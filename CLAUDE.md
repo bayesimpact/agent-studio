@@ -16,36 +16,42 @@ This is a Turborepo monorepo with the following structure:
 
 ## Development Commands
 
-All commands should be run from the root directory using npm (configured with npm@10.5.0):
+All commands should be run from the root directory using Turbo (via npm scripts):
 
 ### Development
-- `npm run dev` - Start all applications in development mode
-- `npm run dev --filter=api` - Start only the API application
-- `npm run dev --filter=web` - Start only the web application
+- `npx turbo dev` - Start all applications in development mode
+- `npx turbo dev --filter=api` - Start only the API application
+- `npx turbo dev --filter=web` - Start only the web application
 
 ### Building
-- `npm run build` - Build all applications and packages
-- `npm run build --filter=api` - Build only the API application
-- `npm run build --filter=web` - Build only the web application
+- `npx turbo build` - Build all applications and packages
+- `npx turbo build --filter=api` - Build only the API application
+- `npx turbo build --filter=web` - Build only the web application
 
 ### Testing
-- `npm run test` - Run all tests
-- `npm run test:e2e` - Run end-to-end tests
-- `npm run test --filter=api` - Run API tests only
+- `npx turbo test` - Run all tests
+- `npx turbo test --filter=api` - Run API tests only
+- `npx turbo test --filter=web` - Run web tests only
 
 ### Code Quality
-- `npm run lint` - Lint all packages and applications
-- `npm run format` - Format code using Prettier
+- `npx turbo lint` - Lint all packages and applications
+- `npx turbo lint --filter=api` - Lint only the API application
+- `npx turbo lint --filter=web` - Lint only the web application
+
+### TypeScript Compilation Check
+- `cd apps/api && npx tsc --noEmit` - Check API TypeScript without emitting files
+- `cd apps/web && npx tsc --noEmit` - Check web TypeScript without emitting files
 
 ### Application-Specific Commands
 
 **API (NestJS):**
-- `cd apps/api && npm run dev` - Development with watch mode
-- `cd apps/api && npm run start:debug` - Debug mode
+- `cd apps/api && npm run start:dev` - Development with watch mode
+- `cd apps/api && npm run start:debug` - Debug mode with inspector
 - `cd apps/api && npm run test:watch` - Test watch mode
 
 **Web (Next.js):**
-- `cd apps/web && npm run check-types` - TypeScript type checking
+- `cd apps/web && npm run dev` - Development mode with Turbopack
+- `cd apps/web && npm run build` - Production build
 
 ## Architecture Notes
 
@@ -53,8 +59,32 @@ All commands should be run from the root directory using npm (configured with np
 - Built with NestJS framework
 - Entry point: `apps/api/src/main.ts`
 - Main module: `apps/api/src/app.module.ts`
-- Modular structure with feature-based modules (e.g., `LinksModule`)
+- Modular structure with feature-based modules
 - Uses dependency injection and decorators pattern
+
+#### AI Service Architecture
+The API uses a modular AI service provider pattern for extensibility:
+
+- **AIServiceProvider Interface** (`src/common/interfaces/ai-service.interface.ts`):
+  - All AI-enabled services implement this interface
+  - Methods: `getFunctionDeclaration()`, `getPromptContext()`, `executeFunction()`
+
+- **Current Services**:
+  - `FranceTravailService` - Job search via France Travail API
+  - `DataInclusionService` - Social services search via Data Inclusion API
+  - `GeolocService` - Municipality geocoding for location parameters
+
+- **Adding a New AI Service**:
+  1. Implement `AIServiceProvider` interface
+  2. Define function declaration (tool schema)
+  3. Define prompt context (service-specific instructions)
+  4. Implement `executeFunction()` method
+  5. Register in `ChatService.onModuleInit()`
+
+- **Dynamic Prompt Building**:
+  - System prompt is built dynamically from registered services
+  - Each service contributes its own prompt context
+  - Maintains separation of concerns and easy extensibility
 
 ### Web Application
 - Next.js 15 with App Router

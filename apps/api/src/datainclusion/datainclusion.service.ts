@@ -3,7 +3,9 @@ import axios from 'axios';
 import qs from 'qs';
 import { ServiceSearchResponse } from './types/service-search.types';
 import { SimplifiedService } from './models/simplified-service.model';
-import { Type } from '@google/genai';
+import { Type, FunctionDeclaration, FunctionCall } from '@google/genai';
+import { AIServiceProvider } from '../common/interfaces/ai-service.interface';
+import { Location } from '../geoloc/models/location.model';
 
 const thematiques = [
   'choisir-un-metier--confirmer-son-choix-de-metier',
@@ -77,40 +79,83 @@ const thematiques = [
   'trouver-un-emploi--suivre-ses-candidatures-et-relancer-les-employeurs',
 ];
 
-export const servicesSearchDefinition = {
-  name: 'services_search',
-  description:
-    'La recherche de services permet de trouver des services basé sur des thématiques.',
-  parameters: {
-    type: Type.OBJECT,
-    properties: {
-      thematiques: {
-        type: Type.ARRAY,
-        description: 'Thematiques, possible de mettre plusieurs thématiques',
-        items: {
-          type: Type.STRING,
-          enum: thematiques,
-        },
-      },
-      cityName: {
-        type: Type.ARRAY,
-        description: 'City name in french',
-        items: {
-          type: Type.STRING,
-        },
-      },
-    },
-    required: ['thematiques', 'cityName'],
-  },
-};
-
 @Injectable()
-export class DataInclusionService {
+export class DataInclusionService implements AIServiceProvider {
   // eslint-disable-next-line turbo/no-undeclared-env-vars
   private token = process.env.DATA_INCLUSION_TOKEN;
   private baseUrl = 'https://api.data.inclusion.beta.gouv.fr/api/v1';
 
   constructor() {}
+
+  getFunctionDeclaration(): FunctionDeclaration {
+    return {
+      name: 'services_search',
+      description:
+        'La recherche de services permet de trouver des services basé sur des thématiques.',
+      parameters: {
+        type: Type.OBJECT,
+        properties: {
+          thematiques: {
+            type: Type.ARRAY,
+            description: 'Thematiques, possible de mettre plusieurs thématiques',
+            items: {
+              type: Type.STRING,
+              enum: thematiques,
+            },
+          },
+          cityName: {
+            type: Type.ARRAY,
+            description: 'City name in french',
+            items: {
+              type: Type.STRING,
+            },
+          },
+        },
+        required: ['thematiques', 'cityName'],
+      },
+    };
+  }
+
+  getPromptContext(): string {
+    return `
+### Outil: \`services_search\`
+**Description**: Utilise cet outil pour toutes les demandes concernant l'aide sociale, administrative, financière, le logement, la santé, la formation, etc. d'un bénéficiaire. Il sert à trouver des services d'accompagnement.
+
+**Règles spécifiques**:
+- Pour cet outil, tu **DOIS** faire correspondre la description avec les thématiques exactes de la liste \`enum\`.
+- Tu **PEUX** sélectionner plusieurs thématiques si la situation du bénéficiaire est complexe.
+- Pour le paramètre \`cityName\`, tu **DOIS** demander la précision au gestionnaire si ce n'est pas fourni.
+
+**Exemples**:
+- **Exemple de routage**:
+  Gestionnaire: "Dossier Dupont : le bénéficiaire a des impayés de loyer."
+  Appel d'outil: \`services_search(thematiques=["logement-hebergement--reduire-les-impayes-de-loyer"], cityName=["Paris"])\`
+
+- **Exemple avec besoins multiples**:
+  Gestionnaire: "Le bénéficiaire a besoin d'un accompagnement sur son CV et sur la préparation aux entretiens."
+  Appel d'outil: \`services_search(thematiques=["preparer-sa-candidature--realiser-un-cv-et-ou-une-lettre-de-motivation", "trouver-un-emploi--convaincre-un-recruteur-en-entretien"], cityName=["Lyon"])\`
+
+- **Exemple d'urgence**:
+  Gestionnaire: "Situation d'urgence : le bénéficiaire est sans domicile."
+  Appel d'outil: \`services_search(thematiques=["logement-hebergement--rechercher-une-solution-dhebergement-temporaire"], cityName=["Marseille"])\`
+`;
+  }
+
+  async executeFunction(
+    functionCall: FunctionCall,
+    locations: Location[],
+  ): Promise<{services: SimplifiedService[]}> {
+    const thematiques = functionCall.args['thematiques'] as string[];
+    const cityCode = locations[0].citycode;
+    console.log('Function calling with params:', thematiques, cityCode);
+
+    const services = await this.searchServices({
+      thematiques,
+      codeCommune: cityCode,
+    });
+    console.log('Services length: ', services.length);
+    return { services };
+  }
 
   async searchServices({
     thematiques,

@@ -10,10 +10,20 @@ import { SendMessageDto } from '@repo/api/chat/dto/send-message.dto';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import remarkBreaks from 'remark-breaks';
+import { JobList } from './job-list';
 
 interface FunctionCallData {
   name: string
   args: Record<string, any>
+}
+
+interface JobOffer {
+  id: string
+  title: string
+  company: string
+  location: string
+  contractType?: string
+  description?: string
 }
 
 interface Message {
@@ -25,6 +35,7 @@ interface Message {
   isProcessingFunctions?: boolean
   isInitializing?: boolean
   isFinished?: boolean
+  jobList?: JobOffer[]
 }
 
 export function ChatInterface() {
@@ -156,11 +167,24 @@ export function ChatInterface() {
               break
 
             case 'function_calls':
+              // Check if this is a joblist_display function call
+              const joblistCall = data.functionCalls?.find((fc: FunctionCallData) => fc.name === 'joblist_display')
+
+              // Filter out frontend-only function calls from display (they're shown visually instead)
+              const backendFunctionCalls = data.functionCalls?.filter((fc: FunctionCallData) => fc.name !== 'joblist_display')
+
               // Store function calls in the message and mark as processing
               setMessages(prev =>
                 prev.map(msg =>
                   msg.id === data.messageId
-                    ? { ...msg, functionCalls: data.functionCalls, isProcessingFunctions: true }
+                    ? {
+                        ...msg,
+                        // Only show backend function calls in the status box
+                        functionCalls: backendFunctionCalls?.length > 0 ? backendFunctionCalls : msg.functionCalls,
+                        isProcessingFunctions: true,
+                        // Extract job list if it's a joblist_display call
+                        jobList: joblistCall?.args?.jobs || msg.jobList
+                      }
                     : msg
                 )
               )
@@ -357,6 +381,11 @@ export function ChatInterface() {
                         )}
                       </div>
                     </div>
+                  )}
+
+                  {/* Job List Display */}
+                  {message.jobList && message.jobList.length > 0 && (
+                    <JobList jobs={message.jobList} />
                   )}
 
                   {/* Message Text Content */}
