@@ -1,0 +1,95 @@
+###
+
+POST https://entreprise.francetravail.fr/connexion/oauth2/access_token?realm=%2Fpartenaire
+Content-Type: application/x-www-form-urlencoded
+
+grant_type=client_credentials
+    &client_id={{client_id}}
+    &client_secret={{secret_key}}
+    &scope=api_romeov2 o2dsoffre api_offresdemploiv2 api_evenementsv1 evenements
+#    &scope=api_offresdemploiv2 o2dsoffre api_evenementsv1 evenements
+
+###
+
+POST https://api.francetravail.io/partenaire/romeo/v2/predictionMetiers
+Accept: application/json
+Content-Type: application/json
+Authorization: Bearer wKiA_zCT_HVNNMMAwls3B6IRDZ4
+
+{
+  "appellations": [
+    {
+      "intitule": "métiers du jeu vidéo",
+      "identifiant": "id1"
+    }
+  ],
+  "options": {
+    "nomAppelant": "caseai",
+    "nbResultats": 5,
+    "seuilScorePrediction": 0.7
+  }
+}
+###
+
+# curl --request GET
+#  --url https://api.francetravail.io/partenaire/offresdemploi/v2/offres/search
+#  --header 'Accept: application/json'
+#  --header 'Authorization: Bearer 123'
+GET https://api.francetravail.io/partenaire/offresdemploi/v2/offres/search?codeROME=M1405,M1419,M1811,M1409,M1422,K2402,K2401,M1402,M1429,M1702,M1403&departement=75&range=0-2
+Accept: application/json
+Authorization: Bearer 28A5hH6C7wFlUmEjSEK46___WkI
+
+###
+GET https://api.francetravail.io/partenaire/evenements/v1/salonsenligne
+Accept: application/json
+Authorization: Bearer ezbsR2CkLuKey_hNuh1adWJWSaE
+
+###
+POST https://api.francetravail.io/partenaire/evenements/v1/mee/evenements
+Content-Type: application/json
+Accept: application/json
+Authorization: Bearer ezbsR2CkLuKey_hNuh1adWJWSaE
+
+{
+  "dateDebut": "2025-09-30",
+  "dateFin": "2025-10-01",
+  "secteurActivite" : "E"
+}
+
+###
+GET https://api.francetravail.io/partenaire/evenements/v1/mee/tags/opera/lister
+Content-Type:application/json
+Accept:application/json
+Authorization: Bearer ezbsR2CkLuKey_hNuh1adWJWSaE
+
+
+
+###
+GET https://api.data.inclusion.gouv.fr/api/v1/search/services?page=1&size=10&thematiques=logement-hebergement
+Authorization: Bearer {{dataInclusionBearer}}
+Content-Type:application/json
+Accept:application/json
+
+###
+GET https://api.data.inclusion.gouv.fr/api/v1/search/services?page=1&size=10&thematiques=trouver-un-emploi--convaincre-un-recruteur-en-entretien&thematiques=choisir-un-metier--confirmer-son-choix-de-metier
+Authorization: Bearer {{dataInclusionBearer}}
+Content-Type:application/json
+Accept:application/json
+
+
+###
+GET https://api.data.inclusion.gouv.fr/api/v1/search/services?page=1&size=10&thematiques=logement-hebergement--mal-loges-sans-logis
+Authorization: Bearer {{dataInclusionBearer}}
+Content-Type:application/json
+Accept:application/json
+
+
+###
+# curl -X 'GET'
+#  'https://data.geopf.fr/geocodage/search?q=rouen&autocomplete=1&index=address&limit=10&returntruegeometry=false'
+#  -H 'accept: application/json'
+GET https://data.geopf.fr/geocodage/search?q=Sotteville&type=municipality
+accept: application/json
+
+###
+
