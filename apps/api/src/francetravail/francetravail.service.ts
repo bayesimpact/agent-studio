@@ -2,41 +2,81 @@ import { Injectable } from '@nestjs/common';
 import axios from 'axios';
 import { JobSearchResponse } from './types/job-offer.types';
 import { SimplifiedJobOffer } from './models/simplified-job-offer.model';
-import { Type } from '@google/genai';
-
-export const jobSearchDefinition = {
-  name: 'jobs_search',
-  description: 'Search for a job, you can automatically propose job titles based on the context you have',
-  parameters: {
-    type: Type.OBJECT,
-    properties: {
-      jobTitles: {
-        type: Type.ARRAY,
-        description: 'possible jobs title in french, e.g. boucher or chauffeur de bus',
-        items: {
-          type: Type.STRING,
-        }
-      },
-      cityName: {
-        type: Type.ARRAY,
-        description: 'City name in french',
-        items: {
-          type: Type.STRING,
-        }
-      },
-    },
-    required: ['jobTitles', 'cityName'],
-  },
-};
+import { Type, FunctionDeclaration, FunctionCall } from '@google/genai';
+import { AIServiceProvider } from '../common/interfaces/ai-service.interface';
+import { Location } from '../geoloc/models/location.model';
 
 @Injectable()
-export class FranceTravailService {
+export class FranceTravailService implements AIServiceProvider {
   // eslint-disable-next-line turbo/no-undeclared-env-vars
   private clientId = process.env.FRANCE_TRAVAIL_CLIENT_ID;
   // eslint-disable-next-line turbo/no-undeclared-env-vars
   private secretKey = process.env.FRANCE_TRAVAIL_SECRET_KEY;
 
   constructor() {}
+
+  getFunctionDeclaration(): FunctionDeclaration {
+    return {
+      name: 'jobs_search',
+      description: 'Search for a job, you can automatically propose job titles based on the context you have',
+      parameters: {
+        type: Type.OBJECT,
+        properties: {
+          jobTitles: {
+            type: Type.ARRAY,
+            description: 'possible jobs title in french, e.g. boucher or chauffeur de bus',
+            items: {
+              type: Type.STRING,
+            }
+          },
+          cityName: {
+            type: Type.ARRAY,
+            description: 'City name in french',
+            items: {
+              type: Type.STRING,
+            }
+          },
+        },
+        required: ['jobTitles', 'cityName'],
+      },
+    };
+  }
+
+  getPromptContext(): string {
+    return `
+### Outil: \`jobs_search\`
+**Description**: Utilise cet outil **uniquement** pour lancer une recherche d'offres d'emploi pour un bénéficiaire.
+
+**Règles spécifiques**:
+- Pour le paramètre \`jobTitles\`, tu **DOIS** déduire des titres de postes pertinents à partir de la description. En général un maximum de 5 titres de postes suffit.
+- Pour le paramètre \`cityName\`, tu **DOIS** demander la précision au gestionnaire si ce n'est pas fourni.
+
+**Exemples**:
+- **Exemple avec lieu manquant**:
+  Gestionnaire: "Le bénéficiaire est développeur et cherche du travail."
+  Toi: "Entendu. Pour lancer la recherche, pouvez-vous me préciser dans quelle ville ou quel département le bénéficiaire souhaite chercher ?"
+
+- **Exemple avec lieu explicite**:
+  Gestionnaire: "Lancer une recherche de postes de chauffeur de bus sur Paris pour ce bénéficiaire."
+  Appel d'outil: \`jobs_search(jobTitles=["chauffeur de bus", "conducteur de transport en commun"], cityName=["Paris"])\`
+`;
+  }
+
+  async executeFunction(
+    functionCall: FunctionCall,
+    locations: Location[],
+  ): Promise<{jobOffers: SimplifiedJobOffer[]}> {
+    const jobTitles = functionCall.args['jobTitles'] as string[];
+    const departmentsCode = [locations[0].departmentCode];
+    console.log('Function calling with params:', jobTitles, departmentsCode);
+
+    const jobOffers = await this.searchJobOffers({
+      jobTitles,
+      departmentsCode,
+    });
+    console.log('Job offers length: ', jobOffers.length);
+    return { jobOffers };
+  }
 
   private async getAccessToken(): Promise<string> {
     const params = new URLSearchParams({
