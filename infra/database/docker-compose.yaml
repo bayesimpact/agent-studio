@@ -1,0 +1,12 @@
+name: "caseai-connect-db"
+services:
+  pgvector:
+    image: pgvector/pgvector:pg17
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: passpass
+    volumes:
+      - ./sql/common.sql:/docker-entrypoint-initdb.d/common.sql
+      - ./dontsave/pgdata:/var/lib/postgresql/data
