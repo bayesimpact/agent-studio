@@ -108,12 +108,7 @@ ${toolContexts}
   }
 
   private buildContents(chatSession: ChatSession): ContentListUnion {
-    const currentCarePlan = this.extractCurrentCarePlan(chatSession);
-    const systemPrompt = this.buildSystemPrompt(currentCarePlan);
-    const contents: Content[] = [{
-      role: 'model',
-      parts: [{ text: systemPrompt }]
-    }];
+    const contents: Content[] = [];
 
     // Group consecutive tool responses into ONE user message with MULTIPLE functionResponse parts
     let toolResponseParts: any[] = [];
@@ -175,6 +170,8 @@ ${toolContexts}
   }): AsyncGenerator<GenerateContentResponse> {
     console.info(`Calling LLM`)
     const contents = this.buildContents(chatSession);
+    const currentCarePlan = this.extractCurrentCarePlan(chatSession);
+    const systemInstruction = this.buildSystemPrompt(currentCarePlan);
 
     // Log the LLM call parameters to a JSON file
     // try {
@@ -196,6 +193,7 @@ ${toolContexts}
       contents,
       config: {
         temperature: 0.1,
+        systemInstruction,
         thinkingConfig: {
           thinkingBudget: 0,
         },
