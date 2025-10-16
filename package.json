@@ -11,7 +11,8 @@
     "test": "turbo run test",
     "test:e2e": "turbo run test:e2e",
     "lint": "turbo run lint",
-    "format": "prettier --write \"**/*.{ts,tsx,md}\""
+    "format": "prettier --write \"**/*.{ts,tsx,md}\"",
+    "clean": "find . -name '.turbo' -type d -prune -exec rm -rf '{}' + && find . -name 'node_modules' -type d -prune -exec rm -rf '{}' + && rm -rf node_modules"
   },
   "devDependencies": {
     "@repo/eslint-config": "*",
