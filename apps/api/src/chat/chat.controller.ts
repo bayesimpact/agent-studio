@@ -1,7 +1,5 @@
-import { Body, Controller, Post, Sse, MessageEvent, Query } from '@nestjs/common';
+import { Controller, Post, Sse, MessageEvent, Query } from '@nestjs/common';
 import { Observable } from 'rxjs';
-import { SendMessageDto } from '@repo/api/chat/dto/send-message.dto';
-import { MessageResponseDto } from '@repo/api/chat/dto/message-response.dto';
 import { ChatService } from './chat.service';
 import { CreateChatSessionResponseDto } from '@repo/api/chat/dto/create-chat-session.dto';
 
