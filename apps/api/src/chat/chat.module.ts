@@ -6,10 +6,10 @@ import { ChatRepository } from './chat.repository';
 import { FranceTravailModule } from '../francetravail/francetravail.module';
 import { DataInclusionModule } from '../datainclusion/datainclusion.module';
 import { GeolocModule } from '../geoloc/geoloc.module';
-import { JobListModule } from '../joblist/joblist.module';
+import { CarePlanModule } from '../care-plan/care-plan.module';
 
 @Module({
-  imports: [AIModule, FranceTravailModule, DataInclusionModule, GeolocModule, JobListModule],
+  imports: [AIModule, FranceTravailModule, DataInclusionModule, GeolocModule, CarePlanModule],
   controllers: [ChatController],
   providers: [ChatService, ChatRepository],
 })

@@ -15,7 +15,7 @@ import {
 import { GeolocService } from '../geoloc/geoloc.service';
 import { AIServiceProvider } from '../common/interfaces/ai-service.interface';
 import { AIFrontendProvider } from '../common/interfaces/ai-frontend-provider.interface';
-import { JobListProvider } from '../joblist/joblist.provider';
+import { CarePlanProvider } from '../care-plan/care-plan.provider';
 
 @Injectable()
 export class ChatService {
@@ -27,7 +27,7 @@ export class ChatService {
     private geolocService: GeolocService,
     private franceTravailService: FranceTravailService,
     private dataInclusionService: DataInclusionService,
-    private jobListProvider: JobListProvider,
+    private carePlanProvider: CarePlanProvider,
     private aiService: AIService,
     private chatRepository: ChatRepository,
   ) {
@@ -37,7 +37,7 @@ export class ChatService {
     this.registerServiceProvider(this.dataInclusionService);
 
     // Register frontend providers
-    this.registerFrontendProvider(this.jobListProvider);
+    this.registerFrontendProvider(this.carePlanProvider);
 
     // Build tools from all registered providers
     const allDeclarations = [
@@ -240,7 +240,7 @@ export class ChatService {
               } as MessageEvent);
             }
 
-            // Handle function calls from second LLM call (e.g., joblist_display after jobs_search)
+            // Handle function calls from second LLM call (e.g., display_care_plan after jobs_search)
             if (
               secondLastChunk?.functionCalls &&
               secondLastChunk.functionCalls.length > 0

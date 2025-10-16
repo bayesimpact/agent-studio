@@ -45,20 +45,14 @@ export class FranceTravailService implements AIServiceProvider {
   getPromptContext(): string {
     return `
 ### Outil: \`jobs_search\`
-**Description**: Utilise cet outil **uniquement** pour lancer une recherche d'offres d'emploi pour un bénéficiaire.
+**Description**: Recherche des offres d'emploi via l'API France Travail.
 
-**Règles spécifiques**:
-- Pour le paramètre \`jobTitles\`, tu **DOIS** déduire des titres de postes pertinents à partir de la description. En général un maximum de 5 titres de postes suffit.
-- Pour le paramètre \`cityName\`, tu **DOIS** demander la précision au gestionnaire si ce n'est pas fourni.
+**Paramètres**:
+- \`jobTitles\`: 2-5 titres de postes pertinents en français
+  - Exemples: ["développeur web", "développeur full stack"], ["chauffeur de bus", "conducteur"]
+- \`cityName\`: Nom de la ville (obligatoire - demande si non fourni)
 
-**Exemples**:
-- **Exemple avec lieu manquant**:
-  Gestionnaire: "Le bénéficiaire est développeur et cherche du travail."
-  Toi: "Entendu. Pour lancer la recherche, pouvez-vous me préciser dans quelle ville ou quel département le bénéficiaire souhaite chercher ?"
-
-- **Exemple avec lieu explicite**:
-  Gestionnaire: "Lancer une recherche de postes de chauffeur de bus sur Paris pour ce bénéficiaire."
-  Appel d'outil: \`jobs_search(jobTitles=["chauffeur de bus", "conducteur de transport en commun"], cityName=["Paris"])\`
+**Retourne**: Liste d'offres avec id, titre, entreprise, localisation, type de contrat, description (jusqu'à 20 résultats)
 `;
   }
 
