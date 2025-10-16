@@ -57,6 +57,9 @@ yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 
+# LLM debug logs
+llm-logs/
+
 # Misc
 .DS_Store
 *.pem

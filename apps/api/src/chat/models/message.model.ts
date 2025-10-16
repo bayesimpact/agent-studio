@@ -1,5 +1,4 @@
 export interface ToolCall {
-  id: string;
   name: string;
   arguments: Record<string, unknown>;
 }
@@ -11,6 +10,5 @@ export class Message {
     public readonly sender: 'user' | 'assistant' | 'tool',
     public readonly timestamp: Date,
     public readonly toolCalls?: ToolCall[],
-    public readonly toolCallId?: string,
   ) {}
 }

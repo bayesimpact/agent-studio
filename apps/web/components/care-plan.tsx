@@ -237,11 +237,11 @@ export function CarePlan({ planItems }: CarePlanProps) {
                             <CardContent className="p-3 space-y-2">
                               <div className="flex items-start gap-2">
                                 <Building2 className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
-                                <div className="flex-1 min-w-0">
+                                <div className="flex-1 min-w-0 overflow-hidden">
                                   <h4 className="text-sm font-semibold text-foreground line-clamp-1">
                                     {job.title}
                                   </h4>
-                                  <p className="text-xs text-muted-foreground truncate">{job.company}</p>
+                                  <p className="text-xs text-muted-foreground truncate max-w-full">{job.company}</p>
                                 </div>
                               </div>
 

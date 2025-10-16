@@ -90,10 +90,10 @@ export class ChatService {
     );
 
     const functionCallsData = functionCalls.map((fc) => ({
-      id: `${fc.name}-${Date.now()}`,
       name: fc.name,
       args: fc.args,
     }));
+    console.log('functionCallsData', backendFunctionCalls);
 
     // Notify frontend about function calls
     subscriber.next({
@@ -112,8 +112,6 @@ export class ChatService {
 
       for (let i = 0; i < backendFunctionCalls.length; i++) {
         const functionCall = backendFunctionCalls[i];
-        const toolCallId = functionCallsData.find(fc => fc.name === functionCall.name)?.id || `${functionCall.name}-${Date.now()}`;
-
         const provider = this.serviceProviders.get(functionCall.name);
         if (provider) {
           const result = await provider.executeFunction(
@@ -122,7 +120,6 @@ export class ChatService {
           );
           // Add tool response message with proper tool_call_id
           updatedSession = updatedSession.addToolResponse(
-            toolCallId,
             functionCall.name,
             { result },
           );
@@ -138,10 +135,7 @@ export class ChatService {
     // Frontend function calls are handled by the frontend - add acknowledgment as tool response
     for (let i = 0; i < frontendFunctionCalls.length; i++) {
       const functionCall = frontendFunctionCalls[i];
-      const toolCallId = functionCallsData.find(fc => fc.name === functionCall.name)?.id || `${functionCall.name}-${Date.now()}`;
-
       updatedSession = updatedSession.addToolResponse(
-        toolCallId,
         functionCall.name,
         { executed: 'frontend' },
       );
@@ -223,11 +217,9 @@ export class ChatService {
             } as MessageEvent);
           }
 
-          // Handle function calls from first LLM call
           if (lastChunk?.functionCalls && lastChunk.functionCalls.length > 0) {
-            // STEP 2: Save assistant message with tool_calls (no content yet)
             const toolCallsData = lastChunk.functionCalls.map((fc) => ({
-              id: `${fc.name}-${Date.now()}`,
+              id: v4(),
               name: fc.name,
               arguments: fc.args,
             }));
@@ -239,10 +231,10 @@ export class ChatService {
               timestamp,
               toolCallsData,
             );
+            console.info(assistantToolCallMessage);
             updatedSession = updatedSession.addMessage(assistantToolCallMessage);
             this.chatRepository.save(updatedSession);
 
-            // STEP 3: Execute functions and add tool response messages
             updatedSession = await this.processFunctionCalls(
               lastChunk.functionCalls,
               updatedSession,
@@ -250,7 +242,6 @@ export class ChatService {
               subscriber,
             );
 
-            // STEP 4: Second streaming call - assistant generates final answer with function results
             fullText = '';
             const secondStreamGenerator = this.aiService.generateContentStream({
               chatSession: updatedSession,
@@ -279,7 +270,6 @@ export class ChatService {
             ) {
               // Save second assistant message with tool_calls
               const secondToolCallsData = secondLastChunk.functionCalls.map((fc) => ({
-                id: `${fc.name}-${Date.now()}`,
                 name: fc.name,
                 arguments: fc.args,
               }));
@@ -301,26 +291,6 @@ export class ChatService {
                 messageId,
                 subscriber,
               );
-
-              // Third streaming call if there were function calls in the second response
-              fullText = '';
-              const thirdStreamGenerator = this.aiService.generateContentStream({
-                chatSession: updatedSession,
-                tools: this.tools,
-              });
-
-              for await (const chunk of thirdStreamGenerator) {
-                const chunkText = chunk.text || '';
-                fullText += chunkText;
-
-                subscriber.next({
-                  data: JSON.stringify({
-                    type: 'chunk',
-                    content: chunkText,
-                    messageId,
-                  }),
-                } as MessageEvent);
-              }
             }
           }
 
