@@ -17,14 +17,17 @@ export class ChatSession {
     );
   }
 
-  addFunctionCallResult(name: string, response: Record<string, unknown>): ChatSession {
-    const functionResultMessage = new Message(
-      `func-${Date.now()}`,
-      '',
-      'user',
+  addToolResponse(toolCallId: string, name: string, response: Record<string, unknown>): ChatSession {
+    // Store the function name in the toolCallId for retrieval later
+    // Format: "functionName-timestamp"
+    const toolMessage = new Message(
+      `tool-${Date.now()}`,
+      JSON.stringify(response),
+      'tool',
       new Date(),
-      { name, response }
+      undefined,
+      toolCallId, // This already contains the function name
     );
-    return this.addMessage(functionResultMessage);
+    return this.addMessage(toolMessage);
   }
 }

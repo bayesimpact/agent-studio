@@ -71,31 +71,56 @@ ${toolContexts}
 `;
   }
 
-  private buildContents(chatSession: ChatSession) {
+  private buildContents(chatSession: ChatSession): any[] {
     const systemPrompt = this.buildSystemPrompt();
-    return [
-      {
-        role: 'model',
-        parts: [{ text: systemPrompt }]
-      },
-      ...chatSession.messages.map((message) => {
-        if (message.functionCallResult) {
-          return {
-            role: 'user',
-            parts: [{
-              functionResponse: {
-                name: message.functionCallResult.name,
-                response: message.functionCallResult.response
-              }
-            }]
-          };
+    const contents: any[] = [{
+      role: 'model',
+      parts: [{ text: systemPrompt }]
+    }];
+
+    // Group consecutive tool responses into a single user message
+    let toolResponseParts: any[] = [];
+
+    for (const message of chatSession.messages) {
+      if (message.sender === 'tool') {
+        // Accumulate tool responses
+        const functionName = message.toolCallId?.split('-').slice(0, -1).join('-') || 'unknown';
+        toolResponseParts.push({
+          functionResponse: {
+            name: functionName,
+            response: JSON.parse(message.content || '{}')
+          }
+        });
+      } else {
+        // Flush accumulated tool responses before adding non-tool message
+        if (toolResponseParts.length > 0) {
+          contents.push({ role: 'user', parts: toolResponseParts });
+          toolResponseParts = [];
         }
-        return {
-          role: message.sender === 'assistant' ? 'model' : 'user',
-          parts: [{ text: message.content }]
-        };
-      })
-    ];
+
+        // Add non-tool message
+        if (message.sender === 'assistant' && message.toolCalls?.length) {
+          contents.push({
+            role: 'model',
+            parts: message.toolCalls.map(tc => ({
+              functionCall: { name: tc.name, args: tc.arguments }
+            }))
+          });
+        } else {
+          contents.push({
+            role: message.sender === 'assistant' ? 'model' : 'user',
+            parts: [{ text: message.content || '' }]
+          });
+        }
+      }
+    }
+
+    // Flush any remaining tool responses
+    if (toolResponseParts.length > 0) {
+      contents.push({ role: 'user', parts: toolResponseParts });
+    }
+
+    return contents;
   }
 
 

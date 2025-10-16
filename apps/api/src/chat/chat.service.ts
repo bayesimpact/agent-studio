@@ -70,12 +70,13 @@ export class ChatService {
 
   /**
    * Process function calls from LLM response
-   * Handles both backend and frontend function calls
+   * Follows proper conversational flow: assistant (with tool_calls) → tool → assistant (answer)
+   * IMPORTANT: All tool responses must be added before saving to maintain proper message pairing
    */
   private async processFunctionCalls(
     functionCalls: FunctionCall[],
     session: ChatSession,
-    messageId: string,
+    toolCallsMessageId: string,
     subscriber: any,
   ): Promise<ChatSession> {
     let updatedSession = session;
@@ -89,14 +90,16 @@ export class ChatService {
     );
 
     const functionCallsData = functionCalls.map((fc) => ({
+      id: `${fc.name}-${Date.now()}`,
       name: fc.name,
       args: fc.args,
     }));
 
+    // Notify frontend about function calls
     subscriber.next({
       data: JSON.stringify({
         type: 'function_calls',
-        messageId,
+        messageId: toolCallsMessageId,
         functionCalls: functionCallsData,
       }),
     } as MessageEvent);
@@ -107,18 +110,23 @@ export class ChatService {
       const municipalities =
         await this.geolocService.searchMunicipalities(cityName);
 
-      for (const functionCall of backendFunctionCalls) {
+      for (let i = 0; i < backendFunctionCalls.length; i++) {
+        const functionCall = backendFunctionCalls[i];
+        const toolCallId = functionCallsData.find(fc => fc.name === functionCall.name)?.id || `${functionCall.name}-${Date.now()}`;
+
         const provider = this.serviceProviders.get(functionCall.name);
         if (provider) {
           const result = await provider.executeFunction(
             functionCall,
             municipalities,
           );
-          updatedSession = updatedSession.addFunctionCallResult(
+          // Add tool response message with proper tool_call_id
+          updatedSession = updatedSession.addToolResponse(
+            toolCallId,
             functionCall.name,
             { result },
           );
-          this.chatRepository.save(updatedSession);
+          // DO NOT save yet - we need all tool responses before saving
         } else {
           console.warn(
             `No provider found for function: ${functionCall.name}`,
@@ -127,15 +135,21 @@ export class ChatService {
       }
     }
 
-    // Frontend function calls are handled by the frontend - no backend execution
-    // Just acknowledge them in the session
-    for (const functionCall of frontendFunctionCalls) {
-      updatedSession = updatedSession.addFunctionCallResult(
+    // Frontend function calls are handled by the frontend - add acknowledgment as tool response
+    for (let i = 0; i < frontendFunctionCalls.length; i++) {
+      const functionCall = frontendFunctionCalls[i];
+      const toolCallId = functionCallsData.find(fc => fc.name === functionCall.name)?.id || `${functionCall.name}-${Date.now()}`;
+
+      updatedSession = updatedSession.addToolResponse(
+        toolCallId,
         functionCall.name,
         { executed: 'frontend' },
       );
-      this.chatRepository.save(updatedSession);
+      // DO NOT save yet - we need all tool responses before saving
     }
+
+    // NOW save once with all tool responses
+    this.chatRepository.save(updatedSession);
 
     return updatedSession;
   }
@@ -211,6 +225,24 @@ export class ChatService {
 
           // Handle function calls from first LLM call
           if (lastChunk?.functionCalls && lastChunk.functionCalls.length > 0) {
+            // STEP 2: Save assistant message with tool_calls (no content yet)
+            const toolCallsData = lastChunk.functionCalls.map((fc) => ({
+              id: `${fc.name}-${Date.now()}`,
+              name: fc.name,
+              arguments: fc.args,
+            }));
+
+            const assistantToolCallMessage = new Message(
+              messageId,
+              null, // No text content yet
+              'assistant',
+              timestamp,
+              toolCallsData,
+            );
+            updatedSession = updatedSession.addMessage(assistantToolCallMessage);
+            this.chatRepository.save(updatedSession);
+
+            // STEP 3: Execute functions and add tool response messages
             updatedSession = await this.processFunctionCalls(
               lastChunk.functionCalls,
               updatedSession,
@@ -218,7 +250,7 @@ export class ChatService {
               subscriber,
             );
 
-            // Second streaming call with function results
+            // STEP 4: Second streaming call - assistant generates final answer with function results
             fullText = '';
             const secondStreamGenerator = this.aiService.generateContentStream({
               chatSession: updatedSession,
@@ -245,6 +277,24 @@ export class ChatService {
               secondLastChunk?.functionCalls &&
               secondLastChunk.functionCalls.length > 0
             ) {
+              // Save second assistant message with tool_calls
+              const secondToolCallsData = secondLastChunk.functionCalls.map((fc) => ({
+                id: `${fc.name}-${Date.now()}`,
+                name: fc.name,
+                arguments: fc.args,
+              }));
+
+              const secondAssistantToolCallMessage = new Message(
+                v4(),
+                null,
+                'assistant',
+                new Date(),
+                secondToolCallsData,
+              );
+              updatedSession = updatedSession.addMessage(secondAssistantToolCallMessage);
+              this.chatRepository.save(updatedSession);
+
+              // Execute second round of function calls
               updatedSession = await this.processFunctionCalls(
                 secondLastChunk.functionCalls,
                 updatedSession,
@@ -274,15 +324,17 @@ export class ChatService {
             }
           }
 
-          // Save the complete message
-          const assistantMessage = new Message(
-            messageId,
-            fullText,
-            'assistant',
-            timestamp,
-          );
-          updatedSession = updatedSession.addMessage(assistantMessage);
-          this.chatRepository.save(updatedSession);
+          // Save the final complete assistant message with text content
+          if (fullText) {
+            const assistantMessage = new Message(
+              v4(),
+              fullText,
+              'assistant',
+              new Date(),
+            );
+            updatedSession = updatedSession.addMessage(assistantMessage);
+            this.chatRepository.save(updatedSession);
+          }
 
           // Send end event
           subscriber.next({
