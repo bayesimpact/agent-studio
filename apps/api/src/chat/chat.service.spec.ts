@@ -5,7 +5,7 @@ import { AIModule } from '../ai/ai.module';
 import { FranceTravailModule } from '../francetravail/francetravail.module';
 import { DataInclusionModule } from '../datainclusion/datainclusion.module';
 import { GeolocModule } from '../geoloc/geoloc.module';
-import { JobListModule } from '../joblist/joblist.module';
+import { CarePlanModule } from '../care-plan/care-plan.module';
 import { ChatRepository } from './chat.repository';
 import { Observable } from 'rxjs';
 import { MessageEvent } from '@nestjs/common';
@@ -22,7 +22,7 @@ describe('ChatService', () => {
         FranceTravailModule,
         DataInclusionModule,
         GeolocModule,
-        JobListModule,
+        CarePlanModule,
       ],
     }).compile();
 
@@ -62,11 +62,11 @@ describe('ChatService', () => {
   });
 
   describe('handleMessageStream', () => {
-    it('should stream a message response with events, first calling jobs_search then joblist_display', async () => {
+    it('should stream a care plan with both jobs and services, calling multiple search tools then display_care_plan', async () => {
       const session = await service.createSession();
       const stream = service.handleMessageStream(
         session.id,
-        'Jerem 42 ans cherche un emploi de développeur à Paris',
+        'Robert est au bout du rouleau, il a besoin d\'aide pour manger, faire ses repas, le ménage, ... il a aussi besoin d\'un job alimentaire à Rouen',
       );
 
       const events = await collectStreamEvents(stream);
@@ -94,28 +94,68 @@ describe('ChatService', () => {
       expect(endEvent.messageId).toBeDefined();
       expect(endEvent.timestamp).toBeDefined();
 
-      // Verify function call sequence: jobs_search first, then joblist_display
+      // Verify we have function calls including at least one search tool and display_care_plan
       const functionCallEvents = events.filter((e) => e.type === 'function_calls');
       expect(functionCallEvents.length).toBeGreaterThanOrEqual(2);
 
-      // First function call should be jobs_search
-      const firstFunctionCall = functionCallEvents[0];
-      expect(firstFunctionCall.functionCalls).toBeDefined();
-      expect(firstFunctionCall.functionCalls.length).toBeGreaterThan(0);
-      expect(firstFunctionCall.functionCalls[0].name).toBe('jobs_search');
-      expect(firstFunctionCall.functionCalls[0].args).toBeDefined();
-      expect(firstFunctionCall.functionCalls[0].args.jobTitles).toBeDefined();
-      expect(firstFunctionCall.functionCalls[0].args.cityName).toBeDefined();
+      // Collect all function call names
+      const allFunctionNames = functionCallEvents.flatMap(event =>
+        event.functionCalls.map((fc: any) => fc.name)
+      );
 
-      // Second function call should be joblist_display
-      const secondFunctionCall = functionCallEvents[1];
-      expect(secondFunctionCall.functionCalls).toBeDefined();
-      expect(secondFunctionCall.functionCalls.length).toBeGreaterThan(0);
-      expect(secondFunctionCall.functionCalls[0].name).toBe('joblist_display');
-      expect(secondFunctionCall.functionCalls[0].args).toBeDefined();
-      expect(secondFunctionCall.functionCalls[0].args.jobs).toBeDefined();
-      expect(Array.isArray(secondFunctionCall.functionCalls[0].args.jobs)).toBe(true);
-      expect(secondFunctionCall.functionCalls[0].args.jobs.length).toBeGreaterThan(0);
+      // Should have called at least one search tool
+      const hasJobsSearch = allFunctionNames.includes('jobs_search');
+      const hasServicesSearch = allFunctionNames.includes('services_search');
+      expect(hasJobsSearch || hasServicesSearch).toBe(true);
+
+      // Must have called display_care_plan
+      expect(allFunctionNames).toContain('display_care_plan');
+
+      // Find the display_care_plan function call
+      const displayCarePlanEvent = functionCallEvents.find(event =>
+        event.functionCalls.some((fc: any) => fc.name === 'display_care_plan')
+      );
+      expect(displayCarePlanEvent).toBeDefined();
+
+      const displayCarePlanCall = displayCarePlanEvent.functionCalls.find((fc: any) => fc.name === 'display_care_plan');
+      expect(displayCarePlanCall).toBeDefined();
+      expect(displayCarePlanCall.args).toBeDefined();
+      expect(displayCarePlanCall.args.planItems).toBeDefined();
+      expect(Array.isArray(displayCarePlanCall.args.planItems)).toBe(true);
+      expect(displayCarePlanCall.args.planItems.length).toBeGreaterThan(0);
+
+      // Verify care plan structure
+      const planItems = displayCarePlanCall.args.planItems;
+
+      // At least verify that plan items have correct structure
+      planItems.forEach((item: any) => {
+        expect(item.id).toBeDefined();
+        expect(item.type).toBeDefined();
+        expect(item.title).toBeDefined();
+        expect(['job_search', 'service']).toContain(item.type);
+
+        // If it's a job_search type, verify it has nested items
+        if (item.type === 'job_search') {
+          expect(item.items).toBeDefined();
+          expect(Array.isArray(item.items)).toBe(true);
+          expect(item.items.length).toBeGreaterThan(0);
+
+          // Verify first job has required fields
+          const firstJob = item.items[0];
+          expect(firstJob.id).toBeDefined();
+          expect(firstJob.title).toBeDefined();
+          expect(firstJob.company).toBeDefined();
+          expect(firstJob.location).toBeDefined();
+        }
+
+        // If it's a service type, it should be valid
+        if (item.type === 'service') {
+          // For now, just verify the service structure is valid
+          // The service might have items or description depending on LLM's choice
+          expect(item.id).toBeDefined();
+          expect(item.title).toBeDefined();
+        }
+      });
 
     }, 60000); // 60 second timeout for API calls
   });

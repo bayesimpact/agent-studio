@@ -10,20 +10,35 @@ import { SendMessageDto } from '@repo/api/chat/dto/send-message.dto';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import remarkBreaks from 'remark-breaks';
-import { JobList } from './job-list';
+import { CarePlan } from './care-plan';
 
 interface FunctionCallData {
   name: string
   args: Record<string, any>
 }
 
-interface JobOffer {
+interface DetailItem {
   id: string
   title: string
-  company: string
-  location: string
-  contractType?: string
   description?: string
+  location?: string
+  // Job-specific
+  company?: string
+  contractType?: string
+  // Service-specific
+  contact?: string
+  serviceType?: string
+}
+
+interface CarePlanItem {
+  id: string
+  type: 'job_search' | 'service'
+  title: string
+  description?: string // Used when service has no nested items
+  location?: string
+  contact?: string // Used when service has no nested items
+  serviceType?: string // Used when service has no nested items
+  items?: DetailItem[] // For both job_search and service types
 }
 
 interface Message {
@@ -35,7 +50,7 @@ interface Message {
   isProcessingFunctions?: boolean
   isInitializing?: boolean
   isFinished?: boolean
-  jobList?: JobOffer[]
+  carePlanItems?: CarePlanItem[]
 }
 
 export function ChatInterface() {
@@ -167,11 +182,11 @@ export function ChatInterface() {
               break
 
             case 'function_calls':
-              // Check if this is a joblist_display function call
-              const joblistCall = data.functionCalls?.find((fc: FunctionCallData) => fc.name === 'joblist_display')
+              // Check if this is a display_care_plan function call
+              const carePlanCall = data.functionCalls?.find((fc: FunctionCallData) => fc.name === 'display_care_plan')
 
               // Filter out frontend-only function calls from display (they're shown visually instead)
-              const backendFunctionCalls = data.functionCalls?.filter((fc: FunctionCallData) => fc.name !== 'joblist_display')
+              const backendFunctionCalls = data.functionCalls?.filter((fc: FunctionCallData) => fc.name !== 'display_care_plan')
 
               // Store function calls in the message and mark as processing
               setMessages(prev =>
@@ -182,8 +197,8 @@ export function ChatInterface() {
                         // Only show backend function calls in the status box
                         functionCalls: backendFunctionCalls?.length > 0 ? backendFunctionCalls : msg.functionCalls,
                         isProcessingFunctions: true,
-                        // Extract job list if it's a joblist_display call
-                        jobList: joblistCall?.args?.jobs || msg.jobList
+                        // Extract care plan items if it's a display_care_plan call
+                        carePlanItems: carePlanCall?.args?.planItems || msg.carePlanItems
                       }
                     : msg
                 )
@@ -293,10 +308,10 @@ export function ChatInterface() {
                 </div>
                 {/* Merged Message Content */}
                 <div
-                  className={`max-w-xs lg:max-w-md xl:max-w-lg px-4 py-2 rounded-lg ${
+                  className={`px-4 py-2 rounded-lg ${
                     message.sender === 'user'
-                      ? 'bg-primary text-primary-foreground ml-auto'
-                      : 'bg-muted'
+                      ? 'max-w-xs lg:max-w-md xl:max-w-lg bg-primary text-primary-foreground ml-auto'
+                      : 'w-full max-w-2xl bg-muted'
                   }`}
                 >
                   {/* Status Box - Shows loading/processing states or finished function calls */}
@@ -383,9 +398,9 @@ export function ChatInterface() {
                     </div>
                   )}
 
-                  {/* Job List Display */}
-                  {message.jobList && message.jobList.length > 0 && (
-                    <JobList jobs={message.jobList} />
+                  {/* Care Plan Display */}
+                  {message.carePlanItems && message.carePlanItems.length > 0 && (
+                    <CarePlan planItems={message.carePlanItems} />
                   )}
 
                   {/* Message Text Content */}

@@ -119,25 +119,15 @@ export class DataInclusionService implements AIServiceProvider {
   getPromptContext(): string {
     return `
 ### Outil: \`services_search\`
-**Description**: Utilise cet outil pour toutes les demandes concernant l'aide sociale, administrative, financière, le logement, la santé, la formation, etc. d'un bénéficiaire. Il sert à trouver des services d'accompagnement.
+**Description**: Recherche des services d'accompagnement social, administratif, financier, logement, santé, formation, etc.
 
-**Règles spécifiques**:
-- Pour cet outil, tu **DOIS** faire correspondre la description avec les thématiques exactes de la liste \`enum\`.
-- Tu **PEUX** sélectionner plusieurs thématiques si la situation du bénéficiaire est complexe.
-- Pour le paramètre \`cityName\`, tu **DOIS** demander la précision au gestionnaire si ce n'est pas fourni.
+**Paramètres**:
+- \`thematiques\`: Liste de thématiques exactes parmi l'enum disponible
+  - Tu peux sélectionner plusieurs thématiques si la situation est complexe
+  - Exemples: ["logement-hebergement--reduire-les-impayes-de-loyer"], ["preparer-sa-candidature--realiser-un-cv-et-ou-une-lettre-de-motivation", "trouver-un-emploi--convaincre-un-recruteur-en-entretien"]
+- \`cityName\`: Nom de la ville (obligatoire - demande si non fourni)
 
-**Exemples**:
-- **Exemple de routage**:
-  Gestionnaire: "Dossier Dupont : le bénéficiaire a des impayés de loyer."
-  Appel d'outil: \`services_search(thematiques=["logement-hebergement--reduire-les-impayes-de-loyer"], cityName=["Paris"])\`
-
-- **Exemple avec besoins multiples**:
-  Gestionnaire: "Le bénéficiaire a besoin d'un accompagnement sur son CV et sur la préparation aux entretiens."
-  Appel d'outil: \`services_search(thematiques=["preparer-sa-candidature--realiser-un-cv-et-ou-une-lettre-de-motivation", "trouver-un-emploi--convaincre-un-recruteur-en-entretien"], cityName=["Lyon"])\`
-
-- **Exemple d'urgence**:
-  Gestionnaire: "Situation d'urgence : le bénéficiaire est sans domicile."
-  Appel d'outil: \`services_search(thematiques=["logement-hebergement--rechercher-une-solution-dhebergement-temporaire"], cityName=["Marseille"])\`
+**Retourne**: Liste de services avec id, nom, description, localisation, type de service, contact (jusqu'à 20 résultats)
 `;
   }
 
