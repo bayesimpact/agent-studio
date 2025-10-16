@@ -17,16 +17,14 @@ export class ChatSession {
     );
   }
 
-  addToolResponse(toolCallId: string, name: string, response: Record<string, unknown>): ChatSession {
-    // Store the function name in the toolCallId for retrieval later
-    // Format: "functionName-timestamp"
+  addToolResponse(name: string, response: Record<string, unknown>): ChatSession {
+    // Store toolCallId and name in toolCalls array for proper mapping in buildContents
     const toolMessage = new Message(
       `tool-${Date.now()}`,
       JSON.stringify(response),
       'tool',
       new Date(),
-      undefined,
-      toolCallId, // This already contains the function name
+      [{ name, arguments: {} }],
     );
     return this.addMessage(toolMessage);
   }

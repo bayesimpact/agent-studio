@@ -1,5 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import {
+  Content,
+  ContentListUnion,
   GenerateContentResponse,
   GoogleGenAI,
   ToolListUnion,
@@ -105,21 +107,21 @@ ${toolContexts}
     return undefined;
   }
 
-  private buildContents(chatSession: ChatSession): any[] {
+  private buildContents(chatSession: ChatSession): ContentListUnion {
     const currentCarePlan = this.extractCurrentCarePlan(chatSession);
     const systemPrompt = this.buildSystemPrompt(currentCarePlan);
-    const contents: any[] = [{
+    const contents: Content[] = [{
       role: 'model',
       parts: [{ text: systemPrompt }]
     }];
 
-    // Group consecutive tool responses into a single user message
+    // Group consecutive tool responses into ONE user message with MULTIPLE functionResponse parts
     let toolResponseParts: any[] = [];
 
     for (const message of chatSession.messages) {
       if (message.sender === 'tool') {
-        // Accumulate tool responses
-        const functionName = message.toolCallId?.split('-').slice(0, -1).join('-') || 'unknown';
+        // Accumulate tool responses with matching IDs
+        const functionName = message.toolCalls[0].name;
         toolResponseParts.push({
           functionResponse: {
             name: functionName,
@@ -135,13 +137,18 @@ ${toolContexts}
 
         // Add non-tool message
         if (message.sender === 'assistant' && message.toolCalls?.length) {
+          // Assistant message with function calls (each with ID)
           contents.push({
             role: 'model',
             parts: message.toolCalls.map(tc => ({
-              functionCall: { name: tc.name, args: tc.arguments }
+              functionCall: {
+                name: tc.name,
+                args: tc.arguments
+              }
             }))
           });
         } else {
+          // Regular user or assistant text message
           contents.push({
             role: message.sender === 'assistant' ? 'model' : 'user',
             parts: [{ text: message.content || '' }]
@@ -169,6 +176,21 @@ ${toolContexts}
     console.info(`Calling LLM`)
     const contents = this.buildContents(chatSession);
 
+    // Log the LLM call parameters to a JSON file
+    // try {
+    //   LLMLogger.logCall({
+    //     timestamp: new Date().toISOString(),
+    //     model: 'gemini-2.5-flash',
+    //     temperature: 0.1,
+    //     conversationHistory: contents,
+    //     tools,
+    //     thinkingBudget: 0,
+    //     sessionId: chatSession.id,
+    //   });
+    // } catch (error) {
+    //   console.error('[AI Service] Failed to log LLM call:', error);
+    //   // Continue execution even if logging fails
+    // }
     const streamResult = await this.genAI.models.generateContentStream({
       model: 'gemini-2.5-flash',
       contents,
