@@ -59,6 +59,7 @@ export function ChatInterface() {
   const [isLoading, setIsLoading] = useState(false)
   const [sessionId, setSessionId] = useState<string | null>(null)
   const [expandedFunctions, setExpandedFunctions] = useState<Set<string>>(new Set())
+  const [currentCarePlan, setCurrentCarePlan] = useState<CarePlanItem[] | null>(null)
   const scrollAreaRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
 
@@ -185,6 +186,11 @@ export function ChatInterface() {
               // Check if this is a display_care_plan function call
               const carePlanCall = data.functionCalls?.find((fc: FunctionCallData) => fc.name === 'display_care_plan')
 
+              // Update the fixed care plan display
+              if (carePlanCall?.args?.planItems) {
+                setCurrentCarePlan(carePlanCall.args.planItems)
+              }
+
               // Filter out frontend-only function calls from display (they're shown visually instead)
               const backendFunctionCalls = data.functionCalls?.filter((fc: FunctionCallData) => fc.name !== 'display_care_plan')
 
@@ -197,8 +203,6 @@ export function ChatInterface() {
                         // Only show backend function calls in the status box
                         functionCalls: backendFunctionCalls?.length > 0 ? backendFunctionCalls : msg.functionCalls,
                         isProcessingFunctions: true,
-                        // Extract care plan items if it's a display_care_plan call
-                        carePlanItems: carePlanCall?.args?.planItems || msg.carePlanItems
                       }
                     : msg
                 )
@@ -284,172 +288,191 @@ export function ChatInterface() {
   }, [messages])
 
   return (
-    <Card className="w-full max-w-4xl mx-auto h-[80vh] flex flex-col">
-      <CardContent className="flex-1 flex flex-col p-0">
-        <ScrollArea className="flex-1 px-6" ref={scrollAreaRef}>
-          <div className="space-y-4 pb-4">
-            {messages.map((message) => (
-              <div
-                key={message.id}
-                className={`flex items-start gap-3 ${
-                  message.sender === 'user' ? 'flex-row-reverse' : ''
-                }`}
-              >
-                <div className="flex-shrink-0">
-                  {message.sender === 'user' ? (
-                    <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center">
-                      <User className="w-4 h-4 text-primary-foreground" />
-                    </div>
-                  ) : (
-                    <div className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center">
-                      <Bot className="w-4 h-4 text-secondary-foreground" />
-                    </div>
-                  )}
-                </div>
-                {/* Merged Message Content */}
+    <div className="w-full h-[80vh] flex gap-4">
+      {/* Fixed Action Plan - Left Side (with smooth slide-in animation) */}
+      <div
+        className="transition-all duration-500 ease-in-out overflow-hidden"
+        style={{
+          width: currentCarePlan && currentCarePlan.length > 0 ? '384px' : '0px',
+          opacity: currentCarePlan && currentCarePlan.length > 0 ? 1 : 0,
+        }}
+      >
+        <Card className="w-96 h-full flex-shrink-0 flex flex-col">
+          <CardHeader>
+            <CardTitle className="text-lg">Plan d'accompagnement</CardTitle>
+          </CardHeader>
+          <CardContent className="flex-1 overflow-hidden p-0">
+            <ScrollArea className="h-full px-6 pb-6">
+              {currentCarePlan && currentCarePlan.length > 0 && (
+                <CarePlan planItems={currentCarePlan} />
+              )}
+            </ScrollArea>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Chat Interface - Right Side */}
+      <Card className="flex-1 flex flex-col">
+        <CardContent className="flex-1 flex flex-col p-0">
+          <ScrollArea className="flex-1 px-6" ref={scrollAreaRef}>
+            <div className="space-y-4 pb-4 pt-6">
+              {messages.map((message) => (
                 <div
-                  className={`px-4 py-2 rounded-lg ${
-                    message.sender === 'user'
-                      ? 'max-w-xs lg:max-w-md xl:max-w-lg bg-primary text-primary-foreground ml-auto'
-                      : 'w-full max-w-2xl bg-muted'
+                  key={message.id}
+                  className={`flex items-start gap-3 ${
+                    message.sender === 'user' ? 'flex-row-reverse' : ''
                   }`}
                 >
-                  {/* Status Box - Shows loading/processing states or finished function calls */}
-                  {message.sender === 'assistant' && (!message.isFinished || (message.functionCalls && message.functionCalls.length > 0)) && (
-                    <div className="mb-3">
-                      <div
-                        className={`px-3 py-2 rounded-md border ${
-                          message.functionCalls && message.functionCalls.length > 0
-                            ? 'cursor-pointer transition-colors'
-                            : ''
-                        }`}
-                        style={{
-                          backgroundColor: 'var(--status-bg, #e9eeed)',
-                          borderColor: 'var(--status-border, #bacfca)',
-                        }}
-                        onMouseEnter={(e) => {
-                          if (message.functionCalls && message.functionCalls.length > 0) {
-                            e.currentTarget.style.setProperty('--status-bg', '#bacfca');
-                          }
-                        }}
-                        onMouseLeave={(e) => {
-                          if (message.functionCalls && message.functionCalls.length > 0) {
-                            e.currentTarget.style.setProperty('--status-bg', '#e9eeed');
-                          }
-                        }}
-                        onClick={() => {
-                          if (message.functionCalls && message.functionCalls.length > 0) {
-                            const newExpanded = new Set(expandedFunctions)
-                            if (newExpanded.has(message.id)) {
-                              newExpanded.delete(message.id)
-                            } else {
-                              newExpanded.add(message.id)
+                  <div className="flex-shrink-0">
+                    {message.sender === 'user' ? (
+                      <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center">
+                        <User className="w-4 h-4 text-primary-foreground" />
+                      </div>
+                    ) : (
+                      <div className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center">
+                        <Bot className="w-4 h-4 text-secondary-foreground" />
+                      </div>
+                    )}
+                  </div>
+                  {/* Merged Message Content */}
+                  <div
+                    className={`px-4 py-2 rounded-lg ${
+                      message.sender === 'user'
+                        ? 'max-w-xs lg:max-w-md xl:max-w-lg bg-primary text-primary-foreground ml-auto'
+                        : 'w-full max-w-2xl bg-muted'
+                    }`}
+                  >
+                    {/* Status Box - Shows loading/processing states or finished function calls */}
+                    {message.sender === 'assistant' && (!message.isFinished || (message.functionCalls && message.functionCalls.length > 0)) && (
+                      <div className="mb-3">
+                        <div
+                          className={`px-3 py-2 rounded-md border ${
+                            message.functionCalls && message.functionCalls.length > 0
+                              ? 'cursor-pointer transition-colors'
+                              : ''
+                          }`}
+                          style={{
+                            backgroundColor: 'var(--status-bg, #e9eeed)',
+                            borderColor: 'var(--status-border, #bacfca)',
+                          }}
+                          onMouseEnter={(e) => {
+                            if (message.functionCalls && message.functionCalls.length > 0) {
+                              e.currentTarget.style.setProperty('--status-bg', '#bacfca');
                             }
-                            setExpandedFunctions(newExpanded)
-                          }
-                        }}
-                      >
-                        {/* Summary line */}
-                        <div className="flex items-center gap-2">
-                          {!message.isFinished && (
-                            <div className="animate-spin w-3 h-3 border-2 rounded-full" style={{ borderColor: '#597f77', borderTopColor: 'transparent' }}></div>
-                          )}
-                          <span className="text-xs font-semibold" style={{ color: '#124742' }}>
-                            {message.isInitializing
-                              ? 'Processing your request...'
-                              : message.isProcessingFunctions && message.functionCalls
-                              ? `Calling tools: ${message.functionCalls.map(fc => fc.name).join(', ')}...`
-                              : message.isFinished && message.functionCalls
-                              ? `✓ Called tools: ${message.functionCalls.map(fc => fc.name).join(', ')}`
-                              : message.content
-                              ? 'Answering...'
-                              : 'Processing...'}
-                          </span>
-                          {message.functionCalls && message.functionCalls.length > 0 && (
-                            <span className="ml-auto text-xs" style={{ color: '#597f77' }}>
-                              {expandedFunctions.has(message.id) ? '▼' : '▶'} Show details
+                          }}
+                          onMouseLeave={(e) => {
+                            if (message.functionCalls && message.functionCalls.length > 0) {
+                              e.currentTarget.style.setProperty('--status-bg', '#e9eeed');
+                            }
+                          }}
+                          onClick={() => {
+                            if (message.functionCalls && message.functionCalls.length > 0) {
+                              const newExpanded = new Set(expandedFunctions)
+                              if (newExpanded.has(message.id)) {
+                                newExpanded.delete(message.id)
+                              } else {
+                                newExpanded.add(message.id)
+                              }
+                              setExpandedFunctions(newExpanded)
+                            }
+                          }}
+                        >
+                          {/* Summary line */}
+                          <div className="flex items-center gap-2">
+                            {!message.isFinished && (
+                              <div className="animate-spin w-3 h-3 border-2 rounded-full" style={{ borderColor: '#597f77', borderTopColor: 'transparent' }}></div>
+                            )}
+                            <span className="text-xs font-semibold" style={{ color: '#124742' }}>
+                              {message.isInitializing
+                                ? 'Processing your request...'
+                                : message.isProcessingFunctions && message.functionCalls
+                                ? `Calling tools: ${message.functionCalls.map(fc => fc.name).join(', ')}...`
+                                : message.isFinished && message.functionCalls
+                                ? `✓ Called tools: ${message.functionCalls.map(fc => fc.name).join(', ')}`
+                                : message.content
+                                ? 'Answering...'
+                                : 'Processing...'}
                             </span>
+                            {message.functionCalls && message.functionCalls.length > 0 && (
+                              <span className="ml-auto text-xs" style={{ color: '#597f77' }}>
+                                {expandedFunctions.has(message.id) ? '▼' : '▶'} Show details
+                              </span>
+                            )}
+                          </div>
+
+                          {/* Expandable details - only for function calls */}
+                          {message.functionCalls && message.functionCalls.length > 0 && expandedFunctions.has(message.id) && (
+                            <div className="mt-3 space-y-2">
+                              {message.functionCalls.map((fc, idx) => (
+                                <div key={idx} className="pt-2" style={{ borderTopWidth: '1px', borderTopColor: '#bacfca' }}>
+                                  <div className="flex items-center gap-2 mb-1">
+                                    <span className="text-xs font-semibold" style={{ color: '#124742' }}>
+                                      🔧 {fc.name}
+                                    </span>
+                                  </div>
+                                  <div className="text-xs font-mono" style={{ color: '#597f77' }}>
+                                    {Object.entries(fc.args).map(([key, value]) => (
+                                      <div key={key} className="truncate">
+                                        <span className="font-semibold">{key}:</span>{' '}
+                                        {Array.isArray(value) ? value.join(', ') : String(value)}
+                                      </div>
+                                    ))}
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Message Text Content */}
+                    {message.content && (
+                      <>
+                        <div className="text-sm prose prose-sm dark:prose-invert max-w-none">
+                          {message.sender === 'user' ? (
+                            <p>{message.content}</p>
+                          ) : (
+                            <ReactMarkdown remarkPlugins={[remarkGfm, remarkBreaks]}>
+                              {message.content}
+                            </ReactMarkdown>
                           )}
                         </div>
 
-                        {/* Expandable details - only for function calls */}
-                        {message.functionCalls && message.functionCalls.length > 0 && expandedFunctions.has(message.id) && (
-                          <div className="mt-3 space-y-2">
-                            {message.functionCalls.map((fc, idx) => (
-                              <div key={idx} className="pt-2" style={{ borderTopWidth: '1px', borderTopColor: '#bacfca' }}>
-                                <div className="flex items-center gap-2 mb-1">
-                                  <span className="text-xs font-semibold" style={{ color: '#124742' }}>
-                                    🔧 {fc.name}
-                                  </span>
-                                </div>
-                                <div className="text-xs font-mono" style={{ color: '#597f77' }}>
-                                  {Object.entries(fc.args).map(([key, value]) => (
-                                    <div key={key} className="truncate">
-                                      <span className="font-semibold">{key}:</span>{' '}
-                                      {Array.isArray(value) ? value.join(', ') : String(value)}
-                                    </div>
-                                  ))}
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Care Plan Display */}
-                  {message.carePlanItems && message.carePlanItems.length > 0 && (
-                    <CarePlan planItems={message.carePlanItems} />
-                  )}
-
-                  {/* Message Text Content */}
-                  {message.content && (
-                    <>
-                      <div className="text-sm prose prose-sm dark:prose-invert max-w-none">
-                        {message.sender === 'user' ? (
-                          <p>{message.content}</p>
-                        ) : (
-                          <ReactMarkdown remarkPlugins={[remarkGfm, remarkBreaks]}>
-                            {message.content}
-                          </ReactMarkdown>
-                        )}
-                      </div>
-
-                      {/* Timestamp */}
-                      <p className="text-xs opacity-70 mt-1">
-                        {message.timestamp.toLocaleTimeString()}
-                      </p>
-                    </>
-                  )}
+                        {/* Timestamp */}
+                        <p className="text-xs opacity-70 mt-1">
+                          {message.timestamp.toLocaleTimeString()}
+                        </p>
+                      </>
+                    )}
+                  </div>
                 </div>
-              </div>
-            ))}
+              ))}
+            </div>
+          </ScrollArea>
+          <div className="p-6 pt-4 border-t">
+            <div className="flex gap-2">
+              <Input
+                ref={inputRef}
+                value={inputValue}
+                onChange={(e) => setInputValue(e.target.value)}
+                onKeyDown={handleKeyDown}
+                placeholder="Type your message..."
+                disabled={isLoading}
+                className="flex-1"
+              />
+              <Button
+                className="w-10 h-10 flex justify-center items-center px-2 rounded-full"
+                onClick={handleSendMessage}
+                disabled={!inputValue.trim() || isLoading}
+                size="icon"
+              >
+                <Send className="w-5 h-5" />
+              </Button>
+            </div>
           </div>
-        </ScrollArea>
-        <div className="p-6 pt-4 border-t">
-          <div className="flex gap-2">
-            <Input
-              ref={inputRef}
-              value={inputValue}
-              onChange={(e) => setInputValue(e.target.value)}
-              onKeyDown={handleKeyDown}
-              placeholder="Type your message..."
-              disabled={isLoading}
-              className="flex-1"
-            />
-            <Button
-              className="w-10 h-10 flex justify-center items-center px-2 rounded-full"
-              onClick={handleSendMessage}
-              disabled={!inputValue.trim() || isLoading}
-              size="icon"
-              // className="w-16"
-            >
-              <Send className="w-5 h-5" />
-            </Button>
-          </div>
-        </div>
-      </CardContent>
-    </Card>
+        </CardContent>
+      </Card>
+    </div>
   )
 }
