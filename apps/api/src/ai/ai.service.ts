@@ -30,17 +30,22 @@ export class AIService {
     this.frontendProviders.push(provider);
   }
 
-  private buildSystemPrompt(): string {
+  private buildSystemPrompt(currentCarePlan?: any[]): string {
     const allProviders = [...this.serviceProviders, ...this.frontendProviders];
     const toolContexts = allProviders
       .map((provider) => provider.getPromptContext())
       .join('\n\n');
+
+    const carePlanContext = currentCarePlan && currentCarePlan.length > 0
+      ? `\n\n## Plan d'Accompagnement Actuel\nVoici le plan d'accompagnement actuellement affiché au gestionnaire (${currentCarePlan.length} éléments) :\n${JSON.stringify(currentCarePlan, null, 2)}\n\n**IMPORTANT** : Lors du prochain appel à \`display_care_plan\`, tu DOIS inclure ces éléments s'ils restent pertinents pour le bénéficiaire.`
+      : '';
 
     return `
 Nous somme le: ${new Date().toString()}
 
 ## Persona et Objectif
 Tu es "ConseillerPro", un assistant virtuel expert conçu pour les gestionnaires de cas. Ton rôle est d'aider les gestionnaires à créer des plans d'accompagnement pour les bénéficiaires en trouvant les offres d'emploi et services pertinents. Tu es un outil professionnel, proactif, direct et efficace.
+${carePlanContext}
 
 ## Workflow Principal
 Ton objectif est de **créer des plans d'accompagnement visuels** en suivant ce processus:
@@ -57,6 +62,21 @@ Ton objectif est de **créer des plans d'accompagnement visuels** en suivant ce 
 
 **🔴 RÈGLE ABSOLUE** : Après avoir appelé \`jobs_search\` ou \`services_search\`, tu **DOIS OBLIGATOIREMENT** appeler \`display_care_plan\`. Pas d'exception.
 
+## Gestion du Plan d'Accompagnement (IMPORTANT)
+Le plan d'accompagnement affiché via \`display_care_plan\` est **persistant** et visible en permanence pour le gestionnaire :
+
+- **Approche incrémentale** : À chaque nouvel appel de \`display_care_plan\`, tu DOIS **conserver les éléments précédents** qui restent pertinents pour le bénéficiaire
+- **Ajouter de nouveaux éléments** : Intègre les nouvelles offres/services trouvés aux éléments existants
+- **Supprimer uniquement si non pertinent** : Retire un élément précédent UNIQUEMENT s'il n'est plus adapté aux besoins actuels du bénéficiaire
+- **Limiter la taille** : Garde un maximum de 15-20 éléments au total, en privilégiant les plus pertinents
+
+**Exemple :**
+- Le gestionnaire demande des emplois de restauration à Paris → Tu affiches 5 offres
+- Ensuite il demande des services d'aide alimentaire à Paris → Tu affiches les 5 offres précédentes + 5 nouveaux services
+- Ensuite il demande des emplois dans le bâtiment à Paris → Tu remplaces les offres de restauration par les offres de bâtiment, mais tu **GARDES** les services d'aide alimentaire car ils restent pertinents
+
+**En résumé** : Le plan d'accompagnement s'enrichit au fil de la conversation, sauf si le contexte change radicalement.
+
 ## Instructions Fondamentales
 - Tu **NE DOIS JAMAIS** demander la permission avant d'utiliser un outil
 - Si une seule description contient plusieurs besoins, appelle chaque outil séquentiellement
@@ -71,8 +91,23 @@ ${toolContexts}
 `;
   }
 
+  private extractCurrentCarePlan(chatSession: ChatSession): any[] | undefined {
+    // Find the most recent display_care_plan call in the conversation
+    for (let i = chatSession.messages.length - 1; i >= 0; i--) {
+      const message = chatSession.messages[i];
+      if (message.sender === 'assistant' && message.toolCalls) {
+        const carePlanCall = message.toolCalls.find(tc => tc.name === 'display_care_plan');
+        if (carePlanCall && carePlanCall.arguments['planItems']) {
+          return carePlanCall.arguments['planItems'] as any[];
+        }
+      }
+    }
+    return undefined;
+  }
+
   private buildContents(chatSession: ChatSession): any[] {
-    const systemPrompt = this.buildSystemPrompt();
+    const currentCarePlan = this.extractCurrentCarePlan(chatSession);
+    const systemPrompt = this.buildSystemPrompt(currentCarePlan);
     const contents: any[] = [{
       role: 'model',
       parts: [{ text: systemPrompt }]
