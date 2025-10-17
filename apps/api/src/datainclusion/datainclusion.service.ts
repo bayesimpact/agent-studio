@@ -48,8 +48,8 @@ const thematiques = [
   'mobilite--entretenir-reparer-son-vehicule',
   'mobilite--etre-accompagne-dans-son-parcours-mobilite',
   'mobilite--financer-ma-mobilite',
-  'mobilite--preparer-un-permis-de-conduire',
-  'mobilite--utiliser-des-services-de-mobilite-partagee',
+  'mobilite--preparer-un-permis',
+  'mobilite--mobilite-douce-partagee-collective',
   'numerique--acceder-a-des-services-en-ligne',
   'numerique--acceder-a-une-connexion-internet',
   'numerique--acquerir-un-equipement',
@@ -97,7 +97,8 @@ export class DataInclusionService implements AIServiceProvider {
         properties: {
           thematiques: {
             type: Type.ARRAY,
-            description: 'Thematiques, possible de mettre plusieurs thématiques',
+            description:
+              'Thematiques, possible de mettre plusieurs thématiques',
             items: {
               type: Type.STRING,
               enum: thematiques,
@@ -134,7 +135,7 @@ export class DataInclusionService implements AIServiceProvider {
   async executeFunction(
     functionCall: FunctionCall,
     locations: Location[],
-  ): Promise<{services: SimplifiedService[]}> {
+  ): Promise<{ services: SimplifiedService[] }> {
     const thematiques = functionCall.args['thematiques'] as string[];
     const cityCode = locations[0].citycode;
     console.log('Function calling with params:', thematiques, cityCode);
