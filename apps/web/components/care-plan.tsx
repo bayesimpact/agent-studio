@@ -91,7 +91,7 @@ export function CarePlan({ planItems }: CarePlanProps) {
           return (
             <Card
               key={planItem.id}
-              className="group relative hover:shadow-lg transition-all duration-300 overflow-hidden animate-in fade-in slide-in-from-bottom-4 bg-gradient-to-br from-background to-muted/20 hover:from-primary/5 hover:to-primary/10"
+              className="group relative hover:shadow-lg transition-all duration-300 overflow-hidden animate-in fade-in slide-in-from-bottom-4 bg-gradient-to-br from-primary/5 to-primary/8 hover:from-primary/10 hover:to-primary/15 border-primary/20"
               style={{
                 animationDelay: `${index * 75}ms`,
                 animationFillMode: 'both'
@@ -226,7 +226,7 @@ export function CarePlan({ planItems }: CarePlanProps) {
                       <p className="text-xs font-semibold text-muted-foreground mb-2">
                         {planItem.items.length} offre{planItem.items.length > 1 ? 's' : ''} trouvée{planItem.items.length > 1 ? 's' : ''}
                       </p>
-                      {planItem.items.map((job, jobIndex) => {
+                      {planItem.items.map((job) => {
                         const colors = job.contractType ? getContractTypeColor(job.contractType) : { bg: 'bg-gray-50', text: 'text-gray-700', border: 'border-gray-200' }
 
                         return (

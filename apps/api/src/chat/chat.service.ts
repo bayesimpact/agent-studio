@@ -1,12 +1,11 @@
-import { Injectable, MessageEvent, OnModuleInit } from '@nestjs/common';
+import { Injectable, MessageEvent } from '@nestjs/common';
 import { Observable } from 'rxjs';
 import { v4 } from 'uuid';
 import { AIService } from '../ai/ai.service';
 import { ChatRepository } from './chat.repository';
 import { ChatSession } from './models/chat-session.model';
 import { Message } from './models/message.model';
-import { FranceTravailService } from '../francetravail/francetravail.service';
-import { DataInclusionService } from '../datainclusion/datainclusion.service';
+import { ResourcesService } from '../resources/resources.service';
 import {
   FunctionCall,
   GenerateContentResponse,
@@ -25,16 +24,14 @@ export class ChatService {
 
   constructor(
     private geolocService: GeolocService,
-    private franceTravailService: FranceTravailService,
-    private dataInclusionService: DataInclusionService,
+    private resourcesService: ResourcesService,
     private carePlanProvider: CarePlanProvider,
     private aiService: AIService,
     private chatRepository: ChatRepository,
   ) {
 
     // Register service providers
-    this.registerServiceProvider(this.franceTravailService);
-    this.registerServiceProvider(this.dataInclusionService);
+    this.registerServiceProvider(this.resourcesService);
 
     // Register frontend providers
     this.registerFrontendProvider(this.carePlanProvider);
