@@ -3,8 +3,8 @@ import { Type, FunctionDeclaration } from '@google/genai';
 import { AIFrontendProvider } from '../common/interfaces/ai-frontend-provider.interface';
 
 /**
- * Frontend-only provider for displaying a care plan
- * This provider's function calls are executed on the frontend to show the UI
+ * Frontend provider for displaying a care plan
+ * The LLM generates the structured care plan and calls this to display it
  */
 @Injectable()
 export class CarePlanProvider implements AIFrontendProvider {

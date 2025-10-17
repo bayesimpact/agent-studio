@@ -288,31 +288,28 @@ export function ChatInterface() {
   }, [messages])
 
   return (
-    <div className="w-full h-[80vh] flex gap-4">
-      {/* Fixed Action Plan - Left Side (with smooth slide-in animation) */}
+    <div className="w-full h-[80vh]">
+      {/* Action Plan - Fixed Position (Always visible when exists) */}
+      {currentCarePlan && currentCarePlan.length > 0 && (
+        <div className="fixed left-4 top-4 h-[80vh] w-96 z-10">
+          <Card className="h-full flex-shrink-0 flex flex-col bg-gradient-to-br from-primary/5 to-primary/10 border-primary/20 shadow-lg">
+            <CardContent className="flex-1 overflow-hidden p-0">
+              <ScrollArea className="h-full px-6 pb-6">
+                <CarePlan planItems={currentCarePlan} />
+              </ScrollArea>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {/* Chat Interface - With left margin when plan exists */}
       <div
-        className="transition-all duration-500 ease-in-out overflow-hidden"
+        className="h-full transition-all duration-500"
         style={{
-          width: currentCarePlan && currentCarePlan.length > 0 ? '384px' : '0px',
-          opacity: currentCarePlan && currentCarePlan.length > 0 ? 1 : 0,
+          marginLeft: currentCarePlan && currentCarePlan.length > 0 ? '400px' : '0px',
         }}
       >
-        <Card className="w-96 h-full flex-shrink-0 flex flex-col">
-          <CardHeader>
-            <CardTitle className="text-lg">Plan d'accompagnement</CardTitle>
-          </CardHeader>
-          <CardContent className="flex-1 overflow-hidden p-0">
-            <ScrollArea className="h-full px-6 pb-6">
-              {currentCarePlan && currentCarePlan.length > 0 && (
-                <CarePlan planItems={currentCarePlan} />
-              )}
-            </ScrollArea>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Chat Interface - Right Side */}
-      <Card className="flex-1 flex flex-col">
+        <Card className="h-full flex flex-col">
         <CardContent className="flex-1 flex flex-col p-0">
           <ScrollArea className="flex-1 px-6" ref={scrollAreaRef}>
             <div className="space-y-4 pb-4 pt-6">
@@ -472,7 +469,8 @@ export function ChatInterface() {
             </div>
           </div>
         </CardContent>
-      </Card>
+        </Card>
+      </div>
     </div>
   )
 }
