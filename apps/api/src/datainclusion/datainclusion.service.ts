@@ -7,7 +7,7 @@ import { Type, FunctionDeclaration, FunctionCall } from '@google/genai';
 import { AIServiceProvider } from '../common/interfaces/ai-service.interface';
 import { Location } from '../geoloc/models/location.model';
 
-const thematiques = [
+export const thematiques = [
   'choisir-un-metier--confirmer-son-choix-de-metier',
   'choisir-un-metier--connaitre-les-opportunites-demploi',
   'choisir-un-metier--decouvrir-un-metier-ou-un-secteur-dactivite',
@@ -91,14 +91,14 @@ export class DataInclusionService implements AIServiceProvider {
     return {
       name: 'services_search',
       description:
-        'La recherche de services permet de trouver des services basé sur des thématiques.',
+        'Service search allows finding services based on thematic categories.',
       parameters: {
         type: Type.OBJECT,
         properties: {
           thematiques: {
             type: Type.ARRAY,
             description:
-              'Thematiques, possible de mettre plusieurs thématiques',
+              'Thematic categories, multiple themes can be specified',
             items: {
               type: Type.STRING,
               enum: thematiques,
@@ -106,7 +106,7 @@ export class DataInclusionService implements AIServiceProvider {
           },
           cityName: {
             type: Type.ARRAY,
-            description: 'City name in french',
+            description: 'City name in French',
             items: {
               type: Type.STRING,
             },
@@ -119,16 +119,16 @@ export class DataInclusionService implements AIServiceProvider {
 
   getPromptContext(): string {
     return `
-### Outil: \`services_search\`
-**Description**: Recherche des services d'accompagnement social, administratif, financier, logement, santé, formation, etc.
+### Tool: \`services_search\`
+**Description**: Search for support services (social, administrative, financial, housing, health, training, etc.)
 
-**Paramètres**:
-- \`thematiques\`: Liste de thématiques exactes parmi l'enum disponible
-  - Tu peux sélectionner plusieurs thématiques si la situation est complexe
-  - Exemples: ["logement-hebergement--reduire-les-impayes-de-loyer"], ["preparer-sa-candidature--realiser-un-cv-et-ou-une-lettre-de-motivation", "trouver-un-emploi--convaincre-un-recruteur-en-entretien"]
-- \`cityName\`: Nom de la ville (obligatoire - demande si non fourni)
+**Parameters**:
+- \`thematiques\`: List of exact themes from the available enum
+  - You can select multiple themes if the situation is complex
+  - Examples: ["logement-hebergement--reduire-les-impayes-de-loyer"], ["preparer-sa-candidature--realiser-un-cv-et-ou-une-lettre-de-motivation", "trouver-un-emploi--convaincre-un-recruteur-en-entretien"]
+- \`cityName\`: City name (required - ask if not provided)
 
-**Retourne**: Liste de services avec id, nom, description, localisation, type de service, contact (jusqu'à 20 résultats)
+**Returns**: List of services with id, name, description, location, service type, contact (up to 20 results)
 `;
   }
 

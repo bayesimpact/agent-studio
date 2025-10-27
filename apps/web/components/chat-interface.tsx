@@ -5,12 +5,13 @@ import { Button } from '@repo/ui/button'
 import { Input } from '@repo/ui/input'
 import { Card, CardContent, CardHeader, CardTitle } from '@repo/ui/card'
 import { ScrollArea } from '@repo/ui/scroll-area'
-import { Send, User, Bot } from 'lucide-react'
+import { Send, User, Bot, Briefcase, MapPin } from 'lucide-react'
 import { SendMessageDto } from '@repo/api/chat/dto/send-message.dto';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import remarkBreaks from 'remark-breaks';
 import { CarePlan } from './care-plan';
+import { ProfileDisplay } from './profile-display';
 
 interface FunctionCallData {
   name: string
@@ -60,6 +61,7 @@ export function ChatInterface() {
   const [sessionId, setSessionId] = useState<string | null>(null)
   const [expandedFunctions, setExpandedFunctions] = useState<Set<string>>(new Set())
   const [currentCarePlan, setCurrentCarePlan] = useState<CarePlanItem[] | null>(null)
+  const [currentProfile, setCurrentProfile] = useState<any | null>(null)
   const scrollAreaRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
 
@@ -191,8 +193,18 @@ export function ChatInterface() {
                 setCurrentCarePlan(carePlanCall.args.planItems)
               }
 
+              // Check if this is a display_profile function call
+              const profileCall = data.functionCalls?.find((fc: FunctionCallData) => fc.name === 'display_profile')
+
+              // Update the profile display
+              if (profileCall?.args) {
+                setCurrentProfile(profileCall.args)
+              }
+
               // Filter out frontend-only function calls from display (they're shown visually instead)
-              const backendFunctionCalls = data.functionCalls?.filter((fc: FunctionCallData) => fc.name !== 'display_care_plan')
+              const backendFunctionCalls = data.functionCalls?.filter((fc: FunctionCallData) =>
+                fc.name !== 'display_care_plan' && fc.name !== 'display_profile'
+              )
 
               // Store function calls in the message and mark as processing
               setMessages(prev =>
@@ -287,29 +299,43 @@ export function ChatInterface() {
     }
   }, [messages])
 
-  return (
-    <div className="w-full h-[80vh]">
-      {/* Action Plan - Fixed Position (Always visible when exists) */}
-      {currentCarePlan && currentCarePlan.length > 0 && (
-        <div className="fixed left-4 top-4 h-[80vh] w-96 z-10">
-          <Card className="h-full flex-shrink-0 flex flex-col bg-gradient-to-br from-primary/5 to-primary/10 border-primary/20 shadow-lg">
-            <CardContent className="flex-1 overflow-hidden p-0">
-              <ScrollArea className="h-full px-6 pb-6">
-                <CarePlan planItems={currentCarePlan} />
-              </ScrollArea>
-            </CardContent>
-          </Card>
-        </div>
-      )}
+  // Auto-focus input when AI finishes responding
+  useEffect(() => {
+    if (!isLoading && inputRef.current) {
+      inputRef.current.focus()
+    }
+  }, [isLoading])
 
-      {/* Chat Interface - With left margin when plan exists */}
-      <div
-        className="h-full transition-all duration-500"
-        style={{
-          marginLeft: currentCarePlan && currentCarePlan.length > 0 ? '400px' : '0px',
-        }}
-      >
-        <Card className="h-full flex flex-col">
+  return (
+    <div className="w-full h-[80vh] relative">
+      {/* LEFT PANEL - Care Plan - Fixed position */}
+      <div className="fixed left-4 top-[120px] w-96 h-[calc(80vh-40px)] z-10">
+        <Card className="h-full flex flex-col bg-gradient-to-br from-primary/5 to-primary/10 border-primary/20 shadow-lg">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-lg font-bold">Plan d'action</CardTitle>
+          </CardHeader>
+          <CardContent className="flex-1 overflow-hidden p-0">
+            <ScrollArea className="h-full px-6 pb-6">
+              {currentCarePlan && currentCarePlan.length > 0 ? (
+                <CarePlan planItems={currentCarePlan} />
+              ) : (
+                <div className="flex flex-col items-center justify-center h-full text-center px-4 py-8">
+                  <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mb-4">
+                    <Briefcase className="w-8 h-8 text-primary/50" />
+                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    Votre plan d'action apparaîtra ici une fois créé.
+                  </p>
+                </div>
+              )}
+            </ScrollArea>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* MIDDLE PANEL - Chat Interface */}
+      <div className="mx-auto max-w-4xl px-4" style={{ marginLeft: '416px', marginRight: '416px' }}>
+        <Card className="h-[80vh] flex flex-col">
         <CardContent className="flex-1 flex flex-col p-0">
           <ScrollArea className="flex-1 px-6" ref={scrollAreaRef}>
             <div className="space-y-4 pb-4 pt-6">
@@ -469,6 +495,282 @@ export function ChatInterface() {
             </div>
           </div>
         </CardContent>
+        </Card>
+      </div>
+
+      {/* RIGHT PANEL - Profile - Fixed position */}
+      <div className="fixed right-4 top-[120px] w-96 h-[calc(80vh-40px)] z-10">
+        <Card className="h-full flex flex-col bg-gradient-to-br from-blue-50 to-indigo-50 border-blue-200 shadow-lg">
+          <CardHeader className="pb-3">
+            <div className="flex items-center gap-2">
+              <div className="p-2 rounded-lg bg-blue-100">
+                <User className="w-5 h-5 text-blue-600" />
+              </div>
+              <CardTitle className="text-lg font-bold text-blue-900">
+                Votre profil
+              </CardTitle>
+            </div>
+          </CardHeader>
+          <CardContent className="flex-1 overflow-hidden p-0">
+            <ScrollArea className="h-full px-6 pb-6">
+              {currentProfile ? (
+                <div className="space-y-4">
+                  {/* Mandatory Information */}
+                  <div className="space-y-2">
+                    <h4 className="text-sm font-semibold text-blue-800 mb-2">Informations principales</h4>
+
+                    {/* Location */}
+                    <div className="flex items-center gap-2 p-2 bg-white rounded-lg">
+                      <MapPin className="w-4 h-4 text-blue-600 flex-shrink-0" />
+                      <div className="flex-1">
+                        <span className="text-xs text-gray-500">Localisation</span>
+                        <p className="text-sm font-medium text-gray-900">{currentProfile.mandatory.cityName}</p>
+                      </div>
+                    </div>
+
+                    {/* Primary Category */}
+                    <div className="flex items-center gap-2 p-2 bg-white rounded-lg">
+                      <Briefcase className="w-4 h-4 text-blue-600 flex-shrink-0" />
+                      <div className="flex-1">
+                        <span className="text-xs text-gray-500">Priorité principale</span>
+                        <p className="text-sm font-medium text-gray-900">
+                          {currentProfile.mandatory.primaryCategory}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Category-Specific Details */}
+                  {currentProfile.categorySpecific && Object.keys(currentProfile.categorySpecific).length > 0 && (
+                    <div className="space-y-2">
+                      <h4 className="text-sm font-semibold text-blue-800 mb-2">Détails</h4>
+
+                      {/* Desired Jobs */}
+                      {currentProfile.categorySpecific.desiredJobs && currentProfile.categorySpecific.desiredJobs.length > 0 && (
+                        <div className="flex items-start gap-2 p-2 bg-white rounded-lg">
+                          <Briefcase className="w-4 h-4 text-blue-600 flex-shrink-0 mt-0.5" />
+                          <div className="flex-1">
+                            <span className="text-xs text-gray-500">Métiers recherchés</span>
+                            <div className="flex flex-wrap gap-1 mt-1">
+                              {currentProfile.categorySpecific.desiredJobs.map((job: string, idx: number) => (
+                                <span
+                                  key={idx}
+                                  className="px-2 py-0.5 bg-blue-100 text-blue-700 text-xs font-medium rounded-full"
+                                >
+                                  {job}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Project Type */}
+                      {currentProfile.categorySpecific.projectType && (
+                        <div className="flex items-center gap-2 p-2 bg-white rounded-lg">
+                          <Briefcase className="w-4 h-4 text-blue-600 flex-shrink-0" />
+                          <div className="flex-1">
+                            <span className="text-xs text-gray-500">Type de projet</span>
+                            <p className="text-sm font-medium text-gray-900">{currentProfile.categorySpecific.projectType}</p>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Activity Types */}
+                      {currentProfile.categorySpecific.activityTypes && currentProfile.categorySpecific.activityTypes.length > 0 && (
+                        <div className="flex items-start gap-2 p-2 bg-white rounded-lg">
+                          <Briefcase className="w-4 h-4 text-blue-600 flex-shrink-0 mt-0.5" />
+                          <div className="flex-1">
+                            <span className="text-xs text-gray-500">Activités</span>
+                            <div className="flex flex-wrap gap-1 mt-1">
+                              {currentProfile.categorySpecific.activityTypes.map((activity: string, idx: number) => (
+                                <span
+                                  key={idx}
+                                  className="px-2 py-0.5 bg-blue-100 text-blue-700 text-xs font-medium rounded-full"
+                                >
+                                  {activity}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Need Types */}
+                      {currentProfile.categorySpecific.needTypes && currentProfile.categorySpecific.needTypes.length > 0 && (
+                        <div className="flex items-start gap-2 p-2 bg-white rounded-lg">
+                          <Briefcase className="w-4 h-4 text-blue-600 flex-shrink-0 mt-0.5" />
+                          <div className="flex-1">
+                            <span className="text-xs text-gray-500">Besoins</span>
+                            <div className="flex flex-wrap gap-1 mt-1">
+                              {currentProfile.categorySpecific.needTypes.map((need: string, idx: number) => (
+                                <span
+                                  key={idx}
+                                  className="px-2 py-0.5 bg-blue-100 text-blue-700 text-xs font-medium rounded-full"
+                                >
+                                  {need}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Formation Type */}
+                      {currentProfile.categorySpecific.formationType && (
+                        <div className="flex items-center gap-2 p-2 bg-white rounded-lg">
+                          <Briefcase className="w-4 h-4 text-blue-600 flex-shrink-0" />
+                          <div className="flex-1">
+                            <span className="text-xs text-gray-500">Type de formation</span>
+                            <p className="text-sm font-medium text-gray-900">{currentProfile.categorySpecific.formationType}</p>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Housing Need */}
+                      {currentProfile.categorySpecific.housingNeed && (
+                        <div className="flex items-center gap-2 p-2 bg-white rounded-lg">
+                          <Briefcase className="w-4 h-4 text-blue-600 flex-shrink-0" />
+                          <div className="flex-1">
+                            <span className="text-xs text-gray-500">Besoin logement</span>
+                            <p className="text-sm font-medium text-gray-900">{currentProfile.categorySpecific.housingNeed}</p>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Health Needs */}
+                      {currentProfile.categorySpecific.healthNeeds && currentProfile.categorySpecific.healthNeeds.length > 0 && (
+                        <div className="flex items-start gap-2 p-2 bg-white rounded-lg">
+                          <Briefcase className="w-4 h-4 text-blue-600 flex-shrink-0 mt-0.5" />
+                          <div className="flex-1">
+                            <span className="text-xs text-gray-500">Besoins santé</span>
+                            <div className="flex flex-wrap gap-1 mt-1">
+                              {currentProfile.categorySpecific.healthNeeds.map((need: string, idx: number) => (
+                                <span
+                                  key={idx}
+                                  className="px-2 py-0.5 bg-blue-100 text-blue-700 text-xs font-medium rounded-full"
+                                >
+                                  {need}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Optional Information */}
+                  {currentProfile.optional && Object.keys(currentProfile.optional).length > 0 && (
+                    <div className="space-y-2">
+                      <h4 className="text-sm font-semibold text-blue-800 mb-2">Informations complémentaires</h4>
+
+                      {/* Age */}
+                      {currentProfile.optional.age && (
+                        <div className="flex items-center gap-2 p-2 bg-white rounded-lg">
+                          <User className="w-4 h-4 text-blue-600 flex-shrink-0" />
+                          <div className="flex-1">
+                            <span className="text-xs text-gray-500">Âge</span>
+                            <p className="text-sm font-medium text-gray-900">{currentProfile.optional.age} ans</p>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Education Level */}
+                      {currentProfile.optional.educationLevel && (
+                        <div className="flex items-center gap-2 p-2 bg-white rounded-lg">
+                          <Briefcase className="w-4 h-4 text-blue-600 flex-shrink-0" />
+                          <div className="flex-1">
+                            <span className="text-xs text-gray-500">Niveau d'études</span>
+                            <p className="text-sm font-medium text-gray-900">{currentProfile.optional.educationLevel}</p>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Experience Level */}
+                      {currentProfile.optional.experienceLevel && (
+                        <div className="flex items-center gap-2 p-2 bg-white rounded-lg">
+                          <Briefcase className="w-4 h-4 text-blue-600 flex-shrink-0" />
+                          <div className="flex-1">
+                            <span className="text-xs text-gray-500">Expérience</span>
+                            <p className="text-sm font-medium text-gray-900">{currentProfile.optional.experienceLevel}</p>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Contract Types */}
+                      {currentProfile.optional.contractTypes && currentProfile.optional.contractTypes.length > 0 && (
+                        <div className="flex items-start gap-2 p-2 bg-white rounded-lg">
+                          <Briefcase className="w-4 h-4 text-blue-600 flex-shrink-0 mt-0.5" />
+                          <div className="flex-1">
+                            <span className="text-xs text-gray-500">Types de contrat</span>
+                            <div className="flex flex-wrap gap-1 mt-1">
+                              {currentProfile.optional.contractTypes.map((contract: string, idx: number) => (
+                                <span
+                                  key={idx}
+                                  className="px-2 py-0.5 bg-blue-100 text-blue-700 text-xs font-medium rounded-full"
+                                >
+                                  {contract}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Mobility Flags */}
+                      {(currentProfile.optional.hasVehicle || currentProfile.optional.hasDriversLicense) && (
+                        <div className="flex items-start gap-2 p-2 bg-white rounded-lg">
+                          <MapPin className="w-4 h-4 text-blue-600 flex-shrink-0 mt-0.5" />
+                          <div className="flex-1">
+                            <span className="text-xs text-gray-500">Mobilité</span>
+                            <div className="flex flex-wrap gap-1 mt-1">
+                              {currentProfile.optional.hasDriversLicense && (
+                                <span className="px-2 py-0.5 bg-green-100 text-green-700 text-xs font-medium rounded-full">
+                                  Permis
+                                </span>
+                              )}
+                              {currentProfile.optional.hasVehicle && (
+                                <span className="px-2 py-0.5 bg-green-100 text-green-700 text-xs font-medium rounded-full">
+                                  Véhicule
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Other Flags */}
+                      {(currentProfile.optional.hasDisability || currentProfile.optional.financialDifficulties) && (
+                        <div className="flex flex-wrap gap-2">
+                          {currentProfile.optional.hasDisability && (
+                            <div className="flex items-center gap-1.5 px-2.5 py-1 bg-white rounded-lg">
+                              <span className="text-xs font-medium text-gray-700">Situation de handicap</span>
+                            </div>
+                          )}
+                          {currentProfile.optional.financialDifficulties && (
+                            <div className="flex items-center gap-1.5 px-2.5 py-1 bg-white rounded-lg">
+                              <span className="text-xs font-medium text-gray-700">Difficultés financières</span>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="flex flex-col items-center justify-center h-full text-center px-4 py-8">
+                  <div className="animate-spin w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full mb-4"></div>
+                  <p className="text-sm font-medium text-blue-600 mb-2">
+                    En cours de création...
+                  </p>
+                  <p className="text-xs text-gray-600">
+                    Je collecte vos informations pour créer votre profil personnalisé.
+                  </p>
+                </div>
+              )}
+            </ScrollArea>
+          </CardContent>
         </Card>
       </div>
     </div>

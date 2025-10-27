@@ -32,7 +32,7 @@ export class CarePlanProvider implements AIFrontendProvider {
                 },
                 title: {
                   type: Type.STRING,
-                  description: 'High-level action title (e.g., "Trouver un emploi de développeur", "Aide au logement")',
+                  description: 'High-level action title (e.g., "Find a developer job", "Housing assistance")',
                 },
                 description: {
                   type: Type.STRING,
@@ -107,69 +107,69 @@ export class CarePlanProvider implements AIFrontendProvider {
 
   getPromptContext(): string {
     return `
-### Outil: \`display_care_plan\`
-**Description**: Affiche un plan d'accompagnement structuré avec des items de haut niveau qui peuvent être dépliés.
+### Tool: \`display_care_plan\`
+**Description**: Display a structured care plan with high-level items that can be expanded.
 
-**Structure du plan**:
+**Plan structure**:
 \`\`\`json
 {
   "planItems": [
     {
-      "id": "emploi-1",
+      "id": "job-1",
       "type": "job_search",
-      "title": "Trouver un emploi de développeur à Paris",
+      "title": "Find a developer job in Paris",
       "location": "Paris",
       "items": [
-        {"id": "job-1", "title": "Développeur Full Stack", "company": "TechCorp", "location": "Paris", "contractType": "CDI", "description": "..."},
-        {"id": "job-2", "title": "Développeur Backend", "company": "StartupCo", "location": "Paris", "contractType": "CDI", "description": "..."}
+        {"id": "job-1", "title": "Full Stack Developer", "company": "TechCorp", "location": "Paris", "contractType": "Permanent", "description": "..."},
+        {"id": "job-2", "title": "Backend Developer", "company": "StartupCo", "location": "Paris", "contractType": "Permanent", "description": "..."}
       ]
     },
     {
-      "id": "logement-1",
+      "id": "housing-1",
       "type": "service",
-      "title": "Services d'aide au logement",
+      "title": "Housing assistance services",
       "location": "Paris",
       "items": [
-        {"id": "svc-1", "title": "Réduction des impayés de loyer", "description": "# Description\\n\\nCe service...", "contact": "01-23-45-67-89", "serviceType": "Logement"},
-        {"id": "svc-2", "title": "Aide à la recherche de logement", "description": "# Description\\n\\n...", "contact": "01-98-76-54-32"}
+        {"id": "svc-1", "title": "Rent arrears reduction", "description": "# Description\\n\\nThis service...", "contact": "01-23-45-67-89", "serviceType": "Housing"},
+        {"id": "svc-2", "title": "Housing search assistance", "description": "# Description\\n\\n...", "contact": "01-98-76-54-32"}
       ]
     },
     {
-      "id": "formation-1",
+      "id": "training-1",
       "type": "service",
-      "title": "Formation professionnelle",
-      "description": "# Vue d'ensemble\\n\\nPlusieurs formations disponibles...",
+      "title": "Professional training",
+      "description": "# Overview\\n\\nSeveral trainings available...",
       "location": "Paris",
-      "serviceType": "Formation"
+      "serviceType": "Training"
     }
   ]
 }
 \`\`\`
 
-**Types d'items**:
-- **\`job_search\`**: Regroupe plusieurs offres d'emploi sous un titre d'action (ex: "Trouver un emploi de développeur")
-  - **DOIT** contenir un tableau \`items\` avec 3-10 offres d'emploi sélectionnées
-  - Les offres seront affichées quand l'utilisateur déplie l'item
+**Item types**:
+- **\`job_search\`**: Groups multiple job offers under an action title (e.g., "Find a developer job")
+  - **MUST** contain an \`items\` array with 3-10 selected job offers
+  - Offers will be displayed when the user expands the item
 
-- **\`service\`**: Affiche des services d'accompagnement - **2 modes possibles**:
+- **\`service\`**: Display support services - **2 possible modes**:
 
-  **Mode 1 - Avec détails structurés** (plusieurs services similaires):
-  - Contient un tableau \`items\` avec 2-10 services détaillés
-  - Chaque service a: \`title\`, \`description\` (markdown), \`contact\`, \`serviceType\`
-  - Utilisé quand tu as plusieurs services du même type (ex: 3 aides au logement différentes)
+  **Mode 1 - With structured details** (multiple similar services):
+  - Contains an \`items\` array with 2-10 detailed services
+  - Each service has: \`title\`, \`description\` (markdown), \`contact\`, \`serviceType\`
+  - Used when you have multiple services of the same type (e.g., 3 different housing aids)
 
-  **Mode 2 - Description simple** (service unique):
-  - Pas de tableau \`items\`
-  - Utilise le champ \`description\` (markdown) au niveau supérieur
-  - Ajoute \`serviceType\` et \`contact\` au niveau supérieur
-  - Utilisé pour un service unique ou une vue d'ensemble
+  **Mode 2 - Simple description** (single service):
+  - No \`items\` array
+  - Uses the \`description\` field (markdown) at the top level
+  - Adds \`serviceType\` and \`contact\` at the top level
+  - Used for a single service or an overview
 
-**Règles d'utilisation**:
-- Crée 2-5 items de haut niveau dans le plan d'accompagnement
-- Pour les recherches d'emploi, groupe les offres par type de poste ou domaine
-- La description des services doit être en markdown et bien formatée
-- Ta réponse textuelle doit être **courte** (ex: "Voici le plan d'accompagnement proposé.")
-- Ne **JAMAIS** lister les items en texte (l'interface le fait visuellement)
+**Usage rules**:
+- Create 2-5 high-level items in the care plan
+- For job searches, group offers by position type or domain
+- Service descriptions must be in markdown and well formatted
+- Your text response must be **short** (e.g., "Here is the proposed care plan.")
+- **NEVER** list items in text (the interface does this visually)
 `;
   }
 }

@@ -3,8 +3,8 @@ import './globals.css';
 import { ReactNode } from 'react';
 
 export const metadata: Metadata = {
-  title: 'Chat App',
-  description: 'A modern chat application built with Next.js and Tailwind CSS',
+  title: 'CaseAI Connect',
+  description: 'On aide les demandeurs',
 };
 
 export default function RootLayout({

@@ -14,7 +14,7 @@ grant_type=client_credentials
 POST https://api.francetravail.io/partenaire/romeo/v2/predictionMetiers
 Accept: application/json
 Content-Type: application/json
-Authorization: Bearer wKiA_zCT_HVNNMMAwls3B6IRDZ4
+Authorization: Bearer 0ynEws6HL9vL4-VarvBJHGJgylA
 
 {
   "appellations": [
@@ -48,12 +48,13 @@ Authorization: Bearer ezbsR2CkLuKey_hNuh1adWJWSaE
 POST https://api.francetravail.io/partenaire/evenements/v1/mee/evenements
 Content-Type: application/json
 Accept: application/json
-Authorization: Bearer ezbsR2CkLuKey_hNuh1adWJWSaE
+Authorization: Bearer fGOGtWxrSjYkg3Gl_WA7ppudJ2k
 
 {
-  "dateDebut": "2025-09-30",
-  "dateFin": "2025-10-01",
-  "secteurActivite" : "E"
+  "dateFin": "2025-12-01",
+  "departements": ["76"],
+  "secteurActivite" : "M",
+  "objectifs": [39]
 }
 
 ###
@@ -78,7 +79,14 @@ Accept:application/json
 
 
 ###
-GET https://api.data.inclusion.beta.gouv.fr/api/v1/search/services?thematiques=mobilite--preparer-un-permis-de-conduire&code_commune=44109&size=20
+GET https://api.data.inclusion.beta.gouv.fr/api/v1/search/services?thematiques=mobilite--preparer-un-permis&code_commune=44109&size=20
+Authorization: Bearer {{dataInclusionBearer}}
+Content-Type:application/json
+Accept:application/json
+
+
+###
+GET https://emplois.inclusion.beta.gouv.fr/api/v1/siaes?code_insee=44109&distance_max_km=5
 Authorization: Bearer {{dataInclusionBearer}}
 Content-Type:application/json
 Accept:application/json

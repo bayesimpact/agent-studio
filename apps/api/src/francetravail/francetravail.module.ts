@@ -1,8 +1,15 @@
 import { Module } from '@nestjs/common';
-import { FranceTravailService } from './francetravail.service';
+import { FranceTravailJobsService } from './francetravail-jobs.service';
+import { FranceTravailEventsService } from './francetravail-events.service';
 
 @Module({
-  providers: [FranceTravailService],
-  exports: [FranceTravailService],
+  providers: [
+    FranceTravailJobsService,
+    FranceTravailEventsService,
+  ],
+  exports: [
+    FranceTravailJobsService,
+    FranceTravailEventsService,
+  ],
 })
 export class FranceTravailModule {}
