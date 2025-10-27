@@ -19,7 +19,10 @@ export class SimplifiedJobOffer {
     );
   }
 
-  static fromJobOffers(jobOffers: JobOffer[]): SimplifiedJobOffer[] {
+  static fromJobOffers(jobOffers: JobOffer[] | null | undefined): SimplifiedJobOffer[] {
+    if (!jobOffers || jobOffers.length === 0) {
+      return [];
+    }
     return jobOffers.map((jobOffer) => SimplifiedJobOffer.fromJobOffer(jobOffer));
   }
 }

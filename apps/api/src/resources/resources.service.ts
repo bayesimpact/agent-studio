@@ -2,85 +2,18 @@ import { Injectable } from '@nestjs/common';
 import { Type, FunctionDeclaration, FunctionCall } from '@google/genai';
 import { AIServiceProvider } from '../common/interfaces/ai-service.interface';
 import { Location } from '../geoloc/models/location.model';
-import { FranceTravailService } from '../francetravail/francetravail.service';
-import { DataInclusionService } from '../datainclusion/datainclusion.service';
-
-const thematiques = [
-  'choisir-un-metier--confirmer-son-choix-de-metier',
-  'choisir-un-metier--connaitre-les-opportunites-demploi',
-  'choisir-un-metier--decouvrir-un-metier-ou-un-secteur-dactivite',
-  'choisir-un-metier--identifier-ses-points-forts-et-ses-competences',
-  'creer-une-entreprise--definir-son-projet-de-creation-dentreprise',
-  'creer-une-entreprise--developper-son-entreprise',
-  'creer-une-entreprise--structurer-son-projet-de-creation-dentreprise',
-  'difficultes-administratives-ou-juridiques--accompagnement-aux-demarches-administratives',
-  'difficultes-administratives-ou-juridiques--accompagnement-pour-lacces-a-la-citoyennete',
-  'difficultes-administratives-ou-juridiques--accompagnement-pour-lacces-aux-droits',
-  'difficultes-administratives-ou-juridiques--beneficier-dune-mesure-daccompagnement-adapte',
-  'difficultes-administratives-ou-juridiques--connaitre-ses-droits-face-a-une-discrimination',
-  'difficultes-administratives-ou-juridiques--prendre-en-compte-une-problematique-judiciaire',
-  'difficultes-financieres--acquerir-une-autonomie-budgetaire',
-  'difficultes-financieres--ameliorer-sa-gestion-budgetaire',
-  'difficultes-financieres--mettre-en-place-une-mesure-de-protection-financiere',
-  'difficultes-financieres--prevenir-une-degradation-de-la-situation-financiere',
-  'difficultes-financieres--situation-dendettement-surendettement',
-  'equipement-et-alimentation--aide-menagere',
-  'equipement-et-alimentation--alimentation',
-  'equipement-et-alimentation--electromenager',
-  'equipement-et-alimentation--habillement',
-  'famille--garde-denfants',
-  'famille--prise-en-charge-personne-dependante',
-  'famille--soutien-a-la-parentalite-et-a-leducation',
-  'famille--soutien-aidants',
-  'famille--surmonter-conflits-separation-violence',
-  'lecture-ecriture-calcul--maitriser-le-calcul',
-  'lecture-ecriture-calcul--maitriser-le-francais',
-  'logement-hebergement--acheter-un-logement',
-  'logement-hebergement--changer-de-logement',
-  'logement-hebergement--louer-un-logement',
-  'logement-hebergement--rechercher-une-solution-dhebergement-temporaire',
-  'logement-hebergement--reduire-les-impayes-de-loyer',
-  'logement-hebergement--se-maintenir-dans-le-logement',
-  'logement-hebergement--sinformer-sur-les-demarches-liees-a-lacces-au-logement',
-  'mobilite--acceder-a-un-vehicule',
-  'mobilite--entretenir-reparer-son-vehicule',
-  'mobilite--etre-accompagne-dans-son-parcours-mobilite',
-  'mobilite--financer-ma-mobilite',
-  'mobilite--preparer-un-permis-de-conduire',
-  'mobilite--utiliser-des-services-de-mobilite-partagee',
-  'numerique--acceder-a-des-services-en-ligne',
-  'numerique--acceder-a-une-connexion-internet',
-  'numerique--acquerir-un-equipement',
-  'numerique--maitriser-les-fondamentaux-du-numerique',
-  'preparer-sa-candidature--developper-son-reseau',
-  'preparer-sa-candidature--organiser-ses-demarches-de-recherche-demploi',
-  'preparer-sa-candidature--realiser-un-cv-et-ou-une-lettre-de-motivation',
-  'preparer-sa-candidature--valoriser-ses-competences',
-  'remobilisation--activites-sportives-et-culturelles',
-  'remobilisation--benevolat-action-citoyenne',
-  'remobilisation--bien-etre-confiance-en-soi',
-  'remobilisation--lien-social',
-  'sante--acces-aux-soins',
-  'sante--addictions',
-  'sante--constituer-un-dossier-mdph-invalidite',
-  'sante--sante-mentale',
-  'sante--sante-sexuelle',
-  'se-former--monter-son-dossier-de-formation',
-  'se-former--trouver-sa-formation',
-  'souvrir-a-linternational--connaitre-les-opportunites-demploi-a-letranger',
-  'souvrir-a-linternational--sinformer-sur-les-aides-pour-travailler-a-letranger',
-  'souvrir-a-linternational--sorganiser-suite-a-son-retour-en-france',
-  'trouver-un-emploi--convaincre-un-recruteur-en-entretien',
-  'trouver-un-emploi--faire-des-candidatures-spontanees',
-  'trouver-un-emploi--maintien-dans-lemploi',
-  'trouver-un-emploi--repondre-a-des-offres-demploi',
-  'trouver-un-emploi--suivre-ses-candidatures-et-relancer-les-employeurs',
-];
+import { FranceTravailJobsService } from '../francetravail/francetravail-jobs.service';
+import { FranceTravailEventsService } from '../francetravail/francetravail-events.service';
+import {
+  DataInclusionService,
+  thematiques,
+} from '../datainclusion/datainclusion.service';
 
 @Injectable()
 export class ResourcesService implements AIServiceProvider {
   constructor(
-    private franceTravailService: FranceTravailService,
+    private franceTravailJobsService: FranceTravailJobsService,
+    private franceTravailEventsService: FranceTravailEventsService,
     private dataInclusionService: DataInclusionService,
   ) {}
 
@@ -88,34 +21,39 @@ export class ResourcesService implements AIServiceProvider {
     return {
       name: 'search_resources',
       description:
-        'Recherche unifiée de ressources (offres d\'emploi ou services d\'accompagnement) selon le type de besoin du bénéficiaire.',
+        'Unified resource search (job offers, employment events, or support services) based on the beneficiary\'s needs.',
       parameters: {
         type: Type.OBJECT,
         properties: {
           provider: {
             type: Type.STRING,
-            description: 'Type de ressources à rechercher',
-            enum: ['jobs', 'services'],
+            description: 'Type of resources to search',
+            enum: ['jobs', 'events', 'services'],
           },
           cityName: {
             type: Type.ARRAY,
-            description: 'Nom de la ville en français (obligatoire)',
+            description: 'City name in French (required)',
             items: {
               type: Type.STRING,
             },
           },
-          // For jobs provider
+          // For jobs and events providers
           jobTitles: {
             type: Type.ARRAY,
-            description: 'Titres de postes recherchés en français (requis si provider="jobs")',
+            description: 'Job titles sought in French (required if provider="jobs" or provider="events")',
             items: {
               type: Type.STRING,
             },
+          },
+          // For events provider
+          endDate: {
+            type: Type.STRING,
+            description: 'End date for event search in YYYY-MM-DD format (optional, only for events)',
           },
           // For services provider
           thematiques: {
             type: Type.ARRAY,
-            description: 'Thématiques de services (requis si provider="services")',
+            description: 'Service themes (required if provider="services")',
             items: {
               type: Type.STRING,
               enum: thematiques,
@@ -129,27 +67,34 @@ export class ResourcesService implements AIServiceProvider {
 
   getPromptContext(): string {
     return `
-### Outil: \`search_resources\`
-**Description**: Recherche unifiée de ressources d'accompagnement - offres d'emploi OU services sociaux.
+### Tool: \`search_resources\`
+**Description**: Unified resource search - job offers, employment events, OR social services.
 
-**Paramètres**:
-- \`provider\`: Type de recherche
-  - \`"jobs"\`: Recherche d'offres d'emploi via France Travail
-  - \`"services"\`: Recherche de services d'accompagnement via Data Inclusion
-- \`cityName\`: Nom de la ville (obligatoire - demande si non fourni)
+**Parameters**:
+- \`provider\`: Search type
+  - \`"jobs"\`: Search job offers via France Travail
+  - \`"events"\`: Search employment events (job fairs, forums) via France Travail
+  - \`"services"\`: Search support services via Data Inclusion
+- \`cityName\`: City name (required - ask if not provided)
 
-**Si provider="jobs"**:
-- \`jobTitles\`: 2-5 titres de postes pertinents en français
-  - Exemples: ["développeur web", "développeur full stack"], ["chauffeur de bus", "conducteur"]
+**If provider="jobs"**:
+- \`jobTitles\`: 2-5 relevant job titles in French
+  - Examples: ["développeur web", "développeur full stack"], ["chauffeur de bus", "conducteur"]
 
-**Si provider="services"**:
-- \`thematiques\`: Liste de thématiques exactes parmi l'enum disponible
-  - Tu peux sélectionner plusieurs thématiques si la situation est complexe
-  - Exemples: ["logement-hebergement--reduire-les-impayes-de-loyer"], ["preparer-sa-candidature--realiser-un-cv-et-ou-une-lettre-de-motivation", "trouver-un-emploi--convaincre-un-recruteur-en-entretien"]
+**If provider="events"**:
+- \`jobTitles\`: 2-5 relevant job titles in French (to find sector-specific events)
+  - Examples: ["développeur web", "développeur full stack"], ["chauffeur de bus", "conducteur"]
+- \`endDate\`: Optional end date in YYYY-MM-DD format
 
-**Retourne**:
-- Pour jobs: Liste d'offres avec id, titre, entreprise, localisation, type de contrat, description (jusqu'à 20 résultats)
-- Pour services: Liste de services avec id, nom, description, localisation, type de service, contact (jusqu'à 20 résultats)
+**If provider="services"**:
+- \`thematiques\`: List of exact themes from the available enum
+  - You can select multiple themes if the situation is complex
+  - Examples: ["logement-hebergement--reduire-les-impayes-de-loyer"], ["preparer-sa-candidature--realiser-un-cv-et-ou-une-lettre-de-motivation", "trouver-un-emploi--convaincre-un-recruteur-en-entretien"]
+
+**Returns**:
+- For jobs: List of offers with id, title, company, location, contract type, description (up to 20 results)
+- For events: List of events with id, title, description, dates, location, registration URL, sector (up to 20 results)
+- For services: List of services with id, name, description, location, service type, contact (up to 20 results)
 `;
   }
 
@@ -164,11 +109,29 @@ export class ResourcesService implements AIServiceProvider {
       if (!jobTitles || jobTitles.length === 0) {
         throw new Error('jobTitles is required when provider is "jobs"');
       }
-      return await this.franceTravailService.executeFunction(
+      return await this.franceTravailJobsService.executeFunction(
         {
           ...functionCall,
           name: 'jobs_search',
           args: { jobTitles, cityName: functionCall.args['cityName'] },
+        },
+        locations,
+      );
+    } else if (provider === 'events') {
+      const jobTitles = functionCall.args['jobTitles'] as string[];
+      if (!jobTitles || jobTitles.length === 0) {
+        throw new Error('jobTitles is required when provider is "events"');
+      }
+      const endDate = functionCall.args['endDate'] as string | undefined;
+      return await this.franceTravailEventsService.executeFunction(
+        {
+          ...functionCall,
+          name: 'events_search',
+          args: {
+            jobTitles,
+            cityName: functionCall.args['cityName'],
+            ...(endDate && { endDate }),
+          },
         },
         locations,
       );

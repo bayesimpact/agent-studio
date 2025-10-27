@@ -15,6 +15,9 @@ import { GeolocService } from '../geoloc/geoloc.service';
 import { AIServiceProvider } from '../common/interfaces/ai-service.interface';
 import { AIFrontendProvider } from '../common/interfaces/ai-frontend-provider.interface';
 import { CarePlanProvider } from '../care-plan/care-plan.provider';
+import { FranceTravailJobsService } from '../francetravail/francetravail-jobs.service';
+import { FranceTravailEventsService } from '../francetravail/francetravail-events.service';
+import { ProfileDisplayProvider } from '../profile/profile-display.provider';
 
 @Injectable()
 export class ChatService {
@@ -26,15 +29,21 @@ export class ChatService {
     private geolocService: GeolocService,
     private resourcesService: ResourcesService,
     private carePlanProvider: CarePlanProvider,
+    private profileDisplayProvider: ProfileDisplayProvider,
+    private franceTravailJobsService: FranceTravailJobsService,
+    private franceTravailEventsService: FranceTravailEventsService,
     private aiService: AIService,
     private chatRepository: ChatRepository,
   ) {
 
     // Register service providers
     this.registerServiceProvider(this.resourcesService);
+    this.registerServiceProvider(this.franceTravailJobsService);
+    this.registerServiceProvider(this.franceTravailEventsService);
 
     // Register frontend providers
     this.registerFrontendProvider(this.carePlanProvider);
+    this.registerFrontendProvider(this.profileDisplayProvider);
 
     // Build tools from all registered providers
     const allDeclarations = [

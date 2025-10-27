@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@repo/ui/card'
-import { Briefcase, MapPin, FileText, ChevronDown, ExternalLink, Building2, Sparkles, HandHeart, Phone } from 'lucide-react'
+import { Briefcase, MapPin, FileText, ChevronDown, ExternalLink, Building2, Sparkles, HandHeart, Phone, Calendar, Clock, Users } from 'lucide-react'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 
@@ -17,17 +17,26 @@ interface DetailItem {
   // Service-specific
   contact?: string
   serviceType?: string
+  // Event-specific
+  eventDate?: string
+  startTime?: string
+  endTime?: string
+  eventType?: string
+  registrationUrl?: string
+  organizer?: string
+  availableSeats?: number
+  totalSeats?: number
 }
 
 interface CarePlanItem {
   id: string
-  type: 'job_search' | 'service'
+  type: 'job_search' | 'service' | 'event_search'
   title: string
   description?: string // Used when service has no nested items
   location?: string
   contact?: string // Used when service has no nested items
   serviceType?: string // Used when service has no nested items
-  items?: DetailItem[] // For both job_search and service types
+  items?: DetailItem[] // For job_search, service, and event_search types
 }
 
 interface CarePlanProps {
@@ -87,6 +96,7 @@ export function CarePlan({ planItems }: CarePlanProps) {
           const isExpanded = expandedItems.has(planItem.id)
           const isJobSearch = planItem.type === 'job_search'
           const isService = planItem.type === 'service'
+          const isEventSearch = planItem.type === 'event_search'
 
           return (
             <Card
@@ -107,7 +117,7 @@ export function CarePlan({ planItems }: CarePlanProps) {
                     <div className="relative mt-0.5">
                       <div className="absolute inset-0 rounded-lg bg-primary/20 group-hover:scale-110 transition-transform duration-300" />
                       <div className="relative p-2 rounded-lg bg-gradient-to-br from-primary/10 to-primary/20 text-primary group-hover:from-primary/20 group-hover:to-primary/30 transition-all">
-                        {isService ? <HandHeart className="w-4 h-4" /> : <Briefcase className="w-4 h-4" />}
+                        {isService ? <HandHeart className="w-4 h-4" /> : isEventSearch ? <Calendar className="w-4 h-4" /> : <Briefcase className="w-4 h-4" />}
                       </div>
                     </div>
                     <div className="flex-1 min-w-0">
@@ -275,6 +285,114 @@ export function CarePlan({ planItems }: CarePlanProps) {
                                 <span>Voir l'offre</span>
                                 <ExternalLink className="w-3 h-3" />
                               </a>
+                            </CardContent>
+                          </Card>
+                        )
+                      })}
+                    </div>
+                  )}
+
+                  {/* Event Search Type: Display nested events */}
+                  {isEventSearch && planItem.items && planItem.items.length > 0 && (
+                    <div className="pt-2 border-t space-y-2">
+                      <p className="text-xs font-semibold text-muted-foreground mb-2">
+                        {planItem.items.length} événement{planItem.items.length > 1 ? 's' : ''} trouvé{planItem.items.length > 1 ? 's' : ''}
+                      </p>
+                      {planItem.items.map((event) => {
+                        // Format date and time
+                        const formatDate = (dateString?: string) => {
+                          if (!dateString) return ''
+                          try {
+                            return new Date(dateString).toLocaleDateString('fr-FR', {
+                              day: 'numeric',
+                              month: 'long',
+                              year: 'numeric'
+                            })
+                          } catch {
+                            return dateString
+                          }
+                        }
+
+                        const formatTime = (timeString?: string) => {
+                          if (!timeString) return ''
+                          return timeString.substring(0, 5) // HH:MM format
+                        }
+
+                        return (
+                          <Card
+                            key={event.id}
+                            className="bg-background/50 hover:bg-background transition-colors"
+                          >
+                            <CardContent className="p-3 space-y-2">
+                              <div className="flex items-start gap-2">
+                                <Calendar className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
+                                <div className="flex-1 min-w-0">
+                                  <h4 className="text-sm font-semibold text-foreground">
+                                    {event.title}
+                                  </h4>
+                                  {event.organizer && (
+                                    <p className="text-xs text-muted-foreground">{event.organizer}</p>
+                                  )}
+                                </div>
+                              </div>
+
+                              {/* Event description */}
+                              {event.description && (
+                                <p className="text-xs text-muted-foreground line-clamp-2">
+                                  {event.description}
+                                </p>
+                              )}
+
+                              {/* Event Info Pills */}
+                              <div className="flex flex-wrap gap-1.5">
+                                {event.eventDate && (
+                                  <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-muted text-xs font-medium">
+                                    <Calendar className="w-3 h-3" />
+                                    <span>{formatDate(event.eventDate)}</span>
+                                  </div>
+                                )}
+                                {event.startTime && event.endTime && (
+                                  <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-muted text-xs font-medium">
+                                    <Clock className="w-3 h-3" />
+                                    <span>{formatTime(event.startTime)} - {formatTime(event.endTime)}</span>
+                                  </div>
+                                )}
+                                {event.location && (
+                                  <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-muted text-xs font-medium">
+                                    <MapPin className="w-3 h-3" />
+                                    <span>{event.location}</span>
+                                  </div>
+                                )}
+                                {event.eventType && (
+                                  <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20 text-xs font-medium">
+                                    <FileText className="w-3 h-3" />
+                                    <span>{event.eventType}</span>
+                                  </div>
+                                )}
+                                {event.availableSeats !== undefined && event.totalSeats !== undefined && event.totalSeats > 0 && (
+                                  <div className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${
+                                    event.availableSeats > 0
+                                      ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                                      : 'bg-red-50 text-red-700 border border-red-200'
+                                  }`}>
+                                    <Users className="w-3 h-3" />
+                                    <span>{event.availableSeats > 0 ? `${event.availableSeats} places` : 'Complet'}</span>
+                                  </div>
+                                )}
+                              </div>
+
+                              {/* Registration Link */}
+                              {event.registrationUrl && (
+                                <a
+                                  href={event.registrationUrl}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:text-primary/80 transition-colors"
+                                >
+                                  <span>S'inscrire à l'événement</span>
+                                  <ExternalLink className="w-3 h-3" />
+                                </a>
+                              )}
                             </CardContent>
                           </Card>
                         )
