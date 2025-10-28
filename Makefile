@@ -56,6 +56,7 @@ deploy: docker-push
 	--update-secrets=FRANCE_TRAVAIL_CLIENT_ID=${secretsPrefix}FRANCE_TRAVAIL_CLIENT_ID:latest \
 	--update-secrets=FRANCE_TRAVAIL_SECRET_KEY=${secretsPrefix}FRANCE_TRAVAIL_SECRET_KEY:latest \
 	--update-secrets=DATA_INCLUSION_TOKEN=${secretsPrefix}DATA_INCLUSION_TOKEN:latest \
+	--update-secrets=NOTION_SECRET=${secretsPrefix}NOTION_SECRET:latest \
 	--set-env-vars=TZ=UTC \
     --set-env-vars=LANGFUSE_PK=${langfusePk},LANGFUSE_BASE_URL=${langfuseUrl},LOCATION=$(location) \
 	--region=${zone} \
