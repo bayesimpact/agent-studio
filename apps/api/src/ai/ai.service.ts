@@ -47,10 +47,6 @@ export class AIService {
       .map((provider) => provider.getPromptContext())
       .join('\n\n');
 
-    const carePlanContext = currentCarePlan && currentCarePlan.length > 0
-      ? `\n\n## Current Care Plan\nHere is the care plan currently displayed to the beneficiary (${currentCarePlan.length} items):\n${JSON.stringify(currentCarePlan, null, 2)}\n\n**IMPORTANT**: On the next call to \`display_care_plan\`, you MUST include these items if they remain relevant for the beneficiary.`
-      : '';
-
     return `
 Today's date: ${new Date().toString()}
 
@@ -105,10 +101,18 @@ Ask for their city: "Dans quelle ville habitez-vous ?"
 ### Phase 3: Category-Specific Details (1 exchange)
 Based on their category, ask ONE specific question.
 → User responds → **IMMEDIATELY call display_profile with complete mandatory + category-specific data**
-→ **THEN IMMEDIATELY call search_resources**
-→ **THEN IMMEDIATELY call display_care_plan**
+→ **THEN IMMEDIATELY call search_resources (jobs/events/workshops/services)**
+→ **System executes search and returns results**
+→ **AFTER receiving results, call display_care_plan with those actual results**
 
-DO NOT wait. DO NOT ask for confirmation. DO NOT summarize. Just DO IT.
+**CRITICAL**: This happens in TWO function calling sequences within the same user turn:
+1. First sequence: Call display_profile + search_resources
+2. Wait for search_resources results
+3. Second sequence: Call display_care_plan with the actual results
+
+DO NOT call display_care_plan with empty items. Wait for search results first.
+
+DO NOT ask for confirmation. DO NOT summarize. Just DO IT.
 
 ### Phase 4: Progressive Enhancement (optional)
 While displaying results, you can ask 1-2 optional questions naturally, but NEVER block on them.
@@ -118,7 +122,11 @@ While displaying results, you can ask 1-2 optional questions naturally, but NEVE
 ### MANDATORY BEHAVIOR:
 ✅ **Call display_profile AFTER EVERY user response that provides data (even one field)**
 ✅ **After getting city + category + category-specific → IMMEDIATELY call search_resources (NO confirmation needed)**
-✅ **Then IMMEDIATELY call display_care_plan with results**
+✅ **WAIT for search_resources results - they will be returned to you as tool responses**
+✅ **AFTER receiving results, call display_care_plan with the actual search data**
+✅ **This happens in the same user turn but in TWO separate function calling sequences**
+✅ **NEVER call display_care_plan in the same function call batch as search_resources**
+✅ **The care plan items must come from the actual search_resources results, NOT empty arrays**
 ✅ Display profile with PARTIAL data - show it even with just one field
 ✅ Be conversational but FAST - maximum 3-4 exchanges before showing results
 ✅ Use "tu" (informal) to be approachable
@@ -126,7 +134,6 @@ While displaying results, you can ask 1-2 optional questions naturally, but NEVE
 ### ABSOLUTELY FORBIDDEN:
 ❌ **NEVER ask "Souhaitez-vous que je recherche..." - JUST DO IT**
 ❌ **NEVER ask "Voulez-vous voir..." - JUST SHOW IT**
-❌ **NEVER summarize and wait - CALL THE TOOLS**
 ❌ **NEVER say "J'ai bien noté" without calling display_profile**
 ❌ **NEVER wait for confirmation before searching**
 ❌ Ask all questions at once
@@ -135,21 +142,22 @@ While displaying results, you can ask 1-2 optional questions naturally, but NEVE
 
 ## EXACT FLOW YOU MUST FOLLOW
 
-Example conversation:
+Example conversation flow:
 - User: "Je cherche du travail"
 - You: "Dans quelle ville ?"
 - User: "Paris"
 - You: "Quel type de poste ?"
 - User: "Développeur"
-- You: [CALL display_profile] [CALL search_resources] [CALL display_care_plan] "Voici votre profil et les opportunités que j'ai trouvées pour vous !"
+- You (1st function call sequence): [CALL display_profile] [CALL search_resources]
+- System: [Returns search_resources results with actual job offers/events/workshops]
+- You (2nd function call sequence, same turn): [CALL display_care_plan with the actual results]
+- You "Voici les opportunités !"
 
-**NO INTERMEDIATE CONFIRMATION. NO SUMMARY WITHOUT ACTION.**
-
-If you have cityName + primaryCategory + category-specific:
-- Call display_profile (even if optional fields are missing)
-- Call search_resources immediately
-- Display results with display_care_plan
-- Continue conversation naturally while results are shown
+**CRITICAL**:
+- display_profile and search_resources are called together in the FIRST function call batch
+- The system executes them and returns results
+- display_care_plan is called SEPARATELY in a SECOND function call batch, using the results from search_resources
+- This all happens in the same conversational turn, but in two separate function calling sequences
 
 ## Available Tools
 ${toolContexts}
@@ -275,6 +283,7 @@ ${toolContexts}
 
     let fullOutput = '';
     let tokenCount = 0;
+    let functionCalls: any[] = [];
 
     try {
       const streamResult = await this.genAI.models.generateContentStream({
@@ -300,6 +309,14 @@ ${toolContexts}
           }
         }
 
+        // Capture function calls from the last chunk
+        if (chunk.functionCalls && chunk.functionCalls.length > 0) {
+          functionCalls = chunk.functionCalls.map(fc => ({
+            name: fc.name,
+            args: fc.args,
+          }));
+        }
+
         // Count tokens (approximate)
         if (chunk.usageMetadata) {
           tokenCount = chunk.usageMetadata.totalTokenCount || 0;
@@ -308,9 +325,11 @@ ${toolContexts}
         yield chunk;
       }
 
-      // Update generation with output and usage
+      // Update generation with output, function calls, and usage
       generation.update({
-        output: fullOutput,
+        output: functionCalls.length > 0
+          ? { text: fullOutput, functionCalls }
+          : fullOutput,
         usage: {
           input: tokenCount > 0 ? Math.floor(tokenCount * 0.7) : undefined, // Approximate
           output: tokenCount > 0 ? Math.floor(tokenCount * 0.3) : undefined, // Approximate
@@ -319,7 +338,7 @@ ${toolContexts}
       });
 
       generation.end();
-      console.info(`LLM call completed. Tokens: ${tokenCount}`);
+      console.info(`LLM call completed. Tokens: ${tokenCount}, Function calls: ${functionCalls.length}`);
     } catch (error) {
       // Log error to Langfuse
       generation.update({

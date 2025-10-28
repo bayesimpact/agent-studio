@@ -40,9 +40,6 @@ export class ChatService {
 
     // Register service providers
     this.registerServiceProvider(this.resourcesService);
-    this.registerServiceProvider(this.franceTravailJobsService);
-    this.registerServiceProvider(this.franceTravailEventsService);
-    this.registerServiceProvider(this.notionWorkshopService);
 
     // Register frontend providers
     this.registerFrontendProvider(this.carePlanProvider);
