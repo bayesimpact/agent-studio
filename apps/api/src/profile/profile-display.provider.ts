@@ -12,13 +12,13 @@ export class ProfileDisplayProvider implements AIFrontendProvider {
     return {
       name: 'display_profile',
       description:
-        'Display the collected profile parameters to the beneficiary. Use this after gathering minimum required information and before searching for jobs/services.',
+        'Display the collected profile parameters to the beneficiary. Call this PROGRESSIVELY as soon as you collect ANY information, even partial data. Update it every time you get new information.',
       parameters: {
         type: Type.OBJECT,
         properties: {
           mandatory: {
             type: Type.OBJECT,
-            description: 'Mandatory parameters that were collected',
+            description: 'Mandatory parameters that were collected (can be partial)',
             properties: {
               cityName: {
                 type: Type.STRING,
@@ -38,7 +38,6 @@ export class ProfileDisplayProvider implements AIFrontendProvider {
                 ],
               },
             },
-            required: ['cityName', 'primaryCategory'],
           },
           categorySpecific: {
             type: Type.OBJECT,
@@ -152,7 +151,6 @@ export class ProfileDisplayProvider implements AIFrontendProvider {
             },
           },
         },
-        required: ['mandatory'],
       },
     };
   }
@@ -162,42 +160,29 @@ export class ProfileDisplayProvider implements AIFrontendProvider {
 ### Tool: \`display_profile\`
 **Description**: Display the collected profile parameters to the beneficiary as a summary card.
 
-**When to use**:
-- After collecting the minimum required parameters (cityName + primaryCategory + category-specific)
-- Before starting to search for jobs/services
-- To confirm with the user that the information is correct
+**CRITICAL: Call this PROGRESSIVELY as information is collected**
+- Call it as soon as you have cityName OR primaryCategory (even just one field)
+- Update it every time you collect new information
+- Don't wait for all mandatory fields - show partial data immediately
+- The profile panel will update progressively as the user provides information
 
-**Profile structure**:
-\`\`\`json
-{
-  "mandatory": {
-    "cityName": "Lyon",
-    "primaryCategory": "emploi"
-  },
-  "categorySpecific": {
-    "desiredJobs": ["cuisinier", "chef de cuisine"]
-  },
-  "optional": {
-    "contractTypes": ["CDI"],
-    "experienceLevel": "3-5ans"
-  }
-}
-\`\`\`
+**When to use**:
+- Immediately after collecting cityName (first piece of info)
+- After collecting primaryCategory (second piece of info)
+- After collecting category-specific details
+- After collecting any optional information
+- Basically: call it after EVERY user response that provides data
+
+**Example progressive flow**:
+1. User: "Paris" → IMMEDIATELY call display_profile with {"mandatory": {"cityName": "Paris"}}
+2. User: "Emploi" → IMMEDIATELY call display_profile with {"mandatory": {"cityName": "Paris", "primaryCategory": "emploi"}}
+3. User: "Développeur" → IMMEDIATELY call display_profile with full data including desiredJobs
 
 **Usage rules**:
-- Call this AFTER collecting minimum required parameters
-- Call this BEFORE calling any search tools (jobs_search, services_search, events_search)
-- Include all parameters that were collected (don't invent or guess missing ones)
-- Use this to confirm information with the beneficiary
-- After calling this, ask if the information is correct or if they want to modify anything
-
-**Example flow**:
-1. Collect cityName → "Lyon"
-2. Collect primaryCategory → "emploi"
-3. Collect desiredJobs → ["cuisinier", "chef de cuisine"]
-4. Call \`display_profile\` with collected data
-5. Show message: "Voici le profil que j'ai créé pour vous. Est-ce que tout est correct ?"
-6. If confirmed, proceed to search for jobs/services
+- Call with PARTIAL data - don't wait for everything
+- Include only what was collected (don't invent missing fields)
+- NO confirmation needed - just display and continue
+- After calling this with complete mandatory+category-specific data, proceed to search
 `;
   }
 }
