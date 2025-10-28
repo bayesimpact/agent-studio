@@ -9,12 +9,14 @@ import {
 import { ChatSession } from '../chat/models/chat-session.model';
 import { AIServiceProvider } from '../common/interfaces/ai-service.interface';
 import { AIFrontendProvider } from '../common/interfaces/ai-frontend-provider.interface';
+import { Langfuse } from 'langfuse';
 
 @Injectable()
 export class AIService {
   private serviceProviders: AIServiceProvider[] = [];
   private frontendProviders: AIFrontendProvider[] = [];
   private genAI: GoogleGenAI;
+  private langfuse: Langfuse;
 
   constructor() {
     this.genAI = new GoogleGenAI({
@@ -22,6 +24,13 @@ export class AIService {
       project: 'caseai-connect',
       // location: 'europe-west9',
       location: 'europe-west1',
+    });
+
+    // Initialize Langfuse
+    this.langfuse = new Langfuse({
+      secretKey: process.env.LANGFUSE_SK,
+      publicKey: process.env.LANGFUSE_PK,
+      baseUrl: process.env.LANGFUSE_BASE_URL,
     });
   }
 
@@ -204,40 +213,101 @@ ${toolContexts}
     chatSession: ChatSession;
     tools: ToolListUnion;
   }): AsyncGenerator<GenerateContentResponse> {
-    console.info(`Calling LLM`)
+    console.info(`Calling LLM for session ${chatSession.id}`);
     const contents = this.buildContents(chatSession);
     const currentCarePlan = this.extractCurrentCarePlan(chatSession);
     const systemInstruction = this.buildSystemPrompt(currentCarePlan);
 
-    // Log the LLM call parameters to a JSON file
-    // try {
-    //   LLMLogger.logCall({
-    //     timestamp: new Date().toISOString(),
-    //     model: 'gemini-2.5-flash',
-    //     temperature: 0.1,
-    //     conversationHistory: contents,
-    //     tools,
-    //     thinkingBudget: 0,
-    //     sessionId: chatSession.id,
-    //   });
-    // } catch (error) {
-    //   console.error('[AI Service] Failed to log LLM call:', error);
-    //   // Continue execution even if logging fails
-    // }
-    const streamResult = await this.genAI.models.generateContentStream({
-      model: 'gemini-2.5-flash',
-      contents,
-      config: {
-        temperature: 0.1,
-        systemInstruction,
-        thinkingConfig: {
-          thinkingBudget: 0,
-        },
-        tools,
+    // Create Langfuse trace
+    const trace = this.langfuse.trace({
+      name: 'chat-generation',
+      sessionId: chatSession.id,
+      userId: chatSession.id, // Using session ID as user ID for now
+      metadata: {
+        sessionId: chatSession.id,
+        messageCount: chatSession.messages.length,
       },
     });
-    for await (const chunk of streamResult) {
-      yield chunk;
+
+    // Create generation span
+    const generation = trace.generation({
+      name: 'gemini-2.5-flash-generation',
+      model: 'gemini-2.5-flash',
+      modelParameters: {
+        temperature: 0.1,
+        thinkingBudget: 0,
+      },
+      input: {
+        systemInstruction,
+        contents,
+      },
+      metadata: {
+        systemInstructionLength: systemInstruction.length,
+        toolsCount: Array.isArray(tools) ? tools.length : 0,
+        hasCarePlan: !!currentCarePlan,
+      },
+    });
+
+    let fullOutput = '';
+    let tokenCount = 0;
+
+    try {
+      const streamResult = await this.genAI.models.generateContentStream({
+        model: 'gemini-2.5-flash',
+        contents,
+        config: {
+          temperature: 0.1,
+          systemInstruction,
+          thinkingConfig: {
+            thinkingBudget: 0,
+          },
+          tools,
+        },
+      });
+
+      for await (const chunk of streamResult) {
+        // Accumulate output for Langfuse
+        if (chunk.candidates?.[0]?.content?.parts) {
+          for (const part of chunk.candidates[0].content.parts) {
+            if (part.text) {
+              fullOutput += part.text;
+            }
+          }
+        }
+
+        // Count tokens (approximate)
+        if (chunk.usageMetadata) {
+          tokenCount = chunk.usageMetadata.totalTokenCount || 0;
+        }
+
+        yield chunk;
+      }
+
+      // Update generation with output and usage
+      generation.update({
+        output: fullOutput,
+        usage: {
+          input: tokenCount > 0 ? Math.floor(tokenCount * 0.7) : undefined, // Approximate
+          output: tokenCount > 0 ? Math.floor(tokenCount * 0.3) : undefined, // Approximate
+          total: tokenCount,
+        },
+      });
+
+      generation.end();
+      console.info(`LLM call completed. Tokens: ${tokenCount}`);
+    } catch (error) {
+      // Log error to Langfuse
+      generation.update({
+        level: 'ERROR',
+        statusMessage: error instanceof Error ? error.message : 'Unknown error',
+      });
+      generation.end();
+
+      console.error('[AI Service] LLM call failed:', error);
+      throw error;
+    } finally {
+      // Ensure Langfuse flushes the trace
+      await this.langfuse.flushAsync();
     }
   }
 }
