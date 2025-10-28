@@ -329,6 +329,12 @@ export function ChatInterface() {
     return labels[paramName] || paramName
   }
 
+  // Truncate long strings with ellipsis
+  const truncateString = (str: string, maxLength: number = 50): string => {
+    if (str.length <= maxLength) return str
+    return str.substring(0, maxLength) + '...'
+  }
+
   // Translate provider values to French
   const getProviderLabel = (provider: string): string => {
     const labels: Record<string, string> = {
@@ -530,9 +536,9 @@ export function ChatInterface() {
                                       }
                                       // Default handling for other parameters
                                       return (
-                                        <div key={key} className="truncate">
+                                        <div key={key} className="truncate" title={formatParamValue(key, value)}>
                                           <span className="font-semibold">{getParamLabel(key)}:</span>{' '}
-                                          {formatParamValue(key, value)}
+                                          {truncateString(formatParamValue(key, value))}
                                         </div>
                                       )
                                     })}
