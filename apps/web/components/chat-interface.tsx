@@ -12,6 +12,7 @@ import remarkGfm from 'remark-gfm';
 import remarkBreaks from 'remark-breaks';
 import { CarePlan } from './care-plan';
 import { ProfileDisplay } from './profile-display';
+import { MentionInput, MentionInputRef } from './mention-input';
 
 interface FunctionCallData {
   name: string
@@ -63,7 +64,7 @@ export function ChatInterface() {
   const [currentCarePlan, setCurrentCarePlan] = useState<CarePlanItem[] | null>(null)
   const [currentProfile, setCurrentProfile] = useState<any | null>(null)
   const scrollAreaRef = useRef<HTMLDivElement>(null)
-  const inputRef = useRef<HTMLInputElement>(null)
+  const inputRef = useRef<MentionInputRef>(null)
 
   const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'
 
@@ -577,10 +578,10 @@ export function ChatInterface() {
           </ScrollArea>
           <div className="p-6 pt-4 border-t">
             <div className="flex gap-2">
-              <Input
+              <MentionInput
                 ref={inputRef}
                 value={inputValue}
-                onChange={(e) => setInputValue(e.target.value)}
+                onChange={setInputValue}
                 onKeyDown={handleKeyDown}
                 placeholder="Type your message..."
                 disabled={isLoading}

@@ -72,7 +72,7 @@ Content-Type:application/json
 Accept:application/json
 
 ###
-GET https://api.data.inclusion.gouv.fr/api/v1/search/services?page=1&size=10&thematiques=trouver-un-emploi--convaincre-un-recruteur-en-entretien&thematiques=choisir-un-metier--confirmer-son-choix-de-metier
+GET https://api.data.inclusion.gouv.fr/api/v1/search/services?page=1&size=20&thematiques=preparer-sa-candidature--realiser-un-cv-et-ou-une-lettre-de-motivation&code_commune=76540&exclure_doublons=true
 Authorization: Bearer {{dataInclusionBearer}}
 Content-Type:application/json
 Accept:application/json
