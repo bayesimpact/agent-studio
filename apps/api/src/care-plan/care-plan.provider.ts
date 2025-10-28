@@ -127,6 +127,7 @@ export class CarePlanProvider implements AIFrontendProvider {
       "type": "job_search",
       "title": "Find a developer job in Paris",
       "location": "Paris",
+      "provider": "ft_offres_emploi",
       "items": [
         {"id": "job-1", "title": "Full Stack Developer", "company": "TechCorp", "location": "Paris", "contractType": "Permanent", "description": "..."},
         {"id": "job-2", "title": "Backend Developer", "company": "StartupCo", "location": "Paris", "contractType": "Permanent", "description": "..."}
@@ -137,6 +138,7 @@ export class CarePlanProvider implements AIFrontendProvider {
       "type": "service",
       "title": "Housing assistance services",
       "location": "Paris",
+      "provider": "data_inclusion",
       "items": [
         {"id": "svc-1", "title": "Rent arrears reduction", "description": "# Description\\n\\nThis service...", "contact": "01-23-45-67-89", "serviceType": "Housing"},
         {"id": "svc-2", "title": "Housing search assistance", "description": "# Description\\n\\n...", "contact": "01-98-76-54-32"}
@@ -148,6 +150,7 @@ export class CarePlanProvider implements AIFrontendProvider {
       "title": "Professional training",
       "description": "# Overview\\n\\nSeveral trainings available...",
       "location": "Paris",
+      "provider": "data_inclusion",
       "serviceType": "Training"
     }
   ]
@@ -158,6 +161,13 @@ export class CarePlanProvider implements AIFrontendProvider {
 - **\`job_search\`**: Groups multiple job offers under an action title (e.g., "Find a developer job")
   - **MUST** contain an \`items\` array with 3-10 selected job offers
   - Offers will be displayed when the user expands the item
+  - **MUST** set \`provider\` to \`"ft_offres_emploi"\`
+
+- **\`event_search\`**: Groups events (job fairs, workshops, etc.)
+  - **MUST** set \`provider\` to \`"ft_mee"\`
+
+- **\`workshop_search\`**: Groups workshops
+  - **MUST** set \`provider\` to \`"notion_workshops"\`
 
 - **\`service\`**: Display support services - **2 possible modes**:
 
@@ -165,12 +175,14 @@ export class CarePlanProvider implements AIFrontendProvider {
   - Contains an \`items\` array with 2-10 detailed services
   - Each service has: \`title\`, \`description\` (markdown), \`contact\`, \`serviceType\`
   - Used when you have multiple services of the same type (e.g., 3 different housing aids)
+  - **MUST** set \`provider\` to \`"data_inclusion"\`
 
   **Mode 2 - Simple description** (single service):
   - No \`items\` array
   - Uses the \`description\` field (markdown) at the top level
   - Adds \`serviceType\` and \`contact\` at the top level
   - Used for a single service or an overview
+  - **MUST** set \`provider\` to \`"data_inclusion"\`
 
 **Usage rules**:
 - Create 2-5 high-level items in the care plan
@@ -178,6 +190,7 @@ export class CarePlanProvider implements AIFrontendProvider {
 - Service descriptions must be in markdown and well formatted
 - Your text response must be **short** (e.g., "Here is the proposed care plan.")
 - **NEVER** list items in text (the interface does this visually)
+- **ALWAYS** include the \`provider\` field for each plan item to indicate the data source
 `;
   }
 }
