@@ -8,7 +8,7 @@ REGION ?= eu
 
 ifeq "$(REGION)" "eu"
 cloudRunName = caseai-connect
-location = europe-west9
+location = europe-west1
 zone = europe-west9
 langfuseUrl = https://your-langfuse-instance.example.com
 langfusePk = pk-lf-YOUR_LANGFUSE_PK
