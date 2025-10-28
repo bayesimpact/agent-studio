@@ -293,6 +293,85 @@ export function ChatInterface() {
     }
   }
 
+  // Translate function names to French user-friendly labels
+  const getFunctionLabel = (functionName: string): string => {
+    const labels: Record<string, string> = {
+      'search_resources': 'Recherche de ressources',
+      'jobs_search': 'Recherche d\'offres d\'emploi',
+      'events_search': 'Recherche d\'événements',
+      'services_search': 'Recherche de services',
+      'workshops_search': 'Recherche d\'ateliers',
+      'display_care_plan': 'Création du plan d\'accompagnement',
+      'display_profile': 'Mise à jour du profil',
+    }
+    return labels[functionName] || functionName
+  }
+
+  const formatFunctionCalls = (functionCalls: FunctionCallData[]): string => {
+    if (functionCalls.length === 1 && functionCalls[0]) {
+      return getFunctionLabel(functionCalls[0].name)
+    }
+    return functionCalls.map(fc => getFunctionLabel(fc.name)).join(', ')
+  }
+
+  // Translate parameter names to French user-friendly labels
+  const getParamLabel = (paramName: string): string => {
+    const labels: Record<string, string> = {
+      'jobTitles': 'Métiers recherchés',
+      'cityName': 'Ville',
+      'provider': 'Type de recherche',
+      'workshopTypes': 'Types d\'ateliers',
+      'thematiques': 'Thématique',
+      'startDate': 'Date de début',
+      'endDate': 'Date de fin',
+      'contractTypes': 'Types de contrat',
+    }
+    return labels[paramName] || paramName
+  }
+
+  // Translate provider values to French
+  const getProviderLabel = (provider: string): string => {
+    const labels: Record<string, string> = {
+      'jobs': 'Offres d\'emploi',
+      'events': 'Événements',
+      'services': 'Services sociaux',
+      'workshops': 'Ateliers',
+    }
+    return labels[provider] || provider
+  }
+
+  // Format parameter value based on type and name
+  const formatParamValue = (key: string, value: any): string => {
+    if (key === 'provider') {
+      return getProviderLabel(String(value))
+    }
+    if (Array.isArray(value)) {
+      // For thematiques, show only first item + count if multiple
+      if (key === 'thematiques' && value.length > 1) {
+        // Extract the readable part after '--'
+        const firstItem = value[0].split('--').pop() || value[0]
+        return `${firstItem} (+${value.length - 1})`
+      }
+      // For thematiques with single item, show readable part
+      if (key === 'thematiques' && value.length === 1) {
+        return value[0].split('--').pop() || value[0]
+      }
+      return value.join(', ')
+    }
+    return String(value)
+  }
+
+  // Get provider badge component for a given provider value
+  const getProviderBadge = (provider: string) => {
+    const badges: Record<string, { name: string; color: string }> = {
+      'jobs': { name: 'France Travail', color: 'bg-blue-50 text-blue-700 border-blue-200' },
+      'events': { name: 'France Travail', color: 'bg-purple-50 text-purple-700 border-purple-200' },
+      'services': { name: 'Data Inclusion', color: 'bg-green-50 text-green-700 border-green-200' },
+      'workshops': { name: 'Ateliers', color: 'bg-orange-50 text-orange-700 border-orange-200' },
+    }
+    return badges[provider] || null
+  }
+
   useEffect(() => {
     if (scrollAreaRef.current) {
       scrollAreaRef.current.scrollTop = scrollAreaRef.current.scrollHeight
@@ -407,18 +486,18 @@ export function ChatInterface() {
                             )}
                             <span className="text-xs font-semibold" style={{ color: '#124742' }}>
                               {message.isInitializing
-                                ? 'Processing your request...'
+                                ? 'Traitement de votre demande...'
                                 : message.isProcessingFunctions && message.functionCalls
-                                ? `Calling tools: ${message.functionCalls.map(fc => fc.name).join(', ')}...`
+                                ? `🔍 ${formatFunctionCalls(message.functionCalls)}...`
                                 : message.isFinished && message.functionCalls
-                                ? `✓ Called tools: ${message.functionCalls.map(fc => fc.name).join(', ')}`
+                                ? `✓ ${formatFunctionCalls(message.functionCalls)}`
                                 : message.content
-                                ? 'Answering...'
-                                : 'Processing...'}
+                                ? 'Réponse en cours...'
+                                : 'Traitement...'}
                             </span>
                             {message.functionCalls && message.functionCalls.length > 0 && (
                               <span className="ml-auto text-xs" style={{ color: '#597f77' }}>
-                                {expandedFunctions.has(message.id) ? '▼' : '▶'} Show details
+                                {expandedFunctions.has(message.id) ? '▼' : '▶'} Détails
                               </span>
                             )}
                           </div>
@@ -430,16 +509,33 @@ export function ChatInterface() {
                                 <div key={idx} className="pt-2" style={{ borderTopWidth: '1px', borderTopColor: '#bacfca' }}>
                                   <div className="flex items-center gap-2 mb-1">
                                     <span className="text-xs font-semibold" style={{ color: '#124742' }}>
-                                      🔧 {fc.name}
+                                      🔧 {getFunctionLabel(fc.name)}
                                     </span>
                                   </div>
-                                  <div className="text-xs font-mono" style={{ color: '#597f77' }}>
-                                    {Object.entries(fc.args).map(([key, value]) => (
-                                      <div key={key} className="truncate">
-                                        <span className="font-semibold">{key}:</span>{' '}
-                                        {Array.isArray(value) ? value.join(', ') : String(value)}
-                                      </div>
-                                    ))}
+                                  <div className="text-xs space-y-1.5" style={{ color: '#597f77' }}>
+                                    {Object.entries(fc.args).map(([key, value]) => {
+                                      // Special handling for provider parameter - show as badge
+                                      if (key === 'provider') {
+                                        const badge = getProviderBadge(String(value))
+                                        if (badge) {
+                                          return (
+                                            <div key={key} className="flex items-center gap-1.5">
+                                              <span className="font-semibold">{getParamLabel(key)}:</span>
+                                              <span className={`inline-flex items-center px-2 py-0.5 rounded-full border text-xs font-medium ${badge.color}`}>
+                                                {badge.name}
+                                              </span>
+                                            </div>
+                                          )
+                                        }
+                                      }
+                                      // Default handling for other parameters
+                                      return (
+                                        <div key={key} className="truncate">
+                                          <span className="font-semibold">{getParamLabel(key)}:</span>{' '}
+                                          {formatParamValue(key, value)}
+                                        </div>
+                                      )
+                                    })}
                                   </div>
                                 </div>
                               ))}
@@ -741,7 +837,7 @@ export function ChatInterface() {
                       )}
 
                       {/* Other Flags */}
-                      {(currentProfile.optional.hasDisability || currentProfile.optional.financialDifficulties) && (
+                      {(currentProfile.optional.hasDisability || currentProfile.optional.financialDifficulties || currentProfile.optional.cvAssistance) && (
                         <div className="flex flex-wrap gap-2">
                           {currentProfile.optional.hasDisability && (
                             <div className="flex items-center gap-1.5 px-2.5 py-1 bg-white rounded-lg">
@@ -751,6 +847,11 @@ export function ChatInterface() {
                           {currentProfile.optional.financialDifficulties && (
                             <div className="flex items-center gap-1.5 px-2.5 py-1 bg-white rounded-lg">
                               <span className="text-xs font-medium text-gray-700">Difficultés financières</span>
+                            </div>
+                          )}
+                          {currentProfile.optional.cvAssistance && (
+                            <div className="flex items-center gap-1.5 px-2.5 py-1 bg-white rounded-lg">
+                              <span className="text-xs font-medium text-gray-700">Besoin d'aide pour le CV</span>
                             </div>
                           )}
                         </div>
