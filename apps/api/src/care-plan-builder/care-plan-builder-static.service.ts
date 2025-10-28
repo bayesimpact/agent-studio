@@ -12,13 +12,24 @@ export class StaticCarePlanBuilderService extends AbstractCarePlanBuilderService
     args: CarePlanBuilderArgs,
     options?: CarePlanBuilderOptions,
   ): Promise<{ carePlan: Action[] }> {
-    // Simulate progress reporting
-    options?.onProgress?.('Analyse du profil en cours');
-    await new Promise((resolve) => setTimeout(resolve, 5000));
+    // Simulate progress reporting with markdown headers
+    options?.onProgress?.('## Analyse du profil');
+    await new Promise((resolve) => setTimeout(resolve, 1000));
 
-    options?.onProgress?.('Génération des actions recommandées');
-    await new Promise((resolve) => setTimeout(resolve, 8000));
-    options?.onProgress?.(`Plan d'action généré`);
+    options?.onProgress?.('Extraction des informations clés du bénéficiaire...');
+    await new Promise((resolve) => setTimeout(resolve, 2000));
+
+    options?.onProgress?.('## Génération des actions');
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+
+    options?.onProgress?.('Création d\'actions personnalisées basées sur le profil...');
+    await new Promise((resolve) => setTimeout(resolve, 2000));
+
+    options?.onProgress?.('## Finalisation');
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+
+    options?.onProgress?.('Structuration du plan d\'accompagnement...');
+    await new Promise((resolve) => setTimeout(resolve, 1000));
 
     // Static mock care plan
     const carePlan: Action[] = [
