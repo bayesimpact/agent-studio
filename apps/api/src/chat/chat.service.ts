@@ -1,59 +1,42 @@
-import { Injectable, MessageEvent } from '@nestjs/common';
+import { Injectable, MessageEvent, Inject } from '@nestjs/common';
 import { Observable } from 'rxjs';
 import { v4 } from 'uuid';
 import { AIService } from '../ai/ai.service';
 import { ChatRepository } from './chat.repository';
 import { ChatSession } from './models/chat-session.model';
 import { Message } from './models/message.model';
-import { ResourcesService } from '../resources/resources.service';
 import {
   FunctionCall,
   GenerateContentResponse,
   ToolListUnion,
 } from '@google/genai';
-import { GeolocService } from '../geoloc/geoloc.service';
 import { AIServiceProvider } from '../common/interfaces/ai-service.interface';
-import { AIFrontendProvider } from '../common/interfaces/ai-frontend-provider.interface';
-import { CarePlanProvider } from '../care-plan/care-plan.provider';
-import { FranceTravailJobsService } from '../francetravail/francetravail-jobs.service';
-import { FranceTravailEventsService } from '../francetravail/francetravail-events.service';
-import { ProfileDisplayProvider } from '../profile/profile-display.provider';
-import { NotionWorkshopService } from '../notion/notion-workshop.service';
 import { NotionBeneficiaryService } from '../notion/notion-beneficiary.service';
 
 @Injectable()
 export class ChatService {
   private serviceProviders: Map<string, AIServiceProvider> = new Map();
-  private frontendProviders: Map<string, AIFrontendProvider> = new Map();
   private tools: ToolListUnion;
 
   constructor(
-    private geolocService: GeolocService,
-    private resourcesService: ResourcesService,
-    private carePlanProvider: CarePlanProvider,
-    private profileDisplayProvider: ProfileDisplayProvider,
-    private franceTravailJobsService: FranceTravailJobsService,
-    private franceTravailEventsService: FranceTravailEventsService,
-    private notionWorkshopService: NotionWorkshopService,
+    // private geolocService: GeolocService,
+    // private resourcesService: ResourcesService,
     private notionBeneficiaryService: NotionBeneficiaryService,
+    @Inject('CarePlanBuilderService')
+    private carePlanBuilderService: AIServiceProvider,
     private aiService: AIService,
     private chatRepository: ChatRepository,
   ) {
 
     // Register service providers
-    this.registerServiceProvider(this.resourcesService);
+    // TEMPORARILY DISABLED - Using simplified care plan builder instead
+    // this.registerServiceProvider(this.resourcesService);
     this.registerServiceProvider(this.notionBeneficiaryService);
-
-    // Register frontend providers
-    this.registerFrontendProvider(this.carePlanProvider);
-    this.registerFrontendProvider(this.profileDisplayProvider);
+    this.registerServiceProvider(this.carePlanBuilderService);
 
     // Build tools from all registered providers
     const allDeclarations = [
       ...Array.from(this.serviceProviders.values()).map((p) =>
-        p.getFunctionDeclaration(),
-      ),
-      ...Array.from(this.frontendProviders.values()).map((p) =>
         p.getFunctionDeclaration(),
       ),
     ];
@@ -69,12 +52,6 @@ export class ChatService {
     const declaration = provider.getFunctionDeclaration();
     this.serviceProviders.set(declaration.name, provider);
     this.aiService.registerServiceProvider(provider);
-  }
-
-  private registerFrontendProvider(provider: AIFrontendProvider): void {
-    const declaration = provider.getFunctionDeclaration();
-    this.frontendProviders.set(declaration.name, provider);
-    this.aiService.registerFrontendProvider(provider);
   }
 
   /**
@@ -94,9 +71,6 @@ export class ChatService {
     const backendFunctionCalls = functionCalls.filter((fc) =>
       this.serviceProviders.has(fc.name),
     );
-    const frontendFunctionCalls = functionCalls.filter((fc) =>
-      this.frontendProviders.has(fc.name),
-    );
 
     const functionCallsData = functionCalls.map((fc) => ({
       name: fc.name,
@@ -115,23 +89,39 @@ export class ChatService {
 
     // Process backend function calls
     if (backendFunctionCalls.length > 0) {
-      // Check if any function call has cityName parameter for geolocation
-      const needsGeolocation = backendFunctionCalls.some(fc => fc.args['cityName']);
-      let municipalities = [];
-
-      if (needsGeolocation) {
-        const cityName = backendFunctionCalls.find(fc => fc.args['cityName'])?.args['cityName'] as string;
-        municipalities = await this.geolocService.searchMunicipalities(cityName);
-      }
-
       for (let i = 0; i < backendFunctionCalls.length; i++) {
         const functionCall = backendFunctionCalls[i];
         const provider = this.serviceProviders.get(functionCall.name);
         if (provider) {
-          const result = await provider.executeFunction(
-            functionCall,
-            municipalities,
-          );
+          // Create progress callback for care plan builder
+          const options =
+            functionCall.name === 'build_care_plan'
+              ? {
+                  onProgress: (message: string) => {
+                    subscriber.next({
+                      data: JSON.stringify({
+                        type: 'care_plan_progress',
+                        messageId: toolCallsMessageId,
+                        message,
+                      }),
+                    } as MessageEvent);
+                  },
+                }
+              : undefined;
+
+          const result = await provider.executeFunction(functionCall, options);
+
+          // Check if this is a care plan builder result and stream it to frontend
+          if (functionCall.name === 'build_care_plan' && result.carePlan) {
+            subscriber.next({
+              data: JSON.stringify({
+                type: 'care_plan_update',
+                messageId: toolCallsMessageId,
+                carePlan: result.carePlan,
+              }),
+            } as MessageEvent);
+          }
+
           // Add tool response message with proper tool_call_id
           updatedSession = updatedSession.addToolResponse(
             functionCall.name,
@@ -144,16 +134,6 @@ export class ChatService {
           );
         }
       }
-    }
-
-    // Frontend function calls are handled by the frontend - add acknowledgment as tool response
-    for (let i = 0; i < frontendFunctionCalls.length; i++) {
-      const functionCall = frontendFunctionCalls[i];
-      updatedSession = updatedSession.addToolResponse(
-        functionCall.name,
-        { executed: 'frontend' },
-      );
-      // DO NOT save yet - we need all tool responses before saving
     }
 
     // NOW save once with all tool responses

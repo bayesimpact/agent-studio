@@ -9,6 +9,7 @@ import {
   thematiques,
 } from '../datainclusion/datainclusion.service';
 import { NotionWorkshopService } from '../notion/notion-workshop.service';
+import { GeolocService } from '../geoloc/geoloc.service';
 
 @Injectable()
 export class ResourcesService implements AIServiceProvider {
@@ -17,6 +18,7 @@ export class ResourcesService implements AIServiceProvider {
     private franceTravailEventsService: FranceTravailEventsService,
     private dataInclusionService: DataInclusionService,
     private notionWorkshopService: NotionWorkshopService,
+    private geolocService: GeolocService,
   ) {}
 
   getFunctionDeclaration(): FunctionDeclaration {
@@ -121,9 +123,10 @@ export class ResourcesService implements AIServiceProvider {
 
   async executeFunction(
     functionCall: FunctionCall,
-    locations: Location[],
   ): Promise<any> {
     const provider = functionCall.args['provider'] as string;
+    const cityName = functionCall.args['cityName'] as string;
+    const locations = await this.geolocService.searchMunicipalities(cityName)
 
     if (provider === 'jobs') {
       const jobTitles = functionCall.args['jobTitles'] as string[];
@@ -134,9 +137,8 @@ export class ResourcesService implements AIServiceProvider {
         {
           ...functionCall,
           name: 'jobs_search',
-          args: { jobTitles, cityName: functionCall.args['cityName'] },
+          args: { jobTitles, departmentsCode: [locations[0].departmentCode] },
         },
-        locations,
       );
       return {
         ...result,
@@ -155,10 +157,10 @@ export class ResourcesService implements AIServiceProvider {
           args: {
             jobTitles,
             cityName: functionCall.args['cityName'],
+            departmentCode: locations[0].departmentCode,
             ...(endDate && { endDate }),
           },
         },
-        locations,
       );
       return {
         ...result,
@@ -173,9 +175,8 @@ export class ResourcesService implements AIServiceProvider {
         {
           ...functionCall,
           name: 'services_search',
-          args: { thematiques, cityName: functionCall.args['cityName'] },
+          args: { thematiques, cityName: functionCall.args['cityName'], cityCode: locations[0].citycode },
         },
-        locations,
       );
       return {
         ...result,
@@ -197,7 +198,6 @@ export class ResourcesService implements AIServiceProvider {
             ...(startDate && { startDate }),
           },
         },
-        locations,
       );
       return {
         ...result,

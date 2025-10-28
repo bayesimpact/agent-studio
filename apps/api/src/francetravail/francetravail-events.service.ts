@@ -64,11 +64,10 @@ export class FranceTravailEventsService
 
   async executeFunction(
     functionCall: FunctionCall,
-    locations: Location[],
   ): Promise<{events: SimplifiedEvent[]}> {
     const jobTitles = functionCall.args['jobTitles'] as string[];
     const endDate = functionCall.args['endDate'] as string | undefined;
-    const departmentCode = locations[0].departmentCode;
+    const departmentCode = functionCall.args['departmentCode'] as string | undefined;
 
     console.log('Function calling events with params:', jobTitles, departmentCode, endDate);
 

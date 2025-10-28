@@ -134,10 +134,9 @@ export class DataInclusionService implements AIServiceProvider {
 
   async executeFunction(
     functionCall: FunctionCall,
-    locations: Location[],
   ): Promise<{ services: SimplifiedService[] }> {
     const thematiques = functionCall.args['thematiques'] as string[];
-    const cityCode = locations[0].citycode;
+    const cityCode = functionCall.args['cityCode'] as string;
     console.log('Function calling with params:', thematiques, cityCode);
 
     const services = await this.searchServices({

@@ -59,10 +59,9 @@ export class FranceTravailJobsService
 
   async executeFunction(
     functionCall: FunctionCall,
-    locations: Location[],
   ): Promise<{jobOffers: SimplifiedJobOffer[]}> {
     const jobTitles = functionCall.args['jobTitles'] as string[];
-    const departmentsCode = [locations[0].departmentCode];
+    const departmentsCode = functionCall.args['departmentsCode'] as string[];
     console.log('Function calling with params:', jobTitles, departmentsCode);
 
     const jobOffers = await this.searchJobOffers({

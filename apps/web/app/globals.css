@@ -32,3 +32,90 @@ input {
   @apply focus:outline-none focus:border-0 focus:shadow-none focus:ring-0;
   @apply focus-visible:outline-none focus-visible:border-0 focus-visible:shadow-none focus-visible:ring-0;
 }
+
+/* Markdown content styling */
+.markdown-content {
+  ol {
+    list-style-type: decimal;
+    padding-left: 1.5rem;
+    margin: 0.75rem 0;
+  }
+
+  ul {
+    list-style-type: disc;
+    padding-left: 1.5rem;
+    margin: 0.75rem 0;
+  }
+
+  li {
+    margin: 0.25rem 0;
+  }
+
+  ol ol {
+    list-style-type: lower-alpha;
+    margin: 0.25rem 0;
+  }
+
+  ol ol ol {
+    list-style-type: lower-roman;
+  }
+
+  p {
+    margin: 0.5rem 0;
+  }
+
+  strong {
+    font-weight: 600;
+  }
+
+  em {
+    font-style: italic;
+  }
+
+  code {
+    background-color: oklch(96% 0.01 100);
+    padding: 0.125rem 0.25rem;
+    border-radius: 0.25rem;
+    font-size: 0.875em;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  }
+
+  pre {
+    background-color: oklch(96% 0.01 100);
+    padding: 1rem;
+    border-radius: 0.5rem;
+    overflow-x: auto;
+    margin: 0.75rem 0;
+  }
+
+  pre code {
+    background-color: transparent;
+    padding: 0;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-weight: 600;
+    margin-top: 1rem;
+    margin-bottom: 0.5rem;
+  }
+
+  h1 { font-size: 1.5rem; }
+  h2 { font-size: 1.25rem; }
+  h3 { font-size: 1.125rem; }
+
+  blockquote {
+    border-left: 4px solid oklch(92% 0.01 100);
+    padding-left: 1rem;
+    margin: 0.75rem 0;
+    color: oklch(50% 0.01 0);
+  }
+
+  a {
+    color: oklch(35% 0.12 160);
+    text-decoration: underline;
+  }
+
+  a:hover {
+    opacity: 0.8;
+  }
+}

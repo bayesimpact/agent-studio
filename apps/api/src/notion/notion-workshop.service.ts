@@ -60,39 +60,25 @@ export class NotionWorkshopService implements AIServiceProvider {
 
   async executeFunction(
     functionCall: FunctionCall,
-    locations: Location[],
   ): Promise<{ workshops: SimplifiedWorkshop[] }> {
     const workshopTypes = functionCall.args['workshopTypes'] as string[];
     const startDate = functionCall.args['startDate'] as string | undefined;
-    const cityName = locations[0]?.name || locations[0]?.city;
 
-    console.log('Function calling workshops with params:', workshopTypes, cityName, startDate);
+    console.log('Function calling workshops with params:', workshopTypes, startDate);
 
-    const workshops = await this.searchWorkshops({
-      workshopTypes,
-      cityName,
-      startDate,
-    });
+    const workshops = await this.searchWorkshops();
     console.log('Workshops found: ', workshops.length);
     return { workshops };
   }
 
-  async searchWorkshops({
-    workshopTypes,
-    cityName,
-    startDate,
-  }: {
-    workshopTypes: string[];
-    cityName: string;
-    startDate?: string;
-  }): Promise<SimplifiedWorkshop[]> {
+  async searchWorkshops(): Promise<SimplifiedWorkshop[]> {
     if (!this.notionSecret) {
       console.error('NOTION_SECRET is not configured');
       return [];
     }
 
     try {
-      console.log(`Calling workshops search (returning all items) - params: ${workshopTypes.join(',')}, ${cityName}, ${startDate || 'no date'}`);
+      console.log(`Calling workshops search (returning all items)`);
 
       // Simple query body - no filters for first version, just return all items
       const queryBody = {
