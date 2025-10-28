@@ -51,7 +51,6 @@ you MUST immediately call this function with the name that follows @trinity.
 
   async executeFunction(
     functionCall: FunctionCall,
-    locations: Location[],
   ): Promise<{ profile: string }> {
     const name = functionCall.args['name'] as string;
 

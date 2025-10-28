@@ -8,6 +8,6 @@ export interface AIServiceProvider {
 
   executeFunction(
     functionCall: FunctionCall,
-    locations: Location[],
+    options?: any,
   ): Promise<any>;
 }
