@@ -195,6 +195,9 @@ export class ChatService {
           const messageId = v4();
           const timestamp = new Date();
 
+          // Calculate turn number: count user messages in the session
+          const turnNumber = updatedSession.messages.filter(m => m.sender === 'user').length;
+
           // Send start event
           subscriber.next({
             data: JSON.stringify({
@@ -209,6 +212,7 @@ export class ChatService {
           const streamGenerator = this.aiService.generateContentStream({
             chatSession: updatedSession,
             tools: this.tools,
+            turnNumber,
           });
 
           let lastChunk: GenerateContentResponse;
@@ -255,6 +259,7 @@ export class ChatService {
             const secondStreamGenerator = this.aiService.generateContentStream({
               chatSession: updatedSession,
               tools: this.tools,
+              turnNumber: turnNumber + 0.5, // Use .5 to indicate this is a follow-up within the same turn
             });
 
             let secondLastChunk: GenerateContentResponse;

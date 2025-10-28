@@ -22,8 +22,7 @@ export class AIService {
     this.genAI = new GoogleGenAI({
       vertexai: true,
       project: 'caseai-connect',
-      // location: 'europe-west9',
-      location: 'europe-west1',
+      location: process.env.LOCATION || 'europe-west1',
     });
 
     // Initialize Langfuse
@@ -221,29 +220,35 @@ ${toolContexts}
   async *generateContentStream({
     chatSession,
     tools,
+    turnNumber,
   }: {
     chatSession: ChatSession;
     tools: ToolListUnion;
+    turnNumber?: number;
   }): AsyncGenerator<GenerateContentResponse> {
-    console.info(`Calling LLM for session ${chatSession.id}`);
+    console.info(`Calling LLM for session ${chatSession.id} (turn ${turnNumber || 'unknown'})`);
     const contents = this.buildContents(chatSession);
     const currentCarePlan = this.extractCurrentCarePlan(chatSession);
     const systemInstruction = this.buildSystemPrompt(currentCarePlan);
 
-    // Create Langfuse trace
+    // Create or get existing Langfuse trace for this session
+    // Use consistent trace ID based on session ID so all turns are in one trace
     const trace = this.langfuse.trace({
-      name: 'chat-generation',
+      id: `session-${chatSession.id}`,
+      name: 'chat-session',
       sessionId: chatSession.id,
-      userId: chatSession.id, // Using session ID as user ID for now
+      userId: chatSession.id,
       metadata: {
         sessionId: chatSession.id,
-        messageCount: chatSession.messages.length,
+        totalMessages: chatSession.messages.length,
+        createdAt: chatSession.createdAt,
+        updatedAt: chatSession.updatedAt,
       },
     });
 
-    // Create generation span
+    // Create generation span for this specific turn
     const generation = trace.generation({
-      name: 'gemini-2.5-flash-generation',
+      name: `turn-${turnNumber || chatSession.messages.length}`,
       model: 'gemini-2.5-flash',
       modelParameters: {
         temperature: 0.1,
@@ -254,6 +259,7 @@ ${toolContexts}
         contents,
       },
       metadata: {
+        turnNumber: turnNumber || chatSession.messages.length,
         systemInstructionLength: systemInstruction.length,
         toolsCount: Array.isArray(tools) ? tools.length : 0,
         hasCarePlan: !!currentCarePlan,
