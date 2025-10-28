@@ -19,6 +19,7 @@ import { FranceTravailJobsService } from '../francetravail/francetravail-jobs.se
 import { FranceTravailEventsService } from '../francetravail/francetravail-events.service';
 import { ProfileDisplayProvider } from '../profile/profile-display.provider';
 import { NotionWorkshopService } from '../notion/notion-workshop.service';
+import { NotionBeneficiaryService } from '../notion/notion-beneficiary.service';
 
 @Injectable()
 export class ChatService {
@@ -34,12 +35,14 @@ export class ChatService {
     private franceTravailJobsService: FranceTravailJobsService,
     private franceTravailEventsService: FranceTravailEventsService,
     private notionWorkshopService: NotionWorkshopService,
+    private notionBeneficiaryService: NotionBeneficiaryService,
     private aiService: AIService,
     private chatRepository: ChatRepository,
   ) {
 
     // Register service providers
     this.registerServiceProvider(this.resourcesService);
+    this.registerServiceProvider(this.notionBeneficiaryService);
 
     // Register frontend providers
     this.registerFrontendProvider(this.carePlanProvider);
@@ -110,11 +113,16 @@ export class ChatService {
       }),
     } as MessageEvent);
 
-    // Process backend function calls (with geolocation)
+    // Process backend function calls
     if (backendFunctionCalls.length > 0) {
-      const cityName = backendFunctionCalls[0].args['cityName'] as string;
-      const municipalities =
-        await this.geolocService.searchMunicipalities(cityName);
+      // Check if any function call has cityName parameter for geolocation
+      const needsGeolocation = backendFunctionCalls.some(fc => fc.args['cityName']);
+      let municipalities = [];
+
+      if (needsGeolocation) {
+        const cityName = backendFunctionCalls.find(fc => fc.args['cityName'])?.args['cityName'] as string;
+        municipalities = await this.geolocService.searchMunicipalities(cityName);
+      }
 
       for (let i = 0; i < backendFunctionCalls.length; i++) {
         const functionCall = backendFunctionCalls[i];
