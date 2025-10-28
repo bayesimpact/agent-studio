@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@repo/ui/card'
-import { Briefcase, MapPin, FileText, ChevronDown, ExternalLink, Building2, Sparkles, HandHeart, Phone, Calendar, Clock, Users } from 'lucide-react'
+import { Briefcase, MapPin, FileText, ChevronDown, ExternalLink, Building2, Sparkles, HandHeart, Phone, Calendar, Clock, Users, Loader2, Database } from 'lucide-react'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 
@@ -26,16 +26,20 @@ interface DetailItem {
   organizer?: string
   availableSeats?: number
   totalSeats?: number
+  // Workshop-specific
+  date?: string
 }
 
 interface CarePlanItem {
   id: string
-  type: 'job_search' | 'service' | 'event_search'
+  type: 'job_search' | 'service' | 'event_search' | 'workshop_search'
   title: string
   description?: string // Used when service has no nested items
   location?: string
   contact?: string // Used when service has no nested items
   serviceType?: string // Used when service has no nested items
+  provider?: 'ft_offres_emploi' | 'ft_mee' | 'data_inclusion' | 'notion_workshops'
+  isLoading?: boolean
   items?: DetailItem[] // For job_search, service, and event_search types
 }
 
@@ -58,6 +62,13 @@ const getContractTypeColor = (contractType: string) => {
     }
   }
   return { bg: 'bg-gray-50', text: 'text-gray-700', border: 'border-gray-200' }
+}
+
+const providerLabels: Record<string, { name: string; color: string }> = {
+  'ft_offres_emploi': { name: 'France Travail - Offres d\'emploi', color: 'bg-blue-50 text-blue-700 border-blue-200' },
+  'ft_mee': { name: 'France Travail - Événements', color: 'bg-purple-50 text-purple-700 border-purple-200' },
+  'data_inclusion': { name: 'Data Inclusion', color: 'bg-green-50 text-green-700 border-green-200' },
+  'notion_workshops': { name: 'Ateliers', color: 'bg-orange-50 text-orange-700 border-orange-200' },
 }
 
 export function CarePlan({ planItems }: CarePlanProps) {
@@ -97,6 +108,7 @@ export function CarePlan({ planItems }: CarePlanProps) {
           const isJobSearch = planItem.type === 'job_search'
           const isService = planItem.type === 'service'
           const isEventSearch = planItem.type === 'event_search'
+          const isWorkshopSearch = planItem.type === 'workshop_search'
 
           return (
             <Card
@@ -117,17 +129,35 @@ export function CarePlan({ planItems }: CarePlanProps) {
                     <div className="relative mt-0.5">
                       <div className="absolute inset-0 rounded-lg bg-primary/20 group-hover:scale-110 transition-transform duration-300" />
                       <div className="relative p-2 rounded-lg bg-gradient-to-br from-primary/10 to-primary/20 text-primary group-hover:from-primary/20 group-hover:to-primary/30 transition-all">
-                        {isService ? <HandHeart className="w-4 h-4" /> : isEventSearch ? <Calendar className="w-4 h-4" /> : <Briefcase className="w-4 h-4" />}
+                        {isService ? <HandHeart className="w-4 h-4" /> : isEventSearch ? <Calendar className="w-4 h-4" /> : isWorkshopSearch ? <Users className="w-4 h-4" /> : <Briefcase className="w-4 h-4" />}
                       </div>
                     </div>
                     <div className="flex-1 min-w-0">
-                      <CardTitle className="text-base font-bold text-foreground group-hover:text-primary transition-colors line-clamp-2">
-                        {planItem.title}
-                      </CardTitle>
+                      <div className="flex items-start gap-2">
+                        <CardTitle className="text-base font-bold text-foreground group-hover:text-primary transition-colors line-clamp-2 flex-1">
+                          {planItem.title}
+                          {planItem.items && planItem.items.length > 0 && (
+                            <span className="ml-2 text-sm font-normal text-muted-foreground">
+                              ({planItem.items.length})
+                            </span>
+                          )}
+                        </CardTitle>
+                        {planItem.isLoading && (
+                          <Loader2 className="w-4 h-4 text-primary animate-spin flex-shrink-0 mt-0.5" />
+                        )}
+                      </div>
                       {planItem.location && (
                         <div className="flex items-center gap-2 mt-1.5 text-sm text-muted-foreground">
                           <MapPin className="w-3.5 h-3.5 flex-shrink-0" />
                           <span className="font-medium truncate">{planItem.location}</span>
+                        </div>
+                      )}
+                      {planItem.provider && providerLabels[planItem.provider] && (
+                        <div className="mt-1.5">
+                          <div className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full border text-xs font-medium ${providerLabels[planItem.provider]?.color || ''}`}>
+                            <Database className="w-3 h-3" />
+                            <span>{providerLabels[planItem.provider]?.name || ''}</span>
+                          </div>
                         </div>
                       )}
                     </div>
@@ -285,6 +315,77 @@ export function CarePlan({ planItems }: CarePlanProps) {
                                 <span>Voir l'offre</span>
                                 <ExternalLink className="w-3 h-3" />
                               </a>
+                            </CardContent>
+                          </Card>
+                        )
+                      })}
+                    </div>
+                  )}
+
+                  {/* Workshop Search Type: Display nested workshops */}
+                  {isWorkshopSearch && planItem.items && planItem.items.length > 0 && (
+                    <div className="pt-2 border-t space-y-2">
+                      <p className="text-xs font-semibold text-muted-foreground mb-2">
+                        {planItem.items.length} atelier{planItem.items.length > 1 ? 's' : ''} trouvé{planItem.items.length > 1 ? 's' : ''}
+                      </p>
+                      {planItem.items.map((workshop) => {
+                        // Format date
+                        const formatDate = (dateString?: string) => {
+                          if (!dateString) return ''
+                          try {
+                            return new Date(dateString).toLocaleDateString('fr-FR', {
+                              day: 'numeric',
+                              month: 'long',
+                              year: 'numeric'
+                            })
+                          } catch {
+                            return dateString
+                          }
+                        }
+
+                        return (
+                          <Card
+                            key={workshop.id}
+                            className="bg-background/50 hover:bg-background transition-colors"
+                          >
+                            <CardContent className="p-3 space-y-2">
+                              <div className="flex items-start gap-2">
+                                <Users className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
+                                <div className="flex-1 min-w-0">
+                                  <h4 className="text-sm font-semibold text-foreground">
+                                    {workshop.title}
+                                  </h4>
+                                </div>
+                              </div>
+
+                              {/* Workshop description */}
+                              {workshop.description && (
+                                <p className="text-xs text-muted-foreground line-clamp-2">
+                                  {workshop.description}
+                                </p>
+                              )}
+
+                              {/* Workshop Info Pills */}
+                              <div className="flex flex-wrap gap-1.5">
+                                {workshop.date && (
+                                  <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-muted text-xs font-medium">
+                                    <Calendar className="w-3 h-3" />
+                                    <span>{formatDate(workshop.date)}</span>
+                                  </div>
+                                )}
+                                {workshop.location && (
+                                  <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-muted text-xs font-medium">
+                                    <MapPin className="w-3 h-3" />
+                                    <span>{workshop.location}</span>
+                                  </div>
+                                )}
+                                {workshop.serviceType && (
+                                  <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20 text-xs font-medium">
+                                    <FileText className="w-3 h-3" />
+                                    <span>{workshop.serviceType}</span>
+                                  </div>
+                                )}
+                              </div>
                             </CardContent>
                           </Card>
                         )

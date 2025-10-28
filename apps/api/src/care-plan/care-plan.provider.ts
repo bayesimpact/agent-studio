@@ -28,7 +28,7 @@ export class CarePlanProvider implements AIFrontendProvider {
                 },
                 type: {
                   type: Type.STRING,
-                  description: 'Type of item: "job_search" for job searches, "service" for support services',
+                  description: 'Type of item: "job_search" for job searches, "service" for support services, "event_search" for events, "workshop_search" for workshops',
                 },
                 title: {
                   type: Type.STRING,
@@ -49,6 +49,14 @@ export class CarePlanProvider implements AIFrontendProvider {
                 serviceType: {
                   type: Type.STRING,
                   description: 'Service type or thematic (for services)',
+                },
+                provider: {
+                  type: Type.STRING,
+                  description: 'Data provider: "ft_offres_emploi" (France Travail jobs), "ft_mee" (France Travail events), "data_inclusion" (social services), "notion_workshops" (workshops)',
+                },
+                isLoading: {
+                  type: Type.BOOLEAN,
+                  description: 'Set to true when searching to show loading state',
                 },
                 // Nested items for both job searches and services
                 items: {

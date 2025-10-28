@@ -130,7 +130,7 @@ export class ResourcesService implements AIServiceProvider {
       if (!jobTitles || jobTitles.length === 0) {
         throw new Error('jobTitles is required when provider is "jobs"');
       }
-      return await this.franceTravailJobsService.executeFunction(
+      const result = await this.franceTravailJobsService.executeFunction(
         {
           ...functionCall,
           name: 'jobs_search',
@@ -138,13 +138,17 @@ export class ResourcesService implements AIServiceProvider {
         },
         locations,
       );
+      return {
+        ...result,
+        provider: 'ft_offres_emploi',
+      };
     } else if (provider === 'events') {
       const jobTitles = functionCall.args['jobTitles'] as string[];
       if (!jobTitles || jobTitles.length === 0) {
         throw new Error('jobTitles is required when provider is "events"');
       }
       const endDate = functionCall.args['endDate'] as string | undefined;
-      return await this.franceTravailEventsService.executeFunction(
+      const result = await this.franceTravailEventsService.executeFunction(
         {
           ...functionCall,
           name: 'events_search',
@@ -156,12 +160,16 @@ export class ResourcesService implements AIServiceProvider {
         },
         locations,
       );
+      return {
+        ...result,
+        provider: 'ft_mee',
+      };
     } else if (provider === 'services') {
       const thematiques = functionCall.args['thematiques'] as string[];
       if (!thematiques || thematiques.length === 0) {
         throw new Error('thematiques is required when provider is "services"');
       }
-      return await this.dataInclusionService.executeFunction(
+      const result = await this.dataInclusionService.executeFunction(
         {
           ...functionCall,
           name: 'services_search',
@@ -169,13 +177,17 @@ export class ResourcesService implements AIServiceProvider {
         },
         locations,
       );
+      return {
+        ...result,
+        provider: 'data_inclusion',
+      };
     } else if (provider === 'workshops') {
       const workshopTypes = functionCall.args['workshopTypes'] as string[];
       if (!workshopTypes || workshopTypes.length === 0) {
         throw new Error('workshopTypes is required when provider is "workshops"');
       }
       const startDate = functionCall.args['startDate'] as string | undefined;
-      return await this.notionWorkshopService.executeFunction(
+      const result = await this.notionWorkshopService.executeFunction(
         {
           ...functionCall,
           name: 'workshops_search',
@@ -187,6 +199,10 @@ export class ResourcesService implements AIServiceProvider {
         },
         locations,
       );
+      return {
+        ...result,
+        provider: 'notion_workshops',
+      };
     } else {
       throw new Error(`Unknown provider: ${provider}`);
     }
