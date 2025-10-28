@@ -161,6 +161,7 @@ export class DataInclusionService implements AIServiceProvider {
         params: {
           thematiques: thematiques,
           code_commune: codeCommune,
+          exclure_doublons: true,
           size: 20,
         },
         paramsSerializer: (params) => {
