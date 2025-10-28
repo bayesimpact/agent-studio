@@ -39,6 +39,8 @@ interface Message {
   isFinished?: boolean
   progressMessage?: string
   progressHistory?: string[]
+  progressText?: string
+  currentProgressTitle?: string
 }
 
 export function ChatInterface() {
@@ -192,18 +194,26 @@ export function ChatInterface() {
               break
 
             case 'care_plan_progress':
-              // Update progress message and add to history
+              // Update progress message and accumulate markdown text
               if (data.message) {
                 setMessages(prev =>
-                  prev.map(msg =>
-                    msg.id === data.messageId
-                      ? {
-                          ...msg,
-                          progressMessage: data.message,
-                          progressHistory: [...(msg.progressHistory || []), data.message]
-                        }
-                      : msg
-                  )
+                  prev.map(msg => {
+                    if (msg.id !== data.messageId) return msg
+
+                    // Accumulate full progress text
+                    const newProgressText = (msg.progressText || '') + data.message + '\n'
+
+                    // Extract the last markdown header (# Title) as current title
+                    const headerMatch = data.message.match(/^#+\s+(.+)$/m)
+                    const newTitle = headerMatch ? headerMatch[1] : msg.currentProgressTitle
+
+                    return {
+                      ...msg,
+                      progressText: newProgressText,
+                      currentProgressTitle: newTitle,
+                      progressMessage: newTitle || data.message,
+                    }
+                  })
                 )
               }
               break
@@ -496,19 +506,14 @@ export function ChatInterface() {
                             )}
                           </div>
 
-                          {/* Expandable details - show accumulated progress messages */}
+                          {/* Expandable details - show full progress markdown */}
                           {message.functionCalls && message.functionCalls.length > 0 && expandedFunctions.has(message.id) && (
                             <div className="mt-3 pt-2" style={{ borderTopWidth: '1px', borderTopColor: '#bacfca' }}>
-                              {message.progressHistory && message.progressHistory.length > 0 ? (
-                                <div className="space-y-1.5">
-                                  {message.progressHistory.map((progressMsg, idx) => (
-                                    <div key={idx} className="flex items-start gap-2">
-                                      <span className="text-xs" style={{ color: '#597f77' }}>•</span>
-                                      <span className="text-xs" style={{ color: '#597f77' }}>
-                                        {progressMsg}
-                                      </span>
-                                    </div>
-                                  ))}
+                              {message.progressText ? (
+                                <div className="text-xs markdown-content" style={{ color: '#597f77' }}>
+                                  <ReactMarkdown remarkPlugins={[remarkGfm, remarkBreaks]}>
+                                    {message.progressText}
+                                  </ReactMarkdown>
                                 </div>
                               ) : (
                                 <div className="text-xs" style={{ color: '#597f77' }}>
