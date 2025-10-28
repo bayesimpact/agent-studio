@@ -8,9 +8,10 @@ import { GeolocModule } from '../geoloc/geoloc.module';
 import { CarePlanModule } from '../care-plan/care-plan.module';
 import { FranceTravailModule } from '../francetravail/francetravail.module';
 import { ProfileModule } from '../profile/profile.module';
+import { NotionModule } from '../notion/notion.module';
 
 @Module({
-  imports: [AIModule, ResourcesModule, GeolocModule, CarePlanModule, FranceTravailModule, ProfileModule],
+  imports: [AIModule, ResourcesModule, GeolocModule, CarePlanModule, FranceTravailModule, ProfileModule, NotionModule],
   controllers: [ChatController],
   providers: [ChatService, ChatRepository],
 })

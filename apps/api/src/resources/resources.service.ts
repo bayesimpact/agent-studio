@@ -8,6 +8,7 @@ import {
   DataInclusionService,
   thematiques,
 } from '../datainclusion/datainclusion.service';
+import { NotionWorkshopService } from '../notion/notion-workshop.service';
 
 @Injectable()
 export class ResourcesService implements AIServiceProvider {
@@ -15,6 +16,7 @@ export class ResourcesService implements AIServiceProvider {
     private franceTravailJobsService: FranceTravailJobsService,
     private franceTravailEventsService: FranceTravailEventsService,
     private dataInclusionService: DataInclusionService,
+    private notionWorkshopService: NotionWorkshopService,
   ) {}
 
   getFunctionDeclaration(): FunctionDeclaration {
@@ -28,7 +30,7 @@ export class ResourcesService implements AIServiceProvider {
           provider: {
             type: Type.STRING,
             description: 'Type of resources to search',
-            enum: ['jobs', 'events', 'services'],
+            enum: ['jobs', 'events', 'services', 'workshops'],
           },
           cityName: {
             type: Type.ARRAY,
@@ -59,6 +61,18 @@ export class ResourcesService implements AIServiceProvider {
               enum: thematiques,
             },
           },
+          // For workshops provider
+          workshopTypes: {
+            type: Type.ARRAY,
+            description: 'Workshop types or themes (required if provider="workshops")',
+            items: {
+              type: Type.STRING,
+            },
+          },
+          startDate: {
+            type: Type.STRING,
+            description: 'Start date for workshop search in YYYY-MM-DD format (optional, only for workshops)',
+          },
         },
         required: ['provider', 'cityName'],
       },
@@ -68,12 +82,13 @@ export class ResourcesService implements AIServiceProvider {
   getPromptContext(): string {
     return `
 ### Tool: \`search_resources\`
-**Description**: Unified resource search - job offers, employment events, OR social services.
+**Description**: Unified resource search - job offers, employment events, workshops, OR social services.
 
 **Parameters**:
 - \`provider\`: Search type
   - \`"jobs"\`: Search job offers via France Travail
   - \`"events"\`: Search employment events (job fairs, forums) via France Travail
+  - \`"workshops"\`: Search workshops and training sessions via Notion
   - \`"services"\`: Search support services via Data Inclusion
 - \`cityName\`: City name (required - ask if not provided)
 
@@ -86,6 +101,11 @@ export class ResourcesService implements AIServiceProvider {
   - Examples: ["développeur web", "développeur full stack"], ["chauffeur de bus", "conducteur"]
 - \`endDate\`: Optional end date in YYYY-MM-DD format
 
+**If provider="workshops"**:
+- \`workshopTypes\`: 1-3 workshop types or themes in French
+  - Examples: ["Numérique/Tech"], ["Découverte métier"], ["Formation professionnelle"]
+- \`startDate\`: Optional start date in YYYY-MM-DD format
+
 **If provider="services"**:
 - \`thematiques\`: List of exact themes from the available enum
   - You can select multiple themes if the situation is complex
@@ -94,6 +114,7 @@ export class ResourcesService implements AIServiceProvider {
 **Returns**:
 - For jobs: List of offers with id, title, company, location, contract type, description (up to 20 results)
 - For events: List of events with id, title, description, dates, location, registration URL, sector (up to 20 results)
+- For workshops: List of workshops with id, title, date, location, capacity, signup URL, type, description (up to 20 results)
 - For services: List of services with id, name, description, location, service type, contact (up to 20 results)
 `;
   }
@@ -145,6 +166,24 @@ export class ResourcesService implements AIServiceProvider {
           ...functionCall,
           name: 'services_search',
           args: { thematiques, cityName: functionCall.args['cityName'] },
+        },
+        locations,
+      );
+    } else if (provider === 'workshops') {
+      const workshopTypes = functionCall.args['workshopTypes'] as string[];
+      if (!workshopTypes || workshopTypes.length === 0) {
+        throw new Error('workshopTypes is required when provider is "workshops"');
+      }
+      const startDate = functionCall.args['startDate'] as string | undefined;
+      return await this.notionWorkshopService.executeFunction(
+        {
+          ...functionCall,
+          name: 'workshops_search',
+          args: {
+            workshopTypes,
+            cityName: functionCall.args['cityName'],
+            ...(startDate && { startDate }),
+          },
         },
         locations,
       );

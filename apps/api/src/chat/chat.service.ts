@@ -18,6 +18,7 @@ import { CarePlanProvider } from '../care-plan/care-plan.provider';
 import { FranceTravailJobsService } from '../francetravail/francetravail-jobs.service';
 import { FranceTravailEventsService } from '../francetravail/francetravail-events.service';
 import { ProfileDisplayProvider } from '../profile/profile-display.provider';
+import { NotionWorkshopService } from '../notion/notion-workshop.service';
 
 @Injectable()
 export class ChatService {
@@ -32,6 +33,7 @@ export class ChatService {
     private profileDisplayProvider: ProfileDisplayProvider,
     private franceTravailJobsService: FranceTravailJobsService,
     private franceTravailEventsService: FranceTravailEventsService,
+    private notionWorkshopService: NotionWorkshopService,
     private aiService: AIService,
     private chatRepository: ChatRepository,
   ) {
@@ -40,6 +42,7 @@ export class ChatService {
     this.registerServiceProvider(this.resourcesService);
     this.registerServiceProvider(this.franceTravailJobsService);
     this.registerServiceProvider(this.franceTravailEventsService);
+    this.registerServiceProvider(this.notionWorkshopService);
 
     // Register frontend providers
     this.registerFrontendProvider(this.carePlanProvider);
