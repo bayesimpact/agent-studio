@@ -13,13 +13,13 @@ export class NotionBeneficiaryService implements AIServiceProvider {
   getFunctionDeclaration(): FunctionDeclaration {
     return {
       name: 'fetch_beneficiary_profile',
-      description: 'Fetch a beneficiary profile from Notion database by name. Use this when the user writes @trinity followed by a name (e.g., "@trinity Melvin")',
+      description: 'Fetch a beneficiary profile from Notion database by name. Use this when the user writes @notion followed by a name (e.g., "@notion Melvin")',
       parameters: {
         type: Type.OBJECT,
         properties: {
           name: {
             type: Type.STRING,
-            description: 'Name of the beneficiary to search for (extracted from the @trinity mention)',
+            description: 'Name of the beneficiary to search for (extracted from the @notion mention)',
           },
         },
         required: ['name'],
@@ -32,18 +32,18 @@ export class NotionBeneficiaryService implements AIServiceProvider {
 ### Tool: \`fetch_beneficiary_profile\`
 **Description**: Fetch a beneficiary (job seeker) profile from the Notion database.
 
-**IMPORTANT**: This function should be called automatically when the user mentions a beneficiary using the @trinity syntax.
+**IMPORTANT**: This function should be called automatically when the user mentions a beneficiary using the @notion syntax.
 
-**Trigger Pattern**: When you see "@trinity <Name>" in the user's message (e.g., "@trinity Melvin", "@trinity Jean Dupont"),
-you MUST immediately call this function with the name that follows @trinity.
+**Trigger Pattern**: When you see "@notion <Name>" in the user's message (e.g., "@notion Melvin", "@notion Jean Dupont"),
+you MUST immediately call this function with the name that follows @notion.
 
 **Parameters**:
-- \`name\`: Name of the beneficiary extracted from the @trinity mention (e.g., if user writes "@trinity Melvin", use "Melvin")
+- \`name\`: Name of the beneficiary extracted from the @notion mention (e.g., if user writes "@notion Melvin", use "Melvin")
 
 **Returns**: Profile information as a formatted string
 
 **Example Usage**:
-- User writes: "@trinity Melvin"
+- User writes: "@notion Melvin"
 - You call: fetch_beneficiary_profile(name="Melvin")
 - Then you present the profile information to the user in a natural way
 `;

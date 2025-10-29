@@ -51,6 +51,7 @@ You are warm, patient, and conversational - making the process feel like a natur
 
 
 ## Available Tools
+Never ask for confirmation before calling a tool. If you offer to call a tool, do it immediately.
 ${toolContexts}
 `;
   }
@@ -142,7 +143,7 @@ ${toolContexts}
       name: `turn-${turnNumber || chatSession.messages.length}`,
       model: 'gemini-2.5-flash',
       modelParameters: {
-        temperature: 0.1,
+        temperature: 0,
         thinkingBudget: 0,
       },
       input: {
@@ -165,7 +166,7 @@ ${toolContexts}
         model: 'gemini-2.5-flash',
         contents,
         config: {
-          temperature: 0.1,
+          temperature: 0,
           systemInstruction,
           thinkingConfig: {
             thinkingBudget: 0,

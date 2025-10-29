@@ -7,7 +7,7 @@ This is an MCP (Model Context Protocol) server that exposes the care plan builde
 - Generate personalized care plans based on beneficiary profiles
 - Update existing care plans with new information
 - Structured output with categorized actions in French
-- AI-powered analysis using Google Vertex AI (Gemini 2.5 Flash)
+- AI-powered analysis using Google Vertex AI (Gemini 2.5 Pro)
 - Stdio transport for seamless Claude Desktop integration
 
 ## Documentation

@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { StaticCarePlanBuilderService } from './care-plan-builder-static.service';
 import { AICarePlanBuilderService } from './care-plan-builder-ai.service';
+import { CarePlanBuilderController } from './care-plan-builder.controller';
 import { NotionModule } from '../notion/notion.module';
 import { FranceTravailModule } from '../francetravail/francetravail.module';
 import { DataInclusionModule } from '../datainclusion/datainclusion.module';
@@ -13,6 +14,7 @@ const CarePlanBuilderService = AICarePlanBuilderService;
 
 @Module({
   imports: [NotionModule, FranceTravailModule, DataInclusionModule, GeolocModule],
+  controllers: [CarePlanBuilderController],
   providers: [
     StaticCarePlanBuilderService,
     AICarePlanBuilderService,
