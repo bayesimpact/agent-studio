@@ -49,7 +49,7 @@ interface AIResponse {
 export class AICarePlanBuilderService extends AbstractCarePlanBuilderService {
   private genAI: GoogleGenAI;
   private langfuse: Langfuse;
-  private tools: ToolListUnion;
+  private readonly tools: ToolListUnion;
 
   constructor(
     private notionWorkshopService: NotionWorkshopService,
