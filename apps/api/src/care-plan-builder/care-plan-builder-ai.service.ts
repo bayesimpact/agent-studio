@@ -5,7 +5,7 @@ import {
   CarePlanBuilderArgs,
   CarePlanBuilderOptions,
 } from './care-plan-builder.abstract';
-import { GoogleGenAI, ToolListUnion } from '@google/genai';
+import { GoogleGenAI, ToolListUnion, Type } from '@google/genai';
 import { Langfuse } from 'langfuse';
 import {
   CARE_PLAN_BUILDER_SYSTEM_PROMPT,
@@ -44,11 +44,23 @@ export class AICarePlanBuilderService extends AbstractCarePlanBuilderService {
     ];
   }
 
-  private async callAI(
-    systemPrompt: string,
-    userPrompt: string,
-    options?: CarePlanBuilderOptions,
-  ): Promise<{ fullOutput: string; functionCalls?: any[]; tokenCount: number }> {
+
+  private async callAI(params: {
+    systemPrompt: string;
+    userPrompt: string;
+    tools?: ToolListUnion;
+    options?: CarePlanBuilderOptions;
+  }): Promise<{
+    fullOutput: string;
+    functionCalls?: any[];
+    usage: {
+      inputTokens: number;
+      outputTokens: number;
+      totalTokens: number;
+    };
+  }> {
+    const { systemPrompt, userPrompt, tools, options } = params;
+
     const model = 'gemini-2.5-flash';
     const streamResult = await this.genAI.models.generateContentStream({
       model,
@@ -59,12 +71,11 @@ export class AICarePlanBuilderService extends AbstractCarePlanBuilderService {
           thinkingBudget: 0,
         },
         systemInstruction: systemPrompt,
-        tools: this.tools,
+        ...(tools && { tools }),
       },
     });
 
     let fullOutput = '';
-    let tokenCount = 0;
     let lastChunk: any;
 
     for await (const chunk of streamResult) {
@@ -78,117 +89,85 @@ export class AICarePlanBuilderService extends AbstractCarePlanBuilderService {
           }
         }
       }
-
-      // Count tokens
-      if (chunk.usageMetadata) {
-        tokenCount = chunk.usageMetadata.totalTokenCount || 0;
-      }
     }
+
+    // Extract usage from last chunk
+    const usageMetadata = lastChunk?.usageMetadata || {};
 
     return {
       fullOutput,
       functionCalls: lastChunk?.functionCalls || [],
-      tokenCount,
+      usage: {
+        inputTokens: usageMetadata.promptTokenCount || 0,
+        outputTokens: usageMetadata.candidatesTokenCount || 0,
+        totalTokens: usageMetadata.totalTokenCount || 0,
+      },
     };
   }
 
-  async buildCarePlan(
-    args: CarePlanBuilderArgs,
+  private async executeToolCalls(
+    functionCalls: any[],
+    trace: any,
     options?: CarePlanBuilderOptions,
-  ): Promise<{ carePlan: Action[] }> {
-    // Build system prompt with tool context
-    const systemPrompt = CARE_PLAN_BUILDER_SYSTEM_PROMPT + '\n\n## Available Tools\n\n' + this.notionWorkshopService.getPromptContext();
-    const userPrompt = buildUserPrompt(args.profileText, args.currentCarePlan);
+  ): Promise<any[]> {
+    console.log('🔧 Care plan builder wants to call functions:',
+      functionCalls.map((fc: any) => ({
+        name: fc.name,
+        args: fc.args
+      }))
+    );
+    options?.onProgress?.(`\n## Appel d'outils\nRecherche d'ateliers et formations...\n`);
 
-    // Create Langfuse trace
-    const trace = this.langfuse.trace({
-      name: 'care-plan-generation',
-      metadata: {
-        profileLength: args.profileText.length,
-        hasCurrentPlan: !!args.currentCarePlan,
-      },
-    });
+    const functionResults: any[] = [];
+    for (const functionCall of functionCalls) {
+      if (functionCall.name === 'workshops_search') {
+        // Create a span for the retrieval step
+        const retrievalSpan = trace.span({
+          name: 'workshop-retrieval',
+          input: {
+            function: functionCall.name,
+            parameters: functionCall.args,
+          },
+        });
 
-    const model = 'gemini-2.5-flash';
-    const generation = trace.generation({
-      name: 'generate-care-plan',
-      model,
-      modelParameters: {
-        temperature: 0,
-      },
-      input: {
-        systemInstruction: systemPrompt,
-        userPrompt,
-      },
-    });
+        const result = await this.notionWorkshopService.executeFunction(functionCall);
 
-    try {
-      options?.onProgress?.(`## Opérateur : Chargement du programme 'Création de plan d'action'
-Programme chargé
-`,
-      );
+        functionResults.push({
+          name: functionCall.name,
+          result,
+        });
 
-      // First AI call: Get reasoning and potential function calls
-      const firstResponse = await this.callAI(systemPrompt, userPrompt, options);
+        console.log(`✅ Workshop search returned ${result.workshops?.length || 0} results`);
 
-      let finalOutput = firstResponse.fullOutput;
-      let totalTokenCount = firstResponse.tokenCount;
+        // Update retrieval span with results
+        retrievalSpan.update({
+          output: {
+            workshopCount: result.workshops?.length || 0,
+            workshops: result.workshops?.map((w: any) => ({
+              title: w.title,
+              date: w.date,
+              type: w.type,
+            })),
+          },
+          metadata: {
+            retrievalType: 'workshop_search',
+            source: 'notion',
+          },
+        });
+        retrievalSpan.end();
+      }
+    }
 
-      // Check if AI wants to call functions
-      if (firstResponse.functionCalls && firstResponse.functionCalls.length > 0) {
-        console.log('🔧 Care plan builder wants to call functions:',
-          firstResponse.functionCalls.map((fc: any) => ({
-            name: fc.name,
-            args: fc.args
-          }))
-        );
-        options?.onProgress?.(`\n## Appel d'outils\nRecherche d'ateliers et formations...\n`);
+    return functionResults;
+  }
 
-        // Execute function calls with Langfuse tracing (RAG retrieval pattern)
-        const functionResults: any[] = [];
-        for (const functionCall of firstResponse.functionCalls) {
-          if (functionCall.name === 'workshops_search') {
-            // Create a span for the retrieval step
-            const retrievalSpan = trace.span({
-              name: 'workshop-retrieval',
-              input: {
-                function: functionCall.name,
-                parameters: functionCall.args,
-              },
-            });
+  private buildSecondPrompt(
+    firstResponseOutput: string,
+    functionResults: any[],
+  ): string {
+    return `## Previous Analysis
 
-            const result = await this.notionWorkshopService.executeFunction(functionCall);
-
-            functionResults.push({
-              name: functionCall.name,
-              result,
-            });
-
-            console.log(`✅ Workshop search returned ${result.workshops?.length || 0} results`);
-
-            // Update retrieval span with results
-            retrievalSpan.update({
-              output: {
-                workshopCount: result.workshops?.length || 0,
-                workshops: result.workshops?.map((w: any) => ({
-                  title: w.title,
-                  date: w.date,
-                  type: w.type,
-                })),
-              },
-              metadata: {
-                retrievalType: 'workshop_search',
-                source: 'notion',
-              },
-            });
-            retrievalSpan.end();
-          }
-        }
-
-        // Build second prompt with function results and previous thinking
-        const secondUserPrompt = `## Previous Analysis
-
-${firstResponse.fullOutput}
+${firstResponseOutput}
 
 ## Available Resources
 
@@ -210,19 +189,156 @@ Now generate the final personalized action plan using these resources.
 **Important**:
 1. Use the previous analysis context to stay consistent with identified priorities
 2. Include real workshop links in action CTAs when you select relevant workshops
-3. End your response with the action plan JSON in a code block \`\`\`json
+3. **After your reflection, return the care plan in a JSON code block as specified in the system prompt**
 4. All action titles, content, CTA names, and markdown section headers must be in French
 `;
+  }
 
-        options?.onProgress?.(`\n## Génération du plan final\n`);
+  private async generateInitialAnalysis(
+    systemPrompt: string,
+    userPrompt: string,
+    options?: CarePlanBuilderOptions,
+  ): Promise<{
+    fullOutput: string;
+    functionCalls?: any[];
+    usage: { inputTokens: number; outputTokens: number; totalTokens: number };
+  }> {
+    return await this.callAI({
+      systemPrompt,
+      userPrompt,
+      tools: this.tools,
+      options,
+    });
+  }
 
-        // Second AI call: Generate final plan with resources
-        const secondResponse = await this.callAI(systemPrompt, secondUserPrompt, options);
+  private async generateFinalPlan(
+    systemPrompt: string,
+    secondUserPrompt: string,
+    trace: any,
+    options?: CarePlanBuilderOptions,
+  ): Promise<{
+    fullOutput: string;
+    usage: { inputTokens: number; outputTokens: number; totalTokens: number };
+  }> {
+    options?.onProgress?.(`\n## Génération du plan final\n`);
+
+    // Create a second generation span for the final plan
+    const secondGeneration = trace.generation({
+      name: 'generate-final-plan',
+      model: 'gemini-2.5-flash',
+      modelParameters: {
+        temperature: 0,
+      },
+      input: {
+        systemInstruction: systemPrompt,
+        userPrompt: secondUserPrompt,
+      },
+    });
+
+    const secondResponse = await this.callAI({
+      systemPrompt,
+      userPrompt: secondUserPrompt,
+      options,
+    });
+
+    secondGeneration.update({
+      output: {
+        textResponse: secondResponse.fullOutput,
+      },
+      usage: {
+        input: secondResponse.usage.inputTokens,
+        output: secondResponse.usage.outputTokens,
+        total: secondResponse.usage.totalTokens,
+        unit: 'TOKENS',
+      },
+    });
+    secondGeneration.end();
+
+    return {
+      fullOutput: secondResponse.fullOutput,
+      usage: secondResponse.usage,
+    };
+  }
+
+  async buildCarePlan(
+    args: CarePlanBuilderArgs,
+    options?: CarePlanBuilderOptions,
+  ): Promise<{ carePlan: Action[] }> {
+    const userPrompt = buildUserPrompt(args.profileText, args.currentCarePlan);
+
+    // Build system prompt for Phase 1 with workshop search tool context
+    const firstSystemPrompt = CARE_PLAN_BUILDER_SYSTEM_PROMPT + '\n\n## Available Tools\n\n' + this.notionWorkshopService.getPromptContext();
+
+    // Build system prompt for Phase 2 (no tools, just JSON output)
+    const secondSystemPrompt = CARE_PLAN_BUILDER_SYSTEM_PROMPT;
+
+    // Create Langfuse trace
+    const trace = this.langfuse.trace({
+      name: 'care-plan-generation',
+      metadata: {
+        profileLength: args.profileText.length,
+        hasCurrentPlan: !!args.currentCarePlan,
+      },
+    });
+
+    const model = 'gemini-2.5-flash';
+    const generation = trace.generation({
+      name: 'generate-care-plan',
+      model,
+      modelParameters: {
+        temperature: 0,
+      },
+      input: {
+        systemInstruction: firstSystemPrompt,
+        userPrompt,
+      },
+    });
+
+    try {
+      options?.onProgress?.(`## Opérateur : Chargement du programme 'Création de plan d'action'
+Programme chargé
+`,
+      );
+
+      // Phase 1: Generate initial analysis and identify needed resources
+      const firstResponse = await this.generateInitialAnalysis(firstSystemPrompt, userPrompt, options);
+
+      // Update first generation trace with output
+      generation.update({
+        output: {
+          textResponse: firstResponse.fullOutput,
+          functionCalls: firstResponse.functionCalls?.map(fc => ({
+            name: fc.name,
+            arguments: fc.args,
+          })),
+        },
+        usage: {
+          input: firstResponse.usage.inputTokens,
+          output: firstResponse.usage.outputTokens,
+          total: firstResponse.usage.totalTokens,
+          unit: 'TOKENS',
+        },
+      });
+      generation.end();
+
+      let finalOutput = firstResponse.fullOutput;
+      let carePlan: Action[];
+
+      // Phase 2: If tools are needed, execute them and generate final plan
+      if (firstResponse.functionCalls && firstResponse.functionCalls.length > 0) {
+        // Execute tool calls and retrieve resources
+        const functionResults = await this.executeToolCalls(firstResponse.functionCalls, trace, options);
+
+        // Build augmented prompt with retrieved resources
+        const secondUserPrompt = this.buildSecondPrompt(firstResponse.fullOutput, functionResults);
+
+        // Generate final plan with resources
+        const secondResponse = await this.generateFinalPlan(secondSystemPrompt, secondUserPrompt, trace, options);
+
         finalOutput = secondResponse.fullOutput;
-        totalTokenCount += secondResponse.tokenCount;
       }
 
-      // Extract JSON from response
+      // Extract care plan from JSON code block
       const jsonMatch = finalOutput.match(/```json\s*([\s\S]*?)\s*```/);
       if (!jsonMatch) {
         throw new Error(
@@ -237,7 +353,7 @@ Now generate the final personalized action plan using these resources.
         throw new Error('Invalid care plan structure in AI response');
       }
 
-      const carePlan: Action[] = parsedResponse.carePlan;
+      carePlan = parsedResponse.carePlan;
 
       // Validate actions
       for (const action of carePlan) {
@@ -252,18 +368,6 @@ Now generate the final personalized action plan using these resources.
           );
         }
       }
-
-      // Update Langfuse with results
-      generation.update({
-        output: { carePlan },
-        usage: {
-          input: totalTokenCount,
-          output: totalTokenCount,
-          total: totalTokenCount,
-          unit: 'TOKENS',
-        },
-      });
-      generation.end();
 
       options?.onProgress?.(`
 ## Génération terminée

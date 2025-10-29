@@ -1,10 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import axios from 'axios';
-import { WorkshopSearchResponse } from './types/workshop.types';
 import { SimplifiedWorkshop } from './models/simplified-workshop.model';
 import { Type, FunctionDeclaration, FunctionCall } from '@google/genai';
 import { AIServiceProvider } from '../common/interfaces/ai-service.interface';
-import { Location } from '../geoloc/models/location.model';
 
 @Injectable()
 export class NotionWorkshopService implements AIServiceProvider {
