@@ -1,12 +1,18 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { AICarePlanBuilderService } from './care-plan-builder-ai.service';
 import { CarePlanBuilderArgs } from './care-plan-builder.abstract';
+import { NotionModule } from '../notion/notion.module';
+import { FranceTravailModule } from '../francetravail/francetravail.module';
+import { DataInclusionModule } from '../datainclusion/datainclusion.module';
+import { GeolocModule } from '../geoloc/geoloc.module';
+import { ConfigModule } from '@nestjs/config';
 
 describe('AICarePlanBuilderService', () => {
   let service: AICarePlanBuilderService;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
+      imports: [ConfigModule.forRoot(), NotionModule, FranceTravailModule, DataInclusionModule, GeolocModule],
       providers: [AICarePlanBuilderService],
     }).compile();
 
