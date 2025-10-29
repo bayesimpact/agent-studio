@@ -3,9 +3,6 @@ import { ChatController } from './chat.controller';
 import { ChatService } from './chat.service';
 import { AIModule } from '../ai/ai.module';
 import { ChatRepository } from './chat.repository';
-// import { ResourcesModule } from '../resources/resources.module';
-// import { GeolocModule } from '../geoloc/geoloc.module';
-// import { FranceTravailModule } from '../francetravail/francetravail.module';
 import { NotionModule } from '../notion/notion.module';
 import { CarePlanBuilderModule } from '../care-plan-builder/care-plan-builder.module';
 
