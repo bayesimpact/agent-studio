@@ -195,6 +195,7 @@ Référentiel a utiliser pour categoriser les actions
 2. **Tool Usage**: **MANDATORY** - You MUST call ALL available tools to gather comprehensive information:
    - Call \`workshops_search\` to find relevant workshops and training sessions
    - Call \`jobs_search\` to find relevant job opportunities
+   - Call \`events_search\` to find relevant job fairs and employment events
    - Use the beneficiary's location information for these searches
 3. **Priority Identification**: Determine the most urgent and important actions
 4. **Action Generation**: Create 4 to 7 concrete and personalized actions
