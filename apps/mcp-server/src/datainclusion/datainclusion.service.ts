@@ -1,10 +1,9 @@
-import { Injectable } from '@nestjs/common';
 import axios from 'axios';
 import qs from 'qs';
-import { ServiceSearchResponse } from './types/service-search.types';
-import { SimplifiedService } from './models/simplified-service.model';
+import { ServiceSearchResponse } from './types/service-search.types.js';
+import { SimplifiedService } from './models/simplified-service.model.js';
 import { Type, FunctionDeclaration, FunctionCall } from '@google/genai';
-import { AIServiceProvider } from '../common/interfaces/ai-service.interface';
+import { AIServiceProvider } from '../common/interfaces/ai-service.interface.js';
 
 export const thematiques = [
   'choisir-un-metier--confirmer-son-choix-de-metier',
@@ -78,7 +77,6 @@ export const thematiques = [
   'trouver-un-emploi--suivre-ses-candidatures-et-relancer-les-employeurs',
 ];
 
-@Injectable()
 export class DataInclusionService implements AIServiceProvider {
   // eslint-disable-next-line turbo/no-undeclared-env-vars
   private token = process.env.DATA_INCLUSION_TOKEN;
@@ -134,16 +132,19 @@ export class DataInclusionService implements AIServiceProvider {
   async executeFunction(
     functionCall: FunctionCall,
   ): Promise<{ services: SimplifiedService[] }> {
-    const thematiques = functionCall.args['thematiques'] as string[];
-    const cityCode = functionCall.args['cityCode'] as string;
-    console.log('Function calling with params:', thematiques, cityCode);
+    if (functionCall.args) {
+      const thematiques = functionCall.args['thematiques'] as string[];
+      const cityCode = functionCall.args['cityCode'] as string;
+      console.error('Function calling with params:', thematiques, cityCode);
 
-    const services = await this.searchServices({
-      thematiques,
-      codeCommune: cityCode,
-    });
-    console.log('Services length: ', services.length);
-    return { services };
+      const services = await this.searchServices({
+        thematiques,
+        codeCommune: cityCode,
+      });
+      console.error('Services length: ', services.length);
+      return { services };
+    }
+    return { services: [] };
   }
 
   async searchServices({
