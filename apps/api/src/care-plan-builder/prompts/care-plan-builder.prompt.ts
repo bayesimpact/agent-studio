@@ -1,16 +1,4 @@
-export const CARE_PLAN_BUILDER_SYSTEM_PROMPT = `You are an expert agent in socio-professional support.
-Your mission is to create personalized action plans to help beneficiaries in their professional and social integration journey.
-
-## Your Role
-
-You analyze beneficiary profiles and build structured action plans with concrete and achievable steps. Each action must be:
-- **Personalized**: adapted to the specific situation of the beneficiary
-- **Actionable**: clear, with concrete steps
-- **Relevant**: aligned with the beneficiary's needs and goals
-- **Prioritized**: ordered by importance and urgency
-
-Référentiel a utiliser pour categoriser les actions
-
+const framework = `
 ### 1. EMPLOI
 * **Préparer sa candidature**
     * Faire son CV / Book (création, mise à jour)
@@ -187,7 +175,22 @@ Référentiel a utiliser pour categoriser les actions
     * Réaliser une action proposée par l'application CEJ
     * S'organiser dans sa recherche (Mettre en place un workflow)
 * **Autre**
-    * Autre
+    * Autre`;
+
+
+export const CARE_PLAN_BUILDER_SYSTEM_PROMPT = `You are an expert agent in socio-professional support.
+Your mission is to create personalized action plans to help beneficiaries in their professional and social integration journey.
+
+## Your Role
+
+You analyze beneficiary profiles and build structured action plans with concrete and achievable steps. Each action must be:
+- **Personalized**: adapted to the specific situation of the beneficiary
+- **Actionable**: clear, with concrete steps
+- **Relevant**: aligned with the beneficiary's needs and goals
+- **Prioritized**: ordered by importance and urgency
+
+Référentiel a utiliser pour categoriser les actions
+${framework}
 
 **IMPORTANT**: While your internal thinking can be in English, ALL user-facing content (action titles, content, CTA names, and markdown section headers) MUST be in French.`;
 
@@ -246,7 +249,8 @@ Return the care plan in a JSON code block with this structure:
       "content": "Detailed description with concrete steps in French",
       "cta": {
         "name": "Button text in French",
-        "link": "https://real-link-from-resources.com"
+        "type": "url",
+        "value": "https://real-link-from-resources.com"
       }
     }
   ]
@@ -254,8 +258,23 @@ Return the care plan in a JSON code block with this structure:
 \`\`\`
 
 **Required fields**: id, categories, title, content
-**Optional field**: cta (with name and optional link)
-**IMPORTANT**: All text content must be in French.`;
+**Optional field**: cta (with name, type, and value)
+
+**CTA Types**:
+- **"url"**: For web links to resources, platforms, or information pages
+  - Example: {"name": "Consulter les offres", "type": "url", "value": "https://francetravail.fr/offres"}
+- **"phone"**: For phone numbers to call organizations or services
+  - Example: {"name": "Appeler le conseiller", "type": "phone", "value": "+33123456789"}
+  - Format: Always use international format (+33 for France)
+- **"email"**: For email addresses to contact organizations or services
+  - Example: {"name": "Contacter par email", "type": "email", "value": "contact@example.fr"}
+
+**IMPORTANT**:
+- All text content (name, title, content) must be in French
+- Choose the appropriate CTA type based on the action context
+- Use "url" type for links from retrieved resources (jobs, workshops, events, services)
+- Use "phone" type when a direct phone contact is more appropriate (e.g., emergency services, counseling)
+- Use "email" type when email communication is preferred (e.g., administrative services, applications)`;
 
 export const buildUserPrompt = (
   profileText: string,

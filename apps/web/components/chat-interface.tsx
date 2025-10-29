@@ -17,15 +17,20 @@ interface FunctionCallData {
   args: Record<string, any>
 }
 
+type CTAType = 'url' | 'phone' | 'email'
+
+interface CTA {
+  name: string
+  type: CTAType
+  value: string
+}
+
 interface Action {
   id: string
   categories: string[]
   content: string
   title: string
-  cta?: {
-    name: string
-    link?: string
-  }
+  cta?: CTA
 }
 
 interface Message {

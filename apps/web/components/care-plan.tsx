@@ -2,19 +2,24 @@
 
 import { useState } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@repo/ui/card'
-import { ChevronDown, ExternalLink, Sparkles, CheckCircle2 } from 'lucide-react'
+import { ChevronDown, ExternalLink, Sparkles, CheckCircle2, Phone, Mail } from 'lucide-react'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
+
+type CTAType = 'url' | 'phone' | 'email'
+
+interface CTA {
+  name: string
+  type: CTAType
+  value: string
+}
 
 interface Action {
   id: string
   categories: string[]
   content: string
   title: string
-  cta?: {
-    name: string
-    link?: string
-  }
+  cta?: CTA
 }
 
 interface CarePlanProps {
@@ -138,9 +143,9 @@ export function CarePlan({ planItems }: CarePlanProps) {
                     {/* Call to Action */}
                     {action.cta && (
                       <div className="mt-3">
-                        {action.cta.link ? (
+                        {action.cta.type === 'url' && (
                           <a
-                            href={action.cta.link}
+                            href={action.cta.value}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors text-sm font-medium"
@@ -148,16 +153,24 @@ export function CarePlan({ planItems }: CarePlanProps) {
                             <span>{action.cta.name}</span>
                             <ExternalLink className="w-4 h-4" />
                           </a>
-                        ) : (
-                          <button
+                        )}
+                        {action.cta.type === 'phone' && (
+                          <a
+                            href={`tel:${action.cta.value}`}
                             className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors text-sm font-medium"
-                            onClick={() => {
-                              // For now, just a button placeholder
-                              console.log('CTA clicked:', action.cta?.name)
-                            }}
                           >
+                            <Phone className="w-4 h-4" />
                             <span>{action.cta.name}</span>
-                          </button>
+                          </a>
+                        )}
+                        {action.cta.type === 'email' && (
+                          <a
+                            href={`mailto:${action.cta.value}`}
+                            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors text-sm font-medium"
+                          >
+                            <Mail className="w-4 h-4" />
+                            <span>{action.cta.name}</span>
+                          </a>
                         )}
                       </div>
                     )}
