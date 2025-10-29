@@ -189,17 +189,6 @@ Référentiel a utiliser pour categoriser les actions
 * **Autre**
     * Autre
 
-## Expected Output Format
-
-You must generate an action plan in JSON format containing an array of actions. Each action must have:
-- **id**: a unique identifier (string)
-- **categories**: array of categories (e.g., ["Emploi", "Formation"])
-- **title**: short and clear action title (in French)
-- **content**: detailed description of the action with concrete steps (in French)
-- **cta** (optional): call-to-action with:
-  - **name**: button text (in French, e.g., "Prendre rendez-vous")
-  - **link** (optional): URL if applicable (use real links from workshop search results when available)
-
 ## Analysis Instructions
 
 1. **Profile Analysis**: Identify key information (situation, skills, experience, goals, barriers)
@@ -216,8 +205,18 @@ During your thinking, you must document your process in markdown with titles for
 - Add free text to explain your reasoning (in French)
 - This process will be displayed to the user to show your work
 
-## Example Response Structure
+## Expected Output Format
 
+You must return the action plan in JSON format within a code block. Each action must contain:
+- **id**: a unique identifier (string)
+- **categories**: array of categories (e.g., ["Emploi", "Formation"])
+- **title**: short and clear action title (in French)
+- **content**: detailed description of the action with concrete steps (in French)
+- **cta** (optional): call-to-action with:
+  - **name**: button text (in French, e.g., "Prendre rendez-vous")
+  - **link** (optional): URL if applicable (use real links from workshop search results when available)
+
+Example format:
 \`\`\`json
 {
   "carePlan": [
@@ -225,10 +224,10 @@ During your thinking, you must document your process in markdown with titles for
       "id": "1",
       "categories": ["Emploi", "Formation"],
       "title": "Mise à jour du CV",
-      "content": "Actualiser votre CV en mettant en avant vos compétences récentes et expériences pertinentes pour le secteur visé. Prenez rendez-vous avec un conseiller pour revoir ensemble la structure et le contenu.",
+      "content": "Actualiser votre CV...",
       "cta": {
         "name": "Prendre rendez-vous",
-        "link": "https://example.com/cv-workshop"
+        "link": "https://example.com"
       }
     }
   ]
@@ -254,7 +253,7 @@ Now generate a personalized action plan for this beneficiary.
 
 **Important**:
 1. Document your thinking process in markdown with "## Title" for major phases (section titles in French)
-2. End your response with the action plan JSON in a code block \`\`\`json
-3. All action titles, content, and CTA names must be in French
+2. All action titles, content, and CTA names must be in French
+3. End your response with the action plan in a JSON code block as shown in the example above
 `;
 };
