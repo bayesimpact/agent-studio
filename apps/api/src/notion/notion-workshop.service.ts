@@ -18,27 +18,16 @@ export class NotionWorkshopService implements AIServiceProvider {
       description: 'Search for workshops, training sessions, and professional events (ateliers, formations, événements professionnels)',
       parameters: {
         type: Type.OBJECT,
-        properties: {
-          workshopTypes: {
-            type: Type.ARRAY,
-            description: 'Types of workshops or themes in French (e.g., "Numérique/Tech", "Découverte métier", "Formation")',
-            items: {
-              type: Type.STRING,
-            },
-          },
+        properties:{
           cityName: {
             type: Type.ARRAY,
             description: 'City name in French',
             items: {
               type: Type.STRING,
             },
-          },
-          startDate: {
-            type: Type.STRING,
-            description: 'Start date for workshop search in YYYY-MM-DD format (optional)',
-          },
+          }
         },
-        required: ['workshopTypes', 'cityName'],
+        required: ['cityName'],
       },
     };
   }
@@ -49,12 +38,9 @@ export class NotionWorkshopService implements AIServiceProvider {
 **Description**: Search for workshops, training sessions, and professional events from Notion database.
 
 **Parameters**:
-- \`workshopTypes\`: 1-3 workshop types or themes in French
-  - Examples: ["Numérique/Tech"], ["Découverte métier"], ["Formation professionnelle"]
-- \`cityName\`: City name (required - ask if not provided)
-- \`startDate\`: Optional start date for the search (format: YYYY-MM-DD)
+- \`cityName\`: City name (required)
 
-**Returns**: List of workshops with title, date, location, capacity, signup URL, type, and description (up to 20 results)
+**Returns**: List of workshops with title, date, location, capacity, signup URL, type, and description
 `;
   }
 

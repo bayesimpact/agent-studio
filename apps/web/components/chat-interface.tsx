@@ -200,8 +200,8 @@ export function ChatInterface() {
                   prev.map(msg => {
                     if (msg.id !== data.messageId) return msg
 
-                    // Accumulate full progress text
-                    const newProgressText = (msg.progressText || '') + data.message + '\n'
+                    // Accumulate full progress text without extra newlines
+                    const newProgressText = (msg.progressText || '') + data.message
 
                     // Extract the last markdown header (# Title) as current title
                     const headerMatch = data.message.match(/^#+\s+(.+)$/m)
@@ -465,22 +465,24 @@ export function ChatInterface() {
                             borderColor: 'var(--status-border, #bacfca)',
                           }}
                           onMouseEnter={(e) => {
-                            if (message.functionCalls && message.functionCalls.length > 0) {
+                            if (message.functionCalls && message.functionCalls.length > 0 && !expandedFunctions.has(message.id)) {
                               e.currentTarget.style.setProperty('--status-bg', '#bacfca');
                             }
                           }}
                           onMouseLeave={(e) => {
-                            if (message.functionCalls && message.functionCalls.length > 0) {
+                            if (message.functionCalls && message.functionCalls.length > 0 && !expandedFunctions.has(message.id)) {
                               e.currentTarget.style.setProperty('--status-bg', '#e9eeed');
                             }
                           }}
-                          onClick={() => {
+                          onClick={(e) => {
                             if (message.functionCalls && message.functionCalls.length > 0) {
                               const newExpanded = new Set(expandedFunctions)
                               if (newExpanded.has(message.id)) {
                                 newExpanded.delete(message.id)
                               } else {
                                 newExpanded.add(message.id)
+                                // Reset hover effect when opening
+                                e.currentTarget.style.setProperty('--status-bg', '#e9eeed')
                               }
                               setExpandedFunctions(newExpanded)
                             }
@@ -510,7 +512,7 @@ export function ChatInterface() {
                           {message.functionCalls && message.functionCalls.length > 0 && expandedFunctions.has(message.id) && (
                             <div className="mt-3 pt-2" style={{ borderTopWidth: '1px', borderTopColor: '#bacfca' }}>
                               {message.progressText ? (
-                                <div className="text-xs markdown-content" style={{ color: '#597f77' }}>
+                                <div className="text-xs markdown-content hide-code" style={{ color: '#597f77' }}>
                                   <ReactMarkdown remarkPlugins={[remarkGfm, remarkBreaks]}>
                                     {message.progressText}
                                   </ReactMarkdown>
