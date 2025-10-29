@@ -21,6 +21,7 @@ import {
 } from './prompts/care-plan-builder.prompt';
 import { NotionWorkshopService } from '../notion/notion-workshop.service';
 import { FranceTravailJobsService } from '../francetravail/francetravail-jobs.service';
+import { FranceTravailEventsService } from '../francetravail/francetravail-events.service';
 import { GeolocService } from '../geoloc/geoloc.service';
 import { Location } from '../geoloc/models/location.model';
 
@@ -50,6 +51,7 @@ export class AICarePlanBuilderService extends AbstractCarePlanBuilderService {
   constructor(
     private notionWorkshopService: NotionWorkshopService,
     private franceTravailJobsService: FranceTravailJobsService,
+    private franceTravailEventsService: FranceTravailEventsService,
     private geolocService: GeolocService,
   ) {
     super();
@@ -72,6 +74,7 @@ export class AICarePlanBuilderService extends AbstractCarePlanBuilderService {
         functionDeclarations: [
           this.notionWorkshopService.getFunctionDeclaration(),
           this.franceTravailJobsService.getFunctionDeclaration(),
+          this.franceTravailEventsService.getFunctionDeclaration(),
         ],
       },
     ];
@@ -146,6 +149,7 @@ export class AICarePlanBuilderService extends AbstractCarePlanBuilderService {
 
     const functionResults: FunctionCallResult[] = [];
     for (const functionCall of functionCalls) {
+      // Resolve location once for all function calls
       if (locations.length === 0) {
         locations = await this.geolocService.searchMunicipalities(
           functionCall.args['cityName'] as string || '',//FIXME
@@ -153,84 +157,48 @@ export class AICarePlanBuilderService extends AbstractCarePlanBuilderService {
       }
       functionCall.args['departmentsCode'] = [locations[0].departmentCode]
       functionCall.args['departmentCode'] = locations[0].departmentCode
+
+      // Create a generic span for the retrieval step
+      const retrievalSpan = trace.span({
+        name: `${functionCall.name}-retrieval`,
+        input: {
+          function: functionCall.name,
+          parameters: functionCall.args,
+        },
+      });
+
+      let result: any;
+      let source = 'unknown';
+
+      // Execute the appropriate service based on function name
       if (functionCall.name === 'workshops_search') {
-        // Create a span for the retrieval step
-        const retrievalSpan = trace.span({
-          name: 'workshop-retrieval',
-          input: {
-            function: functionCall.name,
-            parameters: functionCall.args,
-          },
-        });
-
-        const result =
-          await this.notionWorkshopService.executeFunction(functionCall);
-
-        functionResults.push({
-          name: functionCall.name,
-          result,
-        });
-
-        console.log(
-          `✅ Workshop search returned ${result.workshops?.length || 0} results`,
-        );
-
-        // Update retrieval span with results
-        retrievalSpan.update({
-          output: {
-            workshopCount: result.workshops?.length || 0,
-            workshops: result.workshops?.map((w: any) => ({
-              title: w.title,
-              date: w.date,
-              type: w.type,
-            })),
-          },
-          metadata: {
-            retrievalType: 'workshop_search',
-            source: 'notion',
-          },
-        });
-        retrievalSpan.end();
+        result = await this.notionWorkshopService.executeFunction(functionCall);
+        source = 'notion';
+        console.log(`✅ Workshop search returned ${result.workshops?.length || 0} results`);
       } else if (functionCall.name === 'jobs_search') {
-        // Create a span for the retrieval step
-        const retrievalSpan = trace.span({
-          name: 'job-retrieval',
-          input: {
-            function: functionCall.name,
-            parameters: functionCall.args,
-          },
-        });
-
-        const result =
-          await this.franceTravailJobsService.executeFunction(functionCall);
-
-        functionResults.push({
-          name: functionCall.name,
-          result,
-        });
-
-        console.log(
-          `✅ Job search returned ${result.jobOffers?.length || 0} results`,
-        );
-
-        // Update retrieval span with results
-        retrievalSpan.update({
-          output: {
-            jobOffersCount: result.jobOffers?.length || 0,
-            jobOffers: result.jobOffers?.map((j: any) => ({
-              title: j.title,
-              company: j.company,
-              location: j.location,
-              contractType: j.contractType,
-            })),
-          },
-          metadata: {
-            retrievalType: 'job_search',
-            source: 'francetravail',
-          },
-        });
-        retrievalSpan.end();
+        result = await this.franceTravailJobsService.executeFunction(functionCall);
+        source = 'francetravail';
+        console.log(`✅ Job search returned ${result.jobOffers?.length || 0} results`);
+      } else if (functionCall.name === 'events_search') {
+        result = await this.franceTravailEventsService.executeFunction(functionCall);
+        source = 'francetravail';
+        console.log(`✅ Event search returned ${result.events?.length || 0} results`);
       }
+
+      functionResults.push({
+        name: functionCall.name,
+        result,
+      });
+
+      // Update retrieval span with results
+      retrievalSpan.update({
+        output: result,
+        metadata: {
+          retrievalType: functionCall.name,
+          source,
+        },
+      });
+      retrievalSpan.end();
     }
 
     return functionResults;
@@ -351,7 +319,9 @@ Now generate the final personalized action plan using these resources.
       '\n\n## Available Tools\n\n' +
       this.notionWorkshopService.getPromptContext() +
       '\n' +
-      this.franceTravailJobsService.getPromptContext();
+      this.franceTravailJobsService.getPromptContext() +
+      '\n' +
+      this.franceTravailEventsService.getPromptContext();
 
     // Build system prompt for Phase 2 (no tools, just JSON output)
     const secondSystemPrompt = CARE_PLAN_BUILDER_SYSTEM_PROMPT;
