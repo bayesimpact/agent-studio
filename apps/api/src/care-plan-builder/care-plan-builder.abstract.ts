@@ -1,15 +1,20 @@
 import { AIServiceProvider } from '../common/interfaces/ai-service.interface';
 import { FunctionDeclaration, Type } from '@google/genai';
 
+export type CTAType = 'url' | 'phone' | 'email';
+
+export interface CTA {
+  name: string;
+  type: CTAType;
+  value: string;
+}
+
 export interface Action {
   id: string;
   categories: string[];
   content: string;
   title: string;
-  cta?: {
-    name: string;
-    link?: string;
-  };
+  cta?: CTA;
 }
 
 export interface CarePlanBuilderArgs {
@@ -49,9 +54,21 @@ export abstract class AbstractCarePlanBuilderService
                 cta: {
                   type: Type.OBJECT,
                   properties: {
-                    name: { type: Type.STRING },
-                    link: { type: Type.STRING },
+                    name: {
+                      type: Type.STRING,
+                      description: 'Display text for the call-to-action button'
+                    },
+                    type: {
+                      type: Type.STRING,
+                      description: 'Type of CTA: "url" for web links, "phone" for phone numbers, "email" for email addresses',
+                      enum: ['url', 'phone', 'email']
+                    },
+                    value: {
+                      type: Type.STRING,
+                      description: 'The actual value: URL for "url" type, phone number for "phone" type (format: +33123456789), email address for "email" type'
+                    },
                   },
+                  required: ['name', 'type', 'value']
                 },
               },
             },
@@ -78,7 +95,10 @@ export abstract class AbstractCarePlanBuilderService
   - \`categories\`: Array of category tags (e.g., ["Emploi", "Formation"])
   - \`title\`: Short title of the action
   - \`content\`: Detailed description
-  - \`cta\`: Optional call-to-action with \`name\` and optional \`link\`
+  - \`cta\`: Optional call-to-action object with:
+    - \`name\`: Display text for the button (required)
+    - \`type\`: Type of action - "url", "phone", or "email" (required)
+    - \`value\`: The actual value - URL, phone number (format: +33123456789), or email address (required)
 - \`profileText\`: Full text description of the beneficiary's profile, situation, needs, skills, and goals
 
 **Returns**: A structured care plan as an array of Action objects

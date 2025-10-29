@@ -6,7 +6,7 @@ Content-Type: application/x-www-form-urlencoded
 grant_type=client_credentials
     &client_id={{client_id}}
     &client_secret={{secret_key}}
-    &scope=api_romeov2 o2dsoffre api_offresdemploiv2 api_evenementsv1 evenements
+    &scope=api_romeov2 o2dsoffre api_offresdemploiv2 api_evenementsv1 evenements api_labonneboitev2 search office
 #    &scope=api_offresdemploiv2 o2dsoffre api_evenementsv1 evenements
 
 ###
@@ -62,6 +62,14 @@ GET https://api.francetravail.io/partenaire/evenements/v1/mee/tags/opera/lister
 Content-Type:application/json
 Accept:application/json
 Authorization: Bearer ezbsR2CkLuKey_hNuh1adWJWSaE
+
+
+###
+GET https://api.francetravail.io/partenaire/labonneboite/v2/recherche?city=rouen&rome=G1609&rome=D1212&rome=G1601&rome=G1602&rome=G1607&rome=G1404&rome=F1201&rome=F1108&rome=H2602&rome=H2601&rome=H1504]
+Content-Type:application/json
+Accept:application/json
+Authorization: Bearer 6kPOjNC9HLiVHcEgXa3iSRJmQKcdo
+
 
 
 

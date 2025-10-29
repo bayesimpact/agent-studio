@@ -41,7 +41,8 @@ export class StaticCarePlanBuilderService extends AbstractCarePlanBuilderService
           'Actualiser votre CV en mettant en avant vos compétences récentes et expériences pertinentes pour le secteur visé.',
         cta: {
           name: 'Prendre rendez-vous',
-          link: 'https://example.com/cv-workshop',
+          type: 'url',
+          value: 'https://example.com/cv-workshop',
         },
       },
       {
@@ -51,7 +52,9 @@ export class StaticCarePlanBuilderService extends AbstractCarePlanBuilderService
         content:
           'Participer à des événements de networking et rejoindre des groupes professionnels sur LinkedIn.',
         cta: {
-          name: 'Voir les événements',
+          name: 'Appeler le conseiller',
+          type: 'phone',
+          value: '+33123456789',
         },
       },
       {
@@ -62,7 +65,8 @@ export class StaticCarePlanBuilderService extends AbstractCarePlanBuilderService
           'Identifier et suivre une formation pour renforcer vos compétences dans votre domaine cible.',
         cta: {
           name: 'Explorer les formations',
-          link: 'https://example.com/formations',
+          type: 'url',
+          value: 'https://example.com/formations',
         },
       },
       {
@@ -79,7 +83,9 @@ export class StaticCarePlanBuilderService extends AbstractCarePlanBuilderService
         content:
           "S'assurer que tous les droits sociaux (allocations, aides au logement, etc.) sont à jour et optimisés.",
         cta: {
-          name: 'Prendre rendez-vous',
+          name: 'Contacter par email',
+          type: 'email',
+          value: 'conseil@example.fr',
         },
       },
     ];
