@@ -30,11 +30,8 @@ export class FranceTravailJobsService
             }
           },
           cityName: {
-            type: Type.ARRAY,
+            type: Type.STRING,
             description: 'City name in french',
-            items: {
-              type: Type.STRING,
-            }
           },
         },
         required: ['jobTitles', 'cityName'],

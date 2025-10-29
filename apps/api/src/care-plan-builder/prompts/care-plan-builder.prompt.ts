@@ -189,56 +189,73 @@ Référentiel a utiliser pour categoriser les actions
 * **Autre**
     * Autre
 
-## Analysis Instructions
+**IMPORTANT**: While your internal thinking can be in English, ALL user-facing content (action titles, content, CTA names, and markdown section headers) MUST be in French.`;
 
+// Phase 1: Initial analysis with tool calls
+export const PHASE_1_INSTRUCTIONS = `
+## Phase 1: Profile Analysis and Resource Discovery
+
+Your task is to analyze the beneficiary profile and identify what resources they need.
+
+**Instructions**:
 1. **Profile Analysis**: Identify key information (situation, skills, experience, goals, barriers)
 2. **Tool Usage**: **MANDATORY** - You MUST call ALL available tools to gather comprehensive information:
    - Call \`workshops_search\` to find relevant workshops and training sessions
    - Call \`jobs_search\` to find relevant job opportunities
    - Call \`events_search\` to find relevant job fairs and employment events
+   - Call \`services_search\` to find relevant support services (social, administrative, financial, housing, health, training, etc.)
    - Use the beneficiary's location information for these searches
 3. **Priority Identification**: Determine the most urgent and important actions
-4. **Action Generation**: Create 4 to 7 concrete and personalized actions
-5. **Link Enrichment**: When you have workshop and job search results, include real links in CTAs
-6. **Structuring**: Order actions by priority
 
-## Reflection Process
+**Reflection Process**:
+Document your analysis in markdown with clear section titles in French:
+- Use "## Title" for major steps (e.g., "## Analyse du profil", "## Identification des priorités")
+- Explain your reasoning in French
+- This will be displayed to the user
 
-During your thinking, you must document your process in markdown with titles for each major step:
-- Use "## Title" for major steps (in French, e.g., "## Analyse du profil")
-- Add free text to explain your reasoning (in French)
-- This process will be displayed to the user to show your work
+**IMPORTANT**: You do NOT need to generate the final care plan yet. Just analyze and call the tools.
+`;
 
-## Expected Output Format
+// Phase 2: Final plan generation with retrieved resources
+export const PHASE_2_INSTRUCTIONS = `
+## Phase 2: Final Care Plan Generation
 
-You must return the action plan in JSON format within a code block. Each action must contain:
-- **id**: a unique identifier (string)
-- **categories**: array of categories (e.g., ["Emploi", "Formation"])
-- **title**: short and clear action title (in French)
-- **content**: detailed description of the action with concrete steps (in French)
-- **cta** (optional): call-to-action with:
-  - **name**: button text (in French, e.g., "Prendre rendez-vous")
-  - **link** (optional): URL if applicable (use real links from workshop search results when available)
+Now generate the final personalized care plan using the resources retrieved from the tools.
 
-Example format:
+**Instructions**:
+1. **Resource Selection**: Choose the most relevant resources for this beneficiary
+2. **Action Creation**: Create 4 to 7 concrete and personalized actions
+3. **Link Integration**: Include real links from the retrieved resources in your CTAs
+4. **Prioritization**: Order actions by importance and urgency
+
+**Reflection Process**:
+- Use "## Sélection des ressources" as your main section title
+- Explain WHICH resources you selected and WHY
+- Document how you integrated them into actions
+- Write in French
+
+**Output Format**:
+Return the care plan in a JSON code block with this structure:
 \`\`\`json
 {
   "carePlan": [
     {
       "id": "1",
       "categories": ["Emploi", "Formation"],
-      "title": "Mise à jour du CV",
-      "content": "Actualiser votre CV...",
+      "title": "Short action title in French",
+      "content": "Detailed description with concrete steps in French",
       "cta": {
-        "name": "Prendre rendez-vous",
-        "link": "https://example.com"
+        "name": "Button text in French",
+        "link": "https://real-link-from-resources.com"
       }
     }
   ]
 }
 \`\`\`
 
-**IMPORTANT**: While your internal thinking can be in English, ALL user-facing content (action titles, content, CTA names, and markdown section headers) MUST be in French.`;
+**Required fields**: id, categories, title, content
+**Optional field**: cta (with name and optional link)
+**IMPORTANT**: All text content must be in French.`;
 
 export const buildUserPrompt = (
   profileText: string,

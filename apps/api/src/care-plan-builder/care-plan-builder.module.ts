@@ -3,6 +3,7 @@ import { StaticCarePlanBuilderService } from './care-plan-builder-static.service
 import { AICarePlanBuilderService } from './care-plan-builder-ai.service';
 import { NotionModule } from '../notion/notion.module';
 import { FranceTravailModule } from '../francetravail/francetravail.module';
+import { DataInclusionModule } from '../datainclusion/datainclusion.module';
 import { GeolocModule } from '../geoloc/geoloc.module';
 
 // Choose which implementation to use
@@ -11,7 +12,7 @@ import { GeolocModule } from '../geoloc/geoloc.module';
 const CarePlanBuilderService = AICarePlanBuilderService;
 
 @Module({
-  imports: [NotionModule, FranceTravailModule, GeolocModule],
+  imports: [NotionModule, FranceTravailModule, DataInclusionModule, GeolocModule],
   providers: [
     StaticCarePlanBuilderService,
     AICarePlanBuilderService,
