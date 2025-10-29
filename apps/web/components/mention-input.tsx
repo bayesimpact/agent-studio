@@ -7,7 +7,7 @@ import {
   forwardRef,
   useImperativeHandle,
 } from 'react';
-import { AtSign } from 'lucide-react';
+import { Box, UserRoundCheck, DatabaseZap } from 'lucide-react';
 
 interface MentionOption {
   id: string;
@@ -28,10 +28,22 @@ interface MentionInputProps {
 // Available mention options
 const MENTION_OPTIONS: MentionOption[] = [
   {
-    id: 'trinity',
-    label: '@trinity',
-    description: 'Rechercher un profil bénéficiaire',
-    icon: <AtSign className="w-4 h-4" />,
+    id: 'notion',
+    label: '@notion',
+    description: 'Rechercher un profil bénéficiaire dans Notion',
+    icon: <Box className="w-4 h-4" />,
+  },
+  {
+    id: 'caseai',
+    label: '@caseai',
+    description: 'Rechercher un profil bénéficiaire dans CaseAI',
+    icon: <UserRoundCheck className="w-4 h-4" />,
+  },
+  {
+    id: 'neo',
+    label: '@neo',
+    description: 'Rechercher un profil bénéficiaire (coming soon)',
+    icon: <DatabaseZap className="w-4 h-4" />,
   },
 ];
 
