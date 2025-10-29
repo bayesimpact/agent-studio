@@ -7,6 +7,7 @@ export class SimplifiedJobOffer {
     public readonly company: string,
     public readonly location: string,
     public readonly contractType: string,
+    public readonly url: string,
   ) {}
 
   static fromJobOffer(jobOffer: JobOffer): SimplifiedJobOffer {
@@ -16,6 +17,7 @@ export class SimplifiedJobOffer {
       jobOffer.entreprise.nom,
       jobOffer.lieuTravail.libelle,
       jobOffer.typeContratLibelle,
+      jobOffer.origineOffre.urlOrigine
     );
   }
 

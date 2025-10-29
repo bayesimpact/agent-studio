@@ -37,7 +37,7 @@ Authorization: Bearer 0ynEws6HL9vL4-VarvBJHGJgylA
 #  --header 'Authorization: Bearer 123'
 GET https://api.francetravail.io/partenaire/offresdemploi/v2/offres/search?codeROME=M1405,M1419,M1811,M1409,M1422,K2402,K2401,M1402,M1429,M1702,M1403&departement=75&range=0-2
 Accept: application/json
-Authorization: Bearer 28A5hH6C7wFlUmEjSEK46___WkI
+Authorization: Bearer s9jEVPrLxsYWuViAXEqXEJFvy8o
 
 ###
 GET https://api.francetravail.io/partenaire/evenements/v1/salonsenligne

@@ -31,15 +31,8 @@ export class FranceTravailEventsService
             }
           },
           cityName: {
-            type: Type.ARRAY,
-            description: 'City name in french',
-            items: {
-              type: Type.STRING,
-            }
-          },
-          endDate: {
             type: Type.STRING,
-            description: 'End date for event search in YYYY-MM-DD format (optional)',
+            description: 'City name in french',
           },
         },
         required: ['jobTitles', 'cityName'],
@@ -56,7 +49,6 @@ export class FranceTravailEventsService
 - \`jobTitles\`: 2-5 relevant job titles in French to find sector-specific events
   - Examples: ["développeur web", "développeur full stack"], ["chauffeur de bus", "conducteur"]
 - \`cityName\`: City name (required - ask if not provided)
-- \`endDate\`: Optional end date for the search (format: YYYY-MM-DD)
 
 **Returns**: List of events with id, title, description, dates, location, registration URL, and sector
 `;

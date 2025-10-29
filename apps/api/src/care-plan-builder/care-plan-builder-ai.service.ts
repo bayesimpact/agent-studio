@@ -17,11 +17,14 @@ import {
 } from 'langfuse';
 import {
   CARE_PLAN_BUILDER_SYSTEM_PROMPT,
+  PHASE_1_INSTRUCTIONS,
+  PHASE_2_INSTRUCTIONS,
   buildUserPrompt,
 } from './prompts/care-plan-builder.prompt';
 import { NotionWorkshopService } from '../notion/notion-workshop.service';
 import { FranceTravailJobsService } from '../francetravail/francetravail-jobs.service';
 import { FranceTravailEventsService } from '../francetravail/francetravail-events.service';
+import { DataInclusionService } from '../datainclusion/datainclusion.service';
 import { GeolocService } from '../geoloc/geoloc.service';
 import { Location } from '../geoloc/models/location.model';
 
@@ -52,6 +55,7 @@ export class AICarePlanBuilderService extends AbstractCarePlanBuilderService {
     private notionWorkshopService: NotionWorkshopService,
     private franceTravailJobsService: FranceTravailJobsService,
     private franceTravailEventsService: FranceTravailEventsService,
+    private dataInclusionService: DataInclusionService,
     private geolocService: GeolocService,
   ) {
     super();
@@ -75,6 +79,7 @@ export class AICarePlanBuilderService extends AbstractCarePlanBuilderService {
           this.notionWorkshopService.getFunctionDeclaration(),
           this.franceTravailJobsService.getFunctionDeclaration(),
           this.franceTravailEventsService.getFunctionDeclaration(),
+          this.dataInclusionService.getFunctionDeclaration(),
         ],
       },
     ];
@@ -157,6 +162,7 @@ export class AICarePlanBuilderService extends AbstractCarePlanBuilderService {
       }
       functionCall.args['departmentsCode'] = [locations[0].departmentCode]
       functionCall.args['departmentCode'] = locations[0].departmentCode
+      functionCall.args['cityCode'] = locations[0].citycode
 
       // Create a generic span for the retrieval step
       const retrievalSpan = trace.span({
@@ -183,6 +189,10 @@ export class AICarePlanBuilderService extends AbstractCarePlanBuilderService {
         result = await this.franceTravailEventsService.executeFunction(functionCall);
         source = 'francetravail';
         console.log(`✅ Event search returned ${result.events?.length || 0} results`);
+      } else if (functionCall.name === 'services_search') {
+        result = await this.dataInclusionService.executeFunction(functionCall);
+        source = 'datainclusion';
+        console.log(`✅ Services search returned ${result.services?.length || 0} results`);
       }
 
       functionResults.push({
@@ -321,10 +331,14 @@ Now generate the final personalized action plan using these resources.
       '\n' +
       this.franceTravailJobsService.getPromptContext() +
       '\n' +
-      this.franceTravailEventsService.getPromptContext();
+      this.franceTravailEventsService.getPromptContext() +
+      '\n' +
+      this.dataInclusionService.getPromptContext() +
+      '\n\n' +
+      PHASE_1_INSTRUCTIONS;
 
     // Build system prompt for Phase 2 (no tools, just JSON output)
-    const secondSystemPrompt = CARE_PLAN_BUILDER_SYSTEM_PROMPT;
+    const secondSystemPrompt = CARE_PLAN_BUILDER_SYSTEM_PROMPT + '\n\n' + PHASE_2_INSTRUCTIONS;
 
     // Create Langfuse trace
     const trace = this.langfuse.trace({
