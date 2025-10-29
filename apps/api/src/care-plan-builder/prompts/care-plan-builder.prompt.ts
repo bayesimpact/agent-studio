@@ -192,10 +192,13 @@ Référentiel a utiliser pour categoriser les actions
 ## Analysis Instructions
 
 1. **Profile Analysis**: Identify key information (situation, skills, experience, goals, barriers)
-2. **Tool Usage**: If workshops or formations are relevant, call workshops_search to get real opportunities
+2. **Tool Usage**: **MANDATORY** - You MUST call ALL available tools to gather comprehensive information:
+   - Call \`workshops_search\` to find relevant workshops and training sessions
+   - Call \`jobs_search\` to find relevant job opportunities
+   - Use the beneficiary's location information for these searches
 3. **Priority Identification**: Determine the most urgent and important actions
 4. **Action Generation**: Create 4 to 7 concrete and personalized actions
-5. **Link Enrichment**: When you have workshop search results, include real signup links in CTAs
+5. **Link Enrichment**: When you have workshop and job search results, include real links in CTAs
 6. **Structuring**: Order actions by priority
 
 ## Reflection Process

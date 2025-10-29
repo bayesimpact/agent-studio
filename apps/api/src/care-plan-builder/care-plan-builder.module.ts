@@ -2,6 +2,8 @@ import { Module } from '@nestjs/common';
 import { StaticCarePlanBuilderService } from './care-plan-builder-static.service';
 import { AICarePlanBuilderService } from './care-plan-builder-ai.service';
 import { NotionModule } from '../notion/notion.module';
+import { FranceTravailModule } from '../francetravail/francetravail.module';
+import { GeolocModule } from '../geoloc/geoloc.module';
 
 // Choose which implementation to use
 // Use 'StaticCarePlanBuilderService' for static mock data
@@ -9,7 +11,7 @@ import { NotionModule } from '../notion/notion.module';
 const CarePlanBuilderService = AICarePlanBuilderService;
 
 @Module({
-  imports: [NotionModule],
+  imports: [NotionModule, FranceTravailModule, GeolocModule],
   providers: [
     StaticCarePlanBuilderService,
     AICarePlanBuilderService,

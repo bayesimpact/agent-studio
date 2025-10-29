@@ -4,7 +4,6 @@ import { JobSearchResponse } from './types/job-offer.types';
 import { SimplifiedJobOffer } from './models/simplified-job-offer.model';
 import { Type, FunctionDeclaration, FunctionCall } from '@google/genai';
 import { AIServiceProvider } from '../common/interfaces/ai-service.interface';
-import { Location } from '../geoloc/models/location.model';
 import { FranceTravailBaseService } from './francetravail-base.service';
 
 @Injectable()

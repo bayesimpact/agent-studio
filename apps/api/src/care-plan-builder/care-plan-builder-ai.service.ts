@@ -5,13 +5,41 @@ import {
   CarePlanBuilderArgs,
   CarePlanBuilderOptions,
 } from './care-plan-builder.abstract';
-import { GoogleGenAI, ToolListUnion, Type } from '@google/genai';
-import { Langfuse } from 'langfuse';
+import {
+  GoogleGenAI,
+  ToolListUnion,
+  FunctionCall,
+  GenerateContentResponse,
+} from '@google/genai';
+import {
+  Langfuse,
+  LangfuseTraceClient,
+} from 'langfuse';
 import {
   CARE_PLAN_BUILDER_SYSTEM_PROMPT,
   buildUserPrompt,
 } from './prompts/care-plan-builder.prompt';
 import { NotionWorkshopService } from '../notion/notion-workshop.service';
+import { FranceTravailJobsService } from '../francetravail/francetravail-jobs.service';
+import { GeolocService } from '../geoloc/geoloc.service';
+import { Location } from '../geoloc/models/location.model';
+
+interface FunctionCallResult {
+  name: string;
+  result: unknown;
+}
+
+interface UsageMetadata {
+  inputTokens: number;
+  outputTokens: number;
+  totalTokens: number;
+}
+
+interface AIResponse {
+  fullOutput: string;
+  functionCalls?: FunctionCall[];
+  usage: UsageMetadata;
+}
 
 @Injectable()
 export class AICarePlanBuilderService extends AbstractCarePlanBuilderService {
@@ -19,7 +47,11 @@ export class AICarePlanBuilderService extends AbstractCarePlanBuilderService {
   private langfuse: Langfuse;
   private tools: ToolListUnion;
 
-  constructor(private notionWorkshopService: NotionWorkshopService) {
+  constructor(
+    private notionWorkshopService: NotionWorkshopService,
+    private franceTravailJobsService: FranceTravailJobsService,
+    private geolocService: GeolocService,
+  ) {
     super();
     this.genAI = new GoogleGenAI({
       vertexai: true,
@@ -39,26 +71,18 @@ export class AICarePlanBuilderService extends AbstractCarePlanBuilderService {
       {
         functionDeclarations: [
           this.notionWorkshopService.getFunctionDeclaration(),
+          this.franceTravailJobsService.getFunctionDeclaration(),
         ],
       },
     ];
   }
-
 
   private async callAI(params: {
     systemPrompt: string;
     userPrompt: string;
     tools?: ToolListUnion;
     options?: CarePlanBuilderOptions;
-  }): Promise<{
-    fullOutput: string;
-    functionCalls?: any[];
-    usage: {
-      inputTokens: number;
-      outputTokens: number;
-      totalTokens: number;
-    };
-  }> {
+  }): Promise<AIResponse> {
     const { systemPrompt, userPrompt, tools, options } = params;
 
     const model = 'gemini-2.5-flash';
@@ -76,7 +100,7 @@ export class AICarePlanBuilderService extends AbstractCarePlanBuilderService {
     });
 
     let fullOutput = '';
-    let lastChunk: any;
+    let lastChunk: GenerateContentResponse | undefined;
 
     for await (const chunk of streamResult) {
       lastChunk = chunk;
@@ -96,7 +120,7 @@ export class AICarePlanBuilderService extends AbstractCarePlanBuilderService {
 
     return {
       fullOutput,
-      functionCalls: lastChunk?.functionCalls || [],
+      functionCalls: lastChunk?.functionCalls,
       usage: {
         inputTokens: usageMetadata.promptTokenCount || 0,
         outputTokens: usageMetadata.candidatesTokenCount || 0,
@@ -106,20 +130,29 @@ export class AICarePlanBuilderService extends AbstractCarePlanBuilderService {
   }
 
   private async executeToolCalls(
-    functionCalls: any[],
-    trace: any,
+    functionCalls: FunctionCall[],
+    trace: LangfuseTraceClient,
     options?: CarePlanBuilderOptions,
-  ): Promise<any[]> {
-    console.log('🔧 Care plan builder wants to call functions:',
-      functionCalls.map((fc: any) => ({
+  ): Promise<FunctionCallResult[]> {
+    console.log(
+      '🔧 Care plan builder wants to call functions:',
+      functionCalls.map((fc) => ({
         name: fc.name,
-        args: fc.args
-      }))
+        args: fc.args,
+      })),
     );
-    options?.onProgress?.(`\n## Appel d'outils\nRecherche d'ateliers et formations...\n`);
+    options?.onProgress?.(`\n## Appel d'outils\nRecherche de ressources...\n`);
+    let locations: Location[] = [];
 
-    const functionResults: any[] = [];
+    const functionResults: FunctionCallResult[] = [];
     for (const functionCall of functionCalls) {
+      if (locations.length === 0) {
+        locations = await this.geolocService.searchMunicipalities(
+          functionCall.args['cityName'] as string || '',//FIXME
+        );
+      }
+      functionCall.args['departmentsCode'] = [locations[0].departmentCode]
+      functionCall.args['departmentCode'] = locations[0].departmentCode
       if (functionCall.name === 'workshops_search') {
         // Create a span for the retrieval step
         const retrievalSpan = trace.span({
@@ -130,14 +163,17 @@ export class AICarePlanBuilderService extends AbstractCarePlanBuilderService {
           },
         });
 
-        const result = await this.notionWorkshopService.executeFunction(functionCall);
+        const result =
+          await this.notionWorkshopService.executeFunction(functionCall);
 
         functionResults.push({
           name: functionCall.name,
           result,
         });
 
-        console.log(`✅ Workshop search returned ${result.workshops?.length || 0} results`);
+        console.log(
+          `✅ Workshop search returned ${result.workshops?.length || 0} results`,
+        );
 
         // Update retrieval span with results
         retrievalSpan.update({
@@ -155,6 +191,45 @@ export class AICarePlanBuilderService extends AbstractCarePlanBuilderService {
           },
         });
         retrievalSpan.end();
+      } else if (functionCall.name === 'jobs_search') {
+        // Create a span for the retrieval step
+        const retrievalSpan = trace.span({
+          name: 'job-retrieval',
+          input: {
+            function: functionCall.name,
+            parameters: functionCall.args,
+          },
+        });
+
+        const result =
+          await this.franceTravailJobsService.executeFunction(functionCall);
+
+        functionResults.push({
+          name: functionCall.name,
+          result,
+        });
+
+        console.log(
+          `✅ Job search returned ${result.jobOffers?.length || 0} results`,
+        );
+
+        // Update retrieval span with results
+        retrievalSpan.update({
+          output: {
+            jobOffersCount: result.jobOffers?.length || 0,
+            jobOffers: result.jobOffers?.map((j: any) => ({
+              title: j.title,
+              company: j.company,
+              location: j.location,
+              contractType: j.contractType,
+            })),
+          },
+          metadata: {
+            retrievalType: 'job_search',
+            source: 'francetravail',
+          },
+        });
+        retrievalSpan.end();
       }
     }
 
@@ -163,7 +238,7 @@ export class AICarePlanBuilderService extends AbstractCarePlanBuilderService {
 
   private buildSecondPrompt(
     firstResponseOutput: string,
-    functionResults: any[],
+    functionResults: FunctionCallResult[],
   ): string {
     return `## Previous Analysis
 
@@ -171,10 +246,14 @@ ${firstResponseOutput}
 
 ## Available Resources
 
-Based on your analysis, here are the workshops and formations found:
+Based on your analysis, here are the resources found:
 
-${functionResults.map(fr => `### ${fr.name} results
-${JSON.stringify(fr.result, null, 2)}`).join('\n\n')}
+${functionResults
+  .map(
+    (fr) => `### ${fr.name} results
+${JSON.stringify(fr.result, null, 2)}`,
+  )
+  .join('\n\n')}
 
 ---
 
@@ -182,13 +261,13 @@ Now generate the final personalized action plan using these resources.
 
 **Your reflection process for this phase should focus on**:
 - Use "## Sélection des ressources" as the main section title
-- Explain WHICH workshops/formations from the results above are relevant for this beneficiary
+- Explain WHICH resources (workshops, jobs, events, etc.) from the results above are relevant for this beneficiary
 - Explain WHY you selected or rejected specific resources based on the profile
 - Document how you integrated the selected resources into specific actions
 
 **Important**:
 1. Use the previous analysis context to stay consistent with identified priorities
-2. Include real workshop links in action CTAs when you select relevant workshops
+2. Include real resource links (workshops, jobs) in action CTAs when you select relevant items
 3. **After your reflection, return the care plan in a JSON code block as specified in the system prompt**
 4. All action titles, content, CTA names, and markdown section headers must be in French
 `;
@@ -198,11 +277,7 @@ Now generate the final personalized action plan using these resources.
     systemPrompt: string,
     userPrompt: string,
     options?: CarePlanBuilderOptions,
-  ): Promise<{
-    fullOutput: string;
-    functionCalls?: any[];
-    usage: { inputTokens: number; outputTokens: number; totalTokens: number };
-  }> {
+  ): Promise<AIResponse> {
     return await this.callAI({
       systemPrompt,
       userPrompt,
@@ -214,11 +289,11 @@ Now generate the final personalized action plan using these resources.
   private async generateFinalPlan(
     systemPrompt: string,
     secondUserPrompt: string,
-    trace: any,
+    trace: LangfuseTraceClient,
     options?: CarePlanBuilderOptions,
   ): Promise<{
     fullOutput: string;
-    usage: { inputTokens: number; outputTokens: number; totalTokens: number };
+    usage: UsageMetadata;
   }> {
     options?.onProgress?.(`\n## Génération du plan final\n`);
 
@@ -232,6 +307,10 @@ Now generate the final personalized action plan using these resources.
       input: {
         systemInstruction: systemPrompt,
         userPrompt: secondUserPrompt,
+      },
+      metadata: {
+        tools: [],
+        phase: 'final-plan',
       },
     });
 
@@ -266,8 +345,13 @@ Now generate the final personalized action plan using these resources.
   ): Promise<{ carePlan: Action[] }> {
     const userPrompt = buildUserPrompt(args.profileText, args.currentCarePlan);
 
-    // Build system prompt for Phase 1 with workshop search tool context
-    const firstSystemPrompt = CARE_PLAN_BUILDER_SYSTEM_PROMPT + '\n\n## Available Tools\n\n' + this.notionWorkshopService.getPromptContext();
+    // Build system prompt for Phase 1 with all tool contexts
+    const firstSystemPrompt =
+      CARE_PLAN_BUILDER_SYSTEM_PROMPT +
+      '\n\n## Available Tools\n\n' +
+      this.notionWorkshopService.getPromptContext() +
+      '\n' +
+      this.franceTravailJobsService.getPromptContext();
 
     // Build system prompt for Phase 2 (no tools, just JSON output)
     const secondSystemPrompt = CARE_PLAN_BUILDER_SYSTEM_PROMPT;
@@ -292,22 +376,29 @@ Now generate the final personalized action plan using these resources.
         systemInstruction: firstSystemPrompt,
         userPrompt,
       },
+      metadata: {
+        tools: this.tools,
+        phase: 'initial-analysis',
+      },
     });
 
     try {
       options?.onProgress?.(`## Opérateur : Chargement du programme 'Création de plan d'action'
 Programme chargé
-`,
-      );
+`);
 
       // Phase 1: Generate initial analysis and identify needed resources
-      const firstResponse = await this.generateInitialAnalysis(firstSystemPrompt, userPrompt, options);
+      const firstResponse = await this.generateInitialAnalysis(
+        firstSystemPrompt,
+        userPrompt,
+        options,
+      );
 
       // Update first generation trace with output
       generation.update({
         output: {
           textResponse: firstResponse.fullOutput,
-          functionCalls: firstResponse.functionCalls?.map(fc => ({
+          functionCalls: firstResponse.functionCalls?.map((fc) => ({
             name: fc.name,
             arguments: fc.args,
           })),
@@ -325,15 +416,30 @@ Programme chargé
       let carePlan: Action[];
 
       // Phase 2: If tools are needed, execute them and generate final plan
-      if (firstResponse.functionCalls && firstResponse.functionCalls.length > 0) {
+      if (
+        firstResponse.functionCalls &&
+        firstResponse.functionCalls.length > 0
+      ) {
         // Execute tool calls and retrieve resources
-        const functionResults = await this.executeToolCalls(firstResponse.functionCalls, trace, options);
+        const functionResults = await this.executeToolCalls(
+          firstResponse.functionCalls,
+          trace,
+          options,
+        );
 
         // Build augmented prompt with retrieved resources
-        const secondUserPrompt = this.buildSecondPrompt(firstResponse.fullOutput, functionResults);
+        const secondUserPrompt = this.buildSecondPrompt(
+          firstResponse.fullOutput,
+          functionResults,
+        );
 
         // Generate final plan with resources
-        const secondResponse = await this.generateFinalPlan(secondSystemPrompt, secondUserPrompt, trace, options);
+        const secondResponse = await this.generateFinalPlan(
+          secondSystemPrompt,
+          secondUserPrompt,
+          trace,
+          options,
+        );
 
         finalOutput = secondResponse.fullOutput;
       }
