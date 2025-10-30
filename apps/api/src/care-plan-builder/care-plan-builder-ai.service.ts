@@ -223,80 +223,129 @@ export class AICarePlanBuilderService extends AbstractCarePlanBuilderService {
     return functionResults;
   }
 
-  private async rawStringToJson(rawOutput: string): Promise<{ carePlan: Action[] }> {
+  private async rawStringToJson(
+    rawOutput: string,
+    trace: LangfuseTraceClient,
+  ): Promise<{ carePlan: Action[] }> {
     console.log('🔄 Extracting JSON from raw output using Gemini...');
 
     const model = 'gemini-2.5-flash';
-    const result = await this.genAI.models.generateContent({
+
+    // Create Langfuse generation span for JSON extraction
+    const extractionGeneration = trace.generation({
+      name: 'extract-json-structured',
       model,
-      contents: [
-        {
-          role: 'user',
-          parts: [
-            {
-              text: `Extract the care plan JSON from the following text. The JSON should contain a "carePlan" array with actions.
+      modelParameters: {
+        temperature: 0,
+        responseMimeType: 'application/json',
+      },
+      input: {
+        rawOutputLength: rawOutput.length,
+        task: 'Extract care plan JSON with structured output validation',
+      },
+      metadata: {
+        phase: 'json-extraction',
+        method: 'gemini-structured-output',
+      },
+    });
+
+    try {
+      const result = await this.genAI.models.generateContent({
+        model,
+        contents: [
+          {
+            role: 'user',
+            parts: [
+              {
+                text: `Extract the care plan JSON from the following text. The JSON should contain a "carePlan" array with actions.
 
 Raw output:
 ${rawOutput}
 
 Return ONLY the extracted JSON object with the "carePlan" array.`,
-            },
-          ],
-        },
-      ],
-      config: {
-        temperature: 0,
-        responseMimeType: 'application/json',
-        responseSchema: {
-          type: Type.OBJECT,
-          properties: {
-            carePlan: {
-              type: Type.ARRAY,
-              items: {
-                type: Type.OBJECT,
-                properties: {
-                  id: { type: Type.STRING },
-                  categories: {
-                    type: Type.ARRAY,
-                    items: { type: Type.STRING },
-                  },
-                  title: { type: Type.STRING },
-                  content: { type: Type.STRING },
-                  cta: {
-                    type: Type.OBJECT,
-                    properties: {
-                      name: { type: Type.STRING },
-                      type: {
-                        type: Type.STRING,
-                        enum: ['url', 'phone', 'email']
-                      },
-                      value: { type: Type.STRING },
+              },
+            ],
+          },
+        ],
+        config: {
+          temperature: 0,
+          responseMimeType: 'application/json',
+          responseSchema: {
+            type: Type.OBJECT,
+            properties: {
+              carePlan: {
+                type: Type.ARRAY,
+                items: {
+                  type: Type.OBJECT,
+                  properties: {
+                    id: { type: Type.STRING },
+                    categories: {
+                      type: Type.ARRAY,
+                      items: { type: Type.STRING },
                     },
-                    required: ['name', 'type', 'value'],
+                    title: { type: Type.STRING },
+                    content: { type: Type.STRING },
+                    cta: {
+                      type: Type.OBJECT,
+                      properties: {
+                        name: { type: Type.STRING },
+                        type: {
+                          type: Type.STRING,
+                          enum: ['url', 'phone', 'email']
+                        },
+                        value: { type: Type.STRING },
+                      },
+                      required: ['name', 'type', 'value'],
+                    },
                   },
+                  required: ['id', 'categories', 'title', 'content'],
                 },
-                required: ['id', 'categories', 'title', 'content'],
               },
             },
+            required: ['carePlan'],
           },
-          required: ['carePlan'],
         },
-      },
-    });
+      });
 
-    const responseText = result.candidates?.[0]?.content?.parts?.[0]?.text;
-    if (!responseText) {
-      throw new Error('Failed to extract JSON: No response from Gemini');
+      const responseText = result.candidates?.[0]?.content?.parts?.[0]?.text;
+      if (!responseText) {
+        throw new Error('Failed to extract JSON: No response from Gemini');
+      }
+
+      const parsedResponse = JSON.parse(responseText);
+
+      if (!parsedResponse.carePlan || !Array.isArray(parsedResponse.carePlan)) {
+        throw new Error('Invalid care plan structure in extracted JSON');
+      }
+
+      console.log(`✅ Successfully extracted ${parsedResponse.carePlan.length} actions from raw output`);
+
+      // Update Langfuse with success
+      const usageMetadata = result.usageMetadata || {};
+      extractionGeneration.update({
+        output: {
+          actionsCount: parsedResponse.carePlan.length,
+          extractionSuccess: true,
+        },
+        usage: {
+          input: usageMetadata.promptTokenCount || 0,
+          output: usageMetadata.candidatesTokenCount || 0,
+          total: usageMetadata.totalTokenCount || 0,
+          unit: 'TOKENS',
+        },
+      });
+      extractionGeneration.end();
+
+      return parsedResponse;
+    } catch (error) {
+      // Log error to Langfuse
+      extractionGeneration.update({
+        level: 'ERROR',
+        statusMessage: error instanceof Error ? error.message : 'JSON extraction failed',
+      });
+      extractionGeneration.end();
+      throw error;
     }
-
-    const parsedResponse = JSON.parse(responseText);
-
-    if (!parsedResponse.carePlan || !Array.isArray(parsedResponse.carePlan)) {
-      throw new Error('Invalid care plan structure in extracted JSON');
-    }
-
-    console.log(`✅ Successfully extracted ${parsedResponse.carePlan.length} actions from raw output`);
-    return parsedResponse;
   }
 
   private buildSecondPrompt(
@@ -535,7 +584,8 @@ Now generate the final personalized action plan using these resources.
       }
 
       // Extract and validate care plan using Gemini with structured output
-      const extractedResult = await this.rawStringToJson(finalOutput);
+      options?.onProgress?.(`\n## Structuration du plan\n`);
+      const extractedResult = await this.rawStringToJson(finalOutput, trace);
       const carePlan = extractedResult.carePlan;
 
       // Validate actions
