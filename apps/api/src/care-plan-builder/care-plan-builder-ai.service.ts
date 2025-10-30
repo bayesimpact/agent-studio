@@ -10,6 +10,7 @@ import {
   ToolListUnion,
   FunctionCall,
   GenerateContentResponse,
+  Type,
 } from '@google/genai';
 import {
   Langfuse,
@@ -24,9 +25,11 @@ import {
 import { NotionWorkshopService } from '../notion/notion-workshop.service';
 import { FranceTravailJobsService } from '../francetravail/francetravail-jobs.service';
 import { FranceTravailEventsService } from '../francetravail/francetravail-events.service';
+import { FranceTravailLaBonneBoiteService } from '../francetravail/francetravail-labonneboite.service';
 import { DataInclusionService } from '../datainclusion/datainclusion.service';
 import { GeolocService } from '../geoloc/geoloc.service';
 import { Location } from '../geoloc/models/location.model';
+import { AIServiceProvider } from '../common/interfaces/ai-service.interface';
 
 interface FunctionCallResult {
   name: string;
@@ -55,6 +58,7 @@ export class AICarePlanBuilderService extends AbstractCarePlanBuilderService {
     private notionWorkshopService: NotionWorkshopService,
     private franceTravailJobsService: FranceTravailJobsService,
     private franceTravailEventsService: FranceTravailEventsService,
+    private franceTravailLaBonneBoiteService: FranceTravailLaBonneBoiteService,
     private dataInclusionService: DataInclusionService,
     private geolocService: GeolocService,
   ) {
@@ -79,6 +83,7 @@ export class AICarePlanBuilderService extends AbstractCarePlanBuilderService {
           this.notionWorkshopService.getFunctionDeclaration(),
           this.franceTravailJobsService.getFunctionDeclaration(),
           this.franceTravailEventsService.getFunctionDeclaration(),
+          this.franceTravailLaBonneBoiteService.getFunctionDeclaration(),
           this.dataInclusionService.getFunctionDeclaration(),
         ],
       },
@@ -189,6 +194,10 @@ export class AICarePlanBuilderService extends AbstractCarePlanBuilderService {
         result = await this.franceTravailEventsService.executeFunction(functionCall);
         source = 'francetravail';
         console.log(`✅ Event search returned ${result.events?.length || 0} results`);
+      } else if (functionCall.name === 'companies_search') {
+        result = await this.franceTravailLaBonneBoiteService.executeFunction(functionCall);
+        source = 'francetravail-labonneboite';
+        console.log(`✅ Companies search returned ${result.companies?.length || 0} results`);
       } else if (functionCall.name === 'services_search') {
         result = await this.dataInclusionService.executeFunction(functionCall);
         source = 'datainclusion';
@@ -214,10 +223,112 @@ export class AICarePlanBuilderService extends AbstractCarePlanBuilderService {
     return functionResults;
   }
 
+  private async rawStringToJson(rawOutput: string): Promise<{ carePlan: Action[] }> {
+    console.log('🔄 Extracting JSON from raw output using Gemini...');
+
+    const model = 'gemini-2.5-flash';
+    const result = await this.genAI.models.generateContent({
+      model,
+      contents: [
+        {
+          role: 'user',
+          parts: [
+            {
+              text: `Extract the care plan JSON from the following text. The JSON should contain a "carePlan" array with actions.
+
+Raw output:
+${rawOutput}
+
+Return ONLY the extracted JSON object with the "carePlan" array.`,
+            },
+          ],
+        },
+      ],
+      config: {
+        temperature: 0,
+        responseMimeType: 'application/json',
+        responseSchema: {
+          type: Type.OBJECT,
+          properties: {
+            carePlan: {
+              type: Type.ARRAY,
+              items: {
+                type: Type.OBJECT,
+                properties: {
+                  id: { type: Type.STRING },
+                  categories: {
+                    type: Type.ARRAY,
+                    items: { type: Type.STRING },
+                  },
+                  title: { type: Type.STRING },
+                  content: { type: Type.STRING },
+                  cta: {
+                    type: Type.OBJECT,
+                    properties: {
+                      name: { type: Type.STRING },
+                      type: {
+                        type: Type.STRING,
+                        enum: ['url', 'phone', 'email']
+                      },
+                      value: { type: Type.STRING },
+                    },
+                    required: ['name', 'type', 'value'],
+                  },
+                },
+                required: ['id', 'categories', 'title', 'content'],
+              },
+            },
+          },
+          required: ['carePlan'],
+        },
+      },
+    });
+
+    const responseText = result.candidates?.[0]?.content?.parts?.[0]?.text;
+    if (!responseText) {
+      throw new Error('Failed to extract JSON: No response from Gemini');
+    }
+
+    const parsedResponse = JSON.parse(responseText);
+
+    if (!parsedResponse.carePlan || !Array.isArray(parsedResponse.carePlan)) {
+      throw new Error('Invalid care plan structure in extracted JSON');
+    }
+
+    console.log(`✅ Successfully extracted ${parsedResponse.carePlan.length} actions from raw output`);
+    return parsedResponse;
+  }
+
   private buildSecondPrompt(
     firstResponseOutput: string,
     functionResults: FunctionCallResult[],
   ): string {
+    // Format results using each service's formatter
+    const formattedResults = functionResults
+      .map((fr) => {
+        // Get the service provider based on function name
+        let service: AIServiceProvider | undefined;
+        if (fr.name === 'workshops_search') {
+          service = this.notionWorkshopService;
+        } else if (fr.name === 'jobs_search') {
+          service = this.franceTravailJobsService;
+        } else if (fr.name === 'events_search') {
+          service = this.franceTravailEventsService;
+        } else if (fr.name === 'companies_search') {
+          service = this.franceTravailLaBonneBoiteService;
+        } else if (fr.name === 'services_search') {
+          service = this.dataInclusionService;
+        }
+
+        // Use custom formatter if available, otherwise fall back to JSON
+        if (service && service.formatResultsForPrompt) {
+          return service.formatResultsForPrompt(fr.result);
+        } else {
+          return `### ${fr.name} results\n${JSON.stringify(fr.result, null, 2)}`;
+        }
+      })
+      .join('\n\n---\n\n');
+
     return `## Previous Analysis
 
 ${firstResponseOutput}
@@ -226,12 +337,7 @@ ${firstResponseOutput}
 
 Based on your analysis, here are the resources found:
 
-${functionResults
-  .map(
-    (fr) => `### ${fr.name} results
-${JSON.stringify(fr.result, null, 2)}`,
-  )
-  .join('\n\n')}
+${formattedResults}
 
 ---
 
@@ -333,6 +439,8 @@ Now generate the final personalized action plan using these resources.
       '\n' +
       this.franceTravailEventsService.getPromptContext() +
       '\n' +
+      this.franceTravailLaBonneBoiteService.getPromptContext() +
+      '\n' +
       this.dataInclusionService.getPromptContext() +
       '\n\n' +
       PHASE_1_INSTRUCTIONS;
@@ -367,9 +475,8 @@ Now generate the final personalized action plan using these resources.
     });
 
     try {
-      options?.onProgress?.(`## Opérateur : Chargement du programme 'Création de plan d'action'
-Programme chargé
-`);
+      options?.onProgress?.(`## Création du plan d'action
+ `);
 
       // Phase 1: Generate initial analysis and identify needed resources
       const firstResponse = await this.generateInitialAnalysis(
@@ -397,7 +504,6 @@ Programme chargé
       generation.end();
 
       let finalOutput = firstResponse.fullOutput;
-      let carePlan: Action[];
 
       // Phase 2: If tools are needed, execute them and generate final plan
       if (
@@ -428,22 +534,9 @@ Programme chargé
         finalOutput = secondResponse.fullOutput;
       }
 
-      // Extract care plan from JSON code block
-      const jsonMatch = finalOutput.match(/```json\s*([\s\S]*?)\s*```/);
-      if (!jsonMatch) {
-        throw new Error(
-          'Failed to extract JSON from AI response. Response format invalid.',
-        );
-      }
-
-      const jsonText = jsonMatch[1];
-      const parsedResponse = JSON.parse(jsonText);
-
-      if (!parsedResponse.carePlan || !Array.isArray(parsedResponse.carePlan)) {
-        throw new Error('Invalid care plan structure in AI response');
-      }
-
-      carePlan = parsedResponse.carePlan;
+      // Extract and validate care plan using Gemini with structured output
+      const extractedResult = await this.rawStringToJson(finalOutput);
+      const carePlan = extractedResult.carePlan;
 
       // Validate actions
       for (const action of carePlan) {

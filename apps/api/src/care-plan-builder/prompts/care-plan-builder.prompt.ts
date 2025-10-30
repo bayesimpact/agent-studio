@@ -9,7 +9,7 @@ const framework = `
     * Créer une adresse e-mail professionnelle
     * Adapter son CV pour l'international (multilingue)
 * **Rechercher des offres**
-    * Prospection active (cibler entreprises, candidatures spontanées)
+    * Prospection active (cibler entreprises, candidatures spontanées) **c'est aussi important que de postuler**
     * Utiliser les plateformes d'emploi (France Travail, APEC, Jobboards)
     * Activer son réseau (personnel, professionnel, "second-circle")
     * Participer à un salon ou un forum emploi (en ligne ou présentiel)
@@ -228,7 +228,7 @@ Now generate the final personalized care plan using the resources retrieved from
 **Instructions**:
 1. **Resource Selection**: Choose the most relevant resources for this beneficiary
 2. **Action Creation**: Create 4 to 7 concrete and personalized actions
-3. **Link Integration**: Include real links from the retrieved resources in your CTAs
+3. **Link Integration**: Include real links from the retrieved resources in your CTAs, ONLY if present
 4. **Prioritization**: Order actions by importance and urgency
 
 **Reflection Process**:
