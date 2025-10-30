@@ -9,7 +9,7 @@ import { SendMessageDto } from '@repo/api/chat/dto/send-message.dto';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import remarkBreaks from 'remark-breaks';
-import { CarePlan } from './care-plan';
+import { ActionPlan } from './action-plan';
 import { MentionInput, MentionInputRef } from './mention-input';
 
 interface FunctionCallData {
@@ -54,7 +54,7 @@ export function ChatInterface() {
   const [isLoading, setIsLoading] = useState(false)
   const [sessionId, setSessionId] = useState<string | null>(null)
   const [expandedFunctions, setExpandedFunctions] = useState<Set<string>>(new Set())
-  const [currentCarePlan, setCurrentCarePlan] = useState<Action[] | null>(null)
+  const [currentActionPlan, setCurrentActionPlan] = useState<Action[] | null>(null)
   const scrollAreaRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<MentionInputRef>(null)
 
@@ -198,7 +198,7 @@ export function ChatInterface() {
               currentContent = ''
               break
 
-            case 'care_plan_progress':
+            case 'action_plan_progress':
               // Update progress message and accumulate markdown text
               if (data.message) {
                 setMessages(prev =>
@@ -223,10 +223,10 @@ export function ChatInterface() {
               }
               break
 
-            case 'care_plan_update':
-              // Update the care plan from the function result
-              if (data.carePlan) {
-                setCurrentCarePlan(data.carePlan)
+            case 'action_plan_update':
+              // Update the action plan from the function result
+              if (data.actionPlan) {
+                setCurrentActionPlan(data.actionPlan)
               }
               break
 
@@ -303,7 +303,7 @@ export function ChatInterface() {
   // Translate function names to French user-friendly labels
   const getFunctionLabel = (functionName: string): string => {
     const labels: Record<string, string> = {
-      'build_care_plan': 'Construction du plan d\'accompagnement',
+      'build_action_plan': 'Construction du plan d\'accompagnement',
       'search_resources': 'Recherche de ressources',
       'jobs_search': 'Recherche d\'offres d\'emploi',
       'events_search': 'Recherche d\'événements',
@@ -399,7 +399,7 @@ export function ChatInterface() {
 
   return (
     <div className="w-full h-[80vh] relative">
-      {/* LEFT PANEL - Care Plan - Fixed position */}
+      {/* LEFT PANEL - Action Plan - Fixed position */}
       <div className="fixed left-4 top-[120px] w-96 h-[calc(80vh-40px)] z-10">
         <Card className="h-full flex flex-col bg-gradient-to-br from-primary/5 to-primary/10 border-primary/20 shadow-lg">
           <CardHeader className="pb-3">
@@ -407,8 +407,8 @@ export function ChatInterface() {
           </CardHeader>
           <CardContent className="flex-1 overflow-hidden p-0">
             <ScrollArea className="h-full px-6 pb-6">
-              {currentCarePlan && currentCarePlan.length > 0 ? (
-                <CarePlan planItems={currentCarePlan} />
+              {currentActionPlan && currentActionPlan.length > 0 ? (
+                <ActionPlan planItems={currentActionPlan} />
               ) : (
                 <div className="flex flex-col items-center justify-center h-full text-center px-4 py-8">
                   <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mb-4">

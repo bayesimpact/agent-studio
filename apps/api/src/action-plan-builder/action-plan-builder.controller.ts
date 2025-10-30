@@ -10,57 +10,44 @@ import {
 import { Observable, Subject } from 'rxjs';
 import { Inject } from '@nestjs/common';
 import {
-  AbstractCarePlanBuilderService,
-  CarePlanBuilderArgs,
-  Action,
-} from './care-plan-builder.abstract';
+  AbstractActionPlanBuilderService,
+  ActionPlanBuilderArgs,
+} from './action-plan-builder.abstract';
 
-interface CarePlanBuilderRequestDto {
+interface ActionPlanBuilderRequestDto {
   profileText: string;
-  currentCarePlan?: Action[];
 }
 
-interface CarePlanBuilderProgressEvent {
-  type: 'progress' | 'complete' | 'error';
-  data?: {
-    message?: string;
-    carePlan?: Action[];
-    reasoning?: string;
-    error?: string;
-  };
-}
-
-@Controller('care-plan-builder')
-export class CarePlanBuilderController {
+@Controller('action-plan-builder')
+export class ActionPlanBuilderController {
   constructor(
-    @Inject('CarePlanBuilderService')
-    private readonly carePlanBuilderService: AbstractCarePlanBuilderService,
+    @Inject('ActionPlanBuilderService')
+    private readonly actionPlanBuilderService: AbstractActionPlanBuilderService,
   ) {}
 
   @Post('generate')
   @HttpCode(HttpStatus.OK)
   @Sse()
-  generateCarePlan(
-    @Body() request: CarePlanBuilderRequestDto,
+  generateActionPlan(
+    @Body() request: ActionPlanBuilderRequestDto,
   ): Observable<MessageEvent> {
     const subject = new Subject<MessageEvent>();
 
-    // Start the care plan generation asynchronously
-    this.processCarePlanGeneration(request, subject);
+    // Start the action plan generation asynchronously
+    this.processActionPlanGeneration(request, subject);
 
     return subject.asObservable();
   }
 
-  private async processCarePlanGeneration(
-    request: CarePlanBuilderRequestDto,
+  private async processActionPlanGeneration(
+    request: ActionPlanBuilderRequestDto,
     subject: Subject<MessageEvent>,
   ): Promise<void> {
     let reasoning = '';
 
     try {
-      const args: CarePlanBuilderArgs = {
+      const args: ActionPlanBuilderArgs = {
         profileText: request.profileText,
-        currentCarePlan: request.currentCarePlan,
       };
 
       // Send initial event
@@ -68,13 +55,13 @@ export class CarePlanBuilderController {
         data: {
           type: 'progress',
           data: {
-            message: 'Starting care plan generation...',
+            message: 'Starting action plan generation...',
           },
         },
       } as MessageEvent);
 
-      // Generate care plan with progress callbacks
-      const result = await this.carePlanBuilderService.buildCarePlan(args, {
+      // Generate action plan with progress callbacks
+      const result = await this.actionPlanBuilderService.buildActionPlan(args, {
         onProgress: (progressMessage: string) => {
           reasoning += progressMessage;
 
@@ -95,7 +82,7 @@ export class CarePlanBuilderController {
         data: {
           type: 'complete',
           data: {
-            carePlan: result.carePlan,
+            actionPlan: result.actionPlan,
             reasoning,
           },
         },

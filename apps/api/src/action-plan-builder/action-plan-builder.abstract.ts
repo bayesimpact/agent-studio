@@ -17,30 +17,30 @@ export interface Action {
   cta?: CTA;
 }
 
-export interface CarePlanBuilderArgs {
-  currentCarePlan?: Action[];
+export interface ActionPlanBuilderArgs {
+  currentActionPlan?: Action[];
   profileText: string;
 }
 
-export interface CarePlanBuilderOptions {
+export interface ActionPlanBuilderOptions {
   onProgress?: (message: string) => void;
 }
 
-export abstract class AbstractCarePlanBuilderService
+export abstract class AbstractActionPlanBuilderService
   implements AIServiceProvider
 {
   getFunctionDeclaration(): FunctionDeclaration {
     return {
-      name: 'build_care_plan',
+      name: 'build_action_plan',
       description:
-        'Build or update a care plan based on the beneficiary profile. This generates a structured action plan with specific steps.',
+        'Build or update an action plan based on the beneficiary profile. This generates a structured action plan with specific steps.',
       parameters: {
         type: Type.OBJECT,
         properties: {
-          currentCarePlan: {
+          currentActionPlan: {
             type: Type.ARRAY,
             description:
-              'Optional array of the current care plan actions to update or refine. Each action has id, categories, title, content, and optional cta.',
+              'Optional array of the current action plan actions to update or refine. Each action has id, categories, title, content, and optional cta.',
             items: {
               type: Type.OBJECT,
               properties: {
@@ -86,11 +86,11 @@ export abstract class AbstractCarePlanBuilderService
 
   getPromptContext(): string {
     return `
-### Tool: \`build_care_plan\`
-**Description**: Build or update a personalized care plan for a beneficiary based on their profile.
+### Tool: \`build_action_plan\`
+**Description**: Build or update a personalized action plan for a beneficiary based on their profile.
 
 **Parameters**:
-- \`currentCarePlan\`: (Optional) Array of existing Action objects in the care plan. Each action has:
+- \`currentActionPlan\`: (Optional) Array of existing Action objects in the action plan. Each action has:
   - \`id\`: Unique identifier
   - \`categories\`: Array of category tags (e.g., ["Emploi", "Formation"])
   - \`title\`: Short title of the action
@@ -101,36 +101,36 @@ export abstract class AbstractCarePlanBuilderService
     - \`value\`: The actual value - URL, phone number (format: +33123456789), or email address (required)
 - \`profileText\`: Full text description of the beneficiary's profile, situation, needs, skills, and goals
 
-**Returns**: A structured care plan as an array of Action objects
+**Returns**: A structured action plan as an array of Action objects
 
 **When to use**:
-- Use this to create a NEW care plan when you first learn about a beneficiary's situation
-- Use this to UPDATE an existing care plan when new information is provided or circumstances change
-- Pass the existing \`currentCarePlan\` array when updating so the AI can refine/modify it
+- Use this to create a NEW action plan when you first learn about a beneficiary's situation
+- Use this to UPDATE an existing action plan when new information is provided or circumstances change
+- Pass the existing \`currentActionPlan\` array when updating so the AI can refine/modify it
 
 **Example Usage**:
-- Creating new plan: build_care_plan(profileText="Jean is 35 years old, looking for work in IT, has experience in web development")
-- Updating existing plan: build_care_plan(currentCarePlan=[...existing actions...], profileText="Jean just completed a React certification")
+- Creating new plan: build_action_plan(profileText="Jean is 35 years old, looking for work in IT, has experience in web development")
+- Updating existing plan: build_action_plan(currentActionPlan=[...existing actions...], profileText="Jean just completed a React certification")
 `;
   }
 
   async executeFunction(
     functionCall: any,
-    options?: CarePlanBuilderOptions,
+    options?: ActionPlanBuilderOptions,
   ): Promise<any> {
-    const args = functionCall.args as CarePlanBuilderArgs;
+    const args = functionCall.args as ActionPlanBuilderArgs;
 
-    const result = await this.buildCarePlan(args, options);
+    const result = await this.buildActionPlan(args, options);
 
     return {
       success: true,
-      carePlan: result.carePlan,
-      message: `Care plan generated with ${result.carePlan.length} actions`,
+      actionPlan: result.actionPlan,
+      message: `Action plan generated with ${result.actionPlan.length} actions`,
     };
   }
 
-  abstract buildCarePlan(
-    args: CarePlanBuilderArgs,
-    options?: CarePlanBuilderOptions,
-  ): Promise<{ carePlan: Action[] }>;
+  abstract buildActionPlan(
+    args: ActionPlanBuilderArgs,
+    options?: ActionPlanBuilderOptions,
+  ): Promise<{ actionPlan: Action[] }>;
 }

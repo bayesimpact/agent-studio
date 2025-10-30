@@ -1,23 +1,23 @@
-# Care Plan Builder SSE Endpoint
+# Action Plan Builder SSE Endpoint
 
 This module provides a Server-Sent Events (SSE) endpoint for generating care plans, allowing the MCP server to consume the API without duplicating business logic.
 
 ## Architecture
 
 ```
-MCP Server → SSE Endpoint (NestJS Controller) → AICarePlanBuilderService → External Services
+MCP Server → SSE Endpoint (NestJS Controller) → AIActionPlanBuilderService → External Services
 ```
 
 ## Endpoint
 
-**POST** `/care-plan-builder/generate`
+**POST** `/action-plan-builder/generate`
 
 ### Request Body
 
 ```json
 {
   "profileText": "string (required) - Full text description of the beneficiary profile",
-  "currentCarePlan": [
+  "currentActionPlan": [
     {
       "id": "string",
       "categories": ["string"],
@@ -51,7 +51,7 @@ The endpoint returns a Server-Sent Events stream with the following event types:
 {
   "type": "complete",
   "data": {
-    "carePlan": [
+    "actionPlan": [
       {
         "id": "action-1",
         "categories": ["Emploi"],
@@ -81,7 +81,7 @@ The endpoint returns a Server-Sent Events stream with the following event types:
 ## Usage Example (cURL)
 
 ```bash
-curl -X POST http://localhost:3000/care-plan-builder/generate \
+curl -X POST http://localhost:3000/action-plan-builder/generate \
   -H "Content-Type: application/json" \
   -H "Accept: text/event-stream" \
   -d '{

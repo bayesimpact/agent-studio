@@ -1,31 +1,31 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { AICarePlanBuilderService } from './care-plan-builder-ai.service';
-import { CarePlanBuilderArgs } from './care-plan-builder.abstract';
+import { AIActionPlanBuilderService } from './action-plan-builder-ai.service';
+import { ActionPlanBuilderArgs } from './action-plan-builder.abstract';
 import { NotionModule } from '../notion/notion.module';
 import { FranceTravailModule } from '../francetravail/francetravail.module';
 import { DataInclusionModule } from '../datainclusion/datainclusion.module';
 import { GeolocModule } from '../geoloc/geoloc.module';
 import { ConfigModule } from '@nestjs/config';
 
-describe('AICarePlanBuilderService', () => {
-  let service: AICarePlanBuilderService;
+describe('AIActionPlanBuilderService', () => {
+  let service: AIActionPlanBuilderService;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       imports: [ConfigModule.forRoot(), NotionModule, FranceTravailModule, DataInclusionModule, GeolocModule],
-      providers: [AICarePlanBuilderService],
+      providers: [AIActionPlanBuilderService],
     }).compile();
 
-    service = module.get<AICarePlanBuilderService>(AICarePlanBuilderService);
+    service = module.get<AIActionPlanBuilderService>(AIActionPlanBuilderService);
   });
 
   it('should be defined', () => {
     expect(service).toBeDefined();
   });
 
-  describe('buildCarePlan', () => {
-    it('should generate a care plan from a simple profile text', async () => {
-      const args: CarePlanBuilderArgs = {
+  describe('buildActionPlan', () => {
+    it('should generate an action plan from a simple profile text', async () => {
+      const args: ActionPlanBuilderArgs = {
         profileText:
           `Melvin,
           Vit chez ses parents à Rouen, réfugié était électricien
@@ -39,12 +39,12 @@ CEJ : La recherche d’emploi, la LM, entretien d’embauche, la confiance en so
 DIVERS : La randonné, jeux vidéo, jeux de construction`,
       };
 
-      const result = await service.buildCarePlan(args);
+      const result = await service.buildActionPlan(args);
 
       expect(result).toBeDefined();
-      expect(result.carePlan).toBeDefined();
-      expect(Array.isArray(result.carePlan)).toBe(true);
-      expect(result.carePlan.length).toBeGreaterThan(0);
+      expect(result.actionPlan).toBeDefined();
+      expect(Array.isArray(result.actionPlan)).toBe(true);
+      expect(result.actionPlan.length).toBeGreaterThan(0);
 
 
     });

@@ -1,17 +1,17 @@
 import { Injectable } from '@nestjs/common';
 import {
-  AbstractCarePlanBuilderService,
+  AbstractActionPlanBuilderService,
   Action,
-  CarePlanBuilderArgs,
-  CarePlanBuilderOptions,
-} from './care-plan-builder.abstract';
+  ActionPlanBuilderArgs,
+  ActionPlanBuilderOptions,
+} from './action-plan-builder.abstract';
 
 @Injectable()
-export class StaticCarePlanBuilderService extends AbstractCarePlanBuilderService {
-  async buildCarePlan(
-    args: CarePlanBuilderArgs,
-    options?: CarePlanBuilderOptions,
-  ): Promise<{ carePlan: Action[] }> {
+export class StaticActionPlanBuilderService extends AbstractActionPlanBuilderService {
+  async buildActionPlan(
+    args: ActionPlanBuilderArgs,
+    options?: ActionPlanBuilderOptions,
+  ): Promise<{ actionPlan: Action[] }> {
     // Simulate progress reporting with markdown headers
     options?.onProgress?.('## Analyse du profil');
     await new Promise((resolve) => setTimeout(resolve, 1000));
@@ -31,8 +31,8 @@ export class StaticCarePlanBuilderService extends AbstractCarePlanBuilderService
     options?.onProgress?.('Structuration du plan d\'accompagnement...');
     await new Promise((resolve) => setTimeout(resolve, 1000));
 
-    // Static mock care plan
-    const carePlan: Action[] = [
+    // Static mock action plan
+    const actionPlan: Action[] = [
       {
         id: '1',
         categories: ['Emploi', 'Formation'],
@@ -90,6 +90,6 @@ export class StaticCarePlanBuilderService extends AbstractCarePlanBuilderService
       },
     ];
 
-    return { carePlan };
+    return { actionPlan };
   }
 }

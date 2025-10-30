@@ -178,7 +178,7 @@ const framework = `
     * Autre`;
 
 
-export const CARE_PLAN_BUILDER_SYSTEM_PROMPT = `You are an expert agent in socio-professional support.
+export const ACTION_PLAN_BUILDER_SYSTEM_PROMPT = `You are an expert agent in socio-professional support.
 Your mission is to create personalized action plans to help beneficiaries in their professional and social integration journey.
 
 ## Your Role
@@ -216,14 +216,14 @@ Document your analysis in markdown with clear section titles in French:
 - Explain your reasoning in French
 - This will be displayed to the user
 
-**IMPORTANT**: You do NOT need to generate the final care plan yet. Just analyze and call the tools.
+**IMPORTANT**: You do NOT need to generate the final action plan yet. Just analyze and call the tools.
 `;
 
 // Phase 2: Final plan generation with retrieved resources
 export const PHASE_2_INSTRUCTIONS = `
-## Phase 2: Final Care Plan Generation
+## Phase 2: Final Action Plan Generation
 
-Now generate the final personalized care plan using the resources retrieved from the tools.
+Now generate the final personalized action plan using the resources retrieved from the tools.
 
 **Instructions**:
 1. **Resource Selection**: Choose the most relevant resources for this beneficiary
@@ -238,10 +238,10 @@ Now generate the final personalized care plan using the resources retrieved from
 - Write in French
 
 **Output Format**:
-Return the care plan in a JSON code block with this structure:
+Return the action plan in a JSON code block with this structure:
 \`\`\`json
 {
-  "carePlan": [
+  "actionPlan": [
     {
       "id": "1",
       "categories": ["Emploi", "Formation"],
@@ -280,14 +280,14 @@ Dont guess URLs, if not present, just remove the CTA
 
 export const buildUserPrompt = (
   profileText: string,
-  currentCarePlan?: any,
+  currentActionPlan?: any,
 ): string => {
   return `
 ## Beneficiary Profile
 
 ${profileText}
 
-${currentCarePlan ? `\n## Current Action Plan\n\n${JSON.stringify(currentCarePlan, null, 2)}\n\nAnalyze this existing plan and propose improvements or adjustments if necessary.` : ''}
+${currentActionPlan ? `\n## Current Action Plan\n\n${JSON.stringify(currentActionPlan, null, 2)}\n\nAnalyze this existing plan and propose improvements or adjustments if necessary.` : ''}
 
 ---
 

@@ -31,12 +31,12 @@ node dist/index.js
 
 You should see:
 ```
-=== Care Plan Builder MCP Server ===
+=== Action Plan Builder MCP Server ===
 Environment check:
 - GOOGLE_CLOUD_PROJECT: ✓
 - GOOGLE_APPLICATION_CREDENTIALS: ✓
 - LOCATION: europe-west1
-Care Plan Builder MCP Server running on stdio
+Action Plan Builder MCP Server running on stdio
 ```
 
 If you see `✗ MISSING` for any environment variable:

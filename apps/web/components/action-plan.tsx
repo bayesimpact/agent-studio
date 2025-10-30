@@ -22,7 +22,7 @@ interface Action {
   cta?: CTA
 }
 
-interface CarePlanProps {
+interface ActionPlanProps {
   planItems: Action[]
 }
 
@@ -38,7 +38,7 @@ const getCategoryColor = (category: string) => {
   return categoryColors[category] || { bg: 'bg-gray-50', text: 'text-gray-700', border: 'border-gray-200' }
 }
 
-export function CarePlan({ planItems }: CarePlanProps) {
+export function ActionPlan({ planItems }: ActionPlanProps) {
   // Track which actions have been expanded
   const [expandedActions, setExpandedActions] = useState<Set<string>>(new Set())
 

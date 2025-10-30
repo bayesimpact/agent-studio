@@ -22,17 +22,17 @@ export class ChatService {
     // private geolocService: GeolocService,
     // private resourcesService: ResourcesService,
     private notionBeneficiaryService: NotionBeneficiaryService,
-    @Inject('CarePlanBuilderService')
-    private carePlanBuilderService: AIServiceProvider,
+    @Inject('ActionPlanBuilderService')
+    private actionPlanBuilderService: AIServiceProvider,
     private aiService: AIService,
     private chatRepository: ChatRepository,
   ) {
 
     // Register service providers
-    // TEMPORARILY DISABLED - Using simplified care plan builder instead
+    // TEMPORARILY DISABLED - Using simplified action plan builder instead
     // this.registerServiceProvider(this.resourcesService);
     this.registerServiceProvider(this.notionBeneficiaryService);
-    this.registerServiceProvider(this.carePlanBuilderService);
+    this.registerServiceProvider(this.actionPlanBuilderService);
 
     // Build tools from all registered providers
     const allDeclarations = [
@@ -93,14 +93,14 @@ export class ChatService {
         const functionCall = backendFunctionCalls[i];
         const provider = this.serviceProviders.get(functionCall.name);
         if (provider) {
-          // Create progress callback for care plan builder
+          // Create progress callback for action plan builder
           const options =
-            functionCall.name === 'build_care_plan'
+            functionCall.name === 'build_action_plan'
               ? {
                   onProgress: (message: string) => {
                     subscriber.next({
                       data: JSON.stringify({
-                        type: 'care_plan_progress',
+                        type: 'action_plan_progress',
                         messageId: toolCallsMessageId,
                         message,
                       }),
@@ -111,13 +111,13 @@ export class ChatService {
 
           const result = await provider.executeFunction(functionCall, options);
 
-          // Check if this is a care plan builder result and stream it to frontend
-          if (functionCall.name === 'build_care_plan' && result.carePlan) {
+          // Check if this is an action plan builder result and stream it to frontend
+          if (functionCall.name === 'build_action_plan' && result.actionPlan) {
             subscriber.next({
               data: JSON.stringify({
-                type: 'care_plan_update',
+                type: 'action_plan_update',
                 messageId: toolCallsMessageId,
-                carePlan: result.carePlan,
+                actionPlan: result.actionPlan,
               }),
             } as MessageEvent);
           }
@@ -262,7 +262,7 @@ export class ChatService {
               } as MessageEvent);
             }
 
-            // Handle function calls from second LLM call (e.g., display_care_plan after jobs_search)
+            // Handle function calls from second LLM call (e.g., display_action_plan after jobs_search)
             if (
               secondLastChunk?.functionCalls &&
               secondLastChunk.functionCalls.length > 0

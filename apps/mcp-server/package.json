@@ -2,7 +2,7 @@
   "name": "mcp-server",
   "version": "0.0.0",
   "private": true,
-  "description": "MCP Server for Care Plan Builder",
+  "description": "MCP Server for Action Plan Builder",
   "type": "module",
   "bin": {
     "mcp-server": "./dist/index.js"
