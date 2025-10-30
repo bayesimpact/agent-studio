@@ -303,12 +303,7 @@ export function ChatInterface() {
   // Translate function names to French user-friendly labels
   const getFunctionLabel = (functionName: string): string => {
     const labels: Record<string, string> = {
-      'build_action_plan': 'Construction du plan d\'accompagnement',
-      'search_resources': 'Recherche de ressources',
-      'jobs_search': 'Recherche d\'offres d\'emploi',
-      'events_search': 'Recherche d\'événements',
-      'services_search': 'Recherche de services',
-      'workshops_search': 'Recherche d\'ateliers',
+      'fetch_beneficiary_profile': 'Récupération du profil dans Notion',
     }
     return labels[functionName] || functionName
   }
@@ -318,70 +313,6 @@ export function ChatInterface() {
       return getFunctionLabel(functionCalls[0].name)
     }
     return functionCalls.map(fc => getFunctionLabel(fc.name)).join(', ')
-  }
-
-  // Translate parameter names to French user-friendly labels
-  const getParamLabel = (paramName: string): string => {
-    const labels: Record<string, string> = {
-      'jobTitles': 'Métiers recherchés',
-      'cityName': 'Ville',
-      'provider': 'Type de recherche',
-      'workshopTypes': 'Types d\'ateliers',
-      'thematiques': 'Thématique',
-      'startDate': 'Date de début',
-      'endDate': 'Date de fin',
-      'contractTypes': 'Types de contrat',
-    }
-    return labels[paramName] || paramName
-  }
-
-  // Truncate long strings with ellipsis
-  const truncateString = (str: string, maxLength: number = 50): string => {
-    if (str.length <= maxLength) return str
-    return str.substring(0, maxLength) + '...'
-  }
-
-  // Translate provider values to French
-  const getProviderLabel = (provider: string): string => {
-    const labels: Record<string, string> = {
-      'jobs': 'Offres d\'emploi',
-      'events': 'Événements',
-      'services': 'Services sociaux',
-      'workshops': 'Ateliers',
-    }
-    return labels[provider] || provider
-  }
-
-  // Format parameter value based on type and name
-  const formatParamValue = (key: string, value: any): string => {
-    if (key === 'provider') {
-      return getProviderLabel(String(value))
-    }
-    if (Array.isArray(value)) {
-      // For thematiques, show only first item + count if multiple
-      if (key === 'thematiques' && value.length > 1) {
-        // Extract the readable part after '--'
-        const firstItem = value[0].split('--').pop() || value[0]
-        return `${firstItem} (+${value.length - 1})`
-      }
-      // For thematiques with single item, show readable part
-      if (key === 'thematiques' && value.length === 1) {
-        return value[0].split('--').pop() || value[0]
-      }
-      return value.join(', ')
-    }
-    return String(value)
-  }
-
-  // Get provider badge component for a given provider value
-  const getProviderBadge = (provider: string) => {
-    const badges: Record<string, { name: string; color: string }> = {
-      'jobs': { name: 'France Travail', color: 'bg-blue-50 text-blue-700 border-blue-200' },
-      'events': { name: 'France Travail', color: 'bg-purple-50 text-purple-700 border-purple-200' },
-      'services': { name: 'Data Inclusion', color: 'bg-green-50 text-green-700 border-green-200' },
-      'workshops': { name: 'Ateliers', color: 'bg-orange-50 text-orange-700 border-orange-200' },
-    }
-    return badges[provider] || null
   }
 
   useEffect(() => {
