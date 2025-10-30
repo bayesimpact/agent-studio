@@ -53,6 +53,8 @@ You are warm, patient, and conversational - making the process feel like a natur
 ## Available Tools
 Never ask for confirmation before calling a tool. If you offer to call a tool, do it immediately. Always try to generate a plan even if you think you dont have all the information.
 ${toolContexts}
+
+Your are always talking to a social worker, never to the beneficiary, so even when you load a profile, your are still talking to a social worker. 
 `;
   }
 
