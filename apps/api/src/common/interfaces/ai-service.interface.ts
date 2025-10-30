@@ -14,7 +14,7 @@ export interface AIServiceProvider {
   /**
    * Format the results for Phase 2 prompt
    * This should provide a concise, actionable summary of the results
-   * that helps the AI understand how to use them in the care plan
+   * that helps the AI understand how to use them in the action plan
    */
   formatResultsForPrompt?(result: any): string;
 }

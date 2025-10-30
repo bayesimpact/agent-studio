@@ -17,11 +17,11 @@ config({ path: join(__dirname, '..', '.env') });
 const API_BASE_URL = process.env.API_BASE_URL || 'http://localhost:3000';
 
 const server = new McpServer({
-  name: 'care-plan-builder',
+  name: 'action-plan-builder',
   version: '1.0.0'
 });
 
-const carePlan = z.array(z.object({
+const actionPlan = z.array(z.object({
   id: z.string(),
   categories: z.array(z.string()),
   title: z.string(),
@@ -36,47 +36,36 @@ interface SSEEvent {
   type: 'progress' | 'complete' | 'error';
   data?: {
     message?: string;
-    carePlan?: any[];
+    actionPlan?: any[];
     reasoning?: string;
     error?: string;
   };
 }
 
 server.registerTool(
-  'care-plan-builder',
+  'action-plan-builder',
   {
-    title: 'Build care plans',
-    description: 'Generate a care plan based on a beneficiary profile',
+    title: 'Build action plans',
+    description: 'Generate an action plan based on a beneficiary profile',
     inputSchema: {
-      profileText: z.string(),
-      currentCarePlan: z.array(z.object({
-        id: z.string(),
-        categories: z.array(z.string()),
-        title: z.string(),
-        content: z.string(),
-        cta: z.object({
-          name: z.string(),
-          link: z.string().optional()
-        }).optional()
-      })).optional(),
+      profileText: z.string()
     },
     outputSchema: {
-      carePlan: carePlan,
+      actionPlan: actionPlan,
       reasoning: z.string()
     }
   },
-  async ({ profileText, currentCarePlan }, extra) => {
-    console.error(`[MCP] Generating care plan for profile (${profileText.length} chars)`);
+  async ({ profileText }, extra) => {
+    console.error(`[MCP] Generating action plan for profile (${profileText.length} chars)`);
     let reasoning = "";
-    let finalCarePlan: any[] = [];
+    let finalActionPlan: any[] = [];
 
     try {
       // Call the NestJS SSE endpoint
       const response = await axios.post(
-        `${API_BASE_URL}/care-plan-builder/generate`,
+        `${API_BASE_URL}/action-plan-builder/generate`,
         {
-          profileText,
-          currentCarePlan: currentCarePlan || [],
+          profileText
         },
         {
           responseType: 'stream',
@@ -118,11 +107,11 @@ server.registerTool(
                     });
                   }
                 } else if (eventData.type === 'complete' && eventData.data) {
-                  finalCarePlan = eventData.data.carePlan || [];
+                  finalActionPlan = eventData.data.actionPlan || [];
                   if (eventData.data.reasoning) {
                     reasoning = eventData.data.reasoning;
                   }
-                  console.error(`[MCP] Care plan generated with ${finalCarePlan.length} actions`);
+                  console.error(`[MCP] Care plan generated with ${finalActionPlan.length} actions`);
                 } else if (eventData.type === 'error') {
                   reject(new Error(eventData.data?.error || 'Unknown error'));
                 }
@@ -135,7 +124,7 @@ server.registerTool(
 
         response.data.on('end', () => {
           const output = {
-            carePlan: finalCarePlan,
+            actionPlan: finalActionPlan,
             reasoning
           };
 
@@ -151,7 +140,7 @@ server.registerTool(
         });
       });
     } catch (error) {
-      console.error('[MCP] Error generating care plan:', error);
+      console.error('[MCP] Error generating action plan:', error);
       throw error;
     }
   }

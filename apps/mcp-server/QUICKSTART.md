@@ -23,7 +23,7 @@ npm run build
 ```json
 {
   "mcpServers": {
-    "care-plan-builder": {
+    "action-plan-builder": {
       "command": "node",
       "args": [
         "/Users/jdoucy/Dev/bayesimpact/caseai-connect/apps/mcp-server/dist/index.js"

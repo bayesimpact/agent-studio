@@ -1,4 +1,4 @@
-# Care Plan Builder MCP Server
+# Action Plan Builder MCP Server
 
 This is an MCP (Model Context Protocol) server that exposes the care plan builder functionality to Claude Desktop and other MCP clients.
 
@@ -32,7 +32,7 @@ Then configure Claude Desktop (`~/Library/Application Support/Claude/claude_desk
 ```json
 {
   "mcpServers": {
-    "care-plan-builder": {
+    "action-plan-builder": {
       "command": "node",
       "args": [
         "/Users/jdoucy/Dev/bayesimpact/caseai-connect/apps/mcp-server/dist/index.js"

@@ -1,10 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import {
-  AbstractCarePlanBuilderService,
+  AbstractActionPlanBuilderService,
   Action,
-  CarePlanBuilderArgs,
-  CarePlanBuilderOptions,
-} from './care-plan-builder.abstract';
+  ActionPlanBuilderArgs,
+  ActionPlanBuilderOptions,
+} from './action-plan-builder.abstract';
 import {
   GoogleGenAI,
   ToolListUnion,
@@ -17,11 +17,11 @@ import {
   LangfuseTraceClient,
 } from 'langfuse';
 import {
-  CARE_PLAN_BUILDER_SYSTEM_PROMPT,
+  ACTION_PLAN_BUILDER_SYSTEM_PROMPT,
   PHASE_1_INSTRUCTIONS,
   PHASE_2_INSTRUCTIONS,
   buildUserPrompt,
-} from './prompts/care-plan-builder.prompt';
+} from './prompts/action-plan-builder.prompt';
 import { NotionWorkshopService } from '../notion/notion-workshop.service';
 import { FranceTravailJobsService } from '../francetravail/francetravail-jobs.service';
 import { FranceTravailEventsService } from '../francetravail/francetravail-events.service';
@@ -49,7 +49,7 @@ interface AIResponse {
 }
 
 @Injectable()
-export class AICarePlanBuilderService extends AbstractCarePlanBuilderService {
+export class AIActionPlanBuilderService extends AbstractActionPlanBuilderService {
   private genAI: GoogleGenAI;
   private langfuse: Langfuse;
   private readonly tools: ToolListUnion;
@@ -76,7 +76,7 @@ export class AICarePlanBuilderService extends AbstractCarePlanBuilderService {
       baseUrl: process.env.LANGFUSE_BASE_URL,
     });
 
-    // Setup tools for the care plan builder agent
+    // Setup tools for the action plan builder agent
     this.tools = [
       {
         functionDeclarations: [
@@ -94,7 +94,7 @@ export class AICarePlanBuilderService extends AbstractCarePlanBuilderService {
     systemPrompt: string;
     userPrompt: string;
     tools?: ToolListUnion;
-    options?: CarePlanBuilderOptions;
+    options?: ActionPlanBuilderOptions;
   }): Promise<AIResponse> {
     const { systemPrompt, userPrompt, tools, options } = params;
 
@@ -145,10 +145,10 @@ export class AICarePlanBuilderService extends AbstractCarePlanBuilderService {
   private async executeToolCalls(
     functionCalls: FunctionCall[],
     trace: LangfuseTraceClient,
-    options?: CarePlanBuilderOptions,
+    options?: ActionPlanBuilderOptions,
   ): Promise<FunctionCallResult[]> {
     console.log(
-      '🔧 Care plan builder wants to call functions:',
+      '🔧 Action plan builder wants to call functions:',
       functionCalls.map((fc) => ({
         name: fc.name,
         args: fc.args,
@@ -226,7 +226,7 @@ export class AICarePlanBuilderService extends AbstractCarePlanBuilderService {
   private async rawStringToJson(
     rawOutput: string,
     trace: LangfuseTraceClient,
-  ): Promise<{ carePlan: Action[] }> {
+  ): Promise<{ actionPlan: Action[] }> {
     console.log('🔄 Extracting JSON from raw output using Gemini...');
 
     const model = 'gemini-2.5-flash';
@@ -241,7 +241,7 @@ export class AICarePlanBuilderService extends AbstractCarePlanBuilderService {
       },
       input: {
         rawOutputLength: rawOutput.length,
-        task: 'Extract care plan JSON with structured output validation',
+        task: 'Extract action plan JSON with structured output validation',
       },
       metadata: {
         phase: 'json-extraction',
@@ -257,12 +257,12 @@ export class AICarePlanBuilderService extends AbstractCarePlanBuilderService {
             role: 'user',
             parts: [
               {
-                text: `Extract the care plan JSON from the following text. The JSON should contain a "carePlan" array with actions.
+                text: `Extract the action plan JSON from the following text. The JSON should contain an "actionPlan" array with actions.
 
 Raw output:
 ${rawOutput}
 
-Return ONLY the extracted JSON object with the "carePlan" array.`,
+Return ONLY the extracted JSON object with the "actionPlan" array.`,
               },
             ],
           },
@@ -273,7 +273,7 @@ Return ONLY the extracted JSON object with the "carePlan" array.`,
           responseSchema: {
             type: Type.OBJECT,
             properties: {
-              carePlan: {
+              actionPlan: {
                 type: Type.ARRAY,
                 items: {
                   type: Type.OBJECT,
@@ -302,7 +302,7 @@ Return ONLY the extracted JSON object with the "carePlan" array.`,
                 },
               },
             },
-            required: ['carePlan'],
+            required: ['actionPlan'],
           },
         },
       });
@@ -314,17 +314,17 @@ Return ONLY the extracted JSON object with the "carePlan" array.`,
 
       const parsedResponse = JSON.parse(responseText);
 
-      if (!parsedResponse.carePlan || !Array.isArray(parsedResponse.carePlan)) {
-        throw new Error('Invalid care plan structure in extracted JSON');
+      if (!parsedResponse.actionPlan || !Array.isArray(parsedResponse.actionPlan)) {
+        throw new Error('Invalid action plan structure in extracted JSON');
       }
 
-      console.log(`✅ Successfully extracted ${parsedResponse.carePlan.length} actions from raw output`);
+      console.log(`✅ Successfully extracted ${parsedResponse.actionPlan.length} actions from raw output`);
 
       // Update Langfuse with success
       const usageMetadata = result.usageMetadata || {};
       extractionGeneration.update({
         output: {
-          actionsCount: parsedResponse.carePlan.length,
+          actionsCount: parsedResponse.actionPlan.length,
           extractionSuccess: true,
         },
         usage: {
@@ -401,7 +401,7 @@ Now generate the final personalized action plan using these resources.
 **Important**:
 1. Use the previous analysis context to stay consistent with identified priorities
 2. Include real resource links (workshops, jobs) in action CTAs when you select relevant items
-3. **After your reflection, return the care plan in a JSON code block as specified in the system prompt**
+3. **After your reflection, return the action plan in a JSON code block as specified in the system prompt**
 4. All action titles, content, CTA names, and markdown section headers must be in French
 `;
   }
@@ -409,7 +409,7 @@ Now generate the final personalized action plan using these resources.
   private async generateInitialAnalysis(
     systemPrompt: string,
     userPrompt: string,
-    options?: CarePlanBuilderOptions,
+    options?: ActionPlanBuilderOptions,
   ): Promise<AIResponse> {
     return await this.callAI({
       systemPrompt,
@@ -423,7 +423,7 @@ Now generate the final personalized action plan using these resources.
     systemPrompt: string,
     secondUserPrompt: string,
     trace: LangfuseTraceClient,
-    options?: CarePlanBuilderOptions,
+    options?: ActionPlanBuilderOptions,
   ): Promise<{
     fullOutput: string;
     usage: UsageMetadata;
@@ -472,15 +472,15 @@ Now generate the final personalized action plan using these resources.
     };
   }
 
-  async buildCarePlan(
-    args: CarePlanBuilderArgs,
-    options?: CarePlanBuilderOptions,
-  ): Promise<{ carePlan: Action[] }> {
-    const userPrompt = buildUserPrompt(args.profileText, args.currentCarePlan);
+  async buildActionPlan(
+    args: ActionPlanBuilderArgs,
+    options?: ActionPlanBuilderOptions,
+  ): Promise<{ actionPlan: Action[] }> {
+    const userPrompt = buildUserPrompt(args.profileText, args.currentActionPlan);
 
     // Build system prompt for Phase 1 with all tool contexts
     const firstSystemPrompt =
-      CARE_PLAN_BUILDER_SYSTEM_PROMPT +
+      ACTION_PLAN_BUILDER_SYSTEM_PROMPT +
       '\n\n## Available Tools\n\n' +
       this.notionWorkshopService.getPromptContext() +
       '\n' +
@@ -495,20 +495,20 @@ Now generate the final personalized action plan using these resources.
       PHASE_1_INSTRUCTIONS;
 
     // Build system prompt for Phase 2 (no tools, just JSON output)
-    const secondSystemPrompt = CARE_PLAN_BUILDER_SYSTEM_PROMPT + '\n\n' + PHASE_2_INSTRUCTIONS;
+    const secondSystemPrompt = ACTION_PLAN_BUILDER_SYSTEM_PROMPT + '\n\n' + PHASE_2_INSTRUCTIONS;
 
     // Create Langfuse trace
     const trace = this.langfuse.trace({
-      name: 'care-plan-generation',
+      name: 'action-plan-generation',
       metadata: {
         profileLength: args.profileText.length,
-        hasCurrentPlan: !!args.currentCarePlan,
+        hasCurrentPlan: !!args.currentActionPlan,
       },
     });
 
     const model = 'gemini-2.5-flash';
     const generation = trace.generation({
-      name: 'generate-care-plan',
+      name: 'generate-action-plan',
       model,
       modelParameters: {
         temperature: 0,
@@ -583,13 +583,13 @@ Now generate the final personalized action plan using these resources.
         finalOutput = secondResponse.fullOutput;
       }
 
-      // Extract and validate care plan using Gemini with structured output
+      // Extract and validate action plan using Gemini with structured output
       options?.onProgress?.(`\n## Structuration du plan\n`);
       const extractedResult = await this.rawStringToJson(finalOutput, trace);
-      const carePlan = extractedResult.carePlan;
+      const actionPlan = extractedResult.actionPlan;
 
       // Validate actions
-      for (const action of carePlan) {
+      for (const action of actionPlan) {
         if (
           !action.id ||
           !action.title ||
@@ -604,9 +604,9 @@ Now generate the final personalized action plan using these resources.
 
       options?.onProgress?.(`
 ## Génération terminée
-Plan d'action créé avec ${carePlan.length} actions.`);
+Plan d'action créé avec ${actionPlan.length} actions.`);
 
-      return { carePlan };
+      return { actionPlan };
     } catch (error) {
       // Log error to Langfuse
       generation.update({
@@ -615,9 +615,9 @@ Plan d'action créé avec ${carePlan.length} actions.`);
       });
       generation.end();
 
-      console.error('Error generating care plan:', error);
+      console.error('Error generating action plan:', error);
       throw new Error(
-        `Failed to generate care plan: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        `Failed to generate action plan: ${error instanceof Error ? error.message : 'Unknown error'}`,
       );
     } finally {
       await this.langfuse.flushAsync();
