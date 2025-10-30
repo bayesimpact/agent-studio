@@ -122,7 +122,8 @@ export class DataInclusionService implements AIServiceProvider {
 **Description**: Search for support services (social, administrative, financial, housing, health, training, etc.)
 
 **Parameters**:
-- \`thematiques\`: List of exact themes from the available enum
+- \`thematiques\`: List of exact themes from the available enum:
+${thematiques}
   - You can select multiple themes if the situation is complex
   - Examples: ["logement-hebergement--reduire-les-impayes-de-loyer"], ["preparer-sa-candidature--realiser-un-cv-et-ou-une-lettre-de-motivation", "trouver-un-emploi--convaincre-un-recruteur-en-entretien"]
 - \`cityName\`: City name (required - ask if not provided)
@@ -134,16 +135,43 @@ export class DataInclusionService implements AIServiceProvider {
   async executeFunction(
     functionCall: FunctionCall,
   ): Promise<{ services: SimplifiedService[] }> {
-    const thematiques = functionCall.args['thematiques'] as string[];
+    const rawThematiques = functionCall.args['thematiques'] as string[];
     const cityCode = functionCall.args['cityCode'] as string;
-    console.log('Function calling with params:', thematiques, cityCode);
+
+    // Validate and filter thematiques
+    const validThematiques = this.validateThematiques(rawThematiques);
+
+    console.log('Function calling with params:', validThematiques, cityCode);
 
     const services = await this.searchServices({
-      thematiques,
+      thematiques: validThematiques,
       codeCommune: cityCode,
     });
     console.log('Services length: ', services.length);
     return { services };
+  }
+
+  private validateThematiques(thematiquesInput: string[]): string[] {
+    const validThematiques: string[] = [];
+    const thematiqueSet = new Set(thematiques);
+
+    for (const thematique of thematiquesInput) {
+      if (thematiqueSet.has(thematique)) {
+        validThematiques.push(thematique);
+      } else {
+        console.warn(
+          `⚠️  Invalid thematique removed: "${thematique}". Not found in the allowed thematiques enum.`,
+        );
+      }
+    }
+
+    if (validThematiques.length === 0 && thematiquesInput.length > 0) {
+      console.warn(
+        '⚠️  All provided thematiques were invalid. No services will be searched.',
+      );
+    }
+
+    return validThematiques;
   }
 
   async searchServices({

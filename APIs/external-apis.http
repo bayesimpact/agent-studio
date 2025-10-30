@@ -6,7 +6,7 @@ Content-Type: application/x-www-form-urlencoded
 grant_type=client_credentials
     &client_id={{client_id}}
     &client_secret={{secret_key}}
-    &scope=api_romeov2 o2dsoffre api_offresdemploiv2 api_evenementsv1 evenements api_labonneboitev2 search office
+    &scope=api_romeov2 o2dsoffre api_offresdemploiv2 api_evenementsv1 evenements api_labonneboitev2
 #    &scope=api_offresdemploiv2 o2dsoffre api_evenementsv1 evenements
 
 ###
@@ -37,7 +37,7 @@ Authorization: Bearer 0ynEws6HL9vL4-VarvBJHGJgylA
 #  --header 'Authorization: Bearer 123'
 GET https://api.francetravail.io/partenaire/offresdemploi/v2/offres/search?codeROME=M1405,M1419,M1811,M1409,M1422,K2402,K2401,M1402,M1429,M1702,M1403&departement=75&range=0-2
 Accept: application/json
-Authorization: Bearer s9jEVPrLxsYWuViAXEqXEJFvy8o
+Authorization: Bearer 6hYDTOSegAuBjFgmUuB2jzHdpzk
 
 ###
 GET https://api.francetravail.io/partenaire/evenements/v1/salonsenligne
@@ -68,7 +68,7 @@ Authorization: Bearer ezbsR2CkLuKey_hNuh1adWJWSaE
 GET https://api.francetravail.io/partenaire/labonneboite/v2/recherche?city=rouen&rome=G1609&rome=D1212&rome=G1601&rome=G1602&rome=G1607&rome=G1404&rome=F1201&rome=F1108&rome=H2602&rome=H2601&rome=H1504]
 Content-Type:application/json
 Accept:application/json
-Authorization: Bearer 6kPOjNC9HLiVHcEgXa3iSRJmQKcdo
+Authorization: Bearer mN1b91JNZX_MfpkqhSE04vr-p1M
 
 
 
@@ -78,6 +78,15 @@ GET https://api.data.inclusion.gouv.fr/api/v1/search/services?page=1&size=10&the
 Authorization: Bearer {{dataInclusionBearer}}
 Content-Type:application/json
 Accept:application/json
+
+
+###
+GET https://api.data.inclusion.gouv.fr/api/v1/search/services?thematiques=difficultes-administratives-ou-juridiques--accompagnement-aux-demarches-administratives&thematiques=sante--constituer-un-dossier-mdph-invalidite&thematiques=preparer-sa-candidature--realiser-un-cv-et-ou-une-letter-de-motivation&thematiques=trouver-un-emploi--convaincre-un-recruteur-en-entretien&thematiques=remobilisation--bien-etre-confiance-en-soi&thematiques=difficultes-financieres--acquerir-une-autonomie-budgetaire&code_commune=76540&exclure_doublons=true&size=20
+Authorization: Bearer {{dataInclusionBearer}}
+Content-Type:application/json
+Accept:application/json
+
+
 
 ###
 GET https://api.data.inclusion.gouv.fr/api/v1/search/services?page=1&size=20&thematiques=preparer-sa-candidature--realiser-un-cv-et-ou-une-lettre-de-motivation&code_commune=76540&exclure_doublons=true

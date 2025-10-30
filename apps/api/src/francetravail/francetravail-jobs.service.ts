@@ -68,6 +68,29 @@ export class FranceTravailJobsService
     return { jobOffers };
   }
 
+  formatResultsForPrompt(result: { jobOffers: SimplifiedJobOffer[] }): string {
+    const { jobOffers } = result;
+
+    if (!jobOffers || jobOffers.length === 0) {
+      return `**Offres d'emploi**: Aucune offre trouvée.`;
+    }
+
+    const summary = `**Offres d'emploi** (${jobOffers.length} résultats):
+
+${jobOffers.map((job, index) => `${index + 1}. **${job.title}** - ${job.company}
+   - Lieu: ${job.location}
+   - Contrat: ${job.contractType}
+   - URL: ${job.url}`).join('\n\n')}
+
+**Comment utiliser ces offres**:
+- Inclure les URLs dans les CTAs (type: "url") d'actions liées à la recherche d'emploi
+- Mentionner les types de contrats disponibles dans le contenu des actions
+- Adapter les actions en fonction des lieux (mobilité, transport)
+- Créer des actions avec des titres comme "Postuler à l'offre chez [Entreprise]"`;
+
+    return summary;
+  }
+
   async searchJobOffers({
     jobTitles,
     departmentsCode

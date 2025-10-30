@@ -10,4 +10,11 @@ export interface AIServiceProvider {
     functionCall: FunctionCall,
     options?: any,
   ): Promise<any>;
+
+  /**
+   * Format the results for Phase 2 prompt
+   * This should provide a concise, actionable summary of the results
+   * that helps the AI understand how to use them in the care plan
+   */
+  formatResultsForPrompt?(result: any): string;
 }
