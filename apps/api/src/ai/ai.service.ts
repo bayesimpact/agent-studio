@@ -158,7 +158,6 @@ ${toolContexts}
     });
 
     let fullOutput = '';
-    let tokenCount = 0;
     let functionCalls: any[] = [];
 
     try {
@@ -174,8 +173,9 @@ ${toolContexts}
           tools,
         },
       });
-
+      let lastChunck: GenerateContentResponse
       for await (const chunk of streamResult) {
+        lastChunck = chunk;
         // Accumulate output for Langfuse
         if (chunk.candidates?.[0]?.content?.parts) {
           for (const part of chunk.candidates[0].content.parts) {
@@ -192,12 +192,6 @@ ${toolContexts}
             args: fc.args,
           }));
         }
-
-        // Count tokens (approximate)
-        if (chunk.usageMetadata) {
-          tokenCount = chunk.usageMetadata.totalTokenCount || 0;
-        }
-
         yield chunk;
       }
 
@@ -207,15 +201,15 @@ ${toolContexts}
           ? { text: fullOutput, functionCalls }
           : fullOutput,
         usage: {
-          input: tokenCount,
-          output: tokenCount,
-          total: tokenCount,
+          input: lastChunck?.usageMetadata.promptTokenCount,
+          output: lastChunck?.usageMetadata.candidatesTokenCount,
+          total: lastChunck?.usageMetadata.totalTokenCount,
           unit: "TOKENS"
         },
       });
 
       generation.end();
-      console.info(`LLM call completed. Tokens: ${tokenCount}, Function calls: ${functionCalls.length}`);
+      console.info(`LLM call completed. Tokens: ${lastChunck?.usageMetadata.totalTokenCount}, Function calls: ${functionCalls.length}`);
     } catch (error) {
       // Log error to Langfuse
       generation.update({

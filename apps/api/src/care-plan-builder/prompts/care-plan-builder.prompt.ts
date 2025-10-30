@@ -259,6 +259,7 @@ Return the care plan in a JSON code block with this structure:
 
 **Required fields**: id, categories, title, content
 **Optional field**: cta (with name, type, and value)
+Dont guess URLs, if not present, just remove the CTA
 
 **CTA Types**:
 - **"url"**: For web links to resources, platforms, or information pages
@@ -273,6 +274,7 @@ Return the care plan in a JSON code block with this structure:
 - All text content (name, title, content) must be in French
 - Choose the appropriate CTA type based on the action context
 - Use "url" type for links from retrieved resources (jobs, workshops, events, services)
+- **DONT** guess URL, add URL's CTA only if present inside Available Resources 
 - Use "phone" type when a direct phone contact is more appropriate (e.g., emergency services, counseling)
 - Use "email" type when email communication is preferred (e.g., administrative services, applications)`;
 
