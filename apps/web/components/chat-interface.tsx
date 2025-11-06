@@ -335,7 +335,8 @@ export function ChatInterface() {
       <div className="fixed left-4 top-[120px] w-96 h-[calc(80vh-40px)] z-10">
         <Card className="h-full flex flex-col bg-gradient-to-br from-primary/5 to-primary/10 border-primary/20 shadow-lg">
           <CardHeader className="pb-3">
-            <CardTitle className="text-lg font-bold">Plan d'action</CardTitle>
+            {/*<CardTitle className="text-lg font-bold">Plan d'action</CardTitle>*/}
+            <CardTitle className="text-lg font-bold">Action plan</CardTitle>
           </CardHeader>
           <CardContent className="flex-1 overflow-hidden p-0">
             <ScrollArea className="h-full px-6 pb-6">
@@ -347,7 +348,8 @@ export function ChatInterface() {
                     <Briefcase className="w-8 h-8 text-primary/50" />
                   </div>
                   <p className="text-sm text-muted-foreground">
-                    Votre plan d'action apparaîtra ici une fois créé.
+                    {/*Votre plan d'action apparaîtra ici une fois créé.*/}
+                    Your action plan will appear here.
                   </p>
                 </div>
               )}

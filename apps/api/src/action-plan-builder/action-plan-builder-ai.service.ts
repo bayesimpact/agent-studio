@@ -609,9 +609,13 @@ Now generate the final personalized action plan using these resources.
         }
       }
 
+//       options?.onProgress?.(`
+// ## Génération terminée
+// Plan d'action créé avec ${actionPlan.length} actions.`);
+
       options?.onProgress?.(`
-## Génération terminée
-Plan d'action créé avec ${actionPlan.length} actions.`);
+## Action plan generation completed
+Created with ${actionPlan.length} actions.`);
 
       return { actionPlan };
     } catch (error) {
