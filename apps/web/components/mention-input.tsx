@@ -24,9 +24,32 @@ interface MentionInputProps {
   placeholder?: string;
   className?: string;
 }
-
-// Available mention options
 const MENTION_OPTIONS: MentionOption[] = [
+  {
+    id: 'notion',
+    label: '@notion',
+    description: 'Search a profile in Notion',
+    icon: <Box className="w-4 h-4" />,
+  },
+  {
+    id: 'caseai',
+    label: '@caseai',
+    description: 'Search a profile in CaseAI',
+    icon: <UserRoundCheck className="w-4 h-4" />,
+  },
+  {
+    id: 'salesforce',
+    label: '@salesforce',
+    description: 'Search a profile in Salesforce (coming soon)',
+    icon: <DatabaseZap className="w-4 h-4" />,
+  },{
+    id: 'hubspot',
+    label: '@hubspot',
+    description: 'Search a profile in Hubspot (coming soon)',
+    icon: <DatabaseZap className="w-4 h-4" />,
+  },
+];
+const MENTION_OPTIONS_FR: MentionOption[] = [
   {
     id: 'notion',
     label: '@notion',
