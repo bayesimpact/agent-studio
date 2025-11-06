@@ -146,7 +146,7 @@ export class ChatService {
     const sessionId = v4();
     const initialMessage = new Message(
       v4(),
-      'Bonjour, comment puis-je vous aider ?',
+      'How can I assist you today?',
       'assistant',
       new Date(),
     );

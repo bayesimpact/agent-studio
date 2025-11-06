@@ -1,3 +1,7 @@
+// const lang = `French`;
+const lang = `English`;
+
+
 const framework = `
 ### 1. EMPLOI
 * **Préparer sa candidature**
@@ -192,7 +196,7 @@ You analyze beneficiary profiles and build structured action plans with concrete
 Référentiel a utiliser pour categoriser les actions
 ${framework}
 
-**IMPORTANT**: While your internal thinking can be in English, ALL user-facing content (action titles, content, CTA names, and markdown section headers) MUST be in French.`;
+**IMPORTANT**: While your internal thinking can be in English, ALL user-facing content (action titles, content, CTA names, and markdown section headers) MUST be in ${lang}.`;
 
 // Phase 1: Initial analysis with tool calls
 export const PHASE_1_INSTRUCTIONS = `
@@ -211,9 +215,9 @@ Your task is to analyze the beneficiary profile and identify what resources they
 3. **Priority Identification**: Determine the most urgent and important actions
 
 **Reflection Process**:
-Document your analysis in markdown with clear section titles in French:
+Document your analysis in markdown with clear section titles in ${lang}:
 - Use "## Title" for major steps (e.g., "## Analyse du profil", "## Identification des priorités")
-- Explain your reasoning in French
+- Explain your reasoning in ${lang}
 - This will be displayed to the user
 
 **IMPORTANT**: You do NOT need to generate the final action plan yet. Just analyze and call the tools.
@@ -235,7 +239,7 @@ Now generate the final personalized action plan using the resources retrieved fr
 - Use "## Sélection des ressources" as your main section title
 - Explain WHICH resources you selected and WHY
 - Document how you integrated them into actions
-- Write in French
+- Write in ${lang}
 
 **Output Format**:
 Return the action plan in a JSON code block with this structure:
@@ -244,11 +248,11 @@ Return the action plan in a JSON code block with this structure:
   "actionPlan": [
     {
       "id": "1",
-      "categories": ["Emploi", "Formation"],
-      "title": "Short action title in French",
-      "content": "Detailed description with concrete steps in French",
+      "categories": ["Emploi", "Formation"], // Add categories based on the resources you selected and translate them in ${lang}
+      "title": "Short action title in ${lang}",
+      "content": "Detailed description with concrete steps in ${lang}",
       "cta": {
-        "name": "Button text in French",
+        "name": "Button text in ${lang}",
         "type": "url",
         "value": "https://real-link-from-resources.com"
       }
@@ -271,7 +275,7 @@ Dont guess URLs, if not present, just remove the CTA
   - Example: {"name": "Contacter par email", "type": "email", "value": "contact@example.fr"}
 
 **IMPORTANT**:
-- All text content (name, title, content) must be in French
+- All text content (name, title, content) must be in ${lang}
 - Choose the appropriate CTA type based on the action context
 - Use "url" type for links from retrieved resources (jobs, workshops, events, services)
 - **DONT** guess URL, add URL's CTA only if present inside Available Resources 
@@ -294,8 +298,8 @@ ${currentActionPlan ? `\n## Current Action Plan\n\n${JSON.stringify(currentActio
 Now generate a personalized action plan for this beneficiary.
 
 **Important**:
-1. Document your thinking process in markdown with "## Title" for major phases (section titles in French)
-2. All action titles, content, and CTA names must be in French
+1. Document your thinking process in markdown with "## Title" for major phases (section titles in ${lang})
+2. All action titles, content, and CTA names must be in ${lang}
 3. End your response with the action plan in a JSON code block as shown in the example above
 `;
 };
