@@ -31,6 +31,8 @@ import { GeolocService } from '../geoloc/geoloc.service';
 import { Location } from '../geoloc/models/location.model';
 import { AIServiceProvider } from '../common/interfaces/ai-service.interface';
 
+const lang = "English"
+
 interface FunctionCallResult {
   name: string;
   result: unknown;
@@ -154,7 +156,8 @@ export class AIActionPlanBuilderService extends AbstractActionPlanBuilderService
         args: fc.args,
       })),
     );
-    options?.onProgress?.(`\n## Appel d'outils\nRecherche de ressources...\n`);
+    // options?.onProgress?.(`\n## Appel d'outils\nRecherche de ressources...\n`);
+    options?.onProgress?.(`\n## Calling tools\nSearch for ressources...\n`);
     let locations: Location[] = [];
 
     const functionResults: FunctionCallResult[] = [];
@@ -402,7 +405,7 @@ Now generate the final personalized action plan using these resources.
 1. Use the previous analysis context to stay consistent with identified priorities
 2. Include real resource links (workshops, jobs) in action CTAs when you select relevant items
 3. **After your reflection, return the action plan in a JSON code block as specified in the system prompt**
-4. All action titles, content, CTA names, and markdown section headers must be in French
+4. All action titles, content, CTA names, and markdown section headers must be in ${lang}
 `;
   }
 
@@ -428,7 +431,8 @@ Now generate the final personalized action plan using these resources.
     fullOutput: string;
     usage: UsageMetadata;
   }> {
-    options?.onProgress?.(`\n## Génération du plan final\n`);
+    // options?.onProgress?.(`\n## Génération du plan final\n`);
+    options?.onProgress?.(`\n## Final action plan generation\n`);
 
     // Create a second generation span for the final plan
     const secondGeneration = trace.generation({
@@ -524,7 +528,9 @@ Now generate the final personalized action plan using these resources.
     });
 
     try {
-      options?.onProgress?.(`## Création du plan d'action
+ //      options?.onProgress?.(`## Création du plan d'action
+ // `);
+      options?.onProgress?.(`## Action plan generation
  `);
 
       // Phase 1: Generate initial analysis and identify needed resources
@@ -584,7 +590,8 @@ Now generate the final personalized action plan using these resources.
       }
 
       // Extract and validate action plan using Gemini with structured output
-      options?.onProgress?.(`\n## Structuration du plan\n`);
+      // options?.onProgress?.(`\n## Structuration du plan\n`);
+      options?.onProgress?.(`\n## Plan structuration\n`);
       const extractedResult = await this.rawStringToJson(finalOutput, trace);
       const actionPlan = extractedResult.actionPlan;
 

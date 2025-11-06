@@ -303,7 +303,8 @@ export function ChatInterface() {
   // Translate function names to French user-friendly labels
   const getFunctionLabel = (functionName: string): string => {
     const labels: Record<string, string> = {
-      'fetch_beneficiary_profile': 'Récupération du profil dans Notion',
+      // 'fetch_beneficiary_profile': 'Récupération du profil dans Notion',
+      'fetch_beneficiary_profile': 'Fetching profile in Notion',
     }
     return labels[functionName] || functionName
   }
@@ -431,11 +432,11 @@ export function ChatInterface() {
                             )}
                             <span className="text-xs font-semibold" style={{ color: '#124742' }}>
                               {message.progressMessage ||
-                               (message.isInitializing ? 'Traitement de votre demande...' :
+                               (message.isInitializing ? 'Processing request...' :
                                 message.isProcessingFunctions && message.functionCalls ? `🔍 ${formatFunctionCalls(message.functionCalls)}...` :
                                 message.isFinished && message.functionCalls ? `✓ ${formatFunctionCalls(message.functionCalls)}` :
-                                message.content ? 'Réponse en cours...' :
-                                'Traitement...')}
+                                message.content ? 'Replying...' :
+                                'Processing...')}
                             </span>
                             {message.functionCalls && message.functionCalls.length > 0 && (
                               <span className="ml-auto text-xs" style={{ color: '#597f77' }}>
@@ -455,7 +456,8 @@ export function ChatInterface() {
                                 </div>
                               ) : (
                                 <div className="text-xs" style={{ color: '#597f77' }}>
-                                  Aucune information de progression disponible
+                                  {/*Aucune information de progression disponible*/}
+                                  No progress information available
                                 </div>
                               )}
                             </div>
