@@ -26,12 +26,22 @@ interface ActionPlanProps {
   planItems: Action[]
 }
 
+// const categoryColors: Record<string, { bg: string; text: string; border: string }> = {
+//   'Emploi': { bg: 'bg-blue-50', text: 'text-blue-700', border: 'border-blue-200' },
+//   'Formation': { bg: 'bg-purple-50', text: 'text-purple-700', border: 'border-purple-200' },
+//   'Social': { bg: 'bg-green-50', text: 'text-green-700', border: 'border-green-200' },
+//   'Réseau': { bg: 'bg-amber-50', text: 'text-amber-700', border: 'border-amber-200' },
+//   'Administratif': { bg: 'bg-gray-50', text: 'text-gray-700', border: 'border-gray-200' },
+// }
+
 const categoryColors: Record<string, { bg: string; text: string; border: string }> = {
-  'Emploi': { bg: 'bg-blue-50', text: 'text-blue-700', border: 'border-blue-200' },
-  'Formation': { bg: 'bg-purple-50', text: 'text-purple-700', border: 'border-purple-200' },
+  'Employment': { bg: 'bg-blue-50', text: 'text-blue-700', border: 'border-blue-200' },
+  'Training': { bg: 'bg-purple-50', text: 'text-purple-700', border: 'border-purple-200' },
   'Social': { bg: 'bg-green-50', text: 'text-green-700', border: 'border-green-200' },
-  'Réseau': { bg: 'bg-amber-50', text: 'text-amber-700', border: 'border-amber-200' },
-  'Administratif': { bg: 'bg-gray-50', text: 'text-gray-700', border: 'border-gray-200' },
+  'Education': { bg: 'bg-green-50', text: 'text-green-700', border: 'border-green-200' },
+  'Network': { bg: 'bg-amber-50', text: 'text-amber-700', border: 'border-amber-200' },
+  'Administrative': { bg: 'bg-gray-50', text: 'text-gray-700', border: 'border-gray-200' },
+  'Career Guidance': { bg: 'bg-gray-50', text: 'text-gray-700', border: 'border-gray-200' },
 }
 
 const getCategoryColor = (category: string) => {
@@ -64,7 +74,8 @@ export function ActionPlan({ planItems }: ActionPlanProps) {
       <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-gradient-to-r from-primary/10 to-primary/5 border border-primary/20">
         <Sparkles className="w-4 h-4 text-primary" />
         <span className="text-sm font-semibold text-primary">
-          Plan d'accompagnement
+          Support Plan
+          {/*Plan d'accompagnement*/}
         </span>
       </div>
 
