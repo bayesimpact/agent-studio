@@ -275,7 +275,7 @@ Dont guess URLs, if not present, just remove the CTA
   - Example: {"name": "Contacter par email", "type": "email", "value": "contact@example.fr"}
 
 **IMPORTANT**:
-- All text content (name, title, content) must be in ${lang}
+- All text content (name, title, content, categories) must be in ${lang}
 - Choose the appropriate CTA type based on the action context
 - Use "url" type for links from retrieved resources (jobs, workshops, events, services)
 - **DONT** guess URL, add URL's CTA only if present inside Available Resources 

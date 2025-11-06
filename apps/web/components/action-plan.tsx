@@ -1,72 +1,132 @@
-'use client'
+'use client';
 
-import { useState } from 'react'
-import { Card, CardContent, CardHeader, CardTitle } from '@repo/ui/card'
-import { ChevronDown, ExternalLink, Sparkles, CheckCircle2, Phone, Mail } from 'lucide-react'
-import ReactMarkdown from 'react-markdown'
-import remarkGfm from 'remark-gfm'
+import { useState } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@repo/ui/card';
+import {
+  ChevronDown,
+  ExternalLink,
+  Sparkles,
+  CheckCircle2,
+  Phone,
+  Mail,
+} from 'lucide-react';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 
-type CTAType = 'url' | 'phone' | 'email'
+type CTAType = 'url' | 'phone' | 'email';
 
 interface CTA {
-  name: string
-  type: CTAType
-  value: string
+  name: string;
+  type: CTAType;
+  value: string;
 }
 
 interface Action {
-  id: string
-  categories: string[]
-  content: string
-  title: string
-  cta?: CTA
+  id: string;
+  categories: string[];
+  content: string;
+  title: string;
+  cta?: CTA;
 }
 
 interface ActionPlanProps {
-  planItems: Action[]
+  planItems: Action[];
 }
 
-// const categoryColors: Record<string, { bg: string; text: string; border: string }> = {
-//   'Emploi': { bg: 'bg-blue-50', text: 'text-blue-700', border: 'border-blue-200' },
-//   'Formation': { bg: 'bg-purple-50', text: 'text-purple-700', border: 'border-purple-200' },
-//   'Social': { bg: 'bg-green-50', text: 'text-green-700', border: 'border-green-200' },
-//   'Réseau': { bg: 'bg-amber-50', text: 'text-amber-700', border: 'border-amber-200' },
-//   'Administratif': { bg: 'bg-gray-50', text: 'text-gray-700', border: 'border-gray-200' },
-// }
-
-const categoryColors: Record<string, { bg: string; text: string; border: string }> = {
-  'Employment': { bg: 'bg-blue-50', text: 'text-blue-700', border: 'border-blue-200' },
-  'Training': { bg: 'bg-purple-50', text: 'text-purple-700', border: 'border-purple-200' },
-  'Social': { bg: 'bg-green-50', text: 'text-green-700', border: 'border-green-200' },
-  'Education': { bg: 'bg-green-50', text: 'text-green-700', border: 'border-green-200' },
-  'Network': { bg: 'bg-amber-50', text: 'text-amber-700', border: 'border-amber-200' },
-  'Administrative': { bg: 'bg-gray-50', text: 'text-gray-700', border: 'border-gray-200' },
-  'Career Guidance': { bg: 'bg-gray-50', text: 'text-gray-700', border: 'border-gray-200' },
-}
+const categoryColors: Record<
+  string,
+  { bg: string; text: string; border: string }
+> = {
+  //FR
+  Emploi: {
+    bg: 'bg-blue-50',
+    text: 'text-blue-700',
+    border: 'border-blue-200',
+  },
+  Formation: {
+    bg: 'bg-purple-50',
+    text: 'text-purple-700',
+    border: 'border-purple-200',
+  },
+  Social: {
+    bg: 'bg-green-50',
+    text: 'text-green-700',
+    border: 'border-green-200',
+  },
+  Réseau: {
+    bg: 'bg-amber-50',
+    text: 'text-amber-700',
+    border: 'border-amber-200',
+  },
+  Administratif: {
+    bg: 'bg-gray-50',
+    text: 'text-gray-700',
+    border: 'border-gray-200',
+  },
+  //EN
+  Employment: {
+    bg: 'bg-blue-50',
+    text: 'text-blue-700',
+    border: 'border-blue-200',
+  },
+  Training: {
+    bg: 'bg-purple-50',
+    text: 'text-purple-700',
+    border: 'border-purple-200',
+  },
+  Education: {
+    bg: 'bg-green-50',
+    text: 'text-green-700',
+    border: 'border-green-200',
+  },
+  Network: {
+    bg: 'bg-amber-50',
+    text: 'text-amber-700',
+    border: 'border-amber-200',
+  },
+  Administrative: {
+    bg: 'bg-gray-50',
+    text: 'text-gray-700',
+    border: 'border-gray-200',
+  },
+  'Career Guidance': {
+    bg: 'bg-gray-50',
+    text: 'text-gray-700',
+    border: 'border-gray-200',
+  },
+};
 
 const getCategoryColor = (category: string) => {
-  return categoryColors[category] || { bg: 'bg-gray-50', text: 'text-gray-700', border: 'border-gray-200' }
-}
+  return (
+    categoryColors[category] || {
+      bg: 'bg-gray-50',
+      text: 'text-gray-700',
+      border: 'border-gray-200',
+    }
+  );
+};
 
 export function ActionPlan({ planItems }: ActionPlanProps) {
   // Track which actions have been expanded
-  const [expandedActions, setExpandedActions] = useState<Set<string>>(new Set())
+  const [expandedActions, setExpandedActions] = useState<Set<string>>(
+    new Set(),
+  );
 
   if (!planItems || planItems.length === 0) {
-    return null
+    return null;
   }
 
   const toggleExpand = (actionId: string) => {
-    setExpandedActions(prev => {
-      const newSet = new Set(prev)
+    setExpandedActions((prev) => {
+      const newSet = new Set(prev);
       if (newSet.has(actionId)) {
-        newSet.delete(actionId)
+        newSet.delete(actionId);
       } else {
-        newSet.add(actionId)
+        newSet.add(actionId);
       }
-      return newSet
-    })
-  }
+      return newSet;
+    });
+  };
 
   return (
     <div className="space-y-3 mt-4 mb-4">
@@ -82,7 +142,7 @@ export function ActionPlan({ planItems }: ActionPlanProps) {
       {/* Actions */}
       <div className="space-y-2">
         {planItems.map((action, index) => {
-          const isExpanded = expandedActions.has(action.id)
+          const isExpanded = expandedActions.has(action.id);
 
           return (
             <Card
@@ -90,7 +150,7 @@ export function ActionPlan({ planItems }: ActionPlanProps) {
               className="group relative hover:shadow-lg transition-all duration-300 overflow-hidden animate-in fade-in slide-in-from-bottom-4 bg-gradient-to-br from-primary/5 to-primary/8 hover:from-primary/10 hover:to-primary/15 border-primary/20"
               style={{
                 animationDelay: `${index * 75}ms`,
-                animationFillMode: 'both'
+                animationFillMode: 'both',
               }}
             >
               <CardHeader
@@ -115,7 +175,7 @@ export function ActionPlan({ planItems }: ActionPlanProps) {
                       {action.categories && action.categories.length > 0 && (
                         <div className="flex flex-wrap gap-1.5 mt-1.5">
                           {action.categories.map((category, idx) => {
-                            const colors = getCategoryColor(category)
+                            const colors = getCategoryColor(category);
                             return (
                               <div
                                 key={idx}
@@ -123,7 +183,7 @@ export function ActionPlan({ planItems }: ActionPlanProps) {
                               >
                                 {category}
                               </div>
-                            )
+                            );
                           })}
                         </div>
                       )}
@@ -189,9 +249,9 @@ export function ActionPlan({ planItems }: ActionPlanProps) {
                 </CardContent>
               )}
             </Card>
-          )
+          );
         })}
       </div>
     </div>
-  )
+  );
 }
