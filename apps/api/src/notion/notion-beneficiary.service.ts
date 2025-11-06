@@ -8,7 +8,8 @@ import { Location } from '../geoloc/models/location.model';
 export class NotionBeneficiaryService implements AIServiceProvider {
   private readonly notionApiUrl = process.env.NOTION_API_URL || 'https://api.notion.com/v1';
   private readonly notionSecret = process.env.NOTION_SECRET;
-  private readonly beneficiaryDatabaseId = process.env.NOTION_BENEFICIARY_DATABASE_ID || '29a7d19cc825808baa2dce8093f0dd59';
+  private readonly beneficiaryDatabaseId = process.env.NOTION_BENEFICIARY_DATABASE_ID || '2a37d19cc82580558a42e0ae39470397';
+  // private readonly beneficiaryDatabaseId = process.env.NOTION_BENEFICIARY_DATABASE_ID || '29a7d19cc825808baa2dce8093f0dd59';
 
   getFunctionDeclaration(): FunctionDeclaration {
     return {

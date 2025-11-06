@@ -8,7 +8,8 @@ import { AIServiceProvider } from '../common/interfaces/ai-service.interface';
 export class NotionWorkshopService implements AIServiceProvider {
   private readonly notionApiUrl = process.env.NOTION_API_URL || 'https://api.notion.com/v1';
   private readonly notionSecret = process.env.NOTION_SECRET;
-  private readonly notionDatabaseId = process.env.NOTION_DATABASE_ID || 'e3b5ba04a6b94e6a845c604ae46bcee6';
+  // private readonly notionDatabaseId = process.env.NOTION_DATABASE_ID || 'e3b5ba04a6b94e6a845c604ae46bcee6';
+  private readonly notionDatabaseId = process.env.NOTION_DATABASE_ID || '2a37d19cc82581569dbde2244d994d84';
 
   getFunctionDeclaration(): FunctionDeclaration {
     return {
