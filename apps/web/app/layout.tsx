@@ -4,7 +4,7 @@ import { ReactNode } from 'react';
 
 export const metadata: Metadata = {
   title: 'CaseAI Connect',
-  description: 'On aide les demandeurs',
+  description: 'CaseAI Connect',
 };
 
 export default function RootLayout({

@@ -11,6 +11,7 @@ import remarkGfm from 'remark-gfm';
 import remarkBreaks from 'remark-breaks';
 import { ActionPlan } from './action-plan';
 import { MentionInput, MentionInputRef } from './mention-input';
+import { useTranslations } from '../lib/i18n/use-translations';
 
 interface FunctionCallData {
   name: string
@@ -53,6 +54,7 @@ interface ChatInterfaceProps {
 }
 
 export function ChatInterface({ country }: ChatInterfaceProps) {
+  const t = useTranslations(country)
   const [messages, setMessages] = useState<Message[]>([])
   const [inputValue, setInputValue] = useState('')
   const [isLoading, setIsLoading] = useState(false)
@@ -89,7 +91,7 @@ export function ChatInterface({ country }: ChatInterfaceProps) {
         setMessages([
           {
             id: '1',
-            content: 'Failed to initialize chat. Please refresh the page.',
+            content: t.chat.failedToInitialize,
             sender: 'assistant',
             timestamp: new Date(),
             isFinished: true,
@@ -132,7 +134,6 @@ export function ChatInterface({ country }: ChatInterfaceProps) {
       const payload: SendMessageDto = {
         sessionId,
         content: userMessage.content,
-        country,
       }
 
       // Use EventSource for SSE
@@ -276,7 +277,7 @@ export function ChatInterface({ country }: ChatInterfaceProps) {
         if (isLoading) {
           const errorMessage: Message = {
             id: Date.now().toString(),
-            content: 'Sorry, something went wrong. Please try again.',
+            content: t.chat.errorOccurred,
             sender: 'assistant',
             timestamp: new Date(),
             isFinished: true,
@@ -289,7 +290,7 @@ export function ChatInterface({ country }: ChatInterfaceProps) {
       console.error('Failed to send message:', error)
       const errorMessage: Message = {
         id: Date.now().toString(),
-        content: 'Sorry, something went wrong. Please try again.',
+        content: t.chat.errorOccurred,
         sender: 'assistant',
         timestamp: new Date(),
         isFinished: true,
@@ -306,13 +307,11 @@ export function ChatInterface({ country }: ChatInterfaceProps) {
     }
   }
 
-  // Translate function names to French user-friendly labels
   const getFunctionLabel = (functionName: string): string => {
-    const labels: Record<string, string> = {
-      // 'fetch_beneficiary_profile': 'Récupération du profil dans Notion',
-      'fetch_beneficiary_profile': 'Fetching profile in Notion',
+    const functionLabels: Record<string, string> = {
+      fetch_beneficiary_profile: t.functions.fetchBeneficiaryProfile,
     }
-    return labels[functionName] || functionName
+    return functionLabels[functionName] || functionName
   }
 
   const formatFunctionCalls = (functionCalls: FunctionCallData[]): string => {
@@ -341,8 +340,7 @@ export function ChatInterface({ country }: ChatInterfaceProps) {
       <div className="fixed left-4 top-[120px] w-96 h-[calc(80vh-40px)] z-10">
         <Card className="h-full flex flex-col bg-gradient-to-br from-primary/5 to-primary/10 border-primary/20 shadow-lg">
           <CardHeader className="pb-3">
-            {/*<CardTitle className="text-lg font-bold">Plan d'action</CardTitle>*/}
-            <CardTitle className="text-lg font-bold">Action plan</CardTitle>
+            <CardTitle className="text-lg font-bold">{t.actionPlan.title}</CardTitle>
           </CardHeader>
           <CardContent className="flex-1 overflow-hidden p-0">
             <ScrollArea className="h-full px-6 pb-6">
@@ -354,8 +352,7 @@ export function ChatInterface({ country }: ChatInterfaceProps) {
                     <Briefcase className="w-8 h-8 text-primary/50" />
                   </div>
                   <p className="text-sm text-muted-foreground">
-                    {/*Votre plan d'action apparaîtra ici une fois créé.*/}
-                    Your action plan will appear here.
+                    {t.actionPlan.emptyMessage}
                   </p>
                 </div>
               )}
@@ -440,15 +437,15 @@ export function ChatInterface({ country }: ChatInterfaceProps) {
                             )}
                             <span className="text-xs font-semibold" style={{ color: '#124742' }}>
                               {message.progressMessage ||
-                               (message.isInitializing ? 'Processing request...' :
+                               (message.isInitializing ? t.chat.processingRequest :
                                 message.isProcessingFunctions && message.functionCalls ? `🔍 ${formatFunctionCalls(message.functionCalls)}...` :
                                 message.isFinished && message.functionCalls ? `✓ ${formatFunctionCalls(message.functionCalls)}` :
-                                message.content ? 'Replying...' :
-                                'Processing...')}
+                                message.content ? t.chat.replying :
+                                t.chat.processing)}
                             </span>
                             {message.functionCalls && message.functionCalls.length > 0 && (
                               <span className="ml-auto text-xs" style={{ color: '#597f77' }}>
-                                {expandedFunctions.has(message.id) ? '▼' : '▶'} Détails
+                                {expandedFunctions.has(message.id) ? '▼' : '▶'} {t.chat.details}
                               </span>
                             )}
                           </div>
@@ -464,8 +461,7 @@ export function ChatInterface({ country }: ChatInterfaceProps) {
                                 </div>
                               ) : (
                                 <div className="text-xs" style={{ color: '#597f77' }}>
-                                  {/*Aucune information de progression disponible*/}
-                                  No progress information available
+                                  {t.chat.noProgressInfo}
                                 </div>
                               )}
                             </div>
@@ -505,7 +501,7 @@ export function ChatInterface({ country }: ChatInterfaceProps) {
                 value={inputValue}
                 onChange={setInputValue}
                 onKeyDown={handleKeyDown}
-                placeholder="Type your message..."
+                placeholder={t.chat.placeholder}
                 disabled={isLoading}
                 className="flex-1"
               />
