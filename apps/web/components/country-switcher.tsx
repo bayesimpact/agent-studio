@@ -4,19 +4,14 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Button } from '@repo/ui/button'
 import { Globe } from 'lucide-react'
+import { useTranslations } from '../lib/i18n/use-translations'
 
 type Country = 'fr' | 'us'
 
 interface CountryOption {
   code: Country
-  label: string
   flag: string
 }
-
-const countries: CountryOption[] = [
-  { code: 'fr', label: 'France', flag: '🇫🇷' },
-  { code: 'us', label: 'United States', flag: '🇺🇸' },
-]
 
 interface CountrySwitcherProps {
   currentCountry: Country
@@ -25,6 +20,16 @@ interface CountrySwitcherProps {
 export function CountrySwitcher({ currentCountry }: CountrySwitcherProps) {
   const [isOpen, setIsOpen] = useState(false)
   const router = useRouter()
+  const t = useTranslations(currentCountry)
+
+  const countries: CountryOption[] = [
+    { code: 'fr', flag: '🇫🇷' },
+    { code: 'us', flag: '🇺🇸' },
+  ]
+
+  const getCountryLabel = (code: Country): string => {
+    return code === 'fr' ? t.country.france : t.country.unitedStates
+  }
 
   const selectedCountryData = countries.find((c) => c.code === currentCountry)
 
@@ -43,7 +48,7 @@ export function CountrySwitcher({ currentCountry }: CountrySwitcherProps) {
       >
         <Globe className="w-4 h-4" />
         <span className="text-lg">{selectedCountryData?.flag}</span>
-        <span className="font-medium">{selectedCountryData?.label}</span>
+        <span className="font-medium">{getCountryLabel(currentCountry)}</span>
       </Button>
 
       {isOpen && (
@@ -67,7 +72,7 @@ export function CountrySwitcher({ currentCountry }: CountrySwitcherProps) {
                 }`}
               >
                 <span className="text-xl">{country.flag}</span>
-                <span>{country.label}</span>
+                <span>{getCountryLabel(country.code)}</span>
                 {country.code === currentCountry && (
                   <span className="ml-auto text-primary">✓</span>
                 )}
