@@ -27,7 +27,6 @@ export class ChatService {
     private aiService: AIService,
     private chatRepository: ChatRepository,
   ) {
-
     // Register service providers
     // TEMPORARILY DISABLED - Using simplified action plan builder instead
     // this.registerServiceProvider(this.resourcesService);
@@ -123,15 +122,12 @@ export class ChatService {
           }
 
           // Add tool response message with proper tool_call_id
-          updatedSession = updatedSession.addToolResponse(
-            functionCall.name,
-            { result },
-          );
+          updatedSession = updatedSession.addToolResponse(functionCall.name, {
+            result,
+          });
           // DO NOT save yet - we need all tool responses before saving
         } else {
-          console.warn(
-            `No provider found for function: ${functionCall.name}`,
-          );
+          console.warn(`No provider found for function: ${functionCall.name}`);
         }
       }
     }
@@ -142,11 +138,13 @@ export class ChatService {
     return updatedSession;
   }
 
-  async createSession(): Promise<ChatSession> {
+  async createSession(country?: string): Promise<ChatSession> {
     const sessionId = v4();
     const initialMessage = new Message(
       v4(),
-      'How can I assist you today?',
+      country === 'fr'
+        ? "Comment puis-je vous aider aujourd'hui ?"
+        : 'How can I assist you today?',
       'assistant',
       new Date(),
     );
@@ -163,10 +161,14 @@ export class ChatService {
   handleMessageStream(
     sessionId: string,
     content: string,
+    country?: string,
   ): Observable<MessageEvent> {
     return new Observable((subscriber) => {
       (async () => {
         try {
+          // TODO: Use country parameter for country-specific AI behavior
+          console.log(`Processing message for country: ${country}`);
+
           const session = this.chatRepository.findById(sessionId);
           if (!session) {
             subscriber.error(new Error(`Session ${sessionId} not found`));
@@ -181,7 +183,9 @@ export class ChatService {
           const timestamp = new Date();
 
           // Calculate turn number: count user messages in the session
-          const turnNumber = updatedSession.messages.filter(m => m.sender === 'user').length;
+          const turnNumber = updatedSession.messages.filter(
+            (m) => m.sender === 'user',
+          ).length;
 
           // Send start event
           subscriber.next({
@@ -230,7 +234,9 @@ export class ChatService {
               toolCallsData,
             );
             console.info(assistantToolCallMessage);
-            updatedSession = updatedSession.addMessage(assistantToolCallMessage);
+            updatedSession = updatedSession.addMessage(
+              assistantToolCallMessage,
+            );
             this.chatRepository.save(updatedSession);
 
             updatedSession = await this.processFunctionCalls(
@@ -268,10 +274,12 @@ export class ChatService {
               secondLastChunk.functionCalls.length > 0
             ) {
               // Save second assistant message with tool_calls
-              const secondToolCallsData = secondLastChunk.functionCalls.map((fc) => ({
-                name: fc.name,
-                arguments: fc.args,
-              }));
+              const secondToolCallsData = secondLastChunk.functionCalls.map(
+                (fc) => ({
+                  name: fc.name,
+                  arguments: fc.args,
+                }),
+              );
 
               const secondAssistantToolCallMessage = new Message(
                 v4(),
@@ -280,7 +288,9 @@ export class ChatService {
                 new Date(),
                 secondToolCallsData,
               );
-              updatedSession = updatedSession.addMessage(secondAssistantToolCallMessage);
+              updatedSession = updatedSession.addMessage(
+                secondAssistantToolCallMessage,
+              );
               this.chatRepository.save(updatedSession);
 
               // Execute second round of function calls

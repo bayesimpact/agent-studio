@@ -8,7 +8,7 @@ export default function USPage() {
         <h1 className="text-3xl font-bold text-primary">CaseAI Connect</h1>
         <CountrySwitcher currentCountry="us" />
       </div>
-      <ChatInterface />
+      <ChatInterface country="us" />
     </div>
   );
 }
