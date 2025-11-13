@@ -17,6 +17,7 @@ export interface Translations {
   actionPlan: {
     title: string
     emptyMessage: string
+    supportPlan: string
   }
   functions: {
     fetchBeneficiaryProfile: string
@@ -45,6 +46,7 @@ export const translations: Record<Language, Translations> = {
     actionPlan: {
       title: 'Plan d\'action',
       emptyMessage: 'Votre plan d\'action apparaîtra ici une fois créé.',
+      supportPlan: 'Plan d\'accompagnement',
     },
     functions: {
       fetchBeneficiaryProfile: 'Récupération du profil dans Notion',
@@ -71,6 +73,7 @@ export const translations: Record<Language, Translations> = {
     actionPlan: {
       title: 'Action plan',
       emptyMessage: 'Your action plan will appear here.',
+      supportPlan: 'Support Plan',
     },
     functions: {
       fetchBeneficiaryProfile: 'Fetching profile in Notion',

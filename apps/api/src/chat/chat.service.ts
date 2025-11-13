@@ -138,7 +138,7 @@ export class ChatService {
     return updatedSession;
   }
 
-  async createSession(country?: string): Promise<ChatSession> {
+  async createSession(country: 'fr'|'us'): Promise<ChatSession> {
     const sessionId = v4();
     const initialMessage = new Message(
       v4(),
@@ -151,7 +151,7 @@ export class ChatService {
     const session = new ChatSession(
       sessionId,
       [initialMessage],
-      new Date(),
+      country,
       new Date(),
     );
     this.chatRepository.save(session);
@@ -161,19 +161,17 @@ export class ChatService {
   handleMessageStream(
     sessionId: string,
     content: string,
-    country?: string,
   ): Observable<MessageEvent> {
     return new Observable((subscriber) => {
       (async () => {
         try {
-          // TODO: Use country parameter for country-specific AI behavior
-          console.log(`Processing message for country: ${country}`);
-
           const session = this.chatRepository.findById(sessionId);
           if (!session) {
             subscriber.error(new Error(`Session ${sessionId} not found`));
             return;
           }
+          console.log(`Processing message for country: ${session.country}`);
+
 
           const userMessage = new Message(v4(), content, 'user', new Date());
           let updatedSession = session.addMessage(userMessage);

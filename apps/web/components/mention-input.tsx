@@ -23,6 +23,7 @@ interface MentionInputProps {
   disabled?: boolean;
   placeholder?: string;
   className?: string;
+  country?: 'fr' | 'us';
 }
 const MENTION_OPTIONS: MentionOption[] = [
   {
@@ -75,7 +76,7 @@ export interface MentionInputRef {
 }
 
 export const MentionInput = forwardRef<MentionInputRef, MentionInputProps>(
-  ({ value, onChange, onKeyDown, disabled, placeholder, className }, ref) => {
+  ({ value, onChange, onKeyDown, disabled, placeholder, className, country }, ref) => {
     const [showSuggestions, setShowSuggestions] = useState(false);
     const [selectedIndex, setSelectedIndex] = useState(0);
     const [mentionQuery, setMentionQuery] = useState('');
@@ -90,12 +91,15 @@ export const MentionInput = forwardRef<MentionInputRef, MentionInputProps>(
       },
     }));
 
+    // Select mention options based on country
+    const mentionOptions = country === 'fr' ? MENTION_OPTIONS_FR : MENTION_OPTIONS;
+
     // Filter mentions based on query
     const filteredMentions = mentionQuery
-      ? MENTION_OPTIONS.filter((option) =>
+      ? mentionOptions.filter((option) =>
           option.label.toLowerCase().includes(mentionQuery.toLowerCase()),
         )
-      : MENTION_OPTIONS;
+      : mentionOptions;
 
     // Detect @ character and show suggestions
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {

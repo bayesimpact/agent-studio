@@ -20,6 +20,7 @@ export interface Action {
 export interface ActionPlanBuilderArgs {
   currentActionPlan?: Action[];
   profileText: string;
+  country?: string;
 }
 
 export interface ActionPlanBuilderOptions {
@@ -42,8 +43,13 @@ export abstract class AbstractActionPlanBuilderService
             description:
               'Full text description of the beneficiary profile including their situation, needs, skills, and goals',
           },
+          country: {
+            type: Type.STRING,
+            description:
+              'Country code (ISO 3166-1 alpha-2) select the country based on the conversation context',
+          },
         },
-        required: ['profileText'],
+        required: ['profileText', 'country'],
       },
     };
   }

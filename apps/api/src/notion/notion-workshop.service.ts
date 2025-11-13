@@ -6,27 +6,35 @@ import { AIServiceProvider } from '../common/interfaces/ai-service.interface';
 
 @Injectable()
 export class NotionWorkshopService implements AIServiceProvider {
-  private readonly notionApiUrl = process.env.NOTION_API_URL || 'https://api.notion.com/v1';
+  private readonly notionApiUrl =
+    process.env.NOTION_API_URL || 'https://api.notion.com/v1';
   private readonly notionSecret = process.env.NOTION_SECRET;
-  // private readonly notionDatabaseId = process.env.NOTION_DATABASE_ID || 'e3b5ba04a6b94e6a845c604ae46bcee6';
-  private readonly notionDatabaseId = process.env.NOTION_DATABASE_ID || '2a37d19cc82581569dbde2244d994d84';
+  private readonly notionFrDatabaseId =
+    process.env.NOTION_FR_DATABASE_ID || 'e3b5ba04a6b94e6a845c604ae46bcee6';
+  private readonly notionUsDatabaseId =
+    process.env.NOTION_US_DATABASE_ID || '2a37d19cc82581569dbde2244d994d84';
 
   getFunctionDeclaration(): FunctionDeclaration {
     return {
       name: 'workshops_search',
-      description: 'Search for workshops, training sessions, and professional events (ateliers, formations, événements professionnels)',
+      description:
+        'Search for workshops, training sessions, and professional events (ateliers, formations, événements professionnels)',
       parameters: {
         type: Type.OBJECT,
-        properties:{
+        properties: {
           cityName: {
             type: Type.ARRAY,
             description: 'City name in French',
             items: {
               type: Type.STRING,
             },
-          }
+          },
+          country: {
+            type: Type.STRING,
+            description: 'Country code fr or us, provided inside the prompt',
+          },
         },
-        required: ['cityName'],
+        required: ['cityName', 'country'],
       },
     };
   }
@@ -38,6 +46,7 @@ export class NotionWorkshopService implements AIServiceProvider {
 
 **Parameters**:
 - \`cityName\`: City name (required)
+- \`country\`: us or fr provided by the prompt
 
 **Returns**: List of workshops with title, date, location, capacity, signup URL, type, and description
 `;
@@ -48,15 +57,20 @@ export class NotionWorkshopService implements AIServiceProvider {
   ): Promise<{ workshops: SimplifiedWorkshop[] }> {
     const workshopTypes = functionCall.args['workshopTypes'] as string[];
     const startDate = functionCall.args['startDate'] as string | undefined;
+    const country = functionCall.args['country'] as 'us' | 'fr';
 
-    console.log('Function calling workshops with params:', workshopTypes, startDate);
+    console.log(
+      'Function calling workshops with params:',
+      workshopTypes,
+      startDate,
+    );
 
-    const workshops = await this.searchWorkshops();
+    const workshops = await this.searchWorkshops(country);
     console.log('Workshops found: ', workshops.length);
     return { workshops };
   }
 
-  async searchWorkshops(): Promise<SimplifiedWorkshop[]> {
+  async searchWorkshops(country: 'us' | 'fr'): Promise<SimplifiedWorkshop[]> {
     if (!this.notionSecret) {
       console.error('NOTION_SECRET is not configured');
       return [];
@@ -75,14 +89,15 @@ export class NotionWorkshopService implements AIServiceProvider {
           },
         ],
       };
-
+      const notionDatabaseId =
+        country === 'us' ? this.notionUsDatabaseId : this.notionFrDatabaseId;
       const { data } = await axios.post<any>(
-        `${this.notionApiUrl}/databases/${this.notionDatabaseId}/query`,
+        `${this.notionApiUrl}/databases/${notionDatabaseId}/query`,
         queryBody,
         {
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${this.notionSecret}`,
+            Authorization: `Bearer ${this.notionSecret}`,
             'Notion-Version': '2022-06-28',
           },
         },
@@ -101,7 +116,11 @@ export class NotionWorkshopService implements AIServiceProvider {
       return SimplifiedWorkshop.fromWorkshops(workshops);
     } catch (error) {
       if (axios.isAxiosError(error)) {
-        console.error('Notion API error:', error.response?.status, error.response?.data);
+        console.error(
+          'Notion API error:',
+          error.response?.status,
+          error.response?.data,
+        );
       } else {
         console.error('Error fetching workshops:', error);
       }
@@ -127,7 +146,7 @@ export class NotionWorkshopService implements AIServiceProvider {
       const atelierName = getRichText(properties['Atelier (nom)']);
       const date = getDate(properties['Date']);
       const capacity = getNumber(properties['Capacité']);
-      const signupUrl = getUrl(properties['Lien d\'inscription']);
+      const signupUrl = getUrl(properties["Lien d'inscription"]);
       const status = getStatus(properties['Statut']);
       const type = getSelect(properties['Type']);
       const locationText = getRichText(properties['Lieu']);

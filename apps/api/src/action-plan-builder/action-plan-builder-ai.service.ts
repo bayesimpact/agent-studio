@@ -17,9 +17,9 @@ import {
   LangfuseTraceClient,
 } from 'langfuse';
 import {
-  ACTION_PLAN_BUILDER_SYSTEM_PROMPT,
-  PHASE_1_INSTRUCTIONS,
-  PHASE_2_INSTRUCTIONS,
+  buildSystemPrompt,
+  buildPhase1Instructions,
+  buildPhase2Instructions,
   buildUserPrompt,
 } from './prompts/action-plan-builder.prompt';
 import { NotionWorkshopService } from '../notion/notion-workshop.service';
@@ -30,8 +30,6 @@ import { DataInclusionService } from '../datainclusion/datainclusion.service';
 import { GeolocService } from '../geoloc/geoloc.service';
 import { Location } from '../geoloc/models/location.model';
 import { AIServiceProvider } from '../common/interfaces/ai-service.interface';
-
-const lang = "English"
 
 interface FunctionCallResult {
   name: string;
@@ -48,6 +46,10 @@ interface AIResponse {
   fullOutput: string;
   functionCalls?: FunctionCall[];
   usage: UsageMetadata;
+}
+
+function getFrench(country: string) {
+  return country.toLowerCase() === 'fr';
 }
 
 @Injectable()
@@ -147,6 +149,7 @@ export class AIActionPlanBuilderService extends AbstractActionPlanBuilderService
   private async executeToolCalls(
     functionCalls: FunctionCall[],
     trace: LangfuseTraceClient,
+    country?: string,
     options?: ActionPlanBuilderOptions,
   ): Promise<FunctionCallResult[]> {
     console.log(
@@ -156,8 +159,9 @@ export class AIActionPlanBuilderService extends AbstractActionPlanBuilderService
         args: fc.args,
       })),
     );
-    // options?.onProgress?.(`\n## Appel d'outils\nRecherche de ressources...\n`);
-    options?.onProgress?.(`\n## Calling tools\nSearch for ressources...\n`);
+    options?.onProgress?.(getFrench(country)
+      ? `\n## Appel d'outils\nRecherche de ressources...\n`
+      : `\n## Calling tools\nSearching for resources...\n`);
     let locations: Location[] = [];
 
     const functionResults: FunctionCallResult[] = [];
@@ -354,7 +358,10 @@ Return ONLY the extracted JSON object with the "actionPlan" array.`,
   private buildSecondPrompt(
     firstResponseOutput: string,
     functionResults: FunctionCallResult[],
+    country?: string,
   ): string {
+    const lang = country === 'fr' ? 'French' : 'English';
+
     // Format results using each service's formatter
     const formattedResults = functionResults
       .map((fr) => {
@@ -426,13 +433,15 @@ Now generate the final personalized action plan using these resources.
     systemPrompt: string,
     secondUserPrompt: string,
     trace: LangfuseTraceClient,
+    country?: string,
     options?: ActionPlanBuilderOptions,
   ): Promise<{
     fullOutput: string;
     usage: UsageMetadata;
   }> {
-    // options?.onProgress?.(`\n## Génération du plan final\n`);
-    options?.onProgress?.(`\n## Final action plan generation\n`);
+    options?.onProgress?.(getFrench(country)
+      ? `\n## Génération du plan final\n`
+      : `\n## Final action plan generation\n`);
 
     // Create a second generation span for the final plan
     const secondGeneration = trace.generation({
@@ -480,12 +489,13 @@ Now generate the final personalized action plan using these resources.
     args: ActionPlanBuilderArgs,
     options?: ActionPlanBuilderOptions,
   ): Promise<{ actionPlan: Action[] }> {
-    const userPrompt = buildUserPrompt(args.profileText, args.currentActionPlan);
+    const userPrompt = buildUserPrompt(args.profileText, args.country, args.currentActionPlan);
 
     // Build system prompt for Phase 1 with all tool contexts
     const firstSystemPrompt =
-      ACTION_PLAN_BUILDER_SYSTEM_PROMPT +
+      buildSystemPrompt(args.country) +
       '\n\n## Available Tools\n\n' +
+      `\n\nNode: if a tool need a country parameter, here it is: ${args.country}\n\n` +
       this.notionWorkshopService.getPromptContext() +
       '\n' +
       this.franceTravailJobsService.getPromptContext() +
@@ -496,10 +506,10 @@ Now generate the final personalized action plan using these resources.
       '\n' +
       this.dataInclusionService.getPromptContext() +
       '\n\n' +
-      PHASE_1_INSTRUCTIONS;
+      buildPhase1Instructions(args.country);
 
     // Build system prompt for Phase 2 (no tools, just JSON output)
-    const secondSystemPrompt = ACTION_PLAN_BUILDER_SYSTEM_PROMPT + '\n\n' + PHASE_2_INSTRUCTIONS;
+    const secondSystemPrompt = buildSystemPrompt(args.country) + '\n\n' + buildPhase2Instructions(args.country);
 
     // Create Langfuse trace
     const trace = this.langfuse.trace({
@@ -527,11 +537,11 @@ Now generate the final personalized action plan using these resources.
       },
     });
 
+    const isFrench = getFrench(args.country);
     try {
- //      options?.onProgress?.(`## Création du plan d'action
- // `);
-      options?.onProgress?.(`## Action plan generation
- `);
+      options?.onProgress?.(isFrench
+        ? `## Création du plan d'action\n`
+        : `## Action plan generation\n`);
 
       // Phase 1: Generate initial analysis and identify needed resources
       const firstResponse = await this.generateInitialAnalysis(
@@ -569,6 +579,7 @@ Now generate the final personalized action plan using these resources.
         const functionResults = await this.executeToolCalls(
           firstResponse.functionCalls,
           trace,
+          args.country,
           options,
         );
 
@@ -576,6 +587,7 @@ Now generate the final personalized action plan using these resources.
         const secondUserPrompt = this.buildSecondPrompt(
           firstResponse.fullOutput,
           functionResults,
+          args.country,
         );
 
         // Generate final plan with resources
@@ -583,6 +595,7 @@ Now generate the final personalized action plan using these resources.
           secondSystemPrompt,
           secondUserPrompt,
           trace,
+          args.country,
           options,
         );
 
@@ -590,8 +603,9 @@ Now generate the final personalized action plan using these resources.
       }
 
       // Extract and validate action plan using Gemini with structured output
-      // options?.onProgress?.(`\n## Structuration du plan\n`);
-      options?.onProgress?.(`\n## Plan structuration\n`);
+      options?.onProgress?.(isFrench
+        ? `\n## Structuration du plan\n`
+        : `\n## Plan structuration\n`);
       const extractedResult = await this.rawStringToJson(finalOutput, trace);
       const actionPlan = extractedResult.actionPlan;
 
@@ -609,13 +623,9 @@ Now generate the final personalized action plan using these resources.
         }
       }
 
-//       options?.onProgress?.(`
-// ## Génération terminée
-// Plan d'action créé avec ${actionPlan.length} actions.`);
-
-      options?.onProgress?.(`
-## Action plan generation completed
-Created with ${actionPlan.length} actions.`);
+      options?.onProgress?.(isFrench
+        ? `\n## Génération terminée\nPlan d'action créé avec ${actionPlan.length} actions.`
+        : `\n## Action plan generation completed\nCreated with ${actionPlan.length} actions.`);
 
       return { actionPlan };
     } catch (error) {
