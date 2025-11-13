@@ -1,8 +1,9 @@
-// const lang = `French`;
-const lang = `English`;
+const getLanguage = (country?: string): string => {
+  return country.toLowerCase() === 'fr' ? 'French' : 'English';
+};
 
-
-const framework = `
+const frameworks = {
+  fr: `
 ### 1. EMPLOI
 * **Préparer sa candidature**
     * Faire son CV / Book (création, mise à jour)
@@ -179,10 +180,196 @@ const framework = `
     * Réaliser une action proposée par l'application CEJ
     * S'organiser dans sa recherche (Mettre en place un workflow)
 * **Autre**
-    * Autre`;
+    * Autre`,
+  us: `
+### 1. EMPLOYMENT
+* **Prepare your application**
+    * Create/update your resume
+    * Write a cover letter (generic or specific)
+    * Adapt resume and cover letter to a job posting
+    * Prepare your pitch presentation
+    * Optimize your online profile (LinkedIn, professional social media)
+    * Create a professional email address
+    * Adapt your resume for international applications (multilingual)
+* **Search for opportunities**
+    * Active prospecting (target companies, unsolicited applications)
+    * Use job platforms (Indeed, LinkedIn, job boards)
+    * Activate your network (personal, professional, "second-circle")
+    * Attend a job fair or employment event (online or in-person)
+    * Search for seasonal employment (summer, winter...)
+    * Follow up on networking events (fairs, meetings)
+* **Manage your applications**
+    * Apply to a job posting
+    * Manage your application flow (application tracking/dashboard)
+    * Follow up and follow through with applications and recruiters
+* **Prepare for interviews**
+    * Practice (mock interview)
+    * Research the company and position
+    * Prepare for recruitment tests (exams, auditions...)
+    * Work on your body language
+* **Attend interviews**
+    * Attend a job interview
+    * Take a recruitment test
+    * Complete a situational assessment (as part of recruitment)
+* **Other**
+    * Other
 
+### 2. CAREER PROJECT
+* **Discover careers**
+    * Career inquiry (interview professionals)
+    * Complete an internship (observation/job shadowing)
+    * Use career guidance tools (career centers, online resources)
+    * Attend a career or orientation fair
+    * Explore future-proof/high-demand careers
+    * Learn about types of contracts (full-time, part-time, temporary...)
+* **Identify your skills**
+    * Assess your soft skills (transferable competencies)
+    * Identify your technical skills
+    * Take a personality or career assessment test
+    * Identify your meta-skills (learning to learn)
+* **Validate your project**
+    * Test your project against market reality
+    * Establish an action plan for your project
+* **Other**
+    * Other
 
-export const ACTION_PLAN_BUILDER_SYSTEM_PROMPT = `You are an expert agent in socio-professional support.
+### 3. TRAINING
+* **Search for programs**
+    * Learn about training projects (fairs, forums)
+    * Search for training programs (initial, continuing education)
+    * Search for apprenticeships/work-study programs
+    * Contact training organizations
+    * Learn about skills recognition programs
+* **Finance your training**
+    * Prepare registration or funding application
+    * Search for grants or financial aid (federal, state, local...)
+* **Follow a program**
+    * Participate in training
+    * Participate in an integration program
+    * Attend a workshop (e.g., job center workshop)
+    * Study for an exam, competition, or certification
+    * Complete skills recognition process
+    * Take an online course (MOOC)
+* **Basic & Digital skills**
+    * Computer or Internet basics
+    * Assess your digital skills
+    * Learn office software tools (Microsoft Office, etc.)
+    * Learn/improve a foreign language (Spanish, etc.)
+* **Other**
+    * Other
+
+### 4. ENTREPRENEURSHIP
+* **Study and Preparation**
+    * Learn about starting a business (research, fairs, testimonials)
+    * Conduct market research
+    * Write a business plan
+    * Define your business structure (LLC, sole proprietorship...)
+* **Financing & Legal**
+    * Search for financing (meetings with financial institutions)
+    * Learn about business assistance programs (SBA, grants)
+    * Complete legal procedures (articles of incorporation, registration)
+* **Launch & Sales**
+    * Prospect to find clients
+    * Implement marketing and communication actions
+    * Develop partnerships
+    * Build customer loyalty
+* **Management & Growth**
+    * Organize your business management activities
+    * Diversify services or products
+    * Prepare for hiring
+* **Other**
+    * Other business development actions
+
+### 5. CITIZENSHIP & ADMINISTRATION
+* **Mobility**
+    * Driver's education enrollment
+    * Study for driver's test
+    * Schedule driving lessons
+    * Take the exam (written or practical)
+    * Search for transportation assistance
+    * Manage commute constraints
+    * Specific license procedures (disability accommodations, international...)
+* **Administrative procedures**
+    * Apply for benefits (social services, unemployment...)
+    * Update your administrative status
+    * Identity documents (ID, passport)
+    * Tax procedures
+* **Civic engagement & Legal**
+    * Volunteering
+    * Research/learn about AmeriCorps or similar programs
+    * Legal aid appointment
+* **Other**
+    * Other
+
+### 6. HOUSING
+* **Search for housing**
+    * Define your criteria and budget
+    * Target listings (public, private)
+    * Search for temporary or emergency housing
+    * Plan a relocation/move
+* **Build your file**
+    * Gather required documents
+    * Activate rental assistance programs or guarantors
+* **Manage your situation**
+    * Housing visit
+    * Apply for housing assistance (Section 8, local programs)
+* **Other**
+    * Other
+
+### 7. HEALTH
+* **Access to services**
+    * Health insurance card procedures (create, update)
+    * Open your coverage (Medicaid, health insurance)
+    * Apply for disability services recognition
+* **Medical follow-up & Well-being**
+    * Make a medical appointment (general practitioner, specialist)
+    * Get a health check-up
+    * Psychological follow-up (counseling, community services...)
+    * Work on work-life balance
+* **Specific care**
+    * Hospitalization (planning, follow-up)
+    * Rehabilitation
+    * Addiction-related procedures
+* **Other**
+    * Other
+
+### 8. DAILY LIFE & LEISURE
+* **Budget management**
+    * Create your budget
+    * Appointment with a financial counselor
+* **Personal barriers**
+    * Solve childcare issues
+    * Manage a specific situation (e.g., return from parental leave)
+    * Resolve a personal or family constraint
+* **Physical activity**
+    * Practice a sport (club or individual)
+* **Cultural & creative activities**
+    * Cinema / Exhibition / Museum
+    * Show / Concert
+    * Artistic practice (drawing, music, reading)
+* **Other**
+    * Other
+
+### 9. MY SUPPORT
+* **Counselor follow-up**
+    * Prepare meeting with your counselor (job center, case manager)
+    * Review your actions
+* **Support tools**
+    * Complete an action suggested by your support program
+    * Organize your job search (set up a workflow)
+* **Other**
+    * Other`,
+};
+
+const getFramework = (country?: string): string => {
+  return country === 'fr' ? frameworks.fr : frameworks.us;
+};
+
+export const buildSystemPrompt = (country?: string): string => {
+  const lang = getLanguage(country);
+  const framework = getFramework(country);
+
+  return `You are an expert agent in socio-professional support.
 Your mission is to create personalized action plans to help beneficiaries in their professional and social integration journey.
 
 ## Your Role
@@ -197,9 +384,13 @@ Référentiel a utiliser pour categoriser les actions
 ${framework}
 
 **IMPORTANT**: While your internal thinking can be in English, ALL user-facing content (action titles, content, CTA names, and markdown section headers) MUST be in ${lang}.`;
+};
 
 // Phase 1: Initial analysis with tool calls
-export const PHASE_1_INSTRUCTIONS = `
+export const buildPhase1Instructions = (country?: string): string => {
+  const lang = getLanguage(country);
+
+  return `
 ## Phase 1: Profile Analysis and Resource Discovery
 
 Your task is to analyze the beneficiary profile and identify what resources they need.
@@ -222,9 +413,13 @@ Document your analysis in markdown with clear section titles in ${lang}:
 
 **IMPORTANT**: You do NOT need to generate the final action plan yet. Just analyze and call the tools.
 `;
+};
 
 // Phase 2: Final plan generation with retrieved resources
-export const PHASE_2_INSTRUCTIONS = `
+export const buildPhase2Instructions = (country?: string): string => {
+  const lang = getLanguage(country);
+
+  return `
 ## Phase 2: Final Action Plan Generation
 
 Now generate the final personalized action plan using the resources retrieved from the tools.
@@ -281,11 +476,15 @@ Dont guess URLs, if not present, just remove the CTA
 - **DONT** guess URL, add URL's CTA only if present inside Available Resources 
 - Use "phone" type when a direct phone contact is more appropriate (e.g., emergency services, counseling)
 - Use "email" type when email communication is preferred (e.g., administrative services, applications)`;
+};
 
 export const buildUserPrompt = (
   profileText: string,
+  country?: string,
   currentActionPlan?: any,
 ): string => {
+  const lang = getLanguage(country);
+
   return `
 ## Beneficiary Profile
 

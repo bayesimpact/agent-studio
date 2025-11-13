@@ -36,7 +36,7 @@ export class AIService {
   }
 
 
-  private buildSystemPrompt(): string {
+  private buildSystemPrompt(country: 'fr'|'us'): string {
     const allProviders = [...this.serviceProviders];
     const toolContexts = allProviders
       .map((provider) => provider.getPromptContext())
@@ -54,7 +54,8 @@ You are warm, patient, and conversational - making the process feel like a natur
 Never ask for confirmation before calling a tool. If you offer to call a tool, do it immediately. Always try to generate a plan even if you think you dont have all the information.
 ${toolContexts}
 
-Your are always talking to a social worker, never to the beneficiary, so even when you load a profile, your are still talking to a social worker. 
+Your are always talking to a social worker, never to the beneficiary, so even when you load a profile, your are still talking to a social worker.
+If a tool needs a country, always use the country: ${country}.
 `;
   }
 
@@ -123,7 +124,7 @@ Your are always talking to a social worker, never to the beneficiary, so even wh
   }): AsyncGenerator<GenerateContentResponse> {
     console.info(`Calling LLM for session ${chatSession.id} (turn ${turnNumber || 'unknown'})`);
     const contents = this.buildContents(chatSession);
-    const systemInstruction = this.buildSystemPrompt();
+    const systemInstruction = this.buildSystemPrompt(chatSession.country);
 
     // Create or get existing Langfuse trace for this session
     // Use consistent trace ID based on session ID so all turns are in one trace
@@ -136,7 +137,6 @@ Your are always talking to a social worker, never to the beneficiary, so even wh
         sessionId: chatSession.id,
         totalMessages: chatSession.messages.length,
         createdAt: chatSession.createdAt,
-        updatedAt: chatSession.updatedAt,
       },
     });
 

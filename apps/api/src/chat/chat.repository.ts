@@ -14,11 +14,4 @@ export class ChatRepository {
     return this.sessions.get(sessionId);
   }
 
-  findAll(): ChatSession[] {
-    return Array.from(this.sessions.values());
-  }
-
-  delete(sessionId: string): boolean {
-    return this.sessions.delete(sessionId);
-  }
 }

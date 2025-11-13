@@ -8,8 +8,8 @@ import { Location } from '../geoloc/models/location.model';
 export class NotionBeneficiaryService implements AIServiceProvider {
   private readonly notionApiUrl = process.env.NOTION_API_URL || 'https://api.notion.com/v1';
   private readonly notionSecret = process.env.NOTION_SECRET;
-  private readonly beneficiaryDatabaseId = process.env.NOTION_BENEFICIARY_DATABASE_ID || '2a37d19cc82580558a42e0ae39470397';
-  // private readonly beneficiaryDatabaseId = process.env.NOTION_BENEFICIARY_DATABASE_ID || '29a7d19cc825808baa2dce8093f0dd59';
+  private readonly beneficiaryUSDatabaseId = process.env.US_NOTION_BENEFICIARY_DATABASE_ID || '2a37d19cc82580558a42e0ae39470397';
+  private readonly beneficiaryFRDatabaseId = process.env.FR_NOTION_BENEFICIARY_DATABASE_ID || '29a7d19cc825808baa2dce8093f0dd59';
 
   getFunctionDeclaration(): FunctionDeclaration {
     return {
@@ -22,8 +22,12 @@ export class NotionBeneficiaryService implements AIServiceProvider {
             type: Type.STRING,
             description: 'Name of the beneficiary to search for (extracted from the @notion mention)',
           },
+          country: {
+            type: Type.STRING,
+            description: 'us or fr',
+          },
         },
-        required: ['name'],
+        required: ['name', 'country'],
       },
     };
   }
@@ -54,21 +58,23 @@ you MUST immediately call this function with the name that follows @notion.
     functionCall: FunctionCall,
   ): Promise<{ profile: string }> {
     const name = functionCall.args['name'] as string;
+    const country = functionCall.args['country'] as 'fr'|'us';
 
     console.log('Fetching beneficiary profile for:', name);
 
-    const profile = await this.fetchBeneficiaryProfile(name);
+    const profile = await this.fetchBeneficiaryProfile(name, country);
     return { profile };
   }
 
-  async fetchBeneficiaryProfile(name: string): Promise<string> {
+  async fetchBeneficiaryProfile(name: string, country: 'us'|'fr'): Promise<string> {
     if (!this.notionSecret) {
       console.error('NOTION_SECRET is not configured');
       return 'Error: Notion API key not configured';
     }
+    const beneficiaryDatabaseId = country === 'us' ? this.beneficiaryUSDatabaseId : this.beneficiaryFRDatabaseId;
 
-    if (!this.beneficiaryDatabaseId) {
-      console.error('NOTION_BENEFICIARY_DATABASE_ID is not configured');
+    if (!beneficiaryDatabaseId) {
+      console.error('US_NOTION_BENEFICIARY_DATABASE_ID or FR_NOTION_BENEFICIARY_DATABASE_ID is not configured');
       return 'Error: Beneficiary database ID not configured';
     }
 
@@ -83,7 +89,7 @@ you MUST immediately call this function with the name that follows @notion.
       };
 
       const { data } = await axios.post<any>(
-        `${this.notionApiUrl}/databases/${this.beneficiaryDatabaseId}/query`,
+        `${this.notionApiUrl}/databases/${beneficiaryDatabaseId}/query`,
         queryBody,
         {
           headers: {

@@ -4,16 +4,16 @@ export class ChatSession {
   constructor(
     public readonly id: string,
     public readonly messages: Message[],
+    public readonly country: 'fr'|'us',
     public readonly createdAt: Date,
-    public readonly updatedAt: Date,
   ) {}
 
   addMessage(message: Message): ChatSession {
     return new ChatSession(
       this.id,
       [...this.messages, message],
+      this.country,
       this.createdAt,
-      new Date(),
     );
   }
 

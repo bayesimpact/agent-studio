@@ -16,6 +16,7 @@ import {
 
 interface ActionPlanBuilderRequestDto {
   profileText: string;
+  country?: string;
 }
 
 @Controller('action-plan-builder')
@@ -48,6 +49,7 @@ export class ActionPlanBuilderController {
     try {
       const args: ActionPlanBuilderArgs = {
         profileText: request.profileText,
+        country: request.country,
       };
 
       // Send initial event

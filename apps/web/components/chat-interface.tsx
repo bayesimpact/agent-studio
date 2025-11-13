@@ -345,7 +345,7 @@ export function ChatInterface({ country }: ChatInterfaceProps) {
           <CardContent className="flex-1 overflow-hidden p-0">
             <ScrollArea className="h-full px-6 pb-6">
               {currentActionPlan && currentActionPlan.length > 0 ? (
-                <ActionPlan planItems={currentActionPlan} />
+                <ActionPlan planItems={currentActionPlan} country={country} />
               ) : (
                 <div className="flex flex-col items-center justify-center h-full text-center px-4 py-8">
                   <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mb-4">
@@ -504,6 +504,7 @@ export function ChatInterface({ country }: ChatInterfaceProps) {
                 placeholder={t.chat.placeholder}
                 disabled={isLoading}
                 className="flex-1"
+                country={country}
               />
               <Button
                 className="w-10 h-10 flex justify-center items-center px-2 rounded-full"

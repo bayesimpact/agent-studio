@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import { useTranslations } from '../lib/i18n/use-translations';
 
 type CTAType = 'url' | 'phone' | 'email';
 
@@ -31,6 +32,7 @@ interface Action {
 
 interface ActionPlanProps {
   planItems: Action[];
+  country: 'fr' | 'us';
 }
 
 const categoryColors: Record<
@@ -106,7 +108,9 @@ const getCategoryColor = (category: string) => {
   );
 };
 
-export function ActionPlan({ planItems }: ActionPlanProps) {
+export function ActionPlan({ planItems, country }: ActionPlanProps) {
+  const t = useTranslations(country);
+
   // Track which actions have been expanded
   const [expandedActions, setExpandedActions] = useState<Set<string>>(
     new Set(),
@@ -134,8 +138,7 @@ export function ActionPlan({ planItems }: ActionPlanProps) {
       <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-gradient-to-r from-primary/10 to-primary/5 border border-primary/20">
         <Sparkles className="w-4 h-4 text-primary" />
         <span className="text-sm font-semibold text-primary">
-          Support Plan
-          {/*Plan d'accompagnement*/}
+          {t.actionPlan.supportPlan}
         </span>
       </div>
 
