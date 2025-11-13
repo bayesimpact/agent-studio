@@ -65,7 +65,8 @@ server.registerTool(
       const response = await axios.post(
         `${API_BASE_URL}/action-plan-builder/generate`,
         {
-          profileText
+          profileText,
+          country: 'fr'
         },
         {
           responseType: 'stream',
