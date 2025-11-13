@@ -48,7 +48,11 @@ interface Message {
   currentProgressTitle?: string
 }
 
-export function ChatInterface() {
+interface ChatInterfaceProps {
+  country: 'fr' | 'us'
+}
+
+export function ChatInterface({ country }: ChatInterfaceProps) {
   const [messages, setMessages] = useState<Message[]>([])
   const [inputValue, setInputValue] = useState('')
   const [isLoading, setIsLoading] = useState(false)
@@ -63,7 +67,7 @@ export function ChatInterface() {
   useEffect(() => {
     const initializeSession = async () => {
       try {
-        const response = await fetch(`${apiUrl}/chat/create-session`, {
+        const response = await fetch(`${apiUrl}/chat/create-session?country=${country}`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -95,7 +99,7 @@ export function ChatInterface() {
     }
     initializeSession()
     inputRef.current?.focus()
-  }, [apiUrl])
+  }, [apiUrl, country])
 
   const handleSendMessage = async () => {
     if (!inputValue.trim() || isLoading || !sessionId) return
@@ -128,6 +132,7 @@ export function ChatInterface() {
       const payload: SendMessageDto = {
         sessionId,
         content: userMessage.content,
+        country,
       }
 
       // Use EventSource for SSE
@@ -135,6 +140,7 @@ export function ChatInterface() {
         `${apiUrl}/chat/message-stream?${new URLSearchParams({
           sessionId: payload.sessionId,
           content: payload.content,
+          country: country,
         })}`
       )
 

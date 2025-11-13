@@ -8,7 +8,7 @@ export default function FrancePage() {
         <h1 className="text-3xl font-bold text-primary">CaseAI Connect</h1>
         <CountrySwitcher currentCountry="fr" />
       </div>
-      <ChatInterface />
+      <ChatInterface country="fr" />
     </div>
   );
 }

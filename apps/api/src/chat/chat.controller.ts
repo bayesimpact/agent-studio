@@ -11,14 +11,18 @@ export class ChatController {
   streamMessage(
     @Query('sessionId') sessionId: string,
     @Query('content') content: string,
+    @Query('country') country?: string,
   ): Observable<MessageEvent> {
-    console.log(`new message ${sessionId}`);
-    return this.chatService.handleMessageStream(sessionId, content);
+    console.log(`new message ${sessionId}, country: ${country}`);
+    return this.chatService.handleMessageStream(sessionId, content, country);
   }
 
   @Post('create-session')
-  async createSession(): Promise<CreateChatSessionResponseDto> {
-    const chatSession = await this.chatService.createSession();
+  async createSession(
+    @Query('country') country?: string,
+  ): Promise<CreateChatSessionResponseDto> {
+    console.log(`create session, country: ${country}`);
+    const chatSession = await this.chatService.createSession(country);
     return {
       sessionId: chatSession.id,
       message: {
