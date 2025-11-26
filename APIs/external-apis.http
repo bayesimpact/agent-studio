@@ -65,11 +65,16 @@ Authorization: Bearer ezbsR2CkLuKey_hNuh1adWJWSaE
 
 
 ###
-GET https://api.francetravail.io/partenaire/labonneboite/v2/recherche?city=rouen&rome=G1609&rome=D1212&rome=G1601&rome=G1602&rome=G1607&rome=G1404&rome=F1201&rome=F1108&rome=H2602&rome=H2601&rome=H1504]
+GET https://api.francetravail.io/partenaire/labonneboite/v2/recherche?city=rouen&rome=G1609
 Content-Type:application/json
 Accept:application/json
-Authorization: Bearer mN1b91JNZX_MfpkqhSE04vr-p1M
+Authorization: Bearer ge91ydiEyXWsJWFmzMOuytF8Z2c
 
+###
+GET https://api.francetravail.io/partenaire/labonneboite/v2/recherche?city=rouen&rome=G1609
+Content-Type:application/json
+Accept:application/json
+Authorization: Bearer ge91ydiEyXWsJWFmzMOuytF8Z2c
 
 
 

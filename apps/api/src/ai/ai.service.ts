@@ -19,7 +19,7 @@ export class AIService {
   constructor() {
     this.genAI = new GoogleGenAI({
       vertexai: true,
-      project: 'caseai-connect',
+      project: process.env.GCP_PROJECT || 'caseai-connect',
       location: process.env.LOCATION || 'europe-west1',
     });
 
@@ -35,8 +35,7 @@ export class AIService {
     this.serviceProviders.push(provider);
   }
 
-
-  private buildSystemPrompt(country: 'fr'|'us'): string {
+  private buildSystemPrompt(country: 'fr' | 'us'): string {
     const allProviders = [...this.serviceProviders];
     const toolContexts = allProviders
       .map((provider) => provider.getPromptContext())
@@ -72,8 +71,8 @@ If a tool needs a country, always use the country: ${country}.
         toolResponseParts.push({
           functionResponse: {
             name: functionName,
-            response: JSON.parse(message.content || '{}')
-          }
+            response: JSON.parse(message.content || '{}'),
+          },
         });
       } else {
         // Flush accumulated tool responses before adding non-tool message
@@ -87,18 +86,18 @@ If a tool needs a country, always use the country: ${country}.
           // Assistant message with function calls (each with ID)
           contents.push({
             role: 'model',
-            parts: message.toolCalls.map(tc => ({
+            parts: message.toolCalls.map((tc) => ({
               functionCall: {
                 name: tc.name,
-                args: tc.arguments
-              }
-            }))
+                args: tc.arguments,
+              },
+            })),
           });
         } else {
           // Regular user or assistant text message
           contents.push({
             role: message.sender === 'assistant' ? 'model' : 'user',
-            parts: [{ text: message.content || '' }]
+            parts: [{ text: message.content || '' }],
           });
         }
       }
@@ -112,7 +111,6 @@ If a tool needs a country, always use the country: ${country}.
     return contents;
   }
 
-
   async *generateContentStream({
     chatSession,
     tools,
@@ -122,7 +120,9 @@ If a tool needs a country, always use the country: ${country}.
     tools: ToolListUnion;
     turnNumber?: number;
   }): AsyncGenerator<GenerateContentResponse> {
-    console.info(`Calling LLM for session ${chatSession.id} (turn ${turnNumber || 'unknown'})`);
+    console.info(
+      `Calling LLM for session ${chatSession.id} (turn ${turnNumber || 'unknown'})`,
+    );
     const contents = this.buildContents(chatSession);
     const systemInstruction = this.buildSystemPrompt(chatSession.country);
 
@@ -175,7 +175,7 @@ If a tool needs a country, always use the country: ${country}.
           tools,
         },
       });
-      let lastChunck: GenerateContentResponse
+      let lastChunck: GenerateContentResponse;
       for await (const chunk of streamResult) {
         lastChunck = chunk;
         // Accumulate output for Langfuse
@@ -189,7 +189,7 @@ If a tool needs a country, always use the country: ${country}.
 
         // Capture function calls from the last chunk
         if (chunk.functionCalls && chunk.functionCalls.length > 0) {
-          functionCalls = chunk.functionCalls.map(fc => ({
+          functionCalls = chunk.functionCalls.map((fc) => ({
             name: fc.name,
             args: fc.args,
           }));
@@ -199,19 +199,117 @@ If a tool needs a country, always use the country: ${country}.
 
       // Update generation with output, function calls, and usage
       generation.update({
-        output: functionCalls.length > 0
-          ? { text: fullOutput, functionCalls }
-          : fullOutput,
+        output:
+          functionCalls.length > 0
+            ? { text: fullOutput, functionCalls }
+            : fullOutput,
         usage: {
           input: lastChunck?.usageMetadata.promptTokenCount,
           output: lastChunck?.usageMetadata.candidatesTokenCount,
           total: lastChunck?.usageMetadata.totalTokenCount,
-          unit: "TOKENS"
+          unit: 'TOKENS',
         },
       });
 
       generation.end();
-      console.info(`LLM call completed. Tokens: ${lastChunck?.usageMetadata.totalTokenCount}, Function calls: ${functionCalls.length}`);
+      console.info(
+        `LLM call completed. Tokens: ${lastChunck?.usageMetadata.totalTokenCount}, Function calls: ${functionCalls.length}`,
+      );
+    } catch (error) {
+      // Log error to Langfuse
+      generation.update({
+        level: 'ERROR',
+        statusMessage: error instanceof Error ? error.message : 'Unknown error',
+      });
+      generation.end();
+
+      console.error('[AI Service] LLM call failed:', error);
+      throw error;
+    } finally {
+      await this.langfuse.flushAsync();
+    }
+  }
+
+  async *generateChatStream({
+    chatSession,
+    masterPrompt: systemInstructions,
+  }: {
+    chatSession: ChatSession;
+    masterPrompt: string;
+  }): AsyncGenerator<GenerateContentResponse> {
+    const trace = this.langfuse.trace({
+      id: `session-${chatSession.id}`,
+      name: 'chat-session',
+      sessionId: chatSession.id,
+      userId: chatSession.id,
+      metadata: {
+        sessionId: chatSession.id,
+        totalMessages: chatSession.messages.length,
+        createdAt: chatSession.createdAt,
+      },
+    });
+
+    const contents = this.buildContents(chatSession);
+
+    const generation = trace.generation({
+      name: `turn-${chatSession.messages.length}`,
+      model: 'gemini-2.5-flash',
+      modelParameters: {
+        temperature: 0,
+        thinkingBudget: 0,
+      },
+      input: {
+        systemInstructions,
+        contents,
+      },
+      metadata: {
+        turnNumber: chatSession.messages.length,
+        systemInstructionLength: systemInstructions.length,
+      },
+    });
+
+    try {
+      const streamResult = await this.genAI.models.generateContentStream({
+        model: 'gemini-2.5-flash',
+        contents,
+        config: {
+          temperature: 0,
+          systemInstruction: systemInstructions,
+          thinkingConfig: {
+            thinkingBudget: 0,
+          },
+        },
+      });
+      let fullOutput = '';
+      let lastChunck: GenerateContentResponse;
+      for await (const chunk of streamResult) {
+        lastChunck = chunk;
+        // Accumulate output for Langfuse
+        if (chunk.candidates?.[0]?.content?.parts) {
+          for (const part of chunk.candidates[0].content.parts) {
+            if (part.text) {
+              fullOutput += part.text;
+            }
+          }
+        }
+        yield chunk;
+      }
+
+      // Update generation with output, function calls, and usage
+      generation.update({
+        output: fullOutput,
+        usage: {
+          input: lastChunck?.usageMetadata.promptTokenCount,
+          output: lastChunck?.usageMetadata.candidatesTokenCount,
+          total: lastChunck?.usageMetadata.totalTokenCount,
+          unit: 'TOKENS',
+        },
+      });
+
+      generation.end();
+      console.info(
+        `LLM call completed. Tokens: ${lastChunck?.usageMetadata.totalTokenCount}`,
+      );
     } catch (error) {
       // Log error to Langfuse
       generation.update({
