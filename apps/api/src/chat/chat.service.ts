@@ -19,8 +19,6 @@ export class ChatService {
   private tools: ToolListUnion;
 
   constructor(
-    // private geolocService: GeolocService,
-    // private resourcesService: ResourcesService,
     private notionBeneficiaryService: NotionBeneficiaryService,
     @Inject('ActionPlanBuilderService')
     private actionPlanBuilderService: AIServiceProvider,
