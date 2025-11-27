@@ -1,61 +1,30 @@
+import { Input } from '@codegouvfr/react-dsfr/Input'
 import type { SendMessageDto } from '@repo/api/chat/dto/send-message.dto'
 import { useEffect, useRef, useState } from 'react'
-import type { Message } from '../components/types'
+import { useApiUrl } from '../../hooks/use-api-url'
+import type { Message } from '../types'
+import { ChatInputSubmitButton } from './ChatInputSubmitButton'
+import { useChat } from './context/hook'
+import { createBotMessage, createUserMessage } from './helpers'
 
-export function useChat() {
-	const [messages, setMessages] = useState<Message[]>([])
-	const [inputValue, setInputValue] = useState('')
-	const [isLoading, setIsLoading] = useState(false)
-	const [sessionId, setSessionId] = useState<string | null>(null)
+export function ChatInput() {
 	const inputRef = useRef<HTMLInputElement>(null)
-	const scrollAreaRef = useRef<HTMLDivElement>(null)
+	const [isLoading, setIsLoading] = useState(false)
+	const [inputValue, setInputValue] = useState('')
+	const apiUrl = useApiUrl()
+	const { sessionId, setMessages } = useChat()
 
-	const apiUrl = 'http://localhost:3000'
-
+	// Auto-focus input when AI finishes responding
 	useEffect(() => {
-		const initializeSession = async () => {
-			try {
-				const response = await fetch(`${apiUrl}/prendresoin/create-session`, {
-					method: 'POST',
-					headers: {
-						'Content-Type': 'application/json',
-					},
-				})
-				const data = await response.json()
-				setSessionId(data.sessionId)
-				setMessages([
-					{
-						id: data.message.id,
-						content: data.message.content,
-						sender: data.message.sender,
-						timestamp: new Date(data.message.timestamp),
-					},
-				])
-			} catch (error) {
-				console.error('Failed to create session:', error)
-				setMessages([
-					{
-						id: '1',
-						content: 'Impossible erreur',
-						sender: 'assistant',
-						timestamp: new Date(),
-					},
-				])
-			}
+		if (!isLoading && inputRef.current) {
+			inputRef.current.focus()
 		}
-		initializeSession()
-		inputRef.current?.focus()
-	}, [apiUrl])
+	}, [isLoading])
 
 	const handleSendMessage = async () => {
 		if (!inputValue.trim() || isLoading || !sessionId) return
 
-		const userMessage: Message = {
-			id: Date.now().toString(),
-			content: inputValue.trim(),
-			sender: 'user',
-			timestamp: new Date(),
-		}
+		const userMessage = createUserMessage({ content: inputValue })
 
 		setMessages((prev) => [...prev, userMessage])
 		setInputValue('')
@@ -65,13 +34,11 @@ export function useChat() {
 		const loadingMessageId = `loading-${Date.now()}`
 		setMessages((prev) => [
 			...prev,
-			{
+			createBotMessage({
 				id: loadingMessageId,
 				content: '',
-				sender: 'assistant',
-				timestamp: new Date(),
 				isInitializing: true,
-			},
+			}),
 		])
 
 		try {
@@ -103,13 +70,12 @@ export function useChat() {
 							setMessages((prev) =>
 								prev.map((msg) =>
 									msg.id === loadingMessageId
-										? {
+										? createBotMessage({
 												id: currentMessageId,
 												content: '',
-												sender: 'assistant' as const,
 												timestamp: new Date(data.timestamp),
 												isInitializing: false,
-											}
+											})
 										: msg,
 								),
 							)
@@ -120,7 +86,9 @@ export function useChat() {
 							// Update the message with accumulated content and stop processing indicator
 							setMessages((prev) =>
 								prev.map((msg) =>
-									msg.id === data.messageId ? { ...msg, content: currentContent, isProcessingFunctions: false } : msg,
+									msg.id === data.messageId
+										? ({ ...msg, content: currentContent, isProcessingFunctions: false } satisfies Message)
+										: msg,
 								),
 							)
 							break
@@ -128,7 +96,9 @@ export function useChat() {
 						case 'end':
 							setMessages((prev) =>
 								prev.map((msg) =>
-									msg.id === data.messageId ? { ...msg, isFinished: true, isProcessingFunctions: false } : msg,
+									msg.id === data.messageId
+										? ({ ...msg, isFinished: true, isProcessingFunctions: false } satisfies Message)
+										: msg,
 								),
 							)
 							eventSource.close()
@@ -140,13 +110,11 @@ export function useChat() {
 							eventSource.close()
 							setMessages((prev) => [
 								...prev,
-								{
+								createBotMessage({
 									id: Date.now().toString(),
 									content: data.error,
-									sender: 'assistant',
-									timestamp: new Date(),
 									isFinished: true,
-								},
+								}),
 							])
 							setIsLoading(false)
 							break
@@ -160,24 +128,14 @@ export function useChat() {
 				console.error('EventSource error:', error)
 				eventSource.close()
 				if (isLoading) {
-					const errorMessage: Message = {
-						id: Date.now().toString(),
-						content: 'Erreur',
-						sender: 'assistant',
-						timestamp: new Date(),
-					}
+					const errorMessage = createBotMessage({ content: 'Erreur' })
 					setMessages((prev) => [...prev, errorMessage])
 					setIsLoading(false)
 				}
 			}
 		} catch (error) {
 			console.error('Failed to send message:', error)
-			const errorMessage: Message = {
-				id: Date.now().toString(),
-				content: 'Erreur',
-				sender: 'assistant',
-				timestamp: new Date(),
-			}
+			const errorMessage = createBotMessage({ content: 'Erreur' })
 			setMessages((prev) => [...prev, errorMessage])
 			setIsLoading(false)
 		}
@@ -190,27 +148,25 @@ export function useChat() {
 		}
 	}
 
-	useEffect(() => {
-		if (scrollAreaRef.current) {
-			scrollAreaRef.current.scrollTop = scrollAreaRef.current.scrollHeight
-		}
-	}, [messages])
+	const isSubmitButtonDisabled = !inputValue.trim() || isLoading
 
-	// Auto-focus input when AI finishes responding
-	useEffect(() => {
-		if (!isLoading && inputRef.current) {
-			inputRef.current.focus()
-		}
-	}, [isLoading])
-
-	return {
-		handleKeyDown,
-		inputRef,
-		scrollAreaRef,
-		messages,
-		inputValue,
-		setInputValue,
-		isLoading,
-		handleSendMessage,
-	}
+	return (
+		<Input
+			ref={inputRef}
+			className="w-full"
+			nativeInputProps={{
+				type: 'text',
+				value: inputValue,
+				onChange: (e) => setInputValue(e.target.value),
+				onKeyDown: handleKeyDown,
+				placeholder: 'Tapez votre message...',
+				autoFocus: true,
+			}}
+			disabled={isLoading}
+			addon={<ChatInputSubmitButton disabled={isSubmitButtonDisabled} onClick={handleSendMessage} />}
+			label="Poser une question"
+			state="default"
+			stateRelatedMessage="Text de validation / d'explication de l'erreur"
+		/>
+	)
 }
