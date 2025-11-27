@@ -3,4 +3,7 @@ export interface Message {
 	content: string
 	sender: 'user' | 'assistant'
 	timestamp: Date
+	isProcessingFunctions?: boolean
+	isInitializing?: boolean
+	isFinished?: boolean
 }

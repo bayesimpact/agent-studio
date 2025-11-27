@@ -1,3 +1,4 @@
+// import '@codegouvfr/react-dsfr/dsfr/utility/icons/icons.min.css'
 import '@codegouvfr/react-dsfr/main.css'
 import { startReactDsfr } from '@codegouvfr/react-dsfr/spa'
 import { StrictMode } from 'react'
