@@ -1,7 +1,5 @@
 /* Tailwind CSS */
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
 
 /* DSFR-compatible custom styles */
 :root {
