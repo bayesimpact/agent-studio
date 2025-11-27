@@ -1,0 +1,49 @@
+{
+  "name": "prendresoin",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "lint": "eslint .",
+    "preview": "vite preview",
+    "storybook": "storybook dev -p 6006",
+    "build-storybook": "storybook build",
+    "predev": "react-dsfr update-icons",
+    "prebuild": "react-dsfr update-icons",
+    "prestorybook": "react-dsfr update-icons",
+    "prebuild-storybook": "react-dsfr update-icons"
+  },
+  "dependencies": {
+    "@codegouvfr/react-dsfr": "^1.29.0",
+    "@repo/api": "*",
+    "@repo/ui": "*",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0",
+    "tss-react": "^4.9.19"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.39.1",
+    "@storybook/addon-themes": "^10.1.0",
+    "@storybook/react-vite": "^10.1.0",
+    "@tailwindcss/postcss": "^4.1.17",
+    "@types/node": "^24.10.1",
+    "@types/react": "^19.2.5",
+    "@types/react-dom": "^19.2.3",
+    "@vitejs/plugin-react": "^5.1.1",
+    "autoprefixer": "^10.4.22",
+    "eslint": "^9.39.1",
+    "eslint-plugin-react-hooks": "^7.0.1",
+    "eslint-plugin-react-refresh": "^0.4.24",
+    "eslint-plugin-storybook": "^10.1.0",
+    "globals": "^16.5.0",
+    "postcss": "^8.5.6",
+    "storybook": "^10.1.0",
+    "storybook-dark-mode": "^4.0.2",
+    "tailwindcss": "^4.1.16",
+    "typescript": "~5.9.3",
+    "typescript-eslint": "^8.46.4",
+    "vite": "^7.2.4"
+  }
+}
