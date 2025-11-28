@@ -1,11 +1,10 @@
 import { Input } from '@codegouvfr/react-dsfr/Input'
-import type { SendMessageDto } from '@repo/api/chat/dto/send-message.dto'
 import { useEffect, useRef, useState } from 'react'
 import { useApiUrl } from '../../hooks/use-api-url'
-import type { Message } from '../types'
+import { createSSEUrl, useSSE } from '../../hooks/use-see'
 import { ChatInputSubmitButton } from './ChatInputSubmitButton'
 import { useChat } from './context/hook'
-import { createBotMessage, createUserMessage } from './helpers'
+import { createLoadingMessage, createUserMessage } from './helpers'
 
 export function ChatInput() {
 	const inputRef = useRef<HTMLInputElement>(null)
@@ -13,6 +12,8 @@ export function ChatInput() {
 	const [inputValue, setInputValue] = useState('')
 	const apiUrl = useApiUrl()
 	const { sessionId, setMessages } = useChat()
+
+	const { handleSSEConnection } = useSSE({ setMessages, isLoading, setIsLoading })
 
 	// Auto-focus input when AI finishes responding
 	useEffect(() => {
@@ -25,120 +26,16 @@ export function ChatInput() {
 		if (!inputValue.trim() || isLoading || !sessionId) return
 
 		const userMessage = createUserMessage({ content: inputValue })
-
 		setMessages((prev) => [...prev, userMessage])
 		setInputValue('')
 		setIsLoading(true)
 
-		// Add immediate loading indicator
-		const loadingMessageId = `loading-${Date.now()}`
-		setMessages((prev) => [
-			...prev,
-			createBotMessage({
-				id: loadingMessageId,
-				content: '',
-				isInitializing: true,
-			}),
-		])
+		const { id: loadingMessageId, message: loadingMessage } = createLoadingMessage()
+		setMessages((prev) => [...prev, loadingMessage])
 
-		try {
-			const payload: SendMessageDto = {
-				sessionId,
-				content: userMessage.content,
-			}
+		const eventSource = new EventSource(createSSEUrl(apiUrl, sessionId, userMessage.content))
 
-			// Use EventSource for SSE
-			const eventSource = new EventSource(
-				`${apiUrl}/prendresoin/message-stream?${new URLSearchParams({
-					sessionId: payload.sessionId,
-					content: payload.content,
-				})}`,
-			)
-
-			let currentMessageId = ''
-			let currentContent = ''
-
-			eventSource.addEventListener('message', (event) => {
-				try {
-					const data = JSON.parse(event.data)
-
-					switch (data.type) {
-						case 'start':
-							currentMessageId = data.messageId
-							currentContent = ''
-							// Replace loading message with actual message
-							setMessages((prev) =>
-								prev.map((msg) =>
-									msg.id === loadingMessageId
-										? createBotMessage({
-												id: currentMessageId,
-												content: '',
-												timestamp: new Date(data.timestamp),
-												isInitializing: false,
-											})
-										: msg,
-								),
-							)
-							break
-
-						case 'chunk':
-							currentContent += data.content
-							// Update the message with accumulated content and stop processing indicator
-							setMessages((prev) =>
-								prev.map((msg) =>
-									msg.id === data.messageId
-										? ({ ...msg, content: currentContent, isProcessingFunctions: false } satisfies Message)
-										: msg,
-								),
-							)
-							break
-
-						case 'end':
-							setMessages((prev) =>
-								prev.map((msg) =>
-									msg.id === data.messageId
-										? ({ ...msg, isFinished: true, isProcessingFunctions: false } satisfies Message)
-										: msg,
-								),
-							)
-							eventSource.close()
-							setIsLoading(false)
-							break
-
-						case 'error':
-							console.error('Stream error:', data.error)
-							eventSource.close()
-							setMessages((prev) => [
-								...prev,
-								createBotMessage({
-									id: Date.now().toString(),
-									content: data.error,
-									isFinished: true,
-								}),
-							])
-							setIsLoading(false)
-							break
-					}
-				} catch (error) {
-					console.error('Error parsing SSE data:', error)
-				}
-			})
-
-			eventSource.onerror = (error) => {
-				console.error('EventSource error:', error)
-				eventSource.close()
-				if (isLoading) {
-					const errorMessage = createBotMessage({ content: 'Erreur' })
-					setMessages((prev) => [...prev, errorMessage])
-					setIsLoading(false)
-				}
-			}
-		} catch (error) {
-			console.error('Failed to send message:', error)
-			const errorMessage = createBotMessage({ content: 'Erreur' })
-			setMessages((prev) => [...prev, errorMessage])
-			setIsLoading(false)
-		}
+		handleSSEConnection(eventSource, loadingMessageId)
 	}
 
 	const handleKeyDown = (e: React.KeyboardEvent) => {
