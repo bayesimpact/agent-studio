@@ -17,3 +17,15 @@ export function createBotMessage(fields: Partial<Message> & { content: string })
 		...fields,
 	}
 }
+
+export const createLoadingMessage = () => {
+	const loadingMessageId = `loading-${Date.now()}`
+	return {
+		id: loadingMessageId,
+		message: createBotMessage({
+			id: loadingMessageId,
+			content: '...',
+			isInitializing: true,
+		}),
+	}
+}

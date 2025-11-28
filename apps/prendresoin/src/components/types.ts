@@ -7,3 +7,11 @@ export interface Message {
 	isInitializing?: boolean
 	isFinished?: boolean
 }
+
+export type MessageEventData = MessageEvent<{
+	type: 'start' | 'chunk' | 'end' | 'error'
+	messageId: string
+	timestamp: string
+	content?: string
+	error?: string
+}>['data']
