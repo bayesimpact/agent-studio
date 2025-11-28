@@ -18,13 +18,14 @@ export function useSSE({
 					msg.id === loadingMessageId
 						? createBotMessage({
 								id: data.messageId,
-								content: '',
+								content: '...',
 								timestamp: new Date(data.timestamp),
 								isInitializing: false,
 							})
 						: msg,
 				),
 			)
+			// Replace the loading message with the actual bot message when the start event is received
 			return { messageId: data.messageId, content: '' }
 		},
 		[setMessages],
