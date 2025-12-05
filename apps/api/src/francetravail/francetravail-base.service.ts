@@ -11,7 +11,7 @@ export abstract class FranceTravailBaseService {
       grant_type: 'client_credentials',
       client_id: this.clientId,
       client_secret: this.secretKey,
-      scope: 'api_romeov2 o2dsoffre api_offresdemploiv2 api_evenementsv1 evenements api_labonneboitev2',
+      scope: 'api_romeov2 o2dsoffre api_offresdemploiv2 api_evenementsv1 evenements api_labonneboitev2 search office',
     });
 
     const { data } = await axios.post(

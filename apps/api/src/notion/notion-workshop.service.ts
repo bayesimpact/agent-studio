@@ -146,7 +146,7 @@ export class NotionWorkshopService implements AIServiceProvider {
       const atelierName = getRichText(properties['Atelier (nom)']);
       const date = getDate(properties['Date']);
       const capacity = getNumber(properties['Capacité']);
-      const signupUrl = getUrl(properties["Lien d'inscription"]);
+      // const signupUrl = getUrl(properties["Lien d'inscription"]);
       const status = getStatus(properties['Statut']);
       const type = getSelect(properties['Type']);
       const locationText = getRichText(properties['Lieu']);
@@ -162,7 +162,7 @@ export class NotionWorkshopService implements AIServiceProvider {
           is_datetime: false,
         },
         capacity: capacity,
-        signup_url: signupUrl,
+        signup_url: "NO CTA DO NOT INCLUDE IT INSIDE YOUR ACTION PLAN",
         status: status,
         atelier_name: atelierName,
         type: type,

@@ -1,10 +1,10 @@
 import { Input } from '@codegouvfr/react-dsfr/Input'
 import { useEffect, useRef, useState } from 'react'
 import { useApiUrl } from '../../hooks/use-api-url'
-import { createSSEUrl, useSSE } from '../../hooks/use-see'
 import { ChatInputSubmitButton } from './ChatInputSubmitButton'
 import { useChat } from './context/hook'
 import { createLoadingMessage, createUserMessage } from './helpers'
+import { createSSEUrl, useSSE } from '../../hooks/use-sse';
 
 export function ChatInput() {
 	const inputRef = useRef<HTMLInputElement>(null)

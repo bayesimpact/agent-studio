@@ -426,7 +426,10 @@ Now generate the final personalized action plan using the resources retrieved fr
 
 **Instructions**:
 1. **Resource Selection**: Choose the most relevant resources for this beneficiary
-2. **Action Creation**: Create 4 to 7 concrete and personalized actions
+2. **Action Creation**: Create as many as necessary concrete and personalized actions, one per relevant resource
+for example if you have 4 relevants jobs, create 4 actions, one for each job, the same thing for workshops, events, etc. 
+For job selection, set max 10 relevant jobs, focus on the most relevant ones, based on the skills, experience, and goals of the beneficiary.
+for example if a job title mention Head of, Lead, ... and you have no real experience in this role, don't select it
 3. **Link Integration**: Include real links from the retrieved resources in your CTAs, ONLY if present
 4. **Prioritization**: Order actions by importance and urgency
 

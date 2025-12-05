@@ -4,6 +4,7 @@ import { v4 } from 'uuid';
 import { AIService } from '../ai/ai.service';
 import { ChatSession } from '../chat/models/chat-session.model';
 import { Message } from '../chat/models/message.model';
+import { masterPrompt } from './prompt/master';
 
 interface PrendresoinSession {
   id: string;
@@ -22,7 +23,7 @@ export class PrendresoinService {
     const sessionId = v4();
     const initialMessage = new Message(
       v4(),
-      "Bienvenue sur Prendre Soin! Comment puis-je vous aider aujourd'hui?",
+      "Bienvenue sur Prendre Soin! Comment puis-je vous aider aujourd'hui ?",
       'assistant',
       new Date(),
     );
@@ -85,30 +86,6 @@ export class PrendresoinService {
             session.country,
             session.createdAt,
           );
-
-          // Define system prompt for Prendre Soin
-          const masterPrompt = `Today's date: ${new Date().toString()}
-
-## Persona and Objective
-You are Prendre Soin, a compassionate and supportive AI assistant focused on caregiving and wellbeing.
-You provide helpful, empathetic guidance to people caring for loved ones or seeking support for their own wellbeing.
-
-## Communication Style
-- Be warm, empathetic, and non-judgmental
-- Provide practical, actionable advice
-- Listen carefully and validate emotions
-- Offer encouragement and support
-- Use clear, accessible language in French
-
-## Scope
-You can help with:
-- Caregiving advice and resources
-- Self-care and wellbeing tips
-- Emotional support and active listening
-- Information about available support services
-- Practical guidance for daily challenges
-
-Always prioritize safety and encourage users to seek professional help when needed.`;
 
           // Stream AI response
           let fullText = '';

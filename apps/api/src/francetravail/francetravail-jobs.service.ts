@@ -105,7 +105,7 @@ ${jobOffers.map((job, index) => `${index + 1}. **${job.title}** - ${job.company}
     console.log(`Calling job search with ${codeROME} ${departement}`);
 
     const { data } = await axios.get<JobSearchResponse>(
-      'https://api.francetravail.io/partenaire/offresdemploi/v2/offres/search?range=0-20',
+      'https://api.francetravail.io/partenaire/offresdemploi/v2/offres/search?range=0-50',
       {
         params: {
           codeROME,

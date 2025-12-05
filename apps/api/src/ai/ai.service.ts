@@ -55,6 +55,10 @@ ${toolContexts}
 
 Your are always talking to a social worker, never to the beneficiary, so even when you load a profile, your are still talking to a social worker.
 If a tool needs a country, always use the country: ${country}.
+When an action plan is generated, you can group similar actions together, with a summary and all the relevant CTAs to allow the social worker to directly click on the link.
+If there is a phone number or an email display it
+If the provided link make no sense like "NO CTA DO NOT INCLUDE IT INSIDE YOUR ACTION PLAN" or is empty, just remove the CTA, keep the action
+For jobs, DONT INCLUDE JOBS THAT DOESNT MATCH CANDIDATE REAL EXPERIENCE (NO LEAD or HEAD OF DEPARTMENT)
 `;
   }
 
