@@ -336,33 +336,8 @@ export function ChatInterface({ country }: ChatInterfaceProps) {
 
   return (
     <div className="w-full h-[80vh] relative">
-      {/* LEFT PANEL - Action Plan - Fixed position */}
-      <div className="fixed left-4 top-[120px] w-96 h-[calc(80vh-40px)] z-10">
-        <Card className="h-full flex flex-col bg-gradient-to-br from-primary/5 to-primary/10 border-primary/20 shadow-lg">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-lg font-bold">{t.actionPlan.title}</CardTitle>
-          </CardHeader>
-          <CardContent className="flex-1 overflow-hidden p-0">
-            <ScrollArea className="h-full px-6 pb-6">
-              {currentActionPlan && currentActionPlan.length > 0 ? (
-                <ActionPlan planItems={currentActionPlan} country={country} />
-              ) : (
-                <div className="flex flex-col items-center justify-center h-full text-center px-4 py-8">
-                  <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mb-4">
-                    <Briefcase className="w-8 h-8 text-primary/50" />
-                  </div>
-                  <p className="text-sm text-muted-foreground">
-                    {t.actionPlan.emptyMessage}
-                  </p>
-                </div>
-              )}
-            </ScrollArea>
-          </CardContent>
-        </Card>
-      </div>
 
-      {/* MIDDLE PANEL - Chat Interface */}
-      <div className="mx-auto max-w-4xl px-4" style={{ marginLeft: '416px' }}>
+      <div className="mx-auto max-w-4xl px-4">
         <Card className="h-[80vh] flex flex-col">
         <CardContent className="flex-1 flex flex-col p-0">
           <ScrollArea className="flex-1 px-6" ref={scrollAreaRef}>
