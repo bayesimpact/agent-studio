@@ -1,17 +1,16 @@
 'use client'
 
-import { useState, useRef, useEffect } from 'react'
-import { Button } from '@repo/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@repo/ui/card'
-import { ScrollArea } from '@repo/ui/scroll-area'
-import { Send, User, Bot, Briefcase } from 'lucide-react'
-import { SendMessageDto } from '@repo/api/chat/dto/send-message.dto';
-import ReactMarkdown from 'react-markdown';
-import remarkGfm from 'remark-gfm';
-import remarkBreaks from 'remark-breaks';
-import { ActionPlan } from './action-plan';
-import { MentionInput, MentionInputRef } from './mention-input';
-import { useTranslations } from '../lib/i18n/use-translations';
+import { SendMessageDto } from '@repo/api/chat/dto/send-message.dto'
+import { Button } from '@repo/ui/shad/button'
+import { Card, CardContent } from '@repo/ui/shad/card'
+import { ScrollArea } from '@repo/ui/shad/scroll-area'
+import { Bot, Send, User } from 'lucide-react'
+import { useEffect, useRef, useState } from 'react'
+import ReactMarkdown from 'react-markdown'
+import remarkBreaks from 'remark-breaks'
+import remarkGfm from 'remark-gfm'
+import { useTranslations } from '../lib/i18n/use-translations'
+import { MentionInput, MentionInputRef } from './mention-input'
 
 interface FunctionCallData {
   name: string
