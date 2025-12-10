@@ -1,4 +1,4 @@
-import { ScrollArea } from '@repo/ui/scroll-area'
+import { ScrollArea } from '@repo/ui/shad/scroll-area'
 import { useEffect, useRef } from 'react'
 import { BotMessage } from '../BotMessage'
 import type { Message } from '../types'

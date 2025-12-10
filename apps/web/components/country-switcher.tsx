@@ -1,9 +1,9 @@
 'use client'
 
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
-import { Button } from '@repo/ui/button'
+import { Button } from '@repo/ui/shad/button'
 import { Globe } from 'lucide-react'
+import { useRouter } from 'next/navigation'
+import { useState } from 'react'
 import { useTranslations } from '../lib/i18n/use-translations'
 
 type Country = 'fr' | 'us'

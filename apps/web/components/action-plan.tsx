@@ -1,15 +1,15 @@
 'use client';
 
-import { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@repo/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@repo/ui/shad/card';
 import {
+  CheckCircle2,
   ChevronDown,
   ExternalLink,
-  Sparkles,
-  CheckCircle2,
-  Phone,
   Mail,
+  Phone,
+  Sparkles,
 } from 'lucide-react';
+import { useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { useTranslations } from '../lib/i18n/use-translations';

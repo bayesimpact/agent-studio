@@ -1,7 +1,7 @@
 'use client'
 
-import { Card, CardContent, CardHeader, CardTitle } from '@repo/ui/card'
-import { User, MapPin, Briefcase, GraduationCap, Calendar, FileText, Car, DollarSign, Accessibility } from 'lucide-react'
+import { Card, CardContent, CardHeader, CardTitle } from '@repo/ui/shad/card'
+import { Accessibility, Briefcase, Calendar, Car, DollarSign, FileText, GraduationCap, MapPin, User } from 'lucide-react'
 
 interface ProfileMandatory {
   cityName: string

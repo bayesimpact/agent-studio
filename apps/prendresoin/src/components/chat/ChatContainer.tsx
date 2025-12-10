@@ -1,4 +1,4 @@
-import { Card, CardContent } from '@repo/ui/card'
+import { Card, CardContent } from '@repo/ui/shad/card'
 import type { ReactNode } from 'react'
 import { useChat } from './context/hook'
 import { MessageList } from './MessageList'
