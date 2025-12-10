@@ -13,25 +13,13 @@ function getAbsolutePath(value: string): string {
 }
 const config: StorybookConfig = {
   "stories": [
-    "../src/**/*.stories.@(js|jsx|mjs|ts|tsx)"
+    "../src/**/*.stories.@(js|jsx|mjs|ts|tsx)",
+    "../../../packages/ui/src/**/*.stories.@(js|jsx|mjs|ts|tsx)"
   ],
   "addons": [
     getAbsolutePath('@storybook/addon-themes')
   ],
   "framework": getAbsolutePath('@storybook/react-vite'),
-  viteFinal: async (config) => {
-    return {
-      ...config,
-      css: {
-        ...config.css,
-        postcss: {
-          // plugins: [
-          //   require('tailwindcss'),
-          //   require('autoprefixer'),
-          // ],
-        },
-      },
-    };
-  },
+ 
 };
 export default config;
