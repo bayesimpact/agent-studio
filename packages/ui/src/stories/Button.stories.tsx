@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react";
-import { Button, type ButtonProps } from "../button";
+import { Button } from "../shad/button";
 
-const meta: Meta<ButtonProps> = {
+const meta: Meta<typeof Button> = {
   title: "UI/Button",
   component: Button,
   tags: ["autodocs"],
