@@ -337,7 +337,7 @@ export function ChatInterface({ country }: ChatInterfaceProps) {
     <div className="w-full h-[80vh] relative">
 
       <div className="mx-auto max-w-4xl px-4">
-        <Card className="h-[80vh] flex flex-col">
+        <Card className="h-[80vh] flex flex-col border-none">
         <CardContent className="flex-1 flex flex-col p-0">
           <ScrollArea className="flex-1 px-6" ref={scrollAreaRef}>
             <div className="space-y-4 pb-4 pt-6">
