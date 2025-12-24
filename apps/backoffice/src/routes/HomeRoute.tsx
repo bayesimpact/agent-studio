@@ -5,8 +5,7 @@ import { api } from "@/external/api";
 import { useAsyncNotification } from "@/hooks/use-async-notification";
 import { useAuth0 } from "@auth0/auth0-react";
 import { Button } from "@repo/ui/shad/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@repo/ui/shad/card";
-import { cn } from "@repo/ui/utils";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@repo/ui/shad/card";
 import { Link } from "react-router-dom";
 import { LoadingRoute } from "./LoadingRoute";
 
@@ -34,19 +33,21 @@ export function HomeRoute() {
           </Button>
 
           <div>
-            <Button asChild variant={isAuthenticated ? 'default' : 'secondary'}>
-              <Link to="/profile">Profile <span className={cn(isAuthenticated && 'hidden')}>*</span></Link>
+            <Button asChild variant='outline'>
+              <Link to="/profile">Profile</Link>
             </Button>
-            <p className={cn("mt-0.5 text-xs text-muted-foreground", isAuthenticated && 'hidden')}>* Requires authentication.{' '}</p>
           </div>
 
-          {!isAuthenticated ? <LoginButton /> : <LogoutButton />}
 
           <Button variant='outline' asChild>
             <Link to="/guest">Browse as a guest</Link>
           </Button>
+
         </div>
       </CardContent>
+      <CardFooter >
+        {!isAuthenticated ? <LoginButton /> : <LogoutButton />}
+      </CardFooter>
     </Card>
   </FullPageCenterLayout>
 }
