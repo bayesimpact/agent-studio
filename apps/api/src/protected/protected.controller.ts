@@ -1,11 +1,16 @@
-import { Controller, Get, UseGuards } from '@nestjs/common';
-import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { Controller, Get, Logger, Req, UseGuards } from '@nestjs/common';
+import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 
+@UseGuards(JwtAuthGuard)
 @Controller('protected')
 export class ProtectedController {
-  @UseGuards(JwtAuthGuard)
-  @Get()
-  getHello(): string {
-    return 'This route is protected!';
+  private readonly logger = new Logger(ProtectedController.name)
+
+  @Get('hello')
+  async getHello(
+    @Req() request,
+  ): Promise<string> {
+    this.logger.warn(`Protected route accessed by user: ${request.user.sub}`);
+    return `Protected api route accessed by user: ${request.user.sub}`;
   }
 }
