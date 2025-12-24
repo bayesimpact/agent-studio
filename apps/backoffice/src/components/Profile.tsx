@@ -4,7 +4,6 @@ import { Button } from "@repo/ui/shad/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@repo/ui/shad/card";
 import { Link } from "react-router-dom";
 import { FullPageCenterLayout } from "./layouts/FullPageCenterLayout";
-import LogoutButton from "./LogoutButton";
 
 const Profile = () => {
   const { user, isAuthenticated, isLoading } = useAuth0()
@@ -29,7 +28,6 @@ const Profile = () => {
           </CardContent>
 
           <CardFooter className=" justify-between">
-            <LogoutButton />
             <Button asChild><Link to='/'>Home</Link></Button>
           </CardFooter>
         </Card>
