@@ -1,3 +1,4 @@
+import { LoadingRoute } from "@/routes/LoadingRoute";
 import { useAuth0 } from "@auth0/auth0-react";
 import { Button } from "@repo/ui/shad/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@repo/ui/shad/card";
@@ -6,11 +7,9 @@ import { FullPageCenterLayout } from "./layouts/FullPageCenterLayout";
 import LogoutButton from "./LogoutButton";
 
 const Profile = () => {
-  const { user, isAuthenticated, isLoading } = useAuth0();
+  const { user, isAuthenticated, isLoading } = useAuth0()
 
-  if (isLoading) {
-    return <div className="loading-text">Loading profile...</div>;
-  }
+  if (isLoading) return <LoadingRoute />
 
   return (
     isAuthenticated && user ? (
@@ -36,7 +35,7 @@ const Profile = () => {
         </Card>
       </FullPageCenterLayout>
     ) : null
-  );
-};
+  )
+}
 
 export default Profile;

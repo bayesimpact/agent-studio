@@ -3,17 +3,21 @@ import { LoginButton } from "@/components/LoginButton";
 import LogoutButton from "@/components/LogoutButton";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@repo/ui/shad/button";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@repo/ui/shad/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@repo/ui/shad/card";
 import { cn } from "@repo/ui/utils";
 import { Link } from "react-router-dom";
+import { LoadingRoute } from "./LoadingRoute";
 
 export function HomeRoute() {
-  const { user, accessToken, isLoading, isAuthenticated } = useAuth();
+  const { user, isLoading, isAuthenticated } = useAuth()
+
+  if (isLoading) return <LoadingRoute />
+
   return <FullPageCenterLayout>
     <Card className="w-1/2">
       <CardHeader>
-        <CardTitle>Welcome, {user?.name}!</CardTitle>
-        <CardDescription>Lorem ipsum dolor sit amet, consectetur adipiscing elit.</CardDescription>
+        <CardTitle>{user?.nickname ? <>Welcome, <span className="capitalize">{user.nickname}</span></> : 'Welcome Stranger'}!</CardTitle>
+        <CardDescription>{user ? <>{user.email}</> : `I don't know who you are. Tell me about yourself.`}</CardDescription>
       </CardHeader>
 
       <CardContent>
@@ -28,22 +32,6 @@ export function HomeRoute() {
         </div>
         <p className={cn("mt-0.5 text-xs text-muted-foreground", isAuthenticated && 'hidden')}>* Requires authentication.{' '}</p>
       </CardContent>
-
-
-      <CardFooter className="flex flex-col items-start gap-4">
-        <div className="text-sm text-slate-500 bg-slate-50 p-4 rounded-md w-full">
-          {isLoading ? (
-            <p>Loading authentication details...</p>
-          ) : accessToken ? (
-            <div className="overflow-hidden">
-              <p className="font-semibold pb-1">Access Token:</p>
-              <pre className="text-xs italic whitespace-pre-wrap">{accessToken}</pre>
-            </div>
-          ) : (
-            <p>No access token available.</p>
-          )}
-        </div>
-      </CardFooter>
     </Card>
   </FullPageCenterLayout>
 }
