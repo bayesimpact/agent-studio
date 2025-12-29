@@ -1,5 +1,5 @@
-import { AppSidebar } from "@/components/layouts/sidebar"
-import { SidebarInset, SidebarProvider } from "@/shad/sidebar"
+import { AppSidebar } from "@repo/ui/components/layouts/sidebar"
+import { SidebarInset, SidebarProvider } from "@repo/ui/shad/sidebar"
 import { LayoutHeader } from "./header"
 
 export default function Layout() {
@@ -13,8 +13,10 @@ export default function Layout() {
       }
     >
       <AppSidebar variant="inset" />
+
       <SidebarInset>
         <LayoutHeader />
+
         <div className="flex flex-1 flex-col">
           {/* <div className="@container/main flex flex-1 flex-col gap-2">
             <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6">

@@ -1,11 +1,10 @@
 "use client"
 
 import { Slot } from "@radix-ui/react-slot"
+import { useIsMobile } from "@repo/ui/hooks/use-mobile"
 import { cva, type VariantProps } from "class-variance-authority"
 import { PanelLeftIcon } from "lucide-react"
 import * as React from "react"
-
-import { useIsMobile } from "@/hooks/use-mobile"
 import { cn } from "../lib/utils"
 import { Button } from "./button"
 import { Input } from "./input"
@@ -42,7 +41,7 @@ function useSidebar() {
   return context
 }
 
-function SidebarProvider({
+function _SidebarProvider({
   defaultOpen = true,
   open: openProp,
   onOpenChange: setOpenProp,
@@ -141,7 +140,7 @@ function SidebarProvider({
   )
 }
 
-function Sidebar({
+function _Sidebar({
   side = "left",
   variant = "sidebar",
   collapsible = "offcanvas",
@@ -243,7 +242,7 @@ function Sidebar({
   )
 }
 
-function SidebarTrigger({ className, onClick, ...props }: React.ComponentProps<typeof Button>) {
+function _SidebarTrigger({ className, onClick, ...props }: React.ComponentProps<typeof Button>) {
   const { toggleSidebar } = useSidebar()
 
   return (
@@ -265,7 +264,7 @@ function SidebarTrigger({ className, onClick, ...props }: React.ComponentProps<t
   )
 }
 
-function SidebarRail({ className, ...props }: React.ComponentProps<"button">) {
+function _SidebarRail({ className, ...props }: React.ComponentProps<"button">) {
   const { toggleSidebar } = useSidebar()
 
   return (
@@ -290,7 +289,7 @@ function SidebarRail({ className, ...props }: React.ComponentProps<"button">) {
   )
 }
 
-function SidebarInset({ className, ...props }: React.ComponentProps<"main">) {
+function _SidebarInset({ className, ...props }: React.ComponentProps<"main">) {
   return (
     <main
       data-slot="sidebar-inset"
@@ -304,7 +303,7 @@ function SidebarInset({ className, ...props }: React.ComponentProps<"main">) {
   )
 }
 
-function SidebarInput({ className, ...props }: React.ComponentProps<typeof Input>) {
+function _SidebarInput({ className, ...props }: React.ComponentProps<typeof Input>) {
   return (
     <Input
       data-slot="sidebar-input"
@@ -315,7 +314,7 @@ function SidebarInput({ className, ...props }: React.ComponentProps<typeof Input
   )
 }
 
-function SidebarHeader({ className, ...props }: React.ComponentProps<"div">) {
+function _SidebarHeader({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       data-slot="sidebar-header"
@@ -326,7 +325,7 @@ function SidebarHeader({ className, ...props }: React.ComponentProps<"div">) {
   )
 }
 
-function SidebarFooter({ className, ...props }: React.ComponentProps<"div">) {
+function _SidebarFooter({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       data-slot="sidebar-footer"
@@ -337,7 +336,7 @@ function SidebarFooter({ className, ...props }: React.ComponentProps<"div">) {
   )
 }
 
-function SidebarSeparator({ className, ...props }: React.ComponentProps<typeof Separator>) {
+function _SidebarSeparator({ className, ...props }: React.ComponentProps<typeof Separator>) {
   return (
     <Separator
       data-slot="sidebar-separator"
@@ -348,7 +347,7 @@ function SidebarSeparator({ className, ...props }: React.ComponentProps<typeof S
   )
 }
 
-function SidebarContent({ className, ...props }: React.ComponentProps<"div">) {
+function _SidebarContent({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       data-slot="sidebar-content"
@@ -362,7 +361,7 @@ function SidebarContent({ className, ...props }: React.ComponentProps<"div">) {
   )
 }
 
-function SidebarGroup({ className, ...props }: React.ComponentProps<"div">) {
+function _SidebarGroup({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       data-slot="sidebar-group"
@@ -373,7 +372,7 @@ function SidebarGroup({ className, ...props }: React.ComponentProps<"div">) {
   )
 }
 
-function SidebarGroupLabel({
+function _SidebarGroupLabel({
   className,
   asChild = false,
   ...props
@@ -395,7 +394,7 @@ function SidebarGroupLabel({
   )
 }
 
-function SidebarGroupAction({
+function _SidebarGroupAction({
   className,
   asChild = false,
   ...props
@@ -419,7 +418,7 @@ function SidebarGroupAction({
   )
 }
 
-function SidebarGroupContent({ className, ...props }: React.ComponentProps<"div">) {
+function _SidebarGroupContent({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       data-slot="sidebar-group-content"
@@ -430,7 +429,7 @@ function SidebarGroupContent({ className, ...props }: React.ComponentProps<"div"
   )
 }
 
-function SidebarMenu({ className, ...props }: React.ComponentProps<"ul">) {
+function _SidebarMenu({ className, ...props }: React.ComponentProps<"ul">) {
   return (
     <ul
       data-slot="sidebar-menu"
@@ -441,7 +440,7 @@ function SidebarMenu({ className, ...props }: React.ComponentProps<"ul">) {
   )
 }
 
-function SidebarMenuItem({ className, ...props }: React.ComponentProps<"li">) {
+function _SidebarMenuItem({ className, ...props }: React.ComponentProps<"li">) {
   return (
     <li
       data-slot="sidebar-menu-item"
@@ -474,7 +473,7 @@ const sidebarMenuButtonVariants = cva(
   },
 )
 
-function SidebarMenuButton({
+function _SidebarMenuButton({
   asChild = false,
   isActive = false,
   variant = "default",
@@ -525,7 +524,7 @@ function SidebarMenuButton({
   )
 }
 
-function SidebarMenuAction({
+function _SidebarMenuAction({
   className,
   asChild = false,
   showOnHover = false,
@@ -550,8 +549,13 @@ function SidebarMenuAction({
         "peer-data-[size=lg]/menu-button:top-2.5",
         "group-data-[collapsible=icon]:hidden",
         showOnHover &&
+<<<<<<< HEAD
           "peer-data-[active=true]/menu-button:text-sidebar-accent-foreground group-focus-within/menu-item:opacity-100 group-hover/menu-item:opacity-100 data-[state=open]:opacity-100 md:opacity-0",
         className,
+=======
+        "peer-data-[active=true]/menu-button:text-sidebar-accent-foreground group-focus-within/menu-item:opacity-100 group-hover/menu-item:opacity-100 data-[state=open]:opacity-100 md:opacity-0",
+        className
+>>>>>>> 7724a68 (feat(backoffice): add dashboard layout)
       )}
       {...props}
     />
@@ -670,28 +674,28 @@ function SidebarMenuSubButton({
 }
 
 export {
-  Sidebar,
-  SidebarContent,
-  SidebarFooter,
-  SidebarGroup,
-  SidebarGroupAction,
-  SidebarGroupContent,
-  SidebarGroupLabel,
-  SidebarHeader,
-  SidebarInput,
-  SidebarInset,
-  SidebarMenu,
-  SidebarMenuAction,
+  _Sidebar,
+  _SidebarContent,
+  _SidebarFooter,
+  _SidebarGroup,
+  _SidebarGroupAction,
+  _SidebarGroupContent,
+  _SidebarGroupLabel,
+  _SidebarHeader,
+  _SidebarInput,
+  _SidebarInset,
+  _SidebarMenu,
+  _SidebarMenuAction,
   SidebarMenuBadge,
-  SidebarMenuButton,
-  SidebarMenuItem,
+  _SidebarMenuButton,
+  _SidebarMenuItem,
   SidebarMenuSkeleton,
   SidebarMenuSub,
   SidebarMenuSubButton,
   SidebarMenuSubItem,
-  SidebarProvider,
-  SidebarRail,
-  SidebarSeparator,
-  SidebarTrigger,
+  _SidebarProvider,
+  _SidebarRail,
+  _SidebarSeparator,
+  _SidebarTrigger,
   useSidebar,
 }

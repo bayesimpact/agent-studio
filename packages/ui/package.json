@@ -3,7 +3,8 @@
   "version": "0.0.0",
   "private": true,
   "exports": {
-    "./utils":"./src/lib/utils.ts",
+    "./assets/data": "./src/assets/data.ts",
+    "./utils": "./src/lib/utils.ts",
     "./*": "./src/*.tsx"
   },
   "scripts": {
@@ -30,7 +31,10 @@
     "typescript": "^5.3.3"
   },
   "dependencies": {
+    "@radix-ui/react-avatar": "^1.1.11",
+    "@radix-ui/react-collapsible": "^1.1.12",
     "@radix-ui/react-dialog": "^1.1.15",
+    "@radix-ui/react-dropdown-menu": "^2.1.16",
     "@radix-ui/react-scroll-area": "^1.2.10",
     "@radix-ui/react-separator": "^1.1.8",
     "@radix-ui/react-slot": "^1.2.3",
