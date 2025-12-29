@@ -18,11 +18,13 @@ import { MenuItem } from "../types"
 
 export function CollapsibleList({
   items,
+  name = "Collapsible list"
 }: {
+  name?: string,
   items: MenuItem[]
 }) {
   return (
-    <Section name="Lorem Ipsum">
+    <Section name={name}>
       {items.map((item) => (
         <Collapsible
           key={item.title}
