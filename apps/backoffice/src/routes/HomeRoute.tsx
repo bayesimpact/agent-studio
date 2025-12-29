@@ -34,7 +34,7 @@ export function HomeRoute() {
 
           <div>
             <Button asChild variant='outline'>
-              <Link to="/profile">Profile</Link>
+              <Link to="/dashboard">Dashboard</Link>
             </Button>
           </div>
 
