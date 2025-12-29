@@ -1,11 +1,14 @@
 import { useAuthHandler } from "@/hooks/use-auth-handler";
+import { dataset } from "@repo/ui/assets/data";
 import { LayoutHeader } from "@repo/ui/components/layouts/header";
 import { Header } from "@repo/ui/components/layouts/sidebar/Header";
+import { BasicList } from "@repo/ui/components/layouts/sidebar/lists/Basic";
+import { CollapsibleList } from "@repo/ui/components/layouts/sidebar/lists/Collapsible";
+import { ExpandedList } from "@repo/ui/components/layouts/sidebar/lists/Expanded";
 import { NavUser } from "@repo/ui/components/layouts/sidebar/NavUser";
 import { DropdownMenuGroup, DropdownMenuItem, DropdownMenuSeparator } from "@repo/ui/shad/dropdown-menu";
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarInset, SidebarProvider } from "@repo/ui/shad/sidebar";
 import { BadgeCheckIcon, BellIcon, CreditCardIcon, LogOutIcon, SparklesIcon } from "lucide-react";
-
 type User = {
   name: string,
   email: string,
@@ -31,6 +34,9 @@ export function SidebarLayout({ user, children }: {
       </SidebarHeader>
 
       <SidebarContent>
+        <BasicList name="Basic list" items={dataset.basicList} />
+        <CollapsibleList name="Collapsible list" items={dataset.collapsibleList} />
+        <ExpandedList name="Expanded list" items={dataset.expandedList} />
       </SidebarContent>
 
       <SidebarFooter>

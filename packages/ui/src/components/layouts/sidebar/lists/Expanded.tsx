@@ -1,5 +1,4 @@
 import {
-  SidebarGroup,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
@@ -7,10 +6,11 @@ import {
   SidebarMenuSubButton,
   SidebarMenuSubItem
 } from "@repo/ui/shad/sidebar"
+import { Section } from "../Section"
 import { MenuItem } from "../types"
 
-export function ExpandedList({ items }: { items: MenuItem[] }) {
-  return <SidebarGroup>
+export function ExpandedList({ items, name = "Expanded list" }: { items: MenuItem[], name?: string }) {
+  return <Section name={name}>
     <SidebarMenu>
       {items.map((item) => (
         <SidebarMenuItem key={item.title}>
@@ -33,5 +33,5 @@ export function ExpandedList({ items }: { items: MenuItem[] }) {
         </SidebarMenuItem>
       ))}
     </SidebarMenu>
-  </SidebarGroup>
+  </Section>
 }

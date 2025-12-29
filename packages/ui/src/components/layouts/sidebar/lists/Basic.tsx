@@ -24,13 +24,15 @@ import { Section } from "../Section"
 import { MenuItem } from "../types"
 
 export function BasicList({
+  name = "Basic list",
   items,
 }: {
+  name?: string,
   items: MenuItem[]
 }) {
   const { isMobile } = useSidebar()
   return (
-    <Section name="Lorem Ipsum" className="group-data-[collapsible=icon]:hidden">
+    <Section name={name} className="group-data-[collapsible=icon]:hidden">
       {items.map((item) => (
         <SidebarMenuItem key={item.title}>
           <SidebarMenuButton asChild>
