@@ -1,9 +1,5 @@
-import { useAuthHandler } from "@/hooks/use-auth-handler";
-import { LayoutHeader } from "@repo/ui/components/layouts/header";
-import { AppSidebar } from "@repo/ui/components/layouts/sidebar";
-import { DropdownMenuGroup, DropdownMenuItem, DropdownMenuSeparator } from "@repo/ui/shad/dropdown-menu";
-import { SidebarInset, SidebarProvider } from "@repo/ui/shad/sidebar";
-import { BadgeCheckIcon, BellIcon, CreditCardIcon, LogOutIcon, SparklesIcon } from "lucide-react";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@repo/ui/shad/card";
+import { SidebarLayout } from "./layouts/SidebarLayout";
 
 type User = {
   name: string,
@@ -15,56 +11,39 @@ export function Dashboard({ user }: {
   user: User
 }) {
 
-  return <SidebarProvider
-    style={
-      {
-        "--sidebar-width": "calc(var(--spacing) * 72)",
-        "--header-height": "calc(var(--spacing) * 12)",
-      } as React.CSSProperties
-    }
-  >
-    <AppSidebar variant="inset" navUserDropdownMenuChildren={<NavUserMenuItems />} user={user} />
+  return <SidebarLayout user={user}>
+    <div className="flex gap-4 p-4">
+      <Card>
+        <CardHeader>
+          <CardTitle>
+            <div className="flex gap-2 items-center">
+              Card A
+            </div>
+          </CardTitle>
+          <CardDescription>
+            This is Card A description.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
+        </CardContent>
+      </Card>
 
-    <SidebarInset>
-      <LayoutHeader />
-
-      <div className="flex flex-1 flex-col">
-        {/* // TODO: */}
-      </div>
-    </SidebarInset>
-  </SidebarProvider>
-}
-
-
-
-
-function NavUserMenuItems() {
-  const { handleLogOut } = useAuthHandler()
-  return <>
-    <DropdownMenuGroup>
-      <DropdownMenuItem>
-        <SparklesIcon />
-        Upgrade to Pro
-      </DropdownMenuItem>
-    </DropdownMenuGroup>
-    <DropdownMenuSeparator />
-    <DropdownMenuGroup>
-      <DropdownMenuItem>
-        <BadgeCheckIcon />
-        Account
-      </DropdownMenuItem>
-      <DropdownMenuItem>
-        <CreditCardIcon />
-        Billing
-      </DropdownMenuItem>
-      <DropdownMenuItem>
-        <BellIcon />
-        Notifications
-      </DropdownMenuItem>
-    </DropdownMenuGroup>
-    <DropdownMenuSeparator />
-    <DropdownMenuItem onSelect={handleLogOut}>
-      <LogOutIcon />
-      Log out
-    </DropdownMenuItem></>
+      <Card>
+        <CardHeader>
+          <CardTitle>
+            <div className="flex gap-2 items-center">
+              Card B
+            </div>
+          </CardTitle>
+          <CardDescription>
+            This is Card B description.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
+        </CardContent>
+      </Card>
+    </div>
+  </SidebarLayout>
 }
