@@ -7,6 +7,7 @@ import {
   Trash2
 } from "lucide-react"
 
+import { Section } from "@repo/ui/components/layouts/sidebar/Section"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -20,19 +21,16 @@ import {
   SidebarMenuItem,
   useSidebar
 } from "@repo/ui/shad/sidebar"
-import { Section } from "../Section"
-import { MenuItem } from "../types"
+import type { MenuItem } from "./types"
 
-export function BasicList({
-  name = "Basic list",
+export function NavPrompts({
   items,
 }: {
-  name?: string,
   items: MenuItem[]
 }) {
   const { isMobile } = useSidebar()
   return (
-    <Section name={name} className="group-data-[collapsible=icon]:hidden">
+    <Section name='Prompts' className="group-data-[collapsible=icon]:hidden">
       {items.map((item) => (
         <SidebarMenuItem key={item.title}>
           <SidebarMenuButton asChild>
@@ -55,16 +53,16 @@ export function BasicList({
             >
               <DropdownMenuItem>
                 <Folder className="text-muted-foreground" />
-                <span>View Project</span>
+                <span>View Prompt</span>
               </DropdownMenuItem>
               <DropdownMenuItem>
                 <Forward className="text-muted-foreground" />
-                <span>Share Project</span>
+                <span>Share Prompt</span>
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem>
                 <Trash2 className="text-muted-foreground" />
-                <span>Delete Project</span>
+                <span>Delete Prompt</span>
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>

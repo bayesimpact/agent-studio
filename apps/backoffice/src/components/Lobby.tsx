@@ -6,11 +6,8 @@ import { useAsyncNotification } from "@/hooks/use-async-notification";
 import { Button } from "@repo/ui/shad/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@repo/ui/shad/card";
 import { Link } from "react-router-dom";
+import type { User } from "./sidebar/types";
 
-type User = {
-  name: string,
-  email: string,
-}
 export function Lobby({ user, isAuthenticated }: { user?: User, isAuthenticated: boolean }) {
   const { showAsyncNotification } = useAsyncNotification(api.test.getHello)
 

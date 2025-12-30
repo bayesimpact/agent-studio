@@ -1,3 +1,4 @@
+import { Section } from "@repo/ui/components/layouts/sidebar/Section"
 import {
   SidebarMenu,
   SidebarMenuButton,
@@ -6,11 +7,10 @@ import {
   SidebarMenuSubButton,
   SidebarMenuSubItem
 } from "@repo/ui/shad/sidebar"
-import { Section } from "../Section"
-import { MenuItem } from "../types"
+import type { MenuItem } from "./types"
 
-export function ExpandedList({ items, name = "Expanded list" }: { items: MenuItem[], name?: string }) {
-  return <Section name={name}>
+export function NavSettings({ items, }: { items: MenuItem[], }) {
+  return <Section name="Settings">
     <SidebarMenu>
       {items.map((item) => (
         <SidebarMenuItem key={item.title}>
