@@ -1,19 +1,14 @@
-import { useAuthHandler } from "@/hooks/use-auth-handler";
-import { dataset } from "@repo/ui/assets/data";
+import { dataset } from "@/assets/data";
 import { LayoutHeader } from "@repo/ui/components/layouts/header";
 import { Header } from "@repo/ui/components/layouts/sidebar/Header";
-import { BasicList } from "@repo/ui/components/layouts/sidebar/lists/Basic";
-import { CollapsibleList } from "@repo/ui/components/layouts/sidebar/lists/Collapsible";
-import { ExpandedList } from "@repo/ui/components/layouts/sidebar/lists/Expanded";
 import { NavUser } from "@repo/ui/components/layouts/sidebar/NavUser";
-import { DropdownMenuGroup, DropdownMenuItem, DropdownMenuSeparator } from "@repo/ui/shad/dropdown-menu";
+import { Button } from "@repo/ui/shad/button";
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarInset, SidebarProvider } from "@repo/ui/shad/sidebar";
-import { BadgeCheckIcon, BellIcon, CreditCardIcon, LogOutIcon, SparklesIcon } from "lucide-react";
-type User = {
-  name: string,
-  email: string,
-  avatar?: string
-}
+import { NavPrompts } from "../sidebar/NavPrompts";
+import { NavSettings } from "../sidebar/NavSettings";
+import { NavSources } from "../sidebar/NavSources";
+import { NavUserMenuItems } from "../sidebar/NavUserMenuItems";
+import type { User } from "../sidebar/types";
 
 export function SidebarLayout({ user, children }: {
   user: User,
@@ -34,9 +29,11 @@ export function SidebarLayout({ user, children }: {
       </SidebarHeader>
 
       <SidebarContent>
-        <BasicList name="Basic list" items={dataset.basicList} />
-        <CollapsibleList name="Collapsible list" items={dataset.collapsibleList} />
-        <ExpandedList name="Expanded list" items={dataset.expandedList} />
+        <NavSources items={dataset.sources} />
+
+        <NavPrompts items={dataset.prompts} />
+
+        <NavSettings items={dataset.expandedList} />
       </SidebarContent>
 
       <SidebarFooter>
@@ -47,40 +44,21 @@ export function SidebarLayout({ user, children }: {
     </Sidebar>
 
     <SidebarInset>
-      <LayoutHeader />
+      <LayoutHeader title="Dashboard" rightSlot={
+        <Button variant="ghost" asChild size="sm" className="hidden sm:flex">
+          <a
+            href="#"
+            rel="noopener noreferrer"
+            target="_blank"
+            className="dark:text-foreground"
+          >
+            Todo
+          </a>
+        </Button>
+      } />
 
       <>{children}</>
     </SidebarInset>
   </SidebarProvider>
 }
 
-function NavUserMenuItems() {
-  const { handleLogOut } = useAuthHandler()
-  return <>
-    <DropdownMenuGroup>
-      <DropdownMenuItem>
-        <SparklesIcon />
-        Upgrade to Pro
-      </DropdownMenuItem>
-    </DropdownMenuGroup>
-    <DropdownMenuSeparator />
-    <DropdownMenuGroup>
-      <DropdownMenuItem>
-        <BadgeCheckIcon />
-        Account
-      </DropdownMenuItem>
-      <DropdownMenuItem>
-        <CreditCardIcon />
-        Billing
-      </DropdownMenuItem>
-      <DropdownMenuItem>
-        <BellIcon />
-        Notifications
-      </DropdownMenuItem>
-    </DropdownMenuGroup>
-    <DropdownMenuSeparator />
-    <DropdownMenuItem onSelect={handleLogOut}>
-      <LogOutIcon />
-      Log out
-    </DropdownMenuItem></>
-}

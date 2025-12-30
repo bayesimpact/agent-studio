@@ -3,7 +3,6 @@
   "version": "0.0.0",
   "private": true,
   "exports": {
-    "./assets/data": "./src/assets/data.ts",
     "./utils": "./src/lib/utils.ts",
     "./*": "./src/*.tsx"
   },

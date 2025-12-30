@@ -1,11 +1,6 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@repo/ui/shad/card";
 import { SidebarLayout } from "./layouts/SidebarLayout";
-
-type User = {
-  name: string,
-  email: string,
-  avatar?: string
-}
+import type { User } from "./sidebar/types";
 
 export function Dashboard({ user }: {
   user: User

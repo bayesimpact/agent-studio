@@ -1,5 +1,5 @@
-import { Controller, Get, Logger, Req, UseGuards } from '@nestjs/common';
-import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
+import { Controller, Get, HttpCode, HttpStatus, Logger, Req, UseGuards } from '@nestjs/common';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 
 @UseGuards(JwtAuthGuard)
 @Controller('protected')
@@ -7,6 +7,7 @@ export class ProtectedController {
   private readonly logger = new Logger(ProtectedController.name)
 
   @Get('hello')
+  @HttpCode(HttpStatus.OK)
   async getHello(
     @Req() request,
   ): Promise<string> {

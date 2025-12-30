@@ -17,8 +17,15 @@ describe('ProtectedController', () => {
   });
 
   describe('getHello', () => {
-    it('should return "This route is protected!"', () => {
-      expect(controller.getHello()).toBe('This route is protected!');
+    it('should return protected route message with user sub', async () => {
+      const mockRequest = {
+        user: {
+          sub: 'test-user-123',
+        },
+      };
+
+      const result = await controller.getHello(mockRequest);
+      expect(result).toBe('Protected api route accessed by user: test-user-123');
     });
   });
 });

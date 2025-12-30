@@ -1,4 +1,4 @@
-import { MenuItem, User } from "@/components/layouts/sidebar/types";
+import type { MenuItem, User } from "@/components/sidebar/types";
 import { BookOpenIcon, FrameIcon } from "lucide-react";
 
 export const dataset: {

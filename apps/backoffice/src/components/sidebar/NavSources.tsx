@@ -1,5 +1,6 @@
 "use client"
 
+import { Section } from "@repo/ui/components/layouts/sidebar/Section"
 import {
   Collapsible,
   CollapsibleContent,
@@ -13,18 +14,15 @@ import {
   SidebarMenuSubItem
 } from "@repo/ui/shad/sidebar"
 import { ChevronRight } from "lucide-react"
-import { Section } from "../Section"
-import { MenuItem } from "../types"
+import type { MenuItem } from "./types"
 
-export function CollapsibleList({
+export function NavSources({
   items,
-  name = "Collapsible list"
 }: {
-  name?: string,
   items: MenuItem[]
 }) {
   return (
-    <Section name={name}>
+    <Section name="Data Sources">
       {items.map((item) => (
         <Collapsible
           key={item.title}
