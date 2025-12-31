@@ -1,8 +1,8 @@
 import { FullPageCenterLayout } from "@/components/layouts/FullPageCenterLayout";
 import { LoginButton } from "@/components/LoginButton";
 import LogoutButton from "@/components/LogoutButton";
-import { api } from "@/external/api";
 import { useAsyncNotification } from "@/hooks/use-async-notification";
+import { api } from "@/services/api";
 import { Button } from "@repo/ui/shad/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@repo/ui/shad/card";
 import { Link } from "react-router-dom";
