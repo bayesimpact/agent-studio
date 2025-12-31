@@ -25,7 +25,7 @@ describe('ProtectedController', () => {
       };
 
       const result = await controller.getHello(mockRequest);
-      expect(result).toBe('Protected api route accessed by user: test-user-123');
+      expect(result.data).toBe('Protected api route accessed by user: test-user-123');
     });
   });
 });

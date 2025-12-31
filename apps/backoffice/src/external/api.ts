@@ -6,7 +6,7 @@ interface IApi {
   test: ITestApi
 }
 
-export const buildApi = ({ baseURL }: { baseURL: string }): IApi => {
+const buildApi = ({ baseURL }: { baseURL: string }): IApi => {
   const axiosInstance = axios.create({ baseURL: baseURL + '/' })
   return {
     setAccessToken: (accessToken: string) => {
