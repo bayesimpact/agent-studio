@@ -4,10 +4,10 @@ version ?= `git rev-parse --short HEAD`
 imageUrl ?= europe-west9-docker.pkg.dev/caseai-connect/caseai-connect/api
 
 
-REGION ?= eu
+ENV ?= demo-temp
 
-ifeq "$(REGION)" "eu"
-cloudRunName = caseai-connect
+ifeq "$(ENV)" "demo-temp"
+cloudRunName = caseai-connect-demo-temp
 location = europe-west1
 zone = europe-west9
 langfuseUrl = https://langfuse-y72kzcp7ka-od.a.run.app
