@@ -1,5 +1,5 @@
-import { MessageDto } from './message.dto';
+import type { MessageDto } from "./message.dto"
 
-export class MessageResponseDto {
+export type MessageResponseDto = {
   message: MessageDto
 }

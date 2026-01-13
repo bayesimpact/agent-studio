@@ -1,83 +1,75 @@
-import { Injectable, MessageEvent } from '@nestjs/common';
-import { Observable } from 'rxjs';
-import { v4 } from 'uuid';
-import { AIService } from '../ai/ai.service';
-import { ChatSession } from '../chat/models/chat-session.model';
-import { Message } from '../chat/models/message.model';
-import { masterPrompt } from './prompt/master';
+import { Injectable, type MessageEvent } from "@nestjs/common"
+import { Observable } from "rxjs"
+import { v4 } from "uuid"
+import type { AIService } from "../ai/ai.service"
+import { ChatSession } from "../chat/models/chat-session.model"
+import { Message } from "../chat/models/message.model"
+import { masterPrompt } from "./prompt/master"
 
 interface PrendresoinSession {
-  id: string;
-  messages: Message[];
-  country: 'fr';
-  createdAt: Date;
+  id: string
+  messages: Message[]
+  country: "fr"
+  createdAt: Date
 }
 
 @Injectable()
 export class PrendresoinService {
-  private sessions: Map<string, PrendresoinSession> = new Map();
+  private sessions: Map<string, PrendresoinSession> = new Map()
 
   constructor(private aiService: AIService) {}
 
   async createSession(): Promise<PrendresoinSession> {
-    const sessionId = v4();
+    const sessionId = v4()
     const initialMessage = new Message(
       v4(),
       "Bienvenue sur Prendre Soin! Comment puis-je vous aider aujourd'hui ?",
-      'assistant',
+      "assistant",
       new Date(),
-    );
+    )
 
     const session: PrendresoinSession = {
       id: sessionId,
       messages: [initialMessage],
-      country: 'fr',
+      country: "fr",
       createdAt: new Date(),
-    };
+    }
 
-    this.sessions.set(sessionId, session);
-    return session;
+    this.sessions.set(sessionId, session)
+    return session
   }
 
-  handleMessageStream(
-    sessionId: string,
-    content: string,
-  ): Observable<MessageEvent> {
+  handleMessageStream(sessionId: string, content: string): Observable<MessageEvent> {
     return new Observable((subscriber) => {
-      (async () => {
+      ;(async () => {
         try {
-          const session = this.sessions.get(sessionId);
+          const session = this.sessions.get(sessionId)
           if (!session) {
             subscriber.next({
               data: JSON.stringify({
-                type: 'error',
+                type: "error",
                 error: `Session ${sessionId} not found`,
               }),
-            } as MessageEvent);
-            subscriber.complete();
-            return;
+            } as MessageEvent)
+            subscriber.complete()
+            return
           }
 
           // Add user message to session
-          const userMessage = new Message(
-            v4(),
-            content,
-            'user',
-            new Date(),
-          );
-          session.messages.push(userMessage);
+          const userMessage = new Message(v4(), content, "user", new Date())
+          session.messages.push(userMessage)
 
-          const messageId = v4();
-          const timestamp = new Date();
+          const messageId = v4()
+          const timestamp = new Date()
 
           // Send start event
           subscriber.next({
             data: JSON.stringify({
-              type: 'start',
+              type: "start",
               messageId,
               timestamp: timestamp.toISOString(),
             }),
-          } as MessageEvent);
+          } as MessageEvent)
 
           // Create ChatSession from current session
           const chatSession = new ChatSession(
@@ -85,58 +77,53 @@ export class PrendresoinService {
             session.messages,
             session.country,
             session.createdAt,
-          );
+          )
 
           // Stream AI response
-          let fullText = '';
+          let fullText = ""
           const streamGenerator = this.aiService.generateChatStream({
             chatSession,
             masterPrompt,
-          });
+          })
 
           for await (const chunk of streamGenerator) {
-            const text = chunk.candidates?.[0]?.content?.parts?.[0]?.text;
+            const text = chunk.candidates?.[0]?.content?.parts?.[0]?.text
             if (text) {
-              fullText += text;
+              fullText += text
               subscriber.next({
                 data: JSON.stringify({
-                  type: 'chunk',
+                  type: "chunk",
                   messageId,
                   content: text,
                 }),
-              } as MessageEvent);
+              } as MessageEvent)
             }
           }
 
           // Add assistant message to session
-          const assistantMessage = new Message(
-            messageId,
-            fullText,
-            'assistant',
-            timestamp,
-          );
-          session.messages.push(assistantMessage);
+          const assistantMessage = new Message(messageId, fullText, "assistant", timestamp)
+          session.messages.push(assistantMessage)
 
           // Send end event
           subscriber.next({
             data: JSON.stringify({
-              type: 'end',
+              type: "end",
               messageId,
             }),
-          } as MessageEvent);
+          } as MessageEvent)
 
-          subscriber.complete();
+          subscriber.complete()
         } catch (error) {
-          console.error('Error in message stream:', error);
+          console.error("Error in message stream:", error)
           subscriber.next({
             data: JSON.stringify({
-              type: 'error',
-              error: 'An error occurred',
+              type: "error",
+              error: "An error occurred",
             }),
-          } as MessageEvent);
-          subscriber.complete();
+          } as MessageEvent)
+          subscriber.complete()
         }
-      })();
-    });
+      })()
+    })
   }
 }

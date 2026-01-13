@@ -1,8 +1,5 @@
 // const prendresoinBaseURL = '${prendresoinBaseURL}';
-const prendresoinBaseURL = 'https://prendresoin.ft-qvr.fr';
-
-
-
+const prendresoinBaseURL = "https://prendresoin.ft-qvr.fr"
 
 export const fichesMetiersURLs = `
 URL des fiches métiers Production
@@ -122,7 +119,7 @@ export const servicesMD = `
   - **Type de service** : Intégration complete
   - **Service ayant l'authent FT-Connect** : Oui
   - **URL de redirection** : Moteur de recherche + Présentation entreprise intégrés. Redirection possible vers FT, l'entreprise ou autre via des liens sur la présentation
-  - **URL du service Production** : [${prendresoinBaseURL}/je-decouvre/immersion-facilite?utm\_source=chatgpt.com](${prendresoinBaseURL}/je-decouvre/immersion-facilite?utm_source=chatgpt.com)
+  - **URL du service Production** : [${prendresoinBaseURL}/je-decouvre/immersion-facilite?utm_source=chatgpt.com](${prendresoinBaseURL}/je-decouvre/immersion-facilite?utm_source=chatgpt.com)
 
 -----
 
@@ -131,8 +128,8 @@ export const servicesMD = `
   - Socle
   - **Type de service** : Intégration complete
   - **Service ayant l'authent FT-Connect** : Oui
-  - **URL de redirection** : Questionnaire intégré avec proposition de métier \> redirection interne à la plateforme vers Fiches métier. Puis redirection vers Métierscope possible
-  - **URL du service Production** : [${prendresoinBaseURL}/je-decouvre/diagoriente?utm\_source=chatgpt.com](${prendresoinBaseURL}/je-decouvre/diagoriente?utm_source=chatgpt.com)
+  - **URL de redirection** : Questionnaire intégré avec proposition de métier > redirection interne à la plateforme vers Fiches métier. Puis redirection vers Métierscope possible
+  - **URL du service Production** : [${prendresoinBaseURL}/je-decouvre/diagoriente?utm_source=chatgpt.com](${prendresoinBaseURL}/je-decouvre/diagoriente?utm_source=chatgpt.com)
 
 -----
 
@@ -149,7 +146,7 @@ export const servicesMD = `
 
   - Socle
   - **Type de service** : Intégration complete
-  - **URL de redirection** : Moteur de recherche intégré. Redirection via les missions \> [https://www.service-civique.gouv.fr/trouver-ma-mission/](https://www.service-civique.gouv.fr/trouver-ma-mission/) + ref mission
+  - **URL de redirection** : Moteur de recherche intégré. Redirection via les missions > [https://www.service-civique.gouv.fr/trouver-ma-mission/](https://www.service-civique.gouv.fr/trouver-ma-mission/) + ref mission
   - **URL du service Production** : [${prendresoinBaseURL}/je-decouvre/service-civique](${prendresoinBaseURL}/je-decouvre/service-civique)
 
 -----
@@ -187,7 +184,7 @@ Idf + à venir = Intégration complète avec moteur de recherche. Redirection ve
   - Socle
   - **Type de service** : Intégration complete
   - **Service ayant l'authent FT-Connect** : Autre Systeme : EDUCONNECT
-  - **URL de redirection** : Moteur de recherche intégré. Redirection via les stages \> [https://1eleve1stage.education.gouv.fr/offres-de-stage](https://1eleve1stage.education.gouv.fr/offres-de-stage) + stage séléctionné
+  - **URL de redirection** : Moteur de recherche intégré. Redirection via les stages > [https://1eleve1stage.education.gouv.fr/offres-de-stage](https://1eleve1stage.education.gouv.fr/offres-de-stage) + stage séléctionné
   - **URL du service Production** : [${prendresoinBaseURL}/je-decouvre/1-eleve-1-stage](${prendresoinBaseURL}/je-decouvre/1-eleve-1-stage)
 
 -----
@@ -196,7 +193,7 @@ Idf + à venir = Intégration complète avec moteur de recherche. Redirection ve
 
   - Socle
   - **Type de service** : Redirection simple
-  - **URL de redirection** : PrendreSoin = [https://www.jobirl.com/e-mentorat/jeunes?mtm\_source=prendresoinft\&mtm\_medium=referral\&mtm\_campaign=mentorat](https://www.jobirl.com/e-mentorat/jeunes?mtm_source=prendresoinft&mtm_medium=referral&mtm_campaign=mentorat)
+  - **URL de redirection** : PrendreSoin = [https://www.jobirl.com/e-mentorat/jeunes?mtm_source=prendresoinft&mtm_medium=referral&mtm_campaign=mentorat](https://www.jobirl.com/e-mentorat/jeunes?mtm_source=prendresoinft&mtm_medium=referral&mtm_campaign=mentorat)
   - **URL du service Production** : [${prendresoinBaseURL}/je-decouvre/jobirl-ambassadeur](${prendresoinBaseURL}/je-decouvre/jobirl-ambassadeur)
 
 -----
@@ -205,7 +202,7 @@ Idf + à venir = Intégration complète avec moteur de recherche. Redirection ve
 
   - Socle
   - **Type de service** : Intégation du moteur avec redirection sur MEE
-  - **URL de redirection** : Moteur de recherche intégré. Redirection vers FT si clic sur "Je découvre" un événement \> [https://mesevenementsemploi.francetravail.fr/mes-evenements-emploi/evenement](https://mesevenementsemploi.francetravail.fr/mes-evenements-emploi/evenement) + ref event
+  - **URL de redirection** : Moteur de recherche intégré. Redirection vers FT si clic sur "Je découvre" un événement > [https://mesevenementsemploi.francetravail.fr/mes-evenements-emploi/evenement](https://mesevenementsemploi.francetravail.fr/mes-evenements-emploi/evenement) + ref event
   - **URL du service Production** : [${prendresoinBaseURL}/je-decouvre/evenements-de-decouverte](${prendresoinBaseURL}/je-decouvre/evenements-de-decouverte)
 
 -----
@@ -217,7 +214,7 @@ Idf + à venir = Intégration complète avec moteur de recherche. Redirection ve
 
 -----
 
-### 2\. Je me fais accompagner - Moteur de recherche des structures (France Travail, Missions locales, Cap Emploi)
+### 2. Je me fais accompagner - Moteur de recherche des structures (France Travail, Missions locales, Cap Emploi)
 
   - Socle
   - **Type de service** : Intégration complete
@@ -225,7 +222,7 @@ Idf + à venir = Intégration complète avec moteur de recherche. Redirection ve
 
 -----
 
-### 2\. Je me fais accompagner - Mon conseil en évolution pro
+### 2. Je me fais accompagner - Mon conseil en évolution pro
 
   - Socle
   - **Type de service** : Redirection simple
@@ -234,7 +231,7 @@ Idf + à venir = Intégration complète avec moteur de recherche. Redirection ve
 
 -----
 
-### 2\. Je me fais accompagner - Dema1n . org
+### 2. Je me fais accompagner - Dema1n . org
 
   - Socle
   - **Type de service** : Redirection simple
@@ -243,7 +240,7 @@ Idf + à venir = Intégration complète avec moteur de recherche. Redirection ve
 
 -----
 
-### 2\. Je me fais accompagner - 1jeune1mentor
+### 2. Je me fais accompagner - 1jeune1mentor
 
   - Socle
   - **Type de service** : Intégation complete
@@ -252,7 +249,7 @@ Idf + à venir = Intégration complète avec moteur de recherche. Redirection ve
 
 -----
 
-### 2\. Je me fais accompagner - MyJobGlasses
+### 2. Je me fais accompagner - MyJobGlasses
 
   - Socle
   - **Type de service** : Reflexion en cours
@@ -265,16 +262,16 @@ Idf + à venir = Intégration complète avec moteur de recherche. Redirection ve
 
 -----
 
-### 2\. Je me fais accompagner - job IRL
+### 2. Je me fais accompagner - job IRL
 
   - Socle
   - **Type de service** : Redirection simple
-  - **URL de redirection** : [https://www.jobirl.com/e-mentorat/jeunes?mtm\_source=prendresoinft\&mtm\_medium=referral\&mtm\_campaign=mentorat](https://www.jobirl.com/e-mentorat/jeunes?mtm_source=prendresoinft&mtm_medium=referral&mtm_campaign=mentorat)
+  - **URL de redirection** : [https://www.jobirl.com/e-mentorat/jeunes?mtm_source=prendresoinft&mtm_medium=referral&mtm_campaign=mentorat](https://www.jobirl.com/e-mentorat/jeunes?mtm_source=prendresoinft&mtm_medium=referral&mtm_campaign=mentorat)
   - **URL du service Production** : [${prendresoinBaseURL}/je-decouvre/jobirl-ambassadeur](${prendresoinBaseURL}/je-decouvre/jobirl-ambassadeur)
 
 -----
 
-### 2\. Je me fais accompagner - France VAE
+### 2. Je me fais accompagner - France VAE
 
   - Socle
   - **Type de service** : Redirection simple
@@ -283,7 +280,7 @@ Idf + à venir = Intégration complète avec moteur de recherche. Redirection ve
 
 -----
 
-### 2\. Je me fais accompagner - Emploi Store
+### 2. Je me fais accompagner - Emploi Store
 
   - Socle
   - **Type de service** : Redirection simple
@@ -292,7 +289,7 @@ Idf + à venir = Intégration complète avec moteur de recherche. Redirection ve
 
 -----
 
-### 2\. Je me fais accompagner - Mes aides FT
+### 2. Je me fais accompagner - Mes aides FT
 
   - Socle
   - **Type de service** : Redirection simple
@@ -301,7 +298,7 @@ Idf + à venir = Intégration complète avec moteur de recherche. Redirection ve
 
 -----
 
-### 3\. Je me forme ou je postule - Moteur de recherche emploi FT
+### 3. Je me forme ou je postule - Moteur de recherche emploi FT
 
   - Socle
   - **Type de service** : Intégation du moteur avec redirection
@@ -309,26 +306,26 @@ Idf + à venir = Intégration complète avec moteur de recherche. Redirection ve
 
 -----
 
-### 3\. Je me forme ou je postule - La bonne boite
+### 3. Je me forme ou je postule - La bonne boite
 
   - Socle
   - **Type de service** : Intégration des offres avec redirection sur la bonne boite
   - **Service ayant l'authent FT-Connect** : Oui
-  - **URL de redirection** : Moteur de recherche intégré. Redirection si clic sur "Découvrir" une entreprise \> [https://labonneboite.francetravail.fr/entreprise/](https://labonneboite.francetravail.fr/entreprise/) + code entreprise
+  - **URL de redirection** : Moteur de recherche intégré. Redirection si clic sur "Découvrir" une entreprise > [https://labonneboite.francetravail.fr/entreprise/](https://labonneboite.francetravail.fr/entreprise/) + code entreprise
   - **URL du service Production** : [${prendresoinBaseURL}/je-me-forme-ou-je-postule/la-bonne-boite](${prendresoinBaseURL}/je-me-forme-ou-je-postule/la-bonne-boite)
 
 -----
 
-### 3\. Je me forme ou je postule - La bonne alternance
+### 3. Je me forme ou je postule - La bonne alternance
 
   - Socle
   - **Type de service** : Intégration des offres avec redirection sur la bonne alternance
-  - **URL de redirection** : Moteur de recherche intégré. Redirection si clic sur "Découvrir" une alternance \> [https://labonnealternance.apprentissage.beta.gouv.fr/emploi/offres\_emploi\_lba/](https://labonnealternance.apprentissage.beta.gouv.fr/emploi/offres_emploi_lba/) + code offre
+  - **URL de redirection** : Moteur de recherche intégré. Redirection si clic sur "Découvrir" une alternance > [https://labonnealternance.apprentissage.beta.gouv.fr/emploi/offres_emploi_lba/](https://labonnealternance.apprentissage.beta.gouv.fr/emploi/offres_emploi_lba/) + code offre
   - **URL du service Production** : [${prendresoinBaseURL}/je-me-forme-ou-je-postule/la-bonne-alternance](${prendresoinBaseURL}/je-me-forme-ou-je-postule/la-bonne-alternance)
 
 -----
 
-### 3\. Je me forme ou je postule - Immersion facilité
+### 3. Je me forme ou je postule - Immersion facilité
 
   - Socle
   - **Type de service** : Intégration complète
@@ -337,7 +334,7 @@ Idf + à venir = Intégration complète avec moteur de recherche. Redirection ve
 
 -----
 
-### 3\. Je me forme ou je postule - Ma Formation (FT - infos du carif oref)
+### 3. Je me forme ou je postule - Ma Formation (FT - infos du carif oref)
 
   - Socle
   - **Type de service** : Intégration des formations avec redirection sur les formations
@@ -345,7 +342,7 @@ Idf + à venir = Intégration complète avec moteur de recherche. Redirection ve
 
 -----
 
-### 3\. Je me forme ou je postule - Mon compte formation
+### 3. Je me forme ou je postule - Mon compte formation
 
   - Socle
   - **Type de service** : Redirection simple
@@ -354,18 +351,18 @@ Idf + à venir = Intégration complète avec moteur de recherche. Redirection ve
 
 -----
 
-### 3\. Je me forme ou je postule - Mes événements emploi
+### 3. Je me forme ou je postule - Mes événements emploi
 
   - Socle
   - **Type de service** : Intégration des événements avec redirection sur MEE
-  - **URL de redirection** : Moteur de recherche intégré. Redirection vers FT si clic sur "Je découvre" un événement \> [https://mesevenementsemploi.francetravail.fr/mes-evenements-emploi/evenement](https://mesevenementsemploi.francetravail.fr/mes-evenements-emploi/evenement) + ref event
+  - **URL de redirection** : Moteur de recherche intégré. Redirection vers FT si clic sur "Je découvre" un événement > [https://mesevenementsemploi.francetravail.fr/mes-evenements-emploi/evenement](https://mesevenementsemploi.francetravail.fr/mes-evenements-emploi/evenement) + ref event
   - **URL du service Production** : [${prendresoinBaseURL}/je-me-forme-ou-je-postule/evenements-emploi-recrutement-je-postule](${prendresoinBaseURL}/je-me-forme-ou-je-postule/evenements-emploi-recrutement-je-postule)
 
 -----
 
-### 3\. Je me forme ou je postule - Evenements fournis par les partenaires via un formulaire et une modération
+### 3. Je me forme ou je postule - Evenements fournis par les partenaires via un formulaire et une modération
 
   - Socle
   - **Type de service** : En cours de développement
 
------`;
+-----`

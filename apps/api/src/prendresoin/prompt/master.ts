@@ -1,4 +1,4 @@
-import { fichesMetiersURLs, servicesMD } from './services-prendresoin';
+import { fichesMetiersURLs, servicesMD } from "./services-prendresoin"
 
 export const masterPrompt = `Today's date: ${new Date().toString()}
 
@@ -22,4 +22,4 @@ ${servicesMD}
 
 ## Fiches métiers
 ${fichesMetiersURLs}
-`;
+`

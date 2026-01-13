@@ -1,4 +1,4 @@
-import { JobOffer } from '../types/job-offer.types';
+import type { JobOffer } from "../types/job-offer.types"
 
 export class SimplifiedJobOffer {
   constructor(
@@ -17,14 +17,14 @@ export class SimplifiedJobOffer {
       jobOffer.entreprise.nom,
       jobOffer.lieuTravail.libelle,
       jobOffer.typeContratLibelle,
-      jobOffer.origineOffre.urlOrigine
-    );
+      jobOffer.origineOffre.urlOrigine,
+    )
   }
 
   static fromJobOffers(jobOffers: JobOffer[] | null | undefined): SimplifiedJobOffer[] {
     if (!jobOffers || jobOffers.length === 0) {
-      return [];
+      return []
     }
-    return jobOffers.map((jobOffer) => SimplifiedJobOffer.fromJobOffer(jobOffer));
+    return jobOffers.map((jobOffer) => SimplifiedJobOffer.fromJobOffer(jobOffer))
   }
 }

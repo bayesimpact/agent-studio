@@ -9,7 +9,6 @@ This is a Turborepo monorepo with the following structure:
 - `apps/api` - NestJS backend application (runs on port 3000)
 - `apps/web` - Next.js frontend application (runs on port 3001 with Turbopack)
 - `packages/@repo/api` - Shared NestJS resources
-- `packages/@repo/eslint-config` - Shared ESLint configurations
 - `packages/@repo/jest-config` - Shared Jest configurations
 - `packages/@repo/typescript-config` - Shared TypeScript configurations
 - `packages/@repo/ui` - Shared React component library
@@ -95,9 +94,6 @@ The API uses a modular AI service provider pattern for extensibility:
 
 ### Shared Packages
 - All packages use TypeScript with strict configuration
-- ESLint configuration extends from `@repo/eslint-config` with specific overrides:
-  - `@typescript-eslint/no-explicit-any` is disabled
-  - `@typescript-eslint/unbound-method` is disabled
 - Jest configuration is centralized in `@repo/jest-config`
 
 ## Package Management
