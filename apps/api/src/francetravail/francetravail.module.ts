@@ -1,7 +1,7 @@
-import { Module } from '@nestjs/common';
-import { FranceTravailJobsService } from './francetravail-jobs.service';
-import { FranceTravailEventsService } from './francetravail-events.service';
-import { FranceTravailLaBonneBoiteService } from './francetravail-labonneboite.service';
+import { Module } from "@nestjs/common"
+import { FranceTravailEventsService } from "./francetravail-events.service"
+import { FranceTravailJobsService } from "./francetravail-jobs.service"
+import { FranceTravailLaBonneBoiteService } from "./francetravail-labonneboite.service"
 
 @Module({
   providers: [
@@ -9,10 +9,6 @@ import { FranceTravailLaBonneBoiteService } from './francetravail-labonneboite.s
     FranceTravailEventsService,
     FranceTravailLaBonneBoiteService,
   ],
-  exports: [
-    FranceTravailJobsService,
-    FranceTravailEventsService,
-    FranceTravailLaBonneBoiteService,
-  ],
+  exports: [FranceTravailJobsService, FranceTravailEventsService, FranceTravailLaBonneBoiteService],
 })
 export class FranceTravailModule {}

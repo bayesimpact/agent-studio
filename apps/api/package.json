@@ -8,11 +8,11 @@
     "start": "nest start",
     "start:debug": "nest start --debug --watch",
     "start:prod": "node dist/main",
+    "typecheck": "tsc --noEmit",
     "test": "jest",
     "test:watch": "jest --watch",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
-    "test:e2e": "jest --config ./test/jest-e2e.json",
-    "lint": "eslint \"{src,apps,libs,test}/**/*.ts\""
+    "test:e2e": "jest --config ./test/jest-e2e.json"
   },
   "dependencies": {
     "@google/genai": "^1.21.0",
@@ -33,7 +33,6 @@
     "@nestjs/cli": "^11.0.0",
     "@nestjs/schematics": "^11.0.0",
     "@nestjs/testing": "^11.0.0",
-    "@repo/eslint-config": "*",
     "@repo/jest-config": "*",
     "@repo/typescript-config": "*",
     "@types/express": "^4.17.17",

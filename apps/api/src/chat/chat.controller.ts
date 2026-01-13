@@ -1,36 +1,42 @@
-import { Controller, Post, Sse, MessageEvent, Query } from '@nestjs/common';
-import { Observable } from 'rxjs';
-import { ChatService } from './chat.service';
-import { CreateChatSessionResponseDto } from '@repo/api/chat/dto/create-chat-session.dto';
+import { Controller, type MessageEvent, Post, Query, Sse } from "@nestjs/common"
+import type { CreateChatSessionResponseDto } from "@repo/api"
+import type { Observable } from "rxjs"
+import type { ChatService } from "./chat.service"
 
-@Controller('chat')
+@Controller("chat")
 export class ChatController {
   constructor(private readonly chatService: ChatService) {}
 
-  @Sse('message-stream')
+  @Sse("message-stream")
   streamMessage(
-    @Query('sessionId') sessionId: string,
-    @Query('content') content: string,
-    @Query('country') country?: string,
+    @Query("sessionId") sessionId: string,
+    @Query("content") content: string,
+    @Query("country") country?: string,
   ): Observable<MessageEvent> {
-    console.log(`new message ${sessionId}, country: ${country}`);
-    return this.chatService.handleMessageStream(sessionId, content);
+    console.log(`new message ${sessionId}, country: ${country}`)
+    return this.chatService.handleMessageStream(sessionId, content)
   }
 
-  @Post('create-session')
+  @Post("create-session")
   async createSession(
-    @Query('country') country: 'fr'|'us',
+    @Query("country") country: "fr" | "us",
   ): Promise<CreateChatSessionResponseDto> {
-    console.log(`create session, country: ${country}`);
-    const chatSession = await this.chatService.createSession(country);
+    console.log(`create session, country: ${country}`)
+    const chatSession = await this.chatService.createSession(country)
+
+    const initialMessage = chatSession.messages[0]
+    if (!initialMessage) {
+      throw new Error("Session created without initial message")
+    }
+
     return {
       sessionId: chatSession.id,
       message: {
-        id: chatSession.messages[0].id,
-        content: chatSession.messages[0].content,
-        timestamp: chatSession.messages[0].timestamp,
-        sender: chatSession.messages[0].sender,
+        id: initialMessage.id,
+        content: initialMessage.content,
+        timestamp: initialMessage.timestamp,
+        sender: initialMessage.sender,
       },
-    };
+    }
   }
 }

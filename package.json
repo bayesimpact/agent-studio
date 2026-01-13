@@ -1,36 +1,35 @@
 {
-	"name": "caseai-connect",
-	"version": "0.0.0",
-	"private": true,
-	"description": "",
-	"author": "",
-	"license": "UNLICENSED",
-	"scripts": {
-		"dev": "turbo run dev",
-		"build": "turbo run build",
-		"test": "turbo run test",
-		"test:e2e": "turbo run test:e2e",
-		"lint": "turbo run lint",
-		"format": "biome format --write .",
-		"format:check": "biome format .",
-		"biome:check": "biome check --write .",
-		"biome:ci": "biome ci .",
-		"clean": "find . -name '.turbo' -type d -prune -exec rm -rf '{}' + && find . -name 'node_modules' -type d -prune -exec rm -rf '{}' + && rm -rf node_modules"
-	},
-	"devDependencies": {
-		"@biomejs/biome": "2.3.8",
-		"@repo/eslint-config": "*",
-		"@repo/typescript-config": "*",
-		"@types/jest": "^30.0.0",
-		"prettier": "^3.2.5",
-		"turbo": "^2.5.8"
-	},
-	"engines": {
-		"node": ">=18"
-	},
-	"packageManager": "npm@10.5.0",
-	"workspaces": [
-		"apps/*",
-		"packages/*"
-	]
+  "name": "caseai-connect",
+  "version": "0.0.0",
+  "private": true,
+  "description": "",
+  "author": "",
+  "license": "UNLICENSED",
+  "scripts": {
+    "dev": "turbo run dev",
+    "build": "turbo run build",
+    "test": "turbo run test",
+    "test:e2e": "turbo run test:e2e",
+    "lint": "biome lint .",
+    "format": "biome format --write .",
+    "format:check": "biome format .",
+    "biome:check": "biome check --write --unsafe .",
+    "biome:ci": "biome ci .",
+    "typecheck": "turbo run typecheck",
+    "clean": "find . -name '.turbo' -type d -prune -exec rm -rf '{}' + && find . -name 'node_modules' -type d -prune -exec rm -rf '{}' + && rm -rf node_modules"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "2.3.11",
+    "@repo/typescript-config": "*",
+    "@types/jest": "^30.0.0",
+    "turbo": "^2.5.8"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "packageManager": "npm@10.5.0",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ]
 }

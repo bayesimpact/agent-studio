@@ -1,20 +1,15 @@
-import { Message } from './message.model';
+import { Message } from "./message.model"
 
 export class ChatSession {
   constructor(
     public readonly id: string,
     public readonly messages: Message[],
-    public readonly country: 'fr'|'us',
+    public readonly country: "fr" | "us",
     public readonly createdAt: Date,
   ) {}
 
   addMessage(message: Message): ChatSession {
-    return new ChatSession(
-      this.id,
-      [...this.messages, message],
-      this.country,
-      this.createdAt,
-    );
+    return new ChatSession(this.id, [...this.messages, message], this.country, this.createdAt)
   }
 
   addToolResponse(name: string, response: Record<string, unknown>): ChatSession {
@@ -22,10 +17,10 @@ export class ChatSession {
     const toolMessage = new Message(
       `tool-${Date.now()}`,
       JSON.stringify(response),
-      'tool',
+      "tool",
       new Date(),
       [{ name, arguments: {} }],
-    );
-    return this.addMessage(toolMessage);
+    )
+    return this.addMessage(toolMessage)
   }
 }

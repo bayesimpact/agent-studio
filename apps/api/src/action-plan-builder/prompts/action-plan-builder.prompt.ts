@@ -1,6 +1,8 @@
+import type { Action } from "../action-plan-builder.abstract"
+
 const getLanguage = (country?: string): string => {
-  return country.toLowerCase() === 'fr' ? 'French' : 'English';
-};
+  return country?.toLowerCase() === "fr" ? "French" : "English"
+}
 
 const frameworks = {
   fr: `
@@ -359,15 +361,15 @@ const frameworks = {
     * Organize your job search (set up a workflow)
 * **Other**
     * Other`,
-};
+}
 
 const getFramework = (country?: string): string => {
-  return country === 'fr' ? frameworks.fr : frameworks.us;
-};
+  return country === "fr" ? frameworks.fr : frameworks.us
+}
 
 export const buildSystemPrompt = (country?: string): string => {
-  const lang = getLanguage(country);
-  const framework = getFramework(country);
+  const lang = getLanguage(country)
+  const framework = getFramework(country)
 
   return `You are an expert agent in socio-professional support.
 Your mission is to create personalized action plans to help beneficiaries in their professional and social integration journey.
@@ -383,12 +385,12 @@ You analyze beneficiary profiles and build structured action plans with concrete
 Référentiel a utiliser pour categoriser les actions
 ${framework}
 
-**IMPORTANT**: While your internal thinking can be in English, ALL user-facing content (action titles, content, CTA names, and markdown section headers) MUST be in ${lang}.`;
-};
+**IMPORTANT**: While your internal thinking can be in English, ALL user-facing content (action titles, content, CTA names, and markdown section headers) MUST be in ${lang}.`
+}
 
 // Phase 1: Initial analysis with tool calls
 export const buildPhase1Instructions = (country?: string): string => {
-  const lang = getLanguage(country);
+  const lang = getLanguage(country)
 
   return `
 ## Phase 1: Profile Analysis and Resource Discovery
@@ -412,12 +414,12 @@ Document your analysis in markdown with clear section titles in ${lang}:
 - This will be displayed to the user
 
 **IMPORTANT**: You do NOT need to generate the final action plan yet. Just analyze and call the tools.
-`;
-};
+`
+}
 
 // Phase 2: Final plan generation with retrieved resources
 export const buildPhase2Instructions = (country?: string): string => {
-  const lang = getLanguage(country);
+  const lang = getLanguage(country)
 
   return `
 ## Phase 2: Final Action Plan Generation
@@ -478,22 +480,22 @@ Dont guess URLs, if not present, just remove the CTA
 - Use "url" type for links from retrieved resources (jobs, workshops, events, services)
 - **DONT** guess URL, add URL's CTA only if present inside Available Resources 
 - Use "phone" type when a direct phone contact is more appropriate (e.g., emergency services, counseling)
-- Use "email" type when email communication is preferred (e.g., administrative services, applications)`;
-};
+- Use "email" type when email communication is preferred (e.g., administrative services, applications)`
+}
 
 export const buildUserPrompt = (
   profileText: string,
   country?: string,
-  currentActionPlan?: any,
+  currentActionPlan?: Action,
 ): string => {
-  const lang = getLanguage(country);
+  const lang = getLanguage(country)
 
   return `
 ## Beneficiary Profile
 
 ${profileText}
 
-${currentActionPlan ? `\n## Current Action Plan\n\n${JSON.stringify(currentActionPlan, null, 2)}\n\nAnalyze this existing plan and propose improvements or adjustments if necessary.` : ''}
+${currentActionPlan ? `\n## Current Action Plan\n\n${JSON.stringify(currentActionPlan, null, 2)}\n\nAnalyze this existing plan and propose improvements or adjustments if necessary.` : ""}
 
 ---
 
@@ -503,5 +505,5 @@ Now generate a personalized action plan for this beneficiary.
 1. Document your thinking process in markdown with "## Title" for major phases (section titles in ${lang})
 2. All action titles, content, and CTA names must be in ${lang}
 3. End your response with the action plan in a JSON code block as shown in the example above
-`;
-};
+`
+}

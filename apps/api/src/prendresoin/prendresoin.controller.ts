@@ -1,35 +1,47 @@
-import { Controller, Sse, Post, MessageEvent, Query } from '@nestjs/common';
-import { Observable } from 'rxjs';
-import { PrendresoinService } from './prendresoin.service';
+import { Controller, type MessageEvent, Post, Query, Sse } from "@nestjs/common"
+import type { Observable } from "rxjs"
+import type { PrendresoinService } from "./prendresoin.service"
 
-@Controller('prendresoin')
+@Controller("prendresoin")
 export class PrendresoinController {
   constructor(private readonly prendresoinService: PrendresoinService) {}
 
-  @Post('create-session')
+  @Post("create-session")
   async createSession(): Promise<{
-    sessionId: string;
+    sessionId: string
     message: {
-      id: string;
-      content: string;
-      sender: string;
-      timestamp: Date;
-    };
+      id: string
+      content: string
+      sender: string
+      timestamp: Date
+    }
   }> {
-    console.log('Creating new prendresoin session');
-    const session = await this.prendresoinService.createSession();
+    console.log("Creating new prendresoin session")
+    const session = await this.prendresoinService.createSession()
+
+    const initialMessage = session.messages[0]
+
+    if (!initialMessage || !initialMessage.content) {
+      throw new Error("Session created without initial message")
+    }
+
     return {
       sessionId: session.id,
-      message: session.messages[0],
-    };
+      message: {
+        id: initialMessage.id,
+        content: initialMessage.content,
+        sender: initialMessage.sender,
+        timestamp: initialMessage.timestamp,
+      },
+    }
   }
 
-  @Sse('message-stream')
+  @Sse("message-stream")
   streamMessage(
-    @Query('sessionId') sessionId: string,
-    @Query('content') content: string,
+    @Query("sessionId") sessionId: string,
+    @Query("content") content: string,
   ): Observable<MessageEvent> {
-    console.log(`New message in session ${sessionId}: ${content}`);
-    return this.prendresoinService.handleMessageStream(sessionId, content);
+    console.log(`New message in session ${sessionId}: ${content}`)
+    return this.prendresoinService.handleMessageStream(sessionId, content)
   }
 }

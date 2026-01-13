@@ -1,35 +1,49 @@
-import { Injectable } from '@nestjs/common';
-import axios from 'axios';
-import { Type, FunctionDeclaration, FunctionCall } from '@google/genai';
-import { AIServiceProvider } from '../common/interfaces/ai-service.interface';
-import { Location } from '../geoloc/models/location.model';
+import { type FunctionCall, type FunctionDeclaration, Type } from "@google/genai"
+import { Injectable } from "@nestjs/common"
+import axios from "axios"
+import type { AIServiceProvider } from "../common/interfaces/ai-service.interface"
+import type {
+  NotionDataBaseQueryResponse,
+  NotionDatabaseBasePropertyDate,
+  NotionDatabaseBasePropertyEmail,
+  NotionDatabaseBasePropertyMultiSelect,
+  NotionDatabaseBasePropertyNumber,
+  NotionDatabaseBasePropertyPhoneNumber,
+  NotionDatabaseBasePropertyRichText,
+  NotionDatabaseBasePropertySelect,
+  NotionDatabaseBasePropertyTitle,
+} from "./types/notion.types"
 
 @Injectable()
 export class NotionBeneficiaryService implements AIServiceProvider {
-  private readonly notionApiUrl = process.env.NOTION_API_URL || 'https://api.notion.com/v1';
-  private readonly notionSecret = process.env.NOTION_SECRET;
-  private readonly beneficiaryUSDatabaseId = process.env.US_NOTION_BENEFICIARY_DATABASE_ID || '2a37d19cc82580558a42e0ae39470397';
-  private readonly beneficiaryFRDatabaseId = process.env.FR_NOTION_BENEFICIARY_DATABASE_ID || '29a7d19cc825808baa2dce8093f0dd59';
+  private readonly notionApiUrl = process.env.NOTION_API_URL || "https://api.notion.com/v1"
+  private readonly notionSecret = process.env.NOTION_SECRET
+  private readonly beneficiaryUSDatabaseId =
+    process.env.US_NOTION_BENEFICIARY_DATABASE_ID || "2a37d19cc82580558a42e0ae39470397"
+  private readonly beneficiaryFRDatabaseId =
+    process.env.FR_NOTION_BENEFICIARY_DATABASE_ID || "29a7d19cc825808baa2dce8093f0dd59"
 
   getFunctionDeclaration(): FunctionDeclaration {
     return {
-      name: 'fetch_beneficiary_profile',
-      description: 'Fetch a beneficiary profile from Notion database by name. Use this when the user writes @notion followed by a name (e.g., "@notion Melvin")',
+      name: "fetch_beneficiary_profile",
+      description:
+        'Fetch a beneficiary profile from Notion database by name. Use this when the user writes @notion followed by a name (e.g., "@notion Melvin")',
       parameters: {
         type: Type.OBJECT,
         properties: {
           name: {
             type: Type.STRING,
-            description: 'Name of the beneficiary to search for (extracted from the @notion mention)',
+            description:
+              "Name of the beneficiary to search for (extracted from the @notion mention)",
           },
           country: {
             type: Type.STRING,
-            description: 'us or fr',
+            description: "us or fr",
           },
         },
-        required: ['name', 'country'],
+        required: ["name", "country"],
       },
-    };
+    }
   }
 
   getPromptContext(): string {
@@ -51,132 +65,140 @@ you MUST immediately call this function with the name that follows @notion.
 - User writes: "@notion Melvin"
 - You call: fetch_beneficiary_profile(name="Melvin")
 - Then you present the profile information to the user in a natural way
-`;
+`
   }
 
-  async executeFunction(
-    functionCall: FunctionCall,
-  ): Promise<{ profile: string }> {
-    const name = functionCall.args['name'] as string;
-    const country = functionCall.args['country'] as 'fr'|'us';
+  async executeFunction(functionCall: FunctionCall): Promise<{ profile: string }> {
+    const name = functionCall.args?.name as string
+    const country = functionCall.args?.country as "fr" | "us"
 
-    console.log('Fetching beneficiary profile for:', name);
+    console.log("Fetching beneficiary profile for:", name)
 
-    const profile = await this.fetchBeneficiaryProfile(name, country);
-    return { profile };
+    const profile = await this.fetchBeneficiaryProfile(name, country)
+    return { profile }
   }
 
-  async fetchBeneficiaryProfile(name: string, country: 'us'|'fr'): Promise<string> {
+  async fetchBeneficiaryProfile(name: string, country: "us" | "fr"): Promise<string> {
     if (!this.notionSecret) {
-      console.error('NOTION_SECRET is not configured');
-      return 'Error: Notion API key not configured';
+      console.error("NOTION_SECRET is not configured")
+      return "Error: Notion API key not configured"
     }
-    const beneficiaryDatabaseId = country === 'us' ? this.beneficiaryUSDatabaseId : this.beneficiaryFRDatabaseId;
+    const beneficiaryDatabaseId =
+      country === "us" ? this.beneficiaryUSDatabaseId : this.beneficiaryFRDatabaseId
 
     if (!beneficiaryDatabaseId) {
-      console.error('US_NOTION_BENEFICIARY_DATABASE_ID or FR_NOTION_BENEFICIARY_DATABASE_ID is not configured');
-      return 'Error: Beneficiary database ID not configured';
+      console.error(
+        "US_NOTION_BENEFICIARY_DATABASE_ID or FR_NOTION_BENEFICIARY_DATABASE_ID is not configured",
+      )
+      return "Error: Beneficiary database ID not configured"
     }
 
     try {
-      console.log(`Searching for beneficiary: ${name}`);
+      console.log(`Searching for beneficiary: ${name}`)
 
       const queryBody = {
         filter: {
-          property: 'Name',
+          property: "Name",
           title: { contains: name },
         },
-      };
+      }
 
-      const { data } = await axios.post<any>(
+      const { data } = await axios.post<NotionDataBaseQueryResponse>(
         `${this.notionApiUrl}/databases/${beneficiaryDatabaseId}/query`,
         queryBody,
         {
           headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${this.notionSecret}`,
-            'Notion-Version': '2022-06-28',
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${this.notionSecret}`,
+            "Notion-Version": "2022-06-28",
           },
         },
-      );
+      )
 
       if (!data.results || data.results.length === 0) {
-        console.log('No beneficiary found with that name');
-        return `No beneficiary profile found for: ${name}`;
+        console.log("No beneficiary found with that name")
+        return `No beneficiary profile found for: ${name}`
       }
 
-      console.log(`Found ${data.results.length} beneficiary profile(s)`);
+      console.log(`Found ${data.results.length} beneficiary profile(s)`)
+
+      if (!data.results[0]) {
+        console.log("No beneficiary found with that name")
+        return `No beneficiary profile found for: ${name}`
+      }
 
       // Convert the first result to a readable string
-      const profile = this.formatProfileAsString(data.results[0]);
-      return profile;
+      const profile = this.formatProfileAsString(data.results[0])
+      return profile
     } catch (error) {
       if (axios.isAxiosError(error)) {
-        console.error('Notion API error:', error.response?.status, error.response?.data);
-        return `Error fetching profile: ${error.response?.status} - ${JSON.stringify(error.response?.data)}`;
+        console.error("Notion API error:", error.response?.status, error.response?.data)
+        return `Error fetching profile: ${error.response?.status} - ${JSON.stringify(error.response?.data)}`
       } else {
-        console.error('Error fetching beneficiary profile:', error);
-        return `Error fetching profile: ${error}`;
+        console.error("Error fetching beneficiary profile:", error)
+        return `Error fetching profile: ${error}`
       }
     }
   }
 
-  private formatProfileAsString(page: any): string {
-    const properties = page.properties;
+  private formatProfileAsString(page: NotionDataBaseQueryResponse["results"][0]): string {
+    const properties = page.properties
 
     // Helper functions to extract values from Notion's structure
-    const getTitle = (prop: any) => prop?.title?.[0]?.plain_text || 'N/A';
-    const getRichText = (prop: any) => prop?.rich_text?.[0]?.plain_text || 'N/A';
-    const getSelect = (prop: any) => prop?.select?.name || 'N/A';
-    const getMultiSelect = (prop: any) => prop?.multi_select?.map((item: any) => item.name).join(', ') || 'N/A';
-    const getEmail = (prop: any) => prop?.email || 'N/A';
-    const getPhone = (prop: any) => prop?.phone_number || 'N/A';
-    const getDate = (prop: any) => prop?.date?.start || 'N/A';
-    const getNumber = (prop: any) => prop?.number?.toString() || 'N/A';
+    const getTitle = (prop: NotionDatabaseBasePropertyTitle) =>
+      prop?.title?.[0]?.plain_text || "N/A"
+    const getRichText = (prop: NotionDatabaseBasePropertyRichText) =>
+      prop?.rich_text?.[0]?.plain_text || "N/A"
+    const getSelect = (prop: NotionDatabaseBasePropertySelect) => prop?.select?.name || "N/A"
+    const getMultiSelect = (prop: NotionDatabaseBasePropertyMultiSelect) =>
+      prop?.multi_select?.map((item) => item.name).join(", ") || "N/A"
+    const getEmail = (prop: NotionDatabaseBasePropertyEmail) => prop?.email || "N/A"
+    const getPhone = (prop: NotionDatabaseBasePropertyPhoneNumber) => prop?.phone_number || "N/A"
+    const getDate = (prop: NotionDatabaseBasePropertyDate) => prop?.date?.start || "N/A"
+    const getNumber = (prop: NotionDatabaseBasePropertyNumber) => prop?.number?.toString() || "N/A"
 
     // Build a formatted string with all available properties
-    let profileString = `Beneficiary Profile\n`;
-    profileString += `==================\n\n`;
+    let profileString = `Beneficiary Profile\n`
+    profileString += `==================\n\n`
 
     // Iterate through all properties and format them
-    for (const [key, value] of Object.entries(properties)) {
-      const prop = value as any;
-      let formattedValue = 'N/A';
+    for (const [key, prop] of Object.entries(properties)) {
+      let formattedValue = "N/A"
 
       switch (prop.type) {
-        case 'title':
-          formattedValue = getTitle(prop);
-          break;
-        case 'rich_text':
-          formattedValue = getRichText(prop);
-          break;
-        case 'select':
-          formattedValue = getSelect(prop);
-          break;
-        case 'multi_select':
-          formattedValue = getMultiSelect(prop);
-          break;
-        case 'email':
-          formattedValue = getEmail(prop);
-          break;
-        case 'phone_number':
-          formattedValue = getPhone(prop);
-          break;
-        case 'date':
-          formattedValue = getDate(prop);
-          break;
-        case 'number':
-          formattedValue = getNumber(prop);
-          break;
+        case "title":
+          formattedValue = getTitle(prop)
+          break
+        case "rich_text":
+          formattedValue = getRichText(prop)
+          break
+        case "select":
+          formattedValue = getSelect(prop)
+          break
+        case "multi_select":
+          formattedValue = getMultiSelect(prop)
+          break
+        case "email":
+          formattedValue = getEmail(prop)
+          break
+        case "phone_number":
+          formattedValue = getPhone(prop)
+          break
+        case "date":
+          formattedValue = getDate(prop)
+          break
+        case "number":
+          formattedValue = getNumber(prop)
+          break
         default:
-          formattedValue = JSON.stringify(prop);
+          formattedValue = JSON.stringify(prop)
       }
 
-      if (formattedValue !== 'N/A' && formattedValue !== '') {
-        profileString += `${key}: ${formattedValue}\n`;
+      if (formattedValue !== "N/A" && formattedValue !== "") {
+        profileString += `${key}: ${formattedValue}\n`
       }
     }
 
-    return profileString;
+    return profileString
   }
 }

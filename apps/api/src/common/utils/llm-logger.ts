@@ -1,50 +1,52 @@
-import * as fs from 'fs';
-import * as path from 'path';
-import { ContentListUnion } from '@google/genai';
+// NOTE: This file is not used anymore, but keeping it here for reference
 
-export interface LLMCallLog {
-  timestamp: string;
-  model: string;
-  temperature: number;
-  conversationHistory: ContentListUnion;
-  tools: any;
-  thinkingBudget?: number;
-  sessionId?: string;
-}
+// import type { ContentListUnion } from "@google/genai";
+// import * as fs from "fs";
+// import * as path from "path";
 
-export class LLMLogger {
-  private static logDirectory = path.join(process.cwd(), 'llm-logs');
+// export interface LLMCallLog {
+//   timestamp: string;
+//   model: string;
+//   temperature: number;
+//   conversationHistory: ContentListUnion;
+//   tools: any;
+//   thinkingBudget?: number;
+//   sessionId?: string;
+// }
 
-  static initialize(): void {
-    // Create logs directory if it doesn't exist
-    if (!fs.existsSync(this.logDirectory)) {
-      fs.mkdirSync(this.logDirectory, { recursive: true });
-    }
-  }
+// export class LLMLogger {
+//   private static logDirectory = path.join(process.cwd(), "llm-logs");
 
-  static logCall(params: LLMCallLog): string {
-    this.initialize();
+//   static initialize(): void {
+//     // Create logs directory if it doesn't exist
+//     if (!fs.existsSync(LLMLogger.logDirectory)) {
+//       fs.mkdirSync(LLMLogger.logDirectory, { recursive: true });
+//     }
+//   }
 
-    const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-    const filename = `llm-call-${timestamp}.json`;
-    const filepath = path.join(this.logDirectory, filename);
+//   static logCall(params: LLMCallLog): string {
+//     LLMLogger.initialize();
 
-    const logData = {
-      ...params,
-      timestamp: new Date().toISOString(),
-    };
+//     const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
+//     const filename = `llm-call-${timestamp}.json`;
+//     const filepath = path.join(LLMLogger.logDirectory, filename);
 
-    try {
-      fs.writeFileSync(filepath, JSON.stringify(logData, null, 2), 'utf-8');
-      console.log(`[LLM Logger] Logged call to: ${filepath}`);
-      return filepath;
-    } catch (error) {
-      console.error('[LLM Logger] Failed to write log:', error);
-      throw error;
-    }
-  }
+//     const logData = {
+//       ...params,
+//       timestamp: new Date().toISOString(),
+//     };
 
-  static getLogDirectory(): string {
-    return this.logDirectory;
-  }
-}
+//     try {
+//       fs.writeFileSync(filepath, JSON.stringify(logData, null, 2), "utf-8");
+//       console.log(`[LLM Logger] Logged call to: ${filepath}`);
+//       return filepath;
+//     } catch (error) {
+//       console.error("[LLM Logger] Failed to write log:", error);
+//       throw error;
+//     }
+//   }
+
+//   static getLogDirectory(): string {
+//     return LLMLogger.logDirectory;
+//   }
+// }

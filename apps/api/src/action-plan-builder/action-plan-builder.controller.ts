@@ -1,109 +1,106 @@
 import {
-  Controller,
-  Post,
   Body,
-  Sse,
-  MessageEvent,
+  Controller,
   HttpCode,
   HttpStatus,
-} from '@nestjs/common';
-import { Observable, Subject } from 'rxjs';
-import { Inject } from '@nestjs/common';
-import {
+  Inject,
+  type MessageEvent,
+  Post,
+  Sse,
+} from "@nestjs/common"
+import { type Observable, Subject } from "rxjs"
+import type {
   AbstractActionPlanBuilderService,
   ActionPlanBuilderArgs,
-} from './action-plan-builder.abstract';
+} from "./action-plan-builder.abstract"
 
 interface ActionPlanBuilderRequestDto {
-  profileText: string;
-  country?: string;
+  profileText: string
+  country?: string
 }
 
-@Controller('action-plan-builder')
+@Controller("action-plan-builder")
 export class ActionPlanBuilderController {
   constructor(
-    @Inject('ActionPlanBuilderService')
+    @Inject("ActionPlanBuilderService")
     private readonly actionPlanBuilderService: AbstractActionPlanBuilderService,
   ) {}
 
-  @Post('generate')
+  @Post("generate")
   @HttpCode(HttpStatus.OK)
   @Sse()
-  generateActionPlan(
-    @Body() request: ActionPlanBuilderRequestDto,
-  ): Observable<MessageEvent> {
-    const subject = new Subject<MessageEvent>();
+  generateActionPlan(@Body() request: ActionPlanBuilderRequestDto): Observable<MessageEvent> {
+    const subject = new Subject<MessageEvent>()
 
     // Start the action plan generation asynchronously
-    this.processActionPlanGeneration(request, subject);
+    this.processActionPlanGeneration(request, subject)
 
-    return subject.asObservable();
+    return subject.asObservable()
   }
 
   private async processActionPlanGeneration(
     request: ActionPlanBuilderRequestDto,
     subject: Subject<MessageEvent>,
   ): Promise<void> {
-    let reasoning = '';
+    let reasoning = ""
 
     try {
       const args: ActionPlanBuilderArgs = {
         profileText: request.profileText,
         country: request.country,
-      };
+      }
 
       // Send initial event
       subject.next({
         data: {
-          type: 'progress',
+          type: "progress",
           data: {
-            message: 'Starting action plan generation...',
+            message: "Starting action plan generation...",
           },
         },
-      } as MessageEvent);
+      } as MessageEvent)
 
       // Generate action plan with progress callbacks
       const result = await this.actionPlanBuilderService.buildActionPlan(args, {
         onProgress: (progressMessage: string) => {
-          reasoning += progressMessage;
+          reasoning += progressMessage
 
           // Send progress event
           subject.next({
             data: {
-              type: 'progress',
+              type: "progress",
               data: {
                 message: progressMessage,
               },
             },
-          } as MessageEvent);
+          } as MessageEvent)
         },
-      });
+      })
 
       // Send completion event
       subject.next({
         data: {
-          type: 'complete',
+          type: "complete",
           data: {
             actionPlan: result.actionPlan,
             reasoning,
           },
         },
-      } as MessageEvent);
+      } as MessageEvent)
 
-      subject.complete();
+      subject.complete()
     } catch (error) {
       // Send error event
       subject.next({
         data: {
-          type: 'error',
+          type: "error",
           data: {
-            error:
-              error instanceof Error ? error.message : 'Unknown error occurred',
+            error: error instanceof Error ? error.message : "Unknown error occurred",
           },
         },
-      } as MessageEvent);
+      } as MessageEvent)
 
-      subject.error(error);
+      subject.error(error)
     }
   }
 }

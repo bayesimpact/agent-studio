@@ -1,6 +1,6 @@
-import { MessageDto } from './message.dto';
+import type { MessageDto } from "./message.dto"
 
-export class CreateChatSessionResponseDto {
+export type CreateChatSessionResponseDto = {
   sessionId: string
   message: MessageDto
 }

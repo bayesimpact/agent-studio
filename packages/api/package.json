@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "pnpm build --watch",
     "build": "tsc -b -v",
-    "lint": "eslint \"{src,apps,libs,test}/**/*.ts\""
+    "typecheck": "tsc --noEmit"
   },
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -18,26 +18,15 @@
   },
   "typesVersions": {
     "*": {
-      "*": ["./dist/*"]
-    }
-  },
-  "exports": {
-    ".": {
-      "import": "./dist/index.js",
-      "require": "./dist/index.js",
-      "types": "./dist/index.d.ts"
-    },
-    "./*": {
-      "import": "./dist/*.js",
-      "require": "./dist/*.js",
-      "types": "./dist/*.d.ts"
+      "*": [
+        "./dist/*"
+      ]
     }
   },
   "dependencies": {
     "@nestjs/mapped-types": "*"
   },
   "devDependencies": {
-    "@repo/eslint-config": "*",
     "@repo/typescript-config": "*",
     "@types/node": "^22.10.7",
     "ts-loader": "^9.4.3",

@@ -1,5 +1,5 @@
-export class SendMessageDto {
-  sessionId: string;
-  content: string;
-  country?: string;
+export type SendMessageDto = {
+  sessionId: string
+  content: string
+  country?: string
 }

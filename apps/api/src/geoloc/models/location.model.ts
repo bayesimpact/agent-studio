@@ -1,4 +1,4 @@
-import { GeocodingFeature } from '../types/geocoding.types';
+import type { GeocodingFeature } from "../types/geocoding.types"
 
 export class Location {
   constructor(
@@ -10,16 +10,20 @@ export class Location {
     public readonly department?: string,
     public readonly departmentCode?: string,
     public readonly region?: string,
-    public readonly coordinates?: { lat: number; lon: number },
+    public readonly coordinates?: { lat: number; lon: number } | undefined,
     public readonly score?: number,
     public readonly type?: string,
   ) {}
 
   static fromGeocodingFeature(feature: GeocodingFeature): Location {
-    const departmentCode = feature.properties.citycode?.substring(0, 2);
-    const coordinates = feature.geometry?.coordinates
-      ? { lon: feature.geometry.coordinates[0], lat: feature.geometry.coordinates[1] }
-      : undefined;
+    const departmentCode = feature.properties.citycode?.substring(0, 2)
+    const coordinates =
+      feature.geometry?.coordinates?.[0] && feature.geometry?.coordinates?.[1]
+        ? {
+            lon: feature.geometry.coordinates[0],
+            lat: feature.geometry.coordinates[1],
+          }
+        : undefined
 
     return new Location(
       feature.properties.label,
@@ -33,10 +37,10 @@ export class Location {
       coordinates,
       feature.properties.score,
       feature.properties.type,
-    );
+    )
   }
 
   static fromGeocodingFeatures(features: GeocodingFeature[]): Location[] {
-    return features.map((feature) => Location.fromGeocodingFeature(feature));
+    return features.map((feature) => Location.fromGeocodingFeature(feature))
   }
 }

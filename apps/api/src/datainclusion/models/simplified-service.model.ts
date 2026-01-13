@@ -1,4 +1,4 @@
-import { Service } from '../types/service-search.types';
+import type { Service } from "../types/service-search.types"
 
 export class SimplifiedService {
   constructor(
@@ -13,9 +13,9 @@ export class SimplifiedService {
   static fromService(service: Service): SimplifiedService {
     const location = [service.adresse, service.code_postal, service.commune]
       .filter(Boolean)
-      .join(', ');
+      .join(", ")
 
-    const contact = service.telephone || service.courriel || service.page_web;
+    const contact = service.telephone || service.courriel || service.page_web
 
     return new SimplifiedService(
       service.id,
@@ -24,10 +24,10 @@ export class SimplifiedService {
       location,
       service.thematiques,
       contact,
-    );
+    )
   }
 
   static fromServices(services: Service[]): SimplifiedService[] {
-    return services.map((service) => SimplifiedService.fromService(service));
+    return services.map((service) => SimplifiedService.fromService(service))
   }
 }

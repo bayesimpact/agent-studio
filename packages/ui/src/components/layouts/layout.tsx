@@ -1,10 +1,6 @@
 import { AppSidebar } from "@/components/layouts/sidebar"
-import {
-  SidebarInset,
-  SidebarProvider,
-} from "@/shad/sidebar"
+import { SidebarInset, SidebarProvider } from "@/shad/sidebar"
 import { LayoutHeader } from "./header"
-
 
 export default function Layout() {
   return (

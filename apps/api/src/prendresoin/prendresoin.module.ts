@@ -1,7 +1,7 @@
-import { Module } from '@nestjs/common';
-import { PrendresoinController } from './prendresoin.controller';
-import { PrendresoinService } from './prendresoin.service';
-import { AIModule } from '../ai/ai.module';
+import { Module } from "@nestjs/common"
+import { AIModule } from "../ai/ai.module"
+import { PrendresoinController } from "./prendresoin.controller"
+import { PrendresoinService } from "./prendresoin.service"
 
 @Module({
   imports: [AIModule],

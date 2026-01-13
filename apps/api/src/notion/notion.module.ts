@@ -1,6 +1,6 @@
-import { Module } from '@nestjs/common';
-import { NotionWorkshopService } from './notion-workshop.service';
-import { NotionBeneficiaryService } from './notion-beneficiary.service';
+import { Module } from "@nestjs/common"
+import { NotionBeneficiaryService } from "./notion-beneficiary.service"
+import { NotionWorkshopService } from "./notion-workshop.service"
 
 @Module({
   providers: [NotionWorkshopService, NotionBeneficiaryService],
