@@ -209,7 +209,12 @@ export function ActionPlan({ planItems, country }: ActionPlanProps) {
                   <div className="pt-2 border-t">
                     {/* Action content */}
                     <div className="prose prose-sm max-w-none text-sm text-muted-foreground">
-                      <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                      <ReactMarkdown
+                        remarkPlugins={[remarkGfm]}
+                        components={{
+                          a: ({node, ...props}) => <a {...props} target="_blank" rel="noopener noreferrer" />
+                        }}
+                      >
                         {action.content}
                       </ReactMarkdown>
                     </div>

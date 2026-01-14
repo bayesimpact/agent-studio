@@ -28,6 +28,10 @@ import { FranceTravailEventsService } from '../francetravail/francetravail-event
 import { FranceTravailLaBonneBoiteService } from '../francetravail/francetravail-labonneboite.service';
 import { DataInclusionService } from '../datainclusion/datainclusion.service';
 import { GeolocService } from '../geoloc/geoloc.service';
+import { IndeedJobsService } from '../indeed/indeed-jobs.service';
+import { LaborMarketDataService } from '../labormarketdata/labormarket.service';
+import { CommunityProgramsService } from '../communityprograms/communityprograms.service';
+import { TrainingProgramsService } from '../trainingprograms/trainingprograms.service';
 import { Location } from '../geoloc/models/location.model';
 import { AIServiceProvider } from '../common/interfaces/ai-service.interface';
 
@@ -56,7 +60,6 @@ function getFrench(country: string) {
 export class AIActionPlanBuilderService extends AbstractActionPlanBuilderService {
   private genAI: GoogleGenAI;
   private langfuse: Langfuse;
-  private readonly tools: ToolListUnion;
 
   constructor(
     private notionWorkshopService: NotionWorkshopService,
@@ -65,6 +68,10 @@ export class AIActionPlanBuilderService extends AbstractActionPlanBuilderService
     private franceTravailLaBonneBoiteService: FranceTravailLaBonneBoiteService,
     private dataInclusionService: DataInclusionService,
     private geolocService: GeolocService,
+    private indeedJobsService: IndeedJobsService,
+    private laborMarketDataService: LaborMarketDataService,
+    private communityProgramsService: CommunityProgramsService,
+    private trainingProgramsService: TrainingProgramsService,
   ) {
     super();
     this.genAI = new GoogleGenAI({
@@ -79,19 +86,37 @@ export class AIActionPlanBuilderService extends AbstractActionPlanBuilderService
       publicKey: process.env.LANGFUSE_PK,
       baseUrl: process.env.LANGFUSE_BASE_URL,
     });
+  }
 
-    // Setup tools for the action plan builder agent
-    this.tools = [
-      {
-        functionDeclarations: [
-          this.notionWorkshopService.getFunctionDeclaration(),
-          this.franceTravailJobsService.getFunctionDeclaration(),
-          this.franceTravailEventsService.getFunctionDeclaration(),
-          this.franceTravailLaBonneBoiteService.getFunctionDeclaration(),
-          this.dataInclusionService.getFunctionDeclaration(),
-        ],
-      },
-    ];
+  /**
+   * Get tools based on country
+   * France (fr): FranceTravail services + workshops + data inclusion
+   * US (us): Indeed + labor market data + community programs + training programs
+   */
+  private getToolsForCountry(country: string): ToolListUnion {
+    const isFrench = country.toLowerCase() === 'fr';
+    const isUS = country.toLowerCase() === 'us';
+
+    const functionDeclarations = [];
+
+    if (isFrench) {
+      functionDeclarations.push(
+        this.notionWorkshopService.getFunctionDeclaration(),
+        this.franceTravailJobsService.getFunctionDeclaration(),
+        this.franceTravailEventsService.getFunctionDeclaration(),
+        this.franceTravailLaBonneBoiteService.getFunctionDeclaration(),
+        this.dataInclusionService.getFunctionDeclaration(),
+      );
+    } else if (isUS) {
+      functionDeclarations.push(
+        this.indeedJobsService.getFunctionDeclaration(),
+        this.laborMarketDataService.getFunctionDeclaration(),
+        this.communityProgramsService.getFunctionDeclaration(),
+        this.trainingProgramsService.getFunctionDeclaration(),
+      );
+    }
+
+    return [{ functionDeclarations }];
   }
 
   private async callAI(params: {
@@ -166,15 +191,19 @@ export class AIActionPlanBuilderService extends AbstractActionPlanBuilderService
 
     const functionResults: FunctionCallResult[] = [];
     for (const functionCall of functionCalls) {
-      // Resolve location once for all function calls
-      if (locations.length === 0) {
+      // Resolve location once for all function calls (only for French services)
+      if (getFrench(country) && locations.length === 0) {
         locations = await this.geolocService.searchMunicipalities(
           functionCall.args['cityName'] as string || '',//FIXME
         );
       }
-      functionCall.args['departmentsCode'] = [locations[0].departmentCode]
-      functionCall.args['departmentCode'] = locations[0].departmentCode
-      functionCall.args['cityCode'] = locations[0].citycode
+
+      // Set French location parameters only for French services
+      if (getFrench(country) && locations.length > 0) {
+        functionCall.args['departmentsCode'] = [locations[0].departmentCode]
+        functionCall.args['departmentCode'] = locations[0].departmentCode
+        functionCall.args['cityCode'] = locations[0].citycode
+      }
 
       // Create a generic span for the retrieval step
       const retrievalSpan = trace.span({
@@ -197,6 +226,10 @@ export class AIActionPlanBuilderService extends AbstractActionPlanBuilderService
         result = await this.franceTravailJobsService.executeFunction(functionCall);
         source = 'francetravail';
         console.log(`✅ Job search returned ${result.jobOffers?.length || 0} results`);
+      } else if (functionCall.name === 'indeed_jobs_search') {
+        result = await this.indeedJobsService.executeFunction(functionCall);
+        source = 'indeed';
+        console.log(`✅ Indeed job search returned ${result.jobOffers?.length || 0} results`);
       } else if (functionCall.name === 'events_search') {
         result = await this.franceTravailEventsService.executeFunction(functionCall);
         source = 'francetravail';
@@ -209,6 +242,18 @@ export class AIActionPlanBuilderService extends AbstractActionPlanBuilderService
         result = await this.dataInclusionService.executeFunction(functionCall);
         source = 'datainclusion';
         console.log(`✅ Services search returned ${result.services?.length || 0} results`);
+      } else if (functionCall.name === 'labor_market_insights') {
+        result = await this.laborMarketDataService.executeFunction(functionCall);
+        source = 'labor-market-data';
+        console.log(`✅ Labor market insights returned`);
+      } else if (functionCall.name === 'community_programs_search') {
+        result = await this.communityProgramsService.executeFunction(functionCall);
+        source = 'community-programs';
+        console.log(`✅ Community programs search returned ${result.programs ? 'program data' : '0 results'}`);
+      } else if (functionCall.name === 'training_programs_search') {
+        result = await this.trainingProgramsService.executeFunction(functionCall);
+        source = 'training-programs';
+        console.log(`✅ Training programs search returned ${result.trainingPrograms ? 'program data' : '0 results'}`);
       }
 
       functionResults.push({
@@ -371,12 +416,20 @@ Return ONLY the extracted JSON object with the "actionPlan" array.`,
           service = this.notionWorkshopService;
         } else if (fr.name === 'jobs_search') {
           service = this.franceTravailJobsService;
+        } else if (fr.name === 'indeed_jobs_search') {
+          service = this.indeedJobsService;
         } else if (fr.name === 'events_search') {
           service = this.franceTravailEventsService;
         } else if (fr.name === 'companies_search') {
           service = this.franceTravailLaBonneBoiteService;
         } else if (fr.name === 'services_search') {
           service = this.dataInclusionService;
+        } else if (fr.name === 'labor_market_insights') {
+          service = this.laborMarketDataService;
+        } else if (fr.name === 'community_programs_search') {
+          service = this.communityProgramsService;
+        } else if (fr.name === 'training_programs_search') {
+          service = this.trainingProgramsService;
         }
 
         // Use custom formatter if available, otherwise fall back to JSON
@@ -419,12 +472,13 @@ Now generate the final personalized action plan using these resources.
   private async generateInitialAnalysis(
     systemPrompt: string,
     userPrompt: string,
+    tools: ToolListUnion,
     options?: ActionPlanBuilderOptions,
   ): Promise<AIResponse> {
     return await this.callAI({
       systemPrompt,
       userPrompt,
-      tools: this.tools,
+      tools,
       options,
     });
   }
@@ -492,24 +546,35 @@ Now generate the final personalized action plan using these resources.
     const userPrompt = buildUserPrompt(args.profileText, args.country, args.currentActionPlan);
 
     // Build system prompt for Phase 1 with all tool contexts
+    let toolContexts = '';
+
+    // Add country-specific job search services
+    if (args.country.toLowerCase() === 'fr') {
+      toolContexts += this.notionWorkshopService.getPromptContext() + '\n';
+      toolContexts += this.franceTravailJobsService.getPromptContext() + '\n';
+      toolContexts += this.franceTravailEventsService.getPromptContext() + '\n';
+      toolContexts += this.franceTravailLaBonneBoiteService.getPromptContext() + '\n';
+      toolContexts += this.dataInclusionService.getPromptContext() + '\n';
+    } else if (args.country.toLowerCase() === 'us') {
+      toolContexts += this.indeedJobsService.getPromptContext() + '\n';
+      toolContexts += this.laborMarketDataService.getPromptContext() + '\n';
+      toolContexts += this.communityProgramsService.getPromptContext() + '\n';
+      toolContexts += this.trainingProgramsService.getPromptContext() + '\n';
+    }
+
     const firstSystemPrompt =
       buildSystemPrompt(args.country) +
       '\n\n## Available Tools\n\n' +
       `\n\nNode: if a tool need a country parameter, here it is: ${args.country}\n\n` +
-      this.notionWorkshopService.getPromptContext() +
+      toolContexts +
       '\n' +
-      this.franceTravailJobsService.getPromptContext() +
-      '\n' +
-      this.franceTravailEventsService.getPromptContext() +
-      '\n' +
-      this.franceTravailLaBonneBoiteService.getPromptContext() +
-      '\n' +
-      this.dataInclusionService.getPromptContext() +
-      '\n\n' +
       buildPhase1Instructions(args.country);
 
     // Build system prompt for Phase 2 (no tools, just JSON output)
     const secondSystemPrompt = buildSystemPrompt(args.country) + '\n\n' + buildPhase2Instructions(args.country);
+
+    // Get country-specific tools
+    const tools = this.getToolsForCountry(args.country);
 
     // Create Langfuse trace
     const trace = this.langfuse.trace({
@@ -517,6 +582,7 @@ Now generate the final personalized action plan using these resources.
       metadata: {
         profileLength: args.profileText.length,
         hasCurrentPlan: !!args.currentActionPlan,
+        country: args.country,
       },
     });
 
@@ -532,7 +598,7 @@ Now generate the final personalized action plan using these resources.
         userPrompt,
       },
       metadata: {
-        tools: this.tools,
+        tools,
         phase: 'initial-analysis',
       },
     });
@@ -547,6 +613,7 @@ Now generate the final personalized action plan using these resources.
       const firstResponse = await this.generateInitialAnalysis(
         firstSystemPrompt,
         userPrompt,
+        tools,
         options,
       );
 

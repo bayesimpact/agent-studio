@@ -6,6 +6,10 @@ import { NotionModule } from '../notion/notion.module';
 import { FranceTravailModule } from '../francetravail/francetravail.module';
 import { DataInclusionModule } from '../datainclusion/datainclusion.module';
 import { GeolocModule } from '../geoloc/geoloc.module';
+import { IndeedModule } from '../indeed/indeed.module';
+import { LaborMarketDataModule } from '../labormarketdata/labormarket.module';
+import { CommunityProgramsModule } from '../communityprograms/communityprograms.module';
+import { TrainingProgramsModule } from '../trainingprograms/trainingprograms.module';
 
 // Choose which implementation to use
 // Use 'StaticActionPlanBuilderService' for static mock data
@@ -13,7 +17,7 @@ import { GeolocModule } from '../geoloc/geoloc.module';
 const ActionPlanBuilderService = AIActionPlanBuilderService;
 
 @Module({
-  imports: [NotionModule, FranceTravailModule, DataInclusionModule, GeolocModule],
+  imports: [NotionModule, FranceTravailModule, DataInclusionModule, GeolocModule, IndeedModule, LaborMarketDataModule, CommunityProgramsModule, TrainingProgramsModule],
   controllers: [ActionPlanBuilderController],
   providers: [
     StaticActionPlanBuilderService,

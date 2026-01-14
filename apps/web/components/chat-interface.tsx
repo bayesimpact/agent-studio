@@ -429,7 +429,12 @@ export function ChatInterface({ country }: ChatInterfaceProps) {
                             <div className="mt-3 pt-2" style={{ borderTopWidth: '1px', borderTopColor: '#bacfca' }}>
                               {message.progressText ? (
                                 <div className="text-xs markdown-content hide-code" style={{ color: '#597f77' }}>
-                                  <ReactMarkdown remarkPlugins={[remarkGfm, remarkBreaks]}>
+                                  <ReactMarkdown
+                                    remarkPlugins={[remarkGfm, remarkBreaks]}
+                                    components={{
+                                      a: ({node, ...props}) => <a {...props} target="_blank" rel="noopener noreferrer" />
+                                    }}
+                                  >
                                     {message.progressText}
                                   </ReactMarkdown>
                                 </div>
@@ -451,7 +456,12 @@ export function ChatInterface({ country }: ChatInterfaceProps) {
                           {message.sender === 'user' ? (
                             <p>{message.content}</p>
                           ) : (
-                            <ReactMarkdown remarkPlugins={[remarkGfm, remarkBreaks]}>
+                            <ReactMarkdown
+                              remarkPlugins={[remarkGfm, remarkBreaks]}
+                              components={{
+                                a: ({node, ...props}) => <a {...props} target="_blank" rel="noopener noreferrer" />
+                              }}
+                            >
                               {message.content}
                             </ReactMarkdown>
                           )}

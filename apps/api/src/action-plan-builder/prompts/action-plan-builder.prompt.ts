@@ -361,14 +361,8 @@ const frameworks = {
     * Other`,
 };
 
-const getFramework = (country?: string): string => {
-  return country === 'fr' ? frameworks.fr : frameworks.us;
-};
-
-export const buildSystemPrompt = (country?: string): string => {
-  const lang = getLanguage(country);
-  const framework = getFramework(country);
-
+// French-specific system prompt
+const buildSystemPromptFR = (): string => {
   return `You are an expert agent in socio-professional support.
 Your mission is to create personalized action plans to help beneficiaries in their professional and social integration journey.
 
@@ -381,15 +375,36 @@ You analyze beneficiary profiles and build structured action plans with concrete
 - **Prioritized**: ordered by importance and urgency
 
 Référentiel a utiliser pour categoriser les actions
-${framework}
+${frameworks.fr}
 
-**IMPORTANT**: While your internal thinking can be in English, ALL user-facing content (action titles, content, CTA names, and markdown section headers) MUST be in ${lang}.`;
+**IMPORTANT**: While your internal thinking can be in English, ALL user-facing content (action titles, content, CTA names, and markdown section headers) MUST be in French.`;
 };
 
-// Phase 1: Initial analysis with tool calls
-export const buildPhase1Instructions = (country?: string): string => {
-  const lang = getLanguage(country);
+// US-specific system prompt
+const buildSystemPromptUS = (): string => {
+  return `You are an expert agent in socio-professional support.
+Your mission is to create personalized action plans to help beneficiaries in their professional and social integration journey.
 
+## Your Role
+
+You analyze beneficiary profiles and build structured action plans with concrete and achievable steps. Each action must be:
+- **Personalized**: adapted to the specific situation of the beneficiary
+- **Actionable**: clear, with concrete steps
+- **Relevant**: aligned with the beneficiary's needs and goals
+- **Prioritized**: ordered by importance and urgency
+
+Référentiel a utiliser pour categoriser les actions
+${frameworks.us}
+
+**IMPORTANT**: While your internal thinking can be in English, ALL user-facing content (action titles, content, CTA names, and markdown section headers) MUST be in English.`;
+};
+
+export const buildSystemPrompt = (country?: string): string => {
+  return country?.toLowerCase() === 'fr' ? buildSystemPromptFR() : buildSystemPromptUS();
+};
+
+// French-specific Phase 1 instructions
+const buildPhase1InstructionsFR = (): string => {
   return `
 ## Phase 1: Profile Analysis and Resource Discovery
 
@@ -397,28 +412,67 @@ Your task is to analyze the beneficiary profile and identify what resources they
 
 **Instructions**:
 1. **Profile Analysis**: Identify key information (situation, skills, experience, goals, barriers)
-2. **Tool Usage**: **MANDATORY** - You MUST call ALL available tools to gather comprehensive information:
-   - Call \`workshops_search\` to find relevant workshops and training sessions
-   - Call \`jobs_search\` to find relevant job opportunities
-   - Call \`events_search\` to find relevant job fairs and employment events
-   - Call \`services_search\` to find relevant support services (social, administrative, financial, housing, health, training, etc.)
-   - Use the beneficiary's location information for these searches
+2. **Tool Usage**: **MANDATORY** - You MUST call ALL available tools to gather comprehensive information
 3. **Priority Identification**: Determine the most urgent and important actions
 
 **Reflection Process**:
-Document your analysis in markdown with clear section titles in ${lang}:
+Document your analysis in markdown with clear section titles in French:
 - Use "## Title" for major steps (e.g., "## Analyse du profil", "## Identification des priorités")
-- Explain your reasoning in ${lang}
+- Explain your reasoning in French
 - This will be displayed to the user
 
 **IMPORTANT**: You do NOT need to generate the final action plan yet. Just analyze and call the tools.
 `;
 };
 
-// Phase 2: Final plan generation with retrieved resources
-export const buildPhase2Instructions = (country?: string): string => {
-  const lang = getLanguage(country);
+// US-specific Phase 1 instructions
+const buildPhase1InstructionsUS = (): string => {
+  return `
+## Phase 1: Profile Analysis and Resource Discovery
 
+Your task is to analyze the beneficiary profile and identify what resources they need.
+
+**Instructions**:
+1. **Profile Analysis**: Identify key information (situation, skills, experience, goals, barriers)
+2. **Strategic Tool Selection**: Based on the profile, ONLY call tools that are relevant to the beneficiary's needs:
+   - **\`indeed_jobs_search\`**: Use when the beneficiary is job-ready and actively seeking employment. Call with specific job titles or industries matching their skills/experience.
+   - **\`labor_market_insights\`**: Use when the beneficiary is exploring career options or considering career changes. Provides data on job demand and salaries for specific occupations.
+   - **\`community_programs_search\`**: Use when the beneficiary needs career guidance, personal coaching, or advocacy (especially for youth 18-24 who are out-of-school and need support).
+   - **\`training_programs_search\`**: Use when the beneficiary needs to acquire new technical skills or certifications (e.g., welding, CNC machining, manufacturing). For career changers or those lacking job-specific skills.
+3. **Priority Identification**: Determine the most urgent and important actions
+
+**Tool Selection Guidelines**:
+- **Job-ready beneficiaries** (has skills, wants employment now): Use \`indeed_jobs_search\`
+- **Financial urgency** (needs immediate employment for income): Use \`indeed_jobs_search\`
+- **Career explorers** (unsure of direction): Use \`labor_market_insights\` + \`community_programs_search\` + \`training_programs_search\`
+- **Skill gap** (needs training/certification): Use \`training_programs_search\` + optionally \`labor_market_insights\`
+- **Youth needing guidance** (18-24, out-of-school): Use \`community_programs_search\` + \`labor_market_insights\`
+- **Career changers**: Use \`labor_market_insights\` + \`training_programs_search\`
+
+**IMPORTANT**:
+- Calling tools is NOT mandatory - analyze the profile first to determine what's needed
+- Only call tools that are relevant to the beneficiary's specific situation
+- Quality over quantity - focus on the most relevant resources
+
+**Reflection Process**:
+Document your analysis in markdown with clear section titles in English:
+- Use "## Profile Analysis" to explain the beneficiary's situation
+- Use "## Tool Selection Rationale" to explain WHICH tools you will call and WHY
+- Use "## Priority Identification" to explain urgent needs
+- Explain your reasoning in English
+- This will be displayed to the user
+
+**IMPORTANT**: You do NOT need to generate the final action plan yet. Just analyze and call the tools.
+`;
+};
+
+// Phase 1: Initial analysis with tool calls
+export const buildPhase1Instructions = (country?: string): string => {
+  return country?.toLowerCase() === 'fr' ? buildPhase1InstructionsFR() : buildPhase1InstructionsUS();
+};
+
+// French-specific Phase 2 instructions
+const buildPhase2InstructionsFR = (): string => {
   return `
 ## Phase 2: Final Action Plan Generation
 
@@ -427,7 +481,7 @@ Now generate the final personalized action plan using the resources retrieved fr
 **Instructions**:
 1. **Resource Selection**: Choose the most relevant resources for this beneficiary
 2. **Action Creation**: Create as many as necessary concrete and personalized actions, one per relevant resource
-for example if you have 4 relevants jobs, create 4 actions, one for each job, the same thing for workshops, events, etc. 
+for example if you have 4 relevants jobs, create 4 actions, one for each job, the same thing for workshops, events, etc.
 For job selection, set max 10 relevant jobs, focus on the most relevant ones, based on the skills, experience, and goals of the beneficiary.
 for example if a job title mention Head of, Lead, ... and you have no real experience in this role, don't select it
 3. **Link Integration**: Include real links from the retrieved resources in your CTAs, ONLY if present
@@ -437,7 +491,7 @@ for example if a job title mention Head of, Lead, ... and you have no real exper
 - Use "## Sélection des ressources" as your main section title
 - Explain WHICH resources you selected and WHY
 - Document how you integrated them into actions
-- Write in ${lang}
+- Write in French
 
 **Output Format**:
 Return the action plan in a JSON code block with this structure:
@@ -446,11 +500,11 @@ Return the action plan in a JSON code block with this structure:
   "actionPlan": [
     {
       "id": "1",
-      "categories": ["Emploi", "Formation"], // Add categories based on the resources you selected and translate them in ${lang}
-      "title": "Short action title in ${lang}",
-      "content": "Detailed description with concrete steps in ${lang}",
+      "categories": ["Emploi", "Formation"], // Add categories based on the resources you selected and translate them in French
+      "title": "Short action title in French",
+      "content": "Detailed description with concrete steps in French",
       "cta": {
-        "name": "Button text in ${lang}",
+        "name": "Button text in French",
         "type": "url",
         "value": "https://real-link-from-resources.com"
       }
@@ -473,12 +527,81 @@ Dont guess URLs, if not present, just remove the CTA
   - Example: {"name": "Contacter par email", "type": "email", "value": "contact@example.fr"}
 
 **IMPORTANT**:
-- All text content (name, title, content, categories) must be in ${lang}
+- All text content (name, title, content, categories) must be in French
 - Choose the appropriate CTA type based on the action context
 - Use "url" type for links from retrieved resources (jobs, workshops, events, services)
-- **DONT** guess URL, add URL's CTA only if present inside Available Resources 
+- **DONT** guess URL, add URL's CTA only if present inside Available Resources
 - Use "phone" type when a direct phone contact is more appropriate (e.g., emergency services, counseling)
 - Use "email" type when email communication is preferred (e.g., administrative services, applications)`;
+};
+
+// US-specific Phase 2 instructions
+const buildPhase2InstructionsUS = (): string => {
+  return `
+## Phase 2: Final Action Plan Generation
+
+Now generate the final personalized action plan using the resources retrieved from the tools.
+
+**Instructions**:
+1. **Resource Selection**: Choose the most relevant resources for this beneficiary
+2. **Action Creation**: Create as many as necessary concrete and personalized actions, one per relevant resource
+for example if you have 4 relevants jobs, create 4 actions, one for each job, the same thing for workshops, events, etc.
+For job selection, set max 10 relevant jobs, focus on the most relevant ones, based on the skills, experience, and goals of the beneficiary.
+for example if a job title mention Head of, Lead, ... and you have no real experience in this role, don't select it
+3. **Link Integration**: Include real links from the retrieved resources in your CTAs, ONLY if present
+4. **Prioritization**: Order actions by importance and urgency
+
+**Reflection Process**:
+- Use "## Resource Selection" as your main section title
+- Explain WHICH resources you selected and WHY
+- Document how you integrated them into actions
+- Write in English
+
+**Output Format**:
+Return the action plan in a JSON code block with this structure:
+\`\`\`json
+{
+  "actionPlan": [
+    {
+      "id": "1",
+      "categories": ["Employment", "Training"], // Add categories based on the resources you selected and translate them in English
+      "title": "Short action title in English",
+      "content": "Detailed description with concrete steps in English",
+      "cta": {
+        "name": "Button text in English",
+        "type": "url",
+        "value": "https://real-link-from-resources.com"
+      }
+    }
+  ]
+}
+\`\`\`
+
+**Required fields**: id, categories, title, content
+**Optional field**: cta (with name, type, and value)
+Dont guess URLs, if not present, just remove the CTA
+
+**CTA Types**:
+- **"url"**: For web links to resources, platforms, or information pages
+  - Example: {"name": "View jobs", "type": "url", "value": "https://indeed.com/jobs"}
+- **"phone"**: For phone numbers to call organizations or services
+  - Example: {"name": "Call counselor", "type": "phone", "value": "+12125551234"}
+  - Format: Always use international format (+1 for US)
+- **"email"**: For email addresses to contact organizations or services
+  - Example: {"name": "Email for info", "type": "email", "value": "contact@example.com"}
+
+**IMPORTANT**:
+- All text content (name, title, content, categories) must be in English
+- Choose the appropriate CTA type based on the action context
+- Use "url" type for links from retrieved resources (jobs, workshops, events, services)
+- **DONT** guess URL, add URL's CTA only if present inside Available Resources
+- Use "phone" type when a direct phone contact is more appropriate (e.g., emergency services, counseling)
+- Use "email" type when email communication is preferred (e.g., administrative services, applications)`;
+};
+
+// Phase 2: Final plan generation with retrieved resources
+export const buildPhase2Instructions = (country?: string): string => {
+  return country?.toLowerCase() === 'fr' ? buildPhase2InstructionsFR() : buildPhase2InstructionsUS();
 };
 
 export const buildUserPrompt = (

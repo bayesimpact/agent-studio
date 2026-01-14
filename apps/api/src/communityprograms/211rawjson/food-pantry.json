@@ -1,0 +1,963 @@
+{
+  "count": 140,
+  "request": null,
+  "location": null,
+  "results": [
+    {
+      "idServiceAtLocation": "211columbu-86753",
+      "idOrganization": "211columbu-14284",
+      "idService": "211columbu-27085",
+      "idLocation": "211columbu-14285",
+      "nameOrganization": "Hoge Church Food Pantry",
+      "nameService": "Hoge Church Food Pantry",
+      "nameLocation": "Hoge Church Food Pantry",
+      "nameServiceAtLocation": "Hoge Church Food Pantry at Hoge Church Food Pantry",
+      "alternateNamesOrganization": [],
+      "alternateNamesService": [],
+      "alternateNamesLocation": [],
+      "descriptionOrganization": "Church offering a walk-in food pantry.",
+      "descriptionService": "Walk-in food pantry.",
+      "descriptionServiceVector": [],
+      "address": {
+        "streetAddress": "2930 West Broad Street",
+        "city": "Columbus",
+        "county": "Franklin",
+        "stateProvince": "OH",
+        "postalCode": "43204",
+        "country": "United States",
+        "latitude": "39.95516",
+        "longitude": "-83.07882"
+      },
+      "taxonomy": [
+        {
+          "taxonomyTerm": "Food Pantries",
+          "taxonomyCode": "BD-1800.2000",
+          "taxonomyTermLevel1": "Basic Needs",
+          "taxonomyTermLevel2": "Food",
+          "taxonomyTermLevel3": "Emergency Food",
+          "taxonomyTermLevel4": "Food Pantries",
+          "taxonomyTermLevel5": null,
+          "taxonomyTermLevel6": null,
+          "targets": []
+        }
+      ],
+      "serviceAreas": [
+        {
+          "type": "postal_code",
+          "value": "43223"
+        },
+        {
+          "type": "postal_code",
+          "value": "43204"
+        },
+        {
+          "type": "postal_code",
+          "value": "43228"
+        }
+      ],
+      "tagsService": [],
+      "dataOwner": "211columbus",
+      "dataOwnerDisplayName": "LSS 211 Central Ohio",
+      "geoPoint": null,
+      "status": null
+    },
+    {
+      "idServiceAtLocation": "211columbu-85407",
+      "idOrganization": "211columbu-5012",
+      "idService": "211columbu-26568",
+      "idLocation": "211columbu-5013",
+      "nameOrganization": "St. John Food Pantry",
+      "nameService": "Food Pantries",
+      "nameLocation": "St. John Food Pantry",
+      "nameServiceAtLocation": "Food Pantries at St. John Food Pantry",
+      "alternateNamesOrganization": [],
+      "alternateNamesService": [],
+      "alternateNamesLocation": [],
+      "descriptionOrganization": "Adult basic education, computer literacy classes, and a food pantry.",
+      "descriptionService": "Offers 3-5 day supply of emergency food. Clients can visit twice per month but must have at least one week between visits.",
+      "descriptionServiceVector": [],
+      "address": {
+        "streetAddress": "640 South Ohio Avenue",
+        "city": "Columbus",
+        "county": "Franklin",
+        "stateProvince": "OH",
+        "postalCode": "43205",
+        "country": "United States",
+        "latitude": "39.95214",
+        "longitude": "-82.97095"
+      },
+      "taxonomy": [
+        {
+          "taxonomyTerm": "Food Pantries",
+          "taxonomyCode": "BD-1800.2000",
+          "taxonomyTermLevel1": "Basic Needs",
+          "taxonomyTermLevel2": "Food",
+          "taxonomyTermLevel3": "Emergency Food",
+          "taxonomyTermLevel4": "Food Pantries",
+          "taxonomyTermLevel5": null,
+          "taxonomyTermLevel6": null,
+          "targets": []
+        }
+      ],
+      "serviceAreas": [
+        {
+          "type": "county",
+          "value": "Franklin"
+        }
+      ],
+      "tagsService": [],
+      "dataOwner": "211columbus",
+      "dataOwnerDisplayName": "LSS 211 Central Ohio",
+      "geoPoint": null,
+      "status": null
+    },
+    {
+      "idServiceAtLocation": "211delawar-66440879",
+      "idOrganization": "211delawar-66440876",
+      "idService": "211delawar-66440878",
+      "idLocation": "211delawar-66440877",
+      "nameOrganization": "Worthington Resource Pantry",
+      "nameService": "Worthington Resource Pantry - Food Pantries",
+      "nameLocation": "Worthington Resource Pantry",
+      "nameServiceAtLocation": "Worthington Resource Pantry - Food Pantries at Worthington Resource Pantry",
+      "alternateNamesOrganization": [],
+      "alternateNamesService": [],
+      "alternateNamesLocation": [],
+      "descriptionOrganization": "Worthington Resource Pantry is a choice food and personal items pantry that provides each family four days of food twice each calendar month. A selection of personal items and food will be provided.",
+      "descriptionService": "The choice food pantry can provide four days of food twice each calendar month. A selection of food and personal items will be provided.",
+      "descriptionServiceVector": [],
+      "address": {
+        "streetAddress": "6700 Huntley Rd",
+        "city": "Columbus",
+        "county": "Franklin",
+        "stateProvince": "OH",
+        "postalCode": "43229",
+        "country": "United States",
+        "latitude": "40.10334",
+        "longitude": "-82.99759"
+      },
+      "taxonomy": [
+        {
+          "taxonomyTerm": "Food Pantries",
+          "taxonomyCode": "BD-1800.2000",
+          "taxonomyTermLevel1": "Basic Needs",
+          "taxonomyTermLevel2": "Food",
+          "taxonomyTermLevel3": "Emergency Food",
+          "taxonomyTermLevel4": "Food Pantries",
+          "taxonomyTermLevel5": null,
+          "taxonomyTermLevel6": null,
+          "targets": []
+        }
+      ],
+      "serviceAreas": [
+        {
+          "type": "postal_code",
+          "value": "43065"
+        },
+        {
+          "type": "postal_code",
+          "value": "43035"
+        },
+        {
+          "type": "postal_code",
+          "value": "43240"
+        },
+        {
+          "type": "postal_code",
+          "value": "43065"
+        },
+        {
+          "type": "postal_code",
+          "value": "43065"
+        },
+        {
+          "type": "postal_code",
+          "value": "43065"
+        }
+      ],
+      "tagsService": [],
+      "dataOwner": "211delaware",
+      "dataOwnerDisplayName": "HelpLine211 Delaware OH",
+      "geoPoint": null,
+      "status": null
+    },
+    {
+      "idServiceAtLocation": "211columbu-46037",
+      "idOrganization": "211columbu-4540",
+      "idService": "211columbu-10216",
+      "idLocation": "211columbu-13518",
+      "nameOrganization": "Bread Of Life Food Pantry - New Salem Baptist Church",
+      "nameService": "Bread Of Life Food Pantry",
+      "nameLocation": "Bread Of Life Food Pantry Mission House",
+      "nameServiceAtLocation": "Bread Of Life Food Pantry at Bread Of Life Food Pantry Mission House",
+      "alternateNamesOrganization": [],
+      "alternateNamesService": [],
+      "alternateNamesLocation": [],
+      "descriptionOrganization": "Church with a food pantry..",
+      "descriptionService": "Provides 3 day supply of emergency food.\r\n",
+      "descriptionServiceVector": [],
+      "address": {
+        "streetAddress": "1880 Agler Road",
+        "city": "Columbus",
+        "county": "Franklin",
+        "stateProvince": "OH",
+        "postalCode": "43224",
+        "country": "United States",
+        "latitude": "40.02777",
+        "longitude": "-82.96198"
+      },
+      "taxonomy": [
+        {
+          "taxonomyTerm": "Food Pantries",
+          "taxonomyCode": "BD-1800.2000",
+          "taxonomyTermLevel1": "Basic Needs",
+          "taxonomyTermLevel2": "Food",
+          "taxonomyTermLevel3": "Emergency Food",
+          "taxonomyTermLevel4": "Food Pantries",
+          "taxonomyTermLevel5": null,
+          "taxonomyTermLevel6": null,
+          "targets": []
+        }
+      ],
+      "serviceAreas": [
+        {
+          "type": "county",
+          "value": "Franklin"
+        }
+      ],
+      "tagsService": [],
+      "dataOwner": "211columbus",
+      "dataOwnerDisplayName": "LSS 211 Central Ohio",
+      "geoPoint": null,
+      "status": null
+    },
+    {
+      "idServiceAtLocation": "211columbu-86901",
+      "idOrganization": "211columbu-14349",
+      "idService": "211columbu-27144",
+      "idLocation": "211columbu-14350",
+      "nameOrganization": "Brice United Methodist Church Food Pantry",
+      "nameService": "Brice Umc Food Pantry",
+      "nameLocation": "Brice United Methodist Church Food Pantry",
+      "nameServiceAtLocation": "Brice Umc Food Pantry at Brice United Methodist Church Food Pantry",
+      "alternateNamesOrganization": [],
+      "alternateNamesService": [],
+      "alternateNamesLocation": [],
+      "descriptionOrganization": "Offers a walk-in food pantry. Numbers are given at the door for order of service.",
+      "descriptionService": "Offers clients a supply of emergency food. Clients can be served one time per calendar month.",
+      "descriptionServiceVector": [],
+      "address": {
+        "streetAddress": "3160 Brice Road",
+        "city": "Brice",
+        "county": "Franklin",
+        "stateProvince": "OH",
+        "postalCode": "43109",
+        "country": "United States",
+        "latitude": "39.91404",
+        "longitude": "-82.8315"
+      },
+      "taxonomy": [
+        {
+          "taxonomyTerm": "Food Pantries",
+          "taxonomyCode": "BD-1800.2000",
+          "taxonomyTermLevel1": "Basic Needs",
+          "taxonomyTermLevel2": "Food",
+          "taxonomyTermLevel3": "Emergency Food",
+          "taxonomyTermLevel4": "Food Pantries",
+          "taxonomyTermLevel5": null,
+          "taxonomyTermLevel6": null,
+          "targets": []
+        }
+      ],
+      "serviceAreas": [
+        {
+          "type": "postal_code",
+          "value": "43125"
+        },
+        {
+          "type": "postal_code",
+          "value": "43068"
+        },
+        {
+          "type": "postal_code",
+          "value": "43110"
+        },
+        {
+          "type": "postal_code",
+          "value": "43109"
+        },
+        {
+          "type": "postal_code",
+          "value": "43207"
+        },
+        {
+          "type": "postal_code",
+          "value": "43147"
+        },
+        {
+          "type": "postal_code",
+          "value": "43232"
+        },
+        {
+          "type": "postal_code",
+          "value": "43147"
+        }
+      ],
+      "tagsService": [],
+      "dataOwner": "211columbus",
+      "dataOwnerDisplayName": "LSS 211 Central Ohio",
+      "geoPoint": null,
+      "status": null
+    },
+    {
+      "idServiceAtLocation": "211columbu-89818",
+      "idOrganization": "211columbu-15424",
+      "idService": "211columbu-28333",
+      "idLocation": "211columbu-15425",
+      "nameOrganization": "Rebuild And Renew Cdc",
+      "nameService": "Unity Community Food Pantry",
+      "nameLocation": "Unity Community Food Pantry",
+      "nameServiceAtLocation": "Unity Community Food Pantry at Unity Community Food Pantry",
+      "alternateNamesOrganization": [],
+      "alternateNamesService": [],
+      "alternateNamesLocation": [],
+      "descriptionOrganization": "Food pantry.",
+      "descriptionService": "Provides residents 3-5 day supply of food.",
+      "descriptionServiceVector": [],
+      "address": {
+        "streetAddress": "161 North Hamilton Road",
+        "city": "Whitehall",
+        "county": "Franklin",
+        "stateProvince": "OH",
+        "postalCode": "43213",
+        "country": "United States",
+        "latitude": "39.97977",
+        "longitude": "-82.87434"
+      },
+      "taxonomy": [
+        {
+          "taxonomyTerm": "Food Pantries",
+          "taxonomyCode": "BD-1800.2000",
+          "taxonomyTermLevel1": "Basic Needs",
+          "taxonomyTermLevel2": "Food",
+          "taxonomyTermLevel3": "Emergency Food",
+          "taxonomyTermLevel4": "Food Pantries",
+          "taxonomyTermLevel5": null,
+          "taxonomyTermLevel6": null,
+          "targets": []
+        }
+      ],
+      "serviceAreas": [
+        {
+          "type": "county",
+          "value": "Franklin"
+        }
+      ],
+      "tagsService": [],
+      "dataOwner": "211columbus",
+      "dataOwnerDisplayName": "LSS 211 Central Ohio",
+      "geoPoint": null,
+      "status": null
+    },
+    {
+      "idServiceAtLocation": "211columbu-76647",
+      "idOrganization": "211columbu-4517",
+      "idService": "211columbu-10176",
+      "idLocation": "211columbu-11844",
+      "nameOrganization": "Neighborhood Services",
+      "nameService": "Nsi Food Pantry",
+      "nameLocation": "Neighborhood Services- Food Pantry",
+      "nameServiceAtLocation": "Nsi Food Pantry at Neighborhood Services- Food Pantry",
+      "alternateNamesOrganization": [],
+      "alternateNamesService": [],
+      "alternateNamesLocation": [],
+      "descriptionOrganization": "Neighborhood organization that offers emergency food, free clothing, school supplies, and emergency financial assistance.",
+      "descriptionService": "Food pantry provides a seven day supply of food. Pet (dog/cat) food and diapers may be available.",
+      "descriptionServiceVector": [],
+      "address": {
+        "streetAddress": null,
+        "city": null,
+        "county": null,
+        "stateProvince": null,
+        "postalCode": null,
+        "country": "United States",
+        "latitude": "40.00325",
+        "longitude": "-82.99841"
+      },
+      "taxonomy": [
+        {
+          "taxonomyTerm": "Food Donation Programs",
+          "taxonomyCode": "TI-1800.2000",
+          "taxonomyTermLevel1": "Organizational/Community/International Services",
+          "taxonomyTermLevel2": "Donor Services",
+          "taxonomyTermLevel3": "Donated Specialty Items",
+          "taxonomyTermLevel4": "Food Donation Programs",
+          "taxonomyTermLevel5": null,
+          "taxonomyTermLevel6": null,
+          "targets": []
+        },
+        {
+          "taxonomyTerm": "Food Pantries",
+          "taxonomyCode": "BD-1800.2000",
+          "taxonomyTermLevel1": "Basic Needs",
+          "taxonomyTermLevel2": "Food",
+          "taxonomyTermLevel3": "Emergency Food",
+          "taxonomyTermLevel4": "Food Pantries",
+          "taxonomyTermLevel5": null,
+          "taxonomyTermLevel6": null,
+          "targets": []
+        }
+      ],
+      "serviceAreas": [
+        {
+          "type": "postal_code",
+          "value": "43221"
+        },
+        {
+          "type": "postal_code",
+          "value": "43219"
+        },
+        {
+          "type": "postal_code",
+          "value": "43220"
+        },
+        {
+          "type": "postal_code",
+          "value": "43224"
+        },
+        {
+          "type": "postal_code",
+          "value": "43229"
+        },
+        {
+          "type": "postal_code",
+          "value": "43212"
+        },
+        {
+          "type": "postal_code",
+          "value": "43202"
+        },
+        {
+          "type": "postal_code",
+          "value": "43211"
+        },
+        {
+          "type": "postal_code",
+          "value": "43201"
+        },
+        {
+          "type": "postal_code",
+          "value": "43210"
+        }
+      ],
+      "tagsService": [],
+      "dataOwner": "211columbus",
+      "dataOwnerDisplayName": "LSS 211 Central Ohio",
+      "geoPoint": null,
+      "status": null
+    },
+    {
+      "idServiceAtLocation": "211columbu-85373",
+      "idOrganization": "211columbu-13769",
+      "idService": "211columbu-26553",
+      "idLocation": "211columbu-13770",
+      "nameOrganization": "Church Of Christ On Fishinger Food Pantry",
+      "nameService": "Church Of Christ On Fishinger",
+      "nameLocation": "Church Of Christ On Fishinger Food Pantry",
+      "nameServiceAtLocation": "Church Of Christ On Fishinger at Church Of Christ On Fishinger Food Pantry",
+      "alternateNamesOrganization": [],
+      "alternateNamesService": [],
+      "alternateNamesLocation": [],
+      "descriptionOrganization": "Food pantry.",
+      "descriptionService": "Offers a 3-5 day supply of non-perishable emergency food.",
+      "descriptionServiceVector": [],
+      "address": {
+        "streetAddress": "1130 Fishinger Road",
+        "city": "Columbus",
+        "county": "Franklin",
+        "stateProvince": "OH",
+        "postalCode": "43221",
+        "country": "United States",
+        "latitude": "40.02406",
+        "longitude": "-83.04411"
+      },
+      "taxonomy": [
+        {
+          "taxonomyTerm": "Food Pantries",
+          "taxonomyCode": "BD-1800.2000",
+          "taxonomyTermLevel1": "Basic Needs",
+          "taxonomyTermLevel2": "Food",
+          "taxonomyTermLevel3": "Emergency Food",
+          "taxonomyTermLevel4": "Food Pantries",
+          "taxonomyTermLevel5": null,
+          "taxonomyTermLevel6": null,
+          "targets": []
+        }
+      ],
+      "serviceAreas": [
+        {
+          "type": "county",
+          "value": "Franklin"
+        }
+      ],
+      "tagsService": [],
+      "dataOwner": "211columbus",
+      "dataOwnerDisplayName": "LSS 211 Central Ohio",
+      "geoPoint": null,
+      "status": null
+    },
+    {
+      "idServiceAtLocation": "211columbu-89365",
+      "idOrganization": "211columbu-4336",
+      "idService": "211columbu-26565",
+      "idLocation": "211columbu-4338",
+      "nameOrganization": "Lutheran Social Services Of Central Ohio",
+      "nameService": "Food Pantries",
+      "nameLocation": "Lss - Champion Avenue Food Pantry",
+      "nameServiceAtLocation": "Food Pantries at Lss - Champion Avenue Food Pantry",
+      "alternateNamesOrganization": [],
+      "alternateNamesService": [],
+      "alternateNamesLocation": [],
+      "descriptionOrganization": "Multi-service agency that provides services to people in need, including food pantries, homeless and domestic violence shelters, senior living, affordable housing communities and other programs that uplift families and strengthen communities.",
+      "descriptionService": "Provides an emergency supply of food.",
+      "descriptionServiceVector": [],
+      "address": {
+        "streetAddress": "1460 South Champion Avenue",
+        "city": "Columbus",
+        "county": "Franklin",
+        "stateProvince": "OH",
+        "postalCode": "43206",
+        "country": "United States",
+        "latitude": "39.93501",
+        "longitude": "-82.97084"
+      },
+      "taxonomy": [
+        {
+          "taxonomyTerm": "Food Pantries",
+          "taxonomyCode": "BD-1800.2000",
+          "taxonomyTermLevel1": "Basic Needs",
+          "taxonomyTermLevel2": "Food",
+          "taxonomyTermLevel3": "Emergency Food",
+          "taxonomyTermLevel4": "Food Pantries",
+          "taxonomyTermLevel5": null,
+          "taxonomyTermLevel6": null,
+          "targets": []
+        }
+      ],
+      "serviceAreas": [
+        {
+          "type": "postal_code",
+          "value": "43728"
+        },
+        {
+          "type": "postal_code",
+          "value": "43787"
+        },
+        {
+          "type": "postal_code",
+          "value": "43711"
+        },
+        {
+          "type": "county",
+          "value": "Noble"
+        },
+        {
+          "type": "county",
+          "value": "Perry"
+        },
+        {
+          "type": "postal_code",
+          "value": "43733"
+        },
+        {
+          "type": "county",
+          "value": "Franklin"
+        },
+        {
+          "type": "county",
+          "value": "Morgan"
+        },
+        {
+          "type": "postal_code",
+          "value": "43788"
+        },
+        {
+          "type": "postal_code",
+          "value": "43724"
+        },
+        {
+          "type": "postal_code",
+          "value": "43760"
+        },
+        {
+          "type": "postal_code",
+          "value": "43722"
+        },
+        {
+          "type": "county",
+          "value": "Lawrence"
+        },
+        {
+          "type": "postal_code",
+          "value": "43749"
+        },
+        {
+          "type": "county",
+          "value": "Jefferson"
+        },
+        {
+          "type": "postal_code",
+          "value": "43749"
+        },
+        {
+          "type": "county",
+          "value": "Muskingum"
+        },
+        {
+          "type": "county",
+          "value": "Monroe"
+        },
+        {
+          "type": "postal_code",
+          "value": "43766"
+        },
+        {
+          "type": "postal_code",
+          "value": "43760"
+        },
+        {
+          "type": "postal_code",
+          "value": "43717"
+        },
+        {
+          "type": "county",
+          "value": "Guernsey"
+        },
+        {
+          "type": "county",
+          "value": "Tuscarawas"
+        },
+        {
+          "type": "county",
+          "value": "Washington"
+        },
+        {
+          "type": "postal_code",
+          "value": "43720"
+        },
+        {
+          "type": "county",
+          "value": "Meigs"
+        },
+        {
+          "type": "county",
+          "value": "Gallia"
+        },
+        {
+          "type": "postal_code",
+          "value": "43756"
+        },
+        {
+          "type": "postal_code",
+          "value": "43736"
+        },
+        {
+          "type": "postal_code",
+          "value": "43701"
+        },
+        {
+          "type": "postal_code",
+          "value": "43716"
+        },
+        {
+          "type": "postal_code",
+          "value": "43130"
+        },
+        {
+          "type": "postal_code",
+          "value": "43748"
+        },
+        {
+          "type": "postal_code",
+          "value": "43739"
+        },
+        {
+          "type": "county",
+          "value": "Montgomery"
+        },
+        {
+          "type": "county",
+          "value": "Belmont"
+        },
+        {
+          "type": "postal_code",
+          "value": "43739"
+        },
+        {
+          "type": "postal_code",
+          "value": "43732"
+        },
+        {
+          "type": "postal_code",
+          "value": "43772"
+        },
+        {
+          "type": "postal_code",
+          "value": "43725"
+        },
+        {
+          "type": "county",
+          "value": "Athens"
+        },
+        {
+          "type": "postal_code",
+          "value": "43780"
+        },
+        {
+          "type": "postal_code",
+          "value": "43732"
+        },
+        {
+          "type": "postal_code",
+          "value": "43788"
+        },
+        {
+          "type": "postal_code",
+          "value": "43780"
+        },
+        {
+          "type": "postal_code",
+          "value": "43766"
+        },
+        {
+          "type": "postal_code",
+          "value": "43732"
+        },
+        {
+          "type": "postal_code",
+          "value": "43773"
+        }
+      ],
+      "tagsService": [],
+      "dataOwner": "211columbus",
+      "dataOwnerDisplayName": "LSS 211 Central Ohio",
+      "geoPoint": null,
+      "status": null
+    },
+    {
+      "idServiceAtLocation": "211columbu-51741",
+      "idOrganization": "211columbu-5006",
+      "idService": "211columbu-11850",
+      "idLocation": "211columbu-5007",
+      "nameOrganization": "St. Philip Episcopal Church",
+      "nameService": "Food Pantries",
+      "nameLocation": "St. Philip Episcopal Church",
+      "nameServiceAtLocation": "Food Pantries at St. Philip Episcopal Church",
+      "alternateNamesOrganization": [],
+      "alternateNamesService": [],
+      "alternateNamesLocation": [],
+      "descriptionOrganization": "Food pantry.",
+      "descriptionService": "Choice food pantry that offers a supply of emergency food.",
+      "descriptionServiceVector": [],
+      "address": {
+        "streetAddress": "166 Woodland Avenue",
+        "city": "Columbus",
+        "county": "Franklin",
+        "stateProvince": "OH",
+        "postalCode": "43203",
+        "country": "United States",
+        "latitude": "39.97077",
+        "longitude": "-82.95696"
+      },
+      "taxonomy": [
+        {
+          "taxonomyTerm": "Food Pantries",
+          "taxonomyCode": "BD-1800.2000",
+          "taxonomyTermLevel1": "Basic Needs",
+          "taxonomyTermLevel2": "Food",
+          "taxonomyTermLevel3": "Emergency Food",
+          "taxonomyTermLevel4": "Food Pantries",
+          "taxonomyTermLevel5": null,
+          "taxonomyTermLevel6": null,
+          "targets": []
+        }
+      ],
+      "serviceAreas": [
+        {
+          "type": "postal_code",
+          "value": "43203"
+        },
+        {
+          "type": "postal_code",
+          "value": "43205"
+        }
+      ],
+      "tagsService": [],
+      "dataOwner": "211columbus",
+      "dataOwnerDisplayName": "LSS 211 Central Ohio",
+      "geoPoint": null,
+      "status": null
+    }
+  ],
+  "facets": {
+    "taxonomy/taxonomyTermLevel2": [
+      {
+        "value": "Food",
+        "count": 48
+      },
+      {
+        "value": "Housing/Shelter",
+        "count": 22
+      },
+      {
+        "value": "Material Goods",
+        "count": 21
+      },
+      {
+        "value": "Individual and Family Support Services",
+        "count": 15
+      },
+      {
+        "value": "Donor Services",
+        "count": 13
+      },
+      {
+        "value": "Transportation",
+        "count": 10
+      },
+      {
+        "value": "Utilities",
+        "count": 10
+      },
+      {
+        "value": "Health Screening/Diagnostic Services",
+        "count": 8
+      },
+      {
+        "value": "Health Supportive Services",
+        "count": 8
+      },
+      {
+        "value": "Mental Health Assessment and Treatment",
+        "count": 7
+      }
+    ],
+    "taxonomy/taxonomyTermLevel1": [
+      {
+        "value": "Basic Needs",
+        "count": 87
+      },
+      {
+        "value": "Individual and Family Life",
+        "count": 25
+      },
+      {
+        "value": "Organizational/Community/International Services",
+        "count": 22
+      },
+      {
+        "value": "Health Care",
+        "count": 17
+      },
+      {
+        "value": "Mental Health and Substance Use Disorder Services",
+        "count": 11
+      },
+      {
+        "value": "Criminal Justice and Legal Services",
+        "count": 9
+      },
+      {
+        "value": "Income Support and Employment",
+        "count": 5
+      },
+      {
+        "value": "Education",
+        "count": 3
+      },
+      {
+        "value": "Consumer Services",
+        "count": 1
+      }
+    ],
+    "serviceAreas/valueType": [
+      {
+        "value": "Franklin|county",
+        "count": 104
+      },
+      {
+        "value": "Ohio|state",
+        "count": 19
+      },
+      {
+        "value": "43202|postal_code",
+        "count": 5
+      },
+      {
+        "value": "43224|postal_code",
+        "count": 5
+      },
+      {
+        "value": "43229|postal_code",
+        "count": 5
+      },
+      {
+        "value": "43065|postal_code",
+        "count": 4
+      },
+      {
+        "value": "43201|postal_code",
+        "count": 4
+      },
+      {
+        "value": "43211|postal_code",
+        "count": 4
+      },
+      {
+        "value": "43214|postal_code",
+        "count": 4
+      },
+      {
+        "value": "Fairfield|county",
+        "count": 4
+      }
+    ],
+    "address/stateProvince": [
+      {
+        "value": "OH",
+        "count": 138
+      }
+    ],
+    "tagsService": [],
+    "dataOwnerDisplayName": [
+      {
+        "value": "LSS 211 Central Ohio",
+        "count": 115
+      },
+      {
+        "value": "211 Pathways",
+        "count": 7
+      },
+      {
+        "value": "HelpLink 211 Dayton",
+        "count": 7
+      },
+      {
+        "value": "211 Cleveland",
+        "count": 4
+      },
+      {
+        "value": "HelpLine211 Delaware OH",
+        "count": 3
+      },
+      {
+        "value": "211 UWGC",
+        "count": 2
+      },
+      {
+        "value": "UW 211 Greater Toledo",
+        "count": 2
+      }
+    ]
+  }
+}

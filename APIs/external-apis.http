@@ -148,19 +148,92 @@ Content-Type: application/json
   ]
 }
 
+
+
 ###
 
-POST https://api.notion.com/v1/databases/29a7d19cc825808baa2dce8093f0dd59/query
+POST https://api.notion.com/v1/databases/2e77d19cc82580ea97bdc484aff777c8/query
 Authorization: Bearer {{notionSecret}}
 Notion-Version: 2022-06-28
 Content-Type: application/json
 
 {
-  "page_size": 100,
-  "filter": {
-    "property": "Name",
-    "title": { "contains": "Melvin" }
-  }
+  "page_size": 100
 }
 
+### INDEED
+
+# curl -H "Authorization: Bearer XXX" -H "Content-Type: application/json" -d '{"input":[{"country":"US","domain":"indeed.com","keyword_search":"analyst","location":"New York, NY","date_posted":"Last 24 hours","posted_by":"","location_radius":""},{"country":"FR","domain":"fr.indeed.com","keyword_search":"product manager","location":"Paris","date_posted":"Last 7 days","posted_by":"","location_radius":""},{"country":"US","domain":"indeed.com","keyword_search":"product manager","location":"New York, NY","date_posted":"","posted_by":"","location_radius":""}]}' "https://api.brightdata.com/datasets/v3/scrape?dataset_id=gd_l4dx9j9sscpvs7no2&notify=false&include_errors=true&type=discover_new&discover_by=keyword"
+POST https://api.brightdata.com/datasets/v3/scrape?dataset_id=gd_l4dx9j9sscpvs7no2&notify=false&include_errors=true&
+    type=discover_new&discover_by=keyword
+Authorization: Bearer {{indeedBearer}}
+Content-Type: application/json
+
+{
+  "input": [
+    {
+      "country": "US",
+      "domain": "indeed.com",
+      "keyword_search": "welder",
+      "location": "Columbus, OH",
+      "date_posted": "Last 3 days",
+      "posted_by": "",
+      "location_radius": "Whitin 5 miles"
+    }
+  ]
+}
+
+
+
+###
+# curl -H "Authorization: Bearer XXX" -H "Content-Type: application/json" -d '{"input":[{"country":"US","domain":"indeed.com","keyword_search":"welder","location":"Columbus, OH","date_posted":"","posted_by":"","location_radius":""}]}' "https://api.brightdata.com/datasets/v3/trigger?dataset_id=gd_l4dx9j9sscpvs7no2&notify=false&include_errors=true&type=discover_new&discover_by=keyword&limit_per_input=1000"
+POST https://api.brightdata.com/datasets/v3/trigger?dataset_id=gd_l4dx9j9sscpvs7no2&notify=false&include_errors=true&
+    type=discover_new&discover_by=keyword&limit_per_input=1000
+Authorization: Bearer {{indeedBearer}}
+Content-Type: application/json
+
+{
+  "input": [
+    {
+      "country": "US",
+      "domain": "indeed.com",
+      "keyword_search": "Retail Salespersons",
+      "location": "Columbus, OH",
+      "date_posted": "",
+      "posted_by": "",
+      "location_radius": "Whitin 5 miles"
+    }
+  ]
+}
+
+###
+
+POST https://api.211.org/resources/v2/export/organizations?dataOwners=211columbus
+Cache-Control: no-cache
+Api-Key: {{apiKey}}
+
+###
+
+GET https://api.211.org/resources/v2/export/filters/data-owners
+Api-Key: {{apiKey}}
+
+
+
+###
+GET https://api.211.org/resources/v2/export/organizations?dataOwners=211columbus&includeInactive=false&skip=0&size=10
+Cache-Control: no-cache
+Api-Key: {{apiKey}}
+
+
+
+###
+POST https://api.211.org/resources/v2/search/keyword
+Api-Key: {{apiKey}}
+Accept: application/json
+Content-Type: application/json
+
+{
+  "search": "SNAP",
+  "location": "Columbus, Ohio"
+}
 ###
