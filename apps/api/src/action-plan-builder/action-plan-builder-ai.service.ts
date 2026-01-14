@@ -466,8 +466,9 @@ Now generate the final personalized action plan using these resources.
 **Important**:
 1. Use the previous analysis context to stay consistent with identified priorities
 2. Include real resource links (workshops, jobs) in action CTAs when you select relevant items
-3. **After your reflection, return the action plan in a JSON code block as specified in the system prompt**
-4. All action titles, content, CTA names, and markdown section headers must be in ${lang}
+3. Append a "Processing..." text at the end of your refection just before returning the action plan
+4. **After your reflection, return the action plan in a JSON code block as specified in the system prompt**
+5. All action titles, content, CTA names, and markdown section headers must be in ${lang}
 `;
   }
 
@@ -682,10 +683,9 @@ Now generate the final personalized action plan using these resources.
         ? `\n## Structuration du plan\n`
         : `\n## Plan structuration\n`);
 
-      // Show processing message before completion
       options?.onProgress?.(isFrench
-        ? `\n*Traitement en cours...*\n`
-        : `\n*Processing...*\n`);
+        ? `\nTraitement en cours...\n`
+        : `\nProcessing...\n`);
 
       const extractedResult = await this.rawStringToJson(finalOutput, trace);
       const actionPlan = extractedResult.actionPlan;
