@@ -5,7 +5,6 @@ import { TypeOrmModule } from "@nestjs/typeorm"
 import { AuthModule } from "./auth/auth.module"
 import { ChatModule } from "./chat/chat.module"
 import typeorm from "./config/typeorm"
-import { PrendresoinModule } from "./prendresoin/prendresoin.module"
 import { ProtectedModule } from "./protected/protected.module"
 
 @Module({
@@ -21,7 +20,6 @@ import { ProtectedModule } from "./protected/protected.module"
     }),
     AuthModule,
     ChatModule,
-    PrendresoinModule,
     ProtectedModule,
   ],
 })
