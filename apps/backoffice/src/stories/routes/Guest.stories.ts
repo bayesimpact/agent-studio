@@ -1,17 +1,17 @@
-import { GuestRoute } from '@/routes/GuestRoute';
-import type { Meta, StoryObj } from '@storybook/react-vite';
-import { withRouter } from 'storybook-addon-remix-react-router';
+import type { Meta, StoryObj } from "@storybook/react-vite"
+import { withRouter } from "storybook-addon-remix-react-router"
+import { GuestRoute } from "@/routes/GuestRoute"
 
 const meta = {
-  title: 'routes/Guest',
+  title: "routes/Guest",
   component: GuestRoute,
   decorators: [withRouter],
   parameters: {
-    layout: 'fullscreen',
+    layout: "fullscreen",
   },
-} satisfies Meta<typeof GuestRoute>;
+} satisfies Meta<typeof GuestRoute>
 
-export default meta;
-type Story = StoryObj<typeof meta>;
+export default meta
+type Story = StoryObj<typeof meta>
 
-export const Guest: Story = {};
+export const Guest: Story = {}

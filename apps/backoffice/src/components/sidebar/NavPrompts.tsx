@@ -1,12 +1,5 @@
 "use client"
 
-import {
-  Folder,
-  Forward,
-  MoreHorizontal,
-  Trash2
-} from "lucide-react"
-
 import { Section } from "@repo/ui/components/layouts/sidebar/Section"
 import {
   DropdownMenu,
@@ -19,18 +12,15 @@ import {
   SidebarMenuAction,
   SidebarMenuButton,
   SidebarMenuItem,
-  useSidebar
+  useSidebar,
 } from "@repo/ui/shad/sidebar"
+import { Folder, Forward, MoreHorizontal, Trash2 } from "lucide-react"
 import type { MenuItem } from "./types"
 
-export function NavPrompts({
-  items,
-}: {
-  items: MenuItem[]
-}) {
+export function NavPrompts({ items }: { items: MenuItem[] }) {
   const { isMobile } = useSidebar()
   return (
-    <Section name='Prompts' className="group-data-[collapsible=icon]:hidden">
+    <Section name="Prompts" className="group-data-[collapsible=icon]:hidden">
       {items.map((item) => (
         <SidebarMenuItem key={item.title}>
           <SidebarMenuButton asChild>
@@ -68,6 +58,6 @@ export function NavPrompts({
           </DropdownMenu>
         </SidebarMenuItem>
       ))}
-    </Section >
+    </Section>
   )
 }

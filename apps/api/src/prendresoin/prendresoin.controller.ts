@@ -1,7 +1,7 @@
 import { Controller, type MessageEvent, Post, Query, Sse } from "@nestjs/common"
 import type { Observable } from "rxjs"
-import type { PrendresoinService } from "./prendresoin.service"
-
+// biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
+import { PrendresoinService } from "./prendresoin.service"
 @Controller("prendresoin")
 export class PrendresoinController {
   constructor(private readonly prendresoinService: PrendresoinService) {}

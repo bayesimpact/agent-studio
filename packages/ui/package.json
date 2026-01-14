@@ -4,7 +4,8 @@
   "private": true,
   "exports": {
     "./utils": "./src/lib/utils.ts",
-    "./*": "./src/*.tsx"
+    "./*": "./src/*.tsx",
+    "./components/layouts/sidebar/types": "./src/components/layouts/sidebar/types.ts"
   },
   "scripts": {
     "generate:component": "turbo gen react-component",

@@ -17,12 +17,7 @@ import { ProtectedModule } from "./protected/protected.module"
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
-      useFactory: (configService: ConfigService) => ({
-        type: "postgres",
-        url: configService.get<string>("DATABASE_URL"),
-        autoLoadEntities: true,
-        synchronize: false, // Set to false in production
-      }),
+      useFactory: async (configService: ConfigService) => configService.get("typeorm")(),
     }),
     AuthModule,
     ChatModule,

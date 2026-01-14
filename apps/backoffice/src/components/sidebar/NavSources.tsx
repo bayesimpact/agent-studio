@@ -1,26 +1,18 @@
 "use client"
 
 import { Section } from "@repo/ui/components/layouts/sidebar/Section"
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@repo/ui/shad/collapsible"
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@repo/ui/shad/collapsible"
 import {
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarMenuSub,
   SidebarMenuSubButton,
-  SidebarMenuSubItem
+  SidebarMenuSubItem,
 } from "@repo/ui/shad/sidebar"
 import { ChevronRight } from "lucide-react"
 import type { MenuItem } from "./types"
 
-export function NavSources({
-  items,
-}: {
-  items: MenuItem[]
-}) {
+export function NavSources({ items }: { items: MenuItem[] }) {
   return (
     <Section name="Data Sources">
       {items.map((item) => (
