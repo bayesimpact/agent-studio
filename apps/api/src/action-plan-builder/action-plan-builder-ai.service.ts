@@ -8,18 +8,24 @@ import {
 import { Injectable } from "@nestjs/common"
 import { Langfuse, type LangfuseTraceClient } from "langfuse"
 import type { AIServiceProvider } from "../common/interfaces/ai-service.interface"
-import type { DataInclusionService } from "../datainclusion/datainclusion.service"
+// biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
+import { DataInclusionService } from "../datainclusion/datainclusion.service"
 import type { SimplifiedService } from "../datainclusion/models/simplified-service.model"
-import type { FranceTravailEventsService } from "../francetravail/francetravail-events.service"
-import type { FranceTravailJobsService } from "../francetravail/francetravail-jobs.service"
-import type { FranceTravailLaBonneBoiteService } from "../francetravail/francetravail-labonneboite.service"
+// biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
+import { FranceTravailEventsService } from "../francetravail/francetravail-events.service"
+// biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
+import { FranceTravailJobsService } from "../francetravail/francetravail-jobs.service"
+// biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
+import { FranceTravailLaBonneBoiteService } from "../francetravail/francetravail-labonneboite.service"
 import type { SimplifiedCompany } from "../francetravail/models/simplified-company.model"
 import type { SimplifiedEvent } from "../francetravail/models/simplified-event.model"
 import type { SimplifiedJobOffer } from "../francetravail/models/simplified-job-offer.model"
-import type { GeolocService } from "../geoloc/geoloc.service"
+// biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
+import { GeolocService } from "../geoloc/geoloc.service"
 import type { Location } from "../geoloc/models/location.model"
 import type { SimplifiedWorkshop } from "../notion/models/simplified-workshop.model"
-import type { NotionWorkshopService } from "../notion/notion-workshop.service"
+// biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
+import { NotionWorkshopService } from "../notion/notion-workshop.service"
 import {
   AbstractActionPlanBuilderService,
   type Action,
