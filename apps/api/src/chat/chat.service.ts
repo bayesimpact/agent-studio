@@ -1,13 +1,10 @@
 import type { FunctionCall, GenerateContentResponse, ToolListUnion } from "@google/genai"
-import { Inject, Injectable, type MessageEvent } from "@nestjs/common"
-import { Observable, type Subscriber } from "rxjs"
-import type { Action } from "src/action-plan-builder/action-plan-builder.abstract"
+import { Injectable, type MessageEvent } from "@nestjs/common"
+import { Observable, type Subscriber } from "rxjs" // import type { Action } from "src/action-plan-builder/action-plan-builder.abstract"
 import { v4 } from "uuid"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
 import { AIService } from "../ai/ai.service"
 import type { AIServiceProvider } from "../common/interfaces/ai-service.interface"
-// biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
-import { NotionBeneficiaryService } from "../notion/notion-beneficiary.service"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
 import { ChatRepository } from "./chat.repository"
 import { ChatSession } from "./models/chat-session.model"
@@ -19,18 +16,9 @@ export class ChatService {
   private tools: ToolListUnion
 
   constructor(
-    private notionBeneficiaryService: NotionBeneficiaryService,
-    @Inject("ActionPlanBuilderService")
-    private actionPlanBuilderService: AIServiceProvider,
     private aiService: AIService,
     private chatRepository: ChatRepository,
   ) {
-    // Register service providers
-    // TEMPORARILY DISABLED - Using simplified action plan builder instead
-    // this.registerServiceProvider(this.resourcesService);
-    this.registerServiceProvider(this.notionBeneficiaryService)
-    this.registerServiceProvider(this.actionPlanBuilderService)
-
     // Build tools from all registered providers
     const allDeclarations = [
       ...Array.from(this.serviceProviders.values()).map((p) => p.getFunctionDeclaration()),
@@ -63,7 +51,7 @@ export class ChatService {
     toolCallsMessageId: string,
     subscriber: Subscriber<MessageEvent>,
   ): Promise<ChatSession> {
-    let updatedSession = session
+    const updatedSession = session
 
     // Check if we have any backend function calls (that need cityName for geolocation)
     const backendFunctionCalls = functionCalls.filter(
@@ -95,44 +83,42 @@ export class ChatService {
 
         const provider = this.serviceProviders.get(functionCall.name)
         if (provider) {
-          // Create progress callback for action plan builder
-          const options =
-            functionCall.name === "build_action_plan"
-              ? {
-                  onProgress: (message: string) => {
-                    subscriber.next({
-                      data: JSON.stringify({
-                        type: "action_plan_progress",
-                        messageId: toolCallsMessageId,
-                        message,
-                      }),
-                    } as MessageEvent)
-                  },
-                }
-              : undefined
-
-          const result = (await provider.executeFunction(functionCall, options)) as {
-            success: boolean
-            actionPlan: Action[]
-            message: string
-          }
-
-          // Check if this is an action plan builder result and stream it to frontend
-          if (functionCall.name === "build_action_plan" && result.actionPlan) {
-            subscriber.next({
-              data: JSON.stringify({
-                type: "action_plan_update",
-                messageId: toolCallsMessageId,
-                actionPlan: result.actionPlan,
-              }),
-            } as MessageEvent)
-          }
-
-          // Add tool response message with proper tool_call_id
-          updatedSession = updatedSession.addToolResponse(functionCall.name, {
-            result,
-          })
-          // DO NOT save yet - we need all tool responses before saving
+          // TODO: Implement function call processing
+          // // Create progress callback for action plan builder
+          // const options =
+          //   functionCall.name === "build_action_plan"
+          //     ? {
+          //         onProgress: (message: string) => {
+          //           subscriber.next({
+          //             data: JSON.stringify({
+          //               type: "action_plan_progress",
+          //               messageId: toolCallsMessageId,
+          //               message,
+          //             }),
+          //           } as MessageEvent)
+          //         },
+          //       }
+          //     : undefined
+          // const result = (await provider.executeFunction(functionCall, options)) as {
+          //   success: boolean
+          //   actionPlan: Action[]
+          //   message: string
+          // }
+          // // Check if this is an action plan builder result and stream it to frontend
+          // if (functionCall.name === "build_action_plan" && result.actionPlan) {
+          //   subscriber.next({
+          //     data: JSON.stringify({
+          //       type: "action_plan_update",
+          //       messageId: toolCallsMessageId,
+          //       actionPlan: result.actionPlan,
+          //     }),
+          //   } as MessageEvent)
+          // }
+          // // Add tool response message with proper tool_call_id
+          // updatedSession = updatedSession.addToolResponse(functionCall.name, {
+          //   result,
+          // })
+          // // DO NOT save yet - we need all tool responses before saving
         } else {
           console.warn(`No provider found for function: ${functionCall.name}`)
         }
