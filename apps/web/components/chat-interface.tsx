@@ -17,7 +17,7 @@ interface FunctionCallData {
   args: Record<string, any>
 }
 
-type CTAType = 'url' | 'phone' | 'email'
+type CTAType = 'url' | 'phone' | 'email' | 'address'
 
 interface CTA {
   name: string

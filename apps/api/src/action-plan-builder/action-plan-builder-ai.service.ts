@@ -343,7 +343,7 @@ Return ONLY the extracted JSON object with the "actionPlan" array.`,
                         name: { type: Type.STRING },
                         type: {
                           type: Type.STRING,
-                          enum: ['url', 'phone', 'email']
+                          enum: ['url', 'phone', 'email', 'address']
                         },
                         value: { type: Type.STRING },
                       },
@@ -673,6 +673,12 @@ Now generate the final personalized action plan using these resources.
       options?.onProgress?.(isFrench
         ? `\n## Structuration du plan\n`
         : `\n## Plan structuration\n`);
+
+      // Show processing message before completion
+      options?.onProgress?.(isFrench
+        ? `\n*Traitement en cours...*\n`
+        : `\n*Processing...*\n`);
+
       const extractedResult = await this.rawStringToJson(finalOutput, trace);
       const actionPlan = extractedResult.actionPlan;
 

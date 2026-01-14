@@ -1,0 +1,706 @@
+{
+  "count": 25,
+  "request": null,
+  "location": null,
+  "results": [
+    {
+      "idServiceAtLocation": "211columbu-37594",
+      "idOrganization": "211columbu-5981",
+      "idService": "211columbu-16659",
+      "idLocation": "211columbu-5982",
+      "nameOrganization": "Action For Children",
+      "nameService": "Childcare Resource And Referral",
+      "nameLocation": "Action For Children",
+      "nameServiceAtLocation": "Childcare Resource And Referral at Action For Children",
+      "alternateNamesOrganization": [],
+      "alternateNamesService": [],
+      "alternateNamesLocation": [],
+      "descriptionOrganization": "Promotes and expands the availability of child care through a variety of programs and services.  Referrals to center and home based child care providers. Information and technical assistance to families, corporations and child care providers. Regional information on similar services in Central Ohio.",
+      "descriptionService": "Maintains a database of regulated child care and early education programs in Franklin, Delaware, Madison, Union, Fairfield, Licking and Pickaway counties. Provides information and referral free of charge to families in the community. Database includes private and publicly-funded child care centers, preschools, Head Start programs, family child care home providers and school age programs.",
+      "descriptionServiceVector": [],
+      "address": {
+        "streetAddress": "78 Jefferson Avenue",
+        "city": "Columbus",
+        "county": "Franklin",
+        "stateProvince": "OH",
+        "postalCode": "43215",
+        "country": "United States",
+        "latitude": "39.965653",
+        "longitude": "-82.98418"
+      },
+      "taxonomy": [
+        {
+          "taxonomyTerm": "Child Care Provider Referrals",
+          "taxonomyCode": "PH-2400.1500",
+          "taxonomyTermLevel1": "Individual and Family Life",
+          "taxonomyTermLevel2": "Individual and Family Support Services",
+          "taxonomyTermLevel3": "Family Support Recruitment/Referral",
+          "taxonomyTermLevel4": "Child Care Provider Referrals",
+          "taxonomyTermLevel5": null,
+          "taxonomyTermLevel6": null,
+          "targets": []
+        }
+      ],
+      "serviceAreas": [
+        {
+          "type": "county",
+          "value": "Franklin"
+        }
+      ],
+      "tagsService": [],
+      "dataOwner": "211columbus",
+      "dataOwnerDisplayName": "LSS 211 Central Ohio",
+      "geoPoint": null,
+      "status": null
+    },
+    {
+      "idServiceAtLocation": "211columbu-90651",
+      "idOrganization": "211columbu-9606",
+      "idService": "211columbu-28569",
+      "idLocation": "211columbu-15555",
+      "nameOrganization": "Lower Lights Ministries",
+      "nameService": "Child Enrichment Center",
+      "nameLocation": "Child Enrichment Center",
+      "nameServiceAtLocation": "Child Enrichment Center at Child Enrichment Center",
+      "alternateNamesOrganization": [],
+      "alternateNamesService": [],
+      "alternateNamesLocation": [],
+      "descriptionOrganization": "Community development organization providing assistance to residents of Franklinton and female ex-offenders including supportive, rcovery, housing and wrap-around services.",
+      "descriptionService": "Provides childcare for ages 6 weeks to 5 years old. Partners with families to make childcare affordable and accessible.",
+      "descriptionServiceVector": [],
+      "address": {
+        "streetAddress": "2323 Sullivant Avenue",
+        "city": "Columbus",
+        "county": "Franklin",
+        "stateProvince": "OH",
+        "postalCode": "43204",
+        "country": "United States",
+        "latitude": "39.94568",
+        "longitude": "-83.06055"
+      },
+      "taxonomy": [
+        {
+          "taxonomyTerm": "Child Care Centers",
+          "taxonomyCode": "PH-1250.1400",
+          "taxonomyTermLevel1": "Individual and Family Life",
+          "taxonomyTermLevel2": "Individual and Family Support Services",
+          "taxonomyTermLevel3": "Child Care Providers",
+          "taxonomyTermLevel4": "Child Care Centers",
+          "taxonomyTermLevel5": null,
+          "taxonomyTermLevel6": null,
+          "targets": []
+        }
+      ],
+      "serviceAreas": [
+        {
+          "type": "county",
+          "value": "Franklin"
+        }
+      ],
+      "tagsService": [],
+      "dataOwner": "211columbus",
+      "dataOwnerDisplayName": "LSS 211 Central Ohio",
+      "geoPoint": null,
+      "status": null
+    },
+    {
+      "idServiceAtLocation": "211columbu-79150",
+      "idOrganization": "211columbu-5981",
+      "idService": "211columbu-16657",
+      "idLocation": "211columbu-5982",
+      "nameOrganization": "Action For Children",
+      "nameService": "Professional Development For Early Care And Education Professionals",
+      "nameLocation": "Action For Children",
+      "nameServiceAtLocation": "Professional Development For Early Care And Education Professionals at Action For Children",
+      "alternateNamesOrganization": [],
+      "alternateNamesService": [],
+      "alternateNamesLocation": [],
+      "descriptionOrganization": "Promotes and expands the availability of child care through a variety of programs and services.  Referrals to center and home based child care providers. Information and technical assistance to families, corporations and child care providers. Regional information on similar services in Central Ohio.",
+      "descriptionService": "Provides professional development workshops for home and center-based childcare providers. Offers assistance to individuals and groups wanting to start childcare programs (center, home or after school programs), provides center accreditation, Child Development Associate, and Step Up to Quality support and training. \r\n",
+      "descriptionServiceVector": [],
+      "address": {
+        "streetAddress": "78 Jefferson Avenue",
+        "city": "Columbus",
+        "county": "Franklin",
+        "stateProvince": "OH",
+        "postalCode": "43215",
+        "country": "United States",
+        "latitude": "39.965653",
+        "longitude": "-82.98418"
+      },
+      "taxonomy": [
+        {
+          "taxonomyTerm": "Child Care Provider Training",
+          "taxonomyCode": "JR-8200.1500-150",
+          "taxonomyTermLevel1": "Environment and Public Health/Safety",
+          "taxonomyTermLevel2": "Public Safety",
+          "taxonomyTermLevel3": "Safety Education Programs",
+          "taxonomyTermLevel4": "Child Care Instruction",
+          "taxonomyTermLevel5": "Child Care Provider Training",
+          "taxonomyTermLevel6": null,
+          "targets": []
+        }
+      ],
+      "serviceAreas": [
+        {
+          "type": "county",
+          "value": "Franklin"
+        }
+      ],
+      "tagsService": [],
+      "dataOwner": "211columbus",
+      "dataOwnerDisplayName": "LSS 211 Central Ohio",
+      "geoPoint": null,
+      "status": null
+    },
+    {
+      "idServiceAtLocation": "211lancast-269255",
+      "idOrganization": "211lancast-103802",
+      "idService": "211lancast-64630",
+      "idLocation": "211lancast-103803",
+      "nameOrganization": "Action For Children",
+      "nameService": "Parent Youth Ambassadors",
+      "nameLocation": "Action For Children",
+      "nameServiceAtLocation": "Parent Youth Ambassadors at Action For Children",
+      "alternateNamesOrganization": [],
+      "alternateNamesService": [],
+      "alternateNamesLocation": [],
+      "descriptionOrganization": "Organization acts as the local child care resource and referral agency serving Franklin, Delaware, Fairfield, Licking, Madison, Pickaway and Union counties.",
+      "descriptionService": "Provides resources and referral services for families and youth for needs including childcare, parenting support, material needs, and legal services.",
+      "descriptionServiceVector": [],
+      "address": {
+        "streetAddress": "1105 Schrock Avenue Suite 125",
+        "city": "Columbus",
+        "county": "Franklin",
+        "stateProvince": "OH",
+        "postalCode": "43228",
+        "country": "United States",
+        "latitude": "40.10166",
+        "longitude": "-82.98492"
+      },
+      "taxonomy": [
+        {
+          "taxonomyTerm": "Family Resource Centers/Outreach",
+          "taxonomyCode": "PH-2360.2400",
+          "taxonomyTermLevel1": "Individual and Family Life",
+          "taxonomyTermLevel2": "Individual and Family Support Services",
+          "taxonomyTermLevel3": "Family Based Services",
+          "taxonomyTermLevel4": "Family Resource Centers/Outreach",
+          "taxonomyTermLevel5": null,
+          "taxonomyTermLevel6": null,
+          "targets": []
+        }
+      ],
+      "serviceAreas": [
+        {
+          "type": "county",
+          "value": "Madison"
+        },
+        {
+          "type": "county",
+          "value": "Pickaway"
+        },
+        {
+          "type": "county",
+          "value": "Delaware"
+        },
+        {
+          "type": "county",
+          "value": "Fairfield"
+        },
+        {
+          "type": "county",
+          "value": "Licking"
+        },
+        {
+          "type": "county",
+          "value": "Union"
+        },
+        {
+          "type": "county",
+          "value": "Franklin"
+        }
+      ],
+      "tagsService": [],
+      "dataOwner": "211lancaster",
+      "dataOwnerDisplayName": "211 Fairfield",
+      "geoPoint": null,
+      "status": null
+    },
+    {
+      "idServiceAtLocation": "211columbu-79571",
+      "idOrganization": "211columbu-5981",
+      "idService": "211columbu-16643",
+      "idLocation": "211columbu-5982",
+      "nameOrganization": "Action For Children",
+      "nameService": "Community Outreach And Advocacy",
+      "nameLocation": "Action For Children",
+      "nameServiceAtLocation": "Community Outreach And Advocacy at Action For Children",
+      "alternateNamesOrganization": [],
+      "alternateNamesService": [],
+      "alternateNamesLocation": [],
+      "descriptionOrganization": "Promotes and expands the availability of child care through a variety of programs and services.  Referrals to center and home based child care providers. Information and technical assistance to families, corporations and child care providers. Regional information on similar services in Central Ohio.",
+      "descriptionService": "Participates in community planning projects regarding child care and early learning programs and monitors legislation.  Offers community education on childcare and early education.",
+      "descriptionServiceVector": [],
+      "address": {
+        "streetAddress": "78 Jefferson Avenue",
+        "city": "Columbus",
+        "county": "Franklin",
+        "stateProvince": "OH",
+        "postalCode": "43215",
+        "country": "United States",
+        "latitude": "39.965653",
+        "longitude": "-82.98418"
+      },
+      "taxonomy": [
+        {
+          "taxonomyTerm": "Subject Specific Public Awareness/Education",
+          "taxonomyCode": "TJ-6500.8500",
+          "taxonomyTermLevel1": "Organizational/Community/International Services",
+          "taxonomyTermLevel2": "Information Services",
+          "taxonomyTermLevel3": "Public Awareness/Education",
+          "taxonomyTermLevel4": "Subject Specific Public Awareness/Education",
+          "taxonomyTermLevel5": null,
+          "taxonomyTermLevel6": null,
+          "targets": [
+            {
+              "code": "YZ-1470",
+              "term": "Child Care Issues"
+            }
+          ]
+        }
+      ],
+      "serviceAreas": [
+        {
+          "type": "county",
+          "value": "Franklin"
+        }
+      ],
+      "tagsService": [],
+      "dataOwner": "211columbus",
+      "dataOwnerDisplayName": "LSS 211 Central Ohio",
+      "geoPoint": null,
+      "status": null
+    },
+    {
+      "idServiceAtLocation": "211columbu-86495",
+      "idOrganization": "211columbu-11466",
+      "idService": "211columbu-26943",
+      "idLocation": "211columbu-14170",
+      "nameOrganization": "The Ohio State University",
+      "nameService": "Early Head Start",
+      "nameLocation": "Schoenbaum Family Center",
+      "nameServiceAtLocation": "Early Head Start at Schoenbaum Family Center",
+      "alternateNamesOrganization": [],
+      "alternateNamesService": [],
+      "alternateNamesLocation": [],
+      "descriptionOrganization": "State university.",
+      "descriptionService": "A collaboration of Columbus’ community agencies focused on the education and welfare of children and their families. Identifies resources and collaborates with a network of licensed childcare centers and family child care providers to improve the education and well-being of infants, toddlers and their families.",
+      "descriptionServiceVector": [],
+      "address": {
+        "streetAddress": "175 East 7th Avenue",
+        "city": "Columbus",
+        "county": "Franklin",
+        "stateProvince": "OH",
+        "postalCode": "43201",
+        "country": "United States",
+        "latitude": "39.98941",
+        "longitude": "-83.00146"
+      },
+      "taxonomy": [
+        {
+          "taxonomyTerm": "Early Head Start",
+          "taxonomyCode": "HD-1800.1800",
+          "taxonomyTermLevel1": "Education",
+          "taxonomyTermLevel2": "Educational Institutions/Schools",
+          "taxonomyTermLevel3": "Early Childhood Education",
+          "taxonomyTermLevel4": "Early Head Start",
+          "taxonomyTermLevel5": null,
+          "taxonomyTermLevel6": null,
+          "targets": []
+        }
+      ],
+      "serviceAreas": [
+        {
+          "type": "county",
+          "value": "Franklin"
+        }
+      ],
+      "tagsService": [],
+      "dataOwner": "211columbus",
+      "dataOwnerDisplayName": "LSS 211 Central Ohio",
+      "geoPoint": null,
+      "status": null
+    },
+    {
+      "idServiceAtLocation": "211columbu-78437",
+      "idOrganization": "211columbu-4249",
+      "idService": "211columbu-23823",
+      "idLocation": "211columbu-4250",
+      "nameOrganization": "Childrens Hunger Alliance",
+      "nameService": "Child And Adult Care Food Program",
+      "nameLocation": "Childrens Hunger Alliance",
+      "nameServiceAtLocation": "Child And Adult Care Food Program at Childrens Hunger Alliance",
+      "alternateNamesOrganization": [],
+      "alternateNamesService": [],
+      "alternateNamesLocation": [],
+      "descriptionOrganization": "Sponsors year-round meal programs, recreational and educational programs for Franklin County and statewide programs for children in various child care settings. Public policy advocacy, speakers bureau and public information provided on hunger and poverty issues.",
+      "descriptionService": "Provides partial reimbursement to home-based childcare providers and child care centers for serving nutritious meals and snacks.  Sponsored by the USDA's Child and Adult Care Food Program.",
+      "descriptionServiceVector": [],
+      "address": {
+        "streetAddress": "1105 Schrock Road, Suite 505",
+        "city": "Columbus",
+        "county": "Franklin",
+        "stateProvince": "OH",
+        "postalCode": "43229",
+        "country": "United States",
+        "latitude": "40.10166",
+        "longitude": "-82.98492"
+      },
+      "taxonomy": [
+        {
+          "taxonomyTerm": "Child and Adult Care Food Programs",
+          "taxonomyCode": "BD-5000.1450",
+          "taxonomyTermLevel1": "Basic Needs",
+          "taxonomyTermLevel2": "Food",
+          "taxonomyTermLevel3": "Meals",
+          "taxonomyTermLevel4": "Child and Adult Care Food Programs",
+          "taxonomyTermLevel5": null,
+          "taxonomyTermLevel6": null,
+          "targets": []
+        }
+      ],
+      "serviceAreas": [
+        {
+          "type": "county",
+          "value": "Franklin"
+        }
+      ],
+      "tagsService": [],
+      "dataOwner": "211columbus",
+      "dataOwnerDisplayName": "LSS 211 Central Ohio",
+      "geoPoint": null,
+      "status": null
+    },
+    {
+      "idServiceAtLocation": "211columbu-78795",
+      "idOrganization": "211columbu-11378",
+      "idService": "211columbu-24290",
+      "idLocation": "211columbu-11379",
+      "nameOrganization": "Cap4kids Columbus",
+      "nameService": "Cap4kids Columbus",
+      "nameLocation": "Cap4kids Columbus",
+      "nameServiceAtLocation": "Cap4kids Columbus at Cap4kids Columbus",
+      "alternateNamesOrganization": [],
+      "alternateNamesService": [],
+      "alternateNamesLocation": [],
+      "descriptionOrganization": "Provides specialized information and referral services for children and families.",
+      "descriptionService": "A free website connecting children and families to free and low-cost resources in Central Ohio. Individuals can find everything from housing, utilities and food, to childcare, health care, and after school/summer programs.",
+      "descriptionServiceVector": [],
+      "address": {
+        "streetAddress": "700 Children's Drive",
+        "city": "Columbus",
+        "county": "Franklin",
+        "stateProvince": "OH",
+        "postalCode": "43205",
+        "country": "United States",
+        "latitude": "39.95311",
+        "longitude": "-82.97943"
+      },
+      "taxonomy": [
+        {
+          "taxonomyTerm": "Directory/Resource List Publication",
+          "taxonomyCode": "TJ-6500.1700",
+          "taxonomyTermLevel1": "Organizational/Community/International Services",
+          "taxonomyTermLevel2": "Information Services",
+          "taxonomyTermLevel3": "Public Awareness/Education",
+          "taxonomyTermLevel4": "Directory/Resource List Publication",
+          "taxonomyTermLevel5": null,
+          "taxonomyTermLevel6": null,
+          "targets": []
+        },
+        {
+          "taxonomyTerm": "Specialized Information and Referral",
+          "taxonomyCode": "TJ-3000.8000",
+          "taxonomyTermLevel1": "Organizational/Community/International Services",
+          "taxonomyTermLevel2": "Information Services",
+          "taxonomyTermLevel3": "Information and Referral",
+          "taxonomyTermLevel4": "Specialized Information and Referral",
+          "taxonomyTermLevel5": null,
+          "taxonomyTermLevel6": null,
+          "targets": [
+            {
+              "code": "YB-9500",
+              "term": "Youth"
+            }
+          ]
+        }
+      ],
+      "serviceAreas": [
+        {
+          "type": "county",
+          "value": "Franklin"
+        }
+      ],
+      "tagsService": [],
+      "dataOwner": "211columbus",
+      "dataOwnerDisplayName": "LSS 211 Central Ohio",
+      "geoPoint": null,
+      "status": null
+    },
+    {
+      "idServiceAtLocation": "211cincinn-Hx4QPbjGOc43PmEVi4X2qO7SaANm15",
+      "idOrganization": "211cincinn-HxXNB3NmwuDny9DjCk5gl8rSNA40E1",
+      "idService": "211cincinn-Hx2QlmqxBCWa8234ComJ8OdC2qO5yq",
+      "idLocation": "211cincinn-HxQX1GQelSndmK5vTk5LkE6IJzva3a",
+      "nameOrganization": "Ohio Department Of Children And Youth",
+      "nameService": "Prenatal/Postnatal Home Visitation Programs (HELP ME GROW)",
+      "nameLocation": "Ohio Department Of Children And Youth",
+      "nameServiceAtLocation": "Prenatal/Postnatal Home Visitation Programs (HELP ME GROW) at Ohio Department Of Children And Youth",
+      "alternateNamesOrganization": [],
+      "alternateNamesService": [],
+      "alternateNamesLocation": [],
+      "descriptionOrganization": "State agency focused on children and youth well-being.",
+      "descriptionService": "<p>Offers Help Me Grow programming. Provides free in-home nurse visits for expectant mothers and families with newborns. Provides health screenings, birth and childcare education, and community support referrals.</p>\n",
+      "descriptionServiceVector": [],
+      "address": {
+        "streetAddress": "246 North High Street, 8th Floor",
+        "city": "Columbus",
+        "county": "Franklin",
+        "stateProvince": "OH",
+        "postalCode": "43215",
+        "country": "United States",
+        "latitude": "39.967174",
+        "longitude": "-83.000801"
+      },
+      "taxonomy": [
+        {
+          "taxonomyTerm": "Prenatal/Postnatal Home Visitation Programs",
+          "taxonomyCode": "LJ-5000.6615",
+          "taxonomyTermLevel1": "Health Care",
+          "taxonomyTermLevel2": "Human Reproduction",
+          "taxonomyTermLevel3": "Mother and Infant Care",
+          "taxonomyTermLevel4": "Prenatal/Postnatal Home Visitation Programs",
+          "taxonomyTermLevel5": null,
+          "taxonomyTermLevel6": null,
+          "targets": []
+        }
+      ],
+      "serviceAreas": [
+        {
+          "type": "state",
+          "value": "Ohio"
+        }
+      ],
+      "tagsService": [],
+      "dataOwner": "211cincinnati",
+      "dataOwnerDisplayName": "211 UWGC",
+      "geoPoint": null,
+      "status": null
+    },
+    {
+      "idServiceAtLocation": "211columbu-75007",
+      "idOrganization": "211columbu-5410",
+      "idService": "211columbu-23559",
+      "idLocation": "211columbu-5411",
+      "nameOrganization": "Ywca Columbus",
+      "nameService": "Bright Futures Leadership Program",
+      "nameLocation": "Ywca Columbus",
+      "nameServiceAtLocation": "Bright Futures Leadership Program at Ywca Columbus",
+      "alternateNamesOrganization": [],
+      "alternateNamesService": [],
+      "alternateNamesLocation": [],
+      "descriptionOrganization": "Multi-service agency that provides emergency shelter to families, access to affordable supportive housing, childcare, before and after-school programs, leadership development and other related services.",
+      "descriptionService": "Works to build leadership skills in young women. Participants gather for training sessions and panel discussions covering topics such as leadership development, social justice and positive self-image.",
+      "descriptionServiceVector": [],
+      "address": {
+        "streetAddress": "65 South Fourth Street",
+        "city": "Columbus",
+        "county": "Franklin",
+        "stateProvince": "OH",
+        "postalCode": "43215",
+        "country": "United States",
+        "latitude": "39.961233",
+        "longitude": "-82.996154"
+      },
+      "taxonomy": [
+        {
+          "taxonomyTerm": "Leadership Development",
+          "taxonomyCode": "PH-6200.4500",
+          "taxonomyTermLevel1": "Individual and Family Life",
+          "taxonomyTermLevel2": "Individual and Family Support Services",
+          "taxonomyTermLevel3": "Personal Enrichment",
+          "taxonomyTermLevel4": "Leadership Development",
+          "taxonomyTermLevel5": null,
+          "taxonomyTermLevel6": null,
+          "targets": [
+            {
+              "code": "YS-2000.2500",
+              "term": "Girls"
+            }
+          ]
+        }
+      ],
+      "serviceAreas": [
+        {
+          "type": "county",
+          "value": "Franklin"
+        }
+      ],
+      "tagsService": [],
+      "dataOwner": "211columbus",
+      "dataOwnerDisplayName": "LSS 211 Central Ohio",
+      "geoPoint": null,
+      "status": null
+    }
+  ],
+  "facets": {
+    "taxonomy/taxonomyTermLevel2": [
+      {
+        "value": "Individual and Family Support Services",
+        "count": 15
+      },
+      {
+        "value": "Human Reproduction",
+        "count": 10
+      },
+      {
+        "value": "Mutual Support",
+        "count": 7
+      },
+      {
+        "value": "Counseling Settings",
+        "count": 2
+      },
+      {
+        "value": "Housing/Shelter",
+        "count": 2
+      },
+      {
+        "value": "Information Services",
+        "count": 2
+      },
+      {
+        "value": "Mental Health Assessment and Treatment",
+        "count": 2
+      },
+      {
+        "value": "Educational Institutions/Schools",
+        "count": 1
+      },
+      {
+        "value": "Employment",
+        "count": 1
+      },
+      {
+        "value": "Food",
+        "count": 1
+      }
+    ],
+    "taxonomy/taxonomyTermLevel1": [
+      {
+        "value": "Individual and Family Life",
+        "count": 15
+      },
+      {
+        "value": "Health Care",
+        "count": 10
+      },
+      {
+        "value": "Basic Needs",
+        "count": 3
+      },
+      {
+        "value": "Mental Health and Substance Use Disorder Services",
+        "count": 3
+      },
+      {
+        "value": "Organizational/Community/International Services",
+        "count": 2
+      },
+      {
+        "value": "Education",
+        "count": 1
+      },
+      {
+        "value": "Environment and Public Health/Safety",
+        "count": 1
+      },
+      {
+        "value": "Income Support and Employment",
+        "count": 1
+      }
+    ],
+    "serviceAreas/valueType": [
+      {
+        "value": "Franklin|county",
+        "count": 23
+      },
+      {
+        "value": "Licking|county",
+        "count": 4
+      },
+      {
+        "value": "Pickaway|county",
+        "count": 4
+      },
+      {
+        "value": "Knox|county",
+        "count": 3
+      },
+      {
+        "value": "Marion|county",
+        "count": 3
+      },
+      {
+        "value": "Morgan|county",
+        "count": 3
+      },
+      {
+        "value": "Muskingum|county",
+        "count": 3
+      },
+      {
+        "value": "Perry|county",
+        "count": 3
+      },
+      {
+        "value": "Washington|county",
+        "count": 3
+      },
+      {
+        "value": "Wood|county",
+        "count": 2
+      }
+    ],
+    "address/stateProvince": [
+      {
+        "value": "OH",
+        "count": 25
+      }
+    ],
+    "tagsService": [],
+    "dataOwnerDisplayName": [
+      {
+        "value": "LSS 211 Central Ohio",
+        "count": 20
+      },
+      {
+        "value": "211 Pathways",
+        "count": 2
+      },
+      {
+        "value": "211 Fairfield",
+        "count": 1
+      },
+      {
+        "value": "211 UWGC",
+        "count": 1
+      },
+      {
+        "value": "HelpLink 211 Dayton",
+        "count": 1
+      }
+    ]
+  }
+}

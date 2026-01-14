@@ -1,7 +1,7 @@
 import { AIServiceProvider } from '../common/interfaces/ai-service.interface';
 import { FunctionDeclaration, Type } from '@google/genai';
 
-export type CTAType = 'url' | 'phone' | 'email';
+export type CTAType = 'url' | 'phone' | 'email' | 'address';
 
 export interface CTA {
   name: string;

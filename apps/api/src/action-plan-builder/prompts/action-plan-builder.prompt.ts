@@ -525,6 +525,8 @@ Dont guess URLs, if not present, just remove the CTA
   - Format: Always use international format (+33 for France)
 - **"email"**: For email addresses to contact organizations or services
   - Example: {"name": "Contacter par email", "type": "email", "value": "contact@example.fr"}
+- **"address"**: For physical addresses of services or organizations
+  - Example: {"name": "Voir l'adresse", "type": "address", "value": "123 Rue de la République, 75001 Paris"}
 
 **IMPORTANT**:
 - All text content (name, title, content, categories) must be in French
@@ -589,6 +591,8 @@ Dont guess URLs, if not present, just remove the CTA
   - Format: Always use international format (+1 for US)
 - **"email"**: For email addresses to contact organizations or services
   - Example: {"name": "Email for info", "type": "email", "value": "contact@example.com"}
+- **"address"**: For physical addresses of services or organizations
+  - Example: {"name": "View address", "type": "address", "value": "123 Main Street, Columbus, OH 43215"}
 
 **IMPORTANT**:
 - All text content (name, title, content, categories) must be in English

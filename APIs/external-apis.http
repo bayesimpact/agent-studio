@@ -178,7 +178,7 @@ Content-Type: application/json
       "location": "Columbus, OH",
       "date_posted": "Last 3 days",
       "posted_by": "",
-      "location_radius": "Whitin 5 miles"
+      "location_radius": "Within 5 miles"
     }
   ]
 }
@@ -233,7 +233,7 @@ Accept: application/json
 Content-Type: application/json
 
 {
-  "search": "SNAP",
+  "search": "Childcare",
   "location": "Columbus, Ohio"
 }
 ###
