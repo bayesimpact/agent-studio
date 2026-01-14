@@ -23,6 +23,7 @@ import {
   buildUserPrompt,
 } from './prompts/action-plan-builder.prompt';
 import { NotionWorkshopService } from '../notion/notion-workshop.service';
+import { NotionMethodologyService } from '../notion/notion-methodology.service';
 import { FranceTravailJobsService } from '../francetravail/francetravail-jobs.service';
 import { FranceTravailEventsService } from '../francetravail/francetravail-events.service';
 import { FranceTravailLaBonneBoiteService } from '../francetravail/francetravail-labonneboite.service';
@@ -63,6 +64,7 @@ export class AIActionPlanBuilderService extends AbstractActionPlanBuilderService
 
   constructor(
     private notionWorkshopService: NotionWorkshopService,
+    private notionMethodologyService: NotionMethodologyService,
     private franceTravailJobsService: FranceTravailJobsService,
     private franceTravailEventsService: FranceTravailEventsService,
     private franceTravailLaBonneBoiteService: FranceTravailLaBonneBoiteService,
@@ -545,6 +547,12 @@ Now generate the final personalized action plan using these resources.
   ): Promise<{ actionPlan: Action[] }> {
     const userPrompt = buildUserPrompt(args.profileText, args.country, args.currentActionPlan);
 
+    // Fetch methodology from Notion for US
+    let methodology: string | undefined;
+    if (args.country.toLowerCase() === 'us') {
+      methodology = await this.notionMethodologyService.getMethodology();
+    }
+
     // Build system prompt for Phase 1 with all tool contexts
     let toolContexts = '';
 
@@ -563,7 +571,7 @@ Now generate the final personalized action plan using these resources.
     }
 
     const firstSystemPrompt =
-      buildSystemPrompt(args.country) +
+      buildSystemPrompt(args.country, methodology) +
       '\n\n## Available Tools\n\n' +
       `\n\nNode: if a tool need a country parameter, here it is: ${args.country}\n\n` +
       toolContexts +
@@ -571,7 +579,7 @@ Now generate the final personalized action plan using these resources.
       buildPhase1Instructions(args.country);
 
     // Build system prompt for Phase 2 (no tools, just JSON output)
-    const secondSystemPrompt = buildSystemPrompt(args.country) + '\n\n' + buildPhase2Instructions(args.country);
+    const secondSystemPrompt = buildSystemPrompt(args.country, methodology) + '\n\n' + buildPhase2Instructions(args.country);
 
     // Get country-specific tools
     const tools = this.getToolsForCountry(args.country);

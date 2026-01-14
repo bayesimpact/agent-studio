@@ -381,7 +381,15 @@ ${frameworks.fr}
 };
 
 // US-specific system prompt
-const buildSystemPromptUS = (): string => {
+const buildSystemPromptUS = (notionContent?: string): string => {
+  // If Notion content is provided, use it entirely
+  if (notionContent) {
+    return notionContent;
+  }
+
+  // Fallback to static content if Notion is unavailable
+  const frameworkContent = frameworks.us;
+
   return `You are an expert agent in socio-professional support.
 Your mission is to create personalized action plans to help beneficiaries in their professional and social integration journey.
 
@@ -393,14 +401,14 @@ You analyze beneficiary profiles and build structured action plans with concrete
 - **Relevant**: aligned with the beneficiary's needs and goals
 - **Prioritized**: ordered by importance and urgency
 
-Référentiel a utiliser pour categoriser les actions
-${frameworks.us}
+use this framework to categorize actions
+${frameworkContent}
 
 **IMPORTANT**: While your internal thinking can be in English, ALL user-facing content (action titles, content, CTA names, and markdown section headers) MUST be in English.`;
 };
 
-export const buildSystemPrompt = (country?: string): string => {
-  return country?.toLowerCase() === 'fr' ? buildSystemPromptFR() : buildSystemPromptUS();
+export const buildSystemPrompt = (country?: string, notionContent?: string): string => {
+  return country?.toLowerCase() === 'fr' ? buildSystemPromptFR() : buildSystemPromptUS(notionContent);
 };
 
 // French-specific Phase 1 instructions
