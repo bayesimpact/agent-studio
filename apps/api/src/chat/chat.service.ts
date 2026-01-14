@@ -3,10 +3,13 @@ import { Inject, Injectable, type MessageEvent } from "@nestjs/common"
 import { Observable, type Subscriber } from "rxjs"
 import type { Action } from "src/action-plan-builder/action-plan-builder.abstract"
 import { v4 } from "uuid"
-import type { AIService } from "../ai/ai.service"
+// biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
+import { AIService } from "../ai/ai.service"
 import type { AIServiceProvider } from "../common/interfaces/ai-service.interface"
-import type { NotionBeneficiaryService } from "../notion/notion-beneficiary.service"
-import type { ChatRepository } from "./chat.repository"
+// biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
+import { NotionBeneficiaryService } from "../notion/notion-beneficiary.service"
+// biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
+import { ChatRepository } from "./chat.repository"
 import { ChatSession } from "./models/chat-session.model"
 import { Message } from "./models/message.model"
 

@@ -10,3 +10,7 @@ services:
     volumes:
       - ./sql/common.sql:/docker-entrypoint-initdb.d/common.sql
       - ./dontsave/pgdata:/var/lib/postgresql/data
+    command:
+      - "postgres"
+      - "-c"
+      - "log_statement=all"
