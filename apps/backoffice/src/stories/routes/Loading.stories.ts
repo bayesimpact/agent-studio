@@ -1,15 +1,15 @@
-import { LoadingRoute } from '@/routes/LoadingRoute';
-import type { Meta, StoryObj } from '@storybook/react-vite';
+import type { Meta, StoryObj } from "@storybook/react-vite"
+import { LoadingRoute } from "@/routes/LoadingRoute"
 
 const meta = {
-  title: 'routes/Loading',
+  title: "routes/Loading",
   component: LoadingRoute,
   parameters: {
-    layout: 'fullscreen',
+    layout: "fullscreen",
   },
-} satisfies Meta<typeof LoadingRoute>;
+} satisfies Meta<typeof LoadingRoute>
 
-export default meta;
-type Story = StoryObj<typeof meta>;
+export default meta
+type Story = StoryObj<typeof meta>
 
-export const Loading: Story = {};
+export const Loading: Story = {}

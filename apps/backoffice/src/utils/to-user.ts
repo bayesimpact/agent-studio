@@ -1,5 +1,5 @@
-import type { User } from "@/components/sidebar/types";
-import type { User as UserDTO } from "@auth0/auth0-react";
+import type { User as UserDTO } from "@auth0/auth0-react"
+import type { User } from "@/components/sidebar/types"
 
 export function toUser(user: UserDTO): User {
   return {

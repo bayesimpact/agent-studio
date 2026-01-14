@@ -1,7 +1,7 @@
-import { Lobby } from "@/components/Lobby";
-import { toUser } from "@/utils/to-user";
-import { useAuth0 } from "@auth0/auth0-react";
-import { LoadingRoute } from "./LoadingRoute";
+import { useAuth0 } from "@auth0/auth0-react"
+import { Lobby } from "@/components/Lobby"
+import { toUser } from "@/utils/to-user"
+import { LoadingRoute } from "./LoadingRoute"
 
 export function HomeRoute() {
   const { user: userDto, isLoading, isAuthenticated } = useAuth0()

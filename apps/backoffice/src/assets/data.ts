@@ -1,11 +1,11 @@
-import type { MenuItem, User } from "@/components/sidebar/types";
-import { BookOpenIcon, FrameIcon } from "lucide-react";
+import { BookOpenIcon, FrameIcon } from "lucide-react"
+import type { MenuItem, User } from "@/components/sidebar/types"
 
 export const dataset: {
-  sources: MenuItem[];
-  expandedList: MenuItem[];
-  prompts: MenuItem[];
-  user: User;
+  sources: MenuItem[]
+  expandedList: MenuItem[]
+  prompts: MenuItem[]
+  user: User
 } = {
   expandedList: [
     {
@@ -73,7 +73,7 @@ export const dataset: {
       title: "Prompt B",
       url: "#",
       icon: FrameIcon,
-    }
+    },
   ],
   user: {
     name: "James Bond",

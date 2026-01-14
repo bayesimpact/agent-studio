@@ -28,6 +28,9 @@
           "level": "error",
           "fix": "safe"
         }
+      },
+      "style": {
+        "noNonNullAssertion": "off"
       }
     }
   },

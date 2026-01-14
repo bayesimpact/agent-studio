@@ -1,6 +1,6 @@
-import type { Preview } from '@storybook/react-vite';
+import type { Preview } from "@storybook/react-vite"
 
-import '../src/index.css';
+import "../src/index.css"
 
 const preview: Preview = {
   parameters: {
@@ -11,6 +11,6 @@ const preview: Preview = {
       },
     },
   },
-};
+}
 
-export default preview;
+export default preview

@@ -1,13 +1,13 @@
-import { NotFoundRoute as Comp } from '@/routes/NotFoundRoute';
-import type { Meta, StoryObj } from '@storybook/react-vite';
-import { withRouter } from 'storybook-addon-remix-react-router';
+import type { Meta, StoryObj } from "@storybook/react-vite"
+import { withRouter } from "storybook-addon-remix-react-router"
+import { NotFoundRoute as Comp } from "@/routes/NotFoundRoute"
 
 const meta = {
-  title: 'routes/NotFound',
+  title: "routes/NotFound",
   component: Comp,
   decorators: [withRouter],
   parameters: {
-    layout: 'fullscreen',
+    layout: "fullscreen",
     // reactRouter: reactRouterParameters({
     //   location: {
     //     pathParams: { userId: '42' },
@@ -15,11 +15,9 @@ const meta = {
     //   routing: { path: '/users/:userId' },
     // }),
   },
-} satisfies Meta<typeof Comp>;
+} satisfies Meta<typeof Comp>
 
-export default meta;
-type Story = StoryObj<typeof meta>;
+export default meta
+type Story = StoryObj<typeof meta>
 
-export const NotFound: Story = {
-};
-
+export const NotFound: Story = {}
