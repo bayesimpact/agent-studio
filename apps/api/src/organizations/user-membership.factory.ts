@@ -1,12 +1,13 @@
+import { randomUUID } from "node:crypto"
 import { Factory } from "fishery"
 import type { MembershipRole, UserMembership } from "./user-membership.entity"
 
-export const userMembershipFactory = Factory.define<UserMembership>(({ sequence, params }) => {
+export const userMembershipFactory = Factory.define<UserMembership>(({ params }) => {
   const now = new Date()
   return {
-    id: params.id || `membership-${sequence}-${Date.now()}`,
-    userId: params.userId || `user-${sequence}`,
-    organizationId: params.organizationId || `org-${sequence}`,
+    id: params.id || randomUUID(),
+    userId: params.userId || randomUUID(),
+    organizationId: params.organizationId || randomUUID(),
     role: (params.role || "member") as MembershipRole,
     createdAt: params.createdAt || now,
     updatedAt: params.updatedAt || now,
