@@ -1,10 +1,10 @@
 import { Controller, Get, Req, UseGuards } from "@nestjs/common"
-import type { MeResponseDto } from "@repo/api"
 import { JwtAuthGuard } from "@/auth/jwt-auth.guard"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
 import { OrganizationsService } from "@/organizations/organizations.service"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
 import { UserBootstrapService } from "@/organizations/user-bootstrap.service"
+import { MeRoutes } from "./me.routes"
 
 interface Auth0JwtPayload {
   sub: string
@@ -14,15 +14,15 @@ interface Auth0JwtPayload {
 }
 
 @UseGuards(JwtAuthGuard)
-@Controller("me")
+@Controller()
 export class MeController {
   constructor(
     private readonly userBootstrapService: UserBootstrapService,
     private readonly organizationsService: OrganizationsService,
   ) {}
 
-  @Get()
-  async getMe(@Req() request: { user: Auth0JwtPayload }): Promise<MeResponseDto> {
+  @Get(MeRoutes.getMe.path)
+  async getMe(@Req() request: { user: Auth0JwtPayload }): Promise<typeof MeRoutes.getMe.response> {
     // Extract Auth0 user info from JWT payload
     const auth0UserInfo = {
       sub: request.user.sub,
@@ -46,12 +46,14 @@ export class MeController {
     }))
 
     return {
-      user: {
-        id: user.id,
-        email: user.email,
-        name: user.name,
+      data: {
+        user: {
+          id: user.id,
+          email: user.email,
+          name: user.name,
+        },
+        organizations,
       },
-      organizations,
     }
   }
 }
