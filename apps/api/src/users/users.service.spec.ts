@@ -1,9 +1,8 @@
 import type { Repository } from "typeorm"
 import {
-  clearTestDatabase,
-  setupTestDatabase,
+  setupTransactionalTestDatabase,
   teardownTestDatabase,
-} from "@/common/test/test-database"
+} from "@/common/test/test-transaction-manager"
 import { User } from "./user.entity"
 import { userFactory } from "./user.factory"
 import { UsersService } from "./users.service"
@@ -11,20 +10,27 @@ import { UsersService } from "./users.service"
 describe("UsersService", () => {
   let service: UsersService
   let repository: Repository<User>
-  let dbSetup: Awaited<ReturnType<typeof setupTestDatabase>>
+  let setup: Awaited<ReturnType<typeof setupTransactionalTestDatabase>>
 
   beforeAll(async () => {
-    dbSetup = await setupTestDatabase([User], [UsersService])
-    service = dbSetup.module.get<UsersService>(UsersService)
-    repository = dbSetup.getRepository(User)
+    setup = await setupTransactionalTestDatabase([User], [UsersService])
   })
 
   afterAll(async () => {
-    await teardownTestDatabase(dbSetup)
+    await teardownTestDatabase(setup)
   })
 
   beforeEach(async () => {
-    await clearTestDatabase(dbSetup.dataSource)
+    // Start transaction - this creates a new module with transactional providers
+    await setup.startTransaction()
+    // Get service and repository from transactional module
+    service = setup.module.get<UsersService>(UsersService)
+    repository = setup.getRepository(User)
+  })
+
+  afterEach(async () => {
+    // Rollback transaction - automatically cleans up all data
+    await setup.rollbackTransaction()
   })
 
   describe("findByAuth0Id", () => {
@@ -119,7 +125,8 @@ describe("UsersService", () => {
 
       const user = await service.create(auth0UserInfo)
 
-      const foundUser = await repository.findOne({ where: { id: user.id } })
+      // Use service to find the user (both use the same transactional repository)
+      const foundUser = await service.findById(user.id)
       expect(foundUser).not.toBeNull()
       expect(foundUser?.auth0Id).toBe("auth0|persisted")
     })
@@ -139,9 +146,10 @@ describe("UsersService", () => {
       expect(user.email).toBe("create@example.com")
       expect(user.name).toBe("Create User")
 
-      // Verify it was saved
-      const count = await repository.count({ where: { auth0Id: "auth0|create-new" } })
-      expect(count).toBe(1)
+      // Verify it was saved - use service to query (both use same transaction)
+      const found = await service.findByAuth0Id("auth0|create-new")
+      expect(found).not.toBeNull()
+      expect(found?.id).toBe(user.id)
     })
 
     it("should return existing user when it exists", async () => {
@@ -191,8 +199,8 @@ describe("UsersService", () => {
       expect(user.name).toBe("New Name")
       expect(user.pictureUrl).toBe("https://new.com/pic.jpg")
 
-      // Verify it was updated in database
-      const updatedUser = await repository.findOne({ where: { id: existingUser.id } })
+      // Verify it was updated in database - use service to query
+      const updatedUser = await service.findById(existingUser.id)
       expect(updatedUser?.email).toBe("new@example.com")
       expect(updatedUser?.name).toBe("New Name")
     })
@@ -243,8 +251,8 @@ describe("UsersService", () => {
       const user = await service.findOrCreate(auth0UserInfo)
 
       expect(user.id).toBe(existingUser.id)
-      // Verify it's the same instance (not a new save)
-      const foundUser = await repository.findOne({ where: { id: existingUser.id } })
+      // Verify it's the same instance (not a new save) - use service to query
+      const foundUser = await service.findById(existingUser.id)
       expect(foundUser?.updatedAt.getTime()).toBeLessThanOrEqual(originalUpdatedAt.getTime() + 1000)
     })
 

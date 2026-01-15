@@ -1,8 +1,14 @@
-import type { Provider } from "@nestjs/common"
+import type { DynamicModule, Provider, Type } from "@nestjs/common"
 import { ConfigModule } from "@nestjs/config"
 import { Test, type TestingModule } from "@nestjs/testing"
 import { getRepositoryToken, TypeOrmModule } from "@nestjs/typeorm"
-import { DataSource, type ObjectLiteral, type Repository } from "typeorm"
+import {
+  DataSource,
+  type EntityManager,
+  type ObjectLiteral,
+  type QueryRunner,
+  type Repository,
+} from "typeorm"
 import { Organization } from "@/organizations/organization.entity"
 import { UserMembership } from "@/organizations/user-membership.entity"
 import { User } from "@/users/user.entity"
@@ -13,6 +19,19 @@ export interface TestDatabaseSetup {
   module: TestingModule
   dataSource: DataSource
   getRepository: <T extends ObjectLiteral>(entity: new () => T) => Repository<T>
+  /**
+   * Starts a transaction and returns a QueryRunner.
+   * All repositories obtained via getRepository will use the transactional EntityManager.
+   * Remember to call rollbackTransaction() and release() when done.
+   */
+  startTransaction: () => Promise<QueryRunner>
+  /**
+   * Gets a repository that uses the provided transactional EntityManager.
+   */
+  getRepositoryForTransaction: <T extends ObjectLiteral>(
+    entity: new () => T,
+    entityManager: EntityManager,
+  ) => Repository<T>
 }
 
 /**
@@ -22,6 +41,7 @@ export interface TestDatabaseSetup {
 export async function setupTestDatabase(
   featureEntities: Array<new () => ObjectLiteral>,
   providers: Provider[] = [],
+  additionalImports: Array<Type<unknown> | DynamicModule> = [],
 ): Promise<TestDatabaseSetup> {
   const testDatabaseUrl = process.env.DATABASE_URL
   if (!testDatabaseUrl) {
@@ -42,6 +62,7 @@ export async function setupTestDatabase(
         dropSchema: false,
       }),
       TypeOrmModule.forFeature(featureEntities),
+      ...additionalImports,
     ],
     providers,
   }).compile()
@@ -52,10 +73,26 @@ export async function setupTestDatabase(
     return module.get<Repository<T>>(getRepositoryToken(entity))
   }
 
+  const startTransaction = async (): Promise<QueryRunner> => {
+    const queryRunner = dataSource.createQueryRunner()
+    await queryRunner.connect()
+    await queryRunner.startTransaction()
+    return queryRunner
+  }
+
+  const getRepositoryForTransaction = <T extends ObjectLiteral>(
+    entity: new () => T,
+    entityManager: EntityManager,
+  ): Repository<T> => {
+    return entityManager.getRepository(entity)
+  }
+
   return {
     module,
     dataSource,
     getRepository,
+    startTransaction,
+    getRepositoryForTransaction,
   }
 }
 

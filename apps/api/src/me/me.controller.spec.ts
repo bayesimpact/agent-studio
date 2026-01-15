@@ -1,7 +1,8 @@
-import { ConfigModule } from "@nestjs/config"
-import { Test, type TestingModule } from "@nestjs/testing"
-import { getRepositoryToken, TypeOrmModule } from "@nestjs/typeorm"
-import type { DataSource, Repository } from "typeorm"
+import type { Repository } from "typeorm"
+import {
+  setupTransactionalTestDatabase,
+  teardownTestDatabase,
+} from "@/common/test/test-transaction-manager"
 import { Organization } from "@/organizations/organization.entity"
 import { organizationFactory } from "@/organizations/organization.factory"
 import { UserMembership } from "@/organizations/user-membership.entity"
@@ -11,64 +12,37 @@ import { MeModule } from "./me.module"
 
 describe("MeController", () => {
   let controller: MeController
-  let module: TestingModule
-  let dataSource: DataSource
+  let setup: Awaited<ReturnType<typeof setupTransactionalTestDatabase>>
   let userRepository: Repository<User>
   let organizationRepository: Repository<Organization>
   let membershipRepository: Repository<UserMembership>
 
   beforeAll(async () => {
-    const testDatabaseUrl = process.env.DATABASE_URL
-    if (!testDatabaseUrl) {
-      throw new Error("DATABASE_URL not found in environment. Make sure .env.test is loaded.")
-    }
-
-    module = await Test.createTestingModule({
-      imports: [
-        ConfigModule.forRoot({
-          isGlobal: true,
-        }),
-        TypeOrmModule.forRoot({
-          type: "postgres",
-          url: testDatabaseUrl,
-          entities: [User, Organization, UserMembership],
-          synchronize: true,
-          logging: false,
-          dropSchema: false,
-        }),
-        TypeOrmModule.forFeature([User, Organization, UserMembership]),
-        MeModule,
-      ],
-    }).compile()
-
-    controller = module.get<MeController>(MeController)
-    userRepository = module.get<Repository<User>>(getRepositoryToken(User))
-    organizationRepository = module.get<Repository<Organization>>(getRepositoryToken(Organization))
-    membershipRepository = module.get<Repository<UserMembership>>(
-      getRepositoryToken(UserMembership),
+    // Use transactional setup with MeModule import
+    setup = await setupTransactionalTestDatabase(
+      [User, Organization, UserMembership],
+      [],
+      [MeModule],
     )
-
-    // Get DataSource from repository manager
-    dataSource = userRepository.manager.connection as DataSource
   })
 
   afterAll(async () => {
-    // Clear tables in correct order
-    await membershipRepository.createQueryBuilder().delete().execute()
-    await organizationRepository.createQueryBuilder().delete().execute()
-    await userRepository.createQueryBuilder().delete().execute()
-
-    if (dataSource?.isInitialized) {
-      await dataSource.destroy()
-    }
-    await module.close()
+    await teardownTestDatabase(setup)
   })
 
   beforeEach(async () => {
-    // Clear all data before each test (child tables first due to foreign keys)
-    await membershipRepository.createQueryBuilder().delete().execute()
-    await organizationRepository.createQueryBuilder().delete().execute()
-    await userRepository.createQueryBuilder().delete().execute()
+    // Start transaction - this creates a new module with transactional providers
+    await setup.startTransaction()
+    // Get controller and repositories from transactional module (important!)
+    controller = setup.module.get<MeController>(MeController)
+    userRepository = setup.getRepository(User)
+    organizationRepository = setup.getRepository(Organization)
+    membershipRepository = setup.getRepository(UserMembership)
+  })
+
+  afterEach(async () => {
+    // Rollback transaction - automatically cleans up all data
+    await setup.rollbackTransaction()
   })
 
   it("should be defined", () => {
@@ -107,13 +81,19 @@ describe("MeController", () => {
       expect(result.user.name).toBe("Test User")
       expect(result.organizations).toEqual([]) // No memberships yet
 
-      // Create memberships
+      // Create memberships - ensure user exists in transaction
       const user = await userRepository.findOne({
         where: { auth0Id: auth0Sub },
       })
       expect(user).not.toBeNull()
 
       if (user) {
+        // Verify organizations exist in transaction
+        const org1 = await organizationRepository.findOne({ where: { id: savedOrg1.id } })
+        const org2 = await organizationRepository.findOne({ where: { id: savedOrg2.id } })
+        expect(org1).not.toBeNull()
+        expect(org2).not.toBeNull()
+
         const membership1 = membershipRepository.create({
           userId: user.id,
           organizationId: savedOrg1.id,
