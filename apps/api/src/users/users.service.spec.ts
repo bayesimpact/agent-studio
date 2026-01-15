@@ -1,9 +1,9 @@
-import { ConfigModule } from "@nestjs/config"
-import { Test, type TestingModule } from "@nestjs/testing"
-import { getRepositoryToken, TypeOrmModule } from "@nestjs/typeorm"
-import { DataSource, type Repository } from "typeorm"
-import { Organization } from "../organizations/organization.entity"
-import { UserMembership } from "../organizations/user-membership.entity"
+import type { Repository } from "typeorm"
+import {
+  clearTestDatabase,
+  setupTestDatabase,
+  teardownTestDatabase,
+} from "@/common/test/test-database"
 import { User } from "./user.entity"
 import { userFactory } from "./user.factory"
 import { UsersService } from "./users.service"
@@ -11,53 +11,20 @@ import { UsersService } from "./users.service"
 describe("UsersService", () => {
   let service: UsersService
   let repository: Repository<User>
-  let dataSource: DataSource
-  let module: TestingModule
+  let dbSetup: Awaited<ReturnType<typeof setupTestDatabase>>
 
   beforeAll(async () => {
-    // Use DATABASE_URL from .env.test
-    const testDatabaseUrl = process.env.DATABASE_URL
-    if (!testDatabaseUrl) {
-      throw new Error("DATABASE_URL not found in environment. Make sure .env.test is loaded.")
-    }
-
-    module = await Test.createTestingModule({
-      imports: [
-        ConfigModule.forRoot({
-          isGlobal: true,
-        }),
-        TypeOrmModule.forRoot({
-          type: "postgres",
-          url: testDatabaseUrl,
-          entities: [User, Organization, UserMembership],
-          synchronize: true, // Use synchronize for tests
-          logging: false,
-          dropSchema: false, // Don't drop schema, just clear data
-        }),
-        TypeOrmModule.forFeature([User]),
-      ],
-      providers: [UsersService],
-    }).compile()
-
-    service = module.get<UsersService>(UsersService)
-    repository = module.get<Repository<User>>(getRepositoryToken(User))
-    dataSource = module.get<DataSource>(DataSource)
+    dbSetup = await setupTestDatabase([User], [UsersService])
+    service = dbSetup.module.get<UsersService>(UsersService)
+    repository = dbSetup.getRepository(User)
   })
 
   afterAll(async () => {
-    // Clear tables in correct order (child tables first due to foreign keys)
-    await dataSource.getRepository(UserMembership).createQueryBuilder().delete().execute()
-    await dataSource.getRepository(Organization).createQueryBuilder().delete().execute()
-    await repository.createQueryBuilder().delete().execute()
-    await dataSource.destroy()
-    await module.close()
+    await teardownTestDatabase(dbSetup)
   })
 
   beforeEach(async () => {
-    // Clear all data before each test (child tables first due to foreign keys)
-    await dataSource.getRepository(UserMembership).createQueryBuilder().delete().execute()
-    await dataSource.getRepository(Organization).createQueryBuilder().delete().execute()
-    await repository.createQueryBuilder().delete().execute()
+    await clearTestDatabase(dbSetup.dataSource)
   })
 
   describe("findByAuth0Id", () => {

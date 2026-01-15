@@ -1,8 +1,10 @@
 import { Controller, Get, Req, UseGuards } from "@nestjs/common"
 import type { MeResponseDto } from "@repo/api"
 import { JwtAuthGuard } from "@/auth/jwt-auth.guard"
-import type { OrganizationsService } from "@/organizations/organizations.service"
-import type { UserBootstrapService } from "@/organizations/user-bootstrap.service"
+// biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
+import { OrganizationsService } from "@/organizations/organizations.service"
+// biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
+import { UserBootstrapService } from "@/organizations/user-bootstrap.service"
 
 interface Auth0JwtPayload {
   sub: string

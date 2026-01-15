@@ -1,42 +1,74 @@
+import { ConfigModule } from "@nestjs/config"
 import { Test, type TestingModule } from "@nestjs/testing"
-import { organizationFactory } from "../organizations/organization.factory"
-import { OrganizationsService } from "../organizations/organizations.service"
-import { UserBootstrapService } from "../organizations/user-bootstrap.service"
-import { userMembershipFactory } from "../organizations/user-membership.factory"
-import { userFactory } from "../users/user.factory"
+import { getRepositoryToken, TypeOrmModule } from "@nestjs/typeorm"
+import type { DataSource, Repository } from "typeorm"
+import { Organization } from "@/organizations/organization.entity"
+import { organizationFactory } from "@/organizations/organization.factory"
+import { UserMembership } from "@/organizations/user-membership.entity"
+import { User } from "@/users/user.entity"
 import { MeController } from "./me.controller"
+import { MeModule } from "./me.module"
 
 describe("MeController", () => {
   let controller: MeController
-  let userBootstrapService: jest.Mocked<UserBootstrapService>
-  let organizationsService: jest.Mocked<OrganizationsService>
+  let module: TestingModule
+  let dataSource: DataSource
+  let userRepository: Repository<User>
+  let organizationRepository: Repository<Organization>
+  let membershipRepository: Repository<UserMembership>
 
-  beforeEach(async () => {
-    const mockUserBootstrapService = {
-      ensureUser: jest.fn(),
+  beforeAll(async () => {
+    const testDatabaseUrl = process.env.DATABASE_URL
+    if (!testDatabaseUrl) {
+      throw new Error("DATABASE_URL not found in environment. Make sure .env.test is loaded.")
     }
 
-    const mockOrganizationsService = {
-      getUserOrganizationsWithMemberships: jest.fn(),
-    }
-
-    const module: TestingModule = await Test.createTestingModule({
-      controllers: [MeController],
-      providers: [
-        {
-          provide: UserBootstrapService,
-          useValue: mockUserBootstrapService,
-        },
-        {
-          provide: OrganizationsService,
-          useValue: mockOrganizationsService,
-        },
+    module = await Test.createTestingModule({
+      imports: [
+        ConfigModule.forRoot({
+          isGlobal: true,
+        }),
+        TypeOrmModule.forRoot({
+          type: "postgres",
+          url: testDatabaseUrl,
+          entities: [User, Organization, UserMembership],
+          synchronize: true,
+          logging: false,
+          dropSchema: false,
+        }),
+        TypeOrmModule.forFeature([User, Organization, UserMembership]),
+        MeModule,
       ],
     }).compile()
 
     controller = module.get<MeController>(MeController)
-    userBootstrapService = module.get(UserBootstrapService)
-    organizationsService = module.get(OrganizationsService)
+    userRepository = module.get<Repository<User>>(getRepositoryToken(User))
+    organizationRepository = module.get<Repository<Organization>>(getRepositoryToken(Organization))
+    membershipRepository = module.get<Repository<UserMembership>>(
+      getRepositoryToken(UserMembership),
+    )
+
+    // Get DataSource from repository manager
+    dataSource = userRepository.manager.connection as DataSource
+  })
+
+  afterAll(async () => {
+    // Clear tables in correct order
+    await membershipRepository.createQueryBuilder().delete().execute()
+    await organizationRepository.createQueryBuilder().delete().execute()
+    await userRepository.createQueryBuilder().delete().execute()
+
+    if (dataSource?.isInitialized) {
+      await dataSource.destroy()
+    }
+    await module.close()
+  })
+
+  beforeEach(async () => {
+    // Clear all data before each test (child tables first due to foreign keys)
+    await membershipRepository.createQueryBuilder().delete().execute()
+    await organizationRepository.createQueryBuilder().delete().execute()
+    await userRepository.createQueryBuilder().delete().execute()
   })
 
   it("should be defined", () => {
@@ -47,34 +79,6 @@ describe("MeController", () => {
     it("should return user and organizations", async () => {
       // Arrange
       const auth0Sub = "auth0|123456"
-      const user = userFactory.build({
-        auth0Id: auth0Sub,
-        email: "test@example.com",
-        name: "Test User",
-      })
-
-      const organization1 = organizationFactory.build({
-        id: "org-1",
-        name: "Organization 1",
-      })
-      const organization2 = organizationFactory.build({
-        id: "org-2",
-        name: "Organization 2",
-      })
-
-      const _membership1 = userMembershipFactory.build({
-        userId: user.id,
-        organizationId: organization1.id,
-        role: "owner",
-        organization: organization1,
-      })
-      const _membership2 = userMembershipFactory.build({
-        userId: user.id,
-        organizationId: organization2.id,
-        role: "member",
-        organization: organization2,
-      })
-
       const mockRequest = {
         user: {
           sub: auth0Sub,
@@ -84,93 +88,182 @@ describe("MeController", () => {
         },
       }
 
-      userBootstrapService.ensureUser.mockResolvedValue(user)
-      organizationsService.getUserOrganizationsWithMemberships.mockResolvedValue([
-        { organization: organization1, role: "owner" },
-        { organization: organization2, role: "member" },
-      ])
+      // Create organizations and memberships in database
+      const organization1 = organizationFactory.build({
+        name: "Organization 1",
+      })
+      const savedOrg1 = await organizationRepository.save(organization1)
 
-      // Act
+      const organization2 = organizationFactory.build({
+        name: "Organization 2",
+      })
+      const savedOrg2 = await organizationRepository.save(organization2)
+
+      // Act - This will create the user via UserBootstrapService
       const result = await controller.getMe(mockRequest)
 
-      // Assert
-      expect(userBootstrapService.ensureUser).toHaveBeenCalledWith({
-        sub: auth0Sub,
-        email: "test@example.com",
-        name: "Test User",
-        picture: "https://example.com/picture.jpg",
+      // Assert - User should be created
+      expect(result.user.email).toBe("test@example.com")
+      expect(result.user.name).toBe("Test User")
+      expect(result.organizations).toEqual([]) // No memberships yet
+
+      // Create memberships
+      const user = await userRepository.findOne({
+        where: { auth0Id: auth0Sub },
       })
-      expect(organizationsService.getUserOrganizationsWithMemberships).toHaveBeenCalledWith(user.id)
-      expect(result).toEqual({
-        user: {
-          id: user.id,
-          email: user.email,
-          name: user.name,
-        },
-        organizations: [
-          { id: organization1.id, name: organization1.name, role: "owner" },
-          { id: organization2.id, name: organization2.name, role: "member" },
-        ],
-      })
+      expect(user).not.toBeNull()
+
+      if (user) {
+        const membership1 = membershipRepository.create({
+          userId: user.id,
+          organizationId: savedOrg1.id,
+          role: "owner",
+        })
+        await membershipRepository.save(membership1)
+
+        const membership2 = membershipRepository.create({
+          userId: user.id,
+          organizationId: savedOrg2.id,
+          role: "member",
+        })
+        await membershipRepository.save(membership2)
+
+        // Act again - Now with memberships
+        const resultWithOrgs = await controller.getMe(mockRequest)
+
+        // Assert
+        expect(resultWithOrgs.organizations).toHaveLength(2)
+        expect(resultWithOrgs.organizations).toEqual(
+          expect.arrayContaining([
+            { id: savedOrg1.id, name: "Organization 1", role: "owner" },
+            { id: savedOrg2.id, name: "Organization 2", role: "member" },
+          ]),
+        )
+      }
     })
 
     it("should handle user with no organizations", async () => {
       // Arrange
-      const auth0Sub = "auth0|123456"
-      const user = userFactory.build({
-        auth0Id: auth0Sub,
-        email: "test@example.com",
-        name: "Test User",
-      })
-
+      const auth0Sub = "auth0|no-orgs"
       const mockRequest = {
         user: {
           sub: auth0Sub,
-          email: "test@example.com",
+          email: "noorgs@example.com",
         },
       }
-
-      userBootstrapService.ensureUser.mockResolvedValue(user)
-      organizationsService.getUserOrganizationsWithMemberships.mockResolvedValue([])
 
       // Act
       const result = await controller.getMe(mockRequest)
 
       // Assert
-      expect(result).toEqual({
-        user: {
-          id: user.id,
-          email: user.email,
-          name: user.name,
-        },
-        organizations: [],
+      expect(result.user.email).toBe("noorgs@example.com")
+      expect(result.organizations).toEqual([])
+
+      // Verify user was created in database
+      const user = await userRepository.findOne({
+        where: { auth0Id: auth0Sub },
       })
+      expect(user).not.toBeNull()
+      expect(user?.email).toBe("noorgs@example.com")
     })
 
     it("should handle user with null name", async () => {
       // Arrange
-      const auth0Sub = "auth0|123456"
-      const user = userFactory.build({
-        auth0Id: auth0Sub,
-        email: "test@example.com",
-        name: null,
-      })
-
+      const auth0Sub = "auth0|null-name"
       const mockRequest = {
         user: {
           sub: auth0Sub,
-          email: "test@example.com",
+          email: "nullname@example.com",
         },
       }
-
-      userBootstrapService.ensureUser.mockResolvedValue(user)
-      organizationsService.getUserOrganizationsWithMemberships.mockResolvedValue([])
 
       // Act
       const result = await controller.getMe(mockRequest)
 
       // Assert
       expect(result.user.name).toBeNull()
+      expect(result.user.email).toBe("nullname@example.com")
+
+      // Verify in database
+      const user = await userRepository.findOne({
+        where: { auth0Id: auth0Sub },
+      })
+      expect(user?.name).toBeNull()
+    })
+
+    it("should create user on first call and reuse on subsequent calls", async () => {
+      // Arrange
+      const auth0Sub = "auth0|idempotent"
+      const mockRequest = {
+        user: {
+          sub: auth0Sub,
+          email: "idempotent@example.com",
+          name: "Idempotent User",
+        },
+      }
+
+      // Act - First call
+      const result1 = await controller.getMe(mockRequest)
+      const userId1 = result1.user.id
+
+      // Act - Second call
+      const result2 = await controller.getMe(mockRequest)
+      const userId2 = result2.user.id
+
+      // Assert - Same user ID (idempotent)
+      expect(userId1).toBe(userId2)
+      expect(result1.user.email).toBe(result2.user.email)
+
+      // Verify only one user exists in database
+      const userCount = await userRepository.count({
+        where: { auth0Id: auth0Sub },
+      })
+      expect(userCount).toBe(1)
+    })
+
+    it("should return organizations in correct format", async () => {
+      // Arrange
+      const auth0Sub = "auth0|org-format"
+      const mockRequest = {
+        user: {
+          sub: auth0Sub,
+          email: "orgformat@example.com",
+        },
+      }
+
+      // Create organization and membership
+      const organization = organizationFactory.build({
+        name: "Test Org",
+      })
+      const savedOrg = await organizationRepository.save(organization)
+
+      // Create user first
+      await controller.getMe(mockRequest)
+      const user = await userRepository.findOne({
+        where: { auth0Id: auth0Sub },
+      })
+
+      if (user) {
+        const membership = membershipRepository.create({
+          userId: user.id,
+          organizationId: savedOrg.id,
+          role: "admin",
+        })
+        await membershipRepository.save(membership)
+
+        // Act
+        const result = await controller.getMe(mockRequest)
+
+        // Assert - Check format
+        expect(result.organizations).toHaveLength(1)
+        expect(result.organizations[0]).toEqual({
+          id: savedOrg.id,
+          name: "Test Org",
+          role: "admin",
+        })
+        expect(result.organizations[0]).not.toHaveProperty("organization")
+        expect(result.organizations[0]).not.toHaveProperty("createdAt")
+      }
     })
   })
 })

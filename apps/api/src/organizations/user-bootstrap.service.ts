@@ -1,5 +1,7 @@
 import { Injectable } from "@nestjs/common"
-import type { Auth0UserInfo, UsersService } from "@/users/users.service"
+import type { Auth0UserInfo } from "@/users/users.service"
+// biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
+import { UsersService } from "@/users/users.service"
 
 @Injectable()
 export class UserBootstrapService {
