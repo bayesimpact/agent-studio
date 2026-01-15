@@ -1,6 +1,6 @@
 import { Controller, Get, HttpCode, HttpStatus, Logger, Req, UseGuards } from "@nestjs/common"
 import { JwtAuthGuard } from "../auth/jwt-auth.guard"
-import { ProtectedRoutes } from "../exports/api-routes/protected"
+import { ProtectedRoutes } from "./protected.routes"
 
 @UseGuards(JwtAuthGuard)
 @Controller()

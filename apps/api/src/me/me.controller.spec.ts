@@ -74,7 +74,7 @@ describe("MeController", () => {
       const savedOrg2 = await organizationRepository.save(organization2)
 
       // Act - This will create the user via UserBootstrapService
-      const result = await controller.getMe(mockRequest)
+      const { data: result } = await controller.getMe(mockRequest)
 
       // Assert - User should be created
       expect(result.user.email).toBe("test@example.com")
@@ -109,7 +109,7 @@ describe("MeController", () => {
         await membershipRepository.save(membership2)
 
         // Act again - Now with memberships
-        const resultWithOrgs = await controller.getMe(mockRequest)
+        const { data: resultWithOrgs } = await controller.getMe(mockRequest)
 
         // Assert
         expect(resultWithOrgs.organizations).toHaveLength(2)
@@ -133,7 +133,7 @@ describe("MeController", () => {
       }
 
       // Act
-      const result = await controller.getMe(mockRequest)
+      const { data: result } = await controller.getMe(mockRequest)
 
       // Assert
       expect(result.user.email).toBe("noorgs@example.com")
@@ -158,7 +158,7 @@ describe("MeController", () => {
       }
 
       // Act
-      const result = await controller.getMe(mockRequest)
+      const { data: result } = await controller.getMe(mockRequest)
 
       // Assert
       expect(result.user.name).toBeNull()
@@ -183,11 +183,11 @@ describe("MeController", () => {
       }
 
       // Act - First call
-      const result1 = await controller.getMe(mockRequest)
+      const { data: result1 } = await controller.getMe(mockRequest)
       const userId1 = result1.user.id
 
       // Act - Second call
-      const result2 = await controller.getMe(mockRequest)
+      const { data: result2 } = await controller.getMe(mockRequest)
       const userId2 = result2.user.id
 
       // Assert - Same user ID (idempotent)
@@ -232,7 +232,7 @@ describe("MeController", () => {
         await membershipRepository.save(membership)
 
         // Act
-        const result = await controller.getMe(mockRequest)
+        const { data: result } = await controller.getMe(mockRequest)
 
         // Assert - Check format
         expect(result.organizations).toHaveLength(1)

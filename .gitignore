@@ -70,3 +70,6 @@ llm-logs/
 
 # http secrets
 *private.env*
+
+# Smart IDEs
+.cursorrules
