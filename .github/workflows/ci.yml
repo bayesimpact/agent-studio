@@ -51,7 +51,11 @@ jobs:
 
       - name: Run database migrations
         working-directory: apps/api
+        env:
+          DATABASE_URL: postgresql://test:test@localhost:5432/test
         run: npm run migration:test:run
 
       - name: Run tests
+        env:
+          DATABASE_URL: postgresql://test:test@localhost:5432/test
         run: npm run test
