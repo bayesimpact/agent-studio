@@ -11,9 +11,10 @@ import {
 } from "typeorm"
 import { Organization } from "@/organizations/organization.entity"
 import { UserMembership } from "@/organizations/user-membership.entity"
+import { Project } from "@/projects/project.entity"
 import { User } from "@/users/user.entity"
 
-const TEST_ENTITIES = [User, Organization, UserMembership]
+const TEST_ENTITIES = [User, Organization, UserMembership, Project]
 
 export interface TestDatabaseSetup {
   module: TestingModule
@@ -116,6 +117,7 @@ export async function clearTestDatabase(dataSource: DataSource): Promise<void> {
       // Disable foreign key checks temporarily for safer truncation
       // Delete in order: child tables first, then parent tables
       await queryRunner.query(`DELETE FROM "user_memberships"`)
+      await queryRunner.query(`DELETE FROM "projects"`)
       await queryRunner.query(`DELETE FROM "organizations"`)
       await queryRunner.query(`DELETE FROM "users"`)
 

@@ -7,6 +7,7 @@ import { ChatModule } from "./chat/chat.module"
 import typeorm from "./config/typeorm"
 import { MeModule } from "./me/me.module"
 import { OrganizationsModule } from "./organizations/organizations.module"
+import { ProjectsModule } from "./projects/projects.module"
 import { ProtectedModule } from "./protected/protected.module"
 import { UsersModule } from "./users/users.module"
 
@@ -26,6 +27,7 @@ import { UsersModule } from "./users/users.module"
     ProtectedModule,
     UsersModule,
     OrganizationsModule,
+    ProjectsModule,
     MeModule,
   ],
 })
