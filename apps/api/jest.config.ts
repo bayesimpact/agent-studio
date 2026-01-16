@@ -13,7 +13,13 @@ export const nestConfig = {
   transform: {
     "^.+\\.(t|j)s$": "ts-jest",
   },
-  collectCoverageFrom: ["**/*.(t|j)s", "!**/migrations/**", "!**/*.migration.ts"],
+  collectCoverageFrom: [
+    "**/*.(t|j)s",
+    "!**/migrations/**",
+    "!**/*.migration.ts",
+    "!**/dto/**",
+    "!**/*.dto.ts",
+  ],
   coverageDirectory: "../coverage",
   testEnvironment: "node",
   moduleNameMapper: {
