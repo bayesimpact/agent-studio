@@ -1,5 +1,5 @@
+import { cn } from "@caseai-connect/ui/utils"
 import { Slot } from "@radix-ui/react-slot"
-import { cn } from "@repo/ui/utils"
 import { cva, type VariantProps } from "class-variance-authority"
 import type * as React from "react"
 import { Separator } from "./separator"

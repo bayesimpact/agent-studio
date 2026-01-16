@@ -1,7 +1,7 @@
 "use client"
 
+import { cn } from "@caseai-connect/ui/utils"
 import * as PopoverPrimitive from "@radix-ui/react-popover"
-import { cn } from "@repo/ui/utils"
 import type * as React from "react"
 
 function Popover({ ...props }: React.ComponentProps<typeof PopoverPrimitive.Root>) {

@@ -1,8 +1,8 @@
-import { LayoutHeader } from "@repo/ui/components/layouts/header"
-import { Header } from "@repo/ui/components/layouts/sidebar/Header"
-import { NavUser } from "@repo/ui/components/layouts/sidebar/NavUser"
-import type { User } from "@repo/ui/components/layouts/sidebar/types"
-import { Button } from "@repo/ui/shad/button"
+import { LayoutHeader } from "@caseai-connect/ui/components/layouts/header"
+import { Header } from "@caseai-connect/ui/components/layouts/sidebar/Header"
+import { NavUser } from "@caseai-connect/ui/components/layouts/sidebar/NavUser"
+import type { User } from "@caseai-connect/ui/components/layouts/sidebar/types"
+import { Button } from "@caseai-connect/ui/shad/button"
 import {
   Sidebar,
   SidebarContent,
@@ -10,7 +10,7 @@ import {
   SidebarHeader,
   SidebarInset,
   SidebarProvider,
-} from "@repo/ui/shad/sidebar"
+} from "@caseai-connect/ui/shad/sidebar"
 import { dataset } from "@/assets/data"
 import { NavPrompts } from "../sidebar/NavPrompts"
 import { NavSettings } from "../sidebar/NavSettings"

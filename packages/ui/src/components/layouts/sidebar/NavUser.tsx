@@ -1,14 +1,19 @@
 "use client"
 
-import { Avatar, AvatarFallback, AvatarImage } from "@repo/ui/shad/avatar"
+import { Avatar, AvatarFallback, AvatarImage } from "@caseai-connect/ui/shad/avatar"
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@repo/ui/shad/dropdown-menu"
-import { SidebarMenu, SidebarMenuButton, SidebarMenuItem, useSidebar } from "@repo/ui/shad/sidebar"
+} from "@caseai-connect/ui/shad/dropdown-menu"
+import {
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+  useSidebar,
+} from "@caseai-connect/ui/shad/sidebar"
 import { ChevronsUpDown } from "lucide-react"
 import type * as React from "react"
 import type { User } from "./types"

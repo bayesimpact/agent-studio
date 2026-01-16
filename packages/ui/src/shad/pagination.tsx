@@ -1,4 +1,4 @@
-import { cn } from "@repo/ui/utils"
+import { cn } from "@caseai-connect/ui/utils"
 import { ChevronLeftIcon, ChevronRightIcon, MoreHorizontalIcon } from "lucide-react"
 import type * as React from "react"
 import { type Button, buttonVariants } from "./button"

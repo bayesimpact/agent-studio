@@ -1,5 +1,5 @@
-import { Separator } from "@repo/ui/shad/separator"
-import { SidebarTrigger } from "@repo/ui/shad/sidebar"
+import { Separator } from "@caseai-connect/ui/shad/separator"
+import { SidebarTrigger } from "@caseai-connect/ui/shad/sidebar"
 
 export function LayoutHeader({ title, rightSlot }: { title: string; rightSlot?: React.ReactNode }) {
   return (

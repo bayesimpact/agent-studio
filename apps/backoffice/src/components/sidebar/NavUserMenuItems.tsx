@@ -2,7 +2,7 @@ import {
   DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuSeparator,
-} from "@repo/ui/shad/dropdown-menu"
+} from "@caseai-connect/ui/shad/dropdown-menu"
 import { BadgeCheckIcon, BellIcon, CreditCardIcon, LogOutIcon, SparklesIcon } from "lucide-react"
 import { useAuthHandler } from "@/hooks/use-auth-handler"
 

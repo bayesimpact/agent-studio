@@ -1,4 +1,4 @@
-import { Card, CardDescription, CardHeader, CardTitle } from "@repo/ui/shad/card"
+import { Card, CardDescription, CardHeader, CardTitle } from "@caseai-connect/ui/shad/card"
 import { Loader2Icon } from "lucide-react"
 import { FullPageCenterLayout } from "@/components/layouts/FullPageCenterLayout"
 
