@@ -28,5 +28,9 @@
   },
   "typescript.tsdk": "node_modules/typescript/lib",
   "typescript.enablePromptUseWorkspaceTsdk": true,
-  "typescript.preferences.useAliasesForRenames": false
+  "typescript.preferences.useAliasesForRenames": false,
+  "typescript.preferences.includePackageJsonAutoImports": "on",
+  "typescript.tsserver.watchOptions": {
+    "excludeDirectories": ["**/node_modules", "**/dist"]
+  }
 }
