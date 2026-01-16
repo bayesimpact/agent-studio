@@ -1,6 +1,6 @@
-import type { MeResponseDto } from "@repo/api"
 import type { ResponseData } from "@/exports/dtos/generic"
 import { defineRoute } from "@/helpers"
+import type { MeResponseDto } from "./dto/me.dto"
 
 export const MeRoutes = {
   getMe: defineRoute<ResponseData<MeResponseDto>>({
