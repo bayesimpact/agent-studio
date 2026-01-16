@@ -1,5 +1,5 @@
 import { Module } from "@nestjs/common"
-import { ProtectedController } from "./Protected.controller"
+import { ProtectedController } from "./protected.controller"
 
 @Module({
   imports: [],
