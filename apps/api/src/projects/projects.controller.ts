@@ -1,9 +1,9 @@
 import { Body, Controller, Get, Param, Post, Req, UseGuards } from "@nestjs/common"
-import type { CreateProjectRequestDto } from "@repo/api"
 import { JwtAuthGuard } from "@/auth/jwt-auth.guard"
 import type { TimeType } from "@/exports/dtos/generic"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
 import { UserBootstrapService } from "@/organizations/user-bootstrap.service"
+import type { CreateProjectRequestDto } from "./dto/create-project.dto"
 import { ProjectsRoutes } from "./projects.routes"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
 import { ProjectsService } from "./projects.service"
