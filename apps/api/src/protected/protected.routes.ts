@@ -1,5 +1,5 @@
-import { defineRoute } from "../../helpers"
-import type { ResponseData } from "../dtos/generic"
+import type { ResponseData } from "@/exports/dtos/generic"
+import { defineRoute } from "@/helpers"
 
 export const ProtectedRoutes = {
   getHello: defineRoute<ResponseData<string>>({

@@ -13,6 +13,7 @@ if (process.env.DATABASE_HOST?.startsWith("/cloudsql")) {
     socketPath: process.env.DATABASE_HOST,
   }
 }
+
 export const config: () => TypeOrmModuleOptions = () => ({
   type: "postgres",
   url: process.env.DATABASE_URL,
@@ -23,5 +24,15 @@ export const config: () => TypeOrmModuleOptions = () => ({
   logging: true,
   extra,
 })
+
+// DataSource for migrations (uses source files for CLI operations)
+// This is used by TypeORM CLI for running migrations
+const baseConfig = config()
+const { autoLoadEntities, ...dataSourceConfig } = baseConfig
+export const connectionSource = new DataSource({
+  ...dataSourceConfig,
+  entities: ["src/**/*.entity.ts"],
+  migrations: ["src/**/migrations/*.ts"],
+} as DataSourceOptions)
+
 export default registerAs("typeorm", () => config)
-export const connectionSource = new DataSource(config() as DataSourceOptions)
