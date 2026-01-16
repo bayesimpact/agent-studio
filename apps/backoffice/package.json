@@ -1,5 +1,5 @@
 {
-  "name": "backoffice",
+  "name": "@caseai-connect/backoffice",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -13,9 +13,8 @@
   },
   "dependencies": {
     "@auth0/auth0-react": "^2.11.0",
-    "api": "*",
-    "@repo/api": "*",
-    "@repo/ui": "*",
+    "@caseai-connect/api-contracts": "*",
+    "@caseai-connect/ui": "*",
     "@tailwindcss/vite": "^4.1.18",
     "axios": "^1.13.2",
     "lodash": "^4.17.21",

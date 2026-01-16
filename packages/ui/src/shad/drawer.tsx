@@ -1,6 +1,6 @@
 "use client"
 
-import { cn } from "@repo/ui/utils"
+import { cn } from "@caseai-connect/ui/utils"
 import type * as React from "react"
 import { Drawer as DrawerPrimitive } from "vaul"
 

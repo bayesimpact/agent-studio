@@ -1,4 +1,4 @@
-import { Button } from "@repo/ui/shad/button"
+import { Button } from "@caseai-connect/ui/shad/button"
 import { Link } from "react-router-dom"
 
 export function NotFoundRoute() {

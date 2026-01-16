@@ -1,19 +1,19 @@
 "use client"
 
-import { Section } from "@repo/ui/components/layouts/sidebar/Section"
+import { Section } from "@caseai-connect/ui/components/layouts/sidebar/Section"
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@repo/ui/shad/dropdown-menu"
+} from "@caseai-connect/ui/shad/dropdown-menu"
 import {
   SidebarMenuAction,
   SidebarMenuButton,
   SidebarMenuItem,
   useSidebar,
-} from "@repo/ui/shad/sidebar"
+} from "@caseai-connect/ui/shad/sidebar"
 import { Folder, Forward, MoreHorizontal, Trash2 } from "lucide-react"
 import type { MenuItem } from "./types"
 

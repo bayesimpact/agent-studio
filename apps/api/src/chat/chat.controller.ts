@@ -1,5 +1,5 @@
+import type { CreateChatSessionResponseDto } from "@caseai-connect/api-contracts"
 import { Controller, type MessageEvent, Post, Query, Sse } from "@nestjs/common"
-import type { CreateChatSessionResponseDto } from "@repo/api"
 import type { Observable } from "rxjs"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
 import { ChatService } from "./chat.service"

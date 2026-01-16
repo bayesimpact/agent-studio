@@ -1,5 +1,5 @@
 {
-  "name": "api",
+  "name": "@caseai-connect/api",
   "version": "0.0.0",
   "private": true,
   "scripts": {
@@ -30,7 +30,7 @@
     "@nestjs/passport": "^11.0.5",
     "@nestjs/platform-express": "^11.0.0",
     "@nestjs/typeorm": "^11.0.0",
-    "@repo/api": "*",
+    "@caseai-connect/api-contracts": "*",
     "axios": "^1.12.2",
     "jwks-rsa": "^3.2.0",
     "langfuse": "^3.38.6",

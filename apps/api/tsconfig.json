@@ -5,8 +5,8 @@
     "outDir": "./dist",
     "paths": {
       "@/*": ["./src/*"],
-      "@repo/api": ["../../packages/api/src/index.ts"],
-      "@repo/api/*": ["../../packages/api/src/*"]
+      "@caseai-connect/api-contracts": ["../../packages/api-contracts/src/index.ts"],
+      "@caseai-connect/api-contracts/*": ["../../packages/api-contracts/src/*"]
     }
   },
   "include": ["src/**/*"],

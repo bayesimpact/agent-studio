@@ -1,4 +1,4 @@
-import { Button } from "@repo/ui/shad/button"
+import { Button } from "@caseai-connect/ui/shad/button"
 import {
   Card,
   CardContent,
@@ -6,7 +6,7 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-} from "@repo/ui/shad/card"
+} from "@caseai-connect/ui/shad/card"
 import { Link } from "react-router-dom"
 import { LoginButton } from "@/components/LoginButton"
 import LogoutButton from "@/components/LogoutButton"

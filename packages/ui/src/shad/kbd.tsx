@@ -1,4 +1,4 @@
-import { cn } from "@repo/ui/utils"
+import { cn } from "@caseai-connect/ui/utils"
 
 function Kbd({ className, ...props }: React.ComponentProps<"kbd">) {
   return (
