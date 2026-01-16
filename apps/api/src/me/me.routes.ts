@@ -1,10 +1,2 @@
-import type { ResponseData } from "@/exports/dtos/generic"
-import { defineRoute } from "@/helpers"
-import type { MeResponseDto } from "./dto/me.dto"
-
-export const MeRoutes = {
-  getMe: defineRoute<ResponseData<MeResponseDto>>({
-    path: "me",
-    method: "get",
-  }),
-}
+// Re-export from api-contracts
+export { MeRoutes } from "@caseai-connect/api-contracts"
