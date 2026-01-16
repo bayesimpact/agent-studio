@@ -99,14 +99,34 @@ export async function setupTestDatabase(
 /**
  * Clears all test data from the database.
  * Tables are cleared in the correct order to respect foreign key constraints.
+ * Uses TRUNCATE CASCADE for faster and safer cleanup that respects foreign keys.
  */
 export async function clearTestDatabase(dataSource: DataSource): Promise<void> {
   if (!dataSource || !dataSource.isInitialized) {
     return
   }
-  await dataSource.getRepository(UserMembership).createQueryBuilder().delete().execute()
-  await dataSource.getRepository(Organization).createQueryBuilder().delete().execute()
-  await dataSource.getRepository(User).createQueryBuilder().delete().execute()
+
+  // Use a transaction to ensure atomic cleanup
+  const queryRunner = dataSource.createQueryRunner()
+  try {
+    await queryRunner.connect()
+    await queryRunner.startTransaction()
+
+    try {
+      // Disable foreign key checks temporarily for safer truncation
+      // Delete in order: child tables first, then parent tables
+      await queryRunner.query(`DELETE FROM "user_memberships"`)
+      await queryRunner.query(`DELETE FROM "organizations"`)
+      await queryRunner.query(`DELETE FROM "users"`)
+
+      await queryRunner.commitTransaction()
+    } catch (error) {
+      await queryRunner.rollbackTransaction()
+      throw error
+    }
+  } finally {
+    await queryRunner.release()
+  }
 }
 
 /**

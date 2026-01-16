@@ -14,7 +14,6 @@ import { DataSource, EntityManager } from "typeorm"
 import { Organization } from "@/organizations/organization.entity"
 import { UserMembership } from "@/organizations/user-membership.entity"
 import { User } from "@/users/user.entity"
-import { clearTestDatabase } from "./test-database"
 
 const TEST_ENTITIES = [User, Organization, UserMembership]
 
@@ -39,6 +38,8 @@ export interface TransactionalTestSetup {
  *
  * beforeAll(async () => {
  *   setup = await setupTransactionalTestDatabase([User], [UsersService])
+ *   // Optionally clear database once at the start for clean state
+ *   await clearTestDatabase(setup.dataSource)
  * })
  *
  * beforeEach(async () => {
@@ -96,16 +97,20 @@ export async function setupTransactionalTestDatabase(
       await rollbackTransaction()
     }
 
-    // Clear database before starting transaction to ensure clean state
-    // This is a safety measure - the transaction should handle isolation, but
-    // clearing first ensures we start with a clean slate
-    await clearTestDatabase(dataSource)
-
     queryRunner = dataSource.createQueryRunner()
     await queryRunner.connect()
-    // Use READ COMMITTED isolation level for better test isolation
+    // Use READ COMMITTED isolation level for test isolation
+    // Note: While READ COMMITTED prevents "dirty reads" (queries seeing uncommitted data),
+    // PostgreSQL's unique constraint checks DO see uncommitted inserts from other transactions.
+    // This means if two parallel tests try to insert the same unique value, one will fail
+    // with a constraint violation even though both are in separate transactions.
+    // Solution: Each test file uses unique identifier prefixes to avoid conflicts.
     await queryRunner.query("SET TRANSACTION ISOLATION LEVEL READ COMMITTED")
     await queryRunner.startTransaction()
+
+    // Note: We do NOT clear the database here. Transaction rollback in afterEach
+    // will automatically clean up all changes made during the test, providing proper isolation.
+    // This avoids foreign key constraint issues and works correctly with parallel test execution.
 
     // Create a new module with overridden providers for this transaction
     // This is the "other method" - recreate module with transactional providers
@@ -128,16 +133,29 @@ export async function setupTransactionalTestDatabase(
       providers: [
         ...providers,
         // Override EntityManager to use transactional manager
+        // This ensures ALL repositories (including from imported modules) use the transaction
         {
           provide: EntityManager,
           useValue: queryRunner.manager,
         },
-        // Override repository providers to use transactional manager
+        // Override repository providers for explicitly listed entities
+        // IMPORTANT: We also override EntityManager above, so repositories from imported
+        // modules (like UsersModule) will automatically use the transactional EntityManager
+        // when they inject EntityManager in their TypeOrmModule.forFeature() providers
         ...featureEntities.map((entity) => ({
           provide: getRepositoryToken(entity),
           useFactory: (manager: EntityManager) => manager.getRepository(entity),
           inject: [EntityManager],
         })),
+        // Also override repositories for TEST_ENTITIES to catch all possible entities
+        // that might be used by imported modules
+        ...TEST_ENTITIES.filter((entity) => !featureEntities.some((fe) => fe === entity)).map(
+          (entity) => ({
+            provide: getRepositoryToken(entity),
+            useFactory: (manager: EntityManager) => manager.getRepository(entity),
+            inject: [EntityManager],
+          }),
+        ),
       ],
     })
 

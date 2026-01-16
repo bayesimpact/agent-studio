@@ -1,4 +1,5 @@
 import type { Repository } from "typeorm"
+import { clearTestDatabase } from "@/common/test/test-database"
 import {
   setupTransactionalTestDatabase,
   teardownTestDatabase,
@@ -24,6 +25,9 @@ describe("MeController", () => {
       [],
       [MeModule],
     )
+    // Clear database once at the start to ensure clean state
+    // Individual tests use transactions with rollback for isolation
+    await clearTestDatabase(setup.dataSource)
   })
 
   afterAll(async () => {

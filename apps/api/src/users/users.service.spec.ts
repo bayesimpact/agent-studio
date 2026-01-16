@@ -1,4 +1,5 @@
 import type { Repository } from "typeorm"
+import { clearTestDatabase } from "@/common/test/test-database"
 import {
   setupTransactionalTestDatabase,
   teardownTestDatabase,
@@ -14,6 +15,9 @@ describe("UsersService", () => {
 
   beforeAll(async () => {
     setup = await setupTransactionalTestDatabase([User], [UsersService])
+    // Clear database once at the start to ensure clean state
+    // Individual tests use transactions with rollback for isolation
+    await clearTestDatabase(setup.dataSource)
   })
 
   afterAll(async () => {
@@ -41,15 +45,15 @@ describe("UsersService", () => {
 
     it("should return user when it exists", async () => {
       const user = userFactory.build({
-        auth0Id: "auth0|123",
+        auth0Id: "auth0|user-123",
         email: "test@example.com",
       })
       await repository.save(user)
 
-      const result = await service.findByAuth0Id("auth0|123")
+      const result = await service.findByAuth0Id("auth0|user-123")
       expect(result).not.toBeNull()
       expect(result?.id).toBe(user.id)
-      expect(result?.auth0Id).toBe("auth0|123")
+      expect(result?.auth0Id).toBe("auth0|user-123")
       expect(result?.email).toBe("test@example.com")
     })
   })
@@ -62,6 +66,7 @@ describe("UsersService", () => {
 
     it("should return user when it exists", async () => {
       const user = userFactory.build({
+        auth0Id: "auth0|user-findbyid-test",
         email: "test@example.com",
       })
       const savedUser = await repository.save(user)
@@ -76,7 +81,7 @@ describe("UsersService", () => {
   describe("create", () => {
     it("should create a new user", async () => {
       const auth0UserInfo = {
-        sub: "auth0|new-user",
+        sub: "auth0|user-new-user",
         email: "newuser@example.com",
         name: "New User",
         picture: "https://example.com/picture.jpg",
@@ -85,7 +90,7 @@ describe("UsersService", () => {
       const user = await service.create(auth0UserInfo)
 
       expect(user.id).toBeDefined()
-      expect(user.auth0Id).toBe("auth0|new-user")
+      expect(user.auth0Id).toBe("auth0|user-new-user")
       expect(user.email).toBe("newuser@example.com")
       expect(user.name).toBe("New User")
       expect(user.pictureUrl).toBe("https://example.com/picture.jpg")
@@ -154,14 +159,14 @@ describe("UsersService", () => {
 
     it("should return existing user when it exists", async () => {
       const existingUser = userFactory.build({
-        auth0Id: "auth0|existing",
+        auth0Id: "auth0|user-existing",
         email: "existing@example.com",
         name: "Existing User",
       })
       await repository.save(existingUser)
 
       const auth0UserInfo = {
-        sub: "auth0|existing",
+        sub: "auth0|user-existing",
         email: "existing@example.com",
         name: "Existing User",
       }
@@ -172,7 +177,7 @@ describe("UsersService", () => {
       expect(user.email).toBe("existing@example.com")
 
       // Verify no duplicate was created
-      const count = await repository.count({ where: { auth0Id: "auth0|existing" } })
+      const count = await repository.count({ where: { auth0Id: "auth0|user-existing" } })
       expect(count).toBe(1)
     })
 
