@@ -31,6 +31,8 @@ const baseConfig = config()
 const { autoLoadEntities, ...dataSourceConfig } = baseConfig
 export const connectionSource = new DataSource({
   ...dataSourceConfig,
+  entities: ["src/**/*.entity.ts"],
+  migrations: ["src/**/migrations/*.ts"],
 } as DataSourceOptions)
 
 export default registerAs("typeorm", () => config)
