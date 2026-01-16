@@ -6,6 +6,7 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from "typeorm"
+import { Project } from "@/projects/project.entity"
 import { UserMembership } from "./user-membership.entity"
 
 @Entity("organizations")
@@ -27,4 +28,10 @@ export class Organization {
     (membership) => membership.organization,
   )
   memberships!: UserMembership[]
+
+  @OneToMany(
+    () => Project,
+    (project) => project.organization,
+  )
+  projects!: Project[]
 }
