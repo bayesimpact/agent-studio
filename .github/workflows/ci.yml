@@ -49,5 +49,9 @@ jobs:
       - name: Run typecheck
         run: npm run typecheck
 
+      - name: Run database migrations
+        working-directory: apps/api
+        run: npm run migration:test:run
+
       - name: Run tests
         run: npm run test
