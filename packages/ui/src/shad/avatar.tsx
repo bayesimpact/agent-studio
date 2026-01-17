@@ -1,7 +1,7 @@
 "use client"
 
+import { cn } from "@caseai-connect/ui/utils"
 import * as AvatarPrimitive from "@radix-ui/react-avatar"
-import { cn } from "@repo/ui/utils"
 import type * as React from "react"
 
 function Avatar({ className, ...props }: React.ComponentProps<typeof AvatarPrimitive.Root>) {

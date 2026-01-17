@@ -1,4 +1,4 @@
-import type { RequestPayload, ResponseData } from "./exports/dtos/generic"
+import type { RequestPayload, ResponseData } from "./generic"
 
 type GetPath = (options?: Record<string, string>) => string
 type Method = "get" | "post" | "put" | "delete" | "patch"

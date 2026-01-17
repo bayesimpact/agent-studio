@@ -1,14 +1,18 @@
 "use client"
 
-import { Section } from "@repo/ui/components/layouts/sidebar/Section"
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@repo/ui/shad/collapsible"
+import { Section } from "@caseai-connect/ui/components/layouts/sidebar/Section"
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@caseai-connect/ui/shad/collapsible"
 import {
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarMenuSub,
   SidebarMenuSubButton,
   SidebarMenuSubItem,
-} from "@repo/ui/shad/sidebar"
+} from "@caseai-connect/ui/shad/sidebar"
 import { ChevronRight } from "lucide-react"
 import type { MenuItem } from "./types"
 

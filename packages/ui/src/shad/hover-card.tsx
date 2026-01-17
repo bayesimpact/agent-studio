@@ -1,7 +1,7 @@
 "use client"
 
+import { cn } from "@caseai-connect/ui/utils"
 import * as HoverCardPrimitive from "@radix-ui/react-hover-card"
-import { cn } from "@repo/ui/utils"
 import type * as React from "react"
 
 function HoverCard({ ...props }: React.ComponentProps<typeof HoverCardPrimitive.Root>) {

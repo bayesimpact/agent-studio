@@ -1,4 +1,4 @@
-import { SidebarMenu, SidebarMenuButton, SidebarMenuItem } from "@repo/ui/shad/sidebar"
+import { SidebarMenu, SidebarMenuButton, SidebarMenuItem } from "@caseai-connect/ui/shad/sidebar"
 import { type LucideIcon, PlugZap2Icon } from "lucide-react"
 
 export function Header({
