@@ -8,15 +8,36 @@ import {
   CardTitle,
 } from "@caseai-connect/ui/shad/card"
 import { Link } from "react-router-dom"
+import { toast } from "sonner"
 import { LoginButton } from "@/components/LoginButton"
 import LogoutButton from "@/components/LogoutButton"
 import { FullPageCenterLayout } from "@/components/layouts/FullPageCenterLayout"
-import { useAsyncNotification } from "@/hooks/use-async-notification"
-import { api } from "@/services/api"
+import { getHello } from "@/features/test/test.thunks"
+import { useAppDispatch } from "@/store/hooks"
 import type { User } from "./sidebar/types"
 
 export function Lobby({ user, isAuthenticated }: { user?: User; isAuthenticated: boolean }) {
-  const { showAsyncNotification } = useAsyncNotification(api.test.getHello)
+  const dispatch = useAppDispatch()
+
+  const showAsyncNotification = async () => {
+    toast.promise(
+      dispatch(getHello())
+        .unwrap()
+        .then((result) => result.data),
+      {
+        loading: "Loading...",
+        success: (data) => data,
+        error: (error) => (
+          <div className="flex flex-col">
+            <span className="font-medium">{`Error: ${error.statusCode || "Unknown"}`}</span>
+            <span className="text-muted-foreground font-normal whitespace-break-spaces">
+              {error.message || "Unknown error occurred."}
+            </span>
+          </div>
+        ),
+      },
+    )
+  }
 
   return (
     <FullPageCenterLayout>
