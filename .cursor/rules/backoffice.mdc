@@ -1,0 +1,52 @@
+---
+description: Rules for the React Backoffice frontend application (apps/backoffice)
+globs:
+  - "apps/backoffice/**/*"
+alwaysApply: false
+---
+
+# Cursor Agent Rules for CaseAI Connect - Backoffice
+
+## Redux Architecture
+
+### API Calls Must Go Through Redux
+
+**Rule**: All API calls MUST go through React-Redux thunks. React components MUST NOT call the API directly.
+
+**Requirements**:
+- All API calls must use Redux thunks (`createAsyncThunk`)
+- Components dispatch thunks, never call API directly
+- API routes and DTOs come from `@caseai-connect/api-contracts`
+- Single API client (`store/apiClient.ts`) is the only place allowed to use `fetch`
+
+**Structure**:
+- Redux slices: `features/{domain}/{domain}.slice.ts`
+- Redux thunks: `features/{domain}/{domain}.thunks.ts`
+- Redux selectors: `features/{domain}/{domain}.selectors.ts`
+- API client: `store/apiClient.ts` (centralized fetch wrapper)
+
+**Example**:
+```typescript
+// ✅ Correct - Component dispatches thunk
+const dispatch = useAppDispatch()
+dispatch(fetchMe())
+
+// ❌ Wrong - Component calls API directly
+const response = await fetch('/me')
+```
+
+## Completion Criteria
+
+### Required Checks Before Marking Work as Completed
+
+**Rule**: When working on the backoffice frontend application (`apps/backoffice`), you MUST run both `npm run biome:check` and `npm run typecheck` to confirm that your changes didn't break anything before marking the task as finished.
+
+**Why**: The frontend application is particularly sensitive to type errors and formatting issues that can break the build or cause runtime errors. These checks must pass before considering the work complete.
+
+**Required Steps**:
+1. After making changes to backoffice code, run `npm run biome:check`
+2. Then run `npm run typecheck`
+3. Fix any errors or warnings that appear
+4. Only mark the task as complete when both commands pass successfully
+
+**Note**: These checks ensure code quality, type safety, and that existing functionality continues to work correctly.
