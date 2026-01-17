@@ -4,6 +4,7 @@ import { HomeRoute } from "@/routes/HomeRoute"
 import { LoginRoute } from "@/routes/LoginRoute"
 import { LogoutRoute } from "@/routes/LogoutRoute"
 import { NotFoundRoute } from "@/routes/NotFoundRoute"
+import { OnboardingRoute } from "@/routes/OnboardingRoute"
 import { ProtectedRoute } from "@/routes/ProtectedRoute"
 import { DashboardRoute } from "./DashboardRoute"
 
@@ -15,6 +16,14 @@ export function Router() {
         <Route path="/guest" element={<GuestRoute />} />
         <Route path="/login" element={<LoginRoute />} />
         <Route path="/logout" element={<LogoutRoute />} />
+        <Route
+          path="/onboarding"
+          element={
+            <ProtectedRoute>
+              <OnboardingRoute />
+            </ProtectedRoute>
+          }
+        />
         <Route
           path="/dashboard"
           element={

@@ -4,12 +4,20 @@
   "private": true,
   "license": "MIT",
   "scripts": {
-    "dev": "pnpm build --watch",
+    "dev": "tsc -b --watch",
     "build": "tsc -b -v",
     "typecheck": "tsc --noEmit"
   },
-  "main": "./src/index.ts",
+  "main": "./dist/index.js",
+  "module": "./src/index.ts",
   "types": "./src/index.ts",
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "import": "./src/index.ts",
+      "require": "./dist/index.js"
+    }
+  },
   "files": [
     "./src/**"
   ],

@@ -1,3 +1,4 @@
+import type { User } from "@caseai-connect/ui/components/layouts/sidebar/types"
 import { Button } from "@caseai-connect/ui/shad/button"
 import {
   Card,
@@ -14,7 +15,6 @@ import LogoutButton from "@/components/LogoutButton"
 import { FullPageCenterLayout } from "@/components/layouts/FullPageCenterLayout"
 import { getHello } from "@/features/test/test.thunks"
 import { useAppDispatch } from "@/store/hooks"
-import type { User } from "./sidebar/types"
 
 export function Lobby({ user, isAuthenticated }: { user?: User; isAuthenticated: boolean }) {
   const dispatch = useAppDispatch()

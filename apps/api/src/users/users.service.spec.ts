@@ -98,16 +98,14 @@ describe("UsersService", () => {
       expect(user.updatedAt).toBeInstanceOf(Date)
     })
 
-    it("should create user with empty email when email is not provided", async () => {
+    it("should throw error when email is not provided", async () => {
       const auth0UserInfo = {
         sub: "auth0|no-email",
       }
 
-      const user = await service.create(auth0UserInfo)
-
-      expect(user.email).toBe("")
-      expect(user.name).toBeNull()
-      expect(user.pictureUrl).toBeNull()
+      await expect(service.create(auth0UserInfo)).rejects.toThrow(
+        "Email is required from Auth0 token",
+      )
     })
 
     it("should create user with null values for optional fields", async () => {
