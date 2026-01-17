@@ -45,6 +45,8 @@ export const organizationsSlice = createSlice({
         state.status = "succeeded"
         state.createdOrganization = action.payload.data
         state.error = null
+        // Note: Organizations list will be updated by fetchMe.fulfilled
+        // (Option A: single source of truth)
       })
       .addCase(createOrganization.rejected, (state, action) => {
         state.status = "failed"

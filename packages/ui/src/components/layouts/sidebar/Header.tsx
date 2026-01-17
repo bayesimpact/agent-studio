@@ -3,7 +3,7 @@ import { type LucideIcon, PlugZap2Icon } from "lucide-react"
 
 export function Header({
   name = "CaseAi",
-  subname = "Connect",
+  subname,
   Icon = PlugZap2Icon,
 }: {
   name?: string
@@ -20,7 +20,7 @@ export function Header({
             </div>
             <div className="flex flex-col gap-0.5 leading-none">
               <span className="font-medium">{name}</span>
-              <span className="">{subname}</span>
+              {subname && <span className="">{subname}</span>}
             </div>
           </a>
         </SidebarMenuButton>

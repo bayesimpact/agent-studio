@@ -17,10 +17,12 @@ export class OrganizationsService {
   async getUserOrganizationsWithMemberships(
     userId: string,
   ): Promise<Array<{ organization: Organization; role: MembershipRole }>> {
-    const memberships = await this.membershipRepository.find({
-      where: { userId },
-      relations: ["organization"],
-    })
+    // Use query builder to ensure proper join and handle potential null organizations
+    const memberships = await this.membershipRepository
+      .createQueryBuilder("membership")
+      .innerJoinAndSelect("membership.organization", "organization")
+      .where("membership.userId = :userId", { userId })
+      .getMany()
 
     return memberships.map((membership) => ({
       organization: membership.organization,
@@ -32,6 +34,11 @@ export class OrganizationsService {
     userId: string,
     name: string,
   ): Promise<{ organization: Organization; role: MembershipRole }> {
+    // Validate organization name (defense in depth)
+    if (!name || name.trim().length < 3) {
+      throw new Error("Organization name must be at least 3 characters long")
+    }
+
     // Verify user exists and get entity reference (required for foreign key constraint)
     const user = await this.userRepository.findOne({ where: { id: userId } })
     if (!user) {

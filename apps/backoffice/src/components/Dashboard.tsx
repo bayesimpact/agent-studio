@@ -1,3 +1,4 @@
+import type { User } from "@caseai-connect/ui/components/layouts/sidebar/types"
 import {
   Card,
   CardContent,
@@ -6,7 +7,6 @@ import {
   CardTitle,
 } from "@caseai-connect/ui/shad/card"
 import { SidebarLayout } from "./layouts/SidebarLayout"
-import type { User } from "./sidebar/types"
 
 export function Dashboard({ user }: { user: User }) {
   return (

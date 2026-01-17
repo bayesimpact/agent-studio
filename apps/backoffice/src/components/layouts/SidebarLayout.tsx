@@ -12,12 +12,18 @@ import {
   SidebarProvider,
 } from "@caseai-connect/ui/shad/sidebar"
 import { dataset } from "@/assets/data"
+import { selectOrganizations } from "@/features/organizations/organizations.selectors"
+import { useAppSelector } from "@/store/hooks"
 import { NavPrompts } from "../sidebar/NavPrompts"
 import { NavSettings } from "../sidebar/NavSettings"
 import { NavSources } from "../sidebar/NavSources"
 import { NavUserMenuItems } from "../sidebar/NavUserMenuItems"
 
 export function SidebarLayout({ user, children }: { user: User; children: React.ReactNode }) {
+  const organizations = useAppSelector(selectOrganizations)
+  // Use the first organization's name, or fall back to "CaseAi" if no organizations
+  const organizationName = organizations.length > 0 ? organizations[0].name : "CaseAi"
+
   return (
     <SidebarProvider
       style={
@@ -29,7 +35,7 @@ export function SidebarLayout({ user, children }: { user: User; children: React.
     >
       <Sidebar variant="inset" collapsible="offcanvas">
         <SidebarHeader>
-          <Header />
+          <Header name={organizationName} />
         </SidebarHeader>
 
         <SidebarContent>

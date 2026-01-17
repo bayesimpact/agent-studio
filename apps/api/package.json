@@ -23,6 +23,7 @@
     "migration:test:show": "ts-node -r tsconfig-paths/register ./node_modules/typeorm/cli.js migration:show -d src/config/typeorm.test.ts"
   },
   "dependencies": {
+    "@caseai-connect/api-contracts": "*",
     "@google/genai": "^1.21.0",
     "@nestjs/common": "^11.0.0",
     "@nestjs/config": "^4.0.2",
@@ -30,8 +31,9 @@
     "@nestjs/passport": "^11.0.5",
     "@nestjs/platform-express": "^11.0.0",
     "@nestjs/typeorm": "^11.0.0",
-    "@caseai-connect/api-contracts": "*",
     "axios": "^1.12.2",
+    "class-transformer": "^0.5.1",
+    "class-validator": "^0.14.3",
     "jwks-rsa": "^3.2.0",
     "langfuse": "^3.38.6",
     "passport": "^0.7.0",
