@@ -1,4 +1,4 @@
-import { SidebarGroup, SidebarGroupLabel, SidebarMenu } from "@repo/ui/shad/sidebar"
+import { SidebarGroup, SidebarGroupLabel, SidebarMenu } from "@caseai-connect/ui/shad/sidebar"
 
 export function Section({
   name,

@@ -1,7 +1,7 @@
 "use client"
 
+import { cn } from "@caseai-connect/ui/utils"
 import * as SwitchPrimitive from "@radix-ui/react-switch"
-import { cn } from "@repo/ui/utils"
 import type * as React from "react"
 
 function Switch({ className, ...props }: React.ComponentProps<typeof SwitchPrimitive.Root>) {

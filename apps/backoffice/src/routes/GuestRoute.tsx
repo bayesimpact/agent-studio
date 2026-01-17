@@ -1,5 +1,11 @@
-import { Button } from "@repo/ui/shad/button"
-import { Card, CardDescription, CardFooter, CardHeader, CardTitle } from "@repo/ui/shad/card"
+import { Button } from "@caseai-connect/ui/shad/button"
+import {
+  Card,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@caseai-connect/ui/shad/card"
 import { Link } from "react-router-dom"
 import { FullPageCenterLayout } from "@/components/layouts/FullPageCenterLayout"
 

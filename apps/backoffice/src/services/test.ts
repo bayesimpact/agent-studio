@@ -1,4 +1,4 @@
-import ApiRoutes from "api/api-routes/index"
+import { ApiRoutes } from "@caseai-connect/api-contracts"
 import type { AxiosError, AxiosInstance } from "axios"
 import { sleep } from "@/utils/sleep"
 

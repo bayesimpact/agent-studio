@@ -1,4 +1,10 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@repo/ui/shad/card"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@caseai-connect/ui/shad/card"
 import { SidebarLayout } from "./layouts/SidebarLayout"
 import type { User } from "./sidebar/types"
 

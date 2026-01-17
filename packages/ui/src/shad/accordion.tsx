@@ -1,7 +1,7 @@
 "use client"
 
+import { cn } from "@caseai-connect/ui/utils"
 import * as AccordionPrimitive from "@radix-ui/react-accordion"
-import { cn } from "@repo/ui/utils"
 import { ChevronDownIcon } from "lucide-react"
 import type * as React from "react"
 

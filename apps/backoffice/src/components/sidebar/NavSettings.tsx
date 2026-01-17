@@ -1,4 +1,4 @@
-import { Section } from "@repo/ui/components/layouts/sidebar/Section"
+import { Section } from "@caseai-connect/ui/components/layouts/sidebar/Section"
 import {
   SidebarMenu,
   SidebarMenuButton,
@@ -6,7 +6,7 @@ import {
   SidebarMenuSub,
   SidebarMenuSubButton,
   SidebarMenuSubItem,
-} from "@repo/ui/shad/sidebar"
+} from "@caseai-connect/ui/shad/sidebar"
 import type { MenuItem } from "./types"
 
 export function NavSettings({ items }: { items: MenuItem[] }) {

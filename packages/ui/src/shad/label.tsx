@@ -1,7 +1,7 @@
 "use client"
 
+import { cn } from "@caseai-connect/ui/utils"
 import * as LabelPrimitive from "@radix-ui/react-label"
-import { cn } from "@repo/ui/utils"
 import type * as React from "react"
 
 function Label({ className, ...props }: React.ComponentProps<typeof LabelPrimitive.Root>) {

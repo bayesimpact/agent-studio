@@ -8,10 +8,10 @@ This is a Turborepo monorepo with the following structure:
 
 - `apps/api` - NestJS backend application (runs on port 3000)
 - `apps/web` - Next.js frontend application (runs on port 3001 with Turbopack)
-- `packages/@repo/api` - Shared NestJS resources
+- `packages/@caseai-connect/api-contracts` - Shared API contracts and DTOs
 - `packages/@repo/jest-config` - Shared Jest configurations
 - `packages/@repo/typescript-config` - Shared TypeScript configurations
-- `packages/@repo/ui` - Shared React component library
+- `packages/@caseai-connect/ui` - Shared React component library
 
 ## Development Commands
 
@@ -89,7 +89,7 @@ The API uses a modular AI service provider pattern for extensibility:
 - Next.js 15 with App Router
 - Uses Turbopack for faster development
 - Custom fonts with Geist Sans and Geist Mono
-- Integrates with shared UI component library from `@repo/ui`
+- Integrates with shared UI component library from `@caseai-connect/ui`
 - Entry point: `apps/web/app/page.tsx`
 
 ### Shared Packages
