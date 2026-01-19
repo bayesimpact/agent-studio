@@ -35,5 +35,9 @@ export type {
   ListProjectsResponseDto,
   ProjectDto,
 } from "./projects/dto/list-projects.dto"
+export type {
+  UpdateProjectRequestDto,
+  UpdateProjectResponseDto,
+} from "./projects/dto/update-project.dto"
 export { ProjectsRoutes } from "./projects/projects.routes"
 export { ProtectedRoutes } from "./protected/protected.routes"
