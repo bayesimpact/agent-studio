@@ -58,6 +58,41 @@ export class ProjectsService {
   }
 
   /**
+   * Verifies that a user can update a project.
+   * User must be either "owner" or "admin" of the project's organization.
+   * Throws ForbiddenException if the user is not a member or doesn't have the required role.
+   */
+  async verifyUserCanUpdateProject(userId: string, projectId: string): Promise<void> {
+    const project = await this.projectRepository.findOne({
+      where: { id: projectId },
+    })
+
+    if (!project) {
+      throw new NotFoundException(`Project with id ${projectId} not found`)
+    }
+
+    const membership = await this.membershipRepository.findOne({
+      where: {
+        userId,
+        organizationId: project.organizationId,
+      },
+    })
+
+    if (!membership) {
+      throw new ForbiddenException(
+        `User does not have access to organization ${project.organizationId}`,
+      )
+    }
+
+    const allowedRoles: MembershipRole[] = ["owner", "admin"]
+    if (!allowedRoles.includes(membership.role)) {
+      throw new ForbiddenException(
+        `User must be an owner or admin of organization ${project.organizationId} to update projects`,
+      )
+    }
+  }
+
+  /**
    * Creates a new project for an organization.
    * Verifies that the user is an owner or admin of the organization before creating the project.
    */
@@ -97,5 +132,27 @@ export class ProjectsService {
       where: { organizationId },
       order: { createdAt: "DESC" },
     })
+  }
+
+  /**
+   * Updates a project.
+   * Verifies that the user is an owner or admin of the project's organization before updating.
+   */
+  async updateProject(userId: string, projectId: string, name: string): Promise<Project> {
+    // Verify user can update the project
+    await this.verifyUserCanUpdateProject(userId, projectId)
+
+    // Find the project
+    const project = await this.projectRepository.findOne({
+      where: { id: projectId },
+    })
+
+    if (!project) {
+      throw new NotFoundException(`Project with id ${projectId} not found`)
+    }
+
+    // Update the project
+    project.name = name
+    return this.projectRepository.save(project)
   }
 }

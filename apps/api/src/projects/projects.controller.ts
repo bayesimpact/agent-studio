@@ -1,5 +1,9 @@
-import type { CreateProjectRequestDto, TimeType } from "@caseai-connect/api-contracts"
-import { Body, Controller, Get, Param, Post, Req, UseGuards } from "@nestjs/common"
+import type {
+  CreateProjectRequestDto,
+  TimeType,
+  UpdateProjectRequestDto,
+} from "@caseai-connect/api-contracts"
+import { Body, Controller, Get, Param, Patch, Post, Req, UseGuards } from "@nestjs/common"
 import { JwtAuthGuard } from "@/auth/jwt-auth.guard"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
 import { UserBootstrapService } from "@/organizations/user-bootstrap.service"
@@ -82,6 +86,35 @@ export class ProjectsController {
           createdAt: project.createdAt.getTime() as TimeType,
           updatedAt: project.updatedAt.getTime() as TimeType,
         })),
+      },
+    }
+  }
+
+  @Patch(ProjectsRoutes.updateProject.path)
+  async updateProject(
+    @Req() request: { user: Auth0JwtPayload },
+    @Param("projectId") projectId: string,
+    @Body() body: { payload: UpdateProjectRequestDto },
+  ): Promise<typeof ProjectsRoutes.updateProject.response> {
+    // Extract Auth0 user info from JWT payload
+    const auth0UserInfo = {
+      sub: request.user.sub,
+      email: request.user.email,
+      name: request.user.name,
+      picture: request.user.picture,
+    }
+
+    // Ensure user exists locally
+    const user = await this.userBootstrapService.ensureUser(auth0UserInfo)
+
+    // Update project
+    const project = await this.projectsService.updateProject(user.id, projectId, body.payload.name)
+
+    return {
+      data: {
+        id: project.id,
+        name: project.name,
+        organizationId: project.organizationId,
       },
     }
   }

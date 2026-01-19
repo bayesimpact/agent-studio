@@ -14,6 +14,7 @@ import {
 import { dataset } from "@/assets/data"
 import { selectOrganizations } from "@/features/organizations/organizations.selectors"
 import { useAppSelector } from "@/store/hooks"
+import { NavProjects } from "../sidebar/NavProjects"
 import { NavPrompts } from "../sidebar/NavPrompts"
 import { NavSettings } from "../sidebar/NavSettings"
 import { NavSources } from "../sidebar/NavSources"
@@ -39,6 +40,8 @@ export function SidebarLayout({ user, children }: { user: User; children: React.
         </SidebarHeader>
 
         <SidebarContent>
+          <NavProjects />
+
           <NavSources items={dataset.sources} />
 
           <NavPrompts items={dataset.prompts} />
