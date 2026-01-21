@@ -46,3 +46,15 @@ export const updateProject = createAsyncThunk(
     return apiRequest(ProjectsRoutes.updateProject, { payload }, token, { projectId })
   },
 )
+
+export const deleteProject = createAsyncThunk(
+  "projects/delete",
+  async (projectId: string, { getState }) => {
+    const state = getState() as RootState
+    const token = selectAuthToken(state)
+    if (!token) {
+      throw new Error("No authentication token available")
+    }
+    return apiRequest(ProjectsRoutes.deleteProject, undefined, token, { projectId })
+  },
+)

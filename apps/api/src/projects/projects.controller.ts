@@ -3,7 +3,7 @@ import type {
   TimeType,
   UpdateProjectRequestDto,
 } from "@caseai-connect/api-contracts"
-import { Body, Controller, Get, Param, Patch, Post, Req, UseGuards } from "@nestjs/common"
+import { Body, Controller, Delete, Get, Param, Patch, Post, Req, UseGuards } from "@nestjs/common"
 import { JwtAuthGuard } from "@/auth/jwt-auth.guard"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
 import { UserBootstrapService } from "@/organizations/user-bootstrap.service"
@@ -115,6 +115,32 @@ export class ProjectsController {
         id: project.id,
         name: project.name,
         organizationId: project.organizationId,
+      },
+    }
+  }
+
+  @Delete(ProjectsRoutes.deleteProject.path)
+  async deleteProject(
+    @Req() request: { user: Auth0JwtPayload },
+    @Param("projectId") projectId: string,
+  ): Promise<typeof ProjectsRoutes.deleteProject.response> {
+    // Extract Auth0 user info from JWT payload
+    const auth0UserInfo = {
+      sub: request.user.sub,
+      email: request.user.email,
+      name: request.user.name,
+      picture: request.user.picture,
+    }
+
+    // Ensure user exists locally
+    const user = await this.userBootstrapService.ensureUser(auth0UserInfo)
+
+    // Delete project
+    await this.projectsService.deleteProject(user.id, projectId)
+
+    return {
+      data: {
+        success: true,
       },
     }
   }
