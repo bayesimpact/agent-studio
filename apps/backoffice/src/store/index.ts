@@ -1,5 +1,6 @@
 import { configureStore } from "@reduxjs/toolkit"
 import { authSlice } from "@/features/auth/auth.slice"
+import { chatTemplatesSlice } from "@/features/chat-templates/chat-templates.slice"
 import { meSlice } from "@/features/me/me.slice"
 import { organizationsSlice } from "@/features/organizations/organizations.slice"
 import { projectsSlice } from "@/features/projects/projects.slice"
@@ -12,6 +13,7 @@ export const store = configureStore({
     me: meSlice.reducer,
     organizations: organizationsSlice.reducer,
     projects: projectsSlice.reducer,
+    chatTemplates: chatTemplatesSlice.reducer,
     test: testSlice.reducer,
   },
   middleware: (getDefaultMiddleware) =>

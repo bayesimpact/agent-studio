@@ -14,6 +14,7 @@ import {
   useSidebar,
 } from "@caseai-connect/ui/shad/sidebar"
 import { Edit, Folder, MoreHorizontal, Trash2 } from "lucide-react"
+import { Link } from "react-router-dom"
 
 interface ProjectListItemProps {
   project: ProjectDto
@@ -27,10 +28,10 @@ export function ProjectListItem({ project, onEdit, onDelete }: ProjectListItemPr
   return (
     <SidebarMenuItem>
       <SidebarMenuButton asChild>
-        <a href={`/projects/${project.id}`}>
+        <Link to={`/projects/${project.id}`}>
           <Folder />
           <span>{project.name}</span>
-        </a>
+        </Link>
       </SidebarMenuButton>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>

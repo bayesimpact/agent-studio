@@ -5,6 +5,7 @@ import { LoginRoute } from "@/routes/LoginRoute"
 import { LogoutRoute } from "@/routes/LogoutRoute"
 import { NotFoundRoute } from "@/routes/NotFoundRoute"
 import { OnboardingRoute } from "@/routes/OnboardingRoute"
+import { ProjectChatTemplatesRoute } from "@/routes/ProjectChatTemplatesRoute"
 import { ProtectedRoute } from "@/routes/ProtectedRoute"
 import { DashboardRoute } from "./DashboardRoute"
 
@@ -29,6 +30,14 @@ export function Router() {
           element={
             <ProtectedRoute>
               <DashboardRoute />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/projects/:projectId"
+          element={
+            <ProtectedRoute>
+              <ProjectChatTemplatesRoute />
             </ProtectedRoute>
           }
         />
