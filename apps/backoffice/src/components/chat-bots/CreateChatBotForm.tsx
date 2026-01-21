@@ -1,26 +1,23 @@
 import { toast } from "sonner"
-import {
-  selectChatTemplatesError,
-  selectChatTemplatesStatus,
-} from "@/features/chat-templates/chat-templates.selectors"
-import { createChatTemplate } from "@/features/chat-templates/chat-templates.thunks"
+import { selectChatBotsError, selectChatBotsStatus } from "@/features/chat-bots/chat-bots.selectors"
+import { createChatBot } from "@/features/chat-bots/chat-bots.thunks"
 import { useAppDispatch, useAppSelector } from "@/store/hooks"
-import { ChatTemplateForm } from "./ChatTemplateForm"
+import { ChatBotForm } from "./ChatBotForm"
 
-interface CreateChatTemplateFormProps {
+interface CreateChatBotFormProps {
   projectId: string
   onSuccess?: () => void
 }
 
-export function CreateChatTemplateForm({ projectId, onSuccess }: CreateChatTemplateFormProps) {
+export function CreateChatBotForm({ projectId, onSuccess }: CreateChatBotFormProps) {
   const dispatch = useAppDispatch()
-  const status = useAppSelector(selectChatTemplatesStatus)
-  const error = useAppSelector(selectChatTemplatesError)
+  const status = useAppSelector(selectChatBotsStatus)
+  const error = useAppSelector(selectChatBotsError)
 
   const handleSubmit = async (data: { name: string; defaultPrompt: string }) => {
     try {
       await dispatch(
-        createChatTemplate({
+        createChatBot({
           name: data.name,
           defaultPrompt: data.defaultPrompt,
           projectId,
@@ -38,7 +35,7 @@ export function CreateChatTemplateForm({ projectId, onSuccess }: CreateChatTempl
   const isLoading = status === "loading"
 
   return (
-    <ChatTemplateForm
+    <ChatBotForm
       defaultName=""
       defaultPrompt=""
       isLoading={isLoading}

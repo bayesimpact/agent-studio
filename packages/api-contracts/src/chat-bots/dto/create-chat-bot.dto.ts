@@ -1,10 +1,10 @@
-export type CreateChatTemplateRequestDto = {
+export type CreateChatBotRequestDto = {
   name: string
   defaultPrompt: string
   projectId: string
 }
 
-export type CreateChatTemplateResponseDto = {
+export type CreateChatBotResponseDto = {
   id: string
   name: string
   defaultPrompt: string

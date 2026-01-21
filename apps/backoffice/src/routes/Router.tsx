@@ -5,7 +5,7 @@ import { LoginRoute } from "@/routes/LoginRoute"
 import { LogoutRoute } from "@/routes/LogoutRoute"
 import { NotFoundRoute } from "@/routes/NotFoundRoute"
 import { OnboardingRoute } from "@/routes/OnboardingRoute"
-import { ProjectChatTemplatesRoute } from "@/routes/ProjectChatTemplatesRoute"
+import { ProjectChatBotsRoute } from "@/routes/ProjectChatBotsRoute"
 import { ProtectedRoute } from "@/routes/ProtectedRoute"
 import { DashboardRoute } from "./DashboardRoute"
 
@@ -37,7 +37,7 @@ export function Router() {
           path="/projects/:projectId"
           element={
             <ProtectedRoute>
-              <ProjectChatTemplatesRoute />
+              <ProjectChatBotsRoute />
             </ProtectedRoute>
           }
         />

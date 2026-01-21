@@ -1,41 +1,41 @@
 import {
-  ChatTemplatesRoutes,
-  type CreateChatTemplateRequestDto,
-  type UpdateChatTemplateRequestDto,
+  ChatBotsRoutes,
+  type CreateChatBotRequestDto,
+  type UpdateChatBotRequestDto,
 } from "@caseai-connect/api-contracts"
 import { createAsyncThunk } from "@reduxjs/toolkit"
 import { selectAuthToken } from "@/features/auth/auth.selectors"
 import type { RootState } from "@/store"
 import { apiRequest } from "@/store/apiClient"
 
-export const listChatTemplates = createAsyncThunk(
-  "chatTemplates/list",
+export const listChatBots = createAsyncThunk(
+  "chatBots/list",
   async (projectId: string, { getState }) => {
     const state = getState() as RootState
     const token = selectAuthToken(state)
     if (!token) {
       throw new Error("No authentication token available")
     }
-    return apiRequest(ChatTemplatesRoutes.listChatTemplates, undefined, token, { projectId })
+    return apiRequest(ChatBotsRoutes.listChatBots, undefined, token, { projectId })
   },
 )
 
-export const createChatTemplate = createAsyncThunk(
-  "chatTemplates/create",
-  async (payload: CreateChatTemplateRequestDto, { getState }) => {
+export const createChatBot = createAsyncThunk(
+  "chatBots/create",
+  async (payload: CreateChatBotRequestDto, { getState }) => {
     const state = getState() as RootState
     const token = selectAuthToken(state)
     if (!token) {
       throw new Error("No authentication token available")
     }
-    return apiRequest(ChatTemplatesRoutes.createChatTemplate, { payload }, token)
+    return apiRequest(ChatBotsRoutes.createChatBot, { payload }, token)
   },
 )
 
-export const updateChatTemplate = createAsyncThunk(
-  "chatTemplates/update",
+export const updateChatBot = createAsyncThunk(
+  "chatBots/update",
   async (
-    { chatTemplateId, payload }: { chatTemplateId: string; payload: UpdateChatTemplateRequestDto },
+    { chatBotId, payload }: { chatBotId: string; payload: UpdateChatBotRequestDto },
     { getState },
   ) => {
     const state = getState() as RootState
@@ -43,22 +43,22 @@ export const updateChatTemplate = createAsyncThunk(
     if (!token) {
       throw new Error("No authentication token available")
     }
-    return apiRequest(ChatTemplatesRoutes.updateChatTemplate, { payload }, token, {
-      chatTemplateId,
+    return apiRequest(ChatBotsRoutes.updateChatBot, { payload }, token, {
+      chatBotId,
     })
   },
 )
 
-export const deleteChatTemplate = createAsyncThunk(
-  "chatTemplates/delete",
-  async (chatTemplateId: string, { getState }) => {
+export const deleteChatBot = createAsyncThunk(
+  "chatBots/delete",
+  async (chatBotId: string, { getState }) => {
     const state = getState() as RootState
     const token = selectAuthToken(state)
     if (!token) {
       throw new Error("No authentication token available")
     }
-    return apiRequest(ChatTemplatesRoutes.deleteChatTemplate, undefined, token, {
-      chatTemplateId,
+    return apiRequest(ChatBotsRoutes.deleteChatBot, undefined, token, {
+      chatBotId,
     })
   },
 )

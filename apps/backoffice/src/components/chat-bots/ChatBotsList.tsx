@@ -1,6 +1,6 @@
 "use client"
 
-import type { ChatTemplateDto } from "@caseai-connect/api-contracts"
+import type { ChatBotDto } from "@caseai-connect/api-contracts"
 import { Button } from "@caseai-connect/ui/shad/button"
 import {
   Card,
@@ -18,29 +18,24 @@ import {
 import { Edit, MoreHorizontal, Plus, Trash2 } from "lucide-react"
 import { useEffect, useState } from "react"
 import { useParams } from "react-router-dom"
-import {
-  selectChatTemplates,
-  selectChatTemplatesStatus,
-} from "@/features/chat-templates/chat-templates.selectors"
-import { listChatTemplates } from "@/features/chat-templates/chat-templates.thunks"
+import { selectChatBots, selectChatBotsStatus } from "@/features/chat-bots/chat-bots.selectors"
+import { listChatBots } from "@/features/chat-bots/chat-bots.thunks"
 import { selectProjects } from "@/features/projects/projects.selectors"
 import { useAppDispatch, useAppSelector } from "@/store/hooks"
-import { CreateChatTemplateDialog } from "./CreateChatTemplateDialog"
-import { DeleteChatTemplateDialog } from "./DeleteChatTemplateDialog"
-import { EditChatTemplateDialog } from "./EditChatTemplateDialog"
+import { CreateChatBotDialog } from "./CreateChatBotDialog"
+import { DeleteChatBotDialog } from "./DeleteChatBotDialog"
+import { EditChatBotDialog } from "./EditChatBotDialog"
 
-export function ChatTemplatesList() {
+export function ChatBotsList() {
   const { projectId } = useParams<{ projectId: string }>()
   const dispatch = useAppDispatch()
   const projects = useAppSelector(selectProjects)
-  const chatTemplates = useAppSelector((state) =>
-    projectId ? selectChatTemplates(state, projectId) : null,
-  )
-  const status = useAppSelector(selectChatTemplatesStatus)
+  const chatBots = useAppSelector((state) => (projectId ? selectChatBots(state, projectId) : null))
+  const status = useAppSelector(selectChatBotsStatus)
 
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
-  const [editingTemplate, setEditingTemplate] = useState<ChatTemplateDto | null>(null)
-  const [deletingTemplate, setDeletingTemplate] = useState<ChatTemplateDto | null>(null)
+  const [editingTemplate, setEditingTemplate] = useState<ChatBotDto | null>(null)
+  const [deletingTemplate, setDeletingTemplate] = useState<ChatBotDto | null>(null)
 
   // Find the project to get its name
   const project = projects?.projects?.find((p) => p.id === projectId)
@@ -48,7 +43,7 @@ export function ChatTemplatesList() {
   // Load chat templates when projectId is available
   useEffect(() => {
     if (projectId) {
-      dispatch(listChatTemplates(projectId))
+      dispatch(listChatBots(projectId))
     }
   }, [projectId, dispatch])
 
@@ -60,7 +55,7 @@ export function ChatTemplatesList() {
     return <div>Loading project...</div>
   }
 
-  const templates = chatTemplates?.chatTemplates || []
+  const templates = chatBots?.chatBots || []
   const isEmpty = templates.length === 0
 
   return (
@@ -71,7 +66,7 @@ export function ChatTemplatesList() {
           <p className="text-muted-foreground">Chat Templates</p>
         </div>
         {!isEmpty && (
-          <CreateChatTemplateDialog
+          <CreateChatBotDialog
             projectId={projectId}
             projectName={project.name}
             isOpen={isCreateDialogOpen}
@@ -95,7 +90,7 @@ export function ChatTemplatesList() {
               <Plus className="mr-2 h-4 w-4" />
               Create First Chat Template
             </Button>
-            <CreateChatTemplateDialog
+            <CreateChatBotDialog
               projectId={projectId}
               projectName={project.name}
               isOpen={isCreateDialogOpen}
@@ -145,14 +140,14 @@ export function ChatTemplatesList() {
         </div>
       )}
 
-      <EditChatTemplateDialog
-        chatTemplate={editingTemplate}
+      <EditChatBotDialog
+        chatBot={editingTemplate}
         projectId={projectId}
         onClose={() => setEditingTemplate(null)}
       />
 
-      <DeleteChatTemplateDialog
-        chatTemplate={deletingTemplate}
+      <DeleteChatBotDialog
+        chatBot={deletingTemplate}
         projectId={projectId}
         onClose={() => setDeletingTemplate(null)}
       />

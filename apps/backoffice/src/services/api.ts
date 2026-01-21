@@ -1,5 +1,5 @@
 import axios from "axios"
-import { buildChatTemplatesApi, type IChatTemplatesApi } from "./chat-templates"
+import { buildChatBotsApi, type IChatBotsApi } from "./chat-bots"
 import { buildMeApi, type IMeApi } from "./me"
 import { buildOrganizationsApi, type IOrganizationsApi } from "./organizations"
 import { buildProjectsApi, type IProjectsApi } from "./projects"
@@ -11,7 +11,7 @@ interface IApi {
   me: IMeApi
   organizations: IOrganizationsApi
   projects: IProjectsApi
-  chatTemplates: IChatTemplatesApi
+  chatBots: IChatBotsApi
 }
 
 const buildApi = ({ baseURL }: { baseURL: string }): IApi => {
@@ -24,7 +24,7 @@ const buildApi = ({ baseURL }: { baseURL: string }): IApi => {
     me: buildMeApi(axiosInstance),
     organizations: buildOrganizationsApi(axiosInstance),
     projects: buildProjectsApi(axiosInstance),
-    chatTemplates: buildChatTemplatesApi(axiosInstance),
+    chatBots: buildChatBotsApi(axiosInstance),
   }
 }
 
