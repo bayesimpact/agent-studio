@@ -35,6 +35,83 @@ dispatch(fetchMe())
 const response = await fetch('/me')
 ```
 
+## Form Component Architecture
+
+### Separation of Create and Update Forms
+
+**Rule**: A `CreateXXXForm` component MUST NEVER be used for both creating and updating actions. Always create separate components for create and update operations, and extract shared form logic into a shared component.
+
+**Requirements**:
+- `CreateXXXForm` should ONLY handle creation logic
+- `UpdateXXXForm` should ONLY handle update logic
+- When forms share common code (fields, validation, layout), extract it into a shared `XXXForm` component
+- The shared form component should be a presentational component that accepts props for different behaviors
+
+**Structure**:
+- Shared form component: `components/{domain}/{Domain}Form.tsx` (e.g., `components/projects/ProjectForm.tsx`)
+- Create form: `components/{domain}/Create{Domain}Form.tsx` (e.g., `components/projects/CreateProjectForm.tsx`)
+- Update form: `components/{domain}/Update{Domain}Form.tsx` (e.g., `components/projects/UpdateProjectForm.tsx`)
+
+**Example - Correct Pattern**:
+```typescript
+// ✅ Correct - Shared form component
+// components/projects/ProjectForm.tsx
+export function ProjectForm({
+  defaultName,
+  isLoading,
+  error,
+  onSubmit,
+  submitLabelIdle,
+  submitLabelLoading,
+}: ProjectFormProps) {
+  // Shared form fields, validation, and layout
+}
+
+// ✅ Correct - Create-only form
+// components/projects/CreateProjectForm.tsx
+export function CreateProjectForm({ organizationId, onSuccess }: CreateProjectFormProps) {
+  const dispatch = useAppDispatch()
+  const handleSubmit = async (data) => {
+    await dispatch(createProject({ name: data.name, organizationId })).unwrap()
+    onSuccess?.()
+  }
+  return <ProjectForm onSubmit={handleSubmit} submitLabelIdle="Create Project" ... />
+}
+
+// ✅ Correct - Update-only form
+// components/projects/UpdateProjectForm.tsx
+export function UpdateProjectForm({ project, onSuccess }: UpdateProjectFormProps) {
+  const dispatch = useAppDispatch()
+  const handleSubmit = async (data) => {
+    await dispatch(updateProject({ projectId: project.id, payload: { name: data.name } })).unwrap()
+    onSuccess?.()
+  }
+  return <ProjectForm defaultName={project.name} onSubmit={handleSubmit} submitLabelIdle="Update Project" ... />
+}
+```
+
+**Example - Wrong Pattern**:
+```typescript
+// ❌ Wrong - Single form handling both create and update
+export function CreateProjectForm({ organizationId, project, onSuccess }: CreateProjectFormProps) {
+  const onSubmit = async (data) => {
+    if (project) {
+      // Update logic
+    } else {
+      // Create logic
+    }
+  }
+  // ...
+}
+```
+
+**Why this pattern?**
+- **Separation of concerns**: Each form has a single, clear responsibility
+- **Type safety**: Create and update forms can have different prop types
+- **Maintainability**: Changes to create logic don't affect update logic and vice versa
+- **Reusability**: Shared form component can be reused in other contexts
+- **Testability**: Easier to test create and update logic independently
+
 ## Completion Criteria
 
 ### Required Checks Before Marking Work as Completed
