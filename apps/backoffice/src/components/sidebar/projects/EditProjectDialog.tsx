@@ -8,7 +8,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@caseai-connect/ui/shad/dialog"
-import { CreateProjectForm } from "@/components/CreateProjectForm"
+import { UpdateProjectForm } from "@/components/projects/UpdateProjectForm"
 import { listProjects } from "@/features/projects/projects.thunks"
 import { useAppDispatch } from "@/store/hooks"
 
@@ -37,11 +37,7 @@ export function EditProjectDialog({ project, organizationId, onClose }: EditProj
           <DialogTitle>Edit Project</DialogTitle>
           <DialogDescription>Update the project name</DialogDescription>
         </DialogHeader>
-        <CreateProjectForm
-          organizationId={organizationId}
-          project={project}
-          onSuccess={handleSuccess}
-        />
+        <UpdateProjectForm project={project} onSuccess={handleSuccess} />
       </DialogContent>
     </Dialog>
   )

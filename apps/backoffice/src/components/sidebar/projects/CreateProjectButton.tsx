@@ -10,7 +10,7 @@ import {
 } from "@caseai-connect/ui/shad/dialog"
 import { SidebarMenuButton, SidebarMenuItem } from "@caseai-connect/ui/shad/sidebar"
 import { Plus } from "lucide-react"
-import { CreateProjectForm } from "@/components/CreateProjectForm"
+import { CreateProjectForm } from "@/components/projects/CreateProjectForm"
 import { listProjects } from "@/features/projects/projects.thunks"
 import { useAppDispatch } from "@/store/hooks"
 
