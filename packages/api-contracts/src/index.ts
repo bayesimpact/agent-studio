@@ -7,6 +7,20 @@ export type { CreateChatSessionResponseDto } from "./chat/dto/create-chat-sessio
 export type { MessageDto } from "./chat/dto/message.dto"
 export type { MessageResponseDto } from "./chat/dto/message-response.dto"
 export type { SendMessageDto } from "./chat/dto/send-message.dto"
+export { ChatTemplatesRoutes } from "./chat-templates/chat-templates.routes"
+// Chat Templates DTOs
+export type {
+  CreateChatTemplateRequestDto,
+  CreateChatTemplateResponseDto,
+} from "./chat-templates/dto/create-chat-template.dto"
+export type {
+  ChatTemplateDto,
+  ListChatTemplatesResponseDto,
+} from "./chat-templates/dto/list-chat-templates.dto"
+export type {
+  UpdateChatTemplateRequestDto,
+  UpdateChatTemplateResponseDto,
+} from "./chat-templates/dto/update-chat-template.dto"
 export type {
   RequestPayload,
   ResponseData,

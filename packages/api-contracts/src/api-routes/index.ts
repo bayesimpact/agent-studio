@@ -1,3 +1,4 @@
+import { ChatTemplatesRoutes } from "../chat-templates/chat-templates.routes"
 import { MeRoutes } from "../me/me.routes"
 import { OrganizationsRoutes } from "../organizations/organizations.routes"
 import { ProjectsRoutes } from "../projects/projects.routes"
@@ -8,4 +9,5 @@ export default {
   MeRoutes,
   OrganizationsRoutes,
   ProjectsRoutes,
+  ChatTemplatesRoutes,
 }
