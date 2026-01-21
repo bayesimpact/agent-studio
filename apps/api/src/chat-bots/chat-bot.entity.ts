@@ -9,8 +9,8 @@ import {
 } from "typeorm"
 import { Project } from "@/projects/project.entity"
 
-@Entity("chat_templates")
-export class ChatTemplate {
+@Entity("chat_bots")
+export class ChatBot {
   @PrimaryGeneratedColumn("uuid")
   id!: string
 
@@ -31,7 +31,7 @@ export class ChatTemplate {
 
   @ManyToOne(
     () => Project,
-    (project) => project.chatTemplates,
+    (project) => project.chatBots,
   )
   @JoinColumn({ name: "project_id" })
   project!: Project

@@ -1,6 +1,6 @@
 import type { Repository } from "typeorm"
-import { ChatTemplate } from "@/chat-templates/chat-template.entity"
-import { chatTemplateFactory } from "@/chat-templates/chat-template.factory"
+import { ChatBot } from "@/chat-bots/chat-bot.entity"
+import { chatBotFactory } from "@/chat-bots/chat-bot.factory"
 import { clearTestDatabase } from "@/common/test/test-database"
 import {
   setupTransactionalTestDatabase,
@@ -12,23 +12,23 @@ import { UserMembership } from "@/organizations/user-membership.entity"
 import { Project } from "@/projects/project.entity"
 import { projectFactory } from "@/projects/project.factory"
 import { User } from "@/users/user.entity"
-import { ChatTemplatesController } from "./chat-templates.controller"
-import { ChatTemplatesModule } from "./chat-templates.module"
+import { ChatBotsController } from "./chat-bots.controller"
+import { ChatBotsModule } from "./chat-bots.module"
 
-describe("ChatTemplatesController", () => {
-  let controller: ChatTemplatesController
+describe("ChatBotsController", () => {
+  let controller: ChatBotsController
   let setup: Awaited<ReturnType<typeof setupTransactionalTestDatabase>>
   let userRepository: Repository<User>
   let organizationRepository: Repository<Organization>
   let membershipRepository: Repository<UserMembership>
   let projectRepository: Repository<Project>
-  let chatTemplateRepository: Repository<ChatTemplate>
+  let chatBotRepository: Repository<ChatBot>
 
   beforeAll(async () => {
     setup = await setupTransactionalTestDatabase(
-      [User, Organization, UserMembership, Project, ChatTemplate],
+      [User, Organization, UserMembership, Project, ChatBot],
       [],
-      [ChatTemplatesModule],
+      [ChatBotsModule],
     )
     await clearTestDatabase(setup.dataSource)
   })
@@ -39,12 +39,12 @@ describe("ChatTemplatesController", () => {
 
   beforeEach(async () => {
     await setup.startTransaction()
-    controller = setup.module.get<ChatTemplatesController>(ChatTemplatesController)
+    controller = setup.module.get<ChatBotsController>(ChatBotsController)
     userRepository = setup.getRepository(User)
     organizationRepository = setup.getRepository(Organization)
     membershipRepository = setup.getRepository(UserMembership)
     projectRepository = setup.getRepository(Project)
-    chatTemplateRepository = setup.getRepository(ChatTemplate)
+    chatBotRepository = setup.getRepository(ChatBot)
   })
 
   afterEach(async () => {
@@ -55,10 +55,10 @@ describe("ChatTemplatesController", () => {
     expect(controller).toBeDefined()
   })
 
-  describe("createChatTemplate", () => {
+  describe("createChatBot", () => {
     it("should create a chat template when user is owner", async () => {
       // Arrange
-      const auth0Sub = "auth0|chat-template-ctrl-owner"
+      const auth0Sub = "auth0|chat-bot-ctrl-owner"
       const mockRequest = {
         user: {
           sub: auth0Sub,
@@ -96,7 +96,7 @@ describe("ChatTemplatesController", () => {
       }
 
       // Act
-      const { data: result } = await controller.createChatTemplate(mockRequest, body)
+      const { data: result } = await controller.createChatBot(mockRequest, body)
 
       // Assert
       expect(result.id).toBeDefined()
@@ -104,7 +104,7 @@ describe("ChatTemplatesController", () => {
       expect(result.defaultPrompt).toBe("This is a default prompt")
       expect(result.projectId).toBe(savedProject.id)
 
-      const template = await chatTemplateRepository.findOne({
+      const template = await chatBotRepository.findOne({
         where: { id: result.id },
       })
       expect(template).not.toBeNull()
@@ -113,7 +113,7 @@ describe("ChatTemplatesController", () => {
 
     it("should create a chat template when user is admin", async () => {
       // Arrange
-      const auth0Sub = "auth0|chat-template-ctrl-admin"
+      const auth0Sub = "auth0|chat-bot-ctrl-admin"
       const mockRequest = {
         user: {
           sub: auth0Sub,
@@ -148,7 +148,7 @@ describe("ChatTemplatesController", () => {
       }
 
       // Act
-      const { data: result } = await controller.createChatTemplate(mockRequest, body)
+      const { data: result } = await controller.createChatBot(mockRequest, body)
 
       // Assert
       expect(result.name).toBe("Admin Template")
@@ -158,7 +158,7 @@ describe("ChatTemplatesController", () => {
 
     it("should throw ForbiddenException when user is member", async () => {
       // Arrange
-      const auth0Sub = "auth0|chat-template-ctrl-member"
+      const auth0Sub = "auth0|chat-bot-ctrl-member"
       const mockRequest = {
         user: {
           sub: auth0Sub,
@@ -193,16 +193,16 @@ describe("ChatTemplatesController", () => {
       }
 
       // Act & Assert
-      await expect(controller.createChatTemplate(mockRequest, body)).rejects.toThrow(
+      await expect(controller.createChatBot(mockRequest, body)).rejects.toThrow(
         "User must be an owner or admin",
       )
     })
   })
 
-  describe("listChatTemplates", () => {
+  describe("listChatBots", () => {
     it("should return chat templates for a project", async () => {
       // Arrange
-      const auth0Sub = "auth0|chat-template-ctrl-list"
+      const auth0Sub = "auth0|chat-bot-ctrl-list"
       const mockRequest = {
         user: {
           sub: auth0Sub,
@@ -229,33 +229,33 @@ describe("ChatTemplatesController", () => {
       const savedProject = await projectRepository.save(project)
 
       // Create chat templates
-      const template1 = chatTemplateFactory.build({
+      const template1 = chatBotFactory.build({
         name: "Template 1",
         defaultPrompt: "Prompt 1",
         projectId: savedProject.id,
       })
-      const template2 = chatTemplateFactory.build({
+      const template2 = chatBotFactory.build({
         name: "Template 2",
         defaultPrompt: "Prompt 2",
         projectId: savedProject.id,
       })
-      await chatTemplateRepository.save([template1, template2])
+      await chatBotRepository.save([template1, template2])
 
       // Act
-      const { data: result } = await controller.listChatTemplates(mockRequest, savedProject.id)
+      const { data: result } = await controller.listChatBots(mockRequest, savedProject.id)
 
       // Assert
-      expect(result.chatTemplates).toHaveLength(2)
-      expect(result.chatTemplates.map((t) => t.name)).toContain("Template 1")
-      expect(result.chatTemplates.map((t) => t.name)).toContain("Template 2")
-      expect(result.chatTemplates[0]).toHaveProperty("id")
-      expect(result.chatTemplates[0]).toHaveProperty("createdAt")
-      expect(result.chatTemplates[0]).toHaveProperty("updatedAt")
+      expect(result.chatBots).toHaveLength(2)
+      expect(result.chatBots.map((t) => t.name)).toContain("Template 1")
+      expect(result.chatBots.map((t) => t.name)).toContain("Template 2")
+      expect(result.chatBots[0]).toHaveProperty("id")
+      expect(result.chatBots[0]).toHaveProperty("createdAt")
+      expect(result.chatBots[0]).toHaveProperty("updatedAt")
     })
 
     it("should return empty array when project has no chat templates", async () => {
       // Arrange
-      const auth0Sub = "auth0|chat-template-ctrl-empty"
+      const auth0Sub = "auth0|chat-bot-ctrl-empty"
       const mockRequest = {
         user: {
           sub: auth0Sub,
@@ -282,15 +282,15 @@ describe("ChatTemplatesController", () => {
       const savedProject = await projectRepository.save(project)
 
       // Act
-      const { data: result } = await controller.listChatTemplates(mockRequest, savedProject.id)
+      const { data: result } = await controller.listChatBots(mockRequest, savedProject.id)
 
       // Assert
-      expect(result.chatTemplates).toEqual([])
+      expect(result.chatBots).toEqual([])
     })
 
     it("should throw ForbiddenException when user is not a member", async () => {
       // Arrange
-      const auth0Sub = "auth0|chat-template-ctrl-nonmember"
+      const auth0Sub = "auth0|chat-bot-ctrl-nonmember"
       const mockRequest = {
         user: {
           sub: auth0Sub,
@@ -313,16 +313,16 @@ describe("ChatTemplatesController", () => {
       const savedProject = await projectRepository.save(project)
 
       // Act & Assert
-      await expect(controller.listChatTemplates(mockRequest, savedProject.id)).rejects.toThrow(
+      await expect(controller.listChatBots(mockRequest, savedProject.id)).rejects.toThrow(
         "User does not have access to organization",
       )
     })
   })
 
-  describe("updateChatTemplate", () => {
+  describe("updateChatBot", () => {
     it("should update a chat template when user is owner", async () => {
       // Arrange
-      const auth0Sub = "auth0|chat-template-ctrl-update-owner"
+      const auth0Sub = "auth0|chat-bot-ctrl-update-owner"
       const mockRequest = {
         user: {
           sub: auth0Sub,
@@ -350,12 +350,12 @@ describe("ChatTemplatesController", () => {
       })
       const savedProject = await projectRepository.save(project)
 
-      const template = chatTemplateFactory.build({
+      const template = chatBotFactory.build({
         name: "Original Template",
         defaultPrompt: "Original Prompt",
         projectId: savedProject.id,
       })
-      const savedTemplate = await chatTemplateRepository.save(template)
+      const savedTemplate = await chatBotRepository.save(template)
 
       const body = {
         payload: {
@@ -365,11 +365,7 @@ describe("ChatTemplatesController", () => {
       }
 
       // Act
-      const { data: result } = await controller.updateChatTemplate(
-        mockRequest,
-        savedTemplate.id,
-        body,
-      )
+      const { data: result } = await controller.updateChatBot(mockRequest, savedTemplate.id, body)
 
       // Assert
       expect(result.id).toBe(savedTemplate.id)
@@ -377,7 +373,7 @@ describe("ChatTemplatesController", () => {
       expect(result.defaultPrompt).toBe("Updated Prompt")
       expect(result.projectId).toBe(savedProject.id)
 
-      const updatedTemplate = await chatTemplateRepository.findOne({
+      const updatedTemplate = await chatBotRepository.findOne({
         where: { id: savedTemplate.id },
       })
       expect(updatedTemplate?.name).toBe("Updated Template")
@@ -385,7 +381,7 @@ describe("ChatTemplatesController", () => {
 
     it("should update a chat template when user is admin", async () => {
       // Arrange
-      const auth0Sub = "auth0|chat-template-ctrl-update-admin"
+      const auth0Sub = "auth0|chat-bot-ctrl-update-admin"
       const mockRequest = {
         user: {
           sub: auth0Sub,
@@ -411,12 +407,12 @@ describe("ChatTemplatesController", () => {
       })
       const savedProject = await projectRepository.save(project)
 
-      const template = chatTemplateFactory.build({
+      const template = chatBotFactory.build({
         name: "Original Template",
         defaultPrompt: "Original Prompt",
         projectId: savedProject.id,
       })
-      const savedTemplate = await chatTemplateRepository.save(template)
+      const savedTemplate = await chatBotRepository.save(template)
 
       const body = {
         payload: {
@@ -425,11 +421,7 @@ describe("ChatTemplatesController", () => {
       }
 
       // Act
-      const { data: result } = await controller.updateChatTemplate(
-        mockRequest,
-        savedTemplate.id,
-        body,
-      )
+      const { data: result } = await controller.updateChatBot(mockRequest, savedTemplate.id, body)
 
       // Assert
       expect(result.name).toBe("Admin Updated Template")
@@ -438,7 +430,7 @@ describe("ChatTemplatesController", () => {
 
     it("should throw ForbiddenException when user is member", async () => {
       // Arrange
-      const auth0Sub = "auth0|chat-template-ctrl-update-member"
+      const auth0Sub = "auth0|chat-bot-ctrl-update-member"
       const mockRequest = {
         user: {
           sub: auth0Sub,
@@ -464,12 +456,12 @@ describe("ChatTemplatesController", () => {
       })
       const savedProject = await projectRepository.save(project)
 
-      const template = chatTemplateFactory.build({
+      const template = chatBotFactory.build({
         name: "Template",
         defaultPrompt: "Prompt",
         projectId: savedProject.id,
       })
-      const savedTemplate = await chatTemplateRepository.save(template)
+      const savedTemplate = await chatBotRepository.save(template)
 
       const body = {
         payload: {
@@ -478,12 +470,12 @@ describe("ChatTemplatesController", () => {
       }
 
       // Act & Assert
-      await expect(
-        controller.updateChatTemplate(mockRequest, savedTemplate.id, body),
-      ).rejects.toThrow("User must be an owner or admin")
+      await expect(controller.updateChatBot(mockRequest, savedTemplate.id, body)).rejects.toThrow(
+        "User must be an owner or admin",
+      )
 
       // Verify template unchanged
-      const unchangedTemplate = await chatTemplateRepository.findOne({
+      const unchangedTemplate = await chatBotRepository.findOne({
         where: { id: savedTemplate.id },
       })
       expect(unchangedTemplate?.name).toBe("Template")
@@ -491,7 +483,7 @@ describe("ChatTemplatesController", () => {
 
     it("should throw NotFoundException when chat template does not exist", async () => {
       // Arrange
-      const auth0Sub = "auth0|chat-template-ctrl-update-notfound"
+      const auth0Sub = "auth0|chat-bot-ctrl-update-notfound"
       const mockRequest = {
         user: {
           sub: auth0Sub,
@@ -508,15 +500,15 @@ describe("ChatTemplatesController", () => {
 
       // Act & Assert
       await expect(
-        controller.updateChatTemplate(mockRequest, nonExistentTemplateId, body),
+        controller.updateChatBot(mockRequest, nonExistentTemplateId, body),
       ).rejects.toThrow("Chat template with id")
     })
   })
 
-  describe("deleteChatTemplate", () => {
+  describe("deleteChatBot", () => {
     it("should delete a chat template when user is owner", async () => {
       // Arrange
-      const auth0Sub = "auth0|chat-template-ctrl-delete-owner"
+      const auth0Sub = "auth0|chat-bot-ctrl-delete-owner"
       const mockRequest = {
         user: {
           sub: auth0Sub,
@@ -544,20 +536,20 @@ describe("ChatTemplatesController", () => {
       })
       const savedProject = await projectRepository.save(project)
 
-      const template = chatTemplateFactory.build({
+      const template = chatBotFactory.build({
         name: "Template to Delete",
         defaultPrompt: "Prompt",
         projectId: savedProject.id,
       })
-      const savedTemplate = await chatTemplateRepository.save(template)
+      const savedTemplate = await chatBotRepository.save(template)
 
       // Act
-      const { data: result } = await controller.deleteChatTemplate(mockRequest, savedTemplate.id)
+      const { data: result } = await controller.deleteChatBot(mockRequest, savedTemplate.id)
 
       // Assert
       expect(result.success).toBe(true)
 
-      const deletedTemplate = await chatTemplateRepository.findOne({
+      const deletedTemplate = await chatBotRepository.findOne({
         where: { id: savedTemplate.id },
       })
       expect(deletedTemplate).toBeNull()
@@ -565,7 +557,7 @@ describe("ChatTemplatesController", () => {
 
     it("should delete a chat template when user is admin", async () => {
       // Arrange
-      const auth0Sub = "auth0|chat-template-ctrl-delete-admin"
+      const auth0Sub = "auth0|chat-bot-ctrl-delete-admin"
       const mockRequest = {
         user: {
           sub: auth0Sub,
@@ -591,20 +583,20 @@ describe("ChatTemplatesController", () => {
       })
       const savedProject = await projectRepository.save(project)
 
-      const template = chatTemplateFactory.build({
+      const template = chatBotFactory.build({
         name: "Admin Template to Delete",
         defaultPrompt: "Prompt",
         projectId: savedProject.id,
       })
-      const savedTemplate = await chatTemplateRepository.save(template)
+      const savedTemplate = await chatBotRepository.save(template)
 
       // Act
-      const { data: result } = await controller.deleteChatTemplate(mockRequest, savedTemplate.id)
+      const { data: result } = await controller.deleteChatBot(mockRequest, savedTemplate.id)
 
       // Assert
       expect(result.success).toBe(true)
 
-      const deletedTemplate = await chatTemplateRepository.findOne({
+      const deletedTemplate = await chatBotRepository.findOne({
         where: { id: savedTemplate.id },
       })
       expect(deletedTemplate).toBeNull()
@@ -612,7 +604,7 @@ describe("ChatTemplatesController", () => {
 
     it("should throw ForbiddenException when user is member", async () => {
       // Arrange
-      const auth0Sub = "auth0|chat-template-ctrl-delete-member"
+      const auth0Sub = "auth0|chat-bot-ctrl-delete-member"
       const mockRequest = {
         user: {
           sub: auth0Sub,
@@ -638,20 +630,20 @@ describe("ChatTemplatesController", () => {
       })
       const savedProject = await projectRepository.save(project)
 
-      const template = chatTemplateFactory.build({
+      const template = chatBotFactory.build({
         name: "Should Not Delete",
         defaultPrompt: "Prompt",
         projectId: savedProject.id,
       })
-      const savedTemplate = await chatTemplateRepository.save(template)
+      const savedTemplate = await chatBotRepository.save(template)
 
       // Act & Assert
-      await expect(controller.deleteChatTemplate(mockRequest, savedTemplate.id)).rejects.toThrow(
+      await expect(controller.deleteChatBot(mockRequest, savedTemplate.id)).rejects.toThrow(
         "User must be an owner or admin",
       )
 
       // Verify template still exists
-      const existingTemplate = await chatTemplateRepository.findOne({
+      const existingTemplate = await chatBotRepository.findOne({
         where: { id: savedTemplate.id },
       })
       expect(existingTemplate).not.toBeNull()
@@ -659,7 +651,7 @@ describe("ChatTemplatesController", () => {
 
     it("should throw NotFoundException when chat template does not exist", async () => {
       // Arrange
-      const auth0Sub = "auth0|chat-template-ctrl-delete-notfound"
+      const auth0Sub = "auth0|chat-bot-ctrl-delete-notfound"
       const mockRequest = {
         user: {
           sub: auth0Sub,
@@ -669,9 +661,9 @@ describe("ChatTemplatesController", () => {
       const nonExistentTemplateId = "00000000-0000-0000-0000-000000000000"
 
       // Act & Assert
-      await expect(
-        controller.deleteChatTemplate(mockRequest, nonExistentTemplateId),
-      ).rejects.toThrow("Chat template with id")
+      await expect(controller.deleteChatBot(mockRequest, nonExistentTemplateId)).rejects.toThrow(
+        "Chat template with id",
+      )
     })
   })
 })

@@ -8,7 +8,7 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from "typeorm"
-import { ChatTemplate } from "@/chat-templates/chat-template.entity"
+import { ChatBot } from "@/chat-bots/chat-bot.entity"
 import { Organization } from "@/organizations/organization.entity"
 
 @Entity("projects")
@@ -36,8 +36,8 @@ export class Project {
   organization!: Organization
 
   @OneToMany(
-    () => ChatTemplate,
-    (chatTemplate) => chatTemplate.project,
+    () => ChatBot,
+    (chatBot) => chatBot.project,
   )
-  chatTemplates!: ChatTemplate[]
+  chatBots!: ChatBot[]
 }

@@ -1,69 +1,64 @@
 import type {
-  CreateChatTemplateResponseDto,
-  ListChatTemplatesResponseDto,
+  CreateChatBotResponseDto,
+  ListChatBotsResponseDto,
 } from "@caseai-connect/api-contracts"
 import { createSlice } from "@reduxjs/toolkit"
-import {
-  createChatTemplate,
-  deleteChatTemplate,
-  listChatTemplates,
-  updateChatTemplate,
-} from "./chat-templates.thunks"
+import { createChatBot, deleteChatBot, listChatBots, updateChatBot } from "./chat-bots.thunks"
 
-interface ChatTemplatesState {
-  chatTemplates: Record<string, ListChatTemplatesResponseDto | null> // keyed by projectId
-  createdChatTemplate: CreateChatTemplateResponseDto | null
+interface ChatBotsState {
+  chatBots: Record<string, ListChatBotsResponseDto | null> // keyed by projectId
+  createdChatBot: CreateChatBotResponseDto | null
   status: "idle" | "loading" | "succeeded" | "failed"
   error: string | null
 }
 
-const initialState: ChatTemplatesState = {
-  chatTemplates: {},
-  createdChatTemplate: null,
+const initialState: ChatBotsState = {
+  chatBots: {},
+  createdChatBot: null,
   status: "idle",
   error: null,
 }
 
-export const chatTemplatesSlice = createSlice({
-  name: "chatTemplates",
+export const chatBotsSlice = createSlice({
+  name: "chatBots",
   initialState,
   reducers: {
-    clearChatTemplates: (state, action: { payload: string }) => {
+    clearChatBots: (state, action: { payload: string }) => {
       // Clear chat templates for a specific project
-      delete state.chatTemplates[action.payload]
+      delete state.chatBots[action.payload]
     },
-    clearCreatedChatTemplate: (state) => {
-      state.createdChatTemplate = null
+    clearCreatedChatBot: (state) => {
+      state.createdChatBot = null
     },
   },
   extraReducers: (builder) => {
     builder
-      .addCase(listChatTemplates.pending, (state) => {
+      .addCase(listChatBots.pending, (state) => {
         state.status = "loading"
         state.error = null
       })
-      .addCase(listChatTemplates.fulfilled, (state, action) => {
+      .addCase(listChatBots.fulfilled, (state, action) => {
         state.status = "succeeded"
         const projectId = action.meta.arg
-        state.chatTemplates[projectId] = action.payload.data
+        state.chatBots[projectId] = action.payload.data
         state.error = null
       })
-      .addCase(listChatTemplates.rejected, (state, action) => {
+      .addCase(listChatBots.rejected, (state, action) => {
         state.status = "failed"
         state.error = action.error.message || "Failed to list chat templates"
       })
-      .addCase(createChatTemplate.pending, (state) => {
+      .addCase(createChatBot.pending, (state) => {
         state.status = "loading"
         state.error = null
       })
-      .addCase(createChatTemplate.fulfilled, (state, action) => {
+      .addCase(createChatBot.fulfilled, (state, action) => {
         state.status = "succeeded"
-        state.createdChatTemplate = action.payload.data
+        state.createdChatBot = action.payload.data
         state.error = null
         // Add the new chat template to the list
         const projectId = action.payload.data.projectId
-        if (state.chatTemplates[projectId]?.chatTemplates) {
-          state.chatTemplates[projectId]!.chatTemplates.unshift({
+        if (state.chatBots[projectId]?.chatBots) {
+          state.chatBots[projectId]!.chatBots.unshift({
             id: action.payload.data.id,
             name: action.payload.data.name,
             defaultPrompt: action.payload.data.defaultPrompt,
@@ -73,27 +68,27 @@ export const chatTemplatesSlice = createSlice({
           })
         }
       })
-      .addCase(createChatTemplate.rejected, (state, action) => {
+      .addCase(createChatBot.rejected, (state, action) => {
         state.status = "failed"
         state.error = action.error.message || "Failed to create chat template"
       })
-      .addCase(updateChatTemplate.pending, (state) => {
+      .addCase(updateChatBot.pending, (state) => {
         state.status = "loading"
         state.error = null
       })
-      .addCase(updateChatTemplate.fulfilled, (state, action) => {
+      .addCase(updateChatBot.fulfilled, (state, action) => {
         state.status = "succeeded"
         state.error = null
         // Update the chat template in the list
         const updatedTemplate = action.payload.data
         const projectId = updatedTemplate.projectId
-        if (state.chatTemplates[projectId]?.chatTemplates) {
-          const templateIndex = state.chatTemplates[projectId]!.chatTemplates.findIndex(
+        if (state.chatBots[projectId]?.chatBots) {
+          const templateIndex = state.chatBots[projectId]!.chatBots.findIndex(
             (t) => t.id === updatedTemplate.id,
           )
           if (templateIndex !== -1) {
-            state.chatTemplates[projectId]!.chatTemplates[templateIndex] = {
-              ...state.chatTemplates[projectId]!.chatTemplates[templateIndex],
+            state.chatBots[projectId]!.chatBots[templateIndex] = {
+              ...state.chatBots[projectId]!.chatBots[templateIndex],
               name: updatedTemplate.name,
               defaultPrompt: updatedTemplate.defaultPrompt,
               updatedAt: Date.now(),
@@ -101,33 +96,33 @@ export const chatTemplatesSlice = createSlice({
           }
         }
       })
-      .addCase(updateChatTemplate.rejected, (state, action) => {
+      .addCase(updateChatBot.rejected, (state, action) => {
         state.status = "failed"
         state.error = action.error.message || "Failed to update chat template"
       })
-      .addCase(deleteChatTemplate.pending, (state) => {
+      .addCase(deleteChatBot.pending, (state) => {
         state.status = "loading"
         state.error = null
       })
-      .addCase(deleteChatTemplate.fulfilled, (state, action) => {
+      .addCase(deleteChatBot.fulfilled, (state, action) => {
         state.status = "succeeded"
         state.error = null
         // Remove the chat template from the list
         // We need to find which project it belongs to and remove it from that project's list
         const deletedTemplateId = action.meta.arg
-        for (const projectId in state.chatTemplates) {
-          if (state.chatTemplates[projectId]?.chatTemplates) {
-            state.chatTemplates[projectId]!.chatTemplates = state.chatTemplates[
-              projectId
-            ]!.chatTemplates.filter((t) => t.id !== deletedTemplateId)
+        for (const projectId in state.chatBots) {
+          if (state.chatBots[projectId]?.chatBots) {
+            state.chatBots[projectId]!.chatBots = state.chatBots[projectId]!.chatBots.filter(
+              (t) => t.id !== deletedTemplateId,
+            )
           }
         }
       })
-      .addCase(deleteChatTemplate.rejected, (state, action) => {
+      .addCase(deleteChatBot.rejected, (state, action) => {
         state.status = "failed"
         state.error = action.error.message || "Failed to delete chat template"
       })
   },
 })
 
-export const { clearChatTemplates } = chatTemplatesSlice.actions
+export const { clearChatBots } = chatBotsSlice.actions

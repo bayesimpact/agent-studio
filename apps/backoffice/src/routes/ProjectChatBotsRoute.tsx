@@ -1,7 +1,7 @@
 import { useAuth0 } from "@auth0/auth0-react"
 import { useEffect } from "react"
 import { useNavigate, useParams } from "react-router-dom"
-import { ChatTemplatesList } from "@/components/chat-templates/ChatTemplatesList"
+import { ChatBotsList } from "@/components/chat-bots/ChatBotsList"
 import { SidebarLayout } from "@/components/layouts/SidebarLayout"
 import { selectMe, selectMeStatus } from "@/features/me/me.selectors"
 import { selectOrganizations } from "@/features/organizations/organizations.selectors"
@@ -10,7 +10,7 @@ import { LoadingRoute } from "@/routes/LoadingRoute"
 import { useAppSelector } from "@/store/hooks"
 import { meStateToUser } from "@/utils/to-user"
 
-export function ProjectChatTemplatesRoute() {
+export function ProjectChatBotsRoute() {
   const { isAuthenticated, isLoading } = useAuth0()
   const navigate = useNavigate()
   const { projectId } = useParams<{ projectId: string }>()
@@ -36,7 +36,7 @@ export function ProjectChatTemplatesRoute() {
   if (isAuthenticated && user && organizations.length > 0) {
     return (
       <SidebarLayout user={user} headerTitle={headerTitle}>
-        <ChatTemplatesList />
+        <ChatBotsList />
       </SidebarLayout>
     )
   }

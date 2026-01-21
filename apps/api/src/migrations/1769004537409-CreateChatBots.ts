@@ -1,13 +1,13 @@
 import { type MigrationInterface, type QueryRunner, Table, TableForeignKey } from "typeorm"
 
-export class CreateChatTemplates1768994391000 implements MigrationInterface {
-  name = "CreateChatTemplates1768994391000"
+export class CreateChatBots1769004537409 implements MigrationInterface {
+  name = "CreateChatBots1769004537409"
 
   public async up(queryRunner: QueryRunner): Promise<void> {
-    // Create chat_templates table
+    // Create chat_bots table
     await queryRunner.createTable(
       new Table({
-        name: "chat_templates",
+        name: "chat_bots",
         columns: [
           {
             name: "id",
@@ -44,9 +44,9 @@ export class CreateChatTemplates1768994391000 implements MigrationInterface {
       true,
     )
 
-    // Create foreign key from chat_templates to projects
+    // Create foreign key from chat_bots to projects
     await queryRunner.createForeignKey(
-      "chat_templates",
+      "chat_bots",
       new TableForeignKey({
         columnNames: ["project_id"],
         referencedColumnNames: ["id"],
@@ -58,18 +58,18 @@ export class CreateChatTemplates1768994391000 implements MigrationInterface {
 
   public async down(queryRunner: QueryRunner): Promise<void> {
     // Drop foreign key first
-    const chatTemplatesTable = await queryRunner.getTable("chat_templates")
-    if (chatTemplatesTable) {
-      const foreignKeyProject = chatTemplatesTable.foreignKeys.find(
+    const chatBotsTable = await queryRunner.getTable("chat_bots")
+    if (chatBotsTable) {
+      const foreignKeyProject = chatBotsTable.foreignKeys.find(
         (fk) => fk.columnNames.indexOf("project_id") !== -1,
       )
 
       if (foreignKeyProject) {
-        await queryRunner.dropForeignKey("chat_templates", foreignKeyProject)
+        await queryRunner.dropForeignKey("chat_bots", foreignKeyProject)
       }
     }
 
     // Drop table
-    await queryRunner.dropTable("chat_templates")
+    await queryRunner.dropTable("chat_bots")
   }
 }

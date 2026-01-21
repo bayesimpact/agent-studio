@@ -1,7 +1,7 @@
 import { ForbiddenException, NotFoundException } from "@nestjs/common"
 import type { Repository } from "typeorm"
-import { ChatTemplate } from "@/chat-templates/chat-template.entity"
-import { chatTemplateFactory } from "@/chat-templates/chat-template.factory"
+import { ChatBot } from "@/chat-bots/chat-bot.entity"
+import { chatBotFactory } from "@/chat-bots/chat-bot.factory"
 import { clearTestDatabase } from "@/common/test/test-database"
 import {
   setupTransactionalTestDatabase,
@@ -14,12 +14,12 @@ import { Project } from "@/projects/project.entity"
 import { projectFactory } from "@/projects/project.factory"
 import { User } from "@/users/user.entity"
 import { userFactory } from "@/users/user.factory"
-import { ChatTemplatesModule } from "./chat-templates.module"
-import { ChatTemplatesService } from "./chat-templates.service"
+import { ChatBotsModule } from "./chat-bots.module"
+import { ChatBotsService } from "./chat-bots.service"
 
-describe("ChatTemplatesService", () => {
-  let service: ChatTemplatesService
-  let chatTemplateRepository: Repository<ChatTemplate>
+describe("ChatBotsService", () => {
+  let service: ChatBotsService
+  let chatBotRepository: Repository<ChatBot>
   let projectRepository: Repository<Project>
   let organizationRepository: Repository<Organization>
   let membershipRepository: Repository<UserMembership>
@@ -28,9 +28,9 @@ describe("ChatTemplatesService", () => {
 
   beforeAll(async () => {
     setup = await setupTransactionalTestDatabase(
-      [ChatTemplate, Project, Organization, UserMembership, User],
+      [ChatBot, Project, Organization, UserMembership, User],
       [],
-      [ChatTemplatesModule],
+      [ChatBotsModule],
     )
     await clearTestDatabase(setup.dataSource)
   })
@@ -41,8 +41,8 @@ describe("ChatTemplatesService", () => {
 
   beforeEach(async () => {
     await setup.startTransaction()
-    service = setup.module.get<ChatTemplatesService>(ChatTemplatesService)
-    chatTemplateRepository = setup.getRepository(ChatTemplate)
+    service = setup.module.get<ChatBotsService>(ChatBotsService)
+    chatBotRepository = setup.getRepository(ChatBot)
     projectRepository = setup.getRepository(Project)
     organizationRepository = setup.getRepository(Organization)
     membershipRepository = setup.getRepository(UserMembership)
@@ -53,12 +53,12 @@ describe("ChatTemplatesService", () => {
     await setup.rollbackTransaction()
   })
 
-  describe("createChatTemplate", () => {
+  describe("createChatBot", () => {
     it("should create a chat template when user is owner", async () => {
       // Arrange
       const user = userFactory.build({
         email: "owner@example.com",
-        auth0Id: "auth0|chat-template-owner-1",
+        auth0Id: "auth0|chat-bot-owner-1",
       })
       const savedUser = await userRepository.save(user)
       const org = organizationFactory.build({ name: "Test Org" })
@@ -78,7 +78,7 @@ describe("ChatTemplatesService", () => {
       const savedProject = await projectRepository.save(project)
 
       // Act
-      const result = await service.createChatTemplate(
+      const result = await service.createChatBot(
         savedUser.id,
         savedProject.id,
         "My Template",
@@ -91,7 +91,7 @@ describe("ChatTemplatesService", () => {
       expect(result.projectId).toBe(savedProject.id)
       expect(result.id).toBeDefined()
 
-      const savedTemplate = await chatTemplateRepository.findOne({
+      const savedTemplate = await chatBotRepository.findOne({
         where: { id: result.id },
       })
       expect(savedTemplate).not.toBeNull()
@@ -102,7 +102,7 @@ describe("ChatTemplatesService", () => {
       // Arrange
       const user = userFactory.build({
         email: "admin@example.com",
-        auth0Id: "auth0|chat-template-admin-1",
+        auth0Id: "auth0|chat-bot-admin-1",
       })
       const savedUser = await userRepository.save(user)
       const org = organizationFactory.build({ name: "Admin Org" })
@@ -122,7 +122,7 @@ describe("ChatTemplatesService", () => {
       const savedProject = await projectRepository.save(project)
 
       // Act
-      const result = await service.createChatTemplate(
+      const result = await service.createChatBot(
         savedUser.id,
         savedProject.id,
         "Admin Template",
@@ -159,10 +159,10 @@ describe("ChatTemplatesService", () => {
 
       // Act & Assert
       await expect(
-        service.createChatTemplate(savedUser.id, savedProject.id, "AB", "Prompt"),
+        service.createChatBot(savedUser.id, savedProject.id, "AB", "Prompt"),
       ).rejects.toThrow(ForbiddenException)
       await expect(
-        service.createChatTemplate(savedUser.id, savedProject.id, "AB", "Prompt"),
+        service.createChatBot(savedUser.id, savedProject.id, "AB", "Prompt"),
       ).rejects.toThrow("Chat template name must be at least 3 characters long")
     })
 
@@ -170,7 +170,7 @@ describe("ChatTemplatesService", () => {
       // Arrange
       const user = userFactory.build({
         email: "nonmember@example.com",
-        auth0Id: "auth0|chat-template-nonmember-create-1",
+        auth0Id: "auth0|chat-bot-nonmember-create-1",
       })
       const savedUser = await userRepository.save(user)
       const org = organizationFactory.build({ name: "Other Org" })
@@ -184,10 +184,10 @@ describe("ChatTemplatesService", () => {
 
       // Act & Assert
       await expect(
-        service.createChatTemplate(savedUser.id, savedProject.id, "Template", "Prompt"),
+        service.createChatBot(savedUser.id, savedProject.id, "Template", "Prompt"),
       ).rejects.toThrow(ForbiddenException)
       await expect(
-        service.createChatTemplate(savedUser.id, savedProject.id, "Template", "Prompt"),
+        service.createChatBot(savedUser.id, savedProject.id, "Template", "Prompt"),
       ).rejects.toThrow("User does not have access to organization")
     })
 
@@ -195,7 +195,7 @@ describe("ChatTemplatesService", () => {
       // Arrange
       const user = userFactory.build({
         email: "member@example.com",
-        auth0Id: "auth0|chat-template-member-1",
+        auth0Id: "auth0|chat-bot-member-1",
       })
       const savedUser = await userRepository.save(user)
       const org = organizationFactory.build({ name: "Member Org" })
@@ -216,10 +216,10 @@ describe("ChatTemplatesService", () => {
 
       // Act & Assert
       await expect(
-        service.createChatTemplate(savedUser.id, savedProject.id, "Template", "Prompt"),
+        service.createChatBot(savedUser.id, savedProject.id, "Template", "Prompt"),
       ).rejects.toThrow(ForbiddenException)
       await expect(
-        service.createChatTemplate(savedUser.id, savedProject.id, "Template", "Prompt"),
+        service.createChatBot(savedUser.id, savedProject.id, "Template", "Prompt"),
       ).rejects.toThrow("User must be an owner or admin")
     })
 
@@ -227,27 +227,27 @@ describe("ChatTemplatesService", () => {
       // Arrange
       const user = userFactory.build({
         email: "user@example.com",
-        auth0Id: "auth0|chat-template-user-1",
+        auth0Id: "auth0|chat-bot-user-1",
       })
       const savedUser = await userRepository.save(user)
       const nonExistentProjectId = "00000000-0000-0000-0000-000000000000"
 
       // Act & Assert
       await expect(
-        service.createChatTemplate(savedUser.id, nonExistentProjectId, "Template", "Prompt"),
+        service.createChatBot(savedUser.id, nonExistentProjectId, "Template", "Prompt"),
       ).rejects.toThrow(NotFoundException)
       await expect(
-        service.createChatTemplate(savedUser.id, nonExistentProjectId, "Template", "Prompt"),
+        service.createChatBot(savedUser.id, nonExistentProjectId, "Template", "Prompt"),
       ).rejects.toThrow("Project with id")
     })
   })
 
-  describe("listChatTemplates", () => {
+  describe("listChatBots", () => {
     it("should return chat templates for a project", async () => {
       // Arrange
       const user = userFactory.build({
         email: "list@example.com",
-        auth0Id: "auth0|chat-template-list-1",
+        auth0Id: "auth0|chat-bot-list-1",
       })
       const savedUser = await userRepository.save(user)
       const org = organizationFactory.build({ name: "List Org" })
@@ -266,20 +266,20 @@ describe("ChatTemplatesService", () => {
       })
       const savedProject = await projectRepository.save(project)
 
-      const template1 = chatTemplateFactory.build({
+      const template1 = chatBotFactory.build({
         name: "Template 1",
         defaultPrompt: "Prompt 1",
         projectId: savedProject.id,
       })
-      const template2 = chatTemplateFactory.build({
+      const template2 = chatBotFactory.build({
         name: "Template 2",
         defaultPrompt: "Prompt 2",
         projectId: savedProject.id,
       })
-      await chatTemplateRepository.save([template1, template2])
+      await chatBotRepository.save([template1, template2])
 
       // Act
-      const result = await service.listChatTemplates(savedUser.id, savedProject.id)
+      const result = await service.listChatBots(savedUser.id, savedProject.id)
 
       // Assert
       expect(result).toHaveLength(2)
@@ -291,7 +291,7 @@ describe("ChatTemplatesService", () => {
       // Arrange
       const user = userFactory.build({
         email: "empty@example.com",
-        auth0Id: "auth0|chat-template-empty-1",
+        auth0Id: "auth0|chat-bot-empty-1",
       })
       const savedUser = await userRepository.save(user)
       const org = organizationFactory.build({ name: "Empty Org" })
@@ -311,7 +311,7 @@ describe("ChatTemplatesService", () => {
       const savedProject = await projectRepository.save(project)
 
       // Act
-      const result = await service.listChatTemplates(savedUser.id, savedProject.id)
+      const result = await service.listChatBots(savedUser.id, savedProject.id)
 
       // Assert
       expect(result).toEqual([])
@@ -331,10 +331,10 @@ describe("ChatTemplatesService", () => {
       const savedProject = await projectRepository.save(project)
 
       // Act & Assert
-      await expect(service.listChatTemplates(savedUser.id, savedProject.id)).rejects.toThrow(
+      await expect(service.listChatBots(savedUser.id, savedProject.id)).rejects.toThrow(
         ForbiddenException,
       )
-      await expect(service.listChatTemplates(savedUser.id, savedProject.id)).rejects.toThrow(
+      await expect(service.listChatBots(savedUser.id, savedProject.id)).rejects.toThrow(
         "User does not have access to organization",
       )
     })
@@ -343,7 +343,7 @@ describe("ChatTemplatesService", () => {
       // Arrange
       const user = userFactory.build({
         email: "ordered@example.com",
-        auth0Id: "auth0|chat-template-ordered-1",
+        auth0Id: "auth0|chat-bot-ordered-1",
       })
       const savedUser = await userRepository.save(user)
       const org = organizationFactory.build({ name: "Ordered Org" })
@@ -362,22 +362,22 @@ describe("ChatTemplatesService", () => {
       })
       const savedProject = await projectRepository.save(project)
 
-      const template1 = chatTemplateFactory.build({
+      const template1 = chatBotFactory.build({
         name: "First Template",
         defaultPrompt: "Prompt 1",
         projectId: savedProject.id,
         createdAt: new Date("2024-01-01"),
       })
-      const template2 = chatTemplateFactory.build({
+      const template2 = chatBotFactory.build({
         name: "Second Template",
         defaultPrompt: "Prompt 2",
         projectId: savedProject.id,
         createdAt: new Date("2024-01-02"),
       })
-      await chatTemplateRepository.save([template1, template2])
+      await chatBotRepository.save([template1, template2])
 
       // Act
-      const result = await service.listChatTemplates(savedUser.id, savedProject.id)
+      const result = await service.listChatBots(savedUser.id, savedProject.id)
 
       // Assert
       expect(result).toHaveLength(2)
@@ -387,12 +387,12 @@ describe("ChatTemplatesService", () => {
     })
   })
 
-  describe("updateChatTemplate", () => {
+  describe("updateChatBot", () => {
     it("should update a chat template when user is owner", async () => {
       // Arrange
       const user = userFactory.build({
         email: "owner@example.com",
-        auth0Id: "auth0|chat-template-owner-update-1",
+        auth0Id: "auth0|chat-bot-owner-update-1",
       })
       const savedUser = await userRepository.save(user)
       const org = organizationFactory.build({ name: "Update Org" })
@@ -411,15 +411,15 @@ describe("ChatTemplatesService", () => {
       })
       const savedProject = await projectRepository.save(project)
 
-      const template = chatTemplateFactory.build({
+      const template = chatBotFactory.build({
         name: "Original Template",
         defaultPrompt: "Original Prompt",
         projectId: savedProject.id,
       })
-      const savedTemplate = await chatTemplateRepository.save(template)
+      const savedTemplate = await chatBotRepository.save(template)
 
       // Act
-      const result = await service.updateChatTemplate(
+      const result = await service.updateChatBot(
         savedUser.id,
         savedTemplate.id,
         "Updated Template",
@@ -431,7 +431,7 @@ describe("ChatTemplatesService", () => {
       expect(result.defaultPrompt).toBe("Updated Prompt")
       expect(result.id).toBe(savedTemplate.id)
 
-      const updatedTemplate = await chatTemplateRepository.findOne({
+      const updatedTemplate = await chatBotRepository.findOne({
         where: { id: savedTemplate.id },
       })
       expect(updatedTemplate?.name).toBe("Updated Template")
@@ -461,19 +461,15 @@ describe("ChatTemplatesService", () => {
       })
       const savedProject = await projectRepository.save(project)
 
-      const template = chatTemplateFactory.build({
+      const template = chatBotFactory.build({
         name: "Original Template",
         defaultPrompt: "Original Prompt",
         projectId: savedProject.id,
       })
-      const savedTemplate = await chatTemplateRepository.save(template)
+      const savedTemplate = await chatBotRepository.save(template)
 
       // Act
-      const result = await service.updateChatTemplate(
-        savedUser.id,
-        savedTemplate.id,
-        "Updated Name",
-      )
+      const result = await service.updateChatBot(savedUser.id, savedTemplate.id, "Updated Name")
 
       // Assert
       expect(result.name).toBe("Updated Name")
@@ -503,27 +499,27 @@ describe("ChatTemplatesService", () => {
       })
       const savedProject = await projectRepository.save(project)
 
-      const template = chatTemplateFactory.build({
+      const template = chatBotFactory.build({
         name: "Original Template",
         defaultPrompt: "Original Prompt",
         projectId: savedProject.id,
       })
-      const savedTemplate = await chatTemplateRepository.save(template)
+      const savedTemplate = await chatBotRepository.save(template)
 
       // Act & Assert
-      await expect(
-        service.updateChatTemplate(savedUser.id, savedTemplate.id, "AB"),
-      ).rejects.toThrow(ForbiddenException)
-      await expect(
-        service.updateChatTemplate(savedUser.id, savedTemplate.id, "AB"),
-      ).rejects.toThrow("Chat template name must be at least 3 characters long")
+      await expect(service.updateChatBot(savedUser.id, savedTemplate.id, "AB")).rejects.toThrow(
+        ForbiddenException,
+      )
+      await expect(service.updateChatBot(savedUser.id, savedTemplate.id, "AB")).rejects.toThrow(
+        "Chat template name must be at least 3 characters long",
+      )
     })
 
     it("should throw ForbiddenException when user is member but not owner or admin", async () => {
       // Arrange
       const user = userFactory.build({
         email: "member@example.com",
-        auth0Id: "auth0|chat-template-member-update-1",
+        auth0Id: "auth0|chat-bot-member-update-1",
       })
       const savedUser = await userRepository.save(user)
       const org = organizationFactory.build({ name: "Member Org" })
@@ -542,19 +538,19 @@ describe("ChatTemplatesService", () => {
       })
       const savedProject = await projectRepository.save(project)
 
-      const template = chatTemplateFactory.build({
+      const template = chatBotFactory.build({
         name: "Template",
         defaultPrompt: "Prompt",
         projectId: savedProject.id,
       })
-      const savedTemplate = await chatTemplateRepository.save(template)
+      const savedTemplate = await chatBotRepository.save(template)
 
       // Act & Assert
       await expect(
-        service.updateChatTemplate(savedUser.id, savedTemplate.id, "Updated"),
+        service.updateChatBot(savedUser.id, savedTemplate.id, "Updated"),
       ).rejects.toThrow(ForbiddenException)
       await expect(
-        service.updateChatTemplate(savedUser.id, savedTemplate.id, "Updated"),
+        service.updateChatBot(savedUser.id, savedTemplate.id, "Updated"),
       ).rejects.toThrow("User must be an owner or admin")
     })
 
@@ -562,27 +558,27 @@ describe("ChatTemplatesService", () => {
       // Arrange
       const user = userFactory.build({
         email: "user@example.com",
-        auth0Id: "auth0|chat-template-user-update-1",
+        auth0Id: "auth0|chat-bot-user-update-1",
       })
       const savedUser = await userRepository.save(user)
       const nonExistentTemplateId = "00000000-0000-0000-0000-000000000000"
 
       // Act & Assert
       await expect(
-        service.updateChatTemplate(savedUser.id, nonExistentTemplateId, "Updated"),
+        service.updateChatBot(savedUser.id, nonExistentTemplateId, "Updated"),
       ).rejects.toThrow(NotFoundException)
       await expect(
-        service.updateChatTemplate(savedUser.id, nonExistentTemplateId, "Updated"),
+        service.updateChatBot(savedUser.id, nonExistentTemplateId, "Updated"),
       ).rejects.toThrow("Chat template with id")
     })
   })
 
-  describe("deleteChatTemplate", () => {
+  describe("deleteChatBot", () => {
     it("should delete a chat template when user is owner", async () => {
       // Arrange
       const user = userFactory.build({
         email: "owner@example.com",
-        auth0Id: "auth0|chat-template-owner-delete-1",
+        auth0Id: "auth0|chat-bot-owner-delete-1",
       })
       const savedUser = await userRepository.save(user)
       const org = organizationFactory.build({ name: "Delete Org" })
@@ -601,18 +597,18 @@ describe("ChatTemplatesService", () => {
       })
       const savedProject = await projectRepository.save(project)
 
-      const template = chatTemplateFactory.build({
+      const template = chatBotFactory.build({
         name: "Template to Delete",
         defaultPrompt: "Prompt",
         projectId: savedProject.id,
       })
-      const savedTemplate = await chatTemplateRepository.save(template)
+      const savedTemplate = await chatBotRepository.save(template)
 
       // Act
-      await service.deleteChatTemplate(savedUser.id, savedTemplate.id)
+      await service.deleteChatBot(savedUser.id, savedTemplate.id)
 
       // Assert
-      const deletedTemplate = await chatTemplateRepository.findOne({
+      const deletedTemplate = await chatBotRepository.findOne({
         where: { id: savedTemplate.id },
       })
       expect(deletedTemplate).toBeNull()
@@ -622,7 +618,7 @@ describe("ChatTemplatesService", () => {
       // Arrange
       const user = userFactory.build({
         email: "admin@example.com",
-        auth0Id: "auth0|chat-template-admin-delete-1",
+        auth0Id: "auth0|chat-bot-admin-delete-1",
       })
       const savedUser = await userRepository.save(user)
       const org = organizationFactory.build({ name: "Admin Delete Org" })
@@ -641,18 +637,18 @@ describe("ChatTemplatesService", () => {
       })
       const savedProject = await projectRepository.save(project)
 
-      const template = chatTemplateFactory.build({
+      const template = chatBotFactory.build({
         name: "Admin Template to Delete",
         defaultPrompt: "Prompt",
         projectId: savedProject.id,
       })
-      const savedTemplate = await chatTemplateRepository.save(template)
+      const savedTemplate = await chatBotRepository.save(template)
 
       // Act
-      await service.deleteChatTemplate(savedUser.id, savedTemplate.id)
+      await service.deleteChatBot(savedUser.id, savedTemplate.id)
 
       // Assert
-      const deletedTemplate = await chatTemplateRepository.findOne({
+      const deletedTemplate = await chatBotRepository.findOne({
         where: { id: savedTemplate.id },
       })
       expect(deletedTemplate).toBeNull()
@@ -662,7 +658,7 @@ describe("ChatTemplatesService", () => {
       // Arrange
       const user = userFactory.build({
         email: "member@example.com",
-        auth0Id: "auth0|chat-template-member-delete-1",
+        auth0Id: "auth0|chat-bot-member-delete-1",
       })
       const savedUser = await userRepository.save(user)
       const org = organizationFactory.build({ name: "Member Delete Org" })
@@ -681,23 +677,23 @@ describe("ChatTemplatesService", () => {
       })
       const savedProject = await projectRepository.save(project)
 
-      const template = chatTemplateFactory.build({
+      const template = chatBotFactory.build({
         name: "Should Not Delete",
         defaultPrompt: "Prompt",
         projectId: savedProject.id,
       })
-      const savedTemplate = await chatTemplateRepository.save(template)
+      const savedTemplate = await chatBotRepository.save(template)
 
       // Act & Assert
-      await expect(service.deleteChatTemplate(savedUser.id, savedTemplate.id)).rejects.toThrow(
+      await expect(service.deleteChatBot(savedUser.id, savedTemplate.id)).rejects.toThrow(
         ForbiddenException,
       )
-      await expect(service.deleteChatTemplate(savedUser.id, savedTemplate.id)).rejects.toThrow(
+      await expect(service.deleteChatBot(savedUser.id, savedTemplate.id)).rejects.toThrow(
         "User must be an owner or admin",
       )
 
       // Verify template still exists
-      const existingTemplate = await chatTemplateRepository.findOne({
+      const existingTemplate = await chatBotRepository.findOne({
         where: { id: savedTemplate.id },
       })
       expect(existingTemplate).not.toBeNull()
@@ -707,16 +703,16 @@ describe("ChatTemplatesService", () => {
       // Arrange
       const user = userFactory.build({
         email: "user@example.com",
-        auth0Id: "auth0|chat-template-user-delete-1",
+        auth0Id: "auth0|chat-bot-user-delete-1",
       })
       const savedUser = await userRepository.save(user)
       const nonExistentTemplateId = "00000000-0000-0000-0000-000000000000"
 
       // Act & Assert
-      await expect(service.deleteChatTemplate(savedUser.id, nonExistentTemplateId)).rejects.toThrow(
+      await expect(service.deleteChatBot(savedUser.id, nonExistentTemplateId)).rejects.toThrow(
         NotFoundException,
       )
-      await expect(service.deleteChatTemplate(savedUser.id, nonExistentTemplateId)).rejects.toThrow(
+      await expect(service.deleteChatBot(savedUser.id, nonExistentTemplateId)).rejects.toThrow(
         "Chat template with id",
       )
     })
@@ -725,7 +721,7 @@ describe("ChatTemplatesService", () => {
       // Arrange
       const user = userFactory.build({
         email: "nonmember@example.com",
-        auth0Id: "auth0|chat-template-nonmember-delete-1",
+        auth0Id: "auth0|chat-bot-nonmember-delete-1",
       })
       const savedUser = await userRepository.save(user)
       const org = organizationFactory.build({ name: "Other Org" })
@@ -737,23 +733,23 @@ describe("ChatTemplatesService", () => {
       })
       const savedProject = await projectRepository.save(project)
 
-      const template = chatTemplateFactory.build({
+      const template = chatBotFactory.build({
         name: "Other Template",
         defaultPrompt: "Prompt",
         projectId: savedProject.id,
       })
-      const savedTemplate = await chatTemplateRepository.save(template)
+      const savedTemplate = await chatBotRepository.save(template)
 
       // Act & Assert
-      await expect(service.deleteChatTemplate(savedUser.id, savedTemplate.id)).rejects.toThrow(
+      await expect(service.deleteChatBot(savedUser.id, savedTemplate.id)).rejects.toThrow(
         ForbiddenException,
       )
-      await expect(service.deleteChatTemplate(savedUser.id, savedTemplate.id)).rejects.toThrow(
+      await expect(service.deleteChatBot(savedUser.id, savedTemplate.id)).rejects.toThrow(
         "User does not have access to organization",
       )
 
       // Verify template still exists
-      const existingTemplate = await chatTemplateRepository.findOne({
+      const existingTemplate = await chatBotRepository.findOne({
         where: { id: savedTemplate.id },
       })
       expect(existingTemplate).not.toBeNull()

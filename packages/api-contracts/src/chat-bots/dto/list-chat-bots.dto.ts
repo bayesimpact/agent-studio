@@ -1,6 +1,6 @@
 import type { TimeType } from "../../generic"
 
-export type ChatTemplateDto = {
+export type ChatBotDto = {
   id: string
   name: string
   defaultPrompt: string
@@ -9,6 +9,6 @@ export type ChatTemplateDto = {
   updatedAt: TimeType
 }
 
-export type ListChatTemplatesResponseDto = {
-  chatTemplates: ChatTemplateDto[]
+export type ListChatBotsResponseDto = {
+  chatBots: ChatBotDto[]
 }

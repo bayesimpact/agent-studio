@@ -1,28 +1,25 @@
-import type { ChatTemplateDto } from "@caseai-connect/api-contracts"
+import type { ChatBotDto } from "@caseai-connect/api-contracts"
 import { toast } from "sonner"
-import {
-  selectChatTemplatesError,
-  selectChatTemplatesStatus,
-} from "@/features/chat-templates/chat-templates.selectors"
-import { updateChatTemplate } from "@/features/chat-templates/chat-templates.thunks"
+import { selectChatBotsError, selectChatBotsStatus } from "@/features/chat-bots/chat-bots.selectors"
+import { updateChatBot } from "@/features/chat-bots/chat-bots.thunks"
 import { useAppDispatch, useAppSelector } from "@/store/hooks"
-import { ChatTemplateForm } from "./ChatTemplateForm"
+import { ChatBotForm } from "./ChatBotForm"
 
-interface UpdateChatTemplateFormProps {
-  chatTemplate: ChatTemplateDto
+interface UpdateChatBotFormProps {
+  chatBot: ChatBotDto
   onSuccess?: () => void
 }
 
-export function UpdateChatTemplateForm({ chatTemplate, onSuccess }: UpdateChatTemplateFormProps) {
+export function UpdateChatBotForm({ chatBot, onSuccess }: UpdateChatBotFormProps) {
   const dispatch = useAppDispatch()
-  const status = useAppSelector(selectChatTemplatesStatus)
-  const error = useAppSelector(selectChatTemplatesError)
+  const status = useAppSelector(selectChatBotsStatus)
+  const error = useAppSelector(selectChatBotsError)
 
   const handleSubmit = async (data: { name: string; defaultPrompt: string }) => {
     try {
       await dispatch(
-        updateChatTemplate({
-          chatTemplateId: chatTemplate.id,
+        updateChatBot({
+          chatBotId: chatBot.id,
           payload: {
             name: data.name,
             defaultPrompt: data.defaultPrompt,
@@ -41,9 +38,9 @@ export function UpdateChatTemplateForm({ chatTemplate, onSuccess }: UpdateChatTe
   const isLoading = status === "loading"
 
   return (
-    <ChatTemplateForm
-      defaultName={chatTemplate.name}
-      defaultPrompt={chatTemplate.defaultPrompt}
+    <ChatBotForm
+      defaultName={chatBot.name}
+      defaultPrompt={chatBot.defaultPrompt}
       isLoading={isLoading}
       error={error}
       onSubmit={handleSubmit}

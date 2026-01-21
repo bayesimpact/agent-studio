@@ -7,28 +7,28 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@caseai-connect/ui/shad/dialog"
-import { listChatTemplates } from "@/features/chat-templates/chat-templates.thunks"
+import { listChatBots } from "@/features/chat-bots/chat-bots.thunks"
 import { useAppDispatch } from "@/store/hooks"
-import { CreateChatTemplateForm } from "./CreateChatTemplateForm"
+import { CreateChatBotForm } from "./CreateChatBotForm"
 
-interface CreateChatTemplateDialogProps {
+interface CreateChatBotDialogProps {
   projectId: string
   projectName: string
   isOpen: boolean
   onOpenChange: (open: boolean) => void
 }
 
-export function CreateChatTemplateDialog({
+export function CreateChatBotDialog({
   projectId,
   projectName,
   isOpen,
   onOpenChange,
-}: CreateChatTemplateDialogProps) {
+}: CreateChatBotDialogProps) {
   const dispatch = useAppDispatch()
 
   const handleSuccess = () => {
     onOpenChange(false)
-    dispatch(listChatTemplates(projectId))
+    dispatch(listChatBots(projectId))
   }
 
   return (
@@ -38,7 +38,7 @@ export function CreateChatTemplateDialog({
           <DialogTitle>Create Chat Template</DialogTitle>
           <DialogDescription>Create a new chat template for {projectName}</DialogDescription>
         </DialogHeader>
-        <CreateChatTemplateForm projectId={projectId} onSuccess={handleSuccess} />
+        <CreateChatBotForm projectId={projectId} onSuccess={handleSuccess} />
       </DialogContent>
     </Dialog>
   )

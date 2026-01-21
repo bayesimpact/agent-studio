@@ -1,16 +1,16 @@
 import type {
-  CreateChatTemplateRequestDto,
+  CreateChatBotRequestDto,
   TimeType,
-  UpdateChatTemplateRequestDto,
+  UpdateChatBotRequestDto,
 } from "@caseai-connect/api-contracts"
 import { Body, Controller, Delete, Get, Param, Patch, Post, Req, UseGuards } from "@nestjs/common"
 import { JwtAuthGuard } from "@/auth/jwt-auth.guard"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
 import { UserBootstrapService } from "@/organizations/user-bootstrap.service"
 import type { User } from "@/users/user.entity"
-import { ChatTemplatesRoutes } from "./chat-templates.routes"
+import { ChatBotsRoutes } from "./chat-bots.routes"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
-import { ChatTemplatesService } from "./chat-templates.service"
+import { ChatBotsService } from "./chat-bots.service"
 
 interface Auth0JwtPayload {
   sub: string
@@ -21,21 +21,21 @@ interface Auth0JwtPayload {
 
 @UseGuards(JwtAuthGuard)
 @Controller()
-export class ChatTemplatesController {
+export class ChatBotsController {
   constructor(
     private readonly userBootstrapService: UserBootstrapService,
-    private readonly chatTemplatesService: ChatTemplatesService,
+    private readonly chatBotsService: ChatBotsService,
   ) {}
 
-  @Post(ChatTemplatesRoutes.createChatTemplate.path)
-  async createChatTemplate(
+  @Post(ChatBotsRoutes.createChatBot.path)
+  async createChatBot(
     @Req() request: { user: Auth0JwtPayload },
-    @Body() body: { payload: CreateChatTemplateRequestDto },
-  ): Promise<typeof ChatTemplatesRoutes.createChatTemplate.response> {
+    @Body() body: { payload: CreateChatBotRequestDto },
+  ): Promise<typeof ChatBotsRoutes.createChatBot.response> {
     const user = await this.ensureUserFromRequest(request)
 
     // Create chat template
-    const chatTemplate = await this.chatTemplatesService.createChatTemplate(
+    const chatBot = await this.chatBotsService.createChatBot(
       user.id,
       body.payload.projectId,
       body.payload.name,
@@ -44,73 +44,73 @@ export class ChatTemplatesController {
 
     return {
       data: {
-        id: chatTemplate.id,
-        name: chatTemplate.name,
-        defaultPrompt: chatTemplate.defaultPrompt,
-        projectId: chatTemplate.projectId,
+        id: chatBot.id,
+        name: chatBot.name,
+        defaultPrompt: chatBot.defaultPrompt,
+        projectId: chatBot.projectId,
       },
     }
   }
 
-  @Get(ChatTemplatesRoutes.listChatTemplates.path)
-  async listChatTemplates(
+  @Get(ChatBotsRoutes.listChatBots.path)
+  async listChatBots(
     @Req() request: { user: Auth0JwtPayload },
     @Param("projectId") projectId: string,
-  ): Promise<typeof ChatTemplatesRoutes.listChatTemplates.response> {
+  ): Promise<typeof ChatBotsRoutes.listChatBots.response> {
     const user = await this.ensureUserFromRequest(request)
 
     // List chat templates for the project
-    const chatTemplates = await this.chatTemplatesService.listChatTemplates(user.id, projectId)
+    const chatBots = await this.chatBotsService.listChatBots(user.id, projectId)
 
     return {
       data: {
-        chatTemplates: chatTemplates.map((chatTemplate) => ({
-          id: chatTemplate.id,
-          name: chatTemplate.name,
-          defaultPrompt: chatTemplate.defaultPrompt,
-          projectId: chatTemplate.projectId,
-          createdAt: chatTemplate.createdAt.getTime() as TimeType,
-          updatedAt: chatTemplate.updatedAt.getTime() as TimeType,
+        chatBots: chatBots.map((chatBot) => ({
+          id: chatBot.id,
+          name: chatBot.name,
+          defaultPrompt: chatBot.defaultPrompt,
+          projectId: chatBot.projectId,
+          createdAt: chatBot.createdAt.getTime() as TimeType,
+          updatedAt: chatBot.updatedAt.getTime() as TimeType,
         })),
       },
     }
   }
 
-  @Patch(ChatTemplatesRoutes.updateChatTemplate.path)
-  async updateChatTemplate(
+  @Patch(ChatBotsRoutes.updateChatBot.path)
+  async updateChatBot(
     @Req() request: { user: Auth0JwtPayload },
-    @Param("chatTemplateId") chatTemplateId: string,
-    @Body() body: { payload: UpdateChatTemplateRequestDto },
-  ): Promise<typeof ChatTemplatesRoutes.updateChatTemplate.response> {
+    @Param("chatBotId") chatBotId: string,
+    @Body() body: { payload: UpdateChatBotRequestDto },
+  ): Promise<typeof ChatBotsRoutes.updateChatBot.response> {
     const user = await this.ensureUserFromRequest(request)
 
     // Update chat template
-    const chatTemplate = await this.chatTemplatesService.updateChatTemplate(
+    const chatBot = await this.chatBotsService.updateChatBot(
       user.id,
-      chatTemplateId,
+      chatBotId,
       body.payload.name,
       body.payload.defaultPrompt,
     )
 
     return {
       data: {
-        id: chatTemplate.id,
-        name: chatTemplate.name,
-        defaultPrompt: chatTemplate.defaultPrompt,
-        projectId: chatTemplate.projectId,
+        id: chatBot.id,
+        name: chatBot.name,
+        defaultPrompt: chatBot.defaultPrompt,
+        projectId: chatBot.projectId,
       },
     }
   }
 
-  @Delete(ChatTemplatesRoutes.deleteChatTemplate.path)
-  async deleteChatTemplate(
+  @Delete(ChatBotsRoutes.deleteChatBot.path)
+  async deleteChatBot(
     @Req() request: { user: Auth0JwtPayload },
-    @Param("chatTemplateId") chatTemplateId: string,
-  ): Promise<typeof ChatTemplatesRoutes.deleteChatTemplate.response> {
+    @Param("chatBotId") chatBotId: string,
+  ): Promise<typeof ChatBotsRoutes.deleteChatBot.response> {
     const user = await this.ensureUserFromRequest(request)
 
     // Delete chat template
-    await this.chatTemplatesService.deleteChatTemplate(user.id, chatTemplateId)
+    await this.chatBotsService.deleteChatBot(user.id, chatBotId)
 
     return {
       data: {

@@ -9,24 +9,24 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
 
-const chatTemplateSchema = z.object({
+const chatBotSchema = z.object({
   name: z.string().min(3, "Chat template name must be at least 3 characters"),
   defaultPrompt: z.string().min(1, "Default prompt is required"),
 })
 
-type ChatTemplateFormData = z.infer<typeof chatTemplateSchema>
+type ChatBotFormData = z.infer<typeof chatBotSchema>
 
-interface ChatTemplateFormProps {
+interface ChatBotFormProps {
   defaultName?: string
   defaultPrompt?: string
   isLoading: boolean
   error: string | null
-  onSubmit: (values: ChatTemplateFormData) => Promise<void> | void
+  onSubmit: (values: ChatBotFormData) => Promise<void> | void
   submitLabelIdle: string
   submitLabelLoading: string
 }
 
-export function ChatTemplateForm({
+export function ChatBotForm({
   defaultName,
   defaultPrompt,
   isLoading,
@@ -34,21 +34,21 @@ export function ChatTemplateForm({
   onSubmit,
   submitLabelIdle,
   submitLabelLoading,
-}: ChatTemplateFormProps) {
+}: ChatBotFormProps) {
   const {
     register,
     handleSubmit,
     formState: { errors },
     reset,
-  } = useForm<ChatTemplateFormData>({
-    resolver: zodResolver(chatTemplateSchema),
+  } = useForm<ChatBotFormData>({
+    resolver: zodResolver(chatBotSchema),
     defaultValues: {
       name: defaultName ?? "",
       defaultPrompt: defaultPrompt ?? "",
     },
   })
 
-  const handleFormSubmit = async (data: ChatTemplateFormData) => {
+  const handleFormSubmit = async (data: ChatBotFormData) => {
     await onSubmit(data)
     reset({ name: data.name, defaultPrompt: data.defaultPrompt })
   }
