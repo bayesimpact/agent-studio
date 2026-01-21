@@ -23,4 +23,8 @@ export const ProjectsRoutes = {
     method: "patch",
     path: "projects/:projectId",
   }),
+  deleteProject: defineRoute<ResponseData<{ success: boolean }>>({
+    method: "delete",
+    path: "projects/:projectId",
+  }),
 }

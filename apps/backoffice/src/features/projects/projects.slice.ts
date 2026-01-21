@@ -3,7 +3,7 @@ import type {
   ListProjectsResponseDto,
 } from "@caseai-connect/api-contracts"
 import { createSlice } from "@reduxjs/toolkit"
-import { createProject, listProjects, updateProject } from "./projects.thunks"
+import { createProject, deleteProject, listProjects, updateProject } from "./projects.thunks"
 
 interface ProjectsState {
   projects: ListProjectsResponseDto | null
@@ -92,6 +92,22 @@ export const projectsSlice = createSlice({
       .addCase(updateProject.rejected, (state, action) => {
         state.status = "failed"
         state.error = action.error.message || "Failed to update project"
+      })
+      .addCase(deleteProject.pending, (state) => {
+        state.status = "loading"
+        state.error = null
+      })
+      .addCase(deleteProject.fulfilled, (state, action) => {
+        state.status = "succeeded"
+        state.error = null
+        // Remove the project from the projects list
+        if (state.projects?.projects) {
+          state.projects.projects = state.projects.projects.filter((p) => p.id !== action.meta.arg)
+        }
+      })
+      .addCase(deleteProject.rejected, (state, action) => {
+        state.status = "failed"
+        state.error = action.error.message || "Failed to delete project"
       })
   },
 })
