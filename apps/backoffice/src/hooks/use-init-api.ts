@@ -1,19 +1,20 @@
 import { useAuth0 } from "@auth0/auth0-react"
 import { useEffect } from "react"
-import { setToken } from "@/features/auth/auth.slice"
+import { setAuthenticated } from "@/features/auth/auth.slice"
 import { useAppDispatch } from "@/store/hooks"
 
+/**
+ * Hook to sync Auth0 authentication state with Redux.
+ * This allows the listenerMiddleware to react to authentication changes
+ * and automatically fetch user data when the user becomes authenticated.
+ */
 export function useInitApi() {
-  const { isAuthenticated, isLoading, getAccessTokenSilently } = useAuth0()
+  const { isAuthenticated, isLoading } = useAuth0()
   const dispatch = useAppDispatch()
 
   useEffect(() => {
-    if (isAuthenticated && !isLoading) {
-      getAccessTokenSilently()
-        .then((token) => dispatch(setToken(token)))
-        .catch(console.error)
-    } else if (!isAuthenticated) {
-      dispatch(setToken(null))
+    if (!isLoading) {
+      dispatch(setAuthenticated(isAuthenticated))
     }
-  }, [isAuthenticated, isLoading, getAccessTokenSilently, dispatch])
+  }, [isAuthenticated, isLoading, dispatch])
 }

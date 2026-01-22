@@ -1,6 +1,6 @@
 import type { TypedStartListening } from "@reduxjs/toolkit"
 import { createListenerMiddleware } from "@reduxjs/toolkit"
-import { setToken } from "@/features/auth/auth.slice"
+import { setAuthenticated } from "@/features/auth/auth.slice"
 import { meSlice } from "@/features/me/me.slice"
 import { fetchMe } from "@/features/me/me.thunks"
 import { organizationsSlice } from "@/features/organizations/organizations.slice"
@@ -11,17 +11,17 @@ export const listenerMiddleware = createListenerMiddleware<RootState, AppDispatc
 
 export type AppStartListening = TypedStartListening<RootState, AppDispatch>
 
-// Listen for token changes and automatically fetch user data
+// Listen for authentication state changes and automatically fetch user data
 listenerMiddleware.startListening({
-  actionCreator: setToken,
+  actionCreator: setAuthenticated,
   effect: async (action, listenerApi) => {
-    const token = action.payload
+    const isAuthenticated = action.payload
 
-    if (token) {
-      // Token was set - fetch user data
+    if (isAuthenticated) {
+      // User became authenticated - fetch user data
       await listenerApi.dispatch(fetchMe())
     } else {
-      // Token was cleared (logout) - clear user and organizations state
+      // User logged out - clear user and organizations state
       listenerApi.dispatch(meSlice.actions.reset())
       listenerApi.dispatch(organizationsSlice.actions.reset())
     }

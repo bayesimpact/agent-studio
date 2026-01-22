@@ -1,12 +1,12 @@
 import { createSlice } from "@reduxjs/toolkit"
 
 interface AuthState {
-  token: string | null
+  isAuthenticated: boolean
   status: "idle" | "loading" | "succeeded" | "failed"
 }
 
 const initialState: AuthState = {
-  token: null,
+  isAuthenticated: false,
   status: "idle",
 }
 
@@ -14,13 +14,13 @@ export const authSlice = createSlice({
   name: "auth",
   initialState,
   reducers: {
-    setToken: (state, action: { payload: string | null }) => {
-      state.token = action.payload
+    setAuthenticated: (state, action: { payload: boolean }) => {
+      state.isAuthenticated = action.payload
     },
-    clearToken: (state) => {
-      state.token = null
+    clearAuth: (state) => {
+      state.isAuthenticated = false
     },
   },
 })
 
-export const { setToken, clearToken } = authSlice.actions
+export const { setAuthenticated, clearAuth } = authSlice.actions
