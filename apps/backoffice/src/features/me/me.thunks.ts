@@ -1,12 +1,13 @@
 import type { MeResponseDto, ResponseData } from "@caseai-connect/api-contracts"
-import { MeRoutes } from "@caseai-connect/api-contracts"
 import { createAsyncThunk } from "@reduxjs/toolkit"
-import { apiRequestWithAuth } from "@/services/apiClientWithAuth"
-import type { RootState } from "@/store"
+import type { RootState, ThunkExtraArg } from "@/store"
 
-export const fetchMe = createAsyncThunk<ResponseData<MeResponseDto>, void, { state: RootState }>(
+type ThunkConfig = { state: RootState; extra: ThunkExtraArg }
+
+export const fetchMe = createAsyncThunk<ResponseData<MeResponseDto>, void, ThunkConfig>(
   "me/fetch",
-  async () => {
-    return apiRequestWithAuth({ route: MeRoutes.getMe })
+  async (_, { extra }) => {
+    const data = await extra.api.me.getMe()
+    return { data }
   },
 )

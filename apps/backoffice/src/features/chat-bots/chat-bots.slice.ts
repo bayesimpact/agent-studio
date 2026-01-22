@@ -80,22 +80,25 @@ export const chatBotsSlice = createSlice({
         state.status = "succeeded"
         state.error = null
         // Update the chat template in the list
-        const updatedTemplate = action.payload.data
-        const projectId = updatedTemplate.projectId
-        if (state.chatBots[projectId]?.chatBots) {
-          const templateIndex = state.chatBots[projectId]!.chatBots.findIndex(
-            (t) => t.id === updatedTemplate.id,
-          )
-          if (templateIndex !== -1) {
-            const existingTemplate = state.chatBots[projectId]!.chatBots[templateIndex]
-            if (existingTemplate) {
-              state.chatBots[projectId]!.chatBots[templateIndex] = {
-                id: existingTemplate.id,
-                name: updatedTemplate.name,
-                defaultPrompt: updatedTemplate.defaultPrompt,
-                projectId: existingTemplate.projectId,
-                createdAt: existingTemplate.createdAt,
-                updatedAt: Date.now(),
+        const { chatBotId, payload } = action.meta.arg
+        // Find which project this chat bot belongs to
+        for (const projectId in state.chatBots) {
+          if (state.chatBots[projectId]?.chatBots) {
+            const templateIndex = state.chatBots[projectId]!.chatBots.findIndex(
+              (t) => t.id === chatBotId,
+            )
+            if (templateIndex !== -1) {
+              const existingTemplate = state.chatBots[projectId]!.chatBots[templateIndex]
+              if (existingTemplate) {
+                state.chatBots[projectId]!.chatBots[templateIndex] = {
+                  id: existingTemplate.id,
+                  name: payload.name ?? existingTemplate.name,
+                  defaultPrompt: payload.defaultPrompt ?? existingTemplate.defaultPrompt,
+                  projectId: existingTemplate.projectId,
+                  createdAt: existingTemplate.createdAt,
+                  updatedAt: Date.now(),
+                }
+                break
               }
             }
           }

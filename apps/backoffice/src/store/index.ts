@@ -5,7 +5,9 @@ import { meSlice } from "@/features/me/me.slice"
 import { organizationsSlice } from "@/features/organizations/organizations.slice"
 import { projectsSlice } from "@/features/projects/projects.slice"
 import { testSlice } from "@/features/test/test.slice"
+import { api } from "@/services/api"
 import { listenerMiddleware } from "./listenerMiddleware"
+import type { ThunkExtraArg } from "./types"
 
 export const store = configureStore({
   reducer: {
@@ -17,8 +19,12 @@ export const store = configureStore({
     test: testSlice.reducer,
   },
   middleware: (getDefaultMiddleware) =>
-    getDefaultMiddleware().prepend(listenerMiddleware.middleware),
+    getDefaultMiddleware({
+      thunk: {
+        extraArgument: { api } satisfies ThunkExtraArg,
+      },
+    }).prepend(listenerMiddleware.middleware),
 })
 
 // Re-export types for convenience (they're defined in types.ts to avoid circular deps)
-export type { AppDispatch, RootState } from "./types"
+export type { AppDispatch, RootState, ThunkExtraArg } from "./types"

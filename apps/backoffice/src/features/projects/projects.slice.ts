@@ -77,15 +77,14 @@ export const projectsSlice = createSlice({
         state.error = null
         // Update the project in the projects list
         if (state.projects?.projects) {
-          const projectIndex = state.projects.projects.findIndex(
-            (p) => p.id === action.payload.data.id,
-          )
+          const { projectId, payload } = action.meta.arg
+          const projectIndex = state.projects.projects.findIndex((p) => p.id === projectId)
           if (projectIndex !== -1) {
             const existingProject = state.projects.projects[projectIndex]
             if (existingProject) {
               state.projects.projects[projectIndex] = {
                 id: existingProject.id,
-                name: action.payload.data.name,
+                name: payload.name,
                 organizationId: existingProject.organizationId,
                 createdAt: existingProject.createdAt,
                 updatedAt: Date.now(),

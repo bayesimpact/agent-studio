@@ -1,42 +1,43 @@
-import {
-  type CreateProjectRequestDto,
-  ProjectsRoutes,
-  type UpdateProjectRequestDto,
+import type {
+  CreateProjectRequestDto,
+  UpdateProjectRequestDto,
 } from "@caseai-connect/api-contracts"
 import { createAsyncThunk } from "@reduxjs/toolkit"
-import { apiRequestWithAuth } from "@/services/apiClientWithAuth"
+import type { IApi } from "@/services/api"
+import type { RootState, ThunkExtraArg } from "@/store"
 
-export const createProject = createAsyncThunk(
-  "projects/create",
-  async (payload: CreateProjectRequestDto) => {
-    return apiRequestWithAuth({
-      route: ProjectsRoutes.createProject,
-      payload: { payload },
-    })
-  },
-)
+type ThunkConfig = { state: RootState; extra: ThunkExtraArg }
 
-export const listProjects = createAsyncThunk("projects/list", async (organizationId: string) => {
-  return apiRequestWithAuth({
-    route: ProjectsRoutes.listProjects,
-    pathParams: { organizationId },
-  })
+export const createProject = createAsyncThunk<
+  { data: Awaited<ReturnType<IApi["projects"]["createProject"]>> },
+  CreateProjectRequestDto,
+  ThunkConfig
+>("projects/create", async (payload, { extra }) => {
+  const data = await extra.api.projects.createProject(payload)
+  return { data }
 })
 
-export const updateProject = createAsyncThunk(
-  "projects/update",
-  async ({ projectId, payload }: { projectId: string; payload: UpdateProjectRequestDto }) => {
-    return apiRequestWithAuth({
-      route: ProjectsRoutes.updateProject,
-      payload: { payload },
-      pathParams: { projectId },
-    })
+export const listProjects = createAsyncThunk<
+  { data: Awaited<ReturnType<IApi["projects"]["listProjects"]>> },
+  string,
+  ThunkConfig
+>("projects/list", async (organizationId, { extra }) => {
+  const data = await extra.api.projects.listProjects(organizationId)
+  return { data }
+})
+
+export const updateProject = createAsyncThunk<
+  void,
+  { projectId: string; payload: UpdateProjectRequestDto },
+  ThunkConfig
+>("projects/update", async ({ projectId, payload }, { extra }) => {
+  await extra.api.projects.updateProject(projectId, payload)
+})
+
+export const deleteProject = createAsyncThunk<string, string, ThunkConfig>(
+  "projects/delete",
+  async (projectId, { extra }) => {
+    await extra.api.projects.deleteProject(projectId)
+    return projectId
   },
 )
-
-export const deleteProject = createAsyncThunk("projects/delete", async (projectId: string) => {
-  return apiRequestWithAuth({
-    route: ProjectsRoutes.deleteProject,
-    pathParams: { projectId },
-  })
-})

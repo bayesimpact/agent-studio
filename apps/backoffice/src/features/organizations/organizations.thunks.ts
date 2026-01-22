@@ -3,18 +3,16 @@ import type {
   CreateOrganizationResponseDto,
   ResponseData,
 } from "@caseai-connect/api-contracts"
-import { OrganizationsRoutes } from "@caseai-connect/api-contracts"
 import { createAsyncThunk } from "@reduxjs/toolkit"
-import { apiRequestWithAuth } from "@/services/apiClientWithAuth"
-import type { RootState } from "@/store"
+import type { RootState, ThunkExtraArg } from "@/store"
+
+type ThunkConfig = { state: RootState; extra: ThunkExtraArg }
 
 export const createOrganization = createAsyncThunk<
   ResponseData<CreateOrganizationResponseDto>,
   CreateOrganizationRequestDto,
-  { state: RootState }
->("organizations/create", async (payload) => {
-  return apiRequestWithAuth({
-    route: OrganizationsRoutes.createOrganization,
-    payload: { payload },
-  })
+  ThunkConfig
+>("organizations/create", async (payload, { extra }) => {
+  const data = await extra.api.organizations.createOrganization(payload)
+  return { data }
 })
