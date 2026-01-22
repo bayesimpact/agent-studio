@@ -1,44 +1,43 @@
-import {
-  ChatBotsRoutes,
-  type CreateChatBotRequestDto,
-  type UpdateChatBotRequestDto,
+import type {
+  CreateChatBotRequestDto,
+  UpdateChatBotRequestDto,
 } from "@caseai-connect/api-contracts"
 import { createAsyncThunk } from "@reduxjs/toolkit"
-import { apiRequestWithAuth } from "@/services/apiClientWithAuth"
+import type { IApi } from "@/services/api"
+import type { RootState, ThunkExtraArg } from "@/store"
 
-export const listChatBots = createAsyncThunk("chatBots/list", async (projectId: string) => {
-  return apiRequestWithAuth({
-    route: ChatBotsRoutes.listChatBots,
-    pathParams: { projectId },
-  })
+type ThunkConfig = { state: RootState; extra: ThunkExtraArg }
+
+export const listChatBots = createAsyncThunk<
+  { data: Awaited<ReturnType<IApi["chatBots"]["listChatBots"]>> },
+  string,
+  ThunkConfig
+>("chatBots/list", async (projectId, { extra }) => {
+  const data = await extra.api.chatBots.listChatBots(projectId)
+  return { data }
 })
 
-export const createChatBot = createAsyncThunk(
-  "chatBots/create",
-  async (payload: CreateChatBotRequestDto) => {
-    return apiRequestWithAuth({
-      route: ChatBotsRoutes.createChatBot,
-      payload: { payload },
-    })
-  },
-)
-
-export const updateChatBot = createAsyncThunk(
-  "chatBots/update",
-  async ({ chatBotId, payload }: { chatBotId: string; payload: UpdateChatBotRequestDto }) => {
-    return apiRequestWithAuth({
-      route: ChatBotsRoutes.updateChatBot,
-      payload: { payload },
-      pathParams: { chatBotId },
-    })
-  },
-)
-
-export const deleteChatBot = createAsyncThunk("chatBots/delete", async (chatBotId: string) => {
-  return apiRequestWithAuth({
-    route: ChatBotsRoutes.deleteChatBot,
-    pathParams: {
-      chatBotId,
-    },
-  })
+export const createChatBot = createAsyncThunk<
+  { data: Awaited<ReturnType<IApi["chatBots"]["createChatBot"]>> },
+  CreateChatBotRequestDto,
+  ThunkConfig
+>("chatBots/create", async (payload, { extra }) => {
+  const data = await extra.api.chatBots.createChatBot(payload)
+  return { data }
 })
+
+export const updateChatBot = createAsyncThunk<
+  void,
+  { chatBotId: string; payload: UpdateChatBotRequestDto },
+  ThunkConfig
+>("chatBots/update", async ({ chatBotId, payload }, { extra }) => {
+  await extra.api.chatBots.updateChatBot(chatBotId, payload)
+})
+
+export const deleteChatBot = createAsyncThunk<string, string, ThunkConfig>(
+  "chatBots/delete",
+  async (chatBotId, { extra }) => {
+    await extra.api.chatBots.deleteChatBot(chatBotId)
+    return chatBotId
+  },
+)
