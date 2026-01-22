@@ -1,5 +1,6 @@
 import { Button } from "@caseai-connect/ui/shad/button"
 import type { Meta, StoryObj } from "@storybook/react-vite"
+import { CirclePlusIcon, MicIcon, PaperclipIcon } from "lucide-react"
 import { useState } from "react"
 import { withRouter } from "storybook-addon-remix-react-router"
 import {
@@ -77,10 +78,16 @@ export const Default: Story = {
               <ChatInput placeholder="Ask a question..." className="resize-none" />
 
               <ChatActions>
-                <div className="flex-1 justify-start flex gap-2">
-                  <Button>A</Button>
-                  <Button variant="secondary">B</Button>
-                  <Button variant="outline">C</Button>
+                <div className="flex-1 justify-start flex gap-1">
+                  <Button variant="secondary">
+                    <CirclePlusIcon />
+                  </Button>
+                  <Button variant="ghost">
+                    <PaperclipIcon />
+                  </Button>
+                  <Button variant="ghost">
+                    <MicIcon />
+                  </Button>
                 </div>
                 <ChatSubmit variant="ghost" />
               </ChatActions>
