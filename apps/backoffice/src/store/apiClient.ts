@@ -1,11 +1,18 @@
 import type { ApiRoute } from "@caseai-connect/api-contracts"
 
-export async function apiRequest<Req, Res>(
-  route: ApiRoute,
-  payload?: Req,
-  token?: string,
-  pathParams?: Record<string, string>,
-): Promise<Res> {
+type Params<T extends ApiRoute> = {
+  route: T
+  payload?: T["request"]
+  token?: string
+  pathParams?: Record<string, string>
+}
+
+export async function apiRequest<T extends ApiRoute>({
+  route,
+  payload,
+  token,
+  pathParams,
+}: Params<T>): Promise<T["response"]> {
   const method = route.method.toUpperCase()
   const path = pathParams ? route.getPath(pathParams) : route.getPath()
 

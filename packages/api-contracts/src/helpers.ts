@@ -9,17 +9,6 @@ type Return<TMethod extends Method, TResponse> = {
   method: TMethod
 }
 
-export function defineRoute<TResponse extends ResponseData<unknown>>(def: {
-  path: string
-  method: "get" | "delete"
-}): Return<"get" | "delete", TResponse>
-export function defineRoute<
-  TResponse extends ResponseData<unknown>,
-  TRequest extends RequestPayload<unknown>,
->(def: {
-  path: string
-  method: "post" | "put" | "patch"
-}): Return<"post" | "put" | "patch", TResponse> & { request: TRequest }
 export function defineRoute<
   TResponse extends ResponseData<unknown>,
   TRequest extends RequestPayload<unknown> = RequestPayload<unknown>,
@@ -42,12 +31,6 @@ function interpolatePath(path: string, options: Record<string, string>) {
 export type ApiRoute = {
   getPath: GetPath
   response: object
-} & (
-  | {
-      method: "post" | "put" | "patch"
-      request: object
-    }
-  | {
-      method: "get" | "delete"
-    }
-)
+  request?: object
+  method: "post" | "put" | "patch" | "get" | "delete"
+}

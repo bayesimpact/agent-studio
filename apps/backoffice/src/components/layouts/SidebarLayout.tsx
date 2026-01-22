@@ -31,7 +31,8 @@ export function SidebarLayout({
 }) {
   const organizations = useAppSelector(selectOrganizations)
   // Use the first organization's name, or fall back to "CaseAi" if no organizations
-  const organizationName = organizations.length > 0 ? organizations[0].name : "CaseAi"
+  const organizationName =
+    organizations.length > 0 && organizations[0] ? organizations[0].name : "CaseAi"
 
   return (
     <SidebarProvider

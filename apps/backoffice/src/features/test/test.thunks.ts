@@ -13,6 +13,6 @@ export const getHello = createAsyncThunk<ResponseData<string>, void, { state: Ro
     if (!token) {
       throw new Error("No authentication token available")
     }
-    return apiRequest(ProtectedRoutes.getHello, undefined, token)
+    return apiRequest({ route: ProtectedRoutes.getHello, token })
   },
 )

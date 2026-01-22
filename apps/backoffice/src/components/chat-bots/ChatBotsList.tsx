@@ -55,7 +55,7 @@ export function ChatBotsList() {
     return <div>Loading project...</div>
   }
 
-  const templates = chatBots?.chatBots || []
+  const templates: ChatBotDto[] = chatBots?.chatBots || []
   const isEmpty = templates.length === 0
 
   return (

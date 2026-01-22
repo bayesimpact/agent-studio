@@ -36,7 +36,7 @@ export function NavSources({ items }: { items: MenuItem[] }) {
             </CollapsibleTrigger>
             <CollapsibleContent>
               <SidebarMenuSub>
-                {item.items?.map((subItem) => (
+                {item.items?.map((subItem: MenuItem) => (
                   <SidebarMenuSubItem key={subItem.title}>
                     <SidebarMenuSubButton asChild>
                       <a href={subItem.url}>

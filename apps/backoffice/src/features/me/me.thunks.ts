@@ -13,6 +13,6 @@ export const fetchMe = createAsyncThunk<ResponseData<MeResponseDto>, void, { sta
     if (!token) {
       throw new Error("No authentication token available")
     }
-    return apiRequest(MeRoutes.getMe, undefined, token)
+    return apiRequest({ route: MeRoutes.getMe, token })
   },
 )

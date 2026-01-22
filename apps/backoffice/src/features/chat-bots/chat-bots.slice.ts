@@ -87,11 +87,16 @@ export const chatBotsSlice = createSlice({
             (t) => t.id === updatedTemplate.id,
           )
           if (templateIndex !== -1) {
-            state.chatBots[projectId]!.chatBots[templateIndex] = {
-              ...state.chatBots[projectId]!.chatBots[templateIndex],
-              name: updatedTemplate.name,
-              defaultPrompt: updatedTemplate.defaultPrompt,
-              updatedAt: Date.now(),
+            const existingTemplate = state.chatBots[projectId]!.chatBots[templateIndex]
+            if (existingTemplate) {
+              state.chatBots[projectId]!.chatBots[templateIndex] = {
+                id: existingTemplate.id,
+                name: updatedTemplate.name,
+                defaultPrompt: updatedTemplate.defaultPrompt,
+                projectId: existingTemplate.projectId,
+                createdAt: existingTemplate.createdAt,
+                updatedAt: Date.now(),
+              }
             }
           }
         }
