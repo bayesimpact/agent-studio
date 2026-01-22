@@ -1,0 +1,201 @@
+import { Button } from "@caseai-connect/ui/shad/button"
+import { Textarea } from "@caseai-connect/ui/shad/textarea"
+import { cn } from "@caseai-connect/ui/utils"
+import { EllipsisIcon, SendIcon, SparklesIcon } from "lucide-react"
+import * as React from "react"
+
+interface ChatContextValue {
+  onMessageSubmit: (value: string) => void
+  input: {
+    value: string
+    setValue: React.Dispatch<React.SetStateAction<string>>
+    ref: React.RefObject<HTMLTextAreaElement | null>
+  }
+}
+
+const ChatContext = React.createContext<ChatContextValue | null>(null)
+
+function useChat() {
+  const context = React.useContext(ChatContext)
+  if (!context) {
+    throw new Error("useChat must be used within a Chat")
+  }
+  return context
+}
+
+function Chat({
+  onMessageSubmit,
+  className,
+  children,
+  ...props
+}: React.ComponentProps<"div"> & {
+  onMessageSubmit: (value: string) => void
+}) {
+  const inputRef = React.useRef<HTMLTextAreaElement>(null)
+
+  const [inputValue, setInputValue] = React.useState("")
+
+  const handleSubmit = React.useCallback(
+    (value: string) => {
+      if (!value.trim()) return
+      onMessageSubmit?.(value)
+      setInputValue("")
+      if (inputRef.current) {
+        inputRef.current.focus()
+      }
+    },
+    [onMessageSubmit],
+  )
+
+  return (
+    <ChatContext.Provider
+      value={{
+        input: { value: inputValue, setValue: setInputValue, ref: inputRef },
+        onMessageSubmit: handleSubmit,
+      }}
+    >
+      <div
+        data-slot="chat"
+        className={cn("relative shadow-xl rounded-2xl overflow-hidden bg-white", className)}
+        {...props}
+      >
+        {children}
+      </div>
+    </ChatContext.Provider>
+  )
+}
+
+function ChatHeader({ className, ...props }: React.ComponentProps<"div">) {
+  return (
+    <div
+      data-slot="chat-header"
+      className={cn("bg-primary text-white h-20 flex items-center px-6 gap-4", className)}
+      {...props}
+    >
+      <div className="border border-gray-700 rounded-full p-2">
+        <SparklesIcon className="size-6" />
+      </div>
+      <div className="flex-1">Chat</div>
+      <div>
+        <EllipsisIcon className="size-5" />
+      </div>
+    </div>
+  )
+}
+
+function ChatBotMessage({ className, ...props }: React.ComponentProps<"div">) {
+  return (
+    <div
+      data-slot="chat-bot-message"
+      className={cn("rounded-2xl p-4 bg-gray-100 w-fit h-fit whitespace-break-spaces", className)}
+      {...props}
+    />
+  )
+}
+
+function ChatUserMessage({ className, children, ...props }: React.ComponentProps<"div">) {
+  return (
+    <div
+      data-slot="chat-user-message"
+      className={cn("flex w-full justify-end", className)}
+      {...props}
+    >
+      <div className="w-fit flex items-center justify-end max-w-2/3">
+        <div className="rounded-2xl text-white p-4 bg-primary h-fit w-fit justify-end whitespace-break-spaces">
+          {children}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function ChatContent({ className, ...props }: React.ComponentProps<"div">) {
+  return (
+    <div
+      data-slot="chat-content"
+      className={cn("p-6 flex flex-col gap-4 overflow-y-auto", className)}
+      {...props}
+    />
+  )
+}
+
+function ChatFooter({ className, ...props }: React.ComponentProps<"div">) {
+  return (
+    <div
+      data-slot="chat-footer"
+      className={cn("p-6 bg-gray-50 flex items-center gap-4", className)}
+      {...props}
+    />
+  )
+}
+
+function ChatInput({
+  className,
+  onKeyDown,
+  onChange,
+  ...props
+}: React.ComponentProps<typeof Textarea>) {
+  const { input, onMessageSubmit } = useChat()
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (!input.value.trim()) return
+
+    if (e.key === "Enter" && e.metaKey) {
+      e.preventDefault()
+      onMessageSubmit(input.value)
+    }
+    onKeyDown?.(e)
+  }
+
+  const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    input.setValue(e.target.value)
+    onChange?.(e)
+  }
+
+  return (
+    <Textarea
+      ref={input.ref}
+      data-slot="chat-input"
+      value={input.value}
+      onChange={handleChange}
+      onKeyDown={handleKeyDown}
+      className={cn(className)}
+      {...props}
+    />
+  )
+}
+
+function ChatSubmit({ className, onClick, ...props }: React.ComponentProps<typeof Button>) {
+  const { onMessageSubmit, input } = useChat()
+
+  const isInputEmpty = !input.value.trim()
+
+  const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault()
+    onMessageSubmit(input.value)
+    onClick?.(e)
+  }
+
+  return (
+    <Button
+      data-slot="chat-submit"
+      onClick={handleClick}
+      className={cn(className)}
+      {...props}
+      disabled={isInputEmpty}
+    >
+      {props.children ? props.children : <SendIcon />}
+    </Button>
+  )
+}
+
+export {
+  Chat,
+  ChatHeader,
+  ChatBotMessage,
+  ChatUserMessage,
+  ChatContent,
+  ChatFooter,
+  ChatInput,
+  ChatSubmit,
+}
