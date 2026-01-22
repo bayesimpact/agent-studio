@@ -10,7 +10,7 @@ import { useForm } from "react-hook-form"
 import { z } from "zod"
 
 const chatBotSchema = z.object({
-  name: z.string().min(3, "Chat template name must be at least 3 characters"),
+  name: z.string().min(3, "ChatBot name must be at least 3 characters"),
   defaultPrompt: z.string().min(1, "Default prompt is required"),
 })
 
@@ -57,10 +57,10 @@ export function ChatBotForm({
     <form onSubmit={handleSubmit(handleFormSubmit)}>
       <CardContent className="space-y-4 mt-2 px-0">
         <div className="space-y-2">
-          <Label htmlFor="name">Template Name</Label>
+          <Label htmlFor="name">ChatBot Name</Label>
           <Input
             id="name"
-            placeholder="Enter template name"
+            placeholder="Enter chat bot name"
             {...register("name")}
             disabled={isLoading}
             aria-invalid={errors.name ? "true" : "false"}
@@ -71,7 +71,7 @@ export function ChatBotForm({
           <Label htmlFor="defaultPrompt">Default Prompt</Label>
           <Textarea
             id="defaultPrompt"
-            placeholder="Enter the default prompt for this template"
+            placeholder="Enter the default prompt for this chat bot"
             rows={8}
             {...register("defaultPrompt")}
             disabled={isLoading}

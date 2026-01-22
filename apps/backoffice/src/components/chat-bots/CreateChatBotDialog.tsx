@@ -35,8 +35,8 @@ export function CreateChatBotDialog({
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Create Chat Template</DialogTitle>
-          <DialogDescription>Create a new chat template for {projectName}</DialogDescription>
+          <DialogTitle>Create ChatBot</DialogTitle>
+          <DialogDescription>Create a new chat bot for {projectName}</DialogDescription>
         </DialogHeader>
         <CreateChatBotForm projectId={projectId} onSuccess={handleSuccess} />
       </DialogContent>

@@ -26,11 +26,10 @@ export function UpdateChatBotForm({ chatBot, onSuccess }: UpdateChatBotFormProps
           },
         }),
       ).unwrap()
-      toast.success("Chat template updated successfully!")
+      toast.success("ChatBot updated successfully!")
       onSuccess?.()
     } catch (err) {
-      const errorMessage =
-        (err as { message?: string })?.message || "Failed to update chat template"
+      const errorMessage = (err as { message?: string })?.message || "Failed to update chat bot"
       toast.error(errorMessage)
     }
   }
@@ -44,7 +43,7 @@ export function UpdateChatBotForm({ chatBot, onSuccess }: UpdateChatBotFormProps
       isLoading={isLoading}
       error={error}
       onSubmit={handleSubmit}
-      submitLabelIdle="Update Chat Template"
+      submitLabelIdle="Update ChatBot"
       submitLabelLoading="Updating..."
     />
   )

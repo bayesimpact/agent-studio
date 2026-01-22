@@ -54,7 +54,7 @@ describe("ChatBotsService", () => {
   })
 
   describe("createChatBot", () => {
-    it("should create a chat template when user is owner", async () => {
+    it("should create a ChatBot when user is owner", async () => {
       // Arrange
       const user = userFactory.build({
         email: "owner@example.com",
@@ -98,7 +98,7 @@ describe("ChatBotsService", () => {
       expect(savedTemplate?.name).toBe("My Template")
     })
 
-    it("should create a chat template when user is admin", async () => {
+    it("should create a ChatBot when user is admin", async () => {
       // Arrange
       const user = userFactory.build({
         email: "admin@example.com",
@@ -163,7 +163,7 @@ describe("ChatBotsService", () => {
       ).rejects.toThrow(ForbiddenException)
       await expect(
         service.createChatBot(savedUser.id, savedProject.id, "AB", "Prompt"),
-      ).rejects.toThrow("Chat template name must be at least 3 characters long")
+      ).rejects.toThrow("ChatBot name must be at least 3 characters long")
     })
 
     it("should throw ForbiddenException when user is not a member", async () => {
@@ -243,7 +243,7 @@ describe("ChatBotsService", () => {
   })
 
   describe("listChatBots", () => {
-    it("should return chat templates for a project", async () => {
+    it("should return ChatBots for a project", async () => {
       // Arrange
       const user = userFactory.build({
         email: "list@example.com",
@@ -287,7 +287,7 @@ describe("ChatBotsService", () => {
       expect(result.map((t) => t.name)).toContain("Template 2")
     })
 
-    it("should return empty array when project has no chat templates", async () => {
+    it("should return empty array when project has no ChatBots", async () => {
       // Arrange
       const user = userFactory.build({
         email: "empty@example.com",
@@ -339,7 +339,7 @@ describe("ChatBotsService", () => {
       )
     })
 
-    it("should return chat templates ordered by createdAt DESC", async () => {
+    it("should return ChatBots ordered by createdAt DESC", async () => {
       // Arrange
       const user = userFactory.build({
         email: "ordered@example.com",
@@ -388,7 +388,7 @@ describe("ChatBotsService", () => {
   })
 
   describe("updateChatBot", () => {
-    it("should update a chat template when user is owner", async () => {
+    it("should update a ChatBot when user is owner", async () => {
       // Arrange
       const user = userFactory.build({
         email: "owner@example.com",
@@ -511,7 +511,7 @@ describe("ChatBotsService", () => {
         ForbiddenException,
       )
       await expect(service.updateChatBot(savedUser.id, savedTemplate.id, "AB")).rejects.toThrow(
-        "Chat template name must be at least 3 characters long",
+        "ChatBot name must be at least 3 characters long",
       )
     })
 
@@ -554,7 +554,7 @@ describe("ChatBotsService", () => {
       ).rejects.toThrow("User must be an owner or admin")
     })
 
-    it("should throw NotFoundException when chat template does not exist", async () => {
+    it("should throw NotFoundException when chat bot does not exist", async () => {
       // Arrange
       const user = userFactory.build({
         email: "user@example.com",
@@ -569,12 +569,12 @@ describe("ChatBotsService", () => {
       ).rejects.toThrow(NotFoundException)
       await expect(
         service.updateChatBot(savedUser.id, nonExistentTemplateId, "Updated"),
-      ).rejects.toThrow("Chat template with id")
+      ).rejects.toThrow("ChatBot with id")
     })
   })
 
   describe("deleteChatBot", () => {
-    it("should delete a chat template when user is owner", async () => {
+    it("should delete a ChatBot when user is owner", async () => {
       // Arrange
       const user = userFactory.build({
         email: "owner@example.com",
@@ -614,7 +614,7 @@ describe("ChatBotsService", () => {
       expect(deletedTemplate).toBeNull()
     })
 
-    it("should delete a chat template when user is admin", async () => {
+    it("should delete a ChatBot when user is admin", async () => {
       // Arrange
       const user = userFactory.build({
         email: "admin@example.com",
@@ -699,7 +699,7 @@ describe("ChatBotsService", () => {
       expect(existingTemplate).not.toBeNull()
     })
 
-    it("should throw NotFoundException when chat template does not exist", async () => {
+    it("should throw NotFoundException when chat bot does not exist", async () => {
       // Arrange
       const user = userFactory.build({
         email: "user@example.com",
@@ -713,7 +713,7 @@ describe("ChatBotsService", () => {
         NotFoundException,
       )
       await expect(service.deleteChatBot(savedUser.id, nonExistentTemplateId)).rejects.toThrow(
-        "Chat template with id",
+        "ChatBot with id",
       )
     })
 
