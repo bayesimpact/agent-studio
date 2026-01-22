@@ -1,8 +1,10 @@
+import { Button } from "@caseai-connect/ui/shad/button"
 import type { Meta, StoryObj } from "@storybook/react-vite"
 import { useState } from "react"
 import { withRouter } from "storybook-addon-remix-react-router"
 import {
   Chat,
+  ChatActions,
   ChatBotMessage,
   ChatContent,
   ChatFooter,
@@ -59,7 +61,7 @@ export const Default: Story = {
     return (
       <div className="h-screen w-screen">
         <DotsBackground className="p-10">
-          <Chat onMessageSubmit={handleSubmit}>
+          <Chat>
             <ChatHeader />
             <ChatContent>
               {messages.map((msg) =>
@@ -70,9 +72,18 @@ export const Default: Story = {
                 ),
               )}
             </ChatContent>
-            <ChatFooter>
+
+            <ChatFooter onMessageSubmit={handleSubmit}>
               <ChatInput placeholder="Ask a question..." className="resize-none" />
-              <ChatSubmit />
+
+              <ChatActions>
+                <div className="flex-1 justify-start flex gap-2">
+                  <Button>A</Button>
+                  <Button variant="secondary">B</Button>
+                  <Button variant="outline">C</Button>
+                </div>
+                <ChatSubmit variant="ghost" />
+              </ChatActions>
             </ChatFooter>
           </Chat>
         </DotsBackground>

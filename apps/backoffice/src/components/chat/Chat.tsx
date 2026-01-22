@@ -1,67 +1,19 @@
 import { Button } from "@caseai-connect/ui/shad/button"
 import { Textarea } from "@caseai-connect/ui/shad/textarea"
 import { cn } from "@caseai-connect/ui/utils"
-import { EllipsisIcon, SendIcon, SparklesIcon } from "lucide-react"
+import { Slot } from "@radix-ui/react-slot"
+import { EllipsisIcon, SendHorizonalIcon, SparklesIcon } from "lucide-react"
 import * as React from "react"
 
-interface ChatContextValue {
-  onMessageSubmit: (value: string) => void
-  input: {
-    value: string
-    setValue: React.Dispatch<React.SetStateAction<string>>
-    ref: React.RefObject<HTMLTextAreaElement | null>
-  }
-}
-
-const ChatContext = React.createContext<ChatContextValue | null>(null)
-
-function useChat() {
-  const context = React.useContext(ChatContext)
-  if (!context) {
-    throw new Error("useChat must be used within a Chat")
-  }
-  return context
-}
-
-function Chat({
-  onMessageSubmit,
-  className,
-  children,
-  ...props
-}: React.ComponentProps<"div"> & {
-  onMessageSubmit: (value: string) => void
-}) {
-  const inputRef = React.useRef<HTMLTextAreaElement>(null)
-
-  const [inputValue, setInputValue] = React.useState("")
-
-  const handleSubmit = React.useCallback(
-    (value: string) => {
-      if (!value.trim()) return
-      onMessageSubmit?.(value)
-      setInputValue("")
-      if (inputRef.current) {
-        inputRef.current.focus()
-      }
-    },
-    [onMessageSubmit],
-  )
-
+function Chat({ className, children, ...props }: React.ComponentProps<"div"> & {}) {
   return (
-    <ChatContext.Provider
-      value={{
-        input: { value: inputValue, setValue: setInputValue, ref: inputRef },
-        onMessageSubmit: handleSubmit,
-      }}
+    <div
+      data-slot="chat"
+      className={cn("relative shadow-xl rounded-2xl overflow-hidden bg-white", className)}
+      {...props}
     >
-      <div
-        data-slot="chat"
-        className={cn("relative shadow-xl rounded-2xl overflow-hidden bg-white", className)}
-        {...props}
-      >
-        {children}
-      </div>
-    </ChatContext.Provider>
+      {children}
+    </div>
   )
 }
 
@@ -119,11 +71,107 @@ function ChatContent({ className, ...props }: React.ComponentProps<"div">) {
   )
 }
 
-function ChatFooter({ className, ...props }: React.ComponentProps<"div">) {
+interface ChatFooterContextValue {
+  onMessageSubmit: (value: string) => void
+  input: {
+    value: string
+    setValue: React.Dispatch<React.SetStateAction<string>>
+    ref: React.RefObject<HTMLTextAreaElement | null>
+  }
+}
+
+const ChatFooterContext = React.createContext<ChatFooterContextValue | null>(null)
+
+function useChatFooter() {
+  const context = React.useContext(ChatFooterContext)
+  if (!context) {
+    throw new Error("useChatFooter must be used within a ChatFooter")
+  }
+  return context
+}
+
+function ChatFooter({
+  onMessageSubmit,
+  className,
+  children,
+  ...props
+}: React.ComponentProps<"button"> & {
+  onMessageSubmit: (value: string) => void
+}) {
+  const inputRef = React.useRef<HTMLTextAreaElement>(null)
+
+  const [inputValue, setInputValue] = React.useState("")
+
+  const [isFocused, setIsFocused] = React.useState(false)
+
+  React.useEffect(() => {
+    const handleFocus = () => {
+      setIsFocused(true)
+    }
+    const handleBlur = () => {
+      setIsFocused(false)
+    }
+    const inputElem = inputRef.current
+    if (inputElem) {
+      inputElem.addEventListener("focus", handleFocus)
+      inputElem.addEventListener("blur", handleBlur)
+    }
+    return () => {
+      if (inputElem) {
+        inputElem.removeEventListener("focus", handleFocus)
+        inputElem.removeEventListener("blur", handleBlur)
+      }
+    }
+  }, [])
+
+  const handleSubmit = React.useCallback(
+    (value: string) => {
+      if (!value.trim()) return
+      onMessageSubmit?.(value)
+      setInputValue("")
+      if (inputRef.current) {
+        inputRef.current.focus()
+      }
+    },
+    [onMessageSubmit],
+  )
+
+  const handleClick = () => {
+    if (inputRef.current) {
+      inputRef.current.focus()
+    }
+  }
+
+  return (
+    <ChatFooterContext.Provider
+      value={{
+        input: { value: inputValue, setValue: setInputValue, ref: inputRef },
+        onMessageSubmit: handleSubmit,
+      }}
+    >
+      <div className="flex flex-1">
+        <button
+          data-slot="chat-footer"
+          className={cn(
+            "flex-1 border-2 m-6 rounded-2xl flex items-center flex-col cursor-text",
+            isFocused ? "border-gray-400" : "border-gray-200",
+            className,
+          )}
+          {...props}
+          onClick={handleClick}
+        >
+          {children}
+        </button>
+      </div>
+    </ChatFooterContext.Provider>
+  )
+}
+
+function ChatActions({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
-      data-slot="chat-footer"
-      className={cn("p-6 bg-gray-50 flex items-center gap-4", className)}
+      data-slot="chat-actions"
+      className={cn("p-2 flex flex-1 items-center justify-end w-full gap-4", className)}
       {...props}
     />
   )
@@ -135,7 +183,7 @@ function ChatInput({
   onChange,
   ...props
 }: React.ComponentProps<typeof Textarea>) {
-  const { input, onMessageSubmit } = useChat()
+  const { input, onMessageSubmit } = useChatFooter()
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (!input.value.trim()) return
@@ -157,16 +205,24 @@ function ChatInput({
       ref={input.ref}
       data-slot="chat-input"
       value={input.value}
+      rows={1}
       onChange={handleChange}
       onKeyDown={handleKeyDown}
-      className={cn(className)}
+      className={cn("border-none min-h-min shadow-none focus-visible:ring-0", className)}
       {...props}
     />
   )
 }
 
-function ChatSubmit({ className, onClick, ...props }: React.ComponentProps<typeof Button>) {
-  const { onMessageSubmit, input } = useChat()
+function ChatSubmit({
+  asChild = false,
+  className,
+  onClick,
+  ...props
+}: React.ComponentProps<typeof Button> & {
+  asChild?: boolean
+}) {
+  const { onMessageSubmit, input } = useChatFooter()
 
   const isInputEmpty = !input.value.trim()
 
@@ -175,7 +231,17 @@ function ChatSubmit({ className, onClick, ...props }: React.ComponentProps<typeo
     onMessageSubmit(input.value)
     onClick?.(e)
   }
-
+  if (asChild)
+    return (
+      // @ts-expect-error we're spreading props onto a dynamic component
+      <Slot
+        data-slot="chat-submit"
+        onClick={handleClick}
+        className={cn(className)}
+        disabled={isInputEmpty}
+        {...props}
+      />
+    )
   return (
     <Button
       data-slot="chat-submit"
@@ -184,18 +250,19 @@ function ChatSubmit({ className, onClick, ...props }: React.ComponentProps<typeo
       {...props}
       disabled={isInputEmpty}
     >
-      {props.children ? props.children : <SendIcon />}
+      {props.children ? props.children : <SendHorizonalIcon className="size-5" />}
     </Button>
   )
 }
 
 export {
   Chat,
-  ChatHeader,
+  ChatActions,
   ChatBotMessage,
-  ChatUserMessage,
   ChatContent,
   ChatFooter,
+  ChatHeader,
   ChatInput,
   ChatSubmit,
+  ChatUserMessage,
 }
