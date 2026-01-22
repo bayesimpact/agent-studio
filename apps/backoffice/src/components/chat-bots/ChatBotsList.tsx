@@ -34,13 +34,13 @@ export function ChatBotsList() {
   const status = useAppSelector(selectChatBotsStatus)
 
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
-  const [editingTemplate, setEditingTemplate] = useState<ChatBotDto | null>(null)
-  const [deletingTemplate, setDeletingTemplate] = useState<ChatBotDto | null>(null)
+  const [editingChatBot, setEditingChatBot] = useState<ChatBotDto | null>(null)
+  const [deletingChatBot, setDeletingChatBot] = useState<ChatBotDto | null>(null)
 
   // Find the project to get its name
   const project = projects?.projects?.find((p) => p.id === projectId)
 
-  // Load chat templates when projectId is available
+  // Load chat bots when projectId is available
   useEffect(() => {
     if (projectId) {
       dispatch(listChatBots(projectId))
@@ -55,15 +55,15 @@ export function ChatBotsList() {
     return <div>Loading project...</div>
   }
 
-  const templates: ChatBotDto[] = chatBots?.chatBots || []
-  const isEmpty = templates.length === 0
+  const chatBotsList: ChatBotDto[] = chatBots?.chatBots || []
+  const isEmpty = chatBotsList.length === 0
 
   return (
     <div className="flex flex-col gap-4 p-4">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-semibold">{project.name}</h1>
-          <p className="text-muted-foreground">Chat Templates</p>
+          <p className="text-muted-foreground">ChatBots</p>
         </div>
         {!isEmpty && (
           <CreateChatBotDialog
@@ -75,20 +75,20 @@ export function ChatBotsList() {
         )}
       </div>
 
-      {status === "loading" && <div>Loading chat templates...</div>}
+      {status === "loading" && <div>Loading chat bots...</div>}
 
       {status === "succeeded" && isEmpty && (
         <Card>
           <CardHeader>
-            <CardTitle>No chat templates yet</CardTitle>
+            <CardTitle>No chat bots yet</CardTitle>
             <CardDescription>
-              Create your first chat template to get started with custom prompts for this project.
+              Create your first chat bot to get started with custom prompts for this project.
             </CardDescription>
           </CardHeader>
           <CardContent>
             <Button onClick={() => setIsCreateDialogOpen(true)}>
               <Plus className="mr-2 h-4 w-4" />
-              Create First Chat Template
+              Create First ChatBot
             </Button>
             <CreateChatBotDialog
               projectId={projectId}
@@ -102,11 +102,11 @@ export function ChatBotsList() {
 
       {status === "succeeded" && !isEmpty && (
         <div className="grid gap-4">
-          {templates.map((template) => (
-            <Card key={template.id}>
+          {chatBotsList.map((chatBot) => (
+            <Card key={chatBot.id}>
               <CardHeader>
                 <div className="flex items-center justify-between">
-                  <CardTitle>{template.name}</CardTitle>
+                  <CardTitle>{chatBot.name}</CardTitle>
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <Button variant="ghost" size="icon">
@@ -115,16 +115,16 @@ export function ChatBotsList() {
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
-                      <DropdownMenuItem onClick={() => setEditingTemplate(template)}>
+                      <DropdownMenuItem onClick={() => setEditingChatBot(chatBot)}>
                         <Edit className="mr-2 h-4 w-4" />
-                        <span>Edit Template</span>
+                        <span>Edit ChatBot</span>
                       </DropdownMenuItem>
                       <DropdownMenuItem
-                        onClick={() => setDeletingTemplate(template)}
+                        onClick={() => setDeletingChatBot(chatBot)}
                         className="text-destructive focus:text-destructive"
                       >
                         <Trash2 className="mr-2 h-4 w-4" />
-                        <span>Delete Template</span>
+                        <span>Delete ChatBot</span>
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
@@ -132,7 +132,7 @@ export function ChatBotsList() {
               </CardHeader>
               <CardContent>
                 <p className="text-sm text-muted-foreground line-clamp-2">
-                  {template.defaultPrompt}
+                  {chatBot.defaultPrompt}
                 </p>
               </CardContent>
             </Card>
@@ -141,15 +141,15 @@ export function ChatBotsList() {
       )}
 
       <EditChatBotDialog
-        chatBot={editingTemplate}
+        chatBot={editingChatBot}
         projectId={projectId}
-        onClose={() => setEditingTemplate(null)}
+        onClose={() => setEditingChatBot(null)}
       />
 
       <DeleteChatBotDialog
-        chatBot={deletingTemplate}
+        chatBot={deletingChatBot}
         projectId={projectId}
-        onClose={() => setDeletingTemplate(null)}
+        onClose={() => setDeletingChatBot(null)}
       />
     </div>
   )

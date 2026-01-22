@@ -34,8 +34,8 @@ export function EditChatBotDialog({ chatBot, projectId, onClose }: EditChatBotDi
     <Dialog open={!!chatBot} onOpenChange={(open) => !open && onClose()}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Edit Chat Template</DialogTitle>
-          <DialogDescription>Update the chat template details</DialogDescription>
+          <DialogTitle>Edit ChatBot</DialogTitle>
+          <DialogDescription>Update the chat bot details</DialogDescription>
         </DialogHeader>
         <UpdateChatBotForm chatBot={chatBot} onSuccess={handleSuccess} />
       </DialogContent>

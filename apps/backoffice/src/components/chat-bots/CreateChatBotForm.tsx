@@ -23,11 +23,10 @@ export function CreateChatBotForm({ projectId, onSuccess }: CreateChatBotFormPro
           projectId,
         }),
       ).unwrap()
-      toast.success("Chat template created successfully!")
+      toast.success("ChatBot created successfully!")
       onSuccess?.()
     } catch (err) {
-      const errorMessage =
-        (err as { message?: string })?.message || "Failed to create chat template"
+      const errorMessage = (err as { message?: string })?.message || "Failed to create chat bot"
       toast.error(errorMessage)
     }
   }
@@ -41,7 +40,7 @@ export function CreateChatBotForm({ projectId, onSuccess }: CreateChatBotFormPro
       isLoading={isLoading}
       error={error}
       onSubmit={handleSubmit}
-      submitLabelIdle="Create Chat Template"
+      submitLabelIdle="Create ChatBot"
       submitLabelLoading="Creating..."
     />
   )

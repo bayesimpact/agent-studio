@@ -31,12 +31,11 @@ export function DeleteChatBotDialog({ chatBot, projectId, onClose }: DeleteChatB
   const handleDelete = async () => {
     try {
       await dispatch(deleteChatBot(chatBot.id)).unwrap()
-      toast.success("Chat template deleted successfully")
+      toast.success("ChatBot deleted successfully")
       onClose()
       dispatch(listChatBots(projectId))
     } catch (err) {
-      const errorMessage =
-        (err as { message?: string })?.message || "Failed to delete chat template"
+      const errorMessage = (err as { message?: string })?.message || "Failed to delete chat bot"
       toast.error(errorMessage)
     }
   }
@@ -45,7 +44,7 @@ export function DeleteChatBotDialog({ chatBot, projectId, onClose }: DeleteChatB
     <Dialog open={!!chatBot} onOpenChange={(open) => !open && onClose()}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Delete Chat Template</DialogTitle>
+          <DialogTitle>Delete ChatBot</DialogTitle>
           <DialogDescription>
             Are you sure you want to delete "{chatBot.name}"? This action cannot be undone.
           </DialogDescription>

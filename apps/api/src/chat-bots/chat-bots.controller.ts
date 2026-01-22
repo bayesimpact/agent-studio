@@ -34,7 +34,7 @@ export class ChatBotsController {
   ): Promise<typeof ChatBotsRoutes.createChatBot.response> {
     const user = await this.ensureUserFromRequest(request)
 
-    // Create chat template
+    // Create ChatBot
     const chatBot = await this.chatBotsService.createChatBot(
       user.id,
       body.payload.projectId,
@@ -59,7 +59,7 @@ export class ChatBotsController {
   ): Promise<typeof ChatBotsRoutes.listChatBots.response> {
     const user = await this.ensureUserFromRequest(request)
 
-    // List chat templates for the project
+    // List ChatBots for the project
     const chatBots = await this.chatBotsService.listChatBots(user.id, projectId)
 
     return {
@@ -84,7 +84,7 @@ export class ChatBotsController {
   ): Promise<typeof ChatBotsRoutes.updateChatBot.response> {
     const user = await this.ensureUserFromRequest(request)
 
-    // Update chat template
+    // Update ChatBot
     const chatBot = await this.chatBotsService.updateChatBot(
       user.id,
       chatBotId,
@@ -109,7 +109,7 @@ export class ChatBotsController {
   ): Promise<typeof ChatBotsRoutes.deleteChatBot.response> {
     const user = await this.ensureUserFromRequest(request)
 
-    // Delete chat template
+    // Delete ChatBot
     await this.chatBotsService.deleteChatBot(user.id, chatBotId)
 
     return {

@@ -501,7 +501,7 @@ describe("ChatBotsController", () => {
       // Act & Assert
       await expect(
         controller.updateChatBot(mockRequest, nonExistentTemplateId, body),
-      ).rejects.toThrow("Chat template with id")
+      ).rejects.toThrow("ChatBot with id")
     })
   })
 
@@ -649,7 +649,7 @@ describe("ChatBotsController", () => {
       expect(existingTemplate).not.toBeNull()
     })
 
-    it("should throw NotFoundException when chat template does not exist", async () => {
+    it("should throw NotFoundException when chat bot does not exist", async () => {
       // Arrange
       const auth0Sub = "auth0|chat-bot-ctrl-delete-notfound"
       const mockRequest = {
@@ -662,7 +662,7 @@ describe("ChatBotsController", () => {
 
       // Act & Assert
       await expect(controller.deleteChatBot(mockRequest, nonExistentTemplateId)).rejects.toThrow(
-        "Chat template with id",
+        "ChatBot with id",
       )
     })
   })

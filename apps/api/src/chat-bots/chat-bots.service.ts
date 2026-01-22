@@ -63,7 +63,7 @@ export class ChatBotsService {
     })
 
     if (!chatBot) {
-      throw new NotFoundException(`Chat template with id ${chatBotId} not found`)
+      throw new NotFoundException(`ChatBot with id ${chatBotId} not found`)
     }
 
     const membership = await this.membershipRepository.findOne({
@@ -99,7 +99,7 @@ export class ChatBotsService {
     })
 
     if (!chatBot) {
-      throw new NotFoundException(`Chat template with id ${chatBotId} not found`)
+      throw new NotFoundException(`ChatBot with id ${chatBotId} not found`)
     }
 
     const membership = await this.membershipRepository.findOne({
@@ -163,7 +163,7 @@ export class ChatBotsService {
   ): Promise<ChatBot> {
     // Validate name (min 3 characters)
     if (name.length < 3) {
-      throw new ForbiddenException("Chat template name must be at least 3 characters long")
+      throw new ForbiddenException("ChatBot name must be at least 3 characters long")
     }
 
     // Verify user is owner or admin of the project's organization
@@ -216,7 +216,7 @@ export class ChatBotsService {
   ): Promise<ChatBot> {
     // Validate name if provided (min 3 characters)
     if (name !== undefined && name.length < 3) {
-      throw new ForbiddenException("Chat template name must be at least 3 characters long")
+      throw new ForbiddenException("ChatBot name must be at least 3 characters long")
     }
 
     // Verify user can update the chat bot
@@ -228,7 +228,7 @@ export class ChatBotsService {
     })
 
     if (!chatBot) {
-      throw new NotFoundException(`Chat template with id ${chatBotId} not found`)
+      throw new NotFoundException(`ChatBot with id ${chatBotId} not found`)
     }
 
     // Update the chat bot
@@ -256,7 +256,7 @@ export class ChatBotsService {
     })
 
     if (!chatBot) {
-      throw new NotFoundException(`Chat template with id ${chatBotId} not found`)
+      throw new NotFoundException(`ChatBot with id ${chatBotId} not found`)
     }
 
     // Delete the chat bot

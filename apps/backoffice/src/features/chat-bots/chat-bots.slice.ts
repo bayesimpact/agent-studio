@@ -24,7 +24,7 @@ export const chatBotsSlice = createSlice({
   initialState,
   reducers: {
     clearChatBots: (state, action: { payload: string }) => {
-      // Clear chat templates for a specific project
+      // Clear chat bots for a specific project
       delete state.chatBots[action.payload]
     },
     clearCreatedChatBot: (state) => {
@@ -45,7 +45,7 @@ export const chatBotsSlice = createSlice({
       })
       .addCase(listChatBots.rejected, (state, action) => {
         state.status = "failed"
-        state.error = action.error.message || "Failed to list chat templates"
+        state.error = action.error.message || "Failed to list chat bots"
       })
       .addCase(createChatBot.pending, (state) => {
         state.status = "loading"
@@ -55,7 +55,7 @@ export const chatBotsSlice = createSlice({
         state.status = "succeeded"
         state.createdChatBot = action.payload.data
         state.error = null
-        // Add the new chat template to the list
+        // Add the new chat bot to the list
         const projectId = action.payload.data.projectId
         if (state.chatBots[projectId]?.chatBots) {
           state.chatBots[projectId]!.chatBots.unshift({
@@ -70,7 +70,7 @@ export const chatBotsSlice = createSlice({
       })
       .addCase(createChatBot.rejected, (state, action) => {
         state.status = "failed"
-        state.error = action.error.message || "Failed to create chat template"
+        state.error = action.error.message || "Failed to create chat bot"
       })
       .addCase(updateChatBot.pending, (state) => {
         state.status = "loading"
@@ -79,7 +79,7 @@ export const chatBotsSlice = createSlice({
       .addCase(updateChatBot.fulfilled, (state, action) => {
         state.status = "succeeded"
         state.error = null
-        // Update the chat template in the list
+        // Update the chat bot in the list
         const { chatBotId, payload } = action.meta.arg
         // Find which project this chat bot belongs to
         for (const projectId in state.chatBots) {
@@ -106,7 +106,7 @@ export const chatBotsSlice = createSlice({
       })
       .addCase(updateChatBot.rejected, (state, action) => {
         state.status = "failed"
-        state.error = action.error.message || "Failed to update chat template"
+        state.error = action.error.message || "Failed to update chat bot"
       })
       .addCase(deleteChatBot.pending, (state) => {
         state.status = "loading"
@@ -115,7 +115,7 @@ export const chatBotsSlice = createSlice({
       .addCase(deleteChatBot.fulfilled, (state, action) => {
         state.status = "succeeded"
         state.error = null
-        // Remove the chat template from the list
+        // Remove the chat bot from the list
         // We need to find which project it belongs to and remove it from that project's list
         const deletedTemplateId = action.meta.arg
         for (const projectId in state.chatBots) {
@@ -128,7 +128,7 @@ export const chatBotsSlice = createSlice({
       })
       .addCase(deleteChatBot.rejected, (state, action) => {
         state.status = "failed"
-        state.error = action.error.message || "Failed to delete chat template"
+        state.error = action.error.message || "Failed to delete chat bot"
       })
   },
 })
