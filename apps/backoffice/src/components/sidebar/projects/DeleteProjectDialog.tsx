@@ -45,7 +45,7 @@ export function DeleteProjectDialog({
   }
 
   return (
-    <Dialog open={!!project} onOpenChange={(open) => !open && onClose()}>
+    <Dialog open={!!project} onOpenChange={(open: boolean) => !open && onClose()}>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Delete Project</DialogTitle>

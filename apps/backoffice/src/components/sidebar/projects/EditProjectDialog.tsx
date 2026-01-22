@@ -31,7 +31,7 @@ export function EditProjectDialog({ project, organizationId, onClose }: EditProj
   }
 
   return (
-    <Dialog open={!!project} onOpenChange={(open) => !open && onClose()}>
+    <Dialog open={!!project} onOpenChange={(open: boolean) => !open && onClose()}>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Edit Project</DialogTitle>

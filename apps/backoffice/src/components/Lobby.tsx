@@ -27,7 +27,7 @@ export function Lobby({ user, isAuthenticated }: { user?: User; isAuthenticated:
       {
         loading: "Loading...",
         success: (data: string) => data,
-        error: (error) => (
+        error: (error: { statusCode?: number; message?: string }) => (
           <div className="flex flex-col">
             <span className="font-medium">{`Error: ${error.statusCode || "Unknown"}`}</span>
             <span className="text-muted-foreground font-normal whitespace-break-spaces">

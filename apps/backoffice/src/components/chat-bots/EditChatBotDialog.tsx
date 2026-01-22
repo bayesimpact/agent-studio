@@ -31,7 +31,7 @@ export function EditChatBotDialog({ chatBot, projectId, onClose }: EditChatBotDi
   }
 
   return (
-    <Dialog open={!!chatBot} onOpenChange={(open) => !open && onClose()}>
+    <Dialog open={!!chatBot} onOpenChange={(open: boolean) => !open && onClose()}>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Edit ChatBot</DialogTitle>

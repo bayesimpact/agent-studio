@@ -6,7 +6,6 @@ import { Page } from "./Page"
 
 const meta = {
   title: "Example/Page",
-  // @ts-expect-error - React type version mismatch between packages
   component: Page,
   parameters: {
     // More on how to position stories at: https://storybook.js.org/docs/configure/story-layout
@@ -21,7 +20,7 @@ export const LoggedOut: Story = {}
 
 // More on component testing: https://storybook.js.org/docs/writing-tests/interaction-testing
 export const LoggedIn: Story = {
-  play: async ({ canvasElement }) => {
+  play: async ({ canvasElement }: { canvasElement: HTMLElement }) => {
     const canvas = within(canvasElement)
     const loginButton = canvas.getByRole("button", { name: /Log in/i })
     await expect(loginButton).toBeInTheDocument()

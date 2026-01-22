@@ -233,7 +233,6 @@ function ChatSubmit({
   }
   if (asChild)
     return (
-      // @ts-expect-error we're spreading props onto a dynamic component
       <Slot
         data-slot="chat-submit"
         onClick={handleClick}
