@@ -41,7 +41,7 @@ export function DeleteChatBotDialog({ chatBot, projectId, onClose }: DeleteChatB
   }
 
   return (
-    <Dialog open={!!chatBot} onOpenChange={(open) => !open && onClose()}>
+    <Dialog open={!!chatBot} onOpenChange={(open: boolean) => !open && onClose()}>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Delete ChatBot</DialogTitle>
