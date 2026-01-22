@@ -19,5 +19,5 @@ export const createOrganization = createAsyncThunk<
   if (!token) {
     throw new Error("No authentication token available")
   }
-  return apiRequest(OrganizationsRoutes.createOrganization, { payload }, token)
+  return apiRequest({ route: OrganizationsRoutes.createOrganization, payload: { payload }, token })
 })

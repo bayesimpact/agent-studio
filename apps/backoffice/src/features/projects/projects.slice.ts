@@ -81,10 +81,15 @@ export const projectsSlice = createSlice({
             (p) => p.id === action.payload.data.id,
           )
           if (projectIndex !== -1) {
-            state.projects.projects[projectIndex] = {
-              ...state.projects.projects[projectIndex],
-              name: action.payload.data.name,
-              updatedAt: Date.now(),
+            const existingProject = state.projects.projects[projectIndex]
+            if (existingProject) {
+              state.projects.projects[projectIndex] = {
+                id: existingProject.id,
+                name: action.payload.data.name,
+                organizationId: existingProject.organizationId,
+                createdAt: existingProject.createdAt,
+                updatedAt: Date.now(),
+              }
             }
           }
         }

@@ -23,10 +23,10 @@ export function Lobby({ user, isAuthenticated }: { user?: User; isAuthenticated:
     toast.promise(
       dispatch(getHello())
         .unwrap()
-        .then((result) => result.data),
+        .then((result: { data: string }) => result.data),
       {
         loading: "Loading...",
-        success: (data) => data,
+        success: (data: string) => data,
         error: (error) => (
           <div className="flex flex-col">
             <span className="font-medium">{`Error: ${error.statusCode || "Unknown"}`}</span>

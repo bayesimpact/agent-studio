@@ -16,7 +16,7 @@ export const createProject = createAsyncThunk(
     if (!token) {
       throw new Error("No authentication token available")
     }
-    return apiRequest(ProjectsRoutes.createProject, { payload }, token)
+    return apiRequest({ route: ProjectsRoutes.createProject, payload: { payload }, token })
   },
 )
 
@@ -28,7 +28,7 @@ export const listProjects = createAsyncThunk(
     if (!token) {
       throw new Error("No authentication token available")
     }
-    return apiRequest(ProjectsRoutes.listProjects, undefined, token, { organizationId })
+    return apiRequest({ route: ProjectsRoutes.listProjects, token, pathParams: { organizationId } })
   },
 )
 
@@ -43,7 +43,12 @@ export const updateProject = createAsyncThunk(
     if (!token) {
       throw new Error("No authentication token available")
     }
-    return apiRequest(ProjectsRoutes.updateProject, { payload }, token, { projectId })
+    return apiRequest({
+      route: ProjectsRoutes.updateProject,
+      payload: { payload },
+      token,
+      pathParams: { projectId },
+    })
   },
 )
 
@@ -55,6 +60,10 @@ export const deleteProject = createAsyncThunk(
     if (!token) {
       throw new Error("No authentication token available")
     }
-    return apiRequest(ProjectsRoutes.deleteProject, undefined, token, { projectId })
+    return apiRequest({
+      route: ProjectsRoutes.deleteProject,
+      token,
+      pathParams: { projectId },
+    })
   },
 )

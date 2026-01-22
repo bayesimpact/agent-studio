@@ -16,7 +16,7 @@ export const listChatBots = createAsyncThunk(
     if (!token) {
       throw new Error("No authentication token available")
     }
-    return apiRequest(ChatBotsRoutes.listChatBots, undefined, token, { projectId })
+    return apiRequest({ route: ChatBotsRoutes.listChatBots, token, pathParams: { projectId } })
   },
 )
 
@@ -28,7 +28,7 @@ export const createChatBot = createAsyncThunk(
     if (!token) {
       throw new Error("No authentication token available")
     }
-    return apiRequest(ChatBotsRoutes.createChatBot, { payload }, token)
+    return apiRequest({ route: ChatBotsRoutes.createChatBot, payload: { payload }, token })
   },
 )
 
@@ -43,8 +43,11 @@ export const updateChatBot = createAsyncThunk(
     if (!token) {
       throw new Error("No authentication token available")
     }
-    return apiRequest(ChatBotsRoutes.updateChatBot, { payload }, token, {
-      chatBotId,
+    return apiRequest({
+      route: ChatBotsRoutes.updateChatBot,
+      payload: { payload },
+      token,
+      pathParams: { chatBotId },
     })
   },
 )
@@ -57,8 +60,12 @@ export const deleteChatBot = createAsyncThunk(
     if (!token) {
       throw new Error("No authentication token available")
     }
-    return apiRequest(ChatBotsRoutes.deleteChatBot, undefined, token, {
-      chatBotId,
+    return apiRequest({
+      route: ChatBotsRoutes.deleteChatBot,
+      token,
+      pathParams: {
+        chatBotId,
+      },
     })
   },
 )

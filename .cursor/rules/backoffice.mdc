@@ -112,6 +112,50 @@ export function CreateProjectForm({ organizationId, project, onSuccess }: Create
 - **Reusability**: Shared form component can be reused in other contexts
 - **Testability**: Easier to test create and update logic independently
 
+## TypeScript Type Safety
+
+### Never Use `any` to Fix TypeScript Errors
+
+**Rule**: NEVER use `any` type or `as any` type assertions to fix TypeScript errors. Always use proper types, type guards, or type narrowing instead.
+
+**Requirements**:
+- Never use `any` type annotations
+- Never use `as any` type assertions
+- Never use `// @ts-ignore` or `// @ts-expect-error` to suppress type errors
+- Always fix type errors properly by:
+  - Using correct types from the codebase
+  - Adding proper type guards
+  - Using type narrowing
+  - Creating proper type definitions when needed
+  - Using `unknown` and type guards if the type is truly unknown
+
+**Examples**:
+```typescript
+// ❌ Wrong - Using `any` to fix type errors
+const result = someFunction() as any
+dispatch(action as any)
+
+// ✅ Correct - Using proper types
+const result: ExpectedType = someFunction()
+dispatch(action)
+
+// ✅ Correct - Using type guards for unknown types
+function isExpectedType(value: unknown): value is ExpectedType {
+  return typeof value === 'object' && value !== null && 'property' in value
+}
+
+if (isExpectedType(unknownValue)) {
+  // Now TypeScript knows the type
+  useValue(unknownValue)
+}
+```
+
+**Why this rule?**
+- `any` defeats the purpose of TypeScript's type safety
+- `any` can hide real bugs and lead to runtime errors
+- Proper types make the code more maintainable and self-documenting
+- Type guards and narrowing provide runtime safety checks
+
 ## Completion Criteria
 
 ### Required Checks Before Marking Work as Completed

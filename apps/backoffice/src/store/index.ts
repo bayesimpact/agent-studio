@@ -20,5 +20,5 @@ export const store = configureStore({
     getDefaultMiddleware().prepend(listenerMiddleware.middleware),
 })
 
-export type RootState = ReturnType<typeof store.getState>
-export type AppDispatch = typeof store.dispatch
+// Re-export types for convenience (they're defined in types.ts to avoid circular deps)
+export type { AppDispatch, RootState } from "./types"

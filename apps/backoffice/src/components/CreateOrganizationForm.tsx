@@ -44,6 +44,7 @@ export function CreateOrganizationForm() {
   })
 
   const onSubmit = async (data: CreateOrganizationFormData) => {
+    console.log("onSubmit !!!")
     try {
       await dispatch(createOrganization({ name: data.name })).unwrap()
       // Refresh user data to get updated organizations list (Option A)
