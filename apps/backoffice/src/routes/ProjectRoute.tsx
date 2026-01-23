@@ -8,7 +8,6 @@ import { selectProjects } from "@/features/projects/projects.selectors"
 import { LoadingRoute } from "@/routes/LoadingRoute"
 import { useAppSelector } from "@/store/hooks"
 import { meStateToUser } from "@/utils/to-user"
-import { NotFoundRoute } from "./NotFoundRoute"
 
 export function ProjectRoute() {
   const { projectId } = useParams<{ projectId: string }>()
@@ -35,8 +34,6 @@ export function ProjectRoute() {
       navigate("/onboarding", { replace: true })
     }
   }, [meStatus, organizations, navigate])
-
-  if (!project) return <NotFoundRoute />
 
   if (user && organizations.length > 0) {
     return <ChatBotsList />
