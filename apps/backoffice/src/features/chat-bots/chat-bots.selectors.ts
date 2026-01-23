@@ -1,6 +1,6 @@
 import type { RootState } from "@/store"
 
-export const selectChatBots = (state: RootState, projectId: string) =>
+export const selectChatBots = (projectId: string) => (state: RootState) =>
   state.chatBots.chatBots[projectId] || null
 export const selectCreatedChatBot = (state: RootState) => state.chatBots.createdChatBot
 export const selectChatBotsStatus = (state: RootState) => state.chatBots.status

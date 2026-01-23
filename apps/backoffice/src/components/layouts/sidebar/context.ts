@@ -1,16 +1,16 @@
 import { createContext, type Dispatch, useContext } from "react"
 
-interface SidebarContextValue {
+interface SidebarLayoutContextValue {
   headerTitle: string
   setHeaderTitle: Dispatch<React.SetStateAction<string>>
 }
 
-export const SidebarContext = createContext<SidebarContextValue | null>(null)
+export const SidebarLayoutContext = createContext<SidebarLayoutContextValue | null>(null)
 
-export function useSidebar() {
-  const context = useContext(SidebarContext)
+export function useSidebarLayout() {
+  const context = useContext(SidebarLayoutContext)
   if (!context) {
-    throw new Error("useSidebar must be used within a Sidebar")
+    throw new Error("useSidebarLayout must be used within a SidebarLayoutProvider")
   }
   return context
 }

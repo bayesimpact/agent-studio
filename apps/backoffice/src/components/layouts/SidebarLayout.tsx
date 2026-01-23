@@ -1,3 +1,4 @@
+import type { ProjectDto } from "@caseai-connect/api-contracts"
 import { LayoutHeader } from "@caseai-connect/ui/components/layouts/header"
 import { Header } from "@caseai-connect/ui/components/layouts/sidebar/Header"
 import { NavUser } from "@caseai-connect/ui/components/layouts/sidebar/NavUser"
@@ -11,18 +12,24 @@ import {
   SidebarProvider,
 } from "@caseai-connect/ui/shad/sidebar"
 import { useState } from "react"
-import { dataset } from "@/assets/data"
 import { selectOrganizations } from "@/features/organizations/organizations.selectors"
 import { RouteNames } from "@/routes/helpers"
 import { useAppSelector } from "@/store/hooks"
 import { NavProjects } from "../sidebar/NavProjects"
-import { NavPrompts } from "../sidebar/NavPrompts"
-import { NavSettings } from "../sidebar/NavSettings"
-import { NavSources } from "../sidebar/NavSources"
 import { NavUserMenuItems } from "../sidebar/NavUserMenuItems"
-import { SidebarContext } from "./sidebar/context"
+import { SidebarLayoutContext } from "./sidebar/context"
 
-export function SidebarLayout({ user, children }: { user: User; children: React.ReactNode }) {
+export function SidebarLayout({
+  user,
+  projects,
+  children,
+  organizationId,
+}: {
+  user: User
+  projects: ProjectDto[]
+  children: React.ReactNode
+  organizationId: string
+}) {
   const [headerTitle, setHeaderTitle] = useState("Dashboard")
 
   const organizations = useAppSelector(selectOrganizations)
@@ -31,7 +38,7 @@ export function SidebarLayout({ user, children }: { user: User; children: React.
     organizations.length > 0 && organizations[0] ? organizations[0].name : "CaseAi"
 
   return (
-    <SidebarContext.Provider value={{ headerTitle, setHeaderTitle }}>
+    <SidebarLayoutContext.Provider value={{ headerTitle, setHeaderTitle }}>
       <SidebarProvider
         style={
           {
@@ -46,13 +53,7 @@ export function SidebarLayout({ user, children }: { user: User; children: React.
           </SidebarHeader>
 
           <SidebarContent>
-            <NavProjects />
-
-            <NavSources items={dataset.sources} />
-
-            <NavPrompts items={dataset.prompts} />
-
-            <NavSettings items={dataset.expandedList} />
+            <NavProjects projects={projects} organizationId={organizationId} />
           </SidebarContent>
 
           <SidebarFooter>
@@ -68,6 +69,6 @@ export function SidebarLayout({ user, children }: { user: User; children: React.
           {children}
         </SidebarInset>
       </SidebarProvider>
-    </SidebarContext.Provider>
+    </SidebarLayoutContext.Provider>
   )
 }
