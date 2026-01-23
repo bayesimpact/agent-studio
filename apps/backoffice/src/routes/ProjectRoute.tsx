@@ -15,7 +15,7 @@ export function ProjectRoute() {
   const chatBots = useAppSelector(selectChatBots(projectId)) || []
 
   const { setHeaderTitle } = useSidebarLayout()
-  const headerTitle = project ? `${project.name} - Chat Bots` : "Dashboard"
+  const headerTitle = project ? project.name : "Dashboard"
 
   useEffect(() => {
     if (outlet) return

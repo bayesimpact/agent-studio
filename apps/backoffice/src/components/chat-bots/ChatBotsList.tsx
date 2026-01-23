@@ -17,7 +17,9 @@ import {
 } from "@caseai-connect/ui/shad/dropdown-menu"
 import { Edit, MoreHorizontal, Plus, Trash2 } from "lucide-react"
 import { useState } from "react"
+import { useNavigate } from "react-router-dom"
 import { selectChatBotsStatus } from "@/features/chat-bots/chat-bots.selectors"
+import { buildChatBotPath } from "@/routes/helpers"
 import { LoadingRoute } from "@/routes/LoadingRoute"
 import { useAppSelector } from "@/store/hooks"
 import { CreateChatBotDialog } from "./CreateChatBotDialog"
@@ -31,6 +33,7 @@ export function ChatBotsList({
   project: ProjectDto
   chatBots: ChatBotDto[]
 }) {
+  const navigate = useNavigate()
   const status = useAppSelector(selectChatBotsStatus)
 
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
@@ -39,8 +42,19 @@ export function ChatBotsList({
 
   const isEmpty = chatBots.length === 0
 
+  const handleClick = (chatBotId: string) => {
+    navigate(
+      buildChatBotPath({
+        organizationId: project.organizationId,
+        projectId: project.id,
+        chatBotId,
+      }),
+    )
+  }
+
   return (
     <div className="flex flex-col gap-4 p-4">
+      <h1 className="scroll-m-20 text-xl font-semibold tracking-tight">Chat Bots</h1>
       <div className="flex items-center justify-between">
         {!isEmpty && (
           <CreateChatBotDialog
@@ -83,7 +97,9 @@ export function ChatBotsList({
             <Card key={chatBot.id}>
               <CardHeader>
                 <div className="flex items-center justify-between">
-                  <CardTitle>{chatBot.name}</CardTitle>
+                  <CardTitle className="cursor-pointer" onClick={() => handleClick(chatBot.id)}>
+                    {chatBot.name}
+                  </CardTitle>
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <Button variant="ghost" size="icon">
