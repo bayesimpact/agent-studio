@@ -49,7 +49,6 @@ export default meta
 type Story = StoryObj<typeof meta>
 
 export const Default: Story = {
-  // @ts-expect-error args type mismatch
   render: (args: { messages: Message[] }) => {
     const [messages, setMessages] = useState(args.messages)
 

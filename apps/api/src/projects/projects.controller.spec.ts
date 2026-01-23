@@ -269,4 +269,142 @@ describe("ProjectsController", () => {
       )
     })
   })
+
+  describe("deleteProject", () => {
+    it("should delete a project when user is owner", async () => {
+      // Arrange
+      const auth0Sub = "auth0|delete-owner"
+      const mockRequest = {
+        user: {
+          sub: auth0Sub,
+          email: "owner@example.com",
+          name: "Owner User",
+        },
+      }
+      const org = organizationFactory.build({ name: "Delete Org" })
+      const savedOrg = await organizationRepository.save(org)
+
+      const user = await userRepository.save({
+        auth0Id: auth0Sub,
+        email: "owner@example.com",
+        name: "Owner User",
+      })
+      await membershipRepository.save({
+        userId: user.id,
+        organizationId: savedOrg.id,
+        role: "owner",
+      })
+
+      const project = await projectRepository.save({
+        name: "Project to Delete",
+        organizationId: savedOrg.id,
+      })
+
+      // Act
+      const { data: result } = await controller.deleteProject(mockRequest, project.id)
+
+      // Assert
+      expect(result.success).toBe(true)
+
+      const deletedProject = await projectRepository.findOne({
+        where: { id: project.id },
+      })
+      expect(deletedProject).toBeNull()
+    })
+
+    it("should delete a project when user is admin", async () => {
+      // Arrange
+      const auth0Sub = "auth0|delete-admin"
+      const mockRequest = {
+        user: {
+          sub: auth0Sub,
+          email: "admin@example.com",
+        },
+      }
+      const org = organizationFactory.build({ name: "Admin Delete Org" })
+      const savedOrg = await organizationRepository.save(org)
+
+      const user = await userRepository.save({
+        auth0Id: auth0Sub,
+        email: "admin@example.com",
+      })
+      await membershipRepository.save({
+        userId: user.id,
+        organizationId: savedOrg.id,
+        role: "admin",
+      })
+
+      const project = await projectRepository.save({
+        name: "Admin Project to Delete",
+        organizationId: savedOrg.id,
+      })
+
+      // Act
+      const { data: result } = await controller.deleteProject(mockRequest, project.id)
+
+      // Assert
+      expect(result.success).toBe(true)
+
+      const deletedProject = await projectRepository.findOne({
+        where: { id: project.id },
+      })
+      expect(deletedProject).toBeNull()
+    })
+
+    it("should throw ForbiddenException when user is member", async () => {
+      // Arrange
+      const auth0Sub = "auth0|delete-member"
+      const mockRequest = {
+        user: {
+          sub: auth0Sub,
+          email: "member@example.com",
+        },
+      }
+      const org = organizationFactory.build({ name: "Member Delete Org" })
+      const savedOrg = await organizationRepository.save(org)
+
+      const user = await userRepository.save({
+        auth0Id: auth0Sub,
+        email: "member@example.com",
+      })
+      await membershipRepository.save({
+        userId: user.id,
+        organizationId: savedOrg.id,
+        role: "member",
+      })
+
+      const project = await projectRepository.save({
+        name: "Should Not Delete",
+        organizationId: savedOrg.id,
+      })
+
+      // Act & Assert
+      await expect(controller.deleteProject(mockRequest, project.id)).rejects.toThrow(
+        "User must be an owner or admin",
+      )
+
+      // Verify project still exists
+      const existingProject = await projectRepository.findOne({
+        where: { id: project.id },
+      })
+      expect(existingProject).not.toBeNull()
+    })
+
+    it("should throw NotFoundException when project does not exist", async () => {
+      // Arrange
+      const auth0Sub = "auth0|delete-notfound"
+      const mockRequest = {
+        user: {
+          sub: auth0Sub,
+          email: "user@example.com",
+        },
+      }
+      const nonExistentProjectId = "00000000-0000-0000-0000-000000000000"
+
+      // Act & Assert
+      await expect(controller.deleteProject(mockRequest, nonExistentProjectId)).rejects.toThrow(
+        "Project with id",
+      )
+    })
+  })
 })

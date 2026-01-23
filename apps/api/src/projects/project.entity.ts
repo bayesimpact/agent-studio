@@ -4,9 +4,11 @@ import {
   Entity,
   JoinColumn,
   ManyToOne,
+  OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from "typeorm"
+import { ChatBot } from "@/chat-bots/chat-bot.entity"
 import { Organization } from "@/organizations/organization.entity"
 
 @Entity("projects")
@@ -32,4 +34,10 @@ export class Project {
   )
   @JoinColumn({ name: "organization_id" })
   organization!: Organization
+
+  @OneToMany(
+    () => ChatBot,
+    (chatBot) => chatBot.project,
+  )
+  chatBots!: ChatBot[]
 }

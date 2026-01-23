@@ -1,0 +1,173 @@
+---
+description: Rules for the React Backoffice frontend application (apps/backoffice)
+globs:
+  - "apps/backoffice/**/*"
+alwaysApply: false
+---
+
+# Cursor Agent Rules for CaseAI Connect - Backoffice
+
+## Redux Architecture
+
+### API Calls Must Go Through Redux
+
+**Rule**: All API calls MUST go through React-Redux thunks. React components MUST NOT call the API directly.
+
+**Requirements**:
+- All API calls must use Redux thunks (`createAsyncThunk`)
+- Components dispatch thunks, never call API directly
+- API routes and DTOs come from `@caseai-connect/api-contracts`
+- Single API client (`store/apiClient.ts`) is the only place allowed to use `fetch`
+
+**Structure**:
+- Redux slices: `features/{domain}/{domain}.slice.ts`
+- Redux thunks: `features/{domain}/{domain}.thunks.ts`
+- Redux selectors: `features/{domain}/{domain}.selectors.ts`
+- API client: `store/apiClient.ts` (centralized fetch wrapper)
+
+**Example**:
+```typescript
+// ✅ Correct - Component dispatches thunk
+const dispatch = useAppDispatch()
+dispatch(fetchMe())
+
+// ❌ Wrong - Component calls API directly
+const response = await fetch('/me')
+```
+
+## Form Component Architecture
+
+### Separation of Create and Update Forms
+
+**Rule**: A `CreateXXXForm` component MUST NEVER be used for both creating and updating actions. Always create separate components for create and update operations, and extract shared form logic into a shared component.
+
+**Requirements**:
+- `CreateXXXForm` should ONLY handle creation logic
+- `UpdateXXXForm` should ONLY handle update logic
+- When forms share common code (fields, validation, layout), extract it into a shared `XXXForm` component
+- The shared form component should be a presentational component that accepts props for different behaviors
+
+**Structure**:
+- Shared form component: `components/{domain}/{Domain}Form.tsx` (e.g., `components/projects/ProjectForm.tsx`)
+- Create form: `components/{domain}/Create{Domain}Form.tsx` (e.g., `components/projects/CreateProjectForm.tsx`)
+- Update form: `components/{domain}/Update{Domain}Form.tsx` (e.g., `components/projects/UpdateProjectForm.tsx`)
+
+**Example - Correct Pattern**:
+```typescript
+// ✅ Correct - Shared form component
+// components/projects/ProjectForm.tsx
+export function ProjectForm({
+  defaultName,
+  isLoading,
+  error,
+  onSubmit,
+  submitLabelIdle,
+  submitLabelLoading,
+}: ProjectFormProps) {
+  // Shared form fields, validation, and layout
+}
+
+// ✅ Correct - Create-only form
+// components/projects/CreateProjectForm.tsx
+export function CreateProjectForm({ organizationId, onSuccess }: CreateProjectFormProps) {
+  const dispatch = useAppDispatch()
+  const handleSubmit = async (data) => {
+    await dispatch(createProject({ name: data.name, organizationId })).unwrap()
+    onSuccess?.()
+  }
+  return <ProjectForm onSubmit={handleSubmit} submitLabelIdle="Create Project" ... />
+}
+
+// ✅ Correct - Update-only form
+// components/projects/UpdateProjectForm.tsx
+export function UpdateProjectForm({ project, onSuccess }: UpdateProjectFormProps) {
+  const dispatch = useAppDispatch()
+  const handleSubmit = async (data) => {
+    await dispatch(updateProject({ projectId: project.id, payload: { name: data.name } })).unwrap()
+    onSuccess?.()
+  }
+  return <ProjectForm defaultName={project.name} onSubmit={handleSubmit} submitLabelIdle="Update Project" ... />
+}
+```
+
+**Example - Wrong Pattern**:
+```typescript
+// ❌ Wrong - Single form handling both create and update
+export function CreateProjectForm({ organizationId, project, onSuccess }: CreateProjectFormProps) {
+  const onSubmit = async (data) => {
+    if (project) {
+      // Update logic
+    } else {
+      // Create logic
+    }
+  }
+  // ...
+}
+```
+
+**Why this pattern?**
+- **Separation of concerns**: Each form has a single, clear responsibility
+- **Type safety**: Create and update forms can have different prop types
+- **Maintainability**: Changes to create logic don't affect update logic and vice versa
+- **Reusability**: Shared form component can be reused in other contexts
+- **Testability**: Easier to test create and update logic independently
+
+## TypeScript Type Safety
+
+### Never Use `any` to Fix TypeScript Errors
+
+**Rule**: NEVER use `any` type or `as any` type assertions to fix TypeScript errors. Always use proper types, type guards, or type narrowing instead.
+
+**Requirements**:
+- Never use `any` type annotations
+- Never use `as any` type assertions
+- Never use `// @ts-ignore` or `// @ts-expect-error` to suppress type errors
+- Always fix type errors properly by:
+  - Using correct types from the codebase
+  - Adding proper type guards
+  - Using type narrowing
+  - Creating proper type definitions when needed
+  - Using `unknown` and type guards if the type is truly unknown
+
+**Examples**:
+```typescript
+// ❌ Wrong - Using `any` to fix type errors
+const result = someFunction() as any
+dispatch(action as any)
+
+// ✅ Correct - Using proper types
+const result: ExpectedType = someFunction()
+dispatch(action)
+
+// ✅ Correct - Using type guards for unknown types
+function isExpectedType(value: unknown): value is ExpectedType {
+  return typeof value === 'object' && value !== null && 'property' in value
+}
+
+if (isExpectedType(unknownValue)) {
+  // Now TypeScript knows the type
+  useValue(unknownValue)
+}
+```
+
+**Why this rule?**
+- `any` defeats the purpose of TypeScript's type safety
+- `any` can hide real bugs and lead to runtime errors
+- Proper types make the code more maintainable and self-documenting
+- Type guards and narrowing provide runtime safety checks
+
+## Completion Criteria
+
+### Required Checks Before Marking Work as Completed
+
+**Rule**: When working on the backoffice frontend application (`apps/backoffice`), you MUST run both `npm run biome:check` and `npm run typecheck` to confirm that your changes didn't break anything before marking the task as finished.
+
+**Why**: The frontend application is particularly sensitive to type errors and formatting issues that can break the build or cause runtime errors. These checks must pass before considering the work complete.
+
+**Required Steps**:
+1. After making changes to backoffice code, run `npm run biome:check`
+2. Then run `npm run typecheck`
+3. Fix any errors or warnings that appear
+4. Only mark the task as complete when both commands pass successfully
+
+**Note**: These checks ensure code quality, type safety, and that existing functionality continues to work correctly.

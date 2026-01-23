@@ -1,4 +1,5 @@
 import type { Repository } from "typeorm"
+import { Auth0UserInfoService } from "@/auth/auth0-userinfo.service"
 import { clearTestDatabase } from "@/common/test/test-database"
 import {
   setupTransactionalTestDatabase,
@@ -17,6 +18,7 @@ describe("MeController", () => {
   let userRepository: Repository<User>
   let organizationRepository: Repository<Organization>
   let membershipRepository: Repository<UserMembership>
+  let auth0UserInfoService: Auth0UserInfoService
 
   beforeAll(async () => {
     // Use transactional setup with MeModule import
@@ -39,9 +41,12 @@ describe("MeController", () => {
     await setup.startTransaction()
     // Get controller and repositories from transactional module (important!)
     controller = setup.module.get<MeController>(MeController)
+    auth0UserInfoService = setup.module.get<Auth0UserInfoService>(Auth0UserInfoService)
     userRepository = setup.getRepository(User)
     organizationRepository = setup.getRepository(Organization)
     membershipRepository = setup.getRepository(UserMembership)
+    // Clear mocks before each test
+    jest.clearAllMocks()
   })
 
   afterEach(async () => {
@@ -248,6 +253,143 @@ describe("MeController", () => {
         expect(result.organizations[0]).not.toHaveProperty("organization")
         expect(result.organizations[0]).not.toHaveProperty("createdAt")
       }
+    })
+
+    it("should fetch user info from Auth0 UserInfo endpoint when access token is provided", async () => {
+      // Arrange
+      const auth0Sub = "auth0|userinfo-test"
+      const mockRequest = {
+        user: {
+          sub: auth0Sub,
+          // JWT payload doesn't have email/name
+        },
+      }
+      const authorization = "Bearer test-access-token"
+      const mockUserInfo = {
+        sub: auth0Sub,
+        email: "userinfo@example.com",
+        name: "UserInfo User",
+        picture: "https://example.com/userinfo.jpg",
+      }
+
+      // Mock getUserInfo method
+      jest.spyOn(auth0UserInfoService, "getUserInfo").mockResolvedValueOnce(mockUserInfo)
+
+      // Act
+      const { data: result } = await controller.getMe(mockRequest, authorization)
+
+      // Assert - Should use UserInfo data
+      expect(result.user.email).toBe("userinfo@example.com")
+      expect(result.user.name).toBe("UserInfo User")
+
+      // Verify getUserInfo was called with the access token
+      expect(auth0UserInfoService.getUserInfo).toHaveBeenCalledWith("test-access-token")
+
+      // Verify user was created with UserInfo data
+      const user = await userRepository.findOne({
+        where: { auth0Id: auth0Sub },
+      })
+      expect(user?.email).toBe("userinfo@example.com")
+      expect(user?.name).toBe("UserInfo User")
+      expect(user?.pictureUrl).toBe("https://example.com/userinfo.jpg")
+    })
+
+    it("should fall back to JWT payload when UserInfo endpoint fails", async () => {
+      // Arrange
+      const auth0Sub = "auth0|fallback-test"
+      const mockRequest = {
+        user: {
+          sub: auth0Sub,
+          email: "jwt@example.com",
+          name: "JWT User",
+        },
+      }
+      const authorization = "Bearer test-access-token"
+
+      // Mock getUserInfo to throw an error
+      jest
+        .spyOn(auth0UserInfoService, "getUserInfo")
+        .mockRejectedValueOnce(new Error("Failed to fetch user info from Auth0: 401"))
+
+      // Act
+      const { data: result } = await controller.getMe(mockRequest, authorization)
+
+      // Assert - Should fall back to JWT payload
+      expect(result.user.email).toBe("jwt@example.com")
+      expect(result.user.name).toBe("JWT User")
+
+      // Verify getUserInfo was called
+      expect(auth0UserInfoService.getUserInfo).toHaveBeenCalledWith("test-access-token")
+
+      // Verify user was created with JWT data
+      const user = await userRepository.findOne({
+        where: { auth0Id: auth0Sub },
+      })
+      expect(user?.email).toBe("jwt@example.com")
+      expect(user?.name).toBe("JWT User")
+    })
+
+    it("should merge UserInfo data with JWT payload (UserInfo takes precedence)", async () => {
+      // Arrange
+      const auth0Sub = "auth0|merge-test"
+      const mockRequest = {
+        user: {
+          sub: auth0Sub,
+          email: "jwt@example.com", // JWT has email
+          name: "JWT Name", // JWT has name
+        },
+      }
+      const authorization = "Bearer test-access-token"
+      const mockUserInfo = {
+        sub: auth0Sub,
+        email: "userinfo@example.com", // UserInfo has different email
+        // UserInfo doesn't have name, should use JWT name
+      }
+
+      // Mock getUserInfo method
+      jest.spyOn(auth0UserInfoService, "getUserInfo").mockResolvedValueOnce(mockUserInfo)
+
+      // Act
+      const { data: result } = await controller.getMe(mockRequest, authorization)
+
+      // Assert - UserInfo email should take precedence, JWT name should be used
+      expect(result.user.email).toBe("userinfo@example.com") // From UserInfo
+      expect(result.user.name).toBe("JWT Name") // From JWT (UserInfo doesn't have it)
+
+      // Verify getUserInfo was called
+      expect(auth0UserInfoService.getUserInfo).toHaveBeenCalledWith("test-access-token")
+
+      // Verify in database
+      const user = await userRepository.findOne({
+        where: { auth0Id: auth0Sub },
+      })
+      expect(user?.email).toBe("userinfo@example.com")
+      expect(user?.name).toBe("JWT Name")
+    })
+
+    it("should use JWT payload when no authorization header is provided", async () => {
+      // Arrange
+      const auth0Sub = "auth0|no-header"
+      const mockRequest = {
+        user: {
+          sub: auth0Sub,
+          email: "jwt-only@example.com",
+          name: "JWT Only",
+        },
+      }
+
+      // Set up spy to track calls
+      const getUserInfoSpy = jest.spyOn(auth0UserInfoService, "getUserInfo")
+
+      // Act
+      const { data: result } = await controller.getMe(mockRequest, undefined)
+
+      // Assert - Should use JWT payload only
+      expect(result.user.email).toBe("jwt-only@example.com")
+      expect(result.user.name).toBe("JWT Only")
+
+      // Verify getUserInfo was not called
+      expect(getUserInfoSpy).not.toHaveBeenCalled()
     })
   })
 })
