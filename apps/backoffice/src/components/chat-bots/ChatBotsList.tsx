@@ -1,6 +1,6 @@
 "use client"
 
-import type { ChatBotDto } from "@caseai-connect/api-contracts"
+import type { ChatBotDto, ProjectDto } from "@caseai-connect/api-contracts"
 import { Button } from "@caseai-connect/ui/shad/button"
 import {
   Card,
@@ -16,55 +16,35 @@ import {
   DropdownMenuTrigger,
 } from "@caseai-connect/ui/shad/dropdown-menu"
 import { Edit, MoreHorizontal, Plus, Trash2 } from "lucide-react"
-import { useEffect, useState } from "react"
-import { useParams } from "react-router-dom"
-import { selectChatBots, selectChatBotsStatus } from "@/features/chat-bots/chat-bots.selectors"
-import { listChatBots } from "@/features/chat-bots/chat-bots.thunks"
-import { selectProjects } from "@/features/projects/projects.selectors"
+import { useState } from "react"
+import { selectChatBotsStatus } from "@/features/chat-bots/chat-bots.selectors"
 import { LoadingRoute } from "@/routes/LoadingRoute"
-import { useAppDispatch, useAppSelector } from "@/store/hooks"
+import { useAppSelector } from "@/store/hooks"
 import { CreateChatBotDialog } from "./CreateChatBotDialog"
 import { DeleteChatBotDialog } from "./DeleteChatBotDialog"
 import { EditChatBotDialog } from "./EditChatBotDialog"
 
-export function ChatBotsList() {
-  const { projectId } = useParams<{ projectId: string }>()
-  const dispatch = useAppDispatch()
-  const projects = useAppSelector(selectProjects)
-  const chatBots = useAppSelector((state) => (projectId ? selectChatBots(state, projectId) : null))
+export function ChatBotsList({
+  project,
+  chatBots,
+}: {
+  project: ProjectDto
+  chatBots: ChatBotDto[]
+}) {
   const status = useAppSelector(selectChatBotsStatus)
 
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
   const [editingChatBot, setEditingChatBot] = useState<ChatBotDto | null>(null)
   const [deletingChatBot, setDeletingChatBot] = useState<ChatBotDto | null>(null)
 
-  // Find the project to get its name
-  const project = projects?.projects?.find((p) => p.id === projectId)
-
-  // Load chat bots when projectId is available
-  useEffect(() => {
-    if (projectId) {
-      dispatch(listChatBots(projectId))
-    }
-  }, [projectId, dispatch])
-
-  if (!projectId) {
-    return <div>Project not found</div>
-  }
-
-  if (!project) {
-    return <LoadingRoute />
-  }
-
-  const chatBotsList: ChatBotDto[] = chatBots?.chatBots || []
-  const isEmpty = chatBotsList.length === 0
+  const isEmpty = chatBots.length === 0
 
   return (
     <div className="flex flex-col gap-4 p-4">
       <div className="flex items-center justify-between">
         {!isEmpty && (
           <CreateChatBotDialog
-            projectId={projectId}
+            projectId={project.id}
             projectName={project.name}
             isOpen={isCreateDialogOpen}
             onOpenChange={setIsCreateDialogOpen}
@@ -72,7 +52,7 @@ export function ChatBotsList() {
         )}
       </div>
 
-      {status === "loading" && <div>Loading chat bots...</div>}
+      {status === "loading" && <LoadingRoute />}
 
       {status === "succeeded" && isEmpty && (
         <Card>
@@ -88,7 +68,7 @@ export function ChatBotsList() {
               Create First ChatBot
             </Button>
             <CreateChatBotDialog
-              projectId={projectId}
+              projectId={project.id}
               projectName={project.name}
               isOpen={isCreateDialogOpen}
               onOpenChange={setIsCreateDialogOpen}
@@ -99,7 +79,7 @@ export function ChatBotsList() {
 
       {status === "succeeded" && !isEmpty && (
         <div className="grid gap-4">
-          {chatBotsList.map((chatBot) => (
+          {chatBots.map((chatBot) => (
             <Card key={chatBot.id}>
               <CardHeader>
                 <div className="flex items-center justify-between">
@@ -139,13 +119,13 @@ export function ChatBotsList() {
 
       <EditChatBotDialog
         chatBot={editingChatBot}
-        projectId={projectId}
+        projectId={project.id}
         onClose={() => setEditingChatBot(null)}
       />
 
       <DeleteChatBotDialog
         chatBot={deletingChatBot}
-        projectId={projectId}
+        projectId={project.id}
         onClose={() => setDeletingChatBot(null)}
       />
     </div>

@@ -1,15 +1,16 @@
-import { useAuth0 } from "@auth0/auth0-react"
 import { useEffect } from "react"
-import { useNavigate } from "react-router-dom"
+import { useLoaderData, useNavigate, useParams } from "react-router-dom"
 import { DashboardLayout } from "@/components/DashboardLayout"
 import { selectMe, selectMeStatus } from "@/features/me/me.selectors"
 import { selectOrganizations } from "@/features/organizations/organizations.selectors"
 import { LoadingRoute } from "@/routes/LoadingRoute"
 import { useAppSelector } from "@/store/hooks"
 import { meStateToUser } from "@/utils/to-user"
+import type { ProjectsLoaderData } from "./loaders/load-projects"
 
 export function DashboardRoute() {
-  const { isAuthenticated, isLoading } = useAuth0()
+  const { organizationId } = useParams<{ organizationId: string }>()
+  const projects = useLoaderData<ProjectsLoaderData>()
   const navigate = useNavigate()
   const organizations = useAppSelector(selectOrganizations)
   const meStatus = useAppSelector(selectMeStatus)
@@ -23,10 +24,10 @@ export function DashboardRoute() {
     }
   }, [meStatus, organizations, navigate])
 
-  if (isLoading || meStatus === "loading") return <LoadingRoute />
+  if (meStatus === "loading") return <LoadingRoute />
 
-  if (isAuthenticated && user && organizations.length > 0) {
-    return <DashboardLayout user={user} />
+  if (projects && user && organizations.length > 0) {
+    return <DashboardLayout organizationId={organizationId} user={user} projects={projects} />
   }
 
   // Show loading while redirecting
