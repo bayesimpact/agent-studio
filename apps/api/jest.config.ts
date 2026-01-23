@@ -4,6 +4,9 @@ import { config as dotenvConfig } from "dotenv"
 // Load .env.test file for tests
 dotenvConfig({ path: resolve(__dirname, ".env.test") })
 
+// Resolve path to api-contracts package
+const apiContractsPath = resolve(__dirname, "../../packages/api-contracts/src")
+
 export const nestConfig = {
   collectCoverage: true,
   coverageProvider: "v8",
@@ -24,6 +27,8 @@ export const nestConfig = {
   testEnvironment: "node",
   moduleNameMapper: {
     "^@/(.*)$": "<rootDir>/$1",
+    "^@caseai-connect/api-contracts$": `${apiContractsPath}/index.ts`,
+    "^@caseai-connect/api-contracts/(.*)$": `${apiContractsPath}/$1`,
   },
   setupFilesAfterEnv: ["<rootDir>/../jest.setup.ts"],
 }
