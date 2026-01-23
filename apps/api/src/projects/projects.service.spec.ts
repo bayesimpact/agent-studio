@@ -1,4 +1,4 @@
-import { ForbiddenException } from "@nestjs/common"
+import { ForbiddenException, NotFoundException } from "@nestjs/common"
 import type { Repository } from "typeorm"
 import { clearTestDatabase } from "@/common/test/test-database"
 import {
@@ -282,6 +282,161 @@ describe("ProjectsService", () => {
       const [first, second] = result
       expect(first!.name).toBe("Second Project") // Most recent first
       expect(second!.name).toBe("First Project")
+    })
+  })
+
+  describe("deleteProject", () => {
+    it("should delete a project when user is owner", async () => {
+      // Arrange
+      const user = userFactory.build({
+        email: "owner@example.com",
+        auth0Id: "auth0|owner-delete-1",
+      })
+      const savedUser = await userRepository.save(user)
+      const org = organizationFactory.build({ name: "Delete Org" })
+      const savedOrg = await organizationRepository.save(org)
+
+      const membership = membershipRepository.create({
+        userId: savedUser.id,
+        organizationId: savedOrg.id,
+        role: "owner",
+      })
+      await membershipRepository.save(membership)
+
+      const project = projectFactory.build({
+        name: "Project to Delete",
+        organizationId: savedOrg.id,
+      })
+      const savedProject = await projectRepository.save(project)
+
+      // Act
+      await service.deleteProject(savedUser.id, savedProject.id)
+
+      // Assert
+      const deletedProject = await projectRepository.findOne({
+        where: { id: savedProject.id },
+      })
+      expect(deletedProject).toBeNull()
+    })
+
+    it("should delete a project when user is admin", async () => {
+      // Arrange
+      const user = userFactory.build({
+        email: "admin@example.com",
+        auth0Id: "auth0|admin-delete-1",
+      })
+      const savedUser = await userRepository.save(user)
+      const org = organizationFactory.build({ name: "Admin Delete Org" })
+      const savedOrg = await organizationRepository.save(org)
+
+      const membership = membershipRepository.create({
+        userId: savedUser.id,
+        organizationId: savedOrg.id,
+        role: "admin",
+      })
+      await membershipRepository.save(membership)
+
+      const project = projectFactory.build({
+        name: "Admin Project to Delete",
+        organizationId: savedOrg.id,
+      })
+      const savedProject = await projectRepository.save(project)
+
+      // Act
+      await service.deleteProject(savedUser.id, savedProject.id)
+
+      // Assert
+      const deletedProject = await projectRepository.findOne({
+        where: { id: savedProject.id },
+      })
+      expect(deletedProject).toBeNull()
+    })
+
+    it("should throw ForbiddenException when user is member", async () => {
+      // Arrange
+      const user = userFactory.build({
+        email: "member@example.com",
+        auth0Id: "auth0|member-delete-1",
+      })
+      const savedUser = await userRepository.save(user)
+      const org = organizationFactory.build({ name: "Member Delete Org" })
+      const savedOrg = await organizationRepository.save(org)
+
+      const membership = membershipRepository.create({
+        userId: savedUser.id,
+        organizationId: savedOrg.id,
+        role: "member",
+      })
+      await membershipRepository.save(membership)
+
+      const project = projectFactory.build({
+        name: "Should Not Delete",
+        organizationId: savedOrg.id,
+      })
+      const savedProject = await projectRepository.save(project)
+
+      // Act & Assert
+      await expect(service.deleteProject(savedUser.id, savedProject.id)).rejects.toThrow(
+        ForbiddenException,
+      )
+      await expect(service.deleteProject(savedUser.id, savedProject.id)).rejects.toThrow(
+        "User must be an owner or admin",
+      )
+
+      // Verify project still exists
+      const existingProject = await projectRepository.findOne({
+        where: { id: savedProject.id },
+      })
+      expect(existingProject).not.toBeNull()
+    })
+
+    it("should throw NotFoundException when project does not exist", async () => {
+      // Arrange
+      const user = userFactory.build({
+        email: "user@example.com",
+        auth0Id: "auth0|user-delete-1",
+      })
+      const savedUser = await userRepository.save(user)
+      const nonExistentProjectId = "00000000-0000-0000-0000-000000000000"
+
+      // Act & Assert
+      await expect(service.deleteProject(savedUser.id, nonExistentProjectId)).rejects.toThrow(
+        NotFoundException,
+      )
+      await expect(service.deleteProject(savedUser.id, nonExistentProjectId)).rejects.toThrow(
+        "Project with id",
+      )
+    })
+
+    it("should throw ForbiddenException when user is not a member", async () => {
+      // Arrange
+      const user = userFactory.build({
+        email: "nonmember@example.com",
+        auth0Id: "auth0|nonmember-delete-1",
+      })
+      const savedUser = await userRepository.save(user)
+      const org = organizationFactory.build({ name: "Other Org" })
+      const savedOrg = await organizationRepository.save(org)
+
+      const project = projectFactory.build({
+        name: "Other Project",
+        organizationId: savedOrg.id,
+      })
+      const savedProject = await projectRepository.save(project)
+
+      // Act & Assert
+      await expect(service.deleteProject(savedUser.id, savedProject.id)).rejects.toThrow(
+        ForbiddenException,
+      )
+      await expect(service.deleteProject(savedUser.id, savedProject.id)).rejects.toThrow(
+        "User does not have access to organization",
+      )
+
+      // Verify project still exists
+      const existingProject = await projectRepository.findOne({
+        where: { id: savedProject.id },
+      })
+      expect(existingProject).not.toBeNull()
     })
   })
 })

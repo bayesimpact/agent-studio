@@ -1,14 +1,34 @@
 import { useAuth0 } from "@auth0/auth0-react"
+import { useEffect } from "react"
+import { useNavigate } from "react-router-dom"
 import { Dashboard } from "@/components/Dashboard"
+import { selectMe, selectMeStatus } from "@/features/me/me.selectors"
+import { selectOrganizations } from "@/features/organizations/organizations.selectors"
 import { LoadingRoute } from "@/routes/LoadingRoute"
-import { toUser } from "@/utils/to-user"
-import { NotFoundRoute } from "./NotFoundRoute"
+import { useAppSelector } from "@/store/hooks"
+import { meStateToUser } from "@/utils/to-user"
 
 export function DashboardRoute() {
-  const { user: userDto, isAuthenticated, isLoading } = useAuth0()
+  const { isAuthenticated, isLoading } = useAuth0()
+  const navigate = useNavigate()
+  const organizations = useAppSelector(selectOrganizations)
+  const meStatus = useAppSelector(selectMeStatus)
+  const meUser = useAppSelector(selectMe)
+  const user = meStateToUser(meUser)
 
-  if (isLoading) return <LoadingRoute />
+  useEffect(() => {
+    // If user data is loaded and has no organizations, redirect to onboarding
+    if (meStatus === "succeeded" && organizations.length === 0) {
+      navigate("/onboarding", { replace: true })
+    }
+  }, [meStatus, organizations, navigate])
 
-  if (isAuthenticated && userDto) return <Dashboard user={toUser(userDto)} />
-  return <NotFoundRoute />
+  if (isLoading || meStatus === "loading") return <LoadingRoute />
+
+  if (isAuthenticated && user && organizations.length > 0) {
+    return <Dashboard user={user} />
+  }
+
+  // Show loading while redirecting
+  return <LoadingRoute />
 }

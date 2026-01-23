@@ -58,7 +58,6 @@ function Item({
 }: React.ComponentProps<"div"> & VariantProps<typeof itemVariants> & { asChild?: boolean }) {
   const Comp = asChild ? Slot : "div"
   return (
-    // @ts-expect-error we're spreading props onto a dynamic component
     <Comp
       data-slot="item"
       data-variant={variant}

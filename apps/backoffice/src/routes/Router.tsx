@@ -4,6 +4,8 @@ import { HomeRoute } from "@/routes/HomeRoute"
 import { LoginRoute } from "@/routes/LoginRoute"
 import { LogoutRoute } from "@/routes/LogoutRoute"
 import { NotFoundRoute } from "@/routes/NotFoundRoute"
+import { OnboardingRoute } from "@/routes/OnboardingRoute"
+import { ProjectChatBotsRoute } from "@/routes/ProjectChatBotsRoute"
 import { ProtectedRoute } from "@/routes/ProtectedRoute"
 import { DashboardRoute } from "./DashboardRoute"
 
@@ -16,10 +18,26 @@ export function Router() {
         <Route path="/login" element={<LoginRoute />} />
         <Route path="/logout" element={<LogoutRoute />} />
         <Route
+          path="/onboarding"
+          element={
+            <ProtectedRoute>
+              <OnboardingRoute />
+            </ProtectedRoute>
+          }
+        />
+        <Route
           path="/dashboard"
           element={
             <ProtectedRoute>
               <DashboardRoute />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/projects/:projectId"
+          element={
+            <ProtectedRoute>
+              <ProjectChatBotsRoute />
             </ProtectedRoute>
           }
         />

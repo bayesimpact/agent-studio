@@ -9,10 +9,13 @@ export function useAsyncNotification(asyncFunction: () => Promise<string>) {
       },
       {
         loading: "Loading...",
-        success: (data) => data,
-        error: (error) => (
+        success: (data: string) => data,
+        error: (error: {
+          response?: { data?: { statusCode?: number; message?: string } }
+          message?: string
+        }) => (
           <div className="flex flex-col">
-            <span className="font-medium">{`Error: ${error.response?.data.statusCode}`}</span>
+            <span className="font-medium">{`Error: ${error.response?.data?.statusCode || "Unknown"}`}</span>
             <span className="text-muted-foreground font-normal whitespace-break-spaces">
               {error.response?.data?.message || error.message || "Unknown error occurred."}
             </span>

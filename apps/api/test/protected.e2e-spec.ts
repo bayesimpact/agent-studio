@@ -1,9 +1,9 @@
+import { ProtectedRoutes } from "@caseai-connect/api-contracts"
 import type { INestApplication } from "@nestjs/common"
 import { Test, type TestingModule } from "@nestjs/testing"
 import type { App } from "supertest/types"
 import { AppModule } from "./../src/app.module"
 import { JwtAuthGuard } from "./../src/auth/jwt-auth.guard"
-import { ProtectedRoutes } from "../src/exports/api-routes/protected"
 import { type Requester, testRequester } from "./request"
 
 // NOTE: How to run this test:

@@ -1,5 +1,5 @@
+import type { ApiRoute } from "@caseai-connect/api-contracts"
 import type { INestApplication } from "@nestjs/common/interfaces"
-import type { ApiRoute } from "src/helpers"
 import request from "supertest"
 import type { App } from "supertest/types"
 

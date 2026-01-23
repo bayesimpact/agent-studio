@@ -1,0 +1,43 @@
+import type {
+  CreateProjectRequestDto,
+  UpdateProjectRequestDto,
+} from "@caseai-connect/api-contracts"
+import { createAsyncThunk } from "@reduxjs/toolkit"
+import type { IApi } from "@/services/api"
+import type { RootState, ThunkExtraArg } from "@/store"
+
+type ThunkConfig = { state: RootState; extra: ThunkExtraArg }
+
+export const createProject = createAsyncThunk<
+  { data: Awaited<ReturnType<IApi["projects"]["createProject"]>> },
+  CreateProjectRequestDto,
+  ThunkConfig
+>("projects/create", async (payload, { extra }) => {
+  const data = await extra.api.projects.createProject(payload)
+  return { data }
+})
+
+export const listProjects = createAsyncThunk<
+  { data: Awaited<ReturnType<IApi["projects"]["listProjects"]>> },
+  string,
+  ThunkConfig
+>("projects/list", async (organizationId, { extra }) => {
+  const data = await extra.api.projects.listProjects(organizationId)
+  return { data }
+})
+
+export const updateProject = createAsyncThunk<
+  void,
+  { projectId: string; payload: UpdateProjectRequestDto },
+  ThunkConfig
+>("projects/update", async ({ projectId, payload }, { extra }) => {
+  await extra.api.projects.updateProject(projectId, payload)
+})
+
+export const deleteProject = createAsyncThunk<string, string, ThunkConfig>(
+  "projects/delete",
+  async (projectId, { extra }) => {
+    await extra.api.projects.deleteProject(projectId)
+    return projectId
+  },
+)

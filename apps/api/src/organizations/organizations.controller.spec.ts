@@ -283,5 +283,87 @@ describe("OrganizationsController", () => {
       })
       expect(organizations.length).toBe(3)
     })
+
+    it("should reject organization name shorter than 3 characters", async () => {
+      // Arrange
+      const auth0Sub = "auth0|org-validation"
+      const mockRequest = {
+        user: {
+          sub: auth0Sub,
+          email: "validation@example.com",
+        },
+      }
+      const body = {
+        payload: {
+          name: "AB", // Only 2 characters
+        },
+      }
+
+      // Act & Assert - ValidationPipe will throw BadRequestException
+      await expect(controller.createOrganization(mockRequest, body)).rejects.toThrow()
+    })
+
+    it("should reject empty organization name", async () => {
+      // Arrange
+      const auth0Sub = "auth0|org-empty"
+      const mockRequest = {
+        user: {
+          sub: auth0Sub,
+          email: "empty@example.com",
+        },
+      }
+      const body = {
+        payload: {
+          name: "",
+        },
+      }
+
+      // Act & Assert - ValidationPipe will throw BadRequestException
+      await expect(controller.createOrganization(mockRequest, body)).rejects.toThrow()
+    })
+
+    it("should accept organization name with exactly 3 characters", async () => {
+      // Arrange
+      const auth0Sub = "auth0|org-exact"
+      const mockRequest = {
+        user: {
+          sub: auth0Sub,
+          email: "exact@example.com",
+        },
+      }
+      const body = {
+        payload: {
+          name: "ABC", // Exactly 3 characters
+        },
+      }
+
+      // Act
+      const { data: result } = await controller.createOrganization(mockRequest, body)
+
+      // Assert
+      expect(result.name).toBe("ABC")
+      expect(result.id).toBeDefined()
+    })
+
+    it("should reject organization name with only whitespace", async () => {
+      // Arrange
+      const auth0Sub = "auth0|org-whitespace"
+      const mockRequest = {
+        user: {
+          sub: auth0Sub,
+          email: "whitespace@example.com",
+        },
+      }
+      const body = {
+        payload: {
+          name: "   ", // Only whitespace (trimmed would be empty)
+        },
+      }
+
+      // Act & Assert - ValidationPipe will throw BadRequestException
+      // Note: MinLength validator doesn't trim, so this might pass validation
+      // but fail in the service layer. For now, we test that it throws.
+      await expect(controller.createOrganization(mockRequest, body)).rejects.toThrow()
+    })
   })
 })
