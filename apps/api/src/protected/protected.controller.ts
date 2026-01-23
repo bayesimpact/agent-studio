@@ -1,6 +1,6 @@
+import { ProtectedRoutes } from "@caseai-connect/api-contracts"
 import { Controller, Get, HttpCode, HttpStatus, Logger, Req, UseGuards } from "@nestjs/common"
 import { JwtAuthGuard } from "../auth/jwt-auth.guard"
-import { ProtectedRoutes } from "./protected.routes"
 
 @UseGuards(JwtAuthGuard)
 @Controller()
