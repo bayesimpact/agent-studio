@@ -114,12 +114,9 @@ export async function clearTestDatabase(dataSource: DataSource): Promise<void> {
     await queryRunner.startTransaction()
 
     try {
-      // Disable foreign key checks temporarily for safer truncation
       // Delete in order: child tables first, then parent tables
       await queryRunner.query(`DELETE FROM "user_memberships"`)
-      // Handle both old and new table names during migration
       await queryRunner.query(`DELETE FROM "chat_bots"`).catch(() => {})
-      await queryRunner.query(`DELETE FROM "chat_templates"`).catch(() => {})
       await queryRunner.query(`DELETE FROM "projects"`)
       await queryRunner.query(`DELETE FROM "organizations"`)
       await queryRunner.query(`DELETE FROM "users"`)
