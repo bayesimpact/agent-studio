@@ -1,20 +1,23 @@
 import { SidebarMenu, SidebarMenuButton, SidebarMenuItem } from "@caseai-connect/ui/shad/sidebar"
 import { type LucideIcon, PlugZap2Icon } from "lucide-react"
+import { Link } from "react-router-dom"
 
 export function Header({
   name = "CaseAi",
   subname,
   Icon = PlugZap2Icon,
+  to,
 }: {
   name?: string
   subname?: string
   Icon?: LucideIcon
+  to: string
 }) {
   return (
     <SidebarMenu>
       <SidebarMenuItem>
         <SidebarMenuButton size="lg" asChild>
-          <a href="https://www.bayesimpact.org">
+          <Link to={to}>
             <div className="bg-sidebar-primary text-sidebar-primary-foreground flex aspect-square size-8 items-center justify-center rounded-lg">
               <Icon className="size-4" />
             </div>
@@ -22,7 +25,7 @@ export function Header({
               <span className="font-medium">{name}</span>
               {subname && <span className="">{subname}</span>}
             </div>
-          </a>
+          </Link>
         </SidebarMenuButton>
       </SidebarMenuItem>
     </SidebarMenu>

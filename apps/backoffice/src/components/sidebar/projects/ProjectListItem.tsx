@@ -15,20 +15,34 @@ import {
 } from "@caseai-connect/ui/shad/sidebar"
 import { Edit, Folder, MoreHorizontal, Trash2 } from "lucide-react"
 import { Link } from "react-router-dom"
+import { buildProjectPath } from "@/routes/helpers"
 
 interface ProjectListItemProps {
   project: ProjectDto
+  organizationId: string
   onEdit: (project: ProjectDto) => void
   onDelete: (project: ProjectDto) => void
+  isSelected: boolean
 }
 
-export function ProjectListItem({ project, onEdit, onDelete }: ProjectListItemProps) {
+export function ProjectListItem({
+  project,
+  organizationId,
+  onEdit,
+  onDelete,
+  isSelected,
+}: ProjectListItemProps) {
   const { isMobile } = useSidebar()
 
   return (
     <SidebarMenuItem>
-      <SidebarMenuButton asChild>
-        <Link to={`/projects/${project.id}`}>
+      <SidebarMenuButton className={isSelected ? "bg-muted" : ""} asChild>
+        <Link
+          to={buildProjectPath({
+            organizationId,
+            projectId: project.id,
+          })}
+        >
           <Folder />
           <span>{project.name}</span>
         </Link>

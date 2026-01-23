@@ -5,6 +5,7 @@ import { CreateOrganizationForm } from "@/components/CreateOrganizationForm"
 import { selectMeStatus } from "@/features/me/me.selectors"
 import { selectOrganizations } from "@/features/organizations/organizations.selectors"
 import { useAppSelector } from "@/store/hooks"
+import { buildOrganizationPath } from "./helpers"
 import { LoadingRoute } from "./LoadingRoute"
 
 export function OnboardingRoute() {
@@ -21,7 +22,9 @@ export function OnboardingRoute() {
 
     // If user data is loaded and has organizations, redirect to dashboard
     if (meStatus === "succeeded" && organizations.length > 0) {
-      navigate("/dashboard", { replace: true })
+      const organization = organizations[0]
+      if (!organization) throw new Error("No organization found")
+      navigate(buildOrganizationPath(organization.id), { replace: true })
     }
   }, [isAuthenticated, authLoading, meStatus, organizations, navigate])
 

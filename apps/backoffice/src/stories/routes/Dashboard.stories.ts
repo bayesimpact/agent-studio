@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite"
 
-import { Dashboard as Comp } from "../../components/Dashboard"
+import { Dashboard as Comp } from "../../components/DashboardLayout"
 
 const meta = {
   title: "routes/Dashboard",
