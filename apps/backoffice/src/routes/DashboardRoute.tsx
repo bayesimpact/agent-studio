@@ -1,7 +1,7 @@
 import { useAuth0 } from "@auth0/auth0-react"
 import { useEffect } from "react"
 import { useNavigate } from "react-router-dom"
-import { Dashboard } from "@/components/Dashboard"
+import { DashboardLayout } from "@/components/DashboardLayout"
 import { selectMe, selectMeStatus } from "@/features/me/me.selectors"
 import { selectOrganizations } from "@/features/organizations/organizations.selectors"
 import { LoadingRoute } from "@/routes/LoadingRoute"
@@ -26,7 +26,7 @@ export function DashboardRoute() {
   if (isLoading || meStatus === "loading") return <LoadingRoute />
 
   if (isAuthenticated && user && organizations.length > 0) {
-    return <Dashboard user={user} />
+    return <DashboardLayout user={user} />
   }
 
   // Show loading while redirecting

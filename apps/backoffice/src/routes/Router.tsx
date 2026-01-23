@@ -5,42 +5,43 @@ import { LoginRoute } from "@/routes/LoginRoute"
 import { LogoutRoute } from "@/routes/LogoutRoute"
 import { NotFoundRoute } from "@/routes/NotFoundRoute"
 import { OnboardingRoute } from "@/routes/OnboardingRoute"
-import { ProjectChatBotsRoute } from "@/routes/ProjectChatBotsRoute"
+import { ProjectRoute } from "@/routes/ProjectRoute"
 import { ProtectedRoute } from "@/routes/ProtectedRoute"
 import { DashboardRoute } from "./DashboardRoute"
+import { RouteNames } from "./helpers"
 
 export function Router() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={<HomeRoute />} />
+        <Route path={RouteNames.HOME} element={<HomeRoute />} />
         <Route path="/guest" element={<GuestRoute />} />
-        <Route path="/login" element={<LoginRoute />} />
-        <Route path="/logout" element={<LogoutRoute />} />
+        <Route path={RouteNames.LOGIN} element={<LoginRoute />} />
+        <Route path={RouteNames.LOGOUT} element={<LogoutRoute />} />
         <Route
-          path="/onboarding"
+          path={RouteNames.ONBOARDING}
           element={
             <ProtectedRoute>
               <OnboardingRoute />
             </ProtectedRoute>
           }
         />
+
         <Route
-          path="/dashboard"
+          path={RouteNames.ORGANIZATION_DASHBOARD}
           element={
             <ProtectedRoute>
               <DashboardRoute />
             </ProtectedRoute>
           }
-        />
-        <Route
-          path="/projects/:projectId"
-          element={
-            <ProtectedRoute>
-              <ProjectChatBotsRoute />
-            </ProtectedRoute>
-          }
-        />
+        >
+          {/* Index route */}
+          <Route index element={<div>TODO: Dashboard</div>} />
+
+          {/* Sub-route */}
+          <Route path={RouteNames.PROJECT} element={<ProjectRoute />} />
+        </Route>
+
         <Route path="*" element={<NotFoundRoute />} />
       </Routes>
     </BrowserRouter>

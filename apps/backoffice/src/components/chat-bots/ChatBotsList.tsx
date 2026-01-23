@@ -21,6 +21,7 @@ import { useParams } from "react-router-dom"
 import { selectChatBots, selectChatBotsStatus } from "@/features/chat-bots/chat-bots.selectors"
 import { listChatBots } from "@/features/chat-bots/chat-bots.thunks"
 import { selectProjects } from "@/features/projects/projects.selectors"
+import { LoadingRoute } from "@/routes/LoadingRoute"
 import { useAppDispatch, useAppSelector } from "@/store/hooks"
 import { CreateChatBotDialog } from "./CreateChatBotDialog"
 import { DeleteChatBotDialog } from "./DeleteChatBotDialog"
@@ -52,7 +53,7 @@ export function ChatBotsList() {
   }
 
   if (!project) {
-    return <div>Loading project...</div>
+    return <LoadingRoute />
   }
 
   const chatBotsList: ChatBotDto[] = chatBots?.chatBots || []
@@ -61,10 +62,6 @@ export function ChatBotsList() {
   return (
     <div className="flex flex-col gap-4 p-4">
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold">{project.name}</h1>
-          <p className="text-muted-foreground">ChatBots</p>
-        </div>
         {!isEmpty && (
           <CreateChatBotDialog
             projectId={projectId}

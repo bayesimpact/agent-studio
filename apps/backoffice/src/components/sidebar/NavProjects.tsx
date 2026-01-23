@@ -3,6 +3,7 @@
 import type { ProjectDto } from "@caseai-connect/api-contracts"
 import { Section } from "@caseai-connect/ui/components/layouts/sidebar/Section"
 import { useState } from "react"
+import { useParams } from "react-router-dom"
 import { CreateProjectButton } from "./projects/CreateProjectButton"
 import { DeleteProjectDialog } from "./projects/DeleteProjectDialog"
 import { EditProjectDialog } from "./projects/EditProjectDialog"
@@ -10,6 +11,7 @@ import { useProjectsData } from "./projects/hooks/useProjectsData"
 import { ProjectListItem } from "./projects/ProjectListItem"
 
 export function NavProjects() {
+  const { projectId } = useParams<{ projectId: string }>()
   const { currentOrganization, projectList } = useProjectsData()
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
   const [editingProject, setEditingProject] = useState<ProjectDto | null>(null)
@@ -33,7 +35,9 @@ export function NavProjects() {
           {projectList.map((project) => (
             <ProjectListItem
               key={project.id}
+              isSelected={project.id === projectId}
               project={project}
+              organizationId={currentOrganization.id}
               onEdit={setEditingProject}
               onDelete={setDeletingProject}
             />
