@@ -38,8 +38,10 @@ export function UpdateChatBotForm({ chatBot, onSuccess }: UpdateChatBotFormProps
 
   return (
     <ChatBotForm
-      defaultName={chatBot.name}
-      defaultPrompt={chatBot.defaultPrompt}
+      defaultValues={{
+        name: chatBot.name,
+        defaultPrompt: chatBot.defaultPrompt,
+      }}
       isLoading={isLoading}
       error={error}
       onSubmit={handleSubmit}

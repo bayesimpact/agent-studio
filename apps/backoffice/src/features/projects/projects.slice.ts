@@ -6,7 +6,7 @@ import { createSlice } from "@reduxjs/toolkit"
 import { createProject, deleteProject, listProjects, updateProject } from "./projects.thunks"
 
 interface ProjectsState {
-  projects: ListProjectsResponseDto | null
+  projects: ListProjectsResponseDto["projects"] | null
   createdProject: CreateProjectResponseDto | null
   status: "idle" | "loading" | "succeeded" | "failed"
   error: string | null
@@ -41,8 +41,8 @@ export const projectsSlice = createSlice({
         state.createdProject = action.payload.data
         state.error = null
         // Add the new project to the projects list
-        if (state.projects?.projects) {
-          state.projects.projects.unshift({
+        if (state.projects) {
+          state.projects.unshift({
             id: action.payload.data.id,
             name: action.payload.data.name,
             organizationId: action.payload.data.organizationId,
@@ -55,19 +55,23 @@ export const projectsSlice = createSlice({
         state.status = "failed"
         state.error = action.error.message || "Failed to create project"
       })
+
+    builder
       .addCase(listProjects.pending, (state) => {
-        state.status = "loading"
+        if (state.status !== "succeeded") state.status = "loading"
         state.error = null
       })
       .addCase(listProjects.fulfilled, (state, action) => {
         state.status = "succeeded"
-        state.projects = action.payload.data
+        state.projects = action.payload.data.projects
         state.error = null
       })
       .addCase(listProjects.rejected, (state, action) => {
         state.status = "failed"
         state.error = action.error.message || "Failed to list projects"
       })
+
+    builder
       .addCase(updateProject.pending, (state) => {
         state.status = "loading"
         state.error = null
@@ -76,13 +80,13 @@ export const projectsSlice = createSlice({
         state.status = "succeeded"
         state.error = null
         // Update the project in the projects list
-        if (state.projects?.projects) {
+        if (state.projects) {
           const { projectId, payload } = action.meta.arg
-          const projectIndex = state.projects.projects.findIndex((p) => p.id === projectId)
+          const projectIndex = state.projects.findIndex((p) => p.id === projectId)
           if (projectIndex !== -1) {
-            const existingProject = state.projects.projects[projectIndex]
+            const existingProject = state.projects[projectIndex]
             if (existingProject) {
-              state.projects.projects[projectIndex] = {
+              state.projects[projectIndex] = {
                 id: existingProject.id,
                 name: payload.name,
                 organizationId: existingProject.organizationId,
@@ -97,6 +101,8 @@ export const projectsSlice = createSlice({
         state.status = "failed"
         state.error = action.error.message || "Failed to update project"
       })
+
+    builder
       .addCase(deleteProject.pending, (state) => {
         state.status = "loading"
         state.error = null
@@ -105,8 +111,8 @@ export const projectsSlice = createSlice({
         state.status = "succeeded"
         state.error = null
         // Remove the project from the projects list
-        if (state.projects?.projects) {
-          state.projects.projects = state.projects.projects.filter((p) => p.id !== action.meta.arg)
+        if (state.projects) {
+          state.projects = state.projects.filter((p) => p.id !== action.meta.arg)
         }
       })
       .addCase(deleteProject.rejected, (state, action) => {

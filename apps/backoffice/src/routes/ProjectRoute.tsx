@@ -1,23 +1,26 @@
 import { useEffect } from "react"
-import { useLoaderData, useOutlet } from "react-router-dom"
+import { useOutlet, useParams } from "react-router-dom"
 import { ChatBotsList } from "@/components/chat-bots/ChatBotsList"
 import { useSidebarLayout } from "@/components/layouts/sidebar/context"
-import type { ProjectAndChatBotsLoaderData } from "./loaders/load-project"
+import { selectChatBots } from "@/features/chat-bots/chat-bots.selectors"
+import { selectCurrentProject } from "@/features/projects/projects.selectors"
+import { useAppSelector } from "@/store/hooks"
 import { NotFoundRoute } from "./NotFoundRoute"
 
 export function ProjectRoute() {
+  const { projectId } = useParams()
   const outlet = useOutlet()
 
-  const data = useLoaderData<ProjectAndChatBotsLoaderData>()
-  const project = data?.project
-  const chatBots = data?.chatBots || []
+  const project = useAppSelector(selectCurrentProject(projectId))
+  const chatBots = useAppSelector(selectChatBots(projectId)) || []
 
   const { setHeaderTitle } = useSidebarLayout()
   const headerTitle = project ? `${project.name} - Chat Bots` : "Dashboard"
 
   useEffect(() => {
+    if (outlet) return
     setHeaderTitle(headerTitle)
-  }, [headerTitle, setHeaderTitle])
+  }, [outlet, headerTitle, setHeaderTitle])
 
   if (!project) return <NotFoundRoute />
 

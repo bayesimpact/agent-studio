@@ -117,17 +117,9 @@ export function ChatBotsList({
         </div>
       )}
 
-      <EditChatBotDialog
-        chatBot={editingChatBot}
-        projectId={project.id}
-        onClose={() => setEditingChatBot(null)}
-      />
+      <EditChatBotDialog chatBot={editingChatBot} onClose={() => setEditingChatBot(null)} />
 
-      <DeleteChatBotDialog
-        chatBot={deletingChatBot}
-        projectId={project.id}
-        onClose={() => setDeletingChatBot(null)}
-      />
+      <DeleteChatBotDialog chatBot={deletingChatBot} onClose={() => setDeletingChatBot(null)} />
     </div>
   )
 }

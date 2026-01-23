@@ -35,8 +35,6 @@ export function CreateChatBotForm({ projectId, onSuccess }: CreateChatBotFormPro
 
   return (
     <ChatBotForm
-      defaultName=""
-      defaultPrompt=""
       isLoading={isLoading}
       error={error}
       onSubmit={handleSubmit}

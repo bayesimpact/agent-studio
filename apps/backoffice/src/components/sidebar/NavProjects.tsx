@@ -1,15 +1,28 @@
 "use client"
 
-import type { ProjectDto } from "@caseai-connect/api-contracts"
+import type { ChatBotDto, ProjectDto } from "@caseai-connect/api-contracts"
 import { Section } from "@caseai-connect/ui/components/layouts/sidebar/Section"
 import { SidebarMenu } from "@caseai-connect/ui/shad/sidebar"
 import { useState } from "react"
 import { selectCurrentOrganization } from "@/features/organizations/organizations.selectors"
 import { useAppSelector } from "@/store/hooks"
+import { DeleteChatBotDialog } from "../chat-bots/DeleteChatBotDialog"
+import { EditChatBotDialog } from "../chat-bots/EditChatBotDialog"
 import { CreateProjectButton } from "./projects/CreateProjectButton"
 import { DeleteProjectDialog } from "./projects/DeleteProjectDialog"
 import { EditProjectDialog } from "./projects/EditProjectDialog"
 import { ProjectListItem } from "./projects/ProjectListItem"
+
+type Item = { action: "edit" | "delete" } & (
+  | {
+      type: "project"
+      value: ProjectDto
+    }
+  | {
+      type: "chatBot"
+      value: ChatBotDto
+    }
+)
 
 export function NavProjects({
   projects,
@@ -20,22 +33,18 @@ export function NavProjects({
 }) {
   const currentOrganization = useAppSelector(selectCurrentOrganization(organizationId))
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
-  const [editingProject, setEditingProject] = useState<ProjectDto | null>(null)
-  const [deletingProject, setDeletingProject] = useState<ProjectDto | null>(null)
+
+  const [item, setItem] = useState<Item | null>(null)
 
   if (!currentOrganization) {
     return null
   }
 
-  const handleEdit = (id: string) => {
-    const project = projects.find((p) => p.id === id) || null
-    setEditingProject(project)
+  const handleItem = (item: Item) => {
+    setItem(item)
   }
 
-  const handleDelete = (id: string) => {
-    const project = projects.find((p) => p.id === id) || null
-    setDeletingProject(project)
-  }
+  const handleClose = () => setItem(null)
 
   return (
     <Section name="Projects" className="group-data-[collapsible=icon]:hidden">
@@ -54,8 +63,18 @@ export function NavProjects({
                 key={project.id}
                 project={project}
                 organizationId={currentOrganization.id}
-                onEdit={() => handleEdit(project.id)}
-                onDelete={() => handleDelete(project.id)}
+                onEditItem={(item) =>
+                  handleItem({
+                    action: "edit",
+                    ...item,
+                  })
+                }
+                onDeleteItem={(item) =>
+                  handleItem({
+                    action: "delete",
+                    ...item,
+                  })
+                }
               />
             ))}
           </SidebarMenu>
@@ -70,15 +89,23 @@ export function NavProjects({
       )}
 
       <EditProjectDialog
-        project={editingProject}
+        project={item?.type === "project" && item.action === "edit" ? item.value : null}
         organizationId={currentOrganization.id}
-        onClose={() => setEditingProject(null)}
+        onClose={handleClose}
+      />
+      <DeleteProjectDialog
+        project={item?.type === "project" && item.action === "delete" ? item.value : null}
+        organizationId={currentOrganization.id}
+        onClose={handleClose}
       />
 
-      <DeleteProjectDialog
-        project={deletingProject}
-        organizationId={currentOrganization.id}
-        onClose={() => setDeletingProject(null)}
+      <EditChatBotDialog
+        chatBot={item?.type === "chatBot" && item.action === "edit" ? item.value : null}
+        onClose={handleClose}
+      />
+      <DeleteChatBotDialog
+        chatBot={item?.type === "chatBot" && item.action === "delete" ? item.value : null}
+        onClose={handleClose}
       />
     </Section>
   )

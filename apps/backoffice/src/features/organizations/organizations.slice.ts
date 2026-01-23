@@ -33,10 +33,11 @@ export const organizationsSlice = createSlice({
     reset: () => initialState,
   },
   extraReducers: (builder) => {
+    builder.addCase(fetchMe.fulfilled, (state, action) => {
+      state.organizations = action.payload.data.organizations
+    })
+
     builder
-      .addCase(fetchMe.fulfilled, (state, action) => {
-        state.organizations = action.payload.data.organizations
-      })
       .addCase(createOrganization.pending, (state) => {
         state.status = "loading"
         state.error = null
