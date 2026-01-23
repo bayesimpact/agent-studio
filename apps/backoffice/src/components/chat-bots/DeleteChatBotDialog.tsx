@@ -16,11 +16,10 @@ import { useAppDispatch, useAppSelector } from "@/store/hooks"
 
 interface DeleteChatBotDialogProps {
   chatBot: ChatBotDto | null
-  projectId: string
   onClose: () => void
 }
 
-export function DeleteChatBotDialog({ chatBot, projectId, onClose }: DeleteChatBotDialogProps) {
+export function DeleteChatBotDialog({ chatBot, onClose }: DeleteChatBotDialogProps) {
   const dispatch = useAppDispatch()
   const status = useAppSelector(selectChatBotsStatus)
 
@@ -33,7 +32,7 @@ export function DeleteChatBotDialog({ chatBot, projectId, onClose }: DeleteChatB
       await dispatch(deleteChatBot(chatBot.id)).unwrap()
       toast.success("ChatBot deleted successfully")
       onClose()
-      dispatch(listChatBots(projectId))
+      dispatch(listChatBots(chatBot.projectId))
     } catch (err) {
       const errorMessage = (err as { message?: string })?.message || "Failed to delete chat bot"
       toast.error(errorMessage)

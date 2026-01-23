@@ -17,8 +17,10 @@ const chatBotSchema = z.object({
 type ChatBotFormData = z.infer<typeof chatBotSchema>
 
 interface ChatBotFormProps {
-  defaultName?: string
-  defaultPrompt?: string
+  defaultValues?: {
+    name: string
+    defaultPrompt: string
+  }
   isLoading: boolean
   error: string | null
   onSubmit: (values: ChatBotFormData) => Promise<void> | void
@@ -27,8 +29,7 @@ interface ChatBotFormProps {
 }
 
 export function ChatBotForm({
-  defaultName,
-  defaultPrompt,
+  defaultValues = { name: "", defaultPrompt: "" },
   isLoading,
   error,
   onSubmit,
@@ -42,10 +43,7 @@ export function ChatBotForm({
     reset,
   } = useForm<ChatBotFormData>({
     resolver: zodResolver(chatBotSchema),
-    defaultValues: {
-      name: defaultName ?? "",
-      defaultPrompt: defaultPrompt ?? "",
-    },
+    defaultValues,
   })
 
   const handleFormSubmit = async (data: ChatBotFormData) => {

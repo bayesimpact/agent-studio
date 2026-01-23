@@ -6,7 +6,7 @@ import { createSlice } from "@reduxjs/toolkit"
 import { createChatBot, deleteChatBot, listChatBots, updateChatBot } from "./chat-bots.thunks"
 
 interface ChatBotsState {
-  chatBots: Record<string, ListChatBotsResponseDto | null> // keyed by projectId
+  chatBots: Record<string, ListChatBotsResponseDto["chatBots"] | null> // keyed by projectId
   createdChatBot: CreateChatBotResponseDto | null
   status: "idle" | "loading" | "succeeded" | "failed"
   error: string | null
@@ -34,19 +34,21 @@ export const chatBotsSlice = createSlice({
   extraReducers: (builder) => {
     builder
       .addCase(listChatBots.pending, (state) => {
-        state.status = "loading"
+        if (state.status !== "succeeded") state.status = "loading"
         state.error = null
       })
       .addCase(listChatBots.fulfilled, (state, action) => {
         state.status = "succeeded"
         const projectId = action.meta.arg
-        state.chatBots[projectId] = action.payload.data
+        state.chatBots[projectId] = action.payload.data.chatBots
         state.error = null
       })
       .addCase(listChatBots.rejected, (state, action) => {
         state.status = "failed"
         state.error = action.error.message || "Failed to list chat bots"
       })
+
+    builder
       .addCase(createChatBot.pending, (state) => {
         state.status = "loading"
         state.error = null
@@ -57,8 +59,8 @@ export const chatBotsSlice = createSlice({
         state.error = null
         // Add the new chat bot to the list
         const projectId = action.payload.data.projectId
-        if (state.chatBots[projectId]?.chatBots) {
-          state.chatBots[projectId]!.chatBots.unshift({
+        if (state.chatBots[projectId]) {
+          state.chatBots[projectId].unshift({
             id: action.payload.data.id,
             name: action.payload.data.name,
             defaultPrompt: action.payload.data.defaultPrompt,
@@ -72,6 +74,8 @@ export const chatBotsSlice = createSlice({
         state.status = "failed"
         state.error = action.error.message || "Failed to create chat bot"
       })
+
+    builder
       .addCase(updateChatBot.pending, (state) => {
         state.status = "loading"
         state.error = null
@@ -83,14 +87,12 @@ export const chatBotsSlice = createSlice({
         const { chatBotId, payload } = action.meta.arg
         // Find which project this chat bot belongs to
         for (const projectId in state.chatBots) {
-          if (state.chatBots[projectId]?.chatBots) {
-            const templateIndex = state.chatBots[projectId]!.chatBots.findIndex(
-              (t) => t.id === chatBotId,
-            )
+          if (state.chatBots[projectId]) {
+            const templateIndex = state.chatBots[projectId].findIndex((t) => t.id === chatBotId)
             if (templateIndex !== -1) {
-              const existingTemplate = state.chatBots[projectId]!.chatBots[templateIndex]
+              const existingTemplate = state.chatBots[projectId][templateIndex]
               if (existingTemplate) {
-                state.chatBots[projectId]!.chatBots[templateIndex] = {
+                state.chatBots[projectId][templateIndex] = {
                   id: existingTemplate.id,
                   name: payload.name ?? existingTemplate.name,
                   defaultPrompt: payload.defaultPrompt ?? existingTemplate.defaultPrompt,
@@ -108,6 +110,8 @@ export const chatBotsSlice = createSlice({
         state.status = "failed"
         state.error = action.error.message || "Failed to update chat bot"
       })
+
+    builder
       .addCase(deleteChatBot.pending, (state) => {
         state.status = "loading"
         state.error = null
@@ -119,8 +123,8 @@ export const chatBotsSlice = createSlice({
         // We need to find which project it belongs to and remove it from that project's list
         const deletedTemplateId = action.meta.arg
         for (const projectId in state.chatBots) {
-          if (state.chatBots[projectId]?.chatBots) {
-            state.chatBots[projectId]!.chatBots = state.chatBots[projectId]!.chatBots.filter(
+          if (state.chatBots[projectId]) {
+            state.chatBots[projectId] = state.chatBots[projectId].filter(
               (t) => t.id !== deletedTemplateId,
             )
           }

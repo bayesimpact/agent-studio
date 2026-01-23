@@ -14,11 +14,10 @@ import { UpdateChatBotForm } from "./UpdateChatBotForm"
 
 interface EditChatBotDialogProps {
   chatBot: ChatBotDto | null
-  projectId: string
   onClose: () => void
 }
 
-export function EditChatBotDialog({ chatBot, projectId, onClose }: EditChatBotDialogProps) {
+export function EditChatBotDialog({ chatBot, onClose }: EditChatBotDialogProps) {
   const dispatch = useAppDispatch()
 
   if (!chatBot) {
@@ -27,7 +26,7 @@ export function EditChatBotDialog({ chatBot, projectId, onClose }: EditChatBotDi
 
   const handleSuccess = () => {
     onClose()
-    dispatch(listChatBots(projectId))
+    dispatch(listChatBots(chatBot.projectId))
   }
 
   return (

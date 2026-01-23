@@ -1,16 +1,16 @@
 import { useEffect } from "react"
-import { useLoaderData, useNavigate, useParams } from "react-router-dom"
+import { useNavigate, useParams } from "react-router-dom"
 import { DashboardLayout } from "@/components/DashboardLayout"
 import { selectMe, selectMeStatus } from "@/features/me/me.selectors"
 import { selectOrganizations } from "@/features/organizations/organizations.selectors"
+import { selectProjects } from "@/features/projects/projects.selectors"
 import { LoadingRoute } from "@/routes/LoadingRoute"
 import { useAppSelector } from "@/store/hooks"
 import { meStateToUser } from "@/utils/to-user"
-import type { ProjectsLoaderData } from "./loaders/load-projects"
 
 export function DashboardRoute() {
   const { organizationId } = useParams<{ organizationId: string }>()
-  const projects = useLoaderData<ProjectsLoaderData>()
+  const projects = useAppSelector(selectProjects)
   const navigate = useNavigate()
   const organizations = useAppSelector(selectOrganizations)
   const meStatus = useAppSelector(selectMeStatus)

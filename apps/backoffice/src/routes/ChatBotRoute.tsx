@@ -1,10 +1,12 @@
 import { useEffect } from "react"
-import { useLoaderData } from "react-router-dom"
+import { useParams } from "react-router-dom"
 import { useSidebarLayout } from "@/components/layouts/sidebar/context"
-import type { ChatBotLoaderData } from "./loaders/load-chat-bot"
+import { selectCurrentChatBot } from "@/features/chat-bots/chat-bots.selectors"
+import { useAppSelector } from "@/store/hooks"
 
 export function ChatBotRoute() {
-  const chatBot = useLoaderData<ChatBotLoaderData>()
+  const { chatBotId, projectId } = useParams()
+  const chatBot = useAppSelector(selectCurrentChatBot({ projectId, chatBotId }))
 
   const { setHeaderTitle } = useSidebarLayout()
   const headerTitle = chatBot ? `Chat Bot - ${chatBot.name}` : "Chat Bot"
