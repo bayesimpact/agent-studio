@@ -9,8 +9,8 @@ import {
 } from "@google/genai"
 import { Injectable } from "@nestjs/common"
 import { Langfuse } from "langfuse"
-import type { ChatSession } from "../chat/models/chat-session.model"
 import type { AIServiceProvider } from "../common/interfaces/ai-service.interface"
+import type { ChatSession } from "../legacy-chat/models/chat-session.model"
 
 @Injectable()
 export class AIService {
