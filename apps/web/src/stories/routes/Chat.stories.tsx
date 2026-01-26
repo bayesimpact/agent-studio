@@ -22,6 +22,10 @@ type Message = {
   content: string
 }
 
+type StoryArgs = {
+  messages: Message[]
+}
+
 const meta = {
   title: "components/Chat",
   decorators: [withRouter],
@@ -43,17 +47,18 @@ const meta = {
       },
     ],
   },
-} satisfies Meta<unknown>
+} satisfies Meta<StoryArgs>
 
 export default meta
 type Story = StoryObj<typeof meta>
 
 export const Default: Story = {
-  render: (args: { messages: Message[] }) => {
-    const [messages, setMessages] = useState(args.messages)
+  render: (args) => {
+    const typedArgs = args as StoryArgs
+    const [messages, setMessages] = useState<Message[]>(typedArgs.messages)
 
     const handleSubmit = (value: string) => {
-      setMessages((prev) => [
+      setMessages((prev: Message[]) => [
         ...prev,
         { id: String(prev.length + 1), role: "user", content: value },
       ])
@@ -64,7 +69,7 @@ export const Default: Story = {
           <Chat>
             <ChatHeader />
             <ChatContent>
-              {messages.map((msg) =>
+              {messages.map((msg: Message) =>
                 msg.role === "bot" ? (
                   <ChatBotMessage key={msg.id}>{msg.content}</ChatBotMessage>
                 ) : (
