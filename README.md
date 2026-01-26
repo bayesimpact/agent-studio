@@ -1,6 +1,6 @@
 # CaseAI Connect
 
-A SaaS platform built as a Turbo monorepo with a NestJS API and React backoffice, using Auth0 for authentication.
+A SaaS platform built as a Turbo monorepo with a NestJS API and React web frontend, using Auth0 for authentication.
 
 ## Prerequisites
 
@@ -103,10 +103,10 @@ AUTH0_AUDIENCE=https://bayes-impact.eu.auth0.com/api/v2/
 - `GOOGLE_APPLICATION_CREDENTIALS` - Path to Google Cloud service account key (for AI features)
 - `LANGFUSE_*` - Langfuse configuration (for AI observability)
 
-#### Backoffice Environment Variables
+#### Web Environment Variables
 
 ```bash
-cd apps/backoffice
+cd apps/web
 cp .env-example .env
 ```
 
@@ -163,14 +163,14 @@ npm run dev
 
 The API will be available at `http://localhost:3000`.
 
-**Backoffice:**
+**Web frontend:**
 
 ```bash
-cd apps/backoffice
+cd apps/web
 npm run dev
 ```
 
-The backoffice will typically run on a different port (check the console output).
+The web frontend will typically run on a different port (check the console output).
 
 ## Running Tests
 
@@ -328,7 +328,7 @@ npm run typecheck
 caseai-connect/
 ├── apps/
 │   ├── api/              # NestJS API
-│   ├── backoffice/       # React backoffice
+│   ├── web/              # React web frontend
 │   └── mcp-server/       # MCP server for Claude Desktop
 ├── packages/
 │   ├── api/              # Shared API types and DTOs

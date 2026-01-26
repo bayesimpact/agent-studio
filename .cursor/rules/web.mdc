@@ -1,11 +1,11 @@
 ---
-description: Rules for the React Backoffice frontend application (apps/backoffice)
+description: Rules for the React Web frontend application (apps/web)
 globs:
-  - "apps/backoffice/**/*"
+  - "apps/web/**/*"
 alwaysApply: false
 ---
 
-# Cursor Agent Rules for CaseAI Connect - Backoffice
+# Cursor Agent Rules for CaseAI Connect - Web
 
 ## Redux Architecture
 
@@ -160,12 +160,12 @@ if (isExpectedType(unknownValue)) {
 
 ### Required Checks Before Marking Work as Completed
 
-**Rule**: When working on the backoffice frontend application (`apps/backoffice`), you MUST run both `npm run biome:check` and `npm run typecheck` to confirm that your changes didn't break anything before marking the task as finished.
+**Rule**: When working on the web frontend application (`apps/web`), you MUST run both `npm run biome:check` and `npm run typecheck` to confirm that your changes didn't break anything before marking the task as finished.
 
 **Why**: The frontend application is particularly sensitive to type errors and formatting issues that can break the build or cause runtime errors. These checks must pass before considering the work complete.
 
 **Required Steps**:
-1. After making changes to backoffice code, run `npm run biome:check`
+1. After making changes to web code, run `npm run biome:check`
 2. Then run `npm run typecheck`
 3. Fix any errors or warnings that appear
 4. Only mark the task as complete when both commands pass successfully

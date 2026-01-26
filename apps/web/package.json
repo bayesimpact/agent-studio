@@ -1,5 +1,5 @@
 {
-  "name": "@caseai-connect/backoffice",
+  "name": "@caseai-connect/web",
   "private": true,
   "version": "0.0.0",
   "type": "module",
