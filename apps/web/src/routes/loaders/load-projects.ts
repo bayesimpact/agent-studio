@@ -16,13 +16,17 @@ export const loadProjects = async ({
   const { organizationId } = params
   if (!organizationId) return null
 
-  const {
-    data: { projects },
-  } = await dispatch(listProjects(organizationId)).unwrap()
+  try {
+    const {
+      data: { projects },
+    } = await dispatch(listProjects(organizationId)).unwrap()
 
-  // Automatically load the only project if there's just one
-  if (projects.length === 1)
-    loadProjectAndChatBots({ dispatch, params: { ...params, projectId: projects[0]!.id } })
+    // Automatically load the only project if there's just one
+    if (projects.length === 1)
+      loadProjectAndChatBots({ dispatch, params: { ...params, projectId: projects[0]!.id } })
 
-  return projects
+    return projects
+  } catch (error) {
+    throw new Error("Failed to load projects", error as Error)
+  }
 }

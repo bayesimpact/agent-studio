@@ -85,7 +85,7 @@ export function CreateOrganizationForm() {
               {error && !errors.name && <p className="text-sm text-destructive">{error}</p>}
             </div>
           </CardContent>
-          <CardFooter>
+          <CardFooter className="mt-2">
             <Button type="submit" disabled={isLoading} className="w-full">
               {isLoading ? "Creating..." : "Create Organization"}
             </Button>

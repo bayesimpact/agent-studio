@@ -6,6 +6,7 @@ export enum RouteNames {
   ORGANIZATION_DASHBOARD = "/o/:organizationId",
   PROJECT = "/o/:organizationId/p/:projectId",
   CHAT_BOT = "/o/:organizationId/p/:projectId/cb/:chatBotId",
+  USER_CHAT = "/chat/:chatSessionId",
 }
 
 export const buildOrganizationPath = (organizationId: string) => {
@@ -32,4 +33,8 @@ export const buildChatBotPath = ({
   chatBotId: string
 }) => {
   return `/o/${organizationId}/p/${projectId}/cb/${chatBotId}`
+}
+
+export const buildUserChatPath = ({ chatSessionId }: { chatSessionId: string }) => {
+  return `/chat/${chatSessionId}`
 }

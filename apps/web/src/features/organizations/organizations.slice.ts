@@ -3,7 +3,7 @@ import { createSlice } from "@reduxjs/toolkit"
 import { fetchMe } from "@/features/me/me.thunks"
 import { createOrganization } from "./organizations.thunks"
 
-interface Organization {
+export interface Organization {
   id: string
   name: string
   role: string
