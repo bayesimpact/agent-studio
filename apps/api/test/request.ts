@@ -16,8 +16,6 @@ export const testRequester =
 
     const path = getPath()
 
-    console.warn("AJ: method", method)
-    console.warn("AJ: path", path)
     const req = request(app.getHttpServer())[method](path)
 
     // Attach request body for methods that support it
