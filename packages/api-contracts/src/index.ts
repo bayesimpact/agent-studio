@@ -1,7 +1,6 @@
 // Generic DTOs
 
 // API Routes (default export)
-export { default as ApiRoutes } from "./api-routes/index"
 // Chat DTOs - kept in packages/api-contracts for now
 export type { CreateChatSessionResponseDto } from "./chat/dto/create-chat-session.dto"
 export type { MessageDto } from "./chat/dto/message.dto"

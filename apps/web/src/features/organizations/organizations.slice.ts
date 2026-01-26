@@ -34,7 +34,7 @@ export const organizationsSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder.addCase(fetchMe.fulfilled, (state, action) => {
-      state.organizations = action.payload.data.organizations
+      state.organizations = action.payload.organizations
     })
 
     builder

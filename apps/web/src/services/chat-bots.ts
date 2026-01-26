@@ -1,5 +1,5 @@
 import {
-  ApiRoutes,
+  ChatBotsRoutes,
   type CreateChatBotRequestDto,
   type CreateChatBotResponseDto,
   type ListChatBotsResponseDto,
@@ -17,8 +17,8 @@ export interface IChatBotsApi {
 export const buildChatBotsApi = (axios: AxiosInstance): IChatBotsApi => ({
   listChatBots: async (projectId: string) => {
     try {
-      const response = await axios.get<typeof ApiRoutes.ChatBotsRoutes.listChatBots.response>(
-        ApiRoutes.ChatBotsRoutes.listChatBots.getPath({
+      const response = await axios.get<typeof ChatBotsRoutes.listChatBots.response>(
+        ChatBotsRoutes.listChatBots.getPath({
           projectId,
         }),
       )
@@ -29,8 +29,8 @@ export const buildChatBotsApi = (axios: AxiosInstance): IChatBotsApi => ({
   },
   createChatBot: async (payload: CreateChatBotRequestDto) => {
     try {
-      const response = await axios.post<typeof ApiRoutes.ChatBotsRoutes.createChatBot.response>(
-        ApiRoutes.ChatBotsRoutes.createChatBot.getPath(),
+      const response = await axios.post<typeof ChatBotsRoutes.createChatBot.response>(
+        ChatBotsRoutes.createChatBot.getPath(),
         {
           payload,
         },
@@ -42,14 +42,14 @@ export const buildChatBotsApi = (axios: AxiosInstance): IChatBotsApi => ({
   },
   updateChatBot: async (chatBotId: string, payload: UpdateChatBotRequestDto) => {
     try {
-      await axios.patch(ApiRoutes.ChatBotsRoutes.updateChatBot.getPath({ chatBotId }), { payload })
+      await axios.patch(ChatBotsRoutes.updateChatBot.getPath({ chatBotId }), { payload })
     } catch (apiError) {
       return Promise.reject(apiError as AxiosError)
     }
   },
   deleteChatBot: async (chatBotId: string) => {
     try {
-      await axios.delete(ApiRoutes.ChatBotsRoutes.deleteChatBot.getPath({ chatBotId }))
+      await axios.delete(ChatBotsRoutes.deleteChatBot.getPath({ chatBotId }))
     } catch (apiError) {
       return Promise.reject(apiError as AxiosError)
     }
