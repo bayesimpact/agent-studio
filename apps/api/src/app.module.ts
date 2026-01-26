@@ -4,6 +4,7 @@ import { TypeOrmModule } from "@nestjs/typeorm"
 
 import { AuthModule } from "./auth/auth.module"
 import { ChatBotsModule } from "./chat-bots/chat-bots.module"
+import { ChatSessionsModule } from "./chat-sessions/chat-sessions.module"
 import typeorm from "./config/typeorm"
 import { MeModule } from "./me/me.module"
 import { OrganizationsModule } from "./organizations/organizations.module"
@@ -28,6 +29,7 @@ import { UsersModule } from "./users/users.module"
     OrganizationsModule,
     ProjectsModule,
     ChatBotsModule,
+    ChatSessionsModule,
     MeModule,
   ],
 })
