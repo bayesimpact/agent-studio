@@ -13,6 +13,6 @@ export const createOrganization = createAsyncThunk<
   CreateOrganizationRequestDto,
   ThunkConfig
 >("organizations/create", async (payload, { extra }) => {
-  const data = await extra.api.organizations.createOrganization(payload)
+  const data = await extra.services.organizations.createOrganization(payload)
   return { data }
 })

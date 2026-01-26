@@ -1,20 +1,14 @@
 import axios from "axios"
-import { Auth0AuthenticationError, getAccessToken, logoutAuth0 } from "./auth0Client"
-import { buildChatBotsApi, type IChatBotsApi } from "./chat-bots"
-import { buildMeApi, type IMeApi } from "./me"
-import { buildOrganizationsApi, type IOrganizationsApi } from "./organizations"
-import { buildProjectsApi, type IProjectsApi } from "./projects"
-import { buildTestApi, type ITestApi } from "./test"
+import type { Services } from "@/di/services"
+import { buildMeApi } from "@/features/me/external/me.api"
+import { Auth0AuthenticationError, getAccessToken, logoutAuth0 } from "../services/auth0Client"
+import { buildChatBotsApi } from "../services/chat-bots"
+import { buildOrganizationsApi } from "../services/organizations"
+import { buildProjectsApi } from "../services/projects"
+import { buildTestApi } from "../services/test"
 
-export type IApi = {
-  test: ITestApi
-  me: IMeApi
-  organizations: IOrganizationsApi
-  projects: IProjectsApi
-  chatBots: IChatBotsApi
-}
-
-const buildApi = ({ baseURL }: { baseURL: string }): IApi => {
+// TODO: create a singleton axios instance shared across the app
+const initServices = ({ baseURL }: { baseURL: string }): Services => {
   const axiosInstance = axios.create({ baseURL: `${baseURL}/` })
 
   // Set up request interceptor to automatically inject Auth0 access token
@@ -92,4 +86,4 @@ const buildApi = ({ baseURL }: { baseURL: string }): IApi => {
   }
 }
 
-export const api = buildApi({ baseURL: import.meta.env.VITE_API_URL as string })
+export const services = initServices({ baseURL: import.meta.env.VITE_API_URL as string })
