@@ -16,6 +16,9 @@ import { LoadingRoute } from "./LoadingRoute"
 import { loadChatBot } from "./loaders/load-chat-bot"
 import { loadProjectAndChatBots } from "./loaders/load-project"
 import { loadProjects } from "./loaders/load-projects"
+import { OrganizationsHoc } from "./OrganizationsHoc"
+import { UserChatRoute } from "./UserChatRoute"
+import { UserHoc } from "./UserHoc"
 
 const router = (dispatch: AppDispatch) =>
   createBrowserRouter([
@@ -47,9 +50,18 @@ const router = (dispatch: AppDispatch) =>
       path: RouteNames.ORGANIZATION_DASHBOARD,
       loader: async ({ params }) => loadProjects({ dispatch, params }),
       hydrateFallbackElement: <LoadingRoute />,
+      errorElement: <NotFoundRoute />,
       element: (
         <ProtectedRoute>
-          <DashboardRoute />
+          <UserHoc>
+            {(user) => {
+              return (
+                <OrganizationsHoc>
+                  {(_organizations) => <DashboardRoute user={user} />}
+                </OrganizationsHoc>
+              )
+            }}
+          </UserHoc>
         </ProtectedRoute>
       ),
       children: [
@@ -61,17 +73,34 @@ const router = (dispatch: AppDispatch) =>
           path: RouteNames.PROJECT,
           loader: async ({ params }) => loadProjectAndChatBots({ dispatch, params }),
           hydrateFallbackElement: <LoadingRoute />,
+          errorElement: <NotFoundRoute />,
           element: <ProjectRoute />,
           children: [
             {
               path: RouteNames.CHAT_BOT,
               loader: async ({ params }) => loadChatBot({ dispatch, params }),
+              errorElement: <NotFoundRoute />,
               hydrateFallbackElement: <LoadingRoute />,
               element: <ChatBotRoute />,
             },
           ],
         },
       ],
+    },
+    {
+      path: RouteNames.USER_CHAT,
+      // loader: async ({ params }) => loadProjects({ dispatch, params }), // TODO:
+      hydrateFallbackElement: <LoadingRoute />,
+      errorElement: <NotFoundRoute />,
+      element: (
+        <ProtectedRoute>
+          <UserHoc>
+            {(user) => {
+              return <UserChatRoute user={user} />
+            }}
+          </UserHoc>
+        </ProtectedRoute>
+      ),
     },
     {
       path: "*",

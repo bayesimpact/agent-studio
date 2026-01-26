@@ -16,16 +16,20 @@ export const loadProjectAndChatBots = async ({
   const { organizationId, projectId } = params
   if (!organizationId || !projectId) return null
 
-  const {
-    data: { projects },
-  } = await dispatch(listProjects(organizationId)).unwrap()
-  const project = projects.find((p) => p.id === projectId)
+  try {
+    const {
+      data: { projects },
+    } = await dispatch(listProjects(organizationId)).unwrap()
+    const project = projects.find((p) => p.id === projectId)
 
-  if (!project) return null
+    if (!project) return null
 
-  const {
-    data: { chatBots },
-  } = await dispatch(listChatBots(project.id)).unwrap()
+    const {
+      data: { chatBots },
+    } = await dispatch(listChatBots(project.id)).unwrap()
 
-  return { project, chatBots }
+    return { project, chatBots }
+  } catch (error) {
+    throw new Error("Failed to load project and chat bots", error as Error)
+  }
 }

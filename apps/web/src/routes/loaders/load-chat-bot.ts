@@ -15,11 +15,15 @@ export const loadChatBot = async ({
   const { projectId, chatBotId } = params
   if (!projectId || !chatBotId) return null
 
-  const {
-    data: { chatBots },
-  } = await dispatch(listChatBots(projectId)).unwrap()
-  const chatBot = chatBots.find((cb) => cb.id === chatBotId)
+  try {
+    const {
+      data: { chatBots },
+    } = await dispatch(listChatBots(projectId)).unwrap()
+    const chatBot = chatBots.find((cb) => cb.id === chatBotId)
 
-  if (chatBot) return chatBot
-  return null
+    if (chatBot) return chatBot
+    return null
+  } catch (error) {
+    throw new Error("Failed to load chat bot", error as Error)
+  }
 }
