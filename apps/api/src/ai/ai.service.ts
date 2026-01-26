@@ -10,7 +10,22 @@ import {
 import { Injectable } from "@nestjs/common"
 import { Langfuse } from "langfuse"
 import type { AIServiceProvider } from "../common/interfaces/ai-service.interface"
-import type { ChatSession } from "../legacy-chat/models/chat-session.model"
+
+// Temporary type - will be replaced with proper ChatSession entity
+type ChatSession = {
+  id: string
+  messages: Array<{
+    sender: "user" | "assistant" | "tool"
+    content: string | null
+    toolCalls?: Array<{
+      name: string
+      arguments: Record<string, unknown>
+    }>
+    timestamp: Date
+  }>
+  country: "fr" | "us"
+  createdAt: Date
+}
 
 @Injectable()
 export class AIService {

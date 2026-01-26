@@ -1,8 +1,6 @@
 // Generic DTOs
 
 // API Routes (default export)
-// Chat DTOs - kept in packages/api-contracts for now
-export type * from "./chat/dto/chat.dto"
 // Chat Bots DTOs
 export type * from "./chat-bots/chat-bots.dto"
 export { ChatBotsRoutes } from "./chat-bots/chat-bots.routes"

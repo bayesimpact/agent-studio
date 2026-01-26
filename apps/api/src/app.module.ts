@@ -5,7 +5,6 @@ import { TypeOrmModule } from "@nestjs/typeorm"
 import { AuthModule } from "./auth/auth.module"
 import { ChatBotsModule } from "./chat-bots/chat-bots.module"
 import typeorm from "./config/typeorm"
-import { ChatModule } from "./legacy-chat/chat.module"
 import { MeModule } from "./me/me.module"
 import { OrganizationsModule } from "./organizations/organizations.module"
 import { ProjectsModule } from "./projects/projects.module"
@@ -24,7 +23,6 @@ import { UsersModule } from "./users/users.module"
       useFactory: async (configService: ConfigService) => configService.get("typeorm")(),
     }),
     AuthModule,
-    ChatModule,
     ProtectedModule,
     UsersModule,
     OrganizationsModule,
