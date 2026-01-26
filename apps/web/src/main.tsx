@@ -3,8 +3,8 @@ import { StrictMode } from "react"
 import { createRoot } from "react-dom/client"
 import { Provider } from "react-redux"
 import App from "./App.tsx"
-import { auth0ProviderConfig } from "./config/auth0.config"
-import { store } from "./store"
+import { auth0ProviderConfig } from "./config/auth0.config.ts"
+import { store } from "./store/index.ts"
 import "./index.css"
 
 createRoot(document.getElementById("root")!).render(
