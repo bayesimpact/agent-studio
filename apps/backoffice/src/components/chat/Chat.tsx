@@ -95,7 +95,7 @@ function ChatFooter({
   className,
   children,
   ...props
-}: React.ComponentProps<"button"> & {
+}: React.ComponentProps<"div"> & {
   onMessageSubmit: (value: string) => void
 }) {
   const inputRef = React.useRef<HTMLTextAreaElement>(null)
@@ -150,7 +150,9 @@ function ChatFooter({
       }}
     >
       <div className="flex flex-1">
-        <button
+        {/** biome-ignore lint/a11y/useKeyWithClickEvents: to allow onClick on Div */}
+        {/** biome-ignore lint/a11y/noStaticElementInteractions: to allow onClick on Div */}
+        <div
           data-slot="chat-footer"
           className={cn(
             "flex-1 border-2 m-6 rounded-2xl flex items-center flex-col cursor-text",
@@ -161,7 +163,7 @@ function ChatFooter({
           onClick={handleClick}
         >
           {children}
-        </button>
+        </div>
       </div>
     </ChatFooterContext.Provider>
   )
