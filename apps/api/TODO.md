@@ -1,6 +1,6 @@
 # TODO
 ## Dtos
-- do not export 1 file per DTO (create-chat-bot.dto.ts, etc...)
+<!-- DONE - do not export 1 file per DTO (create-chat-bot.dto.ts, etc...) -->
 
 ## Dispatch
 - do not await dispatch on component to trigger another dispatch (ex: await dispatch(updateX) => dispatch(getX)) => solution: use middleware

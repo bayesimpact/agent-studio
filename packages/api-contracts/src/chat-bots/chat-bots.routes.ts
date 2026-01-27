@@ -1,8 +1,12 @@
 import type { RequestPayload, ResponseData } from "../generic"
 import { defineRoute } from "../helpers"
-import type { CreateChatBotRequestDto, CreateChatBotResponseDto } from "./dto/create-chat-bot.dto"
-import type { ListChatBotsResponseDto } from "./dto/list-chat-bots.dto"
-import type { UpdateChatBotRequestDto, UpdateChatBotResponseDto } from "./dto/update-chat-bot.dto"
+import type {
+  CreateChatBotRequestDto,
+  CreateChatBotResponseDto,
+  ListChatBotsResponseDto,
+  UpdateChatBotRequestDto,
+  UpdateChatBotResponseDto,
+} from "./dto/chat-bots.dto"
 
 export const ChatBotsRoutes = {
   createChatBot: defineRoute<
