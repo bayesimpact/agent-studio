@@ -1,4 +1,4 @@
-import type { Organization } from "../organizations/organizations.slice"
+import type { Organization } from "../organizations/organizations.models"
 
 export type User = {
   id: string

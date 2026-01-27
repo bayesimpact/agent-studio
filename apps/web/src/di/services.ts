@@ -1,14 +1,14 @@
-import { services } from "@/external/axios"
+import { services } from "@/external/axios.services"
 import type { IMeSpi } from "@/features/me/me.spi"
+import type { IOrganizationsSpi } from "@/features/organizations/organizations.spi"
 import type { IChatBotsApi } from "@/services/chat-bots"
-import type { IOrganizationsApi } from "@/services/organizations"
 import type { IProjectsApi } from "@/services/projects"
 import type { ITestApi } from "@/services/test"
 
 export type Services = {
   test: ITestApi
   me: IMeSpi
-  organizations: IOrganizationsApi
+  organizations: IOrganizationsSpi
   projects: IProjectsApi
   chatBots: IChatBotsApi
 }
