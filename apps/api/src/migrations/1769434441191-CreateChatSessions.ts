@@ -10,10 +10,10 @@ export class CreateChatSessions1769434441191 implements MigrationInterface {
   name = "CreateChatSessions1769434441191"
 
   public async up(queryRunner: QueryRunner): Promise<void> {
-    // Create chat_sessions table
+    // Create chat_session table
     await queryRunner.createTable(
       new Table({
-        name: "chat_sessions",
+        name: "chat_session",
         columns: [
           {
             name: "id",
@@ -66,37 +66,37 @@ export class CreateChatSessions1769434441191 implements MigrationInterface {
 
     // Add CHECK constraint for type column
     await queryRunner.query(
-      `ALTER TABLE "chat_sessions" ADD CONSTRAINT "CHK_chat_sessions_type" CHECK (type IN ('playground', 'production'))`,
+      `ALTER TABLE "chat_session" ADD CONSTRAINT "CHK_chat_session_type" CHECK (type IN ('playground', 'production'))`,
     )
 
     // Create indexes
     await queryRunner.createIndex(
-      "chat_sessions",
+      "chat_session",
       new TableIndex({
-        name: "IDX_chat_sessions_chatbot_type",
+        name: "IDX_chat_session_chatbot_type",
         columnNames: ["chatbot_id", "type"],
       }),
     )
 
     await queryRunner.createIndex(
-      "chat_sessions",
+      "chat_session",
       new TableIndex({
-        name: "IDX_chat_sessions_organization_type",
+        name: "IDX_chat_session_organization_type",
         columnNames: ["organization_id", "type"],
       }),
     )
 
     await queryRunner.createIndex(
-      "chat_sessions",
+      "chat_session",
       new TableIndex({
-        name: "IDX_chat_sessions_expires_at",
+        name: "IDX_chat_session_expires_at",
         columnNames: ["expires_at"],
       }),
     )
 
-    // Create foreign key from chat_sessions to chat_bots
+    // Create foreign key from chat_session to chat_bots
     await queryRunner.createForeignKey(
-      "chat_sessions",
+      "chat_session",
       new TableForeignKey({
         columnNames: ["chatbot_id"],
         referencedColumnNames: ["id"],
@@ -105,9 +105,9 @@ export class CreateChatSessions1769434441191 implements MigrationInterface {
       }),
     )
 
-    // Create foreign key from chat_sessions to users
+    // Create foreign key from chat_session to users
     await queryRunner.createForeignKey(
-      "chat_sessions",
+      "chat_session",
       new TableForeignKey({
         columnNames: ["user_id"],
         referencedColumnNames: ["id"],
@@ -116,9 +116,9 @@ export class CreateChatSessions1769434441191 implements MigrationInterface {
       }),
     )
 
-    // Create foreign key from chat_sessions to organizations
+    // Create foreign key from chat_session to organizations
     await queryRunner.createForeignKey(
-      "chat_sessions",
+      "chat_session",
       new TableForeignKey({
         columnNames: ["organization_id"],
         referencedColumnNames: ["id"],
@@ -130,7 +130,7 @@ export class CreateChatSessions1769434441191 implements MigrationInterface {
 
   public async down(queryRunner: QueryRunner): Promise<void> {
     // Drop foreign keys first
-    const chatSessionsTable = await queryRunner.getTable("chat_sessions")
+    const chatSessionsTable = await queryRunner.getTable("chat_session")
     if (chatSessionsTable) {
       const foreignKeyChatBot = chatSessionsTable.foreignKeys.find(
         (fk) => fk.columnNames.indexOf("chatbot_id") !== -1,
@@ -143,27 +143,27 @@ export class CreateChatSessions1769434441191 implements MigrationInterface {
       )
 
       if (foreignKeyChatBot) {
-        await queryRunner.dropForeignKey("chat_sessions", foreignKeyChatBot)
+        await queryRunner.dropForeignKey("chat_session", foreignKeyChatBot)
       }
       if (foreignKeyUser) {
-        await queryRunner.dropForeignKey("chat_sessions", foreignKeyUser)
+        await queryRunner.dropForeignKey("chat_session", foreignKeyUser)
       }
       if (foreignKeyOrg) {
-        await queryRunner.dropForeignKey("chat_sessions", foreignKeyOrg)
+        await queryRunner.dropForeignKey("chat_session", foreignKeyOrg)
       }
     }
 
     // Drop CHECK constraint
     await queryRunner.query(
-      `ALTER TABLE "chat_sessions" DROP CONSTRAINT IF EXISTS "CHK_chat_sessions_type"`,
+      `ALTER TABLE "chat_session" DROP CONSTRAINT IF EXISTS "CHK_chat_session_type"`,
     )
 
     // Drop indexes
-    await queryRunner.dropIndex("chat_sessions", "IDX_chat_sessions_chatbot_type")
-    await queryRunner.dropIndex("chat_sessions", "IDX_chat_sessions_organization_type")
-    await queryRunner.dropIndex("chat_sessions", "IDX_chat_sessions_expires_at")
+    await queryRunner.dropIndex("chat_session", "IDX_chat_session_chatbot_type")
+    await queryRunner.dropIndex("chat_session", "IDX_chat_session_organization_type")
+    await queryRunner.dropIndex("chat_session", "IDX_chat_session_expires_at")
 
     // Drop table
-    await queryRunner.dropTable("chat_sessions")
+    await queryRunner.dropTable("chat_session")
   }
 }

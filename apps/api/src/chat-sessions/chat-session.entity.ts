@@ -14,7 +14,7 @@ import { User } from "@/users/user.entity"
 
 export type ChatSessionType = "playground" | "production"
 
-@Entity("chat_sessions")
+@Entity("chat_session")
 @Index(["chatbotId", "type"])
 @Index(["organizationId", "type"])
 @Index(["expiresAt"])
@@ -37,7 +37,7 @@ export class ChatSession {
   @Column({ type: "jsonb" })
   messages!: Array<{
     id: string
-    role: "user" | "assistant" | "tool"
+    role: "user" | "assistant"
     content: string
     status?: "streaming" | "completed" | "aborted" | "error"
     createdAt?: string
