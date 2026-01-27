@@ -10,3 +10,18 @@ export type MessageDto = {
   }>
   toolCallId?: string
 }
+
+export type MessageResponseDto = {
+  message: MessageDto
+}
+
+export type CreateChatSessionResponseDto = {
+  sessionId: string
+  message: MessageDto
+}
+
+export type SendMessageDto = {
+  sessionId: string
+  content: string
+  country?: string
+}

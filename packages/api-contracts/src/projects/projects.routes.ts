@@ -1,8 +1,12 @@
 import type { RequestPayload, ResponseData } from "../generic"
 import { defineRoute } from "../helpers"
-import type { CreateProjectRequestDto, CreateProjectResponseDto } from "./dto/create-project.dto"
-import type { ListProjectsResponseDto } from "./dto/list-projects.dto"
-import type { UpdateProjectRequestDto, UpdateProjectResponseDto } from "./dto/update-project.dto"
+import type {
+  CreateProjectRequestDto,
+  CreateProjectResponseDto,
+  ListProjectsResponseDto,
+  UpdateProjectRequestDto,
+  UpdateProjectResponseDto,
+} from "./dto/projects.dto"
 
 export const ProjectsRoutes = {
   createProject: defineRoute<
