@@ -1,11 +1,10 @@
 import { configureStore } from "@reduxjs/toolkit"
+import { getServices } from "@/di/services"
 import { authSlice } from "@/features/auth/auth.slice"
 import { chatBotsSlice } from "@/features/chat-bots/chat-bots.slice"
 import { meSlice } from "@/features/me/me.slice"
 import { organizationsSlice } from "@/features/organizations/organizations.slice"
 import { projectsSlice } from "@/features/projects/projects.slice"
-import { testSlice } from "@/features/test/test.slice"
-import { api } from "@/services/api"
 import { listenerMiddleware } from "./listenerMiddleware"
 import type { ThunkExtraArg } from "./types"
 
@@ -16,12 +15,11 @@ export const store = configureStore({
     organizations: organizationsSlice.reducer,
     projects: projectsSlice.reducer,
     chatBots: chatBotsSlice.reducer,
-    test: testSlice.reducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
       thunk: {
-        extraArgument: { api } satisfies ThunkExtraArg,
+        extraArgument: { services: getServices() } satisfies ThunkExtraArg,
       },
     }).prepend(listenerMiddleware.middleware),
 })

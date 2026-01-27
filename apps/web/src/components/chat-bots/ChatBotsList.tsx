@@ -1,6 +1,6 @@
 "use client"
 
-import type { ChatBotDto, ProjectDto } from "@caseai-connect/api-contracts"
+import type { ProjectDto } from "@caseai-connect/api-contracts"
 import { Button } from "@caseai-connect/ui/shad/button"
 import {
   Card,
@@ -18,6 +18,7 @@ import {
 import { Edit, MoreHorizontal, Plus, Trash2 } from "lucide-react"
 import { useState } from "react"
 import { useNavigate } from "react-router-dom"
+import type { ChatBot } from "@/features/chat-bots/chat-bots.models"
 import { selectChatBotsStatus } from "@/features/chat-bots/chat-bots.selectors"
 import { buildChatBotPath } from "@/routes/helpers"
 import { LoadingRoute } from "@/routes/LoadingRoute"
@@ -26,19 +27,13 @@ import { CreateChatBotDialog } from "./CreateChatBotDialog"
 import { DeleteChatBotDialog } from "./DeleteChatBotDialog"
 import { EditChatBotDialog } from "./EditChatBotDialog"
 
-export function ChatBotsList({
-  project,
-  chatBots,
-}: {
-  project: ProjectDto
-  chatBots: ChatBotDto[]
-}) {
+export function ChatBotsList({ project, chatBots }: { project: ProjectDto; chatBots: ChatBot[] }) {
   const navigate = useNavigate()
   const status = useAppSelector(selectChatBotsStatus)
 
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
-  const [editingChatBot, setEditingChatBot] = useState<ChatBotDto | null>(null)
-  const [deletingChatBot, setDeletingChatBot] = useState<ChatBotDto | null>(null)
+  const [editingChatBot, setEditingChatBot] = useState<ChatBot | null>(null)
+  const [deletingChatBot, setDeletingChatBot] = useState<ChatBot | null>(null)
 
   const isEmpty = chatBots.length === 0
 

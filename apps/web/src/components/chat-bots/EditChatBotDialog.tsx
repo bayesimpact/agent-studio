@@ -1,6 +1,5 @@
 "use client"
 
-import type { ChatBotDto } from "@caseai-connect/api-contracts"
 import {
   Dialog,
   DialogContent,
@@ -8,12 +7,13 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@caseai-connect/ui/shad/dialog"
+import type { ChatBot } from "@/features/chat-bots/chat-bots.models"
 import { listChatBots } from "@/features/chat-bots/chat-bots.thunks"
 import { useAppDispatch } from "@/store/hooks"
 import { UpdateChatBotForm } from "./UpdateChatBotForm"
 
 interface EditChatBotDialogProps {
-  chatBot: ChatBotDto | null
+  chatBot: ChatBot | null
   onClose: () => void
 }
 

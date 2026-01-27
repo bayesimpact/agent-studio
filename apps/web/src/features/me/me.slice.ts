@@ -1,12 +1,9 @@
 import { createSlice } from "@reduxjs/toolkit"
+import type { Me } from "./me.models"
 import { fetchMe } from "./me.thunks"
 
 interface MeState {
-  user: {
-    id: string
-    email: string
-    name: string | null
-  } | null
+  user: Me["user"] | null
   status: "idle" | "loading" | "succeeded" | "failed"
   error: string | null
 }
@@ -31,7 +28,7 @@ export const meSlice = createSlice({
       })
       .addCase(fetchMe.fulfilled, (state, action) => {
         state.status = "succeeded"
-        state.user = action.payload.data.user
+        state.user = action.payload.user
         state.error = null
       })
       .addCase(fetchMe.rejected, (state, action) => {

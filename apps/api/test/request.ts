@@ -8,18 +8,23 @@ export const testRequester =
   (app: INestApplication<App>) =>
   async <T extends ApiRoute>(params: {
     route: T
+    pathParams?: Record<string, string>
     token?: string
-    request?: T extends { method: "post" | "put" | "patch" } ? object : never
+    request?: T["request"]
   }): Promise<Omit<request.Response, "body"> & { body: T["response"] }> => {
     const { token, route } = params
     const { method, getPath } = route
 
-    const path = getPath()
+    const path = getPath(params.pathParams)
 
     const req = request(app.getHttpServer())[method](path)
 
-    // Attach request body for methods that support it
-    if (method === "post" || method === "put" || method === "patch") {
+    if (
+      "request" in params &&
+      params.request &&
+      "payload" in params.request &&
+      params.request.payload
+    ) {
       req.send(params.request)
     }
 
