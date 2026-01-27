@@ -1,38 +1,23 @@
-import type {
-  CreateProjectRequestDto,
-  TimeType,
-  UpdateProjectRequestDto,
-} from "@caseai-connect/api-contracts"
+import type { TimeType } from "@caseai-connect/api-contracts"
 import { Body, Controller, Delete, Get, Param, Patch, Post, Req, UseGuards } from "@nestjs/common"
 import { JwtAuthGuard } from "@/auth/jwt-auth.guard"
-// biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
-import { UserBootstrapService } from "@/organizations/user-bootstrap.service"
-import type { User } from "@/users/user.entity"
+import { UserGuard } from "@/guards/user.guard"
+import type { EndpointRequest } from "@/request.interface"
 import { ProjectsRoutes } from "./projects.routes"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
 import { ProjectsService } from "./projects.service"
 
-interface Auth0JwtPayload {
-  sub: string
-  email?: string
-  name?: string
-  picture?: string
-}
-
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, UserGuard)
 @Controller()
 export class ProjectsController {
-  constructor(
-    private readonly userBootstrapService: UserBootstrapService,
-    private readonly projectsService: ProjectsService,
-  ) {}
+  constructor(private readonly projectsService: ProjectsService) {}
 
   @Post(ProjectsRoutes.createProject.path)
   async createProject(
-    @Req() request: { user: Auth0JwtPayload },
-    @Body() body: { payload: CreateProjectRequestDto },
+    @Req() request: EndpointRequest,
+    @Body() body: typeof ProjectsRoutes.createProject.request,
   ): Promise<typeof ProjectsRoutes.createProject.response> {
-    const user = await this.ensureUserFromRequest(request)
+    const user = request.user
 
     // Create project
     const project = await this.projectsService.createProject(
@@ -52,10 +37,10 @@ export class ProjectsController {
 
   @Get(ProjectsRoutes.listProjects.path)
   async listProjects(
-    @Req() request: { user: Auth0JwtPayload },
+    @Req() request: EndpointRequest,
     @Param("organizationId") organizationId: string,
   ): Promise<typeof ProjectsRoutes.listProjects.response> {
-    const user = await this.ensureUserFromRequest(request)
+    const user = request.user
 
     // List projects for the organization
     const projects = await this.projectsService.listProjects(user.id, organizationId)
@@ -75,11 +60,11 @@ export class ProjectsController {
 
   @Patch(ProjectsRoutes.updateProject.path)
   async updateProject(
-    @Req() request: { user: Auth0JwtPayload },
+    @Req() request: EndpointRequest,
     @Param("projectId") projectId: string,
-    @Body() body: { payload: UpdateProjectRequestDto },
+    @Body() body: typeof ProjectsRoutes.updateProject.request,
   ): Promise<typeof ProjectsRoutes.updateProject.response> {
-    const user = await this.ensureUserFromRequest(request)
+    const user = request.user
 
     // Update project
     const project = await this.projectsService.updateProject(user.id, projectId, body.payload.name)
@@ -95,10 +80,10 @@ export class ProjectsController {
 
   @Delete(ProjectsRoutes.deleteProject.path)
   async deleteProject(
-    @Req() request: { user: Auth0JwtPayload },
+    @Req() request: EndpointRequest,
     @Param("projectId") projectId: string,
   ): Promise<typeof ProjectsRoutes.deleteProject.response> {
-    const user = await this.ensureUserFromRequest(request)
+    const user = request.user
 
     // Delete project
     await this.projectsService.deleteProject(user.id, projectId)
@@ -108,20 +93,5 @@ export class ProjectsController {
         success: true,
       },
     }
-  }
-
-  /**
-   * Extracts Auth0 user info from JWT payload and ensures the user exists locally.
-   * Returns the local User entity.
-   */
-  private async ensureUserFromRequest(request: { user: Auth0JwtPayload }): Promise<User> {
-    const auth0UserInfo = {
-      sub: request.user.sub,
-      email: request.user.email,
-      name: request.user.name,
-      picture: request.user.picture,
-    }
-
-    return this.userBootstrapService.ensureUser(auth0UserInfo)
   }
 }

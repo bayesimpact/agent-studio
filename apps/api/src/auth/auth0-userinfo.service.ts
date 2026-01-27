@@ -11,6 +11,7 @@ export interface Auth0UserInfoResponse {
   nickname?: string
   given_name?: string
   family_name?: string
+  updated_at?: string
 }
 
 @Injectable()
