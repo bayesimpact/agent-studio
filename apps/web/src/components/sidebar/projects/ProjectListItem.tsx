@@ -1,6 +1,6 @@
 "use client"
 
-import type { ChatBotDto, ProjectDto } from "@caseai-connect/api-contracts"
+import type { ProjectDto } from "@caseai-connect/api-contracts"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -18,6 +18,7 @@ import {
 } from "@caseai-connect/ui/shad/sidebar"
 import { BotIcon, Edit, FolderIcon, MoreHorizontal, Trash2 } from "lucide-react"
 import { Link, useParams } from "react-router-dom"
+import type { ChatBot } from "@/features/chat-bots/chat-bots.models"
 import { selectChatBots } from "@/features/chat-bots/chat-bots.selectors"
 import { buildChatBotPath, buildProjectPath } from "@/routes/helpers"
 import { useAppSelector } from "@/store/hooks"
@@ -28,10 +29,10 @@ type ProjectListItemProps = {
   organizationId: string
 } & {
   onEditItem: (
-    item: { type: "project"; value: ProjectDto } | { type: "chatBot"; value: ChatBotDto },
+    item: { type: "project"; value: ProjectDto } | { type: "chatBot"; value: ChatBot },
   ) => void
   onDeleteItem: (
-    item: { type: "project"; value: ProjectDto } | { type: "chatBot"; value: ChatBotDto },
+    item: { type: "project"; value: ProjectDto } | { type: "chatBot"; value: ChatBot },
   ) => void
 }
 

@@ -1,6 +1,6 @@
 import { useNavigate } from "react-router-dom"
+import type { Organization } from "@/features/organizations/organizations.models"
 import { selectOrganizations } from "@/features/organizations/organizations.selectors"
-import type { Organization } from "@/features/organizations/organizations.slice"
 import { useAppSelector } from "@/store/hooks"
 
 export function OrganizationsHoc({

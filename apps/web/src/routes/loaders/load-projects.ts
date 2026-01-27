@@ -1,10 +1,10 @@
-import type { ProjectDto } from "@caseai-connect/api-contracts"
 import type { Params } from "react-router-dom"
+import type { Project } from "@/features/projects/projects.models"
 import { listProjects } from "@/features/projects/projects.thunks"
 import type { AppDispatch } from "@/store"
 import { loadProjectAndChatBots } from "./load-project"
 
-export type ProjectsLoaderData = ProjectDto[] | null
+export type ProjectsLoaderData = Project[] | null
 
 export const loadProjects = async ({
   dispatch,
@@ -17,9 +17,7 @@ export const loadProjects = async ({
   if (!organizationId) return null
 
   try {
-    const {
-      data: { projects },
-    } = await dispatch(listProjects(organizationId)).unwrap()
+    const projects = await dispatch(listProjects(organizationId)).unwrap()
 
     // Automatically load the only project if there's just one
     if (projects.length === 1)

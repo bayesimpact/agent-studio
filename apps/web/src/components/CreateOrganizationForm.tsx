@@ -45,14 +45,13 @@ export function CreateOrganizationForm() {
   })
 
   const onSubmit = async (data: CreateOrganizationFormData) => {
-    console.log("onSubmit !!!")
     try {
       const organization = await dispatch(createOrganization({ name: data.name })).unwrap()
       // Refresh user data to get updated organizations list (Option A)
       await dispatch(fetchMe()).unwrap()
       toast.success("Organization created successfully!")
       // Redirect to dashboard
-      navigate(buildOrganizationPath(organization.data.id), { replace: true })
+      navigate(buildOrganizationPath(organization.id), { replace: true })
     } catch (err) {
       const errorMessage = (err as { message?: string })?.message || "Failed to create organization"
       toast.error(errorMessage)
