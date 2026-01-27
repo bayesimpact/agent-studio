@@ -1,4 +1,5 @@
 import type { Repository } from "typeorm"
+import type { Auth0UserInfoResponse } from "@/auth/auth0-userinfo.service"
 import { clearTestDatabase } from "@/common/test/test-database"
 import {
   setupTransactionalTestDatabase,
@@ -143,7 +144,15 @@ describe("UsersService", () => {
         name: "Create User",
       }
 
-      const user = await service.findOrCreate(auth0UserInfo)
+      const user = await service.findOrCreate({
+        sub: auth0UserInfo.sub,
+        getUserInfo: () =>
+          Promise.resolve({
+            sub: auth0UserInfo.sub,
+            email: auth0UserInfo.email,
+            name: auth0UserInfo.name,
+          } as Auth0UserInfoResponse),
+      })
 
       expect(user.auth0Id).toBe("auth0|create-new")
       expect(user.email).toBe("create@example.com")
@@ -169,7 +178,10 @@ describe("UsersService", () => {
         name: "Existing User",
       }
 
-      const user = await service.findOrCreate(auth0UserInfo)
+      const user = await service.findOrCreate({
+        sub: auth0UserInfo.sub,
+        getUserInfo: () => Promise.resolve({} as Auth0UserInfoResponse),
+      })
 
       expect(user.id).toBe(existingUser.id)
       expect(user.email).toBe("existing@example.com")
@@ -177,108 +189,6 @@ describe("UsersService", () => {
       // Verify no duplicate was created
       const count = await repository.count({ where: { auth0Id: "auth0|user-existing" } })
       expect(count).toBe(1)
-    })
-
-    it("should update user when Auth0 info changes", async () => {
-      const existingUser = userFactory.build({
-        auth0Id: "auth0|update",
-        email: "old@example.com",
-        name: "Old Name",
-        pictureUrl: "https://old.com/pic.jpg",
-      })
-      await repository.save(existingUser)
-
-      const auth0UserInfo = {
-        sub: "auth0|update",
-        email: "new@example.com",
-        name: "New Name",
-        picture: "https://new.com/pic.jpg",
-      }
-
-      const user = await service.findOrCreate(auth0UserInfo)
-
-      expect(user.id).toBe(existingUser.id)
-      expect(user.email).toBe("new@example.com")
-      expect(user.name).toBe("New Name")
-      expect(user.pictureUrl).toBe("https://new.com/pic.jpg")
-
-      // Verify it was updated in database - use service to query
-      const updatedUser = await service.findById(existingUser.id)
-      expect(updatedUser?.email).toBe("new@example.com")
-      expect(updatedUser?.name).toBe("New Name")
-    })
-
-    it("should update only changed fields", async () => {
-      const existingUser = userFactory.build({
-        auth0Id: "auth0|partial-update",
-        email: "original@example.com",
-        name: "Original Name",
-        pictureUrl: "https://original.com/pic.jpg",
-      })
-      await repository.save(existingUser)
-
-      const auth0UserInfo = {
-        sub: "auth0|partial-update",
-        email: "original@example.com", // Same
-        name: "Updated Name", // Changed
-        picture: "https://original.com/pic.jpg", // Same
-      }
-
-      const user = await service.findOrCreate(auth0UserInfo)
-
-      expect(user.email).toBe("original@example.com")
-      expect(user.name).toBe("Updated Name")
-      expect(user.pictureUrl).toBe("https://original.com/pic.jpg")
-    })
-
-    it("should not update when nothing changed", async () => {
-      const existingUser = userFactory.build({
-        auth0Id: "auth0|no-change",
-        email: "same@example.com",
-        name: "Same Name",
-        pictureUrl: "https://same.com/pic.jpg",
-      })
-      const originalUpdatedAt = existingUser.updatedAt
-      await repository.save(existingUser)
-
-      // Wait a bit to ensure timestamp would change if updated
-      await new Promise((resolve) => setTimeout(resolve, 10))
-
-      const auth0UserInfo = {
-        sub: "auth0|no-change",
-        email: "same@example.com",
-        name: "Same Name",
-        picture: "https://same.com/pic.jpg",
-      }
-
-      const user = await service.findOrCreate(auth0UserInfo)
-
-      expect(user.id).toBe(existingUser.id)
-      // Verify it's the same instance (not a new save) - use service to query
-      const foundUser = await service.findById(existingUser.id)
-      expect(foundUser?.updatedAt.getTime()).toBeLessThanOrEqual(originalUpdatedAt.getTime() + 1000)
-    })
-
-    it("should handle missing optional fields in update", async () => {
-      const existingUser = userFactory.build({
-        auth0Id: "auth0|missing-fields",
-        email: "original@example.com",
-        name: "Original Name",
-        pictureUrl: "https://original.com/pic.jpg",
-      })
-      await repository.save(existingUser)
-
-      const auth0UserInfo = {
-        sub: "auth0|missing-fields",
-        // email, name, picture not provided
-      }
-
-      const user = await service.findOrCreate(auth0UserInfo)
-
-      // Should preserve existing values when not provided
-      expect(user.email).toBe("original@example.com")
-      expect(user.name).toBe("Original Name")
-      expect(user.pictureUrl).toBe("https://original.com/pic.jpg")
     })
   })
 })

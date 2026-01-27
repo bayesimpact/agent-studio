@@ -4,7 +4,6 @@ import {
   Injectable,
   UnauthorizedException,
 } from "@nestjs/common"
-import { normalizeAuth0Name } from "@/auth/auth0-userinfo.helper"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
 import { Auth0UserInfoService } from "@/auth/auth0-userinfo.service"
 import { getAccessToken } from "@/common/utils/get-access-token"
@@ -34,17 +33,10 @@ export class UserGuard implements CanActivate {
     }
 
     try {
-      // TODO: const user = await this.userBootstrapService.ensureUserExists(jwtPayload, accessToken)
-      let user = await this.usersService.findByAuth0Id(jwtPayload.sub)
-      if (!user) {
-        const auth0UserInfo = await this.auth0UserInfoService.getUserInfo(accessToken)
-        user = await this.usersService.create({
-          sub: auth0UserInfo.sub,
-          email: auth0UserInfo.email,
-          name: normalizeAuth0Name(auth0UserInfo.name, auth0UserInfo.email),
-          picture: auth0UserInfo.picture,
-        })
-      }
+      const user = await this.usersService.findOrCreate({
+        sub: jwtPayload.sub,
+        getUserInfo: () => this.auth0UserInfoService.getUserInfo(accessToken),
+      })
 
       request.user = {
         ...jwtPayload,
@@ -53,8 +45,8 @@ export class UserGuard implements CanActivate {
         updatedAt: user.updatedAt.getTime(),
       } as EndpointRequest["user"]
       return true
-    } catch (_error) {
-      throw new UnauthorizedException("Could not ensure user exists")
+    } catch (error) {
+      throw new UnauthorizedException("Could not ensure user exists", error as Error)
     }
   }
 }

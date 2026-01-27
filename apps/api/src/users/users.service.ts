@@ -1,6 +1,7 @@
 import { Injectable } from "@nestjs/common"
 import { InjectRepository } from "@nestjs/typeorm"
 import type { Repository } from "typeorm"
+import { normalizeAuth0Name } from "@/auth/auth0-userinfo.helper"
 import type { Auth0UserInfoResponse } from "@/auth/auth0-userinfo.service"
 import { User } from "./user.entity"
 
@@ -33,5 +34,25 @@ export class UsersService {
     })
 
     return this.userRepository.save(user)
+  }
+
+  async findOrCreate({
+    sub,
+    getUserInfo,
+  }: {
+    sub: Auth0UserInfoResponse["sub"]
+    getUserInfo: () => Promise<Auth0UserInfoResponse>
+  }): Promise<User> {
+    let user = await this.findByAuth0Id(sub)
+    if (!user) {
+      const auth0UserInfo = await getUserInfo()
+      user = await this.create({
+        sub: auth0UserInfo.sub,
+        email: auth0UserInfo.email,
+        name: normalizeAuth0Name(auth0UserInfo.name, auth0UserInfo.email),
+        picture: auth0UserInfo.picture,
+      })
+    }
+    return user
   }
 }
