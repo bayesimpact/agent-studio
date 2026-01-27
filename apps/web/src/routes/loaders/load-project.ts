@@ -1,10 +1,10 @@
-import type { ChatBotDto, ProjectDto } from "@caseai-connect/api-contracts"
 import type { Params } from "react-router-dom"
 import { listChatBots } from "@/features/chat-bots/chat-bots.thunks"
+import type { Project } from "@/features/projects/projects.models"
 import { listProjects } from "@/features/projects/projects.thunks"
 import type { AppDispatch } from "@/store"
 
-export type ProjectAndChatBotsLoaderData = { project: ProjectDto; chatBots: ChatBotDto[] } | null
+export type ProjectAndChatBotsLoaderData = { project: Project; chatBots: unknown[] } | null
 
 export const loadProjectAndChatBots = async ({
   dispatch,
@@ -17,18 +17,14 @@ export const loadProjectAndChatBots = async ({
   if (!organizationId || !projectId) return null
 
   try {
-    const {
-      data: { projects },
-    } = await dispatch(listProjects(organizationId)).unwrap()
-    const project = projects.find((p) => p.id === projectId)
+    const projects = await dispatch(listProjects(organizationId)).unwrap()
+    const project = projects.find((project) => project.id === projectId)
 
     if (!project) return null
 
-    const {
-      data: { chatBots },
-    } = await dispatch(listChatBots(project.id)).unwrap()
+    const { data } = await dispatch(listChatBots(project.id)).unwrap()
 
-    return { project, chatBots }
+    return { project, chatBots: data.chatBots }
   } catch (error) {
     throw new Error("Failed to load project and chat bots", error as Error)
   }

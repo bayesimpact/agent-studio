@@ -1,13 +1,10 @@
-import type {
-  CreateProjectResponseDto,
-  ListProjectsResponseDto,
-} from "@caseai-connect/api-contracts"
 import { createSlice } from "@reduxjs/toolkit"
+import type { Project } from "./projects.models"
 import { createProject, deleteProject, listProjects, updateProject } from "./projects.thunks"
 
 interface ProjectsState {
-  projects: ListProjectsResponseDto["projects"] | null
-  createdProject: CreateProjectResponseDto | null
+  projects: Project[] | null
+  createdProject: Project | null
   status: "idle" | "loading" | "succeeded" | "failed"
   error: string | null
 }
@@ -38,17 +35,11 @@ export const projectsSlice = createSlice({
       })
       .addCase(createProject.fulfilled, (state, action) => {
         state.status = "succeeded"
-        state.createdProject = action.payload.data
+        state.createdProject = action.payload
         state.error = null
         // Add the new project to the projects list
         if (state.projects) {
-          state.projects.unshift({
-            id: action.payload.data.id,
-            name: action.payload.data.name,
-            organizationId: action.payload.data.organizationId,
-            createdAt: Date.now(),
-            updatedAt: Date.now(),
-          })
+          state.projects.unshift(action.payload)
         }
       })
       .addCase(createProject.rejected, (state, action) => {
@@ -63,7 +54,7 @@ export const projectsSlice = createSlice({
       })
       .addCase(listProjects.fulfilled, (state, action) => {
         state.status = "succeeded"
-        state.projects = action.payload.data.projects
+        state.projects = action.payload
         state.error = null
       })
       .addCase(listProjects.rejected, (state, action) => {
