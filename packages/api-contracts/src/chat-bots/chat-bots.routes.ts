@@ -6,7 +6,7 @@ import type {
   ListChatBotsResponseDto,
   UpdateChatBotRequestDto,
   UpdateChatBotResponseDto,
-} from "./dto/chat-bots.dto"
+} from "./chat-bots.dto"
 
 export const ChatBotsRoutes = {
   createChatBot: defineRoute<
