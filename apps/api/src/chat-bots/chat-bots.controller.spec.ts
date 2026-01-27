@@ -11,6 +11,7 @@ import { organizationFactory } from "@/organizations/organization.factory"
 import { UserMembership } from "@/organizations/user-membership.entity"
 import { Project } from "@/projects/project.entity"
 import { projectFactory } from "@/projects/project.factory"
+import type { EndpointRequest } from "@/request.interface"
 import { User } from "@/users/user.entity"
 import { ChatBotsController } from "./chat-bots.controller"
 import { ChatBotsModule } from "./chat-bots.module"
@@ -65,7 +66,7 @@ describe("ChatBotsController", () => {
           email: "owner@example.com",
           name: "Owner User",
         },
-      }
+      } as EndpointRequest
       const org = organizationFactory.build({ name: "Owner Org" })
       const savedOrg = await organizationRepository.save(org)
 
@@ -119,7 +120,7 @@ describe("ChatBotsController", () => {
           sub: auth0Sub,
           email: "admin@example.com",
         },
-      }
+      } as EndpointRequest
       const org = organizationFactory.build({ name: "Admin Org" })
       const savedOrg = await organizationRepository.save(org)
 
@@ -164,7 +165,7 @@ describe("ChatBotsController", () => {
           sub: auth0Sub,
           email: "member@example.com",
         },
-      }
+      } as EndpointRequest
       const org = organizationFactory.build({ name: "Member Org" })
       const savedOrg = await organizationRepository.save(org)
 
@@ -208,7 +209,7 @@ describe("ChatBotsController", () => {
           sub: auth0Sub,
           email: "list@example.com",
         },
-      }
+      } as EndpointRequest
       const org = organizationFactory.build({ name: "List Org" })
       const savedOrg = await organizationRepository.save(org)
 
@@ -261,7 +262,7 @@ describe("ChatBotsController", () => {
           sub: auth0Sub,
           email: "empty@example.com",
         },
-      }
+      } as EndpointRequest
       const org = organizationFactory.build({ name: "Empty Org" })
       const savedOrg = await organizationRepository.save(org)
 
@@ -296,7 +297,7 @@ describe("ChatBotsController", () => {
           sub: auth0Sub,
           email: "nonmember@example.com",
         },
-      }
+      } as EndpointRequest
       const org = organizationFactory.build({ name: "Other Org" })
       const savedOrg = await organizationRepository.save(org)
 
@@ -329,7 +330,7 @@ describe("ChatBotsController", () => {
           email: "owner@example.com",
           name: "Owner User",
         },
-      }
+      } as EndpointRequest
       const org = organizationFactory.build({ name: "Update Org" })
       const savedOrg = await organizationRepository.save(org)
 
@@ -387,7 +388,7 @@ describe("ChatBotsController", () => {
           sub: auth0Sub,
           email: "admin@example.com",
         },
-      }
+      } as EndpointRequest
       const org = organizationFactory.build({ name: "Admin Update Org" })
       const savedOrg = await organizationRepository.save(org)
 
@@ -436,7 +437,7 @@ describe("ChatBotsController", () => {
           sub: auth0Sub,
           email: "member@example.com",
         },
-      }
+      } as EndpointRequest
       const org = organizationFactory.build({ name: "Member Update Org" })
       const savedOrg = await organizationRepository.save(org)
 
@@ -489,7 +490,7 @@ describe("ChatBotsController", () => {
           sub: auth0Sub,
           email: "user@example.com",
         },
-      }
+      } as EndpointRequest
       const nonExistentTemplateId = "00000000-0000-0000-0000-000000000000"
 
       const body = {
@@ -515,7 +516,7 @@ describe("ChatBotsController", () => {
           email: "owner@example.com",
           name: "Owner User",
         },
-      }
+      } as EndpointRequest
       const org = organizationFactory.build({ name: "Delete Org" })
       const savedOrg = await organizationRepository.save(org)
 
@@ -563,7 +564,7 @@ describe("ChatBotsController", () => {
           sub: auth0Sub,
           email: "admin@example.com",
         },
-      }
+      } as EndpointRequest
       const org = organizationFactory.build({ name: "Admin Delete Org" })
       const savedOrg = await organizationRepository.save(org)
 
@@ -610,7 +611,7 @@ describe("ChatBotsController", () => {
           sub: auth0Sub,
           email: "member@example.com",
         },
-      }
+      } as EndpointRequest
       const org = organizationFactory.build({ name: "Member Delete Org" })
       const savedOrg = await organizationRepository.save(org)
 
@@ -657,7 +658,7 @@ describe("ChatBotsController", () => {
           sub: auth0Sub,
           email: "user@example.com",
         },
-      }
+      } as EndpointRequest
       const nonExistentTemplateId = "00000000-0000-0000-0000-000000000000"
 
       // Act & Assert
