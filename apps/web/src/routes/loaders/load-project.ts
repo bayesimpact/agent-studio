@@ -1,10 +1,11 @@
 import type { Params } from "react-router-dom"
+import type { ChatBot } from "@/features/chat-bots/chat-bots.models"
 import { listChatBots } from "@/features/chat-bots/chat-bots.thunks"
 import type { Project } from "@/features/projects/projects.models"
 import { listProjects } from "@/features/projects/projects.thunks"
 import type { AppDispatch } from "@/store"
 
-export type ProjectAndChatBotsLoaderData = { project: Project; chatBots: unknown[] } | null
+export type ProjectAndChatBotsLoaderData = { project: Project; chatBots: ChatBot[] } | null
 
 export const loadProjectAndChatBots = async ({
   dispatch,
@@ -22,9 +23,9 @@ export const loadProjectAndChatBots = async ({
 
     if (!project) return null
 
-    const { data } = await dispatch(listChatBots(project.id)).unwrap()
+    const chatBots = await dispatch(listChatBots(project.id)).unwrap()
 
-    return { project, chatBots: data.chatBots }
+    return { project, chatBots }
   } catch (error) {
     throw new Error("Failed to load project and chat bots", error as Error)
   }

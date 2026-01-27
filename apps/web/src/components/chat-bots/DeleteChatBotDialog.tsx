@@ -1,6 +1,5 @@
 "use client"
 
-import type { ChatBotDto } from "@caseai-connect/api-contracts"
 import { Button } from "@caseai-connect/ui/shad/button"
 import {
   Dialog,
@@ -10,12 +9,13 @@ import {
   DialogTitle,
 } from "@caseai-connect/ui/shad/dialog"
 import { toast } from "sonner"
+import type { ChatBot } from "@/features/chat-bots/chat-bots.models"
 import { selectChatBotsStatus } from "@/features/chat-bots/chat-bots.selectors"
 import { deleteChatBot, listChatBots } from "@/features/chat-bots/chat-bots.thunks"
 import { useAppDispatch, useAppSelector } from "@/store/hooks"
 
 interface DeleteChatBotDialogProps {
-  chatBot: ChatBotDto | null
+  chatBot: ChatBot | null
   onClose: () => void
 }
 

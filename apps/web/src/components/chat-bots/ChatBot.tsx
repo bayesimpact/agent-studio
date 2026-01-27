@@ -1,7 +1,7 @@
-import type { ChatBotDto } from "@caseai-connect/api-contracts"
 import { Button } from "@caseai-connect/ui/shad/button"
 import { Item, ItemContent, ItemHeader, ItemTitle } from "@caseai-connect/ui/shad/item"
 import { CirclePlusIcon, MicIcon, PaperclipIcon } from "lucide-react"
+import type { ChatBot as ChatBotModel } from "@/features/chat-bots/chat-bots.models"
 import {
   Chat,
   ChatActions,
@@ -15,7 +15,7 @@ import {
 } from "../chat/Chat"
 import { DotsBackground } from "../DotsBackground"
 
-export function ChatBot({ chatBot }: { chatBot: ChatBotDto }) {
+export function ChatBot({ chatBot }: { chatBot: ChatBotModel }) {
   const messages = [
     {
       id: "1",

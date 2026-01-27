@@ -1,43 +1,35 @@
-import type {
-  CreateChatBotRequestDto,
-  UpdateChatBotRequestDto,
-} from "@caseai-connect/api-contracts"
 import { createAsyncThunk } from "@reduxjs/toolkit"
-import type { Services } from "@/di/services"
 import type { RootState, ThunkExtraArg } from "@/store"
+import type { ChatBot, CreateChatBotPayload, UpdateChatBotPayload } from "./chat-bots.models"
 
 type ThunkConfig = { state: RootState; extra: ThunkExtraArg }
 
-export const listChatBots = createAsyncThunk<
-  { data: Awaited<ReturnType<Services["chatBots"]["listChatBots"]>> },
-  string,
-  ThunkConfig
->("chatBots/list", async (projectId, { extra }) => {
-  const data = await extra.services.chatBots.listChatBots(projectId)
-  return { data }
-})
+export const listChatBots = createAsyncThunk<ChatBot[], string, ThunkConfig>(
+  "chatBots/list",
+  async (projectId, { extra: { services } }) => {
+    return await services.chatBots.listChatBots(projectId)
+  },
+)
 
-export const createChatBot = createAsyncThunk<
-  { data: Awaited<ReturnType<Services["chatBots"]["createChatBot"]>> },
-  CreateChatBotRequestDto,
-  ThunkConfig
->("chatBots/create", async (payload, { extra }) => {
-  const data = await extra.services.chatBots.createChatBot(payload)
-  return { data }
-})
+export const createChatBot = createAsyncThunk<ChatBot, CreateChatBotPayload, ThunkConfig>(
+  "chatBots/create",
+  async (payload, { extra: { services } }) => {
+    return await services.chatBots.createChatBot(payload)
+  },
+)
 
 export const updateChatBot = createAsyncThunk<
   void,
-  { chatBotId: string; payload: UpdateChatBotRequestDto },
+  { chatBotId: string; payload: UpdateChatBotPayload },
   ThunkConfig
->("chatBots/update", async ({ chatBotId, payload }, { extra }) => {
-  await extra.services.chatBots.updateChatBot(chatBotId, payload)
+>("chatBots/update", async ({ chatBotId, payload }, { extra: { services } }) => {
+  await services.chatBots.updateChatBot(chatBotId, payload)
 })
 
 export const deleteChatBot = createAsyncThunk<string, string, ThunkConfig>(
   "chatBots/delete",
-  async (chatBotId, { extra }) => {
-    await extra.services.chatBots.deleteChatBot(chatBotId)
+  async (chatBotId, { extra: { services } }) => {
+    await services.chatBots.deleteChatBot(chatBotId)
     return chatBotId
   },
 )

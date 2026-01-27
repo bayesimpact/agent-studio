@@ -1,12 +1,12 @@
-import type { ChatBotDto } from "@caseai-connect/api-contracts"
 import { toast } from "sonner"
+import type { ChatBot } from "@/features/chat-bots/chat-bots.models"
 import { selectChatBotsError, selectChatBotsStatus } from "@/features/chat-bots/chat-bots.selectors"
 import { updateChatBot } from "@/features/chat-bots/chat-bots.thunks"
 import { useAppDispatch, useAppSelector } from "@/store/hooks"
 import { ChatBotForm } from "./ChatBotForm"
 
 interface UpdateChatBotFormProps {
-  chatBot: ChatBotDto
+  chatBot: ChatBot
   onSuccess?: () => void
 }
 

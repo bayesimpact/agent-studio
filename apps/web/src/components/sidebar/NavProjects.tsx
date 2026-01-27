@@ -1,9 +1,10 @@
 "use client"
 
-import type { ChatBotDto, ProjectDto } from "@caseai-connect/api-contracts"
+import type { ProjectDto } from "@caseai-connect/api-contracts"
 import { Section } from "@caseai-connect/ui/components/layouts/sidebar/Section"
 import { SidebarMenu } from "@caseai-connect/ui/shad/sidebar"
 import { useState } from "react"
+import type { ChatBot } from "@/features/chat-bots/chat-bots.models"
 import { selectCurrentOrganization } from "@/features/organizations/organizations.selectors"
 import { useAppSelector } from "@/store/hooks"
 import { DeleteChatBotDialog } from "../chat-bots/DeleteChatBotDialog"
@@ -20,7 +21,7 @@ type Item = { action: "edit" | "delete" } & (
     }
   | {
       type: "chatBot"
-      value: ChatBotDto
+      value: ChatBot
     }
 )
 

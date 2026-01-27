@@ -1,13 +1,10 @@
-import type {
-  CreateChatBotResponseDto,
-  ListChatBotsResponseDto,
-} from "@caseai-connect/api-contracts"
 import { createSlice } from "@reduxjs/toolkit"
+import type { ChatBot } from "./chat-bots.models"
 import { createChatBot, deleteChatBot, listChatBots, updateChatBot } from "./chat-bots.thunks"
 
 interface ChatBotsState {
-  chatBots: Record<string, ListChatBotsResponseDto["chatBots"] | null> // keyed by projectId
-  createdChatBot: CreateChatBotResponseDto | null
+  chatBots: Record<string, ChatBot[] | null> // keyed by projectId
+  createdChatBot: ChatBot | null
   status: "idle" | "loading" | "succeeded" | "failed"
   error: string | null
 }
@@ -40,7 +37,7 @@ export const chatBotsSlice = createSlice({
       .addCase(listChatBots.fulfilled, (state, action) => {
         state.status = "succeeded"
         const projectId = action.meta.arg
-        state.chatBots[projectId] = action.payload.data.chatBots
+        state.chatBots[projectId] = action.payload
         state.error = null
       })
       .addCase(listChatBots.rejected, (state, action) => {
@@ -55,19 +52,12 @@ export const chatBotsSlice = createSlice({
       })
       .addCase(createChatBot.fulfilled, (state, action) => {
         state.status = "succeeded"
-        state.createdChatBot = action.payload.data
+        state.createdChatBot = action.payload
         state.error = null
         // Add the new chat bot to the list
-        const projectId = action.payload.data.projectId
+        const projectId = action.payload.projectId
         if (state.chatBots[projectId]) {
-          state.chatBots[projectId].unshift({
-            id: action.payload.data.id,
-            name: action.payload.data.name,
-            defaultPrompt: action.payload.data.defaultPrompt,
-            projectId: action.payload.data.projectId,
-            createdAt: Date.now(),
-            updatedAt: Date.now(),
-          })
+          state.chatBots[projectId].unshift(action.payload)
         }
       })
       .addCase(createChatBot.rejected, (state, action) => {
@@ -88,16 +78,16 @@ export const chatBotsSlice = createSlice({
         // Find which project this chat bot belongs to
         for (const projectId in state.chatBots) {
           if (state.chatBots[projectId]) {
-            const templateIndex = state.chatBots[projectId].findIndex((t) => t.id === chatBotId)
-            if (templateIndex !== -1) {
-              const existingTemplate = state.chatBots[projectId][templateIndex]
-              if (existingTemplate) {
-                state.chatBots[projectId][templateIndex] = {
-                  id: existingTemplate.id,
-                  name: payload.name ?? existingTemplate.name,
-                  defaultPrompt: payload.defaultPrompt ?? existingTemplate.defaultPrompt,
-                  projectId: existingTemplate.projectId,
-                  createdAt: existingTemplate.createdAt,
+            const chatBotIndex = state.chatBots[projectId].findIndex(
+              (chatBot) => chatBot.id === chatBotId,
+            )
+            if (chatBotIndex !== -1) {
+              const existingChatBot = state.chatBots[projectId][chatBotIndex]
+              if (existingChatBot) {
+                state.chatBots[projectId][chatBotIndex] = {
+                  ...existingChatBot,
+                  name: payload.name ?? existingChatBot.name,
+                  defaultPrompt: payload.defaultPrompt ?? existingChatBot.defaultPrompt,
                   updatedAt: Date.now(),
                 }
                 break
@@ -121,11 +111,11 @@ export const chatBotsSlice = createSlice({
         state.error = null
         // Remove the chat bot from the list
         // We need to find which project it belongs to and remove it from that project's list
-        const deletedTemplateId = action.meta.arg
+        const deletedChatBotId = action.meta.arg
         for (const projectId in state.chatBots) {
           if (state.chatBots[projectId]) {
             state.chatBots[projectId] = state.chatBots[projectId].filter(
-              (t) => t.id !== deletedTemplateId,
+              (chatBot) => chatBot.id !== deletedChatBotId,
             )
           }
         }

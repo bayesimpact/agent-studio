@@ -1,9 +1,9 @@
-import type { ChatBotDto } from "@caseai-connect/api-contracts"
 import type { Params } from "react-router-dom"
+import type { ChatBot } from "@/features/chat-bots/chat-bots.models"
 import { listChatBots } from "@/features/chat-bots/chat-bots.thunks"
 import type { AppDispatch } from "@/store"
 
-export type ChatBotLoaderData = ChatBotDto | null
+export type ChatBotLoaderData = ChatBot | null
 
 export const loadChatBot = async ({
   dispatch,
@@ -16,10 +16,8 @@ export const loadChatBot = async ({
   if (!projectId || !chatBotId) return null
 
   try {
-    const {
-      data: { chatBots },
-    } = await dispatch(listChatBots(projectId)).unwrap()
-    const chatBot = chatBots.find((cb) => cb.id === chatBotId)
+    const chatBots = await dispatch(listChatBots(projectId)).unwrap()
+    const chatBot = chatBots.find((chatBot) => chatBot.id === chatBotId)
 
     if (chatBot) return chatBot
     return null
