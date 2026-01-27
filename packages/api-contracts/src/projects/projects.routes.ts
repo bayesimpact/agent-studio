@@ -6,7 +6,7 @@ import type {
   ListProjectsResponseDto,
   UpdateProjectRequestDto,
   UpdateProjectResponseDto,
-} from "./dto/projects.dto"
+} from "./projects.dto"
 
 export const ProjectsRoutes = {
   createProject: defineRoute<
