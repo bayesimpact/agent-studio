@@ -7,7 +7,7 @@
 
 ## Routes and endpoints
 - name CRUD endpoint following: getAll, updateOne, deleteOne, getOne... (do not name it "listProjects", "createProject")
-- replace ensureUserFromRequest by a UserGuard
+<!-- DONE - replace ensureUserFromRequest by a UserGuard -->
 
 ## Tests
 ### Backend
