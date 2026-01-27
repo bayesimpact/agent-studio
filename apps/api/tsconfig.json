@@ -4,9 +4,7 @@
     "baseUrl": "./",
     "outDir": "./dist",
     "paths": {
-      "@/*": ["./src/*"],
-      "@caseai-connect/api-contracts": ["../../packages/api-contracts/src/index.ts"],
-      "@caseai-connect/api-contracts/*": ["../../packages/api-contracts/src/*"]
+      "@/*": ["./src/*"]
     }
   },
   "include": ["src/**/*"],
