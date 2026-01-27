@@ -10,14 +10,14 @@ import type { ChatBot, CreateChatBotPayload, UpdateChatBotPayload } from "../cha
 import type { IChatBotsSpi } from "../chat-bots.spi"
 
 export default {
-  listChatBots: async (projectId: string) => {
+  getAll: async (projectId: string) => {
     const axios = getAxiosInstance()
     const response = await axios.get<typeof ChatBotsRoutes.listChatBots.response>(
       ChatBotsRoutes.listChatBots.getPath({ projectId }),
     )
     return fromListDto(response.data.data)
   },
-  createChatBot: async (payload: CreateChatBotPayload) => {
+  createOne: async (payload: CreateChatBotPayload) => {
     const axios = getAxiosInstance()
     const response = await axios.post<typeof ChatBotsRoutes.createChatBot.response>(
       ChatBotsRoutes.createChatBot.getPath(),
@@ -27,13 +27,13 @@ export default {
     )
     return fromCreateDto(response.data.data)
   },
-  updateChatBot: async (chatBotId: string, payload: UpdateChatBotPayload) => {
+  updateOne: async (chatBotId: string, payload: UpdateChatBotPayload) => {
     const axios = getAxiosInstance()
     await axios.patch(ChatBotsRoutes.updateChatBot.getPath({ chatBotId }), {
       payload: toUpdateDto(payload),
     })
   },
-  deleteChatBot: async (chatBotId: string) => {
+  deleteOne: async (chatBotId: string) => {
     const axios = getAxiosInstance()
     await axios.delete(ChatBotsRoutes.deleteChatBot.getPath({ chatBotId }))
   },

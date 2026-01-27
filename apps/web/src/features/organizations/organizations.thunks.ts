@@ -6,7 +6,5 @@ type ThunkConfig = { state: RootState; extra: ThunkExtraArg }
 
 export const createOrganization = createAsyncThunk<Organization, { name: string }, ThunkConfig>(
   "organizations/create",
-  async (payload, { extra: { services } }) => {
-    return await services.organizations.createOrganization(payload)
-  },
+  async (payload, { extra: { services } }) => await services.organizations.createOne(payload),
 )

@@ -10,7 +10,7 @@ import type { CreateProjectPayload, Project, UpdateProjectPayload } from "../pro
 import type { IProjectsSpi } from "../projects.spi"
 
 export default {
-  createProject: async (payload: CreateProjectPayload) => {
+  createOne: async (payload: CreateProjectPayload) => {
     const axios = getAxiosInstance()
     const response = await axios.post<typeof ProjectsRoutes.createProject.response>(
       ProjectsRoutes.createProject.getPath(),
@@ -20,20 +20,20 @@ export default {
     )
     return fromCreateDto(response.data.data)
   },
-  listProjects: async (organizationId: string) => {
+  getAll: async (organizationId: string) => {
     const axios = getAxiosInstance()
     const response = await axios.get<typeof ProjectsRoutes.listProjects.response>(
       ProjectsRoutes.listProjects.getPath({ organizationId }),
     )
     return fromListDto(response.data.data)
   },
-  updateProject: async (projectId: string, payload: UpdateProjectPayload) => {
+  updateOne: async (projectId: string, payload: UpdateProjectPayload) => {
     const axios = getAxiosInstance()
     await axios.patch(ProjectsRoutes.updateProject.getPath({ projectId }), {
       payload: toUpdateDto(payload),
     })
   },
-  deleteProject: async (projectId: string) => {
+  deleteOne: async (projectId: string) => {
     const axios = getAxiosInstance()
     await axios.delete(ProjectsRoutes.deleteProject.getPath({ projectId }))
   },

@@ -12,7 +12,7 @@ type Return<TMethod extends Method, TResponse> = {
 export function defineRoute<
   TResponse extends ResponseData<unknown>,
   TRequest extends RequestPayload<unknown> = RequestPayload<unknown>,
->(def: { path: string; method: Method }): Return<Method, TResponse> & { request?: TRequest } {
+>(def: { path: string; method: Method }): Return<Method, TResponse> & { request: TRequest } {
   const normalizedPath = def.path.startsWith("/") ? def.path : `/${def.path}`
   return {
     ...def,
