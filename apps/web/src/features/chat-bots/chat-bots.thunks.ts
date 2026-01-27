@@ -6,30 +6,25 @@ type ThunkConfig = { state: RootState; extra: ThunkExtraArg }
 
 export const listChatBots = createAsyncThunk<ChatBot[], string, ThunkConfig>(
   "chatBots/list",
-  async (projectId, { extra: { services } }) => {
-    return await services.chatBots.listChatBots(projectId)
-  },
+  async (projectId, { extra: { services } }) => await services.chatBots.getAll(projectId),
 )
 
 export const createChatBot = createAsyncThunk<ChatBot, CreateChatBotPayload, ThunkConfig>(
   "chatBots/create",
-  async (payload, { extra: { services } }) => {
-    return await services.chatBots.createChatBot(payload)
-  },
+  async (payload, { extra: { services } }) => await services.chatBots.createOne(payload),
 )
 
 export const updateChatBot = createAsyncThunk<
   void,
   { chatBotId: string; payload: UpdateChatBotPayload },
   ThunkConfig
->("chatBots/update", async ({ chatBotId, payload }, { extra: { services } }) => {
-  await services.chatBots.updateChatBot(chatBotId, payload)
-})
+>(
+  "chatBots/update",
+  async ({ chatBotId, payload }, { extra: { services } }) =>
+    await services.chatBots.updateOne(chatBotId, payload),
+)
 
-export const deleteChatBot = createAsyncThunk<string, string, ThunkConfig>(
+export const deleteChatBot = createAsyncThunk<void, string, ThunkConfig>(
   "chatBots/delete",
-  async (chatBotId, { extra: { services } }) => {
-    await services.chatBots.deleteChatBot(chatBotId)
-    return chatBotId
-  },
+  async (chatBotId, { extra: { services } }) => await services.chatBots.deleteOne(chatBotId),
 )

@@ -6,30 +6,25 @@ type ThunkConfig = { state: RootState; extra: ThunkExtraArg }
 
 export const createProject = createAsyncThunk<Project, CreateProjectPayload, ThunkConfig>(
   "projects/create",
-  async (payload, { extra: { services } }) => {
-    return await services.projects.createProject(payload)
-  },
+  async (payload, { extra: { services } }) => await services.projects.createOne(payload),
 )
 
 export const listProjects = createAsyncThunk<Project[], string, ThunkConfig>(
   "projects/list",
-  async (organizationId, { extra: { services } }) => {
-    return await services.projects.listProjects(organizationId)
-  },
+  async (organizationId, { extra: { services } }) => await services.projects.getAll(organizationId),
 )
 
 export const updateProject = createAsyncThunk<
   void,
   { projectId: string; payload: UpdateProjectPayload },
   ThunkConfig
->("projects/update", async ({ projectId, payload }, { extra: { services } }) => {
-  await services.projects.updateProject(projectId, payload)
-})
+>(
+  "projects/update",
+  async ({ projectId, payload }, { extra: { services } }) =>
+    await services.projects.updateOne(projectId, payload),
+)
 
-export const deleteProject = createAsyncThunk<string, string, ThunkConfig>(
+export const deleteProject = createAsyncThunk<void, string, ThunkConfig>(
   "projects/delete",
-  async (projectId, { extra: { services } }) => {
-    await services.projects.deleteProject(projectId)
-    return projectId
-  },
+  async (projectId, { extra: { services } }) => await services.projects.deleteOne(projectId),
 )

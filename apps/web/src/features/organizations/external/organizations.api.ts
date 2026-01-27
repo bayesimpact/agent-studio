@@ -7,7 +7,7 @@ import type { Organization } from "../organizations.models"
 import type { IOrganizationsSpi } from "../organizations.spi"
 
 export default {
-  createOrganization: async (payload: { name: string }) => {
+  createOne: async (payload: { name: string }) => {
     const axios = getAxiosInstance()
     const response = await axios.post<typeof OrganizationsRoutes.createOrganization.response>(
       OrganizationsRoutes.createOrganization.getPath(),
