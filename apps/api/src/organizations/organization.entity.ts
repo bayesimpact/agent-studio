@@ -9,7 +9,7 @@ import {
 import { Project } from "@/projects/project.entity"
 import { UserMembership } from "./user-membership.entity"
 
-@Entity("organizations")
+@Entity("organization")
 export class Organization {
   @PrimaryGeneratedColumn("uuid")
   id!: string

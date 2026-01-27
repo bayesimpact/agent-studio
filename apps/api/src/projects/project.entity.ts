@@ -11,7 +11,7 @@ import {
 import { ChatBot } from "@/chat-bots/chat-bot.entity"
 import { Organization } from "@/organizations/organization.entity"
 
-@Entity("projects")
+@Entity("project")
 export class Project {
   @PrimaryGeneratedColumn("uuid")
   id!: string

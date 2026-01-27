@@ -13,7 +13,7 @@ import { Organization } from "./organization.entity"
 
 export type MembershipRole = "owner" | "admin" | "member"
 
-@Entity("user_memberships")
+@Entity("user_membership")
 @Unique(["userId", "organizationId"])
 export class UserMembership {
   @PrimaryGeneratedColumn("uuid")
