@@ -331,6 +331,91 @@ async verifyUserCanCreateProject(userId: string, organizationId: string): Promis
 
 **Important**: Never skip authorization checks, even for "simple" operations. Security must be enforced at the service layer.
 
+## TypeORM Database Migrations
+
+### Synchronize Option - NEVER Enable in Production
+
+**Rule**: The `synchronize` option in TypeORM MUST always be set to `false` in all environments (production, development, and test).
+
+**Why**:
+- `synchronize: true` automatically syncs your entity schema to the database on every application start
+- This can cause **data loss** if entities are modified (e.g., removing a column drops the column and all its data)
+- There is no version control, no rollback capability, and no way to review changes
+- It's unsafe for production and should not be used in development either
+
+**Current Configuration**:
+- `synchronize: false` is correctly set in `apps/api/src/config/typeorm.ts`
+- This configuration MUST remain `false` - never change it to `true`
+
+### Migration Workflow
+
+**Rule**: All database schema changes MUST be made through TypeORM migrations, never by manually editing the database or enabling `synchronize`.
+
+**Workflow for Schema Changes**:
+
+1. **Modify Entity Files**: Update your TypeORM entity classes (`*.entity.ts`) with the desired schema changes
+
+2. **Generate Migration**: Use the migration generation command to create a migration file:
+   ```bash
+   npm run migration:generate src/migrations/YourMigrationName
+   ```
+   This compares your entities to the current database schema and generates the necessary SQL changes.
+
+3. **Review Generated Migration**: Always review the generated migration file to ensure:
+   - The changes are correct
+   - No unintended data loss will occur
+   - Indexes, foreign keys, and constraints are properly handled
+   - The `down()` method correctly reverses the migration
+
+4. **Test Migration**: Test the migration on a development database:
+   ```bash
+   npm run migration:run
+   ```
+
+5. **Revert if Needed**: If something goes wrong, you can revert:
+   ```bash
+   npm run migration:revert
+   ```
+
+**Available Migration Commands**:
+- `npm run migration:generate` - Generate migration from entity changes
+- `npm run migration:create` - Create empty migration (use only when explicitly requested)
+- `npm run migration:run` - Run pending migrations
+- `npm run migration:revert` - Rollback last migration
+- `npm run migration:show` - Show migration status
+
+### FORBIDDEN: Manual Migration Creation
+
+**CRITICAL RULE**: You MUST NEVER manually create a migration file unless the user explicitly tells you to do so.
+
+**What is Forbidden**:
+- ❌ Creating migration files manually (e.g., `CreateTableX.ts`)
+- ❌ Writing migration SQL code by hand
+- ❌ Copying and modifying existing migration files
+- ❌ Creating empty migrations with `migration:create` without explicit user request
+
+**What You MUST Do Instead**:
+- ✅ Always use `migration:generate` to create migrations from entity changes
+- ✅ Modify entity files first, then generate the migration
+- ✅ Only create migrations manually if the user explicitly requests it (e.g., "create a manual migration for X")
+
+**Why This Rule Exists**:
+- Auto-generated migrations ensure consistency between entities and database schema
+- Manual migrations can get out of sync with entity definitions
+- Generated migrations are more reliable and less error-prone
+- The migration generation process validates the changes before creating the migration
+
+**Exception**: If the user explicitly says "create a manual migration" or "write a migration manually for X", then you may do so. Otherwise, always use `migration:generate`.
+
+### Migration Best Practices
+
+1. **One Migration Per Feature**: Create separate migrations for logically distinct schema changes
+2. **Meaningful Names**: Use descriptive migration names that explain what the migration does
+3. **Always Implement `down()`**: Every migration must have a proper `down()` method for rollback
+4. **Test Rollback**: Verify that `migration:revert` works correctly
+5. **Review Before Committing**: Always review generated migrations before committing to version control
+6. **Never Edit Existing Migrations**: Once a migration has been run in production, never modify it. Create a new migration instead.
+
 ## Completion Criteria
 
 ### Required Checks Before Marking Work as Completed
