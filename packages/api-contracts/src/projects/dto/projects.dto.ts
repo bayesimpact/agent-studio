@@ -1,4 +1,4 @@
-import type { TimeType } from "generic"
+import type { TimeType } from "../../generic"
 
 export type CreateProjectRequestDto = {
   name: string
