@@ -416,6 +416,58 @@ async verifyUserCanCreateProject(userId: string, organizationId: string): Promis
 5. **Review Before Committing**: Always review generated migrations before committing to version control
 6. **Never Edit Existing Migrations**: Once a migration has been run in production, never modify it. Create a new migration instead.
 
+## TypeORM Entity Guidelines
+
+### Column Naming Convention
+
+**Rule**: All database column names MUST be in snake_case format.
+
+**Requirements**:
+- Multi-word column names MUST use snake_case (e.g., `organization_id`, `created_at`, `updated_at`, `auth0_id`)
+- Single-word column names are acceptable as-is (e.g., `id`, `name`, `email`, `role`)
+- When defining columns in entities, use the `name` option in `@Column()` decorator to specify the snake_case column name
+
+**Implementation**:
+- Always specify the `name` property in `@Column()` decorator for multi-word properties
+- The TypeScript property name can be camelCase, but the database column name must be snake_case
+- This applies to all column types: `@Column()`, `@CreateDateColumn()`, `@UpdateDateColumn()`, `@PrimaryGeneratedColumn()`, etc.
+
+**Examples**:
+```typescript
+// ✅ Correct - snake_case column names
+@Column({ type: "uuid", name: "organization_id" })
+organizationId!: string
+
+@Column({ type: "varchar", unique: true, name: "auth0_id" })
+auth0Id!: string
+
+@CreateDateColumn({ name: "created_at" })
+createdAt!: Date
+
+@UpdateDateColumn({ name: "updated_at" })
+updatedAt!: Date
+
+// ✅ Correct - single word columns don't need explicit name
+@Column({ type: "varchar" })
+name!: string
+
+@Column({ type: "varchar" })
+email!: string
+
+// ❌ Wrong - camelCase column names
+@Column({ type: "uuid" })
+organizationId!: string  // This would create "organizationId" column in DB
+
+@Column({ type: "varchar" })
+auth0Id!: string  // This would create "auth0Id" column in DB
+```
+
+**Why this rule?**
+- Consistency with SQL naming conventions
+- Better compatibility with database tools and SQL queries
+- Aligns with PostgreSQL best practices
+- Makes raw SQL queries more readable
+
 ## Completion Criteria
 
 ### Required Checks Before Marking Work as Completed
