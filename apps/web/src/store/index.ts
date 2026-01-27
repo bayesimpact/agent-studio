@@ -5,7 +5,6 @@ import { chatBotsSlice } from "@/features/chat-bots/chat-bots.slice"
 import { meSlice } from "@/features/me/me.slice"
 import { organizationsSlice } from "@/features/organizations/organizations.slice"
 import { projectsSlice } from "@/features/projects/projects.slice"
-import { testSlice } from "@/features/test/test.slice"
 import { listenerMiddleware } from "./listenerMiddleware"
 import type { ThunkExtraArg } from "./types"
 
@@ -16,7 +15,6 @@ export const store = configureStore({
     organizations: organizationsSlice.reducer,
     projects: projectsSlice.reducer,
     chatBots: chatBotsSlice.reducer,
-    test: testSlice.reducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
