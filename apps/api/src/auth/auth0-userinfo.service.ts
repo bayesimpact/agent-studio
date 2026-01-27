@@ -11,6 +11,7 @@ export interface Auth0UserInfoResponse {
   nickname?: string
   given_name?: string
   family_name?: string
+  updated_at?: string
 }
 
 @Injectable()
@@ -45,6 +46,7 @@ export class Auth0UserInfoService {
     }
 
     const userInfo = (await response.json()) as Auth0UserInfoResponse
+    console.warn("AJ: userInfo", userInfo)
     return userInfo
   }
 }

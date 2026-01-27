@@ -6,7 +6,6 @@ import { AppModule } from "./../src/app.module"
 import { Auth0UserInfoService } from "./../src/auth/auth0-userinfo.service"
 import { JwtAuthGuard } from "./../src/auth/jwt-auth.guard"
 import { OrganizationsService } from "./../src/organizations/organizations.service"
-import { UserBootstrapService } from "./../src/organizations/user-bootstrap.service"
 import { type Requester, testRequester } from "./request"
 
 // Mock Langfuse to avoid dynamic import issues in Jest
@@ -57,7 +56,7 @@ describe("MeController (e2e)", () => {
     }),
   }
 
-  const mockUserBootstrapService = {
+  const _mockUserBootstrapService = {
     ensureUser: jest.fn().mockResolvedValue(mockUser),
   }
 
@@ -105,8 +104,6 @@ describe("MeController (e2e)", () => {
           })
           .overrideProvider(Auth0UserInfoService)
           .useValue(mockAuth0UserInfoService)
-          .overrideProvider(UserBootstrapService)
-          .useValue(mockUserBootstrapService)
           .overrideProvider(OrganizationsService)
           .useValue(mockOrganizationsService)
           .compile()

@@ -6,7 +6,6 @@ import { UsersModule } from "@/users/users.module"
 import { Organization } from "./organization.entity"
 import { OrganizationsController } from "./organizations.controller"
 import { OrganizationsService } from "./organizations.service"
-import { UserBootstrapService } from "./user-bootstrap.service"
 import { UserMembership } from "./user-membership.entity"
 
 @Module({
@@ -15,8 +14,8 @@ import { UserMembership } from "./user-membership.entity"
     UsersModule,
     AuthModule,
   ],
-  providers: [OrganizationsService, UserBootstrapService],
+  providers: [OrganizationsService],
   controllers: [OrganizationsController],
-  exports: [OrganizationsService, UserBootstrapService],
+  exports: [OrganizationsService],
 })
 export class OrganizationsModule {}
