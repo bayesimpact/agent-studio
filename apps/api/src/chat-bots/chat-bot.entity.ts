@@ -9,7 +9,7 @@ import {
 } from "typeorm"
 import { Project } from "@/projects/project.entity"
 
-@Entity("chat_bots")
+@Entity("chat_bot")
 export class ChatBot {
   @PrimaryGeneratedColumn("uuid")
   id!: string

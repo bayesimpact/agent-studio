@@ -8,12 +8,12 @@ import {
 } from "typeorm"
 import { UserMembership } from "@/organizations/user-membership.entity"
 
-@Entity("users")
+@Entity("user")
 export class User {
   @PrimaryGeneratedColumn("uuid")
   id!: string
 
-  @Column({ type: "varchar", unique: true })
+  @Column({ type: "varchar", unique: true, name: "auth0_id" })
   auth0Id!: string
 
   @Column({ type: "varchar" })
