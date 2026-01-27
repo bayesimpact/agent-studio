@@ -5,7 +5,9 @@ import {
   setupTransactionalTestDatabase,
   teardownTestDatabase,
 } from "@/common/test/test-transaction-manager"
+import type { EndpointRequest } from "@/request.interface"
 import { User } from "@/users/user.entity"
+import { userFactory } from "@/users/user.factory"
 import { Organization } from "./organization.entity"
 import { OrganizationsController } from "./organizations.controller"
 import { OrganizationsModule } from "./organizations.module"
@@ -42,6 +44,12 @@ describe("OrganizationsController", () => {
     userRepository = setup.getRepository(User)
     organizationRepository = setup.getRepository(Organization)
     membershipRepository = setup.getRepository(UserMembership)
+
+    // FIXME: @Did: rollbackTransaction does not clear data as expected
+    // so we manually clear relevant tables here before each test
+    membershipRepository.clear()
+    organizationRepository.deleteAll()
+    userRepository.deleteAll()
   })
 
   afterEach(async () => {
@@ -55,23 +63,26 @@ describe("OrganizationsController", () => {
 
   describe("createOrganization", () => {
     it("should create organization and make user owner", async () => {
-      // Arrange
       const auth0Sub = "auth0|org-123456"
+      const newUser = userFactory.build({
+        auth0Id: auth0Sub,
+        email: "james@example.com",
+        name: "James Bond",
+      })
+      await userRepository.save(newUser)
       const mockRequest = {
         user: {
           sub: auth0Sub,
-          email: "test@example.com",
-          name: "Test User",
-          picture: "https://example.com/picture.jpg",
+          email: newUser.email,
+          name: newUser.name,
         },
-      }
+      } as EndpointRequest
       const body = {
         payload: {
           name: "New Organization",
         },
       }
 
-      // Act
       const { data: result } = await controller.createOrganization(mockRequest, body)
 
       // Assert
@@ -104,48 +115,21 @@ describe("OrganizationsController", () => {
       }
     })
 
-    it("should create user if not exists", async () => {
-      // Arrange
-      const auth0Sub = "auth0|org-new-user"
-      const mockRequest = {
-        user: {
-          sub: auth0Sub,
-          email: "newuser@example.com",
-          name: "New User",
-        },
-      }
-      const body = {
-        payload: {
-          name: "First Organization",
-        },
-      }
-
-      // Act
-      const { data: result } = await controller.createOrganization(mockRequest, body)
-
-      // Assert - User should be created
-      const user = await userRepository.findOne({
-        where: { auth0Id: auth0Sub },
-      })
-      expect(user).not.toBeNull()
-      expect(user?.email).toBe("newuser@example.com")
-      expect(user?.name).toBe("New User")
-
-      // Organization should be created
-      expect(result.id).toBeDefined()
-      expect(result.name).toBe("First Organization")
-    })
-
     it("should reuse existing user", async () => {
-      // Arrange
       const auth0Sub = "auth0|org-existing"
+      const newUser = userFactory.build({
+        auth0Id: auth0Sub,
+        email: "james@example.com",
+        name: "James Bond",
+      })
+      await userRepository.save(newUser)
       const mockRequest = {
         user: {
           sub: auth0Sub,
-          email: "existing@example.com",
-          name: "Existing User",
+          email: newUser.email,
+          name: newUser.name,
         },
-      }
+      } as EndpointRequest
       const body1 = {
         payload: {
           name: "First Org",
@@ -157,13 +141,11 @@ describe("OrganizationsController", () => {
         },
       }
 
-      // Act - Create first organization
       const { data: result1 } = await controller.createOrganization(mockRequest, body1)
       const userId1 = await userRepository.findOne({
         where: { auth0Id: auth0Sub },
       })
 
-      // Act - Create second organization
       const { data: result2 } = await controller.createOrganization(mockRequest, body2)
       const userId2 = await userRepository.findOne({
         where: { auth0Id: auth0Sub },
@@ -183,21 +165,25 @@ describe("OrganizationsController", () => {
     })
 
     it("should return organization in correct format", async () => {
-      // Arrange
       const auth0Sub = "auth0|org-format-test"
+      const newUser = userFactory.build({
+        auth0Id: auth0Sub,
+        email: "james@example.com",
+        name: "James Bond",
+      })
+      await userRepository.save(newUser)
       const mockRequest = {
         user: {
           sub: auth0Sub,
-          email: "format@example.com",
+          email: newUser.email,
         },
-      }
+      } as EndpointRequest
       const body = {
         payload: {
           name: "Format Test Org",
         },
       }
 
-      // Act
       const response = await controller.createOrganization(mockRequest, body)
 
       // Assert - Check format matches expected DTO structure
@@ -212,21 +198,25 @@ describe("OrganizationsController", () => {
     })
 
     it("should create membership with owner role for current user", async () => {
-      // Arrange
       const auth0Sub = "auth0|org-owner-test"
+      const newUser = userFactory.build({
+        auth0Id: auth0Sub,
+        email: "james@example.com",
+        name: "James Bond",
+      })
+      await userRepository.save(newUser)
       const mockRequest = {
         user: {
           sub: auth0Sub,
-          email: "owner@example.com",
+          // email: "james@example.com",
         },
-      }
+      } as EndpointRequest
       const body = {
         payload: {
           name: "Owner Test Org",
         },
       }
 
-      // Act
       const { data: result } = await controller.createOrganization(mockRequest, body)
 
       // Assert - Verify membership exists with owner role
@@ -248,16 +238,20 @@ describe("OrganizationsController", () => {
     })
 
     it("should handle different organization names", async () => {
-      // Arrange
       const auth0Sub = "auth0|org-multi-org"
+      const newUser = userFactory.build({
+        auth0Id: auth0Sub,
+        email: "james@example.com",
+        name: "James Bond",
+      })
+      await userRepository.save(newUser)
       const mockRequest = {
         user: {
           sub: auth0Sub,
-          email: "multi@example.com",
+          email: newUser.email,
         },
-      }
+      } as EndpointRequest
 
-      // Act
       const org1 = await controller.createOrganization(mockRequest, {
         payload: { name: "Organization A" },
       })
@@ -285,59 +279,71 @@ describe("OrganizationsController", () => {
     })
 
     it("should reject organization name shorter than 3 characters", async () => {
-      // Arrange
       const auth0Sub = "auth0|org-validation"
+      const newUser = userFactory.build({
+        auth0Id: auth0Sub,
+        email: "james@example.com",
+        name: "James Bond",
+      })
+      await userRepository.save(newUser)
       const mockRequest = {
         user: {
           sub: auth0Sub,
-          email: "validation@example.com",
+          email: newUser.email,
         },
-      }
+      } as EndpointRequest
       const body = {
         payload: {
           name: "AB", // Only 2 characters
         },
       }
 
-      // Act & Assert - ValidationPipe will throw BadRequestException
       await expect(controller.createOrganization(mockRequest, body)).rejects.toThrow()
     })
 
     it("should reject empty organization name", async () => {
-      // Arrange
       const auth0Sub = "auth0|org-empty"
+      const newUser = userFactory.build({
+        auth0Id: auth0Sub,
+        email: "james@example.com",
+        name: "James Bond",
+      })
+      await userRepository.save(newUser)
       const mockRequest = {
         user: {
           sub: auth0Sub,
-          email: "empty@example.com",
+          email: newUser.email,
         },
-      }
+      } as EndpointRequest
       const body = {
         payload: {
           name: "",
         },
       }
 
-      // Act & Assert - ValidationPipe will throw BadRequestException
       await expect(controller.createOrganization(mockRequest, body)).rejects.toThrow()
     })
 
     it("should accept organization name with exactly 3 characters", async () => {
-      // Arrange
       const auth0Sub = "auth0|org-exact"
+      const newUser = userFactory.build({
+        auth0Id: auth0Sub,
+        email: "james@example.com",
+        name: "James Bond",
+      })
+      await userRepository.save(newUser)
       const mockRequest = {
         user: {
           sub: auth0Sub,
-          email: "exact@example.com",
+          email: newUser.email,
         },
-      }
+      } as EndpointRequest
       const body = {
         payload: {
           name: "ABC", // Exactly 3 characters
         },
       }
 
-      // Act
       const { data: result } = await controller.createOrganization(mockRequest, body)
 
       // Assert
@@ -346,21 +352,25 @@ describe("OrganizationsController", () => {
     })
 
     it("should reject organization name with only whitespace", async () => {
-      // Arrange
       const auth0Sub = "auth0|org-whitespace"
+      const newUser = userFactory.build({
+        auth0Id: auth0Sub,
+        email: "james@example.com",
+        name: "James Bond",
+      })
+      await userRepository.save(newUser)
       const mockRequest = {
         user: {
           sub: auth0Sub,
-          email: "whitespace@example.com",
+          email: newUser.email,
         },
-      }
+      } as EndpointRequest
       const body = {
         payload: {
           name: "   ", // Only whitespace (trimmed would be empty)
         },
       }
 
-      // Act & Assert - ValidationPipe will throw BadRequestException
       // Note: MinLength validator doesn't trim, so this might pass validation
       // but fail in the service layer. For now, we test that it throws.
       await expect(controller.createOrganization(mockRequest, body)).rejects.toThrow()

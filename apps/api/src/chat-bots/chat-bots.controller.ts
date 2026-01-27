@@ -1,38 +1,23 @@
-import type {
-  CreateChatBotRequestDto,
-  TimeType,
-  UpdateChatBotRequestDto,
-} from "@caseai-connect/api-contracts"
+import type { TimeType } from "@caseai-connect/api-contracts"
 import { Body, Controller, Delete, Get, Param, Patch, Post, Req, UseGuards } from "@nestjs/common"
 import { JwtAuthGuard } from "@/auth/jwt-auth.guard"
-// biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
-import { UserBootstrapService } from "@/organizations/user-bootstrap.service"
-import type { User } from "@/users/user.entity"
+import { UserGuard } from "@/guards/user.guard"
+import type { EndpointRequest } from "@/request.interface"
 import { ChatBotsRoutes } from "./chat-bots.routes"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
 import { ChatBotsService } from "./chat-bots.service"
 
-interface Auth0JwtPayload {
-  sub: string
-  email?: string
-  name?: string
-  picture?: string
-}
-
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, UserGuard)
 @Controller()
 export class ChatBotsController {
-  constructor(
-    private readonly userBootstrapService: UserBootstrapService,
-    private readonly chatBotsService: ChatBotsService,
-  ) {}
+  constructor(private readonly chatBotsService: ChatBotsService) {}
 
   @Post(ChatBotsRoutes.createChatBot.path)
   async createChatBot(
-    @Req() request: { user: Auth0JwtPayload },
-    @Body() body: { payload: CreateChatBotRequestDto },
+    @Req() request: EndpointRequest,
+    @Body() body: typeof ChatBotsRoutes.createChatBot.request,
   ): Promise<typeof ChatBotsRoutes.createChatBot.response> {
-    const user = await this.ensureUserFromRequest(request)
+    const user = request.user
 
     // Create ChatBot
     const chatBot = await this.chatBotsService.createChatBot(
@@ -54,10 +39,10 @@ export class ChatBotsController {
 
   @Get(ChatBotsRoutes.listChatBots.path)
   async listChatBots(
-    @Req() request: { user: Auth0JwtPayload },
+    @Req() request: EndpointRequest,
     @Param("projectId") projectId: string,
   ): Promise<typeof ChatBotsRoutes.listChatBots.response> {
-    const user = await this.ensureUserFromRequest(request)
+    const user = request.user
 
     // List ChatBots for the project
     const chatBots = await this.chatBotsService.listChatBots(user.id, projectId)
@@ -78,11 +63,11 @@ export class ChatBotsController {
 
   @Patch(ChatBotsRoutes.updateChatBot.path)
   async updateChatBot(
-    @Req() request: { user: Auth0JwtPayload },
+    @Req() request: EndpointRequest,
     @Param("chatBotId") chatBotId: string,
-    @Body() body: { payload: UpdateChatBotRequestDto },
+    @Body() body: typeof ChatBotsRoutes.updateChatBot.request,
   ): Promise<typeof ChatBotsRoutes.updateChatBot.response> {
-    const user = await this.ensureUserFromRequest(request)
+    const user = request.user
 
     // Update ChatBot
     const chatBot = await this.chatBotsService.updateChatBot(
@@ -104,33 +89,11 @@ export class ChatBotsController {
 
   @Delete(ChatBotsRoutes.deleteChatBot.path)
   async deleteChatBot(
-    @Req() request: { user: Auth0JwtPayload },
+    @Req() request: EndpointRequest,
     @Param("chatBotId") chatBotId: string,
   ): Promise<typeof ChatBotsRoutes.deleteChatBot.response> {
-    const user = await this.ensureUserFromRequest(request)
-
     // Delete ChatBot
-    await this.chatBotsService.deleteChatBot(user.id, chatBotId)
-
-    return {
-      data: {
-        success: true,
-      },
-    }
-  }
-
-  /**
-   * Extracts Auth0 user info from JWT payload and ensures the user exists locally.
-   * Returns the local User entity.
-   */
-  private async ensureUserFromRequest(request: { user: Auth0JwtPayload }): Promise<User> {
-    const auth0UserInfo = {
-      sub: request.user.sub,
-      email: request.user.email,
-      name: request.user.name,
-      picture: request.user.picture,
-    }
-
-    return this.userBootstrapService.ensureUser(auth0UserInfo)
+    await this.chatBotsService.deleteChatBot(request.user.id, chatBotId)
+    return { data: { success: true } }
   }
 }
