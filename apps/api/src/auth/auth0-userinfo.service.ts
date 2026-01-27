@@ -46,7 +46,6 @@ export class Auth0UserInfoService {
     }
 
     const userInfo = (await response.json()) as Auth0UserInfoResponse
-    console.warn("AJ: userInfo", userInfo)
     return userInfo
   }
 }
