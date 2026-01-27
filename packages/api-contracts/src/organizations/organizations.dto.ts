@@ -1,3 +1,4 @@
+// Create organization DTOs
 export type CreateOrganizationRequestDto = {
   name: string
 }

@@ -3,7 +3,7 @@ import { defineRoute } from "../helpers"
 import type {
   CreateOrganizationRequestDto,
   CreateOrganizationResponseDto,
-} from "./dto/create-organization.dto"
+} from "./organizations.dto"
 
 export const OrganizationsRoutes = {
   createOrganization: defineRoute<

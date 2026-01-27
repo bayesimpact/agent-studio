@@ -1,25 +1,23 @@
 // Generic DTOs
 
-// API Routes (default export)
-// Chat DTOs - kept in packages/api-contracts for now
-export type { CreateChatSessionResponseDto } from "./chat/dto/create-chat-session.dto"
-export type { MessageDto } from "./chat/dto/message.dto"
-export type { MessageResponseDto } from "./chat/dto/message-response.dto"
-export type { SendMessageDto } from "./chat/dto/send-message.dto"
-export { ChatBotsRoutes } from "./chat-bots/chat-bots.routes"
+// Chat DTOs
+export type {
+  CreateChatSessionResponseDto,
+  MessageDto,
+  MessageResponseDto,
+  SendMessageDto,
+} from "./chat/chat.dto"
 // Chat Bots DTOs
 export type {
+  ChatBotDto,
   CreateChatBotRequestDto,
   CreateChatBotResponseDto,
-} from "./chat-bots/dto/create-chat-bot.dto"
-export type {
-  ChatBotDto,
   ListChatBotsResponseDto,
-} from "./chat-bots/dto/list-chat-bots.dto"
-export type {
   UpdateChatBotRequestDto,
   UpdateChatBotResponseDto,
-} from "./chat-bots/dto/update-chat-bot.dto"
+} from "./chat-bots/chat-bots.dto"
+// API Routes
+export { ChatBotsRoutes } from "./chat-bots/chat-bots.routes"
 export type {
   RequestPayload,
   ResponseData,
@@ -30,27 +28,22 @@ export type { ApiRoute } from "./helpers"
 // Helpers
 export { defineRoute } from "./helpers"
 // Me DTOs
-export type { MeResponseDto } from "./me/dto/me.dto"
-// Routes
+export type { MeResponseDto } from "./me/me.dto"
 export { MeRoutes } from "./me/me.routes"
 // Organizations DTOs
 export type {
   CreateOrganizationRequestDto,
   CreateOrganizationResponseDto,
-} from "./organizations/dto/create-organization.dto"
+} from "./organizations/organizations.dto"
 export { OrganizationsRoutes } from "./organizations/organizations.routes"
 // Projects DTOs
 export type {
   CreateProjectRequestDto,
   CreateProjectResponseDto,
-} from "./projects/dto/create-project.dto"
-export type {
   ListProjectsResponseDto,
   ProjectDto,
-} from "./projects/dto/list-projects.dto"
-export type {
   UpdateProjectRequestDto,
   UpdateProjectResponseDto,
-} from "./projects/dto/update-project.dto"
+} from "./projects/projects.dto"
 export { ProjectsRoutes } from "./projects/projects.routes"
 export { ProtectedRoutes } from "./protected/protected.routes"
