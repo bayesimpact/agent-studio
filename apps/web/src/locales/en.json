@@ -118,10 +118,6 @@
   },
   "user": {
     "menu": {
-      "upgrade": "Upgrade to Pro",
-      "account": "Account",
-      "billing": "Billing",
-      "notifications": "Notifications",
       "logout": "Log out"
     }
   },
