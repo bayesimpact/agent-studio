@@ -47,9 +47,11 @@ describe("OrganizationsController", () => {
 
     // FIXME: @Did: rollbackTransaction does not clear data as expected
     // so we manually clear relevant tables here before each test
-    membershipRepository.clear()
-    organizationRepository.deleteAll()
-    userRepository.deleteAll()
+    // Delete in order to respect foreign key constraints
+    // Use query builder to delete all records (delete({}) doesn't work with empty criteria)
+    await membershipRepository.createQueryBuilder().delete().execute()
+    await organizationRepository.createQueryBuilder().delete().execute()
+    await userRepository.createQueryBuilder().delete().execute()
   })
 
   afterEach(async () => {

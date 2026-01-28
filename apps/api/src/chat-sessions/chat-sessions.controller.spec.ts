@@ -59,13 +59,6 @@ describe("ChatSessionsController", () => {
   describe("createPlaygroundSession", () => {
     it("should create a playground session when user is a member", async () => {
       const auth0Sub = "auth0|chat-session-ctrl-member"
-      const mockRequest = {
-        user: {
-          sub: auth0Sub,
-          email: "member@example.com",
-        },
-      } as EndpointRequest
-
       const organization = organizationFactory.build({ name: "Playground Org" })
       const savedOrganization = await organizationRepository.save(organization)
 
@@ -74,10 +67,18 @@ describe("ChatSessionsController", () => {
         email: "member@example.com",
       })
 
+      const mockRequest = {
+        user: {
+          sub: auth0Sub,
+          email: "member@example.com",
+          id: user.id,
+        },
+      } as EndpointRequest
+
       await membershipRepository.save({
         userId: user.id,
         organizationId: savedOrganization.id,
-        role: "member",
+        role: "owner",
       })
 
       const project = projectFactory.build({

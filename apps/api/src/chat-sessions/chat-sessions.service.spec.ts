@@ -187,7 +187,7 @@ describe("ChatSessionsService", () => {
       await membershipRepository.save({
         userId: testUser.id,
         organizationId: testOrganization.id,
-        role: "member",
+        role: "owner",
       })
 
       const session = await service.createPlaygroundSessionForChatBot(testChatBot.id, testUser.id)
@@ -211,7 +211,7 @@ describe("ChatSessionsService", () => {
       await membershipRepository.save({
         userId: testUser.id,
         organizationId: testOrganization.id,
-        role: "member",
+        role: "owner",
       })
 
       const nonExistentChatBotId = "00000000-0000-0000-0000-000000000000"
