@@ -15,7 +15,7 @@ langfusePk = pk-lf-YOUR_LANGFUSE_PK
 secretsPrefix = CONNECT_
 postHogHost=https://eu.i.posthog.com
 addCloudSqlInstances=YOUR_PROJECT:YOUR_REGION:YOUR_INSTANCE
-cloudSqlProxyPort = 5434
+cloudSqlProxyPort = 5433
 endif
 
 
