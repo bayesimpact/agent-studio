@@ -9,14 +9,13 @@ import { ProjectRoute } from "@/routes/ProjectRoute"
 import { ProtectedRoute } from "@/routes/ProtectedRoute"
 import type { AppDispatch } from "@/store"
 import { useAppDispatch } from "@/store/hooks"
+import { ChatBotLoader } from "./ChatBotLoader"
 import { ChatBotRoute } from "./ChatBotRoute"
+import { ChatBotsLoader } from "./ChatBotsLoader"
 import { DashboardRoute } from "./DashboardRoute"
 import { RouteNames } from "./helpers"
-import { LoadingRoute } from "./LoadingRoute"
-import { loadChatBot } from "./loaders/load-chat-bot"
-import { loadProjectAndChatBots } from "./loaders/load-project"
-import { loadProjects } from "./loaders/load-projects"
-import { OrganizationsHoc } from "./OrganizationsHoc"
+import { OrganizationsLoader } from "./OrganizationsLoader"
+import { ProjectsLoader } from "./ProjectsLoader"
 import { UserChatRoute } from "./UserChatRoute"
 import { UserHoc } from "./UserHoc"
 
@@ -48,19 +47,18 @@ const router = (dispatch: AppDispatch) =>
     },
     {
       path: RouteNames.ORGANIZATION_DASHBOARD,
-      loader: async ({ params }) => loadProjects({ dispatch, params }),
-      hydrateFallbackElement: <LoadingRoute />,
-      errorElement: <NotFoundRoute />,
       element: (
         <ProtectedRoute>
           <UserHoc>
-            {(user) => {
-              return (
-                <OrganizationsHoc>
-                  {(_organizations) => <DashboardRoute user={user} />}
-                </OrganizationsHoc>
-              )
-            }}
+            {(user) => (
+              <OrganizationsLoader>
+                {(organizationId) => (
+                  <ProjectsLoader organizationId={organizationId}>
+                    <DashboardRoute user={user} />
+                  </ProjectsLoader>
+                )}
+              </OrganizationsLoader>
+            )}
           </UserHoc>
         </ProtectedRoute>
       ),
@@ -71,17 +69,19 @@ const router = (dispatch: AppDispatch) =>
         },
         {
           path: RouteNames.PROJECT,
-          loader: async ({ params }) => loadProjectAndChatBots({ dispatch, params }),
-          hydrateFallbackElement: <LoadingRoute />,
-          errorElement: <NotFoundRoute />,
-          element: <ProjectRoute />,
+          element: (
+            <ChatBotsLoader>
+              <ProjectRoute />
+            </ChatBotsLoader>
+          ),
           children: [
             {
               path: RouteNames.CHAT_BOT,
-              loader: async ({ params }) => loadChatBot({ dispatch, params }),
-              errorElement: <NotFoundRoute />,
-              hydrateFallbackElement: <LoadingRoute />,
-              element: <ChatBotRoute />,
+              element: (
+                <ChatBotLoader>
+                  <ChatBotRoute />
+                </ChatBotLoader>
+              ),
             },
           ],
         },
@@ -90,8 +90,6 @@ const router = (dispatch: AppDispatch) =>
     {
       path: RouteNames.USER_CHAT,
       // loader: async ({ params }) => loadProjects({ dispatch, params }), // TODO:
-      hydrateFallbackElement: <LoadingRoute />,
-      errorElement: <NotFoundRoute />,
       element: (
         <ProtectedRoute>
           <UserHoc>

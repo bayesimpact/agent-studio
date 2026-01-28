@@ -1,4 +1,5 @@
 import { createSlice, type PayloadAction } from "@reduxjs/toolkit"
+import { projectsActions } from "../projects/projects.slice"
 import type { ChatBot } from "./chat-bots.models"
 import { listChatBots } from "./chat-bots.thunks"
 
@@ -44,6 +45,16 @@ const slice = createSlice({
         state.status = "failed"
         state.error = action.error.message || "Failed to list chat bots"
       })
+
+    builder.addCase(projectsActions.setCurrentProjectId, (state, action) => {
+      const projectId = action.payload.projectId
+
+      if (projectId && state.chatBots[projectId]) state.status = "succeeded"
+      else state.status = "idle"
+
+      state.error = null
+      state.currentChatBotId = null
+    })
   },
 })
 
