@@ -1,5 +1,7 @@
+import { useTranslation } from "react-i18next"
 import { selectProjectsError, selectProjectsStatus } from "@/features/projects/projects.selectors"
 import { createProject } from "@/features/projects/projects.thunks"
+import { ADS } from "@/store/async-data-status"
 import { useAppDispatch, useAppSelector } from "@/store/hooks"
 import { ProjectForm } from "./ProjectForm"
 
@@ -9,6 +11,7 @@ interface CreateProjectFormProps {
 }
 
 export function CreateProjectForm({ organizationId, onSuccess }: CreateProjectFormProps) {
+  const { t } = useTranslation("project", { keyPrefix: "createForm" })
   const dispatch = useAppDispatch()
   const status = useAppSelector(selectProjectsStatus)
   const error = useAppSelector(selectProjectsError)
@@ -18,7 +21,7 @@ export function CreateProjectForm({ organizationId, onSuccess }: CreateProjectFo
     onSuccess?.()
   }
 
-  const isLoading = status === "loading"
+  const isLoading = ADS.isLoading(status)
 
   return (
     <ProjectForm
@@ -26,8 +29,8 @@ export function CreateProjectForm({ organizationId, onSuccess }: CreateProjectFo
       isLoading={isLoading}
       error={error}
       onSubmit={handleSubmit}
-      submitLabelIdle="Create Project"
-      submitLabelLoading="Creating..."
+      submitLabelIdle={t("submit")}
+      submitLabelLoading={t("submitting")}
     />
   )
 }

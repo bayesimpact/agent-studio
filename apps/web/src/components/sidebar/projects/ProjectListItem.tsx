@@ -17,6 +17,7 @@ import {
   useSidebar,
 } from "@caseai-connect/ui/shad/sidebar"
 import { BotIcon, Edit, FolderIcon, MoreHorizontal, Trash2 } from "lucide-react"
+import { useTranslation } from "react-i18next"
 import { Link } from "react-router-dom"
 import type { ChatBot } from "@/features/chat-bots/chat-bots.models"
 import { selectChatBots, selectCurrentChatBotId } from "@/features/chat-bots/chat-bots.selectors"
@@ -123,12 +124,14 @@ type ItemOptionsProps = { onEdit: () => void; onDelete: () => void }
 
 function ItemOptions({ onEdit, onDelete }: ItemOptionsProps) {
   const { isMobile } = useSidebar()
+  const { t } = useTranslation("project", { keyPrefix: "list.actions" })
+  const { t: tCommon } = useTranslation("common")
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <SidebarMenuAction showOnHover>
           <MoreHorizontal />
-          <span className="sr-only">More</span>
+          <span className="sr-only">{tCommon("more")}</span>
         </SidebarMenuAction>
       </DropdownMenuTrigger>
       <DropdownMenuContent
@@ -138,11 +141,11 @@ function ItemOptions({ onEdit, onDelete }: ItemOptionsProps) {
       >
         <DropdownMenuItem onClick={onEdit}>
           <Edit className="text-muted-foreground" />
-          <span>Edit Project</span>
+          <span>{t("edit")}</span>
         </DropdownMenuItem>
         <DropdownMenuItem onClick={onDelete} className="text-destructive focus:text-destructive">
           <Trash2 className="text-muted-foreground" />
-          <span>Delete Project</span>
+          <span>{t("delete")}</span>
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
@@ -151,12 +154,14 @@ function ItemOptions({ onEdit, onDelete }: ItemOptionsProps) {
 
 function ChatBotItemOptions({ onEdit, onDelete }: ItemOptionsProps) {
   const { isMobile } = useSidebar()
+  const { t } = useTranslation("chatBot", { keyPrefix: "list.actions" })
+  const { t: tCommon } = useTranslation("common")
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <SidebarMenuAction showOnHover>
           <MoreHorizontal />
-          <span className="sr-only">More</span>
+          <span className="sr-only">{tCommon("more")}</span>
         </SidebarMenuAction>
       </DropdownMenuTrigger>
       <DropdownMenuContent
@@ -166,11 +171,11 @@ function ChatBotItemOptions({ onEdit, onDelete }: ItemOptionsProps) {
       >
         <DropdownMenuItem onClick={onEdit}>
           <Edit className="text-muted-foreground" />
-          <span>Edit Chat Bot</span>
+          <span>{t("edit")}</span>
         </DropdownMenuItem>
         <DropdownMenuItem onClick={onDelete} className="text-destructive focus:text-destructive">
           <Trash2 className="text-muted-foreground" />
-          <span>Delete Chat Bot</span>
+          <span>{t("delete")}</span>
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

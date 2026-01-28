@@ -8,6 +8,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@caseai-connect/ui/shad/dialog"
+import { useTranslation } from "react-i18next"
 import { UpdateProjectForm } from "@/components/projects/UpdateProjectForm"
 
 interface EditProjectDialogProps {
@@ -16,6 +17,7 @@ interface EditProjectDialogProps {
 }
 
 export function EditProjectDialog({ project, onClose }: EditProjectDialogProps) {
+  const { t } = useTranslation("project", { keyPrefix: "update" })
   if (!project) {
     return null
   }
@@ -28,8 +30,8 @@ export function EditProjectDialog({ project, onClose }: EditProjectDialogProps) 
     <Dialog open={!!project} onOpenChange={(open: boolean) => !open && onClose()}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Edit Project</DialogTitle>
-          <DialogDescription>Update the project name</DialogDescription>
+          <DialogTitle>{t("title")}</DialogTitle>
+          <DialogDescription>{t("description")}</DialogDescription>
         </DialogHeader>
         <UpdateProjectForm project={project} onSuccess={handleSuccess} />
       </DialogContent>

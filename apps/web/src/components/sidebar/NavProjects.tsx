@@ -4,6 +4,7 @@ import type { ProjectDto } from "@caseai-connect/api-contracts"
 import { Section } from "@caseai-connect/ui/components/layouts/sidebar/Section"
 import { SidebarMenu } from "@caseai-connect/ui/shad/sidebar"
 import { useState } from "react"
+import { useTranslation } from "react-i18next"
 import type { ChatBot } from "@/features/chat-bots/chat-bots.models"
 import { selectCurrentOrganization } from "@/features/organizations/organizations.selectors"
 import { useAppSelector } from "@/store/hooks"
@@ -26,6 +27,7 @@ type Item = { action: "edit" | "delete" } & (
 )
 
 export function NavProjects({ projects }: { projects: ProjectDto[] }) {
+  const { t } = useTranslation("project", { keyPrefix: "list" })
   const currentOrganization = useAppSelector(selectCurrentOrganization)
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
 
@@ -42,7 +44,7 @@ export function NavProjects({ projects }: { projects: ProjectDto[] }) {
   const handleClose = () => setItem(null)
 
   return (
-    <Section name="Projects" className="group-data-[collapsible=icon]:hidden">
+    <Section name={t("title")} className="group-data-[collapsible=icon]:hidden">
       {projects.length === 0 ? (
         <CreateProjectButton
           organizationId={currentOrganization.id}

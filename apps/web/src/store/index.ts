@@ -5,6 +5,7 @@ import { chatBotsMiddleware } from "@/features/chat-bots/chat-bots.middleware"
 import { chatBotsSliceReducer } from "@/features/chat-bots/chat-bots.slice"
 import { meSliceReducer } from "@/features/me/me.slice"
 import { notificationsSliceReducer } from "@/features/notifications/notifications.slice"
+import { organizationsMiddleware } from "@/features/organizations/organizations.middleware"
 import { organizationsSliceReducer } from "@/features/organizations/organizations.slice"
 import { projectsMiddleware } from "@/features/projects/projects.middleware"
 import { projectsSliceReducer } from "@/features/projects/projects.slice"
@@ -27,6 +28,7 @@ export const store = configureStore({
       },
     }).prepend(
       listenerMiddleware.middleware,
+      organizationsMiddleware.middleware,
       projectsMiddleware.middleware,
       chatBotsMiddleware.middleware,
     ),

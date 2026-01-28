@@ -7,6 +7,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@caseai-connect/ui/shad/dialog"
+import { useTranslation } from "react-i18next"
 import { CreateChatBotForm } from "./CreateChatBotForm"
 
 interface CreateChatBotDialogProps {
@@ -22,6 +23,7 @@ export function CreateChatBotDialog({
   isOpen,
   onOpenChange,
 }: CreateChatBotDialogProps) {
+  const { t } = useTranslation("chatBot", { keyPrefix: "create" })
   const handleSuccess = () => {
     onOpenChange(false)
   }
@@ -30,8 +32,8 @@ export function CreateChatBotDialog({
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Create ChatBot</DialogTitle>
-          <DialogDescription>Create a new chat bot for {projectName}</DialogDescription>
+          <DialogTitle>{t("title")}</DialogTitle>
+          <DialogDescription>{t("description", { projectName })}</DialogDescription>
         </DialogHeader>
         <CreateChatBotForm projectId={projectId} onSuccess={handleSuccess} />
       </DialogContent>

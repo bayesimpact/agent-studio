@@ -8,10 +8,12 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@caseai-connect/ui/shad/dialog"
+import { useTranslation } from "react-i18next"
 import { toast } from "sonner"
 import type { ChatBot } from "@/features/chat-bots/chat-bots.models"
 import { selectChatBotsStatus } from "@/features/chat-bots/chat-bots.selectors"
 import { deleteChatBot, listChatBots } from "@/features/chat-bots/chat-bots.thunks"
+import { ADS } from "@/store/async-data-status"
 import { useAppDispatch, useAppSelector } from "@/store/hooks"
 
 interface DeleteChatBotDialogProps {
@@ -20,6 +22,8 @@ interface DeleteChatBotDialogProps {
 }
 
 export function DeleteChatBotDialog({ chatBot, onClose }: DeleteChatBotDialogProps) {
+  const { t } = useTranslation("chatBot", { keyPrefix: "delete" })
+  const { t: tCommon } = useTranslation("common")
   const dispatch = useAppDispatch()
   const status = useAppSelector(selectChatBotsStatus)
 
@@ -30,11 +34,11 @@ export function DeleteChatBotDialog({ chatBot, onClose }: DeleteChatBotDialogPro
   const handleDelete = async () => {
     try {
       await dispatch(deleteChatBot({ chatBotId: chatBot.id })).unwrap()
-      toast.success("ChatBot deleted successfully")
+      toast.success(t("success"))
       onClose()
       dispatch(listChatBots({ projectId: chatBot.projectId }))
     } catch (err) {
-      const errorMessage = (err as { message?: string })?.message || "Failed to delete chat bot"
+      const errorMessage = (err as { message?: string })?.message || t("error")
       toast.error(errorMessage)
     }
   }
@@ -43,17 +47,15 @@ export function DeleteChatBotDialog({ chatBot, onClose }: DeleteChatBotDialogPro
     <Dialog open={!!chatBot} onOpenChange={(open: boolean) => !open && onClose()}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Delete ChatBot</DialogTitle>
-          <DialogDescription>
-            Are you sure you want to delete "{chatBot.name}"? This action cannot be undone.
-          </DialogDescription>
+          <DialogTitle>{t("title")}</DialogTitle>
+          <DialogDescription>{t("description", { name: chatBot.name })}</DialogDescription>
         </DialogHeader>
         <div className="flex justify-end gap-2 pt-4">
-          <Button variant="outline" onClick={onClose} disabled={status === "loading"}>
-            Cancel
+          <Button variant="outline" onClick={onClose} disabled={ADS.isLoading(status)}>
+            {tCommon("cancel")}
           </Button>
-          <Button variant="destructive" onClick={handleDelete} disabled={status === "loading"}>
-            {status === "loading" ? "Deleting..." : "Delete"}
+          <Button variant="destructive" onClick={handleDelete} disabled={ADS.isLoading(status)}>
+            {ADS.isLoading(status) ? t("submitting") : t("submit")}
           </Button>
         </div>
       </DialogContent>
