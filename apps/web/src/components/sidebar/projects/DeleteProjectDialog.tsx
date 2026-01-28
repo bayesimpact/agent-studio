@@ -9,8 +9,10 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@caseai-connect/ui/shad/dialog"
+import { useTranslation } from "react-i18next"
 import { selectProjectsStatus } from "@/features/projects/projects.selectors"
 import { deleteProject } from "@/features/projects/projects.thunks"
+import { ADS } from "@/store/async-data-status"
 import { useAppDispatch, useAppSelector } from "@/store/hooks"
 
 interface DeleteProjectDialogProps {
@@ -19,6 +21,8 @@ interface DeleteProjectDialogProps {
 }
 
 export function DeleteProjectDialog({ project, onClose }: DeleteProjectDialogProps) {
+  const { t } = useTranslation("project", { keyPrefix: "delete" })
+  const { t: tCommon } = useTranslation("common")
   const dispatch = useAppDispatch()
   const projectsStatus = useAppSelector(selectProjectsStatus)
 
@@ -35,21 +39,19 @@ export function DeleteProjectDialog({ project, onClose }: DeleteProjectDialogPro
     <Dialog open={!!project} onOpenChange={(open: boolean) => !open && onClose()}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Delete Project</DialogTitle>
-          <DialogDescription>
-            Are you sure you want to delete "{project.name}"? This action cannot be undone.
-          </DialogDescription>
+          <DialogTitle>{t("title")}</DialogTitle>
+          <DialogDescription>{t("description", { name: project.name })}</DialogDescription>
         </DialogHeader>
         <div className="flex justify-end gap-2 pt-4">
-          <Button variant="outline" onClick={onClose} disabled={projectsStatus === "loading"}>
-            Cancel
+          <Button variant="outline" onClick={onClose} disabled={ADS.isLoading(projectsStatus)}>
+            {tCommon("cancel")}
           </Button>
           <Button
             variant="destructive"
             onClick={handleDelete}
-            disabled={projectsStatus === "loading"}
+            disabled={ADS.isLoading(projectsStatus)}
           >
-            {projectsStatus === "loading" ? "Deleting..." : "Delete"}
+            {ADS.isLoading(projectsStatus) ? t("submitting") : t("submit")}
           </Button>
         </div>
       </DialogContent>

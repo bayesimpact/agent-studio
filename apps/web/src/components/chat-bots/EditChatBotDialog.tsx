@@ -7,6 +7,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@caseai-connect/ui/shad/dialog"
+import { useTranslation } from "react-i18next"
 import type { ChatBot } from "@/features/chat-bots/chat-bots.models"
 import { UpdateChatBotForm } from "./UpdateChatBotForm"
 
@@ -16,6 +17,7 @@ interface EditChatBotDialogProps {
 }
 
 export function EditChatBotDialog({ chatBot, onClose }: EditChatBotDialogProps) {
+  const { t } = useTranslation("chatBot", { keyPrefix: "update" })
   if (!chatBot) {
     return null
   }
@@ -28,8 +30,8 @@ export function EditChatBotDialog({ chatBot, onClose }: EditChatBotDialogProps) 
     <Dialog open={!!chatBot} onOpenChange={(open: boolean) => !open && onClose()}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Edit ChatBot</DialogTitle>
-          <DialogDescription>Update the chat bot details</DialogDescription>
+          <DialogTitle>{t("title")}</DialogTitle>
+          <DialogDescription>{t("description")}</DialogDescription>
         </DialogHeader>
         <UpdateChatBotForm chatBot={chatBot} onSuccess={handleSuccess} />
       </DialogContent>

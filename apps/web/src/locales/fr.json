@@ -1,12 +1,133 @@
 {
   "common": {
+    "loading": "Chargement...",
+    "loadingDescription": "Veuillez patienter pendant le chargement des données.",
     "english": "Anglais",
-    "french": "Français"
+    "french": "Français",
+    "cancel": "Annuler",
+    "edit": "Modifier",
+    "delete": "Supprimer",
+    "more": "Plus"
   },
   "project": {
     "createButton": {
       "title": "Créer un projet",
       "description": "Créer un nouveau projet pour {{organizationName}}"
+    },
+    "form": {
+      "labelName": "Nom du projet",
+      "placeholderName": "Entrez le nom du projet",
+      "validation": {
+        "nameRequired": "Le nom du projet est requis"
+      }
+    },
+    "createForm": {
+      "submit": "Créer un projet",
+      "submitting": "Création..."
+    },
+    "update": {
+      "title": "Modifier le projet",
+      "description": "Mettre à jour le nom du projet",
+      "submit": "Mettre à jour le projet",
+      "submitting": "Mise à jour..."
+    },
+    "delete": {
+      "title": "Supprimer le projet",
+      "description": "Êtes-vous sûr de vouloir supprimer {{name}} ? Cette action est irréversible.",
+      "submit": "Supprimer",
+      "submitting": "Suppression..."
+    },
+    "list": {
+      "title": "Projets",
+      "actions": {
+        "edit": "Modifier le projet",
+        "delete": "Supprimer le projet"
+      }
     }
+  },
+  "organization": {
+    "createForm": {
+      "title": "Créez votre organisation",
+      "description": "Commencez par créer votre première organisation. Vous pourrez en ajouter d'autres plus tard.",
+      "labelName": "Nom de l'organisation",
+      "placeholderName": "Entrez le nom de l'organisation",
+      "submit": "Créer l'organisation",
+      "submitting": "Création...",
+      "success": "Organisation créée avec succès!",
+      "error": "Échec de la création de l'organisation",
+      "validation": {
+        "minNameLength": "Le nom de l'organisation doit comporter au moins 3 caractères"
+      }
+    }
+  },
+  "chatBot": {
+    "form": {
+      "labelName": "Nom du ChatBot",
+      "placeholderName": "Entrez le nom du ChatBot",
+      "labelPrompt": "Prompt par défaut",
+      "placeholderPrompt": "Entrez le prompt par défaut pour ce ChatBot",
+      "validation": {
+        "nameMinLength": "Le nom du ChatBot doit comporter au moins 3 caractères",
+        "promptRequired": "Le prompt par défaut est requis"
+      }
+    },
+    "create": {
+      "title": "Créer un ChatBot",
+      "description": "Créer un nouveau ChatBot pour {{projectName}}",
+      "submit": "Créer le ChatBot",
+      "submitting": "Création..."
+    },
+    "update": {
+      "title": "Modifier le ChatBot",
+      "description": "Mettre à jour les détails du ChatBot",
+      "submit": "Mettre à jour le ChatBot",
+      "submitting": "Mise à jour..."
+    },
+    "delete": {
+      "title": "Supprimer le ChatBot",
+      "description": "Êtes-vous sûr de vouloir supprimer {{name}} ? Cette action est irréversible.",
+      "submit": "Supprimer",
+      "submitting": "Suppression...",
+      "success": "ChatBot supprimé avec succès",
+      "error": "Échec de la suppression du ChatBot"
+    },
+    "list": {
+      "title": "ChatBots",
+      "empty": {
+        "title": "Pas encore de ChatBots",
+        "description": "Créez votre premier ChatBot pour commencer avec des prompts personnalisés pour ce projet.",
+        "button": "Créer le premier ChatBot"
+      },
+      "actions": {
+        "edit": "Modifier le ChatBot",
+        "delete": "Supprimer le ChatBot",
+        "more": "Plus"
+      }
+    },
+    "detail": {
+      "defaultPromptTitle": "Prompt par défaut",
+      "mock": {
+        "msg1": "Hé, demandez-moi n'importe quoi!",
+        "msg2": "Que pouvez-vous faire?"
+      }
+    }
+  },
+  "chat": {
+    "header": "Chat",
+    "placeholder": "Posez une question..."
+  },
+  "user": {
+    "menu": {
+      "upgrade": "Passer à Pro",
+      "account": "Compte",
+      "billing": "Facturation",
+      "notifications": "Notifications",
+      "logout": "Se déconnecter"
+    }
+  },
+  "notFound": {
+    "title": "404 - Non trouvé",
+    "description": "La page que vous recherchez n'existe pas. Veuillez vérifier l'URL ou retourner à la page d'accueil.",
+    "home": "Accueil"
   }
 }

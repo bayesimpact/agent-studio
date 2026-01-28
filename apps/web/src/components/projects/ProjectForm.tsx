@@ -6,13 +6,8 @@ import { Input } from "@caseai-connect/ui/shad/input"
 import { Label } from "@caseai-connect/ui/shad/label"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
+import { useTranslation } from "react-i18next"
 import { z } from "zod"
-
-const projectSchema = z.object({
-  name: z.string().min(1, "Project name is required"),
-})
-
-type ProjectFormData = z.infer<typeof projectSchema>
 
 interface ProjectFormProps {
   defaultName?: string
@@ -23,6 +18,10 @@ interface ProjectFormProps {
   submitLabelLoading: string
 }
 
+type ProjectFormData = {
+  name: string
+}
+
 export function ProjectForm({
   defaultName,
   isLoading,
@@ -31,6 +30,12 @@ export function ProjectForm({
   submitLabelIdle,
   submitLabelLoading,
 }: ProjectFormProps) {
+  const { t } = useTranslation("project", { keyPrefix: "form" })
+
+  const projectSchema = z.object({
+    name: z.string().min(1, t("validation.nameRequired")),
+  })
+
   const {
     register,
     handleSubmit,
@@ -52,10 +57,10 @@ export function ProjectForm({
     <form onSubmit={handleSubmit(handleFormSubmit)}>
       <CardContent className="space-y-4 mt-2 px-0">
         <div className="space-y-2">
-          <Label htmlFor="name">Project Name</Label>
+          <Label htmlFor="name">{t("labelName")}</Label>
           <Input
             id="name"
-            placeholder="Enter project name"
+            placeholder={t("placeholderName")}
             {...register("name")}
             disabled={isLoading}
             aria-invalid={errors.name ? "true" : "false"}

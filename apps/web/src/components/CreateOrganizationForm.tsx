@@ -11,30 +11,31 @@ import { Input } from "@caseai-connect/ui/shad/input"
 import { Label } from "@caseai-connect/ui/shad/label"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
+import { useTranslation } from "react-i18next"
 import { useNavigate } from "react-router-dom"
-import { toast } from "sonner"
 import { z } from "zod"
-import { fetchMe } from "@/features/me/me.thunks"
 import {
   selectOrganizationsError,
   selectOrganizationsStatus,
 } from "@/features/organizations/organizations.selectors"
 import { createOrganization } from "@/features/organizations/organizations.thunks"
-import { buildOrganizationPath } from "@/routes/helpers"
+import { RouteNames } from "@/routes/helpers"
+import { ADS } from "@/store/async-data-status"
 import { useAppDispatch, useAppSelector } from "@/store/hooks"
 import { FullPageCenterLayout } from "./layouts/FullPageCenterLayout"
 
-const createOrganizationSchema = z.object({
-  name: z.string().min(3, "Organization name must be at least 3 characters long"),
-})
-
-type CreateOrganizationFormData = z.infer<typeof createOrganizationSchema>
-
 export function CreateOrganizationForm() {
+  const { t } = useTranslation("organization", { keyPrefix: "createForm" })
   const dispatch = useAppDispatch()
   const navigate = useNavigate()
   const status = useAppSelector(selectOrganizationsStatus)
   const error = useAppSelector(selectOrganizationsError)
+
+  const createOrganizationSchema = z.object({
+    name: z.string().min(3, t("validation.minNameLength")),
+  })
+
+  type CreateOrganizationFormData = z.infer<typeof createOrganizationSchema>
 
   const {
     register,
@@ -45,37 +46,27 @@ export function CreateOrganizationForm() {
   })
 
   const onSubmit = async (data: CreateOrganizationFormData) => {
-    try {
-      const organization = await dispatch(createOrganization({ name: data.name })).unwrap()
-      // Refresh user data to get updated organizations list (Option A)
-      await dispatch(fetchMe()).unwrap()
-      toast.success("Organization created successfully!")
-      // Redirect to dashboard
-      navigate(buildOrganizationPath(organization.id), { replace: true })
-    } catch (err) {
-      const errorMessage = (err as { message?: string })?.message || "Failed to create organization"
-      toast.error(errorMessage)
-    }
+    dispatch(createOrganization({ name: data.name })).finally(() =>
+      navigate(RouteNames.HOME, { replace: true }),
+    )
   }
 
-  const isLoading = status === "loading"
+  const isLoading = ADS.isLoading(status)
 
   return (
     <FullPageCenterLayout>
       <Card className="w-full max-w-md">
         <CardHeader>
-          <CardTitle>Create Your Organization</CardTitle>
-          <CardDescription>
-            Get started by creating your first organization. You can add more later.
-          </CardDescription>
+          <CardTitle>{t("title")}</CardTitle>
+          <CardDescription>{t("description")}</CardDescription>
         </CardHeader>
         <form onSubmit={handleSubmit(onSubmit)}>
           <CardContent className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="name">Organization Name</Label>
+              <Label htmlFor="name">{t("labelName")}</Label>
               <Input
                 id="name"
-                placeholder="Enter organization name"
+                placeholder={t("placeholderName")}
                 {...register("name")}
                 disabled={isLoading}
                 aria-invalid={errors.name ? "true" : "false"}
@@ -86,7 +77,7 @@ export function CreateOrganizationForm() {
           </CardContent>
           <CardFooter className="mt-2">
             <Button type="submit" disabled={isLoading} className="w-full">
-              {isLoading ? "Creating..." : "Create Organization"}
+              {isLoading ? t("submitting") : t("submit")}
             </Button>
           </CardFooter>
         </form>

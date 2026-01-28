@@ -1,6 +1,8 @@
+import { useTranslation } from "react-i18next"
 import type { ChatBot } from "@/features/chat-bots/chat-bots.models"
 import { selectChatBotsError, selectChatBotsStatus } from "@/features/chat-bots/chat-bots.selectors"
 import { updateChatBot } from "@/features/chat-bots/chat-bots.thunks"
+import { ADS } from "@/store/async-data-status"
 import { useAppDispatch, useAppSelector } from "@/store/hooks"
 import { ChatBotForm } from "./ChatBotForm"
 
@@ -10,6 +12,7 @@ interface UpdateChatBotFormProps {
 }
 
 export function UpdateChatBotForm({ chatBot, onSuccess }: UpdateChatBotFormProps) {
+  const { t } = useTranslation("chatBot", { keyPrefix: "update" })
   const dispatch = useAppDispatch()
   const status = useAppSelector(selectChatBotsStatus)
   const error = useAppSelector(selectChatBotsError)
@@ -27,7 +30,7 @@ export function UpdateChatBotForm({ chatBot, onSuccess }: UpdateChatBotFormProps
     onSuccess?.()
   }
 
-  const isLoading = status === "loading"
+  const isLoading = ADS.isLoading(status)
 
   return (
     <ChatBotForm
@@ -38,8 +41,8 @@ export function UpdateChatBotForm({ chatBot, onSuccess }: UpdateChatBotFormProps
       isLoading={isLoading}
       error={error}
       onSubmit={handleSubmit}
-      submitLabelIdle="Update ChatBot"
-      submitLabelLoading="Updating..."
+      submitLabelIdle={t("submit")}
+      submitLabelLoading={t("submitting")}
     />
   )
 }

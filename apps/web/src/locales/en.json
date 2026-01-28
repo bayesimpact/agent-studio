@@ -1,12 +1,133 @@
 {
   "common": {
+    "loading": "Loading...",
+    "loadingDescription": "Please wait while we load data.",
     "english": "English",
-    "french": "French"
+    "french": "French",
+    "cancel": "Cancel",
+    "edit": "Edit",
+    "delete": "Delete",
+    "more": "More"
   },
   "project": {
     "createButton": {
       "title": "Create Project",
       "description": "Create a new project for {{organizationName}}"
+    },
+    "form": {
+      "labelName": "Project Name",
+      "placeholderName": "Enter project name",
+      "validation": {
+        "nameRequired": "Project name is required"
+      }
+    },
+    "createForm": {
+      "submit": "Create Project",
+      "submitting": "Creating..."
+    },
+    "update": {
+      "title": "Edit Project",
+      "description": "Update the project name",
+      "submit": "Update Project",
+      "submitting": "Updating..."
+    },
+    "delete": {
+      "title": "Delete Project",
+      "description": "Are you sure you want to delete \"{{name}}\"? This action cannot be undone.",
+      "submit": "Delete",
+      "submitting": "Deleting..."
+    },
+    "list": {
+      "title": "Projects",
+      "actions": {
+        "edit": "Edit Project",
+        "delete": "Delete Project"
+      }
     }
+  },
+  "organization": {
+    "createForm": {
+      "title": "Create Your Organization",
+      "description": "Get started by creating your first organization. You can add more later.",
+      "labelName": "Organization Name",
+      "placeholderName": "Enter organization name",
+      "submit": "Create Organization",
+      "submitting": "Creating...",
+      "success": "Organization created successfully!",
+      "error": "Failed to create organization",
+      "validation": {
+        "minNameLength": "Organization name must be at least 3 characters long"
+      }
+    }
+  },
+  "chatBot": {
+    "form": {
+      "labelName": "ChatBot Name",
+      "placeholderName": "Enter chat bot name",
+      "labelPrompt": "Default Prompt",
+      "placeholderPrompt": "Enter the default prompt for this chat bot",
+      "validation": {
+        "nameMinLength": "ChatBot name must be at least 3 characters",
+        "promptRequired": "Default prompt is required"
+      }
+    },
+    "create": {
+      "title": "Create ChatBot",
+      "description": "Create a new chat bot for {{projectName}}",
+      "submit": "Create ChatBot",
+      "submitting": "Creating..."
+    },
+    "update": {
+      "title": "Edit ChatBot",
+      "description": "Update the chat bot details",
+      "submit": "Update ChatBot",
+      "submitting": "Updating..."
+    },
+    "delete": {
+      "title": "Delete ChatBot",
+      "description": "Are you sure you want to delete \"{{name}}\"? This action cannot be undone.",
+      "submit": "Delete",
+      "submitting": "Deleting...",
+      "success": "ChatBot deleted successfully",
+      "error": "Failed to delete chat bot"
+    },
+    "list": {
+      "title": "ChatBots",
+      "empty": {
+        "title": "No chat bots yet",
+        "description": "Create your first chat bot to get started with custom prompts for this project.",
+        "button": "Create First ChatBot"
+      },
+      "actions": {
+        "edit": "Edit ChatBot",
+        "delete": "Delete ChatBot",
+        "more": "More"
+      }
+    },
+    "detail": {
+      "defaultPromptTitle": "Default Prompt",
+      "mock": {
+        "msg1": "Hey, ask me anything!",
+        "msg2": "What can you do?"
+      }
+    }
+  },
+  "chat": {
+    "header": "Chat",
+    "placeholder": "Ask a question..."
+  },
+  "user": {
+    "menu": {
+      "upgrade": "Upgrade to Pro",
+      "account": "Account",
+      "billing": "Billing",
+      "notifications": "Notifications",
+      "logout": "Log out"
+    }
+  },
+  "notFound": {
+    "title": "404 - Not Found",
+    "description": "The page you are looking for does not exist. Please check the URL or return to the home page.",
+    "home": "Home"
   }
 }

@@ -7,14 +7,8 @@ import { Label } from "@caseai-connect/ui/shad/label"
 import { Textarea } from "@caseai-connect/ui/shad/textarea"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
+import { useTranslation } from "react-i18next"
 import { z } from "zod"
-
-const chatBotSchema = z.object({
-  name: z.string().min(3, "ChatBot name must be at least 3 characters"),
-  defaultPrompt: z.string().min(1, "Default prompt is required"),
-})
-
-type ChatBotFormData = z.infer<typeof chatBotSchema>
 
 interface ChatBotFormProps {
   defaultValues?: {
@@ -28,6 +22,11 @@ interface ChatBotFormProps {
   submitLabelLoading: string
 }
 
+type ChatBotFormData = {
+  name: string
+  defaultPrompt: string
+}
+
 export function ChatBotForm({
   defaultValues = { name: "", defaultPrompt: "" },
   isLoading,
@@ -36,6 +35,13 @@ export function ChatBotForm({
   submitLabelIdle,
   submitLabelLoading,
 }: ChatBotFormProps) {
+  const { t } = useTranslation("chatBot", { keyPrefix: "form" })
+
+  const chatBotSchema = z.object({
+    name: z.string().min(3, t("validation.nameMinLength")),
+    defaultPrompt: z.string().min(1, t("validation.promptRequired")),
+  })
+
   const {
     register,
     handleSubmit,
@@ -55,10 +61,10 @@ export function ChatBotForm({
     <form onSubmit={handleSubmit(handleFormSubmit)}>
       <CardContent className="space-y-4 mt-2 px-0">
         <div className="space-y-2">
-          <Label htmlFor="name">ChatBot Name</Label>
+          <Label htmlFor="name">{t("labelName")}</Label>
           <Input
             id="name"
-            placeholder="Enter chat bot name"
+            placeholder={t("placeholderName")}
             {...register("name")}
             disabled={isLoading}
             aria-invalid={errors.name ? "true" : "false"}
@@ -66,10 +72,10 @@ export function ChatBotForm({
           {errors.name && <p className="text-sm text-destructive">{errors.name.message}</p>}
         </div>
         <div className="space-y-2">
-          <Label htmlFor="defaultPrompt">Default Prompt</Label>
+          <Label htmlFor="defaultPrompt">{t("labelPrompt")}</Label>
           <Textarea
             id="defaultPrompt"
-            placeholder="Enter the default prompt for this chat bot"
+            placeholder={t("placeholderPrompt")}
             rows={8}
             {...register("defaultPrompt")}
             disabled={isLoading}

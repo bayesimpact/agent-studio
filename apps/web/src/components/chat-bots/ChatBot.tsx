@@ -1,6 +1,7 @@
 import { Button } from "@caseai-connect/ui/shad/button"
 import { Item, ItemContent, ItemHeader, ItemTitle } from "@caseai-connect/ui/shad/item"
 import { CirclePlusIcon, MicIcon, PaperclipIcon } from "lucide-react"
+import { useTranslation } from "react-i18next"
 import type { ChatBot as ChatBotModel } from "@/features/chat-bots/chat-bots.models"
 import {
   Chat,
@@ -16,16 +17,18 @@ import {
 import { DotsBackground } from "../DotsBackground"
 
 export function ChatBot({ chatBot }: { chatBot: ChatBotModel }) {
+  const { t } = useTranslation("chatBot", { keyPrefix: "detail" })
+  const { t: tChat } = useTranslation("chat")
   const messages = [
     {
       id: "1",
       role: "bot",
-      content: "Hey, ask me anything!",
+      content: t("mock.msg1"),
     },
     {
       id: "2",
       role: "user",
-      content: "What can you do?",
+      content: t("mock.msg2"),
     },
   ]
 
@@ -36,7 +39,7 @@ export function ChatBot({ chatBot }: { chatBot: ChatBotModel }) {
     <div className="p-6 flex flex-col gap-6 flex-1">
       <Item variant="outline">
         <ItemHeader>
-          <ItemTitle>Default Prompt</ItemTitle>
+          <ItemTitle>{t("defaultPromptTitle")}</ItemTitle>
         </ItemHeader>
         <ItemContent>{chatBot.defaultPrompt}</ItemContent>
       </Item>
@@ -55,7 +58,7 @@ export function ChatBot({ chatBot }: { chatBot: ChatBotModel }) {
           </ChatContent>
 
           <ChatFooter onMessageSubmit={handleSubmit}>
-            <ChatInput placeholder="Ask a question..." className="resize-none" />
+            <ChatInput placeholder={tChat("placeholder")} className="resize-none" />
 
             <ChatActions>
               <div className="flex-1 justify-start flex gap-1">
