@@ -11,7 +11,10 @@ export const createPlaygroundSession = createAsyncThunk<ChatSession, void, Thunk
   "chatSession/createPlaygroundSession",
   async (_, { extra: { services }, getState }) => {
     const state = getState()
-    const chatBotId = state.chatBots.currentChatBotId! // it
+    const chatBotId = state.chatBots.currentChatBotId
+    if (!chatBotId) {
+      throw new Error("No current chat bot ID found")
+    }
     return services.chatSession.createPlaygroundSession(chatBotId)
   },
 )

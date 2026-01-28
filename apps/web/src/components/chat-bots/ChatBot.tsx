@@ -1,8 +1,15 @@
 import { Button } from "@caseai-connect/ui/shad/button"
 import { Item, ItemContent, ItemHeader, ItemTitle } from "@caseai-connect/ui/shad/item"
+import { Spinner } from "@caseai-connect/ui/shad/spinner"
 import { AlertCircleIcon, CirclePlusIcon, MicIcon, PaperclipIcon } from "lucide-react"
 import { useTranslation } from "react-i18next"
 import type { ChatBot as ChatBotModel } from "@/features/chat-bots/chat-bots.models"
+import type { ChatSessionMessage } from "@/features/chat-session/chat-session.models"
+import {
+  selectCurrentChatSession,
+  selectCurrentMessages,
+  selectStreaming,
+} from "@/features/chat-session/chat-session.selectors"
 import { sendMessage } from "@/features/chat-session/chat-session.thunks"
 import { useAppDispatch, useAppSelector } from "@/store/hooks"
 import {
@@ -22,9 +29,9 @@ export function ChatBot({ chatBot }: { chatBot: ChatBotModel }) {
   const { t } = useTranslation("chatBot", { keyPrefix: "detail" })
   const { t: tChat } = useTranslation("chat")
   const dispatch = useAppDispatch()
-  const messages = useAppSelector((state) => state.chatSession.messages)
-  const session = useAppSelector((state) => state.chatSession.session)
-  const isStreaming = useAppSelector((state) => state.chatSession.isStreaming)
+  const session = useAppSelector(selectCurrentChatSession)
+  const messages = useAppSelector(selectCurrentMessages)
+  const isStreaming = useAppSelector(selectStreaming)
 
   const handleSubmit = (message: string) => {
     if (!session || isStreaming || !message.trim()) {
@@ -46,28 +53,9 @@ export function ChatBot({ chatBot }: { chatBot: ChatBotModel }) {
         <Chat>
           <ChatHeader />
           <ChatContent>
-            {messages.map((message) =>
-              message.role === "assistant" ? (
-                <ChatBotMessage
-                  key={message.id}
-                  className={
-                    message.status === "error"
-                      ? "bg-red-50 border border-red-200 text-red-800"
-                      : undefined
-                  }
-                >
-                  {message.status === "error" && (
-                    <div className="flex items-center gap-2 mb-2">
-                      <AlertCircleIcon className="size-4 text-red-600" />
-                      <span className="font-semibold text-red-700">Error</span>
-                    </div>
-                  )}
-                  {message.content}
-                </ChatBotMessage>
-              ) : (
-                <ChatUserMessage key={message.id}>{message.content}</ChatUserMessage>
-              ),
-            )}
+            {messages?.map((message) => (
+              <Message key={message.id} message={message} />
+            ))}
           </ChatContent>
 
           <ChatFooter onMessageSubmit={handleSubmit}>
@@ -94,6 +82,44 @@ export function ChatBot({ chatBot }: { chatBot: ChatBotModel }) {
           </ChatFooter>
         </Chat>
       </DotsBackground>
+    </div>
+  )
+}
+
+function Message({ message }: { message: ChatSessionMessage }) {
+  const isAssistant = message.role === "assistant"
+  const isStreaming = message.status === "streaming"
+  const isError = message.status === "error"
+  if (isAssistant) {
+    return (
+      <ChatBotMessage
+        key={message.id}
+        className={isError ? "bg-red-50 border border-red-200 text-red-800" : undefined}
+      >
+        {isStreaming && <ThinkingMessage />}
+        {isError && <ErrorMessage />}
+
+        {message.content}
+      </ChatBotMessage>
+    )
+  } else return <ChatUserMessage key={message.id}>{message.content}</ChatUserMessage>
+}
+
+function ErrorMessage() {
+  return (
+    <div className="flex items-center gap-2 mb-2">
+      <AlertCircleIcon className="size-4 text-red-600" />
+      <span className="font-semibold text-red-700">Error</span>
+    </div>
+  )
+}
+
+function ThinkingMessage() {
+  const { t } = useTranslation("chatBot", { keyPrefix: "detail" })
+  return (
+    <div className="flex items-center gap-2 mb-2 animate-pulse">
+      <Spinner />
+      <span>{t("thinking")}</span>
     </div>
   )
 }

@@ -1,45 +1,35 @@
 import { createSlice } from "@reduxjs/toolkit"
-import type { ChatSession, ChatSessionMessage, ChatSessionStatus } from "./chat-session.models"
+import { ADS, type AsyncData, defaultAsyncData } from "@/store/async-data-status"
+import type { ChatSession, ChatSessionMessage } from "./chat-session.models"
 import { createPlaygroundSession, loadSessionMessages } from "./chat-session.thunks"
 
-type ChatSessionState = {
-  session: ChatSession | null
-  messages: ChatSessionMessage[]
-  status: ChatSessionStatus
-  error: string | null
+type State = {
+  data: AsyncData<ChatSession>
+  messages: AsyncData<ChatSessionMessage[]>
   isStreaming: boolean
-  currentAssistantMessageId: string | null
 }
 
-const initialState: ChatSessionState = {
-  session: null,
-  messages: [],
-  status: "idle",
-  error: null,
+const initialState: State = {
+  data: defaultAsyncData,
+  messages: defaultAsyncData,
   isStreaming: false,
-  currentAssistantMessageId: null,
 }
 
 export const chatSessionSlice = createSlice({
   name: "chatSession",
   initialState,
   reducers: {
-    clearChatSession: (state) => {
-      state.session = null
-      state.messages = []
-      state.status = "idle"
-      state.error = null
-      state.isStreaming = false
-      state.currentAssistantMessageId = null
-    },
+    reset: () => initialState,
     startStreaming: (
       state,
       action: { payload: { userMessage: ChatSessionMessage; assistantMessageId: string } },
     ) => {
+      if (!ADS.isFulfilled(state.messages))
+        state.messages = { value: [], status: ADS.Fulfilled, error: null }
+
       state.isStreaming = true
-      state.currentAssistantMessageId = action.payload.assistantMessageId
-      state.messages.push(action.payload.userMessage)
-      state.messages.push({
+      state.messages.value.push(action.payload.userMessage)
+      state.messages.value.push({
         id: action.payload.assistantMessageId,
         role: "assistant",
         content: "",
@@ -50,14 +40,17 @@ export const chatSessionSlice = createSlice({
       state,
       action: { payload: { oldMessageId: string; newMessageId: string } },
     ) => {
-      const message = state.messages.find((msg) => msg.id === action.payload.oldMessageId)
+      if (!ADS.isFulfilled(state.messages)) return
+
+      const message = state.messages.value.find((msg) => msg.id === action.payload.oldMessageId)
       if (message && message.role === "assistant" && message.status === "streaming") {
         message.id = action.payload.newMessageId
-        state.currentAssistantMessageId = action.payload.newMessageId
       }
     },
     appendAssistantChunk: (state, action: { payload: { messageId: string; chunk: string } }) => {
-      const message = state.messages.find((msg) => msg.id === action.payload.messageId)
+      if (!ADS.isFulfilled(state.messages)) return
+
+      const message = state.messages.value.find((msg) => msg.id === action.payload.messageId)
       if (message && message.role === "assistant") {
         message.content += action.payload.chunk
       }
@@ -66,7 +59,9 @@ export const chatSessionSlice = createSlice({
       state,
       action: { payload: { messageId: string; fullContent: string } },
     ) => {
-      const message = state.messages.find((msg) => msg.id === action.payload.messageId)
+      if (!ADS.isFulfilled(state.messages)) return
+
+      const message = state.messages.value.find((msg) => msg.id === action.payload.messageId)
       if (message && message.role === "assistant") {
         message.content = action.payload.fullContent
         message.status = "completed"
@@ -75,10 +70,11 @@ export const chatSessionSlice = createSlice({
         }
       }
       state.isStreaming = false
-      state.currentAssistantMessageId = null
     },
     failAssistantMessage: (state, action: { payload: { messageId: string; error: string } }) => {
-      const message = state.messages.find((msg) => msg.id === action.payload.messageId)
+      if (!ADS.isFulfilled(state.messages)) return
+
+      const message = state.messages.value.find((msg) => msg.id === action.payload.messageId)
       if (message && message.role === "assistant") {
         message.status = "error"
         message.content = action.payload.error
@@ -87,45 +83,47 @@ export const chatSessionSlice = createSlice({
         }
       }
       state.isStreaming = false
-      state.currentAssistantMessageId = null
     },
   },
   extraReducers: (builder) => {
     builder
       .addCase(createPlaygroundSession.pending, (state) => {
-        state.status = "loading"
-        state.error = null
+        state.data.status = ADS.Loading
+        state.data.error = null
       })
       .addCase(createPlaygroundSession.fulfilled, (state, action) => {
-        state.status = "succeeded"
-        state.session = action.payload
-        state.error = null
-        state.messages = []
+        state.data = {
+          value: action.payload,
+          status: ADS.Fulfilled,
+          error: null,
+        }
+        state.messages = defaultAsyncData
       })
       .addCase(createPlaygroundSession.rejected, (state, action) => {
-        state.status = "failed"
-        state.error = action.error.message || "Failed to create playground session"
+        state.data.status = ADS.Error
+        state.data.error = action.error.message || "Failed to create playground session"
       })
 
     builder
       .addCase(loadSessionMessages.pending, (state) => {
-        // Keep existing session but reflect loading state if needed
-        if (state.status === "idle") {
-          state.status = "loading"
-        }
-        state.error = null
+        state.messages.status = ADS.Loading
+        state.messages.error = null
       })
       .addCase(loadSessionMessages.fulfilled, (state, action) => {
-        state.status = "succeeded"
-        state.messages = action.payload
-        state.error = null
+        state.messages = {
+          value: action.payload,
+          status: ADS.Fulfilled,
+          error: null,
+        }
       })
       .addCase(loadSessionMessages.rejected, (state, action) => {
-        state.status = "failed"
-        state.error = action.error.message || "Failed to load session messages"
+        state.messages.status = ADS.Error
+        state.messages.error = action.error.message || "Failed to load session messages"
       })
   },
 })
 
+export type { State as ChatSessionState }
+export const chatSessionInitialState = initialState
 export const chatSessionActions = { ...chatSessionSlice.actions }
 export const chatSessionSliceReducer = chatSessionSlice.reducer
