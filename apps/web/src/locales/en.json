@@ -109,7 +109,8 @@
       "mock": {
         "msg1": "Hey, ask me anything!",
         "msg2": "What can you do?"
-      }
+      },
+      "thinking": "Thinking..."
     }
   },
   "chat": {
