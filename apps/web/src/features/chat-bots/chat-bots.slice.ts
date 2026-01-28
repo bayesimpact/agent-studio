@@ -1,20 +1,18 @@
 import { createSlice, type PayloadAction } from "@reduxjs/toolkit"
+import { ADS, type AsyncData, defaultAsyncData } from "@/store/async-data-status"
 import { projectsActions } from "../projects/projects.slice"
 import type { ChatBot } from "./chat-bots.models"
 import { listChatBots } from "./chat-bots.thunks"
 
+type DataType = Record<string, ChatBot[]> // keyed by projectId
 interface State {
   currentChatBotId: string | null
-  chatBots: Record<string, ChatBot[] | null> // keyed by projectId
-  status: "idle" | "loading" | "succeeded" | "failed"
-  error: string | null
+  data: AsyncData<DataType>
 }
 
 const initialState: State = {
   currentChatBotId: null,
-  chatBots: {},
-  status: "idle",
-  error: null,
+  data: defaultAsyncData,
 }
 
 const slice = createSlice({
@@ -26,33 +24,39 @@ const slice = createSlice({
     },
     clearChatBots: (state, action: PayloadAction<{ projectId: string }>) => {
       // Clear chat bots for a specific project
-      delete state.chatBots[action.payload.projectId]
+      delete state.data.value?.[action.payload.projectId]
     },
   },
   extraReducers: (builder) => {
     builder
       .addCase(listChatBots.pending, (state) => {
-        if (state.status !== "succeeded") state.status = "loading"
-        state.error = null
+        if (!ADS.isFulfilled(state.data)) state.data.status = ADS.Loading
+        state.data.error = null
       })
       .addCase(listChatBots.fulfilled, (state, action) => {
-        state.status = "succeeded"
         const projectId = action.meta.arg.projectId
-        state.chatBots[projectId] = action.payload
-        state.error = null
+        state.data = {
+          status: ADS.Fulfilled,
+          error: null,
+          value: {
+            ...state.data.value,
+            [projectId]: action.payload,
+          },
+        }
       })
       .addCase(listChatBots.rejected, (state, action) => {
-        state.status = "failed"
-        state.error = action.error.message || "Failed to list chat bots"
+        state.data.status = ADS.Error
+        state.data.error = action.error.message || "Failed to list chat bots"
       })
 
     builder.addCase(projectsActions.setCurrentProjectId, (state, action) => {
       const projectId = action.payload.projectId
 
-      if (projectId && state.chatBots[projectId]) state.status = "succeeded"
-      else state.status = "idle"
+      if (projectId && ADS.isFulfilled(state.data) && state.data.value[projectId])
+        state.data.status = ADS.Fulfilled
+      else state.data.status = ADS.Uninitialized
 
-      state.error = null
+      state.data.error = null
     })
   },
 })

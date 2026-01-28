@@ -1,5 +1,6 @@
 import { selectChatBotsStatus } from "@/features/chat-bots/chat-bots.selectors"
 import { useSetCurrentChatBotId } from "@/hooks/use-set-current-id"
+import { ADS } from "@/store/async-data-status"
 import { useAppSelector } from "@/store/hooks"
 import { LoadingRoute } from "./LoadingRoute"
 import { NotFoundRoute } from "./NotFoundRoute"
@@ -9,9 +10,9 @@ export function ChatBotLoader({ children }: { children: React.ReactNode }) {
 
   const status = useAppSelector(selectChatBotsStatus)
 
-  if (status === "failed") return <NotFoundRoute />
+  if (ADS.isError(status)) return <NotFoundRoute />
 
-  if (status === "succeeded") return <>{children}</>
+  if (ADS.isFulfilled(status)) return <>{children}</>
 
   return <LoadingRoute />
 }

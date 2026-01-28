@@ -1,9 +1,9 @@
 import { configureStore } from "@reduxjs/toolkit"
 import { getServices } from "@/di/services"
-import { authSlice } from "@/features/auth/auth.slice"
+import { authSliceReducer } from "@/features/auth/auth.slice"
 import { chatBotsMiddleware } from "@/features/chat-bots/chat-bots.middleware"
 import { chatBotsSliceReducer } from "@/features/chat-bots/chat-bots.slice"
-import { meSlice } from "@/features/me/me.slice"
+import { meSliceReducer } from "@/features/me/me.slice"
 import { notificationsSliceReducer } from "@/features/notifications/notifications.slice"
 import { organizationsSliceReducer } from "@/features/organizations/organizations.slice"
 import { projectsMiddleware } from "@/features/projects/projects.middleware"
@@ -13,9 +13,9 @@ import type { ThunkExtraArg } from "./types"
 
 export const store = configureStore({
   reducer: {
-    auth: authSlice.reducer,
+    auth: authSliceReducer,
     chatBots: chatBotsSliceReducer,
-    me: meSlice.reducer,
+    me: meSliceReducer,
     notifications: notificationsSliceReducer,
     organizations: organizationsSliceReducer,
     projects: projectsSliceReducer,

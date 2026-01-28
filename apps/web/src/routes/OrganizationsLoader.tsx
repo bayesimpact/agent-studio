@@ -5,6 +5,7 @@ import {
   selectOrganizationsStatus,
 } from "@/features/organizations/organizations.selectors"
 import { useSetCurrentOrganizationId } from "@/hooks/use-set-current-id"
+import { ADS } from "@/store/async-data-status"
 import { useAppSelector } from "@/store/hooks"
 import { LoadingRoute } from "./LoadingRoute"
 import { NotFoundRoute } from "./NotFoundRoute"
@@ -21,10 +22,10 @@ export function OrganizationsLoader({
   const status = useAppSelector(selectOrganizationsStatus)
   const organizations = useAppSelector(selectOrganizations)
 
-  if (status === "failed") return <NotFoundRoute />
+  if (ADS.isError(status)) return <NotFoundRoute />
 
-  if (status === "succeeded" && organizationId) {
-    if (organizations.length === 0) {
+  if (ADS.isFulfilled(status) && organizationId) {
+    if (!organizations || organizations.length === 0) {
       navigate("/onboarding", { replace: true })
     }
     return <>{children(organizationId)}</>

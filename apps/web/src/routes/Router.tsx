@@ -87,7 +87,6 @@ const router = () =>
     },
     {
       path: RouteNames.USER_CHAT,
-      // loader: async ({ params }) => loadProjects({ dispatch, params }), // TODO:
       element: (
         <ProtectedRoute>
           <UserHoc>

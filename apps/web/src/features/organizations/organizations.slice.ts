@@ -1,19 +1,16 @@
 import { createSlice, type PayloadAction } from "@reduxjs/toolkit"
 import { fetchMe } from "@/features/me/me.thunks"
+import { ADS, type AsyncData, defaultAsyncData } from "@/store/async-data-status"
 import type { Organization } from "./organizations.models"
 
 interface State {
   currentOrganizationId: string | null
-  organizations: Organization[]
-  status: "idle" | "loading" | "succeeded" | "failed"
-  error: string | null
+  data: AsyncData<Organization[]>
 }
 
 const initialState: State = {
   currentOrganizationId: null,
-  organizations: [],
-  status: "idle",
-  error: null,
+  data: defaultAsyncData,
 }
 
 const slice = createSlice({
@@ -28,17 +25,19 @@ const slice = createSlice({
   extraReducers: (builder) => {
     builder
       .addCase(fetchMe.pending, (state) => {
-        if (state.status !== "succeeded") state.status = "loading"
-        state.error = null
+        if (!ADS.isFulfilled(state.data)) state.data.status = ADS.Loading
+        state.data.error = null
       })
       .addCase(fetchMe.fulfilled, (state, action) => {
-        state.organizations = action.payload.organizations
-        state.status = "succeeded"
-        state.error = null
+        state.data = {
+          status: ADS.Fulfilled,
+          error: null,
+          value: action.payload.organizations,
+        }
       })
       .addCase(fetchMe.rejected, (state, action) => {
-        state.status = "failed"
-        state.error = action.error.message || "Failed to list organizations"
+        state.data.status = ADS.Error
+        state.data.error = action.error.message || "Failed to list organizations"
       })
   },
 })
