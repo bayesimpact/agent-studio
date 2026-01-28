@@ -1,0 +1,147 @@
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  tests:
+    runs-on:
+      labels: ubuntu-latest-m
+    environment: test
+    steps:
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24.x'
+
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Run tests and checks
+        run: make ci
+
+      - name: Run tests
+        run: make tests
+
+#      - name: Publish Test Report
+#        uses: ctrf-io/github-test-reporter@v1
+#        with:
+#          report-path: '**/ctrf/*.json'
+#          github-report: true
+
+      - name: Notify on failure
+        if: ${{ failure() }}
+        run: make notify-error
+
+  build-and-push:
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24.x'
+
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - id: Auth
+        uses: 'google-github-actions/auth@v2'
+        with:
+          credentials_json: '${{ secrets.GCP_CREDENTIALS }}'
+
+      - name: gcloud caching
+        uses: actions/cache@v4
+        with:
+          path: ${{ runner.tool_cache }}/gcloud
+          key: ${{ runner.os }}-gcloud-beta-v545.0.0
+
+      - uses: google-github-actions/setup-gcloud@v2
+        with:
+          install_components: beta
+          version: "545.0.0"
+
+      - name: Docker connect to GCP
+        run: gcloud auth configure-docker REGION-docker.pkg.dev
+
+      - name: 'Check docker image starts and push it'
+        run: make docker-push
+
+      - name: Notify on failure
+        if: ${{ failure() }}
+        run: make notify-error
+
+  deploy:
+    needs: [tests, build-and-push]
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24.x'
+
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - id: Auth
+        uses: 'google-github-actions/auth@v2'
+        with:
+          credentials_json: '${{ secrets.GCP_CREDENTIALS }}'
+
+      - name: gcloud caching
+        uses: actions/cache@v4
+        with:
+          path: ${{ runner.tool_cache }}/gcloud
+          key: ${{ runner.os }}-beta-gcloud-v545.0.0
+
+      - uses: google-github-actions/setup-gcloud@v2
+        with:
+          install_components: beta
+          version: "545.0.0"
+
+      - id: Secrets
+        uses: 'google-github-actions/get-secretmanager-secrets@v2'
+        with:
+          secrets: |-
+            DATABASE_PASSWORD:bayes-agents/CONNECT_DATABASE_PASSWORD
+
+      - name: 'create cred file for cloudsql proxy'
+        run: 'mkdir dontsave && echo "$SSH_KEY" > dontsave/key.json && chmod o+r dontsave/key.json'
+        shell: bash
+        env:
+          SSH_KEY: ${{secrets.GCP_CREDENTIALS}}
+
+      - name: migration
+        run: make migrations MIG_DATABASE_PASSWORD=${{ steps.Secrets.outputs.DATABASE_PASSWORD }} REGION=eu
+
+#      - name: deploy
+#        run: make deploy-only REGION=eu
+
+      - name: Notify on failure
+        if: ${{ failure() }}
+        run: make notify-error
+
+  notify:
+    needs: [deploy]
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24.x'
+
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: notify
+        run: make notify

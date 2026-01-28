@@ -5,7 +5,7 @@
 First, run the development server:
 
 ```bash
-pnpm run dev
+npm run dev
 ```
 
 By default, your server will run at [http://localhost:3000](http://localhost:3000). You can use your favorite API platform like [Insomnia](https://insomnia.rest/) or [Postman](https://www.postman.com/) to test your APIs

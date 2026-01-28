@@ -1,4 +1,4 @@
-name: "caseai-connect-db"
+name: "connect-db"
 services:
   pgvector:
     image: pgvector/pgvector:pg17

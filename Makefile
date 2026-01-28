@@ -7,13 +7,15 @@ imageUrl ?= REGION-docker.pkg.dev/YOUR_PROJECT/YOUR_REPO/api
 REGION ?= eu
 
 ifeq "$(REGION)" "eu"
-cloudRunName = caseai-connect
+cloudRunName = connect
 location = europe-west1
 zone = europe-west9
 langfuseUrl = https://your-langfuse-instance.example.com
 langfusePk = pk-lf-YOUR_LANGFUSE_PK
-secretsPrefix = CASEAI_CONNECT_
+secretsPrefix = CONNECT_
 postHogHost=https://eu.i.posthog.com
+addCloudSqlInstances=YOUR_PROJECT:YOUR_REGION:YOUR_INSTANCE
+cloudSqlProxyPort = 5434
 endif
 
 
@@ -44,25 +46,36 @@ docker-check: docker-build
 	docker kill $$CONTAINER_ID >/dev/null 2>&1; \
 	exit 1
 
+
+ci-checks:
+	npm ci && npm run biome:ci && npm run typecheck
+
+
+db-tests:
+	docker compose -f infra/database/docker-compose.yaml up -d
+
+tests: db-tests ci-checks
+	cd apps/api && npm run test
+
 migrations:
-	docker compose up -d cloudsql-proxy
+	docker compose up -f infra/cloudsql-proxy/docker-compose.yaml -d cloudsql-proxy
 	docker compose logs cloudsql-proxy
-	cd backends/api && npm ci && DATABASE_HOST=localhost DATABASE_PORT=${cloudSqlProxyPort} DATABASE_USERNAME=caseai_admin DATABASE_NAME=caseai DATABASE_PASSWORD=${MIG_DATABASE_PASSWORD} npm run migration:run
+	cd apps/api && npm ci && DATABASE_HOST=localhost DATABASE_PORT=${cloudSqlProxyPort} DATABASE_USERNAME=connect_admin DATABASE_NAME=connect DATABASE_PASSWORD=${MIG_DATABASE_PASSWORD} npm run migration:run
 
 deploy: docker-push
-	gcloud config set project caseai-connect
 	gcloud run deploy ${cloudRunName} --image ${imageUrl}:${version} \
 	--update-secrets=LANGFUSE_SK=${secretsPrefix}LANGFUSE_SK:latest \
-	--update-secrets=FRANCE_TRAVAIL_CLIENT_ID=${secretsPrefix}FRANCE_TRAVAIL_CLIENT_ID:latest \
-	--update-secrets=FRANCE_TRAVAIL_SECRET_KEY=${secretsPrefix}FRANCE_TRAVAIL_SECRET_KEY:latest \
-	--update-secrets=DATA_INCLUSION_TOKEN=${secretsPrefix}DATA_INCLUSION_TOKEN:latest \
-	--update-secrets=NOTION_SECRET=${secretsPrefix}NOTION_SECRET:latest \
 	--set-env-vars=TZ=UTC \
     --set-env-vars=LANGFUSE_PK=${langfusePk},LANGFUSE_BASE_URL=${langfuseUrl},LOCATION=$(location) \
 	--region=${zone} \
 	--port=3000 \
 	--min-instances=1 \
 	--max-instances=1 \
-	--service-account=YOUR_SA@YOUR_PROJECT.iam.gserviceaccount.com
+	--service-account=YOUR_SA@YOUR_PROJECT.iam.gserviceaccount.com \
+	--project caseai-connect
 
+notify:
+	curl -X POST -H 'Content-type: application/json' --data '{"text":"$(shell git log -1 --pretty=%B)"}' SLACK_WEBHOOK_REDACTED
 
+notify-error:
+	curl -X POST -H 'Content-type: application/json' --data '{"text":"❌ Error in github action"}' SLACK_WEBHOOK_REDACTED

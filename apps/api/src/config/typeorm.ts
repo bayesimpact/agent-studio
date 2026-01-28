@@ -1,5 +1,4 @@
 import * as process from "node:process"
-
 import { registerAs } from "@nestjs/config"
 import type { TypeOrmModuleOptions } from "@nestjs/typeorm"
 import { config as dotenvConfig } from "dotenv"
@@ -16,7 +15,11 @@ if (process.env.DATABASE_HOST?.startsWith("/cloudsql")) {
 
 export const config: () => TypeOrmModuleOptions = () => ({
   type: "postgres",
-  url: process.env.DATABASE_URL,
+  host: `${process.env.DATABASE_HOST}`,
+  port: Number(`${process.env.DATABASE_PORT}`),
+  username: `${process.env.DATABASE_USERNAME}`,
+  password: `${process.env.DATABASE_PASSWORD}`,
+  database: `${process.env.DATABASE_NAME}`,
   entities: ["dist/**/*.entity.js"],
   migrations: ["dist/**/migrations/*.js"],
   autoLoadEntities: true,

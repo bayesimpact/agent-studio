@@ -1,3 +1,3 @@
-CREATE USER caseai_admin WITH PASSWORD 'passpass';
-CREATE DATABASE caseai_connect OWNER caseai_admin;
-CREATE DATABASE caseai_connect_test OWNER caseai_admin;
+CREATE USER connect_admin WITH PASSWORD 'passpass';
+CREATE DATABASE "connect" OWNER connect_admin;
+CREATE DATABASE connect_test OWNER connect_admin;
