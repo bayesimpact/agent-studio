@@ -7,8 +7,6 @@ import { NotFoundRoute } from "@/routes/NotFoundRoute"
 import { OnboardingRoute } from "@/routes/OnboardingRoute"
 import { ProjectRoute } from "@/routes/ProjectRoute"
 import { ProtectedRoute } from "@/routes/ProtectedRoute"
-import type { AppDispatch } from "@/store"
-import { useAppDispatch } from "@/store/hooks"
 import { ChatBotLoader } from "./ChatBotLoader"
 import { ChatBotRoute } from "./ChatBotRoute"
 import { ChatBotsLoader } from "./ChatBotsLoader"
@@ -19,7 +17,7 @@ import { ProjectsLoader } from "./ProjectsLoader"
 import { UserChatRoute } from "./UserChatRoute"
 import { UserHoc } from "./UserHoc"
 
-const router = (dispatch: AppDispatch) =>
+const router = () =>
   createBrowserRouter([
     {
       path: RouteNames.HOME,
@@ -107,6 +105,5 @@ const router = (dispatch: AppDispatch) =>
   ])
 
 export function Router() {
-  const dispatch = useAppDispatch()
-  return <RouterProvider router={router(dispatch)} />
+  return <RouterProvider router={router()} />
 }
