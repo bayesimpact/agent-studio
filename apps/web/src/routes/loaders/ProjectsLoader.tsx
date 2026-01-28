@@ -3,8 +3,8 @@ import { selectProjectsStatus } from "@/features/projects/projects.selectors"
 import { listProjects } from "@/features/projects/projects.thunks"
 import { ADS } from "@/store/async-data-status"
 import { useAppDispatch, useAppSelector } from "@/store/hooks"
-import { LoadingRoute } from "./LoadingRoute"
-import { NotFoundRoute } from "./NotFoundRoute"
+import { LoadingRoute } from "../LoadingRoute"
+import { NotFoundRoute } from "../NotFoundRoute"
 
 export function ProjectsLoader({
   children,
