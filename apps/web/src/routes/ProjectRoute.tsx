@@ -1,5 +1,5 @@
 import { useEffect } from "react"
-import { useOutlet, useParams } from "react-router-dom"
+import { useOutlet } from "react-router-dom"
 import { ChatBotsList } from "@/components/chat-bots/ChatBotsList"
 import { useSidebarLayout } from "@/components/layouts/sidebar/context"
 import { selectChatBots } from "@/features/chat-bots/chat-bots.selectors"
@@ -8,11 +8,10 @@ import { useAppSelector } from "@/store/hooks"
 import { NotFoundRoute } from "./NotFoundRoute"
 
 export function ProjectRoute() {
-  const { projectId } = useParams()
   const outlet = useOutlet()
 
-  const project = useAppSelector(selectCurrentProject(projectId))
-  const chatBots = useAppSelector(selectChatBots(projectId)) || []
+  const project = useAppSelector(selectCurrentProject)
+  const chatBots = useAppSelector(selectChatBots) || []
 
   const { setHeaderTitle } = useSidebarLayout()
   const headerTitle = project ? project.name : "Dashboard"

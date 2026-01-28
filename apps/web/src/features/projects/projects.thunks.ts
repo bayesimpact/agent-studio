@@ -9,9 +9,10 @@ export const createProject = createAsyncThunk<Project, CreateProjectPayload, Thu
   async (payload, { extra: { services } }) => await services.projects.createOne(payload),
 )
 
-export const listProjects = createAsyncThunk<Project[], string, ThunkConfig>(
+export const listProjects = createAsyncThunk<Project[], { organizationId: string }, ThunkConfig>(
   "projects/list",
-  async (organizationId, { extra: { services } }) => await services.projects.getAll(organizationId),
+  async ({ organizationId }, { extra: { services } }) =>
+    await services.projects.getAll(organizationId),
 )
 
 export const updateProject = createAsyncThunk<
@@ -24,7 +25,7 @@ export const updateProject = createAsyncThunk<
     await services.projects.updateOne(projectId, payload),
 )
 
-export const deleteProject = createAsyncThunk<void, string, ThunkConfig>(
+export const deleteProject = createAsyncThunk<void, { projectId: string }, ThunkConfig>(
   "projects/delete",
-  async (projectId, { extra: { services } }) => await services.projects.deleteOne(projectId),
+  async ({ projectId }, { extra: { services } }) => await services.projects.deleteOne(projectId),
 )

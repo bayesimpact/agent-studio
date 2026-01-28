@@ -3,7 +3,7 @@ import { createListenerMiddleware } from "@reduxjs/toolkit"
 import { setAuthenticated } from "@/features/auth/auth.slice"
 import { meSlice } from "@/features/me/me.slice"
 import { fetchMe } from "@/features/me/me.thunks"
-import { organizationsSlice } from "@/features/organizations/organizations.slice"
+import { organizationsActions } from "@/features/organizations/organizations.slice"
 import type { AppDispatch, RootState } from "./types"
 
 // Create typed listener middleware
@@ -23,7 +23,7 @@ listenerMiddleware.startListening({
     } else {
       // User logged out - clear user and organizations state
       listenerApi.dispatch(meSlice.actions.reset())
-      listenerApi.dispatch(organizationsSlice.actions.reset())
+      listenerApi.dispatch(organizationsActions.reset())
     }
   },
 })

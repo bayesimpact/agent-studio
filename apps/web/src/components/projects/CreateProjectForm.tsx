@@ -1,4 +1,3 @@
-import { toast } from "sonner"
 import { selectProjectsError, selectProjectsStatus } from "@/features/projects/projects.selectors"
 import { createProject } from "@/features/projects/projects.thunks"
 import { useAppDispatch, useAppSelector } from "@/store/hooks"
@@ -15,14 +14,8 @@ export function CreateProjectForm({ organizationId, onSuccess }: CreateProjectFo
   const error = useAppSelector(selectProjectsError)
 
   const handleSubmit = async (data: { name: string }) => {
-    try {
-      await dispatch(createProject({ name: data.name, organizationId })).unwrap()
-      toast.success("Project created successfully!")
-      onSuccess?.()
-    } catch (err) {
-      const errorMessage = (err as { message?: string })?.message || "Failed to create project"
-      toast.error(errorMessage)
-    }
+    dispatch(createProject({ name: data.name, organizationId }))
+    onSuccess?.()
   }
 
   const isLoading = status === "loading"

@@ -25,14 +25,8 @@ type Item = { action: "edit" | "delete" } & (
     }
 )
 
-export function NavProjects({
-  projects,
-  organizationId,
-}: {
-  projects: ProjectDto[]
-  organizationId: string
-}) {
-  const currentOrganization = useAppSelector(selectCurrentOrganization(organizationId))
+export function NavProjects({ projects }: { projects: ProjectDto[] }) {
+  const currentOrganization = useAppSelector(selectCurrentOrganization)
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
 
   const [item, setItem] = useState<Item | null>(null)
@@ -91,12 +85,10 @@ export function NavProjects({
 
       <EditProjectDialog
         project={item?.type === "project" && item.action === "edit" ? item.value : null}
-        organizationId={currentOrganization.id}
         onClose={handleClose}
       />
       <DeleteProjectDialog
         project={item?.type === "project" && item.action === "delete" ? item.value : null}
-        organizationId={currentOrganization.id}
         onClose={handleClose}
       />
 

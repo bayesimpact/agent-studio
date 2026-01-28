@@ -1,4 +1,5 @@
 import type { Params } from "react-router-dom"
+import { organizationsActions } from "@/features/organizations/organizations.slice"
 import type { Project } from "@/features/projects/projects.models"
 import { listProjects } from "@/features/projects/projects.thunks"
 import type { AppDispatch } from "@/store"
@@ -14,10 +15,15 @@ export const loadProjects = async ({
   params: Params<string>
 }): Promise<ProjectsLoaderData> => {
   const { organizationId } = params
-  if (!organizationId) return null
+  if (!organizationId) {
+    dispatch(organizationsActions.setCurrentOrganizationId({ organizationId: null }))
+    return null
+  }
+
+  dispatch(organizationsActions.setCurrentOrganizationId({ organizationId }))
 
   try {
-    const projects = await dispatch(listProjects(organizationId)).unwrap()
+    const projects = await dispatch(listProjects({ organizationId })).unwrap()
 
     // Automatically load the only project if there's just one
     if (projects.length === 1)

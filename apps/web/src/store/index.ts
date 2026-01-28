@@ -1,27 +1,35 @@
 import { configureStore } from "@reduxjs/toolkit"
 import { getServices } from "@/di/services"
 import { authSlice } from "@/features/auth/auth.slice"
-import { chatBotsSlice } from "@/features/chat-bots/chat-bots.slice"
+import { chatBotsMiddleware } from "@/features/chat-bots/chat-bots.middleware"
+import { chatBotsSliceReducer } from "@/features/chat-bots/chat-bots.slice"
 import { meSlice } from "@/features/me/me.slice"
-import { organizationsSlice } from "@/features/organizations/organizations.slice"
-import { projectsSlice } from "@/features/projects/projects.slice"
+import { notificationsSliceReducer } from "@/features/notifications/notifications.slice"
+import { organizationsSliceReducer } from "@/features/organizations/organizations.slice"
+import { projectsMiddleware } from "@/features/projects/projects.middleware"
+import { projectsSliceReducer } from "@/features/projects/projects.slice"
 import { listenerMiddleware } from "./listenerMiddleware"
 import type { ThunkExtraArg } from "./types"
 
 export const store = configureStore({
   reducer: {
     auth: authSlice.reducer,
+    chatBots: chatBotsSliceReducer,
     me: meSlice.reducer,
-    organizations: organizationsSlice.reducer,
-    projects: projectsSlice.reducer,
-    chatBots: chatBotsSlice.reducer,
+    notifications: notificationsSliceReducer,
+    organizations: organizationsSliceReducer,
+    projects: projectsSliceReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
       thunk: {
         extraArgument: { services: getServices() } satisfies ThunkExtraArg,
       },
-    }).prepend(listenerMiddleware.middleware),
+    }).prepend(
+      listenerMiddleware.middleware,
+      projectsMiddleware.middleware,
+      chatBotsMiddleware.middleware,
+    ),
 })
 
 // Re-export types for convenience (they're defined in types.ts to avoid circular deps)

@@ -8,8 +8,6 @@ import {
   DialogTitle,
 } from "@caseai-connect/ui/shad/dialog"
 import type { ChatBot } from "@/features/chat-bots/chat-bots.models"
-import { listChatBots } from "@/features/chat-bots/chat-bots.thunks"
-import { useAppDispatch } from "@/store/hooks"
 import { UpdateChatBotForm } from "./UpdateChatBotForm"
 
 interface EditChatBotDialogProps {
@@ -18,15 +16,12 @@ interface EditChatBotDialogProps {
 }
 
 export function EditChatBotDialog({ chatBot, onClose }: EditChatBotDialogProps) {
-  const dispatch = useAppDispatch()
-
   if (!chatBot) {
     return null
   }
 
   const handleSuccess = () => {
     onClose()
-    dispatch(listChatBots(chatBot.projectId))
   }
 
   return (
