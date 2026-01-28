@@ -2,7 +2,6 @@ on:
   push:
     branches:
       - main
-
 jobs:
   tests:
     runs-on:
@@ -110,7 +109,7 @@ jobs:
         uses: 'google-github-actions/get-secretmanager-secrets@v2'
         with:
           secrets: |-
-            DATABASE_PASSWORD:bayes-agents/CONNECT_DATABASE_PASSWORD
+            DATABASE_PASSWORD:caseai-connect/CONNECT_DATABASE_PASSWORD
 
       - name: 'create cred file for cloudsql proxy'
         run: 'mkdir dontsave && echo "$SSH_KEY" > dontsave/key.json && chmod o+r dontsave/key.json'
