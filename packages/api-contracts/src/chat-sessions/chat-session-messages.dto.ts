@@ -1,5 +1,3 @@
-import type { TimeType } from "../generic"
-
 export type ChatSessionMessageDto = {
   id: string
   role: "user" | "assistant"
@@ -19,4 +17,3 @@ export type ListChatSessionMessagesResponseDto = {
   sessionId: string
   messages: ChatSessionMessageDto[]
 }
-

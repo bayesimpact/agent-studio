@@ -1,10 +1,10 @@
+import type { ChatSessionMessageDto } from "@caseai-connect/api-contracts"
 import { ForbiddenException, Injectable, NotFoundException } from "@nestjs/common"
 import { InjectRepository } from "@nestjs/typeorm"
 import type { Repository } from "typeorm"
 import { v4 } from "uuid"
 import { ChatBot } from "@/chat-bots/chat-bot.entity"
 import { UserMembership } from "@/organizations/user-membership.entity"
-import type { ChatSessionMessageDto } from "@caseai-connect/api-contracts"
 import { ChatSession } from "./chat-session.entity"
 
 export type MessageStatus = "streaming" | "completed" | "aborted" | "error"
@@ -67,6 +67,37 @@ export class ChatSessionsService {
     }
 
     return session.messages as ChatSessionMessageDto[]
+  }
+
+  /**
+   * Loads a session and its chatbot, ensuring the session belongs to the user.
+   * Used by streaming controller to prepare for LLM calls.
+   */
+  async getSessionWithChatBotForUser(
+    sessionId: string,
+    userId: string,
+  ): Promise<{ session: ChatSession; chatBot: ChatBot }> {
+    const session = await this.chatSessionRepository.findOne({
+      where: { id: sessionId },
+    })
+
+    if (!session) {
+      throw new NotFoundException(`ChatSession with id ${sessionId} not found`)
+    }
+
+    if (session.userId !== userId) {
+      throw new ForbiddenException("User does not own this session")
+    }
+
+    const chatBot = await this.chatBotRepository.findOne({
+      where: { id: session.chatbotId },
+    })
+
+    if (!chatBot) {
+      throw new NotFoundException(`ChatBot with id ${session.chatbotId} not found`)
+    }
+
+    return { session, chatBot }
   }
 
   /**

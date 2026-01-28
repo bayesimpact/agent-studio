@@ -32,13 +32,21 @@ export class ChatStreamingService {
     const { session: updatedSession, assistantMessageId } =
       await this.chatSessionsService.prepareForStreaming(session.id, userContent)
 
-    // Step 2: Convert messages to LLM format
+    // Step 2: Send start event with messageId so frontend can update optimistic message
+    yield {
+      data: JSON.stringify({
+        type: "start",
+        messageId: assistantMessageId,
+      }),
+    } as MessageEvent
+
+    // Step 3: Convert messages to LLM format
     const llmMessages = this.convertToLLMFormat(updatedSession.messages)
 
-    // Step 3: Build LLM config from chatbot
+    // Step 4: Build LLM config from chatbot
     const llmConfig = this.buildLLMConfig(chatbot)
 
-    // Step 4: Stream response
+    // Step 5: Stream response
     let fullContent = ""
 
     try {
@@ -56,7 +64,7 @@ export class ChatStreamingService {
         } as MessageEvent
       }
 
-      // Step 5: Finalize streaming (persist completed message)
+      // Step 6: Finalize streaming (persist completed message)
       await this.chatSessionsService.finalizeStreaming(
         updatedSession.id,
         assistantMessageId,
@@ -111,6 +119,11 @@ export class ChatStreamingService {
         continue
       }
 
+      // Skip messages with empty content (AI SDK requires non-empty content)
+      if (!message.content || message.content.trim().length === 0) {
+        continue
+      }
+
       llmMessages.push({
         role: message.role === "user" ? "user" : "assistant",
         content: message.content,
@@ -124,9 +137,22 @@ export class ChatStreamingService {
    * Builds LLM configuration from ChatBot entity
    */
   private buildLLMConfig(chatbot: ChatBot): LLMConfig {
+    // Convert temperature to number (database decimal types may be returned as strings)
+    const temperature =
+      typeof chatbot.temperature === "string"
+        ? parseFloat(chatbot.temperature)
+        : Number(chatbot.temperature)
+
+    // Validate temperature is a valid number
+    if (Number.isNaN(temperature) || temperature < 0 || temperature > 2) {
+      throw new Error(
+        `Invalid temperature value: ${chatbot.temperature}. Temperature must be a number between 0 and 2.`,
+      )
+    }
+
     return {
       model: chatbot.model,
-      temperature: chatbot.temperature,
+      temperature,
       systemPrompt: chatbot.defaultPrompt,
     }
   }

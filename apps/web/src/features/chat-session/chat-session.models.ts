@@ -11,4 +11,6 @@ export type ChatSessionState = {
   messages: ChatSessionMessage[]
   status: ChatSessionStatus
   error: string | null
+  isStreaming: boolean
+  currentAssistantMessageId: string | null
 }
