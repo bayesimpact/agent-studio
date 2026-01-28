@@ -78,7 +78,7 @@ export const Default: Story = {
               )}
             </ChatContent>
 
-            <ChatFooter onMessageSubmit={handleSubmit}>
+            <ChatFooter focus={false} onMessageSubmit={handleSubmit}>
               <ChatInput placeholder="Ask a question..." className="resize-none" />
 
               <ChatActions>
