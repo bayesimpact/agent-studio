@@ -3,7 +3,7 @@ import { ChatBot } from "@/components/chat-bots/ChatBot"
 import { useSidebarLayout } from "@/components/layouts/sidebar/context"
 import { selectCurrentChatBot } from "@/features/chat-bots/chat-bots.selectors"
 import { useAppSelector } from "@/store/hooks"
-import { NotFoundRoute } from "./NotFoundRoute"
+import { LoadingRoute } from "./LoadingRoute"
 
 export function ChatBotRoute() {
   const chatBot = useAppSelector(selectCurrentChatBot)
@@ -15,6 +15,6 @@ export function ChatBotRoute() {
     setHeaderTitle(headerTitle)
   }, [headerTitle, setHeaderTitle])
 
-  if (!chatBot) return <NotFoundRoute />
+  if (!chatBot) return <LoadingRoute />
   return <ChatBot chatBot={chatBot} />
 }
