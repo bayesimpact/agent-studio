@@ -53,7 +53,6 @@ const slice = createSlice({
       else state.status = "idle"
 
       state.error = null
-      state.currentChatBotId = null
     })
   },
 })
