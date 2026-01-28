@@ -5,8 +5,7 @@ export const selectChatBotsStatus = (state: RootState) => state.chatBots.status
 
 export const selectChatBotsError = (state: RootState) => state.chatBots.error
 
-export const selectChatBots = (state: RootState) => {
-  const projectId = selectCurrentProjectId(state)
+export const selectChatBots = (projectId?: string) => (state: RootState) => {
   if (!projectId) return null
   return state.chatBots.chatBots[projectId] || null
 }

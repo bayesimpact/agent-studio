@@ -43,9 +43,9 @@ export function ProjectListItem({
   onEditItem,
   onDeleteItem,
 }: ProjectListItemProps) {
-  const projectId = useAppSelector(selectCurrentProjectId)
-  const chatBotId = useAppSelector(selectCurrentChatBotId)
-  const chatBots = useAppSelector(selectChatBots) || []
+  const currentProjectId = useAppSelector(selectCurrentProjectId)
+  const currentChatBotId = useAppSelector(selectCurrentChatBotId)
+  const chatBots = useAppSelector(selectChatBots(project.id)) || []
   const item: MenuItem = {
     id: project.id,
     title: project.name,
@@ -53,7 +53,7 @@ export function ProjectListItem({
       organizationId,
       projectId: project.id,
     }),
-    isActive: projectId === project.id && !chatBotId,
+    isActive: currentProjectId === project.id && !currentChatBotId,
     icon: FolderIcon,
     items: chatBots
       ? chatBots.map((chatBot) => ({
@@ -64,7 +64,7 @@ export function ProjectListItem({
             projectId: project.id,
             chatBotId: chatBot.id,
           }),
-          isActive: chatBotId === chatBot.id,
+          isActive: currentChatBotId === chatBot.id,
           icon: BotIcon,
         }))
       : [],
