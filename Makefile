@@ -59,7 +59,7 @@ tests: db-tests ci-checks
 
 migrations:
 	docker compose -f infra/cloudsql-proxy/docker-compose.yaml up -d
-	docker compose logs connect-cloudsql-proxy
+	docker compose -f infra/cloudsql-proxy/docker-compose.yaml logs cloudsql-proxy
 	cd apps/api && npm ci && DATABASE_HOST=localhost DATABASE_PORT=${cloudSqlProxyPort} DATABASE_USERNAME=connect_admin DATABASE_NAME=connect DATABASE_PASSWORD=${MIG_DATABASE_PASSWORD} npm run migration:run
 
 deploy: docker-push
