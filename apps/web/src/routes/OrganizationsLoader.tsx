@@ -1,8 +1,7 @@
-import { useNavigate } from "react-router-dom"
+import { Navigate } from "react-router-dom"
 import {
   selectCurrentOrganizationId,
-  selectOrganizations,
-  selectOrganizationsStatus,
+  selectOrganizationsData,
 } from "@/features/organizations/organizations.selectors"
 import { useSetCurrentOrganizationId } from "@/hooks/use-set-current-id"
 import { ADS } from "@/store/async-data-status"
@@ -17,18 +16,15 @@ export function OrganizationsLoader({
 }) {
   useSetCurrentOrganizationId()
 
-  const navigate = useNavigate()
   const organizationId = useAppSelector(selectCurrentOrganizationId)
-  const status = useAppSelector(selectOrganizationsStatus)
-  const organizations = useAppSelector(selectOrganizations)
+  const organizationsData = useAppSelector(selectOrganizationsData)
 
-  if (ADS.isError(status)) return <NotFoundRoute />
+  if (ADS.isError(organizationsData)) return <NotFoundRoute />
 
-  if (ADS.isFulfilled(status) && organizationId) {
-    if (!organizations || organizations.length === 0) {
-      navigate("/onboarding", { replace: true })
-    }
-    return <>{children(organizationId)}</>
+  if (ADS.isFulfilled(organizationsData) && organizationId) {
+    if (organizationsData.value.length === 0) {
+      return <Navigate to="/onboarding" replace />
+    } else return <>{children(organizationId)}</>
   }
 
   return <LoadingRoute />
