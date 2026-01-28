@@ -10,6 +10,7 @@ import { ProtectedRoute } from "@/routes/ProtectedRoute"
 import { ChatBotLoader } from "./ChatBotLoader"
 import { ChatBotRoute } from "./ChatBotRoute"
 import { ChatBotsLoader } from "./ChatBotsLoader"
+import { ChatSessionLoader } from "./ChatSessionLoader"
 import { DashboardRoute } from "./DashboardRoute"
 import { RouteNames } from "./helpers"
 import { OrganizationsLoader } from "./OrganizationsLoader"
@@ -77,7 +78,9 @@ const router = () =>
               path: RouteNames.CHAT_BOT,
               element: (
                 <ChatBotLoader>
-                  <ChatBotRoute />
+                  <ChatSessionLoader>
+                    <ChatBotRoute />
+                  </ChatSessionLoader>
                 </ChatBotLoader>
               ),
             },

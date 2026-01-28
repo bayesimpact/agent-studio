@@ -6,6 +6,7 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from "typeorm"
+import { ChatSession } from "@/chat-sessions/chat-session.entity"
 import { UserMembership } from "@/organizations/user-membership.entity"
 
 @Entity("user")
@@ -36,4 +37,10 @@ export class User {
     (membership) => membership.user,
   )
   memberships!: UserMembership[]
+
+  @OneToMany(
+    () => ChatSession,
+    (chatSession) => chatSession.user,
+  )
+  chatSessions!: ChatSession[]
 }

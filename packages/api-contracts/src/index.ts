@@ -1,11 +1,14 @@
 // Generic DTOs
 
-// API Routes (default export)
-// Chat DTOs - kept in packages/api-contracts for now
-export type * from "./chat/dto/chat.dto"
 // Chat Bots DTOs
 export type * from "./chat-bots/chat-bots.dto"
 export { ChatBotsRoutes } from "./chat-bots/chat-bots.routes"
+export type * from "./chat-sessions/chat-session-messages.dto"
+export { ChatSessionMessagesRoutes } from "./chat-sessions/chat-session-messages.routes"
+export { ChatSessionStreamingRoutes } from "./chat-sessions/chat-session-streaming.routes"
+// Chat Sessions DTOs
+export type * from "./chat-sessions/chat-sessions.dto"
+export { ChatSessionsRoutes } from "./chat-sessions/chat-sessions.routes"
 export type * from "./generic"
 export type { ApiRoute } from "./helpers"
 // Helpers

@@ -1,7 +1,10 @@
 import { ForbiddenException, Injectable, NotFoundException } from "@nestjs/common"
 import { InjectRepository } from "@nestjs/typeorm"
 import type { Repository } from "typeorm"
-import { type MembershipRole, UserMembership } from "@/organizations/user-membership.entity"
+// biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
+import { ChatSessionsService } from "@/chat-sessions/chat-sessions.service"
+import type { MembershipRole } from "@/organizations/user-membership.entity"
+import { UserMembership } from "@/organizations/user-membership.entity"
 import { Project } from "@/projects/project.entity"
 import { ChatBot } from "./chat-bot.entity"
 
@@ -14,6 +17,7 @@ export class ChatBotsService {
     private readonly projectRepository: Repository<Project>,
     @InjectRepository(UserMembership)
     private readonly membershipRepository: Repository<UserMembership>,
+    private readonly chatSessionsService: ChatSessionsService,
   ) {}
 
   /**
@@ -160,6 +164,9 @@ export class ChatBotsService {
     projectId: string,
     name: string,
     defaultPrompt: string,
+    model?: string,
+    temperature?: number,
+    locale?: string,
   ): Promise<ChatBot> {
     // Validate name (min 3 characters)
     if (name.length < 3) {
@@ -178,10 +185,13 @@ export class ChatBotsService {
       throw new NotFoundException(`Project with id ${projectId} not found`)
     }
 
-    // Create the chat bot
+    // Create the chat bot with defaults
     const chatBot = this.chatBotRepository.create({
       name,
       defaultPrompt,
+      model: model || "gemini-2.5-flash",
+      temperature: temperature ?? 0,
+      locale: locale || "en",
       projectId,
       project,
     })
@@ -207,12 +217,16 @@ export class ChatBotsService {
   /**
    * Updates a chat bot.
    * Verifies that the user is an owner or admin of the chat bot's project's organization before updating.
+   * Deletes playground sessions if configuration fields change.
    */
   async updateChatBot(
     userId: string,
     chatBotId: string,
     name?: string,
     defaultPrompt?: string,
+    model?: string,
+    temperature?: number,
+    locale?: string,
   ): Promise<ChatBot> {
     // Validate name if provided (min 3 characters)
     if (name !== undefined && name.length < 3) {
@@ -231,6 +245,13 @@ export class ChatBotsService {
       throw new NotFoundException(`ChatBot with id ${chatBotId} not found`)
     }
 
+    // Track if configuration fields changed (these trigger playground cleanup)
+    const configChanged =
+      (model !== undefined && model !== chatBot.model) ||
+      (temperature !== undefined && temperature !== chatBot.temperature) ||
+      (defaultPrompt !== undefined && defaultPrompt !== chatBot.defaultPrompt) ||
+      (locale !== undefined && locale !== chatBot.locale)
+
     // Update the chat bot
     if (name !== undefined) {
       chatBot.name = name
@@ -238,8 +259,24 @@ export class ChatBotsService {
     if (defaultPrompt !== undefined) {
       chatBot.defaultPrompt = defaultPrompt
     }
+    if (model !== undefined) {
+      chatBot.model = model
+    }
+    if (temperature !== undefined) {
+      chatBot.temperature = temperature
+    }
+    if (locale !== undefined) {
+      chatBot.locale = locale
+    }
 
-    return this.chatBotRepository.save(chatBot)
+    const updatedChatBot = await this.chatBotRepository.save(chatBot)
+
+    // If configuration changed, delete all playground sessions for this chatbot
+    if (configChanged) {
+      await this.chatSessionsService.deletePlaygroundSessionsForChatBot(chatBotId)
+    }
+
+    return updatedChatBot
   }
 
   /**
