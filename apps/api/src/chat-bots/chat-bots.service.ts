@@ -1,7 +1,8 @@
 import { ForbiddenException, Injectable, NotFoundException } from "@nestjs/common"
 import { InjectRepository } from "@nestjs/typeorm"
 import type { Repository } from "typeorm"
-import type { ChatSessionsService } from "@/chat-sessions/chat-sessions.service"
+// biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
+import { ChatSessionsService } from "@/chat-sessions/chat-sessions.service"
 import type { MembershipRole } from "@/organizations/user-membership.entity"
 import { UserMembership } from "@/organizations/user-membership.entity"
 import { Project } from "@/projects/project.entity"

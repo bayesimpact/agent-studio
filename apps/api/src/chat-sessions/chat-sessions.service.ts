@@ -8,7 +8,7 @@ export type MessageStatus = "streaming" | "completed" | "aborted" | "error"
 
 export interface ChatMessageInput {
   id: string
-  role: "user" | "assistant" | "tool"
+  role: "user" | "assistant"
   content: string
   status?: MessageStatus
   createdAt?: string

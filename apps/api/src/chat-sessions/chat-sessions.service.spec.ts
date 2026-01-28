@@ -385,13 +385,31 @@ describe("ChatSessionsService", () => {
 
   describe("deleteExpiredPlaygroundSessions", () => {
     it("should delete expired playground sessions", async () => {
-      // Create an expired session (more than 5 minutes ago to pass safety margin)
+      // Create a non-expired session first
+      const validSession = await service.createPlaygroundSession(
+        testChatBot.id,
+        testUser.id,
+        testOrganization.id,
+      )
+
+      // Create another chatbot to avoid session reuse
+      const anotherChatBot = chatBotRepository.create({
+        name: "Another Test ChatBot",
+        defaultPrompt: "You are a helpful assistant",
+        model: "gemini-2.5-flash",
+        temperature: 0,
+        locale: "en",
+        projectId: testProject.id,
+      })
+      await chatBotRepository.save(anotherChatBot)
+
+      // Create an expired session with a different chatbot to avoid reuse
       // Set to 1 hour ago to ensure it's well past the 5-minute safety margin
       const expiredDate = new Date()
       expiredDate.setHours(expiredDate.getHours() - 1)
 
       const expiredSession = chatSessionRepository.create({
-        chatbotId: testChatBot.id,
+        chatbotId: anotherChatBot.id,
         userId: testUser.id,
         organizationId: testOrganization.id,
         type: "playground",
@@ -405,13 +423,6 @@ describe("ChatSessionsService", () => {
         where: { id: expiredSession.id },
       })
       expect(beforeDelete).toBeDefined()
-
-      // Create a non-expired session
-      const validSession = await service.createPlaygroundSession(
-        testChatBot.id,
-        testUser.id,
-        testOrganization.id,
-      )
 
       // Delete expired sessions
       const deletedCount = await service.deleteExpiredPlaygroundSessions()

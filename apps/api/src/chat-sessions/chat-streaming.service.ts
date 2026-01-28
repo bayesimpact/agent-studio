@@ -101,11 +101,6 @@ export class ChatStreamingService {
     const llmMessages: ChatMessage[] = []
 
     for (const message of messages) {
-      // Skip tool messages (they're handled differently in ai-sdk)
-      if (message.role === "tool") {
-        continue
-      }
-
       // Skip streaming messages (they're not complete yet)
       if (message.status === "streaming") {
         continue
