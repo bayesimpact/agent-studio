@@ -13,6 +13,7 @@ export function NavUserMenuItems() {
   return (
     <>
       <DropdownMenuGroup>
+        <ChangeLanguage />
         <DropdownMenuItem>
           <SparklesIcon />
           {t("upgrade")}
@@ -40,4 +41,23 @@ export function NavUserMenuItems() {
       </DropdownMenuItem>
     </>
   )
+}
+
+function ChangeLanguage() {
+  const { i18n } = useTranslation("user", { keyPrefix: "menu" })
+  if (i18n.language === "en") {
+    return (
+      <DropdownMenuItem onSelect={() => i18n.changeLanguage("fr")}>
+        <span>🇫🇷</span>
+        <span className="ml-0.5">Choisir le Français</span>
+      </DropdownMenuItem>
+    )
+  } else {
+    return (
+      <DropdownMenuItem onSelect={() => i18n.changeLanguage("en")}>
+        <span>🇺🇸</span>
+        <span className="ml-0.5">Switch to English</span>
+      </DropdownMenuItem>
+    )
+  }
 }
