@@ -7,4 +7,4 @@ services:
     ports:
       - "5433:5433"
     volumes:
-      - ../dontsave/key.json:/secrets/cloudsql/credentials.json
+      - ../../dontsave/key.json:/secrets/cloudsql/credentials.json
