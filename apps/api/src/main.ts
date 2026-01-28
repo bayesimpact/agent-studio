@@ -18,6 +18,7 @@ async function bootstrap() {
       "http://localhost:3002",
       "http://localhost:5173",
       "https://caseai-connect-web.vercel.app",
+      "https://connect-web-flax.vercel.app",
       "https://connect.caseai.org",
     ],
     credentials: true,
