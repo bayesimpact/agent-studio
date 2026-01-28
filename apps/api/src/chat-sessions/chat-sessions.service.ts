@@ -1,7 +1,9 @@
-import { Injectable, NotFoundException } from "@nestjs/common"
+import { ForbiddenException, Injectable, NotFoundException } from "@nestjs/common"
 import { InjectRepository } from "@nestjs/typeorm"
 import type { Repository } from "typeorm"
 import { v4 } from "uuid"
+import { ChatBot } from "@/chat-bots/chat-bot.entity"
+import { UserMembership } from "@/organizations/user-membership.entity"
 import { ChatSession } from "./chat-session.entity"
 
 export type MessageStatus = "streaming" | "completed" | "aborted" | "error"
@@ -28,6 +30,10 @@ export class ChatSessionsService {
   constructor(
     @InjectRepository(ChatSession)
     private readonly chatSessionRepository: Repository<ChatSession>,
+    @InjectRepository(ChatBot)
+    private readonly chatBotRepository: Repository<ChatBot>,
+    @InjectRepository(UserMembership)
+    private readonly membershipRepository: Repository<UserMembership>,
   ) {}
 
   /**
@@ -80,6 +86,49 @@ export class ChatSessionsService {
     })
 
     return this.chatSessionRepository.save(session)
+  }
+
+  /**
+   * Verifies that a user can create a playground session for a chat bot.
+   * User must be an admin or owner of the chat bot's project's organization.
+   * Throws ForbiddenException if the user is not a member.
+   */
+  private async verifyUserCanCreatePlaygroundSession(
+    userId: string,
+    chatbotId: string,
+  ): Promise<{ organizationId: string }> {
+    const chatBot = await this.chatBotRepository.findOne({
+      where: { id: chatbotId },
+      relations: ["project"],
+    })
+
+    if (!chatBot) {
+      throw new NotFoundException(`ChatBot with id ${chatbotId} not found`)
+    }
+
+    const membership = await this.membershipRepository.findOne({
+      where: {
+        userId,
+        organizationId: chatBot.project.organizationId,
+      },
+    })
+
+    if (!membership || (membership.role !== "owner" && membership.role !== "admin")) {
+      throw new ForbiddenException(
+        `User does not have access to organization ${chatBot.project.organizationId}`,
+      )
+    }
+
+    return { organizationId: chatBot.project.organizationId }
+  }
+
+  /**
+   * Creates or reuses a playground session for a user and chatbot,
+   * performing organization membership checks based on the chatbot's project.
+   */
+  async createPlaygroundSessionForChatBot(chatbotId: string, userId: string): Promise<ChatSession> {
+    const { organizationId } = await this.verifyUserCanCreatePlaygroundSession(userId, chatbotId)
+    return this.createPlaygroundSession(chatbotId, userId, organizationId)
   }
 
   /**

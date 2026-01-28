@@ -1,4 +1,4 @@
-import { NotFoundException } from "@nestjs/common"
+import { ForbiddenException, NotFoundException } from "@nestjs/common"
 import type { Repository } from "typeorm"
 import { ChatBot } from "@/chat-bots/chat-bot.entity"
 import { clearTestDatabase } from "@/common/test/test-database"
@@ -175,6 +175,48 @@ describe("ChatSessionsService", () => {
       expect(session2.messages).toEqual([]) // Messages reset
       expect(session2.expiresAt).not.toBeNull()
       expect(session2.expiresAt!.getTime()).toBeGreaterThan(Date.now()) // TTL updated
+    })
+  })
+
+  describe("createPlaygroundSessionForChatBot", () => {
+    it("should create a playground session when user is a member of the organization", async () => {
+      const membershipRepository = setup.getRepository(UserMembership)
+
+      await membershipRepository.save({
+        userId: testUser.id,
+        organizationId: testOrganization.id,
+        role: "member",
+      })
+
+      const session = await service.createPlaygroundSessionForChatBot(testChatBot.id, testUser.id)
+
+      expect(session).toBeDefined()
+      expect(session.type).toBe("playground")
+      expect(session.chatbotId).toBe(testChatBot.id)
+      expect(session.userId).toBe(testUser.id)
+      expect(session.organizationId).toBe(testOrganization.id)
+    })
+
+    it("should throw ForbiddenException when user is not a member of the organization", async () => {
+      await expect(
+        service.createPlaygroundSessionForChatBot(testChatBot.id, testUser.id),
+      ).rejects.toThrow(ForbiddenException)
+    })
+
+    it("should throw NotFoundException when chat bot does not exist", async () => {
+      const membershipRepository = setup.getRepository(UserMembership)
+
+      await membershipRepository.save({
+        userId: testUser.id,
+        organizationId: testOrganization.id,
+        role: "member",
+      })
+
+      const nonExistentChatBotId = "00000000-0000-0000-0000-000000000000"
+
+      await expect(
+        service.createPlaygroundSessionForChatBot(nonExistentChatBotId, testUser.id),
+      ).rejects.toThrow(NotFoundException)
     })
   })
 

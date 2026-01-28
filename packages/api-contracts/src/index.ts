@@ -1,9 +1,11 @@
 // Generic DTOs
 
-// API Routes (default export)
 // Chat Bots DTOs
 export type * from "./chat-bots/chat-bots.dto"
 export { ChatBotsRoutes } from "./chat-bots/chat-bots.routes"
+// Chat Sessions DTOs
+export type * from "./chat-sessions/chat-sessions.dto"
+export { ChatSessionsRoutes } from "./chat-sessions/chat-sessions.routes"
 export type * from "./generic"
 export type { ApiRoute } from "./helpers"
 // Helpers
