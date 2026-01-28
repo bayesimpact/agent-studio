@@ -15,6 +15,7 @@ COPY package.json ./
 # Generate the production build. The build script runs "nest build" to compile the application.
 RUN npm ci
 RUN cd apps/api && npm run build
+RUN cd packages/api-contracts && npm run build
 
 #
 # 🚀 Production Server
