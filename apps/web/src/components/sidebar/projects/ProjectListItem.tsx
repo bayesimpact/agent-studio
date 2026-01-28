@@ -17,9 +17,10 @@ import {
   useSidebar,
 } from "@caseai-connect/ui/shad/sidebar"
 import { BotIcon, Edit, FolderIcon, MoreHorizontal, Trash2 } from "lucide-react"
-import { Link, useParams } from "react-router-dom"
+import { Link } from "react-router-dom"
 import type { ChatBot } from "@/features/chat-bots/chat-bots.models"
-import { selectChatBots } from "@/features/chat-bots/chat-bots.selectors"
+import { selectChatBots, selectCurrentChatBotId } from "@/features/chat-bots/chat-bots.selectors"
+import { selectCurrentProjectId } from "@/features/projects/projects.selectors"
 import { buildChatBotPath, buildProjectPath } from "@/routes/helpers"
 import { useAppSelector } from "@/store/hooks"
 import type { MenuItem } from "../types"
@@ -42,8 +43,9 @@ export function ProjectListItem({
   onEditItem,
   onDeleteItem,
 }: ProjectListItemProps) {
-  const { projectId, chatBotId } = useParams<{ projectId: string; chatBotId: string }>()
-  const chatBots = useAppSelector(selectChatBots(project.id)) || []
+  const projectId = useAppSelector(selectCurrentProjectId)
+  const chatBotId = useAppSelector(selectCurrentChatBotId)
+  const chatBots = useAppSelector(selectChatBots) || []
   const item: MenuItem = {
     id: project.id,
     title: project.name,

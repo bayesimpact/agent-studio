@@ -11,8 +11,6 @@ import {
 import { SidebarMenuButton, SidebarMenuItem } from "@caseai-connect/ui/shad/sidebar"
 import { Plus } from "lucide-react"
 import { CreateProjectForm } from "@/components/projects/CreateProjectForm"
-import { listProjects } from "@/features/projects/projects.thunks"
-import { useAppDispatch } from "@/store/hooks"
 
 interface CreateProjectButtonProps {
   organizationId: string
@@ -27,11 +25,8 @@ export function CreateProjectButton({
   isOpen,
   onOpenChange,
 }: CreateProjectButtonProps) {
-  const dispatch = useAppDispatch()
-
   const handleSuccess = () => {
     onOpenChange(false)
-    dispatch(listProjects(organizationId))
   }
 
   return (

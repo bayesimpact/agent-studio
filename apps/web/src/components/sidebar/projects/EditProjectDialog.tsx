@@ -9,25 +9,19 @@ import {
   DialogTitle,
 } from "@caseai-connect/ui/shad/dialog"
 import { UpdateProjectForm } from "@/components/projects/UpdateProjectForm"
-import { listProjects } from "@/features/projects/projects.thunks"
-import { useAppDispatch } from "@/store/hooks"
 
 interface EditProjectDialogProps {
   project: ProjectDto | null
-  organizationId: string
   onClose: () => void
 }
 
-export function EditProjectDialog({ project, organizationId, onClose }: EditProjectDialogProps) {
-  const dispatch = useAppDispatch()
-
+export function EditProjectDialog({ project, onClose }: EditProjectDialogProps) {
   if (!project) {
     return null
   }
 
   const handleSuccess = () => {
     onClose()
-    dispatch(listProjects(organizationId))
   }
 
   return (

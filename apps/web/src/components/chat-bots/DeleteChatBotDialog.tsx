@@ -29,10 +29,10 @@ export function DeleteChatBotDialog({ chatBot, onClose }: DeleteChatBotDialogPro
 
   const handleDelete = async () => {
     try {
-      await dispatch(deleteChatBot(chatBot.id)).unwrap()
+      await dispatch(deleteChatBot({ chatBotId: chatBot.id })).unwrap()
       toast.success("ChatBot deleted successfully")
       onClose()
-      dispatch(listChatBots(chatBot.projectId))
+      dispatch(listChatBots({ projectId: chatBot.projectId }))
     } catch (err) {
       const errorMessage = (err as { message?: string })?.message || "Failed to delete chat bot"
       toast.error(errorMessage)

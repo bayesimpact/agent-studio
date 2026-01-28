@@ -1,53 +1,49 @@
-import { createSlice } from "@reduxjs/toolkit"
+import { createSlice, type PayloadAction } from "@reduxjs/toolkit"
 import { fetchMe } from "@/features/me/me.thunks"
 import type { Organization } from "./organizations.models"
-import { createOrganization } from "./organizations.thunks"
 
-interface OrganizationsState {
+interface State {
+  currentOrganizationId: string | null
   organizations: Organization[]
-  createdOrganization: Organization | null
   status: "idle" | "loading" | "succeeded" | "failed"
   error: string | null
 }
 
-const initialState: OrganizationsState = {
+const initialState: State = {
+  currentOrganizationId: null,
   organizations: [],
-  createdOrganization: null,
   status: "idle",
   error: null,
 }
 
-export const organizationsSlice = createSlice({
+const slice = createSlice({
   name: "organizations",
   initialState,
   reducers: {
-    clearCreatedOrganization: (state) => {
-      state.createdOrganization = null
+    setCurrentOrganizationId: (state, action: PayloadAction<{ organizationId: string | null }>) => {
+      state.currentOrganizationId = action.payload.organizationId
     },
     reset: () => initialState,
   },
   extraReducers: (builder) => {
-    builder.addCase(fetchMe.fulfilled, (state, action) => {
-      state.organizations = action.payload.organizations
-    })
-
     builder
-      .addCase(createOrganization.pending, (state) => {
-        state.status = "loading"
+      .addCase(fetchMe.pending, (state) => {
+        if (state.status !== "succeeded") state.status = "loading"
         state.error = null
       })
-      .addCase(createOrganization.fulfilled, (state, action) => {
+      .addCase(fetchMe.fulfilled, (state, action) => {
+        state.organizations = action.payload.organizations
         state.status = "succeeded"
-        state.createdOrganization = action.payload
         state.error = null
-        // Note: Organizations list will be updated by fetchMe.fulfilled
-        // (Option A: single source of truth)
       })
-      .addCase(createOrganization.rejected, (state, action) => {
+      .addCase(fetchMe.rejected, (state, action) => {
         state.status = "failed"
-        state.error = action.error.message || "Failed to create organization"
+        state.error = action.error.message || "Failed to list organizations"
       })
   },
 })
 
-export const { clearCreatedOrganization } = organizationsSlice.actions
+export type { State as OrganizationsState }
+export const organizationsInitialState = initialState
+export const organizationsActions = { ...slice.actions }
+export const organizationsSliceReducer = slice.reducer

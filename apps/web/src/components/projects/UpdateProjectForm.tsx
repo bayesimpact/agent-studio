@@ -1,5 +1,4 @@
 import type { ProjectDto } from "@caseai-connect/api-contracts"
-import { toast } from "sonner"
 import { selectProjectsError, selectProjectsStatus } from "@/features/projects/projects.selectors"
 import { updateProject } from "@/features/projects/projects.thunks"
 import { useAppDispatch, useAppSelector } from "@/store/hooks"
@@ -16,16 +15,8 @@ export function UpdateProjectForm({ project, onSuccess }: UpdateProjectFormProps
   const error = useAppSelector(selectProjectsError)
 
   const handleSubmit = async (data: { name: string }) => {
-    try {
-      await dispatch(
-        updateProject({ projectId: project.id, payload: { name: data.name } }),
-      ).unwrap()
-      toast.success("Project updated successfully!")
-      onSuccess?.()
-    } catch (err) {
-      const errorMessage = (err as { message?: string })?.message || "Failed to update project"
-      toast.error(errorMessage)
-    }
+    dispatch(updateProject({ projectId: project.id, payload: { name: data.name } }))
+    onSuccess?.()
   }
 
   const isLoading = status === "loading"

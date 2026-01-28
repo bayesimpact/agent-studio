@@ -4,9 +4,9 @@ import type { ChatBot, CreateChatBotPayload, UpdateChatBotPayload } from "./chat
 
 type ThunkConfig = { state: RootState; extra: ThunkExtraArg }
 
-export const listChatBots = createAsyncThunk<ChatBot[], string, ThunkConfig>(
+export const listChatBots = createAsyncThunk<ChatBot[], { projectId: string }, ThunkConfig>(
   "chatBots/list",
-  async (projectId, { extra: { services } }) => await services.chatBots.getAll(projectId),
+  async ({ projectId }, { extra: { services } }) => await services.chatBots.getAll(projectId),
 )
 
 export const createChatBot = createAsyncThunk<ChatBot, CreateChatBotPayload, ThunkConfig>(
@@ -24,7 +24,7 @@ export const updateChatBot = createAsyncThunk<
     await services.chatBots.updateOne(chatBotId, payload),
 )
 
-export const deleteChatBot = createAsyncThunk<void, string, ThunkConfig>(
+export const deleteChatBot = createAsyncThunk<void, { chatBotId: string }, ThunkConfig>(
   "chatBots/delete",
-  async (chatBotId, { extra: { services } }) => await services.chatBots.deleteOne(chatBotId),
+  async ({ chatBotId }, { extra: { services } }) => await services.chatBots.deleteOne(chatBotId),
 )

@@ -9,22 +9,16 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@caseai-connect/ui/shad/dialog"
-import { toast } from "sonner"
 import { selectProjectsStatus } from "@/features/projects/projects.selectors"
-import { deleteProject, listProjects } from "@/features/projects/projects.thunks"
+import { deleteProject } from "@/features/projects/projects.thunks"
 import { useAppDispatch, useAppSelector } from "@/store/hooks"
 
 interface DeleteProjectDialogProps {
   project: ProjectDto | null
-  organizationId: string
   onClose: () => void
 }
 
-export function DeleteProjectDialog({
-  project,
-  organizationId,
-  onClose,
-}: DeleteProjectDialogProps) {
+export function DeleteProjectDialog({ project, onClose }: DeleteProjectDialogProps) {
   const dispatch = useAppDispatch()
   const projectsStatus = useAppSelector(selectProjectsStatus)
 
@@ -33,15 +27,8 @@ export function DeleteProjectDialog({
   }
 
   const handleDelete = async () => {
-    try {
-      await dispatch(deleteProject(project.id)).unwrap()
-      toast.success("Project deleted successfully")
-      onClose()
-      dispatch(listProjects(organizationId))
-    } catch (err) {
-      const errorMessage = (err as { message?: string })?.message || "Failed to delete project"
-      toast.error(errorMessage)
-    }
+    dispatch(deleteProject({ projectId: project.id }))
+    onClose()
   }
 
   return (

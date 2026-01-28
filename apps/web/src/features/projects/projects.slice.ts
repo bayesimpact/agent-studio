@@ -1,52 +1,38 @@
-import { createSlice } from "@reduxjs/toolkit"
+import { createSlice, type PayloadAction } from "@reduxjs/toolkit"
 import type { Project } from "./projects.models"
-import { createProject, deleteProject, listProjects, updateProject } from "./projects.thunks"
+import { listProjects } from "./projects.thunks"
 
-interface ProjectsState {
-  projects: Project[] | null
+interface State {
+  currentProjectId: string | null
+  projects: Project[]
   createdProject: Project | null
   status: "idle" | "loading" | "succeeded" | "failed"
   error: string | null
 }
 
-const initialState: ProjectsState = {
-  projects: null,
+const initialState: State = {
+  currentProjectId: null,
+  projects: [],
   createdProject: null,
   status: "idle",
   error: null,
 }
 
-export const projectsSlice = createSlice({
+const slice = createSlice({
   name: "projects",
   initialState,
   reducers: {
+    setCurrentProjectId: (state, action: PayloadAction<{ projectId: string | null }>) => {
+      state.currentProjectId = action.payload.projectId
+    },
     clearCreatedProject: (state) => {
       state.createdProject = null
     },
     clearProjects: (state) => {
-      state.projects = null
+      state.projects = []
     },
   },
   extraReducers: (builder) => {
-    builder
-      .addCase(createProject.pending, (state) => {
-        state.status = "loading"
-        state.error = null
-      })
-      .addCase(createProject.fulfilled, (state, action) => {
-        state.status = "succeeded"
-        state.createdProject = action.payload
-        state.error = null
-        // Add the new project to the projects list
-        if (state.projects) {
-          state.projects.unshift(action.payload)
-        }
-      })
-      .addCase(createProject.rejected, (state, action) => {
-        state.status = "failed"
-        state.error = action.error.message || "Failed to create project"
-      })
-
     builder
       .addCase(listProjects.pending, (state) => {
         if (state.status !== "succeeded") state.status = "loading"
@@ -61,56 +47,10 @@ export const projectsSlice = createSlice({
         state.status = "failed"
         state.error = action.error.message || "Failed to list projects"
       })
-
-    builder
-      .addCase(updateProject.pending, (state) => {
-        state.status = "loading"
-        state.error = null
-      })
-      .addCase(updateProject.fulfilled, (state, action) => {
-        state.status = "succeeded"
-        state.error = null
-        // Update the project in the projects list
-        if (state.projects) {
-          const { projectId, payload } = action.meta.arg
-          const projectIndex = state.projects.findIndex((p) => p.id === projectId)
-          if (projectIndex !== -1) {
-            const existingProject = state.projects[projectIndex]
-            if (existingProject) {
-              state.projects[projectIndex] = {
-                id: existingProject.id,
-                name: payload.name,
-                organizationId: existingProject.organizationId,
-                createdAt: existingProject.createdAt,
-                updatedAt: Date.now(),
-              }
-            }
-          }
-        }
-      })
-      .addCase(updateProject.rejected, (state, action) => {
-        state.status = "failed"
-        state.error = action.error.message || "Failed to update project"
-      })
-
-    builder
-      .addCase(deleteProject.pending, (state) => {
-        state.status = "loading"
-        state.error = null
-      })
-      .addCase(deleteProject.fulfilled, (state, action) => {
-        state.status = "succeeded"
-        state.error = null
-        // Remove the project from the projects list
-        if (state.projects) {
-          state.projects = state.projects.filter((p) => p.id !== action.meta.arg)
-        }
-      })
-      .addCase(deleteProject.rejected, (state, action) => {
-        state.status = "failed"
-        state.error = action.error.message || "Failed to delete project"
-      })
   },
 })
 
-export const { clearCreatedProject, clearProjects } = projectsSlice.actions
+export type { State as ProjectsState }
+export const projectsInitialState = initialState
+export const projectsActions = { ...slice.actions }
+export const projectsSliceReducer = slice.reducer

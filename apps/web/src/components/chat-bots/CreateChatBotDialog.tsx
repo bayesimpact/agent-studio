@@ -7,8 +7,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@caseai-connect/ui/shad/dialog"
-import { listChatBots } from "@/features/chat-bots/chat-bots.thunks"
-import { useAppDispatch } from "@/store/hooks"
 import { CreateChatBotForm } from "./CreateChatBotForm"
 
 interface CreateChatBotDialogProps {
@@ -24,11 +22,8 @@ export function CreateChatBotDialog({
   isOpen,
   onOpenChange,
 }: CreateChatBotDialogProps) {
-  const dispatch = useAppDispatch()
-
   const handleSuccess = () => {
     onOpenChange(false)
-    dispatch(listChatBots(projectId))
   }
 
   return (
