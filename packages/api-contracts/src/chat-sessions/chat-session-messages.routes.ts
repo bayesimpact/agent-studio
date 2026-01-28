@@ -8,4 +8,3 @@ export const ChatSessionMessagesRoutes = {
     path: "chat-sessions/:sessionId/messages",
   }),
 }
-

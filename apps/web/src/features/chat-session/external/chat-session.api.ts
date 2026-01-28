@@ -19,9 +19,9 @@ export default {
   },
   getMessages: async (sessionId: string) => {
     const axios = getAxiosInstance()
-    const response = await axios.get<
-      typeof ChatSessionMessagesRoutes.listMessages.response
-    >(ChatSessionMessagesRoutes.listMessages.getPath({ sessionId }))
+    const response = await axios.get<typeof ChatSessionMessagesRoutes.listMessages.response>(
+      ChatSessionMessagesRoutes.listMessages.getPath({ sessionId }),
+    )
 
     return fromMessagesDto(response.data.data.messages)
   },

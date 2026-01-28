@@ -2,20 +2,16 @@ import { createAsyncThunk } from "@reduxjs/toolkit"
 import { v4 } from "uuid"
 import type { RootState, ThunkExtraArg } from "@/store"
 import type { ChatSession, ChatSessionMessage } from "./chat-session.models"
-import {
-  appendAssistantChunk,
-  completeAssistantMessage,
-  failAssistantMessage,
-  startStreaming,
-  updateAssistantMessageId,
-} from "./chat-session.slice"
+import { chatSessionActions } from "./chat-session.slice"
 import { streamChatResponse } from "./external/chat-session-streaming"
 
 type ThunkConfig = { state: RootState; extra: ThunkExtraArg }
 
-export const createPlaygroundSession = createAsyncThunk<ChatSession, string, ThunkConfig>(
+export const createPlaygroundSession = createAsyncThunk<ChatSession, void, ThunkConfig>(
   "chatSession/createPlaygroundSession",
-  async (chatBotId, { extra: { services } }) => {
+  async (_, { extra: { services }, getState }) => {
+    const state = getState()
+    const chatBotId = state.chatBots.currentChatBotId! // it
     return services.chatSession.createPlaygroundSession(chatBotId)
   },
 )
@@ -53,7 +49,7 @@ export const sendMessage = createAsyncThunk<
   }
 
   // Dispatch start streaming action (adds both messages optimistically)
-  dispatch(startStreaming({ userMessage, assistantMessageId }))
+  dispatch(chatSessionActions.startStreaming({ userMessage, assistantMessageId }))
 
   try {
     // Stream the response
@@ -64,32 +60,47 @@ export const sendMessage = createAsyncThunk<
         onStart: (event) => {
           // Update the optimistic message ID to match the backend's ID
           dispatch(
-            updateAssistantMessageId({
+            chatSessionActions.updateAssistantMessageId({
               oldMessageId: assistantMessageId,
               newMessageId: event.messageId,
             }),
           )
         },
         onChunk: (event) => {
-          dispatch(appendAssistantChunk({ messageId: event.messageId, chunk: event.content }))
+          dispatch(
+            chatSessionActions.appendAssistantChunk({
+              messageId: event.messageId,
+              chunk: event.content,
+            }),
+          )
         },
         onEnd: (event) => {
           dispatch(
-            completeAssistantMessage({
+            chatSessionActions.completeAssistantMessage({
               messageId: event.messageId,
               fullContent: event.fullContent,
             }),
           )
         },
         onError: (event) => {
-          dispatch(failAssistantMessage({ messageId: event.messageId, error: event.error }))
+          dispatch(
+            chatSessionActions.failAssistantMessage({
+              messageId: event.messageId,
+              error: event.error,
+            }),
+          )
         },
       },
       signal,
     )
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : "Failed to stream response"
-    dispatch(failAssistantMessage({ messageId: assistantMessageId, error: errorMessage }))
+    dispatch(
+      chatSessionActions.failAssistantMessage({
+        messageId: assistantMessageId,
+        error: errorMessage,
+      }),
+    )
     throw error
   }
 })

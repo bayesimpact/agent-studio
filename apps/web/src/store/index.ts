@@ -3,6 +3,7 @@ import { getServices } from "@/di/services"
 import { authSliceReducer } from "@/features/auth/auth.slice"
 import { chatBotsMiddleware } from "@/features/chat-bots/chat-bots.middleware"
 import { chatBotsSliceReducer } from "@/features/chat-bots/chat-bots.slice"
+import { chatSessionMiddleware } from "@/features/chat-session/chat-session.middleware"
 import { chatSessionSliceReducer } from "@/features/chat-session/chat-session.slice"
 import { meSliceReducer } from "@/features/me/me.slice"
 import { notificationsSliceReducer } from "@/features/notifications/notifications.slice"
@@ -33,6 +34,7 @@ export const store = configureStore({
       organizationsMiddleware.middleware,
       projectsMiddleware.middleware,
       chatBotsMiddleware.middleware,
+      chatSessionMiddleware.middleware,
     ),
 })
 

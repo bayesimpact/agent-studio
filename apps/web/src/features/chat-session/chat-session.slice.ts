@@ -1,10 +1,18 @@
 import { createSlice } from "@reduxjs/toolkit"
-import type { ChatSessionMessage, ChatSessionState } from "./chat-session.models"
+import type { ChatSession, ChatSessionMessage, ChatSessionStatus } from "./chat-session.models"
 import { createPlaygroundSession, loadSessionMessages } from "./chat-session.thunks"
+
+type ChatSessionState = {
+  session: ChatSession | null
+  messages: ChatSessionMessage[]
+  status: ChatSessionStatus
+  error: string | null
+  isStreaming: boolean
+  currentAssistantMessageId: string | null
+}
 
 const initialState: ChatSessionState = {
   session: null,
-  activeChatBotId: null,
   messages: [],
   status: "idle",
   error: null,
@@ -18,7 +26,6 @@ export const chatSessionSlice = createSlice({
   reducers: {
     clearChatSession: (state) => {
       state.session = null
-      state.activeChatBotId = null
       state.messages = []
       state.status = "idle"
       state.error = null
@@ -85,10 +92,9 @@ export const chatSessionSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
-      .addCase(createPlaygroundSession.pending, (state, action) => {
+      .addCase(createPlaygroundSession.pending, (state) => {
         state.status = "loading"
         state.error = null
-        state.activeChatBotId = action.meta.arg
       })
       .addCase(createPlaygroundSession.fulfilled, (state, action) => {
         state.status = "succeeded"
@@ -121,13 +127,5 @@ export const chatSessionSlice = createSlice({
   },
 })
 
-export const {
-  clearChatSession,
-  startStreaming,
-  updateAssistantMessageId,
-  appendAssistantChunk,
-  completeAssistantMessage,
-  failAssistantMessage,
-} = chatSessionSlice.actions
 export const chatSessionActions = { ...chatSessionSlice.actions }
 export const chatSessionSliceReducer = chatSessionSlice.reducer

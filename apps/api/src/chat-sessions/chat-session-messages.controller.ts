@@ -1,6 +1,6 @@
 import {
-  type ListChatSessionMessagesResponseDto,
   ChatSessionMessagesRoutes,
+  type ListChatSessionMessagesResponseDto,
 } from "@caseai-connect/api-contracts"
 import { Controller, Get, Param, Req, UseGuards } from "@nestjs/common"
 import { JwtAuthGuard } from "@/auth/jwt-auth.guard"
@@ -33,4 +33,3 @@ export class ChatSessionMessagesController {
     }
   }
 }
-
