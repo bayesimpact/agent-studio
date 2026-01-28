@@ -6,7 +6,7 @@ export class ExtendChatBots1769434441192 implements MigrationInterface {
   public async up(queryRunner: QueryRunner): Promise<void> {
     // Add model column
     await queryRunner.addColumn(
-      "chat_bots",
+      "chat_bot",
       new TableColumn({
         name: "model",
         type: "varchar",
@@ -17,7 +17,7 @@ export class ExtendChatBots1769434441192 implements MigrationInterface {
 
     // Add temperature column
     await queryRunner.addColumn(
-      "chat_bots",
+      "chat_bot",
       new TableColumn({
         name: "temperature",
         type: "decimal",
@@ -30,7 +30,7 @@ export class ExtendChatBots1769434441192 implements MigrationInterface {
 
     // Add locale column
     await queryRunner.addColumn(
-      "chat_bots",
+      "chat_bot",
       new TableColumn({
         name: "locale",
         type: "varchar",
@@ -42,8 +42,8 @@ export class ExtendChatBots1769434441192 implements MigrationInterface {
 
   public async down(queryRunner: QueryRunner): Promise<void> {
     // Remove columns in reverse order
-    await queryRunner.dropColumn("chat_bots", "locale")
-    await queryRunner.dropColumn("chat_bots", "temperature")
-    await queryRunner.dropColumn("chat_bots", "model")
+    await queryRunner.dropColumn("chat_bot", "locale")
+    await queryRunner.dropColumn("chat_bot", "temperature")
+    await queryRunner.dropColumn("chat_bot", "model")
   }
 }

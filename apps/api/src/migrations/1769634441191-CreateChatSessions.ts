@@ -94,35 +94,35 @@ export class CreateChatSessions1769434441191 implements MigrationInterface {
       }),
     )
 
-    // Create foreign key from chat_session to chat_bots
+    // Create foreign key from chat_session to chat_bot
     await queryRunner.createForeignKey(
       "chat_session",
       new TableForeignKey({
         columnNames: ["chatbot_id"],
         referencedColumnNames: ["id"],
-        referencedTableName: "chat_bots",
+        referencedTableName: "chat_bot",
         onDelete: "CASCADE",
       }),
     )
 
-    // Create foreign key from chat_session to users
+    // Create foreign key from chat_session to user
     await queryRunner.createForeignKey(
       "chat_session",
       new TableForeignKey({
         columnNames: ["user_id"],
         referencedColumnNames: ["id"],
-        referencedTableName: "users",
+        referencedTableName: "user",
         onDelete: "CASCADE",
       }),
     )
 
-    // Create foreign key from chat_session to organizations
+    // Create foreign key from chat_session to organization
     await queryRunner.createForeignKey(
       "chat_session",
       new TableForeignKey({
         columnNames: ["organization_id"],
         referencedColumnNames: ["id"],
-        referencedTableName: "organizations",
+        referencedTableName: "organization",
         onDelete: "CASCADE",
       }),
     )
