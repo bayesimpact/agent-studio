@@ -1,6 +1,6 @@
 import { createAsyncThunk } from "@reduxjs/toolkit"
-import { v4 } from "uuid"
 import type { RootState, ThunkExtraArg } from "@/store"
+import { generateId } from "@/utils/generate-id"
 import type { ChatSession, ChatSessionMessage } from "./chat-session.models"
 import { chatSessionActions } from "./chat-session.slice"
 import { streamChatResponse } from "./external/chat-session-streaming"
@@ -37,8 +37,8 @@ export const sendMessage = createAsyncThunk<
   }
 
   // Generate IDs for user and assistant messages
-  const userMessageId = v4()
-  const assistantMessageId = v4()
+  const userMessageId = generateId()
+  const assistantMessageId = generateId()
 
   // Create user message
   const userMessage: ChatSessionMessage = {
