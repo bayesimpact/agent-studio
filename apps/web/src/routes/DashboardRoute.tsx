@@ -11,6 +11,5 @@ export function DashboardRoute({ user }: { user: User }) {
     return <DashboardLayout user={user} projects={projects} />
   }
 
-  // Show loading while redirecting
   return <LoadingRoute />
 }
