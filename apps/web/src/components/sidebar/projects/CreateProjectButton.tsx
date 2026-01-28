@@ -9,7 +9,8 @@ import {
   DialogTrigger,
 } from "@caseai-connect/ui/shad/dialog"
 import { SidebarMenuButton, SidebarMenuItem } from "@caseai-connect/ui/shad/sidebar"
-import { Plus } from "lucide-react"
+import { PlusIcon } from "lucide-react"
+import { useTranslation } from "react-i18next"
 import { CreateProjectForm } from "@/components/projects/CreateProjectForm"
 
 interface CreateProjectButtonProps {
@@ -28,20 +29,20 @@ export function CreateProjectButton({
   const handleSuccess = () => {
     onOpenChange(false)
   }
-
+  const { t } = useTranslation("project", { keyPrefix: "createButton" })
   return (
     <SidebarMenuItem>
       <Dialog open={isOpen} onOpenChange={onOpenChange}>
         <DialogTrigger asChild>
-          <SidebarMenuButton tooltip="Create Project">
-            <Plus />
-            <span>Create Project</span>
+          <SidebarMenuButton tooltip={t("title")}>
+            <PlusIcon />
+            <span>{t("title")}</span>
           </SidebarMenuButton>
         </DialogTrigger>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Create Project</DialogTitle>
-            <DialogDescription>Create a new project for {organizationName}</DialogDescription>
+            <DialogTitle>{t("title")}</DialogTitle>
+            <DialogDescription>{t("description", { organizationName })}</DialogDescription>
           </DialogHeader>
           <CreateProjectForm organizationId={organizationId} onSuccess={handleSuccess} />
         </DialogContent>
