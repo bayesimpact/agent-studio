@@ -1,0 +1,12 @@
+{
+  "common": {
+    "english": "Anglais",
+    "french": "Français"
+  },
+  "project": {
+    "createButton": {
+      "title": "Créer un projet",
+      "description": "Créer un nouveau projet pour {{organizationName}}"
+    }
+  }
+}
