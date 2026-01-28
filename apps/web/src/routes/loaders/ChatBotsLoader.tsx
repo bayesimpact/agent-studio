@@ -4,8 +4,8 @@ import { listChatBots } from "@/features/chat-bots/chat-bots.thunks"
 import { selectCurrentProjectId } from "@/features/projects/projects.selectors"
 import { ADS } from "@/store/async-data-status"
 import { useAppDispatch, useAppSelector } from "@/store/hooks"
-import { LoadingRoute } from "./LoadingRoute"
-import { NotFoundRoute } from "./NotFoundRoute"
+import { LoadingRoute } from "../LoadingRoute"
+import { NotFoundRoute } from "../NotFoundRoute"
 
 export function ChatBotsLoader({ children }: { children: React.ReactNode }) {
   const projectId = useAppSelector(selectCurrentProjectId)
