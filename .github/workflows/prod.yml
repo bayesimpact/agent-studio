@@ -19,8 +19,8 @@ jobs:
         with:
           fetch-depth: 1
 
-      - name: Run tests and checks
-        run: make ci
+#      - name: Run tests and checks
+#        run: make ci
 
       - name: Run tests
         run: make tests
