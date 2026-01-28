@@ -24,3 +24,13 @@
 # Guidelines
 ## Thunks
 - thunk actions should be explicit listProjects, createProject
+
+# Questions
+## Why?
+```
+// Re-export from api-contracts
+export { ChatSessionStreamingRoutes } from "@caseai-connect/api-contracts"
+```
+
+## Dangerous for nest?
+`--experimental-vm-modules`
