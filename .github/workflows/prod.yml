@@ -120,8 +120,8 @@ jobs:
       - name: migration
         run: make migrations MIG_DATABASE_PASSWORD=${{ steps.Secrets.outputs.DATABASE_PASSWORD }} REGION=eu
 
-#      - name: deploy
-#        run: make deploy-only REGION=eu
+      - name: deploy
+        run: make deploy-only REGION=eu
 
       - name: Notify on failure
         if: ${{ failure() }}

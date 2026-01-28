@@ -65,12 +65,17 @@ migrations:
 deploy: docker-push
 	gcloud run deploy ${cloudRunName} --image ${imageUrl}:${version} \
 	--update-secrets=LANGFUSE_SK=${secretsPrefix}LANGFUSE_SK:latest \
+	--update-secrets=DATABASE_PASSWORD=${secretsPrefix}DATABASE_PASSWORD:latest \
 	--set-env-vars=TZ=UTC \
+	--set-env-vars=AUTH0_ISSUER_URL=https://your-tenant.auth0.com/,AUTH0_AUDIENCE=https://your-tenant.auth0.com/api/v2/ \
     --set-env-vars=LANGFUSE_PK=${langfusePk},LANGFUSE_BASE_URL=${langfuseUrl},LOCATION=$(location) \
+    --set-env-vars=DATABASE_HOST=/cloudsql/${addCloudSqlInstances},DATABASE_USERNAME=connect_admin,DATABASE_NAME=connect \
 	--region=${zone} \
 	--port=3000 \
 	--min-instances=1 \
 	--max-instances=1 \
+	--add-cloudsql-instances=${addCloudSqlInstances} \
+	--network=projects/YOUR_PROJECT/global/networks/default \
 	--service-account=YOUR_SA@YOUR_PROJECT.iam.gserviceaccount.com \
 	--project caseai-connect
 
