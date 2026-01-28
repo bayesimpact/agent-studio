@@ -3,7 +3,6 @@ import { useParams } from "react-router-dom"
 import { chatBotsActions } from "@/features/chat-bots/chat-bots.slice"
 import { organizationsActions } from "@/features/organizations/organizations.slice"
 import { projectsActions } from "@/features/projects/projects.slice"
-import type { AppDispatch } from "@/store"
 import { useAppDispatch } from "@/store/hooks"
 
 export function useSetCurrentOrganizationId() {
@@ -19,13 +18,10 @@ export function useSetCurrentOrganizationId() {
   }, [dispatch, organizationId])
 }
 
-export function useSetCurrentProjectId({
-  projectId,
-  dispatch,
-}: {
-  projectId?: string
-  dispatch: AppDispatch
-}) {
+export function useSetCurrentProjectId() {
+  const { projectId } = useParams()
+  const dispatch = useAppDispatch()
+
   useEffect(() => {
     if (!projectId) return
     dispatch(projectsActions.setCurrentProjectId({ projectId }))

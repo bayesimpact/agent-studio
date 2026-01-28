@@ -7,16 +7,17 @@ import { NotFoundRoute } from "@/routes/NotFoundRoute"
 import { OnboardingRoute } from "@/routes/OnboardingRoute"
 import { ProjectRoute } from "@/routes/ProjectRoute"
 import { ProtectedRoute } from "@/routes/ProtectedRoute"
-import { ChatBotLoader } from "./ChatBotLoader"
 import { ChatBotRoute } from "./ChatBotRoute"
-import { ChatBotsLoader } from "./ChatBotsLoader"
-import { ChatSessionLoader } from "./ChatSessionLoader"
 import { DashboardRoute } from "./DashboardRoute"
 import { RouteNames } from "./helpers"
+import { ChatBotLoader } from "./loaders/ChatBotLoader"
+import { ChatBotsLoader } from "./loaders/ChatBotsLoader"
+import { ChatSessionLoader } from "./loaders/ChatSessionLoader"
+import { ProjectLoader } from "./loaders/ProjectLoader"
+import { ProjectsLoader } from "./loaders/ProjectsLoader"
+import { UserHoc } from "./loaders/UserHoc"
 import { OrganizationsLoader } from "./OrganizationsLoader"
-import { ProjectsLoader } from "./ProjectsLoader"
 import { UserChatRoute } from "./UserChatRoute"
-import { UserHoc } from "./UserHoc"
 
 const router = () =>
   createBrowserRouter([
@@ -69,9 +70,11 @@ const router = () =>
         {
           path: RouteNames.PROJECT,
           element: (
-            <ChatBotsLoader>
-              <ProjectRoute />
-            </ChatBotsLoader>
+            <ProjectLoader>
+              <ChatBotsLoader>
+                <ProjectRoute />
+              </ChatBotsLoader>
+            </ProjectLoader>
           ),
           children: [
             {
