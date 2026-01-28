@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom"
 import { CreateOrganizationForm } from "@/components/CreateOrganizationForm"
 import { selectMeStatus } from "@/features/me/me.selectors"
 import { selectOrganizations } from "@/features/organizations/organizations.selectors"
+import { ADS } from "@/store/async-data-status"
 import { useAppSelector } from "@/store/hooks"
 import { buildOrganizationPath } from "./helpers"
 import { LoadingRoute } from "./LoadingRoute"
@@ -21,7 +22,7 @@ export function OnboardingRoute() {
     }
 
     // If user data is loaded and has organizations, redirect to dashboard
-    if (meStatus === "succeeded" && organizations.length > 0) {
+    if (ADS.isFulfilled(meStatus) && organizations && organizations?.length > 0) {
       const organization = organizations[0]
       if (!organization) throw new Error("No organization found")
       navigate(buildOrganizationPath(organization.id), { replace: true })
@@ -29,7 +30,7 @@ export function OnboardingRoute() {
   }, [isAuthenticated, authLoading, meStatus, organizations, navigate])
 
   // Show loading while Auth0 is loading or while fetching user data
-  if (authLoading || meStatus === "loading") {
+  if (authLoading || ADS.isLoading(meStatus)) {
     return <LoadingRoute />
   }
 
@@ -39,7 +40,7 @@ export function OnboardingRoute() {
   }
 
   // If user data failed to load, show error (could be improved with error UI)
-  if (meStatus === "failed") {
+  if (ADS.isError(meStatus)) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
@@ -51,7 +52,7 @@ export function OnboardingRoute() {
   }
 
   // If user has no organizations, show the create organization form
-  if (meStatus === "succeeded" && organizations.length === 0) {
+  if (ADS.isFulfilled(meStatus) && organizations?.length === 0) {
     return <CreateOrganizationForm />
   }
 

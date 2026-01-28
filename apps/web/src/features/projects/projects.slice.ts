@@ -1,21 +1,16 @@
 import { createSlice, type PayloadAction } from "@reduxjs/toolkit"
+import { ADS, type AsyncData, defaultAsyncData } from "@/store/async-data-status"
 import type { Project } from "./projects.models"
 import { listProjects } from "./projects.thunks"
 
 interface State {
   currentProjectId: string | null
-  projects: Project[]
-  createdProject: Project | null
-  status: "idle" | "loading" | "succeeded" | "failed"
-  error: string | null
+  data: AsyncData<Project[]>
 }
 
 const initialState: State = {
   currentProjectId: null,
-  projects: [],
-  createdProject: null,
-  status: "idle",
-  error: null,
+  data: defaultAsyncData,
 }
 
 const slice = createSlice({
@@ -25,27 +20,26 @@ const slice = createSlice({
     setCurrentProjectId: (state, action: PayloadAction<{ projectId: string | null }>) => {
       state.currentProjectId = action.payload.projectId
     },
-    clearCreatedProject: (state) => {
-      state.createdProject = null
-    },
     clearProjects: (state) => {
-      state.projects = []
+      state.data = defaultAsyncData
     },
   },
   extraReducers: (builder) => {
     builder
       .addCase(listProjects.pending, (state) => {
-        if (state.status !== "succeeded") state.status = "loading"
-        state.error = null
+        if (!ADS.isFulfilled(state.data)) state.data.status = ADS.Loading
+        state.data.error = null
       })
       .addCase(listProjects.fulfilled, (state, action) => {
-        state.status = "succeeded"
-        state.projects = action.payload
-        state.error = null
+        state.data = {
+          status: ADS.Fulfilled,
+          error: null,
+          value: action.payload,
+        }
       })
       .addCase(listProjects.rejected, (state, action) => {
-        state.status = "failed"
-        state.error = action.error.message || "Failed to list projects"
+        state.data.status = ADS.Error
+        state.data.error = action.error.message || "Failed to list projects"
       })
   },
 })

@@ -3,6 +3,7 @@ import { useParams } from "react-router-dom"
 import { listChatBots } from "@/features/chat-bots/chat-bots.thunks"
 import { selectProjectsStatus } from "@/features/projects/projects.selectors"
 import { useSetCurrentProjectId } from "@/hooks/use-set-current-id"
+import { ADS } from "@/store/async-data-status"
 import { useAppDispatch, useAppSelector } from "@/store/hooks"
 import { LoadingRoute } from "./LoadingRoute"
 import { NotFoundRoute } from "./NotFoundRoute"
@@ -20,9 +21,9 @@ export function ChatBotsLoader({ children }: { children: React.ReactNode }) {
     dispatch(listChatBots({ projectId }))
   }, [dispatch, projectId])
 
-  if (status === "failed") return <NotFoundRoute />
+  if (ADS.isError(status)) return <NotFoundRoute />
 
-  if (status === "succeeded") return <>{children}</>
+  if (ADS.isFulfilled(status)) return <>{children}</>
 
   return <LoadingRoute />
 }

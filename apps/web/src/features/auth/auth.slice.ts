@@ -1,26 +1,24 @@
 import { createSlice } from "@reduxjs/toolkit"
 
-interface AuthState {
+interface State {
   isAuthenticated: boolean
-  status: "idle" | "loading" | "succeeded" | "failed"
 }
 
-const initialState: AuthState = {
+const initialState: State = {
   isAuthenticated: false,
-  status: "idle",
 }
 
-export const authSlice = createSlice({
+const slice = createSlice({
   name: "auth",
   initialState,
   reducers: {
     setAuthenticated: (state, action: { payload: boolean }) => {
       state.isAuthenticated = action.payload
     },
-    clearAuth: (state) => {
-      state.isAuthenticated = false
-    },
   },
 })
 
-export const { setAuthenticated, clearAuth } = authSlice.actions
+export type { State as AuthState }
+export const authInitialState = initialState
+export const authActions = { ...slice.actions }
+export const authSliceReducer = slice.reducer

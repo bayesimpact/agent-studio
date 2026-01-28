@@ -22,6 +22,7 @@ import type { ChatBot } from "@/features/chat-bots/chat-bots.models"
 import { selectChatBotsStatus } from "@/features/chat-bots/chat-bots.selectors"
 import { buildChatBotPath } from "@/routes/helpers"
 import { LoadingRoute } from "@/routes/LoadingRoute"
+import { ADS } from "@/store/async-data-status"
 import { useAppSelector } from "@/store/hooks"
 import { CreateChatBotDialog } from "./CreateChatBotDialog"
 import { DeleteChatBotDialog } from "./DeleteChatBotDialog"
@@ -61,9 +62,9 @@ export function ChatBotsList({ project, chatBots }: { project: ProjectDto; chatB
         )}
       </div>
 
-      {status === "loading" && <LoadingRoute />}
+      {ADS.isLoading(status) && <LoadingRoute />}
 
-      {status === "succeeded" && isEmpty && (
+      {ADS.isFulfilled(status) && isEmpty && (
         <Card>
           <CardHeader>
             <CardTitle>No chat bots yet</CardTitle>
@@ -86,7 +87,7 @@ export function ChatBotsList({ project, chatBots }: { project: ProjectDto; chatB
         </Card>
       )}
 
-      {status === "succeeded" && !isEmpty && (
+      {ADS.isFulfilled(status) && !isEmpty && (
         <div className="grid gap-4">
           {chatBots.map((chatBot) => (
             <Card key={chatBot.id}>

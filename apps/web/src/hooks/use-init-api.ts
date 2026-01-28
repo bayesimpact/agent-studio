@@ -1,6 +1,6 @@
 import { useAuth0 } from "@auth0/auth0-react"
 import { useEffect } from "react"
-import { setAuthenticated } from "@/features/auth/auth.slice"
+import { authActions } from "@/features/auth/auth.slice"
 import { useAppDispatch } from "@/store/hooks"
 
 /**
@@ -14,7 +14,7 @@ export function useInitApi() {
 
   useEffect(() => {
     if (!isLoading) {
-      dispatch(setAuthenticated(isAuthenticated))
+      dispatch(authActions.setAuthenticated(isAuthenticated))
     }
   }, [isAuthenticated, isLoading, dispatch])
 }
