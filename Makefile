@@ -15,7 +15,7 @@ langfusePk = pk-lf-48fd15e2-85a2-4c78-9e95-0730d9b22553
 secretsPrefix = CONNECT_
 postHogHost=https://eu.i.posthog.com
 addCloudSqlInstances=caseai-connect:europe-west9:connect-eu
-cloudSqlProxyPort = 5434
+cloudSqlProxyPort = 5433
 endif
 
 
