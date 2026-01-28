@@ -21,19 +21,8 @@ import { DotsBackground } from "../DotsBackground"
 export function ChatBot({ chatBot }: { chatBot: ChatBotModel }) {
   const { t } = useTranslation("chatBot", { keyPrefix: "detail" })
   const { t: tChat } = useTranslation("chat")
-  const messages = [
-    {
-      id: "1",
-      role: "bot",
-      content: t("mock.msg1"),
-    },
-    {
-      id: "2",
-      role: "user",
-      content: t("mock.msg2"),
-    },
-  ]
   const dispatch = useAppDispatch()
+  const messages = useAppSelector((state) => state.chatSession.messages)
   const session = useAppSelector((state) => state.chatSession.session)
   const isStreaming = useAppSelector((state) => state.chatSession.isStreaming)
 
