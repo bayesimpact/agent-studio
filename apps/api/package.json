@@ -15,9 +15,9 @@
     "migration:run": "ts-node -r tsconfig-paths/register ./node_modules/typeorm/cli.js migration:run -d src/config/typeorm.ts",
     "migration:revert": "ts-node -r tsconfig-paths/register ./node_modules/typeorm/cli.js migration:revert -d src/config/typeorm.ts",
     "migration:show": "ts-node -r tsconfig-paths/register ./node_modules/typeorm/cli.js migration:show -d src/config/typeorm.ts",
-    "migration:test:run": "ts-node -r tsconfig-paths/register ./node_modules/typeorm/cli.js migration:run -d src/config/typeorm.test.ts",
-    "migration:test:revert": "ts-node -r tsconfig-paths/register ./node_modules/typeorm/cli.js migration:revert -d src/config/typeorm.test.ts",
-    "migration:test:show": "ts-node -r tsconfig-paths/register ./node_modules/typeorm/cli.js migration:show -d src/config/typeorm.test.ts"
+    "migration:test:run": "DATABASE_URL=postgresql://connect_admin:passpass@localhost:5432/connect_test ts-node -r tsconfig-paths/register ./node_modules/typeorm/cli.js migration:run -d src/config/typeorm.test.ts",
+    "migration:test:revert": "DATABASE_URL=postgresql://connect_admin:passpass@localhost:5432/connect_test ts-node -r tsconfig-paths/register ./node_modules/typeorm/cli.js migration:revert -d src/config/typeorm.test.ts",
+    "migration:test:show": "DATABASE_URL=postgresql://connect_admin:passpass@localhost:5432/connect_test ts-node -r tsconfig-paths/register ./node_modules/typeorm/cli.js migration:show -d src/config/typeorm.test.ts"
   },
   "dependencies": {
     "@ai-sdk/google": "^3.0.13",

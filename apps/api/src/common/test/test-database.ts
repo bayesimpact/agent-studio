@@ -58,7 +58,6 @@ export async function setupTestDatabase(
         type: "postgres",
         url: testDatabaseUrl,
         entities: TEST_ENTITIES,
-        synchronize: true,
         logging: false,
         dropSchema: false,
       }),
