@@ -1,6 +1,10 @@
 import type { TypedStartListening } from "@reduxjs/toolkit"
 import { createListenerMiddleware } from "@reduxjs/toolkit"
 import { authActions } from "@/features/auth/auth.slice"
+import {
+  createPlaygroundSession,
+  loadSessionMessages,
+} from "@/features/chat-session/chat-session.thunks"
 import { meActions } from "@/features/me/me.slice"
 import { fetchMe } from "@/features/me/me.thunks"
 import { organizationsActions } from "@/features/organizations/organizations.slice"
@@ -25,5 +29,14 @@ listenerMiddleware.startListening({
       listenerApi.dispatch(meActions.reset())
       listenerApi.dispatch(organizationsActions.reset())
     }
+  },
+})
+
+// When a playground session is created, automatically load its messages
+listenerMiddleware.startListening({
+  actionCreator: createPlaygroundSession.fulfilled,
+  effect: async (action, listenerApi) => {
+    const session = action.payload
+    await listenerApi.dispatch(loadSessionMessages(session.id))
   },
 })

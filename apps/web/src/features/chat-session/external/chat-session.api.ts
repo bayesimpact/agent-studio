@@ -1,6 +1,11 @@
-import { type ChatSessionDto, ChatSessionsRoutes } from "@caseai-connect/api-contracts"
+import {
+  type ChatSessionDto,
+  type ChatSessionMessageDto,
+  ChatSessionMessagesRoutes,
+  ChatSessionsRoutes,
+} from "@caseai-connect/api-contracts"
 import { getAxiosInstance } from "@/external/axios"
-import type { ChatSession } from "../chat-session.models"
+import type { ChatSession, ChatSessionMessage } from "../chat-session.models"
 import type { IChatSessionSpi } from "../chat-session.spi"
 
 export default {
@@ -12,6 +17,14 @@ export default {
 
     return fromDto(response.data.data)
   },
+  getMessages: async (sessionId: string) => {
+    const axios = getAxiosInstance()
+    const response = await axios.get<
+      typeof ChatSessionMessagesRoutes.listMessages.response
+    >(ChatSessionMessagesRoutes.listMessages.getPath({ sessionId }))
+
+    return fromMessagesDto(response.data.data.messages)
+  },
 } satisfies IChatSessionSpi
 
 const fromDto = (dto: ChatSessionDto): ChatSession => ({
@@ -20,3 +33,8 @@ const fromDto = (dto: ChatSessionDto): ChatSession => ({
   type: dto.type,
   expiresAt: dto.expiresAt,
 })
+
+const fromMessagesDto = (dtos: ChatSessionMessageDto[]): ChatSessionMessage[] =>
+  dtos.map((message) => ({
+    ...message,
+  }))

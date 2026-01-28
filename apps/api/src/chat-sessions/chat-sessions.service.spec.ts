@@ -21,6 +21,7 @@ describe("ChatSessionsService", () => {
   let userRepository: Repository<User>
   let organizationRepository: Repository<Organization>
   let projectRepository: Repository<Project>
+  let membershipRepository: Repository<UserMembership>
   let setup: Awaited<ReturnType<typeof setupTransactionalTestDatabase>>
 
   // Test data
@@ -50,6 +51,7 @@ describe("ChatSessionsService", () => {
     userRepository = setup.getRepository(User)
     organizationRepository = setup.getRepository(Organization)
     projectRepository = setup.getRepository(Project)
+    membershipRepository = setup.getRepository(UserMembership)
 
     // Use unique identifier to avoid conflicts between tests
     const uniqueId = Date.now().toString()
@@ -217,6 +219,62 @@ describe("ChatSessionsService", () => {
       await expect(
         service.createPlaygroundSessionForChatBot(nonExistentChatBotId, testUser.id),
       ).rejects.toThrow(NotFoundException)
+    })
+  })
+
+  describe("listMessagesForSession", () => {
+    it("should return messages when user is a member of the organization", async () => {
+      await membershipRepository.save({
+        userId: testUser.id,
+        organizationId: testOrganization.id,
+        role: "member",
+      })
+
+      const session = await service.createPlaygroundSession(
+        testChatBot.id,
+        testUser.id,
+        testOrganization.id,
+      )
+
+      session.messages = [
+        {
+          id: "msg-1",
+          role: "user",
+          content: "Hello",
+          createdAt: new Date().toISOString(),
+        },
+        {
+          id: "msg-2",
+          role: "assistant",
+          content: "Hi!",
+          createdAt: new Date().toISOString(),
+        },
+      ]
+      await chatSessionRepository.save(session)
+
+      const messages = await service.listMessagesForSession(session.id, testUser.id)
+
+      expect(messages).toHaveLength(2)
+      expect(messages[0]?.id).toBe("msg-1")
+      expect(messages[1]?.id).toBe("msg-2")
+    })
+
+    it("should throw NotFoundException when session does not exist", async () => {
+      await expect(
+        service.listMessagesForSession("00000000-0000-0000-0000-000000000000", testUser.id),
+      ).rejects.toThrow(NotFoundException)
+    })
+
+    it("should throw ForbiddenException when user is not a member of the organization", async () => {
+      const session = await service.createPlaygroundSession(
+        testChatBot.id,
+        testUser.id,
+        testOrganization.id,
+      )
+
+      await expect(service.listMessagesForSession(session.id, testUser.id)).rejects.toThrow(
+        ForbiddenException,
+      )
     })
   })
 

@@ -4,6 +4,7 @@ import type { Repository } from "typeorm"
 import { v4 } from "uuid"
 import { ChatBot } from "@/chat-bots/chat-bot.entity"
 import { UserMembership } from "@/organizations/user-membership.entity"
+import type { ChatSessionMessageDto } from "@caseai-connect/api-contracts"
 import { ChatSession } from "./chat-session.entity"
 
 export type MessageStatus = "streaming" | "completed" | "aborted" | "error"
@@ -35,6 +36,38 @@ export class ChatSessionsService {
     @InjectRepository(UserMembership)
     private readonly membershipRepository: Repository<UserMembership>,
   ) {}
+
+  /**
+   * Returns messages for a session after verifying that the user
+   * belongs to the session's organization.
+   */
+  async listMessagesForSession(
+    sessionId: string,
+    userId: string,
+  ): Promise<ChatSessionMessageDto[]> {
+    const session = await this.chatSessionRepository.findOne({
+      where: { id: sessionId },
+    })
+
+    if (!session) {
+      throw new NotFoundException(`ChatSession with id ${sessionId} not found`)
+    }
+
+    const membership = await this.membershipRepository.findOne({
+      where: {
+        userId,
+        organizationId: session.organizationId,
+      },
+    })
+
+    if (!membership) {
+      throw new ForbiddenException(
+        `User does not have access to organization ${session.organizationId}`,
+      )
+    }
+
+    return session.messages as ChatSessionMessageDto[]
+  }
 
   /**
    * Creates or reuses a playground session for a user and chatbot

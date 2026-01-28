@@ -48,11 +48,11 @@ export function ChatBot({ chatBot }: { chatBot: ChatBotModel }) {
         <Chat>
           <ChatHeader />
           <ChatContent>
-            {messages.map((msg) =>
-              msg.role === "bot" ? (
-                <ChatBotMessage key={msg.id}>{msg.content}</ChatBotMessage>
+            {messages.map((message) =>
+              message.role === "assistant" ? (
+                <ChatBotMessage key={message.id}>{message.content}</ChatBotMessage>
               ) : (
-                <ChatUserMessage key={msg.id}>{msg.content}</ChatUserMessage>
+                <ChatUserMessage key={message.id}>{message.content}</ChatUserMessage>
               ),
             )}
           </ChatContent>
