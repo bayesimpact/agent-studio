@@ -94,11 +94,13 @@ function useChatFooter() {
 
 function ChatFooter({
   onMessageSubmit,
+  focus,
   className,
   children,
   ...props
 }: React.ComponentProps<"div"> & {
   onMessageSubmit: (value: string) => void
+  focus: boolean
 }) {
   const inputRef = React.useRef<HTMLTextAreaElement>(null)
 
@@ -125,6 +127,12 @@ function ChatFooter({
       }
     }
   }, [])
+
+  React.useEffect(() => {
+    if (focus && inputRef.current) {
+      inputRef.current.focus()
+    }
+  }, [focus])
 
   const handleSubmit = React.useCallback(
     (value: string) => {

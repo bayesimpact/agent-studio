@@ -58,7 +58,7 @@ export function ChatBot({ chatBot }: { chatBot: ChatBotModel }) {
             ))}
           </ChatContent>
 
-          <ChatFooter onMessageSubmit={handleSubmit}>
+          <ChatFooter focus={!isStreaming} onMessageSubmit={handleSubmit}>
             <ChatInput
               placeholder={tChat("placeholder")}
               className="resize-none"
