@@ -55,7 +55,7 @@ db-tests:
 	docker compose -f infra/database/docker-compose.yaml up -d
 
 tests: db-tests ci-checks
-	cd apps/api && npm run test
+	cd apps/api && npm run migration:test:run && npm run test
 
 migrations:
 	docker compose up -f infra/cloudsql-proxy/docker-compose.yaml -d cloudsql-proxy
