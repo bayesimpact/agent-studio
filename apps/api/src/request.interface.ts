@@ -1,4 +1,5 @@
 import type { TimeType } from "@caseai-connect/api-contracts"
+import type { UserMembership } from "./organizations/user-membership.entity"
 
 export interface JwtPayload {
   sub: string
@@ -19,6 +20,6 @@ export interface EndpointRequest {
     pictureUrl?: string
     createdAt: TimeType
     updatedAt: TimeType
-    memberships?: []
+    memberships?: UserMembership[]
   }
 }
