@@ -118,10 +118,6 @@
   },
   "user": {
     "menu": {
-      "upgrade": "Passer à Pro",
-      "account": "Compte",
-      "billing": "Facturation",
-      "notifications": "Notifications",
       "logout": "Se déconnecter"
     }
   },
