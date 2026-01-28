@@ -1,7 +1,7 @@
-name: "caseai-connect-migration"
+name: "connect-migration"
 services:
   cloudsql-proxy:
-    container_name: cloudsql-proxy
+    container_name: connect-cloudsql-proxy
     image: gcr.io/cloud-sql-connectors/cloud-sql-proxy:2.14.0
     command: /cloud_sql_proxy --credentials-file=/secrets/cloudsql/credentials.json --address 0.0.0.0 --port 5432 caseai-connect:europe-west9:connect-eu
     ports:
