@@ -11,7 +11,7 @@ export function ProjectRoute() {
   const outlet = useOutlet()
 
   const project = useAppSelector(selectCurrentProject)
-  const chatBots = useAppSelector(selectChatBots) || []
+  const chatBots = useAppSelector(selectChatBots(project?.id)) || []
 
   const { setHeaderTitle } = useSidebarLayout()
   const headerTitle = project ? project.name : "Dashboard"

@@ -3,7 +3,7 @@
 <!-- DONE - do not export 1 file per DTO (create-chat-bot.dto.ts, etc...) -->
 
 ## Dispatch
-- do not await dispatch on component to trigger another dispatch (ex: await dispatch(updateX) => dispatch(getX)) => solution: use middleware
+<!-- DONE - do not await dispatch on component to trigger another dispatch (ex: await dispatch(updateX) => dispatch(getX)) => solution: use middleware -->
 
 ## Routes and endpoints
 - name CRUD endpoint following: getAll, updateOne, deleteOne, getOne... (do not name it "listProjects", "createProject")
