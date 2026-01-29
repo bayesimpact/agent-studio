@@ -159,15 +159,14 @@ export class ChatBotsService {
    * Creates a new chat bot for a project.
    * Verifies that the user is an owner or admin of the project's organization before creating.
    */
-  async createChatBot(
-    userId: string,
-    projectId: string,
-    name: string,
-    defaultPrompt: string,
-    model?: string,
-    temperature?: number,
-    locale?: string,
-  ): Promise<ChatBot> {
+  async createChatBot(params: {
+    required: {
+      userId: string
+    } & Pick<ChatBot, "projectId" | "defaultPrompt" | "name">
+    optional?: Pick<Partial<ChatBot>, "model" | "temperature" | "locale">
+  }): Promise<ChatBot> {
+    const { userId, projectId, name, defaultPrompt } = params.required
+
     // Validate name (min 3 characters)
     if (name.length < 3) {
       throw new ForbiddenException("ChatBot name must be at least 3 characters long")
@@ -189,9 +188,9 @@ export class ChatBotsService {
     const chatBot = this.chatBotRepository.create({
       name,
       defaultPrompt,
-      model: model || "gemini-2.5-flash",
-      temperature: temperature ?? 0,
-      locale: locale || "en",
+      model: params.optional?.model || "gemini-2.5-flash",
+      temperature: params.optional?.temperature ?? 0,
+      locale: params.optional?.locale || "en",
       projectId,
       project,
     })
@@ -203,7 +202,13 @@ export class ChatBotsService {
    * Lists all chat bots for a project.
    * Verifies that the user has access to the project's organization before listing.
    */
-  async listChatBots(userId: string, projectId: string): Promise<ChatBot[]> {
+  async listChatBots({
+    userId,
+    projectId,
+  }: {
+    userId: string
+    projectId: string
+  }): Promise<ChatBot[]> {
     // Verify user has access to the project's organization
     await this.verifyUserCanListChatBots(userId, projectId)
 
@@ -219,15 +224,18 @@ export class ChatBotsService {
    * Verifies that the user is an owner or admin of the chat bot's project's organization before updating.
    * Deletes playground sessions if configuration fields change.
    */
-  async updateChatBot(
-    userId: string,
-    chatBotId: string,
-    name?: string,
-    defaultPrompt?: string,
-    model?: string,
-    temperature?: number,
-    locale?: string,
-  ): Promise<ChatBot> {
+  async updateChatBot(params: {
+    required: {
+      userId: string
+      chatBotId: string
+    }
+    fieldsToUpdate: Partial<
+      Pick<ChatBot, "name" | "defaultPrompt" | "model" | "temperature" | "locale">
+    >
+  }): Promise<ChatBot> {
+    const { userId, chatBotId } = params.required
+    const { name, defaultPrompt, model, temperature, locale } = params.fieldsToUpdate
+
     // Validate name if provided (min 3 characters)
     if (name !== undefined && name.length < 3) {
       throw new ForbiddenException("ChatBot name must be at least 3 characters long")
@@ -246,28 +254,24 @@ export class ChatBotsService {
     }
 
     // Track if configuration fields changed (these trigger playground cleanup)
-    const configChanged =
-      (model !== undefined && model !== chatBot.model) ||
-      (temperature !== undefined && temperature !== chatBot.temperature) ||
-      (defaultPrompt !== undefined && defaultPrompt !== chatBot.defaultPrompt) ||
-      (locale !== undefined && locale !== chatBot.locale)
+    const configFields = [
+      { value: model, current: chatBot.model },
+      { value: temperature, current: chatBot.temperature },
+      { value: defaultPrompt, current: chatBot.defaultPrompt },
+      { value: locale, current: chatBot.locale },
+    ]
+    const configChanged = configFields.some(
+      ({ value, current }) => value !== undefined && value !== current,
+    )
 
     // Update the chat bot
-    if (name !== undefined) {
-      chatBot.name = name
-    }
-    if (defaultPrompt !== undefined) {
-      chatBot.defaultPrompt = defaultPrompt
-    }
-    if (model !== undefined) {
-      chatBot.model = model
-    }
-    if (temperature !== undefined) {
-      chatBot.temperature = temperature
-    }
-    if (locale !== undefined) {
-      chatBot.locale = locale
-    }
+    Object.assign(chatBot, {
+      ...(name !== undefined && { name }),
+      ...(defaultPrompt !== undefined && { defaultPrompt }),
+      ...(model !== undefined && { model }),
+      ...(temperature !== undefined && { temperature }),
+      ...(locale !== undefined && { locale }),
+    })
 
     const updatedChatBot = await this.chatBotRepository.save(chatBot)
 

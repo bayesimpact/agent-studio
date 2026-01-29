@@ -1,8 +1,9 @@
-import type { TimeType } from "@caseai-connect/api-contracts"
+import type { ChatBotDto } from "@caseai-connect/api-contracts"
 import { Body, Controller, Delete, Get, Param, Patch, Post, Req, UseGuards } from "@nestjs/common"
 import { JwtAuthGuard } from "@/auth/jwt-auth.guard"
 import { UserGuard } from "@/guards/user.guard"
 import type { EndpointRequest } from "@/request.interface"
+import type { ChatBot } from "./chat-bot.entity"
 import { ChatBotsRoutes } from "./chat-bots.routes"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
 import { ChatBotsService } from "./chat-bots.service"
@@ -12,88 +13,77 @@ import { ChatBotsService } from "./chat-bots.service"
 export class ChatBotsController {
   constructor(private readonly chatBotsService: ChatBotsService) {}
 
-  @Post(ChatBotsRoutes.createChatBot.path)
-  async createChatBot(
-    @Req() request: EndpointRequest,
-    @Body() body: typeof ChatBotsRoutes.createChatBot.request,
-  ): Promise<typeof ChatBotsRoutes.createChatBot.response> {
-    const user = request.user
-
-    // Create ChatBot
-    const chatBot = await this.chatBotsService.createChatBot(
-      user.id,
-      body.payload.projectId,
-      body.payload.name,
-      body.payload.defaultPrompt,
-    )
-
-    return {
-      data: {
-        id: chatBot.id,
-        name: chatBot.name,
-        defaultPrompt: chatBot.defaultPrompt,
-        projectId: chatBot.projectId,
-      },
-    }
-  }
-
-  @Get(ChatBotsRoutes.listChatBots.path)
-  async listChatBots(
+  @Post(ChatBotsRoutes.createOne.path)
+  async createOne(
     @Req() request: EndpointRequest,
     @Param("projectId") projectId: string,
-  ): Promise<typeof ChatBotsRoutes.listChatBots.response> {
+    @Body() { payload }: typeof ChatBotsRoutes.createOne.request,
+  ): Promise<typeof ChatBotsRoutes.createOne.response> {
     const user = request.user
 
-    // List ChatBots for the project
-    const chatBots = await this.chatBotsService.listChatBots(user.id, projectId)
-
-    return {
-      data: {
-        chatBots: chatBots.map((chatBot) => ({
-          id: chatBot.id,
-          name: chatBot.name,
-          defaultPrompt: chatBot.defaultPrompt,
-          projectId: chatBot.projectId,
-          createdAt: chatBot.createdAt.getTime() as TimeType,
-          updatedAt: chatBot.updatedAt.getTime() as TimeType,
-        })),
+    const chatBot = await this.chatBotsService.createChatBot({
+      required: {
+        userId: user.id,
+        projectId,
+        name: payload.name,
+        defaultPrompt: payload.defaultPrompt,
       },
+    })
+
+    if (!chatBot) {
+      throw new Error("ChatBot not created")
     }
+    return { data: { success: true } }
   }
 
-  @Patch(ChatBotsRoutes.updateChatBot.path)
-  async updateChatBot(
+  @Get(ChatBotsRoutes.getAll.path)
+  async getAll(
     @Req() request: EndpointRequest,
-    @Param("chatBotId") chatBotId: string,
-    @Body() body: typeof ChatBotsRoutes.updateChatBot.request,
-  ): Promise<typeof ChatBotsRoutes.updateChatBot.response> {
+    @Param("projectId") projectId: string,
+  ): Promise<typeof ChatBotsRoutes.getAll.response> {
     const user = request.user
 
-    // Update ChatBot
-    const chatBot = await this.chatBotsService.updateChatBot(
-      user.id,
-      chatBotId,
-      body.payload.name,
-      body.payload.defaultPrompt,
-    )
+    const chatBots = await this.chatBotsService.listChatBots({ userId: user.id, projectId })
 
-    return {
-      data: {
-        id: chatBot.id,
-        name: chatBot.name,
-        defaultPrompt: chatBot.defaultPrompt,
-        projectId: chatBot.projectId,
-      },
-    }
+    return { data: { chatBots: chatBots.map(toChatBotDto) } }
   }
 
-  @Delete(ChatBotsRoutes.deleteChatBot.path)
-  async deleteChatBot(
+  @Patch(ChatBotsRoutes.updateOne.path)
+  async updateOne(
     @Req() request: EndpointRequest,
     @Param("chatBotId") chatBotId: string,
-  ): Promise<typeof ChatBotsRoutes.deleteChatBot.response> {
-    // Delete ChatBot
+    @Body() { payload }: typeof ChatBotsRoutes.updateOne.request,
+  ): Promise<typeof ChatBotsRoutes.updateOne.response> {
+    const user = request.user
+
+    const chatBot = await this.chatBotsService.updateChatBot({
+      required: { userId: user.id, chatBotId },
+      fieldsToUpdate: payload,
+    })
+
+    if (!chatBot) {
+      throw new Error("ChatBot not updated")
+    }
+    return { data: { success: true } }
+  }
+
+  @Delete(ChatBotsRoutes.deleteOne.path)
+  async deleteOne(
+    @Req() request: EndpointRequest,
+    @Param("chatBotId") chatBotId: string,
+  ): Promise<typeof ChatBotsRoutes.deleteOne.response> {
     await this.chatBotsService.deleteChatBot(request.user.id, chatBotId)
     return { data: { success: true } }
+  }
+}
+
+function toChatBotDto(entity: ChatBot): ChatBotDto {
+  return {
+    id: entity.id,
+    name: entity.name,
+    defaultPrompt: entity.defaultPrompt,
+    projectId: entity.projectId,
+    createdAt: entity.createdAt.getTime(),
+    updatedAt: entity.updatedAt.getTime(),
   }
 }
