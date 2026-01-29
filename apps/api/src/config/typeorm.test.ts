@@ -3,8 +3,7 @@ import * as process from "node:process"
 import { config as dotenvConfig } from "dotenv"
 import { DataSource, type DataSourceOptions } from "typeorm"
 
-// Load .env.test for test database migrations
-dotenvConfig({ path: ".env.test" })
+dotenvConfig({ path: ".env.test", override: true })
 
 let extra = {}
 if (process.env.DATABASE_HOST?.startsWith("/cloudsql")) {
