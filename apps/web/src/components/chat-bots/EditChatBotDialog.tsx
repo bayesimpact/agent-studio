@@ -1,12 +1,13 @@
 "use client"
 
+import { ScrollArea } from "@caseai-connect/ui/shad/scroll-area"
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@caseai-connect/ui/shad/dialog"
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+} from "@caseai-connect/ui/shad/sheet"
 import { useTranslation } from "react-i18next"
 import type { ChatBot } from "@/features/chat-bots/chat-bots.models"
 import { UpdateChatBotForm } from "./UpdateChatBotForm"
@@ -27,14 +28,18 @@ export function EditChatBotDialog({ chatBot, onClose }: EditChatBotDialogProps) 
   }
 
   return (
-    <Dialog open={!!chatBot} onOpenChange={(open: boolean) => !open && onClose()}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>{t("title")}</DialogTitle>
-          <DialogDescription>{t("description")}</DialogDescription>
-        </DialogHeader>
-        <UpdateChatBotForm chatBot={chatBot} onSuccess={handleSuccess} />
-      </DialogContent>
-    </Dialog>
+    <Sheet modal open={!!chatBot} onOpenChange={(open: boolean) => !open && onClose()}>
+      <SheetContent side="bottom" className="h-[100dvh]">
+        <ScrollArea className="h-full">
+          <SheetHeader>
+            <SheetTitle>{t("title")}</SheetTitle>
+            <SheetDescription>{t("description")}</SheetDescription>
+          </SheetHeader>
+          <div className="px-4 pb-4">
+            <UpdateChatBotForm chatBot={chatBot} onSuccess={handleSuccess} />
+          </div>
+        </ScrollArea>
+      </SheetContent>
+    </Sheet>
   )
 }

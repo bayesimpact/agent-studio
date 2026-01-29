@@ -4,11 +4,11 @@ export interface IChatBotsSpi {
   getAll: (params: { projectId: string }) => Promise<ChatBot[]>
   createOne: (
     params: { projectId: string },
-    payload: Pick<ChatBot, "name" | "defaultPrompt">,
+    payload: Pick<ChatBot, "name" | "defaultPrompt" | "model" | "locale" | "temperature">,
   ) => Promise<void>
   updateOne: (
     params: { chatBotId: string; projectId: string },
-    payload: Partial<Pick<ChatBot, "name" | "defaultPrompt">>,
+    payload: Partial<Pick<ChatBot, "name" | "defaultPrompt" | "model" | "locale" | "temperature">>,
   ) => Promise<void>
   deleteOne: (params: { chatBotId: string; projectId: string }) => Promise<void>
 }

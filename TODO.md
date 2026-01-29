@@ -1,7 +1,11 @@
 # TODO
 
-- write LLM Rules for any IDE
+- use moostache to compile master-prompt+variables(locale, defaultprompt)
+- gptlike -> display chat session
 - write e2e tests
+- ProjectGuard, ChatbotGuard...
+- invite user
+- write LLM Rules for any IDE
 
 ## Routes and endpoints
 - name CRUD endpoint following: getAll, updateOne, deleteOne, getOne... (do not name it "listProjects", "createProject")

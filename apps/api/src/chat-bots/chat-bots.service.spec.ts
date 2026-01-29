@@ -1,3 +1,4 @@
+import { ChatBotLocale, ChatBotModel } from "@caseai-connect/api-contracts"
 import { ForbiddenException, NotFoundException } from "@nestjs/common"
 import type { Repository } from "typeorm"
 import { ChatBot } from "@/chat-bots/chat-bot.entity"
@@ -79,12 +80,13 @@ describe("ChatBotsService", () => {
 
       // Act
       const result = await service.createChatBot({
-        required: {
-          userId: savedUser.id,
-          projectId: savedProject.id,
-          name: "My Template",
-          defaultPrompt: "This is a default prompt",
-        },
+        userId: savedUser.id,
+        projectId: savedProject.id,
+        name: "My Template",
+        defaultPrompt: "This is a default prompt",
+        model: ChatBotModel.Gemini25Flash,
+        temperature: 0,
+        locale: ChatBotLocale.EN,
       })
 
       // Assert
@@ -125,12 +127,13 @@ describe("ChatBotsService", () => {
 
       // Act
       const result = await service.createChatBot({
-        required: {
-          userId: savedUser.id,
-          projectId: savedProject.id,
-          name: "Admin Template",
-          defaultPrompt: "Admin prompt",
-        },
+        userId: savedUser.id,
+        projectId: savedProject.id,
+        name: "Admin Template",
+        defaultPrompt: "Admin prompt",
+        model: ChatBotModel.Gemini25Flash,
+        temperature: 0,
+        locale: ChatBotLocale.EN,
       })
 
       // Assert
@@ -164,22 +167,24 @@ describe("ChatBotsService", () => {
       // Act & Assert
       await expect(
         service.createChatBot({
-          required: {
-            userId: savedUser.id,
-            projectId: savedProject.id,
-            name: "AB",
-            defaultPrompt: "Prompt",
-          },
+          userId: savedUser.id,
+          projectId: savedProject.id,
+          name: "AB",
+          defaultPrompt: "Prompt",
+          model: ChatBotModel.Gemini25Flash,
+          temperature: 0,
+          locale: ChatBotLocale.EN,
         }),
       ).rejects.toThrow(ForbiddenException)
       await expect(
         service.createChatBot({
-          required: {
-            userId: savedUser.id,
-            projectId: savedProject.id,
-            name: "AB",
-            defaultPrompt: "Prompt",
-          },
+          userId: savedUser.id,
+          projectId: savedProject.id,
+          name: "AB",
+          defaultPrompt: "Prompt",
+          model: ChatBotModel.Gemini25Flash,
+          temperature: 0,
+          locale: ChatBotLocale.EN,
         }),
       ).rejects.toThrow("ChatBot name must be at least 3 characters long")
     })
@@ -203,22 +208,24 @@ describe("ChatBotsService", () => {
       // Act & Assert
       await expect(
         service.createChatBot({
-          required: {
-            userId: savedUser.id,
-            projectId: savedProject.id,
-            name: "Template",
-            defaultPrompt: "Prompt",
-          },
+          userId: savedUser.id,
+          projectId: savedProject.id,
+          name: "Template",
+          defaultPrompt: "Prompt",
+          model: ChatBotModel.Gemini25Flash,
+          temperature: 0,
+          locale: ChatBotLocale.EN,
         }),
       ).rejects.toThrow(ForbiddenException)
       await expect(
         service.createChatBot({
-          required: {
-            userId: savedUser.id,
-            projectId: savedProject.id,
-            name: "Template",
-            defaultPrompt: "Prompt",
-          },
+          userId: savedUser.id,
+          projectId: savedProject.id,
+          name: "Template",
+          defaultPrompt: "Prompt",
+          model: ChatBotModel.Gemini25Flash,
+          temperature: 0,
+          locale: ChatBotLocale.EN,
         }),
       ).rejects.toThrow("User does not have access to organization")
     })
@@ -249,22 +256,24 @@ describe("ChatBotsService", () => {
       // Act & Assert
       await expect(
         service.createChatBot({
-          required: {
-            userId: savedUser.id,
-            projectId: savedProject.id,
-            name: "Template",
-            defaultPrompt: "Prompt",
-          },
+          userId: savedUser.id,
+          projectId: savedProject.id,
+          name: "Template",
+          defaultPrompt: "Prompt",
+          model: ChatBotModel.Gemini25Flash,
+          temperature: 0,
+          locale: ChatBotLocale.EN,
         }),
       ).rejects.toThrow(ForbiddenException)
       await expect(
         service.createChatBot({
-          required: {
-            userId: savedUser.id,
-            projectId: savedProject.id,
-            name: "Template",
-            defaultPrompt: "Prompt",
-          },
+          userId: savedUser.id,
+          projectId: savedProject.id,
+          name: "Template",
+          defaultPrompt: "Prompt",
+          model: ChatBotModel.Gemini25Flash,
+          temperature: 0,
+          locale: ChatBotLocale.EN,
         }),
       ).rejects.toThrow("User must be an owner or admin")
     })
@@ -281,22 +290,24 @@ describe("ChatBotsService", () => {
       // Act & Assert
       await expect(
         service.createChatBot({
-          required: {
-            userId: savedUser.id,
-            projectId: nonExistentProjectId,
-            name: "Template",
-            defaultPrompt: "Prompt",
-          },
+          userId: savedUser.id,
+          projectId: nonExistentProjectId,
+          name: "Template",
+          defaultPrompt: "Prompt",
+          model: ChatBotModel.Gemini25Flash,
+          temperature: 0,
+          locale: ChatBotLocale.EN,
         }),
       ).rejects.toThrow(NotFoundException)
       await expect(
         service.createChatBot({
-          required: {
-            userId: savedUser.id,
-            projectId: nonExistentProjectId,
-            name: "Template",
-            defaultPrompt: "Prompt",
-          },
+          userId: savedUser.id,
+          projectId: nonExistentProjectId,
+          name: "Template",
+          defaultPrompt: "Prompt",
+          model: ChatBotModel.Gemini25Flash,
+          temperature: 0,
+          locale: ChatBotLocale.EN,
         }),
       ).rejects.toThrow("Project with id")
     })

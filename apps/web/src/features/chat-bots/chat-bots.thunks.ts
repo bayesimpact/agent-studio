@@ -11,7 +11,10 @@ export const listChatBots = createAsyncThunk<ChatBot[], { projectId: string }, T
 
 export const createChatBot = createAsyncThunk<
   void,
-  Pick<ChatBot, "name" | "defaultPrompt" | "projectId">,
+  {
+    projectId: string
+    fields: Pick<ChatBot, "name" | "defaultPrompt" | "model" | "temperature" | "locale">
+  },
   ThunkConfig
 >(
   "chatBots/create",
@@ -19,8 +22,11 @@ export const createChatBot = createAsyncThunk<
     await services.chatBots.createOne(
       { projectId: payload.projectId },
       {
-        name: payload.name,
-        defaultPrompt: payload.defaultPrompt,
+        name: payload.fields.name,
+        defaultPrompt: payload.fields.defaultPrompt,
+        model: payload.fields.model,
+        temperature: payload.fields.temperature,
+        locale: payload.fields.locale,
       },
     ),
 )
@@ -30,7 +36,7 @@ export const updateChatBot = createAsyncThunk<
   {
     chatBotId: string
     projectId: string
-    fields: Partial<Pick<ChatBot, "name" | "defaultPrompt">>
+    fields: Partial<Pick<ChatBot, "name" | "defaultPrompt" | "model" | "temperature" | "locale">>
   },
   ThunkConfig
 >(

@@ -34,24 +34,33 @@ export default {
 } satisfies IChatBotsSpi
 
 const toCreateDto = (
-  payload: Pick<ChatBot, "name" | "defaultPrompt">,
+  payload: Pick<ChatBot, "name" | "defaultPrompt" | "model" | "locale" | "temperature">,
 ): (typeof ChatBotsRoutes.createOne.request)["payload"] => ({
-  name: payload.name,
   defaultPrompt: payload.defaultPrompt,
+  locale: payload.locale,
+  model: payload.model,
+  name: payload.name,
+  temperature: payload.temperature,
 })
 
 const toUpdateDto = (
-  payload: Partial<Pick<ChatBot, "name" | "defaultPrompt">>,
+  payload: Partial<Pick<ChatBot, "name" | "defaultPrompt" | "locale" | "model" | "temperature">>,
 ): (typeof ChatBotsRoutes.updateOne.request)["payload"] => ({
-  name: payload.name,
   defaultPrompt: payload.defaultPrompt,
+  locale: payload.locale,
+  model: payload.model,
+  name: payload.name,
+  temperature: payload.temperature,
 })
 
 const fromChatBotDto = (dto: ChatBotDto): ChatBot => ({
-  id: dto.id,
-  name: dto.name,
-  defaultPrompt: dto.defaultPrompt,
-  projectId: dto.projectId,
   createdAt: dto.createdAt,
+  defaultPrompt: dto.defaultPrompt,
+  id: dto.id,
+  locale: dto.locale,
+  model: dto.model,
+  name: dto.name,
+  projectId: dto.projectId,
+  temperature: dto.temperature,
   updatedAt: dto.updatedAt,
 })

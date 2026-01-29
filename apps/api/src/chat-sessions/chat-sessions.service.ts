@@ -406,6 +406,16 @@ export class ChatSessionsService {
   }
 
   /**
+   * Deletes all sessions for a chatbot
+   * Called when deleting a chatbot
+   */
+  async deleteAllSessionsForChatBot(chatbotId: string): Promise<void> {
+    await this.chatSessionRepository.delete({
+      chatbotId,
+    })
+  }
+
+  /**
    * Deletes expired playground sessions
    * Called by cleanup cron job
    * Uses 5-minute safety margin to avoid deleting active streams

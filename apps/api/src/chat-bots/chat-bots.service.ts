@@ -159,13 +159,13 @@ export class ChatBotsService {
    * Creates a new chat bot for a project.
    * Verifies that the user is an owner or admin of the project's organization before creating.
    */
-  async createChatBot(params: {
-    required: {
+  async createChatBot(
+    params: {
       userId: string
-    } & Pick<ChatBot, "projectId" | "defaultPrompt" | "name">
-    optional?: Pick<Partial<ChatBot>, "model" | "temperature" | "locale">
-  }): Promise<ChatBot> {
-    const { userId, projectId, name, defaultPrompt } = params.required
+    } & Pick<ChatBot, "projectId" | "defaultPrompt" | "name" | "model" | "temperature" | "locale">,
+  ): Promise<ChatBot> {
+    const { userId, ...fields } = params
+    const { projectId, name } = fields
 
     // Validate name (min 3 characters)
     if (name.length < 3) {
@@ -185,15 +185,7 @@ export class ChatBotsService {
     }
 
     // Create the chat bot with defaults
-    const chatBot = this.chatBotRepository.create({
-      name,
-      defaultPrompt,
-      model: params.optional?.model || "gemini-2.5-flash",
-      temperature: params.optional?.temperature ?? 0,
-      locale: params.optional?.locale || "en",
-      projectId,
-      project,
-    })
+    const chatBot = this.chatBotRepository.create(fields)
 
     return this.chatBotRepository.save(chatBot)
   }
@@ -299,6 +291,9 @@ export class ChatBotsService {
     if (!chatBot) {
       throw new NotFoundException(`ChatBot with id ${chatBotId} not found`)
     }
+
+    // Delete all sessions for the chat bot
+    await this.chatSessionsService.deleteAllSessionsForChatBot(chatBotId)
 
     // Delete the chat bot
     await this.chatBotRepository.remove(chatBot)

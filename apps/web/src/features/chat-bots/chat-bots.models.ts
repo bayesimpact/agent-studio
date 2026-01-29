@@ -1,8 +1,18 @@
+import type {
+  ChatBotLocale,
+  ChatBotModel,
+  ChatBotTemperature,
+  TimeType,
+} from "@caseai-connect/api-contracts"
+
 export type ChatBot = {
-  createdAt: number
+  createdAt: TimeType
   defaultPrompt: string
   id: string
+  locale: ChatBotLocale
+  model: ChatBotModel
   name: string
   projectId: string
-  updatedAt: number
+  temperature: ChatBotTemperature
+  updatedAt: TimeType
 }

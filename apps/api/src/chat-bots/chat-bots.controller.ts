@@ -22,12 +22,9 @@ export class ChatBotsController {
     const user = request.user
 
     const chatBot = await this.chatBotsService.createChatBot({
-      required: {
-        userId: user.id,
-        projectId,
-        name: payload.name,
-        defaultPrompt: payload.defaultPrompt,
-      },
+      userId: user.id,
+      projectId,
+      ...payload,
     })
 
     if (!chatBot) {
@@ -79,11 +76,14 @@ export class ChatBotsController {
 
 function toChatBotDto(entity: ChatBot): ChatBotDto {
   return {
-    id: entity.id,
-    name: entity.name,
-    defaultPrompt: entity.defaultPrompt,
-    projectId: entity.projectId,
     createdAt: entity.createdAt.getTime(),
+    defaultPrompt: entity.defaultPrompt,
+    id: entity.id,
+    locale: entity.locale,
+    model: entity.model,
+    name: entity.name,
+    projectId: entity.projectId,
+    temperature: entity.temperature,
     updatedAt: entity.updatedAt.getTime(),
   }
 }
