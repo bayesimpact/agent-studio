@@ -11,7 +11,10 @@ async function bootstrap() {
       transform: true,
     }),
   )
-  app.enableCors()
+  app.enableCors({
+    origin: ["http://localhost:5173", "https://connect-web-flax.vercel.app"],
+    credentials: true,
+  })
   await app.listen(3000)
 }
 
