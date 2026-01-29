@@ -12,15 +12,7 @@ async function bootstrap() {
     }),
   )
   app.enableCors({
-    origin: [
-      "http://localhost:3000",
-      "http://localhost:3001",
-      "http://localhost:3002",
-      "http://localhost:5173",
-      "https://caseai-connect-web.vercel.app",
-      "https://connect-web-flax.vercel.app",
-      "https://connect.caseai.org",
-    ],
+    origin: ["http://localhost:5173", "https://connect-web-flax.vercel.app"],
     credentials: true,
   })
   await app.listen(3000)
