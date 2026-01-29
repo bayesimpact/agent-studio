@@ -1,13 +1,10 @@
 # TODO
-## Dtos
-<!-- DONE - do not export 1 file per DTO (create-chat-bot.dto.ts, etc...) -->
 
-## Dispatch
-<!-- DONE - do not await dispatch on component to trigger another dispatch (ex: await dispatch(updateX) => dispatch(getX)) => solution: use middleware -->
+- write LLM Rules for any IDE
+- write e2e tests
 
 ## Routes and endpoints
 - name CRUD endpoint following: getAll, updateOne, deleteOne, getOne... (do not name it "listProjects", "createProject")
-<!-- DONE - replace ensureUserFromRequest by a UserGuard -->
 
 ## Tests
 ### Backend
