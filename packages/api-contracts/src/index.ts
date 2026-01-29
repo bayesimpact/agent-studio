@@ -1,7 +1,7 @@
 // Generic DTOs
 
 // Chat Bots DTOs
-export type * from "./chat-bots/chat-bots.dto"
+export * from "./chat-bots/chat-bots.dto"
 export { ChatBotsRoutes } from "./chat-bots/chat-bots.routes"
 export type * from "./chat-sessions/chat-session-messages.dto"
 export { ChatSessionMessagesRoutes } from "./chat-sessions/chat-session-messages.routes"

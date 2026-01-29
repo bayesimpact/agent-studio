@@ -1,20 +1,26 @@
 "use client"
 
+import { ChatBotLocale, ChatBotModel } from "@caseai-connect/api-contracts"
 import { Button } from "@caseai-connect/ui/shad/button"
 import { CardContent, CardFooter } from "@caseai-connect/ui/shad/card"
 import { Input } from "@caseai-connect/ui/shad/input"
 import { Label } from "@caseai-connect/ui/shad/label"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@caseai-connect/ui/shad/select"
 import { Textarea } from "@caseai-connect/ui/shad/textarea"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { useForm } from "react-hook-form"
+import { Controller, useForm } from "react-hook-form"
 import { useTranslation } from "react-i18next"
 import { z } from "zod"
+import type { ChatBot } from "@/features/chat-bots/chat-bots.models"
 
 interface ChatBotFormProps {
-  defaultValues?: {
-    name: string
-    defaultPrompt: string
-  }
+  defaultValues?: ChatBotFormData
   isLoading: boolean
   error: string | null
   onSubmit: (values: ChatBotFormData) => Promise<void> | void
@@ -22,13 +28,16 @@ interface ChatBotFormProps {
   submitLabelLoading: string
 }
 
-type ChatBotFormData = {
-  name: string
-  defaultPrompt: string
-}
+type ChatBotFormData = Pick<ChatBot, "name" | "defaultPrompt" | "model" | "temperature" | "locale">
 
 export function ChatBotForm({
-  defaultValues = { name: "", defaultPrompt: "" },
+  defaultValues = {
+    name: "",
+    defaultPrompt: "",
+    model: ChatBotModel.Gemini25Flash,
+    temperature: 0.0,
+    locale: ChatBotLocale.EN,
+  },
   isLoading,
   error,
   onSubmit,
@@ -40,21 +49,41 @@ export function ChatBotForm({
   const chatBotSchema = z.object({
     name: z.string().min(3, t("validation.nameMinLength")),
     defaultPrompt: z.string().min(1, t("validation.promptRequired")),
+    model: z.enum(ChatBotModel),
+    temperature: z
+      .number()
+      .min(0)
+      .max(2)
+      .refine(
+        (val) => val >= 0 && val <= 2 && Number.isFinite(val),
+        t("validation.temperatureInvalid"),
+      ),
+    locale: z.enum(ChatBotLocale),
   })
+
+  // Infer the type from the schema to avoid conflicts with z.coerce
+  type FormValues = z.infer<typeof chatBotSchema>
 
   const {
     register,
+    control,
     handleSubmit,
     formState: { errors },
     reset,
-  } = useForm<ChatBotFormData>({
+  } = useForm<FormValues>({
     resolver: zodResolver(chatBotSchema),
-    defaultValues,
+    defaultValues: defaultValues as FormValues,
   })
 
-  const handleFormSubmit = async (data: ChatBotFormData) => {
-    await onSubmit(data)
-    reset({ name: data.name, defaultPrompt: data.defaultPrompt })
+  const handleFormSubmit = async (data: FormValues) => {
+    // data is already validated and coerced
+    await onSubmit(data as ChatBotFormData)
+    // Optional: reset to new values or keep form state.
+    // If we want to reset to the *initial* defaults (clearing the form), use defaultValues.
+    // If we want to update the "pristine" state to current values, use reset(data).
+    // The previous code reset to defaultValues, which might be intended to "clear" the form or "reset to saved state".
+    // For now I'll keep the previous behavior but fix the variable.
+    reset(data)
   }
 
   return (
@@ -71,12 +100,14 @@ export function ChatBotForm({
           />
           {errors.name && <p className="text-sm text-destructive">{errors.name.message}</p>}
         </div>
+
         <div className="space-y-2">
           <Label htmlFor="defaultPrompt">{t("labelPrompt")}</Label>
           <Textarea
             id="defaultPrompt"
             placeholder={t("placeholderPrompt")}
             rows={8}
+            className="min-h-40"
             {...register("defaultPrompt")}
             disabled={isLoading}
             aria-invalid={errors.defaultPrompt ? "true" : "false"}
@@ -84,12 +115,82 @@ export function ChatBotForm({
           {errors.defaultPrompt && (
             <p className="text-sm text-destructive">{errors.defaultPrompt.message}</p>
           )}
-          {error && !errors.name && !errors.defaultPrompt && (
-            <p className="text-sm text-destructive">{error}</p>
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="model">{t("labelModel")}</Label>
+          <Controller
+            control={control}
+            name="model"
+            render={({ field }) => (
+              <Select
+                onValueChange={field.onChange}
+                defaultValue={field.value}
+                disabled={isLoading}
+              >
+                <SelectTrigger id="model" aria-invalid={errors.model ? "true" : "false"}>
+                  <SelectValue placeholder={t("placeholderModel")} />
+                </SelectTrigger>
+                <SelectContent>
+                  {Object.entries(ChatBotModel).map(([key, value]) => (
+                    <SelectItem key={key} value={value}>
+                      {value}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
+          />
+          {errors.model && <p className="text-sm text-destructive">{errors.model.message}</p>}
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="temperature">{t("labelTemperature")}</Label>
+          <Input
+            id="temperature"
+            type="number"
+            step="0.01"
+            min="0"
+            max="2"
+            placeholder={t("placeholderTemperature")}
+            {...register("temperature", { valueAsNumber: true })}
+            disabled={isLoading}
+            aria-invalid={errors.temperature ? "true" : "false"}
+          />
+          {errors.temperature && (
+            <p className="text-sm text-destructive">{errors.temperature.message}</p>
           )}
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="locale">{t("labelLocale")}</Label>
+          <Controller
+            control={control}
+            name="locale"
+            render={({ field }) => (
+              <Select
+                onValueChange={field.onChange}
+                defaultValue={field.value}
+                disabled={isLoading}
+              >
+                <SelectTrigger id="locale" aria-invalid={errors.locale ? "true" : "false"}>
+                  <SelectValue placeholder={t("placeholderLocale")} />
+                </SelectTrigger>
+                <SelectContent>
+                  {Object.entries(ChatBotLocale).map(([key, value]) => (
+                    <SelectItem key={key} value={value}>
+                      {value}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
+          />
+          {errors.locale && <p className="text-sm text-destructive">{errors.locale.message}</p>}
         </div>
       </CardContent>
       <CardFooter className="mt-4 px-0">
+        {error && <p className="text-sm text-destructive">{error}</p>}
         <Button type="submit" disabled={isLoading} className="w-full">
           {isLoading ? submitLabelLoading : submitLabelIdle}
         </Button>

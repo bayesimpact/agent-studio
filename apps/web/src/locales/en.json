@@ -66,6 +66,12 @@
       "placeholderName": "Enter chat bot name",
       "labelPrompt": "Default Prompt",
       "placeholderPrompt": "Enter the default prompt for this chat bot",
+      "labelModel": "Model",
+      "placeholderModel": "Select model",
+      "labelLocale": "Language",
+      "placeholderLocale": "Select language",
+      "labelTemperature": "Temperature",
+      "placeholderTemperature": "0.0 - 2.0",
       "validation": {
         "nameMinLength": "ChatBot name must be at least 3 characters",
         "promptRequired": "Default prompt is required"

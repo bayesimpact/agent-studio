@@ -1,3 +1,4 @@
+import type { ChatBotLocale, ChatBotModel, ChatBotTemperature } from "@caseai-connect/api-contracts"
 import {
   Column,
   CreateDateColumn,
@@ -23,13 +24,13 @@ export class ChatBot {
   defaultPrompt!: string
 
   @Column({ type: "varchar" })
-  model!: string
+  model!: ChatBotModel
 
   @Column({ type: "decimal", precision: 3, scale: 2, default: 0 })
-  temperature!: number
+  temperature!: ChatBotTemperature
 
   @Column({ type: "varchar" })
-  locale!: string
+  locale!: ChatBotLocale
 
   @Column({ type: "uuid", name: "project_id" })
   projectId!: string

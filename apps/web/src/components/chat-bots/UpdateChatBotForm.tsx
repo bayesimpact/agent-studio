@@ -17,15 +17,14 @@ export function UpdateChatBotForm({ chatBot, onSuccess }: UpdateChatBotFormProps
   const status = useAppSelector(selectChatBotsStatus)
   const error = useAppSelector(selectChatBotsError)
 
-  const handleSubmit = (data: { name: string; defaultPrompt: string }) => {
+  const handleSubmit = (
+    fields: Partial<Pick<ChatBot, "name" | "defaultPrompt" | "model" | "temperature" | "locale">>,
+  ) => {
     dispatch(
       updateChatBot({
         projectId: chatBot.projectId,
         chatBotId: chatBot.id,
-        fields: {
-          name: data.name,
-          defaultPrompt: data.defaultPrompt,
-        },
+        fields,
       }),
     )
     onSuccess?.()
@@ -38,6 +37,9 @@ export function UpdateChatBotForm({ chatBot, onSuccess }: UpdateChatBotFormProps
       defaultValues={{
         name: chatBot.name,
         defaultPrompt: chatBot.defaultPrompt,
+        model: chatBot.model,
+        temperature: chatBot.temperature,
+        locale: chatBot.locale,
       }}
       isLoading={isLoading}
       error={error}

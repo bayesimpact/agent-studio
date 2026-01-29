@@ -1,4 +1,5 @@
 import { useTranslation } from "react-i18next"
+import type { ChatBot } from "@/features/chat-bots/chat-bots.models"
 import { selectChatBotsError, selectChatBotsStatus } from "@/features/chat-bots/chat-bots.selectors"
 import { createChatBot } from "@/features/chat-bots/chat-bots.thunks"
 import { ADS } from "@/store/async-data-status"
@@ -16,14 +17,10 @@ export function CreateChatBotForm({ projectId, onSuccess }: CreateChatBotFormPro
   const status = useAppSelector(selectChatBotsStatus)
   const error = useAppSelector(selectChatBotsError)
 
-  const handleSubmit = (data: { name: string; defaultPrompt: string }) => {
-    dispatch(
-      createChatBot({
-        name: data.name,
-        defaultPrompt: data.defaultPrompt,
-        projectId,
-      }),
-    )
+  const handleSubmit = (
+    fields: Pick<ChatBot, "defaultPrompt" | "name" | "model" | "temperature" | "locale">,
+  ) => {
+    dispatch(createChatBot({ projectId, fields }))
     onSuccess?.()
   }
 

@@ -1,12 +1,13 @@
 "use client"
 
+import { ScrollArea } from "@caseai-connect/ui/shad/scroll-area"
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@caseai-connect/ui/shad/dialog"
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+} from "@caseai-connect/ui/shad/sheet"
 import { useTranslation } from "react-i18next"
 import { CreateChatBotForm } from "./CreateChatBotForm"
 
@@ -29,14 +30,18 @@ export function CreateChatBotDialog({
   }
 
   return (
-    <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>{t("title")}</DialogTitle>
-          <DialogDescription>{t("description", { projectName })}</DialogDescription>
-        </DialogHeader>
-        <CreateChatBotForm projectId={projectId} onSuccess={handleSuccess} />
-      </DialogContent>
-    </Dialog>
+    <Sheet modal open={isOpen} onOpenChange={onOpenChange}>
+      <SheetContent side="bottom" className="h-[100dvh]">
+        <ScrollArea className="h-full">
+          <SheetHeader>
+            <SheetTitle>{t("title")}</SheetTitle>
+            <SheetDescription>{t("description", { projectName })}</SheetDescription>
+          </SheetHeader>
+          <div className="px-4 pb-4">
+            <CreateChatBotForm projectId={projectId} onSuccess={handleSuccess} />
+          </div>
+        </ScrollArea>
+      </SheetContent>
+    </Sheet>
   )
 }

@@ -1,3 +1,4 @@
+import { ChatBotLocale, ChatBotModel } from "@caseai-connect/api-contracts"
 import { ForbiddenException, NotFoundException } from "@nestjs/common"
 import type { Repository } from "typeorm"
 import { ChatBot } from "@/chat-bots/chat-bot.entity"
@@ -78,9 +79,9 @@ describe("ChatSessionsService", () => {
     testChatBot = chatBotRepository.create({
       name: `Test ChatBot ${uniqueId}`,
       defaultPrompt: "You are a helpful assistant",
-      model: "gemini-2.5-flash",
+      model: ChatBotModel.Gemini25Flash,
       temperature: 0,
-      locale: "en",
+      locale: ChatBotLocale.EN,
       projectId: testProject.id,
     })
     testChatBot = await chatBotRepository.save(testChatBot)
@@ -496,9 +497,9 @@ describe("ChatSessionsService", () => {
       const anotherChatBot = chatBotRepository.create({
         name: "Another Test ChatBot",
         defaultPrompt: "You are a helpful assistant",
-        model: "gemini-2.5-flash",
+        model: ChatBotModel.Gemini25Flash,
         temperature: 0,
-        locale: "en",
+        locale: ChatBotLocale.EN,
         projectId: testProject.id,
       })
       await chatBotRepository.save(anotherChatBot)

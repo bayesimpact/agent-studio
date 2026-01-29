@@ -1,3 +1,4 @@
+import { ChatBotLocale, ChatBotModel } from "@caseai-connect/api-contracts"
 import type { Repository } from "typeorm"
 import { ChatBot } from "@/chat-bots/chat-bot.entity"
 import { clearTestDatabase } from "@/common/test/test-database"
@@ -89,9 +90,9 @@ describe("ChatSessionMessagesController", () => {
       const chatBot = chatBotRepository.create({
         name: "Messages Bot",
         defaultPrompt: "You are a helpful assistant",
-        model: "gemini-2.5-flash",
+        model: ChatBotModel.Gemini25Flash,
         temperature: 0,
-        locale: "en",
+        locale: ChatBotLocale.EN,
         projectId: savedProject.id,
       })
       const savedChatBot = await chatBotRepository.save(chatBot)

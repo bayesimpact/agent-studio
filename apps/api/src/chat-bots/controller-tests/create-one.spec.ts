@@ -1,3 +1,4 @@
+import { ChatBotLocale, ChatBotModel } from "@caseai-connect/api-contracts"
 import { userMembershipFactory } from "@/organizations/user-membership.factory"
 import { projectFactory } from "@/projects/project.factory"
 import type { EndpointRequest } from "@/request.interface"
@@ -59,6 +60,9 @@ describe("ChatBot - createOne", () => {
         payload: {
           name: "New Template",
           defaultPrompt: "This is a default prompt",
+          model: ChatBotModel.Gemini25Flash,
+          temperature: 0,
+          locale: ChatBotLocale.EN,
         },
       } satisfies typeof ChatBotsRoutes.createOne.request
 
@@ -125,6 +129,9 @@ describe("ChatBot - createOne", () => {
         payload: {
           name: "Admin Template",
           defaultPrompt: "Admin prompt",
+          model: ChatBotModel.Gemini25Flash,
+          temperature: 0,
+          locale: ChatBotLocale.EN,
         },
       } satisfies typeof ChatBotsRoutes.createOne.request
 
@@ -179,6 +186,9 @@ describe("ChatBot - createOne", () => {
         payload: {
           name: "Should Fail",
           defaultPrompt: "Prompt",
+          model: ChatBotModel.Gemini25Flash,
+          temperature: 0,
+          locale: ChatBotLocale.EN,
         },
       } satisfies typeof ChatBotsRoutes.createOne.request
 

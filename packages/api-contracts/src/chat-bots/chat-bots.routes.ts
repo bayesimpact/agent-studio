@@ -5,7 +5,7 @@ import type { ChatBotDto, ListChatBotsResponseDto } from "./chat-bots.dto"
 export const ChatBotsRoutes = {
   createOne: defineRoute<
     ResponseData<SuccessResponseDTO>,
-    RequestPayload<Pick<ChatBotDto, "name" | "defaultPrompt">>
+    RequestPayload<Pick<ChatBotDto, "name" | "defaultPrompt" | "model" | "locale" | "temperature">>
   >({
     method: "post",
     path: "projects/:projectId/chat-bots",
@@ -16,7 +16,9 @@ export const ChatBotsRoutes = {
   }),
   updateOne: defineRoute<
     ResponseData<SuccessResponseDTO>,
-    RequestPayload<Partial<Pick<ChatBotDto, "name" | "defaultPrompt">>>
+    RequestPayload<
+      Partial<Pick<ChatBotDto, "name" | "defaultPrompt" | "locale" | "model" | "temperature">>
+    >
   >({
     method: "patch",
     path: "projects/:projectId/chat-bots/:chatBotId",
