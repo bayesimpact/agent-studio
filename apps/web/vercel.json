@@ -1,6 +1,9 @@
 {
   "outputDirectory": "dist",
-  "rewrites": [{
-    "source": "/(.*)",
-    "destination": "/" }]
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": "/"
+    }
+  ]
 }
