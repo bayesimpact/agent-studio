@@ -5,6 +5,7 @@ imageUrl ?= REGION-docker.pkg.dev/YOUR_PROJECT/YOUR_REPO/api
 
 
 REGION ?= eu
+TEST_DATABASE_URL ?= postgresql://connect_admin:passpass@localhost:5432/connect_test
 
 ifeq "$(REGION)" "eu"
 cloudRunName = connect
@@ -50,12 +51,11 @@ docker-check: docker-build
 ci-checks:
 	npm ci && npm run biome:ci && npm run typecheck
 
-
 db-tests:
 	docker compose -f infra/database/docker-compose.yaml up -d
 
 tests: db-tests ci-checks
-	cd apps/api && npm run migration:test:run && npm run test
+	cd apps/api && DATABASE_URL=${TEST_DATABASE_URL} npm run migration:test:run && DATABASE_URL=${TEST_DATABASE_URL} npm run test
 
 migrations:
 	docker compose -f infra/cloudsql-proxy/docker-compose.yaml up -d

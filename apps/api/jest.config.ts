@@ -1,8 +1,4 @@
 import { resolve } from "node:path"
-import { config as dotenvConfig } from "dotenv"
-
-// Load .env.test file for tests
-dotenvConfig({ path: resolve(__dirname, ".env.test") })
 
 // Resolve path to api-contracts package
 const apiContractsPath = resolve(__dirname, "../../packages/api-contracts/src")
