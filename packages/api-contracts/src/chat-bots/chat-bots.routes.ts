@@ -1,34 +1,28 @@
-import type { RequestPayload, ResponseData } from "../generic"
+import type { RequestPayload, ResponseData, SuccessResponseDTO } from "../generic"
 import { defineRoute } from "../helpers"
-import type {
-  CreateChatBotRequestDto,
-  CreateChatBotResponseDto,
-  ListChatBotsResponseDto,
-  UpdateChatBotRequestDto,
-  UpdateChatBotResponseDto,
-} from "./chat-bots.dto"
+import type { ChatBotDto, ListChatBotsResponseDto } from "./chat-bots.dto"
 
 export const ChatBotsRoutes = {
-  createChatBot: defineRoute<
-    ResponseData<CreateChatBotResponseDto>,
-    RequestPayload<CreateChatBotRequestDto>
+  createOne: defineRoute<
+    ResponseData<SuccessResponseDTO>,
+    RequestPayload<Pick<ChatBotDto, "name" | "defaultPrompt">>
   >({
     method: "post",
-    path: "chat-bots",
+    path: "projects/:projectId/chat-bots",
   }),
-  listChatBots: defineRoute<ResponseData<ListChatBotsResponseDto>>({
+  getAll: defineRoute<ResponseData<ListChatBotsResponseDto>>({
     method: "get",
     path: "projects/:projectId/chat-bots",
   }),
-  updateChatBot: defineRoute<
-    ResponseData<UpdateChatBotResponseDto>,
-    RequestPayload<UpdateChatBotRequestDto>
+  updateOne: defineRoute<
+    ResponseData<SuccessResponseDTO>,
+    RequestPayload<Partial<Pick<ChatBotDto, "name" | "defaultPrompt">>>
   >({
     method: "patch",
-    path: "chat-bots/:chatBotId",
+    path: "projects/:projectId/chat-bots/:chatBotId",
   }),
-  deleteChatBot: defineRoute<ResponseData<{ success: boolean }>>({
+  deleteOne: defineRoute<ResponseData<SuccessResponseDTO>>({
     method: "delete",
-    path: "chat-bots/:chatBotId",
+    path: "projects/:projectId/chat-bots/:chatBotId",
   }),
 }

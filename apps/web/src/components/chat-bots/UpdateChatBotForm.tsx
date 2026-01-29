@@ -20,8 +20,9 @@ export function UpdateChatBotForm({ chatBot, onSuccess }: UpdateChatBotFormProps
   const handleSubmit = (data: { name: string; defaultPrompt: string }) => {
     dispatch(
       updateChatBot({
+        projectId: chatBot.projectId,
         chatBotId: chatBot.id,
-        payload: {
+        fields: {
           name: data.name,
           defaultPrompt: data.defaultPrompt,
         },

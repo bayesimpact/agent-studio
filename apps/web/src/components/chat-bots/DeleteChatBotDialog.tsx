@@ -9,10 +9,9 @@ import {
   DialogTitle,
 } from "@caseai-connect/ui/shad/dialog"
 import { useTranslation } from "react-i18next"
-import { toast } from "sonner"
 import type { ChatBot } from "@/features/chat-bots/chat-bots.models"
 import { selectChatBotsStatus } from "@/features/chat-bots/chat-bots.selectors"
-import { deleteChatBot, listChatBots } from "@/features/chat-bots/chat-bots.thunks"
+import { deleteChatBot } from "@/features/chat-bots/chat-bots.thunks"
 import { ADS } from "@/store/async-data-status"
 import { useAppDispatch, useAppSelector } from "@/store/hooks"
 
@@ -31,16 +30,9 @@ export function DeleteChatBotDialog({ chatBot, onClose }: DeleteChatBotDialogPro
     return null
   }
 
-  const handleDelete = async () => {
-    try {
-      await dispatch(deleteChatBot({ chatBotId: chatBot.id })).unwrap()
-      toast.success(t("success"))
-      onClose()
-      dispatch(listChatBots({ projectId: chatBot.projectId }))
-    } catch (err) {
-      const errorMessage = (err as { message?: string })?.message || t("error")
-      toast.error(errorMessage)
-    }
+  const handleDelete = () => {
+    dispatch(deleteChatBot({ projectId: chatBot.projectId, chatBotId: chatBot.id }))
+    onClose()
   }
 
   return (

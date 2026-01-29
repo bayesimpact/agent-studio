@@ -1,70 +1,57 @@
-import {
-  ChatBotsRoutes,
-  type CreateChatBotRequestDto,
-  type CreateChatBotResponseDto,
-  type ListChatBotsResponseDto,
-  type UpdateChatBotRequestDto,
-} from "@caseai-connect/api-contracts"
+import { type ChatBotDto, ChatBotsRoutes } from "@caseai-connect/api-contracts"
 import { getAxiosInstance } from "@/external/axios"
-import type { ChatBot, CreateChatBotPayload, UpdateChatBotPayload } from "../chat-bots.models"
+import type { ChatBot } from "../chat-bots.models"
 import type { IChatBotsSpi } from "../chat-bots.spi"
 
 export default {
-  getAll: async (projectId: string) => {
+  getAll: async (params) => {
     const axios = getAxiosInstance()
-    const response = await axios.get<typeof ChatBotsRoutes.listChatBots.response>(
-      ChatBotsRoutes.listChatBots.getPath({ projectId }),
+    const response = await axios.get<typeof ChatBotsRoutes.getAll.response>(
+      ChatBotsRoutes.getAll.getPath(params),
     )
-    return fromListDto(response.data.data)
+    return response.data.data.chatBots.map(fromChatBotDto)
   },
-  createOne: async (payload: CreateChatBotPayload) => {
+  createOne: async (params, payload) => {
     const axios = getAxiosInstance()
-    const response = await axios.post<typeof ChatBotsRoutes.createChatBot.response>(
-      ChatBotsRoutes.createChatBot.getPath(),
+    await axios.post<typeof ChatBotsRoutes.createOne.response>(
+      ChatBotsRoutes.createOne.getPath(params),
       {
         payload: toCreateDto(payload),
       },
     )
-    return fromCreateDto(response.data.data)
+    return
   },
-  updateOne: async (chatBotId: string, payload: UpdateChatBotPayload) => {
+  updateOne: async (params, payload) => {
     const axios = getAxiosInstance()
-    await axios.patch(ChatBotsRoutes.updateChatBot.getPath({ chatBotId }), {
+    await axios.patch(ChatBotsRoutes.updateOne.getPath(params), {
       payload: toUpdateDto(payload),
     })
   },
-  deleteOne: async (chatBotId: string) => {
+  deleteOne: async (params) => {
     const axios = getAxiosInstance()
-    await axios.delete(ChatBotsRoutes.deleteChatBot.getPath({ chatBotId }))
+    await axios.delete(ChatBotsRoutes.deleteOne.getPath(params))
   },
 } satisfies IChatBotsSpi
 
-const toCreateDto = (payload: CreateChatBotPayload): CreateChatBotRequestDto => ({
-  name: payload.name,
-  defaultPrompt: payload.defaultPrompt,
-  projectId: payload.projectId,
-})
-
-const toUpdateDto = (payload: UpdateChatBotPayload): UpdateChatBotRequestDto => ({
+const toCreateDto = (
+  payload: Pick<ChatBot, "name" | "defaultPrompt">,
+): (typeof ChatBotsRoutes.createOne.request)["payload"] => ({
   name: payload.name,
   defaultPrompt: payload.defaultPrompt,
 })
 
-const fromCreateDto = (dto: CreateChatBotResponseDto): ChatBot => ({
+const toUpdateDto = (
+  payload: Partial<Pick<ChatBot, "name" | "defaultPrompt">>,
+): (typeof ChatBotsRoutes.updateOne.request)["payload"] => ({
+  name: payload.name,
+  defaultPrompt: payload.defaultPrompt,
+})
+
+const fromChatBotDto = (dto: ChatBotDto): ChatBot => ({
   id: dto.id,
   name: dto.name,
   defaultPrompt: dto.defaultPrompt,
   projectId: dto.projectId,
-  createdAt: Date.now(),
-  updatedAt: Date.now(),
+  createdAt: dto.createdAt,
+  updatedAt: dto.updatedAt,
 })
-
-const fromListDto = (dto: ListChatBotsResponseDto): ChatBot[] =>
-  dto.chatBots.map((chatBot) => ({
-    id: chatBot.id,
-    name: chatBot.name,
-    defaultPrompt: chatBot.defaultPrompt,
-    projectId: chatBot.projectId,
-    createdAt: chatBot.createdAt,
-    updatedAt: chatBot.updatedAt,
-  }))

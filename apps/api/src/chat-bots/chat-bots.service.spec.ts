@@ -78,12 +78,14 @@ describe("ChatBotsService", () => {
       const savedProject = await projectRepository.save(project)
 
       // Act
-      const result = await service.createChatBot(
-        savedUser.id,
-        savedProject.id,
-        "My Template",
-        "This is a default prompt",
-      )
+      const result = await service.createChatBot({
+        required: {
+          userId: savedUser.id,
+          projectId: savedProject.id,
+          name: "My Template",
+          defaultPrompt: "This is a default prompt",
+        },
+      })
 
       // Assert
       expect(result.name).toBe("My Template")
@@ -122,12 +124,14 @@ describe("ChatBotsService", () => {
       const savedProject = await projectRepository.save(project)
 
       // Act
-      const result = await service.createChatBot(
-        savedUser.id,
-        savedProject.id,
-        "Admin Template",
-        "Admin prompt",
-      )
+      const result = await service.createChatBot({
+        required: {
+          userId: savedUser.id,
+          projectId: savedProject.id,
+          name: "Admin Template",
+          defaultPrompt: "Admin prompt",
+        },
+      })
 
       // Assert
       expect(result.name).toBe("Admin Template")
@@ -159,10 +163,24 @@ describe("ChatBotsService", () => {
 
       // Act & Assert
       await expect(
-        service.createChatBot(savedUser.id, savedProject.id, "AB", "Prompt"),
+        service.createChatBot({
+          required: {
+            userId: savedUser.id,
+            projectId: savedProject.id,
+            name: "AB",
+            defaultPrompt: "Prompt",
+          },
+        }),
       ).rejects.toThrow(ForbiddenException)
       await expect(
-        service.createChatBot(savedUser.id, savedProject.id, "AB", "Prompt"),
+        service.createChatBot({
+          required: {
+            userId: savedUser.id,
+            projectId: savedProject.id,
+            name: "AB",
+            defaultPrompt: "Prompt",
+          },
+        }),
       ).rejects.toThrow("ChatBot name must be at least 3 characters long")
     })
 
@@ -184,10 +202,24 @@ describe("ChatBotsService", () => {
 
       // Act & Assert
       await expect(
-        service.createChatBot(savedUser.id, savedProject.id, "Template", "Prompt"),
+        service.createChatBot({
+          required: {
+            userId: savedUser.id,
+            projectId: savedProject.id,
+            name: "Template",
+            defaultPrompt: "Prompt",
+          },
+        }),
       ).rejects.toThrow(ForbiddenException)
       await expect(
-        service.createChatBot(savedUser.id, savedProject.id, "Template", "Prompt"),
+        service.createChatBot({
+          required: {
+            userId: savedUser.id,
+            projectId: savedProject.id,
+            name: "Template",
+            defaultPrompt: "Prompt",
+          },
+        }),
       ).rejects.toThrow("User does not have access to organization")
     })
 
@@ -216,10 +248,24 @@ describe("ChatBotsService", () => {
 
       // Act & Assert
       await expect(
-        service.createChatBot(savedUser.id, savedProject.id, "Template", "Prompt"),
+        service.createChatBot({
+          required: {
+            userId: savedUser.id,
+            projectId: savedProject.id,
+            name: "Template",
+            defaultPrompt: "Prompt",
+          },
+        }),
       ).rejects.toThrow(ForbiddenException)
       await expect(
-        service.createChatBot(savedUser.id, savedProject.id, "Template", "Prompt"),
+        service.createChatBot({
+          required: {
+            userId: savedUser.id,
+            projectId: savedProject.id,
+            name: "Template",
+            defaultPrompt: "Prompt",
+          },
+        }),
       ).rejects.toThrow("User must be an owner or admin")
     })
 
@@ -234,10 +280,24 @@ describe("ChatBotsService", () => {
 
       // Act & Assert
       await expect(
-        service.createChatBot(savedUser.id, nonExistentProjectId, "Template", "Prompt"),
+        service.createChatBot({
+          required: {
+            userId: savedUser.id,
+            projectId: nonExistentProjectId,
+            name: "Template",
+            defaultPrompt: "Prompt",
+          },
+        }),
       ).rejects.toThrow(NotFoundException)
       await expect(
-        service.createChatBot(savedUser.id, nonExistentProjectId, "Template", "Prompt"),
+        service.createChatBot({
+          required: {
+            userId: savedUser.id,
+            projectId: nonExistentProjectId,
+            name: "Template",
+            defaultPrompt: "Prompt",
+          },
+        }),
       ).rejects.toThrow("Project with id")
     })
   })
@@ -279,7 +339,10 @@ describe("ChatBotsService", () => {
       await chatBotRepository.save([template1, template2])
 
       // Act
-      const result = await service.listChatBots(savedUser.id, savedProject.id)
+      const result = await service.listChatBots({
+        userId: savedUser.id,
+        projectId: savedProject.id,
+      })
 
       // Assert
       expect(result).toHaveLength(2)
@@ -311,7 +374,10 @@ describe("ChatBotsService", () => {
       const savedProject = await projectRepository.save(project)
 
       // Act
-      const result = await service.listChatBots(savedUser.id, savedProject.id)
+      const result = await service.listChatBots({
+        userId: savedUser.id,
+        projectId: savedProject.id,
+      })
 
       // Assert
       expect(result).toEqual([])
@@ -331,12 +397,18 @@ describe("ChatBotsService", () => {
       const savedProject = await projectRepository.save(project)
 
       // Act & Assert
-      await expect(service.listChatBots(savedUser.id, savedProject.id)).rejects.toThrow(
-        ForbiddenException,
-      )
-      await expect(service.listChatBots(savedUser.id, savedProject.id)).rejects.toThrow(
-        "User does not have access to organization",
-      )
+      await expect(
+        service.listChatBots({
+          userId: savedUser.id,
+          projectId: savedProject.id,
+        }),
+      ).rejects.toThrow(ForbiddenException)
+      await expect(
+        service.listChatBots({
+          userId: savedUser.id,
+          projectId: savedProject.id,
+        }),
+      ).rejects.toThrow("User does not have access to organization")
     })
 
     it("should return ChatBots ordered by createdAt DESC", async () => {
@@ -377,7 +449,10 @@ describe("ChatBotsService", () => {
       await chatBotRepository.save([template1, template2])
 
       // Act
-      const result = await service.listChatBots(savedUser.id, savedProject.id)
+      const result = await service.listChatBots({
+        userId: savedUser.id,
+        projectId: savedProject.id,
+      })
 
       // Assert
       expect(result).toHaveLength(2)
@@ -419,12 +494,16 @@ describe("ChatBotsService", () => {
       const savedTemplate = await chatBotRepository.save(template)
 
       // Act
-      const result = await service.updateChatBot(
-        savedUser.id,
-        savedTemplate.id,
-        "Updated Template",
-        "Updated Prompt",
-      )
+      const result = await service.updateChatBot({
+        required: {
+          userId: savedUser.id,
+          chatBotId: savedTemplate.id,
+        },
+        fieldsToUpdate: {
+          name: "Updated Template",
+          defaultPrompt: "Updated Prompt",
+        },
+      })
 
       // Assert
       expect(result.name).toBe("Updated Template")
@@ -469,7 +548,15 @@ describe("ChatBotsService", () => {
       const savedTemplate = await chatBotRepository.save(template)
 
       // Act
-      const result = await service.updateChatBot(savedUser.id, savedTemplate.id, "Updated Name")
+      const result = await service.updateChatBot({
+        required: {
+          userId: savedUser.id,
+          chatBotId: savedTemplate.id,
+        },
+        fieldsToUpdate: {
+          name: "Updated Name",
+        },
+      })
 
       // Assert
       expect(result.name).toBe("Updated Name")
@@ -507,12 +594,28 @@ describe("ChatBotsService", () => {
       const savedTemplate = await chatBotRepository.save(template)
 
       // Act & Assert
-      await expect(service.updateChatBot(savedUser.id, savedTemplate.id, "AB")).rejects.toThrow(
-        ForbiddenException,
-      )
-      await expect(service.updateChatBot(savedUser.id, savedTemplate.id, "AB")).rejects.toThrow(
-        "ChatBot name must be at least 3 characters long",
-      )
+      await expect(
+        service.updateChatBot({
+          required: {
+            userId: savedUser.id,
+            chatBotId: savedTemplate.id,
+          },
+          fieldsToUpdate: {
+            name: "AB",
+          },
+        }),
+      ).rejects.toThrow(ForbiddenException)
+      await expect(
+        service.updateChatBot({
+          required: {
+            userId: savedUser.id,
+            chatBotId: savedTemplate.id,
+          },
+          fieldsToUpdate: {
+            name: "AB",
+          },
+        }),
+      ).rejects.toThrow("ChatBot name must be at least 3 characters long")
     })
 
     it("should throw ForbiddenException when user is member but not owner or admin", async () => {
@@ -547,10 +650,26 @@ describe("ChatBotsService", () => {
 
       // Act & Assert
       await expect(
-        service.updateChatBot(savedUser.id, savedTemplate.id, "Updated"),
+        service.updateChatBot({
+          required: {
+            userId: savedUser.id,
+            chatBotId: savedTemplate.id,
+          },
+          fieldsToUpdate: {
+            name: "Updated",
+          },
+        }),
       ).rejects.toThrow(ForbiddenException)
       await expect(
-        service.updateChatBot(savedUser.id, savedTemplate.id, "Updated"),
+        service.updateChatBot({
+          required: {
+            userId: savedUser.id,
+            chatBotId: savedTemplate.id,
+          },
+          fieldsToUpdate: {
+            name: "Updated",
+          },
+        }),
       ).rejects.toThrow("User must be an owner or admin")
     })
 
@@ -565,10 +684,23 @@ describe("ChatBotsService", () => {
 
       // Act & Assert
       await expect(
-        service.updateChatBot(savedUser.id, nonExistentTemplateId, "Updated"),
+        service.updateChatBot({
+          required: {
+            userId: savedUser.id,
+            chatBotId: nonExistentTemplateId,
+          },
+          fieldsToUpdate: {
+            name: "Updated",
+          },
+        }),
       ).rejects.toThrow(NotFoundException)
       await expect(
-        service.updateChatBot(savedUser.id, nonExistentTemplateId, "Updated"),
+        service.updateChatBot({
+          required: { userId: savedUser.id, chatBotId: nonExistentTemplateId },
+          fieldsToUpdate: {
+            name: "Updated",
+          },
+        }),
       ).rejects.toThrow("ChatBot with id")
     })
   })
