@@ -94,7 +94,7 @@
     "list": {
       "title": "ChatBots",
       "empty": {
-        "title": "Pas encore de ChatBots",
+        "title": "Pas encore de ChatBot",
         "description": "Créez votre premier ChatBot pour commencer avec des prompts personnalisés pour ce projet.",
         "button": "Créer le premier ChatBot"
       },
