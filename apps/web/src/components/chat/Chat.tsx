@@ -10,7 +10,10 @@ function Chat({ className, children, ...props }: React.ComponentProps<"div"> & {
   return (
     <div
       data-slot="chat"
-      className={cn("relative shadow-xl rounded-2xl overflow-hidden bg-white", className)}
+      className={cn(
+        "relative flex flex-1 h-full flex-col shadow-xl rounded-2xl overflow-hidden bg-white",
+        className,
+      )}
       {...props}
     >
       {children}
@@ -67,7 +70,7 @@ function ChatContent({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       data-slot="chat-content"
-      className={cn("p-6 flex flex-col gap-4 overflow-y-auto", className)}
+      className={cn("p-6 flex flex-col gap-4 overflow-y-auto h-full flex-1", className)}
       {...props}
     />
   )
@@ -159,7 +162,7 @@ function ChatFooter({
         onMessageSubmit: handleSubmit,
       }}
     >
-      <div className="flex flex-1">
+      <div className="flex h-fit">
         {/** biome-ignore lint/a11y/useKeyWithClickEvents: to allow onClick on Div */}
         {/** biome-ignore lint/a11y/noStaticElementInteractions: to allow onClick on Div */}
         <div
