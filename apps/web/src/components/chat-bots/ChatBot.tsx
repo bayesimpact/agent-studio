@@ -46,7 +46,7 @@ export function ChatBot({ chatBot }: { chatBot: ChatBotModel }) {
         <ItemHeader>
           <ItemTitle>{t("defaultPromptTitle")}</ItemTitle>
         </ItemHeader>
-        <ItemContent>{chatBot.defaultPrompt}</ItemContent>
+        <ItemContent className=" whitespace-break-spaces">{chatBot.defaultPrompt}</ItemContent>
       </Item>
 
       <DotsBackground className="p-10">
