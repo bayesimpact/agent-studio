@@ -29,7 +29,13 @@ import { CreateChatBotDialog } from "./CreateChatBotDialog"
 import { DeleteChatBotDialogWithOutTrigger } from "./DeleteChatBotDialog"
 import { EditChatBotDialogWithOutTrigger } from "./EditChatBotDialog"
 
-export function ChatBotsList({ project, chatBots }: { project: ProjectDto; chatBots: ChatBot[] }) {
+export function AdminChatBotsList({
+  project,
+  chatBots,
+}: {
+  project: ProjectDto
+  chatBots: ChatBot[]
+}) {
   const { t } = useTranslation("chatBot", { keyPrefix: "list" })
   const navigate = useNavigate()
   const status = useAppSelector(selectChatBotsStatus)
@@ -137,6 +143,70 @@ export function ChatBotsList({ project, chatBots }: { project: ProjectDto; chatB
         chatBot={deletingChatBot}
         onClose={() => setDeletingChatBot(null)}
       />
+    </div>
+  )
+}
+
+export function AppChatBotsList({
+  project,
+  chatBots,
+}: {
+  project: ProjectDto
+  chatBots: ChatBot[]
+}) {
+  const { t } = useTranslation("chatBot", { keyPrefix: "list" })
+  const navigate = useNavigate()
+  const status = useAppSelector(selectChatBotsStatus)
+
+  const [_isCreateDialogOpen, _setIsCreateDialogOpen] = useState(false)
+  const [_editingChatBot, _setEditingChatBot] = useState<ChatBot | null>(null)
+  const [_deletingChatBot, _setDeletingChatBot] = useState<ChatBot | null>(null)
+
+  const isEmpty = chatBots.length === 0
+
+  const handleClick = (chatBotId: string) => {
+    navigate(
+      buildChatBotPath({
+        organizationId: project.organizationId,
+        projectId: project.id,
+        chatBotId,
+        admin: false,
+      }),
+    )
+  }
+
+  return (
+    <div className="flex flex-col gap-4 p-4">
+      <h1 className="scroll-m-20 text-xl font-semibold tracking-tight">{t("title")}</h1>
+
+      {ADS.isLoading(status) && <LoadingRoute />}
+
+      {ADS.isFulfilled(status) && isEmpty && (
+        <Card>
+          <CardHeader>
+            <CardTitle>{t("empty.title")}</CardTitle>
+          </CardHeader>
+        </Card>
+      )}
+
+      {ADS.isFulfilled(status) && !isEmpty && (
+        <div className="grid gap-4">
+          {chatBots.map((chatBot) => (
+            <Card key={chatBot.id}>
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <CardTitle
+                    className="cursor-pointer hover:underline"
+                    onClick={() => handleClick(chatBot.id)}
+                  >
+                    {chatBot.name}
+                  </CardTitle>
+                </div>
+              </CardHeader>
+            </Card>
+          ))}
+        </div>
+      )}
     </div>
   )
 }
