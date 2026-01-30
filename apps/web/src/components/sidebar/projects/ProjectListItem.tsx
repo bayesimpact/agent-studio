@@ -53,6 +53,7 @@ export function ProjectListItem({
     url: buildProjectPath({
       organizationId,
       projectId: project.id,
+      admin: true,
     }),
     isActive: currentProjectId === project.id && !currentChatBotId,
     icon: FolderIcon,
@@ -64,6 +65,7 @@ export function ProjectListItem({
             organizationId,
             projectId: project.id,
             chatBotId: chatBot.id,
+            admin: true,
           }),
           isActive: currentChatBotId === chatBot.id,
           icon: BotIcon,

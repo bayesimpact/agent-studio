@@ -1,7 +1,8 @@
 # TODO
 
-- use moostache to compile master-prompt+variables(locale, defaultprompt)
 - gptlike -> display chat session
+- create ErrorRoute
+- use moostache to compile master-prompt+variables(locale, defaultprompt)
 - write e2e tests
 - ProjectGuard, ChatbotGuard...
 - invite user

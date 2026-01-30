@@ -1,6 +1,10 @@
 import type { TimeType } from "../generic"
 
-export type ChatSessionTypeDto = "playground" | "production"
+export type ChatSessionTypeDto =
+  | "playground"
+  | "production"
+  | "end-user-private"
+  | "end-user-public"
 
 export type ChatSessionDto = {
   id: string
@@ -8,5 +12,3 @@ export type ChatSessionDto = {
   type: ChatSessionTypeDto
   expiresAt: TimeType | null
 }
-
-export type CreatePlaygroundSessionResponseDto = ChatSessionDto

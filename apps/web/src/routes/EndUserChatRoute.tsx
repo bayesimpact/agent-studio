@@ -19,7 +19,7 @@ import { SidebarLayout } from "@/components/layouts/SidebarLayout"
 import { useSidebarLayout } from "@/components/layouts/sidebar/context"
 import { RouteNames } from "./helpers"
 
-export function UserChatRoute({ user }: { user: User }) {
+export function EndUserChatRoute({ user }: { user: User }) {
   return (
     <SidebarLayout
       user={user}
