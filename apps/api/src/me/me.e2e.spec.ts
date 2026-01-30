@@ -2,11 +2,11 @@ import { MeRoutes } from "@caseai-connect/api-contracts"
 import type { INestApplication } from "@nestjs/common"
 import { Test, type TestingModule } from "@nestjs/testing"
 import type { App } from "supertest/types"
-import { AppModule } from "./../src/app.module"
-import { Auth0UserInfoService } from "./../src/auth/auth0-userinfo.service"
-import { JwtAuthGuard } from "./../src/auth/jwt-auth.guard"
-import { OrganizationsService } from "./../src/organizations/organizations.service"
-import { type Requester, testRequester } from "./request"
+import { type Requester, testRequester } from "../../test/request"
+import { AppModule } from "../app.module"
+import { Auth0UserInfoService } from "../auth/auth0-userinfo.service"
+import { JwtAuthGuard } from "../auth/jwt-auth.guard"
+import { OrganizationsService } from "../organizations/organizations.service"
 
 // Mock Langfuse to avoid dynamic import issues in Jest
 jest.mock("langfuse", () => {
@@ -56,10 +56,6 @@ describe("MeController (e2e)", () => {
     }),
   }
 
-  const _mockUserBootstrapService = {
-    ensureUser: jest.fn().mockResolvedValue(mockUser),
-  }
-
   const mockOrganizationsService = {
     getUserOrganizationsWithMemberships: jest
       .fn()
@@ -90,7 +86,7 @@ describe("MeController (e2e)", () => {
 
     describe("Authorized", () => {
       beforeAll(async () => {
-        const moduleFixture: TestingModule = await Test.createTestingModule({
+        const moduleFixture = await Test.createTestingModule({
           imports: [AppModule],
         })
           .overrideGuard(JwtAuthGuard)
@@ -121,7 +117,7 @@ describe("MeController (e2e)", () => {
         const res = await request({ route: MeRoutes.getMe, token: "mocked-token" })
         expect(res.status).toBe(200)
 
-        expect(mockAuth0UserInfoService.getUserInfo).toHaveBeenCalledWith("mocked-token")
+        expect(mockAuth0UserInfoService.getUserInfo).toHaveBeenCalledWith("auth0|123")
 
         expect(res.body.data).toEqual({
           user: mockUser,

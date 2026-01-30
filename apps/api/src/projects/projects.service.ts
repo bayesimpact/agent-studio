@@ -148,7 +148,6 @@ export class ProjectsService {
     const project = this.projectRepository.create({
       name,
       organizationId,
-      organization,
     })
 
     return this.projectRepository.save(project)

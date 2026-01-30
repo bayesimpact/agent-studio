@@ -502,6 +502,44 @@ auth0Id!: string  // This would create "auth0Id" column in DB
 - Aligns with PostgreSQL best practices
 - Makes raw SQL queries more readable
 
+### Foreign Key Relationships in Entity Creation
+
+**Rule**: When creating TypeORM entities with `@ManyToOne` or `@OneToOne` relationships, you MUST pass either the foreign key ID OR the entity object, but NOT both.
+
+**Why**: TypeORM only needs one of these to establish the relationship:
+- The foreign key ID (e.g., `organizationId`) - TypeORM sets the foreign key directly
+- The entity object (e.g., `organization`) - TypeORM extracts the ID from the entity
+
+Passing both is redundant and unnecessary.
+
+**Examples**:
+```typescript
+// ✅ Correct - Pass only the foreign key ID
+const project = this.projectRepository.create({
+  name: "My Project",
+  organizationId, // This is sufficient
+})
+
+// ✅ Correct - Pass only the entity object
+const project = this.projectRepository.create({
+  name: "My Project",
+  organization, // TypeORM will extract the ID from this
+})
+
+// ❌ Wrong - Passing both is redundant
+const project = this.projectRepository.create({
+  name: "My Project",
+  organizationId, // Redundant
+  organization,   // Redundant - only one is needed
+})
+```
+
+**When to use each approach**:
+- **Use the ID** when you only have the ID (most common case)
+- **Use the entity** when you've already fetched the entity for validation or other purposes, but prefer the ID for consistency
+
+**Best Practice**: Prefer passing the foreign key ID for consistency and clarity, as it's the most common pattern in the codebase.
+
 ## Completion Criteria
 
 ### Required Checks Before Marking Work as Completed
