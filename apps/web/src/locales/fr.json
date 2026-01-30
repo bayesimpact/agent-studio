@@ -111,6 +111,7 @@
       }
     },
     "detail": {
+      "viewPrompt": "Voir le prompt par défaut",
       "defaultPromptTitle": "Prompt par défaut",
       "mock": {
         "msg1": "Hé, demandez-moi n'importe quoi!",

@@ -1,5 +1,6 @@
 "use client"
 
+import { Button } from "@caseai-connect/ui/shad/button"
 import { ScrollArea } from "@caseai-connect/ui/shad/scroll-area"
 import {
   Sheet,
@@ -7,29 +8,47 @@ import {
   SheetDescription,
   SheetHeader,
   SheetTitle,
+  SheetTrigger,
 } from "@caseai-connect/ui/shad/sheet"
+import { PenLineIcon } from "lucide-react"
 import { useTranslation } from "react-i18next"
 import type { ChatBot } from "@/features/chat-bots/chat-bots.models"
 import { UpdateChatBotForm } from "./UpdateChatBotForm"
 
 interface EditChatBotDialogProps {
   chatBot: ChatBot | null
-  onClose: () => void
+  onClose?: () => void
+  withTrigger?: boolean
 }
 
-export function EditChatBotDialog({ chatBot, onClose }: EditChatBotDialogProps) {
+export function EditChatBotDialog({
+  chatBot,
+  onClose,
+  withTrigger = true,
+}: EditChatBotDialogProps) {
   const { t } = useTranslation("chatBot", { keyPrefix: "update" })
   if (!chatBot) {
     return null
   }
 
   const handleSuccess = () => {
-    onClose()
+    onClose?.()
   }
 
   return (
-    <Sheet modal open={!!chatBot} onOpenChange={(open: boolean) => !open && onClose()}>
-      <SheetContent side="bottom" className="h-[100dvh]">
+    <Sheet
+      modal
+      open={withTrigger ? undefined : !!chatBot}
+      onOpenChange={(open: boolean) => !open && onClose?.()}
+    >
+      {withTrigger && (
+        <SheetTrigger asChild>
+          <Button variant="outline" size="icon">
+            <PenLineIcon />
+          </Button>
+        </SheetTrigger>
+      )}
+      <SheetContent side="bottom" className="h-dvh">
         <ScrollArea className="h-full">
           <SheetHeader>
             <SheetTitle>{t("title")}</SheetTitle>
