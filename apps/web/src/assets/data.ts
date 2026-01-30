@@ -1,11 +1,12 @@
 import { BookOpenIcon, FrameIcon } from "lucide-react"
-import type { MenuItem, User } from "@/components/sidebar/types"
+import type { MenuItem } from "@/components/sidebar/types"
+import type { User } from "@/features/me/me.models"
 
 export const dataset: {
   sources: MenuItem[]
   expandedList: MenuItem[]
   prompts: MenuItem[]
-  user: User
+  user: Pick<User, "name" | "email">
 } = {
   expandedList: [
     {

@@ -38,7 +38,7 @@ type ProjectListItemProps = {
   ) => void
 }
 
-export function ProjectListItem({
+export function AdminProjectListItem({
   project,
   organizationId,
   onEditItem,
@@ -112,6 +112,61 @@ export function ProjectListItem({
                     onEdit={() => handleEditChatBot(subItem.id)}
                     onDelete={() => handleDeleteChatBot(subItem.id)}
                   />
+                </Link>
+              </SidebarMenuSubButton>
+            </SidebarMenuSubItem>
+          ))}
+        </SidebarMenuSub>
+      ) : null}
+    </SidebarMenuItem>
+  )
+}
+
+export function AppProjectListItem({ project, organizationId }: ProjectListItemProps) {
+  const currentProjectId = useAppSelector(selectCurrentProjectId)
+  const currentChatBotId = useAppSelector(selectCurrentChatBotId)
+  const chatBots = useAppSelector(selectChatBots(project.id)) || []
+  const item: MenuItem = {
+    id: project.id,
+    title: project.name,
+    url: buildProjectPath({
+      organizationId,
+      projectId: project.id,
+      admin: false,
+    }),
+    isActive: currentProjectId === project.id && !currentChatBotId,
+    icon: FolderIcon,
+    items: chatBots
+      ? chatBots.map((chatBot) => ({
+          id: chatBot.id,
+          title: chatBot.name,
+          url: buildChatBotPath({
+            organizationId,
+            projectId: project.id,
+            chatBotId: chatBot.id,
+            admin: false,
+          }),
+          isActive: currentChatBotId === chatBot.id,
+          icon: BotIcon,
+        }))
+      : [],
+  }
+  return (
+    <SidebarMenuItem>
+      <SidebarMenuButton isActive={item.isActive} asChild>
+        <Link to={item.url} className="font-medium">
+          {item.icon && <item.icon />}
+          <span>{item.title}</span>
+        </Link>
+      </SidebarMenuButton>
+      {item.items?.length ? (
+        <SidebarMenuSub>
+          {item.items.map((subItem) => (
+            <SidebarMenuSubItem key={subItem.id}>
+              <SidebarMenuSubButton asChild isActive={subItem.isActive}>
+                <Link to={subItem.url}>
+                  {subItem.icon && <subItem.icon />}
+                  <span>{subItem.title}</span>
                 </Link>
               </SidebarMenuSubButton>
             </SidebarMenuSubItem>

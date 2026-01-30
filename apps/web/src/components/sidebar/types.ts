@@ -8,9 +8,3 @@ export type MenuItem = {
   isActive?: boolean
   items?: MenuItem[]
 }
-
-export type User = {
-  name: string
-  email: string
-  avatar?: string
-}
