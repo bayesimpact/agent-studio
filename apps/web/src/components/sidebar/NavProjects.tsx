@@ -13,7 +13,7 @@ import { EditChatBotDialogWithOutTrigger } from "../chat-bots/EditChatBotDialog"
 import { CreateProjectButton } from "./projects/CreateProjectButton"
 import { DeleteProjectDialog } from "./projects/DeleteProjectDialog"
 import { EditProjectDialog } from "./projects/EditProjectDialog"
-import { ProjectListItem } from "./projects/ProjectListItem"
+import { AdminProjectListItem, AppProjectListItem } from "./projects/ProjectListItem"
 
 type Item = { action: "edit" | "delete" } & (
   | {
@@ -26,7 +26,7 @@ type Item = { action: "edit" | "delete" } & (
     }
 )
 
-export function NavProjects({ projects }: { projects: ProjectDto[] }) {
+export function AdminNavProjects({ projects }: { projects: ProjectDto[] }) {
   const { t } = useTranslation("project", { keyPrefix: "list" })
   const currentOrganization = useAppSelector(selectCurrentOrganization)
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
@@ -56,7 +56,7 @@ export function NavProjects({ projects }: { projects: ProjectDto[] }) {
         <>
           <SidebarMenu>
             {projects.map((project) => (
-              <ProjectListItem
+              <AdminProjectListItem
                 key={project.id}
                 project={project}
                 organizationId={currentOrganization.id}
@@ -102,6 +102,31 @@ export function NavProjects({ projects }: { projects: ProjectDto[] }) {
         chatBot={item?.type === "chatBot" && item.action === "delete" ? item.value : null}
         onClose={handleClose}
       />
+    </Section>
+  )
+}
+
+export function AppNavProjects({ projects }: { projects: ProjectDto[] }) {
+  const { t } = useTranslation("project", { keyPrefix: "list" })
+  const currentOrganization = useAppSelector(selectCurrentOrganization)
+  if (!currentOrganization) return null
+  return (
+    <Section name={t("title")} className="group-data-[collapsible=icon]:hidden">
+      {projects.length === 0 ? (
+        <div>{t("noProjects")}</div>
+      ) : (
+        <SidebarMenu>
+          {projects.map((project) => (
+            <AppProjectListItem
+              key={project.id}
+              project={project}
+              organizationId={currentOrganization.id}
+              onEditItem={() => {}}
+              onDeleteItem={() => {}}
+            />
+          ))}
+        </SidebarMenu>
+      )}
     </Section>
   )
 }

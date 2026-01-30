@@ -6,7 +6,7 @@ import { selectCurrentOrganization } from "@/features/organizations/organization
 import { RouteNames } from "@/routes/helpers"
 import { useAppSelector } from "@/store/hooks"
 import { SidebarLayout } from "./layouts/SidebarLayout"
-import { NavProjects } from "./sidebar/NavProjects"
+import { AdminNavProjects, AppNavProjects } from "./sidebar/NavProjects"
 
 export function DashboardLayout({ user, projects }: { user: User; projects: ProjectDto[] }) {
   const organization = useAppSelector(selectCurrentOrganization)
@@ -16,7 +16,13 @@ export function DashboardLayout({ user, projects }: { user: User; projects: Proj
     return (
       <SidebarLayout
         sidebarHeaderChildren={<Header to={RouteNames.HOME} name={organizationName} />}
-        sidebarContentChildren={<NavProjects projects={projects} />}
+        sidebarContentChildren={
+          user.admin ? (
+            <AdminNavProjects projects={projects} />
+          ) : (
+            <AppNavProjects projects={projects} />
+          )
+        }
         user={user}
       >
         <Outlet />
