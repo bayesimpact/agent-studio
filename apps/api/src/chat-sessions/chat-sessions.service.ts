@@ -232,6 +232,18 @@ export class ChatSessionsService {
     userId: string
   }): Promise<ChatSession> {
     const { organizationId } = await this.verifyUserCanCreateAppPrivateSession(userId, chatbotId)
+    // Look for existing playground session for this user and chatbot
+    const existingSession = await this.chatSessionRepository.findOne({
+      where: {
+        chatbotId,
+        userId,
+        organizationId,
+        type: "app-private",
+      },
+    })
+
+    if (existingSession) return existingSession
+
     const session = this.chatSessionRepository.create({
       chatbotId,
       userId,

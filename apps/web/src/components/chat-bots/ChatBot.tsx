@@ -24,7 +24,7 @@ import {
 import { MarkdownWrapper } from "../chat/MarkdownWrapper"
 import { DotsBackground } from "../DotsBackground"
 
-export function ChatBot() {
+export function AdminChatBot() {
   const { t } = useTranslation("chat")
   const dispatch = useAppDispatch()
   const session = useAppSelector(selectCurrentChatSession)
@@ -73,6 +73,58 @@ export function ChatBot() {
           </ChatFooter>
         </Chat>
       </DotsBackground>
+    </div>
+  )
+}
+
+export function AppChatBot() {
+  const { t } = useTranslation("chat")
+  const dispatch = useAppDispatch()
+  const session = useAppSelector(selectCurrentChatSession)
+  const messages = useAppSelector(selectCurrentMessages)
+  const isStreaming = useAppSelector(selectStreaming)
+
+  const handleSubmit = (message: string) => {
+    if (!session || isStreaming || !message.trim()) {
+      return
+    }
+
+    void dispatch(sendMessage({ sessionId: session.id, content: message.trim() }))
+  }
+  return (
+    <div className="flex flex-1 items-center justify-center p-4">
+      <div className="flex flex-col gap-6 flex-1 max-w-2/3">
+        <Chat className="shadow-none">
+          <ChatContent>
+            {messages?.map((message) => (
+              <Message key={message.id} message={message} />
+            ))}
+          </ChatContent>
+
+          <ChatFooter focus={!isStreaming} onMessageSubmit={handleSubmit}>
+            <ChatInput
+              placeholder={t("placeholder")}
+              className="resize-none"
+              disabled={isStreaming || !session}
+            />
+
+            <ChatActions>
+              <div className="flex-1 justify-start flex gap-1">
+                <Button variant="secondary" disabled={isStreaming || !session}>
+                  <CirclePlusIcon />
+                </Button>
+                <Button variant="ghost" disabled={isStreaming || !session}>
+                  <PaperclipIcon />
+                </Button>
+                <Button variant="ghost" disabled={isStreaming || !session}>
+                  <MicIcon />
+                </Button>
+              </div>
+              <ChatSubmit variant="ghost" disabled={isStreaming || !session} />
+            </ChatActions>
+          </ChatFooter>
+        </Chat>
+      </div>
     </div>
   )
 }

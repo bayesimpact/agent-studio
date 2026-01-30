@@ -1,6 +1,9 @@
 import { useEffect } from "react"
 import { selectChatSessionStatus } from "@/features/chat-session/chat-session.selectors"
-import { createPlaygroundSession } from "@/features/chat-session/chat-session.thunks"
+import {
+  createAppSession,
+  createPlaygroundSession,
+} from "@/features/chat-session/chat-session.thunks"
 import { useAbility } from "@/hooks/use-ability"
 import { ADS } from "@/store/async-data-status"
 import { useAppDispatch, useAppSelector } from "@/store/hooks"
@@ -11,18 +14,16 @@ export function ChatSessionLoader({ children }: { children: React.ReactNode }) {
   const { admin } = useAbility()
   const dispatch = useAppDispatch()
 
+  const status = useAppSelector(selectChatSessionStatus)
+
   useEffect(() => {
     if (admin) void dispatch(createPlaygroundSession())
-    // TODO: void dispatch(createEndUserPrivateSession())
+    else void dispatch(createAppSession())
   }, [dispatch, admin])
-
-  const status = useAppSelector(selectChatSessionStatus)
 
   if (ADS.isError(status)) return <NotFoundRoute />
 
   if (ADS.isFulfilled(status)) return <>{children}</>
-
-  if (!admin) return <div>Not yet implemented</div>
 
   return <LoadingRoute />
 }
