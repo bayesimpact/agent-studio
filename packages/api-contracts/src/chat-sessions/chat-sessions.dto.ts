@@ -1,10 +1,6 @@
 import type { TimeType } from "../generic"
 
-export type ChatSessionTypeDto =
-  | "playground"
-  | "production"
-  | "end-user-private"
-  | "end-user-public"
+export type ChatSessionTypeDto = "playground" | "production" | "app-private"
 
 export type ChatSessionDto = {
   id: string
