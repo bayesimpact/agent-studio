@@ -1,21 +1,26 @@
-import type { User } from "@caseai-connect/ui/components/layouts/sidebar/types"
-import { selectMe, selectMeStatus } from "@/features/me/me.selectors"
+import type { User } from "@/features/me/me.models"
+import { selectMeData } from "@/features/me/me.selectors"
 import { useAbility } from "@/hooks/use-ability"
 import { ADS } from "@/store/async-data-status"
 import { useAppSelector } from "@/store/hooks"
-import { meStateToUser } from "@/utils/to-user"
 import { LoadingRoute } from "../LoadingRoute"
 import { NotFoundRoute } from "../NotFoundRoute"
 
 export function UserHoc({ children }: { children: (user: User) => React.ReactNode }) {
   const { admin } = useAbility()
-  const me = useAppSelector(selectMe)
-  const status = useAppSelector(selectMeStatus)
-  const user = meStateToUser(me, admin)
+  const meData = useAppSelector(selectMeData)
 
-  if (ADS.isError(status)) return <NotFoundRoute />
+  if (ADS.isError(meData)) return <NotFoundRoute />
 
-  if (user && ADS.isFulfilled(status)) return <>{children(user)}</>
+  if (ADS.isFulfilled(meData))
+    return (
+      <>
+        {children({
+          ...meData.value,
+          admin,
+        })}
+      </>
+    )
 
   return <LoadingRoute />
 }

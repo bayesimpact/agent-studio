@@ -1,7 +1,7 @@
 import type { ProjectDto } from "@caseai-connect/api-contracts"
 import { Header } from "@caseai-connect/ui/components/layouts/sidebar/Header"
-import type { User } from "@caseai-connect/ui/components/layouts/sidebar/types"
 import { Outlet } from "react-router-dom"
+import type { User } from "@/features/me/me.models"
 import { selectCurrentOrganization } from "@/features/organizations/organizations.selectors"
 import { RouteNames } from "@/routes/helpers"
 import { useAppSelector } from "@/store/hooks"
@@ -23,7 +23,10 @@ export function DashboardLayout({ user, projects }: { user: User; projects: Proj
             <AppNavProjects projects={projects} />
           )
         }
-        user={user}
+        user={{
+          name: user.name,
+          email: user.email,
+        }}
       >
         <Outlet />
       </SidebarLayout>

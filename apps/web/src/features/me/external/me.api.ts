@@ -12,6 +12,12 @@ export default {
 } satisfies IMeSpi
 
 const fromDto = (dto: MeResponseDto): Me => ({
-  user: dto.user,
+  user: {
+    id: dto.user.id,
+    email: dto.user.email,
+    name: dto.user.name || "Unknown User Name",
+    // FIXME: temporary hardcode until we have proper roles
+    admin: false,
+  },
   organizations: dto.organizations,
 })

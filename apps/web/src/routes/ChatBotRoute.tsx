@@ -17,22 +17,25 @@ import { EditChatBotDialogWithTrigger } from "@/components/chat-bots/EditChatBot
 import { useSidebarLayout } from "@/components/layouts/sidebar/context"
 import type { ChatBot as ChatBotType } from "@/features/chat-bots/chat-bots.models"
 import { selectCurrentChatBot } from "@/features/chat-bots/chat-bots.selectors"
+import { useAbility } from "@/hooks/use-ability"
 import { useAppSelector } from "@/store/hooks"
 import { LoadingRoute } from "./LoadingRoute"
+
 export function ChatBotRoute() {
+  const { admin } = useAbility()
   const chatBot = useAppSelector(selectCurrentChatBot)
 
   const { setHeaderTitle, setHeaderRightSlot } = useSidebarLayout()
-  const headerTitle = chatBot ? `${chatBot.name} - Playground` : "Chat Bot"
+  const headerTitle = chatBot && admin ? `${chatBot.name} - Playground` : "Chat Bot"
 
   useEffect(() => {
     setHeaderTitle(headerTitle)
     if (!chatBot) return
-    setHeaderRightSlot(<HeaderRightSlot chatBot={chatBot} />)
+    if (admin) setHeaderRightSlot(<HeaderRightSlot chatBot={chatBot} />)
     return () => {
       setHeaderRightSlot(undefined)
     }
-  }, [headerTitle, setHeaderTitle, chatBot, setHeaderRightSlot])
+  }, [headerTitle, setHeaderTitle, chatBot, setHeaderRightSlot, admin])
 
   if (!chatBot) return <LoadingRoute />
   return <ChatBot />
