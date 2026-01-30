@@ -17,6 +17,16 @@ export default {
 
     return fromDto(response.data.data)
   },
+  createAppSession: async ({ chatBotId, chatSessionType }) => {
+    const axios = getAxiosInstance()
+    const response = await axios.post<typeof ChatSessionsRoutes.createAppSession.response>(
+      ChatSessionsRoutes.createAppSession.getPath({ chatBotId }),
+      {
+        payload: { chatSessionType },
+      } satisfies typeof ChatSessionsRoutes.createAppSession.request,
+    )
+    return fromDto(response.data.data)
+  },
   getMessages: async (sessionId: string) => {
     const axios = getAxiosInstance()
     const response = await axios.get<typeof ChatSessionMessagesRoutes.listMessages.response>(

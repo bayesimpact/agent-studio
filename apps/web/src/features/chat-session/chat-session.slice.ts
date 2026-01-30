@@ -1,7 +1,11 @@
-import { createSlice } from "@reduxjs/toolkit"
+import { createSlice, isAnyOf } from "@reduxjs/toolkit"
 import { ADS, type AsyncData, defaultAsyncData } from "@/store/async-data-status"
 import type { ChatSession, ChatSessionMessage } from "./chat-session.models"
-import { createPlaygroundSession, loadSessionMessages } from "./chat-session.thunks"
+import {
+  createAppSession,
+  createPlaygroundSession,
+  loadSessionMessages,
+} from "./chat-session.thunks"
 
 type State = {
   data: AsyncData<ChatSession>
@@ -87,24 +91,6 @@ export const chatSessionSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
-      .addCase(createPlaygroundSession.pending, (state) => {
-        state.data.status = ADS.Loading
-        state.data.error = null
-      })
-      .addCase(createPlaygroundSession.fulfilled, (state, action) => {
-        state.data = {
-          value: action.payload,
-          status: ADS.Fulfilled,
-          error: null,
-        }
-        state.messages = defaultAsyncData
-      })
-      .addCase(createPlaygroundSession.rejected, (state, action) => {
-        state.data.status = ADS.Error
-        state.data.error = action.error.message || "Failed to create playground session"
-      })
-
-    builder
       .addCase(loadSessionMessages.pending, (state) => {
         state.messages.status = ADS.Loading
         state.messages.error = null
@@ -120,6 +106,30 @@ export const chatSessionSlice = createSlice({
         state.messages.status = ADS.Error
         state.messages.error = action.error.message || "Failed to load session messages"
       })
+
+    builder
+      .addMatcher(isAnyOf(createPlaygroundSession.pending, createAppSession.pending), (state) => {
+        state.data.status = ADS.Loading
+        state.data.error = null
+      })
+      .addMatcher(
+        isAnyOf(createPlaygroundSession.fulfilled, createAppSession.fulfilled),
+        (state, action) => {
+          state.data = {
+            value: action.payload,
+            status: ADS.Fulfilled,
+            error: null,
+          }
+          state.messages = defaultAsyncData
+        },
+      )
+      .addMatcher(
+        isAnyOf(createPlaygroundSession.rejected, createAppSession.rejected),
+        (state, action) => {
+          state.data.status = ADS.Error
+          state.data.error = action.error.message || "Failed to create session"
+        },
+      )
   },
 })
 

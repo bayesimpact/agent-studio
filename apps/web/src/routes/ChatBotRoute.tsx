@@ -11,7 +11,7 @@ import {
 import { useEffect } from "react"
 import { useTranslation } from "react-i18next"
 import { MarkdownWrapper } from "@/components/chat/MarkdownWrapper"
-import { ChatBot } from "@/components/chat-bots/ChatBot"
+import { AdminChatBot, AppChatBot } from "@/components/chat-bots/ChatBot"
 import { DeleteChatBotDialogWithTrigger } from "@/components/chat-bots/DeleteChatBotDialog"
 import { EditChatBotDialogWithTrigger } from "@/components/chat-bots/EditChatBotDialog"
 import { useSidebarLayout } from "@/components/layouts/sidebar/context"
@@ -38,7 +38,8 @@ export function ChatBotRoute() {
   }, [headerTitle, setHeaderTitle, chatBot, setHeaderRightSlot, admin])
 
   if (!chatBot) return <LoadingRoute />
-  return <ChatBot />
+  if (admin) return <AdminChatBot />
+  return <AppChatBot />
 }
 
 function HeaderRightSlot({ chatBot }: { chatBot: ChatBotType }) {
