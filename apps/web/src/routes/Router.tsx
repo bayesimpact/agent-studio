@@ -4,6 +4,7 @@ import { LoginRoute } from "@/routes/LoginRoute"
 import { LogoutRoute } from "@/routes/LogoutRoute"
 import { NotFoundRoute } from "@/routes/NotFoundRoute"
 import { adminRoutes } from "./admin/routes"
+import { appRoutes } from "./app/routes"
 import { RouteNames } from "./helpers"
 
 const router = () =>
@@ -22,6 +23,7 @@ const router = () =>
     },
 
     ...adminRoutes,
+    ...appRoutes,
 
     {
       path: "*",
