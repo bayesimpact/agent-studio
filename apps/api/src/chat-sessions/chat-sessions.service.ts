@@ -240,7 +240,7 @@ export class ChatSessionsService {
       messages: [],
       expiresAt: null,
     })
-    return session
+    return await this.chatSessionRepository.save(session)
   }
 
   /**
