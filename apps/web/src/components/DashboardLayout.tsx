@@ -1,5 +1,6 @@
 import type { ProjectDto } from "@caseai-connect/api-contracts"
 import { Header } from "@caseai-connect/ui/components/layouts/sidebar/Header"
+import { SlidersHorizontalIcon, SparklesIcon } from "lucide-react"
 import { Outlet } from "react-router-dom"
 import type { User } from "@/features/me/me.models"
 import { selectCurrentOrganization } from "@/features/organizations/organizations.selectors"
@@ -15,7 +16,17 @@ export function DashboardLayout({ user, projects }: { user: User; projects: Proj
   if (organization)
     return (
       <SidebarLayout
-        sidebarHeaderChildren={<Header to={RouteNames.HOME} name={organizationName} />}
+        sidebarHeaderChildren={
+          <Header
+            Icon={user.admin ? SlidersHorizontalIcon : SparklesIcon}
+            to={RouteNames.HOME}
+            name={organizationName}
+            subname={user.admin ? "Admin" : undefined}
+            iconClassName={
+              user.admin ? "bg-orange-500" : "bg-gradient-to-tr from-purple-600 to-indigo-600"
+            }
+          />
+        }
         sidebarContentChildren={
           user.admin ? (
             <AdminNavProjects projects={projects} />
