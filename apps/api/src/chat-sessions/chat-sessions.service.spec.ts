@@ -297,6 +297,23 @@ describe("ChatSessionsService", () => {
     })
   })
 
+  describe("createAppPrivateSession", () => {
+    it("should create an app-private session without TTL", async () => {
+      const session = await service.createAppPrivateSession({
+        chatbotId: testChatBot.id,
+        userId: testUser.id,
+      })
+
+      expect(session).toBeDefined()
+      expect(session.type).toBe("app-private")
+      expect(session.chatbotId).toBe(testChatBot.id)
+      expect(session.userId).toBe(testUser.id)
+      expect(session.organizationId).toBe(testOrganization.id)
+      expect(session.messages).toEqual([])
+      expect(session.expiresAt).toBeNull()
+    })
+  })
+
   describe("findById", () => {
     it("should find an existing session", async () => {
       const createdSession = await service.createPlaygroundSession(

@@ -7,11 +7,11 @@ export const ChatSessionsRoutes = {
     method: "post",
     path: "chat-bots/:chatBotId/playground-session",
   }),
-  createEndUserSession: defineRoute<
+  createAppSession: defineRoute<
     ResponseData<ChatSessionDto>,
     RequestPayload<{ chatSessionType: ChatSessionTypeDto }>
   >({
     method: "post",
-    path: "chat-bots/:chatBotId/end-user-session",
+    path: "chat-bots/:chatBotId/app-session",
   }),
 }

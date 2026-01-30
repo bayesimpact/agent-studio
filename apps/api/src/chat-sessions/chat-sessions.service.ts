@@ -186,6 +186,35 @@ export class ChatSessionsService {
     return { organizationId: chatBot.project.organizationId }
   }
 
+  private async verifyUserCanCreateAppPrivateSession(
+    userId: string,
+    chatbotId: string,
+  ): Promise<{ organizationId: string }> {
+    const chatBot = await this.chatBotRepository.findOne({
+      where: { id: chatbotId },
+      relations: ["project"],
+    })
+
+    if (!chatBot) {
+      throw new NotFoundException(`ChatBot with id ${chatbotId} not found`)
+    }
+
+    const membership = await this.membershipRepository.findOne({
+      where: {
+        userId,
+        organizationId: chatBot.project.organizationId,
+      },
+    })
+
+    if (!membership) {
+      throw new ForbiddenException(
+        `User does not have access to organization ${chatBot.project.organizationId}`,
+      )
+    }
+
+    return { organizationId: chatBot.project.organizationId }
+  }
+
   /**
    * Creates or reuses a playground session for a user and chatbot,
    * performing organization membership checks based on the chatbot's project.
@@ -195,13 +224,23 @@ export class ChatSessionsService {
     return this.createPlaygroundSession(chatbotId, userId, organizationId)
   }
 
-  async createPrivateEnUserSessionForChatBot(
-    chatbotId: string,
-    userId: string,
-  ): Promise<ChatSession> {
-    const { organizationId } = await this.verifyUserCanCreatePlaygroundSession(userId, chatbotId)
-    // TODO:
-    return this.createPlaygroundSession(chatbotId, userId, organizationId)
+  async createAppPrivateSession({
+    chatbotId,
+    userId,
+  }: {
+    chatbotId: string
+    userId: string
+  }): Promise<ChatSession> {
+    const { organizationId } = await this.verifyUserCanCreateAppPrivateSession(userId, chatbotId)
+    const session = this.chatSessionRepository.create({
+      chatbotId,
+      userId,
+      organizationId,
+      type: "app-private",
+      messages: [],
+      expiresAt: null,
+    })
+    return session
   }
 
   /**

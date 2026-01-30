@@ -28,26 +28,22 @@ export class ChatSessionsController {
     return { data: toChatSessionDto(session) }
   }
 
-  @Post(ChatSessionsRoutes.createEndUserSession.path)
-  async createEndUserSession(
+  @Post(ChatSessionsRoutes.createAppSession.path)
+  async createAppSession(
     @Req() request: EndpointRequest,
     @Param("chatBotId") chatBotId: string,
-    @Body() { payload }: typeof ChatSessionsRoutes.createEndUserSession.request,
-  ): Promise<typeof ChatSessionsRoutes.createEndUserSession.response> {
+    @Body() { payload }: typeof ChatSessionsRoutes.createAppSession.request,
+  ): Promise<typeof ChatSessionsRoutes.createAppSession.response> {
     const user = request.user
 
-    if (!payload.chatSessionType.startsWith("end-user-")) {
+    if (payload.chatSessionType !== "app-private") {
       throw new Error("Session type not supported.")
     }
 
-    if (payload.chatSessionType === "end-user-public") {
-      throw new Error("Public session is not supported yet.")
-    }
-
-    const session = await this.chatSessionsService.createPrivateEnUserSessionForChatBot(
-      chatBotId,
-      user.id,
-    )
+    const session = await this.chatSessionsService.createAppPrivateSession({
+      chatbotId: chatBotId,
+      userId: user.id,
+    })
 
     return { data: toChatSessionDto(session) }
   }
