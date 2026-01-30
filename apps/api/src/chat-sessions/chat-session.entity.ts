@@ -12,7 +12,7 @@ import { ChatBot } from "@/chat-bots/chat-bot.entity"
 import { Organization } from "@/organizations/organization.entity"
 import { User } from "@/users/user.entity"
 
-export type ChatSessionType = "playground" | "production"
+export type ChatSessionType = "playground" | "production" | "end-user-private" | "end-user-public"
 
 @Entity("chat_session")
 @Index(["chatbotId", "type"])

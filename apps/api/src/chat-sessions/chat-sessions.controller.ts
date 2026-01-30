@@ -1,8 +1,9 @@
-import type { TimeType } from "@caseai-connect/api-contracts"
-import { Controller, Param, Post, Req, UseGuards } from "@nestjs/common"
+import type { ChatSessionDto } from "@caseai-connect/api-contracts"
+import { Body, Controller, Param, Post, Req, UseGuards } from "@nestjs/common"
 import { JwtAuthGuard } from "@/auth/jwt-auth.guard"
 import { UserGuard } from "@/guards/user.guard"
 import type { EndpointRequest } from "@/request.interface"
+import type { ChatSession } from "./chat-session.entity"
 import { ChatSessionsRoutes } from "./chat-sessions.routes"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
 import { ChatSessionsService } from "./chat-sessions.service"
@@ -24,15 +25,39 @@ export class ChatSessionsController {
       user.id,
     )
 
-    const response = {
-      id: session.id,
-      chatbotId: session.chatbotId,
-      type: session.type,
-      expiresAt: session.expiresAt ? (session.expiresAt.getTime() as TimeType) : null,
+    return { data: toChatSessionDto(session) }
+  }
+
+  @Post(ChatSessionsRoutes.createEndUserSession.path)
+  async createEndUserSession(
+    @Req() request: EndpointRequest,
+    @Param("chatBotId") chatBotId: string,
+    @Body() { payload }: typeof ChatSessionsRoutes.createEndUserSession.request,
+  ): Promise<typeof ChatSessionsRoutes.createEndUserSession.response> {
+    const user = request.user
+
+    if (!payload.chatSessionType.startsWith("end-user-")) {
+      throw new Error("Session type not supported.")
     }
 
-    return {
-      data: response,
+    if (payload.chatSessionType === "end-user-public") {
+      throw new Error("Public session is not supported yet.")
     }
+
+    const session = await this.chatSessionsService.createPrivateEnUserSessionForChatBot(
+      chatBotId,
+      user.id,
+    )
+
+    return { data: toChatSessionDto(session) }
+  }
+}
+
+function toChatSessionDto(entity: ChatSession): ChatSessionDto {
+  return {
+    id: entity.id,
+    chatbotId: entity.chatbotId,
+    type: entity.type,
+    expiresAt: entity.expiresAt ? entity.expiresAt.getTime() : null,
   }
 }

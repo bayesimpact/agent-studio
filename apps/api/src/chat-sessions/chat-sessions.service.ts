@@ -195,6 +195,15 @@ export class ChatSessionsService {
     return this.createPlaygroundSession(chatbotId, userId, organizationId)
   }
 
+  async createPrivateEnUserSessionForChatBot(
+    chatbotId: string,
+    userId: string,
+  ): Promise<ChatSession> {
+    const { organizationId } = await this.verifyUserCanCreatePlaygroundSession(userId, chatbotId)
+    // TODO:
+    return this.createPlaygroundSession(chatbotId, userId, organizationId)
+  }
+
   /**
    * Creates a new production session
    * No TTL (expiresAt is null)

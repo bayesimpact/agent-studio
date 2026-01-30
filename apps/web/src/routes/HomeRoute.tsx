@@ -1,6 +1,7 @@
 import { useAuth0 } from "@auth0/auth0-react"
 import { useEffect } from "react"
 import { useNavigate } from "react-router-dom"
+import { buildAdminPath, RouteNames } from "./helpers"
 import { LoadingRoute } from "./LoadingRoute"
 
 export function HomeRoute() {
@@ -11,7 +12,7 @@ export function HomeRoute() {
     if (!isLoading) {
       if (isAuthenticated) {
         // User is authenticated, redirect to onboarding (which will check for organizations)
-        navigate("/onboarding", { replace: true })
+        navigate(buildAdminPath(RouteNames.ONBOARDING), { replace: true })
       } else {
         // User is not authenticated, redirect to Auth0 login
         loginWithRedirect()
