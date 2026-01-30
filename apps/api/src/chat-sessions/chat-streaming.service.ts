@@ -133,6 +133,16 @@ export class ChatStreamingService {
     return llmMessages
   }
 
+  private generateMasterPrompt(chatbot: ChatBot): string {
+    return `
+Today's date: ${new Date().toLocaleDateString()}
+
+${chatbot.defaultPrompt}
+
+Always answer in ${chatbot.locale}.
+  `.trim()
+  }
+
   /**
    * Builds LLM configuration from ChatBot entity
    */
@@ -150,10 +160,12 @@ export class ChatStreamingService {
       )
     }
 
+    const systemPrompt = this.generateMasterPrompt(chatbot)
+
     return {
       model: chatbot.model,
       temperature,
-      systemPrompt: chatbot.defaultPrompt,
+      systemPrompt,
     }
   }
 }

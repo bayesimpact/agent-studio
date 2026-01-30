@@ -119,11 +119,6 @@ export function ChatBotsList({ project, chatBots }: { project: ProjectDto; chatB
                   </DropdownMenu>
                 </div>
               </CardHeader>
-              <CardContent>
-                <p className="text-sm text-muted-foreground line-clamp-2">
-                  {chatBot.defaultPrompt}
-                </p>
-              </CardContent>
             </Card>
           ))}
         </div>
