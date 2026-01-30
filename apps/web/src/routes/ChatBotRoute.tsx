@@ -12,8 +12,8 @@ import { useEffect } from "react"
 import { useTranslation } from "react-i18next"
 import { MarkdownWrapper } from "@/components/chat/MarkdownWrapper"
 import { ChatBot } from "@/components/chat-bots/ChatBot"
-import { DeleteChatBotDialog } from "@/components/chat-bots/DeleteChatBotDialog"
-import { EditChatBotDialog } from "@/components/chat-bots/EditChatBotDialog"
+import { DeleteChatBotDialogWithTrigger } from "@/components/chat-bots/DeleteChatBotDialog"
+import { EditChatBotDialogWithTrigger } from "@/components/chat-bots/EditChatBotDialog"
 import { useSidebarLayout } from "@/components/layouts/sidebar/context"
 import type { ChatBot as ChatBotType } from "@/features/chat-bots/chat-bots.models"
 import { selectCurrentChatBot } from "@/features/chat-bots/chat-bots.selectors"
@@ -42,8 +42,8 @@ function HeaderRightSlot({ chatBot }: { chatBot: ChatBotType }) {
   return (
     <div className="flex items-center gap-2">
       <DefaultPromptDialog prompt={chatBot.defaultPrompt} />
-      <EditChatBotDialog chatBot={chatBot} />
-      <DeleteChatBotDialog chatBot={chatBot} />
+      <EditChatBotDialogWithTrigger chatBot={chatBot} />
+      <DeleteChatBotDialogWithTrigger chatBot={chatBot} />
     </div>
   )
 }
