@@ -29,8 +29,11 @@
     "react-dom": "^19.2.0",
     "react-hook-form": "^7.71.1",
     "react-i18next": "^16.5.4",
+    "react-markdown": "^10.1.0",
     "react-redux": "^9.2.0",
     "react-router-dom": "^7.11.0",
+    "remark-breaks": "^4.0.0",
+    "remark-gfm": "^4.0.1",
     "sonner": "^2.0.7",
     "tailwindcss": "^4.1.17",
     "zod": "^4.3.5"
