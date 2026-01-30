@@ -1,7 +1,7 @@
 # TODO
 
-- gptlike -> display chat session + list de session
-- list session playground
+- app -> create and list sessions
+- admin -> create and list sessions (playground)
 - remove ttl
 - rename chatbotId into chatBotId (in chat session entity)
 - create ErrorRoute
