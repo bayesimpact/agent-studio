@@ -1,6 +1,8 @@
 # TODO
 
-- gptlike -> display chat session
+- gptlike -> display chat session + list de session
+- list session playground
+- remove ttl
 - create ErrorRoute
 - use moostache to compile master-prompt+variables(locale, defaultprompt)
 - write e2e tests

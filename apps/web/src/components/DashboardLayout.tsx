@@ -4,12 +4,14 @@ import { SlidersHorizontalIcon, SparklesIcon } from "lucide-react"
 import { Outlet } from "react-router-dom"
 import type { User } from "@/features/me/me.models"
 import { selectCurrentOrganization } from "@/features/organizations/organizations.selectors"
-import { RouteNames } from "@/routes/helpers"
+import { useAbility } from "@/hooks/use-ability"
+import { buildOrganizationPath } from "@/routes/helpers"
 import { useAppSelector } from "@/store/hooks"
 import { SidebarLayout } from "./layouts/SidebarLayout"
 import { AdminNavProjects, AppNavProjects } from "./sidebar/NavProjects"
 
 export function DashboardLayout({ user, projects }: { user: User; projects: ProjectDto[] }) {
+  const { admin } = useAbility()
   const organization = useAppSelector(selectCurrentOrganization)
   const organizationName = organization?.name || "CaseAi"
 
@@ -18,21 +20,17 @@ export function DashboardLayout({ user, projects }: { user: User; projects: Proj
       <SidebarLayout
         sidebarHeaderChildren={
           <Header
-            Icon={user.admin ? SlidersHorizontalIcon : SparklesIcon}
-            to={RouteNames.HOME}
+            Icon={admin ? SlidersHorizontalIcon : SparklesIcon}
+            to={buildOrganizationPath({ organizationId: organization.id, admin })}
             name={organizationName}
-            subname={user.admin ? "Admin" : undefined}
+            subname={admin ? "Admin" : undefined}
             iconClassName={
-              user.admin ? "bg-orange-500" : "bg-gradient-to-tr from-purple-600 to-indigo-600"
+              admin ? "bg-orange-500" : "bg-gradient-to-tr from-purple-600 to-indigo-600"
             }
           />
         }
         sidebarContentChildren={
-          user.admin ? (
-            <AdminNavProjects projects={projects} />
-          ) : (
-            <AppNavProjects projects={projects} />
-          )
+          admin ? <AdminNavProjects projects={projects} /> : <AppNavProjects projects={projects} />
         }
         user={{
           name: user.name,
