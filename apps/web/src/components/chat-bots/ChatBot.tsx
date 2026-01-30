@@ -23,6 +23,7 @@ import {
   ChatSubmit,
   ChatUserMessage,
 } from "../chat/Chat"
+import { MarkdownWrapper } from "../chat/MarkdownWrapper"
 import { DotsBackground } from "../DotsBackground"
 
 export function ChatBot({ chatBot }: { chatBot: ChatBotModel }) {
@@ -99,7 +100,7 @@ function Message({ message }: { message: ChatSessionMessage }) {
         {isStreaming && <ThinkingMessage />}
         {isError && <ErrorMessage />}
 
-        {message.content}
+        <MarkdownWrapper content={message.content} />
       </ChatBotMessage>
     )
   } else return <ChatUserMessage key={message.id}>{message.content}</ChatUserMessage>
