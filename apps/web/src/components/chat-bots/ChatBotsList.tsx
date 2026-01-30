@@ -46,6 +46,7 @@ export function ChatBotsList({ project, chatBots }: { project: ProjectDto; chatB
         organizationId: project.organizationId,
         projectId: project.id,
         chatBotId,
+        admin: true,
       }),
     )
   }
