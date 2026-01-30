@@ -299,6 +299,14 @@ describe("ChatSessionsService", () => {
 
   describe("createAppPrivateSession", () => {
     it("should create an app-private session without TTL", async () => {
+      const membershipRepository = setup.getRepository(UserMembership)
+
+      await membershipRepository.save({
+        userId: testUser.id,
+        organizationId: testOrganization.id,
+        role: "member",
+      })
+
       const session = await service.createAppPrivateSession({
         chatbotId: testChatBot.id,
         userId: testUser.id,
