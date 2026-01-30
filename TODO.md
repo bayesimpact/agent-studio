@@ -3,6 +3,7 @@
 - gptlike -> display chat session + list de session
 - list session playground
 - remove ttl
+- rename chatbotId into chatBotId (in chat session entity)
 - create ErrorRoute
 - use moostache to compile master-prompt+variables(locale, defaultprompt)
 - write e2e tests
