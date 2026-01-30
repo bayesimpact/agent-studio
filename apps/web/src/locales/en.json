@@ -111,6 +111,7 @@
       }
     },
     "detail": {
+      "viewPrompt": "View Default Prompt",
       "defaultPromptTitle": "Default Prompt",
       "mock": {
         "msg1": "Hey, ask me anything!",

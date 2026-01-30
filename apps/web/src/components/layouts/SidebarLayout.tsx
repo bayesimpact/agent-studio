@@ -25,9 +25,12 @@ export function SidebarLayout({
   sidebarContentChildren: React.ReactNode
 }) {
   const [headerTitle, setHeaderTitle] = useState("Dashboard")
+  const [headerRightSlot, setHeaderRightSlot] = useState<React.ReactNode>(null)
 
   return (
-    <SidebarLayoutContext.Provider value={{ headerTitle, setHeaderTitle }}>
+    <SidebarLayoutContext.Provider
+      value={{ headerTitle, setHeaderTitle, headerRightSlot, setHeaderRightSlot }}
+    >
       <SidebarProvider
         style={
           {
@@ -49,7 +52,7 @@ export function SidebarLayout({
         </Sidebar>
 
         <SidebarInset>
-          <LayoutHeader title={headerTitle} />
+          <LayoutHeader title={headerTitle} rightSlot={headerRightSlot} />
 
           {children}
         </SidebarInset>

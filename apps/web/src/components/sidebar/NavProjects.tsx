@@ -97,10 +97,12 @@ export function NavProjects({ projects }: { projects: ProjectDto[] }) {
       <EditChatBotDialog
         chatBot={item?.type === "chatBot" && item.action === "edit" ? item.value : null}
         onClose={handleClose}
+        withTrigger={false}
       />
       <DeleteChatBotDialog
         chatBot={item?.type === "chatBot" && item.action === "delete" ? item.value : null}
         onClose={handleClose}
+        withTrigger={false}
       />
     </Section>
   )

@@ -31,7 +31,7 @@ export function CreateChatBotDialog({
 
   return (
     <Sheet modal open={isOpen} onOpenChange={onOpenChange}>
-      <SheetContent side="bottom" className="h-[100dvh]">
+      <SheetContent side="bottom" className="h-dvh">
         <ScrollArea className="h-full">
           <SheetHeader>
             <SheetTitle>{t("title")}</SheetTitle>
