@@ -26,8 +26,8 @@ import { LoadingRoute } from "@/routes/LoadingRoute"
 import { ADS } from "@/store/async-data-status"
 import { useAppSelector } from "@/store/hooks"
 import { CreateChatBotDialog } from "./CreateChatBotDialog"
-import { DeleteChatBotDialog } from "./DeleteChatBotDialog"
-import { EditChatBotDialog } from "./EditChatBotDialog"
+import { DeleteChatBotDialogWithOutTrigger } from "./DeleteChatBotDialog"
+import { EditChatBotDialogWithOutTrigger } from "./EditChatBotDialog"
 
 export function ChatBotsList({ project, chatBots }: { project: ProjectDto; chatBots: ChatBot[] }) {
   const { t } = useTranslation("chatBot", { keyPrefix: "list" })
@@ -93,7 +93,10 @@ export function ChatBotsList({ project, chatBots }: { project: ProjectDto; chatB
             <Card key={chatBot.id}>
               <CardHeader>
                 <div className="flex items-center justify-between">
-                  <CardTitle className="cursor-pointer" onClick={() => handleClick(chatBot.id)}>
+                  <CardTitle
+                    className="cursor-pointer hover:underline"
+                    onClick={() => handleClick(chatBot.id)}
+                  >
                     {chatBot.name}
                   </CardTitle>
                   <DropdownMenu>
@@ -124,9 +127,15 @@ export function ChatBotsList({ project, chatBots }: { project: ProjectDto; chatB
         </div>
       )}
 
-      <EditChatBotDialog chatBot={editingChatBot} onClose={() => setEditingChatBot(null)} />
+      <EditChatBotDialogWithOutTrigger
+        chatBot={editingChatBot}
+        onClose={() => setEditingChatBot(null)}
+      />
 
-      <DeleteChatBotDialog chatBot={deletingChatBot} onClose={() => setDeletingChatBot(null)} />
+      <DeleteChatBotDialogWithOutTrigger
+        chatBot={deletingChatBot}
+        onClose={() => setDeletingChatBot(null)}
+      />
     </div>
   )
 }

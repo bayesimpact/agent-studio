@@ -8,8 +8,8 @@ import { useTranslation } from "react-i18next"
 import type { ChatBot } from "@/features/chat-bots/chat-bots.models"
 import { selectCurrentOrganization } from "@/features/organizations/organizations.selectors"
 import { useAppSelector } from "@/store/hooks"
-import { DeleteChatBotDialog } from "../chat-bots/DeleteChatBotDialog"
-import { EditChatBotDialog } from "../chat-bots/EditChatBotDialog"
+import { DeleteChatBotDialogWithOutTrigger } from "../chat-bots/DeleteChatBotDialog"
+import { EditChatBotDialogWithOutTrigger } from "../chat-bots/EditChatBotDialog"
 import { CreateProjectButton } from "./projects/CreateProjectButton"
 import { DeleteProjectDialog } from "./projects/DeleteProjectDialog"
 import { EditProjectDialog } from "./projects/EditProjectDialog"
@@ -94,15 +94,13 @@ export function NavProjects({ projects }: { projects: ProjectDto[] }) {
         onClose={handleClose}
       />
 
-      <EditChatBotDialog
+      <EditChatBotDialogWithOutTrigger
         chatBot={item?.type === "chatBot" && item.action === "edit" ? item.value : null}
         onClose={handleClose}
-        withTrigger={false}
       />
-      <DeleteChatBotDialog
+      <DeleteChatBotDialogWithOutTrigger
         chatBot={item?.type === "chatBot" && item.action === "delete" ? item.value : null}
         onClose={handleClose}
-        withTrigger={false}
       />
     </Section>
   )
