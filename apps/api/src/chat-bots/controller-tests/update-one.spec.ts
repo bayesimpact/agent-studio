@@ -36,25 +36,20 @@ describe("ChatBot - updateOne", () => {
       })
       const savedUser = await userRepository.save(user)
 
-      const membership = userMembershipFactory.build({
-        userId: savedUser.id,
-        organizationId: organization.id,
-        role: "owner",
-        user: savedUser,
-        organization,
-      })
+      const membership = userMembershipFactory
+        .owner()
+        .transient({ user: savedUser, organization })
+        .build()
       await membershipRepository.save(membership)
 
-      const project = projectFactory.build({
+      const project = projectFactory.transient({ organization }).build({
         name: "Update Project",
-        organizationId: organization.id,
       })
       const savedProject = await projectRepository.save(project)
 
-      const template = chatBotFactory.build({
+      const template = chatBotFactory.transient({ project: savedProject }).build({
         name: "Original Template",
         defaultPrompt: "Original Prompt",
-        projectId: savedProject.id,
       })
       const savedTemplate = await chatBotRepository.save(template)
 
@@ -110,25 +105,20 @@ describe("ChatBot - updateOne", () => {
       })
       const savedUser = await userRepository.save(user)
 
-      const membership = userMembershipFactory.build({
-        userId: savedUser.id,
-        organizationId: organization.id,
-        role: "admin",
-        user: savedUser,
-        organization,
-      })
+      const membership = userMembershipFactory
+        .admin()
+        .transient({ user: savedUser, organization })
+        .build()
       await membershipRepository.save(membership)
 
-      const project = projectFactory.build({
+      const project = projectFactory.transient({ organization }).build({
         name: "Admin Update Project",
-        organizationId: organization.id,
       })
       const savedProject = await projectRepository.save(project)
 
-      const template = chatBotFactory.build({
+      const template = chatBotFactory.transient({ project: savedProject }).build({
         name: "Original Template",
         defaultPrompt: "Original Prompt",
-        projectId: savedProject.id,
       })
       const savedTemplate = await chatBotRepository.save(template)
 
@@ -183,25 +173,20 @@ describe("ChatBot - updateOne", () => {
       })
       const savedUser = await userRepository.save(user)
 
-      const membership = userMembershipFactory.build({
-        userId: savedUser.id,
-        organizationId: organization.id,
-        role: "member",
-        user: savedUser,
-        organization,
-      })
+      const membership = userMembershipFactory
+        .member()
+        .transient({ user: savedUser, organization })
+        .build()
       await membershipRepository.save(membership)
 
-      const project = projectFactory.build({
+      const project = projectFactory.transient({ organization }).build({
         name: "Member Update Project",
-        organizationId: organization.id,
       })
       const savedProject = await projectRepository.save(project)
 
-      const template = chatBotFactory.build({
+      const template = chatBotFactory.transient({ project: savedProject }).build({
         name: "Template",
         defaultPrompt: "Prompt",
-        projectId: savedProject.id,
       })
       const savedTemplate = await chatBotRepository.save(template)
 

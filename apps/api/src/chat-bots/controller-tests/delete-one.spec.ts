@@ -34,26 +34,21 @@ describe("ChatBot - deleteOne", () => {
       })
       const savedUser = await userRepository.save(user)
 
-      const membership = userMembershipFactory.build({
-        userId: savedUser.id,
-        organizationId: organization.id,
-        role: "owner",
-        user: savedUser,
-        organization,
-      })
+      const membership = userMembershipFactory
+        .owner()
+        .transient({ user: savedUser, organization })
+        .build()
 
       await membershipRepository.save(membership)
 
-      const project = projectFactory.build({
+      const project = projectFactory.transient({ organization }).build({
         name: "Delete Project",
-        organizationId: organization.id,
       })
       const savedProject = await projectRepository.save(project)
 
-      const chatBot = chatBotFactory.build({
+      const chatBot = chatBotFactory.transient({ project: savedProject }).build({
         name: "ChatBot to Delete",
         defaultPrompt: "Prompt",
-        projectId: savedProject.id,
       })
       const savedChatBot = await chatBotRepository.save(chatBot)
 
@@ -93,25 +88,20 @@ describe("ChatBot - deleteOne", () => {
       })
       const savedUser = await userRepository.save(user)
 
-      const membership = userMembershipFactory.build({
-        userId: savedUser.id,
-        organizationId: organization.id,
-        role: "admin",
-        user: savedUser,
-        organization,
-      })
+      const membership = userMembershipFactory
+        .admin()
+        .transient({ user: savedUser, organization })
+        .build()
       await membershipRepository.save(membership)
 
-      const project = projectFactory.build({
+      const project = projectFactory.transient({ organization }).build({
         name: "Admin Delete Project",
-        organizationId: organization.id,
       })
       const savedProject = await projectRepository.save(project)
 
-      const chatBot = chatBotFactory.build({
+      const chatBot = chatBotFactory.transient({ project: savedProject }).build({
         name: "Admin ChatBot to Delete",
         defaultPrompt: "Prompt",
-        projectId: savedProject.id,
       })
       const savedChatBot = await chatBotRepository.save(chatBot)
 
@@ -151,25 +141,20 @@ describe("ChatBot - deleteOne", () => {
       })
       const savedUser = await userRepository.save(user)
 
-      const membership = userMembershipFactory.build({
-        userId: savedUser.id,
-        organizationId: organization.id,
-        role: "member",
-        user: savedUser,
-        organization,
-      })
+      const membership = userMembershipFactory
+        .member()
+        .transient({ user: savedUser, organization })
+        .build()
       await membershipRepository.save(membership)
 
-      const project = projectFactory.build({
+      const project = projectFactory.transient({ organization }).build({
         name: "Member Delete Project",
-        organizationId: organization.id,
       })
       const savedProject = await projectRepository.save(project)
 
-      const chatBot = chatBotFactory.build({
+      const chatBot = chatBotFactory.transient({ project: savedProject }).build({
         name: "Should Not Delete",
         defaultPrompt: "Prompt",
-        projectId: savedProject.id,
       })
       const savedChatBot = await chatBotRepository.save(chatBot)
 
@@ -228,25 +213,20 @@ describe("ChatBot - deleteOne", () => {
       })
       const savedUser = await userRepository.save(user)
 
-      const membership = userMembershipFactory.build({
-        userId: savedUser.id,
-        organizationId: organization.id,
-        role: "owner",
-        user: savedUser,
-        organization,
-      })
+      const membership = userMembershipFactory
+        .owner()
+        .transient({ user: savedUser, organization })
+        .build()
       await membershipRepository.save(membership)
 
-      const project = projectFactory.build({
+      const project = projectFactory.transient({ organization }).build({
         name: "Delete Project With Sessions",
-        organizationId: organization.id,
       })
       const savedProject = await projectRepository.save(project)
 
-      const chatBot = chatBotFactory.build({
+      const chatBot = chatBotFactory.transient({ project: savedProject }).build({
         name: "ChatBot with Sessions",
         defaultPrompt: "Prompt",
-        projectId: savedProject.id,
       })
       const savedChatBot = await chatBotRepository.save(chatBot)
 
@@ -256,7 +236,6 @@ describe("ChatBot - deleteOne", () => {
         userId: savedUser.id,
         organizationId: organization.id,
         type: "production",
-        messages: [],
       })
       await chatSessionRepository.save(session)
 

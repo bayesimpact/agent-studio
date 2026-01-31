@@ -1,15 +1,27 @@
 import { randomUUID } from "node:crypto"
 import { Factory } from "fishery"
+import type { Organization } from "@/organizations/organization.entity"
 import type { Project } from "./project.entity"
 
-export const projectFactory = Factory.define<Project>(({ sequence, params }) => {
+type ProjectTransientParams = {
+  organization: Organization
+}
+
+class ProjectFactory extends Factory<Project, ProjectTransientParams> {}
+
+export const projectFactory = ProjectFactory.define(({ sequence, params, transientParams }) => {
+  if (!transientParams.organization) {
+    throw new Error("organization transient is required")
+  }
+
   const now = new Date()
   return {
     id: params.id || randomUUID(),
     name: params.name || `Test Project ${sequence}`,
-    organizationId: params.organizationId || randomUUID(),
+    organizationId: transientParams.organization.id,
     createdAt: params.createdAt || now,
     updatedAt: params.updatedAt || now,
-    organization: params.organization,
-  } as Project
+    organization: transientParams.organization,
+    chatBots: params.chatBots || [],
+  } satisfies Project
 })

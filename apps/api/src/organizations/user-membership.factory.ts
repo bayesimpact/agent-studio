@@ -1,17 +1,45 @@
 import { randomUUID } from "node:crypto"
 import { Factory } from "fishery"
+import type { User } from "@/users/user.entity"
+import type { Organization } from "./organization.entity"
 import type { MembershipRole, UserMembership } from "./user-membership.entity"
 
-export const userMembershipFactory = Factory.define<UserMembership>(({ params }) => {
+type UserMembershipTransientParams = {
+  user: User
+  organization: Organization
+}
+
+class UserMembershipFactory extends Factory<UserMembership, UserMembershipTransientParams> {
+  member() {
+    return this.params({ role: "member" })
+  }
+
+  admin() {
+    return this.params({ role: "admin" })
+  }
+
+  owner() {
+    return this.params({ role: "owner" })
+  }
+}
+
+export const userMembershipFactory = UserMembershipFactory.define(({ params, transientParams }) => {
+  if (!transientParams.user) {
+    throw new Error("user transient is required")
+  }
+  if (!transientParams.organization) {
+    throw new Error("organization transient is required")
+  }
+
   const now = new Date()
   return {
     id: params.id || randomUUID(),
-    userId: params.userId || randomUUID(),
-    organizationId: params.organizationId || randomUUID(),
+    userId: transientParams.user.id,
+    organizationId: transientParams.organization.id,
     role: (params.role || "member") as MembershipRole,
     createdAt: params.createdAt || now,
     updatedAt: params.updatedAt || now,
-    user: params.user || ({} as UserMembership["user"]),
-    organization: params.organization || ({} as UserMembership["organization"]),
-  } as UserMembership
+    user: transientParams.user,
+    organization: transientParams.organization,
+  } satisfies UserMembership
 })

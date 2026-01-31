@@ -11,7 +11,7 @@ import { ChatSessionsService } from "./chat-sessions.service"
 
 @UseGuards(JwtAuthGuard, UserGuard)
 @Controller()
-export class ChatSessionMessagesController {
+export class ChatMessagesController {
   constructor(private readonly chatSessionsService: ChatSessionsService) {}
 
   @Get(ChatSessionMessagesRoutes.listMessages.path)

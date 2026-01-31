@@ -1,5 +1,6 @@
 import { randomUUID } from "node:crypto"
 import { Factory } from "fishery"
+import type { Repository } from "typeorm"
 import type { User } from "./user.entity"
 
 export const userFactory = Factory.define<User>(({ sequence, params }) => {
@@ -13,5 +14,15 @@ export const userFactory = Factory.define<User>(({ sequence, params }) => {
     createdAt: params.createdAt || now,
     updatedAt: params.updatedAt || now,
     memberships: params.memberships || [],
-  } as User
+    chatSessions: params.chatSessions || [],
+  } satisfies User
 })
+
+export const createSingleUser = async (
+  repository: Repository<User>,
+  userParams: Partial<User> = {},
+): Promise<User> => {
+  const user = userFactory.build(userParams)
+  await repository.insert(user)
+  return user
+}
