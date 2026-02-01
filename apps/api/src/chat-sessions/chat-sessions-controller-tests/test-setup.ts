@@ -13,7 +13,7 @@ import { User } from "@/users/user.entity"
 import { ChatSessionsController } from "../chat-sessions.controller"
 import { ChatSessionsModule } from "../chat-sessions.module"
 
-export function chatSessionControllerTestSetup() {
+export function chatSessionsControllerTestSetup() {
   let controller: ChatSessionsController
   let setup: Awaited<ReturnType<typeof setupTransactionalTestDatabase>>
   let userRepository: Repository<User>

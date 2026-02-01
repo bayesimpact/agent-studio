@@ -3,9 +3,9 @@ import { userMembershipFactory } from "@/organizations/user-membership.factory"
 import { projectFactory } from "@/projects/project.factory"
 import type { EndpointRequest } from "@/request.interface"
 import { userFactory } from "@/users/user.factory"
-import { chatSessionControllerTestSetup } from "./test-setup"
+import { chatSessionsControllerTestSetup } from "./test-setup"
 
-const getTestContext = chatSessionControllerTestSetup()
+const getTestContext = chatSessionsControllerTestSetup()
 
 describe("createAppSession", () => {
   it("should create a app session when user is a member", async () => {
