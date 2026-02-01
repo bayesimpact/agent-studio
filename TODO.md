@@ -1,7 +1,6 @@
 # TODO
 
-- app -> create and list sessions
-- admin -> create and list sessions (playground)
+- fix create session
 - remove ttl
 - rename chatbotId into chatBotId (in chat session entity)
 - create ErrorRoute

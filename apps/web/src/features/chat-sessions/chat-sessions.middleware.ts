@@ -7,7 +7,6 @@ import {
   loadSessionMessages,
 } from "@/features/chat-sessions/chat-sessions.thunks"
 import type { AppDispatch, RootState } from "@/store"
-import { listChatBots } from "../chat-bots/chat-bots.thunks"
 import { chatSessionsActions } from "./chat-sessions.slice"
 
 // Create typed listener middleware
@@ -15,16 +14,18 @@ export const listenerMiddleware = createListenerMiddleware<RootState, AppDispatc
 
 export type AppStartListening = TypedStartListening<RootState, AppDispatch>
 
-listenerMiddleware.startListening({
-  actionCreator: listChatBots.fulfilled,
-  effect: async (action, listenerApi) => {
-    const chatBots = action.payload
+// FIXME: when admin will be available on user
+//  listenerMiddleware.startListening({
+//   actionCreator: listChatBots.fulfilled,
+//   effect: async (action, listenerApi) => {
+//     const chatBots = action.payload
 
-    chatBots.forEach((chatBot) => {
-      listenerApi.dispatch(listSessions({ chatBotId: chatBot.id, playground: false }))
-    })
-  },
-})
+//     const admin = listenerApi.getState().me.data.value?.admin
+//     chatBots.forEach((chatBot) => {
+//     listenerApi.dispatch(listSessions({ chatBotId: chatBot.id, playground: !!admin }))
+//      })
+//   },
+// })
 
 listenerMiddleware.startListening({
   actionCreator: chatSessionsActions.setCurrentChatSessionId,
