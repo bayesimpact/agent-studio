@@ -1,21 +1,36 @@
 "use client"
 
-import { Button } from "@caseai-connect/ui/shad/button"
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@caseai-connect/ui/shad/dropdown-menu"
-import { SidebarMenuAction, SidebarMenuItem, useSidebar } from "@caseai-connect/ui/shad/sidebar"
-import { BotIcon, Edit, MoreHorizontal, Trash2 } from "lucide-react"
+import { ScrollArea } from "@caseai-connect/ui/shad/scroll-area"
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@caseai-connect/ui/shad/sheet"
+import {
+  SidebarMenuAction,
+  SidebarMenuButton,
+  SidebarMenuItem,
+  useSidebar,
+} from "@caseai-connect/ui/shad/sidebar"
+import { BotIcon, Edit, MoreHorizontal, PlusIcon, Trash2 } from "lucide-react"
 import { useState } from "react"
 import { useTranslation } from "react-i18next"
+import { CreateChatBotForm } from "@/components/chat-bots/CreateChatBotForm"
 import { DeleteChatBotDialogWithOutTrigger } from "@/components/chat-bots/DeleteChatBotDialog"
 import { EditChatBotDialogWithOutTrigger } from "@/components/chat-bots/EditChatBotDialog"
 import type { ChatBot } from "@/features/chat-bots/chat-bots.models"
 import { selectCurrentChatBotId } from "@/features/chat-bots/chat-bots.selectors"
 import { selectChatSessions } from "@/features/chat-sessions/chat-sessions.selectors"
+import type { Project } from "@/features/projects/projects.models"
 import { buildChatBotPath } from "@/routes/helpers"
 import { useAppSelector } from "@/store/hooks"
 import { AppNavItem } from "../../NavItem"
@@ -24,9 +39,11 @@ import { ChatSessionList } from "../chat-sessions/ChatSessionList"
 type Item = { action: "edit" | "delete"; value: ChatBot }
 
 export function AdminChatBotList({
+  project,
   chatBots,
   organizationId,
 }: {
+  project: Project
   chatBots: ChatBot[]
   organizationId: string
 }) {
@@ -71,7 +88,7 @@ export function AdminChatBotList({
       ))}
 
       <SidebarMenuItem>
-        <CreateChatBotDialogWithTrigger />
+        <CreateChatBotDialogWithTrigger project={project} />
       </SidebarMenuItem>
 
       <EditChatBotDialogWithOutTrigger
@@ -126,9 +143,32 @@ export function AppChatBotList({
     </>
   )
 }
-function CreateChatBotDialogWithTrigger() {
-  // TODO: Implement ChatBot creation dialog
-  return <Button variant="outline">Create ChatBot</Button>
+function CreateChatBotDialogWithTrigger({ project }: { project: Project }) {
+  const { t } = useTranslation("chatBot", { keyPrefix: "create" })
+  const [open, setOpen] = useState(false)
+  return (
+    <div>
+      <Sheet modal open={open} onOpenChange={setOpen}>
+        <SheetTrigger asChild>
+          <SidebarMenuButton>
+            <PlusIcon />
+            <span>{t("title")}</span>
+          </SidebarMenuButton>
+        </SheetTrigger>
+        <SheetContent side="bottom" className="h-dvh">
+          <ScrollArea className="h-full">
+            <SheetHeader>
+              <SheetTitle>{t("title")}</SheetTitle>
+              <SheetDescription>{t("description", { projectName: project.name })}</SheetDescription>
+            </SheetHeader>
+            <div className="px-4 pb-4">
+              <CreateChatBotForm projectId={project.id} onSuccess={() => setOpen(false)} />
+            </div>
+          </ScrollArea>
+        </SheetContent>
+      </Sheet>
+    </div>
+  )
 }
 
 function ChatBotOptions({ onEdit, onDelete }: { onEdit: () => void; onDelete: () => void }) {

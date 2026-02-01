@@ -2,6 +2,8 @@ import type { RootState } from "@/store"
 
 export const selectProjects = (state: RootState) => state.projects.data.value
 
+export const selectProjectsData = (state: RootState) => state.projects.data
+
 export const selectProjectsStatus = (state: RootState) => state.projects.data.status
 
 export const selectProjectsError = (state: RootState) => state.projects.data.error

@@ -13,6 +13,7 @@ import { ChatSessionsService } from "./chat-sessions.service"
 export class ChatSessionsController {
   constructor(private readonly chatSessionsService: ChatSessionsService) {}
 
+  // FIXME: add ability checks shoud be admin
   @Get(ChatSessionsRoutes.getAllPlayground.path)
   async getAllPlayground(
     @Req() request: EndpointRequest,

@@ -1,4 +1,5 @@
 import { useEffect } from "react"
+import { selectCurrentChatBotId } from "@/features/chat-bots/chat-bots.selectors"
 import { selectChatSessionStatus } from "@/features/chat-sessions/chat-sessions.selectors"
 import { listSessions } from "@/features/chat-sessions/chat-sessions.thunks"
 import { useAbility } from "@/hooks/use-ability"
@@ -11,14 +12,16 @@ export function ChatSessionsLoader({ children }: { children: React.ReactNode }) 
   const { admin } = useAbility()
   const dispatch = useAppDispatch()
   const status = useAppSelector(selectChatSessionStatus)
+  const chatBotId = useAppSelector(selectCurrentChatBotId)
 
   useEffect(() => {
-    void dispatch(listSessions({ playground: admin }))
-  }, [dispatch, admin])
+    if (!chatBotId) return
+    void dispatch(listSessions({ chatBotId, playground: admin }))
+  }, [dispatch, admin, chatBotId])
 
   if (ADS.isError(status)) return <NotFoundRoute />
 
-  if (ADS.isFulfilled(status)) return <>{children}</>
+  if (ADS.isFulfilled(status) && chatBotId) return <>{children}</>
 
   return <LoadingRoute />
 }
