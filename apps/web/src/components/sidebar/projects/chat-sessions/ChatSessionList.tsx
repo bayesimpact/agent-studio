@@ -69,7 +69,7 @@ function CreateSessionButton() {
   }
   // FIXME: i18n
   return (
-    <SidebarMenuSubButton onClick={handleClick}>
+    <SidebarMenuSubButton onClick={handleClick} className="cursor-default">
       <MessageSquarePlusIcon />
       <span>New Chat Session</span>
     </SidebarMenuSubButton>
