@@ -36,53 +36,45 @@ describe("getAllApp", () => {
       },
     } as EndpointRequest
 
-    const membership = userMembershipFactory.build({
-      userId: savedUser.id,
-      organizationId: organization.id,
-      role: "member",
-      organization,
-      user: savedUser,
-    })
+    const membership = userMembershipFactory
+      .transient({ user: savedUser, organization: organization })
+      .member()
+      .build()
     await membershipRepository.save(membership)
 
-    const project = projectFactory.build({
+    const project = projectFactory.transient({ organization: organization }).build({
       name: "App Project",
-      organizationId: organization.id,
     })
     const savedProject = await projectRepository.save(project)
 
-    const chatBot = chatBotFactory.build({
+    const chatBot = chatBotFactory.transient({ project: savedProject }).build({
       name: "App Bot",
       defaultPrompt: "You are a helpful assistant",
-      projectId: savedProject.id,
     })
     const savedChatBot = await chatBotRepository.save(chatBot)
 
     // Create multiple app-private sessions
-    const session1 = chatSessionFactory.build({
-      chatbotId: savedChatBot.id,
-      userId: savedUser.id,
-      organizationId: organization.id,
-      type: "app-private",
-      createdAt: new Date("2026-01-01T10:00:00Z"),
-    })
+    const session1 = chatSessionFactory
+      .transient({ chatBot: savedChatBot, user: savedUser, organization: organization })
+      .build({
+        type: "app-private",
+        createdAt: new Date("2026-01-01T10:00:00Z"),
+      })
 
-    const session2 = chatSessionFactory.build({
-      chatbotId: savedChatBot.id,
-      userId: savedUser.id,
-      organizationId: organization.id,
-      type: "app-private",
-      createdAt: new Date("2026-01-02T10:00:00Z"),
-    })
+    const session2 = chatSessionFactory
+      .transient({ chatBot: savedChatBot, user: savedUser, organization: organization })
+      .build({
+        type: "app-private",
+        createdAt: new Date("2026-01-02T10:00:00Z"),
+      })
 
     // Create a playground session (should not be returned)
-    const playgroundSession = chatSessionFactory.build({
-      chatbotId: savedChatBot.id,
-      userId: savedUser.id,
-      organizationId: organization.id,
-      type: "playground",
-      createdAt: new Date("2026-01-03T10:00:00Z"),
-    })
+    const playgroundSession = chatSessionFactory
+      .transient({ chatBot: savedChatBot, user: savedUser, organization: organization })
+      .build({
+        type: "playground",
+        createdAt: new Date("2026-01-03T10:00:00Z"),
+      })
 
     await chatSessionRepository.save([session1, session2, playgroundSession])
 
@@ -119,25 +111,20 @@ describe("getAllApp", () => {
       },
     } as EndpointRequest
 
-    const membership = userMembershipFactory.build({
-      userId: savedUser.id,
-      organizationId: organization.id,
-      role: "member",
-      organization,
-      user: savedUser,
-    })
+    const membership = userMembershipFactory
+      .transient({ user: savedUser, organization: organization })
+      .member()
+      .build()
     await membershipRepository.save(membership)
 
-    const project = projectFactory.build({
+    const project = projectFactory.transient({ organization: organization }).build({
       name: "Empty App Project",
-      organizationId: organization.id,
     })
     const savedProject = await projectRepository.save(project)
 
-    const chatBot = chatBotFactory.build({
+    const chatBot = chatBotFactory.transient({ project: savedProject }).build({
       name: "Empty App Bot",
       defaultPrompt: "You are a helpful assistant",
-      projectId: savedProject.id,
     })
     const savedChatBot = await chatBotRepository.save(chatBot)
 
@@ -173,43 +160,36 @@ describe("getAllApp", () => {
       },
     } as EndpointRequest
 
-    const membership = userMembershipFactory.build({
-      userId: savedUser.id,
-      organizationId: organization.id,
-      role: "member",
-      organization,
-      user: savedUser,
-    })
+    const membership = userMembershipFactory
+      .transient({ user: savedUser, organization: organization })
+      .member()
+      .build()
     await membershipRepository.save(membership)
 
-    const project = projectFactory.build({
+    const project = projectFactory.transient({ organization: organization }).build({
       name: "Order App Project",
-      organizationId: organization.id,
     })
     const savedProject = await projectRepository.save(project)
 
-    const chatBot = chatBotFactory.build({
+    const chatBot = chatBotFactory.transient({ project: savedProject }).build({
       name: "Order App Bot",
       defaultPrompt: "You are a helpful assistant",
-      projectId: savedProject.id,
     })
     const savedChatBot = await chatBotRepository.save(chatBot)
 
-    const oldSession = chatSessionFactory.build({
-      chatbotId: savedChatBot.id,
-      userId: savedUser.id,
-      organizationId: organization.id,
-      type: "app-private",
-      createdAt: new Date("2026-01-01T10:00:00Z"),
-    })
+    const oldSession = chatSessionFactory
+      .transient({ chatBot: savedChatBot, user: savedUser, organization: organization })
+      .build({
+        type: "app-private",
+        createdAt: new Date("2026-01-01T10:00:00Z"),
+      })
 
-    const newestSession = chatSessionFactory.build({
-      chatbotId: savedChatBot.id,
-      userId: savedUser.id,
-      organizationId: organization.id,
-      type: "app-private",
-      createdAt: new Date("2026-01-30T10:00:00Z"),
-    })
+    const newestSession = chatSessionFactory
+      .transient({ chatBot: savedChatBot, user: savedUser, organization: organization })
+      .build({
+        type: "app-private",
+        createdAt: new Date("2026-01-30T10:00:00Z"),
+      })
 
     await chatSessionRepository.save([oldSession, newestSession])
 
