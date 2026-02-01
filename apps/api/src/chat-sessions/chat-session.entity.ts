@@ -5,12 +5,14 @@ import {
   Index,
   JoinColumn,
   ManyToOne,
+  OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from "typeorm"
 import { ChatBot } from "@/chat-bots/chat-bot.entity"
 import { Organization } from "@/organizations/organization.entity"
 import { User } from "@/users/user.entity"
+import { ChatMessage } from "./chat-message.entity"
 
 export type ChatSessionType = "playground" | "production" | "app-private"
 
@@ -33,22 +35,6 @@ export class ChatSession {
 
   @Column({ type: "varchar" })
   type!: ChatSessionType
-
-  @Column({ type: "jsonb" })
-  messages!: Array<{
-    id: string
-    role: "user" | "assistant"
-    content: string
-    status?: "streaming" | "completed" | "aborted" | "error"
-    createdAt?: string
-    startedAt?: string
-    completedAt?: string
-    toolCalls?: Array<{
-      id: string
-      name: string
-      arguments: Record<string, unknown>
-    }>
-  }>
 
   @Column({ type: "timestamp", nullable: true, name: "expires_at" })
   expiresAt!: Date | null
@@ -79,4 +65,10 @@ export class ChatSession {
   )
   @JoinColumn({ name: "organization_id" })
   organization!: Organization
+
+  @OneToMany(
+    () => ChatMessage,
+    (message) => message.session,
+  )
+  messages!: ChatMessage[]
 }

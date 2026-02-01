@@ -5,24 +5,8 @@ import type { Repository } from "typeorm"
 import { v4 } from "uuid"
 import { ChatBot } from "@/chat-bots/chat-bot.entity"
 import { UserMembership } from "@/organizations/user-membership.entity"
+import { ChatMessage } from "./chat-message.entity"
 import { ChatSession } from "./chat-session.entity"
-
-export type MessageStatus = "streaming" | "completed" | "aborted" | "error"
-
-export interface ChatMessageInput {
-  id: string
-  role: "user" | "assistant"
-  content: string
-  status?: MessageStatus
-  createdAt?: string
-  startedAt?: string
-  completedAt?: string
-  toolCalls?: Array<{
-    id: string
-    name: string
-    arguments: Record<string, unknown>
-  }>
-}
 
 @Injectable()
 export class ChatSessionsService {
@@ -31,6 +15,8 @@ export class ChatSessionsService {
   constructor(
     @InjectRepository(ChatSession)
     private readonly chatSessionRepository: Repository<ChatSession>,
+    @InjectRepository(ChatMessage)
+    private readonly chatMessageRepository: Repository<ChatMessage>,
     @InjectRepository(ChatBot)
     private readonly chatBotRepository: Repository<ChatBot>,
     @InjectRepository(UserMembership)
@@ -66,7 +52,12 @@ export class ChatSessionsService {
       )
     }
 
-    return session.messages as ChatSessionMessageDto[]
+    const messages = await this.chatMessageRepository.find({
+      where: { sessionId },
+      order: { createdAt: "ASC" },
+    })
+
+    return messages.map((message) => this.toDto(message))
   }
 
   /**
@@ -79,6 +70,7 @@ export class ChatSessionsService {
   ): Promise<{ session: ChatSession; chatBot: ChatBot }> {
     const session = await this.chatSessionRepository.findOne({
       where: { id: sessionId },
+      relations: ["messages"],
     })
 
     if (!session) {
@@ -147,8 +139,8 @@ export class ChatSessionsService {
     if (existingSession) {
       // Check if TTL expired
       if (existingSession.expiresAt && existingSession.expiresAt < now) {
-        // TTL expired: reset messages and update TTL
-        existingSession.messages = []
+        // TTL expired: delete all messages and update TTL
+        await this.chatMessageRepository.delete({ sessionId: existingSession.id })
         existingSession.expiresAt = expiresAt
         return this.chatSessionRepository.save(existingSession)
       }
@@ -163,7 +155,6 @@ export class ChatSessionsService {
       userId,
       organizationId,
       type: "playground",
-      messages: [],
       expiresAt,
     })
 
@@ -267,7 +258,6 @@ export class ChatSessionsService {
       userId,
       organizationId,
       type: "app-private",
-      messages: [],
       expiresAt: null,
     })
     return await this.chatSessionRepository.save(session)
@@ -287,7 +277,6 @@ export class ChatSessionsService {
       userId,
       organizationId,
       type: "production",
-      messages: [],
       expiresAt: null,
     })
 
@@ -300,6 +289,7 @@ export class ChatSessionsService {
   async findById(sessionId: string): Promise<ChatSession | null> {
     const session = await this.chatSessionRepository.findOne({
       where: { id: sessionId },
+      relations: ["messages"],
     })
 
     if (!session) {
@@ -307,35 +297,13 @@ export class ChatSessionsService {
     }
 
     // Recover aborted streams
-    this.recoverAbortedStreams(session)
+    await this.recoverAbortedStreams(sessionId)
 
-    // If we recovered any streams, persist the changes
-    const needsUpdate = session.messages.some(
-      (message) =>
-        message.role === "assistant" &&
-        message.status === "streaming" &&
-        this.isStreamAborted(message),
-    )
-
-    if (needsUpdate) {
-      // Update messages in place
-      session.messages = session.messages.map((message) => {
-        if (
-          message.role === "assistant" &&
-          message.status === "streaming" &&
-          this.isStreamAborted(message)
-        ) {
-          return {
-            ...message,
-            status: "aborted",
-          }
-        }
-        return message
-      })
-      await this.chatSessionRepository.save(session)
-    }
-
-    return session
+    // Reload session with updated messages
+    return this.chatSessionRepository.findOne({
+      where: { id: sessionId },
+      relations: ["messages"],
+    })
   }
 
   /**
@@ -352,29 +320,43 @@ export class ChatSessionsService {
       throw new NotFoundException(`ChatSession with id ${sessionId} not found`)
     }
 
-    // Add user message
-    const userMessage: ChatMessageInput = {
-      id: v4(),
+    // Create user message
+    const userMessage = this.chatMessageRepository.create({
+      sessionId,
       role: "user",
       content: userContent,
-      createdAt: new Date().toISOString(),
-    }
+      status: null,
+      startedAt: null,
+      completedAt: null,
+      toolCalls: null,
+    })
+    await this.chatMessageRepository.save(userMessage)
 
-    // Add empty assistant message with streaming status
+    // Create empty assistant message with streaming status
     const assistantMessageId = v4()
-    const assistantMessage: ChatMessageInput = {
+    const assistantMessage = this.chatMessageRepository.create({
       id: assistantMessageId,
+      sessionId,
       role: "assistant",
       content: "",
       status: "streaming",
-      startedAt: new Date().toISOString(),
+      startedAt: new Date(),
+      completedAt: null,
+      toolCalls: null,
+    })
+    await this.chatMessageRepository.save(assistantMessage)
+
+    // Reload session with messages
+    const updatedSession = await this.chatSessionRepository.findOne({
+      where: { id: sessionId },
+      relations: ["messages"],
+    })
+
+    if (!updatedSession) {
+      throw new NotFoundException(`ChatSession with id ${sessionId} not found`)
     }
 
-    session.messages = [...session.messages, userMessage, assistantMessage]
-
-    await this.chatSessionRepository.save(session)
-
-    return { session, assistantMessageId }
+    return { session: updatedSession, assistantMessageId }
   }
 
   /**
@@ -386,26 +368,31 @@ export class ChatSessionsService {
     assistantMessageId: string,
     fullContent: string,
   ): Promise<ChatSession> {
-    const session = await this.findById(sessionId)
+    const message = await this.chatMessageRepository.findOne({
+      where: { id: assistantMessageId, sessionId },
+    })
+
+    if (!message) {
+      throw new NotFoundException(
+        `ChatMessage with id ${assistantMessageId} not found in session ${sessionId}`,
+      )
+    }
+
+    message.content = fullContent
+    message.status = "completed"
+    message.completedAt = new Date()
+    await this.chatMessageRepository.save(message)
+
+    const session = await this.chatSessionRepository.findOne({
+      where: { id: sessionId },
+      relations: ["messages"],
+    })
 
     if (!session) {
       throw new NotFoundException(`ChatSession with id ${sessionId} not found`)
     }
 
-    // Update assistant message
-    session.messages = session.messages.map((message) => {
-      if (message.id === assistantMessageId) {
-        return {
-          ...message,
-          content: fullContent,
-          status: "completed" as MessageStatus,
-          completedAt: new Date().toISOString(),
-        }
-      }
-      return message
-    })
-
-    return this.chatSessionRepository.save(session)
+    return session
   }
 
   /**
@@ -416,60 +403,85 @@ export class ChatSessionsService {
     assistantMessageId: string,
     errorMessage: string,
   ): Promise<ChatSession> {
-    const session = await this.findById(sessionId)
+    const message = await this.chatMessageRepository.findOne({
+      where: { id: assistantMessageId, sessionId },
+    })
+
+    if (!message) {
+      throw new NotFoundException(
+        `ChatMessage with id ${assistantMessageId} not found in session ${sessionId}`,
+      )
+    }
+
+    message.content = errorMessage
+    message.status = "error"
+    message.completedAt = new Date()
+    await this.chatMessageRepository.save(message)
+
+    const session = await this.chatSessionRepository.findOne({
+      where: { id: sessionId },
+      relations: ["messages"],
+    })
 
     if (!session) {
       throw new NotFoundException(`ChatSession with id ${sessionId} not found`)
     }
 
-    session.messages = session.messages.map((message) => {
-      if (message.id === assistantMessageId) {
-        return {
-          ...message,
-          content: errorMessage,
-          status: "error" as MessageStatus,
-          completedAt: new Date().toISOString(),
-        }
-      }
-      return message
-    })
-
-    return this.chatSessionRepository.save(session)
+    return session
   }
 
   /**
    * Recovers aborted streams in a session
    * Marks old "streaming" messages as "aborted"
    */
-  private recoverAbortedStreams(session: ChatSession): void {
-    session.messages = session.messages.map((message) => {
-      if (
-        message.role === "assistant" &&
-        message.status === "streaming" &&
-        this.isStreamAborted(message)
-      ) {
-        return {
-          ...message,
-          status: "aborted" as MessageStatus,
-        }
-      }
-      return message
+  private async recoverAbortedStreams(sessionId: string): Promise<void> {
+    const messages = await this.chatMessageRepository.find({
+      where: {
+        sessionId,
+        role: "assistant",
+        status: "streaming",
+      },
     })
+
+    const _now = new Date()
+    for (const message of messages) {
+      if (this.isStreamAborted(message)) {
+        message.status = "aborted"
+        await this.chatMessageRepository.save(message)
+      }
+    }
   }
 
   /**
    * Checks if a streaming message should be marked as aborted
    */
-  private isStreamAborted(message: ChatMessageInput): boolean {
+  private isStreamAborted(message: ChatMessage): boolean {
     if (!message.startedAt) {
       return false
     }
 
-    const startedAt = new Date(message.startedAt)
+    const startedAt =
+      message.startedAt instanceof Date ? message.startedAt : new Date(message.startedAt)
     const now = new Date()
     const elapsed = now.getTime() - startedAt.getTime()
 
     return elapsed > this.STREAM_TIMEOUT_MS
+  }
+
+  /**
+   * Converts ChatMessage entity to DTO
+   */
+  private toDto(message: ChatMessage): ChatSessionMessageDto {
+    return {
+      id: message.id,
+      role: message.role,
+      content: message.content,
+      status: message.status ?? undefined,
+      createdAt: message.createdAt.toISOString(),
+      startedAt: message.startedAt?.toISOString(),
+      completedAt: message.completedAt?.toISOString(),
+      toolCalls: message.toolCalls ?? undefined,
+    }
   }
 
   /**

@@ -33,31 +33,22 @@ describe("ChatBotsController - getAll", () => {
     const savedUser = await userRepository.save(user)
 
     await membershipRepository.save(
-      userMembershipFactory.build({
-        userId: savedUser.id,
-        organizationId: organization.id,
-        role: "member",
-        user: savedUser,
-        organization,
-      }),
+      userMembershipFactory.member().transient({ user: savedUser, organization }).build(),
     )
 
-    const project = projectFactory.build({
+    const project = projectFactory.transient({ organization }).build({
       name: "List Project",
-      organizationId: organization.id,
     })
     const savedProject = await projectRepository.save(project)
 
     // Create chat templates
-    const template1 = chatBotFactory.build({
+    const template1 = chatBotFactory.transient({ project: savedProject }).build({
       name: "Template 1",
       defaultPrompt: "Prompt 1",
-      projectId: savedProject.id,
     })
-    const template2 = chatBotFactory.build({
+    const template2 = chatBotFactory.transient({ project: savedProject }).build({
       name: "Template 2",
       defaultPrompt: "Prompt 2",
-      projectId: savedProject.id,
     })
     await chatBotRepository.save([template1, template2])
 
@@ -90,18 +81,11 @@ describe("ChatBotsController - getAll", () => {
     const savedUser = await userRepository.save(user)
 
     await membershipRepository.save(
-      userMembershipFactory.build({
-        userId: savedUser.id,
-        organizationId: organization.id,
-        role: "member",
-        user: savedUser,
-        organization,
-      }),
+      userMembershipFactory.member().transient({ user: savedUser, organization }).build(),
     )
 
-    const project = projectFactory.build({
+    const project = projectFactory.transient({ organization }).build({
       name: "Empty Project",
-      organizationId: organization.id,
     })
     const savedProject = await projectRepository.save(project)
 
@@ -128,9 +112,8 @@ describe("ChatBotsController - getAll", () => {
       }),
     )
 
-    const project = projectFactory.build({
+    const project = projectFactory.transient({ organization }).build({
       name: "Other Project",
-      organizationId: organization.id,
     })
     const savedProject = await projectRepository.save(project)
 

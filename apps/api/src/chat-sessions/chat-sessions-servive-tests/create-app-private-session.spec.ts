@@ -8,13 +8,10 @@ describe("createAppPrivateSession", () => {
     const { service, testChatBot, testUser, testOrganization, membershipRepository } =
       getTestContext()
 
-    const membership = userMembershipFactory.build({
-      userId: testUser.id,
-      organizationId: testOrganization.id,
-      role: "member",
-      user: testUser,
-      organization: testOrganization,
-    })
+    const membership = userMembershipFactory
+      .transient({ user: testUser, organization: testOrganization })
+      .member()
+      .build()
     await membershipRepository.save(membership)
 
     const session = await service.createAppPrivateSession({
@@ -27,7 +24,7 @@ describe("createAppPrivateSession", () => {
     expect(session.chatbotId).toBe(testChatBot.id)
     expect(session.userId).toBe(testUser.id)
     expect(session.organizationId).toBe(testOrganization.id)
-    expect(session.messages).toEqual([])
+    expect(session.messages).toBeUndefined()
     expect(session.expiresAt).toBeNull()
   })
 })

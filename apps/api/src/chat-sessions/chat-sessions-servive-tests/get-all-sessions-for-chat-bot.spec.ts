@@ -10,30 +10,16 @@ describe("getAllSessionsForChatBot", () => {
     const { service, testChatBot, testOrganization, testUser, chatSessionRepository } =
       getTestContext()
 
+    const buildChatBot = (date: Date) =>
+      chatSessionFactory
+        .transient({ chatBot: testChatBot, user: testUser, organization: testOrganization })
+        .production()
+        .build({ createdAt: date })
+
     // Create multiple sessions with different timestamps
-    const oldSession = chatSessionFactory.build({
-      chatbotId: testChatBot.id,
-      userId: testUser.id,
-      organizationId: testOrganization.id,
-      type: "production",
-      createdAt: new Date("2026-01-01T10:00:00Z"),
-    })
-
-    const middleSession = chatSessionFactory.build({
-      chatbotId: testChatBot.id,
-      userId: testUser.id,
-      organizationId: testOrganization.id,
-      type: "playground",
-      createdAt: new Date("2026-01-15T10:00:00Z"),
-    })
-
-    const newestSession = chatSessionFactory.build({
-      chatbotId: testChatBot.id,
-      userId: testUser.id,
-      organizationId: testOrganization.id,
-      type: "app-private",
-      createdAt: new Date("2026-01-30T10:00:00Z"),
-    })
+    const oldSession = buildChatBot(new Date("2026-01-01T10:00:00Z"))
+    const middleSession = buildChatBot(new Date("2026-01-15T10:00:00Z"))
+    const newestSession = buildChatBot(new Date("2026-01-30T10:00:00Z"))
 
     await chatSessionRepository.save([oldSession, middleSession, newestSession])
 
@@ -60,27 +46,20 @@ describe("getAllSessionsForChatBot", () => {
     } = getTestContext()
 
     // Create another chatbot
-    const anotherChatBot = chatBotFactory.build({
+    const anotherChatBot = chatBotFactory.transient({ project: testProject }).build({
       name: "Another ChatBot",
-      projectId: testProject.id,
-      project: testProject,
     })
     await chatBotRepository.save(anotherChatBot)
 
     // Create sessions for both chatbots
-    const session1 = chatSessionFactory.build({
-      chatbotId: testChatBot.id,
-      userId: testUser.id,
-      organizationId: testOrganization.id,
-      type: "production",
-    })
+    const session1 = chatSessionFactory
+      .transient({ chatBot: testChatBot, user: testUser, organization: testOrganization })
+      .production()
+      .build()
 
-    const session2 = chatSessionFactory.build({
-      chatbotId: anotherChatBot.id,
-      userId: testUser.id,
-      organizationId: testOrganization.id,
-      type: "production",
-    })
+    const session2 = chatSessionFactory
+      .transient({ chatBot: anotherChatBot, user: testUser, organization: testOrganization })
+      .build()
 
     await chatSessionRepository.save([session1, session2])
 
@@ -110,19 +89,15 @@ describe("getAllSessionsForChatBot", () => {
     await userRepository.save(anotherUser)
 
     // Create sessions for both users
-    const session1 = chatSessionFactory.build({
-      chatbotId: testChatBot.id,
-      userId: testUser.id,
-      organizationId: testOrganization.id,
-      type: "production",
-    })
+    const session1 = chatSessionFactory
+      .transient({ chatBot: testChatBot, user: testUser, organization: testOrganization })
+      .production()
+      .build()
 
-    const session2 = chatSessionFactory.build({
-      chatbotId: testChatBot.id,
-      userId: anotherUser.id,
-      organizationId: testOrganization.id,
-      type: "production",
-    })
+    const session2 = chatSessionFactory
+      .transient({ chatBot: testChatBot, user: anotherUser, organization: testOrganization })
+      .production()
+      .build()
 
     await chatSessionRepository.save([session1, session2])
 
@@ -150,29 +125,20 @@ describe("getAllSessionsForChatBot", () => {
     const { service, testChatBot, testOrganization, testUser, chatSessionRepository } =
       getTestContext()
 
-    const playgroundSession = chatSessionFactory.build({
-      chatbotId: testChatBot.id,
-      userId: testUser.id,
-      organizationId: testOrganization.id,
-      type: "playground",
-      createdAt: new Date("2026-01-01T10:00:00Z"),
-    })
+    const playgroundSession = chatSessionFactory
+      .transient({ chatBot: testChatBot, user: testUser, organization: testOrganization })
+      .playground()
+      .build({ createdAt: new Date("2026-01-01T10:00:00Z") })
 
-    const productionSession = chatSessionFactory.build({
-      chatbotId: testChatBot.id,
-      userId: testUser.id,
-      organizationId: testOrganization.id,
-      type: "production",
-      createdAt: new Date("2026-01-02T10:00:00Z"),
-    })
+    const productionSession = chatSessionFactory
+      .transient({ chatBot: testChatBot, user: testUser, organization: testOrganization })
+      .production()
+      .build({ createdAt: new Date("2026-01-02T10:00:00Z") })
 
-    const appPrivateSession = chatSessionFactory.build({
-      chatbotId: testChatBot.id,
-      userId: testUser.id,
-      organizationId: testOrganization.id,
-      type: "app-private",
-      createdAt: new Date("2026-01-03T10:00:00Z"),
-    })
+    const appPrivateSession = chatSessionFactory
+      .transient({ chatBot: testChatBot, user: testUser, organization: testOrganization })
+      .appPrivate()
+      .build({ createdAt: new Date("2026-01-03T10:00:00Z") })
 
     await chatSessionRepository.save([playgroundSession, productionSession, appPrivateSession])
 

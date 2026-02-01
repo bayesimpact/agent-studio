@@ -1,4 +1,3 @@
-import { ChatBotLocale, ChatBotModel } from "@caseai-connect/api-contracts"
 import { chatBotFactory } from "@/chat-bots/chat-bot.factory"
 import { chatSessionFactory } from "../chat-session.factory"
 import { chatSessionControllerTestSetup } from "./test-setup"
@@ -25,31 +24,19 @@ describe("deleteExpiredPlaygroundSessions", () => {
     )
 
     // Create another chatbot to avoid session reuse
-    const chatBot = chatBotFactory.build({
+    const anotherChatBot = chatBotFactory.transient({ project: testProject }).build({
       name: "Another Test ChatBot",
       defaultPrompt: "You are a helpful assistant",
-      model: ChatBotModel.Gemini25Flash,
-      temperature: 0,
-      locale: ChatBotLocale.EN,
-      projectId: testProject.id,
     })
-    const anotherChatBot = chatBotRepository.create(chatBot)
     await chatBotRepository.save(anotherChatBot)
 
     // Create an expired session with a different chatbot to avoid reuse
     // Set to 1 hour ago to ensure it's well past the 5-minute safety margin
-    const expiredDate = new Date()
-    expiredDate.setHours(expiredDate.getHours() - 1)
-
-    const session = chatSessionFactory.build({
-      chatbotId: anotherChatBot.id,
-      userId: testUser.id,
-      organizationId: testOrganization.id,
-      type: "playground",
-      messages: [],
-      expiresAt: expiredDate,
-    })
-    const expiredSession = chatSessionRepository.create(session)
+    const expiredSession = chatSessionFactory
+      .transient({ chatBot: anotherChatBot, user: testUser, organization: testOrganization })
+      .playground()
+      .expiredMinutesAgo(60)
+      .build()
     await chatSessionRepository.save(expiredSession)
 
     // Verify the expired session exists before deletion
@@ -79,18 +66,11 @@ describe("deleteExpiredPlaygroundSessions", () => {
       getTestContext()
 
     // Create a session that expired 3 minutes ago (within 5-minute safety margin)
-    const recentlyExpiredDate = new Date()
-    recentlyExpiredDate.setMinutes(recentlyExpiredDate.getMinutes() - 3)
-
-    const session = chatSessionFactory.build({
-      chatbotId: testChatBot.id,
-      userId: testUser.id,
-      organizationId: testOrganization.id,
-      type: "playground",
-      messages: [],
-      expiresAt: recentlyExpiredDate,
-    })
-    const recentlyExpiredSession = chatSessionRepository.create(session)
+    const recentlyExpiredSession = chatSessionFactory
+      .transient({ chatBot: testChatBot, user: testUser, organization: testOrganization })
+      .playground()
+      .expiredMinutesAgo(3)
+      .build()
     await chatSessionRepository.save(recentlyExpiredSession)
 
     // Delete expired sessions
