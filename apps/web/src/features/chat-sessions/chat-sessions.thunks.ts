@@ -7,20 +7,16 @@ import { streamChatResponse } from "./external/chat-session-streaming"
 
 type ThunkConfig = { state: RootState; extra: ThunkExtraArg }
 
-export const listSessions = createAsyncThunk<ChatSession[], { playground: boolean }, ThunkConfig>(
-  "chatSession/listSessions",
-  async ({ playground }, { extra: { services }, getState }) => {
-    const state = getState()
-    const chatBotId = state.chatBots.currentChatBotId
-    if (!chatBotId) {
-      throw new Error("No current chat bot ID found")
-    }
-    if (playground) {
-      return services.chatSession.getAllPlayground(chatBotId)
-    }
-    return services.chatSession.getAllApp(chatBotId)
-  },
-)
+export const listSessions = createAsyncThunk<
+  ChatSession[],
+  { chatBotId: string; playground: boolean },
+  ThunkConfig
+>("chatSession/listSessions", async ({ chatBotId, playground }, { extra: { services } }) => {
+  if (playground) {
+    return services.chatSession.getAllPlayground(chatBotId)
+  }
+  return services.chatSession.getAllApp(chatBotId)
+})
 
 export const createPlaygroundSession = createAsyncThunk<ChatSession, void, ThunkConfig>(
   "chatSession/createPlaygroundSession",

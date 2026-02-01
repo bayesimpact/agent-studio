@@ -38,7 +38,11 @@ export function AdminNavProjects({ projects }: { projects: ProjectDto[] }) {
           showEmptyProject={true}
         >
           {({ chatBots, organizationId }) => (
-            <AdminChatBotList chatBots={chatBots} organizationId={organizationId} />
+            <AdminChatBotList
+              chatBots={chatBots}
+              organizationId={organizationId}
+              project={project}
+            />
           )}
         </ProjectItem>
       ))}

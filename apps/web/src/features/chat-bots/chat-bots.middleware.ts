@@ -1,14 +1,28 @@
 import type { TypedStartListening } from "@reduxjs/toolkit"
 import { createListenerMiddleware, isAnyOf } from "@reduxjs/toolkit"
+import { ADS } from "@/store/async-data-status"
 import type { AppDispatch, RootState } from "@/store/types"
 import { notificationsActions } from "../notifications/notifications.slice"
-import { selectCurrentProjectId } from "../projects/projects.selectors"
+import { selectCurrentProjectId, selectProjectsData } from "../projects/projects.selectors"
+import { listProjects } from "../projects/projects.thunks"
 import { createChatBot, deleteChatBot, listChatBots, updateChatBot } from "./chat-bots.thunks"
 
 // Create typed listener middleware
 const listenerMiddleware = createListenerMiddleware<RootState, AppDispatch>()
 
 export type AppStartListening = TypedStartListening<RootState, AppDispatch>
+
+listenerMiddleware.startListening({
+  actionCreator: listProjects.fulfilled,
+  effect: async (_, listenerApi) => {
+    const projects = selectProjectsData(listenerApi.getState())
+    if (!ADS.isFulfilled(projects)) return
+
+    projects.value.forEach((project) => {
+      listenerApi.dispatch(listChatBots({ projectId: project.id }))
+    })
+  },
+})
 
 listenerMiddleware.startListening({
   matcher: isAnyOf(deleteChatBot.fulfilled, createChatBot.fulfilled, updateChatBot.fulfilled),
