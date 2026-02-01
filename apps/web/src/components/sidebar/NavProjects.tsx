@@ -2,7 +2,7 @@
 
 import type { ProjectDto } from "@caseai-connect/api-contracts"
 import { Section } from "@caseai-connect/ui/components/layouts/sidebar/Section"
-import { SidebarMenu } from "@caseai-connect/ui/shad/sidebar"
+import { SidebarMenu, SidebarMenuItem } from "@caseai-connect/ui/shad/sidebar"
 import { useState } from "react"
 import { useTranslation } from "react-i18next"
 import type { ChatBot } from "@/features/chat-bots/chat-bots.models"
@@ -10,7 +10,7 @@ import { selectCurrentOrganization } from "@/features/organizations/organization
 import { useAppSelector } from "@/store/hooks"
 import { DeleteChatBotDialogWithOutTrigger } from "../chat-bots/DeleteChatBotDialog"
 import { EditChatBotDialogWithOutTrigger } from "../chat-bots/EditChatBotDialog"
-import { CreateProjectButton } from "./projects/CreateProjectButton"
+import { CreateProjectDialogWithTrigger } from "./projects/CreateProjectDialog"
 import { DeleteProjectDialog } from "./projects/DeleteProjectDialog"
 import { EditProjectDialog } from "./projects/EditProjectDialog"
 import { AdminProjectListItem, AppProjectListItem } from "./projects/ProjectListItem"
@@ -45,45 +45,38 @@ export function AdminNavProjects({ projects }: { projects: ProjectDto[] }) {
 
   return (
     <Section name={t("title")} className="group-data-[collapsible=icon]:hidden">
-      {projects.length === 0 ? (
-        <CreateProjectButton
-          organizationId={currentOrganization.id}
-          organizationName={currentOrganization.name}
-          isOpen={isCreateDialogOpen}
-          onOpenChange={setIsCreateDialogOpen}
-        />
-      ) : (
-        <>
-          <SidebarMenu>
-            {projects.map((project) => (
-              <AdminProjectListItem
-                key={project.id}
-                project={project}
-                organizationId={currentOrganization.id}
-                onEditItem={(item) =>
-                  handleItem({
-                    action: "edit",
-                    ...item,
-                  })
-                }
-                onDeleteItem={(item) =>
-                  handleItem({
-                    action: "delete",
-                    ...item,
-                  })
-                }
-              />
-            ))}
-          </SidebarMenu>
+      <SidebarMenu>
+        {projects.map((project) => (
+          <AdminProjectListItem
+            key={project.id}
+            project={project}
+            organizationId={currentOrganization.id}
+            onEditItem={(item) =>
+              handleItem({
+                action: "edit",
+                ...item,
+              })
+            }
+            onDeleteItem={(item) =>
+              handleItem({
+                action: "delete",
+                ...item,
+              })
+            }
+          />
+        ))}
+      </SidebarMenu>
 
-          <CreateProjectButton
+      <SidebarMenu>
+        <SidebarMenuItem>
+          <CreateProjectDialogWithTrigger
             organizationId={currentOrganization.id}
             organizationName={currentOrganization.name}
             isOpen={isCreateDialogOpen}
             onOpenChange={setIsCreateDialogOpen}
           />
-        </>
-      )}
+        </SidebarMenuItem>
+      </SidebarMenu>
 
       <EditProjectDialog
         project={item?.type === "project" && item.action === "edit" ? item.value : null}
@@ -121,8 +114,6 @@ export function AppNavProjects({ projects }: { projects: ProjectDto[] }) {
               key={project.id}
               project={project}
               organizationId={currentOrganization.id}
-              onEditItem={() => {}}
-              onDeleteItem={() => {}}
             />
           ))}
         </SidebarMenu>
