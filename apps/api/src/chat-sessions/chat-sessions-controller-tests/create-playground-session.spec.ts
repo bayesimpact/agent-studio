@@ -34,25 +34,20 @@ describe("createPlaygroundSession", () => {
       },
     } as EndpointRequest
 
-    const membership = userMembershipFactory.build({
-      userId: savedUser.id,
-      organizationId: organization.id,
-      role: "owner",
-      organization,
-      user: savedUser,
-    })
+    const membership = userMembershipFactory
+      .transient({ user: savedUser, organization: organization })
+      .owner()
+      .build()
     await membershipRepository.save(membership)
 
-    const project = projectFactory.build({
-      name: "Playground Project",
-      organizationId: organization.id,
-    })
+    const project = projectFactory
+      .transient({ organization: organization })
+      .build({ name: "Playground Project" })
     const savedProject = await projectRepository.save(project)
 
-    const chatBot = chatBotFactory.build({
+    const chatBot = chatBotFactory.transient({ project: savedProject }).build({
       name: "Playground Bot",
       defaultPrompt: "You are a helpful assistant",
-      projectId: savedProject.id,
     })
     const savedChatBot = await chatBotRepository.save(chatBot)
 

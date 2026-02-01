@@ -1,4 +1,3 @@
-import { ChatBotLocale, ChatBotModel } from "@caseai-connect/api-contracts"
 import type { Repository } from "typeorm"
 import { ChatBot } from "@/chat-bots/chat-bot.entity"
 import { chatBotFactory } from "@/chat-bots/chat-bot.factory"
@@ -14,6 +13,7 @@ import { Project } from "@/projects/project.entity"
 import { projectFactory } from "@/projects/project.factory"
 import { User } from "@/users/user.entity"
 import { userFactory } from "@/users/user.factory"
+import { ChatMessage } from "../chat-message.entity"
 import { ChatSession } from "../chat-session.entity"
 import { ChatSessionsModule } from "../chat-sessions.module"
 import { ChatSessionsService } from "../chat-sessions.service"
@@ -22,6 +22,7 @@ export function chatSessionControllerTestSetup() {
   let service: ChatSessionsService
   let chatSessionRepository: Repository<ChatSession>
   let chatBotRepository: Repository<ChatBot>
+  let chatMessageRepository: Repository<ChatMessage>
   let userRepository: Repository<User>
   let organizationRepository: Repository<Organization>
   let projectRepository: Repository<Project>
@@ -51,6 +52,7 @@ export function chatSessionControllerTestSetup() {
     await setup.startTransaction()
     service = setup.module.get<ChatSessionsService>(ChatSessionsService)
     chatSessionRepository = setup.getRepository(ChatSession)
+    chatMessageRepository = setup.getRepository(ChatMessage)
     chatBotRepository = setup.getRepository(ChatBot)
     userRepository = setup.getRepository(User)
     organizationRepository = setup.getRepository(Organization)
@@ -74,20 +76,16 @@ export function chatSessionControllerTestSetup() {
     testUser = userRepository.create(user)
     testUser = await userRepository.save(testUser)
 
-    const project = projectFactory.build({
+    const project = projectFactory.transient({ organization: testOrganization }).build({
       name: `Test Project ${uniqueId}`,
-      organizationId: testOrganization.id,
     })
     testProject = projectRepository.create(project)
     testProject = await projectRepository.save(testProject)
 
-    const chatBot = chatBotFactory.build({
+    const chatBot = chatBotFactory.transient({ project: testProject }).build({
       name: `Test ChatBot ${uniqueId}`,
       defaultPrompt: "You are a helpful assistant",
-      model: ChatBotModel.Gemini25Flash,
       temperature: 0,
-      locale: ChatBotLocale.EN,
-      projectId: testProject.id,
     })
     testChatBot = chatBotRepository.create(chatBot)
     testChatBot = await chatBotRepository.save(testChatBot)
@@ -102,6 +100,7 @@ export function chatSessionControllerTestSetup() {
     return {
       chatBotRepository,
       chatSessionRepository,
+      chatMessageRepository,
       membershipRepository,
       organizationRepository,
       projectRepository,

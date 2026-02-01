@@ -1,3 +1,4 @@
+import { chatMessageFactory } from "../chat-messages.factory"
 import { chatSessionControllerTestSetup } from "./test-setup"
 
 const getTestContext = chatSessionControllerTestSetup()
@@ -17,7 +18,7 @@ describe("createPlaygroundSession", () => {
     expect(session.chatbotId).toBe(testChatBot.id)
     expect(session.userId).toBe(testUser.id)
     expect(session.organizationId).toBe(testOrganization.id)
-    expect(session.messages).toEqual([])
+    expect(session.messages).toBeUndefined()
     expect(session.expiresAt).toBeDefined()
     expect(session.expiresAt).not.toBeNull()
 
@@ -29,7 +30,7 @@ describe("createPlaygroundSession", () => {
   })
 
   it("should reuse existing session if TTL not expired", async () => {
-    const { service, testChatBot, testUser, testOrganization, chatSessionRepository } =
+    const { service, testChatBot, testUser, testOrganization, chatMessageRepository } =
       getTestContext()
 
     const session1 = await service.createPlaygroundSession(
@@ -39,15 +40,9 @@ describe("createPlaygroundSession", () => {
     )
 
     // Add some messages to the session
-    session1.messages = [
-      {
-        id: "msg-1",
-        role: "user",
-        content: "Hello",
-        createdAt: new Date().toISOString(),
-      },
-    ]
-    await chatSessionRepository.save(session1)
+    await chatMessageRepository.save(
+      chatMessageFactory.user().transient({ session: session1 }).build(),
+    )
 
     // Create again - should return the same session
     const session2 = await service.createPlaygroundSession(
@@ -57,12 +52,19 @@ describe("createPlaygroundSession", () => {
     )
 
     expect(session1.id).toBe(session2.id)
-    expect(session2.messages).toHaveLength(1) // Messages preserved
+    const messages = await chatMessageRepository.find({ where: { sessionId: session2.id } })
+    expect(messages).toHaveLength(1) // Messages preserved
   })
 
   it("should reset messages and update TTL if session expired", async () => {
-    const { service, testChatBot, testUser, testOrganization, chatSessionRepository } =
-      getTestContext()
+    const {
+      service,
+      testChatBot,
+      testUser,
+      testOrganization,
+      chatSessionRepository,
+      chatMessageRepository,
+    } = getTestContext()
 
     const session1 = await service.createPlaygroundSession(
       testChatBot.id,
@@ -71,14 +73,9 @@ describe("createPlaygroundSession", () => {
     )
 
     // Add some messages
-    session1.messages = [
-      {
-        id: "msg-1",
-        role: "user",
-        content: "Hello",
-        createdAt: new Date().toISOString(),
-      },
-    ]
+    await chatMessageRepository.save(
+      chatMessageFactory.user().transient({ session: session1 }).build(),
+    )
 
     // Set TTL to expired (1 hour ago)
     const expiredDate = new Date()
@@ -94,7 +91,8 @@ describe("createPlaygroundSession", () => {
     )
 
     expect(session1.id).toBe(session2.id) // Same session
-    expect(session2.messages).toEqual([]) // Messages reset
+    const messages = await chatMessageRepository.find({ where: { sessionId: session2.id } })
+    expect(messages).toEqual([]) // Messages reset
     expect(session2.expiresAt).not.toBeNull()
     expect(session2.expiresAt!.getTime()).toBeGreaterThan(Date.now()) // TTL updated
   })

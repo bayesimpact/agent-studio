@@ -20,7 +20,7 @@ export const chatBotFactory = ChatBotFactory.define(({ sequence, params, transie
     id: params.id || randomUUID(),
     name: params.name || `Test Chat Bot ${sequence}`,
     defaultPrompt: params.defaultPrompt || `This is a test default prompt for bot ${sequence}`,
-    model: params.model || ChatBotModel.Gemini25Pro,
+    model: params.model || ChatBotModel.Gemini25Flash,
     temperature: params.temperature ?? 0.7,
     locale: params.locale || ChatBotLocale.EN,
     projectId: transientParams.project.id,

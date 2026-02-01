@@ -34,25 +34,20 @@ describe("createAppSession", () => {
       },
     } as EndpointRequest
 
-    const membership = userMembershipFactory.build({
-      userId: savedUser.id,
-      organizationId: organization.id,
-      role: "member",
-      organization,
-      user: savedUser,
-    })
+    const membership = userMembershipFactory
+      .transient({ user: savedUser, organization: organization })
+      .member()
+      .build()
     await membershipRepository.save(membership)
 
-    const project = projectFactory.build({
+    const project = projectFactory.transient({ organization: organization }).build({
       name: "App Project",
-      organizationId: organization.id,
     })
     const savedProject = await projectRepository.save(project)
 
-    const chatBot = chatBotFactory.build({
+    const chatBot = chatBotFactory.transient({ project: savedProject }).build({
       name: "App Bot",
       defaultPrompt: "You are a helpful assistant",
-      projectId: savedProject.id,
     })
     const savedChatBot = await chatBotRepository.save(chatBot)
 
