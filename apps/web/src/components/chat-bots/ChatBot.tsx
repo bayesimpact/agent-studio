@@ -2,9 +2,8 @@ import { Button } from "@caseai-connect/ui/shad/button"
 import { Spinner } from "@caseai-connect/ui/shad/spinner"
 import { AlertCircleIcon, CirclePlusIcon, MicIcon, PaperclipIcon } from "lucide-react"
 import { useTranslation } from "react-i18next"
-import type { ChatSessionMessage } from "@/features/chat-sessions/chat-sessions.models"
+import type { ChatSession, ChatSessionMessage } from "@/features/chat-sessions/chat-sessions.models"
 import {
-  selectCurrentChatSession,
   selectCurrentMessages,
   selectStreaming,
 } from "@/features/chat-sessions/chat-sessions.selectors"
@@ -24,10 +23,9 @@ import {
 import { MarkdownWrapper } from "../chat/MarkdownWrapper"
 import { DotsBackground } from "../DotsBackground"
 
-export function AdminChatBot() {
+export function AdminChatBot({ session }: { session: ChatSession }) {
   const { t } = useTranslation("chat")
   const dispatch = useAppDispatch()
-  const session = useAppSelector(selectCurrentChatSession)
   const messages = useAppSelector(selectCurrentMessages)
   const isStreaming = useAppSelector(selectStreaming)
 
@@ -77,10 +75,9 @@ export function AdminChatBot() {
   )
 }
 
-export function AppChatBot() {
+export function AppChatBot({ session }: { session: ChatSession }) {
   const { t } = useTranslation("chat")
   const dispatch = useAppDispatch()
-  const session = useAppSelector(selectCurrentChatSession)
   const messages = useAppSelector(selectCurrentMessages)
   const isStreaming = useAppSelector(selectStreaming)
 

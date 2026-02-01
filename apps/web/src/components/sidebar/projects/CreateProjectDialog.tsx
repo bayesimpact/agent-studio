@@ -10,26 +10,19 @@ import {
 } from "@caseai-connect/ui/shad/dialog"
 import { SidebarMenuButton } from "@caseai-connect/ui/shad/sidebar"
 import { PlusIcon } from "lucide-react"
+import { useState } from "react"
 import { useTranslation } from "react-i18next"
 import { CreateProjectForm } from "@/components/projects/CreateProjectForm"
+import type { Organization } from "@/features/organizations/organizations.models"
 
-export function CreateProjectDialogWithTrigger({
-  organizationId,
-  organizationName,
-  isOpen,
-  onOpenChange,
-}: {
-  organizationId: string
-  organizationName: string
-  isOpen: boolean
-  onOpenChange: (open: boolean) => void
-}) {
+export function CreateProjectDialogWithTrigger({ organization }: { organization: Organization }) {
+  const [open, setOpen] = useState(false)
   const handleSuccess = () => {
-    onOpenChange(false)
+    setOpen(false)
   }
   const { t } = useTranslation("project", { keyPrefix: "createButton" })
   return (
-    <Dialog open={isOpen} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <SidebarMenuButton tooltip={t("title")}>
           <PlusIcon />
@@ -39,9 +32,11 @@ export function CreateProjectDialogWithTrigger({
       <DialogContent>
         <DialogHeader>
           <DialogTitle>{t("title")}</DialogTitle>
-          <DialogDescription>{t("description", { organizationName })}</DialogDescription>
+          <DialogDescription>
+            {t("description", { organizationName: organization.name })}
+          </DialogDescription>
         </DialogHeader>
-        <CreateProjectForm organizationId={organizationId} onSuccess={handleSuccess} />
+        <CreateProjectForm organizationId={organization.id} onSuccess={handleSuccess} />
       </DialogContent>
     </Dialog>
   )

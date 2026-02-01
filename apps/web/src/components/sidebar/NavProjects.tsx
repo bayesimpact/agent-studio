@@ -2,122 +2,99 @@
 
 import type { ProjectDto } from "@caseai-connect/api-contracts"
 import { Section } from "@caseai-connect/ui/components/layouts/sidebar/Section"
-import { SidebarMenu, SidebarMenuItem } from "@caseai-connect/ui/shad/sidebar"
+import { SidebarMenu } from "@caseai-connect/ui/shad/sidebar"
 import { useState } from "react"
 import { useTranslation } from "react-i18next"
 import type { ChatBot } from "@/features/chat-bots/chat-bots.models"
+import { selectChatBots } from "@/features/chat-bots/chat-bots.selectors"
 import { selectCurrentOrganization } from "@/features/organizations/organizations.selectors"
 import { useAppSelector } from "@/store/hooks"
-import { DeleteChatBotDialogWithOutTrigger } from "../chat-bots/DeleteChatBotDialog"
-import { EditChatBotDialogWithOutTrigger } from "../chat-bots/EditChatBotDialog"
-import { CreateProjectDialogWithTrigger } from "./projects/CreateProjectDialog"
+import { AdminChatBotList, AppChatBotList } from "./projects/chat-bots/ChatBotList"
 import { DeleteProjectDialog } from "./projects/DeleteProjectDialog"
 import { EditProjectDialog } from "./projects/EditProjectDialog"
-import { AdminProjectListItem, AppProjectListItem } from "./projects/ProjectListItem"
+import { ProjectOptions } from "./projects/ProjectOptions"
 
-type Item = { action: "edit" | "delete" } & (
-  | {
-      type: "project"
-      value: ProjectDto
-    }
-  | {
-      type: "chatBot"
-      value: ChatBot
-    }
-)
+type Item = { action: "edit" | "delete"; value: ProjectDto }
 
 export function AdminNavProjects({ projects }: { projects: ProjectDto[] }) {
-  const { t } = useTranslation("project", { keyPrefix: "list" })
   const currentOrganization = useAppSelector(selectCurrentOrganization)
-  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
-
   const [item, setItem] = useState<Item | null>(null)
-
-  if (!currentOrganization) {
-    return null
-  }
-
-  const handleItem = (item: Item) => {
-    setItem(item)
-  }
-
+  const handleItem = (item: Item) => setItem(item)
   const handleClose = () => setItem(null)
-
+  if (!currentOrganization) return null
   return (
-    <Section name={t("title")} className="group-data-[collapsible=icon]:hidden">
-      <SidebarMenu>
-        {projects.map((project) => (
-          <AdminProjectListItem
-            key={project.id}
-            project={project}
-            organizationId={currentOrganization.id}
-            onEditItem={(item) =>
-              handleItem({
-                action: "edit",
-                ...item,
-              })
-            }
-            onDeleteItem={(item) =>
-              handleItem({
-                action: "delete",
-                ...item,
-              })
-            }
-          />
-        ))}
-      </SidebarMenu>
-
-      <SidebarMenu>
-        <SidebarMenuItem>
-          <CreateProjectDialogWithTrigger
-            organizationId={currentOrganization.id}
-            organizationName={currentOrganization.name}
-            isOpen={isCreateDialogOpen}
-            onOpenChange={setIsCreateDialogOpen}
-          />
-        </SidebarMenuItem>
-      </SidebarMenu>
+    <>
+      {projects.map((project) => (
+        <ProjectItem
+          key={project.id}
+          project={project}
+          currentOrganizationId={currentOrganization.id}
+          options={
+            <ProjectOptions
+              onEdit={() => handleItem({ action: "edit", value: project })}
+              onDelete={() => handleItem({ action: "delete", value: project })}
+            />
+          }
+          showEmptyProject={true}
+        >
+          {({ chatBots, organizationId }) => (
+            <AdminChatBotList chatBots={chatBots} organizationId={organizationId} />
+          )}
+        </ProjectItem>
+      ))}
 
       <EditProjectDialog
-        project={item?.type === "project" && item.action === "edit" ? item.value : null}
+        project={item?.action === "edit" ? item.value : null}
         onClose={handleClose}
       />
       <DeleteProjectDialog
-        project={item?.type === "project" && item.action === "delete" ? item.value : null}
+        project={item?.action === "delete" ? item.value : null}
         onClose={handleClose}
       />
-
-      <EditChatBotDialogWithOutTrigger
-        chatBot={item?.type === "chatBot" && item.action === "edit" ? item.value : null}
-        onClose={handleClose}
-      />
-      <DeleteChatBotDialogWithOutTrigger
-        chatBot={item?.type === "chatBot" && item.action === "delete" ? item.value : null}
-        onClose={handleClose}
-      />
-    </Section>
+    </>
   )
 }
 
 export function AppNavProjects({ projects }: { projects: ProjectDto[] }) {
-  const { t } = useTranslation("project", { keyPrefix: "list" })
   const currentOrganization = useAppSelector(selectCurrentOrganization)
   if (!currentOrganization) return null
   return (
-    <Section name={t("title")} className="group-data-[collapsible=icon]:hidden">
-      {projects.length === 0 ? (
-        <div>{t("noProjects")}</div>
-      ) : (
-        <SidebarMenu>
-          {projects.map((project) => (
-            <AppProjectListItem
-              key={project.id}
-              project={project}
-              organizationId={currentOrganization.id}
-            />
-          ))}
-        </SidebarMenu>
-      )}
+    <>
+      {projects.map((project) => (
+        <ProjectItem
+          key={project.id}
+          project={project}
+          currentOrganizationId={currentOrganization.id}
+        >
+          {({ chatBots, organizationId }) => (
+            <AppChatBotList chatBots={chatBots} organizationId={organizationId} />
+          )}
+        </ProjectItem>
+      ))}
+    </>
+  )
+}
+
+function ProjectItem({
+  project,
+  currentOrganizationId,
+  children,
+  options,
+  showEmptyProject = false,
+}: {
+  project: ProjectDto
+  currentOrganizationId: string
+  children: (args: { chatBots: ChatBot[]; organizationId: string }) => React.ReactNode
+  options?: React.ReactNode
+  showEmptyProject?: boolean
+}) {
+  const { t } = useTranslation("common")
+  const chatBots = useAppSelector(selectChatBots(project.id)) || []
+  const name = `${t("project")} - ${project.name}`
+  if (chatBots.length === 0 && !showEmptyProject) return null
+  return (
+    <Section name={name} options={options} className="group-data-[collapsible=icon]:hidden">
+      <SidebarMenu>{children({ chatBots, organizationId: currentOrganizationId })}</SidebarMenu>
     </Section>
   )
 }

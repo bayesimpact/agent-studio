@@ -13,16 +13,33 @@ import { ChatSessionsService } from "./chat-sessions.service"
 export class ChatSessionsController {
   constructor(private readonly chatSessionsService: ChatSessionsService) {}
 
-  @Get(ChatSessionsRoutes.getAll.path)
-  async getAllSessions(
+  @Get(ChatSessionsRoutes.getAllPlayground.path)
+  async getAllPlayground(
     @Req() request: EndpointRequest,
     @Param("chatBotId") chatBotId: string,
-  ): Promise<typeof ChatSessionsRoutes.getAll.response> {
+  ): Promise<typeof ChatSessionsRoutes.getAllPlayground.response> {
     const user = request.user
 
     const sessions = await this.chatSessionsService.getAllSessionsForChatBot({
       chatbotId: chatBotId,
       userId: user.id,
+      type: "playground",
+    })
+
+    return { data: sessions.map(toChatSessionDto) }
+  }
+
+  @Get(ChatSessionsRoutes.getAllApp.path)
+  async getAllApp(
+    @Req() request: EndpointRequest,
+    @Param("chatBotId") chatBotId: string,
+  ): Promise<typeof ChatSessionsRoutes.getAllApp.response> {
+    const user = request.user
+
+    const sessions = await this.chatSessionsService.getAllSessionsForChatBot({
+      chatbotId: chatBotId,
+      userId: user.id,
+      type: "app-private",
     })
 
     return { data: sessions.map(toChatSessionDto) }

@@ -2,10 +2,25 @@ import { createAsyncThunk } from "@reduxjs/toolkit"
 import type { RootState, ThunkExtraArg } from "@/store"
 import { generateId } from "@/utils/generate-id"
 import type { ChatSession, ChatSessionMessage } from "./chat-sessions.models"
-import { chatSessionActions } from "./chat-sessions.slice"
+import { chatSessionsActions } from "./chat-sessions.slice"
 import { streamChatResponse } from "./external/chat-session-streaming"
 
 type ThunkConfig = { state: RootState; extra: ThunkExtraArg }
+
+export const listSessions = createAsyncThunk<ChatSession[], { playground: boolean }, ThunkConfig>(
+  "chatSession/listSessions",
+  async ({ playground }, { extra: { services }, getState }) => {
+    const state = getState()
+    const chatBotId = state.chatBots.currentChatBotId
+    if (!chatBotId) {
+      throw new Error("No current chat bot ID found")
+    }
+    if (playground) {
+      return services.chatSession.getAllPlayground(chatBotId)
+    }
+    return services.chatSession.getAllApp(chatBotId)
+  },
+)
 
 export const createPlaygroundSession = createAsyncThunk<ChatSession, void, ThunkConfig>(
   "chatSession/createPlaygroundSession",
@@ -47,10 +62,10 @@ export const sendMessage = createAsyncThunk<
   ThunkConfig
 >("chatSession/sendMessage", async ({ sessionId, content }, { dispatch, getState, signal }) => {
   const state = getState()
-  const chatSessionState = state.chatSession
+  const chatSessionsState = state.chatSessions
 
   // Guard: don't allow sending if already streaming
-  if (chatSessionState.isStreaming) {
+  if (chatSessionsState.isStreaming) {
     return
   }
 
@@ -67,7 +82,7 @@ export const sendMessage = createAsyncThunk<
   }
 
   // Dispatch start streaming action (adds both messages optimistically)
-  dispatch(chatSessionActions.startStreaming({ userMessage, assistantMessageId }))
+  dispatch(chatSessionsActions.startStreaming({ userMessage, assistantMessageId }))
 
   try {
     // Stream the response
@@ -78,7 +93,7 @@ export const sendMessage = createAsyncThunk<
         onStart: (event) => {
           // Update the optimistic message ID to match the backend's ID
           dispatch(
-            chatSessionActions.updateAssistantMessageId({
+            chatSessionsActions.updateAssistantMessageId({
               oldMessageId: assistantMessageId,
               newMessageId: event.messageId,
             }),
@@ -86,7 +101,7 @@ export const sendMessage = createAsyncThunk<
         },
         onChunk: (event) => {
           dispatch(
-            chatSessionActions.appendAssistantChunk({
+            chatSessionsActions.appendAssistantChunk({
               messageId: event.messageId,
               chunk: event.content,
             }),
@@ -94,7 +109,7 @@ export const sendMessage = createAsyncThunk<
         },
         onEnd: (event) => {
           dispatch(
-            chatSessionActions.completeAssistantMessage({
+            chatSessionsActions.completeAssistantMessage({
               messageId: event.messageId,
               fullContent: event.fullContent,
             }),
@@ -102,7 +117,7 @@ export const sendMessage = createAsyncThunk<
         },
         onError: (event) => {
           dispatch(
-            chatSessionActions.failAssistantMessage({
+            chatSessionsActions.failAssistantMessage({
               messageId: event.messageId,
               error: event.error,
             }),
@@ -114,7 +129,7 @@ export const sendMessage = createAsyncThunk<
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : "Failed to stream response"
     dispatch(
-      chatSessionActions.failAssistantMessage({
+      chatSessionsActions.failAssistantMessage({
         messageId: assistantMessageId,
         error: errorMessage,
       }),

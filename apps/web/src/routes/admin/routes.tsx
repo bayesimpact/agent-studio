@@ -1,9 +1,11 @@
 import { ChatBotRoute } from "../ChatBotRoute"
+import { ChatSessionRoute } from "../ChatSessionRoute"
 import { DashboardRoute } from "../DashboardRoute"
 import { buildAdminPath, RouteNames } from "../helpers"
 import { ChatBotLoader } from "../loaders/ChatBotLoader"
 import { ChatBotsLoader } from "../loaders/ChatBotsLoader"
 import { ChatSessionLoader } from "../loaders/ChatSessionLoader"
+import { ChatSessionsLoader } from "../loaders/ChatSessionsLoader"
 import { ProjectLoader } from "../loaders/ProjectLoader"
 import { ProjectsLoader } from "../loaders/ProjectsLoader"
 import { UserHoc } from "../loaders/UserHoc"
@@ -57,11 +59,21 @@ export const adminRoutes = [
             path: buildAdminPath(RouteNames.CHAT_BOT),
             element: (
               <ChatBotLoader>
-                <ChatSessionLoader>
+                <ChatSessionsLoader>
                   <ChatBotRoute />
-                </ChatSessionLoader>
+                </ChatSessionsLoader>
               </ChatBotLoader>
             ),
+            children: [
+              {
+                path: buildAdminPath(RouteNames.CHAT_SESSION),
+                element: (
+                  <ChatSessionLoader>
+                    <ChatSessionRoute />
+                  </ChatSessionLoader>
+                ),
+              },
+            ],
           },
         ],
       },

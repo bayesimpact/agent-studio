@@ -1,6 +1,7 @@
 import { useEffect } from "react"
 import { useParams } from "react-router-dom"
 import { chatBotsActions } from "@/features/chat-bots/chat-bots.slice"
+import { chatSessionsActions } from "@/features/chat-sessions/chat-sessions.slice"
 import { organizationsActions } from "@/features/organizations/organizations.slice"
 import { projectsActions } from "@/features/projects/projects.slice"
 import { useAppDispatch } from "@/store/hooks"
@@ -42,4 +43,17 @@ export function useSetCurrentChatBotId() {
       dispatch(chatBotsActions.setCurrentChatBotId({ chatBotId: null }))
     }
   }, [dispatch, chatBotId])
+}
+
+export function useSetCurrentChatSessionId() {
+  const { chatSessionId } = useParams()
+  const dispatch = useAppDispatch()
+
+  useEffect(() => {
+    if (!chatSessionId) return
+    dispatch(chatSessionsActions.setCurrentChatSessionId({ chatSessionId }))
+    return () => {
+      dispatch(chatSessionsActions.setCurrentChatSessionId({ chatSessionId: null }))
+    }
+  }, [dispatch, chatSessionId])
 }

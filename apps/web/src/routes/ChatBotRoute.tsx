@@ -10,8 +10,8 @@ import {
 } from "@caseai-connect/ui/shad/sheet"
 import { useEffect } from "react"
 import { useTranslation } from "react-i18next"
+import { Outlet, useOutlet } from "react-router-dom"
 import { MarkdownWrapper } from "@/components/chat/MarkdownWrapper"
-import { AdminChatBot, AppChatBot } from "@/components/chat-bots/ChatBot"
 import { DeleteChatBotDialogWithTrigger } from "@/components/chat-bots/DeleteChatBotDialog"
 import { EditChatBotDialogWithTrigger } from "@/components/chat-bots/EditChatBotDialog"
 import { useSidebarLayout } from "@/components/layouts/sidebar/context"
@@ -23,6 +23,7 @@ import { LoadingRoute } from "./LoadingRoute"
 
 export function ChatBotRoute() {
   const { admin } = useAbility()
+  const outlet = useOutlet()
   const chatBot = useAppSelector(selectCurrentChatBot)
 
   const { setHeaderTitle, setHeaderRightSlot } = useSidebarLayout()
@@ -38,8 +39,9 @@ export function ChatBotRoute() {
   }, [headerTitle, setHeaderTitle, chatBot, setHeaderRightSlot, admin])
 
   if (!chatBot) return <LoadingRoute />
-  if (admin) return <AdminChatBot />
-  return <AppChatBot />
+
+  if (outlet) return <Outlet />
+  return <div>TODO: list of sessions for chatbot {chatBot.name}</div>
 }
 
 function HeaderRightSlot({ chatBot }: { chatBot: ChatBotType }) {

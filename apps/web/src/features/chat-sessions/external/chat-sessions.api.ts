@@ -9,6 +9,20 @@ import type { ChatSession, ChatSessionMessage } from "../chat-sessions.models"
 import type { IChatSessionsSpi } from "../chat-sessions.spi"
 
 export default {
+  getAllPlayground: async (chatBotId: string) => {
+    const axios = getAxiosInstance()
+    const response = await axios.get<typeof ChatSessionsRoutes.getAllPlayground.response>(
+      ChatSessionsRoutes.getAllPlayground.getPath({ chatBotId }),
+    )
+    return response.data.data.map(fromDto)
+  },
+  getAllApp: async (chatBotId: string) => {
+    const axios = getAxiosInstance()
+    const response = await axios.get<typeof ChatSessionsRoutes.getAllApp.response>(
+      ChatSessionsRoutes.getAllApp.getPath({ chatBotId }),
+    )
+    return response.data.data.map(fromDto)
+  },
   createPlaygroundSession: async (chatBotId: string) => {
     const axios = getAxiosInstance()
     const response = await axios.post<typeof ChatSessionsRoutes.createPlaygroundSession.response>(

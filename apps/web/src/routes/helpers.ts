@@ -7,6 +7,7 @@ export enum RouteNames {
   ORGANIZATION_DASHBOARD = "/o/:organizationId",
   PROJECT = "/o/:organizationId/p/:projectId",
   CHAT_BOT = "/o/:organizationId/p/:projectId/cb/:chatBotId",
+  CHAT_SESSION = "/o/:organizationId/p/:projectId/cb/:chatBotId/cs/:chatSessionId",
 
   // ADMIN ROUTES
   ADMIN = "/admin",
@@ -61,6 +62,24 @@ export const buildChatBotPath = ({
   admin: boolean
 }) => {
   const path = `/o/${organizationId}/p/${projectId}/cb/${chatBotId}`
+  if (admin) return buildAdminPath(path)
+  return buildAppPath(path)
+}
+
+export const buildChatSessionPath = ({
+  organizationId,
+  projectId,
+  chatBotId,
+  chatSessionId,
+  admin,
+}: {
+  organizationId: string
+  projectId: string
+  chatBotId: string
+  chatSessionId: string
+  admin: boolean
+}) => {
+  const path = `/o/${organizationId}/p/${projectId}/cb/${chatBotId}/cs/${chatSessionId}`
   if (admin) return buildAdminPath(path)
   return buildAppPath(path)
 }

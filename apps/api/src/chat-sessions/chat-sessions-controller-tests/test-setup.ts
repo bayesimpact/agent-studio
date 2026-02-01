@@ -10,6 +10,7 @@ import { organizationFactory } from "@/organizations/organization.factory"
 import { UserMembership } from "@/organizations/user-membership.entity"
 import { Project } from "@/projects/project.entity"
 import { User } from "@/users/user.entity"
+import { ChatSession } from "../chat-session.entity"
 import { ChatSessionsController } from "../chat-sessions.controller"
 import { ChatSessionsModule } from "../chat-sessions.module"
 
@@ -21,6 +22,7 @@ export function chatSessionsControllerTestSetup() {
   let membershipRepository: Repository<UserMembership>
   let projectRepository: Repository<Project>
   let chatBotRepository: Repository<ChatBot>
+  let chatSessionRepository: Repository<ChatSession>
   let organization: Organization
 
   beforeAll(async () => {
@@ -44,6 +46,7 @@ export function chatSessionsControllerTestSetup() {
     membershipRepository = setup.getRepository(UserMembership)
     projectRepository = setup.getRepository(Project)
     chatBotRepository = setup.getRepository(ChatBot)
+    chatSessionRepository = setup.getRepository(ChatSession)
 
     const org = organizationFactory.build({ name: "Org1" })
     organization = await organizationRepository.save(org)
@@ -60,13 +63,14 @@ export function chatSessionsControllerTestSetup() {
 
   return () => {
     return {
-      organizationRepository,
-      userRepository,
-      membershipRepository,
-      projectRepository,
       chatBotRepository,
+      chatSessionRepository,
       controller,
+      membershipRepository,
       organization,
+      organizationRepository,
+      projectRepository,
+      userRepository,
     }
   }
 }
