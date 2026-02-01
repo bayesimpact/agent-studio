@@ -1,6 +1,6 @@
-import type { ChatSession, ChatSessionMessage } from "./chat-session.models"
+import type { ChatSession, ChatSessionMessage } from "./chat-sessions.models"
 
-export interface IChatSessionSpi {
+export interface IChatSessionsSpi {
   createPlaygroundSession: (chatBotId: string) => Promise<ChatSession>
   createAppSession: (params: {
     chatBotId: string

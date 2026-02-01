@@ -1,5 +1,5 @@
 import chatBotsApi from "@/features/chat-bots/external/chat-bots.api"
-import chatSessionApi from "@/features/chat-session/external/chat-session.api"
+import chatSessionApi from "@/features/chat-sessions/external/chat-sessions.api"
 import meApi from "@/features/me/external/me.api"
 import organizationsApi from "@/features/organizations/external/organizations.api"
 import projectsApi from "@/features/projects/external/projects.api"

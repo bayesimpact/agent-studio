@@ -1,9 +1,9 @@
 import { useEffect } from "react"
-import { selectChatSessionStatus } from "@/features/chat-session/chat-session.selectors"
+import { selectChatSessionStatus } from "@/features/chat-sessions/chat-sessions.selectors"
 import {
   createAppSession,
   createPlaygroundSession,
-} from "@/features/chat-session/chat-session.thunks"
+} from "@/features/chat-sessions/chat-sessions.thunks"
 import { useAbility } from "@/hooks/use-ability"
 import { ADS } from "@/store/async-data-status"
 import { useAppDispatch, useAppSelector } from "@/store/hooks"

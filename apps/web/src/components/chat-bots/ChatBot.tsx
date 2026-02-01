@@ -2,13 +2,13 @@ import { Button } from "@caseai-connect/ui/shad/button"
 import { Spinner } from "@caseai-connect/ui/shad/spinner"
 import { AlertCircleIcon, CirclePlusIcon, MicIcon, PaperclipIcon } from "lucide-react"
 import { useTranslation } from "react-i18next"
-import type { ChatSessionMessage } from "@/features/chat-session/chat-session.models"
+import type { ChatSessionMessage } from "@/features/chat-sessions/chat-sessions.models"
 import {
   selectCurrentChatSession,
   selectCurrentMessages,
   selectStreaming,
-} from "@/features/chat-session/chat-session.selectors"
-import { sendMessage } from "@/features/chat-session/chat-session.thunks"
+} from "@/features/chat-sessions/chat-sessions.selectors"
+import { sendMessage } from "@/features/chat-sessions/chat-sessions.thunks"
 import { useAppDispatch, useAppSelector } from "@/store/hooks"
 import {
   Chat,

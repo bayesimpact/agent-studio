@@ -1,8 +1,8 @@
 import { createAsyncThunk } from "@reduxjs/toolkit"
 import type { RootState, ThunkExtraArg } from "@/store"
 import { generateId } from "@/utils/generate-id"
-import type { ChatSession, ChatSessionMessage } from "./chat-session.models"
-import { chatSessionActions } from "./chat-session.slice"
+import type { ChatSession, ChatSessionMessage } from "./chat-sessions.models"
+import { chatSessionActions } from "./chat-sessions.slice"
 import { streamChatResponse } from "./external/chat-session-streaming"
 
 type ThunkConfig = { state: RootState; extra: ThunkExtraArg }

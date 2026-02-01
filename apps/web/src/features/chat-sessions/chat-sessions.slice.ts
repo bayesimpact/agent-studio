@@ -1,11 +1,11 @@
 import { createSlice, isAnyOf } from "@reduxjs/toolkit"
 import { ADS, type AsyncData, defaultAsyncData } from "@/store/async-data-status"
-import type { ChatSession, ChatSessionMessage } from "./chat-session.models"
+import type { ChatSession, ChatSessionMessage } from "./chat-sessions.models"
 import {
   createAppSession,
   createPlaygroundSession,
   loadSessionMessages,
-} from "./chat-session.thunks"
+} from "./chat-sessions.thunks"
 
 type State = {
   data: AsyncData<ChatSession>
