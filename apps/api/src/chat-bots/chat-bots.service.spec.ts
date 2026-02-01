@@ -155,7 +155,7 @@ describe("ChatBotsService", () => {
         email: "another@example.com",
         auth0Id: "auth0|chat-bot-another-1",
       })
-      await userRepository.insert(anotherUser)
+      await userRepository.save(anotherUser)
 
       const createWrongfulChatBot = async () =>
         service.createChatBot({
@@ -273,14 +273,14 @@ describe("ChatBotsService", () => {
     it("should throw ForbiddenException when user is not a member", async () => {
       // Arrange
       const user = userFactory.build({ email: "nonmember@example.com" })
-      await userRepository.insert(user)
+      await userRepository.save(user)
       const organization = organizationFactory.build({ name: "Other Org" })
-      await organizationRepository.insert(organization)
+      await organizationRepository.save(organization)
 
       const project = projectFactory.transient({ organization }).build({
         name: "Other Project",
       })
-      await projectRepository.insert(project)
+      await projectRepository.save(project)
 
       const createWrongfulListChatBots = async () =>
         service.listChatBots({ userId: user.id, projectId: project.id })
@@ -309,7 +309,7 @@ describe("ChatBotsService", () => {
         name: "Second Template",
         defaultPrompt: "Prompt 2",
       })
-      await chatBotRepository.insert([template1, template2])
+      await chatBotRepository.save([template1, template2])
 
       // Act
       const result = await service.listChatBots({ userId: user.id, projectId: project.id })

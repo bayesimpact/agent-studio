@@ -23,6 +23,6 @@ export const createSingleUser = async (
   userParams: Partial<User> = {},
 ): Promise<User> => {
   const user = userFactory.build(userParams)
-  await repository.insert(user)
+  await repository.save(user)
   return user
 }

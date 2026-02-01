@@ -73,9 +73,9 @@ export async function createOrganizationWithOwner(
 }> {
   const { organization, user, membership } = buildOrganizationWithOwner(params)
 
-  await repositories.userRepository.insert(user)
-  await repositories.organizationRepository.insert(organization)
-  await repositories.membershipRepository.insert(membership)
+  await repositories.userRepository.save(user)
+  await repositories.organizationRepository.save(organization)
+  await repositories.membershipRepository.save(membership)
 
   return {
     organization,
@@ -114,7 +114,7 @@ export async function createOrganizationWithProject(
   })
 
   const project = projectFactory.transient({ organization }).build(params.project)
-  await repositories.projectRepository.insert(project)
+  await repositories.projectRepository.save(project)
 
   return {
     organization,
@@ -161,7 +161,7 @@ export async function createOrganizationWithChatBot(
   )
 
   const chatBot = chatBotFactory.transient({ project }).build(params.chatBot)
-  await repositories.chatBotRepository.insert(chatBot)
+  await repositories.chatBotRepository.save(chatBot)
 
   return {
     organization,
