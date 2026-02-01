@@ -100,6 +100,24 @@ export class ChatSessionsService {
     return { session, chatBot }
   }
 
+  async getAllSessionsForChatBot({
+    chatbotId,
+    userId,
+  }: {
+    chatbotId: string
+    userId: string
+  }): Promise<ChatSession[]> {
+    return await this.chatSessionRepository.find({
+      where: {
+        chatbotId,
+        userId,
+      },
+      order: {
+        createdAt: "DESC",
+      },
+    })
+  }
+
   /**
    * Creates or reuses a playground session for a user and chatbot
    * - If session exists and TTL not expired: returns existing session

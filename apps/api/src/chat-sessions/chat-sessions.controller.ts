@@ -1,5 +1,5 @@
 import type { ChatSessionDto } from "@caseai-connect/api-contracts"
-import { Body, Controller, Param, Post, Req, UseGuards } from "@nestjs/common"
+import { Body, Controller, Get, Param, Post, Req, UseGuards } from "@nestjs/common"
 import { JwtAuthGuard } from "@/auth/jwt-auth.guard"
 import { UserGuard } from "@/guards/user.guard"
 import type { EndpointRequest } from "@/request.interface"
@@ -12,6 +12,21 @@ import { ChatSessionsService } from "./chat-sessions.service"
 @Controller()
 export class ChatSessionsController {
   constructor(private readonly chatSessionsService: ChatSessionsService) {}
+
+  @Get(ChatSessionsRoutes.getAll.path)
+  async getAllSessions(
+    @Req() request: EndpointRequest,
+    @Param("chatBotId") chatBotId: string,
+  ): Promise<typeof ChatSessionsRoutes.getAll.response> {
+    const user = request.user
+
+    const sessions = await this.chatSessionsService.getAllSessionsForChatBot({
+      chatbotId: chatBotId,
+      userId: user.id,
+    })
+
+    return { data: sessions.map(toChatSessionDto) }
+  }
 
   @Post(ChatSessionsRoutes.createPlaygroundSession.path)
   async createPlaygroundSession(
