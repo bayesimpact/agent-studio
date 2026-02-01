@@ -9,13 +9,10 @@ describe("createPlaygroundSessionForChatBot", () => {
     const { service, testChatBot, testUser, testOrganization, membershipRepository } =
       getTestContext()
 
-    const membership = userMembershipFactory.build({
-      userId: testUser.id,
-      organizationId: testOrganization.id,
-      role: "owner",
-      user: testUser,
-      organization: testOrganization,
-    })
+    const membership = userMembershipFactory
+      .transient({ user: testUser, organization: testOrganization })
+      .owner()
+      .build()
     await membershipRepository.save(membership)
 
     const session = await service.createPlaygroundSessionForChatBot(testChatBot.id, testUser.id)
@@ -38,13 +35,10 @@ describe("createPlaygroundSessionForChatBot", () => {
   it("should throw NotFoundException when chat bot does not exist", async () => {
     const { service, testUser, testOrganization, membershipRepository } = getTestContext()
 
-    const membership = userMembershipFactory.build({
-      userId: testUser.id,
-      organizationId: testOrganization.id,
-      role: "owner",
-      user: testUser,
-      organization: testOrganization,
-    })
+    const membership = userMembershipFactory
+      .transient({ user: testUser, organization: testOrganization })
+      .owner()
+      .build()
     await membershipRepository.save(membership)
 
     const nonExistentChatBotId = "00000000-0000-0000-0000-000000000000"

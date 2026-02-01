@@ -41,6 +41,7 @@ export class ChatStreamingService {
     } as MessageEvent
 
     // Step 3: Convert messages to LLM format
+    // Messages are already loaded via relations in prepareForStreaming
     const llmMessages = this.convertToLLMFormat(updatedSession.messages)
 
     // Step 4: Build LLM config from chatbot

@@ -12,13 +12,22 @@ import { getRepositoryToken, TypeOrmModule } from "@nestjs/typeorm"
 import type { ObjectLiteral, QueryRunner, Repository } from "typeorm"
 import { DataSource, EntityManager } from "typeorm"
 import { ChatBot } from "@/chat-bots/chat-bot.entity"
+import { ChatMessage } from "@/chat-sessions/chat-message.entity"
 import { ChatSession } from "@/chat-sessions/chat-session.entity"
 import { Organization } from "@/organizations/organization.entity"
 import { UserMembership } from "@/organizations/user-membership.entity"
 import { Project } from "@/projects/project.entity"
 import { User } from "@/users/user.entity"
 
-const TEST_ENTITIES = [User, Organization, UserMembership, Project, ChatBot, ChatSession]
+const TEST_ENTITIES = [
+  User,
+  Organization,
+  UserMembership,
+  Project,
+  ChatBot,
+  ChatSession,
+  ChatMessage,
+]
 
 export interface TransactionalTestSetup {
   module: TestingModule

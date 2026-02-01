@@ -1,5 +1,6 @@
 import { ForbiddenException, NotFoundException } from "@nestjs/common/exceptions"
 import { userMembershipFactory } from "@/organizations/user-membership.factory"
+import { createChitChatConversation } from "../chat-messages.factory"
 import { chatSessionControllerTestSetup } from "./test-setup"
 
 const getTestContext = chatSessionControllerTestSetup()
@@ -12,17 +13,15 @@ describe("listMessagesForSession", () => {
       testUser,
       testOrganization,
       membershipRepository,
-      chatSessionRepository,
+      chatMessageRepository,
     } = getTestContext()
 
-    const membership = userMembershipFactory.build({
-      userId: testUser.id,
-      organizationId: testOrganization.id,
-      role: "member",
-      user: testUser,
-      organization: testOrganization,
-    })
-    await membershipRepository.save(membership)
+    await membershipRepository.save(
+      userMembershipFactory
+        .transient({ user: testUser, organization: testOrganization })
+        .owner()
+        .build(),
+    )
 
     const session = await service.createPlaygroundSession(
       testChatBot.id,
@@ -30,27 +29,15 @@ describe("listMessagesForSession", () => {
       testOrganization.id,
     )
 
-    session.messages = [
-      {
-        id: "msg-1",
-        role: "user",
-        content: "Hello",
-        createdAt: new Date().toISOString(),
-      },
-      {
-        id: "msg-2",
-        role: "assistant",
-        content: "Hi!",
-        createdAt: new Date().toISOString(),
-      },
-    ]
-    await chatSessionRepository.save(session)
+    await createChitChatConversation(session, { chatMessageRepository })
 
     const messages = await service.listMessagesForSession(session.id, testUser.id)
 
     expect(messages).toHaveLength(2)
-    expect(messages[0]?.id).toBe("msg-1")
-    expect(messages[1]?.id).toBe("msg-2")
+    expect(messages[0]?.role).toBe("user")
+    expect(messages[0]?.content).toBe("Hello")
+    expect(messages[1]?.role).toBe("assistant")
+    expect(messages[1]?.content).toBe("Hi!")
   })
 
   it("should throw NotFoundException when session does not exist", async () => {

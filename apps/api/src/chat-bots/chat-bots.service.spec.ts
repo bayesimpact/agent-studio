@@ -9,7 +9,12 @@ import {
   teardownTestDatabase,
 } from "@/common/test/test-transaction-manager"
 import { Organization } from "@/organizations/organization.entity"
-import { organizationFactory } from "@/organizations/organization.factory"
+import {
+  createOrganizationWithChatBot,
+  createOrganizationWithOwner,
+  createOrganizationWithProject,
+  organizationFactory,
+} from "@/organizations/organization.factory"
 import { UserMembership } from "@/organizations/user-membership.entity"
 import { Project } from "@/projects/project.entity"
 import { projectFactory } from "@/projects/project.factory"
@@ -56,32 +61,16 @@ describe("ChatBotsService", () => {
 
   describe("createChatBot", () => {
     it("should create a ChatBot when user is owner", async () => {
-      // Arrange
-      const user = userFactory.build({
-        email: "owner@example.com",
-        auth0Id: "auth0|chat-bot-owner-1",
+      const { user, project } = await createOrganizationWithProject({
+        organizationRepository,
+        userRepository,
+        membershipRepository,
+        projectRepository,
       })
-      const savedUser = await userRepository.save(user)
-      const org = organizationFactory.build({ name: "Test Org" })
-      const savedOrg = await organizationRepository.save(org)
 
-      const membership = membershipRepository.create({
-        userId: savedUser.id,
-        organizationId: savedOrg.id,
-        role: "owner",
-      })
-      await membershipRepository.save(membership)
-
-      const project = projectFactory.build({
-        name: "Test Project",
-        organizationId: savedOrg.id,
-      })
-      const savedProject = await projectRepository.save(project)
-
-      // Act
       const result = await service.createChatBot({
-        userId: savedUser.id,
-        projectId: savedProject.id,
+        userId: user.id,
+        projectId: project.id,
         name: "My Template",
         defaultPrompt: "This is a default prompt",
         model: ChatBotModel.Gemini25Flash,
@@ -92,7 +81,7 @@ describe("ChatBotsService", () => {
       // Assert
       expect(result.name).toBe("My Template")
       expect(result.defaultPrompt).toBe("This is a default prompt")
-      expect(result.projectId).toBe(savedProject.id)
+      expect(result.projectId).toBe(project.id)
       expect(result.id).toBeDefined()
 
       const savedTemplate = await chatBotRepository.findOne({
@@ -103,32 +92,20 @@ describe("ChatBotsService", () => {
     })
 
     it("should create a ChatBot when user is admin", async () => {
-      // Arrange
-      const user = userFactory.build({
-        email: "admin@example.com",
-        auth0Id: "auth0|chat-bot-admin-1",
-      })
-      const savedUser = await userRepository.save(user)
-      const org = organizationFactory.build({ name: "Admin Org" })
-      const savedOrg = await organizationRepository.save(org)
-
-      const membership = membershipRepository.create({
-        userId: savedUser.id,
-        organizationId: savedOrg.id,
-        role: "admin",
-      })
-      await membershipRepository.save(membership)
-
-      const project = projectFactory.build({
-        name: "Admin Project",
-        organizationId: savedOrg.id,
-      })
-      const savedProject = await projectRepository.save(project)
+      const { user, project } = await createOrganizationWithProject(
+        {
+          organizationRepository,
+          userRepository,
+          membershipRepository,
+          projectRepository,
+        },
+        { membership: { role: "admin" } },
+      )
 
       // Act
       const result = await service.createChatBot({
-        userId: savedUser.id,
-        projectId: savedProject.id,
+        userId: user.id,
+        projectId: project.id,
         name: "Admin Template",
         defaultPrompt: "Admin prompt",
         model: ChatBotModel.Gemini25Flash,
@@ -142,218 +119,135 @@ describe("ChatBotsService", () => {
     })
 
     it("should throw ForbiddenException when name is less than 3 characters", async () => {
-      // Arrange
-      const user = userFactory.build({
-        email: "owner@example.com",
-        auth0Id: "auth0|owner-short",
+      const { user, project } = await createOrganizationWithProject({
+        organizationRepository,
+        userRepository,
+        membershipRepository,
+        projectRepository,
       })
-      const savedUser = await userRepository.save(user)
-      const org = organizationFactory.build({ name: "Test Org" })
-      const savedOrg = await organizationRepository.save(org)
 
-      const membership = membershipRepository.create({
-        userId: savedUser.id,
-        organizationId: savedOrg.id,
-        role: "owner",
-      })
-      await membershipRepository.save(membership)
-
-      const project = projectFactory.build({
-        name: "Test Project",
-        organizationId: savedOrg.id,
-      })
-      const savedProject = await projectRepository.save(project)
+      const createWrongfulChatBot = async () =>
+        service.createChatBot({
+          userId: user.id,
+          projectId: project.id,
+          name: "AB",
+          defaultPrompt: "Prompt",
+          model: ChatBotModel.Gemini25Flash,
+          temperature: 0,
+          locale: ChatBotLocale.EN,
+        })
 
       // Act & Assert
-      await expect(
-        service.createChatBot({
-          userId: savedUser.id,
-          projectId: savedProject.id,
-          name: "AB",
-          defaultPrompt: "Prompt",
-          model: ChatBotModel.Gemini25Flash,
-          temperature: 0,
-          locale: ChatBotLocale.EN,
-        }),
-      ).rejects.toThrow(ForbiddenException)
-      await expect(
-        service.createChatBot({
-          userId: savedUser.id,
-          projectId: savedProject.id,
-          name: "AB",
-          defaultPrompt: "Prompt",
-          model: ChatBotModel.Gemini25Flash,
-          temperature: 0,
-          locale: ChatBotLocale.EN,
-        }),
-      ).rejects.toThrow("ChatBot name must be at least 3 characters long")
+      await expect(createWrongfulChatBot()).rejects.toThrow(ForbiddenException)
+      await expect(createWrongfulChatBot()).rejects.toThrow(
+        "ChatBot name must be at least 3 characters long",
+      )
     })
 
     it("should throw ForbiddenException when user is not a member", async () => {
-      // Arrange
-      const user = userFactory.build({
-        email: "nonmember@example.com",
-        auth0Id: "auth0|chat-bot-nonmember-create-1",
+      const { project } = await createOrganizationWithProject({
+        organizationRepository,
+        userRepository,
+        membershipRepository,
+        projectRepository,
       })
-      const savedUser = await userRepository.save(user)
-      const org = organizationFactory.build({ name: "Other Org" })
-      const savedOrg = await organizationRepository.save(org)
+      const anotherUser = userFactory.build({
+        email: "another@example.com",
+        auth0Id: "auth0|chat-bot-another-1",
+      })
+      await userRepository.save(anotherUser)
 
-      const project = projectFactory.build({
-        name: "Other Project",
-        organizationId: savedOrg.id,
-      })
-      const savedProject = await projectRepository.save(project)
+      const createWrongfulChatBot = async () =>
+        service.createChatBot({
+          userId: anotherUser.id,
+          projectId: project.id,
+          name: "Template",
+          defaultPrompt: "Prompt",
+          model: ChatBotModel.Gemini25Flash,
+          temperature: 0,
+          locale: ChatBotLocale.EN,
+        })
 
       // Act & Assert
-      await expect(
-        service.createChatBot({
-          userId: savedUser.id,
-          projectId: savedProject.id,
-          name: "Template",
-          defaultPrompt: "Prompt",
-          model: ChatBotModel.Gemini25Flash,
-          temperature: 0,
-          locale: ChatBotLocale.EN,
-        }),
-      ).rejects.toThrow(ForbiddenException)
-      await expect(
-        service.createChatBot({
-          userId: savedUser.id,
-          projectId: savedProject.id,
-          name: "Template",
-          defaultPrompt: "Prompt",
-          model: ChatBotModel.Gemini25Flash,
-          temperature: 0,
-          locale: ChatBotLocale.EN,
-        }),
-      ).rejects.toThrow("User does not have access to organization")
+      await expect(createWrongfulChatBot()).rejects.toThrow(ForbiddenException)
+      await expect(createWrongfulChatBot()).rejects.toThrow(
+        "User does not have access to organization",
+      )
     })
 
     it("should throw ForbiddenException when user is member but not owner or admin", async () => {
-      // Arrange
-      const user = userFactory.build({
-        email: "member@example.com",
-        auth0Id: "auth0|chat-bot-member-1",
-      })
-      const savedUser = await userRepository.save(user)
-      const org = organizationFactory.build({ name: "Member Org" })
-      const savedOrg = await organizationRepository.save(org)
+      const { user, project } = await createOrganizationWithProject(
+        {
+          organizationRepository,
+          userRepository,
+          membershipRepository,
+          projectRepository,
+        },
+        { membership: { role: "member" } },
+      )
 
-      const membership = membershipRepository.create({
-        userId: savedUser.id,
-        organizationId: savedOrg.id,
-        role: "member",
-      })
-      await membershipRepository.save(membership)
-
-      const project = projectFactory.build({
-        name: "Member Project",
-        organizationId: savedOrg.id,
-      })
-      const savedProject = await projectRepository.save(project)
+      const createWrongfulChatBot = async () =>
+        service.createChatBot({
+          userId: user.id,
+          projectId: project.id,
+          name: "Template",
+          defaultPrompt: "Prompt",
+          model: ChatBotModel.Gemini25Flash,
+          temperature: 0,
+          locale: ChatBotLocale.EN,
+        })
 
       // Act & Assert
-      await expect(
-        service.createChatBot({
-          userId: savedUser.id,
-          projectId: savedProject.id,
-          name: "Template",
-          defaultPrompt: "Prompt",
-          model: ChatBotModel.Gemini25Flash,
-          temperature: 0,
-          locale: ChatBotLocale.EN,
-        }),
-      ).rejects.toThrow(ForbiddenException)
-      await expect(
-        service.createChatBot({
-          userId: savedUser.id,
-          projectId: savedProject.id,
-          name: "Template",
-          defaultPrompt: "Prompt",
-          model: ChatBotModel.Gemini25Flash,
-          temperature: 0,
-          locale: ChatBotLocale.EN,
-        }),
-      ).rejects.toThrow("User must be an owner or admin")
+      await expect(createWrongfulChatBot()).rejects.toThrow(ForbiddenException)
+      await expect(createWrongfulChatBot()).rejects.toThrow("User must be an owner or admin")
     })
 
     it("should throw NotFoundException when project does not exist", async () => {
-      // Arrange
-      const user = userFactory.build({
-        email: "user@example.com",
-        auth0Id: "auth0|chat-bot-user-1",
+      const { user } = await createOrganizationWithOwner({
+        organizationRepository,
+        userRepository,
+        membershipRepository,
       })
-      const savedUser = await userRepository.save(user)
       const nonExistentProjectId = "00000000-0000-0000-0000-000000000000"
 
+      const createWrongfulChatBot = async () =>
+        service.createChatBot({
+          userId: user.id,
+          projectId: nonExistentProjectId,
+          name: "Template",
+          defaultPrompt: "Prompt",
+          model: ChatBotModel.Gemini25Flash,
+          temperature: 0,
+          locale: ChatBotLocale.EN,
+        })
+
       // Act & Assert
-      await expect(
-        service.createChatBot({
-          userId: savedUser.id,
-          projectId: nonExistentProjectId,
-          name: "Template",
-          defaultPrompt: "Prompt",
-          model: ChatBotModel.Gemini25Flash,
-          temperature: 0,
-          locale: ChatBotLocale.EN,
-        }),
-      ).rejects.toThrow(NotFoundException)
-      await expect(
-        service.createChatBot({
-          userId: savedUser.id,
-          projectId: nonExistentProjectId,
-          name: "Template",
-          defaultPrompt: "Prompt",
-          model: ChatBotModel.Gemini25Flash,
-          temperature: 0,
-          locale: ChatBotLocale.EN,
-        }),
-      ).rejects.toThrow("Project with id")
+      await expect(createWrongfulChatBot()).rejects.toThrow(NotFoundException)
+      await expect(createWrongfulChatBot()).rejects.toThrow("Project with id")
     })
   })
 
   describe("listChatBots", () => {
     it("should return ChatBots for a project", async () => {
-      // Arrange
-      const user = userFactory.build({
-        email: "list@example.com",
-        auth0Id: "auth0|chat-bot-list-1",
+      const { user, project } = await createOrganizationWithProject({
+        organizationRepository,
+        userRepository,
+        membershipRepository,
+        projectRepository,
       })
-      const savedUser = await userRepository.save(user)
-      const org = organizationFactory.build({ name: "List Org" })
-      const savedOrg = await organizationRepository.save(org)
 
-      const membership = membershipRepository.create({
-        userId: savedUser.id,
-        organizationId: savedOrg.id,
-        role: "member",
-      })
-      await membershipRepository.save(membership)
-
-      const project = projectFactory.build({
-        name: "List Project",
-        organizationId: savedOrg.id,
-      })
-      const savedProject = await projectRepository.save(project)
-
-      const template1 = chatBotFactory.build({
+      const template1 = chatBotFactory.transient({ project }).build({
         name: "Template 1",
         defaultPrompt: "Prompt 1",
-        projectId: savedProject.id,
       })
-      const template2 = chatBotFactory.build({
+      const template2 = chatBotFactory.transient({ project }).build({
         name: "Template 2",
         defaultPrompt: "Prompt 2",
-        projectId: savedProject.id,
       })
       await chatBotRepository.save([template1, template2])
 
       // Act
-      const result = await service.listChatBots({
-        userId: savedUser.id,
-        projectId: savedProject.id,
-      })
+      const result = await service.listChatBots({ userId: user.id, projectId: project.id })
 
       // Assert
       expect(result).toHaveLength(2)
@@ -362,33 +256,15 @@ describe("ChatBotsService", () => {
     })
 
     it("should return empty array when project has no ChatBots", async () => {
-      // Arrange
-      const user = userFactory.build({
-        email: "empty@example.com",
-        auth0Id: "auth0|chat-bot-empty-1",
+      const { user, project } = await createOrganizationWithProject({
+        organizationRepository,
+        userRepository,
+        membershipRepository,
+        projectRepository,
       })
-      const savedUser = await userRepository.save(user)
-      const org = organizationFactory.build({ name: "Empty Org" })
-      const savedOrg = await organizationRepository.save(org)
-
-      const membership = membershipRepository.create({
-        userId: savedUser.id,
-        organizationId: savedOrg.id,
-        role: "member",
-      })
-      await membershipRepository.save(membership)
-
-      const project = projectFactory.build({
-        name: "Empty Project",
-        organizationId: savedOrg.id,
-      })
-      const savedProject = await projectRepository.save(project)
 
       // Act
-      const result = await service.listChatBots({
-        userId: savedUser.id,
-        projectId: savedProject.id,
-      })
+      const result = await service.listChatBots({ userId: user.id, projectId: project.id })
 
       // Assert
       expect(result).toEqual([])
@@ -397,73 +273,46 @@ describe("ChatBotsService", () => {
     it("should throw ForbiddenException when user is not a member", async () => {
       // Arrange
       const user = userFactory.build({ email: "nonmember@example.com" })
-      const savedUser = await userRepository.save(user)
-      const org = organizationFactory.build({ name: "Other Org" })
-      const savedOrg = await organizationRepository.save(org)
+      await userRepository.save(user)
+      const organization = organizationFactory.build({ name: "Other Org" })
+      await organizationRepository.save(organization)
 
-      const project = projectFactory.build({
+      const project = projectFactory.transient({ organization }).build({
         name: "Other Project",
-        organizationId: savedOrg.id,
       })
-      const savedProject = await projectRepository.save(project)
+      await projectRepository.save(project)
+
+      const createWrongfulListChatBots = async () =>
+        service.listChatBots({ userId: user.id, projectId: project.id })
 
       // Act & Assert
-      await expect(
-        service.listChatBots({
-          userId: savedUser.id,
-          projectId: savedProject.id,
-        }),
-      ).rejects.toThrow(ForbiddenException)
-      await expect(
-        service.listChatBots({
-          userId: savedUser.id,
-          projectId: savedProject.id,
-        }),
-      ).rejects.toThrow("User does not have access to organization")
+      await expect(createWrongfulListChatBots()).rejects.toThrow(ForbiddenException)
+      await expect(createWrongfulListChatBots()).rejects.toThrow(
+        "User does not have access to organization",
+      )
     })
 
     it("should return ChatBots ordered by createdAt DESC", async () => {
-      // Arrange
-      const user = userFactory.build({
-        email: "ordered@example.com",
-        auth0Id: "auth0|chat-bot-ordered-1",
+      const { user, project } = await createOrganizationWithProject({
+        organizationRepository,
+        userRepository,
+        membershipRepository,
+        projectRepository,
       })
-      const savedUser = await userRepository.save(user)
-      const org = organizationFactory.build({ name: "Ordered Org" })
-      const savedOrg = await organizationRepository.save(org)
 
-      const membership = membershipRepository.create({
-        userId: savedUser.id,
-        organizationId: savedOrg.id,
-        role: "member",
-      })
-      await membershipRepository.save(membership)
-
-      const project = projectFactory.build({
-        name: "Ordered Project",
-        organizationId: savedOrg.id,
-      })
-      const savedProject = await projectRepository.save(project)
-
-      const template1 = chatBotFactory.build({
+      const template1 = chatBotFactory.transient({ project }).build({
         name: "First Template",
         defaultPrompt: "Prompt 1",
-        projectId: savedProject.id,
-        createdAt: new Date("2024-01-01"),
+        createdAt: new Date("2024-01-02"),
       })
-      const template2 = chatBotFactory.build({
+      const template2 = chatBotFactory.transient({ project }).build({
         name: "Second Template",
         defaultPrompt: "Prompt 2",
-        projectId: savedProject.id,
-        createdAt: new Date("2024-01-02"),
       })
       await chatBotRepository.save([template1, template2])
 
       // Act
-      const result = await service.listChatBots({
-        userId: savedUser.id,
-        projectId: savedProject.id,
-      })
+      const result = await service.listChatBots({ userId: user.id, projectId: project.id })
 
       // Assert
       expect(result).toHaveLength(2)
@@ -475,41 +324,17 @@ describe("ChatBotsService", () => {
 
   describe("updateChatBot", () => {
     it("should update a ChatBot when user is owner", async () => {
-      // Arrange
-      const user = userFactory.build({
-        email: "owner@example.com",
-        auth0Id: "auth0|chat-bot-owner-update-1",
+      const { user, chatBot } = await createOrganizationWithChatBot({
+        organizationRepository,
+        userRepository,
+        membershipRepository,
+        projectRepository,
+        chatBotRepository,
       })
-      const savedUser = await userRepository.save(user)
-      const org = organizationFactory.build({ name: "Update Org" })
-      const savedOrg = await organizationRepository.save(org)
-
-      const membership = membershipRepository.create({
-        userId: savedUser.id,
-        organizationId: savedOrg.id,
-        role: "owner",
-      })
-      await membershipRepository.save(membership)
-
-      const project = projectFactory.build({
-        name: "Update Project",
-        organizationId: savedOrg.id,
-      })
-      const savedProject = await projectRepository.save(project)
-
-      const template = chatBotFactory.build({
-        name: "Original Template",
-        defaultPrompt: "Original Prompt",
-        projectId: savedProject.id,
-      })
-      const savedTemplate = await chatBotRepository.save(template)
 
       // Act
       const result = await service.updateChatBot({
-        required: {
-          userId: savedUser.id,
-          chatBotId: savedTemplate.id,
-        },
+        required: { userId: user.id, chatBotId: chatBot.id },
         fieldsToUpdate: {
           name: "Updated Template",
           defaultPrompt: "Updated Prompt",
@@ -519,54 +344,29 @@ describe("ChatBotsService", () => {
       // Assert
       expect(result.name).toBe("Updated Template")
       expect(result.defaultPrompt).toBe("Updated Prompt")
-      expect(result.id).toBe(savedTemplate.id)
+      expect(result.id).toBe(chatBot.id)
 
-      const updatedTemplate = await chatBotRepository.findOne({
-        where: { id: savedTemplate.id },
-      })
+      const updatedTemplate = await chatBotRepository.findOne({ where: { id: chatBot.id } })
       expect(updatedTemplate?.name).toBe("Updated Template")
       expect(updatedTemplate?.defaultPrompt).toBe("Updated Prompt")
     })
 
     it("should update only name when defaultPrompt is not provided", async () => {
-      // Arrange
-      const user = userFactory.build({
-        email: "owner@example.com",
-        auth0Id: "auth0|owner-update-partial",
-      })
-      const savedUser = await userRepository.save(user)
-      const org = organizationFactory.build({ name: "Partial Update Org" })
-      const savedOrg = await organizationRepository.save(org)
-
-      const membership = membershipRepository.create({
-        userId: savedUser.id,
-        organizationId: savedOrg.id,
-        role: "owner",
-      })
-      await membershipRepository.save(membership)
-
-      const project = projectFactory.build({
-        name: "Partial Project",
-        organizationId: savedOrg.id,
-      })
-      const savedProject = await projectRepository.save(project)
-
-      const template = chatBotFactory.build({
-        name: "Original Template",
-        defaultPrompt: "Original Prompt",
-        projectId: savedProject.id,
-      })
-      const savedTemplate = await chatBotRepository.save(template)
+      const { user, chatBot } = await createOrganizationWithChatBot(
+        {
+          organizationRepository,
+          userRepository,
+          membershipRepository,
+          projectRepository,
+          chatBotRepository,
+        },
+        { chatBot: { defaultPrompt: "Original Prompt" } },
+      )
 
       // Act
       const result = await service.updateChatBot({
-        required: {
-          userId: savedUser.id,
-          chatBotId: savedTemplate.id,
-        },
-        fieldsToUpdate: {
-          name: "Updated Name",
-        },
+        required: { userId: user.id, chatBotId: chatBot.id },
+        fieldsToUpdate: { name: "Updated Name" },
       })
 
       // Assert
@@ -575,326 +375,165 @@ describe("ChatBotsService", () => {
     })
 
     it("should throw ForbiddenException when name is less than 3 characters", async () => {
-      // Arrange
-      const user = userFactory.build({
-        email: "owner@example.com",
-        auth0Id: "auth0|owner-short-update",
+      const { user, chatBot } = await createOrganizationWithChatBot({
+        organizationRepository,
+        userRepository,
+        membershipRepository,
+        projectRepository,
+        chatBotRepository,
       })
-      const savedUser = await userRepository.save(user)
-      const org = organizationFactory.build({ name: "Test Org" })
-      const savedOrg = await organizationRepository.save(org)
 
-      const membership = membershipRepository.create({
-        userId: savedUser.id,
-        organizationId: savedOrg.id,
-        role: "owner",
-      })
-      await membershipRepository.save(membership)
-
-      const project = projectFactory.build({
-        name: "Test Project",
-        organizationId: savedOrg.id,
-      })
-      const savedProject = await projectRepository.save(project)
-
-      const template = chatBotFactory.build({
-        name: "Original Template",
-        defaultPrompt: "Original Prompt",
-        projectId: savedProject.id,
-      })
-      const savedTemplate = await chatBotRepository.save(template)
+      const createWrongfulUpdateChatBot = async () =>
+        service.updateChatBot({
+          required: { userId: user.id, chatBotId: chatBot.id },
+          fieldsToUpdate: { name: "AB" },
+        })
 
       // Act & Assert
-      await expect(
-        service.updateChatBot({
-          required: {
-            userId: savedUser.id,
-            chatBotId: savedTemplate.id,
-          },
-          fieldsToUpdate: {
-            name: "AB",
-          },
-        }),
-      ).rejects.toThrow(ForbiddenException)
-      await expect(
-        service.updateChatBot({
-          required: {
-            userId: savedUser.id,
-            chatBotId: savedTemplate.id,
-          },
-          fieldsToUpdate: {
-            name: "AB",
-          },
-        }),
-      ).rejects.toThrow("ChatBot name must be at least 3 characters long")
+      await expect(createWrongfulUpdateChatBot()).rejects.toThrow(ForbiddenException)
+      await expect(createWrongfulUpdateChatBot()).rejects.toThrow(
+        "ChatBot name must be at least 3 characters long",
+      )
     })
 
     it("should throw ForbiddenException when user is member but not owner or admin", async () => {
-      // Arrange
-      const user = userFactory.build({
-        email: "member@example.com",
-        auth0Id: "auth0|chat-bot-member-update-1",
-      })
-      const savedUser = await userRepository.save(user)
-      const org = organizationFactory.build({ name: "Member Org" })
-      const savedOrg = await organizationRepository.save(org)
+      const { user, chatBot } = await createOrganizationWithChatBot(
+        {
+          organizationRepository,
+          userRepository,
+          membershipRepository,
+          projectRepository,
+          chatBotRepository,
+        },
+        { membership: { role: "member" } },
+      )
 
-      const membership = membershipRepository.create({
-        userId: savedUser.id,
-        organizationId: savedOrg.id,
-        role: "member",
-      })
-      await membershipRepository.save(membership)
-
-      const project = projectFactory.build({
-        name: "Member Project",
-        organizationId: savedOrg.id,
-      })
-      const savedProject = await projectRepository.save(project)
-
-      const template = chatBotFactory.build({
-        name: "Template",
-        defaultPrompt: "Prompt",
-        projectId: savedProject.id,
-      })
-      const savedTemplate = await chatBotRepository.save(template)
+      const createWrongfulUpdateChatBot = async () =>
+        service.updateChatBot({
+          required: { userId: user.id, chatBotId: chatBot.id },
+          fieldsToUpdate: { name: "Updated" },
+        })
 
       // Act & Assert
-      await expect(
-        service.updateChatBot({
-          required: {
-            userId: savedUser.id,
-            chatBotId: savedTemplate.id,
-          },
-          fieldsToUpdate: {
-            name: "Updated",
-          },
-        }),
-      ).rejects.toThrow(ForbiddenException)
-      await expect(
-        service.updateChatBot({
-          required: {
-            userId: savedUser.id,
-            chatBotId: savedTemplate.id,
-          },
-          fieldsToUpdate: {
-            name: "Updated",
-          },
-        }),
-      ).rejects.toThrow("User must be an owner or admin")
+      await expect(createWrongfulUpdateChatBot()).rejects.toThrow(ForbiddenException)
+      await expect(createWrongfulUpdateChatBot()).rejects.toThrow("User must be an owner or admin")
     })
 
     it("should throw NotFoundException when chat bot does not exist", async () => {
-      // Arrange
-      const user = userFactory.build({
-        email: "user@example.com",
-        auth0Id: "auth0|chat-bot-user-update-1",
-      })
-      const savedUser = await userRepository.save(user)
+      const user = userFactory.build()
+      await userRepository.save(user)
       const nonExistentTemplateId = "00000000-0000-0000-0000-000000000000"
 
+      const createWrongfulUpdateChatBot = async () =>
+        service.updateChatBot({
+          required: { userId: user.id, chatBotId: nonExistentTemplateId },
+          fieldsToUpdate: { name: "Updated" },
+        })
+
       // Act & Assert
-      await expect(
-        service.updateChatBot({
-          required: {
-            userId: savedUser.id,
-            chatBotId: nonExistentTemplateId,
-          },
-          fieldsToUpdate: {
-            name: "Updated",
-          },
-        }),
-      ).rejects.toThrow(NotFoundException)
-      await expect(
-        service.updateChatBot({
-          required: { userId: savedUser.id, chatBotId: nonExistentTemplateId },
-          fieldsToUpdate: {
-            name: "Updated",
-          },
-        }),
-      ).rejects.toThrow("ChatBot with id")
+      await expect(createWrongfulUpdateChatBot()).rejects.toThrow(NotFoundException)
+      await expect(createWrongfulUpdateChatBot()).rejects.toThrow("ChatBot with id")
     })
   })
 
   describe("deleteChatBot", () => {
     it("should delete a ChatBot when user is owner", async () => {
-      // Arrange
-      const user = userFactory.build({
-        email: "owner@example.com",
-        auth0Id: "auth0|chat-bot-owner-delete-1",
+      const { user, chatBot } = await createOrganizationWithChatBot({
+        organizationRepository,
+        userRepository,
+        membershipRepository,
+        projectRepository,
+        chatBotRepository,
       })
-      const savedUser = await userRepository.save(user)
-      const org = organizationFactory.build({ name: "Delete Org" })
-      const savedOrg = await organizationRepository.save(org)
-
-      const membership = membershipRepository.create({
-        userId: savedUser.id,
-        organizationId: savedOrg.id,
-        role: "owner",
-      })
-      await membershipRepository.save(membership)
-
-      const project = projectFactory.build({
-        name: "Delete Project",
-        organizationId: savedOrg.id,
-      })
-      const savedProject = await projectRepository.save(project)
-
-      const template = chatBotFactory.build({
-        name: "Template to Delete",
-        defaultPrompt: "Prompt",
-        projectId: savedProject.id,
-      })
-      const savedTemplate = await chatBotRepository.save(template)
 
       // Act
-      await service.deleteChatBot(savedUser.id, savedTemplate.id)
+      await service.deleteChatBot(user.id, chatBot.id)
 
       // Assert
-      const deletedTemplate = await chatBotRepository.findOne({
-        where: { id: savedTemplate.id },
-      })
+      const deletedTemplate = await chatBotRepository.findOne({ where: { id: chatBot.id } })
       expect(deletedTemplate).toBeNull()
     })
 
     it("should delete a ChatBot when user is admin", async () => {
-      // Arrange
-      const user = userFactory.build({
-        email: "admin@example.com",
-        auth0Id: "auth0|chat-bot-admin-delete-1",
-      })
-      const savedUser = await userRepository.save(user)
-      const org = organizationFactory.build({ name: "Admin Delete Org" })
-      const savedOrg = await organizationRepository.save(org)
-
-      const membership = membershipRepository.create({
-        userId: savedUser.id,
-        organizationId: savedOrg.id,
-        role: "admin",
-      })
-      await membershipRepository.save(membership)
-
-      const project = projectFactory.build({
-        name: "Admin Delete Project",
-        organizationId: savedOrg.id,
-      })
-      const savedProject = await projectRepository.save(project)
-
-      const template = chatBotFactory.build({
-        name: "Admin Template to Delete",
-        defaultPrompt: "Prompt",
-        projectId: savedProject.id,
-      })
-      const savedTemplate = await chatBotRepository.save(template)
+      const { user, chatBot } = await createOrganizationWithChatBot(
+        {
+          organizationRepository,
+          userRepository,
+          membershipRepository,
+          projectRepository,
+          chatBotRepository,
+        },
+        { membership: { role: "admin" } },
+      )
 
       // Act
-      await service.deleteChatBot(savedUser.id, savedTemplate.id)
+      await service.deleteChatBot(user.id, chatBot.id)
 
       // Assert
-      const deletedTemplate = await chatBotRepository.findOne({
-        where: { id: savedTemplate.id },
-      })
+      const deletedTemplate = await chatBotRepository.findOne({ where: { id: chatBot.id } })
       expect(deletedTemplate).toBeNull()
     })
 
     it("should throw ForbiddenException when user is member", async () => {
-      // Arrange
-      const user = userFactory.build({
-        email: "member@example.com",
-        auth0Id: "auth0|chat-bot-member-delete-1",
-      })
-      const savedUser = await userRepository.save(user)
-      const org = organizationFactory.build({ name: "Member Delete Org" })
-      const savedOrg = await organizationRepository.save(org)
-
-      const membership = membershipRepository.create({
-        userId: savedUser.id,
-        organizationId: savedOrg.id,
-        role: "member",
-      })
-      await membershipRepository.save(membership)
-
-      const project = projectFactory.build({
-        name: "Member Delete Project",
-        organizationId: savedOrg.id,
-      })
-      const savedProject = await projectRepository.save(project)
-
-      const template = chatBotFactory.build({
-        name: "Should Not Delete",
-        defaultPrompt: "Prompt",
-        projectId: savedProject.id,
-      })
-      const savedTemplate = await chatBotRepository.save(template)
+      const { user, chatBot } = await createOrganizationWithChatBot(
+        {
+          organizationRepository,
+          userRepository,
+          membershipRepository,
+          projectRepository,
+          chatBotRepository,
+        },
+        { membership: { role: "member" } },
+      )
 
       // Act & Assert
-      await expect(service.deleteChatBot(savedUser.id, savedTemplate.id)).rejects.toThrow(
-        ForbiddenException,
-      )
-      await expect(service.deleteChatBot(savedUser.id, savedTemplate.id)).rejects.toThrow(
+      await expect(service.deleteChatBot(user.id, chatBot.id)).rejects.toThrow(ForbiddenException)
+      await expect(service.deleteChatBot(user.id, chatBot.id)).rejects.toThrow(
         "User must be an owner or admin",
       )
 
       // Verify template still exists
-      const existingTemplate = await chatBotRepository.findOne({
-        where: { id: savedTemplate.id },
-      })
+      const existingTemplate = await chatBotRepository.findOne({ where: { id: chatBot.id } })
       expect(existingTemplate).not.toBeNull()
     })
 
     it("should throw NotFoundException when chat bot does not exist", async () => {
       // Arrange
-      const user = userFactory.build({
-        email: "user@example.com",
-        auth0Id: "auth0|chat-bot-user-delete-1",
-      })
-      const savedUser = await userRepository.save(user)
+      const user = userFactory.build()
+      await userRepository.save(user)
       const nonExistentTemplateId = "00000000-0000-0000-0000-000000000000"
 
       // Act & Assert
-      await expect(service.deleteChatBot(savedUser.id, nonExistentTemplateId)).rejects.toThrow(
+      await expect(service.deleteChatBot(user.id, nonExistentTemplateId)).rejects.toThrow(
         NotFoundException,
       )
-      await expect(service.deleteChatBot(savedUser.id, nonExistentTemplateId)).rejects.toThrow(
+      await expect(service.deleteChatBot(user.id, nonExistentTemplateId)).rejects.toThrow(
         "ChatBot with id",
       )
     })
 
     it("should throw ForbiddenException when user is not a member", async () => {
-      // Arrange
-      const user = userFactory.build({
-        email: "nonmember@example.com",
-        auth0Id: "auth0|chat-bot-nonmember-delete-1",
+      const { chatBot } = await createOrganizationWithChatBot({
+        organizationRepository,
+        userRepository,
+        membershipRepository,
+        projectRepository,
+        chatBotRepository,
       })
-      const savedUser = await userRepository.save(user)
-      const org = organizationFactory.build({ name: "Other Org" })
-      const savedOrg = await organizationRepository.save(org)
+      const anotherUser = userFactory.build()
+      await userRepository.save(anotherUser)
 
-      const project = projectFactory.build({
-        name: "Other Project",
-        organizationId: savedOrg.id,
-      })
-      const savedProject = await projectRepository.save(project)
-
-      const template = chatBotFactory.build({
-        name: "Other Template",
-        defaultPrompt: "Prompt",
-        projectId: savedProject.id,
-      })
-      const savedTemplate = await chatBotRepository.save(template)
+      const createWrongfulDeleteChatBot = async () =>
+        service.deleteChatBot(anotherUser.id, chatBot.id)
 
       // Act & Assert
-      await expect(service.deleteChatBot(savedUser.id, savedTemplate.id)).rejects.toThrow(
-        ForbiddenException,
-      )
-      await expect(service.deleteChatBot(savedUser.id, savedTemplate.id)).rejects.toThrow(
+      await expect(createWrongfulDeleteChatBot()).rejects.toThrow(ForbiddenException)
+      await expect(createWrongfulDeleteChatBot()).rejects.toThrow(
         "User does not have access to organization",
       )
 
       // Verify template still exists
-      const existingTemplate = await chatBotRepository.findOne({
-        where: { id: savedTemplate.id },
-      })
+      const existingTemplate = await chatBotRepository.findOne({ where: { id: chatBot.id } })
       expect(existingTemplate).not.toBeNull()
     })
   })

@@ -186,13 +186,11 @@ describe("ProjectsService", () => {
       })
       await membershipRepository.save(membership)
 
-      const project1 = projectFactory.build({
+      const project1 = projectFactory.transient({ organization: savedOrg }).build({
         name: "Project 1",
-        organizationId: savedOrg.id,
       })
-      const project2 = projectFactory.build({
+      const project2 = projectFactory.transient({ organization: savedOrg }).build({
         name: "Project 2",
-        organizationId: savedOrg.id,
       })
       await projectRepository.save([project1, project2])
 
@@ -262,14 +260,12 @@ describe("ProjectsService", () => {
       })
       await membershipRepository.save(membership)
 
-      const project1 = projectFactory.build({
+      const project1 = projectFactory.transient({ organization: savedOrg }).build({
         name: "First Project",
-        organizationId: savedOrg.id,
         createdAt: new Date("2024-01-01"),
       })
-      const project2 = projectFactory.build({
+      const project2 = projectFactory.transient({ organization: savedOrg }).build({
         name: "Second Project",
-        organizationId: savedOrg.id,
         createdAt: new Date("2024-01-02"),
       })
       await projectRepository.save([project1, project2])
@@ -303,9 +299,8 @@ describe("ProjectsService", () => {
       })
       await membershipRepository.save(membership)
 
-      const project = projectFactory.build({
+      const project = projectFactory.transient({ organization: savedOrg }).build({
         name: "Project to Delete",
-        organizationId: savedOrg.id,
       })
       const savedProject = await projectRepository.save(project)
 
@@ -336,9 +331,8 @@ describe("ProjectsService", () => {
       })
       await membershipRepository.save(membership)
 
-      const project = projectFactory.build({
+      const project = projectFactory.transient({ organization: savedOrg }).build({
         name: "Admin Project to Delete",
-        organizationId: savedOrg.id,
       })
       const savedProject = await projectRepository.save(project)
 
@@ -369,9 +363,8 @@ describe("ProjectsService", () => {
       })
       await membershipRepository.save(membership)
 
-      const project = projectFactory.build({
+      const project = projectFactory.transient({ organization: savedOrg }).build({
         name: "Should Not Delete",
-        organizationId: savedOrg.id,
       })
       const savedProject = await projectRepository.save(project)
 
@@ -418,9 +411,8 @@ describe("ProjectsService", () => {
       const org = organizationFactory.build({ name: "Other Org" })
       const savedOrg = await organizationRepository.save(org)
 
-      const project = projectFactory.build({
+      const project = projectFactory.transient({ organization: savedOrg }).build({
         name: "Other Project",
-        organizationId: savedOrg.id,
       })
       const savedProject = await projectRepository.save(project)
 
