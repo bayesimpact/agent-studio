@@ -6,7 +6,7 @@ import { v4 } from "uuid"
 import { ChatBot } from "@/chat-bots/chat-bot.entity"
 import { UserMembership } from "@/organizations/user-membership.entity"
 import { ChatMessage } from "./chat-message.entity"
-import { ChatSession } from "./chat-session.entity"
+import { ChatSession, type ChatSessionType } from "./chat-session.entity"
 
 @Injectable()
 export class ChatSessionsService {
@@ -95,14 +95,17 @@ export class ChatSessionsService {
   async getAllSessionsForChatBot({
     chatbotId,
     userId,
+    type,
   }: {
     chatbotId: string
     userId: string
+    type: ChatSessionType
   }): Promise<ChatSession[]> {
     return await this.chatSessionRepository.find({
       where: {
         chatbotId,
         userId,
+        type,
       },
       order: {
         createdAt: "DESC",

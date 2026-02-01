@@ -1,9 +1,11 @@
 import { ChatBotRoute } from "../ChatBotRoute"
+import { ChatSessionRoute } from "../ChatSessionRoute"
 import { DashboardRoute } from "../DashboardRoute"
 import { buildAppPath, RouteNames } from "../helpers"
 import { ChatBotLoader } from "../loaders/ChatBotLoader"
 import { ChatBotsLoader } from "../loaders/ChatBotsLoader"
 import { ChatSessionLoader } from "../loaders/ChatSessionLoader"
+import { ChatSessionsLoader } from "../loaders/ChatSessionsLoader"
 import { ProjectLoader } from "../loaders/ProjectLoader"
 import { ProjectsLoader } from "../loaders/ProjectsLoader"
 import { UserHoc } from "../loaders/UserHoc"
@@ -48,11 +50,21 @@ export const appRoutes = [
             path: buildAppPath(RouteNames.CHAT_BOT),
             element: (
               <ChatBotLoader>
-                <ChatSessionLoader>
+                <ChatSessionsLoader>
                   <ChatBotRoute />
-                </ChatSessionLoader>
+                </ChatSessionsLoader>
               </ChatBotLoader>
             ),
+            children: [
+              {
+                path: buildAppPath(RouteNames.CHAT_SESSION),
+                element: (
+                  <ChatSessionLoader>
+                    <ChatSessionRoute />
+                  </ChatSessionLoader>
+                ),
+              },
+            ],
           },
         ],
       },

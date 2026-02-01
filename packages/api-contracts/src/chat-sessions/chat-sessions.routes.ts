@@ -3,9 +3,13 @@ import { defineRoute } from "../helpers"
 import type { ChatSessionDto, ChatSessionTypeDto } from "./chat-sessions.dto"
 
 export const ChatSessionsRoutes = {
-  getAll: defineRoute<ResponseData<ChatSessionDto[]>>({
+  getAllPlayground: defineRoute<ResponseData<ChatSessionDto[]>>({
     method: "get",
-    path: "chat-bots/:chatBotId/sessions",
+    path: "chat-bots/:chatBotId/playground/sessions",
+  }),
+  getAllApp: defineRoute<ResponseData<ChatSessionDto[]>>({
+    method: "get",
+    path: "chat-bots/:chatBotId/app/sessions",
   }),
   createPlaygroundSession: defineRoute<ResponseData<ChatSessionDto>>({
     method: "post",

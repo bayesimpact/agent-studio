@@ -4,7 +4,7 @@ import { authSliceReducer } from "@/features/auth/auth.slice"
 import { chatBotsMiddleware } from "@/features/chat-bots/chat-bots.middleware"
 import { chatBotsSliceReducer } from "@/features/chat-bots/chat-bots.slice"
 import { chatSessionMiddleware } from "@/features/chat-sessions/chat-sessions.middleware"
-import { chatSessionSliceReducer } from "@/features/chat-sessions/chat-sessions.slice"
+import { chatSessionsSliceReducer } from "@/features/chat-sessions/chat-sessions.slice"
 import { meSliceReducer } from "@/features/me/me.slice"
 import { notificationsSliceReducer } from "@/features/notifications/notifications.slice"
 import { organizationsMiddleware } from "@/features/organizations/organizations.middleware"
@@ -18,11 +18,11 @@ export const store = configureStore({
   reducer: {
     auth: authSliceReducer,
     chatBots: chatBotsSliceReducer,
+    chatSessions: chatSessionsSliceReducer,
     me: meSliceReducer,
     notifications: notificationsSliceReducer,
     organizations: organizationsSliceReducer,
     projects: projectsSliceReducer,
-    chatSession: chatSessionSliceReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({

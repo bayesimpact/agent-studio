@@ -2,7 +2,7 @@ import type { ThunkDispatch, UnknownAction } from "@reduxjs/toolkit"
 import type { Services } from "@/di/services"
 import type { authSliceReducer } from "@/features/auth/auth.slice"
 import type { chatBotsSliceReducer } from "@/features/chat-bots/chat-bots.slice"
-import type { chatSessionSliceReducer } from "@/features/chat-sessions/chat-sessions.slice"
+import type { chatSessionsSliceReducer } from "@/features/chat-sessions/chat-sessions.slice"
 import type { meSliceReducer } from "@/features/me/me.slice"
 import type { notificationsSliceReducer } from "@/features/notifications/notifications.slice"
 import type { organizationsSliceReducer } from "@/features/organizations/organizations.slice"
@@ -13,11 +13,11 @@ import type { projectsSliceReducer } from "@/features/projects/projects.slice"
 export type RootState = {
   auth: ReturnType<typeof authSliceReducer>
   chatBots: ReturnType<typeof chatBotsSliceReducer>
+  chatSessions: ReturnType<typeof chatSessionsSliceReducer>
   me: ReturnType<typeof meSliceReducer>
   notifications: ReturnType<typeof notificationsSliceReducer>
   organizations: ReturnType<typeof organizationsSliceReducer>
   projects: ReturnType<typeof projectsSliceReducer>
-  chatSession: ReturnType<typeof chatSessionSliceReducer>
 }
 
 // Extra argument passed to thunks for dependency injection

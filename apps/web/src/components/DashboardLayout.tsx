@@ -1,5 +1,6 @@
 import type { ProjectDto } from "@caseai-connect/api-contracts"
 import { Header } from "@caseai-connect/ui/components/layouts/sidebar/Header"
+import { SidebarMenu, SidebarMenuItem } from "@caseai-connect/ui/shad/sidebar"
 import { SlidersHorizontalIcon, SparklesIcon } from "lucide-react"
 import { Outlet } from "react-router-dom"
 import type { User } from "@/features/me/me.models"
@@ -9,6 +10,7 @@ import { buildOrganizationPath } from "@/routes/helpers"
 import { useAppSelector } from "@/store/hooks"
 import { SidebarLayout } from "./layouts/SidebarLayout"
 import { AdminNavProjects, AppNavProjects } from "./sidebar/NavProjects"
+import { CreateProjectDialogWithTrigger } from "./sidebar/projects/CreateProjectDialog"
 
 export function DashboardLayout({ user, projects }: { user: User; projects: ProjectDto[] }) {
   const { admin } = useAbility()
@@ -30,7 +32,19 @@ export function DashboardLayout({ user, projects }: { user: User; projects: Proj
           />
         }
         sidebarContentChildren={
-          admin ? <AdminNavProjects projects={projects} /> : <AppNavProjects projects={projects} />
+          admin ? (
+            <>
+              <AdminNavProjects projects={projects} />
+
+              <SidebarMenu>
+                <SidebarMenuItem>
+                  <CreateProjectDialogWithTrigger organization={organization} />
+                </SidebarMenuItem>
+              </SidebarMenu>
+            </>
+          ) : (
+            <AppNavProjects projects={projects} />
+          )
         }
         user={{
           name: user.name,
