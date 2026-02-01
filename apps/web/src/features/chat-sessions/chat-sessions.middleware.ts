@@ -4,9 +4,9 @@ import {
   createAppSession,
   createPlaygroundSession,
   loadSessionMessages,
-} from "@/features/chat-session/chat-session.thunks"
+} from "@/features/chat-sessions/chat-sessions.thunks"
 import type { AppDispatch, RootState } from "@/store"
-import type { ChatSession } from "./chat-session.models"
+import type { ChatSession } from "./chat-sessions.models"
 
 // Create typed listener middleware
 export const listenerMiddleware = createListenerMiddleware<RootState, AppDispatch>()

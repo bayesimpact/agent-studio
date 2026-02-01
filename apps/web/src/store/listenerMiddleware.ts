@@ -4,7 +4,7 @@ import { authActions } from "@/features/auth/auth.slice"
 import {
   createPlaygroundSession,
   loadSessionMessages,
-} from "@/features/chat-session/chat-session.thunks"
+} from "@/features/chat-sessions/chat-sessions.thunks"
 import { meActions } from "@/features/me/me.slice"
 import { fetchMe } from "@/features/me/me.thunks"
 import { organizationsActions } from "@/features/organizations/organizations.slice"

@@ -1,6 +1,6 @@
 import { services } from "@/external/axios.services"
 import type { IChatBotsSpi } from "@/features/chat-bots/chat-bots.spi"
-import type { IChatSessionSpi } from "@/features/chat-session/chat-session.spi"
+import type { IChatSessionsSpi } from "@/features/chat-sessions/chat-sessions.spi"
 import type { IMeSpi } from "@/features/me/me.spi"
 import type { IOrganizationsSpi } from "@/features/organizations/organizations.spi"
 import type { IProjectsSpi } from "@/features/projects/projects.spi"
@@ -10,7 +10,7 @@ export type Services = {
   organizations: IOrganizationsSpi
   projects: IProjectsSpi
   chatBots: IChatBotsSpi
-  chatSession: IChatSessionSpi
+  chatSession: IChatSessionsSpi
 }
 
 export const getServices = () => {

@@ -5,8 +5,8 @@ import {
   ChatSessionsRoutes,
 } from "@caseai-connect/api-contracts"
 import { getAxiosInstance } from "@/external/axios"
-import type { ChatSession, ChatSessionMessage } from "../chat-session.models"
-import type { IChatSessionSpi } from "../chat-session.spi"
+import type { ChatSession, ChatSessionMessage } from "../chat-sessions.models"
+import type { IChatSessionsSpi } from "../chat-sessions.spi"
 
 export default {
   createPlaygroundSession: async (chatBotId: string) => {
@@ -35,7 +35,7 @@ export default {
 
     return fromMessagesDto(response.data.data.messages)
   },
-} satisfies IChatSessionSpi
+} satisfies IChatSessionsSpi
 
 const fromDto = (dto: ChatSessionDto): ChatSession => ({
   id: dto.id,
