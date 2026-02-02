@@ -49,7 +49,7 @@ export function ChatBotRoute() {
     }
   }, [headerTitle, setHeaderTitle, chatBot, setHeaderRightSlot, admin])
 
-  const callback = useCallback(
+  const onSuccess = useCallback(
     (chatSessionId: string) => {
       navigate(buildPath("chatSession", { chatSessionId }))
     },
@@ -60,9 +60,9 @@ export function ChatBotRoute() {
   useEffect(() => {
     if (!chatBot || outlet || firstChatSession || sessionCreationInitiated.current) return
     sessionCreationInitiated.current = true
-    if (admin) dispatch(createPlaygroundSession({ callback }))
-    else dispatch(createAppSession({ callback }))
-  }, [chatBot, outlet, firstChatSession, admin, dispatch, callback])
+    if (admin) dispatch(createPlaygroundSession({ onSuccess }))
+    else dispatch(createAppSession({ onSuccess }))
+  }, [chatBot, outlet, firstChatSession, admin, dispatch, onSuccess])
 
   if (!chatBot) return <LoadingRoute />
 

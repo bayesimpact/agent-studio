@@ -40,7 +40,7 @@ listenerMiddleware.startListening({
 listenerMiddleware.startListening({
   actionCreator: createPlaygroundSession.fulfilled,
   effect: async (action, listenerApi) => {
-    const callback = action.meta.arg.callback
+    const callback = action.meta.arg.onSuccess
     const { chatBotId, id } = action.payload
     await listenerApi.dispatch(listSessions({ chatBotId, playground: true }))
     await sleep(200)
@@ -51,7 +51,7 @@ listenerMiddleware.startListening({
 listenerMiddleware.startListening({
   actionCreator: createAppSession.fulfilled,
   effect: async (action, listenerApi) => {
-    const callback = action.meta.arg.callback
+    const callback = action.meta.arg.onSuccess
     const { chatBotId, id } = action.payload
     await listenerApi.dispatch(listSessions({ chatBotId, playground: false }))
     await sleep(200)
