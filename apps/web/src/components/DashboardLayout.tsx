@@ -16,7 +16,7 @@ export function DashboardLayout({ user, projects }: { user: User; projects: Proj
   const { admin } = useAbility()
   const organization = useAppSelector(selectCurrentOrganization)
   const organizationName = organization?.name || "CaseAi"
-  const { organizationPath } = useBuildPath()
+  const { getPath } = useBuildPath()
 
   if (organization)
     return (
@@ -24,7 +24,7 @@ export function DashboardLayout({ user, projects }: { user: User; projects: Proj
         sidebarHeaderChildren={
           <Header
             Icon={admin ? SlidersHorizontalIcon : SparklesIcon}
-            to={organizationPath}
+            to={getPath("organization")}
             name={organizationName}
             subname={admin ? "Admin" : undefined}
             iconClassName={

@@ -50,14 +50,14 @@ export function AdminChatBotList({
   organizationId: string
 }) {
   const navigate = useNavigate()
-  const { projectPath } = useBuildPath()
+  const { getPath } = useBuildPath()
   const currentChatBotId = useAppSelector(selectCurrentChatBotId)
   const sessions = useAppSelector(selectChatSessions)
   const [item, setItem] = useState<Item | null>(null)
   const handleItem = (item: Item) => setItem(item)
   const handleClose = () => {
     setItem(null)
-    navigate(projectPath)
+    navigate(getPath("project"))
   }
   return (
     <>

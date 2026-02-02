@@ -16,7 +16,7 @@ export function OrganizationsLoader({
   children: (organizationId: string) => React.ReactNode
 }) {
   useSetCurrentOrganizationId()
-  const { onboardingPath } = useBuildPath()
+  const { getPath } = useBuildPath()
 
   const organization = useAppSelector(selectCurrentOrganization)
   const organizationsData = useAppSelector(selectOrganizationsData)
@@ -25,7 +25,7 @@ export function OrganizationsLoader({
 
   if (ADS.isFulfilled(organizationsData) && organization) {
     if (organizationsData.value.length === 0) {
-      return <Navigate to={onboardingPath} replace />
+      return <Navigate to={getPath("onboarding")} replace />
     } else return <>{children(organization.id)}</>
   }
 
