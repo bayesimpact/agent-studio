@@ -24,11 +24,11 @@ export function DeleteChatBotDialogWithTrigger({ chatBot }: { chatBot: ChatBot }
   const navigate = useNavigate()
   const [open, setOpen] = useState(false)
 
-  const { projectPath } = useBuildPath()
+  const { getPath } = useBuildPath()
 
   const handleSuccess = () => {
     setOpen(false)
-    navigate(projectPath)
+    navigate(getPath("project"))
   }
 
   const handleClose = () => {

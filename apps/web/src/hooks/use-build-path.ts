@@ -1,3 +1,4 @@
+import { useCallback, useMemo } from "react"
 import { useParams } from "react-router-dom"
 import { selectChatBots } from "@/features/chat-bots/chat-bots.selectors"
 import { selectChatSessions } from "@/features/chat-sessions/chat-sessions.selectors"
@@ -15,6 +16,14 @@ import {
 import { useAppSelector } from "@/store/hooks"
 import { useAbility } from "./use-ability"
 
+export type PathType =
+  | "organization"
+  | "project"
+  | "chatBot"
+  | "chatSession"
+  | "onboarding"
+  | "closestParent"
+
 export function useBuildPath() {
   const { admin } = useAbility()
   const { organizationId, projectId, chatBotId, chatSessionId } = useParams()
@@ -23,71 +32,90 @@ export function useBuildPath() {
   const chatBots = useAppSelector(selectChatBots(projectId))
   const chatSessions = useAppSelector(selectChatSessions)
 
-  const organizationPath =
-    organizationId && organizations?.find((org) => org.id === organizationId)
-      ? buildOrganizationPath({
-          organizationId,
-          admin,
-        })
-      : RouteNames.HOME
+  const organizationFound = useMemo(
+    () => (organizationId && organizations?.find((org) => org.id === organizationId)) || null,
+    [organizationId, organizations],
+  )
 
-  const projectPath =
-    organizationId &&
-    projectId &&
-    organizations?.find((org) => org.id === organizationId) &&
-    projects?.find((proj) => proj.id === projectId)
-      ? buildProjectPath({
-          organizationId,
-          projectId,
-          admin,
-        })
-      : organizationPath || RouteNames.HOME
+  const projectFound = useMemo(
+    () => (projectId && projects?.find((proj) => proj.id === projectId)) || null,
+    [projectId, projects],
+  )
 
-  const chatBotPath =
-    organizationId &&
-    projectId &&
-    chatBotId &&
-    organizations?.find((org) => org.id === organizationId) &&
-    projects?.find((proj) => proj.id === projectId) &&
-    chatBots?.find((cb) => cb.id === chatBotId)
-      ? buildChatBotPath({
-          organizationId,
-          projectId,
-          chatBotId,
-          admin,
-        })
-      : projectPath || organizationPath || RouteNames.HOME
+  const chatBotFound = useMemo(
+    () => (chatBotId && chatBots?.find((cb) => cb.id === chatBotId)) || null,
+    [chatBotId, chatBots],
+  )
 
-  const chatSessionPath =
-    organizationId &&
-    projectId &&
-    chatBotId &&
-    chatSessionId &&
-    organizations?.find((org) => org.id === organizationId) &&
-    projects?.find((proj) => proj.id === projectId) &&
-    chatBots?.find((cb) => cb.id === chatBotId) &&
-    chatSessions?.find((cs) => cs.id === chatSessionId)
-      ? buildChatSessionPath({
-          organizationId,
-          projectId,
-          chatBotId,
-          chatSessionId,
-          admin,
-        })
-      : chatBotPath || projectPath || organizationPath || RouteNames.HOME
+  const chatSessionFound = useMemo(
+    () => (chatSessionId && chatSessions?.find((cs) => cs.id === chatSessionId)) || null,
+    [chatSessionId, chatSessions],
+  )
 
-  const onboardingPath = admin
-    ? buildAdminPath(RouteNames.ONBOARDING)
-    : buildAppPath(RouteNames.ONBOARDING)
+  const getPath = useCallback(
+    (pathType: PathType): string => {
+      const organizationPath = organizationFound
+        ? buildOrganizationPath({
+            organizationId: organizationFound.id,
+            admin,
+          })
+        : RouteNames.HOME
 
-  const closestParentPath =
-    chatSessionPath || chatBotPath || projectPath || organizationPath || RouteNames.HOME
-  return {
-    chatBotPath,
-    chatSessionPath,
-    closestParentPath,
-    onboardingPath,
-    organizationPath,
-    projectPath,
-  }
+      if (pathType === "organization") {
+        return organizationPath
+      }
+
+      const projectPath =
+        organizationFound && projectFound
+          ? buildProjectPath({
+              organizationId: organizationFound.id,
+              projectId: projectFound.id,
+              admin,
+            })
+          : organizationPath
+
+      if (pathType === "project") {
+        return projectPath
+      }
+
+      const chatBotPath =
+        organizationFound && projectFound && chatBotFound
+          ? buildChatBotPath({
+              organizationId: organizationFound.id,
+              projectId: projectFound.id,
+              chatBotId: chatBotFound.id,
+              admin,
+            })
+          : projectPath
+
+      if (pathType === "chatBot") {
+        return chatBotPath
+      }
+
+      const chatSessionPath =
+        organizationFound && projectFound && chatBotFound && chatSessionFound
+          ? buildChatSessionPath({
+              organizationId: organizationFound.id,
+              projectId: projectFound.id,
+              chatBotId: chatBotFound.id,
+              chatSessionId: chatSessionFound.id,
+              admin,
+            })
+          : chatBotPath
+
+      if (pathType === "chatSession") {
+        return chatSessionPath
+      }
+
+      if (pathType === "onboarding") {
+        return admin ? buildAdminPath(RouteNames.ONBOARDING) : buildAppPath(RouteNames.ONBOARDING)
+      }
+
+      // closestParent
+      return chatSessionPath || chatBotPath || projectPath || organizationPath || RouteNames.HOME
+    },
+    [admin, organizationFound, projectFound, chatBotFound, chatSessionFound],
+  )
+
+  return { getPath }
 }
