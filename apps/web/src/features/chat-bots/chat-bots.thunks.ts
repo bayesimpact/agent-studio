@@ -10,10 +10,11 @@ export const listChatBots = createAsyncThunk<ChatBot[], { projectId: string }, T
 )
 
 export const createChatBot = createAsyncThunk<
-  void,
+  ChatBot,
   {
     projectId: string
     fields: Pick<ChatBot, "name" | "defaultPrompt" | "model" | "temperature" | "locale">
+    onSuccess: (chatBotId: string) => void
   },
   ThunkConfig
 >(

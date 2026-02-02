@@ -5,6 +5,7 @@ import type { AppDispatch, RootState } from "@/store/types"
 import { notificationsActions } from "../notifications/notifications.slice"
 import { selectProjectsData } from "../projects/projects.selectors"
 import { listProjects } from "../projects/projects.thunks"
+import type { ChatBot } from "./chat-bots.models"
 import { createChatBot, deleteChatBot, listChatBots, updateChatBot } from "./chat-bots.thunks"
 
 // Create typed listener middleware
@@ -19,13 +20,20 @@ listenerMiddleware.startListening({
     updateChatBot.fulfilled,
     listProjects.fulfilled,
   ),
-  effect: async (_, listenerApi) => {
+  effect: async (action, listenerApi) => {
     const projects = selectProjectsData(listenerApi.getState())
     if (!ADS.isFulfilled(projects)) return
 
     projects.value.forEach((project) => {
       listenerApi.dispatch(listChatBots({ projectId: project.id }))
     })
+
+    if (action.type === createChatBot.fulfilled.type) {
+      const callback = (action.meta as { arg: { onSuccess: (chatBotId: string) => void } }).arg
+        .onSuccess
+      const { id } = action.payload as ChatBot
+      callback(id)
+    }
   },
 })
 

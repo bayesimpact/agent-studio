@@ -4,7 +4,7 @@ import type { ChatBotDto, ListChatBotsResponseDto } from "./chat-bots.dto"
 
 export const ChatBotsRoutes = {
   createOne: defineRoute<
-    ResponseData<SuccessResponseDTO>,
+    ResponseData<ChatBotDto>,
     RequestPayload<Pick<ChatBotDto, "name" | "defaultPrompt" | "model" | "locale" | "temperature">>
   >({
     method: "post",

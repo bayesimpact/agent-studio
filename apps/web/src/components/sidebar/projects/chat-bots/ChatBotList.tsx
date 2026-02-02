@@ -6,26 +6,12 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@caseai-connect/ui/shad/dropdown-menu"
-import { ScrollArea } from "@caseai-connect/ui/shad/scroll-area"
-import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from "@caseai-connect/ui/shad/sheet"
-import {
-  SidebarMenuAction,
-  SidebarMenuButton,
-  SidebarMenuItem,
-  useSidebar,
-} from "@caseai-connect/ui/shad/sidebar"
-import { BotIcon, Edit, MoreHorizontal, PlusIcon, Trash2 } from "lucide-react"
+import { SidebarMenuAction, SidebarMenuItem, useSidebar } from "@caseai-connect/ui/shad/sidebar"
+import { BotIcon, Edit, MoreHorizontal, Trash2 } from "lucide-react"
 import { useState } from "react"
 import { useTranslation } from "react-i18next"
 import { useNavigate, useParams } from "react-router-dom"
-import { CreateChatBotForm } from "@/components/chat-bots/CreateChatBotForm"
+import { CreateChatBotDialogWithTrigger } from "@/components/chat-bots/CreateChatBotDialog"
 import { DeleteChatBotDialogWithOutTrigger } from "@/components/chat-bots/DeleteChatBotDialog"
 import { EditChatBotDialogWithOutTrigger } from "@/components/chat-bots/EditChatBotDialog"
 import type { ChatBot } from "@/features/chat-bots/chat-bots.models"
@@ -127,33 +113,6 @@ export function AppChatBotList({ chatBots }: { chatBots: ChatBot[] }) {
         </AppNavItem>
       ))}
     </>
-  )
-}
-function CreateChatBotDialogWithTrigger({ project }: { project: Project }) {
-  const { t } = useTranslation("chatBot", { keyPrefix: "create" })
-  const [open, setOpen] = useState(false)
-  return (
-    <div>
-      <Sheet modal open={open} onOpenChange={setOpen}>
-        <SheetTrigger asChild>
-          <SidebarMenuButton>
-            <PlusIcon />
-            <span>{t("title")}</span>
-          </SidebarMenuButton>
-        </SheetTrigger>
-        <SheetContent side="bottom" className="h-dvh">
-          <ScrollArea className="h-full">
-            <SheetHeader>
-              <SheetTitle>{t("title")}</SheetTitle>
-              <SheetDescription>{t("description", { projectName: project.name })}</SheetDescription>
-            </SheetHeader>
-            <div className="px-4 pb-4">
-              <CreateChatBotForm projectId={project.id} onSuccess={() => setOpen(false)} />
-            </div>
-          </ScrollArea>
-        </SheetContent>
-      </Sheet>
-    </div>
   )
 }
 

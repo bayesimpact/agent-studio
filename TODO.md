@@ -1,4 +1,7 @@
-# TODO
+# // FIXME: 
+- chat-sessions should be per chatbotId in store
+
+# // TODO:
 
 - create resources per orgId/projectId
 - upload file to create resource 

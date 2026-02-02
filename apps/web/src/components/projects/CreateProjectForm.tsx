@@ -7,7 +7,7 @@ import { ProjectForm } from "./ProjectForm"
 
 interface CreateProjectFormProps {
   organizationId: string
-  onSuccess?: () => void
+  onSuccess: (projectId: string) => void
 }
 
 export function CreateProjectForm({ organizationId, onSuccess }: CreateProjectFormProps) {
@@ -17,8 +17,7 @@ export function CreateProjectForm({ organizationId, onSuccess }: CreateProjectFo
   const error = useAppSelector(selectProjectsError)
 
   const handleSubmit = async (data: { name: string }) => {
-    dispatch(createProject({ name: data.name, organizationId }))
-    onSuccess?.()
+    dispatch(createProject({ payload: { name: data.name, organizationId }, onSuccess }))
   }
 
   const isLoading = ADS.isLoading(status)

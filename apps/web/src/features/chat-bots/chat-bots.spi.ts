@@ -5,7 +5,7 @@ export interface IChatBotsSpi {
   createOne: (
     params: { projectId: string },
     payload: Pick<ChatBot, "name" | "defaultPrompt" | "model" | "locale" | "temperature">,
-  ) => Promise<void>
+  ) => Promise<ChatBot>
   updateOne: (
     params: { chatBotId: string; projectId: string },
     payload: Partial<Pick<ChatBot, "name" | "defaultPrompt" | "model" | "locale" | "temperature">>,

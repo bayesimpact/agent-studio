@@ -4,9 +4,13 @@ import type { CreateProjectPayload, Project, UpdateProjectPayload } from "./proj
 
 type ThunkConfig = { state: RootState; extra: ThunkExtraArg }
 
-export const createProject = createAsyncThunk<Project, CreateProjectPayload, ThunkConfig>(
+export const createProject = createAsyncThunk<
+  Project,
+  { payload: CreateProjectPayload; onSuccess: (projectId: string) => void },
+  ThunkConfig
+>(
   "projects/create",
-  async (payload, { extra: { services } }) => await services.projects.createOne(payload),
+  async ({ payload }, { extra: { services } }) => await services.projects.createOne(payload),
 )
 
 export const listProjects = createAsyncThunk<Project[], { organizationId: string }, ThunkConfig>(
