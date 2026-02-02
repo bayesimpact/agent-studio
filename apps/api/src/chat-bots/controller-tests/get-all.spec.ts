@@ -1,95 +1,49 @@
 import { chatBotFactory } from "@/chat-bots/chat-bot.factory"
-import { userMembershipFactory } from "@/organizations/user-membership.factory"
+import { buildEndpointRequest } from "@/common/test/request.factory"
+import { createOrganizationWithProject } from "@/organizations/organization.factory"
 import { projectFactory } from "@/projects/project.factory"
-import type { EndpointRequest } from "@/request.interface"
 import { userFactory } from "@/users/user.factory"
 import { chatBotsControllerTestSetup } from "./test-setup"
 
 const getTestContext = chatBotsControllerTestSetup()
 
 describe("ChatBotsController - getAll", () => {
-  it("should return chat templates for a project", async () => {
-    const {
-      controller,
-      userRepository,
-      membershipRepository,
-      projectRepository,
-      chatBotRepository,
-      organization,
-    } = getTestContext()
-
-    const auth0Sub = "auth0|chat-bot-ctrl-list"
-    const mockRequest = {
-      user: {
-        sub: auth0Sub,
-        email: "list@example.com",
-      },
-    } as EndpointRequest
-
-    const user = userFactory.build({
-      auth0Id: auth0Sub,
-      email: "list@example.com",
+  it("should return chat bots for a project", async () => {
+    const { controller, chatBotRepository } = getTestContext()
+    const { user, project } = await createOrganizationWithProject(getTestContext(), {
+      membership: { role: "member" },
     })
-    const savedUser = await userRepository.save(user)
+    const mockRequest = buildEndpointRequest(user)
 
-    await membershipRepository.save(
-      userMembershipFactory.member().transient({ user: savedUser, organization }).build(),
-    )
-
-    const project = projectFactory.transient({ organization }).build({
-      name: "List Project",
-    })
-    const savedProject = await projectRepository.save(project)
-
-    // Create chat templates
-    const template1 = chatBotFactory.transient({ project: savedProject }).build({
-      name: "Template 1",
+    // Create chat bots
+    const chatBot1 = chatBotFactory.transient({ project }).build({
+      name: "ChatBot 1",
       defaultPrompt: "Prompt 1",
     })
-    const template2 = chatBotFactory.transient({ project: savedProject }).build({
-      name: "Template 2",
+    const chatBot2 = chatBotFactory.transient({ project }).build({
+      name: "ChatBot 2",
       defaultPrompt: "Prompt 2",
     })
-    await chatBotRepository.save([template1, template2])
+    await chatBotRepository.save([chatBot1, chatBot2])
 
-    const { data: result } = await controller.getAll(mockRequest, savedProject.id)
+    const { data: result } = await controller.getAll(mockRequest, project.id)
 
     expect(result.chatBots).toHaveLength(2)
-    expect(result.chatBots.map((t) => t.name)).toContain("Template 1")
-    expect(result.chatBots.map((t) => t.name)).toContain("Template 2")
+    expect(result.chatBots.map((chatBot) => chatBot.name)).toContain("ChatBot 1")
+    expect(result.chatBots.map((chatBot) => chatBot.name)).toContain("ChatBot 2")
     expect(result.chatBots[0]).toHaveProperty("id")
     expect(result.chatBots[0]).toHaveProperty("createdAt")
     expect(result.chatBots[0]).toHaveProperty("updatedAt")
   })
 
-  it("should return empty array when project has no chat templates", async () => {
-    const { controller, userRepository, membershipRepository, projectRepository, organization } =
-      getTestContext()
-
-    const auth0Sub = "auth0|chat-bot-ctrl-empty"
-    const mockRequest = {
-      user: {
-        sub: auth0Sub,
-        email: "empty@example.com",
-      },
-    } as EndpointRequest
-
-    const user = userFactory.build({
-      auth0Id: auth0Sub,
-      email: "empty@example.com",
+  it("should return empty array when project has no chat bots", async () => {
+    const { controller } = getTestContext()
+    const { user, project } = await createOrganizationWithProject(getTestContext(), {
+      membership: { role: "member" },
     })
-    const savedUser = await userRepository.save(user)
+    const mockRequest = buildEndpointRequest(user)
 
-    await membershipRepository.save(
-      userMembershipFactory.member().transient({ user: savedUser, organization }).build(),
-    )
-
-    const project = projectFactory.transient({ organization }).build({
-      name: "Empty Project",
-    })
-    const savedProject = await projectRepository.save(project)
-
-    const { data: result } = await controller.getAll(mockRequest, savedProject.id)
+    const { data: result } = await controller.getAll(mockRequest, project.id)
 
     expect(result.chatBots).toEqual([])
   })
@@ -97,20 +51,12 @@ describe("ChatBotsController - getAll", () => {
   it("should throw ForbiddenException when user is not a member", async () => {
     const { controller, projectRepository, userRepository, organization } = getTestContext()
 
-    const auth0Sub = "auth0|chat-bot-ctrl-nonmember"
-    const mockRequest = {
-      user: {
-        sub: auth0Sub,
-        email: "nonmember@example.com",
-      },
-    } as EndpointRequest
-
-    await userRepository.save(
-      userFactory.build({
-        auth0Id: auth0Sub,
-        email: "nonmember@example.com",
-      }),
-    )
+    const user = userFactory.build({
+      auth0Id: "auth0|chat-bot-ctrl-nonmember",
+      email: "nonmember@example.com",
+    })
+    await userRepository.save(user)
+    const mockRequest = buildEndpointRequest(user)
 
     const project = projectFactory.transient({ organization }).build({
       name: "Other Project",

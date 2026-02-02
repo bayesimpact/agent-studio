@@ -15,7 +15,10 @@ describe("UsersService", () => {
   let setup: Awaited<ReturnType<typeof setupTransactionalTestDatabase>>
 
   beforeAll(async () => {
-    setup = await setupTransactionalTestDatabase([User], [UsersService])
+    setup = await setupTransactionalTestDatabase({
+      featureEntities: [User],
+      providers: [UsersService],
+    })
     // Clear database once at the start to ensure clean state
     // Individual tests use transactions with rollback for isolation
     await clearTestDatabase(setup.dataSource)
