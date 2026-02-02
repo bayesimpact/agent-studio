@@ -22,7 +22,7 @@ export class ChatSessionsController {
     const user = request.user
 
     const sessions = await this.chatSessionsService.getAllSessionsForChatBot({
-      chatbotId: chatBotId,
+      chatBotId: chatBotId,
       userId: user.id,
       type: "playground",
     })
@@ -38,7 +38,7 @@ export class ChatSessionsController {
     const user = request.user
 
     const sessions = await this.chatSessionsService.getAllSessionsForChatBot({
-      chatbotId: chatBotId,
+      chatBotId: chatBotId,
       userId: user.id,
       type: "app-private",
     })
@@ -74,7 +74,7 @@ export class ChatSessionsController {
     }
 
     const session = await this.chatSessionsService.createAppPrivateSession({
-      chatbotId: chatBotId,
+      chatBotId: chatBotId,
       userId: user.id,
     })
 
@@ -85,7 +85,7 @@ export class ChatSessionsController {
 function toChatSessionDto(entity: ChatSession): ChatSessionDto {
   return {
     id: entity.id,
-    chatbotId: entity.chatbotId,
+    chatBotId: entity.chatBotId,
     type: entity.type,
     expiresAt: entity.expiresAt ? entity.expiresAt.getTime() : null,
   }

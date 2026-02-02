@@ -39,16 +39,16 @@ listenerMiddleware.startListening({
 listenerMiddleware.startListening({
   actionCreator: createPlaygroundSession.fulfilled,
   effect: async (action, listenerApi) => {
-    const { chatbotId } = action.payload
-    await listenerApi.dispatch(listSessions({ chatBotId: chatbotId, playground: true }))
+    const { chatBotId } = action.payload
+    await listenerApi.dispatch(listSessions({ chatBotId, playground: true }))
   },
 })
 
 listenerMiddleware.startListening({
   actionCreator: createAppSession.fulfilled,
   effect: async (action, listenerApi) => {
-    const { chatbotId } = action.payload
-    await listenerApi.dispatch(listSessions({ chatBotId: chatbotId, playground: false }))
+    const { chatBotId } = action.payload
+    await listenerApi.dispatch(listSessions({ chatBotId, playground: false }))
   },
 })
 

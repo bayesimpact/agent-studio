@@ -82,28 +82,28 @@ export class ChatSessionsService {
     }
 
     const chatBot = await this.chatBotRepository.findOne({
-      where: { id: session.chatbotId },
+      where: { id: session.chatBotId },
     })
 
     if (!chatBot) {
-      throw new NotFoundException(`ChatBot with id ${session.chatbotId} not found`)
+      throw new NotFoundException(`ChatBot with id ${session.chatBotId} not found`)
     }
 
     return { session, chatBot }
   }
 
   async getAllSessionsForChatBot({
-    chatbotId,
+    chatBotId,
     userId,
     type,
   }: {
-    chatbotId: string
+    chatBotId: string
     userId: string
     type: ChatSessionType
   }): Promise<ChatSession[]> {
     return await this.chatSessionRepository.find({
       where: {
-        chatbotId,
+        chatBotId,
         userId,
         type,
       },
@@ -121,14 +121,14 @@ export class ChatSessionsService {
    * Sets TTL to 24 hours from now
    */
   async createPlaygroundSession(
-    chatbotId: string,
+    chatBotId: string,
     userId: string,
     organizationId: string,
   ): Promise<ChatSession> {
     // Look for existing playground session for this user and chatbot
     const existingSession = await this.chatSessionRepository.findOne({
       where: {
-        chatbotId,
+        chatBotId,
         userId,
         organizationId,
         type: "playground",
@@ -154,7 +154,7 @@ export class ChatSessionsService {
 
     // No existing session: create new one
     const session = this.chatSessionRepository.create({
-      chatbotId,
+      chatBotId,
       userId,
       organizationId,
       type: "playground",
@@ -171,15 +171,15 @@ export class ChatSessionsService {
    */
   private async verifyUserCanCreatePlaygroundSession(
     userId: string,
-    chatbotId: string,
+    chatBotId: string,
   ): Promise<{ organizationId: string }> {
     const chatBot = await this.chatBotRepository.findOne({
-      where: { id: chatbotId },
+      where: { id: chatBotId },
       relations: ["project"],
     })
 
     if (!chatBot) {
-      throw new NotFoundException(`ChatBot with id ${chatbotId} not found`)
+      throw new NotFoundException(`ChatBot with id ${chatBotId} not found`)
     }
 
     const membership = await this.membershipRepository.findOne({
@@ -200,15 +200,15 @@ export class ChatSessionsService {
 
   private async verifyUserCanCreateAppPrivateSession(
     userId: string,
-    chatbotId: string,
+    chatBotId: string,
   ): Promise<{ organizationId: string }> {
     const chatBot = await this.chatBotRepository.findOne({
-      where: { id: chatbotId },
+      where: { id: chatBotId },
       relations: ["project"],
     })
 
     if (!chatBot) {
-      throw new NotFoundException(`ChatBot with id ${chatbotId} not found`)
+      throw new NotFoundException(`ChatBot with id ${chatBotId} not found`)
     }
 
     const membership = await this.membershipRepository.findOne({
@@ -231,23 +231,23 @@ export class ChatSessionsService {
    * Creates or reuses a playground session for a user and chatbot,
    * performing organization membership checks based on the chatbot's project.
    */
-  async createPlaygroundSessionForChatBot(chatbotId: string, userId: string): Promise<ChatSession> {
-    const { organizationId } = await this.verifyUserCanCreatePlaygroundSession(userId, chatbotId)
-    return this.createPlaygroundSession(chatbotId, userId, organizationId)
+  async createPlaygroundSessionForChatBot(chatBotId: string, userId: string): Promise<ChatSession> {
+    const { organizationId } = await this.verifyUserCanCreatePlaygroundSession(userId, chatBotId)
+    return this.createPlaygroundSession(chatBotId, userId, organizationId)
   }
 
   async createAppPrivateSession({
-    chatbotId,
+    chatBotId,
     userId,
   }: {
-    chatbotId: string
+    chatBotId: string
     userId: string
   }): Promise<ChatSession> {
-    const { organizationId } = await this.verifyUserCanCreateAppPrivateSession(userId, chatbotId)
+    const { organizationId } = await this.verifyUserCanCreateAppPrivateSession(userId, chatBotId)
     // Look for existing playground session for this user and chatbot
     const existingSession = await this.chatSessionRepository.findOne({
       where: {
-        chatbotId,
+        chatBotId,
         userId,
         organizationId,
         type: "app-private",
@@ -257,7 +257,7 @@ export class ChatSessionsService {
     if (existingSession) return existingSession
 
     const session = this.chatSessionRepository.create({
-      chatbotId,
+      chatBotId,
       userId,
       organizationId,
       type: "app-private",
@@ -271,12 +271,12 @@ export class ChatSessionsService {
    * No TTL (expiresAt is null)
    */
   async createProductionSession(
-    chatbotId: string,
+    chatBotId: string,
     userId: string,
     organizationId: string,
   ): Promise<ChatSession> {
     const session = this.chatSessionRepository.create({
-      chatbotId,
+      chatBotId,
       userId,
       organizationId,
       type: "production",
@@ -491,9 +491,9 @@ export class ChatSessionsService {
    * Deletes all playground sessions for a chatbot
    * Called when chatbot configuration changes
    */
-  async deletePlaygroundSessionsForChatBot(chatbotId: string): Promise<void> {
+  async deletePlaygroundSessionsForChatBot(chatBotId: string): Promise<void> {
     await this.chatSessionRepository.delete({
-      chatbotId,
+      chatBotId,
       type: "playground",
     })
   }
@@ -502,9 +502,9 @@ export class ChatSessionsService {
    * Deletes all sessions for a chatbot
    * Called when deleting a chatbot
    */
-  async deleteAllSessionsForChatBot(chatbotId: string): Promise<void> {
+  async deleteAllSessionsForChatBot(chatBotId: string): Promise<void> {
     await this.chatSessionRepository.delete({
-      chatbotId,
+      chatBotId,
     })
   }
 

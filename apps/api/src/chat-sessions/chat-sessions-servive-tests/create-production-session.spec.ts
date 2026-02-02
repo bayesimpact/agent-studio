@@ -14,7 +14,7 @@ describe("createProductionSession", () => {
 
     expect(session).toBeDefined()
     expect(session.type).toBe("production")
-    expect(session.chatbotId).toBe(testChatBot.id)
+    expect(session.chatBotId).toBe(testChatBot.id)
     expect(session.userId).toBe(testUser.id)
     expect(session.organizationId).toBe(testOrganization.id)
     expect(session.messages).toBeUndefined()

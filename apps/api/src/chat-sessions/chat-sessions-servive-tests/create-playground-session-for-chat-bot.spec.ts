@@ -19,7 +19,7 @@ describe("createPlaygroundSessionForChatBot", () => {
 
     expect(session).toBeDefined()
     expect(session.type).toBe("playground")
-    expect(session.chatbotId).toBe(testChatBot.id)
+    expect(session.chatBotId).toBe(testChatBot.id)
     expect(session.userId).toBe(testUser.id)
     expect(session.organizationId).toBe(testOrganization.id)
   })
