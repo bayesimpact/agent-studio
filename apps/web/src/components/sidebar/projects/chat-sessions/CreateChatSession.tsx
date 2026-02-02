@@ -1,18 +1,14 @@
+import { Button } from "@caseai-connect/ui/shad/button"
 import { SidebarMenuSubButton } from "@caseai-connect/ui/shad/sidebar"
 import { PlusIcon } from "lucide-react"
 import { useTranslation } from "react-i18next"
 import { useNavigate } from "react-router-dom"
-import {
-  createAppSession,
-  createPlaygroundSession,
-} from "@/features/chat-sessions/chat-sessions.thunks"
-import { useAbility } from "@/hooks/use-ability"
+import { createChatSession } from "@/features/chat-sessions/chat-sessions.thunks"
 import { useBuildPath } from "@/hooks/use-build-path"
 import { useAppDispatch } from "@/store/hooks"
 
-export function CreateChatSession() {
+export function CreateChatSession({ type }: { type: "button" | "menu" }) {
   const navigate = useNavigate()
-  const { admin } = useAbility()
   const { t } = useTranslation("chatSession", { keyPrefix: "create" })
   const dispatch = useAppDispatch()
   const { buildPath } = useBuildPath()
@@ -20,13 +16,13 @@ export function CreateChatSession() {
     navigate(buildPath("chatSession", { chatSessionId }))
   }
   const handleClick = () => {
-    if (admin) dispatch(createPlaygroundSession({ onSuccess }))
-    else dispatch(createAppSession({ onSuccess }))
+    dispatch(createChatSession({ onSuccess }))
   }
+  const Comp = type === "button" ? Button : SidebarMenuSubButton
   return (
-    <SidebarMenuSubButton onClick={handleClick} className="cursor-default">
+    <Comp onClick={handleClick} className="cursor-default">
       <PlusIcon />
       <span>{t("button")}</span>
-    </SidebarMenuSubButton>
+    </Comp>
   )
 }

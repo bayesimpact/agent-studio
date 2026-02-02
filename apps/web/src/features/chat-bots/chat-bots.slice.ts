@@ -1,10 +1,11 @@
 import { createSlice, type PayloadAction } from "@reduxjs/toolkit"
 import { ADS, type AsyncData, defaultAsyncData } from "@/store/async-data-status"
-import { projectsActions } from "../projects/projects.slice"
+import { initOrganization } from "../global.thunks"
+import type { Project } from "../projects/projects.models"
 import type { ChatBot } from "./chat-bots.models"
 import { listChatBots } from "./chat-bots.thunks"
 
-type DataType = Record<string, ChatBot[]> // keyed by projectId
+type DataType = Record<Project["id"], ChatBot[]> // keyed by projectId
 interface State {
   currentChatBotId: string | null
   data: AsyncData<DataType>
@@ -35,6 +36,26 @@ const slice = createSlice({
   },
   extraReducers: (builder) => {
     builder
+      .addCase(initOrganization.pending, (state) => {
+        if (!ADS.isFulfilled(state.data)) state.data.status = ADS.Loading
+        state.data.error = null
+      })
+      .addCase(initOrganization.fulfilled, (state, action) => {
+        state.data = {
+          status: ADS.Fulfilled,
+          error: null,
+          value: action.payload.projects.reduce((acc, project) => {
+            acc[project.id] = action.payload.chatBots[project.id] || []
+            return acc
+          }, {} as DataType),
+        }
+      })
+      .addCase(initOrganization.rejected, (state, action) => {
+        state.data.status = ADS.Error
+        state.data.error = action.error.message || "Failed to list chat bots"
+      })
+
+    builder
       .addCase(listChatBots.pending, (state) => {
         if (!ADS.isFulfilled(state.data)) state.data.status = ADS.Loading
         state.data.error = null
@@ -54,16 +75,6 @@ const slice = createSlice({
         state.data.status = ADS.Error
         state.data.error = action.error.message || "Failed to list chat bots"
       })
-
-    builder.addCase(projectsActions.setCurrentProjectId, (state, action) => {
-      const projectId = action.payload.projectId
-
-      if (projectId && ADS.isFulfilled(state.data) && state.data.value[projectId])
-        state.data.status = ADS.Fulfilled
-      else state.data.status = ADS.Uninitialized
-
-      state.data.error = null
-    })
   },
 })
 

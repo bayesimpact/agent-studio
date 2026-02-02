@@ -1,11 +1,14 @@
 import { createSlice, type PayloadAction } from "@reduxjs/toolkit"
 import { ADS, type AsyncData, defaultAsyncData } from "@/store/async-data-status"
+import type { ChatBot } from "../chat-bots/chat-bots.models"
+import { initOrganization } from "../global.thunks"
 import type { ChatSession, ChatSessionMessage } from "./chat-sessions.models"
 import { listSessions, loadSessionMessages } from "./chat-sessions.thunks"
 
+type DataType = Record<ChatBot["id"], ChatSession[]> // keyed by chatBotId
 type State = {
   currentChatSessionId: string | null
-  data: AsyncData<ChatSession[]>
+  data: AsyncData<DataType>
   messages: AsyncData<ChatSessionMessage[]>
   isStreaming: boolean
 }
@@ -23,7 +26,9 @@ const slice = createSlice({
   reducers: {
     setCurrentChatSessionId: (state, action: PayloadAction<{ chatSessionId: string | null }>) => {
       if (!ADS.isFulfilled(state.data)) return
-      const found = state.data.value.find((s) => s.id === action.payload.chatSessionId)
+      const found = Object.values(state.data.value)
+        .flat()
+        .find((s) => s.id === action.payload.chatSessionId)
       if (!found) return
 
       state.currentChatSessionId = action.payload.chatSessionId
@@ -96,13 +101,39 @@ const slice = createSlice({
   },
   extraReducers: (builder) => {
     builder
+      .addCase(initOrganization.pending, (state) => {
+        if (!ADS.isFulfilled(state.data)) state.data.status = ADS.Loading
+        state.data.error = null
+      })
+      .addCase(initOrganization.fulfilled, (state, action) => {
+        state.data = {
+          status: ADS.Fulfilled,
+          error: null,
+          value: Object.values(action.payload.chatBots)
+            .flat()
+            .reduce((acc, chatBot) => {
+              acc[chatBot.id] = action.payload.chatSessions[chatBot.id] || []
+              return acc
+            }, {} as DataType),
+        }
+      })
+      .addCase(initOrganization.rejected, (state, action) => {
+        state.data.status = ADS.Error
+        state.data.error = action.error.message || "Failed to list chat bots"
+      })
+
+    builder
       .addCase(listSessions.pending, (state) => {
         state.data.status = ADS.Loading
         state.data.error = null
       })
       .addCase(listSessions.fulfilled, (state, action) => {
+        const chatBotId = action.meta.arg.chatBotId
         state.data = {
-          value: action.payload,
+          value: {
+            ...state.data.value,
+            [chatBotId]: action.payload,
+          },
           status: ADS.Fulfilled,
           error: null,
         }

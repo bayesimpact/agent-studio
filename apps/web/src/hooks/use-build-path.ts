@@ -1,10 +1,11 @@
 import { useCallback } from "react"
 import { useParams } from "react-router-dom"
 import { selectChatBotsFromProjectId } from "@/features/chat-bots/chat-bots.selectors"
-import { selectChatSessions } from "@/features/chat-sessions/chat-sessions.selectors"
+import { selectChatSessionsFromChatBotId } from "@/features/chat-sessions/chat-sessions.selectors"
 import { selectOrganizations } from "@/features/organizations/organizations.selectors"
 import { selectProjects } from "@/features/projects/projects.selectors"
 import { buildAdminPath, buildAppPath, RouteNames } from "@/routes/helpers"
+import { ADS } from "@/store/async-data-status"
 import { useAppSelector } from "@/store/hooks"
 import { useAbility } from "./use-ability"
 
@@ -116,7 +117,7 @@ export function useClosestParentPath() {
   const organizations = useAppSelector(selectOrganizations)
   const projects = useAppSelector(selectProjects)
   const chatBots = useAppSelector(selectChatBotsFromProjectId(urlProjectId))
-  const chatSessions = useAppSelector(selectChatSessions)
+  const chatSessions = useAppSelector(selectChatSessionsFromChatBotId(urlChatBotId))
 
   const foundOrganization = useCallback(
     (organizationId: string | undefined) =>
@@ -132,13 +133,21 @@ export function useClosestParentPath() {
 
   const foundChatBot = useCallback(
     (chatBotId: string | undefined) =>
-      chatBotId ? chatBots?.find((cb) => cb.id === chatBotId) || null : null,
+      chatBotId
+        ? ADS.isFulfilled(chatBots)
+          ? chatBots.value.find((cb) => cb.id === chatBotId) || null
+          : null
+        : null,
     [chatBots],
   )
 
   const foundChatSession = useCallback(
     (chatSessionId: string | undefined) =>
-      chatSessionId ? chatSessions?.find((cs) => cs.id === chatSessionId) || null : null,
+      chatSessionId
+        ? ADS.isFulfilled(chatSessions)
+          ? chatSessions.value.find((cs) => cs.id === chatSessionId) || null
+          : null
+        : null,
     [chatSessions],
   )
 
@@ -214,7 +223,7 @@ const buildOrganizationPath = ({
   organizationId: string
   admin: boolean
 }) => {
-  const path = `/o/${organizationId}`
+  const path = `/o/${organizationId}/`
   if (admin) return buildAdminPath(path)
   return buildAppPath(path)
 }

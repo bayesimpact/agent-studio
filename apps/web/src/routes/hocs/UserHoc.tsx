@@ -8,15 +8,15 @@ import { NotFoundRoute } from "../NotFoundRoute"
 
 export function UserHoc({ children }: { children: (user: User) => React.ReactNode }) {
   const { admin } = useAbility()
-  const meData = useAppSelector(selectMeData)
+  const data = useAppSelector(selectMeData)
 
-  if (ADS.isError(meData)) return <NotFoundRoute />
+  if (ADS.isError(data)) return <NotFoundRoute />
 
-  if (ADS.isFulfilled(meData))
+  if (ADS.isFulfilled(data))
     return (
       <>
         {children({
-          ...meData.value,
+          ...data.value,
           admin,
         })}
       </>

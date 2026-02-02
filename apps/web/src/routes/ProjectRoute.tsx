@@ -13,21 +13,36 @@ import { Navigate, useOutlet } from "react-router-dom"
 import { CreateChatBotDialogWithoutTrigger } from "@/components/chat-bots/CreateChatBotDialog"
 // import { AdminChatBotsList, AppChatBotsList } from "@/components/chat-bots/ChatBotsList"
 import { useSidebarLayout } from "@/components/layouts/sidebar/context"
-import { selectChatBotsFromProjectId } from "@/features/chat-bots/chat-bots.selectors"
+import type { ChatBot } from "@/features/chat-bots/chat-bots.models"
 import type { Project } from "@/features/projects/projects.models"
-import { selectCurrentProject } from "@/features/projects/projects.selectors"
+import { useAbility } from "@/hooks/use-ability"
 import { useBuildPath } from "@/hooks/use-build-path"
-import { useAppSelector } from "@/store/hooks"
-import { NotFoundRoute } from "./NotFoundRoute"
 
-export function ProjectRoute() {
+export function ProjectRoute({ project, chatBots }: { project: Project; chatBots: ChatBot[] }) {
   const outlet = useOutlet()
+  const { admin } = useAbility()
   const { buildPath } = useBuildPath()
-
-  const project = useAppSelector(selectCurrentProject)
-  const chatBots = useAppSelector(selectChatBotsFromProjectId(project?.id))
   const firstChatBot = chatBots?.[0]
 
+  useHandleHeader({ project, outlet })
+
+  if (outlet) return outlet
+
+  if (firstChatBot)
+    return <Navigate to={buildPath("chatBot", { chatBotId: firstChatBot.id })} replace />
+
+  if (admin) return <NoChatBot project={project} />
+
+  return null
+}
+
+function useHandleHeader({
+  project,
+  outlet,
+}: {
+  project: Project | null
+  outlet: ReturnType<typeof useOutlet>
+}) {
   const { setHeaderTitle } = useSidebarLayout()
   const headerTitle = project ? project.name : "Dashboard"
 
@@ -35,21 +50,11 @@ export function ProjectRoute() {
     if (outlet) return
     setHeaderTitle(headerTitle)
   }, [outlet, headerTitle, setHeaderTitle])
-
-  if (!project) return <NotFoundRoute />
-
-  if (outlet) return outlet
-  if (firstChatBot) {
-    return <Navigate to={buildPath("chatBot", { chatBotId: firstChatBot.id })} replace />
-  }
-  return <NoChatBot project={project} />
 }
 
 function NoChatBot({ project }: { project: Project }) {
   const { t } = useTranslation("chatBot", { keyPrefix: "list" })
   const [open, setOpen] = useState(false)
-
-  if (!project) return null
   return (
     <div className="p-6">
       <Card>

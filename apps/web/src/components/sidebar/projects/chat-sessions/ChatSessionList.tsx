@@ -6,39 +6,44 @@ import {
 import { format } from "date-fns"
 import { MessagesSquareIcon } from "lucide-react"
 import { Link, useParams } from "react-router-dom"
-import type { ChatSession } from "@/features/chat-sessions/chat-sessions.models"
+import { selectChatSessionsFromChatBotId } from "@/features/chat-sessions/chat-sessions.selectors"
 import { useBuildPath } from "@/hooks/use-build-path"
+import { ADS } from "@/store/async-data-status"
+import { useAppSelector } from "@/store/hooks"
 import { getLocale } from "@/utils/get-locale"
 import type { MenuItem } from "../../types"
 import { CreateChatSession } from "./CreateChatSession"
 
 export function ChatSessionList({
-  sessions,
   chatBotId,
   projectId,
 }: {
   projectId: string
   chatBotId: string
-  sessions: ChatSession[]
 }) {
+  const { chatSessionId: urlChatSessionId } = useParams()
   const { buildPath } = useBuildPath()
-  const { chatSessionId: currentChatSessionId } = useParams()
-  const items: MenuItem[] = sessions.map((session) => ({
-    id: session.id,
-    title: format(new Date(session.createdAt), "dd MMMM yyyy HH:mm", {
-      locale: getLocale(),
-    }),
-    url: buildPath("chatSession", {
-      projectId,
-      chatBotId,
-      chatSessionId: session.id,
-    }),
-    isActive: currentChatSessionId === session.id,
-    icon: MessagesSquareIcon,
-  }))
+
+  const sessions = useAppSelector(selectChatSessionsFromChatBotId(chatBotId))
+
+  const items: MenuItem[] = ADS.isFulfilled(sessions)
+    ? sessions.value.map((session) => ({
+        id: session.id,
+        title: format(new Date(session.createdAt), "dd MMMM yyyy HH:mm", {
+          locale: getLocale(),
+        }),
+        url: buildPath("chatSession", {
+          projectId,
+          chatBotId,
+          chatSessionId: session.id,
+        }),
+        isActive: urlChatSessionId === session.id,
+        icon: MessagesSquareIcon,
+      }))
+    : []
   return (
     <SidebarMenuSub>
-      <CreateChatSession />
+      {items.length > 0 && <CreateChatSession type="menu" />}
 
       {items.map((item) => (
         <SidebarMenuSubItem key={item.id}>
