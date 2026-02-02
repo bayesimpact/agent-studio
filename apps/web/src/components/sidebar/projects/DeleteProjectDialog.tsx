@@ -10,8 +10,10 @@ import {
   DialogTitle,
 } from "@caseai-connect/ui/shad/dialog"
 import { useTranslation } from "react-i18next"
+import { useNavigate } from "react-router-dom"
 import { selectProjectsStatus } from "@/features/projects/projects.selectors"
 import { deleteProject } from "@/features/projects/projects.thunks"
+import { useBuildPath } from "@/hooks/use-build-path"
 import { ADS } from "@/store/async-data-status"
 import { useAppDispatch, useAppSelector } from "@/store/hooks"
 
@@ -21,6 +23,8 @@ interface DeleteProjectDialogProps {
 }
 
 export function DeleteProjectDialog({ project, onClose }: DeleteProjectDialogProps) {
+  const navigate = useNavigate()
+  const { organizationPath } = useBuildPath()
   const { t } = useTranslation("project", { keyPrefix: "delete" })
   const { t: tCommon } = useTranslation("common")
   const dispatch = useAppDispatch()
@@ -32,6 +36,7 @@ export function DeleteProjectDialog({ project, onClose }: DeleteProjectDialogPro
 
   const handleDelete = async () => {
     dispatch(deleteProject({ projectId: project.id }))
+    navigate(organizationPath)
     onClose()
   }
 

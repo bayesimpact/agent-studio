@@ -1,6 +1,7 @@
 # TODO
 
 - remove ttl
+- delete chat session
 - create ErrorRoute
 - use moostache to compile master-prompt+variables(locale, defaultprompt)
 - write e2e tests

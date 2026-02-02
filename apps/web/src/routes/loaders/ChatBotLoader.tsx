@@ -1,6 +1,6 @@
 import {
   selectChatBotsStatus,
-  selectCurrentChatBotId,
+  selectCurrentChatBot,
 } from "@/features/chat-bots/chat-bots.selectors"
 import { useSetCurrentChatBotId } from "@/hooks/use-set-current-id"
 import { ADS } from "@/store/async-data-status"
@@ -11,12 +11,12 @@ import { NotFoundRoute } from "../NotFoundRoute"
 export function ChatBotLoader({ children }: { children: React.ReactNode }) {
   useSetCurrentChatBotId()
 
-  const chatBotId = useAppSelector(selectCurrentChatBotId)
+  const chatBot = useAppSelector(selectCurrentChatBot)
   const status = useAppSelector(selectChatBotsStatus)
 
-  if (ADS.isError(status)) return <NotFoundRoute />
+  if (ADS.isError(status) || !chatBot) return <NotFoundRoute />
 
-  if (ADS.isFulfilled(status) && chatBotId) return <>{children}</>
+  if (ADS.isFulfilled(status) && chatBot) return <>{children}</>
 
   return <LoadingRoute />
 }

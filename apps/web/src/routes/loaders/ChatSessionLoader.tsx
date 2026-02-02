@@ -1,6 +1,6 @@
 import {
   selectChatSessionStatus,
-  selectCurrentChatSessionId,
+  selectCurrentChatSession,
 } from "@/features/chat-sessions/chat-sessions.selectors"
 import { useSetCurrentChatSessionId } from "@/hooks/use-set-current-id"
 import { ADS } from "@/store/async-data-status"
@@ -11,18 +11,12 @@ import { NotFoundRoute } from "../NotFoundRoute"
 export function ChatSessionLoader({ children }: { children: React.ReactNode }) {
   useSetCurrentChatSessionId()
 
-  const chatSessionId = useAppSelector(selectCurrentChatSessionId)
+  const chatSession = useAppSelector(selectCurrentChatSession)
   const status = useAppSelector(selectChatSessionStatus)
 
-  // FIXME: should be triggered elsewhere by a button
-  // useEffect(() => {
-  //   if (admin) void dispatch(createPlaygroundSession())
-  //   else void dispatch(createAppSession())
-  // }, [dispatch, admin])
+  if (ADS.isError(status) || !chatSession) return <NotFoundRoute />
 
-  if (ADS.isError(status)) return <NotFoundRoute />
-
-  if (ADS.isFulfilled(status) && chatSessionId) return <>{children}</>
+  if (ADS.isFulfilled(status) && chatSession) return <>{children}</>
 
   return <LoadingRoute />
 }
