@@ -13,13 +13,11 @@ export default {
   },
   createOne: async (params, payload) => {
     const axios = getAxiosInstance()
-    await axios.post<typeof ChatBotsRoutes.createOne.response>(
+    const response = await axios.post<typeof ChatBotsRoutes.createOne.response>(
       ChatBotsRoutes.createOne.getPath(params),
-      {
-        payload: toCreateDto(payload),
-      },
+      { payload: toCreateDto(payload) },
     )
-    return
+    return fromChatBotDto(response.data.data)
   },
   updateOne: async (params, payload) => {
     const axios = getAxiosInstance()

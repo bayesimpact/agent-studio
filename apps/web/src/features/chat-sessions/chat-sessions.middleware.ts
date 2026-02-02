@@ -7,7 +7,6 @@ import {
   loadSessionMessages,
 } from "@/features/chat-sessions/chat-sessions.thunks"
 import type { AppDispatch, RootState } from "@/store"
-import { sleep } from "@/utils/sleep"
 import { chatSessionsActions } from "./chat-sessions.slice"
 
 // Create typed listener middleware
@@ -43,7 +42,6 @@ listenerMiddleware.startListening({
     const callback = action.meta.arg.onSuccess
     const { chatBotId, id } = action.payload
     await listenerApi.dispatch(listSessions({ chatBotId, playground: true }))
-    await sleep(200)
     callback(id)
   },
 })
@@ -54,7 +52,6 @@ listenerMiddleware.startListening({
     const callback = action.meta.arg.onSuccess
     const { chatBotId, id } = action.payload
     await listenerApi.dispatch(listSessions({ chatBotId, playground: false }))
-    await sleep(200)
     callback(id)
   },
 })

@@ -12,15 +12,24 @@ import { SidebarMenuButton } from "@caseai-connect/ui/shad/sidebar"
 import { PlusIcon } from "lucide-react"
 import { useState } from "react"
 import { useTranslation } from "react-i18next"
+import { useNavigate } from "react-router-dom"
 import { CreateProjectForm } from "@/components/projects/CreateProjectForm"
 import type { Organization } from "@/features/organizations/organizations.models"
+import { useBuildPath } from "@/hooks/use-build-path"
 
 export function CreateProjectDialogWithTrigger({ organization }: { organization: Organization }) {
-  const [open, setOpen] = useState(false)
-  const handleSuccess = () => {
-    setOpen(false)
-  }
+  const navigate = useNavigate()
+  const { buildPath } = useBuildPath()
   const { t } = useTranslation("project", { keyPrefix: "createButton" })
+
+  const [open, setOpen] = useState(false)
+
+  const handleSuccess = (projectId: string) => {
+    setOpen(false)
+    const path = buildPath("project", { projectId })
+    navigate(path)
+  }
+
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>

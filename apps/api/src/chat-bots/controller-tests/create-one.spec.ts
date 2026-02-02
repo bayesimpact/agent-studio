@@ -35,8 +35,8 @@ describe("ChatBot - createOne", () => {
       const savedUser = await userRepository.save(user)
 
       const membership = userMembershipFactory
-        .owner()
         .transient({ user: savedUser, organization })
+        .owner()
         .build()
 
       await membershipRepository.save(membership)
@@ -64,14 +64,11 @@ describe("ChatBot - createOne", () => {
 
       const { data: result } = await controller.createOne(mockRequest, savedProject.id, body)
 
-      expect(result.success).toBeTruthy()
-
-      const chatBots = await chatBotRepository.find({
-        where: { projectId: savedProject.id },
-      })
-
-      expect(chatBots).toHaveLength(1)
-      expect(chatBots[0]?.name).toBe(body.payload.name)
+      expect(result.name).toBe(body.payload.name)
+      expect(result.defaultPrompt).toBe(body.payload.defaultPrompt)
+      expect(result.model).toBe(body.payload.model)
+      expect(result.temperature.toString()).toBe("0.00")
+      expect(result.locale).toBe(body.payload.locale)
     })
   })
 
@@ -128,15 +125,11 @@ describe("ChatBot - createOne", () => {
       } satisfies typeof ChatBotsRoutes.createOne.request
 
       const { data: result } = await controller.createOne(mockRequest, savedProject.id, body)
-      expect(result.success).toBeTruthy()
-
-      const chatBots = await chatBotRepository.find({
-        where: { projectId: savedProject.id },
-      })
-
-      expect(chatBots).toHaveLength(1)
-      expect(chatBots[0]?.name).toBe("Admin Template")
-      expect(chatBots[0]?.defaultPrompt).toBe("Admin prompt")
+      expect(result.name).toBe(body.payload.name)
+      expect(result.defaultPrompt).toBe(body.payload.defaultPrompt)
+      expect(result.model).toBe(body.payload.model)
+      expect(result.temperature.toString()).toBe("0.00")
+      expect(result.locale).toBe(body.payload.locale)
     })
   })
 

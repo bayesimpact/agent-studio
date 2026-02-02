@@ -27,10 +27,7 @@ export class ChatBotsController {
       ...payload,
     })
 
-    if (!chatBot) {
-      throw new Error("ChatBot not created")
-    }
-    return { data: { success: true } }
+    return { data: toChatBotDto(chatBot) }
   }
 
   @Get(ChatBotsRoutes.getAll.path)

@@ -8,7 +8,7 @@ import { ChatBotForm } from "./ChatBotForm"
 
 interface CreateChatBotFormProps {
   projectId: string
-  onSuccess?: () => void
+  onSuccess: (chatBotId: string) => void
 }
 
 export function CreateChatBotForm({ projectId, onSuccess }: CreateChatBotFormProps) {
@@ -20,8 +20,7 @@ export function CreateChatBotForm({ projectId, onSuccess }: CreateChatBotFormPro
   const handleSubmit = (
     fields: Pick<ChatBot, "defaultPrompt" | "name" | "model" | "temperature" | "locale">,
   ) => {
-    dispatch(createChatBot({ projectId, fields }))
-    onSuccess?.()
+    dispatch(createChatBot({ projectId, fields, onSuccess }))
   }
 
   const isLoading = ADS.isLoading(status)

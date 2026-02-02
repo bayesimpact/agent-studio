@@ -10,7 +10,7 @@ import { Plus } from "lucide-react"
 import { useEffect, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { Navigate, useOutlet } from "react-router-dom"
-import { CreateChatBotDialog } from "@/components/chat-bots/CreateChatBotDialog"
+import { CreateChatBotDialogWithoutTrigger } from "@/components/chat-bots/CreateChatBotDialog"
 // import { AdminChatBotsList, AppChatBotsList } from "@/components/chat-bots/ChatBotsList"
 import { useSidebarLayout } from "@/components/layouts/sidebar/context"
 import { selectChatBotsFromProjectId } from "@/features/chat-bots/chat-bots.selectors"
@@ -62,7 +62,7 @@ function NoChatBot({ project }: { project: Project }) {
             <Plus className="mr-2 h-4 w-4" />
             {t("empty.button")}
           </Button>
-          <CreateChatBotDialog
+          <CreateChatBotDialogWithoutTrigger
             projectId={project.id}
             projectName={project.name}
             isOpen={open}
