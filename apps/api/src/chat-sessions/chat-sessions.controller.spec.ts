@@ -100,7 +100,7 @@ describe("ChatSessionsController", () => {
       expect(result.id).toBeDefined()
       expect(result.chatBotId).toBe(savedChatBot.id)
       expect(result.type).toBe("playground")
-      expect(result.expiresAt).not.toBeNull()
+      expect(result.expiresAt).toBeNull()
     })
   })
 })

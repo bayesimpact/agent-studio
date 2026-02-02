@@ -21,6 +21,8 @@ export class ChatSessionsController {
   ): Promise<typeof ChatSessionsRoutes.getAllPlayground.response> {
     const user = request.user
 
+    await this.chatSessionsService.verifyUserCanCreatePlaygroundSession(user.id, chatBotId)
+
     const sessions = await this.chatSessionsService.getAllSessionsForChatBot({
       chatBotId: chatBotId,
       userId: user.id,
@@ -36,6 +38,8 @@ export class ChatSessionsController {
     @Param("chatBotId") chatBotId: string,
   ): Promise<typeof ChatSessionsRoutes.getAllApp.response> {
     const user = request.user
+
+    await this.chatSessionsService.verifyUserCanCreateAppPrivateSession(user.id, chatBotId)
 
     const sessions = await this.chatSessionsService.getAllSessionsForChatBot({
       chatBotId: chatBotId,
@@ -53,9 +57,15 @@ export class ChatSessionsController {
   ): Promise<typeof ChatSessionsRoutes.createPlaygroundSession.response> {
     const user = request.user
 
-    const session = await this.chatSessionsService.createPlaygroundSessionForChatBot(
+    const { organizationId } = await this.chatSessionsService.verifyUserCanCreatePlaygroundSession(
+      user.id,
+      chatBotId,
+    )
+
+    const session = await this.chatSessionsService.createPlaygroundSession(
       chatBotId,
       user.id,
+      organizationId,
     )
 
     return { data: toChatSessionDto(session) }
@@ -73,9 +83,15 @@ export class ChatSessionsController {
       throw new Error("Session type not supported.")
     }
 
+    const { organizationId } = await this.chatSessionsService.verifyUserCanCreateAppPrivateSession(
+      user.id,
+      chatBotId,
+    )
+
     const session = await this.chatSessionsService.createAppPrivateSession({
       chatBotId: chatBotId,
       userId: user.id,
+      organizationId,
     })
 
     return { data: toChatSessionDto(session) }

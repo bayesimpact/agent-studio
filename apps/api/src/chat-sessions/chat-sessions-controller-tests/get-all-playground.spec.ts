@@ -9,194 +9,271 @@ import { chatSessionsControllerTestSetup } from "./test-setup"
 const getTestContext = chatSessionsControllerTestSetup()
 
 describe("getAllPlayground", () => {
-  it("should return all playground sessions for a chatbot and user", async () => {
-    const {
-      controller,
-      userRepository,
-      membershipRepository,
-      projectRepository,
-      chatBotRepository,
-      chatSessionRepository,
-      organization,
-    } = getTestContext()
+  describe("when user is owner", () => {
+    it("should return all playground sessions for a chatbot and user", async () => {
+      const {
+        controller,
+        userRepository,
+        membershipRepository,
+        projectRepository,
+        chatBotRepository,
+        chatSessionRepository,
+        organization,
+      } = getTestContext()
 
-    const auth0Sub = "auth0|get-all-playground"
+      const auth0Sub = "auth0|get-all-playground"
 
-    const user = userFactory.build({
-      auth0Id: auth0Sub,
-      email: "playground@example.com",
-    })
-    const savedUser = await userRepository.save(user)
-
-    const mockRequest = {
-      user: {
-        sub: auth0Sub,
-        email: savedUser.email,
-        id: savedUser.id,
-      },
-    } as EndpointRequest
-
-    const membership = userMembershipFactory
-      .transient({ user: savedUser, organization: organization })
-      .member()
-      .build()
-    await membershipRepository.save(membership)
-
-    const project = projectFactory.transient({ organization: organization }).build({
-      name: "Playground Project",
-    })
-    const savedProject = await projectRepository.save(project)
-
-    const chatBot = chatBotFactory.transient({ project: savedProject }).build({
-      name: "Playground Bot",
-      defaultPrompt: "You are a helpful assistant",
-    })
-    const savedChatBot = await chatBotRepository.save(chatBot)
-
-    // Create multiple playground sessions
-    const session1 = chatSessionFactory
-      .transient({ chatBot: savedChatBot, user: savedUser, organization: organization })
-      .build({
-        type: "playground",
-        createdAt: new Date("2026-01-01T10:00:00Z"),
+      const user = userFactory.build({
+        auth0Id: auth0Sub,
+        email: "playground@example.com",
       })
+      const savedUser = await userRepository.save(user)
 
-    const session2 = chatSessionFactory
-      .transient({ chatBot: savedChatBot, user: savedUser, organization: organization })
-      .build({
-        type: "playground",
-        createdAt: new Date("2026-01-02T10:00:00Z"),
+      const mockRequest = {
+        user: {
+          sub: auth0Sub,
+          email: savedUser.email,
+          id: savedUser.id,
+        },
+      } as EndpointRequest
+
+      const membership = userMembershipFactory
+        .transient({ user: savedUser, organization: organization })
+        .owner()
+        .build()
+      await membershipRepository.save(membership)
+
+      const project = projectFactory.transient({ organization: organization }).build({
+        name: "Playground Project",
       })
+      const savedProject = await projectRepository.save(project)
 
-    // Create an app-private session (should not be returned)
-    const appSession = chatSessionFactory
-      .transient({ chatBot: savedChatBot, user: savedUser, organization: organization })
-      .build({
-        type: "app-private",
-        createdAt: new Date("2026-01-03T10:00:00Z"),
+      const chatBot = chatBotFactory.transient({ project: savedProject }).build({
+        name: "Playground Bot",
+        defaultPrompt: "You are a helpful assistant",
       })
+      const savedChatBot = await chatBotRepository.save(chatBot)
 
-    await chatSessionRepository.save([session1, session2, appSession])
+      // Create multiple playground sessions
+      const session1 = chatSessionFactory
+        .transient({ chatBot: savedChatBot, user: savedUser, organization: organization })
+        .build({
+          type: "playground",
+          createdAt: new Date("2026-01-01T10:00:00Z"),
+        })
 
-    const { data: result } = await controller.getAllPlayground(mockRequest, savedChatBot.id)
+      const session2 = chatSessionFactory
+        .transient({ chatBot: savedChatBot, user: savedUser, organization: organization })
+        .build({
+          type: "playground",
+          createdAt: new Date("2026-01-02T10:00:00Z"),
+        })
 
-    expect(result).toHaveLength(2)
-    expect(result.every((s) => s.type === "playground")).toBe(true)
-    expect(result.every((s) => s.chatBotId === savedChatBot.id)).toBe(true)
+      // Create an app-private session (should not be returned)
+      const appSession = chatSessionFactory
+        .transient({ chatBot: savedChatBot, user: savedUser, organization: organization })
+        .build({
+          type: "app-private",
+          createdAt: new Date("2026-01-03T10:00:00Z"),
+        })
+
+      await chatSessionRepository.save([session1, session2, appSession])
+
+      const { data: result } = await controller.getAllPlayground(mockRequest, savedChatBot.id)
+
+      expect(result).toHaveLength(2)
+      expect(result.every((s) => s.type === "playground")).toBe(true)
+      expect(result.every((s) => s.chatBotId === savedChatBot.id)).toBe(true)
+    })
+
+    it("should return empty array when no playground sessions exist", async () => {
+      const {
+        controller,
+        userRepository,
+        membershipRepository,
+        projectRepository,
+        chatBotRepository,
+        organization,
+      } = getTestContext()
+
+      const auth0Sub = "auth0|get-all-playground-empty"
+
+      const user = userFactory.build({
+        auth0Id: auth0Sub,
+        email: "playground-empty@example.com",
+      })
+      const savedUser = await userRepository.save(user)
+
+      const mockRequest = {
+        user: {
+          sub: auth0Sub,
+          email: savedUser.email,
+          id: savedUser.id,
+        },
+      } as EndpointRequest
+
+      const membership = userMembershipFactory
+        .transient({ user: savedUser, organization: organization })
+        .owner()
+        .build()
+      await membershipRepository.save(membership)
+
+      const project = projectFactory.transient({ organization: organization }).build({
+        name: "Empty Project",
+      })
+      const savedProject = await projectRepository.save(project)
+
+      const chatBot = chatBotFactory.transient({ project: savedProject }).build({
+        name: "Empty Bot",
+        defaultPrompt: "You are a helpful assistant",
+      })
+      const savedChatBot = await chatBotRepository.save(chatBot)
+
+      const { data: result } = await controller.getAllPlayground(mockRequest, savedChatBot.id)
+
+      expect(result).toEqual([])
+    })
+
+    it("should return sessions in descending order by creation date", async () => {
+      const {
+        controller,
+        userRepository,
+        membershipRepository,
+        projectRepository,
+        chatBotRepository,
+        chatSessionRepository,
+        organization,
+      } = getTestContext()
+
+      const auth0Sub = "auth0|get-all-playground-order"
+
+      const user = userFactory.build({
+        auth0Id: auth0Sub,
+        email: "playground-order@example.com",
+      })
+      const savedUser = await userRepository.save(user)
+
+      const mockRequest = {
+        user: {
+          sub: auth0Sub,
+          email: savedUser.email,
+          id: savedUser.id,
+        },
+      } as EndpointRequest
+
+      const membership = userMembershipFactory
+        .transient({ user: savedUser, organization: organization })
+        .owner()
+        .build()
+      await membershipRepository.save(membership)
+
+      const project = projectFactory.transient({ organization: organization }).build({
+        name: "Order Project",
+      })
+      const savedProject = await projectRepository.save(project)
+
+      const chatBot = chatBotFactory.transient({ project: savedProject }).build({
+        name: "Order Bot",
+        defaultPrompt: "You are a helpful assistant",
+      })
+      const savedChatBot = await chatBotRepository.save(chatBot)
+
+      const oldSession = chatSessionFactory
+        .transient({ chatBot: savedChatBot, user: savedUser, organization: organization })
+        .build({
+          type: "playground",
+          createdAt: new Date("2026-01-01T10:00:00Z"),
+        })
+
+      const newestSession = chatSessionFactory
+        .transient({ chatBot: savedChatBot, user: savedUser, organization: organization })
+        .build({
+          type: "playground",
+          createdAt: new Date("2026-01-30T10:00:00Z"),
+        })
+
+      await chatSessionRepository.save([oldSession, newestSession])
+
+      const { data: result } = await controller.getAllPlayground(mockRequest, savedChatBot.id)
+
+      expect(result).toHaveLength(2)
+      expect(result[0]?.id).toBe(newestSession.id)
+      expect(result[1]?.id).toBe(oldSession.id)
+    })
   })
 
-  it("should return empty array when no playground sessions exist", async () => {
-    const {
-      controller,
-      userRepository,
-      membershipRepository,
-      projectRepository,
-      chatBotRepository,
-      organization,
-    } = getTestContext()
+  describe("when user is member", () => {
+    it("fails when user is member", async () => {
+      const {
+        controller,
 
-    const auth0Sub = "auth0|get-all-playground-empty"
+        userRepository,
+        membershipRepository,
+        projectRepository,
+        chatBotRepository,
+        chatSessionRepository,
+        organization,
+      } = getTestContext()
 
-    const user = userFactory.build({
-      auth0Id: auth0Sub,
-      email: "playground-empty@example.com",
-    })
-    const savedUser = await userRepository.save(user)
+      const auth0Sub = "auth0|get-all-playground"
 
-    const mockRequest = {
-      user: {
-        sub: auth0Sub,
-        email: savedUser.email,
-        id: savedUser.id,
-      },
-    } as EndpointRequest
-
-    const membership = userMembershipFactory
-      .transient({ user: savedUser, organization: organization })
-      .member()
-      .build()
-    await membershipRepository.save(membership)
-
-    const project = projectFactory.transient({ organization: organization }).build({
-      name: "Empty Project",
-    })
-    const savedProject = await projectRepository.save(project)
-
-    const chatBot = chatBotFactory.transient({ project: savedProject }).build({
-      name: "Empty Bot",
-      defaultPrompt: "You are a helpful assistant",
-    })
-    const savedChatBot = await chatBotRepository.save(chatBot)
-
-    const { data: result } = await controller.getAllPlayground(mockRequest, savedChatBot.id)
-
-    expect(result).toEqual([])
-  })
-
-  it("should return sessions in descending order by creation date", async () => {
-    const {
-      controller,
-      userRepository,
-      membershipRepository,
-      projectRepository,
-      chatBotRepository,
-      chatSessionRepository,
-      organization,
-    } = getTestContext()
-
-    const auth0Sub = "auth0|get-all-playground-order"
-
-    const user = userFactory.build({
-      auth0Id: auth0Sub,
-      email: "playground-order@example.com",
-    })
-    const savedUser = await userRepository.save(user)
-
-    const mockRequest = {
-      user: {
-        sub: auth0Sub,
-        email: savedUser.email,
-        id: savedUser.id,
-      },
-    } as EndpointRequest
-
-    const membership = userMembershipFactory
-      .transient({ user: savedUser, organization: organization })
-      .member()
-      .build()
-    await membershipRepository.save(membership)
-
-    const project = projectFactory.transient({ organization: organization }).build({
-      name: "Order Project",
-    })
-    const savedProject = await projectRepository.save(project)
-
-    const chatBot = chatBotFactory.transient({ project: savedProject }).build({
-      name: "Order Bot",
-      defaultPrompt: "You are a helpful assistant",
-    })
-    const savedChatBot = await chatBotRepository.save(chatBot)
-
-    const oldSession = chatSessionFactory
-      .transient({ chatBot: savedChatBot, user: savedUser, organization: organization })
-      .build({
-        type: "playground",
-        createdAt: new Date("2026-01-01T10:00:00Z"),
+      const user = userFactory.build({
+        auth0Id: auth0Sub,
+        email: "playground@example.com",
       })
+      const savedUser = await userRepository.save(user)
 
-    const newestSession = chatSessionFactory
-      .transient({ chatBot: savedChatBot, user: savedUser, organization: organization })
-      .build({
-        type: "playground",
-        createdAt: new Date("2026-01-30T10:00:00Z"),
+      const mockRequest = {
+        user: {
+          sub: auth0Sub,
+          email: savedUser.email,
+          id: savedUser.id,
+        },
+      } as EndpointRequest
+
+      const membership = userMembershipFactory
+        .transient({ user: savedUser, organization: organization })
+        .member()
+        .build()
+      await membershipRepository.save(membership)
+
+      const project = projectFactory.transient({ organization: organization }).build({
+        name: "Playground Project",
       })
+      const savedProject = await projectRepository.save(project)
 
-    await chatSessionRepository.save([oldSession, newestSession])
+      const chatBot = chatBotFactory.transient({ project: savedProject }).build({
+        name: "Playground Bot",
+        defaultPrompt: "You are a helpful assistant",
+      })
+      const savedChatBot = await chatBotRepository.save(chatBot)
 
-    const { data: result } = await controller.getAllPlayground(mockRequest, savedChatBot.id)
+      // Create multiple playground sessions
+      const session1 = chatSessionFactory
+        .transient({ chatBot: savedChatBot, user: savedUser, organization: organization })
+        .build({
+          type: "playground",
+          createdAt: new Date("2026-01-01T10:00:00Z"),
+        })
 
-    expect(result).toHaveLength(2)
-    expect(result[0]?.id).toBe(newestSession.id)
-    expect(result[1]?.id).toBe(oldSession.id)
+      const session2 = chatSessionFactory
+        .transient({ chatBot: savedChatBot, user: savedUser, organization: organization })
+        .build({
+          type: "playground",
+          createdAt: new Date("2026-01-02T10:00:00Z"),
+        })
+
+      // Create an app-private session (should not be returned)
+      const appSession = chatSessionFactory
+        .transient({ chatBot: savedChatBot, user: savedUser, organization: organization })
+        .build({
+          type: "app-private",
+          createdAt: new Date("2026-01-03T10:00:00Z"),
+        })
+
+      await chatSessionRepository.save([session1, session2, appSession])
+
+      await expect(controller.getAllPlayground(mockRequest, savedChatBot.id)).rejects.toThrow()
+    })
   })
 })

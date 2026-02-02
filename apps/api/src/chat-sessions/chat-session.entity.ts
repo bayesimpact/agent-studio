@@ -36,7 +36,7 @@ export class ChatSession {
   @Column({ type: "varchar" })
   type!: ChatSessionType
 
-  @Column({ type: "timestamp", nullable: true, name: "expires_at" })
+  @Column({ type: "timestamp", nullable: true, name: "expires_at" }) // FIXME: to be removed
   expiresAt!: Date | null
 
   @CreateDateColumn({ name: "created_at" })
