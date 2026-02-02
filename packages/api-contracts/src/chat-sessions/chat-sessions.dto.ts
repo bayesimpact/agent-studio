@@ -6,5 +6,6 @@ export type ChatSessionDto = {
   id: string
   chatBotId: string
   type: ChatSessionTypeDto
-  expiresAt: TimeType | null
+  createdAt: TimeType
+  updatedAt: TimeType
 }

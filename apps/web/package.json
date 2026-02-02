@@ -20,6 +20,7 @@
     "@reduxjs/toolkit": "^2.11.2",
     "@tailwindcss/vite": "^4.1.18",
     "axios": "^1.13.2",
+    "date-fns": "^4.1.0",
     "i18next": "^25.8.0",
     "i18next-browser-languagedetector": "^8.2.0",
     "lodash": "^4.17.21",

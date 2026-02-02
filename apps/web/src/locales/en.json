@@ -121,6 +121,11 @@
       "thinking": "Thinking..."
     }
   },
+  "chatSession": {
+    "create": {
+      "button": "New chat"
+    }
+  },
   "chat": {
     "header": "Chat",
     "placeholder": "Ask a question..."

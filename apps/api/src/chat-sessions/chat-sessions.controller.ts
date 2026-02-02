@@ -103,6 +103,7 @@ function toChatSessionDto(entity: ChatSession): ChatSessionDto {
     id: entity.id,
     chatBotId: entity.chatBotId,
     type: entity.type,
-    expiresAt: entity.expiresAt ? entity.expiresAt.getTime() : null,
+    createdAt: entity.createdAt.getTime(),
+    updatedAt: entity.updatedAt.getTime(),
   }
 }

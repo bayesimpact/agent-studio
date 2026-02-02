@@ -55,7 +55,8 @@ const fromDto = (dto: ChatSessionDto): ChatSession => ({
   id: dto.id,
   chatBotId: dto.chatBotId,
   type: dto.type,
-  expiresAt: dto.expiresAt,
+  createdAt: dto.createdAt,
+  updatedAt: dto.updatedAt,
 })
 
 const fromMessagesDto = (dtos: ChatSessionMessageDto[]): ChatSessionMessage[] =>

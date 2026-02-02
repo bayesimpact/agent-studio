@@ -58,6 +58,5 @@ describe("createAppSession", () => {
     expect(result.id).toBeDefined()
     expect(result.chatBotId).toBe(savedChatBot.id)
     expect(result.type).toBe("app-private")
-    expect(result.expiresAt).toBeNull()
   })
 })
