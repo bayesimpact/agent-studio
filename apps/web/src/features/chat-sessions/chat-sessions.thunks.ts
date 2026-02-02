@@ -18,32 +18,34 @@ export const listSessions = createAsyncThunk<
   return services.chatSession.getAllApp(chatBotId)
 })
 
-export const createPlaygroundSession = createAsyncThunk<ChatSession, void, ThunkConfig>(
-  "chatSession/createPlaygroundSession",
-  async (_, { extra: { services }, getState }) => {
-    const state = getState()
-    const chatBotId = state.chatBots.currentChatBotId
-    if (!chatBotId) {
-      throw new Error("No current chat bot ID found")
-    }
-    return services.chatSession.createPlaygroundSession(chatBotId)
-  },
-)
+export const createPlaygroundSession = createAsyncThunk<
+  ChatSession,
+  { callback: (chatSessionId: string) => void },
+  ThunkConfig
+>("chatSession/createPlaygroundSession", async (_, { extra: { services }, getState }) => {
+  const state = getState()
+  const chatBotId = state.chatBots.currentChatBotId
+  if (!chatBotId) {
+    throw new Error("No current chat bot ID found")
+  }
+  return services.chatSession.createPlaygroundSession(chatBotId)
+})
 
-export const createAppSession = createAsyncThunk<ChatSession, void, ThunkConfig>(
-  "chatSession/createAppSession",
-  async (_, { extra: { services }, getState }) => {
-    const state = getState()
-    const chatBotId = state.chatBots.currentChatBotId
-    if (!chatBotId) {
-      throw new Error("No current chat bot ID found")
-    }
-    return services.chatSession.createAppSession({
-      chatBotId,
-      chatSessionType: "app-private",
-    })
-  },
-)
+export const createAppSession = createAsyncThunk<
+  ChatSession,
+  { callback: (chatSessionId: string) => void },
+  ThunkConfig
+>("chatSession/createAppSession", async (_, { extra: { services }, getState }) => {
+  const state = getState()
+  const chatBotId = state.chatBots.currentChatBotId
+  if (!chatBotId) {
+    throw new Error("No current chat bot ID found")
+  }
+  return services.chatSession.createAppSession({
+    chatBotId,
+    chatSessionType: "app-private",
+  })
+})
 
 export const loadSessionMessages = createAsyncThunk<ChatSessionMessage[], string, ThunkConfig>(
   "chatSession/loadSessionMessages",
