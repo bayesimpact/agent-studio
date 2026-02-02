@@ -35,7 +35,7 @@ describe("getAllSessionsForChatBot", () => {
       await chatSessionRepository.save([prodSession, appSession, playgroundSession])
 
       const sessions = await service.getAllSessionsForChatBot({
-        chatbotId: testChatBot.id,
+        chatBotId: testChatBot.id,
         userId: testUser.id,
         type: "app-private",
       })
@@ -73,7 +73,7 @@ describe("getAllSessionsForChatBot", () => {
       await chatSessionRepository.save([prodSession, appSession, playgroundSession])
 
       const sessions = await service.getAllSessionsForChatBot({
-        chatbotId: testChatBot.id,
+        chatBotId: testChatBot.id,
         userId: testUser.id,
         type: "playground",
       })
@@ -113,13 +113,13 @@ describe("getAllSessionsForChatBot", () => {
     await chatSessionRepository.save([session1, session2])
 
     const sessions = await service.getAllSessionsForChatBot({
-      chatbotId: testChatBot.id,
+      chatBotId: testChatBot.id,
       userId: testUser.id,
       type: "production",
     })
 
     expect(sessions).toHaveLength(1)
-    expect(sessions[0]?.chatbotId).toBe(testChatBot.id)
+    expect(sessions[0]?.chatBotId).toBe(testChatBot.id)
   })
 
   it("should return only sessions for the specific user", async () => {
@@ -152,7 +152,7 @@ describe("getAllSessionsForChatBot", () => {
     await chatSessionRepository.save([session1, session2])
 
     const sessions = await service.getAllSessionsForChatBot({
-      chatbotId: testChatBot.id,
+      chatBotId: testChatBot.id,
       userId: testUser.id,
       type: "production",
     })
@@ -165,7 +165,7 @@ describe("getAllSessionsForChatBot", () => {
     const { service, testChatBot, testUser } = getTestContext()
 
     const sessions = await service.getAllSessionsForChatBot({
-      chatbotId: testChatBot.id,
+      chatBotId: testChatBot.id,
       userId: testUser.id,
       type: "production",
     })

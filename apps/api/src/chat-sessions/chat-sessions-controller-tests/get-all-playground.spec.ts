@@ -82,7 +82,7 @@ describe("getAllPlayground", () => {
 
     expect(result).toHaveLength(2)
     expect(result.every((s) => s.type === "playground")).toBe(true)
-    expect(result.every((s) => s.chatbotId === savedChatBot.id)).toBe(true)
+    expect(result.every((s) => s.chatBotId === savedChatBot.id)).toBe(true)
   })
 
   it("should return empty array when no playground sessions exist", async () => {

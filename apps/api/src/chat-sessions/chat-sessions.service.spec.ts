@@ -89,7 +89,7 @@ describe("ChatSessionsService", () => {
 
       expect(session).toBeDefined()
       expect(session.type).toBe("playground")
-      expect(session.chatbotId).toBe(testChatBot.id)
+      expect(session.chatBotId).toBe(testChatBot.id)
       expect(session.userId).toBe(testUser.id)
       expect(session.organizationId).toBe(testOrganization.id)
       expect(session.expiresAt).toBeDefined()
@@ -163,7 +163,7 @@ describe("ChatSessionsService", () => {
 
       expect(session).toBeDefined()
       expect(session.type).toBe("playground")
-      expect(session.chatbotId).toBe(testChatBot.id)
+      expect(session.chatBotId).toBe(testChatBot.id)
       expect(session.userId).toBe(testUser.id)
       expect(session.organizationId).toBe(testOrganization.id)
     })
@@ -235,7 +235,7 @@ describe("ChatSessionsService", () => {
 
       expect(session).toBeDefined()
       expect(session.type).toBe("production")
-      expect(session.chatbotId).toBe(testChatBot.id)
+      expect(session.chatBotId).toBe(testChatBot.id)
       expect(session.userId).toBe(testUser.id)
       expect(session.organizationId).toBe(testOrganization.id)
       expect(session.expiresAt).toBeNull()
@@ -245,13 +245,13 @@ describe("ChatSessionsService", () => {
   describe("createAppPrivateSession", () => {
     it("should create an app-private session without TTL", async () => {
       const session = await service.createAppPrivateSession({
-        chatbotId: testChatBot.id,
+        chatBotId: testChatBot.id,
         userId: testUser.id,
       })
 
       expect(session).toBeDefined()
       expect(session.type).toBe("app-private")
-      expect(session.chatbotId).toBe(testChatBot.id)
+      expect(session.chatBotId).toBe(testChatBot.id)
       expect(session.userId).toBe(testUser.id)
       expect(session.organizationId).toBe(testOrganization.id)
       expect(session.expiresAt).toBeNull()

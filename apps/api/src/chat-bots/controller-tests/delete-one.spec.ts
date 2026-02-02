@@ -232,7 +232,7 @@ describe("ChatBot - deleteOne", () => {
 
       // Create a session
       const session = chatSessionRepository.create({
-        chatbotId: savedChatBot.id,
+        chatBotId: savedChatBot.id,
         userId: savedUser.id,
         organizationId: organization.id,
         type: "production",
