@@ -8,6 +8,7 @@ import { useTranslation } from "react-i18next"
 import type { ChatBot } from "@/features/chat-bots/chat-bots.models"
 import { selectChatBotsFromProjectId } from "@/features/chat-bots/chat-bots.selectors"
 import { selectCurrentOrganization } from "@/features/organizations/organizations.selectors"
+import { ADS } from "@/store/async-data-status"
 import { useAppSelector } from "@/store/hooks"
 import { AdminChatBotList, AppChatBotList } from "./projects/chat-bots/ChatBotList"
 import { DeleteProjectDialog } from "./projects/DeleteProjectDialog"
@@ -78,12 +79,13 @@ function ProjectItem({
   showEmptyProject?: boolean
 }) {
   const { t } = useTranslation("common")
-  const chatBots = useAppSelector(selectChatBotsFromProjectId(project.id)) || []
+  const chatBots = useAppSelector(selectChatBotsFromProjectId(project.id))
   const name = `${t("project")} - ${project.name}`
-  if (chatBots.length === 0 && !showEmptyProject) return null
+  if (!ADS.isFulfilled(chatBots)) return <div>Error</div>
+  if (chatBots.value.length === 0 && !showEmptyProject) return null
   return (
     <Section name={name} options={options} className="group-data-[collapsible=icon]:hidden">
-      <SidebarMenu>{children({ chatBots })}</SidebarMenu>
+      <SidebarMenu>{children({ chatBots: chatBots.value })}</SidebarMenu>
     </Section>
   )
 }

@@ -3,10 +3,7 @@ import { Spinner } from "@caseai-connect/ui/shad/spinner"
 import { AlertCircleIcon, CirclePlusIcon, MicIcon, PaperclipIcon } from "lucide-react"
 import { useTranslation } from "react-i18next"
 import type { ChatSession, ChatSessionMessage } from "@/features/chat-sessions/chat-sessions.models"
-import {
-  selectCurrentMessages,
-  selectStreaming,
-} from "@/features/chat-sessions/chat-sessions.selectors"
+import { selectStreaming } from "@/features/chat-sessions/chat-sessions.selectors"
 import { sendMessage } from "@/features/chat-sessions/chat-sessions.thunks"
 import { useAppDispatch, useAppSelector } from "@/store/hooks"
 import {
@@ -23,10 +20,15 @@ import {
 import { MarkdownWrapper } from "../chat/MarkdownWrapper"
 import { DotsBackground } from "../DotsBackground"
 
-export function AdminChatSession({ session }: { session: ChatSession }) {
+export function AdminChatSession({
+  session,
+  messages,
+}: {
+  session: ChatSession
+  messages: ChatSessionMessage[]
+}) {
   const { t } = useTranslation("chat")
   const dispatch = useAppDispatch()
-  const messages = useAppSelector(selectCurrentMessages)
   const isStreaming = useAppSelector(selectStreaming)
 
   const handleSubmit = (message: string) => {
@@ -75,10 +77,15 @@ export function AdminChatSession({ session }: { session: ChatSession }) {
   )
 }
 
-export function AppChatSession({ session }: { session: ChatSession }) {
+export function AppChatSession({
+  session,
+  messages,
+}: {
+  session: ChatSession
+  messages: ChatSessionMessage[]
+}) {
   const { t } = useTranslation("chat")
   const dispatch = useAppDispatch()
-  const messages = useAppSelector(selectCurrentMessages)
   const isStreaming = useAppSelector(selectStreaming)
 
   const handleSubmit = (message: string) => {

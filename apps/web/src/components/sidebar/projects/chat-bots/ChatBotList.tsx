@@ -15,22 +15,23 @@ import { CreateChatBotDialogWithTrigger } from "@/components/chat-bots/CreateCha
 import { DeleteChatBotDialogWithOutTrigger } from "@/components/chat-bots/DeleteChatBotDialog"
 import { EditChatBotDialogWithOutTrigger } from "@/components/chat-bots/EditChatBotDialog"
 import type { ChatBot } from "@/features/chat-bots/chat-bots.models"
-import { selectChatSessions } from "@/features/chat-sessions/chat-sessions.selectors"
 import type { Project } from "@/features/projects/projects.models"
 import { useBuildPath } from "@/hooks/use-build-path"
-import { useAppSelector } from "@/store/hooks"
 import { AppNavItem } from "../../NavItem"
 import { ChatSessionList } from "../chat-sessions/ChatSessionList"
 
 type Item = { action: "edit" | "delete"; value: ChatBot }
 
 export function AdminChatBotList({ project, chatBots }: { project: Project; chatBots: ChatBot[] }) {
-  const { chatBotId: currentChatBotId } = useParams()
+  const { chatBotId: urlChatBotId } = useParams()
   const navigate = useNavigate()
+
   const { getPath, buildPath } = useBuildPath()
-  const sessions = useAppSelector(selectChatSessions)
+
   const [item, setItem] = useState<Item | null>(null)
+
   const handleItem = (item: Item) => setItem(item)
+
   const handleClose = () => {
     setItem(null)
     navigate(getPath("project"))
@@ -47,7 +48,7 @@ export function AdminChatBotList({ project, chatBots }: { project: Project; chat
               projectId: chatBot.projectId,
               chatBotId: chatBot.id,
             }),
-            isActive: currentChatBotId === chatBot.id,
+            isActive: urlChatBotId === chatBot.id,
             icon: BotIcon,
           }}
           itemOptions={
@@ -57,13 +58,7 @@ export function AdminChatBotList({ project, chatBots }: { project: Project; chat
             />
           }
         >
-          {sessions && (
-            <ChatSessionList
-              sessions={sessions}
-              chatBotId={chatBot.id}
-              projectId={chatBot.projectId}
-            />
-          )}
+          <ChatSessionList chatBotId={chatBot.id} projectId={chatBot.projectId} />
         </AppNavItem>
       ))}
 
@@ -84,9 +79,8 @@ export function AdminChatBotList({ project, chatBots }: { project: Project; chat
 }
 
 export function AppChatBotList({ chatBots }: { chatBots: ChatBot[] }) {
-  const { chatBotId: currentChatBotId } = useParams()
+  const { chatBotId: urlChatBotId } = useParams()
   const { buildPath } = useBuildPath()
-  const sessions = useAppSelector(selectChatSessions)
   return (
     <>
       {chatBots.map((chatBot) => (
@@ -99,17 +93,11 @@ export function AppChatBotList({ chatBots }: { chatBots: ChatBot[] }) {
               projectId: chatBot.projectId,
               chatBotId: chatBot.id,
             }),
-            isActive: currentChatBotId === chatBot.id,
+            isActive: urlChatBotId === chatBot.id,
             icon: BotIcon,
           }}
         >
-          {sessions && (
-            <ChatSessionList
-              sessions={sessions}
-              chatBotId={chatBot.id}
-              projectId={chatBot.projectId}
-            />
-          )}
+          <ChatSessionList chatBotId={chatBot.id} projectId={chatBot.projectId} />
         </AppNavItem>
       ))}
     </>

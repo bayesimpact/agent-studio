@@ -1,15 +1,16 @@
 import { DashboardLayout } from "@/components/DashboardLayout"
 import type { User } from "@/features/me/me.models"
-import { selectProjects } from "@/features/projects/projects.selectors"
-import { LoadingRoute } from "@/routes/LoadingRoute"
-import { useAppSelector } from "@/store/hooks"
+import type { Organization } from "@/features/organizations/organizations.models"
+import type { Project } from "@/features/projects/projects.models"
 
-export function DashboardRoute({ user }: { user: User }) {
-  const projects = useAppSelector(selectProjects)
-
-  if (projects && user) {
-    return <DashboardLayout user={user} projects={projects} />
-  }
-
-  return <LoadingRoute />
+export function DashboardRoute({
+  user,
+  projects,
+  organization,
+}: {
+  user: User
+  projects: Project[]
+  organization: Organization
+}) {
+  return <DashboardLayout user={user} projects={projects} organization={organization} />
 }

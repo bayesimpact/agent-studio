@@ -4,17 +4,23 @@ import { SidebarMenu, SidebarMenuItem } from "@caseai-connect/ui/shad/sidebar"
 import { SlidersHorizontalIcon, SparklesIcon } from "lucide-react"
 import { Outlet } from "react-router-dom"
 import type { User } from "@/features/me/me.models"
-import { selectCurrentOrganization } from "@/features/organizations/organizations.selectors"
+import type { Organization } from "@/features/organizations/organizations.models"
 import { useAbility } from "@/hooks/use-ability"
 import { useBuildPath } from "@/hooks/use-build-path"
-import { useAppSelector } from "@/store/hooks"
 import { SidebarLayout } from "./layouts/SidebarLayout"
 import { AdminNavProjects, AppNavProjects } from "./sidebar/NavProjects"
 import { CreateProjectDialogWithTrigger } from "./sidebar/projects/CreateProjectDialog"
 
-export function DashboardLayout({ user, projects }: { user: User; projects: ProjectDto[] }) {
+export function DashboardLayout({
+  user,
+  projects,
+  organization,
+}: {
+  user: User
+  projects: ProjectDto[]
+  organization: Organization
+}) {
   const { admin } = useAbility()
-  const organization = useAppSelector(selectCurrentOrganization)
   const organizationName = organization?.name || "CaseAi"
   const { getPath } = useBuildPath()
 

@@ -1,4 +1,11 @@
 import { Button } from "@caseai-connect/ui/shad/button"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@caseai-connect/ui/shad/card"
 import { Item, ItemContent } from "@caseai-connect/ui/shad/item"
 import { ScrollArea } from "@caseai-connect/ui/shad/scroll-area"
 import {
@@ -8,74 +15,76 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@caseai-connect/ui/shad/sheet"
-import { useCallback, useEffect, useRef } from "react"
+import { useEffect } from "react"
 import { useTranslation } from "react-i18next"
-import { Navigate, Outlet, useNavigate, useOutlet } from "react-router-dom"
+import { Navigate, Outlet, useOutlet } from "react-router-dom"
 import { MarkdownWrapper } from "@/components/chat/MarkdownWrapper"
 import { DeleteChatBotDialogWithTrigger } from "@/components/chat-bots/DeleteChatBotDialog"
 import { EditChatBotDialogWithTrigger } from "@/components/chat-bots/EditChatBotDialog"
 import { useSidebarLayout } from "@/components/layouts/sidebar/context"
-import type { ChatBot as ChatBotType } from "@/features/chat-bots/chat-bots.models"
-import { selectCurrentChatBot } from "@/features/chat-bots/chat-bots.selectors"
-import { selectFirstSession } from "@/features/chat-sessions/chat-sessions.selectors"
-import {
-  createAppSession,
-  createPlaygroundSession,
-} from "@/features/chat-sessions/chat-sessions.thunks"
+import { CreateChatSession } from "@/components/sidebar/projects/chat-sessions/CreateChatSession"
+import type { ChatBot } from "@/features/chat-bots/chat-bots.models"
+import type { ChatSession } from "@/features/chat-sessions/chat-sessions.models"
 import { useAbility } from "@/hooks/use-ability"
 import { useBuildPath } from "@/hooks/use-build-path"
-import { useAppDispatch, useAppSelector } from "@/store/hooks"
-import { LoadingRoute } from "./LoadingRoute"
 
-export function ChatBotRoute() {
-  const dispatch = useAppDispatch()
-  const navigate = useNavigate()
-  const { admin } = useAbility()
+export function ChatBotRoute({
+  chatBot,
+  chatSessions,
+}: {
+  chatBot: ChatBot
+  chatSessions: ChatSession[]
+}) {
   const outlet = useOutlet()
-  const chatBot = useAppSelector(selectCurrentChatBot)
-  const firstChatSession = useAppSelector(selectFirstSession)
-  const { buildPath } = useBuildPath()
-  const sessionCreationInitiated = useRef(false)
 
+  useHandleHeader(chatBot)
+
+  if (outlet) return <Outlet />
+
+  if (chatSessions.length > 0) {
+    return <FirstChatSession chatSession={chatSessions[0]} />
+  }
+  return <NoChatSession />
+}
+
+function FirstChatSession({ chatSession }: { chatSession?: ChatSession }) {
+  const { buildPath } = useBuildPath()
+  if (!chatSession) return null
+  return <Navigate to={buildPath("chatSession", { chatSessionId: chatSession.id })} replace />
+}
+
+function NoChatSession() {
+  const { t } = useTranslation("chatSession", { keyPrefix: "list" })
+  return (
+    <div className="p-6">
+      <Card>
+        <CardHeader>
+          <CardTitle>{t("empty.title")}</CardTitle>
+          <CardDescription>{t("empty.description")}</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <CreateChatSession type="button" />
+        </CardContent>
+      </Card>
+    </div>
+  )
+}
+
+function useHandleHeader(chatBot: ChatBot) {
+  const { admin } = useAbility()
   const { setHeaderTitle, setHeaderRightSlot } = useSidebarLayout()
   const headerTitle = chatBot && admin ? `${chatBot.name} - Playground` : "Chat Bot"
 
   useEffect(() => {
     setHeaderTitle(headerTitle)
-    if (!chatBot) return
     if (admin) setHeaderRightSlot(<HeaderRightSlot chatBot={chatBot} />)
     return () => {
       setHeaderRightSlot(undefined)
     }
   }, [headerTitle, setHeaderTitle, chatBot, setHeaderRightSlot, admin])
-
-  const onSuccess = useCallback(
-    (chatSessionId: string) => {
-      navigate(buildPath("chatSession", { chatSessionId }))
-    },
-    [navigate, buildPath],
-  )
-
-  // Create a new session if none exists (debounced via ref to prevent duplicate calls)
-  useEffect(() => {
-    if (!chatBot || outlet || firstChatSession || sessionCreationInitiated.current) return
-    sessionCreationInitiated.current = true
-    if (admin) dispatch(createPlaygroundSession({ onSuccess }))
-    else dispatch(createAppSession({ onSuccess }))
-  }, [chatBot, outlet, firstChatSession, admin, dispatch, onSuccess])
-
-  if (!chatBot) return <LoadingRoute />
-
-  if (outlet) return <Outlet />
-  if (firstChatSession) {
-    return (
-      <Navigate to={buildPath("chatSession", { chatSessionId: firstChatSession.id })} replace />
-    )
-  }
-  return null
 }
 
-function HeaderRightSlot({ chatBot }: { chatBot: ChatBotType }) {
+function HeaderRightSlot({ chatBot }: { chatBot: ChatBot }) {
   return (
     <div className="flex items-center gap-2">
       <DefaultPromptDialog prompt={chatBot.defaultPrompt} />

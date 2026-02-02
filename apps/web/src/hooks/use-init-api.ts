@@ -13,8 +13,7 @@ export function useInitApi() {
   const dispatch = useAppDispatch()
 
   useEffect(() => {
-    if (!isLoading) {
-      dispatch(authActions.setAuthenticated(isAuthenticated))
-    }
+    if (isLoading) return
+    dispatch(authActions.setAuthenticated(isAuthenticated))
   }, [isAuthenticated, isLoading, dispatch])
 }

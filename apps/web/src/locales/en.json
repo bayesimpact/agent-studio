@@ -124,6 +124,12 @@
   "chatSession": {
     "create": {
       "button": "New chat"
+    },
+    "list": {
+      "empty": {
+        "title": "No chats yet",
+        "description": "Start a new chat."
+      }
     }
   },
   "chat": {

@@ -13,35 +13,24 @@ export const listSessions = createAsyncThunk<
   ThunkConfig
 >("chatSession/listSessions", async ({ chatBotId, playground }, { extra: { services } }) => {
   if (playground) {
-    return services.chatSession.getAllPlayground(chatBotId)
+    return services.chatSessions.getAllPlayground(chatBotId)
   }
-  return services.chatSession.getAllApp(chatBotId)
+  return services.chatSessions.getAllApp(chatBotId)
 })
 
-export const createPlaygroundSession = createAsyncThunk<
+export const createChatSession = createAsyncThunk<
   ChatSession,
   { onSuccess: (chatSessionId: string) => void },
   ThunkConfig
->("chatSession/createPlaygroundSession", async (_, { extra: { services }, getState }) => {
+>("chatSession/createChatSession", async (_, { extra: { services }, getState }) => {
   const state = getState()
+  const isAdmin = state.auth.isAdmin
   const chatBotId = state.chatBots.currentChatBotId
   if (!chatBotId) {
     throw new Error("No current chat bot ID found")
   }
-  return services.chatSession.createPlaygroundSession(chatBotId)
-})
-
-export const createAppSession = createAsyncThunk<
-  ChatSession,
-  { onSuccess: (chatSessionId: string) => void },
-  ThunkConfig
->("chatSession/createAppSession", async (_, { extra: { services }, getState }) => {
-  const state = getState()
-  const chatBotId = state.chatBots.currentChatBotId
-  if (!chatBotId) {
-    throw new Error("No current chat bot ID found")
-  }
-  return services.chatSession.createAppSession({
+  if (isAdmin) return services.chatSessions.createPlaygroundSession(chatBotId)
+  return services.chatSessions.createAppSession({
     chatBotId,
     chatSessionType: "app-private",
   })
@@ -50,7 +39,7 @@ export const createAppSession = createAsyncThunk<
 export const loadSessionMessages = createAsyncThunk<ChatSessionMessage[], string, ThunkConfig>(
   "chatSession/loadSessionMessages",
   async (sessionId, { extra: { services } }) => {
-    return services.chatSession.getMessages(sessionId)
+    return services.chatSessions.getMessages(sessionId)
   },
 )
 

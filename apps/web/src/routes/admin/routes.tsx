@@ -1,16 +1,5 @@
-import { ChatBotRoute } from "../ChatBotRoute"
-import { ChatSessionRoute } from "../ChatSessionRoute"
-import { DashboardRoute } from "../DashboardRoute"
+import { getElement } from "../Elements"
 import { buildAdminPath, RouteNames } from "../helpers"
-import { ChatBotLoader } from "../loaders/ChatBotLoader"
-import { ChatBotsLoader } from "../loaders/ChatBotsLoader"
-import { ChatSessionLoader } from "../loaders/ChatSessionLoader"
-import { ChatSessionsLoader } from "../loaders/ChatSessionsLoader"
-import { ProjectLoader } from "../loaders/ProjectLoader"
-import { ProjectsLoader } from "../loaders/ProjectsLoader"
-import { UserHoc } from "../loaders/UserHoc"
-import { OrganizationsLoader } from "../OrganizationsLoader"
-import { ProjectRoute } from "../ProjectRoute"
 import { ProtectedRoute } from "../ProtectedRoute"
 import { AdminOnboardingRoute } from "./AdminOnboardingRoute"
 
@@ -25,53 +14,23 @@ export const adminRoutes = [
   },
   {
     path: buildAdminPath(RouteNames.ORGANIZATION_DASHBOARD),
-    element: (
-      <ProtectedRoute>
-        <UserHoc>
-          {(user) => (
-            <OrganizationsLoader>
-              {(organizationId) => (
-                <ProjectsLoader organizationId={organizationId}>
-                  <DashboardRoute user={user} />
-                </ProjectsLoader>
-              )}
-            </OrganizationsLoader>
-          )}
-        </UserHoc>
-      </ProtectedRoute>
-    ),
+    element: getElement(RouteNames.ORGANIZATION_DASHBOARD),
     children: [
       {
         index: true,
-        element: <div>TODO: Dashboard</div>,
+        element: <div>TODO: Admin Dashboard</div>,
       },
       {
         path: buildAdminPath(RouteNames.PROJECT),
-        element: (
-          <ProjectLoader>
-            <ChatBotsLoader>
-              <ProjectRoute />
-            </ChatBotsLoader>
-          </ProjectLoader>
-        ),
+        element: getElement(RouteNames.PROJECT),
         children: [
           {
             path: buildAdminPath(RouteNames.CHAT_BOT),
-            element: (
-              <ChatBotLoader>
-                <ChatSessionsLoader>
-                  <ChatBotRoute />
-                </ChatSessionsLoader>
-              </ChatBotLoader>
-            ),
+            element: getElement(RouteNames.CHAT_BOT),
             children: [
               {
                 path: buildAdminPath(RouteNames.CHAT_SESSION),
-                element: (
-                  <ChatSessionLoader>
-                    <ChatSessionRoute />
-                  </ChatSessionLoader>
-                ),
+                element: getElement(RouteNames.CHAT_SESSION),
               },
             ],
           },

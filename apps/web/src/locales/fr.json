@@ -128,6 +128,12 @@
   "chatSession": {
     "create": {
       "button": "Nouveau chat"
+    },
+    "list": {
+      "empty": {
+        "title": "Pas encore de conversations",
+        "description": "Commencez une nouvelle conversation."
+      }
     }
   },
   "user": {

@@ -10,10 +10,10 @@ export type Services = {
   organizations: IOrganizationsSpi
   projects: IProjectsSpi
   chatBots: IChatBotsSpi
-  chatSession: IChatSessionsSpi
+  chatSessions: IChatSessionsSpi
 }
 
-export const getServices = () => {
+export const getServices = (): Services => {
   // TODO: if .env.STORRYBOOK => mockSerivces
   // if(envProd) require("@/external/axios") // ensure axios singleton is initialized
   // else require("@/mocks") // ensure axios singleton is initialized
