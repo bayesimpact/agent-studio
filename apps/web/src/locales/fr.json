@@ -125,6 +125,11 @@
     "header": "Chat",
     "placeholder": "Posez une question..."
   },
+  "chatSession": {
+    "create": {
+      "button": "Nouveau chat"
+    }
+  },
   "user": {
     "menu": {
       "logout": "Se déconnecter"

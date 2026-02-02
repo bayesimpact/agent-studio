@@ -1,5 +1,6 @@
 import { SidebarMenuSubButton } from "@caseai-connect/ui/shad/sidebar"
-import { MessageSquarePlusIcon } from "lucide-react"
+import { PlusIcon } from "lucide-react"
+import { useTranslation } from "react-i18next"
 import {
   createAppSession,
   createPlaygroundSession,
@@ -9,16 +10,16 @@ import { useAppDispatch } from "@/store/hooks"
 
 export function CreateChatSession() {
   const { admin } = useAbility()
+  const { t } = useTranslation("chatSession", { keyPrefix: "create" })
   const dispatch = useAppDispatch()
   const handleClick = () => {
     if (admin) dispatch(createPlaygroundSession())
     else dispatch(createAppSession())
   }
-  // FIXME: i18n
   return (
     <SidebarMenuSubButton onClick={handleClick} className="cursor-default">
-      <MessageSquarePlusIcon />
-      <span>New Chat Session</span>
+      <PlusIcon />
+      <span>{t("button")}</span>
     </SidebarMenuSubButton>
   )
 }

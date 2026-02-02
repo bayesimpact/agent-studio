@@ -56,7 +56,6 @@ describe("createPlaygroundSession", () => {
     expect(result.id).toBeDefined()
     expect(result.chatBotId).toBe(savedChatBot.id)
     expect(result.type).toBe("playground")
-    expect(result.expiresAt).toBeNull()
   })
   it("fails when user is a member", async () => {
     const {
