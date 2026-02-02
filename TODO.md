@@ -1,8 +1,6 @@
 # TODO
 
-- fix create session
 - remove ttl
-- rename chatbotId into chatBotId (in chat session entity)
 - create ErrorRoute
 - use moostache to compile master-prompt+variables(locale, defaultprompt)
 - write e2e tests

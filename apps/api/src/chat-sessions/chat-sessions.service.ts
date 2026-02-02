@@ -113,52 +113,17 @@ export class ChatSessionsService {
     })
   }
 
-  /**
-   * Creates or reuses a playground session for a user and chatbot
-   * - If session exists and TTL not expired: returns existing session
-   * - If session exists but TTL expired: resets messages and updates TTL
-   * - If session doesn't exist: creates new session
-   * Sets TTL to 24 hours from now
-   */
   async createPlaygroundSession(
     chatBotId: string,
     userId: string,
     organizationId: string,
   ): Promise<ChatSession> {
-    // Look for existing playground session for this user and chatbot
-    const existingSession = await this.chatSessionRepository.findOne({
-      where: {
-        chatBotId,
-        userId,
-        organizationId,
-        type: "playground",
-      },
-    })
-
-    const now = new Date()
-    const expiresAt = new Date()
-    expiresAt.setHours(expiresAt.getHours() + 24) // 24 hours TTL
-
-    if (existingSession) {
-      // Check if TTL expired
-      if (existingSession.expiresAt && existingSession.expiresAt < now) {
-        // TTL expired: delete all messages and update TTL
-        await this.chatMessageRepository.delete({ sessionId: existingSession.id })
-        existingSession.expiresAt = expiresAt
-        return this.chatSessionRepository.save(existingSession)
-      }
-
-      // TTL not expired: return existing session
-      return existingSession
-    }
-
-    // No existing session: create new one
     const session = this.chatSessionRepository.create({
       chatBotId,
       userId,
       organizationId,
       type: "playground",
-      expiresAt,
+      expiresAt: null,
     })
 
     return this.chatSessionRepository.save(session)
@@ -169,7 +134,7 @@ export class ChatSessionsService {
    * User must be an admin or owner of the chat bot's project's organization.
    * Throws ForbiddenException if the user is not a member.
    */
-  private async verifyUserCanCreatePlaygroundSession(
+  async verifyUserCanCreatePlaygroundSession(
     userId: string,
     chatBotId: string,
   ): Promise<{ organizationId: string }> {
@@ -198,7 +163,7 @@ export class ChatSessionsService {
     return { organizationId: chatBot.project.organizationId }
   }
 
-  private async verifyUserCanCreateAppPrivateSession(
+  async verifyUserCanCreateAppPrivateSession(
     userId: string,
     chatBotId: string,
   ): Promise<{ organizationId: string }> {
@@ -227,35 +192,15 @@ export class ChatSessionsService {
     return { organizationId: chatBot.project.organizationId }
   }
 
-  /**
-   * Creates or reuses a playground session for a user and chatbot,
-   * performing organization membership checks based on the chatbot's project.
-   */
-  async createPlaygroundSessionForChatBot(chatBotId: string, userId: string): Promise<ChatSession> {
-    const { organizationId } = await this.verifyUserCanCreatePlaygroundSession(userId, chatBotId)
-    return this.createPlaygroundSession(chatBotId, userId, organizationId)
-  }
-
   async createAppPrivateSession({
     chatBotId,
     userId,
+    organizationId,
   }: {
     chatBotId: string
     userId: string
+    organizationId: string
   }): Promise<ChatSession> {
-    const { organizationId } = await this.verifyUserCanCreateAppPrivateSession(userId, chatBotId)
-    // Look for existing playground session for this user and chatbot
-    const existingSession = await this.chatSessionRepository.findOne({
-      where: {
-        chatBotId,
-        userId,
-        organizationId,
-        type: "app-private",
-      },
-    })
-
-    if (existingSession) return existingSession
-
     const session = this.chatSessionRepository.create({
       chatBotId,
       userId,

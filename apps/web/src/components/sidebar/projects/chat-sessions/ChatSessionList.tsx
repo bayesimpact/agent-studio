@@ -3,17 +3,15 @@ import {
   SidebarMenuSubButton,
   SidebarMenuSubItem,
 } from "@caseai-connect/ui/shad/sidebar"
-import { MessageSquarePlusIcon, MessagesSquareIcon } from "lucide-react"
-import { Link, useParams } from "react-router-dom"
+import { MessagesSquareIcon } from "lucide-react"
+import { Link } from "react-router-dom"
 import type { ChatSession } from "@/features/chat-sessions/chat-sessions.models"
-import {
-  createAppSession,
-  createPlaygroundSession,
-} from "@/features/chat-sessions/chat-sessions.thunks"
+import { selectCurrentChatSessionId } from "@/features/chat-sessions/chat-sessions.selectors"
 import { useAbility } from "@/hooks/use-ability"
 import { buildChatSessionPath } from "@/routes/helpers"
-import { useAppDispatch } from "@/store/hooks"
+import { useAppSelector } from "@/store/hooks"
 import type { MenuItem } from "../../types"
+import { CreateChatSession } from "./CreateChatSession"
 
 export function ChatSessionList({
   sessions,
@@ -27,8 +25,7 @@ export function ChatSessionList({
   organizationId: string
 }) {
   const { admin } = useAbility()
-  // const currentChatSessionId = useAppSelector(selectCurrentChatSessionId)
-  const { chatSessionId: currentChatSessionId } = useParams() // FIXME:
+  const currentChatSessionId = useAppSelector(selectCurrentChatSessionId)
   const items: MenuItem[] = sessions.map((session) => ({
     id: session.id,
     title: session.id.slice(0, 6), // TODO: use createdAt as name
@@ -55,23 +52,8 @@ export function ChatSessionList({
           </SidebarMenuSubButton>
         </SidebarMenuSubItem>
       ))}
-      <CreateSessionButton />
-    </SidebarMenuSub>
-  )
-}
 
-function CreateSessionButton() {
-  const { admin } = useAbility()
-  const dispatch = useAppDispatch()
-  const handleClick = () => {
-    if (admin) dispatch(createPlaygroundSession())
-    dispatch(createAppSession())
-  }
-  // FIXME: i18n
-  return (
-    <SidebarMenuSubButton onClick={handleClick} className="cursor-default">
-      <MessageSquarePlusIcon />
-      <span>New Chat Session</span>
-    </SidebarMenuSubButton>
+      <CreateChatSession />
+    </SidebarMenuSub>
   )
 }

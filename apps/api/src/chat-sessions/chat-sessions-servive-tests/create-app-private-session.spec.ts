@@ -4,7 +4,7 @@ import { chatSessionControllerTestSetup } from "./test-setup"
 const getTestContext = chatSessionControllerTestSetup()
 
 describe("createAppPrivateSession", () => {
-  it("should create an app-private session without TTL", async () => {
+  it("should create an app-private session", async () => {
     const { service, testChatBot, testUser, testOrganization, membershipRepository } =
       getTestContext()
 
@@ -17,6 +17,7 @@ describe("createAppPrivateSession", () => {
     const session = await service.createAppPrivateSession({
       chatBotId: testChatBot.id,
       userId: testUser.id,
+      organizationId: testOrganization.id,
     })
 
     expect(session).toBeDefined()
