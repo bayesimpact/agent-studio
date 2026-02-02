@@ -26,11 +26,10 @@ export function chatBotsControllerTestSetup() {
   let organization: Organization
 
   beforeAll(async () => {
-    setup = await setupTransactionalTestDatabase(
-      [User, Organization, UserMembership, Project, ChatBot, ChatSession],
-      [],
-      [ChatBotsModule],
-    )
+    setup = await setupTransactionalTestDatabase({
+      featureEntities: [User, Organization, UserMembership, Project, ChatBot, ChatSession],
+      additionalImports: [ChatBotsModule],
+    })
     await clearTestDatabase(setup.dataSource)
   })
 

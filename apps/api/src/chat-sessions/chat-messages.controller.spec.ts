@@ -29,11 +29,18 @@ describe("ChatMessagesController", () => {
   let chatMessageRepository: Repository<ChatMessage>
 
   beforeAll(async () => {
-    setup = await setupTransactionalTestDatabase(
-      [User, Organization, UserMembership, Project, ChatBot, ChatSession, ChatMessage],
-      [],
-      [ChatSessionsModule],
-    )
+    setup = await setupTransactionalTestDatabase({
+      featureEntities: [
+        User,
+        Organization,
+        UserMembership,
+        Project,
+        ChatBot,
+        ChatSession,
+        ChatMessage,
+      ],
+      additionalImports: [ChatSessionsModule],
+    })
     await clearTestDatabase(setup.dataSource)
   })
 

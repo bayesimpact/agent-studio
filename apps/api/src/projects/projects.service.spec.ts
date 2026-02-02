@@ -24,11 +24,10 @@ describe("ProjectsService", () => {
   let setup: Awaited<ReturnType<typeof setupTransactionalTestDatabase>>
 
   beforeAll(async () => {
-    setup = await setupTransactionalTestDatabase(
-      [Project, Organization, UserMembership, User],
-      [],
-      [ProjectsModule],
-    )
+    setup = await setupTransactionalTestDatabase({
+      featureEntities: [Project, Organization, UserMembership, User],
+      additionalImports: [ProjectsModule],
+    })
     await clearTestDatabase(setup.dataSource)
   })
 
