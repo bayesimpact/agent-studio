@@ -22,6 +22,10 @@ const slice = createSlice({
   initialState,
   reducers: {
     setCurrentChatSessionId: (state, action: PayloadAction<{ chatSessionId: string | null }>) => {
+      if (!ADS.isFulfilled(state.data)) return
+      const found = state.data.value.find((s) => s.id === action.payload.chatSessionId)
+      if (!found) return
+
       state.currentChatSessionId = action.payload.chatSessionId
     },
     reset: () => initialState,

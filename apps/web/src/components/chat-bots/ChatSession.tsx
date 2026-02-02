@@ -23,7 +23,7 @@ import {
 import { MarkdownWrapper } from "../chat/MarkdownWrapper"
 import { DotsBackground } from "../DotsBackground"
 
-export function AdminChatBot({ session }: { session: ChatSession }) {
+export function AdminChatSession({ session }: { session: ChatSession }) {
   const { t } = useTranslation("chat")
   const dispatch = useAppDispatch()
   const messages = useAppSelector(selectCurrentMessages)
@@ -75,7 +75,7 @@ export function AdminChatBot({ session }: { session: ChatSession }) {
   )
 }
 
-export function AppChatBot({ session }: { session: ChatSession }) {
+export function AppChatSession({ session }: { session: ChatSession }) {
   const { t } = useTranslation("chat")
   const dispatch = useAppDispatch()
   const messages = useAppSelector(selectCurrentMessages)

@@ -12,17 +12,23 @@ import {
 import { Trash2Icon } from "lucide-react"
 import { useState } from "react"
 import { useTranslation } from "react-i18next"
+import { useNavigate } from "react-router-dom"
 import type { ChatBot } from "@/features/chat-bots/chat-bots.models"
 import { selectChatBotsStatus } from "@/features/chat-bots/chat-bots.selectors"
 import { deleteChatBot } from "@/features/chat-bots/chat-bots.thunks"
+import { useBuildPath } from "@/hooks/use-build-path"
 import { ADS } from "@/store/async-data-status"
 import { useAppDispatch, useAppSelector } from "@/store/hooks"
 
 export function DeleteChatBotDialogWithTrigger({ chatBot }: { chatBot: ChatBot }) {
+  const navigate = useNavigate()
   const [open, setOpen] = useState(false)
+
+  const { projectPath } = useBuildPath()
 
   const handleSuccess = () => {
     setOpen(false)
+    navigate(projectPath)
   }
 
   const handleClose = () => {

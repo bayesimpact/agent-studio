@@ -6,7 +6,7 @@ import { Outlet } from "react-router-dom"
 import type { User } from "@/features/me/me.models"
 import { selectCurrentOrganization } from "@/features/organizations/organizations.selectors"
 import { useAbility } from "@/hooks/use-ability"
-import { buildOrganizationPath } from "@/routes/helpers"
+import { useBuildPath } from "@/hooks/use-build-path"
 import { useAppSelector } from "@/store/hooks"
 import { SidebarLayout } from "./layouts/SidebarLayout"
 import { AdminNavProjects, AppNavProjects } from "./sidebar/NavProjects"
@@ -16,6 +16,7 @@ export function DashboardLayout({ user, projects }: { user: User; projects: Proj
   const { admin } = useAbility()
   const organization = useAppSelector(selectCurrentOrganization)
   const organizationName = organization?.name || "CaseAi"
+  const { organizationPath } = useBuildPath()
 
   if (organization)
     return (
@@ -23,7 +24,7 @@ export function DashboardLayout({ user, projects }: { user: User; projects: Proj
         sidebarHeaderChildren={
           <Header
             Icon={admin ? SlidersHorizontalIcon : SparklesIcon}
-            to={buildOrganizationPath({ organizationId: organization.id, admin })}
+            to={organizationPath}
             name={organizationName}
             subname={admin ? "Admin" : undefined}
             iconClassName={

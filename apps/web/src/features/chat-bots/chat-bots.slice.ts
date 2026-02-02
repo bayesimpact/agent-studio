@@ -20,6 +20,12 @@ const slice = createSlice({
   initialState,
   reducers: {
     setCurrentChatBotId: (state, action: PayloadAction<{ chatBotId: string | null }>) => {
+      if (!ADS.isFulfilled(state.data)) return
+      const found = Object.values(state.data.value)
+        .flat()
+        .find((b) => b.id === action.payload.chatBotId)
+      if (!found) return
+
       state.currentChatBotId = action.payload.chatBotId
     },
     clearChatBots: (state, action: PayloadAction<{ projectId: string }>) => {

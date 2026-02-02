@@ -18,6 +18,10 @@ const slice = createSlice({
   initialState,
   reducers: {
     setCurrentOrganizationId: (state, action: PayloadAction<{ organizationId: string | null }>) => {
+      if (!ADS.isFulfilled(state.data)) return
+      const found = state.data.value.find((o) => o.id === action.payload.organizationId)
+      if (!found) return
+
       state.currentOrganizationId = action.payload.organizationId
     },
     reset: () => initialState,

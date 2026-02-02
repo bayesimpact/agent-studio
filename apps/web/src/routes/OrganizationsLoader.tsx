@@ -1,12 +1,12 @@
 import { Navigate } from "react-router-dom"
 import {
-  selectCurrentOrganizationId,
+  selectCurrentOrganization,
   selectOrganizationsData,
 } from "@/features/organizations/organizations.selectors"
+import { useBuildPath } from "@/hooks/use-build-path"
 import { useSetCurrentOrganizationId } from "@/hooks/use-set-current-id"
 import { ADS } from "@/store/async-data-status"
 import { useAppSelector } from "@/store/hooks"
-import { buildAdminPath, RouteNames } from "./helpers"
 import { LoadingRoute } from "./LoadingRoute"
 import { NotFoundRoute } from "./NotFoundRoute"
 
@@ -16,16 +16,17 @@ export function OrganizationsLoader({
   children: (organizationId: string) => React.ReactNode
 }) {
   useSetCurrentOrganizationId()
+  const { onboardingPath } = useBuildPath()
 
-  const organizationId = useAppSelector(selectCurrentOrganizationId)
+  const organization = useAppSelector(selectCurrentOrganization)
   const organizationsData = useAppSelector(selectOrganizationsData)
 
-  if (ADS.isError(organizationsData)) return <NotFoundRoute />
+  if (ADS.isError(organizationsData) || !organization) return <NotFoundRoute />
 
-  if (ADS.isFulfilled(organizationsData) && organizationId) {
+  if (ADS.isFulfilled(organizationsData) && organization) {
     if (organizationsData.value.length === 0) {
-      return <Navigate to={buildAdminPath(RouteNames.ONBOARDING)} replace />
-    } else return <>{children(organizationId)}</>
+      return <Navigate to={onboardingPath} replace />
+    } else return <>{children(organization.id)}</>
   }
 
   return <LoadingRoute />

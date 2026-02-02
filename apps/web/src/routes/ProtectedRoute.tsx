@@ -13,7 +13,7 @@ export function ProtectedRoute({ children }: { children: React.ReactNode }) {
   }, [isLoading, isAuthenticated, loginWithRedirect])
 
   if (isLoading) return <LoadingRoute />
-  if (!isAuthenticated) return <LoadingRoute /> // Will redirect via useEffect
+  if (!isAuthenticated) return <LoadingRoute />
 
   return <>{children}</>
 }

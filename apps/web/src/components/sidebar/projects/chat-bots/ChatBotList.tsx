@@ -24,6 +24,7 @@ import {
 import { BotIcon, Edit, MoreHorizontal, PlusIcon, Trash2 } from "lucide-react"
 import { useState } from "react"
 import { useTranslation } from "react-i18next"
+import { useNavigate } from "react-router-dom"
 import { CreateChatBotForm } from "@/components/chat-bots/CreateChatBotForm"
 import { DeleteChatBotDialogWithOutTrigger } from "@/components/chat-bots/DeleteChatBotDialog"
 import { EditChatBotDialogWithOutTrigger } from "@/components/chat-bots/EditChatBotDialog"
@@ -31,6 +32,7 @@ import type { ChatBot } from "@/features/chat-bots/chat-bots.models"
 import { selectCurrentChatBotId } from "@/features/chat-bots/chat-bots.selectors"
 import { selectChatSessions } from "@/features/chat-sessions/chat-sessions.selectors"
 import type { Project } from "@/features/projects/projects.models"
+import { useBuildPath } from "@/hooks/use-build-path"
 import { buildChatBotPath } from "@/routes/helpers"
 import { useAppSelector } from "@/store/hooks"
 import { AppNavItem } from "../../NavItem"
@@ -47,11 +49,16 @@ export function AdminChatBotList({
   chatBots: ChatBot[]
   organizationId: string
 }) {
+  const navigate = useNavigate()
+  const { projectPath } = useBuildPath()
   const currentChatBotId = useAppSelector(selectCurrentChatBotId)
   const sessions = useAppSelector(selectChatSessions)
   const [item, setItem] = useState<Item | null>(null)
   const handleItem = (item: Item) => setItem(item)
-  const handleClose = () => setItem(null)
+  const handleClose = () => {
+    setItem(null)
+    navigate(projectPath)
+  }
   return (
     <>
       {chatBots.map((chatBot) => (

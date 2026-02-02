@@ -1,4 +1,4 @@
-import { AdminChatBot, AppChatBot } from "@/components/chat-bots/ChatBot"
+import { AdminChatSession, AppChatSession } from "@/components/chat-bots/ChatSession"
 import { selectCurrentChatSession } from "@/features/chat-sessions/chat-sessions.selectors"
 import { useAbility } from "@/hooks/use-ability"
 import { useAppSelector } from "@/store/hooks"
@@ -9,6 +9,6 @@ export function ChatSessionRoute() {
   const chatSession = useAppSelector(selectCurrentChatSession)
 
   if (!chatSession) return <LoadingRoute />
-  if (admin) return <AdminChatBot session={chatSession} />
-  return <AppChatBot session={chatSession} />
+  if (admin) return <AdminChatSession session={chatSession} />
+  return <AppChatSession session={chatSession} />
 }

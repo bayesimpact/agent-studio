@@ -1,7 +1,4 @@
-import {
-  selectCurrentProjectId,
-  selectProjectsStatus,
-} from "@/features/projects/projects.selectors"
+import { selectCurrentProject, selectProjectsStatus } from "@/features/projects/projects.selectors"
 import { useSetCurrentProjectId } from "@/hooks/use-set-current-id"
 import { ADS } from "@/store/async-data-status"
 import { useAppSelector } from "@/store/hooks"
@@ -11,12 +8,12 @@ import { NotFoundRoute } from "../NotFoundRoute"
 export function ProjectLoader({ children }: { children: React.ReactNode }) {
   useSetCurrentProjectId()
 
-  const projectId = useAppSelector(selectCurrentProjectId)
+  const project = useAppSelector(selectCurrentProject)
   const status = useAppSelector(selectProjectsStatus)
 
-  if (ADS.isError(status)) return <NotFoundRoute />
+  if (ADS.isError(status) || !project) return <NotFoundRoute />
 
-  if (ADS.isFulfilled(status) && projectId) return <>{children}</>
+  if (ADS.isFulfilled(status) && project) return <>{children}</>
 
   return <LoadingRoute />
 }

@@ -12,8 +12,17 @@ import { UserHoc } from "../loaders/UserHoc"
 import { OrganizationsLoader } from "../OrganizationsLoader"
 import { ProjectRoute } from "../ProjectRoute"
 import { ProtectedRoute } from "../ProtectedRoute"
+import { AppOnboardingRoute } from "./AppOnboardingRoute"
 
 export const appRoutes = [
+  {
+    path: buildAppPath(RouteNames.ONBOARDING),
+    element: (
+      <ProtectedRoute>
+        <AppOnboardingRoute />
+      </ProtectedRoute>
+    ),
+  },
   {
     path: buildAppPath(RouteNames.ORGANIZATION_DASHBOARD),
     element: (
