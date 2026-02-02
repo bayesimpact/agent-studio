@@ -1,4 +1,5 @@
 import type { RootState } from "@/store"
+import { ADS } from "@/store/async-data-status"
 
 export const selectChatSessionStatus = (state: RootState) => state.chatSessions.data.status
 
@@ -21,3 +22,9 @@ export const selectChatSessionMessagesError = (state: RootState) =>
   state.chatSessions.messages.error
 
 export const selectStreaming = (state: RootState) => state.chatSessions.isStreaming
+
+export const selectFirstSession = (state: RootState) => {
+  const sessions = state.chatSessions.data
+  if (!ADS.isFulfilled(sessions)) return null
+  return sessions.value[0] || null
+}

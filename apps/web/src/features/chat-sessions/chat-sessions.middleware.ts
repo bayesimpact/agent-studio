@@ -7,6 +7,7 @@ import {
   loadSessionMessages,
 } from "@/features/chat-sessions/chat-sessions.thunks"
 import type { AppDispatch, RootState } from "@/store"
+import { sleep } from "@/utils/sleep"
 import { chatSessionsActions } from "./chat-sessions.slice"
 
 // Create typed listener middleware
@@ -39,16 +40,22 @@ listenerMiddleware.startListening({
 listenerMiddleware.startListening({
   actionCreator: createPlaygroundSession.fulfilled,
   effect: async (action, listenerApi) => {
-    const { chatBotId } = action.payload
+    const callback = action.meta.arg.callback
+    const { chatBotId, id } = action.payload
     await listenerApi.dispatch(listSessions({ chatBotId, playground: true }))
+    await sleep(200)
+    callback(id)
   },
 })
 
 listenerMiddleware.startListening({
   actionCreator: createAppSession.fulfilled,
   effect: async (action, listenerApi) => {
-    const { chatBotId } = action.payload
+    const callback = action.meta.arg.callback
+    const { chatBotId, id } = action.payload
     await listenerApi.dispatch(listSessions({ chatBotId, playground: false }))
+    await sleep(200)
+    callback(id)
   },
 })
 

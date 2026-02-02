@@ -6,7 +6,7 @@ import { SidebarMenu } from "@caseai-connect/ui/shad/sidebar"
 import { useState } from "react"
 import { useTranslation } from "react-i18next"
 import type { ChatBot } from "@/features/chat-bots/chat-bots.models"
-import { selectChatBots } from "@/features/chat-bots/chat-bots.selectors"
+import { selectChatBotsFromProjectId } from "@/features/chat-bots/chat-bots.selectors"
 import { selectCurrentOrganization } from "@/features/organizations/organizations.selectors"
 import { useAppSelector } from "@/store/hooks"
 import { AdminChatBotList, AppChatBotList } from "./projects/chat-bots/ChatBotList"
@@ -28,7 +28,6 @@ export function AdminNavProjects({ projects }: { projects: ProjectDto[] }) {
         <ProjectItem
           key={project.id}
           project={project}
-          currentOrganizationId={currentOrganization.id}
           options={
             <ProjectOptions
               onEdit={() => handleItem({ action: "edit", value: project })}
@@ -37,13 +36,7 @@ export function AdminNavProjects({ projects }: { projects: ProjectDto[] }) {
           }
           showEmptyProject={true}
         >
-          {({ chatBots, organizationId }) => (
-            <AdminChatBotList
-              chatBots={chatBots}
-              organizationId={organizationId}
-              project={project}
-            />
-          )}
+          {({ chatBots }) => <AdminChatBotList chatBots={chatBots} project={project} />}
         </ProjectItem>
       ))}
 
@@ -65,14 +58,8 @@ export function AppNavProjects({ projects }: { projects: ProjectDto[] }) {
   return (
     <>
       {projects.map((project) => (
-        <ProjectItem
-          key={project.id}
-          project={project}
-          currentOrganizationId={currentOrganization.id}
-        >
-          {({ chatBots, organizationId }) => (
-            <AppChatBotList chatBots={chatBots} organizationId={organizationId} />
-          )}
+        <ProjectItem key={project.id} project={project}>
+          {({ chatBots }) => <AppChatBotList chatBots={chatBots} />}
         </ProjectItem>
       ))}
     </>
@@ -81,24 +68,22 @@ export function AppNavProjects({ projects }: { projects: ProjectDto[] }) {
 
 function ProjectItem({
   project,
-  currentOrganizationId,
   children,
   options,
   showEmptyProject = false,
 }: {
   project: ProjectDto
-  currentOrganizationId: string
-  children: (args: { chatBots: ChatBot[]; organizationId: string }) => React.ReactNode
+  children: (args: { chatBots: ChatBot[] }) => React.ReactNode
   options?: React.ReactNode
   showEmptyProject?: boolean
 }) {
   const { t } = useTranslation("common")
-  const chatBots = useAppSelector(selectChatBots(project.id)) || []
+  const chatBots = useAppSelector(selectChatBotsFromProjectId(project.id)) || []
   const name = `${t("project")} - ${project.name}`
   if (chatBots.length === 0 && !showEmptyProject) return null
   return (
     <Section name={name} options={options} className="group-data-[collapsible=icon]:hidden">
-      <SidebarMenu>{children({ chatBots, organizationId: currentOrganizationId })}</SidebarMenu>
+      <SidebarMenu>{children({ chatBots })}</SidebarMenu>
     </Section>
   )
 }
