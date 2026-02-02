@@ -16,12 +16,12 @@ export function CreateChatSession() {
   const { t } = useTranslation("chatSession", { keyPrefix: "create" })
   const dispatch = useAppDispatch()
   const { buildPath } = useBuildPath()
-  const callback = (chatSessionId: string) => {
+  const onSuccess = (chatSessionId: string) => {
     navigate(buildPath("chatSession", { chatSessionId }))
   }
   const handleClick = () => {
-    if (admin) dispatch(createPlaygroundSession({ callback }))
-    else dispatch(createAppSession({ callback }))
+    if (admin) dispatch(createPlaygroundSession({ onSuccess }))
+    else dispatch(createAppSession({ onSuccess }))
   }
   return (
     <SidebarMenuSubButton onClick={handleClick} className="cursor-default">

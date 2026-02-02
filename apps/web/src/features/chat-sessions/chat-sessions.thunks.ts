@@ -20,7 +20,7 @@ export const listSessions = createAsyncThunk<
 
 export const createPlaygroundSession = createAsyncThunk<
   ChatSession,
-  { callback: (chatSessionId: string) => void },
+  { onSuccess: (chatSessionId: string) => void },
   ThunkConfig
 >("chatSession/createPlaygroundSession", async (_, { extra: { services }, getState }) => {
   const state = getState()
@@ -33,7 +33,7 @@ export const createPlaygroundSession = createAsyncThunk<
 
 export const createAppSession = createAsyncThunk<
   ChatSession,
-  { callback: (chatSessionId: string) => void },
+  { onSuccess: (chatSessionId: string) => void },
   ThunkConfig
 >("chatSession/createAppSession", async (_, { extra: { services }, getState }) => {
   const state = getState()
