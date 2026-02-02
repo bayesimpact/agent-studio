@@ -7,7 +7,7 @@
 
 import type { DynamicModule, Provider, Type } from "@nestjs/common"
 import { ConfigModule } from "@nestjs/config"
-import { Test, type TestingModule } from "@nestjs/testing"
+import { Test, type TestingModule, type TestingModuleBuilder } from "@nestjs/testing"
 import { getRepositoryToken, TypeOrmModule } from "@nestjs/typeorm"
 import type { ObjectLiteral, QueryRunner, Repository } from "typeorm"
 import { DataSource, EntityManager } from "typeorm"
@@ -49,7 +49,10 @@ export interface TransactionalTestSetup {
  * let setup: TransactionalTestSetup
  *
  * beforeAll(async () => {
- *   setup = await setupTransactionalTestDatabase([User], [UsersService])
+ *   setup = await setupTransactionalTestDatabase({
+ *     featureEntities: [User],
+ *     providers: [UsersService],
+ *   })
  *   // Optionally clear database once at the start for clean state
  *   await clearTestDatabase(setup.dataSource)
  * })
@@ -70,34 +73,12 @@ export interface TransactionalTestSetup {
  * ```
  */
 export async function setupTransactionalTestDatabase(
-  featureEntities: Array<new () => ObjectLiteral>,
-  providers: Provider[] = [],
-  additionalImports: Array<Type<unknown> | DynamicModule> = [],
+  params: CreateTestingModuleParams,
 ): Promise<TransactionalTestSetup> {
+  const { featureEntities, providers = [], additionalImports = [] } = params
+  const baseModule = await createBaseTestingModule(params).compile()
+
   const testDatabaseUrl = process.env.DATABASE_URL
-  if (!testDatabaseUrl) {
-    throw new Error("DATABASE_URL not found in environment. Make sure .env.test is loaded.")
-  }
-
-  // Create base module without transaction
-  const baseModule = await Test.createTestingModule({
-    imports: [
-      ConfigModule.forRoot({
-        isGlobal: true,
-      }),
-      TypeOrmModule.forRoot({
-        type: "postgres",
-        url: testDatabaseUrl,
-        entities: TEST_ENTITIES,
-        logging: false,
-        dropSchema: false,
-      }),
-      TypeOrmModule.forFeature(featureEntities),
-      ...additionalImports,
-    ],
-    providers,
-  }).compile()
-
   const dataSource = baseModule.get<DataSource>(DataSource)
   let queryRunner: QueryRunner | null = null
   let transactionalModule: TestingModule = baseModule
@@ -235,4 +216,46 @@ export async function teardownTestDatabase(setup: TransactionalTestSetup): Promi
   }
   await setup.dataSource.destroy()
   await setup.module.close()
+}
+
+export function createBaseTestingModule(
+  {
+    featureEntities,
+    providers = [],
+    additionalImports = [],
+    applyOverrides,
+  }: CreateTestingModuleParams = { featureEntities: [], applyOverrides: undefined },
+) {
+  const testDatabaseUrl = process.env.DATABASE_URL
+  if (!testDatabaseUrl) {
+    throw new Error("DATABASE_URL not found in environment. Make sure .env.test is loaded.")
+  }
+
+  // Create base module without transaction
+  const baseModule = Test.createTestingModule({
+    imports: [
+      ConfigModule.forRoot({
+        isGlobal: true,
+      }),
+      TypeOrmModule.forRoot({
+        type: "postgres",
+        url: testDatabaseUrl,
+        entities: TEST_ENTITIES,
+        logging: false,
+        dropSchema: false,
+      }),
+      TypeOrmModule.forFeature(featureEntities),
+      ...additionalImports,
+    ],
+    providers,
+  })
+
+  return applyOverrides ? applyOverrides(baseModule) : baseModule
+}
+
+export type CreateTestingModuleParams = {
+  featureEntities: Array<new () => ObjectLiteral>
+  providers?: Provider[]
+  additionalImports?: Array<Type<unknown> | DynamicModule>
+  applyOverrides?: (moduleBuilder: TestingModuleBuilder) => TestingModuleBuilder
 }

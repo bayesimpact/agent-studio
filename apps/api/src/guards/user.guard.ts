@@ -7,7 +7,7 @@ import {
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
 import { Auth0UserInfoService } from "@/auth/auth0-userinfo.service"
 import { getAccessToken } from "@/common/utils/get-access-token"
-import type { EndpointRequest, JwtPayload } from "@/request.interface"
+import type { JwtPayload } from "@/request.interface"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
 import { UsersService } from "@/users/users.service"
 
@@ -38,12 +38,9 @@ export class UserGuard implements CanActivate {
         getUserInfo: () => this.auth0UserInfoService.getUserInfo(accessToken),
       })
 
-      request.user = {
-        ...jwtPayload,
-        ...user,
-        createdAt: user.createdAt.getTime(),
-        updatedAt: user.updatedAt.getTime(),
-      } as EndpointRequest["user"]
+      request.jwtPayload = jwtPayload
+      request.user = user
+
       return true
     } catch (error) {
       throw new UnauthorizedException("Could not ensure user exists", error as Error)

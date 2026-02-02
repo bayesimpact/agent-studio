@@ -1,5 +1,4 @@
-import type { TimeType } from "@caseai-connect/api-contracts"
-import type { UserMembership } from "./organizations/user-membership.entity"
+import type { User } from "./users/user.entity"
 
 export interface JwtPayload {
   sub: string
@@ -12,14 +11,6 @@ export interface JwtPayload {
 }
 
 export interface EndpointRequest {
-  user: JwtPayload & {
-    id: string
-    auth0Id: string
-    email: string
-    name: string
-    pictureUrl?: string
-    createdAt: TimeType
-    updatedAt: TimeType
-    memberships?: UserMembership[]
-  }
+  jwtPayload: JwtPayload
+  user: User
 }

@@ -33,11 +33,10 @@ describe("ChatBotsService", () => {
   let setup: Awaited<ReturnType<typeof setupTransactionalTestDatabase>>
 
   beforeAll(async () => {
-    setup = await setupTransactionalTestDatabase(
-      [ChatBot, Project, Organization, UserMembership, User],
-      [],
-      [ChatBotsModule],
-    )
+    setup = await setupTransactionalTestDatabase({
+      featureEntities: [ChatBot, Project, Organization, UserMembership, User],
+      additionalImports: [ChatBotsModule],
+    })
     await clearTestDatabase(setup.dataSource)
   })
 

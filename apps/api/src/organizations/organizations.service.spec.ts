@@ -20,11 +20,10 @@ describe("OrganizationsService", () => {
   let setup: Awaited<ReturnType<typeof setupTransactionalTestDatabase>>
 
   beforeAll(async () => {
-    setup = await setupTransactionalTestDatabase(
-      [Organization, UserMembership, User],
-      [],
-      [OrganizationsModule],
-    )
+    setup = await setupTransactionalTestDatabase({
+      featureEntities: [Organization, UserMembership, User],
+      additionalImports: [OrganizationsModule],
+    })
     // Clear database once at the start to ensure clean state
     // Individual tests use transactions with rollback for isolation
     await clearTestDatabase(setup.dataSource)
