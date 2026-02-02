@@ -15,13 +15,13 @@ describe("createAppPrivateSession", () => {
     await membershipRepository.save(membership)
 
     const session = await service.createAppPrivateSession({
-      chatbotId: testChatBot.id,
+      chatBotId: testChatBot.id,
       userId: testUser.id,
     })
 
     expect(session).toBeDefined()
     expect(session.type).toBe("app-private")
-    expect(session.chatbotId).toBe(testChatBot.id)
+    expect(session.chatBotId).toBe(testChatBot.id)
     expect(session.userId).toBe(testUser.id)
     expect(session.organizationId).toBe(testOrganization.id)
     expect(session.messages).toBeUndefined()

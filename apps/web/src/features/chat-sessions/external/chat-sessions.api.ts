@@ -53,7 +53,7 @@ export default {
 
 const fromDto = (dto: ChatSessionDto): ChatSession => ({
   id: dto.id,
-  chatbotId: dto.chatbotId,
+  chatBotId: dto.chatBotId,
   type: dto.type,
   expiresAt: dto.expiresAt,
 })

@@ -4,7 +4,7 @@ export type ChatSessionTypeDto = "playground" | "production" | "app-private"
 
 export type ChatSessionDto = {
   id: string
-  chatbotId: string
+  chatBotId: string
   type: ChatSessionTypeDto
   expiresAt: TimeType | null
 }

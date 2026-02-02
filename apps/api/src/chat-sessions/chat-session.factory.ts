@@ -48,7 +48,7 @@ export const chatSessionFactory = ChatSessionFactory.define(({ params, transient
 
   return {
     id: params.id || randomUUID(),
-    chatbotId: transientParams.chatBot.id,
+    chatBotId: transientParams.chatBot.id,
     userId: transientParams.user.id,
     organizationId: transientParams.organization.id,
     type: params.type || "playground",

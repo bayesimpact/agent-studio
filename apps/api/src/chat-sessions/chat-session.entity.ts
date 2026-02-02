@@ -17,15 +17,15 @@ import { ChatMessage } from "./chat-message.entity"
 export type ChatSessionType = "playground" | "production" | "app-private"
 
 @Entity("chat_session")
-@Index(["chatbotId", "type"])
+@Index(["chatBotId", "type"])
 @Index(["organizationId", "type"])
 @Index(["expiresAt"])
 export class ChatSession {
   @PrimaryGeneratedColumn("uuid")
   id!: string
 
-  @Column({ type: "uuid", name: "chatbot_id" })
-  chatbotId!: string
+  @Column({ type: "uuid", name: "chat_bot_id" })
+  chatBotId!: string
 
   @Column({ type: "uuid", name: "user_id" })
   userId!: string
@@ -49,7 +49,7 @@ export class ChatSession {
     () => ChatBot,
     (chatBot) => chatBot.chatSessions,
   )
-  @JoinColumn({ name: "chatbot_id" })
+  @JoinColumn({ name: "chat_bot_id" })
   chatbot!: ChatBot
 
   @ManyToOne(
