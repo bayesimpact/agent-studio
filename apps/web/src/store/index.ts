@@ -1,5 +1,6 @@
 import { configureStore } from "@reduxjs/toolkit"
 import { getServices } from "@/di/services"
+import { authMiddleware } from "@/features/auth/auth.middleware"
 import { authSliceReducer } from "@/features/auth/auth.slice"
 import { chatBotsMiddleware } from "@/features/chat-bots/chat-bots.middleware"
 import { chatBotsSliceReducer } from "@/features/chat-bots/chat-bots.slice"
@@ -11,7 +12,6 @@ import { organizationsMiddleware } from "@/features/organizations/organizations.
 import { organizationsSliceReducer } from "@/features/organizations/organizations.slice"
 import { projectsMiddleware } from "@/features/projects/projects.middleware"
 import { projectsSliceReducer } from "@/features/projects/projects.slice"
-import { listenerMiddleware } from "./listenerMiddleware"
 import type { ThunkExtraArg } from "./types"
 
 export const store = configureStore({
@@ -30,7 +30,7 @@ export const store = configureStore({
         extraArgument: { services: getServices() } satisfies ThunkExtraArg,
       },
     }).prepend(
-      listenerMiddleware.middleware,
+      authMiddleware.middleware,
       organizationsMiddleware.middleware,
       projectsMiddleware.middleware,
       chatBotsMiddleware.middleware,

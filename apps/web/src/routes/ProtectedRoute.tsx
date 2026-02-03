@@ -1,12 +1,9 @@
 import { useAuth0 } from "@auth0/auth0-react"
 import { useEffect } from "react"
-import { useInitAbility } from "@/hooks/use-init-ability"
 import { LoadingRoute } from "./LoadingRoute"
 
 export function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, isLoading, loginWithRedirect } = useAuth0()
-
-  useInitAbility()
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {

@@ -1,6 +1,7 @@
 import { createAsyncThunk } from "@reduxjs/toolkit"
 import type { RootState, ThunkExtraArg } from "@/store"
 import { generateId } from "@/utils/generate-id"
+import { selectIsAdminInterface } from "../auth/auth.selectors"
 import type { ChatSession, ChatSessionMessage } from "./chat-sessions.models"
 import { chatSessionsActions } from "./chat-sessions.slice"
 import { streamChatResponse } from "./external/chat-session-streaming"
@@ -24,12 +25,12 @@ export const createChatSession = createAsyncThunk<
   ThunkConfig
 >("chatSession/createChatSession", async (action, { extra: { services }, getState }) => {
   const state = getState()
-  const isAdmin = state.auth.isAdmin
+  const isAdminInterface = selectIsAdminInterface(state)
   const chatBotId = action.chatBotId
   if (!chatBotId) {
     throw new Error("No current chat bot ID found")
   }
-  if (isAdmin) return services.chatSessions.createPlaygroundSession(chatBotId)
+  if (isAdminInterface) return services.chatSessions.createPlaygroundSession(chatBotId)
   return services.chatSessions.createAppSession({
     chatBotId,
     chatSessionType: "app-private",

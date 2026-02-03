@@ -1,3 +1,5 @@
+import type { MembershipRoleDto } from "../organizations/organizations.dto"
+
 export type MeResponseDto = {
   user: {
     id: string
@@ -7,6 +9,6 @@ export type MeResponseDto = {
   organizations: Array<{
     id: string
     name: string
-    role: string
+    role: MembershipRoleDto
   }>
 }

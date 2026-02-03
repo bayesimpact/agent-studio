@@ -5,5 +5,6 @@ export type CreateOrganizationRequestDto = {
 export type CreateOrganizationResponseDto = {
   id: string
   name: string
-  role: string
+  role: MembershipRoleDto
 }
+export type MembershipRoleDto = "owner" | "admin" | "member"

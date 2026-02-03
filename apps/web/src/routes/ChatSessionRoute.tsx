@@ -9,7 +9,7 @@ export function ChatSessionRoute({
   chatSession: ChatSession
   messages: ChatSessionMessage[]
 }) {
-  const { admin } = useAbility()
-  if (admin) return <AdminChatSession session={chatSession} messages={messages} />
+  const { isAdminInterface } = useAbility()
+  if (isAdminInterface) return <AdminChatSession session={chatSession} messages={messages} />
   return <AppChatSession session={chatSession} messages={messages} />
 }

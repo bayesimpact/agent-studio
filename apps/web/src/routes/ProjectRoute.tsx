@@ -20,7 +20,7 @@ import { useBuildPath } from "@/hooks/use-build-path"
 
 export function ProjectRoute({ project, chatBots }: { project: Project; chatBots: ChatBot[] }) {
   const outlet = useOutlet()
-  const { admin } = useAbility()
+  const { isAdminInterface } = useAbility()
   const { buildPath } = useBuildPath()
   const firstChatBot = chatBots?.[0]
 
@@ -31,7 +31,7 @@ export function ProjectRoute({ project, chatBots }: { project: Project; chatBots
   if (firstChatBot)
     return <Navigate to={buildPath("chatBot", { chatBotId: firstChatBot.id })} replace />
 
-  if (admin) return <NoChatBot project={project} />
+  if (isAdminInterface) return <NoChatBot project={project} />
 
   return null
 }

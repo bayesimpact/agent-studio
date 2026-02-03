@@ -71,17 +71,17 @@ function NoChatSession({ chatBotId }: { chatBotId: string }) {
 }
 
 function useHandleHeader(chatBot: ChatBot) {
-  const { admin } = useAbility()
+  const { isAdminInterface } = useAbility()
   const { setHeaderTitle, setHeaderRightSlot } = useSidebarLayout()
-  const headerTitle = chatBot && admin ? `${chatBot.name} - Playground` : "Chat Bot"
+  const headerTitle = chatBot && isAdminInterface ? `${chatBot.name} - Playground` : "Chat Bot"
 
   useEffect(() => {
     setHeaderTitle(headerTitle)
-    if (admin) setHeaderRightSlot(<HeaderRightSlot chatBot={chatBot} />)
+    if (isAdminInterface) setHeaderRightSlot(<HeaderRightSlot chatBot={chatBot} />)
     return () => {
       setHeaderRightSlot(undefined)
     }
-  }, [headerTitle, setHeaderTitle, chatBot, setHeaderRightSlot, admin])
+  }, [headerTitle, setHeaderTitle, chatBot, setHeaderRightSlot, isAdminInterface])
 }
 
 function HeaderRightSlot({ chatBot }: { chatBot: ChatBot }) {

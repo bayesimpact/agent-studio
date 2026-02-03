@@ -1,5 +1,6 @@
 import { createAsyncThunk } from "@reduxjs/toolkit"
 import type { RootState, ThunkExtraArg } from "@/store"
+import { selectIsAdminInterface } from "./auth/auth.selectors"
 import type { ChatBot } from "./chat-bots/chat-bots.models"
 import type { ChatSession } from "./chat-sessions/chat-sessions.models"
 import type { Project } from "./projects/projects.models"
@@ -16,7 +17,7 @@ export const initOrganization = createAsyncThunk<
   ThunkConfig
 >("init/organization", async ({ organizationId }, { extra: { services }, getState }) => {
   const state = getState()
-  const isAdmin = state.auth.isAdmin
+  const isAdminInterface = selectIsAdminInterface(state)
   const projects = await services.projects.getAll(organizationId)
   const chatBots: Record<Project["id"], ChatBot[]> = {}
   const chatSessions: Record<ChatBot["id"], ChatSession[]> = {}
@@ -26,7 +27,7 @@ export const initOrganization = createAsyncThunk<
     chatBots[project.id] = bots
 
     for (const bot of bots) {
-      if (isAdmin) {
+      if (isAdminInterface) {
         const sessions = await services.chatSessions.getAllPlayground(bot.id)
         chatSessions[bot.id] = sessions
       } else {
