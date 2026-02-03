@@ -317,6 +317,67 @@ describe("ProjectsService", () => {
 
 **Note**: Use the existing test utilities (`setupTransactionalTestDatabase`) from `@/common/test/test-transaction-manager` for consistent test setup.
 
+### Always Use Factory Functions for Test Data
+
+**Rule**: When writing tests, you MUST always use fishery factory functions to create test data instead of manually constructing objects or using `new` constructors.
+
+**Requirements**:
+- Use factory functions (e.g., `userFactory`, `organizationFactory`, `projectFactory`, `userMembershipFactory`) to create test entities
+- Never manually create entities using `new EntityName()` or object literals
+- Use factory methods like `.owner()`, `.admin()`, `.member()` when available for role-specific factories
+- Use `.transient()` to pass required relationships (e.g., `projectFactory.transient({ organization })`)
+- Use `.params()` to override specific properties when needed
+
+**Why this rule?**
+- **Consistency**: Factories ensure all test data follows the same patterns
+- **Maintainability**: Changes to entity structure only need to be updated in factories
+- **Realistic data**: Factories generate more realistic test data with proper relationships
+- **Less boilerplate**: Factories handle default values and required fields automatically
+
+**Examples**:
+```typescript
+// ❌ Wrong - Manual object creation
+const user = new User()
+user.id = randomUUID()
+user.email = "test@example.com"
+// ... many more lines
+
+// ✅ Correct - Using factory
+const user = userFactory.build({ email: "test@example.com" })
+
+// ❌ Wrong - Manual membership creation
+const membership = new UserMembership()
+membership.role = "owner"
+membership.userId = user.id
+membership.organizationId = org.id
+
+// ✅ Correct - Using factory with transient params
+const membership = userMembershipFactory
+  .owner()
+  .transient({ user, organization })
+  .build()
+
+// ❌ Wrong - Manual project creation
+const project = {
+  id: randomUUID(),
+  name: "Test Project",
+  organizationId: org.id,
+  // ... missing required fields
+}
+
+// ✅ Correct - Using factory
+const project = projectFactory.transient({ organization: org }).build()
+```
+
+**Available Factories**:
+- `userFactory` - For creating User entities
+- `organizationFactory` - For creating Organization entities
+- `projectFactory` - For creating Project entities (requires organization transient)
+- `userMembershipFactory` - For creating UserMembership entities (requires user and organization transients, has `.owner()`, `.admin()`, `.member()` methods)
+- `chatBotFactory` - For creating ChatBot entities
+- `chatSessionFactory` - For creating ChatSession entities
+- Additional factories may exist for other entities
+
 ## Organization-Based Resource Authorization
 
 ### Mandatory Authorization Checks
