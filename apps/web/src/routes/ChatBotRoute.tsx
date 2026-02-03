@@ -44,7 +44,7 @@ export function ChatBotRoute({
   if (chatSessions.length > 0) {
     return <FirstChatSession chatSession={chatSessions[0]} />
   }
-  return <NoChatSession />
+  return <NoChatSession chatBotId={chatBot.id} />
 }
 
 function FirstChatSession({ chatSession }: { chatSession?: ChatSession }) {
@@ -53,7 +53,7 @@ function FirstChatSession({ chatSession }: { chatSession?: ChatSession }) {
   return <Navigate to={buildPath("chatSession", { chatSessionId: chatSession.id })} replace />
 }
 
-function NoChatSession() {
+function NoChatSession({ chatBotId }: { chatBotId: string }) {
   const { t } = useTranslation("chatSession", { keyPrefix: "list" })
   return (
     <div className="p-6">
@@ -63,7 +63,7 @@ function NoChatSession() {
           <CardDescription>{t("empty.description")}</CardDescription>
         </CardHeader>
         <CardContent>
-          <CreateChatSession type="button" />
+          <CreateChatSession chatBotId={chatBotId} type="button" />
         </CardContent>
       </Card>
     </div>
