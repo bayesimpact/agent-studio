@@ -20,12 +20,12 @@ export const listSessions = createAsyncThunk<
 
 export const createChatSession = createAsyncThunk<
   ChatSession,
-  { onSuccess: (chatSessionId: string) => void },
+  { chatBotId: string; onSuccess?: (chatSessionId: string) => void },
   ThunkConfig
->("chatSession/createChatSession", async (_, { extra: { services }, getState }) => {
+>("chatSession/createChatSession", async (action, { extra: { services }, getState }) => {
   const state = getState()
   const isAdmin = state.auth.isAdmin
-  const chatBotId = state.chatBots.currentChatBotId
+  const chatBotId = action.chatBotId
   if (!chatBotId) {
     throw new Error("No current chat bot ID found")
   }

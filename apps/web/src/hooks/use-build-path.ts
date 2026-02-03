@@ -33,10 +33,12 @@ export function useBuildPath() {
         return admin ? buildAdminPath(RouteNames.ONBOARDING) : buildAppPath(RouteNames.ONBOARDING)
       }
 
-      const organizationId = options?.organizationId ?? urlOrganizationId
-      const projectId = options?.projectId ?? urlProjectId
-      const chatBotId = options?.chatBotId ?? urlChatBotId
-      const chatSessionId = options?.chatSessionId ?? urlChatSessionId
+      const organizationId =
+        options && "organizationId" in options ? options.organizationId : urlOrganizationId
+      const projectId = options && "projectId" in options ? options.projectId : urlProjectId
+      const chatBotId = options && "chatBotId" in options ? options.chatBotId : urlChatBotId
+      const chatSessionId =
+        options && "chatSessionId" in options ? options.chatSessionId : urlChatSessionId
 
       const organizationPath = organizationId
         ? buildOrganizationPath({
