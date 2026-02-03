@@ -1,21 +1,20 @@
 import type { ChatBotLocale, ChatBotModel, ChatBotTemperature } from "@caseai-connect/api-contracts"
-import {
-  Column,
-  CreateDateColumn,
-  Entity,
-  JoinColumn,
-  ManyToOne,
-  OneToMany,
-  PrimaryGeneratedColumn,
-  UpdateDateColumn,
-} from "typeorm"
+import { Column, Entity, JoinColumn, ManyToOne, OneToMany } from "typeorm"
 import { ChatSession } from "@/chat-sessions/chat-session.entity"
+import { Base4AllEntity } from "@/common/entities/base4all.entity"
 import { Project } from "@/projects/project.entity"
 
 @Entity("chat_bot")
-export class ChatBot {
-  @PrimaryGeneratedColumn("uuid")
-  id!: string
+export class ChatBot extends Base4AllEntity {
+  @Column({ type: "uuid", name: "project_id" })
+  projectId!: string
+
+  @ManyToOne(
+    () => Project,
+    (project) => project.chatBots,
+  )
+  @JoinColumn({ name: "project_id" })
+  project!: Project
 
   @Column({ type: "varchar" })
   name!: string
@@ -31,22 +30,6 @@ export class ChatBot {
 
   @Column({ type: "varchar" })
   locale!: ChatBotLocale
-
-  @Column({ type: "uuid", name: "project_id" })
-  projectId!: string
-
-  @CreateDateColumn({ name: "created_at" })
-  createdAt!: Date
-
-  @UpdateDateColumn({ name: "updated_at" })
-  updatedAt!: Date
-
-  @ManyToOne(
-    () => Project,
-    (project) => project.chatBots,
-  )
-  @JoinColumn({ name: "project_id" })
-  project!: Project
 
   @OneToMany(
     () => ChatSession,
