@@ -19,7 +19,7 @@ import {
   selectOrganizationsStatus,
 } from "@/features/organizations/organizations.selectors"
 import { createOrganization } from "@/features/organizations/organizations.thunks"
-import { RouteNames } from "@/routes/helpers"
+import { buildAdminPath, RouteNames } from "@/routes/helpers"
 import { ADS } from "@/store/async-data-status"
 import { useAppDispatch, useAppSelector } from "@/store/hooks"
 import { FullPageCenterLayout } from "./layouts/FullPageCenterLayout"
@@ -47,7 +47,7 @@ export function CreateOrganizationForm() {
 
   const onSubmit = async (data: CreateOrganizationFormData) => {
     dispatch(createOrganization({ name: data.name })).finally(() =>
-      navigate(RouteNames.HOME, { replace: true }),
+      navigate(buildAdminPath(RouteNames.ONBOARDING), { replace: true }),
     )
   }
 
