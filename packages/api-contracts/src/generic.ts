@@ -9,3 +9,9 @@ export type ResponseData<T> = {
 }
 
 export type SuccessResponseDTO = { success: true }
+
+export type ErrorResponseDTO = {
+  message: string
+  error: string
+  statusCode: number
+}

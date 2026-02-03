@@ -1,13 +1,16 @@
 import type { TimeType } from "@caseai-connect/api-contracts"
 import { Body, Controller, Delete, Get, Param, Patch, Post, Req, UseGuards } from "@nestjs/common"
 import { JwtAuthGuard } from "@/auth/jwt-auth.guard"
+import { CheckPolicy } from "@/common/policies/check-policy.decorator"
 import { UserGuard } from "@/guards/user.guard"
-import type { EndpointRequest } from "@/request.interface"
+import { OrganizationGuard } from "@/organizations/organization.guard"
+import type { EndpointRequest, EndpointRequestWithUserMembership } from "@/request.interface"
+import { ProjectsGuard } from "./projects.guard"
 import { ProjectsRoutes } from "./projects.routes"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
 import { ProjectsService } from "./projects.service"
 
-@UseGuards(JwtAuthGuard, UserGuard)
+@UseGuards(JwtAuthGuard, UserGuard, OrganizationGuard, ProjectsGuard)
 @Controller()
 export class ProjectsController {
   constructor(private readonly projectsService: ProjectsService) {}
@@ -36,11 +39,11 @@ export class ProjectsController {
   }
 
   @Get(ProjectsRoutes.listProjects.path)
+  @CheckPolicy((policy) => policy.canList())
   async listProjects(
-    @Req() request: EndpointRequest,
-    @Param("organizationId") organizationId: string,
+    @Req() request: EndpointRequestWithUserMembership,
   ): Promise<typeof ProjectsRoutes.listProjects.response> {
-    const user = request.user
+    const { user, organizationId } = request
 
     // List projects for the organization
     const projects = await this.projectsService.listProjects(user.id, organizationId)

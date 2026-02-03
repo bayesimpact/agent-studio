@@ -378,6 +378,75 @@ const project = projectFactory.transient({ organization: org }).build()
 - `chatSessionFactory` - For creating ChatSession entities
 - Additional factories may exist for other entities
 
+### Use Organization Factory Helpers in Tests
+
+**Rule**: When writing tests that need to create organizations with users and memberships, you MUST use the helper functions from `organization.factory.ts` instead of manually creating and saving entities.
+
+**Available Helpers**:
+- `createOrganizationWithOwner(repositories, params?)` - Creates and saves an organization, user, and membership (with owner role) in one call
+- `buildOrganizationWithOwner(params?)` - Builds (but doesn't save) an organization, user, and membership
+- Additional helpers may exist for creating organizations with projects, chat bots, etc.
+
+**Requirements**:
+- Use `createOrganizationWithOwner` when you need an organization with a user and membership already saved to the database
+- Pass repositories as the first parameter: `{ userRepository, organizationRepository, membershipRepository }`
+- Optionally pass params to customize the entities: `{ user: { email: "..." }, organization: { name: "..." }, membership: { role: "..." } }`
+- Extract the returned entities using destructuring: `const { user, organization, membership } = await createOrganizationWithOwner(...)`
+- Create a `mainRepositories` object in `beforeEach` to avoid repeating the repositories parameter in every test
+
+**Why this rule?**
+- **Reduces boilerplate**: Eliminates repetitive code for creating users, organizations, and memberships
+- **Consistency**: Ensures all tests use the same pattern for creating test data
+- **Maintainability**: Changes to entity relationships only need to be updated in the helper
+- **Readability**: Tests are more concise and focus on what they're testing, not setup
+
+**Examples**:
+```typescript
+// ✅ Correct - Using helper with mainRepositories
+let mainRepositories: {
+  membershipRepository: Repository<UserMembership>
+  organizationRepository: Repository<Organization>
+  userRepository: Repository<User>
+}
+
+beforeEach(async () => {
+  await setup.startTransaction()
+  membershipRepository = setup.getRepository(UserMembership)
+  organizationRepository = setup.getRepository(Organization)
+  userRepository = setup.getRepository(User)
+  mainRepositories = {
+    membershipRepository,
+    organizationRepository,
+    userRepository,
+  }
+})
+
+it("should return membership when user is a member", async () => {
+  const { user, organization } = await createOrganizationWithOwner(mainRepositories, {
+    user: { email: "member@example.com" },
+    organization: { name: "Test Org" },
+  })
+  // ... test code
+})
+
+// ❌ Wrong - Manually creating and saving entities
+it("should return membership when user is a member", async () => {
+  const user = userFactory.build({ email: "member@example.com" })
+  const savedUser = await userRepository.save(user)
+  const organization = organizationFactory.build({ name: "Test Org" })
+  const savedOrganization = await organizationRepository.save(organization)
+  const membership = userMembershipFactory
+    .transient({ user: savedUser, organization: savedOrganization })
+    .build()
+  await membershipRepository.save(membership)
+  // ... test code
+})
+```
+
+**When to use helpers vs factories**:
+- **Use helpers** (`createOrganizationWithOwner`) when you need entities saved to the database and want to reduce boilerplate
+- **Use factories** (`organizationFactory`, `userFactory`) when you need more control over the creation process or when building entities that don't need to be saved immediately
+
 ## Organization-Based Resource Authorization
 
 ### Mandatory Authorization Checks

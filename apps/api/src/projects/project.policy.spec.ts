@@ -6,6 +6,7 @@ import { projectFactory } from "./project.factory"
 import { ProjectPolicy } from "./project.policy"
 
 type Project = ReturnType<typeof projectFactory.build>
+type ResourceState = "sameOrganization" | "differentOrganization" | "noResource"
 
 describe("ProjectPolicy", () => {
   const organization = organizationFactory.build()
@@ -20,29 +21,27 @@ describe("ProjectPolicy", () => {
     return projectFactory.transient({ organization: projectOrganization }).build()
   }
 
-  const buildResource = (
-    resourceState: "matching" | "nonMatching" | "undefined",
-  ): Project | undefined => {
-    if (resourceState === "matching") {
+  const buildResource = (resourceState: ResourceState): Project | undefined => {
+    if (resourceState === "sameOrganization") {
       return buildProject(organization)
     }
-    if (resourceState === "nonMatching") {
+    if (resourceState === "differentOrganization") {
       return buildProject(otherOrganization)
     }
     return undefined
   }
 
   describe("canList", () => {
-    describe.each<[MembershipRole, "matching" | "nonMatching" | "undefined"]>([
-      ["owner", "matching"],
-      ["owner", "nonMatching"],
-      ["owner", "undefined"],
-      ["admin", "matching"],
-      ["admin", "nonMatching"],
-      ["admin", "undefined"],
-      ["member", "matching"],
-      ["member", "nonMatching"],
-      ["member", "undefined"],
+    describe.each<[MembershipRole, ResourceState]>([
+      ["owner", "sameOrganization"],
+      ["owner", "differentOrganization"],
+      ["owner", "noResource"],
+      ["admin", "sameOrganization"],
+      ["admin", "differentOrganization"],
+      ["admin", "noResource"],
+      ["member", "sameOrganization"],
+      ["member", "differentOrganization"],
+      ["member", "noResource"],
     ])("when user is %s with %s resource", (role, resourceState) => {
       it("should always return true", () => {
         const policy = new ProjectPolicy(buildUserMembership(role), buildResource(resourceState))
@@ -70,16 +69,16 @@ describe("ProjectPolicy", () => {
   })
 
   describe("canUpdate", () => {
-    describe.each<[MembershipRole, "matching" | "nonMatching" | "undefined", boolean]>([
-      ["owner", "matching", true],
-      ["owner", "nonMatching", false],
-      ["owner", "undefined", false],
-      ["admin", "matching", true],
-      ["admin", "nonMatching", false],
-      ["admin", "undefined", false],
-      ["member", "matching", false],
-      ["member", "nonMatching", false],
-      ["member", "undefined", false],
+    describe.each<[MembershipRole, ResourceState, boolean]>([
+      ["owner", "sameOrganization", true],
+      ["owner", "differentOrganization", false],
+      ["owner", "noResource", false],
+      ["admin", "sameOrganization", true],
+      ["admin", "differentOrganization", false],
+      ["admin", "noResource", false],
+      ["member", "sameOrganization", false],
+      ["member", "differentOrganization", false],
+      ["member", "noResource", false],
     ])("when user is %s with %s resource", (role, resourceState, expected) => {
       it(`should return ${expected}`, () => {
         const policy = new ProjectPolicy(buildUserMembership(role), buildResource(resourceState))
@@ -90,16 +89,16 @@ describe("ProjectPolicy", () => {
   })
 
   describe("canDelete", () => {
-    describe.each<[MembershipRole, "matching" | "nonMatching" | "undefined", boolean]>([
-      ["owner", "matching", true],
-      ["owner", "nonMatching", false],
-      ["owner", "undefined", false],
-      ["admin", "matching", true],
-      ["admin", "nonMatching", false],
-      ["admin", "undefined", false],
-      ["member", "matching", false],
-      ["member", "nonMatching", false],
-      ["member", "undefined", false],
+    describe.each<[MembershipRole, ResourceState, boolean]>([
+      ["owner", "sameOrganization", true],
+      ["owner", "differentOrganization", false],
+      ["owner", "noResource", false],
+      ["admin", "sameOrganization", true],
+      ["admin", "differentOrganization", false],
+      ["admin", "noResource", false],
+      ["member", "sameOrganization", false],
+      ["member", "differentOrganization", false],
+      ["member", "noResource", false],
     ])("when user is %s with %s resource", (role, resourceState, expected) => {
       it(`should return ${expected}`, () => {
         const policy = new ProjectPolicy(buildUserMembership(role), buildResource(resourceState))
