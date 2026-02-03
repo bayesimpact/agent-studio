@@ -1,11 +1,11 @@
 import { useEffect } from "react"
 import { useNavigate } from "react-router-dom"
+import { CreateOrganizationForm } from "@/components/CreateOrganizationForm"
 import { selectOrganizationsData } from "@/features/organizations/organizations.selectors"
 import { useBuildPath } from "@/hooks/use-build-path"
 import { ADS } from "@/store/async-data-status"
 import { useAppSelector } from "@/store/hooks"
 import { LoadingRoute } from "../LoadingRoute"
-import { NotFoundRoute } from "../NotFoundRoute"
 
 export function AppOnboardingRoute() {
   const navigate = useNavigate()
@@ -24,7 +24,7 @@ export function AppOnboardingRoute() {
   }, [organizationsData, navigate, buildPath])
 
   if (ADS.isFulfilled(organizationsData) && organizationsData.value.length === 0) {
-    return <NotFoundRoute />
+    return <CreateOrganizationForm />
   }
 
   return <LoadingRoute />
