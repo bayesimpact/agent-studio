@@ -2,7 +2,6 @@ import type { ProjectDto } from "@caseai-connect/api-contracts"
 import { Header } from "@caseai-connect/ui/components/layouts/sidebar/Header"
 import { SidebarMenu, SidebarMenuItem } from "@caseai-connect/ui/shad/sidebar"
 import { Switch } from "@caseai-connect/ui/shad/switch"
-import { delay } from "lodash"
 import { SlidersHorizontalIcon, SparklesIcon } from "lucide-react"
 import { Outlet, useLocation, useNavigate } from "react-router-dom"
 import { authActions } from "@/features/auth/auth.slice"
@@ -88,13 +87,17 @@ function InterfaceToggle({
 
   const handleChange = (checked: boolean) => {
     dispatch(authActions.setIsAdminInterface(checked))
-    const newLocation = location.pathname.replace(
+    let newLocation = location.pathname.replace(
       checked ? "/app" : "/admin",
       checked ? "/admin" : "/app",
     )
-    delay(() => {
-      navigate(newLocation)
-    }, 300)
+    // Remove everything after the /cb/... part of the path when switching interfaces
+    const cbMatch = newLocation.match(/^(.*\/cb\/[^/]+)/)
+    if (cbMatch?.[1]) {
+      newLocation = cbMatch[1]
+    }
+
+    navigate(newLocation)
   }
   return <Switch checked={isAdminInterface} onCheckedChange={handleChange} />
 }
