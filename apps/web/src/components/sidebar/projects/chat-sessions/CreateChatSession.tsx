@@ -7,16 +7,22 @@ import { createChatSession } from "@/features/chat-sessions/chat-sessions.thunks
 import { useBuildPath } from "@/hooks/use-build-path"
 import { useAppDispatch } from "@/store/hooks"
 
-export function CreateChatSession({ type }: { type: "button" | "menu" }) {
+export function CreateChatSession({
+  type,
+  chatBotId,
+}: {
+  type: "button" | "menu"
+  chatBotId: string
+}) {
   const navigate = useNavigate()
   const { t } = useTranslation("chatSession", { keyPrefix: "create" })
   const dispatch = useAppDispatch()
   const { buildPath } = useBuildPath()
   const onSuccess = (chatSessionId: string) => {
-    navigate(buildPath("chatSession", { chatSessionId }))
+    navigate(buildPath("chatSession", { chatBotId, chatSessionId }))
   }
   const handleClick = () => {
-    dispatch(createChatSession({ onSuccess }))
+    dispatch(createChatSession({ chatBotId, onSuccess }))
   }
   const Comp = type === "button" ? Button : SidebarMenuSubButton
   return (

@@ -43,7 +43,7 @@ export function ChatSessionList({
     : []
   return (
     <SidebarMenuSub>
-      {items.length > 0 && <CreateChatSession type="menu" />}
+      {items.length > 0 && <CreateChatSession chatBotId={chatBotId} type="menu" />}
 
       {items.map((item) => (
         <SidebarMenuSubItem key={item.id}>
