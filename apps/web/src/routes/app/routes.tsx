@@ -1,17 +1,7 @@
 import { getElement } from "../Elements"
 import { buildAppPath, RouteNames } from "../helpers"
-import { ProtectedRoute } from "../ProtectedRoute"
-import { AppOnboardingRoute } from "./AppOnboardingRoute"
 
 export const appRoutes = [
-  {
-    path: buildAppPath(RouteNames.ONBOARDING),
-    element: (
-      <ProtectedRoute>
-        <AppOnboardingRoute />
-      </ProtectedRoute>
-    ),
-  },
   {
     path: buildAppPath(RouteNames.ORGANIZATION_DASHBOARD),
     element: getElement(RouteNames.ORGANIZATION_DASHBOARD),

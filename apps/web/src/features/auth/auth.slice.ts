@@ -3,11 +3,13 @@ import { createSlice, type PayloadAction } from "@reduxjs/toolkit"
 interface State {
   isAuthenticated: boolean
   isAdmin: boolean
+  isAdminInterface: boolean
 }
 
 const initialState: State = {
   isAuthenticated: false,
   isAdmin: false,
+  isAdminInterface: false,
 }
 
 const slice = createSlice({
@@ -18,7 +20,14 @@ const slice = createSlice({
       state.isAuthenticated = action.payload
     },
     setIsAdmin: (state, action: PayloadAction<boolean>) => {
+      const isAdmin = action.payload
       state.isAdmin = action.payload
+      if (!isAdmin && state.isAdminInterface) {
+        state.isAdminInterface = false
+      }
+    },
+    setIsAdminInterface: (state, action: PayloadAction<boolean>) => {
+      state.isAdminInterface = action.payload
     },
   },
 })

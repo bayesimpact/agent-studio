@@ -19,7 +19,7 @@ export interface BuildPathOptions {
 }
 
 export function useBuildPath() {
-  const { admin } = useAbility()
+  const { isAdminInterface } = useAbility()
   const {
     organizationId: urlOrganizationId,
     projectId: urlProjectId,
@@ -28,9 +28,9 @@ export function useBuildPath() {
   } = useParams()
 
   const computePath = useCallback(
-    (pathType: PathType, options?: BuildPathOptions): string => {
+    (isAdminInterface: boolean, pathType: PathType, options?: BuildPathOptions): string => {
       if (pathType === "onboarding") {
-        return admin ? buildAdminPath(RouteNames.ONBOARDING) : buildAppPath(RouteNames.ONBOARDING)
+        return RouteNames.ONBOARDING
       }
 
       const organizationId =
@@ -43,7 +43,7 @@ export function useBuildPath() {
       const organizationPath = organizationId
         ? buildOrganizationPath({
             organizationId,
-            admin,
+            isAdminInterface,
           })
         : RouteNames.HOME
 
@@ -56,7 +56,7 @@ export function useBuildPath() {
           ? buildProjectPath({
               organizationId,
               projectId,
-              admin,
+              isAdminInterface,
             })
           : organizationPath
 
@@ -70,7 +70,7 @@ export function useBuildPath() {
               organizationId,
               projectId,
               chatBotId,
-              admin,
+              isAdminInterface,
             })
           : projectPath
 
@@ -85,7 +85,7 @@ export function useBuildPath() {
               projectId,
               chatBotId,
               chatSessionId,
-              admin,
+              isAdminInterface,
             })
           : chatBotPath
 
@@ -95,21 +95,25 @@ export function useBuildPath() {
 
       return RouteNames.HOME
     },
-    [admin, urlChatBotId, urlChatSessionId, urlOrganizationId, urlProjectId],
+    [urlChatBotId, urlChatSessionId, urlOrganizationId, urlProjectId],
   )
 
-  const getPath = useCallback((pathType: PathType): string => computePath(pathType), [computePath])
+  const getPath = useCallback(
+    (pathType: PathType): string => computePath(isAdminInterface, pathType),
+    [computePath, isAdminInterface],
+  )
 
   const buildPath = useCallback(
-    (pathType: PathType, options: BuildPathOptions): string => computePath(pathType, options),
-    [computePath],
+    (pathType: PathType, options: BuildPathOptions): string =>
+      computePath(isAdminInterface, pathType, options),
+    [computePath, isAdminInterface],
   )
 
   return { getPath, buildPath }
 }
 
 export function useClosestParentPath() {
-  const { admin } = useAbility()
+  const { isAdminInterface } = useAbility()
   const {
     organizationId: urlOrganizationId,
     projectId: urlProjectId,
@@ -167,7 +171,7 @@ export function useClosestParentPath() {
     const organizationPath = organizationFound
       ? buildOrganizationPath({
           organizationId: organizationFound.id,
-          admin,
+          isAdminInterface,
         })
       : RouteNames.HOME
 
@@ -176,7 +180,7 @@ export function useClosestParentPath() {
         ? buildProjectPath({
             organizationId: organizationFound.id,
             projectId: projectFound.id,
-            admin,
+            isAdminInterface,
           })
         : organizationPath
 
@@ -186,7 +190,7 @@ export function useClosestParentPath() {
             organizationId: organizationFound.id,
             projectId: projectFound.id,
             chatBotId: chatBotFound.id,
-            admin,
+            isAdminInterface,
           })
         : projectPath
 
@@ -197,14 +201,14 @@ export function useClosestParentPath() {
             projectId: projectFound.id,
             chatBotId: chatBotFound.id,
             chatSessionId: chatSessionFound.id,
-            admin,
+            isAdminInterface,
           })
         : chatBotPath
 
     // closestParent
     return chatSessionPath || chatBotPath || projectPath || organizationPath || RouteNames.HOME
   }, [
-    admin,
+    isAdminInterface,
     foundChatBot,
     foundChatSession,
     foundOrganization,
@@ -220,27 +224,27 @@ export function useClosestParentPath() {
 
 const buildOrganizationPath = ({
   organizationId,
-  admin,
+  isAdminInterface,
 }: {
   organizationId: string
-  admin: boolean
+  isAdminInterface: boolean
 }) => {
   const path = `/o/${organizationId}/`
-  if (admin) return buildAdminPath(path)
+  if (isAdminInterface) return buildAdminPath(path)
   return buildAppPath(path)
 }
 
 const buildProjectPath = ({
   organizationId,
   projectId,
-  admin,
+  isAdminInterface,
 }: {
   organizationId: string
   projectId: string
-  admin: boolean
+  isAdminInterface: boolean
 }) => {
   const path = `/o/${organizationId}/p/${projectId}`
-  if (admin) return buildAdminPath(path)
+  if (isAdminInterface) return buildAdminPath(path)
   return buildAppPath(path)
 }
 
@@ -248,15 +252,15 @@ const buildChatBotPath = ({
   organizationId,
   projectId,
   chatBotId,
-  admin,
+  isAdminInterface,
 }: {
   organizationId: string
   projectId: string
   chatBotId: string
-  admin: boolean
+  isAdminInterface: boolean
 }) => {
   const path = `/o/${organizationId}/p/${projectId}/cb/${chatBotId}`
-  if (admin) return buildAdminPath(path)
+  if (isAdminInterface) return buildAdminPath(path)
   return buildAppPath(path)
 }
 
@@ -265,15 +269,15 @@ const buildChatSessionPath = ({
   projectId,
   chatBotId,
   chatSessionId,
-  admin,
+  isAdminInterface,
 }: {
   organizationId: string
   projectId: string
   chatBotId: string
   chatSessionId: string
-  admin: boolean
+  isAdminInterface: boolean
 }) => {
   const path = `/o/${organizationId}/p/${projectId}/cb/${chatBotId}/cs/${chatSessionId}`
-  if (admin) return buildAdminPath(path)
+  if (isAdminInterface) return buildAdminPath(path)
   return buildAppPath(path)
 }

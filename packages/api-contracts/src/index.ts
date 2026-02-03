@@ -18,10 +18,7 @@ export type { MeResponseDto } from "./me/me.dto"
 // Routes
 export { MeRoutes } from "./me/me.routes"
 // Organizations DTOs
-export type {
-  CreateOrganizationRequestDto,
-  CreateOrganizationResponseDto,
-} from "./organizations/organizations.dto"
+export type * from "./organizations/organizations.dto"
 export { OrganizationsRoutes } from "./organizations/organizations.routes"
 // Projects DTOs
 export type * from "./projects/projects.dto"

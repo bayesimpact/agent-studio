@@ -8,7 +8,7 @@ export const selectChatBotsStatus = (state: RootState) => state.chatBots.data.st
 
 export const selectChatBotsError = (state: RootState) => state.chatBots.data.error
 
-const selectChatBotsData = (state: RootState) => state.chatBots.data
+export const selectChatBotsData = (state: RootState) => state.chatBots.data
 
 const missingProjectId = { status: ADS.Error, value: null, error: "No project selected" }
 const missingChatBots = { status: ADS.Error, value: null, error: "No chat bots available" }

@@ -6,6 +6,9 @@ import {
   loadSessionMessages,
 } from "@/features/chat-sessions/chat-sessions.thunks"
 import type { AppDispatch, RootState } from "@/store"
+import { ADS } from "@/store/async-data-status"
+import { selectIsAdminInterface } from "../auth/auth.selectors"
+import { selectChatBotsData } from "../chat-bots/chat-bots.selectors"
 import { chatBotsActions } from "../chat-bots/chat-bots.slice"
 import { createChatBot, listChatBots } from "../chat-bots/chat-bots.thunks"
 import { selectCurrentChatSessionId } from "./chat-sessions.selectors"
@@ -19,9 +22,9 @@ listenerMiddleware.startListening({
   actionCreator: listChatBots.fulfilled,
   effect: async ({ payload }, listenerApi) => {
     const state = listenerApi.getState()
-    const isAdmin = state.auth.isAdmin
+    const isAdminInterface = selectIsAdminInterface(state)
     for (const chatBot of payload) {
-      listenerApi.dispatch(listSessions({ chatBotId: chatBot.id, playground: isAdmin }))
+      listenerApi.dispatch(listSessions({ chatBotId: chatBot.id, playground: isAdminInterface }))
     }
   },
 })
@@ -52,10 +55,31 @@ listenerMiddleware.startListening({
   actionCreator: createChatSession.fulfilled,
   effect: async (action, listenerApi) => {
     const callback = action.meta.arg.onSuccess
-    const isAdmin = listenerApi.getState().auth.isAdmin
+    const state = listenerApi.getState()
+    const isAdminInterface = selectIsAdminInterface(state)
     const { chatBotId, id } = action.payload
-    await listenerApi.dispatch(listSessions({ chatBotId, playground: isAdmin }))
+    await listenerApi.dispatch(listSessions({ chatBotId, playground: isAdminInterface }))
     callback?.(id)
+  },
+})
+
+listenerMiddleware.startListening({
+  predicate(_, currentState, originalState) {
+    const prevInterface = selectIsAdminInterface(originalState)
+    const nextInterface = selectIsAdminInterface(currentState)
+    return prevInterface !== nextInterface
+  },
+  effect: async (_, listenerApi) => {
+    const state = listenerApi.getState()
+    const isAdminInterface = selectIsAdminInterface(state)
+    const chatBots = selectChatBotsData(state)
+    if (ADS.isFulfilled(chatBots)) {
+      for (const chatBot of Object.values(chatBots.value).flat()) {
+        await listenerApi.dispatch(
+          listSessions({ chatBotId: chatBot.id, playground: isAdminInterface }),
+        )
+      }
+    }
   },
 })
 

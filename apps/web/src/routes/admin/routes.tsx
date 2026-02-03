@@ -1,17 +1,7 @@
 import { getElement } from "../Elements"
 import { buildAdminPath, RouteNames } from "../helpers"
-import { ProtectedRoute } from "../ProtectedRoute"
-import { AdminOnboardingRoute } from "./AdminOnboardingRoute"
 
 export const adminRoutes = [
-  {
-    path: buildAdminPath(RouteNames.ONBOARDING),
-    element: (
-      <ProtectedRoute>
-        <AdminOnboardingRoute />
-      </ProtectedRoute>
-    ),
-  },
   {
     path: buildAdminPath(RouteNames.ORGANIZATION_DASHBOARD),
     element: getElement(RouteNames.ORGANIZATION_DASHBOARD),
