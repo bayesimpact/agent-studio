@@ -1,4 +1,4 @@
-import type { ApiRoute } from "@caseai-connect/api-contracts"
+import type { ApiRoute, ErrorResponseDTO } from "@caseai-connect/api-contracts"
 import type { INestApplication } from "@nestjs/common/interfaces"
 import request from "supertest"
 import type { App } from "supertest/types"
@@ -37,3 +37,21 @@ export const testRequester =
   }
 
 export type Requester = ReturnType<typeof testRequester>
+
+export const expectErrorResponse = (res: request.Response, status: number, message: string) => {
+  expect(res.status).toBe(status)
+  const errorResponse = res.body as unknown as ErrorResponseDTO
+  expect(errorResponse.message).toBe(message)
+}
+
+export const expectResponse = (
+  res: request.Response,
+  status: number = 200,
+  errorMessage?: string,
+) => {
+  if (errorMessage) {
+    expectErrorResponse(res, status, errorMessage)
+    return
+  }
+  expect(res.status).toBe(status)
+}

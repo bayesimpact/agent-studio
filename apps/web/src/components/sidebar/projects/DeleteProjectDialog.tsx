@@ -35,7 +35,7 @@ export function DeleteProjectDialog({ project, onClose }: DeleteProjectDialogPro
   }
 
   const handleDelete = async () => {
-    dispatch(deleteProject({ projectId: project.id }))
+    dispatch(deleteProject({ organizationId: project.organizationId, projectId: project.id }))
     navigate(getPath("organization"))
     onClose()
   }

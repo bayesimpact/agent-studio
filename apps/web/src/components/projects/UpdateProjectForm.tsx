@@ -18,7 +18,13 @@ export function UpdateProjectForm({ project, onSuccess }: UpdateProjectFormProps
   const error = useAppSelector(selectProjectsError)
 
   const handleSubmit = async (data: { name: string }) => {
-    dispatch(updateProject({ projectId: project.id, payload: { name: data.name } }))
+    dispatch(
+      updateProject({
+        organizationId: project.organizationId,
+        projectId: project.id,
+        payload: { name: data.name },
+      }),
+    )
     onSuccess?.()
   }
 
