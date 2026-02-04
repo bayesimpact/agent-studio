@@ -1,4 +1,3 @@
-import { ForbiddenException, NotFoundException } from "@nestjs/common"
 import type { Repository } from "typeorm"
 import { clearTestDatabase } from "@/common/test/test-database"
 import {
@@ -8,11 +7,10 @@ import {
 import { Organization } from "@/organizations/organization.entity"
 import {
   createOrganizationWithOwner,
-  organizationFactory,
+  createOrganizationWithProject,
 } from "@/organizations/organization.factory"
 import { UserMembership } from "@/organizations/user-membership.entity"
 import { User } from "@/users/user.entity"
-import { userFactory } from "@/users/user.factory"
 import { Project } from "./project.entity"
 import { projectFactory } from "./project.factory"
 import { ProjectsModule } from "./projects.module"
@@ -21,10 +19,10 @@ import { ProjectsService } from "./projects.service"
 describe("ProjectsService", () => {
   let service: ProjectsService
   let projectRepository: Repository<Project>
-  let organizationRepository: Repository<Organization>
-  let membershipRepository: Repository<UserMembership>
-  let userRepository: Repository<User>
   let setup: Awaited<ReturnType<typeof setupTransactionalTestDatabase>>
+  let repositories: ReturnType<
+    Awaited<ReturnType<typeof setupTransactionalTestDatabase>>["getAllRepositories"]
+  >
 
   beforeAll(async () => {
     setup = await setupTransactionalTestDatabase({
@@ -32,29 +30,23 @@ describe("ProjectsService", () => {
       additionalImports: [ProjectsModule],
     })
     await clearTestDatabase(setup.dataSource)
+    repositories = setup.getAllRepositories()
+    projectRepository = repositories.projectRepository
+    service = setup.module.get<ProjectsService>(ProjectsService)
   })
 
   afterAll(async () => {
     await teardownTestDatabase(setup)
   })
 
-  beforeEach(async () => {
-    await setup.startTransaction()
-    service = setup.module.get<ProjectsService>(ProjectsService)
-    projectRepository = setup.getRepository(Project)
-    organizationRepository = setup.getRepository(Organization)
-    membershipRepository = setup.getRepository(UserMembership)
-    userRepository = setup.getRepository(User)
-  })
-
   afterEach(async () => {
-    await setup.rollbackTransaction()
+    await clearTestDatabase(setup.dataSource)
   })
 
   describe("createProject", () => {
     it("should create a project", async () => {
       // Arrange
-      const { organization } = await createOrganizationWithOwner(setup.getAllRepositories())
+      const { organization } = await createOrganizationWithOwner(repositories)
 
       // Act
       const result = await service.createProject(organization.id, "New Project")
@@ -75,7 +67,7 @@ describe("ProjectsService", () => {
   describe("listProjects", () => {
     it("should return projects for an organization", async () => {
       // Arrange
-      const { organization } = await createOrganizationWithOwner(setup.getAllRepositories())
+      const { organization } = await createOrganizationWithOwner(repositories)
 
       const project1 = projectFactory.transient({ organization }).build({
         name: "Project 1",
@@ -96,7 +88,7 @@ describe("ProjectsService", () => {
 
     it("should return empty array when organization has no projects", async () => {
       // Arrange
-      const { organization } = await createOrganizationWithOwner(setup.getAllRepositories())
+      const { organization } = await createOrganizationWithOwner(repositories)
 
       // Act
       const result = await service.listProjects(organization.id)
@@ -107,7 +99,7 @@ describe("ProjectsService", () => {
 
     it("should return projects ordered by createdAt DESC", async () => {
       // Arrange
-      const { organization } = await createOrganizationWithOwner(setup.getAllRepositories())
+      const { organization } = await createOrganizationWithOwner(repositories)
 
       const project1 = projectFactory.transient({ organization }).build({
         name: "First Project",
@@ -131,153 +123,17 @@ describe("ProjectsService", () => {
   })
 
   describe("deleteProject", () => {
-    it("should delete a project when user is owner", async () => {
-      // Arrange
-      const user = userFactory.build({
-        email: "owner@example.com",
-        auth0Id: "auth0|owner-delete-1",
-      })
-      const savedUser = await userRepository.save(user)
-      const org = organizationFactory.build({ name: "Delete Org" })
-      const savedOrg = await organizationRepository.save(org)
-
-      const membership = membershipRepository.create({
-        userId: savedUser.id,
-        organizationId: savedOrg.id,
-        role: "owner",
-      })
-      await membershipRepository.save(membership)
-
-      const project = projectFactory.transient({ organization: savedOrg }).build({
-        name: "Project to Delete",
-      })
-      const savedProject = await projectRepository.save(project)
+    it("should delete a project", async () => {
+      const { project } = await createOrganizationWithProject(repositories)
 
       // Act
-      await service.deleteProject(savedUser.id, savedProject.id)
+      await service.deleteProject(project)
 
       // Assert
       const deletedProject = await projectRepository.findOne({
-        where: { id: savedProject.id },
+        where: { id: project.id },
       })
       expect(deletedProject).toBeNull()
-    })
-
-    it("should delete a project when user is admin", async () => {
-      // Arrange
-      const user = userFactory.build({
-        email: "admin@example.com",
-        auth0Id: "auth0|admin-delete-1",
-      })
-      const savedUser = await userRepository.save(user)
-      const org = organizationFactory.build({ name: "Admin Delete Org" })
-      const savedOrg = await organizationRepository.save(org)
-
-      const membership = membershipRepository.create({
-        userId: savedUser.id,
-        organizationId: savedOrg.id,
-        role: "admin",
-      })
-      await membershipRepository.save(membership)
-
-      const project = projectFactory.transient({ organization: savedOrg }).build({
-        name: "Admin Project to Delete",
-      })
-      const savedProject = await projectRepository.save(project)
-
-      // Act
-      await service.deleteProject(savedUser.id, savedProject.id)
-
-      // Assert
-      const deletedProject = await projectRepository.findOne({
-        where: { id: savedProject.id },
-      })
-      expect(deletedProject).toBeNull()
-    })
-
-    it("should throw ForbiddenException when user is member", async () => {
-      // Arrange
-      const user = userFactory.build({
-        email: "member@example.com",
-        auth0Id: "auth0|member-delete-1",
-      })
-      const savedUser = await userRepository.save(user)
-      const org = organizationFactory.build({ name: "Member Delete Org" })
-      const savedOrg = await organizationRepository.save(org)
-
-      const membership = membershipRepository.create({
-        userId: savedUser.id,
-        organizationId: savedOrg.id,
-        role: "member",
-      })
-      await membershipRepository.save(membership)
-
-      const project = projectFactory.transient({ organization: savedOrg }).build({
-        name: "Should Not Delete",
-      })
-      const savedProject = await projectRepository.save(project)
-
-      // Act & Assert
-      await expect(service.deleteProject(savedUser.id, savedProject.id)).rejects.toThrow(
-        ForbiddenException,
-      )
-      await expect(service.deleteProject(savedUser.id, savedProject.id)).rejects.toThrow(
-        "User must be an owner or admin",
-      )
-
-      // Verify project still exists
-      const existingProject = await projectRepository.findOne({
-        where: { id: savedProject.id },
-      })
-      expect(existingProject).not.toBeNull()
-    })
-
-    it("should throw NotFoundException when project does not exist", async () => {
-      // Arrange
-      const user = userFactory.build({
-        email: "user@example.com",
-        auth0Id: "auth0|user-delete-1",
-      })
-      const savedUser = await userRepository.save(user)
-      const nonExistentProjectId = "00000000-0000-0000-0000-000000000000"
-
-      // Act & Assert
-      await expect(service.deleteProject(savedUser.id, nonExistentProjectId)).rejects.toThrow(
-        NotFoundException,
-      )
-      await expect(service.deleteProject(savedUser.id, nonExistentProjectId)).rejects.toThrow(
-        "Project with id",
-      )
-    })
-
-    it("should throw ForbiddenException when user is not a member", async () => {
-      // Arrange
-      const user = userFactory.build({
-        email: "nonmember@example.com",
-        auth0Id: "auth0|nonmember-delete-1",
-      })
-      const savedUser = await userRepository.save(user)
-      const org = organizationFactory.build({ name: "Other Org" })
-      const savedOrg = await organizationRepository.save(org)
-
-      const project = projectFactory.transient({ organization: savedOrg }).build({
-        name: "Other Project",
-      })
-      const savedProject = await projectRepository.save(project)
-
-      // Act & Assert
-      await expect(service.deleteProject(savedUser.id, savedProject.id)).rejects.toThrow(
-        ForbiddenException,
-      )
-      await expect(service.deleteProject(savedUser.id, savedProject.id)).rejects.toThrow(
-        "User does not have access to organization",
-      )
-
-      // Verify project still exists
-      const existingProject = await projectRepository.findOne({
-        where: { id: savedProject.id },
-      })
-      expect(existingProject).not.toBeNull()
     })
   })
 })

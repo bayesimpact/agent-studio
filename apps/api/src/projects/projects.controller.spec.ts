@@ -19,9 +19,6 @@ import { ProjectsModule } from "./projects.module"
 describe("ProjectsController", () => {
   let controller: ProjectsController
   let setup: Awaited<ReturnType<typeof setupTransactionalTestDatabase>>
-  let userRepository: Repository<User>
-  let organizationRepository: Repository<Organization>
-  let membershipRepository: Repository<UserMembership>
   let projectRepository: Repository<Project>
   let defaultRepositories: {
     userRepository: Repository<User>
@@ -44,15 +41,13 @@ describe("ProjectsController", () => {
   beforeEach(async () => {
     await setup.startTransaction()
     controller = setup.module.get<ProjectsController>(ProjectsController)
-    userRepository = setup.getRepository(User)
-    organizationRepository = setup.getRepository(Organization)
-    membershipRepository = setup.getRepository(UserMembership)
     projectRepository = setup.getRepository(Project)
-    defaultRepositories = { userRepository, organizationRepository, membershipRepository }
+    defaultRepositories = setup.getAllRepositories()
   })
 
   afterEach(async () => {
     await setup.rollbackTransaction()
+    await clearTestDatabase(setup.dataSource)
   })
 
   it("should be defined", () => {

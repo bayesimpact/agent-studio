@@ -22,12 +22,12 @@ export const listProjects = createAsyncThunk<Project[], { organizationId: string
 
 export const updateProject = createAsyncThunk<
   void,
-  { projectId: string; payload: UpdateProjectPayload },
+  { organizationId: string; projectId: string; payload: UpdateProjectPayload },
   ThunkConfig
 >(
   "projects/update",
-  async ({ projectId, payload }, { extra: { services } }) =>
-    await services.projects.updateOne(projectId, payload),
+  async ({ organizationId, projectId, payload }, { extra: { services } }) =>
+    await services.projects.updateOne(organizationId, projectId, payload),
 )
 
 export const deleteProject = createAsyncThunk<

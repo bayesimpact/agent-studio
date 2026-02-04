@@ -1,3 +1,4 @@
+import { randomUUID } from "node:crypto"
 import { ProjectsRoutes } from "@caseai-connect/api-contracts"
 import type { INestApplication } from "@nestjs/common"
 import type { App } from "supertest/types"
@@ -15,7 +16,6 @@ import { User } from "@/users/user.entity"
 import { setupUserGuardForTesting } from "../../test/e2e.helpers"
 import { expectResponse, type Requester, testRequester } from "../../test/request"
 import { ProjectsModule } from "./projects.module"
-import { ProjectsService } from "./projects.service"
 
 describe("ProjectsController (e2e)", () => {
   let app: INestApplication<App>
@@ -24,7 +24,6 @@ describe("ProjectsController (e2e)", () => {
   let repositories: ReturnType<
     Awaited<ReturnType<typeof setupTransactionalTestDatabase>>["getAllRepositories"]
   >
-  let mockProjectsService: jest.Mocked<ProjectsService>
 
   // Variables for the tests
   let organizationId: string | null = "random-organization-id"
@@ -36,22 +35,12 @@ describe("ProjectsController (e2e)", () => {
     setup = await setupTransactionalTestDatabase({
       featureEntities: [User, Organization, UserMembership],
       additionalImports: [ProjectsModule],
-      applyOverrides: (moduleBuilder) =>
-        setupUserGuardForTesting(moduleBuilder, () => auth0Id)
-          .overrideProvider(ProjectsService)
-          .useValue({
-            getProject: jest.fn().mockResolvedValue(undefined),
-            deleteProject: jest.fn().mockResolvedValue(undefined),
-            updateProject: jest.fn().mockResolvedValue(undefined),
-            createProject: jest.fn().mockResolvedValue({}),
-            listProjects: jest.fn().mockResolvedValue([]),
-          }),
+      applyOverrides: (moduleBuilder) => setupUserGuardForTesting(moduleBuilder, () => auth0Id),
     })
     repositories = setup.getAllRepositories()
     app = setup.module.createNestApplication()
     await app.init()
     request = testRequester(app)
-    mockProjectsService = setup.module.get(ProjectsService) as typeof mockProjectsService
   })
 
   beforeEach(async () => {
@@ -71,8 +60,6 @@ describe("ProjectsController (e2e)", () => {
     const { user, organization, project } = await createOrganizationWithProject(repositories, {
       membership: { role },
     })
-    mockProjectsService.getProject.mockResolvedValue(project)
-    console.log("user created by the context", user)
     organizationId = organization.id
     projectId = project.id
     accessToken = "token"
@@ -116,11 +103,12 @@ describe("ProjectsController (e2e)", () => {
   })
 
   describe("ProjectsRoutes.createProject", () => {
-    const subject = async () =>
+    const subject = async (payload?: typeof ProjectsRoutes.createProject.request) =>
       request({
         route: ProjectsRoutes.createProject,
         pathParams: removeNullish({ organizationId }),
         token: accessToken ?? undefined,
+        request: payload,
       })
 
     it("requires an authentication token", async () => {
@@ -142,7 +130,7 @@ describe("ProjectsController (e2e)", () => {
     })
     it("allows the owner to create projects", async () => {
       await createContextForRole("owner")
-      expectResponse(await subject(), 500)
+      expectResponse(await subject({ payload: { name: "Test Project" } }), 201)
     })
   })
 
@@ -169,7 +157,8 @@ describe("ProjectsController (e2e)", () => {
     })
     it("requires an existing project ID", async () => {
       await createContextForRole("owner")
-      mockProjectsService.getProject.mockResolvedValue(undefined)
+      // Use a valid UUID format that doesn't exist in the database
+      projectId = randomUUID()
       expectResponse(await subject(), 404)
     })
     it("doesn't allow a simple member to delete projects", async () => {
@@ -179,6 +168,44 @@ describe("ProjectsController (e2e)", () => {
     it("allows the owner to delete projects", async () => {
       await createContextForRole()
       expectResponse(await subject(), 200)
+    })
+  })
+
+  describe("ProjectsRoutes.updateProject", () => {
+    const subject = async (payload?: typeof ProjectsRoutes.updateProject.request) =>
+      request({
+        route: ProjectsRoutes.updateProject,
+        pathParams: removeNullish({ organizationId, projectId }),
+        token: accessToken ?? undefined,
+        request: payload,
+      })
+
+    it("requires an authentication token", async () => {
+      accessToken = null
+      expectResponse(await subject(), 401, AUTH_ERRORS.NO_ACCESS_TOKEN)
+    })
+    it("requires a valid organization ID", async () => {
+      organizationId = null
+      expectResponse(await subject(), 400, AUTH_ERRORS.NO_ORGANIZATION_ID)
+    })
+    it("requires the user to be a member of the organization", async () => {
+      await createContextForRole("owner")
+      auth0Id = "another-auth0-id" // this will trigger a new user to be created in the database
+      expectResponse(await subject(), 401, AUTH_ERRORS.NOT_MEMBER_OF_ORG)
+    })
+    it("requires an existing project ID", async () => {
+      await createContextForRole("owner")
+      // Use a valid UUID format that doesn't exist in the database
+      projectId = randomUUID()
+      expectResponse(await subject(), 404)
+    })
+    it("doesn't allow a simple member to update a project", async () => {
+      await createContextForRole("member")
+      expectResponse(await subject(), 403, AUTH_ERRORS.UNAUTHORIZED_RESOURCE)
+    })
+    it("allows the owner to update the project name", async () => {
+      await createContextForRole()
+      expectResponse(await subject({ payload: { name: "Updated Project" } }), 200)
     })
   })
 })

@@ -34,13 +34,10 @@ export class UserGuard implements CanActivate {
     }
 
     try {
-      console.log("jwtPayload", jwtPayload)
       const user = await this.usersService.findOrCreate({
         sub: jwtPayload.sub,
         getUserInfo: () => this.auth0UserInfoService.getUserInfo(accessToken),
       })
-
-      console.log("user", user)
 
       request.jwtPayload = jwtPayload
       request.user = user

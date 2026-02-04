@@ -1,11 +1,10 @@
 import type { TimeType } from "@caseai-connect/api-contracts"
-import { Body, Controller, Delete, Get, Param, Patch, Post, Req, UseGuards } from "@nestjs/common"
+import { Body, Controller, Delete, Get, Patch, Post, Req, UseGuards } from "@nestjs/common"
 import { JwtAuthGuard } from "@/auth/jwt-auth.guard"
 import { CheckPolicy } from "@/common/policies/check-policy.decorator"
 import { UserGuard } from "@/guards/user.guard"
 import { OrganizationGuard } from "@/organizations/organization.guard"
 import type {
-  EndpointRequest,
   EndpointRequestWithProject,
   EndpointRequestWithUserMembership,
 } from "@/request.interface"
@@ -63,21 +62,21 @@ export class ProjectsController {
   }
 
   @Patch(ProjectsRoutes.updateProject.path)
+  @CheckPolicy((policy) => policy.canUpdate())
   async updateProject(
-    @Req() request: EndpointRequest,
-    @Param("projectId") projectId: string,
+    @Req() request: EndpointRequestWithProject,
     @Body() body: typeof ProjectsRoutes.updateProject.request,
   ): Promise<typeof ProjectsRoutes.updateProject.response> {
-    const user = request.user
+    const { project } = request
 
     // Update project
-    const project = await this.projectsService.updateProject(user.id, projectId, body.payload.name)
+    const updatedProject = await this.projectsService.updateProject(project!, body.payload.name)
 
     return {
       data: {
-        id: project.id,
-        name: project.name,
-        organizationId: project.organizationId,
+        id: updatedProject.id,
+        name: updatedProject.name,
+        organizationId: updatedProject.organizationId,
       },
     }
   }
@@ -87,10 +86,10 @@ export class ProjectsController {
   async deleteProject(
     @Req() request: EndpointRequestWithProject,
   ): Promise<typeof ProjectsRoutes.deleteProject.response> {
-    const { user, project } = request
+    const { project } = request
 
     // Delete project
-    await this.projectsService.deleteProject(user.id, project!.id)
+    await this.projectsService.deleteProject(project!)
 
     return {
       data: {

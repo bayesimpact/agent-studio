@@ -27,9 +27,9 @@ export default {
     )
     return fromListDto(response.data.data)
   },
-  updateOne: async (projectId: string, payload: UpdateProjectPayload) => {
+  updateOne: async (organizationId: string, projectId: string, payload: UpdateProjectPayload) => {
     const axios = getAxiosInstance()
-    await axios.patch(ProjectsRoutes.updateProject.getPath({ projectId }), {
+    await axios.patch(ProjectsRoutes.updateProject.getPath({ organizationId, projectId }), {
       payload: toUpdateDto(payload),
     })
   },

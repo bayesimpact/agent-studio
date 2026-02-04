@@ -39,7 +39,6 @@ export const testRequester =
 export type Requester = ReturnType<typeof testRequester>
 
 export const expectErrorResponse = (res: request.Response, status: number, message: string) => {
-  console.log("res.body", res.body)
   expect(res.status).toBe(status)
   const errorResponse = res.body as unknown as ErrorResponseDTO
   expect(errorResponse.message).toBe(message)
