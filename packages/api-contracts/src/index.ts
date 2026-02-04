@@ -1,5 +1,3 @@
-// Generic DTOs
-
 // Chat Bots DTOs
 export * from "./chat-bots/chat-bots.dto"
 export { ChatBotsRoutes } from "./chat-bots/chat-bots.routes"
@@ -9,6 +7,7 @@ export { ChatSessionStreamingRoutes } from "./chat-sessions/chat-session-streami
 // Chat Sessions DTOs
 export type * from "./chat-sessions/chat-sessions.dto"
 export { ChatSessionsRoutes } from "./chat-sessions/chat-sessions.routes"
+// Generic DTOs
 export type * from "./generic"
 export type { ApiRoute } from "./helpers"
 // Helpers
@@ -24,3 +23,6 @@ export { OrganizationsRoutes } from "./organizations/organizations.routes"
 export type * from "./projects/projects.dto"
 export { ProjectsRoutes } from "./projects/projects.routes"
 export { ProtectedRoutes } from "./protected/protected.routes"
+// Resources DTOs
+export type * from "./resources/resources.dto"
+export { ResourcesRoutes } from "./resources/resources.routes"
