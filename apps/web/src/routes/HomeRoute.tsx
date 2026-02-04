@@ -5,6 +5,7 @@ import { selectOrganizationsData } from "@/features/organizations/organizations.
 import { useBuildPath } from "@/hooks/use-build-path"
 import { ADS } from "@/store/async-data-status"
 import { useAppSelector } from "@/store/hooks"
+import { RouteNames } from "./helpers"
 import { LoadingRoute } from "./LoadingRoute"
 
 export function HomeRoute() {
@@ -27,7 +28,7 @@ export function HomeRoute() {
 
       const path = firstOrganization
         ? buildPath("organization", { organizationId: firstOrganization.id })
-        : buildPath("onboarding", {})
+        : RouteNames.ONBOARDING
       navigate(path, { replace: true })
     } else {
       // User is not authenticated, redirect to Auth0 login

@@ -20,15 +20,22 @@ import { useBuildPath } from "@/hooks/use-build-path"
 import { ADS } from "@/store/async-data-status"
 import { useAppDispatch, useAppSelector } from "@/store/hooks"
 
-export function DeleteChatBotDialogWithTrigger({ chatBot }: { chatBot: ChatBot }) {
+export function DeleteChatBotDialogWithTrigger({
+  organizationId,
+  chatBot,
+}: {
+  organizationId: string
+  chatBot: ChatBot
+}) {
   const navigate = useNavigate()
   const [open, setOpen] = useState(false)
 
-  const { getPath } = useBuildPath()
+  const { buildPath } = useBuildPath()
+  const path = buildPath("project", { organizationId, projectId: chatBot.projectId })
 
   const handleSuccess = () => {
+    navigate(path, { replace: true })
     setOpen(false)
-    navigate(getPath("project"))
   }
 
   const handleClose = () => {
@@ -50,13 +57,21 @@ export function DeleteChatBotDialogWithTrigger({ chatBot }: { chatBot: ChatBot }
 }
 
 export function DeleteChatBotDialogWithOutTrigger({
+  organizationId,
+  projectId,
   chatBot,
   onClose,
 }: {
+  organizationId: string
+  projectId: string
   chatBot: ChatBot | null
   onClose: () => void
 }) {
+  const navigate = useNavigate()
+  const { buildPath } = useBuildPath()
+  const path = buildPath("project", { organizationId, projectId })
   const handleSuccess = () => {
+    navigate(path, { replace: true })
     onClose()
   }
 
@@ -84,8 +99,7 @@ function Content({
   const status = useAppSelector(selectChatBotsStatus)
 
   const handleDelete = () => {
-    dispatch(deleteChatBot({ projectId: chatBot.projectId, chatBotId: chatBot.id }))
-    onSuccess()
+    dispatch(deleteChatBot({ projectId: chatBot.projectId, chatBotId: chatBot.id, onSuccess }))
   }
 
   return (

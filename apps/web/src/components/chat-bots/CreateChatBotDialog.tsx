@@ -18,22 +18,19 @@ import type { Project } from "@/features/projects/projects.models"
 import { useBuildPath } from "@/hooks/use-build-path"
 import { CreateChatBotForm } from "./CreateChatBotForm"
 
-interface CreateChatBotDialogProps {
-  projectId: string
-  projectName: string
-  isOpen: boolean
-  onOpenChange: (open: boolean) => void
-}
-
 export function CreateChatBotDialogWithTrigger({ project }: { project: Project }) {
   const navigate = useNavigate()
   const { buildPath } = useBuildPath()
   const { t } = useTranslation("chatBot", { keyPrefix: "create" })
   const [open, setOpen] = useState(false)
   const handleSuccess = (chatBotId: string) => {
-    setOpen(false)
-    const path = buildPath("chatBot", { chatBotId })
+    const path = buildPath("chatBot", {
+      organizationId: project.organizationId,
+      projectId: project.id,
+      chatBotId,
+    })
     navigate(path)
+    setOpen(false)
   }
   return (
     <div>
@@ -61,18 +58,25 @@ export function CreateChatBotDialogWithTrigger({ project }: { project: Project }
 }
 
 export function CreateChatBotDialogWithoutTrigger({
-  projectId,
-  projectName,
+  project,
   isOpen,
   onOpenChange,
-}: CreateChatBotDialogProps) {
+}: {
+  project: Project
+  isOpen: boolean
+  onOpenChange: (open: boolean) => void
+}) {
   const { t } = useTranslation("chatBot", { keyPrefix: "create" })
   const navigate = useNavigate()
   const { buildPath } = useBuildPath()
   const handleSuccess = (chatBotId: string) => {
-    onOpenChange(false)
-    const path = buildPath("chatBot", { chatBotId })
+    const path = buildPath("chatBot", {
+      organizationId: project.organizationId,
+      projectId: project.id,
+      chatBotId,
+    })
     navigate(path)
+    onOpenChange(false)
   }
 
   return (
@@ -81,10 +85,10 @@ export function CreateChatBotDialogWithoutTrigger({
         <ScrollArea className="h-full">
           <SheetHeader>
             <SheetTitle>{t("title")}</SheetTitle>
-            <SheetDescription>{t("description", { projectName })}</SheetDescription>
+            <SheetDescription>{t("description", { projectName: project.name })}</SheetDescription>
           </SheetHeader>
           <div className="px-4 pb-4">
-            <CreateChatBotForm projectId={projectId} onSuccess={handleSuccess} />
+            <CreateChatBotForm projectId={project.id} onSuccess={handleSuccess} />
           </div>
         </ScrollArea>
       </SheetContent>

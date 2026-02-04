@@ -6,9 +6,8 @@ import { LoginRoute } from "@/routes/LoginRoute"
 import { LogoutRoute } from "@/routes/LogoutRoute"
 import { NotFoundRoute } from "@/routes/NotFoundRoute"
 import { useAppDispatch } from "@/store/hooks"
-import { adminRoutes } from "./admin/routes"
-import { appRoutes } from "./app/routes"
-import { RouteNames } from "./helpers"
+import { getElement } from "./Elements"
+import { buildAdminPath, buildAppPath, RouteNames } from "./helpers"
 import { OnboardingRoute } from "./OnboardingRoute"
 import { ProtectedRoute } from "./ProtectedRoute"
 
@@ -38,12 +37,66 @@ const router = () =>
     {
       path: "/admin",
       element: <AdminInterfaceHandler />,
-      children: adminRoutes,
+      children: [
+        {
+          path: buildAdminPath(RouteNames.ORGANIZATION_DASHBOARD),
+          element: getElement(RouteNames.ORGANIZATION_DASHBOARD),
+          children: [
+            {
+              index: true,
+              element: <div>TODO: Admin Dashboard</div>,
+            },
+            {
+              path: buildAdminPath(RouteNames.PROJECT),
+              element: getElement(RouteNames.PROJECT),
+              children: [
+                {
+                  path: buildAdminPath(RouteNames.CHAT_BOT),
+                  element: getElement(RouteNames.CHAT_BOT),
+                  children: [
+                    {
+                      path: buildAdminPath(RouteNames.CHAT_SESSION),
+                      element: getElement(RouteNames.CHAT_SESSION),
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+        },
+      ],
     },
     {
       path: "/app",
       element: <AppInterfaceHandler />,
-      children: appRoutes,
+      children: [
+        {
+          path: buildAppPath(RouteNames.ORGANIZATION_DASHBOARD),
+          element: getElement(RouteNames.ORGANIZATION_DASHBOARD),
+          children: [
+            {
+              index: true,
+              element: <div>TODO: App Dashboard</div>,
+            },
+            {
+              path: buildAppPath(RouteNames.PROJECT),
+              element: getElement(RouteNames.PROJECT),
+              children: [
+                {
+                  path: buildAppPath(RouteNames.CHAT_BOT),
+                  element: getElement(RouteNames.CHAT_BOT),
+                  children: [
+                    {
+                      path: buildAppPath(RouteNames.CHAT_SESSION),
+                      element: getElement(RouteNames.CHAT_SESSION),
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+        },
+      ],
     },
 
     {
