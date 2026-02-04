@@ -59,7 +59,7 @@ listenerMiddleware.startListening({
   effect: async (_, listenerApi) => {
     const state = listenerApi.getState()
     const org = selectCurrentOrganization(state)
-    if (!org) throw new Error("No current organization selected")
+    if (!org) return window.console.error("No current organization selected")
     listenerApi.dispatch(authActions.setIsAdmin(org.role === "admin" || org.role === "owner"))
   },
 })

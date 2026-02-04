@@ -1,14 +1,14 @@
-import type { ProjectDto } from "@caseai-connect/api-contracts"
 import { Header } from "@caseai-connect/ui/components/layouts/sidebar/Header"
 import { SidebarMenu, SidebarMenuItem } from "@caseai-connect/ui/shad/sidebar"
 import { Switch } from "@caseai-connect/ui/shad/switch"
 import { SlidersHorizontalIcon, SparklesIcon } from "lucide-react"
-import { Outlet, useLocation, useNavigate } from "react-router-dom"
+import { Outlet } from "react-router-dom"
 import { authActions } from "@/features/auth/auth.slice"
 import type { User } from "@/features/me/me.models"
 import type { Organization } from "@/features/organizations/organizations.models"
+import type { Project } from "@/features/projects/projects.models"
 import { useAbility } from "@/hooks/use-ability"
-import { useBuildPath } from "@/hooks/use-build-path"
+import { useGetPath } from "@/hooks/use-build-path"
 import { useAppDispatch } from "@/store/hooks"
 import { SidebarLayout } from "./layouts/SidebarLayout"
 import { AdminNavProjects, AppNavProjects } from "./sidebar/NavProjects"
@@ -20,12 +20,12 @@ export function DashboardLayout({
   organization,
 }: {
   user: User
-  projects: ProjectDto[]
+  projects: Project[]
   organization: Organization
 }) {
   const { isAdmin, isAdminInterface } = useAbility()
   const organizationName = organization?.name || "CaseAi"
-  const { getPath } = useBuildPath()
+  const { getPath } = useGetPath()
 
   if (organization)
     return (
@@ -49,7 +49,7 @@ export function DashboardLayout({
         sidebarContentChildren={
           isAdminInterface ? (
             <>
-              <AdminNavProjects projects={projects} />
+              <AdminNavProjects organizationId={organization.id} projects={projects} />
 
               <SidebarMenu>
                 <SidebarMenuItem>
@@ -58,7 +58,7 @@ export function DashboardLayout({
               </SidebarMenu>
             </>
           ) : (
-            <AppNavProjects projects={projects} />
+            <AppNavProjects organizationId={organization.id} projects={projects} />
           )
         }
         user={{
@@ -79,25 +79,18 @@ function InterfaceToggle({
   isAdmin: boolean
   isAdminInterface: boolean
 }) {
-  const location = useLocation()
-  const navigate = useNavigate()
   const dispatch = useAppDispatch()
+  const { getPath } = useGetPath()
 
   if (!isAdmin) return null
 
   const handleChange = (checked: boolean) => {
     dispatch(authActions.setIsAdminInterface(checked))
-    let newLocation = location.pathname.replace(
+    const newLocation = getPath("project").replace(
       checked ? "/app" : "/admin",
       checked ? "/admin" : "/app",
     )
-    // Remove everything after the /cb/... part of the path when switching interfaces
-    const cbMatch = newLocation.match(/^(.*\/cb\/[^/]+)/)
-    if (cbMatch?.[1]) {
-      newLocation = cbMatch[1]
-    }
-
-    navigate(newLocation)
+    window.location.replace(newLocation)
   }
   return <Switch checked={isAdminInterface} onCheckedChange={handleChange} />
 }

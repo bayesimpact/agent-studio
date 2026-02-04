@@ -9,7 +9,7 @@ import { ADS } from "@/store/async-data-status"
 import { useAppSelector } from "@/store/hooks"
 import { useAbility } from "./use-ability"
 
-export type PathType = "organization" | "project" | "chatBot" | "chatSession" | "onboarding"
+export type PathType = "organization" | "project" | "chatBot" | "chatSession"
 
 export interface BuildPathOptions {
   organizationId?: string
@@ -18,7 +18,7 @@ export interface BuildPathOptions {
   chatSessionId?: string
 }
 
-export function useBuildPath() {
+export function useGetPath() {
   const { isAdminInterface } = useAbility()
   const {
     organizationId: urlOrganizationId,
@@ -27,89 +27,165 @@ export function useBuildPath() {
     chatSessionId: urlChatSessionId,
   } = useParams()
 
-  const computePath = useCallback(
-    (isAdminInterface: boolean, pathType: PathType, options?: BuildPathOptions): string => {
-      if (pathType === "onboarding") {
-        return RouteNames.ONBOARDING
-      }
+  const computePath = (isAdminInterface: boolean, pathType: PathType): string => {
+    const organizationId = urlOrganizationId
+    const projectId = urlProjectId
+    const chatBotId = urlChatBotId
+    const chatSessionId = urlChatSessionId
 
-      const organizationId =
-        options && "organizationId" in options ? options.organizationId : urlOrganizationId
-      const projectId = options && "projectId" in options ? options.projectId : urlProjectId
-      const chatBotId = options && "chatBotId" in options ? options.chatBotId : urlChatBotId
-      const chatSessionId =
-        options && "chatSessionId" in options ? options.chatSessionId : urlChatSessionId
+    const organizationPath = organizationId
+      ? buildOrganizationPath({
+          organizationId,
+          isAdminInterface,
+        })
+      : RouteNames.HOME
 
-      const organizationPath = organizationId
-        ? buildOrganizationPath({
+    if (pathType === "organization") {
+      return organizationPath
+    }
+
+    const projectPath =
+      organizationId && projectId
+        ? buildProjectPath({
             organizationId,
+            projectId,
             isAdminInterface,
           })
-        : RouteNames.HOME
+        : organizationPath
 
-      if (pathType === "organization") {
-        return organizationPath
-      }
+    if (pathType === "project") {
+      return projectPath
+    }
 
-      const projectPath =
-        organizationId && projectId
-          ? buildProjectPath({
-              organizationId,
-              projectId,
-              isAdminInterface,
-            })
-          : organizationPath
+    const chatBotPath =
+      organizationId && projectId && chatBotId
+        ? buildChatBotPath({
+            organizationId,
+            projectId,
+            chatBotId,
+            isAdminInterface,
+          })
+        : projectPath
 
-      if (pathType === "project") {
-        return projectPath
-      }
+    if (pathType === "chatBot") {
+      return chatBotPath
+    }
 
-      const chatBotPath =
-        organizationId && projectId && chatBotId
-          ? buildChatBotPath({
-              organizationId,
-              projectId,
-              chatBotId,
-              isAdminInterface,
-            })
-          : projectPath
+    const chatSessionPath =
+      organizationId && projectId && chatBotId && chatSessionId
+        ? buildChatSessionPath({
+            organizationId,
+            projectId,
+            chatBotId,
+            chatSessionId,
+            isAdminInterface,
+          })
+        : chatBotPath
 
-      if (pathType === "chatBot") {
-        return chatBotPath
-      }
+    if (pathType === "chatSession") {
+      return chatSessionPath
+    }
 
-      const chatSessionPath =
-        organizationId && projectId && chatBotId && chatSessionId
-          ? buildChatSessionPath({
-              organizationId,
-              projectId,
-              chatBotId,
-              chatSessionId,
-              isAdminInterface,
-            })
-          : chatBotPath
+    return RouteNames.HOME
+  }
 
-      if (pathType === "chatSession") {
-        return chatSessionPath
-      }
+  function getPath(pathType: PathType): string {
+    return computePath(isAdminInterface, pathType)
+  }
 
-      return RouteNames.HOME
-    },
-    [urlChatBotId, urlChatSessionId, urlOrganizationId, urlProjectId],
-  )
+  return { getPath }
+}
 
-  const getPath = useCallback(
-    (pathType: PathType): string => computePath(isAdminInterface, pathType),
-    [computePath, isAdminInterface],
-  )
+export function useBuildPath() {
+  const { isAdminInterface } = useAbility()
 
-  const buildPath = useCallback(
-    (pathType: PathType, options: BuildPathOptions): string =>
-      computePath(isAdminInterface, pathType, options),
-    [computePath, isAdminInterface],
-  )
+  const computePath = (
+    isAdminInterface: boolean,
+    pathType: PathType,
+    options: BuildPathOptions,
+  ): string => {
+    const organizationId = options.organizationId
+    const projectId = options.projectId
+    const chatBotId = options.chatBotId
+    const chatSessionId = options.chatSessionId
 
-  return { getPath, buildPath }
+    const organizationPath = organizationId
+      ? buildOrganizationPath({
+          organizationId,
+          isAdminInterface,
+        })
+      : RouteNames.HOME
+
+    if (pathType === "organization") {
+      return organizationPath
+    }
+
+    const projectPath =
+      organizationId && projectId
+        ? buildProjectPath({
+            organizationId,
+            projectId,
+            isAdminInterface,
+          })
+        : organizationPath
+
+    if (pathType === "project") {
+      return projectPath
+    }
+
+    const chatBotPath =
+      organizationId && projectId && chatBotId
+        ? buildChatBotPath({
+            organizationId,
+            projectId,
+            chatBotId,
+            isAdminInterface,
+          })
+        : projectPath
+
+    if (pathType === "chatBot") {
+      return chatBotPath
+    }
+
+    const chatSessionPath =
+      organizationId && projectId && chatBotId && chatSessionId
+        ? buildChatSessionPath({
+            organizationId,
+            projectId,
+            chatBotId,
+            chatSessionId,
+            isAdminInterface,
+          })
+        : chatBotPath
+
+    if (pathType === "chatSession") {
+      return chatSessionPath
+    }
+
+    return RouteNames.HOME
+  }
+
+  const buildPath: {
+    (
+      pathType: "chatSession",
+      options: {
+        organizationId: string
+        projectId: string
+        chatBotId: string
+        chatSessionId: string
+      },
+    ): string
+    (
+      pathType: "chatBot",
+      options: { organizationId: string; projectId: string; chatBotId: string },
+    ): string
+    (pathType: "project", options: { organizationId: string; projectId: string }): string
+    (pathType: "organization", options: { organizationId: string }): string
+  } = (pathType: PathType, options: BuildPathOptions): string => {
+    return computePath(isAdminInterface, pathType, options)
+  }
+
+  return { buildPath }
 }
 
 export function useClosestParentPath() {

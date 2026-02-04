@@ -1,7 +1,6 @@
 import { createSelector } from "@reduxjs/toolkit"
 import type { RootState } from "@/store"
 import { ADS, type AsyncData } from "@/store/async-data-status"
-import { selectCurrentChatBotId } from "../chat-bots/chat-bots.selectors"
 import type { ChatSession } from "./chat-sessions.models"
 
 export const selectChatSessionStatus = (state: RootState) => state.chatSessions.data.status
@@ -27,34 +26,27 @@ export const selectChatSessionsFromChatBotId = (chatBotId?: string | null) =>
 export const selectCurrentChatSessionId = (state: RootState) =>
   state.chatSessions.currentChatSessionId
 
-export const selectCurrentChatSessionsData = createSelector(
-  [selectCurrentChatBotId, selectChatSessionsData],
-  (chatBotId, chatSessionsData): AsyncData<ChatSession[]> => {
-    if (!chatBotId) return missingChatBotId
+export const selectCurrentChatSessionDataFromChatBotId = (chatBotId?: string | null) =>
+  createSelector(
+    [selectChatSessionsFromChatBotId(chatBotId), selectCurrentChatSessionId],
+    (chatSessionsData, chatSessionId): AsyncData<ChatSession> => {
+      if (!ADS.isFulfilled(chatSessionsData)) return { ...chatSessionsData }
 
-    if (!ADS.isFulfilled(chatSessionsData)) return { ...chatSessionsData }
+      if (!chatSessionId)
+        return { status: ADS.Error, value: null, error: "No chat session selected" }
 
-    if (!chatSessionsData.value?.[chatBotId]) return missingChatSessions
+      const chatSession = chatSessionsData.value.find((cs) => cs.id === chatSessionId)
 
-    return { status: ADS.Fulfilled, value: chatSessionsData.value[chatBotId], error: null }
-  },
-)
+      if (!chatSession)
+        return {
+          status: ADS.Error,
+          value: null,
+          error: "Chat session not found in current chat bot",
+        }
 
-export const selectCurrentChatSessionData = createSelector(
-  [selectCurrentChatSessionsData, selectCurrentChatSessionId],
-  (chatSessionsData, chatSessionId): AsyncData<ChatSession> => {
-    if (!ADS.isFulfilled(chatSessionsData)) return { ...chatSessionsData }
-
-    if (!chatSessionId) return { status: ADS.Error, value: null, error: "No chat session selected" }
-
-    const chatSession = chatSessionsData.value.find((cs) => cs.id === chatSessionId)
-
-    if (!chatSession)
-      return { status: ADS.Error, value: null, error: "Chat session not found in current chat bot" }
-
-    return { status: ADS.Fulfilled, value: chatSession, error: null }
-  },
-)
+      return { status: ADS.Fulfilled, value: chatSession, error: null }
+    },
+  )
 
 export const selectCurrentMessagesData = (state: RootState) => state.chatSessions.messages
 export const selectCurrentMessages = (state: RootState) => state.chatSessions.messages.value

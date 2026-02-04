@@ -8,40 +8,61 @@ import {
 import type { AppDispatch, RootState } from "@/store"
 import { ADS } from "@/store/async-data-status"
 import { selectIsAdminInterface } from "../auth/auth.selectors"
-import { selectChatBotsData } from "../chat-bots/chat-bots.selectors"
-import { chatBotsActions } from "../chat-bots/chat-bots.slice"
-import { createChatBot, listChatBots } from "../chat-bots/chat-bots.thunks"
+import { selectChatBotsData, selectCurrentChatBotId } from "../chat-bots/chat-bots.selectors"
+import { listChatBots } from "../chat-bots/chat-bots.thunks"
 import { selectCurrentChatSessionId } from "./chat-sessions.selectors"
+import { chatSessionsActions } from "./chat-sessions.slice"
 
 // Create typed listener middleware
 export const listenerMiddleware = createListenerMiddleware<RootState, AppDispatch>()
 
 export type AppStartListening = TypedStartListening<RootState, AppDispatch>
 
+// Refresh chat sessions when chat bots are loaded
 listenerMiddleware.startListening({
   actionCreator: listChatBots.fulfilled,
-  effect: async ({ payload }, listenerApi) => {
+  effect: async ({ payload: chatBots }, listenerApi) => {
     const state = listenerApi.getState()
     const isAdminInterface = selectIsAdminInterface(state)
-    for (const chatBot of payload) {
+    chatBots.forEach((chatBot) => {
       listenerApi.dispatch(listSessions({ chatBotId: chatBot.id, playground: isAdminInterface }))
-    }
+    })
   },
 })
 
-listenerMiddleware.startListening({
-  actionCreator: createChatBot.fulfilled,
-  effect: async (action, listenerApi) => {
-    listenerApi.dispatch(chatBotsActions.setCurrentChatBotId({ chatBotId: action.payload.id }))
-    await listenerApi.dispatch(createChatSession({ chatBotId: action.payload.id }))
-  },
-})
-
+// Refresh chat sessions when current chat bot changes
 listenerMiddleware.startListening({
   predicate(_, currentState, originalState) {
-    const prevSessionId = selectCurrentChatSessionId(originalState)
-    const nextSessionId = selectCurrentChatSessionId(currentState)
-    return prevSessionId !== nextSessionId
+    const prevId = selectCurrentChatBotId(originalState)
+    const nextId = selectCurrentChatBotId(currentState)
+    return prevId !== nextId
+  },
+  effect: async (_, listenerApi) => {
+    const state = listenerApi.getState()
+    const chatBotId = selectCurrentChatBotId(state)
+    const isAdminInterface = selectIsAdminInterface(state)
+    if (!chatBotId) return
+    await listenerApi.dispatch(listSessions({ chatBotId, playground: isAdminInterface }))
+  },
+})
+
+// Refresh messages when current chat sessions are loaded and one is selected
+listenerMiddleware.startListening({
+  actionCreator: listSessions.fulfilled,
+  effect: async (_, listenerApi) => {
+    const state = listenerApi.getState()
+    const chatSessionId = selectCurrentChatSessionId(state)
+    if (!chatSessionId) return
+    await listenerApi.dispatch(loadSessionMessages(chatSessionId))
+  },
+})
+
+// Refresh messages when current chat session changes
+listenerMiddleware.startListening({
+  predicate(_, currentState, originalState) {
+    const prevId = selectCurrentChatSessionId(originalState)
+    const nextId = selectCurrentChatSessionId(currentState)
+    return prevId !== nextId
   },
   effect: async (_, listenerApi) => {
     const state = listenerApi.getState()
@@ -54,15 +75,17 @@ listenerMiddleware.startListening({
 listenerMiddleware.startListening({
   actionCreator: createChatSession.fulfilled,
   effect: async (action, listenerApi) => {
-    const callback = action.meta.arg.onSuccess
     const state = listenerApi.getState()
     const isAdminInterface = selectIsAdminInterface(state)
     const { chatBotId, id } = action.payload
     await listenerApi.dispatch(listSessions({ chatBotId, playground: isAdminInterface }))
-    callback?.(id)
+
+    const onSuccess = action.meta.arg.onSuccess
+    onSuccess?.(id)
   },
 })
 
+// Refresh chat sessions when interface type changes
 listenerMiddleware.startListening({
   predicate(_, currentState, originalState) {
     const prevInterface = selectIsAdminInterface(originalState)
@@ -70,6 +93,7 @@ listenerMiddleware.startListening({
     return prevInterface !== nextInterface
   },
   effect: async (_, listenerApi) => {
+    listenerApi.dispatch(chatSessionsActions.reset())
     const state = listenerApi.getState()
     const isAdminInterface = selectIsAdminInterface(state)
     const chatBots = selectChatBotsData(state)
