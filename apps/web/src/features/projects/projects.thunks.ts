@@ -6,7 +6,11 @@ type ThunkConfig = { state: RootState; extra: ThunkExtraArg }
 
 export const createProject = createAsyncThunk<
   Project,
-  { organizationId: string; payload: CreateProjectPayload; onSuccess: (projectId: string) => void },
+  {
+    organizationId: string
+    payload: CreateProjectPayload
+    onSuccess?: (projectId: string) => void
+  },
   ThunkConfig
 >(
   "projects/create",
@@ -32,7 +36,7 @@ export const updateProject = createAsyncThunk<
 
 export const deleteProject = createAsyncThunk<
   void,
-  { organizationId: string; projectId: string },
+  { organizationId: string; projectId: string; onSuccess?: () => void },
   ThunkConfig
 >(
   "projects/delete",

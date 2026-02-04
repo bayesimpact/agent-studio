@@ -10,16 +10,21 @@ import { useAppDispatch } from "@/store/hooks"
 export function CreateChatSession({
   type,
   chatBotId,
+  projectId,
+  organizationId,
 }: {
   type: "button" | "menu"
   chatBotId: string
+  projectId: string
+  organizationId: string
 }) {
   const navigate = useNavigate()
   const { t } = useTranslation("chatSession", { keyPrefix: "create" })
   const dispatch = useAppDispatch()
   const { buildPath } = useBuildPath()
   const onSuccess = (chatSessionId: string) => {
-    navigate(buildPath("chatSession", { chatBotId, chatSessionId }))
+    const path = buildPath("chatSession", { organizationId, projectId, chatBotId, chatSessionId })
+    navigate(path)
   }
   const handleClick = () => {
     dispatch(createChatSession({ chatBotId, onSuccess }))

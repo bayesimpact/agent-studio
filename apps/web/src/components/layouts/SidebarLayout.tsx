@@ -9,7 +9,7 @@ import {
   SidebarInset,
   SidebarProvider,
 } from "@caseai-connect/ui/shad/sidebar"
-import { useState } from "react"
+import { useCallback, useState } from "react"
 import { NavUserMenuItems } from "../sidebar/NavUserMenuItems"
 import { SidebarLayoutContext } from "./sidebar/context"
 
@@ -27,9 +27,21 @@ export function SidebarLayout({
   const [headerTitle, setHeaderTitle] = useState("Dashboard")
   const [headerRightSlot, setHeaderRightSlot] = useState<React.ReactNode>(null)
 
+  const handleSetHeaderTitle = useCallback((title: string) => {
+    if (title.trim().length === 0) {
+      title = "Dashboard"
+    }
+    setHeaderTitle(title)
+  }, [])
+
   return (
     <SidebarLayoutContext.Provider
-      value={{ headerTitle, setHeaderTitle, headerRightSlot, setHeaderRightSlot }}
+      value={{
+        headerTitle,
+        setHeaderTitle: handleSetHeaderTitle,
+        headerRightSlot,
+        setHeaderRightSlot,
+      }}
     >
       <SidebarProvider
         style={
