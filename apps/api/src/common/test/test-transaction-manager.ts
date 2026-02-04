@@ -34,6 +34,11 @@ export interface TransactionalTestSetup {
   dataSource: DataSource
   queryRunner: QueryRunner | null
   getRepository: <T extends ObjectLiteral>(entity: new () => T) => Repository<T>
+  getAllRepositories: () => {
+    userRepository: Repository<User>
+    organizationRepository: Repository<Organization>
+    membershipRepository: Repository<UserMembership>
+  }
   startTransaction: () => Promise<void>
   rollbackTransaction: () => Promise<void>
 }
@@ -192,6 +197,12 @@ export async function setupTransactionalTestDatabase(
     return moduleToUse.get<Repository<T>>(getRepositoryToken(entity))
   }
 
+  const getAllRepositories = () => ({
+    userRepository: getRepository(User),
+    organizationRepository: getRepository(Organization),
+    membershipRepository: getRepository(UserMembership),
+  })
+
   return {
     get module() {
       // Return transactional module if transaction is active, otherwise base
@@ -202,6 +213,7 @@ export async function setupTransactionalTestDatabase(
       return queryRunner
     },
     getRepository,
+    getAllRepositories,
     startTransaction,
     rollbackTransaction,
   }

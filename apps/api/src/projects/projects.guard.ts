@@ -6,6 +6,7 @@ import {
 } from "@nestjs/common"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
 import { Reflector } from "@nestjs/core"
+import { AUTH_ERRORS } from "@/common/errors/auth-errors"
 import { CHECK_POLICY_KEY, type PolicyHandler } from "@/common/policies/check-policy.decorator"
 import type { EndpointRequestWithUserMembership } from "@/request.interface"
 import { ProjectPolicy } from "./project.policy"
@@ -32,7 +33,7 @@ export class ProjectsGuard implements CanActivate {
     ])
 
     if (!policyHandler || !policyHandler(policy)) {
-      throw new UnauthorizedException("You are not authorized to access this resource")
+      throw new UnauthorizedException(AUTH_ERRORS.UNAUTHORIZED_PROTECTED_RESOURCE)
     }
 
     return true

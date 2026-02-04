@@ -5,6 +5,7 @@ import {
   Injectable,
   UnauthorizedException,
 } from "@nestjs/common"
+import { AUTH_ERRORS } from "@/common/errors/auth-errors"
 import type { EndpointRequestWithUserMembership } from "@/request.interface"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
 import { UserMembershipService } from "./user-membership.service"
@@ -23,7 +24,7 @@ export class OrganizationGuard implements CanActivate {
     const organizationId = request.params.organizationId
 
     if (!organizationId || organizationId === ":organizationId") {
-      throw new BadRequestException("Organization ID is required")
+      throw new BadRequestException(AUTH_ERRORS.NO_ORGANIZATION_ID)
     }
 
     // Step 2: Get the user membership for the user and organization
@@ -33,7 +34,7 @@ export class OrganizationGuard implements CanActivate {
     })
 
     if (!userMembership) {
-      throw new UnauthorizedException("User is not a member of the organization")
+      throw new UnauthorizedException(AUTH_ERRORS.NOT_MEMBER_OF_ORG)
     }
 
     // Step 3: Store the user membership and organization ID in the request object
