@@ -1,3 +1,5 @@
+import "./open-telemetry-init" // !!!! first import !!!!
+
 import { createVertex } from "@ai-sdk/google-vertex"
 import { Injectable } from "@nestjs/common"
 import { streamText } from "ai"
@@ -10,11 +12,17 @@ import type {
 @Injectable()
 export class AISDKLLMProvider implements LLMProvider {
   private readonly vertexProvider: ReturnType<typeof createVertex>
+  private readonly vertexProject: string
+  private readonly vertexLocation: string
 
   constructor() {
+    this.vertexProject =
+      process.env.GCP_PROJECT || process.env.GOOGLE_VERTEX_PROJECT || "caseai-connect"
+    this.vertexLocation =
+      process.env.LOCATION || process.env.GOOGLE_VERTEX_LOCATION || "europe-west1"
     this.vertexProvider = createVertex({
-      project: process.env.GCP_PROJECT || process.env.GOOGLE_VERTEX_PROJECT || "caseai-connect",
-      location: process.env.LOCATION || process.env.GOOGLE_VERTEX_LOCATION || "europe-west1",
+      project: this.vertexProject,
+      location: this.vertexLocation,
     })
   }
 
@@ -22,6 +30,7 @@ export class AISDKLLMProvider implements LLMProvider {
     messages: ChatMessage[],
     config: LLMConfig,
   ): AsyncGenerator<string, void, unknown> {
+    const inputMetadata = messages[0]?.inputMetadata ? messages[0].inputMetadata : undefined
     // Convert normalized messages to ai-sdk format
     // Filter out empty messages and system messages (handled separately)
     const aiSDKMessages = messages
@@ -49,14 +58,28 @@ export class AISDKLLMProvider implements LLMProvider {
     // Get system message if present
     const systemMessage = messages.find((msg) => msg.role === "system")?.content
 
+    // Set 'LLM' tags
+    const tags = [this.vertexProject, this.vertexLocation, config.model]
+
     // Stream using ai-sdk
-    const result = await streamText({
+    const result = streamText({
       model: this.vertexProvider(config.model),
       messages: aiSDKMessages,
       system: systemMessage || config.systemPrompt,
       temperature: config.temperature,
+      experimental_telemetry: {
+        isEnabled: true,
+        functionId: `LLMProvider.streamChatResponse [${aiSDKMessages.filter((m) => m.role === "assistant").length + 1} rounds]`, //+1 => current round
+        metadata: {
+          langfuseTraceId: inputMetadata?.chatSessionId || "", //fixme: create a specific field for traceId in ChatSession entity ?
+          sessionId: inputMetadata?.chatSessionId ? `cs:${inputMetadata?.chatSessionId}` : "",
+          userId: inputMetadata?.organizationId
+            ? `o:${inputMetadata?.organizationId} / p:${inputMetadata?.projectId}`
+            : "",
+          tags: [...tags, ...(inputMetadata?.tags || [])],
+        },
+      },
     })
-
     // Yield text chunks
     for await (const chunk of result.textStream) {
       yield chunk
