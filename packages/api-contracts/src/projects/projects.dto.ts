@@ -2,7 +2,6 @@ import type { TimeType } from "../generic"
 
 export type CreateProjectRequestDto = {
   name: string
-  organizationId: string
 }
 
 export type CreateProjectResponseDto = {

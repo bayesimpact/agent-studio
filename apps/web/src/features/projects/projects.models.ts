@@ -8,7 +8,6 @@ export type Project = {
 
 export type CreateProjectPayload = {
   name: string
-  organizationId: string
 }
 
 export type UpdateProjectPayload = {
