@@ -1,3 +1,4 @@
+import type { ResourcesDto } from "@caseai-connect/api-contracts"
 import { Injectable } from "@nestjs/common"
 import { InjectRepository } from "@nestjs/typeorm"
 import type { Repository } from "typeorm"
@@ -14,4 +15,25 @@ export class ResourcesService {
     @InjectRepository(UserMembership)
     private readonly membershipRepository: Repository<UserMembership>,
   ) {}
+
+  async createResourceFromFile({
+    resourceId,
+    projectId,
+    fields,
+  }: {
+    resourceId: string
+    projectId: string
+    fields: Pick<ResourcesDto, "fileName" | "mimeType" | "size" | "storageRelativePath" | "title">
+  }): Promise<Resource> {
+    const resource = this.resourceRepository.create({
+      id: resourceId,
+      projectId,
+      fileName: fields.fileName,
+      mimeType: fields.mimeType,
+      size: fields.size,
+      storageRelativePath: fields.storageRelativePath,
+      title: fields.title ?? fields.fileName,
+    })
+    return this.resourceRepository.save(resource)
+  }
 }
