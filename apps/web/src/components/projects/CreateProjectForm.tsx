@@ -17,7 +17,7 @@ export function CreateProjectForm({ organizationId, onSuccess }: CreateProjectFo
   const error = useAppSelector(selectProjectsError)
 
   const handleSubmit = async (data: { name: string }) => {
-    dispatch(createProject({ payload: { name: data.name, organizationId }, onSuccess }))
+    dispatch(createProject({ organizationId, payload: { name: data.name }, onSuccess }))
   }
 
   const isLoading = ADS.isLoading(status)

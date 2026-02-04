@@ -4,7 +4,7 @@ import { resolve } from "node:path"
 const apiContractsPath = resolve(__dirname, "../../packages/api-contracts/src")
 
 export const nestConfig = {
-  collectCoverage: true,
+  collectCoverage: false,
   coverageProvider: "v8",
   moduleFileExtensions: ["js", "ts", "json"],
   rootDir: "src",

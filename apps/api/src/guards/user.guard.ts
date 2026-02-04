@@ -6,6 +6,7 @@ import {
 } from "@nestjs/common"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
 import { Auth0UserInfoService } from "@/auth/auth0-userinfo.service"
+import { AUTH_ERRORS } from "@/common/errors/auth-errors"
 import { getAccessToken } from "@/common/utils/get-access-token"
 import type { JwtPayload } from "@/request.interface"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
@@ -23,13 +24,13 @@ export class UserGuard implements CanActivate {
 
     const accessToken = getAccessToken(request.headers.authorization)
     if (!accessToken) {
-      throw new UnauthorizedException("Access token not found")
+      throw new UnauthorizedException(AUTH_ERRORS.NO_ACCESS_TOKEN)
     }
 
     const jwtPayload: JwtPayload = request.user
 
     if (!jwtPayload || !jwtPayload.sub) {
-      throw new UnauthorizedException("Sub not found in request")
+      throw new UnauthorizedException(AUTH_ERRORS.SUB_NOT_FOUND)
     }
 
     try {
@@ -43,7 +44,7 @@ export class UserGuard implements CanActivate {
 
       return true
     } catch (error) {
-      throw new UnauthorizedException("Could not ensure user exists", error as Error)
+      throw new UnauthorizedException(AUTH_ERRORS.USER_NOT_FOUND, error as Error)
     }
   }
 }

@@ -13,23 +13,6 @@ import { User } from "@/users/user.entity"
 import { type Requester, testRequester } from "../../test/request"
 import { MeModule } from "./me.module"
 
-// Mock Langfuse to avoid dynamic import issues in Jest
-jest.mock("langfuse", () => {
-  return {
-    Langfuse: class {
-      shutdownAsync() {
-        return Promise.resolve()
-      }
-      flushAsync() {
-        return Promise.resolve()
-      }
-      trace() {
-        return { update: jest.fn() }
-      }
-    },
-  }
-})
-
 const mockOrganization = {
   id: "org-123",
   name: "Test Org",

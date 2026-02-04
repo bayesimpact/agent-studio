@@ -7,6 +7,7 @@ import { Organization } from "./organization.entity"
 import { OrganizationsController } from "./organizations.controller"
 import { OrganizationsService } from "./organizations.service"
 import { UserMembership } from "./user-membership.entity"
+import { UserMembershipService } from "./user-membership.service"
 
 @Module({
   imports: [
@@ -14,8 +15,8 @@ import { UserMembership } from "./user-membership.entity"
     UsersModule,
     AuthModule,
   ],
-  providers: [OrganizationsService],
+  providers: [OrganizationsService, UserMembershipService],
   controllers: [OrganizationsController],
-  exports: [OrganizationsService],
+  exports: [OrganizationsService, UserMembershipService],
 })
 export class OrganizationsModule {}
