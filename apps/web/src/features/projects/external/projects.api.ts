@@ -10,10 +10,10 @@ import type { CreateProjectPayload, Project, UpdateProjectPayload } from "../pro
 import type { IProjectsSpi } from "../projects.spi"
 
 export default {
-  createOne: async (payload: CreateProjectPayload) => {
+  createOne: async (organizationId: string, payload: CreateProjectPayload) => {
     const axios = getAxiosInstance()
     const response = await axios.post<typeof ProjectsRoutes.createProject.response>(
-      ProjectsRoutes.createProject.getPath(),
+      ProjectsRoutes.createProject.getPath({ organizationId }),
       {
         payload: toCreateDto(payload),
       },
@@ -33,15 +33,14 @@ export default {
       payload: toUpdateDto(payload),
     })
   },
-  deleteOne: async (projectId: string) => {
+  deleteOne: async (organizationId: string, projectId: string) => {
     const axios = getAxiosInstance()
-    await axios.delete(ProjectsRoutes.deleteProject.getPath({ projectId }))
+    await axios.delete(ProjectsRoutes.deleteProject.getPath({ organizationId, projectId }))
   },
 } satisfies IProjectsSpi
 
 const toCreateDto = (payload: CreateProjectPayload): CreateProjectRequestDto => ({
   name: payload.name,
-  organizationId: payload.organizationId,
 })
 
 const toUpdateDto = (payload: UpdateProjectPayload): UpdateProjectRequestDto => ({

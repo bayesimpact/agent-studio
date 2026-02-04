@@ -9,8 +9,7 @@ import { Project } from "./project.entity"
 export class ProjectsService {
   constructor(
     @InjectRepository(Project) private readonly projectRepository: Repository<Project>,
-    @InjectRepository(Organization)
-    private readonly organizationRepository: Repository<Organization>,
+    @InjectRepository(Organization) readonly _organizationRepository: Repository<Organization>,
     @InjectRepository(UserMembership)
     private readonly membershipRepository: Repository<UserMembership>,
   ) {}
@@ -131,19 +130,7 @@ export class ProjectsService {
    * Creates a new project for an organization.
    * Verifies that the user is an owner or admin of the organization before creating the project.
    */
-  async createProject(userId: string, organizationId: string, name: string): Promise<Project> {
-    // Verify user is owner or admin of the organization
-    await this.verifyUserCanCreateProject(userId, organizationId)
-
-    // Verify organization exists
-    const organization = await this.organizationRepository.findOne({
-      where: { id: organizationId },
-    })
-
-    if (!organization) {
-      throw new NotFoundException(`Organization with id ${organizationId} not found`)
-    }
-
+  async createProject(organizationId: string, name: string): Promise<Project> {
     // Create the project
     const project = this.projectRepository.create({
       name,
@@ -155,17 +142,24 @@ export class ProjectsService {
 
   /**
    * Lists all projects for an organization.
-   * Verifies that the user has access to the organization before listing projects.
+   * Verification has been handled in the ProjectsGuard.
    */
-  async listProjects(userId: string, organizationId: string): Promise<Project[]> {
-    // Verify user has access to the organization
-    await this.verifyUserOrganizationAccess(userId, organizationId)
-
+  async listProjects(organizationId: string): Promise<Project[]> {
     // List projects for the organization
     return this.projectRepository.find({
       where: { organizationId },
       order: { createdAt: "DESC" },
     })
+  }
+
+  /**
+   * Gets a project by its ID and organization ID.
+   */
+  async getProject(organizationId: string, projectId: string): Promise<Project | undefined> {
+    const project = await this.projectRepository.findOne({
+      where: { id: projectId, organizationId },
+    })
+    return project ?? undefined
   }
 
   /**

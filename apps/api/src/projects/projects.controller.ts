@@ -4,7 +4,11 @@ import { JwtAuthGuard } from "@/auth/jwt-auth.guard"
 import { CheckPolicy } from "@/common/policies/check-policy.decorator"
 import { UserGuard } from "@/guards/user.guard"
 import { OrganizationGuard } from "@/organizations/organization.guard"
-import type { EndpointRequest, EndpointRequestWithUserMembership } from "@/request.interface"
+import type {
+  EndpointRequest,
+  EndpointRequestWithProject,
+  EndpointRequestWithUserMembership,
+} from "@/request.interface"
 import { ProjectsGuard } from "./projects.guard"
 import { ProjectsRoutes } from "./projects.routes"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
@@ -16,18 +20,15 @@ export class ProjectsController {
   constructor(private readonly projectsService: ProjectsService) {}
 
   @Post(ProjectsRoutes.createProject.path)
+  @CheckPolicy((policy) => policy.canCreate())
   async createProject(
-    @Req() request: EndpointRequest,
+    @Req() request: EndpointRequestWithUserMembership,
     @Body() body: typeof ProjectsRoutes.createProject.request,
   ): Promise<typeof ProjectsRoutes.createProject.response> {
-    const user = request.user
+    const { organizationId } = request
 
     // Create project
-    const project = await this.projectsService.createProject(
-      user.id,
-      body.payload.organizationId,
-      body.payload.name,
-    )
+    const project = await this.projectsService.createProject(organizationId, body.payload.name)
 
     return {
       data: {
@@ -43,10 +44,10 @@ export class ProjectsController {
   async listProjects(
     @Req() request: EndpointRequestWithUserMembership,
   ): Promise<typeof ProjectsRoutes.listProjects.response> {
-    const { user, organizationId } = request
+    const { organizationId } = request
 
     // List projects for the organization
-    const projects = await this.projectsService.listProjects(user.id, organizationId)
+    const projects = await this.projectsService.listProjects(organizationId)
 
     return {
       data: {
@@ -82,14 +83,14 @@ export class ProjectsController {
   }
 
   @Delete(ProjectsRoutes.deleteProject.path)
+  @CheckPolicy((policy) => policy.canDelete())
   async deleteProject(
-    @Req() request: EndpointRequest,
-    @Param("projectId") projectId: string,
+    @Req() request: EndpointRequestWithProject,
   ): Promise<typeof ProjectsRoutes.deleteProject.response> {
-    const user = request.user
+    const { user, project } = request
 
     // Delete project
-    await this.projectsService.deleteProject(user.id, projectId)
+    await this.projectsService.deleteProject(user.id, project!.id)
 
     return {
       data: {

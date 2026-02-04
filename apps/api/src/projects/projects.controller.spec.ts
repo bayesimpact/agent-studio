@@ -1,5 +1,8 @@
 import type { Repository } from "typeorm"
-import { buildEndpointRequest } from "@/common/test/request.factory"
+import {
+  buildEndpointRequestWithOrganization,
+  buildEndpointRequestWithOrganizationAndProject,
+} from "@/common/test/request.factory"
 import { clearTestDatabase } from "@/common/test/test-database"
 import {
   setupTransactionalTestDatabase,
@@ -9,7 +12,6 @@ import { Organization } from "@/organizations/organization.entity"
 import { createOrganizationWithOwner } from "@/organizations/organization.factory"
 import { UserMembership } from "@/organizations/user-membership.entity"
 import { User } from "@/users/user.entity"
-import { userFactory } from "@/users/user.factory"
 import { Project } from "./project.entity"
 import { ProjectsController } from "./projects.controller"
 import { ProjectsModule } from "./projects.module"
@@ -62,11 +64,14 @@ describe("ProjectsController", () => {
       const { organization, user } = await createOrganizationWithOwner(defaultRepositories)
 
       const body = {
-        payload: { name: "New Project", organizationId: organization.id },
+        payload: { name: "New Project" },
       }
 
       // Act
-      const { data: result } = await controller.createProject(buildEndpointRequest(user), body)
+      const { data: result } = await controller.createProject(
+        buildEndpointRequestWithOrganization(organization, user),
+        body,
+      )
 
       // Assert
       expect(result.id).toBeDefined()
@@ -78,36 +83,6 @@ describe("ProjectsController", () => {
       })
       expect(project).not.toBeNull()
       expect(project?.name).toBe("New Project")
-    })
-
-    it("should create a project when user is admin", async () => {
-      const { organization, user } = await createOrganizationWithOwner(defaultRepositories, {
-        membership: { role: "admin" },
-      })
-
-      const body = { payload: { name: "Admin Project", organizationId: organization.id } }
-
-      // Act
-      const { data: result } = await controller.createProject(buildEndpointRequest(user), body)
-
-      // Assert
-      expect(result.name).toBe("Admin Project")
-      expect(result.organizationId).toBe(organization.id)
-    })
-
-    it("should throw ForbiddenException when user is member", async () => {
-      const { organization, user } = await createOrganizationWithOwner(defaultRepositories, {
-        membership: { role: "member" },
-      })
-
-      const body = {
-        payload: { name: "Should Fail", organizationId: organization.id },
-      }
-
-      // Act & Assert
-      await expect(controller.createProject(buildEndpointRequest(user), body)).rejects.toThrow(
-        "User must be an owner or admin",
-      )
     })
   })
 
@@ -123,8 +98,7 @@ describe("ProjectsController", () => {
 
       // Act
       const { data: result } = await controller.listProjects(
-        buildEndpointRequest(user),
-        organization.id,
+        buildEndpointRequestWithOrganization(organization, user),
       )
 
       // Assert
@@ -137,40 +111,20 @@ describe("ProjectsController", () => {
     })
 
     it("should return empty array when organization has no projects", async () => {
-      const { organization, user } = await createOrganizationWithOwner(defaultRepositories, {
-        membership: { role: "member" },
-      })
+      const { organization, user } = await createOrganizationWithOwner(defaultRepositories)
 
       // Act
       const { data: result } = await controller.listProjects(
-        buildEndpointRequest(user),
-        organization.id,
+        buildEndpointRequestWithOrganization(organization, user),
       )
 
       // Assert
       expect(result.projects).toEqual([])
     })
-
-    it("should throw ForbiddenException when user is not a member", async () => {
-      const { organization } = await createOrganizationWithOwner(defaultRepositories, {
-        membership: { role: "member" },
-      })
-
-      const anotherUser = await userRepository.save(
-        userFactory.build({
-          email: "nonmember@example.com",
-        }),
-      )
-
-      // Act & Assert
-      await expect(
-        controller.listProjects(buildEndpointRequest(anotherUser), organization.id),
-      ).rejects.toThrow("User does not have access to organization")
-    })
   })
 
   describe("deleteProject", () => {
-    it("should delete a project when user is owner", async () => {
+    it("should delete a project", async () => {
       const { organization, user } = await createOrganizationWithOwner(defaultRepositories)
 
       const project = await projectRepository.save({
@@ -180,8 +134,7 @@ describe("ProjectsController", () => {
 
       // Act
       const { data: result } = await controller.deleteProject(
-        buildEndpointRequest(user),
-        project.id,
+        buildEndpointRequestWithOrganizationAndProject(organization, user, project),
       )
 
       // Assert
@@ -189,59 +142,6 @@ describe("ProjectsController", () => {
 
       const deletedProject = await projectRepository.findOne({ where: { id: project.id } })
       expect(deletedProject).toBeNull()
-    })
-
-    it("should delete a project when user is admin", async () => {
-      const { organization, user } = await createOrganizationWithOwner(defaultRepositories, {
-        membership: { role: "admin" },
-      })
-
-      const project = await projectRepository.save({
-        name: "Admin Project to Delete",
-        organizationId: organization.id,
-      })
-
-      // Act
-      const { data: result } = await controller.deleteProject(
-        buildEndpointRequest(user),
-        project.id,
-      )
-
-      // Assert
-      expect(result.success).toBe(true)
-
-      const deletedProject = await projectRepository.findOne({ where: { id: project.id } })
-      expect(deletedProject).toBeNull()
-    })
-
-    it("should throw ForbiddenException when user is member", async () => {
-      const { organization, user } = await createOrganizationWithOwner(defaultRepositories, {
-        membership: { role: "member" },
-      })
-
-      const project = await projectRepository.save({
-        name: "Should Not Delete",
-        organizationId: organization.id,
-      })
-
-      // Act & Assert
-      await expect(
-        controller.deleteProject(buildEndpointRequest(user), project.id),
-      ).rejects.toThrow("User must be an owner or admin")
-
-      // Verify project still exists
-      const existingProject = await projectRepository.findOne({ where: { id: project.id } })
-      expect(existingProject).not.toBeNull()
-    })
-
-    it("should throw NotFoundException when project does not exist", async () => {
-      const { user } = await createOrganizationWithOwner(defaultRepositories)
-      const nonExistentProjectId = "00000000-0000-0000-0000-000000000000"
-
-      // Act & Assert
-      await expect(
-        controller.deleteProject(buildEndpointRequest(user), nonExistentProjectId),
-      ).rejects.toThrow("Project with id")
     })
   })
 })
