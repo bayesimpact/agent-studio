@@ -11,29 +11,54 @@ import { useEffect, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { Navigate, useOutlet } from "react-router-dom"
 import { CreateChatBotDialogWithoutTrigger } from "@/components/chat-bots/CreateChatBotDialog"
-// import { AdminChatBotsList, AppChatBotsList } from "@/components/chat-bots/ChatBotsList"
 import { useSidebarLayout } from "@/components/layouts/sidebar/context"
 import type { ChatBot } from "@/features/chat-bots/chat-bots.models"
+import { selectChatBotsFromProjectId } from "@/features/chat-bots/chat-bots.selectors"
 import type { Project } from "@/features/projects/projects.models"
+import { selectCurrentProjectId, selectProjectData } from "@/features/projects/projects.selectors"
 import { useAbility } from "@/hooks/use-ability"
 import { useBuildPath } from "@/hooks/use-build-path"
+import { ADS } from "@/store/async-data-status"
+import { useAppSelector } from "@/store/hooks"
+import { LoadingRoute } from "./LoadingRoute"
+import { NotFoundRoute } from "./NotFoundRoute"
 
-export function ProjectRoute({ project, chatBots }: { project: Project; chatBots: ChatBot[] }) {
+export function ProjectRoute() {
+  const project = useAppSelector(selectProjectData)
+  const projectId = useAppSelector(selectCurrentProjectId)
+  const chatBots = useAppSelector(selectChatBotsFromProjectId(projectId))
+
+  if (ADS.isError(project) || ADS.isError(chatBots)) return <NotFoundRoute />
+
+  if (ADS.isFulfilled(project) && ADS.isFulfilled(chatBots)) {
+    return <WithData project={project.value} chatBots={chatBots.value} />
+  }
+
+  return <LoadingRoute />
+}
+
+function WithData({ project, chatBots }: { project: Project; chatBots: ChatBot[] }) {
   const outlet = useOutlet()
   const { isAdminInterface } = useAbility()
   const { buildPath } = useBuildPath()
-  const firstChatBot = chatBots?.[0]
-
   useHandleHeader({ project, outlet })
+  const firstChatBot = chatBots?.[0]
 
   if (outlet) return outlet
 
   if (firstChatBot)
-    return <Navigate to={buildPath("chatBot", { chatBotId: firstChatBot.id })} replace />
+    return (
+      <Navigate
+        to={buildPath("chatBot", {
+          organizationId: project.organizationId,
+          projectId: project.id,
+          chatBotId: firstChatBot.id,
+        })}
+        replace
+      />
+    )
 
   if (isAdminInterface) return <NoChatBot project={project} />
-
-  return null
 }
 
 function useHandleHeader({
@@ -49,6 +74,9 @@ function useHandleHeader({
   useEffect(() => {
     if (outlet) return
     setHeaderTitle(headerTitle)
+    return () => {
+      setHeaderTitle("")
+    }
   }, [outlet, headerTitle, setHeaderTitle])
 }
 
@@ -68,8 +96,7 @@ function NoChatBot({ project }: { project: Project }) {
             {t("empty.button")}
           </Button>
           <CreateChatBotDialogWithoutTrigger
-            projectId={project.id}
-            projectName={project.name}
+            project={project}
             isOpen={open}
             onOpenChange={setOpen}
           />

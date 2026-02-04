@@ -25,12 +25,6 @@ const slice = createSlice({
   initialState,
   reducers: {
     setCurrentChatSessionId: (state, action: PayloadAction<{ chatSessionId: string | null }>) => {
-      if (!ADS.isFulfilled(state.data)) return
-      const found = Object.values(state.data.value)
-        .flat()
-        .find((s) => s.id === action.payload.chatSessionId)
-      if (!found) return
-
       state.currentChatSessionId = action.payload.chatSessionId
     },
     reset: () => initialState,
@@ -124,7 +118,7 @@ const slice = createSlice({
 
     builder
       .addCase(listSessions.pending, (state) => {
-        state.data.status = ADS.Loading
+        if (!ADS.isFulfilled(state.data)) state.data.status = ADS.Loading
         state.data.error = null
       })
       .addCase(listSessions.fulfilled, (state, action) => {
@@ -146,7 +140,7 @@ const slice = createSlice({
 
     builder
       .addCase(loadSessionMessages.pending, (state) => {
-        state.messages.status = ADS.Loading
+        if (!ADS.isFulfilled(state.messages)) state.messages.status = ADS.Loading
         state.messages.error = null
       })
       .addCase(loadSessionMessages.fulfilled, (state, action) => {

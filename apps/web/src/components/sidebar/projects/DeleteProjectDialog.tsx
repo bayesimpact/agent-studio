@@ -24,7 +24,7 @@ interface DeleteProjectDialogProps {
 
 export function DeleteProjectDialog({ project, onClose }: DeleteProjectDialogProps) {
   const navigate = useNavigate()
-  const { getPath } = useBuildPath()
+  const { buildPath } = useBuildPath()
   const { t } = useTranslation("project", { keyPrefix: "delete" })
   const { t: tCommon } = useTranslation("common")
   const dispatch = useAppDispatch()
@@ -34,10 +34,17 @@ export function DeleteProjectDialog({ project, onClose }: DeleteProjectDialogPro
     return null
   }
 
-  const handleDelete = async () => {
-    dispatch(deleteProject({ organizationId: project.organizationId, projectId: project.id }))
-    navigate(getPath("organization"))
+  const path = buildPath("organization", { organizationId: project.organizationId })
+
+  const onSuccess = () => {
+    navigate(path, { replace: true })
     onClose()
+  }
+
+  const handleDelete = async () => {
+    dispatch(
+      deleteProject({ organizationId: project.organizationId, projectId: project.id, onSuccess }),
+    )
   }
 
   return (

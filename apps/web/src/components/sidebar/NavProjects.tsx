@@ -7,7 +7,6 @@ import { useState } from "react"
 import { useTranslation } from "react-i18next"
 import type { ChatBot } from "@/features/chat-bots/chat-bots.models"
 import { selectChatBotsFromProjectId } from "@/features/chat-bots/chat-bots.selectors"
-import { selectCurrentOrganization } from "@/features/organizations/organizations.selectors"
 import { ADS } from "@/store/async-data-status"
 import { useAppSelector } from "@/store/hooks"
 import { AdminChatBotList, AppChatBotList } from "./projects/chat-bots/ChatBotList"
@@ -17,12 +16,16 @@ import { ProjectOptions } from "./projects/ProjectOptions"
 
 type Item = { action: "edit" | "delete"; value: ProjectDto }
 
-export function AdminNavProjects({ projects }: { projects: ProjectDto[] }) {
-  const currentOrganization = useAppSelector(selectCurrentOrganization)
+export function AdminNavProjects({
+  organizationId,
+  projects,
+}: {
+  organizationId: string
+  projects: ProjectDto[]
+}) {
   const [item, setItem] = useState<Item | null>(null)
   const handleItem = (item: Item) => setItem(item)
   const handleClose = () => setItem(null)
-  if (!currentOrganization) return null
   return (
     <>
       {projects.map((project) => (
@@ -37,7 +40,13 @@ export function AdminNavProjects({ projects }: { projects: ProjectDto[] }) {
           }
           showEmptyProject={true}
         >
-          {({ chatBots }) => <AdminChatBotList chatBots={chatBots} project={project} />}
+          {({ chatBots }) => (
+            <AdminChatBotList
+              organizationId={organizationId}
+              chatBots={chatBots}
+              project={project}
+            />
+          )}
         </ProjectItem>
       ))}
 
@@ -53,14 +62,24 @@ export function AdminNavProjects({ projects }: { projects: ProjectDto[] }) {
   )
 }
 
-export function AppNavProjects({ projects }: { projects: ProjectDto[] }) {
-  const currentOrganization = useAppSelector(selectCurrentOrganization)
-  if (!currentOrganization) return null
+export function AppNavProjects({
+  organizationId,
+  projects,
+}: {
+  organizationId: string
+  projects: ProjectDto[]
+}) {
   return (
     <>
       {projects.map((project) => (
         <ProjectItem key={project.id} project={project}>
-          {({ chatBots }) => <AppChatBotList chatBots={chatBots} />}
+          {({ chatBots }) => (
+            <AppChatBotList
+              projectId={project.id}
+              organizationId={organizationId}
+              chatBots={chatBots}
+            />
+          )}
         </ProjectItem>
       ))}
     </>

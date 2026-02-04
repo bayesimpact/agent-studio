@@ -19,10 +19,6 @@ const slice = createSlice({
   initialState,
   reducers: {
     setCurrentProjectId: (state, action: PayloadAction<{ projectId: string | null }>) => {
-      if (!ADS.isFulfilled(state.data)) return
-      const found = state.data.value.find((p) => p.id === action.payload.projectId)
-      if (!found) return
-
       state.currentProjectId = action.payload.projectId
     },
     clearProjects: (state) => {

@@ -10,7 +10,7 @@ import { SidebarMenuAction, SidebarMenuItem, useSidebar } from "@caseai-connect/
 import { BotIcon, Edit, MoreHorizontal, Trash2 } from "lucide-react"
 import { useState } from "react"
 import { useTranslation } from "react-i18next"
-import { useNavigate, useParams } from "react-router-dom"
+import { useParams } from "react-router-dom"
 import { CreateChatBotDialogWithTrigger } from "@/components/chat-bots/CreateChatBotDialog"
 import { DeleteChatBotDialogWithOutTrigger } from "@/components/chat-bots/DeleteChatBotDialog"
 import { EditChatBotDialogWithOutTrigger } from "@/components/chat-bots/EditChatBotDialog"
@@ -22,11 +22,18 @@ import { ChatSessionList } from "../chat-sessions/ChatSessionList"
 
 type Item = { action: "edit" | "delete"; value: ChatBot }
 
-export function AdminChatBotList({ project, chatBots }: { project: Project; chatBots: ChatBot[] }) {
+export function AdminChatBotList({
+  organizationId,
+  project,
+  chatBots,
+}: {
+  organizationId: string
+  project: Project
+  chatBots: ChatBot[]
+}) {
   const { chatBotId: urlChatBotId } = useParams()
-  const navigate = useNavigate()
 
-  const { getPath, buildPath } = useBuildPath()
+  const { buildPath } = useBuildPath()
 
   const [item, setItem] = useState<Item | null>(null)
 
@@ -34,7 +41,6 @@ export function AdminChatBotList({ project, chatBots }: { project: Project; chat
 
   const handleClose = () => {
     setItem(null)
-    navigate(getPath("project"))
   }
   return (
     <>
@@ -45,7 +51,8 @@ export function AdminChatBotList({ project, chatBots }: { project: Project; chat
             id: chatBot.id,
             title: chatBot.name,
             url: buildPath("chatBot", {
-              projectId: chatBot.projectId,
+              organizationId,
+              projectId: project.id,
               chatBotId: chatBot.id,
             }),
             isActive: urlChatBotId === chatBot.id,
@@ -58,7 +65,11 @@ export function AdminChatBotList({ project, chatBots }: { project: Project; chat
             />
           }
         >
-          <ChatSessionList chatBotId={chatBot.id} projectId={chatBot.projectId} />
+          <ChatSessionList
+            organizationId={organizationId}
+            chatBotId={chatBot.id}
+            projectId={chatBot.projectId}
+          />
         </AppNavItem>
       ))}
 
@@ -71,6 +82,8 @@ export function AdminChatBotList({ project, chatBots }: { project: Project; chat
         onClose={handleClose}
       />
       <DeleteChatBotDialogWithOutTrigger
+        organizationId={organizationId}
+        projectId={project.id}
         chatBot={item?.action === "delete" ? item.value : null}
         onClose={handleClose}
       />
@@ -78,7 +91,15 @@ export function AdminChatBotList({ project, chatBots }: { project: Project; chat
   )
 }
 
-export function AppChatBotList({ chatBots }: { chatBots: ChatBot[] }) {
+export function AppChatBotList({
+  organizationId,
+  projectId,
+  chatBots,
+}: {
+  organizationId: string
+  projectId: string
+  chatBots: ChatBot[]
+}) {
   const { chatBotId: urlChatBotId } = useParams()
   const { buildPath } = useBuildPath()
   return (
@@ -90,14 +111,19 @@ export function AppChatBotList({ chatBots }: { chatBots: ChatBot[] }) {
             id: chatBot.id,
             title: chatBot.name,
             url: buildPath("chatBot", {
-              projectId: chatBot.projectId,
+              organizationId,
+              projectId,
               chatBotId: chatBot.id,
             }),
             isActive: urlChatBotId === chatBot.id,
             icon: BotIcon,
           }}
         >
-          <ChatSessionList chatBotId={chatBot.id} projectId={chatBot.projectId} />
+          <ChatSessionList
+            organizationId={organizationId}
+            chatBotId={chatBot.id}
+            projectId={projectId}
+          />
         </AppNavItem>
       ))}
     </>

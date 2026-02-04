@@ -15,9 +15,11 @@ import type { MenuItem } from "../../types"
 import { CreateChatSession } from "./CreateChatSession"
 
 export function ChatSessionList({
+  organizationId,
   chatBotId,
   projectId,
 }: {
+  organizationId: string
   projectId: string
   chatBotId: string
 }) {
@@ -33,6 +35,7 @@ export function ChatSessionList({
           locale: getLocale(),
         }),
         url: buildPath("chatSession", {
+          organizationId,
           projectId,
           chatBotId,
           chatSessionId: session.id,
@@ -43,7 +46,14 @@ export function ChatSessionList({
     : []
   return (
     <SidebarMenuSub>
-      {items.length > 0 && <CreateChatSession chatBotId={chatBotId} type="menu" />}
+      {items.length > 0 && (
+        <CreateChatSession
+          organizationId={organizationId}
+          projectId={projectId}
+          chatBotId={chatBotId}
+          type="menu"
+        />
+      )}
 
       {items.map((item) => (
         <SidebarMenuSubItem key={item.id}>

@@ -3,7 +3,6 @@ import { createListenerMiddleware, isAnyOf } from "@reduxjs/toolkit"
 import type { AppDispatch, RootState } from "@/store/types"
 import { notificationsActions } from "../notifications/notifications.slice"
 import { selectCurrentOrganizationId } from "../organizations/organizations.selectors"
-import type { Project } from "./projects.models"
 import { createProject, deleteProject, listProjects, updateProject } from "./projects.thunks"
 
 // Create typed listener middleware
@@ -13,30 +12,27 @@ export type AppStartListening = TypedStartListening<RootState, AppDispatch>
 
 listenerMiddleware.startListening({
   matcher: isAnyOf(deleteProject.fulfilled, createProject.fulfilled, updateProject.fulfilled),
-  effect: async (action, listenerApi) => {
-    const organizationId = selectCurrentOrganizationId(listenerApi.getState())
+  effect: async (_, listenerApi) => {
+    const state = listenerApi.getState()
+    const organizationId = selectCurrentOrganizationId(state)
     if (!organizationId) throw new Error("No organization selected")
 
     await listenerApi.dispatch(listProjects({ organizationId }))
-
-    if (action.type === createProject.fulfilled.type) {
-      const callback = (action.meta as { arg: { onSuccess: (projectId: string) => void } }).arg
-        .onSuccess
-      const { id } = action.payload as Project
-      callback(id)
-    }
   },
 })
 
 listenerMiddleware.startListening({
   actionCreator: deleteProject.fulfilled,
-  effect: async (_, listenerApi) => {
+  effect: async (action, listenerApi) => {
     listenerApi.dispatch(
       notificationsActions.show({
         title: "Project deleted successfully",
         type: "success",
       }),
     )
+
+    const onSuccess = action.meta.arg.onSuccess
+    onSuccess?.()
   },
 })
 listenerMiddleware.startListening({
@@ -53,13 +49,17 @@ listenerMiddleware.startListening({
 
 listenerMiddleware.startListening({
   actionCreator: createProject.fulfilled,
-  effect: async (_, listenerApi) => {
+  effect: async (action, listenerApi) => {
     listenerApi.dispatch(
       notificationsActions.show({
         title: "Project created successfully",
         type: "success",
       }),
     )
+
+    const onSuccess = action.meta.arg.onSuccess
+    const { id } = action.payload
+    onSuccess?.(id)
   },
 })
 listenerMiddleware.startListening({

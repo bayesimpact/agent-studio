@@ -3,49 +3,66 @@ import { createListenerMiddleware, isAnyOf } from "@reduxjs/toolkit"
 import { ADS } from "@/store/async-data-status"
 import type { AppDispatch, RootState } from "@/store/types"
 import { notificationsActions } from "../notifications/notifications.slice"
-import { selectProjectsData } from "../projects/projects.selectors"
+import { selectCurrentProjectId, selectProjectsData } from "../projects/projects.selectors"
 import { listProjects } from "../projects/projects.thunks"
-import type { ChatBot } from "./chat-bots.models"
 import { createChatBot, deleteChatBot, listChatBots, updateChatBot } from "./chat-bots.thunks"
 
-// Create typed listener middleware
 const listenerMiddleware = createListenerMiddleware<RootState, AppDispatch>()
 
 export type AppStartListening = TypedStartListening<RootState, AppDispatch>
 
+// Refresh chat bots when projects are loaded
 listenerMiddleware.startListening({
-  matcher: isAnyOf(
-    deleteChatBot.fulfilled,
-    createChatBot.fulfilled,
-    updateChatBot.fulfilled,
-    listProjects.fulfilled,
-  ),
+  actionCreator: listProjects.fulfilled,
   effect: async (action, listenerApi) => {
-    const projects = selectProjectsData(listenerApi.getState())
-    if (!ADS.isFulfilled(projects)) return
+    const projects = action.payload
+    projects.forEach((project) => {
+      listenerApi.dispatch(listChatBots({ projectId: project.id }))
+    })
+  },
+})
 
+// Refresh chat bots when current project changes
+listenerMiddleware.startListening({
+  predicate(_, currentState, originalState) {
+    const prevId = selectCurrentProjectId(originalState)
+    const nextId = selectCurrentProjectId(currentState)
+    return prevId !== nextId
+  },
+  effect: async (_, listenerApi) => {
+    const state = listenerApi.getState()
+    const projectId = selectCurrentProjectId(state)
+    if (!projectId) return
+    await listenerApi.dispatch(listChatBots({ projectId }))
+  },
+})
+
+// Refresh chat bots when one is created, updated or deleted
+listenerMiddleware.startListening({
+  matcher: isAnyOf(deleteChatBot.fulfilled, createChatBot.fulfilled, updateChatBot.fulfilled),
+  effect: async (_, listenerApi) => {
+    const state = listenerApi.getState()
+    const projects = selectProjectsData(state)
+    if (!ADS.isFulfilled(projects)) return
     projects.value.forEach((project) => {
       listenerApi.dispatch(listChatBots({ projectId: project.id }))
     })
-
-    if (action.type === createChatBot.fulfilled.type) {
-      const callback = (action.meta as { arg: { onSuccess: (chatBotId: string) => void } }).arg
-        .onSuccess
-      const { id } = action.payload as ChatBot
-      callback(id)
-    }
   },
 })
 
 listenerMiddleware.startListening({
   actionCreator: deleteChatBot.fulfilled,
-  effect: async (_, listenerApi) => {
+  effect: async (action, listenerApi) => {
     listenerApi.dispatch(
       notificationsActions.show({
         title: "Chat bot deleted successfully",
         type: "success",
       }),
     )
+
+    const onSuccess = action.meta.arg.onSuccess
+    const id = action.meta.arg.chatBotId
+    onSuccess?.(id)
   },
 })
 listenerMiddleware.startListening({
@@ -62,13 +79,17 @@ listenerMiddleware.startListening({
 
 listenerMiddleware.startListening({
   actionCreator: createChatBot.fulfilled,
-  effect: async (_, listenerApi) => {
+  effect: async (action, listenerApi) => {
     listenerApi.dispatch(
       notificationsActions.show({
         title: "Chat bot created successfully",
         type: "success",
       }),
     )
+
+    const onSuccess = action.meta.arg.onSuccess
+    const { id } = action.payload
+    onSuccess?.(id)
   },
 })
 listenerMiddleware.startListening({

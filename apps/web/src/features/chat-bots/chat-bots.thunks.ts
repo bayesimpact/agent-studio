@@ -14,7 +14,7 @@ export const createChatBot = createAsyncThunk<
   {
     projectId: string
     fields: Pick<ChatBot, "name" | "defaultPrompt" | "model" | "temperature" | "locale">
-    onSuccess: (chatBotId: string) => void
+    onSuccess?: (chatBotId: string) => void
   },
   ThunkConfig
 >(
@@ -48,7 +48,7 @@ export const updateChatBot = createAsyncThunk<
 
 export const deleteChatBot = createAsyncThunk<
   void,
-  { chatBotId: string; projectId: string },
+  { chatBotId: string; projectId: string; onSuccess?: (chatBotId: string) => void },
   ThunkConfig
 >(
   "chatBots/delete",
