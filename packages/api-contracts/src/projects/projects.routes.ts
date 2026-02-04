@@ -14,7 +14,7 @@ export const ProjectsRoutes = {
     RequestPayload<CreateProjectRequestDto>
   >({
     method: "post",
-    path: "projects",
+    path: "organizations/:organizationId/projects",
   }),
   listProjects: defineRoute<ResponseData<ListProjectsResponseDto>>({
     method: "get",
@@ -25,10 +25,10 @@ export const ProjectsRoutes = {
     RequestPayload<UpdateProjectRequestDto>
   >({
     method: "patch",
-    path: "projects/:projectId",
+    path: "organizations/:organizationId/projects/:projectId",
   }),
   deleteProject: defineRoute<ResponseData<{ success: boolean }>>({
     method: "delete",
-    path: "projects/:projectId",
+    path: "organizations/:organizationId/projects/:projectId",
   }),
 }
