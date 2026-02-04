@@ -4,6 +4,13 @@
 export interface ChatMessage {
   role: "user" | "assistant" | "system"
   content: string
+  inputMetadata?: {
+    organizationId?: string
+    chatSessionId?: string
+    chatBotId?: string
+    projectId?: string
+    tags?: string[]
+  }
 }
 
 /**

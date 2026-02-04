@@ -42,7 +42,11 @@ export class ChatStreamingService {
 
     // Step 3: Convert messages to LLM format
     // Messages are already loaded via relations in prepareForStreaming
-    const llmMessages = this.convertToLLMFormat(updatedSession.messages)
+    const llmMessages = this.convertToLLMFormatWithInputMetadata({
+      messages: updatedSession.messages,
+      chatSession: session,
+      chatBot: chatbot,
+    })
 
     // Step 4: Build LLM config from chatbot
     const llmConfig = this.buildLLMConfig(chatbot)
@@ -106,7 +110,15 @@ export class ChatStreamingService {
   /**
    * Converts ChatSession messages to LLM provider format
    */
-  private convertToLLMFormat(messages: ChatSession["messages"]): ChatMessage[] {
+  private convertToLLMFormatWithInputMetadata({
+    messages,
+    chatSession,
+    chatBot,
+  }: {
+    messages: ChatSession["messages"]
+    chatSession: ChatSession
+    chatBot: ChatBot
+  }): ChatMessage[] {
     const llmMessages: ChatMessage[] = []
 
     for (const message of messages) {
@@ -128,6 +140,13 @@ export class ChatStreamingService {
       llmMessages.push({
         role: message.role === "user" ? "user" : "assistant",
         content: message.content,
+        inputMetadata: {
+          chatSessionId: message.sessionId,
+          chatBotId: chatBot.id,
+          projectId: chatBot.projectId,
+          organizationId: chatSession.organizationId,
+          tags: [chatBot.name],
+        },
       })
     }
 
