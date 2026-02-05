@@ -1,5 +1,5 @@
 import type { Repository } from "typeorm"
-import { ChatBot } from "@/chat-bots/chat-bot.entity"
+import { Agent } from "@/agents/agent.entity"
 import { clearTestDatabase } from "@/common/test/test-database"
 import {
   setupTransactionalTestDatabase,
@@ -24,7 +24,7 @@ describe("ChatMessagesController", () => {
   let organizationRepository: Repository<Organization>
   let membershipRepository: Repository<UserMembership>
   let projectRepository: Repository<Project>
-  let chatBotRepository: Repository<ChatBot>
+  let agentRepository: Repository<Agent>
   let chatSessionRepository: Repository<ChatSession>
   let chatMessageRepository: Repository<ChatMessage>
 
@@ -35,7 +35,7 @@ describe("ChatMessagesController", () => {
         Organization,
         UserMembership,
         Project,
-        ChatBot,
+        Agent,
         ChatSession,
         ChatMessage,
       ],
@@ -55,7 +55,7 @@ describe("ChatMessagesController", () => {
     organizationRepository = setup.getRepository(Organization)
     membershipRepository = setup.getRepository(UserMembership)
     projectRepository = setup.getRepository(Project)
-    chatBotRepository = setup.getRepository(ChatBot)
+    agentRepository = setup.getRepository(Agent)
     chatSessionRepository = setup.getRepository(ChatSession)
     chatMessageRepository = setup.getRepository(ChatMessage)
   })
@@ -75,7 +75,7 @@ describe("ChatMessagesController", () => {
         userRepository,
         membershipRepository,
         projectRepository,
-        chatBotRepository,
+        agentRepository,
         chatSessionRepository,
       })
 

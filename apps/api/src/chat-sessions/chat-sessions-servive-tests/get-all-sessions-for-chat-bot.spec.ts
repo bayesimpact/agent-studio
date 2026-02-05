@@ -1,5 +1,5 @@
 import type { ChatSessionTypeDto } from "@caseai-connect/api-contracts"
-import { chatBotFactory } from "@/chat-bots/chat-bot.factory"
+import { agentFactory } from "@/agents/agent.factory"
 import { chatSessionFactory } from "@/chat-sessions/chat-session.factory"
 import { userFactory } from "@/users/user.factory"
 import { chatSessionControllerTestSetup } from "./test-setup"
@@ -14,7 +14,7 @@ describe("getAllSessionsForChatBot", () => {
 
       const buildChatBot = (params: { date: Date; type: ChatSessionTypeDto }) =>
         chatSessionFactory
-          .transient({ chatBot: testChatBot, user: testUser, organization: testOrganization })
+          .transient({ agent: testChatBot, user: testUser, organization: testOrganization })
           .production()
           .build(params)
 
@@ -52,7 +52,7 @@ describe("getAllSessionsForChatBot", () => {
 
       const buildChatBot = (params: { date: Date; type: ChatSessionTypeDto }) =>
         chatSessionFactory
-          .transient({ chatBot: testChatBot, user: testUser, organization: testOrganization })
+          .transient({ agent: testChatBot, user: testUser, organization: testOrganization })
           .production()
           .build(params)
 
@@ -95,19 +95,19 @@ describe("getAllSessionsForChatBot", () => {
     } = getTestContext()
 
     // Create another chatbot
-    const anotherChatBot = chatBotFactory.transient({ project: testProject }).build({
+    const anotherChatBot = agentFactory.transient({ project: testProject }).build({
       name: "Another ChatBot",
     })
     await chatBotRepository.save(anotherChatBot)
 
     // Create sessions for both chatbots
     const session1 = chatSessionFactory
-      .transient({ chatBot: testChatBot, user: testUser, organization: testOrganization })
+      .transient({ agent: testChatBot, user: testUser, organization: testOrganization })
       .production()
       .build()
 
     const session2 = chatSessionFactory
-      .transient({ chatBot: anotherChatBot, user: testUser, organization: testOrganization })
+      .transient({ agent: anotherChatBot, user: testUser, organization: testOrganization })
       .build()
 
     await chatSessionRepository.save([session1, session2])
@@ -140,12 +140,12 @@ describe("getAllSessionsForChatBot", () => {
 
     // Create sessions for both users
     const session1 = chatSessionFactory
-      .transient({ chatBot: testChatBot, user: testUser, organization: testOrganization })
+      .transient({ agent: testChatBot, user: testUser, organization: testOrganization })
       .production()
       .build()
 
     const session2 = chatSessionFactory
-      .transient({ chatBot: testChatBot, user: anotherUser, organization: testOrganization })
+      .transient({ agent: testChatBot, user: anotherUser, organization: testOrganization })
       .production()
       .build()
 

@@ -1,16 +1,16 @@
 import { randomUUID } from "node:crypto"
-import { ChatBotLocale, ChatBotModel } from "@caseai-connect/api-contracts"
+import { AgentLocale, AgentModel } from "@caseai-connect/api-contracts"
 import { Factory } from "fishery"
 import type { Project } from "@/projects/project.entity"
-import type { ChatBot } from "./chat-bot.entity"
+import type { Agent } from "./agent.entity"
 
-type ChatBotTransientParams = {
+type AgentTransientParams = {
   project: Project
 }
 
-class ChatBotFactory extends Factory<ChatBot, ChatBotTransientParams> {}
+class AgentFactory extends Factory<Agent, AgentTransientParams> {}
 
-export const chatBotFactory = ChatBotFactory.define(({ sequence, params, transientParams }) => {
+export const agentFactory = AgentFactory.define(({ sequence, params, transientParams }) => {
   if (!transientParams.project) {
     throw new Error("project transient is required")
   }
@@ -20,14 +20,14 @@ export const chatBotFactory = ChatBotFactory.define(({ sequence, params, transie
     id: params.id || randomUUID(),
     name: params.name || `Test Chat Bot ${sequence}`,
     defaultPrompt: params.defaultPrompt || `This is a test default prompt for bot ${sequence}`,
-    model: params.model || ChatBotModel.Gemini25Flash,
+    model: params.model || AgentModel.Gemini25Flash,
     temperature: params.temperature ?? 0.7,
-    locale: params.locale || ChatBotLocale.EN,
+    locale: params.locale || AgentLocale.EN,
     projectId: transientParams.project.id,
     createdAt: params.createdAt || now,
     updatedAt: params.updatedAt || now,
     deletedAt: params.deletedAt || null,
     project: transientParams.project,
     chatSessions: params.chatSessions || [],
-  } satisfies ChatBot
+  } satisfies Agent
 })

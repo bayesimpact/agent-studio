@@ -1,12 +1,12 @@
 import { randomUUID } from "node:crypto"
 import { Factory } from "fishery"
-import type { ChatBot } from "@/chat-bots/chat-bot.entity"
+import type { Agent } from "@/agents/agent.entity"
 import type { Organization } from "@/organizations/organization.entity"
 import type { User } from "@/users/user.entity"
 import type { ChatSession } from "./chat-session.entity"
 
 type ChatSessionTransientParams = {
-  chatBot: ChatBot
+  agent: Agent
   user: User
   organization: Organization
 }
@@ -30,8 +30,8 @@ class ChatSessionFactory extends Factory<ChatSession, ChatSessionTransientParams
 }
 
 export const chatSessionFactory = ChatSessionFactory.define(({ params, transientParams }) => {
-  if (!transientParams.chatBot) {
-    throw new Error("chatbot transient is required")
+  if (!transientParams.agent) {
+    throw new Error("agent transient is required")
   }
   if (!transientParams.user) {
     throw new Error("user transient is required")
@@ -48,14 +48,14 @@ export const chatSessionFactory = ChatSessionFactory.define(({ params, transient
 
   return {
     id: params.id || randomUUID(),
-    chatBotId: transientParams.chatBot.id,
+    chatBotId: transientParams.agent.id,
     userId: transientParams.user.id,
     organizationId: transientParams.organization.id,
     type: params.type || "playground",
     expiresAt: params.expiresAt ?? defaultExpiresAt,
     createdAt: params.createdAt || now,
     updatedAt: params.updatedAt || now,
-    chatbot: transientParams.chatBot,
+    chatbot: transientParams.agent,
     user: transientParams.user,
     organization: transientParams.organization,
     messages: params.messages || [],

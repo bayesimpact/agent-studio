@@ -3,7 +3,7 @@ import { ForbiddenException, Injectable, NotFoundException } from "@nestjs/commo
 import { InjectRepository } from "@nestjs/typeorm"
 import type { Repository } from "typeorm"
 import { v4 } from "uuid"
-import { ChatBot } from "@/chat-bots/chat-bot.entity"
+import { Agent } from "@/agents/agent.entity"
 import { UserMembership } from "@/organizations/user-membership.entity"
 import { ChatMessage } from "./chat-message.entity"
 import { ChatSession, type ChatSessionType } from "./chat-session.entity"
@@ -17,8 +17,8 @@ export class ChatSessionsService {
     private readonly chatSessionRepository: Repository<ChatSession>,
     @InjectRepository(ChatMessage)
     private readonly chatMessageRepository: Repository<ChatMessage>,
-    @InjectRepository(ChatBot)
-    private readonly chatBotRepository: Repository<ChatBot>,
+    @InjectRepository(Agent)
+    private readonly chatBotRepository: Repository<Agent>,
     @InjectRepository(UserMembership)
     private readonly membershipRepository: Repository<UserMembership>,
   ) {}
@@ -67,7 +67,7 @@ export class ChatSessionsService {
   async getSessionWithChatBotForUser(
     sessionId: string,
     userId: string,
-  ): Promise<{ session: ChatSession; chatBot: ChatBot }> {
+  ): Promise<{ session: ChatSession; chatBot: Agent }> {
     const session = await this.chatSessionRepository.findOne({
       where: { id: sessionId },
       relations: ["messages"],

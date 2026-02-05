@@ -1,42 +1,42 @@
-import { chatBotFactory } from "@/chat-bots/chat-bot.factory"
+import { agentFactory } from "@/agents/agent.factory"
 import { buildEndpointRequest } from "@/common/test/request.factory"
 import { createOrganizationWithProject } from "@/organizations/organization.factory"
 import { projectFactory } from "@/projects/project.factory"
 import { userFactory } from "@/users/user.factory"
-import { chatBotsControllerTestSetup } from "./test-setup"
+import { agentsControllerTestSetup } from "./test-setup"
 
-const getTestContext = chatBotsControllerTestSetup()
+const getTestContext = agentsControllerTestSetup()
 
-describe("ChatBotsController - getAll", () => {
-  it("should return chat bots for a project", async () => {
-    const { controller, chatBotRepository } = getTestContext()
+describe("AgentsController - getAll", () => {
+  it("should return agents for a project", async () => {
+    const { controller, agentRepository } = getTestContext()
     const { user, project } = await createOrganizationWithProject(getTestContext(), {
       membership: { role: "member" },
     })
     const mockRequest = buildEndpointRequest(user)
 
-    // Create chat bots
-    const chatBot1 = chatBotFactory.transient({ project }).build({
-      name: "ChatBot 1",
+    // Create agents
+    const agent1 = agentFactory.transient({ project }).build({
+      name: "Agent 1",
       defaultPrompt: "Prompt 1",
     })
-    const chatBot2 = chatBotFactory.transient({ project }).build({
-      name: "ChatBot 2",
+    const agent2 = agentFactory.transient({ project }).build({
+      name: "Agent 2",
       defaultPrompt: "Prompt 2",
     })
-    await chatBotRepository.save([chatBot1, chatBot2])
+    await agentRepository.save([agent1, agent2])
 
     const { data: result } = await controller.getAll(mockRequest, project.id)
 
-    expect(result.chatBots).toHaveLength(2)
-    expect(result.chatBots.map((chatBot) => chatBot.name)).toContain("ChatBot 1")
-    expect(result.chatBots.map((chatBot) => chatBot.name)).toContain("ChatBot 2")
-    expect(result.chatBots[0]).toHaveProperty("id")
-    expect(result.chatBots[0]).toHaveProperty("createdAt")
-    expect(result.chatBots[0]).toHaveProperty("updatedAt")
+    expect(result.agents).toHaveLength(2)
+    expect(result.agents.map((agent) => agent.name)).toContain("Agent 1")
+    expect(result.agents.map((agent) => agent.name)).toContain("Agent 2")
+    expect(result.agents[0]).toHaveProperty("id")
+    expect(result.agents[0]).toHaveProperty("createdAt")
+    expect(result.agents[0]).toHaveProperty("updatedAt")
   })
 
-  it("should return empty array when project has no chat bots", async () => {
+  it("should return empty array when project has no agents", async () => {
     const { controller } = getTestContext()
     const { user, project } = await createOrganizationWithProject(getTestContext(), {
       membership: { role: "member" },
@@ -45,14 +45,14 @@ describe("ChatBotsController - getAll", () => {
 
     const { data: result } = await controller.getAll(mockRequest, project.id)
 
-    expect(result.chatBots).toEqual([])
+    expect(result.agents).toEqual([])
   })
 
   it("should throw ForbiddenException when user is not a member", async () => {
     const { controller, projectRepository, userRepository, organization } = getTestContext()
 
     const user = userFactory.build({
-      auth0Id: "auth0|chat-bot-ctrl-nonmember",
+      auth0Id: "auth0|agent-ctrl-nonmember",
       email: "nonmember@example.com",
     })
     await userRepository.save(user)
