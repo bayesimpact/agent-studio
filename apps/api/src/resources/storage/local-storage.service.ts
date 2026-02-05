@@ -1,7 +1,7 @@
+import * as fs from "node:fs/promises"
+import * as path from "node:path"
 import { Injectable, Logger } from "@nestjs/common"
 import type { ConfigService } from "@nestjs/config"
-import * as fs from "fs/promises"
-import * as path from "path"
 import { v4 as uuidv4 } from "uuid"
 import type { MulterFile } from "@/common/types"
 import type { IFileStorage } from "./file-storage.interface"
@@ -43,7 +43,7 @@ export class LocalStorageService implements IFileStorage {
 
       await fs.writeFile(destinationPath, file.buffer)
 
-      const storageRelativePath = `${pathPrefix.endsWith("/") ? pathPrefix : pathPrefix + "/"}${uniqueFileName}`
+      const storageRelativePath = `${pathPrefix.endsWith("/") ? pathPrefix : `${pathPrefix}/`}${uniqueFileName}`
 
       this.logger.log(`File saved locally: ${storageRelativePath}`)
 
