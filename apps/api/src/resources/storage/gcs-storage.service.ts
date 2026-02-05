@@ -48,7 +48,7 @@ export class GcsStorageService implements IFileStorage {
 
     const fileId = uuidv4()
     const uniqueFileName = `${fileId}.${extension}`
-    const storageRelativePath = `${pathPrefix.endsWith("/") ? pathPrefix : pathPrefix + "/"}${uniqueFileName}`
+    const storageRelativePath = `${pathPrefix.endsWith("/") ? pathPrefix : `${pathPrefix}/`}${uniqueFileName}`
 
     const bucket = this.storage.bucket(this.bucketName)
     const fileRef = bucket.file(storageRelativePath)

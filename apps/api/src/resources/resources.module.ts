@@ -1,7 +1,7 @@
+import { join } from "node:path"
 import { Module } from "@nestjs/common"
 import { ServeStaticModule } from "@nestjs/serve-static"
 import { TypeOrmModule } from "@nestjs/typeorm"
-import { join } from "path"
 import { AuthModule } from "@/auth/auth.module"
 import { Organization } from "@/organizations/organization.entity"
 import { OrganizationsModule } from "@/organizations/organizations.module"
