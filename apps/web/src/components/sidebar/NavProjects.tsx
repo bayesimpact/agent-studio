@@ -13,6 +13,7 @@ import { AdminChatBotList, AppChatBotList } from "./projects/chat-bots/ChatBotLi
 import { DeleteProjectDialog } from "./projects/DeleteProjectDialog"
 import { EditProjectDialog } from "./projects/EditProjectDialog"
 import { ProjectOptions } from "./projects/ProjectOptions"
+import { NavResources } from "./resources/NavResources"
 
 type Item = { action: "edit" | "delete"; value: ProjectDto }
 
@@ -105,6 +106,8 @@ function ProjectItem({
   return (
     <Section name={name} options={options} className="group-data-[collapsible=icon]:hidden">
       <SidebarMenu>{children({ chatBots: chatBots.value })}</SidebarMenu>
+
+      <NavResources organizationId={project.organizationId} projectId={project.id} />
     </Section>
   )
 }
