@@ -7,7 +7,6 @@ import {
   Inject,
   MaxFileSizeValidator,
   NotFoundException,
-  Param,
   ParseFilePipe,
   Post,
   Request,
@@ -20,13 +19,16 @@ import { FileInterceptor } from "@nestjs/platform-express/multer"
 import { JwtAuthGuard } from "@/auth/jwt-auth.guard"
 import type { MulterFile } from "@/common/types"
 import { UserGuard } from "@/guards/user.guard"
-import type { EndpointRequest } from "@/request.interface"
+import { OrganizationGuard } from "@/organizations/organization.guard"
+import { ProjectsGuard } from "@/projects/projects.guard"
+import type { EndpointRequestWithProject } from "@/request.interface"
 import type { Resource } from "./resource.entity"
-import type { ResourcesService } from "./resources.service"
+// biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
+import { ResourcesService } from "./resources.service"
 import { FILE_STORAGE_SERVICE, type IFileStorage } from "./storage/file-storage.interface"
 
 const mega = 1024
-@UseGuards(JwtAuthGuard, UserGuard)
+@UseGuards(JwtAuthGuard, UserGuard, OrganizationGuard, ProjectsGuard)
 @Controller()
 export class ResourcesController {
   constructor(
@@ -51,11 +53,14 @@ export class ResourcesController {
       }),
     )
     file: MulterFile,
-    @Request() req: EndpointRequest,
-    @Param("organizationId") organizationId: string,
-    @Param("projectId") projectId: string,
+    @Request() req: EndpointRequestWithProject,
   ): Promise<typeof ResourcesRoutes.uploadOne.response> {
-    // TODO: check ability to upload resources to the project
+    const organizationId = req.organizationId
+    const projectId = req.project?.id
+
+    if (!projectId) {
+      throw new UnprocessableEntityException("Project ID is required.")
+    }
 
     if (!file) {
       throw new UnprocessableEntityException("File is required.")
