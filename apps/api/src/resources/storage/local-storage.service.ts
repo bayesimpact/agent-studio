@@ -9,7 +9,7 @@ import type { IFileStorage } from "./file-storage.interface"
 @Injectable()
 export class LocalStorageService implements IFileStorage {
   private readonly logger = new Logger(LocalStorageService.name)
-  private readonly dir = path.join(process.cwd(), "dontsave_documents")
+  private readonly dir = path.join(process.cwd(), "dontsave_resources")
   private readonly baseUrl: string
 
   constructor(private readonly configService: ConfigService) {
@@ -20,7 +20,7 @@ export class LocalStorageService implements IFileStorage {
   }
 
   getTemporaryUrl(storageRelativePath: string): Promise<string> {
-    return Promise.resolve(`${this.baseUrl}/documents/${storageRelativePath}`)
+    return Promise.resolve(`${this.baseUrl}/resources/${storageRelativePath}`)
   }
 
   async save({

@@ -1,6 +1,6 @@
 import type { TimeType } from "../generic"
 
-export type ResourcesDto = {
+export type ResourceDto = {
   createdAt: TimeType
   id: string
   projectId: string

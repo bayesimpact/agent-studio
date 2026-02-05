@@ -1,9 +1,11 @@
+import type { TimeType } from "@caseai-connect/api-contracts"
+
 export type Project = {
   id: string
   name: string
   organizationId: string
-  createdAt: number
-  updatedAt: number
+  createdAt: TimeType
+  updatedAt: TimeType
 }
 
 export type CreateProjectPayload = {

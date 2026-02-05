@@ -1,4 +1,4 @@
-import type { ResourcesDto } from "@caseai-connect/api-contracts"
+import type { ResourceDto } from "@caseai-connect/api-contracts"
 import { Injectable } from "@nestjs/common"
 import { InjectRepository } from "@nestjs/typeorm"
 import type { Repository } from "typeorm"
@@ -23,7 +23,7 @@ export class ResourcesService {
   }: {
     resourceId: string
     projectId: string
-    fields: Pick<ResourcesDto, "fileName" | "mimeType" | "size" | "storageRelativePath" | "title">
+    fields: Pick<ResourceDto, "fileName" | "mimeType" | "size" | "storageRelativePath" | "title">
   }): Promise<Resource> {
     const resource = this.resourceRepository.create({
       id: resourceId,

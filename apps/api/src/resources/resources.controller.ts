@@ -1,4 +1,4 @@
-import { type ResourcesDto, ResourcesRoutes } from "@caseai-connect/api-contracts"
+import { type MimeTypes, type ResourceDto, ResourcesRoutes } from "@caseai-connect/api-contracts"
 import {
   Controller,
   FileTypeValidator,
@@ -17,18 +17,20 @@ import {
 } from "@nestjs/common"
 import { FileInterceptor } from "@nestjs/platform-express/multer"
 import { JwtAuthGuard } from "@/auth/jwt-auth.guard"
+import { CheckPolicy } from "@/common/policies/check-policy.decorator"
 import type { MulterFile } from "@/common/types"
 import { UserGuard } from "@/guards/user.guard"
 import { OrganizationGuard } from "@/organizations/organization.guard"
 import { ProjectsGuard } from "@/projects/projects.guard"
 import type { EndpointRequestWithProject } from "@/request.interface"
 import type { Resource } from "./resource.entity"
+import { ResourcesGuard } from "./resources.guard"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
 import { ResourcesService } from "./resources.service"
 import { FILE_STORAGE_SERVICE, type IFileStorage } from "./storage/file-storage.interface"
 
 const mega = 1024
-@UseGuards(JwtAuthGuard, UserGuard, OrganizationGuard, ProjectsGuard)
+@UseGuards(JwtAuthGuard, UserGuard, OrganizationGuard, ProjectsGuard, ResourcesGuard)
 @Controller()
 export class ResourcesController {
   constructor(
@@ -37,6 +39,7 @@ export class ResourcesController {
     private readonly resourcesService: ResourcesService,
   ) {}
 
+  @CheckPolicy((policy) => policy.canCreate())
   @Post(ResourcesRoutes.uploadOne.path)
   @HttpCode(HttpStatus.CREATED)
   @UseInterceptors(FileInterceptor("file"))
@@ -122,7 +125,7 @@ export class ResourcesController {
   }
 }
 
-function toResourceDto(entity: Resource): ResourcesDto {
+function toResourceDto(entity: Resource): ResourceDto {
   return {
     id: entity.id,
     projectId: entity.projectId,
@@ -133,7 +136,7 @@ function toResourceDto(entity: Resource): ResourcesDto {
     updatedAt: entity.updatedAt.getTime(),
     deletedAt: entity.deletedAt?.getTime() || undefined,
     language: entity.language === "fr" ? "fr" : "en",
-    mimeType: entity.mimeType,
+    mimeType: entity.mimeType as MimeTypes,
     size: entity.size,
     storageRelativePath: entity.storageRelativePath,
   }
