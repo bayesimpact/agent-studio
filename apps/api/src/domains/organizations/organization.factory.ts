@@ -24,6 +24,7 @@ export const organizationFactory = Factory.define<Organization>(({ sequence, par
     name: params.name || `Test Organization ${sequence}`,
     createdAt: params.createdAt || now,
     updatedAt: params.updatedAt || now,
+    deletedAt: null,
     memberships: params.memberships || [],
     projects: params.projects || [],
     agentSessions: params.agentSessions || [],
@@ -165,7 +166,7 @@ export async function createOrganizationWithAgent(
     },
   )
 
-  const agent = agentFactory.transient({ project }).build(params.agent)
+  const agent = agentFactory.transient({ project, organization }).build(params.agent)
   await repositories.agentRepository.save(agent)
 
   return {
@@ -218,7 +219,7 @@ export async function createOrganizationWithAgentSession(
   )
 
   const agentSession = agentSessionFactory
-    .transient({ organization, user, agent })
+    .transient({ organization, project, user, agent })
     .build(params.agentSession)
   await repositories.agentSessionRepository.save(agentSession)
 
@@ -275,7 +276,7 @@ export async function createOrganizationWithAgentMessage(
     })
 
   const agentMessage = agentMessageFactory
-    .transient({ session: agentSession })
+    .transient({ organization, project, session: agentSession })
     .build(params.agentMessage)
   await repositories.agentMessageRepository.save(agentMessage)
 
@@ -327,7 +328,7 @@ export async function createOrganizationWithDocument(
     },
   )
 
-  const document = documentFactory.transient({ project }).build(params.document)
+  const document = documentFactory.transient({ organization, project }).build(params.document)
   await repositories.documentRepository.save(document)
 
   return {

@@ -1,19 +1,28 @@
 import { NotFoundException } from "@nestjs/common/exceptions"
+
+import type { ConnectRequiredFields } from "@/common/entities/connect-required-fields"
 import { agentSessionControllerTestSetup } from "./test-setup"
 
 const getTestContext = agentSessionControllerTestSetup()
 
 describe("finalizeStreaming", () => {
   it("should update assistant message with content and completed status", async () => {
-    const { service, testAgent, testOrganization, testUser } = getTestContext()
+    const { service, testAgent, testOrganization, testUser, testProject } = getTestContext()
+    const connectRequiredFields: ConnectRequiredFields = {
+      organizationId: testOrganization.id,
+      projectId: testProject.id,
+    }
+    const session = await service.createPlaygroundSession({
+      connectRequiredFields,
+      agentId: testAgent.id,
+      userId: testUser.id,
+    })
 
-    const session = await service.createPlaygroundSession(
-      testAgent.id,
-      testUser.id,
-      testOrganization.id,
-    )
-
-    const { assistantMessageId } = await service.prepareForStreaming(session.id, "Hello")
+    const { assistantMessageId } = await service.prepareForStreaming({
+      connectRequiredFields,
+      sessionId: session.id,
+      userContent: "Hello",
+    })
 
     const finalizedSession = await service.finalizeStreaming(
       session.id,

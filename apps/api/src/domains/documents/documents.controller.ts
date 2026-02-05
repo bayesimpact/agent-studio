@@ -105,7 +105,7 @@ export class DocumentsController {
     })
 
     const document = await this.documentsService.createDocumentFromFile({
-      projectId,
+      connectRequiredFields: { organizationId, projectId },
       documentId: fileInfo.fileId,
       fields: {
         fileName: file.originalname,

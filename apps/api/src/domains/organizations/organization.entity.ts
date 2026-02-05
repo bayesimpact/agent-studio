@@ -1,29 +1,14 @@
-import {
-  Column,
-  CreateDateColumn,
-  Entity,
-  OneToMany,
-  PrimaryGeneratedColumn,
-  UpdateDateColumn,
-} from "typeorm"
+import { Column, Entity, OneToMany } from "typeorm"
+import { Base4AllEntity } from "@/common/entities/base4all.entity"
 import { AgentMessageFeedback } from "@/domains/agent-message-feedback/agent-message-feedback.entity"
 import { AgentSession } from "@/domains/agent-sessions/agent-session.entity"
 import { Project } from "@/domains/projects/project.entity"
 import { UserMembership } from "./user-membership.entity"
 
 @Entity("organization")
-export class Organization {
-  @PrimaryGeneratedColumn("uuid")
-  id!: string
-
+export class Organization extends Base4AllEntity {
   @Column({ type: "varchar" })
   name!: string
-
-  @CreateDateColumn({ name: "created_at" })
-  createdAt!: Date
-
-  @UpdateDateColumn({ name: "updated_at" })
-  updatedAt!: Date
 
   @OneToMany(
     () => UserMembership,

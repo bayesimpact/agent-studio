@@ -1,6 +1,8 @@
 import { Injectable, NotFoundException, UnprocessableEntityException } from "@nestjs/common"
 import { InjectRepository } from "@nestjs/typeorm"
 import type { Repository } from "typeorm"
+
+import type { ConnectRequiredFields } from "@/common/entities/connect-required-fields"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
 import { AgentSessionsService } from "@/domains/agent-sessions/agent-sessions.service"
 import { Agent } from "./agent.entity"
@@ -17,10 +19,8 @@ export class AgentsService {
    * Creates a new agent for a project.
    */
   async createAgent(
-    fields: Pick<
-      Agent,
-      "projectId" | "defaultPrompt" | "name" | "model" | "temperature" | "locale"
-    >,
+    fields: ConnectRequiredFields &
+      Pick<Agent, "defaultPrompt" | "name" | "model" | "temperature" | "locale">,
   ): Promise<Agent> {
     const { name } = fields
 
@@ -38,10 +38,14 @@ export class AgentsService {
   /**
    * Lists all agents for a project.
    */
-  async listAgents({ projectId }: { projectId: string }): Promise<Agent[]> {
+
+  async listAgents(connectRequiredFields: ConnectRequiredFields): Promise<Agent[]> {
     // List agents for the project
     return this.agentRepository.find({
-      where: { projectId },
+      where: {
+        organizationId: connectRequiredFields.organizationId,
+        projectId: connectRequiredFields.projectId,
+      },
       order: { createdAt: "DESC" },
     })
   }

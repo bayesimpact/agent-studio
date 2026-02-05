@@ -1,16 +1,21 @@
+import type { ConnectRequiredFields } from "@/common/entities/connect-required-fields"
 import { agentSessionControllerTestSetup } from "./test-setup"
 
 const getTestContext = agentSessionControllerTestSetup()
 
 describe("createPlaygroundSession", () => {
   it("should create a new playground session", async () => {
-    const { service, testAgent, testUser, testOrganization } = getTestContext()
+    const { service, testAgent, testUser, testOrganization, testProject } = getTestContext()
+    const connectRequiredFields: ConnectRequiredFields = {
+      organizationId: testOrganization.id,
+      projectId: testProject.id,
+    }
 
-    const session = await service.createPlaygroundSession(
-      testAgent.id,
-      testUser.id,
-      testOrganization.id,
-    )
+    const session = await service.createPlaygroundSession({
+      connectRequiredFields,
+      agentId: testAgent.id,
+      userId: testUser.id,
+    })
 
     expect(session).toBeDefined()
     expect(session.type).toBe("playground")

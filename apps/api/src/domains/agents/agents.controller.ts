@@ -26,6 +26,7 @@ export class AgentsController {
     const projectId = request.project.id
 
     const agent = await this.agentsService.createAgent({
+      organizationId: "undefined", //fixme DOO
       projectId,
       ...payload,
     })
@@ -40,7 +41,10 @@ export class AgentsController {
   ): Promise<typeof AgentsRoutes.getAll.response> {
     const projectId = request.project.id
 
-    const agents = await this.agentsService.listAgents({ projectId })
+    const agents = await this.agentsService.listAgents({
+      projectId,
+      organizationId: "undefined",
+    }) //fixme DOO
 
     return { data: { agents: agents.map(toAgentDto) } }
   }

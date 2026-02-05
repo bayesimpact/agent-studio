@@ -2,6 +2,8 @@ import type { DocumentDto } from "@caseai-connect/api-contracts"
 import { Injectable, NotFoundException } from "@nestjs/common"
 import { InjectRepository } from "@nestjs/typeorm"
 import type { Repository } from "typeorm"
+
+import type { ConnectRequiredFields } from "@/common/entities/connect-required-fields"
 import { Document } from "./document.entity"
 
 @Injectable()
@@ -11,17 +13,17 @@ export class DocumentsService {
   ) {}
 
   async createDocumentFromFile({
+    connectRequiredFields,
     documentId,
-    projectId,
     fields,
   }: {
+    connectRequiredFields: ConnectRequiredFields
     documentId: string
-    projectId: string
     fields: Pick<DocumentDto, "fileName" | "mimeType" | "size" | "storageRelativePath" | "title">
   }): Promise<Document> {
     const document = this.documentRepository.create({
+      ...connectRequiredFields,
       id: documentId,
-      projectId,
       fileName: fields.fileName,
       mimeType: fields.mimeType,
       size: fields.size,

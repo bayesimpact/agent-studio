@@ -7,26 +7,28 @@ const getTestContext = agentSessionsControllerTestSetup()
 
 describe("getAllApp", () => {
   it("should return all app-private sessions for an agent and user", async () => {
-    const { controller, agentSessionRepository, organization } = getTestContext()
+    const { controller, agentSessionRepository, organization, project } = getTestContext()
     const { user, agent } = await createOrganizationWithAgent(getTestContext())
     const mockRequest = buildEndpointRequest(user)
 
     // Create multiple app-private sessions
-    const session1 = agentSessionFactory.transient({ agent, user, organization }).build({
+    const session1 = agentSessionFactory.transient({ organization, project, agent, user }).build({
       type: "app-private",
       createdAt: new Date("2026-01-01T10:00:00Z"),
     })
 
-    const session2 = agentSessionFactory.transient({ agent, user, organization }).build({
+    const session2 = agentSessionFactory.transient({ organization, project, agent, user }).build({
       type: "app-private",
       createdAt: new Date("2026-01-02T10:00:00Z"),
     })
 
     // Create a playground session (should not be returned)
-    const playgroundSession = agentSessionFactory.transient({ agent, user, organization }).build({
-      type: "playground",
-      createdAt: new Date("2026-01-03T10:00:00Z"),
-    })
+    const playgroundSession = agentSessionFactory
+      .transient({ organization, project, agent, user })
+      .build({
+        type: "playground",
+        createdAt: new Date("2026-01-03T10:00:00Z"),
+      })
 
     await agentSessionRepository.save([session1, session2, playgroundSession])
 
@@ -49,19 +51,21 @@ describe("getAllApp", () => {
   })
 
   it("should return sessions in descending order by creation date", async () => {
-    const { controller, agentSessionRepository, organization } = getTestContext()
+    const { controller, agentSessionRepository, organization, project } = getTestContext()
     const { user, agent } = await createOrganizationWithAgent(getTestContext())
     const mockRequest = buildEndpointRequest(user)
 
-    const oldSession = agentSessionFactory.transient({ agent, user, organization }).build({
+    const oldSession = agentSessionFactory.transient({ organization, project, agent, user }).build({
       type: "app-private",
       createdAt: new Date("2026-01-01T10:00:00Z"),
     })
 
-    const newestSession = agentSessionFactory.transient({ agent, user, organization }).build({
-      type: "app-private",
-      createdAt: new Date("2026-01-30T10:00:00Z"),
-    })
+    const newestSession = agentSessionFactory
+      .transient({ organization, project, agent, user })
+      .build({
+        type: "app-private",
+        createdAt: new Date("2026-01-30T10:00:00Z"),
+      })
 
     await agentSessionRepository.save([oldSession, newestSession])
 

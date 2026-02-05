@@ -1,34 +1,17 @@
-import {
-  Column,
-  CreateDateColumn,
-  Entity,
-  JoinColumn,
-  ManyToOne,
-  OneToMany,
-  PrimaryGeneratedColumn,
-  UpdateDateColumn,
-} from "typeorm"
 import { AgentMessageFeedback } from "@/domains/agent-message-feedback/agent-message-feedback.entity"
+import { Column, Entity, JoinColumn, ManyToOne, OneToMany } from "typeorm"
+import { Base4AllEntity } from "@/common/entities/base4all.entity"
 import { Agent } from "@/domains/agents/agent.entity"
 import { Document } from "@/domains/documents/document.entity"
 import { Organization } from "@/domains/organizations/organization.entity"
 
 @Entity("project")
-export class Project {
-  @PrimaryGeneratedColumn("uuid")
-  id!: string
-
+export class Project extends Base4AllEntity {
   @Column({ type: "varchar" })
   name!: string
 
   @Column({ type: "uuid", name: "organization_id" })
   organizationId!: string
-
-  @CreateDateColumn({ name: "created_at" })
-  createdAt!: Date
-
-  @UpdateDateColumn({ name: "updated_at" })
-  updatedAt!: Date
 
   @ManyToOne(
     () => Organization,

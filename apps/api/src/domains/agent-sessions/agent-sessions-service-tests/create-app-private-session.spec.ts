@@ -1,3 +1,4 @@
+import type { ConnectRequiredFields } from "@/common/entities/connect-required-fields"
 import { userMembershipFactory } from "@/domains/organizations/user-membership.factory"
 import { agentSessionControllerTestSetup } from "./test-setup"
 
@@ -5,8 +6,12 @@ const getTestContext = agentSessionControllerTestSetup()
 
 describe("createAppPrivateSession", () => {
   it("should create an app-private session", async () => {
-    const { service, testAgent, testUser, testOrganization, membershipRepository } =
+    const { service, testAgent, testUser, testOrganization, membershipRepository, testProject } =
       getTestContext()
+    const connectRequiredFields: ConnectRequiredFields = {
+      organizationId: testOrganization.id,
+      projectId: testProject.id,
+    }
 
     const membership = userMembershipFactory
       .transient({ user: testUser, organization: testOrganization })
@@ -15,9 +20,9 @@ describe("createAppPrivateSession", () => {
     await membershipRepository.save(membership)
 
     const session = await service.createAppPrivateSession({
+      connectRequiredFields,
       agentId: testAgent.id,
       userId: testUser.id,
-      organizationId: testOrganization.id,
     })
 
     expect(session).toBeDefined()

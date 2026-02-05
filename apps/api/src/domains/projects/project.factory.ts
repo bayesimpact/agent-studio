@@ -21,6 +21,7 @@ export const projectFactory = ProjectFactory.define(({ sequence, params, transie
     organizationId: transientParams.organization.id,
     createdAt: params.createdAt || now,
     updatedAt: params.updatedAt || now,
+    deletedAt: null,
     organization: transientParams.organization,
     agents: params.agents || [],
     documents: params.documents || [],

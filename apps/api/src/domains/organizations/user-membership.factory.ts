@@ -39,6 +39,7 @@ export const userMembershipFactory = UserMembershipFactory.define(({ params, tra
     role: (params.role || "member") as MembershipRole,
     createdAt: params.createdAt || now,
     updatedAt: params.updatedAt || now,
+    deletedAt: null,
     user: transientParams.user,
     organization: transientParams.organization,
   } satisfies UserMembership

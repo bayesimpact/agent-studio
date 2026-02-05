@@ -3,7 +3,7 @@ import { ProjectsRoutes } from "@caseai-connect/api-contracts"
 import type { INestApplication } from "@nestjs/common"
 import type { App } from "supertest/types"
 import { AUTH_ERRORS } from "@/common/errors/auth-errors"
-import { clearTestDatabase } from "@/common/test/test-database"
+import { clearTestDatabase, RandomUuid } from "@/common/test/test-database"
 import {
   setupTransactionalTestDatabase,
   teardownTestDatabase,
@@ -23,8 +23,8 @@ describe("Projects - Auth", () => {
   >
 
   // Variables for the tests
-  let organizationId: string | null = "random-organization-id"
-  let projectId: string | null = "random-project-id"
+  let organizationId: string | null = RandomUuid.Organization
+  let projectId: string | null = RandomUuid.Project
   let accessToken: string | null = "token"
   let auth0Id = "auth0|123"
 
@@ -41,8 +41,8 @@ describe("Projects - Auth", () => {
 
   beforeEach(async () => {
     await clearTestDatabase(setup.dataSource)
-    organizationId = "random-organization-id"
-    projectId = "random-project-id"
+    organizationId = RandomUuid.Organization
+    projectId = RandomUuid.Project
     accessToken = "token"
     auth0Id = "auth0|123"
   })

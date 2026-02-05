@@ -8,26 +8,28 @@ const getTestContext = agentSessionsControllerTestSetup()
 describe("getAllPlayground", () => {
   describe("when user is owner", () => {
     it("should return all playground sessions for an agent and user", async () => {
-      const { controller, agentSessionRepository, organization } = getTestContext()
+      const { controller, agentSessionRepository, organization, project } = getTestContext()
       const { user, agent } = await createOrganizationWithAgent(getTestContext())
       const mockRequest = buildEndpointRequest(user)
 
       // Create multiple playground sessions
-      const session1 = agentSessionFactory.transient({ agent, user, organization }).build({
+      const session1 = agentSessionFactory.transient({ organization, project, agent, user }).build({
         type: "playground",
         createdAt: new Date("2026-01-01T10:00:00Z"),
       })
 
-      const session2 = agentSessionFactory.transient({ agent, user, organization }).build({
+      const session2 = agentSessionFactory.transient({ organization, project, agent, user }).build({
         type: "playground",
         createdAt: new Date("2026-01-02T10:00:00Z"),
       })
 
       // Create an app-private session (should not be returned)
-      const appSession = agentSessionFactory.transient({ agent, user, organization }).build({
-        type: "app-private",
-        createdAt: new Date("2026-01-03T10:00:00Z"),
-      })
+      const appSession = agentSessionFactory
+        .transient({ organization, project, agent, user })
+        .build({
+          type: "app-private",
+          createdAt: new Date("2026-01-03T10:00:00Z"),
+        })
 
       await agentSessionRepository.save([session1, session2, appSession])
 
@@ -50,19 +52,23 @@ describe("getAllPlayground", () => {
     })
 
     it("should return sessions in descending order by creation date", async () => {
-      const { controller, agentSessionRepository, organization } = getTestContext()
+      const { organization, project, controller, agentSessionRepository } = getTestContext()
       const { user, agent } = await createOrganizationWithAgent(getTestContext())
       const mockRequest = buildEndpointRequest(user)
 
-      const oldSession = agentSessionFactory.transient({ agent, user, organization }).build({
-        type: "playground",
-        createdAt: new Date("2026-01-01T10:00:00Z"),
-      })
+      const oldSession = agentSessionFactory
+        .transient({ organization, project, agent, user })
+        .build({
+          type: "playground",
+          createdAt: new Date("2026-01-01T10:00:00Z"),
+        })
 
-      const newestSession = agentSessionFactory.transient({ agent, user, organization }).build({
-        type: "playground",
-        createdAt: new Date("2026-01-30T10:00:00Z"),
-      })
+      const newestSession = agentSessionFactory
+        .transient({ organization, project, agent, user })
+        .build({
+          type: "playground",
+          createdAt: new Date("2026-01-30T10:00:00Z"),
+        })
 
       await agentSessionRepository.save([oldSession, newestSession])
 
@@ -76,28 +82,30 @@ describe("getAllPlayground", () => {
 
   describe("when user is member", () => {
     it("fails when user is member", async () => {
-      const { controller, agentSessionRepository, organization } = getTestContext()
+      const { organization, project, controller, agentSessionRepository } = getTestContext()
       const { user, agent } = await createOrganizationWithAgent(getTestContext(), {
         membership: { role: "member" },
       })
       const mockRequest = buildEndpointRequest(user)
 
       // Create multiple playground sessions
-      const session1 = agentSessionFactory.transient({ agent, user, organization }).build({
+      const session1 = agentSessionFactory.transient({ organization, project, agent, user }).build({
         type: "playground",
         createdAt: new Date("2026-01-01T10:00:00Z"),
       })
 
-      const session2 = agentSessionFactory.transient({ agent, user, organization }).build({
+      const session2 = agentSessionFactory.transient({ organization, project, agent, user }).build({
         type: "playground",
         createdAt: new Date("2026-01-02T10:00:00Z"),
       })
 
       // Create an app-private session (should not be returned)
-      const appSession = agentSessionFactory.transient({ agent, user, organization }).build({
-        type: "app-private",
-        createdAt: new Date("2026-01-03T10:00:00Z"),
-      })
+      const appSession = agentSessionFactory
+        .transient({ organization, project, agent, user })
+        .build({
+          type: "app-private",
+          createdAt: new Date("2026-01-03T10:00:00Z"),
+        })
 
       await agentSessionRepository.save([session1, session2, appSession])
 
