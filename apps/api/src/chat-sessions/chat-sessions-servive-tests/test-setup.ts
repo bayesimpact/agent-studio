@@ -1,6 +1,6 @@
 import type { Repository } from "typeorm"
-import { ChatBot } from "@/chat-bots/chat-bot.entity"
-import { chatBotFactory } from "@/chat-bots/chat-bot.factory"
+import { Agent } from "@/agents/agent.entity"
+import { agentFactory } from "@/agents/agent.factory"
 import { clearTestDatabase } from "@/common/test/test-database"
 import {
   setupTransactionalTestDatabase,
@@ -21,7 +21,7 @@ import { ChatSessionsService } from "../chat-sessions.service"
 export function chatSessionControllerTestSetup() {
   let service: ChatSessionsService
   let chatSessionRepository: Repository<ChatSession>
-  let chatBotRepository: Repository<ChatBot>
+  let chatBotRepository: Repository<Agent>
   let chatMessageRepository: Repository<ChatMessage>
   let userRepository: Repository<User>
   let organizationRepository: Repository<Organization>
@@ -33,11 +33,11 @@ export function chatSessionControllerTestSetup() {
   let testUser: User
   let testOrganization: Organization
   let testProject: Project
-  let testChatBot: ChatBot
+  let testChatBot: Agent
 
   beforeAll(async () => {
     setup = await setupTransactionalTestDatabase({
-      featureEntities: [ChatSession, ChatBot, User, Organization, Project, UserMembership],
+      featureEntities: [ChatSession, Agent, User, Organization, Project, UserMembership],
       additionalImports: [ChatSessionsModule],
     })
     await clearTestDatabase(setup.dataSource)
@@ -52,7 +52,7 @@ export function chatSessionControllerTestSetup() {
     service = setup.module.get<ChatSessionsService>(ChatSessionsService)
     chatSessionRepository = setup.getRepository(ChatSession)
     chatMessageRepository = setup.getRepository(ChatMessage)
-    chatBotRepository = setup.getRepository(ChatBot)
+    chatBotRepository = setup.getRepository(Agent)
     userRepository = setup.getRepository(User)
     organizationRepository = setup.getRepository(Organization)
     projectRepository = setup.getRepository(Project)
@@ -81,7 +81,7 @@ export function chatSessionControllerTestSetup() {
     testProject = projectRepository.create(project)
     testProject = await projectRepository.save(testProject)
 
-    const chatBot = chatBotFactory.transient({ project: testProject }).build({
+    const chatBot = agentFactory.transient({ project: testProject }).build({
       name: `Test ChatBot ${uniqueId}`,
       defaultPrompt: "You are a helpful assistant",
       temperature: 0,

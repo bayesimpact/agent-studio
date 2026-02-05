@@ -1,6 +1,6 @@
 import type { MessageEvent } from "@nestjs/common"
 import { Inject, Injectable } from "@nestjs/common"
-import type { ChatBot } from "@/chat-bots/chat-bot.entity"
+import type { Agent } from "@/agents/agent.entity"
 import type {
   ChatMessage,
   LLMConfig,
@@ -26,7 +26,7 @@ export class ChatStreamingService {
    */
   async *streamChatResponse(
     session: ChatSession,
-    chatbot: ChatBot,
+    chatbot: Agent,
     userContent: string,
   ): AsyncGenerator<MessageEvent, void, unknown> {
     // Step 1: Prepare for streaming (persist user message + empty assistant message)
@@ -142,7 +142,7 @@ export class ChatStreamingService {
     return llmMessages
   }
 
-  private generateMasterPrompt(chatbot: ChatBot): string {
+  private generateMasterPrompt(chatbot: Agent): string {
     return `
 Today's date: ${new Date().toLocaleDateString()}
 
@@ -155,7 +155,7 @@ Always answer in ${chatbot.locale}.
   /**
    * Builds LLM configuration from ChatBot entity
    */
-  private buildLLMConfig(chatbot: ChatBot): LLMConfig {
+  private buildLLMConfig(chatbot: Agent): LLMConfig {
     // Convert temperature to number (database decimal types may be returned as strings)
     const temperature =
       typeof chatbot.temperature === "string"
@@ -181,7 +181,7 @@ Always answer in ${chatbot.locale}.
   /**
    * Builds LLM metadata from ChatBot and ChatSession entities
    */
-  private buildLLMMetadata(chatbot: ChatBot, session: ChatSession): LLMMetadata {
+  private buildLLMMetadata(chatbot: Agent, session: ChatSession): LLMMetadata {
     return {
       chatSessionId: session.id,
       chatBotId: chatbot.id,

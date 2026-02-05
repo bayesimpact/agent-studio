@@ -1,11 +1,11 @@
-import type { ChatBotLocale, ChatBotModel, ChatBotTemperature } from "@caseai-connect/api-contracts"
+import type { AgentLocale, AgentModel, AgentTemperature } from "@caseai-connect/api-contracts"
 import { Column, Entity, JoinColumn, ManyToOne, OneToMany } from "typeorm"
 import { ChatSession } from "@/chat-sessions/chat-session.entity"
 import { Base4AllEntity } from "@/common/entities/base4all.entity"
 import { Project } from "@/projects/project.entity"
 
-@Entity("chat_bot")
-export class ChatBot extends Base4AllEntity {
+@Entity("agent")
+export class Agent extends Base4AllEntity {
   @Column({ type: "uuid", name: "project_id" })
   projectId!: string
 
@@ -23,13 +23,13 @@ export class ChatBot extends Base4AllEntity {
   defaultPrompt!: string
 
   @Column({ type: "varchar" })
-  model!: ChatBotModel
+  model!: AgentModel
 
   @Column({ type: "decimal", precision: 3, scale: 2, default: 0 })
-  temperature!: ChatBotTemperature
+  temperature!: AgentTemperature
 
   @Column({ type: "varchar" })
-  locale!: ChatBotLocale
+  locale!: AgentLocale
 
   @OneToMany(
     () => ChatSession,

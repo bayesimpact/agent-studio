@@ -10,10 +10,8 @@ import { Resource } from "./resource.entity"
 export class ResourcesService {
   constructor(
     @InjectRepository(Resource) private readonly resourceRepository: Repository<Resource>,
-    @InjectRepository(Organization)
-    private readonly organizationRepository: Repository<Organization>,
-    @InjectRepository(UserMembership)
-    private readonly membershipRepository: Repository<UserMembership>,
+    @InjectRepository(Organization) readonly _organizationRepository: Repository<Organization>,
+    @InjectRepository(UserMembership) readonly _membershipRepository: Repository<UserMembership>,
   ) {}
 
   async createResourceFromFile({

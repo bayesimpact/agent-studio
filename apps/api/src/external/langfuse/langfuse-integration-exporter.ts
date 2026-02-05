@@ -145,7 +145,7 @@ export class LangfuseIntegrationExporter implements SpanExporter {
         isRootSpan && rootSpanName
           ? rootSpanName
           : "ai.toolCall.name" in attributes
-            ? "ai.toolCall " + attributes["ai.toolCall.name"]?.toString()
+            ? `ai.toolCall ${attributes["ai.toolCall.name"]?.toString()}`
             : span.name,
       startTime: this.hrTimeToDate(span.startTime),
       endTime: this.hrTimeToDate(span.endTime),
@@ -247,20 +247,20 @@ export class LangfuseIntegrationExporter implements SpanExporter {
     return {
       input:
         "gen_ai.usage.prompt_tokens" in attributes // Backward compat, input_tokens used in latest ai SDK versions
-          ? parseInt(attributes["gen_ai.usage.prompt_tokens"]?.toString() ?? "0")
+          ? parseInt(attributes["gen_ai.usage.prompt_tokens"]?.toString() ?? "0", 10)
           : "gen_ai.usage.input_tokens" in attributes
-            ? parseInt(attributes["gen_ai.usage.input_tokens"]?.toString() ?? "0")
+            ? parseInt(attributes["gen_ai.usage.input_tokens"]?.toString() ?? "0", 10)
             : undefined,
 
       output:
         "gen_ai.usage.completion_tokens" in attributes // Backward compat, output_tokens used in latest ai SDK versions
-          ? parseInt(attributes["gen_ai.usage.completion_tokens"]?.toString() ?? "0")
+          ? parseInt(attributes["gen_ai.usage.completion_tokens"]?.toString() ?? "0", 10)
           : "gen_ai.usage.output_tokens" in attributes
-            ? parseInt(attributes["gen_ai.usage.output_tokens"]?.toString() ?? "0")
+            ? parseInt(attributes["gen_ai.usage.output_tokens"]?.toString() ?? "0", 10)
             : undefined,
       total:
         "ai.usage.tokens" in attributes
-          ? parseInt(attributes["ai.usage.tokens"]?.toString() ?? "0")
+          ? parseInt(attributes["ai.usage.tokens"]?.toString() ?? "0", 10)
           : undefined,
     }
   }
@@ -398,7 +398,7 @@ export class LangfuseIntegrationExporter implements SpanExporter {
 
   private parseTraceId(spans: ReadableSpan[]): string | undefined {
     return spans
-      .map((span) => this.parseSpanMetadata(span)["langfuseTraceId"])
+      .map((span) => this.parseSpanMetadata(span).langfuseTraceId)
       .find((id) => Boolean(id))
       ?.toString()
   }
@@ -412,21 +412,21 @@ export class LangfuseIntegrationExporter implements SpanExporter {
 
   private parseUserIdTraceAttribute(spans: ReadableSpan[]): string | undefined {
     return spans
-      .map((span) => this.parseSpanMetadata(span)["userId"])
+      .map((span) => this.parseSpanMetadata(span).userId)
       .find((id) => Boolean(id))
       ?.toString()
   }
 
   private parseSessionIdTraceAttribute(spans: ReadableSpan[]): string | undefined {
     return spans
-      .map((span) => this.parseSpanMetadata(span)["sessionId"])
+      .map((span) => this.parseSpanMetadata(span).sessionId)
       .find((id) => Boolean(id))
       ?.toString()
   }
 
   private parseCurrentTurnTraceAttribute(spans: ReadableSpan[]): string | undefined {
     return spans
-      .map((span) => this.parseSpanMetadata(span)["currentTurn"])
+      .map((span) => this.parseSpanMetadata(span).currentTurn)
       .find((id) => Boolean(id))
       ?.toString()
   }
@@ -435,7 +435,7 @@ export class LangfuseIntegrationExporter implements SpanExporter {
     spans: ReadableSpan[],
   ): LangfusePromptRecord | undefined {
     const jsonPrompt = spans
-      .map((span) => this.parseSpanMetadata(span)["langfusePrompt"])
+      .map((span) => this.parseSpanMetadata(span).langfusePrompt)
       .find((prompt) => Boolean(prompt))
 
     try {
@@ -445,9 +445,9 @@ export class LangfuseIntegrationExporter implements SpanExporter {
         if (
           typeof parsedPrompt !== "object" ||
           !(
-            parsedPrompt["name"] &&
-            parsedPrompt["version"] &&
-            typeof parsedPrompt["isFallback"] === "boolean"
+            parsedPrompt.name &&
+            parsedPrompt.version &&
+            typeof parsedPrompt.isFallback === "boolean"
           )
         ) {
           throw Error("Invalid langfusePrompt")
@@ -463,7 +463,7 @@ export class LangfuseIntegrationExporter implements SpanExporter {
   private parseLangfuseUpdateParentTraceAttribute(spans: ReadableSpan[]): boolean {
     return Boolean(
       spans
-        .map((span) => this.parseSpanMetadata(span)["langfuseUpdateParent"])
+        .map((span) => this.parseSpanMetadata(span).langfuseUpdateParent)
         .find((val) => val != null) ?? true, // default to true if no attribute is set
     )
   }
@@ -472,7 +472,7 @@ export class LangfuseIntegrationExporter implements SpanExporter {
     return [
       ...new Set(
         spans
-          .map((span) => this.parseSpanMetadata(span)["tags"])
+          .map((span) => this.parseSpanMetadata(span).tags)
           .filter((tags) => Array.isArray(tags) && tags.every((tag) => typeof tag === "string"))
           .reduce((acc, tags) => acc.concat(tags as string[]), []),
       ),

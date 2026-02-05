@@ -1,4 +1,4 @@
-import { chatBotFactory } from "@/chat-bots/chat-bot.factory"
+import { agentFactory } from "@/agents/agent.factory"
 import { chatSessionFactory } from "../chat-session.factory"
 import { chatSessionControllerTestSetup } from "./test-setup"
 
@@ -24,7 +24,7 @@ describe("deleteExpiredPlaygroundSessions", () => {
     )
 
     // Create another chatbot to avoid session reuse
-    const anotherChatBot = chatBotFactory.transient({ project: testProject }).build({
+    const anotherChatBot = agentFactory.transient({ project: testProject }).build({
       name: "Another Test ChatBot",
       defaultPrompt: "You are a helpful assistant",
     })
@@ -33,7 +33,7 @@ describe("deleteExpiredPlaygroundSessions", () => {
     // Create an expired session with a different chatbot to avoid reuse
     // Set to 1 hour ago to ensure it's well past the 5-minute safety margin
     const expiredSession = chatSessionFactory
-      .transient({ chatBot: anotherChatBot, user: testUser, organization: testOrganization })
+      .transient({ agent: anotherChatBot, user: testUser, organization: testOrganization })
       .playground()
       .expiredMinutesAgo(60)
       .build()
@@ -67,7 +67,7 @@ describe("deleteExpiredPlaygroundSessions", () => {
 
     // Create a session that expired 3 minutes ago (within 5-minute safety margin)
     const recentlyExpiredSession = chatSessionFactory
-      .transient({ chatBot: testChatBot, user: testUser, organization: testOrganization })
+      .transient({ agent: testChatBot, user: testUser, organization: testOrganization })
       .playground()
       .expiredMinutesAgo(3)
       .build()

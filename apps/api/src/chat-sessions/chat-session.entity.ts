@@ -9,7 +9,7 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from "typeorm"
-import { ChatBot } from "@/chat-bots/chat-bot.entity"
+import { Agent } from "@/agents/agent.entity"
 import { Organization } from "@/organizations/organization.entity"
 import { User } from "@/users/user.entity"
 import { ChatMessage } from "./chat-message.entity"
@@ -46,11 +46,11 @@ export class ChatSession {
   updatedAt!: Date
 
   @ManyToOne(
-    () => ChatBot,
+    () => Agent,
     (chatBot) => chatBot.chatSessions,
   )
   @JoinColumn({ name: "chat_bot_id" })
-  chatbot!: ChatBot
+  chatbot!: Agent
 
   @ManyToOne(
     () => User,

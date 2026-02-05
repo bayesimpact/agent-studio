@@ -1,5 +1,5 @@
 import type { Repository } from "typeorm"
-import { ChatBot } from "@/chat-bots/chat-bot.entity"
+import { Agent } from "@/agents/agent.entity"
 import { ChatSession } from "@/chat-sessions/chat-session.entity"
 import { clearTestDatabase } from "@/common/test/test-database"
 import {
@@ -11,24 +11,24 @@ import { organizationFactory } from "@/organizations/organization.factory"
 import { UserMembership } from "@/organizations/user-membership.entity"
 import { Project } from "@/projects/project.entity"
 import { User } from "@/users/user.entity"
-import { ChatBotsController } from "../chat-bots.controller"
-import { ChatBotsModule } from "../chat-bots.module"
+import { AgentsController } from "../agents.controller"
+import { AgentsModule } from "../agents.module"
 
-export function chatBotsControllerTestSetup() {
-  let controller: ChatBotsController
+export function agentsControllerTestSetup() {
+  let controller: AgentsController
   let setup: Awaited<ReturnType<typeof setupTransactionalTestDatabase>>
   let userRepository: Repository<User>
   let organizationRepository: Repository<Organization>
   let membershipRepository: Repository<UserMembership>
   let projectRepository: Repository<Project>
-  let chatBotRepository: Repository<ChatBot>
+  let agentRepository: Repository<Agent>
   let chatSessionRepository: Repository<ChatSession>
   let organization: Organization
 
   beforeAll(async () => {
     setup = await setupTransactionalTestDatabase({
-      featureEntities: [User, Organization, UserMembership, Project, ChatBot, ChatSession],
-      additionalImports: [ChatBotsModule],
+      featureEntities: [User, Organization, UserMembership, Project, Agent, ChatSession],
+      additionalImports: [AgentsModule],
     })
     await clearTestDatabase(setup.dataSource)
   })
@@ -39,12 +39,12 @@ export function chatBotsControllerTestSetup() {
 
   beforeEach(async () => {
     await setup.startTransaction()
-    controller = setup.module.get<ChatBotsController>(ChatBotsController)
+    controller = setup.module.get<AgentsController>(AgentsController)
     userRepository = setup.getRepository(User)
     organizationRepository = setup.getRepository(Organization)
     membershipRepository = setup.getRepository(UserMembership)
     projectRepository = setup.getRepository(Project)
-    chatBotRepository = setup.getRepository(ChatBot)
+    agentRepository = setup.getRepository(Agent)
     chatSessionRepository = setup.getRepository(ChatSession)
 
     const org = organizationFactory.build({ name: "Org1" })
@@ -66,7 +66,7 @@ export function chatBotsControllerTestSetup() {
       userRepository,
       membershipRepository,
       projectRepository,
-      chatBotRepository,
+      agentRepository,
       chatSessionRepository,
       controller,
       organization,
