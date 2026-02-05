@@ -1,6 +1,7 @@
 import type { ExportResult, ExportResultCode } from "@opentelemetry/core"
 import type { ReadableSpan, SpanExporter } from "@opentelemetry/sdk-trace-base"
 import type { LangfusePromptRecord } from "langfuse"
+import type { components } from "langfuse-core"
 import { Langfuse, type LangfuseOptions } from "langfuse-v2"
 
 type LangfuseExporterParams = {
@@ -9,6 +10,15 @@ type LangfuseExporterParams = {
   baseUrl?: string
   debug?: boolean
 } & LangfuseOptions
+
+type SpanExporterAttributes = Record<string, SpanExporterAttribute | undefined>
+type SpanExporterAttribute =
+  | string
+  | number
+  | boolean
+  | (null | undefined | string)[]
+  | (null | undefined | number)[]
+  | (null | undefined | boolean)[]
 
 export class LangfuseIntegrationExporter implements SpanExporter {
   static langfuse: Langfuse | null = null // Singleton instance
@@ -44,7 +54,7 @@ export class LangfuseIntegrationExporter implements SpanExporter {
 
       for (const span of allSpans) {
         if (!this.isAiSdkSpan(span)) {
-          this.logDebug("Skip non-AI SDK span", span.name)
+          this.logDebug(`Skip non-AI SDK span ${span.name}`)
           continue
         }
         const traceId = span.spanContext().traceId
@@ -234,7 +244,7 @@ export class LangfuseIntegrationExporter implements SpanExporter {
             : null,
       },
       usage: this.parseUsageDetails(attributes),
-      usageDetails: this.parseUsageDetails(attributes),
+      usageDetails: this.parseUsageDetails(attributes) as components["schemas"]["UsageDetails"],
       input: this.parseInput(span),
       output: this.parseOutput(span),
 
@@ -243,7 +253,7 @@ export class LangfuseIntegrationExporter implements SpanExporter {
     })
   }
 
-  private parseUsageDetails(attributes: Record<string, any>): Record<string, any> {
+  private parseUsageDetails(attributes: SpanExporterAttributes): SpanExporterAttributes {
     return {
       input:
         "gen_ai.usage.prompt_tokens" in attributes // Backward compat, input_tokens used in latest ai SDK versions
@@ -265,32 +275,29 @@ export class LangfuseIntegrationExporter implements SpanExporter {
     }
   }
 
-  private parseSpanMetadata(span: ReadableSpan): Record<string, (typeof span.attributes)[0]> {
-    return Object.entries(span.attributes).reduce(
-      (acc, [key, value]) => {
-        const metadataPrefix = "ai.telemetry.metadata."
+  private parseSpanMetadata(span: ReadableSpan): SpanExporterAttributes {
+    return Object.entries(span.attributes).reduce((acc, [key, value]) => {
+      const metadataPrefix = "ai.telemetry.metadata."
 
-        if (key.startsWith(metadataPrefix) && value != null) {
-          const strippedKey = key.slice(metadataPrefix.length)
+      if (key.startsWith(metadataPrefix) && value != null) {
+        const strippedKey = key.slice(metadataPrefix.length)
 
-          acc[strippedKey] = value
-        }
+        acc[strippedKey] = value
+      }
 
-        const spanKeysToAdd = [
-          "ai.settings.maxToolRoundtrips",
-          "ai.prompt.format",
-          "ai.toolCall.id",
-          "ai.schema",
-        ]
+      const spanKeysToAdd = [
+        "ai.settings.maxToolRoundtrips",
+        "ai.prompt.format",
+        "ai.toolCall.id",
+        "ai.schema",
+      ]
 
-        if (spanKeysToAdd.includes(key) && value != null) {
-          acc[key] = value
-        }
+      if (spanKeysToAdd.includes(key) && value != null) {
+        acc[key] = value
+      }
 
-        return acc
-      },
-      {} as Record<string, (typeof span.attributes)[0]>,
-    )
+      return acc
+    }, {} as SpanExporterAttributes)
   }
 
   private isGenerationSpan(span: ReadableSpan): boolean {
@@ -303,6 +310,7 @@ export class LangfuseIntegrationExporter implements SpanExporter {
     // compat with OTEL SDKs v1 and v2
     // https://github.com/open-telemetry/opentelemetry-js/releases/tag/v2.0.0
     const instrumentationScopeName =
+      // biome-ignore lint/suspicious/noExplicitAny: specific
       (span as any).instrumentationLibrary?.name ?? (span as any).instrumentationScope?.name
     return instrumentationScopeName === "ai"
   }
@@ -322,17 +330,18 @@ export class LangfuseIntegrationExporter implements SpanExporter {
     return !parentSpanId || !spanIds.has(parentSpanId)
   }
 
-  private logDebug(message: string, ...args: any[]): void {
+  private logDebug(message: string, spans?: ReadableSpan[]): void {
     if (!this.debug) {
       return
     }
 
-    console.log(`[${new Date().toISOString()}] [LangfuseExporter] ${message}`, ...args)
+    console.log(`[${new Date().toISOString()}] [LangfuseExporter] ${message}`, ...(spans ?? []))
   }
 
   private getParentSpanId(span: ReadableSpan): string | null | undefined {
     // Typecast necessary for OTEL v1 v2 compat
     // https://github.com/open-telemetry/opentelemetry-js/releases/tag/v2.0.0
+    // biome-ignore lint/suspicious/noExplicitAny: specific
     return (span as any).parentSpanId ?? (span as any).parentSpanContext?.spanId
   }
 
@@ -359,6 +368,7 @@ export class LangfuseIntegrationExporter implements SpanExporter {
     const attributes = span.attributes
     const tools = "ai.prompt.tools" in attributes ? attributes["ai.prompt.tools"] : []
 
+    // biome-ignore lint/suspicious/noExplicitAny: specific
     let chatMessages: any[] = []
     if ("ai.prompt.messages" in attributes) {
       chatMessages = [attributes["ai.prompt.messages"]]
@@ -450,7 +460,7 @@ export class LangfuseIntegrationExporter implements SpanExporter {
             typeof parsedPrompt.isFallback === "boolean"
           )
         ) {
-          throw Error("Invalid langfusePrompt")
+          return undefined
         }
 
         return parsedPrompt
@@ -479,24 +489,21 @@ export class LangfuseIntegrationExporter implements SpanExporter {
     ]
   }
 
-  private parseMetadataTraceAttribute(spans: ReadableSpan[]): Record<string, any> {
-    return spans.reduce(
-      (acc, span) => {
-        const metadata = this.parseSpanMetadata(span)
+  private parseMetadataTraceAttribute(spans: ReadableSpan[]): SpanExporterAttributes {
+    return spans.reduce((acc, span) => {
+      const metadata = this.parseSpanMetadata(span)
 
-        for (const [key, value] of Object.entries(metadata)) {
-          if (value) {
-            acc[key] = value
-          }
+      for (const [key, value] of Object.entries(metadata)) {
+        if (value) {
+          acc[key] = value
         }
+      }
 
-        return acc
-      },
-      {} as Record<string, any>,
-    )
+      return acc
+    }, {} as SpanExporterAttributes)
   }
 
-  private filterTraceAttributes(obj: Record<string, any>): Record<string, any> {
+  private filterTraceAttributes(obj: SpanExporterAttributes): SpanExporterAttributes {
     const langfuseTraceAttributes = [
       "userId",
       "sessionId",
@@ -507,15 +514,12 @@ export class LangfuseIntegrationExporter implements SpanExporter {
       "currentTurn",
     ]
 
-    return Object.entries(obj).reduce(
-      (acc, [key, value]) => {
-        if (!langfuseTraceAttributes.includes(key)) {
-          acc[key] = value
-        }
+    return Object.entries(obj).reduce((acc, [key, value]) => {
+      if (!langfuseTraceAttributes.includes(key)) {
+        acc[key] = value
+      }
 
-        return acc
-      },
-      {} as Record<string, any>,
-    )
+      return acc
+    }, {} as SpanExporterAttributes)
   }
 }

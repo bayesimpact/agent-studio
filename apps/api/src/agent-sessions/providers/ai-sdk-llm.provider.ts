@@ -88,11 +88,9 @@ export class AISDKLLMProvider implements LLMProvider {
   ): Record<string, string | number | string[]> {
     const tags = [this.vertexProject, this.vertexLocation, config.model]
     return removeNullish({
-      langfuseTraceId: metadata.agentSessionId || "", //fixme: create a specific field for traceId in AgentSession entity ?
-      sessionId: metadata.agentSessionId ? `cs:${metadata.agentSessionId}` : "",
-      userId: metadata.organizationId
-        ? `o:${metadata.organizationId} / p:${metadata.projectId}`
-        : "",
+      langfuseTraceId: metadata.traceId,
+      sessionId: `as:${metadata.agentSessionId}`,
+      userId: `o:${metadata.organizationId} / p:${metadata.projectId}`,
       tags: [...tags, ...(metadata?.tags || [])],
       currentTurn: metadata.currentTurn,
     })
