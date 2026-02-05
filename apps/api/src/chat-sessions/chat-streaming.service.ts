@@ -4,6 +4,7 @@ import type { ChatBot } from "@/chat-bots/chat-bot.entity"
 import type {
   ChatMessage,
   LLMConfig,
+  LLMMetadata,
   LLMProvider,
 } from "@/common/interfaces/llm-provider.interface"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
@@ -47,12 +48,19 @@ export class ChatStreamingService {
     // Step 4: Build LLM config from chatbot
     const llmConfig = this.buildLLMConfig(chatbot)
 
-    // Step 5: Stream response
+    // Step 5: Build LLM metadata (used for telemetry)
+    const llmMetadata: LLMMetadata = this.buildLLMMetadata(chatbot, updatedSession)
+
+    // Step 6: Stream response
     let fullContent = ""
 
     try {
       // Stream from LLM provider
-      for await (const chunk of this.llmProvider.streamChatResponse(llmMessages, llmConfig)) {
+      for await (const chunk of this.llmProvider.streamChatResponse(
+        llmMessages,
+        llmConfig,
+        llmMetadata,
+      )) {
         fullContent += chunk
 
         // Yield chunk to frontend immediately (SSE)
@@ -65,7 +73,7 @@ export class ChatStreamingService {
         } as MessageEvent
       }
 
-      // Step 6: Finalize streaming (persist completed message)
+      // Step 7: Finalize streaming (persist completed message)
       await this.chatSessionsService.finalizeStreaming(
         updatedSession.id,
         assistantMessageId,
@@ -167,6 +175,20 @@ Always answer in ${chatbot.locale}.
       model: chatbot.model,
       temperature,
       systemPrompt,
+    }
+  }
+
+  /**
+   * Builds LLM metadata from ChatBot and ChatSession entities
+   */
+  private buildLLMMetadata(chatbot: ChatBot, session: ChatSession): LLMMetadata {
+    return {
+      chatSessionId: session.id,
+      chatBotId: chatbot.id,
+      projectId: chatbot.projectId,
+      organizationId: session.organizationId,
+      currentTurn: session.messages.filter((m) => m.role === "user").length,
+      tags: [chatbot.name],
     }
   }
 }
