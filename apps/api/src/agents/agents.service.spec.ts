@@ -1,8 +1,8 @@
-import { ChatBotLocale, ChatBotModel } from "@caseai-connect/api-contracts"
+import { AgentLocale, AgentModel } from "@caseai-connect/api-contracts"
 import { ForbiddenException, NotFoundException } from "@nestjs/common"
 import type { Repository } from "typeorm"
-import { ChatBot } from "@/chat-bots/chat-bot.entity"
-import { chatBotFactory } from "@/chat-bots/chat-bot.factory"
+import { Agent } from "@/agents/agent.entity"
+import { agentFactory } from "@/agents/agent.factory"
 import { clearTestDatabase } from "@/common/test/test-database"
 import {
   setupTransactionalTestDatabase,
@@ -10,7 +10,7 @@ import {
 } from "@/common/test/test-transaction-manager"
 import { Organization } from "@/organizations/organization.entity"
 import {
-  createOrganizationWithChatBot,
+  createOrganizationWithAgent,
   createOrganizationWithOwner,
   createOrganizationWithProject,
   organizationFactory,
@@ -20,12 +20,12 @@ import { Project } from "@/projects/project.entity"
 import { projectFactory } from "@/projects/project.factory"
 import { User } from "@/users/user.entity"
 import { userFactory } from "@/users/user.factory"
-import { ChatBotsModule } from "./chat-bots.module"
-import { ChatBotsService } from "./chat-bots.service"
+import { AgentsModule } from "./agents.module"
+import { AgentsService } from "./agents.service"
 
-describe("ChatBotsService", () => {
-  let service: ChatBotsService
-  let chatBotRepository: Repository<ChatBot>
+describe("AgentsService", () => {
+  let service: AgentsService
+  let agentRepository: Repository<Agent>
   let projectRepository: Repository<Project>
   let organizationRepository: Repository<Organization>
   let membershipRepository: Repository<UserMembership>
@@ -34,8 +34,8 @@ describe("ChatBotsService", () => {
 
   beforeAll(async () => {
     setup = await setupTransactionalTestDatabase({
-      featureEntities: [ChatBot, Project, Organization, UserMembership, User],
-      additionalImports: [ChatBotsModule],
+      featureEntities: [Agent, Project, Organization, UserMembership, User],
+      additionalImports: [AgentsModule],
     })
     await clearTestDatabase(setup.dataSource)
   })
@@ -46,8 +46,8 @@ describe("ChatBotsService", () => {
 
   beforeEach(async () => {
     await setup.startTransaction()
-    service = setup.module.get<ChatBotsService>(ChatBotsService)
-    chatBotRepository = setup.getRepository(ChatBot)
+    service = setup.module.get<AgentsService>(AgentsService)
+    agentRepository = setup.getRepository(Agent)
     projectRepository = setup.getRepository(Project)
     organizationRepository = setup.getRepository(Organization)
     membershipRepository = setup.getRepository(UserMembership)
@@ -58,8 +58,8 @@ describe("ChatBotsService", () => {
     await setup.rollbackTransaction()
   })
 
-  describe("createChatBot", () => {
-    it("should create a ChatBot when user is owner", async () => {
+  describe("createAgent", () => {
+    it("should create an Agent when user is owner", async () => {
       const { user, project } = await createOrganizationWithProject({
         organizationRepository,
         userRepository,
@@ -67,14 +67,14 @@ describe("ChatBotsService", () => {
         projectRepository,
       })
 
-      const result = await service.createChatBot({
+      const result = await service.createAgent({
         userId: user.id,
         projectId: project.id,
         name: "My Template",
         defaultPrompt: "This is a default prompt",
-        model: ChatBotModel.Gemini25Flash,
+        model: AgentModel.Gemini25Flash,
         temperature: 0,
-        locale: ChatBotLocale.EN,
+        locale: AgentLocale.EN,
       })
 
       // Assert
@@ -83,14 +83,14 @@ describe("ChatBotsService", () => {
       expect(result.projectId).toBe(project.id)
       expect(result.id).toBeDefined()
 
-      const savedTemplate = await chatBotRepository.findOne({
+      const savedTemplate = await agentRepository.findOne({
         where: { id: result.id },
       })
       expect(savedTemplate).not.toBeNull()
       expect(savedTemplate?.name).toBe("My Template")
     })
 
-    it("should create a ChatBot when user is admin", async () => {
+    it("should create an Agent when user is admin", async () => {
       const { user, project } = await createOrganizationWithProject(
         {
           organizationRepository,
@@ -102,14 +102,14 @@ describe("ChatBotsService", () => {
       )
 
       // Act
-      const result = await service.createChatBot({
+      const result = await service.createAgent({
         userId: user.id,
         projectId: project.id,
         name: "Admin Template",
         defaultPrompt: "Admin prompt",
-        model: ChatBotModel.Gemini25Flash,
+        model: AgentModel.Gemini25Flash,
         temperature: 0,
-        locale: ChatBotLocale.EN,
+        locale: AgentLocale.EN,
       })
 
       // Assert
@@ -125,21 +125,21 @@ describe("ChatBotsService", () => {
         projectRepository,
       })
 
-      const createWrongfulChatBot = async () =>
-        service.createChatBot({
+      const createWrongfulAgent = async () =>
+        service.createAgent({
           userId: user.id,
           projectId: project.id,
           name: "AB",
           defaultPrompt: "Prompt",
-          model: ChatBotModel.Gemini25Flash,
+          model: AgentModel.Gemini25Flash,
           temperature: 0,
-          locale: ChatBotLocale.EN,
+          locale: AgentLocale.EN,
         })
 
       // Act & Assert
-      await expect(createWrongfulChatBot()).rejects.toThrow(ForbiddenException)
-      await expect(createWrongfulChatBot()).rejects.toThrow(
-        "ChatBot name must be at least 3 characters long",
+      await expect(createWrongfulAgent()).rejects.toThrow(ForbiddenException)
+      await expect(createWrongfulAgent()).rejects.toThrow(
+        "Agent name must be at least 3 characters long",
       )
     })
 
@@ -152,24 +152,24 @@ describe("ChatBotsService", () => {
       })
       const anotherUser = userFactory.build({
         email: "another@example.com",
-        auth0Id: "auth0|chat-bot-another-1",
+        auth0Id: "auth0|agent-another-1",
       })
       await userRepository.save(anotherUser)
 
-      const createWrongfulChatBot = async () =>
-        service.createChatBot({
+      const createWrongfulAgent = async () =>
+        service.createAgent({
           userId: anotherUser.id,
           projectId: project.id,
           name: "Template",
           defaultPrompt: "Prompt",
-          model: ChatBotModel.Gemini25Flash,
+          model: AgentModel.Gemini25Flash,
           temperature: 0,
-          locale: ChatBotLocale.EN,
+          locale: AgentLocale.EN,
         })
 
       // Act & Assert
-      await expect(createWrongfulChatBot()).rejects.toThrow(ForbiddenException)
-      await expect(createWrongfulChatBot()).rejects.toThrow(
+      await expect(createWrongfulAgent()).rejects.toThrow(ForbiddenException)
+      await expect(createWrongfulAgent()).rejects.toThrow(
         "User does not have access to organization",
       )
     })
@@ -185,20 +185,20 @@ describe("ChatBotsService", () => {
         { membership: { role: "member" } },
       )
 
-      const createWrongfulChatBot = async () =>
-        service.createChatBot({
+      const createWrongfulAgent = async () =>
+        service.createAgent({
           userId: user.id,
           projectId: project.id,
           name: "Template",
           defaultPrompt: "Prompt",
-          model: ChatBotModel.Gemini25Flash,
+          model: AgentModel.Gemini25Flash,
           temperature: 0,
-          locale: ChatBotLocale.EN,
+          locale: AgentLocale.EN,
         })
 
       // Act & Assert
-      await expect(createWrongfulChatBot()).rejects.toThrow(ForbiddenException)
-      await expect(createWrongfulChatBot()).rejects.toThrow("User must be an owner or admin")
+      await expect(createWrongfulAgent()).rejects.toThrow(ForbiddenException)
+      await expect(createWrongfulAgent()).rejects.toThrow("User must be an owner or admin")
     })
 
     it("should throw NotFoundException when project does not exist", async () => {
@@ -209,25 +209,25 @@ describe("ChatBotsService", () => {
       })
       const nonExistentProjectId = "00000000-0000-0000-0000-000000000000"
 
-      const createWrongfulChatBot = async () =>
-        service.createChatBot({
+      const createWrongfulAgent = async () =>
+        service.createAgent({
           userId: user.id,
           projectId: nonExistentProjectId,
           name: "Template",
           defaultPrompt: "Prompt",
-          model: ChatBotModel.Gemini25Flash,
+          model: AgentModel.Gemini25Flash,
           temperature: 0,
-          locale: ChatBotLocale.EN,
+          locale: AgentLocale.EN,
         })
 
       // Act & Assert
-      await expect(createWrongfulChatBot()).rejects.toThrow(NotFoundException)
-      await expect(createWrongfulChatBot()).rejects.toThrow("Project with id")
+      await expect(createWrongfulAgent()).rejects.toThrow(NotFoundException)
+      await expect(createWrongfulAgent()).rejects.toThrow("Project with id")
     })
   })
 
-  describe("listChatBots", () => {
-    it("should return ChatBots for a project", async () => {
+  describe("listAgents", () => {
+    it("should return Agents for a project", async () => {
       const { user, project } = await createOrganizationWithProject({
         organizationRepository,
         userRepository,
@@ -235,18 +235,18 @@ describe("ChatBotsService", () => {
         projectRepository,
       })
 
-      const template1 = chatBotFactory.transient({ project }).build({
+      const template1 = agentFactory.transient({ project }).build({
         name: "Template 1",
         defaultPrompt: "Prompt 1",
       })
-      const template2 = chatBotFactory.transient({ project }).build({
+      const template2 = agentFactory.transient({ project }).build({
         name: "Template 2",
         defaultPrompt: "Prompt 2",
       })
-      await chatBotRepository.save([template1, template2])
+      await agentRepository.save([template1, template2])
 
       // Act
-      const result = await service.listChatBots({ userId: user.id, projectId: project.id })
+      const result = await service.listAgents({ userId: user.id, projectId: project.id })
 
       // Assert
       expect(result).toHaveLength(2)
@@ -254,7 +254,7 @@ describe("ChatBotsService", () => {
       expect(result.map((t) => t.name)).toContain("Template 2")
     })
 
-    it("should return empty array when project has no ChatBots", async () => {
+    it("should return empty array when project has no Agents", async () => {
       const { user, project } = await createOrganizationWithProject({
         organizationRepository,
         userRepository,
@@ -263,7 +263,7 @@ describe("ChatBotsService", () => {
       })
 
       // Act
-      const result = await service.listChatBots({ userId: user.id, projectId: project.id })
+      const result = await service.listAgents({ userId: user.id, projectId: project.id })
 
       // Assert
       expect(result).toEqual([])
@@ -281,17 +281,17 @@ describe("ChatBotsService", () => {
       })
       await projectRepository.save(project)
 
-      const createWrongfulListChatBots = async () =>
-        service.listChatBots({ userId: user.id, projectId: project.id })
+      const createWrongfulListAgents = async () =>
+        service.listAgents({ userId: user.id, projectId: project.id })
 
       // Act & Assert
-      await expect(createWrongfulListChatBots()).rejects.toThrow(ForbiddenException)
-      await expect(createWrongfulListChatBots()).rejects.toThrow(
+      await expect(createWrongfulListAgents()).rejects.toThrow(ForbiddenException)
+      await expect(createWrongfulListAgents()).rejects.toThrow(
         "User does not have access to organization",
       )
     })
 
-    it("should return ChatBots ordered by createdAt DESC", async () => {
+    it("should return Agents ordered by createdAt DESC", async () => {
       const { user, project } = await createOrganizationWithProject({
         organizationRepository,
         userRepository,
@@ -299,19 +299,19 @@ describe("ChatBotsService", () => {
         projectRepository,
       })
 
-      const template1 = chatBotFactory.transient({ project }).build({
+      const template1 = agentFactory.transient({ project }).build({
         name: "First Template",
         defaultPrompt: "Prompt 1",
         createdAt: new Date("2024-01-02"),
       })
-      const template2 = chatBotFactory.transient({ project }).build({
+      const template2 = agentFactory.transient({ project }).build({
         name: "Second Template",
         defaultPrompt: "Prompt 2",
       })
-      await chatBotRepository.save([template1, template2])
+      await agentRepository.save([template1, template2])
 
       // Act
-      const result = await service.listChatBots({ userId: user.id, projectId: project.id })
+      const result = await service.listAgents({ userId: user.id, projectId: project.id })
 
       // Assert
       expect(result).toHaveLength(2)
@@ -321,19 +321,19 @@ describe("ChatBotsService", () => {
     })
   })
 
-  describe("updateChatBot", () => {
-    it("should update a ChatBot when user is owner", async () => {
-      const { user, chatBot } = await createOrganizationWithChatBot({
+  describe("updateAgent", () => {
+    it("should update an Agent when user is owner", async () => {
+      const { user, agent } = await createOrganizationWithAgent({
         organizationRepository,
         userRepository,
         membershipRepository,
         projectRepository,
-        chatBotRepository,
+        agentRepository,
       })
 
       // Act
-      const result = await service.updateChatBot({
-        required: { userId: user.id, chatBotId: chatBot.id },
+      const result = await service.updateAgent({
+        required: { userId: user.id, agentId: agent.id },
         fieldsToUpdate: {
           name: "Updated Template",
           defaultPrompt: "Updated Prompt",
@@ -343,28 +343,28 @@ describe("ChatBotsService", () => {
       // Assert
       expect(result.name).toBe("Updated Template")
       expect(result.defaultPrompt).toBe("Updated Prompt")
-      expect(result.id).toBe(chatBot.id)
+      expect(result.id).toBe(agent.id)
 
-      const updatedTemplate = await chatBotRepository.findOne({ where: { id: chatBot.id } })
+      const updatedTemplate = await agentRepository.findOne({ where: { id: agent.id } })
       expect(updatedTemplate?.name).toBe("Updated Template")
       expect(updatedTemplate?.defaultPrompt).toBe("Updated Prompt")
     })
 
     it("should update only name when defaultPrompt is not provided", async () => {
-      const { user, chatBot } = await createOrganizationWithChatBot(
+      const { user, agent } = await createOrganizationWithAgent(
         {
           organizationRepository,
           userRepository,
           membershipRepository,
           projectRepository,
-          chatBotRepository,
+          agentRepository,
         },
-        { chatBot: { defaultPrompt: "Original Prompt" } },
+        { agent: { defaultPrompt: "Original Prompt" } },
       )
 
       // Act
-      const result = await service.updateChatBot({
-        required: { userId: user.id, chatBotId: chatBot.id },
+      const result = await service.updateAgent({
+        required: { userId: user.id, agentId: agent.id },
         fieldsToUpdate: { name: "Updated Name" },
       })
 
@@ -374,165 +374,164 @@ describe("ChatBotsService", () => {
     })
 
     it("should throw ForbiddenException when name is less than 3 characters", async () => {
-      const { user, chatBot } = await createOrganizationWithChatBot({
+      const { user, agent } = await createOrganizationWithAgent({
         organizationRepository,
         userRepository,
         membershipRepository,
         projectRepository,
-        chatBotRepository,
+        agentRepository,
       })
 
-      const createWrongfulUpdateChatBot = async () =>
-        service.updateChatBot({
-          required: { userId: user.id, chatBotId: chatBot.id },
+      const createWrongfulUpdateAgent = async () =>
+        service.updateAgent({
+          required: { userId: user.id, agentId: agent.id },
           fieldsToUpdate: { name: "AB" },
         })
 
       // Act & Assert
-      await expect(createWrongfulUpdateChatBot()).rejects.toThrow(ForbiddenException)
-      await expect(createWrongfulUpdateChatBot()).rejects.toThrow(
-        "ChatBot name must be at least 3 characters long",
+      await expect(createWrongfulUpdateAgent()).rejects.toThrow(ForbiddenException)
+      await expect(createWrongfulUpdateAgent()).rejects.toThrow(
+        "Agent name must be at least 3 characters long",
       )
     })
 
     it("should throw ForbiddenException when user is member but not owner or admin", async () => {
-      const { user, chatBot } = await createOrganizationWithChatBot(
+      const { user, agent } = await createOrganizationWithAgent(
         {
           organizationRepository,
           userRepository,
           membershipRepository,
           projectRepository,
-          chatBotRepository,
+          agentRepository,
         },
         { membership: { role: "member" } },
       )
 
-      const createWrongfulUpdateChatBot = async () =>
-        service.updateChatBot({
-          required: { userId: user.id, chatBotId: chatBot.id },
+      const createWrongfulUpdateAgent = async () =>
+        service.updateAgent({
+          required: { userId: user.id, agentId: agent.id },
           fieldsToUpdate: { name: "Updated" },
         })
 
       // Act & Assert
-      await expect(createWrongfulUpdateChatBot()).rejects.toThrow(ForbiddenException)
-      await expect(createWrongfulUpdateChatBot()).rejects.toThrow("User must be an owner or admin")
+      await expect(createWrongfulUpdateAgent()).rejects.toThrow(ForbiddenException)
+      await expect(createWrongfulUpdateAgent()).rejects.toThrow("User must be an owner or admin")
     })
 
-    it("should throw NotFoundException when chat bot does not exist", async () => {
+    it("should throw NotFoundException when agent does not exist", async () => {
       const user = userFactory.build()
       await userRepository.save(user)
       const nonExistentTemplateId = "00000000-0000-0000-0000-000000000000"
 
-      const createWrongfulUpdateChatBot = async () =>
-        service.updateChatBot({
-          required: { userId: user.id, chatBotId: nonExistentTemplateId },
+      const createWrongfulUpdateAgent = async () =>
+        service.updateAgent({
+          required: { userId: user.id, agentId: nonExistentTemplateId },
           fieldsToUpdate: { name: "Updated" },
         })
 
       // Act & Assert
-      await expect(createWrongfulUpdateChatBot()).rejects.toThrow(NotFoundException)
-      await expect(createWrongfulUpdateChatBot()).rejects.toThrow("ChatBot with id")
+      await expect(createWrongfulUpdateAgent()).rejects.toThrow(NotFoundException)
+      await expect(createWrongfulUpdateAgent()).rejects.toThrow("Agent with id")
     })
   })
 
-  describe("deleteChatBot", () => {
-    it("should delete a ChatBot when user is owner", async () => {
-      const { user, chatBot } = await createOrganizationWithChatBot({
+  describe("deleteAgent", () => {
+    it("should delete an Agent when user is owner", async () => {
+      const { user, agent } = await createOrganizationWithAgent({
         organizationRepository,
         userRepository,
         membershipRepository,
         projectRepository,
-        chatBotRepository,
+        agentRepository,
       })
 
       // Act
-      await service.deleteChatBot(user.id, chatBot.id)
+      await service.deleteAgent(user.id, agent.id)
 
       // Assert
-      const deletedTemplate = await chatBotRepository.findOne({ where: { id: chatBot.id } })
+      const deletedTemplate = await agentRepository.findOne({ where: { id: agent.id } })
       expect(deletedTemplate).toBeNull()
     })
 
-    it("should delete a ChatBot when user is admin", async () => {
-      const { user, chatBot } = await createOrganizationWithChatBot(
+    it("should delete a Agent when user is admin", async () => {
+      const { user, agent } = await createOrganizationWithAgent(
         {
           organizationRepository,
           userRepository,
           membershipRepository,
           projectRepository,
-          chatBotRepository,
+          agentRepository,
         },
         { membership: { role: "admin" } },
       )
 
       // Act
-      await service.deleteChatBot(user.id, chatBot.id)
+      await service.deleteAgent(user.id, agent.id)
 
       // Assert
-      const deletedTemplate = await chatBotRepository.findOne({ where: { id: chatBot.id } })
+      const deletedTemplate = await agentRepository.findOne({ where: { id: agent.id } })
       expect(deletedTemplate).toBeNull()
     })
 
     it("should throw ForbiddenException when user is member", async () => {
-      const { user, chatBot } = await createOrganizationWithChatBot(
+      const { user, agent } = await createOrganizationWithAgent(
         {
           organizationRepository,
           userRepository,
           membershipRepository,
           projectRepository,
-          chatBotRepository,
+          agentRepository,
         },
         { membership: { role: "member" } },
       )
 
       // Act & Assert
-      await expect(service.deleteChatBot(user.id, chatBot.id)).rejects.toThrow(ForbiddenException)
-      await expect(service.deleteChatBot(user.id, chatBot.id)).rejects.toThrow(
+      await expect(service.deleteAgent(user.id, agent.id)).rejects.toThrow(ForbiddenException)
+      await expect(service.deleteAgent(user.id, agent.id)).rejects.toThrow(
         "User must be an owner or admin",
       )
 
       // Verify template still exists
-      const existingTemplate = await chatBotRepository.findOne({ where: { id: chatBot.id } })
+      const existingTemplate = await agentRepository.findOne({ where: { id: agent.id } })
       expect(existingTemplate).not.toBeNull()
     })
 
-    it("should throw NotFoundException when chat bot does not exist", async () => {
+    it("should throw NotFoundException when agent does not exist", async () => {
       // Arrange
       const user = userFactory.build()
       await userRepository.save(user)
       const nonExistentTemplateId = "00000000-0000-0000-0000-000000000000"
 
       // Act & Assert
-      await expect(service.deleteChatBot(user.id, nonExistentTemplateId)).rejects.toThrow(
+      await expect(service.deleteAgent(user.id, nonExistentTemplateId)).rejects.toThrow(
         NotFoundException,
       )
-      await expect(service.deleteChatBot(user.id, nonExistentTemplateId)).rejects.toThrow(
-        "ChatBot with id",
+      await expect(service.deleteAgent(user.id, nonExistentTemplateId)).rejects.toThrow(
+        "Agent with id",
       )
     })
 
     it("should throw ForbiddenException when user is not a member", async () => {
-      const { chatBot } = await createOrganizationWithChatBot({
+      const { agent } = await createOrganizationWithAgent({
         organizationRepository,
         userRepository,
         membershipRepository,
         projectRepository,
-        chatBotRepository,
+        agentRepository,
       })
       const anotherUser = userFactory.build()
       await userRepository.save(anotherUser)
 
-      const createWrongfulDeleteChatBot = async () =>
-        service.deleteChatBot(anotherUser.id, chatBot.id)
+      const createWrongfulDeleteAgent = async () => service.deleteAgent(anotherUser.id, agent.id)
 
       // Act & Assert
-      await expect(createWrongfulDeleteChatBot()).rejects.toThrow(ForbiddenException)
-      await expect(createWrongfulDeleteChatBot()).rejects.toThrow(
+      await expect(createWrongfulDeleteAgent()).rejects.toThrow(ForbiddenException)
+      await expect(createWrongfulDeleteAgent()).rejects.toThrow(
         "User does not have access to organization",
       )
 
       // Verify template still exists
-      const existingTemplate = await chatBotRepository.findOne({ where: { id: chatBot.id } })
+      const existingTemplate = await agentRepository.findOne({ where: { id: agent.id } })
       expect(existingTemplate).not.toBeNull()
     })
   })

@@ -17,5 +17,3 @@ const sdk = new NodeSDK({
 })
 
 sdk.start()
-
-console.log("OpenTelemetry initialized")

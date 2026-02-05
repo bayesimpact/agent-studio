@@ -1,6 +1,6 @@
 // Chat Bots DTOs
-export * from "./chat-bots/chat-bots.dto"
-export { ChatBotsRoutes } from "./chat-bots/chat-bots.routes"
+export * from "./agents/agents.dto"
+export { AgentsRoutes } from "./agents/agents.routes"
 export type * from "./chat-sessions/chat-session-messages.dto"
 export { ChatSessionMessagesRoutes } from "./chat-sessions/chat-session-messages.routes"
 export { ChatSessionStreamingRoutes } from "./chat-sessions/chat-session-streaming.routes"

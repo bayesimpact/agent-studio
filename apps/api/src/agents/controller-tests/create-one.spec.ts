@@ -1,33 +1,33 @@
-import { ChatBotLocale, ChatBotModel } from "@caseai-connect/api-contracts"
+import { AgentLocale, AgentModel } from "@caseai-connect/api-contracts"
 import { buildEndpointRequest } from "@/common/test/request.factory"
 import { createOrganizationWithProject } from "@/organizations/organization.factory"
-import type { ChatBotsRoutes } from "../chat-bots.routes"
-import { chatBotsControllerTestSetup } from "./test-setup"
+import type { AgentsRoutes } from "../agents.routes"
+import { agentsControllerTestSetup } from "./test-setup"
 
-const getTestContext = chatBotsControllerTestSetup()
+const getTestContext = agentsControllerTestSetup()
 
-describe("ChatBot - createOne", () => {
+describe("Agent - createOne", () => {
   describe("user is owner", () => {
     it("returns success", async () => {
-      const { controller, chatBotRepository } = getTestContext()
+      const { controller, agentRepository } = getTestContext()
       const { user, project } = await createOrganizationWithProject(getTestContext())
       const mockRequest = buildEndpointRequest(user)
 
-      const existingChatBots = await chatBotRepository.find({
+      const existingAgents = await agentRepository.find({
         where: { projectId: project.id },
       })
 
-      expect(existingChatBots).toHaveLength(0)
+      expect(existingAgents).toHaveLength(0)
 
       const body = {
         payload: {
           name: "New Template",
           defaultPrompt: "This is a default prompt",
-          model: ChatBotModel.Gemini25Flash,
+          model: AgentModel.Gemini25Flash,
           temperature: 0,
-          locale: ChatBotLocale.EN,
+          locale: AgentLocale.EN,
         },
-      } satisfies typeof ChatBotsRoutes.createOne.request
+      } satisfies typeof AgentsRoutes.createOne.request
 
       const { data: result } = await controller.createOne(mockRequest, project.id, body)
 
@@ -41,27 +41,27 @@ describe("ChatBot - createOne", () => {
 
   describe("user is admin", () => {
     it("returns success", async () => {
-      const { controller, chatBotRepository } = getTestContext()
+      const { controller, agentRepository } = getTestContext()
       const { user, project } = await createOrganizationWithProject(getTestContext(), {
         membership: { role: "admin" },
       })
       const mockRequest = buildEndpointRequest(user)
 
-      const existingChatBots = await chatBotRepository.find({
+      const existingAgents = await agentRepository.find({
         where: { projectId: project.id },
       })
 
-      expect(existingChatBots).toHaveLength(0)
+      expect(existingAgents).toHaveLength(0)
 
       const body = {
         payload: {
           name: "Admin Template",
           defaultPrompt: "Admin prompt",
-          model: ChatBotModel.Gemini25Flash,
+          model: AgentModel.Gemini25Flash,
           temperature: 0,
-          locale: ChatBotLocale.EN,
+          locale: AgentLocale.EN,
         },
-      } satisfies typeof ChatBotsRoutes.createOne.request
+      } satisfies typeof AgentsRoutes.createOne.request
 
       const { data: result } = await controller.createOne(mockRequest, project.id, body)
       expect(result.name).toBe(body.payload.name)
@@ -84,11 +84,11 @@ describe("ChatBot - createOne", () => {
         payload: {
           name: "Should Fail",
           defaultPrompt: "Prompt",
-          model: ChatBotModel.Gemini25Flash,
+          model: AgentModel.Gemini25Flash,
           temperature: 0,
-          locale: ChatBotLocale.EN,
+          locale: AgentLocale.EN,
         },
-      } satisfies typeof ChatBotsRoutes.createOne.request
+      } satisfies typeof AgentsRoutes.createOne.request
 
       await expect(controller.createOne(mockRequest, project.id, body)).rejects.toThrow(
         "User must be an owner or admin",

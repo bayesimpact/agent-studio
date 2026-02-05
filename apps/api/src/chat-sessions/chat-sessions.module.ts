@@ -1,7 +1,7 @@
 import { Module } from "@nestjs/common"
 import { TypeOrmModule } from "@nestjs/typeorm"
+import { Agent } from "@/agents/agent.entity"
 import { AuthModule } from "@/auth/auth.module"
-import { ChatBot } from "@/chat-bots/chat-bot.entity"
 import { UserMembership } from "@/organizations/user-membership.entity"
 import { UsersModule } from "@/users/users.module"
 import { ChatMessage } from "./chat-message.entity"
@@ -15,7 +15,7 @@ import { AISDKLLMProvider } from "./providers/ai-sdk-llm.provider"
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([ChatSession, ChatMessage, ChatBot, UserMembership]),
+    TypeOrmModule.forFeature([ChatSession, ChatMessage, Agent, UserMembership]),
     UsersModule,
     AuthModule,
   ],

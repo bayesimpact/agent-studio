@@ -1,6 +1,6 @@
 "use client"
 
-import { ChatBotLocale, ChatBotModel } from "@caseai-connect/api-contracts"
+import { AgentLocale, AgentModel } from "@caseai-connect/api-contracts"
 import { Button } from "@caseai-connect/ui/shad/button"
 import { CardContent, CardFooter } from "@caseai-connect/ui/shad/card"
 import { Input } from "@caseai-connect/ui/shad/input"
@@ -58,9 +58,9 @@ export function ChatBotForm({
   defaultValues = {
     name: "",
     defaultPrompt,
-    model: ChatBotModel.Gemini25Flash,
+    model: AgentModel.Gemini25Flash,
     temperature: 0.0,
-    locale: ChatBotLocale.EN,
+    locale: AgentLocale.EN,
   },
   isLoading,
   error,
@@ -73,7 +73,7 @@ export function ChatBotForm({
   const chatBotSchema = z.object({
     name: z.string().min(3, t("validation.nameMinLength")),
     defaultPrompt: z.string().min(1, t("validation.promptRequired")),
-    model: z.enum(ChatBotModel),
+    model: z.enum(AgentModel),
     temperature: z
       .number()
       .min(0)
@@ -82,7 +82,7 @@ export function ChatBotForm({
         (val) => val >= 0 && val <= 2 && Number.isFinite(val),
         t("validation.temperatureInvalid"),
       ),
-    locale: z.enum(ChatBotLocale),
+    locale: z.enum(AgentLocale),
   })
 
   // Infer the type from the schema to avoid conflicts with z.coerce
@@ -156,7 +156,7 @@ export function ChatBotForm({
                   <SelectValue placeholder={t("placeholderModel")} />
                 </SelectTrigger>
                 <SelectContent>
-                  {Object.entries(ChatBotModel).map(([key, value]) => (
+                  {Object.entries(AgentModel).map(([key, value]) => (
                     <SelectItem key={key} value={value}>
                       {value}
                     </SelectItem>
@@ -201,7 +201,7 @@ export function ChatBotForm({
                   <SelectValue placeholder={t("placeholderLocale")} />
                 </SelectTrigger>
                 <SelectContent>
-                  {Object.entries(ChatBotLocale).map(([key, value]) => (
+                  {Object.entries(AgentLocale).map(([key, value]) => (
                     <SelectItem key={key} value={value}>
                       {value}
                     </SelectItem>

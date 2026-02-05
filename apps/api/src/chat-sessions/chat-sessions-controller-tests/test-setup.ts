@@ -1,5 +1,5 @@
 import type { Repository } from "typeorm"
-import { ChatBot } from "@/chat-bots/chat-bot.entity"
+import { Agent } from "@/agents/agent.entity"
 import { clearTestDatabase } from "@/common/test/test-database"
 import {
   setupTransactionalTestDatabase,
@@ -21,13 +21,13 @@ export function chatSessionsControllerTestSetup() {
   let organizationRepository: Repository<Organization>
   let membershipRepository: Repository<UserMembership>
   let projectRepository: Repository<Project>
-  let chatBotRepository: Repository<ChatBot>
+  let agentRepository: Repository<Agent>
   let chatSessionRepository: Repository<ChatSession>
   let organization: Organization
 
   beforeAll(async () => {
     setup = await setupTransactionalTestDatabase({
-      featureEntities: [User, Organization, UserMembership, Project, ChatBot],
+      featureEntities: [User, Organization, UserMembership, Project, Agent],
       additionalImports: [ChatSessionsModule],
     })
     await clearTestDatabase(setup.dataSource)
@@ -44,7 +44,7 @@ export function chatSessionsControllerTestSetup() {
     organizationRepository = setup.getRepository(Organization)
     membershipRepository = setup.getRepository(UserMembership)
     projectRepository = setup.getRepository(Project)
-    chatBotRepository = setup.getRepository(ChatBot)
+    agentRepository = setup.getRepository(Agent)
     chatSessionRepository = setup.getRepository(ChatSession)
 
     const org = organizationFactory.build({ name: "Org1" })
@@ -62,7 +62,7 @@ export function chatSessionsControllerTestSetup() {
 
   return () => {
     return {
-      chatBotRepository,
+      agentRepository,
       chatSessionRepository,
       controller,
       membershipRepository,
