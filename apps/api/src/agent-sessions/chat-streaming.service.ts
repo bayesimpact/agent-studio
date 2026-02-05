@@ -183,6 +183,7 @@ Always answer in ${agent.locale}.
    */
   private buildLLMMetadata(agent: Agent, session: AgentSession): LLMMetadata {
     return {
+      traceId: session.traceId,
       agentSessionId: session.id,
       agentId: agent.id,
       projectId: agent.projectId,

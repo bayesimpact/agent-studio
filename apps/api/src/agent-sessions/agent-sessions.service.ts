@@ -124,6 +124,7 @@ export class AgentSessionsService {
       organizationId,
       type: "playground",
       expiresAt: null,
+      traceId: v4(),
     })
 
     return this.agentSessionRepository.save(session)
@@ -207,6 +208,7 @@ export class AgentSessionsService {
       organizationId,
       type: "app-private",
       expiresAt: null,
+      traceId: v4(),
     })
     return await this.agentSessionRepository.save(session)
   }
@@ -226,6 +228,7 @@ export class AgentSessionsService {
       organizationId,
       type: "production",
       expiresAt: null,
+      traceId: v4(),
     })
 
     return this.agentSessionRepository.save(session)

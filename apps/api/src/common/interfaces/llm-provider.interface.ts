@@ -19,12 +19,13 @@ export interface LLMConfig {
  * Metadata for LLM telemetry
  */
 export interface LLMMetadata {
-  organizationId?: string
-  agentSessionId?: string
-  agentId?: string
-  projectId?: string
-  currentTurn?: number
-  tags?: string[]
+  traceId: string
+  organizationId: string
+  agentSessionId: string
+  agentId: string
+  projectId: string
+  currentTurn: number
+  tags: string[]
 }
 
 /**

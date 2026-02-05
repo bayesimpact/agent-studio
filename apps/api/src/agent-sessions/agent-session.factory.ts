@@ -1,5 +1,6 @@
 import { randomUUID } from "node:crypto"
 import { Factory } from "fishery"
+import { v4 } from "uuid"
 import type { Agent } from "@/agents/agent.entity"
 import type { Organization } from "@/organizations/organization.entity"
 import type { User } from "@/users/user.entity"
@@ -59,5 +60,6 @@ export const agentSessionFactory = AgentSessionFactory.define(({ params, transie
     user: transientParams.user,
     organization: transientParams.organization,
     messages: params.messages || [],
+    traceId: v4(),
   } satisfies AgentSession
 })

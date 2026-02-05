@@ -27,6 +27,9 @@ export class AgentSession {
   @Column({ type: "uuid", name: "agent_id" })
   agentId!: string
 
+  @Column({ type: "uuid", name: "trace_id", nullable: true })
+  traceId!: string
+
   @Column({ type: "uuid", name: "user_id" })
   userId!: string
 
