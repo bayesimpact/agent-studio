@@ -83,6 +83,7 @@ export class LangfuseIntegrationExporter implements SpanExporter {
     const finalTraceId = userProvidedTraceId ?? traceId
     const langfusePrompt = this.parseLangfusePromptTraceAttribute(spans)
     const updateParent = this.parseLangfuseUpdateParentTraceAttribute(spans)
+    const currentTurn = this.parseCurrentTurnTraceAttribute(spans)
 
     const traceParams = {
       userId: this.parseUserIdTraceAttribute(spans),
@@ -117,7 +118,11 @@ export class LangfuseIntegrationExporter implements SpanExporter {
           finalTraceId,
           span,
           this.isRootAiSdkSpan(span, spans),
-          userProvidedTraceId ? this.parseTraceName(spans) : undefined,
+          currentTurn
+            ? `Turn #${currentTurn}`
+            : userProvidedTraceId
+              ? this.parseTraceName(spans)
+              : undefined,
         )
       }
     }
@@ -419,6 +424,13 @@ export class LangfuseIntegrationExporter implements SpanExporter {
       ?.toString()
   }
 
+  private parseCurrentTurnTraceAttribute(spans: ReadableSpan[]): string | undefined {
+    return spans
+      .map((span) => this.parseSpanMetadata(span)["currentTurn"])
+      .find((id) => Boolean(id))
+      ?.toString()
+  }
+
   private parseLangfusePromptTraceAttribute(
     spans: ReadableSpan[],
   ): LangfusePromptRecord | undefined {
@@ -492,6 +504,7 @@ export class LangfuseIntegrationExporter implements SpanExporter {
       "langfuseTraceId",
       "langfusePrompt",
       "langfuseUpdateParent",
+      "currentTurn",
     ]
 
     return Object.entries(obj).reduce(

@@ -6,6 +6,7 @@ import { streamText } from "ai"
 import type {
   ChatMessage,
   LLMConfig,
+  LLMMetadata,
   LLMProvider,
 } from "@/common/interfaces/llm-provider.interface"
 
@@ -29,11 +30,11 @@ export class AISDKLLMProvider implements LLMProvider {
   async *streamChatResponse(
     messages: ChatMessage[],
     config: LLMConfig,
+    metadata: LLMMetadata,
   ): AsyncGenerator<string, void, unknown> {
-    const inputMetadata = messages[0]?.inputMetadata ? messages[0].inputMetadata : undefined
     // Convert normalized messages to ai-sdk format
     // Filter out empty messages and system messages (handled separately)
-    const aiSDKMessages = messages
+    const aiSDKMessages: AISDKLLMProvider.AiSDKMessages[] = messages
       .map((message) => {
         if (message.role === "system") {
           // ai-sdk handles system messages separately
@@ -48,7 +49,7 @@ export class AISDKLLMProvider implements LLMProvider {
           content: message.content,
         }
       })
-      .filter((msg) => msg !== undefined) as Array<{ role: "user" | "assistant"; content: string }>
+      .filter((msg) => msg !== undefined) as Array<AISDKLLMProvider.AiSDKMessages>
 
     // Ensure we have at least one message (required by Gemini API)
     if (aiSDKMessages.length === 0) {
@@ -58,9 +59,6 @@ export class AISDKLLMProvider implements LLMProvider {
     // Get system message if present
     const systemMessage = messages.find((msg) => msg.role === "system")?.content
 
-    // Set 'LLM' tags
-    const tags = [this.vertexProject, this.vertexLocation, config.model]
-
     // Stream using ai-sdk
     const result = streamText({
       model: this.vertexProvider(config.model),
@@ -69,20 +67,39 @@ export class AISDKLLMProvider implements LLMProvider {
       temperature: config.temperature,
       experimental_telemetry: {
         isEnabled: true,
-        functionId: `LLMProvider.streamChatResponse [${aiSDKMessages.filter((m) => m.role === "assistant").length + 1} rounds]`, //+1 => current round
-        metadata: {
-          langfuseTraceId: inputMetadata?.chatSessionId || "", //fixme: create a specific field for traceId in ChatSession entity ?
-          sessionId: inputMetadata?.chatSessionId ? `cs:${inputMetadata?.chatSessionId}` : "",
-          userId: inputMetadata?.organizationId
-            ? `o:${inputMetadata?.organizationId} / p:${inputMetadata?.projectId}`
-            : "",
-          tags: [...tags, ...(inputMetadata?.tags || [])],
-        },
+        functionId: this.buildFunctionId(aiSDKMessages),
+        metadata: this.buildMetadata(config, metadata),
       },
     })
     // Yield text chunks
     for await (const chunk of result.textStream) {
       yield chunk
     }
+  }
+
+  buildFunctionId(aiSDKMessages: AISDKLLMProvider.AiSDKMessages[]): string {
+    return `LLMProvider.streamChatResponse [${aiSDKMessages.filter((m) => m.role === "assistant").length + 1} turn(s)]` //+1 => current turn
+  }
+
+  // biome-ignore lint/suspicious/noExplicitAny: expected is Record<string, AttributeValue> that require import { AttributeValue } from "@opentelemetry/api"
+  buildMetadata(config: LLMConfig, metadata: LLMMetadata): Record<string, any> {
+    const tags = [this.vertexProject, this.vertexLocation, config.model]
+    return {
+      langfuseTraceId: metadata.chatSessionId || "", //fixme: create a specific field for traceId in ChatSession entity ?
+      sessionId: metadata.chatSessionId ? `cs:${metadata.chatSessionId}` : "",
+      userId: metadata.organizationId
+        ? `o:${metadata.organizationId} / p:${metadata.projectId}`
+        : "",
+      tags: [...tags, ...(metadata?.tags || [])],
+      currentTurn: metadata.currentTurn,
+    }
+  }
+}
+
+// biome-ignore lint/correctness/noUnusedVariables: used in class AISDKLLMProvider
+namespace AISDKLLMProvider {
+  export type AiSDKMessages = {
+    role: "user" | "assistant"
+    content: string
   }
 }
