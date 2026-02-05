@@ -1,10 +1,10 @@
 import { randomUUID } from "node:crypto"
 import { Factory } from "fishery"
 import type { Repository } from "typeorm"
+import type { AgentSession } from "@/agent-sessions/agent-session.entity"
+import { agentSessionFactory } from "@/agent-sessions/agent-session.factory"
 import type { Agent } from "@/agents/agent.entity"
 import { agentFactory } from "@/agents/agent.factory"
-import type { ChatSession } from "@/chat-sessions/chat-session.entity"
-import { chatSessionFactory } from "@/chat-sessions/chat-session.factory"
 import type { Project } from "@/projects/project.entity"
 import { projectFactory } from "@/projects/project.factory"
 import type { User } from "@/users/user.entity"
@@ -22,7 +22,7 @@ export const organizationFactory = Factory.define<Organization>(({ sequence, par
     updatedAt: params.updatedAt || now,
     memberships: params.memberships || [],
     projects: params.projects || [],
-    chatSessions: params.chatSessions || [],
+    agentSessions: params.agentSessions || [],
   } satisfies Organization
 })
 
@@ -177,7 +177,7 @@ type CreateOrganizationWithChatSessionParams = {
   user?: Partial<User>
   project?: Partial<Project>
   agent?: Partial<Agent>
-  chatSession?: Partial<ChatSession>
+  chatSession?: Partial<AgentSession>
 }
 
 type CreateOrganizationWithChatSessionRepositories = {
@@ -186,7 +186,7 @@ type CreateOrganizationWithChatSessionRepositories = {
   membershipRepository: Repository<UserMembership>
   projectRepository: Repository<Project>
   agentRepository: Repository<Agent>
-  chatSessionRepository: Repository<ChatSession>
+  chatSessionRepository: Repository<AgentSession>
 }
 
 export async function createOrganizationWithChatSession(
@@ -198,7 +198,7 @@ export async function createOrganizationWithChatSession(
   membership: UserMembership
   project: Project
   agent: Agent
-  chatSession: ChatSession
+  chatSession: AgentSession
 }> {
   const { organization, user, membership, project, agent } = await createOrganizationWithAgent(
     repositories,
@@ -210,7 +210,7 @@ export async function createOrganizationWithChatSession(
     },
   )
 
-  const chatSession = chatSessionFactory
+  const chatSession = agentSessionFactory
     .transient({ organization, user, agent })
     .build(params.chatSession)
   await repositories.chatSessionRepository.save(chatSession)

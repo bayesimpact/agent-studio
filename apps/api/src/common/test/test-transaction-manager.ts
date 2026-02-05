@@ -11,9 +11,9 @@ import { Test, type TestingModule, type TestingModuleBuilder } from "@nestjs/tes
 import { getRepositoryToken, TypeOrmModule } from "@nestjs/typeorm"
 import type { ObjectLiteral, QueryRunner, Repository } from "typeorm"
 import { DataSource, EntityManager } from "typeorm"
+import { AgentSession } from "@/agent-sessions/agent-session.entity"
+import { ChatMessage } from "@/agent-sessions/chat-message.entity"
 import { Agent } from "@/agents/agent.entity"
-import { ChatMessage } from "@/chat-sessions/chat-message.entity"
-import { ChatSession } from "@/chat-sessions/chat-session.entity"
 import { Organization } from "@/organizations/organization.entity"
 import { UserMembership } from "@/organizations/user-membership.entity"
 import { Project } from "@/projects/project.entity"
@@ -26,7 +26,7 @@ const TEST_ENTITIES = [
   UserMembership,
   Project,
   Agent,
-  ChatSession,
+  AgentSession,
   ChatMessage,
   Resource,
 ]

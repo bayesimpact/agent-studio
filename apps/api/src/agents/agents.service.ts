@@ -2,7 +2,7 @@ import { ForbiddenException, Injectable, NotFoundException } from "@nestjs/commo
 import { InjectRepository } from "@nestjs/typeorm"
 import type { Repository } from "typeorm"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
-import { ChatSessionsService } from "@/chat-sessions/chat-sessions.service"
+import { AgentSessionsService } from "@/agent-sessions/agent-sessions.service"
 import type { MembershipRole } from "@/organizations/user-membership.entity"
 import { UserMembership } from "@/organizations/user-membership.entity"
 import { Project } from "@/projects/project.entity"
@@ -17,7 +17,7 @@ export class AgentsService {
     private readonly projectRepository: Repository<Project>,
     @InjectRepository(UserMembership)
     private readonly membershipRepository: Repository<UserMembership>,
-    private readonly chatSessionsService: ChatSessionsService,
+    private readonly chatSessionsService: AgentSessionsService,
   ) {}
 
   /**
@@ -263,7 +263,7 @@ export class AgentsService {
 
     // If configuration changed, delete all playground sessions for this agent
     if (configChanged) {
-      await this.chatSessionsService.deletePlaygroundSessionsForChatBot(agentId)
+      await this.chatSessionsService.deletePlaygroundSessionsForAgent(agentId)
     }
 
     return updatedAgent
@@ -287,7 +287,7 @@ export class AgentsService {
     }
 
     // Delete all sessions for the agent
-    await this.chatSessionsService.deleteAllSessionsForChatBot(agentId)
+    await this.chatSessionsService.deleteAllSessionsForAgent(agentId)
 
     // Delete the agent
     await this.agentRepository.remove(agent)

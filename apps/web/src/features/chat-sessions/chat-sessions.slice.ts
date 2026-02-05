@@ -2,14 +2,14 @@ import { createSlice, type PayloadAction } from "@reduxjs/toolkit"
 import { ADS, type AsyncData, defaultAsyncData } from "@/store/async-data-status"
 import type { ChatBot } from "../chat-bots/chat-bots.models"
 import { initOrganization } from "../global.thunks"
-import type { ChatSession, ChatSessionMessage } from "./chat-sessions.models"
+import type { AgentSession, AgentSessionMessage } from "./chat-sessions.models"
 import { listSessions, loadSessionMessages } from "./chat-sessions.thunks"
 
-type DataType = Record<ChatBot["id"], ChatSession[]> // keyed by chatBotId
+type DataType = Record<ChatBot["id"], AgentSession[]> // keyed by chatBotId
 type State = {
   currentChatSessionId: string | null
   data: AsyncData<DataType>
-  messages: AsyncData<ChatSessionMessage[]>
+  messages: AsyncData<AgentSessionMessage[]>
   isStreaming: boolean
 }
 
@@ -30,7 +30,7 @@ const slice = createSlice({
     reset: () => initialState,
     startStreaming: (
       state,
-      action: PayloadAction<{ userMessage: ChatSessionMessage; assistantMessageId: string }>,
+      action: PayloadAction<{ userMessage: AgentSessionMessage; assistantMessageId: string }>,
     ) => {
       if (!ADS.isFulfilled(state.messages))
         state.messages = { value: [], status: ADS.Fulfilled, error: null }
@@ -122,7 +122,7 @@ const slice = createSlice({
         state.data.error = null
       })
       .addCase(listSessions.fulfilled, (state, action) => {
-        const chatBotId = action.meta.arg.chatBotId
+        const chatBotId = action.meta.arg.agentId
         state.data = {
           value: {
             ...state.data.value,

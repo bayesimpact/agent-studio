@@ -1,7 +1,7 @@
 import { Module } from "@nestjs/common"
 import { TypeOrmModule } from "@nestjs/typeorm"
+import { AgentSessionsModule } from "@/agent-sessions/agent-sessions.module"
 import { AuthModule } from "@/auth/auth.module"
-import { ChatSessionsModule } from "@/chat-sessions/chat-sessions.module"
 import { OrganizationsModule } from "@/organizations/organizations.module"
 import { UserMembership } from "@/organizations/user-membership.entity"
 import { Project } from "@/projects/project.entity"
@@ -16,7 +16,7 @@ import { AgentsService } from "./agents.service"
     OrganizationsModule,
     UsersModule,
     AuthModule,
-    ChatSessionsModule,
+    AgentSessionsModule,
   ],
   providers: [AgentsService],
   controllers: [AgentsController],

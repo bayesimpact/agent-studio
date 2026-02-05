@@ -27,7 +27,7 @@ export function CreateChatSession({
     navigate(path)
   }
   const handleClick = () => {
-    dispatch(createChatSession({ chatBotId, onSuccess }))
+    dispatch(createChatSession({ agentId: chatBotId, onSuccess }))
   }
   const Comp = type === "button" ? Button : SidebarMenuSubButton
   return (

@@ -1,43 +1,43 @@
 import {
-  type ChatSessionDto,
-  type ChatSessionMessageDto,
+  type AgentSessionDto,
+  type AgentSessionMessageDto,
+  AgentSessionsRoutes,
   ChatSessionMessagesRoutes,
-  ChatSessionsRoutes,
 } from "@caseai-connect/api-contracts"
 import { getAxiosInstance } from "@/external/axios"
-import type { ChatSession, ChatSessionMessage } from "../chat-sessions.models"
+import type { AgentSession, AgentSessionMessage } from "../chat-sessions.models"
 import type { IChatSessionsSpi } from "../chat-sessions.spi"
 
 export default {
   getAllPlayground: async (chatBotId: string) => {
     const axios = getAxiosInstance()
-    const response = await axios.get<typeof ChatSessionsRoutes.getAllPlayground.response>(
-      ChatSessionsRoutes.getAllPlayground.getPath({ chatBotId }),
+    const response = await axios.get<typeof AgentSessionsRoutes.getAllPlayground.response>(
+      AgentSessionsRoutes.getAllPlayground.getPath({ chatBotId }),
     )
     return response.data.data.map(fromDto)
   },
   getAllApp: async (chatBotId: string) => {
     const axios = getAxiosInstance()
-    const response = await axios.get<typeof ChatSessionsRoutes.getAllApp.response>(
-      ChatSessionsRoutes.getAllApp.getPath({ chatBotId }),
+    const response = await axios.get<typeof AgentSessionsRoutes.getAllApp.response>(
+      AgentSessionsRoutes.getAllApp.getPath({ chatBotId }),
     )
     return response.data.data.map(fromDto)
   },
   createPlaygroundSession: async (chatBotId: string) => {
     const axios = getAxiosInstance()
-    const response = await axios.post<typeof ChatSessionsRoutes.createPlaygroundSession.response>(
-      ChatSessionsRoutes.createPlaygroundSession.getPath({ chatBotId }),
+    const response = await axios.post<typeof AgentSessionsRoutes.createPlaygroundSession.response>(
+      AgentSessionsRoutes.createPlaygroundSession.getPath({ chatBotId }),
     )
 
     return fromDto(response.data.data)
   },
-  createAppSession: async ({ chatBotId, chatSessionType }) => {
+  createAppSession: async ({ agentId, agentSessionType }) => {
     const axios = getAxiosInstance()
-    const response = await axios.post<typeof ChatSessionsRoutes.createAppSession.response>(
-      ChatSessionsRoutes.createAppSession.getPath({ chatBotId }),
+    const response = await axios.post<typeof AgentSessionsRoutes.createAppSession.response>(
+      AgentSessionsRoutes.createAppSession.getPath({ agentId }),
       {
-        payload: { chatSessionType },
-      } satisfies typeof ChatSessionsRoutes.createAppSession.request,
+        payload: { agentSessionType },
+      } satisfies typeof AgentSessionsRoutes.createAppSession.request,
     )
     return fromDto(response.data.data)
   },
@@ -51,15 +51,15 @@ export default {
   },
 } satisfies IChatSessionsSpi
 
-const fromDto = (dto: ChatSessionDto): ChatSession => ({
+const fromDto = (dto: AgentSessionDto): AgentSession => ({
   id: dto.id,
-  chatBotId: dto.chatBotId,
+  agentId: dto.agentId,
   type: dto.type,
   createdAt: dto.createdAt,
   updatedAt: dto.updatedAt,
 })
 
-const fromMessagesDto = (dtos: ChatSessionMessageDto[]): ChatSessionMessage[] =>
+const fromMessagesDto = (dtos: AgentSessionMessageDto[]): AgentSessionMessage[] =>
   dtos.map((message) => ({
     ...message,
   }))
