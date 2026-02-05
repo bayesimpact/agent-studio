@@ -10,6 +10,7 @@ import {
 } from "typeorm"
 import { ChatBot } from "@/chat-bots/chat-bot.entity"
 import { Organization } from "@/organizations/organization.entity"
+import { Resource } from "@/resources/resource.entity"
 
 @Entity("project")
 export class Project {
@@ -40,4 +41,10 @@ export class Project {
     (chatBot) => chatBot.project,
   )
   chatBots!: ChatBot[]
+
+  @OneToMany(
+    () => Resource,
+    (resource) => resource.project,
+  )
+  resources!: Resource[]
 }

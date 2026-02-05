@@ -17,6 +17,7 @@ import { ChatSession } from "@/chat-sessions/chat-session.entity"
 import { Organization } from "@/organizations/organization.entity"
 import { UserMembership } from "@/organizations/user-membership.entity"
 import { Project } from "@/projects/project.entity"
+import { Resource } from "@/resources/resource.entity"
 import { User } from "@/users/user.entity"
 
 const TEST_ENTITIES = [
@@ -27,6 +28,7 @@ const TEST_ENTITIES = [
   ChatBot,
   ChatSession,
   ChatMessage,
+  Resource,
 ]
 
 export interface TransactionalTestSetup {
