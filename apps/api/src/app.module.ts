@@ -10,6 +10,8 @@ import { MeModule } from "./me/me.module"
 import { OrganizationsModule } from "./organizations/organizations.module"
 import { ProjectsModule } from "./projects/projects.module"
 import { ProtectedModule } from "./protected/protected.module"
+import { ResourcesModule } from "./resources/resources.module"
+import { StorageModule } from "./resources/storage/storage.module"
 import { UsersModule } from "./users/users.module"
 
 @Module({
@@ -24,13 +26,15 @@ import { UsersModule } from "./users/users.module"
       useFactory: async (configService: ConfigService) => configService.get("typeorm")(),
     }),
     AuthModule,
-    ProtectedModule,
-    UsersModule,
-    OrganizationsModule,
-    ProjectsModule,
     ChatBotsModule,
     ChatSessionsModule,
     MeModule,
+    OrganizationsModule,
+    ProjectsModule,
+    ProtectedModule,
+    ResourcesModule,
+    StorageModule,
+    UsersModule,
   ],
 })
 export class AppModule {}

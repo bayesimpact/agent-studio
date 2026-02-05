@@ -43,10 +43,6 @@ const router = () =>
           element: getElement(RouteNames.ORGANIZATION_DASHBOARD),
           children: [
             {
-              index: true,
-              element: <div>TODO: Admin Dashboard</div>,
-            },
-            {
               path: buildAdminPath(RouteNames.PROJECT),
               element: getElement(RouteNames.PROJECT),
               children: [
@@ -74,10 +70,6 @@ const router = () =>
           path: buildAppPath(RouteNames.ORGANIZATION_DASHBOARD),
           element: getElement(RouteNames.ORGANIZATION_DASHBOARD),
           children: [
-            {
-              index: true,
-              element: <div>TODO: App Dashboard</div>,
-            },
             {
               path: buildAppPath(RouteNames.PROJECT),
               element: getElement(RouteNames.PROJECT),

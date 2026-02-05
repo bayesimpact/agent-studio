@@ -26,6 +26,7 @@ export const chatBotFactory = ChatBotFactory.define(({ sequence, params, transie
     projectId: transientParams.project.id,
     createdAt: params.createdAt || now,
     updatedAt: params.updatedAt || now,
+    deletedAt: params.deletedAt || null,
     project: transientParams.project,
     chatSessions: params.chatSessions || [],
   } satisfies ChatBot
