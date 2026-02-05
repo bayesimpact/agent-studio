@@ -12,6 +12,8 @@ import { useCallback, useEffect, useState } from "react"
 import { useDropzone } from "react-dropzone"
 import { useTranslation } from "react-i18next"
 
+// TODO: i18n
+
 export function Uploader<T>(
   props: (
     | {

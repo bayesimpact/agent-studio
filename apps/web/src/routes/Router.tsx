@@ -6,6 +6,7 @@ import { LoginRoute } from "@/routes/LoginRoute"
 import { LogoutRoute } from "@/routes/LogoutRoute"
 import { NotFoundRoute } from "@/routes/NotFoundRoute"
 import { useAppDispatch } from "@/store/hooks"
+import { ResourcesRoute } from "./admin/ResourcesRoute"
 import { getElement } from "./Elements"
 import { buildAdminPath, buildAppPath, RouteNames } from "./helpers"
 import { OnboardingRoute } from "./OnboardingRoute"
@@ -43,9 +44,17 @@ const router = () =>
           element: getElement(RouteNames.ORGANIZATION_DASHBOARD),
           children: [
             {
+              index: true,
+              element: <div>TODO: admin Dashboard</div>,
+            },
+            {
               path: buildAdminPath(RouteNames.PROJECT),
               element: getElement(RouteNames.PROJECT),
               children: [
+                {
+                  path: buildAdminPath(RouteNames.RESOURCES),
+                  element: <ResourcesRoute />,
+                },
                 {
                   path: buildAdminPath(RouteNames.CHAT_BOT),
                   element: getElement(RouteNames.CHAT_BOT),
@@ -70,6 +79,10 @@ const router = () =>
           path: buildAppPath(RouteNames.ORGANIZATION_DASHBOARD),
           element: getElement(RouteNames.ORGANIZATION_DASHBOARD),
           children: [
+            {
+              index: true,
+              element: <div>TODO: App Dashboard</div>,
+            },
             {
               path: buildAppPath(RouteNames.PROJECT),
               element: getElement(RouteNames.PROJECT),
