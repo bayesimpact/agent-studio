@@ -1,8 +1,6 @@
 import { Column, Entity, JoinColumn, ManyToOne } from "typeorm"
 import { Base4AllEntity } from "@/common/entities/base4all.entity"
 import { Project } from "@/projects/project.entity"
-// biome-ignore lint/style/useImportType: no problem
-import { MimeTypes } from "./mime-types"
 
 @Entity("resource")
 export class Resource extends Base4AllEntity {
@@ -29,7 +27,7 @@ export class Resource extends Base4AllEntity {
   language!: string
 
   @Column({ name: "mime_type", nullable: false })
-  mimeType!: MimeTypes
+  mimeType!: string
 
   @Column({ name: "size", nullable: true })
   size!: number // Size in bytes

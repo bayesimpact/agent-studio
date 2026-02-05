@@ -1,7 +1,7 @@
 import { randomUUID } from "node:crypto"
+import { MimeTypes } from "@caseai-connect/api-contracts"
 import { Factory } from "fishery"
 import type { Project } from "@/projects/project.entity"
-import { MimeTypes } from "./mime-types"
 import type { Resource } from "./resource.entity"
 
 type ResourceTransientParams = {

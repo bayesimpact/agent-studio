@@ -24,5 +24,5 @@ export type * from "./projects/projects.dto"
 export { ProjectsRoutes } from "./projects/projects.routes"
 export { ProtectedRoutes } from "./protected/protected.routes"
 // Resources DTOs
-export type * from "./resources/resources.dto"
+export * from "./resources/resources.dto"
 export { ResourcesRoutes } from "./resources/resources.routes"

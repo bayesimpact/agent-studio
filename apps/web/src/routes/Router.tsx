@@ -43,10 +43,6 @@ const router = () =>
           element: getElement(RouteNames.ORGANIZATION_DASHBOARD),
           children: [
             {
-              index: true,
-              element: <div>TODO: Admin Dashboard</div>,
-            },
-            {
               path: buildAdminPath(RouteNames.PROJECT),
               element: getElement(RouteNames.PROJECT),
               children: [
