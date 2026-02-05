@@ -49,7 +49,7 @@ export class ResourcesController {
         validators: [
           new MaxFileSizeValidator({ maxSize: 10 * mega * mega }), // 10 MB
           new FileTypeValidator({
-            fileType: ".(png|jpeg|jpg|pdf|docx|doc|xlsx|xls|pptx|ppt|txt|csv)",
+            fileType: ".pdf", //".(png|jpeg|jpg|pdf|docx|doc|xlsx|xls|pptx|ppt|txt|csv)",
           }),
         ],
         errorHttpStatusCode: HttpStatus.UNPROCESSABLE_ENTITY,
