@@ -1,22 +1,29 @@
 import { NotFoundException } from "@nestjs/common/exceptions"
+
+import type { ConnectRequiredFields } from "@/common/entities/connect-required-fields"
 import { agentSessionControllerTestSetup } from "./test-setup"
 
 const getTestContext = agentSessionControllerTestSetup()
 
 describe("prepareForStreaming", () => {
   it("should persist user message and empty assistant message", async () => {
-    const { service, testAgent, testOrganization, testUser } = getTestContext()
+    const { service, testAgent, testOrganization, testUser, testProject } = getTestContext()
+    const connectRequiredFields: ConnectRequiredFields = {
+      organizationId: testOrganization.id,
+      projectId: testProject.id,
+    }
 
-    const session = await service.createPlaygroundSession(
-      testAgent.id,
-      testUser.id,
-      testOrganization.id,
-    )
+    const session = await service.createPlaygroundSession({
+      connectRequiredFields,
+      agentId: testAgent.id,
+      userId: testUser.id,
+    })
 
-    const { session: updatedSession, assistantMessageId } = await service.prepareForStreaming(
-      session.id,
-      "Hello, how are you?",
-    )
+    const { session: updatedSession, assistantMessageId } = await service.prepareForStreaming({
+      connectRequiredFields,
+      sessionId: session.id,
+      userContent: "Hello, how are you?",
+    })
 
     expect(updatedSession.messages).toHaveLength(2)
     const userMessage = updatedSession.messages[0]!
@@ -33,12 +40,20 @@ describe("prepareForStreaming", () => {
   })
 
   it("should throw NotFoundException for non-existent session", async () => {
-    const { service } = getTestContext()
+    const { service, testOrganization, testProject } = getTestContext()
+    const connectRequiredFields: ConnectRequiredFields = {
+      organizationId: testOrganization.id,
+      projectId: testProject.id,
+    }
 
     // Use a valid UUID format for non-existent session
     const nonExistentId = "00000000-0000-0000-0000-000000000000"
-    await expect(service.prepareForStreaming(nonExistentId, "Hello")).rejects.toThrow(
-      NotFoundException,
-    )
+    await expect(
+      service.prepareForStreaming({
+        connectRequiredFields,
+        sessionId: nonExistentId,
+        userContent: "Hello",
+      }),
+    ).rejects.toThrow(NotFoundException)
   })
 })

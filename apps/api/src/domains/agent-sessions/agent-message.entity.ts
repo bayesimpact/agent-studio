@@ -1,24 +1,12 @@
-import {
-  Column,
-  CreateDateColumn,
-  Entity,
-  Index,
-  JoinColumn,
-  ManyToOne,
-  OneToMany,
-  PrimaryGeneratedColumn,
-} from "typeorm"
+import { Column, JoinColumn, ManyToOne, OneToMany } from "typeorm"
+import { ConnectEntity, ConnectEntityBase } from "@/common/entities/connect-entity"
 import { AgentMessageFeedback } from "@/domains/agent-message-feedback/agent-message-feedback.entity"
 import { AgentSession } from "./agent-session.entity"
 
 export type MessageStatus = "streaming" | "completed" | "aborted" | "error"
 
-@Entity("agent_message")
-@Index(["sessionId", "createdAt"])
-export class AgentMessage {
-  @PrimaryGeneratedColumn("uuid")
-  id!: string
-
+@ConnectEntity("agent_message", "sessionId", "createdAt")
+export class AgentMessage extends ConnectEntityBase {
   @Column({ type: "uuid", name: "session_id" })
   sessionId!: string
 
@@ -43,9 +31,6 @@ export class AgentMessage {
     name: string
     arguments: Record<string, unknown>
   }> | null
-
-  @CreateDateColumn({ name: "created_at" })
-  createdAt!: Date
 
   @ManyToOne(
     () => AgentSession,

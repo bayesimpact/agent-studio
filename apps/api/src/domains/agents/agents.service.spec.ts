@@ -55,7 +55,7 @@ describe("AgentsService", () => {
 
   describe("createAgent", () => {
     it("should create an Agent", async () => {
-      const { project } = await createOrganizationWithProject({
+      const { organization, project } = await createOrganizationWithProject({
         organizationRepository,
         userRepository,
         membershipRepository,
@@ -63,6 +63,7 @@ describe("AgentsService", () => {
       })
 
       const result = await service.createAgent({
+        organizationId: organization.id,
         projectId: project.id,
         name: "My Template",
         defaultPrompt: "This is a default prompt",
@@ -84,7 +85,7 @@ describe("AgentsService", () => {
       expect(savedTemplate?.name).toBe("My Template")
     })
     it("should throw UnprocessableEntityException when name is less than 3 characters", async () => {
-      const { project } = await createOrganizationWithProject({
+      const { organization, project } = await createOrganizationWithProject({
         organizationRepository,
         userRepository,
         membershipRepository,
@@ -93,6 +94,7 @@ describe("AgentsService", () => {
 
       const createWrongfulAgent = async () =>
         service.createAgent({
+          organizationId: organization.id,
           projectId: project.id,
           name: "AB",
           defaultPrompt: "Prompt",
@@ -111,25 +113,28 @@ describe("AgentsService", () => {
 
   describe("listAgents", () => {
     it("should return Agents for a project", async () => {
-      const { project } = await createOrganizationWithProject({
+      const { organization, project } = await createOrganizationWithProject({
         organizationRepository,
         userRepository,
         membershipRepository,
         projectRepository,
       })
 
-      const template1 = agentFactory.transient({ project }).build({
+      const template1 = agentFactory.transient({ organization, project }).build({
         name: "Template 1",
         defaultPrompt: "Prompt 1",
       })
-      const template2 = agentFactory.transient({ project }).build({
+      const template2 = agentFactory.transient({ organization, project }).build({
         name: "Template 2",
         defaultPrompt: "Prompt 2",
       })
       await agentRepository.save([template1, template2])
 
       // Act
-      const result = await service.listAgents({ projectId: project.id })
+      const result = await service.listAgents({
+        organizationId: organization.id,
+        projectId: project.id,
+      })
 
       // Assert
       expect(result).toHaveLength(2)
@@ -138,7 +143,7 @@ describe("AgentsService", () => {
     })
 
     it("should return empty array when project has no Agents", async () => {
-      const { project } = await createOrganizationWithProject({
+      const { organization, project } = await createOrganizationWithProject({
         organizationRepository,
         userRepository,
         membershipRepository,
@@ -146,33 +151,39 @@ describe("AgentsService", () => {
       })
 
       // Act
-      const result = await service.listAgents({ projectId: project.id })
+      const result = await service.listAgents({
+        organizationId: organization.id,
+        projectId: project.id,
+      })
 
       // Assert
       expect(result).toEqual([])
     })
 
     it("should return Agents ordered by createdAt DESC", async () => {
-      const { project } = await createOrganizationWithProject({
+      const { organization, project } = await createOrganizationWithProject({
         organizationRepository,
         userRepository,
         membershipRepository,
         projectRepository,
       })
 
-      const template1 = agentFactory.transient({ project }).build({
+      const template1 = agentFactory.transient({ organization, project }).build({
         name: "First Template",
         defaultPrompt: "Prompt 1",
         createdAt: new Date("2024-01-02"),
       })
-      const template2 = agentFactory.transient({ project }).build({
+      const template2 = agentFactory.transient({ organization, project }).build({
         name: "Second Template",
         defaultPrompt: "Prompt 2",
       })
       await agentRepository.save([template1, template2])
 
       // Act
-      const result = await service.listAgents({ projectId: project.id })
+      const result = await service.listAgents({
+        organizationId: organization.id,
+        projectId: project.id,
+      })
 
       // Assert
       expect(result).toHaveLength(2)

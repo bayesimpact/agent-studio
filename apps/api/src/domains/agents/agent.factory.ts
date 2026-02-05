@@ -1,16 +1,17 @@
 import { randomUUID } from "node:crypto"
 import { AgentLocale, AgentModel } from "@caseai-connect/api-contracts"
 import { Factory } from "fishery"
-import type { Project } from "@/domains/projects/project.entity"
+import type { ConnectRequiredTransientParams } from "@/common/entities/connect-required-fields"
 import type { Agent } from "./agent.entity"
 
-type AgentTransientParams = {
-  project: Project
-}
+type AgentTransientParams = ConnectRequiredTransientParams
 
 class AgentFactory extends Factory<Agent, AgentTransientParams> {}
 
 export const agentFactory = AgentFactory.define(({ sequence, params, transientParams }) => {
+  if (!transientParams.organization) {
+    throw new Error("organization transient is required")
+  }
   if (!transientParams.project) {
     throw new Error("project transient is required")
   }
@@ -23,6 +24,7 @@ export const agentFactory = AgentFactory.define(({ sequence, params, transientPa
     model: params.model || AgentModel.Gemini25Flash,
     temperature: params.temperature ?? 0.7,
     locale: params.locale || AgentLocale.EN,
+    organizationId: transientParams.organization.id,
     projectId: transientParams.project.id,
     createdAt: params.createdAt || now,
     updatedAt: params.updatedAt || now,

@@ -1,3 +1,4 @@
+import { randomUUID } from "node:crypto"
 import type { DynamicModule, Provider, Type } from "@nestjs/common"
 import { ConfigModule } from "@nestjs/config"
 import { Test, type TestingModule } from "@nestjs/testing"
@@ -18,6 +19,12 @@ import { Organization } from "@/domains/organizations/organization.entity"
 import { UserMembership } from "@/domains/organizations/user-membership.entity"
 import { Project } from "@/domains/projects/project.entity"
 import { User } from "@/domains/users/user.entity"
+
+export const RandomUuid = {
+  Organization: randomUUID(),
+  Project: randomUUID(),
+  Document: randomUUID(),
+} as const
 
 const TEST_ENTITIES = [
   User,

@@ -1,14 +1,11 @@
 import type { AgentLocale, AgentModel, AgentTemperature } from "@caseai-connect/api-contracts"
-import { Column, Entity, JoinColumn, ManyToOne, OneToMany } from "typeorm"
-import { Base4AllEntity } from "@/common/entities/base4all.entity"
+import { Column, JoinColumn, ManyToOne, OneToMany } from "typeorm"
+import { ConnectEntity, ConnectEntityBase } from "@/common/entities/connect-entity"
 import { AgentSession } from "@/domains/agent-sessions/agent-session.entity"
 import { Project } from "@/domains/projects/project.entity"
 
-@Entity("agent")
-export class Agent extends Base4AllEntity {
-  @Column({ type: "uuid", name: "project_id" })
-  projectId!: string
-
+@ConnectEntity("agent")
+export class Agent extends ConnectEntityBase {
   @ManyToOne(
     () => Project,
     (project) => project.agents,

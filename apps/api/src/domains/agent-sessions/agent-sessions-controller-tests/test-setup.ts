@@ -9,6 +9,7 @@ import { Organization } from "@/domains/organizations/organization.entity"
 import { organizationFactory } from "@/domains/organizations/organization.factory"
 import { UserMembership } from "@/domains/organizations/user-membership.entity"
 import { Project } from "@/domains/projects/project.entity"
+import { projectFactory } from "@/domains/projects/project.factory"
 import { User } from "@/domains/users/user.entity"
 import { AgentSession } from "../agent-session.entity"
 import { AgentSessionsController } from "../agent-sessions.controller"
@@ -24,6 +25,7 @@ export function agentSessionsControllerTestSetup() {
   let agentRepository: Repository<Agent>
   let agentSessionRepository: Repository<AgentSession>
   let organization: Organization
+  let project: Project
 
   beforeAll(async () => {
     setup = await setupTransactionalTestDatabase({
@@ -48,6 +50,8 @@ export function agentSessionsControllerTestSetup() {
 
     const org = organizationFactory.build({ name: "Org1" })
     organization = await organizationRepository.save(org)
+    const proj = projectFactory.transient({ organization }).build({ name: "Project1" })
+    project = await projectRepository.save(proj)
   })
 
   afterEach(async () => {
@@ -66,6 +70,7 @@ export function agentSessionsControllerTestSetup() {
       controller,
       membershipRepository,
       organization,
+      project,
       organizationRepository,
       projectRepository,
       userRepository,

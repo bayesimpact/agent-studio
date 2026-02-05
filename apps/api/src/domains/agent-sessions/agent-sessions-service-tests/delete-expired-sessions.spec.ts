@@ -1,3 +1,4 @@
+import type { ConnectRequiredFields } from "@/common/entities/connect-required-fields"
 import { agentFactory } from "@/domains/agents/agent.factory"
 import { agentSessionFactory } from "../agent-session.factory"
 import { agentSessionControllerTestSetup } from "./test-setup"
@@ -15,25 +16,36 @@ describe("deleteExpiredPlaygroundSessions", () => {
       agentRepository,
       agentSessionRepository,
     } = getTestContext()
+    const connectRequiredFields: ConnectRequiredFields = {
+      organizationId: testOrganization.id,
+      projectId: testProject.id,
+    }
 
     // Create a non-expired session first
-    const validSession = await service.createPlaygroundSession(
-      testAgent.id,
-      testUser.id,
-      testOrganization.id,
-    )
+    const validSession = await service.createPlaygroundSession({
+      connectRequiredFields,
+      agentId: testAgent.id,
+      userId: testUser.id,
+    })
 
     // Create another agent to avoid session reuse
-    const anotherAgent = agentFactory.transient({ project: testProject }).build({
-      name: "Another Test Agent",
-      defaultPrompt: "You are a helpful assistant",
-    })
+    const anotherAgent = agentFactory
+      .transient({ organization: testOrganization, project: testProject })
+      .build({
+        name: "Another Test Agent",
+        defaultPrompt: "You are a helpful assistant",
+      })
     await agentRepository.save(anotherAgent)
 
     // Create an expired session with a different agent to avoid reuse
     // Set to 1 hour ago to ensure it's well past the 5-minute safety margin
     const expiredSession = agentSessionFactory
-      .transient({ agent: anotherAgent, user: testUser, organization: testOrganization })
+      .transient({
+        organization: testOrganization,
+        project: testProject,
+        agent: anotherAgent,
+        user: testUser,
+      })
       .playground()
       .expiredMinutesAgo(60)
       .build()
@@ -62,12 +74,17 @@ describe("deleteExpiredPlaygroundSessions", () => {
   })
 
   it("should not delete sessions within safety margin", async () => {
-    const { service, testAgent, testOrganization, testUser, agentSessionRepository } =
+    const { service, testAgent, testOrganization, testUser, agentSessionRepository, testProject } =
       getTestContext()
 
     // Create a session that expired 3 minutes ago (within 5-minute safety margin)
     const recentlyExpiredSession = agentSessionFactory
-      .transient({ agent: testAgent, user: testUser, organization: testOrganization })
+      .transient({
+        organization: testOrganization,
+        project: testProject,
+        agent: testAgent,
+        user: testUser,
+      })
       .playground()
       .expiredMinutesAgo(3)
       .build()

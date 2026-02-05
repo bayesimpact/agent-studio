@@ -16,14 +16,14 @@ describe("deleteDocument", () => {
       userRepository,
     } = getTestContext()
 
-    const { project } = await createOrganizationWithProject({
+    const { organization, project } = await createOrganizationWithProject({
       organizationRepository,
       userRepository,
       membershipRepository,
       projectRepository,
     })
 
-    const document = documentFactory.transient({ project }).build({
+    const document = documentFactory.transient({ organization, project }).build({
       title: "Document to delete",
       fileName: "file.pdf",
     })

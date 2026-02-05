@@ -62,7 +62,12 @@ describe("AgentMessagesController", () => {
 
   describe("listMessages", () => {
     it("should return messages for a session", async () => {
-      const { user, agentSession: session } = await createOrganizationWithAgentSession({
+      const {
+        user,
+        agentSession: session,
+        organization,
+        project,
+      } = await createOrganizationWithAgentSession({
         organizationRepository,
         userRepository,
         membershipRepository,
@@ -72,7 +77,7 @@ describe("AgentMessagesController", () => {
       })
 
       // add 2 messages (from the assistant and the user) to the session
-      await createChitChatConversation(session, { agentMessageRepository })
+      await createChitChatConversation(organization, project, session, { agentMessageRepository })
 
       const mockRequest = { user: { id: user.id } } as EndpointRequest
 

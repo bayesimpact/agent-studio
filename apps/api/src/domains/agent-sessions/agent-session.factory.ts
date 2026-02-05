@@ -1,15 +1,14 @@
 import { randomUUID } from "node:crypto"
 import { Factory } from "fishery"
 import { v4 } from "uuid"
+import type { ConnectRequiredTransientParams } from "@/common/entities/connect-required-fields"
 import type { Agent } from "@/domains/agents/agent.entity"
-import type { Organization } from "@/domains/organizations/organization.entity"
 import type { User } from "@/domains/users/user.entity"
 import type { AgentSession } from "./agent-session.entity"
 
-type AgentSessionTransientParams = {
+type AgentSessionTransientParams = ConnectRequiredTransientParams & {
   agent: Agent
   user: User
-  organization: Organization
 }
 
 class AgentSessionFactory extends Factory<AgentSession, AgentSessionTransientParams> {
@@ -31,14 +30,18 @@ class AgentSessionFactory extends Factory<AgentSession, AgentSessionTransientPar
 }
 
 export const agentSessionFactory = AgentSessionFactory.define(({ params, transientParams }) => {
+  if (!transientParams.organization) {
+    throw new Error("organization transient is required")
+  }
+  if (!transientParams.project) {
+    throw new Error("project transient is required")
+  }
+
   if (!transientParams.agent) {
     throw new Error("agent transient is required")
   }
   if (!transientParams.user) {
     throw new Error("user transient is required")
-  }
-  if (!transientParams.organization) {
-    throw new Error("organization transient is required")
   }
 
   const now = new Date()
@@ -52,10 +55,12 @@ export const agentSessionFactory = AgentSessionFactory.define(({ params, transie
     agentId: transientParams.agent.id,
     userId: transientParams.user.id,
     organizationId: transientParams.organization.id,
+    projectId: transientParams.project.id,
     type: params.type || "playground",
     expiresAt: params.expiresAt ?? defaultExpiresAt,
     createdAt: params.createdAt || now,
     updatedAt: params.updatedAt || now,
+    deletedAt: null,
     agent: transientParams.agent,
     user: transientParams.user,
     organization: transientParams.organization,

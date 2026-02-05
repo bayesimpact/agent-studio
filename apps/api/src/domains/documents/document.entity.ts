@@ -1,12 +1,9 @@
-import { Column, Entity, JoinColumn, ManyToOne } from "typeorm"
-import { Base4AllEntity } from "@/common/entities/base4all.entity"
+import { Column, JoinColumn, ManyToOne } from "typeorm"
+import { ConnectEntity, ConnectEntityBase } from "@/common/entities/connect-entity"
 import { Project } from "@/domains/projects/project.entity"
 
-@Entity("document")
-export class Document extends Base4AllEntity {
-  @Column({ type: "uuid", name: "project_id" })
-  projectId!: string
-
+@ConnectEntity("document")
+export class Document extends ConnectEntityBase {
   @ManyToOne(
     () => Project,
     (project) => project.documents,

@@ -1,4 +1,6 @@
 import { ForbiddenException, NotFoundException } from "@nestjs/common/exceptions"
+
+import type { ConnectRequiredFields } from "@/common/entities/connect-required-fields"
 import { userMembershipFactory } from "@/domains/organizations/user-membership.factory"
 import { createChitChatConversation } from "../agent-messages.factory"
 import { agentSessionControllerTestSetup } from "./test-setup"
@@ -14,22 +16,29 @@ describe("listMessagesForSession", () => {
       testOrganization,
       membershipRepository,
       agentMessageRepository,
+      testProject,
     } = getTestContext()
+    const connectRequiredFields: ConnectRequiredFields = {
+      organizationId: testOrganization.id,
+      projectId: testProject.id,
+    }
 
     await membershipRepository.save(
       userMembershipFactory
-        .transient({ user: testUser, organization: testOrganization })
+        .transient({ organization: testOrganization, user: testUser })
         .owner()
         .build(),
     )
 
-    const session = await service.createPlaygroundSession(
-      testAgent.id,
-      testUser.id,
-      testOrganization.id,
-    )
+    const session = await service.createPlaygroundSession({
+      connectRequiredFields,
+      agentId: testAgent.id,
+      userId: testUser.id,
+    })
 
-    await createChitChatConversation(session, { agentMessageRepository })
+    await createChitChatConversation(testOrganization, testProject, session, {
+      agentMessageRepository,
+    })
 
     const messages = await service.listMessagesForSession(session.id, testUser.id)
 
@@ -49,13 +58,17 @@ describe("listMessagesForSession", () => {
   })
 
   it("should throw ForbiddenException when user is not a member of the organization", async () => {
-    const { service, testAgent, testUser, testOrganization } = getTestContext()
+    const { service, testAgent, testUser, testOrganization, testProject } = getTestContext()
+    const connectRequiredFields: ConnectRequiredFields = {
+      organizationId: testOrganization.id,
+      projectId: testProject.id,
+    }
 
-    const session = await service.createPlaygroundSession(
-      testAgent.id,
-      testUser.id,
-      testOrganization.id,
-    )
+    const session = await service.createPlaygroundSession({
+      connectRequiredFields,
+      agentId: testAgent.id,
+      userId: testUser.id,
+    })
 
     await expect(service.listMessagesForSession(session.id, testUser.id)).rejects.toThrow(
       ForbiddenException,

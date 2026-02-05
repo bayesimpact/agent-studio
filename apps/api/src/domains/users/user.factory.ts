@@ -13,6 +13,7 @@ export const userFactory = Factory.define<User>(({ sequence, params }) => {
     pictureUrl: params.pictureUrl ?? null,
     createdAt: params.createdAt || now,
     updatedAt: params.updatedAt || now,
+    deletedAt: null,
     memberships: params.memberships || [],
     agentSessions: params.agentSessions || [],
     agentMessageFeedbacks: params.agentMessageFeedbacks || [],

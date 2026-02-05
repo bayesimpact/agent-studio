@@ -15,22 +15,22 @@ describe("listDocuments", () => {
       userRepository,
     } = getTestContext()
 
-    const { project } = await createOrganizationWithProject({
+    const { organization, project } = await createOrganizationWithProject({
       organizationRepository,
       userRepository,
       membershipRepository,
       projectRepository,
     })
 
-    const document1 = documentFactory.transient({ project }).build({
+    const document1 = documentFactory.transient({ organization, project }).build({
       title: "Document 1",
       fileName: "file1.pdf",
     })
-    const document2 = documentFactory.transient({ project }).build({
+    const document2 = documentFactory.transient({ organization, project }).build({
       title: "Document 2",
       fileName: "file2.pdf",
     })
-    const deletedDocument = documentFactory.transient({ project }).build({
+    const deletedDocument = documentFactory.transient({ organization, project }).build({
       title: "Deleted Document",
       fileName: "file2.pdf",
       deletedAt: new Date(),

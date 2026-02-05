@@ -80,11 +80,13 @@ export function agentSessionControllerTestSetup() {
     testProject = projectRepository.create(project)
     testProject = await projectRepository.save(testProject)
 
-    const agent = agentFactory.transient({ project: testProject }).build({
-      name: `Test Agent ${uniqueId}`,
-      defaultPrompt: "You are a helpful assistant",
-      temperature: 0,
-    })
+    const agent = agentFactory
+      .transient({ organization: testOrganization, project: testProject })
+      .build({
+        name: `Test Agent ${uniqueId}`,
+        defaultPrompt: "You are a helpful assistant",
+        temperature: 0,
+      })
     testAgent = agentRepository.create(agent)
     testAgent = await agentRepository.save(testAgent)
   })

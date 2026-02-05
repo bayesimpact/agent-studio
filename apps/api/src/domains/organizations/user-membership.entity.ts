@@ -1,13 +1,5 @@
-import {
-  Column,
-  CreateDateColumn,
-  Entity,
-  JoinColumn,
-  ManyToOne,
-  PrimaryGeneratedColumn,
-  Unique,
-  UpdateDateColumn,
-} from "typeorm"
+import { Column, Entity, JoinColumn, ManyToOne, Unique } from "typeorm"
+import { Base4AllEntity } from "@/common/entities/base4all.entity"
 import { User } from "@/domains/users/user.entity"
 import { Organization } from "./organization.entity"
 
@@ -15,10 +7,7 @@ export type MembershipRole = "owner" | "admin" | "member"
 
 @Entity("user_membership")
 @Unique(["userId", "organizationId"])
-export class UserMembership {
-  @PrimaryGeneratedColumn("uuid")
-  id!: string
-
+export class UserMembership extends Base4AllEntity {
   @Column({ type: "uuid", name: "user_id" })
   userId!: string
 
@@ -27,12 +16,6 @@ export class UserMembership {
 
   @Column({ type: "varchar" })
   role!: MembershipRole
-
-  @CreateDateColumn({ name: "created_at" })
-  createdAt!: Date
-
-  @UpdateDateColumn({ name: "updated_at" })
-  updatedAt!: Date
 
   @ManyToOne(
     () => User,

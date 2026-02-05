@@ -1,20 +1,11 @@
-import {
-  Column,
-  CreateDateColumn,
-  Entity,
-  OneToMany,
-  PrimaryGeneratedColumn,
-  UpdateDateColumn,
-} from "typeorm"
 import { AgentMessageFeedback } from "@/domains/agent-message-feedback/agent-message-feedback.entity"
+import { Column, Entity, OneToMany } from "typeorm"
+import { Base4AllEntity } from "@/common/entities/base4all.entity"
 import { AgentSession } from "@/domains/agent-sessions/agent-session.entity"
 import { UserMembership } from "@/domains/organizations/user-membership.entity"
 
 @Entity("user")
-export class User {
-  @PrimaryGeneratedColumn("uuid")
-  id!: string
-
+export class User extends Base4AllEntity {
   @Column({ type: "varchar", unique: true, name: "auth0_id" })
   auth0Id!: string
 
@@ -26,12 +17,6 @@ export class User {
 
   @Column({ type: "varchar", nullable: true, name: "picture_url" })
   pictureUrl!: string | null
-
-  @CreateDateColumn({ name: "created_at" })
-  createdAt!: Date
-
-  @UpdateDateColumn({ name: "updated_at" })
-  updatedAt!: Date
 
   @OneToMany(
     () => UserMembership,

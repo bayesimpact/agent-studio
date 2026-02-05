@@ -1,3 +1,4 @@
+import type { ConnectRequiredFields } from "@/common/entities/connect-required-fields"
 import { agentMessageFactory } from "../agent-messages.factory"
 import { agentSessionControllerTestSetup } from "./test-setup"
 
@@ -5,12 +6,16 @@ const getTestContext = agentSessionControllerTestSetup()
 
 describe("findById", () => {
   it("should find an existing session", async () => {
-    const { service, testAgent, testOrganization, testUser } = getTestContext()
-    const createdSession = await service.createPlaygroundSession(
-      testAgent.id,
-      testUser.id,
-      testOrganization.id,
-    )
+    const { service, testAgent, testOrganization, testUser, testProject } = getTestContext()
+    const connectRequiredFields: ConnectRequiredFields = {
+      organizationId: testOrganization.id,
+      projectId: testProject.id,
+    }
+    const createdSession = await service.createPlaygroundSession({
+      connectRequiredFields,
+      agentId: testAgent.id,
+      userId: testUser.id,
+    })
 
     const foundSession = await service.findById(createdSession.id)
 
@@ -30,15 +35,19 @@ describe("findById", () => {
   })
 
   it("should recover aborted streams on load", async () => {
-    const { service, testAgent, testOrganization, testUser, agentMessageRepository } =
+    const { service, testAgent, testOrganization, testUser, agentMessageRepository, testProject } =
       getTestContext()
+    const connectRequiredFields: ConnectRequiredFields = {
+      organizationId: testOrganization.id,
+      projectId: testProject.id,
+    }
 
     // Create a session with an old streaming message
-    const session = await service.createPlaygroundSession(
-      testAgent.id,
-      testUser.id,
-      testOrganization.id,
-    )
+    const session = await service.createPlaygroundSession({
+      connectRequiredFields,
+      agentId: testAgent.id,
+      userId: testUser.id,
+    })
 
     // Manually add an old streaming message (simulating a crash)
     const oldDate = new Date()
@@ -48,7 +57,7 @@ describe("findById", () => {
       .streaming()
       .sentMinutesAgo(10)
       .assistant()
-      .transient({ session: session })
+      .transient({ organization: testOrganization, project: testProject, session: session })
       .build()
     await agentMessageRepository.save(oldMessage)
 

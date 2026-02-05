@@ -3,6 +3,8 @@ import { ForbiddenException, Injectable, NotFoundException } from "@nestjs/commo
 import { InjectRepository } from "@nestjs/typeorm"
 import type { Repository } from "typeorm"
 import { v4 } from "uuid"
+
+import type { ConnectRequiredFields } from "@/common/entities/connect-required-fields"
 import { Agent } from "@/domains/agents/agent.entity"
 import { UserMembership } from "@/domains/organizations/user-membership.entity"
 import { AgentMessage } from "./agent-message.entity"
@@ -113,15 +115,19 @@ export class AgentSessionsService {
     })
   }
 
-  async createPlaygroundSession(
-    agentId: string,
-    userId: string,
-    organizationId: string,
-  ): Promise<AgentSession> {
+  async createPlaygroundSession({
+    connectRequiredFields,
+    agentId,
+    userId,
+  }: {
+    connectRequiredFields: ConnectRequiredFields
+    agentId: string
+    userId: string
+  }): Promise<AgentSession> {
     const session = this.agentSessionRepository.create({
+      ...connectRequiredFields,
       agentId,
       userId,
-      organizationId,
       type: "playground",
       expiresAt: null,
       traceId: v4(),
@@ -138,7 +144,7 @@ export class AgentSessionsService {
   async verifyUserCanCreatePlaygroundSession(
     userId: string,
     agentId: string,
-  ): Promise<{ organizationId: string }> {
+  ): Promise<ConnectRequiredFields> {
     const agent = await this.agentRepository.findOne({
       where: { id: agentId },
       relations: ["project"],
@@ -161,13 +167,13 @@ export class AgentSessionsService {
       )
     }
 
-    return { organizationId: agent.project.organizationId }
+    return { organizationId: agent.organizationId, projectId: agent.projectId }
   }
 
   async verifyUserCanCreateAppPrivateSession(
     userId: string,
     agentId: string,
-  ): Promise<{ organizationId: string }> {
+  ): Promise<ConnectRequiredFields> {
     const agent = await this.agentRepository.findOne({
       where: { id: agentId },
       relations: ["project"],
@@ -190,22 +196,22 @@ export class AgentSessionsService {
       )
     }
 
-    return { organizationId: agent.project.organizationId }
+    return { organizationId: agent.organizationId, projectId: agent.projectId }
   }
 
   async createAppPrivateSession({
+    connectRequiredFields,
     agentId,
     userId,
-    organizationId,
   }: {
+    connectRequiredFields: ConnectRequiredFields
     agentId: string
     userId: string
-    organizationId: string
   }): Promise<AgentSession> {
     const session = this.agentSessionRepository.create({
+      ...connectRequiredFields,
       agentId,
       userId,
-      organizationId,
       type: "app-private",
       expiresAt: null,
       traceId: v4(),
@@ -217,15 +223,19 @@ export class AgentSessionsService {
    * Creates a new production session
    * No TTL (expiresAt is null)
    */
-  async createProductionSession(
-    agentId: string,
-    userId: string,
-    organizationId: string,
-  ): Promise<AgentSession> {
+  async createProductionSession({
+    connectRequiredFields,
+    agentId,
+    userId,
+  }: {
+    connectRequiredFields: ConnectRequiredFields
+    agentId: string
+    userId: string
+  }): Promise<AgentSession> {
     const session = this.agentSessionRepository.create({
+      ...connectRequiredFields,
       agentId,
       userId,
-      organizationId,
       type: "production",
       expiresAt: null,
       traceId: v4(),
@@ -261,10 +271,15 @@ export class AgentSessionsService {
    * Prepares session for streaming
    * Persists user message + empty assistant message with status "streaming"
    */
-  async prepareForStreaming(
-    sessionId: string,
-    userContent: string,
-  ): Promise<{ session: AgentSession; assistantMessageId: string }> {
+  async prepareForStreaming({
+    connectRequiredFields,
+    sessionId,
+    userContent,
+  }: {
+    connectRequiredFields: ConnectRequiredFields
+    sessionId: string
+    userContent: string
+  }): Promise<{ session: AgentSession; assistantMessageId: string }> {
     const session = await this.findById(sessionId)
 
     if (!session) {
@@ -273,6 +288,7 @@ export class AgentSessionsService {
 
     // Create user message
     const userMessage = this.agentMessageRepository.create({
+      ...connectRequiredFields,
       sessionId,
       role: "user",
       content: userContent,
@@ -286,6 +302,7 @@ export class AgentSessionsService {
     // Create empty assistant message with streaming status
     const assistantMessageId = v4()
     const assistantMessage = this.agentMessageRepository.create({
+      ...connectRequiredFields,
       id: assistantMessageId,
       sessionId,
       role: "assistant",

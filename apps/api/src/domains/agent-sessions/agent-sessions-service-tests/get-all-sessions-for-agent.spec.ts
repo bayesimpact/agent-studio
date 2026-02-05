@@ -9,12 +9,23 @@ const getTestContext = agentSessionControllerTestSetup()
 describe("getAllSessionsForAgent", () => {
   describe("type: app-private", () => {
     it("should return all sessions for a agent and user ordered by createdAt DESC", async () => {
-      const { service, testAgent, testOrganization, testUser, agentSessionRepository } =
-        getTestContext()
+      const {
+        service,
+        testAgent,
+        testOrganization,
+        testUser,
+        agentSessionRepository,
+        testProject,
+      } = getTestContext()
 
       const buildAgent = (params: { date: Date; type: AgentSessionTypeDto }) =>
         agentSessionFactory
-          .transient({ agent: testAgent, user: testUser, organization: testOrganization })
+          .transient({
+            organization: testOrganization,
+            project: testProject,
+            agent: testAgent,
+            user: testUser,
+          })
           .production()
           .build(params)
 
@@ -47,12 +58,23 @@ describe("getAllSessionsForAgent", () => {
 
   describe("type: playground", () => {
     it("should return all sessions for a agent and user ordered by createdAt DESC", async () => {
-      const { service, testAgent, testOrganization, testUser, agentSessionRepository } =
-        getTestContext()
+      const {
+        service,
+        testAgent,
+        testOrganization,
+        testUser,
+        agentSessionRepository,
+        testProject,
+      } = getTestContext()
 
       const buildAgent = (params: { date: Date; type: AgentSessionTypeDto }) =>
         agentSessionFactory
-          .transient({ agent: testAgent, user: testUser, organization: testOrganization })
+          .transient({
+            organization: testOrganization,
+            project: testProject,
+            agent: testAgent,
+            user: testUser,
+          })
           .production()
           .build(params)
 
@@ -95,19 +117,31 @@ describe("getAllSessionsForAgent", () => {
     } = getTestContext()
 
     // Create another agent
-    const anotherAgent = agentFactory.transient({ project: testProject }).build({
-      name: "Another Agent",
-    })
+    const anotherAgent = agentFactory
+      .transient({ organization: testOrganization, project: testProject })
+      .build({
+        name: "Another Agent",
+      })
     await agentRepository.save(anotherAgent)
 
     // Create sessions for both agents
     const session1 = agentSessionFactory
-      .transient({ agent: testAgent, user: testUser, organization: testOrganization })
+      .transient({
+        organization: testOrganization,
+        project: testProject,
+        agent: testAgent,
+        user: testUser,
+      })
       .production()
       .build()
 
     const session2 = agentSessionFactory
-      .transient({ agent: anotherAgent, user: testUser, organization: testOrganization })
+      .transient({
+        organization: testOrganization,
+        project: testProject,
+        agent: anotherAgent,
+        user: testUser,
+      })
       .build()
 
     await agentSessionRepository.save([session1, session2])
@@ -130,6 +164,7 @@ describe("getAllSessionsForAgent", () => {
       testUser,
       userRepository,
       agentSessionRepository,
+      testProject,
     } = getTestContext()
 
     // Create another user
@@ -140,12 +175,22 @@ describe("getAllSessionsForAgent", () => {
 
     // Create sessions for both users
     const session1 = agentSessionFactory
-      .transient({ agent: testAgent, user: testUser, organization: testOrganization })
+      .transient({
+        organization: testOrganization,
+        project: testProject,
+        agent: testAgent,
+        user: testUser,
+      })
       .production()
       .build()
 
     const session2 = agentSessionFactory
-      .transient({ agent: testAgent, user: anotherUser, organization: testOrganization })
+      .transient({
+        organization: testOrganization,
+        project: testProject,
+        agent: testAgent,
+        user: anotherUser,
+      })
       .production()
       .build()
 
