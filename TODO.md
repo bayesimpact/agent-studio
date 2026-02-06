@@ -3,7 +3,7 @@
 
 # // TODO:
 
-- afficher traceUrl in frontend chatsession playground
+- tools/helpers to seed store in storybook
 - remove ttl
 - delete chat session
 - create ErrorRoute
