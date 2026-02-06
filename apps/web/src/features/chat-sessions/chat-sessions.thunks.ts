@@ -2,42 +2,42 @@ import { createAsyncThunk } from "@reduxjs/toolkit"
 import type { RootState, ThunkExtraArg } from "@/store"
 import { generateId } from "@/utils/generate-id"
 import { selectIsAdminInterface } from "../auth/auth.selectors"
-import type { ChatSession, ChatSessionMessage } from "./chat-sessions.models"
+import type { AgentSession, AgentSessionMessage } from "./chat-sessions.models"
 import { chatSessionsActions } from "./chat-sessions.slice"
 import { streamChatResponse } from "./external/chat-session-streaming"
 
 type ThunkConfig = { state: RootState; extra: ThunkExtraArg }
 
 export const listSessions = createAsyncThunk<
-  ChatSession[],
-  { chatBotId: string; playground: boolean },
+  AgentSession[],
+  { agentId: string; playground: boolean },
   ThunkConfig
->("chatSession/listSessions", async ({ chatBotId, playground }, { extra: { services } }) => {
+>("chatSession/listSessions", async ({ agentId, playground }, { extra: { services } }) => {
   if (playground) {
-    return services.chatSessions.getAllPlayground(chatBotId)
+    return services.chatSessions.getAllPlayground(agentId)
   }
-  return services.chatSessions.getAllApp(chatBotId)
+  return services.chatSessions.getAllApp(agentId)
 })
 
 export const createChatSession = createAsyncThunk<
-  ChatSession,
-  { chatBotId: string; onSuccess?: (chatSessionId: string) => void },
+  AgentSession,
+  { agentId: string; onSuccess?: (agentSessionId: string) => void },
   ThunkConfig
 >("chatSession/createChatSession", async (action, { extra: { services }, getState }) => {
   const state = getState()
   const isAdminInterface = selectIsAdminInterface(state)
-  const chatBotId = action.chatBotId
-  if (!chatBotId) {
+  const agentId = action.agentId
+  if (!agentId) {
     throw new Error("No current chat bot ID found")
   }
-  if (isAdminInterface) return services.chatSessions.createPlaygroundSession(chatBotId)
+  if (isAdminInterface) return services.chatSessions.createPlaygroundSession(agentId)
   return services.chatSessions.createAppSession({
-    chatBotId,
-    chatSessionType: "app-private",
+    agentId,
+    agentSessionType: "app-private",
   })
 })
 
-export const loadSessionMessages = createAsyncThunk<ChatSessionMessage[], string, ThunkConfig>(
+export const loadSessionMessages = createAsyncThunk<AgentSessionMessage[], string, ThunkConfig>(
   "chatSession/loadSessionMessages",
   async (sessionId, { extra: { services } }) => {
     return services.chatSessions.getMessages(sessionId)
@@ -62,7 +62,7 @@ export const sendMessage = createAsyncThunk<
   const assistantMessageId = generateId()
 
   // Create user message
-  const userMessage: ChatSessionMessage = {
+  const userMessage: AgentSessionMessage = {
     id: userMessageId,
     role: "user",
     content,

@@ -9,10 +9,7 @@ import {
 } from "@/common/test/test-transaction-manager"
 import type { MulterFile } from "@/common/types"
 import { removeNullish } from "@/common/utils/remove-nullish"
-import { Organization } from "@/organizations/organization.entity"
 import { createOrganizationWithProject } from "@/organizations/organization.factory"
-import { UserMembership } from "@/organizations/user-membership.entity"
-import { User } from "@/users/user.entity"
 import { setupUserGuardForTesting } from "../../test/e2e.helpers"
 import { expectResponse, type Requester, testRequester } from "../../test/request"
 import { ResourcesModule } from "./resources.module"
@@ -33,7 +30,6 @@ describe("ResourcesController (e2e)", () => {
 
   beforeAll(async () => {
     setup = await setupTransactionalTestDatabase({
-      featureEntities: [User, Organization, UserMembership],
       additionalImports: [ResourcesModule],
       applyOverrides: (moduleBuilder) => setupUserGuardForTesting(moduleBuilder, () => auth0Id),
     })

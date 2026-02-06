@@ -1,7 +1,7 @@
 import { createSelector } from "@reduxjs/toolkit"
 import type { RootState } from "@/store"
 import { ADS, type AsyncData } from "@/store/async-data-status"
-import type { ChatSession } from "./chat-sessions.models"
+import type { AgentSession } from "./chat-sessions.models"
 
 export const selectChatSessionStatus = (state: RootState) => state.chatSessions.data.status
 
@@ -13,7 +13,7 @@ const missingChatBotId = { status: ADS.Error, value: null, error: "No chat bot s
 const missingChatSessions = { status: ADS.Error, value: null, error: "No chat sessions available" }
 
 export const selectChatSessionsFromChatBotId = (chatBotId?: string | null) =>
-  createSelector([selectChatSessionsData], (chatSessionsData): AsyncData<ChatSession[]> => {
+  createSelector([selectChatSessionsData], (chatSessionsData): AsyncData<AgentSession[]> => {
     if (!chatBotId) return missingChatBotId
 
     if (!ADS.isFulfilled(chatSessionsData)) return { ...chatSessionsData }
@@ -29,7 +29,7 @@ export const selectCurrentChatSessionId = (state: RootState) =>
 export const selectCurrentChatSessionDataFromChatBotId = (chatBotId?: string | null) =>
   createSelector(
     [selectChatSessionsFromChatBotId(chatBotId), selectCurrentChatSessionId],
-    (chatSessionsData, chatSessionId): AsyncData<ChatSession> => {
+    (chatSessionsData, chatSessionId): AsyncData<AgentSession> => {
       if (!ADS.isFulfilled(chatSessionsData)) return { ...chatSessionsData }
 
       if (!chatSessionId)

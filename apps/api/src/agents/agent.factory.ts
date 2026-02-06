@@ -28,6 +28,6 @@ export const agentFactory = AgentFactory.define(({ sequence, params, transientPa
     updatedAt: params.updatedAt || now,
     deletedAt: params.deletedAt || null,
     project: transientParams.project,
-    chatSessions: params.chatSessions || [],
+    agentSessions: params.agentSessions || [],
   } satisfies Agent
 })

@@ -34,7 +34,6 @@ describe("AgentsService", () => {
 
   beforeAll(async () => {
     setup = await setupTransactionalTestDatabase({
-      featureEntities: [Agent, Project, Organization, UserMembership, User],
       additionalImports: [AgentsModule],
     })
     await clearTestDatabase(setup.dataSource)

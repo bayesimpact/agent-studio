@@ -1,12 +1,12 @@
-import type { ChatSession, ChatSessionMessage } from "./chat-sessions.models"
+import type { AgentSession, AgentSessionMessage } from "./chat-sessions.models"
 
 export interface IChatSessionsSpi {
-  getAllPlayground: (chatBotId: string) => Promise<ChatSession[]>
-  getAllApp: (chatBotId: string) => Promise<ChatSession[]>
-  createPlaygroundSession: (chatBotId: string) => Promise<ChatSession>
+  getAllPlayground: (agentId: string) => Promise<AgentSession[]>
+  getAllApp: (agentId: string) => Promise<AgentSession[]>
+  createPlaygroundSession: (agentId: string) => Promise<AgentSession>
   createAppSession: (params: {
-    chatBotId: string
-    chatSessionType: "app-private"
-  }) => Promise<ChatSession>
-  getMessages: (sessionId: string) => Promise<ChatSessionMessage[]>
+    agentId: string
+    agentSessionType: "app-private"
+  }) => Promise<AgentSession>
+  getMessages: (sessionId: string) => Promise<AgentSessionMessage[]>
 }

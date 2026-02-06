@@ -29,7 +29,6 @@ describe("UserMembershipService", () => {
 
   beforeAll(async () => {
     setup = await setupTransactionalTestDatabase({
-      featureEntities: [UserMembership, Organization, User],
       additionalImports: [OrganizationsModule],
     })
     await clearTestDatabase(setup.dataSource)

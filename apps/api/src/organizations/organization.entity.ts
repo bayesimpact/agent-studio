@@ -6,7 +6,7 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from "typeorm"
-import { ChatSession } from "@/chat-sessions/chat-session.entity"
+import { AgentSession } from "@/agent-sessions/agent-session.entity"
 import { Project } from "@/projects/project.entity"
 import { UserMembership } from "./user-membership.entity"
 
@@ -37,8 +37,8 @@ export class Organization {
   projects!: Project[]
 
   @OneToMany(
-    () => ChatSession,
-    (chatSession) => chatSession.organization,
+    () => AgentSession,
+    (agentSession) => agentSession.organization,
   )
-  chatSessions!: ChatSession[]
+  agentSessions!: AgentSession[]
 }

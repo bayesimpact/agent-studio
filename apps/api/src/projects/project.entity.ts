@@ -38,9 +38,9 @@ export class Project {
 
   @OneToMany(
     () => Agent,
-    (chatBot) => chatBot.project,
+    (agent) => agent.project,
   )
-  chatBots!: Agent[]
+  agents!: Agent[]
 
   @OneToMany(
     () => Resource,

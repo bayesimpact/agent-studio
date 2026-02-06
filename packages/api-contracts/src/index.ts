@@ -1,12 +1,13 @@
 // Chat Bots DTOs
+
+export type * from "./agent-sessions/agent-session-messages.dto"
+// Chat Sessions DTOs
+export type * from "./agent-sessions/agent-sessions.dto"
+export { AgentSessionsRoutes } from "./agent-sessions/agent-sessions.routes"
+export { ChatSessionMessagesRoutes } from "./agent-sessions/chat-session-messages.routes"
+export { ChatSessionStreamingRoutes } from "./agent-sessions/chat-session-streaming.routes"
 export * from "./agents/agents.dto"
 export { AgentsRoutes } from "./agents/agents.routes"
-export type * from "./chat-sessions/chat-session-messages.dto"
-export { ChatSessionMessagesRoutes } from "./chat-sessions/chat-session-messages.routes"
-export { ChatSessionStreamingRoutes } from "./chat-sessions/chat-session-streaming.routes"
-// Chat Sessions DTOs
-export type * from "./chat-sessions/chat-sessions.dto"
-export { ChatSessionsRoutes } from "./chat-sessions/chat-sessions.routes"
 // Generic DTOs
 export type * from "./generic"
 export type { ApiRoute } from "./helpers"

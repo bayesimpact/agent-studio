@@ -1,6 +1,9 @@
 import { AdminChatSession, AppChatSession } from "@/components/chat-bots/ChatSession"
 import { selectCurrentChatBotId } from "@/features/chat-bots/chat-bots.selectors"
-import type { ChatSession, ChatSessionMessage } from "@/features/chat-sessions/chat-sessions.models"
+import type {
+  AgentSession,
+  AgentSessionMessage,
+} from "@/features/chat-sessions/chat-sessions.models"
 import {
   selectCurrentChatSessionDataFromChatBotId,
   selectCurrentMessagesData,
@@ -29,8 +32,8 @@ function WithData({
   chatSession,
   messages,
 }: {
-  chatSession: ChatSession
-  messages: ChatSessionMessage[]
+  chatSession: AgentSession
+  messages: AgentSessionMessage[]
 }) {
   const { isAdminInterface } = useAbility()
   if (isAdminInterface) return <AdminChatSession session={chatSession} messages={messages} />
