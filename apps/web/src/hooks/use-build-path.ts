@@ -59,7 +59,7 @@ export function useGetPath() {
 
     const agentPath =
       organizationId && projectId && agentId
-        ? buildagentPath({
+        ? buildAgentPath({
             organizationId,
             projectId,
             agentId,
@@ -73,7 +73,7 @@ export function useGetPath() {
 
     const agentSessionPath =
       organizationId && projectId && agentId && agentSessionId
-        ? buildagentSessionPath({
+        ? buildAgentSessionPath({
             organizationId,
             projectId,
             agentId,
@@ -135,7 +135,7 @@ export function useBuildPath() {
 
     const agentPath =
       organizationId && projectId && agentId
-        ? buildagentPath({
+        ? buildAgentPath({
             organizationId,
             projectId,
             agentId,
@@ -149,7 +149,7 @@ export function useBuildPath() {
 
     const agentSessionPath =
       organizationId && projectId && agentId && agentSessionId
-        ? buildagentSessionPath({
+        ? buildAgentSessionPath({
             organizationId,
             projectId,
             agentId,
@@ -262,7 +262,7 @@ export function useClosestParentPath() {
 
     const agentPath =
       organizationFound && projectFound && agentFound
-        ? buildagentPath({
+        ? buildAgentPath({
             organizationId: organizationFound.id,
             projectId: projectFound.id,
             agentId: agentFound.id,
@@ -272,7 +272,7 @@ export function useClosestParentPath() {
 
     const agentSessionPath =
       organizationFound && projectFound && agentFound && agentSessionFound
-        ? buildagentSessionPath({
+        ? buildAgentSessionPath({
             organizationId: organizationFound.id,
             projectId: projectFound.id,
             agentId: agentFound.id,
@@ -324,7 +324,7 @@ const buildProjectPath = ({
   return buildAppPath(path)
 }
 
-const buildagentPath = ({
+const buildAgentPath = ({
   organizationId,
   projectId,
   agentId,
@@ -335,12 +335,12 @@ const buildagentPath = ({
   agentId: string
   isAdminInterface: boolean
 }) => {
-  const path = `/o/${organizationId}/p/${projectId}/cb/${agentId}`
+  const path = `/o/${organizationId}/p/${projectId}/a/${agentId}`
   if (isAdminInterface) return buildAdminPath(path)
   return buildAppPath(path)
 }
 
-const buildagentSessionPath = ({
+const buildAgentSessionPath = ({
   organizationId,
   projectId,
   agentId,
@@ -353,7 +353,7 @@ const buildagentSessionPath = ({
   agentSessionId: string
   isAdminInterface: boolean
 }) => {
-  const path = `/o/${organizationId}/p/${projectId}/cb/${agentId}/cs/${agentSessionId}`
+  const path = `/o/${organizationId}/p/${projectId}/a/${agentId}/as/${agentSessionId}`
   if (isAdminInterface) return buildAdminPath(path)
   return buildAppPath(path)
 }
