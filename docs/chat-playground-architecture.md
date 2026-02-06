@@ -26,8 +26,8 @@ This document explains how the chat playground works end-to-end, covering the AP
 
 ## High-Level Flow
 
-1. **User opens a chatbot playground** (via `ChatBotRoute` component)
-2. **Frontend creates/fetches a chat session** for that chatbot
+1. **User opens a agent playground** (via `agentRoute` component)
+2. **Frontend creates/fetches a chat session** for that agent
 3. **Frontend loads existing messages** for that session
 4. **User sends a message** from the chat UI
 5. **API stores the user message and a placeholder assistant message** for streaming
@@ -43,17 +43,17 @@ This document explains how the chat playground works end-to-end, covering the AP
 
 The chat playground is built on top of several core entities:
 
-- **`ChatBot`**: Configuration of a chatbot (model, temperature, default prompt, etc.)
-- **`ChatSession`**: A conversation between a user and a chatbot
+- **`agent`**: Configuration of a agent (model, temperature, default prompt, etc.)
+- **`agentSession`**: A conversation between a user and a agent
   - Has a `type` field: `"playground"` or `"production"`
   - Contains a `messages` array (JSONB column) storing message objects
   - Playground sessions have a TTL (`expiresAt`) of 24 hours
-- **`ChatSessionMessage`**: Individual messages within a session
+- **`agentSessionMessage`**: Individual messages within a session
   - Fields: `id`, `role` ("user" | "assistant"), `content`, `status` ("streaming" | "completed" | "aborted" | "error"), `createdAt`, `startedAt`, `completedAt`
 
 **Key Services & Controllers**:
 
-- **`ChatSessionsService`**: Core business logic for managing chat sessions
+- **`agentSessionsService`**: Core business logic for managing agent sessions
   - Creates playground sessions with authorization checks
   - Manages message persistence
   - Handles streaming lifecycle (prepare, finalize, error handling)
@@ -71,45 +71,45 @@ When a user opens the playground:
 
 1. **Route Definition** (in `api-contracts`):
    ```typescript
-   ChatSessionsRoutes.createPlaygroundSession
-   // POST /chat-bots/:chatBotId/playground-session
+   agentSessionsRoutes.createPlaygroundSession
+   // POST /chat-bots/:agentId/playground-session
    ```
 
-2. **Controller** (`ChatSessionsController.createPlaygroundSession`):
+2. **Controller** (`agentSessionsController.createPlaygroundSession`):
    - Protected by `JwtAuthGuard` and `UserGuard`
-   - Extracts `chatBotId` from route params
-   - Delegates to `ChatSessionsService.createPlaygroundSessionForChatBot(chatBotId, userId)`
+   - Extracts `agentId` from route params
+   - Delegates to `agentSessionsService.createPlaygroundSessionForagent(agentId, userId)`
 
-3. **Service** (`ChatSessionsService.createPlaygroundSessionForChatBot`):
-   - **Authorization**: Verifies user has access to the chatbot's organization
-     - Checks chatbot exists
-     - Verifies user is a member of the chatbot's project's organization
+3. **Service** (`agentSessionsService.createPlaygroundSessionForagent`):
+   - **Authorization**: Verifies user has access to the agent's organization
+     - Checks agent exists
+     - Verifies user is a member of the agent's project's organization
      - Requires `"owner"` or `"admin"` role
    - **Session Management**:
-     - Looks for existing playground session for this user + chatbot
+     - Looks for existing playground session for this user + agent
      - If exists and TTL not expired: returns existing session
      - If exists but TTL expired: resets messages and updates TTL
      - If doesn't exist: creates new session with 24-hour TTL
-   - Returns `ChatSession` DTO
+   - Returns `agentSession` DTO
 
 ### Loading Messages
 
 1. **Route Definition**:
    ```typescript
-   ChatSessionMessagesRoutes.listMessages
-   // GET /chat-sessions/:sessionId/messages
+   AgentSessionMessagesRoutes.listMessages
+   // GET /agent-sessions/:sessionId/messages
    ```
 
-2. **Controller** (`ChatSessionMessagesController.listMessages`):
+2. **Controller** (`agentSessionMessagesController.listMessages`):
    - Protected by `JwtAuthGuard` and `UserGuard`
    - Extracts `sessionId` from route params
-   - Delegates to `ChatSessionsService.listMessagesForSession(sessionId, userId)`
+   - Delegates to `agentSessionsService.listMessagesForSession(sessionId, userId)`
 
-3. **Service** (`ChatSessionsService.listMessagesForSession`):
+3. **Service** (`agentSessionsService.listMessagesForSession`):
    - **Authorization**: Verifies user has access to the session's organization
      - Checks session exists
      - Verifies user is a member of the session's organization
-   - Returns array of `ChatSessionMessageDto` objects
+   - Returns array of `agentSessionMessageDto` objects
 
 ### Streaming a Response
 
@@ -117,8 +117,8 @@ When a user opens the playground:
 
 The playground chat uses a **streaming endpoint** for LLM responses:
 
-- **Route**: `GET /chat-sessions/:sessionId/stream?q=<userMessage>`
-- **Controller**: `ChatSessionStreamingController.streamPlayground`
+- **Route**: `GET /agent-sessions/:sessionId/stream?q=<userMessage>`
+- **Controller**: `agentSessionStreamingController.streamPlayground`
   - Decorated with `@Sse()` for Server-Sent Events
   - Protected by `JwtAuthGuard` and `UserGuard`
   - Returns `Observable<MessageEvent>` (required by NestJS SSE)
@@ -131,7 +131,7 @@ The streaming service orchestrates the entire flow:
 
 ```typescript
 const { session: updatedSession, assistantMessageId } =
-  await this.chatSessionsService.prepareForStreaming(session.id, userContent)
+  await this.agentSessionsService.prepareForStreaming(session.id, userContent)
 ```
 
 - `prepareForStreaming`:
@@ -175,13 +175,13 @@ const llmMessages = this.convertToLLMFormat(updatedSession.messages)
 **Step 4: Build LLM Config**
 
 ```typescript
-const llmConfig = this.buildLLMConfig(chatbot)
+const llmConfig = this.buildLLMConfig(agent)
 ```
 
-- Extracts configuration from chatbot:
+- Extracts configuration from agent:
   - `model` (e.g., `"models/gemini-2.5-flash"`)
   - `temperature` (parsed to number, validated to be between 0-2)
-  - `systemPrompt` (from `chatbot.defaultPrompt`)
+  - `systemPrompt` (from `agent.defaultPrompt`)
 
 **Step 5: Stream Response from LLM**
 
@@ -208,7 +208,7 @@ for await (const chunk of this.llmProvider.streamChatResponse(llmMessages, llmCo
 **Step 6: Finalize Success**
 
 ```typescript
-await this.chatSessionsService.finalizeStreaming(
+await this.agentSessionsService.finalizeStreaming(
   updatedSession.id,
   assistantMessageId,
   fullContent,
@@ -236,7 +236,7 @@ yield {
 catch (error) {
   const errorMessage = error instanceof Error ? error.message : "Unknown error occurred"
 
-  await this.chatSessionsService.markStreamingError(
+  await this.agentSessionsService.markStreamingError(
     updatedSession.id,
     assistantMessageId,
     errorMessage,
@@ -281,12 +281,12 @@ The LLM provider bridges our normalized message format with the AI SDK:
 
 ### State & Models
 
-**Redux State** (`chatSession` slice):
+**Redux State** (`agentSession` slice):
 
 ```typescript
-type ChatSessionState = {
-  session: ChatSession | null
-  messages: ChatSessionMessage[]
+type agentSessionState = {
+  session: agentSession | null
+  messages: agentSessionMessage[]
   status: "idle" | "loading" | "succeeded" | "failed"
   error: string | null
   isStreaming: boolean
@@ -297,7 +297,7 @@ type ChatSessionState = {
 **Message Model**:
 
 ```typescript
-type ChatSessionMessage = {
+type agentSessionMessage = {
   id: string
   role: "user" | "assistant"
   content: string
@@ -312,16 +312,16 @@ type ChatSessionMessage = {
 **1. Create Playground Session**
 
 ```typescript
-export const createPlaygroundSession = createAsyncThunk<ChatSession, void, ThunkConfig>(
-  "chatSession/createPlaygroundSession",
+export const createPlaygroundSession = createAsyncThunk<agentSession, void, ThunkConfig>(
+  "agentSession/createPlaygroundSession",
   async (_, { extra: { services }, getState }) => {
-    const chatBotId = getState().chatBots.currentChatBotId!
-    return services.chatSession.createPlaygroundSession(chatBotId)
+    const agentId = getState().agents.currentagentId!
+    return services.agentSession.createPlaygroundSession(agentId)
   },
 )
 ```
 
-- Reads `currentChatBotId` from `chatBots` slice
+- Reads `currentagentId` from `agents` slice
 - Calls API to create/fetch playground session
 - Automatically triggers `loadSessionMessages` via middleware (see below)
 
@@ -329,11 +329,11 @@ export const createPlaygroundSession = createAsyncThunk<ChatSession, void, Thunk
 
 ```typescript
 export const loadSessionMessages = createAsyncThunk<
-  ChatSessionMessage[],
+  agentSessionMessage[],
   string,
   ThunkConfig
->("chatSession/loadSessionMessages", async (sessionId, { extra: { services } }) => {
-  return services.chatSession.getMessages(sessionId)
+>("agentSession/loadSessionMessages", async (sessionId, { extra: { services } }) => {
+  return services.agentSession.getMessages(sessionId)
 })
 ```
 
@@ -347,12 +347,12 @@ export const sendMessage = createAsyncThunk<
   void,
   { sessionId: string; content: string },
   ThunkConfig
->("chatSession/sendMessage", async ({ sessionId, content }, { dispatch, getState, signal }) => {
+>("agentSession/sendMessage", async ({ sessionId, content }, { dispatch, getState, signal }) => {
   const state = getState()
-  const chatSessionState = state.chatSession
+  const agentSessionState = state.agentSession
 
   // Guard: don't allow sending if already streaming
-  if (chatSessionState.isStreaming) {
+  if (agentSessionState.isStreaming) {
     return
   }
 
@@ -361,7 +361,7 @@ export const sendMessage = createAsyncThunk<
   const assistantMessageId = v4()
 
   // Create user message
-  const userMessage: ChatSessionMessage = {
+  const userMessage: agentSessionMessage = {
     id: userMessageId,
     role: "user",
     content,
@@ -369,7 +369,7 @@ export const sendMessage = createAsyncThunk<
   }
 
   // Dispatch start streaming action (adds both messages optimistically)
-  dispatch(chatSessionActions.startStreaming({ userMessage, assistantMessageId }))
+  dispatch(agentSessionActions.startStreaming({ userMessage, assistantMessageId }))
 
   try {
     // Stream the response
@@ -380,7 +380,7 @@ export const sendMessage = createAsyncThunk<
         onStart: (event) => {
           // Update optimistic message ID to match backend's ID
           dispatch(
-            chatSessionActions.updateAssistantMessageId({
+            agentSessionActions.updateAssistantMessageId({
               oldMessageId: assistantMessageId,
               newMessageId: event.messageId,
             }),
@@ -388,7 +388,7 @@ export const sendMessage = createAsyncThunk<
         },
         onChunk: (event) => {
           dispatch(
-            chatSessionActions.appendAssistantChunk({
+            agentSessionActions.appendAssistantChunk({
               messageId: event.messageId,
               chunk: event.content,
             }),
@@ -396,7 +396,7 @@ export const sendMessage = createAsyncThunk<
         },
         onEnd: (event) => {
           dispatch(
-            chatSessionActions.completeAssistantMessage({
+            agentSessionActions.completeAssistantMessage({
               messageId: event.messageId,
               fullContent: event.fullContent,
             }),
@@ -404,7 +404,7 @@ export const sendMessage = createAsyncThunk<
         },
         onError: (event) => {
           dispatch(
-            chatSessionActions.failAssistantMessage({
+            agentSessionActions.failAssistantMessage({
               messageId: event.messageId,
               error: event.error,
             }),
@@ -416,7 +416,7 @@ export const sendMessage = createAsyncThunk<
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : "Failed to stream response"
     dispatch(
-      chatSessionActions.failAssistantMessage({
+      agentSessionActions.failAssistantMessage({
         messageId: assistantMessageId,
         error: errorMessage,
       }),
@@ -473,21 +473,21 @@ listenerMiddleware.startListening({
 })
 ```
 
-### Chat UI Component (`ChatBot`)
+### Chat UI Component (`agent`)
 
 The main chat UI component:
 
 - **State Selection**:
   ```typescript
-  const messages = useAppSelector((state) => state.chatSession.messages)
-  const session = useAppSelector((state) => state.chatSession.session)
-  const isStreaming = useAppSelector((state) => state.chatSession.isStreaming)
+  const messages = useAppSelector((state) => state.agentSession.messages)
+  const session = useAppSelector((state) => state.agentSession.session)
+  const isStreaming = useAppSelector((state) => state.agentSession.isStreaming)
   ```
 
 - **Message Rendering**:
   - Maps `messages` array to UI components
   - User messages → `ChatUserMessage`
-  - Assistant messages → `ChatBotMessage`
+  - Assistant messages → `agentMessage`
   - Error messages → Red styling with `AlertCircleIcon` and "Error" label
 
 - **Submit Handler**:
@@ -521,7 +521,7 @@ export async function streamChatResponse(
 **Implementation Details**:
 
 1. **Request Setup**:
-   - Constructs URL: `/chat-sessions/:sessionId/stream?q=<encodedMessage>`
+   - Constructs URL: `/agent-sessions/:sessionId/stream?q=<encodedMessage>`
    - Adds `Authorization: Bearer <token>` header
    - Sets `Accept: "text/event-stream"`
 
@@ -571,7 +571,7 @@ export async function streamChatResponse(
 
 All endpoints are protected:
 
-- **Session Creation**: Requires user to be `"owner"` or `"admin"` of chatbot's organization
+- **Session Creation**: Requires user to be `"owner"` or `"admin"` of agent's organization
 - **Message Listing**: Requires user to be a member of session's organization
 - **Streaming**: Requires user to own the session (`session.userId === user.id`)
 

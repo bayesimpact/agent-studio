@@ -13,7 +13,7 @@ export type AgentSessionMessageDto = {
   }>
 }
 
-export type ListChatSessionMessagesResponseDto = {
+export type ListAgentSessionMessagesResponseDto = {
   sessionId: string
   messages: AgentSessionMessageDto[]
 }

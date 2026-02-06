@@ -21,10 +21,10 @@ export const AgentsRoutes = {
     >
   >({
     method: "patch",
-    path: "projects/:projectId/agents/:chatBotId",
+    path: "projects/:projectId/agents/:agentId",
   }),
   deleteOne: defineRoute<ResponseData<SuccessResponseDTO>>({
     method: "delete",
-    path: "projects/:projectId/agents/:chatBotId",
+    path: "projects/:projectId/agents/:agentId",
   }),
 }

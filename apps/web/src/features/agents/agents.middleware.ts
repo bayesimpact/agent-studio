@@ -1,0 +1,130 @@
+import type { TypedStartListening } from "@reduxjs/toolkit"
+import { createListenerMiddleware, isAnyOf } from "@reduxjs/toolkit"
+import { ADS } from "@/store/async-data-status"
+import type { AppDispatch, RootState } from "@/store/types"
+import { notificationsActions } from "../notifications/notifications.slice"
+import { selectCurrentProjectId, selectProjectsData } from "../projects/projects.selectors"
+import { listProjects } from "../projects/projects.thunks"
+import { createAgent, deleteAgent, listAgents, updateAgent } from "./agents.thunks"
+
+const listenerMiddleware = createListenerMiddleware<RootState, AppDispatch>()
+
+export type AppStartListening = TypedStartListening<RootState, AppDispatch>
+
+// Refresh Agents when projects are loaded
+listenerMiddleware.startListening({
+  actionCreator: listProjects.fulfilled,
+  effect: async (action, listenerApi) => {
+    const projects = action.payload
+    projects.forEach((project) => {
+      listenerApi.dispatch(listAgents({ projectId: project.id }))
+    })
+  },
+})
+
+// Refresh Agents when current project changes
+listenerMiddleware.startListening({
+  predicate(_, currentState, originalState) {
+    const prevId = selectCurrentProjectId(originalState)
+    const nextId = selectCurrentProjectId(currentState)
+    return prevId !== nextId
+  },
+  effect: async (_, listenerApi) => {
+    const state = listenerApi.getState()
+    const projectId = selectCurrentProjectId(state)
+    if (!projectId) return
+    await listenerApi.dispatch(listAgents({ projectId }))
+  },
+})
+
+// Refresh Agents when one is created, updated or deleted
+listenerMiddleware.startListening({
+  matcher: isAnyOf(deleteAgent.fulfilled, createAgent.fulfilled, updateAgent.fulfilled),
+  effect: async (_, listenerApi) => {
+    const state = listenerApi.getState()
+    const projects = selectProjectsData(state)
+    if (!ADS.isFulfilled(projects)) return
+    projects.value.forEach((project) => {
+      listenerApi.dispatch(listAgents({ projectId: project.id }))
+    })
+  },
+})
+
+listenerMiddleware.startListening({
+  actionCreator: deleteAgent.fulfilled,
+  effect: async (action, listenerApi) => {
+    listenerApi.dispatch(
+      notificationsActions.show({
+        title: "Agent deleted successfully",
+        type: "success",
+      }),
+    )
+
+    const onSuccess = action.meta.arg.onSuccess
+    const id = action.meta.arg.agentId
+    onSuccess?.(id)
+  },
+})
+listenerMiddleware.startListening({
+  actionCreator: deleteAgent.rejected,
+  effect: async (_, listenerApi) => {
+    listenerApi.dispatch(
+      notificationsActions.show({
+        title: "Agent deletion failed",
+        type: "error",
+      }),
+    )
+  },
+})
+
+listenerMiddleware.startListening({
+  actionCreator: createAgent.fulfilled,
+  effect: async (action, listenerApi) => {
+    listenerApi.dispatch(
+      notificationsActions.show({
+        title: "Agent created successfully",
+        type: "success",
+      }),
+    )
+
+    const onSuccess = action.meta.arg.onSuccess
+    const { id } = action.payload
+    onSuccess?.(id)
+  },
+})
+listenerMiddleware.startListening({
+  actionCreator: createAgent.rejected,
+  effect: async (_, listenerApi) => {
+    listenerApi.dispatch(
+      notificationsActions.show({
+        title: "Agent creation failed",
+        type: "error",
+      }),
+    )
+  },
+})
+
+listenerMiddleware.startListening({
+  actionCreator: updateAgent.fulfilled,
+  effect: async (_, listenerApi) => {
+    listenerApi.dispatch(
+      notificationsActions.show({
+        title: "Agent updated successfully",
+        type: "success",
+      }),
+    )
+  },
+})
+listenerMiddleware.startListening({
+  actionCreator: updateAgent.rejected,
+  effect: async (_, listenerApi) => {
+    listenerApi.dispatch(
+      notificationsActions.show({
+        title: "Agent update failed",
+        type: "error",
+      }),
+    )
+  },
+})
+
+export { listenerMiddleware as agentsMiddleware }

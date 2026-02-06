@@ -56,12 +56,12 @@ const router = () =>
                   element: <ResourcesRoute />,
                 },
                 {
-                  path: buildAdminPath(RouteNames.CHAT_BOT),
-                  element: getElement(RouteNames.CHAT_BOT),
+                  path: buildAdminPath(RouteNames.AGENT),
+                  element: getElement(RouteNames.AGENT),
                   children: [
                     {
-                      path: buildAdminPath(RouteNames.CHAT_SESSION),
-                      element: getElement(RouteNames.CHAT_SESSION),
+                      path: buildAdminPath(RouteNames.AGENT_SESSION),
+                      element: getElement(RouteNames.AGENT_SESSION),
                     },
                   ],
                 },
@@ -88,12 +88,12 @@ const router = () =>
               element: getElement(RouteNames.PROJECT),
               children: [
                 {
-                  path: buildAppPath(RouteNames.CHAT_BOT),
-                  element: getElement(RouteNames.CHAT_BOT),
+                  path: buildAppPath(RouteNames.AGENT),
+                  element: getElement(RouteNames.AGENT),
                   children: [
                     {
-                      path: buildAppPath(RouteNames.CHAT_SESSION),
-                      element: getElement(RouteNames.CHAT_SESSION),
+                      path: buildAppPath(RouteNames.AGENT_SESSION),
+                      element: getElement(RouteNames.AGENT_SESSION),
                     },
                   ],
                 },

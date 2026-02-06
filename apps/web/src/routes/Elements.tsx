@@ -1,5 +1,5 @@
-import { ChatBotRoute } from "./ChatBotRoute"
-import { ChatSessionRoute } from "./ChatSessionRoute"
+import { AgentRoute } from "./AgentRoute"
+import { AgentSessionRoute } from "./AgentSessionRoute"
 import { DashboardRoute } from "./DashboardRoute"
 import { RouteNames } from "./helpers"
 import { ProjectRoute } from "./ProjectRoute"
@@ -17,11 +17,11 @@ export const getElement = (routeNames: RouteNames) => {
     case RouteNames.PROJECT:
       return <ProjectRoute />
 
-    case RouteNames.CHAT_BOT:
-      return <ChatBotRoute />
+    case RouteNames.AGENT:
+      return <AgentRoute />
 
-    case RouteNames.CHAT_SESSION:
-      return <ChatSessionRoute />
+    case RouteNames.AGENT_SESSION:
+      return <AgentSessionRoute />
 
     default:
       break

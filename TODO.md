@@ -7,8 +7,6 @@
 - delete chat session
 - create ErrorRoute
 - use moostache to compile master-prompt+variables(locale, defaultprompt)
-- write e2e tests
-- ProjectGuard, ChatbotGuard...
 - invite user
 - write LLM Rules for any IDE
 
@@ -25,7 +23,7 @@
 
 
 ## Factory
-- be careful with `as ChatBot` it allows shit
+- be careful with `as agent` it allows shit
 
 # Guidelines
 ## Thunks
@@ -35,7 +33,7 @@
 ## Why?
 ```
 // Re-export from api-contracts
-export { ChatSessionStreamingRoutes } from "@caseai-connect/api-contracts"
+export { AgentSessionStreamingRoutes } from "@caseai-connect/api-contracts"
 ```
 
 ## Dangerous for nest?

@@ -18,7 +18,7 @@ export const agentFactory = AgentFactory.define(({ sequence, params, transientPa
   const now = new Date()
   return {
     id: params.id || randomUUID(),
-    name: params.name || `Test Chat Bot ${sequence}`,
+    name: params.name || `Test Agent ${sequence}`,
     defaultPrompt: params.defaultPrompt || `This is a test default prompt for bot ${sequence}`,
     model: params.model || AgentModel.Gemini25Flash,
     temperature: params.temperature ?? 0.7,

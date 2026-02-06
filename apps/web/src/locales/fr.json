@@ -67,12 +67,12 @@
       }
     }
   },
-  "chatBot": {
+  "agent": {
     "form": {
-      "labelName": "Nom du ChatBot",
-      "placeholderName": "Entrez le nom du ChatBot",
+      "labelName": "Nom du agent",
+      "placeholderName": "Entrez le nom du agent",
       "labelPrompt": "Prompt par défaut",
-      "placeholderPrompt": "Entrez le prompt par défaut pour ce ChatBot",
+      "placeholderPrompt": "Entrez le prompt par défaut pour ce agent",
       "labelModel": "Modèle",
       "placeholderModel": "Sélectionner le modèle",
       "labelLocale": "Langue",
@@ -80,40 +80,40 @@
       "labelTemperature": "Température",
       "placeholderTemperature": "0.0 - 2.0",
       "validation": {
-        "nameMinLength": "Le nom du ChatBot doit comporter au moins 3 caractères",
+        "nameMinLength": "Le nom du agent doit comporter au moins 3 caractères",
         "promptRequired": "Le prompt par défaut est requis"
       }
     },
     "create": {
-      "title": "Créer un ChatBot",
-      "description": "Créer un nouveau ChatBot pour {{projectName}}",
-      "submit": "Créer le ChatBot",
+      "title": "Créer un agent",
+      "description": "Créer un nouveau agent pour {{projectName}}",
+      "submit": "Créer le agent",
       "submitting": "Création..."
     },
     "update": {
-      "title": "Modifier le ChatBot",
-      "description": "Mettre à jour les détails du ChatBot",
-      "submit": "Mettre à jour le ChatBot",
+      "title": "Modifier le agent",
+      "description": "Mettre à jour les détails du agent",
+      "submit": "Mettre à jour le agent",
       "submitting": "Mise à jour..."
     },
     "delete": {
-      "title": "Supprimer le ChatBot",
+      "title": "Supprimer le agent",
       "description": "Êtes-vous sûr de vouloir supprimer {{name}} ? Cette action est irréversible.",
       "submit": "Supprimer",
       "submitting": "Suppression...",
-      "success": "ChatBot supprimé avec succès",
-      "error": "Échec de la suppression du ChatBot"
+      "success": "agent supprimé avec succès",
+      "error": "Échec de la suppression du agent"
     },
     "list": {
-      "title": "ChatBots",
+      "title": "agents",
       "empty": {
-        "title": "Pas encore de ChatBot",
-        "description": "Créez votre premier ChatBot pour commencer avec des prompts personnalisés pour ce projet.",
-        "button": "Créer le premier ChatBot"
+        "title": "Pas encore de agent",
+        "description": "Créez votre premier agent pour commencer avec des prompts personnalisés pour ce projet.",
+        "button": "Créer le premier agent"
       },
       "actions": {
-        "edit": "Modifier le ChatBot",
-        "delete": "Supprimer le ChatBot",
+        "edit": "Modifier le agent",
+        "delete": "Supprimer le agent",
         "more": "Plus"
       }
     },
@@ -131,7 +131,7 @@
     "header": "Chat",
     "placeholder": "Posez une question..."
   },
-  "chatSession": {
+  "agentSession": {
     "create": {
       "button": "Nouveau chat"
     },

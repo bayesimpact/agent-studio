@@ -76,13 +76,13 @@ export function buildChitChatConversation(
   return [userMessage, assistantMessage]
 }
 
-type CreateChatSessionMessageRepositories = {
+type CreateAgentSessionMessageRepositories = {
   chatMessageRepository: Repository<ChatMessage>
 }
 
 export async function createChitChatConversation(
   session: AgentSession,
-  repositories: CreateChatSessionMessageRepositories,
+  repositories: CreateAgentSessionMessageRepositories,
   params: BuildChatConversationParams = {},
 ): Promise<[ChatMessage, ChatMessage]> {
   const [userMessage, assistantMessage] = buildChitChatConversation(session, params)
