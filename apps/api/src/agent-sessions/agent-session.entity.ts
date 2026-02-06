@@ -12,7 +12,7 @@ import {
 import { Agent } from "@/agents/agent.entity"
 import { Organization } from "@/organizations/organization.entity"
 import { User } from "@/users/user.entity"
-import { ChatMessage } from "./chat-message.entity"
+import { AgentMessage } from "./agent-message.entity"
 
 export type AgentSessionType = "playground" | "production" | "app-private"
 
@@ -70,8 +70,8 @@ export class AgentSession {
   organization!: Organization
 
   @OneToMany(
-    () => ChatMessage,
+    () => AgentMessage,
     (message) => message.session,
   )
-  messages!: ChatMessage[]
+  messages!: AgentMessage[]
 }

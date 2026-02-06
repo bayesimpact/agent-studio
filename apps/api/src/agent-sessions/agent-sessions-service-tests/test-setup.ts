@@ -13,16 +13,16 @@ import { Project } from "@/projects/project.entity"
 import { projectFactory } from "@/projects/project.factory"
 import { User } from "@/users/user.entity"
 import { userFactory } from "@/users/user.factory"
+import { AgentMessage } from "../agent-message.entity"
 import { AgentSession } from "../agent-session.entity"
 import { AgentSessionsModule } from "../agent-sessions.module"
 import { AgentSessionsService } from "../agent-sessions.service"
-import { ChatMessage } from "../chat-message.entity"
 
 export function agentSessionControllerTestSetup() {
   let service: AgentSessionsService
   let agentSessionRepository: Repository<AgentSession>
   let agentRepository: Repository<Agent>
-  let chatMessageRepository: Repository<ChatMessage>
+  let agentMessageRepository: Repository<AgentMessage>
   let userRepository: Repository<User>
   let organizationRepository: Repository<Organization>
   let projectRepository: Repository<Project>
@@ -50,7 +50,7 @@ export function agentSessionControllerTestSetup() {
     await setup.startTransaction()
     service = setup.module.get<AgentSessionsService>(AgentSessionsService)
     agentSessionRepository = setup.getRepository(AgentSession)
-    chatMessageRepository = setup.getRepository(ChatMessage)
+    agentMessageRepository = setup.getRepository(AgentMessage)
     agentRepository = setup.getRepository(Agent)
     userRepository = setup.getRepository(User)
     organizationRepository = setup.getRepository(Organization)
@@ -98,7 +98,7 @@ export function agentSessionControllerTestSetup() {
     return {
       agentRepository,
       agentSessionRepository,
-      chatMessageRepository,
+      agentMessageRepository,
       membershipRepository,
       organizationRepository,
       projectRepository,

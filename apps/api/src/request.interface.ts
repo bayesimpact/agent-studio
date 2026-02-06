@@ -24,7 +24,7 @@ export interface EndpointRequestWithUserMembership extends EndpointRequest {
 }
 
 export interface EndpointRequestWithProject extends EndpointRequestWithUserMembership {
-  project?: Project
+  project: Project
 }
 
 export interface EndpointRequestWithResource extends EndpointRequestWithProject {

@@ -1,4 +1,5 @@
-import type { Repository } from "typeorm"
+// biome-ignore lint/style/useImportType: this is a class, not a type
+import { Repository } from "typeorm"
 import { Agent } from "@/agents/agent.entity"
 import { clearTestDatabase } from "@/common/test/test-database"
 import {
@@ -11,14 +12,14 @@ import { UserMembership } from "@/organizations/user-membership.entity"
 import { Project } from "@/projects/project.entity"
 import type { EndpointRequest } from "@/request.interface"
 import { User } from "@/users/user.entity"
+import { AgentMessage } from "./agent-message.entity"
+import { AgentMessagesController } from "./agent-messages.controller"
+import { createChitChatConversation } from "./agent-messages.factory"
 import { AgentSession } from "./agent-session.entity"
 import { AgentSessionsModule } from "./agent-sessions.module"
-import { ChatMessage } from "./chat-message.entity"
-import { ChatMessagesController } from "./chat-messages.controller"
-import { createChitChatConversation } from "./chat-messages.factory"
 
-describe("ChatMessagesController", () => {
-  let controller: ChatMessagesController
+describe("AgentMessagesController", () => {
+  let controller: AgentMessagesController
   let setup: Awaited<ReturnType<typeof setupTransactionalTestDatabase>>
   let userRepository: Repository<User>
   let organizationRepository: Repository<Organization>
@@ -26,7 +27,7 @@ describe("ChatMessagesController", () => {
   let projectRepository: Repository<Project>
   let agentRepository: Repository<Agent>
   let agentSessionRepository: Repository<AgentSession>
-  let chatMessageRepository: Repository<ChatMessage>
+  let agentMessageRepository: Repository<AgentMessage>
 
   beforeAll(async () => {
     setup = await setupTransactionalTestDatabase({
@@ -41,14 +42,14 @@ describe("ChatMessagesController", () => {
 
   beforeEach(async () => {
     await setup.startTransaction()
-    controller = setup.module.get<ChatMessagesController>(ChatMessagesController)
+    controller = setup.module.get<AgentMessagesController>(AgentMessagesController)
     userRepository = setup.getRepository(User)
     organizationRepository = setup.getRepository(Organization)
     membershipRepository = setup.getRepository(UserMembership)
     projectRepository = setup.getRepository(Project)
     agentRepository = setup.getRepository(Agent)
     agentSessionRepository = setup.getRepository(AgentSession)
-    chatMessageRepository = setup.getRepository(ChatMessage)
+    agentMessageRepository = setup.getRepository(AgentMessage)
   })
 
   afterEach(async () => {
@@ -71,7 +72,7 @@ describe("ChatMessagesController", () => {
       })
 
       // add 2 messages (from the assistant and the user) to the session
-      await createChitChatConversation(session, { chatMessageRepository })
+      await createChitChatConversation(session, { agentMessageRepository })
 
       const mockRequest = { user: { id: user.id } } as EndpointRequest
 

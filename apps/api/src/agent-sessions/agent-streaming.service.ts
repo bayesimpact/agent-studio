@@ -2,7 +2,7 @@ import type { MessageEvent } from "@nestjs/common"
 import { Inject, Injectable } from "@nestjs/common"
 import type { Agent } from "@/agents/agent.entity"
 import type {
-  ChatMessage,
+  LLMChatMessage,
   LLMConfig,
   LLMMetadata,
   LLMProvider,
@@ -13,7 +13,7 @@ import { AgentSession } from "./agent-session.entity"
 import { AgentSessionsService } from "./agent-sessions.service"
 
 @Injectable()
-export class ChatStreamingService {
+export class AgentStreamingService {
   constructor(
     private readonly agentSessionsService: AgentSessionsService,
     @Inject("LLMProvider")
@@ -21,10 +21,10 @@ export class ChatStreamingService {
   ) {}
 
   /**
-   * Streams a chat response for a session
+   * Streams a agent response for a session
    * Handles the full flow: persist before, stream, persist after
    */
-  async *streamChatResponse(
+  async *streamAgentResponse(
     session: AgentSession,
     agent: Agent,
     userContent: string,
@@ -114,8 +114,8 @@ export class ChatStreamingService {
   /**
    * Converts AgentSession messages to LLM provider format
    */
-  private convertToLLMFormat(messages: AgentSession["messages"]): ChatMessage[] {
-    const llmMessages: ChatMessage[] = []
+  private convertToLLMFormat(messages: AgentSession["messages"]): LLMChatMessage[] {
+    const llmMessages: LLMChatMessage[] = []
 
     for (const message of messages) {
       // Skip streaming messages (they're not complete yet)

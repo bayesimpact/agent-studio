@@ -16,14 +16,14 @@ import { AgentSessionStreamingRoutes } from "./agent-session-streaming.routes"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
 import { AgentSessionsService } from "./agent-sessions.service"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
-import { ChatStreamingService } from "./chat-streaming.service"
+import { AgentStreamingService } from "./agent-streaming.service"
 
 @UseGuards(JwtAuthGuard, UserGuard)
 @Controller()
 export class AgentSessionStreamingController {
   constructor(
     private readonly agentSessionsService: AgentSessionsService,
-    private readonly chatStreamingService: ChatStreamingService,
+    private readonly chatStreamingService: AgentStreamingService,
   ) {}
 
   @Sse(AgentSessionStreamingRoutes.streamPlayground.path)
@@ -50,7 +50,7 @@ export class AgentSessionStreamingController {
             user.id,
           )
 
-          for await (const event of this.chatStreamingService.streamChatResponse(
+          for await (const event of this.chatStreamingService.streamAgentResponse(
             session,
             agent,
             userContent,

@@ -1,4 +1,4 @@
-import { chatMessageFactory } from "../chat-messages.factory"
+import { agentMessageFactory } from "../agent-messages.factory"
 import { agentSessionControllerTestSetup } from "./test-setup"
 
 const getTestContext = agentSessionControllerTestSetup()
@@ -30,7 +30,7 @@ describe("findById", () => {
   })
 
   it("should recover aborted streams on load", async () => {
-    const { service, testAgent, testOrganization, testUser, chatMessageRepository } =
+    const { service, testAgent, testOrganization, testUser, agentMessageRepository } =
       getTestContext()
 
     // Create a session with an old streaming message
@@ -44,19 +44,19 @@ describe("findById", () => {
     const oldDate = new Date()
     oldDate.setMinutes(oldDate.getMinutes() - 10) // 10 minutes ago
 
-    const oldMessage = chatMessageFactory
+    const oldMessage = agentMessageFactory
       .streaming()
       .sentMinutesAgo(10)
       .assistant()
       .transient({ session: session })
       .build()
-    await chatMessageRepository.save(oldMessage)
+    await agentMessageRepository.save(oldMessage)
 
     // Load the session - should recover the aborted stream
     const loadedSession = await service.findById(session.id)
 
     expect(loadedSession).toBeDefined()
-    const recoveredMessage = await chatMessageRepository.findOne({
+    const recoveredMessage = await agentMessageRepository.findOne({
       where: { id: oldMessage.id },
     })
     expect(recoveredMessage).toBeDefined()
