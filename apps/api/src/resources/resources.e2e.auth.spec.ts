@@ -265,4 +265,120 @@ describe("ResourcesController (e2e)", () => {
       )
     })
   })
+
+  describe("ResourcesRoutes.getTemporaryUrl", () => {
+    const subject = async (params: {
+      organizationId: string | null
+      projectId: string | null
+      resourceId: string | null
+    }) =>
+      request({
+        route: ResourcesRoutes.getTemporaryUrl,
+        pathParams: removeNullish(params),
+        token: accessToken ?? undefined,
+      })
+
+    it("requires an authentication token", async () => {
+      accessToken = null
+      expectResponse(
+        await subject({
+          organizationId: "random-organization-id",
+          projectId: "random-project-id",
+          resourceId: "random-resource-id",
+        }),
+        401,
+        AUTH_ERRORS.NO_ACCESS_TOKEN,
+      )
+    })
+    it("requires a valid organization ID", async () => {
+      expectResponse(
+        await subject({
+          organizationId: null,
+          projectId: "random-project-id",
+          resourceId: "random-resource-id",
+        }),
+        400,
+        AUTH_ERRORS.NO_ORGANIZATION_ID,
+      )
+    })
+    it("requires a valid project ID", async () => {
+      expectResponse(
+        await subject({
+          organizationId: "random-organization-id",
+          projectId: null,
+          resourceId: "random-resource-id",
+        }),
+        500,
+        "Internal server error",
+      )
+    })
+    it("requires the user to be a member of the organization", async () => {
+      const { organization, project } = await createContextForRole("owner")
+      const resource = await createResourceForProject({
+        repositories: { resourceRepository },
+        project,
+      })
+      auth0Id = "another-auth0-id" // this will trigger a new user to be created in the database
+      expectResponse(
+        await subject({
+          organizationId: organization.id,
+          projectId: project.id,
+          resourceId: resource.id,
+        }),
+        401,
+        AUTH_ERRORS.NOT_MEMBER_OF_ORG,
+      )
+    })
+    it("requires the resource to be part of the project", async () => {
+      const { organization, project: project1 } = await createContextForRole("owner")
+      const project2 = await repositories.projectRepository.save(
+        projectFactory.transient({ organization }).build(),
+      )
+      const resource = await createResourceForProject({
+        repositories: { resourceRepository },
+        project: project2,
+      })
+      expect(resource.projectId).toBe(project2.id)
+      expectResponse(
+        await subject({
+          organizationId: organization.id,
+          projectId: project1.id,
+          resourceId: resource.id,
+        }),
+        403,
+        "You are not authorized to access this resource",
+      )
+    })
+    it("doesn't allow a simple member to delete a resource", async () => {
+      const { organization, project } = await createContextForRole("member")
+      const resource = await createResourceForProject({
+        repositories: { resourceRepository },
+        project,
+      })
+      expectResponse(
+        await subject({
+          organizationId: organization.id,
+          projectId: project.id,
+          resourceId: resource.id,
+        }),
+        403,
+        AUTH_ERRORS.UNAUTHORIZED_RESOURCE,
+      )
+    })
+    it("allows the owner to delete a resource", async () => {
+      const { organization, project } = await createContextForRole("owner")
+      const resource = await createResourceForProject({
+        repositories: { resourceRepository },
+        project,
+      })
+      expectResponse(
+        await subject({
+          organizationId: organization.id,
+          projectId: project.id,
+          resourceId: resource.id,
+        }),
+        201,
+      )
+    })
+  })
 })

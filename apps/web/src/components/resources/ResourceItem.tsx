@@ -6,6 +6,7 @@ import { MarkdownWrapper } from "@/components/chat/MarkdownWrapper"
 import type { Resource } from "@/features/resources/resources.models"
 import { getLocale } from "@/utils/get-locale"
 import { DeleteResourceDialog } from "./DeleteResourceDialog"
+import { OpenResourceUrl } from "./OpenResourceUrl"
 
 export function ResourceItem({
   resource,
@@ -20,9 +21,17 @@ export function ResourceItem({
       <ItemHeader>
         <ItemTitle>
           <FileIcon />
-          {resource.title}
+          <span className="wrap-anywhere">{resource.title}</span>
         </ItemTitle>
-        <DeleteResourceDialog organizationId={organizationId} resource={resource} />
+
+        <div className="flex gap-2 items-center">
+          <OpenResourceUrl
+            organizationId={organizationId}
+            projectId={resource.projectId}
+            resource={resource}
+          />
+          <DeleteResourceDialog organizationId={organizationId} resource={resource} />
+        </div>
       </ItemHeader>
 
       <ItemContent>
