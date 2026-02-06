@@ -11,8 +11,8 @@ import { Test, type TestingModule, type TestingModuleBuilder } from "@nestjs/tes
 import { getRepositoryToken, TypeOrmModule } from "@nestjs/typeorm"
 import type { ObjectLiteral, QueryRunner, Repository } from "typeorm"
 import { DataSource, EntityManager } from "typeorm"
+import { AgentMessage } from "@/agent-sessions/agent-message.entity"
 import { AgentSession } from "@/agent-sessions/agent-session.entity"
-import { ChatMessage } from "@/agent-sessions/chat-message.entity"
 import { Agent } from "@/agents/agent.entity"
 import { Organization } from "@/organizations/organization.entity"
 import { UserMembership } from "@/organizations/user-membership.entity"
@@ -27,7 +27,7 @@ const TEST_ENTITIES = [
   Project,
   Agent,
   AgentSession,
-  ChatMessage,
+  AgentMessage,
   Resource,
 ]
 
@@ -43,7 +43,7 @@ export interface TransactionalTestSetup {
     projectRepository: Repository<Project>
     agentRepository: Repository<Agent>
     agentSessionRepository: Repository<AgentSession>
-    chatMessageRepository: Repository<ChatMessage>
+    agentMessageRepository: Repository<AgentMessage>
     resourceRepository: Repository<Resource>
   }
   startTransaction: () => Promise<void>
@@ -199,7 +199,7 @@ export async function setupTransactionalTestDatabase(
     projectRepository: getRepository(Project),
     agentRepository: getRepository(Agent),
     agentSessionRepository: getRepository(AgentSession),
-    chatMessageRepository: getRepository(ChatMessage),
+    agentMessageRepository: getRepository(AgentMessage),
     resourceRepository: getRepository(Resource),
   })
 

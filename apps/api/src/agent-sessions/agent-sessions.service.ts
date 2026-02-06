@@ -5,8 +5,8 @@ import type { Repository } from "typeorm"
 import { v4 } from "uuid"
 import { Agent } from "@/agents/agent.entity"
 import { UserMembership } from "@/organizations/user-membership.entity"
+import { AgentMessage } from "./agent-message.entity"
 import { AgentSession, type AgentSessionType } from "./agent-session.entity"
-import { ChatMessage } from "./chat-message.entity"
 
 @Injectable()
 export class AgentSessionsService {
@@ -15,8 +15,8 @@ export class AgentSessionsService {
   constructor(
     @InjectRepository(AgentSession)
     private readonly agentSessionRepository: Repository<AgentSession>,
-    @InjectRepository(ChatMessage)
-    private readonly chatMessageRepository: Repository<ChatMessage>,
+    @InjectRepository(AgentMessage)
+    private readonly agentMessageRepository: Repository<AgentMessage>,
     @InjectRepository(Agent)
     private readonly agentRepository: Repository<Agent>,
     @InjectRepository(UserMembership)
@@ -52,7 +52,7 @@ export class AgentSessionsService {
       )
     }
 
-    const messages = await this.chatMessageRepository.find({
+    const messages = await this.agentMessageRepository.find({
       where: { sessionId },
       order: { createdAt: "ASC" },
     })
@@ -272,7 +272,7 @@ export class AgentSessionsService {
     }
 
     // Create user message
-    const userMessage = this.chatMessageRepository.create({
+    const userMessage = this.agentMessageRepository.create({
       sessionId,
       role: "user",
       content: userContent,
@@ -281,11 +281,11 @@ export class AgentSessionsService {
       completedAt: null,
       toolCalls: null,
     })
-    await this.chatMessageRepository.save(userMessage)
+    await this.agentMessageRepository.save(userMessage)
 
     // Create empty assistant message with streaming status
     const assistantMessageId = v4()
-    const assistantMessage = this.chatMessageRepository.create({
+    const assistantMessage = this.agentMessageRepository.create({
       id: assistantMessageId,
       sessionId,
       role: "assistant",
@@ -295,7 +295,7 @@ export class AgentSessionsService {
       completedAt: null,
       toolCalls: null,
     })
-    await this.chatMessageRepository.save(assistantMessage)
+    await this.agentMessageRepository.save(assistantMessage)
 
     // Reload session with messages
     const updatedSession = await this.agentSessionRepository.findOne({
@@ -319,7 +319,7 @@ export class AgentSessionsService {
     assistantMessageId: string,
     fullContent: string,
   ): Promise<AgentSession> {
-    const message = await this.chatMessageRepository.findOne({
+    const message = await this.agentMessageRepository.findOne({
       where: { id: assistantMessageId, sessionId },
     })
 
@@ -332,7 +332,7 @@ export class AgentSessionsService {
     message.content = fullContent
     message.status = "completed"
     message.completedAt = new Date()
-    await this.chatMessageRepository.save(message)
+    await this.agentMessageRepository.save(message)
 
     const session = await this.agentSessionRepository.findOne({
       where: { id: sessionId },
@@ -354,7 +354,7 @@ export class AgentSessionsService {
     assistantMessageId: string,
     errorMessage: string,
   ): Promise<AgentSession> {
-    const message = await this.chatMessageRepository.findOne({
+    const message = await this.agentMessageRepository.findOne({
       where: { id: assistantMessageId, sessionId },
     })
 
@@ -367,7 +367,7 @@ export class AgentSessionsService {
     message.content = errorMessage
     message.status = "error"
     message.completedAt = new Date()
-    await this.chatMessageRepository.save(message)
+    await this.agentMessageRepository.save(message)
 
     const session = await this.agentSessionRepository.findOne({
       where: { id: sessionId },
@@ -386,7 +386,7 @@ export class AgentSessionsService {
    * Marks old "streaming" messages as "aborted"
    */
   private async recoverAbortedStreams(sessionId: string): Promise<void> {
-    const messages = await this.chatMessageRepository.find({
+    const messages = await this.agentMessageRepository.find({
       where: {
         sessionId,
         role: "assistant",
@@ -398,7 +398,7 @@ export class AgentSessionsService {
     for (const message of messages) {
       if (this.isStreamAborted(message)) {
         message.status = "aborted"
-        await this.chatMessageRepository.save(message)
+        await this.agentMessageRepository.save(message)
       }
     }
   }
@@ -406,7 +406,7 @@ export class AgentSessionsService {
   /**
    * Checks if a streaming message should be marked as aborted
    */
-  private isStreamAborted(message: ChatMessage): boolean {
+  private isStreamAborted(message: AgentMessage): boolean {
     if (!message.startedAt) {
       return false
     }
@@ -422,7 +422,7 @@ export class AgentSessionsService {
   /**
    * Converts ChatMessage entity to DTO
    */
-  private toDto(message: ChatMessage): AgentSessionMessageDto {
+  private toDto(message: AgentMessage): AgentSessionMessageDto {
     return {
       id: message.id,
       role: message.role,

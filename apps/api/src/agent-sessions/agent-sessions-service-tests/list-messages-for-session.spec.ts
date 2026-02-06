@@ -1,6 +1,6 @@
 import { ForbiddenException, NotFoundException } from "@nestjs/common/exceptions"
 import { userMembershipFactory } from "@/organizations/user-membership.factory"
-import { createChitChatConversation } from "../chat-messages.factory"
+import { createChitChatConversation } from "../agent-messages.factory"
 import { agentSessionControllerTestSetup } from "./test-setup"
 
 const getTestContext = agentSessionControllerTestSetup()
@@ -13,7 +13,7 @@ describe("listMessagesForSession", () => {
       testUser,
       testOrganization,
       membershipRepository,
-      chatMessageRepository,
+      agentMessageRepository,
     } = getTestContext()
 
     await membershipRepository.save(
@@ -29,7 +29,7 @@ describe("listMessagesForSession", () => {
       testOrganization.id,
     )
 
-    await createChitChatConversation(session, { chatMessageRepository })
+    await createChitChatConversation(session, { agentMessageRepository })
 
     const messages = await service.listMessagesForSession(session.id, testUser.id)
 
