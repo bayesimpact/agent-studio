@@ -8,7 +8,13 @@
     "edit": "Modifier",
     "delete": "Supprimer",
     "more": "Plus",
-    "project": "Projet"
+    "project": "Projet",
+    "resources": "Ressources",
+    "dragOrUploadFile": "Glissez ou téléversez un fichier",
+    "processingFile": "Traitement du fichier...",
+    "fileIsStored": "Le fichier est stocké",
+    "fileIsNotStored": "Le fichier n'est pas stocké",
+    "storeFile": "Stocker le fichier"
   },
   "project": {
     "createButton": {

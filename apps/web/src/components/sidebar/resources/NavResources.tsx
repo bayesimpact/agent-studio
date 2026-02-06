@@ -17,7 +17,6 @@ export function NavResources({
   const { isAdminInterface } = useAbility()
   const isActive = useIsResourcesActive(projectId)
   if (!isAdminInterface) return null
-  // TODO: i18n
   const path = buildResourcesPath({ organizationId, projectId })
   return (
     <SidebarMenu>

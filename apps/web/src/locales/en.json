@@ -8,7 +8,13 @@
     "edit": "Edit",
     "delete": "Delete",
     "more": "More",
-    "project": "Project"
+    "project": "Project",
+    "resources": "Resources",
+    "dragOrUploadFile": "Drag or upload a file",
+    "processingFile": "Processing file...",
+    "fileIsStored": "File is stored",
+    "fileIsNotStored": "File is not stored",
+    "storeFile": "Store file"
   },
   "project": {
     "createButton": {
