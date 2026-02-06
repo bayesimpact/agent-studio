@@ -1,5 +1,6 @@
 {
   "common": {
+    "download": "Télécharger",
     "loading": "Chargement...",
     "loadingDescription": "Veuillez patienter pendant le chargement des données.",
     "english": "Anglais",
