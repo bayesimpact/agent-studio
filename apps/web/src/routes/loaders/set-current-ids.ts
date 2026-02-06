@@ -1,7 +1,7 @@
 import { useEffect } from "react"
 import type { Params } from "react-router-dom"
-import { chatBotsActions } from "@/features/chat-bots/chat-bots.slice"
-import { chatSessionsActions } from "@/features/chat-sessions/chat-sessions.slice"
+import { agentSessionsActions } from "@/features/agent-sessions/agent-sessions.slice"
+import { agentsActions } from "@/features/agents/agents.slice"
 import { organizationsActions } from "@/features/organizations/organizations.slice"
 import { projectsActions } from "@/features/projects/projects.slice"
 import type { AppDispatch } from "@/store"
@@ -13,7 +13,7 @@ export const setCurrentIds = ({
   dispatch: AppDispatch
   params: Params<string>
 }) => {
-  const { organizationId, projectId, chatBotId, chatSessionId } = params
+  const { organizationId, projectId, agentId, agentSessionId } = params
 
   useEffect(() => {
     dispatch(
@@ -22,8 +22,10 @@ export const setCurrentIds = ({
 
     dispatch(projectsActions.setCurrentProjectId({ projectId: projectId || null }))
 
-    dispatch(chatBotsActions.setCurrentChatBotId({ chatBotId: chatBotId || null }))
+    dispatch(agentsActions.setCurrentAgentId({ agentId: agentId || null }))
 
-    dispatch(chatSessionsActions.setCurrentChatSessionId({ chatSessionId: chatSessionId || null }))
-  }, [dispatch, organizationId, projectId, chatBotId, chatSessionId])
+    dispatch(
+      agentSessionsActions.setCurrentAgentSessionId({ agentSessionId: agentSessionId || null }),
+    )
+  }, [dispatch, organizationId, projectId, agentId, agentSessionId])
 }

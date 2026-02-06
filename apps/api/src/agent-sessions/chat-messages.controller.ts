@@ -1,6 +1,6 @@
 import {
-  ChatSessionMessagesRoutes,
-  type ListChatSessionMessagesResponseDto,
+  AgentSessionMessagesRoutes,
+  type ListAgentSessionMessagesResponseDto,
 } from "@caseai-connect/api-contracts"
 import { Controller, Get, Param, Req, UseGuards } from "@nestjs/common"
 import { JwtAuthGuard } from "@/auth/jwt-auth.guard"
@@ -14,16 +14,16 @@ import { AgentSessionsService } from "./agent-sessions.service"
 export class ChatMessagesController {
   constructor(private readonly agentSessionsService: AgentSessionsService) {}
 
-  @Get(ChatSessionMessagesRoutes.listMessages.path)
+  @Get(AgentSessionMessagesRoutes.listMessages.path)
   async listMessages(
     @Req() request: EndpointRequest,
     @Param("sessionId") sessionId: string,
-  ): Promise<typeof ChatSessionMessagesRoutes.listMessages.response> {
+  ): Promise<typeof AgentSessionMessagesRoutes.listMessages.response> {
     const user = request.user
 
     const messages = await this.agentSessionsService.listMessagesForSession(sessionId, user.id)
 
-    const data: ListChatSessionMessagesResponseDto = {
+    const data: ListAgentSessionMessagesResponseDto = {
       sessionId,
       messages,
     }

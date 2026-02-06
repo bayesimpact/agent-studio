@@ -374,8 +374,8 @@ const project = projectFactory.transient({ organization: org }).build()
 - `organizationFactory` - For creating Organization entities
 - `projectFactory` - For creating Project entities (requires organization transient)
 - `userMembershipFactory` - For creating UserMembership entities (requires user and organization transients, has `.owner()`, `.admin()`, `.member()` methods)
-- `chatBotFactory` - For creating ChatBot entities
-- `chatSessionFactory` - For creating ChatSession entities
+- `agentFactory` - For creating agent entities
+- `agentSessionFactory` - For creating agentSession entities
 - Additional factories may exist for other entities
 
 ### Use Organization Factory Helpers in Tests
@@ -385,7 +385,7 @@ const project = projectFactory.transient({ organization: org }).build()
 **Available Helpers**:
 - `createOrganizationWithOwner(repositories, params?)` - Creates and saves an organization, user, and membership (with owner role) in one call
 - `buildOrganizationWithOwner(params?)` - Builds (but doesn't save) an organization, user, and membership
-- Additional helpers may exist for creating organizations with projects, chat bots, etc.
+- Additional helpers may exist for creating organizations with projects, Agents, etc.
 
 **Requirements**:
 - Use `createOrganizationWithOwner` when you need an organization with a user and membership already saved to the database

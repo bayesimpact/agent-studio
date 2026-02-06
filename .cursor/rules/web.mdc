@@ -30,7 +30,7 @@ alwaysApply: false
 
 **Store wiring**:
 - `store/index.ts`:
-  - Registers feature reducers under their domain keys (e.g. `me`, `projects`, `organizations`, `chatBots`, etc.)
+  - Registers feature reducers under their domain keys (e.g. `me`, `projects`, `organizations`, `agents`, etc.)
   - Configures `thunk.extraArgument` with `{ services: getServices() }` (typed as `ThunkExtraArg`)
   - Middleware and listeners must assume all side-effectful work goes through these services
 
@@ -82,7 +82,7 @@ alwaysApply: false
 - Keep Redux slices and selectors feature-local, typed on the **domain models**
 
 **Migration Guidance**:
-- Legacy features (e.g. `projects`, `organizations`, `chatBots`, `test`) that currently:
+- Legacy features (e.g. `projects`, `organizations`, `agents`, `test`) that currently:
   - Define APIs in `services/{domain}.ts`
   - Return DTOs directly to slices
   - Are wired via `build{Domain}Api(getAxiosInstance())` in `external/axios.services.ts`

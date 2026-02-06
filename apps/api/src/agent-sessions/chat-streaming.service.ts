@@ -181,14 +181,14 @@ Always answer in ${agent.locale}.
   /**
    * Builds LLM metadata from Agent and AgentSession entities
    */
-  private buildLLMMetadata(chatbot: Agent, session: AgentSession): LLMMetadata {
+  private buildLLMMetadata(agent: Agent, session: AgentSession): LLMMetadata {
     return {
       agentSessionId: session.id,
-      agentId: chatbot.id,
-      projectId: chatbot.projectId,
+      agentId: agent.id,
+      projectId: agent.projectId,
       organizationId: session.organizationId,
       currentTurn: session.messages.filter((m) => m.role === "user").length,
-      tags: [chatbot.name],
+      tags: [agent.name],
     }
   }
 }

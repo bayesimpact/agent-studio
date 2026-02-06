@@ -1,11 +1,11 @@
 import { configureStore } from "@reduxjs/toolkit"
 import { getServices } from "@/di/services"
+import { agentSessionMiddleware } from "@/features/agent-sessions/agent-sessions.middleware"
+import { agentSessionsSliceReducer } from "@/features/agent-sessions/agent-sessions.slice"
+import { agentsMiddleware } from "@/features/agents/agents.middleware"
+import { agentsSliceReducer } from "@/features/agents/agents.slice"
 import { authMiddleware } from "@/features/auth/auth.middleware"
 import { authSliceReducer } from "@/features/auth/auth.slice"
-import { chatBotsMiddleware } from "@/features/chat-bots/chat-bots.middleware"
-import { chatBotsSliceReducer } from "@/features/chat-bots/chat-bots.slice"
-import { chatSessionMiddleware } from "@/features/chat-sessions/chat-sessions.middleware"
-import { chatSessionsSliceReducer } from "@/features/chat-sessions/chat-sessions.slice"
 import { meSliceReducer } from "@/features/me/me.slice"
 import { notificationsSliceReducer } from "@/features/notifications/notifications.slice"
 import { organizationsMiddleware } from "@/features/organizations/organizations.middleware"
@@ -19,8 +19,8 @@ import type { ThunkExtraArg } from "./types"
 export const store = configureStore({
   reducer: {
     auth: authSliceReducer,
-    chatBots: chatBotsSliceReducer,
-    chatSessions: chatSessionsSliceReducer,
+    agents: agentsSliceReducer,
+    agentSessions: agentSessionsSliceReducer,
     me: meSliceReducer,
     notifications: notificationsSliceReducer,
     organizations: organizationsSliceReducer,
@@ -36,8 +36,8 @@ export const store = configureStore({
       authMiddleware.middleware,
       organizationsMiddleware.middleware,
       projectsMiddleware.middleware,
-      chatBotsMiddleware.middleware,
-      chatSessionMiddleware.middleware,
+      agentsMiddleware.middleware,
+      agentSessionMiddleware.middleware,
       resourcesMiddleware.middleware,
     ),
 })

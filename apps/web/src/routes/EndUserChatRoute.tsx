@@ -26,12 +26,12 @@ export function EndUserChatRoute({ user }: { user: User }) {
       sidebarHeaderChildren={<Header to={RouteNames.HOME} />}
       sidebarContentChildren={<div>TODO</div>}
     >
-      <UserChatBot />
+      <UserAgent />
     </SidebarLayout>
   )
 }
 
-function UserChatBot() {
+function UserAgent() {
   const { setHeaderTitle } = useSidebarLayout()
   useEffect(() => {
     setHeaderTitle("Chat with AI Assistant")

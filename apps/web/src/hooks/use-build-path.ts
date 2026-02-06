@@ -1,7 +1,7 @@
 import { useCallback } from "react"
 import { useParams } from "react-router-dom"
-import { selectChatBotsFromProjectId } from "@/features/chat-bots/chat-bots.selectors"
-import { selectChatSessionsFromChatBotId } from "@/features/chat-sessions/chat-sessions.selectors"
+import { selectAgentSessionsFromAgentId } from "@/features/agent-sessions/agent-sessions.selectors"
+import { selectAgentsFromProjectId } from "@/features/agents/agents.selectors"
 import { selectOrganizations } from "@/features/organizations/organizations.selectors"
 import { selectProjects } from "@/features/projects/projects.selectors"
 import { buildAdminPath, buildAppPath, RouteNames } from "@/routes/helpers"
@@ -9,13 +9,13 @@ import { ADS } from "@/store/async-data-status"
 import { useAppSelector } from "@/store/hooks"
 import { useAbility } from "./use-ability"
 
-export type PathType = "organization" | "project" | "chatBot" | "chatSession"
+export type PathType = "organization" | "project" | "agent" | "agentSession"
 
 export interface BuildPathOptions {
   organizationId?: string
   projectId?: string
-  chatBotId?: string
-  chatSessionId?: string
+  agentId?: string
+  agentSessionId?: string
 }
 
 export function useGetPath() {
@@ -23,15 +23,15 @@ export function useGetPath() {
   const {
     organizationId: urlOrganizationId,
     projectId: urlProjectId,
-    chatBotId: urlChatBotId,
-    chatSessionId: urlChatSessionId,
+    agentId: urlagentId,
+    agentSessionId: urlagentSessionId,
   } = useParams()
 
   const computePath = (isAdminInterface: boolean, pathType: PathType): string => {
     const organizationId = urlOrganizationId
     const projectId = urlProjectId
-    const chatBotId = urlChatBotId
-    const chatSessionId = urlChatSessionId
+    const agentId = urlagentId
+    const agentSessionId = urlagentSessionId
 
     const organizationPath = organizationId
       ? buildOrganizationPath({
@@ -57,33 +57,33 @@ export function useGetPath() {
       return projectPath
     }
 
-    const chatBotPath =
-      organizationId && projectId && chatBotId
-        ? buildChatBotPath({
+    const agentPath =
+      organizationId && projectId && agentId
+        ? buildagentPath({
             organizationId,
             projectId,
-            chatBotId,
+            agentId,
             isAdminInterface,
           })
         : projectPath
 
-    if (pathType === "chatBot") {
-      return chatBotPath
+    if (pathType === "agent") {
+      return agentPath
     }
 
-    const chatSessionPath =
-      organizationId && projectId && chatBotId && chatSessionId
-        ? buildChatSessionPath({
+    const agentSessionPath =
+      organizationId && projectId && agentId && agentSessionId
+        ? buildagentSessionPath({
             organizationId,
             projectId,
-            chatBotId,
-            chatSessionId,
+            agentId,
+            agentSessionId,
             isAdminInterface,
           })
-        : chatBotPath
+        : agentPath
 
-    if (pathType === "chatSession") {
-      return chatSessionPath
+    if (pathType === "agentSession") {
+      return agentSessionPath
     }
 
     return RouteNames.HOME
@@ -106,8 +106,8 @@ export function useBuildPath() {
   ): string => {
     const organizationId = options.organizationId
     const projectId = options.projectId
-    const chatBotId = options.chatBotId
-    const chatSessionId = options.chatSessionId
+    const agentId = options.agentId
+    const agentSessionId = options.agentSessionId
 
     const organizationPath = organizationId
       ? buildOrganizationPath({
@@ -133,33 +133,33 @@ export function useBuildPath() {
       return projectPath
     }
 
-    const chatBotPath =
-      organizationId && projectId && chatBotId
-        ? buildChatBotPath({
+    const agentPath =
+      organizationId && projectId && agentId
+        ? buildagentPath({
             organizationId,
             projectId,
-            chatBotId,
+            agentId,
             isAdminInterface,
           })
         : projectPath
 
-    if (pathType === "chatBot") {
-      return chatBotPath
+    if (pathType === "agent") {
+      return agentPath
     }
 
-    const chatSessionPath =
-      organizationId && projectId && chatBotId && chatSessionId
-        ? buildChatSessionPath({
+    const agentSessionPath =
+      organizationId && projectId && agentId && agentSessionId
+        ? buildagentSessionPath({
             organizationId,
             projectId,
-            chatBotId,
-            chatSessionId,
+            agentId,
+            agentSessionId,
             isAdminInterface,
           })
-        : chatBotPath
+        : agentPath
 
-    if (pathType === "chatSession") {
-      return chatSessionPath
+    if (pathType === "agentSession") {
+      return agentSessionPath
     }
 
     return RouteNames.HOME
@@ -167,17 +167,17 @@ export function useBuildPath() {
 
   const buildPath: {
     (
-      pathType: "chatSession",
+      pathType: "agentSession",
       options: {
         organizationId: string
         projectId: string
-        chatBotId: string
-        chatSessionId: string
+        agentId: string
+        agentSessionId: string
       },
     ): string
     (
-      pathType: "chatBot",
-      options: { organizationId: string; projectId: string; chatBotId: string },
+      pathType: "agent",
+      options: { organizationId: string; projectId: string; agentId: string },
     ): string
     (pathType: "project", options: { organizationId: string; projectId: string }): string
     (pathType: "organization", options: { organizationId: string }): string
@@ -193,13 +193,13 @@ export function useClosestParentPath() {
   const {
     organizationId: urlOrganizationId,
     projectId: urlProjectId,
-    chatBotId: urlChatBotId,
-    chatSessionId: urlChatSessionId,
+    agentId: urlagentId,
+    agentSessionId: urlagentSessionId,
   } = useParams()
   const organizations = useAppSelector(selectOrganizations)
   const projects = useAppSelector(selectProjects)
-  const chatBots = useAppSelector(selectChatBotsFromProjectId(urlProjectId))
-  const chatSessions = useAppSelector(selectChatSessionsFromChatBotId(urlChatBotId))
+  const agents = useAppSelector(selectAgentsFromProjectId(urlProjectId))
+  const agentSessions = useAppSelector(selectAgentSessionsFromAgentId(urlagentId))
 
   const foundOrganization = useCallback(
     (organizationId: string | undefined) =>
@@ -213,36 +213,36 @@ export function useClosestParentPath() {
     [projects],
   )
 
-  const foundChatBot = useCallback(
-    (chatBotId: string | undefined) =>
-      chatBotId
-        ? ADS.isFulfilled(chatBots)
-          ? chatBots.value.find((cb) => cb.id === chatBotId) || null
+  const foundagent = useCallback(
+    (agentId: string | undefined) =>
+      agentId
+        ? ADS.isFulfilled(agents)
+          ? agents.value.find((cb) => cb.id === agentId) || null
           : null
         : null,
-    [chatBots],
+    [agents],
   )
 
-  const foundChatSession = useCallback(
-    (chatSessionId: string | undefined) =>
-      chatSessionId
-        ? ADS.isFulfilled(chatSessions)
-          ? chatSessions.value.find((cs) => cs.id === chatSessionId) || null
+  const foundagentSession = useCallback(
+    (agentSessionId: string | undefined) =>
+      agentSessionId
+        ? ADS.isFulfilled(agentSessions)
+          ? agentSessions.value.find((cs) => cs.id === agentSessionId) || null
           : null
         : null,
-    [chatSessions],
+    [agentSessions],
   )
 
   const getClosestParentPath = useCallback((): string => {
     const organizationId = urlOrganizationId
     const projectId = urlProjectId
-    const chatBotId = urlChatBotId
-    const chatSessionId = urlChatSessionId
+    const agentId = urlagentId
+    const agentSessionId = urlagentSessionId
 
     const organizationFound = foundOrganization(organizationId)
     const projectFound = foundProject(projectId)
-    const chatBotFound = foundChatBot(chatBotId)
-    const chatSessionFound = foundChatSession(chatSessionId)
+    const agentFound = foundagent(agentId)
+    const agentSessionFound = foundagentSession(agentSessionId)
 
     const organizationPath = organizationFound
       ? buildOrganizationPath({
@@ -260,37 +260,37 @@ export function useClosestParentPath() {
           })
         : organizationPath
 
-    const chatBotPath =
-      organizationFound && projectFound && chatBotFound
-        ? buildChatBotPath({
+    const agentPath =
+      organizationFound && projectFound && agentFound
+        ? buildagentPath({
             organizationId: organizationFound.id,
             projectId: projectFound.id,
-            chatBotId: chatBotFound.id,
+            agentId: agentFound.id,
             isAdminInterface,
           })
         : projectPath
 
-    const chatSessionPath =
-      organizationFound && projectFound && chatBotFound && chatSessionFound
-        ? buildChatSessionPath({
+    const agentSessionPath =
+      organizationFound && projectFound && agentFound && agentSessionFound
+        ? buildagentSessionPath({
             organizationId: organizationFound.id,
             projectId: projectFound.id,
-            chatBotId: chatBotFound.id,
-            chatSessionId: chatSessionFound.id,
+            agentId: agentFound.id,
+            agentSessionId: agentSessionFound.id,
             isAdminInterface,
           })
-        : chatBotPath
+        : agentPath
 
     // closestParent
-    return chatSessionPath || chatBotPath || projectPath || organizationPath || RouteNames.HOME
+    return agentSessionPath || agentPath || projectPath || organizationPath || RouteNames.HOME
   }, [
     isAdminInterface,
-    foundChatBot,
-    foundChatSession,
+    foundagent,
+    foundagentSession,
     foundOrganization,
     foundProject,
-    urlChatBotId,
-    urlChatSessionId,
+    urlagentId,
+    urlagentSessionId,
     urlOrganizationId,
     urlProjectId,
   ])
@@ -324,36 +324,36 @@ const buildProjectPath = ({
   return buildAppPath(path)
 }
 
-const buildChatBotPath = ({
+const buildagentPath = ({
   organizationId,
   projectId,
-  chatBotId,
+  agentId,
   isAdminInterface,
 }: {
   organizationId: string
   projectId: string
-  chatBotId: string
+  agentId: string
   isAdminInterface: boolean
 }) => {
-  const path = `/o/${organizationId}/p/${projectId}/cb/${chatBotId}`
+  const path = `/o/${organizationId}/p/${projectId}/cb/${agentId}`
   if (isAdminInterface) return buildAdminPath(path)
   return buildAppPath(path)
 }
 
-const buildChatSessionPath = ({
+const buildagentSessionPath = ({
   organizationId,
   projectId,
-  chatBotId,
-  chatSessionId,
+  agentId,
+  agentSessionId,
   isAdminInterface,
 }: {
   organizationId: string
   projectId: string
-  chatBotId: string
-  chatSessionId: string
+  agentId: string
+  agentSessionId: string
   isAdminInterface: boolean
 }) => {
-  const path = `/o/${organizationId}/p/${projectId}/cb/${chatBotId}/cs/${chatSessionId}`
+  const path = `/o/${organizationId}/p/${projectId}/cb/${agentId}/cs/${agentSessionId}`
   if (isAdminInterface) return buildAdminPath(path)
   return buildAppPath(path)
 }

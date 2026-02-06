@@ -7,8 +7,8 @@ export enum RouteNames {
   ORGANIZATION_DASHBOARD = "/o/:organizationId",
   PROJECT = "/o/:organizationId/p/:projectId",
 
-  CHAT_BOT = "/o/:organizationId/p/:projectId/cb/:chatBotId",
-  CHAT_SESSION = "/o/:organizationId/p/:projectId/cb/:chatBotId/cs/:chatSessionId",
+  AGENT = "/o/:organizationId/p/:projectId/a/:agentId",
+  AGENT_SESSION = "/o/:organizationId/p/:projectId/a/:agentId/as/:agentSessionId",
 
   // ADMIN ROUTES
   ADMIN = "/admin",

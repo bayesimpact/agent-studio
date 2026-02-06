@@ -61,7 +61,7 @@ export class AgentSessionsService {
   }
 
   /**
-   * Loads a session and its chatbot, ensuring the session belongs to the user.
+   * Loads a session and its agent, ensuring the session belongs to the user.
    * Used by streaming controller to prepare for LLM calls.
    */
   async getSessionWithAgentForUser(
@@ -433,8 +433,8 @@ export class AgentSessionsService {
   }
 
   /**
-   * Deletes all playground sessions for a chatbot
-   * Called when chatbot configuration changes
+   * Deletes all playground sessions for a agent
+   * Called when agent configuration changes
    */
   async deletePlaygroundSessionsForAgent(agentId: string): Promise<void> {
     await this.agentSessionRepository.delete({
@@ -444,8 +444,8 @@ export class AgentSessionsService {
   }
 
   /**
-   * Deletes all sessions for a chatbot
-   * Called when deleting a chatbot
+   * Deletes all sessions for a agent
+   * Called when deleting a agent
    */
   async deleteAllSessionsForAgent(agentId: string): Promise<void> {
     await this.agentSessionRepository.delete({

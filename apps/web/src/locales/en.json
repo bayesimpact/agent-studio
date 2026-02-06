@@ -67,12 +67,12 @@
       }
     }
   },
-  "chatBot": {
+  "agent": {
     "form": {
-      "labelName": "ChatBot Name",
-      "placeholderName": "Enter chat bot name",
+      "labelName": "Agent Name",
+      "placeholderName": "Enter agent name",
       "labelPrompt": "Default Prompt",
-      "placeholderPrompt": "Enter the default prompt for this chat bot",
+      "placeholderPrompt": "Enter the default prompt for this agent",
       "labelModel": "Model",
       "placeholderModel": "Select model",
       "labelLocale": "Language",
@@ -80,40 +80,40 @@
       "labelTemperature": "Temperature",
       "placeholderTemperature": "0.0 - 2.0",
       "validation": {
-        "nameMinLength": "ChatBot name must be at least 3 characters",
+        "nameMinLength": "Agent name must be at least 3 characters",
         "promptRequired": "Default prompt is required"
       }
     },
     "create": {
-      "title": "Create ChatBot",
-      "description": "Create a new chat bot for {{projectName}}",
-      "submit": "Create ChatBot",
+      "title": "Create Agent",
+      "description": "Create a new agent for {{projectName}}",
+      "submit": "Create Agent",
       "submitting": "Creating..."
     },
     "update": {
-      "title": "Edit ChatBot",
-      "description": "Update the chat bot details",
-      "submit": "Update ChatBot",
+      "title": "Edit Agent",
+      "description": "Update the agent details",
+      "submit": "Update Agent",
       "submitting": "Updating..."
     },
     "delete": {
-      "title": "Delete ChatBot",
+      "title": "Delete Agent",
       "description": "Are you sure you want to delete \"{{name}}\"? This action cannot be undone.",
       "submit": "Delete",
       "submitting": "Deleting...",
-      "success": "ChatBot deleted successfully",
-      "error": "Failed to delete chat bot"
+      "success": "Agent deleted successfully",
+      "error": "Failed to delete agent"
     },
     "list": {
-      "title": "ChatBots",
+      "title": "Agents",
       "empty": {
-        "title": "No chat bots yet",
-        "description": "Create your first chat bot to get started with custom prompts for this project.",
-        "button": "Create First ChatBot"
+        "title": "No agents yet",
+        "description": "Create your first agent to get started with custom prompts for this project.",
+        "button": "Create First Agent"
       },
       "actions": {
-        "edit": "Edit ChatBot",
-        "delete": "Delete ChatBot",
+        "edit": "Edit Agent",
+        "delete": "Delete Agent",
         "more": "More"
       }
     },
@@ -127,7 +127,7 @@
       "thinking": "Thinking..."
     }
   },
-  "chatSession": {
+  "agentSession": {
     "create": {
       "button": "New chat"
     },

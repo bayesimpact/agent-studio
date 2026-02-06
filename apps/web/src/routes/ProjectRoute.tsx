@@ -10,10 +10,10 @@ import { Plus } from "lucide-react"
 import { useEffect, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { Navigate, useOutlet } from "react-router-dom"
-import { CreateChatBotDialogWithoutTrigger } from "@/components/chat-bots/CreateChatBotDialog"
+import { CreateAgentDialogWithoutTrigger } from "@/components/agents/CreateAgentDialog"
 import { useSidebarLayout } from "@/components/layouts/sidebar/context"
-import type { ChatBot } from "@/features/chat-bots/chat-bots.models"
-import { selectChatBotsFromProjectId } from "@/features/chat-bots/chat-bots.selectors"
+import type { Agent } from "@/features/agents/agents.models"
+import { selectAgentsFromProjectId } from "@/features/agents/agents.selectors"
 import type { Project } from "@/features/projects/projects.models"
 import { selectCurrentProjectId, selectProjectData } from "@/features/projects/projects.selectors"
 import { useAbility } from "@/hooks/use-ability"
@@ -26,39 +26,39 @@ import { NotFoundRoute } from "./NotFoundRoute"
 export function ProjectRoute() {
   const project = useAppSelector(selectProjectData)
   const projectId = useAppSelector(selectCurrentProjectId)
-  const chatBots = useAppSelector(selectChatBotsFromProjectId(projectId))
+  const agents = useAppSelector(selectAgentsFromProjectId(projectId))
 
-  if (ADS.isError(project) || ADS.isError(chatBots)) return <NotFoundRoute />
+  if (ADS.isError(project) || ADS.isError(agents)) return <NotFoundRoute />
 
-  if (ADS.isFulfilled(project) && ADS.isFulfilled(chatBots)) {
-    return <WithData project={project.value} chatBots={chatBots.value} />
+  if (ADS.isFulfilled(project) && ADS.isFulfilled(agents)) {
+    return <WithData project={project.value} agents={agents.value} />
   }
 
   return <LoadingRoute />
 }
 
-function WithData({ project, chatBots }: { project: Project; chatBots: ChatBot[] }) {
+function WithData({ project, agents }: { project: Project; agents: Agent[] }) {
   const outlet = useOutlet()
   const { isAdminInterface } = useAbility()
   const { buildPath } = useBuildPath()
   useHandleHeader({ project, outlet })
-  const firstChatBot = chatBots?.[0]
+  const firstAgent = agents?.[0]
 
   if (outlet) return outlet
 
-  if (firstChatBot)
+  if (firstAgent)
     return (
       <Navigate
-        to={buildPath("chatBot", {
+        to={buildPath("agent", {
           organizationId: project.organizationId,
           projectId: project.id,
-          chatBotId: firstChatBot.id,
+          agentId: firstAgent.id,
         })}
         replace
       />
     )
 
-  if (isAdminInterface) return <NoChatBot project={project} />
+  if (isAdminInterface) return <NoAgent project={project} />
 }
 
 function useHandleHeader({
@@ -80,8 +80,8 @@ function useHandleHeader({
   }, [outlet, headerTitle, setHeaderTitle])
 }
 
-function NoChatBot({ project }: { project: Project }) {
-  const { t } = useTranslation("chatBot", { keyPrefix: "list" })
+function NoAgent({ project }: { project: Project }) {
+  const { t } = useTranslation("agent", { keyPrefix: "list" })
   const [open, setOpen] = useState(false)
   return (
     <div className="p-6">
@@ -95,11 +95,7 @@ function NoChatBot({ project }: { project: Project }) {
             <Plus className="mr-2 h-4 w-4" />
             {t("empty.button")}
           </Button>
-          <CreateChatBotDialogWithoutTrigger
-            project={project}
-            isOpen={open}
-            onOpenChange={setOpen}
-          />
+          <CreateAgentDialogWithoutTrigger project={project} isOpen={open} onOpenChange={setOpen} />
         </CardContent>
       </Card>
     </div>
