@@ -1,30 +1,59 @@
-import { Uploader } from "@/components/FileUploader"
-import { selectCurrentOrganizationId } from "@/features/organizations/organizations.selectors"
-import { selectCurrentProjectId } from "@/features/projects/projects.selectors"
-import { uploadResource } from "@/features/resources/resources.thunks"
-import { useAppDispatch, useAppSelector } from "@/store/hooks"
+import { useEffect } from "react"
+import { useSidebarLayout } from "@/components/layouts/sidebar/context"
+import { EmptyResources } from "@/components/resources/EmptyResources"
+import { UploadResourceButton } from "@/components/resources/UploadResourceButton"
+import type { Project } from "@/features/projects/projects.models"
+import { selectCurrentProjectId, selectProjectData } from "@/features/projects/projects.selectors"
+import type { Resource } from "@/features/resources/resources.models"
+import { selectResourcesFromProjectId } from "@/features/resources/resources.selectors"
+import { useAbility } from "@/hooks/use-ability"
+import { ADS } from "@/store/async-data-status"
+import { useAppSelector } from "@/store/hooks"
+import { ResourceItem } from "../../components/resources/ResourceItem"
+import { LoadingRoute } from "../LoadingRoute"
 import { NotFoundRoute } from "../NotFoundRoute"
 
 export function ResourcesRoute() {
-  const dispatch = useAppDispatch()
-  const organizationId = useAppSelector(selectCurrentOrganizationId)
   const projectId = useAppSelector(selectCurrentProjectId)
-  if (!organizationId || !projectId) return <NotFoundRoute />
+  const project = useAppSelector(selectProjectData)
+  const resourcesData = useAppSelector(selectResourcesFromProjectId(projectId))
+  if (!projectId) return <NotFoundRoute />
 
-  const onSuccess = (params: { projectId: string; resourceId: string }) => {
-    console.warn("AJ: onSuccess", params)
-  }
-  const handleProcessFile = async ({ file }: { file: File }) => {
-    dispatch(uploadResource({ organizationId, projectId, file, onSuccess }))
-  }
+  if (ADS.isError(resourcesData) || ADS.isError(project)) return <NotFoundRoute />
+
+  if (ADS.isFulfilled(resourcesData) && ADS.isFulfilled(project))
+    return <WithData project={project.value} resources={resourcesData.value} />
+
+  return <LoadingRoute />
+}
+
+function WithData({ resources, project }: { resources: Resource[]; project: Project }) {
+  useHandleHeader({ project })
   return (
-    <div>
-      list resources here
-      <Uploader
-        organizationId={organizationId}
-        projectId={projectId}
-        processFile={handleProcessFile}
-      />
+    <div className="p-6 grid grid-cols-1 gap-4">
+      {resources.length === 0 ? (
+        <EmptyResources project={project} />
+      ) : (
+        resources.map((resource) => <ResourceItem key={resource.id} resource={resource} />)
+      )}
     </div>
   )
+}
+
+function useHandleHeader({ project }: { project: Project }) {
+  const { isAdminInterface } = useAbility()
+  const { setHeaderTitle, setHeaderRightSlot } = useSidebarLayout()
+  const headerTitle = `Manage your ${project.name}'s resources` // FIXME: i18n
+
+  useEffect(() => {
+    setHeaderTitle(headerTitle)
+    if (isAdminInterface)
+      setHeaderRightSlot(
+        <UploadResourceButton organizationId={project.organizationId} project={project} />,
+      )
+    return () => {
+      setHeaderTitle("")
+      setHeaderRightSlot(undefined)
+    }
+  }, [headerTitle, setHeaderTitle, setHeaderRightSlot, isAdminInterface, project])
 }

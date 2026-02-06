@@ -12,6 +12,8 @@ import { organizationsMiddleware } from "@/features/organizations/organizations.
 import { organizationsSliceReducer } from "@/features/organizations/organizations.slice"
 import { projectsMiddleware } from "@/features/projects/projects.middleware"
 import { projectsSliceReducer } from "@/features/projects/projects.slice"
+import { resourcesMiddleware } from "@/features/resources/resources.middleware"
+import { resourcesSliceReducer } from "@/features/resources/resources.slice"
 import type { ThunkExtraArg } from "./types"
 
 export const store = configureStore({
@@ -23,6 +25,7 @@ export const store = configureStore({
     notifications: notificationsSliceReducer,
     organizations: organizationsSliceReducer,
     projects: projectsSliceReducer,
+    resources: resourcesSliceReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
@@ -35,6 +38,7 @@ export const store = configureStore({
       projectsMiddleware.middleware,
       chatBotsMiddleware.middleware,
       chatSessionMiddleware.middleware,
+      resourcesMiddleware.middleware,
     ),
 })
 

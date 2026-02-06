@@ -15,7 +15,7 @@ export function NavResources({
 }) {
   const { t } = useTranslation("common")
   const { isAdminInterface } = useAbility()
-  const isActive = useIsResourcesActive()
+  const isActive = useIsResourcesActive(projectId)
   if (!isAdminInterface) return null
   // TODO: i18n
   const path = buildResourcesPath({ organizationId, projectId })
@@ -33,7 +33,7 @@ export function NavResources({
   )
 }
 
-function useIsResourcesActive() {
+function useIsResourcesActive(projectId: string) {
   const location = useLocation()
-  return useMemo(() => location.pathname.endsWith("/r"), [location])
+  return useMemo(() => location.pathname.endsWith(`/p/${projectId}/r`), [location, projectId])
 }

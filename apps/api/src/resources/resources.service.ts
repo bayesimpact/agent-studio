@@ -2,16 +2,12 @@ import type { ResourceDto } from "@caseai-connect/api-contracts"
 import { Injectable } from "@nestjs/common"
 import { InjectRepository } from "@nestjs/typeorm"
 import type { Repository } from "typeorm"
-import { Organization } from "@/organizations/organization.entity"
-import { UserMembership } from "@/organizations/user-membership.entity"
 import { Resource } from "./resource.entity"
 
 @Injectable()
 export class ResourcesService {
   constructor(
     @InjectRepository(Resource) private readonly resourceRepository: Repository<Resource>,
-    @InjectRepository(Organization) readonly _organizationRepository: Repository<Organization>,
-    @InjectRepository(UserMembership) readonly _membershipRepository: Repository<UserMembership>,
   ) {}
 
   async createResourceFromFile({
@@ -33,5 +29,12 @@ export class ResourcesService {
       title: fields.title ?? fields.fileName,
     })
     return this.resourceRepository.save(resource)
+  }
+
+  async listResources({ projectId }: { projectId: string }): Promise<Resource[]> {
+    return this.resourceRepository.find({
+      where: { projectId },
+      order: { createdAt: "DESC" },
+    })
   }
 }

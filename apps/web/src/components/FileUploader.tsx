@@ -57,7 +57,7 @@ type UploaderProps<T> = {
 }
 
 function useUploader<T>({ processFile, onDrop }: UploaderProps<T>) {
-  const [status, setStatus] = useState<"idle" | "uploading" | "end">("idle")
+  const [status, setStatus] = useState<"idle" | "uploading">("idle")
 
   const handleProcessFile = useCallback(
     (file: File) => {
@@ -66,7 +66,7 @@ function useUploader<T>({ processFile, onDrop }: UploaderProps<T>) {
       processFile({
         file,
       }).finally(() => {
-        setStatus("end")
+        setStatus("idle")
       })
     },
     [processFile],
@@ -76,7 +76,7 @@ function useUploader<T>({ processFile, onDrop }: UploaderProps<T>) {
     onError: (err) => {
       console.error(err)
     },
-    disabled: status === "uploading" || status === "end",
+    disabled: status === "uploading",
     maxFiles: 1,
     onDrop: (files) => {
       const file = files[0]
@@ -131,7 +131,7 @@ function SmartUploader<T>({
   const [file, setFile] = useState<File>()
   const [isFileStored, setIsFileStored] = useState(false)
 
-  const { getRootProps, getInputProps, status, setStatus, handleProcessFile } = useUploader<T>({
+  const { getRootProps, getInputProps, status } = useUploader<T>({
     processFile,
     onDrop: setFile,
     organizationId,
@@ -151,25 +151,6 @@ function SmartUploader<T>({
               <Loader2Icon className="size-5 animate-spin" />
               {t("processingFile")}
             </div>
-          ) : status === "end" ? (
-            <>
-              <Button disabled variant="secondary" className="disabled:opacity-100">
-                <SparklesIcon className="size-4" />
-                {t("aiAssistant", { colon: true })} {t("smartScanDone")}
-              </Button>
-
-              <Button
-                className="w-fit"
-                onClick={() => {
-                  setStatus("idle")
-                  if (!file) return
-                  void handleProcessFile(file)
-                }}
-              >
-                <SparklesIcon className="size-4" />
-                {t("regenerate", { cfl: true })}
-              </Button>
-            </>
           ) : (
             <Button className="w-full">
               <SparklesIcon className="size-4" /> {t("dragOrUploadFile")}

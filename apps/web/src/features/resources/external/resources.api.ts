@@ -4,6 +4,13 @@ import type { Resource } from "../resources.models"
 import type { IResourcesSpi } from "../resources.spi"
 
 export default {
+  getAll: async ({ organizationId, projectId }) => {
+    const axios = getAxiosInstance()
+    const response = await axios.get<typeof ResourcesRoutes.getAll.response>(
+      ResourcesRoutes.getAll.getPath({ organizationId, projectId }),
+    )
+    return response.data.data.map(toResource)
+  },
   uploadOne: async ({ organizationId, projectId, file }) => {
     const axios = getAxiosInstance()
 

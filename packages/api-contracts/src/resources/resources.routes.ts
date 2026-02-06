@@ -7,4 +7,8 @@ export const ResourcesRoutes = {
     method: "post",
     path: "organizations/:organizationId/projects/:projectId/resources/upload/",
   }),
+  getAll: defineRoute<ResponseData<ResourceDto[]>>({
+    method: "get",
+    path: "organizations/:organizationId/projects/:projectId/resources/",
+  }),
 }
