@@ -36,6 +36,7 @@ describe("getAllPlayground", () => {
       expect(result).toHaveLength(2)
       expect(result.every((session) => session.type === "playground")).toBe(true)
       expect(result.every((session) => session.agentId === agent.id)).toBe(true)
+      expect(result.every((session) => session.traceUrl)).toBe(true)
     })
 
     it("should return empty array when no playground sessions exist", async () => {

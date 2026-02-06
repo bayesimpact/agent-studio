@@ -8,4 +8,5 @@ export type AgentSessionDto = {
   type: AgentSessionTypeDto
   createdAt: TimeType
   updatedAt: TimeType
+  traceUrl?: string
 }

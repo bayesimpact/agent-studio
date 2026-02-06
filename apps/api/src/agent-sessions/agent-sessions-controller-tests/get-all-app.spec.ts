@@ -35,6 +35,7 @@ describe("getAllApp", () => {
     expect(result).toHaveLength(2)
     expect(result.every((session) => session.type === "app-private")).toBe(true)
     expect(result.every((session) => session.agentId === agent.id)).toBe(true)
+    expect(result.every((session) => !session.traceUrl)).toBe(true)
   })
 
   it("should return empty array when no app-private sessions exist", async () => {

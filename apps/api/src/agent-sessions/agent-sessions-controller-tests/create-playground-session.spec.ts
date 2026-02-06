@@ -15,6 +15,7 @@ describe("createPlaygroundSession", () => {
     expect(result.id).toBeDefined()
     expect(result.agentId).toBe(agent.id)
     expect(result.type).toBe("playground")
+    expect(result.traceUrl).toBeDefined()
   })
   it("fails when user is a member", async () => {
     const { controller } = getTestContext()

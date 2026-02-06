@@ -17,5 +17,6 @@ describe("createAppSession", () => {
     expect(result.id).toBeDefined()
     expect(result.agentId).toBe(agent.id)
     expect(result.type).toBe("app-private")
+    expect(result.traceUrl).toBeUndefined()
   })
 })
