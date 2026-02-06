@@ -12,7 +12,7 @@ import { AgentSessionsService } from "./agent-sessions.service"
 @UseGuards(JwtAuthGuard, UserGuard)
 @Controller()
 export class ChatMessagesController {
-  constructor(private readonly chatSessionsService: AgentSessionsService) {}
+  constructor(private readonly agentSessionsService: AgentSessionsService) {}
 
   @Get(ChatSessionMessagesRoutes.listMessages.path)
   async listMessages(
@@ -21,7 +21,7 @@ export class ChatMessagesController {
   ): Promise<typeof ChatSessionMessagesRoutes.listMessages.response> {
     const user = request.user
 
-    const messages = await this.chatSessionsService.listMessagesForSession(sessionId, user.id)
+    const messages = await this.agentSessionsService.listMessagesForSession(sessionId, user.id)
 
     const data: ListChatSessionMessagesResponseDto = {
       sessionId,

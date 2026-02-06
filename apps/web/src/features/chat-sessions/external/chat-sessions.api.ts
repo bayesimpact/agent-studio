@@ -9,24 +9,24 @@ import type { AgentSession, AgentSessionMessage } from "../chat-sessions.models"
 import type { IChatSessionsSpi } from "../chat-sessions.spi"
 
 export default {
-  getAllPlayground: async (chatBotId: string) => {
+  getAllPlayground: async (agentId: string) => {
     const axios = getAxiosInstance()
     const response = await axios.get<typeof AgentSessionsRoutes.getAllPlayground.response>(
-      AgentSessionsRoutes.getAllPlayground.getPath({ chatBotId }),
+      AgentSessionsRoutes.getAllPlayground.getPath({ agentId }),
     )
     return response.data.data.map(fromDto)
   },
-  getAllApp: async (chatBotId: string) => {
+  getAllApp: async (agentId: string) => {
     const axios = getAxiosInstance()
     const response = await axios.get<typeof AgentSessionsRoutes.getAllApp.response>(
-      AgentSessionsRoutes.getAllApp.getPath({ chatBotId }),
+      AgentSessionsRoutes.getAllApp.getPath({ agentId }),
     )
     return response.data.data.map(fromDto)
   },
-  createPlaygroundSession: async (chatBotId: string) => {
+  createPlaygroundSession: async (agentId: string) => {
     const axios = getAxiosInstance()
     const response = await axios.post<typeof AgentSessionsRoutes.createPlaygroundSession.response>(
-      AgentSessionsRoutes.createPlaygroundSession.getPath({ chatBotId }),
+      AgentSessionsRoutes.createPlaygroundSession.getPath({ agentId }),
     )
 
     return fromDto(response.data.data)

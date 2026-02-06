@@ -114,7 +114,7 @@ export async function clearTestDatabase(dataSource: DataSource): Promise<void> {
 
     try {
       // Delete in order: child tables first, then parent tables
-      await queryRunner.query(`DELETE FROM "chat_session"`)
+      await queryRunner.query(`DELETE FROM "agent_session"`)
       await queryRunner.query(`DELETE FROM "user_membership"`)
       await queryRunner.query(`DELETE FROM "resource"`)
       await queryRunner.query(`DELETE FROM "agent"`)

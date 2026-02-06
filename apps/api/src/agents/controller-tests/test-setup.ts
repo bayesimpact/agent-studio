@@ -22,7 +22,7 @@ export function agentsControllerTestSetup() {
   let membershipRepository: Repository<UserMembership>
   let projectRepository: Repository<Project>
   let agentRepository: Repository<Agent>
-  let chatSessionRepository: Repository<AgentSession>
+  let agentSessionRepository: Repository<AgentSession>
   let organization: Organization
 
   beforeAll(async () => {
@@ -45,7 +45,7 @@ export function agentsControllerTestSetup() {
     membershipRepository = setup.getRepository(UserMembership)
     projectRepository = setup.getRepository(Project)
     agentRepository = setup.getRepository(Agent)
-    chatSessionRepository = setup.getRepository(AgentSession)
+    agentSessionRepository = setup.getRepository(AgentSession)
 
     const org = organizationFactory.build({ name: "Org1" })
     organization = await organizationRepository.save(org)
@@ -67,7 +67,7 @@ export function agentsControllerTestSetup() {
       membershipRepository,
       projectRepository,
       agentRepository,
-      chatSessionRepository,
+      agentSessionRepository,
       controller,
       organization,
     }

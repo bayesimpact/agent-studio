@@ -15,7 +15,7 @@ import { AgentSessionsService } from "./agent-sessions.service"
 @Injectable()
 export class ChatStreamingService {
   constructor(
-    private readonly chatSessionsService: AgentSessionsService,
+    private readonly agentSessionsService: AgentSessionsService,
     @Inject("LLMProvider")
     private readonly llmProvider: LLMProvider,
   ) {}
@@ -26,12 +26,12 @@ export class ChatStreamingService {
    */
   async *streamChatResponse(
     session: AgentSession,
-    chatbot: Agent,
+    agent: Agent,
     userContent: string,
   ): AsyncGenerator<MessageEvent, void, unknown> {
     // Step 1: Prepare for streaming (persist user message + empty assistant message)
     const { session: updatedSession, assistantMessageId } =
-      await this.chatSessionsService.prepareForStreaming(session.id, userContent)
+      await this.agentSessionsService.prepareForStreaming(session.id, userContent)
 
     // Step 2: Send start event with messageId so frontend can update optimistic message
     yield {
@@ -45,11 +45,11 @@ export class ChatStreamingService {
     // Messages are already loaded via relations in prepareForStreaming
     const llmMessages = this.convertToLLMFormat(updatedSession.messages)
 
-    // Step 4: Build LLM config from chatbot
-    const llmConfig = this.buildLLMConfig(chatbot)
+    // Step 4: Build LLM config from agent
+    const llmConfig = this.buildLLMConfig(agent)
 
     // Step 5: Build LLM metadata (used for telemetry)
-    const llmMetadata: LLMMetadata = this.buildLLMMetadata(chatbot, updatedSession)
+    const llmMetadata: LLMMetadata = this.buildLLMMetadata(agent, updatedSession)
 
     // Step 6: Stream response
     let fullContent = ""
@@ -74,7 +74,7 @@ export class ChatStreamingService {
       }
 
       // Step 7: Finalize streaming (persist completed message)
-      await this.chatSessionsService.finalizeStreaming(
+      await this.agentSessionsService.finalizeStreaming(
         updatedSession.id,
         assistantMessageId,
         fullContent,
@@ -92,7 +92,7 @@ export class ChatStreamingService {
       // Handle error: mark message as error
       const errorMessage = error instanceof Error ? error.message : "Unknown error occurred"
 
-      await this.chatSessionsService.markStreamingError(
+      await this.agentSessionsService.markStreamingError(
         updatedSession.id,
         assistantMessageId,
         errorMessage,
@@ -112,7 +112,7 @@ export class ChatStreamingService {
   }
 
   /**
-   * Converts ChatSession messages to LLM provider format
+   * Converts AgentSession messages to LLM provider format
    */
   private convertToLLMFormat(messages: AgentSession["messages"]): ChatMessage[] {
     const llmMessages: ChatMessage[] = []
@@ -142,49 +142,49 @@ export class ChatStreamingService {
     return llmMessages
   }
 
-  private generateMasterPrompt(chatbot: Agent): string {
+  private generateMasterPrompt(agent: Agent): string {
     return `
 Today's date: ${new Date().toLocaleDateString()}
 
-${chatbot.defaultPrompt}
+${agent.defaultPrompt}
 
-Always answer in ${chatbot.locale}.
+Always answer in ${agent.locale}.
   `.trim()
   }
 
   /**
-   * Builds LLM configuration from ChatBot entity
+   * Builds LLM configuration from Agent entity
    */
-  private buildLLMConfig(chatbot: Agent): LLMConfig {
+  private buildLLMConfig(agent: Agent): LLMConfig {
     // Convert temperature to number (database decimal types may be returned as strings)
     const temperature =
-      typeof chatbot.temperature === "string"
-        ? parseFloat(chatbot.temperature)
-        : Number(chatbot.temperature)
+      typeof agent.temperature === "string"
+        ? parseFloat(agent.temperature)
+        : Number(agent.temperature)
 
     // Validate temperature is a valid number
     if (Number.isNaN(temperature) || temperature < 0 || temperature > 2) {
       throw new Error(
-        `Invalid temperature value: ${chatbot.temperature}. Temperature must be a number between 0 and 2.`,
+        `Invalid temperature value: ${agent.temperature}. Temperature must be a number between 0 and 2.`,
       )
     }
 
-    const systemPrompt = this.generateMasterPrompt(chatbot)
+    const systemPrompt = this.generateMasterPrompt(agent)
 
     return {
-      model: chatbot.model,
+      model: agent.model,
       temperature,
       systemPrompt,
     }
   }
 
   /**
-   * Builds LLM metadata from ChatBot and ChatSession entities
+   * Builds LLM metadata from Agent and AgentSession entities
    */
   private buildLLMMetadata(chatbot: Agent, session: AgentSession): LLMMetadata {
     return {
-      chatSessionId: session.id,
-      chatBotId: chatbot.id,
+      agentSessionId: session.id,
+      agentId: chatbot.id,
       projectId: chatbot.projectId,
       organizationId: session.organizationId,
       currentTurn: session.messages.filter((m) => m.role === "user").length,

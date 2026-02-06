@@ -172,33 +172,33 @@ export async function createOrganizationWithAgent(
   }
 }
 
-type CreateOrganizationWithChatSessionParams = {
+type CreateOrganizationWithAgentSessionParams = {
   organization?: Partial<Organization>
   user?: Partial<User>
   project?: Partial<Project>
   agent?: Partial<Agent>
-  chatSession?: Partial<AgentSession>
+  agentSession?: Partial<AgentSession>
 }
 
-type CreateOrganizationWithChatSessionRepositories = {
+type CreateOrganizationWithAgentSessionRepositories = {
   organizationRepository: Repository<Organization>
   userRepository: Repository<User>
   membershipRepository: Repository<UserMembership>
   projectRepository: Repository<Project>
   agentRepository: Repository<Agent>
-  chatSessionRepository: Repository<AgentSession>
+  agentSessionRepository: Repository<AgentSession>
 }
 
-export async function createOrganizationWithChatSession(
-  repositories: CreateOrganizationWithChatSessionRepositories,
-  params: CreateOrganizationWithChatSessionParams = {},
+export async function createOrganizationWithAgentSession(
+  repositories: CreateOrganizationWithAgentSessionRepositories,
+  params: CreateOrganizationWithAgentSessionParams = {},
 ): Promise<{
   organization: Organization
   user: User
   membership: UserMembership
   project: Project
   agent: Agent
-  chatSession: AgentSession
+  agentSession: AgentSession
 }> {
   const { organization, user, membership, project, agent } = await createOrganizationWithAgent(
     repositories,
@@ -210,10 +210,10 @@ export async function createOrganizationWithChatSession(
     },
   )
 
-  const chatSession = agentSessionFactory
+  const agentSession = agentSessionFactory
     .transient({ organization, user, agent })
-    .build(params.chatSession)
-  await repositories.chatSessionRepository.save(chatSession)
+    .build(params.agentSession)
+  await repositories.agentSessionRepository.save(agentSession)
 
   return {
     organization,
@@ -221,6 +221,6 @@ export async function createOrganizationWithChatSession(
     membership,
     project,
     agent,
-    chatSession,
+    agentSession,
   }
 }

@@ -22,7 +22,7 @@ import { ChatStreamingService } from "./chat-streaming.service"
 @Controller()
 export class ChatSessionStreamingController {
   constructor(
-    private readonly chatSessionsService: AgentSessionsService,
+    private readonly agentSessionsService: AgentSessionsService,
     private readonly chatStreamingService: ChatStreamingService,
   ) {}
 
@@ -45,7 +45,7 @@ export class ChatSessionStreamingController {
     return new Observable<MessageEvent>((subscriber) => {
       void (async () => {
         try {
-          const { session, agent } = await this.chatSessionsService.getSessionWithAgentForUser(
+          const { session, agent } = await this.agentSessionsService.getSessionWithAgentForUser(
             sessionId,
             user.id,
           )

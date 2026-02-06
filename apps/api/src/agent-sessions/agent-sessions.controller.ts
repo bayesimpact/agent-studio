@@ -11,7 +11,7 @@ import { AgentSessionsService } from "./agent-sessions.service"
 @UseGuards(JwtAuthGuard, UserGuard)
 @Controller()
 export class AgentSessionsController {
-  constructor(private readonly chatSessionsService: AgentSessionsService) {}
+  constructor(private readonly agentSessionsService: AgentSessionsService) {}
 
   // FIXME: add ability checks shoud be admin
   @Get(AgentSessionsRoutes.getAllPlayground.path)
@@ -21,9 +21,9 @@ export class AgentSessionsController {
   ): Promise<typeof AgentSessionsRoutes.getAllPlayground.response> {
     const user = request.user
 
-    await this.chatSessionsService.verifyUserCanCreatePlaygroundSession(user.id, agentId)
+    await this.agentSessionsService.verifyUserCanCreatePlaygroundSession(user.id, agentId)
 
-    const sessions = await this.chatSessionsService.getAllSessionsForAgent({
+    const sessions = await this.agentSessionsService.getAllSessionsForAgent({
       agentId: agentId,
       userId: user.id,
       type: "playground",
@@ -39,9 +39,9 @@ export class AgentSessionsController {
   ): Promise<typeof AgentSessionsRoutes.getAllApp.response> {
     const user = request.user
 
-    await this.chatSessionsService.verifyUserCanCreateAppPrivateSession(user.id, agentId)
+    await this.agentSessionsService.verifyUserCanCreateAppPrivateSession(user.id, agentId)
 
-    const sessions = await this.chatSessionsService.getAllSessionsForAgent({
+    const sessions = await this.agentSessionsService.getAllSessionsForAgent({
       agentId: agentId,
       userId: user.id,
       type: "app-private",
@@ -57,12 +57,12 @@ export class AgentSessionsController {
   ): Promise<typeof AgentSessionsRoutes.createPlaygroundSession.response> {
     const user = request.user
 
-    const { organizationId } = await this.chatSessionsService.verifyUserCanCreatePlaygroundSession(
+    const { organizationId } = await this.agentSessionsService.verifyUserCanCreatePlaygroundSession(
       user.id,
       agentId,
     )
 
-    const session = await this.chatSessionsService.createPlaygroundSession(
+    const session = await this.agentSessionsService.createPlaygroundSession(
       agentId,
       user.id,
       organizationId,
@@ -83,12 +83,12 @@ export class AgentSessionsController {
       throw new Error("Session type not supported.")
     }
 
-    const { organizationId } = await this.chatSessionsService.verifyUserCanCreateAppPrivateSession(
+    const { organizationId } = await this.agentSessionsService.verifyUserCanCreateAppPrivateSession(
       user.id,
       agentId,
     )
 
-    const session = await this.chatSessionsService.createAppPrivateSession({
+    const session = await this.agentSessionsService.createAppPrivateSession({
       agentId,
       userId: user.id,
       organizationId,

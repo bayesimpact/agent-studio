@@ -1,4 +1,7 @@
 import type { Repository } from "typeorm"
+import { AgentSession } from "@/agent-sessions/agent-session.entity"
+import { ChatMessage } from "@/agent-sessions/chat-message.entity"
+import { Agent } from "@/agents/agent.entity"
 import { clearTestDatabase } from "@/common/test/test-database"
 import {
   setupTransactionalTestDatabase,
@@ -10,6 +13,7 @@ import {
   createOrganizationWithProject,
 } from "@/organizations/organization.factory"
 import { UserMembership } from "@/organizations/user-membership.entity"
+import { Resource } from "@/resources/resource.entity"
 import { User } from "@/users/user.entity"
 import { Project } from "./project.entity"
 import { projectFactory } from "./project.factory"
@@ -26,7 +30,16 @@ describe("ProjectsService", () => {
 
   beforeAll(async () => {
     setup = await setupTransactionalTestDatabase({
-      featureEntities: [Project, Organization, UserMembership, User],
+      featureEntities: [
+        Project,
+        Organization,
+        UserMembership,
+        User,
+        Agent,
+        AgentSession,
+        ChatMessage,
+        Resource,
+      ],
       additionalImports: [ProjectsModule],
     })
     await clearTestDatabase(setup.dataSource)

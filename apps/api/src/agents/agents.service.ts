@@ -17,7 +17,7 @@ export class AgentsService {
     private readonly projectRepository: Repository<Project>,
     @InjectRepository(UserMembership)
     private readonly membershipRepository: Repository<UserMembership>,
-    private readonly chatSessionsService: AgentSessionsService,
+    private readonly agentSessionsService: AgentSessionsService,
   ) {}
 
   /**
@@ -263,7 +263,7 @@ export class AgentsService {
 
     // If configuration changed, delete all playground sessions for this agent
     if (configChanged) {
-      await this.chatSessionsService.deletePlaygroundSessionsForAgent(agentId)
+      await this.agentSessionsService.deletePlaygroundSessionsForAgent(agentId)
     }
 
     return updatedAgent
@@ -287,7 +287,7 @@ export class AgentsService {
     }
 
     // Delete all sessions for the agent
-    await this.chatSessionsService.deleteAllSessionsForAgent(agentId)
+    await this.agentSessionsService.deleteAllSessionsForAgent(agentId)
 
     // Delete the agent
     await this.agentRepository.remove(agent)

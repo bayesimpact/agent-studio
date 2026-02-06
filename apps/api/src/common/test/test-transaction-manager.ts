@@ -41,6 +41,10 @@ export interface TransactionalTestSetup {
     organizationRepository: Repository<Organization>
     membershipRepository: Repository<UserMembership>
     projectRepository: Repository<Project>
+    agentRepository: Repository<Agent>
+    agentSessionRepository: Repository<AgentSession>
+    chatMessageRepository: Repository<ChatMessage>
+    resourceRepository: Repository<Resource>
   }
   startTransaction: () => Promise<void>
   rollbackTransaction: () => Promise<void>
@@ -205,6 +209,10 @@ export async function setupTransactionalTestDatabase(
     organizationRepository: getRepository(Organization),
     membershipRepository: getRepository(UserMembership),
     projectRepository: getRepository(Project),
+    agentRepository: getRepository(Agent),
+    agentSessionRepository: getRepository(AgentSession),
+    chatMessageRepository: getRepository(ChatMessage),
+    resourceRepository: getRepository(Resource),
   })
 
   return {

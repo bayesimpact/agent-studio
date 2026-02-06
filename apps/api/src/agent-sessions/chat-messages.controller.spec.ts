@@ -6,7 +6,7 @@ import {
   teardownTestDatabase,
 } from "@/common/test/test-transaction-manager"
 import { Organization } from "@/organizations/organization.entity"
-import { createOrganizationWithChatSession } from "@/organizations/organization.factory"
+import { createOrganizationWithAgentSession } from "@/organizations/organization.factory"
 import { UserMembership } from "@/organizations/user-membership.entity"
 import { Project } from "@/projects/project.entity"
 import type { EndpointRequest } from "@/request.interface"
@@ -25,7 +25,7 @@ describe("ChatMessagesController", () => {
   let membershipRepository: Repository<UserMembership>
   let projectRepository: Repository<Project>
   let agentRepository: Repository<Agent>
-  let chatSessionRepository: Repository<AgentSession>
+  let agentSessionRepository: Repository<AgentSession>
   let chatMessageRepository: Repository<ChatMessage>
 
   beforeAll(async () => {
@@ -56,7 +56,7 @@ describe("ChatMessagesController", () => {
     membershipRepository = setup.getRepository(UserMembership)
     projectRepository = setup.getRepository(Project)
     agentRepository = setup.getRepository(Agent)
-    chatSessionRepository = setup.getRepository(AgentSession)
+    agentSessionRepository = setup.getRepository(AgentSession)
     chatMessageRepository = setup.getRepository(ChatMessage)
   })
 
@@ -70,13 +70,13 @@ describe("ChatMessagesController", () => {
 
   describe("listMessages", () => {
     it("should return messages for a session", async () => {
-      const { user, chatSession: session } = await createOrganizationWithChatSession({
+      const { user, agentSession: session } = await createOrganizationWithAgentSession({
         organizationRepository,
         userRepository,
         membershipRepository,
         projectRepository,
         agentRepository,
-        chatSessionRepository,
+        agentSessionRepository,
       })
 
       // add 2 messages (from the assistant and the user) to the session

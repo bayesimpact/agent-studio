@@ -47,7 +47,7 @@ export class ChatMessage {
 
   @ManyToOne(
     () => AgentSession,
-    (chatSession) => chatSession.messages,
+    (agentSession) => agentSession.messages,
     { onDelete: "CASCADE" },
   )
   @JoinColumn({ name: "session_id" })
