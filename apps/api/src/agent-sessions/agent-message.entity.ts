@@ -11,9 +11,9 @@ import { AgentSession } from "./agent-session.entity"
 
 export type MessageStatus = "streaming" | "completed" | "aborted" | "error"
 
-@Entity("chat_message")
+@Entity("agent_message")
 @Index(["sessionId", "createdAt"])
-export class ChatMessage {
+export class AgentMessage {
   @PrimaryGeneratedColumn("uuid")
   id!: string
 

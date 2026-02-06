@@ -4,7 +4,7 @@ import { createVertex } from "@ai-sdk/google-vertex"
 import { Injectable } from "@nestjs/common"
 import { streamText } from "ai"
 import type {
-  ChatMessage,
+  LLMChatMessage,
   LLMConfig,
   LLMMetadata,
   LLMProvider,
@@ -29,7 +29,7 @@ export class AISDKLLMProvider implements LLMProvider {
   }
 
   async *streamChatResponse(
-    messages: ChatMessage[],
+    messages: LLMChatMessage[],
     config: LLMConfig,
     metadata: LLMMetadata,
   ): AsyncGenerator<string, void, unknown> {

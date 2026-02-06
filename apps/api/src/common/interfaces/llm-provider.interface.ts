@@ -1,7 +1,7 @@
 /**
  * Chat message in normalized format for LLM providers
  */
-export interface ChatMessage {
+export interface LLMChatMessage {
   role: "user" | "assistant" | "system"
   content: string
 }
@@ -41,7 +41,7 @@ export interface LLMProvider {
    * @returns Async generator yielding text chunks
    */
   streamChatResponse(
-    messages: ChatMessage[],
+    messages: LLMChatMessage[],
     config: LLMConfig,
     metadata: LLMMetadata,
   ): AsyncGenerator<string, void, unknown>

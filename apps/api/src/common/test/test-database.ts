@@ -9,8 +9,8 @@ import {
   type QueryRunner,
   type Repository,
 } from "typeorm"
+import { AgentMessage } from "@/agent-sessions/agent-message.entity"
 import { AgentSession } from "@/agent-sessions/agent-session.entity"
-import { ChatMessage } from "@/agent-sessions/chat-message.entity"
 import { Agent } from "@/agents/agent.entity"
 import { Organization } from "@/organizations/organization.entity"
 import { UserMembership } from "@/organizations/user-membership.entity"
@@ -25,7 +25,7 @@ const TEST_ENTITIES = [
   Project,
   Agent,
   AgentSession,
-  ChatMessage,
+  AgentMessage,
   Resource,
 ]
 

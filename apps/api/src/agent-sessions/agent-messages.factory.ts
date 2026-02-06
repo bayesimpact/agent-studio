@@ -1,14 +1,14 @@
 import { randomUUID } from "node:crypto"
 import { Factory } from "fishery"
 import type { Repository } from "typeorm"
+import type { AgentMessage } from "./agent-message.entity"
 import type { AgentSession } from "./agent-session.entity"
-import type { ChatMessage } from "./chat-message.entity"
 
-type ChatMessageTransientParams = {
+type AgentMessageTransientParams = {
   session: AgentSession
 }
 
-class ChatMessageFactory extends Factory<ChatMessage, ChatMessageTransientParams> {
+class AgentMessageFactory extends Factory<AgentMessage, AgentMessageTransientParams> {
   user() {
     return this.params({ role: "user" })
   }
@@ -26,7 +26,7 @@ class ChatMessageFactory extends Factory<ChatMessage, ChatMessageTransientParams
   }
 }
 
-export const chatMessageFactory = ChatMessageFactory.define(
+export const agentMessageFactory = AgentMessageFactory.define(
   ({ sequence, params, transientParams }) => {
     if (!transientParams.session) {
       throw new Error("session transient is required")
@@ -44,20 +44,20 @@ export const chatMessageFactory = ChatMessageFactory.define(
       toolCalls: params.toolCalls ?? null,
       createdAt: params.createdAt || now,
       session: transientParams.session,
-    } satisfies ChatMessage
+    } satisfies AgentMessage
   },
 )
 
-type BuildChatConversationParams = {
-  userMessage?: Partial<ChatMessage>
-  assistantMessage?: Partial<ChatMessage>
+type BuildAgentConversationParams = {
+  userMessage?: Partial<AgentMessage>
+  assistantMessage?: Partial<AgentMessage>
 }
 
 export function buildChitChatConversation(
   session: AgentSession,
-  params: BuildChatConversationParams = {},
-): [ChatMessage, ChatMessage] {
-  const userMessage = chatMessageFactory
+  params: BuildAgentConversationParams = {},
+): [AgentMessage, AgentMessage] {
+  const userMessage = agentMessageFactory
     .user()
     .transient({ session })
     .build({
@@ -65,7 +65,7 @@ export function buildChitChatConversation(
       ...params.userMessage,
     })
 
-  const assistantMessage = chatMessageFactory
+  const assistantMessage = agentMessageFactory
     .assistant()
     .transient({ session })
     .build({
@@ -77,15 +77,15 @@ export function buildChitChatConversation(
 }
 
 type CreateAgentSessionMessageRepositories = {
-  chatMessageRepository: Repository<ChatMessage>
+  agentMessageRepository: Repository<AgentMessage>
 }
 
 export async function createChitChatConversation(
   session: AgentSession,
   repositories: CreateAgentSessionMessageRepositories,
-  params: BuildChatConversationParams = {},
-): Promise<[ChatMessage, ChatMessage]> {
+  params: BuildAgentConversationParams = {},
+): Promise<[AgentMessage, AgentMessage]> {
   const [userMessage, assistantMessage] = buildChitChatConversation(session, params)
-  await repositories.chatMessageRepository.save([userMessage, assistantMessage])
+  await repositories.agentMessageRepository.save([userMessage, assistantMessage])
   return [userMessage, assistantMessage]
 }
