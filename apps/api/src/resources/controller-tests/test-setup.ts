@@ -27,7 +27,6 @@ export function resourcesControllerTestSetup() {
 
   beforeAll(async () => {
     setup = await setupTransactionalTestDatabase({
-      featureEntities: [User, Organization, UserMembership, Project, Resource],
       additionalImports: [ResourcesModule],
     })
     await clearTestDatabase(setup.dataSource)

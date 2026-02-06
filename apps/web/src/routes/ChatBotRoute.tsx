@@ -25,7 +25,7 @@ import { useSidebarLayout } from "@/components/layouts/sidebar/context"
 import { CreateChatSession } from "@/components/sidebar/projects/chat-sessions/CreateChatSession"
 import type { ChatBot } from "@/features/chat-bots/chat-bots.models"
 import { selectChatBotData, selectCurrentChatBotId } from "@/features/chat-bots/chat-bots.selectors"
-import type { ChatSession } from "@/features/chat-sessions/chat-sessions.models"
+import type { AgentSession } from "@/features/chat-sessions/chat-sessions.models"
 import { selectChatSessionsFromChatBotId } from "@/features/chat-sessions/chat-sessions.selectors"
 import { selectCurrentOrganizationId } from "@/features/organizations/organizations.selectors"
 import { selectCurrentProjectId } from "@/features/projects/projects.selectors"
@@ -57,7 +57,7 @@ function useHandleFirstChatSession({
   chatSessions,
 }: {
   chatBotId: string | null
-  chatSessions: AsyncData<ChatSession[]>
+  chatSessions: AsyncData<AgentSession[]>
 }) {
   const organizationId = useAppSelector(selectCurrentOrganizationId)
   const projectId = useAppSelector(selectCurrentProjectId)

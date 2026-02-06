@@ -11,9 +11,9 @@ import { Test, type TestingModule, type TestingModuleBuilder } from "@nestjs/tes
 import { getRepositoryToken, TypeOrmModule } from "@nestjs/typeorm"
 import type { ObjectLiteral, QueryRunner, Repository } from "typeorm"
 import { DataSource, EntityManager } from "typeorm"
+import { AgentSession } from "@/agent-sessions/agent-session.entity"
+import { ChatMessage } from "@/agent-sessions/chat-message.entity"
 import { Agent } from "@/agents/agent.entity"
-import { ChatMessage } from "@/chat-sessions/chat-message.entity"
-import { ChatSession } from "@/chat-sessions/chat-session.entity"
 import { Organization } from "@/organizations/organization.entity"
 import { UserMembership } from "@/organizations/user-membership.entity"
 import { Project } from "@/projects/project.entity"
@@ -26,7 +26,7 @@ const TEST_ENTITIES = [
   UserMembership,
   Project,
   Agent,
-  ChatSession,
+  AgentSession,
   ChatMessage,
   Resource,
 ]
@@ -41,6 +41,10 @@ export interface TransactionalTestSetup {
     organizationRepository: Repository<Organization>
     membershipRepository: Repository<UserMembership>
     projectRepository: Repository<Project>
+    agentRepository: Repository<Agent>
+    agentSessionRepository: Repository<AgentSession>
+    chatMessageRepository: Repository<ChatMessage>
+    resourceRepository: Repository<Resource>
   }
   startTransaction: () => Promise<void>
   rollbackTransaction: () => Promise<void>
@@ -51,6 +55,7 @@ export interface TransactionalTestSetup {
  *
  * The key insight: Override EntityManager provider to use transactional manager.
  * This makes ALL repositories (and thus services) automatically transactional.
+ * All entities in TEST_ENTITIES are automatically registered.
  *
  * Usage:
  * ```typescript
@@ -58,7 +63,6 @@ export interface TransactionalTestSetup {
  *
  * beforeAll(async () => {
  *   setup = await setupTransactionalTestDatabase({
- *     featureEntities: [User],
  *     providers: [UsersService],
  *   })
  *   // Optionally clear database once at the start for clean state
@@ -81,9 +85,9 @@ export interface TransactionalTestSetup {
  * ```
  */
 export async function setupTransactionalTestDatabase(
-  params: CreateTestingModuleParams,
+  params: CreateTestingModuleParams = {},
 ): Promise<TransactionalTestSetup> {
-  const { featureEntities, providers = [], additionalImports = [] } = params
+  const { providers = [], additionalImports = [] } = params
   const baseModule = await createBaseTestingModule(params).compile()
 
   const testDatabaseUrl = process.env.DATABASE_URL
@@ -127,7 +131,7 @@ export async function setupTransactionalTestDatabase(
           logging: false,
           dropSchema: false,
         }),
-        TypeOrmModule.forFeature(featureEntities),
+        TypeOrmModule.forFeature(TEST_ENTITIES),
         ...additionalImports,
       ],
       providers: [
@@ -138,24 +142,12 @@ export async function setupTransactionalTestDatabase(
           provide: EntityManager,
           useValue: queryRunner.manager,
         },
-        // Override repository providers for explicitly listed entities
-        // IMPORTANT: We also override EntityManager above, so repositories from imported
-        // modules (like UsersModule) will automatically use the transactional EntityManager
-        // when they inject EntityManager in their TypeOrmModule.forFeature() providers
-        ...featureEntities.map((entity) => ({
+        // Override repository providers for all entities
+        ...TEST_ENTITIES.map((entity) => ({
           provide: getRepositoryToken(entity),
           useFactory: (manager: EntityManager) => manager.getRepository(entity),
           inject: [EntityManager],
         })),
-        // Also override repositories for TEST_ENTITIES to catch all possible entities
-        // that might be used by imported modules
-        ...TEST_ENTITIES.filter((entity) => !featureEntities.some((fe) => fe === entity)).map(
-          (entity) => ({
-            provide: getRepositoryToken(entity),
-            useFactory: (manager: EntityManager) => manager.getRepository(entity),
-            inject: [EntityManager],
-          }),
-        ),
       ],
     })
 
@@ -205,6 +197,10 @@ export async function setupTransactionalTestDatabase(
     organizationRepository: getRepository(Organization),
     membershipRepository: getRepository(UserMembership),
     projectRepository: getRepository(Project),
+    agentRepository: getRepository(Agent),
+    agentSessionRepository: getRepository(AgentSession),
+    chatMessageRepository: getRepository(ChatMessage),
+    resourceRepository: getRepository(Resource),
   })
 
   return {
@@ -234,14 +230,11 @@ export async function teardownTestDatabase(setup: TransactionalTestSetup): Promi
   await setup.module.close()
 }
 
-export function createBaseTestingModule(
-  {
-    featureEntities,
-    providers = [],
-    additionalImports = [],
-    applyOverrides,
-  }: CreateTestingModuleParams = { featureEntities: [], applyOverrides: undefined },
-) {
+export function createBaseTestingModule({
+  providers = [],
+  additionalImports = [],
+  applyOverrides,
+}: CreateTestingModuleParams = {}) {
   const testDatabaseUrl = process.env.DATABASE_URL
   if (!testDatabaseUrl) {
     throw new Error("DATABASE_URL not found in environment. Make sure .env.test is loaded.")
@@ -260,7 +253,7 @@ export function createBaseTestingModule(
         logging: false,
         dropSchema: false,
       }),
-      TypeOrmModule.forFeature(featureEntities),
+      TypeOrmModule.forFeature(TEST_ENTITIES),
       ...additionalImports,
     ],
     providers,
@@ -270,7 +263,6 @@ export function createBaseTestingModule(
 }
 
 export type CreateTestingModuleParams = {
-  featureEntities: Array<new () => ObjectLiteral>
   providers?: Provider[]
   additionalImports?: Array<Type<unknown> | DynamicModule>
   applyOverrides?: (moduleBuilder: TestingModuleBuilder) => TestingModuleBuilder

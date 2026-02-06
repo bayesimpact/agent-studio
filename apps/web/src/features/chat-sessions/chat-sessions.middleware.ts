@@ -25,7 +25,7 @@ listenerMiddleware.startListening({
     const state = listenerApi.getState()
     const isAdminInterface = selectIsAdminInterface(state)
     chatBots.forEach((chatBot) => {
-      listenerApi.dispatch(listSessions({ chatBotId: chatBot.id, playground: isAdminInterface }))
+      listenerApi.dispatch(listSessions({ agentId: chatBot.id, playground: isAdminInterface }))
     })
   },
 })
@@ -39,10 +39,10 @@ listenerMiddleware.startListening({
   },
   effect: async (_, listenerApi) => {
     const state = listenerApi.getState()
-    const chatBotId = selectCurrentChatBotId(state)
+    const agentId = selectCurrentChatBotId(state)
     const isAdminInterface = selectIsAdminInterface(state)
-    if (!chatBotId) return
-    await listenerApi.dispatch(listSessions({ chatBotId, playground: isAdminInterface }))
+    if (!agentId) return
+    await listenerApi.dispatch(listSessions({ agentId, playground: isAdminInterface }))
   },
 })
 
@@ -77,8 +77,8 @@ listenerMiddleware.startListening({
   effect: async (action, listenerApi) => {
     const state = listenerApi.getState()
     const isAdminInterface = selectIsAdminInterface(state)
-    const { chatBotId, id } = action.payload
-    await listenerApi.dispatch(listSessions({ chatBotId, playground: isAdminInterface }))
+    const { agentId, id } = action.payload
+    await listenerApi.dispatch(listSessions({ agentId, playground: isAdminInterface }))
 
     const onSuccess = action.meta.arg.onSuccess
     onSuccess?.(id)
@@ -100,7 +100,7 @@ listenerMiddleware.startListening({
     if (ADS.isFulfilled(chatBots)) {
       for (const chatBot of Object.values(chatBots.value).flat()) {
         await listenerApi.dispatch(
-          listSessions({ chatBotId: chatBot.id, playground: isAdminInterface }),
+          listSessions({ agentId: chatBot.id, playground: isAdminInterface }),
         )
       }
     }

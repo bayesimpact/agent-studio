@@ -1,9 +1,9 @@
 import { Module } from "@nestjs/common"
 import { ConfigModule, ConfigService } from "@nestjs/config"
 import { TypeOrmModule } from "@nestjs/typeorm"
+import { AgentSessionsModule } from "./agent-sessions/agent-sessions.module"
 import { AgentsModule } from "./agents/agents.module"
 import { AuthModule } from "./auth/auth.module"
-import { ChatSessionsModule } from "./chat-sessions/chat-sessions.module"
 import typeorm from "./config/typeorm"
 import { MeModule } from "./me/me.module"
 import { OrganizationsModule } from "./organizations/organizations.module"
@@ -30,7 +30,7 @@ import { UsersModule } from "./users/users.module"
     OrganizationsModule,
     ProjectsModule,
     AgentsModule,
-    ChatSessionsModule,
+    AgentSessionsModule,
     MeModule,
     OrganizationsModule,
     ProjectsModule,

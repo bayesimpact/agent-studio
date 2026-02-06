@@ -2,7 +2,10 @@ import { Button } from "@caseai-connect/ui/shad/button"
 import { Spinner } from "@caseai-connect/ui/shad/spinner"
 import { AlertCircleIcon, CirclePlusIcon, MicIcon, PaperclipIcon } from "lucide-react"
 import { useTranslation } from "react-i18next"
-import type { ChatSession, ChatSessionMessage } from "@/features/chat-sessions/chat-sessions.models"
+import type {
+  AgentSession,
+  AgentSessionMessage,
+} from "@/features/chat-sessions/chat-sessions.models"
 import { selectStreaming } from "@/features/chat-sessions/chat-sessions.selectors"
 import { sendMessage } from "@/features/chat-sessions/chat-sessions.thunks"
 import { useAppDispatch, useAppSelector } from "@/store/hooks"
@@ -24,8 +27,8 @@ export function AdminChatSession({
   session,
   messages,
 }: {
-  session: ChatSession
-  messages: ChatSessionMessage[]
+  session: AgentSession
+  messages: AgentSessionMessage[]
 }) {
   const { t } = useTranslation("chat")
   const dispatch = useAppDispatch()
@@ -81,8 +84,8 @@ export function AppChatSession({
   session,
   messages,
 }: {
-  session: ChatSession
-  messages: ChatSessionMessage[]
+  session: AgentSession
+  messages: AgentSessionMessage[]
 }) {
   const { t } = useTranslation("chat")
   const dispatch = useAppDispatch()
@@ -133,7 +136,7 @@ export function AppChatSession({
   )
 }
 
-function Message({ message }: { message: ChatSessionMessage }) {
+function Message({ message }: { message: AgentSessionMessage }) {
   const isAssistant = message.role === "assistant"
   const isStreaming = message.status === "streaming"
   const isError = message.status === "error"

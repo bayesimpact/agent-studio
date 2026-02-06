@@ -20,8 +20,8 @@ export interface LLMConfig {
  */
 export interface LLMMetadata {
   organizationId?: string
-  chatSessionId?: string
-  chatBotId?: string
+  agentSessionId?: string
+  agentId?: string
   projectId?: string
   currentTurn?: number
   tags?: string[]
@@ -36,7 +36,7 @@ export interface LLMProvider {
    * Stream a chat response from the LLM
    * @param messages - Chat messages in normalized format
    * @param config - LLM configuration (model, temperature, system prompt)
-   * @param metadata - Metadata used for telemetry (organizationId, chatBotId, tags, ...)
+   * @param metadata - Metadata used for telemetry (organizationId, agentId, tags, ...)
    * @returns Async generator yielding text chunks
    */
   streamChatResponse(

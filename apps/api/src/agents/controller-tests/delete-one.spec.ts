@@ -1,7 +1,7 @@
 import { buildEndpointRequest } from "@/common/test/request.factory"
 import {
   createOrganizationWithAgent,
-  createOrganizationWithChatSession,
+  createOrganizationWithAgentSession,
 } from "@/organizations/organization.factory"
 import { agentsControllerTestSetup } from "./test-setup"
 
@@ -78,8 +78,10 @@ describe("Agent - deleteOne", () => {
 
   describe("when agent has sessions", () => {
     it("should delete agent and its sessions", async () => {
-      const { controller, agentRepository, chatSessionRepository } = getTestContext()
-      const { user, agent, chatSession } = await createOrganizationWithChatSession(getTestContext())
+      const { controller, agentRepository, agentSessionRepository } = getTestContext()
+      const { user, agent, agentSession } = await createOrganizationWithAgentSession(
+        getTestContext(),
+      )
       const mockRequest = buildEndpointRequest(user)
 
       const { data: result } = await controller.deleteOne(mockRequest, agent.id)
@@ -91,8 +93,8 @@ describe("Agent - deleteOne", () => {
       })
       expect(deletedAgent).toBeNull()
 
-      const deletedSession = await chatSessionRepository.findOne({
-        where: { id: chatSession.id },
+      const deletedSession = await agentSessionRepository.findOne({
+        where: { id: agentSession.id },
       })
       expect(deletedSession).toBeNull()
     })

@@ -1,4 +1,4 @@
-import type { ChatSessionDto, ChatSessionMessageDto } from "@caseai-connect/api-contracts"
+import type { AgentSessionDto, AgentSessionMessageDto } from "@caseai-connect/api-contracts"
 
-export type ChatSession = ChatSessionDto
-export type ChatSessionMessage = ChatSessionMessageDto
+export type AgentSession = AgentSessionDto
+export type AgentSessionMessage = AgentSessionMessageDto

@@ -16,7 +16,6 @@ describe("UsersService", () => {
 
   beforeAll(async () => {
     setup = await setupTransactionalTestDatabase({
-      featureEntities: [User],
       providers: [UsersService],
     })
     // Clear database once at the start to ensure clean state

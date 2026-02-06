@@ -22,7 +22,7 @@ export const projectFactory = ProjectFactory.define(({ sequence, params, transie
     createdAt: params.createdAt || now,
     updatedAt: params.updatedAt || now,
     organization: transientParams.organization,
-    chatBots: params.chatBots || [],
+    agents: params.agents || [],
     resources: params.resources || [],
   } satisfies Project
 })

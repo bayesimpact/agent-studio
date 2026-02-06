@@ -8,10 +8,10 @@ import {
   setupTransactionalTestDatabase,
   teardownTestDatabase,
 } from "@/common/test/test-transaction-manager"
-import { Organization } from "@/organizations/organization.entity"
+import type { Organization } from "@/organizations/organization.entity"
 import { createOrganizationWithOwner } from "@/organizations/organization.factory"
-import { UserMembership } from "@/organizations/user-membership.entity"
-import { User } from "@/users/user.entity"
+import type { UserMembership } from "@/organizations/user-membership.entity"
+import type { User } from "@/users/user.entity"
 import { Project } from "./project.entity"
 import { ProjectsController } from "./projects.controller"
 import { ProjectsModule } from "./projects.module"
@@ -28,7 +28,6 @@ describe("ProjectsController", () => {
 
   beforeAll(async () => {
     setup = await setupTransactionalTestDatabase({
-      featureEntities: [User, Organization, UserMembership, Project],
       additionalImports: [ProjectsModule],
     })
     await clearTestDatabase(setup.dataSource)

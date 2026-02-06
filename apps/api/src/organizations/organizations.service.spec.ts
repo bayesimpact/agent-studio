@@ -21,7 +21,6 @@ describe("OrganizationsService", () => {
 
   beforeAll(async () => {
     setup = await setupTransactionalTestDatabase({
-      featureEntities: [Organization, UserMembership, User],
       additionalImports: [OrganizationsModule],
     })
     // Clear database once at the start to ensure clean state

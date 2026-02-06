@@ -9,7 +9,6 @@ import {
   teardownTestDatabase,
 } from "@/common/test/test-transaction-manager"
 import { OrganizationsService } from "@/organizations/organizations.service"
-import { User } from "@/users/user.entity"
 import { type Requester, testRequester } from "../../test/request"
 import { MeModule } from "./me.module"
 
@@ -49,7 +48,6 @@ describe("MeController (e2e)", () => {
 
       beforeAll(async () => {
         setup = await setupTransactionalTestDatabase({
-          featureEntities: [User],
           additionalImports: [MeModule],
         })
         app = setup.module.createNestApplication()
@@ -75,7 +73,6 @@ describe("MeController (e2e)", () => {
 
       beforeAll(async () => {
         setup = await setupTransactionalTestDatabase({
-          featureEntities: [User],
           additionalImports: [MeModule],
           applyOverrides: (moduleBuilder) =>
             moduleBuilder

@@ -1,6 +1,6 @@
 import type { AgentLocale, AgentModel, AgentTemperature } from "@caseai-connect/api-contracts"
 import { Column, Entity, JoinColumn, ManyToOne, OneToMany } from "typeorm"
-import { ChatSession } from "@/chat-sessions/chat-session.entity"
+import { AgentSession } from "@/agent-sessions/agent-session.entity"
 import { Base4AllEntity } from "@/common/entities/base4all.entity"
 import { Project } from "@/projects/project.entity"
 
@@ -11,7 +11,7 @@ export class Agent extends Base4AllEntity {
 
   @ManyToOne(
     () => Project,
-    (project) => project.chatBots,
+    (project) => project.agents,
   )
   @JoinColumn({ name: "project_id" })
   project!: Project
@@ -32,8 +32,8 @@ export class Agent extends Base4AllEntity {
   locale!: AgentLocale
 
   @OneToMany(
-    () => ChatSession,
-    (chatSession) => chatSession.chatbot,
+    () => AgentSession,
+    (agentSession) => agentSession.agent,
   )
-  chatSessions!: ChatSession[]
+  agentSessions!: AgentSession[]
 }

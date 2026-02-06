@@ -22,7 +22,6 @@ describe("OrganizationsController", () => {
   beforeAll(async () => {
     // Use transactional setup with OrganizationsModule import
     setup = await setupTransactionalTestDatabase({
-      featureEntities: [User, Organization, UserMembership],
       additionalImports: [OrganizationsModule],
     })
     // Clear database once at the start to ensure clean state
