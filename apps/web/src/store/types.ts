@@ -7,6 +7,7 @@ import type { meSliceReducer } from "@/features/me/me.slice"
 import type { notificationsSliceReducer } from "@/features/notifications/notifications.slice"
 import type { organizationsSliceReducer } from "@/features/organizations/organizations.slice"
 import type { projectsSliceReducer } from "@/features/projects/projects.slice"
+import type { resourcesSliceReducer } from "@/features/resources/resources.slice"
 
 // Define the store state structure without creating the store
 // This allows us to use these types in listenerMiddleware without circular dependencies
@@ -18,6 +19,7 @@ export type RootState = {
   notifications: ReturnType<typeof notificationsSliceReducer>
   organizations: ReturnType<typeof organizationsSliceReducer>
   projects: ReturnType<typeof projectsSliceReducer>
+  resources: ReturnType<typeof resourcesSliceReducer>
 }
 
 // Extra argument passed to thunks for dependency injection

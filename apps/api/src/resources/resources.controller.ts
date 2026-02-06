@@ -2,6 +2,7 @@ import { type MimeTypes, type ResourceDto, ResourcesRoutes } from "@caseai-conne
 import {
   Controller,
   FileTypeValidator,
+  Get,
   HttpCode,
   HttpStatus,
   Inject,
@@ -122,6 +123,24 @@ export class ResourcesController {
       throw new NotFoundException("Resource not found or you do not have permission to access it.")
     }
     return { data: toResourceDto(resource) }
+  }
+
+  @CheckPolicy((policy) => policy.canList())
+  @Get(ResourcesRoutes.getAll.path)
+  async getAll(
+    @Request() req: EndpointRequestWithProject,
+  ): Promise<typeof ResourcesRoutes.getAll.response> {
+    const projectId = req.project?.id
+
+    if (!projectId) {
+      throw new UnprocessableEntityException("Project ID is required.")
+    }
+
+    const resources = await this.resourcesService.listResources({
+      projectId,
+    })
+
+    return { data: resources.map(toResourceDto) }
   }
 }
 

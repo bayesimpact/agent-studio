@@ -4,13 +4,22 @@ import type { Resource } from "./resources.models"
 
 type ThunkConfig = { state: RootState; extra: ThunkExtraArg }
 
+export const listResources = createAsyncThunk<
+  Resource[],
+  { organizationId: string; projectId: string },
+  ThunkConfig
+>(
+  "resources/list",
+  async (params, { extra: { services } }) => await services.resources.getAll(params),
+)
+
 export const uploadResource = createAsyncThunk<
   Resource,
   {
     organizationId: string
     projectId: string
     file: File
-    onSuccess?: (params: { projectId: string; resourceId: string }) => void
+    onSuccess?: (params: { resourceId: string }) => void
   },
   ThunkConfig
 >(

@@ -20,7 +20,7 @@ export const resourceFactory = ResourceFactory.define(({ sequence, params, trans
     id: params.id || randomUUID(),
     createdAt: params.createdAt || now,
     updatedAt: params.updatedAt || now,
-    deletedAt: params.deletedAt || now,
+    deletedAt: params.deletedAt ?? null,
     projectId: transientParams.project.id,
     project: transientParams.project,
 
