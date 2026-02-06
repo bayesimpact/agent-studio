@@ -27,3 +27,18 @@ export const uploadResource = createAsyncThunk<
   async ({ organizationId, projectId, file }, { extra: { services } }) =>
     await services.resources.uploadOne({ organizationId, projectId, file }),
 )
+
+export const deleteResource = createAsyncThunk<
+  void,
+  {
+    organizationId: string
+    projectId: string
+    resourceId: string
+    onSuccess?: () => void
+  },
+  ThunkConfig
+>(
+  "resources/delete",
+  async ({ organizationId, projectId, resourceId }, { extra: { services } }) =>
+    await services.resources.deleteOne({ organizationId, projectId, resourceId }),
+)

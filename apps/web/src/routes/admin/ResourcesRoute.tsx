@@ -35,7 +35,13 @@ function WithData({ resources, project }: { resources: Resource[]; project: Proj
       {resources.length === 0 ? (
         <EmptyResources project={project} />
       ) : (
-        resources.map((resource) => <ResourceItem key={resource.id} resource={resource} />)
+        resources.map((resource) => (
+          <ResourceItem
+            key={resource.id}
+            resource={resource}
+            organizationId={project.organizationId}
+          />
+        ))
       )}
     </div>
   )

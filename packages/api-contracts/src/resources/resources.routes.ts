@@ -1,4 +1,4 @@
-import type { RequestPayload, ResponseData } from "../generic"
+import type { RequestPayload, ResponseData, SuccessResponseDTO } from "../generic"
 import { defineRoute } from "../helpers"
 import type { ResourceDto } from "./resources.dto"
 
@@ -10,5 +10,9 @@ export const ResourcesRoutes = {
   getAll: defineRoute<ResponseData<ResourceDto[]>>({
     method: "get",
     path: "organizations/:organizationId/projects/:projectId/resources/",
+  }),
+  deleteOne: defineRoute<ResponseData<SuccessResponseDTO>>({
+    method: "delete",
+    path: "organizations/:organizationId/projects/:projectId/resources/:resourceId",
   }),
 }

@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto"
 import { MimeTypes } from "@caseai-connect/api-contracts"
 import { Factory } from "fishery"
+import type { Repository } from "typeorm"
 import type { Project } from "@/projects/project.entity"
 import type { Resource } from "./resource.entity"
 
@@ -33,3 +34,25 @@ export const resourceFactory = ResourceFactory.define(({ sequence, params, trans
     storageRelativePath: params.storageRelativePath || `resources/file_${sequence}.txt`,
   } satisfies Resource
 })
+
+type CreateResourceForProjectParams = {
+  resource?: Partial<Resource>
+}
+
+type CreateResourceForProjectRepositories = {
+  resourceRepository: Repository<Resource>
+}
+
+export async function createResourceForProject({
+  repositories,
+  project,
+  params = {},
+}: {
+  repositories: CreateResourceForProjectRepositories
+  project: Project
+  params?: CreateResourceForProjectParams
+}): Promise<Resource> {
+  const resource = resourceFactory.transient({ project }).build(params.resource)
+  await repositories.resourceRepository.save(resource)
+  return resource
+}

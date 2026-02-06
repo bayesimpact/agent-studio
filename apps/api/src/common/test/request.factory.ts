@@ -5,8 +5,10 @@ import type { Project } from "@/projects/project.entity"
 import type {
   EndpointRequest,
   EndpointRequestWithProject,
+  EndpointRequestWithResource,
   EndpointRequestWithUserMembership,
 } from "@/request.interface"
+import type { Resource } from "@/resources/resource.entity"
 import type { User } from "@/users/user.entity"
 
 type EndpointRequestTransientParams = {
@@ -75,6 +77,13 @@ type EndpointRequestWithOrganizationAndProjectTransientParams = {
   project: Project
 }
 
+type EndpointRequestWithOrganizationAndProjectAndResourceTransientParams = {
+  organization: Organization
+  user: User
+  project: Project
+  resource: Resource
+}
+
 export const endpointRequestWithOrganizationAndProjectFactory = Factory.define<
   EndpointRequestWithProject,
   EndpointRequestWithOrganizationAndProjectTransientParams
@@ -96,6 +105,33 @@ export const endpointRequestWithOrganizationAndProjectFactory = Factory.define<
   } satisfies EndpointRequestWithProject
 })
 
+export const endpointRequestWithOrganizationAndProjectAndResourceFactory = Factory.define<
+  EndpointRequestWithResource,
+  EndpointRequestWithOrganizationAndProjectAndResourceTransientParams
+>(({ transientParams }) => {
+  const organization = transientParams.organization
+  const user = transientParams.user
+  const project = transientParams.project
+  const resource = transientParams.resource
+  const baseRequest = endpointRequestWithOrganizationFactory
+    .transient({ organization, user })
+    .build()
+
+  if (!project) {
+    throw new Error("project transient is required")
+  }
+
+  if (!resource) {
+    throw new Error("resource transient is required")
+  }
+
+  return {
+    ...baseRequest,
+    project,
+    resource,
+  } satisfies EndpointRequestWithResource
+})
+
 export const buildEndpointRequestWithOrganizationAndProject = (
   organization: Organization,
   user: User,
@@ -104,4 +140,13 @@ export const buildEndpointRequestWithOrganizationAndProject = (
   return endpointRequestWithOrganizationAndProjectFactory
     .transient({ organization, user, project })
     .build()
+}
+
+export const buildEndpointRequestWithOrganizationAndProjectAndResource = (params: {
+  organization: Organization
+  user: User
+  project: Project
+  resource: Resource
+}) => {
+  return endpointRequestWithOrganizationAndProjectAndResourceFactory.transient(params).build()
 }

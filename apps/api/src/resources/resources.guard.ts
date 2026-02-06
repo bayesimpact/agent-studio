@@ -9,7 +9,7 @@ import {
 import { Reflector } from "@nestjs/core"
 import { AUTH_ERRORS } from "@/common/errors/auth-errors"
 import { CHECK_POLICY_KEY, type PolicyHandler } from "@/common/policies/check-policy.decorator"
-import type { EndpointRequestWithProject } from "@/request.interface"
+import type { EndpointRequestWithResource } from "@/request.interface"
 import type { Resource } from "./resource.entity"
 import { ResourcePolicy } from "./resource.policy"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
@@ -24,28 +24,27 @@ export class ResourcesGuard implements CanActivate {
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     // since ResourcesGuard is called after UserGuard, we can access the enhanced request object storing the user
-    const request = context.switchToHttp().getRequest() as EndpointRequestWithProject & {
+    const request = context.switchToHttp().getRequest() as EndpointRequestWithResource & {
       params: { resourceId: string }
     }
 
-    // fetch the project from the database if ProjectId is provided
+    // fetch the resource from the database if resourceId is provided
     let resource: Resource | undefined
     const resourceId = request.params.resourceId
 
     // the caller didn't provide a resourceId and our route mechanism uses the :resourceId placeholder instead
     if (resourceId === ":resourceId") throw new NotFoundException()
 
-    // ok, we have a resourceId (UPDATE, DELETE routes), fetch the project from the database
-    // TODO:
-    // if (resourceId) {
-    //   resource = await this.resourcesService.getResource(request.organizationId, resourceId)
-    //   if (!resource) throw new NotFoundException()
+    // ok, we have a resourceId (UPDATE, DELETE routes), fetch the resource from the database
+    if (resourceId) {
+      resource = (await this.resourcesService.findById(resourceId)) ?? undefined
+      if (!resource) throw new NotFoundException()
 
-    //   // enhance the request object with the project
-    //   request.resource = resource
-    // }
+      // enhance the request object with the resource
+      request.resource = resource
+    }
 
-    const policy = new ResourcePolicy(request.userMembership, resource)
+    const policy = new ResourcePolicy(request.userMembership, resource, request.project)
 
     const policyHandler = this.reflector.getAllAndOverride<PolicyHandler>(CHECK_POLICY_KEY, [
       context.getHandler(),

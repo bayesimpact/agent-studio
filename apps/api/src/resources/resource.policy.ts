@@ -1,7 +1,18 @@
 import { BasePolicy } from "@/common/policies/base-policy"
+import type { UserMembership } from "@/organizations/user-membership.entity"
+import type { Project } from "@/projects/project.entity"
 import type { Resource } from "./resource.entity"
 
 export class ResourcePolicy extends BasePolicy<Resource> {
+  constructor(
+    userMembership: UserMembership,
+    resource?: Resource,
+    private readonly project?: Project,
+  ) {
+    super(userMembership, resource)
+    this.project = project
+  }
+
   canList(): boolean {
     return this.isAdminOrOwner()
   }
@@ -11,10 +22,26 @@ export class ResourcePolicy extends BasePolicy<Resource> {
   }
 
   canUpdate(): boolean {
-    return this.doesResourceBelongToOrganization() && this.isAdminOrOwner()
+    return this.doesResourceBelongToProject() && this.isAdminOrOwner()
   }
 
   canDelete(): boolean {
-    return this.doesResourceBelongToOrganization() && this.isAdminOrOwner()
+    return this.doesResourceBelongToProject() && this.isAdminOrOwner()
+  }
+
+  private doesResourceBelongToProject(): boolean {
+    if (!this.resource) return false
+
+    // Ensure resource is an object (not a primitive) before using 'in' operator
+    if (typeof this.resource !== "object") {
+      return false
+    }
+
+    // Check if resource has projectId property using 'in' operator
+    if (!("projectId" in this.resource)) {
+      return false
+    }
+
+    return this.resource.projectId === this.project?.id
   }
 }
