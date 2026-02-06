@@ -145,5 +145,22 @@
     "title": "404 - Not Found",
     "description": "The page you are looking for does not exist. Please check the URL or return to the home page.",
     "home": "Home"
+  },
+  "resources": {
+    "header": {
+      "title": "Manage your {{projectName}}'s resources"
+    },
+    "empty": {
+      "title": "No Resources Yet",
+      "description": "You haven't created any resources yet. Get started by creating your first resource."
+    },
+    "item": {
+      "createdAt": "Created at",
+      "updatedAt": "Updated at",
+      "fileName": "File Name",
+      "fileSize": "File Size",
+      "fileLanguage": "File Language",
+      "fileMimeType": "File MIME Type"
+    }
   }
 }

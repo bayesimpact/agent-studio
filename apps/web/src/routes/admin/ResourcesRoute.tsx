@@ -1,4 +1,5 @@
 import { useEffect } from "react"
+import { useTranslation } from "react-i18next"
 import { useSidebarLayout } from "@/components/layouts/sidebar/context"
 import { EmptyResources } from "@/components/resources/EmptyResources"
 import { UploadResourceButton } from "@/components/resources/UploadResourceButton"
@@ -41,9 +42,10 @@ function WithData({ resources, project }: { resources: Resource[]; project: Proj
 }
 
 function useHandleHeader({ project }: { project: Project }) {
+  const { t } = useTranslation("resources", { keyPrefix: "header" })
   const { isAdminInterface } = useAbility()
   const { setHeaderTitle, setHeaderRightSlot } = useSidebarLayout()
-  const headerTitle = `Manage your ${project.name}'s resources` // FIXME: i18n
+  const headerTitle = t("title", { projectName: project.name })
 
   useEffect(() => {
     setHeaderTitle(headerTitle)
