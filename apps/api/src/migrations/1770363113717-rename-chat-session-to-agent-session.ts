@@ -1,7 +1,7 @@
 import type { MigrationInterface, QueryRunner } from "typeorm"
 
-export class RenameChatSessionToAgentSession1770313054376 implements MigrationInterface {
-  name = "RenameChatSessionToAgentSession1770313054376"
+export class RenameChatSessionToAgentSession1770363113717 implements MigrationInterface {
+  name = "RenameChatSessionToAgentSession1770363113717"
 
   public async up(queryRunner: QueryRunner): Promise<void> {
     await queryRunner.query(

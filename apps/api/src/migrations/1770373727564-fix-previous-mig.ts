@@ -1,10 +1,9 @@
 import type { MigrationInterface, QueryRunner } from "typeorm"
 
-export class CleanAgentTables1770313934213 implements MigrationInterface {
-  name = "CleanAgentTables1770313934213"
+export class FixPreviousMig1770373727564 implements MigrationInterface {
+  name = "FixPreviousMig1770373727564"
 
   public async up(queryRunner: QueryRunner): Promise<void> {
-    await queryRunner.query(`ALTER TABLE "agent" DROP CONSTRAINT "FK_c325e136d171c01945a68ec75b5"`)
     await queryRunner.query(
       `ALTER TABLE "agent_session" DROP CONSTRAINT "FK_cf8aa366e235b6d4c650bd51b3d"`,
     )
@@ -21,9 +20,6 @@ export class CleanAgentTables1770313934213 implements MigrationInterface {
     )
     await queryRunner.query(
       `CREATE INDEX "IDX_bfe74fcb5f049ec7ba5c7ec5e4" ON "agent_session" ("organization_id", "type") `,
-    )
-    await queryRunner.query(
-      `ALTER TABLE "agent" ADD CONSTRAINT "FK_48cb7e253c9f0cbaca40bf98da0" FOREIGN KEY ("project_id") REFERENCES "project"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`,
     )
     await queryRunner.query(
       `ALTER TABLE "agent_session" ADD CONSTRAINT "FK_152a42ea0dc5fe04a227a16611e" FOREIGN KEY ("agent_id") REFERENCES "agent"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`,
@@ -46,7 +42,6 @@ export class CleanAgentTables1770313934213 implements MigrationInterface {
     await queryRunner.query(
       `ALTER TABLE "agent_session" DROP CONSTRAINT "FK_152a42ea0dc5fe04a227a16611e"`,
     )
-    await queryRunner.query(`ALTER TABLE "agent" DROP CONSTRAINT "FK_48cb7e253c9f0cbaca40bf98da0"`)
     await queryRunner.query(`DROP INDEX "public"."IDX_bfe74fcb5f049ec7ba5c7ec5e4"`)
     await queryRunner.query(`DROP INDEX "public"."IDX_d0e43de088b014d8899fff6692"`)
     await queryRunner.query(
@@ -63,9 +58,6 @@ export class CleanAgentTables1770313934213 implements MigrationInterface {
     )
     await queryRunner.query(
       `ALTER TABLE "agent_session" ADD CONSTRAINT "FK_cf8aa366e235b6d4c650bd51b3d" FOREIGN KEY ("user_id") REFERENCES "user"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`,
-    )
-    await queryRunner.query(
-      `ALTER TABLE "agent" ADD CONSTRAINT "FK_c325e136d171c01945a68ec75b5" FOREIGN KEY ("project_id") REFERENCES "project"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`,
     )
   }
 }
