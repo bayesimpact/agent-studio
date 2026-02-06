@@ -29,7 +29,7 @@ describe("deleteResource", () => {
     })
     await resourceRepository.save(resource)
 
-    await service.deleteResource({ resourceId: resource.id, projectId: project.id })
+    await service.deleteResource({ resourceId: resource.id })
 
     const deletedResource = await resourceRepository.findOne({
       where: { id: resource.id },
@@ -46,7 +46,7 @@ describe("deleteResource", () => {
       userRepository,
     } = getTestContext()
 
-    const { project } = await createOrganizationWithProject({
+    await createOrganizationWithProject({
       organizationRepository,
       userRepository,
       membershipRepository,
@@ -55,8 +55,8 @@ describe("deleteResource", () => {
 
     const nonExistentResourceId = "00000000-0000-0000-0000-000000000000"
 
-    await expect(
-      service.deleteResource({ resourceId: nonExistentResourceId, projectId: project.id }),
-    ).rejects.toThrow(NotFoundException)
+    await expect(service.deleteResource({ resourceId: nonExistentResourceId })).rejects.toThrow(
+      NotFoundException,
+    )
   })
 })
