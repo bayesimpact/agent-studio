@@ -28,6 +28,13 @@ export default {
     const axios = getAxiosInstance()
     await axios.delete(ResourcesRoutes.deleteOne.getPath(params))
   },
+  getTemporaryUrl: async (params) => {
+    const axios = getAxiosInstance()
+    const response = await axios.get<typeof ResourcesRoutes.getTemporaryUrl.response>(
+      ResourcesRoutes.getTemporaryUrl.getPath(params),
+    )
+    return response.data.data
+  },
 } satisfies IResourcesSpi
 
 function toResource(dto: ResourceDto): Resource {

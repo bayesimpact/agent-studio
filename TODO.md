@@ -3,6 +3,7 @@
 
 # // TODO:
 
+- afficher traceUrl in frontend chatsession playground
 - remove ttl
 - delete chat session
 - create ErrorRoute

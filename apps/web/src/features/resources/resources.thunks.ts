@@ -42,3 +42,17 @@ export const deleteResource = createAsyncThunk<
   async ({ organizationId, projectId, resourceId }, { extra: { services } }) =>
     await services.resources.deleteOne({ organizationId, projectId, resourceId }),
 )
+
+export const getResourceTemporaryUrl = createAsyncThunk<
+  { url: string },
+  {
+    organizationId: string
+    projectId: string
+    resourceId: string
+  },
+  ThunkConfig
+>(
+  "resources/getTemporaryUrl",
+  async ({ organizationId, projectId, resourceId }, { extra: { services } }) =>
+    await services.resources.getTemporaryUrl({ organizationId, projectId, resourceId }),
+)

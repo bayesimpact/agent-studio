@@ -8,4 +8,9 @@ export interface IResourcesSpi {
     projectId: string
     resourceId: string
   }): Promise<void>
+  getTemporaryUrl(params: {
+    organizationId: string
+    projectId: string
+    resourceId: string
+  }): Promise<{ url: string }>
 }

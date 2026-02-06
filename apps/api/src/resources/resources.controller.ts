@@ -165,6 +165,28 @@ export class ResourcesController {
 
     return { data: { success: true } }
   }
+
+  @CheckPolicy((policy) => policy.canUpdate())
+  @Get(ResourcesRoutes.getTemporaryUrl.path)
+  @HttpCode(HttpStatus.CREATED)
+  async getTemporaryUrl(
+    @Request() req: EndpointRequestWithResource,
+  ): Promise<typeof ResourcesRoutes.getTemporaryUrl.response> {
+    const resourceId = req.resource?.id
+
+    if (!resourceId) {
+      throw new UnprocessableEntityException("Resource ID is required.")
+    }
+    const resource = await this.resourcesService.findById(resourceId)
+    if (!resource) {
+      throw new NotFoundException("Resource not found.")
+    }
+    const url = await this.fileStorageService.getTemporaryUrl(resource.storageRelativePath)
+    if (!url) {
+      throw new NotFoundException("Temporary URL not found for the resource.")
+    }
+    return { data: { url } }
+  }
 }
 
 function toResourceDto(entity: Resource): ResourceDto {

@@ -11,6 +11,10 @@ export const ResourcesRoutes = {
     method: "get",
     path: "organizations/:organizationId/projects/:projectId/resources/",
   }),
+  getTemporaryUrl: defineRoute<ResponseData<{ url: string }>>({
+    method: "get",
+    path: "organizations/:organizationId/projects/:projectId/resources/:resourceId/temporary-url",
+  }),
   deleteOne: defineRoute<ResponseData<SuccessResponseDTO>>({
     method: "delete",
     path: "organizations/:organizationId/projects/:projectId/resources/:resourceId",
