@@ -7,21 +7,20 @@ import {
   EmptyTitle,
 } from "@caseai-connect/ui/shad/empty"
 import { FileIcon } from "lucide-react"
+import { useTranslation } from "react-i18next"
 import type { Project } from "@/features/projects/projects.models"
 import { UploadResourceButton } from "./UploadResourceButton"
 
 export function EmptyResources({ project }: { project: Project }) {
-  // FIXME: i18n
+  const { t } = useTranslation("resources", { keyPrefix: "empty" })
   return (
     <Empty>
       <EmptyHeader>
         <EmptyMedia variant="icon">
           <FileIcon />
         </EmptyMedia>
-        <EmptyTitle>No Resources Yet</EmptyTitle>
-        <EmptyDescription>
-          You haven&apos;t created any resources yet. Get started by creating your first resource.
-        </EmptyDescription>
+        <EmptyTitle>{t("title")}</EmptyTitle>
+        <EmptyDescription>{t("description")}</EmptyDescription>
       </EmptyHeader>
       <EmptyContent className="flex-row justify-center gap-2">
         <UploadResourceButton organizationId={project.organizationId} project={project} />

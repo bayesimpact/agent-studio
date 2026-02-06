@@ -1,12 +1,13 @@
 import { Item, ItemContent, ItemHeader, ItemTitle } from "@caseai-connect/ui/shad/item"
 import { format } from "date-fns"
 import { FileIcon } from "lucide-react"
+import { useTranslation } from "react-i18next"
 import { MarkdownWrapper } from "@/components/chat/MarkdownWrapper"
 import type { Resource } from "@/features/resources/resources.models"
 import { getLocale } from "@/utils/get-locale"
 
 export function ResourceItem({ resource }: { resource: Resource }) {
-  // FIXME: i18n
+  const { t } = useTranslation("resources", { keyPrefix: "item" })
   return (
     <Item variant="outline" className="w-full">
       <ItemHeader>
@@ -20,21 +21,21 @@ export function ResourceItem({ resource }: { resource: Resource }) {
       <ItemContent>
         <div className="flex flex-col gap-2 mb-4 text-muted-foreground">
           <MetaData
-            label="Created at"
+            label={t("createdAt")}
             value={format(new Date(resource.createdAt), "dd MMMM yyyy HH:mm", {
               locale: getLocale(),
             })}
           />
           <MetaData
-            label="Updated at"
+            label={t("updatedAt")}
             value={format(new Date(resource.updatedAt), "dd MMMM yyyy HH:mm", {
               locale: getLocale(),
             })}
           />
-          <MetaData label="File Name" value={resource.fileName} />
-          <MetaData label="File Size" value={resource.size?.toString()} />
-          <MetaData label="File Language" value={resource.language} />
-          <MetaData label="File MIME Type" value={resource.mimeType} />
+          <MetaData label={t("fileName")} value={resource.fileName} />
+          <MetaData label={t("fileSize")} value={resource.size?.toString()} />
+          <MetaData label={t("fileLanguage")} value={resource.language} />
+          <MetaData label={t("fileMimeType")} value={resource.mimeType} />
         </div>
 
         {resource.content && <MarkdownWrapper content={resource.content} />}
