@@ -24,6 +24,10 @@ export default {
     )
     return toResource(response.data.data)
   },
+  deleteOne: async (params) => {
+    const axios = getAxiosInstance()
+    await axios.delete(ResourcesRoutes.deleteOne.getPath(params))
+  },
 } satisfies IResourcesSpi
 
 function toResource(dto: ResourceDto): Resource {

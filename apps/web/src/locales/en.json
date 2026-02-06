@@ -167,6 +167,12 @@
       "fileSize": "File Size",
       "fileLanguage": "File Language",
       "fileMimeType": "File MIME Type"
+    },
+    "delete": {
+      "title": "Delete Resource",
+      "description": "Are you sure you want to delete \"{{name}}\"? This action cannot be undone.",
+      "submit": "Delete",
+      "submitting": "Deleting..."
     }
   }
 }

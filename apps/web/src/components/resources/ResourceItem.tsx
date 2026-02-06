@@ -5,8 +5,15 @@ import { useTranslation } from "react-i18next"
 import { MarkdownWrapper } from "@/components/chat/MarkdownWrapper"
 import type { Resource } from "@/features/resources/resources.models"
 import { getLocale } from "@/utils/get-locale"
+import { DeleteResourceDialog } from "./DeleteResourceDialog"
 
-export function ResourceItem({ resource }: { resource: Resource }) {
+export function ResourceItem({
+  resource,
+  organizationId,
+}: {
+  resource: Resource
+  organizationId: string
+}) {
   const { t } = useTranslation("resources", { keyPrefix: "item" })
   return (
     <Item variant="outline" className="w-full">
@@ -15,7 +22,7 @@ export function ResourceItem({ resource }: { resource: Resource }) {
           <FileIcon />
           {resource.title}
         </ItemTitle>
-        {/* // TODO: add actions (edit, delete) */}
+        <DeleteResourceDialog organizationId={organizationId} resource={resource} />
       </ItemHeader>
 
       <ItemContent>

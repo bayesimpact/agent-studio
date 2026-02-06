@@ -1,5 +1,6 @@
 import type { UserMembership } from "./organizations/user-membership.entity"
 import type { Project } from "./projects/project.entity"
+import type { Resource } from "./resources/resource.entity"
 import type { User } from "./users/user.entity"
 
 export interface JwtPayload {
@@ -24,4 +25,8 @@ export interface EndpointRequestWithUserMembership extends EndpointRequest {
 
 export interface EndpointRequestWithProject extends EndpointRequestWithUserMembership {
   project?: Project
+}
+
+export interface EndpointRequestWithResource extends EndpointRequestWithProject {
+  resource?: Resource
 }

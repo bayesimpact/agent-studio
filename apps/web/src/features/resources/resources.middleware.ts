@@ -5,7 +5,7 @@ import { notificationsActions } from "../notifications/notifications.slice"
 import { selectCurrentOrganizationId } from "../organizations/organizations.selectors"
 import { selectCurrentProjectId } from "../projects/projects.selectors"
 import { listProjects } from "../projects/projects.thunks"
-import { listResources, uploadResource } from "./resources.thunks"
+import { deleteResource, listResources, uploadResource } from "./resources.thunks"
 
 const listenerMiddleware = createListenerMiddleware<RootState, AppDispatch>()
 
@@ -69,6 +69,37 @@ listenerMiddleware.startListening({
     listenerApi.dispatch(
       notificationsActions.show({
         title: "Resource upload failed",
+        type: "error",
+      }),
+    )
+  },
+})
+
+listenerMiddleware.startListening({
+  actionCreator: deleteResource.fulfilled,
+  effect: async (action, listenerApi) => {
+    const projectId = action.meta.arg.projectId
+    const organizationId = action.meta.arg.organizationId
+    // Refresh resources when one is deleted
+    listenerApi.dispatch(listResources({ organizationId, projectId }))
+
+    listenerApi.dispatch(
+      notificationsActions.show({
+        title: "Resource deleted successfully",
+        type: "success",
+      }),
+    )
+
+    const onSuccess = action.meta.arg.onSuccess
+    onSuccess?.()
+  },
+})
+listenerMiddleware.startListening({
+  actionCreator: deleteResource.rejected,
+  effect: async (_, listenerApi) => {
+    listenerApi.dispatch(
+      notificationsActions.show({
+        title: "Resource deletion failed",
         type: "error",
       }),
     )

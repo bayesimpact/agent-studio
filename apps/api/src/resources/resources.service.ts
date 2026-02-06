@@ -1,5 +1,5 @@
 import type { ResourceDto } from "@caseai-connect/api-contracts"
-import { Injectable } from "@nestjs/common"
+import { Injectable, NotFoundException } from "@nestjs/common"
 import { InjectRepository } from "@nestjs/typeorm"
 import type { Repository } from "typeorm"
 import { Resource } from "./resource.entity"
@@ -36,5 +36,23 @@ export class ResourcesService {
       where: { projectId },
       order: { createdAt: "DESC" },
     })
+  }
+
+  async findById(resourceId: string): Promise<Resource | null> {
+    const resource = await this.resourceRepository.findOne({
+      where: { id: resourceId },
+    })
+    if (!resource) {
+      throw new NotFoundException(`Resource with id ${resourceId} not found`)
+    }
+    return resource
+  }
+
+  async deleteResource({ resourceId }: { resourceId: string }): Promise<true> {
+    const isUpdated = await this.resourceRepository.softDelete({ id: resourceId })
+    if (isUpdated.affected === 0) {
+      throw new NotFoundException(`Resource with id ${resourceId} not found`)
+    }
+    return true
   }
 }

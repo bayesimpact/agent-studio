@@ -3,8 +3,6 @@
 
 # // TODO:
 
-- create resources per orgId/projectId
-- upload file to create resource 
 - remove ttl
 - delete chat session
 - create ErrorRoute

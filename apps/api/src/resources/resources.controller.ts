@@ -1,6 +1,7 @@
 import { type MimeTypes, type ResourceDto, ResourcesRoutes } from "@caseai-connect/api-contracts"
 import {
   Controller,
+  Delete,
   FileTypeValidator,
   Get,
   HttpCode,
@@ -23,7 +24,7 @@ import type { MulterFile } from "@/common/types"
 import { UserGuard } from "@/guards/user.guard"
 import { OrganizationGuard } from "@/organizations/organization.guard"
 import { ProjectsGuard } from "@/projects/projects.guard"
-import type { EndpointRequestWithProject } from "@/request.interface"
+import type { EndpointRequestWithProject, EndpointRequestWithResource } from "@/request.interface"
 import type { Resource } from "./resource.entity"
 import { ResourcesGuard } from "./resources.guard"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
@@ -141,6 +142,28 @@ export class ResourcesController {
     })
 
     return { data: resources.map(toResourceDto) }
+  }
+
+  @CheckPolicy((policy) => policy.canDelete())
+  @Delete(ResourcesRoutes.deleteOne.path)
+  async deleteOne(
+    @Request() req: EndpointRequestWithResource,
+  ): Promise<typeof ResourcesRoutes.deleteOne.response> {
+    const projectId = req.project?.id
+    const resourceId = req.resource?.id
+
+    if (!projectId) {
+      throw new UnprocessableEntityException("Project ID is required.")
+    }
+    if (!resourceId) {
+      throw new UnprocessableEntityException("Resource ID is required.")
+    }
+
+    await this.resourcesService.deleteResource({
+      resourceId,
+    })
+
+    return { data: { success: true } }
   }
 }
 
