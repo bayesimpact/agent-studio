@@ -57,6 +57,7 @@ const fromDto = (dto: AgentSessionDto): AgentSession => ({
   type: dto.type,
   createdAt: dto.createdAt,
   updatedAt: dto.updatedAt,
+  traceUrl: dto.traceUrl,
 })
 
 const fromMessagesDto = (dtos: AgentSessionMessageDto[]): AgentSessionMessage[] =>
