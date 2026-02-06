@@ -1,6 +1,7 @@
 import type { AgentSessionDto } from "@caseai-connect/api-contracts"
 import { Body, Controller, Get, Param, Post, Req, UseGuards } from "@nestjs/common"
 import { JwtAuthGuard } from "@/auth/jwt-auth.guard"
+import { getTraceUrl } from "@/external/langfuse/langfuse-helper"
 import { UserGuard } from "@/guards/user.guard"
 import type { EndpointRequest } from "@/request.interface"
 import type { AgentSession } from "./agent-session.entity"
@@ -29,7 +30,7 @@ export class AgentSessionsController {
       type: "playground",
     })
 
-    return { data: sessions.map(toAgentSessionDto) }
+    return { data: sessions.map(toAgentSessionDtoWithTraceUrl) }
   }
 
   @Get(AgentSessionsRoutes.getAllApp.path)
@@ -68,7 +69,7 @@ export class AgentSessionsController {
       organizationId,
     )
 
-    return { data: toAgentSessionDto(session) }
+    return { data: toAgentSessionDtoWithTraceUrl(session) }
   }
 
   @Post(AgentSessionsRoutes.createAppSession.path)
@@ -105,5 +106,15 @@ function toAgentSessionDto(entity: AgentSession): AgentSessionDto {
     type: entity.type,
     createdAt: entity.createdAt.getTime(),
     updatedAt: entity.updatedAt.getTime(),
+  }
+}
+function toAgentSessionDtoWithTraceUrl(entity: AgentSession): AgentSessionDto {
+  return {
+    id: entity.id,
+    agentId: entity.agentId,
+    type: entity.type,
+    createdAt: entity.createdAt.getTime(),
+    updatedAt: entity.updatedAt.getTime(),
+    traceUrl: getTraceUrl(entity.traceId),
   }
 }
