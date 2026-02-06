@@ -2,7 +2,7 @@ import { Button } from "@caseai-connect/ui/shad/button"
 import { Textarea } from "@caseai-connect/ui/shad/textarea"
 import { cn } from "@caseai-connect/ui/utils"
 import { Slot } from "@radix-ui/react-slot"
-import { EllipsisIcon, SendHorizonalIcon, SparklesIcon } from "lucide-react"
+import { SendHorizonalIcon, SparklesIcon } from "lucide-react"
 import * as React from "react"
 import { useTranslation } from "react-i18next"
 
@@ -21,7 +21,7 @@ function Chat({ className, children, ...props }: React.ComponentProps<"div"> & {
   )
 }
 
-function ChatHeader({ className, ...props }: React.ComponentProps<"div">) {
+function ChatHeader({ className, children, ...props }: React.ComponentProps<"div">) {
   const { t } = useTranslation("chat")
   return (
     <div
@@ -33,9 +33,7 @@ function ChatHeader({ className, ...props }: React.ComponentProps<"div">) {
         <SparklesIcon className="size-6" />
       </div>
       <div className="flex-1">{t("header")}</div>
-      <div>
-        <EllipsisIcon className="size-5" />
-      </div>
+      <div>{children}</div>
     </div>
   )
 }

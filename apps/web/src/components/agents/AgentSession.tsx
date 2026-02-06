@@ -1,6 +1,12 @@
 import { Button } from "@caseai-connect/ui/shad/button"
 import { Spinner } from "@caseai-connect/ui/shad/spinner"
-import { AlertCircleIcon, CirclePlusIcon, MicIcon, PaperclipIcon } from "lucide-react"
+import {
+  AlertCircleIcon,
+  CirclePlusIcon,
+  ExternalLinkIcon,
+  MicIcon,
+  PaperclipIcon,
+} from "lucide-react"
 import { useTranslation } from "react-i18next"
 import type {
   AgentSession,
@@ -45,7 +51,16 @@ export function AdminAgentSession({
     <div className="p-6 flex flex-col gap-6 flex-1">
       <DotsBackground className="p-10">
         <Chat>
-          <ChatHeader />
+          <ChatHeader>
+            {session.traceUrl && (
+              <Button asChild variant="ghost">
+                <a href={session.traceUrl} className="cursor-pointer" target="_blank">
+                  Trace Url
+                  <ExternalLinkIcon className="size-4" />
+                </a>
+              </Button>
+            )}
+          </ChatHeader>
           <ChatContent>
             {messages?.map((message) => (
               <Message key={message.id} message={message} />
