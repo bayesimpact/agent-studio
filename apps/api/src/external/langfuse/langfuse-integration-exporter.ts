@@ -1,3 +1,5 @@
+//https://github.com/langfuse/langfuse-js/blob/v3.38.6/langfuse-vercel/src/LangfuseExporter.ts
+
 import type { ExportResult, ExportResultCode } from "@opentelemetry/core"
 import type { ReadableSpan, SpanExporter } from "@opentelemetry/sdk-trace-base"
 import type { LangfusePromptRecord } from "langfuse"
