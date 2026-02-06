@@ -30,15 +30,6 @@ describe("ChatMessagesController", () => {
 
   beforeAll(async () => {
     setup = await setupTransactionalTestDatabase({
-      featureEntities: [
-        User,
-        Organization,
-        UserMembership,
-        Project,
-        Agent,
-        AgentSession,
-        ChatMessage,
-      ],
       additionalImports: [AgentSessionsModule],
     })
     await clearTestDatabase(setup.dataSource)

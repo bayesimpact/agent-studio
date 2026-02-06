@@ -9,12 +9,25 @@ import {
   type QueryRunner,
   type Repository,
 } from "typeorm"
+import { AgentSession } from "@/agent-sessions/agent-session.entity"
+import { ChatMessage } from "@/agent-sessions/chat-message.entity"
+import { Agent } from "@/agents/agent.entity"
 import { Organization } from "@/organizations/organization.entity"
 import { UserMembership } from "@/organizations/user-membership.entity"
 import { Project } from "@/projects/project.entity"
+import { Resource } from "@/resources/resource.entity"
 import { User } from "@/users/user.entity"
 
-const TEST_ENTITIES = [User, Organization, UserMembership, Project]
+const TEST_ENTITIES = [
+  User,
+  Organization,
+  UserMembership,
+  Project,
+  Agent,
+  AgentSession,
+  ChatMessage,
+  Resource,
+]
 
 export interface TestDatabaseSetup {
   module: TestingModule
@@ -40,7 +53,6 @@ export interface TestDatabaseSetup {
  * Automatically handles cleanup in the returned object.
  */
 export async function setupTestDatabase(
-  featureEntities: Array<new () => ObjectLiteral>,
   providers: Provider[] = [],
   additionalImports: Array<Type<unknown> | DynamicModule> = [],
 ): Promise<TestDatabaseSetup> {
@@ -61,7 +73,7 @@ export async function setupTestDatabase(
         logging: false,
         dropSchema: false,
       }),
-      TypeOrmModule.forFeature(featureEntities),
+      TypeOrmModule.forFeature(TEST_ENTITIES),
       ...additionalImports,
     ],
     providers,

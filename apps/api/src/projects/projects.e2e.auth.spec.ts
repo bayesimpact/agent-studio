@@ -9,10 +9,7 @@ import {
   teardownTestDatabase,
 } from "@/common/test/test-transaction-manager"
 import { removeNullish } from "@/common/utils/remove-nullish"
-import { Organization } from "@/organizations/organization.entity"
 import { createOrganizationWithProject } from "@/organizations/organization.factory"
-import { UserMembership } from "@/organizations/user-membership.entity"
-import { User } from "@/users/user.entity"
 import { setupUserGuardForTesting } from "../../test/e2e.helpers"
 import { expectResponse, type Requester, testRequester } from "../../test/request"
 import { ProjectsModule } from "./projects.module"
@@ -33,7 +30,6 @@ describe("ProjectsController (e2e)", () => {
 
   beforeAll(async () => {
     setup = await setupTransactionalTestDatabase({
-      featureEntities: [User, Organization, UserMembership],
       additionalImports: [ProjectsModule],
       applyOverrides: (moduleBuilder) => setupUserGuardForTesting(moduleBuilder, () => auth0Id),
     })

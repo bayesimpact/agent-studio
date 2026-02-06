@@ -27,7 +27,6 @@ export function agentsControllerTestSetup() {
 
   beforeAll(async () => {
     setup = await setupTransactionalTestDatabase({
-      featureEntities: [User, Organization, UserMembership, Project, Agent, AgentSession],
       additionalImports: [AgentsModule],
     })
     await clearTestDatabase(setup.dataSource)
