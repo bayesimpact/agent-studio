@@ -23,6 +23,6 @@ export const projectFactory = ProjectFactory.define(({ sequence, params, transie
     updatedAt: params.updatedAt || now,
     organization: transientParams.organization,
     agents: params.agents || [],
-    resources: params.resources || [],
+    documents: params.documents || [],
   } satisfies Project
 })

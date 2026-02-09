@@ -9,8 +9,8 @@ import {
   UpdateDateColumn,
 } from "typeorm"
 import { Agent } from "@/domains/agents/agent.entity"
+import { Document } from "@/domains/documents/document.entity"
 import { Organization } from "@/domains/organizations/organization.entity"
-import { Resource } from "@/domains/resources/resource.entity"
 
 @Entity("project")
 export class Project {
@@ -43,8 +43,8 @@ export class Project {
   agents!: Agent[]
 
   @OneToMany(
-    () => Resource,
-    (resource) => resource.project,
+    () => Document,
+    (document) => document.project,
   )
-  resources!: Resource[]
+  documents!: Document[]
 }

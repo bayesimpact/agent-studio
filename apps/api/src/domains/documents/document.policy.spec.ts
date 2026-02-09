@@ -2,13 +2,13 @@ import { organizationFactory } from "@/domains/organizations/organization.factor
 import type { MembershipRole } from "@/domains/organizations/user-membership.entity"
 import { userMembershipFactory } from "@/domains/organizations/user-membership.factory"
 import { userFactory } from "@/domains/users/user.factory"
-import { projectFactory } from "./project.factory"
-import { ProjectPolicy } from "./project.policy"
+import { projectFactory } from "../projects/project.factory"
+import { ProjectPolicy } from "../projects/project.policy"
 
 type Project = ReturnType<typeof projectFactory.build>
 type DocumentState = "sameOrganization" | "differentOrganization" | "noDocument"
 
-describe("ProjectPolicy", () => {
+describe("DocumentPolicy", () => {
   const organization = organizationFactory.build()
   const otherOrganization = organizationFactory.build()
   const user = userFactory.build()

@@ -12,8 +12,8 @@ export enum RouteNames {
 
   // ADMIN ROUTES
   ADMIN = "/admin",
-  RESOURCES = "/o/:organizationId/p/:projectId/r",
-  RESOURCE = "/o/:organizationId/p/:projectId/r/:resourceId",
+  DOCUMENTS = "/o/:organizationId/p/:projectId/r",
+  DOCUMENT = "/o/:organizationId/p/:projectId/r/:documentId",
 
   // END USER ROUTES
   APP = "/app",
@@ -27,7 +27,7 @@ export const buildAppPath = (path: string) => {
   return `${RouteNames.APP}${path}`
 }
 
-export const buildResourcesPath = ({
+export const buildDocumentsPath = ({
   organizationId,
   projectId,
 }: {
@@ -35,7 +35,7 @@ export const buildResourcesPath = ({
   projectId: string
 }) => {
   return buildAdminPath(
-    RouteNames.RESOURCES.toString()
+    RouteNames.DOCUMENTS.toString()
       .replace(":organizationId", organizationId)
       .replace(":projectId", projectId),
   )

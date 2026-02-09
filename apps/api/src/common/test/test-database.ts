@@ -12,10 +12,10 @@ import {
 import { AgentMessage } from "@/domains/agent-sessions/agent-message.entity"
 import { AgentSession } from "@/domains/agent-sessions/agent-session.entity"
 import { Agent } from "@/domains/agents/agent.entity"
+import { Document } from "@/domains/documents/document.entity"
 import { Organization } from "@/domains/organizations/organization.entity"
 import { UserMembership } from "@/domains/organizations/user-membership.entity"
 import { Project } from "@/domains/projects/project.entity"
-import { Resource } from "@/domains/resources/resource.entity"
 import { User } from "@/domains/users/user.entity"
 
 const TEST_ENTITIES = [
@@ -26,7 +26,7 @@ const TEST_ENTITIES = [
   Agent,
   AgentSession,
   AgentMessage,
-  Resource,
+  Document,
 ]
 
 export interface TestDatabaseSetup {
@@ -128,7 +128,7 @@ export async function clearTestDatabase(dataSource: DataSource): Promise<void> {
       // Delete in order: child tables first, then parent tables
       await queryRunner.query(`DELETE FROM "agent_session"`)
       await queryRunner.query(`DELETE FROM "user_membership"`)
-      await queryRunner.query(`DELETE FROM "resource"`)
+      await queryRunner.query(`DELETE FROM "document"`)
       await queryRunner.query(`DELETE FROM "agent"`)
       await queryRunner.query(`DELETE FROM "project"`)
       await queryRunner.query(`DELETE FROM "organization"`)
