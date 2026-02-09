@@ -1,6 +1,6 @@
 import type { TestingModuleBuilder } from "@nestjs/testing"
-import { Auth0UserInfoService } from "@/auth/auth0-userinfo.service"
-import { JwtAuthGuard } from "@/auth/jwt-auth.guard"
+import { Auth0UserInfoService } from "@/domains/auth/auth0-userinfo.service"
+import { JwtAuthGuard } from "@/domains/auth/jwt-auth.guard"
 
 const mockAuth0UserInfoService = {
   getUserInfo: jest.fn().mockResolvedValue({

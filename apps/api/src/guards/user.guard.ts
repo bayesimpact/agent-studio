@@ -4,13 +4,13 @@ import {
   Injectable,
   UnauthorizedException,
 } from "@nestjs/common"
-// biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
-import { Auth0UserInfoService } from "@/auth/auth0-userinfo.service"
 import { AUTH_ERRORS } from "@/common/errors/auth-errors"
 import { getAccessToken } from "@/common/utils/get-access-token"
-import type { JwtPayload } from "@/request.interface"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
-import { UsersService } from "@/users/users.service"
+import { Auth0UserInfoService } from "@/domains/auth/auth0-userinfo.service"
+// biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
+import { UsersService } from "@/domains/users/users.service"
+import type { JwtPayload } from "@/request.interface"
 
 @Injectable()
 export class UserGuard implements CanActivate {

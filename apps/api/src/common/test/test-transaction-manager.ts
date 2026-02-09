@@ -11,14 +11,14 @@ import { Test, type TestingModule, type TestingModuleBuilder } from "@nestjs/tes
 import { getRepositoryToken, TypeOrmModule } from "@nestjs/typeorm"
 import type { ObjectLiteral, QueryRunner, Repository } from "typeorm"
 import { DataSource, EntityManager } from "typeorm"
-import { AgentMessage } from "@/agent-sessions/agent-message.entity"
-import { AgentSession } from "@/agent-sessions/agent-session.entity"
-import { Agent } from "@/agents/agent.entity"
-import { Organization } from "@/organizations/organization.entity"
-import { UserMembership } from "@/organizations/user-membership.entity"
-import { Project } from "@/projects/project.entity"
-import { Resource } from "@/resources/resource.entity"
-import { User } from "@/users/user.entity"
+import { AgentMessage } from "@/domains/agent-sessions/agent-message.entity"
+import { AgentSession } from "@/domains/agent-sessions/agent-session.entity"
+import { Agent } from "@/domains/agents/agent.entity"
+import { Organization } from "@/domains/organizations/organization.entity"
+import { UserMembership } from "@/domains/organizations/user-membership.entity"
+import { Project } from "@/domains/projects/project.entity"
+import { Resource } from "@/domains/resources/resource.entity"
+import { User } from "@/domains/users/user.entity"
 
 const TEST_ENTITIES = [
   User,
