@@ -5,6 +5,8 @@ import type { AgentSession } from "@/domains/agent-sessions/agent-session.entity
 import { agentSessionFactory } from "@/domains/agent-sessions/agent-session.factory"
 import type { Agent } from "@/domains/agents/agent.entity"
 import { agentFactory } from "@/domains/agents/agent.factory"
+import type { Document } from "@/domains/documents/document.entity"
+import { documentFactory } from "@/domains/documents/document.factory"
 import type { Project } from "@/domains/projects/project.entity"
 import { projectFactory } from "@/domains/projects/project.factory"
 import type { User } from "@/domains/users/user.entity"
@@ -223,5 +225,54 @@ export async function createOrganizationWithAgentSession(
     project,
     agent,
     agentSession,
+  }
+}
+
+// ====== DOCUMENT ========
+
+type CreateOrganizationWithDocumentParams = {
+  organization?: Partial<Organization>
+  user?: Partial<User>
+  project?: Partial<Project>
+  document?: Partial<Document>
+  membership?: Partial<UserMembership>
+}
+
+type CreateOrganizationWithDocumentRepositories = {
+  organizationRepository: Repository<Organization>
+  userRepository: Repository<User>
+  membershipRepository: Repository<UserMembership>
+  projectRepository: Repository<Project>
+  documentRepository: Repository<Document>
+}
+
+export async function createOrganizationWithDocument(
+  repositories: CreateOrganizationWithDocumentRepositories,
+  params: CreateOrganizationWithDocumentParams = {},
+): Promise<{
+  organization: Organization
+  user: User
+  membership: UserMembership
+  document: Document
+  project: Project
+}> {
+  const { organization, user, membership, project } = await createOrganizationWithProject(
+    repositories,
+    {
+      organization: params.organization,
+      user: params.user,
+      membership: params.membership,
+    },
+  )
+
+  const document = documentFactory.transient({ project }).build(params.document)
+  await repositories.documentRepository.save(document)
+
+  return {
+    organization,
+    user,
+    membership,
+    project,
+    document,
   }
 }
