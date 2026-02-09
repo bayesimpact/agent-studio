@@ -283,37 +283,124 @@ export { MeRoutes } from "./me/me.routes"
 
 ## Testing Requirements
 
-### Mandatory Tests for Controllers and Services
+### E2E Tests for Controllers
 
-**Rule**: When creating or modifying a controller or service, you MUST also create or update corresponding test files.
+**Rule**: Controller behavior MUST be tested via e2e tests that make real HTTP requests through a NestJS application. Do NOT test controllers by calling methods directly (e.g., `controller.getAll(mockRequest)`).
 
-**Requirements**:
-- Every controller MUST have a corresponding `*.controller.spec.ts` file
-- Every service MUST have a corresponding `*.service.spec.ts` file
-- Tests should cover:
-  - Happy path scenarios
-  - Error cases (validation errors, not found, forbidden, etc.)
-  - Edge cases relevant to the functionality
-  - Authorization checks (when applicable)
+**File Organization**: E2e tests live in an `e2e-tests/` subdirectory within the domain folder:
+```
+apps/api/src/domains/{domain}/
+  e2e-tests/
+    auth.spec.ts              # Authorization tests for ALL routes in this domain
+    create-{resource}.spec.ts # Functional tests for create
+    list-{resources}.spec.ts  # Functional tests for list
+    delete-{resource}.spec.ts # Functional tests for delete
+    update-{resource}.spec.ts # Functional tests for update
+    ...
+```
 
-**Example Structure**:
+**Two categories of e2e tests**:
+1. **Auth spec** (`auth.spec.ts`) — Tests authorization for every route: no token, no org ID, not a member, wrong role, allowed roles. Uses `createContextForRole(role)` that accepts a role parameter.
+2. **Functional specs** (one file per action) — Tests happy path and business logic only. Assumes the user is an owner (default). Uses `createContext()` with no role parameter.
+
+#### E2E Test Infrastructure
+
+Every e2e test file follows this structure:
+
 ```typescript
-// projects.controller.spec.ts
-describe("ProjectsController", () => {
-  // Setup with transactional test database
-  // Tests for each endpoint
-  // Tests for authorization
-  // Tests for error handling
-})
+import { DomainRoutes } from "@caseai-connect/api-contracts"
+import type { INestApplication } from "@nestjs/common"
+import type { App } from "supertest/types"
+import { clearTestDatabase } from "@/common/test/test-database"
+import {
+  setupTransactionalTestDatabase,
+  teardownTestDatabase,
+} from "@/common/test/test-transaction-manager"
+import { removeNullish } from "@/common/utils/remove-nullish"
+import { createOrganizationWith... } from "@/domains/organizations/organization.factory"
+import { setupUserGuardForTesting } from "../../../../test/e2e.helpers"
+import { expectResponse, type Requester, testRequester } from "../../../../test/request"
+import { DomainModule } from "../domain.module"
 
-// projects.service.spec.ts
-describe("ProjectsService", () => {
-  // Setup with transactional test database
-  // Tests for each service method
-  // Tests for authorization logic
-  // Tests for error cases
+describe("Domain - actionName", () => {
+  // 1. INFRASTRUCTURE VARIABLES
+  let app: INestApplication<App>
+  let request: Requester
+  let setup: Awaited<ReturnType<typeof setupTransactionalTestDatabase>>
+  let repositories: ReturnType<
+    Awaited<ReturnType<typeof setupTransactionalTestDatabase>>["getAllRepositories"]
+  >
+
+  // 2. MUTABLE STATE (set by createContext, read by subject)
+  let organizationId: string
+  let projectId: string
+  let accessToken: string | undefined = "token"
+  let auth0Id = "auth0|123"
+
+  // 3. LIFECYCLE HOOKS
+  beforeAll(async () => {
+    setup = await setupTransactionalTestDatabase({
+      additionalImports: [DomainModule],
+      applyOverrides: (moduleBuilder) => setupUserGuardForTesting(moduleBuilder, () => auth0Id),
+    })
+    repositories = setup.getAllRepositories()
+    app = setup.module.createNestApplication()
+    await app.init()
+    request = testRequester(app)
+  })
+
+  beforeEach(async () => {
+    await clearTestDatabase(setup.dataSource)
+    accessToken = "token"
+    auth0Id = "auth0|123"
+  })
+
+  afterAll(async () => {
+    await teardownTestDatabase(setup)
+    app.close()
+  })
+
+  // 4. CONTEXT HELPER — sets up test data and assigns mutable state
+  const createContext = async () => {
+    const { user, organization, project } = await createOrganizationWithProject(repositories)
+    organizationId = organization.id
+    projectId = project.id
+    auth0Id = user.auth0Id
+    return { organization, project }
+  }
+
+  // 5. SUBJECT — the HTTP request under test
+  const subject = async () =>
+    request({
+      route: DomainRoutes.someAction,
+      pathParams: removeNullish({ organizationId, projectId }),
+      token: accessToken,
+    })
+
+  // 6. TESTS
+  it("should do the expected thing", async () => {
+    await createContext()
+    const response = await subject()
+    expectResponse(response, 200)
+    // assert on response.body.data
+  })
 })
 ```
+
+#### Key Patterns
+
+- **`createContext()`** (functional specs): Sets up data with default owner role. No role parameter. Returns created entities for further use in the test.
+- **`createContextForRole(role)`** (auth specs): Accepts a role parameter for testing different authorization levels.
+- **`subject()`**: Wraps the HTTP request. Uses `DomainRoutes.actionName` for the route, `removeNullish(...)` for path params, and `accessToken` for the bearer token. For POST/PATCH, accepts a `payload` parameter.
+- **`expectResponse(response, statusCode, errorMessage?)`**: Asserts status code and optionally the error message.
+- **Response assertions**: Access data via `response.body.data` (matching `ResponseData<T>` wrapper).
+- **Database assertions**: Use `repositories.{entity}Repository.findOne(...)` to verify side effects (e.g., entity deleted, entity created).
+- **Auth specs use nullable state**: Variables like `organizationId`, `projectId`, `accessToken` are typed as `string | null` and reset in `beforeEach` to default dummy values. This allows tests to set them to `null` to trigger validation errors.
+- **Functional specs use non-nullable state**: Variables are typed as `string` since `createContext()` always sets real values.
+
+### Service Tests
+
+**Rule**: Every service MUST have a corresponding `*.service.spec.ts` file testing service methods directly (without HTTP layer).
 
 **Note**: Use the existing test utilities (`setupTransactionalTestDatabase`) from `@/common/test/test-transaction-manager` for consistent test setup.
 

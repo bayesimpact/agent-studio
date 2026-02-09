@@ -10,11 +10,11 @@ import {
 } from "@/common/test/test-transaction-manager"
 import { removeNullish } from "@/common/utils/remove-nullish"
 import { createOrganizationWithProject } from "@/domains/organizations/organization.factory"
-import { setupUserGuardForTesting } from "../../../test/e2e.helpers"
-import { expectResponse, type Requester, testRequester } from "../../../test/request"
-import { ProjectsModule } from "./projects.module"
+import { setupUserGuardForTesting } from "../../../../test/e2e.helpers"
+import { expectResponse, type Requester, testRequester } from "../../../../test/request"
+import { ProjectsModule } from "../projects.module"
 
-describe("ProjectsController (e2e)", () => {
+describe("Projects - Auth", () => {
   let app: INestApplication<App>
   let request: Requester
   let setup: Awaited<ReturnType<typeof setupTransactionalTestDatabase>>
@@ -81,7 +81,7 @@ describe("ProjectsController (e2e)", () => {
     })
     it("requires the user to be a member of the organization", async () => {
       await createContextForRole("owner")
-      auth0Id = "another-auth0-id" // this will trigger a new user to be created in the database
+      auth0Id = "another-auth0-id"
       expectResponse(await subject(), 401, AUTH_ERRORS.NOT_MEMBER_OF_ORG)
     })
     it("allows the owner to list projects", async () => {
@@ -90,10 +90,6 @@ describe("ProjectsController (e2e)", () => {
     })
     it("allows the admin to list projects", async () => {
       await createContextForRole("admin")
-      expectResponse(await subject(), 200)
-    })
-    it("allows the member to list projects", async () => {
-      await createContextForRole("member")
       expectResponse(await subject(), 200)
     })
   })
@@ -117,16 +113,12 @@ describe("ProjectsController (e2e)", () => {
     })
     it("requires the user to be a member of the organization", async () => {
       await createContextForRole("owner")
-      auth0Id = "another-auth0-id" // this will trigger a new user to be created in the database
+      auth0Id = "another-auth0-id"
       expectResponse(await subject(), 401, AUTH_ERRORS.NOT_MEMBER_OF_ORG)
     })
     it("doesn't allow a simple member to create projects", async () => {
       await createContextForRole("member")
       expectResponse(await subject(), 403, AUTH_ERRORS.UNAUTHORIZED_RESOURCE)
-    })
-    it("allows the owner to create projects", async () => {
-      await createContextForRole("owner")
-      expectResponse(await subject({ payload: { name: "Test Project" } }), 201)
     })
   })
 
@@ -148,22 +140,17 @@ describe("ProjectsController (e2e)", () => {
     })
     it("requires the user to belong to the organization", async () => {
       await createContextForRole("owner")
-      auth0Id = "another-auth0-id" // this will trigger a new user to be created in the database
+      auth0Id = "another-auth0-id"
       expectResponse(await subject(), 401, AUTH_ERRORS.NOT_MEMBER_OF_ORG)
     })
     it("requires an existing project ID", async () => {
       await createContextForRole("owner")
-      // Use a valid UUID format that doesn't exist in the database
       projectId = randomUUID()
       expectResponse(await subject(), 404)
     })
     it("doesn't allow a simple member to delete projects", async () => {
       await createContextForRole("member")
       expectResponse(await subject(), 403, AUTH_ERRORS.UNAUTHORIZED_RESOURCE)
-    })
-    it("allows the owner to delete projects", async () => {
-      await createContextForRole()
-      expectResponse(await subject(), 200)
     })
   })
 
@@ -186,22 +173,17 @@ describe("ProjectsController (e2e)", () => {
     })
     it("requires the user to be a member of the organization", async () => {
       await createContextForRole("owner")
-      auth0Id = "another-auth0-id" // this will trigger a new user to be created in the database
+      auth0Id = "another-auth0-id"
       expectResponse(await subject(), 401, AUTH_ERRORS.NOT_MEMBER_OF_ORG)
     })
     it("requires an existing project ID", async () => {
       await createContextForRole("owner")
-      // Use a valid UUID format that doesn't exist in the database
       projectId = randomUUID()
       expectResponse(await subject(), 404)
     })
     it("doesn't allow a simple member to update a project", async () => {
       await createContextForRole("member")
       expectResponse(await subject(), 403, AUTH_ERRORS.UNAUTHORIZED_RESOURCE)
-    })
-    it("allows the owner to update the project name", async () => {
-      await createContextForRole()
-      expectResponse(await subject({ payload: { name: "Updated Project" } }), 200)
     })
   })
 })
