@@ -44,7 +44,7 @@ export class DocumentsGuard implements CanActivate {
       request.document = document
     }
 
-    const policy = new DocumentPolicy(request.userMembership, document, request.project)
+    const policy = new DocumentPolicy(request.userMembership, request.project, document)
 
     const policyHandler = this.reflector.getAllAndOverride<PolicyHandler>(CHECK_POLICY_KEY, [
       context.getHandler(),
