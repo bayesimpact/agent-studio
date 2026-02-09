@@ -1,8 +1,7 @@
+import type { Document } from "./domains/documents/document.entity"
 import type { UserMembership } from "./domains/organizations/user-membership.entity"
 import type { Project } from "./domains/projects/project.entity"
-import type { Resource } from "./domains/resources/resource.entity"
 import type { User } from "./domains/users/user.entity"
-
 export interface JwtPayload {
   sub: string
   iss: string
@@ -27,6 +26,6 @@ export interface EndpointRequestWithProject extends EndpointRequestWithUserMembe
   project: Project
 }
 
-export interface EndpointRequestWithResource extends EndpointRequestWithProject {
-  resource?: Resource
+export interface EndpointRequestWithDocument extends EndpointRequestWithProject {
+  document?: Document
 }

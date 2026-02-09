@@ -6,7 +6,7 @@ import { LoginRoute } from "@/routes/LoginRoute"
 import { LogoutRoute } from "@/routes/LogoutRoute"
 import { NotFoundRoute } from "@/routes/NotFoundRoute"
 import { useAppDispatch } from "@/store/hooks"
-import { ResourcesRoute } from "./admin/ResourcesRoute"
+import { DocumentsRoute } from "./admin/DocumentsRoute"
 import { getElement } from "./Elements"
 import { buildAdminPath, buildAppPath, RouteNames } from "./helpers"
 import { OnboardingRoute } from "./OnboardingRoute"
@@ -52,8 +52,8 @@ const router = () =>
               element: getElement(RouteNames.PROJECT),
               children: [
                 {
-                  path: buildAdminPath(RouteNames.RESOURCES),
-                  element: <ResourcesRoute />,
+                  path: buildAdminPath(RouteNames.DOCUMENTS),
+                  element: <DocumentsRoute />,
                 },
                 {
                   path: buildAdminPath(RouteNames.AGENT),

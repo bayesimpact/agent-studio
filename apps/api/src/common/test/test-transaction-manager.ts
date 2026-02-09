@@ -14,10 +14,10 @@ import { DataSource, EntityManager } from "typeorm"
 import { AgentMessage } from "@/domains/agent-sessions/agent-message.entity"
 import { AgentSession } from "@/domains/agent-sessions/agent-session.entity"
 import { Agent } from "@/domains/agents/agent.entity"
+import { Document } from "@/domains/documents/document.entity"
 import { Organization } from "@/domains/organizations/organization.entity"
 import { UserMembership } from "@/domains/organizations/user-membership.entity"
 import { Project } from "@/domains/projects/project.entity"
-import { Resource } from "@/domains/resources/resource.entity"
 import { User } from "@/domains/users/user.entity"
 
 const TEST_ENTITIES = [
@@ -28,7 +28,7 @@ const TEST_ENTITIES = [
   Agent,
   AgentSession,
   AgentMessage,
-  Resource,
+  Document,
 ]
 
 export interface TransactionalTestSetup {
@@ -44,7 +44,7 @@ export interface TransactionalTestSetup {
     agentRepository: Repository<Agent>
     agentSessionRepository: Repository<AgentSession>
     agentMessageRepository: Repository<AgentMessage>
-    resourceRepository: Repository<Resource>
+    documentRepository: Repository<Document>
   }
   startTransaction: () => Promise<void>
   rollbackTransaction: () => Promise<void>
@@ -200,7 +200,7 @@ export async function setupTransactionalTestDatabase(
     agentRepository: getRepository(Agent),
     agentSessionRepository: getRepository(AgentSession),
     agentMessageRepository: getRepository(AgentMessage),
-    resourceRepository: getRepository(Resource),
+    documentRepository: getRepository(Document),
   })
 
   return {

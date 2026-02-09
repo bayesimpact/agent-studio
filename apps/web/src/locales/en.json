@@ -10,7 +10,7 @@
     "delete": "Delete",
     "more": "More",
     "project": "Project",
-    "resources": "Resources",
+    "documents": "Documents",
     "dragOrUploadFile": "Drag or upload a file",
     "processingFile": "Processing file...",
     "fileIsStored": "File is stored",
@@ -153,13 +153,13 @@
     "description": "The page you are looking for does not exist. Please check the URL or return to the home page.",
     "home": "Home"
   },
-  "resources": {
+  "documents": {
     "header": {
-      "title": "Manage your {{projectName}}'s resources"
+      "title": "Manage your {{projectName}}'s documents"
     },
     "empty": {
-      "title": "No Resources Yet",
-      "description": "You haven't created any resources yet. Get started by creating your first resource."
+      "title": "No documents Yet",
+      "description": "You haven't created any documents yet. Get started by creating your first document."
     },
     "item": {
       "createdAt": "Created at",
@@ -170,7 +170,7 @@
       "fileMimeType": "File MIME Type"
     },
     "delete": {
-      "title": "Delete Resource",
+      "title": "Delete Document",
       "description": "Are you sure you want to delete \"{{name}}\"? This action cannot be undone.",
       "submit": "Delete",
       "submitting": "Deleting..."

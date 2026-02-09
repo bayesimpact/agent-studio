@@ -1,0 +1,58 @@
+import { randomUUID } from "node:crypto"
+import { MimeTypes } from "@caseai-connect/api-contracts"
+import { Factory } from "fishery"
+import type { Repository } from "typeorm"
+import type { Project } from "@/domains/projects/project.entity"
+import type { Document } from "./document.entity"
+
+type DocumentTransientParams = {
+  project: Project
+}
+
+class DocumentFactory extends Factory<Document, DocumentTransientParams> {}
+
+export const documentFactory = DocumentFactory.define(({ sequence, params, transientParams }) => {
+  if (!transientParams.project) {
+    throw new Error("project transient is required")
+  }
+
+  const now = new Date()
+  return {
+    id: params.id || randomUUID(),
+    createdAt: params.createdAt || now,
+    updatedAt: params.updatedAt || now,
+    deletedAt: params.deletedAt ?? null,
+    projectId: transientParams.project.id,
+    project: transientParams.project,
+
+    title: params.title || `Document ${sequence}`,
+    content: params.content || "Sample content",
+    fileName: params.fileName || `file_${sequence}.txt`,
+    language: params.language || "en",
+    mimeType: params.mimeType || MimeTypes.txt,
+    size: params.size || 1024,
+    storageRelativePath: params.storageRelativePath || `documents/file_${sequence}.txt`,
+  } satisfies Document
+})
+
+type CreateDocumentForProjectParams = {
+  document?: Partial<Document>
+}
+
+type CreateDocumentForProjectRepositories = {
+  documentRepository: Repository<Document>
+}
+
+export async function createDocumentForProject({
+  repositories,
+  project,
+  params = {},
+}: {
+  repositories: CreateDocumentForProjectRepositories
+  project: Project
+  params?: CreateDocumentForProjectParams
+}): Promise<Document> {
+  const document = documentFactory.transient({ project }).build(params.document)
+  await repositories.documentRepository.save(document)
+  return document
+}

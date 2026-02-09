@@ -5,11 +5,11 @@ import typeorm from "./config/typeorm"
 import { AgentSessionsModule } from "./domains/agent-sessions/agent-sessions.module"
 import { AgentsModule } from "./domains/agents/agents.module"
 import { AuthModule } from "./domains/auth/auth.module"
+import { DocumentsModule } from "./domains/documents/documents.module"
+import { StorageModule } from "./domains/documents/storage/storage.module"
 import { MeModule } from "./domains/me/me.module"
 import { OrganizationsModule } from "./domains/organizations/organizations.module"
 import { ProjectsModule } from "./domains/projects/projects.module"
-import { ResourcesModule } from "./domains/resources/resources.module"
-import { StorageModule } from "./domains/resources/storage/storage.module"
 import { UsersModule } from "./domains/users/users.module"
 
 @Module({
@@ -32,7 +32,7 @@ import { UsersModule } from "./domains/users/users.module"
     MeModule,
     OrganizationsModule,
     ProjectsModule,
-    ResourcesModule,
+    DocumentsModule,
     StorageModule,
     UsersModule,
   ],
