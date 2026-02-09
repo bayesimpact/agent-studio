@@ -9,16 +9,15 @@ import {
   setupTransactionalTestDatabase,
   teardownTestDatabase,
 } from "@/common/test/test-transaction-manager"
-import type { MulterFile } from "@/common/types"
 import { removeNullish } from "@/common/utils/remove-nullish"
 import { createOrganizationWithDocument } from "@/domains/organizations/organization.factory"
 import { projectFactory } from "@/domains/projects/project.factory"
-import { setupUserGuardForTesting } from "../../../test/e2e.helpers"
-import { expectResponse, type Requester, testRequester } from "../../../test/request"
-import { Document } from "./document.entity"
-import { DocumentsModule } from "./documents.module"
+import { setupUserGuardForTesting } from "../../../../test/e2e.helpers"
+import { expectResponse, type Requester, testRequester } from "../../../../test/request"
+import { Document } from "../document.entity"
+import { DocumentsModule } from "../documents.module"
 
-describe("DocumentsController (e2e)", () => {
+describe("Documents - Auth", () => {
   let app: INestApplication<App>
   let request: Requester
   let setup: Awaited<ReturnType<typeof setupTransactionalTestDatabase>>
@@ -108,20 +107,6 @@ describe("DocumentsController (e2e)", () => {
       await createContextForRole("member")
       expectResponse(await subject(), 403, AUTH_ERRORS.UNAUTHORIZED_RESOURCE)
     })
-    it("allows the owner to upload a document", async () => {
-      console.log("(6) organizationId", organizationId)
-      await createContextForRole("owner")
-      expectResponse(
-        await subject({
-          payload: {
-            file: new File(["file content"], "test.txt", {
-              type: "text/plain",
-            }) as unknown as MulterFile,
-          },
-        }),
-        422,
-      )
-    })
   })
 
   describe("DocumentsRoutes.getAll", () => {
@@ -154,10 +139,6 @@ describe("DocumentsController (e2e)", () => {
     it("doesn't allow a simple member to get all documents", async () => {
       await createContextForRole("member")
       expectResponse(await subject(), 403, AUTH_ERRORS.UNAUTHORIZED_RESOURCE)
-    })
-    it("allows the owner to get all documents", async () => {
-      await createContextForRole("owner")
-      expectResponse(await subject(), 200)
     })
   })
 
@@ -200,10 +181,6 @@ describe("DocumentsController (e2e)", () => {
       await createContextForRole("member")
       expectResponse(await subject(), 403, AUTH_ERRORS.UNAUTHORIZED_RESOURCE)
     })
-    it("allows the owner to delete a document", async () => {
-      await createContextForRole("owner")
-      expectResponse(await subject(), 200)
-    })
   })
 
   describe("DocumentsRoutes.getTemporaryUrl", () => {
@@ -244,10 +221,6 @@ describe("DocumentsController (e2e)", () => {
     it("doesn't allow a simple member to delete a document", async () => {
       await createContextForRole("member")
       expectResponse(await subject(), 403, AUTH_ERRORS.UNAUTHORIZED_RESOURCE)
-    })
-    it("allows the owner to delete a document", async () => {
-      await createContextForRole("owner")
-      expectResponse(await subject(), 201)
     })
   })
 })
