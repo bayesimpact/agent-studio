@@ -8,6 +8,9 @@ export type * from "./agent-sessions/agent-sessions.dto"
 export { AgentSessionsRoutes } from "./agent-sessions/agent-sessions.routes"
 export * from "./agents/agents.dto"
 export { AgentsRoutes } from "./agents/agents.routes"
+// Documents DTOs
+export * from "./documents/documents.dto"
+export { DocumentsRoutes } from "./documents/documents.routes"
 // Generic DTOs
 export type * from "./generic"
 export type { ApiRoute } from "./helpers"
@@ -24,6 +27,3 @@ export { OrganizationsRoutes } from "./organizations/organizations.routes"
 export type * from "./projects/projects.dto"
 export { ProjectsRoutes } from "./projects/projects.routes"
 export { ProtectedRoutes } from "./protected/protected.routes"
-// Resources DTOs
-export * from "./resources/resources.dto"
-export { ResourcesRoutes } from "./resources/resources.routes"

@@ -10,7 +10,7 @@
     "delete": "Supprimer",
     "more": "Plus",
     "project": "Projet",
-    "resources": "Ressources",
+    "documents": "Documents",
     "dragOrUploadFile": "Glissez ou téléversez un fichier",
     "processingFile": "Traitement du fichier...",
     "fileIsStored": "Le fichier est stocké",
@@ -153,13 +153,13 @@
     "description": "La page que vous recherchez n'existe pas. Veuillez vérifier l'URL ou retourner à la page d'accueil.",
     "home": "Accueil"
   },
-  "resources": {
+  "documents": {
     "header": {
-      "title": "Gérer les ressources de {{projectName}}"
+      "title": "Gérer les documents de {{projectName}}"
     },
     "empty": {
       "title": "Aucune ressource",
-      "description": "Vous n'avez pas encore créé de ressources. Commencez par créer votre première ressource."
+      "description": "Vous n'avez pas encore créé de documents. Commencez par créer votre première document."
     },
     "item": {
       "createdAt": "Créé le",

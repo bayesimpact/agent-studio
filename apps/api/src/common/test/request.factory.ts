@@ -1,13 +1,13 @@
 import { Factory } from "fishery"
+import type { Document } from "@/domains/documents/document.entity"
 import type { Organization } from "@/domains/organizations/organization.entity"
 import { userMembershipFactory } from "@/domains/organizations/user-membership.factory"
 import type { Project } from "@/domains/projects/project.entity"
-import type { Resource } from "@/domains/resources/resource.entity"
 import type { User } from "@/domains/users/user.entity"
 import type {
   EndpointRequest,
+  EndpointRequestWithDocument,
   EndpointRequestWithProject,
-  EndpointRequestWithResource,
   EndpointRequestWithUserMembership,
 } from "@/request.interface"
 
@@ -77,11 +77,11 @@ type EndpointRequestWithOrganizationAndProjectTransientParams = {
   project: Project
 }
 
-type EndpointRequestWithOrganizationAndProjectAndResourceTransientParams = {
+type EndpointRequestWithOrganizationAndProjectAndDocumentTransientParams = {
   organization: Organization
   user: User
   project: Project
-  resource: Resource
+  document: Document
 }
 
 export const endpointRequestWithOrganizationAndProjectFactory = Factory.define<
@@ -105,14 +105,14 @@ export const endpointRequestWithOrganizationAndProjectFactory = Factory.define<
   } satisfies EndpointRequestWithProject
 })
 
-export const endpointRequestWithOrganizationAndProjectAndResourceFactory = Factory.define<
-  EndpointRequestWithResource,
-  EndpointRequestWithOrganizationAndProjectAndResourceTransientParams
+export const endpointRequestWithOrganizationAndProjectAndDocumentFactory = Factory.define<
+  EndpointRequestWithDocument,
+  EndpointRequestWithOrganizationAndProjectAndDocumentTransientParams
 >(({ transientParams }) => {
   const organization = transientParams.organization
   const user = transientParams.user
   const project = transientParams.project
-  const resource = transientParams.resource
+  const document = transientParams.document
   const baseRequest = endpointRequestWithOrganizationFactory
     .transient({ organization, user })
     .build()
@@ -121,15 +121,15 @@ export const endpointRequestWithOrganizationAndProjectAndResourceFactory = Facto
     throw new Error("project transient is required")
   }
 
-  if (!resource) {
-    throw new Error("resource transient is required")
+  if (!document) {
+    throw new Error("document transient is required")
   }
 
   return {
     ...baseRequest,
     project,
-    resource,
-  } satisfies EndpointRequestWithResource
+    document,
+  } satisfies EndpointRequestWithDocument
 })
 
 export const buildEndpointRequestWithOrganizationAndProject = (
@@ -142,11 +142,11 @@ export const buildEndpointRequestWithOrganizationAndProject = (
     .build()
 }
 
-export const buildEndpointRequestWithOrganizationAndProjectAndResource = (params: {
+export const buildEndpointRequestWithOrganizationAndProjectAndDocument = (params: {
   organization: Organization
   user: User
   project: Project
-  resource: Resource
+  document: Document
 }) => {
-  return endpointRequestWithOrganizationAndProjectAndResourceFactory.transient(params).build()
+  return endpointRequestWithOrganizationAndProjectAndDocumentFactory.transient(params).build()
 }
