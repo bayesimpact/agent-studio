@@ -44,6 +44,7 @@ export const agentMessageFactory = AgentMessageFactory.define(
       toolCalls: params.toolCalls ?? null,
       createdAt: params.createdAt || now,
       session: transientParams.session,
+      agentMessageFeedbacks: params.agentMessageFeedbacks || [],
     } satisfies AgentMessage
   },
 )
