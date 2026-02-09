@@ -1,17 +1,16 @@
 import { Module } from "@nestjs/common"
 import { ConfigModule, ConfigService } from "@nestjs/config"
 import { TypeOrmModule } from "@nestjs/typeorm"
-import { AgentSessionsModule } from "./agent-sessions/agent-sessions.module"
-import { AgentsModule } from "./agents/agents.module"
-import { AuthModule } from "./auth/auth.module"
 import typeorm from "./config/typeorm"
-import { MeModule } from "./me/me.module"
-import { OrganizationsModule } from "./organizations/organizations.module"
-import { ProjectsModule } from "./projects/projects.module"
-import { ProtectedModule } from "./protected/protected.module"
-import { ResourcesModule } from "./resources/resources.module"
-import { StorageModule } from "./resources/storage/storage.module"
-import { UsersModule } from "./users/users.module"
+import { AgentSessionsModule } from "./domains/agent-sessions/agent-sessions.module"
+import { AgentsModule } from "./domains/agents/agents.module"
+import { AuthModule } from "./domains/auth/auth.module"
+import { MeModule } from "./domains/me/me.module"
+import { OrganizationsModule } from "./domains/organizations/organizations.module"
+import { ProjectsModule } from "./domains/projects/projects.module"
+import { ResourcesModule } from "./domains/resources/resources.module"
+import { StorageModule } from "./domains/resources/storage/storage.module"
+import { UsersModule } from "./domains/users/users.module"
 
 @Module({
   imports: [
@@ -25,7 +24,6 @@ import { UsersModule } from "./users/users.module"
       useFactory: async (configService: ConfigService) => configService.get("typeorm")(),
     }),
     AuthModule,
-    ProtectedModule,
     UsersModule,
     OrganizationsModule,
     ProjectsModule,
@@ -34,7 +32,6 @@ import { UsersModule } from "./users/users.module"
     MeModule,
     OrganizationsModule,
     ProjectsModule,
-    ProtectedModule,
     ResourcesModule,
     StorageModule,
     UsersModule,

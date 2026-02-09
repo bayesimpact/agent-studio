@@ -1,15 +1,15 @@
 import { Factory } from "fishery"
-import type { Organization } from "@/organizations/organization.entity"
-import { userMembershipFactory } from "@/organizations/user-membership.factory"
-import type { Project } from "@/projects/project.entity"
+import type { Organization } from "@/domains/organizations/organization.entity"
+import { userMembershipFactory } from "@/domains/organizations/user-membership.factory"
+import type { Project } from "@/domains/projects/project.entity"
+import type { Resource } from "@/domains/resources/resource.entity"
+import type { User } from "@/domains/users/user.entity"
 import type {
   EndpointRequest,
   EndpointRequestWithProject,
   EndpointRequestWithResource,
   EndpointRequestWithUserMembership,
 } from "@/request.interface"
-import type { Resource } from "@/resources/resource.entity"
-import type { User } from "@/users/user.entity"
 
 type EndpointRequestTransientParams = {
   user: User
