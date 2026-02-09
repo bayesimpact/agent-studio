@@ -4,7 +4,7 @@ import {
 } from "@caseai-connect/api-contracts"
 import { Controller, Get, Param, Req, UseGuards } from "@nestjs/common"
 import { JwtAuthGuard } from "@/domains/auth/jwt-auth.guard"
-import { UserGuard } from "@/guards/user.guard"
+import { UserGuard } from "@/domains/users/user.guard"
 import type { EndpointRequest } from "@/request.interface"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
 import { AgentSessionsService } from "./agent-sessions.service"

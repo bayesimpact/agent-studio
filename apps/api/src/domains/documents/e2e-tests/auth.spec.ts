@@ -82,12 +82,10 @@ describe("Documents - Auth", () => {
       })
 
     it("requires an authentication token", async () => {
-      console.log("(1) organizationId", organizationId)
       accessToken = null
       expectResponse(await subject(), 401, AUTH_ERRORS.NO_ACCESS_TOKEN)
     })
     it("requires a valid organization ID", async () => {
-      console.log("(2) organizationId", organizationId)
       organizationId = null
       expectResponse(await subject(), 400, AUTH_ERRORS.NO_ORGANIZATION_ID)
     })
@@ -97,13 +95,11 @@ describe("Documents - Auth", () => {
       expectResponse(await subject(), 404)
     })
     it("requires the user to be a member of the organization", async () => {
-      console.log("(4) organizationId", organizationId)
       await createContextForRole("owner")
       auth0Id = "another-auth0-id" // this will trigger a new user to be created in the database
       expectResponse(await subject(), 401, AUTH_ERRORS.NOT_MEMBER_OF_ORG)
     })
     it("doesn't allow a simple member to upload a document", async () => {
-      console.log("(5) organizationId", organizationId)
       await createContextForRole("member")
       expectResponse(await subject(), 403, AUTH_ERRORS.UNAUTHORIZED_RESOURCE)
     })
