@@ -6,7 +6,7 @@ import { Body, Controller, Get, Param, Post, Req, UseGuards } from "@nestjs/comm
 import { JwtAuthGuard } from "@/domains/auth/jwt-auth.guard"
 import { OrganizationGuard } from "@/domains/organizations/organization.guard"
 import { ProjectsGuard } from "@/domains/projects/projects.guard"
-import { UserGuard } from "@/guards/user.guard"
+import { UserGuard } from "@/domains/users/user.guard"
 import type { EndpointRequestWithProject } from "@/request.interface"
 import type { AgentMessageFeedback } from "./agent-message-feedback.entity"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI

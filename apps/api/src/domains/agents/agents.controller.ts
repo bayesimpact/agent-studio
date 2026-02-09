@@ -1,7 +1,7 @@
 import type { AgentDto } from "@caseai-connect/api-contracts"
 import { Body, Controller, Delete, Get, Param, Patch, Post, Req, UseGuards } from "@nestjs/common"
 import { JwtAuthGuard } from "@/domains/auth/jwt-auth.guard"
-import { UserGuard } from "@/guards/user.guard"
+import { UserGuard } from "@/domains/users/user.guard"
 import type { EndpointRequest } from "@/request.interface"
 import type { Agent } from "./agent.entity"
 import { AgentsRoutes } from "./agents.routes"

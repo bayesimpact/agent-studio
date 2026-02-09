@@ -3,7 +3,7 @@ import { Body, Controller, Delete, Get, Patch, Post, Req, UseGuards } from "@nes
 import { CheckPolicy } from "@/common/policies/check-policy.decorator"
 import { JwtAuthGuard } from "@/domains/auth/jwt-auth.guard"
 import { OrganizationGuard } from "@/domains/organizations/organization.guard"
-import { UserGuard } from "@/guards/user.guard"
+import { UserGuard } from "@/domains/users/user.guard"
 import type {
   EndpointRequestWithProject,
   EndpointRequestWithUserMembership,

@@ -2,7 +2,7 @@ import { Controller, Get, NotFoundException, Req, UseGuards } from "@nestjs/comm
 import { JwtAuthGuard } from "@/domains/auth/jwt-auth.guard"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
 import { OrganizationsService } from "@/domains/organizations/organizations.service"
-import { UserGuard } from "@/guards/user.guard"
+import { UserGuard } from "@/domains/users/user.guard"
 import type { EndpointRequest } from "@/request.interface"
 import { MeRoutes } from "./me.routes"
 
