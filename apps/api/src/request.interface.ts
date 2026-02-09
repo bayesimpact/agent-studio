@@ -1,7 +1,7 @@
-import type { UserMembership } from "./organizations/user-membership.entity"
-import type { Project } from "./projects/project.entity"
-import type { Resource } from "./resources/resource.entity"
-import type { User } from "./users/user.entity"
+import type { UserMembership } from "./domains/organizations/user-membership.entity"
+import type { Project } from "./domains/projects/project.entity"
+import type { Resource } from "./domains/resources/resource.entity"
+import type { User } from "./domains/users/user.entity"
 
 export interface JwtPayload {
   sub: string
