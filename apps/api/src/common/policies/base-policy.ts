@@ -3,10 +3,10 @@ import type { UserMembership } from "@/domains/organizations/user-membership.ent
 export class BasePolicy<T> {
   constructor(
     private readonly userMembership: UserMembership,
-    protected readonly resource?: T,
+    protected readonly entity?: T,
   ) {
     this.userMembership = userMembership
-    this.resource = resource
+    this.entity = entity
   }
 
   canList(): boolean {
@@ -39,19 +39,19 @@ export class BasePolicy<T> {
 
   // TODO: once we have a better way to type the resource which has an organizationId property, we can remove this method
   protected doesResourceBelongToOrganization(): boolean {
-    if (!this.resource) return false
+    if (!this.entity) return false
 
     // Ensure resource is an object (not a primitive) before using 'in' operator
-    if (typeof this.resource !== "object") {
+    if (typeof this.entity !== "object") {
       return false
     }
 
     // Check if resource has organizationId property using 'in' operator
-    if (!("organizationId" in this.resource)) {
+    if (!("organizationId" in this.entity)) {
       return false
     }
     // TypeScript now knows organizationId exists, but we need to assert the type
-    const resourceWithOrgId = this.resource as T & { organizationId: string }
+    const resourceWithOrgId = this.entity as T & { organizationId: string }
     return resourceWithOrgId.organizationId === this.userMembership.organizationId
   }
 }
