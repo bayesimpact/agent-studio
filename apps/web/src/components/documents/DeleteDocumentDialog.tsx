@@ -68,7 +68,7 @@ function Content({
   const { t } = useTranslation("documents", { keyPrefix: "delete" })
   const { t: tCommon } = useTranslation("common")
   const dispatch = useAppDispatch()
-  const resourcesData = useAppSelector(selectDocumentsData)
+  const documentsData = useAppSelector(selectDocumentsData)
 
   const handleDelete = () => {
     dispatch(
@@ -90,15 +90,15 @@ function Content({
         </DialogDescription>
       </DialogHeader>
       <div className="flex justify-end gap-2 pt-4">
-        <Button variant="outline" onClick={onClose} disabled={ADS.isLoading(resourcesData)}>
+        <Button variant="outline" onClick={onClose} disabled={ADS.isLoading(documentsData)}>
           {tCommon("cancel")}
         </Button>
         <Button
           variant="destructive"
           onClick={handleDelete}
-          disabled={ADS.isLoading(resourcesData)}
+          disabled={ADS.isLoading(documentsData)}
         >
-          {ADS.isLoading(resourcesData) ? t("submitting") : t("submit")}
+          {ADS.isLoading(documentsData) ? t("submitting") : t("submit")}
         </Button>
       </div>
     </DialogContent>

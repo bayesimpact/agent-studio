@@ -9,7 +9,7 @@ export default {
     const response = await axios.get<typeof DocumentsRoutes.getAll.response>(
       DocumentsRoutes.getAll.getPath({ organizationId, projectId }),
     )
-    return response.data.data.map(toResource)
+    return response.data.data.map(toDocument)
   },
   uploadOne: async ({ organizationId, projectId, file }) => {
     const axios = getAxiosInstance()
@@ -22,7 +22,7 @@ export default {
       formData,
       { headers: { "Content-Type": "multipart/form-data" } },
     )
-    return toResource(response.data.data)
+    return toDocument(response.data.data)
   },
   deleteOne: async (params) => {
     const axios = getAxiosInstance()
@@ -37,7 +37,7 @@ export default {
   },
 } satisfies IDocumentsSpi
 
-function toResource(dto: DocumentDto): Document {
+function toDocument(dto: DocumentDto): Document {
   return {
     content: dto.content,
     createdAt: dto.createdAt,
