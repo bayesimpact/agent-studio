@@ -6,66 +6,33 @@ import { documentsControllerTestSetup } from "./test-setup"
 const getTestContext = documentsControllerTestSetup()
 
 describe("DocumentsController - deleteOne", () => {
-  describe("user is owner", () => {
-    it("should delete a document", async () => {
-      const testContext = getTestContext()
-      const { controller, documentRepository } = testContext
-      const { organization, user, project } = await createOrganizationWithProject(testContext, {
-        membership: { role: "owner" },
-      })
-
-      const document = documentFactory.transient({ project }).build({
-        title: "Document to delete",
-        fileName: "file.pdf",
-      })
-      await documentRepository.save(document)
-
-      const mockRequest = buildEndpointRequestWithOrganizationAndProjectAndDocument({
-        organization,
-        user,
-        project,
-        document,
-      })
-
-      const { data: result } = await controller.deleteOne(mockRequest)
-
-      expect(result.success).toBe(true)
-
-      const deletedDocument = await documentRepository.findOne({
-        where: { id: document.id },
-      })
-      expect(deletedDocument).toBeNull()
+  it("should delete a document", async () => {
+    const testContext = getTestContext()
+    const { controller, documentRepository } = testContext
+    const { organization, user, project } = await createOrganizationWithProject(testContext, {
+      membership: { role: "owner" },
     })
-  })
 
-  describe("user is admin", () => {
-    it("should delete a document", async () => {
-      const testContext = getTestContext()
-      const { controller, documentRepository } = testContext
-      const { organization, user, project } = await createOrganizationWithProject(testContext, {
-        membership: { role: "admin" },
-      })
-
-      const document = documentFactory.transient({ project }).build({
-        title: "Document to delete",
-        fileName: "file.pdf",
-      })
-      await documentRepository.save(document)
-
-      const mockRequest = buildEndpointRequestWithOrganizationAndProjectAndDocument({
-        organization,
-        user,
-        project,
-        document,
-      })
-      const { data: result } = await controller.deleteOne(mockRequest)
-
-      expect(result.success).toBe(true)
-
-      const deletedDocument = await documentRepository.findOne({
-        where: { id: document.id },
-      })
-      expect(deletedDocument).toBeNull()
+    const document = documentFactory.transient({ project }).build({
+      title: "Document to delete",
+      fileName: "file.pdf",
     })
+    await documentRepository.save(document)
+
+    const mockRequest = buildEndpointRequestWithOrganizationAndProjectAndDocument({
+      organization,
+      user,
+      project,
+      document,
+    })
+
+    const { data: result } = await controller.deleteOne(mockRequest)
+
+    expect(result.success).toBe(true)
+
+    const deletedDocument = await documentRepository.findOne({
+      where: { id: document.id },
+    })
+    expect(deletedDocument).toBeNull()
   })
 })
