@@ -27,5 +27,5 @@ export interface EndpointRequestWithProject extends EndpointRequestWithUserMembe
 }
 
 export interface EndpointRequestWithDocument extends EndpointRequestWithProject {
-  document?: Document
+  document: Document
 }

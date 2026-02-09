@@ -61,11 +61,7 @@ export class DocumentsController {
     @Request() req: EndpointRequestWithProject,
   ): Promise<typeof DocumentsRoutes.uploadOne.response> {
     const organizationId = req.organizationId
-    const projectId = req.project?.id
-
-    if (!projectId) {
-      throw new UnprocessableEntityException("Project ID is required.")
-    }
+    const projectId = req.project.id
 
     if (!file) {
       throw new UnprocessableEntityException("File is required.")
@@ -131,11 +127,7 @@ export class DocumentsController {
   async getAll(
     @Request() req: EndpointRequestWithProject,
   ): Promise<typeof DocumentsRoutes.getAll.response> {
-    const projectId = req.project?.id
-
-    if (!projectId) {
-      throw new UnprocessableEntityException("Project ID is required.")
-    }
+    const projectId = req.project.id
 
     const documents = await this.documentsService.listDocuments({
       projectId,
@@ -149,15 +141,7 @@ export class DocumentsController {
   async deleteOne(
     @Request() req: EndpointRequestWithDocument,
   ): Promise<typeof DocumentsRoutes.deleteOne.response> {
-    const projectId = req.project?.id
-    const documentId = req.document?.id
-
-    if (!projectId) {
-      throw new UnprocessableEntityException("Project ID is required.")
-    }
-    if (!documentId) {
-      throw new UnprocessableEntityException("Document ID is required.")
-    }
+    const documentId = req.document.id
 
     await this.documentsService.deleteDocument({
       documentId,
@@ -172,15 +156,8 @@ export class DocumentsController {
   async getTemporaryUrl(
     @Request() req: EndpointRequestWithDocument,
   ): Promise<typeof DocumentsRoutes.getTemporaryUrl.response> {
-    const documentId = req.document?.id
+    const document = req.document
 
-    if (!documentId) {
-      throw new UnprocessableEntityException("Document ID is required.")
-    }
-    const document = await this.documentsService.findById(documentId)
-    if (!document) {
-      throw new NotFoundException("Document not found.")
-    }
     const url = await this.fileStorageService.getTemporaryUrl(document.storageRelativePath)
     if (!url) {
       throw new NotFoundException("Temporary URL not found for the document.")
