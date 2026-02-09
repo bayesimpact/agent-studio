@@ -6,9 +6,9 @@ export class ProjectScopedPolicy<T> extends BasePolicy<T> {
   constructor(
     userMembership: UserMembership,
     protected readonly project?: Project,
-    protected readonly resource?: T,
+    protected readonly entity?: T,
   ) {
-    super(userMembership, resource)
+    super(userMembership, entity)
     this.project = project
   }
 
@@ -29,18 +29,18 @@ export class ProjectScopedPolicy<T> extends BasePolicy<T> {
   }
 
   private doesResourceBelongToProject(): boolean {
-    if (!this.resource) return false
+    if (!this.entity) return false
 
     // Ensure resource is an object (not a primitive) before using 'in' operator
-    if (typeof this.resource !== "object") {
+    if (typeof this.entity !== "object") {
       return false
     }
 
     // Check if resource has projectId property using 'in' operator
-    if (!("projectId" in this.resource)) {
+    if (!("projectId" in this.entity)) {
       return false
     }
 
-    return this.resource.projectId === this.project?.id
+    return this.entity.projectId === this.project?.id
   }
 }
