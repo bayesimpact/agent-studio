@@ -24,5 +24,6 @@ export const projectFactory = ProjectFactory.define(({ sequence, params, transie
     organization: transientParams.organization,
     agents: params.agents || [],
     documents: params.documents || [],
+    agentMessageFeedbacks: params.agentMessageFeedbacks || [],
   } satisfies Project
 })

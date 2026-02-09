@@ -9,6 +9,7 @@ import {
   type QueryRunner,
   type Repository,
 } from "typeorm"
+import { AgentMessageFeedback } from "@/domains/agent-message-feedback/agent-message-feedback.entity"
 import { AgentMessage } from "@/domains/agent-sessions/agent-message.entity"
 import { AgentSession } from "@/domains/agent-sessions/agent-session.entity"
 import { Agent } from "@/domains/agents/agent.entity"
@@ -26,6 +27,7 @@ const TEST_ENTITIES = [
   Agent,
   AgentSession,
   AgentMessage,
+  AgentMessageFeedback,
   Document,
 ]
 

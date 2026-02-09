@@ -5,8 +5,10 @@ import {
   Index,
   JoinColumn,
   ManyToOne,
+  OneToMany,
   PrimaryGeneratedColumn,
 } from "typeorm"
+import { AgentMessageFeedback } from "@/domains/agent-message-feedback/agent-message-feedback.entity"
 import { AgentSession } from "./agent-session.entity"
 
 export type MessageStatus = "streaming" | "completed" | "aborted" | "error"
@@ -52,4 +54,10 @@ export class AgentMessage {
   )
   @JoinColumn({ name: "session_id" })
   session!: AgentSession
+
+  @OneToMany(
+    () => AgentMessageFeedback,
+    (agentMessageFeedback) => agentMessageFeedback.agentMessage,
+  )
+  agentMessageFeedbacks!: AgentMessageFeedback[]
 }

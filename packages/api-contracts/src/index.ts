@@ -1,5 +1,8 @@
 // Agents DTOs
 
+// Agent Message Feedback DTOs
+export type * from "./agent-message-feedback/agent-message-feedback.dto"
+export { AgentMessageFeedbackRoutes } from "./agent-message-feedback/agent-message-feedback.routes"
 export type * from "./agent-sessions/agent-session-messages.dto"
 export { AgentSessionMessagesRoutes } from "./agent-sessions/agent-session-messages.routes"
 export { AgentSessionStreamingRoutes } from "./agent-sessions/agent-session-streaming.routes"

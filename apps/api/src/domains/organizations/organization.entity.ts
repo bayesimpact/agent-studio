@@ -6,6 +6,7 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from "typeorm"
+import { AgentMessageFeedback } from "@/domains/agent-message-feedback/agent-message-feedback.entity"
 import { AgentSession } from "@/domains/agent-sessions/agent-session.entity"
 import { Project } from "@/domains/projects/project.entity"
 import { UserMembership } from "./user-membership.entity"
@@ -41,4 +42,10 @@ export class Organization {
     (agentSession) => agentSession.organization,
   )
   agentSessions!: AgentSession[]
+
+  @OneToMany(
+    () => AgentMessageFeedback,
+    (agentMessageFeedback) => agentMessageFeedback.organization,
+  )
+  agentMessageFeedbacks!: AgentMessageFeedback[]
 }

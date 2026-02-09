@@ -2,6 +2,7 @@ import { Module } from "@nestjs/common"
 import { ConfigModule, ConfigService } from "@nestjs/config"
 import { TypeOrmModule } from "@nestjs/typeorm"
 import typeorm from "./config/typeorm"
+import { AgentMessageFeedbackModule } from "./domains/agent-message-feedback/agent-message-feedback.module"
 import { AgentSessionsModule } from "./domains/agent-sessions/agent-sessions.module"
 import { AgentsModule } from "./domains/agents/agents.module"
 import { AuthModule } from "./domains/auth/auth.module"
@@ -29,6 +30,7 @@ import { UsersModule } from "./domains/users/users.module"
     ProjectsModule,
     AgentsModule,
     AgentSessionsModule,
+    AgentMessageFeedbackModule,
     MeModule,
     OrganizationsModule,
     ProjectsModule,
