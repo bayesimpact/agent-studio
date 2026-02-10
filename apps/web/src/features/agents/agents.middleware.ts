@@ -3,6 +3,7 @@ import { createListenerMiddleware, isAnyOf } from "@reduxjs/toolkit"
 import { ADS } from "@/store/async-data-status"
 import type { AppDispatch, RootState } from "@/store/types"
 import { notificationsActions } from "../notifications/notifications.slice"
+import { selectCurrentOrganizationId } from "../organizations/organizations.selectors"
 import { selectCurrentProjectId, selectProjectsData } from "../projects/projects.selectors"
 import { listProjects } from "../projects/projects.thunks"
 import { createAgent, deleteAgent, listAgents, updateAgent } from "./agents.thunks"
@@ -16,8 +17,11 @@ listenerMiddleware.startListening({
   actionCreator: listProjects.fulfilled,
   effect: async (action, listenerApi) => {
     const projects = action.payload
+    const state = listenerApi.getState()
+    const organizationId = selectCurrentOrganizationId(state)
+    if (!organizationId) return
     projects.forEach((project) => {
-      listenerApi.dispatch(listAgents({ projectId: project.id }))
+      listenerApi.dispatch(listAgents({ organizationId, projectId: project.id }))
     })
   },
 })
@@ -31,9 +35,10 @@ listenerMiddleware.startListening({
   },
   effect: async (_, listenerApi) => {
     const state = listenerApi.getState()
+    const organizationId = selectCurrentOrganizationId(state)
     const projectId = selectCurrentProjectId(state)
-    if (!projectId) return
-    await listenerApi.dispatch(listAgents({ projectId }))
+    if (!organizationId || !projectId) return
+    await listenerApi.dispatch(listAgents({ organizationId, projectId }))
   },
 })
 
@@ -42,10 +47,12 @@ listenerMiddleware.startListening({
   matcher: isAnyOf(deleteAgent.fulfilled, createAgent.fulfilled, updateAgent.fulfilled),
   effect: async (_, listenerApi) => {
     const state = listenerApi.getState()
+    const organizationId = selectCurrentOrganizationId(state)
+    if (!organizationId) return
     const projects = selectProjectsData(state)
     if (!ADS.isFulfilled(projects)) return
     projects.value.forEach((project) => {
-      listenerApi.dispatch(listAgents({ projectId: project.id }))
+      listenerApi.dispatch(listAgents({ organizationId, projectId: project.id }))
     })
   },
 })

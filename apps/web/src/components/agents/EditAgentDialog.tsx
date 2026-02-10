@@ -16,7 +16,13 @@ import { useTranslation } from "react-i18next"
 import type { Agent } from "@/features/agents/agents.models"
 import { UpdateAgentForm } from "./UpdateAgentForm"
 
-export function EditAgentDialogWithTrigger({ agent }: { agent: Agent }) {
+export function EditAgentDialogWithTrigger({
+  organizationId,
+  agent,
+}: {
+  organizationId: string
+  agent: Agent
+}) {
   const [open, setOpen] = useState(false)
 
   const handleSuccess = () => {
@@ -32,15 +38,17 @@ export function EditAgentDialogWithTrigger({ agent }: { agent: Agent }) {
         </Button>
       </SheetTrigger>
 
-      <Content agent={agent} onSuccess={handleSuccess} />
+      <Content organizationId={organizationId} agent={agent} onSuccess={handleSuccess} />
     </Sheet>
   )
 }
 
 export function EditAgentDialogWithOutTrigger({
+  organizationId,
   agent,
   onClose,
 }: {
+  organizationId: string
   agent: Agent | null
   onClose: () => void
 }) {
@@ -51,12 +59,20 @@ export function EditAgentDialogWithOutTrigger({
   if (!agent) return null
   return (
     <Sheet modal open={!!agent} onOpenChange={(open: boolean) => !open && onClose()}>
-      <Content agent={agent} onSuccess={handleSuccess} />
+      <Content organizationId={organizationId} agent={agent} onSuccess={handleSuccess} />
     </Sheet>
   )
 }
 
-function Content({ agent, onSuccess }: { agent: Agent; onSuccess: () => void }) {
+function Content({
+  organizationId,
+  agent,
+  onSuccess,
+}: {
+  organizationId: string
+  agent: Agent
+  onSuccess: () => void
+}) {
   const { t } = useTranslation("agent", { keyPrefix: "update" })
   return (
     <SheetContent side="bottom" className="h-dvh">
@@ -66,7 +82,7 @@ function Content({ agent, onSuccess }: { agent: Agent; onSuccess: () => void }) 
           <SheetDescription>{t("description")}</SheetDescription>
         </SheetHeader>
         <div className="px-4 pb-4">
-          <UpdateAgentForm agent={agent} onSuccess={onSuccess} />
+          <UpdateAgentForm organizationId={organizationId} agent={agent} onSuccess={onSuccess} />
         </div>
       </ScrollArea>
     </SheetContent>

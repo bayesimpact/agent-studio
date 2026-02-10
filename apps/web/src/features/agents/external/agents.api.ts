@@ -4,30 +4,30 @@ import type { Agent } from "../agents.models"
 import type { IAgentsSpi } from "../agents.spi"
 
 export default {
-  getAll: async (params) => {
+  getAll: async ({ organizationId, projectId }) => {
     const axios = getAxiosInstance()
     const response = await axios.get<typeof AgentsRoutes.getAll.response>(
-      AgentsRoutes.getAll.getPath(params),
+      AgentsRoutes.getAll.getPath({ organizationId, projectId }),
     )
     return response.data.data.agents.map(fromDto)
   },
-  createOne: async (params, payload) => {
+  createOne: async ({ organizationId, projectId }, payload) => {
     const axios = getAxiosInstance()
     const response = await axios.post<typeof AgentsRoutes.createOne.response>(
-      AgentsRoutes.createOne.getPath(params),
+      AgentsRoutes.createOne.getPath({ organizationId, projectId }),
       { payload: toCreateDto(payload) },
     )
     return fromDto(response.data.data)
   },
-  updateOne: async (params, payload) => {
+  updateOne: async ({ organizationId, projectId, agentId }, payload) => {
     const axios = getAxiosInstance()
-    await axios.patch(AgentsRoutes.updateOne.getPath(params), {
+    await axios.patch(AgentsRoutes.updateOne.getPath({ organizationId, projectId, agentId }), {
       payload: toUpdateDto(payload),
     })
   },
-  deleteOne: async (params) => {
+  deleteOne: async ({ organizationId, projectId, agentId }) => {
     const axios = getAxiosInstance()
-    await axios.delete(AgentsRoutes.deleteOne.getPath(params))
+    await axios.delete(AgentsRoutes.deleteOne.getPath({ organizationId, projectId, agentId }))
   },
 } satisfies IAgentsSpi
 

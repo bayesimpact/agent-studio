@@ -7,11 +7,12 @@ import { useAppDispatch, useAppSelector } from "@/store/hooks"
 import { AgentForm } from "./AgentForm"
 
 interface UpdateAgentFormProps {
+  organizationId: string
   agent: Agent
   onSuccess?: () => void
 }
 
-export function UpdateAgentForm({ agent, onSuccess }: UpdateAgentFormProps) {
+export function UpdateAgentForm({ organizationId, agent, onSuccess }: UpdateAgentFormProps) {
   const { t } = useTranslation("agent", { keyPrefix: "update" })
   const dispatch = useAppDispatch()
   const status = useAppSelector(selectAgentsStatus)
@@ -22,6 +23,7 @@ export function UpdateAgentForm({ agent, onSuccess }: UpdateAgentFormProps) {
   ) => {
     dispatch(
       updateAgent({
+        organizationId,
         projectId: agent.projectId,
         agentId: agent.id,
         fields,

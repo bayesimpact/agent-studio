@@ -7,11 +7,12 @@ import { useAppDispatch, useAppSelector } from "@/store/hooks"
 import { AgentForm } from "./AgentForm"
 
 interface CreateagentFormProps {
+  organizationId: string
   projectId: string
   onSuccess: (agentId: string) => void
 }
 
-export function CreateAgentForm({ projectId, onSuccess }: CreateagentFormProps) {
+export function CreateAgentForm({ organizationId, projectId, onSuccess }: CreateagentFormProps) {
   const { t } = useTranslation("agent", { keyPrefix: "create" })
   const dispatch = useAppDispatch()
   const status = useAppSelector(selectAgentsStatus)
@@ -20,7 +21,7 @@ export function CreateAgentForm({ projectId, onSuccess }: CreateagentFormProps) 
   const handleSubmit = (
     fields: Pick<Agent, "defaultPrompt" | "name" | "model" | "temperature" | "locale">,
   ) => {
-    dispatch(createAgent({ projectId, fields, onSuccess }))
+    dispatch(createAgent({ organizationId, projectId, fields, onSuccess }))
   }
 
   const isLoading = ADS.isLoading(status)

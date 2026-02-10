@@ -48,7 +48,11 @@ export function CreateAgentDialogWithTrigger({ project }: { project: Project }) 
               <SheetDescription>{t("description", { projectName: project.name })}</SheetDescription>
             </SheetHeader>
             <div className="px-4 pb-4">
-              <CreateAgentForm projectId={project.id} onSuccess={handleSuccess} />
+              <CreateAgentForm
+                organizationId={project.organizationId}
+                projectId={project.id}
+                onSuccess={handleSuccess}
+              />
             </div>
           </ScrollArea>
         </SheetContent>
@@ -88,7 +92,11 @@ export function CreateAgentDialogWithoutTrigger({
             <SheetDescription>{t("description", { projectName: project.name })}</SheetDescription>
           </SheetHeader>
           <div className="px-4 pb-4">
-            <CreateAgentForm projectId={project.id} onSuccess={handleSuccess} />
+            <CreateAgentForm
+              organizationId={project.organizationId}
+              projectId={project.id}
+              onSuccess={handleSuccess}
+            />
           </div>
         </ScrollArea>
       </SheetContent>

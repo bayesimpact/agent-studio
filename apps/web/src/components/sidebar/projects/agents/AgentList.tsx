@@ -78,6 +78,7 @@ export function AdminAgentList({
       </SidebarMenuItem>
 
       <EditAgentDialogWithOutTrigger
+        organizationId={organizationId}
         agent={item?.action === "edit" ? item.value : null}
         onClose={handleClose}
       />
