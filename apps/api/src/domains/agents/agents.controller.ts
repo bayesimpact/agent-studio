@@ -23,11 +23,9 @@ export class AgentsController {
     @Req() request: EndpointRequestWithProject,
     @Body() { payload }: typeof AgentsRoutes.createOne.request,
   ): Promise<typeof AgentsRoutes.createOne.response> {
-    const user = request.user
     const projectId = request.project.id
 
     const agent = await this.agentsService.createAgent({
-      userId: user.id,
       projectId,
       ...payload,
     })
@@ -40,10 +38,9 @@ export class AgentsController {
   async getAll(
     @Req() request: EndpointRequestWithProject,
   ): Promise<typeof AgentsRoutes.getAll.response> {
-    const userId = request.user.id
     const projectId = request.project.id
 
-    const agents = await this.agentsService.listAgents({ userId, projectId })
+    const agents = await this.agentsService.listAgents({ projectId })
 
     return { data: { agents: agents.map(toAgentDto) } }
   }
@@ -54,11 +51,10 @@ export class AgentsController {
     @Req() request: EndpointRequestWithAgent,
     @Body() { payload }: typeof AgentsRoutes.updateOne.request,
   ): Promise<typeof AgentsRoutes.updateOne.response> {
-    const user = request.user
     const agentId = request.agent.id
 
     const agent = await this.agentsService.updateAgent({
-      required: { userId: user.id, agentId },
+      required: { agentId },
       fieldsToUpdate: payload,
     })
 
@@ -73,7 +69,7 @@ export class AgentsController {
   async deleteOne(
     @Req() request: EndpointRequestWithAgent,
   ): Promise<typeof AgentsRoutes.deleteOne.response> {
-    await this.agentsService.deleteAgent(request.user.id, request.agent.id)
+    await this.agentsService.deleteAgent(request.agent.id)
     return { data: { success: true } }
   }
 }

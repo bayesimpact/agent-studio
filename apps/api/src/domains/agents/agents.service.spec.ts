@@ -1,5 +1,5 @@
 import { AgentLocale, AgentModel } from "@caseai-connect/api-contracts"
-import { ForbiddenException, NotFoundException } from "@nestjs/common"
+import { UnprocessableEntityException } from "@nestjs/common"
 import type { Repository } from "typeorm"
 import { clearTestDatabase } from "@/common/test/test-database"
 import {
@@ -11,15 +11,11 @@ import { agentFactory } from "@/domains/agents/agent.factory"
 import { Organization } from "@/domains/organizations/organization.entity"
 import {
   createOrganizationWithAgent,
-  createOrganizationWithOwner,
   createOrganizationWithProject,
-  organizationFactory,
 } from "@/domains/organizations/organization.factory"
 import { UserMembership } from "@/domains/organizations/user-membership.entity"
 import { Project } from "@/domains/projects/project.entity"
-import { projectFactory } from "@/domains/projects/project.factory"
 import { User } from "@/domains/users/user.entity"
-import { userFactory } from "@/domains/users/user.factory"
 import { AgentsModule } from "./agents.module"
 import { AgentsService } from "./agents.service"
 
@@ -58,8 +54,8 @@ describe("AgentsService", () => {
   })
 
   describe("createAgent", () => {
-    it("should create an Agent when user is owner", async () => {
-      const { user, project } = await createOrganizationWithProject({
+    it("should create an Agent", async () => {
+      const { project } = await createOrganizationWithProject({
         organizationRepository,
         userRepository,
         membershipRepository,
@@ -67,7 +63,6 @@ describe("AgentsService", () => {
       })
 
       const result = await service.createAgent({
-        userId: user.id,
         projectId: project.id,
         name: "My Template",
         defaultPrompt: "This is a default prompt",
@@ -88,36 +83,8 @@ describe("AgentsService", () => {
       expect(savedTemplate).not.toBeNull()
       expect(savedTemplate?.name).toBe("My Template")
     })
-
-    it("should create an Agent when user is admin", async () => {
-      const { user, project } = await createOrganizationWithProject(
-        {
-          organizationRepository,
-          userRepository,
-          membershipRepository,
-          projectRepository,
-        },
-        { membership: { role: "admin" } },
-      )
-
-      // Act
-      const result = await service.createAgent({
-        userId: user.id,
-        projectId: project.id,
-        name: "Admin Template",
-        defaultPrompt: "Admin prompt",
-        model: AgentModel.Gemini25Flash,
-        temperature: 0,
-        locale: AgentLocale.EN,
-      })
-
-      // Assert
-      expect(result.name).toBe("Admin Template")
-      expect(result.defaultPrompt).toBe("Admin prompt")
-    })
-
-    it("should throw ForbiddenException when name is less than 3 characters", async () => {
-      const { user, project } = await createOrganizationWithProject({
+    it("should throw UnprocessableEntityException when name is less than 3 characters", async () => {
+      const { project } = await createOrganizationWithProject({
         organizationRepository,
         userRepository,
         membershipRepository,
@@ -126,7 +93,6 @@ describe("AgentsService", () => {
 
       const createWrongfulAgent = async () =>
         service.createAgent({
-          userId: user.id,
           projectId: project.id,
           name: "AB",
           defaultPrompt: "Prompt",
@@ -136,98 +102,16 @@ describe("AgentsService", () => {
         })
 
       // Act & Assert
-      await expect(createWrongfulAgent()).rejects.toThrow(ForbiddenException)
+      await expect(createWrongfulAgent()).rejects.toThrow(UnprocessableEntityException)
       await expect(createWrongfulAgent()).rejects.toThrow(
         "Agent name must be at least 3 characters long",
       )
-    })
-
-    it("should throw ForbiddenException when user is not a member", async () => {
-      const { project } = await createOrganizationWithProject({
-        organizationRepository,
-        userRepository,
-        membershipRepository,
-        projectRepository,
-      })
-      const anotherUser = userFactory.build({
-        email: "another@example.com",
-        auth0Id: "auth0|agent-another-1",
-      })
-      await userRepository.save(anotherUser)
-
-      const createWrongfulAgent = async () =>
-        service.createAgent({
-          userId: anotherUser.id,
-          projectId: project.id,
-          name: "Template",
-          defaultPrompt: "Prompt",
-          model: AgentModel.Gemini25Flash,
-          temperature: 0,
-          locale: AgentLocale.EN,
-        })
-
-      // Act & Assert
-      await expect(createWrongfulAgent()).rejects.toThrow(ForbiddenException)
-      await expect(createWrongfulAgent()).rejects.toThrow(
-        "User does not have access to organization",
-      )
-    })
-
-    it("should throw ForbiddenException when user is member but not owner or admin", async () => {
-      const { user, project } = await createOrganizationWithProject(
-        {
-          organizationRepository,
-          userRepository,
-          membershipRepository,
-          projectRepository,
-        },
-        { membership: { role: "member" } },
-      )
-
-      const createWrongfulAgent = async () =>
-        service.createAgent({
-          userId: user.id,
-          projectId: project.id,
-          name: "Template",
-          defaultPrompt: "Prompt",
-          model: AgentModel.Gemini25Flash,
-          temperature: 0,
-          locale: AgentLocale.EN,
-        })
-
-      // Act & Assert
-      await expect(createWrongfulAgent()).rejects.toThrow(ForbiddenException)
-      await expect(createWrongfulAgent()).rejects.toThrow("User must be an owner or admin")
-    })
-
-    it("should throw NotFoundException when project does not exist", async () => {
-      const { user } = await createOrganizationWithOwner({
-        organizationRepository,
-        userRepository,
-        membershipRepository,
-      })
-      const nonExistentProjectId = "00000000-0000-0000-0000-000000000000"
-
-      const createWrongfulAgent = async () =>
-        service.createAgent({
-          userId: user.id,
-          projectId: nonExistentProjectId,
-          name: "Template",
-          defaultPrompt: "Prompt",
-          model: AgentModel.Gemini25Flash,
-          temperature: 0,
-          locale: AgentLocale.EN,
-        })
-
-      // Act & Assert
-      await expect(createWrongfulAgent()).rejects.toThrow(NotFoundException)
-      await expect(createWrongfulAgent()).rejects.toThrow("Project with id")
     })
   })
 
   describe("listAgents", () => {
     it("should return Agents for a project", async () => {
-      const { user, project } = await createOrganizationWithProject({
+      const { project } = await createOrganizationWithProject({
         organizationRepository,
         userRepository,
         membershipRepository,
@@ -245,7 +129,7 @@ describe("AgentsService", () => {
       await agentRepository.save([template1, template2])
 
       // Act
-      const result = await service.listAgents({ userId: user.id, projectId: project.id })
+      const result = await service.listAgents({ projectId: project.id })
 
       // Assert
       expect(result).toHaveLength(2)
@@ -254,7 +138,7 @@ describe("AgentsService", () => {
     })
 
     it("should return empty array when project has no Agents", async () => {
-      const { user, project } = await createOrganizationWithProject({
+      const { project } = await createOrganizationWithProject({
         organizationRepository,
         userRepository,
         membershipRepository,
@@ -262,36 +146,14 @@ describe("AgentsService", () => {
       })
 
       // Act
-      const result = await service.listAgents({ userId: user.id, projectId: project.id })
+      const result = await service.listAgents({ projectId: project.id })
 
       // Assert
       expect(result).toEqual([])
     })
 
-    it("should throw ForbiddenException when user is not a member", async () => {
-      // Arrange
-      const user = userFactory.build({ email: "nonmember@example.com" })
-      await userRepository.save(user)
-      const organization = organizationFactory.build({ name: "Other Org" })
-      await organizationRepository.save(organization)
-
-      const project = projectFactory.transient({ organization }).build({
-        name: "Other Project",
-      })
-      await projectRepository.save(project)
-
-      const createWrongfulListAgents = async () =>
-        service.listAgents({ userId: user.id, projectId: project.id })
-
-      // Act & Assert
-      await expect(createWrongfulListAgents()).rejects.toThrow(ForbiddenException)
-      await expect(createWrongfulListAgents()).rejects.toThrow(
-        "User does not have access to organization",
-      )
-    })
-
     it("should return Agents ordered by createdAt DESC", async () => {
-      const { user, project } = await createOrganizationWithProject({
+      const { project } = await createOrganizationWithProject({
         organizationRepository,
         userRepository,
         membershipRepository,
@@ -310,7 +172,7 @@ describe("AgentsService", () => {
       await agentRepository.save([template1, template2])
 
       // Act
-      const result = await service.listAgents({ userId: user.id, projectId: project.id })
+      const result = await service.listAgents({ projectId: project.id })
 
       // Assert
       expect(result).toHaveLength(2)
@@ -321,8 +183,8 @@ describe("AgentsService", () => {
   })
 
   describe("updateAgent", () => {
-    it("should update an Agent when user is owner", async () => {
-      const { user, agent } = await createOrganizationWithAgent({
+    it("should update an Agent", async () => {
+      const { agent } = await createOrganizationWithAgent({
         organizationRepository,
         userRepository,
         membershipRepository,
@@ -332,7 +194,7 @@ describe("AgentsService", () => {
 
       // Act
       const result = await service.updateAgent({
-        required: { userId: user.id, agentId: agent.id },
+        required: { agentId: agent.id },
         fieldsToUpdate: {
           name: "Updated Template",
           defaultPrompt: "Updated Prompt",
@@ -350,7 +212,7 @@ describe("AgentsService", () => {
     })
 
     it("should update only name when defaultPrompt is not provided", async () => {
-      const { user, agent } = await createOrganizationWithAgent(
+      const { agent } = await createOrganizationWithAgent(
         {
           organizationRepository,
           userRepository,
@@ -363,7 +225,7 @@ describe("AgentsService", () => {
 
       // Act
       const result = await service.updateAgent({
-        required: { userId: user.id, agentId: agent.id },
+        required: { agentId: agent.id },
         fieldsToUpdate: { name: "Updated Name" },
       })
 
@@ -372,145 +234,7 @@ describe("AgentsService", () => {
       expect(result.defaultPrompt).toBe("Original Prompt") // Unchanged
     })
 
-    it("should throw ForbiddenException when name is less than 3 characters", async () => {
-      const { user, agent } = await createOrganizationWithAgent({
-        organizationRepository,
-        userRepository,
-        membershipRepository,
-        projectRepository,
-        agentRepository,
-      })
-
-      const createWrongfulUpdateAgent = async () =>
-        service.updateAgent({
-          required: { userId: user.id, agentId: agent.id },
-          fieldsToUpdate: { name: "AB" },
-        })
-
-      // Act & Assert
-      await expect(createWrongfulUpdateAgent()).rejects.toThrow(ForbiddenException)
-      await expect(createWrongfulUpdateAgent()).rejects.toThrow(
-        "Agent name must be at least 3 characters long",
-      )
-    })
-
-    it("should throw ForbiddenException when user is member but not owner or admin", async () => {
-      const { user, agent } = await createOrganizationWithAgent(
-        {
-          organizationRepository,
-          userRepository,
-          membershipRepository,
-          projectRepository,
-          agentRepository,
-        },
-        { membership: { role: "member" } },
-      )
-
-      const createWrongfulUpdateAgent = async () =>
-        service.updateAgent({
-          required: { userId: user.id, agentId: agent.id },
-          fieldsToUpdate: { name: "Updated" },
-        })
-
-      // Act & Assert
-      await expect(createWrongfulUpdateAgent()).rejects.toThrow(ForbiddenException)
-      await expect(createWrongfulUpdateAgent()).rejects.toThrow("User must be an owner or admin")
-    })
-
-    it("should throw NotFoundException when agent does not exist", async () => {
-      const user = userFactory.build()
-      await userRepository.save(user)
-      const nonExistentTemplateId = "00000000-0000-0000-0000-000000000000"
-
-      const createWrongfulUpdateAgent = async () =>
-        service.updateAgent({
-          required: { userId: user.id, agentId: nonExistentTemplateId },
-          fieldsToUpdate: { name: "Updated" },
-        })
-
-      // Act & Assert
-      await expect(createWrongfulUpdateAgent()).rejects.toThrow(NotFoundException)
-      await expect(createWrongfulUpdateAgent()).rejects.toThrow("Agent with id")
-    })
-  })
-
-  describe("deleteAgent", () => {
-    it("should delete an Agent when user is owner", async () => {
-      const { user, agent } = await createOrganizationWithAgent({
-        organizationRepository,
-        userRepository,
-        membershipRepository,
-        projectRepository,
-        agentRepository,
-      })
-
-      // Act
-      await service.deleteAgent(user.id, agent.id)
-
-      // Assert
-      const deletedTemplate = await agentRepository.findOne({ where: { id: agent.id } })
-      expect(deletedTemplate).toBeNull()
-    })
-
-    it("should delete a Agent when user is admin", async () => {
-      const { user, agent } = await createOrganizationWithAgent(
-        {
-          organizationRepository,
-          userRepository,
-          membershipRepository,
-          projectRepository,
-          agentRepository,
-        },
-        { membership: { role: "admin" } },
-      )
-
-      // Act
-      await service.deleteAgent(user.id, agent.id)
-
-      // Assert
-      const deletedTemplate = await agentRepository.findOne({ where: { id: agent.id } })
-      expect(deletedTemplate).toBeNull()
-    })
-
-    it("should throw ForbiddenException when user is member", async () => {
-      const { user, agent } = await createOrganizationWithAgent(
-        {
-          organizationRepository,
-          userRepository,
-          membershipRepository,
-          projectRepository,
-          agentRepository,
-        },
-        { membership: { role: "member" } },
-      )
-
-      // Act & Assert
-      await expect(service.deleteAgent(user.id, agent.id)).rejects.toThrow(ForbiddenException)
-      await expect(service.deleteAgent(user.id, agent.id)).rejects.toThrow(
-        "User must be an owner or admin",
-      )
-
-      // Verify template still exists
-      const existingTemplate = await agentRepository.findOne({ where: { id: agent.id } })
-      expect(existingTemplate).not.toBeNull()
-    })
-
-    it("should throw NotFoundException when agent does not exist", async () => {
-      // Arrange
-      const user = userFactory.build()
-      await userRepository.save(user)
-      const nonExistentTemplateId = "00000000-0000-0000-0000-000000000000"
-
-      // Act & Assert
-      await expect(service.deleteAgent(user.id, nonExistentTemplateId)).rejects.toThrow(
-        NotFoundException,
-      )
-      await expect(service.deleteAgent(user.id, nonExistentTemplateId)).rejects.toThrow(
-        "Agent with id",
-      )
-    })
-
-    it("should throw ForbiddenException when user is not a member", async () => {
+    it("should throw UnprocessableEntityException when name is less than 3 characters", async () => {
       const { agent } = await createOrganizationWithAgent({
         organizationRepository,
         userRepository,
@@ -518,20 +242,37 @@ describe("AgentsService", () => {
         projectRepository,
         agentRepository,
       })
-      const anotherUser = userFactory.build()
-      await userRepository.save(anotherUser)
 
-      const createWrongfulDeleteAgent = async () => service.deleteAgent(anotherUser.id, agent.id)
+      const createWrongfulUpdateAgent = async () =>
+        service.updateAgent({
+          required: { agentId: agent.id },
+          fieldsToUpdate: { name: "AB" },
+        })
 
       // Act & Assert
-      await expect(createWrongfulDeleteAgent()).rejects.toThrow(ForbiddenException)
-      await expect(createWrongfulDeleteAgent()).rejects.toThrow(
-        "User does not have access to organization",
+      await expect(createWrongfulUpdateAgent()).rejects.toThrow(UnprocessableEntityException)
+      await expect(createWrongfulUpdateAgent()).rejects.toThrow(
+        "Agent name must be at least 3 characters long",
       )
+    })
+  })
 
-      // Verify template still exists
-      const existingTemplate = await agentRepository.findOne({ where: { id: agent.id } })
-      expect(existingTemplate).not.toBeNull()
+  describe("deleteAgent", () => {
+    it("should delete an Agent", async () => {
+      const { agent } = await createOrganizationWithAgent({
+        organizationRepository,
+        userRepository,
+        membershipRepository,
+        projectRepository,
+        agentRepository,
+      })
+
+      // Act
+      await service.deleteAgent(agent.id)
+
+      // Assert
+      const deletedTemplate = await agentRepository.findOne({ where: { id: agent.id } })
+      expect(deletedTemplate).toBeNull()
     })
   })
 })
