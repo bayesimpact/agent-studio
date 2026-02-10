@@ -6,6 +6,7 @@ import { OrganizationsModule } from "@/domains/organizations/organizations.modul
 import { UserMembership } from "@/domains/organizations/user-membership.entity"
 import { Project } from "@/domains/projects/project.entity"
 import { UsersModule } from "@/domains/users/users.module"
+import { ProjectsModule } from "../projects/projects.module"
 import { Agent } from "./agent.entity"
 import { AgentsController } from "./agents.controller"
 import { AgentsService } from "./agents.service"
@@ -14,6 +15,7 @@ import { AgentsService } from "./agents.service"
   imports: [
     TypeOrmModule.forFeature([Agent, Project, UserMembership]),
     OrganizationsModule,
+    ProjectsModule,
     UsersModule,
     AuthModule,
     AgentSessionsModule,

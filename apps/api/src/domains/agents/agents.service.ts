@@ -206,6 +206,17 @@ export class AgentsService {
   }
 
   /**
+   * Finds an agent by its id.
+   * @param agentId The id of the agent to find.
+   * @returns The agent if found, undefined otherwise.
+   */
+  async findAgentById(agentId: string): Promise<Agent | null> {
+    return this.agentRepository.findOne({
+      where: { id: agentId },
+    })
+  }
+
+  /**
    * Updates a agent.
    * Verifies that the user is an owner or admin of the agent's project's organization before updating.
    * Deletes playground sessions if configuration fields change.

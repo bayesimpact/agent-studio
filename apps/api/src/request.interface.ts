@@ -1,3 +1,4 @@
+import type { Agent } from "./domains/agents/agent.entity"
 import type { Document } from "./domains/documents/document.entity"
 import type { UserMembership } from "./domains/organizations/user-membership.entity"
 import type { Project } from "./domains/projects/project.entity"
@@ -28,4 +29,8 @@ export interface EndpointRequestWithProject extends EndpointRequestWithUserMembe
 
 export interface EndpointRequestWithDocument extends EndpointRequestWithProject {
   document: Document
+}
+
+export interface EndpointRequestWithAgent extends EndpointRequestWithProject {
+  agent: Agent
 }
