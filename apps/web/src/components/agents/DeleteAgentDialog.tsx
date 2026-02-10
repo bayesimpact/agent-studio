@@ -16,6 +16,7 @@ import { useNavigate } from "react-router-dom"
 import type { Agent } from "@/features/agents/agents.models"
 import { selectAgentsStatus } from "@/features/agents/agents.selectors"
 import { deleteAgent } from "@/features/agents/agents.thunks"
+import { selectCurrentOrganizationId } from "@/features/organizations/organizations.selectors"
 import { useBuildPath } from "@/hooks/use-build-path"
 import { ADS } from "@/store/async-data-status"
 import { useAppDispatch, useAppSelector } from "@/store/hooks"
@@ -96,10 +97,18 @@ function Content({
   const { t } = useTranslation("agent", { keyPrefix: "delete" })
   const { t: tCommon } = useTranslation("common")
   const dispatch = useAppDispatch()
+  const organizationId = useAppSelector(selectCurrentOrganizationId)
   const status = useAppSelector(selectAgentsStatus)
 
   const handleDelete = () => {
-    dispatch(deleteAgent({ projectId: agent.projectId, agentId: agent.id, onSuccess }))
+    dispatch(
+      deleteAgent({
+        organizationId: organizationId!,
+        projectId: agent.projectId,
+        agentId: agent.id,
+        onSuccess,
+      }),
+    )
   }
 
   return (

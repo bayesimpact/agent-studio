@@ -23,7 +23,7 @@ export const initOrganization = createAsyncThunk<
   const agentSessions: Record<Agent["id"], AgentSession[]> = {}
 
   for (const project of projects) {
-    const bots = await services.agents.getAll({ projectId: project.id })
+    const bots = await services.agents.getAll({ organizationId, projectId: project.id })
     agents[project.id] = bots
 
     for (const bot of bots) {

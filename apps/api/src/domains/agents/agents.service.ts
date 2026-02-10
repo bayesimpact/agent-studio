@@ -1,11 +1,8 @@
-import { ForbiddenException, Injectable, NotFoundException } from "@nestjs/common"
+import { Injectable, NotFoundException, UnprocessableEntityException } from "@nestjs/common"
 import { InjectRepository } from "@nestjs/typeorm"
 import type { Repository } from "typeorm"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
 import { AgentSessionsService } from "@/domains/agent-sessions/agent-sessions.service"
-import type { MembershipRole } from "@/domains/organizations/user-membership.entity"
-import { UserMembership } from "@/domains/organizations/user-membership.entity"
-import { Project } from "@/domains/projects/project.entity"
 import { Agent } from "./agent.entity"
 
 @Injectable()
@@ -13,175 +10,23 @@ export class AgentsService {
   constructor(
     @InjectRepository(Agent)
     private readonly agentRepository: Repository<Agent>,
-    @InjectRepository(Project)
-    private readonly projectRepository: Repository<Project>,
-    @InjectRepository(UserMembership)
-    private readonly membershipRepository: Repository<UserMembership>,
     private readonly agentSessionsService: AgentSessionsService,
   ) {}
 
   /**
-   * Verifies that a user can create agents for a project.
-   * User must be either "owner" or "admin" of the project's organization.
-   * Throws ForbiddenException if the user is not a member or doesn't have the required role.
-   */
-  async verifyUserCanCreateAgent(userId: string, projectId: string): Promise<void> {
-    const project = await this.projectRepository.findOne({
-      where: { id: projectId },
-    })
-
-    if (!project) {
-      throw new NotFoundException(`Project with id ${projectId} not found`)
-    }
-
-    const membership = await this.membershipRepository.findOne({
-      where: {
-        userId,
-        organizationId: project.organizationId,
-      },
-    })
-
-    if (!membership) {
-      throw new ForbiddenException(
-        `User does not have access to organization ${project.organizationId}`,
-      )
-    }
-
-    const allowedRoles: MembershipRole[] = ["owner", "admin"]
-    if (!allowedRoles.includes(membership.role)) {
-      throw new ForbiddenException(
-        `User must be an owner or admin of organization ${project.organizationId} to create agents`,
-      )
-    }
-  }
-
-  /**
-   * Verifies that a user can update a agent.
-   * User must be either "owner" or "admin" of the agent's project's organization.
-   * Throws ForbiddenException if the user is not a member or doesn't have the required role.
-   */
-  async verifyUserCanUpdateAgent(userId: string, agentId: string): Promise<void> {
-    const agent = await this.agentRepository.findOne({
-      where: { id: agentId },
-      relations: ["project"],
-    })
-
-    if (!agent) {
-      throw new NotFoundException(`Agent with id ${agentId} not found`)
-    }
-
-    const membership = await this.membershipRepository.findOne({
-      where: {
-        userId,
-        organizationId: agent.project.organizationId,
-      },
-    })
-
-    if (!membership) {
-      throw new ForbiddenException(
-        `User does not have access to organization ${agent.project.organizationId}`,
-      )
-    }
-
-    const allowedRoles: MembershipRole[] = ["owner", "admin"]
-    if (!allowedRoles.includes(membership.role)) {
-      throw new ForbiddenException(
-        `User must be an owner or admin of organization ${agent.project.organizationId} to update agents`,
-      )
-    }
-  }
-
-  /**
-   * Verifies that a user can delete a agent.
-   * User must be either "owner" or "admin" of the agent's project's organization.
-   * Throws ForbiddenException if the user is not a member or doesn't have the required role.
-   */
-  async verifyUserCanDeleteAgent(userId: string, agentId: string): Promise<void> {
-    const agent = await this.agentRepository.findOne({
-      where: { id: agentId },
-      relations: ["project"],
-    })
-
-    if (!agent) {
-      throw new NotFoundException(`Agent with id ${agentId} not found`)
-    }
-
-    const membership = await this.membershipRepository.findOne({
-      where: {
-        userId,
-        organizationId: agent.project.organizationId,
-      },
-    })
-
-    if (!membership) {
-      throw new ForbiddenException(
-        `User does not have access to organization ${agent.project.organizationId}`,
-      )
-    }
-
-    const allowedRoles: MembershipRole[] = ["owner", "admin"]
-    if (!allowedRoles.includes(membership.role)) {
-      throw new ForbiddenException(
-        `User must be an owner or admin of organization ${agent.project.organizationId} to delete agents`,
-      )
-    }
-  }
-
-  /**
-   * Verifies that a user can list agents for a project.
-   * User must be a member of the project's organization.
-   * Throws ForbiddenException if the user is not a member.
-   */
-  async verifyUserCanListAgents(userId: string, projectId: string): Promise<void> {
-    const project = await this.projectRepository.findOne({
-      where: { id: projectId },
-    })
-
-    if (!project) {
-      throw new NotFoundException(`Project with id ${projectId} not found`)
-    }
-
-    const membership = await this.membershipRepository.findOne({
-      where: {
-        userId,
-        organizationId: project.organizationId,
-      },
-    })
-
-    if (!membership) {
-      throw new ForbiddenException(
-        `User does not have access to organization ${project.organizationId}`,
-      )
-    }
-  }
-
-  /**
    * Creates a new agent for a project.
-   * Verifies that the user is an owner or admin of the project's organization before creating.
    */
   async createAgent(
-    params: {
-      userId: string
-    } & Pick<Agent, "projectId" | "defaultPrompt" | "name" | "model" | "temperature" | "locale">,
+    fields: Pick<
+      Agent,
+      "projectId" | "defaultPrompt" | "name" | "model" | "temperature" | "locale"
+    >,
   ): Promise<Agent> {
-    const { userId, ...fields } = params
-    const { projectId, name } = fields
+    const { name } = fields
 
     // Validate name (min 3 characters)
     if (name.length < 3) {
-      throw new ForbiddenException("Agent name must be at least 3 characters long")
-    }
-
-    // Verify user is owner or admin of the project's organization
-    await this.verifyUserCanCreateAgent(userId, projectId)
-
-    // Verify project exists
-    const project = await this.projectRepository.findOne({
-      where: { id: projectId },
-    })
-
-    if (!project) {
-      throw new NotFoundException(`Project with id ${projectId} not found`)
+      throw new UnprocessableEntityException("Agent name must be at least 3 characters long")
     }
 
     // Create the agent with defaults
@@ -192,16 +37,23 @@ export class AgentsService {
 
   /**
    * Lists all agents for a project.
-   * Verifies that the user has access to the project's organization before listing.
    */
-  async listAgents({ userId, projectId }: { userId: string; projectId: string }): Promise<Agent[]> {
-    // Verify user has access to the project's organization
-    await this.verifyUserCanListAgents(userId, projectId)
-
+  async listAgents({ projectId }: { projectId: string }): Promise<Agent[]> {
     // List agents for the project
     return this.agentRepository.find({
       where: { projectId },
       order: { createdAt: "DESC" },
+    })
+  }
+
+  /**
+   * Finds an agent by its id.
+   * @param agentId The id of the agent to find.
+   * @returns The agent if found, undefined otherwise.
+   */
+  async findAgentById(agentId: string): Promise<Agent | null> {
+    return this.agentRepository.findOne({
+      where: { id: agentId },
     })
   }
 
@@ -212,23 +64,19 @@ export class AgentsService {
    */
   async updateAgent(params: {
     required: {
-      userId: string
       agentId: string
     }
     fieldsToUpdate: Partial<
       Pick<Agent, "name" | "defaultPrompt" | "model" | "temperature" | "locale">
     >
   }): Promise<Agent> {
-    const { userId, agentId } = params.required
+    const { agentId } = params.required
     const { name, defaultPrompt, model, temperature, locale } = params.fieldsToUpdate
 
     // Validate name if provided (min 3 characters)
     if (name !== undefined && name.length < 3) {
-      throw new ForbiddenException("Agent name must be at least 3 characters long")
+      throw new UnprocessableEntityException("Agent name must be at least 3 characters long")
     }
-
-    // Verify user can update the agent
-    await this.verifyUserCanUpdateAgent(userId, agentId)
 
     // Find the agent
     const agent = await this.agentRepository.findOne({
@@ -271,12 +119,8 @@ export class AgentsService {
 
   /**
    * Deletes a agent.
-   * Verifies that the user is an owner or admin of the agent's project's organization before deleting.
    */
-  async deleteAgent(userId: string, agentId: string): Promise<void> {
-    // Verify user can delete the agent
-    await this.verifyUserCanDeleteAgent(userId, agentId)
-
+  async deleteAgent(agentId: string): Promise<void> {
     // Find the agent
     const agent = await this.agentRepository.findOne({
       where: { id: agentId },

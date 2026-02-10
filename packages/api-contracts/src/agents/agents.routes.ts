@@ -8,11 +8,11 @@ export const AgentsRoutes = {
     RequestPayload<Pick<AgentDto, "name" | "defaultPrompt" | "model" | "locale" | "temperature">>
   >({
     method: "post",
-    path: "projects/:projectId/agents",
+    path: "organizations/:organizationId/projects/:projectId/agents",
   }),
   getAll: defineRoute<ResponseData<ListAgentsResponseDto>>({
     method: "get",
-    path: "projects/:projectId/agents",
+    path: "organizations/:organizationId/projects/:projectId/agents",
   }),
   updateOne: defineRoute<
     ResponseData<SuccessResponseDTO>,
@@ -21,10 +21,10 @@ export const AgentsRoutes = {
     >
   >({
     method: "patch",
-    path: "projects/:projectId/agents/:agentId",
+    path: "organizations/:organizationId/projects/:projectId/agents/:agentId",
   }),
   deleteOne: defineRoute<ResponseData<SuccessResponseDTO>>({
     method: "delete",
-    path: "projects/:projectId/agents/:agentId",
+    path: "organizations/:organizationId/projects/:projectId/agents/:agentId",
   }),
 }
