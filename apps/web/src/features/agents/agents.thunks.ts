@@ -4,14 +4,16 @@ import type { Agent } from "./agents.models"
 
 type ThunkConfig = { state: RootState; extra: ThunkExtraArg }
 
-export const listAgents = createAsyncThunk<Agent[], { projectId: string }, ThunkConfig>(
-  "agents/list",
-  async (params, { extra: { services } }) => await services.agents.getAll(params),
-)
+export const listAgents = createAsyncThunk<
+  Agent[],
+  { organizationId: string; projectId: string },
+  ThunkConfig
+>("agents/list", async (params, { extra: { services } }) => await services.agents.getAll(params))
 
 export const createAgent = createAsyncThunk<
   Agent,
   {
+    organizationId: string
     projectId: string
     fields: Pick<Agent, "name" | "defaultPrompt" | "model" | "temperature" | "locale">
     onSuccess?: (agentId: string) => void
@@ -21,7 +23,7 @@ export const createAgent = createAsyncThunk<
   "agents/create",
   async (payload, { extra: { services } }) =>
     await services.agents.createOne(
-      { projectId: payload.projectId },
+      { organizationId: payload.organizationId, projectId: payload.projectId },
       {
         name: payload.fields.name,
         defaultPrompt: payload.fields.defaultPrompt,
@@ -35,23 +37,29 @@ export const createAgent = createAsyncThunk<
 export const updateAgent = createAsyncThunk<
   void,
   {
-    agentId: string
+    organizationId: string
     projectId: string
+    agentId: string
     fields: Partial<Pick<Agent, "name" | "defaultPrompt" | "model" | "temperature" | "locale">>
   },
   ThunkConfig
 >(
   "agents/update",
-  async ({ agentId, projectId, fields }, { extra: { services } }) =>
-    await services.agents.updateOne({ agentId, projectId }, fields),
+  async ({ organizationId, projectId, agentId, fields }, { extra: { services } }) =>
+    await services.agents.updateOne({ organizationId, projectId, agentId }, fields),
 )
 
 export const deleteAgent = createAsyncThunk<
   void,
-  { agentId: string; projectId: string; onSuccess?: (agentId: string) => void },
+  {
+    organizationId: string
+    projectId: string
+    agentId: string
+    onSuccess?: (agentId: string) => void
+  },
   ThunkConfig
 >(
   "agents/delete",
-  async ({ agentId, projectId }, { extra: { services } }) =>
-    await services.agents.deleteOne({ agentId, projectId }),
+  async ({ organizationId, projectId, agentId }, { extra: { services } }) =>
+    await services.agents.deleteOne({ organizationId, projectId, agentId }),
 )

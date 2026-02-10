@@ -137,7 +137,7 @@ function HeaderRightSlot({ agent }: { agent: Agent }) {
   return (
     <div className="flex items-center gap-2">
       <DefaultPromptDialog prompt={agent.defaultPrompt} />
-      <EditAgentDialogWithTrigger agent={agent} />
+      <EditAgentDialogWithTrigger organizationId={organizationId} agent={agent} />
       <DeleteAgentDialogWithTrigger organizationId={organizationId} agent={agent} />
     </div>
   )

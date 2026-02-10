@@ -1,28 +1,31 @@
 import type { AgentDto } from "@caseai-connect/api-contracts"
-import { Body, Controller, Delete, Get, Param, Patch, Post, Req, UseGuards } from "@nestjs/common"
+import { Body, Controller, Delete, Get, Patch, Post, Req, UseGuards } from "@nestjs/common"
+import { CheckPolicy } from "@/common/policies/check-policy.decorator"
 import { JwtAuthGuard } from "@/domains/auth/jwt-auth.guard"
 import { UserGuard } from "@/domains/users/user.guard"
-import type { EndpointRequest } from "@/request.interface"
+import type { EndpointRequestWithAgent, EndpointRequestWithProject } from "@/request.interface"
+import { OrganizationGuard } from "../organizations/organization.guard"
+import { ProjectsGuard } from "../projects/projects.guard"
 import type { Agent } from "./agent.entity"
+import { AgentGuard } from "./agent.guard"
 import { AgentsRoutes } from "./agents.routes"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
 import { AgentsService } from "./agents.service"
 
-@UseGuards(JwtAuthGuard, UserGuard)
+@UseGuards(JwtAuthGuard, UserGuard, OrganizationGuard, ProjectsGuard, AgentGuard)
 @Controller()
 export class AgentsController {
   constructor(private readonly agentsService: AgentsService) {}
 
   @Post(AgentsRoutes.createOne.path)
+  @CheckPolicy((policy) => policy.canCreate())
   async createOne(
-    @Req() request: EndpointRequest,
-    @Param("projectId") projectId: string,
+    @Req() request: EndpointRequestWithProject,
     @Body() { payload }: typeof AgentsRoutes.createOne.request,
   ): Promise<typeof AgentsRoutes.createOne.response> {
-    const user = request.user
+    const projectId = request.project.id
 
     const agent = await this.agentsService.createAgent({
-      userId: user.id,
       projectId,
       ...payload,
     })
@@ -31,27 +34,27 @@ export class AgentsController {
   }
 
   @Get(AgentsRoutes.getAll.path)
+  @CheckPolicy((policy) => policy.canList())
   async getAll(
-    @Req() request: EndpointRequest,
-    @Param("projectId") projectId: string,
+    @Req() request: EndpointRequestWithProject,
   ): Promise<typeof AgentsRoutes.getAll.response> {
-    const user = request.user
+    const projectId = request.project.id
 
-    const agents = await this.agentsService.listAgents({ userId: user.id, projectId })
+    const agents = await this.agentsService.listAgents({ projectId })
 
     return { data: { agents: agents.map(toAgentDto) } }
   }
 
   @Patch(AgentsRoutes.updateOne.path)
+  @CheckPolicy((policy) => policy.canUpdate())
   async updateOne(
-    @Req() request: EndpointRequest,
-    @Param("agentId") agentId: string,
+    @Req() request: EndpointRequestWithAgent,
     @Body() { payload }: typeof AgentsRoutes.updateOne.request,
   ): Promise<typeof AgentsRoutes.updateOne.response> {
-    const user = request.user
+    const agentId = request.agent.id
 
     const agent = await this.agentsService.updateAgent({
-      required: { userId: user.id, agentId },
+      required: { agentId },
       fieldsToUpdate: payload,
     })
 
@@ -62,11 +65,11 @@ export class AgentsController {
   }
 
   @Delete(AgentsRoutes.deleteOne.path)
+  @CheckPolicy((policy) => policy.canDelete())
   async deleteOne(
-    @Req() request: EndpointRequest,
-    @Param("agentId") agentId: string,
+    @Req() request: EndpointRequestWithAgent,
   ): Promise<typeof AgentsRoutes.deleteOne.response> {
-    await this.agentsService.deleteAgent(request.user.id, agentId)
+    await this.agentsService.deleteAgent(request.agent.id)
     return { data: { success: true } }
   }
 }
