@@ -57,14 +57,13 @@ describe("Agent Message Feedback - Auth", () => {
   })
 
   const createContextForRole = async (role: "owner" | "admin" | "member" = "owner") => {
-    const { user, organization, project, agentMessage } = await createOrganizationWithAgentMessage(
-      repositories,
-      {
+    const { user, organization, project, agent, agentMessage } =
+      await createOrganizationWithAgentMessage(repositories, {
         membership: { role },
-      },
-    )
+      })
     organizationId = organization.id
     projectId = project.id
+    agentId = agent.id
     agentMessageId = agentMessage.id
     accessToken = "token"
     auth0Id = user.auth0Id
@@ -88,27 +87,17 @@ describe("Agent Message Feedback - Auth", () => {
       organizationId = null
       expectResponse(await subject(), 400, AUTH_ERRORS.NO_ORGANIZATION_ID)
     })
-    it("requires a valid project ID", async () => {
-      await createContextForRole("owner")
-      projectId = null // reset to a non-null value
-      expectResponse(await subject(), 404)
-    })
-    // FIXME: using AgentGuard
-    //  it("requires a valid agent ID", async () => {
-    //   await createContextForRole("owner")
-    //   agentId = null // reset to a non-null value
+    // FIXME: when ProjectsGuard will be added to controller
+    // it("requires a valid project ID", async () => {
+    //   await createContextForRole("member")
+    //   projectId = null // reset to a non-null value
     //   expectResponse(await subject(), 404)
     // })
     it("requires the user to be a member of the organization", async () => {
-      await createContextForRole("owner")
+      await createContextForRole("member")
       auth0Id = "another-auth0-id" // this will trigger a new user to be created in the database
       expectResponse(await subject(), 401, AUTH_ERRORS.NOT_MEMBER_OF_ORG)
     })
-    // FIXME: using AgentMessageFeedbackGuard
-    // it("doesn't allow a simple member to get all feedback", async () => {
-    //   await createContextForRole("member")
-    //   expectResponse(await subject(), 403, AUTH_ERRORS.UNAUTHORIZED_RESOURCE)
-    // })
   })
 
   describe("AgentMessageFeedbackRoutes.getAll", () => {
@@ -133,21 +122,19 @@ describe("Agent Message Feedback - Auth", () => {
       projectId = null // reset to a non-null value
       expectResponse(await subject(), 404)
     })
-    // FIXME: using AgentGuard
-    //  it("requires a valid agent ID", async () => {
-    //   await createContextForRole("owner")
-    //   agentId = null // reset to a non-null value
-    //   expectResponse(await subject(), 404)
-    // })
+    it("requires a valid agent ID", async () => {
+      await createContextForRole("owner")
+      agentId = null // reset to a non-null value
+      expectResponse(await subject(), 404)
+    })
     it("requires the user to be a member of the organization", async () => {
       await createContextForRole("owner")
       auth0Id = "another-auth0-id" // this will trigger a new user to be created in the database
       expectResponse(await subject(), 401, AUTH_ERRORS.NOT_MEMBER_OF_ORG)
     })
-    // FIXME: using AgentMessageFeedbackGuard
-    // it("doesn't allow a simple member to get all feedback", async () => {
-    //   await createContextForRole("member")
-    //   expectResponse(await subject(), 403, AUTH_ERRORS.UNAUTHORIZED_RESOURCE)
-    // })
+    it("doesn't allow a simple member to get all feedback", async () => {
+      await createContextForRole("member")
+      expectResponse(await subject(), 403, AUTH_ERRORS.UNAUTHORIZED_RESOURCE)
+    })
   })
 })

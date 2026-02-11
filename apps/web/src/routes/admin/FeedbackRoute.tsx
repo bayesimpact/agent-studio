@@ -12,7 +12,7 @@ import { useAppSelector } from "@/store/hooks"
 import { LoadingRoute } from "../LoadingRoute"
 import { NotFoundRoute } from "../NotFoundRoute"
 
-export function FeedbacksRoute() {
+export function FeedbackRoute() {
   const agentId = useAppSelector(selectCurrentAgentId)
   const agent = useAppSelector(selectAgentData)
   const feedbacksData = useAppSelector(selectFeedbacksFromAgentId(agentId))
@@ -33,7 +33,7 @@ function WithData({ feedbacks, agent }: { feedbacks: AgentMessageFeedback[]; age
       {feedbacks.length === 0 ? (
         <EmptyFeedback agent={agent} />
       ) : (
-        <div className="grid grid-cols-1 gap-4">
+        <div className="grid grid-cols-1 divide-y-4 divide-gray-100">
           {feedbacks.map((feedback) => (
             <FeedbackItem key={feedback.id} feedback={feedback} />
           ))}

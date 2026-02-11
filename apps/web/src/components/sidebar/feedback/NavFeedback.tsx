@@ -4,7 +4,7 @@ import { useMemo } from "react"
 import { useTranslation } from "react-i18next"
 import { Link, useLocation } from "react-router-dom"
 import { useAbility } from "@/hooks/use-ability"
-import { buildFeedbacksPath } from "@/routes/helpers"
+import { buildFeedbackPath } from "@/routes/helpers"
 
 export function NavFeedback({
   organizationId,
@@ -19,7 +19,7 @@ export function NavFeedback({
   const { isAdminInterface } = useAbility()
   const isActive = useIsFeedbackActive(agentId)
   if (!isAdminInterface) return null
-  const path = buildFeedbacksPath({ organizationId, projectId, agentId })
+  const path = buildFeedbackPath({ organizationId, projectId, agentId })
   return (
     <SidebarMenu>
       <SidebarMenuItem>

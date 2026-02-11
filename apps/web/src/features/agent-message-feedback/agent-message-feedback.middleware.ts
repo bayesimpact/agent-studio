@@ -63,18 +63,13 @@ listenerMiddleware.startListening({
 
 listenerMiddleware.startListening({
   actionCreator: createAgentMessageFeedback.fulfilled,
-  effect: async (action, listenerApi) => {
-    const feedback = action.payload
-
+  effect: async (_, listenerApi) => {
     listenerApi.dispatch(
       notificationsActions.show({
         title: "Feedback submitted successfully",
         type: "success",
       }),
     )
-
-    const onSuccess = action.meta.arg.onSuccess
-    onSuccess?.({ feedbackId: feedback.id })
   },
 })
 

@@ -1,9 +1,9 @@
 import { Column, Entity, JoinColumn, ManyToOne } from "typeorm"
 import { Base4AllEntity } from "@/common/entities/base4all.entity"
-import { AgentMessage } from "@/domains/agent-sessions/agent-message.entity"
 import { Organization } from "@/domains/organizations/organization.entity"
 import { Project } from "@/domains/projects/project.entity"
 import { User } from "@/domains/users/user.entity"
+import { AgentMessage } from "../agent-sessions/agent-message.entity"
 
 @Entity({ name: "agent_message_feedback" })
 export class AgentMessageFeedback extends Base4AllEntity {

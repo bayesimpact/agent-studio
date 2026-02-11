@@ -1,5 +1,6 @@
 {
   "common": {
+    "send": "Send",
     "download": "Download",
     "loading": "Loading...",
     "loadingDescription": "Please wait while we load data.",
@@ -16,7 +17,8 @@
     "fileIsStored": "File is stored",
     "fileIsNotStored": "File is not stored",
     "storeFile": "Store file",
-    "feedback": "Feedback"
+    "feedback": "Feedback",
+    "description": "Description"
   },
   "project": {
     "createButton": {
@@ -184,6 +186,11 @@
     "empty": {
       "title": "No feedbacks for {{agentName}}",
       "description": "No user feedback has been submitted for this agent yet."
+    },
+    "create": {
+      "report": "Report",
+      "title": "Report a problem with this message",
+      "description": "Please provide details about the issue you encountered with this message. Your feedback will help us improve our agents."
     }
   }
 }

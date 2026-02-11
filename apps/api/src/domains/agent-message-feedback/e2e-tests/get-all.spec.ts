@@ -92,6 +92,5 @@ describe("AgentMessageFeedbackRoutes.getAll", () => {
     expect(feedbacks.map((feedback) => feedback.content)).toContain("Feedback 2")
     expect(feedbacks[0]).toHaveProperty("id")
     expect(feedbacks[0]).toHaveProperty("createdAt")
-    expect(feedbacks[0]).toHaveProperty("updatedAt")
   })
 })

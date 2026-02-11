@@ -1,5 +1,6 @@
 {
   "common": {
+    "send": "Envoyer",
     "download": "Télécharger",
     "loading": "Chargement...",
     "loadingDescription": "Veuillez patienter pendant le chargement des données.",
@@ -16,7 +17,8 @@
     "fileIsStored": "Le fichier est stocké",
     "fileIsNotStored": "Le fichier n'est pas stocké",
     "storeFile": "Stocker le fichier",
-    "feedback": "Retours utilisateur"
+    "feedback": "Retours utilisateur",
+    "description": "Description"
   },
   "project": {
     "createButton": {
@@ -184,6 +186,11 @@
     "empty": {
       "title": "Aucun retour pour {{agentName}}",
       "description": "Aucun retour utilisateur n'a encore été soumis pour cet agent."
+    },
+    "create": {
+      "report": "Aider à améliorer",
+      "title": "Signaler un problème avec ce message",
+      "description": "Merci de fournir des détails sur le problème que vous avez rencontré avec ce message. Votre retour nous aidera à améliorer nos agents."
     }
   }
 }
