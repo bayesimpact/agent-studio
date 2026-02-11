@@ -8,7 +8,7 @@ import {
   teardownTestDatabase,
 } from "@/common/test/test-transaction-manager"
 import { removeNullish } from "@/common/utils/remove-nullish"
-import { createOrganizationWithAgent } from "@/domains/organizations/organization.factory"
+import { createOrganizationWithAgentMessage } from "@/domains/organizations/organization.factory"
 import { setupUserGuardForTesting } from "../../../../test/e2e.helpers"
 import { expectResponse, type Requester, testRequester } from "../../../../test/request"
 import { AgentMessageFeedbackModule } from "../agent-message-feedback.module"
@@ -25,6 +25,7 @@ describe("Agent Message Feedback - Auth", () => {
   let organizationId: string | null = "random-organization-id"
   let projectId: string | null = "random-project-id"
   let agentId: string | null = "random-agent-id"
+  let agentMessageId: string | null = "random-agent-message-id"
   let accessToken: string | null = "token"
   let auth0Id = "auth0|123"
 
@@ -45,6 +46,7 @@ describe("Agent Message Feedback - Auth", () => {
     organizationId = "random-organization-id"
     projectId = "random-project-id"
     agentId = "random-agent-id"
+    agentMessageId = "random-agent-message-id"
     accessToken = "token"
     auth0Id = "auth0|123"
   })
@@ -55,16 +57,59 @@ describe("Agent Message Feedback - Auth", () => {
   })
 
   const createContextForRole = async (role: "owner" | "admin" | "member" = "owner") => {
-    const { user, organization, project, agent } = await createOrganizationWithAgent(repositories, {
-      membership: { role },
-    })
+    const { user, organization, project, agentMessage } = await createOrganizationWithAgentMessage(
+      repositories,
+      {
+        membership: { role },
+      },
+    )
     organizationId = organization.id
     projectId = project.id
-    agentId = agent.id
+    agentMessageId = agentMessage.id
     accessToken = "token"
     auth0Id = user.auth0Id
     return { organization, project }
   }
+
+  describe("AgentMessageFeedbackRoutes.createOne", () => {
+    const subject = async (payload?: typeof AgentMessageFeedbackRoutes.createOne.request) =>
+      request({
+        route: AgentMessageFeedbackRoutes.createOne,
+        pathParams: removeNullish({ organizationId, projectId, agentMessageId }),
+        token: accessToken ?? undefined,
+        request: payload,
+      })
+
+    it("requires an authentication token", async () => {
+      accessToken = null
+      expectResponse(await subject(), 401, AUTH_ERRORS.NO_ACCESS_TOKEN)
+    })
+    it("requires a valid organization ID", async () => {
+      organizationId = null
+      expectResponse(await subject(), 400, AUTH_ERRORS.NO_ORGANIZATION_ID)
+    })
+    it("requires a valid project ID", async () => {
+      await createContextForRole("owner")
+      projectId = null // reset to a non-null value
+      expectResponse(await subject(), 404)
+    })
+    // FIXME: using AgentGuard
+    //  it("requires a valid agent ID", async () => {
+    //   await createContextForRole("owner")
+    //   agentId = null // reset to a non-null value
+    //   expectResponse(await subject(), 404)
+    // })
+    it("requires the user to be a member of the organization", async () => {
+      await createContextForRole("owner")
+      auth0Id = "another-auth0-id" // this will trigger a new user to be created in the database
+      expectResponse(await subject(), 401, AUTH_ERRORS.NOT_MEMBER_OF_ORG)
+    })
+    // FIXME: using AgentMessageFeedbackGuard
+    // it("doesn't allow a simple member to get all feedback", async () => {
+    //   await createContextForRole("member")
+    //   expectResponse(await subject(), 403, AUTH_ERRORS.UNAUTHORIZED_RESOURCE)
+    // })
+  })
 
   describe("AgentMessageFeedbackRoutes.getAll", () => {
     const subject = async (payload?: typeof AgentMessageFeedbackRoutes.getAll.request) =>

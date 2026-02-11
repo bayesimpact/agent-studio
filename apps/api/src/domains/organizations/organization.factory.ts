@@ -180,6 +180,7 @@ export async function createOrganizationWithAgent(
 type CreateOrganizationWithAgentSessionParams = {
   organization?: Partial<Organization>
   user?: Partial<User>
+  membership?: Partial<UserMembership>
   project?: Partial<Project>
   agent?: Partial<Agent>
   agentSession?: Partial<AgentSession>
@@ -210,6 +211,7 @@ export async function createOrganizationWithAgentSession(
     {
       organization: params.organization,
       user: params.user,
+      membership: params.membership,
       project: params.project,
       agent: params.agent,
     },
@@ -233,6 +235,7 @@ export async function createOrganizationWithAgentSession(
 type CreateOrganizationWithAgentMessageParams = {
   organization?: Partial<Organization>
   user?: Partial<User>
+  membership?: Partial<UserMembership>
   project?: Partial<Project>
   agent?: Partial<Agent>
   agentSession?: Partial<AgentSession>
@@ -265,6 +268,7 @@ export async function createOrganizationWithAgentMessage(
     await createOrganizationWithAgentSession(repositories, {
       organization: params.organization,
       user: params.user,
+      membership: params.membership,
       project: params.project,
       agent: params.agent,
       agentSession: params.agentSession,
