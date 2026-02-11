@@ -46,6 +46,7 @@ export interface TransactionalTestSetup {
     agentRepository: Repository<Agent>
     agentSessionRepository: Repository<AgentSession>
     agentMessageRepository: Repository<AgentMessage>
+    agentMessageFeedbackRepository: Repository<AgentMessageFeedback>
     documentRepository: Repository<Document>
   }
   startTransaction: () => Promise<void>
@@ -202,6 +203,7 @@ export async function setupTransactionalTestDatabase(
     agentRepository: getRepository(Agent),
     agentSessionRepository: getRepository(AgentSession),
     agentMessageRepository: getRepository(AgentMessage),
+    agentMessageFeedbackRepository: getRepository(AgentMessageFeedback),
     documentRepository: getRepository(Document),
   })
 

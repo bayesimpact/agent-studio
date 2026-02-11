@@ -1,6 +1,8 @@
 import { randomUUID } from "node:crypto"
 import { Factory } from "fishery"
 import type { Repository } from "typeorm"
+import type { AgentMessage } from "@/domains/agent-sessions/agent-message.entity"
+import { agentMessageFactory } from "@/domains/agent-sessions/agent-messages.factory"
 import type { AgentSession } from "@/domains/agent-sessions/agent-session.entity"
 import { agentSessionFactory } from "@/domains/agent-sessions/agent-session.factory"
 import type { Agent } from "@/domains/agents/agent.entity"
@@ -225,6 +227,62 @@ export async function createOrganizationWithAgentSession(
     project,
     agent,
     agentSession,
+  }
+}
+
+type CreateOrganizationWithAgentMessageParams = {
+  organization?: Partial<Organization>
+  user?: Partial<User>
+  project?: Partial<Project>
+  agent?: Partial<Agent>
+  agentSession?: Partial<AgentSession>
+  agentMessage?: Partial<AgentMessage>
+}
+
+type CreateOrganizationWithAgentMessageRepositories = {
+  organizationRepository: Repository<Organization>
+  userRepository: Repository<User>
+  membershipRepository: Repository<UserMembership>
+  projectRepository: Repository<Project>
+  agentRepository: Repository<Agent>
+  agentSessionRepository: Repository<AgentSession>
+  agentMessageRepository: Repository<AgentMessage>
+}
+
+export async function createOrganizationWithAgentMessage(
+  repositories: CreateOrganizationWithAgentMessageRepositories,
+  params: CreateOrganizationWithAgentMessageParams = {},
+): Promise<{
+  organization: Organization
+  user: User
+  membership: UserMembership
+  project: Project
+  agent: Agent
+  agentSession: AgentSession
+  agentMessage: AgentMessage
+}> {
+  const { organization, user, membership, project, agent, agentSession } =
+    await createOrganizationWithAgentSession(repositories, {
+      organization: params.organization,
+      user: params.user,
+      project: params.project,
+      agent: params.agent,
+      agentSession: params.agentSession,
+    })
+
+  const agentMessage = agentMessageFactory
+    .transient({ session: agentSession })
+    .build(params.agentMessage)
+  await repositories.agentMessageRepository.save(agentMessage)
+
+  return {
+    organization,
+    user,
+    membership,
+    project,
+    agent,
+    agentSession,
+    agentMessage,
   }
 }
 

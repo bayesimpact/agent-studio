@@ -3,6 +3,7 @@ import {
   AgentMessageFeedbackRoutes,
 } from "@caseai-connect/api-contracts"
 import { Body, Controller, Get, Param, Post, Req, UseGuards } from "@nestjs/common"
+import { CheckPolicy } from "@/common/policies/check-policy.decorator"
 import { JwtAuthGuard } from "@/domains/auth/jwt-auth.guard"
 import { OrganizationGuard } from "@/domains/organizations/organization.guard"
 import { ProjectsGuard } from "@/domains/projects/projects.guard"
@@ -17,6 +18,7 @@ import { AgentMessageFeedbackService } from "./agent-message-feedback.service"
 export class AgentMessageFeedbackController {
   constructor(private readonly feedbackService: AgentMessageFeedbackService) {}
 
+  @CheckPolicy((policy) => policy.canCreate())
   @Post(AgentMessageFeedbackRoutes.createOne.path)
   async createOne(
     @Req() request: EndpointRequestWithProject,
@@ -34,14 +36,15 @@ export class AgentMessageFeedbackController {
     return { data: toFeedbackDto(feedback) }
   }
 
+  @CheckPolicy((policy) => policy.canList())
   @Get(AgentMessageFeedbackRoutes.getAll.path)
   async getAll(
     // @Req() request: EndpointRequestWithProject,
-    @Param("agentMessageId") agentMessageId: string,
+    @Param("agentId") agentId: string,
   ): Promise<typeof AgentMessageFeedbackRoutes.getAll.response> {
-    // const user = request.user
+    // FIXME: user request.agentId when AgentGuard will be added
 
-    const feedbacks = await this.feedbackService.listFeedbacksForAgent(agentMessageId)
+    const feedbacks = await this.feedbackService.listFeedbacksForAgent(agentId)
 
     return { data: { feedbacks: feedbacks.map(toFeedbackDto) } }
   }
