@@ -11,6 +11,7 @@ import { useBuildPath } from "@/hooks/use-build-path"
 import { ADS } from "@/store/async-data-status"
 import { useAppSelector } from "@/store/hooks"
 import { getLocale } from "@/utils/get-locale"
+import { NavFeedback } from "../../feedback/NavFeedback"
 import type { MenuItem } from "../../types"
 import { CreateAgentSession } from "./CreateAgentSession"
 
@@ -66,6 +67,8 @@ export function AgentSessionList({
           </SidebarMenuSubButton>
         </SidebarMenuSubItem>
       ))}
+
+      <NavFeedback organizationId={organizationId} projectId={projectId} agentId={agentId} />
     </SidebarMenuSub>
   )
 }

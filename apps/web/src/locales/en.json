@@ -15,7 +15,8 @@
     "processingFile": "Processing file...",
     "fileIsStored": "File is stored",
     "fileIsNotStored": "File is not stored",
-    "storeFile": "Store file"
+    "storeFile": "Store file",
+    "feedback": "Feedback"
   },
   "project": {
     "createButton": {
@@ -174,6 +175,15 @@
       "description": "Are you sure you want to delete \"{{name}}\"? This action cannot be undone.",
       "submit": "Delete",
       "submitting": "Deleting..."
+    }
+  },
+  "feedbacks": {
+    "header": {
+      "title": "Feedbacks for {{agentName}}"
+    },
+    "empty": {
+      "title": "No feedbacks for {{agentName}}",
+      "description": "No user feedback has been submitted for this agent yet."
     }
   }
 }

@@ -1,3 +1,4 @@
+import agentMessageFeedbackApi from "@/features/agent-message-feedback/external/agent-message-feedback.api"
 import agentSessionsApi from "@/features/agent-sessions/external/agent-sessions.api"
 import agentsApi from "@/features/agents/external/agents.api"
 import documentsApi from "@/features/documents/external/documents.api"
@@ -6,6 +7,7 @@ import organizationsApi from "@/features/organizations/external/organizations.ap
 import projectsApi from "@/features/projects/external/projects.api"
 
 export const services = {
+  agentMessageFeedback: agentMessageFeedbackApi,
   agents: agentsApi,
   agentSessions: agentSessionsApi,
   me: meApi,

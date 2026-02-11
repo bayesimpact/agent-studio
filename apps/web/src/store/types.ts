@@ -1,5 +1,6 @@
 import type { ThunkDispatch, UnknownAction } from "@reduxjs/toolkit"
 import type { Services } from "@/di/services"
+import type { agentMessageFeedbackSliceReducer } from "@/features/agent-message-feedback/agent-message-feedback.slice"
 import type { agentSessionsSliceReducer } from "@/features/agent-sessions/agent-sessions.slice"
 import type { agentsSliceReducer } from "@/features/agents/agents.slice"
 import type { authSliceReducer } from "@/features/auth/auth.slice"
@@ -12,6 +13,7 @@ import type { projectsSliceReducer } from "@/features/projects/projects.slice"
 // Define the store state structure without creating the store
 // This allows us to use these types in listenerMiddleware without circular dependencies
 export type RootState = {
+  agentMessageFeedback: ReturnType<typeof agentMessageFeedbackSliceReducer>
   auth: ReturnType<typeof authSliceReducer>
   agents: ReturnType<typeof agentsSliceReducer>
   agentSessions: ReturnType<typeof agentSessionsSliceReducer>
