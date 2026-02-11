@@ -14,7 +14,7 @@ export enum RouteNames {
   ADMIN = "/admin",
   DOCUMENTS = "/o/:organizationId/p/:projectId/d",
   DOCUMENT = "/o/:organizationId/p/:projectId/d/:documentId",
-  FEEDBACKS = "/o/:organizationId/p/:projectId/a/:agentId/f",
+  FEEDBACK = "/o/:organizationId/p/:projectId/a/:agentId/f",
 
   // END USER ROUTES
   APP = "/app",
@@ -42,7 +42,7 @@ export const buildDocumentsPath = ({
   )
 }
 
-export const buildFeedbacksPath = ({
+export const buildFeedbackPath = ({
   organizationId,
   projectId,
   agentId,
@@ -52,7 +52,7 @@ export const buildFeedbacksPath = ({
   agentId: string
 }) => {
   return buildAdminPath(
-    RouteNames.FEEDBACKS.toString()
+    RouteNames.FEEDBACK.toString()
       .replace(":organizationId", organizationId)
       .replace(":projectId", projectId)
       .replace(":agentId", agentId),

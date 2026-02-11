@@ -14,22 +14,22 @@ export const listAgentMessageFeedbacks = createAsyncThunk<
 )
 
 export const createAgentMessageFeedback = createAsyncThunk<
-  AgentMessageFeedback,
+  void,
   {
     organizationId: string
     projectId: string
     agentMessageId: string
     content: string
-    onSuccess?: (params: { feedbackId: string }) => void
   },
   ThunkConfig
 >(
   "agentMessageFeedback/create",
-  async ({ organizationId, projectId, agentMessageId, content }, { extra: { services } }) =>
+  async ({ organizationId, projectId, agentMessageId, content }, { extra: { services } }) => {
     await services.agentMessageFeedback.createOne({
       organizationId,
       projectId,
       agentMessageId,
       content,
-    }),
+    })
+  },
 )

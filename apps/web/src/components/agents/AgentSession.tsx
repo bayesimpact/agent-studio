@@ -1,5 +1,6 @@
 import { Button } from "@caseai-connect/ui/shad/button"
 import { Spinner } from "@caseai-connect/ui/shad/spinner"
+import { cn } from "@caseai-connect/ui/utils"
 import {
   AlertCircleIcon,
   CirclePlusIcon,
@@ -15,6 +16,7 @@ import type {
 import { selectStreaming } from "@/features/agent-sessions/agent-sessions.selectors"
 import { sendMessage } from "@/features/agent-sessions/agent-sessions.thunks"
 import { useAppDispatch, useAppSelector } from "@/store/hooks"
+import { CreateFeedbackDialog } from "../agent-message-feedback/CreateFeedbackDialog"
 import {
   Chat,
   ChatActions,
@@ -157,15 +159,18 @@ function Message({ message }: { message: AgentSessionMessage }) {
   const isError = message.status === "error"
   if (isAssistant) {
     return (
-      <ChatBotMessage
-        key={message.id}
-        className={isError ? "bg-red-50 border border-red-200 text-red-800" : undefined}
-      >
-        {isStreaming && <ThinkingMessage />}
-        {isError && <ErrorMessage />}
+      <div key={message.id} className="max-w-3/4 relative">
+        <ChatBotMessage
+          className={cn("pb-8", isError && "bg-red-50 border border-red-200 text-red-800")}
+        >
+          {isStreaming && <ThinkingMessage />}
+          {isError && <ErrorMessage />}
 
-        <MarkdownWrapper content={message.content} />
-      </ChatBotMessage>
+          <MarkdownWrapper content={message.content} />
+        </ChatBotMessage>
+
+        <CreateFeedbackDialog message={message} />
+      </div>
     )
   } else return <ChatUserMessage key={message.id}>{message.content}</ChatUserMessage>
 }

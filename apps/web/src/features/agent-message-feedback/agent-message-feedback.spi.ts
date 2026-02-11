@@ -1,3 +1,4 @@
+import type { SuccessResponseDTO } from "@caseai-connect/api-contracts"
 import type { AgentMessageFeedback } from "./agent-message-feedback.models"
 
 export interface IAgentMessageFeedbackSpi {
@@ -11,5 +12,5 @@ export interface IAgentMessageFeedbackSpi {
     projectId: string
     agentMessageId: string
     content: string
-  }): Promise<AgentMessageFeedback>
+  }): Promise<SuccessResponseDTO>
 }

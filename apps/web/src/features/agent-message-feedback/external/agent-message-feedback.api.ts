@@ -22,9 +22,9 @@ export default {
         projectId,
         agentMessageId,
       }),
-      { content },
+      { payload: { content } } satisfies typeof AgentMessageFeedbackRoutes.createOne.request,
     )
-    return toFeedback(response.data.data)
+    return response.data.data
   },
 } satisfies IAgentMessageFeedbackSpi
 
@@ -33,10 +33,13 @@ function toFeedback(dto: AgentMessageFeedbackDto): AgentMessageFeedback {
     id: dto.id,
     organizationId: dto.organizationId,
     projectId: dto.projectId,
+    agentId: dto.agentId,
+    agentSessionId: dto.agentSessionId,
     agentMessageId: dto.agentMessageId,
+    agentMessageContent: dto.agentMessageContent,
+    traceUrl: dto.traceUrl,
     userId: dto.userId,
     content: dto.content,
     createdAt: dto.createdAt,
-    updatedAt: dto.updatedAt,
   }
 }
