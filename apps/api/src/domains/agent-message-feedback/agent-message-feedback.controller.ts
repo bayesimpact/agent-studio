@@ -10,12 +10,12 @@ import { AgentGuard } from "../agents/agent.guard"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
 import { AgentMessageFeedbackService } from "./agent-message-feedback.service"
 
-@UseGuards(JwtAuthGuard, UserGuard, OrganizationGuard) // FIXME: use ProjectsGuard here
+@UseGuards(JwtAuthGuard, UserGuard, OrganizationGuard, ProjectsGuard)
 @Controller()
 export class AgentMessageFeedbackController {
   constructor(private readonly feedbackService: AgentMessageFeedbackService) {}
 
-  // FIXME: guard and policy
+  @CheckPolicy((policy) => policy.canList())
   @Post(AgentMessageFeedbackRoutes.createOne.path)
   async createOne(
     @Req() request: EndpointRequestWithProject,
@@ -35,7 +35,7 @@ export class AgentMessageFeedbackController {
     return { data: { success: true } }
   }
 
-  @UseGuards(ProjectsGuard, AgentGuard) // TODO: remove ProjectsGuard here
+  @UseGuards(AgentGuard)
   @CheckPolicy((policy) => policy.canList())
   @Get(AgentMessageFeedbackRoutes.getAll.path)
   async getAll(

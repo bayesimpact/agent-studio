@@ -87,12 +87,11 @@ describe("Agent Message Feedback - Auth", () => {
       organizationId = null
       expectResponse(await subject(), 400, AUTH_ERRORS.NO_ORGANIZATION_ID)
     })
-    // FIXME: when ProjectsGuard will be added to controller
-    // it("requires a valid project ID", async () => {
-    //   await createContextForRole("member")
-    //   projectId = null // reset to a non-null value
-    //   expectResponse(await subject(), 404)
-    // })
+    it("requires a valid project ID", async () => {
+      await createContextForRole("member")
+      projectId = null // reset to a non-null value
+      expectResponse(await subject(), 404)
+    })
     it("requires the user to be a member of the organization", async () => {
       await createContextForRole("member")
       auth0Id = "another-auth0-id" // this will trigger a new user to be created in the database
