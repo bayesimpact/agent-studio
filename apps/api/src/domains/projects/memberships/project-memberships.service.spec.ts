@@ -8,11 +8,11 @@ import {
 } from "@/common/test/test-transaction-manager"
 import { createOrganizationWithProject } from "@/domains/organizations/organization.factory"
 import { userFactory } from "@/domains/users/user.factory"
-import { projectFactory } from "./project.factory"
+import { projectFactory } from "../project.factory"
+import { ProjectsModule } from "../projects.module"
 import type { ProjectMembership } from "./project-membership.entity"
 import { projectMembershipFactory } from "./project-membership.factory"
 import { ProjectMembershipsService } from "./project-memberships.service"
-import { ProjectsModule } from "./projects.module"
 
 describe("ProjectMembershipsService", () => {
   let service: ProjectMembershipsService

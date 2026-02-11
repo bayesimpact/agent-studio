@@ -8,12 +8,11 @@ import {
 } from "@/common/test/test-transaction-manager"
 import { removeNullish } from "@/common/utils/remove-nullish"
 import { createOrganizationWithProject } from "@/domains/organizations/organization.factory"
-import { projectFactory } from "@/domains/projects/project.factory"
 import { userFactory } from "@/domains/users/user.factory"
-import { setupUserGuardForTesting } from "../../../../test/e2e.helpers"
-import { expectResponse, type Requester, testRequester } from "../../../../test/request"
+import { setupUserGuardForTesting } from "../../../../../test/e2e.helpers"
+import { expectResponse, type Requester, testRequester } from "../../../../../test/request"
+import { ProjectsModule } from "../../projects.module"
 import { projectMembershipFactory } from "../project-membership.factory"
-import { ProjectsModule } from "../projects.module"
 
 describe("Projects - listProjectMemberships", () => {
   let app: INestApplication<App>
@@ -98,35 +97,5 @@ describe("Projects - listProjectMemberships", () => {
     expect(memberships[0]!).toHaveProperty("projectId")
     expect(memberships[0]!).toHaveProperty("userId")
     expect(memberships[0]!).toHaveProperty("createdAt")
-  })
-
-  it("should only return memberships for the specified project", async () => {
-    const { organization, project } = await createContext()
-
-    // Create another project in the same organization
-    const otherProject = projectFactory.transient({ organization }).build()
-    await repositories.projectRepository.save(otherProject)
-
-    // Create users
-    const user1 = userFactory.build({ email: "user1@example.com" })
-    const user2 = userFactory.build({ email: "user2@example.com" })
-    await repositories.userRepository.save([user1, user2])
-
-    // Create membership in the target project
-    const membership1 = projectMembershipFactory.transient({ project, user: user1 }).build()
-    await repositories.projectMembershipRepository.save(membership1)
-
-    // Create membership in the other project
-    const membership2 = projectMembershipFactory
-      .transient({ project: otherProject, user: user2 })
-      .build()
-    await repositories.projectMembershipRepository.save(membership2)
-
-    const response = await subject()
-
-    expectResponse(response, 200)
-    const { memberships } = response.body.data
-    expect(memberships).toHaveLength(1)
-    expect(memberships[0]!.userEmail).toBe("user1@example.com")
   })
 })

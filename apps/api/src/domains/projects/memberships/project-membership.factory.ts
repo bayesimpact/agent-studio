@@ -1,7 +1,7 @@
 import { randomUUID } from "node:crypto"
 import { Factory } from "fishery"
 import type { User } from "@/domains/users/user.entity"
-import type { Project } from "./project.entity"
+import type { Project } from "../project.entity"
 import type { ProjectMembership, ProjectMembershipStatus } from "./project-membership.entity"
 
 type ProjectMembershipTransientParams = {

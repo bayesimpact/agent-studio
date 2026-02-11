@@ -2,7 +2,7 @@ import { organizationFactory } from "@/domains/organizations/organization.factor
 import type { MembershipRole } from "@/domains/organizations/user-membership.entity"
 import { userMembershipFactory } from "@/domains/organizations/user-membership.factory"
 import { userFactory } from "@/domains/users/user.factory"
-import { projectFactory } from "./project.factory"
+import { projectFactory } from "../project.factory"
 import { projectMembershipFactory } from "./project-membership.factory"
 import { ProjectMembershipPolicy } from "./project-membership.policy"
 

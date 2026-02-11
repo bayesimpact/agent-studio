@@ -18,8 +18,8 @@ import { Agent } from "@/domains/agents/agent.entity"
 import { Document } from "@/domains/documents/document.entity"
 import { Organization } from "@/domains/organizations/organization.entity"
 import { UserMembership } from "@/domains/organizations/user-membership.entity"
+import { ProjectMembership } from "@/domains/projects/memberships/project-membership.entity"
 import { Project } from "@/domains/projects/project.entity"
-import { ProjectMembership } from "@/domains/projects/project-membership.entity"
 import { User } from "@/domains/users/user.entity"
 
 const TEST_ENTITIES = [

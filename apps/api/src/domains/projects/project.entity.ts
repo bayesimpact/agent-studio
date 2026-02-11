@@ -4,7 +4,7 @@ import { AgentMessageFeedback } from "@/domains/agent-message-feedback/agent-mes
 import { Agent } from "@/domains/agents/agent.entity"
 import { Document } from "@/domains/documents/document.entity"
 import { Organization } from "@/domains/organizations/organization.entity"
-import { ProjectMembership } from "./project-membership.entity"
+import { ProjectMembership } from "./memberships/project-membership.entity"
 
 @Entity("project")
 export class Project extends Base4AllEntity {

@@ -8,12 +8,12 @@ import type {
   EndpointRequestWithProject,
   EndpointRequestWithProjectMembership,
 } from "@/request.interface"
+import { ProjectsGuard } from "../projects.guard"
+import { ProjectsRoutes } from "../projects.routes"
 import type { ProjectMembership } from "./project-membership.entity"
 import { ProjectMembershipsGuard } from "./project-memberships.guard"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
 import { ProjectMembershipsService } from "./project-memberships.service"
-import { ProjectsGuard } from "./projects.guard"
-import { ProjectsRoutes } from "./projects.routes"
 
 @UseGuards(JwtAuthGuard, UserGuard, OrganizationGuard, ProjectsGuard, ProjectMembershipsGuard)
 @Controller()

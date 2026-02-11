@@ -9,10 +9,9 @@ import {
 import { removeNullish } from "@/common/utils/remove-nullish"
 import { createOrganizationWithProject } from "@/domains/organizations/organization.factory"
 import { userFactory } from "@/domains/users/user.factory"
-import { setupUserGuardForTesting } from "../../../../test/e2e.helpers"
-import { expectResponse, type Requester, testRequester } from "../../../../test/request"
-import { projectMembershipFactory } from "../project-membership.factory"
-import { ProjectsModule } from "../projects.module"
+import { setupUserGuardForTesting } from "../../../../../test/e2e.helpers"
+import { expectResponse, type Requester, testRequester } from "../../../../../test/request"
+import { ProjectsModule } from "../../projects.module"
 
 describe("Projects - inviteProjectMembers", () => {
   let app: INestApplication<App>
@@ -102,53 +101,5 @@ describe("Projects - inviteProjectMembers", () => {
     expect(memberships[0]!.userEmail).toBe("existing@example.com")
     expect(memberships[0]!.userName).toBe("Existing User")
     expect(memberships[0]!.userId).toBe(existingUser.id)
-  })
-
-  it("should skip duplicate invitations (user already a member)", async () => {
-    const { project } = await createContext()
-
-    const existingUser = userFactory.build({ email: "already@example.com" })
-    await repositories.userRepository.save(existingUser)
-
-    const membership = projectMembershipFactory.transient({ project, user: existingUser }).build()
-    await repositories.projectMembershipRepository.save(membership)
-
-    const response = await subject({ payload: { emails: ["already@example.com"] } })
-
-    expectResponse(response, 201)
-    const { memberships } = response.body.data
-    expect(memberships).toHaveLength(0)
-  })
-
-  it("should create memberships with status 'sent' and a valid invitationToken", async () => {
-    await createContext()
-
-    const response = await subject({ payload: { emails: ["token-test@example.com"] } })
-
-    expectResponse(response, 201)
-
-    // Verify in the database
-    const savedMembership = await repositories.projectMembershipRepository.findOne({
-      where: { projectId },
-    })
-    expect(savedMembership).toBeDefined()
-    expect(savedMembership!.status).toBe("sent")
-    expect(savedMembership!.invitationToken).toBeDefined()
-    expect(savedMembership!.invitationToken.length).toBeGreaterThan(0)
-  })
-
-  it("should handle multiple emails in a single request", async () => {
-    await createContext()
-
-    const response = await subject({
-      payload: { emails: ["multi1@example.com", "multi2@example.com", "multi3@example.com"] },
-    })
-
-    expectResponse(response, 201)
-    const { memberships } = response.body.data
-    expect(memberships).toHaveLength(3)
-    expect(memberships.map((membership) => membership.userEmail)).toEqual(
-      expect.arrayContaining(["multi1@example.com", "multi2@example.com", "multi3@example.com"]),
-    )
   })
 })

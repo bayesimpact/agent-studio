@@ -6,10 +6,10 @@ import { OrganizationsModule } from "@/domains/organizations/organizations.modul
 import { UserMembership } from "@/domains/organizations/user-membership.entity"
 import { User } from "@/domains/users/user.entity"
 import { UsersModule } from "@/domains/users/users.module"
+import { ProjectMembership } from "./memberships/project-membership.entity"
+import { ProjectMembershipsController } from "./memberships/project-memberships.controller"
+import { ProjectMembershipsService } from "./memberships/project-memberships.service"
 import { Project } from "./project.entity"
-import { ProjectMembership } from "./project-membership.entity"
-import { ProjectMembershipsController } from "./project-memberships.controller"
-import { ProjectMembershipsService } from "./project-memberships.service"
 import { ProjectsController } from "./projects.controller"
 import { ProjectsService } from "./projects.service"
 

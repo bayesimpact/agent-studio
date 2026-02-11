@@ -9,10 +9,10 @@ import {
 import { removeNullish } from "@/common/utils/remove-nullish"
 import { createOrganizationWithProject } from "@/domains/organizations/organization.factory"
 import { userFactory } from "@/domains/users/user.factory"
-import { setupUserGuardForTesting } from "../../../../test/e2e.helpers"
-import { expectResponse, type Requester, testRequester } from "../../../../test/request"
+import { setupUserGuardForTesting } from "../../../../../test/e2e.helpers"
+import { expectResponse, type Requester, testRequester } from "../../../../../test/request"
+import { ProjectsModule } from "../../projects.module"
 import { projectMembershipFactory } from "../project-membership.factory"
-import { ProjectsModule } from "../projects.module"
 
 describe("Projects - removeProjectMembership", () => {
   let app: INestApplication<App>

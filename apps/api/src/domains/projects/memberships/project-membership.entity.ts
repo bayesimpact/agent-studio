@@ -9,7 +9,7 @@ import {
   UpdateDateColumn,
 } from "typeorm"
 import { User } from "@/domains/users/user.entity"
-import { Project } from "./project.entity"
+import { Project } from "../project.entity"
 
 export type ProjectMembershipStatus = "sent" | "accepted"
 
