@@ -10,8 +10,11 @@ import {
 } from "@/common/test/test-transaction-manager"
 import { removeNullish } from "@/common/utils/remove-nullish"
 import { createOrganizationWithProject } from "@/domains/organizations/organization.factory"
+import { projectFactory } from "@/domains/projects/project.factory"
+import { userFactory } from "@/domains/users/user.factory"
 import { setupUserGuardForTesting } from "../../../../test/e2e.helpers"
 import { expectResponse, type Requester, testRequester } from "../../../../test/request"
+import { projectMembershipFactory } from "../project-membership.factory"
 import { ProjectsModule } from "../projects.module"
 
 describe("Projects - Auth", () => {
@@ -183,6 +186,148 @@ describe("Projects - Auth", () => {
     })
     it("doesn't allow a simple member to update a project", async () => {
       await createContextForRole("member")
+      expectResponse(await subject(), 403, AUTH_ERRORS.UNAUTHORIZED_RESOURCE)
+    })
+  })
+
+  describe("ProjectsRoutes.listProjectMemberships", () => {
+    const subject = async () =>
+      request({
+        route: ProjectsRoutes.listProjectMemberships,
+        pathParams: removeNullish({ organizationId, projectId }),
+        token: accessToken ?? undefined,
+      })
+
+    it("requires an authentication token", async () => {
+      accessToken = null
+      expectResponse(await subject(), 401, AUTH_ERRORS.NO_ACCESS_TOKEN)
+    })
+    it("requires a valid organization ID", async () => {
+      organizationId = null
+      expectResponse(await subject(), 400, AUTH_ERRORS.NO_ORGANIZATION_ID)
+    })
+    it("requires the user to be a member of the organization", async () => {
+      await createContextForRole("owner")
+      auth0Id = "another-auth0-id"
+      expectResponse(await subject(), 401, AUTH_ERRORS.NOT_MEMBER_OF_ORG)
+    })
+    it("requires an existing project ID", async () => {
+      await createContextForRole("owner")
+      projectId = randomUUID()
+      expectResponse(await subject(), 404)
+    })
+    it("doesn't allow a simple member to list project memberships", async () => {
+      await createContextForRole("member")
+      expectResponse(await subject(), 403, AUTH_ERRORS.UNAUTHORIZED_RESOURCE)
+    })
+    it("allows the owner to list project memberships", async () => {
+      await createContextForRole("owner")
+      expectResponse(await subject(), 200)
+    })
+    it("allows the admin to list project memberships", async () => {
+      await createContextForRole("admin")
+      expectResponse(await subject(), 200)
+    })
+  })
+
+  describe("ProjectsRoutes.inviteProjectMembers", () => {
+    const subject = async (payload?: typeof ProjectsRoutes.inviteProjectMembers.request) =>
+      request({
+        route: ProjectsRoutes.inviteProjectMembers,
+        pathParams: removeNullish({ organizationId, projectId }),
+        token: accessToken ?? undefined,
+        request: payload,
+      })
+
+    it("requires an authentication token", async () => {
+      accessToken = null
+      expectResponse(await subject(), 401, AUTH_ERRORS.NO_ACCESS_TOKEN)
+    })
+    it("requires a valid organization ID", async () => {
+      organizationId = null
+      expectResponse(await subject(), 400, AUTH_ERRORS.NO_ORGANIZATION_ID)
+    })
+    it("requires the user to be a member of the organization", async () => {
+      await createContextForRole("owner")
+      auth0Id = "another-auth0-id"
+      expectResponse(await subject(), 401, AUTH_ERRORS.NOT_MEMBER_OF_ORG)
+    })
+    it("requires an existing project ID", async () => {
+      await createContextForRole("owner")
+      projectId = randomUUID()
+      expectResponse(await subject(), 404)
+    })
+    it("doesn't allow a simple member to invite project members", async () => {
+      await createContextForRole("member")
+      expectResponse(await subject(), 403, AUTH_ERRORS.UNAUTHORIZED_RESOURCE)
+    })
+  })
+
+  describe("ProjectsRoutes.removeProjectMembership", () => {
+    let membershipId: string | null = "random-membership-id"
+
+    const subject = async () =>
+      request({
+        route: ProjectsRoutes.removeProjectMembership,
+        pathParams: removeNullish({ organizationId, projectId, membershipId }),
+        token: accessToken ?? undefined,
+      })
+
+    const createContextForRoleWithMembership = async (
+      role: "owner" | "admin" | "member" = "owner",
+    ) => {
+      const { organization, project } = await createContextForRole(role)
+
+      // Create an invited user and membership for the project
+      const invitedUser = userFactory.build({ email: "invited@example.com" })
+      await repositories.userRepository.save(invitedUser)
+
+      const membership = projectMembershipFactory.transient({ project, user: invitedUser }).build()
+      await repositories.projectMembershipRepository.save(membership)
+      membershipId = membership.id
+
+      return { organization, project, membership }
+    }
+
+    beforeEach(() => {
+      membershipId = "random-membership-id"
+    })
+
+    it("requires an authentication token", async () => {
+      accessToken = null
+      expectResponse(await subject(), 401, AUTH_ERRORS.NO_ACCESS_TOKEN)
+    })
+    it("requires a valid organization ID", async () => {
+      organizationId = null
+      expectResponse(await subject(), 400, AUTH_ERRORS.NO_ORGANIZATION_ID)
+    })
+    it("requires the user to be a member of the organization", async () => {
+      await createContextForRoleWithMembership("owner")
+      auth0Id = "another-auth0-id"
+      expectResponse(await subject(), 401, AUTH_ERRORS.NOT_MEMBER_OF_ORG)
+    })
+    it("requires an existing project ID", async () => {
+      await createContextForRoleWithMembership("owner")
+      projectId = randomUUID()
+      expectResponse(await subject(), 404)
+    })
+    it("requires an existing membership ID", async () => {
+      await createContextForRoleWithMembership("owner")
+      membershipId = randomUUID()
+      expectResponse(await subject(), 404)
+    })
+    it("requires the membership to belong to the project", async () => {
+      const { organization } = await createContextForRoleWithMembership("owner")
+
+      // Create another project in the same organization
+      const otherProject = projectFactory.transient({ organization }).build()
+      await repositories.projectRepository.save(otherProject)
+      projectId = otherProject.id
+
+      expectResponse(await subject(), 403, AUTH_ERRORS.UNAUTHORIZED_RESOURCE)
+    })
+    it("doesn't allow a simple member to remove project memberships", async () => {
+      await createContextForRoleWithMembership("member")
       expectResponse(await subject(), 403, AUTH_ERRORS.UNAUTHORIZED_RESOURCE)
     })
   })

@@ -19,6 +19,7 @@ import { Document } from "@/domains/documents/document.entity"
 import { Organization } from "@/domains/organizations/organization.entity"
 import { UserMembership } from "@/domains/organizations/user-membership.entity"
 import { Project } from "@/domains/projects/project.entity"
+import { ProjectMembership } from "@/domains/projects/project-membership.entity"
 import { User } from "@/domains/users/user.entity"
 
 const TEST_ENTITIES = [
@@ -26,6 +27,7 @@ const TEST_ENTITIES = [
   Organization,
   UserMembership,
   Project,
+  ProjectMembership,
   Agent,
   AgentSession,
   AgentMessage,
@@ -43,6 +45,7 @@ export interface TransactionalTestSetup {
     organizationRepository: Repository<Organization>
     membershipRepository: Repository<UserMembership>
     projectRepository: Repository<Project>
+    projectMembershipRepository: Repository<ProjectMembership>
     agentRepository: Repository<Agent>
     agentSessionRepository: Repository<AgentSession>
     agentMessageRepository: Repository<AgentMessage>
@@ -200,6 +203,7 @@ export async function setupTransactionalTestDatabase(
     organizationRepository: getRepository(Organization),
     membershipRepository: getRepository(UserMembership),
     projectRepository: getRepository(Project),
+    projectMembershipRepository: getRepository(ProjectMembership),
     agentRepository: getRepository(Agent),
     agentSessionRepository: getRepository(AgentSession),
     agentMessageRepository: getRepository(AgentMessage),
@@ -254,6 +258,7 @@ export function createBaseTestingModule({
         type: "postgres",
         url: testDatabaseUrl,
         entities: TEST_ENTITIES,
+        synchronize: true,
         logging: false,
         dropSchema: false,
       }),

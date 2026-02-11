@@ -5,6 +5,7 @@ import type { IAgentsSpi } from "@/features/agents/agents.spi"
 import type { IDocumentsSpi } from "@/features/documents/documents.spi"
 import type { IMeSpi } from "@/features/me/me.spi"
 import type { IOrganizationsSpi } from "@/features/organizations/organizations.spi"
+import type { IProjectMembershipsSpi } from "@/features/project-memberships/project-memberships.spi"
 import type { IProjectsSpi } from "@/features/projects/projects.spi"
 
 export type Services = {
@@ -13,6 +14,7 @@ export type Services = {
   agentSessions: IAgentSessionsSpi
   me: IMeSpi
   organizations: IOrganizationsSpi
+  projectMemberships: IProjectMembershipsSpi
   projects: IProjectsSpi
   documents: IDocumentsSpi
 }

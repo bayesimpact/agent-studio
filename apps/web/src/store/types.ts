@@ -8,6 +8,7 @@ import type { documentsSliceReducer } from "@/features/documents/documents.slice
 import type { meSliceReducer } from "@/features/me/me.slice"
 import type { notificationsSliceReducer } from "@/features/notifications/notifications.slice"
 import type { organizationsSliceReducer } from "@/features/organizations/organizations.slice"
+import type { projectMembershipsSliceReducer } from "@/features/project-memberships/project-memberships.slice"
 import type { projectsSliceReducer } from "@/features/projects/projects.slice"
 
 // Define the store state structure without creating the store
@@ -20,6 +21,7 @@ export type RootState = {
   me: ReturnType<typeof meSliceReducer>
   notifications: ReturnType<typeof notificationsSliceReducer>
   organizations: ReturnType<typeof organizationsSliceReducer>
+  projectMemberships: ReturnType<typeof projectMembershipsSliceReducer>
   projects: ReturnType<typeof projectsSliceReducer>
   documents: ReturnType<typeof documentsSliceReducer>
 }
