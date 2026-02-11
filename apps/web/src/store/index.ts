@@ -1,5 +1,7 @@
 import { configureStore } from "@reduxjs/toolkit"
 import { getServices } from "@/di/services"
+import { agentMessageFeedbackMiddleware } from "@/features/agent-message-feedback/agent-message-feedback.middleware"
+import { agentMessageFeedbackSliceReducer } from "@/features/agent-message-feedback/agent-message-feedback.slice"
 import { agentSessionMiddleware } from "@/features/agent-sessions/agent-sessions.middleware"
 import { agentSessionsSliceReducer } from "@/features/agent-sessions/agent-sessions.slice"
 import { agentsMiddleware } from "@/features/agents/agents.middleware"
@@ -18,6 +20,7 @@ import type { ThunkExtraArg } from "./types"
 
 export const store = configureStore({
   reducer: {
+    agentMessageFeedback: agentMessageFeedbackSliceReducer,
     auth: authSliceReducer,
     agents: agentsSliceReducer,
     agentSessions: agentSessionsSliceReducer,
@@ -39,6 +42,7 @@ export const store = configureStore({
       agentsMiddleware.middleware,
       agentSessionMiddleware.middleware,
       documentsMiddleware.middleware,
+      agentMessageFeedbackMiddleware.middleware,
     ),
 })
 

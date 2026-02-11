@@ -15,7 +15,8 @@
     "processingFile": "Traitement du fichier...",
     "fileIsStored": "Le fichier est stocké",
     "fileIsNotStored": "Le fichier n'est pas stocké",
-    "storeFile": "Stocker le fichier"
+    "storeFile": "Stocker le fichier",
+    "feedback": "Retours utilisateur"
   },
   "project": {
     "createButton": {
@@ -87,34 +88,34 @@
     },
     "create": {
       "title": "Créer un agent",
-      "description": "Créer un nouveau agent pour {{projectName}}",
-      "submit": "Créer le agent",
+      "description": "Créer un nouvel agent pour {{projectName}}",
+      "submit": "Créer l'agent",
       "submitting": "Création..."
     },
     "update": {
-      "title": "Modifier le agent",
-      "description": "Mettre à jour les détails du agent",
-      "submit": "Mettre à jour le agent",
+      "title": "Modifier l'agent",
+      "description": "Mettre à jour les détails de l'agent",
+      "submit": "Mettre à jour l'agent",
       "submitting": "Mise à jour..."
     },
     "delete": {
-      "title": "Supprimer le agent",
+      "title": "Supprimer l'agent",
       "description": "Êtes-vous sûr de vouloir supprimer {{name}} ? Cette action est irréversible.",
       "submit": "Supprimer",
       "submitting": "Suppression...",
-      "success": "agent supprimé avec succès",
-      "error": "Échec de la suppression du agent"
+      "success": "Agent supprimé avec succès",
+      "error": "Échec de la suppression de l'agent"
     },
     "list": {
-      "title": "agents",
+      "title": "Agents",
       "empty": {
-        "title": "Pas encore de agent",
+        "title": "Pas encore d'agent",
         "description": "Créez votre premier agent pour commencer avec des prompts personnalisés pour ce projet.",
         "button": "Créer le premier agent"
       },
       "actions": {
-        "edit": "Modifier le agent",
-        "delete": "Supprimer le agent",
+        "edit": "Modifier l'agent",
+        "delete": "Supprimer l'agent",
         "more": "Plus"
       }
     },
@@ -158,8 +159,8 @@
       "title": "Gérer les documents de {{projectName}}"
     },
     "empty": {
-      "title": "Aucune ressource",
-      "description": "Vous n'avez pas encore créé de documents. Commencez par créer votre première document."
+      "title": "Aucun document",
+      "description": "Vous n'avez pas encore créé de documents. Commencez par créer votre premier document."
     },
     "item": {
       "createdAt": "Créé le",
@@ -170,10 +171,19 @@
       "fileMimeType": "Type MIME du fichier"
     },
     "delete": {
-      "title": "Supprimer la ressource",
+      "title": "Supprimer le document",
       "description": "Êtes-vous sûr de vouloir supprimer \"{{name}}\" ? Cette action est irréversible.",
       "submit": "Supprimer",
       "submitting": "Suppression..."
+    }
+  },
+  "feedbacks": {
+    "header": {
+      "title": "Retours pour {{agentName}}"
+    },
+    "empty": {
+      "title": "Aucun retour pour {{agentName}}",
+      "description": "Aucun retour utilisateur n'a encore été soumis pour cet agent."
     }
   }
 }

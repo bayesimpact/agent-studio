@@ -1,4 +1,5 @@
 import { services } from "@/external/axios.services"
+import type { IAgentMessageFeedbackSpi } from "@/features/agent-message-feedback/agent-message-feedback.spi"
 import type { IAgentSessionsSpi } from "@/features/agent-sessions/agent-sessions.spi"
 import type { IAgentsSpi } from "@/features/agents/agents.spi"
 import type { IDocumentsSpi } from "@/features/documents/documents.spi"
@@ -7,6 +8,7 @@ import type { IOrganizationsSpi } from "@/features/organizations/organizations.s
 import type { IProjectsSpi } from "@/features/projects/projects.spi"
 
 export type Services = {
+  agentMessageFeedback: IAgentMessageFeedbackSpi
   agents: IAgentsSpi
   agentSessions: IAgentSessionsSpi
   me: IMeSpi

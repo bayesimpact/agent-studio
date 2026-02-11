@@ -7,6 +7,7 @@ import { LogoutRoute } from "@/routes/LogoutRoute"
 import { NotFoundRoute } from "@/routes/NotFoundRoute"
 import { useAppDispatch } from "@/store/hooks"
 import { DocumentsRoute } from "./admin/DocumentsRoute"
+import { FeedbacksRoute } from "./admin/FeedbacksRoute"
 import { getElement } from "./Elements"
 import { buildAdminPath, buildAppPath, RouteNames } from "./helpers"
 import { OnboardingRoute } from "./OnboardingRoute"
@@ -62,6 +63,10 @@ const router = () =>
                     {
                       path: buildAdminPath(RouteNames.AGENT_SESSION),
                       element: getElement(RouteNames.AGENT_SESSION),
+                    },
+                    {
+                      path: buildAdminPath(RouteNames.FEEDBACKS),
+                      element: <FeedbacksRoute />,
                     },
                   ],
                 },

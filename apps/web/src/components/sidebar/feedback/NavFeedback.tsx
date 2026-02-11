@@ -1,30 +1,32 @@
 import { SidebarMenu, SidebarMenuButton, SidebarMenuItem } from "@caseai-connect/ui/shad/sidebar"
-import { DatabaseZapIcon } from "lucide-react"
+import { MessageSquareWarningIcon } from "lucide-react"
 import { useMemo } from "react"
 import { useTranslation } from "react-i18next"
 import { Link, useLocation } from "react-router-dom"
 import { useAbility } from "@/hooks/use-ability"
-import { buildDocumentsPath } from "@/routes/helpers"
+import { buildFeedbacksPath } from "@/routes/helpers"
 
-export function NavDocuments({
+export function NavFeedback({
   organizationId,
   projectId,
+  agentId,
 }: {
   organizationId: string
   projectId: string
+  agentId: string
 }) {
   const { t } = useTranslation("common")
   const { isAdminInterface } = useAbility()
-  const isActive = useIsDocumentsActive(projectId)
+  const isActive = useIsFeedbackActive(agentId)
   if (!isAdminInterface) return null
-  const path = buildDocumentsPath({ organizationId, projectId })
+  const path = buildFeedbacksPath({ organizationId, projectId, agentId })
   return (
     <SidebarMenu>
       <SidebarMenuItem>
         <SidebarMenuButton isActive={isActive} asChild>
           <Link to={path} className="font-medium">
-            <DatabaseZapIcon />
-            <span>{t("documents")}</span>
+            <MessageSquareWarningIcon />
+            <span>{t("feedback")}</span>
           </Link>
         </SidebarMenuButton>
       </SidebarMenuItem>
@@ -32,7 +34,7 @@ export function NavDocuments({
   )
 }
 
-function useIsDocumentsActive(projectId: string) {
+function useIsFeedbackActive(agentId: string) {
   const location = useLocation()
-  return useMemo(() => location.pathname.endsWith(`/p/${projectId}/d`), [location, projectId])
+  return useMemo(() => location.pathname.endsWith(`/a/${agentId}/f`), [location, agentId])
 }
