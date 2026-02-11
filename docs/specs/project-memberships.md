@@ -8,15 +8,15 @@ Organization owners and administrators need the ability to invite external users
 
 ## Domain Decision
 
-> **Recommendation**: Place the new controllers, services, and entity within the existing **`projects`** domain.
+> **Decision**: Place the new controllers, services, and entity within the existing **`projects`** domain, inside a dedicated **`memberships`** subfolder.
 >
-> **Rationale**: Project memberships are tightly scoped to projects — they don't exist independently. The existing `projects` domain already owns CRUD for projects, and project memberships are a natural extension of that ownership. Splitting into a separate domain would introduce cross-module coupling without a clear cohesion benefit. If the feature grows significantly (e.g., invitation emails, invitation workflows, etc.), it can be extracted later.
+> **Rationale**: Project memberships are tightly scoped to projects — they don't exist independently. The existing `projects` domain already owns CRUD for projects, and project memberships are a natural extension of that ownership. The `memberships/` subfolder keeps the domain organized without introducing cross-module coupling. If the feature grows significantly (e.g., invitation emails, invitation workflows, etc.), it can be extracted into its own module later.
 
 ---
 
 ## 1. Database / Entity Layer (API)
 
-### 1.1 New Entity: `ProjectMembership`
+### 1.1 Entity: `ProjectMembership`
 
 **Table name**: `project_membership`
 
@@ -33,9 +33,11 @@ Organization owners and administrators need the ability to invite external users
 **Constraints**:
 - `UNIQUE(project_id, user_id)` — A user can only have one membership per project.
 
-**TypeORM Entity**: `apps/api/src/domains/projects/project-membership.entity.ts`
+**File**: `apps/api/src/domains/projects/memberships/project-membership.entity.ts`
 
 ```typescript
+export type ProjectMembershipStatus = "sent" | "accepted"
+
 @Entity("project_membership")
 @Unique(["projectId", "userId"])
 export class ProjectMembership {
@@ -61,16 +63,14 @@ export class ProjectMembership {
   updatedAt!: Date
 
   // Relations
-  @ManyToOne(() => Project)
+  @ManyToOne(() => Project, (project) => project.projectMemberships)
   @JoinColumn({ name: "project_id" })
   project!: Project
 
-  @ManyToOne(() => User)
+  @ManyToOne(() => User, (user) => user.projectMemberships)
   @JoinColumn({ name: "user_id" })
   user!: User
 }
-
-export type ProjectMembershipStatus = "sent" | "accepted"
 ```
 
 **Notes**:
@@ -79,12 +79,13 @@ export type ProjectMembershipStatus = "sent" | "accepted"
 
 ### 1.2 Relationships
 
-- **`Project`** entity gets a new `@OneToMany` → `ProjectMembership[]` relation (`projectMemberships`).
-- **`User`** entity gets a new `@OneToMany` → `ProjectMembership[]` relation (`projectMemberships`).
+- **`Project`** entity has a `@OneToMany` → `ProjectMembership[]` relation (`projectMemberships`).
+- **`User`** entity has a `@OneToMany` → `ProjectMembership[]` relation (`projectMemberships`).
 
 ### 1.3 Migration
 
-- A TypeORM migration will be **generated** (not manually created) via `npm run migration:generate` after the entity is created.
+- A TypeORM migration was generated via `npm run migration:generate`.
+- **File**: `apps/api/src/migrations/1770803458597-create-project-membership.ts`
 
 ---
 
@@ -92,7 +93,7 @@ export type ProjectMembershipStatus = "sent" | "accepted"
 
 ### 2.1 DTOs
 
-**File**: `packages/api-contracts/src/projects/projects.dto.ts` (append to existing file)
+**File**: `packages/api-contracts/src/projects/projects.dto.ts` (appended to existing file)
 
 ```typescript
 // --- Project Membership DTOs ---
@@ -126,7 +127,7 @@ export type RemoveProjectMembershipResponseDto = {
 
 ### 2.2 Routes
 
-**File**: `packages/api-contracts/src/projects/projects.routes.ts` (append to existing `ProjectsRoutes`)
+**File**: `packages/api-contracts/src/projects/projects.routes.ts` (appended to existing `ProjectsRoutes`)
 
 | Route Name                    | Method   | Path                                                                     | Request DTO                          | Response DTO                            |
 |-------------------------------|----------|--------------------------------------------------------------------------|--------------------------------------|-----------------------------------------|
@@ -164,20 +165,21 @@ The new DTOs and routes are exported from `packages/api-contracts/src/index.ts` 
 
 ### 3.1 Service: `ProjectMembershipsService`
 
-**File**: `apps/api/src/domains/projects/project-memberships.service.ts` (**new file** — dedicated service)
+**File**: `apps/api/src/domains/projects/memberships/project-memberships.service.ts`
 
 Methods on `ProjectMembershipsService`:
 
 | Method                      | Description                                                                                          |
 |-----------------------------|------------------------------------------------------------------------------------------------------|
+| `findById(membershipId: string)` | Returns a project membership by its ID (used by the guard to fetch the entity). |
 | `listProjectMemberships(projectId: string)` | Returns all project memberships for a project, with user relations eagerly loaded.   |
 | `inviteProjectMembers(projectId: string, emails: string[])` | For each email: find or create a user, create a `ProjectMembership` with status `sent` and a generated `invitationToken`. Skips duplicates (user already a member). Returns the created memberships. |
 | `removeProjectMembership(membershipId: string, projectId: string)` | Removes a project membership. Validates it belongs to the given project.           |
 
 **Invitation logic detail** (`inviteProjectMembers`):
 1. For each email in the list:
-   - Look up the `User` by email.
-   - If no user exists, create one with a placeholder `auth0Id` set to `"00000000-0000-0000-0000-000000000000"` and the provided email. The user record acts as a pre-provisioned entry. This placeholder will be updated when the user signs up via Auth0.
+   - Look up the `User` by email (normalized to lowercase).
+   - If no user exists, create one with a **unique** placeholder `auth0Id` set to `"00000000-0000-0000-0000-"` + a random 12-character suffix (via `randomUUID().slice(-12)`). Each new user gets a unique placeholder to avoid unique constraint violations. The user record acts as a pre-provisioned entry. This placeholder will be updated when the user signs up via Auth0.
    - Check if a `ProjectMembership` already exists for `(projectId, userId)` — if so, skip.
    - Create a `ProjectMembership` with `status: "sent"` and `invitationToken: randomUUID()`.
 2. Return all created memberships (with user relations loaded).
@@ -190,46 +192,75 @@ Methods on `ProjectMembershipsService`:
 
 ### 4.1 Controller: `ProjectMembershipsController`
 
-**File**: `apps/api/src/domains/projects/project-memberships.controller.ts` (**new file** — dedicated controller)
+**File**: `apps/api/src/domains/projects/memberships/project-memberships.controller.ts`
 
 Endpoints:
 
-| Method             | Decorator               | Policy Check                        | Request Type                        | Notes                                                    |
-|--------------------|-------------------------|-------------------------------------|-------------------------------------|----------------------------------------------------------|
-| `listProjectMemberships`  | `@Get(...)` | `canListProjectMemberships()`       | `EndpointRequestWithProject`        | Returns memberships for the project                      |
-| `inviteProjectMembers`    | `@Post(...)` | `canInviteProjectMembers()`        | `EndpointRequestWithProject` + Body | Accepts `{ payload: { emails: string[] } }`              |
-| `removeProjectMembership` | `@Delete(...)` | `canRemoveProjectMembership()`  | `EndpointRequestWithProject`        | `:membershipId` from path params                         |
+| Method             | Decorator               | Policy Check                        | Request Type                                 | Notes                                                    |
+|--------------------|-------------------------|-------------------------------------|----------------------------------------------|----------------------------------------------------------|
+| `listProjectMemberships`  | `@Get(...)` | `canList()`                         | `EndpointRequestWithProject`                 | Returns memberships for the project                      |
+| `inviteProjectMembers`    | `@Post(...)` | `canCreate()`                      | `EndpointRequestWithProject` + Body          | Accepts `{ payload: { emails: string[] } }`              |
+| `removeProjectMembership` | `@Delete(...)` | `canDelete()`                   | `EndpointRequestWithProjectMembership`       | `projectMembership` from request (set by guard)          |
+
+**DTO mapping**: A `toProjectMembershipDto` helper function maps `ProjectMembership` entities to DTOs.
 
 ### 4.2 Guards
 
-The existing guard chain applies: `JwtAuthGuard → UserGuard → OrganizationGuard → ProjectsGuard`.
+The guard chain is: `JwtAuthGuard → UserGuard → OrganizationGuard → ProjectsGuard → ProjectMembershipsGuard`.
 
-The `ProjectsGuard` already resolves the project from `:projectId` and attaches it to the request, so no new guard is needed.
+#### `ProjectMembershipsGuard`
+
+**File**: `apps/api/src/domains/projects/memberships/project-memberships.guard.ts`
+
+A dedicated guard for project memberships, modeled after `DocumentsGuard`. It:
+
+1. Runs **after** `ProjectsGuard`, so the request already has `project` and `userMembership` set.
+2. If a `membershipId` parameter is present (e.g., DELETE routes):
+   - Fetches the `ProjectMembership` entity via `ProjectMembershipsService.findById()`.
+   - Throws `NotFoundException` if the membership doesn't exist.
+   - Enhances the request with `request.projectMembership`.
+3. Instantiates a `ProjectMembershipPolicy` with `(userMembership, project, projectMembership?)`.
+4. Reads the `@CheckPolicy` decorator handler via the `Reflector` and evaluates it.
+5. Throws `ForbiddenException` if the policy check fails.
+
+#### `EndpointRequestWithProjectMembership`
+
+**File**: `apps/api/src/request.interface.ts`
+
+```typescript
+export interface EndpointRequestWithProjectMembership extends EndpointRequestWithProject {
+  projectMembership: ProjectMembership
+}
+```
+
+This extends the request type chain: `EndpointRequest → EndpointRequestWithUserMembership → EndpointRequestWithProject → EndpointRequestWithProjectMembership`.
 
 ### 4.3 Policy
 
-**File**: `apps/api/src/domains/projects/project.policy.ts` (extend existing policy)
+**File**: `apps/api/src/domains/projects/memberships/project-membership.policy.ts`
 
-New policy methods:
+A dedicated policy for project memberships, extending `ProjectScopedPolicy<ProjectMembership>`:
 
 ```typescript
-canListProjectMemberships(): boolean {
-  return this.isAdminOrOwner()
-}
+import { ProjectScopedPolicy } from "@/common/policies/project-scoped-policy"
+import type { ProjectMembership } from "./project-membership.entity"
 
-canInviteProjectMembers(): boolean {
-  return this.doesResourceBelongToOrganization() && this.isAdminOrOwner()
-}
-
-canRemoveProjectMembership(): boolean {
-  return this.doesResourceBelongToOrganization() && this.isAdminOrOwner()
+export class ProjectMembershipPolicy extends ProjectScopedPolicy<ProjectMembership> {
+  // the default project-scoped policy is enough
 }
 ```
+
+The `ProjectScopedPolicy<T>` base class provides RESTful methods that handle project-scoping automatically:
+
+- **`canList()`**: Returns `true` if the user is an admin or owner of the organization.
+- **`canCreate()`**: Returns `true` if the resource belongs to the organization and the user is an admin or owner.
+- **`canUpdate()`**: Same as `canCreate()`.
+- **`canDelete()`**: Same as `canCreate()`, plus verifies the resource belongs to the correct project.
 
 **Authorization rules**:
 - Only **owners** and **admins** of the organization can list, invite, or remove project memberships.
 - Regular **members** of the organization cannot perform these actions.
-- The sidebar icon in the webapp will be **hidden** for non-admin/non-owner users.
+- The sidebar icon in the webapp is **hidden** for non-admin/non-owner users.
 
 ---
 
@@ -237,9 +268,9 @@ canRemoveProjectMembership(): boolean {
 
 **File**: `apps/api/src/domains/projects/projects.module.ts`
 
-- Add `ProjectMembership` and `User` to `TypeOrmModule.forFeature([...])`.
-- Register `ProjectMembershipsController` in `controllers`.
-- Register `ProjectMembershipsService` in `providers`.
+- `ProjectMembership` and `User` added to `TypeOrmModule.forFeature([...])`.
+- `ProjectMembershipsController` registered in `controllers` (imported from `./memberships/project-memberships.controller`).
+- `ProjectMembershipsService` registered in `providers` (imported from `./memberships/project-memberships.service`).
 
 ---
 
@@ -247,11 +278,9 @@ canRemoveProjectMembership(): boolean {
 
 ### 6.1 E2E Tests
 
-**Directory**: `apps/api/src/domains/projects/e2e-tests/`
+#### `apps/api/src/domains/projects/memberships/e2e-tests/auth.spec.ts` (**dedicated auth spec**)
 
-#### `auth.spec.ts` (extend existing)
-
-Add auth test cases for the three new routes:
+A separate auth test file for project memberships (decoupled from `projects/e2e-tests/auth.spec.ts`):
 
 - `ProjectsRoutes.listProjectMemberships`:
   - Requires authentication token
@@ -265,30 +294,28 @@ Add auth test cases for the three new routes:
 - `ProjectsRoutes.inviteProjectMembers`:
   - Same auth checks as above
   - Denies `member` role → `403`
-  - Allows `admin` and `owner` → `200`
 
 - `ProjectsRoutes.removeProjectMembership`:
   - Same auth checks
-  - Denies `member` role → `403`
   - Requires existing membership ID → `404` if not found
-  - Allows `admin` and `owner` → `200`
+  - Requires membership to belong to the project → `403`
+  - Denies `member` role → `403`
 
-#### New: `list-project-memberships.spec.ts`
+#### `apps/api/src/domains/projects/memberships/e2e-tests/list-project-memberships.spec.ts`
 
 - Returns empty list when no memberships exist
 - Returns memberships with user name and email
 - Only returns memberships for the specified project (not other projects)
 
-#### New: `invite-project-members.spec.ts`
+#### `apps/api/src/domains/projects/memberships/e2e-tests/invite-project-members.spec.ts`
 
 - Successfully invites a new user (creates user + membership)
 - Successfully invites an existing user (creates membership only)
 - Skips duplicate invitations (user already a member of the project)
 - Creates memberships with `status: "sent"` and a valid `invitationToken`
 - Handles multiple emails in a single request
-- Validates email format (if implemented)
 
-#### New: `remove-project-membership.spec.ts`
+#### `apps/api/src/domains/projects/memberships/e2e-tests/remove-project-membership.spec.ts`
 
 - Successfully removes a membership
 - Returns `404` for non-existent membership ID
@@ -297,31 +324,32 @@ Add auth test cases for the three new routes:
 
 ### 6.2 Service Tests
 
-**File**: `apps/api/src/domains/projects/project-memberships.service.spec.ts` (**new file**)
+**File**: `apps/api/src/domains/projects/memberships/project-memberships.service.spec.ts`
 
+- Test `findById` method (returns membership, returns null for non-existent)
 - Test `listProjectMemberships` method
-- Test `inviteProjectMembers` method (user creation, duplicate handling)
+- Test `inviteProjectMembers` method (user creation, duplicate handling, email normalization)
 - Test `removeProjectMembership` method
 
 ### 6.3 Policy Tests
 
-**File**: `apps/api/src/domains/projects/project.policy.spec.ts` (extend existing)
+**File**: `apps/api/src/domains/projects/memberships/project-membership.policy.spec.ts`
 
-- Test `canListProjectMemberships()` for owner, admin, member
-- Test `canInviteProjectMembers()` for owner, admin, member
-- Test `canRemoveProjectMembership()` for owner, admin, member
+- Test `canList()` for owner, admin, member
+- Test `canCreate()` for owner, admin, member
+- Test `canDelete()` for owner, admin, member × sameProject, differentProject, noMembership
 
 ### 6.4 Factory
 
-**File**: `apps/api/src/domains/projects/project-membership.factory.ts`
+**File**: `apps/api/src/domains/projects/memberships/project-membership.factory.ts`
 
-Create a fishery factory for `ProjectMembership` with transient params for `project` and `user`.
+Fishery factory for `ProjectMembership` with transient params for `project` and `user`.
 
 ---
 
 ## 7. Web Frontend
 
-> **Implementation note**: Every pattern described below is derived from the existing codebase. All code must match the conventions already established — same naming, same file structure, same Redux patterns, same component composition.
+> **Implementation note**: Every pattern described below is derived from the existing codebase. All code matches the conventions already established — same naming, same file structure, same Redux patterns, same component composition.
 
 ### 7.1 Feature Architecture
 
@@ -381,7 +409,7 @@ Concrete Axios implementation. Follows the exact same structure as `agents.api.t
 - Uses `getAxiosInstance()` from `@/external/axios`
 - Imports routes & DTOs from `@caseai-connect/api-contracts`
 - Uses `satisfies IProjectMembershipsSpi` at the end
-- Has `fromDto` / `toDto` mapping functions at the bottom of the file
+- Has `fromDto` mapping function at the bottom of the file
 - Default export (like `agents.api.ts`)
 
 ```typescript
@@ -427,7 +455,7 @@ const fromDto = (dto: ProjectMembershipDto): ProjectMembership => ({
 
 #### 7.1.4 Service Registration
 
-**File**: `external/axios.services.ts` — add import + key:
+**File**: `external/axios.services.ts` — added import + key:
 
 ```typescript
 import projectMembershipsApi from "@/features/project-memberships/external/project-memberships.api"
@@ -438,7 +466,7 @@ export const services = {
 }
 ```
 
-**File**: `di/services.ts` — add to `Services` type:
+**File**: `di/services.ts` — added to `Services` type:
 
 ```typescript
 import type { IProjectMembershipsSpi } from "@/features/project-memberships/project-memberships.spi"
@@ -656,7 +684,7 @@ export { listenerMiddleware as projectMembershipsMiddleware }
 
 #### 7.1.9 Store Registration
 
-**File**: `store/index.ts` — add reducer + middleware:
+**File**: `store/index.ts` — added reducer + middleware:
 
 ```typescript
 import { projectMembershipsMiddleware } from "@/features/project-memberships/project-memberships.middleware"
@@ -669,7 +697,7 @@ projectMemberships: projectMembershipsSliceReducer,
 projectMembershipsMiddleware.middleware,
 ```
 
-**File**: `store/types.ts` — add to `RootState`:
+**File**: `store/types.ts` — added to `RootState`:
 
 ```typescript
 import type { projectMembershipsSliceReducer } from "@/features/project-memberships/project-memberships.slice"
@@ -682,13 +710,13 @@ projectMemberships: ReturnType<typeof projectMembershipsSliceReducer>
 
 #### Route Name
 
-**File**: `routes/helpers.ts` — add new enum value:
+**File**: `routes/helpers.ts` — added new enum value:
 
 ```typescript
 PROJECT_MEMBERSHIPS = "/o/:organizationId/p/:projectId/members"
 ```
 
-Also add a `buildProjectMembershipsPath` helper (matches the existing `buildDocumentsPath` pattern):
+Also added a `buildProjectMembershipsPath` helper (matches the existing `buildDocumentsPath` pattern):
 
 ```typescript
 export const buildProjectMembershipsPath = ({
@@ -708,7 +736,7 @@ export const buildProjectMembershipsPath = ({
 
 #### Router Config
 
-**File**: `routes/Router.tsx` — add as a child of the `PROJECT` route in the **admin section only** (same level as `DOCUMENTS`):
+**File**: `routes/Router.tsx` — added as a child of the `PROJECT` route in the **admin section only** (same level as `DOCUMENTS`):
 
 ```typescript
 {
@@ -716,10 +744,6 @@ export const buildProjectMembershipsPath = ({
   element: <ProjectMembershipsRoute />,
 },
 ```
-
-#### Elements
-
-**File**: `routes/Elements.tsx` — add element mapping (if using the `getElement` pattern), or import directly in `Router.tsx`.
 
 #### Route Component
 
@@ -747,7 +771,7 @@ export function ProjectMembershipsRoute() {
 
 ### 7.3 Sidebar Navigation
 
-**File**: `components/sidebar/projects/NavProjectMemberships.tsx` (**new file**)
+**File**: `components/sidebar/projects/NavProjectMemberships.tsx`
 
 Follows the exact `NavDocuments.tsx` pattern:
 - Uses `SidebarMenu > SidebarMenuItem > SidebarMenuButton` from `@caseai-connect/ui/shad/sidebar`
@@ -786,7 +810,7 @@ export function NavProjectMemberships({
 }
 ```
 
-**File**: `components/sidebar/NavProjects.tsx` — in `ProjectItem`, render `NavProjectMemberships` alongside the existing `NavDocuments`:
+**File**: `components/sidebar/NavProjects.tsx` — in `ProjectItem`, renders `NavProjectMemberships` alongside the existing `NavDocuments`:
 
 ```typescript
 <NavDocuments organizationId={project.organizationId} projectId={project.id} />
@@ -798,7 +822,7 @@ export function NavProjectMemberships({
 #### `components/project-memberships/ProjectMembershipsList.tsx`
 
 - Renders a list/table of project memberships
-- Each row shows: user name (or "Pending" if null), user email, status badge (`sent` / `accepted`), remove button (`Trash2Icon`)
+- Each row shows: user name (or "Pending" if null), user email, status badge (`sent` / `accepted`) using a custom `StatusBadge` component with Tailwind CSS classes, remove button (`Trash2Icon`)
 - Remove button dispatches `removeProjectMembership` thunk
 - Uses `useAppDispatch` and `useAppSelector` hooks
 - Uses `useTranslation("projectMemberships")` for i18n keys
@@ -810,13 +834,12 @@ Uses `Dialog` / `DialogContent` / `DialogHeader` / `DialogTitle` / `DialogDescri
 - Controlled via `open` / `onOpenChange` state
 - Form with a textarea for emails (comma or newline separated)
 - Submit button dispatches `inviteProjectMembers` thunk
-- Disabled while `ADS.isLoading(status)`
-- On success: dialog closes (middleware handles list refresh + notification)
+- On success: dialog closes using `.unwrap().then()` for handling success and resetting state (middleware handles list refresh + notification)
 - Uses `useTranslation("projectMemberships", { keyPrefix: "invite" })`
 
 ### 7.5 Internationalization
 
-**File**: `locales/en.json` — add new `projectMemberships` namespace:
+**File**: `locales/en.json` — added new `projectMemberships` namespace:
 
 ```json
 {
@@ -854,7 +877,7 @@ Uses `Dialog` / `DialogContent` / `DialogHeader` / `DialogTitle` / `DialogDescri
 }
 ```
 
-**File**: `locales/fr.json` — add matching French translations.
+**File**: `locales/fr.json` — matching French translations.
 
 ### 7.6 Data Flow Summary
 
@@ -867,6 +890,7 @@ User clicks "Invite Members" button (in route header right slot)
   → Axios POST /organizations/:orgId/projects/:projId/memberships/invite
   → API creates User records (if needed) + ProjectMembership records
   → Response returns created memberships
+  → Dialog closes via .unwrap().then()
   → Middleware: inviteProjectMembers.fulfilled triggers listProjectMemberships refresh
   → Middleware: notificationsActions.show({ title: "Members invited successfully", type: "success" })
   → Slice updates state for the projectId key
@@ -877,23 +901,38 @@ User clicks "Invite Members" button (in route header right slot)
 
 ## 8. File Summary
 
-### API (`apps/api/src/domains/projects/`)
+### API — `apps/api/src/domains/projects/memberships/`
 
 | File                                | Action   | Description                                |
 |-------------------------------------|----------|--------------------------------------------|
 | `project-membership.entity.ts`      | **New**  | TypeORM entity                             |
 | `project-membership.factory.ts`     | **New**  | Test factory (fishery)                     |
+| `project-membership.policy.ts`      | **New**  | Dedicated policy extending `ProjectScopedPolicy<ProjectMembership>` |
+| `project-membership.policy.spec.ts` | **New**  | Policy tests (canList, canCreate, canDelete) |
 | `project-memberships.controller.ts` | **New**  | Dedicated controller for membership endpoints |
+| `project-memberships.guard.ts`      | **New**  | Dedicated guard (fetches entity, enhances request, checks policy) |
 | `project-memberships.service.ts`    | **New**  | Dedicated service for membership logic     |
 | `project-memberships.service.spec.ts` | **New** | Service tests                             |
-| `project.entity.ts`                 | Modify   | Add `@OneToMany` to `ProjectMembership`    |
-| `project.policy.ts`                 | Modify   | Add 3 new policy methods                   |
-| `project.policy.spec.ts`            | Modify   | Add tests for new policy methods           |
-| `projects.module.ts`                | Modify   | Register new controller, service, and entities |
-| `e2e-tests/auth.spec.ts`            | Modify   | Add auth tests for 3 new routes            |
+| `e2e-tests/auth.spec.ts`           | **New**  | Auth tests for all 3 membership routes     |
 | `e2e-tests/list-project-memberships.spec.ts` | **New** | Functional e2e tests             |
 | `e2e-tests/invite-project-members.spec.ts`   | **New** | Functional e2e tests             |
 | `e2e-tests/remove-project-membership.spec.ts` | **New** | Functional e2e tests            |
+
+### API — `apps/api/src/domains/projects/` (modified)
+
+| File                                | Action   | Description                                |
+|-------------------------------------|----------|--------------------------------------------|
+| `project.entity.ts`                 | Modify   | Add `@OneToMany` to `ProjectMembership` (import from `./memberships/`) |
+| `projects.module.ts`                | Modify   | Register controller, service, and entity from `./memberships/` |
+
+### API — Other modified files
+
+| File                                | Action   | Description                                |
+|-------------------------------------|----------|--------------------------------------------|
+| `apps/api/src/request.interface.ts` | Modify   | Add `EndpointRequestWithProjectMembership` interface |
+| `apps/api/src/domains/users/user.entity.ts` | Modify | Add `@OneToMany` to `ProjectMembership` |
+| `apps/api/src/common/test/test-transaction-manager.ts` | Modify | Add `ProjectMembership` to `TEST_ENTITIES` and repositories |
+| `apps/api/src/common/test/test-database.ts` | Modify | Add `ProjectMembership` to `TEST_ENTITIES` and `clearTestDatabase` |
 
 ### API Contracts (`packages/api-contracts/src/projects/`)
 
@@ -919,7 +958,6 @@ User clicks "Invite Members" button (in route header right slot)
 | `routes/admin/ProjectMembershipsRoute.tsx`                          | **New**  | Route component (matches `DocumentsRoute`) |
 | `routes/Router.tsx`                                                 | Modify   | Add admin-only route child of PROJECT      |
 | `routes/helpers.ts`                                                 | Modify   | Add `PROJECT_MEMBERSHIPS` + path builder   |
-| `routes/Elements.tsx`                                               | Modify   | Add element mapping (if needed)            |
 | `components/sidebar/NavProjects.tsx`                                | Modify   | Render `NavProjectMemberships` in `ProjectItem` |
 | `external/axios.services.ts`                                        | Modify   | Register `projectMemberships` service      |
 | `di/services.ts`                                                    | Modify   | Add `projectMemberships` to `Services` type |
@@ -932,15 +970,20 @@ User clicks "Invite Members" button (in route header right slot)
 
 | Action                        | Description                                        |
 |-------------------------------|----------------------------------------------------|
-| Generate migration            | `npm run migration:generate src/migrations/AddProjectMembership` |
+| Generated migration           | `apps/api/src/migrations/1770803458597-create-project-membership.ts` |
 
 ---
 
 ## 9. Resolved Decisions
 
-3. **User creation for unknown emails**: Placeholder users will use `auth0Id = "00000000-0000-0000-0000-000000000000"`. This will be updated when the user signs up via Auth0.
-4. **Bulk operations**: No bulk removal — out of scope for now.
-5. **Pagination**: No pagination on the memberships list endpoint for now.
+1. **File organization**: All project membership files live in `apps/api/src/domains/projects/memberships/` — a subfolder of the `projects` domain. This keeps the domain cohesive while avoiding file clutter.
+2. **Policy architecture**: Project memberships have their own dedicated `ProjectMembershipPolicy` extending `ProjectScopedPolicy<ProjectMembership>`, with RESTful methods (`canList`, `canCreate`, `canDelete`). They do **not** extend `ProjectPolicy`.
+3. **Guard architecture**: A dedicated `ProjectMembershipsGuard` (modeled after `DocumentsGuard`) fetches the `ProjectMembership` entity from the database, enhances the request object, and evaluates the policy. This avoids coupling with `ProjectsGuard`.
+4. **Request type**: A new `EndpointRequestWithProjectMembership` interface extends `EndpointRequestWithProject` to carry the resolved `projectMembership` entity.
+5. **Auth tests**: Project membership auth tests live in a dedicated `memberships/e2e-tests/auth.spec.ts`, separate from the projects' `e2e-tests/auth.spec.ts`.
+6. **User creation for unknown emails**: Placeholder users use a unique `auth0Id` per user: `"00000000-0000-0000-0000-"` + a random 12-character suffix (via `randomUUID().slice(-12)`). This avoids unique constraint violations when inviting multiple new users.
+7. **Bulk operations**: No bulk removal — out of scope for now.
+8. **Pagination**: No pagination on the memberships list endpoint for now.
 
 ## 10. Open Questions / Future Considerations
 
