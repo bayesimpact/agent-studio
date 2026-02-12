@@ -15,6 +15,7 @@ import { AgentMessageFeedbackService } from "./agent-message-feedback.service"
 export class AgentMessageFeedbackController {
   constructor(private readonly feedbackService: AgentMessageFeedbackService) {}
 
+  // TODO: add a AgentMessageGuard
   @CheckPolicy((policy) => policy.canList())
   @Post(AgentMessageFeedbackRoutes.createOne.path)
   async createOne(

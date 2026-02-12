@@ -18,7 +18,9 @@
     "fileIsNotStored": "File is not stored",
     "storeFile": "Store file",
     "feedback": "Feedback",
-    "description": "Description"
+    "description": "Description",
+    "projects": "Projects",
+    "open": "Open"
   },
   "project": {
     "createButton": {
