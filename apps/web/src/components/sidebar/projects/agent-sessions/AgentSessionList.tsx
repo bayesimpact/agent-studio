@@ -5,7 +5,7 @@ import {
 } from "@caseai-connect/ui/shad/sidebar"
 import { MessagesSquareIcon } from "lucide-react"
 import { Link, useParams } from "react-router-dom"
-import { selectAgentSessionsFromAgentId } from "@/features/agent-sessions/agent-sessions.selectors"
+import { selectCurrentAgentSessionsDataFromAgentId } from "@/features/agent-sessions/agent-sessions.selectors"
 import { useBuildPath } from "@/hooks/use-build-path"
 import { ADS } from "@/store/async-data-status"
 import { useAppSelector } from "@/store/hooks"
@@ -26,7 +26,7 @@ export function AgentSessionList({
   const { agentSessionId: urlagentSessionId } = useParams()
   const { buildPath } = useBuildPath()
 
-  const sessions = useAppSelector(selectAgentSessionsFromAgentId(agentId))
+  const sessions = useAppSelector(selectCurrentAgentSessionsDataFromAgentId(agentId))
 
   const items: MenuItem[] = ADS.isFulfilled(sessions)
     ? sessions.value.map((session) => ({

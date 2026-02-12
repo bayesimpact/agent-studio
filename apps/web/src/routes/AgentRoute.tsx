@@ -23,7 +23,7 @@ import { EditAgentDialogWithTrigger } from "@/components/agents/EditAgentDialog"
 import { MarkdownWrapper } from "@/components/chat/MarkdownWrapper"
 import { useSidebarLayout } from "@/components/layouts/sidebar/context"
 import { CreateAgentSession } from "@/components/sidebar/projects/agent-sessions/CreateAgentSession"
-import { selectAgentSessionsFromAgentId } from "@/features/agent-sessions/agent-sessions.selectors"
+import { selectCurrentAgentSessionsData } from "@/features/agent-sessions/agent-sessions.selectors"
 import type { Agent } from "@/features/agents/agents.models"
 import { selectAgentData, selectCurrentAgentId } from "@/features/agents/agents.selectors"
 import { selectCurrentOrganizationId } from "@/features/organizations/organizations.selectors"
@@ -39,7 +39,7 @@ import { NotFoundRoute } from "./NotFoundRoute"
 export function AgentRoute() {
   const agentId = useAppSelector(selectCurrentAgentId)
   const agent = useAppSelector(selectAgentData)
-  const agentSessions = useAppSelector(selectAgentSessionsFromAgentId(agentId))
+  const agentSessions = useAppSelector(selectCurrentAgentSessionsData)
 
   if (ADS.isError(agent) || ADS.isError(agentSessions)) return <NotFoundRoute />
 
@@ -87,29 +87,18 @@ function NoagentSession({ agentId }: { agentId: string }) {
 
 function useHandleHeader(agent: Agent) {
   const { isAdminInterface } = useAbility()
-  const { setHeaderTitle, setHeaderRightSlot } = useSidebarLayout()
-  const headerTitle = agent && isAdminInterface ? `${agent.name} - Playground` : "Agent"
+  const { setHeaderRightSlot } = useSidebarLayout()
   const { isRoute } = useIsRoute()
   const isAgentRoute = isRoute(RouteNames.AGENT)
   const isAgentSessionRoute = isRoute(RouteNames.AGENT_SESSION)
 
   useEffect(() => {
     if (!isAgentRoute && !isAgentSessionRoute) return
-    setHeaderTitle(headerTitle)
     if (isAdminInterface) setHeaderRightSlot(<HeaderRightSlot agent={agent} />)
     return () => {
-      setHeaderTitle("")
       setHeaderRightSlot(undefined)
     }
-  }, [
-    headerTitle,
-    setHeaderTitle,
-    agent,
-    setHeaderRightSlot,
-    isAdminInterface,
-    isAgentRoute,
-    isAgentSessionRoute,
-  ])
+  }, [agent, setHeaderRightSlot, isAdminInterface, isAgentRoute, isAgentSessionRoute])
 }
 
 function HeaderRightSlot({ agent }: { agent: Agent }) {
