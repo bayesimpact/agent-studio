@@ -13,6 +13,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@caseai-connect/ui/shad/dropdown-menu"
+import { cn } from "@caseai-connect/ui/utils"
 import { ChevronDownIcon, DotIcon } from "lucide-react"
 import { useTranslation } from "react-i18next"
 import { Link } from "react-router-dom"
@@ -97,13 +98,16 @@ function ProjectList({ organizationId }: { organizationId: string }) {
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start">
           <DropdownMenuGroup>
-            {projects.value.map((project) => (
+            {projects.value.map((p) => (
               <DropdownMenuItem
-                key={project.id}
-                className="cursor-pointer"
-                onClick={handleClick(project.id)}
+                key={p.id}
+                className={cn(
+                  "cursor-pointer",
+                  p.id === project.value.id && "text-muted-foreground",
+                )}
+                onClick={handleClick(p.id)}
               >
-                {project.name}
+                {p.name}
               </DropdownMenuItem>
             ))}
           </DropdownMenuGroup>
@@ -155,13 +159,13 @@ function AgentList({ organizationId }: { organizationId: string }) {
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start">
           <DropdownMenuGroup>
-            {agents.value.map((agent) => (
+            {agents.value.map((a) => (
               <DropdownMenuItem
-                key={agent.id}
-                className="cursor-pointer"
-                onClick={handleClick(agent.id)}
+                key={a.id}
+                className={cn("cursor-pointer", a.id === agent.value.id && "text-muted-foreground")}
+                onClick={handleClick(a.id)}
               >
-                {agent.name}
+                {a.name}
               </DropdownMenuItem>
             ))}
           </DropdownMenuGroup>
@@ -225,13 +229,16 @@ function AgentSessionList({ organizationId }: { organizationId: string }) {
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start">
           <DropdownMenuGroup>
-            {sessions.value.map((session) => (
+            {sessions.value.map((s) => (
               <DropdownMenuItem
-                key={session.id}
-                className="cursor-pointer"
-                onClick={handleClick({ agentId: session.agentId, agentSessionId: session.id })}
+                key={s.id}
+                className={cn(
+                  "cursor-pointer",
+                  s.id === session.value.id && "text-muted-foreground",
+                )}
+                onClick={handleClick({ agentId: s.agentId, agentSessionId: s.id })}
               >
-                {buildDate(session.createdAt)}
+                {buildDate(s.createdAt)}
               </DropdownMenuItem>
             ))}
           </DropdownMenuGroup>
