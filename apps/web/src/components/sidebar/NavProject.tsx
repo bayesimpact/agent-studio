@@ -17,35 +17,33 @@ import { ProjectOptions } from "./projects/ProjectOptions"
 
 type Item = { action: "edit" | "delete"; value: ProjectDto }
 
-export function AdminNavProjects({
+export function AdminNavProject({
   organizationId,
-  projects,
+  project,
 }: {
   organizationId: string
-  projects: ProjectDto[]
+  project: ProjectDto
 }) {
   const [item, setItem] = useState<Item | null>(null)
   const handleItem = (item: Item) => setItem(item)
   const handleClose = () => setItem(null)
   return (
     <>
-      {projects.map((project) => (
-        <ProjectItem
-          key={project.id}
-          project={project}
-          options={
-            <ProjectOptions
-              onEdit={() => handleItem({ action: "edit", value: project })}
-              onDelete={() => handleItem({ action: "delete", value: project })}
-            />
-          }
-          showEmptyProject={true}
-        >
-          {({ agents }) => (
-            <AdminAgentList organizationId={organizationId} agents={agents} project={project} />
-          )}
-        </ProjectItem>
-      ))}
+      <ProjectItem
+        key={project.id}
+        project={project}
+        options={
+          <ProjectOptions
+            onEdit={() => handleItem({ action: "edit", value: project })}
+            onDelete={() => handleItem({ action: "delete", value: project })}
+          />
+        }
+        showEmptyProject={true}
+      >
+        {({ agents }) => (
+          <AdminAgentList organizationId={organizationId} agents={agents} project={project} />
+        )}
+      </ProjectItem>
 
       <EditProjectDialog
         project={item?.action === "edit" ? item.value : null}
@@ -59,23 +57,19 @@ export function AdminNavProjects({
   )
 }
 
-export function AppNavProjects({
+export function AppNavProject({
   organizationId,
-  projects,
+  project,
 }: {
   organizationId: string
-  projects: ProjectDto[]
+  project: ProjectDto
 }) {
   return (
-    <>
-      {projects.map((project) => (
-        <ProjectItem key={project.id} project={project}>
-          {({ agents }) => (
-            <AppAgentList projectId={project.id} organizationId={organizationId} agents={agents} />
-          )}
-        </ProjectItem>
-      ))}
-    </>
+    <ProjectItem key={project.id} project={project}>
+      {({ agents }) => (
+        <AppAgentList projectId={project.id} organizationId={organizationId} agents={agents} />
+      )}
+    </ProjectItem>
   )
 }
 
