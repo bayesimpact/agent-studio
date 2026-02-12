@@ -36,7 +36,7 @@ export function CreateAgentDialogWithTrigger({ project }: { project: Project }) 
     <div>
       <Sheet modal open={open} onOpenChange={setOpen}>
         <SheetTrigger asChild>
-          <SidebarMenuButton>
+          <SidebarMenuButton className="cursor-pointer">
             <PlusIcon />
             <span>{t("title")}</span>
           </SidebarMenuButton>

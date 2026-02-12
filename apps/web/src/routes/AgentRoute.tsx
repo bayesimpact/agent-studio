@@ -1,12 +1,5 @@
 import { Button } from "@caseai-connect/ui/shad/button"
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@caseai-connect/ui/shad/card"
-import { Item, ItemContent } from "@caseai-connect/ui/shad/item"
+import { Item, ItemActions, ItemContent, ItemTitle } from "@caseai-connect/ui/shad/item"
 import { ScrollArea } from "@caseai-connect/ui/shad/scroll-area"
 import {
   Sheet,
@@ -17,71 +10,153 @@ import {
 } from "@caseai-connect/ui/shad/sheet"
 import { useEffect } from "react"
 import { useTranslation } from "react-i18next"
-import { Outlet, useOutlet, useParams } from "react-router-dom"
+import { Outlet, useNavigate, useOutlet, useParams } from "react-router-dom"
 import { DeleteAgentDialogWithTrigger } from "@/components/agents/DeleteAgentDialog"
 import { EditAgentDialogWithTrigger } from "@/components/agents/EditAgentDialog"
 import { MarkdownWrapper } from "@/components/chat/MarkdownWrapper"
+import { FullPageCenterLayout } from "@/components/layouts/FullPageCenterLayout"
 import { useSidebarLayout } from "@/components/layouts/sidebar/context"
 import { CreateAgentSession } from "@/components/sidebar/projects/agent-sessions/CreateAgentSession"
+import type { AgentSession } from "@/features/agent-sessions/agent-sessions.models"
 import { selectCurrentAgentSessionsData } from "@/features/agent-sessions/agent-sessions.selectors"
 import type { Agent } from "@/features/agents/agents.models"
 import { selectAgentData, selectCurrentAgentId } from "@/features/agents/agents.selectors"
 import { selectCurrentOrganizationId } from "@/features/organizations/organizations.selectors"
 import { selectCurrentProjectId } from "@/features/projects/projects.selectors"
 import { useAbility } from "@/hooks/use-ability"
+import { useBuildPath } from "@/hooks/use-build-path"
 import { useIsRoute } from "@/hooks/use-is-route"
 import { ADS } from "@/store/async-data-status"
 import { useAppSelector } from "@/store/hooks"
+import { buildDate } from "@/utils/build-date"
 import { RouteNames } from "./helpers"
 import { LoadingRoute } from "./LoadingRoute"
 import { NotFoundRoute } from "./NotFoundRoute"
 
 export function AgentRoute() {
+  const organizationId = useAppSelector(selectCurrentOrganizationId)
+  const projectId = useAppSelector(selectCurrentProjectId)
   const agentId = useAppSelector(selectCurrentAgentId)
   const agent = useAppSelector(selectAgentData)
   const agentSessions = useAppSelector(selectCurrentAgentSessionsData)
 
-  if (ADS.isError(agent) || ADS.isError(agentSessions)) return <NotFoundRoute />
+  if (ADS.isError(agent) || ADS.isError(agentSessions) || !organizationId || !projectId)
+    return <NotFoundRoute />
 
   if (ADS.isFulfilled(agent) && ADS.isFulfilled(agentSessions)) {
-    return <WithData key={agentId} agent={agent.value} />
+    return (
+      <WithData
+        key={agentId}
+        projectId={projectId}
+        agent={agent.value}
+        agentSessions={agentSessions.value}
+        organizationId={organizationId}
+      />
+    )
   }
 
   return <LoadingRoute />
 }
 
-function WithData({ agent }: { agent: Agent }) {
+function WithData({
+  agent,
+  agentSessions,
+  organizationId,
+  projectId,
+}: {
+  agent: Agent
+  agentSessions: AgentSession[]
+  organizationId: string
+  projectId: string
+}) {
   const outlet = useOutlet()
 
   useHandleHeader(agent)
 
   if (outlet) return <Outlet />
 
-  return <NoagentSession agentId={agent.id} />
+  return (
+    <AgentSessionList
+      organizationId={organizationId}
+      projectId={projectId}
+      agentId={agent.id}
+      agentSessions={agentSessions}
+    />
+  )
 }
 
-function NoagentSession({ agentId }: { agentId: string }) {
-  const { t } = useTranslation("agentSession", { keyPrefix: "list" })
-  const organizationId = useAppSelector(selectCurrentOrganizationId)
-  const projectId = useAppSelector(selectCurrentProjectId)
-  if (!organizationId || !projectId) return null
+function AgentSessionList({
+  organizationId,
+  projectId,
+  agentId,
+  agentSessions,
+}: {
+  organizationId: string
+  projectId: string
+  agentId: string
+  agentSessions: AgentSession[]
+}) {
+  const { t } = useTranslation("common")
+  const { isAdminInterface } = useAbility()
   return (
-    <div className="p-6">
-      <Card>
-        <CardHeader>
-          <CardTitle>{t("empty.title")}</CardTitle>
-          <CardDescription>{t("empty.description")}</CardDescription>
-        </CardHeader>
-        <CardContent>
+    <FullPageCenterLayout>
+      <div className="flex flex-col gap-4">
+        <h4 className="scroll-m-20 text-xl font-semibold tracking-tight">{t("chatSessions")}</h4>
+        {agentSessions.map((agentSession) => (
+          <AgentSessionItem
+            key={agentSession.id}
+            organizationId={organizationId}
+            projectId={projectId}
+            agentId={agentId}
+            agentSession={agentSession}
+          />
+        ))}
+
+        {isAdminInterface && (
           <CreateAgentSession
             type="button"
             organizationId={organizationId}
             projectId={projectId}
             agentId={agentId}
           />
-        </CardContent>
-      </Card>
-    </div>
+        )}
+      </div>
+    </FullPageCenterLayout>
+  )
+}
+
+function AgentSessionItem({
+  agentSession,
+  organizationId,
+  projectId,
+  agentId,
+}: {
+  agentSession: AgentSession
+  organizationId: string
+  projectId: string
+  agentId: string
+}) {
+  const navigate = useNavigate()
+  const { t } = useTranslation("common")
+  const { buildPath } = useBuildPath()
+  const handleClick = () => {
+    const path = buildPath("agentSession", {
+      organizationId,
+      projectId,
+      agentId,
+      agentSessionId: agentSession.id,
+    })
+    navigate(path)
+  }
+  return (
+    <Item variant="outline" className="min-w-96 w-fit">
+      <ItemContent>
+        <ItemTitle>{buildDate(agentSession.updatedAt)}</ItemTitle>
+      </ItemContent>
+      <ItemActions>
+        <Button onClick={handleClick}>{t("open")}</Button>
+      </ItemActions>
+    </Item>
   )
 }
 

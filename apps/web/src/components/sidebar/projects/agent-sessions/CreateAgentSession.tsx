@@ -31,7 +31,7 @@ export function CreateAgentSession({
   }
   const Comp = type === "button" ? Button : SidebarMenuSubButton
   return (
-    <Comp onClick={handleClick} className="cursor-default">
+    <Comp onClick={handleClick} className="cursor-pointer">
       <PlusIcon />
       <span>{t("button")}</span>
     </Comp>
