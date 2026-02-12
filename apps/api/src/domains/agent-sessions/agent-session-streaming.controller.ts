@@ -1,3 +1,4 @@
+import { AgentSessionStreamingRoutes } from "@caseai-connect/api-contracts"
 import type { MessageEvent } from "@nestjs/common"
 import {
   Controller,
@@ -12,7 +13,6 @@ import { Observable } from "rxjs"
 import { JwtAuthGuard } from "@/domains/auth/jwt-auth.guard"
 import { UserGuard } from "@/domains/users/user.guard"
 import type { EndpointRequest } from "@/request.interface"
-import { AgentSessionStreamingRoutes } from "./agent-session-streaming.routes"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
 import { AgentSessionsService } from "./agent-sessions.service"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
