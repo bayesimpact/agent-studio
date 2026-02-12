@@ -58,10 +58,8 @@ export class AgentSessionsController {
   ): Promise<typeof AgentSessionsRoutes.createPlaygroundSession.response> {
     const user = request.user
 
-    const connectRequiredFields = await this.agentSessionsService.verifyUserCanCreatePlaygroundSession(
-      user.id,
-      agentId,
-    )
+    const connectRequiredFields =
+      await this.agentSessionsService.verifyUserCanCreatePlaygroundSession(user.id, agentId)
 
     const session = await this.agentSessionsService.createPlaygroundSession({
       connectRequiredFields,
@@ -84,10 +82,8 @@ export class AgentSessionsController {
       throw new Error("Session type not supported.")
     }
 
-    const connectRequiredFields = await this.agentSessionsService.verifyUserCanCreateAppPrivateSession(
-      user.id,
-      agentId,
-    )
+    const connectRequiredFields =
+      await this.agentSessionsService.verifyUserCanCreateAppPrivateSession(user.id, agentId)
 
     const session = await this.agentSessionsService.createAppPrivateSession({
       connectRequiredFields,
