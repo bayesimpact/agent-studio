@@ -64,8 +64,7 @@ describe("Agents - createOne", () => {
       request: payload,
     })
 
-  //fixme Restore test
-  xit("should create an agent and return it", async () => {
+  it("should create an agent and return it", async () => {
     await createContext()
 
     const response = await subject({
