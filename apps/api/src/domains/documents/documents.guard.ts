@@ -37,7 +37,14 @@ export class DocumentsGuard implements CanActivate {
 
     // ok, we have a documentId (UPDATE, DELETE routes), fetch the document from the database
     if (documentId) {
-      document = (await this.documentsService.findById(documentId)) ?? undefined
+      document =
+        (await this.documentsService.findById({
+          connectRequiredFields: {
+            organizationId: request.organizationId,
+            projectId: request.project.id,
+          },
+          documentId,
+        })) ?? undefined
       if (!document) throw new NotFoundException()
 
       // enhance the request object with the document

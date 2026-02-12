@@ -1,3 +1,4 @@
+import type { ConnectRequiredFields } from "@/common/entities/connect-required-fields"
 import type { Agent } from "./domains/agents/agent.entity"
 import type { Document } from "./domains/documents/document.entity"
 import type { UserMembership } from "./domains/organizations/user-membership.entity"
@@ -33,4 +34,13 @@ export interface EndpointRequestWithDocument extends EndpointRequestWithProject 
 
 export interface EndpointRequestWithAgent extends EndpointRequestWithProject {
   agent: Agent
+}
+
+export function toConnectRequiredFields<T extends EndpointRequestWithProject>(
+  request: T,
+): ConnectRequiredFields {
+  return {
+    organizationId: request.organizationId,
+    projectId: request.project.id,
+  } satisfies ConnectRequiredFields
 }
