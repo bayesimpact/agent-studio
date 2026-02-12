@@ -18,7 +18,9 @@
     "fileIsNotStored": "Le fichier n'est pas stocké",
     "storeFile": "Stocker le fichier",
     "feedback": "Retours utilisateur",
-    "description": "Description"
+    "description": "Description",
+    "projects": "Projets",
+    "open": "Ouvrir"
   },
   "project": {
     "createButton": {

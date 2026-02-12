@@ -1,16 +1,13 @@
 import { Button } from "@caseai-connect/ui/shad/button"
 import { Item, ItemContent, ItemFooter, ItemHeader, ItemTitle } from "@caseai-connect/ui/shad/item"
-import { format } from "date-fns"
 import { ExternalLinkIcon } from "lucide-react"
 import type { AgentMessageFeedback } from "@/features/agent-message-feedback/agent-message-feedback.models"
-import { getLocale } from "@/utils/get-locale"
+import { buildDate } from "@/utils/build-date"
 import { MarkdownWrapper } from "../chat/MarkdownWrapper"
 
 export function FeedbackItem({ feedback }: { feedback: AgentMessageFeedback }) {
   const { agentSessionId, agentMessageId } = feedback
-  const createdAt = format(new Date(feedback.createdAt), "dd MMMM yyyy HH:mm", {
-    locale: getLocale(),
-  })
+  const createdAt = buildDate(feedback.createdAt)
   return (
     <div className="py-6 flex flex-col gap-4">
       <Item variant="outline">

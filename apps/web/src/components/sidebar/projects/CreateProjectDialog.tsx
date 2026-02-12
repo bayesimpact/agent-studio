@@ -1,5 +1,6 @@
 "use client"
 
+import { Button } from "@caseai-connect/ui/shad/button"
 import {
   Dialog,
   DialogContent,
@@ -16,7 +17,13 @@ import { CreateProjectForm } from "@/components/projects/CreateProjectForm"
 import type { Organization } from "@/features/organizations/organizations.models"
 import { useBuildPath } from "@/hooks/use-build-path"
 
-export function CreateProjectDialogWithTrigger({ organization }: { organization: Organization }) {
+export function CreateProjectDialogWithTrigger({
+  organization,
+  type,
+}: {
+  organization: Organization
+  type: "button" | "sidebarButton"
+}) {
   const { buildPath } = useBuildPath()
   const { t } = useTranslation("project", { keyPrefix: "createButton" })
 
@@ -28,13 +35,15 @@ export function CreateProjectDialogWithTrigger({ organization }: { organization:
     window.location.href = path
   }
 
+  const Comp = type === "button" ? Button : SidebarMenuButton
+
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <SidebarMenuButton tooltip={t("title")}>
+        <Comp tooltip={t("title")}>
           <PlusIcon />
           <span>{t("title")}</span>
-        </SidebarMenuButton>
+        </Comp>
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>

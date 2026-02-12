@@ -1,10 +1,9 @@
 import { Item, ItemContent, ItemHeader, ItemTitle } from "@caseai-connect/ui/shad/item"
-import { format } from "date-fns"
 import { FileIcon } from "lucide-react"
 import { useTranslation } from "react-i18next"
 import { MarkdownWrapper } from "@/components/chat/MarkdownWrapper"
 import type { Document } from "@/features/documents/documents.models"
-import { getLocale } from "@/utils/get-locale"
+import { buildDate } from "@/utils/build-date"
 import { DeleteDocumentDialog } from "./DeleteDocumentDialog"
 import { OpenDocumentUrl } from "./OpenDocumentUrl"
 
@@ -36,18 +35,8 @@ export function DocumentItem({
 
       <ItemContent>
         <div className="flex flex-col gap-2 mb-4 text-muted-foreground">
-          <MetaData
-            label={t("createdAt")}
-            value={format(new Date(document.createdAt), "dd MMMM yyyy HH:mm", {
-              locale: getLocale(),
-            })}
-          />
-          <MetaData
-            label={t("updatedAt")}
-            value={format(new Date(document.updatedAt), "dd MMMM yyyy HH:mm", {
-              locale: getLocale(),
-            })}
-          />
+          <MetaData label={t("createdAt")} value={buildDate(document.createdAt)} />
+          <MetaData label={t("updatedAt")} value={buildDate(document.updatedAt)} />
           <MetaData label={t("fileName")} value={document.fileName} />
           <MetaData label={t("fileSize")} value={document.size?.toString()} />
           <MetaData label={t("fileLanguage")} value={document.language} />
