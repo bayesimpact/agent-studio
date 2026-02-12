@@ -11,7 +11,10 @@ import { selectMeData } from "@/features/me/me.selectors"
 import type { Organization } from "@/features/organizations/organizations.models"
 import { selectOrganizationsData } from "@/features/organizations/organizations.selectors"
 import type { Project } from "@/features/projects/projects.models"
-import { selectProjectData, selectProjectsData } from "@/features/projects/projects.selectors"
+import {
+  selectCurrentProjectData,
+  selectProjectsData,
+} from "@/features/projects/projects.selectors"
 import { useAbility } from "@/hooks/use-ability"
 import { useGetPath } from "@/hooks/use-build-path"
 import { ADS } from "@/store/async-data-status"
@@ -51,7 +54,7 @@ function WithData({
   setCurrentIds({ dispatch, params })
 
   const { isAdmin, isAdminInterface } = useAbility()
-  const project = useAppSelector(selectProjectData)
+  const project = useAppSelector(selectCurrentProjectData)
 
   const organization = organizations[0]
 
@@ -71,6 +74,7 @@ function WithData({
   if (ADS.isFulfilled(project))
     return (
       <SidebarLayout
+        organization={organization}
         sidebarHeaderChildren={
           <SidebarHeaderChildren
             isAdminInterface={isAdminInterface}

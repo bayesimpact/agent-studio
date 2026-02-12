@@ -11,8 +11,7 @@ export function useIsRoute() {
   const isRoute = useCallback(
     (routeName: RouteNames) => {
       const routePieces = getRoutePieces(routeName)
-
-      return pathPieces.every((piece, index) => piece === routePieces[index])
+      return pathPieces === routePieces
     },
     [pathPieces],
   )
@@ -27,6 +26,7 @@ function getPathPieces(pathname: string) {
       .filter(Boolean)
       // filter out id params and "app" and "admin" (for app routes)
       .filter((piece) => !idParamRegex.test(piece) && piece !== "app" && piece !== "admin")
+      .toString()
   )
 }
 function getRoutePieces(routeName: RouteNames) {
@@ -34,6 +34,7 @@ function getRoutePieces(routeName: RouteNames) {
     .split("/")
     .filter(Boolean)
     .filter((piece) => !piece.startsWith(":"))
+    .toString()
 }
 
 // 6b40119c-5c06-47ce-b28b-138c22e48c92

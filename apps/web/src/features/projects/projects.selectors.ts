@@ -13,7 +13,7 @@ export const selectProjectsError = (state: RootState) => state.projects.data.err
 
 export const selectCurrentProjectId = (state: RootState) => state.projects.currentProjectId
 
-export const selectProjectData = createSelector(
+export const selectCurrentProjectData = createSelector(
   [selectProjectsData, selectCurrentProjectId],
   (projectsData, projectId): AsyncData<Project> => {
     if (!projectId) return { status: ADS.Error, value: null, error: "No project selected" }

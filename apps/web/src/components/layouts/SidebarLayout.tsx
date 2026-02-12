@@ -9,36 +9,30 @@ import {
   SidebarInset,
   SidebarProvider,
 } from "@caseai-connect/ui/shad/sidebar"
-import { useCallback, useState } from "react"
+import { useState } from "react"
+import type { Organization } from "@/features/organizations/organizations.models"
 import { NavUserMenuItems } from "../sidebar/NavUserMenuItems"
 import { SidebarLayoutContext } from "./sidebar/context"
+import { SidebarBreadcrumb } from "./sidebar/SidebarBreadcrumb"
 
 export function SidebarLayout({
   user,
+  organization,
   children,
   sidebarHeaderChildren,
   sidebarContentChildren,
 }: {
   user: User
+  organization: Organization
   children: React.ReactNode
   sidebarHeaderChildren: React.ReactNode
   sidebarContentChildren: React.ReactNode
 }) {
-  const [headerTitle, setHeaderTitle] = useState("Dashboard")
   const [headerRightSlot, setHeaderRightSlot] = useState<React.ReactNode>(null)
-
-  const handleSetHeaderTitle = useCallback((title: string) => {
-    if (title.trim().length === 0) {
-      title = "Dashboard"
-    }
-    setHeaderTitle(title)
-  }, [])
 
   return (
     <SidebarLayoutContext.Provider
       value={{
-        headerTitle,
-        setHeaderTitle: handleSetHeaderTitle,
         headerRightSlot,
         setHeaderRightSlot,
       }}
@@ -64,7 +58,10 @@ export function SidebarLayout({
         </Sidebar>
 
         <SidebarInset>
-          <LayoutHeader title={headerTitle} rightSlot={headerRightSlot} />
+          <LayoutHeader
+            title={<SidebarBreadcrumb organization={organization} />}
+            rightSlot={headerRightSlot}
+          />
 
           {children}
         </SidebarInset>

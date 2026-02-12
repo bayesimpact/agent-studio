@@ -7,15 +7,17 @@ import {
   CardTitle,
 } from "@caseai-connect/ui/shad/card"
 import { Plus } from "lucide-react"
-import { useEffect, useState } from "react"
+import { useState } from "react"
 import { useTranslation } from "react-i18next"
 import { Navigate, useOutlet } from "react-router-dom"
 import { CreateAgentDialogWithoutTrigger } from "@/components/agents/CreateAgentDialog"
-import { useSidebarLayout } from "@/components/layouts/sidebar/context"
 import type { Agent } from "@/features/agents/agents.models"
 import { selectAgentsFromProjectId } from "@/features/agents/agents.selectors"
 import type { Project } from "@/features/projects/projects.models"
-import { selectCurrentProjectId, selectProjectData } from "@/features/projects/projects.selectors"
+import {
+  selectCurrentProjectData,
+  selectCurrentProjectId,
+} from "@/features/projects/projects.selectors"
 import { useAbility } from "@/hooks/use-ability"
 import { useBuildPath } from "@/hooks/use-build-path"
 import { ADS } from "@/store/async-data-status"
@@ -24,7 +26,7 @@ import { LoadingRoute } from "./LoadingRoute"
 import { NotFoundRoute } from "./NotFoundRoute"
 
 export function ProjectRoute() {
-  const project = useAppSelector(selectProjectData)
+  const project = useAppSelector(selectCurrentProjectData)
   const projectId = useAppSelector(selectCurrentProjectId)
   const agents = useAppSelector(selectAgentsFromProjectId(projectId))
 
@@ -41,7 +43,6 @@ function WithData({ project, agents }: { project: Project; agents: Agent[] }) {
   const outlet = useOutlet()
   const { isAdminInterface } = useAbility()
   const { buildPath } = useBuildPath()
-  useHandleHeader({ project, outlet })
   const firstAgent = agents?.[0]
 
   if (outlet) return outlet
@@ -59,25 +60,6 @@ function WithData({ project, agents }: { project: Project; agents: Agent[] }) {
     )
 
   if (isAdminInterface) return <NoAgent project={project} />
-}
-
-function useHandleHeader({
-  project,
-  outlet,
-}: {
-  project: Project | null
-  outlet: ReturnType<typeof useOutlet>
-}) {
-  const { setHeaderTitle } = useSidebarLayout()
-  const headerTitle = project ? project.name : "Dashboard"
-
-  useEffect(() => {
-    if (outlet) return
-    setHeaderTitle(headerTitle)
-    return () => {
-      setHeaderTitle("")
-    }
-  }, [outlet, headerTitle, setHeaderTitle])
 }
 
 function NoAgent({ project }: { project: Project }) {

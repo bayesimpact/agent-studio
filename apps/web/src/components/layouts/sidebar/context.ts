@@ -1,8 +1,6 @@
 import { createContext, type Dispatch, useContext } from "react"
 
 interface SidebarLayoutContextValue {
-  headerTitle: string
-  setHeaderTitle: (name: string) => void
   headerRightSlot: React.ReactNode
   setHeaderRightSlot: Dispatch<React.SetStateAction<React.ReactNode>>
 }

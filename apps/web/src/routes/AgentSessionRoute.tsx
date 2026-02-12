@@ -4,10 +4,9 @@ import type {
   AgentSessionMessage,
 } from "@/features/agent-sessions/agent-sessions.models"
 import {
-  selectCurrentAgentSessionDataFromAgentId,
+  selectCurrentAgentSessionData,
   selectCurrentMessagesData,
 } from "@/features/agent-sessions/agent-sessions.selectors"
-import { selectCurrentAgentId } from "@/features/agents/agents.selectors"
 import { useAbility } from "@/hooks/use-ability"
 import { ADS } from "@/store/async-data-status"
 import { useAppSelector } from "@/store/hooks"
@@ -15,8 +14,7 @@ import { LoadingRoute } from "./LoadingRoute"
 import { NotFoundRoute } from "./NotFoundRoute"
 
 export function AgentSessionRoute() {
-  const agentId = useAppSelector(selectCurrentAgentId)
-  const agentSession = useAppSelector(selectCurrentAgentSessionDataFromAgentId(agentId))
+  const agentSession = useAppSelector(selectCurrentAgentSessionData)
   const messages = useAppSelector(selectCurrentMessagesData)
 
   if (ADS.isError(agentSession) || ADS.isError(messages)) return <NotFoundRoute />

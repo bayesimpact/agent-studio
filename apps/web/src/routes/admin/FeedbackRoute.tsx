@@ -1,5 +1,4 @@
 import { useEffect } from "react"
-import { useTranslation } from "react-i18next"
 import { EmptyFeedback } from "@/components/agent-message-feedback/EmptyFeedback"
 import { FeedbackItem } from "@/components/agent-message-feedback/FeedbackItem"
 import { useSidebarLayout } from "@/components/layouts/sidebar/context"
@@ -27,7 +26,7 @@ export function FeedbackRoute() {
 }
 
 function WithData({ feedbacks, agent }: { feedbacks: AgentMessageFeedback[]; agent: Agent }) {
-  useHandleHeader({ agent })
+  useHandleHeader()
   return (
     <div className="p-6">
       {feedbacks.length === 0 ? (
@@ -43,17 +42,13 @@ function WithData({ feedbacks, agent }: { feedbacks: AgentMessageFeedback[]; age
   )
 }
 
-function useHandleHeader({ agent }: { agent: Agent }) {
-  const { t } = useTranslation("feedbacks", { keyPrefix: "header" })
-  const { setHeaderTitle, setHeaderRightSlot } = useSidebarLayout()
-  const headerTitle = t("title", { agentName: agent.name })
+function useHandleHeader() {
+  const { setHeaderRightSlot } = useSidebarLayout()
 
   useEffect(() => {
-    setHeaderTitle(headerTitle)
     setHeaderRightSlot(undefined)
     return () => {
-      setHeaderTitle("")
       setHeaderRightSlot(undefined)
     }
-  }, [headerTitle, setHeaderTitle, setHeaderRightSlot])
+  }, [setHeaderRightSlot])
 }
