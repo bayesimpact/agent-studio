@@ -119,8 +119,10 @@ deploy-only:
 	gcloud run deploy ${cloudRunName} --image ${imageUrl}:${version} \
 	--update-secrets=LANGFUSE_SK=${secretsPrefix}LANGFUSE_SK:latest \
 	--update-secrets=DATABASE_PASSWORD=${secretsPrefix}DATABASE_PASSWORD:latest \
+	--update-secrets=AUTH0_M2M_CLIENT_SECRET=${secretsPrefix}AUTH0_M2M_CLIENT_SECRET:latest \
 	--set-env-vars=TZ=UTC \
 	--set-env-vars=AUTH0_ISSUER_URL=https://bayes-impact.eu.auth0.com/,AUTH0_AUDIENCE=https://bayes-impact.eu.auth0.com/api/v2/ \
+	--set-env-vars=AUTH0_ORGANIZATION_ID=$${AUTH0_ORGANIZATION_ID},AUTH0_CLIENT_ID=$${AUTH0_CLIENT_ID},AUTH0_M2M_CLIENT_ID=$${AUTH0_M2M_CLIENT_ID} \
     --set-env-vars=LANGFUSE_PK=${langfusePk},LANGFUSE_BASE_URL=${langfuseUrl},LOCATION=$(location) \
     --set-env-vars=DATABASE_HOST=/cloudsql/${addCloudSqlInstances},DATABASE_USERNAME=connect_admin,DATABASE_NAME=connect \
 	--region=${zone} \

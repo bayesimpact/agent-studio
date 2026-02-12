@@ -4,6 +4,7 @@ import {
   setupTransactionalTestDatabase,
   teardownTestDatabase,
 } from "@/common/test/test-transaction-manager"
+import { INVITATION_SENDER } from "@/domains/auth/invitation-sender.interface"
 import {
   createOrganizationWithOwner,
   createOrganizationWithProject,
@@ -12,6 +13,10 @@ import type { Project } from "./project.entity"
 import { projectFactory } from "./project.factory"
 import { ProjectsModule } from "./projects.module"
 import { ProjectsService } from "./projects.service"
+
+const mockInvitationSender = {
+  sendInvitation: jest.fn().mockResolvedValue(undefined),
+}
 
 describe("ProjectsService", () => {
   let service: ProjectsService
@@ -24,6 +29,8 @@ describe("ProjectsService", () => {
   beforeAll(async () => {
     setup = await setupTransactionalTestDatabase({
       additionalImports: [ProjectsModule],
+      applyOverrides: (moduleBuilder) =>
+        moduleBuilder.overrideProvider(INVITATION_SENDER).useValue(mockInvitationSender),
     })
     await clearTestDatabase(setup.dataSource)
     repositories = setup.getAllRepositories()

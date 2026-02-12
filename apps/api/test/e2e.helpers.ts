@@ -1,5 +1,6 @@
 import type { TestingModuleBuilder } from "@nestjs/testing"
 import { Auth0UserInfoService } from "@/domains/auth/auth0-userinfo.service"
+import { INVITATION_SENDER } from "@/domains/auth/invitation-sender.interface"
 import { JwtAuthGuard } from "@/domains/auth/jwt-auth.guard"
 
 const mockAuth0UserInfoService = {
@@ -9,6 +10,10 @@ const mockAuth0UserInfoService = {
     name: "Test User",
     picture: "http://picture.url",
   }),
+}
+
+export const mockInvitationSender = {
+  sendInvitation: jest.fn().mockResolvedValue(undefined),
 }
 
 export const setupUserGuardForTesting = (
@@ -27,4 +32,6 @@ export const setupUserGuardForTesting = (
     })
     .overrideProvider(Auth0UserInfoService)
     .useValue(mockAuth0UserInfoService)
+    .overrideProvider(INVITATION_SENDER)
+    .useValue(mockInvitationSender)
 }

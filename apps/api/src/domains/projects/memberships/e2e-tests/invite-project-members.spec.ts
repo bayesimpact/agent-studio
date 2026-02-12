@@ -9,7 +9,7 @@ import {
 import { removeNullish } from "@/common/utils/remove-nullish"
 import { createOrganizationWithProject } from "@/domains/organizations/organization.factory"
 import { userFactory } from "@/domains/users/user.factory"
-import { setupUserGuardForTesting } from "../../../../../test/e2e.helpers"
+import { mockInvitationSender, setupUserGuardForTesting } from "../../../../../test/e2e.helpers"
 import { expectResponse, type Requester, testRequester } from "../../../../../test/request"
 import { ProjectsModule } from "../../projects.module"
 
@@ -41,6 +41,7 @@ describe("Projects - inviteProjectMembers", () => {
     await clearTestDatabase(setup.dataSource)
     accessToken = "token"
     auth0Id = "auth0|123"
+    jest.clearAllMocks()
   })
 
   afterAll(async () => {
@@ -101,5 +102,25 @@ describe("Projects - inviteProjectMembers", () => {
     expect(memberships[0]!.userEmail).toBe("existing@example.com")
     expect(memberships[0]!.userName).toBe("Existing User")
     expect(memberships[0]!.userId).toBe(existingUser.id)
+  })
+
+  it("should call the invitation sender for each invited user", async () => {
+    await createContext()
+
+    await subject({ payload: { emails: ["user1@example.com", "user2@example.com"] } })
+
+    expect(mockInvitationSender.sendInvitation).toHaveBeenCalledTimes(2)
+    expect(mockInvitationSender.sendInvitation).toHaveBeenCalledWith(
+      expect.objectContaining({
+        inviteeEmail: "user1@example.com",
+        metadata: expect.objectContaining({ invitationToken: expect.any(String) }),
+      }),
+    )
+    expect(mockInvitationSender.sendInvitation).toHaveBeenCalledWith(
+      expect.objectContaining({
+        inviteeEmail: "user2@example.com",
+        metadata: expect.objectContaining({ invitationToken: expect.any(String) }),
+      }),
+    )
   })
 })

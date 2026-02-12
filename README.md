@@ -92,12 +92,22 @@ DATABASE_URL=postgresql://admin:passpass@localhost:5432/caseai_connect
 # Auth0
 AUTH0_ISSUER_URL=https://bayes-impact.eu.auth0.com/
 AUTH0_AUDIENCE=https://bayes-impact.eu.auth0.com/api/v2/
+
+# Auth0 Invitations
+AUTH0_ORGANIZATION_ID=org_XXX
+AUTH0_CLIENT_ID=XXX
+AUTH0_M2M_CLIENT_ID=XXX
+AUTH0_M2M_CLIENT_SECRET=XXX
 ```
 
 **Required variables:**
 - `DATABASE_URL` - PostgreSQL connection string
 - `AUTH0_ISSUER_URL` - Auth0 issuer URL
 - `AUTH0_AUDIENCE` - Auth0 API audience
+- `AUTH0_ORGANIZATION_ID` - Auth0 organization ID (single org, see ADR-0001)
+- `AUTH0_CLIENT_ID` - Auth0 web SPA application client ID (used in invitation links)
+- `AUTH0_M2M_CLIENT_ID` - Auth0 M2M application client ID (for Management API)
+- `AUTH0_M2M_CLIENT_SECRET` - Auth0 M2M application client secret
 
 **Optional variables:**
 - `GOOGLE_APPLICATION_CREDENTIALS` - Path to Google Cloud service account key (for AI features)

@@ -42,11 +42,12 @@ export class ProjectMembershipsController {
     @Req() request: EndpointRequestWithProject,
     @Body() body: typeof ProjectsRoutes.inviteProjectMembers.request,
   ): Promise<typeof ProjectsRoutes.inviteProjectMembers.response> {
-    const { project } = request
+    const { project, user } = request
 
     const memberships = await this.projectMembershipsService.inviteProjectMembers(
       project.id,
       body.payload.emails,
+      user.name ?? user.email,
     )
 
     return {
