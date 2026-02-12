@@ -1,27 +1,39 @@
-import { useMemo } from "react"
+import { useCallback, useMemo } from "react"
 import { useLocation } from "react-router-dom"
 import type { RouteNames } from "@/routes/helpers"
 
-export function useIsRoute(routeName: RouteNames): boolean {
-  const routePieces = useMemo(() => {
-    return routeName
-      .split("/")
-      .filter(Boolean)
-      .filter((piece) => !piece.startsWith(":"))
-  }, [routeName])
-
+export function useIsRoute() {
   const { pathname } = useLocation()
   const pathPieces = useMemo(() => {
-    return pathname
-      .split("/")
-      .filter(Boolean)
-      .filter((piece) => !idParamRegex.test(piece) && piece !== "app" && piece !== "admin") // filter out id params and "app" and "admin" (for app routes)
+    return getPathPieces(pathname)
   }, [pathname])
 
-  return useMemo(
-    () => pathPieces.every((piece, index) => piece === routePieces[index]),
-    [routePieces, pathPieces],
+  const isRoute = useCallback(
+    (routeName: RouteNames) => {
+      const routePieces = getRoutePieces(routeName)
+
+      return pathPieces.every((piece, index) => piece === routePieces[index])
+    },
+    [pathPieces],
   )
+
+  return { isRoute }
+}
+
+function getPathPieces(pathname: string) {
+  return (
+    pathname
+      .split("/")
+      .filter(Boolean)
+      // filter out id params and "app" and "admin" (for app routes)
+      .filter((piece) => !idParamRegex.test(piece) && piece !== "app" && piece !== "admin")
+  )
+}
+function getRoutePieces(routeName: RouteNames) {
+  return routeName
+    .split("/")
+    .filter(Boolean)
+    .filter((piece) => !piece.startsWith(":"))
 }
 
 // 6b40119c-5c06-47ce-b28b-138c22e48c92

@@ -9,7 +9,6 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@caseai-connect/ui/shad/dialog"
-import { SidebarMenuButton } from "@caseai-connect/ui/shad/sidebar"
 import { PlusIcon } from "lucide-react"
 import { useState } from "react"
 import { useTranslation } from "react-i18next"
@@ -17,13 +16,7 @@ import { CreateProjectForm } from "@/components/projects/CreateProjectForm"
 import type { Organization } from "@/features/organizations/organizations.models"
 import { useBuildPath } from "@/hooks/use-build-path"
 
-export function CreateProjectDialogWithTrigger({
-  organization,
-  type,
-}: {
-  organization: Organization
-  type: "button" | "sidebarButton"
-}) {
+export function CreateProjectDialogWithTrigger({ organization }: { organization: Organization }) {
   const { buildPath } = useBuildPath()
   const { t } = useTranslation("project", { keyPrefix: "createButton" })
 
@@ -35,15 +28,13 @@ export function CreateProjectDialogWithTrigger({
     window.location.href = path
   }
 
-  const Comp = type === "button" ? Button : SidebarMenuButton
-
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Comp tooltip={t("title")}>
+        <Button>
           <PlusIcon />
           <span>{t("title")}</span>
-        </Comp>
+        </Button>
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>

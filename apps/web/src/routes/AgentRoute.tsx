@@ -89,8 +89,9 @@ function useHandleHeader(agent: Agent) {
   const { isAdminInterface } = useAbility()
   const { setHeaderTitle, setHeaderRightSlot } = useSidebarLayout()
   const headerTitle = agent && isAdminInterface ? `${agent.name} - Playground` : "Agent"
-  const isAgentRoute = useIsRoute(RouteNames.AGENT)
-  const isAgentSessionRoute = useIsRoute(RouteNames.AGENT_SESSION)
+  const { isRoute } = useIsRoute()
+  const isAgentRoute = isRoute(RouteNames.AGENT)
+  const isAgentSessionRoute = isRoute(RouteNames.AGENT_SESSION)
 
   useEffect(() => {
     if (!isAgentRoute && !isAgentSessionRoute) return

@@ -54,9 +54,7 @@ export function ProjectList({
           <ProjectItem key={project.id} organizationId={organization.id} project={project} />
         ))}
 
-        {isAdminInterface && (
-          <CreateProjectDialogWithTrigger type="button" organization={organization} />
-        )}
+        {isAdminInterface && <CreateProjectDialogWithTrigger organization={organization} />}
       </div>
     </FullPageCenterLayout>
   )

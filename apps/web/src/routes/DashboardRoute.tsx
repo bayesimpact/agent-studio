@@ -1,12 +1,10 @@
 import { Header } from "@caseai-connect/ui/components/layouts/sidebar/Header"
-import { SidebarMenu, SidebarMenuItem } from "@caseai-connect/ui/shad/sidebar"
 import { Switch } from "@caseai-connect/ui/shad/switch"
 import { SlidersHorizontalIcon, SparklesIcon } from "lucide-react"
 import { Outlet, useParams } from "react-router-dom"
 import { SidebarLayout } from "@/components/layouts/SidebarLayout"
 import { ProjectList } from "@/components/ProjectList"
-import { AdminNavProjects, AppNavProjects } from "@/components/sidebar/NavProjects"
-import { CreateProjectDialogWithTrigger } from "@/components/sidebar/projects/CreateProjectDialog"
+import { AdminNavProject, AppNavProject } from "@/components/sidebar/NavProject"
 import { authActions } from "@/features/auth/auth.slice"
 import type { User } from "@/features/me/me.models"
 import { selectMeData } from "@/features/me/me.selectors"
@@ -83,7 +81,7 @@ function WithData({
         sidebarContentChildren={
           <SidebarContentChildren
             isAdminInterface={isAdminInterface}
-            projects={projects}
+            project={project.value}
             organization={organization}
           />
         }
@@ -150,24 +148,14 @@ export function InterfaceToggle({
 
 function SidebarContentChildren({
   isAdminInterface,
-  projects,
+  project,
   organization,
 }: {
   isAdminInterface: boolean
-  projects: Project[]
+  project: Project
   organization: Organization
 }) {
   if (isAdminInterface)
-    return (
-      <>
-        <AdminNavProjects organizationId={organization.id} projects={projects} />
-
-        <SidebarMenu>
-          <SidebarMenuItem>
-            <CreateProjectDialogWithTrigger type="sidebarButton" organization={organization} />
-          </SidebarMenuItem>
-        </SidebarMenu>
-      </>
-    )
-  return <AppNavProjects organizationId={organization.id} projects={projects} />
+    return <AdminNavProject organizationId={organization.id} project={project} />
+  return <AppNavProject organizationId={organization.id} project={project} />
 }
