@@ -29,9 +29,18 @@ export class AgentStreamingService {
     agent: Agent,
     userContent: string,
   ): AsyncGenerator<MessageEvent, void, unknown> {
+    //fixme DOO: pass connectRequiredFields
+    const connectRequiredFields = {
+      organizationId: session.organizationId,
+      projectId: session.projectId,
+    }
     // Step 1: Prepare for streaming (persist user message + empty assistant message)
     const { session: updatedSession, assistantMessageId } =
-      await this.agentSessionsService.prepareForStreaming(session.id, userContent)
+      await this.agentSessionsService.prepareForStreaming({
+        connectRequiredFields,
+        sessionId: session.id,
+        userContent: userContent,
+      })
 
     // Step 2: Send start event with messageId so frontend can update optimistic message
     yield {
