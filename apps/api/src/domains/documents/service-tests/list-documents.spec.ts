@@ -37,7 +37,10 @@ describe("listDocuments", () => {
     })
     await documentRepository.save([document1, document2, deletedDocument])
 
-    const result = await service.listDocuments({ projectId: project.id })
+    const result = await service.listDocuments({
+      organizationId: organization.id,
+      projectId: project.id,
+    })
 
     expect(result).toHaveLength(2)
     expect(result.map((r) => r.title)).toContain("Document 1")

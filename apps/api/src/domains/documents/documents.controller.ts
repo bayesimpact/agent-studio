@@ -24,7 +24,11 @@ import { JwtAuthGuard } from "@/domains/auth/jwt-auth.guard"
 import { OrganizationGuard } from "@/domains/organizations/organization.guard"
 import { ProjectsGuard } from "@/domains/projects/projects.guard"
 import { UserGuard } from "@/domains/users/user.guard"
-import type { EndpointRequestWithDocument, EndpointRequestWithProject } from "@/request.interface"
+import {
+  type EndpointRequestWithDocument,
+  type EndpointRequestWithProject,
+  toConnectRequiredFields,
+} from "@/request.interface"
 import type { Document } from "./document.entity"
 import { DocumentsGuard } from "./documents.guard"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
@@ -60,9 +64,6 @@ export class DocumentsController {
     file: MulterFile,
     @Request() req: EndpointRequestWithProject,
   ): Promise<typeof DocumentsRoutes.uploadOne.response> {
-    const organizationId = req.organizationId
-    const projectId = req.project.id
-
     if (!file) {
       throw new UnprocessableEntityException("File is required.")
     }
@@ -97,15 +98,15 @@ export class DocumentsController {
     if (extension.trim().length === 0) {
       throw new UnprocessableEntityException("File extension is required.", extension)
     }
-
+    const connectRequiredFields = toConnectRequiredFields(req)
     const fileInfo = await this.fileStorageService.save({
       file,
-      pathPrefix: `${organizationId}/${projectId}`,
+      pathPrefix: `${connectRequiredFields.organizationId}/${connectRequiredFields.projectId}`,
       extension,
     })
 
     const document = await this.documentsService.createDocumentFromFile({
-      connectRequiredFields: { organizationId, projectId },
+      connectRequiredFields,
       documentId: fileInfo.fileId,
       fields: {
         fileName: file.originalname,
@@ -127,12 +128,7 @@ export class DocumentsController {
   async getAll(
     @Request() req: EndpointRequestWithProject,
   ): Promise<typeof DocumentsRoutes.getAll.response> {
-    const projectId = req.project.id
-
-    const documents = await this.documentsService.listDocuments({
-      projectId,
-    })
-
+    const documents = await this.documentsService.listDocuments(toConnectRequiredFields(req))
     return { data: documents.map(toDocumentDto) }
   }
 
@@ -144,6 +140,7 @@ export class DocumentsController {
     const documentId = req.document.id
 
     await this.documentsService.deleteDocument({
+      connectRequiredFields: toConnectRequiredFields(req),
       documentId,
     })
 

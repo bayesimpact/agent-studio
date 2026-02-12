@@ -29,7 +29,10 @@ describe("deleteDocument", () => {
     })
     await documentRepository.save(document)
 
-    await service.deleteDocument({ documentId: document.id })
+    await service.deleteDocument({
+      connectRequiredFields: { organizationId: organization.id, projectId: project.id },
+      documentId: document.id,
+    })
 
     const deletedDocument = await documentRepository.findOne({
       where: { id: document.id },
@@ -46,7 +49,7 @@ describe("deleteDocument", () => {
       userRepository,
     } = getTestContext()
 
-    await createOrganizationWithProject({
+    const { organization, project } = await createOrganizationWithProject({
       organizationRepository,
       userRepository,
       membershipRepository,
@@ -55,8 +58,11 @@ describe("deleteDocument", () => {
 
     const nonExistentDocumentId = "00000000-0000-0000-0000-000000000000"
 
-    await expect(service.deleteDocument({ documentId: nonExistentDocumentId })).rejects.toThrow(
-      NotFoundException,
-    )
+    await expect(
+      service.deleteDocument({
+        connectRequiredFields: { organizationId: organization.id, projectId: project.id },
+        documentId: nonExistentDocumentId,
+      }),
+    ).rejects.toThrow(NotFoundException)
   })
 })
