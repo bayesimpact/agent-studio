@@ -20,7 +20,8 @@
     "feedback": "Feedback",
     "description": "Description",
     "projects": "Projects",
-    "open": "Open"
+    "open": "Open",
+    "chatSessions": "Chat Sessions"
   },
   "project": {
     "createButton": {
