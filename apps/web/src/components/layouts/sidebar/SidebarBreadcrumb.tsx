@@ -28,7 +28,7 @@ import {
   selectCurrentProjectId,
   selectProjectsData,
 } from "@/features/projects/projects.selectors"
-import { useBuildPath, useGetPath } from "@/hooks/use-build-path"
+import { useBuildPath } from "@/hooks/use-build-path"
 import { useIsRoute } from "@/hooks/use-is-route"
 import { RouteNames } from "@/routes/helpers"
 import { ADS } from "@/store/async-data-status"
@@ -36,16 +36,9 @@ import { useAppSelector } from "@/store/hooks"
 import { buildDate } from "@/utils/build-date"
 
 export function SidebarBreadcrumb({ organization }: { organization: Organization }) {
-  const { getPath } = useGetPath()
   return (
     <Breadcrumb>
       <BreadcrumbList>
-        <BreadcrumbItem>
-          <BreadcrumbLink asChild>
-            <Link to={getPath("organization")}>{organization.name}</Link>
-          </BreadcrumbLink>
-        </BreadcrumbItem>
-
         <ProjectList organizationId={organization.id} />
 
         <AgentList organizationId={organization.id} />
@@ -73,47 +66,34 @@ function ProjectList({ organizationId }: { organizationId: string }) {
   }
   if (projects.value.length === 1)
     return (
-      <>
-        <BreadcrumbSeparator>
-          <DotIcon />
-        </BreadcrumbSeparator>
-        <BreadcrumbItem>
-          <BreadcrumbLink asChild>
-            <Link to={currentProjectPath}>{project.value.name}</Link>
-          </BreadcrumbLink>
-        </BreadcrumbItem>
-      </>
+      <BreadcrumbItem>
+        <BreadcrumbLink asChild>
+          <Link to={currentProjectPath}>{project.value.name}</Link>
+        </BreadcrumbLink>
+      </BreadcrumbItem>
     )
   return (
-    <>
-      <BreadcrumbSeparator>
-        <DotIcon />
-      </BreadcrumbSeparator>{" "}
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button variant="ghost" size="sm">
-            {project.value.name}
-            <ChevronDownIcon className="size-3.5" />
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="start">
-          <DropdownMenuGroup>
-            {projects.value.map((p) => (
-              <DropdownMenuItem
-                key={p.id}
-                className={cn(
-                  "cursor-pointer",
-                  p.id === project.value.id && "text-muted-foreground",
-                )}
-                onClick={handleClick(p.id)}
-              >
-                {p.name}
-              </DropdownMenuItem>
-            ))}
-          </DropdownMenuGroup>
-        </DropdownMenuContent>
-      </DropdownMenu>
-    </>
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant="ghost" size="sm">
+          {project.value.name}
+          <ChevronDownIcon className="size-3.5" />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="start">
+        <DropdownMenuGroup>
+          {projects.value.map((p) => (
+            <DropdownMenuItem
+              key={p.id}
+              className={cn("cursor-pointer", p.id === project.value.id && "text-muted-foreground")}
+              onClick={handleClick(p.id)}
+            >
+              {p.name}
+            </DropdownMenuItem>
+          ))}
+        </DropdownMenuGroup>
+      </DropdownMenuContent>
+    </DropdownMenu>
   )
 }
 
