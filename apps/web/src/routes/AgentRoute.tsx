@@ -97,7 +97,6 @@ function AgentSessionList({
   agentSessions: AgentSession[]
 }) {
   const { t } = useTranslation("common")
-  const { isAdminInterface } = useAbility()
   return (
     <FullPageCenterLayout>
       <div className="flex flex-col gap-4">
@@ -112,14 +111,12 @@ function AgentSessionList({
           />
         ))}
 
-        {isAdminInterface && (
-          <CreateAgentSession
-            type="button"
-            organizationId={organizationId}
-            projectId={projectId}
-            agentId={agentId}
-          />
-        )}
+        <CreateAgentSession
+          type="button"
+          organizationId={organizationId}
+          projectId={projectId}
+          agentId={agentId}
+        />
       </div>
     </FullPageCenterLayout>
   )
