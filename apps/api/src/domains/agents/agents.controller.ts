@@ -26,7 +26,7 @@ export class AgentsController {
     const projectId = request.project.id
 
     const agent = await this.agentsService.createAgent({
-      organizationId: "undefined", //fixme DOO
+      organizationId: request.organizationId,
       projectId,
       ...payload,
     })
@@ -43,8 +43,8 @@ export class AgentsController {
 
     const agents = await this.agentsService.listAgents({
       projectId,
-      organizationId: "undefined",
-    }) //fixme DOO
+      organizationId: request.organizationId,
+    })
 
     return { data: { agents: agents.map(toAgentDto) } }
   }

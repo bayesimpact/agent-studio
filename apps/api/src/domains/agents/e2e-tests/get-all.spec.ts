@@ -90,7 +90,7 @@ describe("Agents - getAll", () => {
   })
 
   //fixme Restore test
-  xit("should return empty array when project has no agents", async () => {
+  it("should return empty array when project has no agents", async () => {
     await createContext()
 
     const response = await subject()
