@@ -11,11 +11,10 @@ import {
 import { removeNullish } from "@/common/utils/remove-nullish"
 import { createOrganizationWithProject } from "@/domains/organizations/organization.factory"
 import { projectFactory } from "@/domains/projects/project.factory"
-import { userFactory } from "@/domains/users/user.factory"
 import { setupUserGuardForTesting } from "../../../../../test/e2e.helpers"
 import { expectResponse, type Requester, testRequester } from "../../../../../test/request"
 import { ProjectsModule } from "../../projects.module"
-import { projectMembershipFactory } from "../project-membership.factory"
+import { createProjectMembership } from "../project-membership.factory"
 
 describe("Project Memberships - Auth", () => {
   let app: INestApplication<App>
@@ -63,7 +62,7 @@ describe("Project Memberships - Auth", () => {
     projectId = project.id
     accessToken = "token"
     auth0Id = user.auth0Id
-    return { organization, project }
+    return { organization, project, user }
   }
 
   describe("ProjectsRoutes.listProjectMemberships", () => {
@@ -155,11 +154,7 @@ describe("Project Memberships - Auth", () => {
       const { organization, project } = await createContextForRole(role)
 
       // Create an invited user and membership for the project
-      const invitedUser = userFactory.build({ email: "invited@example.com" })
-      await repositories.userRepository.save(invitedUser)
-
-      const membership = projectMembershipFactory.transient({ project, user: invitedUser }).build()
-      await repositories.projectMembershipRepository.save(membership)
+      const { membership } = await createProjectMembership({ repositories, project })
       membershipId = membership.id
 
       return { organization, project, membership }

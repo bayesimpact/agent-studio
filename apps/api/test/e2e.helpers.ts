@@ -12,8 +12,15 @@ const mockAuth0UserInfoService = {
   }),
 }
 
+let mockTicketCounter = 0
 export const mockInvitationSender = {
-  sendInvitation: jest.fn().mockResolvedValue(undefined),
+  sendInvitation: jest.fn().mockImplementation(() => {
+    mockTicketCounter += 1
+    return Promise.resolve({ ticketId: `ticket_${mockTicketCounter}` })
+  }),
+  resetTicketCounter: () => {
+    mockTicketCounter = 0
+  },
 }
 
 export const setupUserGuardForTesting = (

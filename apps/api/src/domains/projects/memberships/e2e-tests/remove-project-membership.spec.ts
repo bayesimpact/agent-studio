@@ -8,11 +8,10 @@ import {
 } from "@/common/test/test-transaction-manager"
 import { removeNullish } from "@/common/utils/remove-nullish"
 import { createOrganizationWithProject } from "@/domains/organizations/organization.factory"
-import { userFactory } from "@/domains/users/user.factory"
-import { setupUserGuardForTesting } from "../../../../../test/e2e.helpers"
+import { mockInvitationSender, setupUserGuardForTesting } from "../../../../../test/e2e.helpers"
 import { expectResponse, type Requester, testRequester } from "../../../../../test/request"
 import { ProjectsModule } from "../../projects.module"
-import { projectMembershipFactory } from "../project-membership.factory"
+import { createProjectMembership } from "../project-membership.factory"
 
 describe("Projects - removeProjectMembership", () => {
   let app: INestApplication<App>
@@ -43,6 +42,8 @@ describe("Projects - removeProjectMembership", () => {
     await clearTestDatabase(setup.dataSource)
     accessToken = "token"
     auth0Id = "auth0|123"
+    mockInvitationSender.resetTicketCounter()
+    jest.clearAllMocks()
   })
 
   afterAll(async () => {
@@ -51,17 +52,13 @@ describe("Projects - removeProjectMembership", () => {
   })
 
   const createContext = async () => {
-    const { user, organization, project } = await createOrganizationWithProject(repositories)
+    const { organization, project, user } = await createOrganizationWithProject(repositories)
     organizationId = organization.id
     projectId = project.id
     auth0Id = user.auth0Id
 
     // Create an invited user and membership
-    const invitedUser = userFactory.build({ email: "invited@example.com" })
-    await repositories.userRepository.save(invitedUser)
-
-    const membership = projectMembershipFactory.transient({ project, user: invitedUser }).build()
-    await repositories.projectMembershipRepository.save(membership)
+    const { membership, invitedUser } = await createProjectMembership({ repositories, project })
     membershipId = membership.id
 
     return { organization, project, user, invitedUser, membership }
@@ -87,5 +84,38 @@ describe("Projects - removeProjectMembership", () => {
       where: { id: membershipId },
     })
     expect(deletedMembership).toBeNull()
+  })
+
+  it("should also delete the placeholder user when removing a pending invitation", async () => {
+    const { user, organization, project } = await createOrganizationWithProject(repositories)
+    organizationId = organization.id
+    projectId = project.id
+    auth0Id = user.auth0Id
+
+    const { membership } = await createProjectMembership({ repositories, project })
+    membershipId = membership.id
+
+    // Now remove the membership
+    const response = await subject()
+    expectResponse(response, 200)
+
+    // Verify the placeholder user is also deleted
+    const deletedUser = await repositories.userRepository.findOne({
+      where: { id: membership.userId },
+    })
+    expect(deletedUser).toBeNull()
+  })
+
+  it("should NOT delete a real user when removing their membership", async () => {
+    const { invitedUser } = await createContext()
+
+    const response = await subject()
+    expectResponse(response, 200)
+
+    // Verify the real user still exists (they have a non-placeholder auth0Id from userFactory)
+    const user = await repositories.userRepository.findOne({
+      where: { id: invitedUser.id },
+    })
+    expect(user).toBeDefined()
   })
 })

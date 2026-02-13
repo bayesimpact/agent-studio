@@ -113,13 +113,13 @@ describe("Projects - inviteProjectMembers", () => {
     expect(mockInvitationSender.sendInvitation).toHaveBeenCalledWith(
       expect.objectContaining({
         inviteeEmail: "user1@example.com",
-        metadata: expect.objectContaining({ invitationToken: expect.any(String) }),
+        inviterName: expect.any(String),
       }),
     )
     expect(mockInvitationSender.sendInvitation).toHaveBeenCalledWith(
       expect.objectContaining({
         inviteeEmail: "user2@example.com",
-        metadata: expect.objectContaining({ invitationToken: expect.any(String) }),
+        inviterName: expect.any(String),
       }),
     )
   })

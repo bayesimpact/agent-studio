@@ -1,7 +1,16 @@
 import { Injectable, InternalServerErrorException } from "@nestjs/common"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
 import { ConfigService } from "@nestjs/config"
-import type { InvitationSender, SendInvitationParams } from "./invitation-sender.interface"
+import type {
+  InvitationSender,
+  SendInvitationParams,
+  SendInvitationResult,
+} from "./invitation-sender.interface"
+
+interface Auth0InvitationResponse {
+  id: string
+  ticket_id: string
+}
 
 @Injectable()
 export class Auth0InvitationSenderService implements InvitationSender {
@@ -9,7 +18,7 @@ export class Auth0InvitationSenderService implements InvitationSender {
 
   constructor(private readonly configService: ConfigService) {}
 
-  async sendInvitation(params: SendInvitationParams): Promise<void> {
+  async sendInvitation(params: SendInvitationParams): Promise<SendInvitationResult> {
     const domain = this.getDomain()
     const orgId = this.configService.getOrThrow<string>("AUTH0_ORGANIZATION_ID")
     const clientId = this.configService.getOrThrow<string>("AUTH0_CLIENT_ID")
@@ -26,7 +35,6 @@ export class Auth0InvitationSenderService implements InvitationSender {
         invitee: { email: params.inviteeEmail },
         client_id: clientId,
         send_invitation_email: true,
-        ...(params.metadata && { user_metadata: params.metadata }),
       }),
     })
 
@@ -36,6 +44,9 @@ export class Auth0InvitationSenderService implements InvitationSender {
         `Failed to send Auth0 invitation: ${response.status} ${errorBody}`,
       )
     }
+
+    const data = (await response.json()) as Auth0InvitationResponse
+    return { ticketId: data.ticket_id }
   }
 
   private async getManagementToken(): Promise<string> {

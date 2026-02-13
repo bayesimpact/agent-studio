@@ -1,6 +1,8 @@
 import type { TypedStartListening } from "@reduxjs/toolkit"
 import { createListenerMiddleware } from "@reduxjs/toolkit"
+import { consumePendingInvitation } from "@/routes/HomeRoute"
 import type { AppDispatch, RootState } from "@/store/types"
+import { acceptInvitation } from "../invitations/invitations.thunks"
 import { meActions } from "../me/me.slice"
 import { fetchMe } from "../me/me.thunks"
 import {
@@ -22,7 +24,16 @@ listenerMiddleware.startListening({
     const isAuthenticated = action.payload
 
     if (isAuthenticated) {
-      // User became authenticated - fetch user data
+      // Check for a pending invitation BEFORE fetching /me.
+      // This is critical: /me triggers UserGuard.findOrCreate which would create
+      // a duplicate user. acceptInvitation reconciles the placeholder user's
+      // auth0Id first, so /me then finds the correct existing user.
+      const pendingTicketId = consumePendingInvitation()
+      if (pendingTicketId) {
+        await listenerApi.dispatch(acceptInvitation({ ticketId: pendingTicketId }))
+      }
+
+      // Now fetch user data (will find the reconciled user, not create a new one)
       await listenerApi.dispatch(fetchMe())
     } else {
       // User logged out - clear user and organizations state

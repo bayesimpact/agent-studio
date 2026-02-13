@@ -1,8 +1,11 @@
 import { randomUUID } from "node:crypto"
 import { Factory } from "fishery"
+import type { Repository } from "typeorm"
 import type { User } from "@/domains/users/user.entity"
+import { userFactory } from "@/domains/users/user.factory"
 import type { Project } from "../project.entity"
 import type { ProjectMembership, ProjectMembershipStatus } from "./project-membership.entity"
+import { PLACEHOLDER_AUTH0_ID_PREFIX } from "./project-memberships.service"
 
 type ProjectMembershipTransientParams = {
   project: Project
@@ -33,3 +36,29 @@ export const projectMembershipFactory = Factory.define<
     user: transientParams.user,
   } satisfies ProjectMembership
 })
+
+export const createProjectMembership = async ({
+  repositories,
+  project,
+  user,
+}: {
+  repositories: {
+    userRepository: Repository<User>
+    projectMembershipRepository: Repository<ProjectMembership>
+  }
+  project: Project
+  user?: Partial<User>
+}) => {
+  user = user ?? {
+    email: "invited@example.com",
+    name: "Invited User",
+    auth0Id: `${PLACEHOLDER_AUTH0_ID_PREFIX}-test`,
+  }
+  const invitedUser = userFactory.build(user)
+  await repositories.userRepository.save(invitedUser)
+
+  const membership = projectMembershipFactory.transient({ project, user: invitedUser }).build()
+  await repositories.projectMembershipRepository.save(membership)
+
+  return { membership, invitedUser }
+}

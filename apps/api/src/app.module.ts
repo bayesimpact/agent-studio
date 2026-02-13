@@ -1,6 +1,7 @@
-import { Module } from "@nestjs/common"
+import { type MiddlewareConsumer, Module, type NestModule } from "@nestjs/common"
 import { ConfigModule, ConfigService } from "@nestjs/config"
 import { TypeOrmModule } from "@nestjs/typeorm"
+import { RequestLoggerMiddleware } from "./common/middleware/request-logger.middleware"
 import typeorm from "./config/typeorm"
 import { AgentMessageFeedbackModule } from "./domains/agent-message-feedback/agent-message-feedback.module"
 import { AgentSessionsModule } from "./domains/agent-sessions/agent-sessions.module"
@@ -39,4 +40,8 @@ import { UsersModule } from "./domains/users/users.module"
     UsersModule,
   ],
 })
-export class AppModule {}
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer.apply(RequestLoggerMiddleware).forRoutes("*")
+  }
+}

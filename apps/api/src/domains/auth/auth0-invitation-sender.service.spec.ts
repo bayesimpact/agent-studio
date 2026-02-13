@@ -58,25 +58,26 @@ describe("Auth0InvitationSenderService", () => {
     })
   }
 
-  const mockInvitationResponse = () => {
+  const mockInvitationResponse = (ticketId = "ticket_abc123") => {
     ;(global.fetch as jest.Mock).mockResolvedValueOnce({
       ok: true,
-      json: async () => ({ id: "inv_123" }),
+      json: async () => ({ id: "inv_123", ticket_id: ticketId }),
     })
   }
 
   const sendInvitationParams = {
     inviteeEmail: "user@example.com",
     inviterName: "Admin User",
-    metadata: { invitationToken: "token-uuid-123" },
   }
 
   describe("sendInvitation", () => {
-    it("should obtain a token and send an invitation", async () => {
+    it("should obtain a token and send an invitation, returning ticketId", async () => {
       mockTokenResponse()
-      mockInvitationResponse()
+      mockInvitationResponse("ticket_xyz789")
 
-      await service.sendInvitation(sendInvitationParams)
+      const result = await service.sendInvitation(sendInvitationParams)
+
+      expect(result).toEqual({ ticketId: "ticket_xyz789" })
 
       // Verify token request
       expect(global.fetch).toHaveBeenCalledWith("https://bayes-impact.eu.auth0.com/oauth/token", {
@@ -90,7 +91,7 @@ describe("Auth0InvitationSenderService", () => {
         }),
       })
 
-      // Verify invitation request
+      // Verify invitation request (no user_metadata anymore)
       expect(global.fetch).toHaveBeenCalledWith(
         `https://bayes-impact.eu.auth0.com/api/v2/organizations/${AUTH0_ORGANIZATION_ID}/invitations`,
         {
@@ -104,24 +105,9 @@ describe("Auth0InvitationSenderService", () => {
             invitee: { email: "user@example.com" },
             client_id: AUTH0_CLIENT_ID,
             send_invitation_email: true,
-            user_metadata: { invitationToken: "token-uuid-123" },
           }),
         },
       )
-    })
-
-    it("should not include user_metadata when metadata is undefined", async () => {
-      mockTokenResponse()
-      mockInvitationResponse()
-
-      await service.sendInvitation({
-        inviteeEmail: "user@example.com",
-        inviterName: "Admin User",
-      })
-
-      const invitationCall = (global.fetch as jest.Mock).mock.calls[1]!
-      const body = JSON.parse(invitationCall[1].body)
-      expect(body).not.toHaveProperty("user_metadata")
     })
 
     it("should cache the management token and reuse it on subsequent calls", async () => {

@@ -74,7 +74,7 @@ export class ProjectMembership {
 ```
 
 **Notes**:
-- The `invitation_token` is a UUID generated server-side at creation time. It can later be used for invitation links (e.g., email-based acceptance).
+- The `invitation_token` stores the Auth0 `ticket_id` returned when sending an organization invitation. This ticket_id is used by the web app to accept the invitation after the user authenticates via Auth0.
 - No roles on project memberships for now — presence in the table implies access.
 
 ### 1.2 Relationships
@@ -173,18 +173,65 @@ Methods on `ProjectMembershipsService`:
 |-----------------------------|------------------------------------------------------------------------------------------------------|
 | `findById(membershipId: string)` | Returns a project membership by its ID (used by the guard to fetch the entity). |
 | `listProjectMemberships(projectId: string)` | Returns all project memberships for a project, with user relations eagerly loaded.   |
-| `inviteProjectMembers(projectId: string, emails: string[])` | For each email: find or create a user, create a `ProjectMembership` with status `sent` and a generated `invitationToken`. Skips duplicates (user already a member). Returns the created memberships. |
-| `removeProjectMembership(membershipId: string, projectId: string)` | Removes a project membership. Validates it belongs to the given project.           |
+| `inviteProjectMembers(projectId: string, emails: string[], inviterName: string)` | For each email: find or create a user, send Auth0 invitation, create a `ProjectMembership` with status `sent` and the Auth0 `ticket_id` as `invitationToken`. Skips duplicates. Returns created memberships. Runs in a SQL transaction. |
+| `acceptInvitation(ticketId: string, auth0Sub: string)` | Accepts an invitation by ticket_id. Reconciles placeholder user, creates org membership, marks as accepted. Runs in a SQL transaction. |
+| `removeProjectMembership(membershipId: string, projectId: string)` | Removes a project membership. Also deletes placeholder users. Runs in a SQL transaction. |
 
 **Invitation logic detail** (`inviteProjectMembers`):
 1. For each email in the list:
    - Look up the `User` by email (normalized to lowercase).
-   - If no user exists, create one with a **unique** placeholder `auth0Id` set to `"00000000-0000-0000-0000-"` + a random 12-character suffix (via `randomUUID().slice(-12)`). Each new user gets a unique placeholder to avoid unique constraint violations. The user record acts as a pre-provisioned entry. This placeholder will be updated when the user signs up via Auth0.
+   - If no user exists, create one with a **unique** placeholder `auth0Id` set to `"00000000-0000-0000-0000-"` + a random 12-character suffix (via `randomUUID().slice(-12)`). Each new user gets a unique placeholder to avoid unique constraint violations. The user record acts as a pre-provisioned entry. This placeholder will be updated when the user accepts the invitation.
    - Check if a `ProjectMembership` already exists for `(projectId, userId)` — if so, skip.
-   - Create a `ProjectMembership` with `status: "sent"` and `invitationToken: randomUUID()`.
+   - Send an Auth0 organization invitation via the `InvitationSender` interface (see §3.2). Auth0 sends the invitation email and returns a `ticket_id`.
+   - Create a `ProjectMembership` with `status: "sent"` and `invitationToken` set to the Auth0 `ticket_id`.
 2. Return all created memberships (with user relations loaded).
 
-> **Open question for later**: Should we send invitation emails? For now, the invitation is simply a database entry. Email delivery can be added as a follow-up feature.
+**Acceptance logic detail** (`acceptInvitation`):
+1. Look up the `ProjectMembership` by `invitationToken` (the Auth0 `ticket_id`).
+2. If not found, throw `NotFoundException`.
+3. If already accepted, return as-is (idempotent).
+4. If the user has a placeholder `auth0Id` (starts with `"00000000-0000-0000-0000-"`), reconcile it with the real `auth0Sub` from the JWT.
+5. Create a `UserMembership` (organization membership) with role `"member"` for the user in the project's organization, if one doesn't already exist.
+6. Update the membership `status` to `"accepted"`.
+
+> **Critical ordering note**: The `acceptInvitation` endpoint must be called **before** `/me` (which runs `UserGuard.findOrCreate`). If `/me` runs first, it would create a duplicate user since no user with the real `auth0Id` exists yet. The web app's auth middleware enforces this ordering (see §11.2).
+
+**Removal logic detail** (`removeProjectMembership`):
+1. Look up the `ProjectMembership` by ID with its user relation.
+2. Delete the membership.
+3. If the associated user has a placeholder `auth0Id` (never accepted the invitation), also delete the orphaned placeholder user.
+
+### 3.2 Auth0 Invitation Sender
+
+**Interface**: `apps/api/src/domains/auth/invitation-sender.interface.ts`
+
+```typescript
+export const INVITATION_SENDER = Symbol("INVITATION_SENDER")
+
+export interface SendInvitationParams {
+  inviteeEmail: string
+  inviterName: string
+}
+
+export interface SendInvitationResult {
+  ticketId: string
+}
+
+export interface InvitationSender {
+  sendInvitation(params: SendInvitationParams): Promise<SendInvitationResult>
+}
+```
+
+**Implementation**: `apps/api/src/domains/auth/auth0-invitation-sender.service.ts`
+
+The `Auth0InvitationSenderService` sends organization invitations via the Auth0 Management API:
+
+1. Obtains a Management API access token (client credentials grant, cached).
+2. Calls `POST /api/v2/organizations/{orgId}/invitations` with the invitee email and inviter name.
+3. Auth0 sends the invitation email automatically (`send_invitation_email: true`).
+4. Returns the `ticket_id` from Auth0's response — this is stored as the `invitationToken` on the `ProjectMembership`.
+
+The invitation email contains a link to the **Application Login URI** with query parameters: `?invitation={ticket_id}&organization={org_id}&organization_name={org_name}`.
 
 ---
 
@@ -274,9 +321,73 @@ The `ProjectScopedPolicy<T>` base class provides RESTful methods that handle pro
 
 ---
 
-## 6. Tests (API)
+## 6. Invitation Acceptance (API)
 
-### 6.1 E2E Tests
+### 6.1 API Contracts
+
+**File**: `packages/api-contracts/src/invitations/invitations.dto.ts`
+
+```typescript
+export type AcceptInvitationRequestDto = {
+  ticketId: string
+}
+
+export type AcceptInvitationResponseDto = {
+  success: true
+}
+```
+
+**File**: `packages/api-contracts/src/invitations/invitations.routes.ts`
+
+| Route Name          | Method | Path                 | Request DTO                    | Response DTO                    |
+|---------------------|--------|----------------------|--------------------------------|---------------------------------|
+| `acceptInvitation`  | `POST` | `invitations/accept` | `AcceptInvitationRequestDto`   | `AcceptInvitationResponseDto`   |
+
+### 6.2 Controller: `InvitationsController`
+
+**File**: `apps/api/src/domains/invitations/invitations.controller.ts`
+
+A separate controller in its own `invitations` domain, dedicated to invitation acceptance.
+
+**Important**: This controller is guarded by `JwtAuthGuard` **only** — no `UserGuard`. This is critical because `acceptInvitation` must reconcile the placeholder user's `auth0Id` with the real one *before* `UserGuard.findOrCreate` runs (which happens on `/me`). If `UserGuard` were present, it would create a duplicate user.
+
+```typescript
+@UseGuards(JwtAuthGuard)
+@Controller()
+export class InvitationsController {
+  constructor(private readonly projectMembershipsService: ProjectMembershipsService) {}
+
+  @Post(InvitationsRoutes.acceptOne.path)
+  async acceptInvitation(
+    @Req() request: { user: JwtPayload },
+    @Body() body: typeof InvitationsRoutes.acceptOne.request,
+  ): Promise<typeof InvitationsRoutes.acceptOne.response> {
+    const jwtPayload = request.user
+    await this.projectMembershipsService.acceptInvitation(body.payload.ticketId, jwtPayload.sub)
+    return { data: { success: true } }
+  }
+}
+```
+
+### 6.3 Module: `InvitationsModule`
+
+**File**: `apps/api/src/domains/invitations/invitations.module.ts`
+
+```typescript
+@Module({
+  imports: [AuthModule, UsersModule, ProjectsModule],
+  controllers: [InvitationsController],
+})
+export class InvitationsModule {}
+```
+
+Registered in `AppModule`.
+
+---
+
+## 7. Tests (API)
+
+### 7.1 E2E Tests
 
 #### `apps/api/src/domains/projects/memberships/e2e-tests/auth.spec.ts` (**dedicated auth spec**)
 
@@ -321,17 +432,38 @@ A separate auth test file for project memberships (decoupled from `projects/e2e-
 - Returns `404` for non-existent membership ID
 - Returns `404` if membership belongs to a different project
 - Verifies the membership is actually deleted from the database
+- Deletes the placeholder user when removing a pending invitation
+- Does NOT delete a real user when removing their membership
 
-### 6.2 Service Tests
+#### `apps/api/src/domains/invitations/e2e-tests/accept-invitation.spec.ts`
+
+- Accepts an invitation and returns success
+- Updates the membership status to `"accepted"`
+- Creates an organization membership (role `"member"`) for the invitee
+- Returns `404` for an unknown ticketId
+- Is idempotent — accepting an already accepted invitation returns success
+- Returns `404` when ticketId does not match any invitation
+
+### 7.2 Service Tests
 
 **File**: `apps/api/src/domains/projects/memberships/project-memberships.service.spec.ts`
 
 - Test `findById` method (returns membership, returns null for non-existent)
 - Test `listProjectMemberships` method
-- Test `inviteProjectMembers` method (user creation, duplicate handling, email normalization)
-- Test `removeProjectMembership` method
+- Test `inviteProjectMembers` method (user creation, duplicate handling, email normalization, Auth0 invitation sending)
+- Test `acceptInvitation` method:
+  - Reconciles placeholder user's auth0Id
+  - Creates organization membership (role `"member"`)
+  - Does not duplicate org membership if one already exists
+  - Returns membership if already accepted (idempotent)
+  - Throws `NotFoundException` for unknown ticketId
+  - Does not overwrite auth0Id if user is not a placeholder
+- Test `removeProjectMembership` method:
+  - Removes the membership
+  - Also deletes the placeholder user when removing a pending invitation
+  - Does NOT delete a real user when removing a membership
 
-### 6.3 Policy Tests
+### 7.3 Policy Tests
 
 **File**: `apps/api/src/domains/projects/memberships/project-membership.policy.spec.ts`
 
@@ -339,7 +471,7 @@ A separate auth test file for project memberships (decoupled from `projects/e2e-
 - Test `canCreate()` for owner, admin, member
 - Test `canDelete()` for owner, admin, member × sameProject, differentProject, noMembership
 
-### 6.4 Factory
+### 7.4 Factory
 
 **File**: `apps/api/src/domains/projects/memberships/project-membership.factory.ts`
 
@@ -347,17 +479,17 @@ Fishery factory for `ProjectMembership` with transient params for `project` and 
 
 ---
 
-## 7. Web Frontend
+## 8. Web Frontend
 
 > **Implementation note**: Every pattern described below is derived from the existing codebase. All code matches the conventions already established — same naming, same file structure, same Redux patterns, same component composition.
 
-### 7.1 Feature Architecture
+### 8.1 Feature Architecture
 
 A new `project-memberships` feature is created following the canonical feature pattern (as established by `me`, `agents`, `documents`, etc.).
 
 > **Note**: Even though the API controllers live in the `projects` domain on the backend, the frontend feature is separate (`project-memberships`) to maintain clear separation of concerns and avoid bloating the existing `projects` feature — same rationale as `agents` vs `projects`.
 
-#### 7.1.1 Domain Model
+#### 8.1.1 Domain Model
 
 **File**: `features/project-memberships/project-memberships.models.ts`
 
@@ -375,7 +507,7 @@ export type ProjectMembership = {
 }
 ```
 
-#### 7.1.2 SPI (Service Provider Interface)
+#### 8.1.2 SPI (Service Provider Interface)
 
 **File**: `features/project-memberships/project-memberships.spi.ts`
 
@@ -400,7 +532,7 @@ export interface IProjectMembershipsSpi {
 
 > **Convention note**: SPI params use object destructuring (`params: { ... }`) to match the `agents.spi.ts` pattern — not positional arguments.
 
-#### 7.1.3 API Implementation
+#### 8.1.3 API Implementation
 
 **File**: `features/project-memberships/external/project-memberships.api.ts`
 
@@ -453,7 +585,7 @@ const fromDto = (dto: ProjectMembershipDto): ProjectMembership => ({
 })
 ```
 
-#### 7.1.4 Service Registration
+#### 8.1.4 Service Registration
 
 **File**: `external/axios.services.ts` — added import + key:
 
@@ -477,7 +609,7 @@ export type Services = {
 }
 ```
 
-#### 7.1.5 Redux Thunks
+#### 8.1.5 Redux Thunks
 
 **File**: `features/project-memberships/project-memberships.thunks.ts`
 
@@ -521,7 +653,7 @@ export const removeProjectMembership = createAsyncThunk<
 )
 ```
 
-#### 7.1.6 Redux Slice
+#### 8.1.6 Redux Slice
 
 **File**: `features/project-memberships/project-memberships.slice.ts`
 
@@ -575,7 +707,7 @@ export const projectMembershipsActions = { ...slice.actions }
 export const projectMembershipsSliceReducer = slice.reducer
 ```
 
-#### 7.1.7 Redux Selectors
+#### 8.1.7 Redux Selectors
 
 **File**: `features/project-memberships/project-memberships.selectors.ts`
 
@@ -606,7 +738,7 @@ export const selectProjectMembershipsFromProjectId = (projectId?: string | null)
   )
 ```
 
-#### 7.1.8 Redux Middleware (Listener)
+#### 8.1.8 Redux Middleware (Listener)
 
 **File**: `features/project-memberships/project-memberships.middleware.ts`
 
@@ -682,7 +814,7 @@ listenerMiddleware.startListening({
 export { listenerMiddleware as projectMembershipsMiddleware }
 ```
 
-#### 7.1.9 Store Registration
+#### 8.1.9 Store Registration
 
 **File**: `store/index.ts` — added reducer + middleware:
 
@@ -706,7 +838,7 @@ import type { projectMembershipsSliceReducer } from "@/features/project-membersh
 projectMemberships: ReturnType<typeof projectMembershipsSliceReducer>
 ```
 
-### 7.2 Routing
+### 8.2 Routing
 
 #### Route Name
 
@@ -769,7 +901,7 @@ export function ProjectMembershipsRoute() {
 }
 ```
 
-### 7.3 Sidebar Navigation
+### 8.3 Sidebar Navigation
 
 **File**: `components/sidebar/projects/NavProjectMemberships.tsx`
 
@@ -817,7 +949,7 @@ export function NavProjectMemberships({
 <NavProjectMemberships organizationId={project.organizationId} projectId={project.id} />
 ```
 
-### 7.4 UI Components
+### 8.4 UI Components
 
 #### `components/project-memberships/ProjectMembershipsList.tsx`
 
@@ -837,7 +969,7 @@ Uses `Dialog` / `DialogContent` / `DialogHeader` / `DialogTitle` / `DialogDescri
 - On success: dialog closes using `.unwrap().then()` for handling success and resetting state (middleware handles list refresh + notification)
 - Uses `useTranslation("projectMemberships", { keyPrefix: "invite" })`
 
-### 7.5 Internationalization
+### 8.5 Internationalization
 
 **File**: `locales/en.json` — added new `projectMemberships` namespace:
 
@@ -879,8 +1011,9 @@ Uses `Dialog` / `DialogContent` / `DialogHeader` / `DialogTitle` / `DialogDescri
 
 **File**: `locales/fr.json` — matching French translations.
 
-### 7.6 Data Flow Summary
+### 8.6 Data Flow Summary
 
+**Invite flow:**
 ```
 User clicks "Invite Members" button (in route header right slot)
   → InviteProjectMembersDialog opens (Dialog from shadcn/ui)
@@ -888,7 +1021,9 @@ User clicks "Invite Members" button (in route header right slot)
   → dispatch(inviteProjectMembers({ organizationId, projectId, emails }))
   → thunk calls extra.services.projectMemberships.invite(...)
   → Axios POST /organizations/:orgId/projects/:projId/memberships/invite
-  → API creates User records (if needed) + ProjectMembership records
+  → API creates User records (if needed)
+  → API sends Auth0 org invitations (returns ticket_id per email)
+  → API creates ProjectMembership records (invitationToken = ticket_id)
   → Response returns created memberships
   → Dialog closes via .unwrap().then()
   → Middleware: inviteProjectMembers.fulfilled triggers listProjectMemberships refresh
@@ -897,9 +1032,73 @@ User clicks "Invite Members" button (in route header right slot)
   → List re-renders with new memberships
 ```
 
+**Acceptance flow:**
+```
+Invitee clicks invitation link in email
+  → Browser navigates to: {Application Login URI}?invitation={ticket_id}&organization={org_id}
+  → HomeRoute detects invitation + organization query params
+  → Stores ticket_id in localStorage (key: "pendingInvitationTicketId")
+  → Calls loginWithRedirect({ authorizationParams: { organization, invitation } })
+  → Auth0 authenticates the user (signup or login)
+  → Auth0 redirects back to the app
+  → Auth middleware fires on setAuthenticated
+  → consumePendingInvitation() reads and clears ticket_id from localStorage
+  → dispatch(acceptInvitation({ ticketId }))
+  → Axios POST /invitations/accept (only JwtAuthGuard, no UserGuard)
+  → API reconciles placeholder auth0Id → real auth0Sub
+  → API creates UserMembership (org member) if needed
+  → API updates membership status to "accepted"
+  → THEN dispatch(fetchMe())
+  → /me finds the reconciled user (not a duplicate)
+  → Normal app flow continues (navigate to organization dashboard)
+```
+
 ---
 
-## 8. File Summary
+## 9. Web Frontend — Invitation Acceptance
+
+### 9.1 HomeRoute: Invitation Detection
+
+**File**: `apps/web/src/routes/HomeRoute.tsx`
+
+The `HomeRoute` is the application's entry point. It was extended to detect Auth0 invitation links:
+
+1. On mount, checks for `invitation` and `organization` query parameters in the URL.
+2. If present, stores the `invitation` (ticket_id) in `localStorage` using `storePendingInvitation()`.
+3. Calls `loginWithRedirect` with `authorizationParams: { organization, invitation }` — this forwards the invitation ticket to Auth0 so it can associate the user with the organization.
+
+**localStorage helpers** (exported from `HomeRoute.tsx`):
+
+- `storePendingInvitation(ticketId: string)` — stores the ticket_id under key `"pendingInvitationTicketId"`.
+- `consumePendingInvitation(): string | null` — reads and removes the ticket_id (one-time read).
+
+### 9.2 Auth Middleware: Ordering `acceptInvitation` Before `fetchMe`
+
+**File**: `apps/web/src/features/auth/auth.middleware.ts`
+
+The auth middleware listens for `authActions.setAuthenticated` and now:
+
+1. **First**, checks for a pending invitation via `consumePendingInvitation()`.
+2. If found, dispatches `acceptInvitation({ ticketId })` **before** `fetchMe()`.
+3. **Then** dispatches `fetchMe()`.
+
+This ordering is critical: the `acceptInvitation` endpoint reconciles the placeholder user's `auth0Id` → real `auth0Sub`. If `fetchMe` ran first, `UserGuard.findOrCreate` would create a duplicate user.
+
+### 9.3 Invitations Feature
+
+A minimal new feature for invitation acceptance:
+
+| File                                                                | Description                              |
+|---------------------------------------------------------------------|------------------------------------------|
+| `features/invitations/invitations.spi.ts`                           | SPI interface: `acceptInvitation(ticketId)` |
+| `features/invitations/external/invitations.api.ts`                  | Axios implementation: `POST /invitations/accept` |
+| `features/invitations/invitations.thunks.ts`                        | Redux thunk: `acceptInvitation`          |
+
+Registered in `external/axios.services.ts` and `di/services.ts`.
+
+---
+
+## 10. File Summary
 
 ### API — `apps/api/src/domains/projects/memberships/`
 
@@ -925,14 +1124,38 @@ User clicks "Invite Members" button (in route header right slot)
 | `project.entity.ts`                 | Modify   | Add `@OneToMany` to `ProjectMembership` (import from `./memberships/`) |
 | `projects.module.ts`                | Modify   | Register controller, service, and entity from `./memberships/` |
 
+### API — `apps/api/src/domains/invitations/`
+
+| File                                  | Action   | Description                                |
+|---------------------------------------|----------|--------------------------------------------|
+| `invitations.controller.ts`           | **New**  | Invitation acceptance endpoint (JwtAuthGuard only) |
+| `invitations.module.ts`               | **New**  | NestJS module for invitations              |
+| `e2e-tests/accept-invitation.spec.ts` | **New**  | E2E tests for invitation acceptance        |
+
+### API — `apps/api/src/domains/auth/`
+
+| File                                  | Action   | Description                                |
+|---------------------------------------|----------|--------------------------------------------|
+| `invitation-sender.interface.ts`      | **New**  | `InvitationSender` interface + `INVITATION_SENDER` token |
+| `auth0-invitation-sender.service.ts`  | **New**  | Auth0 Management API implementation        |
+
+### API Contracts — `packages/api-contracts/src/invitations/`
+
+| File                   | Action   | Description                              |
+|------------------------|----------|------------------------------------------|
+| `invitations.dto.ts`   | **New**  | `AcceptInvitationRequestDto`, `AcceptInvitationResponseDto` |
+| `invitations.routes.ts` | **New** | `InvitationsRoutes.acceptOne` route definition |
+
 ### API — Other modified files
 
 | File                                | Action   | Description                                |
 |-------------------------------------|----------|--------------------------------------------|
 | `apps/api/src/request.interface.ts` | Modify   | Add `EndpointRequestWithProjectMembership` interface |
+| `apps/api/src/app.module.ts`        | Modify   | Register `InvitationsModule`, `RequestLoggerMiddleware` |
 | `apps/api/src/domains/users/user.entity.ts` | Modify | Add `@OneToMany` to `ProjectMembership` |
 | `apps/api/src/common/test/test-transaction-manager.ts` | Modify | Add `ProjectMembership` to `TEST_ENTITIES` and repositories |
 | `apps/api/src/common/test/test-database.ts` | Modify | Add `ProjectMembership` to `TEST_ENTITIES` and `clearTestDatabase` |
+| `apps/api/src/common/middleware/request-logger.middleware.ts` | **New** | Request logging middleware (method, URL, body, response status/time) |
 
 ### API Contracts (`packages/api-contracts/src/projects/`)
 
@@ -956,6 +1179,11 @@ User clicks "Invite Members" button (in route header right slot)
 | `components/project-memberships/InviteProjectMembersDialog.tsx`     | **New**  | Dialog (shadcn/ui) with email form         |
 | `components/sidebar/projects/NavProjectMemberships.tsx`             | **New**  | Sidebar nav item (matches `NavDocuments`)  |
 | `routes/admin/ProjectMembershipsRoute.tsx`                          | **New**  | Route component (matches `DocumentsRoute`) |
+| `features/invitations/invitations.spi.ts`                           | **New**  | SPI interface for invitations              |
+| `features/invitations/external/invitations.api.ts`                  | **New**  | Axios implementation for invitations       |
+| `features/invitations/invitations.thunks.ts`                        | **New**  | Redux thunk for accepting invitations      |
+| `routes/HomeRoute.tsx`                                              | Modify   | Detect invitation params, store in localStorage, redirect to Auth0 |
+| `features/auth/auth.middleware.ts`                                  | Modify   | Call `acceptInvitation` before `fetchMe`   |
 | `routes/Router.tsx`                                                 | Modify   | Add admin-only route child of PROJECT      |
 | `routes/helpers.ts`                                                 | Modify   | Add `PROJECT_MEMBERSHIPS` + path builder   |
 | `components/sidebar/NavProjects.tsx`                                | Modify   | Render `NavProjectMemberships` in `ProjectItem` |
@@ -974,7 +1202,7 @@ User clicks "Invite Members" button (in route header right slot)
 
 ---
 
-## 9. Resolved Decisions
+## 11. Resolved Decisions
 
 1. **File organization**: All project membership files live in `apps/api/src/domains/projects/memberships/` — a subfolder of the `projects` domain. This keeps the domain cohesive while avoiding file clutter.
 2. **Policy architecture**: Project memberships have their own dedicated `ProjectMembershipPolicy` extending `ProjectScopedPolicy<ProjectMembership>`, with RESTful methods (`canList`, `canCreate`, `canDelete`). They do **not** extend `ProjectPolicy`.
@@ -984,8 +1212,14 @@ User clicks "Invite Members" button (in route header right slot)
 6. **User creation for unknown emails**: Placeholder users use a unique `auth0Id` per user: `"00000000-0000-0000-0000-"` + a random 12-character suffix (via `randomUUID().slice(-12)`). This avoids unique constraint violations when inviting multiple new users.
 7. **Bulk operations**: No bulk removal — out of scope for now.
 8. **Pagination**: No pagination on the memberships list endpoint for now.
+9. **Invitation delivery**: Auth0 handles invitation email delivery. The `invitationToken` on `ProjectMembership` stores the Auth0 `ticket_id`, not a self-generated UUID.
+10. **Invitation acceptance flow**: Uses Auth0's built-in organization invitation mechanism. The web app detects `invitation` + `organization` query params from the Auth0 email link, stores the `ticket_id` in `localStorage`, and redirects to Auth0 for authentication. After auth, the web app calls `POST /invitations/accept` with the `ticket_id` to reconcile the placeholder user and mark the membership as accepted.
+11. **Accept before /me ordering**: The `acceptInvitation` endpoint runs with `JwtAuthGuard` only (no `UserGuard`). The web app's auth middleware dispatches `acceptInvitation` **before** `fetchMe` to prevent `UserGuard.findOrCreate` from creating a duplicate user.
+12. **Organization membership on acceptance**: When a user accepts a project invitation, they are automatically added as a `"member"` of the project's organization (via `UserMembership`), if not already a member.
+13. **Placeholder user cleanup**: When removing a project membership whose user still has a placeholder `auth0Id` (never accepted), the placeholder user is also deleted to avoid orphaned records.
 
-## 10. Open Questions / Future Considerations
+## 12. Open Questions / Future Considerations
 
-1. **Email notifications**: Should we send invitation emails when inviting users? (Deferred — not in scope for this iteration.)
-2. **Invitation acceptance flow**: How does a user "accept" an invitation? Via a magic link with the `invitationToken`? Or auto-accept on first login? (Deferred — the `status` field is there to support this later.)
+1. **Invitation expiry**: Auth0 invitations expire after a configurable period. Should we handle expired invitations gracefully on the API side?
+2. **Invitation revocation**: Should removing a project membership also revoke the Auth0 organization invitation?
+3. **Multi-project invitations**: A user invited to multiple projects in the same organization only needs one Auth0 organization invitation. Currently, each project invitation sends a separate Auth0 invitation — should we deduplicate?
