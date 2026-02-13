@@ -3,7 +3,8 @@
 version ?= `git rev-parse --short HEAD`
 imageUrl ?= europe-west9-docker.pkg.dev/caseai-connect/caseai-connect/api
 
-
+# Change detection configuration
+BASE_REF ?= HEAD^1
 REGION ?= eu
 TEST_DATABASE_URL ?= postgresql://connect_admin:passpass@localhost:5432/connect_test
 
@@ -19,6 +20,58 @@ addCloudSqlInstances=caseai-connect:europe-west9:connect-eu
 cloudSqlProxyPort = 5433
 endif
 
+# ==============================================================================
+# Change Detection
+# ==============================================================================
+
+# Paths that affect API deployment
+API_PATHS := \
+	apps/api/src \
+	apps/api/package.json \
+	apps/api/nest-cli.json \
+	apps/api/tsconfig.json \
+	apps/api/Dockerfile \
+	packages/api-contracts \
+	package.json \
+	package-lock.json \
+	turbo.json
+
+# Patterns that should NOT trigger deployment (extended regex format)
+API_EXCLUDE_PATTERNS := \.md$$|\.spec\.ts$$|\.e2e-spec\.ts$$|apps/api/test/|apps/api/README\.md
+
+# Check if API has meaningful changes
+.PHONY: check-api-changes
+check-api-changes:
+	@echo "Checking for API changes between $(BASE_REF) and HEAD..."
+	@CHANGED=$$(git diff --name-only $(BASE_REF) HEAD -- $(API_PATHS) | \
+		grep -v -E '$(API_EXCLUDE_PATTERNS)' || true); \
+	if [ -n "$$CHANGED" ]; then \
+		echo "✓ API changes detected:"; \
+		echo "$$CHANGED" | sed 's/^/  - /'; \
+		exit 0; \
+	else \
+		echo "✗ No API changes detected (skipping deployment)"; \
+		exit 1; \
+	fi
+
+# Check if frontend has meaningful changes (for future use)
+.PHONY: check-web-changes
+check-web-changes:
+	@echo "Checking for web changes between $(BASE_REF) and HEAD..."
+	@CHANGED=$$(git diff --name-only $(BASE_REF) HEAD -- apps/web packages/ui | \
+		grep -v -E '\.md$$|\.spec\.ts$$|\.test\.ts$$' || true); \
+	if [ -n "$$CHANGED" ]; then \
+		echo "✓ Web changes detected:"; \
+		echo "$$CHANGED" | sed 's/^/  - /'; \
+		exit 0; \
+	else \
+		echo "✗ No web changes detected"; \
+		exit 1; \
+	fi
+
+# ==============================================================================
+# Docker & Deployment
+# ==============================================================================
 
 docker-build:
 	docker build --platform=linux/amd64 --target prod -t ${imageUrl}:${version} -f apps/api/Dockerfile .
@@ -62,8 +115,10 @@ migrations:
 	docker compose -f infra/cloudsql-proxy/docker-compose.yaml logs cloudsql-proxy
 	cd apps/api && npm ci && DATABASE_HOST=localhost DATABASE_PORT=${cloudSqlProxyPort} DATABASE_USERNAME=connect_admin DATABASE_NAME=connect DATABASE_PASSWORD=${MIG_DATABASE_PASSWORD} npm run migration:run
 
+.PHONY: deploy
 deploy: docker-push deploy-only
 
+.PHONY: deploy-only
 deploy-only:
 	gcloud run deploy ${cloudRunName} --image ${imageUrl}:${version} \
 	--update-secrets=LANGFUSE_SK=${secretsPrefix}LANGFUSE_SK:latest \
@@ -83,6 +138,9 @@ deploy-only:
 
 notify:
 	curl -X POST -H 'Content-type: application/json' --data '{"text":"$(shell git log -1 --pretty=%B)"}' https://hooks.slack.com/services/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
+
+notify-skip:
+	curl -X POST -H 'Content-type: application/json' --data '{"text":"⏭️ Deployment skipped - no API changes detected"}' https://hooks.slack.com/services/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
 
 notify-error:
 	curl -X POST -H 'Content-type: application/json' --data '{"text":"❌ Error in github action"}' https://hooks.slack.com/services/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

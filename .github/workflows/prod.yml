@@ -3,7 +3,29 @@ on:
     branches:
       - main
 jobs:
+  check-changes:
+    runs-on: ubuntu-latest
+    outputs:
+      deploy: ${{ steps.check.outputs.deploy }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Check for API changes
+        id: check
+        run: |
+          if make check-api-changes BASE_REF=HEAD^1; then
+            echo "deploy=true" >> $GITHUB_OUTPUT
+          else
+            echo "deploy=false" >> $GITHUB_OUTPUT
+            make notify-skip
+          fi
+
   tests:
+    needs: [check-changes]
+    if: needs.check-changes.outputs.deploy == 'true'
     runs-on:
       labels: ubuntu-latest-m
     environment: test
@@ -35,6 +57,8 @@ jobs:
         run: make notify-error
 
   build-and-push:
+    needs: [check-changes, tests]
+    if: needs.check-changes.outputs.deploy == 'true'
     runs-on: ubuntu-latest
     environment: production
     steps:
@@ -75,7 +99,8 @@ jobs:
         run: make notify-error
 
   deploy:
-    needs: [tests, build-and-push]
+    needs: [check-changes, tests, build-and-push]
+    if: needs.check-changes.outputs.deploy == 'true'
     runs-on: ubuntu-latest
     environment: production
     steps:
@@ -128,7 +153,8 @@ jobs:
         run: make notify-error
 
   notify:
-    needs: [deploy]
+    needs: [check-changes, deploy]
+    if: needs.check-changes.outputs.deploy == 'true'
     runs-on: ubuntu-latest
     environment: production
     steps:
