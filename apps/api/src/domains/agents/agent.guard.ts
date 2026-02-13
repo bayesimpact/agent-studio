@@ -9,7 +9,7 @@ import {
 import { Reflector } from "@nestjs/core"
 import { AUTH_ERRORS } from "@/common/errors/auth-errors"
 import { CHECK_POLICY_KEY, type PolicyHandler } from "@/common/policies/check-policy.decorator"
-import type { EndpointRequestWithAgent } from "@/request.interface"
+import { type EndpointRequestWithAgent, toConnectRequiredFields } from "@/request.interface"
 import type { Agent } from "./agent.entity"
 import { AgentPolicy } from "./agent.policy"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
@@ -37,7 +37,11 @@ export class AgentGuard implements CanActivate {
 
     // ok, we have a agentId (UPDATE, DELETE routes), fetch the agent from the database
     if (agentId) {
-      agent = (await this.agentsService.findAgentById(agentId)) ?? undefined
+      agent =
+        (await this.agentsService.findAgentById({
+          connectRequiredFields: toConnectRequiredFields(request),
+          agentId,
+        })) ?? undefined
       if (!agent) throw new NotFoundException()
 
       // enhance the request object with the agent

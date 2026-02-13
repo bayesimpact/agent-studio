@@ -63,13 +63,17 @@ describe("AgentsService", () => {
       })
 
       const result = await service.createAgent({
-        organizationId: organization.id,
-        projectId: project.id,
-        name: "My Template",
-        defaultPrompt: "This is a default prompt",
-        model: AgentModel.Gemini25Flash,
-        temperature: 0,
-        locale: AgentLocale.EN,
+        connectRequiredFields: {
+          organizationId: organization.id,
+          projectId: project.id,
+        },
+        fields: {
+          name: "My Template",
+          defaultPrompt: "This is a default prompt",
+          model: AgentModel.Gemini25Flash,
+          temperature: 0,
+          locale: AgentLocale.EN,
+        },
       })
 
       // Assert
@@ -94,13 +98,17 @@ describe("AgentsService", () => {
 
       const createWrongfulAgent = async () =>
         service.createAgent({
-          organizationId: organization.id,
-          projectId: project.id,
-          name: "AB",
-          defaultPrompt: "Prompt",
-          model: AgentModel.Gemini25Flash,
-          temperature: 0,
-          locale: AgentLocale.EN,
+          connectRequiredFields: {
+            organizationId: organization.id,
+            projectId: project.id,
+          },
+          fields: {
+            name: "AB",
+            defaultPrompt: "Prompt",
+            model: AgentModel.Gemini25Flash,
+            temperature: 0,
+            locale: AgentLocale.EN,
+          },
         })
 
       // Act & Assert
@@ -195,7 +203,7 @@ describe("AgentsService", () => {
 
   describe("updateAgent", () => {
     it("should update an Agent", async () => {
-      const { agent } = await createOrganizationWithAgent({
+      const { organization, project, agent } = await createOrganizationWithAgent({
         organizationRepository,
         userRepository,
         membershipRepository,
@@ -205,6 +213,7 @@ describe("AgentsService", () => {
 
       // Act
       const result = await service.updateAgent({
+        connectRequiredFields: { organizationId: organization.id, projectId: project.id },
         required: { agentId: agent.id },
         fieldsToUpdate: {
           name: "Updated Template",
@@ -223,7 +232,7 @@ describe("AgentsService", () => {
     })
 
     it("should update only name when defaultPrompt is not provided", async () => {
-      const { agent } = await createOrganizationWithAgent(
+      const { organization, project, agent } = await createOrganizationWithAgent(
         {
           organizationRepository,
           userRepository,
@@ -236,6 +245,7 @@ describe("AgentsService", () => {
 
       // Act
       const result = await service.updateAgent({
+        connectRequiredFields: { organizationId: organization.id, projectId: project.id },
         required: { agentId: agent.id },
         fieldsToUpdate: { name: "Updated Name" },
       })
@@ -246,7 +256,7 @@ describe("AgentsService", () => {
     })
 
     it("should throw UnprocessableEntityException when name is less than 3 characters", async () => {
-      const { agent } = await createOrganizationWithAgent({
+      const { organization, project, agent } = await createOrganizationWithAgent({
         organizationRepository,
         userRepository,
         membershipRepository,
@@ -256,6 +266,7 @@ describe("AgentsService", () => {
 
       const createWrongfulUpdateAgent = async () =>
         service.updateAgent({
+          connectRequiredFields: { organizationId: organization.id, projectId: project.id },
           required: { agentId: agent.id },
           fieldsToUpdate: { name: "AB" },
         })
@@ -270,7 +281,7 @@ describe("AgentsService", () => {
 
   describe("deleteAgent", () => {
     it("should delete an Agent", async () => {
-      const { agent } = await createOrganizationWithAgent({
+      const { organization, project, agent } = await createOrganizationWithAgent({
         organizationRepository,
         userRepository,
         membershipRepository,
@@ -279,7 +290,10 @@ describe("AgentsService", () => {
       })
 
       // Act
-      await service.deleteAgent(agent.id)
+      await service.deleteAgent({
+        connectRequiredFields: { organizationId: organization.id, projectId: project.id },
+        agentId: agent.id,
+      })
 
       // Assert
       const deletedTemplate = await agentRepository.findOne({ where: { id: agent.id } })

@@ -3,7 +3,11 @@ import { Body, Controller, Delete, Get, Patch, Post, Req, UseGuards } from "@nes
 import { CheckPolicy } from "@/common/policies/check-policy.decorator"
 import { JwtAuthGuard } from "@/domains/auth/jwt-auth.guard"
 import { UserGuard } from "@/domains/users/user.guard"
-import type { EndpointRequestWithAgent, EndpointRequestWithProject } from "@/request.interface"
+import {
+  type EndpointRequestWithAgent,
+  type EndpointRequestWithProject,
+  toConnectRequiredFields,
+} from "@/request.interface"
 import { OrganizationGuard } from "../organizations/organization.guard"
 import { ProjectsGuard } from "../projects/projects.guard"
 import type { Agent } from "./agent.entity"
@@ -23,12 +27,9 @@ export class AgentsController {
     @Req() request: EndpointRequestWithProject,
     @Body() { payload }: typeof AgentsRoutes.createOne.request,
   ): Promise<typeof AgentsRoutes.createOne.response> {
-    const projectId = request.project.id
-
     const agent = await this.agentsService.createAgent({
-      organizationId: request.organizationId,
-      projectId,
-      ...payload,
+      connectRequiredFields: toConnectRequiredFields(request),
+      fields: payload,
     })
 
     return { data: toAgentDto(agent) }
@@ -39,12 +40,7 @@ export class AgentsController {
   async getAll(
     @Req() request: EndpointRequestWithProject,
   ): Promise<typeof AgentsRoutes.getAll.response> {
-    const projectId = request.project.id
-
-    const agents = await this.agentsService.listAgents({
-      projectId,
-      organizationId: request.organizationId,
-    })
+    const agents = await this.agentsService.listAgents(toConnectRequiredFields(request))
 
     return { data: { agents: agents.map(toAgentDto) } }
   }
@@ -58,6 +54,7 @@ export class AgentsController {
     const agentId = request.agent.id
 
     const agent = await this.agentsService.updateAgent({
+      connectRequiredFields: toConnectRequiredFields(request),
       required: { agentId },
       fieldsToUpdate: payload,
     })
@@ -73,7 +70,10 @@ export class AgentsController {
   async deleteOne(
     @Req() request: EndpointRequestWithAgent,
   ): Promise<typeof AgentsRoutes.deleteOne.response> {
-    await this.agentsService.deleteAgent(request.agent.id)
+    await this.agentsService.deleteAgent({
+      connectRequiredFields: toConnectRequiredFields(request),
+      agentId: request.agent.id,
+    })
     return { data: { success: true } }
   }
 }

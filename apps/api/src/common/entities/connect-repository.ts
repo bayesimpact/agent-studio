@@ -65,4 +65,8 @@ export class ConnectRepository<T extends ConnectEntityBase> {
   ): Promise<T> {
     return this.repository.save(this.repository.create({ ...connectRequiredFields, ...entity }))
   }
+
+  public async saveOne(entity: T): Promise<T> {
+    return this.repository.save(entity)
+  }
 }

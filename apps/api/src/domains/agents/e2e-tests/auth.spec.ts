@@ -169,7 +169,7 @@ describe("Agents - Auth", () => {
         projectFactory.transient({ organization }).build(),
       )
       projectId = project2.id
-      expectResponse(await subject(), 403, AUTH_ERRORS.UNAUTHORIZED_RESOURCE)
+      expectResponse(await subject(), 404) //exception thrown by guard
     })
     it("doesn't allow a simple member to delete a agent", async () => {
       await createContextForRole("member")
@@ -210,7 +210,7 @@ describe("Agents - Auth", () => {
         projectFactory.transient({ organization }).build(),
       )
       projectId = project2.id
-      expectResponse(await subject(), 403, AUTH_ERRORS.UNAUTHORIZED_RESOURCE)
+      expectResponse(await subject(), 404) //exception thrown by guard
     })
     it("doesn't allow a simple member to delete a agent", async () => {
       await createContextForRole("member")
