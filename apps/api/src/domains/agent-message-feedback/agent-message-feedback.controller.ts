@@ -5,7 +5,11 @@ import { JwtAuthGuard } from "@/domains/auth/jwt-auth.guard"
 import { OrganizationGuard } from "@/domains/organizations/organization.guard"
 import { ProjectsGuard } from "@/domains/projects/projects.guard"
 import { UserGuard } from "@/domains/users/user.guard"
-import type { EndpointRequestWithAgent, EndpointRequestWithProject } from "@/request.interface"
+import {
+  type EndpointRequestWithAgent,
+  type EndpointRequestWithProject,
+  toConnectRequiredFields,
+} from "@/request.interface"
 import { AgentGuard } from "../agents/agent.guard"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
 import { AgentMessageFeedbackService } from "./agent-message-feedback.service"
@@ -26,6 +30,7 @@ export class AgentMessageFeedbackController {
     const user = request.user
 
     const feedback = await this.feedbackService.createFeedback({
+      connectRequiredFields: toConnectRequiredFields(request),
       userId: user.id,
       agentMessageId,
       content: payload.content,
@@ -42,7 +47,10 @@ export class AgentMessageFeedbackController {
   async getAll(
     @Req() request: EndpointRequestWithAgent,
   ): Promise<typeof AgentMessageFeedbackRoutes.getAll.response> {
-    const feedbacks = await this.feedbackService.listFeedbacksForAgent(request.agent.id)
+    const feedbacks = await this.feedbackService.listFeedbacksForAgent({
+      connectRequiredFields: toConnectRequiredFields(request),
+      agentId: request.agent.id,
+    })
 
     return { data: { feedbacks } }
   }

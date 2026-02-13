@@ -7,6 +7,9 @@ import {
   teardownTestDatabase,
 } from "@/common/test/test-transaction-manager"
 import { removeNullish } from "@/common/utils/remove-nullish"
+import { agentMessageFactory } from "@/domains/agent-sessions/agent-messages.factory"
+import { agentSessionFactory } from "@/domains/agent-sessions/agent-session.factory"
+import { agentFactory } from "@/domains/agents/agent.factory"
 import { createOrganizationWithAgentMessage } from "@/domains/organizations/organization.factory"
 import { setupUserGuardForTesting } from "../../../../test/e2e.helpers"
 import { expectResponse, type Requester, testRequester } from "../../../../test/request"
@@ -50,13 +53,13 @@ describe("AgentMessageFeedbackRoutes.getAll", () => {
   })
 
   const createContext = async () => {
-    const { user, organization, project, agent, agentMessage } =
+    const { user, organization, project, agent, agentMessage, agentSession } =
       await createOrganizationWithAgentMessage(repositories)
     organizationId = organization.id
     projectId = project.id
     agentId = agent.id
     auth0Id = user.auth0Id
-    return { user, organization, project, agentMessage }
+    return { user, organization, project, agentMessage, agentSession }
   }
 
   const subject = async () =>
@@ -82,6 +85,32 @@ describe("AgentMessageFeedbackRoutes.getAll", () => {
       })
 
     await repositories.agentMessageFeedbackRepository.save([feedback1, feedback2])
+
+    const agentX = agentFactory.transient({ organization, project }).build({
+      name: "Agent X",
+      defaultPrompt: "Prompt X",
+    })
+    await repositories.agentRepository.save([agentX])
+
+    const sessionX = agentSessionFactory
+      .transient({ organization, project, agent: agentX, user })
+      .build({
+        type: "app-private",
+        createdAt: new Date("2026-01-01T10:00:00Z"),
+      })
+    await repositories.agentSessionRepository.save([sessionX])
+
+    const agentMessageX = agentMessageFactory
+      .transient({ organization, project, session: sessionX })
+      .build()
+    await repositories.agentMessageRepository.save([agentMessageX])
+
+    const feedbackX = agentMessageFeedbackFactory
+      .transient({ user, organization, project, agentMessage: agentMessageX })
+      .build({
+        content: "Feedback X",
+      })
+    await repositories.agentMessageFeedbackRepository.save([feedbackX])
 
     const response = await subject()
 

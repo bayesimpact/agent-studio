@@ -1,7 +1,9 @@
 import type { AgentMessageFeedbackDto } from "@caseai-connect/api-contracts"
-import { Injectable, NotFoundException } from "@nestjs/common"
+import { Injectable } from "@nestjs/common"
 import { InjectRepository } from "@nestjs/typeorm"
 import { In, type Repository } from "typeorm"
+import { ConnectRepository } from "@/common/entities/connect-repository"
+import type { ConnectRequiredFields } from "@/common/entities/connect-required-fields"
 import { getTraceUrl } from "@/external/langfuse/langfuse-helper"
 import { AgentMessage } from "../agent-sessions/agent-message.entity"
 import { AgentMessageFeedback } from "./agent-message-feedback.entity"
@@ -10,50 +12,59 @@ import { AgentMessageFeedback } from "./agent-message-feedback.entity"
 export class AgentMessageFeedbackService {
   constructor(
     @InjectRepository(AgentMessageFeedback)
-    private readonly feedbackRepository: Repository<AgentMessageFeedback>,
+    feedbackRepository: Repository<AgentMessageFeedback>,
     @InjectRepository(AgentMessage)
-    private readonly agentMessageRepository: Repository<AgentMessage>,
-  ) {}
-
+    agentMessageRepository: Repository<AgentMessage>,
+  ) {
+    this.feedbackConnectRepository = new ConnectRepository(
+      feedbackRepository,
+      "agent_message_feedbacks",
+    )
+    this.agentMessageConnectRepository = new ConnectRepository(
+      agentMessageRepository,
+      "agent_messages",
+    )
+  }
+  private readonly feedbackConnectRepository: ConnectRepository<AgentMessageFeedback>
+  private readonly agentMessageConnectRepository: ConnectRepository<AgentMessage>
   async createFeedback({
+    connectRequiredFields,
     userId,
     agentMessageId,
     content,
   }: {
+    connectRequiredFields: ConnectRequiredFields
     userId: string
     agentMessageId: string
     content: string
-  }): Promise<AgentMessageFeedback> {
-    const agentMessage = await this.agentMessageRepository.findOne({
-      where: { id: agentMessageId },
-      relations: ["session", "session.agent", "session.agent.project"],
-    })
-
+  }): Promise<AgentMessageFeedback | null> {
+    const agentMessage = await this.agentMessageConnectRepository.getOneById(
+      connectRequiredFields,
+      agentMessageId,
+    )
     if (!agentMessage) {
-      throw new NotFoundException(`Agent message with id ${agentMessageId} not found`)
+      return null
     }
-
-    const project = agentMessage.session.agent.project
-    const organizationId = project.organizationId
-
-    const feedback = this.feedbackRepository.create({
+    return await this.feedbackConnectRepository.createAndSave(connectRequiredFields, {
       userId,
       agentMessageId,
-      projectId: project.id,
-      organizationId,
       content,
     })
-
-    return this.feedbackRepository.save(feedback)
   }
 
-  async listFeedbacksForAgent(agentId: string): Promise<AgentMessageFeedbackDto[]> {
-    const agentMessages = await this.agentMessageRepository.find({
+  async listFeedbacksForAgent({
+    connectRequiredFields,
+    agentId,
+  }: {
+    connectRequiredFields: ConnectRequiredFields
+    agentId: string
+  }): Promise<AgentMessageFeedbackDto[]> {
+    const agentMessages = await this.agentMessageConnectRepository.find(connectRequiredFields, {
       where: { session: { agentId } },
       relations: ["session"],
     })
     const agentMessageIds = agentMessages.map((message) => message.id)
-    const feedbacks = await this.feedbackRepository.find({
+    const feedbacks = await this.feedbackConnectRepository.find(connectRequiredFields, {
       where: { agentMessageId: In(agentMessageIds) },
       order: { createdAt: "DESC" },
     })
@@ -82,15 +93,13 @@ export class AgentMessageFeedbackService {
       .filter((f) => f !== null)
   }
 
-  async findById(feedbackId: string): Promise<AgentMessageFeedback> {
-    const feedback = await this.feedbackRepository.findOne({
-      where: { id: feedbackId },
-    })
-
-    if (!feedback) {
-      throw new NotFoundException(`Feedback with id ${feedbackId} not found`)
-    }
-
-    return feedback
+  async findById({
+    connectRequiredFields,
+    feedbackId,
+  }: {
+    connectRequiredFields: ConnectRequiredFields
+    feedbackId: string
+  }): Promise<AgentMessageFeedback | null> {
+    return await this.feedbackConnectRepository.getOneById(connectRequiredFields, feedbackId)
   }
 }
