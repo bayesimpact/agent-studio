@@ -1,4 +1,4 @@
-import type { Repository, SelectQueryBuilder } from "typeorm"
+import type { FindManyOptions, Repository, SelectQueryBuilder } from "typeorm"
 import type { DeepPartial } from "typeorm/common/DeepPartial"
 import type { ConnectEntityBase } from "@/common/entities/connect-entity"
 import type { ConnectRequiredFields } from "@/common/entities/connect-required-fields"
@@ -10,6 +10,43 @@ export class ConnectRepository<T extends ConnectEntityBase> {
   constructor(repository: Repository<T>, alias: string) {
     this.repository = repository
     this.alias = alias
+  }
+
+  public async find(
+    connectRequiredFields: ConnectRequiredFields,
+    options: FindManyOptions<Pick<ConnectRequiredFields, never> & T>,
+  ): Promise<T[]> {
+    return await this.repository.find(
+      this.addConnectRequiredFieldsWhere(connectRequiredFields, options),
+    )
+  }
+  addConnectRequiredFieldsWhere<T extends ConnectRequiredFields>(
+    connectRequiredFields: ConnectRequiredFields,
+    options: FindManyOptions<T>,
+  ): FindManyOptions<T> {
+    let extended = this.addWhere(options, {
+      organizationId: connectRequiredFields.organizationId,
+    })
+
+    extended = this.addWhere(extended, {
+      projectId: connectRequiredFields.projectId,
+    })
+
+    return extended
+  }
+
+  addWhere<T>(options: FindManyOptions<T>, extra: Record<string, string>): FindManyOptions<T> {
+    const where = options.where
+    if (Array.isArray(where)) {
+      return {
+        ...options,
+        where: where.map((w) => ({ ...w, ...extra })),
+      }
+    }
+    return {
+      ...options,
+      where: { ...(where ?? {}), ...extra },
+    }
   }
 
   public async getMany(connectRequiredFields: ConnectRequiredFields): Promise<T[]> {
