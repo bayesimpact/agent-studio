@@ -1,5 +1,4 @@
 import { useEffect } from "react"
-import { useTranslation } from "react-i18next"
 import { useSidebarLayout } from "@/components/layouts/sidebar/context"
 import { InviteProjectMembersDialog } from "@/components/project-memberships/InviteProjectMembersDialog"
 import { ProjectMembershipsList } from "@/components/project-memberships/ProjectMembershipsList"
@@ -8,7 +7,10 @@ import type { ProjectMembership } from "@/features/project-memberships/project-m
 import { selectProjectMemberships } from "@/features/project-memberships/project-memberships.selectors"
 import { listProjectMemberships } from "@/features/project-memberships/project-memberships.thunks"
 import type { Project } from "@/features/projects/projects.models"
-import { selectCurrentProjectId, selectProjectData } from "@/features/projects/projects.selectors"
+import {
+  selectCurrentProjectData,
+  selectCurrentProjectId,
+} from "@/features/projects/projects.selectors"
 import { useAbility } from "@/hooks/use-ability"
 import { ADS } from "@/store/async-data-status"
 import { useAppDispatch, useAppSelector } from "@/store/hooks"
@@ -19,7 +21,7 @@ export function ProjectMembershipsRoute() {
   const dispatch = useAppDispatch()
   const projectId = useAppSelector(selectCurrentProjectId)
   const organizationId = useAppSelector(selectCurrentOrganizationId)
-  const project = useAppSelector(selectProjectData)
+  const project = useAppSelector(selectCurrentProjectData)
   const membershipsData = useAppSelector(selectProjectMemberships)
 
   useEffect(() => {
@@ -71,20 +73,16 @@ function useHandleHeader({
   project: Project
   organizationId: string
 }) {
-  const { t } = useTranslation("projectMemberships", { keyPrefix: "header" })
   const { isAdminInterface } = useAbility()
-  const { setHeaderTitle, setHeaderRightSlot } = useSidebarLayout()
-  const headerTitle = t("title", { projectName: project.name })
+  const { setHeaderRightSlot } = useSidebarLayout()
 
   useEffect(() => {
-    setHeaderTitle(headerTitle)
     if (isAdminInterface)
       setHeaderRightSlot(
         <InviteProjectMembersDialog organizationId={organizationId} projectId={project.id} />,
       )
     return () => {
-      setHeaderTitle("")
       setHeaderRightSlot(undefined)
     }
-  }, [headerTitle, setHeaderTitle, setHeaderRightSlot, isAdminInterface, project, organizationId])
+  }, [setHeaderRightSlot, isAdminInterface, project, organizationId])
 }
