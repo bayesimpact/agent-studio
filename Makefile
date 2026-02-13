@@ -40,7 +40,6 @@ API_PATHS := \
 API_EXCLUDE_PATTERNS := \.md$$|\.spec\.ts$$|\.e2e-spec\.ts$$|apps/api/test/|apps/api/README\.md
 
 # Check if API has meaningful changes
-.PHONY: check-api-changes
 check-api-changes:
 	@echo "Checking for API changes between $(BASE_REF) and HEAD..."
 	@CHANGED=$$(git diff --name-only $(BASE_REF) HEAD -- $(API_PATHS) | \
@@ -55,7 +54,6 @@ check-api-changes:
 	fi
 
 # Check if frontend has meaningful changes (for future use)
-.PHONY: check-web-changes
 check-web-changes:
 	@echo "Checking for web changes between $(BASE_REF) and HEAD..."
 	@CHANGED=$$(git diff --name-only $(BASE_REF) HEAD -- apps/web packages/ui | \
@@ -115,10 +113,8 @@ migrations:
 	docker compose -f infra/cloudsql-proxy/docker-compose.yaml logs cloudsql-proxy
 	cd apps/api && npm ci && DATABASE_HOST=localhost DATABASE_PORT=${cloudSqlProxyPort} DATABASE_USERNAME=connect_admin DATABASE_NAME=connect DATABASE_PASSWORD=${MIG_DATABASE_PASSWORD} npm run migration:run
 
-.PHONY: deploy
 deploy: docker-push deploy-only
 
-.PHONY: deploy-only
 deploy-only:
 	gcloud run deploy ${cloudRunName} --image ${imageUrl}:${version} \
 	--update-secrets=LANGFUSE_SK=${secretsPrefix}LANGFUSE_SK:latest \
