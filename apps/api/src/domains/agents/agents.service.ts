@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException, UnprocessableEntityException } from "@nestjs/common"
 import { InjectRepository } from "@nestjs/typeorm"
 import type { Repository } from "typeorm"
-
+import { ConnectRepository } from "@/common/entities/connect-repository"
 import type { ConnectRequiredFields } from "@/common/entities/connect-required-fields"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
 import { AgentSessionsService } from "@/domains/agent-sessions/agent-sessions.service"
@@ -11,17 +11,24 @@ import { Agent } from "./agent.entity"
 export class AgentsService {
   constructor(
     @InjectRepository(Agent)
-    private readonly agentRepository: Repository<Agent>,
+    agentRepository: Repository<Agent>,
     private readonly agentSessionsService: AgentSessionsService,
-  ) {}
+  ) {
+    this.agentConnectRepository = new ConnectRepository(agentRepository, "agents")
+  }
+  private readonly agentConnectRepository: ConnectRepository<Agent>
 
   /**
    * Creates a new agent for a project.
    */
-  async createAgent(
-    fields: ConnectRequiredFields &
-      Pick<Agent, "defaultPrompt" | "name" | "model" | "temperature" | "locale">,
-  ): Promise<Agent> {
+  async createAgent({
+    connectRequiredFields,
+    fields,
+  }: {
+    connectRequiredFields: ConnectRequiredFields
+    fields: Pick<ConnectRequiredFields, never> &
+      Pick<Agent, "defaultPrompt" | "name" | "model" | "temperature" | "locale">
+  }): Promise<Agent> {
     const { name } = fields
 
     // Validate name (min 3 characters)
@@ -30,9 +37,7 @@ export class AgentsService {
     }
 
     // Create the agent with defaults
-    const agent = this.agentRepository.create(fields)
-
-    return this.agentRepository.save(agent)
+    return await this.agentConnectRepository.createAndSave(connectRequiredFields, fields)
   }
 
   /**
@@ -40,42 +45,43 @@ export class AgentsService {
    */
 
   async listAgents(connectRequiredFields: ConnectRequiredFields): Promise<Agent[]> {
-    // List agents for the project
-    return this.agentRepository.find({
-      where: {
-        organizationId: connectRequiredFields.organizationId,
-        projectId: connectRequiredFields.projectId,
-      },
-      order: { createdAt: "DESC" },
-    })
+    return (await this.agentConnectRepository.getMany(connectRequiredFields))?.sort(
+      (a, b) => b.createdAt.getTime() - a.createdAt.getTime(),
+    )
   }
 
   /**
    * Finds an agent by its id.
-   * @param agentId The id of the agent to find.
-   * @returns The agent if found, undefined otherwise.
    */
-  async findAgentById(agentId: string): Promise<Agent | null> {
-    return this.agentRepository.findOne({
-      where: { id: agentId },
-    })
+  async findAgentById({
+    connectRequiredFields,
+    agentId,
+  }: {
+    connectRequiredFields: ConnectRequiredFields
+    agentId: string
+  }): Promise<Agent | null> {
+    return this.agentConnectRepository.getOneById(connectRequiredFields, agentId)
   }
 
   /**
-   * Updates a agent.
+   * Updates an agent.
    * Verifies that the user is an owner or admin of the agent's project's organization before updating.
    * Deletes playground sessions if configuration fields change.
    */
-  async updateAgent(params: {
+  async updateAgent({
+    connectRequiredFields,
+    required,
+    fieldsToUpdate,
+  }: {
+    connectRequiredFields: ConnectRequiredFields
     required: {
       agentId: string
     }
-    fieldsToUpdate: Partial<
-      Pick<Agent, "name" | "defaultPrompt" | "model" | "temperature" | "locale">
-    >
+    fieldsToUpdate: Pick<ConnectRequiredFields, never> &
+      Partial<Pick<Agent, "name" | "defaultPrompt" | "model" | "temperature" | "locale">>
   }): Promise<Agent> {
-    const { agentId } = params.required
-    const { name, defaultPrompt, model, temperature, locale } = params.fieldsToUpdate
+    const { agentId } = required
+    const { name, defaultPrompt, model, temperature, locale } = fieldsToUpdate
 
     // Validate name if provided (min 3 characters)
     if (name !== undefined && name.length < 3) {
@@ -83,9 +89,7 @@ export class AgentsService {
     }
 
     // Find the agent
-    const agent = await this.agentRepository.findOne({
-      where: { id: agentId },
-    })
+    const agent = await this.agentConnectRepository.getOneById(connectRequiredFields, agentId)
 
     if (!agent) {
       throw new NotFoundException(`Agent with id ${agentId} not found`)
@@ -111,7 +115,7 @@ export class AgentsService {
       ...(locale !== undefined && { locale }),
     })
 
-    const updatedAgent = await this.agentRepository.save(agent)
+    const updatedAgent = await this.agentConnectRepository.saveOne(agent)
 
     // If configuration changed, delete all playground sessions for this agent
     if (configChanged) {
@@ -122,13 +126,17 @@ export class AgentsService {
   }
 
   /**
-   * Deletes a agent.
+   * Deletes an agent.
    */
-  async deleteAgent(agentId: string): Promise<void> {
+  async deleteAgent({
+    connectRequiredFields,
+    agentId,
+  }: {
+    connectRequiredFields: ConnectRequiredFields
+    agentId: string
+  }): Promise<void> {
     // Find the agent
-    const agent = await this.agentRepository.findOne({
-      where: { id: agentId },
-    })
+    const agent = await this.agentConnectRepository.getOneById(connectRequiredFields, agentId)
 
     if (!agent) {
       throw new NotFoundException(`Agent with id ${agentId} not found`)
@@ -138,6 +146,6 @@ export class AgentsService {
     await this.agentSessionsService.deleteAllSessionsForAgent(agentId)
 
     // Delete the agent
-    await this.agentRepository.remove(agent)
+    await this.agentConnectRepository.deleteOneById({ connectRequiredFields, id: agent.id })
   }
 }

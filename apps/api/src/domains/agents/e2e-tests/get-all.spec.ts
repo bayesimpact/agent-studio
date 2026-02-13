@@ -63,8 +63,7 @@ describe("Agents - getAll", () => {
       token: accessToken,
     })
 
-  //fixme Restore test
-  xit("should return agents for a project", async () => {
+  it("should return agents for a project", async () => {
     const { organization, project } = await createContext()
 
     const agent1 = agentFactory.transient({ organization, project }).build({
@@ -89,7 +88,6 @@ describe("Agents - getAll", () => {
     expect(agents[0]).toHaveProperty("updatedAt")
   })
 
-  //fixme Restore test
   it("should return empty array when project has no agents", async () => {
     await createContext()
 
