@@ -92,12 +92,22 @@ DATABASE_URL=postgresql://admin:passpass@localhost:5432/caseai_connect
 # Auth0
 AUTH0_ISSUER_URL=https://bayes-impact.eu.auth0.com/
 AUTH0_AUDIENCE=https://bayes-impact.eu.auth0.com/api/v2/
+
+# Auth0 Invitations
+AUTH0_ORGANIZATION_ID=org_XXX
+AUTH0_CLIENT_ID=XXX
+AUTH0_M2M_CLIENT_ID=XXX
+AUTH0_M2M_CLIENT_SECRET=XXX
 ```
 
 **Required variables:**
 - `DATABASE_URL` - PostgreSQL connection string
 - `AUTH0_ISSUER_URL` - Auth0 issuer URL
 - `AUTH0_AUDIENCE` - Auth0 API audience
+- `AUTH0_ORGANIZATION_ID` - Auth0 organization ID (single org, see ADR-0001)
+- `AUTH0_CLIENT_ID` - Auth0 web SPA application client ID (used in invitation links)
+- `AUTH0_M2M_CLIENT_ID` - Auth0 M2M application client ID (for Management API)
+- `AUTH0_M2M_CLIENT_SECRET` - Auth0 M2M application client secret
 
 **Optional variables:**
 - `GOOGLE_APPLICATION_CREDENTIALS` - Path to Google Cloud service account key (for AI features)
@@ -140,7 +150,89 @@ This will apply all pending migrations to the `caseai_connect` database.
 - `npm run migration:generate -- -n MigrationName` - Generate a new migration from entity changes
 - `npm run migration:create -- migrations/MigrationName` - Create an empty migration file
 
-### 5. Run the Projects Locally
+### 5. Set Up HTTPS with `connect.localhost` (Recommended)
+
+The invitation flow requires Auth0 redirects that work best with a stable local domain and HTTPS. Both the API and web app auto-detect certificates and enable HTTPS when they are present.
+
+#### 5.1 No hosts-file update needed
+
+You do **not** need to update your hosts file:
+
+- **macOS / Linux**: no `/etc/hosts` change required
+- **Windows**: no `%SystemRoot%\System32\drivers\etc\hosts` change required
+
+#### 5.2 Generate a self-signed certificate
+
+Create the certificate directory and generate a certificate valid for both `localhost` and `connect.localhost`:
+
+```bash
+mkdir -p apps/api/.certs
+
+openssl req -x509 -newkey rsa:2048 -nodes \
+  -keyout apps/api/.certs/key.pem \
+  -out apps/api/.certs/cert.pem \
+  -days 365 \
+  -subj "/CN=connect.localhost" \
+  -addext "subjectAltName=DNS:connect.localhost,DNS:localhost,IP:127.0.0.1,IP:::1"
+```
+
+> **Note**: The `.certs/` directory is shared between the API and the web app. Vite reads certs from `apps/api/.certs/` (see `apps/web/vite.config.ts`). The `*.pem` files are already in `.gitignore`.
+
+#### 5.3 Trust the certificate on your system
+
+Browsers reject self-signed certificates by default. You need to add the certificate to your system's trust store.
+
+**macOS:**
+
+```bash
+sudo security add-trusted-cert -d -r trustRoot \
+  -k /Library/Keychains/System.keychain \
+  apps/api/.certs/cert.pem
+```
+
+After running this command, restart your browser. The certificate will be trusted system-wide.
+
+**Windows:**
+
+1. Double-click `apps/api/.certs/cert.pem` to open it.
+2. Click **Install Certificate…**
+3. Select **Local Machine** → **Next**.
+4. Select **Place all certificates in the following store** → **Browse…** → **Trusted Root Certification Authorities** → **OK** → **Next** → **Finish**.
+5. Restart your browser.
+
+Alternatively, using PowerShell as Administrator:
+
+```powershell
+Import-Certificate -FilePath "apps\api\.certs\cert.pem" -CertStoreLocation "Cert:\LocalMachine\Root"
+```
+
+**Linux (Ubuntu/Debian):**
+
+```bash
+sudo cp apps/api/.certs/cert.pem /usr/local/share/ca-certificates/connect-localhost.crt
+sudo update-ca-certificates
+```
+
+> **Tip**: If you see "Your connection is not private" in Chrome after trusting the cert, try visiting `https://connect.localhost:3000` directly in the browser first and accepting the certificate, then reload the web app.
+
+#### 5.4 Update environment variables for HTTPS
+
+Once HTTPS is set up, update your `.env` files to use `https://connect.localhost`:
+
+**`apps/web/.env`:**
+
+```bash
+VITE_API_URL=https://connect.localhost:3000
+```
+
+**Auth0 Dashboard:**
+
+- Update **Application Login URI** to `https://connect.localhost:5173`
+- Update **Allowed Callback URLs** to include `https://connect.localhost:5173`
+- Update **Allowed Logout URLs** to include `https://connect.localhost:5173`
+- Update **Allowed Web Origins** to include `https://connect.localhost:5173`
+
+### 6. Run the Projects Locally
 
 #### Run All Projects (Development Mode)
 
@@ -152,6 +244,9 @@ npm run dev
 
 This will start all apps in watch mode using Turbo.
 
+- **With HTTPS** (certs present): API at `https://connect.localhost:3000`, web at `https://connect.localhost:5173`
+- **Without HTTPS** (no certs): API at `http://localhost:3000`, web at `http://localhost:5173`
+
 #### Run Individual Projects
 
 **API:**
@@ -161,16 +256,12 @@ cd apps/api
 npm run dev
 ```
 
-The API will be available at `http://localhost:3000`.
-
 **Web frontend:**
 
 ```bash
 cd apps/web
 npm run dev
 ```
-
-The web frontend will typically run on a different port (check the console output).
 
 ## Running Tests
 
@@ -370,6 +461,25 @@ caseai-connect/
 2. **Migration already applied:**
    - Check migration status: `npm run migration:show`
    - If needed, revert and re-run: `npm run migration:revert && npm run migration:run`
+
+### HTTPS / Certificate Issues
+
+1. **"Your connection is not private" in Chrome:**
+   - Make sure you trusted the certificate (see step 5.3)
+   - Try visiting `https://connect.localhost:3000` directly and accepting the certificate
+   - Restart your browser after trusting the certificate
+   - On macOS, verify the cert is trusted: `security find-certificate -c "connect.localhost" /Library/Keychains/System.keychain`
+
+2. **CORS errors with `https://connect.localhost`:**
+   - The API's CORS config already allows `https://connect.localhost:5173`. If you still get CORS errors, the browser may be blocking the request because it doesn't trust the API's certificate.
+   - Visit `https://connect.localhost:3000` directly and accept the certificate, then reload the web app.
+
+3. **Certificate expired:**
+   - Regenerate the certificate (step 5.2) and re-trust it (step 5.3).
+
+4. **App falls back to HTTP:**
+   - Make sure the cert files exist at `apps/api/.certs/key.pem` and `apps/api/.certs/cert.pem`.
+   - Both the API (`main.ts`) and web (`vite.config.ts`) auto-detect certs — if the files are missing, they silently fall back to HTTP.
 
 ### Port Already in Use
 

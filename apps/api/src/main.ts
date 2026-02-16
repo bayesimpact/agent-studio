@@ -1,9 +1,14 @@
+import { readFileSync } from "node:fs"
+import { join } from "node:path"
 import { ValidationPipe } from "@nestjs/common"
 import { NestFactory } from "@nestjs/core"
 import { AppModule } from "./app.module"
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule)
+  const httpsOptions = loadHttpsCertificates()
+  const app = await NestFactory.create(AppModule, {
+    ...(httpsOptions && { httpsOptions }),
+  })
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,
@@ -12,10 +17,33 @@ async function bootstrap() {
     }),
   )
   app.enableCors({
-    origin: ["http://localhost:5173", "https://connect-web-flax.vercel.app"],
+    origin: [
+      "http://localhost:5173",
+      "https://localhost:5173",
+      "https://connect.localhost:5173",
+      "https://connect-web-flax.vercel.app",
+    ],
     credentials: true,
   })
+  const protocol = httpsOptions ? "https" : "http"
   await app.listen(3000)
+  console.log(`API server running on ${protocol}://connect.localhost:3000`)
+}
+
+/**
+ * Loads HTTPS certificates from the .certs directory if they exist.
+ * Returns undefined if certificates are not found (falls back to HTTP).
+ */
+function loadHttpsCertificates(): { key: Buffer; cert: Buffer } | undefined {
+  try {
+    const certsDir = join(__dirname, "..", ".certs")
+    return {
+      key: readFileSync(join(certsDir, "key.pem")),
+      cert: readFileSync(join(certsDir, "cert.pem")),
+    }
+  } catch {
+    return undefined
+  }
 }
 
 void bootstrap()

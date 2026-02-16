@@ -8,6 +8,7 @@ import { NotFoundRoute } from "@/routes/NotFoundRoute"
 import { useAppDispatch } from "@/store/hooks"
 import { DocumentsRoute } from "./admin/DocumentsRoute"
 import { FeedbackRoute } from "./admin/FeedbackRoute"
+import { ProjectMembershipsRoute } from "./admin/ProjectMembershipsRoute"
 import { getElement } from "./Elements"
 import { buildAdminPath, buildAppPath, RouteNames } from "./helpers"
 import { OnboardingRoute } from "./OnboardingRoute"
@@ -51,6 +52,10 @@ const router = () =>
                 {
                   path: buildAdminPath(RouteNames.DOCUMENTS),
                   element: <DocumentsRoute />,
+                },
+                {
+                  path: buildAdminPath(RouteNames.PROJECT_MEMBERSHIPS),
+                  element: <ProjectMembershipsRoute />,
                 },
                 {
                   path: buildAdminPath(RouteNames.AGENT),

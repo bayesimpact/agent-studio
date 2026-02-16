@@ -19,6 +19,9 @@ export type * from "./generic"
 export type { ApiRoute } from "./helpers"
 // Helpers
 export { defineRoute } from "./helpers"
+// Invitations DTOs
+export type * from "./invitations/invitations.dto"
+export { InvitationsRoutes } from "./invitations/invitations.routes"
 // Me DTOs
 export type { MeResponseDto } from "./me/me.dto"
 // Routes

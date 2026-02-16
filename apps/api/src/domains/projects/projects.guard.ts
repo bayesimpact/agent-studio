@@ -10,6 +10,8 @@ import { Reflector } from "@nestjs/core"
 import { AUTH_ERRORS } from "@/common/errors/auth-errors"
 import { CHECK_POLICY_KEY, type PolicyHandler } from "@/common/policies/check-policy.decorator"
 import type { EndpointRequestWithProject } from "@/request.interface"
+// biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
+import { ProjectMembershipsService } from "./memberships/project-memberships.service"
 import type { Project } from "./project.entity"
 import { ProjectPolicy } from "./project.policy"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
@@ -19,6 +21,7 @@ import { ProjectsService } from "./projects.service"
 export class ProjectsGuard implements CanActivate {
   constructor(
     readonly projectsService: ProjectsService,
+    readonly projectMembershipsService: ProjectMembershipsService,
     private reflector: Reflector,
   ) {}
 
@@ -42,6 +45,12 @@ export class ProjectsGuard implements CanActivate {
 
       // enhance the request object with the project
       request.project = project
+
+      request.projectMembership =
+        (await this.projectMembershipsService.findByProjectIdAndUserId(
+          projectId,
+          request.user.id,
+        )) ?? undefined
     }
 
     const policy = new ProjectPolicy(request.userMembership, project)

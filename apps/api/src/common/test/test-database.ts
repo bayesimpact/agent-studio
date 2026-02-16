@@ -17,6 +17,7 @@ import { Agent } from "@/domains/agents/agent.entity"
 import { Document } from "@/domains/documents/document.entity"
 import { Organization } from "@/domains/organizations/organization.entity"
 import { UserMembership } from "@/domains/organizations/user-membership.entity"
+import { ProjectMembership } from "@/domains/projects/memberships/project-membership.entity"
 import { Project } from "@/domains/projects/project.entity"
 import { User } from "@/domains/users/user.entity"
 
@@ -31,6 +32,7 @@ const TEST_ENTITIES = [
   Organization,
   UserMembership,
   Project,
+  ProjectMembership,
   Agent,
   AgentSession,
   AgentMessage,
@@ -79,6 +81,7 @@ export async function setupTestDatabase(
         type: "postgres",
         url: testDatabaseUrl,
         entities: TEST_ENTITIES,
+        synchronize: true,
         logging: false,
         dropSchema: false,
       }),
@@ -139,6 +142,7 @@ export async function clearTestDatabase(dataSource: DataSource): Promise<void> {
       await queryRunner.query(`DELETE FROM "agent_message"`)
       await queryRunner.query(`DELETE FROM "agent_session"`)
       await queryRunner.query(`DELETE FROM "user_membership"`)
+      await queryRunner.query(`DELETE FROM "project_membership"`)
       await queryRunner.query(`DELETE FROM "document"`)
       await queryRunner.query(`DELETE FROM "agent"`)
       await queryRunner.query(`DELETE FROM "project"`)

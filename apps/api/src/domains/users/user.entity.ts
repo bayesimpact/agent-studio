@@ -3,6 +3,7 @@ import { Base4AllEntity } from "@/common/entities/base4all.entity"
 import { AgentMessageFeedback } from "@/domains/agent-message-feedback/agent-message-feedback.entity"
 import { AgentSession } from "@/domains/agent-sessions/agent-session.entity"
 import { UserMembership } from "@/domains/organizations/user-membership.entity"
+import { ProjectMembership } from "@/domains/projects/memberships/project-membership.entity"
 
 @Entity("user")
 export class User extends Base4AllEntity {
@@ -35,4 +36,10 @@ export class User extends Base4AllEntity {
     (agentMessageFeedback) => agentMessageFeedback.user,
   )
   agentMessageFeedbacks!: AgentMessageFeedback[]
+
+  @OneToMany(
+    () => ProjectMembership,
+    (projectMembership) => projectMembership.user,
+  )
+  projectMemberships!: ProjectMembership[]
 }

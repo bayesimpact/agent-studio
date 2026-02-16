@@ -1,6 +1,8 @@
 import { randomUUID } from "node:crypto"
 import { Factory } from "fishery"
+import type { Repository } from "typeorm"
 import type { User } from "@/domains/users/user.entity"
+import { userFactory } from "../users/user.factory"
 import type { Organization } from "./organization.entity"
 import type { MembershipRole, UserMembership } from "./user-membership.entity"
 
@@ -44,3 +46,26 @@ export const userMembershipFactory = UserMembershipFactory.define(({ params, tra
     organization: transientParams.organization,
   } satisfies UserMembership
 })
+
+export const createUserMembership = async ({
+  repositories,
+  organization,
+  membership,
+  user,
+}: {
+  repositories: {
+    userRepository: Repository<User>
+    organizationRepository: Repository<Organization>
+    membershipRepository: Repository<UserMembership>
+  }
+  organization: Organization
+  user?: Partial<User>
+  membership?: Partial<UserMembership>
+}) => {
+  const newUser = userFactory.build(user)
+  await repositories.userRepository.save(newUser)
+  const newMembership = await repositories.membershipRepository.save(
+    userMembershipFactory.transient({ user: newUser, organization }).build(membership),
+  )
+  return { user: newUser, membership: newMembership }
+}
