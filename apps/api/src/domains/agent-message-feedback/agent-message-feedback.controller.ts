@@ -1,16 +1,22 @@
-import { AgentMessageFeedbackRoutes } from "@caseai-connect/api-contracts"
+import {
+  type AgentMessageFeedbackDto,
+  AgentMessageFeedbackRoutes,
+} from "@caseai-connect/api-contracts"
 import { Body, Controller, Get, Param, Post, Req, UseGuards } from "@nestjs/common"
 import { CheckPolicy } from "@/common/policies/check-policy.decorator"
 import { JwtAuthGuard } from "@/domains/auth/jwt-auth.guard"
 import { OrganizationGuard } from "@/domains/organizations/organization.guard"
 import { ProjectsGuard } from "@/domains/projects/projects.guard"
 import { UserGuard } from "@/domains/users/user.guard"
+import { getTraceUrl } from "@/external/langfuse/langfuse-helper"
 import {
   type EndpointRequestWithAgent,
   type EndpointRequestWithProject,
   toConnectRequiredFields,
 } from "@/request.interface"
+import type { AgentMessage } from "../agent-sessions/agent-message.entity"
 import { AgentGuard } from "../agents/agent.guard"
+import type { AgentMessageFeedback } from "./agent-message-feedback.entity"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
 import { AgentMessageFeedbackService } from "./agent-message-feedback.service"
 
@@ -47,11 +53,53 @@ export class AgentMessageFeedbackController {
   async getAll(
     @Req() request: EndpointRequestWithAgent,
   ): Promise<typeof AgentMessageFeedbackRoutes.getAll.response> {
-    const feedbacks = await this.feedbackService.listFeedbacksForAgent({
+    const data = await this.feedbackService.listFeedbacksForAgent({
       connectRequiredFields: toConnectRequiredFields(request),
       agentId: request.agent.id,
     })
 
-    return { data: { feedbacks } }
+    return {
+      data: {
+        feedbacks: toDto({
+          agentMessageEntities: data.agentMessages,
+          agentMessageFeedbackEntities: data.agentMessageFeedbacks,
+          agentId: request.agent.id,
+        }),
+      },
+    }
   }
+}
+
+function toDto({
+  agentMessageEntities,
+  agentMessageFeedbackEntities,
+  agentId,
+}: {
+  agentMessageEntities: AgentMessage[]
+  agentMessageFeedbackEntities: AgentMessageFeedback[]
+  agentId: string
+}): AgentMessageFeedbackDto[] {
+  return agentMessageFeedbackEntities
+    .map((f) => {
+      const agentMessage = agentMessageEntities.find((m) => m.id === f.agentMessageId)
+      const traceUrl = agentMessage?.session.traceId
+        ? getTraceUrl(agentMessage.session.traceId)
+        : undefined
+      if (!agentMessage) return null
+
+      return {
+        id: f.id,
+        organizationId: f.organizationId,
+        projectId: f.projectId,
+        agentId,
+        agentSessionId: agentMessage.session.id,
+        agentMessageId: f.agentMessageId,
+        agentMessageContent: agentMessage.content,
+        userId: f.userId,
+        content: f.content,
+        createdAt: f.createdAt.getTime(),
+        traceUrl,
+      } satisfies AgentMessageFeedbackDto
+    })
+    .filter((f) => f !== null)
 }
