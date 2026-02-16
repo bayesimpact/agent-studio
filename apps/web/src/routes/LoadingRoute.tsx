@@ -7,7 +7,7 @@ export function LoadingRoute() {
   const { t } = useTranslation("common")
   return (
     <FullPageCenterLayout>
-      <Card className="w-1/2">
+      <Card className="w-96">
         <CardHeader>
           <CardTitle>
             <div className="flex gap-2 items-center">
