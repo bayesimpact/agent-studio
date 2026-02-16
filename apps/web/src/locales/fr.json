@@ -12,6 +12,7 @@
     "more": "Plus",
     "project": "Projet",
     "documents": "Documents",
+    "projectMemberships": "Membres",
     "dragOrUploadFile": "Glissez ou téléversez un fichier",
     "processingFile": "Traitement du fichier...",
     "fileIsStored": "Le fichier est stocké",
@@ -158,6 +159,32 @@
     "title": "404 - Non trouvé",
     "description": "La page que vous recherchez n'existe pas. Veuillez vérifier l'URL ou retourner à la page d'accueil.",
     "home": "Accueil"
+  },
+  "projectMemberships": {
+    "nav": {
+      "title": "Membres"
+    },
+    "header": {
+      "title": "Gérer les membres de {{projectName}}"
+    },
+    "empty": {
+      "title": "Aucun membre",
+      "description": "Invitez des personnes pour leur donner accès aux agents de ce projet."
+    },
+    "status": {
+      "sent": "En attente",
+      "accepted": "Actif"
+    },
+    "invite": {
+      "trigger": "Inviter des membres",
+      "title": "Inviter des membres",
+      "description": "Entrez les adresses email des personnes que vous souhaitez inviter.",
+      "label": "Adresse email",
+      "placeholder": "email@example.com",
+      "add": "Ajouter",
+      "submit": "Envoyer {{count}} invitation(s)",
+      "submitting": "Envoi..."
+    }
   },
   "documents": {
     "header": {

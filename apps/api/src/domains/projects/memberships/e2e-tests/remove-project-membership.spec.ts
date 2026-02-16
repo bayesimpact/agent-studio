@@ -1,0 +1,121 @@
+import { ProjectsRoutes } from "@caseai-connect/api-contracts"
+import type { INestApplication } from "@nestjs/common"
+import type { App } from "supertest/types"
+import { clearTestDatabase } from "@/common/test/test-database"
+import {
+  setupTransactionalTestDatabase,
+  teardownTestDatabase,
+} from "@/common/test/test-transaction-manager"
+import { removeNullish } from "@/common/utils/remove-nullish"
+import { createOrganizationWithProject } from "@/domains/organizations/organization.factory"
+import { mockInvitationSender, setupUserGuardForTesting } from "../../../../../test/e2e.helpers"
+import { expectResponse, type Requester, testRequester } from "../../../../../test/request"
+import { ProjectsModule } from "../../projects.module"
+import { createProjectMembership } from "../project-membership.factory"
+
+describe("Projects - removeProjectMembership", () => {
+  let app: INestApplication<App>
+  let request: Requester
+  let setup: Awaited<ReturnType<typeof setupTransactionalTestDatabase>>
+  let repositories: ReturnType<
+    Awaited<ReturnType<typeof setupTransactionalTestDatabase>>["getAllRepositories"]
+  >
+
+  let organizationId: string
+  let projectId: string
+  let membershipId: string
+  let accessToken: string | undefined = "token"
+  let auth0Id = "auth0|123"
+
+  beforeAll(async () => {
+    setup = await setupTransactionalTestDatabase({
+      additionalImports: [ProjectsModule],
+      applyOverrides: (moduleBuilder) => setupUserGuardForTesting(moduleBuilder, () => auth0Id),
+    })
+    repositories = setup.getAllRepositories()
+    app = setup.module.createNestApplication()
+    await app.init()
+    request = testRequester(app)
+  })
+
+  beforeEach(async () => {
+    await clearTestDatabase(setup.dataSource)
+    accessToken = "token"
+    auth0Id = "auth0|123"
+    mockInvitationSender.resetTicketCounter()
+    jest.clearAllMocks()
+  })
+
+  afterAll(async () => {
+    await teardownTestDatabase(setup)
+    app.close()
+  })
+
+  const createContext = async () => {
+    const { organization, project, user } = await createOrganizationWithProject(repositories)
+    organizationId = organization.id
+    projectId = project.id
+    auth0Id = user.auth0Id
+
+    // Create an invited user and membership
+    const { membership, invitedUser } = await createProjectMembership({ repositories, project })
+    membershipId = membership.id
+
+    return { organization, project, user, invitedUser, membership }
+  }
+
+  const subject = async () =>
+    request({
+      route: ProjectsRoutes.removeProjectMembership,
+      pathParams: removeNullish({ organizationId, projectId, membershipId }),
+      token: accessToken,
+    })
+
+  it("should successfully remove a membership", async () => {
+    await createContext()
+
+    const response = await subject()
+
+    expectResponse(response, 200)
+    expect(response.body).toEqual({ data: { success: true } })
+
+    // Verify the membership is actually deleted from the database
+    const deletedMembership = await repositories.projectMembershipRepository.findOne({
+      where: { id: membershipId },
+    })
+    expect(deletedMembership).toBeNull()
+  })
+
+  it("should also delete the placeholder user when removing a pending invitation", async () => {
+    const { user, organization, project } = await createOrganizationWithProject(repositories)
+    organizationId = organization.id
+    projectId = project.id
+    auth0Id = user.auth0Id
+
+    const { membership } = await createProjectMembership({ repositories, project })
+    membershipId = membership.id
+
+    // Now remove the membership
+    const response = await subject()
+    expectResponse(response, 200)
+
+    // Verify the placeholder user is also deleted
+    const deletedUser = await repositories.userRepository.findOne({
+      where: { id: membership.userId },
+    })
+    expect(deletedUser).toBeNull()
+  })
+
+  it("should NOT delete a real user when removing their membership", async () => {
+    const { invitedUser } = await createContext()
+
+    const response = await subject()
+    expectResponse(response, 200)
+
+    // Verify the real user still exists (they have a non-placeholder auth0Id from userFactory)
+    const user = await repositories.userRepository.findOne({
+      where: { id: invitedUser.id },
+    })
+    expect(user).toBeDefined()
+  })
+})

@@ -14,6 +14,8 @@ import { meSliceReducer } from "@/features/me/me.slice"
 import { notificationsSliceReducer } from "@/features/notifications/notifications.slice"
 import { organizationsMiddleware } from "@/features/organizations/organizations.middleware"
 import { organizationsSliceReducer } from "@/features/organizations/organizations.slice"
+import { projectMembershipsMiddleware } from "@/features/project-memberships/project-memberships.middleware"
+import { projectMembershipsSliceReducer } from "@/features/project-memberships/project-memberships.slice"
 import { projectsMiddleware } from "@/features/projects/projects.middleware"
 import { projectsSliceReducer } from "@/features/projects/projects.slice"
 import type { ThunkExtraArg } from "./types"
@@ -27,6 +29,7 @@ export const store = configureStore({
     me: meSliceReducer,
     notifications: notificationsSliceReducer,
     organizations: organizationsSliceReducer,
+    projectMemberships: projectMembershipsSliceReducer,
     projects: projectsSliceReducer,
     documents: documentsSliceReducer,
   },
@@ -39,6 +42,7 @@ export const store = configureStore({
       authMiddleware.middleware,
       organizationsMiddleware.middleware,
       projectsMiddleware.middleware,
+      projectMembershipsMiddleware.middleware,
       agentsMiddleware.middleware,
       agentSessionMiddleware.middleware,
       documentsMiddleware.middleware,

@@ -47,6 +47,8 @@ export function SidebarBreadcrumb({ organization }: { organization: Organization
 
         <ProjectDocuments />
 
+        <ProjectMemberships />
+
         <AgentFeedback />
       </BreadcrumbList>
     </Breadcrumb>
@@ -254,6 +256,21 @@ function ProjectDocuments() {
         <DotIcon />
       </BreadcrumbSeparator>
       <BreadcrumbItem>{t("documents")}</BreadcrumbItem>
+    </>
+  )
+}
+
+function ProjectMemberships() {
+  const { isRoute } = useIsRoute()
+  const isProjectMembershipsRoute = isRoute(RouteNames.PROJECT_MEMBERSHIPS)
+  const { t } = useTranslation("common")
+  if (!isProjectMembershipsRoute) return null
+  return (
+    <>
+      <BreadcrumbSeparator>
+        <DotIcon />
+      </BreadcrumbSeparator>
+      <BreadcrumbItem>{t("projectMemberships")}</BreadcrumbItem>
     </>
   )
 }

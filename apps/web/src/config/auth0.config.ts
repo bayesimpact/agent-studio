@@ -1,4 +1,10 @@
 /**
+ * Auth0 organization ID from environment variables.
+ * Used for all loginWithRedirect calls.
+ */
+export const AUTH0_ORGANIZATION_ID = import.meta.env.VITE_AUTH0_ORGANIZATION_ID as string
+
+/**
  * Shared Auth0 configuration used by both Auth0Provider and Auth0 client instances.
  * This ensures a single source of truth for Auth0 settings.
  */

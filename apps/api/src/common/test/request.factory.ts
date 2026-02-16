@@ -102,6 +102,7 @@ export const endpointRequestWithOrganizationAndProjectFactory = Factory.define<
   return {
     ...baseRequest,
     project,
+    projectMembership: undefined,
   } satisfies EndpointRequestWithProject
 })
 
@@ -128,6 +129,7 @@ export const endpointRequestWithOrganizationAndProjectAndDocumentFactory = Facto
   return {
     ...baseRequest,
     project,
+    projectMembership: undefined,
     document,
   } satisfies EndpointRequestWithDocument
 })

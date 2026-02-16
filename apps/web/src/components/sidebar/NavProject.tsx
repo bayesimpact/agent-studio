@@ -10,6 +10,7 @@ import { selectAgentsFromProjectId } from "@/features/agents/agents.selectors"
 import { ADS } from "@/store/async-data-status"
 import { useAppSelector } from "@/store/hooks"
 import { NavDocuments } from "./documents/NavDocuments"
+import { NavProjectMemberships } from "./project-memberships/NavProjectMemberships"
 import { AdminAgentList, AppAgentList } from "./projects/agents/AgentList"
 import { DeleteProjectDialog } from "./projects/DeleteProjectDialog"
 import { EditProjectDialog } from "./projects/EditProjectDialog"
@@ -94,6 +95,7 @@ function ProjectItem({
       <SidebarMenu>{children({ agents: agents.value })}</SidebarMenu>
 
       <NavDocuments organizationId={project.organizationId} projectId={project.id} />
+      <NavProjectMemberships organizationId={project.organizationId} projectId={project.id} />
     </Section>
   )
 }
