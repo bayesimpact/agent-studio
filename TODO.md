@@ -6,22 +6,11 @@
 - tools/helpers to seed store in storybook
 - remove ttl
 - delete chat session
-- create ErrorRoute
 - use moostache to compile master-prompt+variables(locale, defaultprompt)
-- invite user
 - write LLM Rules for any IDE
 
 ## Routes and endpoints
 - name CRUD endpoint following: getAll, updateOne, deleteOne, getOne... (do not name it "listProjects", "createProject")
-
-## Tests
-### Backend
-- always use factory! example of missing use of factory : ```await membershipRepository.save({
-        userId: user.id,
-        organizationId: savedOrg.id,
-        role: "owner",
-      })```
-
 
 ## Factory
 - be careful with `as agent` it allows shit
