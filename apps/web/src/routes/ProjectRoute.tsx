@@ -22,15 +22,16 @@ import { useAbility } from "@/hooks/use-ability"
 import { useBuildPath } from "@/hooks/use-build-path"
 import { ADS } from "@/store/async-data-status"
 import { useAppSelector } from "@/store/hooks"
+import { ErrorRoute } from "./ErrorRoute"
 import { LoadingRoute } from "./LoadingRoute"
-import { NotFoundRoute } from "./NotFoundRoute"
 
 export function ProjectRoute() {
   const project = useAppSelector(selectCurrentProjectData)
   const projectId = useAppSelector(selectCurrentProjectId)
   const agents = useAppSelector(selectAgentsFromProjectId(projectId))
 
-  if (ADS.isError(project) || ADS.isError(agents)) return <NotFoundRoute />
+  if (ADS.isError(project) || ADS.isError(agents))
+    return <ErrorRoute error={project.error || agents.error || "Unknown error"} />
 
   if (ADS.isFulfilled(project) && ADS.isFulfilled(agents)) {
     return <WithData project={project.value} agents={agents.value} />

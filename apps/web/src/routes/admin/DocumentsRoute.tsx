@@ -13,16 +13,17 @@ import { useAbility } from "@/hooks/use-ability"
 import { ADS } from "@/store/async-data-status"
 import { useAppSelector } from "@/store/hooks"
 import { DocumentItem } from "../../components/documents/DocumentItem"
+import { ErrorRoute } from "../ErrorRoute"
 import { LoadingRoute } from "../LoadingRoute"
-import { NotFoundRoute } from "../NotFoundRoute"
 
 export function DocumentsRoute() {
   const projectId = useAppSelector(selectCurrentProjectId)
   const project = useAppSelector(selectCurrentProjectData)
   const documentsData = useAppSelector(selectDocumentsFromProjectId(projectId))
-  if (!projectId) return <NotFoundRoute />
+  if (!projectId) return <ErrorRoute error="Missing valid project ID" />
 
-  if (ADS.isError(documentsData) || ADS.isError(project)) return <NotFoundRoute />
+  if (ADS.isError(documentsData) || ADS.isError(project))
+    return <ErrorRoute error={documentsData.error || project.error || "Unknown error"} />
 
   if (ADS.isFulfilled(documentsData) && ADS.isFulfilled(project))
     return <WithData project={project.value} documents={documentsData.value} />

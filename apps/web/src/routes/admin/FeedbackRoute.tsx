@@ -8,16 +8,17 @@ import type { Agent } from "@/features/agents/agents.models"
 import { selectAgentData, selectCurrentAgentId } from "@/features/agents/agents.selectors"
 import { ADS } from "@/store/async-data-status"
 import { useAppSelector } from "@/store/hooks"
+import { ErrorRoute } from "../ErrorRoute"
 import { LoadingRoute } from "../LoadingRoute"
-import { NotFoundRoute } from "../NotFoundRoute"
 
 export function FeedbackRoute() {
   const agentId = useAppSelector(selectCurrentAgentId)
   const agent = useAppSelector(selectAgentData)
   const feedbacksData = useAppSelector(selectFeedbacksFromAgentId(agentId))
-  if (!agentId) return <NotFoundRoute />
+  if (!agentId) return <ErrorRoute error="Missing valid agent ID" />
 
-  if (ADS.isError(feedbacksData) || ADS.isError(agent)) return <NotFoundRoute />
+  if (ADS.isError(feedbacksData) || ADS.isError(agent))
+    return <ErrorRoute error={feedbacksData.error || agent.error || "Unknown error"} />
 
   if (ADS.isFulfilled(feedbacksData) && ADS.isFulfilled(agent))
     return <WithData agent={agent.value} feedbacks={feedbacksData.value} />
