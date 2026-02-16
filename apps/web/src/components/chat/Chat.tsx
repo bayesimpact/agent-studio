@@ -29,7 +29,7 @@ function ChatHeader({ className, children, ...props }: React.ComponentProps<"div
       className={cn("bg-primary text-white h-20 flex items-center px-6 gap-4", className)}
       {...props}
     >
-      <div className="border border-gray-700 rounded-full p-2">
+      <div className="border border-muted rounded-full p-2">
         <SparklesIcon className="size-6" />
       </div>
       <div className="flex-1">{t("header")}</div>
@@ -42,7 +42,7 @@ function ChatBotMessage({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       data-slot="chat-bot-message"
-      className={cn("rounded-2xl p-4 bg-gray-100 w-fit h-fit whitespace-break-spaces", className)}
+      className={cn("rounded-2xl p-4 bg-muted w-fit h-fit whitespace-break-spaces", className)}
       {...props}
     />
   )
@@ -167,7 +167,7 @@ function ChatFooter({
           data-slot="chat-footer"
           className={cn(
             "flex-1 border-2 m-6 rounded-2xl flex items-center flex-col cursor-text",
-            isFocused ? "border-gray-400" : "border-gray-200",
+            isFocused ? "border-primary" : "border-muted",
             className,
           )}
           {...props}

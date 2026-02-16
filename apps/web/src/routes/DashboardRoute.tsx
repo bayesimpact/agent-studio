@@ -5,6 +5,7 @@ import { Outlet, useParams } from "react-router-dom"
 import { SidebarLayout } from "@/components/layouts/SidebarLayout"
 import { ProjectList } from "@/components/ProjectList"
 import { AdminNavProject, AppNavProject } from "@/components/sidebar/NavProject"
+import { Logo } from "@/components/themes/Logo"
 import { authActions } from "@/features/auth/auth.slice"
 import type { User } from "@/features/me/me.models"
 import { selectMeData } from "@/features/me/me.selectors"
@@ -120,10 +121,12 @@ function SidebarHeaderChildren({
         to={getPath("organization")}
         name={organizationName}
         subname={isAdminInterface ? "Admin" : undefined}
-        iconClassName={
-          isAdminInterface ? "bg-orange-500" : "bg-gradient-to-tr from-purple-600 to-indigo-600"
-        }
-      />
+        subnameClassName="text-primary"
+      >
+        <div className="size-10 contain-content p-1">
+          <Logo />
+        </div>
+      </Header>
       <InterfaceToggle isAdmin={isAdmin} isAdminInterface={isAdminInterface} />
     </div>
   )

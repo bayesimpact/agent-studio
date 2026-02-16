@@ -7,7 +7,6 @@ import {
   ItemDescription,
   ItemTitle,
 } from "@caseai-connect/ui/shad/item"
-import { SlidersHorizontalIcon, SparklesIcon } from "lucide-react"
 import { useTranslation } from "react-i18next"
 import { useNavigate } from "react-router-dom"
 import type { Organization } from "@/features/organizations/organizations.models"
@@ -17,6 +16,7 @@ import { InterfaceToggle } from "@/routes/DashboardRoute"
 import { buildDate } from "@/utils/build-date"
 import { FullPageCenterLayout } from "./layouts/FullPageCenterLayout"
 import { CreateProjectDialogWithTrigger } from "./sidebar/projects/CreateProjectDialog"
+import { Logo } from "./themes/Logo"
 
 export function ProjectList({
   projects,
@@ -34,17 +34,18 @@ export function ProjectList({
   return (
     <FullPageCenterLayout>
       <div className="flex flex-col gap-4">
-        <div className="flex items-center gap-1 mb-2 border-b-4 pb-6 border-gray-100">
+        <div className="flex items-center gap-1 mb-2 border-b-4 pb-6 border-muted">
           <HeaderButton
             className="flex flex-1 gap-2 items-center"
-            Icon={isAdminInterface ? SlidersHorizontalIcon : SparklesIcon}
             to={getPath("organization")}
             name={organization.name}
             subname={isAdminInterface ? "Admin" : undefined}
-            iconClassName={
-              isAdminInterface ? "bg-orange-500" : "bg-gradient-to-tr from-purple-600 to-indigo-600"
-            }
-          />
+            subnameClassName="text-primary"
+          >
+            <div className="size-10 contain-content p-1">
+              <Logo />
+            </div>
+          </HeaderButton>
 
           <InterfaceToggle isAdmin={isAdmin} isAdminInterface={isAdminInterface} />
         </div>
