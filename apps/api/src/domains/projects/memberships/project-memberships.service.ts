@@ -20,7 +20,6 @@ export class ProjectMembershipsService {
   constructor(
     @InjectRepository(ProjectMembership)
     private readonly projectMembershipRepository: Repository<ProjectMembership>,
-    @InjectRepository(User) readonly _userRepository: Repository<User>,
     @Inject(INVITATION_SENDER)
     private readonly invitationSender: InvitationSender,
     private readonly dataSource: DataSource,
@@ -32,6 +31,18 @@ export class ProjectMembershipsService {
   async findById(membershipId: string): Promise<ProjectMembership | null> {
     return this.projectMembershipRepository.findOne({
       where: { id: membershipId },
+    })
+  }
+
+  /**
+   * Find a project membership by projectId and userId.
+   */
+  async findByProjectIdAndUserId(
+    projectId: string,
+    userId: string,
+  ): Promise<ProjectMembership | null> {
+    return this.projectMembershipRepository.findOne({
+      where: { projectId, userId },
     })
   }
 
