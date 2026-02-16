@@ -5,6 +5,7 @@ import { Slot } from "@radix-ui/react-slot"
 import { SendHorizonalIcon, SparklesIcon } from "lucide-react"
 import * as React from "react"
 import { useTranslation } from "react-i18next"
+import { ChatFooterContext, useChatFooter } from "./context"
 
 function Chat({ className, children, ...props }: React.ComponentProps<"div"> & {}) {
   return (
@@ -74,25 +75,6 @@ function ChatContent({ className, ...props }: React.ComponentProps<"div">) {
   )
 }
 
-interface ChatFooterContextValue {
-  onMessageSubmit: (value: string) => void
-  input: {
-    value: string
-    setValue: React.Dispatch<React.SetStateAction<string>>
-    ref: React.RefObject<HTMLTextAreaElement | null>
-  }
-}
-
-const ChatFooterContext = React.createContext<ChatFooterContextValue | null>(null)
-
-function useChatFooter() {
-  const context = React.useContext(ChatFooterContext)
-  if (!context) {
-    throw new Error("useChatFooter must be used within a ChatFooter")
-  }
-  return context
-}
-
 function ChatFooter({
   onMessageSubmit,
   focus,
@@ -106,6 +88,7 @@ function ChatFooter({
   const inputRef = React.useRef<HTMLTextAreaElement>(null)
 
   const [inputValue, setInputValue] = React.useState("")
+  const [disabled, setDisabled] = React.useState(false)
 
   const [isFocused, setIsFocused] = React.useState(false)
 
@@ -156,7 +139,13 @@ function ChatFooter({
   return (
     <ChatFooterContext.Provider
       value={{
-        input: { value: inputValue, setValue: setInputValue, ref: inputRef },
+        input: {
+          value: inputValue,
+          setValue: setInputValue,
+          ref: inputRef,
+          disabled,
+          setDisabled,
+        },
         onMessageSubmit: handleSubmit,
       }}
     >
@@ -223,6 +212,7 @@ function ChatInput({
       onKeyDown={handleKeyDown}
       className={cn("border-none min-h-min shadow-none focus-visible:ring-0", className)}
       {...props}
+      disabled={input.disabled || props.disabled}
     />
   )
 }
