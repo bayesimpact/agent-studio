@@ -33,7 +33,7 @@ function WithData({ feedbacks, agent }: { feedbacks: AgentMessageFeedback[]; age
       {feedbacks.length === 0 ? (
         <EmptyFeedback agent={agent} />
       ) : (
-        <div className="grid grid-cols-1 divide-y-4 divide-gray-100">
+        <div className="grid grid-cols-1 divide-y-4 divide-muted">
           {feedbacks.map((feedback) => (
             <FeedbackItem key={feedback.id} feedback={feedback} />
           ))}
