@@ -150,29 +150,20 @@ This will apply all pending migrations to the `caseai_connect` database.
 - `npm run migration:generate -- -n MigrationName` - Generate a new migration from entity changes
 - `npm run migration:create -- migrations/MigrationName` - Create an empty migration file
 
-### 5. Set Up HTTPS with `connect.local` (Recommended)
+### 5. Set Up HTTPS with `connect.localhost` (Recommended)
 
-The invitation flow requires Auth0 redirects that work best with a stable custom domain and HTTPS. Both the API and web app auto-detect certificates and enable HTTPS when they are present.
+The invitation flow requires Auth0 redirects that work best with a stable local domain and HTTPS. Both the API and web app auto-detect certificates and enable HTTPS when they are present.
 
-#### 5.1 Add `connect.local` to your hosts file
+#### 5.1 No hosts-file update needed
 
-**macOS / Linux:**
+You do **not** need to update your hosts file:
 
-```bash
-sudo sh -c 'echo "127.0.0.1       connect.local" >> /etc/hosts'
-sudo sh -c 'echo "::1             connect.local" >> /etc/hosts'
-```
-
-**Windows (run Command Prompt as Administrator):**
-
-```cmd
-echo 127.0.0.1       connect.local >> %SystemRoot%\System32\drivers\etc\hosts
-echo ::1             connect.local >> %SystemRoot%\System32\drivers\etc\hosts
-```
+- **macOS / Linux**: no `/etc/hosts` change required
+- **Windows**: no `%SystemRoot%\System32\drivers\etc\hosts` change required
 
 #### 5.2 Generate a self-signed certificate
 
-Create the certificate directory and generate a certificate valid for both `localhost` and `connect.local`:
+Create the certificate directory and generate a certificate valid for both `localhost` and `connect.localhost`:
 
 ```bash
 mkdir -p apps/api/.certs
@@ -181,8 +172,8 @@ openssl req -x509 -newkey rsa:2048 -nodes \
   -keyout apps/api/.certs/key.pem \
   -out apps/api/.certs/cert.pem \
   -days 365 \
-  -subj "/CN=connect.local" \
-  -addext "subjectAltName=DNS:connect.local,DNS:localhost,IP:127.0.0.1"
+  -subj "/CN=connect.localhost" \
+  -addext "subjectAltName=DNS:connect.localhost,DNS:localhost,IP:127.0.0.1,IP:::1"
 ```
 
 > **Note**: The `.certs/` directory is shared between the API and the web app. Vite reads certs from `apps/api/.certs/` (see `apps/web/vite.config.ts`). The `*.pem` files are already in `.gitignore`.
@@ -218,28 +209,28 @@ Import-Certificate -FilePath "apps\api\.certs\cert.pem" -CertStoreLocation "Cert
 **Linux (Ubuntu/Debian):**
 
 ```bash
-sudo cp apps/api/.certs/cert.pem /usr/local/share/ca-certificates/connect-local.crt
+sudo cp apps/api/.certs/cert.pem /usr/local/share/ca-certificates/connect-localhost.crt
 sudo update-ca-certificates
 ```
 
-> **Tip**: If you see "Your connection is not private" in Chrome after trusting the cert, try visiting `https://connect.local:3000` directly in the browser first and accepting the certificate, then reload the web app.
+> **Tip**: If you see "Your connection is not private" in Chrome after trusting the cert, try visiting `https://connect.localhost:3000` directly in the browser first and accepting the certificate, then reload the web app.
 
 #### 5.4 Update environment variables for HTTPS
 
-Once HTTPS is set up, update your `.env` files to use `https://connect.local`:
+Once HTTPS is set up, update your `.env` files to use `https://connect.localhost`:
 
 **`apps/web/.env`:**
 
 ```bash
-VITE_API_URL=https://connect.local:3000
+VITE_API_URL=https://connect.localhost:3000
 ```
 
 **Auth0 Dashboard:**
 
-- Update **Application Login URI** to `https://connect.local:5173`
-- Update **Allowed Callback URLs** to include `https://connect.local:5173`
-- Update **Allowed Logout URLs** to include `https://connect.local:5173`
-- Update **Allowed Web Origins** to include `https://connect.local:5173`
+- Update **Application Login URI** to `https://connect.localhost:5173`
+- Update **Allowed Callback URLs** to include `https://connect.localhost:5173`
+- Update **Allowed Logout URLs** to include `https://connect.localhost:5173`
+- Update **Allowed Web Origins** to include `https://connect.localhost:5173`
 
 ### 6. Run the Projects Locally
 
@@ -253,7 +244,7 @@ npm run dev
 
 This will start all apps in watch mode using Turbo.
 
-- **With HTTPS** (certs present): API at `https://connect.local:3000`, web at `https://connect.local:5173`
+- **With HTTPS** (certs present): API at `https://connect.localhost:3000`, web at `https://connect.localhost:5173`
 - **Without HTTPS** (no certs): API at `http://localhost:3000`, web at `http://localhost:5173`
 
 #### Run Individual Projects
@@ -475,13 +466,13 @@ caseai-connect/
 
 1. **"Your connection is not private" in Chrome:**
    - Make sure you trusted the certificate (see step 5.3)
-   - Try visiting `https://connect.local:3000` directly and accepting the certificate
+   - Try visiting `https://connect.localhost:3000` directly and accepting the certificate
    - Restart your browser after trusting the certificate
-   - On macOS, verify the cert is trusted: `security find-certificate -c "connect.local" /Library/Keychains/System.keychain`
+   - On macOS, verify the cert is trusted: `security find-certificate -c "connect.localhost" /Library/Keychains/System.keychain`
 
-2. **CORS errors with `https://connect.local`:**
-   - The API's CORS config already allows `https://connect.local:5173`. If you still get CORS errors, the browser may be blocking the request because it doesn't trust the API's certificate.
-   - Visit `https://connect.local:3000` directly and accept the certificate, then reload the web app.
+2. **CORS errors with `https://connect.localhost`:**
+   - The API's CORS config already allows `https://connect.localhost:5173`. If you still get CORS errors, the browser may be blocking the request because it doesn't trust the API's certificate.
+   - Visit `https://connect.localhost:3000` directly and accept the certificate, then reload the web app.
 
 3. **Certificate expired:**
    - Regenerate the certificate (step 5.2) and re-trust it (step 5.3).

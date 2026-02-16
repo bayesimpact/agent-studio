@@ -33,6 +33,6 @@ export default defineConfig({
           cert: fs.readFileSync(path.join(certsDir, "cert.pem")),
         }
       : undefined,
-    allowedHosts: ["connect.local"],
+    allowedHosts: ["connect.localhost"],
   },
 })

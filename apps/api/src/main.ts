@@ -20,14 +20,14 @@ async function bootstrap() {
     origin: [
       "http://localhost:5173",
       "https://localhost:5173",
-      "https://connect.local:5173",
+      "https://connect.localhost:5173",
       "https://connect-web-flax.vercel.app",
     ],
     credentials: true,
   })
   const protocol = httpsOptions ? "https" : "http"
   await app.listen(3000)
-  console.log(`API server running on ${protocol}://connect.local:3000`)
+  console.log(`API server running on ${protocol}://connect.localhost:3000`)
 }
 
 /**
