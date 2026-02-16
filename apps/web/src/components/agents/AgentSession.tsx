@@ -1,13 +1,7 @@
 import { Button } from "@caseai-connect/ui/shad/button"
 import { Spinner } from "@caseai-connect/ui/shad/spinner"
 import { cn } from "@caseai-connect/ui/utils"
-import {
-  AlertCircleIcon,
-  CirclePlusIcon,
-  ExternalLinkIcon,
-  MicIcon,
-  PaperclipIcon,
-} from "lucide-react"
+import { AlertCircleIcon, CirclePlusIcon, ExternalLinkIcon, PaperclipIcon } from "lucide-react"
 import { useTranslation } from "react-i18next"
 import type {
   AgentSession,
@@ -30,6 +24,7 @@ import {
 } from "../chat/Chat"
 import { MarkdownWrapper } from "../chat/MarkdownWrapper"
 import { DotsBackground } from "../DotsBackground"
+import { Dictaphone } from "./actions/Dictaphone"
 
 export function AdminAgentSession({
   session,
@@ -49,6 +44,7 @@ export function AdminAgentSession({
 
     void dispatch(sendMessage({ sessionId: session.id, content: message.trim() }))
   }
+
   return (
     <div className="p-6 flex flex-col gap-6 flex-1">
       <DotsBackground className="p-10">
@@ -84,9 +80,7 @@ export function AdminAgentSession({
                 <Button variant="ghost" disabled={isStreaming || !session}>
                   <PaperclipIcon />
                 </Button>
-                <Button variant="ghost" disabled={isStreaming || !session}>
-                  <MicIcon />
-                </Button>
+                <Dictaphone session={session} isStreaming={isStreaming} />
               </div>
               <ChatSubmit variant="ghost" disabled={isStreaming || !session} />
             </ChatActions>
@@ -133,16 +127,14 @@ export function AppAgentSession({
             />
 
             <ChatActions>
-              <div className="flex-1 justify-start flex gap-1">
+              <div className="flex-1 justify-start items-center flex gap-1">
                 <Button variant="secondary" disabled={isStreaming || !session}>
                   <CirclePlusIcon />
                 </Button>
                 <Button variant="ghost" disabled={isStreaming || !session}>
                   <PaperclipIcon />
                 </Button>
-                <Button variant="ghost" disabled={isStreaming || !session}>
-                  <MicIcon />
-                </Button>
+                <Dictaphone session={session} isStreaming={isStreaming} />
               </div>
               <ChatSubmit variant="ghost" disabled={isStreaming || !session} />
             </ChatActions>
