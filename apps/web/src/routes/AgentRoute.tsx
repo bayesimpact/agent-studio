@@ -29,9 +29,9 @@ import { useIsRoute } from "@/hooks/use-is-route"
 import { ADS } from "@/store/async-data-status"
 import { useAppSelector } from "@/store/hooks"
 import { buildDate } from "@/utils/build-date"
+import { ErrorRoute } from "./ErrorRoute"
 import { RouteNames } from "./helpers"
 import { LoadingRoute } from "./LoadingRoute"
-import { NotFoundRoute } from "./NotFoundRoute"
 
 export function AgentRoute() {
   const organizationId = useAppSelector(selectCurrentOrganizationId)
@@ -41,7 +41,7 @@ export function AgentRoute() {
   const agentSessions = useAppSelector(selectCurrentAgentSessionsData)
 
   if (ADS.isError(agent) || ADS.isError(agentSessions) || !organizationId || !projectId)
-    return <NotFoundRoute />
+    return <ErrorRoute error={agent.error || agentSessions.error || "Unknown error"} />
 
   if (ADS.isFulfilled(agent) && ADS.isFulfilled(agentSessions)) {
     return (

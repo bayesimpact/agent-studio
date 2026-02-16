@@ -19,9 +19,9 @@ import { useAbility } from "@/hooks/use-ability"
 import { useGetPath } from "@/hooks/use-build-path"
 import { ADS } from "@/store/async-data-status"
 import { useAppDispatch, useAppSelector } from "@/store/hooks"
+import { ErrorRoute } from "./ErrorRoute"
 import { LoadingRoute } from "./LoadingRoute"
 import { setCurrentIds } from "./loaders/set-current-ids"
-import { NotFoundRoute } from "./NotFoundRoute"
 
 export function DashboardRoute() {
   const user = useAppSelector(selectMeData)
@@ -29,7 +29,9 @@ export function DashboardRoute() {
   const projects = useAppSelector(selectProjectsData)
 
   if (ADS.isError(user) || ADS.isError(organizations) || ADS.isError(projects))
-    return <NotFoundRoute />
+    return (
+      <ErrorRoute error={user.error || organizations.error || projects.error || "Unknown error"} />
+    )
 
   if (ADS.isFulfilled(user) && ADS.isFulfilled(organizations) && ADS.isFulfilled(projects)) {
     return (
@@ -58,7 +60,7 @@ function WithData({
 
   const organization = organizations[0]
 
-  if (!organization) return <NotFoundRoute />
+  if (!organization) return <ErrorRoute error="Missing valid organization" />
 
   const organizationName = organization?.name || "CaseAi"
 
