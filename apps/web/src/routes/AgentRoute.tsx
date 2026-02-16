@@ -14,7 +14,7 @@ import { Outlet, useNavigate, useOutlet, useParams } from "react-router-dom"
 import { DeleteAgentDialogWithTrigger } from "@/components/agents/DeleteAgentDialog"
 import { EditAgentDialogWithTrigger } from "@/components/agents/EditAgentDialog"
 import { MarkdownWrapper } from "@/components/chat/MarkdownWrapper"
-import { FullPageCenterLayout } from "@/components/layouts/FullPageCenterLayout"
+import { ListHeader } from "@/components/layouts/ListHeader"
 import { useSidebarLayout } from "@/components/layouts/sidebar/context"
 import { CreateAgentSession } from "@/components/sidebar/projects/agent-sessions/CreateAgentSession"
 import type { AgentSession } from "@/features/agent-sessions/agent-sessions.models"
@@ -24,7 +24,7 @@ import { selectAgentData, selectCurrentAgentId } from "@/features/agents/agents.
 import { selectCurrentOrganizationId } from "@/features/organizations/organizations.selectors"
 import { selectCurrentProjectId } from "@/features/projects/projects.selectors"
 import { useAbility } from "@/hooks/use-ability"
-import { useBuildPath } from "@/hooks/use-build-path"
+import { useBuildPath, useGetPath } from "@/hooks/use-build-path"
 import { useIsRoute } from "@/hooks/use-is-route"
 import { ADS } from "@/store/async-data-status"
 import { useAppSelector } from "@/store/hooks"
@@ -97,28 +97,26 @@ function AgentSessionList({
   agentSessions: AgentSession[]
 }) {
   const { t } = useTranslation("common")
+  const { getPath } = useGetPath()
   return (
-    <FullPageCenterLayout>
-      <div className="flex flex-col gap-4">
-        <h4 className="scroll-m-20 text-xl font-semibold tracking-tight">{t("chatSessions")}</h4>
-        {agentSessions.map((agentSession) => (
-          <AgentSessionItem
-            key={agentSession.id}
-            organizationId={organizationId}
-            projectId={projectId}
-            agentId={agentId}
-            agentSession={agentSession}
-          />
-        ))}
-
-        <CreateAgentSession
-          type="button"
+    <ListHeader path={getPath("agent")} title={t("chatSessions")}>
+      {agentSessions.map((agentSession) => (
+        <AgentSessionItem
+          key={agentSession.id}
           organizationId={organizationId}
           projectId={projectId}
           agentId={agentId}
+          agentSession={agentSession}
         />
-      </div>
-    </FullPageCenterLayout>
+      ))}
+
+      <CreateAgentSession
+        type="button"
+        organizationId={organizationId}
+        projectId={projectId}
+        agentId={agentId}
+      />
+    </ListHeader>
   )
 }
 

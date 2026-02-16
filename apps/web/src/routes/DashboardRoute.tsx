@@ -67,7 +67,6 @@ function WithData({
 
   const projectList = (
     <ProjectList
-      isAdmin={isAdmin}
       isAdminInterface={isAdminInterface}
       projects={projects}
       organization={organization}
