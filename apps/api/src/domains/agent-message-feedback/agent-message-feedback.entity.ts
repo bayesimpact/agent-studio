@@ -1,11 +1,12 @@
-import { Column, Entity, JoinColumn, ManyToOne } from "typeorm"
+import { Column, JoinColumn, ManyToOne } from "typeorm"
 import { Base4AllEntity } from "@/common/entities/base4all.entity"
+import { ConnectEntity } from "@/common/entities/connect-entity"
 import { Organization } from "@/domains/organizations/organization.entity"
 import { Project } from "@/domains/projects/project.entity"
 import { User } from "@/domains/users/user.entity"
 import { AgentMessage } from "../agent-sessions/agent-message.entity"
 
-@Entity({ name: "agent_message_feedback" })
+@ConnectEntity("agent_message_feedback")
 export class AgentMessageFeedback extends Base4AllEntity {
   @Column({ type: "uuid", name: "organization_id" })
   organizationId!: string
