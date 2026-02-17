@@ -5,7 +5,7 @@ import { agentSessionsControllerTestSetup } from "./test-setup"
 
 const getTestContext = agentSessionsControllerTestSetup()
 
-describe("getAllApp", () => {
+describe("getAllAppSessions", () => {
   it("should return all app-private sessions for an agent and user", async () => {
     const { controller, agentSessionRepository, organization, project } = getTestContext()
     const { user, agent } = await createOrganizationWithAgent(getTestContext())
@@ -32,7 +32,7 @@ describe("getAllApp", () => {
 
     await agentSessionRepository.save([session1, session2, playgroundSession])
 
-    const { data: result } = await controller.getAllApp(mockRequest, agent.id)
+    const { data: result } = await controller.getAllAppSessions(mockRequest, agent.id)
 
     expect(result).toHaveLength(2)
     expect(result.every((session) => session.type === "app-private")).toBe(true)
@@ -45,7 +45,7 @@ describe("getAllApp", () => {
     const { user, agent } = await createOrganizationWithAgent(getTestContext())
     const mockRequest = buildEndpointRequest(user)
 
-    const { data: result } = await controller.getAllApp(mockRequest, agent.id)
+    const { data: result } = await controller.getAllAppSessions(mockRequest, agent.id)
 
     expect(result).toEqual([])
   })
@@ -69,7 +69,7 @@ describe("getAllApp", () => {
 
     await agentSessionRepository.save([oldSession, newestSession])
 
-    const { data: result } = await controller.getAllApp(mockRequest, agent.id)
+    const { data: result } = await controller.getAllAppSessions(mockRequest, agent.id)
 
     expect(result).toHaveLength(2)
     expect(result[0]?.id).toBe(newestSession.id)

@@ -33,7 +33,7 @@ describe("getAllPlayground", () => {
 
       await agentSessionRepository.save([session1, session2, appSession])
 
-      const { data: result } = await controller.getAllPlayground(mockRequest, agent.id)
+      const { data: result } = await controller.getAllPlaygroundSessions(mockRequest, agent.id)
 
       expect(result).toHaveLength(2)
       expect(result.every((session) => session.type === "playground")).toBe(true)
@@ -46,7 +46,7 @@ describe("getAllPlayground", () => {
       const { user, agent } = await createOrganizationWithAgent(getTestContext())
       const mockRequest = buildEndpointRequest(user)
 
-      const { data: result } = await controller.getAllPlayground(mockRequest, agent.id)
+      const { data: result } = await controller.getAllPlaygroundSessions(mockRequest, agent.id)
 
       expect(result).toEqual([])
     })
@@ -72,7 +72,7 @@ describe("getAllPlayground", () => {
 
       await agentSessionRepository.save([oldSession, newestSession])
 
-      const { data: result } = await controller.getAllPlayground(mockRequest, agent.id)
+      const { data: result } = await controller.getAllPlaygroundSessions(mockRequest, agent.id)
 
       expect(result).toHaveLength(2)
       expect(result[0]?.id).toBe(newestSession.id)
@@ -109,7 +109,7 @@ describe("getAllPlayground", () => {
 
       await agentSessionRepository.save([session1, session2, appSession])
 
-      await expect(controller.getAllPlayground(mockRequest, agent.id)).rejects.toThrow()
+      await expect(controller.getAllPlaygroundSessions(mockRequest, agent.id)).rejects.toThrow()
     })
   })
 })

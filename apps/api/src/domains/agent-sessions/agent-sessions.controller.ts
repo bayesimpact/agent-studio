@@ -15,11 +15,11 @@ export class AgentSessionsController {
   constructor(private readonly agentSessionsService: AgentSessionsService) {}
 
   // FIXME: add ability checks shoud be admin
-  @Get(AgentSessionsRoutes.getAllPlayground.path)
-  async getAllPlayground(
+  @Get(AgentSessionsRoutes.getAllPlaygroundSessions.path)
+  async getAllPlaygroundSessions(
     @Req() request: EndpointRequest,
     @Param("agentId") agentId: string,
-  ): Promise<typeof AgentSessionsRoutes.getAllPlayground.response> {
+  ): Promise<typeof AgentSessionsRoutes.getAllPlaygroundSessions.response> {
     const user = request.user
 
     await this.agentSessionsService.verifyUserCanCreatePlaygroundSession(user.id, agentId)
@@ -33,11 +33,11 @@ export class AgentSessionsController {
     return { data: sessions.map(toAgentSessionDtoWithTraceUrl) }
   }
 
-  @Get(AgentSessionsRoutes.getAllApp.path)
-  async getAllApp(
+  @Get(AgentSessionsRoutes.getAllAppSessions.path)
+  async getAllAppSessions(
     @Req() request: EndpointRequest,
     @Param("agentId") agentId: string,
-  ): Promise<typeof AgentSessionsRoutes.getAllApp.response> {
+  ): Promise<typeof AgentSessionsRoutes.getAllAppSessions.response> {
     const user = request.user
 
     await this.agentSessionsService.verifyUserCanCreateAppPrivateSession(user.id, agentId)

@@ -28,10 +28,18 @@ export const initOrganization = createAsyncThunk<
 
     for (const bot of bots) {
       if (isAdminInterface) {
-        const sessions = await services.agentSessions.getAllPlayground(bot.id)
+        const sessions = await services.agentSessions.getAllPlaygroundSessions({
+          organizationId,
+          projectId: project.id,
+          agentId: bot.id,
+        })
         agentSessions[bot.id] = sessions
       } else {
-        const sessions = await services.agentSessions.getAllApp(bot.id)
+        const sessions = await services.agentSessions.getAllAppSessions({
+          organizationId,
+          projectId: project.id,
+          agentId: bot.id,
+        })
         agentSessions[bot.id] = sessions
       }
     }
