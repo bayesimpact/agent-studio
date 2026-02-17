@@ -1,19 +1,27 @@
 import { BasePolicy } from "@/common/policies/base-policy"
 import type { UserMembership } from "@/domains/organizations/user-membership.entity"
+import type { ProjectMembership } from "@/domains/projects/memberships/project-membership.entity"
 import type { Project } from "@/domains/projects/project.entity"
 
 export class ProjectScopedPolicy<T> extends BasePolicy<T> {
+  protected readonly project: Project
+  protected readonly projectMembership?: ProjectMembership
+
   constructor(
-    userMembership: UserMembership,
-    protected readonly project?: Project,
+    protected readonly context: {
+      userMembership: UserMembership
+      projectMembership?: ProjectMembership
+      project: Project
+    },
     protected readonly entity?: T,
   ) {
-    super(userMembership, entity)
-    this.project = project
+    super(context.userMembership, entity)
+    this.project = context.project
+    this.projectMembership = context.projectMembership
   }
 
   canList(): boolean {
-    return this.isAdminOrOwner()
+    return this.canAccessProject()
   }
 
   canCreate(): boolean {
@@ -21,11 +29,15 @@ export class ProjectScopedPolicy<T> extends BasePolicy<T> {
   }
 
   canUpdate(): boolean {
-    return this.doesResourceBelongToProject() && this.isAdminOrOwner()
+    return this.doesResourceBelongToProject() && this.canAccessProject()
   }
 
   canDelete(): boolean {
-    return this.doesResourceBelongToProject() && this.isAdminOrOwner()
+    return this.doesResourceBelongToProject() && this.canAccessProject()
+  }
+
+  private canAccessProject(): boolean {
+    return this.isAdminOrOwner() || this.projectMembership?.projectId === this.project.id
   }
 
   private doesResourceBelongToProject(): boolean {

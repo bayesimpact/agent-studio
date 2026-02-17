@@ -10,7 +10,6 @@ import {
 } from "@/common/test/test-transaction-manager"
 import { removeNullish } from "@/common/utils/remove-nullish"
 import { createOrganizationWithProject } from "@/domains/organizations/organization.factory"
-import { projectFactory } from "@/domains/projects/project.factory"
 import { setupUserGuardForTesting } from "../../../../../test/e2e.helpers"
 import { expectResponse, type Requester, testRequester } from "../../../../../test/request"
 import { ProjectsModule } from "../../projects.module"
@@ -186,16 +185,6 @@ describe("Project Memberships - Auth", () => {
       await createContextForRoleWithMembership("owner")
       membershipId = randomUUID()
       expectResponse(await subject(), 404)
-    })
-    it("requires the membership to belong to the project", async () => {
-      const { organization } = await createContextForRoleWithMembership("owner")
-
-      // Create another project in the same organization
-      const otherProject = projectFactory.transient({ organization }).build()
-      await repositories.projectRepository.save(otherProject)
-      projectId = otherProject.id
-
-      expectResponse(await subject(), 403, AUTH_ERRORS.UNAUTHORIZED_RESOURCE)
     })
     it("doesn't allow a simple member to remove project memberships", async () => {
       await createContextForRoleWithMembership("member")

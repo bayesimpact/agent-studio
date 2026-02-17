@@ -10,6 +10,7 @@ import { Reflector } from "@nestjs/core"
 import { AUTH_ERRORS } from "@/common/errors/auth-errors"
 import { CHECK_POLICY_KEY, type PolicyHandler } from "@/common/policies/check-policy.decorator"
 import { type EndpointRequestWithAgent, toConnectRequiredFields } from "@/request.interface"
+import { requestToProjectPolicyContext } from "../projects/helpers"
 import type { Agent } from "./agent.entity"
 import { AgentPolicy } from "./agent.policy"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
@@ -48,7 +49,7 @@ export class AgentGuard implements CanActivate {
       request.agent = agent
     }
 
-    const policy = new AgentPolicy(request.userMembership, request.project, agent)
+    const policy = new AgentPolicy(requestToProjectPolicyContext(request), agent)
 
     const policyHandler = this.reflector.getAllAndOverride<PolicyHandler>(CHECK_POLICY_KEY, [
       context.getHandler(),
