@@ -2,6 +2,7 @@ import { Button } from "@caseai-connect/ui/shad/button"
 import { Spinner } from "@caseai-connect/ui/shad/spinner"
 import { cn } from "@caseai-connect/ui/utils"
 import { AlertCircleIcon, CirclePlusIcon, ExternalLinkIcon, PaperclipIcon } from "lucide-react"
+import { useEffect, useRef } from "react"
 import { useTranslation } from "react-i18next"
 import type {
   AgentSession,
@@ -9,6 +10,7 @@ import type {
 } from "@/features/agent-sessions/agent-sessions.models"
 import { selectStreaming } from "@/features/agent-sessions/agent-sessions.selectors"
 import { sendMessage } from "@/features/agent-sessions/agent-sessions.thunks"
+import { useScrollToEnd } from "@/hooks/use-scroll-to-end"
 import { useAppDispatch, useAppSelector } from "@/store/hooks"
 import { CreateFeedbackDialog } from "../agent-message-feedback/CreateFeedbackDialog"
 import {
@@ -102,6 +104,14 @@ export function AppAgentSession({
   const dispatch = useAppDispatch()
   const isStreaming = useAppSelector(selectStreaming)
 
+  const chatSubmitRef = useRef<HTMLButtonElement>(null)
+  const scrollToEnd = useScrollToEnd(chatSubmitRef)
+
+  useEffect(() => {
+    if (isStreaming) return
+    scrollToEnd()
+  }, [isStreaming, scrollToEnd])
+
   const handleSubmit = (message: string) => {
     if (!session || isStreaming || !message.trim()) {
       return
@@ -136,7 +146,7 @@ export function AppAgentSession({
                 </Button>
                 <Dictaphone session={session} isStreaming={isStreaming} />
               </div>
-              <ChatSubmit variant="ghost" disabled={isStreaming || !session} />
+              <ChatSubmit ref={chatSubmitRef} variant="ghost" disabled={isStreaming || !session} />
             </ChatActions>
           </ChatFooter>
         </Chat>
