@@ -1,22 +1,27 @@
+import type { AgentModel } from "@caseai-connect/api-contracts"
 import type { ModelMessage } from "ai"
-
-/**
- * Chat message in normalized format for LLM providers
- */
+import type { ZodObject, z } from "zod"
 export type LLMChatMessage = ModelMessage
 
-/**
- * Configuration for LLM requests
- */
-export interface LLMConfig {
-  model: string
-  temperature: number
-  systemPrompt?: string
-}
+type MockModels =
+  | AgentModel._MockGenerateObject
+  | AgentModel._MockGenerateText
+  | AgentModel._MockProcessFiles
+  | AgentModel._MockStreamChatResponse
+export type LLMConfig =
+  | {
+      model: MockModels
+      temperature: number
+      systemPrompt?: string
+      mockResult: string | string[]
+    }
+  | {
+      model: Exclude<string, MockModels>
+      temperature: number
+      systemPrompt?: string
+      mockResult?: never
+    }
 
-/**
- * Metadata for LLM telemetry
- */
 export interface LLMMetadata {
   traceId: string
   organizationId: string
@@ -27,26 +32,64 @@ export interface LLMMetadata {
   tags: string[]
 }
 
-/**
- * Interface for LLM providers
- * This abstraction allows swapping LLM libraries without changing business logic
- */
 export interface LLMProvider {
-  /**
-   * Stream a chat response from the LLM
-   * @param messages - Chat messages in normalized format
-   * @param config - LLM configuration (model, temperature, system prompt)
-   * @param metadata - Metadata used for telemetry (organizationId, agentId, tags, ...)
-   * @returns Async generator yielding text chunks
-   */
-  streamChatResponse(
-    messages: LLMChatMessage[],
-    config: LLMConfig,
-    metadata: LLMMetadata,
-  ): AsyncGenerator<string, void, unknown>
-  generateChatResponse(params: {
+  streamChatResponse({
+    messages,
+    config,
+    metadata,
+  }: {
+    messages: LLMChatMessage[]
+    config: LLMConfig
+    metadata: LLMMetadata
+  }): AsyncGenerator<string, void, unknown>
+
+  generateChatResponse({
+    message,
+    config,
+    metadata,
+  }: {
     message: LLMChatMessage
     config: LLMConfig
     metadata: LLMMetadata
   }): Promise<string>
+
+  generateText({
+    prompt,
+    config,
+    metadata,
+  }: {
+    prompt: string
+    config: LLMConfig
+    metadata: LLMMetadata
+  }): Promise<string>
+  // biome-ignore lint/suspicious/noExplicitAny: @Did ? une idée
+  generateObject<T extends ZodObject<any>>({
+    schema,
+    prompt,
+    config,
+    metadata,
+  }: {
+    schema: T
+    prompt: string
+    config: LLMConfig
+    metadata: LLMMetadata
+  }): Promise<z.infer<T>>
+
+  processFiles({
+    prompt,
+    files,
+    config,
+    metadata,
+  }: {
+    prompt: string
+    files: LLMFile[]
+    config: LLMConfig
+    metadata: LLMMetadata
+  }): Promise<string>
+}
+
+export interface LLMFile {
+  name: string
+  content: NonSharedBuffer
+  mediaType: string
 }

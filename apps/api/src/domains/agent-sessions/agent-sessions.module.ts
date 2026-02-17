@@ -5,6 +5,8 @@ import { AgentSessionContextResolver } from "@/common/context/resolvers/agent-se
 import { OrganizationContextResolver } from "@/common/context/resolvers/organization-context.resolver"
 import { ProjectContextResolver } from "@/common/context/resolvers/project-context.resolver"
 import { ResourceContextGuard } from "@/common/context/resource-context.guard"
+import { AISDKMockProvider } from "@/domains/agent-sessions/llm/providers/ai-sdk-mock.provider"
+import { AISDKVertexProvider } from "@/domains/agent-sessions/llm/providers/ai-sdk-vertex.provider"
 import { Agent } from "@/domains/agents/agent.entity"
 import { AuthModule } from "@/domains/auth/auth.module"
 import { UserMembership } from "@/domains/organizations/user-membership.entity"
@@ -28,7 +30,6 @@ import { AppPrivateSessionGuard } from "./app-private/app-private-session.guard"
 import { AppPrivateSessionsController } from "./app-private/app-private-sessions.controller"
 import { PlaygroundSessionGuard } from "./playground/playground-session.guard"
 import { PlaygroundSessionsController } from "./playground/playground-sessions.controller"
-import { AISDKLLMProvider } from "./providers/ai-sdk-llm.provider"
 
 @Module({
   imports: [
@@ -61,8 +62,12 @@ import { AISDKLLMProvider } from "./providers/ai-sdk-llm.provider"
     ProjectContextResolver,
     ResourceContextGuard,
     {
-      provide: "LLMProvider",
-      useClass: AISDKLLMProvider,
+      provide: "VertexLLMProvider",
+      useClass: AISDKVertexProvider,
+    },
+    {
+      provide: "_MockLLMProvider",
+      useClass: AISDKMockProvider,
     },
   ],
   controllers: [

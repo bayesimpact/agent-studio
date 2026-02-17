@@ -1,6 +1,6 @@
 import { URL } from "node:url"
 import type { MessageEvent } from "@nestjs/common"
-import { Inject, Injectable } from "@nestjs/common"
+import { Inject, Injectable, NotImplementedException } from "@nestjs/common"
 import type { FilePart, ImagePart } from "ai"
 import type { RequiredConnectScope } from "@/common/entities/connect-required-fields"
 import type {
@@ -9,6 +9,10 @@ import type {
   LLMMetadata,
   LLMProvider,
 } from "@/common/interfaces/llm-provider.interface"
+import {
+  AgentModelToAgentProvider,
+  AgentProvider,
+} from "@/domains/agent-sessions/llm/agent-provider"
 import type { Agent } from "@/domains/agents/agent.entity"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
 import { DocumentsService } from "../documents/documents.service"
@@ -28,10 +32,23 @@ export class AgentStreamingService {
     private readonly fileStorageService: IFileStorage,
     private readonly documentsService: DocumentsService,
     private readonly agentSessionsService: AgentSessionsService,
-    @Inject("LLMProvider")
-    private readonly llmProvider: LLMProvider,
+    @Inject("_MockLLMProvider")
+    private readonly _mockLlmProvider: LLMProvider,
+    @Inject("VertexLLMProvider")
+    private readonly vertexLlmProvider: LLMProvider,
   ) {}
 
+  getProviderForModel(model: string): LLMProvider {
+    const provider = AgentModelToAgentProvider[model]
+    switch (provider) {
+      case AgentProvider._Mock:
+        return this._mockLlmProvider
+      case AgentProvider.Vertex:
+        return this.vertexLlmProvider
+      default:
+        throw new NotImplementedException(`not supported llm provider: ${provider}`)
+    }
+  }
   /**
    * Streams a agent response for a session
    * Handles the full flow: persist before, stream, persist after
@@ -83,8 +100,11 @@ export class AgentStreamingService {
       if (documentId) await this.handleFileInLLMMessage({ llmMessages, documentId, connectScope })
 
       // Stream from LLM provider
-      const chunks = this.llmProvider.streamChatResponse(llmMessages, llmConfig, llmMetadata)
-      for await (const chunk of chunks) {
+      for await (const chunk of this.getProviderForModel(llmConfig.model).streamChatResponse({
+        messages: llmMessages,
+        config: llmConfig,
+        metadata: llmMetadata,
+      })) {
         fullContent += chunk
 
         // Yield chunk to frontend immediately (SSE)
