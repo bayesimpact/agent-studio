@@ -6,27 +6,29 @@ import {
   setupTransactionalTestDatabase,
   teardownTestDatabase,
 } from "@/common/test/test-transaction-manager"
-import { Agent } from "@/domains/agents/agent.entity"
+import type { Agent } from "@/domains/agents/agent.entity"
 import { agentFactory } from "@/domains/agents/agent.factory"
-import { Organization } from "@/domains/organizations/organization.entity"
+import type { Organization } from "@/domains/organizations/organization.entity"
 import {
   createOrganizationWithAgent,
   createOrganizationWithProject,
 } from "@/domains/organizations/organization.factory"
-import { UserMembership } from "@/domains/organizations/user-membership.entity"
-import { Project } from "@/domains/projects/project.entity"
-import { User } from "@/domains/users/user.entity"
+import type { UserMembership } from "@/domains/organizations/user-membership.entity"
+import type { Project } from "@/domains/projects/project.entity"
+import type { User } from "@/domains/users/user.entity"
 import { AgentsModule } from "./agents.module"
 import { AgentsService } from "./agents.service"
 
 describe("AgentsService", () => {
   let service: AgentsService
-  let agentRepository: Repository<Agent>
-  let projectRepository: Repository<Project>
-  let organizationRepository: Repository<Organization>
-  let membershipRepository: Repository<UserMembership>
-  let userRepository: Repository<User>
   let setup: Awaited<ReturnType<typeof setupTransactionalTestDatabase>>
+  let repositories: {
+    agentRepository: Repository<Agent>
+    projectRepository: Repository<Project>
+    organizationRepository: Repository<Organization>
+    membershipRepository: Repository<UserMembership>
+    userRepository: Repository<User>
+  }
 
   beforeAll(async () => {
     setup = await setupTransactionalTestDatabase({
@@ -42,11 +44,7 @@ describe("AgentsService", () => {
   beforeEach(async () => {
     await setup.startTransaction()
     service = setup.module.get<AgentsService>(AgentsService)
-    agentRepository = setup.getRepository(Agent)
-    projectRepository = setup.getRepository(Project)
-    organizationRepository = setup.getRepository(Organization)
-    membershipRepository = setup.getRepository(UserMembership)
-    userRepository = setup.getRepository(User)
+    repositories = setup.getAllRepositories()
   })
 
   afterEach(async () => {
@@ -55,12 +53,7 @@ describe("AgentsService", () => {
 
   describe("createAgent", () => {
     it("should create an Agent", async () => {
-      const { organization, project } = await createOrganizationWithProject({
-        organizationRepository,
-        userRepository,
-        membershipRepository,
-        projectRepository,
-      })
+      const { organization, project } = await createOrganizationWithProject(repositories)
 
       const result = await service.createAgent({
         connectRequiredFields: {
@@ -82,19 +75,14 @@ describe("AgentsService", () => {
       expect(result.projectId).toBe(project.id)
       expect(result.id).toBeDefined()
 
-      const savedTemplate = await agentRepository.findOne({
+      const savedTemplate = await repositories.agentRepository.findOne({
         where: { id: result.id },
       })
       expect(savedTemplate).not.toBeNull()
       expect(savedTemplate?.name).toBe("My Template")
     })
     it("should throw UnprocessableEntityException when name is less than 3 characters", async () => {
-      const { organization, project } = await createOrganizationWithProject({
-        organizationRepository,
-        userRepository,
-        membershipRepository,
-        projectRepository,
-      })
+      const { organization, project } = await createOrganizationWithProject(repositories)
 
       const createWrongfulAgent = async () =>
         service.createAgent({
@@ -121,12 +109,7 @@ describe("AgentsService", () => {
 
   describe("listAgents", () => {
     it("should return Agents for a project", async () => {
-      const { organization, project } = await createOrganizationWithProject({
-        organizationRepository,
-        userRepository,
-        membershipRepository,
-        projectRepository,
-      })
+      const { organization, project } = await createOrganizationWithProject(repositories)
 
       const template1 = agentFactory.transient({ organization, project }).build({
         name: "Template 1",
@@ -136,7 +119,7 @@ describe("AgentsService", () => {
         name: "Template 2",
         defaultPrompt: "Prompt 2",
       })
-      await agentRepository.save([template1, template2])
+      await repositories.agentRepository.save([template1, template2])
 
       // Act
       const result = await service.listAgents({
@@ -151,12 +134,7 @@ describe("AgentsService", () => {
     })
 
     it("should return empty array when project has no Agents", async () => {
-      const { organization, project } = await createOrganizationWithProject({
-        organizationRepository,
-        userRepository,
-        membershipRepository,
-        projectRepository,
-      })
+      const { organization, project } = await createOrganizationWithProject(repositories)
 
       // Act
       const result = await service.listAgents({
@@ -169,12 +147,7 @@ describe("AgentsService", () => {
     })
 
     it("should return Agents ordered by createdAt DESC", async () => {
-      const { organization, project } = await createOrganizationWithProject({
-        organizationRepository,
-        userRepository,
-        membershipRepository,
-        projectRepository,
-      })
+      const { organization, project } = await createOrganizationWithProject(repositories)
 
       const template1 = agentFactory.transient({ organization, project }).build({
         name: "First Template",
@@ -185,7 +158,7 @@ describe("AgentsService", () => {
         name: "Second Template",
         defaultPrompt: "Prompt 2",
       })
-      await agentRepository.save([template1, template2])
+      await repositories.agentRepository.save([template1, template2])
 
       // Act
       const result = await service.listAgents({
@@ -203,13 +176,7 @@ describe("AgentsService", () => {
 
   describe("updateAgent", () => {
     it("should update an Agent", async () => {
-      const { organization, project, agent } = await createOrganizationWithAgent({
-        organizationRepository,
-        userRepository,
-        membershipRepository,
-        projectRepository,
-        agentRepository,
-      })
+      const { organization, project, agent } = await createOrganizationWithAgent(repositories)
 
       // Act
       const result = await service.updateAgent({
@@ -226,22 +193,17 @@ describe("AgentsService", () => {
       expect(result.defaultPrompt).toBe("Updated Prompt")
       expect(result.id).toBe(agent.id)
 
-      const updatedTemplate = await agentRepository.findOne({ where: { id: agent.id } })
+      const updatedTemplate = await repositories.agentRepository.findOne({
+        where: { id: agent.id },
+      })
       expect(updatedTemplate?.name).toBe("Updated Template")
       expect(updatedTemplate?.defaultPrompt).toBe("Updated Prompt")
     })
 
     it("should update only name when defaultPrompt is not provided", async () => {
-      const { organization, project, agent } = await createOrganizationWithAgent(
-        {
-          organizationRepository,
-          userRepository,
-          membershipRepository,
-          projectRepository,
-          agentRepository,
-        },
-        { agent: { defaultPrompt: "Original Prompt" } },
-      )
+      const { organization, project, agent } = await createOrganizationWithAgent(repositories, {
+        agent: { defaultPrompt: "Original Prompt" },
+      })
 
       // Act
       const result = await service.updateAgent({
@@ -256,13 +218,7 @@ describe("AgentsService", () => {
     })
 
     it("should throw UnprocessableEntityException when name is less than 3 characters", async () => {
-      const { organization, project, agent } = await createOrganizationWithAgent({
-        organizationRepository,
-        userRepository,
-        membershipRepository,
-        projectRepository,
-        agentRepository,
-      })
+      const { organization, project, agent } = await createOrganizationWithAgent(repositories)
 
       const createWrongfulUpdateAgent = async () =>
         service.updateAgent({
@@ -281,13 +237,7 @@ describe("AgentsService", () => {
 
   describe("deleteAgent", () => {
     it("should delete an Agent", async () => {
-      const { organization, project, agent } = await createOrganizationWithAgent({
-        organizationRepository,
-        userRepository,
-        membershipRepository,
-        projectRepository,
-        agentRepository,
-      })
+      const { organization, project, agent } = await createOrganizationWithAgent(repositories)
 
       // Act
       await service.deleteAgent({
@@ -296,7 +246,9 @@ describe("AgentsService", () => {
       })
 
       // Assert
-      const deletedTemplate = await agentRepository.findOne({ where: { id: agent.id } })
+      const deletedTemplate = await repositories.agentRepository.findOne({
+        where: { id: agent.id },
+      })
       expect(deletedTemplate).toBeNull()
     })
   })

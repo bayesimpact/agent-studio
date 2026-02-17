@@ -8,9 +8,11 @@ import {
 } from "@/common/test/test-transaction-manager"
 import { removeNullish } from "@/common/utils/remove-nullish"
 import { createOrganizationWithOwner } from "@/domains/organizations/organization.factory"
+import { createUserMembership } from "@/domains/organizations/user-membership.factory"
 import { projectFactory } from "@/domains/projects/project.factory"
 import { setupUserGuardForTesting } from "../../../../test/e2e.helpers"
 import { expectResponse, type Requester, testRequester } from "../../../../test/request"
+import { projectMembershipFactory } from "../memberships/project-membership.factory"
 import { ProjectsModule } from "../projects.module"
 
 describe("Projects - listProjects", () => {
@@ -87,5 +89,36 @@ describe("Projects - listProjects", () => {
 
     expectResponse(response, 200)
     expect(response.body.data.projects).toEqual([])
+  })
+
+  it("should return only projects the user (not owner or admin) is a member of", async () => {
+    const { organization } = await createContext()
+
+    // create user
+    const { user } = await createUserMembership({
+      repositories,
+      organization,
+      user: { auth0Id: "auth0|456" },
+    })
+
+    // create projects
+    const project1 = projectFactory.transient({ organization }).build({ name: "Project 1" })
+    const project2 = projectFactory.transient({ organization }).build({ name: "Project 2" })
+    await repositories.projectRepository.save([project1, project2])
+
+    // create project membership
+    await repositories.projectMembershipRepository.save(
+      projectMembershipFactory.transient({ project: project2, user }).build(),
+    )
+
+    // user is the one who will make the request
+    auth0Id = user.auth0Id
+
+    const response = await subject()
+
+    expectResponse(response, 200)
+    const { projects } = response.body.data
+    expect(projects).toHaveLength(1)
+    expect(projects.map((project) => project.name)).toContain("Project 2")
   })
 })

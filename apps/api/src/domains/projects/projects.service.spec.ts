@@ -9,6 +9,8 @@ import {
   createOrganizationWithOwner,
   createOrganizationWithProject,
 } from "@/domains/organizations/organization.factory"
+import { createUserMembership } from "../organizations/user-membership.factory"
+import { projectMembershipFactory } from "./memberships/project-membership.factory"
 import type { Project } from "./project.entity"
 import { projectFactory } from "./project.factory"
 import { ProjectsModule } from "./projects.module"
@@ -122,6 +124,28 @@ describe("ProjectsService", () => {
       const [first, second] = result
       expect(first!.name).toBe("Second Project") // Most recent first
       expect(second!.name).toBe("First Project")
+    })
+
+    it("should return projects the user is a member of", async () => {
+      const { organization } = await createOrganizationWithOwner(repositories)
+      const { user } = await createUserMembership({ repositories, organization })
+
+      // create projects
+      const project1 = projectFactory.transient({ organization }).build({ name: "Project 1" })
+      const project2 = projectFactory.transient({ organization }).build({ name: "Project 2" })
+      await repositories.projectRepository.save([project1, project2])
+
+      // create project membership
+      await repositories.projectMembershipRepository.save(
+        projectMembershipFactory.transient({ project: project2, user }).build(),
+      )
+
+      const result = await service.listProjects(organization.id, { userId: user.id })
+
+      // Assert
+      expect(result).toHaveLength(1)
+      const [first] = result
+      expect(first!.name).toBe("Project 2")
     })
   })
 
