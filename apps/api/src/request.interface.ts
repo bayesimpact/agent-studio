@@ -48,5 +48,6 @@ export function toConnectRequiredFields<T extends EndpointRequestWithProject>(
   return {
     organizationId: request.organizationId,
     projectId: request.project.id,
+    userId: request.projectMembership?.userId, // the admins or the owners of an organization don't have a project membership
   } satisfies ConnectRequiredFields
 }

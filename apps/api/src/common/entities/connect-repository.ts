@@ -65,7 +65,7 @@ export class ConnectRepository<T extends ConnectEntityBase> {
   public newQueryBuilderWithConnectRequiredFields(
     connectRequiredFields: ConnectRequiredFields,
   ): SelectQueryBuilder<T> {
-    return this.repository
+    const query = this.repository
       .createQueryBuilder(this.alias)
       .andWhere(`${this.alias}.organization_id = :organizationId`, {
         organizationId: connectRequiredFields.organizationId,
@@ -73,6 +73,21 @@ export class ConnectRepository<T extends ConnectEntityBase> {
       .andWhere(`${this.alias}.project_id = :projectId`, {
         projectId: connectRequiredFields.projectId,
       })
+
+    // If the connectRequiredFields.userId is provided, we need to filter the entities of projects the user is a member of.
+    // It's an extra security measure to prevent users from accessing projects they are not a member BECAUSE we already do the check in the guards / policies.
+    // Important: owners and admins of the organization don't have a project membership.
+    if (connectRequiredFields.userId) {
+      query.andWhere(
+        `${this.alias}.project_id IN (SELECT project_id FROM project_membership WHERE user_id = :userId AND organization_id = :organizationId)`,
+        {
+          userId: connectRequiredFields.userId,
+          organizationId: connectRequiredFields.organizationId,
+        },
+      )
+    }
+
+    return query
   }
 
   public async deleteOneById({

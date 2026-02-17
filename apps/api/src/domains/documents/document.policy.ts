@@ -2,5 +2,19 @@ import { ProjectScopedPolicy } from "@/common/policies/project-scoped-policy"
 import type { Document } from "./document.entity"
 
 export class DocumentPolicy extends ProjectScopedPolicy<Document> {
-  // we don't need any additional logic here, the default project-scoped policy is enough
+  canList(): boolean {
+    return this.isAdminOrOwner()
+  }
+
+  canCreate(): boolean {
+    return this.isAdminOrOwner()
+  }
+
+  canUpdate(): boolean {
+    return this.isAdminOrOwner()
+  }
+
+  canDelete(): boolean {
+    return this.isAdminOrOwner()
+  }
 }

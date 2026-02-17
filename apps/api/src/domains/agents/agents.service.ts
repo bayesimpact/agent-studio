@@ -43,7 +43,6 @@ export class AgentsService {
   /**
    * Lists all agents for a project.
    */
-
   async listAgents(connectRequiredFields: ConnectRequiredFields): Promise<Agent[]> {
     return (await this.agentConnectRepository.getMany(connectRequiredFields))?.sort(
       (a, b) => b.createdAt.getTime() - a.createdAt.getTime(),

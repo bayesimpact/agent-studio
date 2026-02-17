@@ -43,10 +43,12 @@ export class ProjectsController {
   async listProjects(
     @Req() request: EndpointRequestWithUserMembership,
   ): Promise<typeof ProjectsRoutes.listProjects.response> {
-    const { organizationId } = request
+    const { organizationId, userMembership } = request
 
     // List projects for the organization
-    const projects = await this.projectsService.listProjects(organizationId)
+    const projects = await this.projectsService.listProjects(organizationId, {
+      userId: userMembership.role === "member" ? userMembership.userId : undefined,
+    })
 
     return {
       data: {
