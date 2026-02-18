@@ -5,18 +5,19 @@ import type {
   EndpointRequestWithProject,
 } from "@/common/context/request.interface"
 import { toConnectRequiredFields } from "@/common/context/request-context.helpers"
+import { AddContext, RequireContext } from "@/common/context/require-context.decorator"
+import { ResourceContextGuard } from "@/common/context/resource-context.guard"
 import { CheckPolicy } from "@/common/policies/check-policy.decorator"
 import { JwtAuthGuard } from "@/domains/auth/jwt-auth.guard"
 import { UserGuard } from "@/domains/users/user.guard"
-import { OrganizationGuard } from "../organizations/organization.guard"
-import { ProjectsGuard } from "../projects/projects.guard"
 import type { Agent } from "./agent.entity"
 import { AgentGuard } from "./agent.guard"
 import { AgentsRoutes } from "./agents.routes"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
 import { AgentsService } from "./agents.service"
 
-@UseGuards(JwtAuthGuard, UserGuard, OrganizationGuard, ProjectsGuard, AgentGuard)
+@UseGuards(JwtAuthGuard, UserGuard, ResourceContextGuard, AgentGuard)
+@RequireContext("organization", "project")
 @Controller()
 export class AgentsController {
   constructor(private readonly agentsService: AgentsService) {}
@@ -47,6 +48,7 @@ export class AgentsController {
 
   @Patch(AgentsRoutes.updateOne.path)
   @CheckPolicy((policy) => policy.canUpdate())
+  @AddContext("agent")
   async updateOne(
     @Req() request: EndpointRequestWithAgent,
     @Body() { payload }: typeof AgentsRoutes.updateOne.request,
@@ -67,6 +69,7 @@ export class AgentsController {
 
   @Delete(AgentsRoutes.deleteOne.path)
   @CheckPolicy((policy) => policy.canDelete())
+  @AddContext("agent")
   async deleteOne(
     @Req() request: EndpointRequestWithAgent,
   ): Promise<typeof AgentsRoutes.deleteOne.response> {

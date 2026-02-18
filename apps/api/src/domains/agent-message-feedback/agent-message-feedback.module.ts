@@ -1,5 +1,9 @@
 import { Module } from "@nestjs/common"
 import { TypeOrmModule } from "@nestjs/typeorm"
+import { AgentContextResolver } from "@/common/context/resolvers/agent-context.resolver"
+import { OrganizationContextResolver } from "@/common/context/resolvers/organization-context.resolver"
+import { ProjectContextResolver } from "@/common/context/resolvers/project-context.resolver"
+import { ResourceContextGuard } from "@/common/context/resource-context.guard"
 import { AuthModule } from "@/domains/auth/auth.module"
 import { Organization } from "@/domains/organizations/organization.entity"
 import { OrganizationsModule } from "@/domains/organizations/organizations.module"
@@ -8,6 +12,7 @@ import { ProjectsModule } from "@/domains/projects/projects.module"
 import { UsersModule } from "@/domains/users/users.module"
 import { AgentMessage } from "../agent-sessions/agent-message.entity"
 import { AgentSessionsModule } from "../agent-sessions/agent-sessions.module"
+import { AgentGuard } from "../agents/agent.guard"
 import { AgentsModule } from "../agents/agents.module"
 import { AgentMessageFeedbackController } from "./agent-message-feedback.controller"
 import { AgentMessageFeedback } from "./agent-message-feedback.entity"
@@ -23,7 +28,14 @@ import { AgentMessageFeedbackService } from "./agent-message-feedback.service"
     AgentsModule,
     AgentSessionsModule,
   ],
-  providers: [AgentMessageFeedbackService],
+  providers: [
+    AgentMessageFeedbackService,
+    AgentGuard,
+    ResourceContextGuard,
+    OrganizationContextResolver,
+    ProjectContextResolver,
+    AgentContextResolver,
+  ],
   controllers: [AgentMessageFeedbackController],
   exports: [AgentMessageFeedbackService],
 })

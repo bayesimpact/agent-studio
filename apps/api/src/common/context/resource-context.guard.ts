@@ -3,6 +3,7 @@ import {
   type ExecutionContext,
   Injectable,
   InternalServerErrorException,
+  Optional,
 } from "@nestjs/common"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
 import { Reflector } from "@nestjs/core"
@@ -13,13 +14,15 @@ import {
   REQUIRE_CONTEXT_KEY,
 } from "./require-context.decorator"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
+import { AgentContextResolver } from "./resolvers/agent-context.resolver"
+// biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
 import { DocumentContextResolver } from "./resolvers/document-context.resolver"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
 import { OrganizationContextResolver } from "./resolvers/organization-context.resolver"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
 import { ProjectContextResolver } from "./resolvers/project-context.resolver"
 
-const RESOLUTION_ORDER: ContextResource[] = ["organization", "project", "document"]
+const RESOLUTION_ORDER: ContextResource[] = ["organization", "project", "agent", "document"]
 
 @Injectable()
 export class ResourceContextGuard implements CanActivate {
@@ -27,15 +30,26 @@ export class ResourceContextGuard implements CanActivate {
 
   constructor(
     private reflector: Reflector,
-    organizationContextResolver: OrganizationContextResolver,
-    projectContextResolver: ProjectContextResolver,
-    documentContextResolver: DocumentContextResolver,
+    @Optional() organizationContextResolver?: OrganizationContextResolver,
+    @Optional() projectContextResolver?: ProjectContextResolver,
+    @Optional() agentContextResolver?: AgentContextResolver,
+    @Optional() documentContextResolver?: DocumentContextResolver,
   ) {
-    this.resolverMap = new Map(
-      [organizationContextResolver, projectContextResolver, documentContextResolver].map(
-        (resolver) => [resolver.resource, resolver],
-      ),
-    )
+    const resolverEntries: Array<[ContextResource, ContextResolver]> = []
+    if (organizationContextResolver) {
+      resolverEntries.push([organizationContextResolver.resource, organizationContextResolver])
+    }
+    if (projectContextResolver) {
+      resolverEntries.push([projectContextResolver.resource, projectContextResolver])
+    }
+    if (agentContextResolver) {
+      resolverEntries.push([agentContextResolver.resource, agentContextResolver])
+    }
+    if (documentContextResolver) {
+      resolverEntries.push([documentContextResolver.resource, documentContextResolver])
+    }
+
+    this.resolverMap = new Map(resolverEntries)
   }
 
   async canActivate(context: ExecutionContext): Promise<boolean> {

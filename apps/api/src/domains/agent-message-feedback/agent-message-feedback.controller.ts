@@ -8,10 +8,10 @@ import type {
   EndpointRequestWithProject,
 } from "@/common/context/request.interface"
 import { toConnectRequiredFields } from "@/common/context/request-context.helpers"
+import { AddContext, RequireContext } from "@/common/context/require-context.decorator"
+import { ResourceContextGuard } from "@/common/context/resource-context.guard"
 import { CheckPolicy } from "@/common/policies/check-policy.decorator"
 import { JwtAuthGuard } from "@/domains/auth/jwt-auth.guard"
-import { OrganizationGuard } from "@/domains/organizations/organization.guard"
-import { ProjectsGuard } from "@/domains/projects/projects.guard"
 import { UserGuard } from "@/domains/users/user.guard"
 import { getTraceUrl } from "@/external/langfuse/langfuse-helper"
 import type { AgentMessage } from "../agent-sessions/agent-message.entity"
@@ -20,7 +20,8 @@ import type { AgentMessageFeedback } from "./agent-message-feedback.entity"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
 import { AgentMessageFeedbackService } from "./agent-message-feedback.service"
 
-@UseGuards(JwtAuthGuard, UserGuard, OrganizationGuard, ProjectsGuard)
+@UseGuards(JwtAuthGuard, UserGuard, ResourceContextGuard)
+@RequireContext("organization", "project")
 @Controller()
 export class AgentMessageFeedbackController {
   constructor(private readonly feedbackService: AgentMessageFeedbackService) {}
@@ -48,6 +49,7 @@ export class AgentMessageFeedbackController {
   }
 
   @UseGuards(AgentGuard)
+  @AddContext("agent")
   @CheckPolicy((policy) => policy.canList())
   @Get(AgentMessageFeedbackRoutes.getAll.path)
   async getAll(
