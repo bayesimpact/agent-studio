@@ -5,8 +5,8 @@ import {
   Injectable,
   UnauthorizedException,
 } from "@nestjs/common"
+import type { EndpointRequestWithUserMembership } from "@/common/context/request.interface"
 import { AUTH_ERRORS } from "@/common/errors/auth-errors"
-import type { EndpointRequestWithUserMembership } from "@/request.interface"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
 import { UserMembershipService } from "./user-membership.service"
 

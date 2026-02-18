@@ -1,13 +1,13 @@
 import type { AgentDto } from "@caseai-connect/api-contracts"
 import { Body, Controller, Delete, Get, Patch, Post, Req, UseGuards } from "@nestjs/common"
+import type {
+  EndpointRequestWithAgent,
+  EndpointRequestWithProject,
+} from "@/common/context/request.interface"
+import { toConnectRequiredFields } from "@/common/context/request-context.helpers"
 import { CheckPolicy } from "@/common/policies/check-policy.decorator"
 import { JwtAuthGuard } from "@/domains/auth/jwt-auth.guard"
 import { UserGuard } from "@/domains/users/user.guard"
-import {
-  type EndpointRequestWithAgent,
-  type EndpointRequestWithProject,
-  toConnectRequiredFields,
-} from "@/request.interface"
 import { OrganizationGuard } from "../organizations/organization.guard"
 import { ProjectsGuard } from "../projects/projects.guard"
 import type { Agent } from "./agent.entity"

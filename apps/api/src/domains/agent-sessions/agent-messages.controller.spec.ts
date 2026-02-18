@@ -1,5 +1,6 @@
 // biome-ignore lint/style/useImportType: this is a class, not a type
 import { Repository } from "typeorm"
+import type { EndpointRequest } from "@/common/context/request.interface"
 import { clearTestDatabase } from "@/common/test/test-database"
 import {
   setupTransactionalTestDatabase,
@@ -11,7 +12,6 @@ import { createOrganizationWithAgentSession } from "@/domains/organizations/orga
 import { UserMembership } from "@/domains/organizations/user-membership.entity"
 import { Project } from "@/domains/projects/project.entity"
 import { User } from "@/domains/users/user.entity"
-import type { EndpointRequest } from "@/request.interface"
 import { AgentMessage } from "./agent-message.entity"
 import { AgentMessagesController } from "./agent-messages.controller"
 import { createChitChatConversation } from "./agent-messages.factory"

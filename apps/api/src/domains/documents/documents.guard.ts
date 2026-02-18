@@ -3,56 +3,27 @@ import {
   type ExecutionContext,
   ForbiddenException,
   Injectable,
-  NotFoundException,
 } from "@nestjs/common"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
 import { Reflector } from "@nestjs/core"
+import type { EndpointRequestWithProject } from "@/common/context/request.interface"
 import { AUTH_ERRORS } from "@/common/errors/auth-errors"
 import { CHECK_POLICY_KEY, type PolicyHandler } from "@/common/policies/check-policy.decorator"
-import type { EndpointRequestWithDocument } from "@/request.interface"
 import { requestToProjectPolicyContext } from "../projects/helpers"
 import type { Document } from "./document.entity"
 import { DocumentPolicy } from "./document.policy"
-// biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
-import { DocumentsService } from "./documents.service"
 
 @Injectable()
 export class DocumentsGuard implements CanActivate {
-  constructor(
-    readonly documentsService: DocumentsService,
-    private reflector: Reflector,
-  ) {}
+  constructor(private reflector: Reflector) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
-    // since DocumentsGuard is called after UserGuard, we can access the enhanced request object storing the user
-    const request = context.switchToHttp().getRequest() as EndpointRequestWithDocument & {
-      params: { documentId: string }
+    // DocumentContextResolver should already have loaded request.document when required by the route.
+    const request = context.switchToHttp().getRequest() as EndpointRequestWithProject & {
+      document?: Document
     }
 
-    // fetch the document from the database if documentId is provided
-    let document: Document | undefined
-    const documentId = request.params.documentId
-
-    // the caller didn't provide a documentId and our route mechanism uses the :documentId placeholder instead
-    if (documentId === ":documentId") throw new NotFoundException()
-
-    // ok, we have a documentId (UPDATE, DELETE routes), fetch the document from the database
-    if (documentId) {
-      document =
-        (await this.documentsService.findById({
-          connectRequiredFields: {
-            organizationId: request.organizationId,
-            projectId: request.project.id,
-          },
-          documentId,
-        })) ?? undefined
-      if (!document) throw new NotFoundException()
-
-      // enhance the request object with the document
-      request.document = document
-    }
-
-    const policy = new DocumentPolicy(requestToProjectPolicyContext(request), document)
+    const policy = new DocumentPolicy(requestToProjectPolicyContext(request), request.document)
 
     const policyHandler = this.reflector.getAllAndOverride<PolicyHandler>(CHECK_POLICY_KEY, [
       context.getHandler(),

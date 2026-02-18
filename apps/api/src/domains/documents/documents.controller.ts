@@ -18,17 +18,17 @@ import {
   UseInterceptors,
 } from "@nestjs/common"
 import { FileInterceptor } from "@nestjs/platform-express/multer"
+import type {
+  EndpointRequestWithDocument,
+  EndpointRequestWithProject,
+} from "@/common/context/request.interface"
+import { toConnectRequiredFields } from "@/common/context/request-context.helpers"
+import { AddContext, RequireContext } from "@/common/context/require-context.decorator"
+import { ResourceContextGuard } from "@/common/context/resource-context.guard"
 import { CheckPolicy } from "@/common/policies/check-policy.decorator"
 import type { MulterFile } from "@/common/types"
 import { JwtAuthGuard } from "@/domains/auth/jwt-auth.guard"
-import { OrganizationGuard } from "@/domains/organizations/organization.guard"
-import { ProjectsGuard } from "@/domains/projects/projects.guard"
 import { UserGuard } from "@/domains/users/user.guard"
-import {
-  type EndpointRequestWithDocument,
-  type EndpointRequestWithProject,
-  toConnectRequiredFields,
-} from "@/request.interface"
 import type { Document } from "./document.entity"
 import { DocumentsGuard } from "./documents.guard"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
@@ -36,7 +36,8 @@ import { DocumentsService } from "./documents.service"
 import { FILE_STORAGE_SERVICE, type IFileStorage } from "./storage/file-storage.interface"
 
 const mega = 1024
-@UseGuards(JwtAuthGuard, UserGuard, OrganizationGuard, ProjectsGuard, DocumentsGuard)
+@UseGuards(JwtAuthGuard, UserGuard, ResourceContextGuard, DocumentsGuard)
+@RequireContext("organization", "project")
 @Controller()
 export class DocumentsController {
   constructor(
@@ -133,6 +134,7 @@ export class DocumentsController {
   }
 
   @CheckPolicy((policy) => policy.canDelete())
+  @AddContext("document")
   @Delete(DocumentsRoutes.deleteOne.path)
   async deleteOne(
     @Request() req: EndpointRequestWithDocument,
@@ -148,6 +150,7 @@ export class DocumentsController {
   }
 
   @CheckPolicy((policy) => policy.canUpdate())
+  @AddContext("document")
   @Get(DocumentsRoutes.getTemporaryUrl.path)
   @HttpCode(HttpStatus.CREATED)
   async getTemporaryUrl(

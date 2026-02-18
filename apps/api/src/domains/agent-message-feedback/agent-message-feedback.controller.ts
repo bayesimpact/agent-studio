@@ -3,17 +3,17 @@ import {
   AgentMessageFeedbackRoutes,
 } from "@caseai-connect/api-contracts"
 import { Body, Controller, Get, Param, Post, Req, UseGuards } from "@nestjs/common"
+import type {
+  EndpointRequestWithAgent,
+  EndpointRequestWithProject,
+} from "@/common/context/request.interface"
+import { toConnectRequiredFields } from "@/common/context/request-context.helpers"
 import { CheckPolicy } from "@/common/policies/check-policy.decorator"
 import { JwtAuthGuard } from "@/domains/auth/jwt-auth.guard"
 import { OrganizationGuard } from "@/domains/organizations/organization.guard"
 import { ProjectsGuard } from "@/domains/projects/projects.guard"
 import { UserGuard } from "@/domains/users/user.guard"
 import { getTraceUrl } from "@/external/langfuse/langfuse-helper"
-import {
-  type EndpointRequestWithAgent,
-  type EndpointRequestWithProject,
-  toConnectRequiredFields,
-} from "@/request.interface"
 import type { AgentMessage } from "../agent-sessions/agent-message.entity"
 import { AgentGuard } from "../agents/agent.guard"
 import type { AgentMessageFeedback } from "./agent-message-feedback.entity"
