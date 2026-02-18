@@ -2,7 +2,7 @@ import { Injectable, NotFoundException, UnprocessableEntityException } from "@ne
 import { InjectRepository } from "@nestjs/typeorm"
 import type { Repository } from "typeorm"
 import { ConnectRepository } from "@/common/entities/connect-repository"
-import type { ConnectRequiredFields } from "@/common/entities/connect-required-fields"
+import type { RequiredConnectScope } from "@/common/entities/connect-required-fields"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
 import { AgentSessionsService } from "@/domains/agent-sessions/agent-sessions.service"
 import { Agent } from "./agent.entity"
@@ -25,8 +25,8 @@ export class AgentsService {
     connectRequiredFields,
     fields,
   }: {
-    connectRequiredFields: ConnectRequiredFields
-    fields: Pick<ConnectRequiredFields, never> &
+    connectRequiredFields: RequiredConnectScope
+    fields: Pick<RequiredConnectScope, never> &
       Pick<Agent, "defaultPrompt" | "name" | "model" | "temperature" | "locale">
   }): Promise<Agent> {
     const { name } = fields
@@ -43,7 +43,7 @@ export class AgentsService {
   /**
    * Lists all agents for a project.
    */
-  async listAgents(connectRequiredFields: ConnectRequiredFields): Promise<Agent[]> {
+  async listAgents(connectRequiredFields: RequiredConnectScope): Promise<Agent[]> {
     return (await this.agentConnectRepository.getMany(connectRequiredFields))?.sort(
       (a, b) => b.createdAt.getTime() - a.createdAt.getTime(),
     )
@@ -56,7 +56,7 @@ export class AgentsService {
     connectRequiredFields,
     agentId,
   }: {
-    connectRequiredFields: ConnectRequiredFields
+    connectRequiredFields: RequiredConnectScope
     agentId: string
   }): Promise<Agent | null> {
     return this.agentConnectRepository.getOneById(connectRequiredFields, agentId)
@@ -72,11 +72,11 @@ export class AgentsService {
     required,
     fieldsToUpdate,
   }: {
-    connectRequiredFields: ConnectRequiredFields
+    connectRequiredFields: RequiredConnectScope
     required: {
       agentId: string
     }
-    fieldsToUpdate: Pick<ConnectRequiredFields, never> &
+    fieldsToUpdate: Pick<RequiredConnectScope, never> &
       Partial<Pick<Agent, "name" | "defaultPrompt" | "model" | "temperature" | "locale">>
   }): Promise<Agent> {
     const { agentId } = required
@@ -131,7 +131,7 @@ export class AgentsService {
     connectRequiredFields,
     agentId,
   }: {
-    connectRequiredFields: ConnectRequiredFields
+    connectRequiredFields: RequiredConnectScope
     agentId: string
   }): Promise<void> {
     // Find the agent

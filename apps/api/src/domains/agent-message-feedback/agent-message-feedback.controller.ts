@@ -7,7 +7,7 @@ import type {
   EndpointRequestWithAgent,
   EndpointRequestWithProject,
 } from "@/common/context/request.interface"
-import { toConnectRequiredFields } from "@/common/context/request-context.helpers"
+import { getRequiredConnectScope } from "@/common/context/request-context.helpers"
 import { AddContext, RequireContext } from "@/common/context/require-context.decorator"
 import { ResourceContextGuard } from "@/common/context/resource-context.guard"
 import { CheckPolicy } from "@/common/policies/check-policy.decorator"
@@ -37,7 +37,7 @@ export class AgentMessageFeedbackController {
     const user = request.user
 
     const feedback = await this.feedbackService.createFeedback({
-      connectRequiredFields: toConnectRequiredFields(request),
+      connectRequiredFields: getRequiredConnectScope(request),
       userId: user.id,
       agentMessageId,
       content: payload.content,
@@ -56,7 +56,7 @@ export class AgentMessageFeedbackController {
     @Req() request: EndpointRequestWithAgent,
   ): Promise<typeof AgentMessageFeedbackRoutes.getAll.response> {
     const data = await this.feedbackService.listFeedbacksForAgent({
-      connectRequiredFields: toConnectRequiredFields(request),
+      connectRequiredFields: getRequiredConnectScope(request),
       agentId: request.agent.id,
     })
 

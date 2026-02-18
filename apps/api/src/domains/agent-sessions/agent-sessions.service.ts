@@ -4,7 +4,7 @@ import { InjectRepository } from "@nestjs/typeorm"
 import type { Repository } from "typeorm"
 import { v4 } from "uuid"
 
-import type { ConnectRequiredFields } from "@/common/entities/connect-required-fields"
+import type { RequiredConnectScope } from "@/common/entities/connect-required-fields"
 import { Agent } from "@/domains/agents/agent.entity"
 import { AgentMessage } from "./agent-message.entity"
 import { AgentSession, type AgentSessionType } from "./agent-session.entity"
@@ -107,7 +107,7 @@ export class AgentSessionsService {
     agentId,
     userId,
   }: {
-    connectRequiredFields: ConnectRequiredFields
+    connectRequiredFields: RequiredConnectScope
     agentId: string
     userId: string
   }): Promise<AgentSession> {
@@ -128,7 +128,7 @@ export class AgentSessionsService {
     agentId,
     userId,
   }: {
-    connectRequiredFields: ConnectRequiredFields
+    connectRequiredFields: RequiredConnectScope
     agentId: string
     userId: string
   }): Promise<AgentSession> {
@@ -152,7 +152,7 @@ export class AgentSessionsService {
     agentId,
     userId,
   }: {
-    connectRequiredFields: ConnectRequiredFields
+    connectRequiredFields: RequiredConnectScope
     agentId: string
     userId: string
   }): Promise<AgentSession> {
@@ -200,7 +200,7 @@ export class AgentSessionsService {
     sessionId,
     userContent,
   }: {
-    connectRequiredFields: ConnectRequiredFields
+    connectRequiredFields: RequiredConnectScope
     sessionId: string
     userContent: string
   }): Promise<{ session: AgentSession; assistantMessageId: string }> {

@@ -3,7 +3,7 @@ import { Injectable, NotFoundException } from "@nestjs/common"
 import { InjectRepository } from "@nestjs/typeorm"
 import type { Repository } from "typeorm"
 import { ConnectRepository } from "@/common/entities/connect-repository"
-import type { ConnectRequiredFields } from "@/common/entities/connect-required-fields"
+import type { RequiredConnectScope } from "@/common/entities/connect-required-fields"
 import { Document } from "./document.entity"
 
 @Injectable()
@@ -17,7 +17,7 @@ export class DocumentsService {
     documentId,
     fields,
   }: {
-    connectRequiredFields: ConnectRequiredFields
+    connectRequiredFields: RequiredConnectScope
     documentId: string
     fields: Pick<DocumentDto, "fileName" | "mimeType" | "size" | "storageRelativePath" | "title"> //fixme DOO : DocumentDto ???
   }): Promise<Document> {
@@ -31,7 +31,7 @@ export class DocumentsService {
     })
   }
 
-  async listDocuments(connectRequiredFields: ConnectRequiredFields): Promise<Document[]> {
+  async listDocuments(connectRequiredFields: RequiredConnectScope): Promise<Document[]> {
     return (await this.documentConnectRepository.getMany(connectRequiredFields))?.sort(
       (a, b) => b.createdAt.getTime() - a.createdAt.getTime(),
     )
@@ -41,7 +41,7 @@ export class DocumentsService {
     connectRequiredFields,
     documentId,
   }: {
-    connectRequiredFields: ConnectRequiredFields
+    connectRequiredFields: RequiredConnectScope
     documentId: string
   }): Promise<Document | null> {
     return await this.documentConnectRepository.getOneById(connectRequiredFields, documentId)
@@ -51,7 +51,7 @@ export class DocumentsService {
     connectRequiredFields,
     documentId,
   }: {
-    connectRequiredFields: ConnectRequiredFields
+    connectRequiredFields: RequiredConnectScope
     documentId: string
   }): Promise<true> {
     const isDeleted = await this.documentConnectRepository.deleteOneById({

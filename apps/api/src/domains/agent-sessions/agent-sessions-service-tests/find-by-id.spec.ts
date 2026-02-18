@@ -1,4 +1,4 @@
-import type { ConnectRequiredFields } from "@/common/entities/connect-required-fields"
+import type { RequiredConnectScope } from "@/common/entities/connect-required-fields"
 import { agentMessageFactory } from "../agent-messages.factory"
 import { agentSessionControllerTestSetup } from "./test-setup"
 
@@ -7,7 +7,7 @@ const getTestContext = agentSessionControllerTestSetup()
 describe("findById", () => {
   it("should find an existing session", async () => {
     const { service, testAgent, testOrganization, testUser, testProject } = getTestContext()
-    const connectRequiredFields: ConnectRequiredFields = {
+    const connectRequiredFields: RequiredConnectScope = {
       organizationId: testOrganization.id,
       projectId: testProject.id,
     }
@@ -37,7 +37,7 @@ describe("findById", () => {
   it("should recover aborted streams on load", async () => {
     const { service, testAgent, testOrganization, testUser, agentMessageRepository, testProject } =
       getTestContext()
-    const connectRequiredFields: ConnectRequiredFields = {
+    const connectRequiredFields: RequiredConnectScope = {
       organizationId: testOrganization.id,
       projectId: testProject.id,
     }

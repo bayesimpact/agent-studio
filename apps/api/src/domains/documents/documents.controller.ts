@@ -22,7 +22,7 @@ import type {
   EndpointRequestWithDocument,
   EndpointRequestWithProject,
 } from "@/common/context/request.interface"
-import { toConnectRequiredFields } from "@/common/context/request-context.helpers"
+import { getRequiredConnectScope } from "@/common/context/request-context.helpers"
 import { AddContext, RequireContext } from "@/common/context/require-context.decorator"
 import { ResourceContextGuard } from "@/common/context/resource-context.guard"
 import { CheckPolicy } from "@/common/policies/check-policy.decorator"
@@ -99,7 +99,7 @@ export class DocumentsController {
     if (extension.trim().length === 0) {
       throw new UnprocessableEntityException("File extension is required.", extension)
     }
-    const connectRequiredFields = toConnectRequiredFields(req)
+    const connectRequiredFields = getRequiredConnectScope(req)
     const fileInfo = await this.fileStorageService.save({
       file,
       pathPrefix: `${connectRequiredFields.organizationId}/${connectRequiredFields.projectId}`,
@@ -129,7 +129,7 @@ export class DocumentsController {
   async getAll(
     @Request() req: EndpointRequestWithProject,
   ): Promise<typeof DocumentsRoutes.getAll.response> {
-    const documents = await this.documentsService.listDocuments(toConnectRequiredFields(req))
+    const documents = await this.documentsService.listDocuments(getRequiredConnectScope(req))
     return { data: documents.map(toDocumentDto) }
   }
 
@@ -142,7 +142,7 @@ export class DocumentsController {
     const documentId = req.document.id
 
     await this.documentsService.deleteDocument({
-      connectRequiredFields: toConnectRequiredFields(req),
+      connectRequiredFields: getRequiredConnectScope(req),
       documentId,
     })
 

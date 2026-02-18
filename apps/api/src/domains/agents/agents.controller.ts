@@ -4,7 +4,7 @@ import type {
   EndpointRequestWithAgent,
   EndpointRequestWithProject,
 } from "@/common/context/request.interface"
-import { toConnectRequiredFields } from "@/common/context/request-context.helpers"
+import { getRequiredConnectScope } from "@/common/context/request-context.helpers"
 import { AddContext, RequireContext } from "@/common/context/require-context.decorator"
 import { ResourceContextGuard } from "@/common/context/resource-context.guard"
 import { CheckPolicy } from "@/common/policies/check-policy.decorator"
@@ -29,7 +29,7 @@ export class AgentsController {
     @Body() { payload }: typeof AgentsRoutes.createOne.request,
   ): Promise<typeof AgentsRoutes.createOne.response> {
     const agent = await this.agentsService.createAgent({
-      connectRequiredFields: toConnectRequiredFields(request),
+      connectRequiredFields: getRequiredConnectScope(request),
       fields: payload,
     })
 
@@ -41,7 +41,7 @@ export class AgentsController {
   async getAll(
     @Req() request: EndpointRequestWithProject,
   ): Promise<typeof AgentsRoutes.getAll.response> {
-    const agents = await this.agentsService.listAgents(toConnectRequiredFields(request))
+    const agents = await this.agentsService.listAgents(getRequiredConnectScope(request))
 
     return { data: { agents: agents.map(toAgentDto) } }
   }
@@ -56,7 +56,7 @@ export class AgentsController {
     const agentId = request.agent.id
 
     const agent = await this.agentsService.updateAgent({
-      connectRequiredFields: toConnectRequiredFields(request),
+      connectRequiredFields: getRequiredConnectScope(request),
       required: { agentId },
       fieldsToUpdate: payload,
     })
@@ -74,7 +74,7 @@ export class AgentsController {
     @Req() request: EndpointRequestWithAgent,
   ): Promise<typeof AgentsRoutes.deleteOne.response> {
     await this.agentsService.deleteAgent({
-      connectRequiredFields: toConnectRequiredFields(request),
+      connectRequiredFields: getRequiredConnectScope(request),
       agentId: request.agent.id,
     })
     return { data: { success: true } }

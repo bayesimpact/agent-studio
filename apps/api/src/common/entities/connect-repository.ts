@@ -1,7 +1,7 @@
 import type { FindManyOptions, Repository, SelectQueryBuilder } from "typeorm"
 import type { DeepPartial } from "typeorm/common/DeepPartial"
 import type { ConnectEntityBase } from "@/common/entities/connect-entity"
-import type { ConnectRequiredFields } from "@/common/entities/connect-required-fields"
+import type { RequiredConnectScope } from "@/common/entities/connect-required-fields"
 
 export class ConnectRepository<T extends ConnectEntityBase> {
   private repository: Repository<T>
@@ -13,15 +13,15 @@ export class ConnectRepository<T extends ConnectEntityBase> {
   }
 
   public async find(
-    connectRequiredFields: ConnectRequiredFields,
-    options: FindManyOptions<Pick<ConnectRequiredFields, never> & T>,
+    connectRequiredFields: RequiredConnectScope,
+    options: FindManyOptions<Pick<RequiredConnectScope, never> & T>,
   ): Promise<T[]> {
     return await this.repository.find(
       this.addConnectRequiredFieldsWhere(connectRequiredFields, options),
     )
   }
-  addConnectRequiredFieldsWhere<T extends ConnectRequiredFields>(
-    connectRequiredFields: ConnectRequiredFields,
+  addConnectRequiredFieldsWhere<T extends RequiredConnectScope>(
+    connectRequiredFields: RequiredConnectScope,
     options: FindManyOptions<T>,
   ): FindManyOptions<T> {
     let extended = this.addWhere(options, {
@@ -49,12 +49,12 @@ export class ConnectRepository<T extends ConnectEntityBase> {
     }
   }
 
-  public async getMany(connectRequiredFields: ConnectRequiredFields): Promise<T[]> {
+  public async getMany(connectRequiredFields: RequiredConnectScope): Promise<T[]> {
     return await this.newQueryBuilderWithConnectRequiredFields(connectRequiredFields).getMany()
   }
 
   public async getOneById(
-    connectRequiredFields: ConnectRequiredFields,
+    connectRequiredFields: RequiredConnectScope,
     id: string,
   ): Promise<T | null> {
     return await this.newQueryBuilderWithConnectRequiredFields(connectRequiredFields)
@@ -63,7 +63,7 @@ export class ConnectRepository<T extends ConnectEntityBase> {
   }
 
   public newQueryBuilderWithConnectRequiredFields(
-    connectRequiredFields: ConnectRequiredFields,
+    connectRequiredFields: RequiredConnectScope,
   ): SelectQueryBuilder<T> {
     const query = this.repository
       .createQueryBuilder(this.alias)
@@ -94,7 +94,7 @@ export class ConnectRepository<T extends ConnectEntityBase> {
     connectRequiredFields,
     id,
   }: {
-    connectRequiredFields: ConnectRequiredFields
+    connectRequiredFields: RequiredConnectScope
     id: string
   }): Promise<boolean> {
     const query = this.repository
@@ -112,8 +112,8 @@ export class ConnectRepository<T extends ConnectEntityBase> {
   }
 
   public async createAndSave(
-    connectRequiredFields: ConnectRequiredFields,
-    entity: Pick<ConnectRequiredFields, never> & DeepPartial<T>,
+    connectRequiredFields: RequiredConnectScope,
+    entity: Pick<RequiredConnectScope, never> & DeepPartial<T>,
   ): Promise<T> {
     return this.repository.save(this.repository.create({ ...connectRequiredFields, ...entity }))
   }

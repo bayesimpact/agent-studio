@@ -1,4 +1,4 @@
-import type { ConnectRequiredFields } from "@/common/entities/connect-required-fields"
+import type { RequiredConnectScope } from "@/common/entities/connect-required-fields"
 import { agentSessionControllerTestSetup } from "./test-setup"
 
 const getTestContext = agentSessionControllerTestSetup()
@@ -6,7 +6,7 @@ const getTestContext = agentSessionControllerTestSetup()
 describe("createProductionSession", () => {
   it("should create a production session without TTL", async () => {
     const { service, testAgent, testOrganization, testUser, testProject } = getTestContext()
-    const connectRequiredFields: ConnectRequiredFields = {
+    const connectRequiredFields: RequiredConnectScope = {
       organizationId: testOrganization.id,
       projectId: testProject.id,
     }

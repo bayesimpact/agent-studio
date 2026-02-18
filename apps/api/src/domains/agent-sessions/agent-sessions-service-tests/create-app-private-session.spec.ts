@@ -1,4 +1,4 @@
-import type { ConnectRequiredFields } from "@/common/entities/connect-required-fields"
+import type { RequiredConnectScope } from "@/common/entities/connect-required-fields"
 import { userMembershipFactory } from "@/domains/organizations/user-membership.factory"
 import { agentSessionControllerTestSetup } from "./test-setup"
 
@@ -8,7 +8,7 @@ describe("createAppPrivateSession", () => {
   it("should create an app-private session", async () => {
     const { service, testAgent, testUser, testOrganization, membershipRepository, testProject } =
       getTestContext()
-    const connectRequiredFields: ConnectRequiredFields = {
+    const connectRequiredFields: RequiredConnectScope = {
       organizationId: testOrganization.id,
       projectId: testProject.id,
     }

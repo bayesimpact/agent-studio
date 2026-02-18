@@ -1,6 +1,6 @@
 import { NotFoundException } from "@nestjs/common/exceptions"
 
-import type { ConnectRequiredFields } from "@/common/entities/connect-required-fields"
+import type { RequiredConnectScope } from "@/common/entities/connect-required-fields"
 import { agentSessionControllerTestSetup } from "./test-setup"
 
 const getTestContext = agentSessionControllerTestSetup()
@@ -8,7 +8,7 @@ const getTestContext = agentSessionControllerTestSetup()
 describe("prepareForStreaming", () => {
   it("should persist user message and empty assistant message", async () => {
     const { service, testAgent, testOrganization, testUser, testProject } = getTestContext()
-    const connectRequiredFields: ConnectRequiredFields = {
+    const connectRequiredFields: RequiredConnectScope = {
       organizationId: testOrganization.id,
       projectId: testProject.id,
     }
@@ -41,7 +41,7 @@ describe("prepareForStreaming", () => {
 
   it("should throw NotFoundException for non-existent session", async () => {
     const { service, testOrganization, testProject } = getTestContext()
-    const connectRequiredFields: ConnectRequiredFields = {
+    const connectRequiredFields: RequiredConnectScope = {
       organizationId: testOrganization.id,
       projectId: testProject.id,
     }

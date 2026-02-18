@@ -2,7 +2,7 @@ import { Injectable } from "@nestjs/common"
 import { InjectRepository } from "@nestjs/typeorm"
 import { In, type Repository } from "typeorm"
 import { ConnectRepository } from "@/common/entities/connect-repository"
-import type { ConnectRequiredFields } from "@/common/entities/connect-required-fields"
+import type { RequiredConnectScope } from "@/common/entities/connect-required-fields"
 import { AgentMessage } from "../agent-sessions/agent-message.entity"
 import { AgentMessageFeedback } from "./agent-message-feedback.entity"
 
@@ -31,7 +31,7 @@ export class AgentMessageFeedbackService {
     agentMessageId,
     content,
   }: {
-    connectRequiredFields: ConnectRequiredFields
+    connectRequiredFields: RequiredConnectScope
     userId: string
     agentMessageId: string
     content: string
@@ -54,7 +54,7 @@ export class AgentMessageFeedbackService {
     connectRequiredFields,
     agentId,
   }: {
-    connectRequiredFields: ConnectRequiredFields
+    connectRequiredFields: RequiredConnectScope
     agentId: string
   }): Promise<{
     agentMessages: AgentMessage[]
@@ -79,7 +79,7 @@ export class AgentMessageFeedbackService {
     connectRequiredFields,
     feedbackId,
   }: {
-    connectRequiredFields: ConnectRequiredFields
+    connectRequiredFields: RequiredConnectScope
     feedbackId: string
   }): Promise<AgentMessageFeedback | null> {
     return await this.feedbackConnectRepository.getOneById(connectRequiredFields, feedbackId)
