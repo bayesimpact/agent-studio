@@ -10,6 +10,7 @@ import {
 } from "@/common/test/test-transaction-manager"
 import { removeNullish } from "@/common/utils/remove-nullish"
 import { createOrganizationWithAgent } from "@/domains/organizations/organization.factory"
+import { projectMembershipFactory } from "@/domains/projects/memberships/project-membership.factory"
 import { setupUserGuardForTesting } from "../../../../test/e2e.helpers"
 import { expectResponse, type Requester, testRequester } from "../../../../test/request"
 import { AgentSessionsModule } from "../agent-sessions.module"
@@ -44,6 +45,7 @@ describe("Agent Sessions - Auth", () => {
   beforeEach(async () => {
     await clearTestDatabase(setup.dataSource)
     organizationId = randomUUID()
+    projectId = randomUUID()
     agentId = randomUUID()
     accessToken = "token"
     auth0Id = "auth0|123"
@@ -54,10 +56,20 @@ describe("Agent Sessions - Auth", () => {
     app.close()
   })
 
-  const _createContextForRole = async (role: "owner" | "admin" | "member" = "owner") => {
+  const createContextForRole = async (role: "owner" | "admin" | "member" = "owner") => {
     const { user, organization, project, agent } = await createOrganizationWithAgent(repositories, {
       membership: { role },
     })
+    await repositories.projectMembershipRepository.save(
+      projectMembershipFactory
+        .transient({
+          project,
+          user,
+        })
+        .build({
+          status: "accepted",
+        }),
+    )
     organizationId = organization.id
     projectId = project.id
     agentId = agent.id
@@ -78,36 +90,131 @@ describe("Agent Sessions - Auth", () => {
       expectResponse(await subject(), 401, AUTH_ERRORS.NO_ACCESS_TOKEN)
     })
 
-    // it("requires a valid organization ID", async () => {
-    //   organizationId = null
-    //   expectResponse(await subject(), 400, AUTH_ERRORS.NO_ORGANIZATION_ID)
-    // })
-    // it("requires a valid project ID", async () => {
-    //   await createContextForRole("owner")
-    //   projectId = null
-    //   expectResponse(await subject(), 404)
-    // })
+    it("requires a valid organization ID", async () => {
+      organizationId = null
+      expectResponse(await subject(), 400, AUTH_ERRORS.NO_ORGANIZATION_ID)
+    })
+    it("requires a valid agent ID", async () => {
+      await createContextForRole("owner")
+      agentId = null
+      expectResponse(await subject(), 404)
+    })
 
-    // it("requires a valid agent ID", async () => {
-    //   await createContextForRole("owner")
-    //   agentId = randomUUID()
-    //   expectResponse(await subject(), 404)
-    // })
+    it("requires the user to be a member of the organization", async () => {
+      await createContextForRole("owner")
+      auth0Id = "another-auth0-id"
+      expectResponse(await subject(), 401, AUTH_ERRORS.NOT_MEMBER_OF_ORG)
+    })
 
-    // it("requires the user to be a member of the organization", async () => {
-    //   await createContextForRole("owner")
-    //   auth0Id = "another-auth0-id"
-    //   expectResponse(await subject(), 403, AUTH_ERRORS.UNAUTHORIZED_RESOURCE)
-    // })
+    it("doesn't allow a simple member to get all playground sessions", async () => {
+      await createContextForRole("member")
+      expectResponse(await subject(), 403, AUTH_ERRORS.UNAUTHORIZED_RESOURCE)
+    })
 
-    // it("doesn't allow a simple member to get all playground sessions", async () => {
-    //   await createContextForRole("member")
-    //   expectResponse(await subject(), 403, AUTH_ERRORS.UNAUTHORIZED_RESOURCE)
-    // })
+    it("allows admins to get all playground sessions", async () => {
+      await createContextForRole("admin")
+      expectResponse(await subject(), 200)
+    })
+  })
 
-    // it("allows admins to get all playground sessions", async () => {
-    //   await createContextForRole("admin")
-    //   expectResponse(await subject(), 200)
-    // })
+  describe("AgentSessionsRoutes.createPlaygroundSession", () => {
+    const subject = async () =>
+      request({
+        route: AgentSessionsRoutes.createPlaygroundSession,
+        pathParams: removeNullish({ organizationId, projectId, agentId }),
+        token: accessToken ?? undefined,
+      })
+
+    it("requires an authentication token", async () => {
+      accessToken = null
+      expectResponse(await subject(), 401, AUTH_ERRORS.NO_ACCESS_TOKEN)
+    })
+
+    it("requires a valid organization ID", async () => {
+      organizationId = null
+      expectResponse(await subject(), 400, AUTH_ERRORS.NO_ORGANIZATION_ID)
+    })
+    it("requires a valid agent ID", async () => {
+      await createContextForRole("owner")
+      agentId = null
+      expectResponse(await subject(), 404)
+    })
+
+    it("requires the user to be a member of the organization", async () => {
+      await createContextForRole("owner")
+      auth0Id = "another-auth0-id"
+      expectResponse(await subject(), 401, AUTH_ERRORS.NOT_MEMBER_OF_ORG)
+    })
+
+    it("doesn't allow a simple member to create playground sessions", async () => {
+      await createContextForRole("member")
+      expectResponse(await subject(), 403, AUTH_ERRORS.UNAUTHORIZED_RESOURCE)
+    })
+
+    it("allows owners to create playground sessions", async () => {
+      await createContextForRole("owner")
+      expectResponse(await subject(), 201)
+    })
+  })
+
+  describe("AgentSessionsRoutes.getAllAppSessions", () => {
+    const subject = async () =>
+      request({
+        route: AgentSessionsRoutes.getAllAppSessions,
+        pathParams: removeNullish({ organizationId, projectId, agentId }),
+        token: accessToken ?? undefined,
+      })
+
+    it("requires an authentication token", async () => {
+      accessToken = null
+      expectResponse(await subject(), 401, AUTH_ERRORS.NO_ACCESS_TOKEN)
+    })
+    it("requires a valid organization ID", async () => {
+      organizationId = null
+      expectResponse(await subject(), 400, AUTH_ERRORS.NO_ORGANIZATION_ID)
+    })
+    it("requires a valid agent ID", async () => {
+      await createContextForRole("owner")
+      agentId = null
+      expectResponse(await subject(), 404)
+    })
+    it("requires the user to be a member of the organization", async () => {
+      await createContextForRole("owner")
+      auth0Id = "another-auth0-id"
+      expectResponse(await subject(), 401, AUTH_ERRORS.NOT_MEMBER_OF_ORG)
+    })
+  })
+
+  describe("AgentSessionsRoutes.createAppSession", () => {
+    const subject = async (payload: typeof AgentSessionsRoutes.createAppSession.request) =>
+      request({
+        route: AgentSessionsRoutes.createAppSession,
+        pathParams: removeNullish({ organizationId, projectId, agentId }),
+        token: accessToken ?? undefined,
+        request: payload,
+      })
+
+    const payload: typeof AgentSessionsRoutes.createAppSession.request = {
+      payload: { agentSessionType: "app-private" },
+    }
+
+    it("requires an authentication token", async () => {
+      accessToken = null
+      expectResponse(await subject(payload), 401, AUTH_ERRORS.NO_ACCESS_TOKEN)
+    })
+    it("requires a valid organization ID", async () => {
+      organizationId = null
+      expectResponse(await subject(payload), 400, AUTH_ERRORS.NO_ORGANIZATION_ID)
+    })
+    it("requires a valid agent ID", async () => {
+      await createContextForRole("owner")
+      agentId = null
+      expectResponse(await subject(payload), 404)
+    })
+    it("requires the user to be a member of the organization", async () => {
+      await createContextForRole("owner")
+      auth0Id = "another-auth0-id"
+      expectResponse(await subject(payload), 401, AUTH_ERRORS.NOT_MEMBER_OF_ORG)
+    })
   })
 })

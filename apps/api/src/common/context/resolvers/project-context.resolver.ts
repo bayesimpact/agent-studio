@@ -1,8 +1,8 @@
 import { Injectable, NotFoundException } from "@nestjs/common"
-// biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
-import { ProjectMembershipsService } from "@/domains/projects/memberships/project-memberships.service"
-// biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
-import { ProjectsService } from "@/domains/projects/projects.service"
+import { InjectRepository } from "@nestjs/typeorm"
+import type { Repository } from "typeorm"
+import { ProjectMembership } from "@/domains/projects/memberships/project-membership.entity"
+import { Project } from "@/domains/projects/project.entity"
 import type { ContextResolver, ResolvableRequest } from "../context-resolver.interface"
 import type { EndpointRequestWithProject } from "../request.interface"
 
@@ -11,8 +11,10 @@ export class ProjectContextResolver implements ContextResolver {
   readonly resource = "project" as const
 
   constructor(
-    private readonly projectsService: ProjectsService,
-    private readonly projectMembershipsService: ProjectMembershipsService,
+    @InjectRepository(Project)
+    private readonly projectRepository: Repository<Project>,
+    @InjectRepository(ProjectMembership)
+    private readonly projectMembershipRepository: Repository<ProjectMembership>,
   ) {}
 
   async resolve(request: ResolvableRequest): Promise<void> {
@@ -24,17 +26,22 @@ export class ProjectContextResolver implements ContextResolver {
     if (!projectId || projectId === ":projectId") throw new NotFoundException()
 
     const requestWithProject = request as EndpointRequestWithProject
-    const project = await this.projectsService.getProject(
-      requestWithProject.organizationId,
-      projectId,
-    )
+    const project =
+      (await this.projectRepository.findOne({
+        where: {
+          id: projectId,
+          organizationId: requestWithProject.organizationId,
+        },
+      })) ?? undefined
     if (!project) throw new NotFoundException()
 
     requestWithProject.project = project
     requestWithProject.projectMembership =
-      (await this.projectMembershipsService.findByProjectIdAndUserId(
-        project.id,
-        request.user.id,
-      )) ?? undefined
+      (await this.projectMembershipRepository.findOne({
+        where: {
+          projectId: project.id,
+          userId: request.user.id,
+        },
+      })) ?? undefined
   }
 }

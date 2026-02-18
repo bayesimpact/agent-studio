@@ -6,7 +6,6 @@ import { v4 } from "uuid"
 
 import type { ConnectRequiredFields } from "@/common/entities/connect-required-fields"
 import { Agent } from "@/domains/agents/agent.entity"
-import { UserMembership } from "@/domains/organizations/user-membership.entity"
 import { AgentMessage } from "./agent-message.entity"
 import { AgentSession, type AgentSessionType } from "./agent-session.entity"
 
@@ -21,13 +20,10 @@ export class AgentSessionsService {
     private readonly agentMessageRepository: Repository<AgentMessage>,
     @InjectRepository(Agent)
     private readonly agentRepository: Repository<Agent>,
-    @InjectRepository(UserMembership)
-    private readonly membershipRepository: Repository<UserMembership>,
   ) {}
 
   /**
-   * Returns messages for a session after verifying that the user
-   * belongs to the session's organization.
+   * Returns messages for a session after verifying the user owns the session.
    */
   async listMessagesForSession(
     sessionId: string,
@@ -41,17 +37,8 @@ export class AgentSessionsService {
       throw new NotFoundException(`AgentSession with id ${sessionId} not found`)
     }
 
-    const membership = await this.membershipRepository.findOne({
-      where: {
-        userId,
-        organizationId: session.organizationId,
-      },
-    })
-
-    if (!membership) {
-      throw new ForbiddenException(
-        `User does not have access to organization ${session.organizationId}`,
-      )
+    if (session.userId !== userId) {
+      throw new ForbiddenException("User does not own this session")
     }
 
     const messages = await this.agentMessageRepository.find({
@@ -134,69 +121,6 @@ export class AgentSessionsService {
     })
 
     return this.agentSessionRepository.save(session)
-  }
-
-  /**
-   * Verifies that a user can create a playground session for a agent.
-   * User must be an admin or owner of the agent's project's organization.
-   * Throws ForbiddenException if the user is not a member.
-   */
-  async verifyUserCanCreatePlaygroundSession(
-    userId: string,
-    agentId: string,
-  ): Promise<ConnectRequiredFields> {
-    const agent = await this.agentRepository.findOne({
-      where: { id: agentId },
-      relations: ["project"],
-    })
-
-    if (!agent) {
-      throw new NotFoundException(`Agent with id ${agentId} not found`)
-    }
-
-    const membership = await this.membershipRepository.findOne({
-      where: {
-        userId,
-        organizationId: agent.project.organizationId,
-      },
-    })
-
-    if (!membership || (membership.role !== "owner" && membership.role !== "admin")) {
-      throw new ForbiddenException(
-        `User does not have access to organization ${agent.project.organizationId}`,
-      )
-    }
-
-    return { organizationId: agent.organizationId, projectId: agent.projectId }
-  }
-
-  async verifyUserCanCreateAppPrivateSession(
-    userId: string,
-    agentId: string,
-  ): Promise<ConnectRequiredFields> {
-    const agent = await this.agentRepository.findOne({
-      where: { id: agentId },
-      relations: ["project"],
-    })
-
-    if (!agent) {
-      throw new NotFoundException(`Agent with id ${agentId} not found`)
-    }
-
-    const membership = await this.membershipRepository.findOne({
-      where: {
-        userId,
-        organizationId: agent.project.organizationId,
-      },
-    })
-
-    if (!membership) {
-      throw new ForbiddenException(
-        `User does not have access to organization ${agent.project.organizationId}`,
-      )
-    }
-
-    return { organizationId: agent.organizationId, projectId: agent.projectId }
   }
 
   async createAppPrivateSession({

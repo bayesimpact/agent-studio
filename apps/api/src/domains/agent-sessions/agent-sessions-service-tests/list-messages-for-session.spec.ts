@@ -1,3 +1,4 @@
+import { randomUUID } from "node:crypto"
 import { ForbiddenException, NotFoundException } from "@nestjs/common/exceptions"
 
 import type { ConnectRequiredFields } from "@/common/entities/connect-required-fields"
@@ -57,7 +58,7 @@ describe("listMessagesForSession", () => {
     ).rejects.toThrow(NotFoundException)
   })
 
-  it("should throw ForbiddenException when user is not a member of the organization", async () => {
+  it("should throw ForbiddenException when user does not own the session", async () => {
     const { service, testAgent, testUser, testOrganization, testProject } = getTestContext()
     const connectRequiredFields: ConnectRequiredFields = {
       organizationId: testOrganization.id,
@@ -70,7 +71,7 @@ describe("listMessagesForSession", () => {
       userId: testUser.id,
     })
 
-    await expect(service.listMessagesForSession(session.id, testUser.id)).rejects.toThrow(
+    await expect(service.listMessagesForSession(session.id, randomUUID())).rejects.toThrow(
       ForbiddenException,
     )
   })

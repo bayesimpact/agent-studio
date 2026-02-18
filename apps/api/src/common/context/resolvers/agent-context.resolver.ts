@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException } from "@nestjs/common"
-import { toConnectRequiredFields } from "@/common/context/request-context.helpers"
-// biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
-import { AgentsService } from "@/domains/agents/agents.service"
+import { InjectRepository } from "@nestjs/typeorm"
+import type { Repository } from "typeorm"
+import { Agent } from "@/domains/agents/agent.entity"
 import type { ContextResolver, ResolvableRequest } from "../context-resolver.interface"
 import type { EndpointRequestWithAgent, EndpointRequestWithProject } from "../request.interface"
 
@@ -9,7 +9,10 @@ import type { EndpointRequestWithAgent, EndpointRequestWithProject } from "../re
 export class AgentContextResolver implements ContextResolver {
   readonly resource = "agent" as const
 
-  constructor(private readonly agentsService: AgentsService) {}
+  constructor(
+    @InjectRepository(Agent)
+    private readonly agentRepository: Repository<Agent>,
+  ) {}
 
   async resolve(request: ResolvableRequest): Promise<void> {
     const requestWithParams = request as ResolvableRequest & {
@@ -21,9 +24,12 @@ export class AgentContextResolver implements ContextResolver {
 
     const requestWithProject = request as EndpointRequestWithProject
     const agent =
-      (await this.agentsService.findAgentById({
-        connectRequiredFields: toConnectRequiredFields(requestWithProject),
-        agentId,
+      (await this.agentRepository.findOne({
+        where: {
+          id: agentId,
+          organizationId: requestWithProject.organizationId,
+          projectId: requestWithProject.project.id,
+        },
       })) ?? undefined
     if (!agent) throw new NotFoundException()
 

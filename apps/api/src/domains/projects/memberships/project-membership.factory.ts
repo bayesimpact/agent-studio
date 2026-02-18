@@ -1,6 +1,9 @@
 import { randomUUID } from "node:crypto"
 import { Factory } from "fishery"
 import type { Repository } from "typeorm"
+import type { Organization } from "@/domains/organizations/organization.entity"
+import type { UserMembership } from "@/domains/organizations/user-membership.entity"
+import { userMembershipFactory } from "@/domains/organizations/user-membership.factory"
 import type { User } from "@/domains/users/user.entity"
 import { userFactory } from "@/domains/users/user.factory"
 import type { Project } from "../project.entity"
@@ -39,13 +42,16 @@ export const projectMembershipFactory = Factory.define<
 
 export const createProjectMembership = async ({
   repositories,
+  organization,
   project,
   user,
 }: {
   repositories: {
     userRepository: Repository<User>
+    membershipRepository: Repository<UserMembership>
     projectMembershipRepository: Repository<ProjectMembership>
   }
+  organization?: Organization
   project: Project
   user?: Partial<User>
 }) => {
@@ -56,6 +62,12 @@ export const createProjectMembership = async ({
   }
   const invitedUser = userFactory.build(user)
   await repositories.userRepository.save(invitedUser)
+
+  if (organization) {
+    await repositories.membershipRepository.save(
+      userMembershipFactory.transient({ user: invitedUser, organization }).build(),
+    )
+  }
 
   const membership = projectMembershipFactory.transient({ project, user: invitedUser }).build()
   await repositories.projectMembershipRepository.save(membership)

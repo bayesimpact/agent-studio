@@ -10,6 +10,7 @@ import { AuthModule } from "@/domains/auth/auth.module"
 import { Organization } from "@/domains/organizations/organization.entity"
 import { OrganizationsModule } from "@/domains/organizations/organizations.module"
 import { UserMembership } from "@/domains/organizations/user-membership.entity"
+import { ProjectMembership } from "@/domains/projects/memberships/project-membership.entity"
 import { Project } from "@/domains/projects/project.entity"
 import { ProjectsModule } from "@/domains/projects/projects.module"
 import { UsersModule } from "@/domains/users/users.module"
@@ -21,7 +22,7 @@ import { StorageModule } from "./storage/storage.module"
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Document, Project, Organization, UserMembership]),
+    TypeOrmModule.forFeature([Document, Project, Organization, UserMembership, ProjectMembership]),
     // Only serve static files in development/local environment
     ...(process.env.NODE_ENV !== "production"
       ? [

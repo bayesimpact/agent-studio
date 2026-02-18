@@ -8,6 +8,7 @@ import { AgentSessionsModule } from "@/domains/agent-sessions/agent-sessions.mod
 import { AuthModule } from "@/domains/auth/auth.module"
 import { OrganizationsModule } from "@/domains/organizations/organizations.module"
 import { UserMembership } from "@/domains/organizations/user-membership.entity"
+import { ProjectMembership } from "@/domains/projects/memberships/project-membership.entity"
 import { Project } from "@/domains/projects/project.entity"
 import { UsersModule } from "@/domains/users/users.module"
 import { ProjectsModule } from "../projects/projects.module"
@@ -18,7 +19,7 @@ import { AgentsService } from "./agents.service"
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Agent, Project, UserMembership]),
+    TypeOrmModule.forFeature([Agent, Project, UserMembership, ProjectMembership]),
     OrganizationsModule,
     ProjectsModule,
     UsersModule,

@@ -64,6 +64,7 @@ describe("Invitations - acceptInvitation", () => {
 
     const { membership } = await createProjectMembership({
       repositories,
+      organization,
       project,
       user: {
         email: "invitee@example.com",

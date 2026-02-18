@@ -1,7 +1,8 @@
 import { BadRequestException, Injectable, UnauthorizedException } from "@nestjs/common"
+import { InjectRepository } from "@nestjs/typeorm"
+import type { Repository } from "typeorm"
 import { AUTH_ERRORS } from "@/common/errors/auth-errors"
-// biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
-import { UserMembershipService } from "@/domains/organizations/user-membership.service"
+import { UserMembership } from "@/domains/organizations/user-membership.entity"
 import type { ContextResolver, ResolvableRequest } from "../context-resolver.interface"
 import type { EndpointRequestWithUserMembership } from "../request.interface"
 
@@ -9,7 +10,10 @@ import type { EndpointRequestWithUserMembership } from "../request.interface"
 export class OrganizationContextResolver implements ContextResolver {
   readonly resource = "organization" as const
 
-  constructor(private readonly userMembershipService: UserMembershipService) {}
+  constructor(
+    @InjectRepository(UserMembership)
+    private readonly membershipRepository: Repository<UserMembership>,
+  ) {}
 
   async resolve(request: ResolvableRequest): Promise<void> {
     const requestWithParams = request as ResolvableRequest & {
@@ -20,9 +24,11 @@ export class OrganizationContextResolver implements ContextResolver {
       throw new BadRequestException(AUTH_ERRORS.NO_ORGANIZATION_ID)
     }
 
-    const userMembership = await this.userMembershipService.findUserMembership({
-      userId: request.user.id,
-      organizationId,
+    const userMembership = await this.membershipRepository.findOne({
+      where: {
+        userId: request.user.id,
+        organizationId,
+      },
     })
     if (!userMembership) {
       throw new UnauthorizedException(AUTH_ERRORS.NOT_MEMBER_OF_ORG)

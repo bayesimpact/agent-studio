@@ -5,21 +5,21 @@ import type { AgentSessionDto, AgentSessionTypeDto } from "./agent-sessions.dto"
 export const AgentSessionsRoutes = {
   getAllPlaygroundSessions: defineRoute<ResponseData<AgentSessionDto[]>>({
     method: "get",
-    path: "/organizations/:organizationId/agents/:agentId/playground/sessions",
+    path: "/organizations/:organizationId/projects/:projectId/agents/:agentId/playground/sessions",
   }),
   getAllAppSessions: defineRoute<ResponseData<AgentSessionDto[]>>({
     method: "get",
-    path: "/organizations/:organizationId/agents/:agentId/app/sessions",
+    path: "/organizations/:organizationId/projects/:projectId/agents/:agentId/app/sessions",
   }),
   createPlaygroundSession: defineRoute<ResponseData<AgentSessionDto>>({
     method: "post",
-    path: "/organizations/:organizationId/agents/:agentId/playground-session",
+    path: "/organizations/:organizationId/projects/:projectId/agents/:agentId/playground-session",
   }),
   createAppSession: defineRoute<
     ResponseData<AgentSessionDto>,
     RequestPayload<{ agentSessionType: AgentSessionTypeDto }>
   >({
     method: "post",
-    path: "/organizations/:organizationId/agents/:agentId/app-session",
+    path: "/organizations/:organizationId/projects/:projectId/agents/:agentId/app-session",
   }),
 }
