@@ -88,19 +88,21 @@ export class AgentStreamingService {
         }
 
         const url = await this.fileStorageService.getTemporaryUrl(document.storageRelativePath)
-        console.warn("AJ: url", url)
 
         const llmMessage: LLMChatMessage = {
           role: "user",
           content: [{ type: "text", text: message.content as string }],
         }
 
+        const hasStorageBucketName: boolean = !!process.env.GCS_STORAGE_BUCKET_NAME
+
         switch (document.mimeType) {
           case "application/pdf":
             {
               const data = new URL(
-                // url // FIXME:
-                "https://www.impots.gouv.fr/sites/default/files/formulaires/2042/2025/2042_5180.pdf",
+                hasStorageBucketName
+                  ? url
+                  : "https://www.impots.gouv.fr/sites/default/files/formulaires/2042/2025/2042_5180.pdf",
               )
 
               const content = llmMessage.content as Array<FilePart>
@@ -118,8 +120,9 @@ export class AgentStreamingService {
           case "image/jpg":
             {
               const image = new URL(
-                //url // FIXME:
-                "https://www.oiseaux.net/photos/marc.fasol/images/id/canard.colvert.mafa.3p.230.h.jpg",
+                hasStorageBucketName
+                  ? url
+                  : "https://www.oiseaux.net/photos/marc.fasol/images/id/canard.colvert.mafa.3p.230.h.jpg",
               )
 
               const content = llmMessage.content as Array<ImagePart>
@@ -222,7 +225,6 @@ export class AgentStreamingService {
         continue
       }
 
-      // FIXME: are we sure about that?
       // Skip messages with empty content (AI SDK requires non-empty content)
       if (!message.content || message.content.trim().length === 0) {
         continue
