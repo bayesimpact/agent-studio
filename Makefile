@@ -24,6 +24,7 @@ auth0IssuerUrl = https://bayes-impact.eu.auth0.com/
 auth0M2MClientId = ct0uygE3ld8IOKjaGozWbRLMae0R0Pcr
 auth0ClientId = Ntkc5sZnx8OQNP4UJDCqId4eo0WqGTJD
 localStorageServerBaseUrl = https://connect.localhost:3000
+gcsStorageBucketName = eu-connect-file-storage
 endif
 
 # ==============================================================================
@@ -130,6 +131,7 @@ deploy-only:
 	--set-env-vars=AUTH0_ISSUER_URL=${auth0IssuerUrl},AUTH0_AUDIENCE=${auth0Audience} \
 	--set-env-vars=AUTH0_ORGANIZATION_ID=${auth0OrganizationId},AUTH0_CLIENT_ID=${auth0ClientId},AUTH0_M2M_CLIENT_ID=${auth0M2MClientId} \
 	--set-env-vars=LOCAL_STORAGE_SERVER_BASE_URL=${localStorageServerBaseUrl} \
+	--set-env-vars=GCS_STORAGE_BUCKET_NAME=${gcsStorageBucketName} \
   --set-env-vars=LANGFUSE_PK=${langfusePk},LANGFUSE_BASE_URL=${langfuseUrl},LOCATION=$(location) \
   --set-env-vars=DATABASE_HOST=/cloudsql/${addCloudSqlInstances},DATABASE_USERNAME=connect_admin,DATABASE_NAME=connect \
 	--region=${zone} \
