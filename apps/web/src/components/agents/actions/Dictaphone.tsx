@@ -3,16 +3,9 @@ import { MicIcon } from "lucide-react"
 import { useCallback, useEffect } from "react"
 import SpeechRecognition, { useSpeechRecognition } from "react-speech-recognition"
 import { useChatFooter } from "@/components/chat/context"
-import type { AgentSession } from "@/features/agent-sessions/agent-sessions.models"
 import { getLocale } from "@/utils/get-locale"
 
-export function Dictaphone({
-  session,
-  isStreaming,
-}: {
-  session: AgentSession
-  isStreaming: boolean
-}) {
+export function Dictaphone({ disabled }: { disabled: boolean }) {
   const { input } = useChatFooter()
   const {
     listening,
@@ -57,7 +50,7 @@ export function Dictaphone({
   return (
     <Button
       variant={listening ? "default" : "ghost"}
-      disabled={isStreaming || !session}
+      disabled={disabled}
       onClick={handleRecognition}
     >
       <MicIcon className={listening ? "animate-pulse" : ""} />

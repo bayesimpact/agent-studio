@@ -18,7 +18,7 @@ export default {
     formData.append("file", file)
 
     const response = await axios.post<typeof DocumentsRoutes.uploadOne.response>(
-      DocumentsRoutes.uploadOne.getPath({ organizationId, projectId }),
+      DocumentsRoutes.uploadOne.getPath({ organizationId, projectId, sourceType: "project" }),
       formData,
       { headers: { "Content-Type": "multipart/form-data" } },
     )

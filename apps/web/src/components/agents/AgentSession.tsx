@@ -1,15 +1,17 @@
 import { Button } from "@caseai-connect/ui/shad/button"
 import { Spinner } from "@caseai-connect/ui/shad/spinner"
 import { cn } from "@caseai-connect/ui/utils"
-import { AlertCircleIcon, CirclePlusIcon, ExternalLinkIcon, PaperclipIcon } from "lucide-react"
+import { AlertCircleIcon, CirclePlusIcon, ExternalLinkIcon } from "lucide-react"
 import { useEffect, useRef } from "react"
 import { useTranslation } from "react-i18next"
 import type {
-  AgentSession,
   AgentSessionMessage,
+  AgentSession as AgentSessionType,
 } from "@/features/agent-sessions/agent-sessions.models"
 import { selectStreaming } from "@/features/agent-sessions/agent-sessions.selectors"
 import { sendMessage } from "@/features/agent-sessions/agent-sessions.thunks"
+import { selectCurrentOrganizationId } from "@/features/organizations/organizations.selectors"
+import { selectCurrentProjectId } from "@/features/projects/projects.selectors"
 import { useScrollToEnd } from "@/hooks/use-scroll-to-end"
 import { useAppDispatch, useAppSelector } from "@/store/hooks"
 import { CreateFeedbackDialog } from "../agent-message-feedback/CreateFeedbackDialog"
@@ -26,83 +28,23 @@ import {
 } from "../chat/Chat"
 import { MarkdownWrapper } from "../chat/MarkdownWrapper"
 import { DotsBackground } from "../DotsBackground"
+import { AttachDocument } from "../documents/AttachDocument"
 import { Dictaphone } from "./actions/Dictaphone"
 
-export function AdminAgentSession({
+export function AgentSession({
+  isAdminInterface,
   session,
   messages,
 }: {
-  session: AgentSession
+  isAdminInterface: boolean
+  session: AgentSessionType
   messages: AgentSessionMessage[]
 }) {
   const { t } = useTranslation("chat")
   const dispatch = useAppDispatch()
   const isStreaming = useAppSelector(selectStreaming)
-
-  const handleSubmit = (message: string) => {
-    if (!session || isStreaming || !message.trim()) {
-      return
-    }
-
-    void dispatch(sendMessage({ sessionId: session.id, content: message.trim() }))
-  }
-
-  return (
-    <div className="p-6 flex flex-col gap-6 flex-1">
-      <DotsBackground className="p-10">
-        <Chat>
-          <ChatHeader>
-            {session.traceUrl && (
-              <Button asChild variant="ghost">
-                <a href={session.traceUrl} className="cursor-pointer" target="_blank">
-                  Trace Url
-                  <ExternalLinkIcon className="size-4" />
-                </a>
-              </Button>
-            )}
-          </ChatHeader>
-          <ChatContent>
-            {messages?.map((message) => (
-              <Message key={message.id} message={message} />
-            ))}
-          </ChatContent>
-
-          <ChatFooter focus={!isStreaming} onMessageSubmit={handleSubmit}>
-            <ChatInput
-              placeholder={t("placeholder")}
-              className="resize-none"
-              disabled={isStreaming || !session}
-            />
-
-            <ChatActions>
-              <div className="flex-1 justify-start flex gap-1">
-                <Button variant="secondary" disabled={isStreaming || !session}>
-                  <CirclePlusIcon />
-                </Button>
-                <Button variant="ghost" disabled={isStreaming || !session}>
-                  <PaperclipIcon />
-                </Button>
-                <Dictaphone session={session} isStreaming={isStreaming} />
-              </div>
-              <ChatSubmit variant="ghost" disabled={isStreaming || !session} />
-            </ChatActions>
-          </ChatFooter>
-        </Chat>
-      </DotsBackground>
-    </div>
-  )
-}
-
-export function AppAgentSession({
-  session,
-  messages,
-}: {
-  session: AgentSession
-  messages: AgentSessionMessage[]
-}) {
-  const { t } = useTranslation("chat")
-  const dispatch = useAppDispatch()
-  const isStreaming = useAppSelector(selectStreaming)
+  const organizationId = useAppSelector(selectCurrentOrganizationId)
+  const projectId = useAppSelector(selectCurrentProjectId)
 
   const chatSubmitRef = useRef<HTMLButtonElement>(null)
   const scrollToEnd = useScrollToEnd(chatSubmitRef)
@@ -112,13 +54,66 @@ export function AppAgentSession({
     scrollToEnd()
   }, [isStreaming, scrollToEnd])
 
-  const handleSubmit = (message: string) => {
-    if (!session || isStreaming || !message.trim()) {
-      return
-    }
+  if (!organizationId || !projectId) return null
 
-    void dispatch(sendMessage({ sessionId: session.id, content: message.trim() }))
+  const handleAttachDocument = (file: File) => {
+    handleSubmit(file.name, file)
   }
+
+  const handleSubmit = (message: string, file?: File) => {
+    const trimedMessage = message.trim()
+    if (isStreaming || !trimedMessage) return
+    void dispatch(sendMessage({ content: trimedMessage, file }))
+  }
+
+  if (isAdminInterface)
+    return (
+      <div className="p-6 flex flex-col gap-6 flex-1">
+        <DotsBackground className="p-10">
+          <Chat>
+            <ChatHeader>
+              {session.traceUrl && (
+                <Button asChild variant="ghost">
+                  <a href={session.traceUrl} className="cursor-pointer" target="_blank">
+                    Trace Url
+                    <ExternalLinkIcon className="size-4" />
+                  </a>
+                </Button>
+              )}
+            </ChatHeader>
+            <ChatContent>
+              {messages?.map((message) => (
+                <Message key={message.id} message={message} />
+              ))}
+            </ChatContent>
+
+            <ChatFooter focus={!isStreaming} onMessageSubmit={handleSubmit}>
+              <ChatInput
+                placeholder={t("placeholder")}
+                className="resize-none"
+                disabled={isStreaming || !session}
+              />
+
+              <ChatActions>
+                <div className="flex-1 justify-start flex gap-1">
+                  <Button variant="secondary" disabled={isStreaming || !session}>
+                    <CirclePlusIcon />
+                  </Button>
+
+                  <AttachDocument
+                    onAttach={handleAttachDocument}
+                    disabled={isStreaming || !session}
+                  />
+
+                  <Dictaphone disabled={isStreaming || !session} />
+                </div>
+                <ChatSubmit variant="ghost" disabled={isStreaming || !session} />
+              </ChatActions>
+            </ChatFooter>
+          </Chat>
+        </DotsBackground>
+      </div>
+    )
   return (
     <div className="flex flex-1 items-center justify-center p-4">
       <div className="flex flex-col gap-6 flex-1 max-w-2/3">
@@ -141,10 +136,11 @@ export function AppAgentSession({
                 <Button variant="secondary" disabled={isStreaming || !session}>
                   <CirclePlusIcon />
                 </Button>
-                <Button variant="ghost" disabled={isStreaming || !session}>
-                  <PaperclipIcon />
-                </Button>
-                <Dictaphone session={session} isStreaming={isStreaming} />
+                <AttachDocument
+                  onAttach={handleAttachDocument}
+                  disabled={isStreaming || !session}
+                />
+                <Dictaphone disabled={isStreaming || !session} />
               </div>
               <ChatSubmit ref={chatSubmitRef} variant="ghost" disabled={isStreaming || !session} />
             </ChatActions>

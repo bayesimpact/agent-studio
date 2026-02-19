@@ -36,6 +36,7 @@ export const documentFactory = DocumentFactory.define(({ sequence, params, trans
     mimeType: params.mimeType || MimeTypes.txt,
     size: params.size || 1024,
     storageRelativePath: params.storageRelativePath || `documents/file_${sequence}.txt`,
+    sourceType: params.sourceType || "project",
   } satisfies Document
 })
 

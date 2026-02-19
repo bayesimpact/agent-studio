@@ -1,4 +1,4 @@
-import { Module } from "@nestjs/common"
+import { forwardRef, Module } from "@nestjs/common"
 import { TypeOrmModule } from "@nestjs/typeorm"
 import { AgentContextResolver } from "@/common/context/resolvers/agent-context.resolver"
 import { OrganizationContextResolver } from "@/common/context/resolvers/organization-context.resolver"
@@ -24,7 +24,7 @@ import { AgentsService } from "./agents.service"
     ProjectsModule,
     UsersModule,
     AuthModule,
-    AgentSessionsModule,
+    forwardRef(() => AgentSessionsModule),
   ],
   providers: [
     AgentsService,

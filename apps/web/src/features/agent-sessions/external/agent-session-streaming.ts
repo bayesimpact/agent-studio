@@ -1,5 +1,6 @@
-import { AgentSessionStreamingRoutes } from "@caseai-connect/api-contracts"
+import { AgentSessionStreamingRoutes, DocumentsRoutes } from "@caseai-connect/api-contracts"
 import { getAccessToken } from "@/external/auth0Client"
+import { getAxiosInstance } from "@/external/axios"
 
 export type StreamEvent =
   | { type: "start"; messageId: string }
@@ -15,109 +16,179 @@ export type StreamEventHandler = {
 }
 
 /**
- * Streams a chat response using Server-Sent Events (SSE) via fetch.
- * Uses fetch instead of EventSource to support Authorization headers.
+ * Streams a chat response using Server-Sent Events (SSE) via axios.
+ * Uses axios instead of EventSource to support Authorization headers.
  */
-export async function streamChatResponse(
-  sessionId: string,
-  userMessage: string,
-  handlers: StreamEventHandler,
-  abortSignal?: AbortSignal,
-): Promise<void> {
-  const token = await getAccessToken()
-  const baseURL = import.meta.env.VITE_API_URL as string
-  const url = `${baseURL}${AgentSessionStreamingRoutes.streamPlayground.getPath({ sessionId })}?q=${encodeURIComponent(userMessage)}`
+export async function streamChatResponse({
+  organizationId,
+  projectId,
+  agentId,
+  sessionId,
+  content,
+  file,
+  handlers,
+  signal,
+}: {
+  organizationId: string
+  projectId: string
+  agentId: string
+  sessionId: string
+  content: string
+  file?: File
+  handlers: StreamEventHandler
+  signal?: AbortSignal
+}): Promise<void> {
+  const axios = getAxiosInstance()
 
-  const response = await fetch(url, {
-    method: "GET",
-    headers: {
-      Authorization: `Bearer ${token}`,
-      Accept: "text/event-stream",
-    },
-    signal: abortSignal,
-  })
+  let documentId: string | undefined
 
-  if (!response.ok) {
-    const errorText = await response.text().catch(() => "Unknown error")
-    throw new Error(`Streaming failed: ${response.status} ${errorText}`)
+  if (file) {
+    documentId = await handleFile({ file, organizationId, projectId, axios })
   }
-
-  if (!response.body) {
-    throw new Error("Response body is null")
-  }
-
-  const reader = response.body.getReader()
-  const decoder = new TextDecoder()
-  let buffer = ""
 
   try {
-    while (true) {
-      const { done, value } = await reader.read()
+    const token = await getAccessToken()
+    const baseURL = import.meta.env.VITE_API_URL as string
+    const body = {
+      payload: { content, documentId },
+    } satisfies typeof AgentSessionStreamingRoutes.stream.request
+    const url = `${baseURL}${AgentSessionStreamingRoutes.stream.getPath({ organizationId, projectId, agentId, sessionId })}?q=${encodeURIComponent(JSON.stringify(body))}`
 
-      if (done) {
-        // Process any remaining data in buffer
-        if (buffer.trim()) {
-          const events = buffer.split("\n\n").filter((event) => event.trim())
-          for (const eventText of events) {
-            const dataLine = eventText.split("\n").find((line) => line.startsWith("data: "))
-            if (dataLine) {
-              const data = dataLine.slice(6) // Remove "data: " prefix
-              try {
-                const event: StreamEvent = JSON.parse(data)
-                if (event.type === "start") {
-                  handlers.onStart?.(event)
-                } else if (event.type === "chunk") {
-                  handlers.onChunk(event)
-                } else if (event.type === "end") {
-                  handlers.onEnd(event)
-                  return
-                } else if (event.type === "error") {
-                  handlers.onError(event)
-                  return
+    const response = await fetch(url, {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        Accept: "text/event-stream",
+        "Content-Type": "application/json",
+      },
+      signal,
+    })
+
+    if (!response.ok) {
+      const errorText = await response.text().catch(() => "Unknown error")
+      throw new Error(`Streaming failed: ${response.status} ${errorText}`)
+    }
+
+    if (!response.body) {
+      throw new Error("Response body is null")
+    }
+
+    // FIXME: use axios
+    // const response = await axios.post<typeof AgentSessionStreamingRoutes.stream.response>(
+    //   AgentSessionStreamingRoutes.stream.getPath({ organizationId, projectId, agentId, sessionId }),
+    //   {
+    //     payload: { content, documentId },
+    //   } satisfies typeof AgentSessionStreamingRoutes.stream.request,
+    //   { signal },
+    // )
+
+    const reader = response.body.getReader()
+    const decoder = new TextDecoder()
+    let buffer = ""
+
+    try {
+      while (true) {
+        const { done, value } = await reader.read()
+
+        if (done) {
+          // Process any remaining data in buffer
+          if (buffer.trim()) {
+            const events = buffer.split("\n\n").filter((event) => event.trim())
+            for (const eventText of events) {
+              const dataLine = eventText.split("\n").find((line) => line.startsWith("data: "))
+              if (dataLine) {
+                const data = dataLine.slice(6) // Remove "data: " prefix
+                try {
+                  const event: StreamEvent = JSON.parse(data)
+                  if (event.type === "start") {
+                    handlers.onStart?.(event)
+                  } else if (event.type === "chunk") {
+                    handlers.onChunk(event)
+                  } else if (event.type === "end") {
+                    handlers.onEnd(event)
+                    return
+                  } else if (event.type === "error") {
+                    handlers.onError(event)
+                    return
+                  }
+                } catch (parseError) {
+                  console.error("Failed to parse SSE event:", parseError, "Data:", data)
                 }
-              } catch (parseError) {
-                console.error("Failed to parse SSE event:", parseError, "Data:", data)
               }
             }
           }
+          break
         }
-        break
-      }
 
-      buffer += decoder.decode(value, { stream: true })
+        buffer += decoder.decode(value, { stream: true })
 
-      // Process complete SSE events (events are separated by \n\n)
-      const events = buffer.split("\n\n")
-      // Keep the last incomplete event in buffer
-      buffer = events.pop() || ""
+        // Process complete SSE events (events are separated by \n\n)
+        const events = buffer.split("\n\n")
+        // Keep the last incomplete event in buffer
+        buffer = events.pop() || ""
 
-      for (const eventText of events) {
-        if (!eventText.trim()) continue
+        for (const eventText of events) {
+          if (!eventText.trim()) continue
 
-        const dataLine = eventText.split("\n").find((line) => line.startsWith("data: "))
-        if (dataLine) {
-          const data = dataLine.slice(6) // Remove "data: " prefix
-          try {
-            const event: StreamEvent = JSON.parse(data)
+          const dataLine = eventText.split("\n").find((line) => line.startsWith("data: "))
+          if (dataLine) {
+            const data = dataLine.slice(6) // Remove "data: " prefix
+            try {
+              const event: StreamEvent = JSON.parse(data)
 
-            if (event.type === "start") {
-              handlers.onStart?.(event)
-            } else if (event.type === "chunk") {
-              handlers.onChunk(event)
-            } else if (event.type === "end") {
-              handlers.onEnd(event)
-              return // Stream completed successfully
-            } else if (event.type === "error") {
-              handlers.onError(event)
-              return // Stream ended with error
+              if (event.type === "start") {
+                handlers.onStart?.(event)
+              } else if (event.type === "chunk") {
+                handlers.onChunk(event)
+              } else if (event.type === "end") {
+                handlers.onEnd(event)
+                return // Stream completed successfully
+              } else if (event.type === "error") {
+                handlers.onError(event)
+                return // Stream ended with error
+              }
+            } catch (parseError) {
+              console.error("Failed to parse SSE event:", parseError, "Data:", data)
             }
-          } catch (parseError) {
-            console.error("Failed to parse SSE event:", parseError, "Data:", data)
           }
         }
       }
+    } finally {
+      reader.releaseLock()
     }
-  } finally {
-    reader.releaseLock()
+    // biome-ignore lint/suspicious/noExplicitAny: Error handling
+  } catch (error: any) {
+    throw new Error("Fail to stream", error)
+  }
+}
+
+async function handleFile({
+  file,
+  organizationId,
+  projectId,
+  axios,
+}: {
+  file: File
+  organizationId: string
+  projectId: string
+  axios: ReturnType<typeof getAxiosInstance>
+}) {
+  const formData = new FormData()
+  formData.append("file", file)
+
+  try {
+    const response = await axios.post<typeof DocumentsRoutes.uploadOne.response>(
+      DocumentsRoutes.uploadOne.getPath({
+        organizationId,
+        projectId,
+        sourceType: "agentSessionMessage",
+      }),
+      formData,
+      { headers: { "Content-Type": "multipart/form-data" } },
+    )
+    return response.data.data.id
+    // biome-ignore lint/suspicious/noExplicitAny: Error handling
+  } catch (error: any) {
+    throw new Error("Fail to upload document", error)
   }
 }

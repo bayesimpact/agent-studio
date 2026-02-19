@@ -1,6 +1,7 @@
-import { Column, JoinColumn, ManyToOne, OneToMany } from "typeorm"
+import { Column, JoinColumn, ManyToOne, OneToMany, OneToOne } from "typeorm"
 import { ConnectEntity, ConnectEntityBase } from "@/common/entities/connect-entity"
 import { AgentMessageFeedback } from "@/domains/agent-message-feedback/agent-message-feedback.entity"
+import { Document } from "@/domains/documents/document.entity"
 import { AgentSession } from "./agent-session.entity"
 
 export type MessageStatus = "streaming" | "completed" | "aborted" | "error"
@@ -39,6 +40,13 @@ export class AgentMessage extends ConnectEntityBase {
   )
   @JoinColumn({ name: "session_id" })
   session!: AgentSession
+
+  @Column({ type: "uuid", name: "document_id", nullable: true })
+  documentId!: string | null
+
+  @OneToOne(() => Document, { nullable: true, onDelete: "SET NULL" })
+  @JoinColumn({ name: "document_id" })
+  document!: Document | null
 
   @OneToMany(
     () => AgentMessageFeedback,

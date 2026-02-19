@@ -1,4 +1,3 @@
-import type { DocumentDto } from "@caseai-connect/api-contracts"
 import { Injectable, NotFoundException } from "@nestjs/common"
 import { InjectRepository } from "@nestjs/typeorm"
 import type { Repository } from "typeorm"
@@ -19,7 +18,10 @@ export class DocumentsService {
   }: {
     connectScope: RequiredConnectScope
     documentId: string
-    fields: Pick<DocumentDto, "fileName" | "mimeType" | "size" | "storageRelativePath" | "title"> //fixme DOO : DocumentDto ???
+    fields: Pick<
+      Document,
+      "fileName" | "mimeType" | "size" | "storageRelativePath" | "title" | "sourceType"
+    >
   }): Promise<Document> {
     return await this.documentConnectRepository.createAndSave(connectScope, {
       id: documentId,
@@ -28,13 +30,16 @@ export class DocumentsService {
       size: fields.size,
       storageRelativePath: fields.storageRelativePath,
       title: fields.title ?? fields.fileName,
+      sourceType: fields.sourceType,
     })
   }
 
   async listDocuments(connectScope: RequiredConnectScope): Promise<Document[]> {
-    return (await this.documentConnectRepository.getMany(connectScope))?.sort(
-      (a, b) => b.createdAt.getTime() - a.createdAt.getTime(),
-    )
+    return (
+      await this.documentConnectRepository.find(connectScope, {
+        where: { sourceType: "project" },
+      })
+    )?.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
   }
 
   async findById({

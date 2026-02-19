@@ -1,7 +1,7 @@
 import { uploadDocument } from "@/features/documents/documents.thunks"
 import type { Project } from "@/features/projects/projects.models"
 import { useAppDispatch } from "@/store/hooks"
-import { Uploader } from "../FileUploader"
+import { BasicUploader } from "../FileUploader"
 
 export function UploadDocumentButton({
   organizationId,
@@ -15,7 +15,7 @@ export function UploadDocumentButton({
     dispatch(uploadDocument({ organizationId, projectId: project.id, file }))
   }
   return (
-    <Uploader
+    <BasicUploader
       organizationId={organizationId}
       projectId={project.id}
       processFile={handleProcessFile}

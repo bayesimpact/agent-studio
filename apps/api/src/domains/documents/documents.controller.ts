@@ -9,6 +9,7 @@ import {
   Inject,
   MaxFileSizeValidator,
   NotFoundException,
+  Param,
   ParseFilePipe,
   Post,
   Request,
@@ -56,7 +57,7 @@ export class DocumentsController {
         validators: [
           new MaxFileSizeValidator({ maxSize: 10 * mega * mega }), // 10 MB
           new FileTypeValidator({
-            fileType: ".pdf", //".(png|jpeg|jpg|pdf|docx|doc|xlsx|xls|pptx|ppt|txt|csv)",
+            fileType: ".(png|jpeg|jpg|pdf|txt|csv)", //".(png|jpeg|jpg|pdf|docx|doc|xlsx|xls|pptx|ppt|txt|csv)",
           }),
         ],
         errorHttpStatusCode: HttpStatus.UNPROCESSABLE_ENTITY,
@@ -64,7 +65,11 @@ export class DocumentsController {
     )
     file: MulterFile,
     @Request() req: EndpointRequestWithProject,
+    @Param("sourceType") sourceType: "project" | "agentSessionMessage",
   ): Promise<typeof DocumentsRoutes.uploadOne.response> {
+    if (!sourceType) {
+      throw new UnprocessableEntityException("Source type is required.")
+    }
     if (!file) {
       throw new UnprocessableEntityException("File is required.")
     }
@@ -115,6 +120,7 @@ export class DocumentsController {
         size: file.size,
         storageRelativePath: fileInfo.storageRelativePath,
         title: file.originalname,
+        sourceType,
       },
     })
 

@@ -58,6 +58,8 @@ export const agentMessageFactory = AgentMessageFactory.define(
       agentMessageFeedbacks: params.agentMessageFeedbacks || [],
       organizationId: transientParams.organization.id,
       projectId: transientParams.project.id,
+      documentId: params.documentId ?? null,
+      document: null, // TODO: transientParams??
     } satisfies AgentMessage
   },
 )

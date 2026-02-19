@@ -1,4 +1,4 @@
-import type { ResponseData } from "../generic"
+import type { RequestPayload, ResponseData } from "../generic"
 import { defineRoute } from "../helpers"
 
 // Streaming responses are sent as text/event-stream (SSE) and do not follow the usual ResponseData<T> shape.
@@ -6,8 +6,11 @@ import { defineRoute } from "../helpers"
 export type AgentSessionStreamResponse = unknown
 
 export const AgentSessionStreamingRoutes = {
-  streamPlayground: defineRoute<ResponseData<AgentSessionStreamResponse>>({
-    method: "get",
-    path: "agent-sessions/:sessionId/stream",
+  stream: defineRoute<
+    ResponseData<AgentSessionStreamResponse>,
+    RequestPayload<{ content: string; documentId?: string }>
+  >({
+    method: "post",
+    path: "organizations/:organizationId/projects/:projectId/agents/:agentId/agent-sessions/:sessionId/stream",
   }),
 }

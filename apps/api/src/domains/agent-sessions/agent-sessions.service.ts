@@ -66,38 +66,6 @@ export class AgentSessionsService {
     return messages.map((message) => this.toDto(message))
   }
 
-  /**
-   * Loads a session and its agent, ensuring the session belongs to the user.
-   * Used by streaming controller to prepare for LLM calls.
-   */
-  async getSessionWithAgentForUser(
-    sessionId: string,
-    userId: string,
-  ): Promise<{ session: AgentSession; agent: Agent }> {
-    const session = await this.agentSessionRepository.findOne({
-      where: { id: sessionId },
-      relations: ["messages"],
-    })
-
-    if (!session) {
-      throw new NotFoundException(`AgentSession with id ${sessionId} not found`)
-    }
-
-    if (session.userId !== userId) {
-      throw new ForbiddenException("User does not own this session")
-    }
-
-    const agent = await this.agentRepository.findOne({
-      where: { id: session.agentId },
-    })
-
-    if (!agent) {
-      throw new NotFoundException(`Agent with id ${session.agentId} not found`)
-    }
-
-    return { session, agent }
-  }
-
   async getAllSessionsForAgent({
     connectScope,
     agentId,
@@ -206,10 +174,12 @@ export class AgentSessionsService {
     connectScope,
     sessionId,
     userContent,
+    documentId,
   }: {
     connectScope: RequiredConnectScope
     sessionId: string
     userContent: string
+    documentId?: string
   }): Promise<{ session: AgentSession; assistantMessageId: string }> {
     const session = await this.findById(sessionId)
 
@@ -226,6 +196,7 @@ export class AgentSessionsService {
       startedAt: null,
       completedAt: null,
       toolCalls: null,
+      documentId: documentId ?? null,
     })
 
     // Create empty assistant message with streaming status

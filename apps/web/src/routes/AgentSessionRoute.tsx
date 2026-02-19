@@ -1,7 +1,7 @@
-import { AdminAgentSession, AppAgentSession } from "@/components/agents/AgentSession"
+import { AgentSession } from "@/components/agents/AgentSession"
 import type {
-  AgentSession,
   AgentSessionMessage,
+  AgentSession as AgentSessionType,
 } from "@/features/agent-sessions/agent-sessions.models"
 import {
   selectCurrentAgentSessionData,
@@ -31,10 +31,11 @@ function WithData({
   agentSession,
   messages,
 }: {
-  agentSession: AgentSession
+  agentSession: AgentSessionType
   messages: AgentSessionMessage[]
 }) {
   const { isAdminInterface } = useAbility()
-  if (isAdminInterface) return <AdminAgentSession session={agentSession} messages={messages} />
-  return <AppAgentSession session={agentSession} messages={messages} />
+  return (
+    <AgentSession isAdminInterface={isAdminInterface} session={agentSession} messages={messages} />
+  )
 }

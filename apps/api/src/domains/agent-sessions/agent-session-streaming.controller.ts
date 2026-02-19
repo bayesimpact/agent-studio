@@ -1,68 +1,67 @@
 import { AgentSessionStreamingRoutes } from "@caseai-connect/api-contracts"
 import type { MessageEvent } from "@nestjs/common"
-import {
-  Controller,
-  ForbiddenException,
-  NotFoundException,
-  Query,
-  Req,
-  Sse,
-  UseGuards,
-} from "@nestjs/common"
+import { Controller, ForbiddenException, Param, Query, Req, Sse, UseGuards } from "@nestjs/common"
 import { Observable } from "rxjs"
-import type { EndpointRequest } from "@/common/context/request.interface"
+import type { EndpointRequestWithAgent } from "@/common/context/request.interface"
+import { ResourceContextGuard } from "@/common/context/resource-context.guard"
+import { CheckPolicy } from "@/common/policies/check-policy.decorator"
 import { JwtAuthGuard } from "@/domains/auth/jwt-auth.guard"
 import { UserGuard } from "@/domains/users/user.guard"
-// biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
-import { AgentSessionsService } from "./agent-sessions.service"
+import { AgentGuard } from "../agents/agent.guard"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
 import { AgentStreamingService } from "./agent-streaming.service"
 
-@UseGuards(JwtAuthGuard, UserGuard)
+@UseGuards(JwtAuthGuard, UserGuard, ResourceContextGuard, AgentGuard)
 @Controller()
 export class AgentSessionStreamingController {
-  constructor(
-    private readonly agentSessionsService: AgentSessionsService,
-    private readonly chatStreamingService: AgentStreamingService,
-  ) {}
+  constructor(private readonly chatStreamingService: AgentStreamingService) {}
 
-  @Sse(AgentSessionStreamingRoutes.streamPlayground.path)
-  streamPlayground(
-    @Req() request: EndpointRequest,
-    @Query("q") userContent: string,
+  @CheckPolicy((policy) => policy.canList())
+  @Sse(AgentSessionStreamingRoutes.stream.path, { method: 0 /* GET */ })
+  stream(
+    @Req() request: EndpointRequestWithAgent,
+    @Query("q") query: string,
+    @Param("sessionId") sessionId: string, // FIXME: use a AgentSessionGuard
   ): Observable<MessageEvent> {
-    if (!userContent || !userContent.trim()) {
-      throw new ForbiddenException("User content must not be empty")
-    }
+    try {
+      const parsedQuery = JSON.parse(query) as typeof AgentSessionStreamingRoutes.stream.request
+      const userContent = parsedQuery.payload.content
+      const documentId = parsedQuery.payload.documentId
+      const organizationId = request.organizationId
+      const projectId = request.project.id
+      const agent = request.agent
 
-    const user = request.user
+      if (!userContent) {
+        throw new ForbiddenException("Missing user content")
+      }
 
-    const sessionId = (request as unknown as { params?: { sessionId?: string } }).params?.sessionId
-    if (!sessionId) {
-      throw new NotFoundException("sessionId is required")
-    }
+      if (typeof userContent === "string" && !userContent.trim()) {
+        throw new ForbiddenException("User content must not be empty")
+      }
 
-    return new Observable<MessageEvent>((subscriber) => {
-      void (async () => {
-        try {
-          const { session, agent } = await this.agentSessionsService.getSessionWithAgentForUser(
-            sessionId,
-            user.id,
-          )
+      return new Observable<MessageEvent>((subscriber) => {
+        void (async () => {
+          try {
+            const events = this.chatStreamingService.streamAgentResponse({
+              connectScope: { organizationId, projectId },
+              agent,
+              sessionId,
+              userContent,
+              documentId,
+            })
 
-          for await (const event of this.chatStreamingService.streamAgentResponse(
-            session,
-            agent,
-            userContent,
-          )) {
-            subscriber.next(event)
+            for await (const event of events) {
+              subscriber.next(event)
+            }
+
+            subscriber.complete()
+          } catch (error) {
+            subscriber.error(error)
           }
-
-          subscriber.complete()
-        } catch (error) {
-          subscriber.error(error)
-        }
-      })()
-    })
+        })()
+      })
+    } catch (_) {
+      throw new ForbiddenException("Invalid query format")
+    }
   }
 }
