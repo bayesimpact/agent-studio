@@ -2,7 +2,7 @@ import { Button } from "@caseai-connect/ui/shad/button"
 import { Spinner } from "@caseai-connect/ui/shad/spinner"
 import { cn } from "@caseai-connect/ui/utils"
 import { AlertCircleIcon, CirclePlusIcon, ExternalLinkIcon } from "lucide-react"
-import { useEffect, useRef } from "react"
+import { useEffect, useRef, useState } from "react"
 import { useTranslation } from "react-i18next"
 import type {
   AgentSessionMessage,
@@ -46,6 +46,8 @@ export function AgentSession({
   const organizationId = useAppSelector(selectCurrentOrganizationId)
   const projectId = useAppSelector(selectCurrentProjectId)
 
+  const [file, setFile] = useState<File>()
+
   const chatSubmitRef = useRef<HTMLButtonElement>(null)
   const scrollToEnd = useScrollToEnd(chatSubmitRef)
 
@@ -57,13 +59,18 @@ export function AgentSession({
   if (!organizationId || !projectId) return null
 
   const handleAttachDocument = (file: File) => {
-    handleSubmit(file.name, file)
+    setFile(file)
   }
 
-  const handleSubmit = (message: string, file?: File) => {
+  const handleUnattachDocument = () => {
+    setFile(undefined)
+  }
+
+  const handleSubmit = (message: string) => {
     const trimedMessage = message.trim()
     if (isStreaming || !trimedMessage) return
     void dispatch(sendMessage({ content: trimedMessage, file }))
+    handleUnattachDocument()
   }
 
   if (isAdminInterface)
@@ -102,6 +109,7 @@ export function AgentSession({
 
                   <AttachDocument
                     onAttach={handleAttachDocument}
+                    onUnattach={handleUnattachDocument}
                     disabled={isStreaming || !session}
                   />
 
@@ -138,6 +146,7 @@ export function AgentSession({
                 </Button>
                 <AttachDocument
                   onAttach={handleAttachDocument}
+                  onUnattach={handleUnattachDocument}
                   disabled={isStreaming || !session}
                 />
                 <Dictaphone disabled={isStreaming || !session} />
