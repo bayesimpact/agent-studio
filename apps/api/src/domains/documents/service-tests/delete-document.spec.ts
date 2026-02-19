@@ -30,7 +30,7 @@ describe("deleteDocument", () => {
     await documentRepository.save(document)
 
     await service.deleteDocument({
-      connectRequiredFields: { organizationId: organization.id, projectId: project.id },
+      connectScope: { organizationId: organization.id, projectId: project.id },
       documentId: document.id,
     })
 
@@ -60,7 +60,7 @@ describe("deleteDocument", () => {
 
     await expect(
       service.deleteDocument({
-        connectRequiredFields: { organizationId: organization.id, projectId: project.id },
+        connectScope: { organizationId: organization.id, projectId: project.id },
         documentId: nonExistentDocumentId,
       }),
     ).rejects.toThrow(NotFoundException)

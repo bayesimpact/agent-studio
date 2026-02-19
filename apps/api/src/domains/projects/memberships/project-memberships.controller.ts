@@ -1,13 +1,13 @@
 import type { ProjectMembershipDto } from "@caseai-connect/api-contracts"
 import { Body, Controller, Delete, Get, Post, Req, UseGuards } from "@nestjs/common"
+import type {
+  EndpointRequestWithProject,
+  EndpointRequestWithProjectMembership,
+} from "@/common/context/request.interface"
 import { CheckPolicy } from "@/common/policies/check-policy.decorator"
 import { JwtAuthGuard } from "@/domains/auth/jwt-auth.guard"
 import { OrganizationGuard } from "@/domains/organizations/organization.guard"
 import { UserGuard } from "@/domains/users/user.guard"
-import type {
-  EndpointRequestWithProject,
-  EndpointRequestWithProjectMembership,
-} from "@/request.interface"
 import { ProjectsGuard } from "../projects.guard"
 import { ProjectsRoutes } from "../projects.routes"
 import type { ProjectMembership } from "./project-membership.entity"

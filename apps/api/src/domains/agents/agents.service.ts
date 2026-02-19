@@ -2,7 +2,7 @@ import { Injectable, NotFoundException, UnprocessableEntityException } from "@ne
 import { InjectRepository } from "@nestjs/typeorm"
 import type { Repository } from "typeorm"
 import { ConnectRepository } from "@/common/entities/connect-repository"
-import type { ConnectRequiredFields } from "@/common/entities/connect-required-fields"
+import type { RequiredConnectScope } from "@/common/entities/connect-required-fields"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
 import { AgentSessionsService } from "@/domains/agent-sessions/agent-sessions.service"
 import { Agent } from "./agent.entity"
@@ -22,11 +22,11 @@ export class AgentsService {
    * Creates a new agent for a project.
    */
   async createAgent({
-    connectRequiredFields,
+    connectScope,
     fields,
   }: {
-    connectRequiredFields: ConnectRequiredFields
-    fields: Pick<ConnectRequiredFields, never> &
+    connectScope: RequiredConnectScope
+    fields: Pick<RequiredConnectScope, never> &
       Pick<Agent, "defaultPrompt" | "name" | "model" | "temperature" | "locale">
   }): Promise<Agent> {
     const { name } = fields
@@ -37,14 +37,14 @@ export class AgentsService {
     }
 
     // Create the agent with defaults
-    return await this.agentConnectRepository.createAndSave(connectRequiredFields, fields)
+    return await this.agentConnectRepository.createAndSave(connectScope, fields)
   }
 
   /**
    * Lists all agents for a project.
    */
-  async listAgents(connectRequiredFields: ConnectRequiredFields): Promise<Agent[]> {
-    return (await this.agentConnectRepository.getMany(connectRequiredFields))?.sort(
+  async listAgents(connectScope: RequiredConnectScope): Promise<Agent[]> {
+    return (await this.agentConnectRepository.getMany(connectScope))?.sort(
       (a, b) => b.createdAt.getTime() - a.createdAt.getTime(),
     )
   }
@@ -53,13 +53,13 @@ export class AgentsService {
    * Finds an agent by its id.
    */
   async findAgentById({
-    connectRequiredFields,
+    connectScope,
     agentId,
   }: {
-    connectRequiredFields: ConnectRequiredFields
+    connectScope: RequiredConnectScope
     agentId: string
   }): Promise<Agent | null> {
-    return this.agentConnectRepository.getOneById(connectRequiredFields, agentId)
+    return this.agentConnectRepository.getOneById(connectScope, agentId)
   }
 
   /**
@@ -68,15 +68,15 @@ export class AgentsService {
    * Deletes playground sessions if configuration fields change.
    */
   async updateAgent({
-    connectRequiredFields,
+    connectScope,
     required,
     fieldsToUpdate,
   }: {
-    connectRequiredFields: ConnectRequiredFields
+    connectScope: RequiredConnectScope
     required: {
       agentId: string
     }
-    fieldsToUpdate: Pick<ConnectRequiredFields, never> &
+    fieldsToUpdate: Pick<RequiredConnectScope, never> &
       Partial<Pick<Agent, "name" | "defaultPrompt" | "model" | "temperature" | "locale">>
   }): Promise<Agent> {
     const { agentId } = required
@@ -88,7 +88,7 @@ export class AgentsService {
     }
 
     // Find the agent
-    const agent = await this.agentConnectRepository.getOneById(connectRequiredFields, agentId)
+    const agent = await this.agentConnectRepository.getOneById(connectScope, agentId)
 
     if (!agent) {
       throw new NotFoundException(`Agent with id ${agentId} not found`)
@@ -128,14 +128,14 @@ export class AgentsService {
    * Deletes an agent.
    */
   async deleteAgent({
-    connectRequiredFields,
+    connectScope,
     agentId,
   }: {
-    connectRequiredFields: ConnectRequiredFields
+    connectScope: RequiredConnectScope
     agentId: string
   }): Promise<void> {
     // Find the agent
-    const agent = await this.agentConnectRepository.getOneById(connectRequiredFields, agentId)
+    const agent = await this.agentConnectRepository.getOneById(connectScope, agentId)
 
     if (!agent) {
       throw new NotFoundException(`Agent with id ${agentId} not found`)
@@ -145,6 +145,6 @@ export class AgentsService {
     await this.agentSessionsService.deleteAllSessionsForAgent(agentId)
 
     // Delete the agent
-    await this.agentConnectRepository.deleteOneById({ connectRequiredFields, id: agent.id })
+    await this.agentConnectRepository.deleteOneById({ connectScope, id: agent.id })
   }
 }

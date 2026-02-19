@@ -1,15 +1,17 @@
 import { Factory } from "fishery"
+import type {
+  EndpointRequest,
+  EndpointRequestWithAgent,
+  EndpointRequestWithDocument,
+  EndpointRequestWithProject,
+  EndpointRequestWithUserMembership,
+} from "@/common/context/request.interface"
+import type { Agent } from "@/domains/agents/agent.entity"
 import type { Document } from "@/domains/documents/document.entity"
 import type { Organization } from "@/domains/organizations/organization.entity"
 import { userMembershipFactory } from "@/domains/organizations/user-membership.factory"
 import type { Project } from "@/domains/projects/project.entity"
 import type { User } from "@/domains/users/user.entity"
-import type {
-  EndpointRequest,
-  EndpointRequestWithDocument,
-  EndpointRequestWithProject,
-  EndpointRequestWithUserMembership,
-} from "@/request.interface"
 
 type EndpointRequestTransientParams = {
   user: User
@@ -84,6 +86,13 @@ type EndpointRequestWithOrganizationAndProjectAndDocumentTransientParams = {
   document: Document
 }
 
+type EndpointRequestWithAgentTransientParams = {
+  organization: Organization
+  user: User
+  project: Project
+  agent: Agent
+}
+
 export const endpointRequestWithOrganizationAndProjectFactory = Factory.define<
   EndpointRequestWithProject,
   EndpointRequestWithOrganizationAndProjectTransientParams
@@ -134,6 +143,34 @@ export const endpointRequestWithOrganizationAndProjectAndDocumentFactory = Facto
   } satisfies EndpointRequestWithDocument
 })
 
+export const endpointRequestWithAgentFactory = Factory.define<
+  EndpointRequestWithAgent,
+  EndpointRequestWithAgentTransientParams
+>(({ transientParams }) => {
+  const organization = transientParams.organization
+  const user = transientParams.user
+  const project = transientParams.project
+  const agent = transientParams.agent
+  const baseRequest = endpointRequestWithOrganizationFactory
+    .transient({ organization, user })
+    .build()
+
+  if (!project) {
+    throw new Error("project transient is required")
+  }
+
+  if (!agent) {
+    throw new Error("agent transient is required")
+  }
+
+  return {
+    ...baseRequest,
+    project,
+    projectMembership: undefined,
+    agent,
+  } satisfies EndpointRequestWithAgent
+})
+
 export const buildEndpointRequestWithOrganizationAndProject = (
   organization: Organization,
   user: User,
@@ -151,4 +188,13 @@ export const buildEndpointRequestWithOrganizationAndProjectAndDocument = (params
   document: Document
 }) => {
   return endpointRequestWithOrganizationAndProjectAndDocumentFactory.transient(params).build()
+}
+
+export const buildEndpointRequestWithAgent = (params: {
+  organization: Organization
+  user: User
+  project: Project
+  agent: Agent
+}) => {
+  return endpointRequestWithAgentFactory.transient(params).build()
 }

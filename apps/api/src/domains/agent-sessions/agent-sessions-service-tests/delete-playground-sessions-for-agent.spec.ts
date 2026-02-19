@@ -1,4 +1,4 @@
-import type { ConnectRequiredFields } from "@/common/entities/connect-required-fields"
+import type { RequiredConnectScope } from "@/common/entities/connect-required-fields"
 import { agentSessionControllerTestSetup } from "./test-setup"
 
 const getTestContext = agentSessionControllerTestSetup()
@@ -6,26 +6,26 @@ const getTestContext = agentSessionControllerTestSetup()
 describe("deletePlaygroundSessionsForAgent", () => {
   it("should delete all playground sessions for an agent", async () => {
     const { service, testAgent, testOrganization, testUser, testProject } = getTestContext()
-    const connectRequiredFields: ConnectRequiredFields = {
+    const connectScope: RequiredConnectScope = {
       organizationId: testOrganization.id,
       projectId: testProject.id,
     }
 
     // Create multiple playground sessions
     const session1 = await service.createPlaygroundSession({
-      connectRequiredFields,
+      connectScope,
       agentId: testAgent.id,
       userId: testUser.id,
     })
     const session2 = await service.createPlaygroundSession({
-      connectRequiredFields,
+      connectScope,
       agentId: testAgent.id,
       userId: testUser.id,
     })
 
     // Create a production session (should not be deleted)
     const productionSession = await service.createProductionSession({
-      connectRequiredFields,
+      connectScope,
       agentId: testAgent.id,
       userId: testUser.id,
     })

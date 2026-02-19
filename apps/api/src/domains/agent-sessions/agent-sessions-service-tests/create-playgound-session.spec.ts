@@ -1,4 +1,4 @@
-import type { ConnectRequiredFields } from "@/common/entities/connect-required-fields"
+import type { RequiredConnectScope } from "@/common/entities/connect-required-fields"
 import { agentSessionControllerTestSetup } from "./test-setup"
 
 const getTestContext = agentSessionControllerTestSetup()
@@ -6,13 +6,13 @@ const getTestContext = agentSessionControllerTestSetup()
 describe("createPlaygroundSession", () => {
   it("should create a new playground session", async () => {
     const { service, testAgent, testUser, testOrganization, testProject } = getTestContext()
-    const connectRequiredFields: ConnectRequiredFields = {
+    const connectScope: RequiredConnectScope = {
       organizationId: testOrganization.id,
       projectId: testProject.id,
     }
 
     const session = await service.createPlaygroundSession({
-      connectRequiredFields,
+      connectScope,
       agentId: testAgent.id,
       userId: testUser.id,
     })

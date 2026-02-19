@@ -1,4 +1,4 @@
-import type { EndpointRequestWithProject } from "@/request.interface"
+import type { EndpointRequestWithProject } from "@/common/context/request.interface"
 
 export const requestToProjectPolicyContext = (request: EndpointRequestWithProject) => {
   return {

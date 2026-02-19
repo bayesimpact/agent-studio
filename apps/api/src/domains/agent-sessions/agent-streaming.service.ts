@@ -29,15 +29,15 @@ export class AgentStreamingService {
     agent: Agent,
     userContent: string,
   ): AsyncGenerator<MessageEvent, void, unknown> {
-    //fixme DOO: pass connectRequiredFields
-    const connectRequiredFields = {
+    // FIXME: pass through connectScope
+    const connectScope = {
       organizationId: session.organizationId,
       projectId: session.projectId,
     }
     // Step 1: Prepare for streaming (persist user message + empty assistant message)
     const { session: updatedSession, assistantMessageId } =
       await this.agentSessionsService.prepareForStreaming({
-        connectRequiredFields,
+        connectScope,
         sessionId: session.id,
         userContent: userContent,
       })

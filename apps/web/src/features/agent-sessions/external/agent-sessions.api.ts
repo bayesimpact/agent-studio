@@ -9,32 +9,66 @@ import type { AgentSession, AgentSessionMessage } from "../agent-sessions.models
 import type { IAgentSessionsSpi } from "../agent-sessions.spi"
 
 export default {
-  getAllPlayground: async (agentId: string) => {
+  getAllPlaygroundSessions: async ({
+    organizationId,
+    projectId,
+    agentId,
+  }: {
+    organizationId: string
+    projectId: string
+    agentId: string
+  }) => {
     const axios = getAxiosInstance()
-    const response = await axios.get<typeof AgentSessionsRoutes.getAllPlayground.response>(
-      AgentSessionsRoutes.getAllPlayground.getPath({ agentId }),
+    const response = await axios.get<typeof AgentSessionsRoutes.getAllPlaygroundSessions.response>(
+      AgentSessionsRoutes.getAllPlaygroundSessions.getPath({ organizationId, projectId, agentId }),
     )
     return response.data.data.map(fromDto)
   },
-  getAllApp: async (agentId: string) => {
+  getAllAppSessions: async ({
+    organizationId,
+    projectId,
+    agentId,
+  }: {
+    organizationId: string
+    projectId: string
+    agentId: string
+  }) => {
     const axios = getAxiosInstance()
-    const response = await axios.get<typeof AgentSessionsRoutes.getAllApp.response>(
-      AgentSessionsRoutes.getAllApp.getPath({ agentId }),
+    const response = await axios.get<typeof AgentSessionsRoutes.getAllAppSessions.response>(
+      AgentSessionsRoutes.getAllAppSessions.getPath({ organizationId, projectId, agentId }),
     )
     return response.data.data.map(fromDto)
   },
-  createPlaygroundSession: async (agentId: string) => {
+  createPlaygroundSession: async ({
+    organizationId,
+    projectId,
+    agentId,
+  }: {
+    organizationId: string
+    projectId: string
+    agentId: string
+  }) => {
     const axios = getAxiosInstance()
     const response = await axios.post<typeof AgentSessionsRoutes.createPlaygroundSession.response>(
-      AgentSessionsRoutes.createPlaygroundSession.getPath({ agentId }),
+      AgentSessionsRoutes.createPlaygroundSession.getPath({ organizationId, projectId, agentId }),
     )
 
     return fromDto(response.data.data)
   },
-  createAppSession: async ({ agentId, agentSessionType }) => {
+  createAppSession: async ({
+    organizationId,
+    projectId,
+    agentId,
+    agentSessionType,
+  }: {
+    organizationId: string
+    projectId: string
+    agentId: string
+    agentSessionType: "app-private"
+  }) => {
     const axios = getAxiosInstance()
     const response = await axios.post<typeof AgentSessionsRoutes.createAppSession.response>(
-      AgentSessionsRoutes.createAppSession.getPath({ agentId }),
+      AgentSessionsRoutes.createAppSession.getPath({ organizationId, projectId, agentId }),
       {
         payload: { agentSessionType },
       } satisfies typeof AgentSessionsRoutes.createAppSession.request,

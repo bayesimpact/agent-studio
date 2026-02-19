@@ -1,6 +1,7 @@
+import { randomUUID } from "node:crypto"
 import { ForbiddenException, NotFoundException } from "@nestjs/common/exceptions"
 
-import type { ConnectRequiredFields } from "@/common/entities/connect-required-fields"
+import type { RequiredConnectScope } from "@/common/entities/connect-required-fields"
 import { userMembershipFactory } from "@/domains/organizations/user-membership.factory"
 import { createChitChatConversation } from "../agent-messages.factory"
 import { agentSessionControllerTestSetup } from "./test-setup"
@@ -18,7 +19,7 @@ describe("listMessagesForSession", () => {
       agentMessageRepository,
       testProject,
     } = getTestContext()
-    const connectRequiredFields: ConnectRequiredFields = {
+    const connectScope: RequiredConnectScope = {
       organizationId: testOrganization.id,
       projectId: testProject.id,
     }
@@ -31,7 +32,7 @@ describe("listMessagesForSession", () => {
     )
 
     const session = await service.createPlaygroundSession({
-      connectRequiredFields,
+      connectScope,
       agentId: testAgent.id,
       userId: testUser.id,
     })
@@ -57,20 +58,20 @@ describe("listMessagesForSession", () => {
     ).rejects.toThrow(NotFoundException)
   })
 
-  it("should throw ForbiddenException when user is not a member of the organization", async () => {
+  it("should throw ForbiddenException when user does not own the session", async () => {
     const { service, testAgent, testUser, testOrganization, testProject } = getTestContext()
-    const connectRequiredFields: ConnectRequiredFields = {
+    const connectScope: RequiredConnectScope = {
       organizationId: testOrganization.id,
       projectId: testProject.id,
     }
 
     const session = await service.createPlaygroundSession({
-      connectRequiredFields,
+      connectScope,
       agentId: testAgent.id,
       userId: testUser.id,
     })
 
-    await expect(service.listMessagesForSession(session.id, testUser.id)).rejects.toThrow(
+    await expect(service.listMessagesForSession(session.id, randomUUID())).rejects.toThrow(
       ForbiddenException,
     )
   })

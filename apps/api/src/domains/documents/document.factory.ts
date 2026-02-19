@@ -2,12 +2,12 @@ import { randomUUID } from "node:crypto"
 import { MimeTypes } from "@caseai-connect/api-contracts"
 import { Factory } from "fishery"
 import type { Repository } from "typeorm"
-import type { ConnectRequiredTransientParams } from "@/common/entities/connect-required-fields"
+import type { RequiredScopeTransientParams } from "@/common/entities/connect-required-fields"
 import type { Organization } from "@/domains/organizations/organization.entity"
 import type { Project } from "@/domains/projects/project.entity"
 import type { Document } from "./document.entity"
 
-type DocumentTransientParams = ConnectRequiredTransientParams
+type DocumentTransientParams = RequiredScopeTransientParams
 
 class DocumentFactory extends Factory<Document, DocumentTransientParams> {}
 
