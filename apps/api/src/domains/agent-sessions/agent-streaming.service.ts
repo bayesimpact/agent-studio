@@ -142,7 +142,7 @@ export class AgentStreamingService {
             systemPrompt: this.generateMasterPrompt({
               ...agent,
               defaultPrompt:
-                "You are an assistant and your role is to analyze documents. What is the document file about in one sentence?",
+                "You are an assistant and your role is to analyze documents (image or pdf). Answer the user's question based on the content of the file they uploaded. If you don't know the answer, say you don't know.",
             }),
           },
           metadata: llmMetadata,
