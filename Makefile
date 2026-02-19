@@ -15,14 +15,15 @@ zone = europe-west9
 langfuseUrl = https://your-langfuse-instance.example.com
 langfusePk = pk-lf-YOUR_LANGFUSE_PK
 secretsPrefix = CONNECT_
-postHogHost=https://eu.i.posthog.com
+postHogHost = https://eu.i.posthog.com
 addCloudSqlInstances=YOUR_PROJECT:YOUR_REGION:YOUR_INSTANCE
 cloudSqlProxyPort = 5433
-auth0OrganizationId=org_YOUR_ORG_ID
-auth0Audience=https://your-tenant.auth0.com/api/v2/
-auth0IssuerUrl=https://your-tenant.auth0.com/
-auth0M2MClientId=YOUR_AUTH0_M2M_CLIENT_ID
-auth0ClientId=YOUR_AUTH0_CLIENT_ID
+auth0OrganizationId = org_YOUR_ORG_ID
+auth0Audience = https://your-tenant.auth0.com/api/v2/
+auth0IssuerUrl = https://your-tenant.auth0.com/
+auth0M2MClientId = YOUR_AUTH0_M2M_CLIENT_ID
+auth0ClientId = YOUR_AUTH0_CLIENT_ID
+localStorageServerBaseUrl = https://connect.localhost:3000
 endif
 
 # ==============================================================================
@@ -128,6 +129,7 @@ deploy-only:
 	--set-env-vars=TZ=UTC \
 	--set-env-vars=AUTH0_ISSUER_URL=${auth0IssuerUrl},AUTH0_AUDIENCE=${auth0Audience} \
 	--set-env-vars=AUTH0_ORGANIZATION_ID=${auth0OrganizationId},AUTH0_CLIENT_ID=${auth0ClientId},AUTH0_M2M_CLIENT_ID=${auth0M2MClientId} \
+	--set-env-vars=LOCAL_STORAGE_SERVER_BASE_URL=${localStorageServerBaseUrl} \
   --set-env-vars=LANGFUSE_PK=${langfusePk},LANGFUSE_BASE_URL=${langfuseUrl},LOCATION=$(location) \
   --set-env-vars=DATABASE_HOST=/cloudsql/${addCloudSqlInstances},DATABASE_USERNAME=connect_admin,DATABASE_NAME=connect \
 	--region=${zone} \
