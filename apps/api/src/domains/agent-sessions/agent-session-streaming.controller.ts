@@ -23,7 +23,8 @@ export class AgentSessionStreamingController {
   stream(
     @Req() request: EndpointRequestWithAgent,
     @Query("q") query: string,
-    @Param("sessionId") sessionId: string, // FIXME: use a AgentSessionGuard
+    // FIXME: use a AgentSessionGuard
+    @Param("sessionId") sessionId: string,
   ): Observable<MessageEvent> {
     try {
       const parsedQuery = JSON.parse(query) as typeof AgentSessionStreamingRoutes.stream.request
