@@ -75,13 +75,28 @@ export default {
     )
     return fromDto(response.data.data)
   },
-  getMessages: async (sessionId: string) => {
+  getMessages: async ({
+    organizationId,
+    projectId,
+    agentId,
+    agentSessionId,
+  }: {
+    organizationId: string
+    projectId: string
+    agentId: string
+    agentSessionId: string
+  }) => {
     const axios = getAxiosInstance()
     const response = await axios.get<typeof AgentSessionMessagesRoutes.listMessages.response>(
-      AgentSessionMessagesRoutes.listMessages.getPath({ sessionId }),
+      AgentSessionMessagesRoutes.listMessages.getPath({
+        organizationId,
+        projectId,
+        agentId,
+        agentSessionId,
+      }),
     )
 
-    return fromMessagesDto(response.data.data.messages)
+    return fromMessagesDto(response.data.data)
   },
 } satisfies IAgentSessionsSpi
 

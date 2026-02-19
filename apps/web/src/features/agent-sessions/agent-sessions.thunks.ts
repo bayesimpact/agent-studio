@@ -57,8 +57,26 @@ export const createAgentSession = createAsyncThunk<
 
 export const loadSessionMessages = createAsyncThunk<AgentSessionMessage[], string, ThunkConfig>(
   "agentSession/loadSessionMessages",
-  async (sessionId, { extra: { services } }) => {
-    return services.agentSessions.getMessages(sessionId)
+  async (agentSessionId, { extra: { services }, getState }) => {
+    const state = getState()
+    const organizationId = selectCurrentOrganizationId(state)
+    if (!organizationId) {
+      throw new Error("No current organization ID found")
+    }
+    const projectId = selectCurrentProjectId(state)
+    if (!projectId) {
+      throw new Error("No current project ID found")
+    }
+    const agentId = selectCurrentAgentId(state)
+    if (!agentId) {
+      throw new Error("No current agent ID found")
+    }
+    return services.agentSessions.getMessages({
+      organizationId,
+      projectId,
+      agentId,
+      agentSessionId,
+    })
   },
 )
 

@@ -22,7 +22,8 @@
     "description": "Description",
     "projects": "Projects",
     "open": "Open",
-    "chatSessions": "Chat Sessions"
+    "chatSessions": "Chat Sessions",
+    "viewAttachment": "View Attachment"
   },
   "project": {
     "createButton": {

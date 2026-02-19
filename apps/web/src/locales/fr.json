@@ -22,7 +22,8 @@
     "description": "Description",
     "projects": "Projets",
     "open": "Ouvrir",
-    "chatSessions": "Sessions de chat"
+    "chatSessions": "Sessions de chat",
+    "viewAttachment": "Voir la pièce jointe"
   },
   "project": {
     "createButton": {

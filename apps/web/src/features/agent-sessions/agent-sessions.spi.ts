@@ -22,5 +22,10 @@ export interface IAgentSessionsSpi {
     agentId: string
     agentSessionType: "app-private"
   }) => Promise<AgentSession>
-  getMessages: (sessionId: string) => Promise<AgentSessionMessage[]>
+  getMessages: (params: {
+    organizationId: string
+    projectId: string
+    agentId: string
+    agentSessionId: string
+  }) => Promise<AgentSessionMessage[]>
 }

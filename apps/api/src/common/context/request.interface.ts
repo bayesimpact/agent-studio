@@ -1,3 +1,4 @@
+import type { AgentSession } from "@/domains/agent-sessions/agent-session.entity"
 import type { Agent } from "@/domains/agents/agent.entity"
 import type { Document } from "@/domains/documents/document.entity"
 import type { UserMembership } from "@/domains/organizations/user-membership.entity"
@@ -40,4 +41,7 @@ export interface EndpointRequestWithProjectMembership extends EndpointRequestWit
 
 export interface EndpointRequestWithAgent extends EndpointRequestWithProject {
   agent: Agent
+}
+export interface EndpointRequestWithAgentSession extends EndpointRequestWithAgent {
+  agentSession: AgentSession
 }

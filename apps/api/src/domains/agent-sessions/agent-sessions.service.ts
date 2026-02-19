@@ -1,12 +1,10 @@
-import type { AgentSessionMessageDto } from "@caseai-connect/api-contracts"
-import { ForbiddenException, Injectable, NotFoundException } from "@nestjs/common"
+import { Injectable, NotFoundException } from "@nestjs/common"
 import { InjectRepository } from "@nestjs/typeorm"
 import type { Repository } from "typeorm"
 import { v4 } from "uuid"
 
 import { ConnectRepository } from "@/common/entities/connect-repository"
 import type { RequiredConnectScope } from "@/common/entities/connect-required-fields"
-import { Agent } from "@/domains/agents/agent.entity"
 import { AgentMessage } from "./agent-message.entity"
 import { AgentSession, type AgentSessionType } from "./agent-session.entity"
 
@@ -19,8 +17,6 @@ export class AgentSessionsService {
     agentSessionRepository: Repository<AgentSession>,
     @InjectRepository(AgentMessage)
     agentMessageRepository: Repository<AgentMessage>,
-    @InjectRepository(Agent)
-    private readonly agentRepository: Repository<Agent>,
   ) {
     this.agentSessionRepository = agentSessionRepository
     this.agentMessageRepository = agentMessageRepository
@@ -39,31 +35,11 @@ export class AgentSessionsService {
   private readonly agentSessionConnectRepository: ConnectRepository<AgentSession>
   private readonly agentMessageConnectRepository: ConnectRepository<AgentMessage>
 
-  /**
-   * Returns messages for a session after verifying the user owns the session.
-   */
-  async listMessagesForSession(
-    sessionId: string,
-    userId: string,
-  ): Promise<AgentSessionMessageDto[]> {
-    const session = await this.agentSessionRepository.findOne({
-      where: { id: sessionId },
-    })
-
-    if (!session) {
-      throw new NotFoundException(`AgentSession with id ${sessionId} not found`)
-    }
-
-    if (session.userId !== userId) {
-      throw new ForbiddenException("User does not own this session")
-    }
-
-    const messages = await this.agentMessageRepository.find({
-      where: { sessionId },
+  async listMessagesForSession(agentSessionId: string): Promise<AgentMessage[]> {
+    return this.agentMessageRepository.find({
+      where: { sessionId: agentSessionId },
       order: { createdAt: "ASC" },
     })
-
-    return messages.map((message) => this.toDto(message))
   }
 
   async getAllSessionsForAgent({
@@ -332,22 +308,6 @@ export class AgentSessionsService {
     const elapsed = now.getTime() - startedAt.getTime()
 
     return elapsed > this.STREAM_TIMEOUT_MS
-  }
-
-  /**
-   * Converts ChatMessage entity to DTO
-   */
-  private toDto(message: AgentMessage): AgentSessionMessageDto {
-    return {
-      id: message.id,
-      role: message.role,
-      content: message.content,
-      status: message.status ?? undefined,
-      createdAt: message.createdAt.toISOString(),
-      startedAt: message.startedAt?.toISOString(),
-      completedAt: message.completedAt?.toISOString(),
-      toolCalls: message.toolCalls ?? undefined,
-    }
   }
 
   /**

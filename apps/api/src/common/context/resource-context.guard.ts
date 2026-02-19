@@ -16,13 +16,21 @@ import {
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
 import { AgentContextResolver } from "./resolvers/agent-context.resolver"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
+import { AgentSessionContextResolver } from "./resolvers/agent-session-context.resolver"
+// biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
 import { DocumentContextResolver } from "./resolvers/document-context.resolver"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
 import { OrganizationContextResolver } from "./resolvers/organization-context.resolver"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
 import { ProjectContextResolver } from "./resolvers/project-context.resolver"
 
-const RESOLUTION_ORDER: ContextResource[] = ["organization", "project", "agent", "document"]
+const RESOLUTION_ORDER: ContextResource[] = [
+  "organization",
+  "project",
+  "agent",
+  "agentSession",
+  "document",
+]
 
 @Injectable()
 export class ResourceContextGuard implements CanActivate {
@@ -33,6 +41,7 @@ export class ResourceContextGuard implements CanActivate {
     @Optional() organizationContextResolver?: OrganizationContextResolver,
     @Optional() projectContextResolver?: ProjectContextResolver,
     @Optional() agentContextResolver?: AgentContextResolver,
+    @Optional() agentSessionContextResolver?: AgentSessionContextResolver,
     @Optional() documentContextResolver?: DocumentContextResolver,
   ) {
     const resolverEntries: Array<[ContextResource, ContextResolver]> = []
@@ -45,10 +54,12 @@ export class ResourceContextGuard implements CanActivate {
     if (agentContextResolver) {
       resolverEntries.push([agentContextResolver.resource, agentContextResolver])
     }
+    if (agentSessionContextResolver) {
+      resolverEntries.push([agentSessionContextResolver.resource, agentSessionContextResolver])
+    }
     if (documentContextResolver) {
       resolverEntries.push([documentContextResolver.resource, documentContextResolver])
     }
-
     this.resolverMap = new Map(resolverEntries)
   }
 
