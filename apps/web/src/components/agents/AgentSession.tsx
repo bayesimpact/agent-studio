@@ -1,7 +1,13 @@
 import { Button } from "@caseai-connect/ui/shad/button"
 import { Spinner } from "@caseai-connect/ui/shad/spinner"
 import { cn } from "@caseai-connect/ui/utils"
-import { AlertCircleIcon, CirclePlusIcon, ExternalLinkIcon } from "lucide-react"
+import {
+  AlertCircleIcon,
+  CirclePlusIcon,
+  ExternalLinkIcon,
+  FileCheckIcon,
+  XIcon,
+} from "lucide-react"
 import { useEffect, useRef, useState } from "react"
 import { useTranslation } from "react-i18next"
 import type {
@@ -107,11 +113,18 @@ export function AgentSession({
                     <CirclePlusIcon />
                   </Button>
 
-                  <AttachDocument
-                    onAttach={handleAttachDocument}
-                    onUnattach={handleUnattachDocument}
-                    disabled={isStreaming || !session}
-                  />
+                  <div className="flex items-center gap-1">
+                    <AttachDocument
+                      onAttach={handleAttachDocument}
+                      disabled={isStreaming || !session}
+                    />
+                    {file && (
+                      <Button variant="default" onClick={handleUnattachDocument}>
+                        <FileCheckIcon className="size-4" /> {file?.name}
+                        <XIcon className="size-4" />
+                      </Button>
+                    )}
+                  </div>
 
                   <Dictaphone disabled={isStreaming || !session} />
                 </div>
@@ -144,11 +157,20 @@ export function AgentSession({
                 <Button variant="secondary" disabled={isStreaming || !session}>
                   <CirclePlusIcon />
                 </Button>
-                <AttachDocument
-                  onAttach={handleAttachDocument}
-                  onUnattach={handleUnattachDocument}
-                  disabled={isStreaming || !session}
-                />
+
+                <div className="flex items-center gap-1">
+                  <AttachDocument
+                    onAttach={handleAttachDocument}
+                    disabled={isStreaming || !session}
+                  />
+                  {file && (
+                    <Button variant="default" onClick={handleUnattachDocument}>
+                      <FileCheckIcon className="size-4" /> {file?.name}
+                      <XIcon className="size-4" />
+                    </Button>
+                  )}
+                </div>
+
                 <Dictaphone disabled={isStreaming || !session} />
               </div>
               <ChatSubmit ref={chatSubmitRef} variant="ghost" disabled={isStreaming || !session} />
