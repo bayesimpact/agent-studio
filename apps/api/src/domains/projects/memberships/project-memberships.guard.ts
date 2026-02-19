@@ -7,9 +7,9 @@ import {
 } from "@nestjs/common"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
 import { Reflector } from "@nestjs/core"
+import type { EndpointRequestWithProjectMembership } from "@/common/context/request.interface"
 import { AUTH_ERRORS } from "@/common/errors/auth-errors"
 import { CHECK_POLICY_KEY, type PolicyHandler } from "@/common/policies/check-policy.decorator"
-import type { EndpointRequestWithProjectMembership } from "@/request.interface"
 import { requestToProjectPolicyContext } from "../helpers"
 import type { ProjectMembership } from "./project-membership.entity"
 import { ProjectMembershipPolicy } from "./project-membership.policy"

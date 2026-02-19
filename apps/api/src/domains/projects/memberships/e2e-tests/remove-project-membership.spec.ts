@@ -58,7 +58,10 @@ describe("Projects - removeProjectMembership", () => {
     auth0Id = user.auth0Id
 
     // Create an invited user and membership
-    const { membership, invitedUser } = await createProjectMembership({ repositories, project })
+    const { membership, invitedUser } = await createProjectMembership({
+      repositories,
+      project,
+    })
     membershipId = membership.id
 
     return { organization, project, user, invitedUser, membership }

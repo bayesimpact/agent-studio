@@ -36,11 +36,15 @@ export class ProjectScopedPolicy<T> extends BasePolicy<T> {
     return this.doesResourceBelongToProject() && this.canAccessProject()
   }
 
-  private canAccessProject(): boolean {
-    return this.isAdminOrOwner() || this.projectMembership?.projectId === this.project.id
+  protected canAccessProject(): boolean {
+    return this.isAdminOrOwner() || this.isMemberOfProject()
   }
 
-  private doesResourceBelongToProject(): boolean {
+  protected isMemberOfProject(): boolean {
+    return this.projectMembership?.projectId === this.project.id
+  }
+
+  protected doesResourceBelongToProject(): boolean {
     if (!this.entity) return false
 
     // Ensure resource is an object (not a primitive) before using 'in' operator

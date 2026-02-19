@@ -55,8 +55,8 @@ describe("ProjectMembershipsService", () => {
 
   describe("findById", () => {
     it("should return a membership by its ID", async () => {
-      const { project } = await createOrganizationWithProject(repositories)
-      const { membership } = await createProjectMembership({ repositories, project })
+      const { organization, project } = await createOrganizationWithProject(repositories)
+      const { membership } = await createProjectMembership({ repositories, organization, project })
 
       const result = await service.findById(membership.id)
 
@@ -80,8 +80,8 @@ describe("ProjectMembershipsService", () => {
     })
 
     it("should return memberships with user relations", async () => {
-      const { project } = await createOrganizationWithProject(repositories)
-      await createProjectMembership({ repositories, project })
+      const { organization, project } = await createOrganizationWithProject(repositories)
+      await createProjectMembership({ repositories, organization, project })
 
       const result = await service.listProjectMemberships(project.id)
 
@@ -92,12 +92,12 @@ describe("ProjectMembershipsService", () => {
     })
 
     it("should return memberships ordered by createdAt DESC", async () => {
-      const { project } = await createOrganizationWithProject(repositories)
+      const { organization, project } = await createOrganizationWithProject(repositories)
 
       const user1 = { email: "first@example.com", name: "First User" }
-      await createProjectMembership({ repositories, project, user: user1 })
+      await createProjectMembership({ repositories, organization, project, user: user1 })
       const user2 = { email: "second@example.com", name: "Second User" }
-      await createProjectMembership({ repositories, project, user: user2 })
+      await createProjectMembership({ repositories, organization, project, user: user2 })
 
       const result = await service.listProjectMemberships(project.id)
 
@@ -148,10 +148,10 @@ describe("ProjectMembershipsService", () => {
     })
 
     it("should skip if user is already a member", async () => {
-      const { project } = await createOrganizationWithProject(repositories)
+      const { organization, project } = await createOrganizationWithProject(repositories)
 
       const email = "already@example.com"
-      await createProjectMembership({ repositories, project, user: { email } })
+      await createProjectMembership({ repositories, organization, project, user: { email } })
 
       const result = await service.inviteProjectMembers(
         project.id,
@@ -210,10 +210,10 @@ describe("ProjectMembershipsService", () => {
     })
 
     it("should not call invitationSender.sendInvitation for skipped duplicates", async () => {
-      const { project } = await createOrganizationWithProject(repositories)
+      const { organization, project } = await createOrganizationWithProject(repositories)
 
       const email = "already@example.com"
-      await createProjectMembership({ repositories, project, user: { email } })
+      await createProjectMembership({ repositories, organization, project, user: { email } })
 
       await service.inviteProjectMembers(project.id, ["already@example.com"], "Admin")
 

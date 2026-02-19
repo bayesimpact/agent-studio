@@ -153,7 +153,7 @@ describe("Project Memberships - Auth", () => {
       const { organization, project } = await createContextForRole(role)
 
       // Create an invited user and membership for the project
-      const { membership } = await createProjectMembership({ repositories, project })
+      const { membership } = await createProjectMembership({ repositories, organization, project })
       membershipId = membership.id
 
       return { organization, project, membership }

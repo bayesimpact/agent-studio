@@ -1,9 +1,9 @@
 import { InvitationsRoutes } from "@caseai-connect/api-contracts"
 import { Body, Controller, Post, Req, UseGuards } from "@nestjs/common"
+import type { JwtPayload } from "@/common/context/request.interface"
 import { JwtAuthGuard } from "@/domains/auth/jwt-auth.guard"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
 import { ProjectMembershipsService } from "@/domains/projects/memberships/project-memberships.service"
-import type { JwtPayload } from "@/request.interface"
 
 /**
  * Handles invitation acceptance.

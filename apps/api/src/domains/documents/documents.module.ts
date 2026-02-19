@@ -2,21 +2,27 @@ import { join } from "node:path"
 import { Module } from "@nestjs/common"
 import { ServeStaticModule } from "@nestjs/serve-static"
 import { TypeOrmModule } from "@nestjs/typeorm"
+import { DocumentContextResolver } from "@/common/context/resolvers/document-context.resolver"
+import { OrganizationContextResolver } from "@/common/context/resolvers/organization-context.resolver"
+import { ProjectContextResolver } from "@/common/context/resolvers/project-context.resolver"
+import { ResourceContextGuard } from "@/common/context/resource-context.guard"
 import { AuthModule } from "@/domains/auth/auth.module"
 import { Organization } from "@/domains/organizations/organization.entity"
 import { OrganizationsModule } from "@/domains/organizations/organizations.module"
 import { UserMembership } from "@/domains/organizations/user-membership.entity"
+import { ProjectMembership } from "@/domains/projects/memberships/project-membership.entity"
 import { Project } from "@/domains/projects/project.entity"
 import { ProjectsModule } from "@/domains/projects/projects.module"
 import { UsersModule } from "@/domains/users/users.module"
 import { Document } from "./document.entity"
 import { DocumentsController } from "./documents.controller"
+import { DocumentsGuard } from "./documents.guard"
 import { DocumentsService } from "./documents.service"
 import { StorageModule } from "./storage/storage.module"
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Document, Project, Organization, UserMembership]),
+    TypeOrmModule.forFeature([Document, Project, Organization, UserMembership, ProjectMembership]),
     // Only serve static files in development/local environment
     ...(process.env.NODE_ENV !== "production"
       ? [
@@ -37,7 +43,14 @@ import { StorageModule } from "./storage/storage.module"
     AuthModule,
     StorageModule,
   ],
-  providers: [DocumentsService],
+  providers: [
+    DocumentsService,
+    DocumentsGuard,
+    ResourceContextGuard,
+    OrganizationContextResolver,
+    ProjectContextResolver,
+    DocumentContextResolver,
+  ],
   controllers: [DocumentsController],
   exports: [DocumentsService],
 })

@@ -1,13 +1,13 @@
 import { randomUUID } from "node:crypto"
 import { Factory } from "fishery"
 import type { Repository } from "typeorm"
-import type { ConnectRequiredTransientParams } from "@/common/entities/connect-required-fields"
+import type { RequiredScopeTransientParams } from "@/common/entities/connect-required-fields"
 import type { Organization } from "@/domains/organizations/organization.entity"
 import type { Project } from "@/domains/projects/project.entity"
 import type { AgentMessage } from "./agent-message.entity"
 import type { AgentSession } from "./agent-session.entity"
 
-type AgentMessageTransientParams = ConnectRequiredTransientParams & {
+type AgentMessageTransientParams = RequiredScopeTransientParams & {
   session: AgentSession
 }
 

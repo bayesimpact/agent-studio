@@ -1,10 +1,10 @@
 import { randomUUID } from "node:crypto"
 import { AgentLocale, AgentModel } from "@caseai-connect/api-contracts"
 import { Factory } from "fishery"
-import type { ConnectRequiredTransientParams } from "@/common/entities/connect-required-fields"
+import type { RequiredScopeTransientParams } from "@/common/entities/connect-required-fields"
 import type { Agent } from "./agent.entity"
 
-type AgentTransientParams = ConnectRequiredTransientParams
+type AgentTransientParams = RequiredScopeTransientParams
 
 class AgentFactory extends Factory<Agent, AgentTransientParams> {}
 

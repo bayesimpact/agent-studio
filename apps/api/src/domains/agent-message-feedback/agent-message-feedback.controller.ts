@@ -3,24 +3,25 @@ import {
   AgentMessageFeedbackRoutes,
 } from "@caseai-connect/api-contracts"
 import { Body, Controller, Get, Param, Post, Req, UseGuards } from "@nestjs/common"
+import type {
+  EndpointRequestWithAgent,
+  EndpointRequestWithProject,
+} from "@/common/context/request.interface"
+import { getRequiredConnectScope } from "@/common/context/request-context.helpers"
+import { AddContext, RequireContext } from "@/common/context/require-context.decorator"
+import { ResourceContextGuard } from "@/common/context/resource-context.guard"
 import { CheckPolicy } from "@/common/policies/check-policy.decorator"
 import { JwtAuthGuard } from "@/domains/auth/jwt-auth.guard"
-import { OrganizationGuard } from "@/domains/organizations/organization.guard"
-import { ProjectsGuard } from "@/domains/projects/projects.guard"
 import { UserGuard } from "@/domains/users/user.guard"
 import { getTraceUrl } from "@/external/langfuse/langfuse-helper"
-import {
-  type EndpointRequestWithAgent,
-  type EndpointRequestWithProject,
-  toConnectRequiredFields,
-} from "@/request.interface"
 import type { AgentMessage } from "../agent-sessions/agent-message.entity"
 import { AgentGuard } from "../agents/agent.guard"
 import type { AgentMessageFeedback } from "./agent-message-feedback.entity"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
 import { AgentMessageFeedbackService } from "./agent-message-feedback.service"
 
-@UseGuards(JwtAuthGuard, UserGuard, OrganizationGuard, ProjectsGuard)
+@UseGuards(JwtAuthGuard, UserGuard, ResourceContextGuard)
+@RequireContext("organization", "project")
 @Controller()
 export class AgentMessageFeedbackController {
   constructor(private readonly feedbackService: AgentMessageFeedbackService) {}
@@ -36,7 +37,7 @@ export class AgentMessageFeedbackController {
     const user = request.user
 
     const feedback = await this.feedbackService.createFeedback({
-      connectRequiredFields: toConnectRequiredFields(request),
+      connectScope: getRequiredConnectScope(request),
       userId: user.id,
       agentMessageId,
       content: payload.content,
@@ -48,13 +49,14 @@ export class AgentMessageFeedbackController {
   }
 
   @UseGuards(AgentGuard)
+  @AddContext("agent")
   @CheckPolicy((policy) => policy.canList())
   @Get(AgentMessageFeedbackRoutes.getAll.path)
   async getAll(
     @Req() request: EndpointRequestWithAgent,
   ): Promise<typeof AgentMessageFeedbackRoutes.getAll.response> {
     const data = await this.feedbackService.listFeedbacksForAgent({
-      connectRequiredFields: toConnectRequiredFields(request),
+      connectScope: getRequiredConnectScope(request),
       agentId: request.agent.id,
     })
 

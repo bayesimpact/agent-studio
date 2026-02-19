@@ -1,4 +1,4 @@
-import type { ConnectRequiredFields } from "@/common/entities/connect-required-fields"
+import type { RequiredConnectScope } from "@/common/entities/connect-required-fields"
 import { agentFactory } from "@/domains/agents/agent.factory"
 import { agentSessionFactory } from "../agent-session.factory"
 import { agentSessionControllerTestSetup } from "./test-setup"
@@ -16,14 +16,14 @@ describe("deleteExpiredPlaygroundSessions", () => {
       agentRepository,
       agentSessionRepository,
     } = getTestContext()
-    const connectRequiredFields: ConnectRequiredFields = {
+    const connectScope: RequiredConnectScope = {
       organizationId: testOrganization.id,
       projectId: testProject.id,
     }
 
     // Create a non-expired session first
     const validSession = await service.createPlaygroundSession({
-      connectRequiredFields,
+      connectScope,
       agentId: testAgent.id,
       userId: testUser.id,
     })

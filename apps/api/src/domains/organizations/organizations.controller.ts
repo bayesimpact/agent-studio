@@ -1,7 +1,7 @@
 import { Body, Controller, Post, Req, UseGuards } from "@nestjs/common"
+import type { EndpointRequest } from "@/common/context/request.interface"
 import { JwtAuthGuard } from "@/domains/auth/jwt-auth.guard"
 import { UserGuard } from "@/domains/users/user.guard"
-import type { EndpointRequest } from "@/request.interface"
 import { OrganizationsRoutes } from "./organizations.routes"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
 import { OrganizationsService } from "./organizations.service"
