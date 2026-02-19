@@ -6,9 +6,10 @@ import {
   CirclePlusIcon,
   ExternalLinkIcon,
   FileCheckIcon,
+  PaperclipIcon,
   XIcon,
 } from "lucide-react"
-import { useEffect, useRef, useState } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 import { useTranslation } from "react-i18next"
 import type {
   AgentSessionMessage,
@@ -16,6 +17,7 @@ import type {
 } from "@/features/agent-sessions/agent-sessions.models"
 import { selectStreaming } from "@/features/agent-sessions/agent-sessions.selectors"
 import { sendMessage } from "@/features/agent-sessions/agent-sessions.thunks"
+import { getDocumentTemporaryUrl } from "@/features/documents/documents.thunks"
 import { selectCurrentOrganizationId } from "@/features/organizations/organizations.selectors"
 import { selectCurrentProjectId } from "@/features/projects/projects.selectors"
 import { useScrollToEnd } from "@/hooks/use-scroll-to-end"
@@ -201,7 +203,42 @@ function Message({ message }: { message: AgentSessionMessage }) {
         <CreateFeedbackDialog message={message} />
       </div>
     )
-  } else return <ChatUserMessage key={message.id}>{message.content}</ChatUserMessage>
+  } else
+    return (
+      <div className="flex flex-col gap-2 items-end">
+        <ChatUserMessage key={message.id}>{message.content}</ChatUserMessage>
+        <Attachment message={message} />
+      </div>
+    )
+}
+
+function Attachment({ message }: { message: AgentSessionMessage }) {
+  const { t } = useTranslation("common")
+  const dispatch = useAppDispatch()
+  const organizationId = useAppSelector(selectCurrentOrganizationId)
+  const projectId = useAppSelector(selectCurrentProjectId)
+
+  const [url, setUrl] = useState<string>()
+
+  const loadDocument = useCallback(async () => {
+    if (!message.documentId || !organizationId || !projectId) return
+    const res = await dispatch(
+      getDocumentTemporaryUrl({ documentId: message.documentId, organizationId, projectId }),
+    ).unwrap()
+    if (res.url) setUrl(res.url)
+  }, [dispatch, message.documentId, organizationId, projectId])
+
+  useEffect(() => {
+    loadDocument()
+  }, [loadDocument])
+
+  if (!message.documentId) return null
+  return (
+    <Button variant="outline" size="sm" onClick={() => window.open(url, "_blank")} disabled={!url}>
+      <PaperclipIcon className="size-4" /> {t("viewAttachment")}
+      <ExternalLinkIcon className="size-4" />
+    </Button>
+  )
 }
 
 function ErrorMessage() {

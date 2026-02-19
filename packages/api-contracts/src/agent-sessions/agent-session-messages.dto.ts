@@ -2,7 +2,7 @@ export type AgentSessionMessageDto = {
   id: string
   role: "user" | "assistant"
   content: string
-  // TODO: documentId for files/images
+  documentId?: string
   status?: "streaming" | "completed" | "aborted" | "error"
   createdAt?: string
   startedAt?: string
@@ -12,9 +12,4 @@ export type AgentSessionMessageDto = {
     name: string
     arguments: Record<string, unknown>
   }>
-}
-
-export type ListAgentSessionMessagesResponseDto = {
-  sessionId: string
-  messages: AgentSessionMessageDto[]
 }

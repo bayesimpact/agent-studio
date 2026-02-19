@@ -24,7 +24,7 @@ export const config: () => TypeOrmModuleOptions = () => ({
   migrations: ["dist/**/migrations/*.js"],
   autoLoadEntities: true,
   synchronize: false,
-  logging: true,
+  logging: false,
   extra,
 })
 

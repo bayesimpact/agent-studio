@@ -1,6 +1,7 @@
 import { forwardRef, Module } from "@nestjs/common"
 import { TypeOrmModule } from "@nestjs/typeorm"
 import { AgentContextResolver } from "@/common/context/resolvers/agent-context.resolver"
+import { AgentSessionContextResolver } from "@/common/context/resolvers/agent-session-context.resolver"
 import { OrganizationContextResolver } from "@/common/context/resolvers/organization-context.resolver"
 import { ProjectContextResolver } from "@/common/context/resolvers/project-context.resolver"
 import { ResourceContextGuard } from "@/common/context/resource-context.guard"
@@ -51,6 +52,7 @@ import { AISDKLLMProvider } from "./providers/ai-sdk-llm.provider"
   ],
   providers: [
     AgentContextResolver,
+    AgentSessionContextResolver,
     AgentSessionsService,
     AgentStreamingService,
     AppPrivateSessionGuard,
