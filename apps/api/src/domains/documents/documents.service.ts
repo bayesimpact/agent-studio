@@ -13,15 +13,15 @@ export class DocumentsService {
   }
   private readonly documentConnectRepository: ConnectRepository<Document>
   async createDocumentFromFile({
-    connectRequiredFields,
+    connectScope,
     documentId,
     fields,
   }: {
-    connectRequiredFields: RequiredConnectScope
+    connectScope: RequiredConnectScope
     documentId: string
     fields: Pick<DocumentDto, "fileName" | "mimeType" | "size" | "storageRelativePath" | "title"> //fixme DOO : DocumentDto ???
   }): Promise<Document> {
-    return await this.documentConnectRepository.createAndSave(connectRequiredFields, {
+    return await this.documentConnectRepository.createAndSave(connectScope, {
       id: documentId,
       fileName: fields.fileName,
       mimeType: fields.mimeType,
@@ -31,31 +31,31 @@ export class DocumentsService {
     })
   }
 
-  async listDocuments(connectRequiredFields: RequiredConnectScope): Promise<Document[]> {
-    return (await this.documentConnectRepository.getMany(connectRequiredFields))?.sort(
+  async listDocuments(connectScope: RequiredConnectScope): Promise<Document[]> {
+    return (await this.documentConnectRepository.getMany(connectScope))?.sort(
       (a, b) => b.createdAt.getTime() - a.createdAt.getTime(),
     )
   }
 
   async findById({
-    connectRequiredFields,
+    connectScope,
     documentId,
   }: {
-    connectRequiredFields: RequiredConnectScope
+    connectScope: RequiredConnectScope
     documentId: string
   }): Promise<Document | null> {
-    return await this.documentConnectRepository.getOneById(connectRequiredFields, documentId)
+    return await this.documentConnectRepository.getOneById(connectScope, documentId)
   }
 
   async deleteDocument({
-    connectRequiredFields,
+    connectScope,
     documentId,
   }: {
-    connectRequiredFields: RequiredConnectScope
+    connectScope: RequiredConnectScope
     documentId: string
   }): Promise<true> {
     const isDeleted = await this.documentConnectRepository.deleteOneById({
-      connectRequiredFields,
+      connectScope,
       id: documentId,
     })
     if (!isDeleted) {

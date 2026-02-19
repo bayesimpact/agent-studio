@@ -7,12 +7,12 @@ const getTestContext = agentSessionControllerTestSetup()
 describe("findById", () => {
   it("should find an existing session", async () => {
     const { service, testAgent, testOrganization, testUser, testProject } = getTestContext()
-    const connectRequiredFields: RequiredConnectScope = {
+    const connectScope: RequiredConnectScope = {
       organizationId: testOrganization.id,
       projectId: testProject.id,
     }
     const createdSession = await service.createPlaygroundSession({
-      connectRequiredFields,
+      connectScope,
       agentId: testAgent.id,
       userId: testUser.id,
     })
@@ -37,14 +37,14 @@ describe("findById", () => {
   it("should recover aborted streams on load", async () => {
     const { service, testAgent, testOrganization, testUser, agentMessageRepository, testProject } =
       getTestContext()
-    const connectRequiredFields: RequiredConnectScope = {
+    const connectScope: RequiredConnectScope = {
       organizationId: testOrganization.id,
       projectId: testProject.id,
     }
 
     // Create a session with an old streaming message
     const session = await service.createPlaygroundSession({
-      connectRequiredFields,
+      connectScope,
       agentId: testAgent.id,
       userId: testUser.id,
     })

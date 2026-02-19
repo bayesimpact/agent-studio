@@ -1,6 +1,7 @@
 import type { AgentSessionDto } from "@caseai-connect/api-contracts"
 import { Body, Controller, Get, Post, Req, UseGuards } from "@nestjs/common"
 import type { EndpointRequestWithAgent } from "@/common/context/request.interface"
+import { getRequiredConnectScope } from "@/common/context/request-context.helpers"
 import { RequireContext } from "@/common/context/require-context.decorator"
 import { ResourceContextGuard } from "@/common/context/resource-context.guard"
 import { CheckPolicy } from "@/common/policies/check-policy.decorator"
@@ -24,6 +25,7 @@ export class AppPrivateSessionsController {
     @Req() request: EndpointRequestWithAgent,
   ): Promise<typeof AgentSessionsRoutes.getAllAppSessions.response> {
     const sessions = await this.agentSessionsService.getAllSessionsForAgent({
+      connectScope: getRequiredConnectScope(request),
       agentId: request.agent.id,
       userId: request.user.id,
       type: "app-private",
@@ -43,10 +45,7 @@ export class AppPrivateSessionsController {
     }
 
     const session = await this.agentSessionsService.createAppPrivateSession({
-      connectRequiredFields: {
-        organizationId: request.organizationId,
-        projectId: request.agent.projectId,
-      },
+      connectScope: getRequiredConnectScope(request),
       agentId: request.agent.id,
       userId: request.user.id,
     })

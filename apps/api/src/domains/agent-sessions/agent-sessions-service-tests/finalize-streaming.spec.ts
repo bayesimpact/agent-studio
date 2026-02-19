@@ -8,18 +8,18 @@ const getTestContext = agentSessionControllerTestSetup()
 describe("finalizeStreaming", () => {
   it("should update assistant message with content and completed status", async () => {
     const { service, testAgent, testOrganization, testUser, testProject } = getTestContext()
-    const connectRequiredFields: RequiredConnectScope = {
+    const connectScope: RequiredConnectScope = {
       organizationId: testOrganization.id,
       projectId: testProject.id,
     }
     const session = await service.createPlaygroundSession({
-      connectRequiredFields,
+      connectScope,
       agentId: testAgent.id,
       userId: testUser.id,
     })
 
     const { assistantMessageId } = await service.prepareForStreaming({
-      connectRequiredFields,
+      connectScope,
       sessionId: session.id,
       userContent: "Hello",
     })

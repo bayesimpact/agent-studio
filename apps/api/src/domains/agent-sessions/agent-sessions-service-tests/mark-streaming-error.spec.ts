@@ -6,19 +6,19 @@ const getTestContext = agentSessionControllerTestSetup()
 describe("markStreamingError", () => {
   it("should mark assistant message as error", async () => {
     const { service, testAgent, testOrganization, testUser, testProject } = getTestContext()
-    const connectRequiredFields: RequiredConnectScope = {
+    const connectScope: RequiredConnectScope = {
       organizationId: testOrganization.id,
       projectId: testProject.id,
     }
 
     const session = await service.createPlaygroundSession({
-      connectRequiredFields,
+      connectScope,
       agentId: testAgent.id,
       userId: testUser.id,
     })
 
     const { assistantMessageId } = await service.prepareForStreaming({
-      connectRequiredFields,
+      connectScope,
       sessionId: session.id,
       userContent: "Hello",
     })

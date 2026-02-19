@@ -4,6 +4,7 @@ import { InjectRepository } from "@nestjs/typeorm"
 import type { Repository } from "typeorm"
 import { v4 } from "uuid"
 
+import { ConnectRepository } from "@/common/entities/connect-repository"
 import type { RequiredConnectScope } from "@/common/entities/connect-required-fields"
 import { Agent } from "@/domains/agents/agent.entity"
 import { AgentMessage } from "./agent-message.entity"
@@ -15,12 +16,28 @@ export class AgentSessionsService {
 
   constructor(
     @InjectRepository(AgentSession)
-    private readonly agentSessionRepository: Repository<AgentSession>,
+    agentSessionRepository: Repository<AgentSession>,
     @InjectRepository(AgentMessage)
-    private readonly agentMessageRepository: Repository<AgentMessage>,
+    agentMessageRepository: Repository<AgentMessage>,
     @InjectRepository(Agent)
     private readonly agentRepository: Repository<Agent>,
-  ) {}
+  ) {
+    this.agentSessionRepository = agentSessionRepository
+    this.agentMessageRepository = agentMessageRepository
+    this.agentSessionConnectRepository = new ConnectRepository(
+      agentSessionRepository,
+      "agentSession",
+    )
+    this.agentMessageConnectRepository = new ConnectRepository(
+      agentMessageRepository,
+      "agentMessage",
+    )
+  }
+
+  private readonly agentSessionRepository: Repository<AgentSession>
+  private readonly agentMessageRepository: Repository<AgentMessage>
+  private readonly agentSessionConnectRepository: ConnectRepository<AgentSession>
+  private readonly agentMessageConnectRepository: ConnectRepository<AgentMessage>
 
   /**
    * Returns messages for a session after verifying the user owns the session.
@@ -82,20 +99,18 @@ export class AgentSessionsService {
   }
 
   async getAllSessionsForAgent({
+    connectScope,
     agentId,
     userId,
     type,
   }: {
+    connectScope: RequiredConnectScope
     agentId: string
     userId: string
     type: AgentSessionType
   }): Promise<AgentSession[]> {
-    return await this.agentSessionRepository.find({
-      where: {
-        agentId,
-        userId,
-        type,
-      },
+    return await this.agentSessionConnectRepository.find(connectScope, {
+      where: { agentId, userId, type },
       order: {
         createdAt: "DESC",
       },
@@ -103,44 +118,39 @@ export class AgentSessionsService {
   }
 
   async createPlaygroundSession({
-    connectRequiredFields,
+    connectScope,
     agentId,
     userId,
   }: {
-    connectRequiredFields: RequiredConnectScope
+    connectScope: RequiredConnectScope
     agentId: string
     userId: string
   }): Promise<AgentSession> {
-    const session = this.agentSessionRepository.create({
-      ...connectRequiredFields,
+    return await this.agentSessionConnectRepository.createAndSave(connectScope, {
       agentId,
       userId,
       type: "playground",
       expiresAt: null,
       traceId: v4(),
     })
-
-    return this.agentSessionRepository.save(session)
   }
 
   async createAppPrivateSession({
-    connectRequiredFields,
+    connectScope,
     agentId,
     userId,
   }: {
-    connectRequiredFields: RequiredConnectScope
+    connectScope: RequiredConnectScope
     agentId: string
     userId: string
   }): Promise<AgentSession> {
-    const session = this.agentSessionRepository.create({
-      ...connectRequiredFields,
+    return await this.agentSessionConnectRepository.createAndSave(connectScope, {
       agentId,
       userId,
       type: "app-private",
       expiresAt: null,
       traceId: v4(),
     })
-    return await this.agentSessionRepository.save(session)
   }
 
   /**
@@ -148,24 +158,21 @@ export class AgentSessionsService {
    * No TTL (expiresAt is null)
    */
   async createProductionSession({
-    connectRequiredFields,
+    connectScope,
     agentId,
     userId,
   }: {
-    connectRequiredFields: RequiredConnectScope
+    connectScope: RequiredConnectScope
     agentId: string
     userId: string
   }): Promise<AgentSession> {
-    const session = this.agentSessionRepository.create({
-      ...connectRequiredFields,
+    return await this.agentSessionConnectRepository.createAndSave(connectScope, {
       agentId,
       userId,
       type: "production",
       expiresAt: null,
       traceId: v4(),
     })
-
-    return this.agentSessionRepository.save(session)
   }
 
   /**
@@ -196,11 +203,11 @@ export class AgentSessionsService {
    * Persists user message + empty assistant message with status "streaming"
    */
   async prepareForStreaming({
-    connectRequiredFields,
+    connectScope,
     sessionId,
     userContent,
   }: {
-    connectRequiredFields: RequiredConnectScope
+    connectScope: RequiredConnectScope
     sessionId: string
     userContent: string
   }): Promise<{ session: AgentSession; assistantMessageId: string }> {
@@ -211,8 +218,7 @@ export class AgentSessionsService {
     }
 
     // Create user message
-    const userMessage = this.agentMessageRepository.create({
-      ...connectRequiredFields,
+    await this.agentMessageConnectRepository.createAndSave(connectScope, {
       sessionId,
       role: "user",
       content: userContent,
@@ -221,12 +227,10 @@ export class AgentSessionsService {
       completedAt: null,
       toolCalls: null,
     })
-    await this.agentMessageRepository.save(userMessage)
 
     // Create empty assistant message with streaming status
     const assistantMessageId = v4()
-    const assistantMessage = this.agentMessageRepository.create({
-      ...connectRequiredFields,
+    await this.agentMessageConnectRepository.createAndSave(connectScope, {
       id: assistantMessageId,
       sessionId,
       role: "assistant",
@@ -236,7 +240,6 @@ export class AgentSessionsService {
       completedAt: null,
       toolCalls: null,
     })
-    await this.agentMessageRepository.save(assistantMessage)
 
     // Reload session with messages
     const updatedSession = await this.agentSessionRepository.findOne({

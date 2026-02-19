@@ -404,6 +404,43 @@ describe("Domain - actionName", () => {
 
 **Note**: Use the existing test utilities (`setupTransactionalTestDatabase`) from `@/common/test/test-transaction-manager` for consistent test setup.
 
+### Connect Scope Pattern for Services
+
+**Rule**: For connect-scoped entities, services MUST accept a `connectScope: RequiredConnectScope` argument and delegate scoping to `ConnectRepository` methods.
+
+**Required Pattern**:
+- Initialize a `ConnectRepository<Entity>` in the service constructor
+- Accept `connectScope: RequiredConnectScope` in service methods that read/write scoped entities
+- Pass `connectScope` directly to `ConnectRepository` methods (`createAndSave`, `getMany`, `getOneById`, `deleteOneById`, `find`)
+- Keep service logic focused on business behavior (validation, sorting, error mapping), not SQL scope plumbing
+
+**Forbidden Pattern**:
+- Do not manually re-implement connect scoping in service `where` clauses when a `ConnectRepository` is available
+- Do not duplicate `organizationId` / `projectId` filtering logic in each service method
+
+**Why this pattern?**
+- Centralizes scope enforcement in one abstraction
+- Reduces copy-paste query conditions and security drift
+- Keeps services readable and consistent across domains
+
+**Example**:
+```typescript
+import { ConnectRepository } from "@/common/entities/connect-repository"
+import type { RequiredConnectScope } from "@/common/entities/connect-required-fields"
+
+export class DocumentsService {
+  constructor(@InjectRepository(Document) documentRepository: Repository<Document>) {
+    this.documentConnectRepository = new ConnectRepository(documentRepository, "documents")
+  }
+
+  private readonly documentConnectRepository: ConnectRepository<Document>
+
+  async listDocuments(connectScope: RequiredConnectScope): Promise<Document[]> {
+    return this.documentConnectRepository.getMany(connectScope)
+  }
+}
+```
+
 ### Always Use Factory Functions for Test Data
 
 **Rule**: When writing tests, you MUST always use fishery factory functions to create test data instead of manually constructing objects or using `new` constructors.

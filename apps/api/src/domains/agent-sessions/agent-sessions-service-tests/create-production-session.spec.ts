@@ -6,13 +6,13 @@ const getTestContext = agentSessionControllerTestSetup()
 describe("createProductionSession", () => {
   it("should create a production session without TTL", async () => {
     const { service, testAgent, testOrganization, testUser, testProject } = getTestContext()
-    const connectRequiredFields: RequiredConnectScope = {
+    const connectScope: RequiredConnectScope = {
       organizationId: testOrganization.id,
       projectId: testProject.id,
     }
 
     const session = await service.createProductionSession({
-      connectRequiredFields,
+      connectScope,
       agentId: testAgent.id,
       userId: testUser.id,
     })

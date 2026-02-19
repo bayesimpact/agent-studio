@@ -99,15 +99,15 @@ export class DocumentsController {
     if (extension.trim().length === 0) {
       throw new UnprocessableEntityException("File extension is required.", extension)
     }
-    const connectRequiredFields = getRequiredConnectScope(req)
+    const connectScope = getRequiredConnectScope(req)
     const fileInfo = await this.fileStorageService.save({
       file,
-      pathPrefix: `${connectRequiredFields.organizationId}/${connectRequiredFields.projectId}`,
+      pathPrefix: `${connectScope.organizationId}/${connectScope.projectId}`,
       extension,
     })
 
     const document = await this.documentsService.createDocumentFromFile({
-      connectRequiredFields,
+      connectScope,
       documentId: fileInfo.fileId,
       fields: {
         fileName: file.originalname,
@@ -142,7 +142,7 @@ export class DocumentsController {
     const documentId = req.document.id
 
     await this.documentsService.deleteDocument({
-      connectRequiredFields: getRequiredConnectScope(req),
+      connectScope: getRequiredConnectScope(req),
       documentId,
     })
 

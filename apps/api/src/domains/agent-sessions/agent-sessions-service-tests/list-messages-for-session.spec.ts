@@ -19,7 +19,7 @@ describe("listMessagesForSession", () => {
       agentMessageRepository,
       testProject,
     } = getTestContext()
-    const connectRequiredFields: RequiredConnectScope = {
+    const connectScope: RequiredConnectScope = {
       organizationId: testOrganization.id,
       projectId: testProject.id,
     }
@@ -32,7 +32,7 @@ describe("listMessagesForSession", () => {
     )
 
     const session = await service.createPlaygroundSession({
-      connectRequiredFields,
+      connectScope,
       agentId: testAgent.id,
       userId: testUser.id,
     })
@@ -60,13 +60,13 @@ describe("listMessagesForSession", () => {
 
   it("should throw ForbiddenException when user does not own the session", async () => {
     const { service, testAgent, testUser, testOrganization, testProject } = getTestContext()
-    const connectRequiredFields: RequiredConnectScope = {
+    const connectScope: RequiredConnectScope = {
       organizationId: testOrganization.id,
       projectId: testProject.id,
     }
 
     const session = await service.createPlaygroundSession({
-      connectRequiredFields,
+      connectScope,
       agentId: testAgent.id,
       userId: testUser.id,
     })

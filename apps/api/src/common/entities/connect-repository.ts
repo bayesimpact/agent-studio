@@ -13,23 +13,21 @@ export class ConnectRepository<T extends ConnectEntityBase> {
   }
 
   public async find(
-    connectRequiredFields: RequiredConnectScope,
+    connectScope: RequiredConnectScope,
     options: FindManyOptions<Pick<RequiredConnectScope, never> & T>,
   ): Promise<T[]> {
-    return await this.repository.find(
-      this.addConnectRequiredFieldsWhere(connectRequiredFields, options),
-    )
+    return await this.repository.find(this.addConnectRequiredFieldsWhere(connectScope, options))
   }
   addConnectRequiredFieldsWhere<T extends RequiredConnectScope>(
-    connectRequiredFields: RequiredConnectScope,
+    connectScope: RequiredConnectScope,
     options: FindManyOptions<T>,
   ): FindManyOptions<T> {
     let extended = this.addWhere(options, {
-      organizationId: connectRequiredFields.organizationId,
+      organizationId: connectScope.organizationId,
     })
 
     extended = this.addWhere(extended, {
-      projectId: connectRequiredFields.projectId,
+      projectId: connectScope.projectId,
     })
 
     return extended
@@ -49,40 +47,37 @@ export class ConnectRepository<T extends ConnectEntityBase> {
     }
   }
 
-  public async getMany(connectRequiredFields: RequiredConnectScope): Promise<T[]> {
-    return await this.newQueryBuilderWithConnectRequiredFields(connectRequiredFields).getMany()
+  public async getMany(connectScope: RequiredConnectScope): Promise<T[]> {
+    return await this.newQueryBuilderWithConnectRequiredFields(connectScope).getMany()
   }
 
-  public async getOneById(
-    connectRequiredFields: RequiredConnectScope,
-    id: string,
-  ): Promise<T | null> {
-    return await this.newQueryBuilderWithConnectRequiredFields(connectRequiredFields)
+  public async getOneById(connectScope: RequiredConnectScope, id: string): Promise<T | null> {
+    return await this.newQueryBuilderWithConnectRequiredFields(connectScope)
       .andWhere(`${this.alias}.id = :id`, { id })
       .getOne()
   }
 
   public newQueryBuilderWithConnectRequiredFields(
-    connectRequiredFields: RequiredConnectScope,
+    connectScope: RequiredConnectScope,
   ): SelectQueryBuilder<T> {
     const query = this.repository
       .createQueryBuilder(this.alias)
       .andWhere(`${this.alias}.organization_id = :organizationId`, {
-        organizationId: connectRequiredFields.organizationId,
+        organizationId: connectScope.organizationId,
       })
       .andWhere(`${this.alias}.project_id = :projectId`, {
-        projectId: connectRequiredFields.projectId,
+        projectId: connectScope.projectId,
       })
 
-    // If the connectRequiredFields.userId is provided, we need to filter the entities of projects the user is a member of.
+    // If the connectScope.userId is provided, we need to filter the entities of projects the user is a member of.
     // It's an extra security measure to prevent users from accessing projects they are not a member BECAUSE we already do the check in the guards / policies.
     // Important: owners and admins of the organization don't have a project membership.
-    if (connectRequiredFields.userId) {
+    if (connectScope.userId) {
       query.andWhere(
         `${this.alias}.project_id IN (SELECT project_id FROM project_membership WHERE user_id = :userId AND organization_id = :organizationId)`,
         {
-          userId: connectRequiredFields.userId,
-          organizationId: connectRequiredFields.organizationId,
+          userId: connectScope.userId,
+          organizationId: connectScope.organizationId,
         },
       )
     }
@@ -91,20 +86,20 @@ export class ConnectRepository<T extends ConnectEntityBase> {
   }
 
   public async deleteOneById({
-    connectRequiredFields,
+    connectScope,
     id,
   }: {
-    connectRequiredFields: RequiredConnectScope
+    connectScope: RequiredConnectScope
     id: string
   }): Promise<boolean> {
     const query = this.repository
       .createQueryBuilder()
       .softDelete()
       .andWhere(`organization_id = :organizationId`, {
-        organizationId: connectRequiredFields.organizationId,
+        organizationId: connectScope.organizationId,
       })
       .andWhere(`project_id = :projectId`, {
-        projectId: connectRequiredFields.projectId,
+        projectId: connectScope.projectId,
       })
       .andWhere(`id = :id`, { id })
     const res = await query.execute()
@@ -112,10 +107,10 @@ export class ConnectRepository<T extends ConnectEntityBase> {
   }
 
   public async createAndSave(
-    connectRequiredFields: RequiredConnectScope,
+    connectScope: RequiredConnectScope,
     entity: Pick<RequiredConnectScope, never> & DeepPartial<T>,
   ): Promise<T> {
-    return this.repository.save(this.repository.create({ ...connectRequiredFields, ...entity }))
+    return this.repository.save(this.repository.create({ ...connectScope, ...entity }))
   }
 
   public async saveOne(entity: T): Promise<T> {

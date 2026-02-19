@@ -8,7 +8,7 @@ describe("createAppPrivateSession", () => {
   it("should create an app-private session", async () => {
     const { service, testAgent, testUser, testOrganization, membershipRepository, testProject } =
       getTestContext()
-    const connectRequiredFields: RequiredConnectScope = {
+    const connectScope: RequiredConnectScope = {
       organizationId: testOrganization.id,
       projectId: testProject.id,
     }
@@ -20,7 +20,7 @@ describe("createAppPrivateSession", () => {
     await membershipRepository.save(membership)
 
     const session = await service.createAppPrivateSession({
-      connectRequiredFields,
+      connectScope,
       agentId: testAgent.id,
       userId: testUser.id,
     })

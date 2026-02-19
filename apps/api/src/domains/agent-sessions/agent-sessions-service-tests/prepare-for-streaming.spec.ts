@@ -8,19 +8,19 @@ const getTestContext = agentSessionControllerTestSetup()
 describe("prepareForStreaming", () => {
   it("should persist user message and empty assistant message", async () => {
     const { service, testAgent, testOrganization, testUser, testProject } = getTestContext()
-    const connectRequiredFields: RequiredConnectScope = {
+    const connectScope: RequiredConnectScope = {
       organizationId: testOrganization.id,
       projectId: testProject.id,
     }
 
     const session = await service.createPlaygroundSession({
-      connectRequiredFields,
+      connectScope,
       agentId: testAgent.id,
       userId: testUser.id,
     })
 
     const { session: updatedSession, assistantMessageId } = await service.prepareForStreaming({
-      connectRequiredFields,
+      connectScope,
       sessionId: session.id,
       userContent: "Hello, how are you?",
     })
@@ -41,7 +41,7 @@ describe("prepareForStreaming", () => {
 
   it("should throw NotFoundException for non-existent session", async () => {
     const { service, testOrganization, testProject } = getTestContext()
-    const connectRequiredFields: RequiredConnectScope = {
+    const connectScope: RequiredConnectScope = {
       organizationId: testOrganization.id,
       projectId: testProject.id,
     }
@@ -50,7 +50,7 @@ describe("prepareForStreaming", () => {
     const nonExistentId = "00000000-0000-0000-0000-000000000000"
     await expect(
       service.prepareForStreaming({
-        connectRequiredFields,
+        connectScope,
         sessionId: nonExistentId,
         userContent: "Hello",
       }),

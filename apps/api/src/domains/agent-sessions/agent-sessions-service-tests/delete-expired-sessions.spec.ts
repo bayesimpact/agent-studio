@@ -16,14 +16,14 @@ describe("deleteExpiredPlaygroundSessions", () => {
       agentRepository,
       agentSessionRepository,
     } = getTestContext()
-    const connectRequiredFields: RequiredConnectScope = {
+    const connectScope: RequiredConnectScope = {
       organizationId: testOrganization.id,
       projectId: testProject.id,
     }
 
     // Create a non-expired session first
     const validSession = await service.createPlaygroundSession({
-      connectRequiredFields,
+      connectScope,
       agentId: testAgent.id,
       userId: testUser.id,
     })

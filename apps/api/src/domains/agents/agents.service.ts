@@ -128,14 +128,14 @@ export class AgentsService {
    * Deletes an agent.
    */
   async deleteAgent({
-    connectRequiredFields,
+    connectScope,
     agentId,
   }: {
-    connectRequiredFields: RequiredConnectScope
+    connectScope: RequiredConnectScope
     agentId: string
   }): Promise<void> {
     // Find the agent
-    const agent = await this.agentConnectRepository.getOneById(connectRequiredFields, agentId)
+    const agent = await this.agentConnectRepository.getOneById(connectScope, agentId)
 
     if (!agent) {
       throw new NotFoundException(`Agent with id ${agentId} not found`)
@@ -145,6 +145,6 @@ export class AgentsService {
     await this.agentSessionsService.deleteAllSessionsForAgent(agentId)
 
     // Delete the agent
-    await this.agentConnectRepository.deleteOneById({ connectRequiredFields, id: agent.id })
+    await this.agentConnectRepository.deleteOneById({ connectScope, id: agent.id })
   }
 }

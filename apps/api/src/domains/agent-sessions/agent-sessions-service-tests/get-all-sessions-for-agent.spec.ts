@@ -46,6 +46,10 @@ describe("getAllSessionsForAgent", () => {
       await agentSessionRepository.save([prodSession, appSession, playgroundSession])
 
       const sessions = await service.getAllSessionsForAgent({
+        connectScope: {
+          organizationId: testOrganization.id,
+          projectId: testProject.id,
+        },
         agentId: testAgent.id,
         userId: testUser.id,
         type: "app-private",
@@ -95,6 +99,10 @@ describe("getAllSessionsForAgent", () => {
       await agentSessionRepository.save([prodSession, appSession, playgroundSession])
 
       const sessions = await service.getAllSessionsForAgent({
+        connectScope: {
+          organizationId: testOrganization.id,
+          projectId: testProject.id,
+        },
         agentId: testAgent.id,
         userId: testUser.id,
         type: "playground",
@@ -147,6 +155,10 @@ describe("getAllSessionsForAgent", () => {
     await agentSessionRepository.save([session1, session2])
 
     const sessions = await service.getAllSessionsForAgent({
+      connectScope: {
+        organizationId: testOrganization.id,
+        projectId: testProject.id,
+      },
       agentId: testAgent.id,
       userId: testUser.id,
       type: "production",
@@ -197,6 +209,10 @@ describe("getAllSessionsForAgent", () => {
     await agentSessionRepository.save([session1, session2])
 
     const sessions = await service.getAllSessionsForAgent({
+      connectScope: {
+        organizationId: testOrganization.id,
+        projectId: testProject.id,
+      },
       agentId: testAgent.id,
       userId: testUser.id,
       type: "production",
@@ -207,9 +223,13 @@ describe("getAllSessionsForAgent", () => {
   })
 
   it("should return empty array when no sessions exist", async () => {
-    const { service, testAgent, testUser } = getTestContext()
+    const { service, testAgent, testUser, testOrganization, testProject } = getTestContext()
 
     const sessions = await service.getAllSessionsForAgent({
+      connectScope: {
+        organizationId: testOrganization.id,
+        projectId: testProject.id,
+      },
       agentId: testAgent.id,
       userId: testUser.id,
       type: "production",

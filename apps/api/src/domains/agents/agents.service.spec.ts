@@ -241,7 +241,7 @@ describe("AgentsService", () => {
 
       // Act
       await service.deleteAgent({
-        connectRequiredFields: { organizationId: organization.id, projectId: project.id },
+        connectScope: { organizationId: organization.id, projectId: project.id },
         agentId: agent.id,
       })
 

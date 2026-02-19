@@ -3,6 +3,7 @@ import { Injectable, NotFoundException } from "@nestjs/common"
 import { DocumentsService } from "@/domains/documents/documents.service"
 import type { ContextResolver, ResolvableRequest } from "../context-resolver.interface"
 import type { EndpointRequestWithDocument } from "../request.interface"
+import { getRequiredConnectScope } from "../request-context.helpers"
 
 @Injectable()
 export class DocumentContextResolver implements ContextResolver {
@@ -21,10 +22,7 @@ export class DocumentContextResolver implements ContextResolver {
     const requestWithDocument = request as EndpointRequestWithDocument
     const document =
       (await this.documentsService.findById({
-        connectRequiredFields: {
-          organizationId: requestWithDocument.organizationId,
-          projectId: requestWithDocument.project.id,
-        },
+        connectScope: getRequiredConnectScope(requestWithDocument),
         documentId,
       })) ?? undefined
     if (!document) throw new NotFoundException()

@@ -1,6 +1,7 @@
 import type { AgentSessionDto } from "@caseai-connect/api-contracts"
 import { Controller, Get, Post, Req, UseGuards } from "@nestjs/common"
 import type { EndpointRequestWithAgent } from "@/common/context/request.interface"
+import { getRequiredConnectScope } from "@/common/context/request-context.helpers"
 import { RequireContext } from "@/common/context/require-context.decorator"
 import { ResourceContextGuard } from "@/common/context/resource-context.guard"
 import { CheckPolicy } from "@/common/policies/check-policy.decorator"
@@ -25,6 +26,7 @@ export class PlaygroundSessionsController {
     @Req() request: EndpointRequestWithAgent,
   ): Promise<typeof AgentSessionsRoutes.getAllPlaygroundSessions.response> {
     const sessions = await this.agentSessionsService.getAllSessionsForAgent({
+      connectScope: getRequiredConnectScope(request),
       agentId: request.agent.id,
       userId: request.user.id,
       type: "playground",
@@ -39,10 +41,7 @@ export class PlaygroundSessionsController {
     @Req() request: EndpointRequestWithAgent,
   ): Promise<typeof AgentSessionsRoutes.createPlaygroundSession.response> {
     const session = await this.agentSessionsService.createPlaygroundSession({
-      connectRequiredFields: {
-        organizationId: request.organizationId,
-        projectId: request.agent.projectId,
-      },
+      connectScope: getRequiredConnectScope(request),
       agentId: request.agent.id,
       userId: request.user.id,
     })
