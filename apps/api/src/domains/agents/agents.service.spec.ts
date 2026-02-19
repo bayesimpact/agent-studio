@@ -56,7 +56,7 @@ describe("AgentsService", () => {
       const { organization, project } = await createOrganizationWithProject(repositories)
 
       const result = await service.createAgent({
-        connectRequiredFields: {
+        connectScope: {
           organizationId: organization.id,
           projectId: project.id,
         },
@@ -86,7 +86,7 @@ describe("AgentsService", () => {
 
       const createWrongfulAgent = async () =>
         service.createAgent({
-          connectRequiredFields: {
+          connectScope: {
             organizationId: organization.id,
             projectId: project.id,
           },
@@ -180,7 +180,7 @@ describe("AgentsService", () => {
 
       // Act
       const result = await service.updateAgent({
-        connectRequiredFields: { organizationId: organization.id, projectId: project.id },
+        connectScope: { organizationId: organization.id, projectId: project.id },
         required: { agentId: agent.id },
         fieldsToUpdate: {
           name: "Updated Template",
@@ -207,7 +207,7 @@ describe("AgentsService", () => {
 
       // Act
       const result = await service.updateAgent({
-        connectRequiredFields: { organizationId: organization.id, projectId: project.id },
+        connectScope: { organizationId: organization.id, projectId: project.id },
         required: { agentId: agent.id },
         fieldsToUpdate: { name: "Updated Name" },
       })
@@ -222,7 +222,7 @@ describe("AgentsService", () => {
 
       const createWrongfulUpdateAgent = async () =>
         service.updateAgent({
-          connectRequiredFields: { organizationId: organization.id, projectId: project.id },
+          connectScope: { organizationId: organization.id, projectId: project.id },
           required: { agentId: agent.id },
           fieldsToUpdate: { name: "AB" },
         })

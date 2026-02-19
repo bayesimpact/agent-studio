@@ -37,7 +37,7 @@ export class AgentMessageFeedbackController {
     const user = request.user
 
     const feedback = await this.feedbackService.createFeedback({
-      connectRequiredFields: getRequiredConnectScope(request),
+      connectScope: getRequiredConnectScope(request),
       userId: user.id,
       agentMessageId,
       content: payload.content,
@@ -56,7 +56,7 @@ export class AgentMessageFeedbackController {
     @Req() request: EndpointRequestWithAgent,
   ): Promise<typeof AgentMessageFeedbackRoutes.getAll.response> {
     const data = await this.feedbackService.listFeedbacksForAgent({
-      connectRequiredFields: getRequiredConnectScope(request),
+      connectScope: getRequiredConnectScope(request),
       agentId: request.agent.id,
     })
 

@@ -22,10 +22,10 @@ export class AgentsService {
    * Creates a new agent for a project.
    */
   async createAgent({
-    connectRequiredFields,
+    connectScope,
     fields,
   }: {
-    connectRequiredFields: RequiredConnectScope
+    connectScope: RequiredConnectScope
     fields: Pick<RequiredConnectScope, never> &
       Pick<Agent, "defaultPrompt" | "name" | "model" | "temperature" | "locale">
   }): Promise<Agent> {
@@ -37,14 +37,14 @@ export class AgentsService {
     }
 
     // Create the agent with defaults
-    return await this.agentConnectRepository.createAndSave(connectRequiredFields, fields)
+    return await this.agentConnectRepository.createAndSave(connectScope, fields)
   }
 
   /**
    * Lists all agents for a project.
    */
-  async listAgents(connectRequiredFields: RequiredConnectScope): Promise<Agent[]> {
-    return (await this.agentConnectRepository.getMany(connectRequiredFields))?.sort(
+  async listAgents(connectScope: RequiredConnectScope): Promise<Agent[]> {
+    return (await this.agentConnectRepository.getMany(connectScope))?.sort(
       (a, b) => b.createdAt.getTime() - a.createdAt.getTime(),
     )
   }
@@ -53,13 +53,13 @@ export class AgentsService {
    * Finds an agent by its id.
    */
   async findAgentById({
-    connectRequiredFields,
+    connectScope,
     agentId,
   }: {
-    connectRequiredFields: RequiredConnectScope
+    connectScope: RequiredConnectScope
     agentId: string
   }): Promise<Agent | null> {
-    return this.agentConnectRepository.getOneById(connectRequiredFields, agentId)
+    return this.agentConnectRepository.getOneById(connectScope, agentId)
   }
 
   /**
@@ -68,11 +68,11 @@ export class AgentsService {
    * Deletes playground sessions if configuration fields change.
    */
   async updateAgent({
-    connectRequiredFields,
+    connectScope,
     required,
     fieldsToUpdate,
   }: {
-    connectRequiredFields: RequiredConnectScope
+    connectScope: RequiredConnectScope
     required: {
       agentId: string
     }
@@ -88,7 +88,7 @@ export class AgentsService {
     }
 
     // Find the agent
-    const agent = await this.agentConnectRepository.getOneById(connectRequiredFields, agentId)
+    const agent = await this.agentConnectRepository.getOneById(connectScope, agentId)
 
     if (!agent) {
       throw new NotFoundException(`Agent with id ${agentId} not found`)

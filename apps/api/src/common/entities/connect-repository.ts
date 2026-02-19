@@ -16,9 +16,10 @@ export class ConnectRepository<T extends ConnectEntityBase> {
     connectScope: RequiredConnectScope,
     options: FindManyOptions<Pick<RequiredConnectScope, never> & T>,
   ): Promise<T[]> {
-    return await this.repository.find(this.addConnectRequiredFieldsWhere(connectScope, options))
+    return await this.repository.find(this.addConnectScopeWhere(connectScope, options))
   }
-  addConnectRequiredFieldsWhere<T extends RequiredConnectScope>(
+
+  addConnectScopeWhere<T extends RequiredConnectScope>(
     connectScope: RequiredConnectScope,
     options: FindManyOptions<T>,
   ): FindManyOptions<T> {
@@ -48,16 +49,16 @@ export class ConnectRepository<T extends ConnectEntityBase> {
   }
 
   public async getMany(connectScope: RequiredConnectScope): Promise<T[]> {
-    return await this.newQueryBuilderWithConnectRequiredFields(connectScope).getMany()
+    return await this.newQueryBuilderWithConnectScope(connectScope).getMany()
   }
 
   public async getOneById(connectScope: RequiredConnectScope, id: string): Promise<T | null> {
-    return await this.newQueryBuilderWithConnectRequiredFields(connectScope)
+    return await this.newQueryBuilderWithConnectScope(connectScope)
       .andWhere(`${this.alias}.id = :id`, { id })
       .getOne()
   }
 
-  public newQueryBuilderWithConnectRequiredFields(
+  public newQueryBuilderWithConnectScope(
     connectScope: RequiredConnectScope,
   ): SelectQueryBuilder<T> {
     const query = this.repository

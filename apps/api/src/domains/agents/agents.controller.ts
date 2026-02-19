@@ -29,7 +29,7 @@ export class AgentsController {
     @Body() { payload }: typeof AgentsRoutes.createOne.request,
   ): Promise<typeof AgentsRoutes.createOne.response> {
     const agent = await this.agentsService.createAgent({
-      connectRequiredFields: getRequiredConnectScope(request),
+      connectScope: getRequiredConnectScope(request),
       fields: payload,
     })
 
@@ -56,7 +56,7 @@ export class AgentsController {
     const agentId = request.agent.id
 
     const agent = await this.agentsService.updateAgent({
-      connectRequiredFields: getRequiredConnectScope(request),
+      connectScope: getRequiredConnectScope(request),
       required: { agentId },
       fieldsToUpdate: payload,
     })
