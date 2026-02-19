@@ -70,19 +70,6 @@ export class ConnectRepository<T extends ConnectEntityBase> {
         projectId: connectScope.projectId,
       })
 
-    // If the connectScope.userId is provided, we need to filter the entities of projects the user is a member of.
-    // It's an extra security measure to prevent users from accessing projects they are not a member BECAUSE we already do the check in the guards / policies.
-    // Important: owners and admins of the organization don't have a project membership.
-    if (connectScope.userId) {
-      query.andWhere(
-        `${this.alias}.project_id IN (SELECT project_id FROM project_membership WHERE user_id = :userId AND organization_id = :organizationId)`,
-        {
-          userId: connectScope.userId,
-          organizationId: connectScope.organizationId,
-        },
-      )
-    }
-
     return query
   }
 
