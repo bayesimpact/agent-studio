@@ -1,5 +1,8 @@
+import { URL } from "node:url"
 import type { MessageEvent } from "@nestjs/common"
 import { Inject, Injectable } from "@nestjs/common"
+import type { FilePart, ImagePart } from "ai"
+import type { RequiredConnectScope } from "@/common/entities/connect-required-fields"
 import type {
   LLMChatMessage,
   LLMConfig,
@@ -8,6 +11,12 @@ import type {
 } from "@/common/interfaces/llm-provider.interface"
 import type { Agent } from "@/domains/agents/agent.entity"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
+import { DocumentsService } from "../documents/documents.service"
+import {
+  FILE_STORAGE_SERVICE,
+  type IFileStorage,
+} from "../documents/storage/file-storage.interface"
+// biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
 import { AgentSession } from "./agent-session.entity"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
 import { AgentSessionsService } from "./agent-sessions.service"
@@ -15,6 +24,9 @@ import { AgentSessionsService } from "./agent-sessions.service"
 @Injectable()
 export class AgentStreamingService {
   constructor(
+    @Inject(FILE_STORAGE_SERVICE)
+    private readonly fileStorageService: IFileStorage,
+    private readonly documentsService: DocumentsService,
     private readonly agentSessionsService: AgentSessionsService,
     @Inject("LLMProvider")
     private readonly llmProvider: LLMProvider,
@@ -24,22 +36,26 @@ export class AgentStreamingService {
    * Streams a agent response for a session
    * Handles the full flow: persist before, stream, persist after
    */
-  async *streamAgentResponse(
-    session: AgentSession,
-    agent: Agent,
-    userContent: string,
-  ): AsyncGenerator<MessageEvent, void, unknown> {
-    // FIXME: pass through connectScope
-    const connectScope = {
-      organizationId: session.organizationId,
-      projectId: session.projectId,
-    }
+  async *streamAgentResponse({
+    connectScope,
+    sessionId,
+    agent,
+    userContent,
+    documentId,
+  }: {
+    connectScope: RequiredConnectScope
+    sessionId: string
+    agent: Agent
+    userContent: string
+    documentId?: string
+  }): AsyncGenerator<MessageEvent, void, unknown> {
     // Step 1: Prepare for streaming (persist user message + empty assistant message)
     const { session: updatedSession, assistantMessageId } =
       await this.agentSessionsService.prepareForStreaming({
         connectScope,
-        sessionId: session.id,
-        userContent: userContent,
+        sessionId,
+        userContent,
+        documentId,
       })
 
     // Step 2: Send start event with messageId so frontend can update optimistic message
@@ -50,36 +66,105 @@ export class AgentStreamingService {
       }),
     } as MessageEvent
 
-    // Step 3: Convert messages to LLM format
-    // Messages are already loaded via relations in prepareForStreaming
-    const llmMessages = this.convertToLLMFormat(updatedSession.messages)
-
-    // Step 4: Build LLM config from agent
+    // Step 3: Build LLM config from agent
     const llmConfig = this.buildLLMConfig(agent)
 
-    // Step 5: Build LLM metadata (used for telemetry)
+    // Step 4: Build LLM metadata (used for telemetry)
     const llmMetadata: LLMMetadata = this.buildLLMMetadata(agent, updatedSession)
+
+    // Step 5: Convert messages to LLM format
+    // Messages are already loaded via relations in prepareForStreaming
+    const llmMessages = await this.convertToLLMFormat(updatedSession.messages)
 
     // Step 6: Stream response
     let fullContent = ""
 
     try {
-      // Stream from LLM provider
-      for await (const chunk of this.llmProvider.streamChatResponse(
-        llmMessages,
-        llmConfig,
-        llmMetadata,
-      )) {
-        fullContent += chunk
+      const message = llmMessages[llmMessages.length - 1]
+      if (documentId && message) {
+        const document = await this.documentsService.findById({ connectScope, documentId })
+        if (!document) {
+          throw new Error(`Document with ID ${documentId} not found`)
+        }
+
+        const url = await this.fileStorageService.getTemporaryUrl(document.storageRelativePath)
+        console.warn("AJ: url", url)
+
+        const llmMessage: LLMChatMessage = {
+          role: "user",
+          content: [{ type: "text", text: message.content as string }],
+        }
+
+        switch (document.mimeType) {
+          case "application/pdf":
+            {
+              const data = new URL(
+                // url // FIXME:
+                "https://www.impots.gouv.fr/sites/default/files/formulaires/2042/2025/2042_5180.pdf",
+              )
+
+              const content = llmMessage.content as Array<FilePart>
+              content.push({
+                type: "file",
+                mediaType: "application/pdf",
+                data,
+                filename: document.fileName, // optional, not used by all providers
+              })
+            }
+            break
+
+          case "image/png":
+          case "image/jpeg":
+          case "image/jpg":
+            {
+              const image = new URL(
+                //url // FIXME:
+                "https://www.oiseaux.net/photos/marc.fasol/images/id/canard.colvert.mafa.3p.230.h.jpg",
+              )
+
+              const content = llmMessage.content as Array<ImagePart>
+              content.push({ type: "image", image })
+            }
+            break
+
+          default:
+            throw new Error(`Unsupported document type: ${document.mimeType}`)
+        }
+
+        const response = await this.llmProvider.generateChatResponse({
+          message: llmMessage,
+          config: {
+            ...llmConfig,
+            systemPrompt: // TODO: the prompt should come from agent config: file analysis
+              "You are an assistant and your role is to analyze documents. What is the document file about in one sentence?",
+          },
+          metadata: llmMetadata,
+        })
+        fullContent = response
 
         // Yield chunk to frontend immediately (SSE)
         yield {
           data: JSON.stringify({
             type: "chunk",
-            content: chunk,
+            content: response,
             messageId: assistantMessageId,
           }),
         } as MessageEvent
+      } else {
+        // Stream from LLM provider
+        const chunks = this.llmProvider.streamChatResponse(llmMessages, llmConfig, llmMetadata)
+        for await (const chunk of chunks) {
+          fullContent += chunk
+
+          // Yield chunk to frontend immediately (SSE)
+          yield {
+            data: JSON.stringify({
+              type: "chunk",
+              content: chunk,
+              messageId: assistantMessageId,
+            }),
+          } as MessageEvent
+        }
       }
 
       // Step 7: Finalize streaming (persist completed message)
@@ -123,7 +208,7 @@ export class AgentStreamingService {
   /**
    * Converts AgentSession messages to LLM provider format
    */
-  private convertToLLMFormat(messages: AgentSession["messages"]): LLMChatMessage[] {
+  private async convertToLLMFormat(messages: AgentSession["messages"]): Promise<LLMChatMessage[]> {
     const llmMessages: LLMChatMessage[] = []
 
     for (const message of messages) {
@@ -137,6 +222,7 @@ export class AgentStreamingService {
         continue
       }
 
+      // FIXME: are we sure about that?
       // Skip messages with empty content (AI SDK requires non-empty content)
       if (!message.content || message.content.trim().length === 0) {
         continue

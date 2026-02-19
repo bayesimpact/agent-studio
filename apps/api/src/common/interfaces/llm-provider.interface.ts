@@ -1,10 +1,9 @@
+import type { ModelMessage } from "ai"
+
 /**
  * Chat message in normalized format for LLM providers
  */
-export interface LLMChatMessage {
-  role: "user" | "assistant" | "system"
-  content: string
-}
+export type LLMChatMessage = ModelMessage
 
 /**
  * Configuration for LLM requests
@@ -45,4 +44,9 @@ export interface LLMProvider {
     config: LLMConfig,
     metadata: LLMMetadata,
   ): AsyncGenerator<string, void, unknown>
+  generateChatResponse(params: {
+    message: LLMChatMessage
+    config: LLMConfig
+    metadata: LLMMetadata
+  }): Promise<string>
 }

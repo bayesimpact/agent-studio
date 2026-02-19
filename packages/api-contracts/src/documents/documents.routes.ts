@@ -5,7 +5,7 @@ import type { DocumentDto } from "./documents.dto"
 export const DocumentsRoutes = {
   uploadOne: defineRoute<ResponseData<DocumentDto>, RequestPayload<{ file: File }>>({
     method: "post",
-    path: "organizations/:organizationId/projects/:projectId/documents/upload/",
+    path: "organizations/:organizationId/projects/:projectId/documents/:sourceType/upload/",
   }),
   getAll: defineRoute<ResponseData<DocumentDto[]>>({
     method: "get",

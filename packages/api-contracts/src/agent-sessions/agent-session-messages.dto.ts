@@ -2,6 +2,7 @@ export type AgentSessionMessageDto = {
   id: string
   role: "user" | "assistant"
   content: string
+  // TODO: documentId for files/images
   status?: "streaming" | "completed" | "aborted" | "error"
   createdAt?: string
   startedAt?: string

@@ -1,8 +1,12 @@
 import { createAsyncThunk } from "@reduxjs/toolkit"
 import type { RootState, ThunkExtraArg } from "@/store"
 import { generateId } from "@/utils/generate-id"
+import { selectCurrentAgentId } from "../agents/agents.selectors"
 import { selectIsAdminInterface } from "../auth/auth.selectors"
+import { selectCurrentOrganizationId } from "../organizations/organizations.selectors"
+import { selectCurrentProjectId } from "../projects/projects.selectors"
 import type { AgentSession, AgentSessionMessage } from "./agent-sessions.models"
+import { selectCurrentAgentSessionId } from "./agent-sessions.selectors"
 import { agentSessionsActions } from "./agent-sessions.slice"
 import { streamChatResponse } from "./external/agent-session-streaming"
 
@@ -58,84 +62,100 @@ export const loadSessionMessages = createAsyncThunk<AgentSessionMessage[], strin
   },
 )
 
-export const sendMessage = createAsyncThunk<
-  void,
-  { sessionId: string; content: string },
-  ThunkConfig
->("agentSession/sendMessage", async ({ sessionId, content }, { dispatch, getState, signal }) => {
-  const state = getState()
-  const agentSessionsState = state.agentSessions
+export const sendMessage = createAsyncThunk<void, { content: string; file?: File }, ThunkConfig>(
+  "agentSession/sendMessage",
+  async ({ content, file }, { dispatch, getState, signal }) => {
+    const state = getState()
+    const organizationId = selectCurrentOrganizationId(state)
+    if (!organizationId) {
+      throw new Error("No current organization ID found")
+    }
+    const projectId = selectCurrentProjectId(state)
+    if (!projectId) {
+      throw new Error("No current project ID found")
+    }
+    const agentId = selectCurrentAgentId(state)
+    if (!agentId) {
+      throw new Error("No current agent ID found")
+    }
+    const sessionId = selectCurrentAgentSessionId(state)
+    if (!sessionId) {
+      throw new Error("No current agent session ID found")
+    }
 
-  // Guard: don't allow sending if already streaming
-  if (agentSessionsState.isStreaming) {
-    return
-  }
+    const agentSessionsState = state.agentSessions
 
-  // Generate IDs for user and assistant messages
-  const userMessageId = generateId()
-  const assistantMessageId = generateId()
+    // Guard: don't allow sending if already streaming
+    if (agentSessionsState.isStreaming) {
+      return
+    }
 
-  // Create user message
-  const userMessage: AgentSessionMessage = {
-    id: userMessageId,
-    role: "user",
-    content,
-    createdAt: new Date().toISOString(),
-  }
+    const userMessageId = generateId()
+    const assistantMessageId = generateId()
 
-  // Dispatch start streaming action (adds both messages optimistically)
-  dispatch(agentSessionsActions.startStreaming({ userMessage, assistantMessageId }))
-
-  try {
-    // Stream the response
-    await streamChatResponse(
-      sessionId,
+    const userMessage: AgentSessionMessage = {
+      id: userMessageId,
+      role: "user",
       content,
-      {
-        onStart: (event) => {
-          // Update the optimistic message ID to match the backend's ID
-          dispatch(
-            agentSessionsActions.updateAssistantMessageId({
-              oldMessageId: assistantMessageId,
-              newMessageId: event.messageId,
-            }),
-          )
+      createdAt: new Date().toISOString(),
+    }
+
+    dispatch(agentSessionsActions.startStreaming({ userMessage, assistantMessageId }))
+
+    try {
+      await streamChatResponse({
+        organizationId,
+        projectId,
+        agentId,
+        sessionId,
+        content,
+        file,
+        handlers: {
+          onStart: (event) => {
+            // Update the optimistic message ID to match the backend's ID
+            dispatch(
+              agentSessionsActions.updateAssistantMessageId({
+                oldMessageId: assistantMessageId,
+                newMessageId: event.messageId,
+              }),
+            )
+          },
+          onChunk: (event) => {
+            dispatch(
+              agentSessionsActions.appendAssistantChunk({
+                messageId: event.messageId,
+                chunk: event.content,
+              }),
+            )
+          },
+          onEnd: (event) => {
+            dispatch(
+              agentSessionsActions.completeAssistantMessage({
+                messageId: event.messageId,
+                fullContent: event.fullContent,
+              }),
+            )
+          },
+          onError: (event) => {
+            dispatch(
+              agentSessionsActions.failAssistantMessage({
+                messageId: event.messageId,
+                error: event.error,
+              }),
+            )
+          },
         },
-        onChunk: (event) => {
-          dispatch(
-            agentSessionsActions.appendAssistantChunk({
-              messageId: event.messageId,
-              chunk: event.content,
-            }),
-          )
-        },
-        onEnd: (event) => {
-          dispatch(
-            agentSessionsActions.completeAssistantMessage({
-              messageId: event.messageId,
-              fullContent: event.fullContent,
-            }),
-          )
-        },
-        onError: (event) => {
-          dispatch(
-            agentSessionsActions.failAssistantMessage({
-              messageId: event.messageId,
-              error: event.error,
-            }),
-          )
-        },
-      },
-      signal,
-    )
-  } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : "Failed to stream response"
-    dispatch(
-      agentSessionsActions.failAssistantMessage({
-        messageId: assistantMessageId,
-        error: errorMessage,
-      }),
-    )
-    throw error
-  }
-})
+        signal,
+      })
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : "Failed to stream response"
+      dispatch(
+        agentSessionsActions.failAssistantMessage({
+          messageId: assistantMessageId,
+          error: errorMessage,
+        }),
+      )
+      throw error
+    }
+  },
+)

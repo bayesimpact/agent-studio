@@ -13,10 +13,11 @@ export class LocalStorageService implements IFileStorage {
   private readonly baseUrl: string
 
   constructor(private readonly configService: ConfigService) {
-    this.baseUrl = this.configService.get<string>(
-      "SERVER_BASE_URL",
-      `http://localhost:${process.env.PORT || "3001"}`,
-    )
+    const envBaseUrl = process.env.LOCAL_STORAGE_SERVER_BASE_URL
+    if (!envBaseUrl) {
+      throw new Error("LOCAL_STORAGE_SERVER_BASE_URL is not set.")
+    }
+    this.baseUrl = this.configService.get<string>("SERVER_BASE_URL", envBaseUrl as string)
   }
 
   getTemporaryUrl(storageRelativePath: string): Promise<string> {

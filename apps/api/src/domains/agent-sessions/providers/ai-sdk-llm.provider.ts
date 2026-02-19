@@ -2,7 +2,7 @@ import "./open-telemetry-init" // !!!! first import !!!!
 
 import { createVertex } from "@ai-sdk/google-vertex"
 import { Injectable } from "@nestjs/common"
-import { streamText } from "ai"
+import { generateText, streamText } from "ai"
 import type {
   LLMChatMessage,
   LLMConfig,
@@ -35,22 +35,22 @@ export class AISDKLLMProvider implements LLMProvider {
   ): AsyncGenerator<string, void, unknown> {
     // Convert normalized messages to ai-sdk format
     // Filter out empty messages and system messages (handled separately)
-    const aiSDKMessages: AISDKLLMProvider.AiSDKMessages[] = messages
+    const aiSDKMessages: LLMChatMessage[] = messages
       .map((message) => {
         if (message.role === "system") {
           // ai-sdk handles system messages separately
           return undefined
         }
         // Skip messages with empty content (Gemini requires non-empty parts field)
-        if (!message.content || message.content.trim().length === 0) {
-          return undefined
-        }
+        // if (!message.content || message.content.trim().length === 0) {
+        //   return undefined
+        // }
         return {
           role: message.role === "assistant" ? "assistant" : "user",
           content: message.content,
         }
       })
-      .filter((msg) => msg !== undefined) as Array<AISDKLLMProvider.AiSDKMessages>
+      .filter((msg) => msg !== undefined) as LLMChatMessage[]
 
     // Ensure we have at least one message (required by Gemini API)
     if (aiSDKMessages.length === 0) {
@@ -78,7 +78,55 @@ export class AISDKLLMProvider implements LLMProvider {
     }
   }
 
-  buildFunctionId(aiSDKMessages: AISDKLLMProvider.AiSDKMessages[]): string {
+  async generateChatResponse({
+    message,
+    config,
+    metadata,
+  }: {
+    message: LLMChatMessage
+    config: LLMConfig
+    metadata: LLMMetadata
+  }): Promise<string> {
+    // Convert normalized messages to ai-sdk format
+    // Filter out empty messages and system messages (handled separately)
+    const aiSDKMessages: LLMChatMessage[] = [message]
+      .map((message) => {
+        if (message.role === "system") {
+          // ai-sdk handles system messages separately
+          return undefined
+        }
+        // Skip messages with empty content (Gemini requires non-empty parts field)
+        // if (!message.content || message.content.trim().length === 0) {
+        //   return undefined
+        // }
+        return {
+          role: message.role === "assistant" ? "assistant" : "user",
+          content: message.content,
+        }
+      })
+      .filter((msg) => msg !== undefined) as LLMChatMessage[]
+
+    // Ensure we have at least one message (required by Gemini API)
+    if (aiSDKMessages.length === 0) {
+      throw new Error("Cannot stream response: no valid messages provided")
+    }
+
+    // Stream using ai-sdk
+    const result = await generateText({
+      model: this.vertexProvider(config.model),
+      messages: aiSDKMessages,
+      system: config.systemPrompt,
+      temperature: config.temperature,
+      experimental_telemetry: {
+        isEnabled: true,
+        functionId: this.buildFunctionId(aiSDKMessages),
+        metadata: this.buildMetadata(config, metadata),
+      },
+    })
+    return result.text
+  }
+
+  buildFunctionId(aiSDKMessages: LLMChatMessage[]): string {
     return `LLMProvider.streamChatResponse [${aiSDKMessages.filter((m) => m.role === "assistant").length + 1} turn(s)]` //+1 => current turn
   }
 
@@ -94,13 +142,5 @@ export class AISDKLLMProvider implements LLMProvider {
       tags: [...tags, ...(metadata?.tags || [])],
       currentTurn: metadata.currentTurn,
     })
-  }
-}
-
-// biome-ignore lint/correctness/noUnusedVariables: used in class AISDKLLMProvider
-namespace AISDKLLMProvider {
-  export type AiSDKMessages = {
-    role: "user" | "assistant"
-    content: string
   }
 }

@@ -31,4 +31,7 @@ export class Document extends ConnectEntityBase {
 
   @Column({ name: "storage_relative_path", nullable: true })
   storageRelativePath!: string
+
+  @Column({ name: "source_type", nullable: false })
+  sourceType!: "project" | "agentSessionMessage"
 }

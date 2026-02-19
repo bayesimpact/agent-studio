@@ -14,6 +14,8 @@ const listenerMiddleware = createListenerMiddleware<RootState, AppDispatch>()
 
 export type AppStartListening = TypedStartListening<RootState, AppDispatch>
 
+// TODO: add listener on createFeedback should reload all feedback
+
 // Refresh feedbacks when agents are loaded
 listenerMiddleware.startListening({
   actionCreator: listAgents.fulfilled,
