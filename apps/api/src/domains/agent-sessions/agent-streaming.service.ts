@@ -138,8 +138,12 @@ export class AgentStreamingService {
           message: llmMessage,
           config: {
             ...llmConfig,
-            systemPrompt: // TODO: the prompt should come from agent config: file analysis
-              "You are an assistant and your role is to analyze documents. What is the document file about in one sentence?",
+            // TODO: the prompt should come from agent config: file analysis
+            systemPrompt: this.generateMasterPrompt({
+              ...agent,
+              defaultPrompt:
+                "You are an assistant and your role is to analyze documents. What is the document file about in one sentence?",
+            }),
           },
           metadata: llmMetadata,
         })
