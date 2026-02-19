@@ -15,14 +15,15 @@ zone = europe-west9
 langfuseUrl = https://langfuse-y72kzcp7ka-od.a.run.app
 langfusePk = pk-lf-48fd15e2-85a2-4c78-9e95-0730d9b22553
 secretsPrefix = CONNECT_
-postHogHost=https://eu.i.posthog.com
+postHogHost = https://eu.i.posthog.com
 addCloudSqlInstances=caseai-connect:europe-west9:connect-eu
 cloudSqlProxyPort = 5433
-auth0OrganizationId=org_ue5MX9VnvRlaM3gT
-auth0Audience=https://bayes-impact.eu.auth0.com/api/v2/
-auth0IssuerUrl=https://bayes-impact.eu.auth0.com/
-auth0M2MClientId=ct0uygE3ld8IOKjaGozWbRLMae0R0Pcr
-auth0ClientId=Ntkc5sZnx8OQNP4UJDCqId4eo0WqGTJD
+auth0OrganizationId = org_ue5MX9VnvRlaM3gT
+auth0Audience = https://bayes-impact.eu.auth0.com/api/v2/
+auth0IssuerUrl = https://bayes-impact.eu.auth0.com/
+auth0M2MClientId = ct0uygE3ld8IOKjaGozWbRLMae0R0Pcr
+auth0ClientId = Ntkc5sZnx8OQNP4UJDCqId4eo0WqGTJD
+localStorageServerBaseUrl = https://connect.localhost:3000
 endif
 
 # ==============================================================================
@@ -128,6 +129,7 @@ deploy-only:
 	--set-env-vars=TZ=UTC \
 	--set-env-vars=AUTH0_ISSUER_URL=${auth0IssuerUrl},AUTH0_AUDIENCE=${auth0Audience} \
 	--set-env-vars=AUTH0_ORGANIZATION_ID=${auth0OrganizationId},AUTH0_CLIENT_ID=${auth0ClientId},AUTH0_M2M_CLIENT_ID=${auth0M2MClientId} \
+	--set-env-vars=LOCAL_STORAGE_SERVER_BASE_URL=${localStorageServerBaseUrl} \
   --set-env-vars=LANGFUSE_PK=${langfusePk},LANGFUSE_BASE_URL=${langfuseUrl},LOCATION=$(location) \
   --set-env-vars=DATABASE_HOST=/cloudsql/${addCloudSqlInstances},DATABASE_USERNAME=connect_admin,DATABASE_NAME=connect \
 	--region=${zone} \
