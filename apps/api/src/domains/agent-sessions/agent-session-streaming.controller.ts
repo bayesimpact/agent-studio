@@ -3,19 +3,21 @@ import type { MessageEvent } from "@nestjs/common"
 import { Controller, ForbiddenException, Param, Query, Req, Sse, UseGuards } from "@nestjs/common"
 import { Observable } from "rxjs"
 import type { EndpointRequestWithAgent } from "@/common/context/request.interface"
+import { AddContext, RequireContext } from "@/common/context/require-context.decorator"
 import { ResourceContextGuard } from "@/common/context/resource-context.guard"
 import { CheckPolicy } from "@/common/policies/check-policy.decorator"
 import { JwtAuthGuard } from "@/domains/auth/jwt-auth.guard"
 import { UserGuard } from "@/domains/users/user.guard"
-import { AgentGuard } from "../agents/agent.guard"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
 import { AgentStreamingService } from "./agent-streaming.service"
 
-@UseGuards(JwtAuthGuard, UserGuard, ResourceContextGuard, AgentGuard)
+@UseGuards(JwtAuthGuard, UserGuard, ResourceContextGuard)
+@RequireContext("organization", "project")
 @Controller()
 export class AgentSessionStreamingController {
   constructor(private readonly chatStreamingService: AgentStreamingService) {}
 
+  @AddContext("agent")
   @CheckPolicy((policy) => policy.canList())
   @Sse(AgentSessionStreamingRoutes.stream.path, { method: 0 /* GET */ })
   stream(
