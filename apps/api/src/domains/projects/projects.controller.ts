@@ -4,16 +4,18 @@ import type {
   EndpointRequestWithProject,
   EndpointRequestWithUserMembership,
 } from "@/common/context/request.interface"
+import { AddContext, RequireContext } from "@/common/context/require-context.decorator"
+import { ResourceContextGuard } from "@/common/context/resource-context.guard"
 import { CheckPolicy } from "@/common/policies/check-policy.decorator"
 import { JwtAuthGuard } from "@/domains/auth/jwt-auth.guard"
-import { OrganizationGuard } from "@/domains/organizations/organization.guard"
 import { UserGuard } from "@/domains/users/user.guard"
 import { ProjectsGuard } from "./projects.guard"
 import { ProjectsRoutes } from "./projects.routes"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
 import { ProjectsService } from "./projects.service"
 
-@UseGuards(JwtAuthGuard, UserGuard, OrganizationGuard, ProjectsGuard)
+@UseGuards(JwtAuthGuard, UserGuard, ResourceContextGuard, ProjectsGuard)
+@RequireContext("organization")
 @Controller()
 export class ProjectsController {
   constructor(private readonly projectsService: ProjectsService) {}
@@ -65,6 +67,7 @@ export class ProjectsController {
 
   @Patch(ProjectsRoutes.updateProject.path)
   @CheckPolicy((policy) => policy.canUpdate())
+  @AddContext("project")
   async updateProject(
     @Req() request: EndpointRequestWithProject,
     @Body() body: typeof ProjectsRoutes.updateProject.request,
@@ -85,6 +88,7 @@ export class ProjectsController {
 
   @Delete(ProjectsRoutes.deleteProject.path)
   @CheckPolicy((policy) => policy.canDelete())
+  @AddContext("project")
   async deleteProject(
     @Req() request: EndpointRequestWithProject,
   ): Promise<typeof ProjectsRoutes.deleteProject.response> {

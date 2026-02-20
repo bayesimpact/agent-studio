@@ -3,57 +3,31 @@ import {
   type ExecutionContext,
   ForbiddenException,
   Injectable,
-  NotFoundException,
 } from "@nestjs/common"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
 import { Reflector } from "@nestjs/core"
-import type { EndpointRequestWithProject } from "@/common/context/request.interface"
+import type {
+  EndpointRequestWithProject,
+  EndpointRequestWithUserMembership,
+} from "@/common/context/request.interface"
 import { AUTH_ERRORS } from "@/common/errors/auth-errors"
 import { CHECK_POLICY_KEY, type PolicyHandler } from "@/common/policies/check-policy.decorator"
-// biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
-import { ProjectMembershipsService } from "./memberships/project-memberships.service"
-import type { Project } from "./project.entity"
 import { ProjectPolicy } from "./project.policy"
-// biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
-import { ProjectsService } from "./projects.service"
 
 @Injectable()
 export class ProjectsGuard implements CanActivate {
-  constructor(
-    readonly projectsService: ProjectsService,
-    readonly projectMembershipsService: ProjectMembershipsService,
-    private reflector: Reflector,
-  ) {}
+  constructor(private reflector: Reflector) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
-    // since ProjectsGuard is called after UserGuard, we can access the enhanced request object storing the user
-    const request = context.switchToHttp().getRequest() as EndpointRequestWithProject & {
-      params: { projectId: string }
-    }
+    // ResourceContextGuard resolves organization/project context before policy evaluation.
+    const request = context.switchToHttp().getRequest() as
+      | EndpointRequestWithUserMembership
+      | EndpointRequestWithProject
 
-    // fetch the project from the database if ProjectId is provided
-    let project: Project | undefined
-    const projectId = request.params.projectId
-
-    // the caller didn't provide a projectId and our route mechanism uses the :projectId placeholder instead
-    if (projectId === ":projectId") throw new NotFoundException()
-
-    // ok, we have a projectId (UPDATE, DELETE routes), fetch the project from the database
-    if (projectId) {
-      project = await this.projectsService.getProject(request.organizationId, projectId)
-      if (!project) throw new NotFoundException()
-
-      // enhance the request object with the project
-      request.project = project
-
-      request.projectMembership =
-        (await this.projectMembershipsService.findByProjectIdAndUserId(
-          projectId,
-          request.user.id,
-        )) ?? undefined
-    }
-
-    const policy = new ProjectPolicy(request.userMembership, project)
+    const policy = new ProjectPolicy(
+      request.userMembership,
+      "project" in request ? request.project : undefined,
+    )
 
     const policyHandler = this.reflector.getAllAndOverride<PolicyHandler>(CHECK_POLICY_KEY, [
       context.getHandler(),

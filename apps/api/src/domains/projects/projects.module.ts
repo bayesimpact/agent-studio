@@ -1,5 +1,9 @@
 import { Module } from "@nestjs/common"
 import { TypeOrmModule } from "@nestjs/typeorm"
+import { OrganizationContextResolver } from "@/common/context/resolvers/organization-context.resolver"
+import { ProjectContextResolver } from "@/common/context/resolvers/project-context.resolver"
+import { ProjectMembershipContextResolver } from "@/common/context/resolvers/project-membership-context.resolver"
+import { ResourceContextGuard } from "@/common/context/resource-context.guard"
 import { AuthModule } from "@/domains/auth/auth.module"
 import { Organization } from "@/domains/organizations/organization.entity"
 import { OrganizationsModule } from "@/domains/organizations/organizations.module"
@@ -12,6 +16,7 @@ import { ProjectMembershipsController } from "./memberships/project-memberships.
 import { ProjectMembershipsService } from "./memberships/project-memberships.service"
 import { Project } from "./project.entity"
 import { ProjectsController } from "./projects.controller"
+import { ProjectsGuard } from "./projects.guard"
 import { ProjectsService } from "./projects.service"
 
 @Module({
@@ -21,7 +26,15 @@ import { ProjectsService } from "./projects.service"
     UsersModule,
     AuthModule,
   ],
-  providers: [ProjectsService, ProjectMembershipsService],
+  providers: [
+    ProjectsService,
+    ProjectMembershipsService,
+    ProjectsGuard,
+    ResourceContextGuard,
+    OrganizationContextResolver,
+    ProjectContextResolver,
+    ProjectMembershipContextResolver,
+  ],
   controllers: [ProjectsController, ProjectMembershipsController, InvitationsController],
   exports: [ProjectsService, ProjectMembershipsService],
 })
