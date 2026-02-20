@@ -5,6 +5,7 @@ import { selectCurrentAgentId } from "../agents/agents.selectors"
 import { listAgents } from "../agents/agents.thunks"
 import { notificationsActions } from "../notifications/notifications.slice"
 import { selectCurrentOrganizationId } from "../organizations/organizations.selectors"
+import { selectCurrentProjectId } from "../projects/projects.selectors"
 import {
   createAgentMessageFeedback,
   listAgentMessageFeedbacks,
@@ -72,6 +73,13 @@ listenerMiddleware.startListening({
         type: "success",
       }),
     )
+
+    const state = listenerApi.getState()
+    const organizationId = selectCurrentOrganizationId(state)
+    const projectId = selectCurrentProjectId(state)
+    const agentId = selectCurrentAgentId(state)
+    if (!organizationId || !projectId || !agentId) return
+    await listenerApi.dispatch(listAgentMessageFeedbacks({ organizationId, projectId, agentId }))
   },
 })
 
