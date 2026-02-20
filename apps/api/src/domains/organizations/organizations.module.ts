@@ -6,6 +6,7 @@ import { UsersModule } from "@/domains/users/users.module"
 import { Organization } from "./organization.entity"
 import { OrganizationsController } from "./organizations.controller"
 import { OrganizationsService } from "./organizations.service"
+import { OrganizationsPolicyGuard } from "./organizations-policy.guard"
 import { UserMembership } from "./user-membership.entity"
 import { UserMembershipService } from "./user-membership.service"
 
@@ -15,7 +16,7 @@ import { UserMembershipService } from "./user-membership.service"
     UsersModule,
     AuthModule,
   ],
-  providers: [OrganizationsService, UserMembershipService],
+  providers: [OrganizationsService, UserMembershipService, OrganizationsPolicyGuard],
   controllers: [OrganizationsController],
   exports: [OrganizationsService, UserMembershipService],
 })
