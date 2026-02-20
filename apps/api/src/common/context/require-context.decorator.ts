@@ -3,7 +3,13 @@ import { SetMetadata } from "@nestjs/common"
 export const REQUIRE_CONTEXT_KEY = "require_context"
 export const ADD_CONTEXT_KEY = "add_context"
 
-export type ContextResource = "organization" | "project" | "agent" | "agentSession" | "document"
+export type ContextResource =
+  | "organization"
+  | "project"
+  | "projectMembership"
+  | "agent"
+  | "agentSession"
+  | "document"
 
 export const RequireContext = (...resources: ContextResource[]) =>
   SetMetadata(REQUIRE_CONTEXT_KEY, resources)

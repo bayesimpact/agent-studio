@@ -23,10 +23,13 @@ import { DocumentContextResolver } from "./resolvers/document-context.resolver"
 import { OrganizationContextResolver } from "./resolvers/organization-context.resolver"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
 import { ProjectContextResolver } from "./resolvers/project-context.resolver"
+// biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
+import { ProjectMembershipContextResolver } from "./resolvers/project-membership-context.resolver"
 
 const RESOLUTION_ORDER: ContextResource[] = [
   "organization",
   "project",
+  "projectMembership",
   "agent",
   "agentSession",
   "document",
@@ -40,6 +43,7 @@ export class ResourceContextGuard implements CanActivate {
     private reflector: Reflector,
     @Optional() organizationContextResolver?: OrganizationContextResolver,
     @Optional() projectContextResolver?: ProjectContextResolver,
+    @Optional() projectMembershipContextResolver?: ProjectMembershipContextResolver,
     @Optional() agentContextResolver?: AgentContextResolver,
     @Optional() agentSessionContextResolver?: AgentSessionContextResolver,
     @Optional() documentContextResolver?: DocumentContextResolver,
@@ -50,6 +54,12 @@ export class ResourceContextGuard implements CanActivate {
     }
     if (projectContextResolver) {
       resolverEntries.push([projectContextResolver.resource, projectContextResolver])
+    }
+    if (projectMembershipContextResolver) {
+      resolverEntries.push([
+        projectMembershipContextResolver.resource,
+        projectMembershipContextResolver,
+      ])
     }
     if (agentContextResolver) {
       resolverEntries.push([agentContextResolver.resource, agentContextResolver])

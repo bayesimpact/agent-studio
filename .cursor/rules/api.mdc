@@ -204,6 +204,37 @@ export class MyController {
 - Always wrap response objects in `{ data: ... }` to match `ResponseData<T>` structure
 - For POST/PUT/PATCH, request bodies should match `RequestPayload<T>` (wrapped in `{ payload: ... }`)
 
+### Context Resolver Architecture (Required)
+
+Controllers and guards MUST follow the context resolver pattern for resource loading:
+
+- Use `ResourceContextGuard` to resolve request context (`organization`, `project`, `projectMembership`, `agent`, etc.)
+- Declare required context at controller or method level with `@RequireContext(...)`
+- Add route-specific context with `@AddContext(...)` when only some handlers need extra resources
+- Keep domain guards (e.g. `ProjectsGuard`, `ProjectMembershipsGuard`, `AgentGuard`) focused on **policy evaluation only**
+- Do **not** use cascading resource-loading guards like `UserGuard -> OrganizationGuard -> ProjectsGuard` to populate request resources
+- Do **not** fetch domain resources in policy guards when a context resolver exists
+
+**Module wiring rules**:
+- Register `ResourceContextGuard` in module providers
+- Register each resolver used by the module (e.g., `OrganizationContextResolver`, `ProjectContextResolver`, `ProjectMembershipContextResolver`)
+- Keep `JwtAuthGuard` and `UserGuard` for authentication/user hydration; use resolvers for resource hydration
+
+**Example pattern**:
+```typescript
+@UseGuards(JwtAuthGuard, UserGuard, ResourceContextGuard, ProjectsGuard)
+@RequireContext("organization", "project")
+@Controller()
+export class ExampleController {
+  @Delete("organizations/:organizationId/projects/:projectId/memberships/:membershipId")
+  @AddContext("projectMembership")
+  @CheckPolicy((policy) => policy.canDelete())
+  async remove(@Req() request: EndpointRequestWithProjectMembership) {
+    return { data: { success: true } }
+  }
+}
+```
+
 #### Step 3: Export Routes
 
 Export your routes in `packages/api-contracts/src/api-routes/index.ts`:
