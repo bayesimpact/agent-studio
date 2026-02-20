@@ -36,7 +36,6 @@ export class AgentSessionContextResolver implements ContextResolver {
           agentId: requestWithAgent.agent.id,
         },
       })) ?? undefined
-    console.warn("AJ: agentSession", agentSession)
     if (!agentSession) throw new NotFoundException()
 
     const requestWithAgentSession = request as EndpointRequestWithAgentSession
