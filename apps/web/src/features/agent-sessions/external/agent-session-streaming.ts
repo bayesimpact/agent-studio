@@ -1,6 +1,5 @@
-import { AgentSessionStreamingRoutes, DocumentsRoutes } from "@caseai-connect/api-contracts"
+import { AgentSessionStreamingRoutes } from "@caseai-connect/api-contracts"
 import { getAccessToken } from "@/external/auth0Client"
-import { getAxiosInstance } from "@/external/axios"
 
 export type StreamEvent =
   | { type: "start"; messageId: string }
@@ -25,7 +24,7 @@ export async function streamChatResponse({
   agentId,
   sessionId,
   content,
-  file,
+  documentId,
   handlers,
   signal,
 }: {
@@ -34,18 +33,10 @@ export async function streamChatResponse({
   agentId: string
   sessionId: string
   content: string
-  file?: File
+  documentId?: string
   handlers: StreamEventHandler
   signal?: AbortSignal
 }): Promise<void> {
-  const axios = getAxiosInstance()
-
-  let documentId: string | undefined
-
-  if (file) {
-    documentId = await handleFile({ file, organizationId, projectId, axios })
-  }
-
   try {
     const token = await getAccessToken()
     const baseURL = import.meta.env.VITE_API_URL as string
@@ -159,36 +150,5 @@ export async function streamChatResponse({
     // biome-ignore lint/suspicious/noExplicitAny: Error handling
   } catch (error: any) {
     throw new Error("Fail to stream", error)
-  }
-}
-
-async function handleFile({
-  file,
-  organizationId,
-  projectId,
-  axios,
-}: {
-  file: File
-  organizationId: string
-  projectId: string
-  axios: ReturnType<typeof getAxiosInstance>
-}) {
-  const formData = new FormData()
-  formData.append("file", file)
-
-  try {
-    const response = await axios.post<typeof DocumentsRoutes.uploadOne.response>(
-      DocumentsRoutes.uploadOne.getPath({
-        organizationId,
-        projectId,
-        sourceType: "agentSessionMessage",
-      }),
-      formData,
-      { headers: { "Content-Type": "multipart/form-data" } },
-    )
-    return response.data.data.id
-    // biome-ignore lint/suspicious/noExplicitAny: Error handling
-  } catch (error: any) {
-    throw new Error("Fail to upload document", error)
   }
 }

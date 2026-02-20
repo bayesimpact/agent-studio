@@ -12,7 +12,7 @@ export function UploadDocumentButton({
 }) {
   const dispatch = useAppDispatch()
   const handleProcessFile = async ({ file }: { file: File }) => {
-    dispatch(uploadDocument({ organizationId, projectId: project.id, file }))
+    dispatch(uploadDocument({ organizationId, projectId: project.id, file, sourceType: "project" }))
   }
   return (
     <BasicUploader

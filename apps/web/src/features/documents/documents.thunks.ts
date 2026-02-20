@@ -19,13 +19,14 @@ export const uploadDocument = createAsyncThunk<
     organizationId: string
     projectId: string
     file: File
+    sourceType: "project" | "agentSessionMessage"
     onSuccess?: (params: { documentId: string }) => void
   },
   ThunkConfig
 >(
   "documents/uploadOne",
-  async ({ organizationId, projectId, file }, { extra: { services } }) =>
-    await services.documents.uploadOne({ organizationId, projectId, file }),
+  async ({ organizationId, projectId, file, sourceType }, { extra: { services } }) =>
+    await services.documents.uploadOne({ organizationId, projectId, file, sourceType }),
 )
 
 export const deleteDocument = createAsyncThunk<
