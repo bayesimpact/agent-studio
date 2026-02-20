@@ -9,10 +9,10 @@ import { ResourceContextGuard } from "@/common/context/resource-context.guard"
 import { CheckPolicy } from "@/common/policies/check-policy.decorator"
 import { JwtAuthGuard } from "@/domains/auth/jwt-auth.guard"
 import { UserGuard } from "@/domains/users/user.guard"
-import type { AgentMessage } from "./agent-message.entity"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
-import { AgentSessionsService } from "./agent-sessions.service"
-import { AppPrivateSessionGuard } from "./app-private-session.guard"
+import { AgentSessionsService } from "../agent-sessions.service"
+import { AppPrivateSessionGuard } from "../app-private/app-private-session.guard"
+import type { AgentMessage } from "./agent-message.entity"
 
 @UseGuards(JwtAuthGuard, UserGuard, ResourceContextGuard, AppPrivateSessionGuard)
 @RequireContext("organization", "project", "agent", "agentSession")

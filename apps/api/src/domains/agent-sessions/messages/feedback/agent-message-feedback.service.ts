@@ -3,7 +3,7 @@ import { InjectRepository } from "@nestjs/typeorm"
 import { In, type Repository } from "typeorm"
 import { ConnectRepository } from "@/common/entities/connect-repository"
 import type { RequiredConnectScope } from "@/common/entities/connect-required-fields"
-import { AgentMessage } from "../agent-sessions/agent-message.entity"
+import { AgentMessage } from "../agent-message.entity"
 import { AgentMessageFeedback } from "./agent-message-feedback.entity"
 
 @Injectable()

@@ -9,8 +9,8 @@ import {
 } from "@/common/test/test-transaction-manager"
 import { removeNullish } from "@/common/utils/remove-nullish"
 import { createOrganizationWithAgentMessage } from "@/domains/organizations/organization.factory"
-import { setupUserGuardForTesting } from "../../../../test/e2e.helpers"
-import { expectResponse, type Requester, testRequester } from "../../../../test/request"
+import { setupUserGuardForTesting } from "../../../../../../test/e2e.helpers"
+import { expectResponse, type Requester, testRequester } from "../../../../../../test/request"
 import { AgentMessageFeedbackModule } from "../agent-message-feedback.module"
 
 describe("Agent Message Feedback - Auth", () => {

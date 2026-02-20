@@ -1,6 +1,6 @@
 import type { RequiredConnectScope } from "@/common/entities/connect-required-fields"
 import { userMembershipFactory } from "@/domains/organizations/user-membership.factory"
-import { createChitChatConversation } from "../agent-messages.factory"
+import { createChitChatConversation } from "../messages/agent-messages.factory"
 import { agentSessionControllerTestSetup } from "./test-setup"
 
 const getTestContext = agentSessionControllerTestSetup()

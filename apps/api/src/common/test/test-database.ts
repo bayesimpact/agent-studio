@@ -10,9 +10,9 @@ import {
   type QueryRunner,
   type Repository,
 } from "typeorm"
-import { AgentMessageFeedback } from "@/domains/agent-message-feedback/agent-message-feedback.entity"
-import { AgentMessage } from "@/domains/agent-sessions/agent-message.entity"
 import { AgentSession } from "@/domains/agent-sessions/agent-session.entity"
+import { AgentMessage } from "@/domains/agent-sessions/messages/agent-message.entity"
+import { AgentMessageFeedback } from "@/domains/agent-sessions/messages/feedback/agent-message-feedback.entity"
 import { Agent } from "@/domains/agents/agent.entity"
 import { Document } from "@/domains/documents/document.entity"
 import { Organization } from "@/domains/organizations/organization.entity"

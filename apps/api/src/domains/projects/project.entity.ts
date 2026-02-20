@@ -1,6 +1,6 @@
 import { Column, Entity, JoinColumn, ManyToOne, OneToMany } from "typeorm"
 import { Base4AllEntity } from "@/common/entities/base4all.entity"
-import { AgentMessageFeedback } from "@/domains/agent-message-feedback/agent-message-feedback.entity"
+import { AgentMessageFeedback } from "@/domains/agent-sessions/messages/feedback/agent-message-feedback.entity"
 import { Agent } from "@/domains/agents/agent.entity"
 import { Document } from "@/domains/documents/document.entity"
 import { Organization } from "@/domains/organizations/organization.entity"
