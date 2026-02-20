@@ -3,7 +3,7 @@ import { ConnectEntity, ConnectEntityBase } from "@/common/entities/connect-enti
 import { Agent } from "@/domains/agents/agent.entity"
 import { Organization } from "@/domains/organizations/organization.entity"
 import { User } from "@/domains/users/user.entity"
-import { AgentMessage } from "./agent-message.entity"
+import { AgentMessage } from "../agent-sessions/messages/agent-message.entity"
 
 export type AgentSessionType = "playground" | "production" | "app-private"
 

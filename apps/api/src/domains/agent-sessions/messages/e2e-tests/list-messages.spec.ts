@@ -10,8 +10,8 @@ import { removeNullish } from "@/common/utils/remove-nullish"
 import { createOrganizationWithAgentSession } from "@/domains/organizations/organization.factory"
 import { setupUserGuardForTesting } from "../../../../../test/e2e.helpers"
 import { type Requester, testRequester } from "../../../../../test/request"
-import { createChitChatConversation } from "../../agent-messages.factory"
 import { AgentSessionsModule } from "../../agent-sessions.module"
+import { createChitChatConversation } from "../agent-messages.factory"
 
 describe("AgentSessionMessagesRoutes.listMessages", () => {
   let app: INestApplication<App>

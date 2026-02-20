@@ -1,5 +1,5 @@
 import type { RequiredConnectScope } from "@/common/entities/connect-required-fields"
-import { agentMessageFactory } from "../agent-messages.factory"
+import { agentMessageFactory } from "../messages/agent-messages.factory"
 import { agentSessionControllerTestSetup } from "./test-setup"
 
 const getTestContext = agentSessionControllerTestSetup()

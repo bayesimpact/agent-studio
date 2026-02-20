@@ -3,7 +3,7 @@ import { Factory } from "fishery"
 import type { Organization } from "@/domains/organizations/organization.entity"
 import type { Project } from "@/domains/projects/project.entity"
 import type { User } from "@/domains/users/user.entity"
-import type { AgentMessage } from "../agent-sessions/agent-message.entity"
+import type { AgentMessage } from "../agent-message.entity"
 import type { AgentMessageFeedback } from "./agent-message-feedback.entity"
 
 type AgentMessageFeedbackTransientParams = {

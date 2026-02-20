@@ -5,7 +5,7 @@ import { v4 } from "uuid"
 
 import { ConnectRepository } from "@/common/entities/connect-repository"
 import type { RequiredConnectScope } from "@/common/entities/connect-required-fields"
-import { AgentMessage } from "./agent-message.entity"
+import { AgentMessage } from "../agent-sessions/messages/agent-message.entity"
 import { AgentSession, type AgentSessionType } from "./agent-session.entity"
 
 @Injectable()
