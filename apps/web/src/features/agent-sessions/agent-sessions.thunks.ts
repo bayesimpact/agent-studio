@@ -82,7 +82,7 @@ export const loadSessionMessages = createAsyncThunk<AgentSessionMessage[], strin
 
 export const sendMessage = createAsyncThunk<void, { content: string; file?: File }, ThunkConfig>(
   "agentSession/sendMessage",
-  async ({ content, file }, { dispatch, getState, signal }) => {
+  async ({ content, file }, { extra: { services }, dispatch, getState, signal }) => {
     const state = getState()
     const organizationId = selectCurrentOrganizationId(state)
     if (!organizationId) {
@@ -111,10 +111,23 @@ export const sendMessage = createAsyncThunk<void, { content: string; file?: File
     const userMessageId = generateId()
     const assistantMessageId = generateId()
 
+    let documentId: string | undefined
+
+    if (file) {
+      const document = await services.documents.uploadOne({
+        organizationId,
+        projectId,
+        file,
+        sourceType: "agentSessionMessage",
+      })
+      documentId = document.id
+    }
+
     const userMessage: AgentSessionMessage = {
       id: userMessageId,
       role: "user",
       content,
+      documentId,
       createdAt: new Date().toISOString(),
     }
 
@@ -127,7 +140,7 @@ export const sendMessage = createAsyncThunk<void, { content: string; file?: File
         agentId,
         sessionId,
         content,
-        file,
+        documentId,
         handlers: {
           onStart: (event) => {
             // Update the optimistic message ID to match the backend's ID
