@@ -1,4 +1,4 @@
-import type { TimeType } from "@caseai-connect/api-contracts"
+import { ProjectsRoutes, type TimeType } from "@caseai-connect/api-contracts"
 import { Body, Controller, Delete, Get, Patch, Post, Req, UseGuards } from "@nestjs/common"
 import type {
   EndpointRequestWithProject,
@@ -10,7 +10,6 @@ import { CheckPolicy } from "@/common/policies/check-policy.decorator"
 import { JwtAuthGuard } from "@/domains/auth/jwt-auth.guard"
 import { UserGuard } from "@/domains/users/user.guard"
 import { ProjectsGuard } from "./projects.guard"
-import { ProjectsRoutes } from "./projects.routes"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
 import { ProjectsService } from "./projects.service"
 
@@ -20,12 +19,12 @@ import { ProjectsService } from "./projects.service"
 export class ProjectsController {
   constructor(private readonly projectsService: ProjectsService) {}
 
-  @Post(ProjectsRoutes.createProject.path)
+  @Post(ProjectsRoutes.createOne.path)
   @CheckPolicy((policy) => policy.canCreate())
   async createProject(
     @Req() request: EndpointRequestWithUserMembership,
-    @Body() body: typeof ProjectsRoutes.createProject.request,
-  ): Promise<typeof ProjectsRoutes.createProject.response> {
+    @Body() body: typeof ProjectsRoutes.createOne.request,
+  ): Promise<typeof ProjectsRoutes.createOne.response> {
     const { organizationId } = request
 
     // Create project
@@ -40,11 +39,11 @@ export class ProjectsController {
     }
   }
 
-  @Get(ProjectsRoutes.listProjects.path)
+  @Get(ProjectsRoutes.getAll.path)
   @CheckPolicy((policy) => policy.canList())
   async listProjects(
     @Req() request: EndpointRequestWithUserMembership,
-  ): Promise<typeof ProjectsRoutes.listProjects.response> {
+  ): Promise<typeof ProjectsRoutes.getAll.response> {
     const { organizationId, userMembership } = request
 
     // List projects for the organization
@@ -65,13 +64,13 @@ export class ProjectsController {
     }
   }
 
-  @Patch(ProjectsRoutes.updateProject.path)
+  @Patch(ProjectsRoutes.updateOne.path)
   @CheckPolicy((policy) => policy.canUpdate())
   @AddContext("project")
   async updateProject(
     @Req() request: EndpointRequestWithProject,
-    @Body() body: typeof ProjectsRoutes.updateProject.request,
-  ): Promise<typeof ProjectsRoutes.updateProject.response> {
+    @Body() body: typeof ProjectsRoutes.updateOne.request,
+  ): Promise<typeof ProjectsRoutes.updateOne.response> {
     const { project } = request
 
     // Update project
@@ -86,12 +85,12 @@ export class ProjectsController {
     }
   }
 
-  @Delete(ProjectsRoutes.deleteProject.path)
+  @Delete(ProjectsRoutes.deleteOne.path)
   @CheckPolicy((policy) => policy.canDelete())
   @AddContext("project")
   async deleteProject(
     @Req() request: EndpointRequestWithProject,
-  ): Promise<typeof ProjectsRoutes.deleteProject.response> {
+  ): Promise<typeof ProjectsRoutes.deleteOne.response> {
     const { project } = request
 
     // Delete project

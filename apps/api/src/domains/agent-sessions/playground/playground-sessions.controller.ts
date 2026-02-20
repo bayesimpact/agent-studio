@@ -1,4 +1,4 @@
-import type { AgentSessionDto } from "@caseai-connect/api-contracts"
+import { type AgentSessionDto, AgentSessionsRoutes } from "@caseai-connect/api-contracts"
 import { Controller, Get, Post, Req, UseGuards } from "@nestjs/common"
 import type { EndpointRequestWithAgent } from "@/common/context/request.interface"
 import { getRequiredConnectScope } from "@/common/context/request-context.helpers"
@@ -9,7 +9,6 @@ import { JwtAuthGuard } from "@/domains/auth/jwt-auth.guard"
 import { UserGuard } from "@/domains/users/user.guard"
 import { getTraceUrl } from "@/external/langfuse/langfuse-helper"
 import type { AgentSession } from "../agent-session.entity"
-import { AgentSessionsRoutes } from "../agent-sessions.routes"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
 import { AgentSessionsService } from "../agent-sessions.service"
 import { PlaygroundSessionGuard } from "./playground-session.guard"

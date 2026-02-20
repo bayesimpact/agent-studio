@@ -1,4 +1,4 @@
-import type { ProjectMembershipDto } from "@caseai-connect/api-contracts"
+import { type ProjectMembershipDto, ProjectsRoutes } from "@caseai-connect/api-contracts"
 import { Body, Controller, Delete, Get, Post, Req, UseGuards } from "@nestjs/common"
 import type {
   EndpointRequestWithProject,
@@ -9,7 +9,6 @@ import { ResourceContextGuard } from "@/common/context/resource-context.guard"
 import { CheckPolicy } from "@/common/policies/check-policy.decorator"
 import { JwtAuthGuard } from "@/domains/auth/jwt-auth.guard"
 import { UserGuard } from "@/domains/users/user.guard"
-import { ProjectsRoutes } from "../projects.routes"
 import type { ProjectMembership } from "./project-membership.entity"
 import { ProjectMembershipsGuard } from "./project-memberships.guard"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI

@@ -63,10 +63,10 @@ describe("Projects - Auth", () => {
     return { organization, project }
   }
 
-  describe("ProjectsRoutes.listProjects", () => {
+  describe("ProjectsRoutes.getAll", () => {
     const subject = async () =>
       request({
-        route: ProjectsRoutes.listProjects,
+        route: ProjectsRoutes.getAll,
         pathParams: removeNullish({ organizationId }),
         token: accessToken ?? undefined,
       })
@@ -94,10 +94,10 @@ describe("Projects - Auth", () => {
     })
   })
 
-  describe("ProjectsRoutes.createProject", () => {
-    const subject = async (payload?: typeof ProjectsRoutes.createProject.request) =>
+  describe("ProjectsRoutes.createOne", () => {
+    const subject = async (payload?: typeof ProjectsRoutes.createOne.request) =>
       request({
-        route: ProjectsRoutes.createProject,
+        route: ProjectsRoutes.createOne,
         pathParams: removeNullish({ organizationId }),
         token: accessToken ?? undefined,
         request: payload,
@@ -122,10 +122,10 @@ describe("Projects - Auth", () => {
     })
   })
 
-  describe("ProjectsRoutes.deleteProject", () => {
+  describe("ProjectsRoutes.deleteOne", () => {
     const subject = async () =>
       request({
-        route: ProjectsRoutes.deleteProject,
+        route: ProjectsRoutes.deleteOne,
         pathParams: removeNullish({ organizationId, projectId }),
         token: accessToken ?? undefined,
       })
@@ -154,10 +154,10 @@ describe("Projects - Auth", () => {
     })
   })
 
-  describe("ProjectsRoutes.updateProject", () => {
-    const subject = async (payload?: typeof ProjectsRoutes.updateProject.request) =>
+  describe("ProjectsRoutes.updateOne", () => {
+    const subject = async (payload?: typeof ProjectsRoutes.updateOne.request) =>
       request({
-        route: ProjectsRoutes.updateProject,
+        route: ProjectsRoutes.updateOne,
         pathParams: removeNullish({ organizationId, projectId }),
         token: accessToken ?? undefined,
         request: payload,

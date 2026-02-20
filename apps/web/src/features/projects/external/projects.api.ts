@@ -12,8 +12,8 @@ import type { IProjectsSpi } from "../projects.spi"
 export default {
   createOne: async (organizationId: string, payload: CreateProjectPayload) => {
     const axios = getAxiosInstance()
-    const response = await axios.post<typeof ProjectsRoutes.createProject.response>(
-      ProjectsRoutes.createProject.getPath({ organizationId }),
+    const response = await axios.post<typeof ProjectsRoutes.createOne.response>(
+      ProjectsRoutes.createOne.getPath({ organizationId }),
       {
         payload: toCreateDto(payload),
       },
@@ -22,20 +22,20 @@ export default {
   },
   getAll: async (organizationId: string) => {
     const axios = getAxiosInstance()
-    const response = await axios.get<typeof ProjectsRoutes.listProjects.response>(
-      ProjectsRoutes.listProjects.getPath({ organizationId }),
+    const response = await axios.get<typeof ProjectsRoutes.getAll.response>(
+      ProjectsRoutes.getAll.getPath({ organizationId }),
     )
     return fromListDto(response.data.data)
   },
   updateOne: async (organizationId: string, projectId: string, payload: UpdateProjectPayload) => {
     const axios = getAxiosInstance()
-    await axios.patch(ProjectsRoutes.updateProject.getPath({ organizationId, projectId }), {
+    await axios.patch(ProjectsRoutes.updateOne.getPath({ organizationId, projectId }), {
       payload: toUpdateDto(payload),
     })
   },
   deleteOne: async (organizationId: string, projectId: string) => {
     const axios = getAxiosInstance()
-    await axios.delete(ProjectsRoutes.deleteProject.getPath({ organizationId, projectId }))
+    await axios.delete(ProjectsRoutes.deleteOne.getPath({ organizationId, projectId }))
   },
 } satisfies IProjectsSpi
 

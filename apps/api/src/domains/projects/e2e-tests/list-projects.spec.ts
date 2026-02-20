@@ -58,7 +58,7 @@ describe("Projects - listProjects", () => {
 
   const subject = async () =>
     request({
-      route: ProjectsRoutes.listProjects,
+      route: ProjectsRoutes.getAll,
       pathParams: removeNullish({ organizationId }),
       token: accessToken,
     })

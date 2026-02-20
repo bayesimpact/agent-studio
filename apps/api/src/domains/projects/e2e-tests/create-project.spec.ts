@@ -54,9 +54,9 @@ describe("Projects - createProject", () => {
     return { organization }
   }
 
-  const subject = async (payload?: typeof ProjectsRoutes.createProject.request) =>
+  const subject = async (payload?: typeof ProjectsRoutes.createOne.request) =>
     request({
-      route: ProjectsRoutes.createProject,
+      route: ProjectsRoutes.createOne,
       pathParams: removeNullish({ organizationId }),
       token: accessToken,
       request: payload,
