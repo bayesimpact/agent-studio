@@ -55,9 +55,9 @@ describe("Projects - updateProject", () => {
     return { organization, project }
   }
 
-  const subject = async (payload?: typeof ProjectsRoutes.updateProject.request) =>
+  const subject = async (payload?: typeof ProjectsRoutes.updateOne.request) =>
     request({
-      route: ProjectsRoutes.updateProject,
+      route: ProjectsRoutes.updateOne,
       pathParams: removeNullish({ organizationId, projectId }),
       token: accessToken,
       request: payload,

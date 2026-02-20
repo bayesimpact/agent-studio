@@ -1,10 +1,10 @@
+import { MeRoutes } from "@caseai-connect/api-contracts"
 import { Controller, Get, NotFoundException, Req, UseGuards } from "@nestjs/common"
 import type { EndpointRequest } from "@/common/context/request.interface"
 import { JwtAuthGuard } from "@/domains/auth/jwt-auth.guard"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
 import { OrganizationsService } from "@/domains/organizations/organizations.service"
 import { UserGuard } from "@/domains/users/user.guard"
-import { MeRoutes } from "./me.routes"
 
 @UseGuards(JwtAuthGuard, UserGuard)
 @Controller()

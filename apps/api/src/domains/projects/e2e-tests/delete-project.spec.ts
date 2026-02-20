@@ -57,7 +57,7 @@ describe("Projects - deleteProject", () => {
 
   const subject = async () =>
     request({
-      route: ProjectsRoutes.deleteProject,
+      route: ProjectsRoutes.deleteOne,
       pathParams: removeNullish({ organizationId, projectId }),
       token: accessToken,
     })

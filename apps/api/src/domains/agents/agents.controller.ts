@@ -1,4 +1,4 @@
-import type { AgentDto } from "@caseai-connect/api-contracts"
+import { type AgentDto, AgentsRoutes } from "@caseai-connect/api-contracts"
 import { Body, Controller, Delete, Get, Patch, Post, Req, UseGuards } from "@nestjs/common"
 import type {
   EndpointRequestWithAgent,
@@ -12,7 +12,6 @@ import { JwtAuthGuard } from "@/domains/auth/jwt-auth.guard"
 import { UserGuard } from "@/domains/users/user.guard"
 import type { Agent } from "./agent.entity"
 import { AgentGuard } from "./agent.guard"
-import { AgentsRoutes } from "./agents.routes"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
 import { AgentsService } from "./agents.service"
 
