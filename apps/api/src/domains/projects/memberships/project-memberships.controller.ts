@@ -4,18 +4,19 @@ import type {
   EndpointRequestWithProject,
   EndpointRequestWithProjectMembership,
 } from "@/common/context/request.interface"
+import { AddContext, RequireContext } from "@/common/context/require-context.decorator"
+import { ResourceContextGuard } from "@/common/context/resource-context.guard"
 import { CheckPolicy } from "@/common/policies/check-policy.decorator"
 import { JwtAuthGuard } from "@/domains/auth/jwt-auth.guard"
-import { OrganizationGuard } from "@/domains/organizations/organization.guard"
 import { UserGuard } from "@/domains/users/user.guard"
-import { ProjectsGuard } from "../projects.guard"
 import { ProjectsRoutes } from "../projects.routes"
 import type { ProjectMembership } from "./project-membership.entity"
 import { ProjectMembershipsGuard } from "./project-memberships.guard"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
 import { ProjectMembershipsService } from "./project-memberships.service"
 
-@UseGuards(JwtAuthGuard, UserGuard, OrganizationGuard, ProjectsGuard, ProjectMembershipsGuard)
+@UseGuards(JwtAuthGuard, UserGuard, ResourceContextGuard, ProjectMembershipsGuard)
+@RequireContext("organization", "project")
 @Controller()
 export class ProjectMembershipsController {
   constructor(private readonly projectMembershipsService: ProjectMembershipsService) {}
@@ -59,6 +60,7 @@ export class ProjectMembershipsController {
 
   @Delete(ProjectsRoutes.removeProjectMembership.path)
   @CheckPolicy((policy) => policy.canDelete())
+  @AddContext("projectMembership")
   async removeProjectMembership(
     @Req() request: EndpointRequestWithProjectMembership,
   ): Promise<typeof ProjectsRoutes.removeProjectMembership.response> {

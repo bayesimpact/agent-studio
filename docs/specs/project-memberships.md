@@ -247,32 +247,48 @@ Endpoints:
 |--------------------|-------------------------|-------------------------------------|----------------------------------------------|----------------------------------------------------------|
 | `listProjectMemberships`  | `@Get(...)` | `canList()`                         | `EndpointRequestWithProject`                 | Returns memberships for the project                      |
 | `inviteProjectMembers`    | `@Post(...)` | `canCreate()`                      | `EndpointRequestWithProject` + Body          | Accepts `{ payload: { emails: string[] } }`              |
-| `removeProjectMembership` | `@Delete(...)` | `canDelete()`                   | `EndpointRequestWithProjectMembership`       | `projectMembership` from request (set by guard)          |
+| `removeProjectMembership` | `@Delete(...)` | `canDelete()`                   | `EndpointRequestWithProjectMembership`       | `projectMembership` from request (set by context resolver) |
 
 **DTO mapping**: A `toProjectMembershipDto` helper function maps `ProjectMembership` entities to DTOs.
 
-### 4.2 Guards
+### 4.2 Context Resolvers and Guards
 
-The guard chain is: `JwtAuthGuard → UserGuard → OrganizationGuard → ProjectsGuard → ProjectMembershipsGuard`.
+The request flow uses context resolvers, not cascading resource-loading guards:
+
+`JwtAuthGuard → UserGuard → ResourceContextGuard → ProjectMembershipsGuard`
+
+`ResourceContextGuard` resolves resources declared with metadata:
+- Class-level: `@RequireContext("organization", "project")`
+- Route-level: `@AddContext("projectMembership")` on remove route
+
+This means `ProjectMembershipsGuard` only performs policy evaluation.
 
 #### `ProjectMembershipsGuard`
 
 **File**: `apps/api/src/domains/projects/memberships/project-memberships.guard.ts`
 
-A dedicated guard for project memberships, modeled after `DocumentsGuard`. It:
+A dedicated policy guard for project memberships. It:
 
-1. Runs **after** `ProjectsGuard`, so the request already has `project` and `userMembership` set.
-2. If a `membershipId` parameter is present (e.g., DELETE routes):
-   - Fetches the `ProjectMembership` entity via `ProjectMembershipsService.findById()`.
-   - Throws `NotFoundException` if the membership doesn't exist.
-   - Enhances the request with `request.projectMembership`.
-3. Instantiates a `ProjectMembershipPolicy` with `(userMembership, project, projectMembership?)`.
-4. Reads the `@CheckPolicy` decorator handler via the `Reflector` and evaluates it.
-5. Throws `ForbiddenException` if the policy check fails.
+1. Runs **after** `ResourceContextGuard`, so request context has already been resolved.
+2. Instantiates a `ProjectMembershipPolicy` with `(userMembership, project, projectMembership?)`.
+3. Reads the `@CheckPolicy` decorator handler via the `Reflector` and evaluates it.
+4. Throws `ForbiddenException` if the policy check fails.
+
+#### `ProjectMembershipContextResolver`
+
+**File**: `apps/api/src/common/context/resolvers/project-membership-context.resolver.ts`
+
+This resolver loads `request.projectMembership` when `membershipId` is required:
+
+1. Reads `membershipId` from route params.
+2. Throws `NotFoundException` if missing/placeholder.
+3. Fetches the membership scoped to the already-resolved `request.project.id`.
+4. Throws `NotFoundException` if not found.
+5. Sets `request.projectMembership`.
 
 #### `EndpointRequestWithProjectMembership`
 
-**File**: `apps/api/src/request.interface.ts`
+**File**: `apps/api/src/common/context/request.interface.ts`
 
 ```typescript
 export interface EndpointRequestWithProjectMembership extends EndpointRequestWithProject {
@@ -1206,7 +1222,7 @@ Registered in `external/axios.services.ts` and `di/services.ts`.
 
 1. **File organization**: All project membership files live in `apps/api/src/domains/projects/memberships/` — a subfolder of the `projects` domain. This keeps the domain cohesive while avoiding file clutter.
 2. **Policy architecture**: Project memberships have their own dedicated `ProjectMembershipPolicy` extending `ProjectScopedPolicy<ProjectMembership>`, with RESTful methods (`canList`, `canCreate`, `canDelete`). They do **not** extend `ProjectPolicy`.
-3. **Guard architecture**: A dedicated `ProjectMembershipsGuard` (modeled after `DocumentsGuard`) fetches the `ProjectMembership` entity from the database, enhances the request object, and evaluates the policy. This avoids coupling with `ProjectsGuard`.
+3. **Guard architecture**: Context is resolved by `ResourceContextGuard` + resolvers (`organization`, `project`, `projectMembership`). `ProjectMembershipsGuard` performs policy evaluation only and does not fetch resources.
 4. **Request type**: A new `EndpointRequestWithProjectMembership` interface extends `EndpointRequestWithProject` to carry the resolved `projectMembership` entity.
 5. **Auth tests**: Project membership auth tests live in a dedicated `memberships/e2e-tests/auth.spec.ts`, separate from the projects' `e2e-tests/auth.spec.ts`.
 6. **User creation for unknown emails**: Placeholder users use a unique `auth0Id` per user: `"00000000-0000-0000-0000-"` + a random 12-character suffix (via `randomUUID().slice(-12)`). This avoids unique constraint violations when inviting multiple new users.

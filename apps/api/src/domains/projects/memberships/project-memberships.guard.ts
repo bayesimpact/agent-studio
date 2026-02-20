@@ -3,51 +3,31 @@ import {
   type ExecutionContext,
   ForbiddenException,
   Injectable,
-  NotFoundException,
 } from "@nestjs/common"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
 import { Reflector } from "@nestjs/core"
-import type { EndpointRequestWithProjectMembership } from "@/common/context/request.interface"
+import type {
+  EndpointRequestWithProject,
+  EndpointRequestWithProjectMembership,
+} from "@/common/context/request.interface"
 import { AUTH_ERRORS } from "@/common/errors/auth-errors"
 import { CHECK_POLICY_KEY, type PolicyHandler } from "@/common/policies/check-policy.decorator"
 import { requestToProjectPolicyContext } from "../helpers"
-import type { ProjectMembership } from "./project-membership.entity"
 import { ProjectMembershipPolicy } from "./project-membership.policy"
-// biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
-import { ProjectMembershipsService } from "./project-memberships.service"
 
 @Injectable()
 export class ProjectMembershipsGuard implements CanActivate {
-  constructor(
-    readonly projectMembershipsService: ProjectMembershipsService,
-    private reflector: Reflector,
-  ) {}
+  constructor(private reflector: Reflector) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
-    // since ProjectMembershipsGuard is called after ProjectsGuard, we can access the enhanced request object storing the project
-    const request = context.switchToHttp().getRequest() as EndpointRequestWithProjectMembership & {
-      params: { membershipId: string }
-    }
-
-    // fetch the project membership from the database if membershipId is provided
-    let projectMembership: ProjectMembership | undefined
-    const membershipId = request.params.membershipId
-
-    // the caller didn't provide a membershipId and our route mechanism uses the :membershipId placeholder instead
-    if (membershipId === ":membershipId") throw new NotFoundException()
-
-    // ok, we have a membershipId (DELETE routes), fetch the membership from the database
-    if (membershipId) {
-      projectMembership = (await this.projectMembershipsService.findById(membershipId)) ?? undefined
-      if (!projectMembership) throw new NotFoundException()
-
-      // enhance the request object with the project membership
-      request.projectMembership = projectMembership
-    }
+    // ResourceContextGuard resolves project/membership context before policy evaluation.
+    const request = context.switchToHttp().getRequest() as
+      | EndpointRequestWithProject
+      | EndpointRequestWithProjectMembership
 
     const policy = new ProjectMembershipPolicy(
       requestToProjectPolicyContext(request),
-      projectMembership,
+      "projectMembership" in request ? request.projectMembership : undefined,
     )
 
     const policyHandler = this.reflector.getAllAndOverride<PolicyHandler>(CHECK_POLICY_KEY, [
