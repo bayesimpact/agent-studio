@@ -20,6 +20,8 @@ import { AgentSessionContextResolver } from "./resolvers/agent-session-context.r
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
 import { DocumentContextResolver } from "./resolvers/document-context.resolver"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
+import { EvaluationContextResolver } from "./resolvers/evaluation-context.resolver"
+// biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
 import { OrganizationContextResolver } from "./resolvers/organization-context.resolver"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
 import { ProjectContextResolver } from "./resolvers/project-context.resolver"
@@ -33,6 +35,7 @@ const RESOLUTION_ORDER: ContextResource[] = [
   "agent",
   "agentSession",
   "document",
+  "evaluation",
 ]
 
 @Injectable()
@@ -47,6 +50,7 @@ export class ResourceContextGuard implements CanActivate {
     @Optional() agentContextResolver?: AgentContextResolver,
     @Optional() agentSessionContextResolver?: AgentSessionContextResolver,
     @Optional() documentContextResolver?: DocumentContextResolver,
+    @Optional() evaluationContextResolver?: EvaluationContextResolver,
   ) {
     const resolverEntries: Array<[ContextResource, ContextResolver]> = []
     if (organizationContextResolver) {
@@ -69,6 +73,9 @@ export class ResourceContextGuard implements CanActivate {
     }
     if (documentContextResolver) {
       resolverEntries.push([documentContextResolver.resource, documentContextResolver])
+    }
+    if (evaluationContextResolver) {
+      resolverEntries.push([evaluationContextResolver.resource, evaluationContextResolver])
     }
     this.resolverMap = new Map(resolverEntries)
   }
