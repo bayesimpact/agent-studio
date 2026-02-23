@@ -3,6 +3,7 @@ import { Column, JoinColumn, ManyToOne, OneToMany } from "typeorm"
 import { ConnectEntity, ConnectEntityBase } from "@/common/entities/connect-entity"
 import { AgentSession } from "@/domains/agent-sessions/agent-session.entity"
 import { Project } from "@/domains/projects/project.entity"
+import { EvaluationReport } from "../evaluations/reports/evaluation-report.entity"
 
 @ConnectEntity("agent")
 export class Agent extends ConnectEntityBase {
@@ -33,4 +34,10 @@ export class Agent extends ConnectEntityBase {
     (agentSession) => agentSession.agent,
   )
   agentSessions!: AgentSession[]
+
+  @OneToMany(
+    () => EvaluationReport,
+    (evaluationReport) => evaluationReport.agent,
+  )
+  evaluationReports!: EvaluationReport[]
 }

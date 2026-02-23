@@ -10,35 +10,13 @@ import {
   type QueryRunner,
   type Repository,
 } from "typeorm"
-import { AgentSession } from "@/domains/agent-sessions/agent-session.entity"
-import { AgentMessage } from "@/domains/agent-sessions/messages/agent-message.entity"
-import { AgentMessageFeedback } from "@/domains/agent-sessions/messages/feedback/agent-message-feedback.entity"
-import { Agent } from "@/domains/agents/agent.entity"
-import { Document } from "@/domains/documents/document.entity"
-import { Organization } from "@/domains/organizations/organization.entity"
-import { UserMembership } from "@/domains/organizations/user-membership.entity"
-import { ProjectMembership } from "@/domains/projects/memberships/project-membership.entity"
-import { Project } from "@/domains/projects/project.entity"
-import { User } from "@/domains/users/user.entity"
+import { TEST_ENTITIES } from "./test-entities"
 
 export const RandomUuid = {
   Organization: randomUUID(),
   Project: randomUUID(),
   Document: randomUUID(),
 } as const
-
-const TEST_ENTITIES = [
-  User,
-  Organization,
-  UserMembership,
-  Project,
-  ProjectMembership,
-  Agent,
-  AgentSession,
-  AgentMessage,
-  AgentMessageFeedback,
-  Document,
-]
 
 export interface TestDatabaseSetup {
   module: TestingModule

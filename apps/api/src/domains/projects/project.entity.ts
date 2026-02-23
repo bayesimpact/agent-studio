@@ -4,6 +4,7 @@ import { AgentMessageFeedback } from "@/domains/agent-sessions/messages/feedback
 import { Agent } from "@/domains/agents/agent.entity"
 import { Document } from "@/domains/documents/document.entity"
 import { Organization } from "@/domains/organizations/organization.entity"
+import { Evaluation } from "../evaluations/evaluation.entity"
 import { ProjectMembership } from "./memberships/project-membership.entity"
 
 @Entity("project")
@@ -32,6 +33,12 @@ export class Project extends Base4AllEntity {
     (document) => document.project,
   )
   documents!: Document[]
+
+  @OneToMany(
+    () => Evaluation,
+    (evaluation) => evaluation.project,
+  )
+  evaluations!: Evaluation[]
 
   @OneToMany(
     () => AgentMessageFeedback,
