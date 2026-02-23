@@ -1,5 +1,7 @@
 {
   "common": {
+    "selectAgent": "Sélectionner un agent",
+    "settings": "Paramètres",
     "send": "Envoyer",
     "download": "Télécharger",
     "loading": "Chargement...",
@@ -23,7 +25,8 @@
     "projects": "Projets",
     "open": "Ouvrir",
     "chatSessions": "Sessions de chat",
-    "viewAttachment": "Voir la pièce jointe"
+    "viewAttachment": "Voir la pièce jointe",
+    "evaluation": "Évaluation"
   },
   "project": {
     "createButton": {
@@ -222,6 +225,56 @@
       "report": "Aider à améliorer",
       "title": "Signaler un problème avec ce message",
       "description": "Merci de fournir des détails sur le problème que vous avez rencontré avec ce message. Votre retour nous aidera à améliorer nos agents."
+    }
+  },
+  "evaluation": {
+    "addEvaluation": "Ajouter une évaluation",
+    "form": {
+      "labelInput": "Entrée",
+      "placeholderInput": "Saisir l'entrée",
+      "labelExpectedOutput": "Sortie attendue",
+      "placeholderExpectedOutput": "Saisir la sortie attendue",
+      "submit": "Soumettre",
+      "validation": {
+        "inputRequired": "L'entrée est requise",
+        "expectedOutputRequired": "La sortie attendue est requise"
+      }
+    },
+    "table": {
+      "headers": {
+        "input": "Entrée",
+        "expectedOutput": "Sortie attendue",
+        "status": "Statut",
+        "output": "Sortie",
+        "score": "Score"
+      },
+      "buttons": {
+        "run": "Exécuter",
+        "runSelected": "Exécuter la sélection",
+        "runAll": "Exécuter tout"
+      },
+      "actions": {
+        "openMenu": "Ouvrir le menu",
+        "edit": "Modifier",
+        "makeCopy": "Faire une copie",
+        "favorite": "Favori",
+        "delete": "Supprimer"
+      },
+      "ariaLabels": {
+        "selectAll": "Sélectionner tout",
+        "selectRow": "Sélectionner la ligne"
+      },
+      "pagination": {
+        "rowsPerPage": "Lignes par page",
+        "of": "sur",
+        "rowsSelected": "ligne(s) sélectionnée(s)",
+        "pageOf": "Page {{page}} sur {{totalPages}}",
+        "goToFirstPage": "Aller à la première page",
+        "goToPreviousPage": "Aller à la page précédente",
+        "goToNextPage": "Aller à la page suivante",
+        "goToLastPage": "Aller à la dernière page"
+      },
+      "noResults": "Aucun résultat."
     }
   }
 }
