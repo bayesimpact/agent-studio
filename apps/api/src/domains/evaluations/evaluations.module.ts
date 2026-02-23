@@ -16,6 +16,7 @@ import { Evaluation } from "./evaluation.entity"
 import { EvaluationGuard } from "./evaluation.guard"
 import { EvaluationsController } from "./evaluations.controller"
 import { EvaluationsService } from "./evaluations.service"
+import { EvaluationReport } from "./reports/evaluation-report.entity"
 
 @Module({
   imports: [
@@ -25,6 +26,7 @@ import { EvaluationsService } from "./evaluations.service"
       Organization,
       UserMembership,
       ProjectMembership,
+      EvaluationReport,
     ]),
     OrganizationsModule,
     ProjectsModule,
