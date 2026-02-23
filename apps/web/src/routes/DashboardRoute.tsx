@@ -4,7 +4,9 @@ import { SlidersHorizontalIcon, SparklesIcon } from "lucide-react"
 import { Outlet, useParams } from "react-router-dom"
 import { SidebarLayout } from "@/components/layouts/SidebarLayout"
 import { ProjectList } from "@/components/ProjectList"
+import { NavDocuments } from "@/components/sidebar/documents/NavDocuments"
 import { AdminNavProject, AppNavProject } from "@/components/sidebar/NavProject"
+import { NavProjectMemberships } from "@/components/sidebar/project-memberships/NavProjectMemberships"
 import { Logo } from "@/components/themes/Logo"
 import { authActions } from "@/features/auth/auth.slice"
 import type { User } from "@/features/me/me.models"
@@ -78,19 +80,20 @@ function WithData({
       <SidebarLayout
         organization={organization}
         sidebarHeaderChildren={
-          <SidebarHeaderChildren
+          <SidebarHeader
             isAdminInterface={isAdminInterface}
             isAdmin={isAdmin}
             organizationName={organizationName}
           />
         }
         sidebarContentChildren={
-          <SidebarContentChildren
+          <SidebarContent
             isAdminInterface={isAdminInterface}
             project={project.value}
             organization={organization}
           />
         }
+        sidebarFooterChildren={isAdminInterface ? <SidebarFooter project={project.value} /> : null}
         user={{
           name: user.name,
           email: user.email,
@@ -103,7 +106,7 @@ function WithData({
   return projectList
 }
 
-function SidebarHeaderChildren({
+function SidebarHeader({
   isAdminInterface,
   isAdmin,
   organizationName,
@@ -154,7 +157,7 @@ export function InterfaceToggle({
   return <Switch checked={isAdminInterface} onCheckedChange={handleChange} />
 }
 
-function SidebarContentChildren({
+function SidebarContent({
   isAdminInterface,
   project,
   organization,
@@ -166,4 +169,13 @@ function SidebarContentChildren({
   if (isAdminInterface)
     return <AdminNavProject organizationId={organization.id} project={project} />
   return <AppNavProject organizationId={organization.id} project={project} />
+}
+
+function SidebarFooter({ project }: { project: Project }) {
+  return (
+    <>
+      <NavDocuments organizationId={project.organizationId} projectId={project.id} />
+      <NavProjectMemberships organizationId={project.organizationId} projectId={project.id} />
+    </>
+  )
 }
