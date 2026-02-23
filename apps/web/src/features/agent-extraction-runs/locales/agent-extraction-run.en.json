@@ -1,0 +1,15 @@
+{
+  "agentExtractionRun": {
+    "list": {
+      "title": "Extraction Runs",
+      "empty": {
+        "title": "No extraction runs yet",
+        "description": "Run history will appear here once extraction execution is available."
+      }
+    },
+    "status": {
+      "success": "Success",
+      "failed": "Failed"
+    }
+  }
+}

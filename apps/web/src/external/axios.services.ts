@@ -1,3 +1,4 @@
+import agentExtractionRunsApi from "@/features/agent-extraction-runs/external/agent-extraction-runs.api"
 import agentMessageFeedbackApi from "@/features/agent-message-feedback/external/agent-message-feedback.api"
 import agentSessionsApi from "@/features/agent-sessions/external/agent-sessions.api"
 import agentsApi from "@/features/agents/external/agents.api"
@@ -12,6 +13,7 @@ import projectsApi from "@/features/projects/external/projects.api"
 
 export const services = {
   agentMessageFeedback: agentMessageFeedbackApi,
+  agentExtractionRuns: agentExtractionRunsApi,
   agents: agentsApi,
   agentSessions: agentSessionsApi,
   documents: documentsApi,

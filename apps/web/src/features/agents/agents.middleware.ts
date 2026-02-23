@@ -95,8 +95,7 @@ listenerMiddleware.startListening({
     )
 
     const onSuccess = action.meta.arg.onSuccess
-    const { id } = action.payload
-    onSuccess?.(id)
+    onSuccess?.(action.payload)
   },
 })
 listenerMiddleware.startListening({
