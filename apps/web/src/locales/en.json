@@ -1,5 +1,7 @@
 {
   "common": {
+    "selectAgent": "Select Agent",
+    "settings": "Settings",
     "send": "Send",
     "download": "Download",
     "loading": "Loading...",
@@ -23,7 +25,8 @@
     "projects": "Projects",
     "open": "Open",
     "chatSessions": "Chat Sessions",
-    "viewAttachment": "View Attachment"
+    "viewAttachment": "View Attachment",
+    "evaluation": "Evaluation"
   },
   "project": {
     "createButton": {
@@ -222,6 +225,56 @@
       "report": "Report",
       "title": "Report a problem with this message",
       "description": "Please provide details about the issue you encountered with this message. Your feedback will help us improve our agents."
+    }
+  },
+  "evaluation": {
+    "addEvaluation": "Add Evaluation",
+    "form": {
+      "labelInput": "Input",
+      "placeholderInput": "Enter input",
+      "labelExpectedOutput": "Expected Output",
+      "placeholderExpectedOutput": "Enter expected output",
+      "submit": "Submit",
+      "validation": {
+        "inputRequired": "Input is required",
+        "expectedOutputRequired": "Expected output is required"
+      }
+    },
+    "table": {
+      "headers": {
+        "input": "Input",
+        "expectedOutput": "Expected Output",
+        "status": "Status",
+        "output": "Output",
+        "score": "Score"
+      },
+      "buttons": {
+        "run": "Run",
+        "runSelected": "Run selected",
+        "runAll": "Run all"
+      },
+      "actions": {
+        "openMenu": "Open menu",
+        "edit": "Edit",
+        "makeCopy": "Make a copy",
+        "favorite": "Favorite",
+        "delete": "Delete"
+      },
+      "ariaLabels": {
+        "selectAll": "Select all",
+        "selectRow": "Select row"
+      },
+      "pagination": {
+        "rowsPerPage": "Rows per page",
+        "of": "of",
+        "rowsSelected": "row(s) selected",
+        "pageOf": "Page {{page}} of {{totalPages}}",
+        "goToFirstPage": "Go to first page",
+        "goToPreviousPage": "Go to previous page",
+        "goToNextPage": "Go to next page",
+        "goToLastPage": "Go to last page"
+      },
+      "noResults": "No results."
     }
   }
 }

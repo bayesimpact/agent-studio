@@ -7,6 +7,7 @@ import { LogoutRoute } from "@/routes/LogoutRoute"
 import { NotFoundRoute } from "@/routes/NotFoundRoute"
 import { useAppDispatch } from "@/store/hooks"
 import { DocumentsRoute } from "./admin/DocumentsRoute"
+import { EvaluationRoute } from "./admin/EvaluationRoute"
 import { FeedbackRoute } from "./admin/FeedbackRoute"
 import { ProjectMembershipsRoute } from "./admin/ProjectMembershipsRoute"
 import { getElement } from "./Elements"
@@ -49,6 +50,10 @@ const router = () =>
               path: buildAdminPath(RouteNames.PROJECT),
               element: getElement(RouteNames.PROJECT),
               children: [
+                {
+                  path: buildAdminPath(RouteNames.EVALUATION),
+                  element: <EvaluationRoute />,
+                },
                 {
                   path: buildAdminPath(RouteNames.DOCUMENTS),
                   element: <DocumentsRoute />,

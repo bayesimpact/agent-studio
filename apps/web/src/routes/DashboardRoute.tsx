@@ -5,6 +5,7 @@ import { Outlet, useParams } from "react-router-dom"
 import { SidebarLayout } from "@/components/layouts/SidebarLayout"
 import { ProjectList } from "@/components/ProjectList"
 import { NavDocuments } from "@/components/sidebar/documents/NavDocuments"
+import { NavEvaluation } from "@/components/sidebar/NavEvaluation"
 import { AdminNavProject, AppNavProject } from "@/components/sidebar/NavProject"
 import { NavProjectMemberships } from "@/components/sidebar/project-memberships/NavProjectMemberships"
 import { Logo } from "@/components/themes/Logo"
@@ -174,6 +175,7 @@ function SidebarContent({
 function SidebarFooter({ project }: { project: Project }) {
   return (
     <>
+      <NavEvaluation organizationId={project.organizationId} projectId={project.id} />
       <NavDocuments organizationId={project.organizationId} projectId={project.id} />
       <NavProjectMemberships organizationId={project.organizationId} projectId={project.id} />
     </>
