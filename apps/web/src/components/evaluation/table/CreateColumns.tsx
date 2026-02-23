@@ -56,7 +56,7 @@ export function createColumns({
       accessorKey: "input",
       header: t("table.headers.input"),
       cell: ({ row }) => {
-        return <>{row.original.input}</>
+        return <div className="whitespace-break-spaces">{row.original.input}</div>
       },
       enableHiding: false,
     },
@@ -64,7 +64,7 @@ export function createColumns({
       accessorKey: "expectedOutput",
       header: t("table.headers.expectedOutput"),
       cell: ({ row }) => {
-        return <>{row.original.expectedOutput}</>
+        return <div className="whitespace-break-spaces">{row.original.expectedOutput}</div>
       },
       enableHiding: false,
     },

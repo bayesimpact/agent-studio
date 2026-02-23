@@ -3,9 +3,8 @@ import { createListenerMiddleware } from "@reduxjs/toolkit"
 import type { AppDispatch, RootState } from "@/store/types"
 import { selectCurrentAgentId } from "../agents/agents.selectors"
 import { listAgents } from "../agents/agents.thunks"
+import { getCurrentIds } from "../helpers"
 import { notificationsActions } from "../notifications/notifications.slice"
-import { selectCurrentOrganizationId } from "../organizations/organizations.selectors"
-import { selectCurrentProjectId } from "../projects/projects.selectors"
 import {
   createAgentMessageFeedback,
   listAgentMessageFeedbacks,
@@ -23,9 +22,9 @@ listenerMiddleware.startListening({
   effect: async (action, listenerApi) => {
     const agents = action.payload
     const state = listenerApi.getState()
-    const organizationId = selectCurrentOrganizationId(state)
+    const { organizationId } = getCurrentIds({ state, wantedIds: ["organizationId"] })
     const projectId = action.meta.arg.projectId
-    if (!organizationId || !projectId) return
+    if (!projectId) return
 
     agents.forEach((agent) => {
       listenerApi.dispatch(
@@ -44,22 +43,10 @@ listenerMiddleware.startListening({
   },
   effect: async (_, listenerApi) => {
     const state = listenerApi.getState()
-    const agentId = selectCurrentAgentId(state)
-    const organizationId = selectCurrentOrganizationId(state)
-    // Get projectId from current agent
-    const agents = state.agents.data.value
-    if (!agentId || !organizationId || !agents) return
-
-    // Find the project from the agent
-    let projectId: string | undefined
-    for (const [pid, agentList] of Object.entries(agents)) {
-      if (agentList.some((a) => a.id === agentId)) {
-        projectId = pid
-        break
-      }
-    }
-    if (!projectId) return
-
+    const { organizationId, projectId, agentId } = getCurrentIds({
+      state,
+      wantedIds: ["organizationId", "projectId", "agentId"],
+    })
     await listenerApi.dispatch(listAgentMessageFeedbacks({ organizationId, projectId, agentId }))
   },
 })
@@ -75,10 +62,10 @@ listenerMiddleware.startListening({
     )
 
     const state = listenerApi.getState()
-    const organizationId = selectCurrentOrganizationId(state)
-    const projectId = selectCurrentProjectId(state)
-    const agentId = selectCurrentAgentId(state)
-    if (!organizationId || !projectId || !agentId) return
+    const { organizationId, projectId, agentId } = getCurrentIds({
+      state,
+      wantedIds: ["organizationId", "projectId", "agentId"],
+    })
     await listenerApi.dispatch(listAgentMessageFeedbacks({ organizationId, projectId, agentId }))
   },
 })

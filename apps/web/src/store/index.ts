@@ -10,6 +10,8 @@ import { authMiddleware } from "@/features/auth/auth.middleware"
 import { authSliceReducer } from "@/features/auth/auth.slice"
 import { documentsMiddleware } from "@/features/documents/documents.middleware"
 import { documentsSliceReducer } from "@/features/documents/documents.slice"
+import { evaluationsMiddleware } from "@/features/evaluations/evaluations.middleware"
+import { evaluationsSliceReducer } from "@/features/evaluations/evaluations.slice"
 import { meSliceReducer } from "@/features/me/me.slice"
 import { notificationsSliceReducer } from "@/features/notifications/notifications.slice"
 import { organizationsMiddleware } from "@/features/organizations/organizations.middleware"
@@ -26,12 +28,13 @@ export const store = configureStore({
     auth: authSliceReducer,
     agents: agentsSliceReducer,
     agentSessions: agentSessionsSliceReducer,
+    documents: documentsSliceReducer,
+    evaluations: evaluationsSliceReducer,
     me: meSliceReducer,
     notifications: notificationsSliceReducer,
     organizations: organizationsSliceReducer,
     projectMemberships: projectMembershipsSliceReducer,
     projects: projectsSliceReducer,
-    documents: documentsSliceReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
@@ -46,6 +49,7 @@ export const store = configureStore({
       agentsMiddleware.middleware,
       agentSessionMiddleware.middleware,
       documentsMiddleware.middleware,
+      evaluationsMiddleware.middleware,
       agentMessageFeedbackMiddleware.middleware,
     ),
 })

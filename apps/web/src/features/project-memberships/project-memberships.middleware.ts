@@ -1,9 +1,8 @@
 import type { TypedStartListening } from "@reduxjs/toolkit"
 import { createListenerMiddleware, isAnyOf } from "@reduxjs/toolkit"
 import type { AppDispatch, RootState } from "@/store/types"
+import { getCurrentIds } from "../helpers"
 import { notificationsActions } from "../notifications/notifications.slice"
-import { selectCurrentOrganizationId } from "../organizations/organizations.selectors"
-import { selectCurrentProjectId } from "../projects/projects.selectors"
 import {
   inviteProjectMembers,
   listProjectMemberships,
@@ -19,9 +18,10 @@ listenerMiddleware.startListening({
   matcher: isAnyOf(inviteProjectMembers.fulfilled, removeProjectMembership.fulfilled),
   effect: async (_, listenerApi) => {
     const state = listenerApi.getState()
-    const organizationId = selectCurrentOrganizationId(state)
-    const projectId = selectCurrentProjectId(state)
-    if (!organizationId || !projectId) return
+    const { organizationId, projectId } = getCurrentIds({
+      state,
+      wantedIds: ["organizationId", "projectId"],
+    })
 
     await listenerApi.dispatch(listProjectMemberships({ organizationId, projectId }))
   },

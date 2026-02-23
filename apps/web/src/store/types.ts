@@ -5,6 +5,7 @@ import type { agentSessionsSliceReducer } from "@/features/agent-sessions/agent-
 import type { agentsSliceReducer } from "@/features/agents/agents.slice"
 import type { authSliceReducer } from "@/features/auth/auth.slice"
 import type { documentsSliceReducer } from "@/features/documents/documents.slice"
+import type { evaluationsSliceReducer } from "@/features/evaluations/evaluations.slice"
 import type { meSliceReducer } from "@/features/me/me.slice"
 import type { notificationsSliceReducer } from "@/features/notifications/notifications.slice"
 import type { organizationsSliceReducer } from "@/features/organizations/organizations.slice"
@@ -18,12 +19,13 @@ export type RootState = {
   auth: ReturnType<typeof authSliceReducer>
   agents: ReturnType<typeof agentsSliceReducer>
   agentSessions: ReturnType<typeof agentSessionsSliceReducer>
+  documents: ReturnType<typeof documentsSliceReducer>
+  evaluations: ReturnType<typeof evaluationsSliceReducer>
   me: ReturnType<typeof meSliceReducer>
   notifications: ReturnType<typeof notificationsSliceReducer>
   organizations: ReturnType<typeof organizationsSliceReducer>
   projectMemberships: ReturnType<typeof projectMembershipsSliceReducer>
   projects: ReturnType<typeof projectsSliceReducer>
-  documents: ReturnType<typeof documentsSliceReducer>
 }
 
 // Extra argument passed to thunks for dependency injection

@@ -1,8 +1,8 @@
 import type { TypedStartListening } from "@reduxjs/toolkit"
 import { createListenerMiddleware } from "@reduxjs/toolkit"
 import type { AppDispatch, RootState } from "@/store/types"
+import { getCurrentIds } from "../helpers"
 import { notificationsActions } from "../notifications/notifications.slice"
-import { selectCurrentOrganizationId } from "../organizations/organizations.selectors"
 import { selectCurrentProjectId } from "../projects/projects.selectors"
 import { listProjects } from "../projects/projects.thunks"
 import { deleteDocument, listDocuments, uploadDocument } from "./documents.thunks"
@@ -17,8 +17,7 @@ listenerMiddleware.startListening({
   effect: async (action, listenerApi) => {
     const projects = action.payload
     const state = listenerApi.getState()
-    const organizationId = selectCurrentOrganizationId(state)
-    if (!organizationId) return
+    const { organizationId } = getCurrentIds({ state, wantedIds: ["organizationId"] })
 
     projects.forEach((project) => {
       listenerApi.dispatch(listDocuments({ organizationId, projectId: project.id }))
@@ -35,9 +34,10 @@ listenerMiddleware.startListening({
   },
   effect: async (_, listenerApi) => {
     const state = listenerApi.getState()
-    const projectId = selectCurrentProjectId(state)
-    const organizationId = selectCurrentOrganizationId(state)
-    if (!projectId || !organizationId) return
+    const { organizationId, projectId } = getCurrentIds({
+      state,
+      wantedIds: ["organizationId", "projectId"],
+    })
     await listenerApi.dispatch(listDocuments({ organizationId, projectId }))
   },
 })
