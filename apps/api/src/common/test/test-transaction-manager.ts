@@ -21,19 +21,7 @@ import { UserMembership } from "@/domains/organizations/user-membership.entity"
 import { ProjectMembership } from "@/domains/projects/memberships/project-membership.entity"
 import { Project } from "@/domains/projects/project.entity"
 import { User } from "@/domains/users/user.entity"
-
-const TEST_ENTITIES = [
-  User,
-  Organization,
-  UserMembership,
-  Project,
-  ProjectMembership,
-  Agent,
-  AgentSession,
-  AgentMessage,
-  AgentMessageFeedback,
-  Document,
-]
+import { TEST_ENTITIES } from "./test-entities"
 
 export interface TransactionalTestSetup {
   module: TestingModule
