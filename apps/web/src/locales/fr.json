@@ -1,5 +1,6 @@
 {
   "common": {
+    "run": "Exécuter",
     "selectAgent": "Sélectionner un agent",
     "settings": "Paramètres",
     "send": "Envoyer",

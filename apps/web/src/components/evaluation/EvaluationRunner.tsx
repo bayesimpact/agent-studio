@@ -52,7 +52,7 @@ export function EvaluationRunner({
         {selectedAgentId && <AgentInfo agent={agents.find((a) => a.id === selectedAgentId)!} />}
 
         <DialogFooter>
-          <Button onClick={handleRun}>Run</Button>
+          <Button onClick={handleRun}>{tCommon("run")}</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
