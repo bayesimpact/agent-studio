@@ -10,8 +10,7 @@ import { ADS } from "@/store/async-data-status"
 import { selectAgentsData, selectCurrentAgentId } from "../agents/agents.selectors"
 import { listAgents } from "../agents/agents.thunks"
 import { selectIsAdminInterface } from "../auth/auth.selectors"
-import { selectCurrentOrganizationId } from "../organizations/organizations.selectors"
-import { selectCurrentProjectId } from "../projects/projects.selectors"
+import { getCurrentIds } from "../helpers"
 import { selectCurrentAgentSessionId } from "./agent-sessions.selectors"
 import { agentSessionsActions } from "./agent-sessions.slice"
 
@@ -26,9 +25,10 @@ listenerMiddleware.startListening({
   effect: async ({ payload: agents }, listenerApi) => {
     const state = listenerApi.getState()
     const isAdminInterface = selectIsAdminInterface(state)
-    const organizationId = selectCurrentOrganizationId(state)
-    const projectId = selectCurrentProjectId(state)
-    if (!organizationId || !projectId) return
+    const { organizationId, projectId } = getCurrentIds({
+      state,
+      wantedIds: ["organizationId", "projectId"],
+    })
     agents.forEach((agent) => {
       listenerApi.dispatch(
         listSessions({
@@ -51,11 +51,11 @@ listenerMiddleware.startListening({
   },
   effect: async (_, listenerApi) => {
     const state = listenerApi.getState()
-    const organizationId = selectCurrentOrganizationId(state)
-    const projectId = selectCurrentProjectId(state)
-    const agentId = selectCurrentAgentId(state)
+    const { organizationId, projectId, agentId } = getCurrentIds({
+      state,
+      wantedIds: ["organizationId", "projectId", "agentId"],
+    })
     const isAdminInterface = selectIsAdminInterface(state)
-    if (!organizationId || !projectId || !agentId) return
     await listenerApi.dispatch(
       listSessions({ organizationId, projectId, agentId, playground: isAdminInterface }),
     )
@@ -93,14 +93,14 @@ listenerMiddleware.startListening({
   effect: async (action, listenerApi) => {
     const state = listenerApi.getState()
     const isAdminInterface = selectIsAdminInterface(state)
-    const organizationId = selectCurrentOrganizationId(state)
-    const projectId = selectCurrentProjectId(state)
+    const { organizationId, projectId } = getCurrentIds({
+      state,
+      wantedIds: ["organizationId", "projectId"],
+    })
     const { agentId, id } = action.payload
-    if (!organizationId || !projectId) return
     await listenerApi.dispatch(
       listSessions({ organizationId, projectId, agentId, playground: isAdminInterface }),
     )
-
     const onSuccess = action.meta.arg.onSuccess
     onSuccess?.(id)
   },
@@ -117,9 +117,10 @@ listenerMiddleware.startListening({
     listenerApi.dispatch(agentSessionsActions.reset())
     const state = listenerApi.getState()
     const isAdminInterface = selectIsAdminInterface(state)
-    const organizationId = selectCurrentOrganizationId(state)
-    const projectId = selectCurrentProjectId(state)
-    if (!organizationId || !projectId) return
+    const { organizationId, projectId } = getCurrentIds({
+      state,
+      wantedIds: ["organizationId", "projectId"],
+    })
     const agents = selectAgentsData(state)
     if (ADS.isFulfilled(agents)) {
       for (const agent of Object.values(agents.value).flat()) {

@@ -1,8 +1,8 @@
 import type { TypedStartListening } from "@reduxjs/toolkit"
 import { createListenerMiddleware, isAnyOf } from "@reduxjs/toolkit"
 import type { AppDispatch, RootState } from "@/store/types"
+import { getCurrentIds } from "../helpers"
 import { notificationsActions } from "../notifications/notifications.slice"
-import { selectCurrentOrganizationId } from "../organizations/organizations.selectors"
 import { createProject, deleteProject, listProjects, updateProject } from "./projects.thunks"
 
 // Create typed listener middleware
@@ -14,9 +14,7 @@ listenerMiddleware.startListening({
   matcher: isAnyOf(deleteProject.fulfilled, createProject.fulfilled, updateProject.fulfilled),
   effect: async (_, listenerApi) => {
     const state = listenerApi.getState()
-    const organizationId = selectCurrentOrganizationId(state)
-    if (!organizationId) throw new Error("No organization selected")
-
+    const { organizationId } = getCurrentIds({ state, wantedIds: ["organizationId"] })
     await listenerApi.dispatch(listProjects({ organizationId }))
   },
 })

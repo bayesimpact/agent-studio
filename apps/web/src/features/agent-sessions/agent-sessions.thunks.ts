@@ -1,12 +1,9 @@
 import { createAsyncThunk } from "@reduxjs/toolkit"
 import type { RootState, ThunkExtraArg } from "@/store"
 import { generateId } from "@/utils/generate-id"
-import { selectCurrentAgentId } from "../agents/agents.selectors"
 import { selectIsAdminInterface } from "../auth/auth.selectors"
-import { selectCurrentOrganizationId } from "../organizations/organizations.selectors"
-import { selectCurrentProjectId } from "../projects/projects.selectors"
+import { getCurrentIds } from "../helpers"
 import type { AgentSession, AgentSessionMessage } from "./agent-sessions.models"
-import { selectCurrentAgentSessionId } from "./agent-sessions.selectors"
 import { agentSessionsActions } from "./agent-sessions.slice"
 import { streamChatResponse } from "./external/agent-session-streaming"
 
@@ -59,18 +56,10 @@ export const loadSessionMessages = createAsyncThunk<AgentSessionMessage[], strin
   "agentSession/loadSessionMessages",
   async (agentSessionId, { extra: { services }, getState }) => {
     const state = getState()
-    const organizationId = selectCurrentOrganizationId(state)
-    if (!organizationId) {
-      throw new Error("No current organization ID found")
-    }
-    const projectId = selectCurrentProjectId(state)
-    if (!projectId) {
-      throw new Error("No current project ID found")
-    }
-    const agentId = selectCurrentAgentId(state)
-    if (!agentId) {
-      throw new Error("No current agent ID found")
-    }
+    const { organizationId, projectId, agentId } = getCurrentIds({
+      state,
+      wantedIds: ["organizationId", "projectId", "agentId"],
+    })
     return services.agentSessions.getMessages({
       organizationId,
       projectId,
@@ -84,22 +73,10 @@ export const sendMessage = createAsyncThunk<void, { content: string; file?: File
   "agentSession/sendMessage",
   async ({ content, file }, { extra: { services }, dispatch, getState, signal }) => {
     const state = getState()
-    const organizationId = selectCurrentOrganizationId(state)
-    if (!organizationId) {
-      throw new Error("No current organization ID found")
-    }
-    const projectId = selectCurrentProjectId(state)
-    if (!projectId) {
-      throw new Error("No current project ID found")
-    }
-    const agentId = selectCurrentAgentId(state)
-    if (!agentId) {
-      throw new Error("No current agent ID found")
-    }
-    const sessionId = selectCurrentAgentSessionId(state)
-    if (!sessionId) {
-      throw new Error("No current agent session ID found")
-    }
+    const { organizationId, projectId, agentId, agentSessionId } = getCurrentIds({
+      state,
+      wantedIds: ["organizationId", "projectId", "agentId", "agentSessionId"],
+    })
 
     const agentSessionsState = state.agentSessions
 
@@ -138,7 +115,7 @@ export const sendMessage = createAsyncThunk<void, { content: string; file?: File
         organizationId,
         projectId,
         agentId,
-        sessionId,
+        sessionId: agentSessionId,
         content,
         documentId,
         handlers: {

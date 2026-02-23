@@ -786,9 +786,7 @@ listenerMiddleware.startListening({
   matcher: isAnyOf(inviteProjectMembers.fulfilled, removeProjectMembership.fulfilled),
   effect: async (_, listenerApi) => {
     const state = listenerApi.getState()
-    const organizationId = selectCurrentOrganizationId(state)
-    const projectId = selectCurrentProjectId(state)
-    if (!organizationId || !projectId) return
+    const { organizationId, projectId } = getCurrentIds({ state, wantedIds: ["organizationId", "projectId"] })
     await listenerApi.dispatch(listProjectMemberships({ organizationId, projectId }))
   },
 })

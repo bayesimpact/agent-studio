@@ -23,24 +23,24 @@ export const initOrganization = createAsyncThunk<
   const agentSessions: Record<Agent["id"], AgentSession[]> = {}
 
   for (const project of projects) {
-    const bots = await services.agents.getAll({ organizationId, projectId: project.id })
-    agents[project.id] = bots
+    const agts = await services.agents.getAll({ organizationId, projectId: project.id })
+    agents[project.id] = agts
 
-    for (const bot of bots) {
+    for (const agent of agts) {
       if (isAdminInterface) {
         const sessions = await services.agentSessions.getAllPlaygroundSessions({
           organizationId,
           projectId: project.id,
-          agentId: bot.id,
+          agentId: agent.id,
         })
-        agentSessions[bot.id] = sessions
+        agentSessions[agent.id] = sessions
       } else {
         const sessions = await services.agentSessions.getAllAppSessions({
           organizationId,
           projectId: project.id,
-          agentId: bot.id,
+          agentId: agent.id,
         })
-        agentSessions[bot.id] = sessions
+        agentSessions[agent.id] = sessions
       }
     }
   }
