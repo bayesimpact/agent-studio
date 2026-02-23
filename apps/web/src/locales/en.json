@@ -1,5 +1,6 @@
 {
   "common": {
+    "run": "Run",
     "selectAgent": "Select Agent",
     "settings": "Settings",
     "send": "Send",
