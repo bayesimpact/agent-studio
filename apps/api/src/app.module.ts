@@ -9,6 +9,7 @@ import { AgentsModule } from "./domains/agents/agents.module"
 import { AuthModule } from "./domains/auth/auth.module"
 import { DocumentsModule } from "./domains/documents/documents.module"
 import { StorageModule } from "./domains/documents/storage/storage.module"
+import { EvaluationsModule } from "./domains/evaluations/evaluations.module"
 import { MeModule } from "./domains/me/me.module"
 import { OrganizationsModule } from "./domains/organizations/organizations.module"
 import { ProjectsModule } from "./domains/projects/projects.module"
@@ -33,6 +34,7 @@ import { UsersModule } from "./domains/users/users.module"
     AgentSessionsModule,
     AgentMessageFeedbackModule,
     MeModule,
+    EvaluationsModule,
     OrganizationsModule,
     ProjectsModule,
     DocumentsModule,

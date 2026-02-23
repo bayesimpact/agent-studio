@@ -14,6 +14,9 @@ export { AgentsRoutes } from "./agents/agents.routes"
 // Documents DTOs
 export * from "./documents/documents.dto"
 export { DocumentsRoutes } from "./documents/documents.routes"
+// Evaluations DTOs
+export * from "./evaluations/evaluations.dto"
+export { EvaluationsRoutes } from "./evaluations/evaluations.routes"
 // Generic DTOs
 export type * from "./generic"
 export type { ApiRoute } from "./helpers"

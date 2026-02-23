@@ -13,8 +13,8 @@ export enum RouteNames {
   // ADMIN ROUTES
   ADMIN = "/admin",
   DOCUMENTS = "/o/:organizationId/p/:projectId/d",
-  EVALUATION = "/o/:organizationId/p/:projectId/eval",
   DOCUMENT = "/o/:organizationId/p/:projectId/d/:documentId",
+  EVALUATION = "/o/:organizationId/p/:projectId/eval",
   FEEDBACK = "/o/:organizationId/p/:projectId/a/:agentId/f",
   PROJECT_MEMBERSHIPS = "/o/:organizationId/p/:projectId/members",
 
