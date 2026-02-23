@@ -27,17 +27,34 @@ export class AgentsService {
   }: {
     connectScope: RequiredConnectScope
     fields: Pick<RequiredConnectScope, never> &
-      Pick<Agent, "defaultPrompt" | "name" | "model" | "temperature" | "locale">
+      Pick<Agent, "defaultPrompt" | "name" | "model" | "temperature" | "locale"> &
+      Partial<Pick<Agent, "type" | "instructionPrompt" | "outputJsonSchema">>
   }): Promise<Agent> {
-    const { name } = fields
+    const {
+      name,
+      type = "conversation",
+      instructionPrompt = null,
+      outputJsonSchema = null,
+    } = fields
 
     // Validate name (min 3 characters)
     if (name.length < 3) {
       throw new UnprocessableEntityException("Agent name must be at least 3 characters long")
     }
 
+    if (type === "extraction" && (!instructionPrompt || !outputJsonSchema)) {
+      throw new UnprocessableEntityException(
+        "Extraction agent requires both instructionPrompt and outputJsonSchema",
+      )
+    }
+
     // Create the agent with defaults
-    return await this.agentConnectRepository.createAndSave(connectScope, fields)
+    return await this.agentConnectRepository.createAndSave(connectScope, {
+      ...fields,
+      type,
+      instructionPrompt,
+      outputJsonSchema,
+    })
   }
 
   /**
@@ -77,10 +94,22 @@ export class AgentsService {
       agentId: string
     }
     fieldsToUpdate: Pick<RequiredConnectScope, never> &
-      Partial<Pick<Agent, "name" | "defaultPrompt" | "model" | "temperature" | "locale">>
+      Partial<
+        Pick<
+          Agent,
+          | "name"
+          | "defaultPrompt"
+          | "model"
+          | "temperature"
+          | "locale"
+          | "type"
+          | "instructionPrompt"
+          | "outputJsonSchema"
+        >
+      >
   }): Promise<Agent> {
     const { agentId } = required
-    const { name, defaultPrompt, model, temperature, locale } = fieldsToUpdate
+    const { name, defaultPrompt, model, temperature, locale, type } = fieldsToUpdate
 
     // Validate name if provided (min 3 characters)
     if (name !== undefined && name.length < 3) {
@@ -94,12 +123,31 @@ export class AgentsService {
       throw new NotFoundException(`Agent with id ${agentId} not found`)
     }
 
+    const nextType = type ?? agent.type
+    const nextInstructionPrompt =
+      fieldsToUpdate.instructionPrompt !== undefined
+        ? fieldsToUpdate.instructionPrompt
+        : agent.instructionPrompt
+    const nextOutputJsonSchema =
+      fieldsToUpdate.outputJsonSchema !== undefined
+        ? fieldsToUpdate.outputJsonSchema
+        : agent.outputJsonSchema
+
+    if (nextType === "extraction" && (!nextInstructionPrompt || !nextOutputJsonSchema)) {
+      throw new UnprocessableEntityException(
+        "Extraction agent requires both instructionPrompt and outputJsonSchema",
+      )
+    }
+
     // Track if configuration fields changed (these trigger playground cleanup)
     const configFields = [
       { value: model, current: agent.model },
       { value: temperature, current: agent.temperature },
       { value: defaultPrompt, current: agent.defaultPrompt },
       { value: locale, current: agent.locale },
+      { value: type, current: agent.type },
+      { value: fieldsToUpdate.instructionPrompt, current: agent.instructionPrompt },
+      { value: fieldsToUpdate.outputJsonSchema, current: agent.outputJsonSchema },
     ]
     const configChanged = configFields.some(
       ({ value, current }) => value !== undefined && value !== current,
@@ -112,6 +160,13 @@ export class AgentsService {
       ...(model !== undefined && { model }),
       ...(temperature !== undefined && { temperature }),
       ...(locale !== undefined && { locale }),
+      ...(type !== undefined && { type }),
+      ...(fieldsToUpdate.instructionPrompt !== undefined && {
+        instructionPrompt: fieldsToUpdate.instructionPrompt,
+      }),
+      ...(fieldsToUpdate.outputJsonSchema !== undefined && {
+        outputJsonSchema: fieldsToUpdate.outputJsonSchema,
+      }),
     })
 
     const updatedAgent = await this.agentConnectRepository.saveOne(agent)

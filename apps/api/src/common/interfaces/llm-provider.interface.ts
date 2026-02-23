@@ -95,8 +95,14 @@ export interface LLMProvider {
     config: LLMConfig
     metadata: LLMMetadata
   }): Promise<string>
-}
 
+  generateStructuredOutput(params: {
+    message: LLMChatMessage
+    schema: Record<string, unknown>
+    config: LLMConfig
+    metadata: LLMMetadata
+  }): Promise<Record<string, unknown>>
+}
 export interface LLMFile {
   name: string
   content: NonSharedBuffer

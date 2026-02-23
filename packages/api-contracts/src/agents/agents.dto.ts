@@ -1,14 +1,19 @@
 import type { TimeType } from "../generic"
 
+export type AgentType = "conversation" | "extraction"
+
 export type AgentDto = {
   createdAt: TimeType
   defaultPrompt: string
   id: string
+  instructionPrompt?: string
   locale: AgentLocale
   model: AgentModel
   name: string
+  outputJsonSchema?: Record<string, unknown>
   projectId: string
   temperature: AgentTemperature
+  type: AgentType
   updatedAt: TimeType
 }
 

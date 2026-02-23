@@ -3,6 +3,7 @@ import { NotImplementedException } from "@nestjs/common"
 import {
   type FilePart,
   generateText,
+  jsonSchema,
   type LanguageModel,
   Output,
   streamText,
@@ -171,6 +172,51 @@ export abstract class AISDKLLMProviderBase implements LLMProvider {
       }),
     })
     return schema.parse(res.output)
+  }
+
+  async generateStructuredOutput({
+    message,
+    schema,
+    config,
+    metadata,
+  }: {
+    message: LLMChatMessage
+    schema: Record<string, unknown>
+    config: LLMConfig
+    metadata: LLMMetadata
+  }): Promise<Record<string, unknown>> {
+    const aiSDKMessages: LLMChatMessage[] = [message]
+      .map((currentMessage) => {
+        if (currentMessage.role === "system") {
+          return undefined
+        }
+        return {
+          role: currentMessage.role === "assistant" ? "assistant" : "user",
+          content: currentMessage.content,
+        }
+      })
+      .filter((currentMessage) => currentMessage !== undefined) as LLMChatMessage[]
+
+    if (aiSDKMessages.length === 0) {
+      throw new Error("Cannot generate structured output: no valid messages provided")
+    }
+
+    const result = await generateText({
+      model: this.getLanguageModel(config),
+      messages: aiSDKMessages,
+      system: config.systemPrompt,
+      temperature: config.temperature,
+      output: Output.object({
+        schema: jsonSchema<Record<string, unknown>>(schema),
+      }),
+      experimental_telemetry: {
+        isEnabled: true,
+        functionId: "LLMProvider.generateStructuredOutput",
+        metadata: this.buildMetadata({ config, metadata }),
+      },
+    })
+
+    return result.output
   }
 
   async processFiles({

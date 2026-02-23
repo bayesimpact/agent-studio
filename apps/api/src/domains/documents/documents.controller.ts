@@ -65,7 +65,7 @@ export class DocumentsController {
     )
     file: MulterFile,
     @Request() req: EndpointRequestWithProject,
-    @Param("sourceType") sourceType: "project" | "agentSessionMessage",
+    @Param("sourceType") sourceType: "project" | "agentSessionMessage" | "extraction",
   ): Promise<typeof DocumentsRoutes.uploadOne.response> {
     if (!sourceType) {
       throw new UnprocessableEntityException("Source type is required.")

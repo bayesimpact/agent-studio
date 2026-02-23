@@ -48,6 +48,9 @@ This v0 is backend-only. UI/UX will be defined later.
 4. **Document source type**: extraction uploads must use `sourceType = "extraction"`
 5. **Contract**: strict structured response based on JSON schema
 6. **History model**: persist each execution as `AgentExtractionRun` (not `AgentSession`)
+7. **Validation failure behavior**: return `422` and persist run as `failed`
+8. **Pagination**: no pagination in v0 for run history
+9. **AI SDK usage**: use AI SDK structured output mode with schema provided to generation call
 
 ---
 
@@ -60,7 +63,7 @@ Rationale:
 - policy and authorization are identical to `Agent`
 - extraction is scoped by existing `organization` + `project` + `agent` context
 - avoids duplicate module and guard wiring
-- keeps `agentType` and execution behavior in one cohesive domain
+- keeps `Agent.type` and execution behavior in one cohesive domain
 
 Suggested folder layout (v0):
 
@@ -90,6 +93,8 @@ Extraction-specific configuration:
 - `instructionPrompt: string`
 - `outputJsonSchema: object` (JSON Schema for expected output)
 
+For `type = "extraction"`, both fields are required at creation time.
+
 ### FR2 — Extraction Endpoint (Sync)
 
 The API exposes a sync extraction endpoint under the agent scope.
@@ -109,6 +114,7 @@ The endpoint:
 - If model output is valid against schema: return `200` with `data`
 - If model output cannot be validated: return explicit validation error
 - API must not return schema-invalid structured output as success
+- On schema validation failure, API returns `422` and stores the run with `status = "failed"`
 
 ### FR4 — Run History
 
@@ -176,6 +182,8 @@ The endpoint:
 }
 ```
 
+This endpoint returns all runs in v0 (no pagination).
+
 ### Endpoint (get one run)
 
 - `GET organizations/:organizationId/projects/:projectId/agents/:agentId/extraction-runs/:runId`
@@ -232,14 +240,19 @@ No custom role logic is introduced in v0.
 
 ### Agent Config
 
-Extend agent configuration with extraction fields:
+Use the `Agent.type` column to represent agent behavior:
 
-- `agentType`
+- `type: "conversation" | "extraction"` (default: `"conversation"`)
 - `instructionPrompt`
 - `outputJsonSchema`
 
 For `conversation` agents, current behavior remains unchanged.
 For `extraction` agents, chat/session endpoints are not part of this v0 flow.
+
+Validation rules:
+
+- If `type = "extraction"`, `instructionPrompt` and `outputJsonSchema` are required.
+- If `type = "conversation"`, extraction fields are ignored.
 
 ### `AgentExtractionRun` Entity (v0)
 
@@ -266,6 +279,7 @@ Design note: `AgentExtractionRun` is intentionally separate from `AgentSession`.
 - Extraction endpoint receives `documentId` (no inline upload in this endpoint)
 - Uploaded documents used for extraction runs must be created with `sourceType = "extraction"`
 - `AgentExtractionRun.documentId` references that uploaded extraction document
+- Existing project documents listing should continue excluding extraction documents
 
 ---
 
@@ -284,6 +298,10 @@ Design note: `AgentExtractionRun` is intentionally separate from `AgentSession`.
 9. Parse and validate response against `outputJsonSchema`
 10. Update run with `success` + `result` OR `failed` + error payload
 11. Return validated structured output and `runId`
+
+Implementation note:
+
+- Use AI SDK structured output mode and pass the output schema in generation parameters.
 
 ---
 
@@ -327,8 +345,7 @@ Design note: `AgentExtractionRun` is intentionally separate from `AgentSession`.
 
 ## Open Questions (Post-v0)
 
-1. Should we include pagination on run history in v0 or defer?
-2. Should we store raw model output in addition to validated `result`?
-3. Should we add retries/repair loops when schema validation fails?
-4. Should we support text/csv/docx extraction at parity with image/pdf in the first incremental release after v0?
-5. Should extraction results include confidence/citation metadata?
+1. Should we store raw model output in addition to validated `result`?
+2. Should we add retries/repair loops when schema validation fails?
+3. Should we support text/csv/docx extraction at parity with image/pdf in the first incremental release after v0?
+4. Should extraction results include confidence/citation metadata?

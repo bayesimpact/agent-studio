@@ -5,7 +5,10 @@ import type { AgentDto, ListAgentsResponseDto } from "./agents.dto"
 export const AgentsRoutes = {
   createOne: defineRoute<
     ResponseData<AgentDto>,
-    RequestPayload<Pick<AgentDto, "name" | "defaultPrompt" | "model" | "locale" | "temperature">>
+    RequestPayload<
+      Pick<AgentDto, "name" | "defaultPrompt" | "model" | "locale" | "temperature"> &
+        Partial<Pick<AgentDto, "type" | "instructionPrompt" | "outputJsonSchema">>
+    >
   >({
     method: "post",
     path: "organizations/:organizationId/projects/:projectId/agents",
@@ -17,7 +20,19 @@ export const AgentsRoutes = {
   updateOne: defineRoute<
     ResponseData<SuccessResponseDTO>,
     RequestPayload<
-      Partial<Pick<AgentDto, "name" | "defaultPrompt" | "locale" | "model" | "temperature">>
+      Partial<
+        Pick<
+          AgentDto,
+          | "name"
+          | "defaultPrompt"
+          | "locale"
+          | "model"
+          | "temperature"
+          | "type"
+          | "instructionPrompt"
+          | "outputJsonSchema"
+        >
+      >
     >
   >({
     method: "patch",

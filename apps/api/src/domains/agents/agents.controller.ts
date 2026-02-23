@@ -85,11 +85,14 @@ function toAgentDto(entity: Agent): AgentDto {
     createdAt: entity.createdAt.getTime(),
     defaultPrompt: entity.defaultPrompt,
     id: entity.id,
+    instructionPrompt: entity.instructionPrompt ?? undefined,
     locale: entity.locale,
     model: entity.model,
     name: entity.name,
+    outputJsonSchema: entity.outputJsonSchema ?? undefined,
     projectId: entity.projectId,
     temperature: entity.temperature,
+    type: entity.type,
     updatedAt: entity.updatedAt.getTime(),
   }
 }
