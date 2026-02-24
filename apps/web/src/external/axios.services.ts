@@ -2,6 +2,7 @@ import agentMessageFeedbackApi from "@/features/agent-message-feedback/external/
 import agentSessionsApi from "@/features/agent-sessions/external/agent-sessions.api"
 import agentsApi from "@/features/agents/external/agents.api"
 import documentsApi from "@/features/documents/external/documents.api"
+import evaluationReportsApi from "@/features/evaluation-reports/external/evaluation-reports.api"
 import evaluationsApi from "@/features/evaluations/external/evaluations.api"
 import invitationsApi from "@/features/invitations/external/invitations.api"
 import meApi from "@/features/me/external/me.api"
@@ -14,6 +15,7 @@ export const services = {
   agents: agentsApi,
   agentSessions: agentSessionsApi,
   documents: documentsApi,
+  evaluationReports: evaluationReportsApi,
   evaluations: evaluationsApi,
   invitations: invitationsApi,
   me: meApi,

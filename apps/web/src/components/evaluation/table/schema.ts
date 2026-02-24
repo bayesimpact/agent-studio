@@ -9,7 +9,8 @@ export const schema = z.object({
       name: z.string(),
     })
     .optional(),
-  status: z.enum(["idle", "loading", "done"]),
+  status: z.enum(["loading", "done"]),
   output: z.string(),
   score: z.string(),
+  traceUrl: z.string(),
 })

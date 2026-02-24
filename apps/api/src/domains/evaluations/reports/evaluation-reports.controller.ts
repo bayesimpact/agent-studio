@@ -11,6 +11,7 @@ import { ResourceContextGuard } from "@/common/context/resource-context.guard"
 import { CheckPolicy } from "@/common/policies/check-policy.decorator"
 import { JwtAuthGuard } from "@/domains/auth/jwt-auth.guard"
 import { UserGuard } from "@/domains/users/user.guard"
+import { getTraceUrl } from "@/external/langfuse/langfuse-helper"
 import type { EvaluationReport } from "./evaluation-report.entity"
 import { EvaluationReportGuard } from "./evaluation-report.guard"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
@@ -40,7 +41,6 @@ export class EvaluationReportsController {
         score: "",
       },
     })
-
     return { data: toDto(report) }
   }
 
@@ -64,7 +64,7 @@ function toDto(entity: EvaluationReport): EvaluationReportDto {
     id: entity.id,
     evaluationId: entity.evaluationId,
     agentId: entity.agentId,
-    traceId: entity.traceId,
+    traceUrl: getTraceUrl(entity.traceId),
     output: entity.output,
     score: entity.score,
     updatedAt: entity.updatedAt.getTime(),

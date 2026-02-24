@@ -3,6 +3,7 @@ import { Button } from "@caseai-connect/ui/shad/button"
 import { IconCircleCheckFilled, IconLoader } from "@tabler/icons-react"
 import type { ColumnDef } from "@tanstack/react-table"
 import type { TFunction } from "i18next"
+import { ExternalLinkIcon } from "lucide-react"
 import type { z } from "zod"
 import { buildDate } from "@/utils/build-date"
 import type { schema } from "./schema"
@@ -56,6 +57,18 @@ export function createColumns({ t }: { t: TFunction }): ColumnDef<z.infer<typeof
       accessorKey: "score",
       header: () => <div>{t("table.headers.score")}</div>,
       cell: ({ row }) => <Badge variant="secondary">{row.original.score}</Badge>,
+    },
+    {
+      accessorKey: "traceUrl",
+      header: () => <></>,
+      cell: ({ row }) => (
+        <Button asChild variant="ghost">
+          <a href={row.original.traceUrl} className="cursor-pointer" target="_blank">
+            Trace Url
+            <ExternalLinkIcon className="size-4" />
+          </a>
+        </Button>
+      ),
     },
   ]
 }
