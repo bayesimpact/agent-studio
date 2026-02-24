@@ -165,6 +165,8 @@ You do **not** need to update your hosts file:
 
 Create the certificate directory and generate a certificate valid for both `localhost` and `connect.localhost`:
 
+**Windows:**: install openssl if not already installed (by ex from :https://slproweb.com/products/Win32OpenSSL.html)
+
 ```bash
 mkdir -p apps/api/.certs
 
@@ -194,17 +196,11 @@ After running this command, restart your browser. The certificate will be truste
 
 **Windows:**
 
-1. Double-click `apps/api/.certs/cert.pem` to open it.
-2. Click **Install Certificate…**
-3. Select **Local Machine** → **Next**.
-4. Select **Place all certificates in the following store** → **Browse…** → **Trusted Root Certification Authorities** → **OK** → **Next** → **Finish**.
-5. Restart your browser.
-
-Alternatively, using PowerShell as Administrator:
-
-```powershell
-Import-Certificate -FilePath "apps\api\.certs\cert.pem" -CertStoreLocation "Cert:\LocalMachine\Root"
+```powershell as administrator
+certutil.exe -addstore -f "Root" "./apps/api/.certs/cert.pem"
+Import-Certificate -FilePath "<SET ROOT HERE>\apps\api\.certs\cert.pem" -CertStoreLocation "Cert:\LocalMachine\Root"
 ```
+Then restart your computer
 
 **Linux (Ubuntu/Debian):**
 
