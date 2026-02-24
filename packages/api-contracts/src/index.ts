@@ -14,6 +14,9 @@ export { AgentsRoutes } from "./agents/agents.routes"
 // Documents DTOs
 export * from "./documents/documents.dto"
 export { DocumentsRoutes } from "./documents/documents.routes"
+// Evaluation Reports DTOs
+export * from "./evaluations/evaluation-reports.dto"
+export { EvaluationReportsRoutes } from "./evaluations/evaluation-reports.routes"
 // Evaluations DTOs
 export * from "./evaluations/evaluations.dto"
 export { EvaluationsRoutes } from "./evaluations/evaluations.routes"

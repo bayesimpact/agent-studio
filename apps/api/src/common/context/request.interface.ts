@@ -2,6 +2,7 @@ import type { AgentSession } from "@/domains/agent-sessions/agent-session.entity
 import type { Agent } from "@/domains/agents/agent.entity"
 import type { Document } from "@/domains/documents/document.entity"
 import type { Evaluation } from "@/domains/evaluations/evaluation.entity"
+import type { EvaluationReport } from "@/domains/evaluations/reports/evaluation-report.entity"
 import type { UserMembership } from "@/domains/organizations/user-membership.entity"
 import type { ProjectMembership } from "@/domains/projects/memberships/project-membership.entity"
 import type { Project } from "@/domains/projects/project.entity"
@@ -49,4 +50,8 @@ export interface EndpointRequestWithAgentSession extends EndpointRequestWithAgen
 
 export interface EndpointRequestWithEvaluation extends EndpointRequestWithProject {
   evaluation: Evaluation
+}
+
+export interface EndpointRequestWithEvaluationReport extends EndpointRequestWithEvaluation {
+  evaluationReport: EvaluationReport
 }
