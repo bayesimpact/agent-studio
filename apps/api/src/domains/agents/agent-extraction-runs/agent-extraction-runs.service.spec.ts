@@ -45,7 +45,6 @@ describe("AgentExtractionRunsService", () => {
     const { organization, project, user, agent } = await createOrganizationWithAgent(repositories, {
       agent: {
         type: "extraction",
-        instructionPrompt: "Extract person data",
         outputJsonSchema: {
           type: "object",
           properties: { fullName: { type: "string" } },
@@ -81,7 +80,6 @@ describe("AgentExtractionRunsService", () => {
     const { organization, project, user, agent } = await createOrganizationWithAgent(repositories, {
       agent: {
         type: "extraction",
-        instructionPrompt: "Extract person data",
         outputJsonSchema: {
           type: "object",
           properties: { fullName: { type: "string" } },
@@ -120,7 +118,6 @@ describe("AgentExtractionRunsService", () => {
     const { organization, project, user, agent } = await createOrganizationWithAgent(repositories, {
       agent: {
         type: "extraction",
-        instructionPrompt: "Extract person data",
         outputJsonSchema: {
           type: "object",
           properties: { age: { type: "number" } },

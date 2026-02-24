@@ -6,7 +6,6 @@ export type AgentDto = {
   createdAt: TimeType
   defaultPrompt: string
   id: string
-  instructionPrompt?: string
   locale: AgentLocale
   model: AgentModel
   name: string

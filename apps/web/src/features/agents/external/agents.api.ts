@@ -33,10 +33,9 @@ export default {
 
 const toCreateDto = (
   payload: Pick<Agent, "name" | "defaultPrompt" | "model" | "locale" | "temperature" | "type"> &
-    Partial<Pick<Agent, "instructionPrompt" | "outputJsonSchema">>,
+    Partial<Pick<Agent, "outputJsonSchema">>,
 ): (typeof AgentsRoutes.createOne.request)["payload"] => ({
   defaultPrompt: payload.defaultPrompt,
-  instructionPrompt: payload.instructionPrompt,
   locale: payload.locale,
   model: payload.model,
   name: payload.name,
@@ -49,19 +48,11 @@ const toUpdateDto = (
   payload: Partial<
     Pick<
       Agent,
-      | "name"
-      | "defaultPrompt"
-      | "locale"
-      | "model"
-      | "temperature"
-      | "type"
-      | "instructionPrompt"
-      | "outputJsonSchema"
+      "name" | "defaultPrompt" | "locale" | "model" | "temperature" | "type" | "outputJsonSchema"
     >
   >,
 ): (typeof AgentsRoutes.updateOne.request)["payload"] => ({
   defaultPrompt: payload.defaultPrompt,
-  instructionPrompt: payload.instructionPrompt,
   locale: payload.locale,
   model: payload.model,
   name: payload.name,
@@ -74,7 +65,6 @@ const fromDto = (dto: AgentDto): Agent => ({
   createdAt: dto.createdAt,
   defaultPrompt: dto.defaultPrompt,
   id: dto.id,
-  instructionPrompt: dto.instructionPrompt,
   locale: dto.locale,
   model: dto.model,
   name: dto.name,

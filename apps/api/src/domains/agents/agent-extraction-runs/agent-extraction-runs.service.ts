@@ -58,13 +58,13 @@ export class AgentExtractionRunsService {
       throw new UnprocessableEntityException("Only extraction agents can run extraction")
     }
 
-    if (!agent.outputJsonSchema || !agent.instructionPrompt) {
+    if (!agent.outputJsonSchema || !agent.defaultPrompt) {
       throw new UnprocessableEntityException(
-        "Extraction agent configuration is invalid: missing outputJsonSchema or instructionPrompt",
+        "Extraction agent configuration is invalid: missing outputJsonSchema or defaultPrompt",
       )
     }
 
-    const effectivePrompt = promptOverride ?? agent.instructionPrompt
+    const effectivePrompt = promptOverride ?? agent.defaultPrompt
     const document = await this.documentsService.findById({ connectScope, documentId })
 
     if (!document) {

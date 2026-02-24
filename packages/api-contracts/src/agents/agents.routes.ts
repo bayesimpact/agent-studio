@@ -7,7 +7,7 @@ export const AgentsRoutes = {
     ResponseData<AgentDto>,
     RequestPayload<
       Pick<AgentDto, "name" | "defaultPrompt" | "model" | "locale" | "temperature"> &
-        Partial<Pick<AgentDto, "type" | "instructionPrompt" | "outputJsonSchema">>
+        Partial<Pick<AgentDto, "type" | "outputJsonSchema">>
     >
   >({
     method: "post",
@@ -29,7 +29,6 @@ export const AgentsRoutes = {
           | "model"
           | "temperature"
           | "type"
-          | "instructionPrompt"
           | "outputJsonSchema"
         >
       >

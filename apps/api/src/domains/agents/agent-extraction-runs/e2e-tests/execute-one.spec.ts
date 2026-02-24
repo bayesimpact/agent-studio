@@ -68,7 +68,6 @@ describe("AgentExtractionRuns - executeOne", () => {
     const { user, organization, project, agent } = await createOrganizationWithAgent(repositories, {
       agent: {
         type: agentType,
-        instructionPrompt: "Extract fields from the file",
         outputJsonSchema: {
           type: "object",
           properties: { fullName: { type: "string" } },

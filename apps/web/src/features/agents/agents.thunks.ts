@@ -16,7 +16,7 @@ export const createAgent = createAsyncThunk<
     organizationId: string
     projectId: string
     fields: Pick<Agent, "name" | "defaultPrompt" | "model" | "temperature" | "locale" | "type"> &
-      Partial<Pick<Agent, "instructionPrompt" | "outputJsonSchema">>
+      Partial<Pick<Agent, "outputJsonSchema">>
     onSuccess?: (agent: Agent) => void
   },
   ThunkConfig
@@ -28,7 +28,6 @@ export const createAgent = createAsyncThunk<
       {
         name: payload.fields.name,
         defaultPrompt: payload.fields.defaultPrompt,
-        instructionPrompt: payload.fields.instructionPrompt,
         model: payload.fields.model,
         temperature: payload.fields.temperature,
         locale: payload.fields.locale,
@@ -47,14 +46,7 @@ export const updateAgent = createAsyncThunk<
     fields: Partial<
       Pick<
         Agent,
-        | "name"
-        | "defaultPrompt"
-        | "model"
-        | "temperature"
-        | "locale"
-        | "type"
-        | "instructionPrompt"
-        | "outputJsonSchema"
+        "name" | "defaultPrompt" | "model" | "temperature" | "locale" | "type" | "outputJsonSchema"
       >
     >
   },

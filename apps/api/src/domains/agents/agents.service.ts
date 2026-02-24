@@ -28,31 +28,23 @@ export class AgentsService {
     connectScope: RequiredConnectScope
     fields: Pick<RequiredConnectScope, never> &
       Pick<Agent, "defaultPrompt" | "name" | "model" | "temperature" | "locale"> &
-      Partial<Pick<Agent, "type" | "instructionPrompt" | "outputJsonSchema">>
+      Partial<Pick<Agent, "type" | "outputJsonSchema">>
   }): Promise<Agent> {
-    const {
-      name,
-      type = "conversation",
-      instructionPrompt = null,
-      outputJsonSchema = null,
-    } = fields
+    const { name, type = "conversation", outputJsonSchema = null } = fields
 
     // Validate name (min 3 characters)
     if (name.length < 3) {
       throw new UnprocessableEntityException("Agent name must be at least 3 characters long")
     }
 
-    if (type === "extraction" && (!instructionPrompt || !outputJsonSchema)) {
-      throw new UnprocessableEntityException(
-        "Extraction agent requires both instructionPrompt and outputJsonSchema",
-      )
+    if (type === "extraction" && !outputJsonSchema) {
+      throw new UnprocessableEntityException("Extraction agent requires outputJsonSchema")
     }
 
     // Create the agent with defaults
     return await this.agentConnectRepository.createAndSave(connectScope, {
       ...fields,
       type,
-      instructionPrompt,
       outputJsonSchema,
     })
   }
@@ -103,7 +95,6 @@ export class AgentsService {
           | "temperature"
           | "locale"
           | "type"
-          | "instructionPrompt"
           | "outputJsonSchema"
         >
       >
@@ -124,19 +115,13 @@ export class AgentsService {
     }
 
     const nextType = type ?? agent.type
-    const nextInstructionPrompt =
-      fieldsToUpdate.instructionPrompt !== undefined
-        ? fieldsToUpdate.instructionPrompt
-        : agent.instructionPrompt
     const nextOutputJsonSchema =
       fieldsToUpdate.outputJsonSchema !== undefined
         ? fieldsToUpdate.outputJsonSchema
         : agent.outputJsonSchema
 
-    if (nextType === "extraction" && (!nextInstructionPrompt || !nextOutputJsonSchema)) {
-      throw new UnprocessableEntityException(
-        "Extraction agent requires both instructionPrompt and outputJsonSchema",
-      )
+    if (nextType === "extraction" && !nextOutputJsonSchema) {
+      throw new UnprocessableEntityException("Extraction agent requires outputJsonSchema")
     }
 
     // Track if configuration fields changed (these trigger playground cleanup)
@@ -146,7 +131,6 @@ export class AgentsService {
       { value: defaultPrompt, current: agent.defaultPrompt },
       { value: locale, current: agent.locale },
       { value: type, current: agent.type },
-      { value: fieldsToUpdate.instructionPrompt, current: agent.instructionPrompt },
       { value: fieldsToUpdate.outputJsonSchema, current: agent.outputJsonSchema },
     ]
     const configChanged = configFields.some(
@@ -161,9 +145,6 @@ export class AgentsService {
       ...(temperature !== undefined && { temperature }),
       ...(locale !== undefined && { locale }),
       ...(type !== undefined && { type }),
-      ...(fieldsToUpdate.instructionPrompt !== undefined && {
-        instructionPrompt: fieldsToUpdate.instructionPrompt,
-      }),
       ...(fieldsToUpdate.outputJsonSchema !== undefined && {
         outputJsonSchema: fieldsToUpdate.outputJsonSchema,
       }),

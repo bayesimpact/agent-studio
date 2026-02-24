@@ -145,13 +145,12 @@ describe("AgentsService", () => {
             temperature: 0,
             locale: AgentLocale.EN,
             type: "extraction",
-            instructionPrompt: "Extract fields from file",
           },
         })
 
       await expect(createExtractionWithoutSchema()).rejects.toThrow(UnprocessableEntityException)
       await expect(createExtractionWithoutSchema()).rejects.toThrow(
-        "Extraction agent requires both instructionPrompt and outputJsonSchema",
+        "Extraction agent requires outputJsonSchema",
       )
     })
   })

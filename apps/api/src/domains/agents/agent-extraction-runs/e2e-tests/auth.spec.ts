@@ -69,7 +69,6 @@ describe("AgentExtractionRuns - Auth", () => {
       membership: { role },
       agent: {
         type: "extraction",
-        instructionPrompt: "Extract data",
         outputJsonSchema: {
           type: "object",
           properties: { fullName: { type: "string" } },
