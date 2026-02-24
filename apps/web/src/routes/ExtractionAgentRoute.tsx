@@ -25,6 +25,7 @@ import { selectAgentDataFromAgentId } from "@/features/agents/agents.selectors"
 import { uploadDocument } from "@/features/documents/documents.thunks"
 import { selectCurrentOrganizationId } from "@/features/organizations/organizations.selectors"
 import { selectCurrentProjectId } from "@/features/projects/projects.selectors"
+import { useAbility } from "@/hooks/use-ability"
 import { useBuildPath } from "@/hooks/use-build-path"
 import { ADS } from "@/store/async-data-status"
 import { useAppDispatch, useAppSelector } from "@/store/hooks"
@@ -57,9 +58,13 @@ function WithData({
   agent: Agent
 }) {
   const dispatch = useAppDispatch()
+  const { isAdminInterface } = useAbility()
   const { buildPath } = useBuildPath()
   const { t } = useTranslation("agentExtractionRun")
-  const runsData = useAppSelector(selectAgentExtractionRunsFromAgentId(agent.id))
+  const extractionRunType = isAdminInterface ? "playground" : "live"
+  const runsData = useAppSelector(
+    selectAgentExtractionRunsFromAgentId({ agentId: agent.id, type: extractionRunType }),
+  )
   const [isFormOpen, setIsFormOpen] = useState(false)
   const [isSubmittingRun, setIsSubmittingRun] = useState(false)
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
@@ -67,8 +72,15 @@ function WithData({
   const [runError, setRunError] = useState<string | null>(null)
 
   useEffect(() => {
-    dispatch(listAgentExtractionRuns({ organizationId, projectId, agentId: agent.id }))
-  }, [agent.id, dispatch, organizationId, projectId])
+    dispatch(
+      listAgentExtractionRuns({
+        organizationId,
+        projectId,
+        agentId: agent.id,
+        type: extractionRunType,
+      }),
+    )
+  }, [agent.id, dispatch, extractionRunType, organizationId, projectId])
 
   if (agent.type !== "extraction") {
     return (
@@ -125,13 +137,21 @@ function WithData({
           projectId,
           agentId: agent.id,
           documentId: uploadedDocument.id,
+          type: extractionRunType,
         }),
       ).unwrap()
 
       setResultOutput(executeResponse.result)
       setSelectedFile(null)
       setIsFormOpen(false)
-      await dispatch(listAgentExtractionRuns({ organizationId, projectId, agentId: agent.id }))
+      await dispatch(
+        listAgentExtractionRuns({
+          organizationId,
+          projectId,
+          agentId: agent.id,
+          type: extractionRunType,
+        }),
+      )
     } catch (error) {
       setRunError(error instanceof Error ? error.message : t("runCreationFailed"))
     } finally {

@@ -13,12 +13,16 @@ export const listAgentExtractionRuns = createAsyncThunk<
     organizationId: string
     projectId: string
     agentId: string
+    type: "playground" | "live"
   },
   ThunkConfig
->(
-  "agentExtractionRuns/list",
-  async (params, { extra: { services } }) => await services.agentExtractionRuns.getAll(params),
-)
+>("agentExtractionRuns/list", async (params, { extra: { services } }) => {
+  if (params.type === "playground") {
+    return await services.agentExtractionRuns.getAllPlayground(params)
+  }
+
+  return await services.agentExtractionRuns.getAllLive(params)
+})
 
 export const executeAgentExtractionRun = createAsyncThunk<
   ExecuteAgentExtractionResponse,
@@ -27,10 +31,14 @@ export const executeAgentExtractionRun = createAsyncThunk<
     projectId: string
     agentId: string
     documentId: string
+    type: "playground" | "live"
     promptOverride?: string
   },
   ThunkConfig
->(
-  "agentExtractionRuns/executeOne",
-  async (params, { extra: { services } }) => await services.agentExtractionRuns.executeOne(params),
-)
+>("agentExtractionRuns/executeOne", async (params, { extra: { services } }) => {
+  if (params.type === "playground") {
+    return await services.agentExtractionRuns.executePlaygroundOne(params)
+  }
+
+  return await services.agentExtractionRuns.executeLiveOne(params)
+})

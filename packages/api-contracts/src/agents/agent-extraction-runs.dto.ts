@@ -1,11 +1,13 @@
 import type { TimeType } from "../generic"
 
 export type AgentExtractionRunStatus = "success" | "failed"
+export type AgentExtractionRunType = "playground" | "live"
 
 export type AgentExtractionRunSummaryDto = {
   id: string
   agentId: string
   documentId: string
+  type: AgentExtractionRunType
   status: AgentExtractionRunStatus
   createdAt: TimeType
   updatedAt: TimeType

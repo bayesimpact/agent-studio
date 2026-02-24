@@ -14,7 +14,17 @@ export const selectAgentExtractionRunsData = (state: RootState) => state.agentEx
 
 const missingAgentId = { status: ADS.Error, value: null, error: "No agent selected" }
 
-export const selectAgentExtractionRunsFromAgentId = (agentId?: string | null) =>
+function buildRunsKey(agentId: string, type: "playground" | "live") {
+  return `${agentId}:${type}`
+}
+
+export const selectAgentExtractionRunsFromAgentId = ({
+  agentId,
+  type,
+}: {
+  agentId?: string | null
+  type: "playground" | "live"
+}) =>
   createSelector(
     [selectAgentExtractionRunsData],
     (runsData): AsyncData<AgentExtractionRunSummary[]> => {
@@ -22,9 +32,10 @@ export const selectAgentExtractionRunsFromAgentId = (agentId?: string | null) =>
 
       if (!ADS.isFulfilled(runsData)) return { ...runsData }
 
-      if (!runsData.value?.[agentId]) return { status: ADS.Fulfilled, value: [], error: null }
+      const runsKey = buildRunsKey(agentId, type)
+      if (!runsData.value?.[runsKey]) return { status: ADS.Fulfilled, value: [], error: null }
 
-      return { status: ADS.Fulfilled, value: runsData.value[agentId], error: null }
+      return { status: ADS.Fulfilled, value: runsData.value[runsKey], error: null }
     },
   )
 
@@ -35,8 +46,9 @@ export const selectCurrentAgentExtractionRunsData = createSelector(
 
     if (!ADS.isFulfilled(runsData)) return { ...runsData }
 
-    if (!runsData.value?.[agentId]) return { status: ADS.Fulfilled, value: [], error: null }
+    const runsKey = buildRunsKey(agentId, "live")
+    if (!runsData.value?.[runsKey]) return { status: ADS.Fulfilled, value: [], error: null }
 
-    return { status: ADS.Fulfilled, value: runsData.value[agentId], error: null }
+    return { status: ADS.Fulfilled, value: runsData.value[runsKey], error: null }
   },
 )

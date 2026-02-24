@@ -4,12 +4,24 @@ import type {
 } from "./agent-extraction-runs.models"
 
 export interface IAgentExtractionRunsSpi {
-  getAll: (params: {
+  getAllPlayground: (params: {
     organizationId: string
     projectId: string
     agentId: string
   }) => Promise<AgentExtractionRunSummary[]>
-  executeOne: (params: {
+  getAllLive: (params: {
+    organizationId: string
+    projectId: string
+    agentId: string
+  }) => Promise<AgentExtractionRunSummary[]>
+  executePlaygroundOne: (params: {
+    organizationId: string
+    projectId: string
+    agentId: string
+    documentId: string
+    promptOverride?: string
+  }) => Promise<ExecuteAgentExtractionResponse>
+  executeLiveOne: (params: {
     organizationId: string
     projectId: string
     agentId: string

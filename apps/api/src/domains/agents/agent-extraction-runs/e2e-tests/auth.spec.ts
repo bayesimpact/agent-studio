@@ -83,10 +83,10 @@ describe("AgentExtractionRuns - Auth", () => {
     auth0Id = user.auth0Id
   }
 
-  describe("AgentExtractionRunsRoutes.executeOne", () => {
+  describe("AgentExtractionRunsRoutes.executePlaygroundOne", () => {
     const subject = async () =>
       request({
-        route: AgentExtractionRunsRoutes.executeOne,
+        route: AgentExtractionRunsRoutes.executePlaygroundOne,
         pathParams: removeNullish({ organizationId, projectId, agentId }),
         token: accessToken ?? undefined,
         request: {
@@ -124,10 +124,10 @@ describe("AgentExtractionRuns - Auth", () => {
     })
   })
 
-  describe("AgentExtractionRunsRoutes.getAll", () => {
+  describe("AgentExtractionRunsRoutes.getAllPlayground", () => {
     const subject = async () =>
       request({
-        route: AgentExtractionRunsRoutes.getAll,
+        route: AgentExtractionRunsRoutes.getAllPlayground,
         pathParams: removeNullish({ organizationId, projectId, agentId }),
         token: accessToken ?? undefined,
       })
@@ -143,10 +143,10 @@ describe("AgentExtractionRuns - Auth", () => {
     })
   })
 
-  describe("AgentExtractionRunsRoutes.getOne", () => {
+  describe("AgentExtractionRunsRoutes.getOnePlayground", () => {
     const subject = async () =>
       request({
-        route: AgentExtractionRunsRoutes.getOne,
+        route: AgentExtractionRunsRoutes.getOnePlayground,
         pathParams: removeNullish({ organizationId, projectId, agentId, runId }),
         token: accessToken ?? undefined,
       })

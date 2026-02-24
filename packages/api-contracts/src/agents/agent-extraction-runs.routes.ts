@@ -8,19 +8,34 @@ import type {
 } from "./agent-extraction-runs.dto"
 
 export const AgentExtractionRunsRoutes = {
-  executeOne: defineRoute<
+  executePlaygroundOne: defineRoute<
     ResponseData<ExecuteAgentExtractionResponseDto>,
     RequestPayload<ExecuteAgentExtractionRequestDto>
   >({
     method: "post",
-    path: "organizations/:organizationId/projects/:projectId/agents/:agentId/extract",
+    path: "organizations/:organizationId/projects/:projectId/agents/:agentId/playground/extract",
   }),
-  getAll: defineRoute<ResponseData<ListAgentExtractionRunsResponseDto>>({
-    method: "get",
-    path: "organizations/:organizationId/projects/:projectId/agents/:agentId/extraction-runs",
+  executeLiveOne: defineRoute<
+    ResponseData<ExecuteAgentExtractionResponseDto>,
+    RequestPayload<ExecuteAgentExtractionRequestDto>
+  >({
+    method: "post",
+    path: "organizations/:organizationId/projects/:projectId/agents/:agentId/live/extract",
   }),
-  getOne: defineRoute<ResponseData<AgentExtractionRunDto>>({
+  getAllPlayground: defineRoute<ResponseData<ListAgentExtractionRunsResponseDto>>({
     method: "get",
-    path: "organizations/:organizationId/projects/:projectId/agents/:agentId/extraction-runs/:runId",
+    path: "organizations/:organizationId/projects/:projectId/agents/:agentId/playground/extraction-runs",
+  }),
+  getAllLive: defineRoute<ResponseData<ListAgentExtractionRunsResponseDto>>({
+    method: "get",
+    path: "organizations/:organizationId/projects/:projectId/agents/:agentId/live/extraction-runs",
+  }),
+  getOnePlayground: defineRoute<ResponseData<AgentExtractionRunDto>>({
+    method: "get",
+    path: "organizations/:organizationId/projects/:projectId/agents/:agentId/playground/extraction-runs/:runId",
+  }),
+  getOneLive: defineRoute<ResponseData<AgentExtractionRunDto>>({
+    method: "get",
+    path: "organizations/:organizationId/projects/:projectId/agents/:agentId/live/extraction-runs/:runId",
   }),
 }

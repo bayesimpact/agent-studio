@@ -91,9 +91,11 @@ describe("AgentExtractionRuns - executeOne", () => {
     auth0Id = user.auth0Id
   }
 
-  const subjectExecute = async (payload?: typeof AgentExtractionRunsRoutes.executeOne.request) =>
+  const subjectExecutePlayground = async (
+    payload?: typeof AgentExtractionRunsRoutes.executePlaygroundOne.request,
+  ) =>
     request({
-      route: AgentExtractionRunsRoutes.executeOne,
+      route: AgentExtractionRunsRoutes.executePlaygroundOne,
       pathParams: removeNullish({ organizationId, projectId, agentId }),
       token: accessToken,
       request: payload ?? {
@@ -103,16 +105,37 @@ describe("AgentExtractionRuns - executeOne", () => {
       },
     })
 
-  const subjectGetAll = async () =>
+  const subjectExecuteLive = async (
+    payload?: typeof AgentExtractionRunsRoutes.executeLiveOne.request,
+  ) =>
     request({
-      route: AgentExtractionRunsRoutes.getAll,
+      route: AgentExtractionRunsRoutes.executeLiveOne,
+      pathParams: removeNullish({ organizationId, projectId, agentId }),
+      token: accessToken,
+      request: payload ?? {
+        payload: {
+          documentId,
+        },
+      },
+    })
+
+  const subjectGetAllPlayground = async () =>
+    request({
+      route: AgentExtractionRunsRoutes.getAllPlayground,
       pathParams: removeNullish({ organizationId, projectId, agentId }),
       token: accessToken,
     })
 
-  const subjectGetOne = async (runId: string) =>
+  const subjectGetAllLive = async () =>
     request({
-      route: AgentExtractionRunsRoutes.getOne,
+      route: AgentExtractionRunsRoutes.getAllLive,
+      pathParams: removeNullish({ organizationId, projectId, agentId }),
+      token: accessToken,
+    })
+
+  const subjectGetOnePlayground = async (runId: string) =>
+    request({
+      route: AgentExtractionRunsRoutes.getOnePlayground,
       pathParams: removeNullish({ organizationId, projectId, agentId, runId }),
       token: accessToken,
     })
@@ -121,18 +144,19 @@ describe("AgentExtractionRuns - executeOne", () => {
     await createContext()
     mockLlmProvider.generateStructuredOutput.mockResolvedValue({ fullName: "Jane Doe" })
 
-    const executeResponse = await subjectExecute()
+    const executeResponse = await subjectExecutePlayground()
     expectResponse(executeResponse, 201)
     expect(executeResponse.body.data.runId).toBeDefined()
     expect(executeResponse.body.data.result).toEqual({ fullName: "Jane Doe" })
 
-    const getAllResponse = await subjectGetAll()
+    const getAllResponse = await subjectGetAllPlayground()
     expectResponse(getAllResponse, 200)
     expect(getAllResponse.body.data.runs).toHaveLength(1)
     expect(getAllResponse.body.data.runs[0]!.status).toBe("success")
+    expect(getAllResponse.body.data.runs[0]!.type).toBe("playground")
     expect(getAllResponse.body.data.runs[0]!.documentId).toBe(documentId)
 
-    const getOneResponse = await subjectGetOne(executeResponse.body.data.runId)
+    const getOneResponse = await subjectGetOnePlayground(executeResponse.body.data.runId)
     expectResponse(getOneResponse, 200)
     expect(getOneResponse.body.data.id).toBe(executeResponse.body.data.runId)
     expect(getOneResponse.body.data.result).toEqual({ fullName: "Jane Doe" })
@@ -146,22 +170,44 @@ describe("AgentExtractionRuns - executeOne", () => {
     schemaError.name = "TypeValidationError"
     mockLlmProvider.generateStructuredOutput.mockRejectedValue(schemaError)
 
-    const response = await subjectExecute()
+    const response = await subjectExecutePlayground()
     expectResponse(response, 422)
 
-    const getAllResponse = await subjectGetAll()
+    const getAllResponse = await subjectGetAllPlayground()
     expectResponse(getAllResponse, 200)
     expect(getAllResponse.body.data.runs).toHaveLength(1)
     expect(getAllResponse.body.data.runs[0]!.status).toBe("failed")
+    expect(getAllResponse.body.data.runs[0]!.type).toBe("playground")
   })
 
   it("should return 422 when trying to run extraction with conversation agent", async () => {
     await createContext({ agentType: "conversation" })
     mockLlmProvider.generateStructuredOutput.mockResolvedValue({ fullName: "Jane Doe" })
 
-    const response = await subjectExecute({
+    const response = await subjectExecutePlayground({
       payload: { documentId },
     })
     expectResponse(response, 422)
+  })
+
+  it("should isolate playground runs from live runs", async () => {
+    await createContext()
+    mockLlmProvider.generateStructuredOutput.mockResolvedValue({ fullName: "Jane Doe" })
+
+    const playgroundResponse = await subjectExecutePlayground()
+    expectResponse(playgroundResponse, 201)
+
+    const liveResponse = await subjectExecuteLive()
+    expectResponse(liveResponse, 201)
+
+    const playgroundRunsResponse = await subjectGetAllPlayground()
+    expectResponse(playgroundRunsResponse, 200)
+    expect(playgroundRunsResponse.body.data.runs).toHaveLength(1)
+    expect(playgroundRunsResponse.body.data.runs[0]!.type).toBe("playground")
+
+    const liveRunsResponse = await subjectGetAllLive()
+    expectResponse(liveRunsResponse, 200)
+    expect(liveRunsResponse.body.data.runs).toHaveLength(1)
+    expect(liveRunsResponse.body.data.runs[0]!.type).toBe("live")
   })
 })

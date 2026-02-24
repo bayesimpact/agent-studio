@@ -1,4 +1,7 @@
-import type { AgentExtractionRunStatus } from "@caseai-connect/api-contracts"
+import type {
+  AgentExtractionRunStatus,
+  AgentExtractionRunType,
+} from "@caseai-connect/api-contracts"
 import { Column, JoinColumn, ManyToOne } from "typeorm"
 import { ConnectEntity, ConnectEntityBase } from "@/common/entities/connect-entity"
 import { Document } from "@/domains/documents/document.entity"
@@ -18,6 +21,9 @@ export class AgentExtractionRun extends ConnectEntityBase {
 
   @Column({ type: "varchar" })
   status!: AgentExtractionRunStatus
+
+  @Column({ type: "varchar" })
+  type!: AgentExtractionRunType
 
   @Column({ type: "jsonb", nullable: true })
   result!: Record<string, unknown> | null

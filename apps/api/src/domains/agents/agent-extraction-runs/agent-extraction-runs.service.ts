@@ -1,4 +1,5 @@
 import { URL } from "node:url"
+import type { AgentExtractionRunType } from "@caseai-connect/api-contracts"
 import { Inject, Injectable, NotFoundException, UnprocessableEntityException } from "@nestjs/common"
 import { InjectRepository } from "@nestjs/typeorm"
 import type { FilePart, ImagePart } from "ai"
@@ -44,12 +45,14 @@ export class AgentExtractionRunsService {
     userId,
     documentId,
     promptOverride,
+    type,
   }: {
     connectScope: RequiredConnectScope
     agent: Agent
     userId: string
     documentId: string
     promptOverride?: string
+    type: AgentExtractionRunType
   }): Promise<AgentExtractionRun> {
     if (agent.type !== "extraction") {
       throw new UnprocessableEntityException("Only extraction agents can run extraction")
@@ -73,6 +76,7 @@ export class AgentExtractionRunsService {
       userId,
       documentId,
       status: "failed",
+      type,
       result: null,
       errorCode: null,
       errorDetails: null,
@@ -129,12 +133,14 @@ export class AgentExtractionRunsService {
   async listRuns({
     connectScope,
     agentId,
+    type,
   }: {
     connectScope: RequiredConnectScope
     agentId: string
+    type: AgentExtractionRunType
   }): Promise<AgentExtractionRun[]> {
     return this.runConnectRepository.find(connectScope, {
-      where: { agentId },
+      where: { agentId, type },
       order: { createdAt: "DESC" },
     })
   }
@@ -143,14 +149,16 @@ export class AgentExtractionRunsService {
     connectScope,
     runId,
     agentId,
+    type,
   }: {
     connectScope: RequiredConnectScope
     runId: string
     agentId: string
+    type: AgentExtractionRunType
   }): Promise<AgentExtractionRun | null> {
     const run = await this.runConnectRepository.getOneById(connectScope, runId)
 
-    if (!run || run.agentId !== agentId) {
+    if (!run || run.agentId !== agentId || run.type !== type) {
       return null
     }
 

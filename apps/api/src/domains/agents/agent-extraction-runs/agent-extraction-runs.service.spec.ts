@@ -69,6 +69,7 @@ describe("AgentExtractionRunsService", () => {
       agent,
       userId: user.id,
       documentId: document.id,
+      type: "playground",
     })
 
     expect(run.status).toBe("success")
@@ -105,6 +106,7 @@ describe("AgentExtractionRunsService", () => {
         agent,
         userId: user.id,
         documentId: document.id,
+        type: "playground",
       }),
     ).rejects.toThrow(UnprocessableEntityException)
 
@@ -140,11 +142,13 @@ describe("AgentExtractionRunsService", () => {
       agent,
       userId: user.id,
       documentId: document.id,
+      type: "playground",
     })
 
     const runs = await service.listRuns({
       connectScope: { organizationId: organization.id, projectId: project.id },
       agentId: agent.id,
+      type: "playground",
     })
     expect(runs).toHaveLength(1)
     expect(runs[0]!.id).toBe(createdRun.id)
@@ -153,6 +157,7 @@ describe("AgentExtractionRunsService", () => {
       connectScope: { organizationId: organization.id, projectId: project.id },
       runId: createdRun.id,
       agentId: agent.id,
+      type: "playground",
     })
     expect(run).not.toBeNull()
     expect(run?.result).toEqual({ age: 32 })
