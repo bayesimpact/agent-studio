@@ -11,6 +11,7 @@ export type ContextResource =
   | "agentSession"
   | "document"
   | "evaluation"
+  | "evaluationReport"
 
 export const RequireContext = (...resources: ContextResource[]) =>
   SetMetadata(REQUIRE_CONTEXT_KEY, resources)

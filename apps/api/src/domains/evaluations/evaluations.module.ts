@@ -1,6 +1,8 @@
 import { Module } from "@nestjs/common"
 import { TypeOrmModule } from "@nestjs/typeorm"
+import { AgentContextResolver } from "@/common/context/resolvers/agent-context.resolver"
 import { EvaluationContextResolver } from "@/common/context/resolvers/evaluation-context.resolver"
+import { EvaluationReportContextResolver } from "@/common/context/resolvers/evaluation-report-context.resolver"
 import { OrganizationContextResolver } from "@/common/context/resolvers/organization-context.resolver"
 import { ProjectContextResolver } from "@/common/context/resolvers/project-context.resolver"
 import { ResourceContextGuard } from "@/common/context/resource-context.guard"
@@ -12,11 +14,15 @@ import { ProjectMembership } from "@/domains/projects/memberships/project-member
 import { Project } from "@/domains/projects/project.entity"
 import { ProjectsModule } from "@/domains/projects/projects.module"
 import { UsersModule } from "@/domains/users/users.module"
+import { Agent } from "../agents/agent.entity"
 import { Evaluation } from "./evaluation.entity"
 import { EvaluationGuard } from "./evaluation.guard"
 import { EvaluationsController } from "./evaluations.controller"
 import { EvaluationsService } from "./evaluations.service"
 import { EvaluationReport } from "./reports/evaluation-report.entity"
+import { EvaluationReportGuard } from "./reports/evaluation-report.guard"
+import { EvaluationReportsController } from "./reports/evaluation-reports.controller"
+import { EvaluationReportsService } from "./reports/evaluation-reports.service"
 
 @Module({
   imports: [
@@ -27,6 +33,7 @@ import { EvaluationReport } from "./reports/evaluation-report.entity"
       UserMembership,
       ProjectMembership,
       EvaluationReport,
+      Agent,
     ]),
     OrganizationsModule,
     ProjectsModule,
@@ -34,14 +41,18 @@ import { EvaluationReport } from "./reports/evaluation-report.entity"
     AuthModule,
   ],
   providers: [
-    EvaluationsService,
+    AgentContextResolver,
+    EvaluationContextResolver,
     EvaluationGuard,
-    ResourceContextGuard,
+    EvaluationReportContextResolver,
+    EvaluationReportGuard,
+    EvaluationReportsService,
+    EvaluationsService,
     OrganizationContextResolver,
     ProjectContextResolver,
-    EvaluationContextResolver,
+    ResourceContextGuard,
   ],
-  controllers: [EvaluationsController],
-  exports: [EvaluationsService],
+  controllers: [EvaluationsController, EvaluationReportsController],
+  exports: [EvaluationsService, EvaluationReportsService],
 })
 export class EvaluationsModule {}

@@ -16,6 +16,8 @@ import { AgentMessage } from "@/domains/agent-sessions/messages/agent-message.en
 import { AgentMessageFeedback } from "@/domains/agent-sessions/messages/feedback/agent-message-feedback.entity"
 import { Agent } from "@/domains/agents/agent.entity"
 import { Document } from "@/domains/documents/document.entity"
+import { Evaluation } from "@/domains/evaluations/evaluation.entity"
+import { EvaluationReport } from "@/domains/evaluations/reports/evaluation-report.entity"
 import { Organization } from "@/domains/organizations/organization.entity"
 import { UserMembership } from "@/domains/organizations/user-membership.entity"
 import { ProjectMembership } from "@/domains/projects/memberships/project-membership.entity"
@@ -29,16 +31,18 @@ export interface TransactionalTestSetup {
   queryRunner: QueryRunner | null
   getRepository: <T extends ObjectLiteral>(entity: new () => T) => Repository<T>
   getAllRepositories: () => {
-    userRepository: Repository<User>
-    organizationRepository: Repository<Organization>
-    membershipRepository: Repository<UserMembership>
-    projectRepository: Repository<Project>
-    projectMembershipRepository: Repository<ProjectMembership>
+    agentMessageFeedbackRepository: Repository<AgentMessageFeedback>
+    agentMessageRepository: Repository<AgentMessage>
     agentRepository: Repository<Agent>
     agentSessionRepository: Repository<AgentSession>
-    agentMessageRepository: Repository<AgentMessage>
-    agentMessageFeedbackRepository: Repository<AgentMessageFeedback>
     documentRepository: Repository<Document>
+    evaluationReportRepository: Repository<EvaluationReport>
+    evaluationRepository: Repository<Evaluation>
+    membershipRepository: Repository<UserMembership>
+    organizationRepository: Repository<Organization>
+    projectMembershipRepository: Repository<ProjectMembership>
+    projectRepository: Repository<Project>
+    userRepository: Repository<User>
   }
   startTransaction: () => Promise<void>
   rollbackTransaction: () => Promise<void>
@@ -197,6 +201,8 @@ export async function setupTransactionalTestDatabase(
     agentMessageRepository: getRepository(AgentMessage),
     agentMessageFeedbackRepository: getRepository(AgentMessageFeedback),
     documentRepository: getRepository(Document),
+    evaluationRepository: getRepository(Evaluation),
+    evaluationReportRepository: getRepository(EvaluationReport),
   })
 
   return {
