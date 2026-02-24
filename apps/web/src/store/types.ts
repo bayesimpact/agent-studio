@@ -5,6 +5,7 @@ import type { agentSessionsSliceReducer } from "@/features/agent-sessions/agent-
 import type { agentsSliceReducer } from "@/features/agents/agents.slice"
 import type { authSliceReducer } from "@/features/auth/auth.slice"
 import type { documentsSliceReducer } from "@/features/documents/documents.slice"
+import type { evaluationReportsSliceReducer } from "@/features/evaluation-reports/evaluation-reports.slice"
 import type { evaluationsSliceReducer } from "@/features/evaluations/evaluations.slice"
 import type { meSliceReducer } from "@/features/me/me.slice"
 import type { notificationsSliceReducer } from "@/features/notifications/notifications.slice"
@@ -20,6 +21,7 @@ export type RootState = {
   agents: ReturnType<typeof agentsSliceReducer>
   agentSessions: ReturnType<typeof agentSessionsSliceReducer>
   documents: ReturnType<typeof documentsSliceReducer>
+  evaluationReports: ReturnType<typeof evaluationReportsSliceReducer>
   evaluations: ReturnType<typeof evaluationsSliceReducer>
   me: ReturnType<typeof meSliceReducer>
   notifications: ReturnType<typeof notificationsSliceReducer>

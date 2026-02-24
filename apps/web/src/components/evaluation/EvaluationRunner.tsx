@@ -12,6 +12,8 @@ import {
 import { useState } from "react"
 import { useTranslation } from "react-i18next"
 import type { Agent } from "@/features/agents/agents.models"
+import { createEvaluationReport } from "@/features/evaluation-reports/evaluation-reports.thunks"
+import { useAppDispatch } from "@/store/hooks"
 
 export function EvaluationRunner({
   ids,
@@ -22,6 +24,7 @@ export function EvaluationRunner({
   modalHandler: { open: boolean; setOpen: (open: boolean) => void }
   agents: Agent[]
 }) {
+  const dispatch = useAppDispatch()
   const { t: tCommon } = useTranslation("common")
   const [selectedAgentId, setSelectedAgentId] = useState<string | undefined>()
 
@@ -29,8 +32,8 @@ export function EvaluationRunner({
     if (!selectedAgentId) return
     const agent = agents.find((a) => a.id === selectedAgentId)
     if (!agent) return
-    console.warn("AJ: agent", agent)
-    console.warn("AJ: ids", ids)
+    ids.map((evaluationId) => dispatch(createEvaluationReport({ agentId: agent.id, evaluationId })))
+    modalHandler.setOpen(false)
   }
   return (
     <Dialog open={modalHandler.open} onOpenChange={modalHandler.setOpen}>

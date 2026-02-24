@@ -5,7 +5,7 @@ export type EvaluationReportDto = {
   id: string
   evaluationId: string
   agentId: string
-  traceId: string
+  traceUrl: string
   output: string
   score: string
   updatedAt: TimeType
