@@ -27,7 +27,10 @@
     "open": "Ouvrir",
     "chatSessions": "Sessions de chat",
     "viewAttachment": "Voir la pièce jointe",
-    "evaluation": "Évaluation"
+    "evaluation": "Évaluation",
+    "evaluations": "Évaluations",
+    "createdAt": "Créé le",
+    "updatedAt": "Mis à jour le"
   },
   "project": {
     "createButton": {
@@ -229,6 +232,10 @@
     }
   },
   "evaluation": {
+    "empty": {
+      "title": "Aucune évaluation",
+      "description": "Vous n'avez pas encore créé d'évaluations. Commencez par créer votre première évaluation pour tester les performances de vos agents."
+    },
     "addEvaluation": "Ajouter une évaluation",
     "form": {
       "labelInput": "Entrée",
@@ -245,9 +252,12 @@
       "headers": {
         "input": "Entrée",
         "expectedOutput": "Sortie attendue",
+        "agent": "Agent",
         "status": "Statut",
         "output": "Sortie",
-        "score": "Score"
+        "score": "Score",
+        "createdAt": "Créé le",
+        "updatedAt": "Mis à jour le"
       },
       "buttons": {
         "run": "Exécuter",

@@ -15,19 +15,14 @@ import {
 } from "@tabler/icons-react"
 import type { Table as TableType } from "@tanstack/react-table"
 import type { TFunction } from "i18next"
+import type z from "zod"
+import type { schema } from "./schema"
 
 export function Paginator({
   table,
   t,
 }: {
-  table: TableType<{
-    id: string
-    input: string
-    expectedOutput: string
-    output: string
-    status: string
-    score: string
-  }>
+  table: TableType<z.infer<typeof schema>>
   t: TFunction
 }) {
   return (

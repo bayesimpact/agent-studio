@@ -9,7 +9,6 @@ import {
   selectCurrentProjectData,
   selectCurrentProjectId,
 } from "@/features/projects/projects.selectors"
-import { useAbility } from "@/hooks/use-ability"
 import { ADS } from "@/store/async-data-status"
 import { useAppSelector } from "@/store/hooks"
 import { DocumentItem } from "../../components/documents/DocumentItem"
@@ -51,15 +50,13 @@ function WithData({ documents, project }: { documents: Document[]; project: Proj
 }
 
 function useHandleHeader({ project }: { project: Project }) {
-  const { isAdminInterface } = useAbility()
   const { setHeaderRightSlot } = useSidebarLayout()
   useEffect(() => {
-    if (isAdminInterface)
-      setHeaderRightSlot(
-        <UploadDocumentButton organizationId={project.organizationId} project={project} />,
-      )
+    setHeaderRightSlot(
+      <UploadDocumentButton organizationId={project.organizationId} project={project} />,
+    )
     return () => {
       setHeaderRightSlot(undefined)
     }
-  }, [setHeaderRightSlot, isAdminInterface, project])
+  }, [setHeaderRightSlot, project])
 }
