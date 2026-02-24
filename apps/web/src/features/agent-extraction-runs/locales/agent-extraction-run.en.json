@@ -7,6 +7,16 @@
         "description": "Run history will appear here once extraction execution is available."
       }
     },
+    "newRunButton": "New extraction run",
+    "newRunTitle": "Create extraction run",
+    "newRunDescription": "Upload a PDF or image to run extraction.",
+    "documentLabel": "Document",
+    "documentHint": "Accepted file types: PDF, JPEG, PNG",
+    "submitRun": "Run extraction",
+    "running": "Running...",
+    "resultTitle": "Structured JSON output",
+    "invalidFileType": "Unsupported file type. Please upload a PDF, JPEG, or PNG file.",
+    "runCreationFailed": "Failed to create extraction run.",
     "status": {
       "success": "Success",
       "failed": "Failed"

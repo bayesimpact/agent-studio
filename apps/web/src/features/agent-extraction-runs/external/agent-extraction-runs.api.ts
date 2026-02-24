@@ -10,6 +10,19 @@ const api: IAgentExtractionRunsSpi = {
     )
     return response.data.data.runs
   },
+  executeOne: async ({ organizationId, projectId, agentId, documentId, promptOverride }) => {
+    const axios = getAxiosInstance()
+    const response = await axios.post<typeof AgentExtractionRunsRoutes.executeOne.response>(
+      AgentExtractionRunsRoutes.executeOne.getPath({ organizationId, projectId, agentId }),
+      {
+        payload: {
+          documentId,
+          promptOverride,
+        },
+      },
+    )
+    return response.data.data
+  },
 }
 
 export default api

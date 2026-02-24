@@ -1,3 +1,7 @@
-import type { AgentExtractionRunSummaryDto } from "@caseai-connect/api-contracts"
+import type {
+  AgentExtractionRunSummaryDto,
+  ExecuteAgentExtractionResponseDto,
+} from "@caseai-connect/api-contracts"
 
 export type AgentExtractionRunSummary = AgentExtractionRunSummaryDto
+export type ExecuteAgentExtractionResponse = ExecuteAgentExtractionResponseDto

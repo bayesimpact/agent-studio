@@ -6,7 +6,7 @@ export interface IDocumentsSpi {
     organizationId: string
     projectId: string
     file: File
-    sourceType: "project" | "agentSessionMessage"
+    sourceType: "project" | "agentSessionMessage" | "extraction"
   }): Promise<Document>
   deleteOne(params: {
     organizationId: string

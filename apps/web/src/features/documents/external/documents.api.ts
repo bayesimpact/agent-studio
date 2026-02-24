@@ -11,14 +11,14 @@ export default {
     )
     return response.data.data.map(toDocument)
   },
-  uploadOne: async ({ organizationId, projectId, file }) => {
+  uploadOne: async ({ organizationId, projectId, file, sourceType }) => {
     const axios = getAxiosInstance()
 
     const formData = new FormData()
     formData.append("file", file)
 
     const response = await axios.post<typeof DocumentsRoutes.uploadOne.response>(
-      DocumentsRoutes.uploadOne.getPath({ organizationId, projectId, sourceType: "project" }),
+      DocumentsRoutes.uploadOne.getPath({ organizationId, projectId, sourceType }),
       formData,
       { headers: { "Content-Type": "multipart/form-data" } },
     )
