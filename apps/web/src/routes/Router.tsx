@@ -130,6 +130,7 @@ function AdminInterfaceHandler() {
 
   return <Outlet />
 }
+
 function AppInterfaceHandler() {
   const dispatch = useAppDispatch()
 

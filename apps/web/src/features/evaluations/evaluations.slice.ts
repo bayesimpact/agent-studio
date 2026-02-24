@@ -35,7 +35,9 @@ const slice = createSlice({
           error: null,
           value: {
             ...state.data.value,
-            [projectId]: action.payload,
+            [projectId]: action.payload.sort((a, b) =>
+              a.input.toString().localeCompare(b.input.toString()),
+            ), // sort evaluations by input
           },
         }
       })

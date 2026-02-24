@@ -24,7 +24,7 @@ export function NavEvaluation({
         <SidebarMenuButton isActive={isActive} asChild>
           <Link to={path} className="font-medium">
             <ListChecksIcon />
-            <span>{t("evaluation")}</span>
+            <span>{t("evaluations")}</span>
           </Link>
         </SidebarMenuButton>
       </SidebarMenuItem>

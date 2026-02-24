@@ -1,7 +1,7 @@
 import { Button } from "@caseai-connect/ui/shad/button"
 import { Dialog, DialogContent, DialogTrigger } from "@caseai-connect/ui/shad/dialog"
-import { Input } from "@caseai-connect/ui/shad/input"
 import { Label } from "@caseai-connect/ui/shad/label"
+import { Textarea } from "@caseai-connect/ui/shad/textarea"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useState } from "react"
 import { useForm } from "react-hook-form"
@@ -66,13 +66,13 @@ function EvaluationForm({ onSubmit }: { onSubmit: (data: EvaluationFormData) => 
     >
       <div className="space-y-2">
         <Label htmlFor="input">{t("labelInput")}</Label>
-        <Input id="input" {...register("input")} placeholder={t("placeholderInput")} />
+        <Textarea id="input" {...register("input")} placeholder={t("placeholderInput")} />
         {errors.input && <p className="text-sm text-destructive">{errors.input.message}</p>}
       </div>
 
       <div className="space-y-2">
         <Label htmlFor="expectedOutput">{t("labelExpectedOutput")}</Label>
-        <Input
+        <Textarea
           id="expectedOutput"
           {...register("expectedOutput")}
           placeholder={t("placeholderExpectedOutput")}
