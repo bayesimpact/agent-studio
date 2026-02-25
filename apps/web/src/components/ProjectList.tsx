@@ -26,7 +26,7 @@ export function ProjectList({
 }) {
   const { t } = useTranslation("common")
   return (
-    <ListHeader title={t("projects")} withInterfaceToggle>
+    <ListHeader title={t("projects", { cfl: true })} withInterfaceToggle>
       {projects.map((project) => (
         <ProjectItem key={project.id} organizationId={organization.id} project={project} />
       ))}
@@ -51,7 +51,7 @@ function ProjectItem({ project, organizationId }: { project: Project; organizati
         <ItemDescription>{buildDate(project.updatedAt)}</ItemDescription>
       </ItemContent>
       <ItemActions>
-        <Button onClick={handleClick}>{t("open")}</Button>
+        <Button onClick={handleClick}>{t("open", { cfl: true })}</Button>
       </ItemActions>
     </Item>
   )

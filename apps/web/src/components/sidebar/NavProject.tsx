@@ -85,7 +85,7 @@ function ProjectItem({
 }) {
   const { t } = useTranslation("common")
   const agents = useAppSelector(selectAgentsFromProjectId(project.id))
-  const name = `${t("project")} - ${project.name}`
+  const name = `${t("project", { cfl: true })} - ${project.name}`
   if (!ADS.isFulfilled(agents)) return <div>Error</div>
   if (agents.value.length === 0 && !showEmptyProject) return null
   return (

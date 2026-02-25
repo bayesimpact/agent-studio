@@ -91,7 +91,7 @@ function AgentSessionList({
   const { t } = useTranslation("common")
   const { getPath } = useGetPath()
   return (
-    <ListHeader path={getPath("agent")} title={t("chatSessions")}>
+    <ListHeader path={getPath("agent")} title={t("chatSessions", { cfl: true })}>
       {agentSessions.map((agentSession) => (
         <AgentSessionItem
           key={agentSession.id}
@@ -141,7 +141,7 @@ function AgentSessionItem({
         <ItemTitle>{buildDate(agentSession.updatedAt)}</ItemTitle>
       </ItemContent>
       <ItemActions>
-        <Button onClick={handleClick}>{t("open")}</Button>
+        <Button onClick={handleClick}>{t("open", { cfl: true })}</Button>
       </ItemActions>
     </Item>
   )

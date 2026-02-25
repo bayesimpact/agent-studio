@@ -45,14 +45,14 @@ export function OpenDocumentUrl({
     return (
       <Button variant="outline" onClick={getUrl}>
         <DownloadIcon className="size-4" />
-        {t("download")}
+        {t("download", { cfl: true })}
       </Button>
     )
   return (
     <Button variant="outline" asChild>
       <a ref={aRef} href={url} target="_blank" download={document.fileName}>
         <DownloadIcon className="size-4" />
-        {t("download")}
+        {t("download", { cfl: true })}
       </a>
     </Button>
   )

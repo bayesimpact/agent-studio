@@ -235,17 +235,18 @@ function Attachment({ message }: { message: AgentSessionMessage }) {
   if (!message.documentId) return null
   return (
     <Button variant="outline" size="sm" onClick={() => window.open(url, "_blank")} disabled={!url}>
-      <PaperclipIcon className="size-4" /> {t("viewAttachment")}
+      <PaperclipIcon className="size-4" /> {t("viewAttachment", { cfl: true })}
       <ExternalLinkIcon className="size-4" />
     </Button>
   )
 }
 
 function ErrorMessage() {
+  const { t } = useTranslation("common")
   return (
     <div className="flex items-center gap-2 mb-2">
       <AlertCircleIcon className="size-4 text-red-600" />
-      <span className="font-semibold text-red-700">Error</span>
+      <span className="font-semibold text-red-700">{t("error", { cfl: true })}</span>
     </div>
   )
 }

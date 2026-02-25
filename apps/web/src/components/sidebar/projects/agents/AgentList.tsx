@@ -140,7 +140,7 @@ function AgentOptions({ onEdit, onDelete }: { onEdit: () => void; onDelete: () =
       <DropdownMenuTrigger asChild>
         <SidebarMenuAction showOnHover>
           <MoreHorizontal />
-          <span className="sr-only">{tCommon("more")}</span>
+          <span className="sr-only">{tCommon("more", { cfl: true })}</span>
         </SidebarMenuAction>
       </DropdownMenuTrigger>
       <DropdownMenuContent

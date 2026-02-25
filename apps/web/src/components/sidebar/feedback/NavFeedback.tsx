@@ -26,7 +26,7 @@ export function NavFeedback({
         <SidebarMenuButton isActive={isActive} asChild>
           <Link to={path} className="font-medium">
             <MessageSquareWarningIcon />
-            <span>{t("feedback")}</span>
+            <span>{t("feedback", { cfl: true })}</span>
           </Link>
         </SidebarMenuButton>
       </SidebarMenuItem>
