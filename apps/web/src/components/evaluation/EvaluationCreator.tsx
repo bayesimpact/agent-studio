@@ -3,12 +3,16 @@ import { Dialog, DialogContent, DialogTrigger } from "@caseai-connect/ui/shad/di
 import { Label } from "@caseai-connect/ui/shad/label"
 import { Textarea } from "@caseai-connect/ui/shad/textarea"
 import { zodResolver } from "@hookform/resolvers/zod"
+import { PenLineIcon } from "lucide-react"
 import { useState } from "react"
 import { useForm } from "react-hook-form"
 import { useTranslation } from "react-i18next"
 import { z } from "zod"
+import type { Evaluation } from "@/features/evaluations/evaluations.models"
+import { updateEvaluation } from "@/features/evaluations/evaluations.thunks"
+import { useAppDispatch } from "@/store/hooks"
 
-export type EvaluationFormData = {
+type EvaluationFormData = {
   input: string
   expectedOutput: string
 }
@@ -33,8 +37,36 @@ export function EvaluationCreator({ onSubmit }: { onSubmit: (data: EvaluationFor
   )
 }
 
-function EvaluationForm({ onSubmit }: { onSubmit: (data: EvaluationFormData) => void }) {
+export function EvaluationEditor({ evaluation }: { evaluation: Evaluation }) {
+  const dispatch = useAppDispatch()
+  const [open, setOpen] = useState(false)
+  const handleSubmit = (fields: EvaluationFormData) => {
+    dispatch(updateEvaluation({ evaluationId: evaluation.id, fields }))
+    setOpen(false)
+  }
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button variant="ghost" size="icon">
+          <PenLineIcon className="size-4" />
+        </Button>
+      </DialogTrigger>
+      <DialogContent>
+        <EvaluationForm editableEvaluation={evaluation} onSubmit={handleSubmit} />
+      </DialogContent>
+    </Dialog>
+  )
+}
+
+function EvaluationForm({
+  onSubmit,
+  editableEvaluation,
+}: {
+  onSubmit: (data: EvaluationFormData) => void
+  editableEvaluation?: Evaluation
+}) {
   const { t } = useTranslation("evaluation", { keyPrefix: "form" })
+  const { t: tCommon } = useTranslation("common")
 
   const evaluationSchema = z.object({
     input: z.string().min(1, t("validation.inputRequired")),
@@ -49,17 +81,19 @@ function EvaluationForm({ onSubmit }: { onSubmit: (data: EvaluationFormData) => 
   } = useForm<EvaluationFormData>({
     resolver: zodResolver(evaluationSchema),
     defaultValues: {
-      input: "",
-      expectedOutput: "",
+      input: editableEvaluation?.input || "",
+      expectedOutput: editableEvaluation?.expectedOutput || "",
     },
   })
 
   return (
     <form
       onSubmit={handleSubmit((data) => {
-        // Reset the form after submission
-        setValue("input", "")
-        setValue("expectedOutput", "")
+        // Reset the form after submission only if it's not an editable evaluation
+        if (!editableEvaluation) {
+          setValue("input", "")
+          setValue("expectedOutput", "")
+        }
         onSubmit(data)
       })}
       className="space-y-4 flex-1"
@@ -82,7 +116,9 @@ function EvaluationForm({ onSubmit }: { onSubmit: (data: EvaluationFormData) => 
         )}
       </div>
 
-      <Button type="submit">{t("submit")}</Button>
+      <Button type="submit">
+        {tCommon(editableEvaluation ? "update" : "create", { cfl: true })}
+      </Button>
     </form>
   )
 }
