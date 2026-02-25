@@ -1,5 +1,6 @@
 {
   "agentMessageFeedback": {
+    "feedback": "Feedback",
     "props": {
       "agentMessageContent": "Agent Message Content",
       "traceUrl": "Trace URL",

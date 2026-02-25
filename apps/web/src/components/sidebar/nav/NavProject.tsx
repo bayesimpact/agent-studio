@@ -6,7 +6,7 @@ import { ProjectDeletor } from "../../project/ProjectDeletor"
 import { ProjectEditor } from "../../project/ProjectEditor"
 import { ProjectItem } from "../../project/ProjectItem"
 import { ProjectItemOptions } from "../../project/ProjectItemOptions"
-import { AdminAgentList, AppAgentList } from "../list/AgentList"
+import { AdminAgentList, AppAgentList } from "../list/SidebarAgentList"
 
 type Item = { action: "edit" | "delete"; value: ProjectDto }
 

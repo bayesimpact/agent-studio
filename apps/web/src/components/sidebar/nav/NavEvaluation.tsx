@@ -13,7 +13,7 @@ export function NavEvaluation({
   organizationId: string
   projectId: string
 }) {
-  const { t } = useTranslation("common")
+  const { t } = useTranslation()
   const { isAdminInterface } = useAbility()
   const isActive = useIsEvaluationActive(projectId)
   if (!isAdminInterface) return null
@@ -24,7 +24,7 @@ export function NavEvaluation({
         <SidebarMenuButton isActive={isActive} asChild>
           <Link to={path} className="font-medium">
             <ListChecksIcon />
-            <span>{t("evaluations")}</span>
+            <span>{t("evaluation:evaluations")}</span>
           </Link>
         </SidebarMenuButton>
       </SidebarMenuItem>

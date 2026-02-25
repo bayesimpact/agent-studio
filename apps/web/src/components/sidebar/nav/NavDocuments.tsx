@@ -13,7 +13,7 @@ export function NavDocuments({
   organizationId: string
   projectId: string
 }) {
-  const { t } = useTranslation("common")
+  const { t } = useTranslation()
   const { isAdminInterface } = useAbility()
   const isActive = useIsDocumentsActive(projectId)
   if (!isAdminInterface) return null
@@ -24,7 +24,7 @@ export function NavDocuments({
         <SidebarMenuButton isActive={isActive} asChild>
           <Link to={path} className="font-medium">
             <DatabaseZapIcon />
-            <span className="capitalize-first">{t("documents")}</span>
+            <span className="capitalize-first">{t("document:documents")}</span>
           </Link>
         </SidebarMenuButton>
       </SidebarMenuItem>

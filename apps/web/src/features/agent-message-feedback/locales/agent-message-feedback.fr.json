@@ -1,5 +1,6 @@
 {
   "agentMessageFeedback": {
+    "feedback": "Retours utilisateurs",
     "props": {
       "agentMessageContent": "Contenu du message d'agent",
       "traceUrl": "URL de trace",

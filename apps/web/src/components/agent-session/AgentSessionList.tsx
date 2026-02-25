@@ -19,7 +19,7 @@ export function AgentSessionList({
   const { t } = useTranslation()
   const { getPath } = useGetPath()
   return (
-    <ListHeader path={getPath("agent")} title={t("common:chatSessions")}>
+    <ListHeader path={getPath("agent")} title={t("agentSession:list.title")}>
       {agentSessions.map((agentSession) => (
         <AgentSessionItem
           key={agentSession.id}

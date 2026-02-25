@@ -10,7 +10,7 @@ import type { Agent } from "@/features/agents/agents.models"
 import type { Project } from "@/features/projects/projects.models"
 import { useBuildPath } from "@/hooks/use-build-path"
 import { AppNavItem } from "../nav/NavItem"
-import { AgentSessionList } from "./AgentSessionList"
+import { AgentSessionList } from "./SidebarAgentSessionList"
 
 type Item = { action: "edit" | "delete"; value: Agent }
 

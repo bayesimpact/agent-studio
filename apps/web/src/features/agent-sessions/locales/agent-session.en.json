@@ -5,6 +5,12 @@
       "createdAt": "Created At",
       "updatedAt": "Updated At",
       "traceUrl": "Trace URL"
+    },
+    "create": {
+      "button": "New Chat"
+    },
+    "list": {
+      "title": "Chat Sessions"
     }
   },
   "agentSessionMessage": {

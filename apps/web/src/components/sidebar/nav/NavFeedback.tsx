@@ -15,7 +15,7 @@ export function NavFeedback({
   projectId: string
   agentId: string
 }) {
-  const { t } = useTranslation("common")
+  const { t } = useTranslation()
   const { isAdminInterface } = useAbility()
   const isActive = useIsFeedbackActive(agentId)
   if (!isAdminInterface) return null
@@ -26,7 +26,7 @@ export function NavFeedback({
         <SidebarMenuButton isActive={isActive} asChild>
           <Link to={path} className="font-medium">
             <MessageSquareWarningIcon />
-            <span>{t("feedback")}</span>
+            <span>{t("agentMessageFeedback:feedback")}</span>
           </Link>
         </SidebarMenuButton>
       </SidebarMenuItem>
