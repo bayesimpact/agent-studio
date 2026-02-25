@@ -12,7 +12,7 @@ import {
   createOrganizationWithAgent,
   createOrganizationWithAgentSession,
 } from "@/domains/organizations/organization.factory"
-import { sdk } from "@/external/llm/open-telemetry-init.ts"
+import { sdk } from "@/external/llm/open-telemetry-init"
 import { setupUserGuardForTesting } from "../../../../test/e2e.helpers"
 import { expectResponse, type Requester, testRequester } from "../../../../test/request"
 import { AgentsModule } from "../agents.module"

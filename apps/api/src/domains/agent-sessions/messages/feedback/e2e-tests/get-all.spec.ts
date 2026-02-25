@@ -12,7 +12,7 @@ import { agentSessionFactory } from "@/domains/agent-sessions/agent-session.fact
 import { agentMessageFactory } from "@/domains/agent-sessions/messages/agent-messages.factory"
 import { agentFactory } from "@/domains/agents/agent.factory"
 import { createOrganizationWithAgentMessage } from "@/domains/organizations/organization.factory"
-import { sdk } from "@/external/llm/open-telemetry-init.ts"
+import { sdk } from "@/external/llm/open-telemetry-init"
 import { setupUserGuardForTesting } from "../../../../../../test/e2e.helpers"
 import { expectResponse, type Requester, testRequester } from "../../../../../../test/request"
 import { agentMessageFeedbackFactory } from "../agent-message-feedback.factory"

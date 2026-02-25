@@ -8,7 +8,7 @@ import type {
   LLMFile,
   LLMMetadata,
 } from "@/common/interfaces/llm-provider.interface"
-import { sdk } from "@/external/llm/open-telemetry-init.ts"
+import { sdk } from "@/external/llm/open-telemetry-init"
 import { AISDKMockProvider } from "@/external/llm/providers/ai-sdk-mock.provider"
 
 describe.skip("AISDKMockProvider", () => {

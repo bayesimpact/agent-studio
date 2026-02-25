@@ -17,7 +17,7 @@ import {
 import type { UserMembership } from "@/domains/organizations/user-membership.entity"
 import type { Project } from "@/domains/projects/project.entity"
 import type { User } from "@/domains/users/user.entity"
-import { sdk } from "@/external/llm/open-telemetry-init.ts"
+import { sdk } from "@/external/llm/open-telemetry-init"
 import { AgentsModule } from "./agents.module"
 import { AgentsService } from "./agents.service"
 

@@ -3,7 +3,7 @@ import { afterAll } from "@jest/globals"
 import { agentSessionFactory } from "@/domains/agent-sessions/agent-session.factory"
 import { agentFactory } from "@/domains/agents/agent.factory"
 import { userFactory } from "@/domains/users/user.factory"
-import { sdk } from "@/external/llm/open-telemetry-init.ts"
+import { sdk } from "@/external/llm/open-telemetry-init"
 import { agentSessionControllerTestSetup } from "./test-setup"
 
 const getTestContext = agentSessionControllerTestSetup()

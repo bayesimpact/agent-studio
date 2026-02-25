@@ -12,7 +12,7 @@ import { evaluationFactory } from "@/domains/evaluations/evaluation.factory"
 import { EvaluationsModule } from "@/domains/evaluations/evaluations.module"
 import { evaluationReportFactory } from "@/domains/evaluations/reports/evaluation-report.factory"
 import { createOrganizationWithAgent } from "@/domains/organizations/organization.factory"
-import { sdk } from "@/external/llm/open-telemetry-init.ts"
+import { sdk } from "@/external/llm/open-telemetry-init"
 import { setupUserGuardForTesting } from "../../../../../test/e2e.helpers"
 import { expectResponse, type Requester, testRequester } from "../../../../../test/request"
 

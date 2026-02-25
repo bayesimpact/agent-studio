@@ -1,5 +1,5 @@
 // // biome-ignore assist/source/organizeImports: open-telemetry-init should be in first
-// import "../open-telemetry-init.ts" // !!!! first import !!!!
+// import "../open-telemetry-init" // !!!! first import !!!!
 
 import { readFile } from "node:fs/promises"
 import { join } from "node:path"
@@ -19,7 +19,7 @@ import type {
 } from "@/common/interfaces/llm-provider.interface"
 import { LangfuseIntegrationExporter } from "@/external/langfuse/langfuse-integration-exporter"
 import { AgentModelToAgentProvider, AgentProvider } from "@/external/llm/agent-provider"
-import { sdk } from "@/external/llm/open-telemetry-init.ts"
+import { sdk } from "@/external/llm/open-telemetry-init"
 import { AISDKVertexProvider } from "@/external/llm/providers/ai-sdk-vertex.provider"
 
 dotenvConfig({ path: ".env.test", override: true })
