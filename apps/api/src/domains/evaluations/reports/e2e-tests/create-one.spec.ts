@@ -11,6 +11,7 @@ import { agentFactory } from "@/domains/agents/agent.factory"
 import { evaluationFactory } from "@/domains/evaluations/evaluation.factory"
 import { EvaluationsModule } from "@/domains/evaluations/evaluations.module"
 import { createOrganizationWithProject } from "@/domains/organizations/organization.factory"
+import { sdk } from "@/external/llm/open-telemetry-init.ts"
 import { setupUserGuardForTesting } from "../../../../../test/e2e.helpers"
 import { expectResponse, type Requester, testRequester } from "../../../../../test/request"
 
@@ -48,6 +49,7 @@ describe("Evaluation Reports - createOne", () => {
 
   afterAll(async () => {
     await teardownTestDatabase(setup)
+    await sdk.shutdown()
     app.close()
   })
 

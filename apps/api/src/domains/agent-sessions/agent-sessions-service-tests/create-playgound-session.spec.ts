@@ -1,9 +1,13 @@
 import type { RequiredConnectScope } from "@/common/entities/connect-required-fields"
+import { sdk } from "@/external/llm/open-telemetry-init.ts"
 import { agentSessionControllerTestSetup } from "./test-setup"
 
 const getTestContext = agentSessionControllerTestSetup()
 
 describe("createPlaygroundSession", () => {
+  afterAll(async () => {
+    await sdk.shutdown()
+  })
   it("should create a new playground session", async () => {
     const { service, testAgent, testUser, testOrganization, testProject } = getTestContext()
     const connectScope: RequiredConnectScope = {
