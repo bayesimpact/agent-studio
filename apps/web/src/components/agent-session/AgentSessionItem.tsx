@@ -18,7 +18,7 @@ export function AgentSessionItem({
   agentId: string
 }) {
   const navigate = useNavigate()
-  const { t } = useTranslation("common")
+  const { t } = useTranslation()
   const { buildPath } = useBuildPath()
   const handleClick = () => {
     const path = buildPath("agentSession", {
@@ -35,7 +35,7 @@ export function AgentSessionItem({
         <ItemTitle>{buildDate(agentSession.updatedAt)}</ItemTitle>
       </ItemContent>
       <ItemActions>
-        <Button onClick={handleClick}>{t("open")}</Button>
+        <Button onClick={handleClick}>{t("actions:open")}</Button>
       </ItemActions>
     </Item>
   )

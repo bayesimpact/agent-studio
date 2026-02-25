@@ -1,5 +1,7 @@
 {
   "evaluation": {
+    "evaluation": "Évaluation",
+    "evaluations": "Évaluations",
     "props": {
       "createdAt": "Créé le",
       "expectedOutput": "Sortie attendue",

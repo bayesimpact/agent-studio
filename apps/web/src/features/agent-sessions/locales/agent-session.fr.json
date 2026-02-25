@@ -5,6 +5,12 @@
       "createdAt": "Créé le",
       "updatedAt": "Mis à jour le",
       "traceUrl": "URL de trace"
+    },
+    "create": {
+      "button": "Nouvelle discussion"
+    },
+    "list": {
+      "title": "Discussions"
     }
   },
   "agentSessionMessage": {

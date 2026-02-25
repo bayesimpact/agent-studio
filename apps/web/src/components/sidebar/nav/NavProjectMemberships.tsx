@@ -13,7 +13,7 @@ export function NavProjectMemberships({
   organizationId: string
   projectId: string
 }) {
-  const { t } = useTranslation("projectMemberships")
+  const { t } = useTranslation()
   const { isAdminInterface } = useAbility()
   const isActive = useIsProjectMembershipsActive(projectId)
   if (!isAdminInterface) return null
@@ -24,7 +24,7 @@ export function NavProjectMemberships({
         <SidebarMenuButton isActive={isActive} asChild>
           <Link to={path} className="font-medium">
             <UsersIcon />
-            <span>{t("nav.title")}</span>
+            <span>{t("projectMembership:members")}</span>
           </Link>
         </SidebarMenuButton>
       </SidebarMenuItem>

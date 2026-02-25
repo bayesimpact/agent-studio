@@ -1,5 +1,6 @@
 {
   "projectMembership": {
+    "members": "Members",
     "props": {
       "userName": "User Name",
       "userEmail": "User Email",

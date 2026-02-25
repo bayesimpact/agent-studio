@@ -1,5 +1,7 @@
 {
   "document": {
+    "document": "Document",
+    "documents": "Documents",
     "props": {
       "createdAt": "Créé le",
       "updatedAt": "Mis à jour le",
