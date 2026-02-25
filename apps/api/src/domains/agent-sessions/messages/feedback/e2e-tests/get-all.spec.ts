@@ -1,4 +1,5 @@
 import { AgentMessageFeedbackRoutes } from "@caseai-connect/api-contracts"
+import { afterAll } from "@jest/globals"
 import type { INestApplication } from "@nestjs/common"
 import type { App } from "supertest/types"
 import { clearTestDatabase } from "@/common/test/test-database"
@@ -11,6 +12,7 @@ import { agentSessionFactory } from "@/domains/agent-sessions/agent-session.fact
 import { agentMessageFactory } from "@/domains/agent-sessions/messages/agent-messages.factory"
 import { agentFactory } from "@/domains/agents/agent.factory"
 import { createOrganizationWithAgentMessage } from "@/domains/organizations/organization.factory"
+import { sdk } from "@/external/llm/open-telemetry-init.ts"
 import { setupUserGuardForTesting } from "../../../../../../test/e2e.helpers"
 import { expectResponse, type Requester, testRequester } from "../../../../../../test/request"
 import { agentMessageFeedbackFactory } from "../agent-message-feedback.factory"
@@ -49,6 +51,7 @@ describe("AgentMessageFeedbackRoutes.getAll", () => {
 
   afterAll(async () => {
     await teardownTestDatabase(setup)
+    await sdk.shutdown()
     app.close()
   })
 

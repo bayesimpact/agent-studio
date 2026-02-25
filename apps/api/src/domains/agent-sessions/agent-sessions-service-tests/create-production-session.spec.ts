@@ -1,9 +1,13 @@
 import type { RequiredConnectScope } from "@/common/entities/connect-required-fields"
+import { sdk } from "@/external/llm/open-telemetry-init.ts"
 import { agentSessionControllerTestSetup } from "./test-setup"
 
 const getTestContext = agentSessionControllerTestSetup()
 
 describe("createProductionSession", () => {
+  afterAll(async () => {
+    await sdk.shutdown()
+  })
   it("should create a production session without TTL", async () => {
     const { service, testAgent, testOrganization, testUser, testProject } = getTestContext()
     const connectScope: RequiredConnectScope = {

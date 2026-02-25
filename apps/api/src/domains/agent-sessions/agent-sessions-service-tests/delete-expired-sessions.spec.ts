@@ -1,11 +1,16 @@
+import { afterAll } from "@jest/globals"
 import type { RequiredConnectScope } from "@/common/entities/connect-required-fields"
 import { agentFactory } from "@/domains/agents/agent.factory"
+import { sdk } from "@/external/llm/open-telemetry-init.ts"
 import { agentSessionFactory } from "../agent-session.factory"
 import { agentSessionControllerTestSetup } from "./test-setup"
 
 const getTestContext = agentSessionControllerTestSetup()
 
 describe("deleteExpiredPlaygroundSessions", () => {
+  afterAll(async () => {
+    await sdk.shutdown()
+  })
   it("should delete expired playground sessions", async () => {
     const {
       service,

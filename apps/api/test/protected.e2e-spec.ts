@@ -2,8 +2,8 @@ import { ProtectedRoutes } from "@caseai-connect/api-contracts"
 import type { INestApplication } from "@nestjs/common"
 import { Test, type TestingModule } from "@nestjs/testing"
 import type { App } from "supertest/types"
-import { AppModule } from "./../src/app.module"
-import { JwtAuthGuard } from "./../src/auth/jwt-auth.guard"
+import { AppModule } from "@/app.module.ts"
+import { JwtAuthGuard } from "@/domains/auth/jwt-auth.guard.ts"
 import { type Requester, testRequester } from "./request"
 
 // NOTE: How to run this test:
@@ -25,6 +25,16 @@ jest.mock("langfuse", () => {
     },
   }
 })
+jest.mock("langfuse-v2", () => ({
+  Langfuse: jest.fn().mockImplementation(() => ({
+    trace: jest.fn(),
+    span: jest.fn().mockReturnValue({ getTraceUrl: jest.fn() }),
+    generation: jest.fn(),
+    flushAsync: jest.fn().mockResolvedValue(undefined),
+    shutdownAsync: jest.fn().mockResolvedValue(undefined),
+    debug: jest.fn(),
+  })),
+}))
 
 describe("ProtectedController (e2e)", () => {
   let app: INestApplication<App>

@@ -187,6 +187,7 @@ export class EvaluationReportsService {
       ratingAgent.model = AgentModel._MockGenerateText
 
     const llmConfig = this.buildLLMConfig(ratingAgent)
+
     const llmMetadata: LLMMetadata = {
       traceId: evaluationReport.traceId,
       evaluationReportId: evaluationReport.id,
@@ -246,7 +247,8 @@ return only the rating value (0 to 100), no sentence`,
       model,
       temperature: safeTemperature,
       systemPrompt,
-    }
+      mockResult: "42",
+    } as LLMConfig
   }
   private buildLLMMetadata({
     agent,

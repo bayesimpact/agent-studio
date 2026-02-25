@@ -1,11 +1,16 @@
+import { afterAll } from "@jest/globals"
 import type { RequiredConnectScope } from "@/common/entities/connect-required-fields"
 import { userMembershipFactory } from "@/domains/organizations/user-membership.factory"
+import { sdk } from "@/external/llm/open-telemetry-init.ts"
 import { createChitChatConversation } from "../messages/agent-messages.factory"
 import { agentSessionControllerTestSetup } from "./test-setup"
 
 const getTestContext = agentSessionControllerTestSetup()
 
 describe("listMessagesForSession", () => {
+  afterAll(async () => {
+    await sdk.shutdown()
+  })
   it("should return messages when user is a member of the organization", async () => {
     const {
       service,

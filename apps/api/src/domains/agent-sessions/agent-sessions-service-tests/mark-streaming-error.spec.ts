@@ -1,9 +1,13 @@
 import type { RequiredConnectScope } from "@/common/entities/connect-required-fields"
+import { sdk } from "@/external/llm/open-telemetry-init.ts"
 import { agentSessionControllerTestSetup } from "./test-setup"
 
 const getTestContext = agentSessionControllerTestSetup()
 
 describe("markStreamingError", () => {
+  afterAll(async () => {
+    await sdk.shutdown()
+  })
   it("should mark assistant message as error", async () => {
     const { service, testAgent, testOrganization, testUser, testProject } = getTestContext()
     const connectScope: RequiredConnectScope = {

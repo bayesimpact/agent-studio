@@ -1,5 +1,5 @@
 import { AgentModel } from "@caseai-connect/api-contracts"
-import { beforeAll } from "@jest/globals"
+import { afterAll, beforeAll } from "@jest/globals"
 import { v4 } from "uuid"
 import { z } from "zod"
 import type {
@@ -8,6 +8,7 @@ import type {
   LLMFile,
   LLMMetadata,
 } from "@/common/interfaces/llm-provider.interface"
+import { sdk } from "@/external/llm/open-telemetry-init.ts"
 import { AISDKMockProvider } from "@/external/llm/providers/ai-sdk-mock.provider"
 
 describe.skip("AISDKMockProvider", () => {
@@ -27,6 +28,9 @@ describe.skip("AISDKMockProvider", () => {
       tags: ["**TEST**"],
       traceId: "traceId",
     }
+  })
+  afterAll(async () => {
+    await sdk.shutdown()
   })
   it("streamChatResponse - default mock value", async () => {
     metadata.traceId = v4()

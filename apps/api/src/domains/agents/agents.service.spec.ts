@@ -1,4 +1,5 @@
 import { AgentLocale, AgentModel } from "@caseai-connect/api-contracts"
+import { afterAll } from "@jest/globals"
 import { UnprocessableEntityException } from "@nestjs/common"
 import type { Repository } from "typeorm"
 import { clearTestDatabase } from "@/common/test/test-database"
@@ -16,6 +17,7 @@ import {
 import type { UserMembership } from "@/domains/organizations/user-membership.entity"
 import type { Project } from "@/domains/projects/project.entity"
 import type { User } from "@/domains/users/user.entity"
+import { sdk } from "@/external/llm/open-telemetry-init.ts"
 import { AgentsModule } from "./agents.module"
 import { AgentsService } from "./agents.service"
 
@@ -39,6 +41,7 @@ describe("AgentsService", () => {
 
   afterAll(async () => {
     await teardownTestDatabase(setup)
+    await sdk.shutdown()
   })
 
   beforeEach(async () => {

@@ -1,3 +1,4 @@
+import { afterAll } from "@jest/globals"
 import type { Repository } from "typeorm"
 import { clearTestDatabase } from "@/common/test/test-database"
 import {
@@ -13,6 +14,7 @@ import { Project } from "@/domains/projects/project.entity"
 import { projectFactory } from "@/domains/projects/project.factory"
 import { User } from "@/domains/users/user.entity"
 import { userFactory } from "@/domains/users/user.factory"
+import { sdk } from "@/external/llm/open-telemetry-init.ts"
 import { AgentMessage } from "../../agent-sessions/messages/agent-message.entity"
 import { AgentSession } from "../agent-session.entity"
 import { AgentSessionsModule } from "../agent-sessions.module"
@@ -44,6 +46,7 @@ export function agentSessionControllerTestSetup() {
 
   afterAll(async () => {
     await teardownTestDatabase(setup)
+    await sdk.shutdown()
   })
 
   beforeEach(async () => {

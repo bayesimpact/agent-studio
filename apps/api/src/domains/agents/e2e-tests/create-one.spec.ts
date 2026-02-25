@@ -1,4 +1,5 @@
 import { AgentLocale, AgentModel, AgentsRoutes } from "@caseai-connect/api-contracts"
+import { afterAll } from "@jest/globals"
 import type { INestApplication } from "@nestjs/common"
 import type { App } from "supertest/types"
 import { clearTestDatabase } from "@/common/test/test-database"
@@ -8,6 +9,7 @@ import {
 } from "@/common/test/test-transaction-manager"
 import { removeNullish } from "@/common/utils/remove-nullish"
 import { createOrganizationWithProject } from "@/domains/organizations/organization.factory"
+import { sdk } from "@/external/llm/open-telemetry-init.ts"
 import { setupUserGuardForTesting } from "../../../../test/e2e.helpers"
 import { expectResponse, type Requester, testRequester } from "../../../../test/request"
 import { Agent } from "../agent.entity"
@@ -45,6 +47,7 @@ describe("Agents - createOne", () => {
 
   afterAll(async () => {
     await teardownTestDatabase(setup)
+    await sdk.shutdown()
     app.close()
   })
 

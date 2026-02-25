@@ -1,11 +1,15 @@
-// biome-ignore assist/source/organizeImports: open-telemetry-init should be in first
-import "../open-telemetry-init.ts" // !!!! first import !!!!
+// // biome-ignore assist/source/organizeImports: open-telemetry-init should be in first
+// import "../open-telemetry-init.ts" // !!!! first import !!!!
+
+import { readFile } from "node:fs/promises"
+import { join } from "node:path"
 import { AgentModel } from "@caseai-connect/api-contracts"
 import { afterAll, beforeAll } from "@jest/globals"
+import { BatchSpanProcessor, ConsoleSpanExporter } from "@opentelemetry/sdk-trace-base"
+import { NodeTracerProvider } from "@opentelemetry/sdk-trace-node"
 import { config as dotenvConfig } from "dotenv"
-import { readFile } from "node:fs/promises"
 import { GoogleAuth } from "google-auth-library"
-import { join } from "node:path"
+import { v4 } from "uuid"
 import { z } from "zod"
 import type {
   LLMChatMessage,
@@ -13,12 +17,10 @@ import type {
   LLMFile,
   LLMMetadata,
 } from "@/common/interfaces/llm-provider.interface"
-import { AgentModelToAgentProvider, AgentProvider } from "@/external/llm/agent-provider"
-import { AISDKVertexProvider } from "@/external/llm/providers/ai-sdk-vertex.provider"
-import { v4 } from "uuid"
-import { BatchSpanProcessor, ConsoleSpanExporter } from "@opentelemetry/sdk-trace-base"
-import { NodeTracerProvider } from "@opentelemetry/sdk-trace-node"
 import { LangfuseIntegrationExporter } from "@/external/langfuse/langfuse-integration-exporter"
+import { AgentModelToAgentProvider, AgentProvider } from "@/external/llm/agent-provider"
+import { sdk } from "@/external/llm/open-telemetry-init.ts"
+import { AISDKVertexProvider } from "@/external/llm/providers/ai-sdk-vertex.provider"
 
 dotenvConfig({ path: ".env.test", override: true })
 // process.env.LANGFUSE_DISABLE_AUTO_DETECTION = "true"
@@ -29,16 +31,15 @@ const testModels = Object.values(AgentModel).filter(
 if (process.env.IS_TEST === "true" && process.env.AIENGINE_TEST === "true") {
   describe.skip("AISDKVertexProvider", () => {
     jest.setTimeout(20_000)
+    const langfuse = new LangfuseIntegrationExporter({
+      secretKey: process.env.LANGFUSE_SK,
+      publicKey: process.env.LANGFUSE_PK,
+      baseUrl: process.env.LANGFUSE_BASE_URL,
+    })
     const traceProvider = new NodeTracerProvider({
       spanProcessors: [
         new BatchSpanProcessor(new ConsoleSpanExporter()),
-        new BatchSpanProcessor(
-          new LangfuseIntegrationExporter({
-            secretKey: process.env.LANGFUSE_SK,
-            publicKey: process.env.LANGFUSE_PK,
-            baseUrl: process.env.LANGFUSE_BASE_URL,
-          }),
-        ),
+        new BatchSpanProcessor(langfuse),
       ],
     })
     let provider: AISDKVertexProvider
@@ -64,8 +65,10 @@ if (process.env.IS_TEST === "true" && process.env.AIENGINE_TEST === "true") {
       traceProvider.register()
     })
     afterAll(async () => {
+      await langfuse.forceFlush()
       await traceProvider.forceFlush()
       await traceProvider.shutdown()
+      await sdk.shutdown()
     })
 
     it.each(testModels)("streamChatResponse - %s", async (model) => {

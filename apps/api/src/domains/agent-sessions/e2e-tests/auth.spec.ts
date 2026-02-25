@@ -1,5 +1,6 @@
 import { randomUUID } from "node:crypto"
 import { AgentSessionsRoutes } from "@caseai-connect/api-contracts"
+import { afterAll } from "@jest/globals"
 import type { INestApplication } from "@nestjs/common"
 import type { App } from "supertest/types"
 import { AUTH_ERRORS } from "@/common/errors/auth-errors"
@@ -11,6 +12,7 @@ import {
 import { removeNullish } from "@/common/utils/remove-nullish"
 import { createOrganizationWithAgent } from "@/domains/organizations/organization.factory"
 import { projectMembershipFactory } from "@/domains/projects/memberships/project-membership.factory"
+import { sdk } from "@/external/llm/open-telemetry-init.ts"
 import { setupUserGuardForTesting } from "../../../../test/e2e.helpers"
 import { expectResponse, type Requester, testRequester } from "../../../../test/request"
 import { AgentSessionsModule } from "../agent-sessions.module"
@@ -53,6 +55,7 @@ describe("Agent Sessions - Auth", () => {
 
   afterAll(async () => {
     await teardownTestDatabase(setup)
+    await sdk.shutdown()
     app.close()
   })
 

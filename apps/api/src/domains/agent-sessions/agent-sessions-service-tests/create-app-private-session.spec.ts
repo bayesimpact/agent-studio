@@ -1,10 +1,15 @@
+import { afterAll } from "@jest/globals"
 import type { RequiredConnectScope } from "@/common/entities/connect-required-fields"
 import { userMembershipFactory } from "@/domains/organizations/user-membership.factory"
+import { sdk } from "@/external/llm/open-telemetry-init.ts"
 import { agentSessionControllerTestSetup } from "./test-setup"
 
 const getTestContext = agentSessionControllerTestSetup()
 
 describe("createAppPrivateSession", () => {
+  afterAll(async () => {
+    await sdk.shutdown()
+  })
   it("should create an app-private session", async () => {
     const { service, testAgent, testUser, testOrganization, membershipRepository, testProject } =
       getTestContext()

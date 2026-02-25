@@ -3,7 +3,7 @@ import { NodeSDK } from "@opentelemetry/sdk-node"
 import { BatchSpanProcessor, ConsoleSpanExporter } from "@opentelemetry/sdk-trace-base"
 import { LangfuseIntegrationExporter } from "@/external/langfuse/langfuse-integration-exporter"
 
-const sdk = new NodeSDK({
+export const sdk = new NodeSDK({
   spanProcessors: [
     new BatchSpanProcessor(new ConsoleSpanExporter()),
     new BatchSpanProcessor(

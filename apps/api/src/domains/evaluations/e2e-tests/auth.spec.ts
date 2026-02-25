@@ -1,5 +1,6 @@
 import { randomUUID } from "node:crypto"
 import { EvaluationsRoutes } from "@caseai-connect/api-contracts"
+import { afterAll } from "@jest/globals"
 import type { INestApplication } from "@nestjs/common"
 import type { App } from "supertest/types"
 import type { Repository } from "typeorm"
@@ -14,6 +15,7 @@ import { Evaluation } from "@/domains/evaluations/evaluation.entity"
 import { EvaluationsModule } from "@/domains/evaluations/evaluations.module"
 import { createOrganizationWithProject } from "@/domains/organizations/organization.factory"
 import { projectFactory } from "@/domains/projects/project.factory"
+import { sdk } from "@/external/llm/open-telemetry-init.ts"
 import { setupUserGuardForTesting } from "../../../../test/e2e.helpers"
 import { expectResponse, type Requester, testRequester } from "../../../../test/request"
 
@@ -56,6 +58,7 @@ describe("Evaluations - Auth", () => {
 
   afterAll(async () => {
     await teardownTestDatabase(setup)
+    await sdk.shutdown()
     app.close()
   })
 
