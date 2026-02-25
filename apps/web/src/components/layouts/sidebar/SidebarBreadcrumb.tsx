@@ -250,7 +250,7 @@ function AgentFeedback() {
 function ProjectDocuments() {
   const { isRoute } = useIsRoute()
   const isDocumentsRoute = isRoute(RouteNames.DOCUMENTS)
-  const { t } = useTranslation("common")
+  const { t } = useTranslation("document")
   if (!isDocumentsRoute) return null
   return (
     <>

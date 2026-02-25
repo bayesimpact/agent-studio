@@ -18,7 +18,7 @@ export function OpenDocumentUrl({
   document: Document
 }) {
   const dispatch = useAppDispatch()
-  const { t } = useTranslation("common")
+  const { t } = useTranslation("actions")
   const [url, setUrl] = useState<string | null>(null)
   const documentId = document.id
   const aRef = useRef<HTMLAnchorElement | null>(null)

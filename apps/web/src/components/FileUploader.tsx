@@ -61,7 +61,7 @@ export function BasicUploader<T>({
     organizationId,
     projectId,
   })
-  const { t } = useTranslation("common")
+  const { t } = useTranslation("actions")
   return (
     <div {...getRootProps()} className="w-fit cursor-pointer">
       {children ? (
@@ -73,7 +73,7 @@ export function BasicUploader<T>({
           ) : (
             <UploadCloudIcon className="size-5" />
           )}{" "}
-          {t("dragOrUploadFile")}
+          <span className="capitalize-first">{t("dragOrUploadFile")}</span>
         </Button>
       )}
       <input {...getInputProps()} />
