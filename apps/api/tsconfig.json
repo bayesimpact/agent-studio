@@ -5,9 +5,7 @@
     "outDir": "./dist",
     "paths": {
       "@/*": ["./src/*"]
-    },
-    "allowImportingTsExtensions": true,
-    "emitDeclarationOnly": true
+    }
   },
   "include": ["src/**/*"],
   "exclude": ["node_modules", "dist", "test"]

@@ -8,7 +8,7 @@ import {
 } from "@/common/test/test-transaction-manager"
 import { removeNullish } from "@/common/utils/remove-nullish"
 import { createOrganizationWithAgentSession } from "@/domains/organizations/organization.factory"
-import { sdk } from "@/external/llm/open-telemetry-init.ts"
+import { sdk } from "@/external/llm/open-telemetry-init"
 import { setupUserGuardForTesting } from "../../../../../test/e2e.helpers"
 import { type Requester, testRequester } from "../../../../../test/request"
 import { AgentSessionsModule } from "../../agent-sessions.module"

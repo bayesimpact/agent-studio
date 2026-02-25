@@ -1,6 +1,6 @@
 import { afterAll } from "@jest/globals"
 import type { RequiredConnectScope } from "@/common/entities/connect-required-fields"
-import { sdk } from "@/external/llm/open-telemetry-init.ts"
+import { sdk } from "@/external/llm/open-telemetry-init"
 import { agentSessionControllerTestSetup } from "./test-setup"
 
 const getTestContext = agentSessionControllerTestSetup()

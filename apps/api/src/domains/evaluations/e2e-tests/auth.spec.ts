@@ -15,7 +15,7 @@ import { Evaluation } from "@/domains/evaluations/evaluation.entity"
 import { EvaluationsModule } from "@/domains/evaluations/evaluations.module"
 import { createOrganizationWithProject } from "@/domains/organizations/organization.factory"
 import { projectFactory } from "@/domains/projects/project.factory"
-import { sdk } from "@/external/llm/open-telemetry-init.ts"
+import { sdk } from "@/external/llm/open-telemetry-init"
 import { setupUserGuardForTesting } from "../../../../test/e2e.helpers"
 import { expectResponse, type Requester, testRequester } from "../../../../test/request"
 
