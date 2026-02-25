@@ -20,7 +20,7 @@ import { selectCurrentProjectId } from "@/features/projects/projects.selectors"
 import { useAppDispatch, useAppSelector } from "@/store/hooks"
 import { MarkdownWrapper } from "../chat/MarkdownWrapper"
 
-export function CreateFeedbackDialog({ message }: { message: AgentSessionMessage }) {
+export function FeedbackCreator({ message }: { message: AgentSessionMessage }) {
   const { t } = useTranslation("feedbacks", { keyPrefix: "create" })
   const [open, setOpen] = useState(false)
   const handleSuccess = () => {
@@ -50,13 +50,13 @@ export function CreateFeedbackDialog({ message }: { message: AgentSessionMessage
           </ItemContent>
         </Item>
 
-        <CreateFeedbackForm agentMessageId={message.id} onSuccess={handleSuccess} />
+        <CreateForm agentMessageId={message.id} onSuccess={handleSuccess} />
       </DialogContent>
     </Dialog>
   )
 }
 
-function CreateFeedbackForm({
+function CreateForm({
   agentMessageId,
   onSuccess,
 }: {

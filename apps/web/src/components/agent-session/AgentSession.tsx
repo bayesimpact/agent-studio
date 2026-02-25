@@ -1,43 +1,30 @@
 import { Button } from "@caseai-connect/ui/shad/button"
-import { Spinner } from "@caseai-connect/ui/shad/spinner"
-import { cn } from "@caseai-connect/ui/utils"
-import {
-  AlertCircleIcon,
-  CirclePlusIcon,
-  ExternalLinkIcon,
-  FileCheckIcon,
-  PaperclipIcon,
-  XIcon,
-} from "lucide-react"
-import { useCallback, useEffect, useRef, useState } from "react"
+import { CirclePlusIcon, ExternalLinkIcon, FileCheckIcon, XIcon } from "lucide-react"
+import { useEffect, useRef, useState } from "react"
 import { useTranslation } from "react-i18next"
 import type {
-  AgentSessionMessage,
+  AgentSessionMessage as AgentSessionMessageType,
   AgentSession as AgentSessionType,
 } from "@/features/agent-sessions/agent-sessions.models"
 import { selectStreaming } from "@/features/agent-sessions/agent-sessions.selectors"
 import { sendMessage } from "@/features/agent-sessions/agent-sessions.thunks"
-import { getDocumentTemporaryUrl } from "@/features/documents/documents.thunks"
 import { selectCurrentOrganizationId } from "@/features/organizations/organizations.selectors"
 import { selectCurrentProjectId } from "@/features/projects/projects.selectors"
 import { useScrollToEnd } from "@/hooks/use-scroll-to-end"
 import { useAppDispatch, useAppSelector } from "@/store/hooks"
-import { CreateFeedbackDialog } from "../agent-message-feedback/CreateFeedbackDialog"
+import { Dictaphone } from "../agent/actions/Dictaphone"
 import {
   Chat,
   ChatActions,
-  ChatBotMessage,
   ChatContent,
   ChatFooter,
   ChatHeader,
   ChatInput,
   ChatSubmit,
-  ChatUserMessage,
 } from "../chat/Chat"
-import { MarkdownWrapper } from "../chat/MarkdownWrapper"
 import { DotsBackground } from "../DotsBackground"
 import { AttachDocument } from "../document/AttachDocument"
-import { Dictaphone } from "./actions/Dictaphone"
+import { AgentSessionMessage } from "./AgentSessionMessage"
 
 export function AgentSession({
   isAdminInterface,
@@ -46,9 +33,9 @@ export function AgentSession({
 }: {
   isAdminInterface: boolean
   session: AgentSessionType
-  messages: AgentSessionMessage[]
+  messages: AgentSessionMessageType[]
 }) {
-  const { t } = useTranslation("chat")
+  const { t } = useTranslation()
   const dispatch = useAppDispatch()
   const isStreaming = useAppSelector(selectStreaming)
   const organizationId = useAppSelector(selectCurrentOrganizationId)
@@ -98,13 +85,13 @@ export function AgentSession({
             </ChatHeader>
             <ChatContent>
               {messages?.map((message) => (
-                <Message key={message.id} message={message} />
+                <AgentSessionMessage key={message.id} message={message} />
               ))}
             </ChatContent>
 
             <ChatFooter focus={!isStreaming} onMessageSubmit={handleSubmit}>
               <ChatInput
-                placeholder={t("placeholder")}
+                placeholder={t("agentSession:chat.placeholder")}
                 className="resize-none"
                 disabled={isStreaming || !session}
               />
@@ -143,13 +130,13 @@ export function AgentSession({
         <Chat className="shadow-none">
           <ChatContent>
             {messages?.map((message) => (
-              <Message key={message.id} message={message} />
+              <AgentSessionMessage key={message.id} message={message} />
             ))}
           </ChatContent>
 
           <ChatFooter focus={!isStreaming} onMessageSubmit={handleSubmit}>
             <ChatInput
-              placeholder={t("placeholder")}
+              placeholder={t("agentSession:chat.placeholder")}
               className="resize-none"
               disabled={isStreaming || !session}
             />
@@ -180,83 +167,6 @@ export function AgentSession({
           </ChatFooter>
         </Chat>
       </div>
-    </div>
-  )
-}
-
-function Message({ message }: { message: AgentSessionMessage }) {
-  const isAssistant = message.role === "assistant"
-  const isStreaming = message.status === "streaming"
-  const isError = message.status === "error"
-  if (isAssistant) {
-    return (
-      <div key={message.id} className="max-w-3/4 relative">
-        <ChatBotMessage
-          className={cn("pb-8", isError && "bg-red-50 border border-red-200 text-red-800")}
-        >
-          {isStreaming && <ThinkingMessage />}
-          {isError && <ErrorMessage />}
-
-          <MarkdownWrapper content={message.content} />
-        </ChatBotMessage>
-
-        <CreateFeedbackDialog message={message} />
-      </div>
-    )
-  } else
-    return (
-      <div className="flex flex-col gap-2 items-end">
-        <ChatUserMessage key={message.id}>{message.content}</ChatUserMessage>
-        <Attachment message={message} />
-      </div>
-    )
-}
-
-function Attachment({ message }: { message: AgentSessionMessage }) {
-  const { t } = useTranslation("common")
-  const dispatch = useAppDispatch()
-  const organizationId = useAppSelector(selectCurrentOrganizationId)
-  const projectId = useAppSelector(selectCurrentProjectId)
-
-  const [url, setUrl] = useState<string>()
-
-  const loadDocument = useCallback(async () => {
-    if (!message.documentId || !organizationId || !projectId) return
-    const res = await dispatch(
-      getDocumentTemporaryUrl({ documentId: message.documentId, organizationId, projectId }),
-    ).unwrap()
-    if (res.url) setUrl(res.url)
-  }, [dispatch, message.documentId, organizationId, projectId])
-
-  useEffect(() => {
-    loadDocument()
-  }, [loadDocument])
-
-  if (!message.documentId) return null
-  return (
-    <Button variant="outline" size="sm" onClick={() => window.open(url, "_blank")} disabled={!url}>
-      <PaperclipIcon className="size-4" /> {t("viewAttachment")}
-      <ExternalLinkIcon className="size-4" />
-    </Button>
-  )
-}
-
-function ErrorMessage() {
-  const { t } = useTranslation("common")
-  return (
-    <div className="flex items-center gap-2 mb-2">
-      <AlertCircleIcon className="size-4 text-red-600" />
-      <span className="font-semibold text-red-700">{t("error")}</span>
-    </div>
-  )
-}
-
-function ThinkingMessage() {
-  const { t } = useTranslation("agent", { keyPrefix: "detail" })
-  return (
-    <div className="flex items-center gap-2 mb-2 animate-pulse">
-      <Spinner />
-      <span>{t("thinking")}</span>
     </div>
   )
 }

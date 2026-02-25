@@ -23,7 +23,7 @@ function Chat({ className, children, ...props }: React.ComponentProps<"div"> & {
 }
 
 function ChatHeader({ className, children, ...props }: React.ComponentProps<"div">) {
-  const { t } = useTranslation("chat")
+  const { t } = useTranslation()
   return (
     <div
       data-slot="chat-header"
@@ -33,7 +33,7 @@ function ChatHeader({ className, children, ...props }: React.ComponentProps<"div
       <div className="border border-muted rounded-full p-2">
         <SparklesIcon className="size-6" />
       </div>
-      <div className="flex-1">{t("header")}</div>
+      <div className="flex-1">{t("agentSession:chat.title")}</div>
       <div>{children}</div>
     </div>
   )
