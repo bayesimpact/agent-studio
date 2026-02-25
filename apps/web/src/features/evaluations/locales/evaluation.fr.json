@@ -4,9 +4,24 @@
     "evaluations": "Évaluations",
     "props": {
       "createdAt": "Créé le",
-      "expectedOutput": "Sortie attendue",
+      "expectedOutput": "Résultat attendu",
       "input": "Entrée",
-      "updatedAt": "Mis à jour le"
-    }
+      "updatedAt": "Mis à jour le",
+      "placeholders": {
+        "input": "Entrez les données d'entrée ici",
+        "expectedOutput": "Entrez le résultat attendu ici"
+      },
+      "validation": {
+        "inputRequired": "L'entrée est requise",
+        "expectedOutputRequired": "Le résultat attendu est requis"
+      }
+    },
+    "create": {
+      "button": "Créer une évaluation",
+      "title": "Créer une évaluation",
+      "description": "Créez une nouvelle évaluation en fournissant les détails nécessaires."
+    },
+    "run": "Exécuter",
+    "runAll": "Exécuter tout"
   }
 }

@@ -76,7 +76,7 @@ function useHandleHeader({ evaluations, agents }: { evaluations: Evaluation[]; a
         disabled={evaluations.length === 0}
         onClick={() => setIdsToRun(evaluations.map((e) => e.id))}
       >
-        {t("table.buttons.runAll")}
+        {t("runAll")}
       </Button>
       <EvaluationRunner
         ids={idsToRun}

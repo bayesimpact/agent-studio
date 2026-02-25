@@ -3,7 +3,8 @@
     "props": {
       "email": "Email",
       "name": "Name"
-    }
+    },
+    "logout": "Log out"
   },
   "me": {
     "props": {

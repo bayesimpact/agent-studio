@@ -23,7 +23,7 @@ export function NavUserMenuItems() {
 }
 
 function LogOutButton() {
-  const { t } = useTranslation("user", { keyPrefix: "menu" })
+  const { t } = useTranslation("user")
   const { handleLogOut } = useAuthHandler()
   return (
     <DropdownMenuItem onSelect={handleLogOut}>
@@ -34,7 +34,7 @@ function LogOutButton() {
 }
 
 function ChangeLanguage() {
-  const { i18n } = useTranslation("user", { keyPrefix: "menu" })
+  const { i18n } = useTranslation()
   if (i18n.language === "en") {
     return (
       <DropdownMenuItem onSelect={() => i18n.changeLanguage("fr")}>

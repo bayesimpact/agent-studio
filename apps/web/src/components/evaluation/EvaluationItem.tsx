@@ -22,7 +22,6 @@ export function EvaluationItem({
   agents: Agent[]
 }) {
   const { t } = useTranslation("evaluation")
-  const { t: tcommon } = useTranslation("common")
   const dispatch = useAppDispatch()
 
   const [open, setOpen] = useState(false)
@@ -41,7 +40,7 @@ export function EvaluationItem({
           <div className="flex gap-2 text-muted-foreground text-xs">
             <div className="flex gap-1">
               <span>
-                {tcommon("createdAt")} {buildDate(evaluation.createdAt)}
+                {t("props.createdAt")} {buildDate(evaluation.createdAt)}
               </span>
             </div>
             {!isEqual(evaluation.createdAt, evaluation.updatedAt) && (
@@ -49,7 +48,7 @@ export function EvaluationItem({
                 •{" "}
                 <div className="flex gap-1">
                   <span>
-                    {tcommon("updatedAt")} {buildDate(evaluation.updatedAt)}
+                    {t("props.updatedAt")} {buildDate(evaluation.updatedAt)}
                   </span>
                 </div>
               </>
@@ -58,7 +57,8 @@ export function EvaluationItem({
         </ItemTitle>
 
         <div className="flex gap-2 items-center">
-          <Button onClick={handleRun}>{t("table.buttons.run")}</Button>
+          <Button onClick={handleRun}>{t("run")}</Button>
+
           <EvaluationRunner
             ids={[evaluation.id]}
             agents={agents}
@@ -75,11 +75,11 @@ export function EvaluationItem({
 
       <ItemContent className="gap-4">
         <div className="flex flex-col gap-1">
-          <Label className="font-semibold">{t("form.labelInput")}</Label>
+          <Label className="font-semibold">{t("props.input")}</Label>
           <p className="text-muted-foreground">{evaluation.input}</p>
         </div>
         <div className="flex flex-col gap-1">
-          <Label className="font-semibold">{t("form.labelExpectedOutput")}</Label>
+          <Label className="font-semibold">{t("props.expectedOutput")}</Label>
           <p className="text-muted-foreground">{evaluation.expectedOutput}</p>
         </div>
       </ItemContent>

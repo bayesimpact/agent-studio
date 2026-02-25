@@ -265,7 +265,7 @@ function ProjectDocuments() {
 function ProjectEvaluation() {
   const { isRoute } = useIsRoute()
   const isEvaluationRoute = isRoute(RouteNames.EVALUATION)
-  const { t } = useTranslation("common")
+  const { t } = useTranslation("evaluation")
   if (!isEvaluationRoute) return null
   return (
     <>
@@ -280,14 +280,14 @@ function ProjectEvaluation() {
 function ProjectMemberships() {
   const { isRoute } = useIsRoute()
   const isProjectMembershipsRoute = isRoute(RouteNames.PROJECT_MEMBERSHIPS)
-  const { t } = useTranslation("common")
+  const { t } = useTranslation("evaluation")
   if (!isProjectMembershipsRoute) return null
   return (
     <>
       <BreadcrumbSeparator>
         <DotIcon />
       </BreadcrumbSeparator>
-      <BreadcrumbItem>{t("projectMemberships")}</BreadcrumbItem>
+      <BreadcrumbItem>{t("members")}</BreadcrumbItem>
     </>
   )
 }

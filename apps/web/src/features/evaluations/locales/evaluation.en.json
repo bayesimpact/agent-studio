@@ -6,7 +6,22 @@
       "createdAt": "Created At",
       "expectedOutput": "Expected Output",
       "input": "Input",
-      "updatedAt": "Updated At"
-    }
+      "updatedAt": "Updated At",
+      "placeholders": {
+        "input": "Enter input data here",
+        "expectedOutput": "Enter expected output here"
+      },
+      "validation": {
+        "inputRequired": "Input is required",
+        "expectedOutputRequired": "Expected output is required"
+      }
+    },
+    "create": {
+      "button": "Create Evaluation",
+      "title": "Create Evaluation",
+      "description": "Create a new evaluation by providing the necessary details."
+    },
+    "run": "Run",
+    "runAll": "Run All"
   }
 }
