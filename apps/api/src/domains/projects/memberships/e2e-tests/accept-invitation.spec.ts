@@ -46,7 +46,7 @@ describe("Invitations - acceptInvitation", () => {
 
   afterAll(async () => {
     await teardownTestDatabase(setup)
-    app.close()
+    await app.close()
   })
 
   const subject = async (payload?: typeof InvitationsRoutes.acceptOne.request) =>

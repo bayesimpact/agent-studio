@@ -45,7 +45,7 @@ describe("Documents - deleteOne", () => {
 
   afterAll(async () => {
     await teardownTestDatabase(setup)
-    app.close()
+    await app.close()
   })
 
   const createContext = async () => {
