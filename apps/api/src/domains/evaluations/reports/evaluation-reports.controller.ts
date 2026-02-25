@@ -29,10 +29,9 @@ export class EvaluationReportsController {
   async createOne(
     @Req() request: EndpointRequestWithEvaluation & EndpointRequestWithAgent,
   ): Promise<typeof EvaluationReportsRoutes.createOne.response> {
-    // TODO: call generateText to fill in traceId, output
-    // TODO: call evaluate to score once the generation pipeline is implemented
+    const connectScope = getRequiredConnectScope(request)
     const report = await this.reportsService.createReport({
-      connectScope: getRequiredConnectScope(request),
+      connectScope,
       evaluationId: request.evaluation.id,
       fields: {
         agentId: request.agent.id,
@@ -41,7 +40,30 @@ export class EvaluationReportsController {
         score: "",
       },
     })
-    return { data: toDto(report) }
+    // TODO: call generateText to fill in traceId, output
+    const result = await this.reportsService.processReport({
+      evaluation: request.evaluation,
+      evaluationReport: report,
+      agent: request.agent,
+    })
+    await this.reportsService.updateReport({
+      connectScope,
+      required: { reportId: report.id },
+      fieldsToUpdate: { output: result },
+    })
+    // TODO: call evaluate to score once the generation pipeline is implemented
+    const rating = await this.reportsService.rateReport({
+      evaluationReport: report,
+      expectedValue: request.evaluation.expectedOutput,
+      generatedValue: result,
+      generatorAgent: request.agent,
+    })
+    const reportUpdated = await this.reportsService.updateReport({
+      connectScope,
+      required: { reportId: report.id },
+      fieldsToUpdate: { score: rating },
+    })
+    return { data: toDto(reportUpdated) }
   }
 
   @Get(EvaluationReportsRoutes.getAll.path)

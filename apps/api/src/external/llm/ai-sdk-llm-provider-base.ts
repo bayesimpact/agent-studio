@@ -17,10 +17,7 @@ import type {
   LLMProvider,
 } from "@/common/interfaces/llm-provider.interface"
 import { removeNullish } from "@/common/utils/remove-nullish"
-import {
-  AgentModelToAgentProvider,
-  type AgentProvider,
-} from "@/domains/agent-sessions/llm/agent-provider"
+import { AgentModelToAgentProvider, type AgentProvider } from "@/external/llm/agent-provider"
 
 export abstract class AISDKLLMProviderBase implements LLMProvider {
   async *streamChatResponse({

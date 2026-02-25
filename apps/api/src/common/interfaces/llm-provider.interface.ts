@@ -22,13 +22,22 @@ export type LLMConfig =
       mockResult?: never
     }
 
-export interface LLMMetadata {
+export type LLMMetadata = (
+  | {
+      evaluationReportId?: never
+      agentSessionId: string
+      currentTurn: number
+    }
+  | {
+      evaluationReportId: string
+      agentSessionId?: never
+      currentTurn?: never
+    }
+) & {
   traceId: string
   organizationId: string
-  agentSessionId: string
   agentId: string
   projectId: string
-  currentTurn: number
   tags: string[]
 }
 

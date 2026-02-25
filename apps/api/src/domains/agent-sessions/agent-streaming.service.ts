@@ -9,11 +9,8 @@ import type {
   LLMMetadata,
   LLMProvider,
 } from "@/common/interfaces/llm-provider.interface"
-import {
-  AgentModelToAgentProvider,
-  AgentProvider,
-} from "@/domains/agent-sessions/llm/agent-provider"
 import type { Agent } from "@/domains/agents/agent.entity"
+import { AgentModelToAgentProvider, AgentProvider } from "@/external/llm/agent-provider"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
 import { DocumentsService } from "../documents/documents.service"
 import {

@@ -3,7 +3,7 @@ import { createVertex } from "@ai-sdk/google-vertex"
 import { Injectable } from "@nestjs/common"
 import type { LanguageModel } from "ai"
 import type { LLMConfig } from "@/common/interfaces/llm-provider.interface"
-import { AISDKLLMProviderBase } from "@/domains/agent-sessions/llm/ai-sdk-llm-provider-base"
+import { AISDKLLMProviderBase } from "@/external/llm/ai-sdk-llm-provider-base"
 import { AgentProvider } from "../agent-provider"
 
 @Injectable()

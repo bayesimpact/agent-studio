@@ -4,8 +4,8 @@ import { Injectable, NotImplementedException } from "@nestjs/common"
 import { type LanguageModel, simulateReadableStream } from "ai"
 import { MockLanguageModelV3 } from "ai/test"
 import type { LLMConfig } from "@/common/interfaces/llm-provider.interface"
-import { AgentProvider } from "@/domains/agent-sessions/llm/agent-provider"
-import { AISDKLLMProviderBase } from "@/domains/agent-sessions/llm/ai-sdk-llm-provider-base"
+import { AgentProvider } from "@/external/llm/agent-provider"
+import { AISDKLLMProviderBase } from "@/external/llm/ai-sdk-llm-provider-base"
 
 @Injectable()
 export class AISDKMockProvider extends AISDKLLMProviderBase {

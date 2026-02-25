@@ -8,7 +8,7 @@ import type {
   LLMFile,
   LLMMetadata,
 } from "@/common/interfaces/llm-provider.interface"
-import { AISDKMockProvider } from "@/domains/agent-sessions/llm/providers/ai-sdk-mock.provider"
+import { AISDKMockProvider } from "@/external/llm/providers/ai-sdk-mock.provider"
 
 describe.skip("AISDKMockProvider", () => {
   let provider: AISDKMockProvider
