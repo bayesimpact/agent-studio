@@ -16,15 +16,13 @@ import type {
   LLMProvider,
 } from "@/common/interfaces/llm-provider.interface"
 import type { Agent } from "@/domains/agents/agent.entity"
-import { Evaluation } from "@/domains/evaluations/evaluation.entity"
+import type { Evaluation } from "@/domains/evaluations/evaluation.entity"
 import { AgentModelToAgentProvider, AgentProvider } from "@/external/llm/agent-provider"
 import { EvaluationReport } from "./evaluation-report.entity"
 
 @Injectable()
 export class EvaluationReportsService {
   constructor(
-    @InjectRepository(Evaluation)
-    evaluationRepository: Repository<Evaluation>,
     @InjectRepository(EvaluationReport)
     reportRepository: Repository<EvaluationReport>,
     @Inject("_MockLLMProvider")
@@ -32,7 +30,6 @@ export class EvaluationReportsService {
     @Inject("VertexLLMProvider")
     private readonly vertexLlmProvider: LLMProvider,
   ) {
-    this.evaluationConnectRepository = new ConnectRepository(evaluationRepository, "evaluations")
     this.reportConnectRepository = new ConnectRepository(reportRepository, "evaluation_reports")
   }
   private readonly reportConnectRepository: ConnectRepository<EvaluationReport>
