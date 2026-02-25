@@ -1,8 +1,8 @@
 import { useEffect } from "react"
 import { Outlet, useOutlet, useParams } from "react-router-dom"
+import { AgentDeletorWithTrigger } from "@/components/agent/AgentDeletor"
+import { AgentEditorWithTrigger } from "@/components/agent/AgentEditor"
 import { DefaultPromptDialog } from "@/components/agent/DefaultPromptDialog"
-import { DeleteAgentDialogWithTrigger } from "@/components/agent/DeleteAgentDialog"
-import { EditAgentDialogWithTrigger } from "@/components/agent/EditAgentDialog"
 import { AgentSessionList } from "@/components/agent-session/AgentSessionList"
 import { useSidebarLayout } from "@/components/layouts/sidebar/context"
 import type { AgentSession } from "@/features/agent-sessions/agent-sessions.models"
@@ -93,8 +93,10 @@ function HeaderRightSlot({ agent }: { agent: Agent }) {
   return (
     <div className="flex items-center gap-2">
       <DefaultPromptDialog buttonProps={{ variant: "outline" }} prompt={agent.defaultPrompt} />
-      <EditAgentDialogWithTrigger organizationId={organizationId} agent={agent} />
-      <DeleteAgentDialogWithTrigger organizationId={organizationId} agent={agent} />
+
+      <AgentEditorWithTrigger organizationId={organizationId} agent={agent} />
+
+      <AgentDeletorWithTrigger organizationId={organizationId} agent={agent} />
     </div>
   )
 }

@@ -18,7 +18,7 @@ import { updateAgent } from "@/features/agents/agents.thunks"
 import { useAppDispatch } from "@/store/hooks"
 import { AgentForm } from "./AgentForm"
 
-export function EditAgentDialogWithTrigger({
+export function AgentEditorWithTrigger({
   organizationId,
   agent,
 }: {
@@ -45,7 +45,7 @@ export function EditAgentDialogWithTrigger({
   )
 }
 
-export function EditAgentDialogWithOutTrigger({
+export function AgentEditorWithoutTrigger({
   organizationId,
   agent,
   onClose,

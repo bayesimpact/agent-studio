@@ -14,14 +14,12 @@ import { useState } from "react"
 import { useTranslation } from "react-i18next"
 import { useNavigate } from "react-router-dom"
 import type { Agent } from "@/features/agents/agents.models"
-import { selectAgentsStatus } from "@/features/agents/agents.selectors"
 import { deleteAgent } from "@/features/agents/agents.thunks"
 import { selectCurrentOrganizationId } from "@/features/organizations/organizations.selectors"
 import { useBuildPath } from "@/hooks/use-build-path"
-import { ADS } from "@/store/async-data-status"
 import { useAppDispatch, useAppSelector } from "@/store/hooks"
 
-export function DeleteAgentDialogWithTrigger({
+export function AgentDeletorWithTrigger({
   organizationId,
   agent,
 }: {
@@ -57,7 +55,7 @@ export function DeleteAgentDialogWithTrigger({
   )
 }
 
-export function DeleteAgentDialogWithOutTrigger({
+export function AgentDeletorWithoutTrigger({
   organizationId,
   projectId,
   agent,
@@ -94,11 +92,9 @@ function Content({
   onSuccess: () => void
   onClose: () => void
 }) {
-  const { t } = useTranslation("agent", { keyPrefix: "delete" })
-  const { t: tCommon } = useTranslation("common")
+  const { t } = useTranslation()
   const dispatch = useAppDispatch()
   const organizationId = useAppSelector(selectCurrentOrganizationId)
-  const status = useAppSelector(selectAgentsStatus)
 
   const handleDelete = () => {
     dispatch(
@@ -114,15 +110,15 @@ function Content({
   return (
     <DialogContent>
       <DialogHeader>
-        <DialogTitle>{t("title")}</DialogTitle>
-        <DialogDescription>{t("description", { name: agent.name })}</DialogDescription>
+        <DialogTitle>{t("agent:delete.title")}</DialogTitle>
+        <DialogDescription>{t("agent:delete.description", { name: agent.name })}</DialogDescription>
       </DialogHeader>
       <div className="flex justify-end gap-2 pt-4">
-        <Button variant="outline" onClick={onClose} disabled={ADS.isLoading(status)}>
-          {tCommon("cancel")}
+        <Button variant="outline" onClick={onClose}>
+          {t("actions:cancel")}
         </Button>
-        <Button variant="destructive" onClick={handleDelete} disabled={ADS.isLoading(status)}>
-          {ADS.isLoading(status) ? t("submitting") : t("submit")}
+        <Button variant="destructive" onClick={handleDelete}>
+          {t("actions:delete")}
         </Button>
       </div>
     </DialogContent>

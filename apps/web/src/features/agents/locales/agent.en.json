@@ -5,20 +5,27 @@
       "defaultPrompt": "Default Prompt",
       "locale": "Locale",
       "name": "Name",
+      "model": "Model",
       "temperature": "Temperature",
       "updatedAt": "Updated At",
       "placeholders": {
         "name": "Enter agent name",
         "defaultPrompt": "Enter default prompt",
+        "model": "Select model",
         "temperature": "Enter temperature 0.0 - 2.0",
         "locale": "Select language for agent responses"
+      },
+      "validation": {
+        "nameMinLength": "Name must be at least 3 characters",
+        "promptRequired": "Default prompt is required",
+        "temperatureInvalid": "Temperature must be between 0.0 and 2.0"
       }
     },
     "create": {
       "title": "Create Agent",
       "description": "Create a new agent for {{projectName}}"
     },
-    "edit": {
+    "update": {
       "title": "Edit Agent",
       "description": "Edit agent details"
     },
@@ -34,6 +41,11 @@
         "description": "Create your first agent to get started with custom prompts for this project.",
         "button": "Create First Agent"
       }
+    },
+    "defaultPromptDialog": {
+      "title": "Default Prompt",
+      "description": "This prompt defines the behavior of the agent.",
+      "button": "View Prompt"
     }
   }
 }
