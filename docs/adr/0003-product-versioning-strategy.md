@@ -57,5 +57,5 @@ Every CalVer release will embed the **Git Commit SHA** in its metadata for a ful
 
 ## 5. Implementation Notes
 
-* CI/CD must be configured to auto-generate the `YY.MM` tag on the first merge to `main` each month.
+* CI/CD not sure how to handle it?
 * The project `README.md` must be updated to document this versioning standard once accepted.
