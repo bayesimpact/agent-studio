@@ -1,0 +1,10 @@
+{
+  "projectMembership": {
+    "props": {
+      "userName": "Nom d'utilisateur",
+      "userEmail": "Email d'utilisateur",
+      "status": "Statut",
+      "createdAt": "Créé le"
+    }
+  }
+}

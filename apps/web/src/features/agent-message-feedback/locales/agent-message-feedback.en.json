@@ -1,0 +1,10 @@
+{
+  "agentMessageFeedback": {
+    "props": {
+      "agentMessageContent": "Agent Message Content",
+      "traceUrl": "Trace URL",
+      "content": "Content",
+      "createdAt": "Created At"
+    }
+  }
+}

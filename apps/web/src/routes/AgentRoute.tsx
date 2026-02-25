@@ -1,14 +1,10 @@
-import { Button } from "@caseai-connect/ui/shad/button"
-import { Item, ItemActions, ItemContent, ItemTitle } from "@caseai-connect/ui/shad/item"
 import { useEffect } from "react"
-import { useTranslation } from "react-i18next"
-import { Outlet, useNavigate, useOutlet, useParams } from "react-router-dom"
-import { DefaultPromptDialog } from "@/components/agents/DefaultPromptDialog"
-import { DeleteAgentDialogWithTrigger } from "@/components/agents/DeleteAgentDialog"
-import { EditAgentDialogWithTrigger } from "@/components/agents/EditAgentDialog"
-import { ListHeader } from "@/components/layouts/ListHeader"
+import { Outlet, useOutlet, useParams } from "react-router-dom"
+import { DefaultPromptDialog } from "@/components/agent/DefaultPromptDialog"
+import { DeleteAgentDialogWithTrigger } from "@/components/agent/DeleteAgentDialog"
+import { EditAgentDialogWithTrigger } from "@/components/agent/EditAgentDialog"
+import { AgentSessionList } from "@/components/agent-session/AgentSessionList"
 import { useSidebarLayout } from "@/components/layouts/sidebar/context"
-import { CreateAgentSession } from "@/components/sidebar/projects/agent-sessions/CreateAgentSession"
 import type { AgentSession } from "@/features/agent-sessions/agent-sessions.models"
 import { selectCurrentAgentSessionsData } from "@/features/agent-sessions/agent-sessions.selectors"
 import type { Agent } from "@/features/agents/agents.models"
@@ -16,11 +12,9 @@ import { selectAgentData, selectCurrentAgentId } from "@/features/agents/agents.
 import { selectCurrentOrganizationId } from "@/features/organizations/organizations.selectors"
 import { selectCurrentProjectId } from "@/features/projects/projects.selectors"
 import { useAbility } from "@/hooks/use-ability"
-import { useBuildPath, useGetPath } from "@/hooks/use-build-path"
 import { useIsRoute } from "@/hooks/use-is-route"
 import { ADS } from "@/store/async-data-status"
 import { useAppSelector } from "@/store/hooks"
-import { buildDate } from "@/utils/build-date"
 import { ErrorRoute } from "./ErrorRoute"
 import { RouteNames } from "./helpers"
 import { LoadingRoute } from "./LoadingRoute"
@@ -74,76 +68,6 @@ function WithData({
       agentId={agent.id}
       agentSessions={agentSessions}
     />
-  )
-}
-
-function AgentSessionList({
-  organizationId,
-  projectId,
-  agentId,
-  agentSessions,
-}: {
-  organizationId: string
-  projectId: string
-  agentId: string
-  agentSessions: AgentSession[]
-}) {
-  const { t } = useTranslation("common")
-  const { getPath } = useGetPath()
-  return (
-    <ListHeader path={getPath("agent")} title={t("chatSessions", { cfl: true })}>
-      {agentSessions.map((agentSession) => (
-        <AgentSessionItem
-          key={agentSession.id}
-          organizationId={organizationId}
-          projectId={projectId}
-          agentId={agentId}
-          agentSession={agentSession}
-        />
-      ))}
-
-      <CreateAgentSession
-        type="button"
-        organizationId={organizationId}
-        projectId={projectId}
-        agentId={agentId}
-      />
-    </ListHeader>
-  )
-}
-
-function AgentSessionItem({
-  agentSession,
-  organizationId,
-  projectId,
-  agentId,
-}: {
-  agentSession: AgentSession
-  organizationId: string
-  projectId: string
-  agentId: string
-}) {
-  const navigate = useNavigate()
-  const { t } = useTranslation("common")
-  const { buildPath } = useBuildPath()
-  const handleClick = () => {
-    const path = buildPath("agentSession", {
-      organizationId,
-      projectId,
-      agentId,
-      agentSessionId: agentSession.id,
-    })
-    navigate(path)
-  }
-  return (
-    <Item variant="outline" className="min-w-96 w-fit">
-      <ItemContent>
-        <ItemTitle>{buildDate(agentSession.updatedAt)}</ItemTitle>
-      </ItemContent>
-      <ItemActions>
-        <Button onClick={handleClick}>{t("open", { cfl: true })}</Button>
-      </ItemActions>
-    </Item>
   )
 }
 

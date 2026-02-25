@@ -83,12 +83,12 @@ function CreateFeedbackForm({
   return (
     <div className="flex flex-col gap-2">
       <Textarea
-        placeholder={t("description", { cfl: true })}
+        placeholder={t("description")}
         value={value}
         onChange={(e) => setValue(e.target.value)}
       />
       <Button className="mt-2" disabled={disabled} onClick={handleSubmit}>
-        {t("send", { cfl: true })}
+        {t("send")}
       </Button>
     </div>
   )

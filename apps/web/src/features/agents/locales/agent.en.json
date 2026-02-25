@@ -1,0 +1,39 @@
+{
+  "agent": {
+    "props": {
+      "createdAt": "Created At",
+      "defaultPrompt": "Default Prompt",
+      "locale": "Locale",
+      "name": "Name",
+      "temperature": "Temperature",
+      "updatedAt": "Updated At",
+      "placeholders": {
+        "name": "Enter agent name",
+        "defaultPrompt": "Enter default prompt",
+        "temperature": "Enter temperature 0.0 - 2.0",
+        "locale": "Select language for agent responses"
+      }
+    },
+    "create": {
+      "title": "Create Agent",
+      "description": "Create a new agent for {{projectName}}"
+    },
+    "edit": {
+      "title": "Edit Agent",
+      "description": "Edit agent details"
+    },
+    "delete": {
+      "title": "Delete Agent",
+      "description": "Are you sure you want to delete \"{{name}}\"? This action cannot be undone."
+    },
+    "list": {
+      "title": "Agents",
+      "description": "Manage agents for {{projectName}}",
+      "empty": {
+        "title": "No agents yet",
+        "description": "Create your first agent to get started with custom prompts for this project.",
+        "button": "Create First Agent"
+      }
+    }
+  }
+}

@@ -1,6 +1,6 @@
 import { useEffect } from "react"
-import { EmptyDocuments } from "@/components/documents/EmptyDocuments"
-import { UploadDocumentButton } from "@/components/documents/UploadDocumentButton"
+import { EmptyDocuments } from "@/components/document/EmptyDocuments"
+import { UploadDocumentButton } from "@/components/document/UploadDocumentButton"
 import { useSidebarLayout } from "@/components/layouts/sidebar/context"
 import type { Document } from "@/features/documents/documents.models"
 import { selectDocumentsFromProjectId } from "@/features/documents/documents.selectors"
@@ -11,7 +11,7 @@ import {
 } from "@/features/projects/projects.selectors"
 import { ADS } from "@/store/async-data-status"
 import { useAppSelector } from "@/store/hooks"
-import { DocumentItem } from "../../components/documents/DocumentItem"
+import { DocumentItem } from "../../components/document/DocumentItem"
 import { ErrorRoute } from "../ErrorRoute"
 import { LoadingRoute } from "../LoadingRoute"
 

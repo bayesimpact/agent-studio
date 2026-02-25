@@ -1,0 +1,12 @@
+{
+  "agent": {
+    "props": {
+      "createdAt": "Créé le",
+      "defaultPrompt": "Prompt par défaut",
+      "locale": "Langue",
+      "name": "Nom",
+      "temperature": "Température",
+      "updatedAt": "Mis à jour le"
+    }
+  }
+}

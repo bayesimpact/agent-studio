@@ -116,9 +116,7 @@ function EvaluationForm({
         )}
       </div>
 
-      <Button type="submit">
-        {tCommon(editableEvaluation ? "update" : "create", { cfl: true })}
-      </Button>
+      <Button type="submit">{tCommon(editableEvaluation ? "update" : "create")}</Button>
     </form>
   )
 }

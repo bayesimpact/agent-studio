@@ -1,0 +1,10 @@
+{
+  "evaluation": {
+    "props": {
+      "createdAt": "Créé le",
+      "expectedOutput": "Sortie attendue",
+      "input": "Entrée",
+      "updatedAt": "Mis à jour le"
+    }
+  }
+}

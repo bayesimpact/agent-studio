@@ -1,0 +1,8 @@
+{
+  "organization": {
+    "props": {
+      "name": "Name",
+      "role": "Role"
+    }
+  }
+}

@@ -242,7 +242,7 @@ function AgentFeedback() {
       <BreadcrumbSeparator>
         <DotIcon />
       </BreadcrumbSeparator>
-      <BreadcrumbItem>{t("feedback", { cfl: true })}</BreadcrumbItem>
+      <BreadcrumbItem>{t("feedback")}</BreadcrumbItem>
     </>
   )
 }
@@ -257,7 +257,7 @@ function ProjectDocuments() {
       <BreadcrumbSeparator>
         <DotIcon />
       </BreadcrumbSeparator>
-      <BreadcrumbItem>{t("documents", { cfl: true })}</BreadcrumbItem>
+      <BreadcrumbItem>{t("documents")}</BreadcrumbItem>
     </>
   )
 }
@@ -272,7 +272,7 @@ function ProjectEvaluation() {
       <BreadcrumbSeparator>
         <DotIcon />
       </BreadcrumbSeparator>
-      <BreadcrumbItem>{t("evaluation", { cfl: true })}</BreadcrumbItem>
+      <BreadcrumbItem>{t("evaluation")}</BreadcrumbItem>
     </>
   )
 }
@@ -287,7 +287,7 @@ function ProjectMemberships() {
       <BreadcrumbSeparator>
         <DotIcon />
       </BreadcrumbSeparator>
-      <BreadcrumbItem>{t("projectMemberships", { cfl: true })}</BreadcrumbItem>
+      <BreadcrumbItem>{t("projectMemberships")}</BreadcrumbItem>
     </>
   )
 }

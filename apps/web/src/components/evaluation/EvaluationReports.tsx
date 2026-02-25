@@ -40,7 +40,7 @@ function LoadingMessage() {
       <Item variant="outline" className="w-fit">
         <ItemHeader>
           <ItemTitle className="w-fit text-primary">
-            <Loader2Icon className="size-5 animate-spin " /> {t("loading", { cfl: true })}
+            <Loader2Icon className="size-5 animate-spin " /> {t("loading")}
           </ItemTitle>
         </ItemHeader>
       </Item>

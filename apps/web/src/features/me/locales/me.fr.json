@@ -1,0 +1,14 @@
+{
+  "user": {
+    "props": {
+      "email": "Email",
+      "name": "Nom"
+    }
+  },
+  "me": {
+    "props": {
+      "user": "Utilisateur",
+      "organizations": "Organisations"
+    }
+  }
+}
