@@ -27,7 +27,7 @@ import type { z } from "zod"
 import { createColumns } from "./CreateColumns"
 import type { schema } from "./schema"
 
-export function EvaluationsTable({ data: initialData }: { data: z.infer<typeof schema>[] }) {
+export function EvaluationReportTable({ data: initialData }: { data: z.infer<typeof schema>[] }) {
   const { t } = useTranslation("evaluation")
   const [data, _setData] = React.useState(() => initialData)
   const [rowSelection, setRowSelection] = React.useState({})

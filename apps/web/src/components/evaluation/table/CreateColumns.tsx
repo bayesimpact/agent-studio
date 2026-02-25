@@ -5,6 +5,7 @@ import type { ColumnDef } from "@tanstack/react-table"
 import type { TFunction } from "i18next"
 import { ExternalLinkIcon } from "lucide-react"
 import type { z } from "zod"
+import { DefaultPromptDialog } from "@/components/agents/DefaultPromptDialog"
 import { buildDate } from "@/utils/build-date"
 import type { schema } from "./schema"
 
@@ -34,13 +35,31 @@ export function createColumns({ t }: { t: TFunction }): ColumnDef<z.infer<typeof
     },
     {
       accessorKey: "agent",
-      header: t("table.headers.agent"),
+      header: t("table.headers.agent.agent"),
       cell: ({ row }) => {
         return row.original.agent ? (
-          // TODO: popover with agent details (model, temperature, etc.)
-          <Button size="sm" variant="secondary">
-            {row.original.agent?.name}
-          </Button>
+          <div className="text-muted-foreground text-xs flex flex-col gap-1.5">
+            <div>
+              <span>{t("table.headers.agent.name", { colon: true, cfl: true })}</span>{" "}
+              <span className="font-semibold">{row.original.agent.name}</span>
+            </div>
+            <div>
+              <span>{t("table.headers.agent.model")}</span>{" "}
+              <span className="font-semibold">{row.original.agent.model}</span>
+            </div>
+            <div>
+              <span>{t("table.headers.agent.locale")}</span>{" "}
+              <span className="font-semibold">{row.original.agent.locale}</span>
+            </div>
+            <div>
+              <span>{t("table.headers.agent.temperature")}</span>{" "}
+              <span className="font-semibold">{row.original.agent.temperature}</span>
+            </div>
+            <DefaultPromptDialog
+              buttonProps={{ variant: "secondary", size: "sm", className: "w-fit" }}
+              prompt={row.original.agent.defaultPrompt}
+            />
+          </div>
         ) : null
       },
       enableHiding: false,
@@ -56,7 +75,9 @@ export function createColumns({ t }: { t: TFunction }): ColumnDef<z.infer<typeof
     {
       accessorKey: "score",
       header: () => <div>{t("table.headers.score")}</div>,
-      cell: ({ row }) => <Badge variant="secondary">{row.original.score}</Badge>,
+      cell: ({ row }) => {
+        row.original.score ? <Badge>{row.original.score}</Badge> : null
+      },
     },
     {
       accessorKey: "traceUrl",
