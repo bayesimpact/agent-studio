@@ -8,6 +8,7 @@ import {
   DialogHeader,
   DialogTrigger,
 } from "@caseai-connect/ui/shad/dialog"
+import { Field, FieldGroup, FieldLabel, FieldSet } from "@caseai-connect/ui/shad/field"
 import { Item, ItemContent } from "@caseai-connect/ui/shad/item"
 import { SheetTitle } from "@caseai-connect/ui/shad/sheet"
 import { Textarea } from "@caseai-connect/ui/shad/textarea"
@@ -21,7 +22,7 @@ import { useAppDispatch, useAppSelector } from "@/store/hooks"
 import { MarkdownWrapper } from "../chat/MarkdownWrapper"
 
 export function FeedbackCreator({ message }: { message: AgentSessionMessage }) {
-  const { t } = useTranslation("feedbacks", { keyPrefix: "create" })
+  const { t } = useTranslation("agentMessageFeedback", { keyPrefix: "create" })
   const [open, setOpen] = useState(false)
   const handleSuccess = () => {
     setOpen(false)
@@ -35,7 +36,7 @@ export function FeedbackCreator({ message }: { message: AgentSessionMessage }) {
             "absolute bottom-2 text-muted-foreground text-xs font-normal hover:text-inherit"
           }
         >
-          {t("report")}
+          {t("button")}
         </Button>
       </DialogTrigger>
       <DialogContent>
@@ -66,7 +67,7 @@ function CreateForm({
   const organizationId = useAppSelector(selectCurrentOrganizationId)
   const projectId = useAppSelector(selectCurrentProjectId)
 
-  const { t } = useTranslation("common")
+  const { t } = useTranslation()
   const dispatch = useAppDispatch()
   const [value, setValue] = useState("")
   const disabled = !value.trim()
@@ -82,14 +83,24 @@ function CreateForm({
   }
   return (
     <div className="flex flex-col gap-2">
-      <Textarea
-        placeholder={t("description")}
-        value={value}
-        onChange={(e) => setValue(e.target.value)}
-      />
-      <Button className="mt-2" disabled={disabled} onClick={handleSubmit}>
-        {t("send")}
-      </Button>
+      <FieldGroup>
+        <FieldSet>
+          <Field>
+            <FieldLabel htmlFor="description">{t("agentMessageFeedback:props.content")}</FieldLabel>
+            <Textarea
+              placeholder={t("agentMessageFeedback:props.placeholders.content")}
+              value={value}
+              onChange={(e) => setValue(e.target.value)}
+            />
+          </Field>
+
+          <Field orientation="horizontal" className="justify-end">
+            <Button disabled={disabled} onClick={handleSubmit}>
+              <span className="capitalize-first">{t("actions:send")}</span>
+            </Button>
+          </Field>
+        </FieldSet>
+      </FieldGroup>
     </div>
   )
 }

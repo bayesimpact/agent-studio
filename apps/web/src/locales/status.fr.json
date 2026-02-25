@@ -1,9 +1,15 @@
 {
   "status": {
-    "idle": "Inactif",
-    "pending": "En attente",
-    "loading": "Chargement",
     "done": "Terminé",
-    "error": "Erreur"
+    "error": "Erreur",
+    "idle": "Inactif",
+    "loading": "Chargement",
+    "pending": "En attente",
+    "thinking": "En réflexion",
+    "notFound": {
+      "title": "404 Page introuvable",
+      "description": "La page que vous recherchez n'existe pas.",
+      "home": "Aller à l'accueil"
+    }
   }
 }

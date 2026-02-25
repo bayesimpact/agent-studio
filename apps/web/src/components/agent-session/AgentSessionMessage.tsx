@@ -37,7 +37,7 @@ export function AgentSessionMessage({ message }: { message: AgentSessionMessageT
 }
 
 function ErrorMessage() {
-  const { t } = useTranslation("common")
+  const { t } = useTranslation("status")
   return (
     <div className="flex items-center gap-2 mb-2">
       <AlertCircleIcon className="size-4 text-red-600" />
@@ -47,7 +47,7 @@ function ErrorMessage() {
 }
 
 function ThinkingMessage() {
-  const { t } = useTranslation("agent", { keyPrefix: "detail" })
+  const { t } = useTranslation("status")
   return (
     <div className="flex items-center gap-2 mb-2 animate-pulse">
       <Spinner />
