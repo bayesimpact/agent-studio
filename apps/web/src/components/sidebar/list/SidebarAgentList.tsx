@@ -3,9 +3,9 @@ import { BotIcon } from "lucide-react"
 import { useState } from "react"
 import { useParams } from "react-router-dom"
 import { AgentCreatorWithTrigger } from "@/components/agent/AgentCreator"
+import { AgentDeletorWithoutTrigger } from "@/components/agent/AgentDeletor"
+import { AgentEditorWithoutTrigger } from "@/components/agent/AgentEditor"
 import { AgentItemOptions } from "@/components/agent/AgentItemOptions"
-import { DeleteAgentDialogWithOutTrigger } from "@/components/agent/DeleteAgentDialog"
-import { EditAgentDialogWithOutTrigger } from "@/components/agent/EditAgentDialog"
 import type { Agent } from "@/features/agents/agents.models"
 import type { Project } from "@/features/projects/projects.models"
 import { useBuildPath } from "@/hooks/use-build-path"
@@ -69,12 +69,12 @@ export function AdminAgentList({
         <AgentCreatorWithTrigger project={project} />
       </SidebarMenuItem>
 
-      <EditAgentDialogWithOutTrigger
+      <AgentEditorWithoutTrigger
         organizationId={organizationId}
         agent={item?.action === "edit" ? item.value : null}
         onClose={handleClose}
       />
-      <DeleteAgentDialogWithOutTrigger
+      <AgentDeletorWithoutTrigger
         organizationId={organizationId}
         projectId={project.id}
         agent={item?.action === "delete" ? item.value : null}

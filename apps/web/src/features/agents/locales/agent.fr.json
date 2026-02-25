@@ -5,8 +5,47 @@
       "defaultPrompt": "Prompt par défaut",
       "locale": "Langue",
       "name": "Nom",
+      "model": "Modèle",
       "temperature": "Température",
-      "updatedAt": "Mis à jour le"
+      "updatedAt": "Mis à jour le",
+      "placeholders": {
+        "name": "Entrez le nom de l'agent",
+        "defaultPrompt": "Entrez le prompt par défaut",
+        "model": "Sélectionnez le modèle",
+        "temperature": "Entrez la température 0.0 - 2.0",
+        "locale": "Sélectionnez la langue pour les réponses de l'agent"
+      },
+      "validation": {
+        "nameMinLength": "Le nom doit comporter au moins 3 caractères",
+        "promptRequired": "Le prompt par défaut est requis",
+        "temperatureInvalid": "La température doit être comprise entre 0,0 et 2,0"
+      }
+    },
+    "create": {
+      "title": "Créer un agent",
+      "description": "Créer un nouvel agent pour {{projectName}}"
+    },
+    "update": {
+      "title": "Modifier l'agent",
+      "description": "Modifier les détails de l'agent"
+    },
+    "delete": {
+      "title": "Supprimer l'agent",
+      "description": "Êtes-vous sûr de vouloir supprimer \"{{name}}\" ? Cette action ne peut pas être annulée."
+    },
+    "list": {
+      "title": "Agents",
+      "description": "Gérer les agents pour {{projectName}}",
+      "empty": {
+        "title": "Aucun agent pour le moment",
+        "description": "Créez votre premier agent pour commencer avec des prompts personnalisés pour ce projet.",
+        "button": "Créer le premier agent"
+      }
+    },
+    "defaultPromptDialog": {
+      "title": "Prompt par défaut",
+      "description": "Ce prompt définit le comportement de l'agent.",
+      "button": "Voir le prompt"
     }
   }
 }

@@ -103,7 +103,7 @@ export function AgentForm({
     <form onSubmit={handleSubmit(handleFormSubmit)}>
       <FieldGroup>
         <FieldSet>
-          <FieldGroup className="space-y-4">
+          <FieldGroup>
             <Field>
               <FieldLabel htmlFor="name">{t("agent:props.name")}</FieldLabel>
               <Input
@@ -193,8 +193,8 @@ export function AgentForm({
               {errors.locale && <p className="text-sm text-destructive">{errors.locale.message}</p>}
             </Field>
 
-            <Field orientation="horizontal" className="justify-between items-center">
-              <Button type="submit" className="w-full">
+            <Field orientation="horizontal" className="justify-end">
+              <Button type="submit" className="w-fit">
                 {editableAgent ? t("actions:update") : t("actions:create")}
               </Button>
             </Field>

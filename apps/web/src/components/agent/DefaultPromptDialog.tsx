@@ -4,6 +4,7 @@ import { ScrollArea } from "@caseai-connect/ui/shad/scroll-area"
 import {
   Sheet,
   SheetContent,
+  SheetDescription,
   SheetHeader,
   SheetTitle,
   SheetTrigger,
@@ -18,16 +19,17 @@ export function DefaultPromptDialog({
   prompt: string
   buttonProps?: React.ComponentProps<typeof Button>
 }) {
-  const { t } = useTranslation("agent", { keyPrefix: "detail" })
+  const { t } = useTranslation("agent", { keyPrefix: "defaultPromptDialog" })
   return (
     <Sheet modal>
       <SheetTrigger asChild>
-        <Button {...buttonProps}>{t("viewPrompt")}</Button>
+        <Button {...buttonProps}>{t("button")}</Button>
       </SheetTrigger>
       <SheetContent className="h-dvh min-w-[40vw]">
         <ScrollArea className="h-full">
           <SheetHeader>
-            <SheetTitle>{t("defaultPromptTitle")}</SheetTitle>
+            <SheetTitle>{t("title")}</SheetTitle>
+            <SheetDescription>{t("description")}</SheetDescription>
           </SheetHeader>
           <Item>
             <ItemContent>
