@@ -4,7 +4,7 @@ import { Link } from "react-router-dom"
 import { useClosestParentPath } from "@/hooks/use-build-path"
 
 export function ErrorRoute({ error }: { error: string }) {
-  const { t } = useTranslation("notFound")
+  const { t } = useTranslation("notFound") // FIXME: i18n
   const { getClosestParentPath } = useClosestParentPath()
   return (
     <div className="flex min-h-screen flex-col items-center justify-center p-4">

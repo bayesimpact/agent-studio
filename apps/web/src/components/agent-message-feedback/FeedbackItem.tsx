@@ -7,7 +7,7 @@ import { MarkdownWrapper } from "../chat/MarkdownWrapper"
 
 export function FeedbackItem({ feedback }: { feedback: AgentMessageFeedback }) {
   const { agentSessionId, agentMessageId } = feedback
-  const createdAt = buildDate(feedback.createdAt)
+  const creationDate = buildDate(feedback.createdAt)
   return (
     <div className="py-6 flex flex-col gap-4">
       <Item variant="outline">
@@ -22,7 +22,7 @@ export function FeedbackItem({ feedback }: { feedback: AgentMessageFeedback }) {
 
       <Item variant="muted">
         <ItemHeader>
-          <ItemTitle className="text-muted-foreground">{createdAt}</ItemTitle>
+          <ItemTitle className="text-muted-foreground">{creationDate}</ItemTitle>
         </ItemHeader>
         <ItemContent className="text-base">{feedback.content}</ItemContent>
         <ItemFooter>

@@ -1,4 +1,4 @@
-import { AgentSession } from "@/components/agent/AgentSession"
+import { AgentSession } from "@/components/agent-session/AgentSession"
 import type {
   AgentSessionMessage,
   AgentSession as AgentSessionType,

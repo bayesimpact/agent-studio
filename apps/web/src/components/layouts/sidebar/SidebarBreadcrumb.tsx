@@ -235,14 +235,14 @@ function AgentSessionList({ organizationId }: { organizationId: string }) {
 function AgentFeedback() {
   const { isRoute } = useIsRoute()
   const isFeedbackRoute = isRoute(RouteNames.FEEDBACK)
-  const { t } = useTranslation("common")
+  const { t } = useTranslation()
   if (!isFeedbackRoute) return null
   return (
     <>
       <BreadcrumbSeparator>
         <DotIcon />
       </BreadcrumbSeparator>
-      <BreadcrumbItem>{t("feedback")}</BreadcrumbItem>
+      <BreadcrumbItem>{t("agentMessageFeedback:feedback")}</BreadcrumbItem>
     </>
   )
 }

@@ -11,6 +11,10 @@
     },
     "list": {
       "title": "Chat Sessions"
+    },
+    "chat": {
+      "title": "Playground",
+      "placeholder": "Ask your question..."
     }
   },
   "agentSessionMessage": {
