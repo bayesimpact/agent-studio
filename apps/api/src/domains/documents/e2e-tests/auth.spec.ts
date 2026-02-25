@@ -56,7 +56,7 @@ describe("Documents - Auth", () => {
 
   afterAll(async () => {
     await teardownTestDatabase(setup)
-    app.close()
+    await app.close()
   })
 
   const createContextForRole = async (role: "owner" | "admin" | "member" = "owner") => {

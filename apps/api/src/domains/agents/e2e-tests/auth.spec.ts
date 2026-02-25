@@ -59,7 +59,7 @@ describe("Agents - Auth", () => {
   afterAll(async () => {
     await teardownTestDatabase(setup)
     await sdk.shutdown()
-    app.close()
+    await app.close()
   })
 
   const createContextForRole = async (role: "owner" | "admin" | "member" = "owner") => {

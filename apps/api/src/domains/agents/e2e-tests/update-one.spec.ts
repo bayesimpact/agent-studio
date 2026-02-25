@@ -48,7 +48,7 @@ describe("Agents - updateOne", () => {
   afterAll(async () => {
     await teardownTestDatabase(setup)
     await sdk.shutdown()
-    app.close()
+    await app.close()
   })
 
   const createContext = async () => {

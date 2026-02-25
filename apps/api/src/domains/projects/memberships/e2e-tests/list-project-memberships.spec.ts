@@ -46,7 +46,7 @@ describe("Projects - listProjectMemberships", () => {
 
   afterAll(async () => {
     await teardownTestDatabase(setup)
-    app.close()
+    await app.close()
   })
 
   const createContext = async () => {
