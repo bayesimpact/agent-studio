@@ -25,7 +25,7 @@ export function EvaluationRunner({
   agents: Agent[]
 }) {
   const dispatch = useAppDispatch()
-  const { t: tCommon } = useTranslation("common")
+  const { t } = useTranslation()
   const [selectedAgentId, setSelectedAgentId] = useState<string | undefined>()
 
   const handleRun = () => {
@@ -38,10 +38,10 @@ export function EvaluationRunner({
   return (
     <Dialog open={modalHandler.open} onOpenChange={modalHandler.setOpen}>
       <DialogContent>
-        <Label className="text-base">{tCommon("selectAgent")}</Label>
+        <Label className="text-base">{t("agent:selectAgent")}</Label>
         <Select value={selectedAgentId} onValueChange={(value) => setSelectedAgentId(value)}>
           <SelectTrigger id="evaluation-agent" className="w-full">
-            <SelectValue placeholder={tCommon("selectAgent")} />
+            <SelectValue placeholder={t("agent:selectAgent")} />
           </SelectTrigger>
           <SelectContent>
             {agents.map((agent) => (
@@ -55,7 +55,7 @@ export function EvaluationRunner({
         {selectedAgentId && <AgentInfo agent={agents.find((a) => a.id === selectedAgentId)!} />}
 
         <DialogFooter>
-          <Button onClick={handleRun}>{tCommon("run")}</Button>
+          <Button onClick={handleRun}>{t("evaluation:run")}</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
@@ -63,26 +63,25 @@ export function EvaluationRunner({
 }
 
 function AgentInfo({ agent }: { agent: Agent }) {
-  const { t } = useTranslation("agent", { keyPrefix: "form" })
-  const { t: tCommon } = useTranslation("common")
+  const { t } = useTranslation("agent")
   return (
     <Item variant="muted">
       <ItemHeader>
-        <ItemTitle className="text-base">{tCommon("settings")}</ItemTitle>
+        <ItemTitle className="text-base">{t("settings")}</ItemTitle>
       </ItemHeader>
       <ItemContent>
         <div className="flex flex-col gap-1">
-          <div className="flex gap-2">
-            <Label>{t("labelLocale")}</Label>
-            <span className="italic">{agent.locale}</span>
+          <div className="flex gap-1">
+            <Label>{t("props.locale", { colon: true })}</Label>
+            <span>{agent.locale}</span>
           </div>
-          <div className="flex gap-2">
-            <Label>{t("labelModel")}</Label>
-            <span className="italic">{agent.model}</span>
+          <div className="flex gap-1">
+            <Label>{t("props.model", { colon: true })}</Label>
+            <span>{agent.model}</span>
           </div>
-          <div className="flex gap-2">
-            <Label>{t("labelTemperature")}</Label>
-            <span className="italic">{agent.temperature}</span>
+          <div className="flex gap-1">
+            <Label>{t("props.temperature", { colon: true })}</Label>
+            <span>{agent.temperature}</span>
           </div>
         </div>
       </ItemContent>

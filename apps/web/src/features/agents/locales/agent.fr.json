@@ -1,5 +1,7 @@
 {
   "agent": {
+    "selectAgent": "Sélectionner un agent",
+    "settings": "Paramètres de l'agent",
     "props": {
       "createdAt": "Créé le",
       "defaultPrompt": "Prompt par défaut",

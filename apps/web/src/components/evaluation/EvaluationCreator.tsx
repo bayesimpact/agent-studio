@@ -1,6 +1,6 @@
 import { Button } from "@caseai-connect/ui/shad/button"
 import { Dialog, DialogContent, DialogTrigger } from "@caseai-connect/ui/shad/dialog"
-import { Label } from "@caseai-connect/ui/shad/label"
+import { Field, FieldGroup, FieldLabel, FieldSet } from "@caseai-connect/ui/shad/field"
 import { Textarea } from "@caseai-connect/ui/shad/textarea"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { PenLineIcon } from "lucide-react"
@@ -18,12 +18,12 @@ type EvaluationFormData = {
 }
 
 export function EvaluationCreator({ onSubmit }: { onSubmit: (data: EvaluationFormData) => void }) {
-  const { t } = useTranslation("evaluation")
+  const { t } = useTranslation("evaluation", { keyPrefix: "create" })
   const [open, setOpen] = useState(false)
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="outline">{t("addEvaluation")}</Button>
+        <Button variant="outline">{t("button")}</Button>
       </DialogTrigger>
       <DialogContent>
         <EvaluationForm
@@ -65,12 +65,11 @@ function EvaluationForm({
   onSubmit: (data: EvaluationFormData) => void
   editableEvaluation?: Evaluation
 }) {
-  const { t } = useTranslation("evaluation", { keyPrefix: "form" })
-  const { t: tCommon } = useTranslation("common")
+  const { t } = useTranslation()
 
   const evaluationSchema = z.object({
-    input: z.string().min(1, t("validation.inputRequired")),
-    expectedOutput: z.string().min(1, t("validation.expectedOutputRequired")),
+    input: z.string().min(1, t("evaluation:props.validation.inputRequired")),
+    expectedOutput: z.string().min(1, t("evaluation:props.validation.expectedOutputRequired")),
   })
 
   const {
@@ -98,25 +97,37 @@ function EvaluationForm({
       })}
       className="space-y-4 flex-1"
     >
-      <div className="space-y-2">
-        <Label htmlFor="input">{t("labelInput")}</Label>
-        <Textarea id="input" {...register("input")} placeholder={t("placeholderInput")} />
-        {errors.input && <p className="text-sm text-destructive">{errors.input.message}</p>}
-      </div>
+      <FieldGroup>
+        <FieldSet>
+          <Field>
+            <FieldLabel htmlFor="input">{t("evaluation:props.input")}</FieldLabel>
+            <Textarea
+              id="input"
+              {...register("input")}
+              placeholder={t("evaluation:props.placeholders.input")}
+            />
+            {errors.input && <p className="text-sm text-destructive">{errors.input.message}</p>}
+          </Field>
 
-      <div className="space-y-2">
-        <Label htmlFor="expectedOutput">{t("labelExpectedOutput")}</Label>
-        <Textarea
-          id="expectedOutput"
-          {...register("expectedOutput")}
-          placeholder={t("placeholderExpectedOutput")}
-        />
-        {errors.expectedOutput && (
-          <p className="text-sm text-destructive">{errors.expectedOutput.message}</p>
-        )}
-      </div>
+          <Field>
+            <FieldLabel htmlFor="expectedOutput">{t("evaluation:props.expectedOutput")}</FieldLabel>
+            <Textarea
+              id="expectedOutput"
+              {...register("expectedOutput")}
+              placeholder={t("evaluation:props.placeholders.expectedOutput")}
+            />
+            {errors.expectedOutput && (
+              <p className="text-sm text-destructive">{errors.expectedOutput.message}</p>
+            )}
+          </Field>
 
-      <Button type="submit">{tCommon(editableEvaluation ? "update" : "create")}</Button>
+          <Field orientation="horizontal" className="justify-end">
+            <Button type="submit">
+              {t(editableEvaluation ? "actions:update" : "actions:create")}
+            </Button>
+          </Field>
+        </FieldSet>
+      </FieldGroup>
     </form>
   )
 }
