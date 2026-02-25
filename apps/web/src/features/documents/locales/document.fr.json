@@ -13,6 +13,16 @@
       "mimeType": "Type MIME",
       "size": "Taille",
       "storageRelativePath": "Chemin de stockage relatif"
+    },
+    "delete": {
+      "title": "Supprimer {{documentTitle}}",
+      "description": "Êtes-vous sûr de vouloir supprimer ce document ? Cette action est irréversible."
+    },
+    "list": {
+      "empty": {
+        "title": "Aucun document pour le moment",
+        "description": "Téléversez votre premier document pour commencer."
+      }
     }
   }
 }

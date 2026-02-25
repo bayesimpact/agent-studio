@@ -6,6 +6,12 @@
       "traceUrl": "Trace URL",
       "content": "Content",
       "createdAt": "Created At"
+    },
+    "list": {
+      "empty": {
+        "title": "No feedback yet",
+        "description": "No feedback on the agent's messages."
+      }
     }
   }
 }

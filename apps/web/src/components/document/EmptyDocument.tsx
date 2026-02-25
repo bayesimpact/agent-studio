@@ -11,8 +11,8 @@ import { useTranslation } from "react-i18next"
 import type { Project } from "@/features/projects/projects.models"
 import { UploadDocumentButton } from "./UploadDocumentButton"
 
-export function EmptyDocuments({ project }: { project: Project }) {
-  const { t } = useTranslation("documents", { keyPrefix: "empty" })
+export function EmptyDocument({ project }: { project: Project }) {
+  const { t } = useTranslation("document", { keyPrefix: "list.empty" })
   return (
     <Empty>
       <EmptyHeader>

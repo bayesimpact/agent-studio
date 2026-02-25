@@ -13,6 +13,16 @@
       "mimeType": "MIME Type",
       "size": "Size",
       "storageRelativePath": "Storage Relative Path"
+    },
+    "delete": {
+      "title": "Delete {{documentTitle}}",
+      "description": "Are you sure you want to delete this document? This action cannot be undone."
+    },
+    "list": {
+      "empty": {
+        "title": "No documents yet",
+        "description": "Upload your first document to get started."
+      }
     }
   }
 }

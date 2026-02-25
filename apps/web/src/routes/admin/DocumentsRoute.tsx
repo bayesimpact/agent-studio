@@ -1,5 +1,5 @@
 import { useEffect } from "react"
-import { EmptyDocuments } from "@/components/document/EmptyDocuments"
+import { EmptyDocument } from "@/components/document/EmptyDocument"
 import { UploadDocumentButton } from "@/components/document/UploadDocumentButton"
 import { useSidebarLayout } from "@/components/layouts/sidebar/context"
 import type { Document } from "@/features/documents/documents.models"
@@ -35,7 +35,7 @@ function WithData({ documents, project }: { documents: Document[]; project: Proj
   return (
     <div className="p-6 grid grid-cols-1 gap-4">
       {documents.length === 0 ? (
-        <EmptyDocuments project={project} />
+        <EmptyDocument project={project} />
       ) : (
         documents.map((document) => (
           <DocumentItem

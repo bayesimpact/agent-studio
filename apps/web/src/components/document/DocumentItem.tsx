@@ -4,7 +4,7 @@ import { useTranslation } from "react-i18next"
 import { MarkdownWrapper } from "@/components/chat/MarkdownWrapper"
 import type { Document } from "@/features/documents/documents.models"
 import { buildDate } from "@/utils/build-date"
-import { DeleteDocumentDialog } from "./DeleteDocumentDialog"
+import { DocumentDeletor } from "./DocumentDeletor"
 import { OpenDocumentUrl } from "./OpenDocumentUrl"
 
 export function DocumentItem({
@@ -14,7 +14,7 @@ export function DocumentItem({
   document: Document
   organizationId: string
 }) {
-  const { t } = useTranslation("documents", { keyPrefix: "item" })
+  const { t } = useTranslation("document", { keyPrefix: "props" })
   return (
     <Item variant="outline" className="w-full">
       <ItemHeader>
@@ -29,7 +29,7 @@ export function DocumentItem({
             projectId={document.projectId}
             document={document}
           />
-          <DeleteDocumentDialog organizationId={organizationId} document={document} />
+          <DocumentDeletor organizationId={organizationId} document={document} />
         </div>
       </ItemHeader>
 
@@ -38,9 +38,9 @@ export function DocumentItem({
           <MetaData label={t("createdAt")} value={buildDate(document.createdAt)} />
           <MetaData label={t("updatedAt")} value={buildDate(document.updatedAt)} />
           <MetaData label={t("fileName")} value={document.fileName} />
-          <MetaData label={t("fileSize")} value={document.size?.toString()} />
-          <MetaData label={t("fileLanguage")} value={document.language} />
-          <MetaData label={t("fileMimeType")} value={document.mimeType} />
+          <MetaData label={t("size")} value={document.size?.toString()} />
+          <MetaData label={t("language")} value={document.language} />
+          <MetaData label={t("mimeType")} value={document.mimeType} />
         </div>
 
         {document.content && <MarkdownWrapper content={document.content} />}

@@ -6,6 +6,12 @@
       "traceUrl": "URL de trace",
       "content": "Contenu",
       "createdAt": "Créé le"
+    },
+    "list": {
+      "empty": {
+        "title": "Pas encore de retours",
+        "description": "Aucun avis sur les messages de l'agent."
+      }
     }
   }
 }
