@@ -1,6 +1,7 @@
 import { createAsyncThunk } from "@reduxjs/toolkit"
 import type { RootState, ThunkExtraArg } from "@/store"
 import type {
+  AgentExtractionRun,
   AgentExtractionRunSummary,
   ExecuteAgentExtractionResponse,
 } from "./agent-extraction-runs.models"
@@ -41,4 +42,22 @@ export const executeAgentExtractionRun = createAsyncThunk<
   }
 
   return await services.agentExtractionRuns.executeLiveOne(params)
+})
+
+export const getAgentExtractionRun = createAsyncThunk<
+  AgentExtractionRun,
+  {
+    organizationId: string
+    projectId: string
+    agentId: string
+    runId: string
+    type: "playground" | "live"
+  },
+  ThunkConfig
+>("agentExtractionRuns/getOne", async (params, { extra: { services } }) => {
+  if (params.type === "playground") {
+    return await services.agentExtractionRuns.getOnePlayground(params)
+  }
+
+  return await services.agentExtractionRuns.getOneLive(params)
 })

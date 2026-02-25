@@ -17,6 +17,25 @@ const api: IAgentExtractionRunsSpi = {
     )
     return response.data.data.runs
   },
+  getOnePlayground: async ({ organizationId, projectId, agentId, runId }) => {
+    const axios = getAxiosInstance()
+    const response = await axios.get<typeof AgentExtractionRunsRoutes.getOnePlayground.response>(
+      AgentExtractionRunsRoutes.getOnePlayground.getPath({
+        organizationId,
+        projectId,
+        agentId,
+        runId,
+      }),
+    )
+    return response.data.data
+  },
+  getOneLive: async ({ organizationId, projectId, agentId, runId }) => {
+    const axios = getAxiosInstance()
+    const response = await axios.get<typeof AgentExtractionRunsRoutes.getOneLive.response>(
+      AgentExtractionRunsRoutes.getOneLive.getPath({ organizationId, projectId, agentId, runId }),
+    )
+    return response.data.data
+  },
   executePlaygroundOne: async ({
     organizationId,
     projectId,
