@@ -53,7 +53,7 @@ describe("Evaluation Reports - getAll", () => {
   })
 
   const createContext = async () => {
-    const { user, organization, project, agent } = await createOrganizationWithAgent(repositories)
+    const { user, organization, project } = await createOrganizationWithAgent(repositories)
     organizationId = organization.id
     projectId = project.id
     auth0Id = user.auth0Id
