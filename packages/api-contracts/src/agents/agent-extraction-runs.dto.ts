@@ -7,6 +7,8 @@ export type AgentExtractionRunSummaryDto = {
   id: string
   agentId: string
   documentId: string
+  documentFileName: string | null
+  traceUrl?: string
   type: AgentExtractionRunType
   status: AgentExtractionRunStatus
   createdAt: TimeType

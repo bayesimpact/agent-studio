@@ -141,6 +141,7 @@ export class AgentExtractionRunsService {
   }): Promise<AgentExtractionRun[]> {
     return this.runConnectRepository.find(connectScope, {
       where: { agentId, type },
+      relations: { document: true },
       order: { createdAt: "DESC" },
     })
   }
@@ -156,9 +157,14 @@ export class AgentExtractionRunsService {
     agentId: string
     type: AgentExtractionRunType
   }): Promise<AgentExtractionRun | null> {
-    const run = await this.runConnectRepository.getOneById(connectScope, runId)
+    const runs = await this.runConnectRepository.find(connectScope, {
+      where: { id: runId, agentId, type },
+      relations: { document: true },
+      take: 1,
+    })
+    const run = runs[0]
 
-    if (!run || run.agentId !== agentId || run.type !== type) {
+    if (!run) {
       return null
     }
 

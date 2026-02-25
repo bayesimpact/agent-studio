@@ -21,6 +21,7 @@ import { ResourceContextGuard } from "@/common/context/resource-context.guard"
 import { CheckPolicy } from "@/common/policies/check-policy.decorator"
 import { JwtAuthGuard } from "@/domains/auth/jwt-auth.guard"
 import { UserGuard } from "@/domains/users/user.guard"
+import { getTraceUrl } from "@/external/langfuse/langfuse-helper"
 import type { AgentExtractionRun } from "./agent-extraction-run.entity"
 import { AgentExtractionRunsGuard } from "./agent-extraction-runs.guard"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
@@ -155,6 +156,8 @@ function toSummaryDto(entity: AgentExtractionRun): AgentExtractionRunSummaryDto 
     id: entity.id,
     agentId: entity.agentId,
     documentId: entity.documentId,
+    documentFileName: entity.document?.fileName ?? null,
+    traceUrl: entity.traceId ? getTraceUrl(entity.traceId) : undefined,
     type: entity.type,
     status: entity.status,
     createdAt: entity.createdAt.getTime(),
