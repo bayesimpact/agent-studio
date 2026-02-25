@@ -13,11 +13,8 @@ import type {
   LLMFile,
   LLMMetadata,
 } from "@/common/interfaces/llm-provider.interface"
-import {
-  AgentModelToAgentProvider,
-  AgentProvider,
-} from "@/domains/agent-sessions/llm/agent-provider"
-import { AISDKVertexProvider } from "@/domains/agent-sessions/llm/providers/ai-sdk-vertex.provider"
+import { AgentModelToAgentProvider, AgentProvider } from "@/external/llm/agent-provider"
+import { AISDKVertexProvider } from "@/external/llm/providers/ai-sdk-vertex.provider"
 import { v4 } from "uuid"
 import { BatchSpanProcessor, ConsoleSpanExporter } from "@opentelemetry/sdk-trace-base"
 import { NodeTracerProvider } from "@opentelemetry/sdk-trace-node"

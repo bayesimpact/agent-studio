@@ -1,4 +1,4 @@
-import { EvaluationReportsRoutes, EvaluationsRoutes } from "@caseai-connect/api-contracts"
+import { AgentModel, EvaluationReportsRoutes } from "@caseai-connect/api-contracts"
 import type { INestApplication } from "@nestjs/common"
 import type { App } from "supertest/types"
 import { clearTestDatabase } from "@/common/test/test-database"
@@ -7,7 +7,10 @@ import {
   teardownTestDatabase,
 } from "@/common/test/test-transaction-manager"
 import { removeNullish } from "@/common/utils/remove-nullish"
+import { agentFactory } from "@/domains/agents/agent.factory"
+import { evaluationFactory } from "@/domains/evaluations/evaluation.factory"
 import { EvaluationsModule } from "@/domains/evaluations/evaluations.module"
+import { evaluationReportFactory } from "@/domains/evaluations/reports/evaluation-report.factory"
 import { createOrganizationWithAgent } from "@/domains/organizations/organization.factory"
 import { setupUserGuardForTesting } from "../../../../../test/e2e.helpers"
 import { expectResponse, type Requester, testRequester } from "../../../../../test/request"
@@ -22,7 +25,6 @@ describe("Evaluation Reports - getAll", () => {
 
   let organizationId: string
   let projectId: string
-  let agentId: string
   let evaluationId: string
   let evaluationReportId: string
   let accessToken: string | undefined = "token"
@@ -50,40 +52,29 @@ describe("Evaluation Reports - getAll", () => {
     app.close()
   })
 
-  const createEvaluation = async (payload: { input: string; expectedOutput: string }) => {
-    const response = await request({
-      route: EvaluationsRoutes.createOne,
-      pathParams: removeNullish({ organizationId, projectId }),
-      token: accessToken,
-      request: { payload },
-    })
-    evaluationId = response.body.data.id
-    return response
-  }
-
-  const createEvaluationReport = async () => {
-    const response = await request({
-      route: EvaluationReportsRoutes.createOne,
-      pathParams: removeNullish({ organizationId, projectId, agentId, evaluationId }),
-      token: accessToken,
-    })
-    evaluationReportId = response.body.data.id
-    return response
-  }
-
   const createContext = async () => {
     const { user, organization, project, agent } = await createOrganizationWithAgent(repositories)
     organizationId = organization.id
     projectId = project.id
-    agentId = agent.id
     auth0Id = user.auth0Id
 
-    await createEvaluation({
+    const agentMock = agentFactory.transient({ organization, project }).build({
+      model: AgentModel._MockGenerateText,
+    })
+    await repositories.agentRepository.save(agentMock)
+
+    const evaluation = evaluationFactory.transient({ organization, project }).build({
       input: "test input",
       expectedOutput: "test output",
     })
+    await repositories.evaluationRepository.save(evaluation)
+    evaluationId = evaluation.id
 
-    await createEvaluationReport()
+    const evaluationReport = evaluationReportFactory
+      .transient({ organization, project, agent: agentMock, evaluation })
+      .build()
+    await repositories.evaluationReportRepository.save(evaluationReport)
+    evaluationReportId = evaluationReport.id
   }
 
   const subject = async () =>

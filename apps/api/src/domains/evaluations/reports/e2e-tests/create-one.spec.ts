@@ -1,4 +1,4 @@
-import { EvaluationReportsRoutes, EvaluationsRoutes } from "@caseai-connect/api-contracts"
+import { AgentModel, EvaluationReportsRoutes } from "@caseai-connect/api-contracts"
 import type { INestApplication } from "@nestjs/common"
 import type { App } from "supertest/types"
 import { clearTestDatabase } from "@/common/test/test-database"
@@ -7,8 +7,10 @@ import {
   teardownTestDatabase,
 } from "@/common/test/test-transaction-manager"
 import { removeNullish } from "@/common/utils/remove-nullish"
+import { agentFactory } from "@/domains/agents/agent.factory"
+import { evaluationFactory } from "@/domains/evaluations/evaluation.factory"
 import { EvaluationsModule } from "@/domains/evaluations/evaluations.module"
-import { createOrganizationWithAgent } from "@/domains/organizations/organization.factory"
+import { createOrganizationWithProject } from "@/domains/organizations/organization.factory"
 import { setupUserGuardForTesting } from "../../../../../test/e2e.helpers"
 import { expectResponse, type Requester, testRequester } from "../../../../../test/request"
 
@@ -49,31 +51,26 @@ describe("Evaluation Reports - createOne", () => {
     app.close()
   })
 
-  const createEvaluation = async (payload: { input: string; expectedOutput: string }) => {
-    const response = await request({
-      route: EvaluationsRoutes.createOne,
-      pathParams: removeNullish({ organizationId, projectId }),
-      token: accessToken,
-      request: { payload },
-    })
-    evaluationId = response.body.data.id
-    return response
-  }
-
   const createContext = async () => {
-    const { user, organization, project, agent } = await createOrganizationWithAgent(repositories, {
+    const { user, organization, project } = await createOrganizationWithProject(repositories, {
       membership: { role: "owner" },
     })
     organizationId = organization.id
     projectId = project.id
-    agentId = agent.id
     auth0Id = user.auth0Id
 
-    const evaluation = await createEvaluation({
+    const agentMock = agentFactory.transient({ organization, project }).build({
+      model: AgentModel._MockGenerateText,
+    })
+    await repositories.agentRepository.save(agentMock)
+    agentId = agentMock.id
+
+    const evaluation = evaluationFactory.transient({ organization, project }).build({
       input: "test input",
       expectedOutput: "test output",
     })
-    evaluationId = evaluation.body.data.id
+    await repositories.evaluationRepository.save(evaluation)
+    evaluationId = evaluation.id
 
     return { organization, project, evaluation }
   }
