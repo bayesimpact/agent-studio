@@ -125,3 +125,9 @@
     cursor: pointer;
   }
 }
+
+@utility capitalize-first {
+  &::first-letter {
+    text-transform: uppercase;
+  }
+}

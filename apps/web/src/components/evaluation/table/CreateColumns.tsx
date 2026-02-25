@@ -5,7 +5,7 @@ import type { ColumnDef } from "@tanstack/react-table"
 import type { TFunction } from "i18next"
 import { ExternalLinkIcon } from "lucide-react"
 import type { z } from "zod"
-import { DefaultPromptDialog } from "@/components/agents/DefaultPromptDialog"
+import { DefaultPromptDialog } from "@/components/agent/DefaultPromptDialog"
 import { buildDate } from "@/utils/build-date"
 import type { schema } from "./schema"
 
@@ -40,7 +40,7 @@ export function createColumns({ t }: { t: TFunction }): ColumnDef<z.infer<typeof
         return row.original.agent ? (
           <div className="text-muted-foreground text-xs flex flex-col gap-1.5">
             <div>
-              <span>{t("table.headers.agent.name", { colon: true, cfl: true })}</span>{" "}
+              <span>{t("table.headers.agent.name", { colon: true })}</span>{" "}
               <span className="font-semibold">{row.original.agent.name}</span>
             </div>
             <div>

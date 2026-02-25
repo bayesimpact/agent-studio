@@ -1,0 +1,21 @@
+{
+  "project": {
+    "project": "Projet",
+    "projects": "Projets",
+    "props": {
+      "name": "Nom",
+      "createdAt": "Créé le",
+      "updatedAt": "Mis à jour le",
+      "placeholders": {
+        "name": "Entrez le nom du projet"
+      },
+      "validation": {
+        "name": "Le nom du projet est requis"
+      }
+    },
+    "create": {
+      "title": "Créer un projet",
+      "description": "Créer un nouveau projet pour {{organizationName}}"
+    }
+  }
+}

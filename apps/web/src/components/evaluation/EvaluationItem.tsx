@@ -41,7 +41,7 @@ export function EvaluationItem({
           <div className="flex gap-2 text-muted-foreground text-xs">
             <div className="flex gap-1">
               <span>
-                {tcommon("createdAt", { cfl: true })} {buildDate(evaluation.createdAt)}
+                {tcommon("createdAt")} {buildDate(evaluation.createdAt)}
               </span>
             </div>
             {!isEqual(evaluation.createdAt, evaluation.updatedAt) && (
@@ -49,7 +49,7 @@ export function EvaluationItem({
                 •{" "}
                 <div className="flex gap-1">
                   <span>
-                    {tcommon("updatedAt", { cfl: true })} {buildDate(evaluation.updatedAt)}
+                    {tcommon("updatedAt")} {buildDate(evaluation.updatedAt)}
                   </span>
                 </div>
               </>
@@ -75,11 +75,11 @@ export function EvaluationItem({
 
       <ItemContent className="gap-4">
         <div className="flex flex-col gap-1">
-          <Label className="font-semibold">{t("form.labelInput", { cfl: true })}</Label>
+          <Label className="font-semibold">{t("form.labelInput")}</Label>
           <p className="text-muted-foreground">{evaluation.input}</p>
         </div>
         <div className="flex flex-col gap-1">
-          <Label className="font-semibold">{t("form.labelExpectedOutput", { cfl: true })}</Label>
+          <Label className="font-semibold">{t("form.labelExpectedOutput")}</Label>
           <p className="text-muted-foreground">{evaluation.expectedOutput}</p>
         </div>
       </ItemContent>

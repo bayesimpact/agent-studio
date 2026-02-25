@@ -1,0 +1,11 @@
+{
+  "evaluationReport": {
+    "props": {
+      "createdAt": "Créé le",
+      "traceUrl": "URL de trace",
+      "output": "Sortie",
+      "score": "Score",
+      "updatedAt": "Mis à jour le"
+    }
+  }
+}

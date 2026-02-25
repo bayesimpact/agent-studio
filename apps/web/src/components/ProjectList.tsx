@@ -13,7 +13,7 @@ import type { Project } from "@/features/projects/projects.models"
 import { useBuildPath } from "@/hooks/use-build-path"
 import { buildDate } from "@/utils/build-date"
 import { ListHeader } from "./layouts/ListHeader"
-import { CreateProjectDialogWithTrigger } from "./sidebar/projects/CreateProjectDialog"
+import { ProjectCreator } from "./project/ProjectCreator"
 
 export function ProjectList({
   projects,
@@ -24,21 +24,21 @@ export function ProjectList({
   organization: Organization
   isAdminInterface: boolean
 }) {
-  const { t } = useTranslation("common")
+  const { t } = useTranslation()
   return (
-    <ListHeader title={t("projects", { cfl: true })} withInterfaceToggle>
+    <ListHeader title={t("project:projects")} withInterfaceToggle>
       {projects.map((project) => (
         <ProjectItem key={project.id} organizationId={organization.id} project={project} />
       ))}
 
-      {isAdminInterface && <CreateProjectDialogWithTrigger organization={organization} />}
+      {isAdminInterface && <ProjectCreator organization={organization} />}
     </ListHeader>
   )
 }
 
 function ProjectItem({ project, organizationId }: { project: Project; organizationId: string }) {
   const navigate = useNavigate()
-  const { t } = useTranslation("common")
+  const { t } = useTranslation()
   const { buildPath } = useBuildPath()
   const handleClick = () => {
     const path = buildPath("project", { organizationId, projectId: project.id })
@@ -51,7 +51,7 @@ function ProjectItem({ project, organizationId }: { project: Project; organizati
         <ItemDescription>{buildDate(project.updatedAt)}</ItemDescription>
       </ItemContent>
       <ItemActions>
-        <Button onClick={handleClick}>{t("open", { cfl: true })}</Button>
+        <Button onClick={handleClick}>{t("actions:open")}</Button>
       </ItemActions>
     </Item>
   )

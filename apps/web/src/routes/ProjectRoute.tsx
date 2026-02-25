@@ -1,16 +1,5 @@
-import { Button } from "@caseai-connect/ui/shad/button"
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@caseai-connect/ui/shad/card"
-import { Plus } from "lucide-react"
-import { useState } from "react"
-import { useTranslation } from "react-i18next"
 import { Navigate, useOutlet } from "react-router-dom"
-import { CreateAgentDialogWithoutTrigger } from "@/components/agents/CreateAgentDialog"
+import { EmptyAgent } from "@/components/agent/EmptyAgent"
 import type { Agent } from "@/features/agents/agents.models"
 import { selectAgentsFromProjectId } from "@/features/agents/agents.selectors"
 import type { Project } from "@/features/projects/projects.models"
@@ -60,27 +49,5 @@ function WithData({ project, agents }: { project: Project; agents: Agent[] }) {
       />
     )
 
-  if (isAdminInterface) return <NoAgent project={project} />
-}
-
-function NoAgent({ project }: { project: Project }) {
-  const { t } = useTranslation("agent", { keyPrefix: "list" })
-  const [open, setOpen] = useState(false)
-  return (
-    <div className="p-6">
-      <Card>
-        <CardHeader>
-          <CardTitle>{t("empty.title")}</CardTitle>
-          <CardDescription>{t("empty.description")}</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Button onClick={() => setOpen(true)}>
-            <Plus className="mr-2 h-4 w-4" />
-            {t("empty.button")}
-          </Button>
-          <CreateAgentDialogWithoutTrigger project={project} isOpen={open} onOpenChange={setOpen} />
-        </CardContent>
-      </Card>
-    </div>
-  )
+  if (isAdminInterface) return <EmptyAgent project={project} />
 }

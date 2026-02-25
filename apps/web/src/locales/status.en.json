@@ -1,0 +1,9 @@
+{
+  "status": {
+    "idle": "Idle",
+    "pending": "Pending",
+    "loading": "Loading",
+    "done": "Done",
+    "error": "Error"
+  }
+}

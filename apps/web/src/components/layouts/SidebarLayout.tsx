@@ -11,7 +11,7 @@ import {
 } from "@caseai-connect/ui/shad/sidebar"
 import { useState } from "react"
 import type { Organization } from "@/features/organizations/organizations.models"
-import { NavUserMenuItems } from "../sidebar/NavUserMenuItems"
+import { NavUserMenuItems } from "../sidebar/nav/NavUserMenuItems"
 import { SidebarLayoutContext } from "./sidebar/context"
 import { SidebarBreadcrumb } from "./sidebar/SidebarBreadcrumb"
 

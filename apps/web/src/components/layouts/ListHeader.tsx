@@ -43,7 +43,9 @@ export function ListHeader({
           )}
         </div>
 
-        <h4 className="scroll-m-20 text-xl font-semibold tracking-tight">{title}</h4>
+        <h4 className="scroll-m-20 text-xl font-semibold tracking-tight capitalize-first">
+          {title}
+        </h4>
 
         {children}
       </div>

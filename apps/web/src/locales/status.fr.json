@@ -1,0 +1,9 @@
+{
+  "status": {
+    "idle": "Inactif",
+    "pending": "En attente",
+    "loading": "Chargement",
+    "done": "Terminé",
+    "error": "Erreur"
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "document": {
+    "props": {
+      "createdAt": "Created At",
+      "updatedAt": "Updated At",
+      "deletedAt": "Deleted At",
+      "title": "Title",
+      "content": "Content",
+      "fileName": "File Name",
+      "language": "Language",
+      "mimeType": "MIME Type",
+      "size": "Size",
+      "storageRelativePath": "Storage Relative Path"
+    }
+  }
+}
