@@ -5,7 +5,7 @@ import { afterAll, beforeAll } from "@jest/globals"
 import { config as dotenvConfig } from "dotenv"
 import { readFile } from "node:fs/promises"
 import { GoogleAuth } from "google-auth-library"
-import { join } from "path"
+import { join } from "node:path"
 import { z } from "zod"
 import type {
   LLMChatMessage,

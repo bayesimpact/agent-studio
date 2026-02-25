@@ -35,8 +35,6 @@ export class EvaluationReportsService {
     this.evaluationConnectRepository = new ConnectRepository(evaluationRepository, "evaluations")
     this.reportConnectRepository = new ConnectRepository(reportRepository, "evaluation_reports")
   }
-
-  private readonly evaluationConnectRepository: ConnectRepository<Evaluation>
   private readonly reportConnectRepository: ConnectRepository<EvaluationReport>
 
   async createReport({
