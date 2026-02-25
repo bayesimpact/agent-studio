@@ -26,6 +26,7 @@
       "startedAt": "Started At",
       "completedAt": "Completed At",
       "toolCalls": "Tool Calls"
-    }
+    },
+    "attachment": "Attachment"
   }
 }

@@ -9,7 +9,7 @@ import { selectCurrentProjectId } from "@/features/projects/projects.selectors"
 import { useAppDispatch, useAppSelector } from "@/store/hooks"
 
 export function Attachment({ message }: { message: AgentSessionMessage }) {
-  const { t } = useTranslation("common")
+  const { t } = useTranslation("agentSessionMessage")
   const dispatch = useAppDispatch()
   const organizationId = useAppSelector(selectCurrentOrganizationId)
   const projectId = useAppSelector(selectCurrentProjectId)
@@ -31,7 +31,7 @@ export function Attachment({ message }: { message: AgentSessionMessage }) {
   if (!message.documentId) return null
   return (
     <Button variant="outline" size="sm" onClick={() => window.open(url, "_blank")} disabled={!url}>
-      <PaperclipIcon className="size-4" /> {t("viewAttachment")}
+      <PaperclipIcon className="size-4" /> {t("attachment")}
       <ExternalLinkIcon className="size-4" />
     </Button>
   )

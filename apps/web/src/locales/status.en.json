@@ -1,9 +1,15 @@
 {
   "status": {
-    "idle": "Idle",
-    "pending": "Pending",
-    "loading": "Loading",
     "done": "Done",
-    "error": "Error"
+    "error": "Error",
+    "idle": "Idle",
+    "loading": "Loading",
+    "pending": "Pending",
+    "thinking": "Thinking",
+    "notFound": {
+      "title": "404 Not Found",
+      "description": "The page you are looking for does not exist.",
+      "home": "Go Home"
+    }
   }
 }
