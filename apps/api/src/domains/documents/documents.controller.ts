@@ -190,4 +190,3 @@ function toDocumentDto(entity: Document): DocumentDto {
     storageRelativePath: entity.storageRelativePath,
   }
 }
-

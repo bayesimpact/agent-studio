@@ -1,5 +1,5 @@
 import { SidebarMenuItem } from "@caseai-connect/ui/shad/sidebar"
-import { BotIcon, FileJson2Icon } from "lucide-react"
+import { BotIcon, ScanText } from "lucide-react"
 import { useState } from "react"
 import { useParams } from "react-router-dom"
 import { AgentCreatorWithTrigger } from "@/components/agent/AgentCreator"
@@ -116,7 +116,7 @@ export function AppAgentList({
 }
 
 function getAgentIcon(agent: Agent) {
-  return agent.type === "extraction" ? FileJson2Icon : BotIcon
+  return agent.type === "extraction" ? ScanText : BotIcon
 }
 
 function getAgentPath({
