@@ -91,7 +91,7 @@ function Content({
       </DialogHeader>
       <div className="flex justify-end gap-2 pt-4">
         <Button variant="outline" onClick={onClose} disabled={ADS.isLoading(documentsData)}>
-          {tCommon("cancel")}
+          {tCommon("cancel", { cfl: true })}
         </Button>
         <Button
           variant="destructive"

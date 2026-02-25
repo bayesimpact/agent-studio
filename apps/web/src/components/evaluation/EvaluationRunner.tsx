@@ -38,10 +38,10 @@ export function EvaluationRunner({
   return (
     <Dialog open={modalHandler.open} onOpenChange={modalHandler.setOpen}>
       <DialogContent>
-        <Label className="text-base">{tCommon("selectAgent")}</Label>
+        <Label className="text-base">{tCommon("selectAgent", { cfl: true })}</Label>
         <Select value={selectedAgentId} onValueChange={(value) => setSelectedAgentId(value)}>
           <SelectTrigger id="evaluation-agent" className="w-full">
-            <SelectValue placeholder={tCommon("selectAgent")} />
+            <SelectValue placeholder={tCommon("selectAgent", { cfl: true })} />
           </SelectTrigger>
           <SelectContent>
             {agents.map((agent) => (
@@ -55,7 +55,7 @@ export function EvaluationRunner({
         {selectedAgentId && <AgentInfo agent={agents.find((a) => a.id === selectedAgentId)!} />}
 
         <DialogFooter>
-          <Button onClick={handleRun}>{tCommon("run")}</Button>
+          <Button onClick={handleRun}>{tCommon("run", { cfl: true })}</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
@@ -68,7 +68,7 @@ function AgentInfo({ agent }: { agent: Agent }) {
   return (
     <Item variant="muted">
       <ItemHeader>
-        <ItemTitle className="text-base">{tCommon("settings")}</ItemTitle>
+        <ItemTitle className="text-base">{tCommon("settings", { cfl: true })}</ItemTitle>
       </ItemHeader>
       <ItemContent>
         <div className="flex flex-col gap-1">

@@ -73,7 +73,7 @@ export function BasicUploader<T>({
           ) : (
             <UploadCloudIcon className="size-5" />
           )}{" "}
-          {t("dragOrUploadFile")}
+          {t("dragOrUploadFile", { cfl: true })}
         </Button>
       )}
       <input {...getInputProps()} />

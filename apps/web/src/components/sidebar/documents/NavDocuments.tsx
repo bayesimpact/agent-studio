@@ -24,7 +24,7 @@ export function NavDocuments({
         <SidebarMenuButton isActive={isActive} asChild>
           <Link to={path} className="font-medium">
             <DatabaseZapIcon />
-            <span>{t("documents")}</span>
+            <span>{t("documents", { cfl: true })}</span>
           </Link>
         </SidebarMenuButton>
       </SidebarMenuItem>

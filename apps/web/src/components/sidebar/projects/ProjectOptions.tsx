@@ -19,7 +19,7 @@ export function ProjectOptions({ onEdit, onDelete }: { onEdit: () => void; onDel
       <DropdownMenuTrigger asChild>
         <SidebarMenuAction>
           <MoreHorizontal />
-          <span className="sr-only">{tCommon("more")}</span>
+          <span className="sr-only">{tCommon("more", { cfl: true })}</span>
         </SidebarMenuAction>
       </DropdownMenuTrigger>
       <DropdownMenuContent
