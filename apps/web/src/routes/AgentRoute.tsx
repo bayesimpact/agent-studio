@@ -1,19 +1,11 @@
 import { Button } from "@caseai-connect/ui/shad/button"
 import { Item, ItemActions, ItemContent, ItemTitle } from "@caseai-connect/ui/shad/item"
-import { ScrollArea } from "@caseai-connect/ui/shad/scroll-area"
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from "@caseai-connect/ui/shad/sheet"
 import { useEffect } from "react"
 import { useTranslation } from "react-i18next"
 import { Outlet, useNavigate, useOutlet, useParams } from "react-router-dom"
+import { DefaultPromptDialog } from "@/components/agents/DefaultPromptDialog"
 import { DeleteAgentDialogWithTrigger } from "@/components/agents/DeleteAgentDialog"
 import { EditAgentDialogWithTrigger } from "@/components/agents/EditAgentDialog"
-import { MarkdownWrapper } from "@/components/chat/MarkdownWrapper"
 import { ListHeader } from "@/components/layouts/ListHeader"
 import { useSidebarLayout } from "@/components/layouts/sidebar/context"
 import { CreateAgentSession } from "@/components/sidebar/projects/agent-sessions/CreateAgentSession"
@@ -176,32 +168,9 @@ function HeaderRightSlot({ agent }: { agent: Agent }) {
   if (!organizationId) return null
   return (
     <div className="flex items-center gap-2">
-      <DefaultPromptDialog prompt={agent.defaultPrompt} />
+      <DefaultPromptDialog buttonProps={{ variant: "outline" }} prompt={agent.defaultPrompt} />
       <EditAgentDialogWithTrigger organizationId={organizationId} agent={agent} />
       <DeleteAgentDialogWithTrigger organizationId={organizationId} agent={agent} />
     </div>
-  )
-}
-
-function DefaultPromptDialog({ prompt }: { prompt: string }) {
-  const { t } = useTranslation("agent", { keyPrefix: "detail" })
-  return (
-    <Sheet modal>
-      <SheetTrigger asChild>
-        <Button variant="outline">{t("viewPrompt")}</Button>
-      </SheetTrigger>
-      <SheetContent className="h-dvh min-w-[40vw]">
-        <ScrollArea className="h-full">
-          <SheetHeader>
-            <SheetTitle>{t("defaultPromptTitle")}</SheetTitle>
-          </SheetHeader>
-          <Item>
-            <ItemContent>
-              <MarkdownWrapper content={prompt} />
-            </ItemContent>
-          </Item>
-        </ScrollArea>
-      </SheetContent>
-    </Sheet>
   )
 }

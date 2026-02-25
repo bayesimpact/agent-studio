@@ -46,7 +46,7 @@ function WithData({ agents, evaluations }: { agents: Agent[]; evaluations: Evalu
       {evaluations.length === 0 ? (
         <EmptyEvaluation />
       ) : (
-        <div className="p-6 grid xl:grid-cols-2 gap-4">
+        <div className="p-6 flex flex-col gap-4">
           {evaluations.map((evaluation) => (
             <EvaluationItem key={evaluation.id} evaluation={evaluation} agents={agents} />
           ))}
