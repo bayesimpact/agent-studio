@@ -29,7 +29,7 @@ const testModels = Object.values(AgentModel).filter(
 )
 
 if (process.env.IS_TEST === "true" && process.env.AIENGINE_TEST === "true") {
-  describe.skip("AISDKVertexProvider", () => {
+  describe("AISDKVertexProvider", () => {
     jest.setTimeout(20_000)
     const langfuse = new LangfuseIntegrationExporter({
       secretKey: process.env.LANGFUSE_SK,
@@ -147,7 +147,7 @@ if (process.env.IS_TEST === "true" && process.env.AIENGINE_TEST === "true") {
   })
 } else {
   describe.skip("AISDKVertexProvider", () => {
-    it("skipped", () => {})
+    it("skipped (requires process.env.IS_TEST=true and process.env.AIENGINE_TEST=true)", () => {})
   })
 }
 

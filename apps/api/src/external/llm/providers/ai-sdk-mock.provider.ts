@@ -16,6 +16,7 @@ export class AISDKMockProvider extends AISDKLLMProviderBase {
     switch (config.model) {
       case AgentModel._MockGenerateText:
       case AgentModel._MockProcessFiles:
+      case AgentModel._MockRate:
         return this.getMockForGenerateText(config)
       case AgentModel._MockGenerateObject:
         return this.getMockForGenerateObject(config)
@@ -26,7 +27,10 @@ export class AISDKMockProvider extends AISDKLLMProviderBase {
     }
   }
   getMockForGenerateText(config: LLMConfig): LanguageModel {
-    let result: string = `Hello, I'm the ${config.model === AgentModel._MockGenerateText ? "generateText" : "processFiles"} default mock response!`
+    let result: string =
+      config.model === AgentModel._MockRate
+        ? "76"
+        : `Hello, I'm the ${config.model === AgentModel._MockGenerateText ? "generateText" : "processFiles"} default mock response!` //<default mock result for generateText>
     if (config.mockResult && !Array.isArray(config.mockResult)) {
       result = config.mockResult
     }

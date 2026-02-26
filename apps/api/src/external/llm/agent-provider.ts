@@ -7,8 +7,9 @@ export enum AgentProvider {
 export const AgentModelToAgentProvider: Record<AgentModel, AgentProvider> = {
   [AgentModel.Gemini25Flash]: AgentProvider.Vertex,
   [AgentModel.Gemini25Pro]: AgentProvider.Vertex,
-  [AgentModel._MockStreamChatResponse]: AgentProvider._Mock,
   [AgentModel._MockGenerateObject]: AgentProvider._Mock,
   [AgentModel._MockGenerateText]: AgentProvider._Mock,
   [AgentModel._MockProcessFiles]: AgentProvider._Mock,
+  [AgentModel._MockRate]: AgentProvider._Mock,
+  [AgentModel._MockStreamChatResponse]: AgentProvider._Mock,
 }
