@@ -45,12 +45,30 @@ const slice = createSlice({
         state.data.status = ADS.Error
         state.data.error = action.error.message || "Failed to list evaluation reports"
       })
-      .addCase(createEvaluationReport.fulfilled, (state, action) => {
-        const evaluationId = action.payload.evaluationId
-        if (ADS.isFulfilled(state.data) && state.data.value?.[evaluationId]) {
-          state.data.value[evaluationId] = [action.payload, ...state.data.value[evaluationId]]
-        }
-      })
+    builder.addCase(createEvaluationReport.pending, (state, action) => {
+      const evaluationId = action.meta.arg.evaluationId
+
+      // Optimistically add a placeholder report to the state for immediate UI feedback
+      state.data.status = ADS.Fulfilled
+      state.data.error = null
+      state.data.value = {
+        ...state.data.value,
+        [evaluationId]: [
+          ...(state.data.value?.[evaluationId] || []),
+          {
+            id: "temp-id", // temp ID for optimistic update
+            evaluationId,
+            // biome-ignore lint/complexity/useDateNow: number is expected here
+            createdAt: new Date().getTime(),
+            agentId: action.meta.arg.agentId,
+            traceUrl: "",
+            output: "",
+            score: "",
+            updatedAt: undefined,
+          },
+        ],
+      }
+    })
   },
 })
 

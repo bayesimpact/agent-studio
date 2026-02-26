@@ -6,6 +6,7 @@
     "loading": "Chargement",
     "pending": "En attente",
     "thinking": "En réflexion",
+    "noResults": "Aucun résultat trouvé.",
     "notFound": {
       "title": "404 Page introuvable",
       "description": "La page que vous recherchez n'existe pas.",

@@ -20,10 +20,10 @@ export function EvaluationReports({
   const evaluationReports = useAppSelector(selectEvaluationReportsForEvaluation(evaluationId))
 
   if (ADS.isError(evaluationReports)) return <ErrorMessage />
-
   if (ADS.isFulfilled(evaluationReports)) {
     const data = buildData({ evaluationReports: evaluationReports.value, agents })
-    return <EvaluationReportTable data={data} />
+    const key = data.map((report) => report.id).join("-")
+    return <EvaluationReportTable key={key} data={data} />
   }
 
   return <LoadingMessage />
