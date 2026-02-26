@@ -19,7 +19,7 @@ export class RequestLoggerMiddleware implements NestMiddleware {
     const startTime = Date.now()
 
     // Build the log parts
-    const parts = [`--> ${method} ${originalUrl}`]
+    const parts = [`--> ${method} ${originalUrl} 📥`]
 
     if (Object.keys(query).length > 0) {
       parts.push(`    query: ${JSON.stringify(query)}`)
@@ -34,7 +34,7 @@ export class RequestLoggerMiddleware implements NestMiddleware {
     // Log response when finished
     response.on("finish", () => {
       const duration = Date.now() - startTime
-      console.log(`<-- ${method} ${originalUrl} ${response.statusCode} ${duration}ms`)
+      console.log(`<-- ${method} ${originalUrl} ${response.statusCode} ${duration}ms 📤`)
     })
 
     next()
