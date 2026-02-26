@@ -297,7 +297,7 @@ function ProjectEvaluation() {
 function ProjectMemberships() {
   const { isRoute } = useIsRoute()
   const isProjectMembershipsRoute = isRoute(RouteNames.PROJECT_MEMBERSHIPS)
-  const { t } = useTranslation("evaluation")
+  const { t } = useTranslation("projectMembership")
   if (!isProjectMembershipsRoute) return null
   return (
     <>
