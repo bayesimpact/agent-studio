@@ -14,8 +14,7 @@ import { ProjectMembership } from "@/domains/projects/memberships/project-member
 import { Project } from "@/domains/projects/project.entity"
 import { ProjectsModule } from "@/domains/projects/projects.module"
 import { UsersModule } from "@/domains/users/users.module"
-import { AISDKMockProvider } from "@/external/llm/providers/ai-sdk-mock.provider"
-import { AISDKVertexProvider } from "@/external/llm/providers/ai-sdk-vertex.provider"
+import { LlmModule } from "@/external/llm/llm.module"
 import { Agent } from "../agents/agent.entity"
 import { Evaluation } from "./evaluation.entity"
 import { EvaluationGuard } from "./evaluation.guard"
@@ -28,6 +27,7 @@ import { EvaluationReportsService } from "./reports/evaluation-reports.service"
 
 @Module({
   imports: [
+    LlmModule,
     TypeOrmModule.forFeature([
       Evaluation,
       Project,
@@ -43,14 +43,6 @@ import { EvaluationReportsService } from "./reports/evaluation-reports.service"
     AuthModule,
   ],
   providers: [
-    {
-      provide: "VertexLLMProvider",
-      useClass: AISDKVertexProvider,
-    },
-    {
-      provide: "_MockLLMProvider",
-      useClass: AISDKMockProvider,
-    },
     AgentContextResolver,
     EvaluationContextResolver,
     EvaluationGuard,

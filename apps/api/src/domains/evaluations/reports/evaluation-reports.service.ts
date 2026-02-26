@@ -1,35 +1,27 @@
-import { AgentModel, type AgentTemperature } from "@caseai-connect/api-contracts"
-import {
-  Inject,
-  Injectable,
-  NotFoundException,
-  NotImplementedException,
-  UnprocessableEntityException,
-} from "@nestjs/common"
+import { AgentModel } from "@caseai-connect/api-contracts"
+import { Inject, Injectable, NotFoundException, UnprocessableEntityException } from "@nestjs/common"
 import { InjectRepository } from "@nestjs/typeorm"
 import type { Repository } from "typeorm"
 import { ConnectRepository } from "@/common/entities/connect-repository"
 import type { RequiredConnectScope } from "@/common/entities/connect-required-fields"
-import type {
-  LLMConfig,
-  LLMMetadata,
-  LLMProvider,
-} from "@/common/interfaces/llm-provider.interface"
+import type { LLMMetadata, LLMProvider } from "@/common/interfaces/llm-provider.interface"
 import type { Agent } from "@/domains/agents/agent.entity"
 import type { Evaluation } from "@/domains/evaluations/evaluation.entity"
 import { AgentModelToAgentProvider, AgentProvider } from "@/external/llm/agent-provider"
+import { ServiceWithLLM } from "@/external/llm/service-with-llm"
 import { EvaluationReport } from "./evaluation-report.entity"
 
 @Injectable()
-export class EvaluationReportsService {
+export class EvaluationReportsService extends ServiceWithLLM {
   constructor(
     @InjectRepository(EvaluationReport)
     reportRepository: Repository<EvaluationReport>,
     @Inject("_MockLLMProvider")
-    private readonly _mockLlmProvider: LLMProvider,
+    mockLlmProvider: LLMProvider,
     @Inject("VertexLLMProvider")
-    private readonly vertexLlmProvider: LLMProvider,
+    vertexLlmProvider: LLMProvider,
   ) {
+    super(mockLlmProvider, vertexLlmProvider)
     this.reportConnectRepository = new ConnectRepository(reportRepository, "evaluation_reports")
   }
   private readonly reportConnectRepository: ConnectRepository<EvaluationReport>
@@ -148,7 +140,15 @@ export class EvaluationReportsService {
       temperature: agent.temperature,
     })
 
-    const llmMetadata: LLMMetadata = this.buildLLMMetadata({ agent, evaluationReport })
+    const llmMetadata: LLMMetadata = {
+      traceId: evaluationReport.traceId,
+      evaluationReportId: evaluationReport.id,
+      agentId: agent.id,
+      projectId: agent.projectId,
+      organizationId: evaluationReport.organizationId,
+      tags: [agent.name],
+    }
+
     return await this.getProviderForModel(llmConfig.model).generateText({
       prompt: evaluation.input,
       config: llmConfig,
@@ -215,59 +215,6 @@ return only the rating value (0 to 100), no sentence`,
     })
   }
 
-  //fixme DOO: below is temp : create base class (ServiceWithLLM) common to streaming service
-  getProviderForModel(model: string): LLMProvider {
-    const provider = AgentModelToAgentProvider[model]
-    switch (provider) {
-      case AgentProvider._Mock:
-        return this._mockLlmProvider
-      case AgentProvider.Vertex:
-        return this.vertexLlmProvider
-      default:
-        throw new NotImplementedException(`not supported llm provider: ${provider}`)
-    }
-  }
-  private buildLLMConfig({
-    systemPrompt,
-    model,
-    temperature,
-  }: {
-    systemPrompt: string
-    model: AgentModel
-    temperature: AgentTemperature
-  }): LLMConfig {
-    // Convert temperature to number (database decimal types may be returned as strings)
-    const safeTemperature =
-      typeof temperature === "string" ? parseFloat(temperature) : Number(temperature)
-
-    // Validate temperature is a valid number
-    if (Number.isNaN(safeTemperature) || safeTemperature < 0 || safeTemperature > 2) {
-      throw new Error(
-        `Invalid temperature value: ${safeTemperature}. Temperature must be a number between 0 and 2.`,
-      )
-    }
-    return {
-      model,
-      temperature: safeTemperature,
-      systemPrompt,
-    } as LLMConfig
-  }
-  private buildLLMMetadata({
-    agent,
-    evaluationReport,
-  }: {
-    agent: Pick<Agent, "name" | "id" | "projectId">
-    evaluationReport: EvaluationReport
-  }): LLMMetadata {
-    return {
-      traceId: evaluationReport.traceId,
-      evaluationReportId: evaluationReport.id,
-      agentId: agent.id,
-      projectId: agent.projectId,
-      organizationId: evaluationReport.organizationId,
-      tags: [agent.name],
-    }
-  }
   private generateMasterPrompt(agent: Agent): string {
     return `
 Today's date: ${new Date().toLocaleDateString()}
