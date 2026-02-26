@@ -1,43 +1,44 @@
 import { createAsyncThunk } from "@reduxjs/toolkit"
 import type { RootState, ThunkExtraArg } from "@/store"
-import type { InviteProjectMembersPayload, ProjectMembership } from "./project-memberships.models"
+import { getCurrentIds } from "../helpers"
+import type { ProjectMembership } from "./project-memberships.models"
 
 type ThunkConfig = { state: RootState; extra: ThunkExtraArg }
 
-export const listProjectMemberships = createAsyncThunk<
-  ProjectMembership[],
-  { organizationId: string; projectId: string },
-  ThunkConfig
->(
+export const listProjectMemberships = createAsyncThunk<ProjectMembership[], void, ThunkConfig>(
   "projectMemberships/list",
-  async ({ organizationId, projectId }, { extra: { services } }) =>
-    await services.projectMemberships.getAll(organizationId, projectId),
+  async (_, { extra: { services }, getState }) => {
+    const state = getState()
+    const { organizationId, projectId } = getCurrentIds({
+      state,
+      wantedIds: ["organizationId", "projectId"],
+    })
+    return await services.projectMemberships.getAll({ organizationId, projectId })
+  },
 )
 
 export const inviteProjectMembers = createAsyncThunk<
   ProjectMembership[],
-  {
-    organizationId: string
-    projectId: string
-    payload: InviteProjectMembersPayload
-  },
+  { emails: string[] },
   ThunkConfig
->(
-  "projectMemberships/invite",
-  async ({ organizationId, projectId, payload }, { extra: { services } }) =>
-    await services.projectMemberships.invite(organizationId, projectId, payload),
-)
+>("projectMemberships/invite", async ({ emails }, { extra: { services }, getState }) => {
+  const state = getState()
+  const { organizationId, projectId } = getCurrentIds({
+    state,
+    wantedIds: ["organizationId", "projectId"],
+  })
+  return await services.projectMemberships.invite({ organizationId, projectId, emails })
+})
 
 export const removeProjectMembership = createAsyncThunk<
   void,
-  {
-    organizationId: string
-    projectId: string
-    membershipId: string
-  },
+  { membershipId: string },
   ThunkConfig
->(
-  "projectMemberships/remove",
-  async ({ organizationId, projectId, membershipId }, { extra: { services } }) =>
-    await services.projectMemberships.remove(organizationId, projectId, membershipId),
-)
+>("projectMemberships/remove", async ({ membershipId }, { extra: { services }, getState }) => {
+  const state = getState()
+  const { organizationId, projectId } = getCurrentIds({
+    state,
+    wantedIds: ["organizationId", "projectId"],
+  })
+  return await services.projectMemberships.remove({ organizationId, projectId, membershipId })
+})

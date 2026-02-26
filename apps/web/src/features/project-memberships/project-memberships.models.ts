@@ -9,7 +9,3 @@ export type ProjectMembership = {
   status: "sent" | "accepted"
   createdAt: TimeType
 }
-
-export type InviteProjectMembersPayload = {
-  emails: string[]
-}

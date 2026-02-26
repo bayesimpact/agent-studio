@@ -1,11 +1,15 @@
-import type { InviteProjectMembersPayload, ProjectMembership } from "./project-memberships.models"
+import type { ProjectMembership } from "./project-memberships.models"
 
 export interface IProjectMembershipsSpi {
-  getAll: (organizationId: string, projectId: string) => Promise<ProjectMembership[]>
-  invite: (
-    organizationId: string,
-    projectId: string,
-    payload: InviteProjectMembersPayload,
-  ) => Promise<ProjectMembership[]>
-  remove: (organizationId: string, projectId: string, membershipId: string) => Promise<void>
+  getAll: (params: { organizationId: string; projectId: string }) => Promise<ProjectMembership[]>
+  invite: (params: {
+    organizationId: string
+    projectId: string
+    emails: string[]
+  }) => Promise<ProjectMembership[]>
+  remove: (params: {
+    organizationId: string
+    projectId: string
+    membershipId: string
+  }) => Promise<void>
 }
