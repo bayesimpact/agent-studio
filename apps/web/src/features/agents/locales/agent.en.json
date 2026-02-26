@@ -10,27 +10,46 @@
       "locale": "Locale",
       "name": "Name",
       "model": "Model",
+      "outputJsonSchema": "Output JSON Schema",
       "temperature": "Temperature",
       "updatedAt": "Updated At",
       "placeholders": {
         "name": "Enter agent name",
         "defaultPrompt": "Enter default prompt",
         "model": "Select model",
+        "outputJsonSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"field\": { \"type\": \"string\" }\n  },\n  \"required\": [\"field\"]\n}",
         "temperature": "Enter temperature 0.0 - 2.0",
         "locale": "Select language for agent responses"
       },
       "validation": {
         "nameMinLength": "Name must be at least 3 characters",
         "promptRequired": "Default prompt is required",
-        "temperatureInvalid": "Temperature must be between 0.0 and 2.0"
+        "temperatureInvalid": "Temperature must be between 0.0 and 2.0",
+        "outputJsonSchemaRequired": "Output JSON schema is required",
+        "outputJsonSchemaInvalid": "Output JSON schema must be a valid JSON object"
       }
     },
     "create": {
       "title": "Create Agent",
+      "titleConversation": "Create Conversation Agent",
+      "titleExtraction": "Create Extraction Agent",
+      "descriptionConversation": "Create a new conversation agent for {{projectName}}",
+      "descriptionExtraction": "Create a new extraction agent for {{projectName}}",
       "description": "Create a new agent for {{projectName}}"
+    },
+    "typeDialog": {
+      "label": "Agent type",
+      "description": "Choose the type before configuring your agent.",
+      "confirm": "Continue",
+      "conversation": "Conversation",
+      "extraction": "Extraction"
     },
     "update": {
       "title": "Edit Agent",
+      "titleConversation": "Edit Conversation Agent",
+      "titleExtraction": "Edit Extraction Agent",
+      "descriptionConversation": "Edit conversation agent details",
+      "descriptionExtraction": "Edit extraction agent details",
       "description": "Edit agent details"
     },
     "delete": {
@@ -50,6 +69,31 @@
       "title": "Default Prompt",
       "description": "This prompt defines the behavior of the agent.",
       "button": "View Prompt"
+    },
+    "extraction": {
+      "runsTitle": "Extraction Runs",
+      "emptyTitle": "No extraction runs yet",
+      "emptyDescription": "Run history will appear here once extraction execution is available.",
+      "newRunButton": "New extraction run",
+      "newRunTitle": "Create extraction run",
+      "newRunDescription": "Upload a PDF or image to run extraction.",
+      "documentLabel": "Document",
+      "documentHint": "Accepted file types: PDF, JPEG, PNG",
+      "uploadedFileLabel": "Uploaded file",
+      "submitRun": "Run extraction",
+      "running": "Running...",
+      "resultTitle": "Structured JSON output",
+      "viewResultButton": "View JSON",
+      "downloadResultButton": "Download JSON",
+      "loadingResult": "Loading result...",
+      "resultUnavailable": "Result is unavailable for this run.",
+      "traceUrl": "Trace Url",
+      "invalidFileType": "Unsupported file type. Please upload a PDF, JPEG, or PNG file.",
+      "runCreationFailed": "Failed to create extraction run.",
+      "status": {
+        "success": "Success",
+        "failed": "Failed"
+      }
     }
   }
 }

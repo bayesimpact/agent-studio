@@ -1,6 +1,8 @@
 import i18n, { type PostProcessorModule } from "i18next"
 import LanguageDetector from "i18next-browser-languagedetector"
 import { initReactI18next } from "react-i18next"
+import agentExtractionRunEN from "./features/agent-extraction-runs/locales/agent-extraction-run.en.json"
+import agentExtractionRunFR from "./features/agent-extraction-runs/locales/agent-extraction-run.fr.json"
 import agentMessageFeedbackEN from "./features/agent-message-feedback/locales/agent-message-feedback.en.json"
 import agentMessageFeedbackFR from "./features/agent-message-feedback/locales/agent-message-feedback.fr.json"
 import agentSessionEN from "./features/agent-sessions/locales/agent-session.en.json"
@@ -69,6 +71,7 @@ i18n
         ...statusEN,
         ...agentEN,
         ...agentMessageFeedbackEN,
+        ...agentExtractionRunEN,
         ...agentSessionEN,
         ...documentEN,
         ...evaluationReportEN,
@@ -84,6 +87,7 @@ i18n
         ...statusFR,
         ...agentFR,
         ...agentMessageFeedbackFR,
+        ...agentExtractionRunFR,
         ...agentSessionFR,
         ...documentFR,
         ...evaluationReportFR,

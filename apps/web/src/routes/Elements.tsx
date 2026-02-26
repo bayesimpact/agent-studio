@@ -1,6 +1,7 @@
 import { AgentRoute } from "./AgentRoute"
 import { AgentSessionRoute } from "./AgentSessionRoute"
 import { DashboardRoute } from "./DashboardRoute"
+import { ExtractionAgentRoute } from "./ExtractionAgentRoute"
 import { RouteNames } from "./helpers"
 import { ProjectRoute } from "./ProjectRoute"
 import { ProtectedRoute } from "./ProtectedRoute"
@@ -19,6 +20,9 @@ export const getElement = (routeNames: RouteNames) => {
 
     case RouteNames.AGENT:
       return <AgentRoute />
+
+    case RouteNames.EXTRACTION_AGENT:
+      return <ExtractionAgentRoute />
 
     case RouteNames.AGENT_SESSION:
       return <AgentSessionRoute />

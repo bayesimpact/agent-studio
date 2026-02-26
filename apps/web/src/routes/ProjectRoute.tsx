@@ -40,11 +40,19 @@ function WithData({ project, agents }: { project: Project; agents: Agent[] }) {
   if (firstAgent)
     return (
       <Navigate
-        to={buildPath("agent", {
-          organizationId: project.organizationId,
-          projectId: project.id,
-          agentId: firstAgent.id,
-        })}
+        to={
+          firstAgent.type === "extraction"
+            ? buildPath("extractionAgent", {
+                organizationId: project.organizationId,
+                projectId: project.id,
+                agentId: firstAgent.id,
+              })
+            : buildPath("agent", {
+                organizationId: project.organizationId,
+                projectId: project.id,
+                agentId: firstAgent.id,
+              })
+        }
         replace
       />
     )

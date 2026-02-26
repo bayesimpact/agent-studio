@@ -8,6 +8,7 @@ export enum RouteNames {
   PROJECT = "/o/:organizationId/p/:projectId",
 
   AGENT = "/o/:organizationId/p/:projectId/a/:agentId",
+  EXTRACTION_AGENT = "/o/:organizationId/p/:projectId/ea/:agentId",
   AGENT_SESSION = "/o/:organizationId/p/:projectId/a/:agentId/as/:agentSessionId",
 
   // ADMIN ROUTES

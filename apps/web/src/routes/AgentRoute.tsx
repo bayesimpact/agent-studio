@@ -1,5 +1,5 @@
 import { useEffect } from "react"
-import { Outlet, useOutlet, useParams } from "react-router-dom"
+import { Navigate, Outlet, useOutlet, useParams } from "react-router-dom"
 import { AgentDeletorWithTrigger } from "@/components/agent/AgentDeletor"
 import { AgentEditorWithTrigger } from "@/components/agent/AgentEditor"
 import { DefaultPromptDialog } from "@/components/agent/DefaultPromptDialog"
@@ -8,10 +8,11 @@ import { useSidebarLayout } from "@/components/layouts/sidebar/context"
 import type { AgentSession } from "@/features/agent-sessions/agent-sessions.models"
 import { selectCurrentAgentSessionsData } from "@/features/agent-sessions/agent-sessions.selectors"
 import type { Agent } from "@/features/agents/agents.models"
-import { selectAgentData, selectCurrentAgentId } from "@/features/agents/agents.selectors"
+import { selectAgentDataFromAgentId } from "@/features/agents/agents.selectors"
 import { selectCurrentOrganizationId } from "@/features/organizations/organizations.selectors"
 import { selectCurrentProjectId } from "@/features/projects/projects.selectors"
 import { useAbility } from "@/hooks/use-ability"
+import { useBuildPath } from "@/hooks/use-build-path"
 import { useIsRoute } from "@/hooks/use-is-route"
 import { ADS } from "@/store/async-data-status"
 import { useAppSelector } from "@/store/hooks"
@@ -20,10 +21,10 @@ import { RouteNames } from "./helpers"
 import { LoadingRoute } from "./LoadingRoute"
 
 export function AgentRoute() {
+  const { agentId: urlAgentId } = useParams()
   const organizationId = useAppSelector(selectCurrentOrganizationId)
   const projectId = useAppSelector(selectCurrentProjectId)
-  const agentId = useAppSelector(selectCurrentAgentId)
-  const agent = useAppSelector(selectAgentData)
+  const agent = useAppSelector(selectAgentDataFromAgentId(urlAgentId))
   const agentSessions = useAppSelector(selectCurrentAgentSessionsData)
 
   if (ADS.isError(agent) || ADS.isError(agentSessions) || !organizationId || !projectId)
@@ -32,7 +33,7 @@ export function AgentRoute() {
   if (ADS.isFulfilled(agent) && ADS.isFulfilled(agentSessions)) {
     return (
       <WithData
-        key={agentId}
+        key={urlAgentId}
         projectId={projectId}
         agent={agent.value}
         agentSessions={agentSessions.value}
@@ -56,8 +57,22 @@ function WithData({
   projectId: string
 }) {
   const outlet = useOutlet()
+  const { buildPath } = useBuildPath()
 
   useHandleHeader(agent)
+
+  if (agent.type === "extraction") {
+    return (
+      <Navigate
+        to={buildPath("extractionAgent", {
+          organizationId,
+          projectId,
+          agentId: agent.id,
+        })}
+        replace
+      />
+    )
+  }
 
   if (outlet) return <Outlet />
 

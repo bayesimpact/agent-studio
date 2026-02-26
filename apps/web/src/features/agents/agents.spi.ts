@@ -4,11 +4,17 @@ export interface IAgentsSpi {
   getAll: (params: { organizationId: string; projectId: string }) => Promise<Agent[]>
   createOne: (
     params: { organizationId: string; projectId: string },
-    payload: Pick<Agent, "name" | "defaultPrompt" | "model" | "locale" | "temperature">,
+    payload: Pick<Agent, "name" | "defaultPrompt" | "model" | "locale" | "temperature" | "type"> &
+      Partial<Pick<Agent, "outputJsonSchema">>,
   ) => Promise<Agent>
   updateOne: (
     params: { organizationId: string; projectId: string; agentId: string },
-    payload: Partial<Pick<Agent, "name" | "defaultPrompt" | "model" | "locale" | "temperature">>,
+    payload: Partial<
+      Pick<
+        Agent,
+        "name" | "defaultPrompt" | "model" | "locale" | "temperature" | "type" | "outputJsonSchema"
+      >
+    >,
   ) => Promise<void>
   deleteOne: (params: {
     organizationId: string

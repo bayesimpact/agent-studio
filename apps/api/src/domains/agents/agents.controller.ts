@@ -88,8 +88,10 @@ function toAgentDto(entity: Agent): AgentDto {
     locale: entity.locale,
     model: entity.model,
     name: entity.name,
+    outputJsonSchema: entity.outputJsonSchema ?? undefined,
     projectId: entity.projectId,
     temperature: entity.temperature,
+    type: entity.type,
     updatedAt: entity.updatedAt.getTime(),
   }
 }

@@ -1,9 +1,15 @@
-import type { AgentLocale, AgentModel, AgentTemperature } from "@caseai-connect/api-contracts"
+import type {
+  AgentLocale,
+  AgentModel,
+  AgentTemperature,
+  AgentType,
+} from "@caseai-connect/api-contracts"
 import { Column, JoinColumn, ManyToOne, OneToMany } from "typeorm"
 import { ConnectEntity, ConnectEntityBase } from "@/common/entities/connect-entity"
 import { AgentSession } from "@/domains/agent-sessions/agent-session.entity"
 import { Project } from "@/domains/projects/project.entity"
 import { EvaluationReport } from "../evaluations/reports/evaluation-report.entity"
+import { AgentExtractionRun } from "./agent-extraction-runs/agent-extraction-run.entity"
 
 @ConnectEntity("agent")
 export class Agent extends ConnectEntityBase {
@@ -29,6 +35,15 @@ export class Agent extends ConnectEntityBase {
   @Column({ type: "varchar" })
   locale!: AgentLocale
 
+  @Column({ type: "varchar", default: "conversation" })
+  type!: AgentType
+
+  @Column({ type: "text", nullable: true, name: "instruction_prompt" })
+  instructionPrompt!: string | null
+
+  @Column({ type: "jsonb", nullable: true, name: "output_json_schema" })
+  outputJsonSchema!: Record<string, unknown> | null
+
   @OneToMany(
     () => AgentSession,
     (agentSession) => agentSession.agent,
@@ -40,4 +55,10 @@ export class Agent extends ConnectEntityBase {
     (evaluationReport) => evaluationReport.agent,
   )
   evaluationReports!: EvaluationReport[]
+
+  @OneToMany(
+    () => AgentExtractionRun,
+    (agentExtractionRun) => agentExtractionRun.agent,
+  )
+  agentExtractionRuns!: AgentExtractionRun[]
 }

@@ -19,7 +19,7 @@ export const uploadDocument = createAsyncThunk<
     organizationId: string
     projectId: string
     file: File
-    sourceType: "project" | "agentSessionMessage"
+    sourceType: "project" | "agentSessionMessage" | "extraction"
     onSuccess?: (params: { documentId: string }) => void
   },
   ThunkConfig

@@ -32,23 +32,33 @@ export default {
 } satisfies IAgentsSpi
 
 const toCreateDto = (
-  payload: Pick<Agent, "name" | "defaultPrompt" | "model" | "locale" | "temperature">,
+  payload: Pick<Agent, "name" | "defaultPrompt" | "model" | "locale" | "temperature" | "type"> &
+    Partial<Pick<Agent, "outputJsonSchema">>,
 ): (typeof AgentsRoutes.createOne.request)["payload"] => ({
   defaultPrompt: payload.defaultPrompt,
   locale: payload.locale,
   model: payload.model,
   name: payload.name,
+  outputJsonSchema: payload.outputJsonSchema,
   temperature: payload.temperature,
+  type: payload.type,
 })
 
 const toUpdateDto = (
-  payload: Partial<Pick<Agent, "name" | "defaultPrompt" | "locale" | "model" | "temperature">>,
+  payload: Partial<
+    Pick<
+      Agent,
+      "name" | "defaultPrompt" | "locale" | "model" | "temperature" | "type" | "outputJsonSchema"
+    >
+  >,
 ): (typeof AgentsRoutes.updateOne.request)["payload"] => ({
   defaultPrompt: payload.defaultPrompt,
   locale: payload.locale,
   model: payload.model,
   name: payload.name,
+  outputJsonSchema: payload.outputJsonSchema,
   temperature: payload.temperature,
+  type: payload.type,
 })
 
 const fromDto = (dto: AgentDto): Agent => ({
@@ -58,7 +68,9 @@ const fromDto = (dto: AgentDto): Agent => ({
   locale: dto.locale,
   model: dto.model,
   name: dto.name,
+  outputJsonSchema: dto.outputJsonSchema,
   projectId: dto.projectId,
   temperature: dto.temperature,
+  type: dto.type,
   updatedAt: dto.updatedAt,
 })

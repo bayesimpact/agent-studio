@@ -2,6 +2,7 @@ import type {
   AgentLocale,
   AgentModel,
   AgentTemperature,
+  AgentType,
   TimeType,
 } from "@caseai-connect/api-contracts"
 import z from "zod"
@@ -13,8 +14,10 @@ export type Agent = {
   locale: AgentLocale
   model: AgentModel
   name: string
+  outputJsonSchema?: Record<string, unknown>
   projectId: string
   temperature: AgentTemperature
+  type: AgentType
   updatedAt: TimeType
 }
 
