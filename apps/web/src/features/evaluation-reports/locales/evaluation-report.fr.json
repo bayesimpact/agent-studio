@@ -6,6 +6,7 @@
       "output": "Sortie",
       "score": "Score",
       "updatedAt": "Mis à jour le"
-    }
+    },
+    "status": "Statut"
   }
 }

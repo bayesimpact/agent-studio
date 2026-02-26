@@ -13,7 +13,7 @@ export function createColumns({ t }: { t: TFunction }): ColumnDef<z.infer<typeof
   return [
     {
       accessorKey: "createdAt",
-      header: t("table.headers.createdAt"),
+      header: t("evaluationReport:props.createdAt"),
       cell: ({ row }) => {
         return <div className="text-muted-foreground">{buildDate(row.original.createdAt)}</div>
       },
@@ -21,7 +21,7 @@ export function createColumns({ t }: { t: TFunction }): ColumnDef<z.infer<typeof
     },
     {
       accessorKey: "status",
-      header: t("table.headers.status"),
+      header: t("evaluationReport:status"),
       cell: ({ row }) => (
         <Badge variant="outline" className="text-muted-foreground px-1.5 select-none">
           {row.original.status === "done" ? (
@@ -35,24 +35,24 @@ export function createColumns({ t }: { t: TFunction }): ColumnDef<z.infer<typeof
     },
     {
       accessorKey: "agent",
-      header: t("table.headers.agent.agent"),
+      header: t("agent:agent"),
       cell: ({ row }) => {
         return row.original.agent ? (
           <div className="text-muted-foreground text-xs flex flex-col gap-1.5">
             <div>
-              <span>{t("table.headers.agent.name", { colon: true })}</span>{" "}
+              <span>{t("agent:props.name", { colon: true })}</span>{" "}
               <span className="font-semibold">{row.original.agent.name}</span>
             </div>
             <div>
-              <span>{t("table.headers.agent.model")}</span>{" "}
+              <span>{t("agent:props.model", { colon: true })}</span>{" "}
               <span className="font-semibold">{row.original.agent.model}</span>
             </div>
             <div>
-              <span>{t("table.headers.agent.locale")}</span>{" "}
+              <span>{t("agent:props.locale", { colon: true })}</span>{" "}
               <span className="font-semibold">{row.original.agent.locale}</span>
             </div>
             <div>
-              <span>{t("table.headers.agent.temperature")}</span>{" "}
+              <span>{t("agent:props.temperature", { colon: true })}</span>{" "}
               <span className="font-semibold">{row.original.agent.temperature}</span>
             </div>
             <DefaultPromptDialog
@@ -66,7 +66,7 @@ export function createColumns({ t }: { t: TFunction }): ColumnDef<z.infer<typeof
     },
     {
       accessorKey: "output",
-      header: t("table.headers.output"),
+      header: t("evaluationReport:props.output"),
       cell: ({ row }) => {
         return <div className="max-w-52 whitespace-break-spaces">{row.original.output}</div>
       },
@@ -74,7 +74,7 @@ export function createColumns({ t }: { t: TFunction }): ColumnDef<z.infer<typeof
     },
     {
       accessorKey: "score",
-      header: () => <div>{t("table.headers.score")}</div>,
+      header: () => <div>{t("evaluationReport:props.score")}</div>,
       cell: ({ row }) => {
         row.original.score ? <Badge>{row.original.score}</Badge> : null
       },
@@ -85,7 +85,7 @@ export function createColumns({ t }: { t: TFunction }): ColumnDef<z.infer<typeof
       cell: ({ row }) => (
         <Button asChild variant="ghost">
           <a href={row.original.traceUrl} className="cursor-pointer" target="_blank">
-            Trace Url
+            {t("evaluationReport:props.traceUrl")}
             <ExternalLinkIcon className="size-4" />
           </a>
         </Button>

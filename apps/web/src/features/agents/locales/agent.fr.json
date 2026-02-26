@@ -1,5 +1,7 @@
 {
   "agent": {
+    "agent": "Agent",
+    "agents": "Agents",
     "selectAgent": "Sélectionner un agent",
     "settings": "Paramètres de l'agent",
     "props": {

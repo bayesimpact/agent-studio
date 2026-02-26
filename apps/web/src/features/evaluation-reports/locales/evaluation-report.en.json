@@ -6,6 +6,7 @@
       "output": "Output",
       "score": "Score",
       "updatedAt": "Updated At"
-    }
+    },
+    "status": "Status"
   }
 }
