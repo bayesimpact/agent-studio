@@ -29,6 +29,13 @@
       "title": "Create Agent",
       "description": "Create a new agent for {{projectName}}"
     },
+    "typeDialog": {
+      "label": "Agent type",
+      "description": "Choose the type before configuring your agent.",
+      "confirm": "Continue",
+      "conversation": "Conversation",
+      "extraction": "Extraction"
+    },
     "update": {
       "title": "Edit Agent",
       "description": "Edit agent details"

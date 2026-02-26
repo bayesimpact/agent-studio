@@ -16,7 +16,7 @@ import { useTranslation } from "react-i18next"
 import type { Agent } from "@/features/agents/agents.models"
 import { updateAgent } from "@/features/agents/agents.thunks"
 import { useAppDispatch } from "@/store/hooks"
-import { AgentForm } from "./AgentForm"
+import { ConversationAgentForm } from "./ConversationAgentForm"
 
 export function AgentEditorWithTrigger({
   organizationId,
@@ -116,5 +116,5 @@ function UpdateForm({
     onSuccess?.()
   }
 
-  return <AgentForm editableAgent={agent} onSubmit={handleSubmit} />
+  return <ConversationAgentForm editableAgent={agent} onSubmit={handleSubmit} />
 }
