@@ -53,11 +53,13 @@ export function AdminAgentList({
             />
           }
         >
-          <AgentSessionList
-            organizationId={organizationId}
-            agentId={agent.id}
-            projectId={agent.projectId}
-          />
+          {agent.type === "conversation" ? (
+            <AgentSessionList
+              organizationId={organizationId}
+              agentId={agent.id}
+              projectId={agent.projectId}
+            />
+          ) : null}
         </AppNavItem>
       ))}
 

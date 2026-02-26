@@ -5,7 +5,6 @@ import { OrganizationContextResolver } from "@/common/context/resolvers/organiza
 import { ProjectContextResolver } from "@/common/context/resolvers/project-context.resolver"
 import { ResourceContextGuard } from "@/common/context/resource-context.guard"
 import { AgentSessionsModule } from "@/domains/agent-sessions/agent-sessions.module"
-import { AISDKLLMProvider } from "@/domains/agent-sessions/providers/ai-sdk-llm.provider"
 import { AuthModule } from "@/domains/auth/auth.module"
 import { DocumentsModule } from "@/domains/documents/documents.module"
 import { StorageModule } from "@/domains/documents/storage/storage.module"
@@ -14,6 +13,7 @@ import { UserMembership } from "@/domains/organizations/user-membership.entity"
 import { ProjectMembership } from "@/domains/projects/memberships/project-membership.entity"
 import { Project } from "@/domains/projects/project.entity"
 import { UsersModule } from "@/domains/users/users.module"
+import { AISDKVertexProvider } from "@/external/llm/providers/ai-sdk-vertex.provider"
 import { ProjectsModule } from "../projects/projects.module"
 import { Agent } from "./agent.entity"
 import { AgentGuard } from "./agent.guard"
@@ -52,7 +52,7 @@ import { AgentsService } from "./agents.service"
     AgentContextResolver,
     {
       provide: "LLMProvider",
-      useClass: AISDKLLMProvider,
+      useClass: AISDKVertexProvider,
     },
   ],
   controllers: [AgentsController, AgentExtractionRunsController],
