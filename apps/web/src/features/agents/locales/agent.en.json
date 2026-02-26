@@ -10,23 +10,31 @@
       "locale": "Locale",
       "name": "Name",
       "model": "Model",
+      "outputJsonSchema": "Output JSON Schema",
       "temperature": "Temperature",
       "updatedAt": "Updated At",
       "placeholders": {
         "name": "Enter agent name",
         "defaultPrompt": "Enter default prompt",
         "model": "Select model",
+        "outputJsonSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"field\": { \"type\": \"string\" }\n  },\n  \"required\": [\"field\"]\n}",
         "temperature": "Enter temperature 0.0 - 2.0",
         "locale": "Select language for agent responses"
       },
       "validation": {
         "nameMinLength": "Name must be at least 3 characters",
         "promptRequired": "Default prompt is required",
-        "temperatureInvalid": "Temperature must be between 0.0 and 2.0"
+        "temperatureInvalid": "Temperature must be between 0.0 and 2.0",
+        "outputJsonSchemaRequired": "Output JSON schema is required",
+        "outputJsonSchemaInvalid": "Output JSON schema must be a valid JSON object"
       }
     },
     "create": {
       "title": "Create Agent",
+      "titleConversation": "Create Conversation Agent",
+      "titleExtraction": "Create Extraction Agent",
+      "descriptionConversation": "Create a new conversation agent for {{projectName}}",
+      "descriptionExtraction": "Create a new extraction agent for {{projectName}}",
       "description": "Create a new agent for {{projectName}}"
     },
     "typeDialog": {

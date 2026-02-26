@@ -10,23 +10,31 @@
       "locale": "Langue",
       "name": "Nom",
       "model": "Modèle",
+      "outputJsonSchema": "Schéma JSON de sortie",
       "temperature": "Température",
       "updatedAt": "Mis à jour le",
       "placeholders": {
         "name": "Entrez le nom de l'agent",
         "defaultPrompt": "Entrez le prompt par défaut",
         "model": "Sélectionnez le modèle",
+        "outputJsonSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"field\": { \"type\": \"string\" }\n  },\n  \"required\": [\"field\"]\n}",
         "temperature": "Entrez la température 0.0 - 2.0",
         "locale": "Sélectionnez la langue pour les réponses de l'agent"
       },
       "validation": {
         "nameMinLength": "Le nom doit comporter au moins 3 caractères",
         "promptRequired": "Le prompt par défaut est requis",
-        "temperatureInvalid": "La température doit être comprise entre 0,0 et 2,0"
+        "temperatureInvalid": "La température doit être comprise entre 0,0 et 2,0",
+        "outputJsonSchemaRequired": "Le schéma JSON de sortie est requis",
+        "outputJsonSchemaInvalid": "Le schéma JSON de sortie doit être un objet JSON valide"
       }
     },
     "create": {
       "title": "Créer un agent",
+      "titleConversation": "Créer un agent conversationnel",
+      "titleExtraction": "Créer un agent d'extraction",
+      "descriptionConversation": "Créer un nouvel agent conversationnel pour {{projectName}}",
+      "descriptionExtraction": "Créer un nouvel agent d'extraction pour {{projectName}}",
       "description": "Créer un nouvel agent pour {{projectName}}"
     },
     "typeDialog": {

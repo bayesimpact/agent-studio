@@ -69,6 +69,12 @@ export function AgentCreatorWithTrigger({ project }: { project: Project }) {
     }
   }
 
+  const sheetTitle = selectedType === "extraction" ? t("titleExtraction") : t("titleConversation")
+  const sheetDescription =
+    selectedType === "extraction"
+      ? t("descriptionExtraction", { projectName: project.name })
+      : t("descriptionConversation", { projectName: project.name })
+
   return (
     <div>
       <AgentTypeDialog
@@ -84,8 +90,8 @@ export function AgentCreatorWithTrigger({ project }: { project: Project }) {
         <SheetContent side="bottom" className="h-dvh">
           <ScrollArea className="h-full">
             <SheetHeader>
-              <SheetTitle>{t("title")}</SheetTitle>
-              <SheetDescription>{t("description", { projectName: project.name })}</SheetDescription>
+              <SheetTitle>{sheetTitle}</SheetTitle>
+              <SheetDescription>{sheetDescription}</SheetDescription>
             </SheetHeader>
             <div className="px-4 pb-4">
               <CreateForm
@@ -165,6 +171,12 @@ export function AgentCreatorWithoutTrigger({
     }
   }, [isFormSheetOpen, isOpen, isTypeDialogOpen])
 
+  const sheetTitle = selectedType === "extraction" ? t("titleExtraction") : t("titleConversation")
+  const sheetDescription =
+    selectedType === "extraction"
+      ? t("descriptionExtraction", { projectName: project.name })
+      : t("descriptionConversation", { projectName: project.name })
+
   return (
     <>
       <AgentTypeDialog
@@ -176,8 +188,8 @@ export function AgentCreatorWithoutTrigger({
         <SheetContent side="bottom" className="h-dvh">
           <ScrollArea className="h-full">
             <SheetHeader>
-              <SheetTitle>{t("title")}</SheetTitle>
-              <SheetDescription>{t("description", { projectName: project.name })}</SheetDescription>
+              <SheetTitle>{sheetTitle}</SheetTitle>
+              <SheetDescription>{sheetDescription}</SheetDescription>
             </SheetHeader>
             <div className="px-4 pb-4">
               <CreateForm
@@ -206,9 +218,6 @@ function CreateForm({
   onSuccess: (agent: Agent) => void
 }) {
   const dispatch = useAppDispatch()
-  const { t } = useTranslation("agent")
-  const [isCreating, setIsCreating] = useState(false)
-  const [formError, setFormError] = useState<string | null>(null)
 
   const handleCreate = async (fields: AgentFormData) => {
     const parsedOutputSchema =
@@ -216,42 +225,26 @@ function CreateForm({
         ? (JSON.parse(fields.outputJsonSchemaText) as Record<string, unknown>)
         : undefined
 
-    setIsCreating(true)
-    setFormError(null)
-    try {
-      const createdAgent = await dispatch(
-        createAgent({
-          organizationId,
-          projectId,
-          fields: {
-            name: fields.name,
-            defaultPrompt: fields.defaultPrompt,
-            model: fields.model,
-            temperature: fields.temperature,
-            locale: fields.locale,
-            type: agentType,
-            outputJsonSchema: parsedOutputSchema,
-          },
-        }),
-      ).unwrap()
-      onSuccess(createdAgent)
-    } catch (error) {
-      setFormError(error instanceof Error ? error.message : "Failed to create agent")
-    } finally {
-      setIsCreating(false)
-    }
+    const createdAgent = await dispatch(
+      createAgent({
+        organizationId,
+        projectId,
+        fields: {
+          name: fields.name,
+          defaultPrompt: fields.defaultPrompt,
+          model: fields.model,
+          temperature: fields.temperature,
+          locale: fields.locale,
+          type: agentType,
+          outputJsonSchema: parsedOutputSchema,
+        },
+      }),
+    ).unwrap()
+    onSuccess(createdAgent)
   }
 
   if (agentType === "extraction") {
-    return (
-      <ExtractionAgentForm
-        isLoading={isCreating}
-        error={formError}
-        onSubmit={handleCreate}
-        submitLabelIdle={t("create.submit")}
-        submitLabelLoading={t("create.submitting")}
-      />
-    )
+    return <ExtractionAgentForm onSubmit={handleCreate} />
   }
 
   return <ConversationAgentForm onSubmit={handleCreate} />
