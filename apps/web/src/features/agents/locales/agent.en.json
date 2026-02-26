@@ -46,6 +46,10 @@
     },
     "update": {
       "title": "Edit Agent",
+      "titleConversation": "Edit Conversation Agent",
+      "titleExtraction": "Edit Extraction Agent",
+      "descriptionConversation": "Edit conversation agent details",
+      "descriptionExtraction": "Edit extraction agent details",
       "description": "Edit agent details"
     },
     "delete": {

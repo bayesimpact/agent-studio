@@ -46,6 +46,10 @@
     },
     "update": {
       "title": "Modifier l'agent",
+      "titleConversation": "Modifier l'agent conversationnel",
+      "titleExtraction": "Modifier l'agent d'extraction",
+      "descriptionConversation": "Modifier les détails de l'agent conversationnel",
+      "descriptionExtraction": "Modifier les détails de l'agent d'extraction",
       "description": "Modifier les détails de l'agent"
     },
     "delete": {
