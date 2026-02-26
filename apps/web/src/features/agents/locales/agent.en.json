@@ -65,6 +65,31 @@
       "title": "Default Prompt",
       "description": "This prompt defines the behavior of the agent.",
       "button": "View Prompt"
+    },
+    "extraction": {
+      "runsTitle": "Extraction Runs",
+      "emptyTitle": "No extraction runs yet",
+      "emptyDescription": "Run history will appear here once extraction execution is available.",
+      "newRunButton": "New extraction run",
+      "newRunTitle": "Create extraction run",
+      "newRunDescription": "Upload a PDF or image to run extraction.",
+      "documentLabel": "Document",
+      "documentHint": "Accepted file types: PDF, JPEG, PNG",
+      "uploadedFileLabel": "Uploaded file",
+      "submitRun": "Run extraction",
+      "running": "Running...",
+      "resultTitle": "Structured JSON output",
+      "viewResultButton": "View JSON",
+      "downloadResultButton": "Download JSON",
+      "loadingResult": "Loading result...",
+      "resultUnavailable": "Result is unavailable for this run.",
+      "traceUrl": "Trace Url",
+      "invalidFileType": "Unsupported file type. Please upload a PDF, JPEG, or PNG file.",
+      "runCreationFailed": "Failed to create extraction run.",
+      "status": {
+        "success": "Success",
+        "failed": "Failed"
+      }
     }
   }
 }
