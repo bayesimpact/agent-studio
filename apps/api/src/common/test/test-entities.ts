@@ -2,6 +2,7 @@ import { AgentSession } from "@/domains/agent-sessions/agent-session.entity"
 import { AgentMessage } from "@/domains/agent-sessions/messages/agent-message.entity"
 import { AgentMessageFeedback } from "@/domains/agent-sessions/messages/feedback/agent-message-feedback.entity"
 import { Agent } from "@/domains/agents/agent.entity"
+import { AgentExtractionRun } from "@/domains/agents/agent-extraction-runs/agent-extraction-run.entity"
 import { Document } from "@/domains/documents/document.entity"
 import { Evaluation } from "@/domains/evaluations/evaluation.entity"
 import { EvaluationReport } from "@/domains/evaluations/reports/evaluation-report.entity"
@@ -16,6 +17,7 @@ export const TEST_ENTITIES = [
   AgentMessage,
   AgentMessageFeedback,
   AgentSession,
+  AgentExtractionRun,
   Document,
   Evaluation,
   EvaluationReport,

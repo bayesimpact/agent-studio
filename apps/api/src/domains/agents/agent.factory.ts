@@ -24,6 +24,9 @@ export const agentFactory = AgentFactory.define(({ sequence, params, transientPa
     model: params.model || AgentModel._MockStreamChatResponse,
     temperature: params.temperature ?? 0.7,
     locale: params.locale || AgentLocale.EN,
+    type: params.type || "conversation",
+    instructionPrompt: params.instructionPrompt ?? null,
+    outputJsonSchema: params.outputJsonSchema ?? null,
     organizationId: transientParams.organization.id,
     projectId: transientParams.project.id,
     createdAt: params.createdAt || now,
@@ -32,5 +35,6 @@ export const agentFactory = AgentFactory.define(({ sequence, params, transientPa
     project: transientParams.project,
     agentSessions: params.agentSessions || [],
     evaluationReports: params.evaluationReports || [],
+    agentExtractionRuns: params.agentExtractionRuns || [],
   } satisfies Agent
 })

@@ -9,6 +9,8 @@ export { AgentSessionStreamingRoutes } from "./agent-sessions/agent-session-stre
 // agent sessions DTOs
 export type * from "./agent-sessions/agent-sessions.dto"
 export { AgentSessionsRoutes } from "./agent-sessions/agent-sessions.routes"
+export type * from "./agents/agent-extraction-runs.dto"
+export { AgentExtractionRunsRoutes } from "./agents/agent-extraction-runs.routes"
 export * from "./agents/agents.dto"
 export { AgentsRoutes } from "./agents/agents.routes"
 // Documents DTOs

@@ -1,5 +1,5 @@
 import { SidebarMenuItem } from "@caseai-connect/ui/shad/sidebar"
-import { BotIcon } from "lucide-react"
+import { BotIcon, ScanText } from "lucide-react"
 import { useState } from "react"
 import { useParams } from "react-router-dom"
 import { AgentCreatorWithTrigger } from "@/components/agent/AgentCreator"
@@ -42,13 +42,9 @@ export function AdminAgentList({
           item={{
             id: agent.id,
             title: agent.name,
-            url: buildPath("agent", {
-              organizationId,
-              projectId: project.id,
-              agentId: agent.id,
-            }),
+            url: getAgentPath({ buildPath, organizationId, projectId: project.id, agent }),
             isActive: urlagentId === agent.id,
-            icon: BotIcon,
+            icon: getAgentIcon(agent),
           }}
           itemOptions={
             <AgentItemOptions
@@ -57,11 +53,13 @@ export function AdminAgentList({
             />
           }
         >
-          <AgentSessionList
-            organizationId={organizationId}
-            agentId={agent.id}
-            projectId={agent.projectId}
-          />
+          {agent.type === "conversation" ? (
+            <AgentSessionList
+              organizationId={organizationId}
+              agentId={agent.id}
+              projectId={agent.projectId}
+            />
+          ) : null}
         </AppNavItem>
       ))}
 
@@ -103,11 +101,7 @@ export function AppAgentList({
           item={{
             id: agent.id,
             title: agent.name,
-            url: buildPath("agent", {
-              organizationId,
-              projectId,
-              agentId: agent.id,
-            }),
+            url: getAgentPath({ buildPath, organizationId, projectId, agent }),
             isActive: urlagentId === agent.id,
             icon: BotIcon,
           }}
@@ -121,4 +115,34 @@ export function AppAgentList({
       ))}
     </>
   )
+}
+
+function getAgentIcon(agent: Agent) {
+  return agent.type === "extraction" ? ScanText : BotIcon
+}
+
+function getAgentPath({
+  buildPath,
+  organizationId,
+  projectId,
+  agent,
+}: {
+  buildPath: ReturnType<typeof useBuildPath>["buildPath"]
+  organizationId: string
+  projectId: string
+  agent: Agent
+}) {
+  if (agent.type === "extraction") {
+    return buildPath("extractionAgent", {
+      organizationId,
+      projectId,
+      agentId: agent.id,
+    })
+  }
+
+  return buildPath("agent", {
+    organizationId,
+    projectId,
+    agentId: agent.id,
+  })
 }

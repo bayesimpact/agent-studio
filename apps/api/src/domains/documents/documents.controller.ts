@@ -32,6 +32,7 @@ import { JwtAuthGuard } from "@/domains/auth/jwt-auth.guard"
 import { UserGuard } from "@/domains/users/user.guard"
 import type { Document } from "./document.entity"
 import { DocumentsGuard } from "./documents.guard"
+import { normalizeUploadedFileName } from "./documents.helpers"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
 import { DocumentsService } from "./documents.service"
 import { FILE_STORAGE_SERVICE, type IFileStorage } from "./storage/file-storage.interface"
@@ -65,7 +66,7 @@ export class DocumentsController {
     )
     file: MulterFile,
     @Request() req: EndpointRequestWithProject,
-    @Param("sourceType") sourceType: "project" | "agentSessionMessage",
+    @Param("sourceType") sourceType: "project" | "agentSessionMessage" | "extraction",
   ): Promise<typeof DocumentsRoutes.uploadOne.response> {
     if (!sourceType) {
       throw new UnprocessableEntityException("Source type is required.")
@@ -100,7 +101,8 @@ export class DocumentsController {
       )
     }
 
-    const extension = file.originalname.split(".").pop() || ""
+    const normalizedFileName = normalizeUploadedFileName(file.originalname)
+    const extension = normalizedFileName.split(".").pop() || ""
     if (extension.trim().length === 0) {
       throw new UnprocessableEntityException("File extension is required.", extension)
     }
@@ -115,11 +117,11 @@ export class DocumentsController {
       connectScope,
       documentId: fileInfo.fileId,
       fields: {
-        fileName: file.originalname,
+        fileName: normalizedFileName,
         mimeType: file.mimetype,
         size: file.size,
         storageRelativePath: fileInfo.storageRelativePath,
-        title: file.originalname,
+        title: normalizedFileName,
         sourceType,
       },
     })

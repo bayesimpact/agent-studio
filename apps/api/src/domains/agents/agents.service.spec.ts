@@ -108,6 +108,51 @@ describe("AgentsService", () => {
         "Agent name must be at least 3 characters long",
       )
     })
+
+    it("should default to conversation type", async () => {
+      const { organization, project } = await createOrganizationWithProject(repositories)
+
+      const result = await service.createAgent({
+        connectScope: {
+          organizationId: organization.id,
+          projectId: project.id,
+        },
+        fields: {
+          name: "Conversation Agent",
+          defaultPrompt: "This is a default prompt",
+          model: AgentModel.Gemini25Flash,
+          temperature: 0,
+          locale: AgentLocale.EN,
+        },
+      })
+
+      expect(result.type).toBe("conversation")
+    })
+
+    it("should require extraction fields when type is extraction", async () => {
+      const { organization, project } = await createOrganizationWithProject(repositories)
+
+      const createExtractionWithoutSchema = async () =>
+        service.createAgent({
+          connectScope: {
+            organizationId: organization.id,
+            projectId: project.id,
+          },
+          fields: {
+            name: "Extraction Agent",
+            defaultPrompt: "This is a default prompt",
+            model: AgentModel.Gemini25Flash,
+            temperature: 0,
+            locale: AgentLocale.EN,
+            type: "extraction",
+          },
+        })
+
+      await expect(createExtractionWithoutSchema()).rejects.toThrow(UnprocessableEntityException)
+      await expect(createExtractionWithoutSchema()).rejects.toThrow(
+        "Extraction agent requires outputJsonSchema",
+      )
+    })
   })
 
   describe("listAgents", () => {
