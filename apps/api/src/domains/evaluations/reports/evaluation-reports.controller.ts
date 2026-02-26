@@ -40,7 +40,7 @@ export class EvaluationReportsController {
         score: "",
       },
     })
-    // TODO: call generateText to fill in traceId, output
+    //Process evaluation => get output
     const result = await this.reportsService.processReport({
       evaluation: request.evaluation,
       evaluationReport: report,
@@ -51,7 +51,7 @@ export class EvaluationReportsController {
       required: { reportId: report.id },
       fieldsToUpdate: { output: result },
     })
-    // TODO: call evaluate to score once the generation pipeline is implemented
+    //Rate evaluation => evaluate output vs expected
     const rating = await this.reportsService.rateReport({
       evaluationReport: report,
       expectedValue: request.evaluation.expectedOutput,

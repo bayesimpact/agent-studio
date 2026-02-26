@@ -11,7 +11,7 @@ import type {
 import { sdk } from "@/external/llm/open-telemetry-init"
 import { AISDKMockProvider } from "@/external/llm/providers/ai-sdk-mock.provider"
 
-describe.skip("AISDKMockProvider", () => {
+describe("AISDKMockProvider", () => {
   let provider: AISDKMockProvider
   let messages: LLMChatMessage[]
   let config: LLMConfig
@@ -155,6 +155,27 @@ describe.skip("AISDKMockProvider", () => {
     expect(result).toBe("This text is from my custom processFiles Mock!")
   })
 
+  it("rate - default mock value", async () => {
+    metadata.traceId = v4()
+    const prompt = ""
+    config = { model: AgentModel._MockRate, temperature: 1, systemPrompt: "" }
+    const result = await provider.generateText({ prompt, config, metadata })
+    expect(result).toBeDefined()
+    expect(result).toBe("76")
+  })
+  it("rate - custom mock value", async () => {
+    metadata.traceId = v4()
+    const prompt = ""
+    config = {
+      model: AgentModel._MockRate,
+      temperature: 1,
+      systemPrompt: "",
+      mockResult: "42 is the answer to life, the universe and everything",
+    }
+    const result = await provider.generateText({ prompt, config, metadata })
+    expect(result).toBeDefined()
+    expect(result).toBe("42 is the answer to life, the universe and everything")
+  })
   async function streamToStringArray(
     stream: AsyncGenerator<string, void, unknown>,
   ): Promise<string[]> {

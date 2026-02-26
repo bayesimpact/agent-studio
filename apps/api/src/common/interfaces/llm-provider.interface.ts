@@ -7,6 +7,7 @@ type MockModels =
   | AgentModel._MockGenerateObject
   | AgentModel._MockGenerateText
   | AgentModel._MockProcessFiles
+  | AgentModel._MockRate
   | AgentModel._MockStreamChatResponse
 export type LLMConfig =
   | {

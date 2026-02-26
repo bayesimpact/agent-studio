@@ -59,6 +59,7 @@ describe("Evaluation Reports - createOne", () => {
     })
     organizationId = organization.id
     projectId = project.id
+
     auth0Id = user.auth0Id
 
     const agentMock = agentFactory.transient({ organization, project }).build({
@@ -93,5 +94,7 @@ describe("Evaluation Reports - createOne", () => {
     expect(res.body.data.id).toBeDefined()
     expect(res.body.data.createdAt).toBeDefined()
     expect(res.body.data.updatedAt).toBeDefined()
+    expect(res.body.data.output).toBe(`Hello, I'm the generateText default mock response!`) //see <default mock result for generateText>
+    expect(res.body.data.score).toBe("76") //see <default mock result for generateText>
   })
 })
