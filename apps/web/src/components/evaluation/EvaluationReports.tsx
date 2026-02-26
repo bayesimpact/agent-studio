@@ -34,7 +34,7 @@ function ErrorMessage() {
 }
 
 function LoadingMessage() {
-  const { t } = useTranslation("common")
+  const { t } = useTranslation("status")
   return (
     <div className="flex flex-1 items-center justify-center">
       <Item variant="outline" className="w-fit">
