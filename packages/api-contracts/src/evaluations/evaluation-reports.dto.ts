@@ -8,5 +8,5 @@ export type EvaluationReportDto = {
   traceUrl: string
   output: string
   score: string
-  updatedAt: TimeType
+  updatedAt?: TimeType
 }

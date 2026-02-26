@@ -103,7 +103,7 @@ export function EvaluationReportTable({ data: initialData }: { data: z.infer<typ
           ) : (
             <TableRow>
               <TableCell colSpan={columns.length} className="h-12 text-center">
-                {t("table.noResults")}
+                {t("status:noResults")}
               </TableCell>
             </TableRow>
           )}

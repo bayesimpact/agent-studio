@@ -6,6 +6,7 @@
     "loading": "Loading",
     "pending": "Pending",
     "thinking": "Thinking",
+    "noResults": "No results found.",
     "notFound": {
       "title": "404 Not Found",
       "description": "The page you are looking for does not exist.",

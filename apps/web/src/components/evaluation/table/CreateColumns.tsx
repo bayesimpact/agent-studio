@@ -1,5 +1,6 @@
 import { Badge } from "@caseai-connect/ui/shad/badge"
 import { Button } from "@caseai-connect/ui/shad/button"
+import { cn } from "@caseai-connect/ui/utils"
 import { IconCircleCheckFilled, IconLoader } from "@tabler/icons-react"
 import type { ColumnDef } from "@tanstack/react-table"
 import type { TFunction } from "i18next"
@@ -22,16 +23,25 @@ export function createColumns({ t }: { t: TFunction }): ColumnDef<z.infer<typeof
     {
       accessorKey: "status",
       header: t("evaluationReport:status"),
-      cell: ({ row }) => (
-        <Badge variant="outline" className="text-muted-foreground px-1.5 select-none">
-          {row.original.status === "done" ? (
-            <IconCircleCheckFilled className="fill-green-500 dark:fill-green-400" />
-          ) : row.original.status === "loading" ? (
-            <IconLoader />
-          ) : null}
-          {row.original.status}
-        </Badge>
-      ),
+      cell: ({ row }) => {
+        const status = row.original.status
+        return (
+          <Badge
+            variant="outline"
+            className={cn(
+              "text-muted-foreground px-1.5 select-none",
+              status === "loading" && "animate-pulse",
+            )}
+          >
+            {status === "done" ? (
+              <IconCircleCheckFilled className="fill-green-500 dark:fill-green-400" />
+            ) : status === "loading" ? (
+              <IconLoader className="animate-spin" />
+            ) : null}
+            {status}
+          </Badge>
+        )
+      },
     },
     {
       accessorKey: "agent",
@@ -75,9 +85,7 @@ export function createColumns({ t }: { t: TFunction }): ColumnDef<z.infer<typeof
     {
       accessorKey: "score",
       header: () => <div>{t("evaluationReport:props.score")}</div>,
-      cell: ({ row }) => {
-        row.original.score ? <Badge>{row.original.score}</Badge> : null
-      },
+      cell: ({ row }) => (row.original.score ? <Badge>{row.original.score}</Badge> : null),
     },
     {
       accessorKey: "traceUrl",

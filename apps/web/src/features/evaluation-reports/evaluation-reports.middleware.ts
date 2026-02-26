@@ -30,11 +30,25 @@ listenerMiddleware.startListening({
 // Success notification when creating an evaluation report
 listenerMiddleware.startListening({
   actionCreator: createEvaluationReport.fulfilled,
-  effect: async (_, listenerApi) => {
+  effect: async (action, listenerApi) => {
     listenerApi.dispatch(
       notificationsActions.show({
         title: "Evaluation report created successfully",
         type: "success",
+      }),
+    )
+
+    const state = listenerApi.getState()
+    const { organizationId, projectId } = getCurrentIds({
+      state,
+      wantedIds: ["organizationId", "projectId"],
+    })
+
+    await listenerApi.dispatch(
+      listEvaluationReports({
+        organizationId,
+        projectId,
+        evaluationId: action.payload.evaluationId,
       }),
     )
   },
