@@ -16,9 +16,7 @@ export async function loadLocales(): Promise<{
 }> {
   // Load all locale files from features and root locales directory
   const featureLocales = import.meta.glob("../features/**/locales/*.{en,fr}.json", { eager: true })
-  const globalLocales = import.meta.glob("*.{en,fr}.json", {
-    eager: true,
-  })
+  const globalLocales = import.meta.glob("../locales/*.{en,fr}.json", { eager: true })
 
   const allLocales = { ...featureLocales, ...globalLocales }
 
@@ -36,7 +34,12 @@ export async function loadLocales(): Promise<{
     const fileName = filePath.split("/").pop() || ""
 
     // Determine language from filename (.en.json or .fr.json)
-    const language = fileName.includes(".en.json") ? "en" : "fr"
+    const language = fileName.includes(".en.json")
+      ? "en"
+      : fileName.includes(".fr.json")
+        ? "fr"
+        : null
+    if (!language) continue
 
     // Merge the locale content into the appropriate language
     Object.assign(resources[language], content)
