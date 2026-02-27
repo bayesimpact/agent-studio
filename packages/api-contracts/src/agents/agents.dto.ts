@@ -24,6 +24,7 @@ export enum AgentModel {
   Gemini25Flash = "gemini-2.5-flash",
   Gemini25Pro = "gemini-2.5-pro",
   _MockGenerateObject = "generate-object-mock-language-model-v3",
+  _MockGenerateStructuredOutput = "generate-structured-output-mock-language-model-v3",
   _MockGenerateText = "generate-text-mock-language-model-v3",
   _MockProcessFiles = "process-files-mock-language-model-v3",
   _MockRate = "rate-mock-language-model-v3",

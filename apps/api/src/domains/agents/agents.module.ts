@@ -13,7 +13,7 @@ import { UserMembership } from "@/domains/organizations/user-membership.entity"
 import { ProjectMembership } from "@/domains/projects/memberships/project-membership.entity"
 import { Project } from "@/domains/projects/project.entity"
 import { UsersModule } from "@/domains/users/users.module"
-import { AISDKVertexProvider } from "@/external/llm/providers/ai-sdk-vertex.provider"
+import { LlmModule } from "@/external/llm/llm.module"
 import { ProjectsModule } from "../projects/projects.module"
 import { Agent } from "./agent.entity"
 import { AgentGuard } from "./agent.guard"
@@ -33,6 +33,7 @@ import { AgentsService } from "./agents.service"
       UserMembership,
       ProjectMembership,
     ]),
+    LlmModule,
     OrganizationsModule,
     ProjectsModule,
     UsersModule,
@@ -50,10 +51,6 @@ import { AgentsService } from "./agents.service"
     OrganizationContextResolver,
     ProjectContextResolver,
     AgentContextResolver,
-    {
-      provide: "LLMProvider",
-      useClass: AISDKVertexProvider,
-    },
   ],
   controllers: [AgentsController, AgentExtractionRunsController],
   exports: [AgentsService, AgentExtractionRunsService],

@@ -10,6 +10,7 @@ import { AuthModule } from "@/domains/auth/auth.module"
 import { UserMembership } from "@/domains/organizations/user-membership.entity"
 import { ProjectMembership } from "@/domains/projects/memberships/project-membership.entity"
 import { UsersModule } from "@/domains/users/users.module"
+import { LlmModule } from "@/external/llm/llm.module"
 import { AISDKMockProvider } from "@/external/llm/providers/ai-sdk-mock.provider"
 import { AISDKVertexProvider } from "@/external/llm/providers/ai-sdk-vertex.provider"
 import { AgentMessage } from "../agent-sessions/messages/agent-message.entity"
@@ -43,6 +44,7 @@ import { PlaygroundSessionsController } from "./playground/playground-sessions.c
       ProjectMembership,
       UserMembership,
     ]),
+    LlmModule,
     AuthModule,
     DocumentsModule,
     forwardRef(() => AgentsModule),

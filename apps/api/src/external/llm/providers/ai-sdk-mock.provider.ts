@@ -18,10 +18,12 @@ export class AISDKMockProvider extends AISDKLLMProviderBase {
       case AgentModel._MockProcessFiles:
       case AgentModel._MockRate:
         return this.getMockForGenerateText(config)
+      case AgentModel._MockGenerateStructuredOutput:
       case AgentModel._MockGenerateObject:
         return this.getMockForGenerateObject(config)
       case AgentModel._MockStreamChatResponse:
         return this.getMockForStreamChatResponse(config)
+
       default:
         throw new NotImplementedException(`Mock : invalid model: ${config.model}`)
     }
@@ -73,7 +75,7 @@ export class AISDKMockProvider extends AISDKLLMProviderBase {
   }
 
   getMockForGenerateObject(config: LLMConfig): LanguageModel {
-    let result: string = `{"content":"Hello, I'm the generateObject default mock response!", "source":"MOCK"}`
+    let result: string = `{"content":"Hello, I'm the ${config.model === AgentModel._MockGenerateObject ? "generateObject" : "generateStructuredOutput"} default mock response!", "source":"MOCK"}` // <default mock result for generateObject>
     if (config.mockResult && !Array.isArray(config.mockResult)) {
       result = config.mockResult
     }

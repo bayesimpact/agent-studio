@@ -16,6 +16,20 @@ describe("AISDKMockProvider", () => {
   let messages: LLMChatMessage[]
   let config: LLMConfig
   let metadata: LLMMetadata
+  const files: LLMFile[] = [
+    {
+      type: "file",
+      name: "file1.pdf",
+      mediaType: "application/pdf",
+      content: Buffer.from("%PDF-1.4\n%%EOF"),
+    },
+    {
+      type: "image",
+      name: "image.png",
+      mediaType: "image/png",
+      content: Buffer.from([0x89, 0x50, 0x4e, 0x47]), // header PNG
+    },
+  ]
   beforeAll(async () => {
     provider = new AISDKMockProvider()
     messages = [{ role: "user", content: "for test purpose" }]
@@ -106,24 +120,12 @@ describe("AISDKMockProvider", () => {
     expect(result).toBeDefined()
     expect(() => schema.parse(result)).not.toThrow()
     const parsed = schema.parse(result)
-    expect(parsed.source).toBe("MOCK")
-    expect(parsed.content).toBe("This object is from my custom generateObject Mock!")
+    expect(parsed.source).toBe(mock.source)
+    expect(parsed.content).toBe(mock.content)
   })
   it("processFiles - default mock value", async () => {
     metadata.traceId = v4()
     const prompt = ""
-    const files: LLMFile[] = [
-      {
-        name: "file1.pdf",
-        mediaType: "application/pdf",
-        content: Buffer.from("%PDF-1.4\n%%EOF"),
-      },
-      {
-        name: "image.png",
-        mediaType: "image/png",
-        content: Buffer.from([0x89, 0x50, 0x4e, 0x47]), // header PNG
-      },
-    ]
     config = { model: AgentModel._MockProcessFiles, temperature: 1, systemPrompt: "" }
     const result = await provider.processFiles({ prompt, files, config, metadata })
     expect(result).toBeDefined()
@@ -132,20 +134,8 @@ describe("AISDKMockProvider", () => {
   it("processFiles - custom mock value", async () => {
     metadata.traceId = v4()
     const prompt = ""
-    const files: LLMFile[] = [
-      {
-        name: "file1.pdf",
-        mediaType: "application/pdf",
-        content: Buffer.from("%PDF-1.4\n%%EOF"),
-      },
-      {
-        name: "image.png",
-        mediaType: "image/png",
-        content: Buffer.from([0x89, 0x50, 0x4e, 0x47]), // header PNG
-      },
-    ]
     config = {
-      model: AgentModel._MockProcessFiles,
+      model: AgentModel._MockGenerateStructuredOutput,
       temperature: 1,
       systemPrompt: "",
       mockResult: "This text is from my custom processFiles Mock!",
@@ -153,6 +143,86 @@ describe("AISDKMockProvider", () => {
     const result = await provider.processFiles({ prompt, files, config, metadata })
     expect(result).toBeDefined()
     expect(result).toBe("This text is from my custom processFiles Mock!")
+  })
+  it("generateStructuredOutput - default mock value", async () => {
+    metadata.traceId = v4()
+    const prompt = ""
+    const schema = z.object({ content: z.string(), source: z.string() })
+    const testFile: LLMFile = {
+      type: "file",
+      name: "file1.pdf",
+      mediaType: "application/pdf",
+      content: Buffer.from("%PDF-1.4\n%%EOF"),
+    }
+    const message: LLMChatMessage = {
+      role: "user",
+      content: [
+        { type: "text", text: prompt },
+        {
+          type: testFile.type as "file",
+          mediaType: testFile.mediaType,
+          data: testFile.content,
+          filename: testFile.name,
+        },
+      ],
+    }
+
+    config = { model: AgentModel._MockGenerateStructuredOutput, temperature: 1, systemPrompt: "" }
+    const result = await provider.generateStructuredOutput({
+      message,
+      schema: schema.toJSONSchema(),
+      config,
+      metadata,
+    })
+    expect(result).toBeDefined()
+    expect(() => schema.parse(result)).not.toThrow()
+    const parsed = schema.parse(result)
+    expect(parsed.source).toBe("MOCK")
+    expect(parsed.content).toBe("Hello, I'm the generateStructuredOutput default mock response!")
+  })
+  it("generateStructuredOutput - custom mock value", async () => {
+    metadata.traceId = v4()
+    const prompt = ""
+    const schema = z.object({ content: z.string(), source: z.string() })
+    const testFile: LLMFile = {
+      type: "file",
+      name: "file1.pdf",
+      mediaType: "application/pdf",
+      content: Buffer.from("%PDF-1.4\n%%EOF"),
+    }
+    const message: LLMChatMessage = {
+      role: "user",
+      content: [
+        { type: "text", text: prompt },
+        {
+          type: testFile.type as "file",
+          mediaType: testFile.mediaType,
+          data: testFile.content,
+          filename: testFile.name,
+        },
+      ],
+    }
+    const mock: z.infer<typeof schema> = {
+      content: "This object is from my custom generateStructuredOutput Mock!",
+      source: "MOCK",
+    }
+    config = {
+      model: AgentModel._MockGenerateStructuredOutput,
+      temperature: 1,
+      systemPrompt: "",
+      mockResult: JSON.stringify(mock),
+    }
+    const result = await provider.generateStructuredOutput({
+      message,
+      schema: schema.toJSONSchema(),
+      config,
+      metadata,
+    })
+    expect(result).toBeDefined()
+    expect(() => schema.parse(result)).not.toThrow()
+    const parsed = schema.parse(result)
+    expect(parsed.source).toBe(mock.source)
+    expect(parsed.content).toBe(mock.content)
   })
 
   it("rate - default mock value", async () => {

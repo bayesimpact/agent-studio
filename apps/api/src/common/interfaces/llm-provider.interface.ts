@@ -5,6 +5,7 @@ export type LLMChatMessage = ModelMessage
 
 type MockModels =
   | AgentModel._MockGenerateObject
+  | AgentModel._MockGenerateStructuredOutput
   | AgentModel._MockGenerateText
   | AgentModel._MockProcessFiles
   | AgentModel._MockRate
@@ -105,6 +106,7 @@ export interface LLMProvider {
   }): Promise<Record<string, unknown>>
 }
 export interface LLMFile {
+  type: "file" | "image"
   name: string
   content: NonSharedBuffer
   mediaType: string
