@@ -54,7 +54,7 @@
     },
     "delete": {
       "title": "Supprimer l'agent",
-      "description": "Êtes-vous sûr de vouloir supprimer \"{{name}}\" ? Cette action ne peut pas être annulée."
+      "description": "Êtes-vous sûr de vouloir supprimer \"{{name}}\" ? Cette action est irréversible."
     },
     "list": {
       "title": "Agents",
