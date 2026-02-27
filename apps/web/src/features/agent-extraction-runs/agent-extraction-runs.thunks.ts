@@ -1,6 +1,5 @@
 import { createAsyncThunk } from "@reduxjs/toolkit"
 import type { RootState, ThunkExtraArg } from "@/store"
-import { sleep } from "@/utils/sleep"
 import { selectIsAdminInterface } from "../auth/auth.selectors"
 import { uploadDocument } from "../documents/documents.thunks"
 import { getCurrentIds } from "../helpers"
@@ -77,7 +76,6 @@ export const getAgentExtractionRun = createAsyncThunk<
     agentId,
     runId: params.runId,
   }
-  await sleep(3000)
   if (isAdminInterface) {
     return await services.agentExtractionRuns.getOnePlayground(payload)
   }
