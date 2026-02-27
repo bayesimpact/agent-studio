@@ -4,4 +4,4 @@ export const themes = [
   { value: "blue", label: "Blue" },
 ] as const
 
-export const defaultTheme = "coral"
+export const defaultTheme = (import.meta.env.VITE_THEME_KEY as string | undefined) || "coral"
