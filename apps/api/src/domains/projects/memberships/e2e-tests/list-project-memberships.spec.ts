@@ -70,7 +70,7 @@ describe("Projects - listProjectMemberships", () => {
     const response = await subject()
 
     expectResponse(response, 200)
-    expect(response.body.data.memberships).toEqual([])
+    expect(response.body.data).toEqual([])
   })
 
   it("should return memberships with user name and email", async () => {
@@ -88,7 +88,7 @@ describe("Projects - listProjectMemberships", () => {
     const response = await subject()
 
     expectResponse(response, 200)
-    const { memberships } = response.body.data
+    const memberships = response.body.data
     expect(memberships).toHaveLength(1)
     expect(memberships[0]!.userName).toBe("Invited User")
     expect(memberships[0]!.userEmail).toBe("invited@example.com")

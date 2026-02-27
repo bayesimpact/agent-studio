@@ -1,5 +1,5 @@
 # // FIXME: 
-- bug: add pokemon then duck -> does not take duck's question into account 
+- can't delete empty project
 
 # // TODO:
 

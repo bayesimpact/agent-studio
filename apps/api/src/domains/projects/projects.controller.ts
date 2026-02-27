@@ -1,4 +1,4 @@
-import { ProjectsRoutes, type TimeType } from "@caseai-connect/api-contracts"
+import { type ProjectDto, ProjectsRoutes, type TimeType } from "@caseai-connect/api-contracts"
 import { Body, Controller, Delete, Get, Patch, Post, Req, UseGuards } from "@nestjs/common"
 import type {
   EndpointRequestWithProject,
@@ -9,6 +9,7 @@ import { ResourceContextGuard } from "@/common/context/resource-context.guard"
 import { CheckPolicy } from "@/common/policies/check-policy.decorator"
 import { JwtAuthGuard } from "@/domains/auth/jwt-auth.guard"
 import { UserGuard } from "@/domains/users/user.guard"
+import type { Project } from "./project.entity"
 import { ProjectsGuard } from "./projects.guard"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
 import { ProjectsService } from "./projects.service"
@@ -27,16 +28,9 @@ export class ProjectsController {
   ): Promise<typeof ProjectsRoutes.createOne.response> {
     const { organizationId } = request
 
-    // Create project
     const project = await this.projectsService.createProject(organizationId, body.payload.name)
 
-    return {
-      data: {
-        id: project.id,
-        name: project.name,
-        organizationId: project.organizationId,
-      },
-    }
+    return { data: toProjectDto(project) }
   }
 
   @Get(ProjectsRoutes.getAll.path)
@@ -51,17 +45,7 @@ export class ProjectsController {
       userId: userMembership.role === "member" ? userMembership.userId : undefined,
     })
 
-    return {
-      data: {
-        projects: projects.map((project) => ({
-          id: project.id,
-          name: project.name,
-          organizationId: project.organizationId,
-          createdAt: project.createdAt.getTime() as TimeType,
-          updatedAt: project.updatedAt.getTime() as TimeType,
-        })),
-      },
-    }
+    return { data: projects.map(toProjectDto) }
   }
 
   @Patch(ProjectsRoutes.updateOne.path)
@@ -73,16 +57,9 @@ export class ProjectsController {
   ): Promise<typeof ProjectsRoutes.updateOne.response> {
     const { project } = request
 
-    // Update project
     const updatedProject = await this.projectsService.updateProject(project!, body.payload.name)
 
-    return {
-      data: {
-        id: updatedProject.id,
-        name: updatedProject.name,
-        organizationId: updatedProject.organizationId,
-      },
-    }
+    return { data: toProjectDto(updatedProject) }
   }
 
   @Delete(ProjectsRoutes.deleteOne.path)
@@ -96,10 +73,16 @@ export class ProjectsController {
     // Delete project
     await this.projectsService.deleteProject(project!)
 
-    return {
-      data: {
-        success: true,
-      },
-    }
+    return { data: { success: true } }
+  }
+}
+
+function toProjectDto(project: Project): ProjectDto {
+  return {
+    id: project.id,
+    name: project.name,
+    organizationId: project.organizationId,
+    createdAt: project.createdAt.getTime() as TimeType,
+    updatedAt: project.updatedAt.getTime() as TimeType,
   }
 }
