@@ -1,5 +1,5 @@
 import { useEffect } from "react"
-import { Navigate, Outlet, useOutlet, useParams } from "react-router-dom"
+import { Outlet, useOutlet, useParams } from "react-router-dom"
 import { AgentDeletorWithTrigger } from "@/components/agent/AgentDeletor"
 import { AgentEditorWithTrigger } from "@/components/agent/AgentEditor"
 import { DefaultPromptDialog } from "@/components/agent/DefaultPromptDialog"
@@ -12,7 +12,6 @@ import { selectAgentDataFromAgentId } from "@/features/agents/agents.selectors"
 import { selectCurrentOrganizationId } from "@/features/organizations/organizations.selectors"
 import { selectCurrentProjectId } from "@/features/projects/projects.selectors"
 import { useAbility } from "@/hooks/use-ability"
-import { useBuildPath } from "@/hooks/use-build-path"
 import { useIsRoute } from "@/hooks/use-is-route"
 import { ADS } from "@/store/async-data-status"
 import { useAppSelector } from "@/store/hooks"
@@ -59,25 +58,9 @@ function WithData({
   projectId: string
 }) {
   const outlet = useOutlet()
-  const { buildPath } = useBuildPath()
-
   useHandleHeader(agent)
 
-  if (agent.type === "extraction") {
-    return (
-      <Navigate
-        to={buildPath("extractionAgent", {
-          organizationId,
-          projectId,
-          agentId: agent.id,
-        })}
-        replace
-      />
-    )
-  }
-
   if (outlet) return <Outlet />
-
   return (
     <AgentSessionList
       organizationId={organizationId}
@@ -104,7 +87,7 @@ function useHandleHeader(agent: Agent) {
 }
 
 function HeaderRightSlot({ agent }: { agent: Agent }) {
-  const { organizationId } = useParams()
+  const organizationId = useAppSelector(selectCurrentOrganizationId)
   if (!organizationId) return null
   return (
     <div className="flex items-center gap-2">
