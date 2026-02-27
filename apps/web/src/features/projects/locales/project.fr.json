@@ -16,6 +16,14 @@
     "create": {
       "title": "Créer un projet",
       "description": "Créer un nouveau projet pour {{organizationName}}"
+    },
+    "update": {
+      "title": "Mettre à jour le projet",
+      "description": "Mettre à jour les informations du projet"
+    },
+    "delete": {
+      "title": "Supprimer le projet",
+      "description": "Êtes-vous sûr de vouloir supprimer {{name}} ? Cette action est irréversible."
     }
   }
 }
