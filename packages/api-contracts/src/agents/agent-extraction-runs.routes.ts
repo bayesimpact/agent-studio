@@ -1,32 +1,31 @@
 import type { RequestPayload, ResponseData } from "../generic"
 import { defineRoute } from "../helpers"
 import type {
+  AgentExtractionResultDto,
   AgentExtractionRunDto,
-  ExecuteAgentExtractionRequestDto,
-  ExecuteAgentExtractionResponseDto,
-  ListAgentExtractionRunsResponseDto,
+  AgentExtractionRunSummaryDto,
 } from "./agent-extraction-runs.dto"
 
 export const AgentExtractionRunsRoutes = {
   executePlaygroundOne: defineRoute<
-    ResponseData<ExecuteAgentExtractionResponseDto>,
-    RequestPayload<ExecuteAgentExtractionRequestDto>
+    ResponseData<AgentExtractionResultDto>,
+    RequestPayload<Pick<AgentExtractionRunSummaryDto, "documentId">>
   >({
     method: "post",
     path: "organizations/:organizationId/projects/:projectId/agents/:agentId/playground/extract",
   }),
   executeLiveOne: defineRoute<
-    ResponseData<ExecuteAgentExtractionResponseDto>,
-    RequestPayload<ExecuteAgentExtractionRequestDto>
+    ResponseData<AgentExtractionResultDto>,
+    RequestPayload<Pick<AgentExtractionRunSummaryDto, "documentId">>
   >({
     method: "post",
     path: "organizations/:organizationId/projects/:projectId/agents/:agentId/live/extract",
   }),
-  getAllPlayground: defineRoute<ResponseData<ListAgentExtractionRunsResponseDto>>({
+  getAllPlayground: defineRoute<ResponseData<AgentExtractionRunSummaryDto[]>>({
     method: "get",
     path: "organizations/:organizationId/projects/:projectId/agents/:agentId/playground/extraction-runs",
   }),
-  getAllLive: defineRoute<ResponseData<ListAgentExtractionRunsResponseDto>>({
+  getAllLive: defineRoute<ResponseData<AgentExtractionRunSummaryDto[]>>({
     method: "get",
     path: "organizations/:organizationId/projects/:projectId/agents/:agentId/live/extraction-runs",
   }),
