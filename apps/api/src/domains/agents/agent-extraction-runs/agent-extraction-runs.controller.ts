@@ -124,7 +124,7 @@ export class AgentExtractionRunsController {
       type,
     })
 
-    return { data: { runs: runs.map(toSummaryDto) } }
+    return { data: runs.map(toSummaryDto) }
   }
 
   private async getOneByType({

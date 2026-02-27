@@ -21,16 +21,7 @@ export type AgentExtractionRunDto = AgentExtractionRunSummaryDto & {
   errorDetails: Record<string, unknown> | null
 }
 
-export type ExecuteAgentExtractionRequestDto = {
-  documentId: string
-  promptOverride?: string
-}
-
-export type ExecuteAgentExtractionResponseDto = {
+export type AgentExtractionResultDto = {
   runId: string
   result: Record<string, unknown>
-}
-
-export type ListAgentExtractionRunsResponseDto = {
-  runs: AgentExtractionRunSummaryDto[]
 }

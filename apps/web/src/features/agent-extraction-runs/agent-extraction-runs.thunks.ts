@@ -4,9 +4,9 @@ import { selectIsAdminInterface } from "../auth/auth.selectors"
 import { uploadDocument } from "../documents/documents.thunks"
 import { getCurrentIds } from "../helpers"
 import type {
+  AgentExtractionResult,
   AgentExtractionRun,
   AgentExtractionRunSummary,
-  ExecuteAgentExtractionResponse,
 } from "./agent-extraction-runs.models"
 
 type ThunkConfig = { state: RootState; extra: ThunkExtraArg }
@@ -26,8 +26,8 @@ export const listAgentExtractionRuns = createAsyncThunk<
 )
 
 export const executeAgentExtractionRun = createAsyncThunk<
-  ExecuteAgentExtractionResponse,
-  { file: File; promptOverride?: string },
+  AgentExtractionResult,
+  { file: File },
   ThunkConfig
 >("agentExtractionRuns/executeOne", async (params, { extra: { services }, getState, dispatch }) => {
   const state = getState()
@@ -50,7 +50,6 @@ export const executeAgentExtractionRun = createAsyncThunk<
     projectId,
     agentId,
     documentId: document.id,
-    promptOverride: params.promptOverride,
   }
 
   if (isAdminInterface) {

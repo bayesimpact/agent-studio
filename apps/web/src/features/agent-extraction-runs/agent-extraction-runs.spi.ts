@@ -1,7 +1,7 @@
 import type {
+  AgentExtractionResult,
   AgentExtractionRun,
   AgentExtractionRunSummary,
-  ExecuteAgentExtractionResponse,
 } from "./agent-extraction-runs.models"
 
 export interface IAgentExtractionRunsSpi {
@@ -32,13 +32,11 @@ export interface IAgentExtractionRunsSpi {
     projectId: string
     agentId: string
     documentId: string
-    promptOverride?: string
-  }) => Promise<ExecuteAgentExtractionResponse>
+  }) => Promise<AgentExtractionResult>
   executeLiveOne: (params: {
     organizationId: string
     projectId: string
     agentId: string
     documentId: string
-    promptOverride?: string
-  }) => Promise<ExecuteAgentExtractionResponse>
+  }) => Promise<AgentExtractionResult>
 }
