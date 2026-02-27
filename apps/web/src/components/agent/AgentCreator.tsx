@@ -32,18 +32,11 @@ export function AgentCreatorWithTrigger({ project }: { project: Project }) {
   const [selectedType, setSelectedType] = useState<Agent["type"]>("conversation")
 
   const handleSuccess = (agent: Agent) => {
-    const path =
-      agent.type === "extraction"
-        ? buildPath("extractionAgent", {
-            organizationId: project.organizationId,
-            projectId: project.id,
-            agentId: agent.id,
-          })
-        : buildPath("agent", {
-            organizationId: project.organizationId,
-            projectId: project.id,
-            agentId: agent.id,
-          })
+    const path = buildPath("agent", {
+      organizationId: project.organizationId,
+      projectId: project.id,
+      agentId: agent.id,
+    })
     navigate(path)
     setIsFormSheetOpen(false)
     setSelectedType("conversation")
@@ -126,18 +119,11 @@ export function AgentCreatorWithoutTrigger({
   }
 
   const handleSuccess = (agent: Agent) => {
-    const path =
-      agent.type === "extraction"
-        ? buildPath("extractionAgent", {
-            organizationId: project.organizationId,
-            projectId: project.id,
-            agentId: agent.id,
-          })
-        : buildPath("agent", {
-            organizationId: project.organizationId,
-            projectId: project.id,
-            agentId: agent.id,
-          })
+    const path = buildPath("agent", {
+      organizationId: project.organizationId,
+      projectId: project.id,
+      agentId: agent.id,
+    })
     navigate(path)
     onOpenChange(false)
     setIsFormSheetOpen(false)

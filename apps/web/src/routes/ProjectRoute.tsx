@@ -37,25 +37,14 @@ function WithData({ project, agents }: { project: Project; agents: Agent[] }) {
 
   if (outlet) return outlet
 
-  if (firstAgent)
-    return (
-      <Navigate
-        to={
-          firstAgent.type === "extraction"
-            ? buildPath("extractionAgent", {
-                organizationId: project.organizationId,
-                projectId: project.id,
-                agentId: firstAgent.id,
-              })
-            : buildPath("agent", {
-                organizationId: project.organizationId,
-                projectId: project.id,
-                agentId: firstAgent.id,
-              })
-        }
-        replace
-      />
-    )
+  if (firstAgent) {
+    const agentPath = buildPath("agent", {
+      organizationId: project.organizationId,
+      projectId: project.id,
+      agentId: firstAgent.id,
+    })
+    return <Navigate to={agentPath} replace />
+  }
 
   if (isAdminInterface) return <EmptyAgent project={project} />
 }

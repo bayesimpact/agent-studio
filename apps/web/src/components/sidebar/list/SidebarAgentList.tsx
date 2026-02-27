@@ -42,9 +42,9 @@ export function AdminAgentList({
           item={{
             id: agent.id,
             title: agent.name,
-            url: getAgentPath({ buildPath, organizationId, projectId: project.id, agent }),
+            url: buildPath("agent", { organizationId, projectId: project.id, agentId: agent.id }),
             isActive: urlagentId === agent.id,
-            icon: getAgentIcon(agent),
+            icon: getAgentIcon(agent.type),
           }}
           itemOptions={
             <AgentItemOptions
@@ -100,9 +100,9 @@ export function AppAgentList({
           item={{
             id: agent.id,
             title: agent.name,
-            url: getAgentPath({ buildPath, organizationId, projectId, agent }),
+            url: buildPath("agent", { organizationId, projectId, agentId: agent.id }),
             isActive: urlagentId === agent.id,
-            icon: BotIcon,
+            icon: getAgentIcon(agent.type),
           }}
         >
           <AgentSessionList
@@ -116,32 +116,6 @@ export function AppAgentList({
   )
 }
 
-function getAgentIcon(agent: Agent) {
-  return agent.type === "extraction" ? ScanText : BotIcon
-}
-
-function getAgentPath({
-  buildPath,
-  organizationId,
-  projectId,
-  agent,
-}: {
-  buildPath: ReturnType<typeof useBuildPath>["buildPath"]
-  organizationId: string
-  projectId: string
-  agent: Agent
-}) {
-  if (agent.type === "extraction") {
-    return buildPath("extractionAgent", {
-      organizationId,
-      projectId,
-      agentId: agent.id,
-    })
-  }
-
-  return buildPath("agent", {
-    organizationId,
-    projectId,
-    agentId: agent.id,
-  })
+function getAgentIcon(agentType: Agent["type"]) {
+  return agentType === "extraction" ? ScanText : BotIcon
 }

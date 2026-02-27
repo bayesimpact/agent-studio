@@ -9,7 +9,7 @@ import { ADS } from "@/store/async-data-status"
 import { useAppSelector } from "@/store/hooks"
 import { useAbility } from "./use-ability"
 
-export type PathType = "organization" | "project" | "agent" | "extractionAgent" | "agentSession"
+export type PathType = "organization" | "project" | "agent" | "agentSession"
 
 export interface BuildPathOptions {
   organizationId?: string
@@ -84,20 +84,6 @@ export function useGetPath() {
 
     if (pathType === "agentSession") {
       return agentSessionPath
-    }
-
-    const extractionAgentPath =
-      organizationId && projectId && agentId
-        ? buildExtractionAgentPath({
-            organizationId,
-            projectId,
-            agentId,
-            isAdminInterface,
-          })
-        : projectPath
-
-    if (pathType === "extractionAgent") {
-      return extractionAgentPath
     }
 
     return RouteNames.HOME
@@ -176,20 +162,6 @@ export function useBuildPath() {
       return agentSessionPath
     }
 
-    const extractionAgentPath =
-      organizationId && projectId && agentId
-        ? buildExtractionAgentPath({
-            organizationId,
-            projectId,
-            agentId,
-            isAdminInterface,
-          })
-        : projectPath
-
-    if (pathType === "extractionAgent") {
-      return extractionAgentPath
-    }
-
     return RouteNames.HOME
   }
 
@@ -207,10 +179,7 @@ export function useBuildPath() {
       pathType: "agent",
       options: { organizationId: string; projectId: string; agentId: string },
     ): string
-    (
-      pathType: "extractionAgent",
-      options: { organizationId: string; projectId: string; agentId: string },
-    ): string
+
     (pathType: "project", options: { organizationId: string; projectId: string }): string
     (pathType: "organization", options: { organizationId: string }): string
   } = (pathType: PathType, options: BuildPathOptions): string => {
@@ -313,25 +282,8 @@ export function useClosestParentPath() {
           })
         : agentPath
 
-    const extractionAgentPath =
-      organizationFound && projectFound && agentFound
-        ? buildExtractionAgentPath({
-            organizationId: organizationFound.id,
-            projectId: projectFound.id,
-            agentId: agentFound.id,
-            isAdminInterface,
-          })
-        : projectPath
-
     // closestParent
-    return (
-      agentSessionPath ||
-      agentPath ||
-      extractionAgentPath ||
-      projectPath ||
-      organizationPath ||
-      RouteNames.HOME
-    )
+    return agentSessionPath || agentPath || projectPath || organizationPath || RouteNames.HOME
   }, [
     isAdminInterface,
     foundagent,
@@ -403,22 +355,6 @@ const buildAgentSessionPath = ({
   isAdminInterface: boolean
 }) => {
   const path = `/o/${organizationId}/p/${projectId}/a/${agentId}/as/${agentSessionId}`
-  if (isAdminInterface) return buildAdminPath(path)
-  return buildAppPath(path)
-}
-
-const buildExtractionAgentPath = ({
-  organizationId,
-  projectId,
-  agentId,
-  isAdminInterface,
-}: {
-  organizationId: string
-  projectId: string
-  agentId: string
-  isAdminInterface: boolean
-}) => {
-  const path = `/o/${organizationId}/p/${projectId}/ea/${agentId}`
   if (isAdminInterface) return buildAdminPath(path)
   return buildAppPath(path)
 }

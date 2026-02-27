@@ -112,27 +112,14 @@ function AgentList({ organizationId }: { organizationId: string }) {
     projectId: agent.value.projectId,
     agentId: agent.value.id,
   })
+
   const handleClick = (agentId: string) => () => {
     const nextAgent = agents.value.find((candidateAgent) => candidateAgent.id === agentId)
     if (!nextAgent) return
-    const path =
-      nextAgent.type === "extraction"
-        ? buildPath("extractionAgent", {
-            organizationId,
-            projectId: agent.value.projectId,
-            agentId,
-          })
-        : buildPath("agent", { organizationId, projectId: agent.value.projectId, agentId })
+    const path = buildPath("agent", { organizationId, projectId: agent.value.projectId, agentId })
     window.location.replace(path)
   }
-  const currentPath =
-    agent.value.type === "extraction"
-      ? buildPath("extractionAgent", {
-          organizationId,
-          projectId: agent.value.projectId,
-          agentId: agent.value.id,
-        })
-      : currentAgentPath
+
   if (agents.value.length === 1)
     return (
       <>
@@ -141,7 +128,7 @@ function AgentList({ organizationId }: { organizationId: string }) {
         </BreadcrumbSeparator>
         <BreadcrumbItem>
           <BreadcrumbLink asChild>
-            <Link to={currentPath}>{agent.value.name}</Link>
+            <Link to={currentAgentPath}>{agent.value.name}</Link>
           </BreadcrumbLink>
         </BreadcrumbItem>
       </>

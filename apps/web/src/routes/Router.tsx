@@ -76,10 +76,6 @@ const router = () =>
                     },
                   ],
                 },
-                {
-                  path: buildAdminPath(RouteNames.EXTRACTION_AGENT),
-                  element: getElement(RouteNames.EXTRACTION_AGENT),
-                },
               ],
             },
           ],
@@ -107,10 +103,6 @@ const router = () =>
                       element: getElement(RouteNames.AGENT_SESSION),
                     },
                   ],
-                },
-                {
-                  path: buildAppPath(RouteNames.EXTRACTION_AGENT),
-                  element: getElement(RouteNames.EXTRACTION_AGENT),
                 },
               ],
             },
