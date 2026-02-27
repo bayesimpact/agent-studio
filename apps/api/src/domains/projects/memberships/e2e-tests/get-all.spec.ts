@@ -1,4 +1,4 @@
-import { ProjectsRoutes } from "@caseai-connect/api-contracts"
+import { ProjectMembershipRoutes } from "@caseai-connect/api-contracts"
 import type { INestApplication } from "@nestjs/common"
 import type { App } from "supertest/types"
 import { clearTestDatabase } from "@/common/test/test-database"
@@ -14,7 +14,7 @@ import { expectResponse, type Requester, testRequester } from "../../../../../te
 import { ProjectsModule } from "../../projects.module"
 import { projectMembershipFactory } from "../project-membership.factory"
 
-describe("Projects - listProjectMemberships", () => {
+describe("Project membership - getAll", () => {
   let app: INestApplication<App>
   let request: Requester
   let setup: Awaited<ReturnType<typeof setupTransactionalTestDatabase>>
@@ -59,7 +59,7 @@ describe("Projects - listProjectMemberships", () => {
 
   const subject = async () =>
     request({
-      route: ProjectsRoutes.listProjectMemberships,
+      route: ProjectMembershipRoutes.getAll,
       pathParams: removeNullish({ organizationId, projectId }),
       token: accessToken,
     })

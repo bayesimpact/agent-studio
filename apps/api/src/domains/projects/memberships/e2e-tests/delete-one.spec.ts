@@ -1,4 +1,4 @@
-import { ProjectsRoutes } from "@caseai-connect/api-contracts"
+import { ProjectMembershipRoutes } from "@caseai-connect/api-contracts"
 import type { INestApplication } from "@nestjs/common"
 import type { App } from "supertest/types"
 import { clearTestDatabase } from "@/common/test/test-database"
@@ -13,7 +13,7 @@ import { expectResponse, type Requester, testRequester } from "../../../../../te
 import { ProjectsModule } from "../../projects.module"
 import { createProjectMembership } from "../project-membership.factory"
 
-describe("Projects - removeProjectMembership", () => {
+describe("Project membership - deleteOne", () => {
   let app: INestApplication<App>
   let request: Requester
   let setup: Awaited<ReturnType<typeof setupTransactionalTestDatabase>>
@@ -69,7 +69,7 @@ describe("Projects - removeProjectMembership", () => {
 
   const subject = async () =>
     request({
-      route: ProjectsRoutes.removeProjectMembership,
+      route: ProjectMembershipRoutes.deleteOne,
       pathParams: removeNullish({ organizationId, projectId, membershipId }),
       token: accessToken,
     })
