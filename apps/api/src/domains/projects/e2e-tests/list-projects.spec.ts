@@ -73,7 +73,7 @@ describe("Projects - listProjects", () => {
     const response = await subject()
 
     expectResponse(response, 200)
-    const { projects } = response.body.data
+    const projects = response.body.data
     expect(projects).toHaveLength(2)
     expect(projects.map((project) => project.name)).toContain("Project 1")
     expect(projects.map((project) => project.name)).toContain("Project 2")
@@ -88,7 +88,7 @@ describe("Projects - listProjects", () => {
     const response = await subject()
 
     expectResponse(response, 200)
-    expect(response.body.data.projects).toEqual([])
+    expect(response.body.data).toEqual([])
   })
 
   it("should return only projects the user (not owner or admin) is a member of", async () => {
@@ -117,7 +117,7 @@ describe("Projects - listProjects", () => {
     const response = await subject()
 
     expectResponse(response, 200)
-    const { projects } = response.body.data
+    const projects = response.body.data
     expect(projects).toHaveLength(1)
     expect(projects.map((project) => project.name)).toContain("Project 2")
   })

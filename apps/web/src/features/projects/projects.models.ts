@@ -7,11 +7,3 @@ export type Project = {
   createdAt: TimeType
   updatedAt: TimeType
 }
-
-export type CreateProjectPayload = {
-  name: string
-}
-
-export type UpdateProjectPayload = {
-  name: string
-}

@@ -1,12 +1,15 @@
-import type { CreateProjectPayload, Project, UpdateProjectPayload } from "./projects.models"
+import type { Project } from "./projects.models"
 
 export interface IProjectsSpi {
-  createOne: (organizationId: string, payload: CreateProjectPayload) => Promise<Project>
+  createOne: (params: {
+    organizationId: string
+    payload: Pick<Project, "name">
+  }) => Promise<Project>
   getAll: (organizationId: string) => Promise<Project[]>
-  updateOne: (
-    organizationId: string,
-    projectId: string,
-    payload: UpdateProjectPayload,
-  ) => Promise<void>
-  deleteOne: (organizationId: string, projectId: string) => Promise<void>
+  updateOne: (params: {
+    organizationId: string
+    projectId: string
+    payload: Pick<Project, "name">
+  }) => Promise<void>
+  deleteOne: (params: { organizationId: string; projectId: string }) => Promise<void>
 }

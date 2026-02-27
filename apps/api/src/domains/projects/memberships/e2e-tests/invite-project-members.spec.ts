@@ -71,7 +71,7 @@ describe("Projects - inviteProjectMembers", () => {
     const response = await subject({ payload: { emails: ["newuser@example.com"] } })
 
     expectResponse(response, 201)
-    const { memberships } = response.body.data
+    const memberships = response.body.data
     expect(memberships).toHaveLength(1)
     expect(memberships[0]!.userEmail).toBe("newuser@example.com")
     expect(memberships[0]!.status).toBe("sent")
@@ -97,7 +97,7 @@ describe("Projects - inviteProjectMembers", () => {
     const response = await subject({ payload: { emails: ["existing@example.com"] } })
 
     expectResponse(response, 201)
-    const { memberships } = response.body.data
+    const memberships = response.body.data
     expect(memberships).toHaveLength(1)
     expect(memberships[0]!.userEmail).toBe("existing@example.com")
     expect(memberships[0]!.userName).toBe("Existing User")

@@ -1,54 +1,38 @@
-import type { RequestPayload, ResponseData } from "../generic"
+import type { RequestPayload, ResponseData, SuccessResponseDTO } from "../generic"
 import { defineRoute } from "../helpers"
-import type {
-  CreateProjectRequestDto,
-  CreateProjectResponseDto,
-  InviteProjectMembersRequestDto,
-  InviteProjectMembersResponseDto,
-  ListProjectMembershipsResponseDto,
-  ListProjectsResponseDto,
-  RemoveProjectMembershipResponseDto,
-  UpdateProjectRequestDto,
-  UpdateProjectResponseDto,
-} from "./projects.dto"
+import type { ProjectDto, ProjectMembershipDto } from "./projects.dto"
 
 export const ProjectsRoutes = {
-  createOne: defineRoute<
-    ResponseData<CreateProjectResponseDto>,
-    RequestPayload<CreateProjectRequestDto>
-  >({
+  createOne: defineRoute<ResponseData<ProjectDto>, RequestPayload<Pick<ProjectDto, "name">>>({
     method: "post",
     path: "organizations/:organizationId/projects",
   }),
-  getAll: defineRoute<ResponseData<ListProjectsResponseDto>>({
+  getAll: defineRoute<ResponseData<ProjectDto[]>>({
     method: "get",
     path: "organizations/:organizationId/projects",
   }),
-  updateOne: defineRoute<
-    ResponseData<UpdateProjectResponseDto>,
-    RequestPayload<UpdateProjectRequestDto>
-  >({
+  updateOne: defineRoute<ResponseData<ProjectDto>, RequestPayload<Pick<ProjectDto, "name">>>({
     method: "patch",
     path: "organizations/:organizationId/projects/:projectId",
   }),
-  deleteOne: defineRoute<ResponseData<{ success: boolean }>>({
+  deleteOne: defineRoute<ResponseData<SuccessResponseDTO>>({
     method: "delete",
     path: "organizations/:organizationId/projects/:projectId",
   }),
 
   // --- Project Membership Routes ---
-  listProjectMemberships: defineRoute<ResponseData<ListProjectMembershipsResponseDto>>({
+  listProjectMemberships: defineRoute<ResponseData<ProjectMembershipDto[]>>({
     method: "get",
     path: "organizations/:organizationId/projects/:projectId/memberships",
   }),
   inviteProjectMembers: defineRoute<
-    ResponseData<InviteProjectMembersResponseDto>,
-    RequestPayload<InviteProjectMembersRequestDto>
+    ResponseData<ProjectMembershipDto[]>,
+    RequestPayload<{ emails: string[] }>
   >({
     method: "post",
     path: "organizations/:organizationId/projects/:projectId/memberships/invite",
   }),
-  removeProjectMembership: defineRoute<ResponseData<RemoveProjectMembershipResponseDto>>({
+  removeProjectMembership: defineRoute<ResponseData<SuccessResponseDTO>>({
     method: "delete",
     path: "organizations/:organizationId/projects/:projectId/memberships/:membershipId",
   }),

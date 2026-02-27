@@ -1,8 +1,4 @@
-import {
-  type InviteProjectMembersResponseDto,
-  type ListProjectMembershipsResponseDto,
-  ProjectsRoutes,
-} from "@caseai-connect/api-contracts"
+import { type ProjectMembershipDto, ProjectsRoutes } from "@caseai-connect/api-contracts"
 import { getAxiosInstance } from "@/external/axios"
 import type { ProjectMembership } from "../project-memberships.models"
 import type { IProjectMembershipsSpi } from "../project-memberships.spi"
@@ -13,7 +9,7 @@ export default {
     const response = await axios.get<typeof ProjectsRoutes.listProjectMemberships.response>(
       ProjectsRoutes.listProjectMemberships.getPath({ organizationId, projectId }),
     )
-    return fromListDto(response.data.data)
+    return response.data.data.map(fromDto)
   },
   invite: async ({ organizationId, projectId, emails }) => {
     const axios = getAxiosInstance()
@@ -21,7 +17,7 @@ export default {
       ProjectsRoutes.inviteProjectMembers.getPath({ organizationId, projectId }),
       { payload: { emails } },
     )
-    return fromListDto(response.data.data)
+    return response.data.data.map(fromDto)
   },
   remove: async ({ organizationId, projectId, membershipId }) => {
     const axios = getAxiosInstance()
@@ -31,15 +27,12 @@ export default {
   },
 } satisfies IProjectMembershipsSpi
 
-const fromListDto = (
-  dto: ListProjectMembershipsResponseDto | InviteProjectMembersResponseDto,
-): ProjectMembership[] =>
-  dto.memberships.map((membership) => ({
-    id: membership.id,
-    projectId: membership.projectId,
-    userId: membership.userId,
-    userName: membership.userName,
-    userEmail: membership.userEmail,
-    status: membership.status,
-    createdAt: membership.createdAt,
-  }))
+const fromDto = (dto: ProjectMembershipDto): ProjectMembership => ({
+  id: dto.id,
+  projectId: dto.projectId,
+  userId: dto.userId,
+  userName: dto.userName,
+  userEmail: dto.userEmail,
+  status: dto.status,
+  createdAt: dto.createdAt,
+})

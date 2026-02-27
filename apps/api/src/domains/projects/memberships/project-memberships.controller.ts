@@ -29,11 +29,7 @@ export class ProjectMembershipsController {
 
     const memberships = await this.projectMembershipsService.listProjectMemberships(project.id)
 
-    return {
-      data: {
-        memberships: memberships.map(toProjectMembershipDto),
-      },
-    }
+    return { data: memberships.map(toDto) }
   }
 
   @Post(ProjectsRoutes.inviteProjectMembers.path)
@@ -50,11 +46,7 @@ export class ProjectMembershipsController {
       user.name ?? user.email,
     )
 
-    return {
-      data: {
-        memberships: memberships.map(toProjectMembershipDto),
-      },
-    }
+    return { data: memberships.map(toDto) }
   }
 
   @Delete(ProjectsRoutes.removeProjectMembership.path)
@@ -67,15 +59,11 @@ export class ProjectMembershipsController {
 
     await this.projectMembershipsService.removeProjectMembership(projectMembership.id, project.id)
 
-    return {
-      data: {
-        success: true,
-      },
-    }
+    return { data: { success: true } }
   }
 }
 
-function toProjectMembershipDto(entity: ProjectMembership): ProjectMembershipDto {
+function toDto(entity: ProjectMembership): ProjectMembershipDto {
   return {
     id: entity.id,
     projectId: entity.projectId,
