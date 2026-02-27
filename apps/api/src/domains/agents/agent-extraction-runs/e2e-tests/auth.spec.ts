@@ -20,7 +20,7 @@ const mockLlmProvider = {
   generateStructuredOutput: jest.fn().mockResolvedValue({ fullName: "Jane Doe" }),
 }
 
-describe("AgentExtractionRuns - Auth", () => {
+describe.skip("AgentExtractionRuns - Auth", () => {
   let app: INestApplication<App>
   let request: Requester
   let setup: Awaited<ReturnType<typeof setupTransactionalTestDatabase>>

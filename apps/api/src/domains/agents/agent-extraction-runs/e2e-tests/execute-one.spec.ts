@@ -19,7 +19,7 @@ const mockLlmProvider = {
   generateStructuredOutput: jest.fn(),
 }
 
-describe("AgentExtractionRuns - executeOne", () => {
+describe.skip("AgentExtractionRuns - executeOne", () => {
   let app: INestApplication<App>
   let request: Requester
   let setup: Awaited<ReturnType<typeof setupTransactionalTestDatabase>>

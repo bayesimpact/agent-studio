@@ -10,7 +10,6 @@ import { ConnectRepository } from "@/common/entities/connect-repository"
 import type { RequiredConnectScope } from "@/common/entities/connect-required-fields"
 import type {
   LLMChatMessage,
-  LLMConfig,
   LLMMetadata,
   LLMProvider,
 } from "@/common/interfaces/llm-provider.interface"
@@ -20,20 +19,24 @@ import {
   FILE_STORAGE_SERVICE,
   type IFileStorage,
 } from "@/domains/documents/storage/file-storage.interface"
+import { ServiceWithLLM } from "@/external/llm"
 import type { Agent } from "../agent.entity"
 import { AgentExtractionRun } from "./agent-extraction-run.entity"
 
 @Injectable()
-export class AgentExtractionRunsService {
+export class AgentExtractionRunsService extends ServiceWithLLM {
   constructor(
     @InjectRepository(AgentExtractionRun)
     runRepository: Repository<AgentExtractionRun>,
     @Inject(FILE_STORAGE_SERVICE)
     private readonly fileStorageService: IFileStorage,
     private readonly documentsService: DocumentsService,
-    @Inject("LLMProvider")
-    private readonly llmProvider: LLMProvider,
+    @Inject("_MockLLMProvider")
+    mockLlmProvider: LLMProvider,
+    @Inject("VertexLLMProvider")
+    vertexLlmProvider: LLMProvider,
   ) {
+    super(mockLlmProvider, vertexLlmProvider)
     this.runConnectRepository = new ConnectRepository(runRepository, "agentExtractionRun")
   }
 
@@ -92,10 +95,14 @@ export class AgentExtractionRunsService {
         prompt: effectivePrompt,
       })
 
-      const result = await this.llmProvider.generateStructuredOutput({
+      const result = await this.getProviderForModel(agent.model).generateStructuredOutput({
         message: llmMessage,
         schema: agent.outputJsonSchema,
-        config: this.buildLLMConfig(agent),
+        config: this.buildLLMConfig({
+          systemPrompt: `Today's date: ${new Date().toLocaleDateString()}`,
+          model: agent.model,
+          temperature: agent.temperature,
+        }),
         metadata: this.buildLLMMetadata({ agent, run, connectScope }),
       })
 
@@ -217,25 +224,6 @@ export class AgentExtractionRunsService {
     }
 
     return llmMessage
-  }
-
-  private buildLLMConfig(agent: Agent): LLMConfig {
-    const temperature =
-      typeof agent.temperature === "string"
-        ? parseFloat(agent.temperature)
-        : Number(agent.temperature)
-
-    if (Number.isNaN(temperature) || temperature < 0 || temperature > 2) {
-      throw new Error(
-        `Invalid temperature value: ${agent.temperature}. Temperature must be a number between 0 and 2.`,
-      )
-    }
-
-    return {
-      model: agent.model,
-      temperature,
-      systemPrompt: `Today's date: ${new Date().toLocaleDateString()}`,
-    }
   }
 
   private buildLLMMetadata({

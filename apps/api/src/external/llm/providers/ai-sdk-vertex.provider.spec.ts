@@ -108,31 +108,66 @@ if (process.env.IS_TEST === "true" && process.env.AIENGINE_TEST === "true") {
       expect(parsed.song).toBe("Can't Help Falling in Love")
       expect(parsed.year).toBe("1961")
     })
+    it.each(testModels)("generateStructuredOutput - %s", async (model) => {
+      if (!(await vertexCheck())) return
+      metadata.traceId = v4()
+      const schema = z.object({ adresse: z.string(), telephone: z.string(), courriel: z.string() })
+      const pdfBuffer = await readFile(join(__dirname, `files`, `test-pdf.pdf`))
+      const testFile: LLMFile = {
+        type: "file",
+        name: "file1.pdf",
+        mediaType: "application/pdf",
+        content: Buffer.from("%PDF-1.4\n%%EOF"),
+      }
+      const message: LLMChatMessage = {
+        role: "user",
+        content: [
+          {
+            type: "text",
+            text: "extrait les valeurs du tableau et remplace le numero de telephone par 007",
+          },
+          {
+            type: testFile.type as "file",
+            filename: "test-pdf.pdf",
+            mediaType: "application/pdf",
+            data: pdfBuffer,
+          },
+        ],
+      }
+      config = { model, temperature: 0, systemPrompt }
+      const result = await provider.generateStructuredOutput({
+        message,
+        schema: schema.toJSONSchema(),
+        config,
+        metadata,
+      })
+      expect(result).toBeDefined()
+      expect(() => schema.parse(result)).not.toThrow()
+      const parsed = schema.parse(result)
+      expect(parsed.adresse.toLowerCase().includes("dreux")).toBeTruthy()
+      expect(parsed.telephone.toLowerCase()).toBe("007")
+      expect(parsed.courriel.toLowerCase()).toBe("jdoudou@laposte.net")
+    })
 
     it.each(testModels)("processFiles - %s", async (model) => {
       if (!(await vertexCheck())) return
       metadata.traceId = v4()
-      const prompt = "How many files in attachment?"
+      const prompt =
+        'About the files in attachment, return their name, MIME type and give them a description. return as JSON [{"name":"<name>", "type":"<type>", "desc":"<description>}, ...]'
 
       const pdfBuffer = await readFile(join(__dirname, `files`, `test-pdf.pdf`))
       const jpgBuffer = await readFile(join(__dirname, `files`, `test-jpg.jpg`))
 
       const files: LLMFile[] = [
-        {
-          name: "test-pdf.pdf",
-          mediaType: "application/pdf",
-          content: pdfBuffer,
-        },
-        {
-          name: "test-jpg.jpg",
-          mediaType: "image/png",
-          content: jpgBuffer,
-        },
+        { type: "file", name: "test-pdf.pdf", mediaType: "application/pdf", content: pdfBuffer },
+
+        { type: "image", name: "test-jpg.jpg", mediaType: "image/png", content: jpgBuffer },
       ]
       config = { model, temperature: 0, systemPrompt }
       const result = await provider.processFiles({ prompt, files, config, metadata })
       expect(result).toBeDefined()
-      expect(result.includes("2") || result.toLowerCase().includes("two")).toBeTruthy()
+      expect(result.toLowerCase().includes("french")).toBeTruthy()
+      expect(result.toLowerCase().includes("math")).toBeTruthy()
     })
 
     async function streamToStringArray(

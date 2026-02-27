@@ -1,16 +1,15 @@
 import { URL } from "node:url"
 import type { MessageEvent } from "@nestjs/common"
-import { Inject, Injectable, NotImplementedException } from "@nestjs/common"
+import { Inject, Injectable } from "@nestjs/common"
 import type { FilePart, ImagePart } from "ai"
 import type { RequiredConnectScope } from "@/common/entities/connect-required-fields"
 import type {
   LLMChatMessage,
-  LLMConfig,
   LLMMetadata,
   LLMProvider,
 } from "@/common/interfaces/llm-provider.interface"
 import type { Agent } from "@/domains/agents/agent.entity"
-import { AgentModelToAgentProvider, AgentProvider } from "@/external/llm/agent-provider"
+import { ServiceWithLLM } from "@/external/llm"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
 import { DocumentsService } from "../documents/documents.service"
 import {
@@ -23,28 +22,18 @@ import { AgentSession } from "./agent-session.entity"
 import { AgentSessionsService } from "./agent-sessions.service"
 
 @Injectable()
-export class AgentStreamingService {
+export class AgentStreamingService extends ServiceWithLLM {
   constructor(
     @Inject(FILE_STORAGE_SERVICE)
     private readonly fileStorageService: IFileStorage,
     private readonly documentsService: DocumentsService,
     private readonly agentSessionsService: AgentSessionsService,
     @Inject("_MockLLMProvider")
-    private readonly _mockLlmProvider: LLMProvider,
+    mockLlmProvider: LLMProvider,
     @Inject("VertexLLMProvider")
-    private readonly vertexLlmProvider: LLMProvider,
-  ) {}
-
-  getProviderForModel(model: string): LLMProvider {
-    const provider = AgentModelToAgentProvider[model]
-    switch (provider) {
-      case AgentProvider._Mock:
-        return this._mockLlmProvider
-      case AgentProvider.Vertex:
-        return this.vertexLlmProvider
-      default:
-        throw new NotImplementedException(`not supported llm provider: ${provider}`)
-    }
+    vertexLlmProvider: LLMProvider,
+  ) {
+    super(mockLlmProvider, vertexLlmProvider)
   }
   /**
    * Streams a agent response for a session
@@ -81,10 +70,22 @@ export class AgentStreamingService {
     } as MessageEvent
 
     // Step 3: Build LLM config from agent
-    const llmConfig = this.buildLLMConfig(agent)
+    const llmConfig = this.buildLLMConfig({
+      systemPrompt: this.generateMasterPrompt(agent),
+      model: agent.model,
+      temperature: agent.temperature,
+    })
 
     // Step 4: Build LLM metadata (used for telemetry)
-    const llmMetadata: LLMMetadata = this.buildLLMMetadata(agent, updatedSession)
+    const llmMetadata: LLMMetadata = {
+      traceId: updatedSession.traceId,
+      agentSessionId: updatedSession.id,
+      agentId: agent.id,
+      projectId: agent.projectId,
+      organizationId: updatedSession.organizationId,
+      currentTurn: updatedSession.messages.filter((m) => m.role === "user").length,
+      tags: [agent.name],
+    }
 
     // Step 5: Convert messages to LLM format
     // Messages are already loaded via relations in prepareForStreaming
@@ -261,46 +262,5 @@ If there is a file (image or pdf) attached to the user's chat message, answer th
 
 Always answer in ${agent.locale}.
   `.trim()
-  }
-
-  /**
-   * Builds LLM configuration from Agent entity
-   */
-  private buildLLMConfig(agent: Agent): LLMConfig {
-    // Convert temperature to number (database decimal types may be returned as strings)
-    const temperature =
-      typeof agent.temperature === "string"
-        ? parseFloat(agent.temperature)
-        : Number(agent.temperature)
-
-    // Validate temperature is a valid number
-    if (Number.isNaN(temperature) || temperature < 0 || temperature > 2) {
-      throw new Error(
-        `Invalid temperature value: ${agent.temperature}. Temperature must be a number between 0 and 2.`,
-      )
-    }
-
-    const systemPrompt = this.generateMasterPrompt(agent)
-
-    return {
-      model: agent.model,
-      temperature,
-      systemPrompt,
-    }
-  }
-
-  /**
-   * Builds LLM metadata from Agent and AgentSession entities
-   */
-  private buildLLMMetadata(agent: Agent, session: AgentSession): LLMMetadata {
-    return {
-      traceId: session.traceId,
-      agentSessionId: session.id,
-      agentId: agent.id,
-      projectId: agent.projectId,
-      organizationId: session.organizationId,
-      currentTurn: session.messages.filter((m) => m.role === "user").length,
-      tags: [agent.name],
-    }
   }
 }

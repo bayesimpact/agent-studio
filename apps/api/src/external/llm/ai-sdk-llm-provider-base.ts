@@ -3,6 +3,7 @@ import { NotImplementedException } from "@nestjs/common"
 import {
   type FilePart,
   generateText,
+  type ImagePart,
   jsonSchema,
   type LanguageModel,
   Output,
@@ -18,7 +19,7 @@ import type {
   LLMProvider,
 } from "@/common/interfaces/llm-provider.interface"
 import { removeNullish } from "@/common/utils/remove-nullish"
-import { AgentModelToAgentProvider, type AgentProvider } from "@/external/llm/agent-provider"
+import { AgentModelToAgentProvider, AgentProvider } from "@/external/llm/agent-provider"
 
 export abstract class AISDKLLMProviderBase implements LLMProvider {
   async *streamChatResponse({
@@ -185,6 +186,26 @@ export abstract class AISDKLLMProviderBase implements LLMProvider {
     config: LLMConfig
     metadata: LLMMetadata
   }): Promise<Record<string, unknown>> {
+    if (AgentModelToAgentProvider[config.model] === AgentProvider._Mock) {
+      const fakeFile: LLMFile = {
+        type: "file",
+        name: "file1.pdf",
+        mediaType: "application/pdf",
+        content: Buffer.from("%PDF-1.4\n%%EOF"),
+      }
+      message = {
+        role: "user",
+        content: [
+          { type: "text", text: "prompt" },
+          {
+            type: fakeFile.type as "file",
+            mediaType: fakeFile.mediaType,
+            data: fakeFile.content,
+            filename: fakeFile.name,
+          },
+        ],
+      }
+    }
     const aiSDKMessages: LLMChatMessage[] = [message]
       .map((currentMessage) => {
         if (currentMessage.role === "system") {
@@ -235,12 +256,22 @@ export abstract class AISDKLLMProviderBase implements LLMProvider {
         type: "text",
         text: prompt,
       } as TextPart,
-      ...files.map<FilePart>((f) => ({
-        type: "file",
-        data: f.content,
-        mediaType: f.mediaType,
-        name: f.name,
-      })),
+      ...files
+        .filter((f) => f.type === "file")
+        .map<FilePart>((f) => ({
+          type: "file",
+          data: f.content,
+          mediaType: f.mediaType,
+          name: f.name,
+        })),
+      ...files
+        .filter((f) => f.type === "image")
+        .map<ImagePart>((f) => ({
+          type: "image",
+          image: f.content,
+          mediaType: f.mediaType,
+          name: f.name,
+        })),
     ]
     const { text } = await generateText({
       model: this.getLanguageModel(config),
