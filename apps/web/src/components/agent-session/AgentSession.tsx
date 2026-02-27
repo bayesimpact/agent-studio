@@ -44,8 +44,8 @@ export function AgentSession({
 
   const [file, setFile] = useState<File>()
 
-  const chatSubmitRef = useRef<HTMLButtonElement>(null)
-  const scrollToEnd = useScrollToEnd(chatSubmitRef)
+  const chatEndRef = useRef<HTMLDivElement>(null)
+  const scrollToEnd = useScrollToEnd(chatEndRef)
 
   useEffect(() => {
     if (isStreaming) return
@@ -81,6 +81,7 @@ export function AgentSession({
               {messages?.map((message) => (
                 <AgentSessionMessage key={message.id} message={message} />
               ))}
+              <div ref={chatEndRef} />
             </ChatContent>
 
             <ChatFooter focus={!isStreaming} onMessageSubmit={handleSubmit}>
@@ -126,6 +127,7 @@ export function AgentSession({
             {messages?.map((message) => (
               <AgentSessionMessage key={message.id} message={message} />
             ))}
+            <div ref={chatEndRef} />
           </ChatContent>
 
           <ChatFooter focus={!isStreaming} onMessageSubmit={handleSubmit}>
@@ -156,7 +158,7 @@ export function AgentSession({
 
                 <Dictaphone disabled={isStreaming || !session} />
               </div>
-              <ChatSubmit ref={chatSubmitRef} variant="ghost" disabled={isStreaming || !session} />
+              <ChatSubmit variant="ghost" disabled={isStreaming || !session} />
             </ChatActions>
           </ChatFooter>
         </Chat>
