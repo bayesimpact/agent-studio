@@ -30,19 +30,21 @@
       }
     },
     "create": {
-      "title": "Create Agent",
-      "titleConversation": "Create Conversation Agent",
-      "titleExtraction": "Create Extraction Agent",
-      "descriptionConversation": "Create a new conversation agent for {{projectName}}",
-      "descriptionExtraction": "Create a new extraction agent for {{projectName}}",
-      "description": "Create a new agent for {{projectName}}"
-    },
-    "typeDialog": {
-      "label": "Agent type",
-      "description": "Choose the type before configuring your agent.",
-      "confirm": "Continue",
-      "conversation": "Conversation",
-      "extraction": "Extraction"
+      "button": "Create Agent",
+      "typeDialog": {
+        "title": "Agent type",
+        "description": "Choose the type before configuring your agent.",
+        "conversation": "Conversation",
+        "extraction": "Extraction"
+      },
+      "conversationDialog": {
+        "title": "Create Conversation Agent",
+        "description": "Create a new conversation agent for {{projectName}}"
+      },
+      "extractionDialog": {
+        "title": "Create Extraction Agent",
+        "description": "Create a new extraction agent for {{projectName}}"
+      }
     },
     "update": {
       "title": "Edit Agent",

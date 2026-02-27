@@ -1,8 +1,9 @@
-import { SidebarMenuItem } from "@caseai-connect/ui/shad/sidebar"
-import { BotIcon, ScanText } from "lucide-react"
+import { SidebarMenuButton, SidebarMenuItem } from "@caseai-connect/ui/shad/sidebar"
+import { BotIcon, PlusIcon, ScanText } from "lucide-react"
 import { useState } from "react"
+import { useTranslation } from "react-i18next"
 import { useParams } from "react-router-dom"
-import { AgentCreatorWithTrigger } from "@/components/agent/AgentCreator"
+import { AgentCreator } from "@/components/agent/AgentCreator"
 import { AgentDeletorWithoutTrigger } from "@/components/agent/AgentDeletor"
 import { AgentEditorWithoutTrigger } from "@/components/agent/AgentEditor"
 import { AgentItemOptions } from "@/components/agent/AgentItemOptions"
@@ -63,9 +64,7 @@ export function AdminAgentList({
         </AppNavItem>
       ))}
 
-      <SidebarMenuItem>
-        <AgentCreatorWithTrigger project={project} />
-      </SidebarMenuItem>
+      <AgentCreatorButton project={project} />
 
       <AgentEditorWithoutTrigger
         agent={item?.action === "edit" ? item.value : null}
@@ -78,6 +77,23 @@ export function AdminAgentList({
         onClose={handleClose}
       />
     </>
+  )
+}
+
+function AgentCreatorButton({ project }: { project: Project }) {
+  const { t } = useTranslation("agent", { keyPrefix: "create" })
+  const [open, setOpen] = useState(false)
+
+  return (
+    <SidebarMenuItem>
+      <div>
+        <SidebarMenuButton className="cursor-pointer" onClick={() => setOpen(true)}>
+          <PlusIcon />
+          <span>{t("button")}</span>
+        </SidebarMenuButton>
+        <AgentCreator project={project} open={open} onOpenChange={setOpen} />
+      </div>
+    </SidebarMenuItem>
   )
 }
 
