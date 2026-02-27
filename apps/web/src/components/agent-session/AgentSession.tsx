@@ -71,7 +71,7 @@ export function AgentSession({
 
   if (isAdminInterface)
     return (
-      <div className="p-6 flex flex-col gap-6 flex-1">
+      <div className="p-6 flex flex-col gap-6 flex-1 max-h-screen">
         <DotsBackground className="p-10">
           <Chat>
             <ChatHeader>
