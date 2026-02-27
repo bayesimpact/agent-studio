@@ -1,5 +1,13 @@
 "use client"
 
+import { Button } from "@caseai-connect/ui/shad/button"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@caseai-connect/ui/shad/dialog"
 import { ScrollArea } from "@caseai-connect/ui/shad/scroll-area"
 import {
   Sheet,
@@ -8,9 +16,8 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@caseai-connect/ui/shad/sheet"
-import { SidebarMenuButton } from "@caseai-connect/ui/shad/sidebar"
-import { PlusIcon } from "lucide-react"
-import { useEffect, useState } from "react"
+import { cn } from "@caseai-connect/ui/utils"
+import { useState } from "react"
 import { useTranslation } from "react-i18next"
 import { useNavigate } from "react-router-dom"
 import type { Agent } from "@/features/agents/agents.models"
@@ -18,105 +25,131 @@ import { createAgent } from "@/features/agents/agents.thunks"
 import type { Project } from "@/features/projects/projects.models"
 import { useBuildPath } from "@/hooks/use-build-path"
 import { useAppDispatch } from "@/store/hooks"
-import { AgentTypeDialog } from "./AgentTypeDialog"
 import type { AgentFormData } from "./agent-form.shared"
 import { ConversationAgentForm } from "./ConversationAgentForm"
 import { ExtractionAgentForm } from "./ExtractionAgentForm"
 
-export function AgentCreatorWithTrigger({ project }: { project: Project }) {
-  const navigate = useNavigate()
-  const { buildPath } = useBuildPath()
-  const { t } = useTranslation("agent", { keyPrefix: "create" })
-  const [isTypeDialogOpen, setIsTypeDialogOpen] = useState(false)
-  const [isFormSheetOpen, setIsFormSheetOpen] = useState(false)
-  const [selectedType, setSelectedType] = useState<Agent["type"]>("conversation")
+const defaultStep = "typeSelection"
+const defaultType = "conversation"
 
-  const handleSuccess = (agent: Agent) => {
-    const path = buildPath("agent", {
-      organizationId: project.organizationId,
-      projectId: project.id,
-      agentId: agent.id,
-    })
-    navigate(path)
-    setIsFormSheetOpen(false)
-    setSelectedType("conversation")
-  }
-
-  const handleSelectType = (agentType: Agent["type"]) => {
-    setSelectedType(agentType)
-    setIsTypeDialogOpen(false)
-    setIsFormSheetOpen(true)
-  }
-
-  const handleTypeDialogOpenChange = (open: boolean) => {
-    setIsTypeDialogOpen(open)
-    if (!open) {
-      setSelectedType("conversation")
-    }
-  }
-
-  const handleFormSheetOpenChange = (open: boolean) => {
-    setIsFormSheetOpen(open)
-    if (!open) {
-      setSelectedType("conversation")
-    }
-  }
-
-  const sheetTitle = selectedType === "extraction" ? t("titleExtraction") : t("titleConversation")
-  const sheetDescription =
-    selectedType === "extraction"
-      ? t("descriptionExtraction", { projectName: project.name })
-      : t("descriptionConversation", { projectName: project.name })
-
-  return (
-    <div>
-      <AgentTypeDialog
-        open={isTypeDialogOpen}
-        onOpenChange={handleTypeDialogOpenChange}
-        onSelectType={handleSelectType}
-      />
-      <SidebarMenuButton className="cursor-pointer" onClick={() => setIsTypeDialogOpen(true)}>
-        <PlusIcon />
-        <span>{t("title")}</span>
-      </SidebarMenuButton>
-      <Sheet modal open={isFormSheetOpen} onOpenChange={handleFormSheetOpenChange}>
-        <SheetContent side="bottom" className="h-dvh">
-          <ScrollArea className="h-full">
-            <SheetHeader>
-              <SheetTitle>{sheetTitle}</SheetTitle>
-              <SheetDescription>{sheetDescription}</SheetDescription>
-            </SheetHeader>
-            <div className="px-4 pb-4">
-              <CreateForm agentType={selectedType} onSuccess={handleSuccess} />
-            </div>
-          </ScrollArea>
-        </SheetContent>
-      </Sheet>
-    </div>
-  )
-}
-
-export function AgentCreatorWithoutTrigger({
+export function AgentCreator({
   project,
-  isOpen,
+  open,
   onOpenChange,
 }: {
   project: Project
-  isOpen: boolean
+  open: boolean
   onOpenChange: (open: boolean) => void
+}) {
+  const [step, setStep] = useState<"typeSelection" | "agentCreation">(defaultStep)
+  const [selectedType, setSelectedType] = useState<Agent["type"]>(defaultType)
+
+  const reset = () => {
+    onOpenChange(false)
+    setStep(defaultStep)
+    setSelectedType(defaultType)
+  }
+
+  const handleNextStep = () => setStep("agentCreation")
+
+  const handleOpenChange = (open: boolean) => {
+    if (!open) reset()
+  }
+
+  return (
+    <>
+      {/* // First step */}
+      <TypeSelection
+        open={open && step === "typeSelection"}
+        selectedType={selectedType}
+        onSelectType={setSelectedType}
+        onOpenChange={handleOpenChange}
+        onComplete={handleNextStep}
+      />
+
+      {/* // Second step */}
+      <AgentCreation
+        project={project}
+        open={open && step === "agentCreation"}
+        onOpenChange={handleOpenChange}
+        selectedType={selectedType}
+        onSuccess={reset}
+      />
+    </>
+  )
+}
+
+function TypeSelection({
+  open,
+  onOpenChange,
+  onComplete,
+  onSelectType,
+  selectedType,
+}: {
+  onSelectType: (agentType: Agent["type"]) => void
+  selectedType: Agent["type"]
+  open: boolean
+  onOpenChange: (open: boolean) => void
+  onComplete: () => void
+}) {
+  const { t } = useTranslation()
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>{t("agent:create.typeDialog.title")}</DialogTitle>
+          <DialogDescription>{t("agent:create.typeDialog.description")}</DialogDescription>
+        </DialogHeader>
+
+        <div className="space-y-4 pt-2">
+          <div className="grid grid-cols-2 gap-2">
+            <button
+              type="button"
+              className={cn(
+                "border rounded-md px-3 py-2 text-sm text-left",
+                selectedType === "conversation" ? "border-primary" : "border-muted",
+              )}
+              onClick={() => onSelectType("conversation")}
+            >
+              {t("agent:create.typeDialog.conversation")}
+            </button>
+            <button
+              type="button"
+              className={cn(
+                "border rounded-md px-3 py-2 text-sm text-left",
+                selectedType === "extraction" ? "border-primary" : "border-muted",
+              )}
+              onClick={() => onSelectType("extraction")}
+            >
+              {t("agent:create.typeDialog.extraction")}
+            </button>
+          </div>
+
+          <Button type="button" onClick={onComplete} className="w-full">
+            {t("actions:confirm")}
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
+  )
+}
+
+function AgentCreation({
+  project,
+  open,
+  onOpenChange,
+  selectedType,
+  onSuccess,
+}: {
+  project: Project
+  open: boolean
+  onOpenChange: (open: boolean) => void
+  selectedType: Agent["type"]
+  onSuccess: () => void
 }) {
   const { t } = useTranslation("agent", { keyPrefix: "create" })
   const navigate = useNavigate()
   const { buildPath } = useBuildPath()
-  const [isTypeDialogOpen, setIsTypeDialogOpen] = useState(false)
-  const [isFormSheetOpen, setIsFormSheetOpen] = useState(false)
-  const [selectedType, setSelectedType] = useState<Agent["type"]>("conversation")
-
-  const handleSelectType = (agentType: Agent["type"]) => {
-    setSelectedType(agentType)
-    setIsTypeDialogOpen(false)
-    setIsFormSheetOpen(true)
-  }
 
   const handleSuccess = (agent: Agent) => {
     const path = buildPath("agent", {
@@ -125,60 +158,26 @@ export function AgentCreatorWithoutTrigger({
       agentId: agent.id,
     })
     navigate(path)
-    onOpenChange(false)
-    setIsFormSheetOpen(false)
-    setIsTypeDialogOpen(false)
-    setSelectedType("conversation")
+    onSuccess()
   }
 
-  const handleTypeDialogOpenChange = (open: boolean) => {
-    setIsTypeDialogOpen(open)
-    if (!open && !isFormSheetOpen) {
-      onOpenChange(false)
-    }
-  }
-
-  const handleSheetOpenChange = (open: boolean) => {
-    setIsFormSheetOpen(open)
-    if (!open) {
-      onOpenChange(false)
-      setSelectedType("conversation")
-    }
-  }
-
-  useEffect(() => {
-    if (isOpen && !isTypeDialogOpen && !isFormSheetOpen) {
-      setIsTypeDialogOpen(true)
-    }
-  }, [isFormSheetOpen, isOpen, isTypeDialogOpen])
-
-  const sheetTitle = selectedType === "extraction" ? t("titleExtraction") : t("titleConversation")
-  const sheetDescription =
-    selectedType === "extraction"
-      ? t("descriptionExtraction", { projectName: project.name })
-      : t("descriptionConversation", { projectName: project.name })
+  const sheetTitle = t(`${selectedType}Dialog.title`)
+  const sheetDescription = t(`${selectedType}Dialog.description`, { projectName: project.name })
 
   return (
-    <>
-      <AgentTypeDialog
-        open={isTypeDialogOpen}
-        onOpenChange={handleTypeDialogOpenChange}
-        onSelectType={handleSelectType}
-      />
-      <Sheet modal open={isFormSheetOpen} onOpenChange={handleSheetOpenChange}>
-        <SheetContent side="bottom" className="h-dvh">
-          <ScrollArea className="h-full">
-            <SheetHeader>
-              <SheetTitle>{sheetTitle}</SheetTitle>
-              <SheetDescription>{sheetDescription}</SheetDescription>
-            </SheetHeader>
-            <div className="px-4 pb-4">
-              <CreateForm agentType={selectedType} onSuccess={handleSuccess} />
-            </div>
-          </ScrollArea>
-        </SheetContent>
-      </Sheet>
-    </>
+    <Sheet modal open={open} onOpenChange={onOpenChange}>
+      <SheetContent side="bottom" className="h-dvh">
+        <ScrollArea className="h-full">
+          <SheetHeader>
+            <SheetTitle>{sheetTitle}</SheetTitle>
+            <SheetDescription>{sheetDescription}</SheetDescription>
+          </SheetHeader>
+          <div className="px-4 pb-4">
+            <CreateForm agentType={selectedType} onSuccess={handleSuccess} />
+          </div>
+        </ScrollArea>
+      </SheetContent>
+    </Sheet>
   )
 }
 

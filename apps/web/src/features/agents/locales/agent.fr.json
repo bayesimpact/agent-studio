@@ -30,19 +30,21 @@
       }
     },
     "create": {
-      "title": "Créer un agent",
-      "titleConversation": "Créer un agent conversationnel",
-      "titleExtraction": "Créer un agent d'extraction",
-      "descriptionConversation": "Créer un nouvel agent conversationnel pour {{projectName}}",
-      "descriptionExtraction": "Créer un nouvel agent d'extraction pour {{projectName}}",
-      "description": "Créer un nouvel agent pour {{projectName}}"
-    },
-    "typeDialog": {
-      "label": "Type d'agent",
-      "description": "Choisissez le type avant de configurer votre agent.",
-      "confirm": "Continuer",
-      "conversation": "Conversation",
-      "extraction": "Extraction"
+      "button": "Créer un agent",
+      "typeDialog": {
+        "title": "Type d'agent",
+        "description": "Choisissez le type avant de configurer votre agent.",
+        "conversation": "Conversation",
+        "extraction": "Extraction"
+      },
+      "conversationDialog": {
+        "title": "Créer un agent conversationnel",
+        "description": "Créer un nouvel agent conversationnel pour {{projectName}}"
+      },
+      "extractionDialog": {
+        "title": "Créer un agent d'extraction",
+        "description": "Créer un nouvel agent d'extraction pour {{projectName}}"
+      }
     },
     "update": {
       "title": "Modifier l'agent",
