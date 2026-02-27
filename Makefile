@@ -35,7 +35,7 @@ databaseUsername = connect_admin
 databaseName = connect
 else ifeq ($(PROJECT),impulse)
 # IMPULSE
-imageUrl = europe-west9-docker.pkg.dev/impulse/impulse/api
+imageUrl = europe-west9-docker.pkg.dev/impulse-488513/impulse/api
 cloudRunName = impulse
 location = europe-west1
 zone = europe-west9
