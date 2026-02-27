@@ -109,7 +109,7 @@ function HeaderRightSlot({ agent }: { agent: Agent }) {
     <div className="flex items-center gap-2">
       <DefaultPromptDialog buttonProps={{ variant: "outline" }} prompt={agent.defaultPrompt} />
 
-      <AgentEditorWithTrigger organizationId={organizationId} agent={agent} />
+      <AgentEditorWithTrigger agent={agent} />
 
       <AgentDeletorWithTrigger organizationId={organizationId} agent={agent} />
     </div>

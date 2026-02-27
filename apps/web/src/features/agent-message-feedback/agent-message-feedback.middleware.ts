@@ -22,10 +22,10 @@ listenerMiddleware.startListening({
   effect: async (action, listenerApi) => {
     const agents = action.payload
     const state = listenerApi.getState()
-    const { organizationId } = getCurrentIds({ state, wantedIds: ["organizationId"] })
-    const projectId = action.meta.arg.projectId
-    if (!projectId) return
-
+    const { organizationId, projectId } = getCurrentIds({
+      state,
+      wantedIds: ["organizationId", "projectId"],
+    })
     agents.forEach((agent) => {
       listenerApi.dispatch(
         listAgentMessageFeedbacks({ organizationId, projectId, agentId: agent.id }),

@@ -9,7 +9,7 @@ export const DocumentsRoutes = {
   }),
   getAll: defineRoute<ResponseData<DocumentDto[]>>({
     method: "get",
-    path: "organizations/:organizationId/projects/:projectId/documents/",
+    path: "organizations/:organizationId/projects/:projectId/documents",
   }),
   getTemporaryUrl: defineRoute<ResponseData<{ url: string }>>({
     method: "get",

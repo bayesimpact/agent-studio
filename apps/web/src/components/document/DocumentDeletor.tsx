@@ -16,13 +16,7 @@ import type { Document } from "@/features/documents/documents.models"
 import { deleteDocument } from "@/features/documents/documents.thunks"
 import { useAppDispatch } from "@/store/hooks"
 
-export function DocumentDeletor({
-  organizationId,
-  document,
-}: {
-  organizationId: string
-  document: Document
-}) {
+export function DocumentDeletor({ document }: { document: Document }) {
   const { t } = useTranslation()
   const dispatch = useAppDispatch()
 
@@ -33,14 +27,7 @@ export function DocumentDeletor({
   }
 
   const handleDelete = () => {
-    dispatch(
-      deleteDocument({
-        organizationId,
-        projectId: document.projectId,
-        documentId: document.id,
-        onSuccess: handleSuccess,
-      }),
-    )
+    dispatch(deleteDocument({ documentId: document.id, onSuccess: handleSuccess }))
   }
 
   const handleClose = () => {

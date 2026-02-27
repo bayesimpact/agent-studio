@@ -1,6 +1,3 @@
-import { Item, ItemHeader, ItemTitle } from "@caseai-connect/ui/shad/item"
-import { Loader2Icon } from "lucide-react"
-import { useTranslation } from "react-i18next"
 import type z from "zod"
 import { EvaluationReportTable } from "@/components/evaluation/table/EvaluationReportTable"
 import type { schema } from "@/components/evaluation/table/schema"
@@ -9,6 +6,7 @@ import type { EvaluationReport } from "@/features/evaluation-reports/evaluation-
 import { selectEvaluationReportsForEvaluation } from "@/features/evaluation-reports/evaluation-reports.selectors"
 import { ADS } from "@/store/async-data-status"
 import { useAppSelector } from "@/store/hooks"
+import { Loader } from "../Loader"
 
 export function EvaluationReports({
   evaluationId,
@@ -26,26 +24,11 @@ export function EvaluationReports({
     return <EvaluationReportTable key={key} data={data} />
   }
 
-  return <LoadingMessage />
+  return <Loader />
 }
 
 function ErrorMessage() {
   return <div className="text-red-500">Failed to load evaluation reports</div>
-}
-
-function LoadingMessage() {
-  const { t } = useTranslation("status")
-  return (
-    <div className="flex flex-1 items-center justify-center">
-      <Item variant="outline" className="w-fit">
-        <ItemHeader>
-          <ItemTitle className="w-fit text-primary">
-            <Loader2Icon className="size-5 animate-spin " /> {t("loading")}
-          </ItemTitle>
-        </ItemHeader>
-      </Item>
-    </div>
-  )
 }
 
 function buildData({

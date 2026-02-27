@@ -55,7 +55,8 @@ const slice = createSlice({
         state.data.error = null
       })
       .addCase(listAgents.fulfilled, (state, action) => {
-        const projectId = action.meta.arg.projectId
+        const projectId = action.payload[0]?.projectId
+        if (!projectId) return // should not happen, but just in case
         state.data = {
           status: ADS.Fulfilled,
           error: null,

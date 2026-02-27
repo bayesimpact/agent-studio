@@ -42,6 +42,37 @@ listenerMiddleware.startListening({
   },
 })
 
+// Refresh agent sessions when interface type changes
+listenerMiddleware.startListening({
+  predicate(_, currentState, originalState) {
+    const prevInterface = selectIsAdminInterface(originalState)
+    const nextInterface = selectIsAdminInterface(currentState)
+    return prevInterface !== nextInterface
+  },
+  effect: async (_, listenerApi) => {
+    listenerApi.dispatch(agentSessionsActions.reset())
+    const state = listenerApi.getState()
+    const isAdminInterface = selectIsAdminInterface(state)
+    const { organizationId, projectId } = getCurrentIds({
+      state,
+      wantedIds: ["organizationId", "projectId"],
+    })
+    const agents = selectAgentsData(state)
+    if (ADS.isFulfilled(agents)) {
+      for (const agent of Object.values(agents.value).flat()) {
+        await listenerApi.dispatch(
+          listSessions({
+            organizationId,
+            projectId,
+            agentId: agent.id,
+            playground: isAdminInterface,
+          }),
+        )
+      }
+    }
+  },
+})
+
 // Refresh agent sessions when current Agent changes
 listenerMiddleware.startListening({
   predicate(_, currentState, originalState) {
@@ -103,37 +134,6 @@ listenerMiddleware.startListening({
     )
     const onSuccess = action.meta.arg.onSuccess
     onSuccess?.(id)
-  },
-})
-
-// Refresh agent sessions when interface type changes
-listenerMiddleware.startListening({
-  predicate(_, currentState, originalState) {
-    const prevInterface = selectIsAdminInterface(originalState)
-    const nextInterface = selectIsAdminInterface(currentState)
-    return prevInterface !== nextInterface
-  },
-  effect: async (_, listenerApi) => {
-    listenerApi.dispatch(agentSessionsActions.reset())
-    const state = listenerApi.getState()
-    const isAdminInterface = selectIsAdminInterface(state)
-    const { organizationId, projectId } = getCurrentIds({
-      state,
-      wantedIds: ["organizationId", "projectId"],
-    })
-    const agents = selectAgentsData(state)
-    if (ADS.isFulfilled(agents)) {
-      for (const agent of Object.values(agents.value).flat()) {
-        await listenerApi.dispatch(
-          listSessions({
-            organizationId,
-            projectId,
-            agentId: agent.id,
-            playground: isAdminInterface,
-          }),
-        )
-      }
-    }
   },
 })
 

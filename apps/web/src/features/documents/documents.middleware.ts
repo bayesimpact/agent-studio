@@ -1,10 +1,8 @@
 import type { TypedStartListening } from "@reduxjs/toolkit"
 import { createListenerMiddleware } from "@reduxjs/toolkit"
 import type { AppDispatch, RootState } from "@/store/types"
-import { getCurrentIds } from "../helpers"
 import { notificationsActions } from "../notifications/notifications.slice"
 import { selectCurrentProjectId } from "../projects/projects.selectors"
-import { listProjects } from "../projects/projects.thunks"
 import { deleteDocument, listDocuments, uploadDocument } from "./documents.thunks"
 
 const listenerMiddleware = createListenerMiddleware<RootState, AppDispatch>()
@@ -12,18 +10,18 @@ const listenerMiddleware = createListenerMiddleware<RootState, AppDispatch>()
 export type AppStartListening = TypedStartListening<RootState, AppDispatch>
 
 // Refresh documents when projects are loaded
-listenerMiddleware.startListening({
-  actionCreator: listProjects.fulfilled,
-  effect: async (action, listenerApi) => {
-    const projects = action.payload
-    const state = listenerApi.getState()
-    const { organizationId } = getCurrentIds({ state, wantedIds: ["organizationId"] })
+// listenerMiddleware.startListening({
+//   actionCreator: listProjects.fulfilled,
+//   effect: async (action, listenerApi) => {
+//     const projects = action.payload
+//     const state = listenerApi.getState()
+//     const { organizationId } = getCurrentIds({ state, wantedIds: ["organizationId"] })
 
-    projects.forEach((project) => {
-      listenerApi.dispatch(listDocuments({ organizationId, projectId: project.id }))
-    })
-  },
-})
+//     projects.forEach((project) => {
+//       listenerApi.dispatch(listDocuments({ organizationId, projectId: project.id }))
+//     })
+//   },
+// })
 
 // Refresh documents when current project changes
 listenerMiddleware.startListening({
@@ -33,22 +31,15 @@ listenerMiddleware.startListening({
     return prevId !== nextId
   },
   effect: async (_, listenerApi) => {
-    const state = listenerApi.getState()
-    const { organizationId, projectId } = getCurrentIds({
-      state,
-      wantedIds: ["organizationId", "projectId"],
-    })
-    await listenerApi.dispatch(listDocuments({ organizationId, projectId }))
+    await listenerApi.dispatch(listDocuments())
   },
 })
 
 listenerMiddleware.startListening({
   actionCreator: uploadDocument.fulfilled,
   effect: async (action, listenerApi) => {
-    const projectId = action.meta.arg.projectId
-    const organizationId = action.meta.arg.organizationId
     // Refresh documents when one is uploaded
-    listenerApi.dispatch(listDocuments({ organizationId, projectId }))
+    listenerApi.dispatch(listDocuments())
 
     listenerApi.dispatch(
       notificationsActions.show({
@@ -78,10 +69,8 @@ listenerMiddleware.startListening({
 listenerMiddleware.startListening({
   actionCreator: deleteDocument.fulfilled,
   effect: async (action, listenerApi) => {
-    const projectId = action.meta.arg.projectId
-    const organizationId = action.meta.arg.organizationId
     // Refresh Documents when one is deleted
-    listenerApi.dispatch(listDocuments({ organizationId, projectId }))
+    listenerApi.dispatch(listDocuments())
 
     listenerApi.dispatch(
       notificationsActions.show({

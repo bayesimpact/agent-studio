@@ -1,9 +1,8 @@
-import { Button } from "@caseai-connect/ui/shad/button"
 import { Item, ItemContent, ItemFooter, ItemHeader, ItemTitle } from "@caseai-connect/ui/shad/item"
-import { ExternalLinkIcon } from "lucide-react"
 import type { AgentMessageFeedback } from "@/features/agent-message-feedback/agent-message-feedback.models"
 import { buildDate } from "@/utils/build-date"
 import { MarkdownWrapper } from "../chat/MarkdownWrapper"
+import { TraceUrlOpener } from "../TraceUrlOpener"
 
 export function FeedbackItem({ feedback }: { feedback: AgentMessageFeedback }) {
   const { agentSessionId, agentMessageId } = feedback
@@ -26,14 +25,10 @@ export function FeedbackItem({ feedback }: { feedback: AgentMessageFeedback }) {
         </ItemHeader>
         <ItemContent className="text-base">{feedback.content}</ItemContent>
         <ItemFooter>
-          {feedback.traceUrl && (
-            <Button asChild variant="outline" size="sm" className="w-fit">
-              <a href={feedback.traceUrl} className="cursor-pointer" target="_blank">
-                Trace Url
-                <ExternalLinkIcon className="size-4" />
-              </a>
-            </Button>
-          )}
+          <TraceUrlOpener
+            traceUrl={feedback.traceUrl}
+            buttonProps={{ size: "sm", className: "w-fit" }}
+          />
         </ItemFooter>
       </Item>
     </div>

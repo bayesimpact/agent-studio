@@ -1,29 +1,13 @@
 import type { TypedStartListening } from "@reduxjs/toolkit"
 import { createListenerMiddleware, isAnyOf } from "@reduxjs/toolkit"
-import { ADS } from "@/store/async-data-status"
 import type { AppDispatch, RootState } from "@/store/types"
-import { getCurrentIds } from "../helpers"
 import { notificationsActions } from "../notifications/notifications.slice"
-import { selectCurrentProjectId, selectProjectsData } from "../projects/projects.selectors"
-import { listProjects } from "../projects/projects.thunks"
+import { selectCurrentProjectId } from "../projects/projects.selectors"
 import { createAgent, deleteAgent, listAgents, updateAgent } from "./agents.thunks"
 
 const listenerMiddleware = createListenerMiddleware<RootState, AppDispatch>()
 
 export type AppStartListening = TypedStartListening<RootState, AppDispatch>
-
-// Refresh Agents when projects are loaded
-listenerMiddleware.startListening({
-  actionCreator: listProjects.fulfilled,
-  effect: async (action, listenerApi) => {
-    const projects = action.payload
-    const state = listenerApi.getState()
-    const { organizationId } = getCurrentIds({ state, wantedIds: ["organizationId"] })
-    projects.forEach((project) => {
-      listenerApi.dispatch(listAgents({ organizationId, projectId: project.id }))
-    })
-  },
-})
 
 // Refresh Agents when current project changes
 listenerMiddleware.startListening({
@@ -33,12 +17,7 @@ listenerMiddleware.startListening({
     return prevId !== nextId
   },
   effect: async (_, listenerApi) => {
-    const state = listenerApi.getState()
-    const { organizationId, projectId } = getCurrentIds({
-      state,
-      wantedIds: ["organizationId", "projectId"],
-    })
-    await listenerApi.dispatch(listAgents({ organizationId, projectId }))
+    await listenerApi.dispatch(listAgents())
   },
 })
 
@@ -46,14 +25,7 @@ listenerMiddleware.startListening({
 listenerMiddleware.startListening({
   matcher: isAnyOf(deleteAgent.fulfilled, createAgent.fulfilled, updateAgent.fulfilled),
   effect: async (_, listenerApi) => {
-    const state = listenerApi.getState()
-    const { organizationId } = getCurrentIds({ state, wantedIds: ["organizationId"] })
-
-    const projects = selectProjectsData(state)
-    if (!ADS.isFulfilled(projects)) return
-    projects.value.forEach((project) => {
-      listenerApi.dispatch(listAgents({ organizationId, projectId: project.id }))
-    })
+    listenerApi.dispatch(listAgents())
   },
 })
 

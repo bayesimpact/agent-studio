@@ -68,7 +68,6 @@ export function AdminAgentList({
       </SidebarMenuItem>
 
       <AgentEditorWithoutTrigger
-        organizationId={organizationId}
         agent={item?.action === "edit" ? item.value : null}
         onClose={handleClose}
       />

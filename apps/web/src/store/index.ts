@@ -1,5 +1,6 @@
 import { configureStore } from "@reduxjs/toolkit"
 import { getServices } from "@/di/services"
+import { agentExtractionRunsMiddleware } from "@/features/agent-extraction-runs/agent-extraction-runs.middleware"
 import { agentExtractionRunsSliceReducer } from "@/features/agent-extraction-runs/agent-extraction-runs.slice"
 import { agentMessageFeedbackMiddleware } from "@/features/agent-message-feedback/agent-message-feedback.middleware"
 import { agentMessageFeedbackSliceReducer } from "@/features/agent-message-feedback/agent-message-feedback.slice"
@@ -27,11 +28,11 @@ import type { ThunkExtraArg } from "./types"
 
 export const store = configureStore({
   reducer: {
-    agentMessageFeedback: agentMessageFeedbackSliceReducer,
     agentExtractionRuns: agentExtractionRunsSliceReducer,
-    auth: authSliceReducer,
+    agentMessageFeedback: agentMessageFeedbackSliceReducer,
     agents: agentsSliceReducer,
     agentSessions: agentSessionsSliceReducer,
+    auth: authSliceReducer,
     documents: documentsSliceReducer,
     evaluationReports: evaluationReportsSliceReducer,
     evaluations: evaluationsSliceReducer,
@@ -47,16 +48,17 @@ export const store = configureStore({
         extraArgument: { services: getServices() } satisfies ThunkExtraArg,
       },
     }).prepend(
-      authMiddleware.middleware,
-      organizationsMiddleware.middleware,
-      projectsMiddleware.middleware,
-      projectMembershipsMiddleware.middleware,
-      agentsMiddleware.middleware,
+      agentExtractionRunsMiddleware.middleware,
+      agentMessageFeedbackMiddleware.middleware,
       agentSessionMiddleware.middleware,
+      agentsMiddleware.middleware,
+      authMiddleware.middleware,
       documentsMiddleware.middleware,
       evaluationReportsMiddleware.middleware,
       evaluationsMiddleware.middleware,
-      agentMessageFeedbackMiddleware.middleware,
+      organizationsMiddleware.middleware,
+      projectMembershipsMiddleware.middleware,
+      projectsMiddleware.middleware,
     ),
 })
 

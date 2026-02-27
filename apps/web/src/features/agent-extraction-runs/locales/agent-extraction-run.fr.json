@@ -1,5 +1,10 @@
 {
   "agentExtractionRun": {
+    "create": {
+      "button": "Nouvelle extraction",
+      "title": "Créer une exécution d'extraction",
+      "description": "Téléversez un PDF ou une image pour lancer l'extraction."
+    },
     "list": {
       "title": "Exécutions d'extraction",
       "empty": {
@@ -7,19 +12,15 @@
         "description": "L'historique apparaîtra ici quand l'exécution d'extraction sera disponible."
       }
     },
-    "newRunButton": "Nouvelle extraction",
-    "newRunTitle": "Créer une exécution d'extraction",
-    "newRunDescription": "Téléversez un PDF ou une image pour lancer l'extraction.",
-    "documentLabel": "Document",
-    "documentHint": "Types acceptés : PDF, JPEG, PNG",
-    "submitRun": "Lancer l'extraction",
-    "running": "Exécution...",
-    "resultTitle": "Sortie JSON structurée",
-    "invalidFileType": "Type de fichier non pris en charge. Veuillez téléverser un PDF, JPEG ou PNG.",
-    "runCreationFailed": "Échec de la création de l'exécution d'extraction.",
-    "status": {
-      "success": "Succès",
-      "failed": "Échec"
+    "result": {
+      "view": {
+        "button": "Voir JSON",
+        "title": "Résultat de l'extraction",
+        "error": "Le résultat de l'extraction n'est pas disponible."
+      },
+      "download": {
+        "button": "Télécharger JSON"
+      }
     }
   }
 }
