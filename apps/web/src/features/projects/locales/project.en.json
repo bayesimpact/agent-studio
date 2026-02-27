@@ -16,6 +16,14 @@
     "create": {
       "title": "Create Project",
       "description": "Create a new project for {{organizationName}}"
+    },
+    "update": {
+      "title": "Update Project",
+      "description": "Update the project information"
+    },
+    "delete": {
+      "title": "Delete Project",
+      "description": "Are you sure you want to delete {{name}}? This action is irreversible."
     }
   }
 }

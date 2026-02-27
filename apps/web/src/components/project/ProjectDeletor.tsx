@@ -11,11 +11,9 @@ import {
 } from "@caseai-connect/ui/shad/dialog"
 import { useTranslation } from "react-i18next"
 import { useNavigate } from "react-router-dom"
-import { selectProjectsStatus } from "@/features/projects/projects.selectors"
 import { deleteProject } from "@/features/projects/projects.thunks"
 import { useBuildPath } from "@/hooks/use-build-path"
-import { ADS } from "@/store/async-data-status"
-import { useAppDispatch, useAppSelector } from "@/store/hooks"
+import { useAppDispatch } from "@/store/hooks"
 
 export function ProjectDeletor({
   project,
@@ -26,10 +24,8 @@ export function ProjectDeletor({
 }) {
   const navigate = useNavigate()
   const { buildPath } = useBuildPath()
-  const { t } = useTranslation("project", { keyPrefix: "delete" })
-  const { t: tCommon } = useTranslation("common")
+  const { t } = useTranslation()
   const dispatch = useAppDispatch()
-  const projectsStatus = useAppSelector(selectProjectsStatus)
 
   if (!project) {
     return null
@@ -48,19 +44,17 @@ export function ProjectDeletor({
     <Dialog open={!!project} onOpenChange={(open: boolean) => !open && onClose()}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>{t("title")}</DialogTitle>
-          <DialogDescription>{t("description", { name: project.name })}</DialogDescription>
+          <DialogTitle>{t("project:delete.title")}</DialogTitle>
+          <DialogDescription>
+            {t("project:delete.description", { name: project.name })}
+          </DialogDescription>
         </DialogHeader>
         <div className="flex justify-end gap-2 pt-4">
-          <Button variant="outline" onClick={onClose} disabled={ADS.isLoading(projectsStatus)}>
-            {tCommon("cancel")}
+          <Button variant="outline" onClick={onClose}>
+            {t("actions:cancel")}
           </Button>
-          <Button
-            variant="destructive"
-            onClick={handleDelete}
-            disabled={ADS.isLoading(projectsStatus)}
-          >
-            {ADS.isLoading(projectsStatus) ? t("submitting") : t("submit")}
+          <Button variant="destructive" onClick={handleDelete}>
+            {t("actions:confirm")}
           </Button>
         </div>
       </DialogContent>
