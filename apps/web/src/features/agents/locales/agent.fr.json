@@ -69,31 +69,6 @@
       "title": "Prompt par défaut",
       "description": "Ce prompt définit le comportement de l'agent.",
       "button": "Voir le prompt"
-    },
-    "extraction": {
-      "runsTitle": "Exécutions d'extraction",
-      "emptyTitle": "Aucune exécution d'extraction",
-      "emptyDescription": "L'historique apparaîtra ici quand l'exécution d'extraction sera disponible.",
-      "newRunButton": "Nouvelle extraction",
-      "newRunTitle": "Créer une exécution d'extraction",
-      "newRunDescription": "Téléversez un PDF ou une image pour lancer l'extraction.",
-      "documentLabel": "Document",
-      "documentHint": "Types acceptés : PDF, JPEG, PNG",
-      "uploadedFileLabel": "Fichier téléversé",
-      "submitRun": "Lancer l'extraction",
-      "running": "Exécution...",
-      "resultTitle": "Sortie JSON structurée",
-      "viewResultButton": "Voir le JSON",
-      "downloadResultButton": "Télécharger le JSON",
-      "loadingResult": "Chargement du résultat...",
-      "resultUnavailable": "Le résultat est indisponible pour cette exécution.",
-      "traceUrl": "Trace Url",
-      "invalidFileType": "Type de fichier non pris en charge. Veuillez téléverser un PDF, JPEG ou PNG.",
-      "runCreationFailed": "Échec de la création de l'exécution d'extraction.",
-      "status": {
-        "success": "Succès",
-        "failed": "Échec"
-      }
     }
   }
 }

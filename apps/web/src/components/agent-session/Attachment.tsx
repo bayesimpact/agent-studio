@@ -4,25 +4,19 @@ import { useCallback, useEffect, useState } from "react"
 import { useTranslation } from "react-i18next"
 import type { AgentSessionMessage } from "@/features/agent-sessions/agent-sessions.models"
 import { getDocumentTemporaryUrl } from "@/features/documents/documents.thunks"
-import { selectCurrentOrganizationId } from "@/features/organizations/organizations.selectors"
-import { selectCurrentProjectId } from "@/features/projects/projects.selectors"
-import { useAppDispatch, useAppSelector } from "@/store/hooks"
+import { useAppDispatch } from "@/store/hooks"
 
 export function Attachment({ message }: { message: AgentSessionMessage }) {
   const { t } = useTranslation("agentSessionMessage")
   const dispatch = useAppDispatch()
-  const organizationId = useAppSelector(selectCurrentOrganizationId)
-  const projectId = useAppSelector(selectCurrentProjectId)
 
   const [url, setUrl] = useState<string>()
 
   const loadDocument = useCallback(async () => {
-    if (!message.documentId || !organizationId || !projectId) return
-    const res = await dispatch(
-      getDocumentTemporaryUrl({ documentId: message.documentId, organizationId, projectId }),
-    ).unwrap()
+    if (!message.documentId) return
+    const res = await dispatch(getDocumentTemporaryUrl({ documentId: message.documentId })).unwrap()
     if (res.url) setUrl(res.url)
-  }, [dispatch, message.documentId, organizationId, projectId])
+  }, [dispatch, message.documentId])
 
   useEffect(() => {
     loadDocument()

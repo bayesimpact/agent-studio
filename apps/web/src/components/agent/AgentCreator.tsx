@@ -94,12 +94,7 @@ export function AgentCreatorWithTrigger({ project }: { project: Project }) {
               <SheetDescription>{sheetDescription}</SheetDescription>
             </SheetHeader>
             <div className="px-4 pb-4">
-              <CreateForm
-                organizationId={project.organizationId}
-                projectId={project.id}
-                agentType={selectedType}
-                onSuccess={handleSuccess}
-              />
+              <CreateForm agentType={selectedType} onSuccess={handleSuccess} />
             </div>
           </ScrollArea>
         </SheetContent>
@@ -192,12 +187,7 @@ export function AgentCreatorWithoutTrigger({
               <SheetDescription>{sheetDescription}</SheetDescription>
             </SheetHeader>
             <div className="px-4 pb-4">
-              <CreateForm
-                organizationId={project.organizationId}
-                projectId={project.id}
-                agentType={selectedType}
-                onSuccess={handleSuccess}
-              />
+              <CreateForm agentType={selectedType} onSuccess={handleSuccess} />
             </div>
           </ScrollArea>
         </SheetContent>
@@ -207,13 +197,9 @@ export function AgentCreatorWithoutTrigger({
 }
 
 function CreateForm({
-  organizationId,
-  projectId,
   agentType,
   onSuccess,
 }: {
-  organizationId: string
-  projectId: string
   agentType: Agent["type"]
   onSuccess: (agent: Agent) => void
 }) {
@@ -227,8 +213,6 @@ function CreateForm({
 
     const createdAgent = await dispatch(
       createAgent({
-        organizationId,
-        projectId,
         fields: {
           name: fields.name,
           defaultPrompt: fields.defaultPrompt,

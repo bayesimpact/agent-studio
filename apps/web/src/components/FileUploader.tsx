@@ -1,14 +1,14 @@
 import { Button } from "@caseai-connect/ui/shad/button"
+import { cn } from "@caseai-connect/ui/utils"
 import { Loader2Icon, UploadCloudIcon } from "lucide-react"
 import { useCallback, useState } from "react"
 import { useDropzone } from "react-dropzone"
 import { useTranslation } from "react-i18next"
 
 type UploaderProps<T> = {
-  organizationId: string
-  projectId: string
   processFile: (params: { file: File }) => Promise<T>
   onDrop?: (file: File) => void
+  className?: string
 }
 
 function useUploader<T>({ processFile, onDrop }: UploaderProps<T>) {
@@ -52,18 +52,13 @@ function useUploader<T>({ processFile, onDrop }: UploaderProps<T>) {
 
 export function BasicUploader<T>({
   processFile,
-  organizationId,
-  projectId,
   children,
+  className,
 }: UploaderProps<T> & { children?: (status: "idle" | "uploading") => React.ReactNode }) {
-  const { getRootProps, getInputProps, status } = useUploader<T>({
-    processFile,
-    organizationId,
-    projectId,
-  })
+  const { getRootProps, getInputProps, status } = useUploader<T>({ processFile })
   const { t } = useTranslation("actions")
   return (
-    <div {...getRootProps()} className="w-fit cursor-pointer">
+    <div {...getRootProps()} className={cn("w-fit cursor-pointer", className)}>
       {children ? (
         children(status)
       ) : (

@@ -20,13 +20,7 @@ import type { AgentFormData } from "./agent-form.shared"
 import { ConversationAgentForm } from "./ConversationAgentForm"
 import { ExtractionAgentForm } from "./ExtractionAgentForm"
 
-export function AgentEditorWithTrigger({
-  organizationId,
-  agent,
-}: {
-  organizationId: string
-  agent: Agent
-}) {
+export function AgentEditorWithTrigger({ agent }: { agent: Agent }) {
   const [open, setOpen] = useState(false)
 
   const handleSuccess = () => {
@@ -42,17 +36,15 @@ export function AgentEditorWithTrigger({
         </Button>
       </SheetTrigger>
 
-      <Content organizationId={organizationId} agent={agent} onSuccess={handleSuccess} />
+      <Content agent={agent} onSuccess={handleSuccess} />
     </Sheet>
   )
 }
 
 export function AgentEditorWithoutTrigger({
-  organizationId,
   agent,
   onClose,
 }: {
-  organizationId: string
   agent: Agent | null
   onClose: () => void
 }) {
@@ -63,20 +55,12 @@ export function AgentEditorWithoutTrigger({
   if (!agent) return null
   return (
     <Sheet modal open={!!agent} onOpenChange={(open: boolean) => !open && onClose()}>
-      <Content organizationId={organizationId} agent={agent} onSuccess={handleSuccess} />
+      <Content agent={agent} onSuccess={handleSuccess} />
     </Sheet>
   )
 }
 
-function Content({
-  organizationId,
-  agent,
-  onSuccess,
-}: {
-  organizationId: string
-  agent: Agent
-  onSuccess: () => void
-}) {
+function Content({ agent, onSuccess }: { agent: Agent; onSuccess: () => void }) {
   const { t } = useTranslation("agent", { keyPrefix: "update" })
   const sheetTitle = agent.type === "extraction" ? t("titleExtraction") : t("titleConversation")
   const sheetDescription =
@@ -90,22 +74,14 @@ function Content({
           <SheetDescription>{sheetDescription}</SheetDescription>
         </SheetHeader>
         <div className="px-4 pb-4">
-          <UpdateForm organizationId={organizationId} agent={agent} onSuccess={onSuccess} />
+          <UpdateForm agent={agent} onSuccess={onSuccess} />
         </div>
       </ScrollArea>
     </SheetContent>
   )
 }
 
-function UpdateForm({
-  organizationId,
-  agent,
-  onSuccess,
-}: {
-  organizationId: string
-  agent: Agent
-  onSuccess?: () => void
-}) {
+function UpdateForm({ agent, onSuccess }: { agent: Agent; onSuccess?: () => void }) {
   const dispatch = useAppDispatch()
 
   const handleSubmit = (fields: AgentFormData) => {
@@ -116,8 +92,6 @@ function UpdateForm({
 
     dispatch(
       updateAgent({
-        organizationId,
-        projectId: agent.projectId,
         agentId: agent.id,
         fields: {
           name: fields.name,

@@ -1,12 +1,11 @@
 import { Badge } from "@caseai-connect/ui/shad/badge"
-import { Button } from "@caseai-connect/ui/shad/button"
 import { cn } from "@caseai-connect/ui/utils"
 import { IconCircleCheckFilled, IconLoader } from "@tabler/icons-react"
 import type { ColumnDef } from "@tanstack/react-table"
 import type { TFunction } from "i18next"
-import { ExternalLinkIcon } from "lucide-react"
 import type { z } from "zod"
 import { DefaultPromptDialog } from "@/components/agent/DefaultPromptDialog"
+import { TraceUrlOpener } from "@/components/TraceUrlOpener"
 import { buildDate } from "@/utils/build-date"
 import type { schema } from "./schema"
 
@@ -90,14 +89,7 @@ export function createColumns({ t }: { t: TFunction }): ColumnDef<z.infer<typeof
     {
       accessorKey: "traceUrl",
       header: () => <></>,
-      cell: ({ row }) => (
-        <Button asChild variant="ghost">
-          <a href={row.original.traceUrl} className="cursor-pointer" target="_blank">
-            {t("evaluationReport:props.traceUrl")}
-            <ExternalLinkIcon className="size-4" />
-          </a>
-        </Button>
-      ),
+      cell: ({ row }) => <TraceUrlOpener traceUrl={row.original.traceUrl} />,
     },
   ]
 }

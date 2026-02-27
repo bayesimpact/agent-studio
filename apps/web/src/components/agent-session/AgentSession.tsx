@@ -1,5 +1,5 @@
 import { Button } from "@caseai-connect/ui/shad/button"
-import { CirclePlusIcon, ExternalLinkIcon, FileCheckIcon, XIcon } from "lucide-react"
+import { CirclePlusIcon, FileCheckIcon, XIcon } from "lucide-react"
 import { useEffect, useRef, useState } from "react"
 import { useTranslation } from "react-i18next"
 import type {
@@ -24,6 +24,7 @@ import {
 } from "../chat/Chat"
 import { DotsBackground } from "../DotsBackground"
 import { AttachDocument } from "../document/AttachDocument"
+import { TraceUrlOpener } from "../TraceUrlOpener"
 import { AgentSessionMessage } from "./AgentSessionMessage"
 
 export function AgentSession({
@@ -74,14 +75,7 @@ export function AgentSession({
         <DotsBackground className="p-10">
           <Chat>
             <ChatHeader>
-              {session.traceUrl && (
-                <Button asChild variant="ghost">
-                  <a href={session.traceUrl} className="cursor-pointer" target="_blank">
-                    Trace Url
-                    <ExternalLinkIcon className="size-4" />
-                  </a>
-                </Button>
-              )}
+              <TraceUrlOpener traceUrl={session.traceUrl} />
             </ChatHeader>
             <ChatContent>
               {messages?.map((message) => (

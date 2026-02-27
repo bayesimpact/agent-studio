@@ -5,15 +5,9 @@ import { MarkdownWrapper } from "@/components/chat/MarkdownWrapper"
 import type { Document } from "@/features/documents/documents.models"
 import { buildDate } from "@/utils/build-date"
 import { DocumentDeletor } from "./DocumentDeletor"
-import { OpenDocumentUrl } from "./OpenDocumentUrl"
+import { DocumentOpener } from "./DocumentOpener"
 
-export function DocumentItem({
-  document,
-  organizationId,
-}: {
-  document: Document
-  organizationId: string
-}) {
+export function DocumentItem({ document }: { document: Document }) {
   const { t } = useTranslation("document", { keyPrefix: "props" })
   return (
     <Item variant="outline" className="w-full">
@@ -24,12 +18,8 @@ export function DocumentItem({
         </ItemTitle>
 
         <div className="flex gap-2 items-center">
-          <OpenDocumentUrl
-            organizationId={organizationId}
-            projectId={document.projectId}
-            document={document}
-          />
-          <DocumentDeletor organizationId={organizationId} document={document} />
+          <DocumentOpener documentId={document.id} />
+          <DocumentDeletor document={document} />
         </div>
       </ItemHeader>
 

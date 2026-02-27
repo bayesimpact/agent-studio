@@ -15,9 +15,8 @@ import { useTranslation } from "react-i18next"
 import { useNavigate } from "react-router-dom"
 import type { Agent } from "@/features/agents/agents.models"
 import { deleteAgent } from "@/features/agents/agents.thunks"
-import { selectCurrentOrganizationId } from "@/features/organizations/organizations.selectors"
 import { useBuildPath } from "@/hooks/use-build-path"
-import { useAppDispatch, useAppSelector } from "@/store/hooks"
+import { useAppDispatch } from "@/store/hooks"
 
 export function AgentDeletorWithTrigger({
   organizationId,
@@ -94,17 +93,9 @@ function Content({
 }) {
   const { t } = useTranslation()
   const dispatch = useAppDispatch()
-  const organizationId = useAppSelector(selectCurrentOrganizationId)
 
   const handleDelete = () => {
-    dispatch(
-      deleteAgent({
-        organizationId: organizationId!,
-        projectId: agent.projectId,
-        agentId: agent.id,
-        onSuccess,
-      }),
-    )
+    dispatch(deleteAgent({ agentId: agent.id, onSuccess }))
   }
 
   return (

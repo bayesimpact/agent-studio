@@ -8,10 +8,9 @@ import {
 } from "@caseai-connect/ui/shad/empty"
 import { FileIcon } from "lucide-react"
 import { useTranslation } from "react-i18next"
-import type { Project } from "@/features/projects/projects.models"
 import { UploadDocumentButton } from "./UploadDocumentButton"
 
-export function EmptyDocument({ project }: { project: Project }) {
+export function EmptyDocument() {
   const { t } = useTranslation("document", { keyPrefix: "list.empty" })
   return (
     <Empty>
@@ -23,7 +22,7 @@ export function EmptyDocument({ project }: { project: Project }) {
         <EmptyDescription>{t("description")}</EmptyDescription>
       </EmptyHeader>
       <EmptyContent className="flex-row justify-center gap-2">
-        <UploadDocumentButton organizationId={project.organizationId} project={project} />
+        <UploadDocumentButton />
       </EmptyContent>
     </Empty>
   )

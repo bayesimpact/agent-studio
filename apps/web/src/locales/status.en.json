@@ -2,11 +2,13 @@
   "status": {
     "done": "Done",
     "error": "Error",
+    "failed": "Failed",
     "idle": "Idle",
     "loading": "Loading",
-    "pending": "Pending",
-    "thinking": "Thinking",
     "noResults": "No results found.",
+    "pending": "Pending",
+    "success": "Success",
+    "thinking": "Thinking",
     "notFound": {
       "title": "404 Not Found",
       "description": "The page you are looking for does not exist.",
