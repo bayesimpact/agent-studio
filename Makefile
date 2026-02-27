@@ -1,14 +1,17 @@
 .PHONY: docker
 
 version ?= `git rev-parse --short HEAD`
-imageUrl ?= europe-west9-docker.pkg.dev/caseai-connect/caseai-connect/api
 
 # Change detection configuration
 BASE_REF ?= HEAD^1
 REGION ?= eu
+PROJECT ?= connect
 TEST_DATABASE_URL ?= postgresql://connect_admin:passpass@localhost:5432/connect_test
 
-ifeq "$(REGION)" "eu"
+ifeq ($(REGION),eu)
+ifeq ($(PROJECT),connect)
+# CONNECT
+imageUrl = europe-west9-docker.pkg.dev/caseai-connect/caseai-connect/api
 cloudRunName = connect
 location = europe-west1
 zone = europe-west9
@@ -25,6 +28,40 @@ auth0M2MClientId = ct0uygE3ld8IOKjaGozWbRLMae0R0Pcr
 auth0ClientId = Ntkc5sZnx8OQNP4UJDCqId4eo0WqGTJD
 localStorageServerBaseUrl = https://connect.localhost:3000
 gcsStorageBucketName = eu-connect-file-storage
+gcpProjectId = caseai-connect
+serviceAccount = connect-api@caseai-connect.iam.gserviceaccount.com
+network = projects/caseai-connect/global/networks/default
+databaseUsername = connect_admin
+databaseName = connect
+else ifeq ($(PROJECT),impulse)
+# IMPULSE
+imageUrl = europe-west9-docker.pkg.dev/impulse/impulse/api
+cloudRunName = impulse
+location = europe-west1
+zone = europe-west9
+langfuseUrl = https://langfuse-y72kzcp7ka-od.a.run.app
+langfusePk = pk-lf-7c8dba87-812c-4447-9e6d-80ac06af9311
+secretsPrefix = IMPULSE_
+postHogHost = https://eu.i.posthog.com
+addCloudSqlInstances = impulse-488513:europe-west9:impulse-eu
+cloudSqlProxyPort = 5433
+auth0OrganizationId = org_CrDgtkMXZORx4H70
+auth0Audience = https://bayes-impact.eu.auth0.com/api/v2/
+auth0IssuerUrl = https://bayes-impact.eu.auth0.com/
+auth0M2MClientId = ct0uygE3ld8IOKjaGozWbRLMae0R0Pcr
+auth0ClientId = Ddw6V44kWddjgciJSmYDGV1J0V5w3REB
+localStorageServerBaseUrl = https://connect.localhost:3000
+gcsStorageBucketName = eu-impulse-file-storage
+gcpProjectId = impulse-488513
+serviceAccount = impulse-api@impulse-488513.iam.gserviceaccount.com
+network = projects/impulse-488513/global/networks/default
+databaseUsername = impulse_admin
+databaseName = impulse
+else
+$(error Unsupported PROJECT '$(PROJECT)' for REGION '$(REGION)')
+endif
+else
+$(error Unsupported REGION '$(REGION)')
 endif
 
 # ==============================================================================
@@ -118,7 +155,7 @@ tests: db-tests ci-checks
 migrations:
 	docker compose -f infra/cloudsql-proxy/docker-compose.yaml up -d
 	docker compose -f infra/cloudsql-proxy/docker-compose.yaml logs cloudsql-proxy
-	cd apps/api && npm ci && DATABASE_HOST=localhost DATABASE_PORT=${cloudSqlProxyPort} DATABASE_USERNAME=connect_admin DATABASE_NAME=connect DATABASE_PASSWORD=${MIG_DATABASE_PASSWORD} npm run migration:run
+	cd apps/api && npm ci && DATABASE_HOST=localhost DATABASE_PORT=${cloudSqlProxyPort} DATABASE_USERNAME=${databaseUsername} DATABASE_NAME=${databaseName} DATABASE_PASSWORD=${MIG_DATABASE_PASSWORD} npm run migration:run
 
 deploy: docker-push deploy-only
 
@@ -133,15 +170,15 @@ deploy-only:
 	--set-env-vars=LOCAL_STORAGE_SERVER_BASE_URL=${localStorageServerBaseUrl} \
 	--set-env-vars=GCS_STORAGE_BUCKET_NAME=${gcsStorageBucketName} \
   --set-env-vars=LANGFUSE_PK=${langfusePk},LANGFUSE_BASE_URL=${langfuseUrl},LOCATION=$(location) \
-  --set-env-vars=DATABASE_HOST=/cloudsql/${addCloudSqlInstances},DATABASE_USERNAME=connect_admin,DATABASE_NAME=connect \
+  --set-env-vars=DATABASE_HOST=/cloudsql/${addCloudSqlInstances},DATABASE_USERNAME=${databaseUsername},DATABASE_NAME=${databaseName} \
 	--region=${zone} \
 	--port=3000 \
 	--min-instances=1 \
 	--max-instances=1 \
 	--add-cloudsql-instances=${addCloudSqlInstances} \
-	--network=projects/caseai-connect/global/networks/default \
-	--service-account=connect-api@caseai-connect.iam.gserviceaccount.com \
-	--project caseai-connect
+	--network=${network} \
+	--service-account=${serviceAccount} \
+	--project ${gcpProjectId}
 
 notify:
 	curl -X POST -H 'Content-type: application/json' --data '{"text":"$(shell git log -1 --pretty=%B)"}' https://hooks.slack.com/services/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
