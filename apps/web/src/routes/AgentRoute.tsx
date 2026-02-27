@@ -93,15 +93,14 @@ function useHandleHeader(agent: Agent) {
   const { setHeaderRightSlot } = useSidebarLayout()
   const { isRoute } = useIsRoute()
   const isAgentRoute = isRoute(RouteNames.AGENT)
-  const isAgentSessionRoute = isRoute(RouteNames.AGENT_SESSION)
 
   useEffect(() => {
-    if (!isAgentRoute && !isAgentSessionRoute) return
+    if (!isAgentRoute) return
     if (isAdminInterface) setHeaderRightSlot(<HeaderRightSlot agent={agent} />)
     return () => {
       setHeaderRightSlot(undefined)
     }
-  }, [agent, setHeaderRightSlot, isAdminInterface, isAgentRoute, isAgentSessionRoute])
+  }, [agent, setHeaderRightSlot, isAdminInterface, isAgentRoute])
 }
 
 function HeaderRightSlot({ agent }: { agent: Agent }) {
