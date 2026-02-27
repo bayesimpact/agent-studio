@@ -3,8 +3,14 @@ services:
   cloudsql-proxy:
     container_name: connect-cloudsql-proxy
     image: gcr.io/cloud-sql-connectors/cloud-sql-proxy:2.14.0
-    command: /cloud_sql_proxy --credentials-file=/secrets/cloudsql/credentials.json --address 0.0.0.0 --port 5432 caseai-connect:europe-west9:connect-eu
+    command:
+      - --credentials-file=/secrets/cloudsql/credentials.json
+      - --address
+      - 0.0.0.0
+      - --port
+      - "5432"
+      - ${CLOUDSQL_INSTANCE:-caseai-connect:europe-west9:connect-eu}
     ports:
-      - "5433:5433"
+      - "${CLOUDSQL_PROXY_PORT:-5433}:5432"
     volumes:
-      - ../../dontsave/key.json:/secrets/cloudsql/credentials.json
+      - ${CLOUDSQL_CREDENTIALS_FILE:-../../dontsave/caseai-connect-26b7a9fadda7.json}:/secrets/cloudsql/credentials.json

@@ -24,7 +24,11 @@ Keep the password for later and store it in 1Password or any other password plat
 
 name: `impulse`
 
-3. create an service account
+3. create service accounts
+
+* One for the account running the instance of the API
+
+name: `api`
 
 https://console.cloud.google.com/iam-admin/serviceaccounts?project=impulse-488513
 
@@ -34,8 +38,20 @@ List of Roles to add:
 - `Compute Network User`
 - `Compute Network Viewer`
 - `Compute Public IP Admin`
-- `Secret Mananger Secret Accessor`
+- `Secret Manager Secret Accessor`
 - `Vertex AI Service Agent`
+
+* Another one for Github (to run the migrations)
+
+name: `github`
+
+- `Artifact Registry Administrator`
+- `Cloud Run Admin`
+- `Cloud SQL client`
+- `Secret Manager Secret Accessor`
+- `Service Account User`
+
+it will also be used to run the migrations for the local machine.
 
 4. Create a project in Langfuse
 
@@ -126,8 +142,51 @@ databaseUsername = impulse_admin
 databaseName = impulse
 ```
 
-10. Deploy the first version
+10. Prepare the first deployment
 
 You need to sign in locally (on your machine) to GKE.
 
+```
+gcloud auth login didier@bayesimpact.org
+gcloud config set account didier@bayesimpact.org
+gcloud config set project impulse-488513
+gcloud auth list
+gcloud auth configure-docker europe-west9-docker.pkg.dev
+```
 
+Weird, this is required:
+
+Grant Network User on the target subnet (or use a dedicated allowed subnet):
+
+```
+# Runtime service account
+gcloud compute networks subnets add-iam-policy-binding default \
+  --region=europe-west9 \
+  --member="serviceAccount:impulse-api@impulse-488513.iam.gserviceaccount.com" \
+  --role="roles/compute.networkUser" \
+  --project=impulse-488513
+
+# Cloud Run service agent
+gcloud compute networks subnets add-iam-policy-binding default \
+  --region=europe-west9 \
+  --member="serviceAccount:service-228409355387@serverless-robot-prod.iam.gserviceaccount.com" \
+  --role="roles/compute.networkUser" \
+  --project=impulse-488513
+```
+
+11. First deployment
+
+```bash
+make deploy PROJECT=impulse REGION=eu
+```
+
+12. Run first migations
+
+2 Requirements:
+- get the password for the `impulse_admin` user. You should have it in 1Password.
+- download the GKE credentials file for the github service account and put it in the `dontsave/.` folder.
+
+```bash
+export MIG_DATABASE_PASSWORD='your_password'
+make migrations PROJECT=impulse REGION=eu
+```

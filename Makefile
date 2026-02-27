@@ -33,6 +33,7 @@ serviceAccount = connect-api@caseai-connect.iam.gserviceaccount.com
 network = projects/caseai-connect/global/networks/default
 databaseUsername = connect_admin
 databaseName = connect
+cloudSqlCredentialsFile = $(CURDIR)/dontsave/caseai-connect-26b7a9fadda7.json
 else ifeq ($(PROJECT),impulse)
 # IMPULSE
 imageUrl = europe-west9-docker.pkg.dev/impulse-488513/impulse/api
@@ -57,6 +58,7 @@ serviceAccount = impulse-api@impulse-488513.iam.gserviceaccount.com
 network = projects/impulse-488513/global/networks/default
 databaseUsername = impulse_admin
 databaseName = impulse
+cloudSqlCredentialsFile = $(CURDIR)/dontsave/impulse-488513-b0551cbbd784.json
 else
 $(error Unsupported PROJECT '$(PROJECT)' for REGION '$(REGION)')
 endif
@@ -153,9 +155,9 @@ tests: db-tests ci-checks
 	cd apps/api && DATABASE_URL=${TEST_DATABASE_URL} npm run migration:test:run && DATABASE_URL=${TEST_DATABASE_URL} npm run test
 
 migrations:
-	docker compose -f infra/cloudsql-proxy/docker-compose.yaml up -d
-	docker compose -f infra/cloudsql-proxy/docker-compose.yaml logs cloudsql-proxy
-	cd apps/api && npm ci && DATABASE_HOST=localhost DATABASE_PORT=${cloudSqlProxyPort} DATABASE_USERNAME=${databaseUsername} DATABASE_NAME=${databaseName} DATABASE_PASSWORD=${MIG_DATABASE_PASSWORD} npm run migration:run
+	CLOUDSQL_INSTANCE=${addCloudSqlInstances} CLOUDSQL_PROXY_PORT=${cloudSqlProxyPort} CLOUDSQL_CREDENTIALS_FILE=${cloudSqlCredentialsFile} docker compose -f infra/cloudsql-proxy/docker-compose.yaml up -d
+	CLOUDSQL_INSTANCE=${addCloudSqlInstances} CLOUDSQL_PROXY_PORT=${cloudSqlProxyPort} CLOUDSQL_CREDENTIALS_FILE=${cloudSqlCredentialsFile} docker compose -f infra/cloudsql-proxy/docker-compose.yaml logs cloudsql-proxy
+	cd apps/api && npm ci && DATABASE_HOST=localhost DATABASE_PORT=${cloudSqlProxyPort} DATABASE_USERNAME=${databaseUsername} DATABASE_NAME=${databaseName} DATABASE_PASSWORD="$${MIG_DATABASE_PASSWORD}" npm run migration:run
 
 deploy: docker-push deploy-only
 
