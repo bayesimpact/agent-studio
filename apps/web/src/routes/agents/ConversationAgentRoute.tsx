@@ -1,8 +1,12 @@
+import { useTranslation } from "react-i18next"
 import { Outlet, useOutlet } from "react-router-dom"
-import { AgentSessionList } from "@/components/agent-session/AgentSessionList"
+import { AgentSessionCreator } from "@/components/agent-session/AgentSessionCreator"
+import { AgentSessionItem } from "@/components/agent-session/AgentSessionItem"
+import { ListHeader } from "@/components/layouts/ListHeader"
 import type { AgentSession } from "@/features/agent-sessions/agent-sessions.models"
 import { selectCurrentAgentSessionsData } from "@/features/agent-sessions/agent-sessions.selectors"
 import type { Agent } from "@/features/agents/agents.models"
+import { useGetPath } from "@/hooks/use-build-path"
 import { ADS } from "@/store/async-data-status"
 import { useAppSelector } from "@/store/hooks"
 import { ErrorRoute } from "../ErrorRoute"
@@ -48,15 +52,29 @@ function ConversationAgentWithData({
   organizationId: string
   projectId: string
 }) {
+  const { t } = useTranslation()
+  const { getPath } = useGetPath()
   const outlet = useOutlet()
 
   if (outlet) return <Outlet />
   return (
-    <AgentSessionList
-      organizationId={organizationId}
-      projectId={projectId}
-      agentId={agent.id}
-      agentSessions={agentSessions}
-    />
+    <ListHeader path={getPath("agent")} title={t("agentSession:list.title")}>
+      <AgentSessionCreator
+        type="button"
+        organizationId={organizationId}
+        projectId={projectId}
+        agentId={agent.id}
+      />
+
+      {agentSessions.map((agentSession) => (
+        <AgentSessionItem
+          key={agentSession.id}
+          organizationId={organizationId}
+          projectId={projectId}
+          agentId={agent.id}
+          agentSession={agentSession}
+        />
+      ))}
+    </ListHeader>
   )
 }

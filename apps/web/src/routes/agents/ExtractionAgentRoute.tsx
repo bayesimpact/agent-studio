@@ -51,11 +51,11 @@ function ExtractionAgentWithData({
 
   return (
     <ListHeader path={buildPath("project", { organizationId, projectId })} title={t("title")}>
+      <ExtractionCreator />
+
       {runs.map((run) => (
         <ExtractionRunItem key={run.id} run={run} />
       ))}
-
-      <ExtractionCreator />
     </ListHeader>
   )
 }
