@@ -27,10 +27,6 @@ export class InvitationsController {
 
     await this.projectMembershipsService.acceptInvitation(body.payload.ticketId, jwtPayload.sub)
 
-    return {
-      data: {
-        success: true,
-      },
-    }
+    return { data: { success: true } }
   }
 }

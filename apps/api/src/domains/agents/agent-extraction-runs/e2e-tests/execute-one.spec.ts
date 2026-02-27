@@ -150,10 +150,10 @@ describe.skip("AgentExtractionRuns - executeOne", () => {
 
     const getAllResponse = await subjectGetAllPlayground()
     expectResponse(getAllResponse, 200)
-    expect(getAllResponse.body.data.runs).toHaveLength(1)
-    expect(getAllResponse.body.data.runs[0]!.status).toBe("success")
-    expect(getAllResponse.body.data.runs[0]!.type).toBe("playground")
-    expect(getAllResponse.body.data.runs[0]!.documentId).toBe(documentId)
+    expect(getAllResponse.body.data).toHaveLength(1)
+    expect(getAllResponse.body.data[0]!.status).toBe("success")
+    expect(getAllResponse.body.data[0]!.type).toBe("playground")
+    expect(getAllResponse.body.data[0]!.documentId).toBe(documentId)
 
     const getOneResponse = await subjectGetOnePlayground(executeResponse.body.data.runId)
     expectResponse(getOneResponse, 200)
@@ -174,9 +174,9 @@ describe.skip("AgentExtractionRuns - executeOne", () => {
 
     const getAllResponse = await subjectGetAllPlayground()
     expectResponse(getAllResponse, 200)
-    expect(getAllResponse.body.data.runs).toHaveLength(1)
-    expect(getAllResponse.body.data.runs[0]!.status).toBe("failed")
-    expect(getAllResponse.body.data.runs[0]!.type).toBe("playground")
+    expect(getAllResponse.body.data).toHaveLength(1)
+    expect(getAllResponse.body.data[0]!.status).toBe("failed")
+    expect(getAllResponse.body.data[0]!.type).toBe("playground")
   })
 
   it("should return 422 when trying to run extraction with conversation agent", async () => {
@@ -201,12 +201,12 @@ describe.skip("AgentExtractionRuns - executeOne", () => {
 
     const playgroundRunsResponse = await subjectGetAllPlayground()
     expectResponse(playgroundRunsResponse, 200)
-    expect(playgroundRunsResponse.body.data.runs).toHaveLength(1)
-    expect(playgroundRunsResponse.body.data.runs[0]!.type).toBe("playground")
+    expect(playgroundRunsResponse.body.data).toHaveLength(1)
+    expect(playgroundRunsResponse.body.data[0]!.type).toBe("playground")
 
     const liveRunsResponse = await subjectGetAllLive()
     expectResponse(liveRunsResponse, 200)
-    expect(liveRunsResponse.body.data.runs).toHaveLength(1)
-    expect(liveRunsResponse.body.data.runs[0]!.type).toBe("live")
+    expect(liveRunsResponse.body.data).toHaveLength(1)
+    expect(liveRunsResponse.body.data[0]!.type).toBe("live")
   })
 })
