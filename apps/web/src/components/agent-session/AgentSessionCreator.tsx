@@ -27,7 +27,7 @@ export function AgentSessionCreator({
     navigate(path)
   }
   const handleClick = () => {
-    dispatch(createAgentSession({ organizationId, projectId, agentId, onSuccess }))
+    dispatch(createAgentSession({ agentId, onSuccess }))
   }
   const Comp = type === "button" ? Button : SidebarMenuSubButton
   return (

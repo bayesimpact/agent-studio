@@ -2,7 +2,6 @@ import type { TypedStartListening } from "@reduxjs/toolkit"
 import { createListenerMiddleware } from "@reduxjs/toolkit"
 import type { AppDispatch, RootState } from "@/store/types"
 import { listEvaluations } from "../evaluations/evaluations.thunks"
-import { getCurrentIds } from "../helpers"
 import { notificationsActions } from "../notifications/notifications.slice"
 import { createEvaluationReport, listEvaluationReports } from "./evaluation-reports.thunks"
 
@@ -14,15 +13,8 @@ export type AppStartListening = TypedStartListening<RootState, AppDispatch>
 listenerMiddleware.startListening({
   actionCreator: listEvaluations.fulfilled,
   effect: async (action, listenerApi) => {
-    const state = listenerApi.getState()
-    const { organizationId, projectId } = getCurrentIds({
-      state,
-      wantedIds: ["organizationId", "projectId"],
-    })
     action.payload.forEach(async (evaluation) => {
-      await listenerApi.dispatch(
-        listEvaluationReports({ organizationId, projectId, evaluationId: evaluation.id }),
-      )
+      await listenerApi.dispatch(listEvaluationReports({ evaluationId: evaluation.id }))
     })
   },
 })
@@ -37,20 +29,7 @@ listenerMiddleware.startListening({
         type: "success",
       }),
     )
-
-    const state = listenerApi.getState()
-    const { organizationId, projectId } = getCurrentIds({
-      state,
-      wantedIds: ["organizationId", "projectId"],
-    })
-
-    await listenerApi.dispatch(
-      listEvaluationReports({
-        organizationId,
-        projectId,
-        evaluationId: action.payload.evaluationId,
-      }),
-    )
+    await listenerApi.dispatch(listEvaluationReports({ evaluationId: action.payload.evaluationId }))
   },
 })
 

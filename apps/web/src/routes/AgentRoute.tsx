@@ -31,6 +31,8 @@ export function AgentRoute() {
     return <ErrorRoute error={agent.error || agentSessions.error || "Unknown error"} />
 
   if (ADS.isFulfilled(agent) && ADS.isFulfilled(agentSessions)) {
+    if (agent.value.type !== "conversation")
+      return <ErrorRoute error={"Agent is not a conversation agent"} />
     return (
       <WithData
         key={urlAgentId}

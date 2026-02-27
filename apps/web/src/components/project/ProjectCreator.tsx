@@ -44,22 +44,16 @@ export function ProjectCreator({ organization }: { organization: Organization })
           </DialogDescription>
         </DialogHeader>
 
-        <CreateForm organizationId={organization.id} onSuccess={handleSuccess} />
+        <CreateForm onSuccess={handleSuccess} />
       </DialogContent>
     </Dialog>
   )
 }
 
-function CreateForm({
-  organizationId,
-  onSuccess,
-}: {
-  organizationId: string
-  onSuccess: (projectId: string) => void
-}) {
+function CreateForm({ onSuccess }: { onSuccess: (projectId: string) => void }) {
   const dispatch = useAppDispatch()
   const handleSubmit = async (data: { name: string }) => {
-    dispatch(createProject({ organizationId, payload: { name: data.name }, onSuccess }))
+    dispatch(createProject({ payload: { name: data.name }, onSuccess }))
   }
   return <ProjectForm onSubmit={handleSubmit} />
 }

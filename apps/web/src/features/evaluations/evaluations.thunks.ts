@@ -5,13 +5,12 @@ import type { Evaluation } from "./evaluations.models"
 
 type ThunkConfig = { state: RootState; extra: ThunkExtraArg }
 
-export const listEvaluations = createAsyncThunk<
-  Evaluation[],
-  { organizationId: string; projectId: string },
-  ThunkConfig
->(
+export const listEvaluations = createAsyncThunk<Evaluation[], void, ThunkConfig>(
   "evaluations/list",
-  async (params, { extra: { services } }) => await services.evaluations.getAll(params),
+  async (_, { extra: { services }, getState }) => {
+    const params = getCurrentIds({ state: getState(), wantedIds: ["organizationId", "projectId"] })
+    return await services.evaluations.getAll(params)
+  },
 )
 
 export const createEvaluation = createAsyncThunk<

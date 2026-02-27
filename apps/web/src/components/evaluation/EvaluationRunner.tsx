@@ -30,9 +30,9 @@ export function EvaluationRunner({
 
   const handleRun = () => {
     if (!selectedAgentId) return
-    const agent = agents.find((a) => a.id === selectedAgentId)
-    if (!agent) return
-    ids.map((evaluationId) => dispatch(createEvaluationReport({ agentId: agent.id, evaluationId })))
+    ids.map((evaluationId) =>
+      dispatch(createEvaluationReport({ agentId: selectedAgentId, evaluationId })),
+    )
     modalHandler.setOpen(false)
   }
   return (

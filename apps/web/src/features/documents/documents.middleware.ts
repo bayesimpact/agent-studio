@@ -9,20 +9,6 @@ const listenerMiddleware = createListenerMiddleware<RootState, AppDispatch>()
 
 export type AppStartListening = TypedStartListening<RootState, AppDispatch>
 
-// Refresh documents when projects are loaded
-// listenerMiddleware.startListening({
-//   actionCreator: listProjects.fulfilled,
-//   effect: async (action, listenerApi) => {
-//     const projects = action.payload
-//     const state = listenerApi.getState()
-//     const { organizationId } = getCurrentIds({ state, wantedIds: ["organizationId"] })
-
-//     projects.forEach((project) => {
-//       listenerApi.dispatch(listDocuments({ organizationId, projectId: project.id }))
-//     })
-//   },
-// })
-
 // Refresh documents when current project changes
 listenerMiddleware.startListening({
   predicate(_, currentState, originalState) {
