@@ -1,4 +1,4 @@
-import { type ProjectMembershipDto, ProjectsRoutes } from "@caseai-connect/api-contracts"
+import { type ProjectMembershipDto, ProjectMembershipRoutes } from "@caseai-connect/api-contracts"
 import { Body, Controller, Delete, Get, Post, Req, UseGuards } from "@nestjs/common"
 import type {
   EndpointRequestWithProject,
@@ -20,11 +20,11 @@ import { ProjectMembershipsService } from "./project-memberships.service"
 export class ProjectMembershipsController {
   constructor(private readonly projectMembershipsService: ProjectMembershipsService) {}
 
-  @Get(ProjectsRoutes.listProjectMemberships.path)
+  @Get(ProjectMembershipRoutes.getAll.path)
   @CheckPolicy((policy) => policy.canList())
-  async listProjectMemberships(
+  async getAll(
     @Req() request: EndpointRequestWithProject,
-  ): Promise<typeof ProjectsRoutes.listProjectMemberships.response> {
+  ): Promise<typeof ProjectMembershipRoutes.getAll.response> {
     const { project } = request
 
     const memberships = await this.projectMembershipsService.listProjectMemberships(project.id)
@@ -32,12 +32,12 @@ export class ProjectMembershipsController {
     return { data: memberships.map(toDto) }
   }
 
-  @Post(ProjectsRoutes.inviteProjectMembers.path)
+  @Post(ProjectMembershipRoutes.createOne.path)
   @CheckPolicy((policy) => policy.canCreate())
   async inviteProjectMembers(
     @Req() request: EndpointRequestWithProject,
-    @Body() body: typeof ProjectsRoutes.inviteProjectMembers.request,
-  ): Promise<typeof ProjectsRoutes.inviteProjectMembers.response> {
+    @Body() body: typeof ProjectMembershipRoutes.createOne.request,
+  ): Promise<typeof ProjectMembershipRoutes.createOne.response> {
     const { project, user } = request
 
     const memberships = await this.projectMembershipsService.inviteProjectMembers(
@@ -49,12 +49,12 @@ export class ProjectMembershipsController {
     return { data: memberships.map(toDto) }
   }
 
-  @Delete(ProjectsRoutes.removeProjectMembership.path)
+  @Delete(ProjectMembershipRoutes.deleteOne.path)
   @CheckPolicy((policy) => policy.canDelete())
   @AddContext("projectMembership")
   async removeProjectMembership(
     @Req() request: EndpointRequestWithProjectMembership,
-  ): Promise<typeof ProjectsRoutes.removeProjectMembership.response> {
+  ): Promise<typeof ProjectMembershipRoutes.deleteOne.response> {
     const { project, projectMembership } = request
 
     await this.projectMembershipsService.removeProjectMembership(projectMembership.id, project.id)

@@ -27,8 +27,7 @@ export type * from "./generic"
 export type { ApiRoute } from "./helpers"
 // Helpers
 export { defineRoute } from "./helpers"
-// Invitations DTOs
-export type * from "./invitations/invitations.dto"
+// Invitations
 export { InvitationsRoutes } from "./invitations/invitations.routes"
 // Me DTOs
 export type { MeResponseDto } from "./me/me.dto"
@@ -37,7 +36,9 @@ export { MeRoutes } from "./me/me.routes"
 // Organizations DTOs
 export type * from "./organizations/organizations.dto"
 export { OrganizationsRoutes } from "./organizations/organizations.routes"
+// Project Membership DTOs
+export type * from "./project-membership/project-membership.dto"
+export { ProjectMembershipRoutes } from "./project-membership/project-membership.routes"
 // Projects DTOs
 export type * from "./projects/projects.dto"
 export { ProjectsRoutes } from "./projects/projects.routes"
-export { ProtectedRoutes } from "./protected/protected.routes"

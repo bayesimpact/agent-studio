@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto"
-import { ProjectsRoutes } from "@caseai-connect/api-contracts"
+import { ProjectMembershipRoutes } from "@caseai-connect/api-contracts"
 import type { INestApplication } from "@nestjs/common"
 import type { App } from "supertest/types"
 import { AUTH_ERRORS } from "@/common/errors/auth-errors"
@@ -64,10 +64,10 @@ describe("Project Memberships - Auth", () => {
     return { organization, project, user }
   }
 
-  describe("ProjectsRoutes.listProjectMemberships", () => {
+  describe("ProjectMembershipRoutes.getAll", () => {
     const subject = async () =>
       request({
-        route: ProjectsRoutes.listProjectMemberships,
+        route: ProjectMembershipRoutes.getAll,
         pathParams: removeNullish({ organizationId, projectId }),
         token: accessToken ?? undefined,
       })
@@ -104,10 +104,10 @@ describe("Project Memberships - Auth", () => {
     })
   })
 
-  describe("ProjectsRoutes.inviteProjectMembers", () => {
-    const subject = async (payload?: typeof ProjectsRoutes.inviteProjectMembers.request) =>
+  describe("ProjectMembershipRoutes.createOne", () => {
+    const subject = async (payload?: typeof ProjectMembershipRoutes.createOne.request) =>
       request({
-        route: ProjectsRoutes.inviteProjectMembers,
+        route: ProjectMembershipRoutes.createOne,
         pathParams: removeNullish({ organizationId, projectId }),
         token: accessToken ?? undefined,
         request: payload,
@@ -137,12 +137,12 @@ describe("Project Memberships - Auth", () => {
     })
   })
 
-  describe("ProjectsRoutes.removeProjectMembership", () => {
+  describe("ProjectMembershipRoutes.deleteOne", () => {
     let membershipId: string | null = "random-membership-id"
 
     const subject = async () =>
       request({
-        route: ProjectsRoutes.removeProjectMembership,
+        route: ProjectMembershipRoutes.deleteOne,
         pathParams: removeNullish({ organizationId, projectId, membershipId }),
         token: accessToken ?? undefined,
       })

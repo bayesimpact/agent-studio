@@ -1,4 +1,4 @@
-import { ProjectsRoutes } from "@caseai-connect/api-contracts"
+import { ProjectMembershipRoutes } from "@caseai-connect/api-contracts"
 import type { INestApplication } from "@nestjs/common"
 import type { App } from "supertest/types"
 import { clearTestDatabase } from "@/common/test/test-database"
@@ -13,7 +13,7 @@ import { mockInvitationSender, setupUserGuardForTesting } from "../../../../../t
 import { expectResponse, type Requester, testRequester } from "../../../../../test/request"
 import { ProjectsModule } from "../../projects.module"
 
-describe("Projects - inviteProjectMembers", () => {
+describe("Project membership - createOne", () => {
   let app: INestApplication<App>
   let request: Requester
   let setup: Awaited<ReturnType<typeof setupTransactionalTestDatabase>>
@@ -57,9 +57,9 @@ describe("Projects - inviteProjectMembers", () => {
     return { organization, project, user }
   }
 
-  const subject = async (payload?: typeof ProjectsRoutes.inviteProjectMembers.request) =>
+  const subject = async (payload?: typeof ProjectMembershipRoutes.createOne.request) =>
     request({
-      route: ProjectsRoutes.inviteProjectMembers,
+      route: ProjectMembershipRoutes.createOne,
       pathParams: removeNullish({ organizationId, projectId }),
       token: accessToken,
       request: payload,
