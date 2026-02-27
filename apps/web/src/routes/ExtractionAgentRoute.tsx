@@ -1,5 +1,4 @@
 import { useTranslation } from "react-i18next"
-import { Navigate } from "react-router-dom"
 import { ListHeader } from "@/components/layouts/ListHeader"
 import type { AgentExtractionRunSummary } from "@/features/agent-extraction-runs/agent-extraction-runs.models"
 import { selectAgentExtractionRunsFromAgentId } from "@/features/agent-extraction-runs/agent-extraction-runs.selectors"
@@ -18,7 +17,6 @@ import { ErrorRoute } from "./ErrorRoute"
 import { LoadingRoute } from "./LoadingRoute"
 
 export function ExtractionAgentRoute() {
-  const { buildPath } = useBuildPath()
   const organizationId = useAppSelector(selectCurrentOrganizationId)
   const projectId = useAppSelector(selectCurrentProjectId)
   const agentId = useAppSelector(selectCurrentAgentId)
@@ -29,18 +27,8 @@ export function ExtractionAgentRoute() {
     return <ErrorRoute error={runsData.error || agent.error || "Unknown error"} />
 
   if (ADS.isFulfilled(agent) && ADS.isFulfilled(runsData)) {
-    if (agent.value.type !== "extraction") {
-      return (
-        <Navigate
-          to={buildPath("agent", {
-            organizationId,
-            projectId,
-            agentId: agent.value.id,
-          })}
-          replace
-        />
-      )
-    }
+    if (agent.value.type !== "extraction")
+      return <ErrorRoute error={"Agent is not an extraction agent"} />
     return <WithData organizationId={organizationId} runs={runsData.value} projectId={projectId} />
   }
 

@@ -16,9 +16,7 @@ import { useState } from "react"
 import { useTranslation } from "react-i18next"
 import { createAgentMessageFeedback } from "@/features/agent-message-feedback/agent-message-feedback.thunks"
 import type { AgentSessionMessage } from "@/features/agent-sessions/agent-sessions.models"
-import { selectCurrentOrganizationId } from "@/features/organizations/organizations.selectors"
-import { selectCurrentProjectId } from "@/features/projects/projects.selectors"
-import { useAppDispatch, useAppSelector } from "@/store/hooks"
+import { useAppDispatch } from "@/store/hooks"
 import { MarkdownWrapper } from "../chat/MarkdownWrapper"
 
 export function FeedbackCreator({ message }: { message: AgentSessionMessage }) {
@@ -64,9 +62,6 @@ function CreateForm({
   agentMessageId: string
   onSuccess: () => void
 }) {
-  const organizationId = useAppSelector(selectCurrentOrganizationId)
-  const projectId = useAppSelector(selectCurrentProjectId)
-
   const { t } = useTranslation()
   const dispatch = useAppDispatch()
   const [value, setValue] = useState("")
@@ -74,12 +69,7 @@ function CreateForm({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     onSuccess()
-
-    if (!organizationId || !projectId) return
-
-    dispatch(
-      createAgentMessageFeedback({ organizationId, projectId, agentMessageId, content: value }),
-    )
+    dispatch(createAgentMessageFeedback({ agentMessageId, content: value }))
   }
   return (
     <div className="flex flex-col gap-2">

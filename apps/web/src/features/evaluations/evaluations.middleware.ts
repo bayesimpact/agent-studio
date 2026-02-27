@@ -1,7 +1,6 @@
 import type { TypedStartListening } from "@reduxjs/toolkit"
 import { createListenerMiddleware, isAnyOf } from "@reduxjs/toolkit"
 import type { AppDispatch, RootState } from "@/store/types"
-import { getCurrentIds } from "../helpers"
 import { notificationsActions } from "../notifications/notifications.slice"
 import { selectCurrentProjectId } from "../projects/projects.selectors"
 import {
@@ -23,12 +22,7 @@ listenerMiddleware.startListening({
     return prevId !== nextId
   },
   effect: async (_, listenerApi) => {
-    const state = listenerApi.getState()
-    const { organizationId, projectId } = getCurrentIds({
-      state,
-      wantedIds: ["organizationId", "projectId"],
-    })
-    await listenerApi.dispatch(listEvaluations({ organizationId, projectId }))
+    await listenerApi.dispatch(listEvaluations())
   },
 })
 
@@ -40,12 +34,7 @@ listenerMiddleware.startListening({
     updateEvaluation.fulfilled,
   ),
   effect: async (_, listenerApi) => {
-    const state = listenerApi.getState()
-    const { organizationId, projectId } = getCurrentIds({
-      state,
-      wantedIds: ["organizationId", "projectId"],
-    })
-    await listenerApi.dispatch(listEvaluations({ organizationId, projectId }))
+    await listenerApi.dispatch(listEvaluations())
   },
 })
 

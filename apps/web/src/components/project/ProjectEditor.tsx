@@ -46,13 +46,7 @@ export function ProjectEditor({
 function UpdateForm({ project, onSuccess }: { project: ProjectDto; onSuccess?: () => void }) {
   const dispatch = useAppDispatch()
   const handleSubmit = async (data: { name: string }) => {
-    dispatch(
-      updateProject({
-        organizationId: project.organizationId,
-        projectId: project.id,
-        payload: { name: data.name },
-      }),
-    )
+    dispatch(updateProject({ payload: { name: data.name } }))
     onSuccess?.()
   }
   return <ProjectForm editableProject={project} onSubmit={handleSubmit} />

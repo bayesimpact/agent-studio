@@ -11,11 +11,16 @@ type ThunkConfig = { state: RootState; extra: ThunkExtraArg }
 
 export const listSessions = createAsyncThunk<
   AgentSession[],
-  { organizationId: string; projectId: string; agentId: string; playground: boolean },
+  { agentId: string; playground: boolean },
   ThunkConfig
 >(
   "agentSession/listSessions",
-  async ({ organizationId, projectId, agentId, playground }, { extra: { services } }) => {
+  async ({ agentId, playground }, { extra: { services }, getState }) => {
+    const state = getState()
+    const { organizationId, projectId } = getCurrentIds({
+      state,
+      wantedIds: ["organizationId", "projectId"],
+    })
     if (playground) {
       return services.agentSessions.getAllPlaygroundSessions({ organizationId, projectId, agentId })
     }
@@ -25,32 +30,24 @@ export const listSessions = createAsyncThunk<
 
 export const createAgentSession = createAsyncThunk<
   AgentSession,
-  {
-    organizationId: string
-    projectId: string
-    agentId: string
-    onSuccess?: (agentSessionId: string) => void
-  },
+  { agentId: string; onSuccess?: (agentSessionId: string) => void },
   ThunkConfig
->(
-  "agentSession/createAgentSession",
-  async ({ organizationId, projectId, agentId }, { extra: { services }, getState }) => {
-    const state = getState()
-    const isAdminInterface = selectIsAdminInterface(state)
-
-    if (!agentId) {
-      throw new Error("No current Agent ID found")
-    }
-    if (isAdminInterface)
-      return services.agentSessions.createPlaygroundSession({ organizationId, projectId, agentId })
-    return services.agentSessions.createAppSession({
-      organizationId,
-      projectId,
-      agentId,
-      agentSessionType: "app-private",
-    })
-  },
-)
+>("agentSession/createAgentSession", async ({ agentId }, { extra: { services }, getState }) => {
+  const state = getState()
+  const isAdminInterface = selectIsAdminInterface(state)
+  const { organizationId, projectId } = getCurrentIds({
+    state,
+    wantedIds: ["organizationId", "projectId"],
+  })
+  if (isAdminInterface)
+    return services.agentSessions.createPlaygroundSession({ organizationId, projectId, agentId })
+  return services.agentSessions.createAppSession({
+    organizationId,
+    projectId,
+    agentId,
+    agentSessionType: "app-private",
+  })
+})
 
 export const loadSessionMessages = createAsyncThunk<AgentSessionMessage[], string, ThunkConfig>(
   "agentSession/loadSessionMessages",

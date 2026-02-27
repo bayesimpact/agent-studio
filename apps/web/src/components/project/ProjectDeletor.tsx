@@ -42,11 +42,7 @@ export function ProjectDeletor({
     onClose()
   }
 
-  const handleDelete = async () => {
-    dispatch(
-      deleteProject({ organizationId: project.organizationId, projectId: project.id, onSuccess }),
-    )
-  }
+  const handleDelete = () => dispatch(deleteProject({ onSuccess }))
 
   return (
     <Dialog open={!!project} onOpenChange={(open: boolean) => !open && onClose()}>

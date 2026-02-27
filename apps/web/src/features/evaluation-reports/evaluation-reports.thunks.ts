@@ -7,19 +7,19 @@ type ThunkConfig = { state: RootState; extra: ThunkExtraArg }
 
 export const listEvaluationReports = createAsyncThunk<
   EvaluationReport[],
-  { organizationId: string; projectId: string; evaluationId: string },
+  { evaluationId: string },
   ThunkConfig
->(
-  "evaluationReports/list",
-  async (params, { extra: { services } }) => await services.evaluationReports.getAll(params),
-)
+>("evaluationReports/list", async (params, { extra: { services }, getState }) => {
+  const { organizationId, projectId } = getCurrentIds({
+    state: getState(),
+    wantedIds: ["organizationId", "projectId"],
+  })
+  return await services.evaluationReports.getAll({ ...params, organizationId, projectId })
+})
 
 export const createEvaluationReport = createAsyncThunk<
   EvaluationReport,
-  {
-    agentId: string
-    evaluationId: string
-  },
+  { agentId: string; evaluationId: string },
   ThunkConfig
 >(
   "evaluationReports/create",

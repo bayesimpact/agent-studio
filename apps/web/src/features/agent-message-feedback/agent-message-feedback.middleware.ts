@@ -14,22 +14,13 @@ const listenerMiddleware = createListenerMiddleware<RootState, AppDispatch>()
 
 export type AppStartListening = TypedStartListening<RootState, AppDispatch>
 
-// TODO: add listener on createFeedback should reload all feedback
-
 // Refresh feedbacks when agents are loaded
 listenerMiddleware.startListening({
   actionCreator: listAgents.fulfilled,
   effect: async (action, listenerApi) => {
     const agents = action.payload
-    const state = listenerApi.getState()
-    const { organizationId, projectId } = getCurrentIds({
-      state,
-      wantedIds: ["organizationId", "projectId"],
-    })
     agents.forEach((agent) => {
-      listenerApi.dispatch(
-        listAgentMessageFeedbacks({ organizationId, projectId, agentId: agent.id }),
-      )
+      listenerApi.dispatch(listAgentMessageFeedbacks({ agentId: agent.id }))
     })
   },
 })
@@ -43,14 +34,12 @@ listenerMiddleware.startListening({
   },
   effect: async (_, listenerApi) => {
     const state = listenerApi.getState()
-    const { organizationId, projectId, agentId } = getCurrentIds({
-      state,
-      wantedIds: ["organizationId", "projectId", "agentId"],
-    })
-    await listenerApi.dispatch(listAgentMessageFeedbacks({ organizationId, projectId, agentId }))
+    const { agentId } = getCurrentIds({ state, wantedIds: ["agentId"] })
+    await listenerApi.dispatch(listAgentMessageFeedbacks({ agentId }))
   },
 })
 
+// Refresh feedbacks when a new feedback is created
 listenerMiddleware.startListening({
   actionCreator: createAgentMessageFeedback.fulfilled,
   effect: async (_, listenerApi) => {
@@ -62,14 +51,10 @@ listenerMiddleware.startListening({
     )
 
     const state = listenerApi.getState()
-    const { organizationId, projectId, agentId } = getCurrentIds({
-      state,
-      wantedIds: ["organizationId", "projectId", "agentId"],
-    })
-    await listenerApi.dispatch(listAgentMessageFeedbacks({ organizationId, projectId, agentId }))
+    const { agentId } = getCurrentIds({ state, wantedIds: ["agentId"] })
+    await listenerApi.dispatch(listAgentMessageFeedbacks({ agentId }))
   },
 })
-
 listenerMiddleware.startListening({
   actionCreator: createAgentMessageFeedback.rejected,
   effect: async (_, listenerApi) => {
