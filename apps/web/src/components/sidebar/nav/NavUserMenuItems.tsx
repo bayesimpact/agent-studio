@@ -1,19 +1,12 @@
 import { DropdownMenuItem, DropdownMenuSeparator } from "@caseai-connect/ui/shad/dropdown-menu"
-import { LogOutIcon, PaletteIcon } from "lucide-react"
+import { LogOutIcon } from "lucide-react"
 import { useTranslation } from "react-i18next"
 import { useAuthHandler } from "@/hooks/use-auth-handler"
-import { ThemeSwitcher } from "../../themes/ThemeSwitcher"
 
 export function NavUserMenuItems() {
   return (
     <>
       <ChangeLanguage />
-
-      <DropdownMenuSeparator />
-
-      <DropdownMenuItem>
-        <PaletteIcon className="mr-2 size-4 text-primary" /> <ThemeSwitcher />
-      </DropdownMenuItem>
 
       <DropdownMenuSeparator />
 
