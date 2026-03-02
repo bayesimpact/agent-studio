@@ -1,7 +1,7 @@
 import { services } from "@/external/axios.services"
 import type { IAgentMessageFeedbackSpi } from "@/features/agent-message-feedback/agent-message-feedback.spi"
-import type { IAgentSessionsSpi } from "@/features/agent-sessions/agent-sessions.spi"
 import type { IAgentsSpi } from "@/features/agents/agents.spi"
+import type { IConversationAgentSessionsSpi } from "@/features/agents/conversation-agent-sessions/conversation-agent-sessions.spi"
 import type { IExtractionAgentSessionsSpi } from "@/features/agents/extraction-agent-sessions/extraction-agent-sessions.spi"
 import type { IDocumentsSpi } from "@/features/documents/documents.spi"
 import type { IEvaluationReportsSpi } from "@/features/evaluation-reports/evaluation-reports.spi"
@@ -16,7 +16,7 @@ export type Services = {
   agentMessageFeedback: IAgentMessageFeedbackSpi
   extractionAgentSessions: IExtractionAgentSessionsSpi
   agents: IAgentsSpi
-  agentSessions: IAgentSessionsSpi
+  conversationAgentSessions: IConversationAgentSessionsSpi
   documents: IDocumentsSpi
   evaluationReports: IEvaluationReportsSpi
   evaluations: IEvaluationsSpi

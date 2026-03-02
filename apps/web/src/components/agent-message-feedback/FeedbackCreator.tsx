@@ -15,11 +15,11 @@ import { Textarea } from "@caseai-connect/ui/shad/textarea"
 import { useState } from "react"
 import { useTranslation } from "react-i18next"
 import { createAgentMessageFeedback } from "@/features/agent-message-feedback/agent-message-feedback.thunks"
-import type { AgentSessionMessage } from "@/features/agent-sessions/agent-sessions.models"
+import type { ConversationAgentSessionMessage } from "@/features/agents/conversation-agent-sessions/conversation-agent-sessions.models"
 import { useAppDispatch } from "@/store/hooks"
 import { MarkdownWrapper } from "../chat/MarkdownWrapper"
 
-export function FeedbackCreator({ message }: { message: AgentSessionMessage }) {
+export function FeedbackCreator({ message }: { message: ConversationAgentSessionMessage }) {
   const { t } = useTranslation("agentMessageFeedback", { keyPrefix: "create" })
   const [open, setOpen] = useState(false)
   const handleSuccess = () => {
@@ -80,7 +80,8 @@ function CreateForm({
             <Textarea
               placeholder={t("agentMessageFeedback:props.placeholders.content")}
               value={value}
-              onChange={(e) => setValue(e.target.value)}
+              // biome-ignore lint/suspicious/noExplicitAny: This is a React change event, which is always an any type
+              onChange={(e: any) => setValue(e.target.value)}
             />
           </Field>
 

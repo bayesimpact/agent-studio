@@ -16,7 +16,7 @@ export const listenerMiddleware = createListenerMiddleware<RootState, AppDispatc
 
 export type AppStartListening = TypedStartListening<RootState, AppDispatch>
 
-// Refresh agent extraction runs when Agents are loaded
+// Refresh extraction agent sessions when Agents are loaded
 listenerMiddleware.startListening({
   actionCreator: listAgents.fulfilled,
   effect: async ({ payload: agents }, listenerApi) => {
@@ -30,7 +30,7 @@ listenerMiddleware.startListening({
   },
 })
 
-// Refresh agent extraction runs when interface type changes
+// Refresh extraction agent sessions when interface type changes
 listenerMiddleware.startListening({
   predicate(_, currentState, originalState) {
     const prevInterface = selectIsAdminInterface(originalState)
@@ -51,7 +51,7 @@ listenerMiddleware.startListening({
   },
 })
 
-// Refresh agent extraction runs when current Agent changes
+// Refresh extraction agent sessions when current Agent changes
 listenerMiddleware.startListening({
   predicate(_, currentState, originalState) {
     const prevId = selectCurrentAgentId(originalState)
@@ -68,7 +68,7 @@ listenerMiddleware.startListening({
   },
 })
 
-// Refresh agent extraction runs when create a new run
+// Refresh extraction agent sessions when create a new run
 listenerMiddleware.startListening({
   actionCreator: executeExtractionAgentSession.fulfilled,
   effect: async (_, listenerApi) => {

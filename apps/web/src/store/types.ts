@@ -1,8 +1,8 @@
 import type { ThunkDispatch, UnknownAction } from "@reduxjs/toolkit"
 import type { Services } from "@/di/services"
 import type { agentMessageFeedbackSliceReducer } from "@/features/agent-message-feedback/agent-message-feedback.slice"
-import type { agentSessionsSliceReducer } from "@/features/agent-sessions/agent-sessions.slice"
 import type { agentsSliceReducer } from "@/features/agents/agents.slice"
+import type { conversationAgentSessionsSliceReducer } from "@/features/agents/conversation-agent-sessions/conversation-agent-sessions.slice"
 import type { extractionAgentSessionsSliceReducer } from "@/features/agents/extraction-agent-sessions/extraction-agent-sessions.slice"
 import type { authSliceReducer } from "@/features/auth/auth.slice"
 import type { documentsSliceReducer } from "@/features/documents/documents.slice"
@@ -21,7 +21,7 @@ export type RootState = {
   extractionAgentSessions: ReturnType<typeof extractionAgentSessionsSliceReducer>
   auth: ReturnType<typeof authSliceReducer>
   agents: ReturnType<typeof agentsSliceReducer>
-  agentSessions: ReturnType<typeof agentSessionsSliceReducer>
+  conversationAgentSessions: ReturnType<typeof conversationAgentSessionsSliceReducer>
   documents: ReturnType<typeof documentsSliceReducer>
   evaluationReports: ReturnType<typeof evaluationReportsSliceReducer>
   evaluations: ReturnType<typeof evaluationsSliceReducer>

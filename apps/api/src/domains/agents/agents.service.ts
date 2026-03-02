@@ -4,7 +4,7 @@ import type { Repository } from "typeorm"
 import { ConnectRepository } from "@/common/entities/connect-repository"
 import type { RequiredConnectScope } from "@/common/entities/connect-required-fields"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
-import { AgentSessionsService } from "@/domains/agent-sessions/agent-sessions.service"
+import { ConversationAgentSessionsService } from "@/domains/conversation-agent-sessions/conversation-agent-sessions.service"
 import { Agent } from "./agent.entity"
 
 @Injectable()
@@ -12,7 +12,7 @@ export class AgentsService {
   constructor(
     @InjectRepository(Agent)
     agentRepository: Repository<Agent>,
-    private readonly agentSessionsService: AgentSessionsService,
+    private readonly conversationAgentSessionsService: ConversationAgentSessionsService,
   ) {
     this.agentConnectRepository = new ConnectRepository(agentRepository, "agents")
   }
@@ -154,7 +154,7 @@ export class AgentsService {
 
     // If configuration changed, delete all playground sessions for this agent
     if (configChanged) {
-      await this.agentSessionsService.deletePlaygroundSessionsForAgent(agentId)
+      await this.conversationAgentSessionsService.deletePlaygroundSessionsForAgent(agentId)
     }
 
     return updatedAgent
@@ -178,7 +178,7 @@ export class AgentsService {
     }
 
     // Delete all sessions for the agent
-    await this.agentSessionsService.deleteAllSessionsForAgent(agentId)
+    await this.conversationAgentSessionsService.deleteAllSessionsForAgent(agentId)
 
     // Delete the agent
     await this.agentConnectRepository.deleteOneById({ connectScope, id: agent.id })

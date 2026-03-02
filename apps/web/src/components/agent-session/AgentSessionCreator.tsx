@@ -3,7 +3,7 @@ import { SidebarMenuSubButton } from "@caseai-connect/ui/shad/sidebar"
 import { PlusIcon } from "lucide-react"
 import { useTranslation } from "react-i18next"
 import { useNavigate } from "react-router-dom"
-import { createAgentSession } from "@/features/agent-sessions/agent-sessions.thunks"
+import { createConversationAgentSession } from "@/features/agents/conversation-agent-sessions/conversation-agent-sessions.thunks"
 import { useBuildPath } from "@/hooks/use-build-path"
 import { useAppDispatch } from "@/store/hooks"
 
@@ -19,15 +19,20 @@ export function AgentSessionCreator({
   organizationId: string
 }) {
   const navigate = useNavigate()
-  const { t } = useTranslation("agentSession", { keyPrefix: "create" })
+  const { t } = useTranslation("conversationAgentSession", { keyPrefix: "create" })
   const dispatch = useAppDispatch()
   const { buildPath } = useBuildPath()
   const onSuccess = (agentSessionId: string) => {
-    const path = buildPath("agentSession", { organizationId, projectId, agentId, agentSessionId })
+    const path = buildPath("conversationAgentSession", {
+      organizationId,
+      projectId,
+      agentId,
+      agentSessionId,
+    })
     navigate(path)
   }
   const handleClick = () => {
-    dispatch(createAgentSession({ agentId, onSuccess }))
+    dispatch(createConversationAgentSession({ agentId, onSuccess }))
   }
   const Comp = type === "button" ? Button : SidebarMenuSubButton
   return (

@@ -17,11 +17,11 @@ import { cn } from "@caseai-connect/ui/utils"
 import { ChevronDownIcon, DotIcon } from "lucide-react"
 import { useTranslation } from "react-i18next"
 import { Link } from "react-router-dom"
-import {
-  selectCurrentAgentSessionData,
-  selectCurrentAgentSessionsData,
-} from "@/features/agent-sessions/agent-sessions.selectors"
 import { selectAgentData, selectCurrentAgentsData } from "@/features/agents/agents.selectors"
+import {
+  selectCurrentConversationAgentSessionData,
+  selectCurrentConversationAgentSessionsData,
+} from "@/features/agents/conversation-agent-sessions/conversation-agent-sessions.selectors"
 import type { Organization } from "@/features/organizations/organizations.models"
 import {
   selectCurrentProjectData,
@@ -165,14 +165,14 @@ function AgentList({ organizationId }: { organizationId: string }) {
 
 function AgentSessionList({ organizationId }: { organizationId: string }) {
   const projectId = useAppSelector(selectCurrentProjectId)
-  const sessions = useAppSelector(selectCurrentAgentSessionsData)
-  const session = useAppSelector(selectCurrentAgentSessionData)
+  const sessions = useAppSelector(selectCurrentConversationAgentSessionsData)
+  const session = useAppSelector(selectCurrentConversationAgentSessionData)
   const { buildPath } = useBuildPath()
 
   if (!ADS.isFulfilled(sessions) || !ADS.isFulfilled(session)) return null
 
   const currentSessionName = buildDate(session.value.createdAt)
-  const currentSessionPath = buildPath("agentSession", {
+  const currentSessionPath = buildPath("conversationAgentSession", {
     organizationId,
     projectId: projectId!,
     agentId: session.value.agentId,
@@ -182,7 +182,7 @@ function AgentSessionList({ organizationId }: { organizationId: string }) {
   const handleClick =
     ({ agentId, agentSessionId }: { agentId: string; agentSessionId: string }) =>
     () => {
-      const path = buildPath("agentSession", {
+      const path = buildPath("conversationAgentSession", {
         organizationId,
         projectId: projectId!,
         agentId,

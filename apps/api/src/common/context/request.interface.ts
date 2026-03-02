@@ -1,5 +1,5 @@
-import type { AgentSession } from "@/domains/agent-sessions/agent-session.entity"
 import type { Agent } from "@/domains/agents/agent.entity"
+import type { ConversationAgentSession } from "@/domains/conversation-agent-sessions/conversation-agent-session.entity"
 import type { Document } from "@/domains/documents/document.entity"
 import type { Evaluation } from "@/domains/evaluations/evaluation.entity"
 import type { EvaluationReport } from "@/domains/evaluations/reports/evaluation-report.entity"
@@ -45,7 +45,7 @@ export interface EndpointRequestWithAgent extends EndpointRequestWithProject {
   agent: Agent
 }
 export interface EndpointRequestWithAgentSession extends EndpointRequestWithAgent {
-  agentSession: AgentSession
+  agentSession: ConversationAgentSession
 }
 
 export interface EndpointRequestWithEvaluation extends EndpointRequestWithProject {

@@ -3,9 +3,9 @@ import { Outlet, useOutlet } from "react-router-dom"
 import { AgentSessionCreator } from "@/components/agent-session/AgentSessionCreator"
 import { AgentSessionItem } from "@/components/agent-session/AgentSessionItem"
 import { ListHeader } from "@/components/layouts/ListHeader"
-import type { AgentSession } from "@/features/agent-sessions/agent-sessions.models"
-import { selectCurrentAgentSessionsData } from "@/features/agent-sessions/agent-sessions.selectors"
 import type { Agent } from "@/features/agents/agents.models"
+import type { ConversationAgentSession } from "@/features/agents/conversation-agent-sessions/conversation-agent-sessions.models"
+import { selectCurrentConversationAgentSessionsData } from "@/features/agents/conversation-agent-sessions/conversation-agent-sessions.selectors"
 import { useGetPath } from "@/hooks/use-build-path"
 import { ADS } from "@/store/async-data-status"
 import { useAppSelector } from "@/store/hooks"
@@ -24,7 +24,7 @@ export function ConversationAgentRoute({
 }) {
   useHandleHeader(agent)
 
-  const agentSessions = useAppSelector(selectCurrentAgentSessionsData)
+  const agentSessions = useAppSelector(selectCurrentConversationAgentSessionsData)
 
   if (ADS.isError(agentSessions))
     return <ErrorRoute error={agentSessions.error || "Unknown error"} />
@@ -48,7 +48,7 @@ function ConversationAgentWithData({
   projectId,
 }: {
   agent: Agent
-  agentSessions: AgentSession[]
+  agentSessions: ConversationAgentSession[]
   organizationId: string
   projectId: string
 }) {
@@ -58,7 +58,7 @@ function ConversationAgentWithData({
 
   if (outlet) return <Outlet />
   return (
-    <ListHeader path={getPath("agent")} title={t("agentSession:list.title")}>
+    <ListHeader path={getPath("agent")} title={t("conversationAgentSession:list.title")}>
       <AgentSessionCreator
         type="button"
         organizationId={organizationId}

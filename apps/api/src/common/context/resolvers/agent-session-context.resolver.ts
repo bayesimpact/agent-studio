@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException } from "@nestjs/common"
 import { InjectRepository } from "@nestjs/typeorm"
 import type { Repository } from "typeorm"
-import { AgentSession } from "@/domains/agent-sessions/agent-session.entity"
+import { ConversationAgentSession } from "@/domains/conversation-agent-sessions/conversation-agent-session.entity"
 import type { ContextResolver, ResolvableRequest } from "../context-resolver.interface"
 import type {
   EndpointRequestWithAgent,
@@ -13,8 +13,8 @@ export class AgentSessionContextResolver implements ContextResolver {
   readonly resource = "agentSession" as const
 
   constructor(
-    @InjectRepository(AgentSession)
-    private readonly agentSessionRepository: Repository<AgentSession>,
+    @InjectRepository(ConversationAgentSession)
+    private readonly conversationAgentSessionRepository: Repository<ConversationAgentSession>,
   ) {}
 
   async resolve(request: ResolvableRequest): Promise<void> {
@@ -27,7 +27,7 @@ export class AgentSessionContextResolver implements ContextResolver {
 
     const requestWithAgent = request as EndpointRequestWithAgent
     const agentSession =
-      (await this.agentSessionRepository.findOne({
+      (await this.conversationAgentSessionRepository.findOne({
         where: {
           id: agentSessionId,
           userId: requestWithAgent.user.id,

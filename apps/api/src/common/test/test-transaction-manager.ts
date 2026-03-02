@@ -11,11 +11,11 @@ import { Test, type TestingModule, type TestingModuleBuilder } from "@nestjs/tes
 import { getRepositoryToken, TypeOrmModule } from "@nestjs/typeorm"
 import type { ObjectLiteral, QueryRunner, Repository } from "typeorm"
 import { DataSource, EntityManager } from "typeorm"
-import { AgentSession } from "@/domains/agent-sessions/agent-session.entity"
-import { AgentMessage } from "@/domains/agent-sessions/messages/agent-message.entity"
-import { AgentMessageFeedback } from "@/domains/agent-sessions/messages/feedback/agent-message-feedback.entity"
 import { Agent } from "@/domains/agents/agent.entity"
 import { ExtractionAgentSession } from "@/domains/agents/extraction-agent-sessions/extraction-agent-session.entity"
+import { ConversationAgentSession } from "@/domains/conversation-agent-sessions/conversation-agent-session.entity"
+import { AgentMessage } from "@/domains/conversation-agent-sessions/messages/agent-message.entity"
+import { AgentMessageFeedback } from "@/domains/conversation-agent-sessions/messages/feedback/agent-message-feedback.entity"
 import { Document } from "@/domains/documents/document.entity"
 import { Evaluation } from "@/domains/evaluations/evaluation.entity"
 import { EvaluationReport } from "@/domains/evaluations/reports/evaluation-report.entity"
@@ -36,7 +36,7 @@ export interface TransactionalTestSetup {
     agentMessageRepository: Repository<AgentMessage>
     agentRepository: Repository<Agent>
     extractionAgentSessionRepository: Repository<ExtractionAgentSession>
-    agentSessionRepository: Repository<AgentSession>
+    conversationAgentSessionRepository: Repository<ConversationAgentSession>
     documentRepository: Repository<Document>
     evaluationReportRepository: Repository<EvaluationReport>
     evaluationRepository: Repository<Evaluation>
@@ -200,7 +200,7 @@ export async function setupTransactionalTestDatabase(
     projectMembershipRepository: getRepository(ProjectMembership),
     agentRepository: getRepository(Agent),
     extractionAgentSessionRepository: getRepository(ExtractionAgentSession),
-    agentSessionRepository: getRepository(AgentSession),
+    conversationAgentSessionRepository: getRepository(ConversationAgentSession),
     agentMessageRepository: getRepository(AgentMessage),
     agentMessageFeedbackRepository: getRepository(AgentMessageFeedback),
     documentRepository: getRepository(Document),

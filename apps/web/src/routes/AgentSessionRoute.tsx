@@ -1,12 +1,12 @@
 import { AgentSession } from "@/components/agent-session/AgentSession"
 import type {
-  AgentSessionMessage,
-  AgentSession as AgentSessionType,
-} from "@/features/agent-sessions/agent-sessions.models"
+  ConversationAgentSessionMessage,
+  ConversationAgentSession as ConversationAgentSessionType,
+} from "@/features/agents/conversation-agent-sessions/conversation-agent-sessions.models"
 import {
-  selectCurrentAgentSessionData,
+  selectCurrentConversationAgentSessionData,
   selectCurrentMessagesData,
-} from "@/features/agent-sessions/agent-sessions.selectors"
+} from "@/features/agents/conversation-agent-sessions/conversation-agent-sessions.selectors"
 import { useAbility } from "@/hooks/use-ability"
 import { ADS } from "@/store/async-data-status"
 import { useAppSelector } from "@/store/hooks"
@@ -14,7 +14,7 @@ import { ErrorRoute } from "./ErrorRoute"
 import { LoadingRoute } from "./LoadingRoute"
 
 export function AgentSessionRoute() {
-  const agentSession = useAppSelector(selectCurrentAgentSessionData)
+  const agentSession = useAppSelector(selectCurrentConversationAgentSessionData)
   const messages = useAppSelector(selectCurrentMessagesData)
 
   if (ADS.isError(agentSession) || ADS.isError(messages))
@@ -31,8 +31,8 @@ function WithData({
   agentSession,
   messages,
 }: {
-  agentSession: AgentSessionType
-  messages: AgentSessionMessage[]
+  agentSession: ConversationAgentSessionType
+  messages: ConversationAgentSessionMessage[]
 }) {
   const { isAdminInterface } = useAbility()
   return (

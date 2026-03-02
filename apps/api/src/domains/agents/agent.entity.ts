@@ -6,7 +6,7 @@ import type {
 } from "@caseai-connect/api-contracts"
 import { Column, JoinColumn, ManyToOne, OneToMany } from "typeorm"
 import { ConnectEntity, ConnectEntityBase } from "@/common/entities/connect-entity"
-import { AgentSession } from "@/domains/agent-sessions/agent-session.entity"
+import { ConversationAgentSession } from "@/domains/conversation-agent-sessions/conversation-agent-session.entity"
 import { Project } from "@/domains/projects/project.entity"
 import { EvaluationReport } from "../evaluations/reports/evaluation-report.entity"
 import { ExtractionAgentSession } from "./extraction-agent-sessions/extraction-agent-session.entity"
@@ -45,10 +45,10 @@ export class Agent extends ConnectEntityBase {
   outputJsonSchema!: Record<string, unknown> | null
 
   @OneToMany(
-    () => AgentSession,
-    (agentSession) => agentSession.agent,
+    () => ConversationAgentSession,
+    (conversationAgentSession) => conversationAgentSession.agent,
   )
-  agentSessions!: AgentSession[]
+  conversationAgentSessions!: ConversationAgentSession[]
 
   @OneToMany(
     () => EvaluationReport,

@@ -1,7 +1,7 @@
 import { Column, Entity, OneToMany } from "typeorm"
 import { Base4AllEntity } from "@/common/entities/base4all.entity"
-import { AgentSession } from "@/domains/agent-sessions/agent-session.entity"
-import { AgentMessageFeedback } from "@/domains/agent-sessions/messages/feedback/agent-message-feedback.entity"
+import { ConversationAgentSession } from "@/domains/conversation-agent-sessions/conversation-agent-session.entity"
+import { AgentMessageFeedback } from "@/domains/conversation-agent-sessions/messages/feedback/agent-message-feedback.entity"
 import { Project } from "@/domains/projects/project.entity"
 import { FeatureFlag } from "../feature-flags/feature-flag.entity"
 import { UserMembership } from "./user-membership.entity"
@@ -24,10 +24,10 @@ export class Organization extends Base4AllEntity {
   projects!: Project[]
 
   @OneToMany(
-    () => AgentSession,
-    (agentSession) => agentSession.organization,
+    () => ConversationAgentSession,
+    (conversationAgentSession) => conversationAgentSession.organization,
   )
-  agentSessions!: AgentSession[]
+  conversationAgentSessions!: ConversationAgentSession[]
 
   @OneToMany(
     () => AgentMessageFeedback,

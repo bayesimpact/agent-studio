@@ -1,7 +1,7 @@
 import { useCallback } from "react"
 import { useParams } from "react-router-dom"
-import { selectCurrentAgentSessionsData } from "@/features/agent-sessions/agent-sessions.selectors"
 import { selectAgentsFromProjectId } from "@/features/agents/agents.selectors"
+import { selectCurrentConversationAgentSessionsData } from "@/features/agents/conversation-agent-sessions/conversation-agent-sessions.selectors"
 import { selectOrganizations } from "@/features/organizations/organizations.selectors"
 import { selectProjects } from "@/features/projects/projects.selectors"
 import { buildAdminPath, buildAppPath, RouteNames } from "@/routes/helpers"
@@ -9,7 +9,7 @@ import { ADS } from "@/store/async-data-status"
 import { useAppSelector } from "@/store/hooks"
 import { useAbility } from "./use-ability"
 
-export type PathType = "organization" | "project" | "agent" | "agentSession"
+export type PathType = "organization" | "project" | "agent" | "conversationAgentSession"
 
 export interface BuildPathOptions {
   organizationId?: string
@@ -82,7 +82,7 @@ export function useGetPath() {
           })
         : agentPath
 
-    if (pathType === "agentSession") {
+    if (pathType === "conversationAgentSession") {
       return agentSessionPath
     }
 
@@ -158,7 +158,7 @@ export function useBuildPath() {
           })
         : agentPath
 
-    if (pathType === "agentSession") {
+    if (pathType === "conversationAgentSession") {
       return agentSessionPath
     }
 
@@ -167,7 +167,7 @@ export function useBuildPath() {
 
   const buildPath: {
     (
-      pathType: "agentSession",
+      pathType: "conversationAgentSession",
       options: {
         organizationId: string
         projectId: string
@@ -200,7 +200,7 @@ export function useClosestParentPath() {
   const organizations = useAppSelector(selectOrganizations)
   const projects = useAppSelector(selectProjects)
   const agents = useAppSelector(selectAgentsFromProjectId(urlProjectId))
-  const agentSessions = useAppSelector(selectCurrentAgentSessionsData)
+  const agentSessions = useAppSelector(selectCurrentConversationAgentSessionsData)
 
   const foundOrganization = useCallback(
     (organizationId: string | undefined) =>

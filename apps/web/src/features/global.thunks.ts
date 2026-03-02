@@ -1,7 +1,7 @@
 import { createAsyncThunk } from "@reduxjs/toolkit"
 import type { RootState, ThunkExtraArg } from "@/store"
-import type { AgentSession } from "./agent-sessions/agent-sessions.models"
 import type { Agent } from "./agents/agents.models"
+import type { ConversationAgentSession } from "./agents/conversation-agent-sessions/conversation-agent-sessions.models"
 import { selectIsAdminInterface } from "./auth/auth.selectors"
 import type { Project } from "./projects/projects.models"
 
@@ -11,7 +11,7 @@ export const initOrganization = createAsyncThunk<
   {
     projects: Project[]
     agents: Record<Project["id"], Agent[]>
-    agentSessions: Record<Agent["id"], AgentSession[]>
+    agentSessions: Record<Agent["id"], ConversationAgentSession[]>
   },
   { organizationId: string },
   ThunkConfig
@@ -20,7 +20,7 @@ export const initOrganization = createAsyncThunk<
   const isAdminInterface = selectIsAdminInterface(state)
   const projects = await services.projects.getAll(organizationId)
   const agents: Record<Project["id"], Agent[]> = {}
-  const agentSessions: Record<Agent["id"], AgentSession[]> = {}
+  const agentSessions: Record<Agent["id"], ConversationAgentSession[]> = {}
 
   for (const project of projects) {
     const agts = await services.agents.getAll({ organizationId, projectId: project.id })
@@ -28,14 +28,14 @@ export const initOrganization = createAsyncThunk<
 
     for (const agent of agts) {
       if (isAdminInterface) {
-        const sessions = await services.agentSessions.getAllPlaygroundSessions({
+        const sessions = await services.conversationAgentSessions.getAllPlaygroundSessions({
           organizationId,
           projectId: project.id,
           agentId: agent.id,
         })
         agentSessions[agent.id] = sessions
       } else {
-        const sessions = await services.agentSessions.getAllAppSessions({
+        const sessions = await services.conversationAgentSessions.getAllAppSessions({
           organizationId,
           projectId: project.id,
           agentId: agent.id,
