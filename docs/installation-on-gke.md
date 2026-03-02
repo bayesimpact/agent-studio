@@ -190,3 +190,7 @@ make deploy PROJECT=impulse REGION=eu
 export MIG_DATABASE_PASSWORD='your_password'
 make migrations PROJECT=impulse REGION=eu
 ```
+
+13. Setup Vercel
+
+TODO
