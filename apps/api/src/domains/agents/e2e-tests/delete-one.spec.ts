@@ -102,7 +102,7 @@ describe("Agents - deleteOne", () => {
     })
     expect(deletedAgent).toBeNull()
 
-    const deletedSession = await repositories.agentSessionRepository.findOne({
+    const deletedSession = await repositories.conversationAgentSessionRepository.findOne({
       where: { id: agentSession.id },
     })
     expect(deletedSession).toBeNull()

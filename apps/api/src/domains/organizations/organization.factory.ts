@@ -1,12 +1,12 @@
 import { randomUUID } from "node:crypto"
 import { Factory } from "fishery"
 import type { Repository } from "typeorm"
-import type { AgentSession } from "@/domains/agent-sessions/agent-session.entity"
-import { agentSessionFactory } from "@/domains/agent-sessions/agent-session.factory"
-import type { AgentMessage } from "@/domains/agent-sessions/messages/agent-message.entity"
-import { agentMessageFactory } from "@/domains/agent-sessions/messages/agent-messages.factory"
 import type { Agent } from "@/domains/agents/agent.entity"
 import { agentFactory } from "@/domains/agents/agent.factory"
+import type { ConversationAgentSession } from "@/domains/conversation-agent-sessions/conversation-agent-session.entity"
+import { conversationAgentSessionFactory } from "@/domains/conversation-agent-sessions/conversation-agent-session.factory"
+import type { AgentMessage } from "@/domains/conversation-agent-sessions/messages/agent-message.entity"
+import { agentMessageFactory } from "@/domains/conversation-agent-sessions/messages/agent-messages.factory"
 import type { Document } from "@/domains/documents/document.entity"
 import { documentFactory } from "@/domains/documents/document.factory"
 import type { Project } from "@/domains/projects/project.entity"
@@ -27,7 +27,7 @@ export const organizationFactory = Factory.define<Organization>(({ sequence, par
     deletedAt: null,
     memberships: params.memberships || [],
     projects: params.projects || [],
-    agentSessions: params.agentSessions || [],
+    conversationAgentSessions: params.conversationAgentSessions || [],
     agentMessageFeedbacks: params.agentMessageFeedbacks || [],
     featureFlags: params.featureFlags || [],
   } satisfies Organization
@@ -185,7 +185,7 @@ type CreateOrganizationWithAgentSessionParams = {
   membership?: Partial<UserMembership>
   project?: Partial<Project>
   agent?: Partial<Agent>
-  agentSession?: Partial<AgentSession>
+  agentSession?: Partial<ConversationAgentSession>
 }
 
 type CreateOrganizationWithAgentSessionRepositories = {
@@ -194,7 +194,7 @@ type CreateOrganizationWithAgentSessionRepositories = {
   membershipRepository: Repository<UserMembership>
   projectRepository: Repository<Project>
   agentRepository: Repository<Agent>
-  agentSessionRepository: Repository<AgentSession>
+  conversationAgentSessionRepository: Repository<ConversationAgentSession>
 }
 
 export async function createOrganizationWithAgentSession(
@@ -206,7 +206,7 @@ export async function createOrganizationWithAgentSession(
   membership: UserMembership
   project: Project
   agent: Agent
-  agentSession: AgentSession
+  agentSession: ConversationAgentSession
 }> {
   const { organization, user, membership, project, agent } = await createOrganizationWithAgent(
     repositories,
@@ -219,10 +219,10 @@ export async function createOrganizationWithAgentSession(
     },
   )
 
-  const agentSession = agentSessionFactory
+  const agentSession = conversationAgentSessionFactory
     .transient({ organization, project, user, agent })
     .build(params.agentSession)
-  await repositories.agentSessionRepository.save(agentSession)
+  await repositories.conversationAgentSessionRepository.save(agentSession)
 
   return {
     organization,
@@ -240,7 +240,7 @@ type CreateOrganizationWithAgentMessageParams = {
   membership?: Partial<UserMembership>
   project?: Partial<Project>
   agent?: Partial<Agent>
-  agentSession?: Partial<AgentSession>
+  agentSession?: Partial<ConversationAgentSession>
   agentMessage?: Partial<AgentMessage>
 }
 
@@ -250,7 +250,7 @@ type CreateOrganizationWithAgentMessageRepositories = {
   membershipRepository: Repository<UserMembership>
   projectRepository: Repository<Project>
   agentRepository: Repository<Agent>
-  agentSessionRepository: Repository<AgentSession>
+  conversationAgentSessionRepository: Repository<ConversationAgentSession>
   agentMessageRepository: Repository<AgentMessage>
 }
 
@@ -263,7 +263,7 @@ export async function createOrganizationWithAgentMessage(
   membership: UserMembership
   project: Project
   agent: Agent
-  agentSession: AgentSession
+  agentSession: ConversationAgentSession
   agentMessage: AgentMessage
 }> {
   const { organization, user, membership, project, agent, agentSession } =

@@ -4,8 +4,8 @@ import { AgentContextResolver } from "@/common/context/resolvers/agent-context.r
 import { OrganizationContextResolver } from "@/common/context/resolvers/organization-context.resolver"
 import { ProjectContextResolver } from "@/common/context/resolvers/project-context.resolver"
 import { ResourceContextGuard } from "@/common/context/resource-context.guard"
-import { AgentSessionsModule } from "@/domains/agent-sessions/agent-sessions.module"
 import { AuthModule } from "@/domains/auth/auth.module"
+import { ConversationAgentSessionsModule } from "@/domains/conversation-agent-sessions/conversation-agent-sessions.module"
 import { DocumentsModule } from "@/domains/documents/documents.module"
 import { StorageModule } from "@/domains/documents/storage/storage.module"
 import { OrganizationsModule } from "@/domains/organizations/organizations.module"
@@ -40,7 +40,7 @@ import { ExtractionAgentSessionsService } from "./extraction-agent-sessions/extr
     AuthModule,
     DocumentsModule,
     StorageModule,
-    forwardRef(() => AgentSessionsModule),
+    forwardRef(() => ConversationAgentSessionsModule),
   ],
   providers: [
     AgentsService,

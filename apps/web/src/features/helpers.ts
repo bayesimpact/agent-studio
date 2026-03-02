@@ -1,6 +1,6 @@
 import type { RootState } from "@/store/types"
-import { selectCurrentAgentSessionId } from "./agent-sessions/agent-sessions.selectors"
 import { selectCurrentAgentId } from "./agents/agents.selectors"
+import { selectCurrentConversationAgentSessionId } from "./agents/conversation-agent-sessions/conversation-agent-sessions.selectors"
 import { selectCurrentOrganizationId } from "./organizations/organizations.selectors"
 import { selectCurrentProjectId } from "./projects/projects.selectors"
 
@@ -32,7 +32,7 @@ export const getCurrentIds = <T extends readonly IdKey[]>({
     },
     agentSessionId: {
       label: "Agent Session",
-      select: selectCurrentAgentSessionId,
+      select: selectCurrentConversationAgentSessionId,
     },
   } as const
 

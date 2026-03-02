@@ -3,11 +3,11 @@ import { FileCheckIcon, XIcon } from "lucide-react"
 import { useEffect, useRef, useState } from "react"
 import { useTranslation } from "react-i18next"
 import type {
-  AgentSessionMessage as AgentSessionMessageType,
-  AgentSession as AgentSessionType,
-} from "@/features/agent-sessions/agent-sessions.models"
-import { selectStreaming } from "@/features/agent-sessions/agent-sessions.selectors"
-import { sendMessage } from "@/features/agent-sessions/agent-sessions.thunks"
+  ConversationAgentSessionMessage as ConversationAgentSessionMessageType,
+  ConversationAgentSession as ConversationAgentSessionType,
+} from "@/features/agents/conversation-agent-sessions/conversation-agent-sessions.models"
+import { selectStreaming } from "@/features/agents/conversation-agent-sessions/conversation-agent-sessions.selectors"
+import { sendMessage } from "@/features/agents/conversation-agent-sessions/conversation-agent-sessions.thunks"
 import { useScrollToEnd } from "@/hooks/use-scroll-to-end"
 import { useAppDispatch, useAppSelector } from "@/store/hooks"
 import { Dictaphone } from "../agent/actions/Dictaphone"
@@ -31,8 +31,8 @@ export function AgentSession({
   messages,
 }: {
   isAdminInterface: boolean
-  session: AgentSessionType
-  messages: AgentSessionMessageType[]
+  session: ConversationAgentSessionType
+  messages: ConversationAgentSessionMessageType[]
 }) {
   const isStreaming = useAppSelector(selectStreaming)
 
@@ -70,7 +70,7 @@ function Messages({
   messages,
   isStreaming,
 }: {
-  messages: AgentSessionMessageType[]
+  messages: ConversationAgentSessionMessageType[]
   isStreaming: boolean
 }) {
   const chatEndRef = useRef<HTMLDivElement>(null)
@@ -91,7 +91,13 @@ function Messages({
   )
 }
 
-function Footer({ session, isStreaming }: { session: AgentSessionType; isStreaming: boolean }) {
+function Footer({
+  session,
+  isStreaming,
+}: {
+  session: ConversationAgentSessionType
+  isStreaming: boolean
+}) {
   const { t } = useTranslation()
   const dispatch = useAppDispatch()
 
@@ -110,7 +116,7 @@ function Footer({ session, isStreaming }: { session: AgentSessionType; isStreami
   return (
     <ChatFooter focus={!isStreaming} onMessageSubmit={handleSubmit}>
       <ChatInput
-        placeholder={t("agentSession:chat.placeholder")}
+        placeholder={t("conversationAgentSession:chat.placeholder")}
         className="resize-none"
         disabled={isStreaming || !session}
       />

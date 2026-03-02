@@ -1,0 +1,32 @@
+{
+  "conversationAgentSession": {
+    "props": {
+      "type": "Type",
+      "createdAt": "Created At",
+      "updatedAt": "Updated At",
+      "traceUrl": "Trace URL"
+    },
+    "create": {
+      "button": "New Chat"
+    },
+    "list": {
+      "title": "Chat Sessions"
+    },
+    "chat": {
+      "title": "Playground",
+      "placeholder": "Ask your question..."
+    }
+  },
+  "agentSessionMessage": {
+    "props": {
+      "role": "Role",
+      "content": "Content",
+      "status": "Status",
+      "createdAt": "Created At",
+      "startedAt": "Started At",
+      "completedAt": "Completed At",
+      "toolCalls": "Tool Calls"
+    },
+    "attachment": "Attachment"
+  }
+}

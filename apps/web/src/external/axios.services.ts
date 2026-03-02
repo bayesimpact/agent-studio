@@ -1,5 +1,5 @@
 import agentMessageFeedbackApi from "@/features/agent-message-feedback/external/agent-message-feedback.api"
-import agentSessionsApi from "@/features/agent-sessions/external/agent-sessions.api"
+import conversationAgentSessionsApi from "@/features/agents/conversation-agent-sessions/external/conversation-agent-sessions.api"
 import agentsApi from "@/features/agents/external/agents.api"
 import extractionAgentSessionsApi from "@/features/agents/extraction-agent-sessions/external/extraction-agent-sessions.api"
 import documentsApi from "@/features/documents/external/documents.api"
@@ -15,7 +15,7 @@ export const services = {
   agentMessageFeedback: agentMessageFeedbackApi,
   extractionAgentSessions: extractionAgentSessionsApi,
   agents: agentsApi,
-  agentSessions: agentSessionsApi,
+  conversationAgentSessions: conversationAgentSessionsApi,
   documents: documentsApi,
   evaluationReports: evaluationReportsApi,
   evaluations: evaluationsApi,

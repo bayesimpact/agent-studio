@@ -2,7 +2,7 @@ import { Button } from "@caseai-connect/ui/shad/button"
 import { Item, ItemActions, ItemContent, ItemTitle } from "@caseai-connect/ui/shad/item"
 import { useTranslation } from "react-i18next"
 import { useNavigate } from "react-router-dom"
-import type { AgentSession } from "@/features/agent-sessions/agent-sessions.models"
+import type { ConversationAgentSession } from "@/features/agents/conversation-agent-sessions/conversation-agent-sessions.models"
 import { useBuildPath } from "@/hooks/use-build-path"
 import { buildDate } from "@/utils/build-date"
 
@@ -12,7 +12,7 @@ export function AgentSessionItem({
   projectId,
   agentId,
 }: {
-  agentSession: AgentSession
+  agentSession: ConversationAgentSession
   organizationId: string
   projectId: string
   agentId: string
@@ -21,7 +21,7 @@ export function AgentSessionItem({
   const { t } = useTranslation()
   const { buildPath } = useBuildPath()
   const handleClick = () => {
-    const path = buildPath("agentSession", {
+    const path = buildPath("conversationAgentSession", {
       organizationId,
       projectId,
       agentId,

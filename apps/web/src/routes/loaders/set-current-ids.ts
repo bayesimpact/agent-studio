@@ -1,7 +1,7 @@
 import { useEffect } from "react"
 import type { Params } from "react-router-dom"
-import { agentSessionsActions } from "@/features/agent-sessions/agent-sessions.slice"
 import { agentsActions } from "@/features/agents/agents.slice"
+import { conversationAgentSessionsActions } from "@/features/agents/conversation-agent-sessions/conversation-agent-sessions.slice"
 import { organizationsActions } from "@/features/organizations/organizations.slice"
 import { projectsActions } from "@/features/projects/projects.slice"
 import type { AppDispatch } from "@/store"
@@ -25,7 +25,9 @@ export const setCurrentIds = ({
     dispatch(agentsActions.setCurrentAgentId({ agentId: agentId || null }))
 
     dispatch(
-      agentSessionsActions.setCurrentAgentSessionId({ agentSessionId: agentSessionId || null }),
+      conversationAgentSessionsActions.setCurrentAgentSessionId({
+        agentSessionId: agentSessionId || null,
+      }),
     )
   }, [dispatch, organizationId, projectId, agentId, agentSessionId])
 }
