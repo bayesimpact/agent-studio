@@ -37,19 +37,19 @@ network = projects/caseai-connect/global/networks/default
 databaseUsername = connect_admin
 databaseName = connect
 cloudSqlCredentialsFile = $(CURDIR)/dontsave/caseai-connect-26b7a9fadda7.json
-else ifeq ($(PROJECT),impulse)
-# IMPULSE
-imageUrl = europe-west9-docker.pkg.dev/impulse-488513/impulse/api
-cloudRunName = impulse
+else ifeq ($(PROJECT),health)
+# Health
+imageUrl = europe-west9-docker.pkg.dev/impulse-488513/health/api
+cloudRunName = health
 googleVertexProject = impulse-488513
 googleVertexLocation = europe-west1
 location = europe-west1
 zone = europe-west9
 langfuseUrl = https://langfuse-y72kzcp7ka-od.a.run.app
 langfusePk = pk-lf-7c8dba87-812c-4447-9e6d-80ac06af9311
-secretsPrefix = IMPULSE_
+secretsPrefix = HEALTH_
 postHogHost = https://eu.i.posthog.com
-addCloudSqlInstances = impulse-488513:europe-west9:impulse-eu
+addCloudSqlInstances = impulse-488513:europe-west9:health-eu
 cloudSqlProxyPort = 5433
 auth0OrganizationId = org_CrDgtkMXZORx4H70
 auth0Audience = https://bayes-impact.eu.auth0.com/api/v2/
@@ -57,14 +57,14 @@ auth0IssuerUrl = https://bayes-impact.eu.auth0.com/
 auth0M2MClientId = ct0uygE3ld8IOKjaGozWbRLMae0R0Pcr
 auth0ClientId = Ddw6V44kWddjgciJSmYDGV1J0V5w3REB
 localStorageServerBaseUrl = https://connect.localhost:3000
-frontendUrl = impulse-web-three.vercel.app
-gcsStorageBucketName = eu-impulse-file-storage
+frontendUrl = health-web-one.vercel.app
+gcsStorageBucketName = eu-health-file-storage
 gcpProjectId = impulse-488513
-serviceAccount = impulse-api@impulse-488513.iam.gserviceaccount.com
+serviceAccount = health-api@impulse-488513.iam.gserviceaccount.com
 network = projects/impulse-488513/global/networks/default
-databaseUsername = impulse_admin
-databaseName = impulse
-cloudSqlCredentialsFile = $(CURDIR)/dontsave/impulse-488513-b0551cbbd784.json
+databaseUsername = health_admin
+databaseName = health
+cloudSqlCredentialsFile = $(CURDIR)/dontsave/health-github-sa.json
 else
 $(error Unsupported PROJECT '$(PROJECT)' for REGION '$(REGION)')
 endif

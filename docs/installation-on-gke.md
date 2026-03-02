@@ -1,151 +1,301 @@
-# Raw instructions to deploy to GKE
+# GKE Deployment Runbook (Impulse Example)
 
-For the sake of the procedure, let's pretend our project has been named "Impulse".
+This guide rewrites the original notes into a step-by-step deployment runbook.
 
-NOTE: The procedure order is important.
+- Example app name: `health`
+- Example Google Cloud project: `health-488513`
+- Keep the order of steps
+- Prefer CLI (`gcloud`) over UI where possible
 
-1. create an project on GKE
+---
 
-In our case, let's name it "Impulse".
+## 1) Google Cloud: local prerequisites (required first)
 
-2. Create the PostgreSQL DB
-
-https://console.cloud.google.com/sql/instances?referrer=search&project=impulse-488513
-
-The first password will be for the `postgres`. Store it in 1Password or any other password platform. 
-
-**Create a new user:**
-
-name: `impulse_admin`
-
-Keep the password for later and store it in 1Password or any other password platform. 
-
-**Create a new database:**
-
-name: `impulse`
-
-3. create service accounts
-
-* One for the account running the instance of the API
-
-name: `api`
-
-https://console.cloud.google.com/iam-admin/serviceaccounts?project=impulse-488513
-
-List of Roles to add:
-- `Cloud Run Service Agent`
-- `Cloud SQL client`
-- `Compute Network User`
-- `Compute Network Viewer`
-- `Compute Public IP Admin`
-- `Secret Manager Secret Accessor`
-- `Vertex AI Service Agent`
-
-* Another one for Github (to run the migrations)
-
-name: `github`
-
-- `Artifact Registry Administrator`
-- `Cloud Run Admin`
-- `Cloud SQL client`
-- `Secret Manager Secret Accessor`
-- `Service Account User`
-
-it will also be used to run the migrations for the local machine.
-
-4. Create a project in Langfuse
-
-We'll need the secret key later
-
-5. Setup Auth0
-
-- Create a new organization on Auth0
-
-https://manage.auth0.com/dashboard/eu/bayes-impact/organizations
-Enable google-oauth2 connections with auto-membership enabled.
-
-Name: `Impulse`
-
-- Create a "Machine to Machine" application
-
-Name: `[PROD] Impulse M2M`
-
-API Permissions: `create:organization_invitations, read:organization_invitations, delete:organization_invitations`
-
-https://manage.auth0.com/dashboard/eu/bayes-impact/applications
-
-- Create a "Single Page Application" application
-
-Name: `[PROD] Impulse`
-Login Experience: 
-  - Type of Users: `Business Users`
-
-6. Add the secrets
-
-https://console.cloud.google.com/security/secret-manager?project=impulse-488513
-
-Click on "Create secret" to add a new secret.
-
-List of secrets to create:
-- `IMPULSE_DATABASE_PASSWORD` (value: the one for the `impulse_admin` created in STEP 2.)
-- `IMPULSE_LANGFUSE_SK` (value: the one created in STEP 4.)
-- `IMPULSE_AUTH0_M2M_CLIENT_SECRET` (value: the one created in STEP 5.)
-
-7. Create 2 storage buckets
-
-a. One of the files uploaded by the users of the platform.
-
-https://console.cloud.google.com/storage/overview;tab=overview?referrer=search&project=impulse-488513
-
-Click on "Create Bucket"
-
-Name: `eu-connect-file-storage`
-Location: eu (multiple regions in European Union) 
-
-Check the "Enforce public access prevention on this bucket" checkbox. 
-
-b. One for public assets like logo, ...etc
-
-Click on "Create Bucket"
-
-Name: `eu-connect-public-file-storage`
-Location: eu (multiple regions in European Union) 
-
-**Don't** check the "Enforce public access prevention on this bucket" checkbox. 
-
-Then in your terminal:
+You must have `gcloud` installed and configured before doing anything else.
 
 ```bash
-gcloud storage buckets add-iam-policy-binding gs://eu-impulse-public-file-storage \
+# Install Google Cloud CLI (macOS)
+brew install --cask google-cloud-sdk
+
+# Initialize and authenticate
+gcloud init
+gcloud auth login didier@bayesimpact.org
+gcloud config set account didier@bayesimpact.org
+
+# Verify active account/project
+gcloud auth list
+gcloud config list
+```
+
+Also configure Docker auth for Artifact Registry:
+
+```bash
+gcloud auth configure-docker europe-west9-docker.pkg.dev
+```
+
+---
+
+## 2) Google Cloud: create project
+
+If you need to create it:
+
+```bash
+gcloud projects create health-488513 --name="Health"
+gcloud config set project health-488513
+```
+
+---
+
+## 3) Google Cloud SQL (PostgreSQL)
+
+Create the PostgreSQL instance, DB user, and DB.
+
+Target instance configuration (must match):
+
+- Region: `europe-west9` (Paris)
+- DB version: `PostgreSQL 18.2`
+- Machine type: `db-perf-optimized-N-8` (`8 vCPU`, `64 GB RAM`)
+- Data cache: enabled (`375 GB`)
+- Storage: `100 GB SSD`
+- Connections: Public IP
+- Backup: Manual
+- Availability: Single zone
+- Point-in-time recovery: Disabled
+
+```bash
+# Create instance
+gcloud sql instances create health-eu \
+  --database-version=POSTGRES_18 \
+  --region=europe-west9 \
+  --tier=db-perf-optimized-N-8 \
+  --storage-type=SSD \
+  --storage-size=100 \
+  --availability-type=ZONAL \
+  --assign-ip
+
+# Then verify/adjust in Console so it matches exactly:
+# - Data cache: enabled (375 GB)
+# - Backup: Manual
+# - Point-in-time recovery: disabled
+
+# Set postgres password (store in 1Password)
+gcloud sql users set-password postgres \
+  --instance=health-eu \
+  --password='<postgres-password>'
+
+# Create app user (store password in 1Password)
+gcloud sql users create health_admin \
+  --instance=health-eu \
+  --password='<health-admin-password>'
+
+# Create app database
+gcloud sql databases create health --instance=health-eu
+
+# Make health_admin owner of the healt database
+gcloud components install cloud-sql-proxy
+gcloud auth application-default login
+
+gcloud sql connect health-eu --user=postgres --database=health
+```
+
+Copy/paste:
+
+```sql
+GRANT health_admin TO postgres;
+
+-- 1) Make health_admin owner-level for this DB (common/simple)
+ALTER DATABASE health OWNER TO health_admin;
+
+-- 2) Ensure schema privileges (usually needed)
+GRANT USAGE, CREATE ON SCHEMA public TO health_admin;
+
+-- 3) Existing tables/sequences/functions
+GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO health_admin;
+GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public TO health_admin;
+GRANT ALL PRIVILEGES ON ALL FUNCTIONS IN SCHEMA public TO health_admin;
+
+-- 4) Future objects created in this schema
+ALTER DEFAULT PRIVILEGES IN SCHEMA public
+  GRANT ALL PRIVILEGES ON TABLES TO health_admin;
+ALTER DEFAULT PRIVILEGES IN SCHEMA public
+  GRANT ALL PRIVILEGES ON SEQUENCES TO health_admin;
+ALTER DEFAULT PRIVILEGES IN SCHEMA public
+  GRANT ALL PRIVILEGES ON FUNCTIONS TO health_admin;
+```
+
+---
+
+## 4) Google Cloud: service accounts and IAM
+
+Create 2 service accounts:
+
+- Runtime API service account: `health-api`
+- CI/migrations service account: `health-github`
+
+```bash
+gcloud iam service-accounts create health-api \
+  --display-name="Health API runtime"
+
+gcloud iam service-accounts create health-github \
+  --display-name="Health GitHub CI and migrations"
+```
+
+Grant roles to runtime API account:
+
+```bash
+for role in \
+  roles/run.serviceAgent \
+  roles/cloudsql.client \
+  roles/compute.networkUser \
+  roles/compute.networkViewer \
+  roles/compute.publicIpAdmin \
+  roles/secretmanager.secretAccessor \
+  roles/aiplatform.serviceAgent
+do
+  gcloud projects add-iam-policy-binding impulse-488513 \
+    --member="serviceAccount:health-api@impulse-488513.iam.gserviceaccount.com" \
+    --role="$role"
+done
+```
+
+Grant roles to GitHub account:
+
+```bash
+for role in \
+  roles/artifactregistry.admin \
+  roles/run.admin \
+  roles/cloudsql.client \
+  roles/secretmanager.secretAccessor \
+  roles/iam.serviceAccountUser
+do
+  gcloud projects add-iam-policy-binding impulse-488513 \
+    --member="serviceAccount:health-github@impulse-488513.iam.gserviceaccount.com" \
+    --role="$role"
+done
+```
+
+If needed for local migrations/CI, create a key file for this account and store it safely (never commit it).
+
+
+```bash
+gcloud iam service-accounts keys create "dontsave/health-github-sa.json" \
+  --iam-account="health-github@impulse-488513.iam.gserviceaccount.com"
+```
+
+---
+
+## 5) Auth0 setup (UI)
+
+Some Auth0 steps are easier in UI:
+
+1. Create organization `Health`
+2. Enable `google-oauth2` connection with auto-membership
+3. Create Machine-to-Machine app:
+   - Name: `[PROD] Health M2M`
+   - API permissions:
+     - `create:organization_invitations`
+     - `read:organization_invitations`
+     - `delete:organization_invitations`
+4. Create Single Page Application:
+   - Name: `[PROD] Health`
+   - Login Experience: `Business Users`
+
+Useful links:
+- `https://manage.auth0.com/dashboard/eu/bayes-impact/organizations`
+- `https://manage.auth0.com/dashboard/eu/bayes-impact/applications`
+
+---
+
+## 6) Langfuse setup
+
+Create project in Langfuse and keep the secret key (`sk-...`) for Secret Manager.
+
+---
+
+## 7) Google Secret Manager
+
+Create required secrets in Google Cloud:
+
+```bash
+printf '%s' '<health-admin-db-password>' | gcloud secrets create HEALTH_DATABASE_PASSWORD \
+  --replication-policy=automatic \
+  --data-file=-
+
+printf '%s' '<langfuse-secret-key>' | gcloud secrets create HEALTH_LANGFUSE_SK \
+  --replication-policy=automatic \
+  --data-file=-
+
+printf '%s' '<auth0-m2m-client-secret>' | gcloud secrets create HEALTH_AUTH0_M2M_CLIENT_SECRET \
+  --replication-policy=automatic \
+  --data-file=-
+```
+
+If a secret already exists, add a new version:
+
+```bash
+printf '%s' '<new-value>' | gcloud secrets versions add IMPULSE_DATABASE_PASSWORD --data-file=-
+```
+
+---
+
+## 8) Google Cloud Storage buckets
+
+Create 2 buckets:
+
+- Private uploads bucket: `eu-health-file-storage`
+- Public assets bucket: `eu-health-public-file-storage`
+
+```bash
+gcloud storage buckets create gs://eu-health-file-storage \
+  --location=EU \
+  --uniform-bucket-level-access
+
+gcloud storage buckets create gs://eu-health-public-file-storage \
+  --location=EU \
+  --uniform-bucket-level-access
+```
+
+Allow public read on the public bucket:
+
+```bash
+gcloud storage buckets add-iam-policy-binding gs://eu-health-public-file-storage \
   --member=allUsers \
   --role=roles/storage.objectViewer
 ```
 
-8. Create a repository for our Docker image
+---
 
-https://console.cloud.google.com/artifacts?referrer=search&project=impulse-488513
+## 9) Artifact Registry (Docker repository)
 
-Click on "Create Repository"
-
-Name: `impulse`
-Region: `europe-west9`
-
-Note: Disable the Vulnerability Scanning
-
-9. Update the Makefile
-
-List of variables to modify:
+Create Docker repo in `europe-west9`:
 
 ```bash
-imageUrl = europe-west9-docker.pkg.dev/impulse/impulse/api
-cloudRunName = impulse
+gcloud artifacts repositories create health \
+  --repository-format=docker \
+  --location=europe-west9 \
+  --description="Health API images"
+```
+
+Note from original setup: vulnerability scanning was disabled in UI.
+
+---
+
+## 10) Makefile environment values
+
+Update your `Makefile` variables:
+
+```bash
+imageUrl = europe-west9-docker.pkg.dev/health/health/api
+cloudRunName = health
+googleVertexProject = health-488513
+googleVertexLocation = europe-west1
 location = europe-west1
 zone = europe-west9
 langfuseUrl = https://langfuse-y72kzcp7ka-od.a.run.app
 langfusePk = pk-lf-7c8dba87-812c-4447-9e6d-80ac06af9311
 secretsPrefix = IMPULSE_
 postHogHost = https://eu.i.posthog.com
-addCloudSqlInstances = impulse-488513:europe-west9:impulse-eu
+addCloudSqlInstances = health-488513:europe-west9:health-eu
 cloudSqlProxyPort = 5433
 auth0OrganizationId = org_CrDgtkMXZORx4H70
 auth0Audience = https://bayes-impact.eu.auth0.com/api/v2/
@@ -153,63 +303,110 @@ auth0IssuerUrl = https://bayes-impact.eu.auth0.com/
 auth0M2MClientId = ct0uygE3ld8IOKjaGozWbRLMae0R0Pcr
 auth0ClientId = Ddw6V44kWddjgciJSmYDGV1J0V5w3REB
 localStorageServerBaseUrl = https://connect.localhost:3000
-gcsStorageBucketName = eu-impulse-file-storage
-gcpProjectId = impulse-488513
-serviceAccount = impulse-api@impulse-488513.iam.gserviceaccount.com
-network = projects/impulse-488513/global/networks/default
-databaseUsername = impulse_admin
-databaseName = impulse
+gcsStorageBucketName = eu-health-file-storage
+gcpProjectId = health-488513
+serviceAccount = health-api@health-488513.iam.gserviceaccount.com
+network = projects/health-488513/global/networks/default
+databaseUsername = health_admin
+databaseName = health
+cloudSqlCredentialsFile = $(CURDIR)/dontsave/health-github-sa.json
 ```
 
-10. Prepare the first deployment
+---
 
-You need to sign in locally (on your machine) to GKE.
+## 11) Network permission workaround (Cloud Run + subnet)
 
-```
-gcloud auth login didier@bayesimpact.org
-gcloud config set account didier@bayesimpact.org
-gcloud config set project impulse-488513
-gcloud auth list
-gcloud auth configure-docker europe-west9-docker.pkg.dev
-```
+If deployment fails on VPC/subnet permissions, grant `compute.networkUser` on subnet:
 
-Weird, this is required:
-
-Grant Network User on the target subnet (or use a dedicated allowed subnet):
-
-```
+```bash
 # Runtime service account
 gcloud compute networks subnets add-iam-policy-binding default \
   --region=europe-west9 \
-  --member="serviceAccount:impulse-api@impulse-488513.iam.gserviceaccount.com" \
-  --role="roles/compute.networkUser" \
-  --project=impulse-488513
-
-# Cloud Run service agent
-gcloud compute networks subnets add-iam-policy-binding default \
-  --region=europe-west9 \
-  --member="serviceAccount:service-228409355387@serverless-robot-prod.iam.gserviceaccount.com" \
+  --member="serviceAccount:health-api@impulse-488513.iam.gserviceaccount.com" \
   --role="roles/compute.networkUser" \
   --project=impulse-488513
 ```
 
-11. First deployment
+Also grant it to the Cloud Run service agent:
 
 ```bash
-make deploy PROJECT=impulse REGION=eu
+PROJECT_NUMBER="$(gcloud projects describe impulse-488513 --format='value(projectNumber)')"
+
+gcloud compute networks subnets add-iam-policy-binding default \
+  --region=europe-west9 \
+  --member="serviceAccount:service-${PROJECT_NUMBER}@serverless-robot-prod.iam.gserviceaccount.com" \
+  --role="roles/compute.networkUser" \
+  --project=impulse-488513
 ```
 
-12. Run first migations
+---
 
-2 Requirements:
-- get the password for the `impulse_admin` user. You should have it in 1Password.
-- download the GKE credentials file for the github service account and put it in the `dontsave/.` folder.
+## 12) First backend deployment (GCP)
+
+```bash
+make deploy PROJECT=health REGION=eu
+```
+
+---
+
+## 13) First database migrations
+
+Requirements:
+
+- `health_admin` DB password available (from password manager)
+- Credentials file for GitHub/migration service account stored locally (example: `dontsave/`)
+
+Run:
 
 ```bash
 export MIG_DATABASE_PASSWORD='your_password'
-make migrations PROJECT=impulse REGION=eu
+make migrations PROJECT=health REGION=eu
 ```
 
-13. Setup Vercel
+---
 
-TODO
+## 14) Vercel setup (Web)
+
+Install and authenticate Vercel CLI:
+
+```bash
+npm i -g vercel
+vercel login
+```
+
+Create a new Vercel project from the CLI:
+
+```
+vercel
+```
+
+- Root directory: `apps/web`
+- Output directory: `dist`
+
+Set environment variables:
+
+- UI personalization:
+  - `VITE_LOGO_URL`
+  - `VITE_THEME_KEY`
+  - `VITE_APP_TITLE`
+- API URL (Cloud Run URL, e.g. `https://<service-id>.europe-west9.run.app`):
+  - `VITE_API_URL`
+- Auth0:
+  - `VITE_AUTH0_DOMAIN`
+  - `VITE_AUTH0_CLIENT_ID`
+  - `VITE_AUTH0_AUDIENCE`
+  - `VITE_AUTH0_ORGANIZATION_ID`
+
+**Notes:** 
+- you'll need to update the Makefile to set the `frontendUrl` variable with the one Vercel communicated to you.
+- don't forget to also use the frontend url in the "Application LoginURI", "Allowed Callback URLs" and "Allowed Logout URLs" of your Auth0 application.
+
+---
+
+## 15) Deploy web to Vercel
+
+Deploy from repository root:
+
+```bash
+vercel --prod
+```
