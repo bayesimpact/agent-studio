@@ -10,7 +10,7 @@ import { selectStreaming } from "@/features/agents/conversation-agent-sessions/c
 import { sendMessage } from "@/features/agents/conversation-agent-sessions/conversation-agent-sessions.thunks"
 import { useScrollToEnd } from "@/hooks/use-scroll-to-end"
 import { useAppDispatch, useAppSelector } from "@/store/hooks"
-import { Dictaphone } from "../agent/actions/Dictaphone"
+import { AgentSessionMessage } from "../../../../components/chat/AgentSessionMessage"
 import {
   Chat,
   ChatActions,
@@ -19,13 +19,13 @@ import {
   ChatHeader,
   ChatInput,
   ChatSubmit,
-} from "../chat/Chat"
-import { DotsBackground } from "../DotsBackground"
-import { AttachDocument } from "../document/AttachDocument"
-import { TraceUrlOpener } from "../TraceUrlOpener"
-import { AgentSessionMessage } from "./AgentSessionMessage"
+} from "../../../../components/chat/Chat"
+import { Dictaphone } from "../../../../components/chat/Dictaphone"
+import { DotsBackground } from "../../../../components/DotsBackground"
+import { AttachDocument } from "../../../../components/document/AttachDocument"
+import { TraceUrlOpener } from "../../../../components/TraceUrlOpener"
 
-export function AgentSession({
+export function ConversationAgentSession({
   isAdminInterface,
   session,
   messages,

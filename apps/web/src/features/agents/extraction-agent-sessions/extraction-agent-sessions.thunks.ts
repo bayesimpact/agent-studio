@@ -13,17 +13,18 @@ type ThunkConfig = { state: RootState; extra: ThunkExtraArg }
 
 export const listExtractionAgentSessions = createAsyncThunk<
   ExtractionAgentSessionSummary[],
-  { agentId: string; playground: boolean },
+  { agentId: string },
   ThunkConfig
->(
-  "extractionAgentSessions/list",
-  async ({ agentId, playground }, { extra: { services }, getState }) => {
-    const params = getCurrentIds({ state: getState(), wantedIds: ["organizationId", "projectId"] })
-    const payload = { ...params, agentId }
-    if (playground) return await services.extractionAgentSessions.getAllPlayground(payload)
-    return await services.extractionAgentSessions.getAllLive(payload)
-  },
-)
+>("extractionAgentSessions/list", async ({ agentId }, { extra: { services }, getState }) => {
+  const state = getState()
+  const isAdminInterface = selectIsAdminInterface(state)
+  const params = getCurrentIds({ state, wantedIds: ["organizationId", "projectId"] })
+  return await services.extractionAgentSessions.getAll({
+    ...params,
+    agentId,
+    type: isAdminInterface ? "playground" : "live",
+  })
+})
 
 export const executeExtractionAgentSession = createAsyncThunk<
   ExtractionAgentSessionResult,
@@ -47,17 +48,13 @@ export const executeExtractionAgentSession = createAsyncThunk<
       wantedIds: ["organizationId", "projectId", "agentId"],
     })
 
-    const payload = {
+    return await services.extractionAgentSessions.executeOne({
       organizationId,
       projectId,
       agentId,
       documentId: document.id,
-    }
-
-    if (isAdminInterface) {
-      return await services.extractionAgentSessions.executePlaygroundOne(payload)
-    }
-    return await services.extractionAgentSessions.executeLiveOne(payload)
+      type: isAdminInterface ? "playground" : "live",
+    })
   },
 )
 
@@ -72,14 +69,11 @@ export const getExtractionAgentSession = createAsyncThunk<
     state,
     wantedIds: ["organizationId", "projectId", "agentId"],
   })
-  const payload = {
+  return await services.extractionAgentSessions.getOne({
     organizationId,
     projectId,
     agentId,
     runId: params.runId,
-  }
-  if (isAdminInterface) {
-    return await services.extractionAgentSessions.getOnePlayground(payload)
-  }
-  return await services.extractionAgentSessions.getOneLive(payload)
+    type: isAdminInterface ? "playground" : "live",
+  })
 })

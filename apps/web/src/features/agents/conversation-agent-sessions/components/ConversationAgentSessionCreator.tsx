@@ -7,7 +7,7 @@ import { createConversationAgentSession } from "@/features/agents/conversation-a
 import { useBuildPath } from "@/hooks/use-build-path"
 import { useAppDispatch } from "@/store/hooks"
 
-export function AgentSessionCreator({
+export function ConversationAgentSessionCreator({
   type,
   agentId,
   projectId,

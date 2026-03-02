@@ -6,7 +6,7 @@ import type { ConversationAgentSession } from "@/features/agents/conversation-ag
 import { useBuildPath } from "@/hooks/use-build-path"
 import { buildDate } from "@/utils/build-date"
 
-export function AgentSessionItem({
+export function ConversationAgentSessionItem({
   agentSession,
   organizationId,
   projectId,

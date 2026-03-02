@@ -20,12 +20,8 @@ export type AppStartListening = TypedStartListening<RootState, AppDispatch>
 listenerMiddleware.startListening({
   actionCreator: listAgents.fulfilled,
   effect: async ({ payload: agents }, listenerApi) => {
-    const state = listenerApi.getState()
-    const isAdminInterface = selectIsAdminInterface(state)
     agents.forEach((agent) => {
-      listenerApi.dispatch(
-        listExtractionAgentSessions({ agentId: agent.id, playground: isAdminInterface }),
-      )
+      listenerApi.dispatch(listExtractionAgentSessions({ agentId: agent.id }))
     })
   },
 })
@@ -39,13 +35,10 @@ listenerMiddleware.startListening({
   },
   effect: async (_, listenerApi) => {
     const state = listenerApi.getState()
-    const isAdminInterface = selectIsAdminInterface(state)
     const agents = selectAgentsData(state)
     if (ADS.isFulfilled(agents)) {
       for (const agent of Object.values(agents.value).flat()) {
-        await listenerApi.dispatch(
-          listExtractionAgentSessions({ agentId: agent.id, playground: isAdminInterface }),
-        )
+        await listenerApi.dispatch(listExtractionAgentSessions({ agentId: agent.id }))
       }
     }
   },
@@ -61,10 +54,7 @@ listenerMiddleware.startListening({
   effect: async (_, listenerApi) => {
     const state = listenerApi.getState()
     const { agentId } = getCurrentIds({ state, wantedIds: ["agentId"] })
-    const isAdminInterface = selectIsAdminInterface(state)
-    await listenerApi.dispatch(
-      listExtractionAgentSessions({ agentId, playground: isAdminInterface }),
-    )
+    await listenerApi.dispatch(listExtractionAgentSessions({ agentId }))
   },
 })
 
@@ -74,10 +64,7 @@ listenerMiddleware.startListening({
   effect: async (_, listenerApi) => {
     const state = listenerApi.getState()
     const { agentId } = getCurrentIds({ state, wantedIds: ["agentId"] })
-    const isAdminInterface = selectIsAdminInterface(state)
-    await listenerApi.dispatch(
-      listExtractionAgentSessions({ agentId, playground: isAdminInterface }),
-    )
+    await listenerApi.dispatch(listExtractionAgentSessions({ agentId }))
   },
 })
 

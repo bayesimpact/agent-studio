@@ -1,3 +1,4 @@
+import type { ExtractionAgentSessionDto } from "@caseai-connect/api-contracts"
 import type {
   ExtractionAgentSession,
   ExtractionAgentSessionResult,
@@ -5,38 +6,24 @@ import type {
 } from "./extraction-agent-sessions.models"
 
 export interface IExtractionAgentSessionsSpi {
-  getAllPlayground: (params: {
+  getAll: (params: {
     organizationId: string
     projectId: string
     agentId: string
+    type: ExtractionAgentSessionDto["type"]
   }) => Promise<ExtractionAgentSessionSummary[]>
-  getAllLive: (params: {
-    organizationId: string
-    projectId: string
-    agentId: string
-  }) => Promise<ExtractionAgentSessionSummary[]>
-  getOnePlayground: (params: {
+  getOne: (params: {
     organizationId: string
     projectId: string
     agentId: string
     runId: string
+    type: ExtractionAgentSessionDto["type"]
   }) => Promise<ExtractionAgentSession>
-  getOneLive: (params: {
-    organizationId: string
-    projectId: string
-    agentId: string
-    runId: string
-  }) => Promise<ExtractionAgentSession>
-  executePlaygroundOne: (params: {
+  executeOne: (params: {
     organizationId: string
     projectId: string
     agentId: string
     documentId: string
-  }) => Promise<ExtractionAgentSessionResult>
-  executeLiveOne: (params: {
-    organizationId: string
-    projectId: string
-    agentId: string
-    documentId: string
+    type: ExtractionAgentSessionDto["type"]
   }) => Promise<ExtractionAgentSessionResult>
 }
