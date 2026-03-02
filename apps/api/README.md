@@ -23,3 +23,9 @@ To learn more about NestJs, take a look at the following resources:
 - [Official Documentation](https://docs.nestjs.com) - A progressive Node.js framework for building efficient, reliable and scalable server-side applications.
 - [Official NestJS Courses](https://courses.nestjs.com) - Learn everything you need to master NestJS and tackle modern backend applications at any scale.
 - [GitHub Repo](https://github.com/nestjs/nest)
+
+## Force API Deployment (No TS Changes)
+
+Production CI only deploys when `make check-api-changes` finds meaningful API changes.
+If you need to trigger deployment without touching TypeScript code, update
+`apps/api/src/.deploy-trigger` (for example by adding a timestamp line) and push.
