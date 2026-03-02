@@ -1,10 +1,10 @@
 import { useTranslation } from "react-i18next"
 import { ListHeader } from "@/components/layouts/ListHeader"
-import type { AgentExtractionRunSummary } from "@/features/agent-extraction-runs/agent-extraction-runs.models"
-import { selectAgentExtractionRunsFromAgentId } from "@/features/agent-extraction-runs/agent-extraction-runs.selectors"
-import { ExtractionCreator } from "@/features/agent-extraction-runs/components/ExtractionCreator"
-import { ExtractionRunItem } from "@/features/agent-extraction-runs/components/ExtractionRunItem"
 import type { Agent } from "@/features/agents/agents.models"
+import { ExtractionSessionCreator } from "@/features/agents/extraction-agent-sessions/components/ExtractionAgentSessionCreator"
+import { ExtractionSessionItem } from "@/features/agents/extraction-agent-sessions/components/ExtractionAgentSessionItem"
+import type { ExtractionAgentSessionSummary } from "@/features/agents/extraction-agent-sessions/extraction-agent-sessions.models"
+import { selectExtractionAgentSessionsFromAgentId } from "@/features/agents/extraction-agent-sessions/extraction-agent-sessions.selectors"
 import { useBuildPath } from "@/hooks/use-build-path"
 import { ADS } from "@/store/async-data-status"
 import { useAppSelector } from "@/store/hooks"
@@ -22,7 +22,7 @@ export function ExtractionAgentRoute({
   projectId: string
 }) {
   useHandleHeader(agent)
-  const runsData = useAppSelector(selectAgentExtractionRunsFromAgentId(agent.id))
+  const runsData = useAppSelector(selectExtractionAgentSessionsFromAgentId(agent.id))
 
   if (ADS.isError(runsData)) return <ErrorRoute error={runsData.error || "Unknown error"} />
   if (ADS.isFulfilled(runsData)) {
@@ -44,17 +44,17 @@ function ExtractionAgentWithData({
 }: {
   organizationId: string
   projectId: string
-  runs: AgentExtractionRunSummary[]
+  runs: ExtractionAgentSessionSummary[]
 }) {
   const { buildPath } = useBuildPath()
-  const { t } = useTranslation("agentExtractionRun", { keyPrefix: "list" })
+  const { t } = useTranslation("extractionAgentSession", { keyPrefix: "list" })
 
   return (
     <ListHeader path={buildPath("project", { organizationId, projectId })} title={t("title")}>
-      <ExtractionCreator />
+      <ExtractionSessionCreator />
 
       {runs.map((run) => (
-        <ExtractionRunItem key={run.id} run={run} />
+        <ExtractionSessionItem key={run.id} run={run} />
       ))}
     </ListHeader>
   )

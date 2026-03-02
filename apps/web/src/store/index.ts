@@ -1,13 +1,13 @@
 import { configureStore } from "@reduxjs/toolkit"
 import { getServices } from "@/di/services"
-import { agentExtractionRunsMiddleware } from "@/features/agent-extraction-runs/agent-extraction-runs.middleware"
-import { agentExtractionRunsSliceReducer } from "@/features/agent-extraction-runs/agent-extraction-runs.slice"
 import { agentMessageFeedbackMiddleware } from "@/features/agent-message-feedback/agent-message-feedback.middleware"
 import { agentMessageFeedbackSliceReducer } from "@/features/agent-message-feedback/agent-message-feedback.slice"
 import { agentSessionMiddleware } from "@/features/agent-sessions/agent-sessions.middleware"
 import { agentSessionsSliceReducer } from "@/features/agent-sessions/agent-sessions.slice"
 import { agentsMiddleware } from "@/features/agents/agents.middleware"
 import { agentsSliceReducer } from "@/features/agents/agents.slice"
+import { extractionAgentSessionsMiddleware } from "@/features/agents/extraction-agent-sessions/extraction-agent-sessions.middleware"
+import { extractionAgentSessionsSliceReducer } from "@/features/agents/extraction-agent-sessions/extraction-agent-sessions.slice"
 import { authMiddleware } from "@/features/auth/auth.middleware"
 import { authSliceReducer } from "@/features/auth/auth.slice"
 import { documentsMiddleware } from "@/features/documents/documents.middleware"
@@ -28,7 +28,7 @@ import type { ThunkExtraArg } from "./types"
 
 export const store = configureStore({
   reducer: {
-    agentExtractionRuns: agentExtractionRunsSliceReducer,
+    extractionAgentSessions: extractionAgentSessionsSliceReducer,
     agentMessageFeedback: agentMessageFeedbackSliceReducer,
     agents: agentsSliceReducer,
     agentSessions: agentSessionsSliceReducer,
@@ -48,7 +48,7 @@ export const store = configureStore({
         extraArgument: { services: getServices() } satisfies ThunkExtraArg,
       },
     }).prepend(
-      agentExtractionRunsMiddleware.middleware,
+      extractionAgentSessionsMiddleware.middleware,
       agentMessageFeedbackMiddleware.middleware,
       agentSessionMiddleware.middleware,
       agentsMiddleware.middleware,

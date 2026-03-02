@@ -1,47 +1,62 @@
 // Agents DTOs
 
-// Agent Message Feedback DTOs
+// Agent Message Feedback
 export type * from "./agent-message-feedback/agent-message-feedback.dto"
 export { AgentMessageFeedbackRoutes } from "./agent-message-feedback/agent-message-feedback.routes"
-export type * from "./agent-sessions/agent-session-messages.dto"
-export { AgentSessionMessagesRoutes } from "./agent-sessions/agent-session-messages.routes"
-export { AgentSessionStreamingRoutes } from "./agent-sessions/agent-session-streaming.routes"
-// agent sessions DTOs
-export type * from "./agent-sessions/agent-sessions.dto"
-export { AgentSessionsRoutes } from "./agent-sessions/agent-sessions.routes"
-export type * from "./agents/agent-extraction-runs.dto"
-export { AgentExtractionRunsRoutes } from "./agents/agent-extraction-runs.routes"
+
+// Agent
 export * from "./agents/agents.dto"
 export { AgentsRoutes } from "./agents/agents.routes"
-// Documents DTOs
+// Agent Conversation Sessions
+export type * from "./agents/base-sessions/messages/session-messages.dto"
+export { AgentSessionMessagesRoutes } from "./agents/base-sessions/messages/session-messages.routes"
+export { AgentSessionStreamingRoutes } from "./agents/conversation-sessions/agent-session-streaming.routes"
+export type * from "./agents/conversation-sessions/conversation-sessions.dto"
+export { ConversationAgentSessionsRoutes } from "./agents/conversation-sessions/conversation-sessions.routes"
+
+// Extraction Agent Sessions
+export type * from "./agents/extraction-agent-sessions/extraction-agent-sessions.dto"
+export { ExtractionAgentSessionsRoutes } from "./agents/extraction-agent-sessions/extraction-agent-sessions.routes"
+
+// Documents
 export * from "./documents/documents.dto"
 export { DocumentsRoutes } from "./documents/documents.routes"
-// Evaluation Reports DTOs
+// Evaluation Reports
 export * from "./evaluations/evaluation-reports.dto"
 export { EvaluationReportsRoutes } from "./evaluations/evaluation-reports.routes"
-// Evaluations DTOs
+
+// Evaluations
 export * from "./evaluations/evaluations.dto"
 export { EvaluationsRoutes } from "./evaluations/evaluations.routes"
-// Feature Flags DTOs
+
+// Feature Flags
 export type * from "./feature-flags/feature-flags.dto"
 export { FeatureFlagsRoutes } from "./feature-flags/feature-flags.routes"
-// Generic DTOs
+
+// Generic
 export type * from "./generic"
 export type { ApiRoute } from "./helpers"
+
 // Helpers
 export { defineRoute } from "./helpers"
+
 // Invitations
 export { InvitationsRoutes } from "./invitations/invitations.routes"
-// Me DTOs
+
+// Me
 export type { MeResponseDto } from "./me/me.dto"
+
 // Routes
 export { MeRoutes } from "./me/me.routes"
-// Organizations DTOs
+
+// Organizations
 export type * from "./organizations/organizations.dto"
 export { OrganizationsRoutes } from "./organizations/organizations.routes"
-// Project Membership DTOs
+
+// Project Membership
 export type * from "./project-membership/project-membership.dto"
 export { ProjectMembershipRoutes } from "./project-membership/project-membership.routes"
-// Projects DTOs
+
+// Projects
 export type * from "./projects/projects.dto"
 export { ProjectsRoutes } from "./projects/projects.routes"

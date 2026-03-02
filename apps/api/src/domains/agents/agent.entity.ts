@@ -9,7 +9,7 @@ import { ConnectEntity, ConnectEntityBase } from "@/common/entities/connect-enti
 import { AgentSession } from "@/domains/agent-sessions/agent-session.entity"
 import { Project } from "@/domains/projects/project.entity"
 import { EvaluationReport } from "../evaluations/reports/evaluation-report.entity"
-import { AgentExtractionRun } from "./agent-extraction-runs/agent-extraction-run.entity"
+import { ExtractionAgentSession } from "./extraction-agent-sessions/extraction-agent-session.entity"
 
 @ConnectEntity("agent")
 export class Agent extends ConnectEntityBase {
@@ -57,8 +57,8 @@ export class Agent extends ConnectEntityBase {
   evaluationReports!: EvaluationReport[]
 
   @OneToMany(
-    () => AgentExtractionRun,
-    (agentExtractionRun) => agentExtractionRun.agent,
+    () => ExtractionAgentSession,
+    (extractionAgentSession) => extractionAgentSession.agent,
   )
-  agentExtractionRuns!: AgentExtractionRun[]
+  extractionSessions!: ExtractionAgentSession[]
 }

@@ -1,4 +1,4 @@
-import { AgentSessionsRoutes } from "@caseai-connect/api-contracts"
+import { ConversationAgentSessionsRoutes } from "@caseai-connect/api-contracts"
 import { afterAll } from "@jest/globals"
 import type { INestApplication } from "@nestjs/common"
 import type { App } from "supertest/types"
@@ -14,7 +14,7 @@ import { setupUserGuardForTesting } from "../../../../test/e2e.helpers"
 import { expectResponse, type Requester, testRequester } from "../../../../test/request"
 import { AgentSessionsModule } from "../agent-sessions.module"
 
-describe("AgentSessionsRoutes.createPlaygroundSession", () => {
+describe("ConversationAgentSessionsRoutes.createPlaygroundSession", () => {
   let app: INestApplication<App>
   let request: Requester
   let setup: Awaited<ReturnType<typeof setupTransactionalTestDatabase>>
@@ -62,7 +62,7 @@ describe("AgentSessionsRoutes.createPlaygroundSession", () => {
 
   const subject = async () =>
     request({
-      route: AgentSessionsRoutes.createPlaygroundSession,
+      route: ConversationAgentSessionsRoutes.createPlaygroundSession,
       pathParams: removeNullish({ organizationId, projectId, agentId }),
       token: accessToken,
     })
