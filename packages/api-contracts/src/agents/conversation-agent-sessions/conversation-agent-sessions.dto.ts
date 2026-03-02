@@ -1,11 +1,11 @@
 import type { TimeType } from "../../generic"
 
-export type AgentSessionTypeDto = "playground" | "production" | "app-private"
+export type ConversationAgentSessionTypeDto = "playground" | "live"
 
 export type ConversationAgentSessionDto = {
   id: string
   agentId: string
-  type: AgentSessionTypeDto
+  type: ConversationAgentSessionTypeDto
   createdAt: TimeType
   updatedAt: TimeType
   traceUrl?: string

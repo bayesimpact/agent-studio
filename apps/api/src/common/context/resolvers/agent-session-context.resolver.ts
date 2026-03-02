@@ -1,16 +1,16 @@
 import { Injectable, NotFoundException } from "@nestjs/common"
 import { InjectRepository } from "@nestjs/typeorm"
 import type { Repository } from "typeorm"
-import { ConversationAgentSession } from "@/domains/conversation-agent-sessions/conversation-agent-session.entity"
+import { ConversationAgentSession } from "@/domains/agents/conversation-agent-sessions/conversation-agent-session.entity"
 import type { ContextResolver, ResolvableRequest } from "../context-resolver.interface"
 import type {
   EndpointRequestWithAgent,
-  EndpointRequestWithAgentSession,
+  EndpointRequestWithConversationAgentSession,
 } from "../request.interface"
 
 @Injectable()
 export class AgentSessionContextResolver implements ContextResolver {
-  readonly resource = "agentSession" as const
+  readonly resource = "conversationAgentSession" as const
 
   constructor(
     @InjectRepository(ConversationAgentSession)
@@ -38,7 +38,8 @@ export class AgentSessionContextResolver implements ContextResolver {
       })) ?? undefined
     if (!agentSession) throw new NotFoundException()
 
-    const requestWithAgentSession = request as EndpointRequestWithAgentSession
-    requestWithAgentSession.agentSession = agentSession
+    const requestWithConversationAgentSession =
+      request as EndpointRequestWithConversationAgentSession
+    requestWithConversationAgentSession.conversationAgentSession = agentSession
   }
 }

@@ -1,7 +1,7 @@
 import { Column, Entity, JoinColumn, ManyToOne, OneToMany } from "typeorm"
 import { Base4AllEntity } from "@/common/entities/base4all.entity"
 import { Agent } from "@/domains/agents/agent.entity"
-import { AgentMessageFeedback } from "@/domains/conversation-agent-sessions/messages/feedback/agent-message-feedback.entity"
+import { AgentMessageFeedback } from "@/domains/agents/conversation-agent-sessions/messages/feedback/agent-message-feedback.entity"
 import { Document } from "@/domains/documents/document.entity"
 import { Organization } from "@/domains/organizations/organization.entity"
 import { Evaluation } from "../evaluations/evaluation.entity"

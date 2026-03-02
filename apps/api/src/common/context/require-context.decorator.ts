@@ -8,7 +8,7 @@ export type ContextResource =
   | "project"
   | "projectMembership"
   | "agent"
-  | "agentSession"
+  | "conversationAgentSession"
   | "document"
   | "evaluation"
   | "evaluationReport"
