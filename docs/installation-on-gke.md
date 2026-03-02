@@ -91,7 +91,9 @@ List of secrets to create:
 - `IMPULSE_LANGFUSE_SK` (value: the one created in STEP 4.)
 - `IMPULSE_AUTH0_M2M_CLIENT_SECRET` (value: the one created in STEP 5.)
 
-7. Create a storage bucket
+7. Create 2 storage buckets
+
+a. One of the files uploaded by the users of the platform.
 
 https://console.cloud.google.com/storage/overview;tab=overview?referrer=search&project=impulse-488513
 
@@ -101,6 +103,23 @@ Name: `eu-connect-file-storage`
 Location: eu (multiple regions in European Union) 
 
 Check the "Enforce public access prevention on this bucket" checkbox. 
+
+b. One for public assets like logo, ...etc
+
+Click on "Create Bucket"
+
+Name: `eu-connect-public-file-storage`
+Location: eu (multiple regions in European Union) 
+
+**Don't** check the "Enforce public access prevention on this bucket" checkbox. 
+
+Then in your terminal:
+
+```bash
+gcloud storage buckets add-iam-policy-binding gs://eu-impulse-public-file-storage \
+  --member=allUsers \
+  --role=roles/storage.objectViewer
+```
 
 8. Create a repository for our Docker image
 
