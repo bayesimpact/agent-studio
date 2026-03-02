@@ -144,13 +144,15 @@ jobs:
             DATABASE_PASSWORD:caseai-connect/CONNECT_DATABASE_PASSWORD
 
       - name: 'create cred file for cloudsql proxy'
-        run: 'mkdir dontsave && echo "$SSH_KEY" > dontsave/key.json && chmod o+r dontsave/key.json'
+        run: 'mkdir -p dontsave && printf "%s" "$GCP_CREDENTIALS_JSON" > dontsave/key.json && chmod o+r dontsave/key.json'
         shell: bash
         env:
-          SSH_KEY: ${{secrets.GCP_CREDENTIALS}}
+          GCP_CREDENTIALS_JSON: ${{secrets.GCP_CREDENTIALS}}
 
       - name: migration
         run: make migrations MIG_DATABASE_PASSWORD=${{ steps.Secrets.outputs.DATABASE_PASSWORD }} REGION=eu
+        env:
+          CLOUDSQL_CREDENTIALS_FILE: dontsave/key.json
 
       - name: deploy
         run: make deploy-only REGION=eu
