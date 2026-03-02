@@ -41,7 +41,7 @@ else ifeq ($(PROJECT),impulse)
 # IMPULSE
 imageUrl = europe-west9-docker.pkg.dev/impulse-488513/impulse/api
 cloudRunName = impulse
-googleVertexProject = impulse
+googleVertexProject = impulse-488513
 googleVertexLocation = europe-west1
 location = europe-west1
 zone = europe-west9
