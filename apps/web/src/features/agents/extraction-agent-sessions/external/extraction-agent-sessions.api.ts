@@ -13,71 +13,42 @@ import type {
 import type { IExtractionAgentSessionsSpi } from "../extraction-agent-sessions.spi"
 
 const api: IExtractionAgentSessionsSpi = {
-  getAllPlayground: async ({ organizationId, projectId, agentId }) => {
+  getAll: async ({ organizationId, projectId, agentId, type }) => {
     const axios = getAxiosInstance()
-    const response = await axios.get<
-      typeof ExtractionAgentSessionsRoutes.getAllPlayground.response
-    >(
-      ExtractionAgentSessionsRoutes.getAllPlayground.getPath({
+    const response = await axios.post<typeof ExtractionAgentSessionsRoutes.getAll.response>(
+      ExtractionAgentSessionsRoutes.getAll.getPath({
         organizationId,
         projectId,
         agentId,
       }),
+      { payload: { type } } satisfies typeof ExtractionAgentSessionsRoutes.getAll.request,
     )
     return response.data.data.map(fromExtractionAgentSessionSummaryDto)
   },
-  getAllLive: async ({ organizationId, projectId, agentId }) => {
+  getOne: async ({ organizationId, projectId, agentId, runId, type }) => {
     const axios = getAxiosInstance()
-    const response = await axios.get<typeof ExtractionAgentSessionsRoutes.getAllLive.response>(
-      ExtractionAgentSessionsRoutes.getAllLive.getPath({ organizationId, projectId, agentId }),
-    )
-    return response.data.data.map(fromExtractionAgentSessionSummaryDto)
-  },
-  getOnePlayground: async ({ organizationId, projectId, agentId, runId }) => {
-    const axios = getAxiosInstance()
-    const response = await axios.get<
-      typeof ExtractionAgentSessionsRoutes.getOnePlayground.response
-    >(
-      ExtractionAgentSessionsRoutes.getOnePlayground.getPath({
+    const response = await axios.post<typeof ExtractionAgentSessionsRoutes.getOne.response>(
+      ExtractionAgentSessionsRoutes.getOne.getPath({
         organizationId,
         projectId,
         agentId,
         runId,
       }),
+      { payload: { type } } satisfies typeof ExtractionAgentSessionsRoutes.getOne.request,
     )
     return fromExtractionAgentSessionDto(response.data.data)
   },
-  getOneLive: async ({ organizationId, projectId, agentId, runId }) => {
+  executeOne: async ({ organizationId, projectId, agentId, documentId, type }) => {
     const axios = getAxiosInstance()
-    const response = await axios.get<typeof ExtractionAgentSessionsRoutes.getOneLive.response>(
-      ExtractionAgentSessionsRoutes.getOneLive.getPath({
-        organizationId,
-        projectId,
-        agentId,
-        runId,
-      }),
-    )
-    return fromExtractionAgentSessionDto(response.data.data)
-  },
-  executePlaygroundOne: async ({ organizationId, projectId, agentId, documentId }) => {
-    const axios = getAxiosInstance()
-    const response = await axios.post<
-      typeof ExtractionAgentSessionsRoutes.executePlaygroundOne.response
-    >(
-      ExtractionAgentSessionsRoutes.executePlaygroundOne.getPath({
+    const response = await axios.post<typeof ExtractionAgentSessionsRoutes.executeOne.response>(
+      ExtractionAgentSessionsRoutes.executeOne.getPath({
         organizationId,
         projectId,
         agentId,
       }),
-      { payload: { documentId } },
-    )
-    return fromExtractionAgentSessionResultDto(response.data.data)
-  },
-  executeLiveOne: async ({ organizationId, projectId, agentId, documentId }) => {
-    const axios = getAxiosInstance()
-    const response = await axios.post<typeof ExtractionAgentSessionsRoutes.executeLiveOne.response>(
-      ExtractionAgentSessionsRoutes.executeLiveOne.getPath({ organizationId, projectId, agentId }),
-      { payload: { documentId } },
+      {
+        payload: { documentId, type },
+      } satisfies typeof ExtractionAgentSessionsRoutes.executeOne.request,
     )
     return fromExtractionAgentSessionResultDto(response.data.data)
   },

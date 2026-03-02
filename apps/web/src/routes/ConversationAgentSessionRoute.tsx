@@ -1,4 +1,4 @@
-import { AgentSession } from "@/components/agent-session/AgentSession"
+import { ConversationAgentSession } from "@/features/agents/conversation-agent-sessions/components/ConversationAgentSession"
 import type {
   ConversationAgentSessionMessage,
   ConversationAgentSession as ConversationAgentSessionType,
@@ -13,7 +13,7 @@ import { useAppSelector } from "@/store/hooks"
 import { ErrorRoute } from "./ErrorRoute"
 import { LoadingRoute } from "./LoadingRoute"
 
-export function AgentSessionRoute() {
+export function ConversationAgentSessionRoute() {
   const agentSession = useAppSelector(selectCurrentConversationAgentSessionData)
   const messages = useAppSelector(selectCurrentMessagesData)
 
@@ -36,6 +36,10 @@ function WithData({
 }) {
   const { isAdminInterface } = useAbility()
   return (
-    <AgentSession isAdminInterface={isAdminInterface} session={agentSession} messages={messages} />
+    <ConversationAgentSession
+      isAdminInterface={isAdminInterface}
+      session={agentSession}
+      messages={messages}
+    />
   )
 }

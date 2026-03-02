@@ -10,7 +10,7 @@ import { useBuildPath } from "@/hooks/use-build-path"
 import { ADS } from "@/store/async-data-status"
 import { useAppSelector } from "@/store/hooks"
 import { buildDate } from "@/utils/build-date"
-import { AgentSessionCreator } from "../../agent-session/AgentSessionCreator"
+import { ConversationAgentSessionCreator } from "../../../features/agents/conversation-agent-sessions/components/ConversationAgentSessionCreator"
 import { NavFeedback } from "../nav/NavFeedback"
 import type { MenuItem } from "../types"
 
@@ -45,7 +45,7 @@ export function AgentSessionList({
   return (
     <SidebarMenuSub>
       {items.length > 0 && (
-        <AgentSessionCreator
+        <ConversationAgentSessionCreator
           organizationId={organizationId}
           projectId={projectId}
           agentId={agentId}

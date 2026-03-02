@@ -4,9 +4,9 @@ import { AlertCircleIcon } from "lucide-react"
 import { useTranslation } from "react-i18next"
 import type { ConversationAgentSessionMessage as ConversationAgentSessionMessageType } from "@/features/agents/conversation-agent-sessions/conversation-agent-sessions.models"
 import { FeedbackCreator } from "../agent-message-feedback/FeedbackCreator"
-import { ChatBotMessage, ChatUserMessage } from "../chat/Chat"
-import { MarkdownWrapper } from "../chat/MarkdownWrapper"
 import { Attachment } from "./Attachment"
+import { ChatBotMessage, ChatUserMessage } from "./Chat"
+import { MarkdownWrapper } from "./MarkdownWrapper"
 
 export function AgentSessionMessage({ message }: { message: ConversationAgentSessionMessageType }) {
   const isAssistant = message.role === "assistant"

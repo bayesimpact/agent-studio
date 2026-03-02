@@ -20,6 +20,7 @@ const mockLlmProvider = {
   generateStructuredOutput: jest.fn().mockResolvedValue({ fullName: "Jane Doe" }),
 }
 
+// FIXME: Why is it skipped? @Olivier @did ??
 describe.skip("ExtractionAgentSessions - Auth", () => {
   let app: INestApplication<App>
   let request: Requester
@@ -82,15 +83,16 @@ describe.skip("ExtractionAgentSessions - Auth", () => {
     auth0Id = user.auth0Id
   }
 
-  describe("ExtractionAgentSessionsRoutes.executePlaygroundOne", () => {
+  describe("ExtractionAgentSessionsRoutes.executeOne", () => {
     const subject = async () =>
       request({
-        route: ExtractionAgentSessionsRoutes.executePlaygroundOne,
+        route: ExtractionAgentSessionsRoutes.executeOne,
         pathParams: removeNullish({ organizationId, projectId, agentId }),
         token: accessToken ?? undefined,
         request: {
           payload: {
             documentId: randomUUID(),
+            type: "playground",
           },
         },
       })
@@ -123,12 +125,13 @@ describe.skip("ExtractionAgentSessions - Auth", () => {
     })
   })
 
-  describe("ExtractionAgentSessionsRoutes.getAllPlayground", () => {
+  describe("ExtractionAgentSessionsRoutes.getAll", () => {
     const subject = async () =>
       request({
-        route: ExtractionAgentSessionsRoutes.getAllPlayground,
+        route: ExtractionAgentSessionsRoutes.getAll,
         pathParams: removeNullish({ organizationId, projectId, agentId }),
         token: accessToken ?? undefined,
+        request: { payload: { type: "playground" } },
       })
 
     it("requires authentication", async () => {
@@ -142,12 +145,13 @@ describe.skip("ExtractionAgentSessions - Auth", () => {
     })
   })
 
-  describe("ExtractionAgentSessionsRoutes.getOnePlayground", () => {
+  describe("ExtractionAgentSessionsRoutes.getOne", () => {
     const subject = async () =>
       request({
-        route: ExtractionAgentSessionsRoutes.getOnePlayground,
+        route: ExtractionAgentSessionsRoutes.getOne,
         pathParams: removeNullish({ organizationId, projectId, agentId, runId }),
         token: accessToken ?? undefined,
+        request: { payload: { type: "playground" } },
       })
 
     it("requires authentication", async () => {

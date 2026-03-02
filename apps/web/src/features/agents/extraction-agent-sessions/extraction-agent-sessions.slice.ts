@@ -24,13 +24,12 @@ const slice = createSlice({
         state.data.error = null
       })
       .addCase(listExtractionAgentSessions.fulfilled, (state, action) => {
-        const runsKey = `${action.meta.arg.agentId}:${action.meta.arg.playground ? "playground" : "live"}`
         state.data = {
           status: ADS.Fulfilled,
           error: null,
           value: {
             ...state.data.value,
-            [runsKey]: action.payload,
+            [action.meta.arg.agentId]: action.payload,
           },
         }
       })

@@ -1,5 +1,5 @@
 import { AgentRoute } from "./AgentRoute"
-import { AgentSessionRoute } from "./AgentSessionRoute"
+import { ConversationAgentSessionRoute } from "./ConversationAgentSessionRoute"
 import { DashboardRoute } from "./DashboardRoute"
 import { RouteNames } from "./helpers"
 import { ProjectRoute } from "./ProjectRoute"
@@ -21,7 +21,7 @@ export const getElement = (routeNames: RouteNames) => {
       return <AgentRoute />
 
     case RouteNames.AGENT_SESSION:
-      return <AgentSessionRoute />
+      return <ConversationAgentSessionRoute />
 
     default:
       break

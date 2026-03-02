@@ -7,34 +7,25 @@ import type {
 } from "./extraction-agent-sessions.dto"
 
 export const ExtractionAgentSessionsRoutes = {
-  executePlaygroundOne: defineRoute<
+  executeOne: defineRoute<
     ResponseData<ExtractionAgentSessionResultDto>,
-    RequestPayload<Pick<ExtractionAgentSessionSummaryDto, "documentId">>
+    RequestPayload<Pick<ExtractionAgentSessionSummaryDto, "documentId" | "type">>
   >({
     method: "post",
-    path: "organizations/:organizationId/projects/:projectId/agents/:agentId/playground/extract",
+    path: "organizations/:organizationId/projects/:projectId/agents/:agentId/extraction-agent-sessions/execute",
   }),
-  executeLiveOne: defineRoute<
-    ResponseData<ExtractionAgentSessionResultDto>,
-    RequestPayload<Pick<ExtractionAgentSessionSummaryDto, "documentId">>
+  getAll: defineRoute<
+    ResponseData<ExtractionAgentSessionSummaryDto[]>,
+    RequestPayload<Pick<ExtractionAgentSessionSummaryDto, "type">>
   >({
     method: "post",
-    path: "organizations/:organizationId/projects/:projectId/agents/:agentId/live/extract",
+    path: "organizations/:organizationId/projects/:projectId/agents/:agentId/extraction-agent-sessions",
   }),
-  getAllPlayground: defineRoute<ResponseData<ExtractionAgentSessionSummaryDto[]>>({
-    method: "get",
-    path: "organizations/:organizationId/projects/:projectId/agents/:agentId/playground/extraction-runs",
-  }),
-  getAllLive: defineRoute<ResponseData<ExtractionAgentSessionSummaryDto[]>>({
-    method: "get",
-    path: "organizations/:organizationId/projects/:projectId/agents/:agentId/live/extraction-runs",
-  }),
-  getOnePlayground: defineRoute<ResponseData<ExtractionAgentSessionDto>>({
-    method: "get",
-    path: "organizations/:organizationId/projects/:projectId/agents/:agentId/playground/extraction-runs/:runId",
-  }),
-  getOneLive: defineRoute<ResponseData<ExtractionAgentSessionDto>>({
-    method: "get",
-    path: "organizations/:organizationId/projects/:projectId/agents/:agentId/live/extraction-runs/:runId",
+  getOne: defineRoute<
+    ResponseData<ExtractionAgentSessionDto>,
+    RequestPayload<Pick<ExtractionAgentSessionSummaryDto, "type">>
+  >({
+    method: "post",
+    path: "organizations/:organizationId/projects/:projectId/agents/:agentId/extraction-agent-sessions/:runId",
   }),
 }

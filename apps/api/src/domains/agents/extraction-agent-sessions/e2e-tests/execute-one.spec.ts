@@ -19,6 +19,7 @@ const mockLlmProvider = {
   generateStructuredOutput: jest.fn(),
 }
 
+// FIXME: Why is it skipped? @Olivier @did ??
 describe.skip("ExtractionAgentSessions - executeOne", () => {
   let app: INestApplication<App>
   let request: Requester
@@ -91,52 +92,57 @@ describe.skip("ExtractionAgentSessions - executeOne", () => {
   }
 
   const subjectExecutePlayground = async (
-    payload?: typeof ExtractionAgentSessionsRoutes.executePlaygroundOne.request,
+    payload?: typeof ExtractionAgentSessionsRoutes.executeOne.request,
   ) =>
     request({
-      route: ExtractionAgentSessionsRoutes.executePlaygroundOne,
+      route: ExtractionAgentSessionsRoutes.executeOne,
       pathParams: removeNullish({ organizationId, projectId, agentId }),
       token: accessToken,
       request: payload ?? {
         payload: {
           documentId,
+          type: "playground",
         },
       },
     })
 
   const subjectExecuteLive = async (
-    payload?: typeof ExtractionAgentSessionsRoutes.executeLiveOne.request,
+    payload?: typeof ExtractionAgentSessionsRoutes.executeOne.request,
   ) =>
     request({
-      route: ExtractionAgentSessionsRoutes.executeLiveOne,
+      route: ExtractionAgentSessionsRoutes.executeOne,
       pathParams: removeNullish({ organizationId, projectId, agentId }),
       token: accessToken,
       request: payload ?? {
         payload: {
           documentId,
+          type: "live",
         },
       },
     })
 
   const subjectGetAllPlayground = async () =>
     request({
-      route: ExtractionAgentSessionsRoutes.getAllPlayground,
+      route: ExtractionAgentSessionsRoutes.getAll,
       pathParams: removeNullish({ organizationId, projectId, agentId }),
       token: accessToken,
+      request: { payload: { type: "playground" } },
     })
 
   const subjectGetAllLive = async () =>
     request({
-      route: ExtractionAgentSessionsRoutes.getAllLive,
+      route: ExtractionAgentSessionsRoutes.getAll,
       pathParams: removeNullish({ organizationId, projectId, agentId }),
       token: accessToken,
+      request: { payload: { type: "live" } },
     })
 
   const subjectGetOnePlayground = async (runId: string) =>
     request({
-      route: ExtractionAgentSessionsRoutes.getOnePlayground,
+      route: ExtractionAgentSessionsRoutes.getOne,
       pathParams: removeNullish({ organizationId, projectId, agentId, runId }),
       token: accessToken,
+      request: { payload: { type: "playground" } },
     })
 
   it("should execute extraction, persist a run, and expose it in history endpoints", async () => {
@@ -184,7 +190,7 @@ describe.skip("ExtractionAgentSessions - executeOne", () => {
     mockLlmProvider.generateStructuredOutput.mockResolvedValue({ fullName: "Jane Doe" })
 
     const response = await subjectExecutePlayground({
-      payload: { documentId },
+      payload: { documentId, type: "playground" },
     })
     expectResponse(response, 422)
   })

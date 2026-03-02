@@ -9,10 +9,10 @@ type Request = RequestPayload<{ type: ConversationAgentSessionTypeDto }>
 export const ConversationAgentSessionsRoutes = {
   getAll: defineRoute<ResponseData<ConversationAgentSessionDto[]>, Request>({
     method: "post",
-    path: "/organizations/:organizationId/projects/:projectId/agents/:agentId/sessions",
+    path: "/organizations/:organizationId/projects/:projectId/agents/:agentId/conversation-agent-sessions",
   }),
   createOne: defineRoute<ResponseData<ConversationAgentSessionDto>, Request>({
     method: "post",
-    path: "/organizations/:organizationId/projects/:projectId/agents/:agentId/session",
+    path: "/organizations/:organizationId/projects/:projectId/agents/:agentId/conversation-agent-sessions/create",
   }),
 }
