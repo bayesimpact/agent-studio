@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto"
-import { AgentSessionsRoutes } from "@caseai-connect/api-contracts"
+import { ConversationAgentSessionsRoutes } from "@caseai-connect/api-contracts"
 import { afterAll } from "@jest/globals"
 import type { INestApplication } from "@nestjs/common"
 import type { App } from "supertest/types"
@@ -80,10 +80,10 @@ describe("Agent Sessions - Auth", () => {
     auth0Id = user.auth0Id
   }
 
-  describe("AgentSessionsRoutes.getAllPlaygroundSessions", () => {
+  describe("ConversationAgentSessionsRoutes.getAllPlaygroundSessions", () => {
     const subject = async () =>
       request({
-        route: AgentSessionsRoutes.getAllPlaygroundSessions,
+        route: ConversationAgentSessionsRoutes.getAllPlaygroundSessions,
         pathParams: removeNullish({ organizationId, projectId, agentId }),
         token: accessToken ?? undefined,
       })
@@ -120,10 +120,10 @@ describe("Agent Sessions - Auth", () => {
     })
   })
 
-  describe("AgentSessionsRoutes.createPlaygroundSession", () => {
+  describe("ConversationAgentSessionsRoutes.createPlaygroundSession", () => {
     const subject = async () =>
       request({
-        route: AgentSessionsRoutes.createPlaygroundSession,
+        route: ConversationAgentSessionsRoutes.createPlaygroundSession,
         pathParams: removeNullish({ organizationId, projectId, agentId }),
         token: accessToken ?? undefined,
       })
@@ -160,10 +160,10 @@ describe("Agent Sessions - Auth", () => {
     })
   })
 
-  describe("AgentSessionsRoutes.getAllAppSessions", () => {
+  describe("ConversationAgentSessionsRoutes.getAllAppSessions", () => {
     const subject = async () =>
       request({
-        route: AgentSessionsRoutes.getAllAppSessions,
+        route: ConversationAgentSessionsRoutes.getAllAppSessions,
         pathParams: removeNullish({ organizationId, projectId, agentId }),
         token: accessToken ?? undefined,
       })
@@ -188,16 +188,18 @@ describe("Agent Sessions - Auth", () => {
     })
   })
 
-  describe("AgentSessionsRoutes.createAppSession", () => {
-    const subject = async (payload: typeof AgentSessionsRoutes.createAppSession.request) =>
+  describe("ConversationAgentSessionsRoutes.createAppSession", () => {
+    const subject = async (
+      payload: typeof ConversationAgentSessionsRoutes.createAppSession.request,
+    ) =>
       request({
-        route: AgentSessionsRoutes.createAppSession,
+        route: ConversationAgentSessionsRoutes.createAppSession,
         pathParams: removeNullish({ organizationId, projectId, agentId }),
         token: accessToken ?? undefined,
         request: payload,
       })
 
-    const payload: typeof AgentSessionsRoutes.createAppSession.request = {
+    const payload: typeof ConversationAgentSessionsRoutes.createAppSession.request = {
       payload: { agentSessionType: "app-private" },
     }
 

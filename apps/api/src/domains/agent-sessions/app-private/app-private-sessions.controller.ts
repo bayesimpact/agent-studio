@@ -1,4 +1,7 @@
-import { type AgentSessionDto, AgentSessionsRoutes } from "@caseai-connect/api-contracts"
+import {
+  type AgentSessionDto,
+  ConversationAgentSessionsRoutes,
+} from "@caseai-connect/api-contracts"
 import { Body, Controller, Get, Post, Req, UseGuards } from "@nestjs/common"
 import type { EndpointRequestWithAgent } from "@/common/context/request.interface"
 import { getRequiredConnectScope } from "@/common/context/request-context.helpers"
@@ -19,10 +22,10 @@ export class AppPrivateSessionsController {
   constructor(private readonly agentSessionsService: AgentSessionsService) {}
 
   @CheckPolicy((policy) => policy.canList())
-  @Get(AgentSessionsRoutes.getAllAppSessions.path)
+  @Get(ConversationAgentSessionsRoutes.getAllAppSessions.path)
   async getAllAppSessions(
     @Req() request: EndpointRequestWithAgent,
-  ): Promise<typeof AgentSessionsRoutes.getAllAppSessions.response> {
+  ): Promise<typeof ConversationAgentSessionsRoutes.getAllAppSessions.response> {
     const sessions = await this.agentSessionsService.getAllSessionsForAgent({
       connectScope: getRequiredConnectScope(request),
       agentId: request.agent.id,
@@ -34,11 +37,11 @@ export class AppPrivateSessionsController {
   }
 
   @CheckPolicy((policy) => policy.canCreate())
-  @Post(AgentSessionsRoutes.createAppSession.path)
+  @Post(ConversationAgentSessionsRoutes.createAppSession.path)
   async createAppSession(
     @Req() request: EndpointRequestWithAgent,
-    @Body() { payload }: typeof AgentSessionsRoutes.createAppSession.request,
-  ): Promise<typeof AgentSessionsRoutes.createAppSession.response> {
+    @Body() { payload }: typeof ConversationAgentSessionsRoutes.createAppSession.request,
+  ): Promise<typeof ConversationAgentSessionsRoutes.createAppSession.response> {
     if (payload.agentSessionType !== "app-private") {
       throw new Error("Session type not supported.")
     }

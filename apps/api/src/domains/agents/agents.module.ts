@@ -17,18 +17,18 @@ import { LlmModule } from "@/external/llm/llm.module"
 import { ProjectsModule } from "../projects/projects.module"
 import { Agent } from "./agent.entity"
 import { AgentGuard } from "./agent.guard"
-import { AgentExtractionRun } from "./agent-extraction-runs/agent-extraction-run.entity"
-import { AgentExtractionRunsController } from "./agent-extraction-runs/agent-extraction-runs.controller"
-import { AgentExtractionRunsGuard } from "./agent-extraction-runs/agent-extraction-runs.guard"
-import { AgentExtractionRunsService } from "./agent-extraction-runs/agent-extraction-runs.service"
 import { AgentsController } from "./agents.controller"
 import { AgentsService } from "./agents.service"
+import { ExtractionAgentSession } from "./extraction-agent-sessions/extraction-agent-session.entity"
+import { ExtractionAgentSessionsController } from "./extraction-agent-sessions/extraction-agent-sessions.controller"
+import { ExtractionAgentSessionsGuard } from "./extraction-agent-sessions/extraction-agent-sessions.guard"
+import { ExtractionAgentSessionsService } from "./extraction-agent-sessions/extraction-agent-sessions.service"
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([
       Agent,
-      AgentExtractionRun,
+      ExtractionAgentSession,
       Project,
       UserMembership,
       ProjectMembership,
@@ -44,15 +44,15 @@ import { AgentsService } from "./agents.service"
   ],
   providers: [
     AgentsService,
-    AgentExtractionRunsService,
-    AgentExtractionRunsGuard,
+    ExtractionAgentSessionsService,
+    ExtractionAgentSessionsGuard,
     AgentGuard,
     ResourceContextGuard,
     OrganizationContextResolver,
     ProjectContextResolver,
     AgentContextResolver,
   ],
-  controllers: [AgentsController, AgentExtractionRunsController],
-  exports: [AgentsService, AgentExtractionRunsService],
+  controllers: [AgentsController, ExtractionAgentSessionsController],
+  exports: [AgentsService, ExtractionAgentSessionsService],
 })
 export class AgentsModule {}

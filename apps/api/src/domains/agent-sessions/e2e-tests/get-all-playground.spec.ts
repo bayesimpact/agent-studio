@@ -1,4 +1,4 @@
-import { AgentSessionsRoutes } from "@caseai-connect/api-contracts"
+import { ConversationAgentSessionsRoutes } from "@caseai-connect/api-contracts"
 import { afterAll } from "@jest/globals"
 import type { INestApplication } from "@nestjs/common"
 import type { App } from "supertest/types"
@@ -16,7 +16,7 @@ import { expectResponse, type Requester, testRequester } from "../../../../test/
 import { agentSessionFactory } from "../agent-session.factory"
 import { AgentSessionsModule } from "../agent-sessions.module"
 
-describe("AgentSessionsRoutes.getAllPlaygroundSessions", () => {
+describe("ConversationAgentSessionsRoutes.getAllPlaygroundSessions", () => {
   let app: INestApplication<App>
   let request: Requester
   let setup: Awaited<ReturnType<typeof setupTransactionalTestDatabase>>
@@ -129,7 +129,7 @@ describe("AgentSessionsRoutes.getAllPlaygroundSessions", () => {
 
   const subject = async () =>
     request({
-      route: AgentSessionsRoutes.getAllPlaygroundSessions,
+      route: ConversationAgentSessionsRoutes.getAllPlaygroundSessions,
       pathParams: removeNullish({ organizationId, projectId, agentId }),
       token: accessToken,
     })

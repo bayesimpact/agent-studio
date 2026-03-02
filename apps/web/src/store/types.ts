@@ -1,9 +1,9 @@
 import type { ThunkDispatch, UnknownAction } from "@reduxjs/toolkit"
 import type { Services } from "@/di/services"
-import type { agentExtractionRunsSliceReducer } from "@/features/agent-extraction-runs/agent-extraction-runs.slice"
 import type { agentMessageFeedbackSliceReducer } from "@/features/agent-message-feedback/agent-message-feedback.slice"
 import type { agentSessionsSliceReducer } from "@/features/agent-sessions/agent-sessions.slice"
 import type { agentsSliceReducer } from "@/features/agents/agents.slice"
+import type { extractionAgentSessionsSliceReducer } from "@/features/agents/extraction-agent-sessions/extraction-agent-sessions.slice"
 import type { authSliceReducer } from "@/features/auth/auth.slice"
 import type { documentsSliceReducer } from "@/features/documents/documents.slice"
 import type { evaluationReportsSliceReducer } from "@/features/evaluation-reports/evaluation-reports.slice"
@@ -18,7 +18,7 @@ import type { projectsSliceReducer } from "@/features/projects/projects.slice"
 // This allows us to use these types in listenerMiddleware without circular dependencies
 export type RootState = {
   agentMessageFeedback: ReturnType<typeof agentMessageFeedbackSliceReducer>
-  agentExtractionRuns: ReturnType<typeof agentExtractionRunsSliceReducer>
+  extractionAgentSessions: ReturnType<typeof extractionAgentSessionsSliceReducer>
   auth: ReturnType<typeof authSliceReducer>
   agents: ReturnType<typeof agentsSliceReducer>
   agentSessions: ReturnType<typeof agentSessionsSliceReducer>

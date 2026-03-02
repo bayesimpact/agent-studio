@@ -2,7 +2,7 @@ import {
   type AgentSessionDto,
   type AgentSessionMessageDto,
   AgentSessionMessagesRoutes,
-  AgentSessionsRoutes,
+  ConversationAgentSessionsRoutes,
 } from "@caseai-connect/api-contracts"
 import { getAxiosInstance } from "@/external/axios"
 import type { AgentSession, AgentSessionMessage } from "../agent-sessions.models"
@@ -19,8 +19,14 @@ export default {
     agentId: string
   }) => {
     const axios = getAxiosInstance()
-    const response = await axios.get<typeof AgentSessionsRoutes.getAllPlaygroundSessions.response>(
-      AgentSessionsRoutes.getAllPlaygroundSessions.getPath({ organizationId, projectId, agentId }),
+    const response = await axios.get<
+      typeof ConversationAgentSessionsRoutes.getAllPlaygroundSessions.response
+    >(
+      ConversationAgentSessionsRoutes.getAllPlaygroundSessions.getPath({
+        organizationId,
+        projectId,
+        agentId,
+      }),
     )
     return response.data.data.map(fromDto)
   },
@@ -34,8 +40,14 @@ export default {
     agentId: string
   }) => {
     const axios = getAxiosInstance()
-    const response = await axios.get<typeof AgentSessionsRoutes.getAllAppSessions.response>(
-      AgentSessionsRoutes.getAllAppSessions.getPath({ organizationId, projectId, agentId }),
+    const response = await axios.get<
+      typeof ConversationAgentSessionsRoutes.getAllAppSessions.response
+    >(
+      ConversationAgentSessionsRoutes.getAllAppSessions.getPath({
+        organizationId,
+        projectId,
+        agentId,
+      }),
     )
     return response.data.data.map(fromDto)
   },
@@ -49,8 +61,14 @@ export default {
     agentId: string
   }) => {
     const axios = getAxiosInstance()
-    const response = await axios.post<typeof AgentSessionsRoutes.createPlaygroundSession.response>(
-      AgentSessionsRoutes.createPlaygroundSession.getPath({ organizationId, projectId, agentId }),
+    const response = await axios.post<
+      typeof ConversationAgentSessionsRoutes.createPlaygroundSession.response
+    >(
+      ConversationAgentSessionsRoutes.createPlaygroundSession.getPath({
+        organizationId,
+        projectId,
+        agentId,
+      }),
     )
 
     return fromDto(response.data.data)
@@ -67,11 +85,17 @@ export default {
     agentSessionType: "app-private"
   }) => {
     const axios = getAxiosInstance()
-    const response = await axios.post<typeof AgentSessionsRoutes.createAppSession.response>(
-      AgentSessionsRoutes.createAppSession.getPath({ organizationId, projectId, agentId }),
+    const response = await axios.post<
+      typeof ConversationAgentSessionsRoutes.createAppSession.response
+    >(
+      ConversationAgentSessionsRoutes.createAppSession.getPath({
+        organizationId,
+        projectId,
+        agentId,
+      }),
       {
         payload: { agentSessionType },
-      } satisfies typeof AgentSessionsRoutes.createAppSession.request,
+      } satisfies typeof ConversationAgentSessionsRoutes.createAppSession.request,
     )
     return fromDto(response.data.data)
   },

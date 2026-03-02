@@ -1,4 +1,7 @@
-import { type AgentSessionDto, AgentSessionsRoutes } from "@caseai-connect/api-contracts"
+import {
+  type AgentSessionDto,
+  ConversationAgentSessionsRoutes,
+} from "@caseai-connect/api-contracts"
 import { Controller, Get, Post, Req, UseGuards } from "@nestjs/common"
 import type { EndpointRequestWithAgent } from "@/common/context/request.interface"
 import { getRequiredConnectScope } from "@/common/context/request-context.helpers"
@@ -20,10 +23,10 @@ export class PlaygroundSessionsController {
   constructor(private readonly agentSessionsService: AgentSessionsService) {}
 
   @CheckPolicy((policy) => policy.canList())
-  @Get(AgentSessionsRoutes.getAllPlaygroundSessions.path)
+  @Get(ConversationAgentSessionsRoutes.getAllPlaygroundSessions.path)
   async getAllPlaygroundSessions(
     @Req() request: EndpointRequestWithAgent,
-  ): Promise<typeof AgentSessionsRoutes.getAllPlaygroundSessions.response> {
+  ): Promise<typeof ConversationAgentSessionsRoutes.getAllPlaygroundSessions.response> {
     const sessions = await this.agentSessionsService.getAllSessionsForAgent({
       connectScope: getRequiredConnectScope(request),
       agentId: request.agent.id,
@@ -35,10 +38,10 @@ export class PlaygroundSessionsController {
   }
 
   @CheckPolicy((policy) => policy.canCreate())
-  @Post(AgentSessionsRoutes.createPlaygroundSession.path)
+  @Post(ConversationAgentSessionsRoutes.createPlaygroundSession.path)
   async createPlaygroundSession(
     @Req() request: EndpointRequestWithAgent,
-  ): Promise<typeof AgentSessionsRoutes.createPlaygroundSession.response> {
+  ): Promise<typeof ConversationAgentSessionsRoutes.createPlaygroundSession.response> {
     const session = await this.agentSessionsService.createPlaygroundSession({
       connectScope: getRequiredConnectScope(request),
       agentId: request.agent.id,

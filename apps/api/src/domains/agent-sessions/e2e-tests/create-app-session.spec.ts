@@ -1,4 +1,4 @@
-import { AgentSessionsRoutes } from "@caseai-connect/api-contracts"
+import { ConversationAgentSessionsRoutes } from "@caseai-connect/api-contracts"
 import type { INestApplication } from "@nestjs/common"
 import type { App } from "supertest/types"
 import { clearTestDatabase } from "@/common/test/test-database"
@@ -14,7 +14,7 @@ import { setupUserGuardForTesting } from "../../../../test/e2e.helpers"
 import { expectResponse, type Requester, testRequester } from "../../../../test/request"
 import { AgentSessionsModule } from "../agent-sessions.module"
 
-describe("AgentSessionsRoutes.createAppSession", () => {
+describe("ConversationAgentSessionsRoutes.createAppSession", () => {
   let app: INestApplication<App>
   let request: Requester
   let setup: Awaited<ReturnType<typeof setupTransactionalTestDatabase>>
@@ -61,9 +61,11 @@ describe("AgentSessionsRoutes.createAppSession", () => {
     auth0Id = invitedUser.auth0Id
   }
 
-  const subject = async (payload?: typeof AgentSessionsRoutes.createAppSession.request) =>
+  const subject = async (
+    payload?: typeof ConversationAgentSessionsRoutes.createAppSession.request,
+  ) =>
     request({
-      route: AgentSessionsRoutes.createAppSession,
+      route: ConversationAgentSessionsRoutes.createAppSession,
       pathParams: removeNullish({ organizationId, projectId, agentId }),
       token: accessToken,
       request: payload,
