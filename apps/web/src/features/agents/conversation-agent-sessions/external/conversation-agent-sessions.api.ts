@@ -12,115 +12,37 @@ import type {
 import type { IConversationAgentSessionsSpi } from "../conversation-agent-sessions.spi"
 
 export default {
-  getAllPlaygroundSessions: async ({
-    organizationId,
-    projectId,
-    agentId,
-  }: {
-    organizationId: string
-    projectId: string
-    agentId: string
-  }) => {
+  getAll: async ({ organizationId, projectId, agentId, type }) => {
     const axios = getAxiosInstance()
-    const response = await axios.get<
-      typeof ConversationAgentSessionsRoutes.getAllPlaygroundSessions.response
-    >(
-      ConversationAgentSessionsRoutes.getAllPlaygroundSessions.getPath({
-        organizationId,
-        projectId,
-        agentId,
-      }),
+    const response = await axios.post<typeof ConversationAgentSessionsRoutes.getAll.response>(
+      ConversationAgentSessionsRoutes.getAll.getPath({ organizationId, projectId, agentId }),
+      { payload: { type } } satisfies typeof ConversationAgentSessionsRoutes.getAll.request,
     )
     return response.data.data.map(fromDto)
   },
-  getAllAppSessions: async ({
-    organizationId,
-    projectId,
-    agentId,
-  }: {
-    organizationId: string
-    projectId: string
-    agentId: string
-  }) => {
+  createOne: async ({ organizationId, projectId, agentId, type }) => {
     const axios = getAxiosInstance()
-    const response = await axios.get<
-      typeof ConversationAgentSessionsRoutes.getAllAppSessions.response
-    >(
-      ConversationAgentSessionsRoutes.getAllAppSessions.getPath({
+    const response = await axios.post<typeof ConversationAgentSessionsRoutes.createOne.response>(
+      ConversationAgentSessionsRoutes.createOne.getPath({
         organizationId,
         projectId,
         agentId,
       }),
-    )
-    return response.data.data.map(fromDto)
-  },
-  createPlaygroundSession: async ({
-    organizationId,
-    projectId,
-    agentId,
-  }: {
-    organizationId: string
-    projectId: string
-    agentId: string
-  }) => {
-    const axios = getAxiosInstance()
-    const response = await axios.post<
-      typeof ConversationAgentSessionsRoutes.createPlaygroundSession.response
-    >(
-      ConversationAgentSessionsRoutes.createPlaygroundSession.getPath({
-        organizationId,
-        projectId,
-        agentId,
-      }),
+      { payload: { type } } satisfies typeof ConversationAgentSessionsRoutes.createOne.request,
     )
 
     return fromDto(response.data.data)
   },
-  createAppSession: async ({
-    organizationId,
-    projectId,
-    agentId,
-    agentSessionType,
-  }: {
-    organizationId: string
-    projectId: string
-    agentId: string
-    agentSessionType: "app-private"
-  }) => {
+  getMessages: async ({ organizationId, projectId, agentId, agentSessionId, type }) => {
     const axios = getAxiosInstance()
-    const response = await axios.post<
-      typeof ConversationAgentSessionsRoutes.createAppSession.response
-    >(
-      ConversationAgentSessionsRoutes.createAppSession.getPath({
-        organizationId,
-        projectId,
-        agentId,
-      }),
-      {
-        payload: { agentSessionType },
-      } satisfies typeof ConversationAgentSessionsRoutes.createAppSession.request,
-    )
-    return fromDto(response.data.data)
-  },
-  getMessages: async ({
-    organizationId,
-    projectId,
-    agentId,
-    agentSessionId,
-  }: {
-    organizationId: string
-    projectId: string
-    agentId: string
-    agentSessionId: string
-  }) => {
-    const axios = getAxiosInstance()
-    const response = await axios.get<typeof AgentSessionMessagesRoutes.listMessages.response>(
+    const response = await axios.post<typeof AgentSessionMessagesRoutes.listMessages.response>(
       AgentSessionMessagesRoutes.listMessages.getPath({
         organizationId,
         projectId,
         agentId,
         agentSessionId,
       }),
+      { payload: { type } } satisfies typeof AgentSessionMessagesRoutes.listMessages.request,
     )
 
     return fromMessagesDto(response.data.data)

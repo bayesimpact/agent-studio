@@ -45,6 +45,7 @@ export const createProjectMembership = async ({
   organization,
   project,
   user,
+  role,
 }: {
   repositories: {
     userRepository: Repository<User>
@@ -54,6 +55,7 @@ export const createProjectMembership = async ({
   organization?: Organization
   project: Project
   user?: Partial<User>
+  role?: "owner" | "member" | "admin"
 }) => {
   user = user ?? {
     email: "invited@example.com",
@@ -65,7 +67,9 @@ export const createProjectMembership = async ({
 
   if (organization) {
     await repositories.membershipRepository.save(
-      userMembershipFactory.transient({ user: invitedUser, organization }).build(),
+      role
+        ? userMembershipFactory.transient({ user: invitedUser, organization }).build({ role })
+        : userMembershipFactory.transient({ user: invitedUser, organization }).build(),
     )
   }
 

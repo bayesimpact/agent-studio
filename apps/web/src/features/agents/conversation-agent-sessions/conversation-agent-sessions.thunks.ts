@@ -24,17 +24,11 @@ export const listConversationAgentSessions = createAsyncThunk<
       state,
       wantedIds: ["organizationId", "projectId"],
     })
-    if (playground) {
-      return services.conversationAgentSessions.getAllPlaygroundSessions({
-        organizationId,
-        projectId,
-        agentId,
-      })
-    }
-    return services.conversationAgentSessions.getAllAppSessions({
+    return services.conversationAgentSessions.getAll({
       organizationId,
       projectId,
       agentId,
+      type: playground ? "playground" : "live",
     })
   },
 )
@@ -52,17 +46,11 @@ export const createConversationAgentSession = createAsyncThunk<
       state,
       wantedIds: ["organizationId", "projectId"],
     })
-    if (isAdminInterface)
-      return services.conversationAgentSessions.createPlaygroundSession({
-        organizationId,
-        projectId,
-        agentId,
-      })
-    return services.conversationAgentSessions.createAppSession({
+    return services.conversationAgentSessions.createOne({
       organizationId,
       projectId,
       agentId,
-      agentSessionType: "app-private",
+      type: isAdminInterface ? "playground" : "live",
     })
   },
 )
@@ -79,11 +67,13 @@ export const loadSessionMessages = createAsyncThunk<
       state,
       wantedIds: ["organizationId", "projectId", "agentId"],
     })
+    const isAdminInterface = selectIsAdminInterface(state)
     return services.conversationAgentSessions.getMessages({
       organizationId,
       projectId,
       agentId,
       agentSessionId,
+      type: isAdminInterface ? "playground" : "live",
     })
   },
 )

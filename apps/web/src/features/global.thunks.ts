@@ -27,21 +27,13 @@ export const initOrganization = createAsyncThunk<
     agents[project.id] = agts
 
     for (const agent of agts) {
-      if (isAdminInterface) {
-        const sessions = await services.conversationAgentSessions.getAllPlaygroundSessions({
-          organizationId,
-          projectId: project.id,
-          agentId: agent.id,
-        })
-        agentSessions[agent.id] = sessions
-      } else {
-        const sessions = await services.conversationAgentSessions.getAllAppSessions({
-          organizationId,
-          projectId: project.id,
-          agentId: agent.id,
-        })
-        agentSessions[agent.id] = sessions
-      }
+      const sessions = await services.conversationAgentSessions.getAll({
+        organizationId,
+        projectId: project.id,
+        agentId: agent.id,
+        type: isAdminInterface ? "playground" : "live",
+      })
+      agentSessions[agent.id] = sessions
     }
   }
 

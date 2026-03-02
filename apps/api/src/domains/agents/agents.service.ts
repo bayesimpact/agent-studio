@@ -4,7 +4,7 @@ import type { Repository } from "typeorm"
 import { ConnectRepository } from "@/common/entities/connect-repository"
 import type { RequiredConnectScope } from "@/common/entities/connect-required-fields"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
-import { ConversationAgentSessionsService } from "@/domains/conversation-agent-sessions/conversation-agent-sessions.service"
+import { ConversationAgentSessionsService } from "@/domains/agents/conversation-agent-sessions/conversation-agent-sessions.service"
 import { Agent } from "./agent.entity"
 
 @Injectable()
