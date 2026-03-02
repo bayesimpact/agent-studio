@@ -1,6 +1,7 @@
 import { Module } from "@nestjs/common"
 import { TypeOrmModule } from "@nestjs/typeorm"
 import { AuthModule } from "@/domains/auth/auth.module"
+import { FeatureFlag } from "@/domains/feature-flags/feature-flag.entity"
 import { User } from "@/domains/users/user.entity"
 import { UsersModule } from "@/domains/users/users.module"
 import { Organization } from "./organization.entity"
@@ -12,7 +13,7 @@ import { UserMembershipService } from "./user-membership.service"
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Organization, UserMembership, User]),
+    TypeOrmModule.forFeature([Organization, UserMembership, User, FeatureFlag]),
     UsersModule,
     AuthModule,
   ],

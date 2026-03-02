@@ -6,6 +6,7 @@ import {
 } from "@/common/test/test-transaction-manager"
 import { User } from "@/domains/users/user.entity"
 import { userFactory } from "@/domains/users/user.factory"
+import { FeatureFlag } from "../feature-flags/feature-flag.entity"
 import { Organization } from "./organization.entity"
 import { organizationFactory } from "./organization.factory"
 import { OrganizationsModule } from "./organizations.module"
@@ -39,6 +40,7 @@ describe("OrganizationsService", () => {
     service = setup.module.get<OrganizationsService>(OrganizationsService)
     organizationRepository = setup.getRepository(Organization)
     membershipRepository = setup.getRepository(UserMembership)
+    setup.getRepository(FeatureFlag)
     userRepository = setup.getRepository(User)
   })
 

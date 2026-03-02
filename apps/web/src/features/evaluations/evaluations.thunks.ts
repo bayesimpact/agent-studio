@@ -1,4 +1,5 @@
 import { createAsyncThunk } from "@reduxjs/toolkit"
+import { hasFeatureOrThrow } from "@/hooks/use-feature-falgs"
 import type { RootState, ThunkExtraArg } from "@/store"
 import { getCurrentIds } from "../helpers"
 import type { Evaluation } from "./evaluations.models"
@@ -8,7 +9,9 @@ type ThunkConfig = { state: RootState; extra: ThunkExtraArg }
 export const listEvaluations = createAsyncThunk<Evaluation[], void, ThunkConfig>(
   "evaluations/list",
   async (_, { extra: { services }, getState }) => {
-    const params = getCurrentIds({ state: getState(), wantedIds: ["organizationId", "projectId"] })
+    const state = getState()
+    hasFeatureOrThrow({ state, feature: "evaluation" })
+    const params = getCurrentIds({ state, wantedIds: ["organizationId", "projectId"] })
     return await services.evaluations.getAll(params)
   },
 )
@@ -19,6 +22,7 @@ export const createEvaluation = createAsyncThunk<
   ThunkConfig
 >("evaluations/create", async (payload, { extra: { services }, getState }) => {
   const state = getState()
+  hasFeatureOrThrow({ state, feature: "evaluation" })
   const { organizationId, projectId } = getCurrentIds({
     state,
     wantedIds: ["organizationId", "projectId"],
@@ -34,13 +38,11 @@ export const createEvaluation = createAsyncThunk<
 
 export const updateEvaluation = createAsyncThunk<
   void,
-  {
-    evaluationId: string
-    fields: Partial<Pick<Evaluation, "input" | "expectedOutput">>
-  },
+  { evaluationId: string; fields: Partial<Pick<Evaluation, "input" | "expectedOutput">> },
   ThunkConfig
 >("evaluations/update", async ({ evaluationId, fields }, { extra: { services }, getState }) => {
   const state = getState()
+  hasFeatureOrThrow({ state, feature: "evaluation" })
   const { organizationId, projectId } = getCurrentIds({
     state,
     wantedIds: ["organizationId", "projectId"],
@@ -52,6 +54,7 @@ export const deleteEvaluation = createAsyncThunk<void, { evaluationId: string },
   "evaluations/delete",
   async ({ evaluationId }, { extra: { services }, getState }) => {
     const state = getState()
+    hasFeatureOrThrow({ state, feature: "evaluation" })
     const { organizationId, projectId } = getCurrentIds({
       state,
       wantedIds: ["organizationId", "projectId"],

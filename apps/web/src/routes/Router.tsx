@@ -1,5 +1,6 @@
 import { useEffect } from "react"
 import { createBrowserRouter, Outlet, RouterProvider } from "react-router-dom"
+import { RestrictedFeature } from "@/components/RestrictedFeature"
 import { authActions } from "@/features/auth/auth.slice"
 import { HomeRoute } from "@/routes/HomeRoute"
 import { LoginRoute } from "@/routes/LoginRoute"
@@ -52,7 +53,11 @@ const router = () =>
               children: [
                 {
                   path: buildAdminPath(RouteNames.EVALUATION),
-                  element: <EvaluationRoute />,
+                  element: (
+                    <RestrictedFeature feature="evaluation">
+                      <EvaluationRoute />
+                    </RestrictedFeature>
+                  ),
                 },
                 {
                   path: buildAdminPath(RouteNames.DOCUMENTS),
