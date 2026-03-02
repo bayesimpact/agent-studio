@@ -9,6 +9,8 @@ import type { TimeType } from "../generic"
 export enum AgentModel {
   Gemini25Flash = "gemini-2.5-flash",
   Gemini25Pro = "gemini-2.5-pro",
+  MedGemma15_4B_LanguageModelV2 = "google/medgemma-1.5-4b-it:LanguageModelV2",
+  MedGemma15_4B = "google/medgemma-1.5-4b-it",
   _MockGenerateObject = "generate-object-mock-language-model-v3",
   _MockGenerateStructuredOutput = "generate-structured-output-mock-language-model-v3",
   _MockGenerateText = "generate-text-mock-language-model-v3",
@@ -16,7 +18,6 @@ export enum AgentModel {
   _MockRate = "rate-mock-language-model-v3",
   _MockStreamChatResponse = "stream-chat-response-mock-language-model-v3",
 }
-
 export enum AgentLocale {
   EN = "en",
   FR = "fr",

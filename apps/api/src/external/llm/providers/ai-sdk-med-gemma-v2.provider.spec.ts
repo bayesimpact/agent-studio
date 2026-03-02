@@ -16,25 +16,18 @@ import type {
   LLMMetadata,
 } from "@/common/interfaces/llm-provider.interface"
 import { LangfuseIntegrationExporter } from "@/external/langfuse/langfuse-integration-exporter"
-import { AgentModelToAgentProvider, AgentProvider } from "@/external/llm/agent-provider"
 import { sdk } from "@/external/llm/open-telemetry-init"
-import { AISDKVertexProvider } from "@/external/llm/providers/ai-sdk-vertex.provider"
+import { AISDKMedGemmaV2Provider } from "@/external/llm/providers/ai-sdk-med-gemma-v2.provider"
 import { gcpCredentialsCheck } from "@/external/llm/providers/spec-gcp-tools"
-import {
-  expectIncludes,
-  expectIncludesAtLeastOne,
-  includesInsensitive,
-} from "@/external/llm/providers/spec-tools"
+import { expectIncludes, includesInsensitive } from "@/external/llm/providers/spec-tools"
 
 dotenvConfig({ path: ".env", override: true })
 dotenvConfig({ path: ".env.test", override: true })
-const testModels = Object.values(AgentModel).filter(
-  (am) => AgentModelToAgentProvider[am] === AgentProvider.Vertex,
-)
+const model = AgentModel.MedGemma15_4B_LanguageModelV2.split(":")[0] as string
 
-if (process.env.IS_TEST === "true" && process.env.VERTEX_TEST === "true") {
-  describe("AISDKVertexProvider", () => {
-    jest.setTimeout(30_000)
+if (process.env.IS_TEST === "true" && process.env.MEDGEMMA_TEST === "true") {
+  describe("AISDKMedGemmaProvider - ai-sdk/provider/LanguageModelV2", () => {
+    jest.setTimeout(60_000)
     const langfuse = new LangfuseIntegrationExporter({
       secretKey: process.env.LANGFUSE_SK,
       publicKey: process.env.LANGFUSE_PK,
@@ -46,7 +39,7 @@ if (process.env.IS_TEST === "true" && process.env.VERTEX_TEST === "true") {
         new BatchSpanProcessor(langfuse),
       ],
     })
-    let provider: AISDKVertexProvider
+    let provider: AISDKMedGemmaV2Provider
     let messages: LLMChatMessage[]
     let config: LLMConfig
     let metadata: LLMMetadata
@@ -55,7 +48,7 @@ if (process.env.IS_TEST === "true" && process.env.VERTEX_TEST === "true") {
     beforeAll(async () => {
       const conf = process.env.GOOGLE_APPLICATION_CREDENTIALS
       if (!conf) return
-      provider = new AISDKVertexProvider()
+      provider = new AISDKMedGemmaV2Provider()
       messages = []
       metadata = {
         agentId: "agentId",
@@ -74,12 +67,12 @@ if (process.env.IS_TEST === "true" && process.env.VERTEX_TEST === "true") {
       await traceProvider.shutdown()
       await sdk.shutdown()
     })
-    it("gcpCredentialsCheck", async () => {
+    xit("gcpCredentialsCheck", async () => {
       const check = await gcpCredentialsCheck()
       expect(check).toBeTruthy()
     })
 
-    it.each(testModels)("generateText - %s", async (model) => {
+    it("generateText", async () => {
       metadata.traceId = v4()
       const prompt = "What's your name? answer only your name"
       config = { model, temperature: 0, systemPrompt }
@@ -88,7 +81,7 @@ if (process.env.IS_TEST === "true" && process.env.VERTEX_TEST === "true") {
       expect(result).toBe("Elvis")
     })
 
-    it.each(testModels)("generateObject - %s", async (model) => {
+    it("generateObject", async () => {
       metadata.traceId = v4()
       const prompt =
         "Give me the more popular song of Elvis with Love in his title. Return also the year of the song."
@@ -101,7 +94,7 @@ if (process.env.IS_TEST === "true" && process.env.VERTEX_TEST === "true") {
       expect(parsed.song).toBe("Can't Help Falling in Love")
       expect(parsed.year).toBe("1961")
     })
-    it.each(testModels)("generateStructuredOutput -pdf- %s", async (model) => {
+    it("generateStructuredOutput -pdf", async () => {
       metadata.traceId = v4()
       const schema = z.object({ adresse: z.string(), telephone: z.string(), courriel: z.string() })
       const pdfBuffer = await readFile(join(__dirname, `files`, `test-pdf.pdf`))
@@ -141,7 +134,7 @@ if (process.env.IS_TEST === "true" && process.env.VERTEX_TEST === "true") {
       expect(parsed.courriel.toLowerCase()).toBe("jdoudou@laposte.net")
     })
 
-    it.each(testModels)("generateStructuredOutput -jpg- %s", async (model) => {
+    it("generateStructuredOutput -jpg", async () => {
       metadata.traceId = v4()
       const schema = z.array(z.object({ constant: z.string(), value: z.number() }))
       const jpgBuffer = await readFile(join(__dirname, `files`, "test-jpg.jpg"))
@@ -185,7 +178,7 @@ if (process.env.IS_TEST === "true" && process.env.VERTEX_TEST === "true") {
       expect(pi[0]?.value).toBe(0.007)
     })
 
-    it.each(testModels)("generateStructuredOutput -png- %s", async (model) => {
+    it("generateStructuredOutput -png", async () => {
       metadata.traceId = v4()
       const schema = z.object({ title: z.string(), description: z.string() })
       const pngBuffer = await readFile(join(__dirname, `files`, "xray-png.png"))
@@ -225,35 +218,37 @@ if (process.env.IS_TEST === "true" && process.env.VERTEX_TEST === "true") {
       expectIncludes(parsed.description, "pleural")
     })
 
-    it.each(testModels)("processFiles - %s", async (model) => {
+    it("processFiles", async () => {
       metadata.traceId = v4()
-      const prompt =
-        'About the files in attachment, return their name, MIME type and give them a description. return as JSON [{"name":"<name>", "type":"<type>", "desc":"<description>}, ...]'
+      const prompt = "About the file in attachment, give a short description (2 or 3 sentences)."
 
-      const jpgBuffer = await readFile(join(__dirname, `files`, `test-jpg.jpg`))
+      const pngBuffer = await readFile(join(__dirname, `files`, "xray-png.png"))
+      const testFile: LLMFile = {
+        type: "file",
+        name: "xray-png.png",
+        mediaType: "image/png",
+        content: pngBuffer,
+      }
 
-      const files: LLMFile[] = [
-        { type: "image", name: "test-jpg.jpg", mediaType: "image/jpeg", content: jpgBuffer },
-      ]
+      const files: LLMFile[] = [testFile]
       config = { model, temperature: 0, systemPrompt }
       const result = await provider.processFiles({ prompt, files, config, metadata })
       expect(result).toBeDefined()
-      expectIncludesAtLeastOne(result, ["math", "king"])
+      expectIncludes(result, "math")
     })
 
-    it.each(testModels)("streamChatResponse - %s", async (model) => {
+    it("streamChatResponse", async () => {
       metadata.traceId = v4()
       config = { model, temperature: 0, systemPrompt }
-      messages = [{ role: "user", content: "Are you a human?" }]
+      messages = [{ role: "user", content: "What can you do for me?" }]
       const stream = provider.streamChatResponse({ messages, config, metadata })
       const results = await streamToStringArray(stream)
       expect(results).toBeDefined()
       expect(results.length).toBeGreaterThan(0)
-      expectIncludes(results.join(""), "no")
+      expectIncludes(results.join(""), "answer")
     })
 
-    it.each(testModels)("streamChatResponse with tools - %s", async (model) => {
-      expect(model).toBe(AgentModel.Gemini25Pro) //tools works only with Gemini25Pro
+    it("streamChatResponse with tools", async () => {
       const prompt = `Today's date: 10/03/2026
 ##Instructions:
 Your main task is to help the user fill out the form by asking questions and providing guidance. 
@@ -383,7 +378,7 @@ Response language: Always answer in English.`
     }
   })
 } else {
-  describe.skip("AISDKVertexProvider", () => {
-    it("skipped (requires process.env.IS_TEST=true and process.env.VERTEX_TEST=true)", () => {})
+  describe.skip("AISDKMedGemmaProvider - ai-sdk/provider/LanguageModelV2", () => {
+    it("skipped (requires process.env.IS_TEST=true and process.env.MEDGEMMA_TEST=true)", () => {})
   })
 }

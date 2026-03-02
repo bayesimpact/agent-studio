@@ -1,4 +1,5 @@
 import { Module } from "@nestjs/common"
+import { AISDKMedGemmaProvider } from "@/external/llm/providers/ai-sdk-med-gemma.provider"
 import { AISDKMockProvider } from "@/external/llm/providers/ai-sdk-mock.provider"
 import { AISDKVertexProvider } from "@/external/llm/providers/ai-sdk-vertex.provider"
 
@@ -9,10 +10,14 @@ import { AISDKVertexProvider } from "@/external/llm/providers/ai-sdk-vertex.prov
       useClass: AISDKVertexProvider,
     },
     {
+      provide: "MedGemmaLLMProvider",
+      useClass: AISDKMedGemmaProvider,
+    },
+    {
       provide: "_MockLLMProvider",
       useClass: AISDKMockProvider,
     },
   ],
-  exports: ["VertexLLMProvider", "_MockLLMProvider"],
+  exports: ["MedGemmaLLMProvider", "VertexLLMProvider", "_MockLLMProvider"],
 })
 export class LlmModule {}

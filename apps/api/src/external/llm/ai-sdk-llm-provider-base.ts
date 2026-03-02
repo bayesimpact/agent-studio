@@ -5,12 +5,11 @@ import {
   generateText,
   type ImagePart,
   jsonSchema,
-  type LanguageModel,
   Output,
   type TextPart,
   ToolLoopAgent,
 } from "ai"
-import type { ZodObject, z } from "zod"
+import { type ZodObject, z } from "zod"
 import type {
   LLMChatMessage,
   LLMConfig,
@@ -31,19 +30,15 @@ export abstract class AISDKLLMProviderBase implements LLMProvider {
     config: LLMConfig
     metadata: LLMMetadata
   }): AsyncGenerator<string, void, unknown> {
+    const callOrigin = config.tools
+      ? CallOrigin.streamChatResponse_withTools
+      : CallOrigin.streamChatResponse
     this.checkConfigProviderAndModel(config)
-    // Convert normalized messages to ai-sdk format
-    // Filter out empty messages and system messages (handled separately)
     const aiSDKMessages: LLMChatMessage[] = messages
       .map((message) => {
         if (message.role === "system") {
-          // ai-sdk handles system messages separately
           return undefined
         }
-        // Skip messages with empty content (Gemini requires non-empty parts field)
-        // if (!message.content || message.content.trim().length === 0) {
-        //   return undefined
-        // }
         return {
           role: message.role === "assistant" ? "assistant" : "user",
           content: message.content,
@@ -51,22 +46,23 @@ export abstract class AISDKLLMProviderBase implements LLMProvider {
       })
       .filter((msg) => msg !== undefined) as LLMChatMessage[]
 
-    // Ensure we have at least one message (required by Gemini API)
     if (aiSDKMessages.length === 0) {
       throw new Error("Cannot stream response: no valid messages provided")
     }
 
-    // Get system message if present
     const systemMessage = messages.find((msg) => msg.role === "system")?.content
 
     const agent = new ToolLoopAgent({
-      model: this.getLanguageModel(config),
+      model: this.getLanguageModel({ config, callOrigin }),
       temperature: config.temperature,
       tools: config.tools,
       experimental_telemetry: {
         isEnabled: true,
         functionId: this.buildFunctionIdForStreamChatResponse(aiSDKMessages),
         metadata: this.buildMetadata({ config, metadata }),
+      },
+      providerOptions: {
+        custom: { callOrigin },
       },
     })
 
@@ -80,10 +76,15 @@ export abstract class AISDKLLMProviderBase implements LLMProvider {
       messages: [...systemMessagePart, ...aiSDKMessages],
     })
 
-    // Yield text chunks
     for await (const chunk of (await streamer).textStream) {
       yield chunk
     }
+    //fixme doo : debug
+    // let fullStream = ""
+    // for await (const chunk of (await streamer).textStream) {
+    //   fullStream += chunk
+    // }
+    // yield fullStream
   }
   async generateChatResponse({
     message,
@@ -94,18 +95,13 @@ export abstract class AISDKLLMProviderBase implements LLMProvider {
     config: LLMConfig
     metadata: LLMMetadata
   }): Promise<string> {
-    // Convert normalized messages to ai-sdk format
-    // Filter out empty messages and system messages (handled separately)
+    const callOrigin = CallOrigin.generateChatResponse
+    this.checkConfigProviderAndModel(config)
     const aiSDKMessages: LLMChatMessage[] = [message]
       .map((message) => {
         if (message.role === "system") {
-          // ai-sdk handles system messages separately
           return undefined
         }
-        // Skip messages with empty content (Gemini requires non-empty parts field)
-        // if (!message.content || message.content.trim().length === 0) {
-        //   return undefined
-        // }
         return {
           role: message.role === "assistant" ? "assistant" : "user",
           content: message.content,
@@ -113,14 +109,12 @@ export abstract class AISDKLLMProviderBase implements LLMProvider {
       })
       .filter((msg) => msg !== undefined) as LLMChatMessage[]
 
-    // Ensure we have at least one message (required by Gemini API)
     if (aiSDKMessages.length === 0) {
       throw new Error("Cannot stream response: no valid messages provided")
     }
 
-    // Stream using ai-sdk
     const result = await generateText({
-      model: this.getLanguageModel(config),
+      model: this.getLanguageModel({ config, callOrigin }),
       messages: aiSDKMessages,
       system: config.systemPrompt,
       temperature: config.temperature,
@@ -128,6 +122,9 @@ export abstract class AISDKLLMProviderBase implements LLMProvider {
         isEnabled: true,
         functionId: this.buildFunctionIdForStreamChatResponse(aiSDKMessages),
         metadata: this.buildMetadata({ config, metadata }),
+      },
+      providerOptions: {
+        custom: { callOrigin },
       },
     })
     return result.text
@@ -141,8 +138,9 @@ export abstract class AISDKLLMProviderBase implements LLMProvider {
     config: LLMConfig
     metadata: LLMMetadata
   }): Promise<string> {
+    const callOrigin = CallOrigin.generateText
     const { text } = await generateText({
-      model: this.getLanguageModel(config),
+      model: this.getLanguageModel({ config, callOrigin }),
       system: config.systemPrompt,
       prompt,
       temperature: config.temperature,
@@ -151,14 +149,19 @@ export abstract class AISDKLLMProviderBase implements LLMProvider {
         functionId: "LLMProvider.generateText",
         metadata: this.buildMetadata({ config, metadata }),
       },
+      providerOptions: {
+        custom: { callOrigin },
+      },
     })
-    return text
+    const { answer } = extractThoughtAndAnswer(text)
+    return answer
   }
 
   // biome-ignore lint/suspicious/noExplicitAny: @did : une idée
   async generateObject<T extends ZodObject<any>>({
     schema,
     prompt,
+
     config,
     metadata,
   }: {
@@ -167,8 +170,9 @@ export abstract class AISDKLLMProviderBase implements LLMProvider {
     config: LLMConfig
     metadata: LLMMetadata
   }): Promise<z.infer<T>> {
+    const callOrigin = CallOrigin.generateObject
     const res = await generateText({
-      model: this.getLanguageModel(config),
+      model: this.getLanguageModel({ config, callOrigin }),
       system: config.systemPrompt,
       prompt,
       temperature: config.temperature,
@@ -180,6 +184,9 @@ export abstract class AISDKLLMProviderBase implements LLMProvider {
       output: Output.object({
         schema: schema,
       }),
+      providerOptions: {
+        custom: { callOrigin },
+      },
     })
     return schema.parse(res.output)
   }
@@ -195,6 +202,7 @@ export abstract class AISDKLLMProviderBase implements LLMProvider {
     config: LLMConfig
     metadata: LLMMetadata
   }): Promise<Record<string, unknown>> {
+    const callOrigin = CallOrigin.generateStructuredOutput
     if (AgentModelToAgentProvider[config.model] === AgentProvider._Mock) {
       const fakeFile: LLMFile = {
         type: "file",
@@ -232,7 +240,7 @@ export abstract class AISDKLLMProviderBase implements LLMProvider {
     }
 
     const result = await generateText({
-      model: this.getLanguageModel(config),
+      model: this.getLanguageModel({ config, callOrigin }),
       messages: aiSDKMessages,
       system: config.systemPrompt,
       temperature: config.temperature,
@@ -244,9 +252,42 @@ export abstract class AISDKLLMProviderBase implements LLMProvider {
         functionId: "LLMProvider.generateStructuredOutput",
         metadata: this.buildMetadata({ config, metadata }),
       },
+      providerOptions: {
+        custom: { callOrigin },
+      },
     })
-
+    if (AgentModelToAgentProvider[config.model] === AgentProvider.MedGemma) {
+      // @ts-expect-error
+      return JSON.parse(result?.steps[0]?.content[0]?.text)
+    }
     return result.output
+  }
+  private recordToZodSchema(record: Record<string, unknown>): z.ZodObject<any> {
+    const shape: Record<string, z.ZodTypeAny> = {}
+
+    for (const [key, value] of Object.entries(record)) {
+      shape[key] = this.inferZodType(value)
+    }
+
+    return z.object(shape)
+  }
+
+  private inferZodType(value: unknown): z.ZodTypeAny {
+    if (typeof value === "string") return z.string()
+    if (typeof value === "number") return z.number()
+    if (typeof value === "boolean") return z.boolean()
+    if (value === null) return z.null()
+
+    if (Array.isArray(value)) {
+      if (value.length === 0) return z.array(z.any())
+      return z.array(this.inferZodType(value[0]))
+    }
+
+    if (typeof value === "object") {
+      return this.recordToZodSchema(value as Record<string, unknown>)
+    }
+
+    return z.any()
   }
 
   async processFiles({
@@ -260,6 +301,7 @@ export abstract class AISDKLLMProviderBase implements LLMProvider {
     config: LLMConfig
     metadata: LLMMetadata
   }): Promise<string> {
+    const callOrigin = CallOrigin.processFiles
     const content = [
       {
         type: "text",
@@ -283,7 +325,7 @@ export abstract class AISDKLLMProviderBase implements LLMProvider {
         })),
     ]
     const { text } = await generateText({
-      model: this.getLanguageModel(config),
+      model: this.getLanguageModel({ config, callOrigin }),
       system: config.systemPrompt,
       temperature: config.temperature,
       experimental_telemetry: {
@@ -297,6 +339,9 @@ export abstract class AISDKLLMProviderBase implements LLMProvider {
           content,
         },
       ],
+      providerOptions: {
+        custom: { callOrigin },
+      },
     })
     return text
   }
@@ -329,7 +374,7 @@ export abstract class AISDKLLMProviderBase implements LLMProvider {
     })
   }
 
-  abstract getLanguageModel(config: LLMConfig): LanguageModel
+  abstract getLanguageModel({ config, callOrigin }: { config: LLMConfig; callOrigin: CallOrigin })
   abstract getTags(config: LLMConfig): string[]
   abstract getAgentProvider(): AgentProvider
 }
@@ -340,4 +385,24 @@ namespace AISDKLLMProviderBase {
     role: "user" | "assistant"
     content: string
   }
+}
+
+export enum CallOrigin {
+  streamChatResponse = "streamChatResponse",
+  streamChatResponse_withTools = "streamChatResponse_withTools",
+  generateChatResponse = "generateChatResponse",
+  generateText = "generateText",
+  generateObject = "generateObject",
+  generateStructuredOutput = "generateStructuredOutput",
+  processFiles = "processFiles",
+}
+
+export function extractThoughtAndAnswer(raw: string) {
+  const thoughtMatch = raw.match(/<unused\d+>thought([\s\S]*?)(?=<unused\d+>)/i)
+  if (!thoughtMatch) return { answer: raw }
+  // @ts-expect-error
+  const thought = thoughtMatch ? thoughtMatch[1].replace(/<unused\d+>/g, "").trim() : null
+  let answer = raw.replace(/<unused\d+>thought[\s\S]*?(?=<unused\d+>)/gi, "")
+  answer = answer.replace(/<unused\d+>/g, "").trim()
+  return { thought, answer }
 }

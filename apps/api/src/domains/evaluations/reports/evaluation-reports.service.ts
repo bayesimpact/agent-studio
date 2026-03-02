@@ -20,8 +20,10 @@ export class EvaluationReportsService extends ServiceWithLLM {
     mockLlmProvider: LLMProvider,
     @Inject("VertexLLMProvider")
     vertexLlmProvider: LLMProvider,
+    @Inject("MedGemmaLLMProvider")
+    medGemmaLlmProvider: LLMProvider,
   ) {
-    super(mockLlmProvider, vertexLlmProvider)
+    super({ mockLlmProvider, vertexLlmProvider, medGemmaLlmProvider })
     this.reportConnectRepository = new ConnectRepository(reportRepository, "evaluation_reports")
   }
   private readonly reportConnectRepository: ConnectRepository<EvaluationReport>

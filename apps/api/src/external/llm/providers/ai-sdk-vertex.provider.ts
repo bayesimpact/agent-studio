@@ -3,7 +3,7 @@ import { createVertex } from "@ai-sdk/google-vertex"
 import { Injectable } from "@nestjs/common"
 import type { LanguageModel } from "ai"
 import type { LLMConfig } from "@/common/interfaces/llm-provider.interface"
-import { AISDKLLMProviderBase } from "@/external/llm/ai-sdk-llm-provider-base"
+import { AISDKLLMProviderBase, type CallOrigin } from "@/external/llm/ai-sdk-llm-provider-base"
 import { AgentProvider } from "../agent-provider"
 
 @Injectable()
@@ -31,7 +31,7 @@ export class AISDKVertexProvider extends AISDKLLMProviderBase {
       })
   }
 
-  getLanguageModel(config: LLMConfig): LanguageModel {
+  getLanguageModel({ config }: { config: LLMConfig; callOrigin: CallOrigin }): LanguageModel {
     return this.vertexProvider(config.model)
   }
   getTags(config: LLMConfig): string[] {

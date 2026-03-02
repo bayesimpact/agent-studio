@@ -149,7 +149,7 @@ export class LangfuseIntegrationExporter implements SpanExporter {
     const spanContext = span.spanContext()
     const attributes = span.attributes
 
-    const spanClient = this.langfuse.span({
+    const _spanClient = this.langfuse.span({
       traceId,
       parentObservationId: isRootSpan ? undefined : this.getParentSpanId(span),
       id: spanContext.spanId,
@@ -167,7 +167,6 @@ export class LangfuseIntegrationExporter implements SpanExporter {
 
       metadata: this.filterTraceAttributes(this.parseSpanMetadata(span)),
     })
-    console.debug(spanClient.getTraceUrl())
   }
 
   private processSpanAsLangfuseGeneration(

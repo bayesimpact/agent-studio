@@ -5,14 +5,14 @@ import { type LanguageModel, simulateReadableStream } from "ai"
 import { MockLanguageModelV3 } from "ai/test"
 import type { LLMConfig } from "@/common/interfaces/llm-provider.interface"
 import { AgentProvider } from "@/external/llm/agent-provider"
-import { AISDKLLMProviderBase } from "@/external/llm/ai-sdk-llm-provider-base"
+import { AISDKLLMProviderBase, type CallOrigin } from "@/external/llm/ai-sdk-llm-provider-base"
 
 @Injectable()
 export class AISDKMockProvider extends AISDKLLMProviderBase {
   getAgentProvider(): AgentProvider {
     return AgentProvider._Mock
   }
-  getLanguageModel(config: LLMConfig): LanguageModel {
+  getLanguageModel({ config }: { config: LLMConfig; callOrigin: CallOrigin }): LanguageModel {
     switch (config.model) {
       case AgentModel._MockGenerateText:
       case AgentModel._MockProcessFiles:
