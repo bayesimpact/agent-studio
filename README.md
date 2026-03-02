@@ -86,6 +86,11 @@ LANGFUSE_SK=XXX
 LANGFUSE_PK=XXX
 LANGFUSE_BASE_URL=XXX
 
+# PostHog (optional, for product analytics)
+# Use the same PostHog project/API key in API and web.
+POSTHOG_KEY=phc_xxx
+POSTHOG_HOST=https://eu.i.posthog.com
+
 # Database
 DATABASE_URL=postgresql://admin:passpass@localhost:5432/caseai_connect
 
@@ -112,6 +117,8 @@ AUTH0_M2M_CLIENT_SECRET=XXX
 **Optional variables:**
 - `GOOGLE_APPLICATION_CREDENTIALS` - Path to Google Cloud service account key (for AI features)
 - `LANGFUSE_*` - Langfuse configuration (for AI observability)
+- `POSTHOG_KEY` - PostHog project API key (enables API exception tracking)
+- `POSTHOG_HOST` - PostHog ingestion host (`https://eu.i.posthog.com` or `https://us.i.posthog.com`)
 
 #### Web Environment Variables
 
@@ -124,6 +131,10 @@ Edit `.env`:
 
 ```bash
 VITE_API_URL=http://localhost:3000
+
+# PostHog (optional, use the same project/API key as API)
+VITE_PUBLIC_POSTHOG_KEY=phc_xxx
+VITE_PUBLIC_POSTHOG_HOST=https://eu.i.posthog.com
 
 # Auth0
 VITE_AUTH0_DOMAIN=bayes-impact.eu.auth0.com

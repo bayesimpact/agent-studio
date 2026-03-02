@@ -14,6 +14,7 @@ import { MeModule } from "./domains/me/me.module"
 import { OrganizationsModule } from "./domains/organizations/organizations.module"
 import { ProjectsModule } from "./domains/projects/projects.module"
 import { UsersModule } from "./domains/users/users.module"
+import { ExceptionTrackerModule } from "./exception-tracker/exception-tracker.module"
 
 @Module({
   imports: [
@@ -26,6 +27,7 @@ import { UsersModule } from "./domains/users/users.module"
       inject: [ConfigService],
       useFactory: async (configService: ConfigService) => configService.get("typeorm")(),
     }),
+    ExceptionTrackerModule,
     AuthModule,
     UsersModule,
     OrganizationsModule,
