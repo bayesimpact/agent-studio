@@ -1,0 +1,17 @@
+.git
+.github
+.cursor
+.vscode
+
+docs
+infra
+dontsave
+
+**/.DS_Store
+**/*.log
+**/coverage
+**/.turbo
+**/tmp
+**/dist
+**/build
+**/.next

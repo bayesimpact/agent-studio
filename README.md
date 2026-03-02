@@ -1,6 +1,6 @@
-# CaseAI Connect
+# AgentStudio
 
-A SaaS platform built as a Turbo monorepo with a NestJS API and React web frontend, using Auth0 for authentication.
+A SaaS platform for building multi-agent systems, built as a Turbo monorepo with a NestJS API and a React web frontend using Auth0 for authentication.
 
 ## Prerequisites
 

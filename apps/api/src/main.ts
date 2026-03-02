@@ -5,6 +5,7 @@ import { NestFactory } from "@nestjs/core"
 import { AppModule } from "./app.module"
 
 async function bootstrap() {
+  const frontendUrl = normalizeFrontendUrl(process.env.FRONTEND_URL)
   const httpsOptions = loadHttpsCertificates()
   const app = await NestFactory.create(AppModule, {
     ...(httpsOptions && { httpsOptions }),
@@ -21,13 +22,25 @@ async function bootstrap() {
       "http://localhost:5173",
       "https://localhost:5173",
       "https://connect.localhost:5173",
-      "https://connect-web-flax.vercel.app",
+      ...(frontendUrl ? [frontendUrl] : []),
     ],
     credentials: true,
   })
   const protocol = httpsOptions ? "https" : "http"
   await app.listen(3000)
   console.log(`API server running on ${protocol}://connect.localhost:3000`)
+}
+
+function normalizeFrontendUrl(frontendUrl: string | undefined): string | undefined {
+  if (!frontendUrl) {
+    return undefined
+  }
+
+  if (frontendUrl.startsWith("http://") || frontendUrl.startsWith("https://")) {
+    return frontendUrl
+  }
+
+  return `https://${frontendUrl}`
 }
 
 /**

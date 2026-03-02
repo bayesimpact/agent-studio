@@ -1,15 +1,20 @@
 .PHONY: docker
 
 version ?= `git rev-parse --short HEAD`
-imageUrl ?= REGION-docker.pkg.dev/YOUR_PROJECT/YOUR_REPO/api
 
 # Change detection configuration
 BASE_REF ?= HEAD^1
 REGION ?= eu
+PROJECT ?= connect
 TEST_DATABASE_URL ?= postgresql://connect_admin:passpass@localhost:5432/connect_test
 
-ifeq "$(REGION)" "eu"
+ifeq ($(REGION),eu)
+ifeq ($(PROJECT),connect)
+# CONNECT
+imageUrl = REGION-docker.pkg.dev/YOUR_PROJECT/YOUR_REPO/api
 cloudRunName = connect
+googleVertexProject = connect
+googleVertexLocation = europe-west1
 location = europe-west1
 zone = europe-west9
 langfuseUrl = https://your-langfuse-instance.example.com
@@ -24,7 +29,47 @@ auth0IssuerUrl = https://your-tenant.auth0.com/
 auth0M2MClientId = YOUR_AUTH0_M2M_CLIENT_ID
 auth0ClientId = YOUR_AUTH0_CLIENT_ID
 localStorageServerBaseUrl = https://connect.localhost:3000
+frontendUrl = connect-web-flax.vercel.app
 gcsStorageBucketName = your-bucket-name
+gcpProjectId = YOUR_GCP_PROJECT
+serviceAccount = YOUR_SA@YOUR_PROJECT.iam.gserviceaccount.com
+network = projects/YOUR_PROJECT/global/networks/default
+databaseUsername = connect_admin
+databaseName = connect
+cloudSqlCredentialsFile = $(CURDIR)/dontsave/your-credentials.json
+else ifeq ($(PROJECT),health)
+# Health
+imageUrl = REGION-docker.pkg.dev/YOUR_PROJECT/YOUR_REPO/api
+cloudRunName = health
+googleVertexProject = YOUR_GCP_PROJECT
+googleVertexLocation = europe-west1
+location = europe-west1
+zone = europe-west9
+langfuseUrl = https://your-langfuse-instance.example.com
+langfusePk = pk-lf-YOUR_LANGFUSE_PK
+secretsPrefix = HEALTH_
+postHogHost = https://eu.i.posthog.com
+addCloudSqlInstances = YOUR_PROJECT:YOUR_REGION:YOUR_INSTANCE
+cloudSqlProxyPort = 5433
+auth0OrganizationId = org_YOUR_ORG_ID
+auth0Audience = https://your-tenant.auth0.com/api/v2/
+auth0IssuerUrl = https://your-tenant.auth0.com/
+auth0M2MClientId = YOUR_AUTH0_M2M_CLIENT_ID
+auth0ClientId = YOUR_AUTH0_CLIENT_ID
+localStorageServerBaseUrl = https://connect.localhost:3000
+frontendUrl = health-web-one.vercel.app
+gcsStorageBucketName = your-bucket-name
+gcpProjectId = YOUR_GCP_PROJECT
+serviceAccount = YOUR_SA@YOUR_PROJECT.iam.gserviceaccount.com
+network = projects/YOUR_PROJECT/global/networks/default
+databaseUsername = health_admin
+databaseName = health
+cloudSqlCredentialsFile = $(CURDIR)/dontsave/your-credentials.json
+else
+$(error Unsupported PROJECT '$(PROJECT)' for REGION '$(REGION)')
+endif
+else
+$(error Unsupported REGION '$(REGION)')
 endif
 
 # ==============================================================================
@@ -116,9 +161,9 @@ tests: db-tests ci-checks
 	cd apps/api && DATABASE_URL=${TEST_DATABASE_URL} npm run migration:test:run && DATABASE_URL=${TEST_DATABASE_URL} npm run test
 
 migrations:
-	docker compose -f infra/cloudsql-proxy/docker-compose.yaml up -d
-	docker compose -f infra/cloudsql-proxy/docker-compose.yaml logs cloudsql-proxy
-	cd apps/api && npm ci && DATABASE_HOST=localhost DATABASE_PORT=${cloudSqlProxyPort} DATABASE_USERNAME=connect_admin DATABASE_NAME=connect DATABASE_PASSWORD=${MIG_DATABASE_PASSWORD} npm run migration:run
+	CLOUDSQL_INSTANCE=${addCloudSqlInstances} CLOUDSQL_PROXY_PORT=${cloudSqlProxyPort} CLOUDSQL_CREDENTIALS_FILE=${cloudSqlCredentialsFile} docker compose -f infra/cloudsql-proxy/docker-compose.yaml up -d
+	CLOUDSQL_INSTANCE=${addCloudSqlInstances} CLOUDSQL_PROXY_PORT=${cloudSqlProxyPort} CLOUDSQL_CREDENTIALS_FILE=${cloudSqlCredentialsFile} docker compose -f infra/cloudsql-proxy/docker-compose.yaml logs cloudsql-proxy
+	cd apps/api && npm ci && DATABASE_HOST=localhost DATABASE_PORT=${cloudSqlProxyPort} DATABASE_USERNAME=${databaseUsername} DATABASE_NAME=${databaseName} DATABASE_PASSWORD="$${MIG_DATABASE_PASSWORD}" npm run migration:run
 
 deploy: docker-push deploy-only
 
@@ -130,18 +175,21 @@ deploy-only:
 	--set-env-vars=TZ=UTC \
 	--set-env-vars=AUTH0_ISSUER_URL=${auth0IssuerUrl},AUTH0_AUDIENCE=${auth0Audience} \
 	--set-env-vars=AUTH0_ORGANIZATION_ID=${auth0OrganizationId},AUTH0_CLIENT_ID=${auth0ClientId},AUTH0_M2M_CLIENT_ID=${auth0M2MClientId} \
+	--set-env-vars=FRONTEND_URL=${frontendUrl} \
 	--set-env-vars=LOCAL_STORAGE_SERVER_BASE_URL=${localStorageServerBaseUrl} \
 	--set-env-vars=GCS_STORAGE_BUCKET_NAME=${gcsStorageBucketName} \
+	--set-env-vars=GOOGLE_VERTEX_PROJECT=${googleVertexProject} \
+	--set-env-vars=GOOGLE_VERTEX_LOCATION=${googleVertexLocation} \
   --set-env-vars=LANGFUSE_PK=${langfusePk},LANGFUSE_BASE_URL=${langfuseUrl},LOCATION=$(location) \
-  --set-env-vars=DATABASE_HOST=/cloudsql/${addCloudSqlInstances},DATABASE_USERNAME=connect_admin,DATABASE_NAME=connect \
+  --set-env-vars=DATABASE_HOST=/cloudsql/${addCloudSqlInstances},DATABASE_USERNAME=${databaseUsername},DATABASE_NAME=${databaseName} \
 	--region=${zone} \
 	--port=3000 \
 	--min-instances=1 \
 	--max-instances=1 \
 	--add-cloudsql-instances=${addCloudSqlInstances} \
-	--network=projects/YOUR_PROJECT/global/networks/default \
-	--service-account=YOUR_SA@YOUR_PROJECT.iam.gserviceaccount.com \
-	--project caseai-connect
+	--network=${network} \
+	--service-account=${serviceAccount} \
+	--project ${gcpProjectId}
 
 notify:
 	curl -X POST -H 'Content-type: application/json' --data '{"text":"$(shell git log -1 --pretty=%B)"}' SLACK_WEBHOOK_REDACTED
