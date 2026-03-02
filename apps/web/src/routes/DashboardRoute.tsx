@@ -4,6 +4,7 @@ import { SlidersHorizontalIcon, SparklesIcon } from "lucide-react"
 import { Outlet, useParams } from "react-router-dom"
 import { SidebarLayout } from "@/components/layouts/SidebarLayout"
 import { ProjectList } from "@/components/ProjectList"
+import { RestrictedFeature } from "@/components/RestrictedFeature"
 import { NavDocuments } from "@/components/sidebar/nav/NavDocuments"
 import { NavEvaluation } from "@/components/sidebar/nav/NavEvaluation"
 import { AdminNavProject, AppNavProject } from "@/components/sidebar/nav/NavProject"
@@ -175,7 +176,9 @@ function SidebarContent({
 function SidebarFooter({ project }: { project: Project }) {
   return (
     <>
-      <NavEvaluation organizationId={project.organizationId} projectId={project.id} />
+      <RestrictedFeature feature="evaluation">
+        <NavEvaluation organizationId={project.organizationId} projectId={project.id} />
+      </RestrictedFeature>
       <NavDocuments organizationId={project.organizationId} projectId={project.id} />
       <NavProjectMemberships organizationId={project.organizationId} projectId={project.id} />
     </>

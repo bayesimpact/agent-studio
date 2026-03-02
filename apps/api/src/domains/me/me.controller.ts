@@ -5,6 +5,7 @@ import { JwtAuthGuard } from "@/domains/auth/jwt-auth.guard"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
 import { OrganizationsService } from "@/domains/organizations/organizations.service"
 import { UserGuard } from "@/domains/users/user.guard"
+import { toDto as toOrganizationDto } from "../organizations/organizations.controller"
 
 @UseGuards(JwtAuthGuard, UserGuard)
 @Controller()
@@ -20,11 +21,7 @@ export class MeController {
         await this.organizationsService.getUserOrganizationsWithMemberships(user.id)
 
       // Format response
-      const organizations = organizationsWithMemberships.map(({ organization, role }) => ({
-        id: organization.id,
-        name: organization.name,
-        role,
-      }))
+      const organizations = organizationsWithMemberships.map(toOrganizationDto)
 
       return {
         data: {

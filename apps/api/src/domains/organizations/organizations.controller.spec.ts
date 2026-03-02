@@ -127,6 +127,7 @@ describe("OrganizationsController", () => {
         id: expect.any(String),
         name: "Format Test Org",
         role: "owner",
+        featureFlags: [],
       })
       expect(response.data).not.toHaveProperty("organization")
       expect(response.data).not.toHaveProperty("createdAt")

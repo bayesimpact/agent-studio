@@ -8,7 +8,7 @@ import { type MembershipRole, UserMembership } from "./user-membership.entity"
 @Injectable()
 export class OrganizationsService {
   constructor(
-    @InjectRepository(Organization) readonly _organizationRepository: Repository<Organization>,
+    @InjectRepository(Organization) readonly organizationRepository: Repository<Organization>,
     @InjectRepository(UserMembership)
     private readonly membershipRepository: Repository<UserMembership>,
     @InjectRepository(User) private readonly userRepository: Repository<User>,
@@ -21,6 +21,7 @@ export class OrganizationsService {
     const memberships = await this.membershipRepository
       .createQueryBuilder("membership")
       .innerJoinAndSelect("membership.organization", "organization")
+      .leftJoinAndSelect("organization.featureFlags", "featureFlags")
       .where("membership.userId = :userId", { userId })
       .getMany()
 
@@ -46,8 +47,8 @@ export class OrganizationsService {
     }
 
     // Create the organization
-    const organization = this._organizationRepository.create({ name })
-    const savedOrganization = await this._organizationRepository.save(organization)
+    const organization = this.organizationRepository.create({ name })
+    const savedOrganization = await this.organizationRepository.save(organization)
 
     // Create the membership with owner role
     // Set both entity references and IDs to ensure proper foreign key handling in transactions

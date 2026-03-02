@@ -1,4 +1,4 @@
-import type { MembershipRoleDto } from "../organizations/organizations.dto"
+import type { OrganizationDto } from "../organizations/organizations.dto"
 
 export type MeResponseDto = {
   user: {
@@ -6,9 +6,5 @@ export type MeResponseDto = {
     email: string
     name: string | null
   }
-  organizations: Array<{
-    id: string
-    name: string
-    role: MembershipRoleDto
-  }>
+  organizations: Array<OrganizationDto>
 }

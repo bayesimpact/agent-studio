@@ -6,6 +6,7 @@ import { AgentExtractionRun } from "@/domains/agents/agent-extraction-runs/agent
 import { Document } from "@/domains/documents/document.entity"
 import { Evaluation } from "@/domains/evaluations/evaluation.entity"
 import { EvaluationReport } from "@/domains/evaluations/reports/evaluation-report.entity"
+import { FeatureFlag } from "@/domains/feature-flags/feature-flag.entity"
 import { Organization } from "@/domains/organizations/organization.entity"
 import { UserMembership } from "@/domains/organizations/user-membership.entity"
 import { ProjectMembership } from "@/domains/projects/memberships/project-membership.entity"
@@ -24,6 +25,7 @@ export const TEST_ENTITIES = [
   Organization,
   Project,
   ProjectMembership,
+  FeatureFlag,
   User,
   UserMembership,
 ]

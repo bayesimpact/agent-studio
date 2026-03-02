@@ -3,6 +3,7 @@ import { Base4AllEntity } from "@/common/entities/base4all.entity"
 import { AgentSession } from "@/domains/agent-sessions/agent-session.entity"
 import { AgentMessageFeedback } from "@/domains/agent-sessions/messages/feedback/agent-message-feedback.entity"
 import { Project } from "@/domains/projects/project.entity"
+import { FeatureFlag } from "../feature-flags/feature-flag.entity"
 import { UserMembership } from "./user-membership.entity"
 
 @Entity("organization")
@@ -33,4 +34,10 @@ export class Organization extends Base4AllEntity {
     (agentMessageFeedback) => agentMessageFeedback.organization,
   )
   agentMessageFeedbacks!: AgentMessageFeedback[]
+
+  @OneToMany(
+    () => FeatureFlag,
+    (featureFlag) => featureFlag.organization,
+  )
+  featureFlags!: FeatureFlag[]
 }

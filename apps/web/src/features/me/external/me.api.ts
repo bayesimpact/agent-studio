@@ -1,5 +1,6 @@
 import { type MeResponseDto, MeRoutes } from "@caseai-connect/api-contracts"
 import { getAxiosInstance } from "@/external/axios"
+import { fromDto as fromOrganizationDto } from "../../organizations/external/organizations.api"
 import type { Me } from "../me.models"
 import type { IMeSpi } from "../me.spi"
 
@@ -17,5 +18,5 @@ const fromDto = (dto: MeResponseDto): Me => ({
     email: dto.user.email,
     name: dto.user.name || "Unknown User Name",
   },
-  organizations: dto.organizations,
+  organizations: dto.organizations.map(fromOrganizationDto),
 })

@@ -22,6 +22,9 @@ export { EvaluationReportsRoutes } from "./evaluations/evaluation-reports.routes
 // Evaluations DTOs
 export * from "./evaluations/evaluations.dto"
 export { EvaluationsRoutes } from "./evaluations/evaluations.routes"
+// Feature Flags DTOs
+export type * from "./feature-flags/feature-flags.dto"
+export { FeatureFlagsRoutes } from "./feature-flags/feature-flags.routes"
 // Generic DTOs
 export type * from "./generic"
 export type { ApiRoute } from "./helpers"
