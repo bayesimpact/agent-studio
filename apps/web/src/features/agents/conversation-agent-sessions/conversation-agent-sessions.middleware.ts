@@ -8,8 +8,7 @@ import {
 import type { AppDispatch, RootState } from "@/store"
 import { ADS } from "@/store/async-data-status"
 import { selectIsAdminInterface } from "../../auth/auth.selectors"
-import { getCurrentIds } from "../../helpers"
-import { selectAgentsData, selectCurrentAgentId } from "../agents.selectors"
+import { selectAgentsData } from "../agents.selectors"
 import { listAgents } from "../agents.thunks"
 import { selectCurrentConversationAgentSessionId } from "./conversation-agent-sessions.selectors"
 import { conversationAgentSessionsActions } from "./conversation-agent-sessions.slice"
@@ -23,12 +22,9 @@ export type AppStartListening = TypedStartListening<RootState, AppDispatch>
 listenerMiddleware.startListening({
   actionCreator: listAgents.fulfilled,
   effect: async ({ payload: agents }, listenerApi) => {
-    const state = listenerApi.getState()
-    const isAdminInterface = selectIsAdminInterface(state)
     agents.forEach((agent) => {
-      listenerApi.dispatch(
-        listConversationAgentSessions({ agentId: agent.id, playground: isAdminInterface }),
-      )
+      if (agent.type !== "conversation") return
+      listenerApi.dispatch(listConversationAgentSessions({ agentId: agent.id }))
     })
   },
 })
@@ -43,35 +39,12 @@ listenerMiddleware.startListening({
   effect: async (_, listenerApi) => {
     listenerApi.dispatch(conversationAgentSessionsActions.reset())
     const state = listenerApi.getState()
-    const isAdminInterface = selectIsAdminInterface(state)
     const agents = selectAgentsData(state)
     if (ADS.isFulfilled(agents)) {
       for (const agent of Object.values(agents.value).flat()) {
-        await listenerApi.dispatch(
-          listConversationAgentSessions({
-            agentId: agent.id,
-            playground: isAdminInterface,
-          }),
-        )
+        await listenerApi.dispatch(listConversationAgentSessions({ agentId: agent.id }))
       }
     }
-  },
-})
-
-// Refresh agent sessions when current Agent changes
-listenerMiddleware.startListening({
-  predicate(_, currentState, originalState) {
-    const prevId = selectCurrentAgentId(originalState)
-    const nextId = selectCurrentAgentId(currentState)
-    return prevId !== nextId
-  },
-  effect: async (_, listenerApi) => {
-    const state = listenerApi.getState()
-    const { agentId } = getCurrentIds({ state, wantedIds: ["agentId"] })
-    const isAdminInterface = selectIsAdminInterface(state)
-    await listenerApi.dispatch(
-      listConversationAgentSessions({ agentId, playground: isAdminInterface }),
-    )
   },
 })
 
@@ -91,7 +64,7 @@ listenerMiddleware.startListening({
   predicate(_, currentState, originalState) {
     const prevId = selectCurrentConversationAgentSessionId(originalState)
     const nextId = selectCurrentConversationAgentSessionId(currentState)
-    return prevId !== nextId
+    return prevId !== nextId && !!nextId
   },
   effect: async (_, listenerApi) => {
     const state = listenerApi.getState()
@@ -104,12 +77,8 @@ listenerMiddleware.startListening({
 listenerMiddleware.startListening({
   actionCreator: createConversationAgentSession.fulfilled,
   effect: async (action, listenerApi) => {
-    const state = listenerApi.getState()
-    const isAdminInterface = selectIsAdminInterface(state)
     const { agentId, id } = action.payload
-    await listenerApi.dispatch(
-      listConversationAgentSessions({ agentId, playground: isAdminInterface }),
-    )
+    await listenerApi.dispatch(listConversationAgentSessions({ agentId }))
     const onSuccess = action.meta.arg.onSuccess
     onSuccess?.(id)
   },

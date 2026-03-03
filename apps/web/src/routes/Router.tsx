@@ -1,12 +1,9 @@
-import { useEffect } from "react"
 import { createBrowserRouter, Outlet, RouterProvider } from "react-router-dom"
 import { RestrictedFeature } from "@/components/RestrictedFeature"
-import { authActions } from "@/features/auth/auth.slice"
 import { HomeRoute } from "@/routes/HomeRoute"
 import { LoginRoute } from "@/routes/LoginRoute"
 import { LogoutRoute } from "@/routes/LogoutRoute"
 import { NotFoundRoute } from "@/routes/NotFoundRoute"
-import { useAppDispatch } from "@/store/hooks"
 import { DocumentsRoute } from "./admin/DocumentsRoute"
 import { EvaluationRoute } from "./admin/EvaluationRoute"
 import { FeedbackRoute } from "./admin/FeedbackRoute"
@@ -41,7 +38,7 @@ const router = () =>
 
     {
       path: "/admin",
-      element: <AdminInterfaceHandler />,
+      element: <Outlet />,
       children: [
         {
           path: buildAdminPath(RouteNames.ORGANIZATION_DASHBOARD),
@@ -89,7 +86,7 @@ const router = () =>
     },
     {
       path: "/app",
-      element: <AppInterfaceHandler />,
+      element: <Outlet />,
       children: [
         {
           path: buildAppPath(RouteNames.ORGANIZATION_DASHBOARD),
@@ -124,24 +121,4 @@ const router = () =>
 
 export function Router() {
   return <RouterProvider router={router()} />
-}
-
-function AdminInterfaceHandler() {
-  const dispatch = useAppDispatch()
-
-  useEffect(() => {
-    dispatch(authActions.setIsAdminInterface(true))
-  }, [dispatch])
-
-  return <Outlet />
-}
-
-function AppInterfaceHandler() {
-  const dispatch = useAppDispatch()
-
-  useEffect(() => {
-    dispatch(authActions.setIsAdminInterface(false))
-  }, [dispatch])
-
-  return <Outlet />
 }

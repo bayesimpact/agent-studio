@@ -61,6 +61,7 @@ listenerMiddleware.startListening({
   },
 })
 
+// Set isAdmin and isAdminInterface flags when current organization changes
 listenerMiddleware.startListening({
   predicate(_, currentState, originalState) {
     const prevOrgId = selectCurrentOrganizationId(originalState)
@@ -71,7 +72,12 @@ listenerMiddleware.startListening({
     const state = listenerApi.getState()
     const org = selectCurrentOrganization(state)
     if (!org) return window.console.error("No current organization selected")
-    listenerApi.dispatch(authActions.setIsAdmin(org.role === "admin" || org.role === "owner"))
+
+    const isAdmin = org.role === "admin" || org.role === "owner"
+    listenerApi.dispatch(authActions.setIsAdmin(isAdmin))
+
+    const isAdminInterface = isAdmin && window.location.pathname.startsWith("/admin/")
+    listenerApi.dispatch(authActions.setIsAdminInterface(isAdminInterface))
   },
 })
 

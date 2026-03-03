@@ -5,7 +5,7 @@ import { useSidebarLayout } from "@/components/layouts/sidebar/context"
 import type { AgentMessageFeedback } from "@/features/agent-message-feedback/agent-message-feedback.models"
 import { selectFeedbacksFromAgentId } from "@/features/agent-message-feedback/agent-message-feedback.selectors"
 import type { Agent } from "@/features/agents/agents.models"
-import { selectAgentData, selectCurrentAgentId } from "@/features/agents/agents.selectors"
+import { selectCurrentAgentData, selectCurrentAgentId } from "@/features/agents/agents.selectors"
 import { ADS } from "@/store/async-data-status"
 import { useAppSelector } from "@/store/hooks"
 import { ErrorRoute } from "../ErrorRoute"
@@ -13,7 +13,7 @@ import { LoadingRoute } from "../LoadingRoute"
 
 export function FeedbackRoute() {
   const agentId = useAppSelector(selectCurrentAgentId)
-  const agent = useAppSelector(selectAgentData)
+  const agent = useAppSelector(selectCurrentAgentData)
   const feedbacksData = useAppSelector(selectFeedbacksFromAgentId(agentId))
   if (!agentId) return <ErrorRoute error="Missing valid agent ID" />
 

@@ -1,7 +1,4 @@
-import {
-  selectAgentDataFromAgentId,
-  selectCurrentAgentId,
-} from "@/features/agents/agents.selectors"
+import { selectCurrentAgentData } from "@/features/agents/agents.selectors"
 import { selectCurrentOrganizationId } from "@/features/organizations/organizations.selectors"
 import { selectCurrentProjectId } from "@/features/projects/projects.selectors"
 import { ADS } from "@/store/async-data-status"
@@ -12,10 +9,9 @@ import { ErrorRoute } from "./ErrorRoute"
 import { LoadingRoute } from "./LoadingRoute"
 
 export function AgentRoute() {
-  const agentId = useAppSelector(selectCurrentAgentId)
   const organizationId = useAppSelector(selectCurrentOrganizationId)
   const projectId = useAppSelector(selectCurrentProjectId)
-  const agent = useAppSelector(selectAgentDataFromAgentId(agentId))
+  const agent = useAppSelector(selectCurrentAgentData)
 
   if (ADS.isError(agent) || !organizationId || !projectId)
     return <ErrorRoute error={agent.error || "Unknown error"} />

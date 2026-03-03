@@ -40,8 +40,7 @@ export const getCurrentIds = <T extends readonly IdKey[]>({
     const { label, select } = idLookups[idKey]
     const value = select(state)
     if (!value) {
-      window.console.info(`No current ${label} ID.`)
-      return result as GetIdsResult<T>
+      throw new Error(`No current ${label} ID found.`)
     }
     result[idKey as keyof typeof result] = value
   }

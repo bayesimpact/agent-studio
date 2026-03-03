@@ -1,7 +1,7 @@
 import { createSelector } from "@reduxjs/toolkit"
 import type { RootState } from "@/store"
 import { ADS, type AsyncData } from "@/store/async-data-status"
-import { selectAgentData } from "../agents.selectors"
+import { selectCurrentAgentData } from "../agents.selectors"
 import type { ConversationAgentSession } from "./conversation-agent-sessions.models"
 
 const selectConversationAgentSessionsData = (state: RootState) =>
@@ -15,7 +15,7 @@ const missingAgentSessions = {
 }
 
 export const selectCurrentConversationAgentSessionsData = createSelector(
-  [selectAgentData, selectConversationAgentSessionsData],
+  [selectCurrentAgentData, selectConversationAgentSessionsData],
   (agentData, conversationAgentSessionsData): AsyncData<ConversationAgentSession[]> => {
     if (!ADS.isFulfilled(agentData)) return { ...agentData }
 

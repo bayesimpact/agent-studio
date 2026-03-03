@@ -14,21 +14,22 @@ type ThunkConfig = { state: RootState; extra: ThunkExtraArg }
 
 export const listConversationAgentSessions = createAsyncThunk<
   ConversationAgentSession[],
-  { agentId: string; playground: boolean },
+  { agentId: string },
   ThunkConfig
 >(
   "conversationAgentSession/listConversationAgentSessions",
-  async ({ agentId, playground }, { extra: { services }, getState }) => {
+  async ({ agentId }, { extra: { services }, getState }) => {
     const state = getState()
     const { organizationId, projectId } = getCurrentIds({
       state,
       wantedIds: ["organizationId", "projectId"],
     })
+    const isAdminInterface = selectIsAdminInterface(state)
     return services.conversationAgentSessions.getAll({
       organizationId,
       projectId,
       agentId,
-      type: playground ? "playground" : "live",
+      type: isAdminInterface ? "playground" : "live",
     })
   },
 )

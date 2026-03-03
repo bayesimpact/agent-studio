@@ -1,6 +1,5 @@
 import { createSlice, type PayloadAction } from "@reduxjs/toolkit"
 import { ADS, type AsyncData, defaultAsyncData } from "@/store/async-data-status"
-import { initOrganization } from "../../global.thunks"
 import type { Agent } from "../agents.models"
 import type {
   ConversationAgentSession,
@@ -103,28 +102,6 @@ const slice = createSlice({
     },
   },
   extraReducers: (builder) => {
-    builder
-      .addCase(initOrganization.pending, (state) => {
-        if (!ADS.isFulfilled(state.data)) state.data.status = ADS.Loading
-        state.data.error = null
-      })
-      .addCase(initOrganization.fulfilled, (state, action) => {
-        state.data = {
-          status: ADS.Fulfilled,
-          error: null,
-          value: Object.values(action.payload.agents)
-            .flat()
-            .reduce((acc, agent) => {
-              acc[agent.id] = action.payload.agentSessions[agent.id] || []
-              return acc
-            }, {} as DataType),
-        }
-      })
-      .addCase(initOrganization.rejected, (state, action) => {
-        state.data.status = ADS.Error
-        state.data.error = action.error.message || "Failed to list Agents"
-      })
-
     builder
       .addCase(listConversationAgentSessions.pending, (state) => {
         if (!ADS.isFulfilled(state.data)) state.data.status = ADS.Loading

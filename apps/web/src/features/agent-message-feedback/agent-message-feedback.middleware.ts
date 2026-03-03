@@ -1,7 +1,6 @@
 import type { TypedStartListening } from "@reduxjs/toolkit"
 import { createListenerMiddleware } from "@reduxjs/toolkit"
 import type { AppDispatch, RootState } from "@/store/types"
-import { selectCurrentAgentId } from "../agents/agents.selectors"
 import { listAgents } from "../agents/agents.thunks"
 import { getCurrentIds } from "../helpers"
 import { notificationsActions } from "../notifications/notifications.slice"
@@ -20,22 +19,9 @@ listenerMiddleware.startListening({
   effect: async (action, listenerApi) => {
     const agents = action.payload
     agents.forEach((agent) => {
+      if (agent.type === "extraction") return
       listenerApi.dispatch(listAgentMessageFeedbacks({ agentId: agent.id }))
     })
-  },
-})
-
-// Refresh feedbacks when current agent changes
-listenerMiddleware.startListening({
-  predicate(_, currentState, originalState) {
-    const prevId = selectCurrentAgentId(originalState)
-    const nextId = selectCurrentAgentId(currentState)
-    return prevId !== nextId
-  },
-  effect: async (_, listenerApi) => {
-    const state = listenerApi.getState()
-    const { agentId } = getCurrentIds({ state, wantedIds: ["agentId"] })
-    await listenerApi.dispatch(listAgentMessageFeedbacks({ agentId }))
   },
 })
 

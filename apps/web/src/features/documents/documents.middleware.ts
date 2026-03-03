@@ -14,7 +14,7 @@ listenerMiddleware.startListening({
   predicate(_, currentState, originalState) {
     const prevId = selectCurrentProjectId(originalState)
     const nextId = selectCurrentProjectId(currentState)
-    return prevId !== nextId
+    return prevId !== nextId && !!nextId
   },
   effect: async (_, listenerApi) => {
     await listenerApi.dispatch(listDocuments())
