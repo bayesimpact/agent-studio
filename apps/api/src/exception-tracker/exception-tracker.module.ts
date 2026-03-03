@@ -6,11 +6,11 @@ import { EXCEPTION_TRACKER_SERVICE } from "./types"
 @Global()
 @Module({
   providers: [
+    PosthogService,
     {
       provide: EXCEPTION_TRACKER_SERVICE,
-      useClass: PosthogService,
+      useExisting: PosthogService,
     },
-    PosthogService,
     ExceptionTrackerFilter,
   ],
   exports: [EXCEPTION_TRACKER_SERVICE, PosthogService, ExceptionTrackerFilter],

@@ -35,6 +35,8 @@ export class PosthogService implements OnModuleInit, ExceptionTrackerService {
     const properties = context && typeof context === "object" ? { ...context } : {}
     delete properties.userId
 
+    this.logger.log(`Sending exception to PostHog for user ${userId}`)
+
     this.client.captureException(error, userId, properties)
   }
 
