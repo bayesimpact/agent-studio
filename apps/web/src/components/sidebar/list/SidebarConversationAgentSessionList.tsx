@@ -14,7 +14,7 @@ import { ConversationAgentSessionCreator } from "../../../features/agents/conver
 import { NavFeedback } from "../nav/NavFeedback"
 import type { MenuItem } from "../types"
 
-export function AgentSessionList({
+export function SidebarConversationAgentSessionList({
   organizationId,
   agentId,
   projectId,

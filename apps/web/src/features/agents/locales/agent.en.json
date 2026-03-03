@@ -35,7 +35,8 @@
         "title": "Agent type",
         "description": "Choose the type before configuring your agent.",
         "conversation": "Conversation",
-        "extraction": "Extraction"
+        "extraction": "Extraction",
+        "form": "form"
       },
       "conversationDialog": {
         "title": "Create Conversation Agent",
@@ -44,15 +45,25 @@
       "extractionDialog": {
         "title": "Create Extraction Agent",
         "description": "Create a new extraction agent for {{projectName}}"
+      },
+      "formDialog": {
+        "title": "Create Form Agent",
+        "description": "Create a new form agent for {{projectName}}"
       }
     },
     "update": {
-      "title": "Edit Agent",
-      "titleConversation": "Edit Conversation Agent",
-      "titleExtraction": "Edit Extraction Agent",
-      "descriptionConversation": "Edit conversation agent details",
-      "descriptionExtraction": "Edit extraction agent details",
-      "description": "Edit agent details"
+      "conversation": {
+        "title": "Edit Conversation Agent",
+        "description": "Edit details for this conversation agent"
+      },
+      "extraction": {
+        "title": "Edit Extraction Agent",
+        "description": "Edit details for this extraction agent"
+      },
+      "form": {
+        "title": "Edit Form Agent",
+        "description": "Edit details for this form agent"
+      }
     },
     "delete": {
       "title": "Delete Agent",

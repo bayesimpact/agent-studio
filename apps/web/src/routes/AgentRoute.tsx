@@ -5,6 +5,7 @@ import { ADS } from "@/store/async-data-status"
 import { useAppSelector } from "@/store/hooks"
 import { ConversationAgentRoute } from "./agents/ConversationAgentRoute"
 import { ExtractionAgentRoute } from "./agents/ExtractionAgentRoute"
+import { FormAgentRoute } from "./agents/FormAgentRoute"
 import { ErrorRoute } from "./ErrorRoute"
 import { LoadingRoute } from "./LoadingRoute"
 
@@ -21,6 +22,14 @@ export function AgentRoute() {
       case "conversation":
         return (
           <ConversationAgentRoute
+            projectId={projectId}
+            agent={agent.value}
+            organizationId={organizationId}
+          />
+        )
+      case "form":
+        return (
+          <FormAgentRoute
             projectId={projectId}
             agent={agent.value}
             organizationId={organizationId}

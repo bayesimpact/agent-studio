@@ -10,7 +10,7 @@ import {
   SheetTrigger,
 } from "@caseai-connect/ui/shad/sheet"
 import { useTranslation } from "react-i18next"
-import { MarkdownWrapper } from "../chat/MarkdownWrapper"
+import { MarkdownWrapper } from "@/components/chat/MarkdownWrapper"
 
 export function DefaultPromptDialog({
   prompt,

@@ -26,8 +26,7 @@ import type { Project } from "@/features/projects/projects.models"
 import { useBuildPath } from "@/hooks/use-build-path"
 import { useAppDispatch } from "@/store/hooks"
 import type { AgentFormData } from "./agent-form.shared"
-import { ConversationAgentForm } from "./ConversationAgentForm"
-import { ExtractionAgentForm } from "./ExtractionAgentForm"
+import { BaseAgentForm } from "./BaseAgentForm"
 
 const defaultStep = "typeSelection"
 const defaultType = "conversation"
@@ -123,6 +122,16 @@ function TypeSelection({
             >
               {t("agent:create.typeDialog.extraction")}
             </button>
+            <button
+              type="button"
+              className={cn(
+                "border rounded-md px-3 py-2 text-sm text-left",
+                selectedType === "form" ? "border-primary" : "border-muted",
+              )}
+              onClick={() => onSelectType("form")}
+            >
+              {t("agent:create.typeDialog.form")}
+            </button>
           </div>
 
           <Button type="button" onClick={onComplete} className="w-full">
@@ -212,9 +221,5 @@ function CreateForm({
     onSuccess(createdAgent)
   }
 
-  if (agentType === "extraction") {
-    return <ExtractionAgentForm onSubmit={handleCreate} />
-  }
-
-  return <ConversationAgentForm onSubmit={handleCreate} />
+  return <BaseAgentForm agentType={agentType} onSubmit={handleCreate} />
 }

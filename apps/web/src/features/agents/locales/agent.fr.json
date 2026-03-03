@@ -35,7 +35,8 @@
         "title": "Type d'agent",
         "description": "Choisissez le type avant de configurer votre agent.",
         "conversation": "Conversation",
-        "extraction": "Extraction"
+        "extraction": "Extraction",
+        "form": "Formulaire"
       },
       "conversationDialog": {
         "title": "Créer un agent conversationnel",
@@ -44,15 +45,25 @@
       "extractionDialog": {
         "title": "Créer un agent d'extraction",
         "description": "Créer un nouvel agent d'extraction pour {{projectName}}"
+      },
+      "formDialog": {
+        "title": "Créer un agent de formulaire",
+        "description": "Créer un nouvel agent de formulaire pour {{projectName}}"
       }
     },
     "update": {
-      "title": "Modifier l'agent",
-      "titleConversation": "Modifier l'agent conversationnel",
-      "titleExtraction": "Modifier l'agent d'extraction",
-      "descriptionConversation": "Modifier les détails de l'agent conversationnel",
-      "descriptionExtraction": "Modifier les détails de l'agent d'extraction",
-      "description": "Modifier les détails de l'agent"
+      "conversation": {
+        "title": "Modifier l'agent conversationnel",
+        "description": "Modifier les détails de cet agent conversationnel"
+      },
+      "extraction": {
+        "title": "Modifier l'agent d'extraction",
+        "description": "Modifier les détails de cet agent d'extraction"
+      },
+      "form": {
+        "title": "Modifier l'agent de formulaire",
+        "description": "Modifier les détails de cet agent de formulaire"
+      }
     },
     "delete": {
       "title": "Supprimer l'agent",

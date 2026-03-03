@@ -24,32 +24,44 @@ import {
   isValidJsonObject,
 } from "./agent-form.shared"
 
-export function ExtractionAgentForm({
+export function BaseAgentForm({
   editableAgent,
   onSubmit,
+  agentType,
 }: {
+  agentType: Agent["type"]
   editableAgent?: Agent
   onSubmit: (values: AgentFormData) => Promise<void> | void
 }) {
   const { t } = useTranslation()
-  const agentSchema = buildAgentSchema((key) => t(`agent:props.${key}`)).extend({
-    outputJsonSchemaText: z
-      .string()
-      .min(1, t("agent:props.validation.outputJsonSchemaRequired"))
-      .refine(isValidJsonObject, t("agent:props.validation.outputJsonSchemaInvalid")),
-  })
-  type FormValues = z.infer<typeof agentSchema>
+  const baseAgentSchema = buildAgentSchema((key) => t(`agent:props.${key}`))
+
+  const hasOutputJsonSchema = agentType !== "conversation"
+
+  type FormValues = z.infer<typeof baseAgentSchema> &
+    (typeof hasOutputJsonSchema extends true ? { outputJsonSchemaText: string } : object)
+
+  const agentSchema = hasOutputJsonSchema
+    ? baseAgentSchema.extend({
+        outputJsonSchemaText: z
+          .string()
+          .min(1, t("agent:props.validation.outputJsonSchemaRequired"))
+          .refine(isValidJsonObject, t("agent:props.validation.outputJsonSchemaInvalid")),
+      })
+    : baseAgentSchema
 
   const defaultValues = editableAgent
     ? ({
         ...editableAgent,
-        outputJsonSchemaText: editableAgent.outputJsonSchema
-          ? JSON.stringify(editableAgent.outputJsonSchema, null, 2)
-          : "",
+        ...(hasOutputJsonSchema && {
+          outputJsonSchemaText: editableAgent.outputJsonSchema
+            ? JSON.stringify(editableAgent.outputJsonSchema, null, 2)
+            : "",
+        }),
       } as FormValues)
     : ({
         ...getDefaultFormValues("extraction"),
-        outputJsonSchemaText: "",
+        ...(hasOutputJsonSchema && { outputJsonSchemaText: "" }),
       } as FormValues)
 
   const {
@@ -64,13 +76,7 @@ export function ExtractionAgentForm({
   })
 
   const handleFormSubmit = async (data: FormValues) => {
-    // data is already validated and coerced
     await onSubmit(data as AgentFormData)
-    // Optional: reset to new values or keep form state.
-    // If we want to reset to the *initial* defaults (clearing the form), use defaultValues.
-    // If we want to update the "pristine" state to current values, use reset(data).
-    // The previous code reset to defaultValues, which might be intended to "clear" the form or "reset to saved state".
-    // For now I'll keep the previous behavior but fix the variable.
     reset(data)
   }
 
@@ -105,22 +111,34 @@ export function ExtractionAgentForm({
               )}
             </Field>
 
-            <Field>
-              <FieldLabel htmlFor="outputJsonSchemaText">
-                {t("agent:props.outputJsonSchema")}
-              </FieldLabel>
-              <Textarea
-                id="outputJsonSchemaText"
-                placeholder={t("agent:props.placeholders.outputJsonSchema")}
-                rows={10}
-                className="font-mono min-h-56"
-                {...register("outputJsonSchemaText")}
-                aria-invalid={errors.outputJsonSchemaText ? "true" : "false"}
-              />
-              {errors.outputJsonSchemaText && (
-                <p className="text-sm text-destructive">{errors.outputJsonSchemaText.message}</p>
-              )}
-            </Field>
+            {hasOutputJsonSchema && (
+              <Field>
+                <FieldLabel htmlFor="outputJsonSchemaText">
+                  {t("agent:props.outputJsonSchema")}
+                </FieldLabel>
+                <Textarea
+                  id="outputJsonSchemaText"
+                  placeholder={t("agent:props.placeholders.outputJsonSchema")}
+                  rows={10}
+                  className="font-mono min-h-56"
+                  // @ts-expect-error
+                  {...register("outputJsonSchemaText")}
+                  // @ts-expect-error
+                  aria-invalid={errors.outputJsonSchemaText ? "true" : "false"}
+                />
+                {
+                  // @ts-expect-error
+                  errors.outputJsonSchemaText && (
+                    <p className="text-sm text-destructive">
+                      {
+                        // @ts-expect-error
+                        errors.outputJsonSchemaText.message
+                      }
+                    </p>
+                  )
+                }
+              </Field>
+            )}
 
             <Field>
               <FieldLabel htmlFor="model">{t("agent:props.model")}</FieldLabel>

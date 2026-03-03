@@ -17,8 +17,7 @@ import type { Agent } from "@/features/agents/agents.models"
 import { updateAgent } from "@/features/agents/agents.thunks"
 import { useAppDispatch } from "@/store/hooks"
 import type { AgentFormData } from "./agent-form.shared"
-import { ConversationAgentForm } from "./ConversationAgentForm"
-import { ExtractionAgentForm } from "./ExtractionAgentForm"
+import { BaseAgentForm } from "./BaseAgentForm"
 
 export function AgentEditorWithTrigger({ agent }: { agent: Agent }) {
   const [open, setOpen] = useState(false)
@@ -62,9 +61,8 @@ export function AgentEditorWithoutTrigger({
 
 function Content({ agent, onSuccess }: { agent: Agent; onSuccess: () => void }) {
   const { t } = useTranslation("agent", { keyPrefix: "update" })
-  const sheetTitle = agent.type === "extraction" ? t("titleExtraction") : t("titleConversation")
-  const sheetDescription =
-    agent.type === "extraction" ? t("descriptionExtraction") : t("descriptionConversation")
+  const sheetTitle = t(`${agent.type}.title`)
+  const sheetDescription = t(`${agent.type}.description`)
 
   return (
     <SheetContent side="bottom" className="h-dvh">
@@ -106,9 +104,5 @@ function UpdateForm({ agent, onSuccess }: { agent: Agent; onSuccess?: () => void
     onSuccess?.()
   }
 
-  if (agent.type === "extraction") {
-    return <ExtractionAgentForm editableAgent={agent} onSubmit={handleSubmit} />
-  }
-
-  return <ConversationAgentForm editableAgent={agent} onSubmit={handleSubmit} />
+  return <BaseAgentForm agentType={agent.type} editableAgent={agent} onSubmit={handleSubmit} />
 }
