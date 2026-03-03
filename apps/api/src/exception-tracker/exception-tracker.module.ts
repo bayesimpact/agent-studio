@@ -1,5 +1,4 @@
 import { Global, Module } from "@nestjs/common"
-import { APP_FILTER } from "@nestjs/core"
 import { ExceptionTrackerFilter } from "./exception-tracker.filter"
 import { PosthogService } from "./posthog.service"
 import { EXCEPTION_TRACKER_SERVICE } from "./types"
@@ -12,11 +11,8 @@ import { EXCEPTION_TRACKER_SERVICE } from "./types"
       useClass: PosthogService,
     },
     PosthogService,
-    {
-      provide: APP_FILTER,
-      useClass: ExceptionTrackerFilter,
-    },
+    ExceptionTrackerFilter,
   ],
-  exports: [EXCEPTION_TRACKER_SERVICE, PosthogService],
+  exports: [EXCEPTION_TRACKER_SERVICE, PosthogService, ExceptionTrackerFilter],
 })
 export class ExceptionTrackerModule {}
