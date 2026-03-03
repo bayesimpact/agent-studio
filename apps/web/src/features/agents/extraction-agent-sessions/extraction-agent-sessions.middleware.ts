@@ -4,7 +4,7 @@ import type { AppDispatch, RootState } from "@/store"
 import { ADS } from "@/store/async-data-status"
 import { selectIsAdminInterface } from "../../auth/auth.selectors"
 import { getCurrentIds } from "../../helpers"
-import { selectAgentsData, selectCurrentAgentId } from "../agents.selectors"
+import { selectAgentsData } from "../agents.selectors"
 import { listAgents } from "../agents.thunks"
 import {
   executeExtractionAgentSession,
@@ -21,6 +21,7 @@ listenerMiddleware.startListening({
   actionCreator: listAgents.fulfilled,
   effect: async ({ payload: agents }, listenerApi) => {
     agents.forEach((agent) => {
+      if (agent.type !== "extraction") return
       listenerApi.dispatch(listExtractionAgentSessions({ agentId: agent.id }))
     })
   },
@@ -41,20 +42,6 @@ listenerMiddleware.startListening({
         await listenerApi.dispatch(listExtractionAgentSessions({ agentId: agent.id }))
       }
     }
-  },
-})
-
-// Refresh extraction agent sessions when current Agent changes
-listenerMiddleware.startListening({
-  predicate(_, currentState, originalState) {
-    const prevId = selectCurrentAgentId(originalState)
-    const nextId = selectCurrentAgentId(currentState)
-    return prevId !== nextId
-  },
-  effect: async (_, listenerApi) => {
-    const state = listenerApi.getState()
-    const { agentId } = getCurrentIds({ state, wantedIds: ["agentId"] })
-    await listenerApi.dispatch(listExtractionAgentSessions({ agentId }))
   },
 })
 

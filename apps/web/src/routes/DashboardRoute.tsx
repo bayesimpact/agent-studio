@@ -10,7 +10,6 @@ import { NavEvaluation } from "@/components/sidebar/nav/NavEvaluation"
 import { AdminNavProject, AppNavProject } from "@/components/sidebar/nav/NavProject"
 import { NavProjectMemberships } from "@/components/sidebar/nav/NavProjectMemberships"
 import { Logo } from "@/components/themes/Logo"
-import { authActions } from "@/features/auth/auth.slice"
 import type { User } from "@/features/me/me.models"
 import { selectMeData } from "@/features/me/me.selectors"
 import type { Organization } from "@/features/organizations/organizations.models"
@@ -143,13 +142,11 @@ export function InterfaceToggle({
   isAdmin: boolean
   isAdminInterface: boolean
 }) {
-  const dispatch = useAppDispatch()
   const { getPath } = useGetPath()
 
   if (!isAdmin) return null
 
   const handleChange = (checked: boolean) => {
-    dispatch(authActions.setIsAdminInterface(checked))
     const newLocation = getPath("project").replace(
       checked ? "/app" : "/admin",
       checked ? "/admin" : "/app",

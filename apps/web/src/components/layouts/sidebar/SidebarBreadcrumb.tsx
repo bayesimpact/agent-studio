@@ -17,7 +17,7 @@ import { cn } from "@caseai-connect/ui/utils"
 import { ChevronDownIcon, DotIcon } from "lucide-react"
 import { useTranslation } from "react-i18next"
 import { Link } from "react-router-dom"
-import { selectAgentData, selectCurrentAgentsData } from "@/features/agents/agents.selectors"
+import { selectCurrentAgentData, selectCurrentAgentsData } from "@/features/agents/agents.selectors"
 import {
   selectCurrentConversationAgentSessionData,
   selectCurrentConversationAgentSessionsData,
@@ -103,7 +103,7 @@ function ProjectList({ organizationId }: { organizationId: string }) {
 
 function AgentList({ organizationId }: { organizationId: string }) {
   const agents = useAppSelector(selectCurrentAgentsData)
-  const agent = useAppSelector(selectAgentData)
+  const agent = useAppSelector(selectCurrentAgentData)
   const { buildPath } = useBuildPath()
   if (!ADS.isFulfilled(agents) || !ADS.isFulfilled(agent)) return null
 

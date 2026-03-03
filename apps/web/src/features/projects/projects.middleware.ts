@@ -2,12 +2,25 @@ import type { TypedStartListening } from "@reduxjs/toolkit"
 import { createListenerMiddleware, isAnyOf } from "@reduxjs/toolkit"
 import type { AppDispatch, RootState } from "@/store/types"
 import { notificationsActions } from "../notifications/notifications.slice"
+import { selectCurrentOrganizationId } from "../organizations/organizations.selectors"
 import { createProject, deleteProject, listProjects, updateProject } from "./projects.thunks"
 
 // Create typed listener middleware
 const listenerMiddleware = createListenerMiddleware<RootState, AppDispatch>()
 
 export type AppStartListening = TypedStartListening<RootState, AppDispatch>
+
+// List projects when the current organization changes
+listenerMiddleware.startListening({
+  predicate(_, currentState, originalState) {
+    const prevOrgId = selectCurrentOrganizationId(originalState)
+    const currOrgId = selectCurrentOrganizationId(currentState)
+    return prevOrgId !== currOrgId
+  },
+  effect: async (_, listenerApi) => {
+    await listenerApi.dispatch(listProjects())
+  },
+})
 
 listenerMiddleware.startListening({
   matcher: isAnyOf(deleteProject.fulfilled, createProject.fulfilled, updateProject.fulfilled),

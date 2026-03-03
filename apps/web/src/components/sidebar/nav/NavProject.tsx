@@ -4,8 +4,8 @@ import type { ProjectDto } from "@caseai-connect/api-contracts"
 import { useState } from "react"
 import { ProjectDeletor } from "../../project/ProjectDeletor"
 import { ProjectEditor } from "../../project/ProjectEditor"
-import { ProjectItem } from "../../project/ProjectItem"
 import { ProjectItemOptions } from "../../project/ProjectItemOptions"
+import { SidebarProjectItem } from "../../project/SidebarProjectItem"
 import { AdminAgentList, AppAgentList } from "../list/SidebarAgentList"
 
 type Item = { action: "edit" | "delete"; value: ProjectDto }
@@ -22,7 +22,7 @@ export function AdminNavProject({
   const handleClose = () => setItem(null)
   return (
     <>
-      <ProjectItem
+      <SidebarProjectItem
         key={project.id}
         project={project}
         options={
@@ -36,7 +36,7 @@ export function AdminNavProject({
         {({ agents }) => (
           <AdminAgentList organizationId={organizationId} agents={agents} project={project} />
         )}
-      </ProjectItem>
+      </SidebarProjectItem>
 
       <ProjectEditor project={item?.action === "edit" ? item.value : null} onClose={handleClose} />
 
@@ -56,10 +56,10 @@ export function AppNavProject({
   project: ProjectDto
 }) {
   return (
-    <ProjectItem key={project.id} project={project}>
+    <SidebarProjectItem key={project.id} project={project}>
       {({ agents }) => (
         <AppAgentList projectId={project.id} organizationId={organizationId} agents={agents} />
       )}
-    </ProjectItem>
+    </SidebarProjectItem>
   )
 }

@@ -24,16 +24,6 @@ export const selectAgentsFromProjectId = (projectId?: string | null) =>
     return { status: ADS.Fulfilled, value: agentsData.value[projectId], error: null }
   })
 
-export const selectExtractionAgentsFromProjectId = (projectId?: string | null) =>
-  createSelector([selectAgentsFromProjectId(projectId)], (agentsData): AsyncData<Agent[]> => {
-    if (!ADS.isFulfilled(agentsData)) return { ...agentsData }
-    return {
-      status: ADS.Fulfilled,
-      error: null,
-      value: agentsData.value.filter((agent) => agent.type === "extraction"),
-    }
-  })
-
 export const selectCurrentAgentId = (state: RootState) => state.agents.currentAgentId
 
 export const selectCurrentAgentsData = createSelector(
@@ -49,7 +39,7 @@ export const selectCurrentAgentsData = createSelector(
   },
 )
 
-export const selectAgentData = createSelector(
+export const selectCurrentAgentData = createSelector(
   [selectCurrentAgentsData, selectCurrentAgentId],
   (agentsData, agentId): AsyncData<Agent> => {
     if (!agentId) return { status: ADS.Error, value: null, error: "No Agent selected" }
@@ -60,13 +50,3 @@ export const selectAgentData = createSelector(
     return { status: ADS.Fulfilled, value: agent, error: null }
   },
 )
-
-export const selectAgentDataFromAgentId = (agentId?: string | null) =>
-  createSelector([selectCurrentAgentsData], (agentsData): AsyncData<Agent> => {
-    if (!agentId) return { status: ADS.Error, value: null, error: "No Agent selected" }
-    if (!ADS.isFulfilled(agentsData)) return { ...agentsData }
-    const agent = agentsData.value.find((candidateAgent) => candidateAgent.id === agentId)
-    if (!agent)
-      return { status: ADS.Error, value: null, error: "Agent not found in current project" }
-    return { status: ADS.Fulfilled, value: agent, error: null }
-  })

@@ -7,7 +7,7 @@ import type { Project } from "@/features/projects/projects.models"
 import { ADS } from "@/store/async-data-status"
 import { useAppSelector } from "@/store/hooks"
 
-export function ProjectItem({
+export function SidebarProjectItem({
   project,
   children,
   options,
@@ -23,13 +23,14 @@ export function ProjectItem({
 
   const name = `${t("project:project")} - ${project.name}`
 
-  if (!ADS.isFulfilled(agents)) return <div>Error</div>
+  if (ADS.isFulfilled(agents)) {
+    if (agents.value.length === 0 && !showEmptyProject) return null
 
-  if (agents.value.length === 0 && !showEmptyProject) return null
-
-  return (
-    <Section name={name} options={options} className="group-data-[collapsible=icon]:hidden">
-      <SidebarMenu>{children({ agents: agents.value })}</SidebarMenu>
-    </Section>
-  )
+    return (
+      <Section name={name} options={options} className="group-data-[collapsible=icon]:hidden">
+        <SidebarMenu>{children({ agents: agents.value })}</SidebarMenu>
+      </Section>
+    )
+  }
+  return null
 }

@@ -21,13 +21,17 @@ const slice = createSlice({
     },
     setIsAdmin: (state, action: PayloadAction<boolean>) => {
       const isAdmin = action.payload
-      state.isAdmin = action.payload
+      state.isAdmin = isAdmin
       if (!isAdmin && state.isAdminInterface) {
         state.isAdminInterface = false
       }
     },
     setIsAdminInterface: (state, action: PayloadAction<boolean>) => {
-      state.isAdminInterface = action.payload
+      if (state.isAdmin) {
+        state.isAdminInterface = action.payload
+      } else {
+        state.isAdminInterface = false
+      }
     },
   },
 })

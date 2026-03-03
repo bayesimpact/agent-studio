@@ -1,6 +1,5 @@
 import { createSlice, type PayloadAction } from "@reduxjs/toolkit"
 import { ADS, type AsyncData, defaultAsyncData } from "@/store/async-data-status"
-import { initOrganization } from "../global.thunks"
 import type { Project } from "../projects/projects.models"
 import type { Agent } from "./agents.models"
 import { listAgents } from "./agents.thunks"
@@ -29,26 +28,6 @@ const slice = createSlice({
     },
   },
   extraReducers: (builder) => {
-    builder
-      .addCase(initOrganization.pending, (state) => {
-        if (!ADS.isFulfilled(state.data)) state.data.status = ADS.Loading
-        state.data.error = null
-      })
-      .addCase(initOrganization.fulfilled, (state, action) => {
-        state.data = {
-          status: ADS.Fulfilled,
-          error: null,
-          value: action.payload.projects.reduce((acc, project) => {
-            acc[project.id] = action.payload.agents[project.id] || []
-            return acc
-          }, {} as DataType),
-        }
-      })
-      .addCase(initOrganization.rejected, (state, action) => {
-        state.data.status = ADS.Error
-        state.data.error = action.error.message || "Failed to list agents"
-      })
-
     builder
       .addCase(listAgents.pending, (state) => {
         if (!ADS.isFulfilled(state.data)) state.data.status = ADS.Loading
