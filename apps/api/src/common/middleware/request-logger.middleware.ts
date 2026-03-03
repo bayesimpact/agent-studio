@@ -1,9 +1,6 @@
 import { Inject, Injectable, type NestMiddleware } from "@nestjs/common"
 import type { NextFunction, Request, Response } from "express"
-import {
-  EXCEPTION_TRACKER_SERVICE,
-  type ExceptionTrackerService,
-} from "../../exception-tracker/types"
+import { EXCEPTION_TRACKER_SERVICE, type ExceptionTrackerService } from "../exception-tracker/types"
 
 /**
  * NestJS middleware that logs incoming requests and their responses.

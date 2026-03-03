@@ -3,7 +3,7 @@ import { join } from "node:path"
 import { ValidationPipe } from "@nestjs/common"
 import { NestFactory } from "@nestjs/core"
 import { AppModule } from "./app.module"
-import { ExceptionTrackerFilter } from "./exception-tracker/exception-tracker.filter"
+import { ExceptionTrackerFilter } from "./common/exception-tracker/exception-tracker.filter"
 
 async function bootstrap() {
   const frontendUrl = normalizeFrontendUrl(process.env.FRONTEND_URL)

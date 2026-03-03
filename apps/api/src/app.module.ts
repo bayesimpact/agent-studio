@@ -1,6 +1,7 @@
 import { type MiddlewareConsumer, Module, type NestModule } from "@nestjs/common"
 import { ConfigModule, ConfigService } from "@nestjs/config"
 import { TypeOrmModule } from "@nestjs/typeorm"
+import { ExceptionTrackerModule } from "./common/exception-tracker/exception-tracker.module"
 import { RequestLoggerMiddleware } from "./common/middleware/request-logger.middleware"
 import typeorm from "./config/typeorm"
 import { AgentsModule } from "./domains/agents/agents.module"
@@ -14,7 +15,6 @@ import { MeModule } from "./domains/me/me.module"
 import { OrganizationsModule } from "./domains/organizations/organizations.module"
 import { ProjectsModule } from "./domains/projects/projects.module"
 import { UsersModule } from "./domains/users/users.module"
-import { ExceptionTrackerModule } from "./exception-tracker/exception-tracker.module"
 
 @Module({
   imports: [
