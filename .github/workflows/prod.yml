@@ -152,7 +152,7 @@ jobs:
       - name: migration
         run: make migrations MIG_DATABASE_PASSWORD=${{ steps.Secrets.outputs.DATABASE_PASSWORD }} REGION=eu
         env:
-          CLOUDSQL_CREDENTIALS_FILE: dontsave/key.json
+          CLOUDSQL_CREDENTIALS_FILE: ${{ github.workspace }}/dontsave/key.json
 
       - name: deploy
         run: make deploy-only REGION=eu
