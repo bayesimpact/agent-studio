@@ -37,7 +37,14 @@ export class PosthogService implements OnModuleInit, ExceptionTrackerService {
 
     this.logger.log(`Sending exception to PostHog for user ${userId}`)
 
-    this.client.captureException(error, userId, properties)
+    void this.client
+      .captureExceptionImmediate(error, userId, properties)
+      .then(() => {
+        this.logger.log("Exception sent to PostHog successfully")
+      })
+      .catch((captureError) => {
+        this.logger.error("Failed to send exception to PostHog", captureError)
+      })
   }
 
   shutdown(): void {

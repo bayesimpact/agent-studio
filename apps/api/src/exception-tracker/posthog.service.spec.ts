@@ -1,10 +1,10 @@
 import { PosthogService } from "./posthog.service"
 
-const captureExceptionMock = jest.fn()
+const captureExceptionImmediateMock = jest.fn()
 
 jest.mock("posthog-node", () => ({
   PostHog: jest.fn().mockImplementation(() => ({
-    captureException: captureExceptionMock,
+    captureExceptionImmediate: captureExceptionImmediateMock,
     shutdown: jest.fn(),
   })),
 }))
@@ -30,13 +30,13 @@ describe("PosthogService", () => {
 
     service.captureException(new Error("test-error"))
 
-    expect(captureExceptionMock).not.toHaveBeenCalled()
+    expect(captureExceptionImmediateMock).not.toHaveBeenCalled()
   })
 
   it("captures exception immediately with user context", async () => {
     process.env.POSTHOG_KEY = "phc_test_key"
     process.env.POSTHOG_HOST = "https://eu.i.posthog.com"
-    captureExceptionMock.mockResolvedValue(undefined)
+    captureExceptionImmediateMock.mockResolvedValue(undefined)
 
     const service = new PosthogService()
     service.onModuleInit()
@@ -50,7 +50,7 @@ describe("PosthogService", () => {
 
     await Promise.resolve()
 
-    expect(captureExceptionMock).toHaveBeenCalledWith(
+    expect(captureExceptionImmediateMock).toHaveBeenCalledWith(
       expect.objectContaining({ message: "boom" }),
       "user-123",
       expect.objectContaining({
