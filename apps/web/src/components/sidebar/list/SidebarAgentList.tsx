@@ -1,17 +1,17 @@
 import { SidebarMenuButton, SidebarMenuItem } from "@caseai-connect/ui/shad/sidebar"
-import { BotIcon, PlusIcon, ScanText } from "lucide-react"
+import { BotIcon, BotMessageSquareIcon, FormIcon, PlusIcon, ScanText } from "lucide-react"
 import { useState } from "react"
 import { useTranslation } from "react-i18next"
 import { useParams } from "react-router-dom"
-import { AgentCreator } from "@/components/agent/AgentCreator"
-import { AgentDeletorWithoutTrigger } from "@/components/agent/AgentDeletor"
-import { AgentEditorWithoutTrigger } from "@/components/agent/AgentEditor"
-import { AgentItemOptions } from "@/components/agent/AgentItemOptions"
 import type { Agent } from "@/features/agents/agents.models"
+import { AgentCreator } from "@/features/agents/components/AgentCreator"
+import { AgentDeletorWithoutTrigger } from "@/features/agents/components/AgentDeletor"
+import { AgentEditorWithoutTrigger } from "@/features/agents/components/AgentEditor"
+import { AgentItemOptions } from "@/features/agents/components/AgentItemOptions"
 import type { Project } from "@/features/projects/projects.models"
 import { useBuildPath } from "@/hooks/use-build-path"
 import { AppNavItem } from "../nav/NavItem"
-import { AgentSessionList } from "./SidebarAgentSessionList"
+import { SidebarConversationAgentSessionList } from "./SidebarConversationAgentSessionList"
 
 type Item = { action: "edit" | "delete"; value: Agent }
 
@@ -54,13 +54,13 @@ export function AdminAgentList({
             />
           }
         >
-          {agent.type === "conversation" ? (
-            <AgentSessionList
+          {agent.type === "conversation" && (
+            <SidebarConversationAgentSessionList
               organizationId={organizationId}
               agentId={agent.id}
               projectId={agent.projectId}
             />
-          ) : null}
+          )}
         </AppNavItem>
       ))}
 
@@ -121,7 +121,7 @@ export function AppAgentList({
             icon: getAgentIcon(agent.type),
           }}
         >
-          <AgentSessionList
+          <SidebarConversationAgentSessionList
             organizationId={organizationId}
             agentId={agent.id}
             projectId={projectId}
@@ -133,5 +133,11 @@ export function AppAgentList({
 }
 
 function getAgentIcon(agentType: Agent["type"]) {
-  return agentType === "extraction" ? ScanText : BotIcon
+  return agentType === "extraction"
+    ? ScanText
+    : agentType === "form"
+      ? FormIcon
+      : agentType === "conversation"
+        ? BotMessageSquareIcon
+        : BotIcon
 }

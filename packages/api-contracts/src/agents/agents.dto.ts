@@ -1,6 +1,6 @@
 import type { TimeType } from "../generic"
 
-export type AgentType = "conversation" | "extraction"
+export type AgentType = "conversation" | "extraction" | "form"
 
 export type AgentDto = {
   createdAt: TimeType

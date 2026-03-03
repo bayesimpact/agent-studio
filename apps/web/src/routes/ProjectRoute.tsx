@@ -1,7 +1,7 @@
 import { Navigate, useOutlet } from "react-router-dom"
-import { EmptyAgent } from "@/components/agent/EmptyAgent"
 import type { Agent } from "@/features/agents/agents.models"
 import { selectAgentsFromProjectId } from "@/features/agents/agents.selectors"
+import { EmptyAgent } from "@/features/agents/components/EmptyAgent"
 import type { Project } from "@/features/projects/projects.models"
 import {
   selectCurrentProjectData,
