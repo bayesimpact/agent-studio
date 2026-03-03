@@ -181,7 +181,7 @@ deploy-only:
 	--set-env-vars=GCS_STORAGE_BUCKET_NAME=${gcsStorageBucketName} \
 	--set-env-vars=GOOGLE_VERTEX_PROJECT=${googleVertexProject} \
 	--set-env-vars=GOOGLE_VERTEX_LOCATION=${googleVertexLocation} \
-  --set-env-vars=LANGFUSE_PK=${langfusePk},LANGFUSE_BASE_URL=${langfuseUrl},LOCATION=$(location) \
+  --set-env-vars=LANGFUSE_PK=${langfusePk},LANGFUSE_BASE_URL=${langfuseUrl},LOCATION=$(location),POSTHOG_HOST=${postHogHost} \
   --set-env-vars=DATABASE_HOST=/cloudsql/${addCloudSqlInstances},DATABASE_USERNAME=${databaseUsername},DATABASE_NAME=${databaseName} \
 	--region=${zone} \
 	--port=3000 \

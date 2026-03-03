@@ -1,21 +1,29 @@
-import { Injectable, type OnModuleInit } from "@nestjs/common"
+import { Injectable, Logger, type OnModuleInit } from "@nestjs/common"
 import { PostHog } from "posthog-node"
 import type { ExceptionTrackerService } from "./types"
 
 @Injectable()
 export class PosthogService implements OnModuleInit, ExceptionTrackerService {
   private client: PostHog | undefined
+  private readonly logger = new Logger(PosthogService.name)
 
   onModuleInit() {
     const posthogKey = process.env.POSTHOG_KEY ?? process.env.POSTHOG_API_KEY
     if (!posthogKey) {
+      this.logger.log("PostHog disabled: missing POSTHOG_KEY/POSTHOG_API_KEY")
       return
     }
 
+    const posthogHost = process.env.POSTHOG_HOST
+    if (!posthogHost) {
+      this.logger.warn("POSTHOG_HOST is not configured. Default host will be used by SDK.")
+    }
+
     this.client = new PostHog(posthogKey, {
-      host: process.env.POSTHOG_HOST,
+      host: posthogHost,
       enableExceptionAutocapture: true,
     })
+    this.logger.log("PostHog exception tracking initialized")
   }
 
   captureException(error: Error, context?: Record<string, unknown>): void {
