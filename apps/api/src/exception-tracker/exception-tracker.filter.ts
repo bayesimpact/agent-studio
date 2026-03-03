@@ -23,6 +23,8 @@ export class ExceptionTrackerFilter extends BaseExceptionFilter implements Excep
 
   override catch(exception: unknown, host: ArgumentsHost) {
     const request = host.switchToHttp().getRequest<Request>()
+    const trackedRequest = request as Request & { exceptionTrackedByFilter?: boolean }
+    trackedRequest.exceptionTrackedByFilter = true
 
     const error =
       exception instanceof Error ? exception : new Error(this.safeStringifyException(exception))
