@@ -3,6 +3,7 @@ import { join } from "node:path"
 import { ValidationPipe } from "@nestjs/common"
 import { NestFactory } from "@nestjs/core"
 import { AppModule } from "./app.module"
+import { StackTraceLoggingExceptionFilter } from "./common/filters/stack-trace-logging-exception.filter"
 
 async function bootstrap() {
   const frontendUrl = normalizeFrontendUrl(process.env.FRONTEND_URL)
@@ -17,6 +18,7 @@ async function bootstrap() {
       transform: true,
     }),
   )
+  app.useGlobalFilters(new StackTraceLoggingExceptionFilter(app.getHttpAdapter()))
   app.enableCors({
     origin: [
       "http://localhost:5173",
