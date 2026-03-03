@@ -1,11 +1,10 @@
-# GKE Deployment Runbook (Impulse Example)
+# GKE Deployment Runbook (Health Example)
 
-This guide rewrites the original notes into a step-by-step deployment runbook.
-
-- Example app name: `health`
-- Example Google Cloud project: `health-488513`
-- Keep the order of steps
-- Prefer CLI (`gcloud`) over UI where possible
+Pre-requisities:
+- a GKE account with the admin/owner permissions
+- a Posthog account (and a Posthog project)
+- a Auth0 account with admin permissions
+- a Vercel account with admin permissions
 
 ---
 
@@ -228,12 +227,16 @@ printf '%s' '<langfuse-secret-key>' | gcloud secrets create HEALTH_LANGFUSE_SK \
 printf '%s' '<auth0-m2m-client-secret>' | gcloud secrets create HEALTH_AUTH0_M2M_CLIENT_SECRET \
   --replication-policy=automatic \
   --data-file=-
+
+printf '%s' '<posthog-key>' | gcloud secrets create HEALTH_POSTHOG_KEY \
+  --replication-policy=automatic \
+  --data-file=-
 ```
 
 If a secret already exists, add a new version:
 
 ```bash
-printf '%s' '<new-value>' | gcloud secrets versions add IMPULSE_DATABASE_PASSWORD --data-file=-
+printf '%s' '<new-value>' | gcloud secrets versions add HEALTH_DATABASE_PASSWORD --data-file=-
 ```
 
 ---
@@ -396,6 +399,12 @@ Set environment variables:
   - `VITE_AUTH0_CLIENT_ID`
   - `VITE_AUTH0_AUDIENCE`
   - `VITE_AUTH0_ORGANIZATION_ID`
+- Posthog:
+  - `VITE_PUBLIC_POSTHOG_KEY`
+  - `VITE_PUBLIC_POSTHOG_HOST`
+  - `POSTHOG_CLI_HOST`
+  - `POSTHOG_CLI_ENV_ID`
+  - `POSTHOG_CLI_TOKEN` (personal API key)
 
 **Notes:** 
 - you'll need to update the Makefile to set the `frontendUrl` variable with the one Vercel communicated to you.

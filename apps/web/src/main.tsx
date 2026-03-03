@@ -4,25 +4,31 @@ import { StrictMode } from "react"
 import { createRoot } from "react-dom/client"
 import { Provider } from "react-redux"
 import App from "./App.tsx"
+import { ExceptionTracker } from "./components/ExceptionTracker.tsx"
+import { PostHogAuthSync } from "./components/providers/PostHogAuthSync.tsx"
 import { auth0ProviderConfig } from "./config/auth0.config.ts"
 import { store } from "./store/index.ts"
 import "./i18n"
 import "./index.css"
 import { defaultTheme, themes } from "./components/themes/helpers.ts"
+import { isPosthogEnabled, posthog } from "./external/posthog.ts"
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
-    <Provider store={store}>
-      <Auth0Provider {...auth0ProviderConfig}>
-        <ThemeProvider
-          attribute="class"
-          defaultTheme={defaultTheme}
-          themes={themes.map((theme) => theme.value)}
-          disableTransitionOnChange={false}
-        >
-          <App />
-        </ThemeProvider>
-      </Auth0Provider>
-    </Provider>
+    <ExceptionTracker client={isPosthogEnabled ? posthog : undefined}>
+      <Provider store={store}>
+        <Auth0Provider {...auth0ProviderConfig}>
+          <PostHogAuthSync />
+          <ThemeProvider
+            attribute="class"
+            defaultTheme={defaultTheme}
+            themes={themes.map((theme) => theme.value)}
+            disableTransitionOnChange={false}
+          >
+            <App />
+          </ThemeProvider>
+        </Auth0Provider>
+      </Provider>
+    </ExceptionTracker>
   </StrictMode>,
 )

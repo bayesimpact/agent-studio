@@ -1,6 +1,7 @@
 import { type MiddlewareConsumer, Module, type NestModule } from "@nestjs/common"
 import { ConfigModule, ConfigService } from "@nestjs/config"
 import { TypeOrmModule } from "@nestjs/typeorm"
+import { ExceptionTrackerModule } from "./common/exception-tracker/exception-tracker.module"
 import { RequestLoggerMiddleware } from "./common/middleware/request-logger.middleware"
 import typeorm from "./config/typeorm"
 import { AgentsModule } from "./domains/agents/agents.module"
@@ -26,6 +27,7 @@ import { UsersModule } from "./domains/users/users.module"
       inject: [ConfigService],
       useFactory: async (configService: ConfigService) => configService.get("typeorm")(),
     }),
+    ExceptionTrackerModule,
     AuthModule,
     UsersModule,
     OrganizationsModule,

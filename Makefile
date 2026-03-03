@@ -172,6 +172,7 @@ deploy-only:
 	--update-secrets=LANGFUSE_SK=${secretsPrefix}LANGFUSE_SK:latest \
 	--update-secrets=DATABASE_PASSWORD=${secretsPrefix}DATABASE_PASSWORD:latest \
 	--update-secrets=AUTH0_M2M_CLIENT_SECRET=${secretsPrefix}AUTH0_M2M_CLIENT_SECRET:latest \
+	--update-secrets=POSTHOG_KEY=${secretsPrefix}POSTHOG_KEY:latest \
 	--set-env-vars=TZ=UTC \
 	--set-env-vars=AUTH0_ISSUER_URL=${auth0IssuerUrl},AUTH0_AUDIENCE=${auth0Audience} \
 	--set-env-vars=AUTH0_ORGANIZATION_ID=${auth0OrganizationId},AUTH0_CLIENT_ID=${auth0ClientId},AUTH0_M2M_CLIENT_ID=${auth0M2MClientId} \
@@ -180,7 +181,7 @@ deploy-only:
 	--set-env-vars=GCS_STORAGE_BUCKET_NAME=${gcsStorageBucketName} \
 	--set-env-vars=GOOGLE_VERTEX_PROJECT=${googleVertexProject} \
 	--set-env-vars=GOOGLE_VERTEX_LOCATION=${googleVertexLocation} \
-  --set-env-vars=LANGFUSE_PK=${langfusePk},LANGFUSE_BASE_URL=${langfuseUrl},LOCATION=$(location) \
+  --set-env-vars=LANGFUSE_PK=${langfusePk},LANGFUSE_BASE_URL=${langfuseUrl},LOCATION=$(location),POSTHOG_HOST=${postHogHost} \
   --set-env-vars=DATABASE_HOST=/cloudsql/${addCloudSqlInstances},DATABASE_USERNAME=${databaseUsername},DATABASE_NAME=${databaseName} \
 	--region=${zone} \
 	--port=3000 \

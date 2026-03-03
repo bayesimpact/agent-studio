@@ -3,6 +3,7 @@ import { join } from "node:path"
 import { ValidationPipe } from "@nestjs/common"
 import { NestFactory } from "@nestjs/core"
 import { AppModule } from "./app.module"
+import { ExceptionTrackerFilter } from "./common/exception-tracker/exception-tracker.filter"
 
 async function bootstrap() {
   const frontendUrl = normalizeFrontendUrl(process.env.FRONTEND_URL)
@@ -26,6 +27,11 @@ async function bootstrap() {
     ],
     credentials: true,
   })
+
+  // Add exception tracker filter (PostHog)
+  const exceptionTrackerFilter = app.get(ExceptionTrackerFilter)
+  app.useGlobalFilters(exceptionTrackerFilter)
+
   const protocol = httpsOptions ? "https" : "http"
   await app.listen(3000)
   console.log(`API server running on ${protocol}://connect.localhost:3000`)
