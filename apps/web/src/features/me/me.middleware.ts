@@ -11,6 +11,7 @@ export type AppStartListening = TypedStartListening<RootState, AppDispatch>
 listenerMiddleware.startListening({
   actionCreator: fetchMe.rejected,
   effect: async () => {
+    // we couldn't fetch or create the user, we take no risks and logout the user
     localStorage.clear()
     await logoutAuth0()
   },

@@ -43,24 +43,6 @@ listenerMiddleware.startListening({
   },
 })
 
-listenerMiddleware.startListening({
-  actionCreator: fetchMe.fulfilled,
-  effect: async (action, listenerApi) => {
-    const state = listenerApi.getState()
-    const currentOrgId = selectCurrentOrganizationId(state)
-    if (currentOrgId) {
-      // Current organization is already set - do nothing
-      return
-    }
-    const firstOrg = action.payload.organizations[0]
-    if (firstOrg) {
-      listenerApi.dispatch(
-        organizationsActions.setCurrentOrganizationId({ organizationId: firstOrg.id }),
-      )
-    }
-  },
-})
-
 // Set isAdmin and isAdminInterface flags when current organization changes
 listenerMiddleware.startListening({
   predicate(_, currentState, originalState) {
