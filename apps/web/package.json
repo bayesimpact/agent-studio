@@ -5,11 +5,13 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b && vite build",
+    "build:core": "tsc && vite build",
+    "build": "npm run build:core && npm run posthog:upload-sourcemaps",
     "lint": "eslint .",
     "preview": "vite preview",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build",
+    "posthog:upload-sourcemaps": "./scripts/posthog-upload-sourcemaps.sh",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
