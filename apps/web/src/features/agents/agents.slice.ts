@@ -21,7 +21,8 @@ const slice = createSlice({
       state.currentAgentId = action.payload.agentId
     },
     reset: (state) => {
-      state = initialState
+      state.currentAgentId = null
+      state.data = defaultAsyncData
     },
   },
   extraReducers: (builder) => {
