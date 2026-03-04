@@ -9,13 +9,13 @@ import { CheckPolicy } from "@/common/policies/check-policy.decorator"
 import { JwtAuthGuard } from "@/domains/auth/jwt-auth.guard"
 import { UserGuard } from "@/domains/users/user.guard"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
-import { AgentStreamingService } from "./conversation-agent-streaming.service"
+import { StreamingService } from "./streaming.service"
 
 @UseGuards(JwtAuthGuard, UserGuard, ResourceContextGuard)
 @RequireContext("organization", "project")
 @Controller()
-export class ConversationAgentSessionStreamingController {
-  constructor(private readonly chatStreamingService: AgentStreamingService) {}
+export class StreamingController {
+  constructor(private readonly chatStreamingService: StreamingService) {}
 
   @AddContext("agent")
   @CheckPolicy((policy) => policy.canList())

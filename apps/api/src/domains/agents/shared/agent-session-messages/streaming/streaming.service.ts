@@ -9,20 +9,20 @@ import type {
   LLMProvider,
 } from "@/common/interfaces/llm-provider.interface"
 import type { Agent } from "@/domains/agents/agent.entity"
-import { ServiceWithLLM } from "@/external/llm"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
-import { DocumentsService } from "../../documents/documents.service"
+import { ConversationAgentSession } from "@/domains/agents/conversation-agent-sessions/conversation-agent-session.entity"
+// biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
+import { ConversationAgentSessionsService } from "@/domains/agents/conversation-agent-sessions/conversation-agent-sessions.service"
+// biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
+import { DocumentsService } from "@/domains/documents/documents.service"
 import {
   FILE_STORAGE_SERVICE,
   type IFileStorage,
-} from "../../documents/storage/file-storage.interface"
-// biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
-import { ConversationAgentSession } from "./conversation-agent-session.entity"
-// biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
-import { ConversationAgentSessionsService } from "./conversation-agent-sessions.service"
+} from "@/domains/documents/storage/file-storage.interface"
+import { ServiceWithLLM } from "@/external/llm"
 
 @Injectable()
-export class AgentStreamingService extends ServiceWithLLM {
+export class StreamingService extends ServiceWithLLM {
   constructor(
     @Inject(FILE_STORAGE_SERVICE)
     private readonly fileStorageService: IFileStorage,
