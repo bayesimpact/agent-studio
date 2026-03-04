@@ -5,7 +5,7 @@ import { RequestLoggerMiddleware } from "./common/middleware/request-logger.midd
 import typeorm from "./config/typeorm"
 import { AgentsModule } from "./domains/agents/agents.module"
 import { ConversationAgentSessionsModule } from "./domains/agents/conversation-agent-sessions/conversation-agent-sessions.module"
-import { AgentMessageFeedbackModule } from "./domains/agents/conversation-agent-sessions/messages/feedback/agent-message-feedback.module"
+import { AgentMessageFeedbackModule } from "./domains/agents/shared/agent-session-messages/feedback/agent-message-feedback.module"
 import { AuthModule } from "./domains/auth/auth.module"
 import { DocumentsModule } from "./domains/documents/documents.module"
 import { StorageModule } from "./domains/documents/storage/storage.module"

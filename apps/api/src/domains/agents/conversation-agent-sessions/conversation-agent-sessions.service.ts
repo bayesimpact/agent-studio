@@ -6,8 +6,8 @@ import { v4 } from "uuid"
 import { ConnectRepository } from "@/common/entities/connect-repository"
 import type { RequiredConnectScope } from "@/common/entities/connect-required-fields"
 import type { BaseAgentSessionType } from "../base-agent-sessions/base-agent-sessions.types"
+import { AgentMessage } from "../shared/agent-session-messages/agent-message.entity"
 import { ConversationAgentSession } from "./conversation-agent-session.entity"
-import { AgentMessage } from "./messages/agent-message.entity"
 
 @Injectable()
 export class ConversationAgentSessionsService {

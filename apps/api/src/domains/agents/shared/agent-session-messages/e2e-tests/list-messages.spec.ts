@@ -7,11 +7,11 @@ import {
   teardownTestDatabase,
 } from "@/common/test/test-transaction-manager"
 import { removeNullish } from "@/common/utils/remove-nullish"
+import { ConversationAgentSessionsModule } from "@/domains/agents/conversation-agent-sessions/conversation-agent-sessions.module"
 import { createOrganizationWithAgentSession } from "@/domains/organizations/organization.factory"
 import { sdk } from "@/external/llm/open-telemetry-init"
 import { setupUserGuardForTesting } from "../../../../../../test/e2e.helpers"
 import { type Requester, testRequester } from "../../../../../../test/request"
-import { ConversationAgentSessionsModule } from "../../conversation-agent-sessions.module"
 import { createChitChatConversation } from "../agent-messages.factory"
 
 describe("AgentSessionMessagesRoutes.listMessages", () => {
