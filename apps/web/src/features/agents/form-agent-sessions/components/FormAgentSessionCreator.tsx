@@ -19,7 +19,7 @@ export function FormAgentSessionCreator({
   organizationId: string
 }) {
   const navigate = useNavigate()
-  const { t } = useTranslation("conversationAgentSession", { keyPrefix: "create" })
+  const { t } = useTranslation("formAgentSession", { keyPrefix: "create" })
   const dispatch = useAppDispatch()
   const { buildPath } = useBuildPath()
   const onSuccess = (agentSessionId: string) => {

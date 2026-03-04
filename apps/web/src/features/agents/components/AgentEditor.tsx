@@ -84,7 +84,7 @@ function UpdateForm({ agent, onSuccess }: { agent: Agent; onSuccess?: () => void
 
   const handleSubmit = (fields: AgentFormData) => {
     const parsedOutputSchema =
-      agent.type === "extraction" && fields.outputJsonSchemaText
+      (agent.type === "extraction" || agent.type === "form") && fields.outputJsonSchemaText
         ? (JSON.parse(fields.outputJsonSchemaText) as Record<string, unknown>)
         : undefined
 

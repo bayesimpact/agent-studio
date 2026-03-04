@@ -201,7 +201,7 @@ function CreateForm({
 
   const handleCreate = async (fields: AgentFormData) => {
     const parsedOutputSchema =
-      agentType === "extraction" && fields.outputJsonSchemaText
+      (agentType === "extraction" || agentType === "form") && fields.outputJsonSchemaText
         ? (JSON.parse(fields.outputJsonSchemaText) as Record<string, unknown>)
         : undefined
 

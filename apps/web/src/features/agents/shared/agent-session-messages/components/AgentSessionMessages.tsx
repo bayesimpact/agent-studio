@@ -5,6 +5,8 @@ import { useTranslation } from "react-i18next"
 import { DotsBackground } from "@/components/DotsBackground"
 import { AttachDocument } from "@/components/document/AttachDocument"
 import { TraceUrlOpener } from "@/components/TraceUrlOpener"
+import type { Agent } from "@/features/agents/agents.models"
+import { selectCurrentAgentData } from "@/features/agents/agents.selectors"
 import type { ConversationAgentSession } from "@/features/agents/conversation-agent-sessions/conversation-agent-sessions.models"
 import type { AgentSessionMessage as AgentSessionMessageType } from "@/features/agents/shared/agent-session-messages/agent-session-messages.models"
 import { AgentSessionMessage } from "@/features/agents/shared/agent-session-messages/components/AgentSessionMessage"
@@ -19,6 +21,7 @@ import {
 } from "@/features/agents/shared/agent-session-messages/components/Chat"
 import { Dictaphone } from "@/features/agents/shared/agent-session-messages/components/Dictaphone"
 import { useScrollToEnd } from "@/hooks/use-scroll-to-end"
+import { ADS } from "@/store/async-data-status"
 import { useAppDispatch, useAppSelector } from "@/store/hooks"
 import { selectStreaming } from "../agent-session-messages.selectors"
 import { sendMessage } from "../agent-session-messages.thunks"
@@ -27,39 +30,62 @@ export function AgentSessionMessages({
   isAdminInterface,
   session,
   messages,
+  agentType,
 }: {
+  agentType: Agent["type"]
   isAdminInterface: boolean
   session: ConversationAgentSession
   messages: AgentSessionMessageType[]
 }) {
   const isStreaming = useAppSelector(selectStreaming)
 
+  const isFormAgent = agentType === "form"
+
   if (isAdminInterface)
     return (
-      <div className="p-6 flex flex-col gap-6 flex-1 max-h-screen">
-        <DotsBackground className="p-10">
-          <Chat>
-            <ChatHeader>
-              <TraceUrlOpener traceUrl={session.traceUrl} />
-            </ChatHeader>
+      <div className="flex flex-1 max-h-screen gap-4">
+        <div className="flex flex-1">
+          <DotsBackground className="p-10 w-full">
+            <Chat>
+              <ChatHeader>
+                <TraceUrlOpener traceUrl={session.traceUrl} />
+              </ChatHeader>
 
-            <Messages messages={messages} isStreaming={isStreaming} />
+              <Messages messages={messages} isStreaming={isStreaming} />
 
-            <Footer session={session} isStreaming={isStreaming} />
-          </Chat>
-        </DotsBackground>
+              <Footer session={session} isStreaming={isStreaming} />
+            </Chat>
+          </DotsBackground>
+        </div>
+        {isFormAgent && <FormResult />}
       </div>
     )
 
   return (
-    <div className="flex flex-1 items-center justify-center p-4">
-      <div className="flex flex-col gap-6 flex-1 max-w-2/3">
-        <Chat className="shadow-none">
-          <Messages messages={messages} isStreaming={isStreaming} />
+    <div className="flex flex-1 items-center justify-center">
+      <div className="flex flex-1 items-center justify-center">
+        <div className="flex flex-col gap-6 flex-1 max-w-2/3">
+          <Chat className="shadow-none">
+            <Messages messages={messages} isStreaming={isStreaming} />
 
-          <Footer session={session} isStreaming={isStreaming} />
-        </Chat>
+            <Footer session={session} isStreaming={isStreaming} />
+          </Chat>
+        </div>
       </div>
+      {isFormAgent && <FormResult />}
+    </div>
+  )
+}
+
+function FormResult() {
+  const agent = useAppSelector(selectCurrentAgentData)
+  if (!ADS.isFulfilled(agent)) return null
+  return (
+    <div className="w-96 p-4 shrink-0 h-full border-l">
+      <h1 className="text-xl font-bold mb-4">Expected output:</h1>
+      <pre className="bg-white p-2 rounded whitespace-pre-wrap">
+        {JSON.stringify(agent.value.outputJsonSchema, null, 2)}
+      </pre>
     </div>
   )
 }

@@ -1,3 +1,4 @@
+import type { Agent } from "@/features/agents/agents.models"
 import { selectCurrentAgentData } from "@/features/agents/agents.selectors"
 import type { ConversationAgentSession } from "@/features/agents/conversation-agent-sessions/conversation-agent-sessions.models"
 import { selectCurrentConversationAgentSessionData } from "@/features/agents/conversation-agent-sessions/conversation-agent-sessions.selectors"
@@ -20,11 +21,19 @@ export function AgentSessionRoute() {
   )
   const messages = useAppSelector(selectCurrentMessagesData)
 
-  if (ADS.isError(agentSession) || ADS.isError(messages))
-    return <ErrorRoute error={agentSession.error || messages.error || "Unknown error"} />
+  if (ADS.isError(agent) || ADS.isError(agentSession) || ADS.isError(messages))
+    return (
+      <ErrorRoute error={agent.error || agentSession.error || messages.error || "Unknown error"} />
+    )
 
-  if (ADS.isFulfilled(agentSession) && ADS.isFulfilled(messages)) {
-    return <WithData agentSession={agentSession.value} messages={messages.value} />
+  if (ADS.isFulfilled(agent) && ADS.isFulfilled(agentSession) && ADS.isFulfilled(messages)) {
+    return (
+      <WithData
+        agentType={agent.value.type}
+        agentSession={agentSession.value}
+        messages={messages.value}
+      />
+    )
   }
 
   return <LoadingRoute />
@@ -33,13 +42,16 @@ export function AgentSessionRoute() {
 function WithData({
   agentSession,
   messages,
+  agentType,
 }: {
+  agentType: Agent["type"]
   agentSession: ConversationAgentSession
   messages: AgentSessionMessage[]
 }) {
   const { isAdminInterface } = useAbility()
   return (
     <AgentSessionMessages
+      agentType={agentType}
       isAdminInterface={isAdminInterface}
       session={agentSession}
       messages={messages}
