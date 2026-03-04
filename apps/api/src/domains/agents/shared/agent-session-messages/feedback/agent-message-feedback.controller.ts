@@ -11,6 +11,7 @@ import { getRequiredConnectScope } from "@/common/context/request-context.helper
 import { AddContext, RequireContext } from "@/common/context/require-context.decorator"
 import { ResourceContextGuard } from "@/common/context/resource-context.guard"
 import { CheckPolicy } from "@/common/policies/check-policy.decorator"
+import type { Agent } from "@/domains/agents/agent.entity"
 import { JwtAuthGuard } from "@/domains/auth/jwt-auth.guard"
 import { UserGuard } from "@/domains/users/user.guard"
 import { getTraceUrl } from "@/external/langfuse/langfuse-helper"
@@ -66,6 +67,7 @@ export class AgentMessageFeedbackController {
           agentMessageEntities: data.agentMessages,
           agentMessageFeedbackEntities: data.agentMessageFeedbacks,
           agentId: request.agent.id,
+          agentType: request.agent.type,
         }),
       },
     }
@@ -76,16 +78,18 @@ function toDto({
   agentMessageEntities,
   agentMessageFeedbackEntities,
   agentId,
+  agentType,
 }: {
   agentMessageEntities: AgentMessage[]
   agentMessageFeedbackEntities: AgentMessageFeedback[]
   agentId: string
+  agentType: Agent["type"]
 }): AgentMessageFeedbackDto[] {
   return agentMessageFeedbackEntities
     .map((f) => {
       const agentMessage = agentMessageEntities.find((m) => m.id === f.agentMessageId)
-      const traceUrl = agentMessage?.session.traceId
-        ? getTraceUrl(agentMessage.session.traceId)
+      const traceUrl = agentMessage?.session(agentType)?.traceId
+        ? getTraceUrl(agentMessage.session(agentType)!.traceId)
         : undefined
       if (!agentMessage) return null
 
@@ -94,7 +98,7 @@ function toDto({
         organizationId: f.organizationId,
         projectId: f.projectId,
         agentId,
-        agentSessionId: agentMessage.session.id,
+        agentSessionId: agentMessage.sessionId,
         agentMessageId: f.agentMessageId,
         agentMessageContent: agentMessage.content,
         userId: f.userId,

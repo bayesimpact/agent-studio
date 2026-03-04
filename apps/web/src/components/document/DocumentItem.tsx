@@ -1,7 +1,7 @@
 import { Item, ItemContent, ItemHeader, ItemTitle } from "@caseai-connect/ui/shad/item"
 import { FileIcon } from "lucide-react"
 import { useTranslation } from "react-i18next"
-import { MarkdownWrapper } from "@/components/chat/MarkdownWrapper"
+import { MarkdownWrapper } from "@/features/agents/shared/agent-session-messages/components/MarkdownWrapper"
 import type { Document } from "@/features/documents/documents.models"
 import { buildDate } from "@/utils/build-date"
 import { DocumentDeletor } from "./DocumentDeletor"

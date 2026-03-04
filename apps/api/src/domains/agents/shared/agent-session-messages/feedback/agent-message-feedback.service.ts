@@ -61,8 +61,8 @@ export class AgentMessageFeedbackService {
     agentMessageFeedbacks: AgentMessageFeedback[]
   }> {
     const agentMessages = await this.agentMessageConnectRepository.find(connectScope, {
-      where: { session: { agentId } },
-      relations: ["session"],
+      where: [{ conversationAgentSession: { agentId } }, { formAgentSession: { agentId } }],
+      relations: ["conversationAgentSession", "formAgentSession"],
     })
     const agentMessageIds = agentMessages.map((message) => message.id)
     const agentMessageFeedbacks = await this.feedbackConnectRepository.find(connectScope, {

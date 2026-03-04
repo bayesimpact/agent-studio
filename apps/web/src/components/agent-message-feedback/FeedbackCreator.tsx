@@ -17,7 +17,7 @@ import { useTranslation } from "react-i18next"
 import { createAgentMessageFeedback } from "@/features/agent-message-feedback/agent-message-feedback.thunks"
 import type { AgentSessionMessage } from "@/features/agents/shared/agent-session-messages/agent-session-messages.models"
 import { useAppDispatch } from "@/store/hooks"
-import { MarkdownWrapper } from "../chat/MarkdownWrapper"
+import { MarkdownWrapper } from "../../features/agents/shared/agent-session-messages/components/MarkdownWrapper"
 
 export function FeedbackCreator({ message }: { message: AgentSessionMessage }) {
   const { t } = useTranslation("agentMessageFeedback", { keyPrefix: "create" })

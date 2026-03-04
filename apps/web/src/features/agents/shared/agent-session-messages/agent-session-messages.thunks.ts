@@ -72,7 +72,7 @@ export const sendMessage = createAsyncThunk<void, { content: string; file?: File
         organizationId,
         projectId,
         agentId,
-        sessionId: agentSessionId,
+        agentSessionId,
         content,
         documentId,
         handlers: {

@@ -9,7 +9,8 @@ describe("markStreamingError", () => {
     await sdk.shutdown()
   })
   it("should mark assistant message as error", async () => {
-    const { service, testAgent, testOrganization, testUser, testProject } = getTestContext()
+    const { service, testAgent, testOrganization, testUser, testProject, streamingService } =
+      getTestContext()
     const connectScope: RequiredConnectScope = {
       organizationId: testOrganization.id,
       projectId: testProject.id,
@@ -22,17 +23,19 @@ describe("markStreamingError", () => {
       type: "playground",
     })
 
-    const { assistantMessageId } = await service.prepareForStreaming({
+    const { assistantMessageId } = await streamingService.prepareForStreaming({
       connectScope,
       sessionId: session.id,
       userContent: "Hello",
+      agentType: testAgent.type,
     })
 
-    const errorSession = await service.markStreamingError(
-      session.id,
+    const errorSession = await streamingService.markStreamingError({
+      sessionId: session.id,
       assistantMessageId,
-      "An error occurred",
-    )
+      errorMessage: "An error occurred",
+      agentType: testAgent.type,
+    })
 
     const errorMessage = errorSession.messages.find((msg) => msg.id === assistantMessageId)
     expect(errorMessage).toBeDefined()

@@ -11,7 +11,8 @@ describe("prepareForStreaming", () => {
     await sdk.shutdown()
   })
   it("should persist user message and empty assistant message", async () => {
-    const { service, testAgent, testOrganization, testUser, testProject } = getTestContext()
+    const { service, testAgent, testOrganization, testUser, testProject, streamingService } =
+      getTestContext()
     const connectScope: RequiredConnectScope = {
       organizationId: testOrganization.id,
       projectId: testProject.id,
@@ -24,11 +25,13 @@ describe("prepareForStreaming", () => {
       type: "playground",
     })
 
-    const { session: updatedSession, assistantMessageId } = await service.prepareForStreaming({
-      connectScope,
-      sessionId: session.id,
-      userContent: "Hello, how are you?",
-    })
+    const { session: updatedSession, assistantMessageId } =
+      await streamingService.prepareForStreaming({
+        connectScope,
+        sessionId: session.id,
+        userContent: "Hello, how are you?",
+        agentType: testAgent.type,
+      })
 
     expect(updatedSession.messages).toHaveLength(2)
     const userMessage = updatedSession.messages[0]!
@@ -45,7 +48,7 @@ describe("prepareForStreaming", () => {
   })
 
   it("should throw NotFoundException for non-existent session", async () => {
-    const { service, testOrganization, testProject } = getTestContext()
+    const { testOrganization, testProject, streamingService, testAgent } = getTestContext()
     const connectScope: RequiredConnectScope = {
       organizationId: testOrganization.id,
       projectId: testProject.id,
@@ -54,10 +57,11 @@ describe("prepareForStreaming", () => {
     // Use a valid UUID format for non-existent session
     const nonExistentId = "00000000-0000-0000-0000-000000000000"
     await expect(
-      service.prepareForStreaming({
+      streamingService.prepareForStreaming({
         connectScope,
         sessionId: nonExistentId,
         userContent: "Hello",
+        agentType: testAgent.type,
       }),
     ).rejects.toThrow(NotFoundException)
   })

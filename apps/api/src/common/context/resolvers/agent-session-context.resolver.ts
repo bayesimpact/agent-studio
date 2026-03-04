@@ -2,19 +2,22 @@ import { Injectable, NotFoundException } from "@nestjs/common"
 import { InjectRepository } from "@nestjs/typeorm"
 import type { Repository } from "typeorm"
 import { ConversationAgentSession } from "@/domains/agents/conversation-agent-sessions/conversation-agent-session.entity"
+import { FormAgentSession } from "@/domains/agents/form-agent-sessions/form-agent-session.entity"
 import type { ContextResolver, ResolvableRequest } from "../context-resolver.interface"
 import type {
   EndpointRequestWithAgent,
-  EndpointRequestWithConversationAgentSession,
+  EndpointRequestWithAgentSession,
 } from "../request.interface"
 
 @Injectable()
 export class AgentSessionContextResolver implements ContextResolver {
-  readonly resource = "conversationAgentSession" as const
+  readonly resource = "agentSession" as const
 
   constructor(
     @InjectRepository(ConversationAgentSession)
     private readonly conversationAgentSessionRepository: Repository<ConversationAgentSession>,
+    @InjectRepository(FormAgentSession)
+    private readonly formAgentSessionRepository: Repository<FormAgentSession>,
   ) {}
 
   async resolve(request: ResolvableRequest): Promise<void> {
@@ -26,8 +29,12 @@ export class AgentSessionContextResolver implements ContextResolver {
     if (!agentSessionId || agentSessionId === ":agentSessionId") throw new NotFoundException()
 
     const requestWithAgent = request as EndpointRequestWithAgent
+    const repository =
+      requestWithAgent.agent.type === "conversation"
+        ? this.conversationAgentSessionRepository
+        : this.formAgentSessionRepository
     const agentSession =
-      (await this.conversationAgentSessionRepository.findOne({
+      (await repository.findOne({
         where: {
           id: agentSessionId,
           userId: requestWithAgent.user.id,
@@ -38,8 +45,7 @@ export class AgentSessionContextResolver implements ContextResolver {
       })) ?? undefined
     if (!agentSession) throw new NotFoundException()
 
-    const requestWithConversationAgentSession =
-      request as EndpointRequestWithConversationAgentSession
-    requestWithConversationAgentSession.conversationAgentSession = agentSession
+    const requestWithAgentSession = request as EndpointRequestWithAgentSession
+    requestWithAgentSession.agentSession = agentSession
   }
 }

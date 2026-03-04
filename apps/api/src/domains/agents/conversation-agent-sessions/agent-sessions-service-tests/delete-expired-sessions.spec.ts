@@ -74,7 +74,7 @@ describe("deleteExpiredPlaygroundSessions", () => {
     expect(deletedCount).toBeGreaterThanOrEqual(1)
 
     // Verify valid session still exists
-    const foundValid = await service.findById(validSession.id)
+    const foundValid = await service.findById({ id: validSession.id, connectScope })
     expect(foundValid).toBeDefined()
     expect(foundValid).not.toBeNull()
   })
@@ -88,6 +88,11 @@ describe("deleteExpiredPlaygroundSessions", () => {
       conversationAgentSessionRepository,
       testProject,
     } = getTestContext()
+
+    const connectScope: RequiredConnectScope = {
+      organizationId: testOrganization.id,
+      projectId: testProject.id,
+    }
 
     // Create a session that expired 3 minutes ago (within 5-minute safety margin)
     const recentlyExpiredSession = conversationAgentSessionFactory
@@ -106,7 +111,7 @@ describe("deleteExpiredPlaygroundSessions", () => {
     await service.deleteExpiredPlaygroundSessions()
 
     // Verify session is NOT deleted (within safety margin)
-    const found = await service.findById(recentlyExpiredSession.id)
+    const found = await service.findById({ id: recentlyExpiredSession.id, connectScope })
     expect(found).toBeDefined()
     expect(found).not.toBeNull()
   })

@@ -3,7 +3,7 @@ import {
   AgentSessionMessagesRoutes,
 } from "@caseai-connect/api-contracts"
 import { Controller, Post, Req, UseGuards } from "@nestjs/common"
-import type { EndpointRequestWithConversationAgentSession } from "@/common/context/request.interface"
+import type { EndpointRequestWithAgentSession } from "@/common/context/request.interface"
 import { RequireContext } from "@/common/context/require-context.decorator"
 import { ResourceContextGuard } from "@/common/context/resource-context.guard"
 import { CheckPolicy } from "@/common/policies/check-policy.decorator"
@@ -15,7 +15,7 @@ import { ConversationAgentSessionsService } from "../../conversation-agent-sessi
 import type { AgentMessage } from "./agent-message.entity"
 
 @UseGuards(JwtAuthGuard, UserGuard, ResourceContextGuard, BaseAgentSessionGuard)
-@RequireContext("organization", "project", "agent", "conversationAgentSession")
+@RequireContext("organization", "project", "agent", "agentSession")
 @Controller()
 export class AgentMessagesController {
   constructor(
@@ -25,9 +25,9 @@ export class AgentMessagesController {
   @CheckPolicy((policy) => policy.canList())
   @Post(AgentSessionMessagesRoutes.listMessages.path)
   async listMessages(
-    @Req() request: EndpointRequestWithConversationAgentSession,
+    @Req() request: EndpointRequestWithAgentSession,
   ): Promise<typeof AgentSessionMessagesRoutes.listMessages.response> {
-    const agentSessionId = request.conversationAgentSession.id
+    const agentSessionId = request.agentSession.id
     const messages =
       await this.conversationAgentSessionsService.listMessagesForSession(agentSessionId)
     return { data: messages.map(toDto) }

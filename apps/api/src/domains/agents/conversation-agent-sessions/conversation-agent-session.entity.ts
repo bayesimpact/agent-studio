@@ -46,7 +46,7 @@ export class ConversationAgentSession extends ConnectEntityBase {
 
   @OneToMany(
     () => AgentMessage,
-    (message) => message.session,
+    (message) => message.conversationAgentSession,
   )
   messages!: AgentMessage[]
 }

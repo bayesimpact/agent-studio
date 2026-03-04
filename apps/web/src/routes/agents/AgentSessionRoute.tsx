@@ -1,16 +1,23 @@
-import { ConversationAgentSession } from "@/features/agents/conversation-agent-sessions/components/ConversationAgentSession"
-import type { ConversationAgentSession as ConversationAgentSessionType } from "@/features/agents/conversation-agent-sessions/conversation-agent-sessions.models"
+import { selectCurrentAgentData } from "@/features/agents/agents.selectors"
+import type { ConversationAgentSession } from "@/features/agents/conversation-agent-sessions/conversation-agent-sessions.models"
 import { selectCurrentConversationAgentSessionData } from "@/features/agents/conversation-agent-sessions/conversation-agent-sessions.selectors"
+import { selectCurrentFormAgentSessionData } from "@/features/agents/form-agent-sessions/form-agent-sessions.selectors"
 import type { AgentSessionMessage } from "@/features/agents/shared/agent-session-messages/agent-session-messages.models"
 import { selectCurrentMessagesData } from "@/features/agents/shared/agent-session-messages/agent-session-messages.selectors"
+import { AgentSessionMessages } from "@/features/agents/shared/agent-session-messages/components/AgentSessionMessages"
 import { useAbility } from "@/hooks/use-ability"
 import { ADS } from "@/store/async-data-status"
 import { useAppSelector } from "@/store/hooks"
-import { ErrorRoute } from "./ErrorRoute"
-import { LoadingRoute } from "./LoadingRoute"
+import { ErrorRoute } from "../ErrorRoute"
+import { LoadingRoute } from "../LoadingRoute"
 
-export function ConversationAgentSessionRoute() {
-  const agentSession = useAppSelector(selectCurrentConversationAgentSessionData)
+export function AgentSessionRoute() {
+  const agent = useAppSelector(selectCurrentAgentData)
+  const agentSession = useAppSelector(
+    agent.value?.type === "conversation"
+      ? selectCurrentConversationAgentSessionData
+      : selectCurrentFormAgentSessionData,
+  )
   const messages = useAppSelector(selectCurrentMessagesData)
 
   if (ADS.isError(agentSession) || ADS.isError(messages))
@@ -27,12 +34,12 @@ function WithData({
   agentSession,
   messages,
 }: {
-  agentSession: ConversationAgentSessionType
+  agentSession: ConversationAgentSession
   messages: AgentSessionMessage[]
 }) {
   const { isAdminInterface } = useAbility()
   return (
-    <ConversationAgentSession
+    <AgentSessionMessages
       isAdminInterface={isAdminInterface}
       session={agentSession}
       messages={messages}
