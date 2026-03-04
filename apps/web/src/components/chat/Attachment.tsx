@@ -2,11 +2,11 @@ import { Button } from "@caseai-connect/ui/shad/button"
 import { ExternalLinkIcon, PaperclipIcon } from "lucide-react"
 import { useCallback, useEffect, useState } from "react"
 import { useTranslation } from "react-i18next"
-import type { ConversationAgentSessionMessage } from "@/features/agents/conversation-agent-sessions/conversation-agent-sessions.models"
+import type { AgentSessionMessage } from "@/features/agents/shared/agent-session-messages/agent-session-messages.models"
 import { getDocumentTemporaryUrl } from "@/features/documents/documents.thunks"
 import { useAppDispatch } from "@/store/hooks"
 
-export function Attachment({ message }: { message: ConversationAgentSessionMessage }) {
+export function Attachment({ message }: { message: AgentSessionMessage }) {
   const { t } = useTranslation("agentSessionMessage")
   const dispatch = useAppDispatch()
 

@@ -8,10 +8,6 @@ export { AgentMessageFeedbackRoutes } from "./agent-message-feedback/agent-messa
 export * from "./agents/agents.dto"
 export { AgentsRoutes } from "./agents/agents.routes"
 
-// Messages
-export type * from "./agents/base-sessions/messages/session-messages.dto"
-export { AgentSessionMessagesRoutes } from "./agents/base-sessions/messages/session-messages.routes"
-
 // Streaming
 export { ConversationAgentSessionStreamingRoutes } from "./agents/conversation-agent-sessions/conversation-agent-session-streaming.routes"
 
@@ -26,6 +22,10 @@ export { ExtractionAgentSessionsRoutes } from "./agents/extraction-agent-session
 // Form Agent Sessions
 export type * from "./agents/form-agent-sessions/form-agent-sessions.dto"
 export { FormAgentSessionsRoutes } from "./agents/form-agent-sessions/form-agent-sessions.routes"
+
+// Agent Session Messages
+export type * from "./agents/shared/agent-session-messages/agent-session-messages.dto"
+export { AgentSessionMessagesRoutes } from "./agents/shared/agent-session-messages/agent-session-messages.routes"
 
 // Documents
 export * from "./documents/documents.dto"

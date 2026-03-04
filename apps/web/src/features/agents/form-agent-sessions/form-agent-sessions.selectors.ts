@@ -2,6 +2,7 @@ import { createSelector } from "@reduxjs/toolkit"
 import type { RootState } from "@/store"
 import { ADS, type AsyncData } from "@/store/async-data-status"
 import { selectCurrentAgentData } from "../agents.selectors"
+import { selectCurrentAgentSessionId } from "../current-agent-session-id/current-agent-session-id.selectors"
 import type { FormAgentSession } from "./form-agent-sessions.models"
 
 const selectFormAgentSessionsData = (state: RootState) => state.formAgentSessions.data
@@ -42,11 +43,8 @@ export const selectCurrentFormAgentSessionsDataFromAgentId = (agentId?: string |
     },
   )
 
-export const selectCurrentFormAgentSessionId = (state: RootState) =>
-  state.formAgentSessions.currentAgentSessionId
-
 export const selectCurrentFormAgentSessionData = createSelector(
-  [selectCurrentFormAgentSessionsData, selectCurrentFormAgentSessionId],
+  [selectCurrentFormAgentSessionsData, selectCurrentAgentSessionId],
   (formAgentSessionsData, agentSessionId): AsyncData<FormAgentSession> => {
     if (!ADS.isFulfilled(formAgentSessionsData)) return { ...formAgentSessionsData }
 
@@ -65,7 +63,3 @@ export const selectCurrentFormAgentSessionData = createSelector(
     return { status: ADS.Fulfilled, value: agentSession, error: null }
   },
 )
-
-export const selectCurrentMessagesData = (state: RootState) => state.formAgentSessions.messages
-
-export const selectStreaming = (state: RootState) => state.formAgentSessions.isStreaming

@@ -1,6 +1,8 @@
 import type { RequestPayload, ResponseData } from "../../generic"
 import { defineRoute } from "../../helpers"
 
+// FIXME: move it to AgentSessionMessagesRoutes
+
 // Streaming responses are sent as text/event-stream (SSE) and do not follow the usual ResponseData<T> shape.
 // We still define a route for path/method typing. The response type is treated as unknown by clients.
 export type AgentSessionStreamResponse = unknown

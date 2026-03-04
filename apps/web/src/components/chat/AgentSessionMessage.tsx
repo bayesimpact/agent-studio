@@ -2,13 +2,13 @@ import { Spinner } from "@caseai-connect/ui/shad/spinner"
 import { cn } from "@caseai-connect/ui/utils"
 import { AlertCircleIcon } from "lucide-react"
 import { useTranslation } from "react-i18next"
-import type { ConversationAgentSessionMessage as ConversationAgentSessionMessageType } from "@/features/agents/conversation-agent-sessions/conversation-agent-sessions.models"
+import type { AgentSessionMessage as AgentSessionMessageType } from "@/features/agents/shared/agent-session-messages/agent-session-messages.models"
 import { FeedbackCreator } from "../agent-message-feedback/FeedbackCreator"
 import { Attachment } from "./Attachment"
 import { ChatBotMessage, ChatUserMessage } from "./Chat"
 import { MarkdownWrapper } from "./MarkdownWrapper"
 
-export function AgentSessionMessage({ message }: { message: ConversationAgentSessionMessageType }) {
+export function AgentSessionMessage({ message }: { message: AgentSessionMessageType }) {
   const isAssistant = message.role === "assistant"
   const isStreaming = message.status === "streaming"
   const isError = message.status === "error"

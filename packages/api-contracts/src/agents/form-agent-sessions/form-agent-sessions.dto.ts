@@ -8,4 +8,5 @@ export type FormAgentSessionDto = {
   createdAt: TimeType
   updatedAt: TimeType
   traceUrl?: string
+  result?: Record<string, unknown>
 }

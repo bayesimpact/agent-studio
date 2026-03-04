@@ -6,8 +6,6 @@ import type {
   FormAgentSessionMessage as FormAgentSessionMessageType,
   FormAgentSession as FormAgentSessionType,
 } from "@/features/agents/form-agent-sessions/form-agent-sessions.models"
-import { selectStreaming } from "@/features/agents/form-agent-sessions/form-agent-sessions.selectors"
-import { sendMessage } from "@/features/agents/form-agent-sessions/form-agent-sessions.thunks"
 import { useScrollToEnd } from "@/hooks/use-scroll-to-end"
 import { useAppDispatch, useAppSelector } from "@/store/hooks"
 import { AgentSessionMessage } from "../../../../components/chat/AgentSessionMessage"
@@ -24,6 +22,8 @@ import { Dictaphone } from "../../../../components/chat/Dictaphone"
 import { DotsBackground } from "../../../../components/DotsBackground"
 import { AttachDocument } from "../../../../components/document/AttachDocument"
 import { TraceUrlOpener } from "../../../../components/TraceUrlOpener"
+import { selectStreaming } from "../../shared/agent-session-messages/agent-session-messages.selectors"
+import { sendMessage } from "../../shared/agent-session-messages/agent-session-messages.thunks"
 
 export function FormAgentSession({
   isAdminInterface,

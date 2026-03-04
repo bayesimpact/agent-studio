@@ -1,12 +1,10 @@
 import type { TypedStartListening } from "@reduxjs/toolkit"
 import { createListenerMiddleware } from "@reduxjs/toolkit"
-import { loadSessionMessages } from "@/features/agents/conversation-agent-sessions/conversation-agent-sessions.thunks"
 import type { AppDispatch, RootState } from "@/store"
 import { ADS } from "@/store/async-data-status"
 import { selectIsAdminInterface } from "../../auth/auth.selectors"
 import { selectAgentsData } from "../agents.selectors"
 import { listAgents } from "../agents.thunks"
-import { selectCurrentFormAgentSessionId } from "./form-agent-sessions.selectors"
 import { formAgentSessionsActions } from "./form-agent-sessions.slice"
 import { createFormAgentSession, listFormAgentSessions } from "./form-agent-sessions.thunks"
 
@@ -42,32 +40,6 @@ listenerMiddleware.startListening({
         await listenerApi.dispatch(listFormAgentSessions({ agentId: agent.id }))
       }
     }
-  },
-})
-
-// Refresh messages when current agent sessions are loaded and one is selected
-listenerMiddleware.startListening({
-  actionCreator: listFormAgentSessions.fulfilled,
-  effect: async (_, listenerApi) => {
-    const state = listenerApi.getState()
-    const agentSessionId = selectCurrentFormAgentSessionId(state)
-    if (!agentSessionId) return
-    await listenerApi.dispatch(loadSessionMessages(agentSessionId))
-  },
-})
-
-// Refresh messages when current agent session changes
-listenerMiddleware.startListening({
-  predicate(_, currentState, originalState) {
-    const prevId = selectCurrentFormAgentSessionId(originalState)
-    const nextId = selectCurrentFormAgentSessionId(currentState)
-    return prevId !== nextId && !!nextId
-  },
-  effect: async (_, listenerApi) => {
-    const state = listenerApi.getState()
-    const agentSessionId = selectCurrentFormAgentSessionId(state)
-    if (!agentSessionId) return
-    await listenerApi.dispatch(loadSessionMessages(agentSessionId))
   },
 })
 

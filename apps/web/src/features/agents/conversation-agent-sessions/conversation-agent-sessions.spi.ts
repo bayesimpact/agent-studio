@@ -1,8 +1,5 @@
 import type { BaseAgentSessionTypeDto } from "@caseai-connect/api-contracts"
-import type {
-  ConversationAgentSession,
-  ConversationAgentSessionMessage,
-} from "./conversation-agent-sessions.models"
+import type { ConversationAgentSession } from "./conversation-agent-sessions.models"
 
 export interface IConversationAgentSessionsSpi {
   getAll: (params: {
@@ -17,11 +14,4 @@ export interface IConversationAgentSessionsSpi {
     agentId: string
     type: BaseAgentSessionTypeDto
   }) => Promise<ConversationAgentSession>
-  getMessages: (params: {
-    organizationId: string
-    projectId: string
-    agentId: string
-    agentSessionId: string
-    type: BaseAgentSessionTypeDto
-  }) => Promise<ConversationAgentSessionMessage[]>
 }

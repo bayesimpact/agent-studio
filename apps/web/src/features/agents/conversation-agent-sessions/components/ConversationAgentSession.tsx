@@ -2,15 +2,7 @@ import { Button } from "@caseai-connect/ui/shad/button"
 import { FileCheckIcon, XIcon } from "lucide-react"
 import { useEffect, useRef, useState } from "react"
 import { useTranslation } from "react-i18next"
-import type {
-  ConversationAgentSessionMessage as ConversationAgentSessionMessageType,
-  ConversationAgentSession as ConversationAgentSessionType,
-} from "@/features/agents/conversation-agent-sessions/conversation-agent-sessions.models"
-import { selectStreaming } from "@/features/agents/conversation-agent-sessions/conversation-agent-sessions.selectors"
-import { sendMessage } from "@/features/agents/conversation-agent-sessions/conversation-agent-sessions.thunks"
-import { useScrollToEnd } from "@/hooks/use-scroll-to-end"
-import { useAppDispatch, useAppSelector } from "@/store/hooks"
-import { AgentSessionMessage } from "../../../../components/chat/AgentSessionMessage"
+import { AgentSessionMessage } from "@/components/chat/AgentSessionMessage"
 import {
   Chat,
   ChatActions,
@@ -19,11 +11,17 @@ import {
   ChatHeader,
   ChatInput,
   ChatSubmit,
-} from "../../../../components/chat/Chat"
-import { Dictaphone } from "../../../../components/chat/Dictaphone"
-import { DotsBackground } from "../../../../components/DotsBackground"
-import { AttachDocument } from "../../../../components/document/AttachDocument"
-import { TraceUrlOpener } from "../../../../components/TraceUrlOpener"
+} from "@/components/chat/Chat"
+import { Dictaphone } from "@/components/chat/Dictaphone"
+import { DotsBackground } from "@/components/DotsBackground"
+import { AttachDocument } from "@/components/document/AttachDocument"
+import { TraceUrlOpener } from "@/components/TraceUrlOpener"
+import type { ConversationAgentSession as ConversationAgentSessionType } from "@/features/agents/conversation-agent-sessions/conversation-agent-sessions.models"
+import type { AgentSessionMessage as AgentSessionMessageType } from "@/features/agents/shared/agent-session-messages/agent-session-messages.models"
+import { useScrollToEnd } from "@/hooks/use-scroll-to-end"
+import { useAppDispatch, useAppSelector } from "@/store/hooks"
+import { selectStreaming } from "../../shared/agent-session-messages/agent-session-messages.selectors"
+import { sendMessage } from "../../shared/agent-session-messages/agent-session-messages.thunks"
 
 export function ConversationAgentSession({
   isAdminInterface,
@@ -32,7 +30,7 @@ export function ConversationAgentSession({
 }: {
   isAdminInterface: boolean
   session: ConversationAgentSessionType
-  messages: ConversationAgentSessionMessageType[]
+  messages: AgentSessionMessageType[]
 }) {
   const isStreaming = useAppSelector(selectStreaming)
 
@@ -70,7 +68,7 @@ function Messages({
   messages,
   isStreaming,
 }: {
-  messages: ConversationAgentSessionMessageType[]
+  messages: AgentSessionMessageType[]
   isStreaming: boolean
 }) {
   const chatEndRef = useRef<HTMLDivElement>(null)
