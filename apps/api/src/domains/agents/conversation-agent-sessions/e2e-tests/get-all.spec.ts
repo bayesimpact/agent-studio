@@ -1,6 +1,6 @@
 import {
+  type BaseAgentSessionTypeDto,
   ConversationAgentSessionsRoutes,
-  type ConversationAgentSessionTypeDto,
 } from "@caseai-connect/api-contracts"
 import type { INestApplication } from "@nestjs/common"
 import type { App } from "supertest/types"
@@ -130,7 +130,7 @@ describe("ConversationAgentSessionsRoutes.getAll", () => {
     }
   }
 
-  const subject = async (type: ConversationAgentSessionTypeDto) =>
+  const subject = async (type: BaseAgentSessionTypeDto) =>
     request({
       route: ConversationAgentSessionsRoutes.getAll,
       pathParams: removeNullish({ organizationId, projectId, agentId }),

@@ -8,6 +8,8 @@ import { conversationAgentSessionsMiddleware } from "@/features/agents/conversat
 import { conversationAgentSessionsSliceReducer } from "@/features/agents/conversation-agent-sessions/conversation-agent-sessions.slice"
 import { extractionAgentSessionsMiddleware } from "@/features/agents/extraction-agent-sessions/extraction-agent-sessions.middleware"
 import { extractionAgentSessionsSliceReducer } from "@/features/agents/extraction-agent-sessions/extraction-agent-sessions.slice"
+import { formAgentSessionsMiddleware } from "@/features/agents/form-agent-sessions/form-agent-sessions.middleware"
+import { formAgentSessionsSliceReducer } from "@/features/agents/form-agent-sessions/form-agent-sessions.slice"
 import { authMiddleware } from "@/features/auth/auth.middleware"
 import { authSliceReducer } from "@/features/auth/auth.slice"
 import { documentsMiddleware } from "@/features/documents/documents.middleware"
@@ -28,14 +30,15 @@ import type { ThunkExtraArg } from "./types"
 
 export const store = configureStore({
   reducer: {
-    extractionAgentSessions: extractionAgentSessionsSliceReducer,
     agentMessageFeedback: agentMessageFeedbackSliceReducer,
     agents: agentsSliceReducer,
-    conversationAgentSessions: conversationAgentSessionsSliceReducer,
     auth: authSliceReducer,
+    conversationAgentSessions: conversationAgentSessionsSliceReducer,
     documents: documentsSliceReducer,
     evaluationReports: evaluationReportsSliceReducer,
     evaluations: evaluationsSliceReducer,
+    extractionAgentSessions: extractionAgentSessionsSliceReducer,
+    formAgentSessions: formAgentSessionsSliceReducer,
     me: meSliceReducer,
     notifications: notificationsSliceReducer,
     organizations: organizationsSliceReducer,
@@ -48,14 +51,15 @@ export const store = configureStore({
         extraArgument: { services: getServices() } satisfies ThunkExtraArg,
       },
     }).prepend(
-      extractionAgentSessionsMiddleware.middleware,
       agentMessageFeedbackMiddleware.middleware,
-      conversationAgentSessionsMiddleware.middleware,
       agentsMiddleware.middleware,
       authMiddleware.middleware,
+      conversationAgentSessionsMiddleware.middleware,
       documentsMiddleware.middleware,
       evaluationReportsMiddleware.middleware,
       evaluationsMiddleware.middleware,
+      extractionAgentSessionsMiddleware.middleware,
+      formAgentSessionsMiddleware.middleware,
       organizationsMiddleware.middleware,
       projectMembershipsMiddleware.middleware,
       projectsMiddleware.middleware,

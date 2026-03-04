@@ -1,8 +1,7 @@
+import type { BaseAgentSessionTypeDto } from "../../agents/conversation-agent-sessions/conversation-agent-sessions.dto"
 import type { TimeType } from "../../generic"
 
-export type BaseAgentSessionTypeDto = "playground" | "live"
-
-export type ConversationAgentSessionDto = {
+export type FormAgentSessionDto = {
   id: string
   agentId: string
   type: BaseAgentSessionTypeDto

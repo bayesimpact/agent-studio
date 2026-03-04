@@ -5,10 +5,8 @@ import { v4 } from "uuid"
 
 import { ConnectRepository } from "@/common/entities/connect-repository"
 import type { RequiredConnectScope } from "@/common/entities/connect-required-fields"
-import {
-  ConversationAgentSession,
-  type ConversationAgentSessionType,
-} from "./conversation-agent-session.entity"
+import type { BaseAgentSessionType } from "../base-agent-sessions/base-agent-sessions.types"
+import { ConversationAgentSession } from "./conversation-agent-session.entity"
 import { AgentMessage } from "./messages/agent-message.entity"
 
 @Injectable()
@@ -54,7 +52,7 @@ export class ConversationAgentSessionsService {
     connectScope: RequiredConnectScope
     agentId: string
     userId: string
-    type: ConversationAgentSessionType
+    type: BaseAgentSessionType
   }): Promise<ConversationAgentSession[]> {
     return await this.conversationAgentSessionConnectRepository.find(connectScope, {
       where: { agentId, userId, type },
@@ -71,7 +69,7 @@ export class ConversationAgentSessionsService {
     connectScope: RequiredConnectScope
     agentId: string
     userId: string
-    type: ConversationAgentSessionType
+    type: BaseAgentSessionType
   }): Promise<ConversationAgentSession> {
     return await this.conversationAgentSessionConnectRepository.createAndSave(connectScope, {
       agentId,

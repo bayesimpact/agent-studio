@@ -1,5 +1,4 @@
 import { URL } from "node:url"
-import type { ExtractionAgentSessionType } from "@caseai-connect/api-contracts"
 import { Inject, Injectable, NotFoundException, UnprocessableEntityException } from "@nestjs/common"
 import { InjectRepository } from "@nestjs/typeorm"
 import type { FilePart, ImagePart } from "ai"
@@ -21,6 +20,7 @@ import {
 } from "@/domains/documents/storage/file-storage.interface"
 import { ServiceWithLLM } from "@/external/llm"
 import type { Agent } from "../agent.entity"
+import type { BaseAgentSessionType } from "../base-agent-sessions/base-agent-sessions.types"
 import { ExtractionAgentSession } from "./extraction-agent-session.entity"
 
 @Injectable()
@@ -58,7 +58,7 @@ export class ExtractionAgentSessionsService extends ServiceWithLLM {
     userId: string
     documentId: string
     promptOverride?: string
-    type: ExtractionAgentSessionType
+    type: BaseAgentSessionType
   }): Promise<ExtractionAgentSession> {
     if (agent.type !== "extraction") {
       throw new UnprocessableEntityException("Only extraction agents can run extraction")
@@ -147,7 +147,7 @@ export class ExtractionAgentSessionsService extends ServiceWithLLM {
   }: {
     connectScope: RequiredConnectScope
     agentId: string
-    type: ExtractionAgentSessionType
+    type: BaseAgentSessionType
   }): Promise<ExtractionAgentSession[]> {
     return this.sessionConnectRepository.find(connectScope, {
       where: { agentId, type },
@@ -165,7 +165,7 @@ export class ExtractionAgentSessionsService extends ServiceWithLLM {
     connectScope: RequiredConnectScope
     runId: string
     agentId: string
-    type: ExtractionAgentSessionType
+    type: BaseAgentSessionType
   }): Promise<ExtractionAgentSession | null> {
     const runs = await this.sessionConnectRepository.find(connectScope, {
       where: { id: runId, agentId, type },

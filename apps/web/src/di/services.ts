@@ -3,6 +3,7 @@ import type { IAgentMessageFeedbackSpi } from "@/features/agent-message-feedback
 import type { IAgentsSpi } from "@/features/agents/agents.spi"
 import type { IConversationAgentSessionsSpi } from "@/features/agents/conversation-agent-sessions/conversation-agent-sessions.spi"
 import type { IExtractionAgentSessionsSpi } from "@/features/agents/extraction-agent-sessions/extraction-agent-sessions.spi"
+import type { IFormAgentSessionsSpi } from "@/features/agents/form-agent-sessions/form-agent-sessions.spi"
 import type { IDocumentsSpi } from "@/features/documents/documents.spi"
 import type { IEvaluationReportsSpi } from "@/features/evaluation-reports/evaluation-reports.spi"
 import type { IEvaluationsSpi } from "@/features/evaluations/evaluations.spi"
@@ -17,6 +18,7 @@ export type Services = {
   extractionAgentSessions: IExtractionAgentSessionsSpi
   agents: IAgentsSpi
   conversationAgentSessions: IConversationAgentSessionsSpi
+  formAgentSessions: IFormAgentSessionsSpi
   documents: IDocumentsSpi
   evaluationReports: IEvaluationReportsSpi
   evaluations: IEvaluationsSpi

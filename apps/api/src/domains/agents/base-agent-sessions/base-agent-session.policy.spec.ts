@@ -1,4 +1,4 @@
-import type { ConversationAgentSessionTypeDto } from "@caseai-connect/api-contracts"
+import type { BaseAgentSessionTypeDto } from "@caseai-connect/api-contracts"
 import { organizationFactory } from "@/domains/organizations/organization.factory"
 import type { MembershipRole } from "@/domains/organizations/user-membership.entity"
 import { userMembershipFactory } from "@/domains/organizations/user-membership.factory"
@@ -33,7 +33,7 @@ describe("BaseAgentSessionPolicy", () => {
   const buildPolicy = (
     role: MembershipRole,
     projectMembershipState: ProjectMembershipState,
-    type: ConversationAgentSessionTypeDto,
+    type: BaseAgentSessionTypeDto,
   ) => {
     return new BaseAgentSessionPolicy(
       {

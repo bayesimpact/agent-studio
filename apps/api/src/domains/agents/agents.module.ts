@@ -21,14 +21,17 @@ import { AgentsController } from "./agents.controller"
 import { AgentsService } from "./agents.service"
 import { ExtractionAgentSession } from "./extraction-agent-sessions/extraction-agent-session.entity"
 import { ExtractionAgentSessionsController } from "./extraction-agent-sessions/extraction-agent-sessions.controller"
-import { ExtractionAgentSessionsGuard } from "./extraction-agent-sessions/extraction-agent-sessions.guard"
 import { ExtractionAgentSessionsService } from "./extraction-agent-sessions/extraction-agent-sessions.service"
+import { FormAgentSession } from "./form-agent-sessions/form-agent-session.entity"
+import { FormAgentSessionsController } from "./form-agent-sessions/form-agent-sessions.controller"
+import { FormAgentSessionsService } from "./form-agent-sessions/form-agent-sessions.service"
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([
       Agent,
       ExtractionAgentSession,
+      FormAgentSession,
       Project,
       UserMembership,
       ProjectMembership,
@@ -45,14 +48,14 @@ import { ExtractionAgentSessionsService } from "./extraction-agent-sessions/extr
   providers: [
     AgentsService,
     ExtractionAgentSessionsService,
-    ExtractionAgentSessionsGuard,
+    FormAgentSessionsService,
     AgentGuard,
     ResourceContextGuard,
     OrganizationContextResolver,
     ProjectContextResolver,
     AgentContextResolver,
   ],
-  controllers: [AgentsController, ExtractionAgentSessionsController],
-  exports: [AgentsService, ExtractionAgentSessionsService],
+  controllers: [AgentsController, ExtractionAgentSessionsController, FormAgentSessionsController],
+  exports: [AgentsService, ExtractionAgentSessionsService, FormAgentSessionsService],
 })
 export class AgentsModule {}

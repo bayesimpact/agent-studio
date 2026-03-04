@@ -4,6 +4,7 @@ import type { agentMessageFeedbackSliceReducer } from "@/features/agent-message-
 import type { agentsSliceReducer } from "@/features/agents/agents.slice"
 import type { conversationAgentSessionsSliceReducer } from "@/features/agents/conversation-agent-sessions/conversation-agent-sessions.slice"
 import type { extractionAgentSessionsSliceReducer } from "@/features/agents/extraction-agent-sessions/extraction-agent-sessions.slice"
+import type { formAgentSessionsSliceReducer } from "@/features/agents/form-agent-sessions/form-agent-sessions.slice"
 import type { authSliceReducer } from "@/features/auth/auth.slice"
 import type { documentsSliceReducer } from "@/features/documents/documents.slice"
 import type { evaluationReportsSliceReducer } from "@/features/evaluation-reports/evaluation-reports.slice"
@@ -22,6 +23,7 @@ export type RootState = {
   auth: ReturnType<typeof authSliceReducer>
   agents: ReturnType<typeof agentsSliceReducer>
   conversationAgentSessions: ReturnType<typeof conversationAgentSessionsSliceReducer>
+  formAgentSessions: ReturnType<typeof formAgentSessionsSliceReducer>
   documents: ReturnType<typeof documentsSliceReducer>
   evaluationReports: ReturnType<typeof evaluationReportsSliceReducer>
   evaluations: ReturnType<typeof evaluationsSliceReducer>
