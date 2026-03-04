@@ -30,6 +30,12 @@ export const buildAppPath = (path: string) => {
   return `${RouteNames.APP}${path}`
 }
 
+export const buildOrganizationDashboardPath = ({ organizationId }: { organizationId: string }) => {
+  return buildAdminPath(
+    RouteNames.ORGANIZATION_DASHBOARD.toString().replace(":organizationId", organizationId),
+  )
+}
+
 export const buildDocumentsPath = ({
   organizationId,
   projectId,

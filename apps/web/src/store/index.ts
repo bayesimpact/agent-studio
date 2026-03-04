@@ -21,6 +21,7 @@ import { evaluationReportsMiddleware } from "@/features/evaluation-reports/evalu
 import { evaluationReportsSliceReducer } from "@/features/evaluation-reports/evaluation-reports.slice"
 import { evaluationsMiddleware } from "@/features/evaluations/evaluations.middleware"
 import { evaluationsSliceReducer } from "@/features/evaluations/evaluations.slice"
+import { meMiddleware } from "@/features/me/me.middleware"
 import { meSliceReducer } from "@/features/me/me.slice"
 import { notificationsSliceReducer } from "@/features/notifications/notifications.slice"
 import { organizationsMiddleware } from "@/features/organizations/organizations.middleware"
@@ -66,6 +67,7 @@ export const store = configureStore({
       evaluationsMiddleware.middleware,
       extractionAgentSessionsMiddleware.middleware,
       formAgentSessionsMiddleware.middleware,
+      meMiddleware.middleware,
       organizationsMiddleware.middleware,
       projectMembershipsMiddleware.middleware,
       projectsMiddleware.middleware,

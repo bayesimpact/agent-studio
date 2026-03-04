@@ -2,7 +2,7 @@ import { Section } from "@caseai-connect/ui/components/layouts/sidebar/Section"
 import { SidebarMenu } from "@caseai-connect/ui/shad/sidebar"
 import { useTranslation } from "react-i18next"
 import type { Agent } from "@/features/agents/agents.models"
-import { selectAgentsFromProjectId } from "@/features/agents/agents.selectors"
+import { selectAgentsData } from "@/features/agents/agents.selectors"
 import type { Project } from "@/features/projects/projects.models"
 import { ADS } from "@/store/async-data-status"
 import { useAppSelector } from "@/store/hooks"
@@ -19,7 +19,7 @@ export function SidebarProjectItem({
   showEmptyProject?: boolean
 }) {
   const { t } = useTranslation()
-  const agents = useAppSelector(selectAgentsFromProjectId(project.id))
+  const agents = useAppSelector(selectAgentsData)
 
   const name = `${t("project:project")} - ${project.name}`
 
