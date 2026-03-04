@@ -34,8 +34,8 @@ describe("deletePlaygroundSessionsForAgent", () => {
     await service.deletePlaygroundSessionsForAgent(testAgent.id)
 
     // Verify playground sessions are deleted
-    const found1 = await service.findById(session1.id)
-    const found2 = await service.findById(session2.id)
+    const found1 = await service.findById({ id: session1.id, connectScope })
+    const found2 = await service.findById({ id: session2.id, connectScope })
     expect(found1).toBeNull()
     expect(found2).toBeNull()
   })

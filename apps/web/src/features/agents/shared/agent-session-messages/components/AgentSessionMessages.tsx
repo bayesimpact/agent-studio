@@ -2,7 +2,12 @@ import { Button } from "@caseai-connect/ui/shad/button"
 import { FileCheckIcon, XIcon } from "lucide-react"
 import { useEffect, useRef, useState } from "react"
 import { useTranslation } from "react-i18next"
-import { AgentSessionMessage } from "@/components/chat/AgentSessionMessage"
+import { DotsBackground } from "@/components/DotsBackground"
+import { AttachDocument } from "@/components/document/AttachDocument"
+import { TraceUrlOpener } from "@/components/TraceUrlOpener"
+import type { ConversationAgentSession } from "@/features/agents/conversation-agent-sessions/conversation-agent-sessions.models"
+import type { AgentSessionMessage as AgentSessionMessageType } from "@/features/agents/shared/agent-session-messages/agent-session-messages.models"
+import { AgentSessionMessage } from "@/features/agents/shared/agent-session-messages/components/AgentSessionMessage"
 import {
   Chat,
   ChatActions,
@@ -11,25 +16,20 @@ import {
   ChatHeader,
   ChatInput,
   ChatSubmit,
-} from "@/components/chat/Chat"
-import { Dictaphone } from "@/components/chat/Dictaphone"
-import { DotsBackground } from "@/components/DotsBackground"
-import { AttachDocument } from "@/components/document/AttachDocument"
-import { TraceUrlOpener } from "@/components/TraceUrlOpener"
-import type { ConversationAgentSession as ConversationAgentSessionType } from "@/features/agents/conversation-agent-sessions/conversation-agent-sessions.models"
-import type { AgentSessionMessage as AgentSessionMessageType } from "@/features/agents/shared/agent-session-messages/agent-session-messages.models"
+} from "@/features/agents/shared/agent-session-messages/components/Chat"
+import { Dictaphone } from "@/features/agents/shared/agent-session-messages/components/Dictaphone"
 import { useScrollToEnd } from "@/hooks/use-scroll-to-end"
 import { useAppDispatch, useAppSelector } from "@/store/hooks"
-import { selectStreaming } from "../../shared/agent-session-messages/agent-session-messages.selectors"
-import { sendMessage } from "../../shared/agent-session-messages/agent-session-messages.thunks"
+import { selectStreaming } from "../agent-session-messages.selectors"
+import { sendMessage } from "../agent-session-messages.thunks"
 
-export function ConversationAgentSession({
+export function AgentSessionMessages({
   isAdminInterface,
   session,
   messages,
 }: {
   isAdminInterface: boolean
-  session: ConversationAgentSessionType
+  session: ConversationAgentSession
   messages: AgentSessionMessageType[]
 }) {
   const isStreaming = useAppSelector(selectStreaming)
@@ -93,7 +93,7 @@ function Footer({
   session,
   isStreaming,
 }: {
-  session: ConversationAgentSessionType
+  session: ConversationAgentSession
   isStreaming: boolean
 }) {
   const { t } = useTranslation()

@@ -8,7 +8,12 @@ import type {
 } from "@/features/agents/form-agent-sessions/form-agent-sessions.models"
 import { useScrollToEnd } from "@/hooks/use-scroll-to-end"
 import { useAppDispatch, useAppSelector } from "@/store/hooks"
-import { AgentSessionMessage } from "../../../../components/chat/AgentSessionMessage"
+import { DotsBackground } from "../../../../components/DotsBackground"
+import { AttachDocument } from "../../../../components/document/AttachDocument"
+import { TraceUrlOpener } from "../../../../components/TraceUrlOpener"
+import { selectStreaming } from "../../shared/agent-session-messages/agent-session-messages.selectors"
+import { sendMessage } from "../../shared/agent-session-messages/agent-session-messages.thunks"
+import { AgentSessionMessage } from "../../shared/agent-session-messages/components/AgentSessionMessage"
 import {
   Chat,
   ChatActions,
@@ -17,13 +22,8 @@ import {
   ChatHeader,
   ChatInput,
   ChatSubmit,
-} from "../../../../components/chat/Chat"
-import { Dictaphone } from "../../../../components/chat/Dictaphone"
-import { DotsBackground } from "../../../../components/DotsBackground"
-import { AttachDocument } from "../../../../components/document/AttachDocument"
-import { TraceUrlOpener } from "../../../../components/TraceUrlOpener"
-import { selectStreaming } from "../../shared/agent-session-messages/agent-session-messages.selectors"
-import { sendMessage } from "../../shared/agent-session-messages/agent-session-messages.thunks"
+} from "../../shared/agent-session-messages/components/Chat"
+import { Dictaphone } from "../../shared/agent-session-messages/components/Dictaphone"
 
 export function FormAgentSession({
   isAdminInterface,

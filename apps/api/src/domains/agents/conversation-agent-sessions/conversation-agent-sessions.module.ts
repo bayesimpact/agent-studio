@@ -8,6 +8,7 @@ import { ResourceContextGuard } from "@/common/context/resource-context.guard"
 import { Agent } from "@/domains/agents/agent.entity"
 import { AgentsModule } from "@/domains/agents/agents.module"
 import { BaseAgentSessionGuard } from "@/domains/agents/base-agent-sessions/base-agent-session.guard"
+import { FormAgentSession } from "@/domains/agents/form-agent-sessions/form-agent-session.entity"
 import { AgentMessage } from "@/domains/agents/shared/agent-session-messages/agent-message.entity"
 import { StreamingController } from "@/domains/agents/shared/agent-session-messages/streaming/streaming.controller"
 import { StreamingService } from "@/domains/agents/shared/agent-session-messages/streaming/streaming.service"
@@ -36,6 +37,7 @@ import { ConversationAgentSessionsService } from "./conversation-agent-sessions.
       Agent,
       AgentMessage,
       ConversationAgentSession,
+      FormAgentSession,
       Document,
       Organization,
       Project,

@@ -2,6 +2,7 @@ import { Column, JoinColumn, ManyToOne, OneToMany, OneToOne } from "typeorm"
 import { ConnectEntity, ConnectEntityBase } from "@/common/entities/connect-entity"
 import { Document } from "@/domains/documents/document.entity"
 import { ConversationAgentSession } from "../../conversation-agent-sessions/conversation-agent-session.entity"
+import { FormAgentSession } from "../../form-agent-sessions/form-agent-session.entity"
 import { AgentMessageFeedback } from "./feedback/agent-message-feedback.entity"
 
 export type MessageStatus = "streaming" | "completed" | "aborted" | "error"
@@ -35,11 +36,28 @@ export class AgentMessage extends ConnectEntityBase {
 
   @ManyToOne(
     () => ConversationAgentSession,
-    (conversationAgentSession) => conversationAgentSession.messages,
-    { onDelete: "CASCADE" },
+    (session) => session.messages,
+    { onDelete: "CASCADE", nullable: true, createForeignKeyConstraints: false },
   )
   @JoinColumn({ name: "session_id" })
-  session!: ConversationAgentSession
+  conversationAgentSession?: ConversationAgentSession
+
+  @ManyToOne(
+    () => FormAgentSession,
+    (session) => session.messages,
+    { onDelete: "CASCADE", nullable: true, createForeignKeyConstraints: false },
+  )
+  @JoinColumn({ name: "session_id" })
+  formAgentSession?: FormAgentSession
+
+  session(agentType: string): ConversationAgentSession | FormAgentSession | undefined {
+    if (agentType === "conversation") {
+      return this.conversationAgentSession
+    } else if (agentType === "form") {
+      return this.formAgentSession
+    }
+    return undefined
+  }
 
   @Column({ type: "uuid", name: "document_id", nullable: true })
   documentId!: string | null

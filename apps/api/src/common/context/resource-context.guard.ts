@@ -33,7 +33,7 @@ const RESOLUTION_ORDER: ContextResource[] = [
   "project",
   "projectMembership",
   "agent",
-  "conversationAgentSession",
+  "agentSession",
   "document",
   "evaluation",
 ]

@@ -1,6 +1,7 @@
-import { Column } from "typeorm"
+import { Column, OneToMany } from "typeorm"
 import { ConnectEntity, ConnectEntityBase } from "@/common/entities/connect-entity"
 import type { BaseAgentSessionType } from "../base-agent-sessions/base-agent-sessions.types"
+import { AgentMessage } from "../shared/agent-session-messages/agent-message.entity"
 
 @ConnectEntity("form_agent_session", "agentId", "type")
 export class FormAgentSession extends ConnectEntityBase {
@@ -18,4 +19,10 @@ export class FormAgentSession extends ConnectEntityBase {
 
   @Column({ type: "jsonb", nullable: true })
   result!: Record<string, unknown> | null
+
+  @OneToMany(
+    () => AgentMessage,
+    (message) => message.formAgentSession,
+  )
+  messages!: AgentMessage[]
 }

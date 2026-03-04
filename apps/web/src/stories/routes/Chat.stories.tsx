@@ -3,6 +3,7 @@ import type { Meta, StoryObj } from "@storybook/react-vite"
 import { CirclePlusIcon, MicIcon, PaperclipIcon } from "lucide-react"
 import { useState } from "react"
 import { withRouter } from "storybook-addon-remix-react-router"
+import { DotsBackground } from "@/components/DotsBackground"
 import {
   Chat,
   ChatActions,
@@ -13,8 +14,7 @@ import {
   ChatInput,
   ChatSubmit,
   ChatUserMessage,
-} from "@/components/chat/Chat"
-import { DotsBackground } from "@/components/DotsBackground"
+} from "@/features/agents/shared/agent-session-messages/components/Chat"
 
 type Message = {
   id: string

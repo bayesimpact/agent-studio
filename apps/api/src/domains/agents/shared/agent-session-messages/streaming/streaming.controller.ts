@@ -1,9 +1,9 @@
 import { AgentSessionMessagesRoutes } from "@caseai-connect/api-contracts"
 import type { MessageEvent } from "@nestjs/common"
-import { Controller, ForbiddenException, Param, Query, Req, Sse, UseGuards } from "@nestjs/common"
+import { Controller, ForbiddenException, Query, Req, Sse, UseGuards } from "@nestjs/common"
 import { Observable } from "rxjs"
-import type { EndpointRequestWithAgent } from "@/common/context/request.interface"
-import { AddContext, RequireContext } from "@/common/context/require-context.decorator"
+import type { EndpointRequestWithAgentSession } from "@/common/context/request.interface"
+import { RequireContext } from "@/common/context/require-context.decorator"
 import { ResourceContextGuard } from "@/common/context/resource-context.guard"
 import { CheckPolicy } from "@/common/policies/check-policy.decorator"
 import { JwtAuthGuard } from "@/domains/auth/jwt-auth.guard"
@@ -12,19 +12,16 @@ import { UserGuard } from "@/domains/users/user.guard"
 import { StreamingService } from "./streaming.service"
 
 @UseGuards(JwtAuthGuard, UserGuard, ResourceContextGuard)
-@RequireContext("organization", "project")
+@RequireContext("organization", "project", "agent", "agentSession")
 @Controller()
 export class StreamingController {
   constructor(private readonly chatStreamingService: StreamingService) {}
 
-  @AddContext("agent")
   @CheckPolicy((policy) => policy.canList())
   @Sse(AgentSessionMessagesRoutes.stream.path, { method: 0 /* GET */ })
   stream(
-    @Req() request: EndpointRequestWithAgent,
+    @Req() request: EndpointRequestWithAgentSession,
     @Query("q") query: string,
-    // FIXME: use a AgentSessionGuard
-    @Param("sessionId") sessionId: string,
   ): Observable<MessageEvent> {
     try {
       const parsedQuery = JSON.parse(query) as typeof AgentSessionMessagesRoutes.stream.request
@@ -33,6 +30,7 @@ export class StreamingController {
       const organizationId = request.organizationId
       const projectId = request.project.id
       const agent = request.agent
+      const sessionId = request.agentSession.id
 
       if (!userContent) {
         throw new ForbiddenException("Missing user content")

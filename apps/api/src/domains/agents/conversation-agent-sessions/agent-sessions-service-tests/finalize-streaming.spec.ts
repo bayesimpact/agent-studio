@@ -11,7 +11,8 @@ describe("finalizeStreaming", () => {
     await sdk.shutdown()
   })
   it("should update assistant message with content and completed status", async () => {
-    const { service, testAgent, testOrganization, testUser, testProject } = getTestContext()
+    const { service, testAgent, testOrganization, testUser, testProject, streamingService } =
+      getTestContext()
     const connectScope: RequiredConnectScope = {
       organizationId: testOrganization.id,
       projectId: testProject.id,
@@ -23,17 +24,19 @@ describe("finalizeStreaming", () => {
       type: "playground",
     })
 
-    const { assistantMessageId } = await service.prepareForStreaming({
+    const { assistantMessageId } = await streamingService.prepareForStreaming({
       connectScope,
       sessionId: session.id,
       userContent: "Hello",
+      agentType: testAgent.type,
     })
 
-    const finalizedSession = await service.finalizeStreaming(
-      session.id,
+    const finalizedSession = await streamingService.finalizeStreaming({
+      sessionId: session.id,
       assistantMessageId,
-      "Hello! How can I help you today?",
-    )
+      fullContent: "Hello! How can I help you today?",
+      agentType: testAgent.type,
+    })
 
     const assistantMessage = finalizedSession.messages.find((msg) => msg.id === assistantMessageId)
     expect(assistantMessage).toBeDefined()
@@ -43,12 +46,17 @@ describe("finalizeStreaming", () => {
   })
 
   it("should throw NotFoundException for non-existent session", async () => {
-    const { service } = getTestContext()
+    const { streamingService, testAgent } = getTestContext()
 
     // Use a valid UUID format for non-existent session
     const nonExistentId = "00000000-0000-0000-0000-000000000000"
     await expect(
-      service.finalizeStreaming(nonExistentId, "00000000-0000-0000-0000-000000000001", "Content"),
+      streamingService.finalizeStreaming({
+        sessionId: nonExistentId,
+        assistantMessageId: "00000000-0000-0000-0000-000000000001",
+        fullContent: "Content",
+        agentType: testAgent.type,
+      }),
     ).rejects.toThrow(NotFoundException)
   })
 })

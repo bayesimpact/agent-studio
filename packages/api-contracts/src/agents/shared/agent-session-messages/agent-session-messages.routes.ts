@@ -20,6 +20,6 @@ export const AgentSessionMessagesRoutes = {
     RequestPayload<{ content: string; documentId?: string }>
   >({
     method: "post",
-    path: "organizations/:organizationId/projects/:projectId/agents/:agentId/agent-sessions/:sessionId/stream",
+    path: "organizations/:organizationId/projects/:projectId/agents/:agentId/agent-sessions/:agentSessionId/stream",
   }),
 }

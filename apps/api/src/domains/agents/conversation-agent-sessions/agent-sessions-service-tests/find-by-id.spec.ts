@@ -11,7 +11,8 @@ describe("findById", () => {
     await sdk.shutdown()
   })
   it("should find an existing session", async () => {
-    const { service, testAgent, testOrganization, testUser, testProject } = getTestContext()
+    const { service, testAgent, testOrganization, testUser, testProject, streamingService } =
+      getTestContext()
     const connectScope: RequiredConnectScope = {
       organizationId: testOrganization.id,
       projectId: testProject.id,
@@ -23,7 +24,10 @@ describe("findById", () => {
       type: "playground",
     })
 
-    const foundSession = await service.findById(createdSession.id)
+    const foundSession = await streamingService.findSessionById({
+      sessionId: createdSession.id,
+      agentType: testAgent.type,
+    })
 
     expect(foundSession).toBeDefined()
     expect(foundSession?.id).toBe(createdSession.id)
@@ -31,18 +35,28 @@ describe("findById", () => {
   })
 
   it("should return null for non-existent session", async () => {
-    const { service } = getTestContext()
+    const { streamingService, testAgent } = getTestContext()
 
     // Use a valid UUID format for non-existent session
     const nonExistentId = "00000000-0000-0000-0000-000000000000"
-    const foundSession = await service.findById(nonExistentId)
+    const foundSession = await streamingService.findSessionById({
+      sessionId: nonExistentId,
+      agentType: testAgent.type,
+    })
 
     expect(foundSession).toBeNull()
   })
 
   it("should recover aborted streams on load", async () => {
-    const { service, testAgent, testOrganization, testUser, agentMessageRepository, testProject } =
-      getTestContext()
+    const {
+      service,
+      testAgent,
+      testOrganization,
+      testUser,
+      agentMessageRepository,
+      testProject,
+      streamingService,
+    } = getTestContext()
     const connectScope: RequiredConnectScope = {
       organizationId: testOrganization.id,
       projectId: testProject.id,
@@ -69,7 +83,10 @@ describe("findById", () => {
     await agentMessageRepository.save(oldMessage)
 
     // Load the session - should recover the aborted stream
-    const loadedSession = await service.findById(session.id)
+    const loadedSession = await streamingService.findSessionById({
+      sessionId: session.id,
+      agentType: testAgent.type,
+    })
 
     expect(loadedSession).toBeDefined()
     const recoveredMessage = await agentMessageRepository.findOne({

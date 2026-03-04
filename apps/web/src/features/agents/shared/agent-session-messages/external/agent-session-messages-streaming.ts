@@ -22,7 +22,7 @@ export async function streamChatResponse({
   organizationId,
   projectId,
   agentId,
-  sessionId,
+  agentSessionId,
   content,
   documentId,
   handlers,
@@ -31,7 +31,7 @@ export async function streamChatResponse({
   organizationId: string
   projectId: string
   agentId: string
-  sessionId: string
+  agentSessionId: string
   content: string
   documentId?: string
   handlers: StreamEventHandler
@@ -43,7 +43,7 @@ export async function streamChatResponse({
     const body = {
       payload: { content, documentId },
     } satisfies typeof AgentSessionMessagesRoutes.stream.request
-    const url = `${baseURL}${AgentSessionMessagesRoutes.stream.getPath({ organizationId, projectId, agentId, sessionId })}?q=${encodeURIComponent(JSON.stringify(body))}`
+    const url = `${baseURL}${AgentSessionMessagesRoutes.stream.getPath({ organizationId, projectId, agentId, agentSessionId })}?q=${encodeURIComponent(JSON.stringify(body))}`
 
     const response = await fetch(url, {
       method: "GET",
@@ -66,7 +66,7 @@ export async function streamChatResponse({
 
     // FIXME: use axios
     // const response = await axios.post<typeof ConversationAgentSessionStreamingRoutes.stream.response>(
-    //   ConversationAgentSessionStreamingRoutes.stream.getPath({ organizationId, projectId, agentId, sessionId }),
+    //   ConversationAgentSessionStreamingRoutes.stream.getPath({ organizationId, projectId, agentId, agentSessionId }),
     //   {
     //     payload: { content, documentId },
     //   } satisfies typeof ConversationAgentSessionStreamingRoutes.stream.request,
