@@ -1,5 +1,16 @@
 {
   "organization": {
+    "createForm": {
+      "title": "Creer une organisation",
+      "description": "Configurez votre organisation pour continuer.",
+      "labelName": "Nom de l'organisation",
+      "placeholderName": "Saisissez le nom de l'organisation",
+      "submit": "Creer l'organisation",
+      "submitting": "Creation de l'organisation...",
+      "validation": {
+        "minNameLength": "Le nom de l'organisation doit contenir au moins 3 caracteres"
+      }
+    },
     "props": {
       "name": "Nom",
       "role": "Rôle"
