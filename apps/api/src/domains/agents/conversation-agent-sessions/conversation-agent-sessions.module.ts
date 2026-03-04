@@ -6,29 +6,29 @@ import { OrganizationContextResolver } from "@/common/context/resolvers/organiza
 import { ProjectContextResolver } from "@/common/context/resolvers/project-context.resolver"
 import { ResourceContextGuard } from "@/common/context/resource-context.guard"
 import { Agent } from "@/domains/agents/agent.entity"
+import { AgentsModule } from "@/domains/agents/agents.module"
+import { BaseAgentSessionGuard } from "@/domains/agents/base-agent-sessions/base-agent-session.guard"
+import { AgentMessage } from "@/domains/agents/shared/agent-session-messages/agent-message.entity"
+import { StreamingController } from "@/domains/agents/shared/agent-session-messages/streaming/streaming.controller"
+import { StreamingService } from "@/domains/agents/shared/agent-session-messages/streaming/streaming.service"
 import { AuthModule } from "@/domains/auth/auth.module"
+import { Document } from "@/domains/documents/document.entity"
+import { DocumentsModule } from "@/domains/documents/documents.module"
+import { StorageModule } from "@/domains/documents/storage/storage.module"
+import { Organization } from "@/domains/organizations/organization.entity"
+import { OrganizationsModule } from "@/domains/organizations/organizations.module"
 import { UserMembership } from "@/domains/organizations/user-membership.entity"
 import { ProjectMembership } from "@/domains/projects/memberships/project-membership.entity"
+import { Project } from "@/domains/projects/project.entity"
+import { ProjectsModule } from "@/domains/projects/projects.module"
 import { UsersModule } from "@/domains/users/users.module"
 import { LlmModule } from "@/external/llm/llm.module"
 import { AISDKMockProvider } from "@/external/llm/providers/ai-sdk-mock.provider"
 import { AISDKVertexProvider } from "@/external/llm/providers/ai-sdk-vertex.provider"
-import { Document } from "../../documents/document.entity"
-import { DocumentsModule } from "../../documents/documents.module"
-import { StorageModule } from "../../documents/storage/storage.module"
-import { Organization } from "../../organizations/organization.entity"
-import { OrganizationsModule } from "../../organizations/organizations.module"
-import { Project } from "../../projects/project.entity"
-import { ProjectsModule } from "../../projects/projects.module"
-import { AgentsModule } from "../agents.module"
-import { BaseAgentSessionGuard } from "../base-agent-sessions/base-agent-session.guard"
-import { AgentMessage } from "../shared/agent-session-messages/agent-message.entity"
 import { AgentMessagesController } from "../shared/agent-session-messages/agent-messages.controller"
 import { ConversationAgentSessionsController } from "./conversation-agent-controller"
 import { ConversationAgentSession } from "./conversation-agent-session.entity"
-import { ConversationAgentSessionStreamingController } from "./conversation-agent-session-streaming.controller"
 import { ConversationAgentSessionsService } from "./conversation-agent-sessions.service"
-import { AgentStreamingService } from "./conversation-agent-streaming.service"
 
 @Module({
   imports: [
@@ -55,7 +55,7 @@ import { AgentStreamingService } from "./conversation-agent-streaming.service"
     AgentContextResolver,
     AgentSessionContextResolver,
     ConversationAgentSessionsService,
-    AgentStreamingService,
+    StreamingService,
     BaseAgentSessionGuard,
     OrganizationContextResolver,
     ProjectContextResolver,
@@ -69,11 +69,7 @@ import { AgentStreamingService } from "./conversation-agent-streaming.service"
       useClass: AISDKMockProvider,
     },
   ],
-  controllers: [
-    AgentMessagesController,
-    ConversationAgentSessionStreamingController,
-    ConversationAgentSessionsController,
-  ],
-  exports: [ConversationAgentSessionsService, AgentStreamingService],
+  controllers: [AgentMessagesController, StreamingController, ConversationAgentSessionsController],
+  exports: [ConversationAgentSessionsService, StreamingService],
 })
 export class ConversationAgentSessionsModule {}
