@@ -1,20 +1,13 @@
-import {
-  type FeatureFlagKey,
-  type FeatureFlagsDto,
-  type OrganizationDto,
-  OrganizationsRoutes,
-} from "@caseai-connect/api-contracts"
+import { OrganizationsRoutes } from "@caseai-connect/api-contracts"
 import { Body, Controller, Post, Req, UseGuards } from "@nestjs/common"
 import type { EndpointRequest } from "@/common/context/request.interface"
 import { CheckPolicy } from "@/common/policies/check-policy.decorator"
 import { JwtAuthGuard } from "@/domains/auth/jwt-auth.guard"
 import { UserGuard } from "@/domains/users/user.guard"
-import type { FeatureFlag } from "../feature-flags/feature-flag.entity"
-import type { Organization } from "./organization.entity"
+import { toDto } from "./organization.helpers"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
 import { OrganizationsService } from "./organizations.service"
 import { OrganizationsPolicyGuard } from "./organizations-policy.guard"
-import type { MembershipRole } from "./user-membership.entity"
 
 @UseGuards(JwtAuthGuard, UserGuard, OrganizationsPolicyGuard)
 @Controller()
@@ -36,27 +29,4 @@ export class OrganizationsController {
     )
     return { data: toDto({ organization, role }) }
   }
-}
-
-export function toDto({
-  organization,
-  role,
-}: {
-  organization: Organization
-  role: MembershipRole
-}): OrganizationDto {
-  return {
-    id: organization.id,
-    name: organization.name,
-    role,
-    featureFlags: toFeatureFlagsDto(organization.featureFlags),
-  }
-}
-
-function toFeatureFlagsDto(featureFlags: FeatureFlag[]): FeatureFlagsDto {
-  return (
-    featureFlags
-      ?.filter((flag) => flag.enabled)
-      .map((flag) => flag.featureFlagKey as FeatureFlagKey) ?? []
-  )
 }

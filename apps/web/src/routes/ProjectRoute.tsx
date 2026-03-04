@@ -1,12 +1,9 @@
 import { Navigate, useOutlet } from "react-router-dom"
 import type { Agent } from "@/features/agents/agents.models"
-import { selectAgentsFromProjectId } from "@/features/agents/agents.selectors"
+import { selectAgentsData } from "@/features/agents/agents.selectors"
 import { EmptyAgent } from "@/features/agents/components/EmptyAgent"
 import type { Project } from "@/features/projects/projects.models"
-import {
-  selectCurrentProjectData,
-  selectCurrentProjectId,
-} from "@/features/projects/projects.selectors"
+import { selectCurrentProjectData } from "@/features/projects/projects.selectors"
 import { useAbility } from "@/hooks/use-ability"
 import { useBuildPath } from "@/hooks/use-build-path"
 import { ADS } from "@/store/async-data-status"
@@ -16,8 +13,7 @@ import { LoadingRoute } from "./LoadingRoute"
 
 export function ProjectRoute() {
   const project = useAppSelector(selectCurrentProjectData)
-  const projectId = useAppSelector(selectCurrentProjectId)
-  const agents = useAppSelector(selectAgentsFromProjectId(projectId))
+  const agents = useAppSelector(selectAgentsData)
 
   if (ADS.isError(project) || ADS.isError(agents))
     return <ErrorRoute error={project.error || agents.error || "Unknown error"} />

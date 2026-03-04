@@ -3,7 +3,7 @@ import { EmptyDocument } from "@/components/document/EmptyDocument"
 import { UploadDocumentButton } from "@/components/document/UploadDocumentButton"
 import { useSidebarLayout } from "@/components/layouts/sidebar/context"
 import type { Document } from "@/features/documents/documents.models"
-import { selectDocumentsFromProjectId } from "@/features/documents/documents.selectors"
+import { selectDocumentsData } from "@/features/documents/documents.selectors"
 import { selectCurrentProjectId } from "@/features/projects/projects.selectors"
 import { ADS } from "@/store/async-data-status"
 import { useAppSelector } from "@/store/hooks"
@@ -13,7 +13,7 @@ import { LoadingRoute } from "../LoadingRoute"
 
 export function DocumentsRoute() {
   const projectId = useAppSelector(selectCurrentProjectId)
-  const documentsData = useAppSelector(selectDocumentsFromProjectId(projectId))
+  const documentsData = useAppSelector(selectDocumentsData)
   if (!projectId) return <ErrorRoute error="Missing valid project ID" />
 
   if (ADS.isError(documentsData))
