@@ -1,9 +1,9 @@
-# GKE Deployment Runbook (Impulse Example)
+# Google Cloud Deployment Runbook (Impulse Example)
 
 This guide rewrites the original notes into a step-by-step deployment runbook.
 
 - Example app name: `health`
-- Example Google Cloud project: `health-488513`
+- Example Google Cloud project: `impulse-488513`
 - Keep the order of steps
 - Prefer CLI (`gcloud`) over UI where possible
 
@@ -40,8 +40,8 @@ gcloud auth configure-docker europe-west9-docker.pkg.dev
 If you need to create it:
 
 ```bash
-gcloud projects create health-488513 --name="Health"
-gcloud config set project health-488513
+gcloud projects create impulse-488513 --name="Health"
+gcloud config set project impulse-488513
 ```
 
 ---
@@ -287,7 +287,7 @@ Update your `Makefile` variables:
 ```bash
 imageUrl = europe-west9-docker.pkg.dev/health/health/api
 cloudRunName = health
-googleVertexProject = health-488513
+googleVertexProject = impulse-488513
 googleVertexLocation = europe-west1
 location = europe-west1
 zone = europe-west9
@@ -295,7 +295,7 @@ langfuseUrl = https://langfuse-y72kzcp7ka-od.a.run.app
 langfusePk = pk-lf-7c8dba87-812c-4447-9e6d-80ac06af9311
 secretsPrefix = IMPULSE_
 postHogHost = https://eu.i.posthog.com
-addCloudSqlInstances = health-488513:europe-west9:health-eu
+addCloudSqlInstances = impulse-488513:europe-west9:health-eu
 cloudSqlProxyPort = 5433
 auth0OrganizationId = org_CrDgtkMXZORx4H70
 auth0Audience = https://bayes-impact.eu.auth0.com/api/v2/
@@ -304,9 +304,9 @@ auth0M2MClientId = ct0uygE3ld8IOKjaGozWbRLMae0R0Pcr
 auth0ClientId = Ddw6V44kWddjgciJSmYDGV1J0V5w3REB
 localStorageServerBaseUrl = https://connect.localhost:3000
 gcsStorageBucketName = eu-health-file-storage
-gcpProjectId = health-488513
-serviceAccount = health-api@health-488513.iam.gserviceaccount.com
-network = projects/health-488513/global/networks/default
+gcpProjectId = impulse-488513
+serviceAccount = health-api@impulse-488513.iam.gserviceaccount.com
+network = projects/impulse-488513/global/networks/default
 databaseUsername = health_admin
 databaseName = health
 cloudSqlCredentialsFile = $(CURDIR)/dontsave/health-github-sa.json
