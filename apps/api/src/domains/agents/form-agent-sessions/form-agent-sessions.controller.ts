@@ -54,5 +54,6 @@ function toDto(entity: FormAgentSession): FormAgentSessionDto {
     type: entity.type,
     createdAt: entity.createdAt.getTime(),
     updatedAt: entity.updatedAt.getTime(),
+    result: entity.result ?? undefined,
   }
 }

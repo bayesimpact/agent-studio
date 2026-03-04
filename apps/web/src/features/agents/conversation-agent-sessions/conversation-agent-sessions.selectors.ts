@@ -2,6 +2,7 @@ import { createSelector } from "@reduxjs/toolkit"
 import type { RootState } from "@/store"
 import { ADS, type AsyncData } from "@/store/async-data-status"
 import { selectCurrentAgentData } from "../agents.selectors"
+import { selectCurrentAgentSessionId } from "../current-agent-session-id/current-agent-session-id.selectors"
 import type { ConversationAgentSession } from "./conversation-agent-sessions.models"
 
 const selectConversationAgentSessionsData = (state: RootState) =>
@@ -44,11 +45,8 @@ export const selectCurrentConversationAgentSessionsDataFromAgentId = (agentId?: 
     },
   )
 
-export const selectCurrentConversationAgentSessionId = (state: RootState) =>
-  state.conversationAgentSessions.currentAgentSessionId
-
 export const selectCurrentConversationAgentSessionData = createSelector(
-  [selectCurrentConversationAgentSessionsData, selectCurrentConversationAgentSessionId],
+  [selectCurrentConversationAgentSessionsData, selectCurrentAgentSessionId],
   (conversationAgentSessionsData, agentSessionId): AsyncData<ConversationAgentSession> => {
     if (!ADS.isFulfilled(conversationAgentSessionsData)) return { ...conversationAgentSessionsData }
 
@@ -67,8 +65,3 @@ export const selectCurrentConversationAgentSessionData = createSelector(
     return { status: ADS.Fulfilled, value: agentSession, error: null }
   },
 )
-
-export const selectCurrentMessagesData = (state: RootState) =>
-  state.conversationAgentSessions.messages
-
-export const selectStreaming = (state: RootState) => state.conversationAgentSessions.isStreaming

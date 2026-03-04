@@ -1,7 +1,7 @@
-import type { BaseAgentSessionTypeDto } from "../../../agents/conversation-agent-sessions/conversation-agent-sessions.dto"
 import type { RequestPayload, ResponseData } from "../../../generic"
 import { defineRoute } from "../../../helpers"
-import type { AgentSessionMessageDto } from "./session-messages.dto"
+import type { BaseAgentSessionTypeDto } from "../../conversation-agent-sessions/conversation-agent-sessions.dto"
+import type { AgentSessionMessageDto } from "./agent-session-messages.dto"
 
 export const AgentSessionMessagesRoutes = {
   listMessages: defineRoute<

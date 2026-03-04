@@ -3,8 +3,10 @@ import type { Services } from "@/di/services"
 import type { agentMessageFeedbackSliceReducer } from "@/features/agent-message-feedback/agent-message-feedback.slice"
 import type { agentsSliceReducer } from "@/features/agents/agents.slice"
 import type { conversationAgentSessionsSliceReducer } from "@/features/agents/conversation-agent-sessions/conversation-agent-sessions.slice"
+import type { currentAgentSessionIdSliceReducer } from "@/features/agents/current-agent-session-id/current-agent-session-id.slice"
 import type { extractionAgentSessionsSliceReducer } from "@/features/agents/extraction-agent-sessions/extraction-agent-sessions.slice"
 import type { formAgentSessionsSliceReducer } from "@/features/agents/form-agent-sessions/form-agent-sessions.slice"
+import type { agentSessionMessagesSliceReducer } from "@/features/agents/shared/agent-session-messages/agent-session-messages.slice"
 import type { authSliceReducer } from "@/features/auth/auth.slice"
 import type { documentsSliceReducer } from "@/features/documents/documents.slice"
 import type { evaluationReportsSliceReducer } from "@/features/evaluation-reports/evaluation-reports.slice"
@@ -18,15 +20,17 @@ import type { projectsSliceReducer } from "@/features/projects/projects.slice"
 // Define the store state structure without creating the store
 // This allows us to use these types in listenerMiddleware without circular dependencies
 export type RootState = {
+  currentAgentSessionId: ReturnType<typeof currentAgentSessionIdSliceReducer>
   agentMessageFeedback: ReturnType<typeof agentMessageFeedbackSliceReducer>
-  extractionAgentSessions: ReturnType<typeof extractionAgentSessionsSliceReducer>
-  auth: ReturnType<typeof authSliceReducer>
   agents: ReturnType<typeof agentsSliceReducer>
+  agentSessionMessages: ReturnType<typeof agentSessionMessagesSliceReducer>
+  auth: ReturnType<typeof authSliceReducer>
   conversationAgentSessions: ReturnType<typeof conversationAgentSessionsSliceReducer>
-  formAgentSessions: ReturnType<typeof formAgentSessionsSliceReducer>
   documents: ReturnType<typeof documentsSliceReducer>
   evaluationReports: ReturnType<typeof evaluationReportsSliceReducer>
   evaluations: ReturnType<typeof evaluationsSliceReducer>
+  extractionAgentSessions: ReturnType<typeof extractionAgentSessionsSliceReducer>
+  formAgentSessions: ReturnType<typeof formAgentSessionsSliceReducer>
   me: ReturnType<typeof meSliceReducer>
   notifications: ReturnType<typeof notificationsSliceReducer>
   organizations: ReturnType<typeof organizationsSliceReducer>

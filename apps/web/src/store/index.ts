@@ -6,10 +6,13 @@ import { agentsMiddleware } from "@/features/agents/agents.middleware"
 import { agentsSliceReducer } from "@/features/agents/agents.slice"
 import { conversationAgentSessionsMiddleware } from "@/features/agents/conversation-agent-sessions/conversation-agent-sessions.middleware"
 import { conversationAgentSessionsSliceReducer } from "@/features/agents/conversation-agent-sessions/conversation-agent-sessions.slice"
+import { currentAgentSessionIdSliceReducer } from "@/features/agents/current-agent-session-id/current-agent-session-id.slice"
 import { extractionAgentSessionsMiddleware } from "@/features/agents/extraction-agent-sessions/extraction-agent-sessions.middleware"
 import { extractionAgentSessionsSliceReducer } from "@/features/agents/extraction-agent-sessions/extraction-agent-sessions.slice"
 import { formAgentSessionsMiddleware } from "@/features/agents/form-agent-sessions/form-agent-sessions.middleware"
 import { formAgentSessionsSliceReducer } from "@/features/agents/form-agent-sessions/form-agent-sessions.slice"
+import { agentSessionMessagesMiddleware } from "@/features/agents/shared/agent-session-messages/agent-session-messages.middleware"
+import { agentSessionMessagesSliceReducer } from "@/features/agents/shared/agent-session-messages/agent-session-messages.slice"
 import { authMiddleware } from "@/features/auth/auth.middleware"
 import { authSliceReducer } from "@/features/auth/auth.slice"
 import { documentsMiddleware } from "@/features/documents/documents.middleware"
@@ -32,8 +35,10 @@ export const store = configureStore({
   reducer: {
     agentMessageFeedback: agentMessageFeedbackSliceReducer,
     agents: agentsSliceReducer,
+    agentSessionMessages: agentSessionMessagesSliceReducer,
     auth: authSliceReducer,
     conversationAgentSessions: conversationAgentSessionsSliceReducer,
+    currentAgentSessionId: currentAgentSessionIdSliceReducer,
     documents: documentsSliceReducer,
     evaluationReports: evaluationReportsSliceReducer,
     evaluations: evaluationsSliceReducer,
@@ -52,6 +57,7 @@ export const store = configureStore({
       },
     }).prepend(
       agentMessageFeedbackMiddleware.middleware,
+      agentSessionMessagesMiddleware.middleware,
       agentsMiddleware.middleware,
       authMiddleware.middleware,
       conversationAgentSessionsMiddleware.middleware,

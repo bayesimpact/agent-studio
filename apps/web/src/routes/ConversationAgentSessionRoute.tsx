@@ -1,12 +1,8 @@
 import { ConversationAgentSession } from "@/features/agents/conversation-agent-sessions/components/ConversationAgentSession"
-import type {
-  ConversationAgentSessionMessage,
-  ConversationAgentSession as ConversationAgentSessionType,
-} from "@/features/agents/conversation-agent-sessions/conversation-agent-sessions.models"
-import {
-  selectCurrentConversationAgentSessionData,
-  selectCurrentMessagesData,
-} from "@/features/agents/conversation-agent-sessions/conversation-agent-sessions.selectors"
+import type { ConversationAgentSession as ConversationAgentSessionType } from "@/features/agents/conversation-agent-sessions/conversation-agent-sessions.models"
+import { selectCurrentConversationAgentSessionData } from "@/features/agents/conversation-agent-sessions/conversation-agent-sessions.selectors"
+import type { AgentSessionMessage } from "@/features/agents/shared/agent-session-messages/agent-session-messages.models"
+import { selectCurrentMessagesData } from "@/features/agents/shared/agent-session-messages/agent-session-messages.selectors"
 import { useAbility } from "@/hooks/use-ability"
 import { ADS } from "@/store/async-data-status"
 import { useAppSelector } from "@/store/hooks"
@@ -32,7 +28,7 @@ function WithData({
   messages,
 }: {
   agentSession: ConversationAgentSessionType
-  messages: ConversationAgentSessionMessage[]
+  messages: AgentSessionMessage[]
 }) {
   const { isAdminInterface } = useAbility()
   return (
