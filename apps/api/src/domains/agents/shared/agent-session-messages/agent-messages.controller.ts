@@ -11,7 +11,7 @@ import { BaseAgentSessionGuard } from "@/domains/agents/base-agent-sessions/base
 import { JwtAuthGuard } from "@/domains/auth/jwt-auth.guard"
 import { UserGuard } from "@/domains/users/user.guard"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
-import { ConversationAgentSessionsService } from "../conversation-agent-sessions.service"
+import { ConversationAgentSessionsService } from "../../conversation-agent-sessions/conversation-agent-sessions.service"
 import type { AgentMessage } from "./agent-message.entity"
 
 @UseGuards(JwtAuthGuard, UserGuard, ResourceContextGuard, BaseAgentSessionGuard)

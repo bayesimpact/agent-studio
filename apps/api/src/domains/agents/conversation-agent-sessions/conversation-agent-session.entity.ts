@@ -4,7 +4,7 @@ import { Agent } from "@/domains/agents/agent.entity"
 import { Organization } from "@/domains/organizations/organization.entity"
 import { User } from "@/domains/users/user.entity"
 import type { BaseAgentSessionType } from "../base-agent-sessions/base-agent-sessions.types"
-import { AgentMessage } from "./messages/agent-message.entity"
+import { AgentMessage } from "../shared/agent-session-messages/agent-message.entity"
 
 @ConnectEntity("conversation_agent_session", "agentId", "type")
 export class ConversationAgentSession extends ConnectEntityBase {

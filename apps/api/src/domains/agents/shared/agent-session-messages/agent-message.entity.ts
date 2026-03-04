@@ -1,8 +1,8 @@
 import { Column, JoinColumn, ManyToOne, OneToMany, OneToOne } from "typeorm"
 import { ConnectEntity, ConnectEntityBase } from "@/common/entities/connect-entity"
-import { AgentMessageFeedback } from "@/domains/agents/conversation-agent-sessions/messages/feedback/agent-message-feedback.entity"
 import { Document } from "@/domains/documents/document.entity"
-import { ConversationAgentSession } from "../conversation-agent-session.entity"
+import { ConversationAgentSession } from "../../conversation-agent-sessions/conversation-agent-session.entity"
+import { AgentMessageFeedback } from "./feedback/agent-message-feedback.entity"
 
 export type MessageStatus = "streaming" | "completed" | "aborted" | "error"
 

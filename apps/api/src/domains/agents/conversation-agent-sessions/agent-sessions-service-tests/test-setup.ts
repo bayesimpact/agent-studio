@@ -15,10 +15,10 @@ import { projectFactory } from "@/domains/projects/project.factory"
 import { User } from "@/domains/users/user.entity"
 import { userFactory } from "@/domains/users/user.factory"
 import { sdk } from "@/external/llm/open-telemetry-init"
+import { AgentMessage } from "../../shared/agent-session-messages/agent-message.entity"
 import { ConversationAgentSession } from "../conversation-agent-session.entity"
 import { ConversationAgentSessionsModule } from "../conversation-agent-sessions.module"
 import { ConversationAgentSessionsService } from "../conversation-agent-sessions.service"
-import { AgentMessage } from "../messages/agent-message.entity"
 
 export function agentSessionControllerTestSetup() {
   let service: ConversationAgentSessionsService

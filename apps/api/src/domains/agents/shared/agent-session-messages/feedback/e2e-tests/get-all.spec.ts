@@ -10,11 +10,11 @@ import {
 import { removeNullish } from "@/common/utils/remove-nullish"
 import { agentFactory } from "@/domains/agents/agent.factory"
 import { conversationAgentSessionFactory } from "@/domains/agents/conversation-agent-sessions/conversation-agent-session.factory"
-import { agentMessageFactory } from "@/domains/agents/conversation-agent-sessions/messages/agent-messages.factory"
 import { createOrganizationWithAgentMessage } from "@/domains/organizations/organization.factory"
 import { sdk } from "@/external/llm/open-telemetry-init"
 import { setupUserGuardForTesting } from "../../../../../../../test/e2e.helpers"
 import { expectResponse, type Requester, testRequester } from "../../../../../../../test/request"
+import { agentMessageFactory } from "../../agent-messages.factory"
 import { agentMessageFeedbackFactory } from "../agent-message-feedback.factory"
 import { AgentMessageFeedbackModule } from "../agent-message-feedback.module"
 

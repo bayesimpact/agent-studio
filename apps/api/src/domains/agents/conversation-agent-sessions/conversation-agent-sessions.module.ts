@@ -22,13 +22,13 @@ import { Project } from "../../projects/project.entity"
 import { ProjectsModule } from "../../projects/projects.module"
 import { AgentsModule } from "../agents.module"
 import { BaseAgentSessionGuard } from "../base-agent-sessions/base-agent-session.guard"
+import { AgentMessage } from "../shared/agent-session-messages/agent-message.entity"
+import { AgentMessagesController } from "../shared/agent-session-messages/agent-messages.controller"
 import { ConversationAgentSessionsController } from "./conversation-agent-controller"
 import { ConversationAgentSession } from "./conversation-agent-session.entity"
 import { ConversationAgentSessionStreamingController } from "./conversation-agent-session-streaming.controller"
 import { ConversationAgentSessionsService } from "./conversation-agent-sessions.service"
 import { AgentStreamingService } from "./conversation-agent-streaming.service"
-import { AgentMessage } from "./messages/agent-message.entity"
-import { AgentMessagesController } from "./messages/agent-messages.controller"
 
 @Module({
   imports: [

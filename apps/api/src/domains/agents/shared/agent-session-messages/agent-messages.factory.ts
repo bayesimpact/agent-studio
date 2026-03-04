@@ -4,7 +4,7 @@ import type { Repository } from "typeorm"
 import type { RequiredScopeTransientParams } from "@/common/entities/connect-required-fields"
 import type { Organization } from "@/domains/organizations/organization.entity"
 import type { Project } from "@/domains/projects/project.entity"
-import type { ConversationAgentSession } from "../conversation-agent-session.entity"
+import type { ConversationAgentSession } from "../../conversation-agent-sessions/conversation-agent-session.entity"
 import type { AgentMessage } from "./agent-message.entity"
 
 type AgentMessageTransientParams = RequiredScopeTransientParams & {
