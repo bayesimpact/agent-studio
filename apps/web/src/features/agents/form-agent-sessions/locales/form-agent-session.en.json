@@ -1,5 +1,5 @@
 {
-  "conversationAgentSession": {
+  "formAgentSession": {
     "props": {
       "type": "Type",
       "createdAt": "Created At",
