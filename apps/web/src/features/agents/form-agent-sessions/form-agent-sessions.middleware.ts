@@ -1,0 +1,84 @@
+import type { TypedStartListening } from "@reduxjs/toolkit"
+import { createListenerMiddleware } from "@reduxjs/toolkit"
+import { loadSessionMessages } from "@/features/agents/conversation-agent-sessions/conversation-agent-sessions.thunks"
+import type { AppDispatch, RootState } from "@/store"
+import { ADS } from "@/store/async-data-status"
+import { selectIsAdminInterface } from "../../auth/auth.selectors"
+import { selectAgentsData } from "../agents.selectors"
+import { listAgents } from "../agents.thunks"
+import { selectCurrentFormAgentSessionId } from "./form-agent-sessions.selectors"
+import { formAgentSessionsActions } from "./form-agent-sessions.slice"
+import { createFormAgentSession, listFormAgentSessions } from "./form-agent-sessions.thunks"
+
+// Create typed listener middleware
+export const listenerMiddleware = createListenerMiddleware<RootState, AppDispatch>()
+
+export type AppStartListening = TypedStartListening<RootState, AppDispatch>
+
+// Refresh agent sessions when Agents are loaded
+listenerMiddleware.startListening({
+  actionCreator: listAgents.fulfilled,
+  effect: async ({ payload: agents }, listenerApi) => {
+    agents.forEach((agent) => {
+      if (agent.type !== "form") return
+      listenerApi.dispatch(listFormAgentSessions({ agentId: agent.id }))
+    })
+  },
+})
+
+// Refresh agent sessions when interface type changes
+listenerMiddleware.startListening({
+  predicate(_, currentState, originalState) {
+    const prevInterface = selectIsAdminInterface(originalState)
+    const nextInterface = selectIsAdminInterface(currentState)
+    return prevInterface !== nextInterface
+  },
+  effect: async (_, listenerApi) => {
+    listenerApi.dispatch(formAgentSessionsActions.reset())
+    const state = listenerApi.getState()
+    const agents = selectAgentsData(state)
+    if (ADS.isFulfilled(agents)) {
+      for (const agent of Object.values(agents.value).flat()) {
+        await listenerApi.dispatch(listFormAgentSessions({ agentId: agent.id }))
+      }
+    }
+  },
+})
+
+// Refresh messages when current agent sessions are loaded and one is selected
+listenerMiddleware.startListening({
+  actionCreator: listFormAgentSessions.fulfilled,
+  effect: async (_, listenerApi) => {
+    const state = listenerApi.getState()
+    const agentSessionId = selectCurrentFormAgentSessionId(state)
+    if (!agentSessionId) return
+    await listenerApi.dispatch(loadSessionMessages(agentSessionId))
+  },
+})
+
+// Refresh messages when current agent session changes
+listenerMiddleware.startListening({
+  predicate(_, currentState, originalState) {
+    const prevId = selectCurrentFormAgentSessionId(originalState)
+    const nextId = selectCurrentFormAgentSessionId(currentState)
+    return prevId !== nextId && !!nextId
+  },
+  effect: async (_, listenerApi) => {
+    const state = listenerApi.getState()
+    const agentSessionId = selectCurrentFormAgentSessionId(state)
+    if (!agentSessionId) return
+    await listenerApi.dispatch(loadSessionMessages(agentSessionId))
+  },
+})
+
+listenerMiddleware.startListening({
+  actionCreator: createFormAgentSession.fulfilled,
+  effect: async (action, listenerApi) => {
+    const { agentId, id } = action.payload
+    await listenerApi.dispatch(listFormAgentSessions({ agentId }))
+    const onSuccess = action.meta.arg.onSuccess
+    onSuccess?.(id)
+  },
+})
+
+export { listenerMiddleware as formAgentSessionsMiddleware }

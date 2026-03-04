@@ -4,20 +4,17 @@ import { generateId } from "@/utils/generate-id"
 import { selectIsAdminInterface } from "../../auth/auth.selectors"
 import { getCurrentIds } from "../../helpers"
 import { streamChatResponse } from "../base-agent-session/external/base-agent-session-streaming"
-import type {
-  ConversationAgentSession,
-  ConversationAgentSessionMessage,
-} from "./conversation-agent-sessions.models"
-import { conversationAgentSessionsActions } from "./conversation-agent-sessions.slice"
+import type { FormAgentSession, FormAgentSessionMessage } from "./form-agent-sessions.models"
+import { formAgentSessionsActions } from "./form-agent-sessions.slice"
 
 type ThunkConfig = { state: RootState; extra: ThunkExtraArg }
 
-export const listConversationAgentSessions = createAsyncThunk<
-  ConversationAgentSession[],
+export const listFormAgentSessions = createAsyncThunk<
+  FormAgentSession[],
   { agentId: string },
   ThunkConfig
 >(
-  "conversationAgentSession/listConversationAgentSessions",
+  "formAgentSession/listFormAgentSessions",
   async ({ agentId }, { extra: { services }, getState }) => {
     const state = getState()
     const { organizationId, projectId } = getCurrentIds({
@@ -25,7 +22,7 @@ export const listConversationAgentSessions = createAsyncThunk<
       wantedIds: ["organizationId", "projectId"],
     })
     const isAdminInterface = selectIsAdminInterface(state)
-    return services.conversationAgentSessions.getAll({
+    return services.formAgentSessions.getAll({
       organizationId,
       projectId,
       agentId,
@@ -34,12 +31,12 @@ export const listConversationAgentSessions = createAsyncThunk<
   },
 )
 
-export const createConversationAgentSession = createAsyncThunk<
-  ConversationAgentSession,
+export const createFormAgentSession = createAsyncThunk<
+  FormAgentSession,
   { agentId: string; onSuccess?: (agentSessionId: string) => void },
   ThunkConfig
 >(
-  "conversationAgentSession/createConversationAgentSession",
+  "formAgentSession/createFormAgentSession",
   async ({ agentId }, { extra: { services }, getState }) => {
     const state = getState()
     const isAdminInterface = selectIsAdminInterface(state)
@@ -47,7 +44,7 @@ export const createConversationAgentSession = createAsyncThunk<
       state,
       wantedIds: ["organizationId", "projectId"],
     })
-    return services.conversationAgentSessions.createOne({
+    return services.formAgentSessions.createOne({
       organizationId,
       projectId,
       agentId,
@@ -56,12 +53,8 @@ export const createConversationAgentSession = createAsyncThunk<
   },
 )
 
-export const loadSessionMessages = createAsyncThunk<
-  ConversationAgentSessionMessage[],
-  string,
-  ThunkConfig
->(
-  "conversationAgentSession/loadSessionMessages",
+export const loadSessionMessages = createAsyncThunk<FormAgentSessionMessage[], string, ThunkConfig>(
+  "formAgentSession/loadSessionMessages",
   async (agentSessionId, { extra: { services }, getState }) => {
     const state = getState()
     const { organizationId, projectId, agentId } = getCurrentIds({
@@ -69,7 +62,7 @@ export const loadSessionMessages = createAsyncThunk<
       wantedIds: ["organizationId", "projectId", "agentId"],
     })
     const isAdminInterface = selectIsAdminInterface(state)
-    return services.conversationAgentSessions.getMessages({
+    return services.formAgentSessions.getMessages({
       organizationId,
       projectId,
       agentId,
@@ -80,7 +73,7 @@ export const loadSessionMessages = createAsyncThunk<
 )
 
 export const sendMessage = createAsyncThunk<void, { content: string; file?: File }, ThunkConfig>(
-  "conversationAgentSession/sendMessage",
+  "formAgentSession/sendMessage",
   async ({ content, file }, { extra: { services }, dispatch, getState, signal }) => {
     const state = getState()
     const { organizationId, projectId, agentId, agentSessionId } = getCurrentIds({
@@ -88,7 +81,7 @@ export const sendMessage = createAsyncThunk<void, { content: string; file?: File
       wantedIds: ["organizationId", "projectId", "agentId", "agentSessionId"],
     })
 
-    const agentSessionsState = state.conversationAgentSessions
+    const agentSessionsState = state.formAgentSessions
 
     // Guard: don't allow sending if already streaming
     if (agentSessionsState.isStreaming) {
@@ -110,7 +103,7 @@ export const sendMessage = createAsyncThunk<void, { content: string; file?: File
       documentId = document.id
     }
 
-    const userMessage: ConversationAgentSessionMessage = {
+    const userMessage: FormAgentSessionMessage = {
       id: userMessageId,
       role: "user",
       content,
@@ -118,7 +111,7 @@ export const sendMessage = createAsyncThunk<void, { content: string; file?: File
       createdAt: new Date().toISOString(),
     }
 
-    dispatch(conversationAgentSessionsActions.startStreaming({ userMessage, assistantMessageId }))
+    dispatch(formAgentSessionsActions.startStreaming({ userMessage, assistantMessageId }))
 
     try {
       await streamChatResponse({
@@ -132,7 +125,7 @@ export const sendMessage = createAsyncThunk<void, { content: string; file?: File
           onStart: (event) => {
             // Update the optimistic message ID to match the backend's ID
             dispatch(
-              conversationAgentSessionsActions.updateAssistantMessageId({
+              formAgentSessionsActions.updateAssistantMessageId({
                 oldMessageId: assistantMessageId,
                 newMessageId: event.messageId,
               }),
@@ -140,7 +133,7 @@ export const sendMessage = createAsyncThunk<void, { content: string; file?: File
           },
           onChunk: (event) => {
             dispatch(
-              conversationAgentSessionsActions.appendAssistantChunk({
+              formAgentSessionsActions.appendAssistantChunk({
                 messageId: event.messageId,
                 chunk: event.content,
               }),
@@ -148,7 +141,7 @@ export const sendMessage = createAsyncThunk<void, { content: string; file?: File
           },
           onEnd: (event) => {
             dispatch(
-              conversationAgentSessionsActions.completeAssistantMessage({
+              formAgentSessionsActions.completeAssistantMessage({
                 messageId: event.messageId,
                 fullContent: event.fullContent,
               }),
@@ -156,7 +149,7 @@ export const sendMessage = createAsyncThunk<void, { content: string; file?: File
           },
           onError: (event) => {
             dispatch(
-              conversationAgentSessionsActions.failAssistantMessage({
+              formAgentSessionsActions.failAssistantMessage({
                 messageId: event.messageId,
                 error: event.error,
               }),
@@ -168,7 +161,7 @@ export const sendMessage = createAsyncThunk<void, { content: string; file?: File
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : "Failed to stream response"
       dispatch(
-        conversationAgentSessionsActions.failAssistantMessage({
+        formAgentSessionsActions.failAssistantMessage({
           messageId: assistantMessageId,
           error: errorMessage,
         }),

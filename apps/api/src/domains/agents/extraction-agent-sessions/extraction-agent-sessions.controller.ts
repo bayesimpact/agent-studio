@@ -1,8 +1,8 @@
 import {
+  type BaseAgentSessionTypeDto,
   type ExtractionAgentSessionDto,
   type ExtractionAgentSessionSummaryDto,
   ExtractionAgentSessionsRoutes,
-  type ExtractionAgentSessionType,
 } from "@caseai-connect/api-contracts"
 import { Body, Controller, NotFoundException, Param, Post, Req, UseGuards } from "@nestjs/common"
 import type { EndpointRequestWithAgent } from "@/common/context/request.interface"
@@ -59,7 +59,7 @@ export class ExtractionAgentSessionsController {
   }: {
     request: EndpointRequestWithAgent
     payload: { documentId: string; promptOverride?: string }
-    type: ExtractionAgentSessionType
+    type: BaseAgentSessionTypeDto
   }) {
     const run = await this.extractionAgentSessionsService.executeExtraction({
       connectScope: getRequiredConnectScope(request),
@@ -78,7 +78,7 @@ export class ExtractionAgentSessionsController {
     type,
   }: {
     request: EndpointRequestWithAgent
-    type: ExtractionAgentSessionType
+    type: BaseAgentSessionTypeDto
   }) {
     const runs = await this.extractionAgentSessionsService.listRuns({
       connectScope: getRequiredConnectScope(request),
@@ -95,7 +95,7 @@ export class ExtractionAgentSessionsController {
   }: {
     request: EndpointRequestWithAgent
     runId: string
-    type: ExtractionAgentSessionType
+    type: BaseAgentSessionTypeDto
   }) {
     const run = await this.extractionAgentSessionsService.findRunById({
       connectScope: getRequiredConnectScope(request),

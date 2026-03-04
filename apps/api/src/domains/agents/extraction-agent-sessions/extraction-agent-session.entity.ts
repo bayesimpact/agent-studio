@@ -1,12 +1,10 @@
-import type {
-  ExtractionAgentSessionStatus,
-  ExtractionAgentSessionType,
-} from "@caseai-connect/api-contracts"
+import type { ExtractionAgentSessionStatus } from "@caseai-connect/api-contracts"
 import { Column, JoinColumn, ManyToOne } from "typeorm"
 import { ConnectEntity, ConnectEntityBase } from "@/common/entities/connect-entity"
 import { Document } from "@/domains/documents/document.entity"
 import { User } from "@/domains/users/user.entity"
 import { Agent } from "../agent.entity"
+import type { BaseAgentSessionType } from "../base-agent-sessions/base-agent-sessions.types"
 
 @ConnectEntity("extraction_agent_session", "agentId", "createdAt")
 export class ExtractionAgentSession extends ConnectEntityBase {
@@ -23,7 +21,7 @@ export class ExtractionAgentSession extends ConnectEntityBase {
   status!: ExtractionAgentSessionStatus
 
   @Column({ type: "varchar" })
-  type!: ExtractionAgentSessionType
+  type!: BaseAgentSessionType
 
   @Column({ type: "jsonb", nullable: true })
   result!: Record<string, unknown> | null

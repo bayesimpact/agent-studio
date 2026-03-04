@@ -1,8 +1,7 @@
-import type { ConversationAgentSessionTypeDto } from "../../agents/conversation-agent-sessions/conversation-agent-sessions.dto"
+import type { BaseAgentSessionTypeDto } from "../../agents/conversation-agent-sessions/conversation-agent-sessions.dto"
 import type { TimeType } from "../../generic"
 
 export type ExtractionAgentSessionStatus = "success" | "failed"
-export type ExtractionAgentSessionType = ConversationAgentSessionTypeDto
 
 export type ExtractionAgentSessionSummaryDto = {
   id: string
@@ -10,7 +9,7 @@ export type ExtractionAgentSessionSummaryDto = {
   documentId: string
   documentFileName: string | null
   traceUrl?: string
-  type: ExtractionAgentSessionType
+  type: BaseAgentSessionTypeDto
   status: ExtractionAgentSessionStatus
   createdAt: TimeType
   updatedAt: TimeType

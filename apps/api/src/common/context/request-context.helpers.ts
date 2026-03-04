@@ -7,6 +7,6 @@ export function getRequiredConnectScope<T extends EndpointRequestWithProject>(
   return {
     organizationId: request.organizationId,
     projectId: request.project.id,
-    userId: request.projectMembership?.userId, // the admins or the owners of an organization don't have a project membership
+    userId: request.projectMembership?.userId ?? request.user.id, // the admins or the owners of an organization don't have a project membership
   }
 }

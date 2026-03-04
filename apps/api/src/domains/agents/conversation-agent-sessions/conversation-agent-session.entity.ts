@@ -3,9 +3,8 @@ import { ConnectEntity, ConnectEntityBase } from "@/common/entities/connect-enti
 import { Agent } from "@/domains/agents/agent.entity"
 import { Organization } from "@/domains/organizations/organization.entity"
 import { User } from "@/domains/users/user.entity"
+import type { BaseAgentSessionType } from "../base-agent-sessions/base-agent-sessions.types"
 import { AgentMessage } from "./messages/agent-message.entity"
-
-export type ConversationAgentSessionType = "playground" | "live"
 
 @ConnectEntity("conversation_agent_session", "agentId", "type")
 export class ConversationAgentSession extends ConnectEntityBase {
@@ -19,7 +18,7 @@ export class ConversationAgentSession extends ConnectEntityBase {
   userId!: string
 
   @Column({ type: "varchar" })
-  type!: ConversationAgentSessionType
+  type!: BaseAgentSessionType
 
   @Column({ type: "timestamp", nullable: true, name: "expires_at" }) // FIXME: to be removed
   expiresAt!: Date | null

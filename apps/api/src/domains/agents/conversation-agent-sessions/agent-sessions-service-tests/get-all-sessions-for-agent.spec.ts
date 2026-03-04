@@ -1,4 +1,4 @@
-import type { ConversationAgentSessionTypeDto } from "@caseai-connect/api-contracts"
+import type { BaseAgentSessionTypeDto } from "@caseai-connect/api-contracts"
 import { afterAll } from "@jest/globals"
 import { agentFactory } from "@/domains/agents/agent.factory"
 import { conversationAgentSessionFactory } from "@/domains/agents/conversation-agent-sessions/conversation-agent-session.factory"
@@ -23,7 +23,7 @@ describe("getAllSessionsForAgent", () => {
         testProject,
       } = getTestContext()
 
-      const buildAgent = (params: { date: Date; type: ConversationAgentSessionTypeDto }) =>
+      const buildAgent = (params: { date: Date; type: BaseAgentSessionTypeDto }) =>
         conversationAgentSessionFactory
           .transient({
             organization: testOrganization,
@@ -72,7 +72,7 @@ describe("getAllSessionsForAgent", () => {
         testProject,
       } = getTestContext()
 
-      const buildAgent = (params: { date: Date; type: ConversationAgentSessionTypeDto }) =>
+      const buildAgent = (params: { date: Date; type: BaseAgentSessionTypeDto }) =>
         conversationAgentSessionFactory
           .transient({
             organization: testOrganization,
