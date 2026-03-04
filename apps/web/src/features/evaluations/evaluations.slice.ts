@@ -1,12 +1,10 @@
-import { createSlice, type PayloadAction } from "@reduxjs/toolkit"
+import { createSlice } from "@reduxjs/toolkit"
 import { ADS, type AsyncData, defaultAsyncData } from "@/store/async-data-status"
-import type { Project } from "../projects/projects.models"
 import type { Evaluation } from "./evaluations.models"
 import { listEvaluations } from "./evaluations.thunks"
 
-type DataType = Record<Project["id"], Evaluation[]> // keyed by projectId
 interface State {
-  data: AsyncData<DataType>
+  data: AsyncData<Evaluation[]>
 }
 
 const initialState: State = {
@@ -17,9 +15,8 @@ const slice = createSlice({
   name: "evaluations",
   initialState,
   reducers: {
-    clearEvaluations: (state, action: PayloadAction<{ projectId: string }>) => {
-      // Clear evaluations for a specific project
-      delete state.data.value?.[action.payload.projectId]
+    reset: (state) => {
+      state.data = defaultAsyncData
     },
   },
   extraReducers: (builder) => {
@@ -29,17 +26,12 @@ const slice = createSlice({
         state.data.error = null
       })
       .addCase(listEvaluations.fulfilled, (state, action) => {
-        const projectId = action.payload?.[0]?.projectId
-        if (!projectId) return // should not happen, but just in case
         state.data = {
           status: ADS.Fulfilled,
           error: null,
-          value: {
-            ...state.data.value,
-            [projectId]: action.payload.sort((a, b) =>
-              a.input.toString().localeCompare(b.input.toString()),
-            ), // sort evaluations by input
-          },
+          value: action.payload.sort((a, b) =>
+            a.input.toString().localeCompare(b.input.toString()),
+          ),
         }
       })
       .addCase(listEvaluations.rejected, (state, action) => {
