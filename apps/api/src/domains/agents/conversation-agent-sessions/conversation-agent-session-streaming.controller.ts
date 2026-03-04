@@ -1,4 +1,4 @@
-import { ConversationAgentSessionStreamingRoutes } from "@caseai-connect/api-contracts"
+import { AgentSessionMessagesRoutes } from "@caseai-connect/api-contracts"
 import type { MessageEvent } from "@nestjs/common"
 import { Controller, ForbiddenException, Param, Query, Req, Sse, UseGuards } from "@nestjs/common"
 import { Observable } from "rxjs"
@@ -19,7 +19,7 @@ export class ConversationAgentSessionStreamingController {
 
   @AddContext("agent")
   @CheckPolicy((policy) => policy.canList())
-  @Sse(ConversationAgentSessionStreamingRoutes.stream.path, { method: 0 /* GET */ })
+  @Sse(AgentSessionMessagesRoutes.stream.path, { method: 0 /* GET */ })
   stream(
     @Req() request: EndpointRequestWithAgent,
     @Query("q") query: string,
@@ -27,9 +27,7 @@ export class ConversationAgentSessionStreamingController {
     @Param("sessionId") sessionId: string,
   ): Observable<MessageEvent> {
     try {
-      const parsedQuery = JSON.parse(
-        query,
-      ) as typeof ConversationAgentSessionStreamingRoutes.stream.request
+      const parsedQuery = JSON.parse(query) as typeof AgentSessionMessagesRoutes.stream.request
       const userContent = parsedQuery.payload.content
       const documentId = parsedQuery.payload.documentId
       const organizationId = request.organizationId

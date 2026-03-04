@@ -8,9 +8,6 @@ export { AgentMessageFeedbackRoutes } from "./agent-message-feedback/agent-messa
 export * from "./agents/agents.dto"
 export { AgentsRoutes } from "./agents/agents.routes"
 
-// Streaming
-export { ConversationAgentSessionStreamingRoutes } from "./agents/conversation-agent-sessions/conversation-agent-session-streaming.routes"
-
 // Conversation Agent Sessions
 export type * from "./agents/conversation-agent-sessions/conversation-agent-sessions.dto"
 export { ConversationAgentSessionsRoutes } from "./agents/conversation-agent-sessions/conversation-agent-sessions.routes"

@@ -1,4 +1,4 @@
-import { ConversationAgentSessionStreamingRoutes } from "@caseai-connect/api-contracts"
+import { AgentSessionMessagesRoutes } from "@caseai-connect/api-contracts"
 import { getAccessToken } from "@/external/auth0Client"
 
 export type StreamEvent =
@@ -42,8 +42,8 @@ export async function streamChatResponse({
     const baseURL = import.meta.env.VITE_API_URL as string
     const body = {
       payload: { content, documentId },
-    } satisfies typeof ConversationAgentSessionStreamingRoutes.stream.request
-    const url = `${baseURL}${ConversationAgentSessionStreamingRoutes.stream.getPath({ organizationId, projectId, agentId, sessionId })}?q=${encodeURIComponent(JSON.stringify(body))}`
+    } satisfies typeof AgentSessionMessagesRoutes.stream.request
+    const url = `${baseURL}${AgentSessionMessagesRoutes.stream.getPath({ organizationId, projectId, agentId, sessionId })}?q=${encodeURIComponent(JSON.stringify(body))}`
 
     const response = await fetch(url, {
       method: "GET",
