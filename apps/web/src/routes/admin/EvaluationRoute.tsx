@@ -7,7 +7,7 @@ import { EvaluationItem } from "@/components/evaluation/EvaluationItem"
 import { EvaluationRunner } from "@/components/evaluation/EvaluationRunner"
 import { useSidebarLayout } from "@/components/layouts/sidebar/context"
 import type { Agent } from "@/features/agents/agents.models"
-import { selectAgentsFromProjectId } from "@/features/agents/agents.selectors"
+import { selectAgentsData } from "@/features/agents/agents.selectors"
 import type { Evaluation } from "@/features/evaluations/evaluations.models"
 import { selectCurrentEvaluationsData } from "@/features/evaluations/evaluations.selectors"
 import { createEvaluation } from "@/features/evaluations/evaluations.thunks"
@@ -25,7 +25,7 @@ export function EvaluationRoute() {
   const project = useAppSelector(selectCurrentProjectData)
   const evaluations = useAppSelector(selectCurrentEvaluationsData)
 
-  const agents = useAppSelector(selectAgentsFromProjectId(project.value?.id))
+  const agents = useAppSelector(selectAgentsData)
   if (!projectId) return <ErrorRoute error="Missing valid project ID" />
 
   if (ADS.isError(evaluations) || ADS.isError(project) || ADS.isError(agents))

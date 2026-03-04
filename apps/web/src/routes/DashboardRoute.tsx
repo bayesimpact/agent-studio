@@ -29,6 +29,7 @@ import { useAppDispatch, useAppSelector } from "@/store/hooks"
 import { ErrorRoute } from "./ErrorRoute"
 import { LoadingRoute } from "./LoadingRoute"
 import { setCurrentIds } from "./loaders/set-current-ids"
+import { useSetIsAdminUi } from "./loaders/set-is-admin-ui"
 
 export function DashboardRoute() {
   const user = useAppSelector(selectMeData)
@@ -36,7 +37,9 @@ export function DashboardRoute() {
   const projects = useAppSelector(selectProjectsData)
   const dispatch = useAppDispatch()
   const params = useParams()
+
   setCurrentIds({ dispatch, params })
+  useSetIsAdminUi()
 
   if (ADS.isError(user) || ADS.isError(organizations) || ADS.isError(projects))
     return (
@@ -59,6 +62,8 @@ function WithData({ user, projects }: { user: User; projects: Project[] }) {
   if (!organization) return <ErrorRoute error="Missing valid organization" />
 
   const organizationName = organization?.name || "CaseAi"
+
+  console.log("project", project, "isAdmin", isAdmin, "isAdminInterface", isAdminInterface)
 
   const projectList = (
     <ProjectList

@@ -1,6 +1,6 @@
 import { useCallback } from "react"
 import { useParams } from "react-router-dom"
-import { selectAgentsFromProjectId } from "@/features/agents/agents.selectors"
+import { selectAgentsData } from "@/features/agents/agents.selectors"
 import { selectCurrentConversationAgentSessionsData } from "@/features/agents/conversation-agent-sessions/conversation-agent-sessions.selectors"
 import { selectOrganizations } from "@/features/organizations/organizations.selectors"
 import { selectProjects } from "@/features/projects/projects.selectors"
@@ -199,7 +199,7 @@ export function useClosestParentPath() {
   } = useParams()
   const organizations = useAppSelector(selectOrganizations)
   const projects = useAppSelector(selectProjects)
-  const agents = useAppSelector(selectAgentsFromProjectId(urlProjectId))
+  const agents = useAppSelector(selectAgentsData)
   const agentSessions = useAppSelector(selectCurrentConversationAgentSessionsData)
 
   const foundOrganization = useCallback(

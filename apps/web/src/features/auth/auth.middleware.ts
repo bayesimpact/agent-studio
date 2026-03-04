@@ -1,14 +1,12 @@
 import type { TypedStartListening } from "@reduxjs/toolkit"
-import { createListenerMiddleware } from "@reduxjs/toolkit"
+import { createListenerMiddleware, isAnyOf } from "@reduxjs/toolkit"
 import { consumePendingInvitation } from "@/routes/HomeRoute"
 import type { AppDispatch, RootState } from "@/store/types"
 import { acceptInvitation } from "../invitations/invitations.thunks"
+import { selectMe } from "../me/me.selectors"
 import { meActions } from "../me/me.slice"
 import { fetchMe } from "../me/me.thunks"
-import {
-  selectCurrentOrganization,
-  selectCurrentOrganizationId,
-} from "../organizations/organizations.selectors"
+import { selectCurrentOrganization } from "../organizations/organizations.selectors"
 import { organizationsActions } from "../organizations/organizations.slice"
 import { authActions } from "./auth.slice"
 
@@ -43,23 +41,18 @@ listenerMiddleware.startListening({
   },
 })
 
-// Set isAdmin and isAdminInterface flags when current organization changes
 listenerMiddleware.startListening({
-  predicate(_, currentState, originalState) {
-    const prevOrgId = selectCurrentOrganizationId(originalState)
-    const newOrgId = selectCurrentOrganizationId(currentState)
-    return prevOrgId !== newOrgId
-  },
+  matcher: isAnyOf(organizationsActions.setCurrentOrganizationId, fetchMe.fulfilled),
   effect: async (_, listenerApi) => {
     const state = listenerApi.getState()
+    const user = selectMe(state)
     const org = selectCurrentOrganization(state)
-    if (!org) return window.console.error("No current organization selected")
+
+    // we don't have enough information to determine if the user is an admin
+    if (!org || !user) return
 
     const isAdmin = org.role === "admin" || org.role === "owner"
     listenerApi.dispatch(authActions.setIsAdmin(isAdmin))
-
-    const isAdminInterface = isAdmin && window.location.pathname.startsWith("/admin/")
-    listenerApi.dispatch(authActions.setIsAdminInterface(isAdminInterface))
   },
 })
 

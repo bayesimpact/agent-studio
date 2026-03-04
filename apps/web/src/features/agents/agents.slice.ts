@@ -1,13 +1,11 @@
 import { createSlice, type PayloadAction } from "@reduxjs/toolkit"
 import { ADS, type AsyncData, defaultAsyncData } from "@/store/async-data-status"
-import type { Project } from "../projects/projects.models"
 import type { Agent } from "./agents.models"
 import { listAgents } from "./agents.thunks"
 
-type DataType = Record<Project["id"], Agent[]> // keyed by projectId
 interface State {
   currentAgentId: string | null
-  data: AsyncData<DataType>
+  data: AsyncData<Agent[]>
 }
 
 const initialState: State = {
@@ -22,9 +20,8 @@ const slice = createSlice({
     setCurrentAgentId: (state, action: PayloadAction<{ agentId: string | null }>) => {
       state.currentAgentId = action.payload.agentId
     },
-    clearAgents: (state, action: PayloadAction<{ projectId: string }>) => {
-      // Clear Agents for a specific project
-      delete state.data.value?.[action.payload.projectId]
+    reset: (state) => {
+      state = initialState
     },
   },
   extraReducers: (builder) => {
@@ -34,15 +31,10 @@ const slice = createSlice({
         state.data.error = null
       })
       .addCase(listAgents.fulfilled, (state, action) => {
-        const projectId = action.payload[0]?.projectId
-        if (!projectId) return // should not happen, but just in case
         state.data = {
           status: ADS.Fulfilled,
           error: null,
-          value: {
-            ...state.data.value,
-            [projectId]: action.payload,
-          },
+          value: action.payload,
         }
       })
       .addCase(listAgents.rejected, (state, action) => {
