@@ -34,23 +34,10 @@ All commands should be run from the root directory using Turbo (via npm scripts)
 
 ### Code Quality
 - `npx turbo lint` - Lint all packages and applications
-- `npx turbo lint --filter=api` - Lint only the API application
-- `npx turbo lint --filter=web` - Lint only the web application
 
 ### TypeScript Compilation Check
 - `cd apps/api && npx tsc --noEmit` - Check API TypeScript without emitting files
 - `cd apps/web && npx tsc --noEmit` - Check web TypeScript without emitting files
-
-### Application-Specific Commands
-
-**API (NestJS):**
-- `cd apps/api && npm run start:dev` - Development with watch mode
-- `cd apps/api && npm run start:debug` - Debug mode with inspector
-- `cd apps/api && npm run test:watch` - Test watch mode
-
-**Web (Next.js):**
-- `cd apps/web && npm run dev` - Development mode with Turbopack
-- `cd apps/web && npm run build` - Production build
 
 ## Architecture Notes
 
@@ -58,43 +45,24 @@ All commands should be run from the root directory using Turbo (via npm scripts)
 - Built with NestJS framework
 - Entry point: `apps/api/src/main.ts`
 - Main module: `apps/api/src/app.module.ts`
-- Modular structure with feature-based modules
+- Modular structure with feature-based modules under `apps/api/src/domains/`
 - Uses dependency injection and decorators pattern
-
-#### AI Service Architecture
-The API uses a modular AI service provider pattern for extensibility:
-
-- **AIServiceProvider Interface** (`src/common/interfaces/ai-service.interface.ts`):
-  - All AI-enabled services implement this interface
-  - Methods: `getFunctionDeclaration()`, `getPromptContext()`, `executeFunction()`
-
-- **Current Services**:
-  - `FranceTravailService` - Job search via France Travail API
-  - `DataInclusionService` - Social services search via Data Inclusion API
-  - `GeolocService` - Municipality geocoding for location parameters
-
-- **Adding a New AI Service**:
-  1. Implement `AIServiceProvider` interface
-  2. Define function declaration (tool schema)
-  3. Define prompt context (service-specific instructions)
-  4. Implement `executeFunction()` method
-  5. Register in `ChatService.onModuleInit()`
-
-- **Dynamic Prompt Building**:
-  - System prompt is built dynamically from registered services
-  - Each service contributes its own prompt context
-  - Maintains separation of concerns and easy extensibility
+- See `apps/api/CLAUDE.md` for detailed API rules
 
 ### Web Application
-- Next.js 15 with App Router
-- Uses Turbopack for faster development
-- Custom fonts with Geist Sans and Geist Mono
+- Next.js 15 with App Router and Turbopack
+- Redux for state management with feature-based slices/thunks/selectors
 - Integrates with shared UI component library from `@caseai-connect/ui`
 - Entry point: `apps/web/app/page.tsx`
+- See `apps/web/CLAUDE.md` for detailed web rules
 
 ### Shared Packages
+- `api-contracts`: DTOs and route definitions shared between API and web
+  - All DTOs consolidated per domain: `packages/api-contracts/src/{domain}/{domain}.dto.ts`
+  - All routes defined with `defineRoute` in `*.routes.ts` files
+  - Everything exported from `packages/api-contracts/src/index.ts`
 - All packages use TypeScript with strict configuration
-- Jest configuration is centralized in `@repo/jest-config`
+- Jest configuration centralized in `@repo/jest-config`
 
 ## Package Management
 
@@ -102,8 +70,26 @@ The API uses a modular AI service provider pattern for extensibility:
 - Private packages with internal dependencies using `*` version specifier
 - Engines requirement: Node.js >= 18
 
-## TypeScript Configuration
+## Code Style
 
-- Shared TypeScript configurations in `@repo/typescript-config`
-- Strict type checking enabled across all packages
-- Path mapping configured for internal package references
+### Descriptive Variable Names in Loops
+
+**Rule**: NEVER use single-letter variables in loops (for, map, forEach, etc.). Always use descriptive, human-readable variable names based on the type of object being iterated.
+
+```typescript
+// ❌ Wrong
+projects.map((p) => p.name)
+
+// ✅ Correct
+projects.map((project) => project.name)
+```
+
+## Completion Criteria
+
+Before marking any work as completed, run and verify:
+
+1. `npm run biome:check` — formatting and linting must pass
+2. `npm run typecheck` — no TypeScript errors
+3. `npm run test` — all tests must pass (API work)
+
+Work is NOT complete until all applicable commands pass with exit code 0.
