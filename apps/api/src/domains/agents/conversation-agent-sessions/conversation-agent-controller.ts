@@ -10,7 +10,9 @@ import { ResourceContextGuard } from "@/common/context/resource-context.guard"
 import { CheckPolicy } from "@/common/policies/check-policy.decorator"
 import { JwtAuthGuard } from "@/domains/auth/jwt-auth.guard"
 import { UserGuard } from "@/domains/users/user.guard"
+import { getTraceUrl } from "@/external/langfuse/langfuse-helper"
 import { BaseAgentSessionGuard } from "../base-agent-sessions/base-agent-session.guard"
+import type { BaseAgentSessionType } from "../base-agent-sessions/base-agent-sessions.types"
 import type { ConversationAgentSession } from "./conversation-agent-session.entity"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
 import { ConversationAgentSessionsService } from "./conversation-agent-sessions.service"
@@ -35,7 +37,7 @@ export class ConversationAgentSessionsController {
       userId: request.user.id,
       type: payload.type,
     })
-    return { data: sessions.map(toDto) }
+    return { data: sessions.map(toDto(payload.type)) }
   }
 
   @CheckPolicy((policy) => policy.canCreate())
@@ -50,16 +52,20 @@ export class ConversationAgentSessionsController {
       userId: request.user.id,
       type: payload.type,
     })
-    return { data: toDto(session) }
+    return { data: toDto(payload.type)(session) }
   }
 }
 
-function toDto(entity: ConversationAgentSession): ConversationAgentSessionDto {
-  return {
-    id: entity.id,
-    agentId: entity.agentId,
-    type: entity.type,
-    createdAt: entity.createdAt.getTime(),
-    updatedAt: entity.updatedAt.getTime(),
+function toDto(agentSessionType: BaseAgentSessionType) {
+  return (entity: ConversationAgentSession): ConversationAgentSessionDto => {
+    const traceUrl = agentSessionType === "live" ? undefined : getTraceUrl(entity.traceId)
+    return {
+      id: entity.id,
+      agentId: entity.agentId,
+      type: entity.type,
+      createdAt: entity.createdAt.getTime(),
+      updatedAt: entity.updatedAt.getTime(),
+      traceUrl,
+    }
   }
 }
