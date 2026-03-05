@@ -2,6 +2,7 @@ import type { Agent } from "@/features/agents/agents.models"
 import { selectCurrentAgentData } from "@/features/agents/agents.selectors"
 import type { ConversationAgentSession } from "@/features/agents/conversation-agent-sessions/conversation-agent-sessions.models"
 import { selectCurrentConversationAgentSessionData } from "@/features/agents/conversation-agent-sessions/conversation-agent-sessions.selectors"
+import type { FormAgentSession } from "@/features/agents/form-agent-sessions/form-agent-sessions.models"
 import { selectCurrentFormAgentSessionData } from "@/features/agents/form-agent-sessions/form-agent-sessions.selectors"
 import type { AgentSessionMessage } from "@/features/agents/shared/agent-session-messages/agent-session-messages.models"
 import { selectCurrentMessagesData } from "@/features/agents/shared/agent-session-messages/agent-session-messages.selectors"
@@ -45,16 +46,29 @@ function WithData({
   agentType,
 }: {
   agentType: Agent["type"]
-  agentSession: ConversationAgentSession
+  agentSession: ConversationAgentSession | FormAgentSession
   messages: AgentSessionMessage[]
 }) {
   const { isAdminInterface } = useAbility()
   return (
     <AgentSessionMessages
-      agentType={agentType}
       isAdminInterface={isAdminInterface}
       session={agentSession}
       messages={messages}
+      rightSlot={agentType === "form" ? <FormResult /> : undefined}
     />
+  )
+}
+
+function FormResult() {
+  const agent = useAppSelector(selectCurrentAgentData)
+  if (!ADS.isFulfilled(agent)) return null
+  return (
+    <>
+      <h1 className="text-xl font-bold mb-4">Expected output:</h1>
+      <pre className="bg-white p-2 rounded whitespace-pre-wrap">
+        {JSON.stringify(agent.value.outputJsonSchema, null, 2)}
+      </pre>
+    </>
   )
 }

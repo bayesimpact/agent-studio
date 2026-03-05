@@ -14,6 +14,7 @@ import { JwtAuthGuard } from "@/domains/auth/jwt-auth.guard"
 import { UserGuard } from "@/domains/users/user.guard"
 import { getTraceUrl } from "@/external/langfuse/langfuse-helper"
 import { BaseAgentSessionGuard } from "../base-agent-sessions/base-agent-session.guard"
+import type { BaseAgentSessionType } from "../base-agent-sessions/base-agent-sessions.types"
 import type { ExtractionAgentSession } from "./extraction-agent-session.entity"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
 import { ExtractionAgentSessionsService } from "./extraction-agent-sessions.service"
@@ -85,7 +86,7 @@ export class ExtractionAgentSessionsController {
       agentId: request.agent.id,
       type,
     })
-    return { data: runs.map(toSummaryDto) }
+    return { data: runs.map(toSummaryDto(type)) }
   }
 
   private async getOneByType({
@@ -108,29 +109,34 @@ export class ExtractionAgentSessionsController {
       throw new NotFoundException(`ExtractionAgentSession with id ${runId} not found`)
     }
 
-    return { data: toDto(run) }
+    return { data: toDto(type)(run) }
   }
 }
 
-function toSummaryDto(entity: ExtractionAgentSession): ExtractionAgentSessionSummaryDto {
-  return {
-    id: entity.id,
-    agentId: entity.agentId,
-    documentId: entity.documentId,
-    documentFileName: entity.document?.fileName ?? null,
-    traceUrl: entity.traceId ? getTraceUrl(entity.traceId) : undefined,
-    type: entity.type,
-    status: entity.status,
-    createdAt: entity.createdAt.getTime(),
-    updatedAt: entity.updatedAt.getTime(),
+function toSummaryDto(agentSessionType: BaseAgentSessionType) {
+  return (entity: ExtractionAgentSession): ExtractionAgentSessionSummaryDto => {
+    const traceUrl = agentSessionType === "live" ? undefined : getTraceUrl(entity.traceId)
+    return {
+      id: entity.id,
+      agentId: entity.agentId,
+      documentId: entity.documentId,
+      documentFileName: entity.document?.fileName ?? null,
+      traceUrl,
+      type: entity.type,
+      status: entity.status,
+      createdAt: entity.createdAt.getTime(),
+      updatedAt: entity.updatedAt.getTime(),
+    }
   }
 }
 
-function toDto(entity: ExtractionAgentSession): ExtractionAgentSessionDto {
-  return {
-    ...toSummaryDto(entity),
-    result: entity.result,
-    errorCode: entity.errorCode,
-    errorDetails: entity.errorDetails,
+function toDto(agentSessionType: BaseAgentSessionType) {
+  return (entity: ExtractionAgentSession): ExtractionAgentSessionDto => {
+    return {
+      ...toSummaryDto(agentSessionType)(entity),
+      result: entity.result,
+      errorCode: entity.errorCode,
+      errorDetails: entity.errorDetails,
+    }
   }
 }

@@ -7,7 +7,9 @@ import { ResourceContextGuard } from "@/common/context/resource-context.guard"
 import { CheckPolicy } from "@/common/policies/check-policy.decorator"
 import { JwtAuthGuard } from "@/domains/auth/jwt-auth.guard"
 import { UserGuard } from "@/domains/users/user.guard"
+import { getTraceUrl } from "@/external/langfuse/langfuse-helper"
 import { BaseAgentSessionGuard } from "../base-agent-sessions/base-agent-session.guard"
+import type { BaseAgentSessionType } from "../base-agent-sessions/base-agent-sessions.types"
 import type { FormAgentSession } from "./form-agent-session.entity"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
 import { FormAgentSessionsService } from "./form-agent-sessions.service"
@@ -29,7 +31,7 @@ export class FormAgentSessionsController {
       agentId: request.agent.id,
       type: payload.type,
     })
-    return { data: sessions.map(toDto) }
+    return { data: sessions.map(toDto(payload.type)) }
   }
 
   @CheckPolicy((policy) => policy.canCreate())
@@ -43,17 +45,21 @@ export class FormAgentSessionsController {
       agentId: request.agent.id,
       type: payload.type,
     })
-    return { data: toDto(session) }
+    return { data: toDto(payload.type)(session) }
   }
 }
 
-function toDto(entity: FormAgentSession): FormAgentSessionDto {
-  return {
-    id: entity.id,
-    agentId: entity.agentId,
-    type: entity.type,
-    createdAt: entity.createdAt.getTime(),
-    updatedAt: entity.updatedAt.getTime(),
-    result: entity.result ?? undefined,
+function toDto(agentSessionType: BaseAgentSessionType) {
+  return (entity: FormAgentSession): FormAgentSessionDto => {
+    const traceUrl = agentSessionType === "live" ? undefined : getTraceUrl(entity.traceId)
+    return {
+      id: entity.id,
+      agentId: entity.agentId,
+      type: entity.type,
+      createdAt: entity.createdAt.getTime(),
+      updatedAt: entity.updatedAt.getTime(),
+      result: entity.result ?? undefined,
+      traceUrl,
+    }
   }
 }
