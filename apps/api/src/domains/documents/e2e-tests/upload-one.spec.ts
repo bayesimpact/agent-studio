@@ -8,9 +8,8 @@ import {
   teardownTestDatabase,
 } from "@/common/test/test-transaction-manager"
 import { createOrganizationWithProject } from "@/domains/organizations/organization.factory"
-import { setupUserGuardForTesting } from "../../../../test/e2e.helpers"
 import { DocumentsModule } from "../documents.module"
-import { BullMqDocumentEmbeddingsBatchService } from "../embeddings/bull-mq-document-embeddings-batch.service"
+import { withDocumentAuthAndEmbeddingsMocks } from "../test-overrides"
 
 describe("Documents - uploadOne", () => {
   let app: INestApplication<App>
@@ -27,12 +26,7 @@ describe("Documents - uploadOne", () => {
     setup = await setupTransactionalTestDatabase({
       additionalImports: [DocumentsModule],
       applyOverrides: (moduleBuilder) =>
-        setupUserGuardForTesting(
-          moduleBuilder.overrideProvider(BullMqDocumentEmbeddingsBatchService).useValue({
-            enqueueCreateEmbeddingsForDocument: jest.fn().mockResolvedValue(undefined),
-          }),
-          () => auth0Id,
-        ),
+        withDocumentAuthAndEmbeddingsMocks(moduleBuilder, () => auth0Id),
     })
     repositories = setup.getAllRepositories()
     app = setup.module.createNestApplication()

@@ -12,11 +12,10 @@ import {
 import { removeNullish } from "@/common/utils/remove-nullish"
 import { createOrganizationWithDocument } from "@/domains/organizations/organization.factory"
 import { projectFactory } from "@/domains/projects/project.factory"
-import { setupUserGuardForTesting } from "../../../../test/e2e.helpers"
 import { expectResponse, type Requester, testRequester } from "../../../../test/request"
 import { Document } from "../document.entity"
 import { DocumentsModule } from "../documents.module"
-import { BullMqDocumentEmbeddingsBatchService } from "../embeddings/bull-mq-document-embeddings-batch.service"
+import { withDocumentAuthAndEmbeddingsMocks } from "../test-overrides"
 
 describe("Documents - Auth", () => {
   let app: INestApplication<App>
@@ -38,12 +37,7 @@ describe("Documents - Auth", () => {
     setup = await setupTransactionalTestDatabase({
       additionalImports: [DocumentsModule],
       applyOverrides: (moduleBuilder) =>
-        setupUserGuardForTesting(
-          moduleBuilder.overrideProvider(BullMqDocumentEmbeddingsBatchService).useValue({
-            enqueueCreateEmbeddingsForDocument: jest.fn().mockResolvedValue(undefined),
-          }),
-          () => auth0Id,
-        ),
+        withDocumentAuthAndEmbeddingsMocks(moduleBuilder, () => auth0Id),
     })
     repositories = setup.getAllRepositories()
     _documentRepository = setup.getRepository(Document)

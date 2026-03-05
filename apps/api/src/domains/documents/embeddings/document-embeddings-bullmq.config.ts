@@ -4,8 +4,6 @@ export function getDocumentEmbeddingsBullMqConnection(): ConnectionOptions {
   const redisUrl = process.env.BULLMQ_REDIS_URL ?? "redis://localhost:6379"
   const parsedRedisUrl = new URL(redisUrl)
 
-  console.log("Parsed Redis URL", parsedRedisUrl)
-
   return {
     host: parsedRedisUrl.hostname,
     port: Number(parsedRedisUrl.port || "6379"),

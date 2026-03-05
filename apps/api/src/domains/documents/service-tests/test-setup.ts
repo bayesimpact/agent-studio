@@ -11,7 +11,7 @@ import { User } from "@/domains/users/user.entity"
 import { Document } from "../document.entity"
 import { DocumentsModule } from "../documents.module"
 import { DocumentsService } from "../documents.service"
-import { BullMqDocumentEmbeddingsBatchService } from "../embeddings/bull-mq-document-embeddings-batch.service"
+import { withDocumentEmbeddingsBatchServiceMock } from "../test-overrides"
 
 export function documentsServiceTestSetup() {
   let service: DocumentsService
@@ -25,10 +25,7 @@ export function documentsServiceTestSetup() {
   beforeAll(async () => {
     setup = await setupTransactionalTestDatabase({
       additionalImports: [DocumentsModule],
-      applyOverrides: (moduleBuilder) =>
-        moduleBuilder.overrideProvider(BullMqDocumentEmbeddingsBatchService).useValue({
-          enqueueCreateEmbeddingsForDocument: jest.fn().mockResolvedValue(undefined),
-        }),
+      applyOverrides: withDocumentEmbeddingsBatchServiceMock,
     })
     await clearTestDatabase(setup.dataSource)
   })
