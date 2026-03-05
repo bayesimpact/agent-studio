@@ -1,4 +1,5 @@
-# Update this file (e.g. timestamp) to force API deployment in CI.
+# Update the timestamp below to force API deployment in CI.
 # This file exists to trigger check-api-changes without code changes.
 # Bash:
-# > touch apps/api/src/.deploy-trigger
+# > sed -i '' "s/^force-deploy: .*/force-deploy: $(date -u +%Y-%m-%dT%H:%M:%SZ)/" apps/api/src/.deploy-trigger
+force-deploy: 2026-03-05T16:34:29Z

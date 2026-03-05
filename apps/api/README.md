@@ -27,5 +27,10 @@ To learn more about NestJs, take a look at the following resources:
 ## Force API Deployment (No TS Changes)
 
 Production CI only deploys when `make check-api-changes` finds meaningful API changes.
-If you need to trigger deployment without touching TypeScript code, update
-`apps/api/src/.deploy-trigger` (for example by adding a timestamp line) and push.
+If you need to trigger deployment without touching TypeScript code:
+
+```bash
+sed -i '' "s/^force-deploy: .*/force-deploy: $(date -u +%Y-%m-%dT%H:%M:%SZ)/" apps/api/src/.deploy-trigger
+```
+
+Then commit and push the change.
