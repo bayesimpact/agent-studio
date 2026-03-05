@@ -2,9 +2,10 @@ import { URL } from "node:url"
 import type { MessageEvent } from "@nestjs/common"
 import { Inject, Injectable, NotFoundException } from "@nestjs/common"
 import { InjectRepository } from "@nestjs/typeorm"
-import type { FilePart, ImagePart } from "ai"
+import type { FilePart, ImagePart, ToolSet } from "ai"
 import type { Repository } from "typeorm/repository/Repository"
 import { v4 } from "uuid"
+import { z } from "zod"
 import { ConnectRepository } from "@/common/entities/connect-repository"
 import type { RequiredConnectScope } from "@/common/entities/connect-required-fields"
 import type {
@@ -23,6 +24,9 @@ import {
 } from "@/domains/documents/storage/file-storage.interface"
 import { ServiceWithLLM } from "@/external/llm"
 import { AgentMessage } from "../agent-message.entity"
+import { buildConversationAgentPrompt } from "./master-promts/conversation-agent.prompt"
+import { buildFormAgentPrompt } from "./master-promts/form-agent.prompt"
+import { fillFormTool } from "./tools/fill-form.tool"
 
 @Injectable()
 export class StreamingService extends ServiceWithLLM {
@@ -73,12 +77,14 @@ export class StreamingService extends ServiceWithLLM {
     agent,
     userContent,
     documentId,
+    sendClientEvent,
   }: {
     connectScope: RequiredConnectScope
     sessionId: string
     agent: Agent
     userContent: string
     documentId?: string
+    sendClientEvent: (event: MessageEvent) => void
   }): AsyncGenerator<MessageEvent, void, unknown> {
     // Step 1: Prepare for streaming (persist user message + empty assistant message)
     const { session: updatedSession, assistantMessageId } = await this.prepareForStreaming({
@@ -102,6 +108,7 @@ export class StreamingService extends ServiceWithLLM {
       systemPrompt: this.generateMasterPrompt(agent),
       model: agent.model,
       temperature: agent.temperature,
+      tools: this.buildTools({ agent, sessionId, sendClientEvent }),
     })
 
     // Step 4: Build LLM metadata (used for telemetry)
@@ -126,11 +133,12 @@ export class StreamingService extends ServiceWithLLM {
       if (documentId) await this.handleFileInLLMMessage({ llmMessages, documentId, connectScope })
 
       // Stream from LLM provider
-      for await (const chunk of this.getProviderForModel(llmConfig.model).streamChatResponse({
+      const responseChunks = this.getProviderForModel(llmConfig.model).streamChatResponse({
         messages: llmMessages,
         config: llmConfig,
         metadata: llmMetadata,
-      })) {
+      })
+      for await (const chunk of responseChunks) {
         fullContent += chunk
 
         // Yield chunk to frontend immediately (SSE)
@@ -284,16 +292,8 @@ export class StreamingService extends ServiceWithLLM {
   }
 
   private generateMasterPrompt(agent: Agent): string {
-    return `
-Today's date: ${new Date().toLocaleDateString()}
-
-${agent.defaultPrompt}
-
-# Attachment:
-If there is a file (image or pdf) attached to the user's chat message, answer the user's question or instruction reading the content of the file.
-
-Always answer in ${agent.locale}.
-  `.trim()
+    if (agent.type === "form") return buildFormAgentPrompt(agent)
+    return buildConversationAgentPrompt(agent)
   }
 
   /**
@@ -525,4 +525,74 @@ Always answer in ${agent.locale}.
 
     return elapsed > this.STREAM_TIMEOUT_MS
   }
+
+  private buildTools({
+    agent,
+    sessionId,
+    sendClientEvent,
+  }: {
+    agent: Agent
+    sessionId: string
+    sendClientEvent: (event: MessageEvent) => void
+  }): ToolSet | undefined {
+    const agentOutputJsonSchema =
+      agent.type === "form" && agent.outputJsonSchema
+        ? (agent.outputJsonSchema as unknown as AgentOutputJsonSchema)
+        : undefined
+
+    const inputSchema = agentOutputJsonSchema
+      ? this.buildZodSchema(agentOutputJsonSchema.properties)
+      : undefined
+
+    const handleChange = async (value: Record<string, unknown>) => {
+      const updated = await this.formAgentSessionRepository.update(sessionId, {
+        // FIXME:
+        // @ts-expect-error
+        result: value,
+      })
+      if (!updated.affected) return
+
+      sendClientEvent({
+        data: JSON.stringify({
+          type: "form_update",
+          sessionId,
+        }),
+      } as MessageEvent)
+    }
+
+    return inputSchema
+      ? { fillForm: fillFormTool({ inputSchema, onExecute: handleChange }) }
+      : undefined
+  }
+
+  private buildZodSchema(
+    properties: Record<string, { type: string; description: string }>,
+  ): z.ZodObject<any> {
+    const shape: Record<string, z.ZodTypeAny> = {}
+
+    for (const [key, value] of Object.entries(properties)) {
+      switch (value.type) {
+        case "string":
+          shape[key] = z.string().describe(value.description).optional()
+          break
+        case "number":
+          shape[key] = z.number().describe(value.description).optional()
+          break
+        case "boolean":
+          shape[key] = z.boolean().describe(value.description).optional()
+          break
+        default:
+          throw new Error(`Unsupported property type: ${value.type}`)
+      }
+    }
+
+    return z.object(shape).strict()
+  }
+}
+
+type AgentOutputJsonSchema = {
+  type: "object"
+  required: string[]
+  properties: Record<string, { type: string; description: string }>
+  additionalProperties: boolean
 }

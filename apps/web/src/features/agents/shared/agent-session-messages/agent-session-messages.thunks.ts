@@ -3,6 +3,7 @@ import type { RootState, ThunkExtraArg } from "@/store"
 import { generateId } from "@/utils/generate-id"
 import { selectIsAdminInterface } from "../../../auth/auth.selectors"
 import { getCurrentIds } from "../../../helpers"
+import { listFormAgentSessions } from "../../form-agent-sessions/form-agent-sessions.thunks"
 import type { AgentSessionMessage } from "./agent-session-messages.models"
 import { agentSessionMessagesActions } from "./agent-session-messages.slice"
 import { streamChatResponse } from "./external/agent-session-messages-streaming"
@@ -93,7 +94,11 @@ export const sendMessage = createAsyncThunk<void, { content: string; file?: File
               }),
             )
           },
+          onFormUpdate(_event) {
+            dispatch(listFormAgentSessions({ agentId }))
+          },
           onEnd: (event) => {
+            console.warn("AJ: onEnd", event)
             dispatch(
               agentSessionMessagesActions.completeAssistantMessage({
                 messageId: event.messageId,
@@ -102,6 +107,7 @@ export const sendMessage = createAsyncThunk<void, { content: string; file?: File
             )
           },
           onError: (event) => {
+            console.warn("AJ: onError", event)
             dispatch(
               agentSessionMessagesActions.failAssistantMessage({
                 messageId: event.messageId,

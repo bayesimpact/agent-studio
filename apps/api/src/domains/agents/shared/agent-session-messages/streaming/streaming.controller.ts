@@ -49,6 +49,9 @@ export class StreamingController {
               sessionId,
               userContent,
               documentId,
+              sendClientEvent: (event) => {
+                subscriber.next(event)
+              },
             })
 
             for await (const event of events) {

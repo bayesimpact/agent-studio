@@ -63,8 +63,6 @@ function WithData({ user, projects }: { user: User; projects: Project[] }) {
 
   const organizationName = organization?.name || "CaseAi"
 
-  console.log("project", project, "isAdmin", isAdmin, "isAdminInterface", isAdminInterface)
-
   const projectList = (
     <ProjectList
       isAdminInterface={isAdminInterface}

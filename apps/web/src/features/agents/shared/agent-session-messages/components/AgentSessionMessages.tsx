@@ -52,7 +52,7 @@ export function AgentSessionMessages({
             </Chat>
           </DotsBackground>
         </div>
-        {rightSlot && <div className="w-96 p-4 shrink-0 h-full border-l">{rightSlot}</div>}
+        {rightSlot && <div className="w-80 shrink-0 h-full border-l">{rightSlot}</div>}
       </div>
     )
 
@@ -67,7 +67,7 @@ export function AgentSessionMessages({
           </Chat>
         </div>
       </div>
-      {rightSlot && <div className="w-96 p-4 shrink-0 h-full border-l">{rightSlot}</div>}
+      {rightSlot && <div className="w-80 shrink-0 h-full border-l">{rightSlot}</div>}
     </div>
   )
 }

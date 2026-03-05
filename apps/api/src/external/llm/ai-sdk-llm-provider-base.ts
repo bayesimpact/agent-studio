@@ -6,9 +6,10 @@ import {
   type ImagePart,
   jsonSchema,
   type LanguageModel,
+  type ModelMessage,
   Output,
-  streamText,
   type TextPart,
+  ToolLoopAgent,
 } from "ai"
 import type { ZodObject, z } from "zod"
 import type {
@@ -59,20 +60,36 @@ export abstract class AISDKLLMProviderBase implements LLMProvider {
     // Get system message if present
     const systemMessage = messages.find((msg) => msg.role === "system")?.content
 
-    // Stream using ai-sdk
-    const result = streamText({
+    const agent = new ToolLoopAgent({
       model: this.getLanguageModel(config),
-      messages: aiSDKMessages,
-      system: systemMessage || config.systemPrompt,
       temperature: config.temperature,
+      tools: config.tools,
       experimental_telemetry: {
         isEnabled: true,
         functionId: this.buildFunctionIdForStreamChatResponse(aiSDKMessages),
         metadata: this.buildMetadata({ config, metadata }),
       },
     })
+
+    const systemPrompt = systemMessage || config.systemPrompt
+
+    // Stream using ai-sdk
+    const streamer = agent.stream({
+      messages: [
+        ...(systemPrompt
+          ? [
+              {
+                role: "system",
+                content: systemPrompt,
+              } satisfies ModelMessage,
+            ]
+          : []),
+        ...aiSDKMessages,
+      ],
+    })
+
     // Yield text chunks
-    for await (const chunk of result.textStream) {
+    for await (const chunk of (await streamer).textStream) {
       yield chunk
     }
   }

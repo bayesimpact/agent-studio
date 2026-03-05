@@ -1,5 +1,6 @@
 import type { AgentModel, AgentTemperature } from "@caseai-connect/api-contracts"
 import { NotImplementedException } from "@nestjs/common"
+import type { ToolSet } from "ai"
 import type { LLMConfig, LLMProvider } from "@/common/interfaces/llm-provider.interface"
 import { AgentModelToAgentProvider, AgentProvider } from "@/external/llm/agent-provider"
 
@@ -25,7 +26,9 @@ export abstract class ServiceWithLLM {
     systemPrompt,
     model,
     temperature,
+    tools,
   }: {
+    tools?: ToolSet
     systemPrompt: string
     model: AgentModel
     temperature: AgentTemperature
@@ -44,6 +47,7 @@ export abstract class ServiceWithLLM {
       model,
       temperature: safeTemperature,
       systemPrompt,
+      tools,
     } as LLMConfig
   }
 }

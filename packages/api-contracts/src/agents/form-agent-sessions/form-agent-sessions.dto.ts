@@ -2,11 +2,11 @@ import type { BaseAgentSessionTypeDto } from "../../agents/conversation-agent-se
 import type { TimeType } from "../../generic"
 
 export type FormAgentSessionDto = {
-  id: string
   agentId: string
-  type: BaseAgentSessionTypeDto
   createdAt: TimeType
-  updatedAt: TimeType
-  traceUrl?: string
+  id: string
   result?: Record<string, unknown>
+  traceUrl?: string
+  type: BaseAgentSessionTypeDto
+  updatedAt: TimeType
 }

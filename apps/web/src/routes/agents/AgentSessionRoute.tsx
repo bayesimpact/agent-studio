@@ -1,3 +1,6 @@
+import { Badge } from "@caseai-connect/ui/shad/badge"
+import { Item, ItemContent, ItemHeader, ItemTitle } from "@caseai-connect/ui/shad/item"
+import { Separator } from "@caseai-connect/ui/shad/separator"
 import type { Agent } from "@/features/agents/agents.models"
 import { selectCurrentAgentData } from "@/features/agents/agents.selectors"
 import type { ConversationAgentSession } from "@/features/agents/conversation-agent-sessions/conversation-agent-sessions.models"
@@ -29,11 +32,7 @@ export function AgentSessionRoute() {
 
   if (ADS.isFulfilled(agent) && ADS.isFulfilled(agentSession) && ADS.isFulfilled(messages)) {
     return (
-      <WithData
-        agentType={agent.value.type}
-        agentSession={agentSession.value}
-        messages={messages.value}
-      />
+      <WithData agent={agent.value} agentSession={agentSession.value} messages={messages.value} />
     )
   }
 
@@ -43,9 +42,9 @@ export function AgentSessionRoute() {
 function WithData({
   agentSession,
   messages,
-  agentType,
+  agent,
 }: {
-  agentType: Agent["type"]
+  agent: Agent
   agentSession: ConversationAgentSession | FormAgentSession
   messages: AgentSessionMessage[]
 }) {
@@ -55,20 +54,61 @@ function WithData({
       isAdminInterface={isAdminInterface}
       session={agentSession}
       messages={messages}
-      rightSlot={agentType === "form" ? <FormResult /> : undefined}
+      rightSlot={
+        agent.type === "form" ? <FormResult agent={agent} agentSession={agentSession} /> : undefined
+      }
     />
   )
 }
 
-function FormResult() {
-  const agent = useAppSelector(selectCurrentAgentData)
-  if (!ADS.isFulfilled(agent)) return null
+function FormResult({ agent, agentSession }: { agent: Agent; agentSession: FormAgentSession }) {
+  const form = buildForm({ agent, agentSession })
   return (
-    <>
-      <h1 className="text-xl font-bold mb-4">Expected output:</h1>
-      <pre className="bg-white p-2 rounded whitespace-pre-wrap">
-        {JSON.stringify(agent.value.outputJsonSchema, null, 2)}
-      </pre>
-    </>
+    <Item>
+      <ItemHeader>
+        <ItemTitle className="text-lg">Form output:</ItemTitle>
+      </ItemHeader>
+      <ItemContent>
+        {Object.entries(form).map(([key, value], index) => {
+          const hasValue = value !== ""
+          return (
+            <div key={key}>
+              {index > 0 && <Separator className="opacity-50" />}
+              <div className="flex gap-2 py-4 items-center">
+                <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                  {key}
+                </span>
+                {hasValue ? (
+                  <Badge variant="outline" className="w-fit text-muted-foreground font-mono">
+                    {value}
+                  </Badge>
+                ) : (
+                  <Badge
+                    variant="outline"
+                    className="w-fit text-muted-foreground opacity-50 font-mono"
+                  >
+                    —
+                  </Badge>
+                )}
+              </div>
+            </div>
+          )
+        })}
+      </ItemContent>
+    </Item>
   )
+}
+
+function buildForm({ agent, agentSession }: { agent: Agent; agentSession: FormAgentSession }) {
+  const properties = Object.fromEntries(
+    Object.entries(agent.outputJsonSchema?.properties ?? {}).map(([key]) => [key, ""]),
+  )
+  if (agentSession.result) {
+    for (const key of Object.keys(properties)) {
+      if (key in agentSession.result) {
+        properties[key] = String(agentSession.result[key])
+      }
+    }
+  }
+  return properties
 }
