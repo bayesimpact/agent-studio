@@ -13,7 +13,7 @@ ifeq ($(PROJECT),connect)
 # CONNECT
 imageUrl = europe-west9-docker.pkg.dev/caseai-connect/caseai-connect/api
 cloudRunName = connect
-googleVertexProject = connect
+googleVertexProject = caseai-connect
 googleVertexLocation = europe-west1
 location = europe-west1
 zone = europe-west9
