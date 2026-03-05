@@ -12,6 +12,7 @@ import { createOrganizationWithProject } from "@/domains/organizations/organizat
 import { setupUserGuardForTesting } from "../../../../test/e2e.helpers"
 import { expectResponse, type Requester, testRequester } from "../../../../test/request"
 import { DocumentsModule } from "../documents.module"
+import { BullMqDocumentEmbeddingsBatchService } from "../embeddings/bull-mq-document-embeddings-batch.service"
 
 describe("Documents - getAll", () => {
   let app: INestApplication<App>
@@ -29,7 +30,13 @@ describe("Documents - getAll", () => {
   beforeAll(async () => {
     setup = await setupTransactionalTestDatabase({
       additionalImports: [DocumentsModule],
-      applyOverrides: (moduleBuilder) => setupUserGuardForTesting(moduleBuilder, () => auth0Id),
+      applyOverrides: (moduleBuilder) =>
+        setupUserGuardForTesting(
+          moduleBuilder.overrideProvider(BullMqDocumentEmbeddingsBatchService).useValue({
+            enqueueCreateEmbeddingsForDocument: jest.fn().mockResolvedValue(undefined),
+          }),
+          () => auth0Id,
+        ),
     })
     repositories = setup.getAllRepositories()
     app = setup.module.createNestApplication()

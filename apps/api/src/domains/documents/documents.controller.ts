@@ -19,6 +19,7 @@ import {
   UseInterceptors,
 } from "@nestjs/common"
 import { FileInterceptor } from "@nestjs/platform-express/multer"
+import { v4 } from "uuid"
 import type {
   EndpointRequestWithDocument,
   EndpointRequestWithProject,
@@ -35,6 +36,10 @@ import { DocumentsGuard } from "./documents.guard"
 import { normalizeUploadedFileName } from "./documents.helpers"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
 import { DocumentsService } from "./documents.service"
+import {
+  DOCUMENT_EMBEDDINGS_BATCH_SERVICE,
+  type DocumentEmbeddingsBatchService,
+} from "./embeddings/document-embeddings-batch.interface"
 import { FILE_STORAGE_SERVICE, type IFileStorage } from "./storage/file-storage.interface"
 
 const mega = 1024
@@ -45,6 +50,8 @@ export class DocumentsController {
   constructor(
     @Inject(FILE_STORAGE_SERVICE)
     private readonly fileStorageService: IFileStorage,
+    @Inject(DOCUMENT_EMBEDDINGS_BATCH_SERVICE)
+    private readonly documentEmbeddingsBatchService: DocumentEmbeddingsBatchService,
     private readonly documentsService: DocumentsService,
   ) {}
 
@@ -129,6 +136,16 @@ export class DocumentsController {
     if (!document) {
       throw new NotFoundException("Document not found or you do not have permission to access it.")
     }
+
+    await this.documentEmbeddingsBatchService.enqueueCreateEmbeddingsForDocument({
+      documentId: document.id,
+      organizationId: connectScope.organizationId,
+      projectId: connectScope.projectId,
+      uploadedByUserId: req.user.id,
+      origin: "document-upload",
+      currentTraceId: v4(),
+    })
+
     return { data: toDocumentDto(document) }
   }
 

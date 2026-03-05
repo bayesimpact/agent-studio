@@ -16,6 +16,7 @@ import { setupUserGuardForTesting } from "../../../../test/e2e.helpers"
 import { expectResponse, type Requester, testRequester } from "../../../../test/request"
 import { Document } from "../document.entity"
 import { DocumentsModule } from "../documents.module"
+import { BullMqDocumentEmbeddingsBatchService } from "../embeddings/bull-mq-document-embeddings-batch.service"
 
 describe("Documents - Auth", () => {
   let app: INestApplication<App>
@@ -36,7 +37,13 @@ describe("Documents - Auth", () => {
   beforeAll(async () => {
     setup = await setupTransactionalTestDatabase({
       additionalImports: [DocumentsModule],
-      applyOverrides: (moduleBuilder) => setupUserGuardForTesting(moduleBuilder, () => auth0Id),
+      applyOverrides: (moduleBuilder) =>
+        setupUserGuardForTesting(
+          moduleBuilder.overrideProvider(BullMqDocumentEmbeddingsBatchService).useValue({
+            enqueueCreateEmbeddingsForDocument: jest.fn().mockResolvedValue(undefined),
+          }),
+          () => auth0Id,
+        ),
     })
     repositories = setup.getAllRepositories()
     _documentRepository = setup.getRepository(Document)

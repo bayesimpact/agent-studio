@@ -12,6 +12,7 @@ import { User } from "@/domains/users/user.entity"
 import { Document } from "../document.entity"
 import { DocumentsController } from "../documents.controller"
 import { DocumentsModule } from "../documents.module"
+import { BullMqDocumentEmbeddingsBatchService } from "../embeddings/bull-mq-document-embeddings-batch.service"
 import { FILE_STORAGE_SERVICE, type IFileStorage } from "../storage/file-storage.interface"
 
 export function documentsControllerTestSetup() {
@@ -28,6 +29,10 @@ export function documentsControllerTestSetup() {
   beforeAll(async () => {
     setup = await setupTransactionalTestDatabase({
       additionalImports: [DocumentsModule],
+      applyOverrides: (moduleBuilder) =>
+        moduleBuilder.overrideProvider(BullMqDocumentEmbeddingsBatchService).useValue({
+          enqueueCreateEmbeddingsForDocument: jest.fn().mockResolvedValue(undefined),
+        }),
     })
     await clearTestDatabase(setup.dataSource)
   })
