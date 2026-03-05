@@ -18,6 +18,7 @@ import { Document } from "./document.entity"
 import { DocumentsController } from "./documents.controller"
 import { DocumentsGuard } from "./documents.guard"
 import { DocumentsService } from "./documents.service"
+import { DocumentEmbeddingsBatchModule } from "./embeddings/document-embeddings-batch.module"
 import { StorageModule } from "./storage/storage.module"
 
 @Module({
@@ -42,6 +43,7 @@ import { StorageModule } from "./storage/storage.module"
     UsersModule,
     AuthModule,
     StorageModule,
+    DocumentEmbeddingsBatchModule,
   ],
   providers: [
     DocumentsService,

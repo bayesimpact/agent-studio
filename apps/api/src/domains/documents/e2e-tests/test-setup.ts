@@ -13,6 +13,7 @@ import { Document } from "../document.entity"
 import { DocumentsController } from "../documents.controller"
 import { DocumentsModule } from "../documents.module"
 import { FILE_STORAGE_SERVICE, type IFileStorage } from "../storage/file-storage.interface"
+import { withDocumentEmbeddingsBatchServiceMock } from "../test-overrides"
 
 export function documentsControllerTestSetup() {
   let controller: DocumentsController
@@ -28,6 +29,7 @@ export function documentsControllerTestSetup() {
   beforeAll(async () => {
     setup = await setupTransactionalTestDatabase({
       additionalImports: [DocumentsModule],
+      applyOverrides: withDocumentEmbeddingsBatchServiceMock,
     })
     await clearTestDatabase(setup.dataSource)
   })

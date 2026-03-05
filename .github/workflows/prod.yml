@@ -154,8 +154,11 @@ jobs:
         env:
           CLOUDSQL_CREDENTIALS_FILE: ${{ github.workspace }}/dontsave/key.json
 
-      - name: deploy
+      - name: API deploy
         run: make deploy-only REGION=eu
+
+      - name: Workers deploy
+        run: make deploy-workers-only REGION=eu
 
       - name: Notify on failure
         if: ${{ failure() }}

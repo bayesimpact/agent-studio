@@ -8,8 +8,8 @@ import {
   teardownTestDatabase,
 } from "@/common/test/test-transaction-manager"
 import { createOrganizationWithProject } from "@/domains/organizations/organization.factory"
-import { setupUserGuardForTesting } from "../../../../test/e2e.helpers"
 import { DocumentsModule } from "../documents.module"
+import { withDocumentAuthAndEmbeddingsMocks } from "../test-overrides"
 
 describe("Documents - uploadOne", () => {
   let app: INestApplication<App>
@@ -25,7 +25,8 @@ describe("Documents - uploadOne", () => {
   beforeAll(async () => {
     setup = await setupTransactionalTestDatabase({
       additionalImports: [DocumentsModule],
-      applyOverrides: (moduleBuilder) => setupUserGuardForTesting(moduleBuilder, () => auth0Id),
+      applyOverrides: (moduleBuilder) =>
+        withDocumentAuthAndEmbeddingsMocks(moduleBuilder, () => auth0Id),
     })
     repositories = setup.getAllRepositories()
     app = setup.module.createNestApplication()

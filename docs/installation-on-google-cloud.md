@@ -125,6 +125,40 @@ ALTER DEFAULT PRIVILEGES IN SCHEMA public
 
 ---
 
+## 3.1) Google Memorystore (Redis)
+
+BullMQ requires Redis. In GCP, use Memorystore for Redis (same region/network as Cloud Run).
+
+Create one dedicated Redis instance for BullMQ async jobs:
+
+```bash
+gcloud redis instances create health-bullmq-redis-eu \
+  --size=1 \
+  --region=europe-west9 \
+  --redis-version=redis_7_0 \
+  --tier=basic \
+  --enable-auth \
+  --redis-config=maxmemory-policy=noeviction \
+  --network=default
+```
+
+Then get connection host and port:
+
+```bash
+gcloud redis instances describe health-bullmq-redis-eu \
+  --region=europe-west9 \
+  --format='value(host,port)'
+```
+
+Get the AUTH password:
+
+```bash
+gcloud redis instances get-auth-string health-bullmq-redis-eu \
+  --region=europe-west9
+```
+
+---
+
 ## 4) Google Cloud: service accounts and IAM
 
 Create 2 service accounts:
@@ -226,6 +260,14 @@ printf '%s' '<langfuse-secret-key>' | gcloud secrets create HEALTH_LANGFUSE_SK \
   --data-file=-
 
 printf '%s' '<auth0-m2m-client-secret>' | gcloud secrets create HEALTH_AUTH0_M2M_CLIENT_SECRET \
+  --replication-policy=automatic \
+  --data-file=-
+
+# Build and store HEALTH_BULLMQ_REDIS_URL from Memorystore host/port + AUTH
+REDIS_HOST="$(gcloud redis instances describe health-bullmq-redis-eu --region=europe-west9 --format='value(host)')"
+REDIS_PORT="$(gcloud redis instances describe health-bullmq-redis-eu --region=europe-west9 --format='value(port)')"
+REDIS_AUTH="$(gcloud redis instances get-auth-string health-bullmq-redis-eu --region=europe-west9 --format='value(authString)')"
+printf '%s' "redis://default:${REDIS_AUTH}@${REDIS_HOST}:${REDIS_PORT}" | gcloud secrets create HEALTH_BULLMQ_REDIS_URL \
   --replication-policy=automatic \
   --data-file=-
 ```
@@ -349,6 +391,18 @@ make deploy PROJECT=health REGION=eu
 
 ---
 
+## 12.1) Create/deploy worker pool (GCP)
+
+Worker pools are created (or updated if they already exist) by deployment:
+
+```bash
+make deploy-workers PROJECT=health REGION=eu
+```
+
+This deploys the `${cloudRunName}-workers` worker pool from the same API image, using the worker entrypoint.
+
+---
+
 ## 13) First database migrations
 
 Requirements:
@@ -362,6 +416,36 @@ Run:
 export MIG_DATABASE_PASSWORD='your_password'
 make migrations PROJECT=health REGION=eu
 ```
+
+---
+
+## 13.1) Async tasks bootstrap (BullMQ + Redis)
+
+The first async task in this project is document embeddings generation for the RAG pipeline.
+
+At this stage:
+- API enqueues a BullMQ job when a document upload is persisted
+- Worker consumes the job and logs the payload
+
+BullMQ requires Redis. In GCP, use Memorystore for Redis (same region/network as Cloud Run).
+
+### Runtime env
+
+Both API and worker must receive:
+- `BULLMQ_REDIS_URL` (from Secret Manager)
+
+### Worker process
+
+The worker uses a dedicated Nest entrypoint:
+- `npm run dev:workers-main` (local)
+- `npm run start:workers-main` (built artifact)
+
+### Verification
+
+1. Start API + worker
+2. Upload a document through the documents endpoint
+3. Check worker logs for:
+   - `[DocumentEmbeddingsWorker] processing create-embeddings job`
 
 ---
 
