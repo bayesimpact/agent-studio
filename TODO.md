@@ -1,4 +1,5 @@
 # // FIXME: 
+- placeholder prompt of ConversationAgent is wrong!!!
 - can't delete empty project
 
 # // TODO:

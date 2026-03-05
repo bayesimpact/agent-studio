@@ -1,5 +1,5 @@
 import type { AgentModel } from "@caseai-connect/api-contracts"
-import type { ModelMessage } from "ai"
+import type { ModelMessage, ToolSet } from "ai"
 import type { ZodObject, z } from "zod"
 export type LLMChatMessage = ModelMessage
 
@@ -16,12 +16,14 @@ export type LLMConfig =
       temperature: number
       systemPrompt?: string
       mockResult: string | string[]
+      tools?: ToolSet
     }
   | {
       model: Exclude<string, MockModels>
       temperature: number
       systemPrompt?: string
       mockResult?: never
+      tools?: ToolSet
     }
 
 export type LLMMetadata = (

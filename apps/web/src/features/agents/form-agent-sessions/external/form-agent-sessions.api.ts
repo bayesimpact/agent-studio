@@ -28,10 +28,11 @@ export default {
 } satisfies IFormAgentSessionsSpi
 
 const fromDto = (dto: FormAgentSessionDto): FormAgentSession => ({
-  id: dto.id,
   agentId: dto.agentId,
-  type: dto.type,
   createdAt: dto.createdAt,
-  updatedAt: dto.updatedAt,
+  id: dto.id,
+  result: dto.result,
   traceUrl: dto.traceUrl,
+  type: dto.type,
+  updatedAt: dto.updatedAt,
 })
