@@ -8,9 +8,9 @@ import {
 } from "@/common/test/test-transaction-manager"
 import { removeNullish } from "@/common/utils/remove-nullish"
 import { createOrganizationWithDocument } from "@/domains/organizations/organization.factory"
-import { setupUserGuardForTesting } from "../../../../test/e2e.helpers"
 import { expectResponse, type Requester, testRequester } from "../../../../test/request"
 import { DocumentsModule } from "../documents.module"
+import { withDocumentAuthAndEmbeddingsMocks } from "../test-overrides"
 
 describe("Documents - deleteOne", () => {
   let app: INestApplication<App>
@@ -29,7 +29,8 @@ describe("Documents - deleteOne", () => {
   beforeAll(async () => {
     setup = await setupTransactionalTestDatabase({
       additionalImports: [DocumentsModule],
-      applyOverrides: (moduleBuilder) => setupUserGuardForTesting(moduleBuilder, () => auth0Id),
+      applyOverrides: (moduleBuilder) =>
+        withDocumentAuthAndEmbeddingsMocks(moduleBuilder, () => auth0Id),
     })
     repositories = setup.getAllRepositories()
     app = setup.module.createNestApplication()

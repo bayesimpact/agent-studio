@@ -150,6 +150,27 @@ docker-check: docker-build
 	docker kill $$CONTAINER_ID >/dev/null 2>&1; \
 	exit 1
 
+docker-workers-check: docker-build
+	@echo "Starting docker workers container and checking for successful startup..."
+	@CONTAINER_ID=$$(docker run -d ${imageUrl}:${version} node /app/apps/api/dist/workers-main.js); \
+	echo "Container ID: $$CONTAINER_ID"; \
+	i=1; \
+	while [ $$i -le 30 ]; do \
+		echo "Checking logs (attempt $$i/30)..."; \
+		LOGS=$$(docker logs $$CONTAINER_ID 2>&1); \
+		echo "$$LOGS"; \
+		if echo "$$LOGS" | grep -q "Workers app started"; then \
+			echo "✓ Docker workers container started successfully"; \
+			docker kill $$CONTAINER_ID >/dev/null 2>&1; \
+			exit 0; \
+		fi; \
+		sleep 1; \
+		i=$$((i + 1)); \
+	done; \
+	echo "✗ Failed to find 'Workers app started' in docker logs"; \
+	docker kill $$CONTAINER_ID >/dev/null 2>&1; \
+	exit 1
+
 
 ci-checks:
 	npm ci && npm run biome:ci && npm run typecheck
@@ -167,10 +188,13 @@ migrations:
 
 deploy: docker-push deploy-only
 
+deploy-workers: docker-push deploy-workers-only
+
 deploy-only:
 	gcloud run deploy ${cloudRunName} --image ${imageUrl}:${version} \
 	--update-secrets=LANGFUSE_SK=${secretsPrefix}LANGFUSE_SK:latest \
 	--update-secrets=DATABASE_PASSWORD=${secretsPrefix}DATABASE_PASSWORD:latest \
+	--update-secrets=BULLMQ_REDIS_URL=${secretsPrefix}BULLMQ_REDIS_URL:latest \
 	--update-secrets=AUTH0_M2M_CLIENT_SECRET=${secretsPrefix}AUTH0_M2M_CLIENT_SECRET:latest \
 	--set-env-vars=TZ=UTC \
 	--set-env-vars=AUTH0_ISSUER_URL=${auth0IssuerUrl},AUTH0_AUDIENCE=${auth0Audience} \
@@ -190,6 +214,28 @@ deploy-only:
 	--network=${network} \
 	--service-account=${serviceAccount} \
 	--project ${gcpProjectId}
+
+deploy-workers-only:
+	gcloud beta run worker-pools deploy ${cloudRunName}-workers --image ${imageUrl}:${version} \
+	--update-secrets=LANGFUSE_SK=${secretsPrefix}LANGFUSE_SK:latest \
+	--update-secrets=DATABASE_PASSWORD=${secretsPrefix}DATABASE_PASSWORD:latest \
+	--update-secrets=BULLMQ_REDIS_URL=${secretsPrefix}BULLMQ_REDIS_URL:latest \
+	--update-secrets=AUTH0_M2M_CLIENT_SECRET=${secretsPrefix}AUTH0_M2M_CLIENT_SECRET:latest \
+	--set-env-vars=TZ=UTC \
+	--set-env-vars=AUTH0_ISSUER_URL=${auth0IssuerUrl},AUTH0_AUDIENCE=${auth0Audience} \
+	--set-env-vars=AUTH0_ORGANIZATION_ID=${auth0OrganizationId},AUTH0_CLIENT_ID=${auth0ClientId},AUTH0_M2M_CLIENT_ID=${auth0M2MClientId} \
+	--set-env-vars=FRONTEND_URL=${frontendUrl} \
+	--set-env-vars=LOCAL_STORAGE_SERVER_BASE_URL=${localStorageServerBaseUrl} \
+	--set-env-vars=GCS_STORAGE_BUCKET_NAME=${gcsStorageBucketName} \
+	--set-env-vars=GOOGLE_VERTEX_PROJECT=${googleVertexProject},GOOGLE_VERTEX_LOCATION=${googleVertexLocation} \
+	--set-env-vars=LANGFUSE_PK=${langfusePk},LANGFUSE_BASE_URL=${langfuseUrl},LOCATION=$(location) \
+	--set-env-vars=DATABASE_HOST=/cloudsql/${addCloudSqlInstances},DATABASE_USERNAME=${databaseUsername},DATABASE_NAME=${databaseName} \
+	--add-cloudsql-instances=${addCloudSqlInstances} \
+	--network=${network} \
+	--service-account=${serviceAccount} \
+	--region=${zone} \
+	--project ${gcpProjectId} \
+	--command=node,/app/apps/api/dist/workers-main.js
 
 notify:
 	curl -X POST -H 'Content-type: application/json' --data '{"text":"$(shell git log -1 --pretty=%B)"}' SLACK_WEBHOOK_REDACTED
