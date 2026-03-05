@@ -13,7 +13,7 @@ ifeq ($(PROJECT),connect)
 # CONNECT
 imageUrl = REGION-docker.pkg.dev/YOUR_PROJECT/YOUR_REPO/api
 cloudRunName = connect
-googleVertexProject = connect
+googleVertexProject = YOUR_GCP_PROJECT
 googleVertexLocation = europe-west1
 location = europe-west1
 zone = europe-west9
