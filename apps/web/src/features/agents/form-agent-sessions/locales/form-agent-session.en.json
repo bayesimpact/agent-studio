@@ -7,26 +7,14 @@
       "traceUrl": "Trace URL"
     },
     "create": {
-      "button": "New Chat"
+      "button": "New Form Session"
     },
     "list": {
-      "title": "Chat Sessions"
+      "title": "Form Sessions"
     },
     "chat": {
       "title": "Playground",
       "placeholder": "Ask your question..."
     }
-  },
-  "agentSessionMessage": {
-    "props": {
-      "role": "Role",
-      "content": "Content",
-      "status": "Status",
-      "createdAt": "Created At",
-      "startedAt": "Started At",
-      "completedAt": "Completed At",
-      "toolCalls": "Tool Calls"
-    },
-    "attachment": "Attachment"
   }
 }

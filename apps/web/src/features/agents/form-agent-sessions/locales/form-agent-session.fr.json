@@ -7,26 +7,14 @@
       "traceUrl": "URL de trace"
     },
     "create": {
-      "button": "Nouvelle discussion"
+      "button": "Nouvelle session de formulaire"
     },
     "list": {
-      "title": "Discussions"
+      "title": "Sessions de formulaire"
     },
     "chat": {
       "title": "Playground",
       "placeholder": "Posez votre question..."
     }
-  },
-  "agentSessionMessage": {
-    "props": {
-      "role": "Rôle",
-      "content": "Contenu",
-      "status": "Statut",
-      "createdAt": "Créé le",
-      "startedAt": "Commencé le",
-      "completedAt": "Terminé le",
-      "toolCalls": "Appels d'outils"
-    },
-    "attachment": "Pièce jointe"
   }
 }

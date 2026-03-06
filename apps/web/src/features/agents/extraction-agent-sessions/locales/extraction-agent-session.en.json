@@ -1,16 +1,12 @@
 {
   "extractionAgentSession": {
     "create": {
-      "button": "New extraction",
-      "title": "Create extraction run",
+      "button": "New Extraction",
+      "title": "Create an extraction",
       "description": "Upload a PDF or image to run extraction."
     },
     "list": {
-      "title": "Extraction Runs",
-      "empty": {
-        "title": "No extraction runs yet",
-        "description": "Run history will appear here once extraction execution is available."
-      }
+      "title": "Extractions"
     },
     "result": {
       "view": {
