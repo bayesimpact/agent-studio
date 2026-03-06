@@ -1,5 +1,5 @@
 import { URL } from "node:url"
-import type { MessageEvent } from "@nestjs/common"
+import type { StreamEvent } from "@caseai-connect/api-contracts"
 import { Inject, Injectable, NotFoundException } from "@nestjs/common"
 import { InjectRepository } from "@nestjs/typeorm"
 import type { FilePart, ImagePart, ToolSet } from "ai"
@@ -79,15 +79,15 @@ export class StreamingService extends ServiceWithLLM {
     agent,
     userContent,
     documentId,
-    sendClientEvent,
+    notifyClient,
   }: {
     connectScope: RequiredConnectScope
     sessionId: string
     agent: Agent
     userContent: string
     documentId?: string
-    sendClientEvent: (event: MessageEvent) => void
-  }): AsyncGenerator<MessageEvent, void, unknown> {
+    notifyClient: NotifyClient
+  }): AsyncGenerator<StreamEvent, void, unknown> {
     const { session: updatedSession, assistantMessageId } = await this.prepareForStreaming({
       connectScope,
       sessionId,
@@ -96,12 +96,12 @@ export class StreamingService extends ServiceWithLLM {
       agentType: agent.type,
     })
 
-    yield this.sseEvent({ type: "start", messageId: assistantMessageId })
+    yield this.seeEvent({ type: "start", messageId: assistantMessageId })
 
     const llmRequest = await this.buildLLMRequest({
       agent,
       sessionId,
-      sendClientEvent,
+      notifyClient,
       session: updatedSession,
       documentId,
       connectScope,
@@ -114,7 +114,7 @@ export class StreamingService extends ServiceWithLLM {
         llmRequest.config.model,
       ).streamChatResponse(llmRequest)) {
         fullContent += chunk
-        yield this.sseEvent({ type: "chunk", content: chunk, messageId: assistantMessageId })
+        yield this.seeEvent({ type: "chunk", content: chunk, messageId: assistantMessageId })
       }
 
       await this.finalizeStreaming({
@@ -124,7 +124,7 @@ export class StreamingService extends ServiceWithLLM {
         agentType: agent.type,
       })
 
-      yield this.sseEvent({ type: "end", messageId: assistantMessageId, fullContent })
+      yield this.seeEvent({ type: "end", messageId: assistantMessageId, fullContent })
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : "Unknown error occurred"
 
@@ -135,27 +135,27 @@ export class StreamingService extends ServiceWithLLM {
         agentType: agent.type,
       })
 
-      yield this.sseEvent({ type: "error", messageId: assistantMessageId, error: errorMessage })
+      yield this.seeEvent({ type: "error", messageId: assistantMessageId, error: errorMessage })
 
       throw error
     }
   }
 
-  private sseEvent(payload: Record<string, unknown>): MessageEvent {
-    return { data: JSON.stringify(payload) } as MessageEvent
+  private seeEvent(payload: Record<string, unknown>): StreamEvent {
+    return JSON.parse(JSON.stringify(payload)) as StreamEvent
   }
 
   private async buildLLMRequest({
     agent,
     sessionId,
-    sendClientEvent,
+    notifyClient,
     session,
     documentId,
     connectScope,
   }: {
     agent: Agent
     sessionId: string
-    sendClientEvent: (event: MessageEvent) => void
+    notifyClient: NotifyClient
     session: ConversationAgentSession | FormAgentSession
     documentId?: string
     connectScope: RequiredConnectScope
@@ -164,7 +164,7 @@ export class StreamingService extends ServiceWithLLM {
       systemPrompt: this.generateMasterPrompt(agent),
       model: agent.model,
       temperature: agent.temperature,
-      tools: this.buildTools({ agent, sessionId, sendClientEvent }),
+      tools: this.buildTools({ agent, sessionId, notifyClient }),
     })
 
     const metadata: LLMMetadata = {
@@ -509,22 +509,17 @@ export class StreamingService extends ServiceWithLLM {
   private buildTools({
     agent,
     sessionId,
-    sendClientEvent,
+    notifyClient,
   }: {
     agent: Agent
     sessionId: string
-    sendClientEvent: (event: MessageEvent) => void
+    notifyClient: NotifyClient
   }): ToolSet | undefined {
     switch (agent.type) {
       case "form": {
-        // Notify client about the form update so it can re-fetch the session and get the latest form state
         const handleExecute = () => {
-          sendClientEvent({
-            data: JSON.stringify({
-              type: "form_update",
-              sessionId,
-            }),
-          } as MessageEvent)
+          // Notify client about the form update so it can re-fetch the session and get the latest form state
+          notifyClient(this.seeEvent({ type: "notify_client" }))
         }
         return this.formAgentSessionsService.buildFillFormTool({
           agent,
@@ -538,3 +533,5 @@ export class StreamingService extends ServiceWithLLM {
     }
   }
 }
+
+type NotifyClient = (event: StreamEvent) => void

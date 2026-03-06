@@ -1,4 +1,4 @@
-import { AgentSessionMessagesRoutes } from "@caseai-connect/api-contracts"
+import { AgentSessionMessagesRoutes, type StreamEvent } from "@caseai-connect/api-contracts"
 import type { MessageEvent } from "@nestjs/common"
 import { Controller, ForbiddenException, Query, Req, Sse, UseGuards } from "@nestjs/common"
 import { Observable } from "rxjs"
@@ -40,7 +40,7 @@ export class StreamingController {
         throw new ForbiddenException("User content must not be empty")
       }
 
-      return new Observable<MessageEvent>((subscriber) => {
+      return new Observable<StreamEvent>((subscriber) => {
         void (async () => {
           try {
             const events = this.chatStreamingService.streamAgentResponse({
@@ -49,7 +49,7 @@ export class StreamingController {
               sessionId,
               userContent,
               documentId,
-              sendClientEvent: (event) => {
+              notifyClient: (event) => {
                 subscriber.next(event)
               },
             })

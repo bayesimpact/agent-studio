@@ -94,7 +94,8 @@ export const sendMessage = createAsyncThunk<void, { content: string; file?: File
               }),
             )
           },
-          onFormUpdate(_event) {
+          onNotifyClient(_event) {
+            // TODO: should have a condition
             dispatch(listFormAgentSessions({ agentId }))
           },
           onEnd: (event) => {
