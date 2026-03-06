@@ -61,9 +61,7 @@ function FormAgentWithData({
     <ListHeader path={getPath("agent")} title={t("formAgentSession:list.title")}>
       <FormAgentSessionCreator
         type="button"
-        organizationId={organizationId}
-        projectId={projectId}
-        agentId={agent.id}
+        ids={{ organizationId, projectId, agentId: agent.id }}
       />
 
       {agentSessions.map((agentSession) => (

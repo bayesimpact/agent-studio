@@ -9,30 +9,21 @@ import { useAppDispatch } from "@/store/hooks"
 
 export function ConversationAgentSessionCreator({
   type,
-  agentId,
-  projectId,
-  organizationId,
+  ids,
 }: {
   type: "button" | "menu"
-  agentId: string
-  projectId: string
-  organizationId: string
+  ids: { agentId: string; projectId: string; organizationId: string }
 }) {
   const navigate = useNavigate()
   const { t } = useTranslation("conversationAgentSession", { keyPrefix: "create" })
   const dispatch = useAppDispatch()
   const { buildPath } = useBuildPath()
   const onSuccess = (agentSessionId: string) => {
-    const path = buildPath("conversationAgentSession", {
-      organizationId,
-      projectId,
-      agentId,
-      agentSessionId,
-    })
+    const path = buildPath("agentSession", { ...ids, agentSessionId })
     navigate(path)
   }
   const handleClick = () => {
-    dispatch(createConversationAgentSession({ agentId, onSuccess }))
+    dispatch(createConversationAgentSession({ agentId: ids.agentId, onSuccess }))
   }
   const Comp = type === "button" ? Button : SidebarMenuSubButton
   return (

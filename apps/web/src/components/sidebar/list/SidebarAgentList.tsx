@@ -11,7 +11,7 @@ import { AgentItemOptions } from "@/features/agents/components/AgentItemOptions"
 import type { Project } from "@/features/projects/projects.models"
 import { useBuildPath } from "@/hooks/use-build-path"
 import { AppNavItem } from "../nav/NavItem"
-import { SidebarConversationAgentSessionList } from "./SidebarConversationAgentSessionList"
+import { SidebarAgentSessionList } from "./SidebarAgentSessionList"
 
 type Item = { action: "edit" | "delete"; value: Agent }
 
@@ -54,11 +54,10 @@ export function AdminAgentList({
             />
           }
         >
-          {agent.type === "conversation" && (
-            <SidebarConversationAgentSessionList
-              organizationId={organizationId}
-              agentId={agent.id}
-              projectId={agent.projectId}
+          {agent.type !== "extraction" && (
+            <SidebarAgentSessionList
+              ids={{ organizationId, projectId: project.id, agentId: agent.id }}
+              agentType={agent.type}
             />
           )}
         </AppNavItem>
@@ -121,11 +120,12 @@ export function AppAgentList({
             icon: getAgentIcon(agent.type),
           }}
         >
-          <SidebarConversationAgentSessionList
-            organizationId={organizationId}
-            agentId={agent.id}
-            projectId={projectId}
-          />
+          {agent.type !== "extraction" && (
+            <SidebarAgentSessionList
+              ids={{ organizationId, projectId, agentId: agent.id }}
+              agentType={agent.type}
+            />
+          )}
         </AppNavItem>
       ))}
     </>

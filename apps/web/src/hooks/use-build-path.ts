@@ -9,7 +9,7 @@ import { ADS } from "@/store/async-data-status"
 import { useAppSelector } from "@/store/hooks"
 import { useAbility } from "./use-ability"
 
-export type PathType = "organization" | "project" | "agent" | "conversationAgentSession"
+export type PathType = "organization" | "project" | "agent" | "agentSession"
 
 export interface BuildPathOptions {
   organizationId?: string
@@ -82,7 +82,7 @@ export function useGetPath() {
           })
         : agentPath
 
-    if (pathType === "conversationAgentSession") {
+    if (pathType === "agentSession") {
       return agentSessionPath
     }
 
@@ -158,7 +158,7 @@ export function useBuildPath() {
           })
         : agentPath
 
-    if (pathType === "conversationAgentSession") {
+    if (pathType === "agentSession") {
       return agentSessionPath
     }
 
@@ -167,7 +167,7 @@ export function useBuildPath() {
 
   const buildPath: {
     (
-      pathType: "conversationAgentSession",
+      pathType: "agentSession",
       options: {
         organizationId: string
         projectId: string

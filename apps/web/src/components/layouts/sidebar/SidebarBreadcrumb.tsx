@@ -172,7 +172,7 @@ function AgentSessionList({ organizationId }: { organizationId: string }) {
   if (!ADS.isFulfilled(sessions) || !ADS.isFulfilled(session)) return null
 
   const currentSessionName = buildDate(session.value.createdAt)
-  const currentSessionPath = buildPath("conversationAgentSession", {
+  const currentSessionPath = buildPath("agentSession", {
     organizationId,
     projectId: projectId!,
     agentId: session.value.agentId,
@@ -182,7 +182,7 @@ function AgentSessionList({ organizationId }: { organizationId: string }) {
   const handleClick =
     ({ agentId, agentSessionId }: { agentId: string; agentSessionId: string }) =>
     () => {
-      const path = buildPath("conversationAgentSession", {
+      const path = buildPath("agentSession", {
         organizationId,
         projectId: projectId!,
         agentId,

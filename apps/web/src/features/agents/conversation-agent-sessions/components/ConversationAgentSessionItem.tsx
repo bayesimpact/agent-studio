@@ -21,7 +21,7 @@ export function ConversationAgentSessionItem({
   const { t } = useTranslation()
   const { buildPath } = useBuildPath()
   const handleClick = () => {
-    const path = buildPath("conversationAgentSession", {
+    const path = buildPath("agentSession", {
       organizationId,
       projectId,
       agentId,

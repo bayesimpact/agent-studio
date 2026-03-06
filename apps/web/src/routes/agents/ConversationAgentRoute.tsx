@@ -61,9 +61,7 @@ function ConversationAgentWithData({
     <ListHeader path={getPath("agent")} title={t("conversationAgentSession:list.title")}>
       <ConversationAgentSessionCreator
         type="button"
-        organizationId={organizationId}
-        projectId={projectId}
-        agentId={agent.id}
+        ids={{ organizationId, projectId, agentId: agent.id }}
       />
 
       {agentSessions.map((agentSession) => (
