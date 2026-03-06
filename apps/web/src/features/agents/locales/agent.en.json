@@ -36,7 +36,7 @@
         "description": "Choose the type before configuring your agent.",
         "conversation": "Conversation",
         "extraction": "Extraction",
-        "form": "form"
+        "form": "Form"
       },
       "conversationDialog": {
         "title": "Create Conversation Agent",
