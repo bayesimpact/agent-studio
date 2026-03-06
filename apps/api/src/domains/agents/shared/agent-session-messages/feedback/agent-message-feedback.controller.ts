@@ -56,6 +56,9 @@ export class AgentMessageFeedbackController {
   async getAll(
     @Req() request: EndpointRequestWithAgent,
   ): Promise<typeof AgentMessageFeedbackRoutes.getAll.response> {
+    if (request.agent.type !== "conversation" && request.agent.type !== "form") {
+      throw new Error("Unsupported agent type")
+    }
     const data = await this.feedbackService.listFeedbacksForAgent({
       connectScope: getRequiredConnectScope(request),
       agentId: request.agent.id,
@@ -92,7 +95,6 @@ function toDto({
         ? getTraceUrl(agentMessage.session(agentType)!.traceId)
         : undefined
       if (!agentMessage) return null
-
       return {
         id: f.id,
         organizationId: f.organizationId,
