@@ -1,19 +1,12 @@
-import { AgentSessionMessagesRoutes } from "@caseai-connect/api-contracts"
+import { AgentSessionMessagesRoutes, type StreamEvent } from "@caseai-connect/api-contracts"
 import { getAccessToken } from "@/external/auth0Client"
 
-export type StreamEvent =
-  | { type: "start"; messageId: string }
-  | { type: "chunk"; content: string; messageId: string }
-  | { type: "form_update"; sessionId: string }
-  | { type: "end"; messageId: string; fullContent: string }
-  | { type: "error"; messageId: string; error: string }
-
 export type StreamEventHandler = {
-  onStart?: (event: { type: "start"; messageId: string }) => void
-  onChunk: (event: { type: "chunk"; content: string; messageId: string }) => void
-  onFormUpdate: (event: { type: "form_update"; sessionId: string }) => void
-  onEnd: (event: { type: "end"; messageId: string; fullContent: string }) => void
-  onError: (event: { type: "error"; messageId: string; error: string }) => void
+  onStart?: (event: Extract<StreamEvent, { type: "start" }>) => void
+  onChunk: (event: Extract<StreamEvent, { type: "chunk" }>) => void
+  onNotifyClient: (event: Extract<StreamEvent, { type: "notify_client" }>) => void
+  onEnd: (event: Extract<StreamEvent, { type: "end" }>) => void
+  onError: (event: Extract<StreamEvent, { type: "error" }>) => void
 }
 
 function parseSSEEvent(eventText: string): StreamEvent | null {
@@ -31,7 +24,7 @@ function parseSSEEvent(eventText: string): StreamEvent | null {
 function dispatchStreamEvent(event: StreamEvent, handlers: StreamEventHandler): boolean {
   if (event.type === "start") handlers.onStart?.(event)
   else if (event.type === "chunk") handlers.onChunk(event)
-  else if (event.type === "form_update") handlers.onFormUpdate(event)
+  else if (event.type === "notify_client") handlers.onNotifyClient(event)
   else if (event.type === "end") {
     handlers.onEnd(event)
     return true
