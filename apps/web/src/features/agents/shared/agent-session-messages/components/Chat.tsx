@@ -203,17 +203,19 @@ function ChatInput({
   }
 
   return (
-    <Textarea
-      ref={input.ref}
-      data-slot="chat-input"
-      value={input.value}
-      rows={1}
-      onChange={handleChange}
-      onKeyDown={handleKeyDown}
-      className={cn("border-none min-h-min shadow-none focus-visible:ring-0", className)}
-      {...props}
-      disabled={input.disabled || props.disabled}
-    />
+    <div className="max-h-60 overflow-hidden overflow-y-auto w-full">
+      <Textarea
+        ref={input.ref}
+        data-slot="chat-input"
+        value={input.value}
+        rows={1}
+        onChange={handleChange}
+        onKeyDown={handleKeyDown}
+        {...props}
+        className={cn("border-none min-h-min shadow-none focus-visible:ring-0", className)}
+        disabled={input.disabled || props.disabled}
+      />
+    </div>
   )
 }
 
