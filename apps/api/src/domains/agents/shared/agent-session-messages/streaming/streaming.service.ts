@@ -5,7 +5,6 @@ import { InjectRepository } from "@nestjs/typeorm"
 import type { FilePart, ImagePart, ToolSet } from "ai"
 import type { Repository } from "typeorm/repository/Repository"
 import { v4 } from "uuid"
-import { z } from "zod"
 import { ConnectRepository } from "@/common/entities/connect-repository"
 import type { RequiredConnectScope } from "@/common/entities/connect-required-fields"
 import type {
@@ -16,6 +15,7 @@ import type {
 import type { Agent } from "@/domains/agents/agent.entity"
 import { ConversationAgentSession } from "@/domains/agents/conversation-agent-sessions/conversation-agent-session.entity"
 import { FormAgentSession } from "@/domains/agents/form-agent-sessions/form-agent-session.entity"
+import { FormAgentSessionsService } from "@/domains/agents/form-agent-sessions/form-agent-sessions.service"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
 import { DocumentsService } from "@/domains/documents/documents.service"
 import {
@@ -26,7 +26,6 @@ import { ServiceWithLLM } from "@/external/llm"
 import { AgentMessage } from "../agent-message.entity"
 import { buildConversationAgentPrompt } from "./master-promts/conversation-agent.prompt"
 import { buildFormAgentPrompt } from "./master-promts/form-agent.prompt"
-import { fillFormTool } from "./tools/fill-form.tool"
 
 @Injectable()
 export class StreamingService extends ServiceWithLLM {
@@ -40,6 +39,9 @@ export class StreamingService extends ServiceWithLLM {
     @Inject(FILE_STORAGE_SERVICE)
     private readonly fileStorageService: IFileStorage,
     private readonly documentsService: DocumentsService,
+
+    @Inject(FormAgentSessionsService)
+    private readonly formAgentSessionsService: FormAgentSessionsService,
 
     @InjectRepository(ConversationAgentSession)
     conversationAgentSessionRepository: Repository<ConversationAgentSession>,
@@ -68,8 +70,8 @@ export class StreamingService extends ServiceWithLLM {
     )
   }
   /**
-   * Streams a agent response for a session
-   * Handles the full flow: persist before, stream, persist after
+   * Streams an agent response for a session.
+   * Handles the full flow: persist before, stream, persist after.
    */
   async *streamAgentResponse({
     connectScope,
@@ -86,7 +88,6 @@ export class StreamingService extends ServiceWithLLM {
     documentId?: string
     sendClientEvent: (event: MessageEvent) => void
   }): AsyncGenerator<MessageEvent, void, unknown> {
-    // Step 1: Prepare for streaming (persist user message + empty assistant message)
     const { session: updatedSession, assistantMessageId } = await this.prepareForStreaming({
       connectScope,
       sessionId,
@@ -95,63 +96,27 @@ export class StreamingService extends ServiceWithLLM {
       agentType: agent.type,
     })
 
-    // Step 2: Send start event with messageId so frontend can update optimistic message
-    yield {
-      data: JSON.stringify({
-        type: "start",
-        messageId: assistantMessageId,
-      }),
-    } as MessageEvent
+    yield this.sseEvent({ type: "start", messageId: assistantMessageId })
 
-    // Step 3: Build LLM config from agent
-    const llmConfig = this.buildLLMConfig({
-      systemPrompt: this.generateMasterPrompt(agent),
-      model: agent.model,
-      temperature: agent.temperature,
-      tools: this.buildTools({ agent, sessionId, sendClientEvent }),
+    const llmRequest = await this.buildLLMRequest({
+      agent,
+      sessionId,
+      sendClientEvent,
+      session: updatedSession,
+      documentId,
+      connectScope,
     })
 
-    // Step 4: Build LLM metadata (used for telemetry)
-    const llmMetadata: LLMMetadata = {
-      traceId: updatedSession.traceId,
-      agentSessionId: updatedSession.id,
-      agentId: agent.id,
-      projectId: agent.projectId,
-      organizationId: updatedSession.organizationId,
-      currentTurn: updatedSession.messages.filter((m) => m.role === "user").length,
-      tags: [agent.name],
-    }
-
-    // Step 5: Convert messages to LLM format
-    // Messages are already loaded via relations in prepareForStreaming
-    const llmMessages = await this.convertToLLMFormat(updatedSession.messages)
-
-    // Step 6: Stream response
     let fullContent = ""
 
     try {
-      if (documentId) await this.handleFileInLLMMessage({ llmMessages, documentId, connectScope })
-
-      // Stream from LLM provider
-      const responseChunks = this.getProviderForModel(llmConfig.model).streamChatResponse({
-        messages: llmMessages,
-        config: llmConfig,
-        metadata: llmMetadata,
-      })
-      for await (const chunk of responseChunks) {
+      for await (const chunk of this.getProviderForModel(
+        llmRequest.config.model,
+      ).streamChatResponse(llmRequest)) {
         fullContent += chunk
-
-        // Yield chunk to frontend immediately (SSE)
-        yield {
-          data: JSON.stringify({
-            type: "chunk",
-            content: chunk,
-            messageId: assistantMessageId,
-          }),
-        } as MessageEvent
+        yield this.sseEvent({ type: "chunk", content: chunk, messageId: assistantMessageId })
       }
 
-      // Step 7: Finalize streaming (persist completed message)
       await this.finalizeStreaming({
         sessionId: updatedSession.id,
         assistantMessageId,
@@ -159,16 +124,8 @@ export class StreamingService extends ServiceWithLLM {
         agentType: agent.type,
       })
 
-      // Send completion event
-      yield {
-        data: JSON.stringify({
-          type: "end",
-          messageId: assistantMessageId,
-          fullContent,
-        }),
-      } as MessageEvent
+      yield this.sseEvent({ type: "end", messageId: assistantMessageId, fullContent })
     } catch (error) {
-      // Handle error: mark message as error
       const errorMessage = error instanceof Error ? error.message : "Unknown error occurred"
 
       await this.markStreamingError({
@@ -178,17 +135,53 @@ export class StreamingService extends ServiceWithLLM {
         agentType: agent.type,
       })
 
-      // Send error event
-      yield {
-        data: JSON.stringify({
-          type: "error",
-          messageId: assistantMessageId,
-          error: errorMessage,
-        }),
-      } as MessageEvent
+      yield this.sseEvent({ type: "error", messageId: assistantMessageId, error: errorMessage })
 
       throw error
     }
+  }
+
+  private sseEvent(payload: Record<string, unknown>): MessageEvent {
+    return { data: JSON.stringify(payload) } as MessageEvent
+  }
+
+  private async buildLLMRequest({
+    agent,
+    sessionId,
+    sendClientEvent,
+    session,
+    documentId,
+    connectScope,
+  }: {
+    agent: Agent
+    sessionId: string
+    sendClientEvent: (event: MessageEvent) => void
+    session: ConversationAgentSession | FormAgentSession
+    documentId?: string
+    connectScope: RequiredConnectScope
+  }) {
+    const config = this.buildLLMConfig({
+      systemPrompt: this.generateMasterPrompt(agent),
+      model: agent.model,
+      temperature: agent.temperature,
+      tools: this.buildTools({ agent, sessionId, sendClientEvent }),
+    })
+
+    const metadata: LLMMetadata = {
+      traceId: session.traceId,
+      agentSessionId: session.id,
+      agentId: agent.id,
+      projectId: agent.projectId,
+      organizationId: session.organizationId,
+      currentTurn: session.messages.filter((message) => message.role === "user").length,
+      tags: [agent.name],
+    }
+
+    const messages = await this.convertToLLMFormat(session.messages)
+    if (documentId)
+      await this.handleFileInLLMMessage({ llmMessages: messages, documentId, connectScope })
+
+    return { config, metadata, messages }
   }
 
   private async handleFileInLLMMessage({
@@ -292,8 +285,14 @@ export class StreamingService extends ServiceWithLLM {
   }
 
   private generateMasterPrompt(agent: Agent): string {
-    if (agent.type === "form") return buildFormAgentPrompt(agent)
-    return buildConversationAgentPrompt(agent)
+    switch (agent.type) {
+      case "form":
+        return buildFormAgentPrompt(agent)
+      case "conversation":
+        return buildConversationAgentPrompt(agent)
+      default:
+        throw new Error(`Unsupported agent type: ${agent.type}`)
+    }
   }
 
   /**
@@ -306,6 +305,9 @@ export class StreamingService extends ServiceWithLLM {
     sessionId: string
     agentType: Agent["type"]
   }): Promise<ConversationAgentSession | FormAgentSession | null> {
+    if (agentType !== "conversation" && agentType !== "form") {
+      throw new Error(`Unsupported agent type: ${agentType}`)
+    }
     const repository =
       agentType === "conversation"
         ? this.conversationAgentSessionRepository
@@ -381,15 +383,7 @@ export class StreamingService extends ServiceWithLLM {
     })
 
     // Reload session with messages
-    const repository =
-      agentType === "conversation"
-        ? this.conversationAgentSessionRepository
-        : this.formAgentSessionRepository
-
-    const updatedSession = await repository.findOne({
-      where: { id: sessionId },
-      relations: ["messages"],
-    })
+    const updatedSession = await this.findSessionById({ sessionId, agentType })
 
     if (!updatedSession) {
       throw new NotFoundException(`AgentSession with id ${sessionId} not found`)
@@ -428,17 +422,10 @@ export class StreamingService extends ServiceWithLLM {
     message.completedAt = new Date()
     await this.agentMessageRepository.save(message)
 
-    const repository =
-      agentType === "conversation"
-        ? this.conversationAgentSessionRepository
-        : this.formAgentSessionRepository
-    const session = await repository.findOne({
-      where: { id: sessionId },
-      relations: ["messages"],
-    })
+    const session = await this.findSessionById({ sessionId, agentType })
 
     if (!session) {
-      throw new NotFoundException(`ConversationAgentSession with id ${sessionId} not found`)
+      throw new NotFoundException(`AgentSession with id ${sessionId} not found`)
     }
 
     return session
@@ -473,14 +460,7 @@ export class StreamingService extends ServiceWithLLM {
     message.completedAt = new Date()
     await this.agentMessageRepository.save(message)
 
-    const repository =
-      agentType === "conversation"
-        ? this.conversationAgentSessionRepository
-        : this.formAgentSessionRepository
-    const session = await repository.findOne({
-      where: { id: sessionId },
-      relations: ["messages"],
-    })
+    const session = await this.findSessionById({ sessionId, agentType })
 
     if (!session) {
       throw new NotFoundException(`ConversationAgentSession with id ${sessionId} not found`)
@@ -535,64 +515,16 @@ export class StreamingService extends ServiceWithLLM {
     sessionId: string
     sendClientEvent: (event: MessageEvent) => void
   }): ToolSet | undefined {
-    const agentOutputJsonSchema =
-      agent.type === "form" && agent.outputJsonSchema
-        ? (agent.outputJsonSchema as unknown as AgentOutputJsonSchema)
-        : undefined
-
-    const inputSchema = agentOutputJsonSchema
-      ? this.buildZodSchema(agentOutputJsonSchema.properties)
-      : undefined
-
-    const handleChange = async (value: Record<string, unknown>) => {
-      const updated = await this.formAgentSessionRepository.update(sessionId, {
-        // FIXME:
-        // @ts-expect-error
-        result: value,
-      })
-      if (!updated.affected) return
-
-      sendClientEvent({
-        data: JSON.stringify({
-          type: "form_update",
+    switch (agent.type) {
+      case "form":
+        return this.formAgentSessionsService.buildFillFormTool({
+          agent,
           sessionId,
-        }),
-      } as MessageEvent)
+          sendClientEvent,
+        })
+
+      default:
+        return undefined
     }
-
-    return inputSchema
-      ? { fillForm: fillFormTool({ inputSchema, onExecute: handleChange }) }
-      : undefined
   }
-
-  private buildZodSchema(
-    properties: Record<string, { type: string; description: string }>,
-  ): z.ZodObject<any> {
-    const shape: Record<string, z.ZodTypeAny> = {}
-
-    for (const [key, value] of Object.entries(properties)) {
-      switch (value.type) {
-        case "string":
-          shape[key] = z.string().describe(value.description).optional()
-          break
-        case "number":
-          shape[key] = z.number().describe(value.description).optional()
-          break
-        case "boolean":
-          shape[key] = z.boolean().describe(value.description).optional()
-          break
-        default:
-          throw new Error(`Unsupported property type: ${value.type}`)
-      }
-    }
-
-    return z.object(shape).strict()
-  }
-}
-
-type AgentOutputJsonSchema = {
-  type: "object"
-  required: string[]
-  properties: Record<string, { type: string; description: string }>
-  additionalProperties: boolean
 }
