@@ -38,7 +38,7 @@ export function AgentSessionMessages({
 
   if (isAdminInterface)
     return (
-      <div className="flex flex-1 max-h-screen gap-4">
+      <div className="flex flex-1 max-h-[calc(100vh-4rem)] gap-4">
         <div className="flex flex-1">
           <DotsBackground className="p-10 w-full">
             <Chat>
