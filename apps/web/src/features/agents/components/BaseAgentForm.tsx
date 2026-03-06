@@ -60,7 +60,7 @@ export function BaseAgentForm({
         }),
       } as FormValues)
     : ({
-        ...getDefaultFormValues("extraction"),
+        ...getDefaultFormValues(agentType),
         ...(hasOutputJsonSchema && { outputJsonSchemaText: "" }),
       } as FormValues)
 
