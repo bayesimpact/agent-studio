@@ -7,10 +7,8 @@ import { FormAgentSessionItem } from "@/features/agents/form-agent-sessions/comp
 import type { FormAgentSession } from "@/features/agents/form-agent-sessions/form-agent-sessions.models"
 import { selectCurrentFormAgentSessionsData } from "@/features/agents/form-agent-sessions/form-agent-sessions.selectors"
 import { useGetPath } from "@/hooks/use-build-path"
-import { ADS } from "@/store/async-data-status"
 import { useAppSelector } from "@/store/hooks"
-import { ErrorRoute } from "../ErrorRoute"
-import { LoadingRoute } from "../LoadingRoute"
+import { AsyncRoute } from "../AsyncRoute"
 import { useHandleHeader } from "./Header"
 
 export function FormAgentRoute({
@@ -26,22 +24,21 @@ export function FormAgentRoute({
 
   const agentSessions = useAppSelector(selectCurrentFormAgentSessionsData)
 
-  if (ADS.isError(agentSessions))
-    return <ErrorRoute error={agentSessions.error || "Unknown error"} />
-  if (ADS.isFulfilled(agentSessions)) {
-    return (
-      <FormAgentWithData
-        agentSessions={agentSessions.value}
-        agent={agent}
-        organizationId={organizationId}
-        projectId={projectId}
-      />
-    )
-  }
-  return <LoadingRoute />
+  return (
+    <AsyncRoute data={[agentSessions]}>
+      {([agentSessionsValue]) => (
+        <WithData
+          agentSessions={agentSessionsValue}
+          agent={agent}
+          organizationId={organizationId}
+          projectId={projectId}
+        />
+      )}
+    </AsyncRoute>
+  )
 }
 
-function FormAgentWithData({
+function WithData({
   agent,
   agentSessions,
   organizationId,

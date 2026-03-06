@@ -7,10 +7,8 @@ import { ConversationAgentSessionItem } from "@/features/agents/conversation-age
 import type { ConversationAgentSession } from "@/features/agents/conversation-agent-sessions/conversation-agent-sessions.models"
 import { selectCurrentConversationAgentSessionsData } from "@/features/agents/conversation-agent-sessions/conversation-agent-sessions.selectors"
 import { useGetPath } from "@/hooks/use-build-path"
-import { ADS } from "@/store/async-data-status"
 import { useAppSelector } from "@/store/hooks"
-import { ErrorRoute } from "../ErrorRoute"
-import { LoadingRoute } from "../LoadingRoute"
+import { AsyncRoute } from "../AsyncRoute"
 import { useHandleHeader } from "./Header"
 
 export function ConversationAgentRoute({
@@ -26,22 +24,21 @@ export function ConversationAgentRoute({
 
   const agentSessions = useAppSelector(selectCurrentConversationAgentSessionsData)
 
-  if (ADS.isError(agentSessions))
-    return <ErrorRoute error={agentSessions.error || "Unknown error"} />
-  if (ADS.isFulfilled(agentSessions)) {
-    return (
-      <ConversationAgentWithData
-        agentSessions={agentSessions.value}
-        agent={agent}
-        organizationId={organizationId}
-        projectId={projectId}
-      />
-    )
-  }
-  return <LoadingRoute />
+  return (
+    <AsyncRoute data={[agentSessions]}>
+      {([agentSessionsValue]) => (
+        <WithData
+          agentSessions={agentSessionsValue}
+          agent={agent}
+          organizationId={organizationId}
+          projectId={projectId}
+        />
+      )}
+    </AsyncRoute>
+  )
 }
 
-function ConversationAgentWithData({
+function WithData({
   agent,
   agentSessions,
   organizationId,

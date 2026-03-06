@@ -6,23 +6,18 @@ import type { Project } from "@/features/projects/projects.models"
 import { selectCurrentProjectData } from "@/features/projects/projects.selectors"
 import { useAbility } from "@/hooks/use-ability"
 import { useBuildPath } from "@/hooks/use-build-path"
-import { ADS } from "@/store/async-data-status"
 import { useAppSelector } from "@/store/hooks"
-import { ErrorRoute } from "./ErrorRoute"
-import { LoadingRoute } from "./LoadingRoute"
+import { AsyncRoute } from "./AsyncRoute"
 
 export function ProjectRoute() {
   const project = useAppSelector(selectCurrentProjectData)
   const agents = useAppSelector(selectAgentsData)
 
-  if (ADS.isError(project) || ADS.isError(agents))
-    return <ErrorRoute error={project.error || agents.error || "Unknown error"} />
-
-  if (ADS.isFulfilled(project) && ADS.isFulfilled(agents)) {
-    return <WithData project={project.value} agents={agents.value} />
-  }
-
-  return <LoadingRoute />
+  return (
+    <AsyncRoute data={[agents, project]}>
+      {([agentsValue, projectValue]) => <WithData project={projectValue} agents={agentsValue} />}
+    </AsyncRoute>
+  )
 }
 
 function WithData({ project, agents }: { project: Project; agents: Agent[] }) {
