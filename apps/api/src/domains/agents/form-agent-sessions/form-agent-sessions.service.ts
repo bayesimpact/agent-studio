@@ -1,8 +1,8 @@
 import { Inject, Injectable } from "@nestjs/common"
 import { InjectRepository } from "@nestjs/typeorm"
+import type { ToolSet } from "ai"
 import type { Repository } from "typeorm"
 import { v4 } from "uuid"
-import { z } from "zod"
 import { ConnectRepository } from "@/common/entities/connect-repository"
 import type { RequiredConnectScope } from "@/common/entities/connect-required-fields"
 import type { LLMProvider } from "@/common/interfaces/llm-provider.interface"
@@ -89,22 +89,13 @@ export class FormAgentSessionsService extends ServiceWithLLM {
   buildFillFormTool({
     agent,
     sessionId,
-    sendClientEvent,
+    onExecute,
   }: {
     agent: Agent
     sessionId: string
-    sendClientEvent: (event: MessageEvent) => void
-  }) {
-    const isValid = this.isValidSchema(agent.outputJsonSchema)
-    if (!isValid) {
-      console.error(`Invalid output JSON schema for agent ${agent.id}`)
-      return undefined
-    }
-
-    const agentOutputJsonSchema = agent.outputJsonSchema as AgentOutputJsonSchema
-    const inputSchema = this.buildZodSchema(agentOutputJsonSchema.properties)
-
-    const handleChange = async (value: Record<string, unknown>) => {
+    onExecute: () => void
+  }): ToolSet {
+    const handleExecute = async (value: Record<string, unknown>) => {
       const updated = await this.formAgentSessionRepository.update(sessionId, {
         // FIXME:
         // @ts-expect-error
@@ -112,74 +103,8 @@ export class FormAgentSessionsService extends ServiceWithLLM {
       })
       if (!updated.affected) return
 
-      sendClientEvent({
-        data: JSON.stringify({
-          type: "form_update",
-          sessionId,
-        }),
-      } as MessageEvent)
+      onExecute()
     }
-    return { fillForm: fillFormTool({ inputSchema, onExecute: handleChange }) }
+    return { fillForm: fillFormTool({ agent, onExecute: handleExecute }) } as ToolSet
   }
-
-  // TODO: write a test for this method
-  private buildZodSchema(
-    properties: Record<string, { type: string; description: string }>,
-  ): z.ZodObject<any> {
-    const shape: Record<string, z.ZodTypeAny> = {}
-    for (const [key, value] of Object.entries(properties)) {
-      switch (value.type) {
-        case "string":
-          shape[key] = z.string().describe(value.description).optional()
-          break
-        case "number":
-          shape[key] = z.number().describe(value.description).optional()
-          break
-        case "boolean":
-          shape[key] = z.boolean().describe(value.description).optional()
-          break
-        default:
-          throw new Error(`Unsupported property type: ${value.type}`)
-      }
-    }
-
-    return z.object(shape).strict()
-  }
-
-  // TODO: write a test for this method
-  private isValidSchema(schema: Record<string, unknown> | null): schema is {
-    required: string[]
-    properties: Record<string, { type: string; description: string }>
-  } {
-    if (!schema) {
-      return false
-    }
-
-    if (
-      !Array.isArray(schema.required) ||
-      !schema.required.every((item) => typeof item === "string")
-    ) {
-      return false
-    }
-
-    if (
-      typeof schema.properties !== "object" ||
-      schema.properties === null ||
-      Array.isArray(schema.properties)
-    ) {
-      return false
-    }
-
-    return Object.values(schema.properties as Record<string, unknown>).every(
-      (prop) =>
-        typeof prop === "object" &&
-        prop !== null &&
-        typeof (prop as Record<string, unknown>).type === "string" &&
-        typeof (prop as Record<string, unknown>).description === "string",
-    )
-  }
-}
-type AgentOutputJsonSchema = {
-  required: string[]
-  properties: Record<string, { type: string; description: string }>
 }
