@@ -22,6 +22,10 @@
       "description": "Créez une nouvelle évaluation en fournissant les détails nécessaires."
     },
     "run": "Exécuter",
-    "runAll": "Exécuter tout"
+    "runAll": "Exécuter tout",
+    "empty": {
+      "title": "Aucune évaluation disponible",
+      "description": "Créez une nouvelle évaluation pour commencer à tester vos agents."
+    }
   }
 }
