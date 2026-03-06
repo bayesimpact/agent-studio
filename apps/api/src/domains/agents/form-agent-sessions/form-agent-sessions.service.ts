@@ -93,17 +93,20 @@ export class FormAgentSessionsService extends ServiceWithLLM {
   }: {
     agent: Agent
     sessionId: string
-    onExecute: () => void
+    onExecute: (input: Record<string, unknown>) => void
   }): ToolSet {
-    const handleExecute = async (value: Record<string, unknown>) => {
+    const handleExecute = async (input: Record<string, unknown>) => {
+      // TODO: merge value and existing result instead of replacing it
+      const session = await this.formAgentSessionRepository.findOneBy({ id: sessionId })
+      if (!session) return
+      const mergedResult = { ...session.result, ...input }
       const updated = await this.formAgentSessionRepository.update(sessionId, {
-        // FIXME:
-        // @ts-expect-error
-        result: value,
+        // @ts-expect-error // FIXME:
+        result: mergedResult,
       })
       if (!updated.affected) return
 
-      onExecute()
+      onExecute(input)
     }
     return { fillForm: fillFormTool({ agent, onExecute: handleExecute }) } as ToolSet
   }
