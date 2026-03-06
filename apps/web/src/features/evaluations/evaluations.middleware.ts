@@ -2,6 +2,7 @@ import type { TypedStartListening } from "@reduxjs/toolkit"
 import { createListenerMiddleware, isAnyOf } from "@reduxjs/toolkit"
 import type { AppDispatch, RootState } from "@/store/types"
 import { notificationsActions } from "../notifications/notifications.slice"
+import { selectCurrentOrganization } from "../organizations/organizations.selectors"
 import { selectCurrentProjectId } from "../projects/projects.selectors"
 import {
   createEvaluation,
@@ -14,12 +15,16 @@ const listenerMiddleware = createListenerMiddleware<RootState, AppDispatch>()
 
 export type AppStartListening = TypedStartListening<RootState, AppDispatch>
 
-// Refresh evaluations when current project changes
+// Refresh evaluations when current project changes or when user changes organization
 listenerMiddleware.startListening({
   predicate(_, currentState, originalState) {
     const prevId = selectCurrentProjectId(originalState)
     const nextId = selectCurrentProjectId(currentState)
-    return prevId !== nextId && !!nextId
+    const prevOrg = selectCurrentOrganization(originalState)
+    const nextOrg = selectCurrentOrganization(currentState)
+    const isNewProject = prevId !== nextId && !!nextId
+    const isNewOrg = prevOrg?.id !== nextOrg?.id
+    return isNewProject || isNewOrg
   },
   effect: async (_, listenerApi) => {
     await listenerApi.dispatch(listEvaluations())

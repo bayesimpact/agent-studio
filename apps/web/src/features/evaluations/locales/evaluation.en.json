@@ -22,6 +22,10 @@
       "description": "Create a new evaluation by providing the necessary details."
     },
     "run": "Run",
-    "runAll": "Run All"
+    "runAll": "Run All",
+    "empty": {
+      "title": "No evaluations available",
+      "description": "Create a new evaluation to start testing your agents."
+    }
   }
 }
