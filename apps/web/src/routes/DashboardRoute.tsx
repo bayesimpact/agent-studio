@@ -26,8 +26,8 @@ import { useAbility } from "@/hooks/use-ability"
 import { useGetPath } from "@/hooks/use-build-path"
 import { ADS } from "@/store/async-data-status"
 import { useAppDispatch, useAppSelector } from "@/store/hooks"
+import { AsyncRoute } from "./AsyncRoute"
 import { ErrorRoute } from "./ErrorRoute"
-import { LoadingRoute } from "./LoadingRoute"
 import { setCurrentIds } from "./loaders/set-current-ids"
 import { useSetIsAdminUi } from "./loaders/set-is-admin-ui"
 
@@ -41,16 +41,11 @@ export function DashboardRoute() {
   setCurrentIds({ dispatch, params })
   useSetIsAdminUi()
 
-  if (ADS.isError(user) || ADS.isError(organizations) || ADS.isError(projects))
-    return (
-      <ErrorRoute error={user.error || organizations.error || projects.error || "Unknown error"} />
-    )
-
-  if (ADS.isFulfilled(user) && ADS.isFulfilled(organizations) && ADS.isFulfilled(projects)) {
-    return <WithData user={user.value} projects={projects.value} />
-  }
-
-  return <LoadingRoute />
+  return (
+    <AsyncRoute data={[user, projects, organizations]}>
+      {([userValue, projectsValue]) => <WithData user={userValue} projects={projectsValue} />}
+    </AsyncRoute>
+  )
 }
 
 function WithData({ user, projects }: { user: User; projects: Project[] }) {

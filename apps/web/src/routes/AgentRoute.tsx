@@ -1,52 +1,53 @@
 import { selectCurrentAgentData } from "@/features/agents/agents.selectors"
 import { selectCurrentOrganizationId } from "@/features/organizations/organizations.selectors"
 import { selectCurrentProjectId } from "@/features/projects/projects.selectors"
-import { ADS } from "@/store/async-data-status"
 import { useAppSelector } from "@/store/hooks"
+import { AsyncRoute } from "./AsyncRoute"
 import { ConversationAgentRoute } from "./agents/ConversationAgentRoute"
 import { ExtractionAgentRoute } from "./agents/ExtractionAgentRoute"
 import { FormAgentRoute } from "./agents/FormAgentRoute"
 import { ErrorRoute } from "./ErrorRoute"
-import { LoadingRoute } from "./LoadingRoute"
 
 export function AgentRoute() {
   const organizationId = useAppSelector(selectCurrentOrganizationId)
   const projectId = useAppSelector(selectCurrentProjectId)
   const agent = useAppSelector(selectCurrentAgentData)
 
-  if (ADS.isError(agent) || !organizationId || !projectId)
-    return <ErrorRoute error={agent.error || "Unknown error"} />
+  if (!organizationId || !projectId)
+    return <ErrorRoute error={"Missing organization or project ID"} />
 
-  if (ADS.isFulfilled(agent)) {
-    switch (agent.value.type) {
-      case "conversation":
-        return (
-          <ConversationAgentRoute
-            projectId={projectId}
-            agent={agent.value}
-            organizationId={organizationId}
-          />
-        )
-      case "form":
-        return (
-          <FormAgentRoute
-            projectId={projectId}
-            agent={agent.value}
-            organizationId={organizationId}
-          />
-        )
-      case "extraction":
-        return (
-          <ExtractionAgentRoute
-            projectId={projectId}
-            agent={agent.value}
-            organizationId={organizationId}
-          />
-        )
-      default:
-        return <ErrorRoute error={"Unknown agent type"} />
-    }
-  }
-
-  return <LoadingRoute />
+  return (
+    <AsyncRoute data={[agent]}>
+      {([agentValue]) => {
+        switch (agentValue.type) {
+          case "conversation":
+            return (
+              <ConversationAgentRoute
+                projectId={projectId}
+                agent={agentValue}
+                organizationId={organizationId}
+              />
+            )
+          case "form":
+            return (
+              <FormAgentRoute
+                projectId={projectId}
+                agent={agentValue}
+                organizationId={organizationId}
+              />
+            )
+          case "extraction":
+            return (
+              <ExtractionAgentRoute
+                projectId={projectId}
+                agent={agentValue}
+                organizationId={organizationId}
+              />
+            )
+          default:
+            return <ErrorRoute error={"Unknown agent type"} />
+        }
+      }}
+    </AsyncRoute>
+  )
 }

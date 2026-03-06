@@ -4,24 +4,17 @@ import { UploadDocumentButton } from "@/components/document/UploadDocumentButton
 import { useSidebarLayout } from "@/components/layouts/sidebar/context"
 import type { Document } from "@/features/documents/documents.models"
 import { selectDocumentsData } from "@/features/documents/documents.selectors"
-import { selectCurrentProjectId } from "@/features/projects/projects.selectors"
-import { ADS } from "@/store/async-data-status"
 import { useAppSelector } from "@/store/hooks"
 import { DocumentItem } from "../../components/document/DocumentItem"
-import { ErrorRoute } from "../ErrorRoute"
-import { LoadingRoute } from "../LoadingRoute"
+import { AsyncRoute } from "../AsyncRoute"
 
 export function DocumentsRoute() {
-  const projectId = useAppSelector(selectCurrentProjectId)
-  const documentsData = useAppSelector(selectDocumentsData)
-  if (!projectId) return <ErrorRoute error="Missing valid project ID" />
-
-  if (ADS.isError(documentsData))
-    return <ErrorRoute error={documentsData.error || "Unknown error"} />
-
-  if (ADS.isFulfilled(documentsData)) return <WithData documents={documentsData.value} />
-
-  return <LoadingRoute />
+  const documents = useAppSelector(selectDocumentsData)
+  return (
+    <AsyncRoute data={[documents]}>
+      {([documentsValue]) => <WithData documents={documentsValue} />}
+    </AsyncRoute>
+  )
 }
 
 function WithData({ documents }: { documents: Document[] }) {

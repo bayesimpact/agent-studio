@@ -165,6 +165,7 @@ function AgentList({ organizationId }: { organizationId: string }) {
 
 function AgentSessionList({ organizationId }: { organizationId: string }) {
   const projectId = useAppSelector(selectCurrentProjectId)
+  // FIXME:
   const sessions = useAppSelector(selectCurrentConversationAgentSessionsData)
   const session = useAppSelector(selectCurrentConversationAgentSessionData)
   const { buildPath } = useBuildPath()

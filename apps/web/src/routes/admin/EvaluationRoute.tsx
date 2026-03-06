@@ -11,32 +11,20 @@ import { selectAgentsData } from "@/features/agents/agents.selectors"
 import type { Evaluation } from "@/features/evaluations/evaluations.models"
 import { selectEvaluationsData } from "@/features/evaluations/evaluations.selectors"
 import { createEvaluation } from "@/features/evaluations/evaluations.thunks"
-import {
-  selectCurrentProjectData,
-  selectCurrentProjectId,
-} from "@/features/projects/projects.selectors"
-import { ADS } from "@/store/async-data-status"
 import { useAppDispatch, useAppSelector } from "@/store/hooks"
-import { ErrorRoute } from "../ErrorRoute"
-import { LoadingRoute } from "../LoadingRoute"
+import { AsyncRoute } from "../AsyncRoute"
 
 export function EvaluationRoute() {
-  const projectId = useAppSelector(selectCurrentProjectId)
-  const project = useAppSelector(selectCurrentProjectData)
   const evaluations = useAppSelector(selectEvaluationsData)
-
   const agents = useAppSelector(selectAgentsData)
-  if (!projectId) return <ErrorRoute error="Missing valid project ID" />
 
-  if (ADS.isError(evaluations) || ADS.isError(project) || ADS.isError(agents))
-    return (
-      <ErrorRoute error={evaluations.error || project.error || agents.error || "Unknown error"} />
-    )
-
-  if (ADS.isFulfilled(evaluations) && ADS.isFulfilled(project) && ADS.isFulfilled(agents))
-    return <WithData agents={agents.value} evaluations={evaluations.value} />
-
-  return <LoadingRoute />
+  return (
+    <AsyncRoute data={[agents, evaluations]}>
+      {([agentsValue, evaluationsValue]) => (
+        <WithData agents={agentsValue} evaluations={evaluationsValue} />
+      )}
+    </AsyncRoute>
+  )
 }
 
 function WithData({ agents, evaluations }: { agents: Agent[]; evaluations: Evaluation[] }) {
