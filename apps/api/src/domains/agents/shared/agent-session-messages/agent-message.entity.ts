@@ -13,7 +13,7 @@ export class AgentMessage extends ConnectEntityBase {
   sessionId!: string
 
   @Column({ type: "varchar" })
-  role!: "user" | "assistant"
+  role!: "user" | "assistant" // TODO: add "system" and "tool"
 
   @Column({ type: "text" })
   content!: string
@@ -27,6 +27,7 @@ export class AgentMessage extends ConnectEntityBase {
   @Column({ type: "timestamp", nullable: true, name: "completed_at" })
   completedAt!: Date | null
 
+  // FIXME: remove thise
   @Column({ type: "jsonb", nullable: true, name: "tool_calls" })
   toolCalls!: Array<{
     id: string

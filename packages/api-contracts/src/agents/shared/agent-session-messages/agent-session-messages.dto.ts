@@ -14,11 +14,11 @@ export type AgentSessionMessageDto = {
   }>
 }
 
-export type StreamEvent = MessageEvent &
-  (
-    | { type: "start"; messageId: string }
-    | { type: "chunk"; content: string; messageId: string }
-    | { type: "notify_client" }
-    | { type: "end"; messageId: string; fullContent: string }
-    | { type: "error"; messageId: string; error: string }
-  )
+export type StreamEventPayload =
+  | { type: "start"; messageId: string }
+  | { type: "chunk"; content: string; messageId: string }
+  | { type: "notify_client" }
+  | { type: "end"; messageId: string; fullContent: string }
+  | { type: "error"; messageId: string; error: string }
+
+export type StreamEvent = MessageEvent & StreamEventPayload

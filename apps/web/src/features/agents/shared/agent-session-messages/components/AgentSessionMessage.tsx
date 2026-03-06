@@ -9,31 +9,36 @@ import { ChatBotMessage, ChatUserMessage } from "./Chat"
 import { MarkdownWrapper } from "./MarkdownWrapper"
 
 export function AgentSessionMessage({ message }: { message: AgentSessionMessageType }) {
-  const isAssistant = message.role === "assistant"
-  const isStreaming = message.status === "streaming"
-  const isError = message.status === "error"
-  if (isAssistant) {
-    return (
-      <div key={message.id} className="max-w-3/4 relative">
-        <ChatBotMessage
-          className={cn("pb-8", isError && "bg-red-50 border border-red-200 text-red-800")}
-        >
-          {isStreaming && <ThinkingMessage />}
-          {isError && <ErrorMessage />}
+  switch (message.role) {
+    case "assistant": {
+      const isStreaming = message.status === "streaming"
+      const isError = message.status === "error"
+      return (
+        <div key={message.id} className="max-w-3/4 relative">
+          <ChatBotMessage
+            className={cn("pb-8", isError && "bg-red-50 border border-red-200 text-red-800")}
+          >
+            {isStreaming && <ThinkingMessage />}
+            {isError && <ErrorMessage />}
 
-          <MarkdownWrapper content={message.content} />
-        </ChatBotMessage>
+            <MarkdownWrapper content={message.content} />
+          </ChatBotMessage>
 
-        <FeedbackCreator message={message} />
-      </div>
-    )
-  } else
-    return (
-      <div className="flex flex-col gap-2 items-end">
-        <ChatUserMessage key={message.id}>{message.content}</ChatUserMessage>
-        <Attachment message={message} />
-      </div>
-    )
+          <FeedbackCreator message={message} />
+        </div>
+      )
+    }
+    case "user":
+      return (
+        <div className="flex flex-col gap-2 items-end">
+          <ChatUserMessage key={message.id}>{message.content}</ChatUserMessage>
+          <Attachment message={message} />
+        </div>
+      )
+    default:
+      window.console.info(`Message from ${message.role}:`, message.content)
+      return null
+  }
 }
 
 function ErrorMessage() {
