@@ -1,9 +1,8 @@
 import type { Agent } from "@/domains/agents/agent.entity"
 
+// FIXME: add ${agent.defaultPrompt}
 export function buildFormAgentPrompt(agent: Agent): string {
   return `Today's date: ${new Date().toLocaleDateString()}
-
-${agent.defaultPrompt}
 
 Here are the form fields to fill:
 ${Object.entries(agent.outputJsonSchema?.properties ?? {})

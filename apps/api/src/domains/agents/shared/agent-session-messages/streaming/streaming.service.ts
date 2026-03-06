@@ -142,7 +142,7 @@ export class StreamingService extends ServiceWithLLM {
   }
 
   private seeEvent(payload: Record<string, unknown>): StreamEvent {
-    return JSON.parse(JSON.stringify(payload)) as StreamEvent
+    return { data: JSON.stringify(payload) } as StreamEvent
   }
 
   private async buildLLMRequest({
