@@ -516,12 +516,22 @@ export class StreamingService extends ServiceWithLLM {
     sendClientEvent: (event: MessageEvent) => void
   }): ToolSet | undefined {
     switch (agent.type) {
-      case "form":
+      case "form": {
+        // Notify client about the form update so it can re-fetch the session and get the latest form state
+        const handleExecute = () => {
+          sendClientEvent({
+            data: JSON.stringify({
+              type: "form_update",
+              sessionId,
+            }),
+          } as MessageEvent)
+        }
         return this.formAgentSessionsService.buildFillFormTool({
           agent,
           sessionId,
-          sendClientEvent,
+          onExecute: handleExecute,
         })
+      }
 
       default:
         return undefined
