@@ -98,7 +98,6 @@ export const sendMessage = createAsyncThunk<void, { content: string; file?: File
             dispatch(listFormAgentSessions({ agentId }))
           },
           onEnd: (event) => {
-            console.warn("AJ: onEnd", event)
             dispatch(
               agentSessionMessagesActions.completeAssistantMessage({
                 messageId: event.messageId,
@@ -107,7 +106,6 @@ export const sendMessage = createAsyncThunk<void, { content: string; file?: File
             )
           },
           onError: (event) => {
-            console.warn("AJ: onError", event)
             dispatch(
               agentSessionMessagesActions.failAssistantMessage({
                 messageId: event.messageId,

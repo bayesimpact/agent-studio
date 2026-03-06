@@ -1,5 +1,4 @@
 # // FIXME: 
-- placeholder prompt of ConversationAgent is wrong!!!
 - when user message is too long, it fails!!
 - can't delete empty project
 

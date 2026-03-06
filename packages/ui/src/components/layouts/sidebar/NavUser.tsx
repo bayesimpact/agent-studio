@@ -62,7 +62,7 @@ function AvatarWrapper({ user }: { user: User }) {
     <>
       <Avatar className="h-8 w-8 rounded-lg">
         <AvatarImage src={user.avatar} alt={user.name} />
-        <AvatarFallback className="rounded-lg">CN</AvatarFallback>
+        <AvatarFallback className="rounded-lg">{extractInitials(user.name)}</AvatarFallback>
       </Avatar>
       <div className="grid flex-1 text-left text-sm leading-tight">
         <span className="truncate font-medium">{user.name}</span>
@@ -70,4 +70,11 @@ function AvatarWrapper({ user }: { user: User }) {
       </div>
     </>
   )
+}
+
+function extractInitials(name: string) {
+  const parts = name.trim().split(/\s+/).filter(Boolean)
+  if (parts.length === 0) return ""
+  if (parts.length === 1) return parts[0]!.slice(0, 2).toUpperCase()
+  return (parts[0]!.charAt(0) + parts[parts.length - 1]!.charAt(0)).toUpperCase()
 }
