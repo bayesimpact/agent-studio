@@ -1,17 +1,57 @@
-import { DropdownMenuItem, DropdownMenuSeparator } from "@caseai-connect/ui/shad/dropdown-menu"
-import { LogOutIcon } from "lucide-react"
+import {
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+} from "@caseai-connect/ui/shad/dropdown-menu"
+import { LogOutIcon, ShieldBanIcon, ShieldCheckIcon } from "lucide-react"
 import { useTranslation } from "react-i18next"
+import { useAbility } from "@/hooks/use-ability"
 import { useAuthHandler } from "@/hooks/use-auth-handler"
+import { useGetPath } from "@/hooks/use-build-path"
 
 export function NavUserMenuItems() {
   return (
     <>
+      <InterfaceToggle />
+
       <LanguageSelector />
 
       <DropdownMenuSeparator />
 
       <LogOutButton />
     </>
+  )
+}
+
+function InterfaceToggle() {
+  const { t } = useTranslation("actions")
+  const { isAdmin, isAdminInterface } = useAbility()
+  const { getPath } = useGetPath()
+
+  if (!isAdmin) return null
+
+  const handleChange = (checked: boolean) => {
+    const newLocation = getPath("project").replace(
+      checked ? "/app" : "/admin",
+      checked ? "/admin" : "/app",
+    )
+    window.location.replace(newLocation)
+  }
+  return (
+    <DropdownMenuGroup>
+      {isAdminInterface ? (
+        <DropdownMenuItem onSelect={() => handleChange(false)}>
+          <ShieldBanIcon />
+          {t("leave")} Admin
+        </DropdownMenuItem>
+      ) : (
+        <DropdownMenuItem onSelect={() => handleChange(true)}>
+          <ShieldCheckIcon />
+          {t("enter")} Admin
+        </DropdownMenuItem>
+      )}
+      <DropdownMenuSeparator />
+    </DropdownMenuGroup>
   )
 }
 
