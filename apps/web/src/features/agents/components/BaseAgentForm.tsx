@@ -151,11 +151,13 @@ export function BaseAgentForm({
                       <SelectValue placeholder={t("agent:props.placeholders.model")} />
                     </SelectTrigger>
                     <SelectContent>
-                      {Object.entries(AgentModel).map(([key, value]) => (
-                        <SelectItem key={key} value={value}>
-                          {value}
-                        </SelectItem>
-                      ))}
+                      {Object.entries(AgentModel)
+                        .filter(([key]) => !key.startsWith("_Mock"))
+                        .map(([key, value]) => (
+                          <SelectItem key={key} value={value}>
+                            {value}
+                          </SelectItem>
+                        ))}
                     </SelectContent>
                   </Select>
                 )}
