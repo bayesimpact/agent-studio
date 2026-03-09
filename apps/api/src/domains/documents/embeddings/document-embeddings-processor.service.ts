@@ -158,6 +158,7 @@ export class DocumentEmbeddingsProcessorService {
     await this.dataSource.query(`DELETE FROM document_chunk WHERE document_id = $1`, [documentId])
 
     for (let chunkIndex = 0; chunkIndex < chunks.length; chunkIndex++) {
+      // NOTE: We need to use raw SQL here because TypeORM doesn't support vector columns (at least in the current 0.3.28 version)
       await this.dataSource.query(
         `INSERT INTO document_chunk (id, created_at, updated_at, organization_id, project_id, document_id, content, chunk_index, embedding)
          VALUES (uuid_generate_v4(), now(), now(), $1, $2, $3, $4, $5, $6::vector)`,
