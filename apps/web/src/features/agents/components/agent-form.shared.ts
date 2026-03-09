@@ -62,13 +62,19 @@ const promptMap: Record<Agent["type"], string> = {
   form: defaultFormPrompt,
 }
 
-export function getDefaultFormValues(agentType: Agent["type"]): AgentFormData {
+export function getDefaultFormValues({
+  agentType,
+  language,
+}: {
+  agentType: Agent["type"]
+  language: AgentLocale
+}): AgentFormData {
   return {
     name: "",
     defaultPrompt: promptMap[agentType],
     model: AgentModel.Gemini25Flash,
     temperature: 0.0,
-    locale: AgentLocale.EN,
+    locale: language,
   }
 }
 

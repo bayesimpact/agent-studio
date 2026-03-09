@@ -33,7 +33,7 @@ export function BaseAgentForm({
   editableAgent?: Agent
   onSubmit: (values: AgentFormData) => Promise<void> | void
 }) {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
   const baseAgentSchema = buildAgentSchema((key) => t(`agent:props.${key}`))
 
   const hasOutputJsonSchema = agentType !== "conversation"
@@ -50,19 +50,23 @@ export function BaseAgentForm({
       })
     : baseAgentSchema
 
-  const defaultValues = editableAgent
-    ? ({
+  const defaultValues = (function buildDefaultValues() {
+    if (editableAgent) {
+      return {
         ...editableAgent,
         ...(hasOutputJsonSchema && {
           outputJsonSchemaText: editableAgent.outputJsonSchema
             ? JSON.stringify(editableAgent.outputJsonSchema, null, 2)
             : "",
         }),
-      } as FormValues)
-    : ({
-        ...getDefaultFormValues(agentType),
-        ...(hasOutputJsonSchema && { outputJsonSchemaText: "" }),
-      } as FormValues)
+      } as FormValues
+    }
+    const language = i18n.language.startsWith("fr") ? AgentLocale.FR : AgentLocale.EN
+    return {
+      ...getDefaultFormValues({ agentType, language }),
+      ...(hasOutputJsonSchema && { outputJsonSchemaText: "" }),
+    } as FormValues
+  })()
 
   const {
     register,
