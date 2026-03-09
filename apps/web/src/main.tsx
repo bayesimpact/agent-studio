@@ -8,7 +8,7 @@ import { auth0ProviderConfig } from "./config/auth0.config.ts"
 import { store } from "./store/index.ts"
 import "./i18n"
 import "./index.css"
-import { defaultTheme, themes } from "./components/themes/helpers.ts"
+import { defaultTheme } from "./components/themes/helpers.ts"
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
@@ -17,8 +17,9 @@ createRoot(document.getElementById("root")!).render(
         <ThemeProvider
           attribute="class"
           defaultTheme={defaultTheme}
-          themes={themes.map((theme) => theme.value)}
+          storageKey="tpk"
           disableTransitionOnChange={false}
+          forcedTheme={defaultTheme}
         >
           <App />
         </ThemeProvider>
