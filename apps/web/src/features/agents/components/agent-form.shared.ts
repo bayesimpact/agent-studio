@@ -54,10 +54,18 @@ Rules:
 - Keep original values as written in the document when possible.
 - Do not include explanations or markdown.`
 
+const defaultFormPrompt = `Your main task is to help the user fill out the form by asking questions and providing guidance. Ask one question at a time to fill out the form.`
+
+const promptMap: Record<Agent["type"], string> = {
+  conversation: defaultConversationPrompt,
+  extraction: defaultExtractionPrompt,
+  form: defaultFormPrompt,
+}
+
 export function getDefaultFormValues(agentType: Agent["type"]): AgentFormData {
   return {
     name: "",
-    defaultPrompt: agentType === "extraction" ? defaultExtractionPrompt : defaultConversationPrompt,
+    defaultPrompt: promptMap[agentType],
     model: AgentModel.Gemini25Flash,
     temperature: 0.0,
     locale: AgentLocale.EN,
