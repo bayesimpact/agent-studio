@@ -6,7 +6,6 @@ import {
   type ImagePart,
   jsonSchema,
   type LanguageModel,
-  type ModelMessage,
   Output,
   type TextPart,
   ToolLoopAgent,
@@ -73,19 +72,12 @@ export abstract class AISDKLLMProviderBase implements LLMProvider {
 
     const systemPrompt = systemMessage || config.systemPrompt
 
-    // Stream using ai-sdk
+    const systemMessagePart = systemPrompt
+      ? [{ role: "system" as const, content: systemPrompt }]
+      : []
+
     const streamer = agent.stream({
-      messages: [
-        ...(systemPrompt
-          ? [
-              {
-                role: "system",
-                content: systemPrompt,
-              } satisfies ModelMessage,
-            ]
-          : []),
-        ...aiSDKMessages,
-      ],
+      messages: [...systemMessagePart, ...aiSDKMessages],
     })
 
     // Yield text chunks

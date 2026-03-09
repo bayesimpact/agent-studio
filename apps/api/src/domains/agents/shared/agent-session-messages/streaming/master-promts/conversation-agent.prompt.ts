@@ -1,11 +1,10 @@
 import type { Agent } from "@/domains/agents/agent.entity"
+import { promptHelpers } from "./helpers"
 
 export function buildConversationAgentPrompt(agent: Agent): string {
-  return `
-Today's date: ${new Date().toLocaleDateString()}
+  return `${promptHelpers.now}
 
 ${agent.defaultPrompt}
 
-Always answer in ${agent.locale}.
-  `.trim()
+${promptHelpers.language(agent.locale)}`
 }
