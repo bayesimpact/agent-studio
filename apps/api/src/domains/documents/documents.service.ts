@@ -52,6 +52,10 @@ export class DocumentsService {
     return await this.documentConnectRepository.getOneById(connectScope, documentId)
   }
 
+  async saveOne(document: Document): Promise<Document> {
+    return this.documentConnectRepository.saveOne(document)
+  }
+
   async deleteDocument({
     connectScope,
     documentId,

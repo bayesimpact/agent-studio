@@ -34,4 +34,7 @@ export class Document extends ConnectEntityBase {
 
   @Column({ name: "source_type", nullable: false })
   sourceType!: "project" | "agentSessionMessage" | "extraction"
+
+  @Column({ name: "embedding_status", nullable: false, default: "pending" })
+  embeddingStatus!: "pending" | "processing" | "completed" | "failed"
 }
