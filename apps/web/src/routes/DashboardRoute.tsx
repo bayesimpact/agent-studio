@@ -11,7 +11,7 @@ import { AdminNavProject, AppNavProject } from "@/components/sidebar/nav/NavProj
 import { NavProjectMemberships } from "@/components/sidebar/nav/NavProjectMemberships"
 import { Logo } from "@/components/themes/Logo"
 import type { User } from "@/features/me/me.models"
-import { selectMeData } from "@/features/me/me.selectors"
+import { selectMe } from "@/features/me/me.selectors"
 import type { Organization } from "@/features/organizations/organizations.models"
 import {
   selectCurrentOrganization,
@@ -32,7 +32,7 @@ import { setCurrentIds } from "./loaders/set-current-ids"
 import { useSetIsAdminUi } from "./loaders/set-is-admin-ui"
 
 export function DashboardRoute() {
-  const user = useAppSelector(selectMeData)
+  const user = useAppSelector(selectMe)
   const organizations = useAppSelector(selectOrganizationsData)
   const projects = useAppSelector(selectProjectsData)
   const dispatch = useAppDispatch()
