@@ -10,11 +10,11 @@ export function TraceUrlOpener({
   traceUrl?: string
   buttonProps?: React.ComponentProps<typeof Button>
 }) {
-  const { isBayesMember } = useAbility()
+  const { isPremiumMember } = useAbility()
   const [isShown, setIsShown] = useState(false)
 
   useEffect(() => {
-    if (!isBayesMember) return
+    if (!isPremiumMember) return
 
     function keyDownHandler(e: globalThis.KeyboardEvent) {
       if (traceUrl && e.key === "Control") {
@@ -26,9 +26,9 @@ export function TraceUrlOpener({
     document.removeEventListener("keydown", keyDownHandler)
     document.addEventListener("keydown", keyDownHandler)
     return () => document.removeEventListener("keydown", keyDownHandler)
-  }, [traceUrl, isBayesMember])
+  }, [traceUrl, isPremiumMember])
 
-  if (!traceUrl || !isBayesMember || !isShown) return null
+  if (!traceUrl || !isPremiumMember || !isShown) return null
   return (
     <Button asChild variant="ghost" {...buttonProps}>
       <a href={traceUrl} className="cursor-pointer" target="_blank" rel="noreferrer">
