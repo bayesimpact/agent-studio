@@ -473,6 +473,8 @@ Set environment variables:
   - `VITE_LOGO_URL`
   - `VITE_THEME_KEY`
   - `VITE_APP_TITLE`
+  - `VITE_FAVICON_URL`
+  - `VITE_PREMIUM_EMAIL_DOMAIN`
 - API URL (Cloud Run URL, e.g. `https://<service-id>.europe-west9.run.app`):
   - `VITE_API_URL`
 - Auth0:
