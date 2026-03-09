@@ -3,7 +3,7 @@ import { promptHelpers } from "./helpers"
 
 // FIXME: add ${agent.defaultPrompt}
 export function buildFormAgentPrompt(agent: Agent): string {
-  return `${promptHelpers.now}
+  return `${promptHelpers.now()}
 
 # Instructions:
 The user will fill out a form based on the above prompt. Your task is to help the user fill out the form by asking questions and providing guidance. Ask one question at a time to fill out the form.
