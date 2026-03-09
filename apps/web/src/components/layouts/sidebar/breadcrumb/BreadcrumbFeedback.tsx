@@ -1,0 +1,20 @@
+import { BreadcrumbItem, BreadcrumbSeparator } from "@caseai-connect/ui/shad/breadcrumb"
+import { DotIcon } from "lucide-react"
+import { useTranslation } from "react-i18next"
+import { useIsRoute } from "@/hooks/use-is-route"
+import { RouteNames } from "@/routes/helpers"
+
+export function BreadcrumbFeedback() {
+  const { isRoute } = useIsRoute()
+  const isFeedbackRoute = isRoute(RouteNames.FEEDBACK)
+  const { t } = useTranslation()
+  if (!isFeedbackRoute) return null
+  return (
+    <>
+      <BreadcrumbSeparator>
+        <DotIcon />
+      </BreadcrumbSeparator>
+      <BreadcrumbItem>{t("agentMessageFeedback:feedback")}</BreadcrumbItem>
+    </>
+  )
+}

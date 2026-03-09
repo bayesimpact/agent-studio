@@ -26,7 +26,7 @@ export function ProjectList({
 }) {
   const { t } = useTranslation()
   return (
-    <ListHeader title={t("project:projects")} withInterfaceToggle>
+    <ListHeader title={t("project:projects")}>
       {projects.map((project) => (
         <ProjectItem key={project.id} organizationId={organization.id} project={project} />
       ))}

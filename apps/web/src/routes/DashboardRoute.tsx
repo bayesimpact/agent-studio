@@ -1,5 +1,4 @@
 import { Header } from "@caseai-connect/ui/components/layouts/sidebar/Header"
-import { Switch } from "@caseai-connect/ui/shad/switch"
 import { SlidersHorizontalIcon, SparklesIcon } from "lucide-react"
 import { Outlet, useParams } from "react-router-dom"
 import { SidebarLayout } from "@/components/layouts/SidebarLayout"
@@ -49,7 +48,7 @@ export function DashboardRoute() {
 }
 
 function WithData({ user, projects }: { user: User; projects: Project[] }) {
-  const { isAdmin, isAdminInterface } = useAbility()
+  const { isAdminInterface } = useAbility()
   const project = useAppSelector(selectCurrentProjectData)
 
   const organization = useAppSelector(selectCurrentOrganization)
@@ -71,11 +70,7 @@ function WithData({ user, projects }: { user: User; projects: Project[] }) {
       <SidebarLayout
         organization={organization}
         sidebarHeaderChildren={
-          <SidebarHeader
-            isAdminInterface={isAdminInterface}
-            isAdmin={isAdmin}
-            organizationName={organizationName}
-          />
+          <SidebarHeader isAdminInterface={isAdminInterface} organizationName={organizationName} />
         }
         sidebarContentChildren={
           <SidebarContent
@@ -99,11 +94,9 @@ function WithData({ user, projects }: { user: User; projects: Project[] }) {
 
 function SidebarHeader({
   isAdminInterface,
-  isAdmin,
   organizationName,
 }: {
   isAdminInterface: boolean
-  isAdmin: boolean
   organizationName: string
 }) {
   const { getPath } = useGetPath()
@@ -120,30 +113,8 @@ function SidebarHeader({
           <Logo />
         </div>
       </Header>
-      <InterfaceToggle isAdmin={isAdmin} isAdminInterface={isAdminInterface} />
     </div>
   )
-}
-
-export function InterfaceToggle({
-  isAdmin,
-  isAdminInterface,
-}: {
-  isAdmin: boolean
-  isAdminInterface: boolean
-}) {
-  const { getPath } = useGetPath()
-
-  if (!isAdmin) return null
-
-  const handleChange = (checked: boolean) => {
-    const newLocation = getPath("project").replace(
-      checked ? "/app" : "/admin",
-      checked ? "/admin" : "/app",
-    )
-    window.location.replace(newLocation)
-  }
-  return <Switch checked={isAdminInterface} onCheckedChange={handleChange} />
 }
 
 function SidebarContent({
