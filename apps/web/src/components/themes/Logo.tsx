@@ -1,11 +1,14 @@
-import { useThemeColor } from "./use-theme-color"
+import { defaultTheme } from "./helpers"
 
 export function Logo() {
-  const themeColor = useThemeColor()
+  const themeColor = defaultTheme === "blue" ? "#7ABECC" : "#f18c6e"
+
   const logoUrl = import.meta.env.VITE_LOGO_URL as string | undefined
+
   if (logoUrl) {
     return <img src={logoUrl} alt="Logo" className="max-h-10 w-auto" />
   }
+
   return (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 410.85 405.35">
       <title>Connect</title>
