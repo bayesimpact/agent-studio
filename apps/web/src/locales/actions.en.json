@@ -40,6 +40,8 @@
     "submit": "Submit",
     "update": "Update",
     "upload": "Upload",
+    "goToStudio": "Enter the Studio",
+    "exitStudio": "Exit the Studio",
     "view": "View"
   }
 }
