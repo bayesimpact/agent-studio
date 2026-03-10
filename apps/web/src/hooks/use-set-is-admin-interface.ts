@@ -3,7 +3,7 @@ import { useLocation } from "react-router-dom"
 import { selectIsAdmin } from "@/features/auth/auth.selectors"
 import { authActions } from "@/features/auth/auth.slice"
 import { useAppDispatch, useAppSelector } from "@/store/hooks"
-import { RouteNames } from "../helpers"
+import { RouteNames } from "../routes/helpers"
 
 export const useSetIsAdminInterface = () => {
   const dispatch = useAppDispatch()

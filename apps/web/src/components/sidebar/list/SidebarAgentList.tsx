@@ -1,5 +1,5 @@
 import { SidebarMenuButton, SidebarMenuItem } from "@caseai-connect/ui/shad/sidebar"
-import { BotIcon, BotMessageSquareIcon, FormIcon, PlusIcon, ScanText } from "lucide-react"
+import { PlusIcon } from "lucide-react"
 import { useState } from "react"
 import { useTranslation } from "react-i18next"
 import { useParams } from "react-router-dom"
@@ -7,6 +7,7 @@ import type { Agent } from "@/features/agents/agents.models"
 import { AgentCreator } from "@/features/agents/components/AgentCreator"
 import { AgentDeletorWithoutTrigger } from "@/features/agents/components/AgentDeletor"
 import { AgentEditorWithoutTrigger } from "@/features/agents/components/AgentEditor"
+import { getAgentIcon } from "@/features/agents/components/AgentIcon"
 import { AgentItemOptions } from "@/features/agents/components/AgentItemOptions"
 import type { Project } from "@/features/projects/projects.models"
 import { useBuildPath } from "@/hooks/use-build-path"
@@ -130,14 +131,4 @@ export function AppAgentList({
       ))}
     </>
   )
-}
-
-function getAgentIcon(agentType: Agent["type"]) {
-  return agentType === "extraction"
-    ? ScanText
-    : agentType === "form"
-      ? FormIcon
-      : agentType === "conversation"
-        ? BotMessageSquareIcon
-        : BotIcon
 }
