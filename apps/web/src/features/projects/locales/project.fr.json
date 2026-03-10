@@ -14,6 +14,7 @@
       }
     },
     "create": {
+      "button": "Créer un projet",
       "title": "Créer un projet",
       "description": "Créer un nouveau projet pour {{organizationName}}"
     },
