@@ -27,11 +27,11 @@ export function ProjectList({
   const { t } = useTranslation()
   return (
     <ListHeader title={t("project:projects")}>
+      {isAdminInterface && <ProjectCreator organization={organization} />}
+
       {projects.map((project) => (
         <ProjectItem key={project.id} organizationId={organization.id} project={project} />
       ))}
-
-      {isAdminInterface && <ProjectCreator organization={organization} />}
     </ListHeader>
   )
 }

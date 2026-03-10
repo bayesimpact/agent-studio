@@ -33,7 +33,7 @@ export function ProjectCreator({ organization }: { organization: Organization })
       <DialogTrigger asChild>
         <Button>
           <PlusIcon />
-          <span className="capitalize-first">{t("actions:create")}</span>
+          <span className="capitalize-first">{t("project:create.button")}</span>
         </Button>
       </DialogTrigger>
       <DialogContent>
