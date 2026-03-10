@@ -117,9 +117,6 @@ export class DocumentEmbeddingsProcessorService {
 
       const text = await this.textExtractorService.extract(fileBuffer, document.mimeType)
 
-      document.content = text
-      await this.documentsService.saveOne(document)
-
       const splitter = new SentenceSplitter({ chunkSize: CHUNK_SIZE, chunkOverlap: CHUNK_OVERLAP })
       const chunks = splitter.splitText(text)
 
