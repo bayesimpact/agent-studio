@@ -4,7 +4,7 @@ import { selectAgentsData } from "@/features/agents/agents.selectors"
 import { selectCurrentConversationAgentSessionsData } from "@/features/agents/conversation-agent-sessions/conversation-agent-sessions.selectors"
 import { selectOrganizations } from "@/features/organizations/organizations.selectors"
 import { selectProjects } from "@/features/projects/projects.selectors"
-import { buildAdminPath, buildAppPath, RouteNames } from "@/routes/helpers"
+import { buildAppPath, buildStudioPath, RouteNames } from "@/routes/helpers"
 import { ADS } from "@/store/async-data-status"
 import { useAppSelector } from "@/store/hooks"
 import { useAbility } from "./use-ability"
@@ -307,7 +307,7 @@ const buildOrganizationPath = ({
   isAdminInterface: boolean
 }) => {
   const path = `/o/${organizationId}/`
-  if (isAdminInterface) return buildAdminPath(path)
+  if (isAdminInterface) return buildStudioPath(path)
   return buildAppPath(path)
 }
 
@@ -321,7 +321,7 @@ const buildProjectPath = ({
   isAdminInterface: boolean
 }) => {
   const path = `/o/${organizationId}/p/${projectId}`
-  if (isAdminInterface) return buildAdminPath(path)
+  if (isAdminInterface) return buildStudioPath(path)
   return buildAppPath(path)
 }
 
@@ -337,7 +337,7 @@ const buildAgentPath = ({
   isAdminInterface: boolean
 }) => {
   const path = `/o/${organizationId}/p/${projectId}/a/${agentId}`
-  if (isAdminInterface) return buildAdminPath(path)
+  if (isAdminInterface) return buildStudioPath(path)
   return buildAppPath(path)
 }
 
@@ -355,6 +355,6 @@ const buildAgentSessionPath = ({
   isAdminInterface: boolean
 }) => {
   const path = `/o/${organizationId}/p/${projectId}/a/${agentId}/as/${agentSessionId}`
-  if (isAdminInterface) return buildAdminPath(path)
+  if (isAdminInterface) return buildStudioPath(path)
   return buildAppPath(path)
 }

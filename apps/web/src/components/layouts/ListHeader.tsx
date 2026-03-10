@@ -27,7 +27,7 @@ export function ListHeader({
             className="flex flex-1 gap-2 items-center"
             to={path ?? getPath("organization")}
             name={organization.name}
-            subname={isAdminInterface ? "Admin" : undefined}
+            subname={isAdminInterface ? "Studio" : undefined}
             subnameClassName="text-primary"
           >
             <div className="size-10 contain-content p-1">

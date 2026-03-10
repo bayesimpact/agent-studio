@@ -28,7 +28,7 @@ import { useAppDispatch, useAppSelector } from "@/store/hooks"
 import { AsyncRoute } from "./AsyncRoute"
 import { ErrorRoute } from "./ErrorRoute"
 import { setCurrentIds } from "./loaders/set-current-ids"
-import { useSetIsAdminUi } from "./loaders/set-is-admin-ui"
+import { useSetIsAdminInterface } from "./loaders/set-is-admin-interface"
 
 export function DashboardRoute() {
   const user = useAppSelector(selectMe)
@@ -38,7 +38,7 @@ export function DashboardRoute() {
   const params = useParams()
 
   setCurrentIds({ dispatch, params })
-  useSetIsAdminUi()
+  useSetIsAdminInterface()
 
   return (
     <AsyncRoute data={[user, projects, organizations]}>
@@ -106,7 +106,7 @@ function SidebarHeader({
         Icon={isAdminInterface ? SlidersHorizontalIcon : SparklesIcon}
         to={getPath("organization")}
         name={organizationName}
-        subname={isAdminInterface ? "Admin" : undefined}
+        subname={isAdminInterface ? "Studio" : undefined}
         subnameClassName="text-primary"
       >
         <div className="size-10 contain-content p-1">
