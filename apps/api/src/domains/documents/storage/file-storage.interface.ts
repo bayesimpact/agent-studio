@@ -6,6 +6,7 @@ export interface IFileStorage {
     storageRelativePath: string
   }>
   getTemporaryUrl(storageRelativePath: string): Promise<string>
+  readFile(storageRelativePath: string): Promise<Buffer>
 }
 
 // We use an "Injection Token" for dependency injection

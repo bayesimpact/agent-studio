@@ -37,6 +37,7 @@ export const documentFactory = DocumentFactory.define(({ sequence, params, trans
     size: params.size || 1024,
     storageRelativePath: params.storageRelativePath || `documents/file_${sequence}.txt`,
     sourceType: params.sourceType || "project",
+    embeddingStatus: params.embeddingStatus || "pending",
   } satisfies Document
 })
 
