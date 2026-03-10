@@ -1,21 +1,17 @@
 import { useEffect } from "react"
-import type { Params } from "react-router-dom"
+import { useParams } from "react-router-dom"
 import { agentsActions } from "@/features/agents/agents.slice"
 import { currentAgentSessionIdActions } from "@/features/agents/current-agent-session-id/current-agent-session-id.slice"
 import { organizationsActions } from "@/features/organizations/organizations.slice"
 import { projectsActions } from "@/features/projects/projects.slice"
-import type { AppDispatch } from "@/store"
+import { useAppDispatch } from "@/store/hooks"
 
-export const setCurrentIds = ({
-  dispatch,
-  params,
-}: {
-  dispatch: AppDispatch
-  params: Params<string>
-}) => {
-  const { organizationId, projectId, agentId, agentSessionId } = params
-
+export const useSetCurrentIds = () => {
+  const dispatch = useAppDispatch()
+  const params = useParams()
   useEffect(() => {
+    const { organizationId, projectId, agentId, agentSessionId } = params
+
     dispatch(
       organizationsActions.setCurrentOrganizationId({ organizationId: organizationId || null }),
     )
@@ -29,5 +25,5 @@ export const setCurrentIds = ({
         agentSessionId: agentSessionId || null,
       }),
     )
-  }, [dispatch, organizationId, projectId, agentId, agentSessionId])
+  }, [dispatch, params])
 }

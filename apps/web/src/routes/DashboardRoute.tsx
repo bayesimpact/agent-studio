@@ -1,6 +1,6 @@
 import { Header } from "@caseai-connect/ui/components/layouts/sidebar/Header"
 import { SlidersHorizontalIcon, SparklesIcon } from "lucide-react"
-import { Outlet, useParams } from "react-router-dom"
+import { Outlet } from "react-router-dom"
 import { SidebarLayout } from "@/components/layouts/SidebarLayout"
 import { ProjectList } from "@/components/ProjectList"
 import { RestrictedFeature } from "@/components/RestrictedFeature"
@@ -24,20 +24,18 @@ import {
 import { useAbility } from "@/hooks/use-ability"
 import { useGetPath } from "@/hooks/use-build-path"
 import { ADS } from "@/store/async-data-status"
-import { useAppDispatch, useAppSelector } from "@/store/hooks"
+import { useAppSelector } from "@/store/hooks"
+import { useSetCurrentIds } from "../hooks/use-set-current-ids"
+import { useSetIsAdminInterface } from "../hooks/use-set-is-admin-interface"
 import { AsyncRoute } from "./AsyncRoute"
 import { ErrorRoute } from "./ErrorRoute"
-import { setCurrentIds } from "./loaders/set-current-ids"
-import { useSetIsAdminInterface } from "./loaders/set-is-admin-interface"
 
 export function DashboardRoute() {
   const user = useAppSelector(selectMe)
   const organizations = useAppSelector(selectOrganizationsData)
   const projects = useAppSelector(selectProjectsData)
-  const dispatch = useAppDispatch()
-  const params = useParams()
 
-  setCurrentIds({ dispatch, params })
+  useSetCurrentIds()
   useSetIsAdminInterface()
 
   return (

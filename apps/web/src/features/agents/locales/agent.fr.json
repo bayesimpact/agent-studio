@@ -71,12 +71,7 @@
     },
     "list": {
       "title": "Agents",
-      "description": "Gérer les agents pour {{projectName}}",
-      "empty": {
-        "title": "Aucun agent pour le moment",
-        "description": "Créez votre premier agent pour commencer avec des prompts personnalisés pour ce projet.",
-        "button": "Créer le premier agent"
-      }
+      "description": "Gérer les agents pour {{projectName}}"
     },
     "defaultPromptDialog": {
       "title": "Prompt par défaut",
