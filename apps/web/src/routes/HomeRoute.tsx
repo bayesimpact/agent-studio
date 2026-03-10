@@ -3,10 +3,9 @@ import { useEffect } from "react"
 import { useNavigate, useSearchParams } from "react-router-dom"
 import { AUTH0_ORGANIZATION_ID } from "@/config/auth0.config"
 import { selectOrganizationsData } from "@/features/organizations/organizations.selectors"
-import { useBuildPath } from "@/hooks/use-build-path"
 import { ADS } from "@/store/async-data-status"
 import { useAppSelector } from "@/store/hooks"
-import { RouteNames } from "./helpers"
+import { buildAppPath, buildStudioPath, RouteNames } from "./helpers"
 import { LoadingRoute } from "./LoadingRoute"
 
 const INVITATION_STORAGE_KEY = "pendingInvitationTicketId"
@@ -32,7 +31,6 @@ export function consumePendingInvitation(): string | null {
 export function HomeRoute() {
   const { isLoading, isAuthenticated, loginWithRedirect } = useAuth0()
   const navigate = useNavigate()
-  const { buildPath } = useBuildPath()
   const organizations = useAppSelector(selectOrganizationsData)
   const [searchParams] = useSearchParams()
 
@@ -68,10 +66,15 @@ export function HomeRoute() {
 
     if (isAuthenticated) {
       const firstOrganization = organizations?.value?.[0]
+      let path: string = RouteNames.ONBOARDING
 
-      const path = firstOrganization
-        ? buildPath("organization", { organizationId: firstOrganization.id })
-        : RouteNames.ONBOARDING
+      if (firstOrganization) {
+        const organizationPath = `/o/${firstOrganization.id}/`
+        const isAdminOrOwner =
+          firstOrganization.role === "admin" || firstOrganization.role === "owner"
+        path = isAdminOrOwner ? buildStudioPath(organizationPath) : buildAppPath(organizationPath)
+      }
+
       navigate(path, { replace: true })
     } else {
       loginWithRedirect({
@@ -80,15 +83,7 @@ export function HomeRoute() {
         },
       })
     }
-  }, [
-    isLoading,
-    buildPath,
-    organizations,
-    isAuthenticated,
-    navigate,
-    loginWithRedirect,
-    searchParams,
-  ])
+  }, [isLoading, organizations, isAuthenticated, navigate, loginWithRedirect, searchParams])
 
   return <LoadingRoute />
 }
