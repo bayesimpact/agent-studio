@@ -230,9 +230,16 @@ Some Auth0 steps are easier in UI:
      - `create:organization_invitations`
      - `read:organization_invitations`
      - `delete:organization_invitations`
+     - `read:users`
+     - `create:users`
+     - `create:organization_members`
 4. Create Single Page Application:
    - Name: `[PROD] Health`
    - Login Experience: `Business Users`
+
+For first-user provisioning (CLI), also confirm:
+- The Auth0 Database connection used by email/password users is enabled on the SPA app.
+- `AUTH0_DB_CONNECTION_NAME` matches the Auth0 connection name exactly (for example `Username-Password-Authentication`).
 
 Useful links:
 - `https://manage.auth0.com/dashboard/eu/bayes-impact/organizations`
