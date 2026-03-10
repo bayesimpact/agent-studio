@@ -6,17 +6,23 @@ import {
   DOCUMENT_EMBEDDINGS_QUEUE_NAME,
 } from "./document-embeddings.constants"
 import type { CreateDocumentEmbeddingsJobPayload } from "./document-embeddings.types"
+// biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
+import { DocumentEmbeddingsProcessorService } from "./document-embeddings-processor.service"
 
 @Processor(DOCUMENT_EMBEDDINGS_QUEUE_NAME)
 export class DocumentEmbeddingsWorker extends WorkerHost {
   private readonly logger = new Logger(DocumentEmbeddingsWorker.name)
+
+  constructor(private readonly embeddingsProcessorService: DocumentEmbeddingsProcessorService) {
+    super()
+  }
 
   async process(job: Job<CreateDocumentEmbeddingsJobPayload>): Promise<void> {
     if (job.name !== DOCUMENT_EMBEDDINGS_JOB_NAME) {
       return
     }
 
-    console.log("[DocumentEmbeddingsWorker] processing create-embeddings job", job.data)
+    await this.embeddingsProcessorService.processDocument(job.data)
   }
 
   @OnWorkerEvent("active")

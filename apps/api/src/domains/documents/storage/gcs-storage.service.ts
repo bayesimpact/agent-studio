@@ -20,6 +20,14 @@ export class GcsStorageService implements IFileStorage {
     this.bucketName = this.configService.get<string>("GCS_STORAGE_BUCKET_NAME") as string
   }
 
+  async readFile(storageRelativePath: string): Promise<Buffer> {
+    const [contents] = await this.storage
+      .bucket(this.bucketName)
+      .file(storageRelativePath)
+      .download()
+    return contents
+  }
+
   async getTemporaryUrl(storageRelativePath: string): Promise<string> {
     // Construct the temporary URL for the file in GCS
     // Generate a signed URL for temporary access (default: 15 minutes)

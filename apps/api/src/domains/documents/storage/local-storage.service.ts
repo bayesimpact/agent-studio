@@ -21,6 +21,10 @@ export class LocalStorageService implements IFileStorage {
     return Promise.resolve(`${this.baseUrl}/documents/${storageRelativePath}`)
   }
 
+  async readFile(storageRelativePath: string): Promise<Buffer> {
+    return fs.readFile(path.join(this.dir, storageRelativePath))
+  }
+
   async save({
     extension,
     file,
