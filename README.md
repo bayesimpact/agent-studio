@@ -1,3 +1,8 @@
+# Bayes Impact
+
+Bayes Impact is a technology nonprofit organization building AI recommendation systems for the public interest.
+As part of this work, we curate public and community resource datasets and make them usable by AI agents.
+
 # AgentStudio
 
 A SaaS platform for building multi-agent systems, built as a Turbo monorepo with a NestJS API and a React web frontend using Auth0 for authentication.
