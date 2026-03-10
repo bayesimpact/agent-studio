@@ -4,14 +4,14 @@ import { HomeRoute } from "@/routes/HomeRoute"
 import { LoginRoute } from "@/routes/LoginRoute"
 import { LogoutRoute } from "@/routes/LogoutRoute"
 import { NotFoundRoute } from "@/routes/NotFoundRoute"
-import { DocumentsRoute } from "./admin/DocumentsRoute"
-import { EvaluationRoute } from "./admin/EvaluationRoute"
-import { FeedbackRoute } from "./admin/FeedbackRoute"
-import { ProjectMembershipsRoute } from "./admin/ProjectMembershipsRoute"
 import { getElement } from "./Elements"
-import { buildAdminPath, buildAppPath, RouteNames } from "./helpers"
+import { buildAppPath, buildStudioPath, RouteNames } from "./helpers"
 import { OnboardingRoute } from "./OnboardingRoute"
 import { ProtectedRoute } from "./ProtectedRoute"
+import { DocumentsRoute } from "./studio/DocumentsRoute"
+import { EvaluationRoute } from "./studio/EvaluationRoute"
+import { FeedbackRoute } from "./studio/FeedbackRoute"
+import { ProjectMembershipsRoute } from "./studio/ProjectMembershipsRoute"
 
 const router = () =>
   createBrowserRouter([
@@ -37,19 +37,19 @@ const router = () =>
     },
 
     {
-      path: "/admin",
+      path: RouteNames.STUDIO,
       element: <Outlet />,
       children: [
         {
-          path: buildAdminPath(RouteNames.ORGANIZATION_DASHBOARD),
+          path: buildStudioPath(RouteNames.ORGANIZATION_DASHBOARD),
           element: getElement(RouteNames.ORGANIZATION_DASHBOARD),
           children: [
             {
-              path: buildAdminPath(RouteNames.PROJECT),
+              path: buildStudioPath(RouteNames.PROJECT),
               element: getElement(RouteNames.PROJECT),
               children: [
                 {
-                  path: buildAdminPath(RouteNames.EVALUATION),
+                  path: buildStudioPath(RouteNames.EVALUATION),
                   element: (
                     <RestrictedFeature feature="evaluation">
                       <EvaluationRoute />
@@ -57,23 +57,23 @@ const router = () =>
                   ),
                 },
                 {
-                  path: buildAdminPath(RouteNames.DOCUMENTS),
+                  path: buildStudioPath(RouteNames.DOCUMENTS),
                   element: <DocumentsRoute />,
                 },
                 {
-                  path: buildAdminPath(RouteNames.PROJECT_MEMBERSHIPS),
+                  path: buildStudioPath(RouteNames.PROJECT_MEMBERSHIPS),
                   element: <ProjectMembershipsRoute />,
                 },
                 {
-                  path: buildAdminPath(RouteNames.AGENT),
+                  path: buildStudioPath(RouteNames.AGENT),
                   element: getElement(RouteNames.AGENT),
                   children: [
                     {
-                      path: buildAdminPath(RouteNames.AGENT_SESSION),
+                      path: buildStudioPath(RouteNames.AGENT_SESSION),
                       element: getElement(RouteNames.AGENT_SESSION),
                     },
                     {
-                      path: buildAdminPath(RouteNames.FEEDBACK),
+                      path: buildStudioPath(RouteNames.FEEDBACK),
                       element: <FeedbackRoute />,
                     },
                   ],
@@ -85,7 +85,7 @@ const router = () =>
       ],
     },
     {
-      path: "/app",
+      path: RouteNames.APP,
       element: <Outlet />,
       children: [
         {

@@ -10,8 +10,8 @@ export enum RouteNames {
   AGENT = "/o/:organizationId/p/:projectId/a/:agentId",
   AGENT_SESSION = "/o/:organizationId/p/:projectId/a/:agentId/as/:agentSessionId",
 
-  // ADMIN ROUTES
-  ADMIN = "/admin",
+  // STUDIO ROUTES
+  STUDIO = "/studio",
   DOCUMENTS = "/o/:organizationId/p/:projectId/d",
   DOCUMENT = "/o/:organizationId/p/:projectId/d/:documentId",
   EVALUATION = "/o/:organizationId/p/:projectId/eval",
@@ -22,8 +22,8 @@ export enum RouteNames {
   APP = "/app",
 }
 
-export const buildAdminPath = (path: string) => {
-  return `${RouteNames.ADMIN}${path}`
+export const buildStudioPath = (path: string) => {
+  return `${RouteNames.STUDIO}${path}`
 }
 
 export const buildAppPath = (path: string) => {
@@ -31,7 +31,7 @@ export const buildAppPath = (path: string) => {
 }
 
 export const buildOrganizationDashboardPath = ({ organizationId }: { organizationId: string }) => {
-  return buildAdminPath(
+  return buildStudioPath(
     RouteNames.ORGANIZATION_DASHBOARD.toString().replace(":organizationId", organizationId),
   )
 }
@@ -43,7 +43,7 @@ export const buildDocumentsPath = ({
   organizationId: string
   projectId: string
 }) => {
-  return buildAdminPath(
+  return buildStudioPath(
     RouteNames.DOCUMENTS.toString()
       .replace(":organizationId", organizationId)
       .replace(":projectId", projectId),
@@ -57,7 +57,7 @@ export const buildEvaluationPath = ({
   organizationId: string
   projectId: string
 }) => {
-  return buildAdminPath(
+  return buildStudioPath(
     RouteNames.EVALUATION.toString()
       .replace(":organizationId", organizationId)
       .replace(":projectId", projectId),
@@ -73,7 +73,7 @@ export const buildFeedbackPath = ({
   projectId: string
   agentId: string
 }) => {
-  return buildAdminPath(
+  return buildStudioPath(
     RouteNames.FEEDBACK.toString()
       .replace(":organizationId", organizationId)
       .replace(":projectId", projectId)
@@ -88,7 +88,7 @@ export const buildProjectMembershipsPath = ({
   organizationId: string
   projectId: string
 }) => {
-  return buildAdminPath(
+  return buildStudioPath(
     RouteNames.PROJECT_MEMBERSHIPS.toString()
       .replace(":organizationId", organizationId)
       .replace(":projectId", projectId),

@@ -8,6 +8,7 @@ import { useTranslation } from "react-i18next"
 import { useAbility } from "@/hooks/use-ability"
 import { useAuthHandler } from "@/hooks/use-auth-handler"
 import { useGetPath } from "@/hooks/use-build-path"
+import { RouteNames } from "@/routes/helpers"
 
 export function NavUserMenuItems() {
   return (
@@ -32,8 +33,8 @@ function InterfaceToggle() {
 
   const handleChange = (checked: boolean) => {
     const newLocation = getPath("project").replace(
-      checked ? "/app" : "/admin",
-      checked ? "/admin" : "/app",
+      checked ? RouteNames.APP : RouteNames.STUDIO,
+      checked ? RouteNames.STUDIO : RouteNames.APP,
     )
     window.location.replace(newLocation)
   }
@@ -42,12 +43,12 @@ function InterfaceToggle() {
       {isAdminInterface ? (
         <DropdownMenuItem onSelect={() => handleChange(false)}>
           <ShieldBanIcon />
-          {t("leave")} Admin
+          {t("leave")} Studio
         </DropdownMenuItem>
       ) : (
         <DropdownMenuItem onSelect={() => handleChange(true)}>
           <ShieldCheckIcon />
-          {t("enter")} Admin
+          {t("enter")} Studio
         </DropdownMenuItem>
       )}
       <DropdownMenuSeparator />

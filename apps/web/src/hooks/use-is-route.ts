@@ -1,6 +1,6 @@
 import { useCallback, useMemo } from "react"
 import { useLocation } from "react-router-dom"
-import type { RouteNames } from "@/routes/helpers"
+import { RouteNames } from "@/routes/helpers"
 
 export function useIsRoute() {
   const { pathname } = useLocation()
@@ -24,8 +24,13 @@ function getPathPieces(pathname: string) {
     pathname
       .split("/")
       .filter(Boolean)
-      // filter out id params and "app" and "admin" (for app routes)
-      .filter((piece) => !idParamRegex.test(piece) && piece !== "app" && piece !== "admin")
+      // filter out id params and "app" and "studio" (for app routes)
+      .filter(
+        (piece) =>
+          !idParamRegex.test(piece) &&
+          piece !== RouteNames.APP.slice(1) &&
+          piece !== RouteNames.STUDIO.slice(1),
+      )
       .toString()
   )
 }
