@@ -43,12 +43,12 @@ function InterfaceToggle() {
       {isAdminInterface ? (
         <DropdownMenuItem onSelect={() => handleChange(false)}>
           <ShieldBanIcon />
-          {t("leave")} Studio
+          {t("exitStudio")}
         </DropdownMenuItem>
       ) : (
         <DropdownMenuItem onSelect={() => handleChange(true)}>
           <ShieldCheckIcon />
-          {t("enter")} Studio
+          {t("goToStudio")}
         </DropdownMenuItem>
       )}
       <DropdownMenuSeparator />

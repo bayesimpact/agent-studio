@@ -40,6 +40,8 @@
     "submit": "Soumettre",
     "update": "Mettre à jour",
     "upload": "Téléverser",
+    "goToStudio": "Entrer dans le Studio",
+    "exitStudio": "Quitter le Studio",
     "view": "Voir"
   }
 }
