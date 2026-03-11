@@ -17,7 +17,7 @@ jest.mock("ai", () => ({
 describe("DocumentChunkRetrievalService", () => {
   beforeEach(() => {
     jest.clearAllMocks()
-    process.env.GCP_PROJECT = "test-project"
+    process.env.GOOGLE_VERTEX_PROJECT = "test-project"
     process.env.GOOGLE_VERTEX_LOCATION = "us-central1"
     process.env.DOCUMENT_EMBEDDING_MODELS = "gemini-embedding-001"
     mockTextEmbeddingModel.mockReturnValue("embedding-model")

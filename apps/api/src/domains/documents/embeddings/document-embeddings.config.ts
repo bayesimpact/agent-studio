@@ -15,24 +15,18 @@ const normalizeVertexLocation = (value: string): string => {
 }
 
 export const resolveVertexConfig = (): { project: string; location: string } => {
-  const project =
-    toNonEmptyValue(process.env.GCP_PROJECT) ??
-    toNonEmptyValue(process.env.GOOGLE_VERTEX_PROJECT) ??
-    toNonEmptyValue(process.env.GOOGLE_CLOUD_PROJECT)
+  const project = toNonEmptyValue(process.env.GOOGLE_VERTEX_PROJECT)
 
-  const rawLocation =
-    toNonEmptyValue(process.env.GOOGLE_VERTEX_LOCATION) ??
-    toNonEmptyValue(process.env.LOCATION) ??
-    toNonEmptyValue(process.env.GOOGLE_CLOUD_LOCATION)
+  const rawLocation = toNonEmptyValue(process.env.GOOGLE_VERTEX_LOCATION)
 
   if (!project) {
     throw new InternalServerErrorException(
-      "Missing Vertex project configuration. Set GCP_PROJECT or GOOGLE_VERTEX_PROJECT.",
+      "Missing Vertex project configuration. Set GOOGLE_VERTEX_PROJECT.",
     )
   }
   if (!rawLocation) {
     throw new InternalServerErrorException(
-      "Missing Vertex location configuration. Set GOOGLE_VERTEX_LOCATION or LOCATION.",
+      "Missing Vertex location configuration. Set GOOGLE_VERTEX_LOCATION.",
     )
   }
   const location = normalizeVertexLocation(rawLocation)
