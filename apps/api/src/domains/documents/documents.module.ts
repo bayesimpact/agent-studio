@@ -18,6 +18,7 @@ import { Document } from "./document.entity"
 import { DocumentsController } from "./documents.controller"
 import { DocumentsGuard } from "./documents.guard"
 import { DocumentsService } from "./documents.service"
+import { DocumentChunkRetrievalService } from "./embeddings/document-chunk-retrieval.service"
 import { DocumentEmbeddingsBatchModule } from "./embeddings/document-embeddings-batch.module"
 import { StorageModule } from "./storage/storage.module"
 
@@ -47,6 +48,7 @@ import { StorageModule } from "./storage/storage.module"
   ],
   providers: [
     DocumentsService,
+    DocumentChunkRetrievalService,
     DocumentsGuard,
     ResourceContextGuard,
     OrganizationContextResolver,
@@ -54,6 +56,6 @@ import { StorageModule } from "./storage/storage.module"
     DocumentContextResolver,
   ],
   controllers: [DocumentsController],
-  exports: [DocumentsService],
+  exports: [DocumentsService, DocumentChunkRetrievalService],
 })
 export class DocumentsModule {}

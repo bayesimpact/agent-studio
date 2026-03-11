@@ -18,6 +18,8 @@ import { FormAgentSession } from "@/domains/agents/form-agent-sessions/form-agen
 import { FormAgentSessionsService } from "@/domains/agents/form-agent-sessions/form-agent-sessions.service"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
 import { DocumentsService } from "@/domains/documents/documents.service"
+// biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
+import { DocumentChunkRetrievalService } from "@/domains/documents/embeddings/document-chunk-retrieval.service"
 import {
   FILE_STORAGE_SERVICE,
   type IFileStorage,
@@ -26,6 +28,7 @@ import { ServiceWithLLM } from "@/external/llm"
 import { AgentMessage } from "../agent-message.entity"
 import { buildConversationAgentPrompt } from "./master-promts/conversation-agent.prompt"
 import { buildFormAgentPrompt } from "./master-promts/form-agent.prompt"
+import { retrieveProjectDocumentChunksTool } from "./tools/retrieve-project-document-chunks.tool"
 
 @Injectable()
 export class StreamingService extends ServiceWithLLM {
@@ -42,6 +45,8 @@ export class StreamingService extends ServiceWithLLM {
 
     @Inject(FormAgentSessionsService)
     private readonly formAgentSessionsService: FormAgentSessionsService,
+
+    private readonly documentChunkRetrievalService: DocumentChunkRetrievalService,
 
     @InjectRepository(ConversationAgentSession)
     conversationAgentSessionRepository: Repository<ConversationAgentSession>,
@@ -169,6 +174,7 @@ export class StreamingService extends ServiceWithLLM {
       tools: this.buildTools({
         agent,
         sessionId,
+        connectScope,
         onExecute: async (toolContent) => {
           // Create a tool message in the database for each tool call, so that the session history is complete and reflects what actually happened during the agent execution (including tool calls)
           await this.agentMessageConnectRepository.createAndSave(connectScope, {
@@ -531,13 +537,28 @@ export class StreamingService extends ServiceWithLLM {
   private buildTools({
     agent,
     sessionId,
+    connectScope,
     onExecute,
   }: {
     agent: Agent
     sessionId: string
+    connectScope: RequiredConnectScope
     onExecute: (toolContent: string) => void
   }): ToolSet | undefined {
     switch (agent.type) {
+      case "conversation":
+        return {
+          retrieveProjectDocumentChunks: retrieveProjectDocumentChunksTool({
+            connectScope,
+            retrievalService: this.documentChunkRetrievalService,
+            onExecute: (retrievedChunks) => {
+              onExecute(
+                `retrieveProjectDocumentChunks tool returned ${retrievedChunks.length} chunk(s)`,
+              )
+            },
+          }),
+        } as ToolSet
+
       case "form":
         return this.formAgentSessionsService.buildFillFormTool({
           agent,
