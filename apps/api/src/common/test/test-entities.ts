@@ -5,6 +5,7 @@ import { FormAgentSession } from "@/domains/agents/form-agent-sessions/form-agen
 import { AgentMessage } from "@/domains/agents/shared/agent-session-messages/agent-message.entity"
 import { AgentMessageFeedback } from "@/domains/agents/shared/agent-session-messages/feedback/agent-message-feedback.entity"
 import { Document } from "@/domains/documents/document.entity"
+import { DocumentTag } from "@/domains/documents/tags/document-tag.entity"
 import { Evaluation } from "@/domains/evaluations/evaluation.entity"
 import { EvaluationReport } from "@/domains/evaluations/reports/evaluation-report.entity"
 import { FeatureFlag } from "@/domains/feature-flags/feature-flag.entity"
@@ -19,15 +20,16 @@ export const TEST_ENTITIES = [
   AgentMessage,
   AgentMessageFeedback,
   ConversationAgentSession,
-  ExtractionAgentSession,
-  FormAgentSession,
   Document,
+  DocumentTag,
   Evaluation,
   EvaluationReport,
+  ExtractionAgentSession,
+  FeatureFlag,
+  FormAgentSession,
   Organization,
   Project,
   ProjectMembership,
-  FeatureFlag,
   User,
   UserMembership,
 ]

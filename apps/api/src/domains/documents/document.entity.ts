@@ -1,6 +1,7 @@
-import { Column, JoinColumn, ManyToOne } from "typeorm"
+import { Column, JoinColumn, JoinTable, ManyToMany, ManyToOne } from "typeorm"
 import { ConnectEntity, ConnectEntityBase } from "@/common/entities/connect-entity"
 import { Project } from "@/domains/projects/project.entity"
+import type { DocumentTag } from "./tags/document-tag.entity"
 
 @ConnectEntity("document")
 export class Document extends ConnectEntityBase {
@@ -37,4 +38,12 @@ export class Document extends ConnectEntityBase {
 
   @Column({ name: "embedding_status", nullable: false, default: "pending" })
   embeddingStatus!: "pending" | "processing" | "completed" | "failed"
+
+  @ManyToMany("DocumentTag", (tag: DocumentTag) => tag.documents)
+  @JoinTable({
+    name: "document_document_tag",
+    joinColumn: { name: "document_id", referencedColumnName: "id" },
+    inverseJoinColumn: { name: "document_tag_id", referencedColumnName: "id" },
+  })
+  tags!: DocumentTag[]
 }
