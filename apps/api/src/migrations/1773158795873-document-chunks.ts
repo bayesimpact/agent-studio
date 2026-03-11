@@ -1,7 +1,7 @@
 import type { MigrationInterface, QueryRunner } from "typeorm"
 
-export class DontsaveMig1773158795873 implements MigrationInterface {
-  name = "DontsaveMig1773158795873"
+export class DocumentChunks1773158795873 implements MigrationInterface {
+  name = "DocumentChunks1773158795873"
 
   public async up(queryRunner: QueryRunner): Promise<void> {
     await queryRunner.query(
