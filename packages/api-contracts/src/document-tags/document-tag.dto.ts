@@ -10,4 +10,3 @@ export type DocumentTagDto = {
   projectId: string
   updatedAt: TimeType
 }
-

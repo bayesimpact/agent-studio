@@ -21,7 +21,10 @@ export class DocumentTagGuard implements CanActivate {
     const request = context.switchToHttp().getRequest() as EndpointRequestWithProject & {
       documentTag?: DocumentTag
     }
-    const policy = new DocumentTagPolicy(requestToProjectPolicyContext(request), request.documentTag)
+    const policy = new DocumentTagPolicy(
+      requestToProjectPolicyContext(request),
+      request.documentTag,
+    )
 
     const policyHandler = this.reflector.getAllAndOverride<PolicyHandler>(CHECK_POLICY_KEY, [
       context.getHandler(),

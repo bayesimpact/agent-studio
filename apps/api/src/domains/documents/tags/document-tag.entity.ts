@@ -21,7 +21,10 @@ export class DocumentTag extends ConnectEntityBase {
   @JoinColumn({ name: "parent_id" })
   parent!: DocumentTag | null
 
-  @OneToMany(() => DocumentTag, (tag) => tag.parent)
+  @OneToMany(
+    () => DocumentTag,
+    (tag) => tag.parent,
+  )
   children!: DocumentTag[]
 
   @ManyToMany("Document", (document: Document) => document.tags)
