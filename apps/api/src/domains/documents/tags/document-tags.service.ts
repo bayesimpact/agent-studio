@@ -40,8 +40,8 @@ export class DocumentTagsService {
    * Lists all document tags for a project.
    */
   async listDocumentTags(connectScope: RequiredConnectScope): Promise<DocumentTag[]> {
-    return (await this.documentTagConnectRepository.getMany(connectScope))?.sort(
-      (a, b) => b.createdAt.getTime() - a.createdAt.getTime(),
+    return (await this.documentTagConnectRepository.getMany(connectScope))?.sort((a, b) =>
+      a.name.localeCompare(b.name),
     )
   }
 

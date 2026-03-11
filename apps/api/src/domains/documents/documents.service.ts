@@ -43,6 +43,7 @@ export class DocumentsService {
     return (
       await this.documentConnectRepository.find(connectScope, {
         where: { sourceType: "project" },
+        relations: ["tags"],
       })
     )?.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
   }

@@ -12,7 +12,8 @@
       "language": "Language",
       "mimeType": "MIME Type",
       "size": "Size",
-      "storageRelativePath": "Storage Relative Path"
+      "storageRelativePath": "Storage Relative Path",
+      "tags": "Tags"
     },
     "delete": {
       "title": "Delete {{documentTitle}}",

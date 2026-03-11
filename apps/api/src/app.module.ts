@@ -9,6 +9,7 @@ import { AgentMessageFeedbackModule } from "./domains/agents/shared/agent-sessio
 import { AuthModule } from "./domains/auth/auth.module"
 import { DocumentsModule } from "./domains/documents/documents.module"
 import { StorageModule } from "./domains/documents/storage/storage.module"
+import { DocumentTagsModule } from "./domains/documents/tags/document-tags.module"
 import { EvaluationsModule } from "./domains/evaluations/evaluations.module"
 import { MeModule } from "./domains/me/me.module"
 import { OrganizationsModule } from "./domains/organizations/organizations.module"
@@ -38,6 +39,7 @@ import { UsersModule } from "./domains/users/users.module"
     OrganizationsModule,
     ProjectsModule,
     DocumentsModule,
+    DocumentTagsModule,
     StorageModule,
     UsersModule,
   ],

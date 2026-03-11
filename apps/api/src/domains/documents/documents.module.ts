@@ -24,7 +24,14 @@ import { DocumentTag } from "./tags/document-tag.entity"
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Document, DocumentTag, Project, Organization, UserMembership, ProjectMembership]),
+    TypeOrmModule.forFeature([
+      Document,
+      DocumentTag,
+      Project,
+      Organization,
+      UserMembership,
+      ProjectMembership,
+    ]),
     // Only serve static files in development/local environment
     ...(process.env.NODE_ENV !== "production"
       ? [

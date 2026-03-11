@@ -13,17 +13,16 @@ export const listDocumentTags = createAsyncThunk<DocumentTag[], void, ThunkConfi
   },
 )
 
-export const getDocumentTag = createAsyncThunk<
-  DocumentTag,
-  { documentTagId: string },
-  ThunkConfig
->("documentTags/getOne", async ({ documentTagId }, { extra: { services }, getState }) => {
-  const { organizationId, projectId } = getCurrentIds({
-    state: getState(),
-    wantedIds: ["organizationId", "projectId"],
-  })
-  return await services.documentTags.getOne({ organizationId, projectId, documentTagId })
-})
+export const getDocumentTag = createAsyncThunk<DocumentTag, { documentTagId: string }, ThunkConfig>(
+  "documentTags/getOne",
+  async ({ documentTagId }, { extra: { services }, getState }) => {
+    const { organizationId, projectId } = getCurrentIds({
+      state: getState(),
+      wantedIds: ["organizationId", "projectId"],
+    })
+    return await services.documentTags.getOne({ organizationId, projectId, documentTagId })
+  },
+)
 
 export const createDocumentTag = createAsyncThunk<
   DocumentTag,
