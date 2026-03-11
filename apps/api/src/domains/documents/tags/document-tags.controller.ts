@@ -1,0 +1,101 @@
+import { type DocumentTagDto, DocumentTagsRoutes } from "@caseai-connect/api-contracts"
+import { Body, Controller, Delete, Get, Patch, Post, Req, UseGuards } from "@nestjs/common"
+import type {
+  EndpointRequestWithDocumentTag,
+  EndpointRequestWithProject,
+} from "@/common/context/request.interface"
+import { getRequiredConnectScope } from "@/common/context/request-context.helpers"
+import { AddContext, RequireContext } from "@/common/context/require-context.decorator"
+import { ResourceContextGuard } from "@/common/context/resource-context.guard"
+import { CheckPolicy } from "@/common/policies/check-policy.decorator"
+import { JwtAuthGuard } from "@/domains/auth/jwt-auth.guard"
+import { UserGuard } from "@/domains/users/user.guard"
+import type { DocumentTag } from "./document-tag.entity"
+import { DocumentTagGuard } from "./document-tag.guard"
+// biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
+import { DocumentTagsService } from "./document-tags.service"
+
+@UseGuards(JwtAuthGuard, UserGuard, ResourceContextGuard, DocumentTagGuard)
+@RequireContext("organization", "project")
+@Controller()
+export class DocumentTagsController {
+  constructor(private readonly documentTagsService: DocumentTagsService) {}
+
+  @Post(DocumentTagsRoutes.createOne.path)
+  @CheckPolicy((policy) => policy.canCreate())
+  async createOne(
+    @Req() request: EndpointRequestWithProject,
+    @Body() { payload }: typeof DocumentTagsRoutes.createOne.request,
+  ): Promise<typeof DocumentTagsRoutes.createOne.response> {
+    const documentTag = await this.documentTagsService.createDocumentTag({
+      connectScope: getRequiredConnectScope(request),
+      fields: payload,
+    })
+
+    return { data: toDocumentTagDto(documentTag) }
+  }
+
+  @Get(DocumentTagsRoutes.getAll.path)
+  @CheckPolicy((policy) => policy.canList())
+  async getAll(
+    @Req() request: EndpointRequestWithProject,
+  ): Promise<typeof DocumentTagsRoutes.getAll.response> {
+    const documentTags = await this.documentTagsService.listDocumentTags(
+      getRequiredConnectScope(request),
+    )
+
+    return { data: documentTags.map(toDocumentTagDto) }
+  }
+
+  @Get(DocumentTagsRoutes.getOne.path)
+  @CheckPolicy((policy) => policy.canList())
+  @AddContext("documentTag")
+  async getOne(
+    @Req() request: EndpointRequestWithDocumentTag,
+  ): Promise<typeof DocumentTagsRoutes.getOne.response> {
+    return { data: toDocumentTagDto(request.documentTag) }
+  }
+
+  @Patch(DocumentTagsRoutes.updateOne.path)
+  @CheckPolicy((policy) => policy.canUpdate())
+  @AddContext("documentTag")
+  async updateOne(
+    @Req() request: EndpointRequestWithDocumentTag,
+    @Body() { payload }: typeof DocumentTagsRoutes.updateOne.request,
+  ): Promise<typeof DocumentTagsRoutes.updateOne.response> {
+    await this.documentTagsService.updateDocumentTag({
+      connectScope: getRequiredConnectScope(request),
+      required: { documentTagId: request.documentTag.id },
+      fieldsToUpdate: payload,
+    })
+
+    return { data: { success: true } }
+  }
+
+  @Delete(DocumentTagsRoutes.deleteOne.path)
+  @CheckPolicy((policy) => policy.canDelete())
+  @AddContext("documentTag")
+  async deleteOne(
+    @Req() request: EndpointRequestWithDocumentTag,
+  ): Promise<typeof DocumentTagsRoutes.deleteOne.response> {
+    await this.documentTagsService.deleteDocumentTag({
+      connectScope: getRequiredConnectScope(request),
+      documentTagId: request.documentTag.id,
+    })
+
+    return { data: { success: true } }
+  }
+}
+
+function toDocumentTagDto(entity: DocumentTag): DocumentTagDto {
+  return {
+    createdAt: entity.createdAt.getTime(),
+    description: entity.description ?? null,
+    id: entity.id,
+    name: entity.name,
+    organizationId: entity.organizationId,
+    parentId: entity.parentId,
+    projectId: entity.projectId,
+    updatedAt: entity.updatedAt.getTime(),
+  }
+}

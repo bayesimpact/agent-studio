@@ -24,6 +24,10 @@ export { FormAgentSessionsRoutes } from "./agents/form-agent-sessions/form-agent
 export type * from "./agents/shared/agent-session-messages/agent-session-messages.dto"
 export { AgentSessionMessagesRoutes } from "./agents/shared/agent-session-messages/agent-session-messages.routes"
 
+// Document Tags
+export * from "./document-tags/document-tag.dto"
+export { DocumentTagsRoutes } from "./document-tags/document-tag.routes"
+
 // Documents
 export * from "./documents/documents.dto"
 export { DocumentsRoutes } from "./documents/documents.routes"

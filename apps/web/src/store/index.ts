@@ -15,6 +15,8 @@ import { agentSessionMessagesMiddleware } from "@/features/agents/shared/agent-s
 import { agentSessionMessagesSliceReducer } from "@/features/agents/shared/agent-session-messages/agent-session-messages.slice"
 import { authMiddleware } from "@/features/auth/auth.middleware"
 import { authSliceReducer } from "@/features/auth/auth.slice"
+import { documentTagsMiddleware } from "@/features/document-tags/document-tags.middleware"
+import { documentTagsSliceReducer } from "@/features/document-tags/document-tags.slice"
 import { documentsMiddleware } from "@/features/documents/documents.middleware"
 import { documentsSliceReducer } from "@/features/documents/documents.slice"
 import { evaluationReportsMiddleware } from "@/features/evaluation-reports/evaluation-reports.middleware"
@@ -40,6 +42,7 @@ export const store = configureStore({
     auth: authSliceReducer,
     conversationAgentSessions: conversationAgentSessionsSliceReducer,
     currentAgentSessionId: currentAgentSessionIdSliceReducer,
+    documentTags: documentTagsSliceReducer,
     documents: documentsSliceReducer,
     evaluationReports: evaluationReportsSliceReducer,
     evaluations: evaluationsSliceReducer,
@@ -62,6 +65,7 @@ export const store = configureStore({
       agentsMiddleware.middleware,
       authMiddleware.middleware,
       conversationAgentSessionsMiddleware.middleware,
+      documentTagsMiddleware.middleware,
       documentsMiddleware.middleware,
       evaluationReportsMiddleware.middleware,
       evaluationsMiddleware.middleware,
