@@ -10,6 +10,7 @@ export type ContextResource =
   | "agent"
   | "agentSession"
   | "document"
+  | "documentTag"
   | "evaluation"
   | "evaluationReport"
 

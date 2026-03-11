@@ -2,6 +2,7 @@ import type { Agent } from "@/domains/agents/agent.entity"
 import type { ConversationAgentSession } from "@/domains/agents/conversation-agent-sessions/conversation-agent-session.entity"
 import type { FormAgentSession } from "@/domains/agents/form-agent-sessions/form-agent-session.entity"
 import type { Document } from "@/domains/documents/document.entity"
+import type { DocumentTag } from "@/domains/documents/tags/document-tag.entity"
 import type { Evaluation } from "@/domains/evaluations/evaluation.entity"
 import type { EvaluationReport } from "@/domains/evaluations/reports/evaluation-report.entity"
 import type { UserMembership } from "@/domains/organizations/user-membership.entity"
@@ -36,6 +37,10 @@ export interface EndpointRequestWithProject extends EndpointRequestWithUserMembe
 
 export interface EndpointRequestWithDocument extends EndpointRequestWithProject {
   document: Document
+}
+
+export interface EndpointRequestWithDocumentTag extends EndpointRequestWithProject {
+  documentTag: DocumentTag
 }
 
 export interface EndpointRequestWithProjectMembership extends EndpointRequestWithProject {

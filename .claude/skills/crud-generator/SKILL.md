@@ -89,7 +89,7 @@ Before writing any files, output a summary table of **what will be created**, gr
 ## Files to generate
 
 ### API Contracts (packages/api-contracts/src/{entityNameKebabPlural}/)
-- {entityName}.dto.ts         — DTO type and list response DTO
+- {entityName}.dto.ts         — DTO type (no list wrapper — GetAll returns {EntityName}Dto[] directly)
 - {entityName}.routes.ts      — Route definitions (methods: {methods})
 
 ### Backend (apps/api/src/domains/{featureName}/)
@@ -129,7 +129,7 @@ File: `packages/api-contracts/src/{entityNameKebabPlural}/{entityNameKebab}.dto.
 Pattern: `packages/api-contracts/src/agents/agents.dto.ts`
 
 - Define the `{EntityName}Dto` type with all entity fields using primitive types (use `TimeType` for timestamps from `"../generic"`)
-- If GetAll is requested, define `List{EntityName}sResponseDto = { {entityNamePlural}: {EntityName}Dto[] }`
+- **Do NOT** define a `List{EntityName}sResponseDto` wrapper — use `{EntityName}Dto[]` directly in the GetAll route
 - Export all types
 
 ### 4b. API Contracts — Routes
@@ -144,7 +144,7 @@ Pattern: `packages/api-contracts/src/agents/agents.routes.ts`
   `organizations/:organizationId/projects/:projectId/{entityNameKebabPlural}`
 - Export `{EntityName}sRoutes = { ... }` with only the routes matching the requested `methods`:
   - `Create`: `defineRoute<ResponseData<{EntityName}Dto>, RequestPayload<...>>({ method: "post", path: "..." })`
-  - `GetAll`: `defineRoute<ResponseData<List{EntityName}sResponseDto>>({ method: "get", path: "..." })`
+  - `GetAll`: `defineRoute<ResponseData<{EntityName}Dto[]>>({ method: "get", path: "..." })`
   - `GetOne`: `defineRoute<ResponseData<{EntityName}Dto>>({ method: "get", path: ".../:entityNameKebabId" })`
   - `Update`: `defineRoute<ResponseData<SuccessResponseDTO>, RequestPayload<Partial<...>>>({ method: "patch", path: ".../:entityNameKebabId" })`
   - `Delete`: `defineRoute<ResponseData<SuccessResponseDTO>>({ method: "delete", path: ".../:entityNameKebabId" })`
@@ -269,7 +269,132 @@ Patterns:
 
 ---
 
-### 4j. Frontend — Models
+### 4j. Backend — `EndpointRequestWith{EntityName}` interface
+
+File: `apps/api/src/common/context/request.interface.ts` (**edit existing file**)
+
+**Always required** when GetOne, Update, or Delete are requested. Add:
+
+1. An import at the top of the file:
+```typescript
+import type { {EntityName} } from "@/domains/{featureName}/{entityNameKebab}.entity"
+```
+
+2. A new interface extending `EndpointRequestWithProject`:
+```typescript
+export interface EndpointRequestWith{EntityName} extends EndpointRequestWithProject {
+  {entityNameCamel}: {EntityName}
+}
+```
+
+---
+
+### 4k. Backend — `{EntityName}ContextResolver`
+
+File: `apps/api/src/common/context/resolvers/{entityNameKebab}-context.resolver.ts` (**new file**)
+
+**Always required** when GetOne, Update, or Delete are requested. Pattern: `apps/api/src/common/context/resolvers/document-context.resolver.ts`
+
+```typescript
+import { Injectable, NotFoundException } from "@nestjs/common"
+// biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
+import { {EntityName}sService } from "@/domains/{featureName}/{entityNamePlural}.service"
+import type { ContextResolver, ResolvableRequest } from "../context-resolver.interface"
+import type { EndpointRequestWith{EntityName} } from "../request.interface"
+import { getRequiredConnectScope } from "../request-context.helpers"
+
+@Injectable()
+export class {EntityName}ContextResolver implements ContextResolver {
+  readonly resource = "{entityNameCamel}" as const
+
+  constructor(private readonly {entityNamePlural}Service: {EntityName}sService) {}
+
+  async resolve(request: ResolvableRequest): Promise<void> {
+    const requestWithParams = request as ResolvableRequest & {
+      params: { {entityNameCamel}Id?: string }
+    }
+    const {entityNameCamel}Id = requestWithParams.params?.{entityNameCamel}Id
+
+    if (!{entityNameCamel}Id || {entityNameCamel}Id === ":{entityNameCamel}Id") throw new NotFoundException()
+
+    const requestWith{EntityName} = request as EndpointRequestWith{EntityName}
+    const {entityNameCamel} =
+      (await this.{entityNamePlural}Service.find{EntityName}ById({
+        connectScope: getRequiredConnectScope(requestWith{EntityName}),
+        {entityNameCamel}Id,
+      })) ?? undefined
+    if (!{entityNameCamel}) throw new NotFoundException()
+
+    requestWith{EntityName}.{entityNameCamel} = {entityNameCamel}
+  }
+}
+```
+
+---
+
+### 4l. Backend — `ContextResource` union entry + `RESOLUTION_ORDER`
+
+**Always required** when GetOne, Update, or Delete are requested.
+
+#### Edit 1: `apps/api/src/common/context/require-context.decorator.ts`
+
+Add `"{entityNameCamel}"` to the `ContextResource` union type:
+
+```typescript
+export type ContextResource =
+  | "organization"
+  | "project"
+  | "projectMembership"
+  | "agent"
+  | "agentSession"
+  | "document"
+  | "{entityNameCamel}"   // ← add this line in alphabetical order
+  | "evaluation"
+  | "evaluationReport"
+```
+
+#### Edit 2: `apps/api/src/common/context/resource-context.guard.ts`
+
+Two changes are required in this file:
+
+1. Add `"{entityNameCamel}"` to `RESOLUTION_ORDER` (in the correct position — after `"document"`, before `"evaluation"`):
+
+```typescript
+const RESOLUTION_ORDER: ContextResource[] = [
+  "organization",
+  "project",
+  "projectMembership",
+  "agent",
+  "agentSession",
+  "document",
+  "{entityNameCamel}",  // ← add this line
+  "evaluation",
+]
+```
+
+2. Add an `@Optional()` constructor parameter and register the resolver in the map:
+
+```typescript
+constructor(
+  private reflector: Reflector,
+  // ... existing resolvers ...
+  @Optional() documentContextResolver?: DocumentContextResolver,
+  @Optional() {entityNameCamel}ContextResolver?: {EntityName}ContextResolver,  // ← add
+  @Optional() evaluationContextResolver?: EvaluationContextResolver,
+) {
+  // ... existing entries ...
+  if ({entityNameCamel}ContextResolver) {
+    resolverEntries.push([{entityNameCamel}ContextResolver.resource, {entityNameCamel}ContextResolver])
+  }
+  // ...
+}
+```
+
+> **Why this matters**: `ResourceContextGuard` only resolves resources that appear in `RESOLUTION_ORDER`. Omitting the entry here means `request.{entityNameCamel}` will always be `undefined`, causing `doesResourceBelongToProject()` in the policy to return `false` and all entity-scoped routes to 403.
+
+---
+
+### 4m. Frontend — Models
 
 File: `apps/web/src/features/{entityNameKebabPlural}/{entityNamePlural}.models.ts`
 
@@ -278,7 +403,7 @@ Pattern: `apps/web/src/features/agents/agents.models.ts`
 - Export a `type {EntityName} = { ... }` mirroring the DTO fields, using frontend-friendly types (import shared types from `"@caseai-connect/api-contracts"` when needed, use `TimeType` for timestamps)
 - Export a `{entityNameCamel}Schema = z.object({ ... }).strict()` Zod schema for the core fields
 
-### 4k. Frontend — SPI
+### 4n. Frontend — SPI
 
 File: `apps/web/src/features/{entityNameKebabPlural}/{entityNamePlural}.spi.ts`
 
@@ -292,7 +417,7 @@ Pattern: `apps/web/src/features/agents/agents.spi.ts`
   - `deleteOne(params): Promise<void>` (if Delete)
 - `params` always includes `organizationId: string`, `projectId: string`, and `{entityNameKebab}Id: string` when the route targets a specific entity
 
-### 4l. Frontend — API Implementation
+### 4o. Frontend — API Implementation
 
 File: `apps/web/src/features/{entityNameKebabPlural}/external/{entityNamePlural}.api.ts`
 
@@ -306,7 +431,7 @@ Pattern: `apps/web/src/features/agents/external/agents.api.ts`
   - Map `toCreateDto` / `toUpdateDto` for request payloads
 - Include `fromDto`, `toCreateDto`, `toUpdateDto` helper functions at the bottom
 
-### 4m. Frontend — Thunks
+### 4p. Frontend — Thunks
 
 File: `apps/web/src/features/{entityNameKebabPlural}/{entityNamePlural}.thunks.ts`
 
@@ -322,7 +447,7 @@ Pattern: `apps/web/src/features/agents/agents.thunks.ts`
 - Use `getCurrentIds({ state: getState(), wantedIds: ["organizationId", "projectId"] })` to get scope params
 - Access the SPI via `services.{entityNamePlural}` (camelCase plural)
 
-### 4n. Frontend — Slice
+### 4q. Frontend — Slice
 
 File: `apps/web/src/features/{entityNameKebabPlural}/{entityNamePlural}.slice.ts`
 
@@ -332,7 +457,7 @@ Pattern: `apps/web/src/features/agents/agents.slice.ts`
 - Handle `list{EntityName}s.pending/fulfilled/rejected` in `extraReducers`
 - Export `{entityNamePlural}Actions`, `{entityNamePlural}SliceReducer`, `{entityNamePlural}InitialState`
 
-### 4o. Frontend — Selectors
+### 4r. Frontend — Selectors
 
 File: `apps/web/src/features/{entityNameKebabPlural}/{entityNamePlural}.selectors.ts`
 
@@ -343,7 +468,7 @@ Pattern: `apps/web/src/features/agents/agents.selectors.ts`
 - `selectCurrent{EntityName}sData` — uses current project ID selector
 - If GetOne is applicable: `selectCurrent{EntityName}Id` from state + `select{EntityName}Data` combining list + current ID
 
-### 4p. Frontend — Middleware
+### 4s. Frontend — Middleware
 
 File: `apps/web/src/features/{entityNameKebabPlural}/{entityNamePlural}.middleware.ts`
 
@@ -376,9 +501,14 @@ After writing all files, output this checklist for the user:
 - [ ] Register {entityNameKebab}ContextResolver in context resolvers if GetOne/Update/Delete are used
 
 ### Frontend
-- [ ] Add {entityNamePlural}SliceReducer to apps/web/src/store/root-reducer.ts
-- [ ] Add {entityNamePlural}Middleware to apps/web/src/store/middleware.ts
-- [ ] Register the API implementation in apps/web/src/store/services.ts:
+- [ ] Add to apps/web/src/store/index.ts:
+      - Import {entityNamePlural}SliceReducer and {entityNamePlural}Middleware
+      - Add `{entityNamePlural}: {entityNamePlural}SliceReducer` to the reducer map (alphabetical order)
+      - Add `{entityNamePlural}Middleware.middleware` to the `.prepend(...)` call (alphabetical order)
+- [ ] Add to apps/web/src/store/types.ts:
+      - `import type { {entityNamePlural}SliceReducer } from "@/features/{entityNameKebabPlural}/{entityNamePlural}.slice"`
+      - Add `{entityNamePlural}: ReturnType<typeof {entityNamePlural}SliceReducer>` to the `RootState` type (alphabetical order)
+- [ ] Register the API implementation in apps/web/src/external/axios.services.ts:
       {entityNamePlural}: {entityNamePlural}Api
 - [ ] Add {EntityName}[] to services type in the ThunkExtraArg if needed
 - [ ] Add locales/{entityNameKebab}.en.json and locales/{entityNameKebab}.fr.json if i18n is used

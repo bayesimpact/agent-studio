@@ -7,8 +7,8 @@ export class DocumentTag extends ConnectEntityBase {
   @Column({ name: "name", nullable: false })
   name!: string
 
-  @Column({ name: "description", nullable: true })
-  description!: string
+  @Column({ name: "description", type: "text", nullable: true })
+  description!: string | null
 
   @Column({ name: "parent_id", type: "uuid", nullable: true })
   parentId!: string | null

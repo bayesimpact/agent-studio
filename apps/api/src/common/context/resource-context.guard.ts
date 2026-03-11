@@ -20,6 +20,8 @@ import { AgentSessionContextResolver } from "./resolvers/agent-session-context.r
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
 import { DocumentContextResolver } from "./resolvers/document-context.resolver"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
+import { DocumentTagContextResolver } from "./resolvers/document-tag-context.resolver"
+// biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
 import { EvaluationContextResolver } from "./resolvers/evaluation-context.resolver"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
 import { OrganizationContextResolver } from "./resolvers/organization-context.resolver"
@@ -35,6 +37,7 @@ const RESOLUTION_ORDER: ContextResource[] = [
   "agent",
   "agentSession",
   "document",
+  "documentTag",
   "evaluation",
 ]
 
@@ -50,6 +53,7 @@ export class ResourceContextGuard implements CanActivate {
     @Optional() agentContextResolver?: AgentContextResolver,
     @Optional() agentSessionContextResolver?: AgentSessionContextResolver,
     @Optional() documentContextResolver?: DocumentContextResolver,
+    @Optional() documentTagContextResolver?: DocumentTagContextResolver,
     @Optional() evaluationContextResolver?: EvaluationContextResolver,
   ) {
     const resolverEntries: Array<[ContextResource, ContextResolver]> = []
@@ -73,6 +77,9 @@ export class ResourceContextGuard implements CanActivate {
     }
     if (documentContextResolver) {
       resolverEntries.push([documentContextResolver.resource, documentContextResolver])
+    }
+    if (documentTagContextResolver) {
+      resolverEntries.push([documentTagContextResolver.resource, documentTagContextResolver])
     }
     if (evaluationContextResolver) {
       resolverEntries.push([evaluationContextResolver.resource, evaluationContextResolver])

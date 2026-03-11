@@ -8,6 +8,7 @@ import type { extractionAgentSessionsSliceReducer } from "@/features/agents/extr
 import type { formAgentSessionsSliceReducer } from "@/features/agents/form-agent-sessions/form-agent-sessions.slice"
 import type { agentSessionMessagesSliceReducer } from "@/features/agents/shared/agent-session-messages/agent-session-messages.slice"
 import type { authSliceReducer } from "@/features/auth/auth.slice"
+import type { documentTagsSliceReducer } from "@/features/document-tags/document-tags.slice"
 import type { documentsSliceReducer } from "@/features/documents/documents.slice"
 import type { evaluationReportsSliceReducer } from "@/features/evaluation-reports/evaluation-reports.slice"
 import type { evaluationsSliceReducer } from "@/features/evaluations/evaluations.slice"
@@ -26,6 +27,7 @@ export type RootState = {
   agentSessionMessages: ReturnType<typeof agentSessionMessagesSliceReducer>
   auth: ReturnType<typeof authSliceReducer>
   conversationAgentSessions: ReturnType<typeof conversationAgentSessionsSliceReducer>
+  documentTags: ReturnType<typeof documentTagsSliceReducer>
   documents: ReturnType<typeof documentsSliceReducer>
   evaluationReports: ReturnType<typeof evaluationReportsSliceReducer>
   evaluations: ReturnType<typeof evaluationsSliceReducer>
