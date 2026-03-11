@@ -20,10 +20,11 @@ import { DocumentsGuard } from "./documents.guard"
 import { DocumentsService } from "./documents.service"
 import { DocumentEmbeddingsBatchModule } from "./embeddings/document-embeddings-batch.module"
 import { StorageModule } from "./storage/storage.module"
+import { DocumentTag } from "./tags/document-tag.entity"
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Document, Project, Organization, UserMembership, ProjectMembership]),
+    TypeOrmModule.forFeature([Document, DocumentTag, Project, Organization, UserMembership, ProjectMembership]),
     // Only serve static files in development/local environment
     ...(process.env.NODE_ENV !== "production"
       ? [

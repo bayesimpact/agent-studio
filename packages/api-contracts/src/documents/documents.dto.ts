@@ -1,3 +1,4 @@
+import type { DocumentTagDto } from "../document-tags/document-tag.dto"
 import type { TimeType } from "../generic"
 
 export type DocumentDto = {
@@ -13,6 +14,7 @@ export type DocumentDto = {
   mimeType?: MimeTypes
   size?: number
   storageRelativePath?: string
+  tags: DocumentTagDto[]
 }
 
 // https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/MIME_types/Common_types

@@ -1,13 +1,18 @@
 import { Injectable, NotFoundException } from "@nestjs/common"
 import { InjectRepository } from "@nestjs/typeorm"
-import type { Repository } from "typeorm"
+import { In, type Repository } from "typeorm"
 import { ConnectRepository } from "@/common/entities/connect-repository"
 import type { RequiredConnectScope } from "@/common/entities/connect-required-fields"
 import { Document } from "./document.entity"
+// biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
+import { DocumentTag } from "./tags/document-tag.entity"
 
 @Injectable()
 export class DocumentsService {
-  constructor(@InjectRepository(Document) documentRepository: Repository<Document>) {
+  constructor(
+    @InjectRepository(Document) documentRepository: Repository<Document>,
+    @InjectRepository(DocumentTag) private readonly documentTagRepository: Repository<DocumentTag>,
+  ) {
     this.documentConnectRepository = new ConnectRepository(documentRepository, "documents")
   }
   private readonly documentConnectRepository: ConnectRepository<Document>
@@ -45,11 +50,60 @@ export class DocumentsService {
   async findById({
     connectScope,
     documentId,
+    withTags = false,
   }: {
     connectScope: RequiredConnectScope
     documentId: string
+    withTags?: boolean
   }): Promise<Document | null> {
-    return await this.documentConnectRepository.getOneById(connectScope, documentId)
+    return await this.documentConnectRepository.getOneById(
+      connectScope,
+      documentId,
+      withTags ? { relations: ["tags"] } : undefined,
+    )
+  }
+
+  async updateDocument({
+    connectScope,
+    documentId,
+    fieldsToUpdate,
+  }: {
+    connectScope: RequiredConnectScope
+    documentId: string
+    fieldsToUpdate: Partial<Pick<Document, "title">> & {
+      tagsToAdd?: DocumentTag["id"][]
+      tagsToRemove?: DocumentTag["id"][]
+    }
+  }): Promise<Document> {
+    const needsTags =
+      (fieldsToUpdate.tagsToAdd !== undefined && fieldsToUpdate.tagsToAdd.length > 0) ||
+      (fieldsToUpdate.tagsToRemove !== undefined && fieldsToUpdate.tagsToRemove.length > 0)
+
+    const document = await this.documentConnectRepository.getOneById(
+      connectScope,
+      documentId,
+      needsTags ? { relations: ["tags"] } : undefined,
+    )
+    if (!document) {
+      throw new NotFoundException(`Document with id ${documentId} not found`)
+    }
+
+    if (fieldsToUpdate.title !== undefined) {
+      document.title = fieldsToUpdate.title
+    }
+
+    if (needsTags) {
+      const tagsToAdd = fieldsToUpdate.tagsToAdd
+        ? await this.documentTagRepository.findBy({ id: In(fieldsToUpdate.tagsToAdd) })
+        : []
+      const tagsToRemoveIds = new Set(fieldsToUpdate.tagsToRemove ?? [])
+      document.tags = [
+        ...(document.tags || []).filter((tag) => !tagsToRemoveIds.has(tag.id)),
+        ...tagsToAdd,
+      ]
+    }
+
+    return this.documentConnectRepository.saveOne(document)
   }
 
   async saveOne(document: Document): Promise<Document> {

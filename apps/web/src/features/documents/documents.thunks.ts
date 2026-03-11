@@ -1,5 +1,6 @@
 import { createAsyncThunk } from "@reduxjs/toolkit"
 import type { RootState, ThunkExtraArg } from "@/store"
+import type { DocumentTag } from "../document-tags/document-tags.models"
 import { getCurrentIds } from "../helpers"
 import type { Document } from "./documents.models"
 
@@ -32,6 +33,31 @@ export const uploadDocument = createAsyncThunk<
     wantedIds: ["organizationId", "projectId"],
   })
   return await services.documents.uploadOne({ organizationId, projectId, file, sourceType })
+})
+
+export const updateDocument = createAsyncThunk<
+  void,
+  {
+    documentId: string
+    fields: Partial<Pick<Document, "title">> & {
+      tagsToAdd?: DocumentTag["id"][]
+      tagsToRemove?: DocumentTag["id"][]
+    }
+    onSuccess?: () => void
+  },
+  ThunkConfig
+>("documents/update", async ({ documentId, fields }, { extra: { services }, getState }) => {
+  const state = getState()
+  const { organizationId, projectId } = getCurrentIds({
+    state,
+    wantedIds: ["organizationId", "projectId"],
+  })
+  return await services.documents.updateOne({
+    organizationId,
+    projectId,
+    documentId,
+    payload: fields,
+  })
 })
 
 export const deleteDocument = createAsyncThunk<

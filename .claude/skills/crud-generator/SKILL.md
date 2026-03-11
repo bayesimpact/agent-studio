@@ -510,6 +510,9 @@ After writing all files, output this checklist for the user:
       - Add `{entityNamePlural}: ReturnType<typeof {entityNamePlural}SliceReducer>` to the `RootState` type (alphabetical order)
 - [ ] Register the API implementation in apps/web/src/external/axios.services.ts:
       {entityNamePlural}: {entityNamePlural}Api
+- [ ] Update apps/web/src/di/services.ts:
+      - Add `import type { I{EntityName}sSpi } from "@/features/{entityNameKebabPlural}/{entityNamePlural}.spi"`
+      - Add `{entityNamePlural}: I{EntityName}sSpi` to the `Services` type (alphabetical order)
 - [ ] Add {EntityName}[] to services type in the ThunkExtraArg if needed
 - [ ] Add locales/{entityNameKebab}.en.json and locales/{entityNameKebab}.fr.json if i18n is used
 ```

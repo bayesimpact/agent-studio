@@ -1,5 +1,6 @@
 import { type DocumentDto, DocumentsRoutes, type MimeTypes } from "@caseai-connect/api-contracts"
 import {
+  Body,
   Controller,
   Delete,
   FileTypeValidator,
@@ -11,6 +12,7 @@ import {
   NotFoundException,
   Param,
   ParseFilePipe,
+  Patch,
   Post,
   Request,
   UnprocessableEntityException,
@@ -41,6 +43,7 @@ import {
   type DocumentEmbeddingsBatchService,
 } from "./embeddings/document-embeddings-batch.interface"
 import { FILE_STORAGE_SERVICE, type IFileStorage } from "./storage/file-storage.interface"
+import { toDocumentTagDto } from "./tags/document-tags.controller"
 
 const mega = 1024
 @UseGuards(JwtAuthGuard, UserGuard, ResourceContextGuard, DocumentsGuard)
@@ -158,6 +161,22 @@ export class DocumentsController {
     return { data: documents.map(toDocumentDto) }
   }
 
+  @CheckPolicy((policy) => policy.canUpdate())
+  @AddContext("document")
+  @Patch(DocumentsRoutes.updateOne.path)
+  async updateOne(
+    @Request() req: EndpointRequestWithDocument,
+    @Body() { payload }: typeof DocumentsRoutes.updateOne.request,
+  ): Promise<typeof DocumentsRoutes.updateOne.response> {
+    await this.documentsService.updateDocument({
+      connectScope: getRequiredConnectScope(req),
+      documentId: req.document.id,
+      fieldsToUpdate: payload,
+    })
+
+    return { data: { success: true } }
+  }
+
   @CheckPolicy((policy) => policy.canDelete())
   @AddContext("document")
   @Delete(DocumentsRoutes.deleteOne.path)
@@ -205,5 +224,6 @@ function toDocumentDto(entity: Document): DocumentDto {
     mimeType: entity.mimeType as MimeTypes,
     size: entity.size,
     storageRelativePath: entity.storageRelativePath,
+    tags: entity.tags?.map(toDocumentTagDto) || [],
   }
 }

@@ -52,10 +52,19 @@ export class ConnectRepository<T extends ConnectEntityBase> {
     return await this.newQueryBuilderWithConnectScope(connectScope).getMany()
   }
 
-  public async getOneById(connectScope: RequiredConnectScope, id: string): Promise<T | null> {
-    return await this.newQueryBuilderWithConnectScope(connectScope)
-      .andWhere(`${this.alias}.id = :id`, { id })
-      .getOne()
+  public async getOneById(
+    connectScope: RequiredConnectScope,
+    id: string,
+    options?: { relations?: string[] },
+  ): Promise<T | null> {
+    let query = this.newQueryBuilderWithConnectScope(connectScope).andWhere(
+      `${this.alias}.id = :id`,
+      { id },
+    )
+    for (const relation of options?.relations ?? []) {
+      query = query.leftJoinAndSelect(`${this.alias}.${relation}`, relation)
+    }
+    return await query.getOne()
   }
 
   public newQueryBuilderWithConnectScope(

@@ -5,6 +5,7 @@ import type { IConversationAgentSessionsSpi } from "@/features/agents/conversati
 import type { IExtractionAgentSessionsSpi } from "@/features/agents/extraction-agent-sessions/extraction-agent-sessions.spi"
 import type { IFormAgentSessionsSpi } from "@/features/agents/form-agent-sessions/form-agent-sessions.spi"
 import type { IAgentSessionMessagesSpi } from "@/features/agents/shared/agent-session-messages/agent-session-messages.spi"
+import type { IDocumentTagsSpi } from "@/features/document-tags/document-tags.spi"
 import type { IDocumentsSpi } from "@/features/documents/documents.spi"
 import type { IEvaluationReportsSpi } from "@/features/evaluation-reports/evaluation-reports.spi"
 import type { IEvaluationsSpi } from "@/features/evaluations/evaluations.spi"
@@ -21,6 +22,7 @@ export type Services = {
   agents: IAgentsSpi
   conversationAgentSessions: IConversationAgentSessionsSpi
   formAgentSessions: IFormAgentSessionsSpi
+  documentTags: IDocumentTagsSpi
   documents: IDocumentsSpi
   evaluationReports: IEvaluationReportsSpi
   evaluations: IEvaluationsSpi
