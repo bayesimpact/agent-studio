@@ -19,9 +19,6 @@ export class DocumentTagsService {
 
   private readonly documentTagConnectRepository: ConnectRepository<DocumentTag>
 
-  /**
-   * Creates a new document tag for a project.
-   */
   async createDocumentTag({
     connectScope,
     fields,
@@ -36,18 +33,12 @@ export class DocumentTagsService {
     })
   }
 
-  /**
-   * Lists all document tags for a project.
-   */
   async listDocumentTags(connectScope: RequiredConnectScope): Promise<DocumentTag[]> {
     return (await this.documentTagConnectRepository.getMany(connectScope))?.sort((a, b) =>
       a.name.localeCompare(b.name),
     )
   }
 
-  /**
-   * Finds a document tag by its id.
-   */
   async findDocumentTagById({
     connectScope,
     documentTagId,
@@ -58,20 +49,15 @@ export class DocumentTagsService {
     return this.documentTagConnectRepository.getOneById(connectScope, documentTagId)
   }
 
-  /**
-   * Updates a document tag.
-   */
   async updateDocumentTag({
     connectScope,
-    required,
+    documentTagId,
     fieldsToUpdate,
   }: {
     connectScope: RequiredConnectScope
-    required: { documentTagId: string }
-    fieldsToUpdate: Partial<Pick<DocumentTag, "name" | "description" | "parentId">>
+    documentTagId: string
+    fieldsToUpdate: Pick<DocumentTag, "name" | "description" | "parentId">
   }): Promise<DocumentTag> {
-    const { documentTagId } = required
-
     const documentTag = await this.documentTagConnectRepository.getOneById(
       connectScope,
       documentTagId,
@@ -81,18 +67,11 @@ export class DocumentTagsService {
       throw new NotFoundException(`DocumentTag with id ${documentTagId} not found`)
     }
 
-    Object.assign(documentTag, {
-      ...(fieldsToUpdate.name !== undefined && { name: fieldsToUpdate.name }),
-      ...(fieldsToUpdate.description !== undefined && { description: fieldsToUpdate.description }),
-      ...(fieldsToUpdate.parentId !== undefined && { parentId: fieldsToUpdate.parentId }),
-    })
+    Object.assign(documentTag, fieldsToUpdate)
 
     return await this.documentTagConnectRepository.saveOne(documentTag)
   }
 
-  /**
-   * Deletes a document tag.
-   */
   async deleteDocumentTag({
     connectScope,
     documentTagId,

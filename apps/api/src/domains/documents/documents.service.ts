@@ -4,7 +4,6 @@ import { In, type Repository } from "typeorm"
 import { ConnectRepository } from "@/common/entities/connect-repository"
 import type { RequiredConnectScope } from "@/common/entities/connect-required-fields"
 import { Document } from "./document.entity"
-// biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
 import { DocumentTag } from "./tags/document-tag.entity"
 
 @Injectable()

@@ -38,6 +38,7 @@ export function ExtractionSessionItem({ run }: { run: ExtractionAgentSessionSumm
 
     setIsLoading(true)
     try {
+      // FIXME:
       const runDetails = await dispatch(getExtractionAgentSession({ runId })).unwrap()
       if (!runDetails.result) {
         return null

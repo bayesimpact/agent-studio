@@ -136,46 +136,6 @@ describe("DocumentTags - Auth", () => {
     })
   })
 
-  describe("DocumentTagsRoutes.getOne", () => {
-    const subject = async () =>
-      request({
-        route: DocumentTagsRoutes.getOne,
-        pathParams: removeNullish({ organizationId, projectId, documentTagId }),
-        token: accessToken ?? undefined,
-      })
-
-    it("requires an authentication token", async () => {
-      accessToken = null
-      expectResponse(await subject(), 401, AUTH_ERRORS.NO_ACCESS_TOKEN)
-    })
-    it("requires a valid organization ID", async () => {
-      organizationId = null
-      expectResponse(await subject(), 400, AUTH_ERRORS.NO_ORGANIZATION_ID)
-    })
-    it("requires a valid project ID", async () => {
-      await createContextForRole("owner")
-      projectId = randomUUID()
-      expectResponse(await subject(), 404)
-    })
-    it("requires the user to be a member of the organization", async () => {
-      await createContextForRole("owner")
-      auth0Id = "another-auth0-id"
-      expectResponse(await subject(), 401, AUTH_ERRORS.NOT_MEMBER_OF_ORG)
-    })
-    it("requires the document tag to be part of the project", async () => {
-      const { organization } = await createContextForRole("owner")
-      const project2 = await repositories.projectRepository.save(
-        projectFactory.transient({ organization }).build(),
-      )
-      projectId = project2.id
-      expectResponse(await subject(), 404)
-    })
-    it("doesn't allow a simple member to get a document tag", async () => {
-      await createContextForRole("member")
-      expectResponse(await subject(), 403, AUTH_ERRORS.UNAUTHORIZED_RESOURCE)
-    })
-  })
-
   describe("DocumentTagsRoutes.updateOne", () => {
     const subject = async () =>
       request({

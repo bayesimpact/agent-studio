@@ -1,0 +1,40 @@
+{
+  "documentTag": {
+    "documentTag": "Tag",
+    "documentTags": "Tags",
+    "props": {
+      "name": "Name",
+      "description": "Description",
+      "parentTag": "Parent tag",
+      "tags": "Tags",
+      "placeholders": {
+        "name": "Tag name",
+        "description": "Optional description"
+      },
+      "validation": {
+        "nameRequired": "Name is required"
+      }
+    },
+    "sheet": {
+      "button": "Tags",
+      "title": "Tags",
+      "empty": "No tags yet"
+    },
+    "create": {
+      "button": "Create tag",
+      "title": "Create tag"
+    },
+    "edit": {
+      "title": "Edit {{tagName}}"
+    },
+    "delete": {
+      "title": "Delete {{tagName}}?",
+      "description": "This action cannot be undone."
+    },
+    "parentNone": "None",
+    "searchPlaceholder": "Search tags...",
+    "noTagsFound": "No tags found",
+    "untagged": "Untagged",
+    "addTag": "Add tag"
+  }
+}

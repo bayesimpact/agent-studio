@@ -49,7 +49,7 @@ export function fillFormTool({
 // TODO: write a test for this method
 function buildInputSchemaForFormTool(
   properties: Record<string, { type: string; description: string }>,
-): z.ZodObject<any> {
+): z.ZodObject<Record<string, z.ZodTypeAny>> {
   const shape: Record<string, z.ZodTypeAny> = {}
   for (const [key, value] of Object.entries(properties)) {
     switch (value.type) {

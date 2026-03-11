@@ -1,16 +1,6 @@
-import type { TimeType } from "@caseai-connect/api-contracts"
-import z from "zod"
+import type { DocumentTagDto } from "@caseai-connect/api-contracts"
 
-export type DocumentTag = {
-  createdAt: TimeType
-  description: string | null
-  id: string
-  name: string
-  organizationId: string
-  parentId: string | null
-  projectId: string
-  updatedAt: TimeType
-}
+export type DocumentTag = DocumentTagDto
 
 export type TagNode = DocumentTag & { children: TagNode[] }
 
@@ -21,7 +11,7 @@ export function buildTagTree(tags: DocumentTag[]): TagNode[] {
   }
   const roots: TagNode[] = []
   for (const node of tagMap.values()) {
-    if (node.parentId === null) {
+    if (node.parentId === undefined) {
       roots.push(node)
     } else {
       const parent = tagMap.get(node.parentId)
@@ -34,16 +24,3 @@ export function buildTagTree(tags: DocumentTag[]): TagNode[] {
   }
   return roots
 }
-
-export const documentTagSchema = z
-  .object({
-    createdAt: z.number(),
-    description: z.string().nullable(),
-    id: z.string(),
-    name: z.string(),
-    organizationId: z.string(),
-    parentId: z.string().nullable(),
-    projectId: z.string(),
-    updatedAt: z.number(),
-  })
-  .strict()

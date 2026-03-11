@@ -32,7 +32,10 @@ export class DocumentTagsController {
       fields: payload,
     })
 
-    return { data: toDocumentTagDto(documentTag) }
+    return {
+      // No need to calculate childrenIds for a newly created tag, as it won't have any children yet
+      data: toDocumentTagDto([])(documentTag),
+    }
   }
 
   @Get(DocumentTagsRoutes.getAll.path)
@@ -43,17 +46,9 @@ export class DocumentTagsController {
     const documentTags = await this.documentTagsService.listDocumentTags(
       getRequiredConnectScope(request),
     )
-
-    return { data: documentTags.map(toDocumentTagDto) }
-  }
-
-  @Get(DocumentTagsRoutes.getOne.path)
-  @CheckPolicy((policy) => policy.canList())
-  @AddContext("documentTag")
-  async getOne(
-    @Req() request: EndpointRequestWithDocumentTag,
-  ): Promise<typeof DocumentTagsRoutes.getOne.response> {
-    return { data: toDocumentTagDto(request.documentTag) }
+    return {
+      data: documentTags.map(toDocumentTagDto(documentTags)),
+    }
   }
 
   @Patch(DocumentTagsRoutes.updateOne.path)
@@ -65,10 +60,13 @@ export class DocumentTagsController {
   ): Promise<typeof DocumentTagsRoutes.updateOne.response> {
     await this.documentTagsService.updateDocumentTag({
       connectScope: getRequiredConnectScope(request),
-      required: { documentTagId: request.documentTag.id },
-      fieldsToUpdate: payload,
+      documentTagId: request.documentTag.id,
+      fieldsToUpdate: {
+        name: payload.name,
+        description: payload.description ?? null,
+        parentId: payload.parentId ?? null,
+      },
     })
-
     return { data: { success: true } }
   }
 
@@ -87,15 +85,29 @@ export class DocumentTagsController {
   }
 }
 
-export function toDocumentTagDto(entity: DocumentTag): DocumentTagDto {
-  return {
+export function toDocumentTagDto(entities: DocumentTag[]) {
+  return (entity: DocumentTag): DocumentTagDto => ({
     createdAt: entity.createdAt.getTime(),
-    description: entity.description ?? null,
+    description: entity.description ?? undefined,
     id: entity.id,
     name: entity.name,
     organizationId: entity.organizationId,
-    parentId: entity.parentId,
+    parentId: entity.parentId ?? undefined,
     projectId: entity.projectId,
     updatedAt: entity.updatedAt.getTime(),
+    childrenIds: getChildrenIds(entities, entity.id),
+  })
+}
+
+// Filter the list of all tags to find those whose parentId matches the current tag's id, and map them to their ids
+function getChildrenIds(documentTags: DocumentTag[], parentId: string): string[] {
+  const children = documentTags.filter((tag) => tag.parentId === parentId)
+  const childrenIds = children.map((child) => child.id)
+
+  // Recursively get the ids of the children's children
+  for (const child of children) {
+    childrenIds.push(...getChildrenIds(documentTags, child.id))
   }
+
+  return childrenIds
 }

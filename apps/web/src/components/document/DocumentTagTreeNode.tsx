@@ -32,9 +32,8 @@ export function DocumentTagTreeNode({
       >
         <ChevronRight className="size-4 transition-transform" />
         {tag.name}
-        {tagDocuments.length > 0 && (
-          <span className="ml-1 text-xs text-muted-foreground">({tagDocuments.length})</span>
-        )}
+
+        <span className="ml-1 text-xs text-muted-foreground">({tagDocuments.length})</span>
       </CollapsibleTrigger>
       <CollapsibleContent
         className="flex flex-col gap-3 pt-2"

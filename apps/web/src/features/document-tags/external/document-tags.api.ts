@@ -11,18 +11,11 @@ export default {
     )
     return response.data.data.map(toDocumentTag)
   },
-  getOne: async ({ organizationId, projectId, documentTagId }) => {
-    const axios = getAxiosInstance()
-    const response = await axios.get<typeof DocumentTagsRoutes.getOne.response>(
-      DocumentTagsRoutes.getOne.getPath({ organizationId, projectId, documentTagId }),
-    )
-    return toDocumentTag(response.data.data)
-  },
   createOne: async ({ organizationId, projectId }, payload) => {
     const axios = getAxiosInstance()
     const response = await axios.post<typeof DocumentTagsRoutes.createOne.response>(
       DocumentTagsRoutes.createOne.getPath({ organizationId, projectId }),
-      { payload: toCreateDto(payload) },
+      { payload } satisfies typeof DocumentTagsRoutes.createOne.request,
     )
     return toDocumentTag(response.data.data)
   },
@@ -30,7 +23,7 @@ export default {
     const axios = getAxiosInstance()
     await axios.patch(
       DocumentTagsRoutes.updateOne.getPath({ organizationId, projectId, documentTagId }),
-      { payload: toUpdateDto(payload) },
+      { payload } satisfies typeof DocumentTagsRoutes.updateOne.request,
     )
   },
   deleteOne: async ({ organizationId, projectId, documentTagId }) => {
@@ -41,23 +34,8 @@ export default {
   },
 } satisfies IDocumentTagsSpi
 
-const toCreateDto = (
-  payload: Pick<DocumentTag, "name"> & Partial<Pick<DocumentTag, "description" | "parentId">>,
-): (typeof DocumentTagsRoutes.createOne.request)["payload"] => ({
-  name: payload.name,
-  description: payload.description,
-  parentId: payload.parentId,
-})
-
-const toUpdateDto = (
-  payload: Partial<Pick<DocumentTag, "name" | "description" | "parentId">>,
-): (typeof DocumentTagsRoutes.updateOne.request)["payload"] => ({
-  name: payload.name,
-  description: payload.description,
-  parentId: payload.parentId,
-})
-
 export const toDocumentTag = (dto: DocumentTagDto): DocumentTag => ({
+  childrenIds: dto.childrenIds,
   createdAt: dto.createdAt,
   description: dto.description,
   id: dto.id,

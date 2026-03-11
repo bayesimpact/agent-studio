@@ -12,31 +12,33 @@ import {
   SheetTrigger,
 } from "@caseai-connect/ui/shad/sheet"
 import { ChevronRight, TagsIcon } from "lucide-react"
+import { useTranslation } from "react-i18next"
 import type { DocumentTag } from "@/features/document-tags/document-tags.models"
 import { buildTagTree, type TagNode } from "@/features/document-tags/document-tags.models"
 import { DocumentTagCreator } from "./DocumentTagCreator"
 import { DocumentTagItem } from "./DocumentTagItem"
 
 export function DocumentTagsSheet({ documentTags }: { documentTags: DocumentTag[] }) {
+  const { t } = useTranslation("documentTag")
   const tagTree = buildTagTree(documentTags)
   return (
     <Sheet>
       <SheetTrigger asChild>
         <Button variant="outline" size="sm">
           <TagsIcon className="size-4" />
-          Tags
+          {t("sheet.button")}
         </Button>
       </SheetTrigger>
       <SheetContent>
         <SheetHeader>
-          <SheetTitle>Tags</SheetTitle>
+          <SheetTitle>{t("sheet.title")}</SheetTitle>
         </SheetHeader>
         <div className="flex flex-col gap-3 px-4 pb-4">
           <div className="flex justify-end">
             <DocumentTagCreator allTags={documentTags} />
           </div>
           {documentTags.length === 0 ? (
-            <p className="text-sm text-muted-foreground">No tags yet.</p>
+            <p className="text-sm text-muted-foreground">{t("sheet.empty")}</p>
           ) : (
             tagTree.map((tag) => (
               <DocumentTagSheetNode key={tag.id} tag={tag} allTags={documentTags} />

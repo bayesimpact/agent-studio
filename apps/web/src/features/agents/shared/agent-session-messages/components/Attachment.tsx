@@ -14,7 +14,7 @@ export function Attachment({ message }: { message: AgentSessionMessage }) {
 
   const loadDocument = useCallback(async () => {
     if (!message.documentId) return
-    const res = await dispatch(getDocumentTemporaryUrl({ documentId: message.documentId })).unwrap()
+    const res = await dispatch(getDocumentTemporaryUrl({ documentId: message.documentId })).unwrap() // FIXME: onSuccess callback
     if (res.url) setUrl(res.url)
   }, [dispatch, message.documentId])
 

@@ -96,7 +96,7 @@ describe("DocumentTags - createOne", () => {
 
     expectResponse(response, 201)
     expect(response.body.data.name).toBe("Minimal Tag")
-    expect(response.body.data.description).toBeNull()
-    expect(response.body.data.parentId).toBeNull()
+    expect(response.body.data.description).toBeUndefined()
+    expect(response.body.data.parentId).toBeUndefined()
   })
 })

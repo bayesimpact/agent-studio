@@ -5,18 +5,21 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
 } from "@caseai-connect/ui/shad/dialog"
 import { Trash2Icon } from "lucide-react"
 import { useState } from "react"
+import { useTranslation } from "react-i18next"
 import type { DocumentTag } from "@/features/document-tags/document-tags.models"
 import { deleteDocumentTag } from "@/features/document-tags/document-tags.thunks"
 import { useAppDispatch } from "@/store/hooks"
 
 export function DocumentTagDeletor({ tag }: { tag: DocumentTag }) {
   const dispatch = useAppDispatch()
+  const { t } = useTranslation()
   const [open, setOpen] = useState(false)
 
   const handleDelete = () => {
@@ -32,17 +35,18 @@ export function DocumentTagDeletor({ tag }: { tag: DocumentTag }) {
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Delete &ldquo;{tag.name}&rdquo;?</DialogTitle>
-          <DialogDescription>This action cannot be undone.</DialogDescription>
+          <DialogTitle>{t("documentTag:delete.title", { tagName: tag.name })}</DialogTitle>
+          <DialogDescription>{t("documentTag:delete.description")}</DialogDescription>
         </DialogHeader>
-        <div className="flex justify-end gap-2 pt-4">
+
+        <DialogFooter>
           <Button variant="outline" onClick={() => setOpen(false)}>
-            Cancel
+            {t("actions:cancel")}
           </Button>
           <Button variant="destructive" onClick={handleDelete}>
-            Delete
+            {t("actions:confirm")}
           </Button>
-        </div>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   )
