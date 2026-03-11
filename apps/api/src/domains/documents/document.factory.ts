@@ -38,6 +38,7 @@ export const documentFactory = DocumentFactory.define(({ sequence, params, trans
     storageRelativePath: params.storageRelativePath || `documents/file_${sequence}.txt`,
     sourceType: params.sourceType || "project",
     embeddingStatus: params.embeddingStatus || "pending",
+    tags: params.tags || [],
   } satisfies Document
 })
 
