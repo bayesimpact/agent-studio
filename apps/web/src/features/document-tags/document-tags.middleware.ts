@@ -49,8 +49,7 @@ listenerMiddleware.startListening({
     )
 
     const onSuccess = action.meta.arg.onSuccess
-    const id = action.meta.arg.documentTagId
-    onSuccess?.(id)
+    onSuccess()
   },
 })
 listenerMiddleware.startListening({
@@ -76,7 +75,7 @@ listenerMiddleware.startListening({
     )
 
     const onSuccess = action.meta.arg.onSuccess
-    onSuccess?.(action.payload)
+    onSuccess(action.payload)
   },
 })
 listenerMiddleware.startListening({
@@ -93,13 +92,15 @@ listenerMiddleware.startListening({
 
 listenerMiddleware.startListening({
   actionCreator: updateDocumentTag.fulfilled,
-  effect: async (_, listenerApi) => {
+  effect: async (action, listenerApi) => {
     listenerApi.dispatch(
       notificationsActions.show({
         title: "Document tag updated successfully",
         type: "success",
       }),
     )
+    const onSuccess = action.meta.arg.onSuccess
+    onSuccess()
   },
 })
 listenerMiddleware.startListening({

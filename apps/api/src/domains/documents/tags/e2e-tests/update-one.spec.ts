@@ -75,10 +75,16 @@ describe("DocumentTags - updateOne", () => {
       request: payload,
     })
 
-  it("should update a document tag and return success", async () => {
-    await createContext()
+  it("should update a document tag", async () => {
+    const { documentTag } = await createContext()
 
-    const response = await subject({ payload: { name: "Updated Name" } })
+    const response = await subject({
+      payload: {
+        name: "Updated Name",
+        description: documentTag.description ?? undefined,
+        parentId: documentTag.parentId ?? undefined,
+      },
+    })
 
     expectResponse(response, 200)
     expect(response.body.data.success).toBe(true)
@@ -87,18 +93,5 @@ describe("DocumentTags - updateOne", () => {
     const updated = await documentTagRepository.findOne({ where: { id: documentTagId } })
     expect(updated?.name).toBe("Updated Name")
     expect(updated?.description).toBe("Original description")
-  })
-
-  it("should partially update only the specified fields", async () => {
-    await createContext()
-
-    const response = await subject({ payload: { description: "New description" } })
-
-    expectResponse(response, 200)
-
-    const documentTagRepository = setup.getRepository(DocumentTag)
-    const updated = await documentTagRepository.findOne({ where: { id: documentTagId } })
-    expect(updated?.name).toBe("Original Name")
-    expect(updated?.description).toBe("New description")
   })
 })

@@ -13,22 +13,11 @@ export const listDocumentTags = createAsyncThunk<DocumentTag[], void, ThunkConfi
   },
 )
 
-export const getDocumentTag = createAsyncThunk<DocumentTag, { documentTagId: string }, ThunkConfig>(
-  "documentTags/getOne",
-  async ({ documentTagId }, { extra: { services }, getState }) => {
-    const { organizationId, projectId } = getCurrentIds({
-      state: getState(),
-      wantedIds: ["organizationId", "projectId"],
-    })
-    return await services.documentTags.getOne({ organizationId, projectId, documentTagId })
-  },
-)
-
 export const createDocumentTag = createAsyncThunk<
   DocumentTag,
   {
     fields: Pick<DocumentTag, "name"> & Partial<Pick<DocumentTag, "description" | "parentId">>
-    onSuccess?: (documentTag: DocumentTag) => void
+    onSuccess: (documentTag: DocumentTag) => void
   },
   ThunkConfig
 >("documentTags/create", async (payload, { extra: { services }, getState }) => {
@@ -50,7 +39,8 @@ export const updateDocumentTag = createAsyncThunk<
   void,
   {
     documentTagId: string
-    fields: Partial<Pick<DocumentTag, "name" | "description" | "parentId">>
+    fields: Pick<DocumentTag, "name" | "description" | "parentId">
+    onSuccess: () => void
   },
   ThunkConfig
 >("documentTags/update", async ({ documentTagId, fields }, { extra: { services }, getState }) => {
@@ -65,7 +55,7 @@ export const deleteDocumentTag = createAsyncThunk<
   void,
   {
     documentTagId: string
-    onSuccess?: (documentTagId: string) => void
+    onSuccess: () => void
   },
   ThunkConfig
 >("documentTags/delete", async ({ documentTagId }, { extra: { services }, getState }) => {

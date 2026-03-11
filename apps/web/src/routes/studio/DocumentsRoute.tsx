@@ -5,6 +5,7 @@ import {
 } from "@caseai-connect/ui/shad/collapsible"
 import { ChevronRight } from "lucide-react"
 import { useEffect } from "react"
+import { useTranslation } from "react-i18next"
 import { DocumentTagTreeNode } from "@/components/document/DocumentTagTreeNode"
 import { EmptyDocument } from "@/components/document/EmptyDocument"
 import { UploadDocumentButton } from "@/components/document/UploadDocumentButton"
@@ -39,6 +40,7 @@ function WithData({
   documentTags: DocumentTag[]
 }) {
   useHandleHeader(documentTags)
+  const { t } = useTranslation("documentTag")
   const tagTree = buildTagTree(documentTags)
   const untagged = documents.filter((document) => document.tags.length === 0)
 
@@ -55,7 +57,7 @@ function WithData({
             <Collapsible defaultOpen>
               <CollapsibleTrigger className="flex items-center gap-1 text-sm font-medium text-muted-foreground hover:text-foreground w-full py-1 [&[data-state=open]>svg]:rotate-90">
                 <ChevronRight className="size-4 transition-transform" />
-                Untagged
+                {t("untagged")}
                 <span className="ml-1 text-xs text-muted-foreground">({untagged.length})</span>
               </CollapsibleTrigger>
               <CollapsibleContent className="flex flex-col gap-3 pl-5 pt-2">

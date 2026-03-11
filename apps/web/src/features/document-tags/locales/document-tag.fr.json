@@ -1,0 +1,40 @@
+{
+  "documentTag": {
+    "documentTag": "Étiquette",
+    "documentTags": "Étiquettes",
+    "props": {
+      "name": "Nom",
+      "description": "Description",
+      "parentTag": "Étiquette parente",
+      "tags": "Étiquettes",
+      "placeholders": {
+        "name": "Nom de l'étiquette",
+        "description": "Description facultative"
+      },
+      "validation": {
+        "nameRequired": "Le nom est requis"
+      }
+    },
+    "sheet": {
+      "button": "Étiquettes",
+      "title": "Étiquettes",
+      "empty": "Aucune étiquette pour l'instant"
+    },
+    "create": {
+      "button": "Ajouter une étiquette",
+      "title": "Créer une étiquette"
+    },
+    "edit": {
+      "title": "Modifier {{tagName}}"
+    },
+    "delete": {
+      "title": "Supprimer {{tagName}} ?",
+      "description": "Cette action est irréversible."
+    },
+    "parentNone": "Aucune",
+    "searchPlaceholder": "Rechercher...",
+    "noTagsFound": "Aucune étiquette trouvée",
+    "untagged": "Sans étiquette",
+    "addTag": "Ajouter une étiquette"
+  }
+}

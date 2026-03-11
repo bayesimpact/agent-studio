@@ -27,8 +27,6 @@ export const documentTagFactory = DocumentTagFactory.define(
       createdAt: params.createdAt || now,
       updatedAt: params.updatedAt || now,
       deletedAt: params.deletedAt || null,
-      parent: (params.parent as DocumentTag | undefined) ?? null,
-      children: params.children || [],
       documents: params.documents || [],
     } satisfies DocumentTag
   },

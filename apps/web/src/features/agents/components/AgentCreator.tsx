@@ -205,7 +205,7 @@ function CreateForm({
         ? (JSON.parse(fields.outputJsonSchemaText) as Record<string, unknown>)
         : undefined
 
-    const createdAgent = await dispatch(
+    await dispatch(
       createAgent({
         fields: {
           name: fields.name,
@@ -216,9 +216,9 @@ function CreateForm({
           type: agentType,
           outputJsonSchema: parsedOutputSchema,
         },
+        onSuccess,
       }),
-    ).unwrap()
-    onSuccess(createdAgent)
+    )
   }
 
   return <BaseAgentForm agentType={agentType} onSubmit={handleCreate} />

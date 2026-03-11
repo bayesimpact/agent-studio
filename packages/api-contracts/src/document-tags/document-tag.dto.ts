@@ -1,12 +1,13 @@
 import type { TimeType } from "../generic"
 
 export type DocumentTagDto = {
+  childrenIds: DocumentTagDto["id"][]
   createdAt: TimeType
-  description: string | null
+  description?: string
   id: string
   name: string
   organizationId: string
-  parentId: string | null
+  parentId?: DocumentTagDto["id"]
   projectId: string
   updatedAt: TimeType
 }

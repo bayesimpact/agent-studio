@@ -16,13 +16,9 @@ export const DocumentTagsRoutes = {
     method: "get",
     path: "organizations/:organizationId/projects/:projectId/document-tags",
   }),
-  getOne: defineRoute<ResponseData<DocumentTagDto>>({
-    method: "get",
-    path: "organizations/:organizationId/projects/:projectId/document-tags/:documentTagId",
-  }),
   updateOne: defineRoute<
     ResponseData<SuccessResponseDTO>,
-    RequestPayload<Partial<Pick<DocumentTagDto, "name" | "description" | "parentId">>>
+    RequestPayload<Pick<DocumentTagDto, "name" | "description" | "parentId">>
   >({
     method: "patch",
     path: "organizations/:organizationId/projects/:projectId/document-tags/:documentTagId",

@@ -224,6 +224,6 @@ function toDocumentDto(entity: Document): DocumentDto {
     mimeType: entity.mimeType as MimeTypes,
     size: entity.size,
     storageRelativePath: entity.storageRelativePath,
-    tags: entity.tags?.map(toDocumentTagDto) || [],
+    tags: entity.tags?.map(toDocumentTagDto(entity.tags)),
   }
 }

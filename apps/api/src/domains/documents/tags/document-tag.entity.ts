@@ -1,4 +1,4 @@
-import { Column, JoinColumn, ManyToMany, ManyToOne, OneToMany } from "typeorm"
+import { Column, ManyToMany } from "typeorm"
 import { ConnectEntity, ConnectEntityBase } from "@/common/entities/connect-entity"
 import type { Document } from "../document.entity"
 
@@ -12,20 +12,6 @@ export class DocumentTag extends ConnectEntityBase {
 
   @Column({ name: "parent_id", type: "uuid", nullable: true })
   parentId!: string | null
-
-  @ManyToOne(
-    () => DocumentTag,
-    (tag) => tag.children,
-    { nullable: true },
-  )
-  @JoinColumn({ name: "parent_id" })
-  parent!: DocumentTag | null
-
-  @OneToMany(
-    () => DocumentTag,
-    (tag) => tag.parent,
-  )
-  children!: DocumentTag[]
 
   @ManyToMany("Document", (document: Document) => document.tags)
   documents!: Document[]

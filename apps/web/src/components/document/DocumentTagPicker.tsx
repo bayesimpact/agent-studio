@@ -13,6 +13,7 @@ import {
 import { Popover, PopoverContent, PopoverTrigger } from "@caseai-connect/ui/shad/popover"
 import { PlusIcon } from "lucide-react"
 import { useState } from "react"
+import { useTranslation } from "react-i18next"
 import type { DocumentTag } from "@/features/document-tags/document-tags.models"
 import { createDocumentTag } from "@/features/document-tags/document-tags.thunks"
 import { useAppDispatch } from "@/store/hooks"
@@ -26,6 +27,7 @@ export function DocumentTagPicker({
   attachedTagIds: string[]
   onAdd: (tagId: string) => void
 }) {
+  const { t } = useTranslation()
   const dispatch = useAppDispatch()
   const [open, setOpen] = useState(false)
   const [search, setSearch] = useState("")
@@ -43,11 +45,17 @@ export function DocumentTagPicker({
     setSearch("")
   }
 
-  const handleCreate = async () => {
-    const newTag = await dispatch(createDocumentTag({ fields: { name: search.trim() } })).unwrap()
-    onAdd(newTag.id)
-    setOpen(false)
-    setSearch("")
+  const handleCreate = () => {
+    dispatch(
+      createDocumentTag({
+        fields: { name: search.trim() },
+        onSuccess: (newTag) => {
+          onAdd(newTag.id)
+          setOpen(false)
+          setSearch("")
+        },
+      }),
+    )
   }
 
   return (
@@ -55,15 +63,19 @@ export function DocumentTagPicker({
       <PopoverTrigger asChild>
         <Button variant="outline" size="sm" className="gap-1">
           <PlusIcon className="size-3" />
-          Add tag
+          {t("documentTag:addTag")}
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-56 p-0" align="start">
         <Command shouldFilter={false}>
-          <CommandInput placeholder="Search tags..." value={search} onValueChange={setSearch} />
+          <CommandInput
+            placeholder={t("documentTag:searchPlaceholder")}
+            value={search}
+            onValueChange={setSearch}
+          />
           <CommandList>
             {filteredTags.length === 0 && !showCreate && (
-              <CommandEmpty>No tags available.</CommandEmpty>
+              <CommandEmpty>{t("documentTag:noTagsFound")}</CommandEmpty>
             )}
             {filteredTags.length > 0 && (
               <CommandGroup>
@@ -80,7 +92,7 @@ export function DocumentTagPicker({
                 <CommandGroup>
                   <CommandItem onSelect={handleCreate}>
                     <PlusIcon />
-                    Create &ldquo;{search.trim()}&rdquo;
+                    {t("actions:add")}
                   </CommandItem>
                 </CommandGroup>
               </>

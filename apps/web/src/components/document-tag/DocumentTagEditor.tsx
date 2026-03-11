@@ -10,6 +10,7 @@ import {
 } from "@caseai-connect/ui/shad/dialog"
 import { PencilIcon } from "lucide-react"
 import { useState } from "react"
+import { useTranslation } from "react-i18next"
 import type { DocumentTag } from "@/features/document-tags/document-tags.models"
 import { updateDocumentTag } from "@/features/document-tags/document-tags.thunks"
 import { useAppDispatch } from "@/store/hooks"
@@ -17,16 +18,8 @@ import { DocumentTagForm } from "./DocumentTagForm"
 
 export function DocumentTagEditor({ allTags, tag }: { allTags: DocumentTag[]; tag: DocumentTag }) {
   const dispatch = useAppDispatch()
+  const { t } = useTranslation("documentTag", { keyPrefix: "edit" })
   const [open, setOpen] = useState(false)
-
-  const handleSubmit = async (data: {
-    name: string
-    description: string | null
-    parentId: string | null
-  }) => {
-    await dispatch(updateDocumentTag({ documentTagId: tag.id, fields: data })).unwrap()
-    setOpen(false)
-  }
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -37,16 +30,17 @@ export function DocumentTagEditor({ allTags, tag }: { allTags: DocumentTag[]; ta
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Edit tag</DialogTitle>
+          <DialogTitle>{t("title", { tagName: tag.name })}</DialogTitle>
         </DialogHeader>
+
         <DocumentTagForm
           allTags={allTags}
-          excludeTagId={tag.id}
-          defaultName={tag.name}
-          defaultDescription={tag.description ?? ""}
-          defaultParentId={tag.parentId}
-          onSubmit={handleSubmit}
-          submitLabel="Save"
+          editableTag={tag}
+          onSubmit={(fields) => {
+            dispatch(
+              updateDocumentTag({ documentTagId: tag.id, fields, onSuccess: () => setOpen(false) }),
+            )
+          }}
         />
       </DialogContent>
     </Dialog>
