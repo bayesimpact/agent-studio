@@ -84,7 +84,7 @@ export class DocumentChunkRetrievalService {
   }): Promise<RetrievedDocumentChunk[]> {
     return await this.dataSource
       .createQueryBuilder()
-      .select('chunk.id', "chunkId")
+      .select("chunk.id", "chunkId")
       .addSelect("chunk.document_id", "documentId")
       .addSelect("document.title", "documentTitle")
       .addSelect("document.file_name", "documentFileName")
@@ -123,7 +123,9 @@ export class DocumentChunkRetrievalService {
     modelName: string
     chunkCount: number
   }): void {
-    this.logger.log(`Retrieved ${chunkCount} chunks for project ${projectId} using model ${modelName}`)
+    this.logger.log(
+      `Retrieved ${chunkCount} chunks for project ${projectId} using model ${modelName}`,
+    )
   }
 
   private buildRetrievalQueryText({

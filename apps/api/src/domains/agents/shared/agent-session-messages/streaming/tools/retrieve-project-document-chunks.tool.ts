@@ -1,10 +1,8 @@
 import { tool } from "ai"
 import { z } from "zod"
 import type { RequiredConnectScope } from "@/common/entities/connect-required-fields"
-import type {
-  DocumentChunkRetrievalService,
-  RetrievedDocumentChunk,
-} from "@/domains/documents/embeddings/document-chunk-retrieval.service"
+import type { DocumentChunkRetrievalService } from "@/domains/documents/embeddings/document-chunk-retrieval.service"
+import type { ToolExecutionLog } from "./tool-execution-log"
 
 const retrieveProjectDocumentChunksInputSchema = z.object({
   conversationSummary: z
@@ -35,6 +33,32 @@ const retrievedChunkSchema = z.object({
   modelName: z.string(),
 })
 
+export type RetrieveProjectDocumentChunksExecution = {
+  input: z.infer<typeof retrieveProjectDocumentChunksInputSchema>
+  result: {
+    chunkIds: string[]
+    documentIds: string[]
+    returnedChunkCount: number
+    topK: number
+  }
+}
+
+export function buildRetrieveProjectDocumentChunksToolExecutionLog(
+  execution: RetrieveProjectDocumentChunksExecution,
+): ToolExecutionLog {
+  return {
+    toolName: "retrieveProjectDocumentChunks",
+    arguments: {
+      conversationSummary: execution.input.conversationSummary,
+      latestUserQuestion: execution.input.latestUserQuestion,
+      topK: execution.input.topK,
+      returnedChunkCount: execution.result.returnedChunkCount,
+      chunkIds: execution.result.chunkIds,
+      documentIds: execution.result.documentIds,
+    },
+  }
+}
+
 export function retrieveProjectDocumentChunksTool({
   connectScope,
   retrievalService,
@@ -42,7 +66,7 @@ export function retrieveProjectDocumentChunksTool({
 }: {
   connectScope: RequiredConnectScope
   retrievalService: DocumentChunkRetrievalService
-  onExecute: (retrievedChunks: RetrievedDocumentChunk[]) => void
+  onExecute: (toolExecution: ToolExecutionLog) => void
 }) {
   return tool({
     description:
@@ -62,7 +86,18 @@ export function retrieveProjectDocumentChunksTool({
         latestUserQuestion: input.latestUserQuestion,
         topK: input.topK,
       })
-      onExecute(retrievedChunks)
+      const documentIds = [...new Set(retrievedChunks.map((chunk) => chunk.documentId))]
+      onExecute(
+        buildRetrieveProjectDocumentChunksToolExecutionLog({
+          input,
+          result: {
+            chunkIds: retrievedChunks.map((chunk) => chunk.chunkId),
+            documentIds,
+            returnedChunkCount: retrievedChunks.length,
+            topK: input.topK,
+          },
+        }),
+      )
       return {
         retrievedChunks,
         retrievalMetadata: {

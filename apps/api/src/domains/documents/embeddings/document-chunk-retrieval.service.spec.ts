@@ -24,7 +24,7 @@ describe("DocumentChunkRetrievalService", () => {
   })
 
   it("retrieves top chunks for a project scope", async () => {
-    const query = jest.fn().mockResolvedValue([
+    const getRawMany = jest.fn().mockResolvedValue([
       {
         chunkId: "chunk-1",
         documentId: "document-1",
@@ -36,13 +36,25 @@ describe("DocumentChunkRetrievalService", () => {
         modelName: "gemini-embedding-001",
       },
     ])
+    const queryBuilder = {
+      select: jest.fn().mockReturnThis(),
+      addSelect: jest.fn().mockReturnThis(),
+      from: jest.fn().mockReturnThis(),
+      innerJoin: jest.fn().mockReturnThis(),
+      where: jest.fn().mockReturnThis(),
+      andWhere: jest.fn().mockReturnThis(),
+      setParameters: jest.fn().mockReturnThis(),
+      orderBy: jest.fn().mockReturnThis(),
+      limit: jest.fn().mockReturnThis(),
+      getRawMany,
+    }
     const mockedEmbed = embed as jest.MockedFunction<typeof embed>
     mockedEmbed.mockResolvedValue({
       embedding: [0.1, 0.2, 0.3],
     } as never)
 
     const service = new DocumentChunkRetrievalService({
-      query,
+      createQueryBuilder: jest.fn().mockReturnValue(queryBuilder),
     } as never)
 
     const chunks = await service.retrieveTopChunks({
@@ -62,7 +74,7 @@ describe("DocumentChunkRetrievalService", () => {
       location: "us-central1",
     })
     expect(mockTextEmbeddingModel).toHaveBeenCalledWith("gemini-embedding-001")
-    expect(query).toHaveBeenCalledTimes(1)
-    expect(query.mock.calls[0]?.[1]?.[4]).toBe(3)
+    expect(getRawMany).toHaveBeenCalledTimes(1)
+    expect(queryBuilder.limit).toHaveBeenCalledWith(3)
   })
 })

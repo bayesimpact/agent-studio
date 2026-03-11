@@ -52,7 +52,17 @@ describe("retrieveProjectDocumentChunksTool", () => {
       latestUserQuestion: "How long does onboarding take?",
       topK: 3,
     })
-    expect(onExecute).toHaveBeenCalledWith(result.retrievedChunks)
+    expect(onExecute).toHaveBeenCalledWith({
+      toolName: "retrieveProjectDocumentChunks",
+      arguments: {
+        conversationSummary: "The user wants onboarding details.",
+        latestUserQuestion: "How long does onboarding take?",
+        topK: 3,
+        returnedChunkCount: 1,
+        chunkIds: ["chunk-1"],
+        documentIds: ["document-1"],
+      },
+    })
     expect(result.retrievalMetadata).toEqual({
       returnedChunkCount: 1,
       topK: 3,
