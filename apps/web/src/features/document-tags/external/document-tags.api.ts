@@ -9,14 +9,14 @@ export default {
     const response = await axios.get<typeof DocumentTagsRoutes.getAll.response>(
       DocumentTagsRoutes.getAll.getPath({ organizationId, projectId }),
     )
-    return response.data.data.map(fromDto)
+    return response.data.data.map(toDocumentTag)
   },
   getOne: async ({ organizationId, projectId, documentTagId }) => {
     const axios = getAxiosInstance()
     const response = await axios.get<typeof DocumentTagsRoutes.getOne.response>(
       DocumentTagsRoutes.getOne.getPath({ organizationId, projectId, documentTagId }),
     )
-    return fromDto(response.data.data)
+    return toDocumentTag(response.data.data)
   },
   createOne: async ({ organizationId, projectId }, payload) => {
     const axios = getAxiosInstance()
@@ -24,7 +24,7 @@ export default {
       DocumentTagsRoutes.createOne.getPath({ organizationId, projectId }),
       { payload: toCreateDto(payload) },
     )
-    return fromDto(response.data.data)
+    return toDocumentTag(response.data.data)
   },
   updateOne: async ({ organizationId, projectId, documentTagId }, payload) => {
     const axios = getAxiosInstance()
@@ -57,7 +57,7 @@ const toUpdateDto = (
   parentId: payload.parentId,
 })
 
-const fromDto = (dto: DocumentTagDto): DocumentTag => ({
+export const toDocumentTag = (dto: DocumentTagDto): DocumentTag => ({
   createdAt: dto.createdAt,
   description: dto.description,
   id: dto.id,

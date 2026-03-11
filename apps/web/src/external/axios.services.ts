@@ -4,6 +4,7 @@ import agentsApi from "@/features/agents/external/agents.api"
 import extractionAgentSessionsApi from "@/features/agents/extraction-agent-sessions/external/extraction-agent-sessions.api"
 import formAgentSessionsApi from "@/features/agents/form-agent-sessions/external/form-agent-sessions.api"
 import agentSessionMessagesApi from "@/features/agents/shared/agent-session-messages/external/agent-session-messages.api"
+import documentTagsApi from "@/features/document-tags/external/document-tags.api"
 import documentsApi from "@/features/documents/external/documents.api"
 import evaluationReportsApi from "@/features/evaluation-reports/external/evaluation-reports.api"
 import evaluationsApi from "@/features/evaluations/external/evaluations.api"
@@ -20,6 +21,7 @@ export const services = {
   agents: agentsApi,
   conversationAgentSessions: conversationAgentSessionsApi,
   formAgentSessions: formAgentSessionsApi,
+  documentTags: documentTagsApi,
   documents: documentsApi,
   evaluationReports: evaluationReportsApi,
   evaluations: evaluationsApi,

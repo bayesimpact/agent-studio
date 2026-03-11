@@ -87,7 +87,7 @@ export class DocumentTagsController {
   }
 }
 
-function toDocumentTagDto(entity: DocumentTag): DocumentTagDto {
+export function toDocumentTagDto(entity: DocumentTag): DocumentTagDto {
   return {
     createdAt: entity.createdAt.getTime(),
     description: entity.description ?? null,
