@@ -1,3 +1,7 @@
+// Registering all entities in one place is convenient because it makes TypeORM metadata
+// deterministic across app variants (API, workers, tests) and avoids
+// "hidden"  runtime failures from missing relation targets.
+
 import { Agent } from "@/domains/agents/agent.entity"
 import { ConversationAgentSession } from "@/domains/agents/conversation-agent-sessions/conversation-agent-session.entity"
 import { ExtractionAgentSession } from "@/domains/agents/extraction-agent-sessions/extraction-agent-session.entity"
@@ -15,7 +19,7 @@ import { ProjectMembership } from "@/domains/projects/memberships/project-member
 import { Project } from "@/domains/projects/project.entity"
 import { User } from "@/domains/users/user.entity"
 
-export const TEST_ENTITIES = [
+export const ALL_ENTITIES = [
   Agent,
   AgentMessage,
   AgentMessageFeedback,
