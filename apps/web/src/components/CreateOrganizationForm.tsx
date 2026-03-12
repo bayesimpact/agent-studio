@@ -58,7 +58,7 @@ export function CreateOrganizationForm() {
   const isLoading = ADS.isLoading(status)
 
   return (
-    <FullPageCenterLayout>
+    <FullPageCenterLayout className="min-h-screen">
       <Card className="w-full max-w-md">
         <CardHeader>
           <CardTitle>{t("title")}</CardTitle>

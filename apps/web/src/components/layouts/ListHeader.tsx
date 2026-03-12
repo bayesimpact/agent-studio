@@ -10,17 +10,19 @@ export function ListHeader({
   title,
   path,
   children,
+  className,
 }: {
   title: string
   path?: string
   children?: React.ReactNode
+  className?: string
 }) {
   const { isAdminInterface } = useAbility()
   const { getPath } = useGetPath()
   const organization = useAppSelector(selectCurrentOrganization)
   if (!organization) return null
   return (
-    <FullPageCenterLayout>
+    <FullPageCenterLayout className={className}>
       <div className="flex flex-col gap-4 min-w-96 max-w-2/3 2xl:max-w-1/2">
         <div className="flex items-center gap-1 mb-2 border-b-4 pb-6 border-muted">
           <HeaderButton

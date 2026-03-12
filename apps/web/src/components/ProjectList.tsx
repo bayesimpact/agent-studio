@@ -26,7 +26,7 @@ export function ProjectList({
 }) {
   const { t } = useTranslation()
   return (
-    <ListHeader title={t("project:projects")}>
+    <ListHeader title={t("project:projects")} className="min-h-screen">
       {isAdminInterface && <ProjectCreator organization={organization} />}
 
       {projects.map((project) => (
