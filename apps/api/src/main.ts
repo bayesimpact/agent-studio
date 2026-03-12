@@ -2,15 +2,18 @@ import { readFileSync } from "node:fs"
 import { join } from "node:path"
 import { ValidationPipe } from "@nestjs/common"
 import { NestFactory } from "@nestjs/core"
+// biome-ignore lint/style/useImportType: Required at runtime for NestJS
+import { NestExpressApplication } from "@nestjs/platform-express"
 import { AppModule } from "./app.module"
 import { StackTraceLoggingExceptionFilter } from "./common/filters/stack-trace-logging-exception.filter"
 
 async function bootstrap() {
   const frontendUrl = normalizeFrontendUrl(process.env.FRONTEND_URL)
   const httpsOptions = loadHttpsCertificates()
-  const app = await NestFactory.create(AppModule, {
+  const app = await NestFactory.create<NestExpressApplication>(AppModule, {
     ...(httpsOptions && { httpsOptions }),
   })
+  app.useBodyParser("json", { limit: "500kb" })
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,
