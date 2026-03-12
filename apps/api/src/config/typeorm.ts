@@ -13,6 +13,11 @@ if (process.env.DATABASE_HOST?.startsWith("/cloudsql")) {
   }
 }
 
+console.log("DATABASE_HOST", process.env.DATABASE_HOST)
+console.log("DATABASE_PORT", process.env.DATABASE_PORT)
+console.log("DATABASE_USERNAME", process.env.DATABASE_USERNAME)
+console.log("DATABASE_NAME", process.env.DATABASE_NAME)
+
 export const config: () => TypeOrmModuleOptions = () => ({
   type: "postgres",
   host: `${process.env.DATABASE_HOST}`,
