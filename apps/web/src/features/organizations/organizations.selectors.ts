@@ -1,6 +1,7 @@
+import { createSelector } from "@reduxjs/toolkit"
 import type { RootState } from "@/store"
-
-export const selectOrganizations = (state: RootState) => state.organizations.data.value
+import { ADS, type AsyncData } from "@/store/async-data-status"
+import type { Organization } from "./organizations.models"
 
 export const selectOrganizationsData = (state: RootState) => state.organizations.data
 
@@ -11,5 +12,20 @@ export const selectOrganizationsError = (state: RootState) => state.organization
 export const selectCurrentOrganizationId = (state: RootState) =>
   state.organizations.currentOrganizationId
 
-export const selectCurrentOrganization = (state: RootState) =>
-  state.organizations.data.value?.find((org) => org.id === selectCurrentOrganizationId(state))
+export const selectCurrentOrganization = createSelector(
+  [selectOrganizationsData, selectCurrentOrganizationId],
+  (organizationsData, organizationId): AsyncData<Organization> => {
+    if (!organizationId) {
+      // Return laoding on purpose
+      return { status: ADS.Loading, value: null, error: null }
+    }
+
+    if (!ADS.isFulfilled(organizationsData)) return { ...organizationsData }
+
+    const organization = organizationsData.value?.find((o) => o.id === organizationId)
+
+    if (!organization) return { status: ADS.Error, value: null, error: "No organization found" }
+
+    return { status: ADS.Fulfilled, value: organization, error: null }
+  },
+)

@@ -1,6 +1,7 @@
 import type { TypedStartListening } from "@reduxjs/toolkit"
 import { createListenerMiddleware, isAnyOf } from "@reduxjs/toolkit"
 import { consumePendingInvitation } from "@/routes/HomeRoute"
+import { ADS } from "@/store/async-data-status"
 import type { AppDispatch, RootState } from "@/store/types"
 import { acceptInvitation } from "../invitations/invitations.thunks"
 import { selectMe } from "../me/me.selectors"
@@ -49,9 +50,9 @@ listenerMiddleware.startListening({
     const org = selectCurrentOrganization(state)
 
     // we don't have enough information to determine if the user is an admin
-    if (!org || !user) return
+    if (!ADS.isFulfilled(org) || !user) return
 
-    const isAdmin = org.role === "admin" || org.role === "owner"
+    const isAdmin = org.value.role === "admin" || org.value.role === "owner"
     listenerApi.dispatch(authActions.setIsAdmin(isAdmin))
   },
 })

@@ -12,10 +12,7 @@ import { Logo } from "@/components/themes/Logo"
 import type { User } from "@/features/me/me.models"
 import { selectMe } from "@/features/me/me.selectors"
 import type { Organization } from "@/features/organizations/organizations.models"
-import {
-  selectCurrentOrganization,
-  selectOrganizationsData,
-} from "@/features/organizations/organizations.selectors"
+import { selectCurrentOrganization } from "@/features/organizations/organizations.selectors"
 import type { Project } from "@/features/projects/projects.models"
 import {
   selectCurrentProjectData,
@@ -28,47 +25,42 @@ import { useAppSelector } from "@/store/hooks"
 import { useSetCurrentIds } from "../hooks/use-set-current-ids"
 import { useSetIsAdminInterface } from "../hooks/use-set-is-admin-interface"
 import { AsyncRoute } from "./AsyncRoute"
-import { ErrorRoute } from "./ErrorRoute"
 
 export function DashboardRoute() {
   const user = useAppSelector(selectMe)
-  const organizations = useAppSelector(selectOrganizationsData)
   const projects = useAppSelector(selectProjectsData)
+  const organization = useAppSelector(selectCurrentOrganization)
 
   useSetCurrentIds()
   useSetIsAdminInterface()
 
   return (
-    <AsyncRoute data={[user, projects, organizations]}>
-      {([userValue, projectsValue]) => <WithData user={userValue} projects={projectsValue} />}
+    <AsyncRoute data={[user, projects, organization]}>
+      {([userValue, projectsValue, organizationValue]) => (
+        <WithData user={userValue} projects={projectsValue} organization={organizationValue} />
+      )}
     </AsyncRoute>
   )
 }
 
-function WithData({ user, projects }: { user: User; projects: Project[] }) {
+function WithData({
+  user,
+  projects,
+  organization,
+}: {
+  user: User
+  projects: Project[]
+  organization: Organization
+}) {
   const { isAdminInterface } = useAbility()
   const project = useAppSelector(selectCurrentProjectData)
-
-  const organization = useAppSelector(selectCurrentOrganization)
-
-  if (!organization) return <ErrorRoute error="Missing valid organization" />
-
-  const organizationName = organization?.name || "CaseAi"
-
-  const projectList = (
-    <ProjectList
-      isAdminInterface={isAdminInterface}
-      projects={projects}
-      organization={organization}
-    />
-  )
 
   if (ADS.isFulfilled(project))
     return (
       <SidebarLayout
         organization={organization}
         sidebarHeaderChildren={
-          <SidebarHeader isAdminInterface={isAdminInterface} organizationName={organizationName} />
+          <SidebarHeader isAdminInterface={isAdminInterface} organizationName={organization.name} />
         }
         sidebarContentChildren={
           <SidebarContent
@@ -87,7 +79,13 @@ function WithData({ user, projects }: { user: User; projects: Project[] }) {
       </SidebarLayout>
     )
 
-  return projectList
+  return (
+    <ProjectList
+      isAdminInterface={isAdminInterface}
+      projects={projects}
+      organization={organization}
+    />
+  )
 }
 
 function SidebarHeader({

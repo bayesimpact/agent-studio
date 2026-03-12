@@ -25,7 +25,10 @@ export class InvitationsController {
     // request.user is the raw JWT payload (set by JwtAuthGuard), not a User entity
     const jwtPayload = request.user
 
-    await this.projectMembershipsService.acceptInvitation(body.payload.ticketId, jwtPayload.sub)
+    await this.projectMembershipsService.acceptInvitation({
+      ticketId: body.payload.ticketId,
+      auth0Sub: jwtPayload.sub,
+    })
 
     return { data: { success: true } }
   }

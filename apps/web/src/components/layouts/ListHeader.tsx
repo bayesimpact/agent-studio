@@ -2,6 +2,7 @@ import { HeaderButton } from "@caseai-connect/ui/components/layouts/sidebar/Head
 import { selectCurrentOrganization } from "@/features/organizations/organizations.selectors"
 import { useAbility } from "@/hooks/use-ability"
 import { useGetPath } from "@/hooks/use-build-path"
+import { ADS } from "@/store/async-data-status"
 import { useAppSelector } from "@/store/hooks"
 import { Logo } from "../themes/Logo"
 import { FullPageCenterLayout } from "./FullPageCenterLayout"
@@ -20,7 +21,7 @@ export function ListHeader({
   const { isAdminInterface } = useAbility()
   const { getPath } = useGetPath()
   const organization = useAppSelector(selectCurrentOrganization)
-  if (!organization) return null
+  if (!ADS.isFulfilled(organization)) return null
   return (
     <FullPageCenterLayout className={className}>
       <div className="flex flex-col gap-4 min-w-96 max-w-2/3 2xl:max-w-1/2">
@@ -28,7 +29,7 @@ export function ListHeader({
           <HeaderButton
             className="flex flex-1 gap-2 items-center"
             to={path ?? getPath("organization")}
-            name={organization.name}
+            name={organization.value.name}
             subname={isAdminInterface ? "Studio" : undefined}
             subnameClassName="text-primary"
           >
