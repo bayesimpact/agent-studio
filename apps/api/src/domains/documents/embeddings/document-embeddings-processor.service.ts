@@ -1,12 +1,6 @@
 import { randomUUID } from "node:crypto"
 import { createVertex } from "@ai-sdk/google-vertex"
-import {
-  Inject,
-  Injectable,
-  InternalServerErrorException,
-  Logger,
-  NotFoundException,
-} from "@nestjs/common"
+import { Inject, Injectable, Logger, NotFoundException } from "@nestjs/common"
 import { InjectDataSource } from "@nestjs/typeorm"
 import { embedMany } from "ai"
 import { SentenceSplitter } from "llamaindex"
@@ -15,74 +9,13 @@ import type { DataSource } from "typeorm"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
 import { DocumentsService } from "../documents.service"
 import { FILE_STORAGE_SERVICE, type IFileStorage } from "../storage/file-storage.interface"
+import { resolveEmbeddingModelNames, resolveVertexConfig } from "./document-embeddings.config"
 import type { CreateDocumentEmbeddingsJobPayload } from "./document-embeddings.types"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
 import { DocumentTextExtractorService } from "./document-text-extractor.service"
 
 const CHUNK_SIZE = 512
 const CHUNK_OVERLAP = 50
-
-const toNonEmptyValue = (value: string | undefined): string | undefined => {
-  const trimmedValue = value?.trim()
-  return trimmedValue && trimmedValue.length > 0 ? trimmedValue : undefined
-}
-
-const normalizeVertexLocation = (value: string): string => {
-  const trimmedValue = value.trim()
-  // Cloud runtimes sometimes expose zones (for example "us-central1-a"), but Vertex expects regions.
-  if (/^[a-z]+-[a-z0-9]+[0-9]-[a-z]$/.test(trimmedValue)) {
-    return trimmedValue.slice(0, -2)
-  }
-  return trimmedValue
-}
-
-const resolveVertexConfig = (): { project: string; location: string } => {
-  const project =
-    toNonEmptyValue(process.env.GCP_PROJECT) ??
-    toNonEmptyValue(process.env.GOOGLE_VERTEX_PROJECT) ??
-    toNonEmptyValue(process.env.GOOGLE_CLOUD_PROJECT)
-
-  const rawLocation =
-    toNonEmptyValue(process.env.GOOGLE_VERTEX_LOCATION) ??
-    toNonEmptyValue(process.env.LOCATION) ??
-    toNonEmptyValue(process.env.GOOGLE_CLOUD_LOCATION)
-
-  if (!project) {
-    throw new InternalServerErrorException(
-      "Missing Vertex project configuration. Set GCP_PROJECT or GOOGLE_VERTEX_PROJECT.",
-    )
-  }
-  if (!rawLocation) {
-    throw new InternalServerErrorException(
-      "Missing Vertex location configuration. Set GOOGLE_VERTEX_LOCATION or LOCATION.",
-    )
-  }
-  const location = normalizeVertexLocation(rawLocation)
-
-  return { project, location }
-}
-
-const resolveEmbeddingModelNames = (): string[] => {
-  const configuredModelNames = toNonEmptyValue(process.env.DOCUMENT_EMBEDDING_MODELS)
-  if (!configuredModelNames) {
-    throw new InternalServerErrorException(
-      "Missing embedding model configuration. Set DOCUMENT_EMBEDDING_MODELS.",
-    )
-  }
-
-  const modelNames = configuredModelNames
-    .split(",")
-    .map((modelName) => modelName.trim())
-    .filter((modelName) => modelName.length > 0)
-
-  if (modelNames.length === 0) {
-    throw new InternalServerErrorException(
-      "Missing embedding model configuration. Set DOCUMENT_EMBEDDING_MODELS with at least one model.",
-    )
-  }
-
-  return [...new Set(modelNames)]
-}
 
 @Injectable()
 export class DocumentEmbeddingsProcessorService {

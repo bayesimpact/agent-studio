@@ -17,10 +17,8 @@ export class AISDKVertexProvider extends AISDKLLMProviderBase {
 
   constructor() {
     super()
-    this.vertexProject =
-      process.env.GCP_PROJECT || process.env.GOOGLE_VERTEX_PROJECT || "caseai-connect"
-    this.vertexLocation =
-      process.env.LOCATION || process.env.GOOGLE_VERTEX_LOCATION || "europe-west1"
+    this.vertexProject = process.env.GOOGLE_VERTEX_PROJECT || "caseai-connect"
+    this.vertexLocation = process.env.GOOGLE_VERTEX_LOCATION || "europe-west1"
     if (process.env.IS_TEST === "true") {
       this.vertexProvider = createVertex({
         project: this.vertexProject,
