@@ -28,7 +28,6 @@ auth0Audience = https://bayes-impact.eu.auth0.com/api/v2/
 auth0IssuerUrl = https://bayes-impact.eu.auth0.com/
 auth0M2MClientId = ct0uygE3ld8IOKjaGozWbRLMae0R0Pcr
 auth0ClientId = Ntkc5sZnx8OQNP4UJDCqId4eo0WqGTJD
-localStorageServerBaseUrl = https://connect.localhost:3000
 frontendUrl = connect-web-flax.vercel.app
 gcsStorageBucketName = eu-connect-file-storage
 gcpProjectId = caseai-connect
@@ -56,8 +55,7 @@ auth0Audience = https://bayes-impact.eu.auth0.com/api/v2/
 auth0IssuerUrl = https://bayes-impact.eu.auth0.com/
 auth0M2MClientId = IXW7hP6wXU6TZickUiUNa64Ln96hNUKo
 auth0ClientId = Ddw6V44kWddjgciJSmYDGV1J0V5w3REB
-localStorageServerBaseUrl = https://connect.localhost:3000
-frontendUrl = health-web-one.vercel.app
+frontendUrl = health.platform.bayes.org
 gcsStorageBucketName = eu-health-file-storage
 gcpProjectId = impulse-488513
 serviceAccount = health-api@impulse-488513.iam.gserviceaccount.com
@@ -200,12 +198,11 @@ deploy-only:
 	--set-env-vars=AUTH0_ISSUER_URL=${auth0IssuerUrl},AUTH0_AUDIENCE=${auth0Audience} \
 	--set-env-vars=AUTH0_ORGANIZATION_ID=${auth0OrganizationId},AUTH0_CLIENT_ID=${auth0ClientId},AUTH0_M2M_CLIENT_ID=${auth0M2MClientId} \
 	--set-env-vars=FRONTEND_URL=${frontendUrl} \
-	--set-env-vars=LOCAL_STORAGE_SERVER_BASE_URL=${localStorageServerBaseUrl} \
 	--set-env-vars=GCS_STORAGE_BUCKET_NAME=${gcsStorageBucketName} \
 	--set-env-vars=GOOGLE_VERTEX_PROJECT=${googleVertexProject} \
 	--set-env-vars=GOOGLE_VERTEX_LOCATION=${googleVertexLocation} \
-  --set-env-vars=LANGFUSE_PK=${langfusePk},LANGFUSE_BASE_URL=${langfuseUrl},LOCATION=$(location) \
-  --set-env-vars=DATABASE_HOST=/cloudsql/${addCloudSqlInstances},DATABASE_USERNAME=${databaseUsername},DATABASE_NAME=${databaseName} \
+  	--set-env-vars=LANGFUSE_PK=${langfusePk},LANGFUSE_BASE_URL=${langfuseUrl},LOCATION=$(location) \
+  	--set-env-vars=DATABASE_HOST=/cloudsql/${addCloudSqlInstances},DATABASE_USERNAME=${databaseUsername},DATABASE_NAME=${databaseName} \
 	--region=${zone} \
 	--port=3000 \
 	--min-instances=1 \
