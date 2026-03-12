@@ -10,7 +10,7 @@ export default {
     const response = await axios.get<typeof DocumentsRoutes.getAll.response>(
       DocumentsRoutes.getAll.getPath({ organizationId, projectId }),
     )
-    return response.data.data.map(toDocument)
+    return response.data.data.map((dto) => toDocument(dto))
   },
   uploadOne: async ({ organizationId, projectId, file, sourceType }) => {
     const axios = getAxiosInstance()
@@ -23,7 +23,7 @@ export default {
       formData,
       { headers: { "Content-Type": "multipart/form-data" } },
     )
-    return toDocument(response.data.data)
+    return toDocument(response.data.data, { noTags: true })
   },
   updateOne: async ({ organizationId, projectId, documentId, payload }) => {
     const axios = getAxiosInstance()
@@ -45,7 +45,7 @@ export default {
   },
 } satisfies IDocumentsSpi
 
-function toDocument(dto: DocumentDto): Document {
+function toDocument(dto: DocumentDto, options?: { noTags: true }): Document {
   return {
     content: dto.content,
     createdAt: dto.createdAt,
@@ -59,6 +59,6 @@ function toDocument(dto: DocumentDto): Document {
     storageRelativePath: dto.storageRelativePath,
     title: dto.title,
     updatedAt: dto.updatedAt,
-    tags: dto.tags.map(toDocumentTag),
+    tags: options?.noTags ? [] : dto.tags.map(toDocumentTag),
   }
 }
