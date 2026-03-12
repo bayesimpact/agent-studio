@@ -3,7 +3,7 @@ import { FullPageCenterLayout } from "@/components/layouts/FullPageCenterLayout"
 
 export function LoadingRoute() {
   return (
-    <FullPageCenterLayout>
+    <FullPageCenterLayout className="min-h-screen">
       <Loader />
     </FullPageCenterLayout>
   )
