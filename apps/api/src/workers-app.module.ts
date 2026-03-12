@@ -11,6 +11,7 @@ import { DocumentEmbeddingsWorkersModule } from "./domains/documents/embeddings/
       load: [typeorm],
     }),
     TypeOrmModule.forRootAsync({
+      imports: [ConfigModule],
       inject: [ConfigService],
       useFactory: async (configService: ConfigService) => configService.get("typeorm")(),
     }),

@@ -24,7 +24,7 @@ import { UserMembership } from "@/domains/organizations/user-membership.entity"
 import { ProjectMembership } from "@/domains/projects/memberships/project-membership.entity"
 import { Project } from "@/domains/projects/project.entity"
 import { User } from "@/domains/users/user.entity"
-import { TEST_ENTITIES } from "./test-entities"
+import { ALL_ENTITIES } from "../all-entities"
 
 export interface TransactionalTestSetup {
   module: TestingModule
@@ -55,7 +55,7 @@ export interface TransactionalTestSetup {
  *
  * The key insight: Override EntityManager provider to use transactional manager.
  * This makes ALL repositories (and thus services) automatically transactional.
- * All entities in TEST_ENTITIES are automatically registered.
+ * All entities in ALL_ENTITIES are automatically registered.
  *
  * Usage:
  * ```typescript
@@ -126,12 +126,12 @@ export async function setupTransactionalTestDatabase(
         TypeOrmModule.forRoot({
           type: "postgres",
           url: testDatabaseUrl,
-          entities: TEST_ENTITIES,
+          entities: ALL_ENTITIES,
           synchronize: true,
           logging: false,
           dropSchema: false,
         }),
-        TypeOrmModule.forFeature(TEST_ENTITIES),
+        TypeOrmModule.forFeature(ALL_ENTITIES),
         ...additionalImports,
       ],
       providers: [
@@ -143,7 +143,7 @@ export async function setupTransactionalTestDatabase(
           useValue: queryRunner.manager,
         },
         // Override repository providers for all entities
-        ...TEST_ENTITIES.map((entity) => ({
+        ...ALL_ENTITIES.map((entity) => ({
           provide: getRepositoryToken(entity),
           useFactory: (manager: EntityManager) => manager.getRepository(entity),
           inject: [EntityManager],
@@ -254,12 +254,12 @@ export function createBaseTestingModule({
       TypeOrmModule.forRoot({
         type: "postgres",
         url: testDatabaseUrl,
-        entities: TEST_ENTITIES,
+        entities: ALL_ENTITIES,
         synchronize: true,
         logging: false,
         dropSchema: false,
       }),
-      TypeOrmModule.forFeature(TEST_ENTITIES),
+      TypeOrmModule.forFeature(ALL_ENTITIES),
       ...additionalImports,
     ],
     providers,
