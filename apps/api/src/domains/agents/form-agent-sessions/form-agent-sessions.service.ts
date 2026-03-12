@@ -11,6 +11,7 @@ import { FILE_STORAGE_SERVICE } from "@/domains/documents/storage/file-storage.i
 import { ServiceWithLLM } from "@/external/llm"
 import type { BaseAgentSessionType } from "../base-agent-sessions/base-agent-sessions.types"
 import { fillFormTool } from "../shared/agent-session-messages/streaming/tools/fill-form.tool"
+import type { ToolExecutionLog } from "../shared/agent-session-messages/streaming/tools/tool-execution-log"
 import { FormAgentSession } from "./form-agent-session.entity"
 
 @Injectable()
@@ -93,7 +94,7 @@ export class FormAgentSessionsService extends ServiceWithLLM {
   }: {
     agent: Agent
     sessionId: string
-    onExecute: (input: Record<string, unknown>) => void
+    onExecute: (toolExecution: ToolExecutionLog) => void
   }): ToolSet {
     const handleExecute = async (input: Record<string, unknown>) => {
       // TODO: merge value and existing result instead of replacing it
@@ -106,7 +107,10 @@ export class FormAgentSessionsService extends ServiceWithLLM {
       })
       if (!updated.affected) return
 
-      onExecute(input)
+      onExecute({
+        toolName: "fillForm",
+        arguments: input,
+      })
     }
     return { fillForm: fillFormTool({ agent, onExecute: handleExecute }) } as ToolSet
   }

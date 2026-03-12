@@ -18,6 +18,8 @@ import { FormAgentSession } from "@/domains/agents/form-agent-sessions/form-agen
 import { FormAgentSessionsService } from "@/domains/agents/form-agent-sessions/form-agent-sessions.service"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
 import { DocumentsService } from "@/domains/documents/documents.service"
+// biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
+import { DocumentChunkRetrievalService } from "@/domains/documents/embeddings/document-chunk-retrieval.service"
 import {
   FILE_STORAGE_SERVICE,
   type IFileStorage,
@@ -26,6 +28,8 @@ import { ServiceWithLLM } from "@/external/llm"
 import { AgentMessage } from "../agent-message.entity"
 import { buildConversationAgentPrompt } from "./master-promts/conversation-agent.prompt"
 import { buildFormAgentPrompt } from "./master-promts/form-agent.prompt"
+import { retrieveProjectDocumentChunksTool } from "./tools/retrieve-project-document-chunks.tool"
+import type { ToolExecutionLog } from "./tools/tool-execution-log"
 
 @Injectable()
 export class StreamingService extends ServiceWithLLM {
@@ -42,6 +46,8 @@ export class StreamingService extends ServiceWithLLM {
 
     @Inject(FormAgentSessionsService)
     private readonly formAgentSessionsService: FormAgentSessionsService,
+
+    private readonly documentChunkRetrievalService: DocumentChunkRetrievalService,
 
     @InjectRepository(ConversationAgentSession)
     conversationAgentSessionRepository: Repository<ConversationAgentSession>,
@@ -169,23 +175,14 @@ export class StreamingService extends ServiceWithLLM {
       tools: this.buildTools({
         agent,
         sessionId,
-        onExecute: async (toolContent) => {
-          // Create a tool message in the database for each tool call, so that the session history is complete and reflects what actually happened during the agent execution (including tool calls)
-          await this.agentMessageConnectRepository.createAndSave(connectScope, {
-            id: v4(),
+        connectScope,
+        onExecute: (toolExecution) =>
+          this.persistToolExecutionAndNotifyClient({
+            connectScope,
             sessionId,
-            // @ts-expect-error
-            role: "tool",
-            content: toolContent,
-            status: "completed",
-            startedAt: new Date(),
-            completedAt: null,
-            toolCalls: null,
-          })
-
-          // Notify client about the form update so it can re-fetch the session and get the latest form state
-          notifyClient(this.sseEvent({ type: "notify_client" }))
-        },
+            notifyClient,
+            toolExecution,
+          }),
       }),
     })
 
@@ -531,25 +528,68 @@ export class StreamingService extends ServiceWithLLM {
   private buildTools({
     agent,
     sessionId,
+    connectScope,
     onExecute,
   }: {
     agent: Agent
     sessionId: string
-    onExecute: (toolContent: string) => void
+    connectScope: RequiredConnectScope
+    onExecute: (toolExecution: ToolExecutionLog) => void
   }): ToolSet | undefined {
     switch (agent.type) {
+      case "conversation":
+        return {
+          retrieveProjectDocumentChunks: retrieveProjectDocumentChunksTool({
+            connectScope,
+            retrievalService: this.documentChunkRetrievalService,
+            onExecute,
+          }),
+        } as ToolSet
+
       case "form":
         return this.formAgentSessionsService.buildFillFormTool({
           agent,
           sessionId,
-          onExecute: (payload) => {
-            onExecute(`fillFormTool was called with input: ${JSON.stringify(payload)}`)
-          },
+          onExecute,
         })
 
       default:
         return undefined
     }
+  }
+
+  private async persistToolExecutionAndNotifyClient({
+    connectScope,
+    sessionId,
+    notifyClient,
+    toolExecution,
+  }: {
+    connectScope: RequiredConnectScope
+    sessionId: string
+    notifyClient: NotifyClient
+    toolExecution: ToolExecutionLog
+  }): Promise<void> {
+    // Create a tool message in the database for each tool call, so that the session history is complete and reflects what actually happened during the agent execution (including tool calls)
+    await this.agentMessageConnectRepository.createAndSave(connectScope, {
+      id: v4(),
+      sessionId,
+      // @ts-expect-error
+      role: "tool",
+      content: `${toolExecution.toolName} called`,
+      status: "completed",
+      startedAt: new Date(),
+      completedAt: null,
+      toolCalls: [
+        {
+          id: v4(),
+          name: toolExecution.toolName,
+          arguments: toolExecution.arguments,
+        },
+      ],
+    })
+
+    // Notify client about the form update so it can re-fetch the session and get the latest form state
+    notifyClient(this.sseEvent({ type: "notify_client" }))
   }
 }
 
