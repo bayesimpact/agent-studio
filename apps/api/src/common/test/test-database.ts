@@ -10,7 +10,7 @@ import {
   type QueryRunner,
   type Repository,
 } from "typeorm"
-import { TEST_ENTITIES } from "./test-entities"
+import { ALL_ENTITIES } from "../all-entities"
 
 export const RandomUuid = {
   Organization: randomUUID(),
@@ -58,12 +58,12 @@ export async function setupTestDatabase(
       TypeOrmModule.forRoot({
         type: "postgres",
         url: testDatabaseUrl,
-        entities: TEST_ENTITIES,
+        entities: ALL_ENTITIES,
         synchronize: true,
         logging: false,
         dropSchema: false,
       }),
-      TypeOrmModule.forFeature(TEST_ENTITIES),
+      TypeOrmModule.forFeature(ALL_ENTITIES),
       ...additionalImports,
     ],
     providers,

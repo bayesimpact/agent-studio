@@ -2,11 +2,9 @@ import { BullModule } from "@nestjs/bullmq"
 import { Module } from "@nestjs/common"
 import { ConfigModule } from "@nestjs/config"
 import { TypeOrmModule } from "@nestjs/typeorm"
-import { Project } from "@/domains/projects/project.entity"
-import { Document } from "../document.entity"
+import { ALL_ENTITIES } from "@/common/all-entities"
 import { DocumentsService } from "../documents.service"
 import { StorageModule } from "../storage/storage.module"
-import { DocumentTag } from "../tags/document-tag.entity"
 import { DOCUMENT_EMBEDDINGS_QUEUE_NAME } from "./document-embeddings.constants"
 import { DocumentEmbeddingsWorker } from "./document-embeddings.worker"
 import { getDocumentEmbeddingsBullMqConnection } from "./document-embeddings-bullmq.config"
@@ -24,7 +22,7 @@ import { DocumentTextExtractorService } from "./document-text-extractor.service"
     BullModule.registerQueue({
       name: DOCUMENT_EMBEDDINGS_QUEUE_NAME,
     }),
-    TypeOrmModule.forFeature([Document, DocumentTag, Project]),
+    TypeOrmModule.forFeature(ALL_ENTITIES),
     StorageModule,
   ],
   providers: [
