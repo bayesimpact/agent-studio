@@ -1,6 +1,7 @@
 import { Header } from "@caseai-connect/ui/components/layouts/sidebar/Header"
 import { SlidersHorizontalIcon, SparklesIcon } from "lucide-react"
-import { Outlet } from "react-router-dom"
+import { useEffect } from "react"
+import { Outlet, useNavigate } from "react-router-dom"
 import { SidebarLayout } from "@/components/layouts/SidebarLayout"
 import { ProjectList } from "@/components/ProjectList"
 import { RestrictedFeature } from "@/components/RestrictedFeature"
@@ -25,6 +26,7 @@ import { useAppSelector } from "@/store/hooks"
 import { useSetCurrentIds } from "../hooks/use-set-current-ids"
 import { useSetIsAdminInterface } from "../hooks/use-set-is-admin-interface"
 import { AsyncRoute } from "./AsyncRoute"
+import { buildStudioPath } from "./helpers"
 
 export function DashboardRoute() {
   const user = useAppSelector(selectMe)
@@ -52,8 +54,15 @@ function WithData({
   projects: Project[]
   organization: Organization
 }) {
-  const { isAdminInterface } = useAbility()
+  const { isAdmin, isAdminInterface } = useAbility()
+  const navigate = useNavigate()
   const project = useAppSelector(selectCurrentProjectData)
+
+  useEffect(() => {
+    if (isAdmin && !isAdminInterface && projects.length === 0) {
+      navigate(buildStudioPath(`/o/${organization.id}/`), { replace: true })
+    }
+  }, [isAdmin, isAdminInterface, projects.length, organization.id, navigate])
 
   if (ADS.isFulfilled(project))
     return (
