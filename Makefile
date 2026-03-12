@@ -63,6 +63,7 @@ network = projects/YOUR_PROJECT/global/networks/default
 databaseUsername = health_admin
 databaseName = health
 cloudSqlCredentialsFile = $(CURDIR)/dontsave/your-credentials.json
+documentEmbeddingModels=gemini-embedding-001
 else
 $(error Unsupported PROJECT '$(PROJECT)' for REGION '$(REGION)')
 endif
@@ -227,6 +228,7 @@ deploy-workers-only:
 	--set-env-vars=GOOGLE_VERTEX_PROJECT=${googleVertexProject},GOOGLE_VERTEX_LOCATION=${googleVertexLocation} \
 	--set-env-vars=LANGFUSE_PK=${langfusePk},LANGFUSE_BASE_URL=${langfuseUrl},LOCATION=$(location) \
 	--set-env-vars=DATABASE_HOST=/cloudsql/${addCloudSqlInstances},DATABASE_USERNAME=${databaseUsername},DATABASE_NAME=${databaseName} \
+	--set-env-vars=DOCUMENT_EMBEDDING_MODELS=${documentEmbeddingModels} \
 	--add-cloudsql-instances=${addCloudSqlInstances} \
 	--network=${network} \
 	--service-account=${serviceAccount} \
