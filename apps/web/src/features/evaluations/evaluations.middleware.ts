@@ -1,5 +1,6 @@
 import type { TypedStartListening } from "@reduxjs/toolkit"
 import { createListenerMiddleware, isAnyOf } from "@reduxjs/toolkit"
+import { ADS } from "@/store/async-data-status"
 import type { AppDispatch, RootState } from "@/store/types"
 import { notificationsActions } from "../notifications/notifications.slice"
 import { selectCurrentOrganization } from "../organizations/organizations.selectors"
@@ -23,7 +24,7 @@ listenerMiddleware.startListening({
     const prevOrg = selectCurrentOrganization(originalState)
     const nextOrg = selectCurrentOrganization(currentState)
     const isNewProject = prevId !== nextId && !!nextId
-    const isNewOrg = prevOrg?.id !== nextOrg?.id
+    const isNewOrg = ADS.isFulfilled(prevOrg) !== ADS.isFulfilled(nextOrg)
     return isNewProject || isNewOrg
   },
   effect: async (_, listenerApi) => {

@@ -2,8 +2,8 @@ import { useCallback } from "react"
 import { useParams } from "react-router-dom"
 import { selectAgentsData } from "@/features/agents/agents.selectors"
 import { selectCurrentConversationAgentSessionsData } from "@/features/agents/conversation-agent-sessions/conversation-agent-sessions.selectors"
-import { selectOrganizations } from "@/features/organizations/organizations.selectors"
-import { selectProjects } from "@/features/projects/projects.selectors"
+import { selectOrganizationsData } from "@/features/organizations/organizations.selectors"
+import { selectProjectsData } from "@/features/projects/projects.selectors"
 import { buildAppPath, buildStudioPath, RouteNames } from "@/routes/helpers"
 import { ADS } from "@/store/async-data-status"
 import { useAppSelector } from "@/store/hooks"
@@ -197,20 +197,28 @@ export function useClosestParentPath() {
     agentId: urlagentId,
     agentSessionId: urlagentSessionId,
   } = useParams()
-  const organizations = useAppSelector(selectOrganizations)
-  const projects = useAppSelector(selectProjects)
+  const organizations = useAppSelector(selectOrganizationsData)
+  const projects = useAppSelector(selectProjectsData)
   const agents = useAppSelector(selectAgentsData)
   const agentSessions = useAppSelector(selectCurrentConversationAgentSessionsData)
 
   const foundOrganization = useCallback(
     (organizationId: string | undefined) =>
-      organizationId ? organizations?.find((org) => org.id === organizationId) || null : null,
+      organizationId
+        ? ADS.isFulfilled(organizations)
+          ? organizations.value.find((org) => org.id === organizationId) || null
+          : null
+        : null,
     [organizations],
   )
 
   const foundProject = useCallback(
     (projectId: string | undefined) =>
-      projectId ? projects?.find((proj) => proj.id === projectId) || null : null,
+      projectId
+        ? ADS.isFulfilled(projects)
+          ? projects.value.find((proj) => proj.id === projectId) || null
+          : null
+        : null,
     [projects],
   )
 

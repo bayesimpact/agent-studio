@@ -1,25 +1,25 @@
 import { useEffect } from "react"
 import { useNavigate } from "react-router-dom"
 import { CreateOrganizationForm } from "@/components/CreateOrganizationForm"
-import { selectOrganizations } from "@/features/organizations/organizations.selectors"
+import { selectOrganizationsData } from "@/features/organizations/organizations.selectors"
 import { useBuildPath } from "@/hooks/use-build-path"
+import { ADS } from "@/store/async-data-status"
 import { useAppSelector } from "@/store/hooks"
 import { LoadingRoute } from "./LoadingRoute"
 
 export function OnboardingRoute() {
   const navigate = useNavigate()
-  const organizations = useAppSelector(selectOrganizations)
+  const organizations = useAppSelector(selectOrganizationsData)
   const { buildPath } = useBuildPath()
-  const firstOrganization = organizations?.[0]
 
   useEffect(() => {
-    if (!firstOrganization) return
+    if (!ADS.isFulfilled(organizations) || !organizations.value[0]) return
 
-    const path = buildPath("organization", { organizationId: firstOrganization.id })
+    const path = buildPath("organization", { organizationId: organizations.value[0].id })
     navigate(path, { replace: true })
-  }, [firstOrganization, navigate, buildPath])
+  }, [organizations, navigate, buildPath])
 
-  if (organizations?.length === 0) {
+  if (ADS.isFulfilled(organizations) && organizations.value.length === 0) {
     return <CreateOrganizationForm />
   }
 

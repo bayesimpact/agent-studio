@@ -1,6 +1,7 @@
 import type { FeatureFlagKey } from "@caseai-connect/api-contracts"
 import { selectCurrentOrganization } from "@/features/organizations/organizations.selectors"
 import type { RootState } from "@/store"
+import { ADS } from "@/store/async-data-status"
 import { useAppSelector } from "@/store/hooks"
 
 function check(flags: FeatureFlagKey[], feature: FeatureFlagKey): boolean {
@@ -9,8 +10,9 @@ function check(flags: FeatureFlagKey[], feature: FeatureFlagKey): boolean {
 
 export function useFeatureFlags() {
   const org = useAppSelector(selectCurrentOrganization)
+  if (!ADS.isFulfilled(org)) return { hasFeature: () => false }
   return {
-    hasFeature: (feature: FeatureFlagKey): boolean => check(org?.featureFlags || [], feature),
+    hasFeature: (feature: FeatureFlagKey): boolean => check(org.value.featureFlags || [], feature),
   }
 }
 
@@ -22,8 +24,8 @@ export function hasFeatureOrThrow({
   feature: FeatureFlagKey
 }): true {
   const organization = selectCurrentOrganization(state)
-  if (!organization) throw new Error("No organization selected")
-  const hasFeature = check(organization.featureFlags, feature)
+  if (!ADS.isFulfilled(organization)) throw new Error("No organization selected")
+  const hasFeature = check(organization.value.featureFlags, feature)
   if (!hasFeature) throw new Error(`Feature "${feature}" is not enabled for this organization`)
   return true
 }

@@ -48,8 +48,10 @@ export const selectCurrentFormAgentSessionData = createSelector(
   (formAgentSessionsData, agentSessionId): AsyncData<FormAgentSession> => {
     if (!ADS.isFulfilled(formAgentSessionsData)) return { ...formAgentSessionsData }
 
-    if (!agentSessionId)
-      return { status: ADS.Error, value: null, error: "No chat session selected" }
+    if (!agentSessionId) {
+      // Return laoding on purpose
+      return { status: ADS.Loading, value: null, error: null }
+    }
 
     const agentSession = formAgentSessionsData.value.find((cs) => cs.id === agentSessionId)
 
@@ -57,7 +59,7 @@ export const selectCurrentFormAgentSessionData = createSelector(
       return {
         status: ADS.Error,
         value: null,
-        error: "Chat session not found in current Agent",
+        error: "Form agent session not found in current Agent",
       }
 
     return { status: ADS.Fulfilled, value: agentSession, error: null }

@@ -111,7 +111,11 @@ describe("ProjectMembershipsService", () => {
     it("should create a user and membership for a new email", async () => {
       const { project } = await createOrganizationWithProject(repositories)
 
-      const result = await service.inviteProjectMembers(project.id, ["new@example.com"], "Admin")
+      const result = await service.inviteProjectMembers({
+        projectId: project.id,
+        emails: ["new@example.com"],
+        inviterName: "Admin",
+      })
 
       expect(result).toHaveLength(1)
       expect(result[0]!.user.email).toBe("new@example.com")
@@ -136,11 +140,11 @@ describe("ProjectMembershipsService", () => {
       })
       await repositories.userRepository.save(existingUser)
 
-      const result = await service.inviteProjectMembers(
-        project.id,
-        ["existing@example.com"],
-        "Admin",
-      )
+      const result = await service.inviteProjectMembers({
+        projectId: project.id,
+        emails: ["existing@example.com"],
+        inviterName: "Admin",
+      })
 
       expect(result).toHaveLength(1)
       expect(result[0]!.userId).toBe(existingUser.id)
@@ -153,11 +157,11 @@ describe("ProjectMembershipsService", () => {
       const email = "already@example.com"
       await createProjectMembership({ repositories, organization, project, user: { email } })
 
-      const result = await service.inviteProjectMembers(
-        project.id,
-        ["already@example.com"],
-        "Admin",
-      )
+      const result = await service.inviteProjectMembers({
+        projectId: project.id,
+        emails: ["already@example.com"],
+        inviterName: "Admin",
+      })
 
       expect(result).toHaveLength(0)
     })
@@ -165,11 +169,11 @@ describe("ProjectMembershipsService", () => {
     it("should handle multiple emails", async () => {
       const { project } = await createOrganizationWithProject(repositories)
 
-      const result = await service.inviteProjectMembers(
-        project.id,
-        ["a@example.com", "b@example.com", "c@example.com"],
-        "Admin",
-      )
+      const result = await service.inviteProjectMembers({
+        projectId: project.id,
+        emails: ["a@example.com", "b@example.com", "c@example.com"],
+        inviterName: "Admin",
+      })
 
       expect(result).toHaveLength(3)
     })
@@ -177,7 +181,11 @@ describe("ProjectMembershipsService", () => {
     it("should normalize email addresses to lowercase", async () => {
       const { project } = await createOrganizationWithProject(repositories)
 
-      const result = await service.inviteProjectMembers(project.id, ["UPPER@EXAMPLE.COM"], "Admin")
+      const result = await service.inviteProjectMembers({
+        projectId: project.id,
+        emails: ["UPPER@EXAMPLE.COM"],
+        inviterName: "Admin",
+      })
 
       expect(result).toHaveLength(1)
       expect(result[0]!.user.email).toBe("upper@example.com")
@@ -186,11 +194,11 @@ describe("ProjectMembershipsService", () => {
     it("should call invitationSender.sendInvitation for each created membership", async () => {
       const { project } = await createOrganizationWithProject(repositories)
 
-      await service.inviteProjectMembers(
-        project.id,
-        ["a@example.com", "b@example.com"],
-        "Admin User",
-      )
+      await service.inviteProjectMembers({
+        projectId: project.id,
+        emails: ["a@example.com", "b@example.com"],
+        inviterName: "Admin User",
+      })
 
       expect(mockInvitationSender.sendInvitation).toHaveBeenCalledTimes(2)
 
@@ -215,7 +223,11 @@ describe("ProjectMembershipsService", () => {
       const email = "already@example.com"
       await createProjectMembership({ repositories, organization, project, user: { email } })
 
-      await service.inviteProjectMembers(project.id, ["already@example.com"], "Admin")
+      await service.inviteProjectMembers({
+        projectId: project.id,
+        emails: ["already@example.com"],
+        inviterName: "Admin",
+      })
 
       expect(mockInvitationSender.sendInvitation).not.toHaveBeenCalled()
     })
@@ -226,13 +238,20 @@ describe("ProjectMembershipsService", () => {
       const { project } = await createOrganizationWithProject(repositories)
 
       // Create a membership via invite
-      const result = await service.inviteProjectMembers(project.id, ["invite@example.com"], "Admin")
+      const result = await service.inviteProjectMembers({
+        projectId: project.id,
+        emails: ["invite@example.com"],
+        inviterName: "Admin",
+      })
       expect(result).toHaveLength(1)
       const membership = result[0]!
 
       const realAuth0Sub = "auth0|real-user-sub-123"
 
-      const accepted = await service.acceptInvitation(membership.invitationToken, realAuth0Sub)
+      const accepted = await service.acceptInvitation({
+        ticketId: membership.invitationToken,
+        auth0Sub: realAuth0Sub,
+      })
 
       expect(accepted.status).toBe("accepted")
 
@@ -247,10 +266,17 @@ describe("ProjectMembershipsService", () => {
     it("should create an organization membership for the user", async () => {
       const { project, organization } = await createOrganizationWithProject(repositories)
 
-      const result = await service.inviteProjectMembers(project.id, ["invite@example.com"], "Admin")
+      const result = await service.inviteProjectMembers({
+        projectId: project.id,
+        emails: ["invite@example.com"],
+        inviterName: "Admin",
+      })
       const membership = result[0]!
 
-      await service.acceptInvitation(membership.invitationToken, "auth0|new-user")
+      await service.acceptInvitation({
+        ticketId: membership.invitationToken,
+        auth0Sub: "auth0|new-user",
+      })
 
       // Verify organization membership was created
       const orgMembership = await repositories.membershipRepository.findOne({
@@ -276,7 +302,10 @@ describe("ProjectMembershipsService", () => {
         .build({ invitationToken: "ticket_existing_org_member" })
       await projectMembershipRepository.save(membership)
 
-      await service.acceptInvitation("ticket_existing_org_member", "auth0|existing")
+      await service.acceptInvitation({
+        ticketId: "ticket_existing_org_member",
+        auth0Sub: "auth0|existing",
+      })
 
       // Verify there's still only one org membership and role wasn't changed
       const orgMemberships = await repositories.membershipRepository.find({
@@ -289,22 +318,32 @@ describe("ProjectMembershipsService", () => {
     it("should return the membership if already accepted", async () => {
       const { project } = await createOrganizationWithProject(repositories)
 
-      const result = await service.inviteProjectMembers(project.id, ["invite@example.com"], "Admin")
+      const result = await service.inviteProjectMembers({
+        projectId: project.id,
+        emails: ["invite@example.com"],
+        inviterName: "Admin",
+      })
       const membership = result[0]!
 
       // Accept once
-      await service.acceptInvitation(membership.invitationToken, "auth0|user")
+      await service.acceptInvitation({
+        ticketId: membership.invitationToken,
+        auth0Sub: "auth0|user",
+      })
 
       // Accept again — should not throw
-      const secondAccept = await service.acceptInvitation(membership.invitationToken, "auth0|user")
+      const secondAccept = await service.acceptInvitation({
+        ticketId: membership.invitationToken,
+        auth0Sub: "auth0|user",
+      })
 
       expect(secondAccept.status).toBe("accepted")
     })
 
     it("should throw NotFoundException for unknown ticketId", async () => {
-      await expect(service.acceptInvitation("non-existent-ticket", "auth0|user")).rejects.toThrow(
-        NotFoundException,
-      )
+      await expect(
+        service.acceptInvitation({ ticketId: "non-existent-ticket", auth0Sub: "auth0|user" }),
+      ).rejects.toThrow(NotFoundException)
     })
 
     it("should not overwrite auth0Id if user is not a placeholder", async () => {
@@ -324,7 +363,10 @@ describe("ProjectMembershipsService", () => {
         .build({ invitationToken: "ticket_existing" })
       await projectMembershipRepository.save(membership)
 
-      await service.acceptInvitation("ticket_existing", "auth0|different-id")
+      await service.acceptInvitation({
+        ticketId: "ticket_existing",
+        auth0Sub: "auth0|different-id",
+      })
 
       // Verify auth0Id was NOT changed (not a placeholder)
       const user = await repositories.userRepository.findOne({
@@ -340,7 +382,7 @@ describe("ProjectMembershipsService", () => {
 
       const { membership } = await createProjectMembership({ repositories, project })
 
-      await service.removeProjectMembership(membership.id, project.id)
+      await service.removeProjectMembership({ membershipId: membership.id, projectId: project.id })
 
       const deletedMembership = await projectMembershipRepository.findOne({
         where: { id: membership.id },
@@ -352,14 +394,14 @@ describe("ProjectMembershipsService", () => {
       const { project } = await createOrganizationWithProject(repositories)
 
       // Create a membership via invite (creates a placeholder user)
-      const result = await service.inviteProjectMembers(
-        project.id,
-        ["placeholder@example.com"],
-        "Admin",
-      )
+      const result = await service.inviteProjectMembers({
+        projectId: project.id,
+        emails: ["placeholder@example.com"],
+        inviterName: "Admin",
+      })
       const membership = result[0]!
 
-      await service.removeProjectMembership(membership.id, project.id)
+      await service.removeProjectMembership({ membershipId: membership.id, projectId: project.id })
 
       // Verify the membership is deleted
       const deletedMembership = await projectMembershipRepository.findOne({
@@ -383,7 +425,7 @@ describe("ProjectMembershipsService", () => {
         user: { email: "real@example.com", auth0Id: "auth0|real-user" },
       })
 
-      await service.removeProjectMembership(membership.id, project.id)
+      await service.removeProjectMembership({ membershipId: membership.id, projectId: project.id })
 
       // Verify the membership is deleted
       const deletedMembership = await projectMembershipRepository.findOne({

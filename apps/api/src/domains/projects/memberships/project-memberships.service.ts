@@ -37,10 +37,13 @@ export class ProjectMembershipsService {
   /**
    * Find a project membership by projectId and userId.
    */
-  async findByProjectIdAndUserId(
-    projectId: string,
-    userId: string,
-  ): Promise<ProjectMembership | null> {
+  async findByProjectIdAndUserId({
+    projectId,
+    userId,
+  }: {
+    projectId: string
+    userId: string
+  }): Promise<ProjectMembership | null> {
     return this.projectMembershipRepository.findOne({
       where: { projectId, userId },
     })
@@ -67,24 +70,28 @@ export class ProjectMembershipsService {
    * - Creates a ProjectMembership with status "sent" and the Auth0 ticket_id as invitationToken
    * - Skips if the user is already a member of the project
    */
-  async inviteProjectMembers(
-    projectId: string,
-    emails: string[],
-    inviterName: string,
-  ): Promise<ProjectMembership[]> {
+  async inviteProjectMembers({
+    projectId,
+    emails,
+    inviterName,
+  }: {
+    projectId: string
+    emails: string[]
+    inviterName: string
+  }): Promise<ProjectMembership[]> {
     return this.dataSource.transaction(async (manager) => {
       const userRepo = manager.getRepository(User)
       const membershipRepo = manager.getRepository(ProjectMembership)
       const createdMemberships: ProjectMembership[] = []
 
       for (const email of emails) {
-        const membership = await this.inviteProjectMember(
+        const membership = await this.inviteProjectMember({
           projectId,
           email,
           inviterName,
           userRepo,
           membershipRepo,
-        )
+        })
         if (membership) {
           createdMemberships.push(membership)
         }
@@ -105,7 +112,13 @@ export class ProjectMembershipsService {
    * @param ticketId The Auth0 ticket_id stored as the membership's invitationToken
    * @param auth0Sub The real Auth0 user ID from the JWT
    */
-  async acceptInvitation(ticketId: string, auth0Sub: string): Promise<ProjectMembership> {
+  async acceptInvitation({
+    ticketId,
+    auth0Sub,
+  }: {
+    ticketId: string
+    auth0Sub: string
+  }): Promise<ProjectMembership> {
     return this.dataSource.transaction(async (manager) => {
       const membershipRepo = manager.getRepository(ProjectMembership)
       const userRepo = manager.getRepository(User)
@@ -160,13 +173,19 @@ export class ProjectMembershipsService {
    * Invites a single user to a project by email.
    * Returns the created membership, or null if the user is already a member.
    */
-  private async inviteProjectMember(
-    projectId: string,
-    email: string,
-    inviterName: string,
-    userRepo: Repository<User>,
-    membershipRepo: Repository<ProjectMembership>,
-  ): Promise<ProjectMembership | null> {
+  private async inviteProjectMember({
+    projectId,
+    email,
+    inviterName,
+    userRepo,
+    membershipRepo,
+  }: {
+    projectId: string
+    email: string
+    inviterName: string
+    userRepo: Repository<User>
+    membershipRepo: Repository<ProjectMembership>
+  }): Promise<ProjectMembership | null> {
     const normalizedEmail = email.trim().toLowerCase()
 
     // Find or create user (using transactional manager)
@@ -220,7 +239,13 @@ export class ProjectMembershipsService {
    * If the associated user is a placeholder (never accepted the invitation),
    * also deletes the placeholder user to avoid orphaned records.
    */
-  async removeProjectMembership(membershipId: string, projectId: string): Promise<void> {
+  async removeProjectMembership({
+    membershipId,
+    projectId,
+  }: {
+    membershipId: string
+    projectId: string
+  }): Promise<void> {
     return this.dataSource.transaction(async (manager) => {
       const membershipRepo = manager.getRepository(ProjectMembership)
       const userRepo = manager.getRepository(User)

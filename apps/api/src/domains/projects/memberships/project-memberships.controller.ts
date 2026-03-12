@@ -32,19 +32,21 @@ export class ProjectMembershipsController {
     return { data: memberships.map(toDto) }
   }
 
+  // TODO: edit role
+
   @Post(ProjectMembershipRoutes.createOne.path)
   @CheckPolicy((policy) => policy.canCreate())
   async inviteProjectMembers(
     @Req() request: EndpointRequestWithProject,
-    @Body() body: typeof ProjectMembershipRoutes.createOne.request,
+    @Body() { payload }: typeof ProjectMembershipRoutes.createOne.request,
   ): Promise<typeof ProjectMembershipRoutes.createOne.response> {
     const { project, user } = request
 
-    const memberships = await this.projectMembershipsService.inviteProjectMembers(
-      project.id,
-      body.payload.emails,
-      user.name ?? user.email,
-    )
+    const memberships = await this.projectMembershipsService.inviteProjectMembers({
+      projectId: project.id,
+      emails: payload.emails,
+      inviterName: user.name ?? user.email,
+    })
 
     return { data: memberships.map(toDto) }
   }
@@ -57,7 +59,10 @@ export class ProjectMembershipsController {
   ): Promise<typeof ProjectMembershipRoutes.deleteOne.response> {
     const { project, projectMembership } = request
 
-    await this.projectMembershipsService.removeProjectMembership(projectMembership.id, project.id)
+    await this.projectMembershipsService.removeProjectMembership({
+      membershipId: projectMembership.id,
+      projectId: project.id,
+    })
 
     return { data: { success: true } }
   }
