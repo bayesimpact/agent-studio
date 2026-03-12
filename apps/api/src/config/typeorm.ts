@@ -13,7 +13,6 @@ if (process.env.DATABASE_HOST?.startsWith("/cloudsql")) {
   }
 }
 
-console.log("DATABASE_HOST", process.env.DATABASE_HOST)
 export const config: () => TypeOrmModuleOptions = () => ({
   type: "postgres",
   host: `${process.env.DATABASE_HOST}`,
@@ -21,8 +20,8 @@ export const config: () => TypeOrmModuleOptions = () => ({
   username: `${process.env.DATABASE_USERNAME}`,
   password: `${process.env.DATABASE_PASSWORD}`,
   database: `${process.env.DATABASE_NAME}`,
-  entities: ["dist/**/*.entity.js"],
-  migrations: ["dist/**/migrations/*.js"],
+  entities: [`${__dirname}/../**/*.entity.{js,ts}`],
+  migrations: [`${__dirname}/../**/migrations/*.{js,ts}`],
   autoLoadEntities: true,
   synchronize: false,
   logging: false,
