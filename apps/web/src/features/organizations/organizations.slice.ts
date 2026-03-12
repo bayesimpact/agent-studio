@@ -2,6 +2,7 @@ import { createSlice, type PayloadAction } from "@reduxjs/toolkit"
 import { fetchMe } from "@/features/me/me.thunks"
 import { ADS, type AsyncData, defaultAsyncData } from "@/store/async-data-status"
 import type { Organization } from "./organizations.models"
+import { createOrganization } from "./organizations.thunks"
 
 interface State {
   currentOrganizationId: string | null
@@ -39,6 +40,13 @@ const slice = createSlice({
         state.data.status = ADS.Error
         state.data.error = action.error.message || "Failed to list organizations"
       })
+
+    builder.addCase(createOrganization.pending, (state) => {
+      if (!ADS.isFulfilled(state.data) || state.data.value?.length === 0) {
+        // Required when no org yet
+        state.data.status = ADS.Loading
+      }
+    })
   },
 })
 
