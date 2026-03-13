@@ -69,7 +69,7 @@ export function HomeRoute() {
     if (isAuthenticated) {
       navigateToFirstOrganization({
         organizations,
-        onNoFirstOrganization: () => {
+        onFail: () => {
           navigate(RouteNames.ONBOARDING, { replace: true })
         },
       })
