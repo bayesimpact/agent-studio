@@ -89,8 +89,14 @@ export function useGetPath() {
     return RouteNames.HOME
   }
 
-  function getPath(pathType: PathType): string {
-    return computePath(isAdminInterface, pathType)
+  function getPath(
+    pathType: PathType,
+    options?: { forceInterface: RouteNames.STUDIO | RouteNames.APP },
+  ): string {
+    const interfaceToUse = options?.forceInterface
+      ? options.forceInterface === RouteNames.STUDIO
+      : isAdminInterface
+    return computePath(interfaceToUse, pathType)
   }
 
   return { getPath }
