@@ -1,4 +1,17 @@
-import type { TimeType } from "../generic"
+import { z } from "zod"
+import { type TimeType, timeTypeSchema } from "../generic"
+
+export const documentTagSchema = z.object({
+  childrenIds: z.array(z.string()),
+  createdAt: timeTypeSchema,
+  description: z.string().optional(),
+  id: z.string(),
+  name: z.string(),
+  organizationId: z.string(),
+  parentId: z.string().optional(),
+  projectId: z.string(),
+  updatedAt: timeTypeSchema,
+})
 
 export type DocumentTagDto = {
   childrenIds: DocumentTagDto["id"][]
@@ -11,7 +24,10 @@ export type DocumentTagDto = {
   projectId: string
   updatedAt: TimeType
 }
-export type DocumentTagsUpdateFieldsDto = {
-  tagsToAdd?: DocumentTagDto["id"][]
-  tagsToRemove?: DocumentTagDto["id"][]
-}
+
+export const updateDocumentTagsSchema = z.object({
+  tagsToAdd: z.array(documentTagSchema.shape.id).optional(),
+  tagsToRemove: z.array(documentTagSchema.shape.id).optional(),
+})
+
+export type DocumentTagsUpdateFieldsDto = z.infer<typeof updateDocumentTagsSchema>

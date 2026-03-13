@@ -9,7 +9,7 @@ export default {
     const response = await axios.get<typeof AgentsRoutes.getAll.response>(
       AgentsRoutes.getAll.getPath(params),
     )
-    return response.data.data.agents.map(toAgent)
+    return response.data.data.map(toAgent)
   },
   createOne: async (params, payload) => {
     const axios = getAxiosInstance()

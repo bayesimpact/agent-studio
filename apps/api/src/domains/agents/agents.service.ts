@@ -35,13 +35,12 @@ export class AgentsService {
       Partial<Pick<Agent, "outputJsonSchema">> &
       DocumentTagsUpdateFields
   }): Promise<Agent> {
-    const { outputJsonSchema = null } = fields
-
     // Validate name (min 3 characters)
     if (fields.name.length < 3) {
       throw new UnprocessableEntityException("Agent name must be at least 3 characters long")
     }
 
+    const outputJsonSchema = fields.outputJsonSchema || null
     if (fields.type === "extraction" && !outputJsonSchema) {
       throw new UnprocessableEntityException("Extraction agent requires outputJsonSchema")
     }

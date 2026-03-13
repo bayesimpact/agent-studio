@@ -18,7 +18,7 @@
         "name": "Entrez le nom de l'agent",
         "defaultPrompt": "Entrez le prompt par défaut",
         "model": "Sélectionnez le modèle",
-        "outputJsonSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"field\": { \"type\": \"string\" }\n  },\n  \"required\": [\"field\"]\n}",
+        "outputJsonSchema": "{\n  \"properties\": {\n    \"field\": { \"type\": \"string\", \"description\": \"blablabla\" }\n  },\n  \"required\": [\"field\"]\n}",
         "temperature": "Entrez la température 0.0 - 2.0",
         "locale": "Sélectionnez la langue pour les réponses de l'agent"
       },

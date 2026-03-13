@@ -82,7 +82,7 @@ describe("Agents - getAll", () => {
     const response = await subject()
 
     expectResponse(response, 200)
-    const { agents } = response.body.data
+    const agents = response.body.data
     expect(agents).toHaveLength(2)
     expect(agents.map((agent) => agent.name)).toContain("Agent 1")
     expect(agents.map((agent) => agent.name)).toContain("Agent 2")
@@ -97,6 +97,6 @@ describe("Agents - getAll", () => {
     const response = await subject()
 
     expectResponse(response, 200)
-    expect(response.body.data.agents).toEqual([])
+    expect(response.body.data).toEqual([])
   })
 })

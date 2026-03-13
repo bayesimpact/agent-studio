@@ -1,6 +1,6 @@
+import type { CreateAgentDto, UpdateAgentDto } from "@caseai-connect/api-contracts"
 import { createAsyncThunk } from "@reduxjs/toolkit"
 import type { RootState, ThunkExtraArg } from "@/store"
-import type { DocumentTagsUpdateFields } from "../document-tags/document-tags.models"
 import { getCurrentIds } from "../helpers"
 import type { Agent } from "./agents.models"
 
@@ -16,12 +16,7 @@ export const listAgents = createAsyncThunk<Agent[], void, ThunkConfig>(
 
 export const createAgent = createAsyncThunk<
   Agent,
-  {
-    fields: Pick<Agent, "name" | "defaultPrompt" | "model" | "temperature" | "locale" | "type"> &
-      Partial<Pick<Agent, "outputJsonSchema">> &
-      DocumentTagsUpdateFields
-    onSuccess?: (agent: Agent) => void
-  },
+  { fields: CreateAgentDto; onSuccess?: (agent: Agent) => void },
   ThunkConfig
 >("agents/create", async ({ fields }, { extra: { services }, getState }) => {
   const params = getCurrentIds({
@@ -33,16 +28,7 @@ export const createAgent = createAsyncThunk<
 
 export const updateAgent = createAsyncThunk<
   void,
-  {
-    agentId: string
-    fields: Partial<
-      Pick<
-        Agent,
-        "name" | "defaultPrompt" | "model" | "temperature" | "locale" | "type" | "outputJsonSchema"
-      >
-    > &
-      DocumentTagsUpdateFields
-  },
+  { agentId: string; fields: UpdateAgentDto },
   ThunkConfig
 >("agents/update", async ({ agentId, fields }, { extra: { services }, getState }) => {
   const params = getCurrentIds({
@@ -54,10 +40,7 @@ export const updateAgent = createAsyncThunk<
 
 export const deleteAgent = createAsyncThunk<
   void,
-  {
-    agentId: string
-    onSuccess?: (agentId: string) => void
-  },
+  { agentId: string; onSuccess?: (agentId: string) => void },
   ThunkConfig
 >("agents/delete", async ({ agentId }, { extra: { services }, getState }) => {
   const params = getCurrentIds({
