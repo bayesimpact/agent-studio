@@ -9,11 +9,15 @@ import { AgentItem } from "@/features/agents/components/AgentItem"
 import type { Project } from "@/features/projects/projects.models"
 import { useAbility } from "@/hooks/use-ability"
 import { useGetPath } from "@/hooks/use-build-path"
+import { useRedirectToStudio } from "@/hooks/use-redirect-to-studio"
 
 export function AgentList({ project, agents }: { project: Project; agents: Agent[] }) {
   const { t } = useTranslation()
   const { getPath } = useGetPath()
   const { isAdminInterface } = useAbility()
+
+  useRedirectToStudio({ condition: agents.length === 0, to: "project" })
+
   return (
     <ListHeader path={getPath("project")} title={t("agent:list.title")}>
       {isAdminInterface && <AgentCreatorButton project={project} />}

@@ -11,6 +11,7 @@ import { useNavigate } from "react-router-dom"
 import type { Organization } from "@/features/organizations/organizations.models"
 import type { Project } from "@/features/projects/projects.models"
 import { useBuildPath } from "@/hooks/use-build-path"
+import { useRedirectToStudio } from "@/hooks/use-redirect-to-studio"
 import { buildDate } from "@/utils/build-date"
 import { ListHeader } from "./layouts/ListHeader"
 import { ProjectCreator } from "./project/ProjectCreator"
@@ -25,6 +26,9 @@ export function ProjectList({
   isAdminInterface: boolean
 }) {
   const { t } = useTranslation()
+
+  useRedirectToStudio({ condition: projects.length === 0, to: "organization" })
+
   return (
     <ListHeader title={t("project:projects")} className="min-h-screen">
       {isAdminInterface && <ProjectCreator organization={organization} />}
