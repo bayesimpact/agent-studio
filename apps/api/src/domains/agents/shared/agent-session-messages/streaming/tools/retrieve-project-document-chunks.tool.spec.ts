@@ -51,6 +51,7 @@ describe("retrieveProjectDocumentChunksTool", () => {
       conversationSummary: "The user wants onboarding details.",
       latestUserQuestion: "How long does onboarding take?",
       topK: 3,
+      documentTagIds: [],
     })
     expect(onExecute).toHaveBeenCalledWith({
       toolName: "retrieveProjectDocumentChunks",
@@ -58,6 +59,7 @@ describe("retrieveProjectDocumentChunksTool", () => {
         conversationSummary: "The user wants onboarding details.",
         latestUserQuestion: "How long does onboarding take?",
         topK: 3,
+        documentTagIds: [],
         returnedChunkCount: 1,
         chunkIds: ["chunk-1"],
         documentIds: ["document-1"],
@@ -66,6 +68,55 @@ describe("retrieveProjectDocumentChunksTool", () => {
     expect(result.retrievalMetadata).toEqual({
       returnedChunkCount: 1,
       topK: 3,
+    })
+  })
+
+  it("passes agent document tags to retrieval", async () => {
+    const onExecute = jest.fn()
+    const retrievalService = {
+      retrieveTopChunks: jest.fn().mockResolvedValue([]),
+    }
+
+    const sdkTool = retrieveProjectDocumentChunksTool({
+      connectScope: {
+        organizationId: "organization-1",
+        projectId: "project-1",
+      },
+      documentTagIds: ["tag-1", "tag-2"],
+      retrievalService: retrievalService as never,
+      onExecute,
+    })
+
+    await sdkTool.execute?.(
+      {
+        conversationSummary: "Summary",
+        latestUserQuestion: "Question",
+        topK: 2,
+      },
+      {} as never,
+    )
+
+    expect(retrievalService.retrieveTopChunks).toHaveBeenCalledWith({
+      connectScope: {
+        organizationId: "organization-1",
+        projectId: "project-1",
+      },
+      conversationSummary: "Summary",
+      latestUserQuestion: "Question",
+      topK: 2,
+      documentTagIds: ["tag-1", "tag-2"],
+    })
+    expect(onExecute).toHaveBeenCalledWith({
+      toolName: "retrieveProjectDocumentChunks",
+      arguments: {
+        conversationSummary: "Summary",
+        latestUserQuestion: "Question",
+        topK: 2,
+        documentTagIds: ["tag-1", "tag-2"],
+        returnedChunkCount: 0,
+        chunkIds: [],
+        documentIds: [],
+      },
     })
   })
 })

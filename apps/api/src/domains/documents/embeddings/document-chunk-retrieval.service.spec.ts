@@ -82,5 +82,49 @@ describe("DocumentChunkRetrievalService", () => {
         projectSourceType: "project",
       },
     )
+    expect(queryBuilder.andWhere).not.toHaveBeenCalledWith(
+      expect.stringContaining("document_document_tag"),
+      expect.anything(),
+    )
+  })
+
+  it("filters retrieved chunks by document tags when provided", async () => {
+    const getRawMany = jest.fn().mockResolvedValue([])
+    const queryBuilder = {
+      select: jest.fn().mockReturnThis(),
+      addSelect: jest.fn().mockReturnThis(),
+      from: jest.fn().mockReturnThis(),
+      innerJoin: jest.fn().mockReturnThis(),
+      where: jest.fn().mockReturnThis(),
+      andWhere: jest.fn().mockReturnThis(),
+      setParameters: jest.fn().mockReturnThis(),
+      orderBy: jest.fn().mockReturnThis(),
+      limit: jest.fn().mockReturnThis(),
+      getRawMany,
+    }
+    const mockedEmbed = embed as jest.MockedFunction<typeof embed>
+    mockedEmbed.mockResolvedValue({
+      embedding: [0.1, 0.2, 0.3],
+    } as never)
+
+    const service = new DocumentChunkRetrievalService({
+      createQueryBuilder: jest.fn().mockReturnValue(queryBuilder),
+    } as never)
+
+    await service.retrieveTopChunks({
+      connectScope: {
+        organizationId: "organization-1",
+        projectId: "project-1",
+      },
+      conversationSummary: "User asked for policies.",
+      latestUserQuestion: "Show me tagged docs only.",
+      topK: 3,
+      documentTagIds: ["tag-1", "tag-2", "tag-1"],
+    })
+
+    expect(queryBuilder.andWhere).toHaveBeenCalledWith(
+      expect.stringContaining("document_document_tag"),
+      { documentTagIds: ["tag-1", "tag-2"] },
+    )
   })
 })
