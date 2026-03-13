@@ -21,3 +21,7 @@ export const selectCurrentProjectData = createSelector(
     return { status: ADS.Fulfilled, value: project, error: null }
   },
 )
+
+export const hasProjectChanged = (prevState: RootState, nextState: RootState): boolean =>
+  selectCurrentProjectId(prevState) !== selectCurrentProjectId(nextState) &&
+  !!selectCurrentProjectId(nextState)

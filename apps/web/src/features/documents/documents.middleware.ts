@@ -1,27 +1,33 @@
 import type { TypedStartListening } from "@reduxjs/toolkit"
 import { createListenerMiddleware, isAnyOf } from "@reduxjs/toolkit"
 import type { AppDispatch, RootState } from "@/store/types"
+import { hasInterfaceChanged, selectIsAdminInterface } from "../auth/auth.selectors"
 import {
   createDocumentTag,
   deleteDocumentTag,
   updateDocumentTag,
 } from "../document-tags/document-tags.thunks"
 import { notificationsActions } from "../notifications/notifications.slice"
-import { selectCurrentProjectId } from "../projects/projects.selectors"
+import { hasProjectChanged } from "../projects/projects.selectors"
 import { deleteDocument, listDocuments, updateDocument, uploadDocument } from "./documents.thunks"
 
 const listenerMiddleware = createListenerMiddleware<RootState, AppDispatch>()
 
 export type AppStartListening = TypedStartListening<RootState, AppDispatch>
 
-// Refresh documents when current project changes
+// Refresh documents when current project or interface changes
 listenerMiddleware.startListening({
   predicate(_, currentState, originalState) {
-    const prevId = selectCurrentProjectId(originalState)
-    const nextId = selectCurrentProjectId(currentState)
-    return prevId !== nextId && !!nextId
+    return (
+      hasInterfaceChanged(originalState, currentState) ||
+      hasProjectChanged(originalState, currentState)
+    )
   },
   effect: async (_, listenerApi) => {
+    const state = listenerApi.getState()
+    const isAdminInterface = selectIsAdminInterface(state)
+    if (!isAdminInterface) return
+
     await listenerApi.dispatch(listDocuments())
   },
 })

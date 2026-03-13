@@ -1,8 +1,9 @@
 import type { TypedStartListening } from "@reduxjs/toolkit"
 import { createListenerMiddleware, isAnyOf } from "@reduxjs/toolkit"
 import type { AppDispatch, RootState } from "@/store/types"
+import { hasInterfaceChanged, selectIsAdminInterface } from "../auth/auth.selectors"
 import { notificationsActions } from "../notifications/notifications.slice"
-import { selectCurrentProjectId } from "../projects/projects.selectors"
+import { hasProjectChanged } from "../projects/projects.selectors"
 import {
   inviteProjectMembers,
   listProjectMemberships,
@@ -16,11 +17,16 @@ export type AppStartListening = TypedStartListening<RootState, AppDispatch>
 // Refresh project memberships when current project changes
 listenerMiddleware.startListening({
   predicate(_, currentState, originalState) {
-    const prev = selectCurrentProjectId(originalState)
-    const next = selectCurrentProjectId(currentState)
-    return prev !== next && !!next
+    return (
+      hasInterfaceChanged(originalState, currentState) ||
+      hasProjectChanged(originalState, currentState)
+    )
   },
   effect: async (_, listenerApi) => {
+    const state = listenerApi.getState()
+    const isAdminInterface = selectIsAdminInterface(state)
+    if (!isAdminInterface) return
+
     await listenerApi.dispatch(listProjectMemberships())
   },
 })

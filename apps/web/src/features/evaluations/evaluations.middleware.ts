@@ -1,10 +1,10 @@
 import type { TypedStartListening } from "@reduxjs/toolkit"
 import { createListenerMiddleware, isAnyOf } from "@reduxjs/toolkit"
-import { ADS } from "@/store/async-data-status"
 import type { AppDispatch, RootState } from "@/store/types"
+import { hasInterfaceChanged, selectIsAdminInterface } from "../auth/auth.selectors"
 import { notificationsActions } from "../notifications/notifications.slice"
-import { selectCurrentOrganization } from "../organizations/organizations.selectors"
-import { selectCurrentProjectId } from "../projects/projects.selectors"
+import { hasOrganizationChanged } from "../organizations/organizations.selectors"
+import { hasProjectChanged } from "../projects/projects.selectors"
 import {
   createEvaluation,
   deleteEvaluation,
@@ -19,15 +19,17 @@ export type AppStartListening = TypedStartListening<RootState, AppDispatch>
 // Refresh evaluations when current project changes or when user changes organization
 listenerMiddleware.startListening({
   predicate(_, currentState, originalState) {
-    const prevId = selectCurrentProjectId(originalState)
-    const nextId = selectCurrentProjectId(currentState)
-    const prevOrg = selectCurrentOrganization(originalState)
-    const nextOrg = selectCurrentOrganization(currentState)
-    const isNewProject = prevId !== nextId && !!nextId
-    const isNewOrg = ADS.isFulfilled(prevOrg) !== ADS.isFulfilled(nextOrg)
-    return isNewProject || isNewOrg
+    return (
+      hasProjectChanged(originalState, currentState) ||
+      hasOrganizationChanged(originalState, currentState) ||
+      hasInterfaceChanged(originalState, currentState)
+    )
   },
   effect: async (_, listenerApi) => {
+    const state = listenerApi.getState()
+    const isAdminInterface = selectIsAdminInterface(state)
+    if (!isAdminInterface) return
+
     await listenerApi.dispatch(listEvaluations())
   },
 })

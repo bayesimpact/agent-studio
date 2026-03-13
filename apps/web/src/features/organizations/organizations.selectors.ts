@@ -29,3 +29,9 @@ export const selectCurrentOrganization = createSelector(
     return { status: ADS.Fulfilled, value: organization, error: null }
   },
 )
+
+export const hasOrganizationChanged = (prevState: RootState, nextState: RootState): boolean => {
+  const prevOrg = selectCurrentOrganization(prevState)
+  const nextOrg = selectCurrentOrganization(nextState)
+  return ADS.isFulfilled(prevOrg) !== ADS.isFulfilled(nextOrg)
+}
