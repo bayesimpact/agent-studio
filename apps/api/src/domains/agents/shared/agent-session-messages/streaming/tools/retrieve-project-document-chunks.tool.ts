@@ -7,7 +7,7 @@ import type { ToolExecutionLog } from "./tool-execution-log"
 const retrieveProjectDocumentChunksInputSchema = z.object({
   conversationSummary: z
     .string()
-    .min(1)
+    .default("")
     .describe("Short summary of the conversation so far, including relevant context."),
   latestUserQuestion: z
     .string()
