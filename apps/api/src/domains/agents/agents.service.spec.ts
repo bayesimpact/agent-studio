@@ -64,6 +64,7 @@ describe("AgentsService", () => {
           projectId: project.id,
         },
         fields: {
+          type: "conversation",
           name: "My Template",
           defaultPrompt: "This is a default prompt",
           model: AgentModel.Gemini25Flash,
@@ -94,6 +95,7 @@ describe("AgentsService", () => {
             projectId: project.id,
           },
           fields: {
+            type: "conversation",
             name: "AB",
             defaultPrompt: "Prompt",
             model: AgentModel.Gemini25Flash,
@@ -118,6 +120,7 @@ describe("AgentsService", () => {
           projectId: project.id,
         },
         fields: {
+          type: "conversation",
           name: "Conversation Agent",
           defaultPrompt: "This is a default prompt",
           model: AgentModel.Gemini25Flash,
@@ -194,17 +197,17 @@ describe("AgentsService", () => {
       expect(result).toEqual([])
     })
 
-    it("should return Agents ordered by createdAt DESC", async () => {
+    it("should return Agents ordered by name DESC", async () => {
       const { organization, project } = await createOrganizationWithProject(repositories)
 
       const template1 = agentFactory.transient({ organization, project }).build({
+        name: "Second Template",
+        defaultPrompt: "Prompt 2",
+      })
+      const template2 = agentFactory.transient({ organization, project }).build({
         name: "First Template",
         defaultPrompt: "Prompt 1",
         createdAt: new Date("2024-01-02"),
-      })
-      const template2 = agentFactory.transient({ organization, project }).build({
-        name: "Second Template",
-        defaultPrompt: "Prompt 2",
       })
       await repositories.agentRepository.save([template1, template2])
 
@@ -217,8 +220,8 @@ describe("AgentsService", () => {
       // Assert
       expect(result).toHaveLength(2)
       const [first, second] = result
-      expect(first!.name).toBe("Second Template") // Most recent first
-      expect(second!.name).toBe("First Template")
+      expect(first!.name).toBe("First Template")
+      expect(second!.name).toBe("Second Template")
     })
   })
 
@@ -229,7 +232,7 @@ describe("AgentsService", () => {
       // Act
       const result = await service.updateAgent({
         connectScope: { organizationId: organization.id, projectId: project.id },
-        required: { agentId: agent.id },
+        agentId: agent.id,
         fieldsToUpdate: {
           name: "Updated Template",
           defaultPrompt: "Updated Prompt",
@@ -256,7 +259,7 @@ describe("AgentsService", () => {
       // Act
       const result = await service.updateAgent({
         connectScope: { organizationId: organization.id, projectId: project.id },
-        required: { agentId: agent.id },
+        agentId: agent.id,
         fieldsToUpdate: { name: "Updated Name" },
       })
 
@@ -271,7 +274,7 @@ describe("AgentsService", () => {
       const createWrongfulUpdateAgent = async () =>
         service.updateAgent({
           connectScope: { organizationId: organization.id, projectId: project.id },
-          required: { agentId: agent.id },
+          agentId: agent.id,
           fieldsToUpdate: { name: "AB" },
         })
 

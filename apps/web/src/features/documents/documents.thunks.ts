@@ -1,6 +1,6 @@
 import { createAsyncThunk } from "@reduxjs/toolkit"
 import type { RootState, ThunkExtraArg } from "@/store"
-import type { DocumentTag } from "../document-tags/document-tags.models"
+import type { DocumentTagsUpdateFields } from "../document-tags/document-tags.models"
 import { getCurrentIds } from "../helpers"
 import type { Document } from "./documents.models"
 
@@ -39,10 +39,7 @@ export const updateDocument = createAsyncThunk<
   void,
   {
     documentId: string
-    fields: Partial<Pick<Document, "title">> & {
-      tagsToAdd?: DocumentTag["id"][]
-      tagsToRemove?: DocumentTag["id"][]
-    }
+    fields: Partial<Pick<Document, "title">> & DocumentTagsUpdateFields
     onSuccess?: () => void
   },
   ThunkConfig

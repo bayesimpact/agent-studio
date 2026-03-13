@@ -1,3 +1,4 @@
+import type { DocumentTagsUpdateFieldsDto } from "../document-tags/document-tag.dto"
 import type { RequestPayload, ResponseData, SuccessResponseDTO } from "../generic"
 import { defineRoute } from "../helpers"
 import type { AgentDto, ListAgentsResponseDto } from "./agents.dto"
@@ -6,8 +7,9 @@ export const AgentsRoutes = {
   createOne: defineRoute<
     ResponseData<AgentDto>,
     RequestPayload<
-      Pick<AgentDto, "name" | "defaultPrompt" | "model" | "locale" | "temperature"> &
-        Partial<Pick<AgentDto, "type" | "outputJsonSchema">>
+      Pick<AgentDto, "type" | "name" | "defaultPrompt" | "model" | "locale" | "temperature"> &
+        Partial<Pick<AgentDto, "outputJsonSchema">> &
+        DocumentTagsUpdateFieldsDto
     >
   >({
     method: "post",
@@ -31,7 +33,8 @@ export const AgentsRoutes = {
           | "type"
           | "outputJsonSchema"
         >
-      >
+      > &
+        DocumentTagsUpdateFieldsDto
     >
   >({
     method: "patch",

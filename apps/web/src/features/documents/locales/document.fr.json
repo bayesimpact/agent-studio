@@ -15,6 +15,9 @@
       "storageRelativePath": "Chemin de stockage relatif",
       "tags": "Tags"
     },
+    "update": {
+      "title": "Modifier {{documentTitle}}"
+    },
     "delete": {
       "title": "Supprimer {{documentTitle}}",
       "description": "Êtes-vous sûr de vouloir supprimer ce document ? Cette action est irréversible."

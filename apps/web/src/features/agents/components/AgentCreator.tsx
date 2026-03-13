@@ -22,6 +22,7 @@ import { useTranslation } from "react-i18next"
 import { useNavigate } from "react-router-dom"
 import type { Agent } from "@/features/agents/agents.models"
 import { createAgent } from "@/features/agents/agents.thunks"
+import { useDocumentTags } from "@/features/document-tags/document-tags.helpers"
 import type { Project } from "@/features/projects/projects.models"
 import { useBuildPath } from "@/hooks/use-build-path"
 import { useAppDispatch } from "@/store/hooks"
@@ -198,6 +199,7 @@ function CreateForm({
   onSuccess: (agent: Agent) => void
 }) {
   const dispatch = useAppDispatch()
+  const { documentTags } = useDocumentTags()
 
   const handleCreate = async (fields: AgentFormData) => {
     const parsedOutputSchema =
@@ -215,11 +217,12 @@ function CreateForm({
           locale: fields.locale,
           type: agentType,
           outputJsonSchema: parsedOutputSchema,
+          tagsToAdd: fields.documentTagIds,
         },
         onSuccess,
       }),
     )
   }
 
-  return <BaseAgentForm agentType={agentType} onSubmit={handleCreate} />
+  return <BaseAgentForm agentType={agentType} onSubmit={handleCreate} documentTags={documentTags} />
 }

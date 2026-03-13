@@ -33,7 +33,7 @@ listenerMiddleware.startListening({
     uploadDocument.fulfilled,
     updateDocument.fulfilled,
     deleteDocument.fulfilled,
-    // Tag changes
+    // DocumentTag changes
     createDocumentTag.fulfilled,
     updateDocumentTag.fulfilled,
     deleteDocumentTag.fulfilled,

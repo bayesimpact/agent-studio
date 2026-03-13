@@ -4,64 +4,34 @@ import type { Agent } from "../agents.models"
 import type { IAgentsSpi } from "../agents.spi"
 
 export default {
-  getAll: async ({ organizationId, projectId }) => {
+  getAll: async (params) => {
     const axios = getAxiosInstance()
     const response = await axios.get<typeof AgentsRoutes.getAll.response>(
-      AgentsRoutes.getAll.getPath({ organizationId, projectId }),
+      AgentsRoutes.getAll.getPath(params),
     )
-    return response.data.data.agents.map(fromDto)
+    return response.data.data.agents.map(toAgent)
   },
-  createOne: async ({ organizationId, projectId }, payload) => {
+  createOne: async (params, payload) => {
     const axios = getAxiosInstance()
     const response = await axios.post<typeof AgentsRoutes.createOne.response>(
-      AgentsRoutes.createOne.getPath({ organizationId, projectId }),
-      { payload: toCreateDto(payload) },
+      AgentsRoutes.createOne.getPath(params),
+      { payload } satisfies typeof AgentsRoutes.createOne.request,
     )
-    return fromDto(response.data.data)
+    return toAgent(response.data.data)
   },
-  updateOne: async ({ organizationId, projectId, agentId }, payload) => {
+  updateOne: async (params, payload) => {
     const axios = getAxiosInstance()
-    await axios.patch(AgentsRoutes.updateOne.getPath({ organizationId, projectId, agentId }), {
-      payload: toUpdateDto(payload),
-    })
+    await axios.patch(AgentsRoutes.updateOne.getPath(params), {
+      payload,
+    } satisfies typeof AgentsRoutes.updateOne.request)
   },
-  deleteOne: async ({ organizationId, projectId, agentId }) => {
+  deleteOne: async (params) => {
     const axios = getAxiosInstance()
-    await axios.delete(AgentsRoutes.deleteOne.getPath({ organizationId, projectId, agentId }))
+    await axios.delete(AgentsRoutes.deleteOne.getPath(params))
   },
 } satisfies IAgentsSpi
 
-const toCreateDto = (
-  payload: Pick<Agent, "name" | "defaultPrompt" | "model" | "locale" | "temperature" | "type"> &
-    Partial<Pick<Agent, "outputJsonSchema">>,
-): (typeof AgentsRoutes.createOne.request)["payload"] => ({
-  defaultPrompt: payload.defaultPrompt,
-  locale: payload.locale,
-  model: payload.model,
-  name: payload.name,
-  outputJsonSchema: payload.outputJsonSchema,
-  temperature: payload.temperature,
-  type: payload.type,
-})
-
-const toUpdateDto = (
-  payload: Partial<
-    Pick<
-      Agent,
-      "name" | "defaultPrompt" | "locale" | "model" | "temperature" | "type" | "outputJsonSchema"
-    >
-  >,
-): (typeof AgentsRoutes.updateOne.request)["payload"] => ({
-  defaultPrompt: payload.defaultPrompt,
-  locale: payload.locale,
-  model: payload.model,
-  name: payload.name,
-  outputJsonSchema: payload.outputJsonSchema,
-  temperature: payload.temperature,
-  type: payload.type,
-})
-
-const fromDto = (dto: AgentDto): Agent => ({
+const toAgent = (dto: AgentDto): Agent => ({
   createdAt: dto.createdAt,
   defaultPrompt: dto.defaultPrompt,
   id: dto.id,
@@ -73,4 +43,5 @@ const fromDto = (dto: AgentDto): Agent => ({
   temperature: dto.temperature,
   type: dto.type,
   updatedAt: dto.updatedAt,
+  documentTagIds: dto.documentTagIds,
 })

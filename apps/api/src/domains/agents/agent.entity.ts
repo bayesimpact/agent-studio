@@ -4,10 +4,11 @@ import type {
   AgentTemperature,
   AgentType,
 } from "@caseai-connect/api-contracts"
-import { Column, JoinColumn, ManyToOne, OneToMany } from "typeorm"
+import { Column, JoinColumn, JoinTable, ManyToMany, ManyToOne, OneToMany } from "typeorm"
 import { ConnectEntity, ConnectEntityBase } from "@/common/entities/connect-entity"
 import { ConversationAgentSession } from "@/domains/agents/conversation-agent-sessions/conversation-agent-session.entity"
 import { Project } from "@/domains/projects/project.entity"
+import type { DocumentTag } from "../documents/tags/document-tag.entity"
 import { EvaluationReport } from "../evaluations/reports/evaluation-report.entity"
 import { ExtractionAgentSession } from "./extraction-agent-sessions/extraction-agent-session.entity"
 
@@ -61,4 +62,12 @@ export class Agent extends ConnectEntityBase {
     (extractionAgentSession) => extractionAgentSession.agent,
   )
   extractionSessions!: ExtractionAgentSession[]
+
+  @ManyToMany("DocumentTag", (tag: DocumentTag) => tag.agents)
+  @JoinTable({
+    name: "agent_document_tag",
+    joinColumn: { name: "agent_id", referencedColumnName: "id" },
+    inverseJoinColumn: { name: "document_tag_id", referencedColumnName: "id" },
+  })
+  documentTags!: DocumentTag[]
 }

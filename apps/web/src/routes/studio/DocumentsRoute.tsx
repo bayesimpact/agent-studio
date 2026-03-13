@@ -42,7 +42,7 @@ function WithData({
   useHandleHeader(documentTags)
   const { t } = useTranslation("documentTag")
   const tagTree = buildTagTree(documentTags)
-  const untagged = documents.filter((document) => document.tags.length === 0)
+  const untagged = documents.filter((document) => document.tagIds.length === 0)
 
   return (
     <div className="p-6 flex flex-col gap-6">
@@ -51,7 +51,13 @@ function WithData({
       ) : (
         <div className="flex flex-col gap-2">
           {tagTree.map((tag) => (
-            <DocumentTagTreeNode key={tag.id} tag={tag} documents={documents} depth={0} />
+            <DocumentTagTreeNode
+              key={tag.id}
+              tag={tag}
+              documents={documents}
+              depth={0}
+              documentTags={documentTags}
+            />
           ))}
           {untagged.length > 0 && (
             <Collapsible defaultOpen>
@@ -62,7 +68,7 @@ function WithData({
               </CollapsibleTrigger>
               <CollapsibleContent className="flex flex-col gap-3 pl-5 pt-2">
                 {untagged.map((document) => (
-                  <DocumentItem key={document.id} document={document} />
+                  <DocumentItem key={document.id} document={document} documentTags={documentTags} />
                 ))}
               </CollapsibleContent>
             </Collapsible>

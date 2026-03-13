@@ -1,3 +1,4 @@
+import type { DocumentTagDto } from "../document-tags/document-tag.dto"
 import type { TimeType } from "../generic"
 
 export type AgentType = "conversation" | "extraction" | "form"
@@ -14,6 +15,7 @@ export type AgentDto = {
   temperature: AgentTemperature
   type: AgentType
   updatedAt: TimeType
+  documentTagIds: DocumentTagDto["id"][]
 }
 
 export type ListAgentsResponseDto = {

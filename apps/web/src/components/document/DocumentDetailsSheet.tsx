@@ -10,10 +10,17 @@ import { InfoIcon } from "lucide-react"
 import { useTranslation } from "react-i18next"
 import { DocumentTagItem } from "@/components/document-tag/DocumentTagItem"
 import { MarkdownWrapper } from "@/features/agents/shared/agent-session-messages/components/MarkdownWrapper"
+import type { DocumentTag } from "@/features/document-tags/document-tags.models"
 import type { Document } from "@/features/documents/documents.models"
 import { buildDate } from "@/utils/build-date"
 
-export function DocumentDetailsSheet({ document }: { document: Document }) {
+export function DocumentDetailsSheet({
+  document,
+  documentTags,
+}: {
+  document: Document
+  documentTags: DocumentTag[]
+}) {
   const { t } = useTranslation("document", { keyPrefix: "props" })
   return (
     <Sheet>
@@ -35,12 +42,14 @@ export function DocumentDetailsSheet({ document }: { document: Document }) {
             <MetaData label={t("language")} value={document.language} />
             <MetaData label={t("mimeType")} value={document.mimeType} />
           </div>
-          {document.tags.length > 0 && (
+          {document.tagIds.length > 0 && (
             <div className="flex flex-col gap-2">
               <span className="text-sm font-medium">{t("tags")}</span>
-              {document.tags.map((tag) => (
-                <DocumentTagItem key={tag.id} tag={tag} readonly />
-              ))}
+              {document.tagIds.map((id) => {
+                const tag = documentTags.find((tag) => tag.id === id)
+                if (!tag) return null
+                return <DocumentTagItem key={id} tag={tag} readonly />
+              })}
             </div>
           )}
           {document.content && <MarkdownWrapper content={document.content} />}

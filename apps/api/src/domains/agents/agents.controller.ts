@@ -56,7 +56,7 @@ export class AgentsController {
 
     const agent = await this.agentsService.updateAgent({
       connectScope: getRequiredConnectScope(request),
-      required: { agentId },
+      agentId,
       fieldsToUpdate: payload,
     })
 
@@ -93,5 +93,6 @@ function toAgentDto(entity: Agent): AgentDto {
     temperature: entity.temperature,
     type: entity.type,
     updatedAt: entity.updatedAt.getTime(),
+    documentTagIds: entity.documentTags?.map((tag) => tag.id) || [],
   }
 }

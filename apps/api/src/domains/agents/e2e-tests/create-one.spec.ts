@@ -72,6 +72,7 @@ describe("Agents - createOne", () => {
 
     const response = await subject({
       payload: {
+        type: "conversation",
         name: "New Agent",
         defaultPrompt: "This is a default prompt",
         model: AgentModel.Gemini25Flash,

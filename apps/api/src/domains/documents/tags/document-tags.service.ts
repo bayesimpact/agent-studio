@@ -1,15 +1,16 @@
 import { Injectable, NotFoundException } from "@nestjs/common"
 import { InjectRepository } from "@nestjs/typeorm"
-import type { Repository } from "typeorm"
+import { In, type Repository } from "typeorm"
 import { ConnectRepository } from "@/common/entities/connect-repository"
 import type { RequiredConnectScope } from "@/common/entities/connect-required-fields"
 import { DocumentTag } from "./document-tag.entity"
+import type { DocumentTagsUpdateFields } from "./document-tags.types"
 
 @Injectable()
 export class DocumentTagsService {
   constructor(
     @InjectRepository(DocumentTag)
-    documentTagRepository: Repository<DocumentTag>,
+    private readonly documentTagRepository: Repository<DocumentTag>,
   ) {
     this.documentTagConnectRepository = new ConnectRepository(
       documentTagRepository,
@@ -18,6 +19,19 @@ export class DocumentTagsService {
   }
 
   private readonly documentTagConnectRepository: ConnectRepository<DocumentTag>
+
+  async resolveTagChanges({
+    currentTags,
+    tagsToAdd = [],
+    tagsToRemove = [],
+  }: {
+    currentTags: DocumentTag[]
+  } & DocumentTagsUpdateFields): Promise<DocumentTag[]> {
+    const addedTags =
+      tagsToAdd.length > 0 ? await this.documentTagRepository.findBy({ id: In(tagsToAdd) }) : []
+    const tagsToRemoveSet = new Set(tagsToRemove)
+    return [...currentTags.filter((tag) => !tagsToRemoveSet.has(tag.id)), ...addedTags]
+  }
 
   async createDocumentTag({
     connectScope,
@@ -87,6 +101,18 @@ export class DocumentTagsService {
     if (!documentTag) {
       throw new NotFoundException(`DocumentTag with id ${documentTagId} not found`)
     }
+
+    // Manually delete relations in join tables before deleting the tag itself to avoid foreign key constraint errors
+    // Document-DocumentTag relation
+    await this.documentTagRepository.manager.query(
+      "DELETE FROM document_document_tag WHERE document_tag_id = $1",
+      [documentTag.id],
+    )
+    // Agent-DocumentTag relation
+    await this.documentTagRepository.manager.query(
+      "DELETE FROM agent_document_tag WHERE document_tag_id = $1",
+      [documentTag.id],
+    )
 
     await this.documentTagConnectRepository.deleteOneById({ connectScope, id: documentTag.id })
   }

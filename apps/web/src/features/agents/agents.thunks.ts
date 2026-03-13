@@ -1,5 +1,6 @@
 import { createAsyncThunk } from "@reduxjs/toolkit"
 import type { RootState, ThunkExtraArg } from "@/store"
+import type { DocumentTagsUpdateFields } from "../document-tags/document-tags.models"
 import { getCurrentIds } from "../helpers"
 import type { Agent } from "./agents.models"
 
@@ -17,27 +18,17 @@ export const createAgent = createAsyncThunk<
   Agent,
   {
     fields: Pick<Agent, "name" | "defaultPrompt" | "model" | "temperature" | "locale" | "type"> &
-      Partial<Pick<Agent, "outputJsonSchema">>
+      Partial<Pick<Agent, "outputJsonSchema">> &
+      DocumentTagsUpdateFields
     onSuccess?: (agent: Agent) => void
   },
   ThunkConfig
->("agents/create", async (payload, { extra: { services }, getState }) => {
-  const { organizationId, projectId } = getCurrentIds({
+>("agents/create", async ({ fields }, { extra: { services }, getState }) => {
+  const params = getCurrentIds({
     state: getState(),
     wantedIds: ["organizationId", "projectId"],
   })
-  return await services.agents.createOne(
-    { organizationId, projectId },
-    {
-      name: payload.fields.name,
-      defaultPrompt: payload.fields.defaultPrompt,
-      model: payload.fields.model,
-      temperature: payload.fields.temperature,
-      locale: payload.fields.locale,
-      outputJsonSchema: payload.fields.outputJsonSchema,
-      type: payload.fields.type,
-    },
-  )
+  return await services.agents.createOne(params, fields)
 })
 
 export const updateAgent = createAsyncThunk<
@@ -49,15 +40,16 @@ export const updateAgent = createAsyncThunk<
         Agent,
         "name" | "defaultPrompt" | "model" | "temperature" | "locale" | "type" | "outputJsonSchema"
       >
-    >
+    > &
+      DocumentTagsUpdateFields
   },
   ThunkConfig
 >("agents/update", async ({ agentId, fields }, { extra: { services }, getState }) => {
-  const { organizationId, projectId } = getCurrentIds({
+  const params = getCurrentIds({
     state: getState(),
     wantedIds: ["organizationId", "projectId"],
   })
-  return await services.agents.updateOne({ organizationId, projectId, agentId }, fields)
+  return await services.agents.updateOne({ ...params, agentId }, fields)
 })
 
 export const deleteAgent = createAsyncThunk<
@@ -68,9 +60,9 @@ export const deleteAgent = createAsyncThunk<
   },
   ThunkConfig
 >("agents/delete", async ({ agentId }, { extra: { services }, getState }) => {
-  const { organizationId, projectId } = getCurrentIds({
+  const params = getCurrentIds({
     state: getState(),
     wantedIds: ["organizationId", "projectId"],
   })
-  return await services.agents.deleteOne({ organizationId, projectId, agentId })
+  return await services.agents.deleteOne({ ...params, agentId })
 })

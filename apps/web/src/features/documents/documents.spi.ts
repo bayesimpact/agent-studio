@@ -1,4 +1,4 @@
-import type { DocumentTag } from "../document-tags/document-tags.models"
+import type { DocumentTagsUpdateFields } from "../document-tags/document-tags.models"
 import type { Document } from "./documents.models"
 
 export interface IDocumentsSpi {
@@ -13,10 +13,7 @@ export interface IDocumentsSpi {
     organizationId: string
     projectId: string
     documentId: string
-    payload: Partial<Pick<Document, "title">> & {
-      tagsToAdd?: DocumentTag["id"][]
-      tagsToRemove?: DocumentTag["id"][]
-    }
+    payload: Partial<Pick<Document, "title">> & DocumentTagsUpdateFields
   }): Promise<void>
   deleteOne(params: {
     organizationId: string

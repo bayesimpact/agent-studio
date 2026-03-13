@@ -21,18 +21,15 @@ export const createDocumentTag = createAsyncThunk<
   },
   ThunkConfig
 >("documentTags/create", async (payload, { extra: { services }, getState }) => {
-  const { organizationId, projectId } = getCurrentIds({
+  const params = getCurrentIds({
     state: getState(),
     wantedIds: ["organizationId", "projectId"],
   })
-  return await services.documentTags.createOne(
-    { organizationId, projectId },
-    {
-      name: payload.fields.name,
-      description: payload.fields.description,
-      parentId: payload.fields.parentId,
-    },
-  )
+  return await services.documentTags.createOne(params, {
+    name: payload.fields.name,
+    description: payload.fields.description,
+    parentId: payload.fields.parentId,
+  })
 })
 
 export const updateDocumentTag = createAsyncThunk<
@@ -44,11 +41,11 @@ export const updateDocumentTag = createAsyncThunk<
   },
   ThunkConfig
 >("documentTags/update", async ({ documentTagId, fields }, { extra: { services }, getState }) => {
-  const { organizationId, projectId } = getCurrentIds({
+  const params = getCurrentIds({
     state: getState(),
     wantedIds: ["organizationId", "projectId"],
   })
-  return await services.documentTags.updateOne({ organizationId, projectId, documentTagId }, fields)
+  return await services.documentTags.updateOne({ ...params, documentTagId }, fields)
 })
 
 export const deleteDocumentTag = createAsyncThunk<
@@ -59,9 +56,9 @@ export const deleteDocumentTag = createAsyncThunk<
   },
   ThunkConfig
 >("documentTags/delete", async ({ documentTagId }, { extra: { services }, getState }) => {
-  const { organizationId, projectId } = getCurrentIds({
+  const params = getCurrentIds({
     state: getState(),
     wantedIds: ["organizationId", "projectId"],
   })
-  return await services.documentTags.deleteOne({ organizationId, projectId, documentTagId })
+  return await services.documentTags.deleteOne({ ...params, documentTagId })
 })
