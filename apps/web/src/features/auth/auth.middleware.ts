@@ -52,8 +52,7 @@ listenerMiddleware.startListening({
     // we don't have enough information to determine if the user is an admin
     if (!ADS.isFulfilled(org) || !user) return
 
-    const isAdmin = org.value.role === "admin" || org.value.role === "owner"
-    listenerApi.dispatch(authActions.setIsAdmin(isAdmin))
+    listenerApi.dispatch(authActions.setIsAdmin(org.value.role))
   },
 })
 

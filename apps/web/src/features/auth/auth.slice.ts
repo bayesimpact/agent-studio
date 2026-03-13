@@ -1,4 +1,5 @@
 import { createSlice, type PayloadAction } from "@reduxjs/toolkit"
+import type { Organization } from "../organizations/organizations.models"
 
 interface State {
   isAuthenticated: boolean
@@ -19,8 +20,8 @@ const slice = createSlice({
     setAuthenticated: (state, action: PayloadAction<boolean>) => {
       state.isAuthenticated = action.payload
     },
-    setIsAdmin: (state, action: PayloadAction<boolean>) => {
-      const isAdmin = action.payload
+    setIsAdmin: (state, action: PayloadAction<Organization["role"]>) => {
+      const isAdmin = action.payload === "admin" || action.payload === "owner"
       state.isAdmin = isAdmin
       if (!isAdmin && state.isAdminInterface) {
         state.isAdminInterface = false
