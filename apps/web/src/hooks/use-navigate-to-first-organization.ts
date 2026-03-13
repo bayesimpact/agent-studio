@@ -20,15 +20,15 @@ export function useNavigateToFirstOrganization() {
 
   const navigateToFirstOrganization = ({
     organizations,
-    onNoFirstOrganization,
+    onFail,
   }: {
     organizations: AsyncData<Organization[]>
-    onNoFirstOrganization?: () => void
+    onFail?: () => void
   }) => {
     const firstOrganization = ADS.isFulfilled(organizations) && organizations.value[0]
 
     if (!firstOrganization) {
-      onNoFirstOrganization?.()
+      onFail?.()
       return
     }
 
