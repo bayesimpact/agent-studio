@@ -1,8 +1,14 @@
 "use client"
 
-import { AgentLocale, AgentModel } from "@caseai-connect/api-contracts"
-import { z } from "zod"
+import {
+  type AgentLocale,
+  AgentModel,
+  type CreateAgentDto,
+  type UpdateAgentDto,
+} from "@caseai-connect/api-contracts"
 import type { Agent } from "@/features/agents/agents.models"
+
+export type AgentFormData = CreateAgentDto | UpdateAgentDto
 
 export interface AgentFormBaseProps {
   defaultValues?: AgentFormData
@@ -11,14 +17,6 @@ export interface AgentFormBaseProps {
   onSubmit: (values: AgentFormData) => Promise<void> | void
   submitLabelIdle: string
   submitLabelLoading: string
-}
-
-export type AgentFormData = Pick<
-  Agent,
-  "name" | "defaultPrompt" | "model" | "temperature" | "locale"
-> & {
-  outputJsonSchemaText?: string
-  documentTagIds: string[]
 }
 
 const defaultConversationPrompt = `## Identity
@@ -71,32 +69,14 @@ export function getDefaultFormValues({
   language: AgentLocale
 }): AgentFormData {
   return {
+    type: agentType,
     name: "",
     defaultPrompt: promptMap[agentType],
     model: AgentModel.Gemini25Flash,
     temperature: 0.0,
     locale: language,
-    documentTagIds: [],
+    tagsToAdd: [],
   }
-}
-
-export function buildAgentSchema(t: (key: string) => string) {
-  return z.object({
-    name: z.string().min(3, t("validation.nameMinLength")),
-    defaultPrompt: z.string().min(1, t("validation.promptRequired")),
-    model: z.enum(AgentModel),
-    temperature: z
-      .number()
-      .min(0)
-      .max(2)
-      .refine(
-        (temperatureValue) =>
-          temperatureValue >= 0 && temperatureValue <= 2 && Number.isFinite(temperatureValue),
-        t("validation.temperatureInvalid"),
-      ),
-    locale: z.enum(AgentLocale),
-    documentTagIds: z.array(z.string()),
-  })
 }
 
 export function isValidJsonObject(rawJson: string): boolean {

@@ -85,15 +85,11 @@ function UpdateForm({ agent, onSuccess }: { agent: Agent; onSuccess?: () => void
   const { documentTags } = useDocumentTags()
 
   const handleSubmit = (fields: AgentFormData) => {
-    const parsedOutputSchema =
-      (agent.type === "extraction" || agent.type === "form") && fields.outputJsonSchemaText
-        ? (JSON.parse(fields.outputJsonSchemaText) as Record<string, unknown>)
-        : undefined
+    if (!("documentTagIds" in fields)) {
+      throw new Error("Missing documentTagIds in fields")
+    }
 
     const originalTagIds = agent.documentTagIds
-    const tagsToAdd = fields.documentTagIds.filter((id) => !originalTagIds.includes(id))
-    const tagsToRemove = originalTagIds.filter((id) => !fields.documentTagIds.includes(id))
-
     dispatch(
       updateAgent({
         agentId: agent.id,
@@ -103,9 +99,10 @@ function UpdateForm({ agent, onSuccess }: { agent: Agent; onSuccess?: () => void
           model: fields.model,
           temperature: fields.temperature,
           locale: fields.locale,
-          outputJsonSchema: parsedOutputSchema,
-          tagsToAdd,
-          tagsToRemove,
+          outputJsonSchema: fields.outputJsonSchema,
+          documentTagIds: fields.documentTagIds,
+          tagsToAdd: fields.documentTagIds.filter((id) => !originalTagIds.includes(id)),
+          tagsToRemove: originalTagIds.filter((id) => !fields.documentTagIds.includes(id)),
         },
       }),
     )

@@ -1,5 +1,15 @@
-import { type AgentDto, AgentsRoutes } from "@caseai-connect/api-contracts"
-import { Body, Controller, Delete, Get, Patch, Post, Req, UseGuards } from "@nestjs/common"
+import { type AgentDto, AgentsRoutes, createAgentSchema } from "@caseai-connect/api-contracts"
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Patch,
+  Post,
+  Req,
+  UseGuards,
+  UsePipes,
+} from "@nestjs/common"
 import type {
   EndpointRequestWithAgent,
   EndpointRequestWithProject,
@@ -8,6 +18,7 @@ import { getRequiredConnectScope } from "@/common/context/request-context.helper
 import { AddContext, RequireContext } from "@/common/context/require-context.decorator"
 import { ResourceContextGuard } from "@/common/context/resource-context.guard"
 import { CheckPolicy } from "@/common/policies/check-policy.decorator"
+import { ZodValidationPipe } from "@/common/zod-validation-pipe"
 import { JwtAuthGuard } from "@/domains/auth/jwt-auth.guard"
 import { UserGuard } from "@/domains/users/user.guard"
 import type { Agent } from "./agent.entity"
@@ -23,6 +34,7 @@ export class AgentsController {
 
   @Post(AgentsRoutes.createOne.path)
   @CheckPolicy((policy) => policy.canCreate())
+  @UsePipes(new ZodValidationPipe(createAgentSchema))
   async createOne(
     @Req() request: EndpointRequestWithProject,
     @Body() { payload }: typeof AgentsRoutes.createOne.request,
@@ -42,7 +54,7 @@ export class AgentsController {
   ): Promise<typeof AgentsRoutes.getAll.response> {
     const agents = await this.agentsService.listAgents(getRequiredConnectScope(request))
 
-    return { data: { agents: agents.map(toAgentDto) } }
+    return { data: agents.map(toAgentDto) }
   }
 
   @Patch(AgentsRoutes.updateOne.path)
@@ -88,7 +100,7 @@ function toAgentDto(entity: Agent): AgentDto {
     locale: entity.locale,
     model: entity.model,
     name: entity.name,
-    outputJsonSchema: entity.outputJsonSchema ?? undefined,
+    outputJsonSchema: (entity.outputJsonSchema as AgentDto["outputJsonSchema"]) ?? undefined,
     projectId: entity.projectId,
     temperature: entity.temperature,
     type: entity.type,

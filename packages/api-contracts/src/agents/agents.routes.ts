@@ -1,42 +1,17 @@
-import type { DocumentTagsUpdateFieldsDto } from "../document-tags/document-tag.dto"
 import type { RequestPayload, ResponseData, SuccessResponseDTO } from "../generic"
 import { defineRoute } from "../helpers"
-import type { AgentDto, ListAgentsResponseDto } from "./agents.dto"
+import type { AgentDto, CreateAgentDto, UpdateAgentDto } from "./agents.dto"
 
 export const AgentsRoutes = {
-  createOne: defineRoute<
-    ResponseData<AgentDto>,
-    RequestPayload<
-      Pick<AgentDto, "type" | "name" | "defaultPrompt" | "model" | "locale" | "temperature"> &
-        Partial<Pick<AgentDto, "outputJsonSchema">> &
-        DocumentTagsUpdateFieldsDto
-    >
-  >({
+  createOne: defineRoute<ResponseData<AgentDto>, RequestPayload<CreateAgentDto>>({
     method: "post",
     path: "organizations/:organizationId/projects/:projectId/agents",
   }),
-  getAll: defineRoute<ResponseData<ListAgentsResponseDto>>({
+  getAll: defineRoute<ResponseData<AgentDto[]>>({
     method: "get",
     path: "organizations/:organizationId/projects/:projectId/agents",
   }),
-  updateOne: defineRoute<
-    ResponseData<SuccessResponseDTO>,
-    RequestPayload<
-      Partial<
-        Pick<
-          AgentDto,
-          | "name"
-          | "defaultPrompt"
-          | "locale"
-          | "model"
-          | "temperature"
-          | "type"
-          | "outputJsonSchema"
-        >
-      > &
-        DocumentTagsUpdateFieldsDto
-    >
-  >({
+  updateOne: defineRoute<ResponseData<SuccessResponseDTO>, RequestPayload<UpdateAgentDto>>({
     method: "patch",
     path: "organizations/:organizationId/projects/:projectId/agents/:agentId",
   }),
