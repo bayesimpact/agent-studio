@@ -43,16 +43,24 @@ describe("Documents - uploadOne", () => {
     await app.close()
   })
 
-  const createContext = async () => {
-    const { user, organization, project } = await createOrganizationWithProject(repositories)
+  const createContext = async (role: "owner" | "admin" | "member" = "owner") => {
+    const { user, organization, project } = await createOrganizationWithProject(repositories, {
+      membership: { role },
+    })
     organizationId = organization.id
     projectId = project.id
     auth0Id = user.auth0Id
     return { organization, project }
   }
 
-  const subject = (file: { buffer: Buffer; filename: string; contentType: string }) => {
-    const path = DocumentsRoutes.uploadOne.getPath({ organizationId, projectId })
+  const subject = ({
+    file,
+    sourceType = "project",
+  }: {
+    file: { buffer: Buffer; filename: string; contentType: string }
+    sourceType?: "project" | "agentSessionMessage" | "extraction"
+  }) => {
+    const path = DocumentsRoutes.uploadOne.getPath({ organizationId, projectId, sourceType })
     return supertest(app.getHttpServer())
       .post(path)
       .set("Authorization", "Bearer token")
@@ -70,9 +78,11 @@ describe("Documents - uploadOne", () => {
     const minimalPdf = "%PDF-1.4\n1 0 obj<</Type/Catalog>>endobj\n%%EOF"
 
     const response = await subject({
-      buffer: Buffer.from(minimalPdf),
-      filename: "test-document.pdf",
-      contentType: "application/pdf",
+      file: {
+        buffer: Buffer.from(minimalPdf),
+        filename: "test-document.pdf",
+        contentType: "application/pdf",
+      },
     })
 
     expect(response.status).toBe(201)
@@ -84,11 +94,29 @@ describe("Documents - uploadOne", () => {
     await createContext()
 
     const response = await subject({
-      buffer: Buffer.from("some text content"),
-      filename: "readme.txt",
-      contentType: "text/plain",
+      file: {
+        buffer: Buffer.from("some text content"),
+        filename: "readme.txt",
+        contentType: "text/plain",
+      },
     })
 
     expect(response.status).toBe(422)
+  })
+
+  it("forbids member upload with project source type", async () => {
+    await createContext("member")
+
+    const minimalPdf = "%PDF-1.4\n1 0 obj<</Type/Catalog>>endobj\n%%EOF"
+    const response = await subject({
+      sourceType: "project",
+      file: {
+        buffer: Buffer.from(minimalPdf),
+        filename: "member-document.pdf",
+        contentType: "application/pdf",
+      },
+    })
+
+    expect(response.status).toBe(403)
   })
 })

@@ -3,9 +3,10 @@ import type { MembershipRole } from "@/domains/organizations/user-membership.ent
 import { userMembershipFactory } from "@/domains/organizations/user-membership.factory"
 import { userFactory } from "@/domains/users/user.factory"
 import { projectFactory } from "../projects/project.factory"
-import { ProjectPolicy } from "../projects/project.policy"
+import type { Document } from "./document.entity"
+import { documentFactory } from "./document.factory"
+import { DocumentPolicy } from "./document.policy"
 
-type Project = ReturnType<typeof projectFactory.build>
 type DocumentState = "sameOrganization" | "differentOrganization" | "noDocument"
 
 describe("DocumentPolicy", () => {
@@ -21,12 +22,16 @@ describe("DocumentPolicy", () => {
     return projectFactory.transient({ organization: projectOrganization }).build()
   }
 
-  const buildDocument = (documentState: DocumentState): Project | undefined => {
+  const buildDocument = (documentState: DocumentState): Document | undefined => {
     if (documentState === "sameOrganization") {
-      return buildProject(organization)
+      return documentFactory
+        .transient({ organization, project: buildProject(organization) })
+        .build()
     }
     if (documentState === "differentOrganization") {
-      return buildProject(otherOrganization)
+      return documentFactory
+        .transient({ organization: otherOrganization, project: buildProject(otherOrganization) })
+        .build()
     }
     return undefined
   }
@@ -44,44 +49,74 @@ describe("DocumentPolicy", () => {
       ["member", "noDocument"],
     ])("when user is %s with %s document", (role, documentState) => {
       it("should always return true", () => {
-        const policy = new ProjectPolicy(buildUserMembership(role), buildDocument(documentState))
+        const policy = new DocumentPolicy(
+          { userMembership: buildUserMembership(role), project: buildProject(organization) },
+          buildDocument(documentState),
+        )
 
-        expect(policy.canList()).toBe(true)
+        expect(policy.canList()).toBe(role === "owner" || role === "admin")
       })
     })
   })
 
   describe("canCreate", () => {
-    it("should return true when user is owner", () => {
-      const policy = new ProjectPolicy(buildUserMembership("owner"))
-      expect(policy.canCreate()).toBe(true)
+    it("allows members for non-project source types", () => {
+      const defaultPolicy = new DocumentPolicy({
+        userMembership: buildUserMembership("member"),
+        project: buildProject(organization),
+      })
+      const agentSessionPolicy = new DocumentPolicy(
+        { userMembership: buildUserMembership("member"), project: buildProject(organization) },
+        undefined,
+        "agentSessionMessage",
+      )
+      const extractionPolicy = new DocumentPolicy(
+        { userMembership: buildUserMembership("member"), project: buildProject(organization) },
+        undefined,
+        "extraction",
+      )
+
+      expect(defaultPolicy.canCreate()).toBe(true)
+      expect(agentSessionPolicy.canCreate()).toBe(true)
+      expect(extractionPolicy.canCreate()).toBe(true)
     })
 
-    it("should return true when user is admin", () => {
-      const policy = new ProjectPolicy(buildUserMembership("admin"))
-      expect(policy.canCreate()).toBe(true)
-    })
-
-    it("should return false when user is member", () => {
-      const policy = new ProjectPolicy(buildUserMembership("member"))
+    it("forbids members for project source type", () => {
+      const policy = new DocumentPolicy(
+        { userMembership: buildUserMembership("member"), project: buildProject(organization) },
+        undefined,
+        "project",
+      )
       expect(policy.canCreate()).toBe(false)
+    })
+
+    it("allows owners and admins for project source type", () => {
+      const ownerPolicy = new DocumentPolicy(
+        { userMembership: buildUserMembership("owner"), project: buildProject(organization) },
+        undefined,
+        "project",
+      )
+      const adminPolicy = new DocumentPolicy(
+        { userMembership: buildUserMembership("admin"), project: buildProject(organization) },
+        undefined,
+        "project",
+      )
+      expect(ownerPolicy.canCreate()).toBe(true)
+      expect(adminPolicy.canCreate()).toBe(true)
     })
   })
 
   describe("canUpdate", () => {
-    describe.each<[MembershipRole, DocumentState, boolean]>([
-      ["owner", "sameOrganization", true],
-      ["owner", "differentOrganization", false],
-      ["owner", "noDocument", false],
-      ["admin", "sameOrganization", true],
-      ["admin", "differentOrganization", false],
-      ["admin", "noDocument", false],
-      ["member", "sameOrganization", false],
-      ["member", "differentOrganization", false],
-      ["member", "noDocument", false],
-    ])("when user is %s with %s document", (role, documentState, expected) => {
+    describe.each<[MembershipRole, boolean]>([
+      ["owner", true],
+      ["admin", true],
+      ["member", false],
+    ])("when user is %s", (role, expected) => {
       it(`should return ${expected}`, () => {
-        const policy = new ProjectPolicy(buildUserMembership(role), buildDocument(documentState))
+        const policy = new DocumentPolicy({
+          userMembership: buildUserMembership(role),
+          project: buildProject(organization),
+        })
 
         expect(policy.canUpdate()).toBe(expected)
       })
@@ -89,19 +124,16 @@ describe("DocumentPolicy", () => {
   })
 
   describe("canDelete", () => {
-    describe.each<[MembershipRole, DocumentState, boolean]>([
-      ["owner", "sameOrganization", true],
-      ["owner", "differentOrganization", false],
-      ["owner", "noDocument", false],
-      ["admin", "sameOrganization", true],
-      ["admin", "differentOrganization", false],
-      ["admin", "noDocument", false],
-      ["member", "sameOrganization", false],
-      ["member", "differentOrganization", false],
-      ["member", "noDocument", false],
-    ])("when user is %s with %s document", (role, documentState, expected) => {
+    describe.each<[MembershipRole, boolean]>([
+      ["owner", true],
+      ["admin", true],
+      ["member", false],
+    ])("when user is %s", (role, expected) => {
       it(`should return ${expected}`, () => {
-        const policy = new ProjectPolicy(buildUserMembership(role), buildDocument(documentState))
+        const policy = new DocumentPolicy({
+          userMembership: buildUserMembership(role),
+          project: buildProject(organization),
+        })
 
         expect(policy.canDelete()).toBe(expected)
       })

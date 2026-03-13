@@ -82,7 +82,7 @@ export class DocumentChunkRetrievalService {
     embedding: number[]
     topK: number
   }): Promise<RetrievedDocumentChunk[]> {
-    return await this.dataSource
+    const queryBuilder = this.dataSource
       .createQueryBuilder()
       .select("chunk.id", "chunkId")
       .addSelect("chunk.document_id", "documentId")
@@ -105,9 +105,12 @@ export class DocumentChunkRetrievalService {
       .andWhere("document.embedding_status = :embeddingStatus", {
         embeddingStatus: "completed",
       })
+      .andWhere("document.source_type = :projectSourceType", { projectSourceType: "project" })
       .andWhere("chunk.deleted_at IS NULL")
       .andWhere("embedding.deleted_at IS NULL")
       .andWhere("document.deleted_at IS NULL")
+
+    return await queryBuilder
       .setParameters({ queryEmbedding: toSql(embedding) })
       .orderBy("embedding.embedding <=> :queryEmbedding::vector", "ASC")
       .limit(topK)
