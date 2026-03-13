@@ -139,14 +139,17 @@ export class DocumentsController {
       throw new NotFoundException("Document not found or you do not have permission to access it.")
     }
 
-    await this.documentEmbeddingsBatchService.enqueueCreateEmbeddingsForDocument({
-      documentId: document.id,
-      organizationId: connectScope.organizationId,
-      projectId: connectScope.projectId,
-      uploadedByUserId: req.user.id,
-      origin: "document-upload",
-      currentTraceId: v4(),
-    })
+    // we only create embeddings for project documents
+    if (sourceType === "project") {
+      await this.documentEmbeddingsBatchService.enqueueCreateEmbeddingsForDocument({
+        documentId: document.id,
+        organizationId: connectScope.organizationId,
+        projectId: connectScope.projectId,
+        uploadedByUserId: req.user.id,
+        origin: "document-upload",
+        currentTraceId: v4(),
+      })
+    }
 
     return { data: toDocumentDto(document) }
   }

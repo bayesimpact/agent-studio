@@ -541,6 +541,7 @@ export class StreamingService extends ServiceWithLLM {
         return {
           retrieveProjectDocumentChunks: retrieveProjectDocumentChunksTool({
             connectScope,
+            documentTagIds: agent.documentTags?.map((documentTag) => documentTag.id) ?? [],
             retrievalService: this.documentChunkRetrievalService,
             onExecute,
           }),
