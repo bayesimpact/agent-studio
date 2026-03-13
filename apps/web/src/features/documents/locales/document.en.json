@@ -11,6 +11,13 @@
       "fileName": "File Name",
       "language": "Language",
       "mimeType": "MIME Type",
+      "embeddingStatus": "Embedding Status",
+      "embeddingStatuses": {
+        "pending": "Pending",
+        "processing": "Processing",
+        "completed": "Completed",
+        "failed": "Failed"
+      },
       "size": "Size",
       "storageRelativePath": "Storage Relative Path",
       "tags": "Tags"

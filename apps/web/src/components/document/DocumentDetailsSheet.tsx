@@ -1,3 +1,4 @@
+import { Badge, type BadgeVariant } from "@caseai-connect/ui/shad/badge"
 import { Button } from "@caseai-connect/ui/shad/button"
 import {
   Sheet,
@@ -41,6 +42,10 @@ export function DocumentDetailsSheet({
             <MetaData label={t("size")} value={document.size?.toString()} />
             <MetaData label={t("language")} value={document.language} />
             <MetaData label={t("mimeType")} value={document.mimeType} />
+            <div className="flex flex-col gap-1">
+              <span className="font-medium">{t("embeddingStatus")}:</span>
+              <EmbeddingStatusBadge status={document.embeddingStatus} />
+            </div>
           </div>
           {document.tagIds.length > 0 && (
             <div className="flex flex-col gap-2">
@@ -57,6 +62,19 @@ export function DocumentDetailsSheet({
       </SheetContent>
     </Sheet>
   )
+}
+
+function EmbeddingStatusBadge({ status }: { status: Document["embeddingStatus"] }) {
+  const { t } = useTranslation("document", { keyPrefix: "props.embeddingStatuses" })
+
+  const statusBadgeVariant: Record<Document["embeddingStatus"], BadgeVariant> = {
+    pending: "outline",
+    processing: "outline",
+    completed: "success",
+    failed: "destructive",
+  }
+
+  return <Badge variant={statusBadgeVariant[status]}>{t(status)}</Badge>
 }
 
 function MetaData({ label, value }: { label: string; value?: string }) {
