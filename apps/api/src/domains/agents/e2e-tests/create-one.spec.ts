@@ -78,6 +78,7 @@ describe("Agents - createOne", () => {
         model: AgentModel.Gemini25Flash,
         temperature: 0,
         locale: AgentLocale.EN,
+        tagsToAdd: [],
       },
     })
 
