@@ -7,6 +7,7 @@ BASE_REF ?= HEAD^1
 REGION ?= eu
 PROJECT ?= connect
 TEST_DATABASE_URL ?= postgresql://connect_admin:passpass@localhost:5432/connect_test
+DOCUMENT_EMBEDDING_MODELS ?= gemini-embedding-001
 
 ifeq ($(REGION),eu)
 ifeq ($(PROJECT),connect)
@@ -63,7 +64,6 @@ network = projects/YOUR_PROJECT/global/networks/default
 databaseUsername = health_admin
 databaseName = health
 cloudSqlCredentialsFile = $(CURDIR)/dontsave/your-credentials.json
-documentEmbeddingModels=gemini-embedding-001
 else
 $(error Unsupported PROJECT '$(PROJECT)' for REGION '$(REGION)')
 endif
@@ -204,7 +204,7 @@ deploy-only:
 	--set-env-vars=GOOGLE_VERTEX_LOCATION=${googleVertexLocation} \
 	--set-env-vars=LANGFUSE_PK=${langfusePk},LANGFUSE_BASE_URL=${langfuseUrl},LOCATION=$(location) \
 	--set-env-vars=DATABASE_HOST=/cloudsql/${addCloudSqlInstances},DATABASE_USERNAME=${databaseUsername},DATABASE_NAME=${databaseName} \
-	--set-env-vars=DOCUMENT_EMBEDDING_MODELS=${documentEmbeddingModels} \
+	--set-env-vars=DOCUMENT_EMBEDDING_MODELS=${DOCUMENT_EMBEDDING_MODELS} \
 	--region=${zone} \
 	--port=3000 \
 	--min-instances=1 \
@@ -229,7 +229,7 @@ deploy-workers-only:
 	--set-env-vars=GOOGLE_VERTEX_PROJECT=${googleVertexProject},GOOGLE_VERTEX_LOCATION=${googleVertexLocation} \
 	--set-env-vars=LANGFUSE_PK=${langfusePk},LANGFUSE_BASE_URL=${langfuseUrl},LOCATION=$(location) \
 	--set-env-vars=DATABASE_HOST=/cloudsql/${addCloudSqlInstances},DATABASE_USERNAME=${databaseUsername},DATABASE_NAME=${databaseName} \
-	--set-env-vars=DOCUMENT_EMBEDDING_MODELS=${documentEmbeddingModels} \
+	--set-env-vars=DOCUMENT_EMBEDDING_MODELS=${DOCUMENT_EMBEDDING_MODELS} \
 	--add-cloudsql-instances=${addCloudSqlInstances} \
 	--network=${network} \
 	--service-account=${serviceAccount} \
