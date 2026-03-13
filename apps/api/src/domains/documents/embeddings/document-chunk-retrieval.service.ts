@@ -3,7 +3,7 @@ import { Injectable, Logger } from "@nestjs/common"
 import { InjectDataSource } from "@nestjs/typeorm"
 import { embed } from "ai"
 import { toSql } from "pgvector"
-import type { DataSource } from "typeorm"
+import type { DataSource, SelectQueryBuilder } from "typeorm"
 import type { RequiredConnectScope } from "@/common/entities/connect-required-fields"
 import { resolveEmbeddingModelNames, resolveVertexConfig } from "./document-embeddings.config"
 
@@ -31,11 +31,13 @@ export class DocumentChunkRetrievalService {
     conversationSummary,
     latestUserQuestion,
     topK = DEFAULT_TOP_K,
+    documentTagIds = [],
   }: {
     connectScope: RequiredConnectScope
     conversationSummary: string
     latestUserQuestion: string
     topK?: number
+    documentTagIds?: string[]
   }): Promise<RetrievedDocumentChunk[]> {
     const retrievalQueryText = this.buildRetrievalQueryText({
       conversationSummary,
@@ -47,6 +49,7 @@ export class DocumentChunkRetrievalService {
     }
 
     const normalizedTopK = this.normalizeTopK(topK)
+    const normalizedDocumentTagIds = this.normalizeDocumentTagIds(documentTagIds)
     const embedding = await this.embedQuery({ query: retrievalQueryText, modelName })
 
     const chunks = await this.fetchChunksByEmbedding({
@@ -54,6 +57,7 @@ export class DocumentChunkRetrievalService {
       modelName,
       embedding,
       topK: normalizedTopK,
+      documentTagIds: normalizedDocumentTagIds,
     })
     this.logRetrievalResult({
       projectId: connectScope.projectId,
@@ -71,16 +75,22 @@ export class DocumentChunkRetrievalService {
     return Math.max(1, topK)
   }
 
+  private normalizeDocumentTagIds(documentTagIds: string[]): string[] {
+    return [...new Set(documentTagIds.filter(Boolean))]
+  }
+
   private async fetchChunksByEmbedding({
     connectScope,
     modelName,
     embedding,
     topK,
+    documentTagIds,
   }: {
     connectScope: RequiredConnectScope
     modelName: string
     embedding: number[]
     topK: number
+    documentTagIds: string[]
   }): Promise<RetrievedDocumentChunk[]> {
     const queryBuilder = this.dataSource
       .createQueryBuilder()
@@ -110,11 +120,35 @@ export class DocumentChunkRetrievalService {
       .andWhere("embedding.deleted_at IS NULL")
       .andWhere("document.deleted_at IS NULL")
 
+    this.applyDocumentTagFilter({ queryBuilder, documentTagIds })
+
     return await queryBuilder
       .setParameters({ queryEmbedding: toSql(embedding) })
       .orderBy("embedding.embedding <=> :queryEmbedding::vector", "ASC")
       .limit(topK)
       .getRawMany<RetrievedDocumentChunk>()
+  }
+
+  private applyDocumentTagFilter({
+    queryBuilder,
+    documentTagIds,
+  }: {
+    queryBuilder: SelectQueryBuilder<Record<string, unknown>>
+    documentTagIds: string[]
+  }): void {
+    if (documentTagIds.length === 0) {
+      return
+    }
+
+    queryBuilder.andWhere(
+      `EXISTS (
+        SELECT 1
+        FROM document_document_tag document_tag_link
+        WHERE document_tag_link.document_id = document.id
+          AND document_tag_link.document_tag_id IN (:...documentTagIds)
+      )`,
+      { documentTagIds },
+    )
   }
 
   private logRetrievalResult({

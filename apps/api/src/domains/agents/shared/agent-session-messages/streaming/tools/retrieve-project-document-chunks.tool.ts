@@ -7,7 +7,7 @@ import type { ToolExecutionLog } from "./tool-execution-log"
 const retrieveProjectDocumentChunksInputSchema = z.object({
   conversationSummary: z
     .string()
-    .min(1)
+    .default("")
     .describe("Short summary of the conversation so far, including relevant context."),
   latestUserQuestion: z
     .string()
@@ -38,6 +38,7 @@ export type RetrieveProjectDocumentChunksExecution = {
   result: {
     chunkIds: string[]
     documentIds: string[]
+    documentTagIds: string[]
     returnedChunkCount: number
     topK: number
   }
@@ -52,6 +53,7 @@ export function buildRetrieveProjectDocumentChunksToolExecutionLog(
       conversationSummary: execution.input.conversationSummary,
       latestUserQuestion: execution.input.latestUserQuestion,
       topK: execution.input.topK,
+      documentTagIds: execution.result.documentTagIds,
       returnedChunkCount: execution.result.returnedChunkCount,
       chunkIds: execution.result.chunkIds,
       documentIds: execution.result.documentIds,
@@ -61,10 +63,12 @@ export function buildRetrieveProjectDocumentChunksToolExecutionLog(
 
 export function retrieveProjectDocumentChunksTool({
   connectScope,
+  documentTagIds = [],
   retrievalService,
   onExecute,
 }: {
   connectScope: RequiredConnectScope
+  documentTagIds?: string[]
   retrievalService: DocumentChunkRetrievalService
   onExecute: (toolExecution: ToolExecutionLog) => void
 }) {
@@ -85,6 +89,7 @@ export function retrieveProjectDocumentChunksTool({
         conversationSummary: input.conversationSummary,
         latestUserQuestion: input.latestUserQuestion,
         topK: input.topK,
+        documentTagIds,
       })
       const documentIds = [...new Set(retrievedChunks.map((chunk) => chunk.documentId))]
       onExecute(
@@ -93,6 +98,7 @@ export function retrieveProjectDocumentChunksTool({
           result: {
             chunkIds: retrievedChunks.map((chunk) => chunk.chunkId),
             documentIds,
+            documentTagIds,
             returnedChunkCount: retrievedChunks.length,
             topK: input.topK,
           },
