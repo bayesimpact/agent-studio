@@ -87,6 +87,7 @@ describe("Documents - getAll", () => {
     expect(documents[0]).toHaveProperty("id")
     expect(documents[0]).toHaveProperty("createdAt")
     expect(documents[0]).toHaveProperty("updatedAt")
+    expect(documents[0]).toHaveProperty("embeddingStatus")
   })
 
   it("should return empty array when project has no documents", async () => {

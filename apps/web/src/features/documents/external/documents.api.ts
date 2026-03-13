@@ -56,6 +56,7 @@ function toDocument(dto: DocumentDto): Document {
     projectId: dto.projectId,
     size: dto.size,
     storageRelativePath: dto.storageRelativePath,
+    embeddingStatus: dto.embeddingStatus,
     title: dto.title,
     updatedAt: dto.updatedAt,
     tagIds: dto.tagIds,

@@ -226,6 +226,7 @@ function toDocumentDto(entity: Document): DocumentDto {
     mimeType: entity.mimeType as MimeTypes,
     size: entity.size,
     storageRelativePath: entity.storageRelativePath,
+    embeddingStatus: entity.embeddingStatus,
     tagIds: entity.tags?.map((tag) => tag.id) || [],
   }
 }
