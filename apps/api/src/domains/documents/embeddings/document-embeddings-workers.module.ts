@@ -5,6 +5,7 @@ import { TypeOrmModule } from "@nestjs/typeorm"
 import { ALL_ENTITIES } from "@/common/all-entities"
 import { DocumentsService } from "../documents.service"
 import { StorageModule } from "../storage/storage.module"
+import { DocumentTagsService } from "../tags/document-tags.service"
 import { DOCUMENT_EMBEDDINGS_QUEUE_NAME } from "./document-embeddings.constants"
 import { DocumentEmbeddingsWorker } from "./document-embeddings.worker"
 import { getDocumentEmbeddingsBullMqConnection } from "./document-embeddings-bullmq.config"
@@ -30,6 +31,7 @@ import { DocumentTextExtractorService } from "./document-text-extractor.service"
     DocumentEmbeddingsProcessorService,
     DocumentTextExtractorService,
     DocumentsService,
+    DocumentTagsService,
   ],
 })
 export class DocumentEmbeddingsWorkersModule {}

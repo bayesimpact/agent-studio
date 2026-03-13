@@ -74,10 +74,16 @@ describe("Documents - Auth", () => {
   }
 
   describe("DocumentsRoutes.uploadOne", () => {
+    let sourceType: "project" | "agentSessionMessage" | "extraction" | null = "project"
+
+    beforeEach(() => {
+      sourceType = "project"
+    })
+
     const subject = async (payload?: typeof DocumentsRoutes.uploadOne.request) =>
       request({
         route: DocumentsRoutes.uploadOne,
-        pathParams: removeNullish({ organizationId, projectId }),
+        pathParams: removeNullish({ organizationId, projectId, sourceType }),
         token: accessToken ?? undefined,
         request: payload,
       })
@@ -100,9 +106,16 @@ describe("Documents - Auth", () => {
       auth0Id = "another-auth0-id" // this will trigger a new user to be created in the database
       expectResponse(await subject(), 401, AUTH_ERRORS.NOT_MEMBER_OF_ORG)
     })
-    it("doesn't allow a simple member to upload a document", async () => {
+    it("doesn't allow a simple member to upload a project document", async () => {
       await createContextForRole("member")
+      sourceType = "project"
       expectResponse(await subject(), 403, AUTH_ERRORS.UNAUTHORIZED_RESOURCE)
+    })
+
+    it("allows a simple member to upload non-project documents", async () => {
+      await createContextForRole("member")
+      sourceType = "agentSessionMessage"
+      expectResponse(await subject(), 422)
     })
   })
 
