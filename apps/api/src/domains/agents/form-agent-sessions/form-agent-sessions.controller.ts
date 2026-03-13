@@ -42,6 +42,7 @@ export class FormAgentSessionsController {
   ): Promise<typeof FormAgentSessionsRoutes.createOne.response> {
     const session = await this.formAgentSessionsService.createSession({
       connectScope: getRequiredConnectScope(request),
+      userId: request.user.id,
       agentId: request.agent.id,
       type: payload.type,
     })

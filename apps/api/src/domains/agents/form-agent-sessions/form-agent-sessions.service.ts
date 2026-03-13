@@ -53,15 +53,17 @@ export class FormAgentSessionsService extends ServiceWithLLM {
   async createSession({
     connectScope,
     agentId,
+    userId,
     type,
   }: {
     connectScope: RequiredConnectScope
+    userId: string
     agentId: string
     type: BaseAgentSessionType
   }): Promise<FormAgentSession> {
     return await this.sessionConnectRepository.createAndSave(connectScope, {
       agentId,
-      userId: connectScope.userId,
+      userId,
       type,
       traceId: v4(),
     })
