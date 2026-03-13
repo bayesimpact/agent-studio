@@ -3,9 +3,10 @@ import { useEffect } from "react"
 import { useNavigate, useSearchParams } from "react-router-dom"
 import { AUTH0_ORGANIZATION_ID } from "@/config/auth0.config"
 import { selectOrganizationsData } from "@/features/organizations/organizations.selectors"
+import { useNavigateToFirstOrganization } from "@/hooks/use-navigate-to-first-organization"
 import { ADS } from "@/store/async-data-status"
 import { useAppSelector } from "@/store/hooks"
-import { buildAppPath, buildStudioPath, RouteNames } from "./helpers"
+import { RouteNames } from "./helpers"
 import { LoadingRoute } from "./LoadingRoute"
 
 const INVITATION_STORAGE_KEY = "pendingInvitationTicketId"
@@ -33,6 +34,7 @@ export function HomeRoute() {
   const navigate = useNavigate()
   const organizations = useAppSelector(selectOrganizationsData)
   const [searchParams] = useSearchParams()
+  const { navigateToFirstOrganization } = useNavigateToFirstOrganization()
 
   useEffect(() => {
     if (isLoading) return
@@ -65,17 +67,12 @@ export function HomeRoute() {
     }
 
     if (isAuthenticated) {
-      const firstOrganization = organizations?.value?.[0]
-      let path: string = RouteNames.ONBOARDING
-
-      if (firstOrganization) {
-        const organizationPath = `/o/${firstOrganization.id}/`
-        const isAdminOrOwner =
-          firstOrganization.role === "admin" || firstOrganization.role === "owner"
-        path = isAdminOrOwner ? buildStudioPath(organizationPath) : buildAppPath(organizationPath)
-      }
-
-      navigate(path, { replace: true })
+      navigateToFirstOrganization({
+        organizations,
+        onNoFirstOrganization: () => {
+          navigate(RouteNames.ONBOARDING, { replace: true })
+        },
+      })
     } else {
       loginWithRedirect({
         authorizationParams: {
@@ -83,7 +80,15 @@ export function HomeRoute() {
         },
       })
     }
-  }, [isLoading, organizations, isAuthenticated, navigate, loginWithRedirect, searchParams])
+  }, [
+    navigateToFirstOrganization,
+    isAuthenticated,
+    isLoading,
+    loginWithRedirect,
+    navigate,
+    organizations,
+    searchParams,
+  ])
 
   return <LoadingRoute />
 }
