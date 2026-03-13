@@ -1,6 +1,8 @@
 import type { DocumentTagDto } from "../document-tags/document-tag.dto"
 import type { TimeType } from "../generic"
 
+export type DocumentEmbeddingStatus = "pending" | "processing" | "completed" | "failed"
+
 export type DocumentDto = {
   createdAt: TimeType
   id: string
@@ -14,6 +16,7 @@ export type DocumentDto = {
   mimeType?: MimeTypes
   size?: number
   storageRelativePath?: string
+  embeddingStatus: DocumentEmbeddingStatus
   tagIds: DocumentTagDto["id"][]
 }
 

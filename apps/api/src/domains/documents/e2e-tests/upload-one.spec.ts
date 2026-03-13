@@ -88,6 +88,7 @@ describe("Documents - uploadOne", () => {
     expect(response.status).toBe(201)
     expect(response.body.data.fileName).toBe("test-document.pdf")
     expect(response.body.data.mimeType).toBe("application/pdf")
+    expect(response.body.data.embeddingStatus).toBe("pending")
   })
 
   it("rejects a file with an unsupported extension", async () => {
