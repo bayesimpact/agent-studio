@@ -76,5 +76,11 @@ describe("DocumentChunkRetrievalService", () => {
     expect(mockTextEmbeddingModel).toHaveBeenCalledWith("gemini-embedding-001")
     expect(getRawMany).toHaveBeenCalledTimes(1)
     expect(queryBuilder.limit).toHaveBeenCalledWith(3)
+    expect(queryBuilder.andWhere).toHaveBeenCalledWith(
+      "document.source_type = :projectSourceType",
+      {
+        projectSourceType: "project",
+      },
+    )
   })
 })
