@@ -8,6 +8,7 @@ import { ConversationAgentSessionsModule } from "@/domains/agents/conversation-a
 import { AuthModule } from "@/domains/auth/auth.module"
 import { DocumentsModule } from "@/domains/documents/documents.module"
 import { StorageModule } from "@/domains/documents/storage/storage.module"
+import { DocumentTagsModule } from "@/domains/documents/tags/document-tags.module"
 import { OrganizationsModule } from "@/domains/organizations/organizations.module"
 import { UserMembership } from "@/domains/organizations/user-membership.entity"
 import { ProjectMembership } from "@/domains/projects/memberships/project-membership.entity"
@@ -42,6 +43,7 @@ import { FormAgentSessionsService } from "./form-agent-sessions/form-agent-sessi
     UsersModule,
     AuthModule,
     DocumentsModule,
+    DocumentTagsModule,
     StorageModule,
     forwardRef(() => ConversationAgentSessionsModule),
   ],

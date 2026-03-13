@@ -19,11 +19,11 @@ import { createDocumentTag } from "@/features/document-tags/document-tags.thunks
 import { useAppDispatch } from "@/store/hooks"
 
 export function DocumentTagPicker({
-  allTags,
+  documentTags,
   attachedTagIds,
   onAdd,
 }: {
-  allTags: DocumentTag[]
+  documentTags: DocumentTag[]
   attachedTagIds: string[]
   onAdd: (tagId: string) => void
 }) {
@@ -32,7 +32,7 @@ export function DocumentTagPicker({
   const [open, setOpen] = useState(false)
   const [search, setSearch] = useState("")
 
-  const availableTags = allTags.filter((tag) => !attachedTagIds.includes(tag.id))
+  const availableTags = documentTags.filter((tag) => !attachedTagIds.includes(tag.id))
   const filteredTags = availableTags.filter((tag) =>
     tag.name.toLowerCase().includes(search.toLowerCase()),
   )
@@ -58,13 +58,16 @@ export function DocumentTagPicker({
     )
   }
 
+  const hasFilteredTags = filteredTags.length > 0
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
-        <Button variant="outline" size="sm" className="gap-1">
-          <PlusIcon className="size-3" />
-          {t("documentTag:addTag")}
-        </Button>
+        {availableTags.length > 0 && (
+          <Button variant="outline" size="sm" className="gap-1">
+            <PlusIcon className="size-3" />
+            {t("documentTag:addTag")}
+          </Button>
+        )}
       </PopoverTrigger>
       <PopoverContent className="w-56 p-0" align="start">
         <Command shouldFilter={false}>
@@ -74,10 +77,10 @@ export function DocumentTagPicker({
             onValueChange={setSearch}
           />
           <CommandList>
-            {filteredTags.length === 0 && !showCreate && (
+            {!hasFilteredTags && !showCreate && (
               <CommandEmpty>{t("documentTag:noTagsFound")}</CommandEmpty>
             )}
-            {filteredTags.length > 0 && (
+            {hasFilteredTags && (
               <CommandGroup>
                 {filteredTags.map((tag) => (
                   <CommandItem key={tag.id} onSelect={() => handleSelect(tag.id)}>
@@ -88,7 +91,7 @@ export function DocumentTagPicker({
             )}
             {showCreate && (
               <>
-                {filteredTags.length > 0 && <CommandSeparator />}
+                {hasFilteredTags && <CommandSeparator />}
                 <CommandGroup>
                   <CommandItem onSelect={handleCreate}>
                     <PlusIcon />

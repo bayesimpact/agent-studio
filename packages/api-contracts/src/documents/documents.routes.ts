@@ -1,4 +1,4 @@
-import type { DocumentTagDto } from "../document-tags/document-tag.dto"
+import type { DocumentTagsUpdateFieldsDto } from "../document-tags/document-tag.dto"
 import type { RequestPayload, ResponseData, SuccessResponseDTO } from "../generic"
 import { defineRoute } from "../helpers"
 import type { DocumentDto } from "./documents.dto"
@@ -18,12 +18,7 @@ export const DocumentsRoutes = {
   }),
   updateOne: defineRoute<
     ResponseData<SuccessResponseDTO>,
-    RequestPayload<
-      Partial<Pick<DocumentDto, "title">> & {
-        tagsToAdd?: DocumentTagDto["id"][]
-        tagsToRemove?: DocumentTagDto["id"][]
-      }
-    >
+    RequestPayload<Partial<Pick<DocumentDto, "title">> & DocumentTagsUpdateFieldsDto>
   >({
     method: "patch",
     path: "organizations/:organizationId/projects/:projectId/documents/:documentId",

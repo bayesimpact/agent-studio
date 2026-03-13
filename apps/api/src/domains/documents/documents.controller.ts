@@ -43,7 +43,6 @@ import {
   type DocumentEmbeddingsBatchService,
 } from "./embeddings/document-embeddings-batch.interface"
 import { FILE_STORAGE_SERVICE, type IFileStorage } from "./storage/file-storage.interface"
-import { toDocumentTagDto } from "./tags/document-tags.controller"
 
 const mega = 1024
 @UseGuards(JwtAuthGuard, UserGuard, ResourceContextGuard, DocumentsGuard)
@@ -224,6 +223,6 @@ function toDocumentDto(entity: Document): DocumentDto {
     mimeType: entity.mimeType as MimeTypes,
     size: entity.size,
     storageRelativePath: entity.storageRelativePath,
-    tags: entity.tags?.map(toDocumentTagDto(entity.tags)),
+    tagIds: entity.tags?.map((tag) => tag.id) || [],
   }
 }

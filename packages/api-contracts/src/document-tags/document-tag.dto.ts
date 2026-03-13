@@ -11,3 +11,7 @@ export type DocumentTagDto = {
   projectId: string
   updatedAt: TimeType
 }
+export type DocumentTagsUpdateFieldsDto = {
+  tagsToAdd?: DocumentTagDto["id"][]
+  tagsToRemove?: DocumentTagDto["id"][]
+}

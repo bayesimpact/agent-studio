@@ -1,6 +1,7 @@
 "use client"
 
 import { AgentLocale, AgentModel } from "@caseai-connect/api-contracts"
+import { Badge } from "@caseai-connect/ui/shad/badge"
 import { Button } from "@caseai-connect/ui/shad/button"
 import { Field, FieldGroup, FieldLabel, FieldSet } from "@caseai-connect/ui/shad/field"
 import { Input } from "@caseai-connect/ui/shad/input"
@@ -13,10 +14,14 @@ import {
 } from "@caseai-connect/ui/shad/select"
 import { Textarea } from "@caseai-connect/ui/shad/textarea"
 import { zodResolver } from "@hookform/resolvers/zod"
+import { XIcon } from "lucide-react"
 import { Controller, useForm } from "react-hook-form"
 import { useTranslation } from "react-i18next"
 import { z } from "zod"
+import { DocumentTagPicker } from "@/components/document/DocumentTagPicker"
 import type { Agent } from "@/features/agents/agents.models"
+import { getTagNameById } from "@/features/document-tags/document-tags.helpers"
+import type { DocumentTag } from "@/features/document-tags/document-tags.models"
 import {
   type AgentFormData,
   buildAgentSchema,
@@ -28,7 +33,9 @@ export function BaseAgentForm({
   editableAgent,
   onSubmit,
   agentType,
+  documentTags,
 }: {
+  documentTags: DocumentTag[]
   agentType: Agent["type"]
   editableAgent?: Agent
   onSubmit: (values: AgentFormData) => Promise<void> | void
@@ -208,6 +215,44 @@ export function BaseAgentForm({
               />
               {errors.locale && <p className="text-sm text-destructive">{errors.locale.message}</p>}
             </Field>
+
+            {
+              // Only show the document tag picker if there are tags available to choose from
+              documentTags.length > 0 && (
+                <Field>
+                  <FieldLabel>{t("agent:props.documentTags")}</FieldLabel>
+                  <Controller
+                    control={control}
+                    name="documentTagIds"
+                    render={({ field }) => {
+                      return (
+                        <div className="flex flex-wrap gap-2 items-center">
+                          {field.value.map((tagId) => (
+                            <Badge key={tagId} variant="secondary" className="gap-1">
+                              {getTagNameById(documentTags, tagId)}
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  field.onChange(field.value.filter((id) => id !== tagId))
+                                }
+                                className="opacity-60 hover:opacity-100"
+                              >
+                                <XIcon className="size-3" />
+                              </button>
+                            </Badge>
+                          ))}
+                          <DocumentTagPicker
+                            documentTags={documentTags}
+                            attachedTagIds={field.value}
+                            onAdd={(tagId) => field.onChange([...field.value, tagId])}
+                          />
+                        </div>
+                      )
+                    }}
+                  />
+                </Field>
+              )
+            }
 
             <Field orientation="horizontal" className="justify-end">
               <Button type="submit" className="w-fit">

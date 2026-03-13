@@ -13,6 +13,7 @@
       "outputJsonSchema": "Schéma JSON de sortie",
       "temperature": "Température",
       "updatedAt": "Mis à jour le",
+      "documentTags": "Étiquettes de document",
       "placeholders": {
         "name": "Entrez le nom de l'agent",
         "defaultPrompt": "Entrez le prompt par défaut",

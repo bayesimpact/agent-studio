@@ -14,7 +14,7 @@ export type DocumentDto = {
   mimeType?: MimeTypes
   size?: number
   storageRelativePath?: string
-  tags: DocumentTagDto[]
+  tagIds: DocumentTagDto["id"][]
 }
 
 // https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/MIME_types/Common_types

@@ -5,6 +5,9 @@ import { ConnectRepository } from "@/common/entities/connect-repository"
 import type { RequiredConnectScope } from "@/common/entities/connect-required-fields"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
 import { ConversationAgentSessionsService } from "@/domains/agents/conversation-agent-sessions/conversation-agent-sessions.service"
+// biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
+import { DocumentTagsService } from "../documents/tags/document-tags.service"
+import type { DocumentTagsUpdateFields } from "../documents/tags/document-tags.types"
 import { Agent } from "./agent.entity"
 
 @Injectable()
@@ -12,6 +15,7 @@ export class AgentsService {
   constructor(
     @InjectRepository(Agent)
     agentRepository: Repository<Agent>,
+    private readonly documentTagsService: DocumentTagsService,
     private readonly conversationAgentSessionsService: ConversationAgentSessionsService,
   ) {
     this.agentConnectRepository = new ConnectRepository(agentRepository, "agents")
@@ -27,25 +31,33 @@ export class AgentsService {
   }: {
     connectScope: RequiredConnectScope
     fields: Pick<RequiredConnectScope, never> &
-      Pick<Agent, "defaultPrompt" | "name" | "model" | "temperature" | "locale"> &
-      Partial<Pick<Agent, "type" | "outputJsonSchema">>
+      Pick<Agent, "defaultPrompt" | "name" | "model" | "temperature" | "locale" | "type"> &
+      Partial<Pick<Agent, "outputJsonSchema">> &
+      DocumentTagsUpdateFields
   }): Promise<Agent> {
-    const { name, type = "conversation", outputJsonSchema = null } = fields
+    const { outputJsonSchema = null } = fields
 
     // Validate name (min 3 characters)
-    if (name.length < 3) {
+    if (fields.name.length < 3) {
       throw new UnprocessableEntityException("Agent name must be at least 3 characters long")
     }
 
-    if (type === "extraction" && !outputJsonSchema) {
+    if (fields.type === "extraction" && !outputJsonSchema) {
       throw new UnprocessableEntityException("Extraction agent requires outputJsonSchema")
     }
 
+    const { tagsToAdd, ...agentFields } = fields
+    const documentTags = await this.documentTagsService.resolveTagChanges({
+      currentTags: [],
+      tagsToAdd,
+    })
+
     // Create the agent with defaults
     return await this.agentConnectRepository.createAndSave(connectScope, {
-      ...fields,
-      type,
+      ...agentFields,
+      type: agentFields.type,
       outputJsonSchema,
+      documentTags,
     })
   }
 
@@ -53,9 +65,11 @@ export class AgentsService {
    * Lists all agents for a project.
    */
   async listAgents(connectScope: RequiredConnectScope): Promise<Agent[]> {
-    return (await this.agentConnectRepository.getMany(connectScope))?.sort(
-      (a, b) => b.createdAt.getTime() - a.createdAt.getTime(),
-    )
+    return (
+      await this.agentConnectRepository.find(connectScope, {
+        relations: ["documentTags"],
+      })
+    )?.sort((a, b) => a.name.localeCompare(b.name))
   }
 
   /**
@@ -78,13 +92,11 @@ export class AgentsService {
    */
   async updateAgent({
     connectScope,
-    required,
+    agentId,
     fieldsToUpdate,
   }: {
     connectScope: RequiredConnectScope
-    required: {
-      agentId: string
-    }
+    agentId: string
     fieldsToUpdate: Pick<RequiredConnectScope, never> &
       Partial<
         Pick<
@@ -97,9 +109,9 @@ export class AgentsService {
           | "type"
           | "outputJsonSchema"
         >
-      >
+      > &
+      DocumentTagsUpdateFields
   }): Promise<Agent> {
-    const { agentId } = required
     const { name, defaultPrompt, model, temperature, locale, type } = fieldsToUpdate
 
     // Validate name if provided (min 3 characters)
@@ -108,7 +120,14 @@ export class AgentsService {
     }
 
     // Find the agent
-    const agent = await this.agentConnectRepository.getOneById(connectScope, agentId)
+    const needsTags =
+      (fieldsToUpdate.tagsToAdd !== undefined && fieldsToUpdate.tagsToAdd.length > 0) ||
+      (fieldsToUpdate.tagsToRemove !== undefined && fieldsToUpdate.tagsToRemove.length > 0)
+    const agent = await this.agentConnectRepository.getOneById(
+      connectScope,
+      agentId,
+      needsTags ? { relations: ["documentTags"] } : undefined,
+    )
 
     if (!agent) {
       throw new NotFoundException(`Agent with id ${agentId} not found`)
@@ -124,20 +143,16 @@ export class AgentsService {
       throw new UnprocessableEntityException("Extraction agent requires outputJsonSchema")
     }
 
-    // Track if configuration fields changed (these trigger playground cleanup)
-    const configFields = [
-      { value: model, current: agent.model },
-      { value: temperature, current: agent.temperature },
-      { value: defaultPrompt, current: agent.defaultPrompt },
-      { value: locale, current: agent.locale },
-      { value: type, current: agent.type },
-      { value: fieldsToUpdate.outputJsonSchema, current: agent.outputJsonSchema },
-    ]
-    const configChanged = configFields.some(
-      ({ value, current }) => value !== undefined && value !== current,
-    )
-
     // Update the agent
+
+    if (needsTags) {
+      agent.documentTags = await this.documentTagsService.resolveTagChanges({
+        currentTags: agent.documentTags ?? [],
+        tagsToAdd: fieldsToUpdate.tagsToAdd,
+        tagsToRemove: fieldsToUpdate.tagsToRemove,
+      })
+    }
+
     Object.assign(agent, {
       ...(name !== undefined && { name }),
       ...(defaultPrompt !== undefined && { defaultPrompt }),
@@ -151,11 +166,6 @@ export class AgentsService {
     })
 
     const updatedAgent = await this.agentConnectRepository.saveOne(agent)
-
-    // If configuration changed, delete all playground sessions for this agent
-    if (configChanged) {
-      await this.conversationAgentSessionsService.deletePlaygroundSessionsForAgent(agentId)
-    }
 
     return updatedAgent
   }

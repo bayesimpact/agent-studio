@@ -18,6 +18,7 @@ export type AgentFormData = Pick<
   "name" | "defaultPrompt" | "model" | "temperature" | "locale"
 > & {
   outputJsonSchemaText?: string
+  documentTagIds: string[]
 }
 
 const defaultConversationPrompt = `## Identity
@@ -75,6 +76,7 @@ export function getDefaultFormValues({
     model: AgentModel.Gemini25Flash,
     temperature: 0.0,
     locale: language,
+    documentTagIds: [],
   }
 }
 
@@ -93,6 +95,7 @@ export function buildAgentSchema(t: (key: string) => string) {
         t("validation.temperatureInvalid"),
       ),
     locale: z.enum(AgentLocale),
+    documentTagIds: z.array(z.string()),
   })
 }
 

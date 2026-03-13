@@ -4,17 +4,17 @@ import type { Organization } from "../organizations.models"
 import type { IOrganizationsSpi } from "../organizations.spi"
 
 export default {
-  createOne: async (payload: { name: string }) => {
+  createOne: async (payload) => {
     const axios = getAxiosInstance()
     const response = await axios.post<typeof OrganizationsRoutes.createOrganization.response>(
       OrganizationsRoutes.createOrganization.getPath(),
-      { payload },
+      { payload } satisfies typeof OrganizationsRoutes.createOrganization.request,
     )
-    return fromDto(response.data.data)
+    return toOrganization(response.data.data)
   },
 } satisfies IOrganizationsSpi
 
-export const fromDto = (dto: OrganizationDto): Organization => ({
+export const toOrganization = (dto: OrganizationDto): Organization => ({
   id: dto.id,
   name: dto.name,
   role: dto.role,

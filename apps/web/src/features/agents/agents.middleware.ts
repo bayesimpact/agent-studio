@@ -1,6 +1,7 @@
 import type { TypedStartListening } from "@reduxjs/toolkit"
 import { createListenerMiddleware, isAnyOf } from "@reduxjs/toolkit"
 import type { AppDispatch, RootState } from "@/store/types"
+import { deleteDocumentTag, updateDocumentTag } from "../document-tags/document-tags.thunks"
 import { notificationsActions } from "../notifications/notifications.slice"
 import { selectCurrentProjectId } from "../projects/projects.selectors"
 import { createAgent, deleteAgent, listAgents, updateAgent } from "./agents.thunks"
@@ -23,7 +24,14 @@ listenerMiddleware.startListening({
 
 // Refresh Agents when one is created, updated or deleted
 listenerMiddleware.startListening({
-  matcher: isAnyOf(deleteAgent.fulfilled, createAgent.fulfilled, updateAgent.fulfilled),
+  matcher: isAnyOf(
+    deleteAgent.fulfilled,
+    createAgent.fulfilled,
+    updateAgent.fulfilled,
+    // DocumentTag changes
+    updateDocumentTag.fulfilled,
+    deleteDocumentTag.fulfilled,
+  ),
   effect: async (_, listenerApi) => {
     listenerApi.dispatch(listAgents())
   },

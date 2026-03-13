@@ -1,25 +1,7 @@
-import type {
-  AgentLocale,
-  AgentModel,
-  AgentTemperature,
-  AgentType,
-  TimeType,
-} from "@caseai-connect/api-contracts"
+import type { AgentDto } from "@caseai-connect/api-contracts"
 import z from "zod"
 
-export type Agent = {
-  createdAt: TimeType
-  defaultPrompt: string
-  id: string
-  locale: AgentLocale
-  model: AgentModel
-  name: string
-  outputJsonSchema?: Record<string, unknown>
-  projectId: string
-  temperature: AgentTemperature
-  type: AgentType
-  updatedAt: TimeType
-}
+export type Agent = AgentDto
 
 export const agentSchema = z
   .object({
@@ -31,5 +13,6 @@ export const agentSchema = z
     name: z.string(),
     temperature: z.number(),
     updatedAt: z.number(),
+    documentTags: z.array(z.object({ id: z.string(), name: z.string() })).optional(),
   })
   .strict()

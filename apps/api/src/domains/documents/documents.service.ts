@@ -1,16 +1,18 @@
 import { Injectable, NotFoundException } from "@nestjs/common"
 import { InjectRepository } from "@nestjs/typeorm"
-import { In, type Repository } from "typeorm"
+import type { Repository } from "typeorm"
 import { ConnectRepository } from "@/common/entities/connect-repository"
 import type { RequiredConnectScope } from "@/common/entities/connect-required-fields"
 import { Document } from "./document.entity"
-import { DocumentTag } from "./tags/document-tag.entity"
+// biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
+import { DocumentTagsService } from "./tags/document-tags.service"
+import type { DocumentTagsUpdateFields } from "./tags/document-tags.types"
 
 @Injectable()
 export class DocumentsService {
   constructor(
     @InjectRepository(Document) documentRepository: Repository<Document>,
-    @InjectRepository(DocumentTag) private readonly documentTagRepository: Repository<DocumentTag>,
+    private readonly documentTagsService: DocumentTagsService,
   ) {
     this.documentConnectRepository = new ConnectRepository(documentRepository, "documents")
   }
@@ -70,10 +72,7 @@ export class DocumentsService {
   }: {
     connectScope: RequiredConnectScope
     documentId: string
-    fieldsToUpdate: Partial<Pick<Document, "title">> & {
-      tagsToAdd?: DocumentTag["id"][]
-      tagsToRemove?: DocumentTag["id"][]
-    }
+    fieldsToUpdate: Partial<Pick<Document, "title">> & DocumentTagsUpdateFields
   }): Promise<Document> {
     const needsTags =
       (fieldsToUpdate.tagsToAdd !== undefined && fieldsToUpdate.tagsToAdd.length > 0) ||
@@ -93,14 +92,11 @@ export class DocumentsService {
     }
 
     if (needsTags) {
-      const tagsToAdd = fieldsToUpdate.tagsToAdd
-        ? await this.documentTagRepository.findBy({ id: In(fieldsToUpdate.tagsToAdd) })
-        : []
-      const tagsToRemoveIds = new Set(fieldsToUpdate.tagsToRemove ?? [])
-      document.tags = [
-        ...(document.tags || []).filter((tag) => !tagsToRemoveIds.has(tag.id)),
-        ...tagsToAdd,
-      ]
+      document.tags = await this.documentTagsService.resolveTagChanges({
+        currentTags: document.tags ?? [],
+        tagsToAdd: fieldsToUpdate.tagsToAdd,
+        tagsToRemove: fieldsToUpdate.tagsToRemove,
+      })
     }
 
     return this.documentConnectRepository.saveOne(document)

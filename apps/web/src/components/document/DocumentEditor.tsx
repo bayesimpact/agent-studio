@@ -13,12 +13,11 @@ import { Field, FieldGroup, FieldLabel, FieldSet } from "@caseai-connect/ui/shad
 import { Input } from "@caseai-connect/ui/shad/input"
 import { PencilIcon, XIcon } from "lucide-react"
 import { useReducer, useState } from "react"
-import type { DocumentTag } from "@/features/document-tags/document-tags.models"
-import { selectDocumentTagsData } from "@/features/document-tags/document-tags.selectors"
+import { useTranslation } from "react-i18next"
+import { getTagNameById, useDocumentTags } from "@/features/document-tags/document-tags.helpers"
 import type { Document } from "@/features/documents/documents.models"
 import { updateDocument } from "@/features/documents/documents.thunks"
-import { ADS } from "@/store/async-data-status"
-import { useAppDispatch, useAppSelector } from "@/store/hooks"
+import { useAppDispatch } from "@/store/hooks"
 import { DocumentTagPicker } from "./DocumentTagPicker"
 
 type EditorAction =
@@ -39,7 +38,8 @@ function editorReducer(state: EditorState, action: EditorAction): EditorState {
   }
 }
 
-export function DocumentEditorDialog({ document }: { document: Document }) {
+export function DocumentEditor({ document }: { document: Document }) {
+  const { t } = useTranslation()
   const [open, setOpen] = useState(false)
 
   return (
@@ -51,7 +51,7 @@ export function DocumentEditorDialog({ document }: { document: Document }) {
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Edit document</DialogTitle>
+          <DialogTitle>{t("document:update.title", { documentTitle: document.title })}</DialogTitle>
         </DialogHeader>
         {open && <EditorForm document={document} onSuccess={() => setOpen(false)} />}
       </DialogContent>
@@ -61,30 +61,25 @@ export function DocumentEditorDialog({ document }: { document: Document }) {
 
 function EditorForm({ document, onSuccess }: { document: Document; onSuccess: () => void }) {
   const dispatch = useAppDispatch()
-  const documentTagsData = useAppSelector(selectDocumentTagsData)
-  const allTags: DocumentTag[] = ADS.isFulfilled(documentTagsData) ? documentTagsData.value : []
+  const { t } = useTranslation()
+  const { documentTags } = useDocumentTags()
 
   const [editorState, dispatchEditor] = useReducer(editorReducer, {
     title: document.title,
-    tagIds: document.tags.map((tag) => tag.id),
+    tagIds: document.tagIds,
   })
 
-  const tagNameById = new Map<string, string>([
-    ...allTags.map((tag): [string, string] => [tag.id, tag.name]),
-    ...document.tags.map((tag): [string, string] => [tag.id, tag.name]),
-  ])
-
-  const handleSave = async () => {
-    const originalTagIds = document.tags.map((tag) => tag.id)
+  const handleSave = () => {
+    const originalTagIds = document.tagIds
     const tagsToAdd = editorState.tagIds.filter((id) => !originalTagIds.includes(id))
     const tagsToRemove = originalTagIds.filter((id) => !editorState.tagIds.includes(id))
-    await dispatch(
+    dispatch(
       updateDocument({
         documentId: document.id,
         fields: { title: editorState.title, tagsToAdd, tagsToRemove },
+        onSuccess,
       }),
-    ).unwrap()
-    onSuccess()
+    )
   }
 
   return (
@@ -93,7 +88,7 @@ function EditorForm({ document, onSuccess }: { document: Document; onSuccess: ()
         <FieldSet>
           <FieldGroup>
             <Field>
-              <FieldLabel htmlFor="doc-title">Title</FieldLabel>
+              <FieldLabel htmlFor="doc-title">{t("document:props.title")}</FieldLabel>
               <Input
                 id="doc-title"
                 value={editorState.title}
@@ -105,11 +100,11 @@ function EditorForm({ document, onSuccess }: { document: Document; onSuccess: ()
       </FieldGroup>
 
       <div className="flex flex-col gap-2">
-        <FieldLabel>Tags</FieldLabel>
+        <FieldLabel>{t("document:props.tags")}</FieldLabel>
         <div className="flex flex-wrap gap-2 items-center">
           {editorState.tagIds.map((id) => (
             <Badge key={id} variant="secondary" className="gap-1">
-              {tagNameById.get(id) ?? id}
+              {getTagNameById(documentTags, id)}
               <button
                 type="button"
                 onClick={() => dispatchEditor({ type: "REMOVE_TAG", tagId: id })}
@@ -120,7 +115,7 @@ function EditorForm({ document, onSuccess }: { document: Document; onSuccess: ()
             </Badge>
           ))}
           <DocumentTagPicker
-            allTags={allTags}
+            documentTags={documentTags}
             attachedTagIds={editorState.tagIds}
             onAdd={(tagId) => dispatchEditor({ type: "ADD_TAG", tagId })}
           />
@@ -128,7 +123,7 @@ function EditorForm({ document, onSuccess }: { document: Document; onSuccess: ()
       </div>
 
       <div className="flex justify-end">
-        <Button onClick={handleSave}>Save</Button>
+        <Button onClick={handleSave}>{t("actions:update")}</Button>
       </div>
     </div>
   )

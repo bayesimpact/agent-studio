@@ -13,15 +13,15 @@ export const createProject = createAsyncThunk<
   },
   ThunkConfig
 >("projects/create", async ({ payload }, { extra: { services }, getState }) => {
-  const { organizationId } = getCurrentIds({ state: getState(), wantedIds: ["organizationId"] })
-  return await services.projects.createOne({ organizationId, payload })
+  const params = getCurrentIds({ state: getState(), wantedIds: ["organizationId"] })
+  return await services.projects.createOne(params, payload)
 })
 
 export const listProjects = createAsyncThunk<Project[], void, ThunkConfig>(
   "projects/list",
   async (_, { extra: { services }, getState }) => {
-    const { organizationId } = getCurrentIds({ state: getState(), wantedIds: ["organizationId"] })
-    return await services.projects.getAll(organizationId)
+    const params = getCurrentIds({ state: getState(), wantedIds: ["organizationId"] })
+    return await services.projects.getAll(params)
   },
 )
 
@@ -30,21 +30,21 @@ export const updateProject = createAsyncThunk<
   { payload: Pick<Project, "name"> },
   ThunkConfig
 >("projects/update", async ({ payload }, { extra: { services }, getState }) => {
-  const { organizationId, projectId } = getCurrentIds({
+  const params = getCurrentIds({
     state: getState(),
     wantedIds: ["organizationId", "projectId"],
   })
-  await services.projects.updateOne({ organizationId, projectId, payload })
+  await services.projects.updateOne(params, payload)
 })
 
 export const deleteProject = createAsyncThunk<void, { onSuccess?: () => void }, ThunkConfig>(
   "projects/delete",
   async ({ onSuccess }, { extra: { services }, getState }) => {
-    const { organizationId, projectId } = getCurrentIds({
+    const params = getCurrentIds({
       state: getState(),
       wantedIds: ["organizationId", "projectId"],
     })
-    await services.projects.deleteOne({ organizationId, projectId })
+    await services.projects.deleteOne(params)
     if (onSuccess) onSuccess()
   },
 )

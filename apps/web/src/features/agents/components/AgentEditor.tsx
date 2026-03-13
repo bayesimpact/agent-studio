@@ -15,6 +15,7 @@ import { useState } from "react"
 import { useTranslation } from "react-i18next"
 import type { Agent } from "@/features/agents/agents.models"
 import { updateAgent } from "@/features/agents/agents.thunks"
+import { useDocumentTags } from "@/features/document-tags/document-tags.helpers"
 import { useAppDispatch } from "@/store/hooks"
 import type { AgentFormData } from "./agent-form.shared"
 import { BaseAgentForm } from "./BaseAgentForm"
@@ -81,12 +82,17 @@ function Content({ agent, onSuccess }: { agent: Agent; onSuccess: () => void }) 
 
 function UpdateForm({ agent, onSuccess }: { agent: Agent; onSuccess?: () => void }) {
   const dispatch = useAppDispatch()
+  const { documentTags } = useDocumentTags()
 
   const handleSubmit = (fields: AgentFormData) => {
     const parsedOutputSchema =
       (agent.type === "extraction" || agent.type === "form") && fields.outputJsonSchemaText
         ? (JSON.parse(fields.outputJsonSchemaText) as Record<string, unknown>)
         : undefined
+
+    const originalTagIds = agent.documentTagIds
+    const tagsToAdd = fields.documentTagIds.filter((id) => !originalTagIds.includes(id))
+    const tagsToRemove = originalTagIds.filter((id) => !fields.documentTagIds.includes(id))
 
     dispatch(
       updateAgent({
@@ -98,11 +104,20 @@ function UpdateForm({ agent, onSuccess }: { agent: Agent; onSuccess?: () => void
           temperature: fields.temperature,
           locale: fields.locale,
           outputJsonSchema: parsedOutputSchema,
+          tagsToAdd,
+          tagsToRemove,
         },
       }),
     )
     onSuccess?.()
   }
 
-  return <BaseAgentForm agentType={agent.type} editableAgent={agent} onSubmit={handleSubmit} />
+  return (
+    <BaseAgentForm
+      agentType={agent.type}
+      editableAgent={agent}
+      onSubmit={handleSubmit}
+      documentTags={documentTags}
+    />
+  )
 }

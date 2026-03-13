@@ -1,6 +1,8 @@
-import type { DocumentTagDto } from "@caseai-connect/api-contracts"
+import type { DocumentTagDto, DocumentTagsUpdateFieldsDto } from "@caseai-connect/api-contracts"
 
 export type DocumentTag = DocumentTagDto
+
+export type DocumentTagsUpdateFields = DocumentTagsUpdateFieldsDto
 
 export type TagNode = DocumentTag & { children: TagNode[] }
 

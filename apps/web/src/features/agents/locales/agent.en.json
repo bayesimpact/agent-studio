@@ -13,6 +13,7 @@
       "outputJsonSchema": "Output JSON Schema",
       "temperature": "Temperature",
       "updatedAt": "Updated At",
+      "documentTags": "Document Tags",
       "placeholders": {
         "name": "Enter agent name",
         "defaultPrompt": "Enter default prompt",
