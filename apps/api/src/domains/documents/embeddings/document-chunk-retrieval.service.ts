@@ -7,7 +7,7 @@ import type { DataSource, SelectQueryBuilder } from "typeorm"
 import type { RequiredConnectScope } from "@/common/entities/connect-required-fields"
 import { resolveEmbeddingModelNames, resolveVertexConfig } from "./document-embeddings.config"
 
-const DEFAULT_TOP_K = 3
+const DEFAULT_TOP_K = 20
 
 export type RetrievedDocumentChunk = {
   chunkId: string
