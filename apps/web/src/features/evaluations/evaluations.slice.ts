@@ -15,9 +15,7 @@ const slice = createSlice({
   name: "evaluations",
   initialState,
   reducers: {
-    reset: (state) => {
-      state.data = defaultAsyncData
-    },
+    reset: () => initialState,
   },
   extraReducers: (builder) => {
     builder

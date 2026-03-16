@@ -12,7 +12,7 @@ import {
   DropdownMenuTrigger,
 } from "@caseai-connect/ui/shad/dropdown-menu"
 import { cn } from "@caseai-connect/ui/utils"
-import { ChevronDownIcon, DotIcon } from "lucide-react"
+import { CheckIcon, ChevronDownIcon, DotIcon } from "lucide-react"
 import { Link } from "react-router-dom"
 import { selectAgentsData, selectCurrentAgentData } from "@/features/agents/agents.selectors"
 import { useBuildPath } from "@/hooks/use-build-path"
@@ -68,10 +68,10 @@ export function BreadcrumbAgent({ organizationId }: { organizationId: string }) 
             {agents.value.map((a) => (
               <DropdownMenuItem
                 key={a.id}
-                className={cn("cursor-pointer", a.id === agent.value.id && "text-muted-foreground")}
+                className={cn("justify-between", a.id === agent.value.id && "font-semibold")}
                 onClick={handleClick(a.id)}
               >
-                {a.name}
+                {a.name} {a.id === agent.value.id && <CheckIcon className="size-4" />}
               </DropdownMenuItem>
             ))}
           </DropdownMenuGroup>

@@ -33,5 +33,5 @@ export const selectCurrentOrganization = createSelector(
 export const hasOrganizationChanged = (prevState: RootState, nextState: RootState): boolean => {
   const prevOrg = selectCurrentOrganization(prevState)
   const nextOrg = selectCurrentOrganization(nextState)
-  return ADS.isFulfilled(prevOrg) !== ADS.isFulfilled(nextOrg)
+  return prevOrg.value?.id !== nextOrg.value?.id && !!nextOrg.value?.id
 }

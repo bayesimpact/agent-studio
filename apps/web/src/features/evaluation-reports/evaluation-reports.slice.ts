@@ -1,4 +1,4 @@
-import { createSlice, type PayloadAction } from "@reduxjs/toolkit"
+import { createSlice } from "@reduxjs/toolkit"
 import { ADS, type AsyncData, defaultAsyncData } from "@/store/async-data-status"
 import type { Evaluation } from "../evaluations/evaluations.models"
 import type { EvaluationReport } from "./evaluation-reports.models"
@@ -17,10 +17,7 @@ const slice = createSlice({
   name: "evaluationReports",
   initialState,
   reducers: {
-    clearEvaluationReports: (state, action: PayloadAction<{ evaluationId: string }>) => {
-      // Clear reports for a specific evaluation
-      delete state.data.value?.[action.payload.evaluationId]
-    },
+    reset: () => initialState,
   },
   extraReducers: (builder) => {
     builder

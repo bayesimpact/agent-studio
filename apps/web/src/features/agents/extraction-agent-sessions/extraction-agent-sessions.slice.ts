@@ -16,7 +16,9 @@ const initialState: State = {
 const slice = createSlice({
   name: "extractionAgentSessions",
   initialState,
-  reducers: {},
+  reducers: {
+    reset: () => initialState,
+  },
   extraReducers: (builder) => {
     builder
       .addCase(listExtractionAgentSessions.pending, (state) => {

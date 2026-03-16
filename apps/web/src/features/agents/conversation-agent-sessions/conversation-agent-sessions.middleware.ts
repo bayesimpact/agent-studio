@@ -6,7 +6,7 @@ import {
 } from "@/features/agents/conversation-agent-sessions/conversation-agent-sessions.thunks"
 import type { AppDispatch, RootState } from "@/store"
 import { ADS } from "@/store/async-data-status"
-import { selectIsAdminInterface } from "../../auth/auth.selectors"
+import { hasInterfaceChanged } from "../../auth/auth.selectors"
 import { selectAgentsData } from "../agents.selectors"
 import { listAgents } from "../agents.thunks"
 import { conversationAgentSessionsActions } from "./conversation-agent-sessions.slice"
@@ -30,9 +30,7 @@ listenerMiddleware.startListening({
 // Refresh agent sessions when interface type changes
 listenerMiddleware.startListening({
   predicate(_, currentState, originalState) {
-    const prevInterface = selectIsAdminInterface(originalState)
-    const nextInterface = selectIsAdminInterface(currentState)
-    return prevInterface !== nextInterface
+    return hasInterfaceChanged(originalState, currentState)
   },
   effect: async (_, listenerApi) => {
     listenerApi.dispatch(conversationAgentSessionsActions.reset())
