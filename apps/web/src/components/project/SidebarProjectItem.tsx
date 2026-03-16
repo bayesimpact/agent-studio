@@ -53,8 +53,6 @@ export function SidebarProjectItem({
   if (!ADS.isFulfilled(agents) || !ADS.isFulfilled(organization)) return null
   if (agents.value.length === 0 && !showEmptyProject) return null
 
-  const name = project.name.length < 10 ? `${t("project:project")} - ${project.name}` : project.name
-
   const handleProjectChange = (projectId: string) => () => {
     const path = buildPath("project", { organizationId: organization.value.id, projectId })
     navigate(path)
@@ -65,7 +63,7 @@ export function SidebarProjectItem({
         <div className="flex gap-4 items-center justify-center mb-4">
           <DropdownMenuTrigger asChild>
             <SidebarMenuButton>
-              <span className="text-base font-medium">{name}</span>
+              <span className="text-base font-medium">{project.name}</span>
               <ChevronsUpDownIcon className="ml-auto size-4" />
             </SidebarMenuButton>
           </DropdownMenuTrigger>
