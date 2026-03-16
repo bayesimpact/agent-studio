@@ -6,7 +6,7 @@ import {
   DropdownMenuTrigger,
 } from "@caseai-connect/ui/shad/dropdown-menu"
 import { cn } from "@caseai-connect/ui/utils"
-import { ChevronsUpDownIcon } from "lucide-react"
+import { CheckIcon, ChevronsUpDownIcon } from "lucide-react"
 import { useTranslation } from "react-i18next"
 import { useNavigate } from "react-router-dom"
 import { Logo } from "@/components/themes/Logo"
@@ -94,9 +94,12 @@ export function OrganizationSelector({
             <DropdownMenuItem
               key={org.id}
               onClick={handleOrganizationChange(org.id)}
-              className="gap-2 p-2"
+              className={cn(
+                "gap-2 p-2 justify-between",
+                org.id === organization.value.id && "font-semibold",
+              )}
             >
-              {org.name}
+              {org.name} {org.id === organization.value.id && <CheckIcon className="size-4" />}
             </DropdownMenuItem>
           ))}
         </DropdownMenuContent>
