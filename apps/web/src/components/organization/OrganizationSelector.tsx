@@ -23,7 +23,9 @@ import { useAppSelector } from "@/store/hooks"
 export function OrganizationSelector({
   TriggerButton = "button",
   side = "bottom",
+  disabled,
 }: {
+  disabled?: boolean
   TriggerButton?: React.ElementType
   side?: "bottom" | "right"
 }) {
@@ -44,7 +46,7 @@ export function OrganizationSelector({
 
   const isButton = TriggerButton === "button"
 
-  const hasMultipleOrganizations = organizations.value.length > 1
+  const hasMultipleOrganizations = organizations.value.length > 1 && !disabled
 
   const triggerButton = (
     <TriggerButton

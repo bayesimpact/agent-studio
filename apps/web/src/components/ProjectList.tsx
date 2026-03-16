@@ -30,7 +30,11 @@ export function ProjectList({
   useRedirectToStudio({ condition: projects.length === 0, to: "organization" })
 
   return (
-    <ListHeader title={t("project:projects")} className="min-h-screen">
+    <ListHeader
+      title={t("project:projects")}
+      className="min-h-screen"
+      disableOrganizationSelector={false}
+    >
       {isAdminInterface && <ProjectCreator organization={organization} />}
 
       {projects.map((project) => (
