@@ -1,6 +1,12 @@
 "use client"
 
-import { AgentLocale, AgentModel } from "@caseai-connect/api-contracts"
+import {
+  AgentLocale,
+  AgentModel,
+  createAgentSchema,
+  outputJsonSchemaSchema,
+  updateAgentSchema,
+} from "@caseai-connect/api-contracts"
 import { Badge } from "@caseai-connect/ui/shad/badge"
 import { Button } from "@caseai-connect/ui/shad/button"
 import { Field, FieldGroup, FieldLabel, FieldSet } from "@caseai-connect/ui/shad/field"
@@ -17,17 +23,12 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { XIcon } from "lucide-react"
 import { Controller, useForm } from "react-hook-form"
 import { useTranslation } from "react-i18next"
-import { z } from "zod"
+import type { z } from "zod"
 import { DocumentTagPicker } from "@/components/document/DocumentTagPicker"
 import type { Agent } from "@/features/agents/agents.models"
 import { getTagNameById } from "@/features/document-tags/document-tags.helpers"
 import type { DocumentTag } from "@/features/document-tags/document-tags.models"
-import {
-  type AgentFormData,
-  buildAgentSchema,
-  getDefaultFormValues,
-  isValidJsonObject,
-} from "./agent-form.shared"
+import { type AgentFormData, getDefaultFormValues } from "./agent-form.shared"
 
 export function BaseAgentForm({
   editableAgent,
@@ -41,38 +42,25 @@ export function BaseAgentForm({
   onSubmit: (values: AgentFormData) => Promise<void> | void
 }) {
   const { t, i18n } = useTranslation()
-  const baseAgentSchema = buildAgentSchema((key) => t(`agent:props.${key}`))
 
   const hasOutputJsonSchema = agentType !== "conversation"
 
-  type FormValues = z.infer<typeof baseAgentSchema> &
-    (typeof hasOutputJsonSchema extends true ? { outputJsonSchemaText: string } : object)
-
-  const agentSchema = hasOutputJsonSchema
-    ? baseAgentSchema.extend({
-        outputJsonSchemaText: z
-          .string()
-          .min(1, t("agent:props.validation.outputJsonSchemaRequired"))
-          .refine(isValidJsonObject, t("agent:props.validation.outputJsonSchemaInvalid")),
-      })
-    : baseAgentSchema
+  const agentSchema = editableAgent ? updateAgentSchema : createAgentSchema
+  type FormValues = z.infer<typeof agentSchema>
 
   const defaultValues = (function buildDefaultValues() {
     if (editableAgent) {
+      // Edition
       return {
         ...editableAgent,
-        ...(hasOutputJsonSchema && {
-          outputJsonSchemaText: editableAgent.outputJsonSchema
-            ? JSON.stringify(editableAgent.outputJsonSchema, null, 2)
-            : "",
-        }),
+        tagsToAdd: [],
+        tagsToRemove: [],
       } as FormValues
     }
+
+    // Creation
     const language = i18n.language.startsWith("fr") ? AgentLocale.FR : AgentLocale.EN
-    return {
-      ...getDefaultFormValues({ agentType, language }),
-      ...(hasOutputJsonSchema && { outputJsonSchemaText: "" }),
-    } as FormValues
+    return getDefaultFormValues({ agentType, language })
   })()
 
   const {
@@ -124,30 +112,42 @@ export function BaseAgentForm({
 
             {hasOutputJsonSchema && (
               <Field>
-                <FieldLabel htmlFor="outputJsonSchemaText">
+                <FieldLabel htmlFor="outputJsonSchema">
                   {t("agent:props.outputJsonSchema")}
                 </FieldLabel>
-                <Textarea
-                  id="outputJsonSchemaText"
-                  placeholder={t("agent:props.placeholders.outputJsonSchema")}
-                  rows={10}
-                  className="font-mono min-h-56"
-                  // @ts-expect-error
-                  {...register("outputJsonSchemaText")}
-                  // @ts-expect-error
-                  aria-invalid={errors.outputJsonSchemaText ? "true" : "false"}
+                <Controller
+                  control={control}
+                  name="outputJsonSchema"
+                  render={({ field }) => (
+                    <Textarea
+                      id="outputJsonSchema"
+                      placeholder={t("agent:props.placeholders.outputJsonSchema")}
+                      rows={10}
+                      className="font-mono min-h-56"
+                      defaultValue={!field.value ? "" : JSON.stringify(field.value, null, 2)}
+                      onChange={async (e) => {
+                        const raw = e.target.value
+                        try {
+                          const parsed = JSON.parse(raw)
+                          const validationResult = outputJsonSchemaSchema.safeParse(parsed)
+                          if (validationResult.success) {
+                            field.onChange(parsed)
+                          } else {
+                            // @ts-expect-error - We know there is at least one error because validation failed
+                            const firstError = validationResult.error.errors[0]
+                            field.onChange(raw, { errors: [{ message: firstError.message }] })
+                          }
+                        } catch {
+                          field.onChange(raw, { errors: [{ message: "Invalid JSON" }] })
+                        }
+                      }}
+                      aria-invalid={errors.outputJsonSchema ? "true" : "false"}
+                    />
+                  )}
                 />
-                {
-                  // @ts-expect-error
-                  errors.outputJsonSchemaText && (
-                    <p className="text-sm text-destructive">
-                      {
-                        // @ts-expect-error
-                        errors.outputJsonSchemaText.message
-                      }
-                    </p>
-                  )
-                }
+                {errors.outputJsonSchema && (
+                  <p className="text-sm text-destructive">{errors.outputJsonSchema.message}</p>
+                )}
               </Field>
             )}
 
@@ -223,7 +223,7 @@ export function BaseAgentForm({
                   <FieldLabel>{t("agent:props.documentTags")}</FieldLabel>
                   <Controller
                     control={control}
-                    name="documentTagIds"
+                    name={"documentTagIds" in agentSchema.shape ? "documentTagIds" : "tagsToAdd"}
                     render={({ field }) => {
                       return (
                         <div className="flex flex-wrap gap-2 items-center">

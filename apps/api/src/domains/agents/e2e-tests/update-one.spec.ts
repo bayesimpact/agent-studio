@@ -69,10 +69,18 @@ describe("Agents - updateOne", () => {
     })
 
   it("should update an agent and return success", async () => {
-    await createContext()
+    const { agent } = await createContext()
 
     const response = await subject({
-      payload: { name: "Updated Agent", defaultPrompt: "Updated Prompt" },
+      payload: {
+        ...agent,
+        name: "Updated Agent",
+        defaultPrompt: "Updated Prompt",
+        documentTagIds: [],
+        outputJsonSchema: undefined,
+        tagsToAdd: [],
+        tagsToRemove: [],
+      },
     })
 
     expectResponse(response, 200)
@@ -90,7 +98,14 @@ describe("Agents - updateOne", () => {
     const originalPrompt = agent.defaultPrompt
 
     const response = await subject({
-      payload: { name: "Only Name Updated" },
+      payload: {
+        ...agent,
+        name: "Only Name Updated",
+        documentTagIds: [],
+        outputJsonSchema: undefined,
+        tagsToAdd: [],
+        tagsToRemove: [],
+      },
     })
 
     expectResponse(response, 200)

@@ -202,11 +202,6 @@ function CreateForm({
   const { documentTags } = useDocumentTags()
 
   const handleCreate = async (fields: AgentFormData) => {
-    const parsedOutputSchema =
-      (agentType === "extraction" || agentType === "form") && fields.outputJsonSchemaText
-        ? (JSON.parse(fields.outputJsonSchemaText) as Record<string, unknown>)
-        : undefined
-
     await dispatch(
       createAgent({
         fields: {
@@ -216,8 +211,8 @@ function CreateForm({
           temperature: fields.temperature,
           locale: fields.locale,
           type: agentType,
-          outputJsonSchema: parsedOutputSchema,
-          tagsToAdd: fields.documentTagIds,
+          outputJsonSchema: fields.outputJsonSchema,
+          tagsToAdd: fields.tagsToAdd,
         },
         onSuccess,
       }),
