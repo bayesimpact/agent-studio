@@ -16,26 +16,41 @@ import { createProject } from "@/features/projects/projects.thunks"
 import { useBuildPath } from "@/hooks/use-build-path"
 import { useAppDispatch } from "@/store/hooks"
 
-export function ProjectCreator({ organization }: { organization: Organization }) {
+export function ProjectCreator({
+  organization,
+  modalHandler,
+}: {
+  organization: Organization
+  modalHandler?: {
+    open: boolean
+    setOpen: (open: boolean) => void
+  }
+}) {
   const { buildPath } = useBuildPath()
   const { t } = useTranslation()
 
   const [open, setOpen] = useState(false)
 
   const handleSuccess = (projectId: string) => {
-    setOpen(false)
+    modalHandler ? modalHandler.setOpen(false) : setOpen(false)
+
     const path = buildPath("project", { organizationId: organization.id, projectId })
     window.location.href = path
   }
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button>
-          <PlusIcon />
-          <span className="capitalize-first">{t("project:create.button")}</span>
-        </Button>
-      </DialogTrigger>
+    <Dialog
+      open={modalHandler ? modalHandler.open : open}
+      onOpenChange={modalHandler ? modalHandler.setOpen : setOpen}
+    >
+      {!modalHandler && (
+        <DialogTrigger asChild>
+          <Button>
+            <PlusIcon />
+            <span className="capitalize-first">{t("project:create.button")}</span>
+          </Button>
+        </DialogTrigger>
+      )}
       <DialogContent>
         <DialogHeader>
           <DialogTitle>{t("project:create.title")}</DialogTitle>

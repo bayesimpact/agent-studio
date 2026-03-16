@@ -7,10 +7,15 @@ import {
   SidebarFooter,
   SidebarHeader,
   SidebarInset,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
   SidebarProvider,
+  useSidebar,
 } from "@caseai-connect/ui/shad/sidebar"
 import { useState } from "react"
 import type { Organization } from "@/features/organizations/organizations.models"
+import { OrganizationSelector } from "../organization/OrganizationSelector"
 import { NavUserMenuItems } from "../sidebar/nav/NavUserMenuItems"
 import { SidebarLayoutContext } from "./sidebar/context"
 import { SidebarBreadcrumb } from "./sidebar/SidebarBreadcrumb"
@@ -19,26 +24,19 @@ export function SidebarLayout({
   user,
   organization,
   children,
-  sidebarHeaderChildren,
   sidebarContentChildren,
   sidebarFooterChildren,
 }: {
   user: User
   organization: Organization
   children: React.ReactNode
-  sidebarHeaderChildren: React.ReactNode
   sidebarContentChildren: React.ReactNode
   sidebarFooterChildren: React.ReactNode
 }) {
   const [headerRightSlot, setHeaderRightSlot] = useState<React.ReactNode>(null)
 
   return (
-    <SidebarLayoutContext.Provider
-      value={{
-        headerRightSlot,
-        setHeaderRightSlot,
-      }}
-    >
+    <SidebarLayoutContext.Provider value={{ headerRightSlot, setHeaderRightSlot }}>
       <SidebarProvider
         style={
           {
@@ -48,7 +46,13 @@ export function SidebarLayout({
         }
       >
         <Sidebar variant="inset" collapsible="offcanvas">
-          <SidebarHeader>{sidebarHeaderChildren}</SidebarHeader>
+          <SidebarHeader>
+            <SidebarMenu>
+              <SidebarMenuItem>
+                <Selector />
+              </SidebarMenuItem>
+            </SidebarMenu>
+          </SidebarHeader>
 
           <SidebarContent>{sidebarContentChildren}</SidebarContent>
 
@@ -71,5 +75,12 @@ export function SidebarLayout({
         </SidebarInset>
       </SidebarProvider>
     </SidebarLayoutContext.Provider>
+  )
+}
+
+function Selector() {
+  const { isMobile } = useSidebar()
+  return (
+    <OrganizationSelector TriggerButton={SidebarMenuButton} side={isMobile ? "bottom" : "right"} />
   )
 }

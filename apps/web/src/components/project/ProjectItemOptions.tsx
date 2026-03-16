@@ -7,7 +7,7 @@ import {
   DropdownMenuTrigger,
 } from "@caseai-connect/ui/shad/dropdown-menu"
 import { SidebarMenuAction, useSidebar } from "@caseai-connect/ui/shad/sidebar"
-import { Edit, MoreHorizontal, Trash2 } from "lucide-react"
+import { Edit, MoreHorizontalIcon, Trash2 } from "lucide-react"
 import { useTranslation } from "react-i18next"
 
 export function ProjectItemOptions({
@@ -22,8 +22,8 @@ export function ProjectItemOptions({
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <SidebarMenuAction>
-          <MoreHorizontal />
+        <SidebarMenuAction className="mt-1.5">
+          <MoreHorizontalIcon />
           <span className="sr-only">{t("actions:more")}</span>
         </SidebarMenuAction>
       </DropdownMenuTrigger>

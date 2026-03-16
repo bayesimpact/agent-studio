@@ -6,19 +6,17 @@ export function Section({
   children,
   options,
 }: {
-  name?: string
+  name: string
   className?: string
   children: React.ReactNode
   options?: React.ReactNode
 }) {
   return (
     <SidebarGroup className={className}>
-      {name && (
-        <div className="flex items-center gap-2">
-          <SidebarGroupLabel className="capitalize">{name}</SidebarGroupLabel>
-          <div className="shrink-0">{options}</div>
-        </div>
-      )}
+      <div className="flex items-center gap-2">
+        <SidebarGroupLabel className="capitalize">{name}</SidebarGroupLabel>
+        <div className="shrink-0">{options}</div>
+      </div>
 
       <SidebarMenu>{children}</SidebarMenu>
     </SidebarGroup>

@@ -1,5 +1,7 @@
 {
   "organization": {
+    "organization": "Organisation",
+    "organizations": "Organisations",
     "createForm": {
       "title": "Creer une organisation",
       "description": "Configurez votre organisation pour continuer.",

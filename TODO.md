@@ -3,7 +3,7 @@
 - can't delete empty project
 
 # // TODO:
-
+- add zod i18n keys
 - tools/helpers to seed store in storybook
 - remove ttl
 - delete chat session
