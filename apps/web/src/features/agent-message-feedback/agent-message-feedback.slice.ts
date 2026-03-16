@@ -19,12 +19,9 @@ const slice = createSlice({
   name: "agentMessageFeedback",
   initialState,
   reducers: {
+    reset: () => initialState,
     setCurrentFeedbackId: (state, action: PayloadAction<{ feedbackId: string | null }>) => {
       state.currentFeedbackId = action.payload.feedbackId
-    },
-    clearFeedbacks: (state, action: PayloadAction<{ agentId: string }>) => {
-      // Clear feedbacks for a specific agent
-      delete state.data.value?.[action.payload.agentId]
     },
   },
   extraReducers: (builder) => {

@@ -17,12 +17,9 @@ const slice = createSlice({
   name: "agents",
   initialState,
   reducers: {
+    reset: () => initialState,
     setCurrentAgentId: (state, action: PayloadAction<{ agentId: string | null }>) => {
       state.currentAgentId = action.payload.agentId
-    },
-    reset: (state) => {
-      state.currentAgentId = null
-      state.data = defaultAsyncData
     },
   },
   extraReducers: (builder) => {

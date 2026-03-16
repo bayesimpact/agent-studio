@@ -12,7 +12,7 @@ import {
   DropdownMenuTrigger,
 } from "@caseai-connect/ui/shad/dropdown-menu"
 import { cn } from "@caseai-connect/ui/utils"
-import { ChevronDownIcon, DotIcon } from "lucide-react"
+import { CheckIcon, ChevronDownIcon, DotIcon } from "lucide-react"
 import { Link } from "react-router-dom"
 import { selectCurrentAgentData } from "@/features/agents/agents.selectors"
 import type { ConversationAgentSession } from "@/features/agents/conversation-agent-sessions/conversation-agent-sessions.models"
@@ -134,13 +134,11 @@ function WithData({
             {sessions.map((s) => (
               <DropdownMenuItem
                 key={s.id}
-                className={cn(
-                  "cursor-pointer",
-                  s.id === currentSession.id && "text-muted-foreground",
-                )}
+                className={cn("justify-between", s.id === currentSession.id && "font-semibold")}
                 onClick={handleClick({ agentId: s.agentId, agentSessionId: s.id })}
               >
-                {buildDate(s.createdAt)}
+                {buildDate(s.createdAt)}{" "}
+                {s.id === currentSession.id && <CheckIcon className="size-4" />}
               </DropdownMenuItem>
             ))}
           </DropdownMenuGroup>

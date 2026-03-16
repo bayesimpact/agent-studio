@@ -2,7 +2,7 @@ import type { TypedStartListening } from "@reduxjs/toolkit"
 import { createListenerMiddleware, isAnyOf } from "@reduxjs/toolkit"
 import type { AppDispatch, RootState } from "@/store/types"
 import { notificationsActions } from "../notifications/notifications.slice"
-import { selectCurrentProjectId } from "../projects/projects.selectors"
+import { hasProjectChanged } from "../projects/projects.selectors"
 import {
   createDocumentTag,
   deleteDocumentTag,
@@ -17,9 +17,7 @@ export type AppStartListening = TypedStartListening<RootState, AppDispatch>
 // Refresh DocumentTags when current project changes
 listenerMiddleware.startListening({
   predicate(_, currentState, originalState) {
-    const prevId = selectCurrentProjectId(originalState)
-    const nextId = selectCurrentProjectId(currentState)
-    return prevId !== nextId && !!nextId
+    return hasProjectChanged(originalState, currentState)
   },
   effect: async (_, listenerApi) => {
     await listenerApi.dispatch(listDocumentTags())

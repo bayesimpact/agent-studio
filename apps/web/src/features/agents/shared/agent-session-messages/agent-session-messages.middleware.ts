@@ -2,7 +2,10 @@ import type { TypedStartListening } from "@reduxjs/toolkit"
 import { createListenerMiddleware, isAnyOf } from "@reduxjs/toolkit"
 import { listConversationAgentSessions } from "@/features/agents/conversation-agent-sessions/conversation-agent-sessions.thunks"
 import type { AppDispatch, RootState } from "@/store"
-import { selectCurrentAgentSessionId } from "../../current-agent-session-id/current-agent-session-id.selectors"
+import {
+  hasAgentSessionChanged,
+  selectCurrentAgentSessionId,
+} from "../../current-agent-session-id/current-agent-session-id.selectors"
 import { listFormAgentSessions } from "../../form-agent-sessions/form-agent-sessions.thunks"
 import { listMessages } from "./agent-session-messages.thunks"
 
@@ -25,9 +28,7 @@ listenerMiddleware.startListening({
 // Refresh messages when current agent session changes
 listenerMiddleware.startListening({
   predicate(_, currentState, originalState) {
-    const prevId = selectCurrentAgentSessionId(originalState)
-    const nextId = selectCurrentAgentSessionId(currentState)
-    return prevId !== nextId && !!nextId
+    return hasAgentSessionChanged(originalState, currentState)
   },
   effect: async (_, listenerApi) => {
     const state = listenerApi.getState()

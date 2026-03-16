@@ -22,6 +22,8 @@ export const selectCurrentProjectData = createSelector(
   },
 )
 
-export const hasProjectChanged = (prevState: RootState, nextState: RootState): boolean =>
-  selectCurrentProjectId(prevState) !== selectCurrentProjectId(nextState) &&
-  !!selectCurrentProjectId(nextState)
+export const hasProjectChanged = (prevState: RootState, nextState: RootState): boolean => {
+  const prev = selectCurrentProjectId(prevState)
+  const next = selectCurrentProjectId(nextState)
+  return prev !== next && !!next
+}

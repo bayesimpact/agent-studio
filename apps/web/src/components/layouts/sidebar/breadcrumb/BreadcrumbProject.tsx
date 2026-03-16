@@ -8,7 +8,7 @@ import {
   DropdownMenuTrigger,
 } from "@caseai-connect/ui/shad/dropdown-menu"
 import { cn } from "@caseai-connect/ui/utils"
-import { ChevronDownIcon } from "lucide-react"
+import { CheckIcon, ChevronDownIcon } from "lucide-react"
 import { Link } from "react-router-dom"
 import {
   selectCurrentProjectData,
@@ -50,10 +50,10 @@ export function BreadcrumbProject({ organizationId }: { organizationId: string }
           {projects.value.map((p) => (
             <DropdownMenuItem
               key={p.id}
-              className={cn("cursor-pointer", p.id === project.value.id && "text-muted-foreground")}
+              className={cn("justify-between", p.id === project.value.id && "font-semibold")}
               onClick={handleClick(p.id)}
             >
-              {p.name}
+              {p.name} {p.id === project.value.id && <CheckIcon className="size-4" />}
             </DropdownMenuItem>
           ))}
         </DropdownMenuGroup>

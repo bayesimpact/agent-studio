@@ -17,11 +17,9 @@ const slice = createSlice({
   name: "projects",
   initialState,
   reducers: {
+    reset: () => initialState,
     setCurrentProjectId: (state, action: PayloadAction<{ projectId: string | null }>) => {
       state.currentProjectId = action.payload.projectId
-    },
-    clearProjects: (state) => {
-      state.data = defaultAsyncData
     },
   },
   extraReducers: (builder) => {

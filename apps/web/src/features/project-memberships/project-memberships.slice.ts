@@ -19,9 +19,7 @@ const slice = createSlice({
   name: "projectMemberships",
   initialState,
   reducers: {
-    clearProjectMemberships: (state) => {
-      state.data = defaultAsyncData
-    },
+    reset: () => initialState,
   },
   extraReducers: (builder) => {
     builder
