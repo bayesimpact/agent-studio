@@ -12,7 +12,8 @@ import {
   SidebarMenuButton,
   useSidebar,
 } from "@caseai-connect/ui/shad/sidebar"
-import { ChevronsUpDownIcon, PlusIcon } from "lucide-react"
+import { cn } from "@caseai-connect/ui/utils"
+import { CheckIcon, ChevronsUpDownIcon, PlusIcon } from "lucide-react"
 import { useState } from "react"
 import { useTranslation } from "react-i18next"
 import { useNavigate } from "react-router"
@@ -82,8 +83,12 @@ export function SidebarProjectItem({
             {t("project:projects")}
           </DropdownMenuLabel>
           {projects.map((p) => (
-            <DropdownMenuItem key={p.id} onClick={handleProjectChange(p.id)} className="gap-2 p-2">
-              {p.name}
+            <DropdownMenuItem
+              key={p.id}
+              onClick={handleProjectChange(p.id)}
+              className={cn("gap-2 p-2 justify-between", p.id === project.id && "font-semibold")}
+            >
+              {p.name} {p.id === project.id && <CheckIcon className="size-4" />}
             </DropdownMenuItem>
           ))}
 
