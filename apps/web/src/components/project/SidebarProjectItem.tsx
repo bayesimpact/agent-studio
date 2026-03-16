@@ -20,6 +20,7 @@ import type { Agent } from "@/features/agents/agents.models"
 import { selectAgentsData } from "@/features/agents/agents.selectors"
 import { selectCurrentOrganization } from "@/features/organizations/organizations.selectors"
 import type { Project } from "@/features/projects/projects.models"
+import { useAbility } from "@/hooks/use-ability"
 import { useBuildPath } from "@/hooks/use-build-path"
 import { ADS } from "@/store/async-data-status"
 import { useAppSelector } from "@/store/hooks"
@@ -38,6 +39,7 @@ export function SidebarProjectItem({
   options?: React.ReactNode
   showEmptyProject?: boolean
 }) {
+  const { isAdminInterface } = useAbility()
   const { t } = useTranslation()
   const navigate = useNavigate()
   const agents = useAppSelector(selectAgentsData)
@@ -67,7 +69,7 @@ export function SidebarProjectItem({
             </SidebarMenuButton>
           </DropdownMenuTrigger>
 
-          <div className="shrink-0 pl-2">{options}</div>
+          {options && <div className="shrink-0 pl-2">{options}</div>}
         </div>
 
         <DropdownMenuContent
@@ -84,18 +86,25 @@ export function SidebarProjectItem({
               {p.name}
             </DropdownMenuItem>
           ))}
-          <DropdownMenuSeparator />
-          <DropdownMenuItem onClick={() => setOpenProjectCreator(true)}>
-            <PlusIcon />
-            <span className="capitalize-first">{t("project:create.button")}</span>
-          </DropdownMenuItem>
+
+          {isAdminInterface && (
+            <>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => setOpenProjectCreator(true)}>
+                <PlusIcon />
+                <span className="capitalize-first">{t("project:create.button")}</span>
+              </DropdownMenuItem>
+            </>
+          )}
         </DropdownMenuContent>
       </DropdownMenu>
 
-      <ProjectCreator
-        organization={organization.value}
-        modalHandler={{ open: openProjectCreator, setOpen: setOpenProjectCreator }}
-      />
+      {isAdminInterface && (
+        <ProjectCreator
+          organization={organization.value}
+          modalHandler={{ open: openProjectCreator, setOpen: setOpenProjectCreator }}
+        />
+      )}
 
       <SidebarMenu>{children({ agents: agents.value })}</SidebarMenu>
     </SidebarGroup>
