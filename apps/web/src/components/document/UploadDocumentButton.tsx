@@ -1,12 +1,13 @@
 import { uploadDocument } from "@/features/documents/documents.thunks"
 import { useAppDispatch } from "@/store/hooks"
-import { BasicUploader } from "../FileUploader"
+import { FileUploader } from "../FileUploader"
 
 export function UploadDocumentButton() {
   const dispatch = useAppDispatch()
   return (
-    <BasicUploader
+    <FileUploader
       processFile={({ file }) => dispatch(uploadDocument({ file, sourceType: "project" }))}
+      allowedMimeTypes={{ pdf: true }}
     />
   )
 }

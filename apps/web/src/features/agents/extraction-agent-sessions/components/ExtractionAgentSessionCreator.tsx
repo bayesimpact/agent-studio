@@ -10,7 +10,7 @@ import {
 import { PlusIcon } from "lucide-react"
 import { useState } from "react"
 import { useTranslation } from "react-i18next"
-import { BasicUploader } from "@/components/FileUploader"
+import { FileUploader } from "@/components/FileUploader"
 import { useAppDispatch } from "@/store/hooks"
 import { executeExtractionAgentSession } from "../extraction-agent-sessions.thunks"
 
@@ -63,9 +63,10 @@ export function ExtractionSessionCreator() {
           <DialogDescription>{t("extractionAgentSession:create.description")}</DialogDescription>
         </DialogHeader>
 
-        <BasicUploader
+        <FileUploader
           className="w-full max-w-full overflow-hidden"
           processFile={handleProcessFile}
+          allowedMimeTypes={{ pdf: true }}
         >
           {(status) => {
             return (
@@ -82,7 +83,7 @@ export function ExtractionSessionCreator() {
               </Button>
             )
           }}
-        </BasicUploader>
+        </FileUploader>
 
         <Button disabled={disabled} onClick={handleSubmit}>
           <span className=" capitalize-first">
