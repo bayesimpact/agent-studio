@@ -1,5 +1,5 @@
 import { useEffect } from "react"
-import { CreateOrganizationForm } from "@/components/CreateOrganizationForm"
+import { OrganizationCreator } from "@/components/organization/OrganizationCreator"
 import { selectOrganizationsData } from "@/features/organizations/organizations.selectors"
 import { useNavigateToFirstOrganization } from "@/hooks/use-navigate-to-first-organization"
 import { ADS } from "@/store/async-data-status"
@@ -15,7 +15,7 @@ export function OnboardingRoute() {
   }, [organizations, navigateToFirstOrganization])
 
   if (ADS.isFulfilled(organizations) && organizations.value.length === 0) {
-    return <CreateOrganizationForm />
+    return <OrganizationCreator />
   }
 
   return <LoadingRoute />

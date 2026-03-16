@@ -9,9 +9,18 @@ type UploaderProps<T> = {
   processFile: (params: { file: File }) => Promise<T>
   onDrop?: (file: File) => void
   className?: string
+  allowedMimeTypes: { csv?: true; text?: true; pdf?: true; png?: true; jpeg?: true }
 }
 
-function useUploader<T>({ processFile, onDrop }: UploaderProps<T>) {
+const availableMimeTypes = {
+  "text/csv": [".csv"],
+  "text/plain": [".txt"],
+  "application/pdf": [".pdf"],
+  "image/png": [".png"],
+  "image/jpeg": [".jpeg", ".jpg"],
+}
+
+function useUploader<T>({ processFile, onDrop, allowedMimeTypes }: UploaderProps<T>) {
   const [status, setStatus] = useState<"idle" | "uploading">("idle")
 
   const handleProcessFile = useCallback(
@@ -28,6 +37,15 @@ function useUploader<T>({ processFile, onDrop }: UploaderProps<T>) {
   )
 
   const { getRootProps, getInputProps } = useDropzone({
+    accept: Object.keys(availableMimeTypes).reduce(
+      (acc, mime) => {
+        if (allowedMimeTypes?.[mime.split("/")[1] as keyof typeof allowedMimeTypes]) {
+          acc[mime] = availableMimeTypes[mime as keyof typeof availableMimeTypes]
+        }
+        return acc
+      },
+      {} as Record<string, string[]>,
+    ),
     onError: (err) => {
       console.error(err)
     },
@@ -50,12 +68,13 @@ function useUploader<T>({ processFile, onDrop }: UploaderProps<T>) {
   }
 }
 
-export function BasicUploader<T>({
+export function FileUploader<T>({
   processFile,
   children,
   className,
+  allowedMimeTypes = { csv: true, text: true, pdf: true, png: true, jpeg: true },
 }: UploaderProps<T> & { children?: (status: "idle" | "uploading") => React.ReactNode }) {
-  const { getRootProps, getInputProps, status } = useUploader<T>({ processFile })
+  const { getRootProps, getInputProps, status } = useUploader<T>({ processFile, allowedMimeTypes })
   const { t } = useTranslation("actions")
   return (
     <div {...getRootProps()} className={cn("w-fit cursor-pointer", className)}>

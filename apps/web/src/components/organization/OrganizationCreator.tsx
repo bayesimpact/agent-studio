@@ -22,9 +22,9 @@ import { createOrganization } from "@/features/organizations/organizations.thunk
 import { buildOrganizationDashboardPath } from "@/routes/helpers"
 import { ADS } from "@/store/async-data-status"
 import { useAppDispatch, useAppSelector } from "@/store/hooks"
-import { FullPageCenterLayout } from "./layouts/FullPageCenterLayout"
+import { FullPageCenterLayout } from "../layouts/FullPageCenterLayout"
 
-export function CreateOrganizationForm() {
+export function OrganizationCreator() {
   const { t } = useTranslation("organization", { keyPrefix: "createForm" })
   const dispatch = useAppDispatch()
   const navigate = useNavigate()

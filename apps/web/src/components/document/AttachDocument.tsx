@@ -1,6 +1,6 @@
 import { Button } from "@caseai-connect/ui/shad/button"
 import { PaperclipIcon } from "lucide-react"
-import { BasicUploader } from "../FileUploader"
+import { FileUploader } from "../FileUploader"
 
 export function AttachDocument({
   disabled,
@@ -13,7 +13,10 @@ export function AttachDocument({
     onAttach(file)
   }
   return (
-    <BasicUploader processFile={handleProcessFile}>
+    <FileUploader
+      processFile={handleProcessFile}
+      allowedMimeTypes={{ pdf: true, png: true, jpeg: true }}
+    >
       {(status) => {
         return (
           <Button variant="ghost" className="w-fit" disabled={disabled || status === "uploading"}>
@@ -21,6 +24,6 @@ export function AttachDocument({
           </Button>
         )
       }}
-    </BasicUploader>
+    </FileUploader>
   )
 }
