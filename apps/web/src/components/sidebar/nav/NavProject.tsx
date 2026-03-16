@@ -1,22 +1,20 @@
 "use client"
 
-import type { ProjectDto } from "@caseai-connect/api-contracts"
 import { useState } from "react"
+import type { Project } from "@/features/projects/projects.models"
 import { ProjectDeletor } from "../../project/ProjectDeletor"
 import { ProjectEditor } from "../../project/ProjectEditor"
 import { ProjectItemOptions } from "../../project/ProjectItemOptions"
 import { SidebarProjectItem } from "../../project/SidebarProjectItem"
 import { AdminAgentList, AppAgentList } from "../list/SidebarAgentList"
 
-type Item = { action: "edit" | "delete"; value: ProjectDto }
-
-export function AdminNavProject({
-  organizationId,
-  project,
-}: {
+type Item = { action: "edit" | "delete"; value: Project }
+type Props = {
   organizationId: string
-  project: ProjectDto
-}) {
+  project: Project
+  projects: Project[]
+}
+export function AdminNavProject({ organizationId, project, projects }: Props) {
   const [item, setItem] = useState<Item | null>(null)
   const handleItem = (item: Item) => setItem(item)
   const handleClose = () => setItem(null)
@@ -25,6 +23,7 @@ export function AdminNavProject({
       <SidebarProjectItem
         key={project.id}
         project={project}
+        projects={projects}
         options={
           <ProjectItemOptions
             onEdit={() => handleItem({ action: "edit", value: project })}
@@ -48,15 +47,9 @@ export function AdminNavProject({
   )
 }
 
-export function AppNavProject({
-  organizationId,
-  project,
-}: {
-  organizationId: string
-  project: ProjectDto
-}) {
+export function AppNavProject({ organizationId, project, projects }: Props) {
   return (
-    <SidebarProjectItem key={project.id} project={project}>
+    <SidebarProjectItem key={project.id} project={project} projects={projects}>
       {({ agents }) => (
         <AppAgentList projectId={project.id} organizationId={organizationId} agents={agents} />
       )}

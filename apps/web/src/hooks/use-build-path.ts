@@ -313,7 +313,7 @@ export function useClosestParentPath() {
   return { getClosestParentPath }
 }
 
-const buildOrganizationPath = ({
+export const buildOrganizationPath = ({
   organizationId,
   isAdminInterface,
 }: {
