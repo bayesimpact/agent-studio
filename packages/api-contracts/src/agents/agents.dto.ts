@@ -1,6 +1,10 @@
 import { z } from "zod"
-import { documentTagSchema, updateDocumentTagsSchema } from "../document-tags/document-tag.dto"
-import { timeTypeSchema } from "../generic"
+import {
+  type DocumentTagDto,
+  documentTagSchema,
+  updateDocumentTagsSchema,
+} from "../document-tags/document-tag.dto"
+import type { TimeType } from "../generic"
 
 export enum AgentModel {
   Gemini25Flash = "gemini-2.5-flash",
@@ -16,6 +20,21 @@ export enum AgentModel {
 export enum AgentLocale {
   EN = "en",
   FR = "fr",
+}
+
+export type AgentDto = {
+  createdAt: TimeType
+  defaultPrompt: string
+  id: string
+  locale: AgentLocale
+  model: AgentModel
+  name: string
+  outputJsonSchema?: Record<string, unknown>
+  projectId: string
+  temperature: AgentTemperature
+  type: AgentType
+  updatedAt: TimeType
+  documentTagIds: DocumentTagDto["id"][]
 }
 
 export const outputJsonSchemaSchema = z
@@ -36,16 +55,13 @@ export const outputJsonSchemaSchema = z
     return true
   }, "All required keys must be defined in properties")
 
-export const agentSchema = z.object({
-  createdAt: timeTypeSchema,
+const agentValidationSchema = z.object({
   defaultPrompt: z.string(),
   documentTagIds: z.array(documentTagSchema.shape.id),
-  id: z.string(),
   locale: z.enum(AgentLocale),
   model: z.enum(AgentModel),
   name: z.string().trim().min(2),
   outputJsonSchema: outputJsonSchemaSchema.optional(),
-  projectId: z.string(),
   temperature: z
     .float32()
     .min(0)
@@ -56,13 +72,10 @@ export const agentSchema = z.object({
       "Temperature must be between 0.0 and 2.0",
     ),
   type: z.enum(["conversation", "extraction", "form"]),
-  updatedAt: timeTypeSchema,
 })
 
-export type AgentDto = z.infer<typeof agentSchema>
-
-export type AgentType = AgentDto["type"]
-export type AgentTemperature = AgentDto["temperature"] // e.g., 0.7 float value
+export type AgentType = z.infer<typeof agentValidationSchema.shape.type>
+export type AgentTemperature = z.infer<typeof agentValidationSchema.shape.temperature>
 
 const refineOutputJsonSchema = {
   fn: (data: Partial<AgentDto>) =>
@@ -73,7 +86,7 @@ const refineOutputJsonSchema = {
   },
 }
 
-export const createAgentSchema = agentSchema
+export const createAgentSchema = agentValidationSchema
   .pick({
     defaultPrompt: true,
     locale: true,
@@ -88,7 +101,7 @@ export const createAgentSchema = agentSchema
   })
   .refine(refineOutputJsonSchema.fn, refineOutputJsonSchema.message)
 
-export const updateAgentSchema = agentSchema
+export const updateAgentSchema = agentValidationSchema
   .pick({
     defaultPrompt: true,
     documentTagIds: true,
@@ -102,7 +115,6 @@ export const updateAgentSchema = agentSchema
     tagsToAdd: updateDocumentTagsSchema.required().shape.tagsToAdd,
     tagsToRemove: updateDocumentTagsSchema.required().shape.tagsToRemove,
   })
-  .refine(refineOutputJsonSchema.fn, refineOutputJsonSchema.message)
 
 export type CreateAgentDto = z.infer<typeof createAgentSchema>
 export type UpdateAgentDto = z.infer<typeof updateAgentSchema>
