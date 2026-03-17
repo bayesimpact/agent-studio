@@ -23,8 +23,11 @@ RUN cd packages/api-contracts && npm run build
 FROM node:24-bookworm-slim AS prod
 
 WORKDIR /app
-RUN apt-get update && apt-get install -y --no-install-recommends python3 python3-pip libc6 && rm -rf /var/lib/apt/lists/*
-RUN pip3 install --no-cache-dir docling
+RUN apt-get update && apt-get install -y --no-install-recommends python3 python3-pip python3-venv libc6 && rm -rf /var/lib/apt/lists/*
+RUN python3 -m venv /opt/docling-venv \
+  && /opt/docling-venv/bin/pip install --no-cache-dir --upgrade pip \
+  && /opt/docling-venv/bin/pip install --no-cache-dir docling \
+  && ln -s /opt/docling-venv/bin/docling /usr/local/bin/docling
 
 # Set to production environment
 ENV NODE_ENV=production
