@@ -19,4 +19,8 @@ export class DocumentChunkEmbedding extends ConnectEntityBase {
 
   @Column({ name: "model_name", type: "varchar" })
   modelName!: string
+
+  // This is a hack to prevent TypeORM from trying to delete the column we created manually in the database.
+  @Column({ name: "embedding", type: "vector", length: 3072, nullable: true })
+  embedding?: []
 }
