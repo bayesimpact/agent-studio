@@ -9,7 +9,15 @@ import {
 } from "../document-tags/document-tags.thunks"
 import { notificationsActions } from "../notifications/notifications.slice"
 import { hasProjectChanged } from "../projects/projects.selectors"
-import { deleteDocument, listDocuments, updateDocument, uploadDocument } from "./documents.thunks"
+import { selectUploaderState } from "./documents.selectors"
+import { documentsActions } from "./documents.slice"
+import {
+  deleteDocument,
+  listDocuments,
+  updateDocument,
+  uploadDocument,
+  uploadDocuments,
+} from "./documents.thunks"
 
 const listenerMiddleware = createListenerMiddleware<RootState, AppDispatch>()
 
@@ -37,6 +45,7 @@ listenerMiddleware.startListening({
   matcher: isAnyOf(
     // Document changes
     uploadDocument.fulfilled,
+    uploadDocuments.fulfilled,
     updateDocument.fulfilled,
     deleteDocument.fulfilled,
     // DocumentTag changes
@@ -50,11 +59,44 @@ listenerMiddleware.startListening({
 })
 
 listenerMiddleware.startListening({
+  predicate(_, currentState) {
+    return selectUploaderState(currentState).status === "completed"
+  },
+  effect: async (_, listenerApi) => {
+    await listenerApi.delay(4000)
+    listenerApi.dispatch(documentsActions.resetUploaderState())
+  },
+})
+
+listenerMiddleware.startListening({
+  actionCreator: uploadDocuments.fulfilled,
+  effect: async (action, listenerApi) => {
+    listenerApi.dispatch(
+      notificationsActions.show({
+        title: `${action.meta.arg.files.length} documents uploaded successfully`,
+        type: "success",
+      }),
+    )
+  },
+})
+
+listenerMiddleware.startListening({
+  actionCreator: uploadDocument.pending,
+  effect: async (action, listenerApi) => {
+    listenerApi.dispatch(
+      notificationsActions.show({
+        title: `Uploading ${action.meta.arg.file.name}...`,
+        type: "info",
+      }),
+    )
+  },
+})
+listenerMiddleware.startListening({
   actionCreator: uploadDocument.fulfilled,
   effect: async (action, listenerApi) => {
     listenerApi.dispatch(
       notificationsActions.show({
-        title: "Document uploaded successfully",
+        title: `${action.meta.arg.file.name} uploaded successfully`,
         type: "success",
       }),
     )
@@ -66,10 +108,10 @@ listenerMiddleware.startListening({
 })
 listenerMiddleware.startListening({
   actionCreator: uploadDocument.rejected,
-  effect: async (_, listenerApi) => {
+  effect: async (action, listenerApi) => {
     listenerApi.dispatch(
       notificationsActions.show({
-        title: "Document upload failed",
+        title: `${action.meta.arg.file.name} upload failed`,
         type: "error",
       }),
     )

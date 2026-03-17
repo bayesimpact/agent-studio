@@ -39,6 +39,7 @@ export const documentFactory = DocumentFactory.define(({ sequence, params, trans
     sourceType: params.sourceType || "project",
     embeddingStatus: params.embeddingStatus || "pending",
     tags: params.tags || [],
+    uploadStatus: params.uploadStatus || "uploaded",
   } satisfies Document
 })
 

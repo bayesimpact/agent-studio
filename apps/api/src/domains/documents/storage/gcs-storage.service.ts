@@ -2,6 +2,7 @@ import { Storage } from "@google-cloud/storage"
 import { Injectable, InternalServerErrorException, Logger } from "@nestjs/common"
 import type { ConfigService } from "@nestjs/config"
 import { v4 as uuidv4 } from "uuid"
+import type { RequiredConnectScope } from "@/common/entities/connect-required-fields"
 import type { MulterFile } from "@/common/types"
 import type { IFileStorage } from "./file-storage.interface"
 
@@ -18,6 +19,18 @@ export class GcsStorageService implements IFileStorage {
         this.configService.get<string>("GOOGLE_APPLICATION_CREDENTIALS"),
     })
     this.bucketName = this.configService.get<string>("GCS_STORAGE_BUCKET_NAME") as string
+  }
+
+  buildStorageRelativePath({
+    connectScope,
+    documentId,
+    extension,
+  }: {
+    connectScope: RequiredConnectScope
+    documentId: string
+    extension: string
+  }): string {
+    return `${connectScope.organizationId}/${connectScope.projectId}/${documentId}.${extension}`
   }
 
   async readFile(storageRelativePath: string): Promise<Buffer> {
@@ -41,22 +54,46 @@ export class GcsStorageService implements IFileStorage {
     return url
   }
 
+  async generateSignedUploadUrl({
+    storagePath,
+    mimeType,
+    expiresInSeconds,
+  }: {
+    storagePath: string
+    mimeType: string
+    expiresInSeconds: number
+  }): Promise<string> {
+    const [url] = await this.storage
+      .bucket(this.bucketName)
+      .file(storagePath)
+      .getSignedUrl({
+        version: "v4",
+        action: "write",
+        expires: Date.now() + expiresInSeconds * 1000,
+        contentType: mimeType,
+      })
+    return url
+  }
+
   async save({
+    connectScope,
     file,
-    pathPrefix,
     extension,
   }: {
+    connectScope: RequiredConnectScope
     extension: string
     file: MulterFile
-    pathPrefix: string
   }): Promise<{ storageRelativePath: string; fileId: string }> {
     if (!file) {
       throw new InternalServerErrorException("No file received.")
     }
 
     const fileId = uuidv4()
-    const uniqueFileName = `${fileId}.${extension}`
-    const storageRelativePath = `${pathPrefix.endsWith("/") ? pathPrefix : `${pathPrefix}/`}${uniqueFileName}`
+    const storageRelativePath = this.buildStorageRelativePath({
+      connectScope,
+      documentId: fileId,
+      extension,
+    })
 
     const bucket = this.storage.bucket(this.bucketName)
     const fileRef = bucket.file(storageRelativePath)

@@ -20,6 +20,7 @@ import { DocumentsGuard } from "./documents.guard"
 import { DocumentsService } from "./documents.service"
 import { DocumentChunkRetrievalService } from "./embeddings/document-chunk-retrieval.service"
 import { DocumentEmbeddingsBatchModule } from "./embeddings/document-embeddings-batch.module"
+import { LocalPresignUploadController } from "./storage/local-presign-upload.controller"
 import { StorageModule } from "./storage/storage.module"
 import { DocumentTagsModule } from "./tags/document-tags.module"
 
@@ -57,7 +58,10 @@ import { DocumentTagsModule } from "./tags/document-tags.module"
     ProjectContextResolver,
     DocumentContextResolver,
   ],
-  controllers: [DocumentsController],
+  controllers: [
+    DocumentsController,
+    ...(process.env.NODE_ENV !== "production" ? [LocalPresignUploadController] : []),
+  ],
   exports: [DocumentsService, DocumentChunkRetrievalService],
 })
 export class DocumentsModule {}

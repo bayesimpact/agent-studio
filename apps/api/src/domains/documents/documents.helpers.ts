@@ -1,3 +1,13 @@
+import { UnprocessableEntityException } from "@nestjs/common"
+
+export function extractFileExtension(fileName: string): string {
+  const extension = fileName.split(".").pop() || ""
+  if (extension.trim().length === 0) {
+    throw new UnprocessableEntityException("File extension is required.")
+  }
+  return extension
+}
+
 export function normalizeUploadedFileName(originalFileName: string): string {
   const likelyMojibake = /(?:Ã.|Â|â[\u0080-\u00BF])/.test(originalFileName)
   if (!likelyMojibake) {

@@ -1,4 +1,11 @@
-import { type DocumentDto, DocumentsRoutes, type MimeTypes } from "@caseai-connect/api-contracts"
+import {
+  type DocumentDto,
+  type DocumentSourceType,
+  DocumentsRoutes,
+  isAllowedMimeType,
+  type MimeTypes,
+  type PresignFileResponseItemDto,
+} from "@caseai-connect/api-contracts"
 import {
   Body,
   Controller,
@@ -29,13 +36,14 @@ import type {
 import { getRequiredConnectScope } from "@/common/context/request-context.helpers"
 import { AddContext, RequireContext } from "@/common/context/require-context.decorator"
 import { ResourceContextGuard } from "@/common/context/resource-context.guard"
+import type { RequiredConnectScope } from "@/common/entities/connect-required-fields"
 import { CheckPolicy } from "@/common/policies/check-policy.decorator"
 import type { MulterFile } from "@/common/types"
 import { JwtAuthGuard } from "@/domains/auth/jwt-auth.guard"
 import { UserGuard } from "@/domains/users/user.guard"
 import type { Document } from "./document.entity"
 import { DocumentsGuard } from "./documents.guard"
-import { normalizeUploadedFileName } from "./documents.helpers"
+import { extractFileExtension, normalizeUploadedFileName } from "./documents.helpers"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
 import { DocumentsService } from "./documents.service"
 import {
@@ -75,7 +83,7 @@ export class DocumentsController {
     )
     file: MulterFile,
     @Request() req: EndpointRequestWithProject,
-    @Param("sourceType") sourceType: "project" | "agentSessionMessage" | "extraction",
+    @Param("sourceType") sourceType: DocumentSourceType,
   ): Promise<typeof DocumentsRoutes.uploadOne.response> {
     if (!sourceType) {
       throw new UnprocessableEntityException("Source type is required.")
@@ -111,18 +119,12 @@ export class DocumentsController {
     }
 
     const normalizedFileName = normalizeUploadedFileName(file.originalname)
-    const extension = normalizedFileName.split(".").pop() || ""
-    if (extension.trim().length === 0) {
-      throw new UnprocessableEntityException("File extension is required.", extension)
-    }
+    const extension = extractFileExtension(normalizedFileName)
     const connectScope = getRequiredConnectScope(req)
-    const fileInfo = await this.fileStorageService.save({
-      file,
-      pathPrefix: `${connectScope.organizationId}/${connectScope.projectId}`,
-      extension,
-    })
+    const fileInfo = await this.fileStorageService.save({ file, connectScope, extension })
 
-    const document = await this.documentsService.createDocumentFromFile({
+    const document = await this.documentsService.createDocument({
+      uploadStatus: "uploaded",
       connectScope,
       documentId: fileInfo.fileId,
       fields: {
@@ -139,19 +141,122 @@ export class DocumentsController {
       throw new NotFoundException("Document not found or you do not have permission to access it.")
     }
 
-    // we only create embeddings for project documents
-    if (sourceType === "project") {
-      await this.documentEmbeddingsBatchService.enqueueCreateEmbeddingsForDocument({
-        documentId: document.id,
-        organizationId: connectScope.organizationId,
-        projectId: connectScope.projectId,
-        uploadedByUserId: req.user.id,
-        origin: "document-upload",
-        currentTraceId: v4(),
-      })
-    }
+    await this.createEmbeddingsIfSourceTypeProject({ document, connectScope, userId: req.user.id })
 
     return { data: toDocumentDto(document) }
+  }
+
+  @CheckPolicy((policy) => policy.canCreate())
+  @Post(DocumentsRoutes.presignMany.path)
+  @HttpCode(HttpStatus.CREATED)
+  async presignMany(
+    @Body() { payload }: typeof DocumentsRoutes.presignMany.request,
+    @Request() req: EndpointRequestWithProject,
+    @Param("sourceType") sourceType: DocumentSourceType,
+  ): Promise<typeof DocumentsRoutes.presignMany.response> {
+    if (!sourceType) {
+      throw new UnprocessableEntityException("Source type is required.")
+    }
+    if (!payload.files || payload.files.length === 0) {
+      throw new UnprocessableEntityException("At least one file is required.")
+    }
+
+    const connectScope = getRequiredConnectScope(req)
+    const results: PresignFileResponseItemDto[] = []
+
+    for (const fileInfo of payload.files) {
+      if (!fileInfo.mimeType) {
+        throw new UnprocessableEntityException("File MIME type is required.")
+      }
+      if (!isAllowedMimeType(fileInfo.mimeType)) {
+        throw new UnprocessableEntityException(
+          `Invalid file type: ${fileInfo.mimeType}. Only images, PDFs, CSV, and text files are allowed.`,
+        )
+      }
+
+      const normalizedFileName = normalizeUploadedFileName(fileInfo.fileName)
+      const extension = extractFileExtension(normalizedFileName)
+
+      const documentId = v4()
+      const storagePath = this.fileStorageService.buildStorageRelativePath({
+        connectScope,
+        documentId,
+        extension,
+      })
+
+      const uploadUrl = await this.fileStorageService.generateSignedUploadUrl({
+        storagePath,
+        mimeType: fileInfo.mimeType,
+        expiresInSeconds: 900, // 15 minutes
+      })
+
+      await this.documentsService.createDocument({
+        uploadStatus: "pending",
+        connectScope,
+        documentId,
+        fields: {
+          fileName: normalizedFileName,
+          mimeType: fileInfo.mimeType,
+          size: fileInfo.size,
+          storageRelativePath: storagePath,
+          title: normalizedFileName,
+          sourceType,
+        },
+      })
+
+      results.push({ documentId, uploadUrl })
+    }
+
+    return { data: results }
+  }
+
+  @CheckPolicy((policy) => policy.canCreate())
+  @Post(DocumentsRoutes.confirmMany.path)
+  @HttpCode(HttpStatus.CREATED)
+  async confirmMany(
+    @Body() { payload }: typeof DocumentsRoutes.confirmMany.request,
+    @Request() req: EndpointRequestWithProject,
+  ): Promise<typeof DocumentsRoutes.confirmMany.response> {
+    if (!payload.documentIds || payload.documentIds.length === 0) {
+      throw new UnprocessableEntityException("At least one document ID is required.")
+    }
+
+    const connectScope = getRequiredConnectScope(req)
+    const documents: Document[] = []
+
+    for (const documentId of payload.documentIds) {
+      const document = await this.documentsService.markAsUploaded({ connectScope, documentId })
+
+      await this.createEmbeddingsIfSourceTypeProject({
+        document,
+        connectScope,
+        userId: req.user.id,
+      })
+
+      documents.push(document)
+    }
+
+    return { data: documents.map(toDocumentDto) }
+  }
+
+  private async createEmbeddingsIfSourceTypeProject({
+    document,
+    connectScope,
+    userId,
+  }: {
+    document: Document
+    connectScope: RequiredConnectScope
+    userId: string
+  }): Promise<void> {
+    if (document.sourceType !== "project") return
+    await this.documentEmbeddingsBatchService.enqueueCreateEmbeddingsForDocument({
+      documentId: document.id,
+      organizationId: connectScope.organizationId,
+      projectId: connectScope.projectId,
+      uploadedByUserId: userId,
+      origin: "document-upload",
+      currentTraceId: v4(),
+    })
   }
 
   @CheckPolicy((policy) => policy.canList())

@@ -1,88 +1,122 @@
+import type { AllowedMimeTypes } from "@caseai-connect/api-contracts"
 import { Button } from "@caseai-connect/ui/shad/button"
 import { cn } from "@caseai-connect/ui/utils"
 import { Loader2Icon, UploadCloudIcon } from "lucide-react"
-import { useCallback, useState } from "react"
+import { useCallback, useEffect, useState } from "react"
 import { useDropzone } from "react-dropzone"
 import { useTranslation } from "react-i18next"
+import { notificationsActions } from "@/features/notifications/notifications.slice"
+import { useAppDispatch } from "@/store/hooks"
 
-type UploaderProps<T> = {
-  processFile: (params: { file: File }) => Promise<T>
-  onDrop?: (file: File) => void
+type UploaderProps = {
+  allowedMimeTypes: Partial<Record<(typeof AllowedMimeTypes)[number], boolean>>
   className?: string
-  allowedMimeTypes: { csv?: true; text?: true; pdf?: true; png?: true; jpeg?: true }
+  maxFiles?: number
+  onDropFiles?: (files: File[]) => void
+  onProcessFiles?: (files: File[]) => Promise<void>
+  onProcessEnd?: () => void
+  shouldRun?: boolean
+  disabled?: boolean
+  maxSize?: number
 }
 
-const availableMimeTypes = {
-  "text/csv": [".csv"],
-  "text/plain": [".txt"],
-  "application/pdf": [".pdf"],
-  "image/png": [".png"],
-  "image/jpeg": [".jpeg", ".jpg"],
-}
+export function FileUploader({
+  onDropFiles,
+  allowedMimeTypes,
+  children,
+  className,
+  maxFiles = 1,
+  onProcessFiles,
+  onProcessEnd,
+  shouldRun = true,
+  maxSize = 10 * 1024 * 1024, // 10MB
+  disabled: disabledProp,
+}: UploaderProps & { children?: React.ReactNode }) {
+  const dispatch = useAppDispatch()
+  const { t } = useTranslation("actions")
+  const [files, setFiles] = useState<File[]>([])
+  const [status, setStatus] = useState<"loading" | "error">()
 
-function useUploader<T>({ processFile, onDrop, allowedMimeTypes }: UploaderProps<T>) {
-  const [status, setStatus] = useState<"idle" | "uploading">("idle")
+  const disabled = disabledProp || status === "loading"
 
-  const handleProcessFile = useCallback(
-    (file: File) => {
-      setStatus("uploading")
-
-      processFile({
-        file,
-      }).finally(() => {
-        setStatus("idle")
-      })
-    },
-    [processFile],
+  const showNotification = useCallback(
+    (type: "info" | "error", title: string) =>
+      // tiemout required
+      setTimeout(() => {
+        dispatch(notificationsActions.show({ type, title }))
+      }, 0),
+    [dispatch],
   )
 
+  const handleFiles = useCallback(
+    async (files: File[]) => {
+      await onProcessFiles?.(files).finally(() => {
+        setStatus(undefined)
+        setFiles([])
+        onProcessEnd?.()
+      })
+    },
+    [onProcessFiles, onProcessEnd],
+  )
+
+  useEffect(() => {
+    if (!shouldRun) return
+    if (files.length === 0) return
+
+    if (onProcessFiles) handleFiles(files)
+  }, [shouldRun, files, handleFiles, onProcessFiles])
+
   const { getRootProps, getInputProps } = useDropzone({
-    accept: Object.keys(availableMimeTypes).reduce(
-      (acc, mime) => {
-        if (allowedMimeTypes?.[mime.split("/")[1] as keyof typeof allowedMimeTypes]) {
-          acc[mime] = availableMimeTypes[mime as keyof typeof availableMimeTypes]
-        }
-        return acc
-      },
-      {} as Record<string, string[]>,
-    ),
+    accept: buildAccept(allowedMimeTypes),
+    maxSize,
     onError: (err) => {
       console.error(err)
     },
-    disabled: status === "uploading",
-    maxFiles: 1,
-    onDrop: (files) => {
-      const file = files[0]
-      if (files.length === 0 || !file) return
-      if (onDrop) onDrop(file)
-      void handleProcessFile(file)
+    onDropAccepted: (files) => {
+      setFiles(files)
+      onDropFiles?.(files)
     },
+    onDropRejected: (fileRejections) => {
+      fileRejections.forEach((rejection) => {
+        rejection.errors.forEach((err) => {
+          switch (err.code) {
+            case "file-invalid-type":
+              showNotification(
+                "error",
+                `${rejection.file.name} has an invalid file type: ${rejection.file.type}`,
+              )
+              break
+
+            case "too-many-files":
+              showNotification("error", `You can only upload up to ${maxFiles} file(s).`)
+              break
+
+            case "file-too-large":
+              showNotification("error", `${rejection.file.name} is too large.`)
+              break
+
+            case "file-too-small":
+              showNotification("error", `${rejection.file.name} is too small.`)
+              break
+
+            default:
+              showNotification("error", `Failed to upload ${rejection.file.name}. ${err.message}`)
+              break
+          }
+        })
+      })
+    },
+    disabled,
+    maxFiles,
   })
 
-  return {
-    getInputProps,
-    getRootProps,
-    handleProcessFile,
-    status,
-    setStatus,
-  }
-}
-
-export function FileUploader<T>({
-  processFile,
-  children,
-  className,
-  allowedMimeTypes = { csv: true, text: true, pdf: true, png: true, jpeg: true },
-}: UploaderProps<T> & { children?: (status: "idle" | "uploading") => React.ReactNode }) {
-  const { getRootProps, getInputProps, status } = useUploader<T>({ processFile, allowedMimeTypes })
-  const { t } = useTranslation("actions")
   return (
     <div {...getRootProps()} className={cn("w-fit cursor-pointer", className)}>
       {children ? (
-        children(status)
+        children
       ) : (
-        <Button className="w-full" disabled={status !== "idle"}>
-          {status === "uploading" ? (
+        <Button className="w-full" disabled={disabled}>
+          {disabled ? (
             <Loader2Icon className="size-5 animate-spin" />
           ) : (
             <UploadCloudIcon className="size-5" />
@@ -93,4 +127,18 @@ export function FileUploader<T>({
       <input {...getInputProps()} />
     </div>
   )
+}
+
+function buildAccept(
+  allowedMimeTypes: Partial<Record<(typeof AllowedMimeTypes)[number], boolean>>,
+) {
+  return Object.keys(allowedMimeTypes)
+    .filter((mime) => allowedMimeTypes[mime as (typeof AllowedMimeTypes)[number]])
+    .reduce(
+      (acc, mime) => {
+        acc[mime] = []
+        return acc
+      },
+      {} as Record<string, string[]>,
+    )
 }

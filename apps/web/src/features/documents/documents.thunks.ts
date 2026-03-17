@@ -3,6 +3,7 @@ import type { RootState, ThunkExtraArg } from "@/store"
 import type { DocumentTagsUpdateFields } from "../document-tags/document-tags.models"
 import { getCurrentIds } from "../helpers"
 import type { Document } from "./documents.models"
+import { documentsActions } from "./documents.slice"
 
 type ThunkConfig = { state: RootState; extra: ThunkExtraArg }
 
@@ -34,6 +35,41 @@ export const uploadDocument = createAsyncThunk<
   })
   return await services.documents.uploadOne({ organizationId, projectId, file, sourceType })
 })
+
+export const uploadDocuments = createAsyncThunk<
+  void,
+  {
+    files: File[]
+    sourceType: "project" | "agentSessionMessage" | "extraction"
+  },
+  ThunkConfig
+>(
+  "documents/uploadMany",
+  async ({ files, sourceType }, { extra: { services }, getState, dispatch }) => {
+    const state = getState()
+    const { organizationId, projectId } = getCurrentIds({
+      state,
+      wantedIds: ["organizationId", "projectId"],
+    })
+    for (const file of files) {
+      try {
+        await services.documents.uploadMany({
+          organizationId,
+          projectId,
+          files: [file],
+          sourceType,
+        })
+        dispatch(documentsActions.setOneDocumentCompleted())
+      } catch (error) {
+        dispatch(
+          documentsActions.setOneDocumentError({
+            error: (error as Error).message || "Failed to upload document",
+          }),
+        )
+      }
+    }
+  },
+)
 
 export const updateDocument = createAsyncThunk<
   void,

@@ -17,10 +17,12 @@ export class DocumentsService {
     this.documentConnectRepository = new ConnectRepository(documentRepository, "documents")
   }
   private readonly documentConnectRepository: ConnectRepository<Document>
-  async createDocumentFromFile({
+
+  async createDocument({
     connectScope,
     documentId,
     fields,
+    uploadStatus,
   }: {
     connectScope: RequiredConnectScope
     documentId: string
@@ -28,6 +30,7 @@ export class DocumentsService {
       Document,
       "fileName" | "mimeType" | "size" | "storageRelativePath" | "title" | "sourceType"
     >
+    uploadStatus: "pending" | "uploaded"
   }): Promise<Document> {
     return await this.documentConnectRepository.createAndSave(connectScope, {
       id: documentId,
@@ -37,13 +40,29 @@ export class DocumentsService {
       storageRelativePath: fields.storageRelativePath,
       title: fields.title ?? fields.fileName,
       sourceType: fields.sourceType,
+      uploadStatus,
     })
+  }
+
+  async markAsUploaded({
+    connectScope,
+    documentId,
+  }: {
+    connectScope: RequiredConnectScope
+    documentId: string
+  }): Promise<Document> {
+    const document = await this.documentConnectRepository.getOneById(connectScope, documentId)
+    if (!document) {
+      throw new NotFoundException(`Document with id ${documentId} not found`)
+    }
+    document.uploadStatus = "uploaded"
+    return this.documentConnectRepository.saveOne(document)
   }
 
   async listDocuments(connectScope: RequiredConnectScope): Promise<Document[]> {
     return (
       await this.documentConnectRepository.find(connectScope, {
-        where: { sourceType: "project" },
+        where: { sourceType: "project", uploadStatus: "uploaded" },
         relations: ["tags"],
       })
     )?.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())

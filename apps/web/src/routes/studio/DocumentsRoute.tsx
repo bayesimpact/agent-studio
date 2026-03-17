@@ -8,7 +8,7 @@ import { useEffect } from "react"
 import { useTranslation } from "react-i18next"
 import { DocumentTagTreeNode } from "@/components/document/DocumentTagTreeNode"
 import { EmptyDocument } from "@/components/document/EmptyDocument"
-import { UploadDocumentButton } from "@/components/document/UploadDocumentButton"
+import { UploadDocumentsButton } from "@/components/document/UploadDocumentsButton"
 import { DocumentTagsSheet } from "@/components/document-tag/DocumentTagsSheet"
 import { useSidebarLayout } from "@/components/layouts/sidebar/context"
 import type { DocumentTag } from "@/features/document-tags/document-tags.models"
@@ -85,7 +85,7 @@ function useHandleHeader(documentTags: DocumentTag[]) {
     setHeaderRightSlot(
       <div className="flex items-center gap-2">
         <DocumentTagsSheet documentTags={documentTags} />
-        <UploadDocumentButton />
+        <UploadDocumentsButton />
       </div>,
     )
     return () => {

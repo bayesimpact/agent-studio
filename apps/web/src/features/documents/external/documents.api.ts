@@ -1,4 +1,8 @@
-import { type DocumentDto, DocumentsRoutes } from "@caseai-connect/api-contracts"
+import {
+  type DocumentDto,
+  DocumentsRoutes,
+  type PresignFileRequestItemDto,
+} from "@caseai-connect/api-contracts"
 import { getAxiosInstance } from "@/external/axios"
 import type { Document } from "../documents.models"
 import type { IDocumentsSpi } from "../documents.spi"
@@ -23,6 +27,46 @@ export default {
       { headers: { "Content-Type": "multipart/form-data" } },
     )
     return toDocument(response.data.data)
+  },
+  uploadMany: async ({ organizationId, projectId, files, sourceType }) => {
+    const axios = getAxiosInstance()
+
+    // 1. Get signed upload URLs + create pending document entities
+    const presignResponse = await axios.post<typeof DocumentsRoutes.presignMany.response>(
+      DocumentsRoutes.presignMany.getPath({ organizationId, projectId, sourceType }),
+      {
+        payload: {
+          files: files.map((file) => ({
+            fileName: file.name,
+            mimeType: file.type as PresignFileRequestItemDto["mimeType"],
+            size: file.size,
+          })),
+        },
+      } satisfies typeof DocumentsRoutes.presignMany.request,
+    )
+    const presigned = presignResponse.data.data
+
+    // 2. Upload directly to GCS — fully parallel, no backend involved
+    await Promise.all(
+      presigned.map(({ uploadUrl }, index) => {
+        const file = files[index]
+        if (!file) throw new Error(`File for index ${index} is missing`)
+        return fetch(uploadUrl, {
+          method: "PUT",
+          headers: { "Content-Type": file.type },
+          body: file,
+        })
+      }),
+    )
+
+    // 3. Confirm all at once — backend marks as uploaded and enqueues embeddings
+    const confirmResponse = await axios.post<typeof DocumentsRoutes.confirmMany.response>(
+      DocumentsRoutes.confirmMany.getPath({ organizationId, projectId }),
+      {
+        payload: { documentIds: presigned.map(({ documentId }) => documentId) },
+      } satisfies typeof DocumentsRoutes.confirmMany.request,
+    )
+    return confirmResponse.data.data.map(toDocument)
   },
   updateOne: async ({ organizationId, projectId, documentId, payload }) => {
     const axios = getAxiosInstance()

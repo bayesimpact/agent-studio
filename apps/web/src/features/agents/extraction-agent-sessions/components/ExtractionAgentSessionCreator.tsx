@@ -22,31 +22,17 @@ export function ExtractionSessionCreator() {
   const [file, setFile] = useState<File>()
   const [isRunning, setIsRunning] = useState(false)
 
-  const handleProcessFile = async ({ file }: { file: File }) => {
-    setFile(file)
-  }
-
   const handleOpenChange = (nextOpen: boolean) => {
-    if (!nextOpen) setFile(undefined)
+    if (!nextOpen) {
+      setIsRunning(false)
+      setFile(undefined)
+    }
     setOpen(nextOpen)
   }
 
-  const disabled = isRunning || !file
-
   const handleSubmit = async () => {
-    if (disabled) return
-
+    if (!file) return
     setIsRunning(true)
-
-    try {
-      await dispatch(executeExtractionAgentSession({ file })).unwrap() // FIXME: should add data to slice
-
-      setOpen(false)
-    } catch (_) {
-      // Ignore error, it will be handled by the middleware and displayed in the UI
-    } finally {
-      setIsRunning(false)
-    }
   }
 
   return (
@@ -65,27 +51,31 @@ export function ExtractionSessionCreator() {
 
         <FileUploader
           className="w-full max-w-full overflow-hidden"
-          processFile={handleProcessFile}
-          allowedMimeTypes={{ pdf: true }}
-        >
-          {(status) => {
-            return (
-              <Button
-                className="w-full max-w-full justify-start"
-                variant={file ? "secondary" : "outline"}
-                disabled={status === "uploading"}
-              >
-                {file ? (
-                  file.name
-                ) : (
-                  <span className="capitalize-first">{t("actions:dragOrUploadFile")}</span>
-                )}
-              </Button>
-            )
+          maxFiles={1}
+          onProcessFiles={async (files) => {
+            const file = files[0]
+            if (!file) return // because maxFiles is 1
+            await dispatch(executeExtractionAgentSession({ file })).unwrap()
           }}
+          onProcessEnd={() => setOpen(false)}
+          allowedMimeTypes={{ "application/pdf": true }}
+          shouldRun={isRunning}
+          onDropFiles={(files) => setFile(files[0])}
+        >
+          <Button
+            className="w-full max-w-full justify-start"
+            variant={file ? "secondary" : "outline"}
+            disabled={isRunning}
+          >
+            {file ? (
+              file.name
+            ) : (
+              <span className="capitalize-first">{t("actions:dragOrUploadFile")}</span>
+            )}
+          </Button>
         </FileUploader>
 
-        <Button disabled={disabled} onClick={handleSubmit}>
+        <Button disabled={isRunning} onClick={handleSubmit}>
           <span className=" capitalize-first">
             {isRunning ? t("status:loading") : t("actions:run")}
           </span>
