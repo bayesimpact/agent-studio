@@ -10,7 +10,8 @@ export const getAxiosInstance = (): AxiosInstance => {
 
 const buildAxiosInstance = (): AxiosInstance => {
   const baseURL = import.meta.env.VITE_API_URL as string
-  const axiosInstance = axios.create({ baseURL: `${baseURL}/` })
+  const timeoutMs = Number(import.meta.env.VITE_API_TIMEOUT_MS ?? "10000")
+  const axiosInstance = axios.create({ baseURL: `${baseURL}/`, timeout: timeoutMs })
 
   // Set up request interceptor to automatically inject Auth0 access token
   // This ensures tokens are always fresh and handles refresh automatically
