@@ -1,12 +1,27 @@
 import type { DocumentTagsUpdateFieldsDto } from "../document-tags/document-tag.dto"
 import type { RequestPayload, ResponseData, SuccessResponseDTO } from "../generic"
 import { defineRoute } from "../helpers"
-import type { DocumentDto } from "./documents.dto"
+import type {
+  DocumentDto,
+  PresignFileRequestItemDto,
+  PresignFileResponseItemDto,
+} from "./documents.dto"
 
 export const DocumentsRoutes = {
   uploadOne: defineRoute<ResponseData<DocumentDto>, RequestPayload<{ file: File }>>({
     method: "post",
     path: "organizations/:organizationId/projects/:projectId/documents/:sourceType/upload/",
+  }),
+  presignMany: defineRoute<
+    ResponseData<PresignFileResponseItemDto[]>,
+    RequestPayload<{ files: PresignFileRequestItemDto[] }>
+  >({
+    method: "post",
+    path: "organizations/:organizationId/projects/:projectId/documents/:sourceType/presign",
+  }),
+  confirmMany: defineRoute<ResponseData<DocumentDto[]>, RequestPayload<{ documentIds: string[] }>>({
+    method: "post",
+    path: "organizations/:organizationId/projects/:projectId/documents/confirm",
   }),
   getAll: defineRoute<ResponseData<DocumentDto[]>>({
     method: "get",

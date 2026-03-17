@@ -6,11 +6,11 @@ import {
   DialogContent,
   DialogDescription,
   DialogHeader,
+  DialogTitle,
   DialogTrigger,
 } from "@caseai-connect/ui/shad/dialog"
 import { Field, FieldGroup, FieldLabel, FieldSet } from "@caseai-connect/ui/shad/field"
 import { Item, ItemContent } from "@caseai-connect/ui/shad/item"
-import { SheetTitle } from "@caseai-connect/ui/shad/sheet"
 import { Textarea } from "@caseai-connect/ui/shad/textarea"
 import { useState } from "react"
 import { useTranslation } from "react-i18next"
@@ -39,7 +39,7 @@ export function FeedbackCreator({ message }: { message: AgentSessionMessage }) {
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <SheetTitle>{t("title")}</SheetTitle>
+          <DialogTitle>{t("title")}</DialogTitle>
           <DialogDescription>{t("description")}</DialogDescription>
         </DialogHeader>
 

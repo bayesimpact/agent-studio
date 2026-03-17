@@ -22,3 +22,5 @@ export const selectDocumentData = createSelector(
     return { status: ADS.Fulfilled, value: document, error: null }
   },
 )
+
+export const selectUploaderState = (state: RootState) => state.documents.uploader

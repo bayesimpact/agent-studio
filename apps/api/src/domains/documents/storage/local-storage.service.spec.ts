@@ -3,6 +3,7 @@ import * as fs from "node:fs/promises"
 import * as os from "node:os"
 import * as path from "node:path"
 import { ConfigService } from "@nestjs/config"
+import type { RequiredConnectScope } from "@/common/entities/connect-required-fields"
 import type { MulterFile } from "@/common/types"
 import type { IFileStorage } from "./file-storage.interface"
 import { GcsStorageService } from "./gcs-storage.service"
@@ -38,11 +39,11 @@ if (process.env.GCS_STORAGE_BUCKET_NAME === "test-caseai-file-storage") {
       const buffer = Buffer.from("integration test content")
       const file = { buffer } as MulterFile
       const extension = "txt"
-      const pathPrefix = "integration"
+      const connectScope = { organizationId: "org1", projectId: "proj1" } as RequiredConnectScope
       const { storageRelativePath } = await service.save({
         extension,
         file,
-        pathPrefix,
+        connectScope,
       })
       // Check URL
       const url = await service.getTemporaryUrl(storageRelativePath)

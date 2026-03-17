@@ -9,21 +9,23 @@ export function AttachDocument({
   disabled: boolean
   onAttach: (file: File) => void
 }) {
-  const handleProcessFile = async ({ file }: { file: File }) => {
-    onAttach(file)
+  const handleProcessFiles = (files: File[]) => {
+    onAttach(files[0]!)
   }
   return (
     <FileUploader
-      processFile={handleProcessFile}
-      allowedMimeTypes={{ pdf: true, png: true, jpeg: true }}
-    >
-      {(status) => {
-        return (
-          <Button variant="ghost" className="w-fit" disabled={disabled || status === "uploading"}>
-            <PaperclipIcon />
-          </Button>
-        )
+      onDropFiles={handleProcessFiles}
+      allowedMimeTypes={{
+        "application/pdf": true,
+        "image/png": true,
+        "image/jpeg": true,
       }}
+      maxFiles={1}
+      shouldRun={false}
+    >
+      <Button variant="ghost" className="w-fit" disabled={disabled}>
+        <PaperclipIcon />
+      </Button>
     </FileUploader>
   )
 }

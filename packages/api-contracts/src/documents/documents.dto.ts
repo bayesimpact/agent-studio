@@ -1,7 +1,19 @@
 import type { DocumentTagDto } from "../document-tags/document-tag.dto"
 import type { TimeType } from "../generic"
 
+export type DocumentSourceType = "project" | "agentSessionMessage" | "extraction"
 export type DocumentEmbeddingStatus = "pending" | "processing" | "completed" | "failed"
+
+export type PresignFileRequestItemDto = {
+  fileName: string
+  mimeType: MimeTypes
+  size: number
+}
+
+export type PresignFileResponseItemDto = {
+  documentId: string
+  uploadUrl: string
+}
 
 export type DocumentDto = {
   createdAt: TimeType
@@ -101,4 +113,23 @@ export enum MimeTypes {
   _3gp = "video/3gpp",
   _3g2 = "video/3gpp2",
   _7z = "application/x-7z-compressed",
+}
+
+export const AllowedMimeTypes = [
+  MimeTypes.png,
+  MimeTypes.jpeg,
+  MimeTypes.jpg,
+  MimeTypes.pdf,
+  // MimeTypes.docx,
+  // MimeTypes.xlsx,
+  // MimeTypes.pptx,
+  // MimeTypes.doc,
+  // MimeTypes.xls,
+  // MimeTypes.ppt,
+  MimeTypes.csv,
+  MimeTypes.txt,
+] as const
+
+export function isAllowedMimeType(mimeType: MimeTypes): boolean {
+  return new Set<MimeTypes>(AllowedMimeTypes).has(mimeType)
 }

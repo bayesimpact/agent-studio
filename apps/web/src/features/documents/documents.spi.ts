@@ -9,6 +9,12 @@ export interface IDocumentsSpi {
     file: File
     sourceType: "project" | "agentSessionMessage" | "extraction"
   }): Promise<Document>
+  uploadMany(params: {
+    organizationId: string
+    projectId: string
+    files: File[]
+    sourceType: "project" | "agentSessionMessage" | "extraction"
+  }): Promise<Document[]>
   updateOne(params: {
     organizationId: string
     projectId: string
