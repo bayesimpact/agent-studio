@@ -51,23 +51,23 @@ export const uploadDocuments = createAsyncThunk<
       state,
       wantedIds: ["organizationId", "projectId"],
     })
-    for (const file of files) {
-      try {
-        await services.documents.uploadMany({
-          organizationId,
-          projectId,
-          files: [file],
-          sourceType,
-        })
-        dispatch(documentsActions.setOneDocumentCompleted())
-      } catch (error) {
-        dispatch(
-          documentsActions.setOneDocumentError({
-            error: (error as Error).message || "Failed to upload document",
-          }),
-        )
-      }
-    }
+    await services.documents.uploadMany({
+      organizationId,
+      projectId,
+      files,
+      sourceType,
+      onFileSettled: (result) => {
+        if (result.status === "success") {
+          dispatch(documentsActions.setOneDocumentCompleted())
+        } else {
+          dispatch(
+            documentsActions.setOneDocumentError({
+              error: result.error.message || "Failed to upload document",
+            }),
+          )
+        }
+      },
+    })
   },
 )
 

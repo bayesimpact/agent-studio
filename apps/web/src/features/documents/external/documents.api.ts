@@ -28,45 +28,51 @@ export default {
     )
     return toDocument(response.data.data)
   },
-  uploadMany: async ({ organizationId, projectId, files, sourceType }) => {
+  uploadMany: async ({ organizationId, projectId, files, sourceType, onFileSettled }) => {
     const axios = getAxiosInstance()
 
-    // 1. Get signed upload URLs + create pending document entities
-    const presignResponse = await axios.post<typeof DocumentsRoutes.presignMany.response>(
-      DocumentsRoutes.presignMany.getPath({ organizationId, projectId, sourceType }),
-      {
-        payload: {
-          files: files.map((file) => ({
-            fileName: file.name,
-            mimeType: file.type as PresignFileRequestItemDto["mimeType"],
-            size: file.size,
-          })),
-        },
-      } satisfies typeof DocumentsRoutes.presignMany.request,
-    )
-    const presigned = presignResponse.data.data
+    for (const file of files) {
+      try {
+        // 1. Presign a single file — creates a pending document entity
+        const presignResponse = await axios.post<typeof DocumentsRoutes.presignMany.response>(
+          DocumentsRoutes.presignMany.getPath({ organizationId, projectId, sourceType }),
+          {
+            payload: {
+              files: [
+                {
+                  fileName: file.name,
+                  mimeType: file.type as PresignFileRequestItemDto["mimeType"],
+                  size: file.size,
+                },
+              ],
+            },
+          } satisfies typeof DocumentsRoutes.presignMany.request,
+        )
+        const [presigned] = presignResponse.data.data
+        if (!presigned) throw new Error("Presign response is missing data")
 
-    // 2. Upload directly to GCS — fully parallel, no backend involved
-    await Promise.all(
-      presigned.map(({ uploadUrl }, index) => {
-        const file = files[index]
-        if (!file) throw new Error(`File for index ${index} is missing`)
-        return fetch(uploadUrl, {
+        // 2. Upload directly to GCS
+        await fetch(presigned.uploadUrl, {
           method: "PUT",
           headers: { "Content-Type": file.type },
           body: file,
         })
-      }),
-    )
 
-    // 3. Confirm all at once — backend marks as uploaded and enqueues embeddings
-    const confirmResponse = await axios.post<typeof DocumentsRoutes.confirmMany.response>(
-      DocumentsRoutes.confirmMany.getPath({ organizationId, projectId }),
-      {
-        payload: { documentIds: presigned.map(({ documentId }) => documentId) },
-      } satisfies typeof DocumentsRoutes.confirmMany.request,
-    )
-    return confirmResponse.data.data.map(toDocument)
+        // 3. Confirm — backend marks as uploaded and enqueues embeddings
+        const confirmResponse = await axios.post<typeof DocumentsRoutes.confirmMany.response>(
+          DocumentsRoutes.confirmMany.getPath({ organizationId, projectId }),
+          {
+            payload: { documentIds: [presigned.documentId] },
+          } satisfies typeof DocumentsRoutes.confirmMany.request,
+        )
+        const [document] = confirmResponse.data.data.map(toDocument)
+        if (!document) throw new Error("Confirm response is missing data")
+
+        onFileSettled({ file, status: "success", document })
+      } catch (error) {
+        onFileSettled({ file, status: "error", error: error instanceof Error ? error : new Error(String(error)) })
+      }
+    }
   },
   updateOne: async ({ organizationId, projectId, documentId, payload }) => {
     const axios = getAxiosInstance()
