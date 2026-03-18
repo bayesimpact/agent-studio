@@ -71,6 +71,9 @@ else
 $(error Unsupported REGION '$(REGION)')
 endif
 
+apiImageTag = ${imageUrl}:${version}-api
+workersImageTag = ${imageUrl}:${version}-workers
+
 # ==============================================================================
 # Change Detection
 # ==============================================================================
@@ -123,14 +126,26 @@ check-web-changes:
 # ==============================================================================
 
 docker-build:
-	docker build --platform=linux/amd64 --target prod -t ${imageUrl}:${version} -f apps/api/Dockerfile .
+	docker build --platform=linux/amd64 --target api-runtime -t ${apiImageTag} -f apps/api/Dockerfile .
+	docker build --platform=linux/amd64 --target workers-runtime -t ${workersImageTag} -f apps/api/Dockerfile .
 
-docker-push: docker-check
-	docker push ${imageUrl}:${version}
+docker-build-api:
+	docker build --platform=linux/amd64 --target api-runtime -t ${apiImageTag} -f apps/api/Dockerfile .
 
-docker-check: docker-build
+docker-build-workers:
+	docker build --platform=linux/amd64 --target workers-runtime -t ${workersImageTag} -f apps/api/Dockerfile .
+
+docker-push: docker-push-api docker-push-workers
+
+docker-push-api: docker-check
+	docker push ${apiImageTag}
+
+docker-push-workers: docker-workers-check
+	docker push ${workersImageTag}
+
+docker-check: docker-build-api
 	@echo "Starting docker container and checking for successful startup..."
-	@CONTAINER_ID=$$(docker run -d -p "3003:3000" ${imageUrl}:${version}); \
+	@CONTAINER_ID=$$(docker run -d -p "3003:3000" ${apiImageTag}); \
 	echo "Container ID: $$CONTAINER_ID"; \
 	i=1; \
 	while [ $$i -le 30 ]; do \
@@ -149,9 +164,9 @@ docker-check: docker-build
 	docker kill $$CONTAINER_ID >/dev/null 2>&1; \
 	exit 1
 
-docker-workers-check: docker-build
+docker-workers-check: docker-build-workers
 	@echo "Starting docker workers container and checking for successful startup..."
-	@CONTAINER_ID=$$(docker run -d ${imageUrl}:${version} node /app/apps/api/dist/workers-main.js); \
+	@CONTAINER_ID=$$(docker run -d ${workersImageTag}); \
 	echo "Container ID: $$CONTAINER_ID"; \
 	i=1; \
 	while [ $$i -le 30 ]; do \
@@ -185,12 +200,12 @@ migrations:
 	CLOUDSQL_INSTANCE=${addCloudSqlInstances} CLOUDSQL_PROXY_PORT=${cloudSqlProxyPort} CLOUDSQL_CREDENTIALS_FILE=$${CLOUDSQL_CREDENTIALS_FILE:-${cloudSqlCredentialsFile}} docker compose -f infra/cloudsql-proxy/docker-compose.yaml logs cloudsql-proxy
 	cd apps/api && npm ci && DATABASE_HOST=localhost DATABASE_PORT=${cloudSqlProxyPort} DATABASE_USERNAME=${databaseUsername} DATABASE_NAME=${databaseName} DATABASE_PASSWORD="$${MIG_DATABASE_PASSWORD}" npm run migration:run
 
-deploy: docker-push deploy-only
+deploy: docker-push-api deploy-only
 
-deploy-workers: docker-push deploy-workers-only
+deploy-workers: docker-push-workers deploy-workers-only
 
 deploy-only:
-	gcloud run deploy ${cloudRunName} --image ${imageUrl}:${version} \
+	gcloud run deploy ${cloudRunName} --image ${apiImageTag} \
 	--update-secrets=LANGFUSE_SK=${secretsPrefix}LANGFUSE_SK:latest \
 	--update-secrets=DATABASE_PASSWORD=${secretsPrefix}DATABASE_PASSWORD:latest \
 	--update-secrets=BULLMQ_REDIS_URL=${secretsPrefix}BULLMQ_REDIS_URL:latest \
@@ -215,7 +230,7 @@ deploy-only:
 	--project ${gcpProjectId}
 
 deploy-workers-only:
-	gcloud beta run worker-pools deploy ${cloudRunName}-workers --image ${imageUrl}:${version} \
+	gcloud beta run worker-pools deploy ${cloudRunName}-workers --image ${workersImageTag} \
 	--update-secrets=LANGFUSE_SK=${secretsPrefix}LANGFUSE_SK:latest \
 	--update-secrets=DATABASE_PASSWORD=${secretsPrefix}DATABASE_PASSWORD:latest \
 	--update-secrets=BULLMQ_REDIS_URL=${secretsPrefix}BULLMQ_REDIS_URL:latest \
@@ -234,8 +249,7 @@ deploy-workers-only:
 	--network=${network} \
 	--service-account=${serviceAccount} \
 	--region=${zone} \
-	--project ${gcpProjectId} \
-	--command=node,/app/apps/api/dist/workers-main.js
+	--project ${gcpProjectId}
 
 notify:
 	curl -X POST -H 'Content-type: application/json' --data '{"text":"$(shell git log -1 --pretty=%B)"}' https://hooks.slack.com/services/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
