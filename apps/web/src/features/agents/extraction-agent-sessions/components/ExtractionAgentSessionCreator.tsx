@@ -22,6 +22,12 @@ export function ExtractionSessionCreator() {
   const [file, setFile] = useState<File>()
   const [isRunning, setIsRunning] = useState(false)
 
+  const resetState = () => {
+    setOpen(false)
+    setIsRunning(false)
+    setFile(undefined)
+  }
+
   const handleOpenChange = (nextOpen: boolean) => {
     if (!nextOpen) {
       setIsRunning(false)
@@ -57,7 +63,7 @@ export function ExtractionSessionCreator() {
             if (!file) return // because maxFiles is 1
             await dispatch(executeExtractionAgentSession({ file })).unwrap()
           }}
-          onProcessEnd={() => setOpen(false)}
+          onProcessEnd={resetState}
           allowedMimeTypes={{ "application/pdf": true }}
           shouldRun={isRunning}
           onDropFiles={(files) => setFile(files[0])}
