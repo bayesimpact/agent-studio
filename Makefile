@@ -238,10 +238,10 @@ deploy-workers-only:
 	--command=node,/app/apps/api/dist/workers-main.js
 
 notify:
-	curl -X POST -H 'Content-type: application/json' --data '{"text":"$(shell git log -1 --pretty=%B)"}' https://hooks.slack.com/services/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
+	curl -X POST -H 'Content-type: application/json' --data '{"text":"$(shell git log -1 --pretty=%B)"}' ${SLACK_WEBHOOK_URL}
 
 notify-skip:
-	curl -X POST -H 'Content-type: application/json' --data '{"text":"⏭️ Deployment skipped - no API changes detected"}' https://hooks.slack.com/services/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
+	curl -X POST -H 'Content-type: application/json' --data '{"text":"⏭️ Deployment skipped - no API changes detected"}' ${SLACK_WEBHOOK_URL}
 
 notify-error:
-	curl -X POST -H 'Content-type: application/json' --data '{"text":"❌ Error in github action"}' https://hooks.slack.com/services/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
+	curl -X POST -H 'Content-type: application/json' --data '{"text":"❌ Error in github action"}' ${SLACK_WEBHOOK_URL}
