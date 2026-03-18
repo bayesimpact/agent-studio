@@ -73,6 +73,7 @@ endif
 
 apiImageTag = ${imageUrl}:${version}-api
 workersImageTag = ${imageUrl}:${version}-workers
+smokeComposeFile = infra/docker-compose.api-workers-smoke.yaml
 
 # ==============================================================================
 # Change Detection
@@ -184,6 +185,28 @@ docker-workers-check: docker-build-workers
 	echo "✗ Failed to find 'Workers app started' in docker logs"; \
 	docker kill $$CONTAINER_ID >/dev/null 2>&1; \
 	exit 1
+
+docker-smoke-up: docker-build
+	API_IMAGE=${apiImageTag} WORKERS_IMAGE=${workersImageTag} docker compose -f ${smokeComposeFile} up -d --build
+
+docker-smoke-ps:
+	API_IMAGE=${apiImageTag} WORKERS_IMAGE=${workersImageTag} docker compose -f ${smokeComposeFile} ps
+
+docker-smoke-logs:
+	API_IMAGE=${apiImageTag} WORKERS_IMAGE=${workersImageTag} docker compose -f ${smokeComposeFile} logs --tail=200 api workers postgres redis
+
+docker-smoke-check: docker-smoke-up
+	@echo "Waiting for services to settle..."
+	@sleep 8
+	@API_IMAGE=${apiImageTag} WORKERS_IMAGE=${workersImageTag} docker compose -f ${smokeComposeFile} ps
+	@if API_IMAGE=${apiImageTag} WORKERS_IMAGE=${workersImageTag} docker compose -f ${smokeComposeFile} ps --status exited | grep -Eq "api|workers"; then \
+		echo "✗ API or workers exited unexpectedly. Check logs with: make docker-smoke-logs PROJECT=$(PROJECT) REGION=$(REGION)"; \
+		exit 1; \
+	fi
+	@echo "✓ API and workers are still running"
+
+docker-smoke-down:
+	API_IMAGE=${apiImageTag} WORKERS_IMAGE=${workersImageTag} docker compose -f ${smokeComposeFile} down -v
 
 
 ci-checks:

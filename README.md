@@ -319,6 +319,35 @@ cd apps/web
 npm run dev
 ```
 
+### Docker Smoke Test (API + Workers + PG + Redis)
+
+Use this when you want to validate that both runtime images boot correctly with Postgres and Redis.
+
+From the repository root:
+
+```bash
+# Build images and start smoke stack
+make docker-smoke-up PROJECT=connect REGION=eu
+
+# Check service status and fail if api/workers exited
+make docker-smoke-check PROJECT=connect REGION=eu
+
+# Inspect logs
+make docker-smoke-logs PROJECT=connect REGION=eu
+
+# Tear down stack and volumes
+make docker-smoke-down PROJECT=connect REGION=eu
+```
+
+Notes:
+
+- The smoke stack is defined in `infra/docker-compose.api-workers-smoke.yaml`.
+- API uses Docker target `api-runtime`; workers use `workers-runtime`.
+- Smoke stack ports:
+  - API: `http://localhost:3003`
+  - Postgres: `localhost:55432`
+  - Redis: `localhost:56379`
+
 ## Running Tests
 
 ### Run All Tests
