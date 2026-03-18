@@ -1,7 +1,14 @@
 import type { Agent } from "@/domains/agents/agent.entity"
+import type { ToolName } from "../tools/tool-execution-log"
 import { promptHelpers } from "./helpers"
 
-export function buildFormAgentPrompt(agent: Agent): string {
+export function buildFormAgentPrompt({
+  agent,
+  toolNames,
+}: {
+  agent: Agent
+  toolNames: ToolName[]
+}): string {
   return `${promptHelpers.now()}
 
 # Instructions:
@@ -14,8 +21,7 @@ ${Object.entries(agent.outputJsonSchema?.properties ?? {})
   )
   .join("\n")}
 
-# Tools:
-You can use "fillForm" tool to fill out the form, even you don't have all the information now. Just fill out the information you have and ask the user for the missing information. You can also update previously filled information if the user changes their answer. Pass undefined for fields that are not filled yet.
+${promptHelpers.tools(toolNames)}
 
 ${promptHelpers.language(agent.locale)}`
 }

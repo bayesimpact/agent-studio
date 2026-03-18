@@ -30,7 +30,8 @@ import { buildConversationAgentPrompt } from "./master-promts/conversation-agent
 import { buildFormAgentPrompt } from "./master-promts/form-agent.prompt"
 import { fillFormTool } from "./tools/fill-form.tool"
 import { retrieveProjectDocumentChunksTool } from "./tools/retrieve-project-document-chunks.tool"
-import type { ToolExecutionLog } from "./tools/tool-execution-log"
+import { sourcesTool } from "./tools/sources.tool"
+import { type ToolExecutionLog, ToolName } from "./tools/tool-execution-log"
 
 @Injectable()
 export class StreamingService extends ServiceWithLLM {
@@ -169,22 +170,25 @@ export class StreamingService extends ServiceWithLLM {
     documentId?: string
     connectScope: RequiredConnectScope
   }) {
+    const tools = this.buildTools({
+      agent,
+      sessionId,
+      connectScope,
+      onExecute: (toolExecution) =>
+        this.persistToolExecutionAndNotifyClient({
+          connectScope,
+          sessionId,
+          notifyClient,
+          toolExecution,
+        }),
+    })
+
+    const toolNames = tools ? (Object.keys(tools) as ToolName[]) : []
     const config = this.buildLLMConfig({
-      systemPrompt: this.generateMasterPrompt(agent),
+      systemPrompt: this.generateMasterPrompt({ agent, toolNames }),
       model: agent.model,
       temperature: agent.temperature,
-      tools: this.buildTools({
-        agent,
-        sessionId,
-        connectScope,
-        onExecute: (toolExecution) =>
-          this.persistToolExecutionAndNotifyClient({
-            connectScope,
-            sessionId,
-            notifyClient,
-            toolExecution,
-          }),
-      }),
+      tools,
     })
 
     const metadata: LLMMetadata = {
@@ -304,14 +308,15 @@ export class StreamingService extends ServiceWithLLM {
     return llmMessages
   }
 
-  private generateMasterPrompt(agent: Agent): string {
-    switch (agent.type) {
+  private generateMasterPrompt(params: { agent: Agent; toolNames: ToolName[] }): string {
+    const agentType = params.agent.type
+    switch (agentType) {
       case "form":
-        return buildFormAgentPrompt(agent)
+        return buildFormAgentPrompt(params)
       case "conversation":
-        return buildConversationAgentPrompt(agent)
+        return buildConversationAgentPrompt(params)
       default:
-        throw new Error(`Unsupported agent type: ${agent.type}`)
+        throw new Error(`Unsupported agent type: ${agentType}`)
     }
   }
 
@@ -540,17 +545,18 @@ export class StreamingService extends ServiceWithLLM {
     switch (agent.type) {
       case "conversation":
         return {
-          retrieveProjectDocumentChunks: retrieveProjectDocumentChunksTool({
+          [ToolName.RetrieveProjectDocumentChunks]: retrieveProjectDocumentChunksTool({
             connectScope,
             documentTagIds: agent.documentTags?.map((documentTag) => documentTag.id) ?? [],
             retrievalService: this.documentChunkRetrievalService,
             onExecute,
           }),
+          [ToolName.Sources]: sourcesTool({ onExecute }),
         } as ToolSet
 
       case "form":
         return {
-          fillForm: fillFormTool({
+          [ToolName.FillForm]: fillFormTool({
             connectScope,
             agent,
             sessionId,

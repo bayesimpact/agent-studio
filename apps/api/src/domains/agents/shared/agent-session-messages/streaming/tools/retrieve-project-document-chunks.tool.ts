@@ -2,7 +2,7 @@ import { tool } from "ai"
 import { z } from "zod"
 import type { RequiredConnectScope } from "@/common/entities/connect-required-fields"
 import type { DocumentChunkRetrievalService } from "@/domains/documents/embeddings/document-chunk-retrieval.service"
-import type { ToolExecutionLog } from "./tool-execution-log"
+import { type ToolExecutionLog, ToolName } from "./tool-execution-log"
 
 const retrieveProjectDocumentChunksInputSchema = z.object({
   conversationSummary: z
@@ -48,7 +48,7 @@ export function buildRetrieveProjectDocumentChunksToolExecutionLog(
   execution: RetrieveProjectDocumentChunksExecution,
 ): ToolExecutionLog {
   return {
-    toolName: "retrieveProjectDocumentChunks",
+    toolName: ToolName.RetrieveProjectDocumentChunks,
     arguments: {
       conversationSummary: execution.input.conversationSummary,
       latestUserQuestion: execution.input.latestUserQuestion,

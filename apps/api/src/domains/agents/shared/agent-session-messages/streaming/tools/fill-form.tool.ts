@@ -4,7 +4,7 @@ import { z } from "zod"
 import type { RequiredConnectScope } from "@/common/entities/connect-required-fields"
 import type { Agent } from "@/domains/agents/agent.entity"
 import type { FormAgentSessionsService } from "@/domains/agents/form-agent-sessions/form-agent-sessions.service"
-import type { ToolExecutionLog } from "./tool-execution-log"
+import { type ToolExecutionLog, ToolName } from "./tool-execution-log"
 
 export function fillFormTool({
   connectScope,
@@ -38,7 +38,7 @@ export function fillFormTool({
         input,
       })
 
-      onExecute({ toolName: "fillForm", arguments: input })
+      onExecute({ toolName: ToolName.FillForm, arguments: input })
 
       return { formState }
     },
