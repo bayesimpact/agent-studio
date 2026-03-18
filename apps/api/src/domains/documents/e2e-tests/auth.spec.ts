@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto"
-import { DocumentsRoutes } from "@caseai-connect/api-contracts"
+import { type DocumentSourceType, DocumentsRoutes } from "@caseai-connect/api-contracts"
 import type { INestApplication } from "@nestjs/common"
 import type { App } from "supertest/types"
 import type { Repository } from "typeorm"
@@ -74,7 +74,7 @@ describe("Documents - Auth", () => {
   }
 
   describe("DocumentsRoutes.uploadOne", () => {
-    let sourceType: "project" | "agentSessionMessage" | "extraction" | null = "project"
+    let sourceType: DocumentSourceType | null = "project"
 
     beforeEach(() => {
       sourceType = "project"

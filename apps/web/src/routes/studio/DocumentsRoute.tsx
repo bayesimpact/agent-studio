@@ -1,9 +1,11 @@
+import { Alert, AlertDescription, AlertTitle } from "@caseai-connect/ui/shad/alert"
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@caseai-connect/ui/shad/collapsible"
-import { ChevronRight } from "lucide-react"
+import { Item } from "@caseai-connect/ui/shad/item"
+import { ChevronRight, CloudAlertIcon, Loader2Icon } from "lucide-react"
 import { useEffect } from "react"
 import { useTranslation } from "react-i18next"
 import { DocumentTagTreeNode } from "@/components/document/DocumentTagTreeNode"
@@ -15,7 +17,7 @@ import type { DocumentTag } from "@/features/document-tags/document-tags.models"
 import { buildTagTree } from "@/features/document-tags/document-tags.models"
 import { selectDocumentTagsData } from "@/features/document-tags/document-tags.selectors"
 import type { Document } from "@/features/documents/documents.models"
-import { selectDocumentsData } from "@/features/documents/documents.selectors"
+import { selectDocumentsData, selectUploaderState } from "@/features/documents/documents.selectors"
 import { useAppSelector } from "@/store/hooks"
 import { DocumentItem } from "../../components/document/DocumentItem"
 import { AsyncRoute } from "../AsyncRoute"
@@ -46,6 +48,7 @@ function WithData({
 
   return (
     <div className="p-6 flex flex-col gap-6">
+      <UploaderState />
       {documents.length === 0 ? (
         <EmptyDocument />
       ) : (
@@ -75,6 +78,32 @@ function WithData({
           )}
         </div>
       )}
+    </div>
+  )
+}
+
+function UploaderState() {
+  const uploaderState = useAppSelector(selectUploaderState)
+
+  const { t } = useTranslation("document")
+  return (
+    <div className="flex flex-col gap-4 items-center justify-center">
+      {uploaderState.status === "uploading" && (
+        <Item variant="muted" className="w-full">
+          <Loader2Icon className="animate-spin size-5" />
+          <span className="text-sm">
+            {t("uploading", { processed: uploaderState.processed, total: uploaderState.total })}
+          </span>
+        </Item>
+      )}
+
+      {uploaderState.errors?.map((error, index) => (
+        <Alert key={`${error.title.length}-${index}`} className="text-destructive">
+          <CloudAlertIcon />
+          <AlertTitle>{error.title}</AlertTitle>
+          <AlertDescription>{error.description}</AlertDescription>
+        </Alert>
+      ))}
     </div>
   )
 }

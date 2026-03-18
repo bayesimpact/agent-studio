@@ -2,7 +2,6 @@ import { selectUploaderState } from "@/features/documents/documents.selectors"
 import { uploadDocuments } from "@/features/documents/documents.thunks"
 import { useAppDispatch, useAppSelector } from "@/store/hooks"
 import { FileUploader } from "../FileUploader"
-import { UploaderState } from "./UploaderState"
 
 export function UploadDocumentsButton() {
   const dispatch = useAppDispatch()
@@ -16,8 +15,6 @@ export function UploadDocumentsButton() {
       onProcessFiles={async (files) => {
         await dispatch(uploadDocuments({ files, sourceType: "project" })).unwrap()
       }}
-    >
-      {uploaderState.status === "idle" ? null : <UploaderState />}
-    </FileUploader>
+    />
   )
 }

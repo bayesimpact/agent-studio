@@ -1,7 +1,9 @@
+import type { DocumentSourceType } from "@caseai-connect/api-contracts"
 import { createAsyncThunk } from "@reduxjs/toolkit"
 import type { RootState, ThunkExtraArg } from "@/store"
 import type { DocumentTagsUpdateFields } from "../document-tags/document-tags.models"
 import { getCurrentIds } from "../helpers"
+import { notificationsActions } from "../notifications/notifications.slice"
 import type { Document } from "./documents.models"
 import { documentsActions } from "./documents.slice"
 
@@ -23,7 +25,7 @@ export const uploadDocument = createAsyncThunk<
   Document,
   {
     file: File
-    sourceType: "project" | "agentSessionMessage" | "extraction"
+    sourceType: DocumentSourceType
     onSuccess?: (params: { documentId: string }) => void
   },
   ThunkConfig
@@ -38,10 +40,7 @@ export const uploadDocument = createAsyncThunk<
 
 export const uploadDocuments = createAsyncThunk<
   void,
-  {
-    files: File[]
-    sourceType: "project" | "agentSessionMessage" | "extraction"
-  },
+  { files: File[]; sourceType: DocumentSourceType },
   ThunkConfig
 >(
   "documents/uploadMany",
@@ -56,15 +55,19 @@ export const uploadDocuments = createAsyncThunk<
       projectId,
       files,
       sourceType,
-      onFileSettled: (result) => {
-        if (result.status === "success") {
-          dispatch(documentsActions.setOneDocumentCompleted())
-        } else {
+      onFileProcessed: (result) => {
+        dispatch(documentsActions.setOneDocumentProcessed())
+
+        if (result.status === "error") {
+          const title = `Error uploading file "${result.file.name}"`
+          const description = result.error.message
           dispatch(
-            documentsActions.setOneDocumentError({
-              error: result.error.message || "Failed to upload document",
+            notificationsActions.show({
+              title: `${title}: ${description}`,
+              type: "error",
             }),
           )
+          dispatch(documentsActions.setOneDocumentError({ error: { title, description } }))
         }
       },
     })

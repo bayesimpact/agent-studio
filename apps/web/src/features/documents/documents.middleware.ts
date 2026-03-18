@@ -64,19 +64,33 @@ listenerMiddleware.startListening({
   },
   effect: async (_, listenerApi) => {
     await listenerApi.delay(4000)
-    listenerApi.dispatch(documentsActions.resetUploaderState())
+    listenerApi.dispatch(documentsActions.resetUploaderCounters())
   },
 })
 
 listenerMiddleware.startListening({
   actionCreator: uploadDocuments.fulfilled,
   effect: async (action, listenerApi) => {
+    const state = listenerApi.getState()
+    const uploaderState = selectUploaderState(state)
+    const errors = uploaderState.errors || []
+    const totalCount = action.meta.arg.files.length
+    const successfulUploadCount = totalCount - errors.length
     listenerApi.dispatch(
       notificationsActions.show({
-        title: `${action.meta.arg.files.length} documents uploaded successfully`,
+        title: `${successfulUploadCount}/${totalCount} documents uploaded successfully`,
         type: "success",
       }),
     )
+    await listenerApi.delay(500)
+    if (errors.length > 0) {
+      listenerApi.dispatch(
+        notificationsActions.show({
+          title: `${errors.length} documents failed to upload`,
+          type: "error",
+        }),
+      )
+    }
   },
 })
 

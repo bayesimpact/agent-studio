@@ -1,11 +1,12 @@
 import { SidebarMenu, SidebarMenuButton, SidebarMenuItem } from "@caseai-connect/ui/shad/sidebar"
-import { DatabaseZapIcon } from "lucide-react"
+import { CloudAlertIcon, DatabaseZapIcon, Loader2Icon } from "lucide-react"
 import { useMemo } from "react"
 import { useTranslation } from "react-i18next"
 import { Link, useLocation } from "react-router-dom"
-import { UploaderState } from "@/components/document/UploaderState"
+import { selectUploaderState } from "@/features/documents/documents.selectors"
 import { useAbility } from "@/hooks/use-ability"
 import { buildDocumentsPath } from "@/routes/helpers"
+import { useAppSelector } from "@/store/hooks"
 
 export function NavDocuments({
   organizationId,
@@ -34,6 +35,26 @@ export function NavDocuments({
         </SidebarMenuButton>
       </SidebarMenuItem>
     </SidebarMenu>
+  )
+}
+
+function UploaderState() {
+  const uploaderState = useAppSelector(selectUploaderState)
+  return (
+    <div className="flex items-center gap-2 px-4 py-2 text-sm">
+      {uploaderState.status === "uploading" && (
+        <>
+          <Loader2Icon className="animate-spin size-4" />
+          <span className="text-xs text-muted-foreground">
+            {uploaderState.processed}/{uploaderState.total}
+          </span>
+        </>
+      )}
+
+      {uploaderState.errors && uploaderState.errors.length > 0 && (
+        <CloudAlertIcon className="text-destructive size-5 animate-pulse" />
+      )}
+    </div>
   )
 }
 
