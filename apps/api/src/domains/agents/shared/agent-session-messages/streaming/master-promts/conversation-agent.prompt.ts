@@ -1,12 +1,19 @@
 import type { Agent } from "@/domains/agents/agent.entity"
+import type { ToolName } from "../tools/tool-execution-log"
 import { promptHelpers } from "./helpers"
 
-export function buildConversationAgentPrompt(agent: Agent): string {
+export function buildConversationAgentPrompt({
+  agent,
+  toolNames,
+}: {
+  agent: Agent
+  toolNames: ToolName[]
+}): string {
   return `${promptHelpers.now()}
 
 ${agent.defaultPrompt}
 
-When the user asks about information that may exist in project documents, call the retrieveProjectDocumentChunks tool before answering. Use the returned chunks as primary context and avoid inventing facts not present in those chunks.
+${promptHelpers.tools(toolNames)}
 
 ${promptHelpers.language(agent.locale)}`
 }
