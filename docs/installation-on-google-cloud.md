@@ -312,6 +312,26 @@ gcloud storage buckets add-iam-policy-binding gs://eu-health-public-file-storage
   --role=roles/storage.objectViewer
 ```
 
+In ordert allow uploading documents from the web app, set CORS on storage buckets using a temporary file:
+
+```bash
+TEMP_CORS_FILE="$(mktemp)"
+cat > "${TEMP_CORS_FILE}" <<'EOF'
+[
+  {
+    "origin": ["https://health.platform.bayes.org"],
+    "method": ["PUT"],
+    "responseHeader": ["Content-Type", "Authorization"],
+    "maxAgeSeconds": 3600
+  }
+]
+EOF
+
+gsutil cors set "${TEMP_CORS_FILE}" gs://eu-health-file-storage
+gsutil cors get gs://eu-health-file-storage
+rm -f "${TEMP_CORS_FILE}"
+```
+
 ---
 
 ## 9) Artifact Registry (Docker repository)
