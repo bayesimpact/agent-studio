@@ -9,7 +9,7 @@ export function UploadDocumentsButton() {
   return (
     <FileUploader
       allowedMimeTypes={{ "application/pdf": true }}
-      maxFiles={30}
+      maxFiles={400}
       disabled={uploaderState.status === "uploading"}
       maxSize={40 * 1024 * 1024} // 40MB
       onProcessFiles={async (files) => {
