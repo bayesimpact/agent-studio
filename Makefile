@@ -238,10 +238,10 @@ deploy-workers-only:
 	--command=node,/app/apps/api/dist/workers-main.js
 
 notify:
-	curl -X POST -H 'Content-type: application/json' --data '{"text":"$(shell git log -1 --pretty=%B)"}' SLACK_WEBHOOK_REDACTED
+	curl -X POST -H 'Content-type: application/json' --data '{"text":"$(shell git log -1 --pretty=%B)"}' ${SLACK_WEBHOOK_URL}
 
 notify-skip:
-	curl -X POST -H 'Content-type: application/json' --data '{"text":"⏭️ Deployment skipped - no API changes detected"}' SLACK_WEBHOOK_REDACTED
+	curl -X POST -H 'Content-type: application/json' --data '{"text":"⏭️ Deployment skipped - no API changes detected"}' ${SLACK_WEBHOOK_URL}
 
 notify-error:
-	curl -X POST -H 'Content-type: application/json' --data '{"text":"❌ Error in github action"}' SLACK_WEBHOOK_REDACTED
+	curl -X POST -H 'Content-type: application/json' --data '{"text":"❌ Error in github action"}' ${SLACK_WEBHOOK_URL}
