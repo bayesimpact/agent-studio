@@ -14,7 +14,12 @@ export interface IDocumentsSpi {
     projectId: string
     files: File[]
     sourceType: "project" | "agentSessionMessage" | "extraction"
-  }): Promise<Document[]>
+    onFileSettled: (
+      result:
+        | { file: File; status: "success"; document: Document }
+        | { file: File; status: "error"; error: Error },
+    ) => void
+  }): Promise<void>
   updateOne(params: {
     organizationId: string
     projectId: string
