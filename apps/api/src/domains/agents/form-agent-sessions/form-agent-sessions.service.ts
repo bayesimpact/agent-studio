@@ -1,23 +1,18 @@
 import { Inject, Injectable } from "@nestjs/common"
 import { InjectRepository } from "@nestjs/typeorm"
-import type { ToolSet } from "ai"
 import type { Repository } from "typeorm"
 import { v4 } from "uuid"
 import { ConnectRepository } from "@/common/entities/connect-repository"
 import type { RequiredConnectScope } from "@/common/entities/connect-required-fields"
 import type { LLMProvider } from "@/common/interfaces/llm-provider.interface"
-import type { Agent } from "@/domains/agents/agent.entity"
 import { FILE_STORAGE_SERVICE } from "@/domains/documents/storage/file-storage.interface"
 import { ServiceWithLLM } from "@/external/llm"
 import type { BaseAgentSessionType } from "../base-agent-sessions/base-agent-sessions.types"
-import { fillFormTool } from "../shared/agent-session-messages/streaming/tools/fill-form.tool"
-import type { ToolExecutionLog } from "../shared/agent-session-messages/streaming/tools/tool-execution-log"
 import { FormAgentSession } from "./form-agent-session.entity"
 
 @Injectable()
 export class FormAgentSessionsService extends ServiceWithLLM {
   private readonly sessionConnectRepository: ConnectRepository<FormAgentSession>
-  private readonly formAgentSessionRepository: Repository<FormAgentSession>
   constructor(
     @InjectRepository(FormAgentSession)
     formAgentSessionRepository: Repository<FormAgentSession>,
@@ -28,7 +23,6 @@ export class FormAgentSessionsService extends ServiceWithLLM {
     vertexLlmProvider: LLMProvider,
   ) {
     super(mockLlmProvider, vertexLlmProvider)
-    this.formAgentSessionRepository = formAgentSessionRepository
     this.sessionConnectRepository = new ConnectRepository(
       formAgentSessionRepository,
       "formAgentSession",
@@ -89,31 +83,22 @@ export class FormAgentSessionsService extends ServiceWithLLM {
     return session
   }
 
-  buildFillFormTool({
-    agent,
+  async updateSessionResult({
+    connectScope,
+    input,
     sessionId,
-    onExecute,
   }: {
-    agent: Agent
+    connectScope: RequiredConnectScope
+    input: Record<string, unknown>
     sessionId: string
-    onExecute: (toolExecution: ToolExecutionLog) => void
-  }): ToolSet {
-    const handleExecute = async (input: Record<string, unknown>) => {
-      // TODO: merge value and existing result instead of replacing it
-      const session = await this.formAgentSessionRepository.findOneBy({ id: sessionId })
-      if (!session) return
-      const mergedResult = { ...session.result, ...input }
-      const updated = await this.formAgentSessionRepository.update(sessionId, {
-        // @ts-expect-error // FIXME:
-        result: mergedResult,
-      })
-      if (!updated.affected) return
+  }): Promise<{ result: Record<string, unknown> | null }> {
+    const session = await this.sessionConnectRepository.getOneById(connectScope, sessionId)
+    if (!session) return { result: null }
 
-      onExecute({
-        toolName: "fillForm",
-        arguments: input,
-      })
-    }
-    return { fillForm: fillFormTool({ agent, onExecute: handleExecute }) } as ToolSet
+    session.result = { ...session.result, ...input } // mergedResult
+
+    const updatedSession = await this.sessionConnectRepository.saveOne(session)
+
+    return { result: updatedSession.result }
   }
 }

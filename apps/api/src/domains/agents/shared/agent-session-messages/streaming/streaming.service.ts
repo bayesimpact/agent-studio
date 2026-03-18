@@ -28,6 +28,7 @@ import { ServiceWithLLM } from "@/external/llm"
 import { AgentMessage } from "../agent-message.entity"
 import { buildConversationAgentPrompt } from "./master-promts/conversation-agent.prompt"
 import { buildFormAgentPrompt } from "./master-promts/form-agent.prompt"
+import { fillFormTool } from "./tools/fill-form.tool"
 import { retrieveProjectDocumentChunksTool } from "./tools/retrieve-project-document-chunks.tool"
 import type { ToolExecutionLog } from "./tools/tool-execution-log"
 
@@ -548,11 +549,15 @@ export class StreamingService extends ServiceWithLLM {
         } as ToolSet
 
       case "form":
-        return this.formAgentSessionsService.buildFillFormTool({
-          agent,
-          sessionId,
-          onExecute,
-        })
+        return {
+          fillForm: fillFormTool({
+            connectScope,
+            agent,
+            sessionId,
+            formAgentSessionsService: this.formAgentSessionsService,
+            onExecute,
+          }),
+        } as ToolSet
 
       default:
         return undefined
@@ -574,7 +579,6 @@ export class StreamingService extends ServiceWithLLM {
     await this.agentMessageConnectRepository.createAndSave(connectScope, {
       id: v4(),
       sessionId,
-      // @ts-expect-error
       role: "tool",
       content: `${toolExecution.toolName} called`,
       status: "completed",

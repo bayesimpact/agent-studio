@@ -1,6 +1,6 @@
 export type AgentSessionMessageDto = {
   id: string
-  role: "user" | "assistant"
+  role: "user" | "assistant" | "tool"
   content: string
   documentId?: string
   status?: "streaming" | "completed" | "aborted" | "error"

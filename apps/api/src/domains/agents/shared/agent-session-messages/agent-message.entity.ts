@@ -13,7 +13,7 @@ export class AgentMessage extends ConnectEntityBase {
   sessionId!: string
 
   @Column({ type: "varchar" })
-  role!: "user" | "assistant" // TODO: add "system" and "tool"
+  role!: "user" | "assistant" | "tool"
 
   @Column({ type: "text" })
   content!: string

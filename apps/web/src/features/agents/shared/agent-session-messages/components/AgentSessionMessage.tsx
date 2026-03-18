@@ -35,8 +35,8 @@ export function AgentSessionMessage({ message }: { message: AgentSessionMessageT
           <Attachment message={message} />
         </div>
       )
+
     default:
-      window.console.info(`Message from ${message.role}:`, message.content)
       return null
   }
 }
