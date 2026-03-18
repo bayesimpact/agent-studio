@@ -39,6 +39,7 @@ export type AgentDto = {
 
 export const outputJsonSchemaSchema = z
   .object({
+    type: z.literal("object"),
     required: z.array(z.string()).optional(),
     properties: z.record(
       z.string(),
