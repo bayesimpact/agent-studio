@@ -1,3 +1,4 @@
+import type { DocumentSourceType } from "@caseai-connect/api-contracts"
 import type { DocumentTagsUpdateFields } from "../document-tags/document-tags.models"
 import type { Document } from "./documents.models"
 
@@ -7,14 +8,14 @@ export interface IDocumentsSpi {
     organizationId: string
     projectId: string
     file: File
-    sourceType: "project" | "agentSessionMessage" | "extraction"
+    sourceType: DocumentSourceType
   }): Promise<Document>
   uploadMany(params: {
     organizationId: string
     projectId: string
     files: File[]
-    sourceType: "project" | "agentSessionMessage" | "extraction"
-    onFileSettled: (
+    sourceType: DocumentSourceType
+    onFileProcessed: (
       result:
         | { file: File; status: "success"; document: Document }
         | { file: File; status: "error"; error: Error },

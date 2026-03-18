@@ -21,7 +21,7 @@ export function EmptyDocument() {
         <EmptyTitle>{t("title")}</EmptyTitle>
         <EmptyDescription>{t("description")}</EmptyDescription>
       </EmptyHeader>
-      <EmptyContent className="flex-row justify-center gap-2">
+      <EmptyContent className="flex-col justify-center gap-2">
         <UploadDocumentsButton />
       </EmptyContent>
     </Empty>

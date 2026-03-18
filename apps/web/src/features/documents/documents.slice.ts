@@ -3,11 +3,12 @@ import { ADS, type AsyncData, defaultAsyncData } from "@/store/async-data-status
 import type { Document } from "./documents.models"
 import { listDocuments, uploadDocuments } from "./documents.thunks"
 
+export type UploaderError = { title: string; description: string }
 type UploaderState = {
-  status: "idle" | "uploading" | "completed" | "error"
+  status: "idle" | "uploading" | "completed"
   total: number
-  completed: number
-  errors: string[] | null
+  processed: number
+  errors: UploaderError[] | null
 }
 interface State {
   currentDocumentId: string | null
@@ -21,7 +22,7 @@ const initialState: State = {
   uploader: {
     status: "idle",
     total: 0,
-    completed: 0,
+    processed: 0,
     errors: null,
   },
 }
@@ -30,26 +31,26 @@ const slice = createSlice({
   name: "documents",
   initialState,
   reducers: {
-    resetUploaderState: (state) => {
-      state.uploader = initialState.uploader
+    resetUploaderCounters: (state) => {
+      state.uploader.total = 0
+      state.uploader.processed = 0
+      state.uploader.status = "idle"
     },
-    setOneDocumentCompleted: (state) => {
-      if (state.uploader.status === "uploading") {
-        state.uploader.completed += 1
-      }
-
-      if (state.uploader.completed === state.uploader.total) {
+    setOneDocumentProcessed: (state) => {
+      if (state.uploader.processed + 1 === state.uploader.total) {
         state.uploader.status = "completed"
+      } else if (state.uploader.status === "uploading") {
+        state.uploader.processed += 1
       }
     },
-    setOneDocumentError: (state, action: PayloadAction<{ error: string }>) => {
+    setOneDocumentError: (state, action: PayloadAction<{ error: UploaderError }>) => {
       if (!state.uploader.errors) {
         state.uploader.errors = []
       }
       state.uploader.errors.push(action.payload.error)
 
       if (
-        state.uploader.completed + (state.uploader.errors ? state.uploader.errors.length : 0) ===
+        state.uploader.processed + (state.uploader.errors ? state.uploader.errors.length : 0) ===
         state.uploader.total
       ) {
         state.uploader.status = "completed"
@@ -79,12 +80,9 @@ const slice = createSlice({
       })
 
     builder.addCase(uploadDocuments.pending, (state, action) => {
-      state.uploader = {
-        status: "uploading",
-        total: action.meta.arg.files.length,
-        completed: 0,
-        errors: null,
-      }
+      state.uploader.status = "uploading"
+      state.uploader.total = action.meta.arg.files.length
+      state.uploader.processed = 0
     })
   },
 })

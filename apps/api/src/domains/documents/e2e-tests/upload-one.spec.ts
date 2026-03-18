@@ -1,4 +1,4 @@
-import { DocumentsRoutes } from "@caseai-connect/api-contracts"
+import { type DocumentSourceType, DocumentsRoutes } from "@caseai-connect/api-contracts"
 import type { INestApplication } from "@nestjs/common"
 import supertest from "supertest"
 import type { App } from "supertest/types"
@@ -58,7 +58,7 @@ describe("Documents - uploadOne", () => {
     sourceType = "project",
   }: {
     file: { buffer: Buffer; filename: string; contentType: string }
-    sourceType?: "project" | "agentSessionMessage" | "extraction"
+    sourceType?: DocumentSourceType
   }) => {
     const path = DocumentsRoutes.uploadOne.getPath({ organizationId, projectId, sourceType })
     return supertest(app.getHttpServer())

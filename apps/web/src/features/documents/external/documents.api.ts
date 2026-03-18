@@ -28,7 +28,7 @@ export default {
     )
     return toDocument(response.data.data)
   },
-  uploadMany: async ({ organizationId, projectId, files, sourceType, onFileSettled }) => {
+  uploadMany: async ({ organizationId, projectId, files, sourceType, onFileProcessed }) => {
     const axios = getAxiosInstance()
 
     for (const file of files) {
@@ -49,7 +49,12 @@ export default {
           } satisfies typeof DocumentsRoutes.presignMany.request,
         )
         const [presigned] = presignResponse.data.data
-        if (!presigned) throw new Error("Presign response is missing data")
+
+        if (!presigned) {
+          const error = new Error(`Presign response is missing data`)
+          onFileProcessed({ file, status: "error", error })
+          continue
+        }
 
         // 2. Upload directly to GCS
         await fetch(presigned.uploadUrl, {
@@ -65,12 +70,19 @@ export default {
             payload: { documentIds: [presigned.documentId] },
           } satisfies typeof DocumentsRoutes.confirmMany.request,
         )
-        const [document] = confirmResponse.data.data.map(toDocument)
-        if (!document) throw new Error("Confirm response is missing data")
 
-        onFileSettled({ file, status: "success", document })
+        const [document] = confirmResponse.data.data.map(toDocument)
+
+        if (!document) {
+          const error = new Error(`Confirm response is missing data`)
+          onFileProcessed({ file, status: "error", error })
+          continue
+        }
+
+        onFileProcessed({ file, status: "success", document })
       } catch (error) {
-        onFileSettled({ file, status: "error", error: error instanceof Error ? error : new Error(String(error)) })
+        const errorMessage = error instanceof Error ? error : new Error(String(error))
+        onFileProcessed({ file, status: "error", error: errorMessage })
       }
     }
   },
