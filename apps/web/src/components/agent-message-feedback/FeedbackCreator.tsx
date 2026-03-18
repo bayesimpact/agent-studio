@@ -11,6 +11,7 @@ import {
 } from "@caseai-connect/ui/shad/dialog"
 import { Field, FieldGroup, FieldLabel, FieldSet } from "@caseai-connect/ui/shad/field"
 import { Item, ItemContent } from "@caseai-connect/ui/shad/item"
+import { ScrollArea } from "@caseai-connect/ui/shad/scroll-area"
 import { Textarea } from "@caseai-connect/ui/shad/textarea"
 import { useState } from "react"
 import { useTranslation } from "react-i18next"
@@ -43,11 +44,13 @@ export function FeedbackCreator({ message }: { message: AgentSessionMessage }) {
           <DialogDescription>{t("description")}</DialogDescription>
         </DialogHeader>
 
-        <Item variant="muted">
-          <ItemContent>
-            <MarkdownWrapper content={message.content} />
-          </ItemContent>
-        </Item>
+        <ScrollArea className="max-h-[40vh]">
+          <Item variant="muted">
+            <ItemContent>
+              <MarkdownWrapper content={message.content} />
+            </ItemContent>
+          </Item>
+        </ScrollArea>
 
         <CreateForm agentMessageId={message.id} onSuccess={handleSuccess} />
       </DialogContent>
