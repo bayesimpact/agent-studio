@@ -46,7 +46,10 @@ CMD ["node", "/app/apps/api/dist/main.js"]
 #
 FROM runtime-base AS workers-runtime
 
-RUN apt-get update && apt-get install -y --no-install-recommends python3 python3-pip python3-venv && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install -y --no-install-recommends \
+  python3 python3-pip python3-venv \
+  libxcb1 libgl1 libglib2.0-0 \
+  && rm -rf /var/lib/apt/lists/*
 RUN python3 -m venv /opt/docling-venv \
   && /opt/docling-venv/bin/pip install --no-cache-dir --upgrade pip \
   && /opt/docling-venv/bin/pip install --no-cache-dir docling \
