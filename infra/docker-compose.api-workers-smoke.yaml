@@ -82,6 +82,6 @@ services:
       GOOGLE_VERTEX_PROJECT: example-project
       GOOGLE_VERTEX_LOCATION: europe-west1
       DOCUMENT_EMBEDDING_MODELS: gemini-embedding-001
-      DOCUMENT_EXTRACTOR_DOCLING_ENABLED: "true"
+      DOCUMENT_EXTRACTOR_DOCLING_ENABLED: "false"
       LOCAL_STORAGE_SERVER_BASE_URL: http://api:3000
     restart: "no"
