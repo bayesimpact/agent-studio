@@ -208,7 +208,6 @@ docker-smoke-check: docker-smoke-up
 docker-smoke-down:
 	API_IMAGE=${apiImageTag} WORKERS_IMAGE=${workersImageTag} docker compose -f ${smokeComposeFile} down -v
 
-
 ci-checks:
 	npm ci && npm run biome:ci && npm run typecheck
 
