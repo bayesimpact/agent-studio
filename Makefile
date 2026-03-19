@@ -9,6 +9,7 @@ PROJECT ?= connect
 TEST_DATABASE_URL ?= postgresql://connect_admin:passpass@localhost:5432/connect_test
 DOCUMENT_EMBEDDING_MODELS ?= gemini-embedding-001
 WORKER_DOCLING_HEALTH_CHECK_TIMEOUT_MS ?= 30000
+MAX_VERTEX_EMBEDDING_BATCH_SIZE ?= 250
 
 ifeq ($(REGION),eu)
 ifeq ($(PROJECT),connect)
@@ -295,6 +296,7 @@ deploy-workers-only:
 	--set-env-vars=DOCUMENT_EMBEDDING_MODELS=${DOCUMENT_EMBEDDING_MODELS} \
 	--set-env-vars=DOCUMENT_EXTRACTOR_DOCLING_ENABLED=true \
 	--set-env-vars=WORKER_DOCLING_HEALTH_CHECK_TIMEOUT_MS=${WORKER_DOCLING_HEALTH_CHECK_TIMEOUT_MS} \
+	--set-env-vars=MAX_VERTEX_EMBEDDING_BATCH_SIZE=${MAX_VERTEX_EMBEDDING_BATCH_SIZE} \
 	--add-cloudsql-instances=${addCloudSqlInstances} \
 	--network=${network} \
 	--service-account=${serviceAccount} \

@@ -12,7 +12,11 @@ import { DocumentsService } from "../documents.service"
 import { FILE_STORAGE_SERVICE, type IFileStorage } from "../storage/file-storage.interface"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
 import { DocumentEmbeddingStatusNotifierService } from "./document-embedding-status-notifier.service"
-import { resolveEmbeddingModelNames, resolveVertexConfig } from "./document-embeddings.config"
+import {
+  resolveEmbeddingModelNames,
+  resolveMaxVertexEmbeddingBatchSize,
+  resolveVertexConfig,
+} from "./document-embeddings.config"
 import type { CreateDocumentEmbeddingsJobPayload } from "./document-embeddings.types"
 import type { DocumentExtractionEngine } from "./document-text-extractor.service"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
@@ -96,6 +100,7 @@ export class DocumentEmbeddingsProcessorService {
   private async generateEmbeddingsByModel(chunks: string[]): Promise<Map<string, number[][]>> {
     const { project, location } = resolveVertexConfig()
     const embeddingModelNames = resolveEmbeddingModelNames()
+    const maxVertexEmbeddingBatchSize = resolveMaxVertexEmbeddingBatchSize()
     this.logger.log(
       `Creating embeddings with Vertex models [${embeddingModelNames.join(", ")}] in project ${project}, location ${location}`,
     )
@@ -104,7 +109,24 @@ export class DocumentEmbeddingsProcessorService {
     const embeddingsByModelName = new Map<string, number[][]>()
     for (const embeddingModelName of embeddingModelNames) {
       const embeddingModel = vertexProvider.textEmbeddingModel(embeddingModelName)
-      const { embeddings } = await embedMany({ model: embeddingModel, values: chunks })
+      const embeddings: number[][] = []
+
+      for (
+        let batchStartIndex = 0;
+        batchStartIndex < chunks.length;
+        batchStartIndex += maxVertexEmbeddingBatchSize
+      ) {
+        const chunkBatch = chunks.slice(
+          batchStartIndex,
+          batchStartIndex + maxVertexEmbeddingBatchSize,
+        )
+        const { embeddings: batchEmbeddings } = await embedMany({
+          model: embeddingModel,
+          values: chunkBatch,
+        })
+        embeddings.push(...batchEmbeddings)
+      }
+
       embeddingsByModelName.set(embeddingModelName, embeddings)
     }
     return embeddingsByModelName
