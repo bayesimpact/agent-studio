@@ -1,18 +1,22 @@
+import { ToolName } from "@caseai-connect/api-contracts"
 import { Spinner } from "@caseai-connect/ui/shad/spinner"
 import { cn } from "@caseai-connect/ui/utils"
 import { AlertCircleIcon } from "lucide-react"
 import { useTranslation } from "react-i18next"
 import { FeedbackCreator } from "@/components/agent-message-feedback/FeedbackCreator"
+import { RestrictedFeature } from "@/components/RestrictedFeature"
 import type { AgentSessionMessage as AgentSessionMessageType } from "@/features/agents/shared/agent-session-messages/agent-session-messages.models"
 import { Attachment } from "./Attachment"
 import { ChatBotMessage, ChatUserMessage } from "./Chat"
 import { MarkdownWrapper } from "./MarkdownWrapper"
+import { SourcesTool } from "./SourcesTool"
 
 export function AgentSessionMessage({ message }: { message: AgentSessionMessageType }) {
   switch (message.role) {
     case "assistant": {
       const isStreaming = message.status === "streaming"
       const isError = message.status === "error"
+      const sourcesTool = message.toolCalls?.find((call) => call.name === ToolName.Sources)
       return (
         <div key={message.id} className="max-w-3/4 relative">
           <ChatBotMessage
@@ -20,11 +24,19 @@ export function AgentSessionMessage({ message }: { message: AgentSessionMessageT
           >
             {isStreaming && <ThinkingMessage />}
             {isError && <ErrorMessage />}
-
-            <MarkdownWrapper content={message.content} />
+            <MarkdownWrapper
+              content={message.content}
+              end={
+                <RestrictedFeature feature="sources_tool">
+                  {sourcesTool && <SourcesTool toolCall={sourcesTool} />}
+                </RestrictedFeature>
+              }
+            />
           </ChatBotMessage>
 
-          <FeedbackCreator message={message} />
+          <div className="absolute bottom-2">
+            <FeedbackCreator message={message} />
+          </div>
         </div>
       )
     }

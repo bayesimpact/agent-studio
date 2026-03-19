@@ -1,8 +1,11 @@
+import { ToolName } from "@caseai-connect/api-contracts"
 import { tool } from "ai"
 import { z } from "zod"
 import type { RequiredConnectScope } from "@/common/entities/connect-required-fields"
 import type { DocumentChunkRetrievalService } from "@/domains/documents/embeddings/document-chunk-retrieval.service"
-import { type ToolExecutionLog, ToolName } from "./tool-execution-log"
+import type { ToolExecutionLog } from "./tool-execution-log"
+
+export const DEFAULT_TOP_K = 20
 
 const retrieveProjectDocumentChunksInputSchema = z.object({
   conversationSummary: z
@@ -17,9 +20,9 @@ const retrieveProjectDocumentChunksInputSchema = z.object({
     .number()
     .int()
     .positive()
-    .max(10)
-    .default(3)
-    .describe("How many chunks to return. Default is 3."),
+    .max(DEFAULT_TOP_K)
+    .default(DEFAULT_TOP_K)
+    .describe(`How many chunks to return. Default is ${DEFAULT_TOP_K}.`),
 })
 
 const retrievedChunkSchema = z.object({

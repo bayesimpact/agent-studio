@@ -1,5 +1,5 @@
 import { createAsyncThunk } from "@reduxjs/toolkit"
-import { hasFeatureOrThrow } from "@/hooks/use-feature-falgs"
+import { hasFeatureOrThrow } from "@/hooks/use-feature-flags"
 import type { RootState, ThunkExtraArg } from "@/store"
 import { getCurrentIds } from "../helpers"
 import type { Evaluation } from "./evaluations.models"

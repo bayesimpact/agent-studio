@@ -1,6 +1,7 @@
+import { ToolName } from "@caseai-connect/api-contracts"
 import { tool } from "ai"
 import { z } from "zod"
-import { type ToolExecutionLog, ToolName } from "./tool-execution-log"
+import type { ToolExecutionLog } from "./tool-execution-log"
 
 export function sourcesTool({
   onExecute,

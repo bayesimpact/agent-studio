@@ -15,6 +15,7 @@ export function FormResult({
   return (
     <Item>
       <ItemHeader>
+        {/* // FIXME: i18n */}
         <ItemTitle className="text-lg">Form output:</ItemTitle>
       </ItemHeader>
       <ItemContent>
