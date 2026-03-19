@@ -8,6 +8,7 @@ REGION ?= eu
 PROJECT ?= connect
 TEST_DATABASE_URL ?= postgresql://connect_admin:passpass@localhost:5432/connect_test
 DOCUMENT_EMBEDDING_MODELS ?= gemini-embedding-001
+WORKER_DOCLING_HEALTH_CHECK_TIMEOUT_MS ?= 30000
 
 ifeq ($(REGION),eu)
 ifeq ($(PROJECT),connect)
@@ -292,7 +293,8 @@ deploy-workers-only:
 	--set-env-vars=LANGFUSE_PK=${langfusePk},LANGFUSE_BASE_URL=${langfuseUrl},LOCATION=$(location) \
 	--set-env-vars=DATABASE_HOST=/cloudsql/${addCloudSqlInstances},DATABASE_USERNAME=${databaseUsername},DATABASE_NAME=${databaseName} \
 	--set-env-vars=DOCUMENT_EMBEDDING_MODELS=${DOCUMENT_EMBEDDING_MODELS} \
-	--set-env-vars=DOCUMENT_EXTRACTOR_DOCLING_ENABLED=false \
+	--set-env-vars=DOCUMENT_EXTRACTOR_DOCLING_ENABLED=true \
+	--set-env-vars=WORKER_DOCLING_HEALTH_CHECK_TIMEOUT_MS=${WORKER_DOCLING_HEALTH_CHECK_TIMEOUT_MS} \
 	--add-cloudsql-instances=${addCloudSqlInstances} \
 	--network=${network} \
 	--service-account=${serviceAccount} \

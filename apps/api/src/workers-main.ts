@@ -8,7 +8,19 @@ import {
 } from "@/external/docling/docling.cli"
 import { WorkersAppModule } from "./workers-app.module"
 
-const WORKER_DOCLING_HEALTH_CHECK_TIMEOUT_MS = 30_000
+const DEFAULT_WORKER_DOCLING_HEALTH_CHECK_TIMEOUT_MS = 30_000
+
+function getWorkerDoclingHealthCheckTimeoutMs(): number {
+  const timeoutValue = process.env.WORKER_DOCLING_HEALTH_CHECK_TIMEOUT_MS
+  if (!timeoutValue) {
+    return DEFAULT_WORKER_DOCLING_HEALTH_CHECK_TIMEOUT_MS
+  }
+
+  const parsedTimeout = Number.parseInt(timeoutValue, 10)
+  return Number.isNaN(parsedTimeout)
+    ? DEFAULT_WORKER_DOCLING_HEALTH_CHECK_TIMEOUT_MS
+    : parsedTimeout
+}
 
 async function bootstrapWorkersMain() {
   await ensureDoclingIsReadyForWorkers()
@@ -27,7 +39,7 @@ async function ensureDoclingIsReadyForWorkers(): Promise<void> {
 
   try {
     const version = await getDoclingVersion({
-      timeoutMs: getDoclingTimeoutMs(WORKER_DOCLING_HEALTH_CHECK_TIMEOUT_MS),
+      timeoutMs: getDoclingTimeoutMs(getWorkerDoclingHealthCheckTimeoutMs()),
     })
     Logger.log(`Docling health check passed (${version || "version unavailable"})`, "WorkersMain")
   } catch (error) {
