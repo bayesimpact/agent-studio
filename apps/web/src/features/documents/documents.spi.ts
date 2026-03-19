@@ -1,6 +1,6 @@
 import type { DocumentSourceType } from "@caseai-connect/api-contracts"
 import type { DocumentTagsUpdateFields } from "../document-tags/document-tags.models"
-import type { Document } from "./documents.models"
+import type { Document, DocumentEmbeddingStatusChangedEvent } from "./documents.models"
 
 export interface IDocumentsSpi {
   getAll(params: { organizationId: string; projectId: string }): Promise<Document[]>
@@ -37,4 +37,10 @@ export interface IDocumentsSpi {
     projectId: string
     documentId: string
   }): Promise<{ url: string }>
+  streamEmbeddingStatus(params: {
+    organizationId: string
+    projectId: string
+    signal?: AbortSignal
+    onStatusChanged: (event: DocumentEmbeddingStatusChangedEvent) => void
+  }): Promise<void>
 }

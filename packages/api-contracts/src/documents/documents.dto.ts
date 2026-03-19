@@ -3,6 +3,16 @@ import type { TimeType } from "../generic"
 
 export type DocumentSourceType = "project" | "agentSessionMessage" | "extraction"
 export type DocumentEmbeddingStatus = "pending" | "processing" | "completed" | "failed"
+export type DocumentEmbeddingStatusChangedEventPayload = {
+  type: "document_embedding_status_changed"
+  documentId: string
+  organizationId: string
+  projectId: string
+  embeddingStatus: DocumentEmbeddingStatus
+  updatedAt: TimeType
+}
+export type DocumentEmbeddingStatusChangedEventDto = MessageEvent &
+  DocumentEmbeddingStatusChangedEventPayload
 
 export type PresignFileRequestItemDto = {
   fileName: string

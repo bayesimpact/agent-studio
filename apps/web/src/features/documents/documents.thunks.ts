@@ -1,11 +1,13 @@
 import type { DocumentSourceType } from "@caseai-connect/api-contracts"
 import { createAsyncThunk } from "@reduxjs/toolkit"
 import type { RootState, ThunkExtraArg } from "@/store"
+import { ADS } from "@/store/async-data-status"
 import type { DocumentTagsUpdateFields } from "../document-tags/document-tags.models"
 import { getCurrentIds } from "../helpers"
 import { notificationsActions } from "../notifications/notifications.slice"
 import type { Document } from "./documents.models"
 import { documentsActions } from "./documents.slice"
+import { shouldTriggerResyncForUnknownDocumentEvent } from "./documents-stream-events"
 
 type ThunkConfig = { state: RootState; extra: ThunkExtraArg }
 
@@ -121,3 +123,54 @@ export const getDocumentTemporaryUrl = createAsyncThunk<
   })
   return await services.documents.getTemporaryUrl({ organizationId, projectId, documentId })
 })
+
+export const streamDocumentEmbeddingStatuses = createAsyncThunk<void, void, ThunkConfig>(
+  "documents/streamEmbeddingStatus",
+  async (_, { extra: { services }, getState, dispatch, signal }) => {
+    const state = getState()
+    const { organizationId, projectId } = getCurrentIds({
+      state,
+      wantedIds: ["organizationId", "projectId"],
+    })
+    let hasTriggeredUnknownDocumentResync = false
+
+    await services.documents.streamEmbeddingStatus({
+      organizationId,
+      projectId,
+      signal,
+      onStatusChanged: ({ documentId, embeddingStatus, updatedAt }) => {
+        const currentState = getState()
+        if (
+          shouldTriggerResyncForUnknownDocumentEvent({
+            documentsData: currentState.documents.data,
+            documentId,
+            hasTriggeredUnknownDocumentResync,
+          })
+        ) {
+          hasTriggeredUnknownDocumentResync = true
+          void dispatch(listDocuments())
+          return
+        }
+
+        if (!ADS.isFulfilled(currentState.documents.data)) {
+          return
+        }
+
+        const documentExistsInCurrentList = currentState.documents.data.value.some(
+          (document) => document.id === documentId,
+        )
+        if (!documentExistsInCurrentList) {
+          return
+        }
+
+        dispatch(
+          documentsActions.patchDocumentEmbeddingStatus({
+            documentId,
+            embeddingStatus,
+            updatedAt,
+          }),
+        )
+      },
+    })
+  },
+)

@@ -1,6 +1,6 @@
 import { execFile } from "node:child_process"
 import { randomUUID } from "node:crypto"
-import { readFile, unlink, writeFile } from "node:fs/promises"
+import { mkdir, readdir, readFile, rm, unlink, writeFile } from "node:fs/promises"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
 import { promisify } from "node:util"
@@ -50,18 +50,31 @@ export async function extractTextWithDocling({
   }
 
   const inputPath = join(tmpdir(), `docling-${randomUUID()}.${extension}`)
-  const outputPath = join(tmpdir(), `docling-${randomUUID()}.md`)
+  const outputDirPath = join(tmpdir(), `docling-output-${randomUUID()}`)
+  await mkdir(outputDirPath, { recursive: true })
   await writeFile(inputPath, buffer)
 
   try {
-    await runCommand(getDoclingCommand(), [inputPath, "--output", outputPath], {
+    await runCommand(getDoclingCommand(), [inputPath, "--output", outputDirPath], {
       timeout: timeoutMs ?? getDoclingTimeoutMs(),
       maxBuffer,
     })
-    return await readFile(outputPath, "utf-8")
+
+    const outputEntries = await readdir(outputDirPath, { withFileTypes: true })
+    const outputFileEntry = outputEntries.find(
+      (outputEntry) =>
+        outputEntry.isFile() &&
+        [".md", ".txt"].some((extensionSuffix) => outputEntry.name.endsWith(extensionSuffix)),
+    )
+
+    if (!outputFileEntry) {
+      throw new Error(`Docling produced no readable output in directory: ${outputDirPath}`)
+    }
+
+    return await readFile(join(outputDirPath, outputFileEntry.name), "utf-8")
   } finally {
     await unlink(inputPath).catch(() => undefined)
-    await unlink(outputPath).catch(() => undefined)
+    await rm(outputDirPath, { recursive: true, force: true }).catch(() => undefined)
   }
 }
 

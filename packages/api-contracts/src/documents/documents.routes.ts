@@ -42,4 +42,9 @@ export const DocumentsRoutes = {
     method: "delete",
     path: "organizations/:organizationId/projects/:projectId/documents/:documentId",
   }),
+  // Streaming responses are sent as text/event-stream (SSE) and do not follow ResponseData<T>.
+  streamEmbeddingStatus: defineRoute<ResponseData<unknown>>({
+    method: "get",
+    path: "organizations/:organizationId/projects/:projectId/documents/embedding-status/stream",
+  }),
 }

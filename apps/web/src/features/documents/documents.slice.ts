@@ -10,10 +10,14 @@ type UploaderState = {
   processed: number
   errors: UploaderError[] | null
 }
+type EmbeddingStatusStreamState = {
+  isActive: boolean
+}
 interface State {
   currentDocumentId: string | null
   data: AsyncData<Document[]>
   uploader: UploaderState
+  embeddingStatusStream: EmbeddingStatusStreamState
 }
 
 const initialState: State = {
@@ -25,6 +29,29 @@ const initialState: State = {
     processed: 0,
     errors: null,
   },
+  embeddingStatusStream: {
+    isActive: false,
+  },
+}
+
+function mergeDocumentsByUpdatedAt({
+  currentDocuments,
+  incomingDocuments,
+}: {
+  currentDocuments: Document[]
+  incomingDocuments: Document[]
+}): Document[] {
+  const currentDocumentById = new Map(
+    currentDocuments.map((currentDocument) => [currentDocument.id, currentDocument] as const),
+  )
+
+  return incomingDocuments.map((incomingDocument) => {
+    const currentDocument = currentDocumentById.get(incomingDocument.id)
+    if (!currentDocument) return incomingDocument
+    return currentDocument.updatedAt > incomingDocument.updatedAt
+      ? currentDocument
+      : incomingDocument
+  })
 }
 
 const slice = createSlice({
@@ -60,6 +87,29 @@ const slice = createSlice({
     setCurrentDocumentId: (state, action: PayloadAction<{ documentId: string | null }>) => {
       state.currentDocumentId = action.payload.documentId
     },
+    startEmbeddingStatusStream: (state) => {
+      state.embeddingStatusStream.isActive = true
+    },
+    stopEmbeddingStatusStream: (state) => {
+      state.embeddingStatusStream.isActive = false
+    },
+    patchDocumentEmbeddingStatus: (
+      state,
+      action: PayloadAction<{
+        documentId: string
+        embeddingStatus: Document["embeddingStatus"]
+        updatedAt: number
+      }>,
+    ) => {
+      if (!ADS.isFulfilled(state.data)) return
+      const document = state.data.value.find(
+        (candidateDocument) => candidateDocument.id === action.payload.documentId,
+      )
+      if (!document) return
+      if (document.updatedAt > action.payload.updatedAt) return
+      document.embeddingStatus = action.payload.embeddingStatus
+      document.updatedAt = action.payload.updatedAt
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -68,10 +118,17 @@ const slice = createSlice({
         state.data.error = null
       })
       .addCase(listDocuments.fulfilled, (state, action) => {
+        const mergedDocuments = ADS.isFulfilled(state.data)
+          ? mergeDocumentsByUpdatedAt({
+              currentDocuments: state.data.value,
+              incomingDocuments: action.payload,
+            })
+          : action.payload
+
         state.data = {
           status: ADS.Fulfilled,
           error: null,
-          value: action.payload,
+          value: mergedDocuments,
         }
       })
       .addCase(listDocuments.rejected, (state, action) => {

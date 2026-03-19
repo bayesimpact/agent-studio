@@ -1,4 +1,3 @@
-import { Badge, type BadgeVariant } from "@caseai-connect/ui/shad/badge"
 import { Button } from "@caseai-connect/ui/shad/button"
 import {
   Sheet,
@@ -14,6 +13,7 @@ import { MarkdownWrapper } from "@/features/agents/shared/agent-session-messages
 import type { DocumentTag } from "@/features/document-tags/document-tags.models"
 import type { Document } from "@/features/documents/documents.models"
 import { buildDate } from "@/utils/build-date"
+import { EmbeddingStatusBadge } from "./EmbeddingStatusBadge"
 
 export function DocumentDetailsSheet({
   document,
@@ -62,19 +62,6 @@ export function DocumentDetailsSheet({
       </SheetContent>
     </Sheet>
   )
-}
-
-function EmbeddingStatusBadge({ status }: { status: Document["embeddingStatus"] }) {
-  const { t } = useTranslation("document", { keyPrefix: "props.embeddingStatuses" })
-
-  const statusBadgeVariant: Record<Document["embeddingStatus"], BadgeVariant> = {
-    pending: "outline",
-    processing: "outline",
-    completed: "success",
-    failed: "destructive",
-  }
-
-  return <Badge variant={statusBadgeVariant[status]}>{t(status)}</Badge>
 }
 
 function MetaData({ label, value }: { label: string; value?: string }) {

@@ -6,9 +6,12 @@ import { embedMany } from "ai"
 import { SentenceSplitter } from "llamaindex"
 import { toSql } from "pgvector"
 import type { DataSource } from "typeorm"
+import type { Document } from "../document.entity"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
 import { DocumentsService } from "../documents.service"
 import { FILE_STORAGE_SERVICE, type IFileStorage } from "../storage/file-storage.interface"
+// biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
+import { DocumentEmbeddingStatusNotifierService } from "./document-embedding-status-notifier.service"
 import { resolveEmbeddingModelNames, resolveVertexConfig } from "./document-embeddings.config"
 import type { CreateDocumentEmbeddingsJobPayload } from "./document-embeddings.types"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
@@ -24,11 +27,39 @@ export class DocumentEmbeddingsProcessorService {
   constructor(
     private readonly documentsService: DocumentsService,
     private readonly textExtractorService: DocumentTextExtractorService,
+    private readonly embeddingStatusNotifierService: DocumentEmbeddingStatusNotifierService,
     @Inject(FILE_STORAGE_SERVICE) private readonly fileStorage: IFileStorage,
     @InjectDataSource() private readonly dataSource: DataSource,
   ) {}
 
   async processDocument(payload: CreateDocumentEmbeddingsJobPayload): Promise<void> {
+    const document = await this.findDocumentOrThrow(payload)
+    await this.markDocumentStatus(document, "processing")
+
+    try {
+      const chunks = await this.extractDocumentChunks(document)
+      const embeddingsByModelName = await this.generateEmbeddingsByModel(chunks)
+
+      await this.insertChunks({
+        documentId: document.id,
+        organizationId: payload.organizationId,
+        projectId: payload.projectId,
+        chunks,
+        embeddingsByModelName,
+      })
+
+      await this.markDocumentStatus(document, "completed")
+
+      this.logger.log(`Embeddings created for document ${document.id}`)
+    } catch (error) {
+      await this.markDocumentStatus(document, "failed")
+      throw error
+    }
+  }
+
+  private async findDocumentOrThrow(
+    payload: CreateDocumentEmbeddingsJobPayload,
+  ): Promise<Document> {
     const connectScope = {
       organizationId: payload.organizationId,
       projectId: payload.projectId,
@@ -42,49 +73,52 @@ export class DocumentEmbeddingsProcessorService {
       throw new NotFoundException(`Document ${payload.documentId} not found`)
     }
 
-    document.embeddingStatus = "processing"
-    await this.documentsService.saveOne(document)
+    return document
+  }
 
-    try {
-      const fileBuffer = await this.fileStorage.readFile(document.storageRelativePath)
+  private async extractDocumentChunks(document: Document): Promise<string[]> {
+    const fileBuffer = await this.fileStorage.readFile(document.storageRelativePath)
+    const text = await this.textExtractorService.extract(fileBuffer, document.mimeType)
+    const splitter = new SentenceSplitter({ chunkSize: CHUNK_SIZE, chunkOverlap: CHUNK_OVERLAP })
+    const chunks = splitter.splitText(text)
+    this.logger.log(`Split document ${document.id} into ${chunks.length} chunks`)
+    return chunks
+  }
 
-      const text = await this.textExtractorService.extract(fileBuffer, document.mimeType)
+  private async generateEmbeddingsByModel(chunks: string[]): Promise<Map<string, number[][]>> {
+    const { project, location } = resolveVertexConfig()
+    const embeddingModelNames = resolveEmbeddingModelNames()
+    this.logger.log(
+      `Creating embeddings with Vertex models [${embeddingModelNames.join(", ")}] in project ${project}, location ${location}`,
+    )
 
-      const splitter = new SentenceSplitter({ chunkSize: CHUNK_SIZE, chunkOverlap: CHUNK_OVERLAP })
-      const chunks = splitter.splitText(text)
-
-      this.logger.log(`Split document ${document.id} into ${chunks.length} chunks`)
-
-      const { project, location } = resolveVertexConfig()
-      const embeddingModelNames = resolveEmbeddingModelNames()
-      this.logger.log(
-        `Creating embeddings with Vertex models [${embeddingModelNames.join(", ")}] in project ${project}, location ${location}`,
-      )
-      const vertexProvider = createVertex({ project, location })
-      const embeddingsByModelName = new Map<string, number[][]>()
-      for (const embeddingModelName of embeddingModelNames) {
-        const embeddingModel = vertexProvider.textEmbeddingModel(embeddingModelName)
-        const { embeddings } = await embedMany({ model: embeddingModel, values: chunks })
-        embeddingsByModelName.set(embeddingModelName, embeddings)
-      }
-
-      await this.insertChunks({
-        documentId: document.id,
-        organizationId: payload.organizationId,
-        projectId: payload.projectId,
-        chunks,
-        embeddingsByModelName,
-      })
-
-      document.embeddingStatus = "completed"
-      await this.documentsService.saveOne(document)
-
-      this.logger.log(`Embeddings created for document ${document.id}`)
-    } catch (error) {
-      document.embeddingStatus = "failed"
-      await this.documentsService.saveOne(document)
-      throw error
+    const vertexProvider = createVertex({ project, location })
+    const embeddingsByModelName = new Map<string, number[][]>()
+    for (const embeddingModelName of embeddingModelNames) {
+      const embeddingModel = vertexProvider.textEmbeddingModel(embeddingModelName)
+      const { embeddings } = await embedMany({ model: embeddingModel, values: chunks })
+      embeddingsByModelName.set(embeddingModelName, embeddings)
     }
+    return embeddingsByModelName
+  }
+
+  private async markDocumentStatus(
+    document: Document,
+    status: Document["embeddingStatus"],
+  ): Promise<void> {
+    document.embeddingStatus = status
+    await this.saveDocumentAndNotify(document)
+  }
+
+  private async saveDocumentAndNotify(document: Document): Promise<void> {
+    const savedDocument = await this.documentsService.saveOne(document)
+    await this.embeddingStatusNotifierService.notifyEmbeddingStatusChanged({
+      documentId: savedDocument.id,
+      organizationId: savedDocument.organizationId,
+      projectId: savedDocument.projectId,
+      embeddingStatus: savedDocument.embeddingStatus,
+      updatedAt: savedDocument.updatedAt.getTime(),
+    })
   }
 
   private async insertChunks({
