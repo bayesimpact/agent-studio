@@ -18,11 +18,13 @@ import { buildTagTree } from "@/features/document-tags/document-tags.models"
 import { selectDocumentTagsData } from "@/features/document-tags/document-tags.selectors"
 import type { Document } from "@/features/documents/documents.models"
 import { selectDocumentsData, selectUploaderState } from "@/features/documents/documents.selectors"
-import { useAppSelector } from "@/store/hooks"
+import { documentsActions } from "@/features/documents/documents.slice"
+import { useAppDispatch, useAppSelector } from "@/store/hooks"
 import { DocumentItem } from "../../components/document/DocumentItem"
 import { AsyncRoute } from "../AsyncRoute"
 
 export function DocumentsRoute() {
+  useDocumentEmbeddingStatusStream()
   const documents = useAppSelector(selectDocumentsData)
   const documentTags = useAppSelector(selectDocumentTagsData)
   return (
@@ -80,6 +82,17 @@ function WithData({
       )}
     </div>
   )
+}
+
+function useDocumentEmbeddingStatusStream() {
+  const dispatch = useAppDispatch()
+
+  useEffect(() => {
+    dispatch(documentsActions.startEmbeddingStatusStream())
+    return () => {
+      dispatch(documentsActions.stopEmbeddingStatusStream())
+    }
+  }, [dispatch])
 }
 
 function UploaderState() {

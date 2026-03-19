@@ -16,7 +16,7 @@
       "embeddingStatuses": {
         "pending": "Pending",
         "processing": "Processing",
-        "completed": "Completed",
+        "completed": "Ready",
         "failed": "Failed"
       },
       "size": "Size",

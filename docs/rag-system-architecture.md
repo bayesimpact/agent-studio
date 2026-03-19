@@ -37,6 +37,8 @@ At a high level, the system has two flows:
   - `apps/api/src/workers-main.ts`
 - **Text extraction**
   - `apps/api/src/domains/documents/embeddings/document-text-extractor.service.ts`
+  - `apps/api/src/external/docling/docling.cli.ts`
+  - `apps/api/src/external/docling/docling.constants.ts`
 - **Vector retrieval service**
   - `apps/api/src/domains/documents/embeddings/document-chunk-retrieval.service.ts`
 - **Chat streaming + tool loop**
@@ -83,6 +85,7 @@ This happens in:
 ### 3) Worker processing
 
 A separate workers process (`workers-main.ts`) consumes embedding jobs.
+At startup, workers run a Docling health check (`docling --version`) when Docling extraction is enabled.
 
 For each job, `DocumentEmbeddingsProcessorService.processDocument(...)`:
 
@@ -101,9 +104,16 @@ For each job, `DocumentEmbeddingsProcessorService.processDocument(...)`:
 
 `DocumentTextExtractorService` currently supports:
 
-- PDF (`application/pdf`)
-- DOC/DOCX
-- TXT/CSV
+- Docling-first extraction for:
+  - PDF
+  - DOC/DOCX
+  - PPT/PPTX
+  - XLS/XLSX
+  - common image formats (`png`, `jpeg`, `jpg`, `tiff`, `bmp`, `webp`)
+- direct UTF-8 decode for TXT/CSV
+- fallback extraction when Docling fails:
+  - PDF -> `@llamaindex/readers/pdf`
+  - DOC/DOCX -> `mammoth`
 
 Unsupported MIME types throw `UnsupportedMediaTypeException` during embedding.
 
@@ -195,6 +205,9 @@ Tool executions are also persisted in message history as `"tool"` messages with 
 - `GOOGLE_VERTEX_LOCATION`
 - `DOCUMENT_EMBEDDING_MODELS` (comma-separated; first model is used for retrieval query embedding)
 - `BULLMQ_REDIS_URL` (defaults to `redis://localhost:6379` if unset)
+- `DOCUMENT_EXTRACTOR_DOCLING_ENABLED` (optional, defaults to `true`)
+- `DOCUMENT_EXTRACTOR_DOCLING_COMMAND` (optional, defaults to `docling`)
+- `DOCUMENT_EXTRACTOR_DOCLING_TIMEOUT_MS` (optional, extraction timeout and worker health-check timeout source)
 
 ### Storage/Infra Variables Used in the Flow
 
@@ -208,6 +221,7 @@ Tool executions are also persisted in message history as `"tool"` messages with 
 - PostgreSQL with `pgvector`
 - Redis (BullMQ queue)
 - Google Cloud Storage (optional file storage backend)
+- Docling CLI runtime (`docling`) available in worker container/host
 
 ---
 
@@ -221,6 +235,8 @@ In deployment, workers are started separately with:
 
 - `node /app/apps/api/dist/workers-main.js`
 
+When Docling extraction is enabled, workers fail fast at startup if the Docling CLI health check fails.
+
 ### Re-index behavior
 
 On reprocessing a document, existing `document_chunk` rows are deleted first, then all chunks/embeddings are inserted again. This keeps chunk set consistent with latest file content and model outputs.
@@ -229,13 +245,13 @@ On reprocessing a document, existing `document_chunk` rows are deleted first, th
 
 ## Known Limitations
 
-- Upload MIME checks allow broader Microsoft formats than the extractor currently handles; unsupported formats can fail during embedding.
 - File-extension validator in upload currently allows only a narrower list (`png|jpeg|jpg|pdf|txt|csv`) than MIME checks.
 - No ANN vector index (e.g. HNSW/IVFFlat) is created in migration for `embedding`; retrieval uses direct `<=>` ordering.
 - No re-ranker is used today; chunk ranking is only the initial vector similarity ranking from pgvector.
 - Retrieval only considers `source_type = "project"` and `embedding_status = "completed"`.
 - Tool input caps `topK` at 10.
 - `document_chunk_embedding` vector writes use raw SQL because TypeORM does not natively support `pgvector` columns in current usage.
+- Docling is executed via CLI per extraction call, which adds subprocess overhead.
 
 ---
 

@@ -1,7 +1,7 @@
 import type { TypedStartListening } from "@reduxjs/toolkit"
 import { createListenerMiddleware, isAnyOf } from "@reduxjs/toolkit"
 import type { AppDispatch, RootState } from "@/store/types"
-import { hasInterfaceChanged, selectIsAdminInterface } from "../auth/auth.selectors"
+import { hasInterfaceChanged } from "../auth/auth.selectors"
 import {
   createDocumentTag,
   deleteDocumentTag,
@@ -18,6 +18,12 @@ import {
   uploadDocument,
   uploadDocuments,
 } from "./documents.thunks"
+import {
+  handleDocumentsContextChanged,
+  startDocumentEmbeddingStatusStream,
+  stopDocumentEmbeddingStatusStream,
+  syncDocumentEmbeddingStatusStreamWithDocuments,
+} from "./documents-stream-status"
 
 const listenerMiddleware = createListenerMiddleware<RootState, AppDispatch>()
 
@@ -32,11 +38,35 @@ listenerMiddleware.startListening({
     )
   },
   effect: async (_, listenerApi) => {
-    const state = listenerApi.getState()
-    const isAdminInterface = selectIsAdminInterface(state)
-    if (!isAdminInterface) return
+    await handleDocumentsContextChanged(listenerApi)
+  },
+})
 
-    await listenerApi.dispatch(listDocuments())
+listenerMiddleware.startListening({
+  actionCreator: documentsActions.startEmbeddingStatusStream,
+  effect: async (_, listenerApi) => {
+    await startDocumentEmbeddingStatusStream(listenerApi)
+  },
+})
+
+listenerMiddleware.startListening({
+  actionCreator: documentsActions.stopEmbeddingStatusStream,
+  effect: async () => {
+    stopDocumentEmbeddingStatusStream()
+  },
+})
+
+listenerMiddleware.startListening({
+  actionCreator: documentsActions.patchDocumentEmbeddingStatus,
+  effect: async (_, listenerApi) => {
+    syncDocumentEmbeddingStatusStreamWithDocuments(listenerApi)
+  },
+})
+
+listenerMiddleware.startListening({
+  actionCreator: listDocuments.fulfilled,
+  effect: async (_, listenerApi) => {
+    syncDocumentEmbeddingStatusStreamWithDocuments(listenerApi)
   },
 })
 

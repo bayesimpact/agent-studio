@@ -1,5 +1,6 @@
 import {
   type DocumentDto,
+  type DocumentEmbeddingStatusChangedEventDto,
   type DocumentSourceType,
   DocumentsRoutes,
   isAllowedMimeType,
@@ -22,12 +23,15 @@ import {
   Patch,
   Post,
   Request,
+  Sse,
   UnprocessableEntityException,
   UploadedFile,
   UseGuards,
   UseInterceptors,
 } from "@nestjs/common"
 import { FileInterceptor } from "@nestjs/platform-express/multer"
+import type { Observable } from "rxjs"
+import { filter, map } from "rxjs"
 import { v4 } from "uuid"
 import type {
   EndpointRequestWithDocument,
@@ -46,6 +50,8 @@ import { DocumentsGuard } from "./documents.guard"
 import { extractFileExtension, normalizeUploadedFileName } from "./documents.helpers"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
 import { DocumentsService } from "./documents.service"
+// biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
+import { DocumentEmbeddingStatusStreamService } from "./embeddings/document-embedding-status-stream.service"
 import {
   DOCUMENT_EMBEDDINGS_BATCH_SERVICE,
   type DocumentEmbeddingsBatchService,
@@ -63,6 +69,7 @@ export class DocumentsController {
     @Inject(DOCUMENT_EMBEDDINGS_BATCH_SERVICE)
     private readonly documentEmbeddingsBatchService: DocumentEmbeddingsBatchService,
     private readonly documentsService: DocumentsService,
+    private readonly documentEmbeddingStatusStreamService: DocumentEmbeddingStatusStreamService,
   ) {}
 
   @CheckPolicy((policy) => policy.canCreate())
@@ -314,6 +321,22 @@ export class DocumentsController {
       throw new NotFoundException("Temporary URL not found for the document.")
     }
     return { data: { url } }
+  }
+
+  @CheckPolicy((policy) => policy.canList())
+  @Sse(DocumentsRoutes.streamEmbeddingStatus.path, { method: 0 /* GET */ })
+  streamEmbeddingStatus(
+    @Request() req: EndpointRequestWithProject,
+  ): Observable<DocumentEmbeddingStatusChangedEventDto> {
+    const connectScope = getRequiredConnectScope(req)
+    return this.documentEmbeddingStatusStreamService.events$.pipe(
+      filter(
+        (event) =>
+          event.organizationId === connectScope.organizationId &&
+          event.projectId === connectScope.projectId,
+      ),
+      map((event) => ({ ...event, data: JSON.stringify(event) })),
+    )
   }
 }
 

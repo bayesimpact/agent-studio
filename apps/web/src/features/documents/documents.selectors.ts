@@ -24,3 +24,19 @@ export const selectDocumentData = createSelector(
 )
 
 export const selectUploaderState = (state: RootState) => state.documents.uploader
+export const selectIsEmbeddingStatusStreamActive = (state: RootState) =>
+  state.documents.embeddingStatusStream.isActive
+
+export const selectHasDocumentsInProgress = createSelector(
+  [selectDocumentsData],
+  (documentsData) => {
+    if (!ADS.isFulfilled(documentsData)) {
+      return false
+    }
+
+    return documentsData.value.some(
+      (document) =>
+        document.embeddingStatus === "pending" || document.embeddingStatus === "processing",
+    )
+  },
+)

@@ -19,6 +19,7 @@ import { DocumentsController } from "./documents.controller"
 import { DocumentsGuard } from "./documents.guard"
 import { DocumentsService } from "./documents.service"
 import { DocumentChunkRetrievalService } from "./embeddings/document-chunk-retrieval.service"
+import { DocumentEmbeddingStatusStreamService } from "./embeddings/document-embedding-status-stream.service"
 import { DocumentEmbeddingsBatchModule } from "./embeddings/document-embeddings-batch.module"
 import { LocalPresignUploadController } from "./storage/local-presign-upload.controller"
 import { StorageModule } from "./storage/storage.module"
@@ -51,6 +52,7 @@ import { DocumentTagsModule } from "./tags/document-tags.module"
   ],
   providers: [
     DocumentsService,
+    DocumentEmbeddingStatusStreamService,
     DocumentChunkRetrievalService,
     DocumentsGuard,
     ResourceContextGuard,
