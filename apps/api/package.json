@@ -20,7 +20,8 @@
     "migration:test:run": "ts-node -r tsconfig-paths/register ./node_modules/typeorm/cli.js migration:run -d src/config/typeorm.test.ts",
     "migration:test:revert": "ts-node -r tsconfig-paths/register ./node_modules/typeorm/cli.js migration:revert -d src/config/typeorm.test.ts",
     "migration:test:show": "ts-node -r tsconfig-paths/register ./node_modules/typeorm/cli.js migration:show -d src/config/typeorm.test.ts",
-    "provision:first-users": "ts-node -r tsconfig-paths/register src/scripts/provision-first-users.ts"
+    "provision:first-users": "ts-node -r tsconfig-paths/register src/scripts/provision-first-users.ts",
+    "requeue:document-embeddings": "ts-node -r tsconfig-paths/register src/scripts/requeue-document-embeddings.ts"
   },
   "dependencies": {
     "@ai-sdk/google": "^3.0.13",

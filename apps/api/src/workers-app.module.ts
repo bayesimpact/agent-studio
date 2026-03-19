@@ -3,6 +3,7 @@ import { ConfigModule, ConfigService } from "@nestjs/config"
 import { TypeOrmModule } from "@nestjs/typeorm"
 import typeorm from "./config/typeorm"
 import { DocumentEmbeddingsWorkersModule } from "./domains/documents/embeddings/document-embeddings-workers.module"
+import { StorageModule } from "./domains/documents/storage/storage.module"
 
 @Module({
   imports: [
@@ -16,6 +17,7 @@ import { DocumentEmbeddingsWorkersModule } from "./domains/documents/embeddings/
       useFactory: async (configService: ConfigService) => configService.get("typeorm")(),
     }),
     DocumentEmbeddingsWorkersModule,
+    StorageModule,
   ],
 })
 export class WorkersAppModule {}

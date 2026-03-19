@@ -136,6 +136,61 @@ VITE_AUTH0_CLIENT_ID=XXX
 VITE_AUTH0_AUDIENCE=https://bayes-impact.eu.auth0.com/api/v2/
 ```
 
+### 3.1 Install Docling for Worker Extraction (macOS, Linux, Windows)
+
+The embedding worker uses Docling in-process for document extraction.
+
+- Extraction logic: `apps/api/src/domains/documents/embeddings/document-text-extractor.service.ts`
+- Worker startup health check: `apps/api/src/workers-main.ts`
+- Shared Docling helpers: `apps/api/src/external/docling`
+
+Install Docling on your machine so `docling` is available in `PATH`.
+
+**macOS**
+
+```bash
+python3 --version
+python3 -m pip install --upgrade pip
+python3 -m pip install docling
+docling --version
+```
+
+**Linux**
+
+```bash
+python3 --version
+python3 -m pip install --upgrade pip
+python3 -m pip install docling
+docling --version
+```
+
+If your distro blocks global Python installs, use a virtual environment:
+
+```bash
+python3 -m venv .venv-docling
+source .venv-docling/bin/activate
+python3 -m pip install --upgrade pip
+python3 -m pip install docling
+docling --version
+```
+
+**Windows (PowerShell)**
+
+```powershell
+py --version
+py -m pip install --upgrade pip
+py -m pip install docling
+docling --version
+```
+
+If `docling` is not recognized, restart the terminal and make sure your Python Scripts directory is in `PATH`.
+
+Docling-related environment variables:
+
+- `DOCUMENT_EXTRACTOR_DOCLING_ENABLED` (default: `true`)
+- `DOCUMENT_EXTRACTOR_DOCLING_COMMAND` (default: `docling`)
+- `DOCUMENT_EXTRACTOR_DOCLING_TIMEOUT_MS` (default: `60000` for extraction; worker health check uses `10000` fallback if unset)
+
 ### 4. Run Database Migrations
 
 Before running the API, you need to apply database migrations:
@@ -263,6 +318,35 @@ npm run dev
 cd apps/web
 npm run dev
 ```
+
+### Docker Smoke Test (API + Workers + PG + Redis)
+
+Use this when you want to validate that both runtime images boot correctly with Postgres and Redis.
+
+From the repository root:
+
+```bash
+# Build images and start smoke stack
+make docker-smoke-up PROJECT=connect REGION=eu
+
+# Check service status and fail if api/workers exited
+make docker-smoke-check PROJECT=connect REGION=eu
+
+# Inspect logs
+make docker-smoke-logs PROJECT=connect REGION=eu
+
+# Tear down stack and volumes
+make docker-smoke-down PROJECT=connect REGION=eu
+```
+
+Notes:
+
+- The smoke stack is defined in `infra/docker-compose.api-workers-smoke.yaml`.
+- API uses Docker target `api-runtime`; workers use `workers-runtime`.
+- Smoke stack ports:
+  - API: `http://localhost:3003`
+  - Postgres: `localhost:55432`
+  - Redis: `localhost:56379`
 
 ## Running Tests
 

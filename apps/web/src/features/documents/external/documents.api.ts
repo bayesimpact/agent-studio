@@ -6,6 +6,7 @@ import {
 import { getAxiosInstance } from "@/external/axios"
 import type { Document } from "../documents.models"
 import type { IDocumentsSpi } from "../documents.spi"
+import { streamDocumentEmbeddingStatus } from "./documents-streaming"
 
 export default {
   getAll: async ({ organizationId, projectId }) => {
@@ -103,6 +104,14 @@ export default {
       DocumentsRoutes.getTemporaryUrl.getPath(params),
     )
     return response.data.data
+  },
+  streamEmbeddingStatus: async ({ organizationId, projectId, signal, onStatusChanged }) => {
+    await streamDocumentEmbeddingStatus({
+      organizationId,
+      projectId,
+      signal,
+      onStatusChanged,
+    })
   },
 } satisfies IDocumentsSpi
 

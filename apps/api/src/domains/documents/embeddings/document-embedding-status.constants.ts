@@ -1,0 +1,1 @@
+export const DOCUMENT_EMBEDDING_STATUS_CHANGED_CHANNEL = "document_embedding_status_changed"

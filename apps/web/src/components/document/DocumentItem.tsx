@@ -6,6 +6,7 @@ import { DocumentDeletor } from "./DocumentDeletor"
 import { DocumentDetailsSheet } from "./DocumentDetailsSheet"
 import { DocumentEditor } from "./DocumentEditor"
 import { DocumentOpener } from "./DocumentOpener"
+import { EmbeddingStatusBadge } from "./EmbeddingStatusBadge"
 
 export function DocumentItem({
   document,
@@ -18,8 +19,9 @@ export function DocumentItem({
     <Item variant="outline" className="w-full">
       <ItemHeader>
         <ItemTitle>
-          <FileIcon />
+          <FileIcon className="shrink-0" />
           <span className="wrap-anywhere">{document.title}</span>
+          <EmbeddingStatusBadge status={document.embeddingStatus} />
         </ItemTitle>
 
         <div className="flex gap-2 items-center">

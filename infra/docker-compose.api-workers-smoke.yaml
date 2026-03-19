@@ -1,0 +1,87 @@
+name: "api-workers-smoke"
+
+services:
+  postgres:
+    image: pgvector/pgvector:pg17
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: passpass
+    ports:
+      - "55432:5432"
+    volumes:
+      - ./database/sql/common.sql:/docker-entrypoint-initdb.d/common.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U admin -d postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "56379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  api:
+    image: ${API_IMAGE:-agentstudio-api-smoke:latest}
+    build:
+      context: ..
+      dockerfile: apps/api/Dockerfile
+      target: api-runtime
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: postgresql://connect_admin:passpass@postgres:5432/connect
+      BULLMQ_REDIS_URL: redis://redis:6379
+      AUTH0_ISSUER_URL: https://example.auth0.com/
+      AUTH0_AUDIENCE: https://example.auth0.com/api/v2/
+      AUTH0_ORGANIZATION_ID: org_example
+      AUTH0_CLIENT_ID: example_client_id
+      AUTH0_M2M_CLIENT_ID: example_m2m_client_id
+      AUTH0_M2M_CLIENT_SECRET: example_m2m_client_secret
+      AUTH0_DB_CONNECTION_NAME: Username-Password-Authentication
+      GOOGLE_VERTEX_PROJECT: example-project
+      GOOGLE_VERTEX_LOCATION: europe-west1
+      DOCUMENT_EMBEDDING_MODELS: gemini-embedding-001
+      DOCUMENT_EXTRACTOR_DOCLING_ENABLED: "false"
+      LOCAL_STORAGE_SERVER_BASE_URL: http://localhost:3000
+    ports:
+      - "3003:3000"
+    restart: "no"
+
+  workers:
+    image: ${WORKERS_IMAGE:-agentstudio-workers-smoke:latest}
+    build:
+      context: ..
+      dockerfile: apps/api/Dockerfile
+      target: workers-runtime
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: postgresql://connect_admin:passpass@postgres:5432/connect
+      BULLMQ_REDIS_URL: redis://redis:6379
+      AUTH0_ISSUER_URL: https://example.auth0.com/
+      AUTH0_AUDIENCE: https://example.auth0.com/api/v2/
+      AUTH0_ORGANIZATION_ID: org_example
+      AUTH0_CLIENT_ID: example_client_id
+      AUTH0_M2M_CLIENT_ID: example_m2m_client_id
+      AUTH0_M2M_CLIENT_SECRET: example_m2m_client_secret
+      AUTH0_DB_CONNECTION_NAME: Username-Password-Authentication
+      GOOGLE_VERTEX_PROJECT: example-project
+      GOOGLE_VERTEX_LOCATION: europe-west1
+      DOCUMENT_EMBEDDING_MODELS: gemini-embedding-001
+      DOCUMENT_EXTRACTOR_DOCLING_ENABLED: "true"
+      LOCAL_STORAGE_SERVER_BASE_URL: http://api:3000
+    restart: "no"

@@ -347,6 +347,13 @@ gcloud artifacts repositories create health \
 
 Note from original setup: vulnerability scanning was disabled in UI.
 
+Runtime images are produced from a single Dockerfile with two targets:
+
+- API runtime image tag: `${imageUrl}:${version}-api`
+- Workers runtime image tag: `${imageUrl}:${version}-workers`
+
+Both images are built from `apps/api/Dockerfile` with different targets (`api-runtime` and `workers-runtime`).
+
 ---
 
 ## 10) Makefile environment values
@@ -412,6 +419,16 @@ gcloud compute networks subnets add-iam-policy-binding default \
 
 ## 12) First backend deployment (GCP)
 
+Build/check/push API image:
+
+```bash
+make docker-build-api PROJECT=health REGION=eu
+make docker-check PROJECT=health REGION=eu
+make docker-push-api PROJECT=health REGION=eu
+```
+
+Deploy API service:
+
 ```bash
 make deploy PROJECT=health REGION=eu
 ```
@@ -422,11 +439,19 @@ make deploy PROJECT=health REGION=eu
 
 Worker pools are created (or updated if they already exist) by deployment:
 
+Build/check/push workers image:
+
+```bash
+make docker-build-workers PROJECT=health REGION=eu
+make docker-workers-check PROJECT=health REGION=eu
+make docker-push-workers PROJECT=health REGION=eu
+```
+
 ```bash
 make deploy-workers PROJECT=health REGION=eu
 ```
 
-This deploys the `${cloudRunName}-workers` worker pool from the same API image, using the worker entrypoint.
+This deploys the `${cloudRunName}-workers` worker pool from the dedicated workers image tag (`-workers`), while API uses the `-api` tag.
 
 ---
 
