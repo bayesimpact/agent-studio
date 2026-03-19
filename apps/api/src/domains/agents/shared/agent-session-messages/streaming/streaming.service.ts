@@ -177,8 +177,8 @@ export class StreamingService extends ServiceWithLLM {
       agent,
       sessionId,
       connectScope,
-      onExecute: (toolExecution) =>
-        this.persistToolExecutionAndNotifyClient({
+      onExecute: async (toolExecution) =>
+        await this.persistToolExecutionAndNotifyClient({
           connectScope,
           sessionId,
           notifyClient,
@@ -607,7 +607,7 @@ export class StreamingService extends ServiceWithLLM {
     })
 
     // Notify client about the form update so it can re-fetch the session and get the latest form state
-    notifyClient(this.sseEvent({ type: "notify_client" }))
+    notifyClient(this.sseEvent({ type: "notify_client", toolName: toolExecution.toolName }))
   }
 }
 

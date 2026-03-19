@@ -23,7 +23,7 @@ export type AgentSessionMessageDto = {
 export type StreamEventPayload =
   | { type: "start"; messageId: string }
   | { type: "chunk"; content: string; messageId: string }
-  | { type: "notify_client" }
+  | { type: "notify_client"; toolName: ToolName }
   | { type: "end"; messageId: string; fullContent: string }
   | { type: "error"; messageId: string; error: string }
 
