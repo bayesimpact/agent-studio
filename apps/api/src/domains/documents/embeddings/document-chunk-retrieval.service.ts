@@ -5,9 +5,8 @@ import { embed } from "ai"
 import { toSql } from "pgvector"
 import type { DataSource, SelectQueryBuilder } from "typeorm"
 import type { RequiredConnectScope } from "@/common/entities/connect-required-fields"
+import { DEFAULT_TOP_K } from "@/domains/agents/shared/agent-session-messages/streaming/tools/retrieve-project-document-chunks.tool"
 import { resolveEmbeddingModelNames, resolveVertexConfig } from "./document-embeddings.config"
-
-const DEFAULT_TOP_K = 20
 
 export type RetrievedDocumentChunk = {
   chunkId: string

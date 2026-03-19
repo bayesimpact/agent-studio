@@ -1,10 +1,10 @@
-import { outputJsonSchemaSchema } from "@caseai-connect/api-contracts"
+import { outputJsonSchemaSchema, ToolName } from "@caseai-connect/api-contracts"
 import { tool } from "ai"
 import { z } from "zod"
 import type { RequiredConnectScope } from "@/common/entities/connect-required-fields"
 import type { Agent } from "@/domains/agents/agent.entity"
 import type { FormAgentSessionsService } from "@/domains/agents/form-agent-sessions/form-agent-sessions.service"
-import { type ToolExecutionLog, ToolName } from "./tool-execution-log"
+import type { ToolExecutionLog } from "./tool-execution-log"
 
 export function fillFormTool({
   connectScope,

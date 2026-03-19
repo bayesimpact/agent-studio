@@ -43,7 +43,7 @@ function toDto(message: AgentMessage): AgentSessionMessageDto {
     createdAt: message.createdAt.toISOString(),
     startedAt: message.startedAt?.toISOString(),
     completedAt: message.completedAt?.toISOString(),
-    toolCalls: message.toolCalls ?? undefined,
+    toolCalls: (message.toolCalls as AgentSessionMessageDto["toolCalls"]) ?? undefined,
     documentId: message.documentId ?? undefined,
   }
 }

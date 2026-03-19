@@ -1,3 +1,9 @@
+export enum ToolName {
+  FillForm = "fillForm",
+  RetrieveProjectDocumentChunks = "retrieveProjectDocumentChunks",
+  Sources = "sources",
+}
+
 export type AgentSessionMessageDto = {
   id: string
   role: "user" | "assistant" | "tool"
@@ -9,7 +15,7 @@ export type AgentSessionMessageDto = {
   completedAt?: string
   toolCalls?: Array<{
     id: string
-    name: string
+    name: ToolName
     arguments: Record<string, unknown>
   }>
 }

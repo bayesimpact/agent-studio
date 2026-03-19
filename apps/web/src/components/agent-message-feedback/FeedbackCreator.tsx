@@ -31,9 +31,7 @@ export function FeedbackCreator({ message }: { message: AgentSessionMessage }) {
       <DialogTrigger asChild>
         <Button
           variant="link"
-          className={
-            "absolute bottom-2 text-muted-foreground text-xs font-normal hover:text-inherit"
-          }
+          className={"text-muted-foreground text-xs font-normal hover:text-inherit"}
         >
           {t("button")}
         </Button>

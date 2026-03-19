@@ -1,4 +1,4 @@
-import { ToolName } from "../tools/tool-execution-log"
+import { ToolName } from "@caseai-connect/api-contracts"
 
 export const promptHelpers = {
   now: () => `Today's date: ${new Date().toLocaleDateString()}`,
