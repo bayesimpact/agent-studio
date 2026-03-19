@@ -1,8 +1,4 @@
-export enum ToolName {
-  FillForm = "fillForm",
-  RetrieveProjectDocumentChunks = "retrieveProjectDocumentChunks",
-  Sources = "sources",
-}
+import type { ToolName } from "@caseai-connect/api-contracts"
 
 export type ToolExecutionLog = {
   toolName: ToolName

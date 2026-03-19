@@ -1,5 +1,5 @@
+import type { ToolName } from "@caseai-connect/api-contracts"
 import type { Agent } from "@/domains/agents/agent.entity"
-import type { ToolName } from "../tools/tool-execution-log"
 import { promptHelpers } from "./helpers"
 
 export function buildConversationAgentPrompt({

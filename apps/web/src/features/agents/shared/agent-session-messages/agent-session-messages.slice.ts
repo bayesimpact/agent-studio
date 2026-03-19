@@ -93,8 +93,20 @@ const slice = createSlice({
         state.data.error = null
       })
       .addCase(listMessages.fulfilled, (state, action) => {
+        const originalMessages = action.payload
+        const mergedMessages: AgentSessionMessage[] = []
+        originalMessages.forEach((msg) => {
+          if (msg.role === "tool") {
+            const lastMessage = mergedMessages[mergedMessages.length - 1]
+            if (!lastMessage || lastMessage.role !== "assistant") return
+            // Merge tool calls into the last message
+            lastMessage.toolCalls = [...(lastMessage.toolCalls || []), ...(msg.toolCalls || [])]
+            return
+          }
+          mergedMessages.push(msg)
+        })
         state.data = {
-          value: action.payload,
+          value: mergedMessages,
           status: ADS.Fulfilled,
           error: null,
         }

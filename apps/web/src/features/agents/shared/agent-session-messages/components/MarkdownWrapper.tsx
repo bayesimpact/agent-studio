@@ -7,8 +7,9 @@ import remarkGfm from "remark-gfm"
 export type MarkdownProps = {
   content: string
   theme?: "light" | "dark"
+  end?: React.ReactNode
 }
-export function MarkdownWrapper({ content, theme = "light" }: MarkdownProps) {
+export function MarkdownWrapper({ content, end, theme = "light" }: MarkdownProps) {
   const isDark = theme === "dark"
   return (
     <Markdown
@@ -34,7 +35,11 @@ export function MarkdownWrapper({ content, theme = "light" }: MarkdownProps) {
           <h6 className={cn("mb-2 mt-4 text-sm font-medium first:mt-0")}>{children}</h6>
         ),
         // Paragraphs
-        p: ({ children }) => <p className={cn("mb-4 leading-relaxed")}>{children}</p>,
+        p: ({ children }) => (
+          <p className={cn("mb-4 leading-relaxed")}>
+            {children} {end}
+          </p>
+        ),
         // Lists
         ul: ({ children }) => <ul className={cn("mb-4 ml-6 list-disc space-y-1")}>{children}</ul>,
         ol: ({ children }) => (

@@ -1,5 +1,5 @@
 import type { FeatureFlagKey } from "@caseai-connect/api-contracts"
-import { useFeatureFlags } from "@/hooks/use-feature-falgs"
+import { useFeatureFlags } from "@/hooks/use-feature-flags"
 
 export function RestrictedFeature({
   feature,

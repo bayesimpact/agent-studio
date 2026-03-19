@@ -1,5 +1,5 @@
 import { URL } from "node:url"
-import type { StreamEvent, StreamEventPayload } from "@caseai-connect/api-contracts"
+import { type StreamEvent, type StreamEventPayload, ToolName } from "@caseai-connect/api-contracts"
 import { Inject, Injectable, NotFoundException } from "@nestjs/common"
 import { InjectRepository } from "@nestjs/typeorm"
 import type { FilePart, ImagePart, ToolSet } from "ai"
@@ -24,6 +24,7 @@ import {
   FILE_STORAGE_SERVICE,
   type IFileStorage,
 } from "@/domains/documents/storage/file-storage.interface"
+import { OrganizationsService } from "@/domains/organizations/organizations.service"
 import { ServiceWithLLM } from "@/external/llm"
 import { AgentMessage } from "../agent-message.entity"
 import { buildConversationAgentPrompt } from "./master-promts/conversation-agent.prompt"
@@ -31,7 +32,7 @@ import { buildFormAgentPrompt } from "./master-promts/form-agent.prompt"
 import { fillFormTool } from "./tools/fill-form.tool"
 import { retrieveProjectDocumentChunksTool } from "./tools/retrieve-project-document-chunks.tool"
 import { sourcesTool } from "./tools/sources.tool"
-import { type ToolExecutionLog, ToolName } from "./tools/tool-execution-log"
+import type { ToolExecutionLog } from "./tools/tool-execution-log"
 
 @Injectable()
 export class StreamingService extends ServiceWithLLM {
@@ -48,6 +49,8 @@ export class StreamingService extends ServiceWithLLM {
 
     @Inject(FormAgentSessionsService)
     private readonly formAgentSessionsService: FormAgentSessionsService,
+    @Inject(OrganizationsService)
+    private readonly organizationsService: OrganizationsService,
 
     private readonly documentChunkRetrievalService: DocumentChunkRetrievalService,
 
@@ -170,7 +173,7 @@ export class StreamingService extends ServiceWithLLM {
     documentId?: string
     connectScope: RequiredConnectScope
   }) {
-    const tools = this.buildTools({
+    const tools = await this.buildTools({
       agent,
       sessionId,
       connectScope,
@@ -531,7 +534,7 @@ export class StreamingService extends ServiceWithLLM {
     return elapsed > this.STREAM_TIMEOUT_MS
   }
 
-  private buildTools({
+  private async buildTools({
     agent,
     sessionId,
     connectScope,
@@ -541,7 +544,11 @@ export class StreamingService extends ServiceWithLLM {
     sessionId: string
     connectScope: RequiredConnectScope
     onExecute: (toolExecution: ToolExecutionLog) => void
-  }): ToolSet | undefined {
+  }): Promise<ToolSet | undefined> {
+    const hasSourcesTool = await this.organizationsService.hasFeature({
+      connectScope,
+      feature: "sources_tool",
+    })
     switch (agent.type) {
       case "conversation":
         return {
@@ -551,7 +558,7 @@ export class StreamingService extends ServiceWithLLM {
             retrievalService: this.documentChunkRetrievalService,
             onExecute,
           }),
-          [ToolName.Sources]: sourcesTool({ onExecute }),
+          ...(hasSourcesTool ? { [ToolName.Sources]: sourcesTool({ onExecute }) } : {}),
         } as ToolSet
 
       case "form":
