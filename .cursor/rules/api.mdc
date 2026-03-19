@@ -707,6 +707,8 @@ async verifyUserCanCreateProject(userId: string, organizationId: string): Promis
 
 **CRITICAL RULE**: You MUST NEVER manually create a migration file unless the user explicitly tells you to do so.
 
+**MANDATORY DEFAULT**: For schema changes, always use `npm run migration:generate`.
+
 **What is Forbidden**:
 - ❌ Creating migration files manually (e.g., `CreateTableX.ts`)
 - ❌ Writing migration SQL code by hand
@@ -717,6 +719,7 @@ async verifyUserCanCreateProject(userId: string, organizationId: string): Promis
 - ✅ Always use `migration:generate` to create migrations from entity changes
 - ✅ Modify entity files first, then generate the migration
 - ✅ Only create migrations manually if the user explicitly requests it (e.g., "create a manual migration for X")
+- ✅ Do not use `migration:create` for normal schema work
 
 **Why This Rule Exists**:
 - Auto-generated migrations ensure consistency between entities and database schema

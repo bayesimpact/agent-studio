@@ -336,6 +336,11 @@ async verifyUserCanCreateProject(userId: string, organizationId: string): Promis
 
 NEVER manually create migration files unless the user explicitly requests it. Always use `migration:generate`.
 
+Default behavior for schema changes:
+- Required: `npm run migration:generate`
+- Forbidden by default: `migration:create` and hand-written migration SQL
+- Exception: only when the user explicitly asks for a manual migration
+
 ### Migration Best Practices
 
 - One migration per feature

@@ -14,6 +14,7 @@ import { FILE_STORAGE_SERVICE, type IFileStorage } from "../storage/file-storage
 import { DocumentEmbeddingStatusNotifierService } from "./document-embedding-status-notifier.service"
 import { resolveEmbeddingModelNames, resolveVertexConfig } from "./document-embeddings.config"
 import type { CreateDocumentEmbeddingsJobPayload } from "./document-embeddings.types"
+import type { DocumentExtractionEngine } from "./document-text-extractor.service"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
 import { DocumentTextExtractorService } from "./document-text-extractor.service"
 
@@ -37,17 +38,18 @@ export class DocumentEmbeddingsProcessorService {
     await this.markDocumentStatus(document, "processing")
 
     try {
-      const chunks = await this.extractDocumentChunks(document)
-      const embeddingsByModelName = await this.generateEmbeddingsByModel(chunks)
+      const extractionResult = await this.extractDocumentChunks(document)
+      const embeddingsByModelName = await this.generateEmbeddingsByModel(extractionResult.chunks)
 
       await this.insertChunks({
         documentId: document.id,
         organizationId: payload.organizationId,
         projectId: payload.projectId,
-        chunks,
+        chunks: extractionResult.chunks,
         embeddingsByModelName,
       })
 
+      document.extractionEngine = extractionResult.extractionEngine
       await this.markDocumentStatus(document, "completed")
 
       this.logger.log(`Embeddings created for document ${document.id}`)
@@ -76,13 +78,19 @@ export class DocumentEmbeddingsProcessorService {
     return document
   }
 
-  private async extractDocumentChunks(document: Document): Promise<string[]> {
+  private async extractDocumentChunks(document: Document): Promise<{
+    chunks: string[]
+    extractionEngine: DocumentExtractionEngine
+  }> {
     const fileBuffer = await this.fileStorage.readFile(document.storageRelativePath)
-    const text = await this.textExtractorService.extract(fileBuffer, document.mimeType)
+    const extractionResult = await this.textExtractorService.extract(fileBuffer, document.mimeType)
     const splitter = new SentenceSplitter({ chunkSize: CHUNK_SIZE, chunkOverlap: CHUNK_OVERLAP })
-    const chunks = splitter.splitText(text)
+    const chunks = splitter.splitText(extractionResult.text)
     this.logger.log(`Split document ${document.id} into ${chunks.length} chunks`)
-    return chunks
+    return {
+      chunks,
+      extractionEngine: extractionResult.extractionEngine,
+    }
   }
 
   private async generateEmbeddingsByModel(chunks: string[]): Promise<Map<string, number[][]>> {

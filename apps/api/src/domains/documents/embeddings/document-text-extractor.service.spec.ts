@@ -27,7 +27,10 @@ describe("DocumentTextExtractorService", () => {
 
     const result = await extractor.extract(Buffer.from("hello world"), "text/plain")
 
-    expect(result).toBe("hello world")
+    expect(result).toEqual({
+      text: "hello world",
+      extractionEngine: null,
+    })
     expect(mockExtractTextWithDocling).not.toHaveBeenCalled()
   })
 
@@ -37,7 +40,10 @@ describe("DocumentTextExtractorService", () => {
 
     const result = await extractor.extract(Buffer.from("fake"), "image/png")
 
-    expect(result).toBe("# Converted markdown\n")
+    expect(result).toEqual({
+      text: "# Converted markdown\n",
+      extractionEngine: "docling",
+    })
     expect(mockExtractTextWithDocling).toHaveBeenCalledTimes(1)
   })
 

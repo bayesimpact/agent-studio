@@ -6,13 +6,23 @@ import { DOC_MIME_TYPES, DOCLING_SUPPORTED_MIME_TYPES } from "@/external/docling
 
 const DOCLING_MAX_STDOUT_BUFFER = 50 * 1024 * 1024
 
+export type DocumentExtractionEngine = "docling" | null
+
+export type DocumentTextExtractionResult = {
+  text: string
+  extractionEngine: DocumentExtractionEngine
+}
+
 @Injectable()
 export class DocumentTextExtractorService {
   private readonly logger = new Logger(DocumentTextExtractorService.name)
 
-  async extract(buffer: Buffer, mimeType: string): Promise<string> {
+  async extract(buffer: Buffer, mimeType: string): Promise<DocumentTextExtractionResult> {
     if (mimeType === "text/plain" || mimeType === "text/csv") {
-      return buffer.toString("utf-8")
+      return {
+        text: buffer.toString("utf-8"),
+        extractionEngine: null,
+      }
     }
 
     if (isDoclingEnabled() && DOCLING_SUPPORTED_MIME_TYPES.has(mimeType)) {
@@ -23,7 +33,10 @@ export class DocumentTextExtractorService {
           maxBuffer: DOCLING_MAX_STDOUT_BUFFER,
         })
         if (extractedText.trim().length > 0) {
-          return extractedText
+          return {
+            text: extractedText,
+            extractionEngine: "docling",
+          }
         }
       } catch (error) {
         this.logger.warn(
@@ -39,13 +52,19 @@ export class DocumentTextExtractorService {
     if (mimeType === "application/pdf") {
       const reader = new PDFReader()
       const docs = await reader.loadDataAsContent(buffer)
-      return docs.map((documentContent) => documentContent.text).join("\n")
+      return {
+        text: docs.map((documentContent) => documentContent.text).join("\n"),
+        extractionEngine: null,
+      }
     }
 
     // as a fallback, we use mammoth to extract the text from the Microsoft document
     if (DOC_MIME_TYPES.has(mimeType)) {
       const result = await mammoth.extractRawText({ buffer })
-      return result.value
+      return {
+        text: result.value,
+        extractionEngine: null,
+      }
     }
 
     throw new UnsupportedMediaTypeException(`Cannot extract text from MIME type: ${mimeType}`)
