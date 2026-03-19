@@ -166,24 +166,25 @@ docker-check: docker-build-api
 	exit 1
 
 docker-workers-check: docker-build-workers
-	@echo "Starting docker workers container and checking for successful startup..."
-	@CONTAINER_ID=$$(docker run -d ${workersImageTag}); \
+	@echo "Starting docker workers with smoke dependencies and checking for successful startup..."
+	@API_IMAGE=${apiImageTag} WORKERS_IMAGE=${workersImageTag} docker compose -f ${smokeComposeFile} up -d postgres redis workers; \
+	CONTAINER_ID=$$(API_IMAGE=${apiImageTag} WORKERS_IMAGE=${workersImageTag} docker compose -f ${smokeComposeFile} ps -q workers); \
 	echo "Container ID: $$CONTAINER_ID"; \
 	i=1; \
-	while [ $$i -le 30 ]; do \
-		echo "Checking logs (attempt $$i/30)..."; \
+	while [ $$i -le 45 ]; do \
+		echo "Checking logs (attempt $$i/45)..."; \
 		LOGS=$$(docker logs $$CONTAINER_ID 2>&1); \
 		echo "$$LOGS"; \
 		if echo "$$LOGS" | grep -q "Workers app started"; then \
 			echo "✓ Docker workers container started successfully"; \
-			docker kill $$CONTAINER_ID >/dev/null 2>&1; \
+			API_IMAGE=${apiImageTag} WORKERS_IMAGE=${workersImageTag} docker compose -f ${smokeComposeFile} down -v >/dev/null 2>&1; \
 			exit 0; \
 		fi; \
 		sleep 1; \
 		i=$$((i + 1)); \
 	done; \
 	echo "✗ Failed to find 'Workers app started' in docker logs"; \
-	docker kill $$CONTAINER_ID >/dev/null 2>&1; \
+	API_IMAGE=${apiImageTag} WORKERS_IMAGE=${workersImageTag} docker compose -f ${smokeComposeFile} down -v >/dev/null 2>&1; \
 	exit 1
 
 docker-smoke-up: docker-build
