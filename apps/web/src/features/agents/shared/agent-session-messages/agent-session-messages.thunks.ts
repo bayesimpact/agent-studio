@@ -1,9 +1,10 @@
+import { ToolName } from "@caseai-connect/api-contracts"
 import { createAsyncThunk } from "@reduxjs/toolkit"
 import type { RootState, ThunkExtraArg } from "@/store"
 import { generateId } from "@/utils/generate-id"
 import { selectIsAdminInterface } from "../../../auth/auth.selectors"
 import { getCurrentIds } from "../../../helpers"
-import { listFormAgentSessions } from "../../form-agent-sessions/form-agent-sessions.thunks"
+import { refreshFormResultForCurrentAgentSession } from "../../form-agent-sessions/form-agent-sessions.thunks"
 import type { AgentSessionMessage } from "./agent-session-messages.models"
 import { agentSessionMessagesActions } from "./agent-session-messages.slice"
 import { streamChatResponse } from "./external/agent-session-messages-streaming"
@@ -94,10 +95,15 @@ export const sendMessage = createAsyncThunk<void, { content: string; file?: File
               }),
             )
           },
-          onNotifyClient(_event) {
-            // TODO: should have a condition
-            // dispatch(refreshFormResultForCurrentAgentSession(agentSessionId))
-            dispatch(listFormAgentSessions({ agentId }))
+          onNotifyClient(event) {
+            switch (event.toolName) {
+              case ToolName.FillForm:
+                dispatch(refreshFormResultForCurrentAgentSession({ agentId }))
+                break
+
+              default:
+                break
+            }
           },
           onEnd: (event) => {
             dispatch(

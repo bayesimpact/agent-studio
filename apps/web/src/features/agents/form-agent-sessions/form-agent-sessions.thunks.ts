@@ -6,6 +6,30 @@ import type { FormAgentSession } from "./form-agent-sessions.models"
 
 type ThunkConfig = { state: RootState; extra: ThunkExtraArg }
 
+export const refreshFormResultForCurrentAgentSession = createAsyncThunk<
+  FormAgentSession[],
+  { agentId: string },
+  ThunkConfig
+>(
+  "formAgentSession/refreshFormResultForCurrentAgentSession",
+  async ({ agentId }, { extra: { services }, getState }) => {
+    const state = getState()
+    const { organizationId, projectId } = getCurrentIds({
+      state,
+      wantedIds: ["organizationId", "projectId"],
+    })
+    const isAdminInterface = selectIsAdminInterface(state)
+    // NOTE: this is a proxy of listFormAgentSessions because middleware listener causes a bug on messages.
+    // TODO: need a dedicated endpoint
+    return services.formAgentSessions.getAll({
+      organizationId,
+      projectId,
+      agentId,
+      type: isAdminInterface ? "playground" : "live",
+    })
+  },
+)
+
 export const listFormAgentSessions = createAsyncThunk<
   FormAgentSession[],
   { agentId: string },
