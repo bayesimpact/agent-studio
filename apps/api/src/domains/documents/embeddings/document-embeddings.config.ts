@@ -14,6 +14,10 @@ const normalizeVertexLocation = (value: string): string => {
   return trimmedValue
 }
 
+const DEFAULT_MAX_VERTEX_EMBEDDING_BATCH_SIZE = 250
+const MIN_VERTEX_EMBEDDING_BATCH_SIZE = 1
+const MAX_ALLOWED_VERTEX_EMBEDDING_BATCH_SIZE = 250
+
 export const resolveVertexConfig = (): { project: string; location: string } => {
   const project = toNonEmptyValue(process.env.GOOGLE_VERTEX_PROJECT)
 
@@ -54,4 +58,24 @@ export const resolveEmbeddingModelNames = (): string[] => {
   }
 
   return [...new Set(modelNames)]
+}
+
+export const resolveMaxVertexEmbeddingBatchSize = (): number => {
+  const configuredBatchSize = toNonEmptyValue(process.env.MAX_VERTEX_EMBEDDING_BATCH_SIZE)
+  if (!configuredBatchSize) {
+    return DEFAULT_MAX_VERTEX_EMBEDDING_BATCH_SIZE
+  }
+
+  const parsedBatchSize = Number.parseInt(configuredBatchSize, 10)
+  if (
+    Number.isNaN(parsedBatchSize) ||
+    parsedBatchSize < MIN_VERTEX_EMBEDDING_BATCH_SIZE ||
+    parsedBatchSize > MAX_ALLOWED_VERTEX_EMBEDDING_BATCH_SIZE
+  ) {
+    throw new InternalServerErrorException(
+      `Invalid MAX_VERTEX_EMBEDDING_BATCH_SIZE: ${configuredBatchSize}. Expected an integer between ${MIN_VERTEX_EMBEDDING_BATCH_SIZE} and ${MAX_ALLOWED_VERTEX_EMBEDDING_BATCH_SIZE}.`,
+    )
+  }
+
+  return parsedBatchSize
 }
