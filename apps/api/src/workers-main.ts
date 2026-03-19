@@ -8,7 +8,7 @@ import {
 } from "@/external/docling/docling.cli"
 import { WorkersAppModule } from "./workers-app.module"
 
-const WORKER_DOCLING_HEALTH_CHECK_TIMEOUT_MS = 10_000
+const WORKER_DOCLING_HEALTH_CHECK_TIMEOUT_MS = 30_000
 
 async function bootstrapWorkersMain() {
   await ensureDoclingIsReadyForWorkers()
