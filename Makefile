@@ -170,6 +170,30 @@ docker-workers-check: docker-build-workers
 	@API_IMAGE=${apiImageTag} WORKERS_IMAGE=${workersImageTag} docker compose -f ${smokeComposeFile} up -d postgres redis workers; \
 	CONTAINER_ID=$$(API_IMAGE=${apiImageTag} WORKERS_IMAGE=${workersImageTag} docker compose -f ${smokeComposeFile} ps -q workers); \
 	echo "Container ID: $$CONTAINER_ID"; \
+	echo "Verifying Docling CLI in workers container..."; \
+	j=1; \
+	DOC_VERSION=""; \
+	while [ $$j -le 15 ]; do \
+		DOC_VERSION=$$(docker exec $$CONTAINER_ID docling --version 2>/dev/null || true); \
+		if [ -n "$$DOC_VERSION" ]; then \
+			echo "✓ Docling CLI available: $$DOC_VERSION"; \
+			break; \
+		fi; \
+		if ! docker ps -q --no-trunc | grep -q "$$CONTAINER_ID"; then \
+			echo "✗ Workers container exited before Docling CLI check completed"; \
+			docker logs $$CONTAINER_ID 2>&1; \
+			API_IMAGE=${apiImageTag} WORKERS_IMAGE=${workersImageTag} docker compose -f ${smokeComposeFile} down -v >/dev/null 2>&1; \
+			exit 1; \
+		fi; \
+		sleep 1; \
+		j=$$((j + 1)); \
+	done; \
+	if [ -z "$$DOC_VERSION" ]; then \
+		echo "✗ Docling CLI check failed in workers container"; \
+		docker logs $$CONTAINER_ID 2>&1; \
+		API_IMAGE=${apiImageTag} WORKERS_IMAGE=${workersImageTag} docker compose -f ${smokeComposeFile} down -v >/dev/null 2>&1; \
+		exit 1; \
+	fi; \
 	i=1; \
 	while [ $$i -le 45 ]; do \
 		echo "Checking logs (attempt $$i/45)..."; \
