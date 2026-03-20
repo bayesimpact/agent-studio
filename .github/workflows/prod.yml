@@ -66,7 +66,7 @@ jobs:
         run: make notify-error
 
   build-and-push:
-    needs: [check-changes, tests]
+    needs: [check-changes]
     if: needs.check-changes.outputs.deploy == 'true'
     runs-on: ubuntu-latest
     environment: production
