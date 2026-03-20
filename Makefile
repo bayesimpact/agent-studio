@@ -14,7 +14,7 @@ MAX_VERTEX_EMBEDDING_BATCH_SIZE ?= 250
 ifeq ($(REGION),eu)
 ifeq ($(PROJECT),connect)
 # CONNECT
-baseImageUrl = europe-west9-docker.pkg.dev/caseai-connect/caseai-connect/api
+baseImageUrl = europe-west9-docker.pkg.dev/caseai-connect/caseai-connect
 cloudRunName = connect
 googleVertexProject = caseai-connect
 googleVertexLocation = europe-west1
@@ -41,7 +41,7 @@ databaseName = connect
 cloudSqlCredentialsFile = $(CURDIR)/dontsave/caseai-connect-26b7a9fadda7.json
 else ifeq ($(PROJECT),health)
 # Health
-baseImageUrl = europe-west9-docker.pkg.dev/impulse-488513/health/api
+baseImageUrl = europe-west9-docker.pkg.dev/impulse-488513/health
 cloudRunName = health
 googleVertexProject = impulse-488513
 googleVertexLocation = europe-west1
