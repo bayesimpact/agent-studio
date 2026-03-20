@@ -1,8 +1,11 @@
-import { createSlice } from "@reduxjs/toolkit"
+import { createSlice, isAnyOf } from "@reduxjs/toolkit"
 import { ADS, type AsyncData, defaultAsyncData } from "@/store/async-data-status"
 import type { Agent } from "../agents.models"
 import type { FormAgentSession } from "./form-agent-sessions.models"
-import { listFormAgentSessions } from "./form-agent-sessions.thunks"
+import {
+  listFormAgentSessions,
+  refreshFormResultForCurrentAgentSession,
+} from "./form-agent-sessions.thunks"
 
 type DataType = Record<Agent["id"], FormAgentSession[]> // keyed by agentId
 type State = {
@@ -21,25 +24,34 @@ const slice = createSlice({
   },
   extraReducers: (builder) => {
     builder
-      .addCase(listFormAgentSessions.pending, (state) => {
-        if (!ADS.isFulfilled(state.data)) state.data.status = ADS.Loading
-        state.data.error = null
-      })
-      .addCase(listFormAgentSessions.fulfilled, (state, action) => {
-        const agentId = action.meta.arg.agentId
-        state.data = {
-          value: {
-            ...state.data.value,
-            [agentId]: action.payload,
-          },
-          status: ADS.Fulfilled,
-          error: null,
-        }
-      })
-      .addCase(listFormAgentSessions.rejected, (state, action) => {
-        state.data.status = ADS.Error
-        state.data.error = action.error.message || "Failed to load sessions"
-      })
+      .addMatcher(
+        isAnyOf(listFormAgentSessions.pending, refreshFormResultForCurrentAgentSession.pending),
+        (state) => {
+          if (!ADS.isFulfilled(state.data)) state.data.status = ADS.Loading
+          state.data.error = null
+        },
+      )
+      .addMatcher(
+        isAnyOf(listFormAgentSessions.fulfilled, refreshFormResultForCurrentAgentSession.fulfilled),
+        (state, action) => {
+          const agentId = action.meta.arg.agentId
+          state.data = {
+            value: {
+              ...state.data.value,
+              [agentId]: action.payload,
+            },
+            status: ADS.Fulfilled,
+            error: null,
+          }
+        },
+      )
+      .addMatcher(
+        isAnyOf(listFormAgentSessions.rejected, refreshFormResultForCurrentAgentSession.rejected),
+        (state, action) => {
+          state.data.status = ADS.Error
+          state.data.error = action.error.message || "Failed to load sessions"
+        },
+      )
   },
 })
 

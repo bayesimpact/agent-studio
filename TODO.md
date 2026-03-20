@@ -1,5 +1,4 @@
 # // FIXME: 
-- onNotifyClient
 - when user message is too long, it fails!!
 - can't delete empty project
 
@@ -13,3 +12,10 @@
 
 ## Dangerous for nest?
 `--experimental-vm-modules`
+
+
+org_membership: role=admin
+workspace_membership: role=admin
+agent_membership: role:user/admin
+
+when creating agent -> every admin of workspace are admin in agent_membership
