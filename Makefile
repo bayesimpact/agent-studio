@@ -14,7 +14,7 @@ MAX_VERTEX_EMBEDDING_BATCH_SIZE ?= 250
 ifeq ($(REGION),eu)
 ifeq ($(PROJECT),connect)
 # CONNECT
-baseImageUrl = REGION-docker.pkg.dev/YOUR_PROJECT/YOUR_REPO/api
+baseImageUrl = REGION-docker.pkg.dev/YOUR_PROJECT/YOUR_REPO
 cloudRunName = connect
 googleVertexProject = YOUR_GCP_PROJECT
 googleVertexLocation = europe-west1
@@ -41,7 +41,7 @@ databaseName = connect
 cloudSqlCredentialsFile = $(CURDIR)/dontsave/your-credentials.json
 else ifeq ($(PROJECT),health)
 # Health
-baseImageUrl = REGION-docker.pkg.dev/YOUR_PROJECT/YOUR_REPO/api
+baseImageUrl = REGION-docker.pkg.dev/YOUR_PROJECT/YOUR_REPO
 cloudRunName = health
 googleVertexProject = YOUR_GCP_PROJECT
 googleVertexLocation = europe-west1
