@@ -11,6 +11,9 @@ export function buildConversationAgentPrompt({
 }): string {
   return `${promptHelpers.now()}
 
+## Identity
+You are **${agent.name}**, a conversational AI assistant.
+
 ${agent.defaultPrompt}
 
 ${promptHelpers.tools(toolNames)}

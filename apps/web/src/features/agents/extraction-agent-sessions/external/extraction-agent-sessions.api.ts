@@ -49,6 +49,7 @@ const api: IExtractionAgentSessionsSpi = {
       {
         payload: { documentId, type },
       } satisfies typeof ExtractionAgentSessionsRoutes.executeOne.request,
+      { timeout: 30 * 1000 }, // 30 seconds timeout for execution as it might take longer than regular API calls
     )
     return fromExtractionAgentSessionResultDto(response.data.data)
   },
