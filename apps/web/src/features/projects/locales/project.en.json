@@ -1,5 +1,6 @@
 {
   "project": {
+    "settings": "Settings",
     "project": "Workspace",
     "projects": "Workspaces",
     "props": {

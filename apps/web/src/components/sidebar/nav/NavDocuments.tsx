@@ -1,4 +1,4 @@
-import { SidebarMenu, SidebarMenuButton, SidebarMenuItem } from "@caseai-connect/ui/shad/sidebar"
+import { SidebarMenuButton, SidebarMenuItem } from "@caseai-connect/ui/shad/sidebar"
 import { CloudAlertIcon, DatabaseZapIcon, Loader2Icon } from "lucide-react"
 import { useMemo } from "react"
 import { useTranslation } from "react-i18next"
@@ -22,19 +22,17 @@ export function NavDocuments({
   if (!isAdminInterface) return null
   const path = buildDocumentsPath({ organizationId, projectId })
   return (
-    <SidebarMenu>
-      <SidebarMenuItem>
-        <SidebarMenuButton isActive={isActive} asChild>
-          <Link to={path} className="font-medium">
-            <div className="flex flex-1 gap-2 items-center">
-              <DatabaseZapIcon className="size-4" />
-              <span className="capitalize-first">{t("document:documents")}</span>
-            </div>
-            <UploaderState />
-          </Link>
-        </SidebarMenuButton>
-      </SidebarMenuItem>
-    </SidebarMenu>
+    <SidebarMenuItem>
+      <SidebarMenuButton isActive={isActive} asChild>
+        <Link to={path}>
+          <div className="flex flex-1 gap-2 items-center">
+            <DatabaseZapIcon className="size-4" />
+            <span className="capitalize-first">{t("document:documents")}</span>
+          </div>
+          <UploaderState />
+        </Link>
+      </SidebarMenuButton>
+    </SidebarMenuItem>
   )
 }
 

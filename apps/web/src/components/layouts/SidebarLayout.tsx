@@ -31,7 +31,7 @@ export function SidebarLayout({
   organization: Organization
   children: React.ReactNode
   sidebarContentChildren: React.ReactNode
-  sidebarFooterChildren: React.ReactNode
+  sidebarFooterChildren?: React.ReactNode
 }) {
   const [headerRightSlot, setHeaderRightSlot] = useState<React.ReactNode>(null)
 
@@ -56,9 +56,9 @@ export function SidebarLayout({
 
           <SidebarContent>{sidebarContentChildren}</SidebarContent>
 
-          <SidebarFooter>
-            {sidebarFooterChildren}
+          {sidebarFooterChildren}
 
+          <SidebarFooter>
             <NavUser user={user}>
               <NavUserMenuItems />
             </NavUser>

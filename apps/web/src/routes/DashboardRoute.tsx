@@ -1,8 +1,18 @@
+import {
+  SidebarGroup,
+  SidebarGroupContent,
+  SidebarGroupLabel,
+  SidebarMenu,
+} from "@caseai-connect/ui/shad/sidebar"
+import { useTranslation } from "react-i18next"
 import { Outlet } from "react-router-dom"
 import { SidebarLayout } from "@/components/layouts/SidebarLayout"
-import { SidebarContent } from "@/components/layouts/sidebar/SidebarContent"
-import { SidebarFooter } from "@/components/layouts/sidebar/SidebarFooter"
 import { ProjectList } from "@/components/ProjectList"
+import { RestrictedFeature } from "@/components/RestrictedFeature"
+import { SidebarAgentList } from "@/components/sidebar/list/SidebarAgentList"
+import { NavDocuments } from "@/components/sidebar/nav/NavDocuments"
+import { NavEvaluation } from "@/components/sidebar/nav/NavEvaluation"
+import { NavProjectMemberships } from "@/components/sidebar/nav/NavProjectMemberships"
 import type { User } from "@/features/me/me.models"
 import { selectMe } from "@/features/me/me.selectors"
 import type { Organization } from "@/features/organizations/organizations.models"
@@ -53,14 +63,15 @@ function WithData({
       <SidebarLayout
         organization={organization}
         sidebarContentChildren={
-          <SidebarContent
-            isAdminInterface={isAdminInterface}
+          <SidebarAgentList
+            organizationId={organization.id}
             project={project.value}
-            projects={projects}
-            organization={organization}
+            isAdminInterface={isAdminInterface}
           />
         }
-        sidebarFooterChildren={isAdminInterface ? <SidebarFooter project={project.value} /> : null}
+        sidebarFooterChildren={
+          isAdminInterface && <SidebarFooterChildren project={project.value} />
+        }
         user={{ name: user.name, email: user.email }}
       >
         <Outlet />
@@ -73,5 +84,29 @@ function WithData({
       projects={projects}
       organization={organization}
     />
+  )
+}
+
+function SidebarFooterChildren({ project }: { project: Project }) {
+  const { t } = useTranslation()
+  return (
+    <SidebarGroup>
+      <SidebarGroupLabel className="uppercase flex-col items-start mb-3">
+        <span className="font-bold text-sm">{project.name}</span>
+        <span>{t("project:settings")}</span>
+      </SidebarGroupLabel>
+
+      <SidebarGroupContent>
+        <SidebarMenu>
+          <RestrictedFeature feature="evaluation">
+            <NavEvaluation organizationId={project.organizationId} projectId={project.id} />
+          </RestrictedFeature>
+
+          <NavDocuments organizationId={project.organizationId} projectId={project.id} />
+
+          <NavProjectMemberships organizationId={project.organizationId} projectId={project.id} />
+        </SidebarMenu>
+      </SidebarGroupContent>
+    </SidebarGroup>
   )
 }

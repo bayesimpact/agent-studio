@@ -1,6 +1,5 @@
 "use client"
 
-import type { ProjectDto } from "@caseai-connect/api-contracts"
 import { Button } from "@caseai-connect/ui/shad/button"
 import {
   Dialog,
@@ -8,40 +7,41 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
+  DialogTrigger,
 } from "@caseai-connect/ui/shad/dialog"
+import { Trash2Icon } from "lucide-react"
+import { useState } from "react"
 import { useTranslation } from "react-i18next"
 import { useNavigate } from "react-router-dom"
+import type { Project } from "@/features/projects/projects.models"
 import { deleteProject } from "@/features/projects/projects.thunks"
 import { useBuildPath } from "@/hooks/use-build-path"
 import { useAppDispatch } from "@/store/hooks"
 
-export function ProjectDeletor({
-  project,
-  onClose,
-}: {
-  project: ProjectDto | null
-  onClose: () => void
-}) {
+export function ProjectDeletor({ project }: { project: Project }) {
   const navigate = useNavigate()
   const { buildPath } = useBuildPath()
   const { t } = useTranslation()
   const dispatch = useAppDispatch()
 
-  if (!project) {
-    return null
-  }
-
+  const [open, setOpen] = useState<boolean>(false)
   const path = buildPath("organization", { organizationId: project.organizationId })
 
   const onSuccess = () => {
     navigate(path, { replace: true })
-    onClose()
+    setOpen(false)
   }
 
   const handleDelete = () => dispatch(deleteProject({ onSuccess }))
 
   return (
-    <Dialog open={!!project} onOpenChange={(open: boolean) => !open && onClose()}>
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button variant="outline" size="sm">
+          <Trash2Icon />
+          {t("actions:delete")}
+        </Button>
+      </DialogTrigger>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>{t("project:delete.title")}</DialogTitle>
@@ -50,7 +50,7 @@ export function ProjectDeletor({
           </DialogDescription>
         </DialogHeader>
         <div className="flex justify-end gap-2 pt-4">
-          <Button variant="outline" onClick={onClose}>
+          <Button variant="outline" onClick={() => setOpen(false)}>
             {t("actions:cancel")}
           </Button>
           <Button variant="destructive" onClick={handleDelete}>
