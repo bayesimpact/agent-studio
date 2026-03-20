@@ -294,7 +294,7 @@ deploy-workers-only:
 	--set-env-vars=LANGFUSE_PK=${langfusePk},LANGFUSE_BASE_URL=${langfuseUrl},LOCATION=$(location) \
 	--set-env-vars=DATABASE_HOST=/cloudsql/${addCloudSqlInstances},DATABASE_USERNAME=${databaseUsername},DATABASE_NAME=${databaseName} \
 	--set-env-vars=DOCUMENT_EMBEDDING_MODELS=${DOCUMENT_EMBEDDING_MODELS} \
-	--set-env-vars=DOCUMENT_EXTRACTOR_DOCLING_ENABLED=true \
+	--set-env-vars=DOCUMENT_EXTRACTOR_DOCLING_ENABLED=false \
 	--set-env-vars=WORKER_DOCLING_HEALTH_CHECK_TIMEOUT_MS=${WORKER_DOCLING_HEALTH_CHECK_TIMEOUT_MS} \
 	--set-env-vars=MAX_VERTEX_EMBEDDING_BATCH_SIZE=${MAX_VERTEX_EMBEDDING_BATCH_SIZE} \
 	--add-cloudsql-instances=${addCloudSqlInstances} \
