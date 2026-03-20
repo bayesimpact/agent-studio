@@ -14,7 +14,7 @@ export function Section({
   return (
     <SidebarGroup className={className}>
       <div className="flex items-center gap-2">
-        <SidebarGroupLabel className="capitalize">{name}</SidebarGroupLabel>
+        <SidebarGroupLabel className="uppercase">{name}</SidebarGroupLabel>
         <div className="shrink-0">{options}</div>
       </div>
 

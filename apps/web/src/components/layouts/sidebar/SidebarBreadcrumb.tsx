@@ -12,7 +12,7 @@ export function SidebarBreadcrumb({ organization }: { organization: Organization
   return (
     <Breadcrumb>
       <BreadcrumbList>
-        <BreadcrumbProject organizationId={organization.id} />
+        <BreadcrumbProject organization={organization} />
 
         <BreadcrumbAgent organizationId={organization.id} />
 

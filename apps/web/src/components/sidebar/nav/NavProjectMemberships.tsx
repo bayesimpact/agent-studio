@@ -1,4 +1,4 @@
-import { SidebarMenu, SidebarMenuButton, SidebarMenuItem } from "@caseai-connect/ui/shad/sidebar"
+import { SidebarMenuButton, SidebarMenuItem } from "@caseai-connect/ui/shad/sidebar"
 import { UsersIcon } from "lucide-react"
 import { useMemo } from "react"
 import { useTranslation } from "react-i18next"
@@ -19,16 +19,14 @@ export function NavProjectMemberships({
   if (!isAdminInterface) return null
   const path = buildProjectMembershipsPath({ organizationId, projectId })
   return (
-    <SidebarMenu>
-      <SidebarMenuItem>
-        <SidebarMenuButton isActive={isActive} asChild>
-          <Link to={path} className="font-medium">
-            <UsersIcon />
-            <span>{t("projectMembership:members")}</span>
-          </Link>
-        </SidebarMenuButton>
-      </SidebarMenuItem>
-    </SidebarMenu>
+    <SidebarMenuItem>
+      <SidebarMenuButton isActive={isActive} asChild>
+        <Link to={path}>
+          <UsersIcon />
+          <span>{t("projectMembership:members")}</span>
+        </Link>
+      </SidebarMenuButton>
+    </SidebarMenuItem>
   )
 }
 

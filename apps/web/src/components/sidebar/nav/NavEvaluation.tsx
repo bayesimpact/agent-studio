@@ -1,4 +1,4 @@
-import { SidebarMenu, SidebarMenuButton, SidebarMenuItem } from "@caseai-connect/ui/shad/sidebar"
+import { SidebarMenuButton, SidebarMenuItem } from "@caseai-connect/ui/shad/sidebar"
 import { ListChecksIcon } from "lucide-react"
 import { useMemo } from "react"
 import { useTranslation } from "react-i18next"
@@ -19,16 +19,14 @@ export function NavEvaluation({
   if (!isAdminInterface) return null
   const path = buildEvaluationPath({ organizationId, projectId })
   return (
-    <SidebarMenu>
-      <SidebarMenuItem>
-        <SidebarMenuButton isActive={isActive} asChild>
-          <Link to={path} className="font-medium">
-            <ListChecksIcon />
-            <span>{t("evaluation:evaluations")}</span>
-          </Link>
-        </SidebarMenuButton>
-      </SidebarMenuItem>
-    </SidebarMenu>
+    <SidebarMenuItem>
+      <SidebarMenuButton isActive={isActive} asChild>
+        <Link to={path}>
+          <ListChecksIcon />
+          <span>{t("evaluation:evaluations")}</span>
+        </Link>
+      </SidebarMenuButton>
+    </SidebarMenuItem>
   )
 }
 
