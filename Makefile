@@ -14,7 +14,7 @@ MAX_VERTEX_EMBEDDING_BATCH_SIZE ?= 250
 ifeq ($(REGION),eu)
 ifeq ($(PROJECT),connect)
 # CONNECT
-imageUrl = REGION-docker.pkg.dev/YOUR_PROJECT/YOUR_REPO/api
+baseImageUrl = REGION-docker.pkg.dev/YOUR_PROJECT/YOUR_REPO/api
 cloudRunName = connect
 googleVertexProject = YOUR_GCP_PROJECT
 googleVertexLocation = europe-west1
@@ -41,7 +41,7 @@ databaseName = connect
 cloudSqlCredentialsFile = $(CURDIR)/dontsave/your-credentials.json
 else ifeq ($(PROJECT),health)
 # Health
-imageUrl = REGION-docker.pkg.dev/YOUR_PROJECT/YOUR_REPO/api
+baseImageUrl = REGION-docker.pkg.dev/YOUR_PROJECT/YOUR_REPO/api
 cloudRunName = health
 googleVertexProject = YOUR_GCP_PROJECT
 googleVertexLocation = europe-west1
@@ -73,8 +73,8 @@ else
 $(error Unsupported REGION '$(REGION)')
 endif
 
-apiImageTag = ${imageUrl}:${version}-api
-workersImageTag = ${imageUrl}:${version}-workers
+apiImageUrl = ${baseImageUrl}/api:${version}
+workersImageUrl = ${baseImageUrl}/workers:${version}
 smokeComposeFile = infra/docker-compose.api-workers-smoke.yaml
 
 # ==============================================================================
@@ -128,27 +128,29 @@ check-web-changes:
 # Docker & Deployment
 # ==============================================================================
 
-docker-build:
-	docker build --platform=linux/amd64 --target api-runtime -t ${apiImageTag} -f apps/api/Dockerfile .
-	docker build --platform=linux/amd64 --target workers-runtime -t ${workersImageTag} -f apps/api/Dockerfile .
+docker-image-refs:
+	@echo "api-image-ref=${apiImageUrl}" >> $(GITHUB_OUTPUT)
+	@echo "workers-image-ref=${workersImageUrl}" >> $(GITHUB_OUTPUT)
+
+docker-build: docker-build-api docker-build-workers
 
 docker-build-api:
-	docker build --platform=linux/amd64 --target api-runtime -t ${apiImageTag} -f apps/api/Dockerfile .
+	docker build --platform=linux/amd64 --target api-runtime -t ${apiImageUrl} -f apps/api/Dockerfile .
 
 docker-build-workers:
-	docker build --platform=linux/amd64 --target workers-runtime -t ${workersImageTag} -f apps/api/Dockerfile .
+	docker build --platform=linux/amd64 --target workers-runtime -t ${workersImageUrl} -f apps/api/Dockerfile .
 
 docker-push: docker-push-api docker-push-workers
 
 docker-push-api: docker-check
-	docker push ${apiImageTag}
+	docker push ${apiImageUrl}
 
 docker-push-workers: docker-workers-check
-	docker push ${workersImageTag}
+	docker push ${workersImageUrl}
 
 docker-check: docker-build-api
 	@echo "Starting docker container and checking for successful startup..."
-	@CONTAINER_ID=$$(docker run -d -p "3003:3000" ${apiImageTag}); \
+	@CONTAINER_ID=$$(docker run -d -p "3003:3000" ${apiImageUrl}); \
 	echo "Container ID: $$CONTAINER_ID"; \
 	i=1; \
 	while [ $$i -le 30 ]; do \
@@ -169,8 +171,8 @@ docker-check: docker-build-api
 
 docker-workers-check: docker-build-workers
 	@echo "Starting docker workers with smoke dependencies and checking for successful startup..."
-	@API_IMAGE=${apiImageTag} WORKERS_IMAGE=${workersImageTag} docker compose -f ${smokeComposeFile} up -d postgres redis workers; \
-	CONTAINER_ID=$$(API_IMAGE=${apiImageTag} WORKERS_IMAGE=${workersImageTag} docker compose -f ${smokeComposeFile} ps -q workers); \
+	@API_IMAGE=${apiImageUrl} WORKERS_IMAGE=${workersImageUrl} docker compose -f ${smokeComposeFile} up -d postgres redis workers; \
+	CONTAINER_ID=$$(API_IMAGE=${apiImageUrl} WORKERS_IMAGE=${workersImageUrl} docker compose -f ${smokeComposeFile} ps -q workers); \
 	echo "Container ID: $$CONTAINER_ID"; \
 	echo "Verifying Docling CLI in workers container..."; \
 	j=1; \
@@ -184,7 +186,7 @@ docker-workers-check: docker-build-workers
 		if ! docker ps -q --no-trunc | grep -q "$$CONTAINER_ID"; then \
 			echo "✗ Workers container exited before Docling CLI check completed"; \
 			docker logs $$CONTAINER_ID 2>&1; \
-			API_IMAGE=${apiImageTag} WORKERS_IMAGE=${workersImageTag} docker compose -f ${smokeComposeFile} down -v >/dev/null 2>&1; \
+			API_IMAGE=${apiImageUrl} WORKERS_IMAGE=${workersImageUrl} docker compose -f ${smokeComposeFile} down -v >/dev/null 2>&1; \
 			exit 1; \
 		fi; \
 		sleep 1; \
@@ -193,7 +195,7 @@ docker-workers-check: docker-build-workers
 	if [ -z "$$DOC_VERSION" ]; then \
 		echo "✗ Docling CLI check failed in workers container"; \
 		docker logs $$CONTAINER_ID 2>&1; \
-		API_IMAGE=${apiImageTag} WORKERS_IMAGE=${workersImageTag} docker compose -f ${smokeComposeFile} down -v >/dev/null 2>&1; \
+		API_IMAGE=${apiImageUrl} WORKERS_IMAGE=${workersImageUrl} docker compose -f ${smokeComposeFile} down -v >/dev/null 2>&1; \
 		exit 1; \
 	fi; \
 	i=1; \
@@ -203,37 +205,37 @@ docker-workers-check: docker-build-workers
 		echo "$$LOGS"; \
 		if echo "$$LOGS" | grep -q "Workers app started"; then \
 			echo "✓ Docker workers container started successfully"; \
-			API_IMAGE=${apiImageTag} WORKERS_IMAGE=${workersImageTag} docker compose -f ${smokeComposeFile} down -v >/dev/null 2>&1; \
+			API_IMAGE=${apiImageUrl} WORKERS_IMAGE=${workersImageUrl} docker compose -f ${smokeComposeFile} down -v >/dev/null 2>&1; \
 			exit 0; \
 		fi; \
 		sleep 1; \
 		i=$$((i + 1)); \
 	done; \
 	echo "✗ Failed to find 'Workers app started' in docker logs"; \
-	API_IMAGE=${apiImageTag} WORKERS_IMAGE=${workersImageTag} docker compose -f ${smokeComposeFile} down -v >/dev/null 2>&1; \
+	API_IMAGE=${apiImageUrl} WORKERS_IMAGE=${workersImageUrl} docker compose -f ${smokeComposeFile} down -v >/dev/null 2>&1; \
 	exit 1
 
 docker-smoke-up: docker-build
-	API_IMAGE=${apiImageTag} WORKERS_IMAGE=${workersImageTag} docker compose -f ${smokeComposeFile} up -d --build
+	API_IMAGE=${apiImageUrl} WORKERS_IMAGE=${workersImageUrl} docker compose -f ${smokeComposeFile} up -d --build
 
 docker-smoke-ps:
-	API_IMAGE=${apiImageTag} WORKERS_IMAGE=${workersImageTag} docker compose -f ${smokeComposeFile} ps
+	API_IMAGE=${apiImageUrl} WORKERS_IMAGE=${workersImageUrl} docker compose -f ${smokeComposeFile} ps
 
 docker-smoke-logs:
-	API_IMAGE=${apiImageTag} WORKERS_IMAGE=${workersImageTag} docker compose -f ${smokeComposeFile} logs --tail=200 api workers postgres redis
+	API_IMAGE=${apiImageUrl} WORKERS_IMAGE=${workersImageUrl} docker compose -f ${smokeComposeFile} logs --tail=200 api workers postgres redis
 
 docker-smoke-check: docker-smoke-up
 	@echo "Waiting for services to settle..."
 	@sleep 8
-	@API_IMAGE=${apiImageTag} WORKERS_IMAGE=${workersImageTag} docker compose -f ${smokeComposeFile} ps
-	@if API_IMAGE=${apiImageTag} WORKERS_IMAGE=${workersImageTag} docker compose -f ${smokeComposeFile} ps --status exited | grep -Eq "api|workers"; then \
+	@API_IMAGE=${apiImageUrl} WORKERS_IMAGE=${workersImageUrl} docker compose -f ${smokeComposeFile} ps
+	@if API_IMAGE=${apiImageUrl} WORKERS_IMAGE=${workersImageUrl} docker compose -f ${smokeComposeFile} ps --status exited | grep -Eq "api|workers"; then \
 		echo "✗ API or workers exited unexpectedly. Check logs with: make docker-smoke-logs PROJECT=$(PROJECT) REGION=$(REGION)"; \
 		exit 1; \
 	fi
 	@echo "✓ API and workers are still running"
 
 docker-smoke-down:
-	API_IMAGE=${apiImageTag} WORKERS_IMAGE=${workersImageTag} docker compose -f ${smokeComposeFile} down -v
+	API_IMAGE=${apiImageUrl} WORKERS_IMAGE=${workersImageUrl} docker compose -f ${smokeComposeFile} down -v
 
 ci-checks:
 	npm ci && npm run biome:ci && npm run typecheck
@@ -254,7 +256,7 @@ deploy: docker-push-api deploy-only
 deploy-workers: docker-push-workers deploy-workers-only
 
 deploy-only:
-	gcloud run deploy ${cloudRunName} --image ${apiImageTag} \
+	gcloud run deploy ${cloudRunName} --image ${apiImageUrl} \
 	--update-secrets=LANGFUSE_SK=${secretsPrefix}LANGFUSE_SK:latest \
 	--update-secrets=DATABASE_PASSWORD=${secretsPrefix}DATABASE_PASSWORD:latest \
 	--update-secrets=BULLMQ_REDIS_URL=${secretsPrefix}BULLMQ_REDIS_URL:latest \
@@ -279,7 +281,7 @@ deploy-only:
 	--project ${gcpProjectId}
 
 deploy-workers-only:
-	gcloud beta run worker-pools deploy ${cloudRunName}-workers --image ${workersImageTag} \
+	gcloud beta run worker-pools deploy ${cloudRunName}-workers --image ${workersImageUrl} \
 	--update-secrets=LANGFUSE_SK=${secretsPrefix}LANGFUSE_SK:latest \
 	--update-secrets=DATABASE_PASSWORD=${secretsPrefix}DATABASE_PASSWORD:latest \
 	--update-secrets=BULLMQ_REDIS_URL=${secretsPrefix}BULLMQ_REDIS_URL:latest \
