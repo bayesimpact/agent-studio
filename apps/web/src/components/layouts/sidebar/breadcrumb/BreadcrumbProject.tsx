@@ -1,4 +1,3 @@
-import { BreadcrumbItem, BreadcrumbLink } from "@caseai-connect/ui/shad/breadcrumb"
 import { Button } from "@caseai-connect/ui/shad/button"
 import {
   DropdownMenu,
@@ -12,7 +11,6 @@ import { cn } from "@caseai-connect/ui/utils"
 import { CheckIcon, ChevronDownIcon, PlusIcon } from "lucide-react"
 import { useState } from "react"
 import { useTranslation } from "react-i18next"
-import { Link } from "react-router-dom"
 import { ProjectCreator } from "@/components/project/ProjectCreator"
 import type { Organization } from "@/features/organizations/organizations.models"
 import {
@@ -35,19 +33,10 @@ export function BreadcrumbProject({ organization }: { organization: Organization
 
   if (!ADS.isFulfilled(projects) || !ADS.isFulfilled(project)) return null
 
-  const currentProjectPath = buildPath("project", { organizationId, projectId: project.value.id })
   const handleClick = (projectId: string) => () => {
     const path = buildPath("project", { organizationId, projectId })
     window.location.replace(path)
   }
-  if (projects.value.length === 1)
-    return (
-      <BreadcrumbItem>
-        <BreadcrumbLink asChild>
-          <Link to={currentProjectPath}>{project.value.name}</Link>
-        </BreadcrumbLink>
-      </BreadcrumbItem>
-    )
   return (
     <>
       <DropdownMenu>
