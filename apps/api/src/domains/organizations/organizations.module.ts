@@ -4,8 +4,8 @@ import { AuthModule } from "@/domains/auth/auth.module"
 import { FeatureFlag } from "@/domains/feature-flags/feature-flag.entity"
 import { User } from "@/domains/users/user.entity"
 import { UsersModule } from "@/domains/users/users.module"
-import { UserMembership } from "./memberships/organization-membership.entity"
-import { UserMembershipService } from "./memberships/organization-membership.service"
+import { OrganizationMembership } from "./memberships/organization-membership.entity"
+import { OrganizationMembershipService } from "./memberships/organization-membership.service"
 import { Organization } from "./organization.entity"
 import { OrganizationsController } from "./organizations.controller"
 import { OrganizationsService } from "./organizations.service"
@@ -15,13 +15,13 @@ import { OrganizationAccountProvisioningService } from "./provisioning/organizat
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Organization, UserMembership, User, FeatureFlag]),
+    TypeOrmModule.forFeature([Organization, OrganizationMembership, User, FeatureFlag]),
     UsersModule,
     AuthModule,
   ],
   providers: [
     OrganizationsService,
-    UserMembershipService,
+    OrganizationMembershipService,
     OrganizationsPolicyGuard,
     OrganizationAccountProvisioningService,
     FirstUserProvisioningService,
@@ -29,7 +29,7 @@ import { OrganizationAccountProvisioningService } from "./provisioning/organizat
   controllers: [OrganizationsController],
   exports: [
     OrganizationsService,
-    UserMembershipService,
+    OrganizationMembershipService,
     OrganizationAccountProvisioningService,
     FirstUserProvisioningService,
   ],

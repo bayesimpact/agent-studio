@@ -3,12 +3,12 @@ import type {
   EndpointRequest,
   EndpointRequestWithAgent,
   EndpointRequestWithDocument,
+  EndpointRequestWithOrganizationMembership,
   EndpointRequestWithProject,
-  EndpointRequestWithUserMembership,
 } from "@/common/context/request.interface"
 import type { Agent } from "@/domains/agents/agent.entity"
 import type { Document } from "@/domains/documents/document.entity"
-import { userMembershipFactory } from "@/domains/organizations/memberships/organization-membership.factory"
+import { organizationMembershipFactory } from "@/domains/organizations/memberships/organization-membership.factory"
 import type { Organization } from "@/domains/organizations/organization.entity"
 import type { Project } from "@/domains/projects/project.entity"
 import type { User } from "@/domains/users/user.entity"
@@ -49,7 +49,7 @@ type EndpointRequestWithOrganizationTransientParams = {
 }
 
 export const endpointRequestWithOrganizationFactory = Factory.define<
-  EndpointRequestWithUserMembership,
+  EndpointRequestWithOrganizationMembership,
   EndpointRequestWithOrganizationTransientParams
 >(({ transientParams }) => {
   const organization = transientParams.organization
@@ -63,14 +63,14 @@ export const endpointRequestWithOrganizationFactory = Factory.define<
   return {
     ...baseRequest,
     organizationId: organization.id,
-    userMembership: userMembershipFactory.transient({ organization, user }).build(),
-  } satisfies EndpointRequestWithUserMembership
+    organizationMembership: organizationMembershipFactory.transient({ organization, user }).build(),
+  } satisfies EndpointRequestWithOrganizationMembership
 })
 
 export const buildEndpointRequestWithOrganization = (organization: Organization, user: User) => {
   return endpointRequestWithOrganizationFactory
     .transient({ organization, user })
-    .build() satisfies EndpointRequestWithUserMembership
+    .build() satisfies EndpointRequestWithOrganizationMembership
 }
 
 type EndpointRequestWithOrganizationAndProjectTransientParams = {

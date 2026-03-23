@@ -4,7 +4,7 @@ import { ConversationAgentSession } from "@/domains/agents/conversation-agent-se
 import { Project } from "@/domains/projects/project.entity"
 import { AgentMessageFeedback } from "../agents/shared/agent-session-messages/feedback/agent-message-feedback.entity"
 import { FeatureFlag } from "../feature-flags/feature-flag.entity"
-import { UserMembership } from "./memberships/organization-membership.entity"
+import { OrganizationMembership } from "./memberships/organization-membership.entity"
 
 @Entity("organization")
 export class Organization extends Base4AllEntity {
@@ -12,10 +12,10 @@ export class Organization extends Base4AllEntity {
   name!: string
 
   @OneToMany(
-    () => UserMembership,
+    () => OrganizationMembership,
     (membership) => membership.organization,
   )
-  memberships!: UserMembership[]
+  memberships!: OrganizationMembership[]
 
   @OneToMany(
     () => Project,

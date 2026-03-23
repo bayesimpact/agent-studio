@@ -3,7 +3,7 @@ import { Test, type TestingModule } from "@nestjs/testing"
 import { getRepositoryToken } from "@nestjs/typeorm"
 import { DataSource, type ObjectLiteral, type Repository } from "typeorm"
 import { User } from "@/domains/users/user.entity"
-import { UserMembership } from "../memberships/organization-membership.entity"
+import { OrganizationMembership } from "../memberships/organization-membership.entity"
 import { Organization } from "../organization.entity"
 import { OrganizationAccountProvisioningService } from "./organization-account-provisioning.service"
 
@@ -22,20 +22,20 @@ describe("OrganizationAccountProvisioningService", () => {
   let service: OrganizationAccountProvisioningService
   let userRepository: MockRepository<User>
   let organizationRepository: MockRepository<Organization>
-  let membershipRepository: MockRepository<UserMembership>
+  let membershipRepository: MockRepository<OrganizationMembership>
   let dataSource: { transaction: jest.Mock }
 
   beforeEach(async () => {
     userRepository = createMockRepository<User>()
     organizationRepository = createMockRepository<Organization>()
-    membershipRepository = createMockRepository<UserMembership>()
+    membershipRepository = createMockRepository<OrganizationMembership>()
     dataSource = {
       transaction: jest.fn(async (callback) =>
         callback({
           getRepository: jest.fn((entity) => {
             if (entity === User) return userRepository
             if (entity === Organization) return organizationRepository
-            if (entity === UserMembership) return membershipRepository
+            if (entity === OrganizationMembership) return membershipRepository
             throw new Error("Unknown repository")
           }),
         }),
@@ -47,7 +47,7 @@ describe("OrganizationAccountProvisioningService", () => {
         OrganizationAccountProvisioningService,
         { provide: getRepositoryToken(User), useValue: userRepository },
         { provide: getRepositoryToken(Organization), useValue: organizationRepository },
-        { provide: getRepositoryToken(UserMembership), useValue: membershipRepository },
+        { provide: getRepositoryToken(OrganizationMembership), useValue: membershipRepository },
         { provide: DataSource, useValue: dataSource },
       ],
     }).compile()

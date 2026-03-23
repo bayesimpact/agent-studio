@@ -3,7 +3,7 @@ import { InjectRepository } from "@nestjs/typeorm"
 import type { Repository } from "typeorm"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
 import { DataSource } from "typeorm"
-import { UserMembership } from "@/domains/organizations/memberships/organization-membership.entity"
+import { OrganizationMembership } from "@/domains/organizations/memberships/organization-membership.entity"
 import { Organization } from "@/domains/organizations/organization.entity"
 import { User } from "@/domains/users/user.entity"
 
@@ -31,8 +31,8 @@ export type ProvisionOrganizationAccountResult =
 @Injectable()
 export class OrganizationAccountProvisioningService {
   constructor(
-    @InjectRepository(UserMembership)
-    private readonly membershipRepository: Repository<UserMembership>,
+    @InjectRepository(OrganizationMembership)
+    private readonly membershipRepository: Repository<OrganizationMembership>,
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
     private readonly dataSource: DataSource,
@@ -46,7 +46,7 @@ export class OrganizationAccountProvisioningService {
 
     return this.dataSource.transaction(async (manager) => {
       const organizationRepository = manager.getRepository(Organization)
-      const membershipRepository = manager.getRepository(UserMembership)
+      const membershipRepository = manager.getRepository(OrganizationMembership)
       const userRepository = manager.getRepository(User)
 
       const user = await this.upsertUser({
@@ -180,8 +180,8 @@ export class OrganizationAccountProvisioningService {
   private async findExistingOwnerMembershipByOrganizationName(input: {
     userId: string
     organizationName: string
-    membershipRepository: Repository<UserMembership>
-  }): Promise<UserMembership | null> {
+    membershipRepository: Repository<OrganizationMembership>
+  }): Promise<OrganizationMembership | null> {
     return input.membershipRepository
       .createQueryBuilder("membership")
       .innerJoin("membership.organization", "organization")

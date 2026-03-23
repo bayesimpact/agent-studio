@@ -2,17 +2,17 @@ import { BadRequestException, Injectable, UnauthorizedException } from "@nestjs/
 import { InjectRepository } from "@nestjs/typeorm"
 import type { Repository } from "typeorm"
 import { AUTH_ERRORS } from "@/common/errors/auth-errors"
-import { UserMembership } from "@/domains/organizations/memberships/organization-membership.entity"
+import { OrganizationMembership } from "@/domains/organizations/memberships/organization-membership.entity"
 import type { ContextResolver, ResolvableRequest } from "../context-resolver.interface"
-import type { EndpointRequestWithUserMembership } from "../request.interface"
+import type { EndpointRequestWithOrganizationMembership } from "../request.interface"
 
 @Injectable()
 export class OrganizationContextResolver implements ContextResolver {
   readonly resource = "organization" as const
 
   constructor(
-    @InjectRepository(UserMembership)
-    private readonly membershipRepository: Repository<UserMembership>,
+    @InjectRepository(OrganizationMembership)
+    private readonly membershipRepository: Repository<OrganizationMembership>,
   ) {}
 
   async resolve(request: ResolvableRequest): Promise<void> {
@@ -24,18 +24,18 @@ export class OrganizationContextResolver implements ContextResolver {
       throw new BadRequestException(AUTH_ERRORS.NO_ORGANIZATION_ID)
     }
 
-    const userMembership = await this.membershipRepository.findOne({
+    const organizationMembership = await this.membershipRepository.findOne({
       where: {
         userId: request.user.id,
         organizationId,
       },
     })
-    if (!userMembership) {
+    if (!organizationMembership) {
       throw new UnauthorizedException(AUTH_ERRORS.NOT_MEMBER_OF_ORG)
     }
 
-    const requestWithMembership = request as EndpointRequestWithUserMembership
+    const requestWithMembership = request as EndpointRequestWithOrganizationMembership
     requestWithMembership.organizationId = organizationId
-    requestWithMembership.userMembership = userMembership
+    requestWithMembership.organizationMembership = organizationMembership
   }
 }

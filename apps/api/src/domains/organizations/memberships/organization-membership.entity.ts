@@ -5,9 +5,9 @@ import { Organization } from "../organization.entity"
 
 export type MembershipRole = "owner" | "admin" | "member"
 
-@Entity("user_membership")
+@Entity("organization_membership")
 @Unique(["userId", "organizationId"])
-export class UserMembership extends Base4AllEntity {
+export class OrganizationMembership extends Base4AllEntity {
   @Column({ type: "uuid", name: "user_id" })
   userId!: string
 

@@ -7,7 +7,7 @@ import {
 } from "@/common/test/test-transaction-manager"
 import { Agent } from "@/domains/agents/agent.entity"
 import { agentFactory } from "@/domains/agents/agent.factory"
-import { UserMembership } from "@/domains/organizations/memberships/organization-membership.entity"
+import { OrganizationMembership } from "@/domains/organizations/memberships/organization-membership.entity"
 import { Organization } from "@/domains/organizations/organization.entity"
 import { organizationFactory } from "@/domains/organizations/organization.factory"
 import { Project } from "@/domains/projects/project.entity"
@@ -30,7 +30,7 @@ export function agentSessionControllerTestSetup() {
   let userRepository: Repository<User>
   let organizationRepository: Repository<Organization>
   let projectRepository: Repository<Project>
-  let membershipRepository: Repository<UserMembership>
+  let membershipRepository: Repository<OrganizationMembership>
   let setup: Awaited<ReturnType<typeof setupTransactionalTestDatabase>>
 
   // Test data
@@ -61,7 +61,7 @@ export function agentSessionControllerTestSetup() {
     userRepository = setup.getRepository(User)
     organizationRepository = setup.getRepository(Organization)
     projectRepository = setup.getRepository(Project)
-    membershipRepository = setup.getRepository(UserMembership)
+    membershipRepository = setup.getRepository(OrganizationMembership)
 
     // Use unique identifier to avoid conflicts between tests
     const uniqueId = Date.now().toString()

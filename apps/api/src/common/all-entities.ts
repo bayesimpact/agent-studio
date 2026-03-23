@@ -13,7 +13,7 @@ import { DocumentTag } from "@/domains/documents/tags/document-tag.entity"
 import { Evaluation } from "@/domains/evaluations/evaluation.entity"
 import { EvaluationReport } from "@/domains/evaluations/reports/evaluation-report.entity"
 import { FeatureFlag } from "@/domains/feature-flags/feature-flag.entity"
-import { UserMembership } from "@/domains/organizations/memberships/organization-membership.entity"
+import { OrganizationMembership } from "@/domains/organizations/memberships/organization-membership.entity"
 import { Organization } from "@/domains/organizations/organization.entity"
 import { ProjectMembership } from "@/domains/projects/memberships/project-membership.entity"
 import { Project } from "@/domains/projects/project.entity"
@@ -35,5 +35,5 @@ export const ALL_ENTITIES = [
   Project,
   ProjectMembership,
   User,
-  UserMembership,
+  OrganizationMembership,
 ]

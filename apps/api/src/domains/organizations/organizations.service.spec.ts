@@ -7,7 +7,7 @@ import {
 import { User } from "@/domains/users/user.entity"
 import { userFactory } from "@/domains/users/user.factory"
 import { FeatureFlag } from "../feature-flags/feature-flag.entity"
-import { UserMembership } from "./memberships/organization-membership.entity"
+import { OrganizationMembership } from "./memberships/organization-membership.entity"
 import { Organization } from "./organization.entity"
 import { organizationFactory } from "./organization.factory"
 import { OrganizationsModule } from "./organizations.module"
@@ -16,7 +16,7 @@ import { OrganizationsService } from "./organizations.service"
 describe("OrganizationsService", () => {
   let service: OrganizationsService
   let organizationRepository: Repository<Organization>
-  let membershipRepository: Repository<UserMembership>
+  let membershipRepository: Repository<OrganizationMembership>
   let userRepository: Repository<User>
   let setup: Awaited<ReturnType<typeof setupTransactionalTestDatabase>>
 
@@ -39,7 +39,7 @@ describe("OrganizationsService", () => {
     // Get service and repositories from transactional module
     service = setup.module.get<OrganizationsService>(OrganizationsService)
     organizationRepository = setup.getRepository(Organization)
-    membershipRepository = setup.getRepository(UserMembership)
+    membershipRepository = setup.getRepository(OrganizationMembership)
     setup.getRepository(FeatureFlag)
     userRepository = setup.getRepository(User)
   })

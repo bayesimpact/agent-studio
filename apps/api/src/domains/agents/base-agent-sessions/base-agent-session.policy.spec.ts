@@ -1,6 +1,6 @@
 import type { BaseAgentSessionTypeDto } from "@caseai-connect/api-contracts"
 import type { MembershipRole } from "@/domains/organizations/memberships/organization-membership.entity"
-import { userMembershipFactory } from "@/domains/organizations/memberships/organization-membership.factory"
+import { organizationMembershipFactory } from "@/domains/organizations/memberships/organization-membership.factory"
 import { organizationFactory } from "@/domains/organizations/organization.factory"
 import { projectMembershipFactory } from "@/domains/projects/memberships/project-membership.factory"
 import { projectFactory } from "@/domains/projects/project.factory"
@@ -16,8 +16,8 @@ describe("BaseAgentSessionPolicy", () => {
   const project = projectFactory.transient({ organization }).build()
   const otherProject = projectFactory.transient({ organization }).build()
 
-  const buildUserMembership = (role: MembershipRole) => {
-    return userMembershipFactory.transient({ user, organization }).params({ role }).build()
+  const buildOrganizationMembership = (role: MembershipRole) => {
+    return organizationMembershipFactory.transient({ user, organization }).params({ role }).build()
   }
 
   const buildProjectMembership = (projectMembershipState: ProjectMembershipState) => {
@@ -37,7 +37,7 @@ describe("BaseAgentSessionPolicy", () => {
   ) => {
     return new BaseAgentSessionPolicy(
       {
-        userMembership: buildUserMembership(role),
+        organizationMembership: buildOrganizationMembership(role),
         projectMembership: buildProjectMembership(projectMembershipState),
         project,
       },

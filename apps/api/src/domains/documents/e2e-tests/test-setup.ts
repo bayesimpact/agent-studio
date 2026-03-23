@@ -4,7 +4,7 @@ import {
   setupTransactionalTestDatabase,
   teardownTestDatabase,
 } from "@/common/test/test-transaction-manager"
-import { UserMembership } from "@/domains/organizations/memberships/organization-membership.entity"
+import { OrganizationMembership } from "@/domains/organizations/memberships/organization-membership.entity"
 import { Organization } from "@/domains/organizations/organization.entity"
 import { organizationFactory } from "@/domains/organizations/organization.factory"
 import { Project } from "@/domains/projects/project.entity"
@@ -20,7 +20,7 @@ export function documentsControllerTestSetup() {
   let setup: Awaited<ReturnType<typeof setupTransactionalTestDatabase>>
   let userRepository: Repository<User>
   let organizationRepository: Repository<Organization>
-  let membershipRepository: Repository<UserMembership>
+  let membershipRepository: Repository<OrganizationMembership>
   let projectRepository: Repository<Project>
   let documentRepository: Repository<Document>
   let fileStorageService: IFileStorage
@@ -44,7 +44,7 @@ export function documentsControllerTestSetup() {
     fileStorageService = setup.module.get<IFileStorage>(FILE_STORAGE_SERVICE)
     userRepository = setup.getRepository(User)
     organizationRepository = setup.getRepository(Organization)
-    membershipRepository = setup.getRepository(UserMembership)
+    membershipRepository = setup.getRepository(OrganizationMembership)
     projectRepository = setup.getRepository(Project)
     documentRepository = setup.getRepository(Document)
 

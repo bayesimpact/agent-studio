@@ -1,5 +1,5 @@
 import type { MembershipRole } from "@/domains/organizations/memberships/organization-membership.entity"
-import { userMembershipFactory } from "@/domains/organizations/memberships/organization-membership.factory"
+import { organizationMembershipFactory } from "@/domains/organizations/memberships/organization-membership.factory"
 import { organizationFactory } from "@/domains/organizations/organization.factory"
 import { userFactory } from "@/domains/users/user.factory"
 import type { Project } from "../project.entity"
@@ -18,8 +18,8 @@ describe("ProjectMembershipPolicy", () => {
   const project = projectFactory.transient({ organization }).build()
   const otherProject = projectFactory.transient({ organization: otherOrganization }).build()
 
-  const buildUserMembership = (role: MembershipRole) => {
-    return userMembershipFactory.transient({ user, organization }).params({ role }).build()
+  const buildOrganizationMembership = (role: MembershipRole) => {
+    return organizationMembershipFactory.transient({ user, organization }).params({ role }).build()
   }
 
   const buildMembership = (membershipState: MembershipState) => {
@@ -40,7 +40,7 @@ describe("ProjectMembershipPolicy", () => {
     membershipState?: MembershipState,
   ) => {
     return {
-      userMembership: buildUserMembership(role),
+      organizationMembership: buildOrganizationMembership(role),
       projectMembership: membershipState ? buildMembership(membershipState) : undefined,
       project: project,
     }

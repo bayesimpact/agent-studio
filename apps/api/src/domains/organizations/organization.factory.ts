@@ -13,8 +13,8 @@ import type { User } from "@/domains/users/user.entity"
 import { userFactory } from "@/domains/users/user.factory"
 import type { AgentMessage } from "../agents/shared/agent-session-messages/agent-message.entity"
 import { agentMessageFactory } from "../agents/shared/agent-session-messages/agent-messages.factory"
-import type { UserMembership } from "./memberships/organization-membership.entity"
-import { userMembershipFactory } from "./memberships/organization-membership.factory"
+import type { OrganizationMembership } from "./memberships/organization-membership.entity"
+import { organizationMembershipFactory } from "./memberships/organization-membership.factory"
 import type { Organization } from "./organization.entity"
 
 export const organizationFactory = Factory.define<Organization>(({ sequence, params }) => {
@@ -36,17 +36,17 @@ export const organizationFactory = Factory.define<Organization>(({ sequence, par
 type BuildOrganizationWithOwnerParams = {
   organization?: Partial<Organization>
   user?: Partial<User>
-  membership?: Partial<UserMembership>
+  membership?: Partial<OrganizationMembership>
 }
 
 export function buildOrganizationWithOwner(params: BuildOrganizationWithOwnerParams = {}): {
   organization: Organization
   user: User
-  membership: UserMembership
+  membership: OrganizationMembership
 } {
   const organization = organizationFactory.build(params.organization)
   const user = userFactory.build(params.user)
-  const membership = userMembershipFactory
+  const membership = organizationMembershipFactory
     .owner()
     .transient({ user, organization })
     .build(params.membership)
@@ -61,13 +61,13 @@ export function buildOrganizationWithOwner(params: BuildOrganizationWithOwnerPar
 type CreateOrganizationWithOwnerParams = {
   organization?: Partial<Organization>
   user?: Partial<User>
-  membership?: Partial<UserMembership>
+  membership?: Partial<OrganizationMembership>
 }
 
 type CreateOrganizationWithOwnerRepositories = {
   userRepository: Repository<User>
   organizationRepository: Repository<Organization>
-  membershipRepository: Repository<UserMembership>
+  membershipRepository: Repository<OrganizationMembership>
 }
 
 export async function createOrganizationWithOwner(
@@ -76,7 +76,7 @@ export async function createOrganizationWithOwner(
 ): Promise<{
   organization: Organization
   user: User
-  membership: UserMembership
+  membership: OrganizationMembership
 }> {
   const { organization, user, membership } = buildOrganizationWithOwner(params)
 
@@ -95,13 +95,13 @@ type CreateOrganizationWithProjectParams = {
   organization?: Partial<Organization>
   user?: Partial<User>
   project?: Partial<Project>
-  membership?: Partial<UserMembership>
+  membership?: Partial<OrganizationMembership>
 }
 
 type CreateOrganizationWithProjectRepositories = {
   organizationRepository: Repository<Organization>
   userRepository: Repository<User>
-  membershipRepository: Repository<UserMembership>
+  membershipRepository: Repository<OrganizationMembership>
   projectRepository: Repository<Project>
 }
 
@@ -111,7 +111,7 @@ export async function createOrganizationWithProject(
 ): Promise<{
   organization: Organization
   user: User
-  membership: UserMembership
+  membership: OrganizationMembership
   project: Project
 }> {
   const { organization, user, membership } = await createOrganizationWithOwner(repositories, {
@@ -134,7 +134,7 @@ export async function createOrganizationWithProject(
 type CreateOrganizationWithAgentParams = {
   organization?: Partial<Organization>
   user?: Partial<User>
-  membership?: Partial<UserMembership>
+  membership?: Partial<OrganizationMembership>
   project?: Partial<Project>
   agent?: Partial<Agent>
 }
@@ -142,7 +142,7 @@ type CreateOrganizationWithAgentParams = {
 type CreateOrganizationWithAgentRepositories = {
   organizationRepository: Repository<Organization>
   userRepository: Repository<User>
-  membershipRepository: Repository<UserMembership>
+  membershipRepository: Repository<OrganizationMembership>
   projectRepository: Repository<Project>
   agentRepository: Repository<Agent>
 }
@@ -153,7 +153,7 @@ export async function createOrganizationWithAgent(
 ): Promise<{
   organization: Organization
   user: User
-  membership: UserMembership
+  membership: OrganizationMembership
   project: Project
   agent: Agent
 }> {
@@ -182,7 +182,7 @@ export async function createOrganizationWithAgent(
 type CreateOrganizationWithAgentSessionParams = {
   organization?: Partial<Organization>
   user?: Partial<User>
-  membership?: Partial<UserMembership>
+  membership?: Partial<OrganizationMembership>
   project?: Partial<Project>
   agent?: Partial<Agent>
   agentSession?: Partial<ConversationAgentSession>
@@ -191,7 +191,7 @@ type CreateOrganizationWithAgentSessionParams = {
 type CreateOrganizationWithAgentSessionRepositories = {
   organizationRepository: Repository<Organization>
   userRepository: Repository<User>
-  membershipRepository: Repository<UserMembership>
+  membershipRepository: Repository<OrganizationMembership>
   projectRepository: Repository<Project>
   agentRepository: Repository<Agent>
   conversationAgentSessionRepository: Repository<ConversationAgentSession>
@@ -203,7 +203,7 @@ export async function createOrganizationWithAgentSession(
 ): Promise<{
   organization: Organization
   user: User
-  membership: UserMembership
+  membership: OrganizationMembership
   project: Project
   agent: Agent
   agentSession: ConversationAgentSession
@@ -237,7 +237,7 @@ export async function createOrganizationWithAgentSession(
 type CreateOrganizationWithAgentMessageParams = {
   organization?: Partial<Organization>
   user?: Partial<User>
-  membership?: Partial<UserMembership>
+  membership?: Partial<OrganizationMembership>
   project?: Partial<Project>
   agent?: Partial<Agent>
   agentSession?: Partial<ConversationAgentSession>
@@ -247,7 +247,7 @@ type CreateOrganizationWithAgentMessageParams = {
 type CreateOrganizationWithAgentMessageRepositories = {
   organizationRepository: Repository<Organization>
   userRepository: Repository<User>
-  membershipRepository: Repository<UserMembership>
+  membershipRepository: Repository<OrganizationMembership>
   projectRepository: Repository<Project>
   agentRepository: Repository<Agent>
   conversationAgentSessionRepository: Repository<ConversationAgentSession>
@@ -260,7 +260,7 @@ export async function createOrganizationWithAgentMessage(
 ): Promise<{
   organization: Organization
   user: User
-  membership: UserMembership
+  membership: OrganizationMembership
   project: Project
   agent: Agent
   agentSession: ConversationAgentSession
@@ -299,13 +299,13 @@ type CreateOrganizationWithDocumentParams = {
   user?: Partial<User>
   project?: Partial<Project>
   document?: Partial<Document>
-  membership?: Partial<UserMembership>
+  membership?: Partial<OrganizationMembership>
 }
 
 type CreateOrganizationWithDocumentRepositories = {
   organizationRepository: Repository<Organization>
   userRepository: Repository<User>
-  membershipRepository: Repository<UserMembership>
+  membershipRepository: Repository<OrganizationMembership>
   projectRepository: Repository<Project>
   documentRepository: Repository<Document>
 }
@@ -316,7 +316,7 @@ export async function createOrganizationWithDocument(
 ): Promise<{
   organization: Organization
   user: User
-  membership: UserMembership
+  membership: OrganizationMembership
   document: Document
   project: Project
 }> {

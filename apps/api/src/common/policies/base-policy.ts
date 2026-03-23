@@ -1,11 +1,11 @@
-import type { UserMembership } from "@/domains/organizations/memberships/organization-membership.entity"
+import type { OrganizationMembership } from "@/domains/organizations/memberships/organization-membership.entity"
 
 export class BasePolicy<T> {
   constructor(
-    private readonly userMembership: UserMembership,
+    private readonly organizationMembership: OrganizationMembership,
     protected readonly entity?: T,
   ) {
-    this.userMembership = userMembership
+    this.organizationMembership = organizationMembership
     this.entity = entity
   }
 
@@ -26,11 +26,11 @@ export class BasePolicy<T> {
   }
 
   protected isOwner(): boolean {
-    return this.userMembership.role === "owner"
+    return this.organizationMembership.role === "owner"
   }
 
   protected isAdmin(): boolean {
-    return this.userMembership.role === "admin"
+    return this.organizationMembership.role === "admin"
   }
 
   protected isAdminOrOwner(): boolean {
@@ -52,6 +52,6 @@ export class BasePolicy<T> {
     }
     // TypeScript now knows organizationId exists, but we need to assert the type
     const resourceWithOrgId = this.entity as T & { organizationId: string }
-    return resourceWithOrgId.organizationId === this.userMembership.organizationId
+    return resourceWithOrgId.organizationId === this.organizationMembership.organizationId
   }
 }

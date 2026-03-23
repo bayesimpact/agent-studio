@@ -4,14 +4,17 @@ import type { Repository } from "typeorm"
 import type { User } from "@/domains/users/user.entity"
 import { userFactory } from "../../users/user.factory"
 import type { Organization } from "../organization.entity"
-import type { MembershipRole, UserMembership } from "./organization-membership.entity"
+import type { MembershipRole, OrganizationMembership } from "./organization-membership.entity"
 
-type UserMembershipTransientParams = {
+type OrganizationMembershipTransientParams = {
   user: User
   organization: Organization
 }
 
-class UserMembershipFactory extends Factory<UserMembership, UserMembershipTransientParams> {
+class OrganizationMembershipFactory extends Factory<
+  OrganizationMembership,
+  OrganizationMembershipTransientParams
+> {
   member() {
     return this.params({ role: "member" })
   }
@@ -25,29 +28,31 @@ class UserMembershipFactory extends Factory<UserMembership, UserMembershipTransi
   }
 }
 
-export const userMembershipFactory = UserMembershipFactory.define(({ params, transientParams }) => {
-  if (!transientParams.user) {
-    throw new Error("user transient is required")
-  }
-  if (!transientParams.organization) {
-    throw new Error("organization transient is required")
-  }
+export const organizationMembershipFactory = OrganizationMembershipFactory.define(
+  ({ params, transientParams }) => {
+    if (!transientParams.user) {
+      throw new Error("user transient is required")
+    }
+    if (!transientParams.organization) {
+      throw new Error("organization transient is required")
+    }
 
-  const now = new Date()
-  return {
-    id: params.id || randomUUID(),
-    userId: transientParams.user.id,
-    organizationId: transientParams.organization.id,
-    role: (params.role || "member") as MembershipRole,
-    createdAt: params.createdAt || now,
-    updatedAt: params.updatedAt || now,
-    deletedAt: null,
-    user: transientParams.user,
-    organization: transientParams.organization,
-  } satisfies UserMembership
-})
+    const now = new Date()
+    return {
+      id: params.id || randomUUID(),
+      userId: transientParams.user.id,
+      organizationId: transientParams.organization.id,
+      role: (params.role || "member") as MembershipRole,
+      createdAt: params.createdAt || now,
+      updatedAt: params.updatedAt || now,
+      deletedAt: null,
+      user: transientParams.user,
+      organization: transientParams.organization,
+    } satisfies OrganizationMembership
+  },
+)
 
-export const createUserMembership = async ({
+export const createOrganizationMembership = async ({
   repositories,
   organization,
   membership,
@@ -56,16 +61,16 @@ export const createUserMembership = async ({
   repositories: {
     userRepository: Repository<User>
     organizationRepository: Repository<Organization>
-    membershipRepository: Repository<UserMembership>
+    membershipRepository: Repository<OrganizationMembership>
   }
   organization: Organization
   user?: Partial<User>
-  membership?: Partial<UserMembership>
+  membership?: Partial<OrganizationMembership>
 }) => {
   const newUser = userFactory.build(user)
   await repositories.userRepository.save(newUser)
   const newMembership = await repositories.membershipRepository.save(
-    userMembershipFactory.transient({ user: newUser, organization }).build(membership),
+    organizationMembershipFactory.transient({ user: newUser, organization }).build(membership),
   )
   return { user: newUser, membership: newMembership }
 }

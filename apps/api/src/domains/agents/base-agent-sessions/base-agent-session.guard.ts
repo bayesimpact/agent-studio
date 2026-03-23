@@ -33,7 +33,7 @@ export class BaseAgentSessionGuard implements CanActivate {
 
     const policy = new BaseAgentSessionPolicy(
       {
-        userMembership: request.userMembership,
+        organizationMembership: request.organizationMembership,
         projectMembership: request.projectMembership,
         project: request.project,
       },

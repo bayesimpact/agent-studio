@@ -8,7 +8,7 @@ import {
   INVITATION_SENDER,
   type InvitationSender,
 } from "@/domains/auth/invitation-sender.interface"
-import { UserMembership } from "@/domains/organizations/memberships/organization-membership.entity"
+import { OrganizationMembership } from "@/domains/organizations/memberships/organization-membership.entity"
 import { User } from "@/domains/users/user.entity"
 import { Project } from "../project.entity"
 import { ProjectMembership } from "./project-membership.entity"
@@ -122,7 +122,7 @@ export class ProjectMembershipsService {
     return this.dataSource.transaction(async (manager) => {
       const membershipRepo = manager.getRepository(ProjectMembership)
       const userRepo = manager.getRepository(User)
-      const orgMembershipRepo = manager.getRepository(UserMembership)
+      const orgMembershipRepo = manager.getRepository(OrganizationMembership)
       const projectRepo = manager.getRepository(Project)
 
       // Find the membership by invitation token (ticket_id)

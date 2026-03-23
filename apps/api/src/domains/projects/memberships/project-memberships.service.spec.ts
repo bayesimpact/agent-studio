@@ -7,7 +7,7 @@ import {
   teardownTestDatabase,
 } from "@/common/test/test-transaction-manager"
 import { INVITATION_SENDER } from "@/domains/auth/invitation-sender.interface"
-import { createUserMembership } from "@/domains/organizations/memberships/organization-membership.factory"
+import { createOrganizationMembership } from "@/domains/organizations/memberships/organization-membership.factory"
 import { createOrganizationWithProject } from "@/domains/organizations/organization.factory"
 import { userFactory } from "@/domains/users/user.factory"
 import { ProjectsModule } from "../projects.module"
@@ -290,7 +290,7 @@ describe("ProjectMembershipsService", () => {
       const { project, organization } = await createOrganizationWithProject(repositories)
 
       // Create a real user who is already a member of the org
-      const { user: existingUser } = await createUserMembership({
+      const { user: existingUser } = await createOrganizationMembership({
         repositories,
         organization,
         user: { email: "existing@example.com", auth0Id: "auth0|existing" },

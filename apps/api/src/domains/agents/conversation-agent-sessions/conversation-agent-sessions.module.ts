@@ -16,7 +16,7 @@ import { AuthModule } from "@/domains/auth/auth.module"
 import { Document } from "@/domains/documents/document.entity"
 import { DocumentsModule } from "@/domains/documents/documents.module"
 import { StorageModule } from "@/domains/documents/storage/storage.module"
-import { UserMembership } from "@/domains/organizations/memberships/organization-membership.entity"
+import { OrganizationMembership } from "@/domains/organizations/memberships/organization-membership.entity"
 import { Organization } from "@/domains/organizations/organization.entity"
 import { OrganizationsModule } from "@/domains/organizations/organizations.module"
 import { ProjectMembership } from "@/domains/projects/memberships/project-membership.entity"
@@ -42,7 +42,7 @@ import { ConversationAgentSessionsService } from "./conversation-agent-sessions.
       Organization,
       Project,
       ProjectMembership,
-      UserMembership,
+      OrganizationMembership,
     ]),
     LlmModule,
     AuthModule,

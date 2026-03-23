@@ -7,7 +7,7 @@ import { OrganizationContextResolver } from "@/common/context/resolvers/organiza
 import { ProjectContextResolver } from "@/common/context/resolvers/project-context.resolver"
 import { ResourceContextGuard } from "@/common/context/resource-context.guard"
 import { AuthModule } from "@/domains/auth/auth.module"
-import { UserMembership } from "@/domains/organizations/memberships/organization-membership.entity"
+import { OrganizationMembership } from "@/domains/organizations/memberships/organization-membership.entity"
 import { Organization } from "@/domains/organizations/organization.entity"
 import { OrganizationsModule } from "@/domains/organizations/organizations.module"
 import { ProjectMembership } from "@/domains/projects/memberships/project-membership.entity"
@@ -32,7 +32,7 @@ import { EvaluationReportsService } from "./reports/evaluation-reports.service"
       Evaluation,
       Project,
       Organization,
-      UserMembership,
+      OrganizationMembership,
       ProjectMembership,
       EvaluationReport,
       Agent,

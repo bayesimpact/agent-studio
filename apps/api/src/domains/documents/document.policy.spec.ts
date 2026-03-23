@@ -1,5 +1,5 @@
 import type { MembershipRole } from "@/domains/organizations/memberships/organization-membership.entity"
-import { userMembershipFactory } from "@/domains/organizations/memberships/organization-membership.factory"
+import { organizationMembershipFactory } from "@/domains/organizations/memberships/organization-membership.factory"
 import { organizationFactory } from "@/domains/organizations/organization.factory"
 import { userFactory } from "@/domains/users/user.factory"
 import { projectFactory } from "../projects/project.factory"
@@ -14,8 +14,8 @@ describe("DocumentPolicy", () => {
   const otherOrganization = organizationFactory.build()
   const user = userFactory.build()
 
-  const buildUserMembership = (role: MembershipRole) => {
-    return userMembershipFactory.transient({ user, organization }).params({ role }).build()
+  const buildOrganizationMembership = (role: MembershipRole) => {
+    return organizationMembershipFactory.transient({ user, organization }).params({ role }).build()
   }
 
   const buildProject = (projectOrganization: typeof organization) => {
@@ -50,7 +50,10 @@ describe("DocumentPolicy", () => {
     ])("when user is %s with %s document", (role, documentState) => {
       it("should always return true", () => {
         const policy = new DocumentPolicy(
-          { userMembership: buildUserMembership(role), project: buildProject(organization) },
+          {
+            organizationMembership: buildOrganizationMembership(role),
+            project: buildProject(organization),
+          },
           buildDocument(documentState),
         )
 
@@ -62,16 +65,22 @@ describe("DocumentPolicy", () => {
   describe("canCreate", () => {
     it("allows members for non-project source types", () => {
       const defaultPolicy = new DocumentPolicy({
-        userMembership: buildUserMembership("member"),
+        organizationMembership: buildOrganizationMembership("member"),
         project: buildProject(organization),
       })
       const agentSessionPolicy = new DocumentPolicy(
-        { userMembership: buildUserMembership("member"), project: buildProject(organization) },
+        {
+          organizationMembership: buildOrganizationMembership("member"),
+          project: buildProject(organization),
+        },
         undefined,
         "agentSessionMessage",
       )
       const extractionPolicy = new DocumentPolicy(
-        { userMembership: buildUserMembership("member"), project: buildProject(organization) },
+        {
+          organizationMembership: buildOrganizationMembership("member"),
+          project: buildProject(organization),
+        },
         undefined,
         "extraction",
       )
@@ -83,7 +92,10 @@ describe("DocumentPolicy", () => {
 
     it("forbids members for project source type", () => {
       const policy = new DocumentPolicy(
-        { userMembership: buildUserMembership("member"), project: buildProject(organization) },
+        {
+          organizationMembership: buildOrganizationMembership("member"),
+          project: buildProject(organization),
+        },
         undefined,
         "project",
       )
@@ -92,12 +104,18 @@ describe("DocumentPolicy", () => {
 
     it("allows owners and admins for project source type", () => {
       const ownerPolicy = new DocumentPolicy(
-        { userMembership: buildUserMembership("owner"), project: buildProject(organization) },
+        {
+          organizationMembership: buildOrganizationMembership("owner"),
+          project: buildProject(organization),
+        },
         undefined,
         "project",
       )
       const adminPolicy = new DocumentPolicy(
-        { userMembership: buildUserMembership("admin"), project: buildProject(organization) },
+        {
+          organizationMembership: buildOrganizationMembership("admin"),
+          project: buildProject(organization),
+        },
         undefined,
         "project",
       )
@@ -114,7 +132,7 @@ describe("DocumentPolicy", () => {
     ])("when user is %s", (role, expected) => {
       it(`should return ${expected}`, () => {
         const policy = new DocumentPolicy({
-          userMembership: buildUserMembership(role),
+          organizationMembership: buildOrganizationMembership(role),
           project: buildProject(organization),
         })
 
@@ -131,7 +149,7 @@ describe("DocumentPolicy", () => {
     ])("when user is %s", (role, expected) => {
       it(`should return ${expected}`, () => {
         const policy = new DocumentPolicy({
-          userMembership: buildUserMembership(role),
+          organizationMembership: buildOrganizationMembership(role),
           project: buildProject(organization),
         })
 

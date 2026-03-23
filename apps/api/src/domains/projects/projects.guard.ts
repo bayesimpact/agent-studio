@@ -7,8 +7,8 @@ import {
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
 import { Reflector } from "@nestjs/core"
 import type {
+  EndpointRequestWithOrganizationMembership,
   EndpointRequestWithProject,
-  EndpointRequestWithUserMembership,
 } from "@/common/context/request.interface"
 import { AUTH_ERRORS } from "@/common/errors/auth-errors"
 import { CHECK_POLICY_KEY, type PolicyHandler } from "@/common/policies/check-policy.decorator"
@@ -21,11 +21,11 @@ export class ProjectsGuard implements CanActivate {
   async canActivate(context: ExecutionContext): Promise<boolean> {
     // ResourceContextGuard resolves organization/project context before policy evaluation.
     const request = context.switchToHttp().getRequest() as
-      | EndpointRequestWithUserMembership
+      | EndpointRequestWithOrganizationMembership
       | EndpointRequestWithProject
 
     const policy = new ProjectPolicy(
-      request.userMembership,
+      request.organizationMembership,
       "project" in request ? request.project : undefined,
     )
 
