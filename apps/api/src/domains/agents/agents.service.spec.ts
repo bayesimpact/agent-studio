@@ -45,7 +45,7 @@ describe("AgentsService", () => {
 
   describe("createAgent", () => {
     it("should create an Agent", async () => {
-      const { organization, project } = await createOrganizationWithProject(repositories)
+      const { organization, project, user } = await createOrganizationWithProject(repositories)
 
       const result = await service.createAgent({
         connectScope: {
@@ -60,6 +60,7 @@ describe("AgentsService", () => {
           temperature: 0,
           locale: AgentLocale.EN,
         },
+        userId: user.id,
       })
 
       // Assert
@@ -75,7 +76,7 @@ describe("AgentsService", () => {
       expect(savedTemplate?.name).toBe("My Template")
     })
     it("should throw UnprocessableEntityException when name is less than 3 characters", async () => {
-      const { organization, project } = await createOrganizationWithProject(repositories)
+      const { organization, project, user } = await createOrganizationWithProject(repositories)
 
       const createWrongfulAgent = async () =>
         service.createAgent({
@@ -91,6 +92,7 @@ describe("AgentsService", () => {
             temperature: 0,
             locale: AgentLocale.EN,
           },
+          userId: user.id,
         })
 
       // Act & Assert
@@ -101,7 +103,7 @@ describe("AgentsService", () => {
     })
 
     it("should default to conversation type", async () => {
-      const { organization, project } = await createOrganizationWithProject(repositories)
+      const { organization, project, user } = await createOrganizationWithProject(repositories)
 
       const result = await service.createAgent({
         connectScope: {
@@ -116,13 +118,14 @@ describe("AgentsService", () => {
           temperature: 0,
           locale: AgentLocale.EN,
         },
+        userId: user.id,
       })
 
       expect(result.type).toBe("conversation")
     })
 
     it("should require extraction fields when type is extraction", async () => {
-      const { organization, project } = await createOrganizationWithProject(repositories)
+      const { organization, project, user } = await createOrganizationWithProject(repositories)
 
       const createExtractionWithoutSchema = async () =>
         service.createAgent({
@@ -138,6 +141,7 @@ describe("AgentsService", () => {
             locale: AgentLocale.EN,
             type: "extraction",
           },
+          userId: user.id,
         })
 
       await expect(createExtractionWithoutSchema()).rejects.toThrow(UnprocessableEntityException)

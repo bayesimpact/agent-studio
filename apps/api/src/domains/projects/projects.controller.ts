@@ -26,9 +26,11 @@ export class ProjectsController {
     @Req() request: EndpointRequestWithOrganizationMembership,
     @Body() body: typeof ProjectsRoutes.createOne.request,
   ): Promise<typeof ProjectsRoutes.createOne.response> {
-    const { organizationId } = request
-
-    const project = await this.projectsService.createProject(organizationId, body.payload.name)
+    const project = await this.projectsService.createProject({
+      organizationId: request.organizationId,
+      name: body.payload.name,
+      userId: request.user.id,
+    })
 
     return { data: toProjectDto(project) }
   }

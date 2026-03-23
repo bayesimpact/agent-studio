@@ -60,6 +60,20 @@ export class ProjectMembershipsService {
     })
   }
 
+  async createProjectOwnerMembership(params: {
+    projectId: string
+    userId: string
+  }): Promise<ProjectMembership> {
+    const membership = this.projectMembershipRepository.create({
+      projectId: params.projectId,
+      userId: params.userId,
+      role: "owner",
+      status: "accepted",
+      invitationToken: `new_project_no_invitation_token-${randomUUID()}`,
+    })
+    return this.projectMembershipRepository.save(membership)
+  }
+
   /**
    * Invites users to a project by their email addresses.
    * Runs inside a SQL transaction — if the Auth0 invitation fails, all DB changes are rolled back.

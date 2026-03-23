@@ -46,6 +46,20 @@ export class AgentMembershipsService {
     })
   }
 
+  async createAgentOwnerMembership(params: {
+    agentId: string
+    userId: string
+  }): Promise<AgentMembership> {
+    const membership = this.agentMembershipRepository.create({
+      agentId: params.agentId,
+      userId: params.userId,
+      role: "owner",
+      status: "accepted",
+      invitationToken: `new_agent_no_invitation_token-${randomUUID()}`,
+    })
+    return this.agentMembershipRepository.save(membership)
+  }
+
   /**
    * Invites users to an agent by their email addresses.
    * Also ensures each invited user will get a ProjectMembership for the agent's project

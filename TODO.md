@@ -1,13 +1,15 @@
 # // FIXME: 
-
-- new mig: org-role-member => projects-role-member => agents-role-member
-- new mig: org-role-owner => projects-role-owner => agents-role-owner
-- new mig: org-role-admin => projects-role-admin => agents-role-admin
-
+- can see project without accepting invitation (status still sent)
 - when user message is too long, it fails!!
 - can't delete empty project
 
 # // TODO:
+- delete agent membership or project membership when deleting agent or project
+- invite user in project => create agent membership on every agent of the project
+- remove user in project => remove project membership and remove agent membership on every agent of this project
+- 
+
+
 - add zod i18n keys
 - tools/helpers to seed store in storybook
 - remove ttl

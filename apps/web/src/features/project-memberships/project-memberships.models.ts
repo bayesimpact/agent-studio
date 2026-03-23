@@ -1,4 +1,4 @@
-import type { TimeType } from "@caseai-connect/api-contracts"
+import type { ProjectMembershipRoleDto, TimeType } from "@caseai-connect/api-contracts"
 
 export type ProjectMembership = {
   id: string
@@ -8,4 +8,5 @@ export type ProjectMembership = {
   userEmail: string
   status: "sent" | "accepted"
   createdAt: TimeType
+  role: ProjectMembershipRoleDto
 }

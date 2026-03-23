@@ -9,6 +9,8 @@ import { ConversationAgentSessionsService } from "@/domains/agents/conversation-
 import { DocumentTagsService } from "../documents/tags/document-tags.service"
 import type { DocumentTagsUpdateFields } from "../documents/tags/document-tags.types"
 import { Agent } from "./agent.entity"
+// biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
+import { AgentMembershipsService } from "./memberships/agent-memberships.service"
 
 @Injectable()
 export class AgentsService {
@@ -17,6 +19,7 @@ export class AgentsService {
     agentRepository: Repository<Agent>,
     private readonly documentTagsService: DocumentTagsService,
     private readonly conversationAgentSessionsService: ConversationAgentSessionsService,
+    private readonly agentMembershipsService: AgentMembershipsService,
   ) {
     this.agentConnectRepository = new ConnectRepository(agentRepository, "agents")
   }
@@ -26,9 +29,11 @@ export class AgentsService {
    * Creates a new agent for a project.
    */
   async createAgent({
+    userId,
     connectScope,
     fields,
   }: {
+    userId: string
     connectScope: RequiredConnectScope
     fields: Pick<RequiredConnectScope, never> &
       Pick<Agent, "defaultPrompt" | "name" | "model" | "temperature" | "locale" | "type"> &
@@ -52,12 +57,18 @@ export class AgentsService {
     })
 
     // Create the agent with defaults
-    return await this.agentConnectRepository.createAndSave(connectScope, {
+    const agent = await this.agentConnectRepository.createAndSave(connectScope, {
       ...agentFields,
       type: agentFields.type,
       outputJsonSchema,
       documentTags,
     })
+
+    await this.agentMembershipsService.createAgentOwnerMembership({
+      agentId: agent.id,
+      userId,
+    })
+    return agent
   }
 
   /**

@@ -1,5 +1,6 @@
+import { Badge } from "@caseai-connect/ui/shad/badge"
 import { Button } from "@caseai-connect/ui/shad/button"
-import { Item, ItemActions, ItemHeader, ItemTitle } from "@caseai-connect/ui/shad/item"
+import { Item, ItemActions, ItemContent, ItemHeader, ItemTitle } from "@caseai-connect/ui/shad/item"
 import { Trash2Icon, UserIcon } from "lucide-react"
 import { useTranslation } from "react-i18next"
 import type { ProjectMembership } from "@/features/project-memberships/project-memberships.models"
@@ -15,17 +16,24 @@ export function ProjectMembershipItem({ membership }: { membership: ProjectMembe
 
   return (
     <Item variant="outline">
-      <ItemHeader>
-        <ItemTitle>
-          <Avatar /> {membership.userName || membership.userEmail}
-          <StatusBadge status={membership.status} />
-        </ItemTitle>
-        <ItemActions>
-          <Button variant="ghost" size="icon" onClick={handleRemove}>
-            <Trash2Icon className="size-4" />
-          </Button>
-        </ItemActions>
-      </ItemHeader>
+      <ItemContent>
+        <ItemHeader>
+          <ItemTitle>
+            <Avatar />
+            <span className="capitalize">{membership.userName}</span>
+            <span className="text-muted-foreground">{membership.userEmail}</span>
+            <Badge variant="outline" className="capitalize">
+              {membership.role}
+            </Badge>
+          </ItemTitle>
+          <ItemActions>
+            <StatusBadge status={membership.status} />
+            <Button variant="ghost" size="icon" onClick={handleRemove}>
+              <Trash2Icon className="size-4" />
+            </Button>
+          </ItemActions>
+        </ItemHeader>
+      </ItemContent>
     </Item>
   )
 }

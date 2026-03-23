@@ -42,6 +42,7 @@ export class AgentsController {
     const agent = await this.agentsService.createAgent({
       connectScope: getRequiredConnectScope(request),
       fields: payload,
+      userId: request.user.id,
     })
 
     return { data: toAgentDto(agent) }

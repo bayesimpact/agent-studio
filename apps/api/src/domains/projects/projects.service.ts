@@ -1,27 +1,29 @@
 import { Injectable } from "@nestjs/common"
 import { InjectRepository } from "@nestjs/typeorm"
 import type { Repository } from "typeorm"
-import { Organization } from "@/domains/organizations/organization.entity"
+// biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
+import { ProjectMembershipsService } from "./memberships/project-memberships.service"
 import { Project } from "./project.entity"
 
 @Injectable()
 export class ProjectsService {
   constructor(
     @InjectRepository(Project) private readonly projectRepository: Repository<Project>,
-    @InjectRepository(Organization) readonly _organizationRepository: Repository<Organization>,
+    private readonly projectMembershipsService: ProjectMembershipsService,
   ) {}
 
-  /**
-   * Creates a new project for an organization.
-   */
-  async createProject(organizationId: string, name: string): Promise<Project> {
-    // Create the project
-    const project = this.projectRepository.create({
-      name,
-      organizationId,
+  async createProject(params: {
+    organizationId: string
+    userId: string
+    name: string
+  }): Promise<Project> {
+    const project = this.projectRepository.create(params)
+    await this.projectRepository.save(project)
+    await this.projectMembershipsService.createProjectOwnerMembership({
+      projectId: project.id,
+      userId: params.userId,
     })
-
-    return this.projectRepository.save(project)
+    return project
   }
 
   async listProjects({
