@@ -1,6 +1,6 @@
+import type { MembershipRole } from "@/domains/organizations/memberships/organization-membership.entity"
+import { userMembershipFactory } from "@/domains/organizations/memberships/organization-membership.factory"
 import { organizationFactory } from "@/domains/organizations/organization.factory"
-import type { MembershipRole } from "@/domains/organizations/user-membership.entity"
-import { userMembershipFactory } from "@/domains/organizations/user-membership.factory"
 import { userFactory } from "@/domains/users/user.factory"
 import { projectFactory } from "../projects/project.factory"
 import type { Document } from "./document.entity"

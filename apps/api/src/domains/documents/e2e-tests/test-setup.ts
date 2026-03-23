@@ -4,9 +4,9 @@ import {
   setupTransactionalTestDatabase,
   teardownTestDatabase,
 } from "@/common/test/test-transaction-manager"
+import { UserMembership } from "@/domains/organizations/memberships/organization-membership.entity"
 import { Organization } from "@/domains/organizations/organization.entity"
 import { organizationFactory } from "@/domains/organizations/organization.factory"
-import { UserMembership } from "@/domains/organizations/user-membership.entity"
 import { Project } from "@/domains/projects/project.entity"
 import { User } from "@/domains/users/user.entity"
 import { Document } from "../document.entity"

@@ -8,12 +8,12 @@ import {
 import { FeatureFlag } from "@/domains/feature-flags/feature-flag.entity"
 import { User } from "@/domains/users/user.entity"
 import { userFactory } from "@/domains/users/user.factory"
+import { UserMembership } from "./memberships/organization-membership.entity"
 import { Organization } from "./organization.entity"
 import { createOrganizationWithOwner } from "./organization.factory"
 import { OrganizationsController } from "./organizations.controller"
 import { OrganizationsModule } from "./organizations.module"
 import { OrganizationsService } from "./organizations.service"
-import { UserMembership } from "./user-membership.entity"
 
 describe("OrganizationsController", () => {
   let controller: OrganizationsController

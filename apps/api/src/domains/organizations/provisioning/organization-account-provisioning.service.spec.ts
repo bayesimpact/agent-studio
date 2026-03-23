@@ -3,8 +3,8 @@ import { Test, type TestingModule } from "@nestjs/testing"
 import { getRepositoryToken } from "@nestjs/typeorm"
 import { DataSource, type ObjectLiteral, type Repository } from "typeorm"
 import { User } from "@/domains/users/user.entity"
+import { UserMembership } from "../memberships/organization-membership.entity"
 import { Organization } from "../organization.entity"
-import { UserMembership } from "../user-membership.entity"
 import { OrganizationAccountProvisioningService } from "./organization-account-provisioning.service"
 
 type MockRepository<T extends ObjectLiteral> = Partial<Record<keyof Repository<T>, jest.Mock>>

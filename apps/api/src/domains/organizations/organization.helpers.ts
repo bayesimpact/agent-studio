@@ -4,8 +4,8 @@ import type {
   OrganizationDto,
 } from "@caseai-connect/api-contracts"
 import type { FeatureFlag } from "../feature-flags/feature-flag.entity"
+import type { MembershipRole } from "./memberships/organization-membership.entity"
 import type { Organization } from "./organization.entity"
-import type { MembershipRole } from "./user-membership.entity"
 
 export function toDto({
   organization,

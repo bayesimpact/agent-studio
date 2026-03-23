@@ -3,8 +3,8 @@ import { InjectRepository } from "@nestjs/typeorm"
 import type { Repository } from "typeorm"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
 import { DataSource } from "typeorm"
+import { UserMembership } from "@/domains/organizations/memberships/organization-membership.entity"
 import { Organization } from "@/domains/organizations/organization.entity"
-import { UserMembership } from "@/domains/organizations/user-membership.entity"
 import { User } from "@/domains/users/user.entity"
 
 const PLACEHOLDER_AUTH0_ID_PREFIX = "00000000-0000-0000-0000-"

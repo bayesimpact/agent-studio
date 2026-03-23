@@ -7,11 +7,11 @@ import {
 import { User } from "@/domains/users/user.entity"
 import { userFactory } from "@/domains/users/user.factory"
 import { FeatureFlag } from "../feature-flags/feature-flag.entity"
+import { UserMembership } from "./memberships/organization-membership.entity"
 import { Organization } from "./organization.entity"
 import { organizationFactory } from "./organization.factory"
 import { OrganizationsModule } from "./organizations.module"
 import { OrganizationsService } from "./organizations.service"
-import { UserMembership } from "./user-membership.entity"
 
 describe("OrganizationsService", () => {
   let service: OrganizationsService

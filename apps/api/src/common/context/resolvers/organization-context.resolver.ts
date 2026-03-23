@@ -2,7 +2,7 @@ import { BadRequestException, Injectable, UnauthorizedException } from "@nestjs/
 import { InjectRepository } from "@nestjs/typeorm"
 import type { Repository } from "typeorm"
 import { AUTH_ERRORS } from "@/common/errors/auth-errors"
-import { UserMembership } from "@/domains/organizations/user-membership.entity"
+import { UserMembership } from "@/domains/organizations/memberships/organization-membership.entity"
 import type { ContextResolver, ResolvableRequest } from "../context-resolver.interface"
 import type { EndpointRequestWithUserMembership } from "../request.interface"
 
