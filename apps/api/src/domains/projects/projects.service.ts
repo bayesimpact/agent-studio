@@ -1,6 +1,6 @@
 import { Injectable } from "@nestjs/common"
 import { InjectRepository } from "@nestjs/typeorm"
-import type { FindOptionsWhere, Repository } from "typeorm"
+import type { Repository } from "typeorm"
 import { Organization } from "@/domains/organizations/organization.entity"
 import { Project } from "./project.entity"
 
@@ -24,20 +24,15 @@ export class ProjectsService {
     return this.projectRepository.save(project)
   }
 
-  /**
-   * Lists all projects for an organization.
-   * Verification has been handled in the ProjectsGuard.
-   * @param options.userId - The ID of the user to filter projects by.
-   */
-  async listProjects(organizationId: string, options?: { userId?: string }): Promise<Project[]> {
-    const whereClause: FindOptionsWhere<Project> = { organizationId }
-
-    if (options?.userId) {
-      whereClause.projectMemberships = { userId: options.userId }
-    }
-
+  async listProjects({
+    organizationId,
+    userId,
+  }: {
+    organizationId: string
+    userId: string
+  }): Promise<Project[]> {
     return this.projectRepository.find({
-      where: whereClause,
+      where: { organizationId, projectMemberships: { userId } },
       order: { createdAt: "DESC" },
     })
   }

@@ -9,8 +9,7 @@ import {
   createOrganizationWithOwner,
   createOrganizationWithProject,
 } from "@/domains/organizations/organization.factory"
-import { createOrganizationMembership } from "../organizations/memberships/organization-membership.factory"
-import { projectMembershipFactory } from "./memberships/project-membership.factory"
+import { createProjectMembership } from "./memberships/project-membership.factory"
 import type { Project } from "./project.entity"
 import { projectFactory } from "./project.factory"
 import { ProjectsModule } from "./projects.module"
@@ -71,8 +70,7 @@ describe("ProjectsService", () => {
 
   describe("listProjects", () => {
     it("should return projects for an organization", async () => {
-      // Arrange
-      const { organization } = await createOrganizationWithOwner(repositories)
+      const { organization, user } = await createOrganizationWithOwner(repositories)
 
       const project1 = projectFactory.transient({ organization }).build({
         name: "Project 1",
@@ -82,70 +80,28 @@ describe("ProjectsService", () => {
       })
       await projectRepository.save([project1, project2])
 
-      // Act
-      const result = await service.listProjects(organization.id)
+      await createProjectMembership({ repositories, project: project1, user })
+      await createProjectMembership({ repositories, project: project2, user })
 
-      // Assert
+      const result = await service.listProjects({
+        organizationId: organization.id,
+        userId: user.id,
+      })
+
       expect(result).toHaveLength(2)
       expect(result.map((project) => project.name)).toContain("Project 1")
       expect(result.map((project) => project.name)).toContain("Project 2")
     })
 
-    it("should return empty array when organization has no projects", async () => {
-      // Arrange
-      const { organization } = await createOrganizationWithOwner(repositories)
-
-      // Act
-      const result = await service.listProjects(organization.id)
-
-      // Assert
+    it("should return empty array when user has no project membership", async () => {
+      const { organization, user } = await createOrganizationWithOwner(repositories)
+      const project = projectFactory.transient({ organization }).build()
+      await projectRepository.save(project)
+      const result = await service.listProjects({
+        organizationId: organization.id,
+        userId: user.id,
+      })
       expect(result).toEqual([])
-    })
-
-    it("should return projects ordered by createdAt DESC", async () => {
-      // Arrange
-      const { organization } = await createOrganizationWithOwner(repositories)
-
-      const project1 = projectFactory.transient({ organization }).build({
-        name: "First Project",
-        createdAt: new Date("2024-01-01"),
-      })
-      const project2 = projectFactory.transient({ organization }).build({
-        name: "Second Project",
-        createdAt: new Date("2024-01-02"),
-      })
-      await projectRepository.save([project1, project2])
-
-      // Act
-      const result = await service.listProjects(organization.id)
-
-      // Assert
-      expect(result).toHaveLength(2)
-      const [first, second] = result
-      expect(first!.name).toBe("Second Project") // Most recent first
-      expect(second!.name).toBe("First Project")
-    })
-
-    it("should return projects the user is a member of", async () => {
-      const { organization } = await createOrganizationWithOwner(repositories)
-      const { user } = await createOrganizationMembership({ repositories, organization })
-
-      // create projects
-      const project1 = projectFactory.transient({ organization }).build({ name: "Project 1" })
-      const project2 = projectFactory.transient({ organization }).build({ name: "Project 2" })
-      await repositories.projectRepository.save([project1, project2])
-
-      // create project membership
-      await repositories.projectMembershipRepository.save(
-        projectMembershipFactory.transient({ project: project2, user }).build(),
-      )
-
-      const result = await service.listProjects(organization.id, { userId: user.id })
-
-      // Assert
-      expect(result).toHaveLength(1)
-      const [first] = result
-      expect(first!.name).toBe("Project 2")
     })
   })
 

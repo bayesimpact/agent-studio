@@ -38,13 +38,8 @@ export class ProjectsController {
   async listProjects(
     @Req() request: EndpointRequestWithOrganizationMembership,
   ): Promise<typeof ProjectsRoutes.getAll.response> {
-    const { organizationId, organizationMembership } = request
-
-    // List projects for the organization
-    const projects = await this.projectsService.listProjects(organizationId, {
-      userId: organizationMembership.role === "member" ? organizationMembership.userId : undefined,
-    })
-
+    const { organizationId, user } = request
+    const projects = await this.projectsService.listProjects({ organizationId, userId: user.id })
     return { data: projects.map(toProjectDto) }
   }
 

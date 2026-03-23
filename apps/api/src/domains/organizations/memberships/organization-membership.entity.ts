@@ -3,7 +3,7 @@ import { Base4AllEntity } from "@/common/entities/base4all.entity"
 import { User } from "@/domains/users/user.entity"
 import { Organization } from "../organization.entity"
 
-export type MembershipRole = "owner" | "admin" | "member"
+export type OrganizationMembershipRole = "owner" | "admin"
 
 @Entity("organization_membership")
 @Unique(["userId", "organizationId"])
@@ -15,7 +15,7 @@ export class OrganizationMembership extends Base4AllEntity {
   organizationId!: string
 
   @Column({ type: "varchar" })
-  role!: MembershipRole
+  role!: OrganizationMembershipRole
 
   @ManyToOne(
     () => User,

@@ -1,4 +1,4 @@
-import type { MembershipRole } from "@/domains/organizations/memberships/organization-membership.entity"
+import type { OrganizationMembershipRole } from "@/domains/organizations/memberships/organization-membership.entity"
 import { organizationMembershipFactory } from "@/domains/organizations/memberships/organization-membership.factory"
 import { organizationFactory } from "@/domains/organizations/organization.factory"
 import { userFactory } from "@/domains/users/user.factory"
@@ -13,7 +13,7 @@ describe("AgentPolicy", () => {
   const otherOrganization = organizationFactory.build()
   const user = userFactory.build()
 
-  const buildOrganizationMembership = (role: MembershipRole) => {
+  const buildOrganizationMembership = (role: OrganizationMembershipRole) => {
     return organizationMembershipFactory.transient({ user, organization }).params({ role }).build()
   }
 
@@ -32,7 +32,7 @@ describe("AgentPolicy", () => {
   }
 
   describe("canList", () => {
-    describe.each<[MembershipRole, AgentState]>([
+    describe.each<[OrganizationMembershipRole, AgentState]>([
       ["owner", "sameOrganization"],
       ["owner", "differentOrganization"],
       ["owner", "noAgent"],
@@ -69,7 +69,7 @@ describe("AgentPolicy", () => {
   })
 
   describe("canUpdate", () => {
-    describe.each<[MembershipRole, AgentState, boolean]>([
+    describe.each<[OrganizationMembershipRole, AgentState, boolean]>([
       ["owner", "sameOrganization", true],
       ["owner", "differentOrganization", false],
       ["owner", "noAgent", false],
@@ -89,7 +89,7 @@ describe("AgentPolicy", () => {
   })
 
   describe("canDelete", () => {
-    describe.each<[MembershipRole, AgentState, boolean]>([
+    describe.each<[OrganizationMembershipRole, AgentState, boolean]>([
       ["owner", "sameOrganization", true],
       ["owner", "differentOrganization", false],
       ["owner", "noAgent", false],

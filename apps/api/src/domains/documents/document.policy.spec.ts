@@ -1,4 +1,4 @@
-import type { MembershipRole } from "@/domains/organizations/memberships/organization-membership.entity"
+import type { OrganizationMembershipRole } from "@/domains/organizations/memberships/organization-membership.entity"
 import { organizationMembershipFactory } from "@/domains/organizations/memberships/organization-membership.factory"
 import { organizationFactory } from "@/domains/organizations/organization.factory"
 import { userFactory } from "@/domains/users/user.factory"
@@ -14,7 +14,7 @@ describe("DocumentPolicy", () => {
   const otherOrganization = organizationFactory.build()
   const user = userFactory.build()
 
-  const buildOrganizationMembership = (role: MembershipRole) => {
+  const buildOrganizationMembership = (role: OrganizationMembershipRole) => {
     return organizationMembershipFactory.transient({ user, organization }).params({ role }).build()
   }
 
@@ -37,7 +37,7 @@ describe("DocumentPolicy", () => {
   }
 
   describe("canList", () => {
-    describe.each<[MembershipRole, DocumentState]>([
+    describe.each<[OrganizationMembershipRole, DocumentState]>([
       ["owner", "sameOrganization"],
       ["owner", "differentOrganization"],
       ["owner", "noDocument"],
@@ -125,7 +125,7 @@ describe("DocumentPolicy", () => {
   })
 
   describe("canUpdate", () => {
-    describe.each<[MembershipRole, boolean]>([
+    describe.each<[OrganizationMembershipRole, boolean]>([
       ["owner", true],
       ["admin", true],
       ["member", false],
@@ -142,7 +142,7 @@ describe("DocumentPolicy", () => {
   })
 
   describe("canDelete", () => {
-    describe.each<[MembershipRole, boolean]>([
+    describe.each<[OrganizationMembershipRole, boolean]>([
       ["owner", true],
       ["admin", true],
       ["member", false],

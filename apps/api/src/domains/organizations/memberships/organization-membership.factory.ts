@@ -4,7 +4,10 @@ import type { Repository } from "typeorm"
 import type { User } from "@/domains/users/user.entity"
 import { userFactory } from "../../users/user.factory"
 import type { Organization } from "../organization.entity"
-import type { MembershipRole, OrganizationMembership } from "./organization-membership.entity"
+import type {
+  OrganizationMembership,
+  OrganizationMembershipRole,
+} from "./organization-membership.entity"
 
 type OrganizationMembershipTransientParams = {
   user: User
@@ -42,10 +45,10 @@ export const organizationMembershipFactory = OrganizationMembershipFactory.defin
       id: params.id || randomUUID(),
       userId: transientParams.user.id,
       organizationId: transientParams.organization.id,
-      role: (params.role || "member") as MembershipRole,
+      role: (params.role || "member") as OrganizationMembershipRole,
       createdAt: params.createdAt || now,
       updatedAt: params.updatedAt || now,
-      deletedAt: null,
+      deletedAt: params.deletedAt || null,
       user: transientParams.user,
       organization: transientParams.organization,
     } satisfies OrganizationMembership

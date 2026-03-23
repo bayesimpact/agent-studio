@@ -4,7 +4,7 @@ import type {
   OrganizationDto,
 } from "@caseai-connect/api-contracts"
 import type { FeatureFlag } from "../feature-flags/feature-flag.entity"
-import type { MembershipRole } from "./memberships/organization-membership.entity"
+import type { OrganizationMembershipRole } from "./memberships/organization-membership.entity"
 import type { Organization } from "./organization.entity"
 
 export function toDto({
@@ -12,7 +12,7 @@ export function toDto({
   role,
 }: {
   organization: Organization
-  role: MembershipRole
+  role: OrganizationMembershipRole
 }): OrganizationDto {
   return {
     id: organization.id,

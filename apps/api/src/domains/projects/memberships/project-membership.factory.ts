@@ -1,13 +1,14 @@
 import { randomUUID } from "node:crypto"
 import { Factory } from "fishery"
 import type { Repository } from "typeorm"
-import type { OrganizationMembership } from "@/domains/organizations/memberships/organization-membership.entity"
-import { organizationMembershipFactory } from "@/domains/organizations/memberships/organization-membership.factory"
-import type { Organization } from "@/domains/organizations/organization.entity"
 import type { User } from "@/domains/users/user.entity"
 import { userFactory } from "@/domains/users/user.factory"
 import type { Project } from "../project.entity"
-import type { ProjectMembership, ProjectMembershipStatus } from "./project-membership.entity"
+import type {
+  ProjectMembership,
+  ProjectMembershipRole,
+  ProjectMembershipStatus,
+} from "./project-membership.entity"
 import { PLACEHOLDER_AUTH0_ID_PREFIX } from "./project-memberships.service"
 
 type ProjectMembershipTransientParams = {
@@ -35,27 +36,26 @@ export const projectMembershipFactory = Factory.define<
     status: (params.status || "sent") as ProjectMembershipStatus,
     createdAt: params.createdAt || now,
     updatedAt: params.updatedAt || now,
+    deletedAt: params.deletedAt || null,
     project: transientParams.project,
     user: transientParams.user,
+    role: (params.role || "admin") as ProjectMembershipRole,
   } satisfies ProjectMembership
 })
 
 export const createProjectMembership = async ({
   repositories,
-  organization,
   project,
   user,
   role,
 }: {
   repositories: {
     userRepository: Repository<User>
-    membershipRepository: Repository<OrganizationMembership>
     projectMembershipRepository: Repository<ProjectMembership>
   }
-  organization?: Organization
   project: Project
   user?: Partial<User>
-  role?: "owner" | "member" | "admin"
+  role?: "owner" | "admin"
 }) => {
   user = user ?? {
     email: "invited@example.com",
@@ -65,17 +65,9 @@ export const createProjectMembership = async ({
   const invitedUser = userFactory.build(user)
   await repositories.userRepository.save(invitedUser)
 
-  if (organization) {
-    await repositories.membershipRepository.save(
-      role
-        ? organizationMembershipFactory
-            .transient({ user: invitedUser, organization })
-            .build({ role })
-        : organizationMembershipFactory.transient({ user: invitedUser, organization }).build(),
-    )
-  }
-
-  const membership = projectMembershipFactory.transient({ project, user: invitedUser }).build()
+  const membership = projectMembershipFactory
+    .transient({ project, user: invitedUser })
+    .build({ role: role || "admin" })
   await repositories.projectMembershipRepository.save(membership)
 
   return { membership, invitedUser }

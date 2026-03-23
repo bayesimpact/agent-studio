@@ -6,8 +6,8 @@ import type { RequiredConnectScope } from "@/common/entities/connect-required-fi
 import { FeatureFlag } from "@/domains/feature-flags/feature-flag.entity"
 import { User } from "@/domains/users/user.entity"
 import {
-  type MembershipRole,
   OrganizationMembership,
+  type OrganizationMembershipRole,
 } from "./memberships/organization-membership.entity"
 import { Organization } from "./organization.entity"
 
@@ -23,7 +23,7 @@ export class OrganizationsService {
 
   async getUserOrganizationsWithMemberships(
     userId: string,
-  ): Promise<Array<{ organization: Organization; role: MembershipRole }>> {
+  ): Promise<Array<{ organization: Organization; role: OrganizationMembershipRole }>> {
     // Use query builder to ensure proper join and handle potential null organizations
     const memberships = await this.membershipRepository
       .createQueryBuilder("membership")
@@ -58,7 +58,7 @@ export class OrganizationsService {
   async createOrganization(
     userId: string,
     name: string,
-  ): Promise<{ organization: Organization; role: MembershipRole }> {
+  ): Promise<{ organization: Organization; role: OrganizationMembershipRole }> {
     // Validate organization name (defense in depth)
     if (!name || name.trim().length < 3) {
       throw new Error("Organization name must be at least 3 characters long")

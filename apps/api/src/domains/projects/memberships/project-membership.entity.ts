@@ -1,24 +1,14 @@
-import {
-  Column,
-  CreateDateColumn,
-  Entity,
-  JoinColumn,
-  ManyToOne,
-  PrimaryGeneratedColumn,
-  Unique,
-  UpdateDateColumn,
-} from "typeorm"
+import { Column, Entity, JoinColumn, ManyToOne, Unique } from "typeorm"
+import { Base4AllEntity } from "@/common/entities/base4all.entity"
 import { User } from "@/domains/users/user.entity"
 import { Project } from "../project.entity"
 
 export type ProjectMembershipStatus = "sent" | "accepted"
+export type ProjectMembershipRole = "owner" | "admin"
 
 @Entity("project_membership")
 @Unique(["projectId", "userId"])
-export class ProjectMembership {
-  @PrimaryGeneratedColumn("uuid")
-  id!: string
-
+export class ProjectMembership extends Base4AllEntity {
   @Column({ type: "uuid", name: "project_id" })
   projectId!: string
 
@@ -31,11 +21,8 @@ export class ProjectMembership {
   @Column({ type: "varchar", default: "sent" })
   status!: ProjectMembershipStatus
 
-  @CreateDateColumn({ name: "created_at" })
-  createdAt!: Date
-
-  @UpdateDateColumn({ name: "updated_at" })
-  updatedAt!: Date
+  @Column({ type: "varchar" })
+  role!: ProjectMembershipRole
 
   @ManyToOne(
     () => Project,
