@@ -8,7 +8,7 @@ import {
 import { FeatureFlag } from "@/domains/feature-flags/feature-flag.entity"
 import { User } from "@/domains/users/user.entity"
 import { userFactory } from "@/domains/users/user.factory"
-import { UserMembership } from "./memberships/organization-membership.entity"
+import { OrganizationMembership } from "./memberships/organization-membership.entity"
 import { Organization } from "./organization.entity"
 import { createOrganizationWithOwner } from "./organization.factory"
 import { OrganizationsController } from "./organizations.controller"
@@ -21,7 +21,7 @@ describe("OrganizationsController", () => {
   let setup: Awaited<ReturnType<typeof setupTransactionalTestDatabase>>
   let userRepository: Repository<User>
   let organizationRepository: Repository<Organization>
-  let membershipRepository: Repository<UserMembership>
+  let membershipRepository: Repository<OrganizationMembership>
   let featureFlagRepository: Repository<FeatureFlag>
 
   beforeAll(async () => {
@@ -46,7 +46,7 @@ describe("OrganizationsController", () => {
     service = setup.module.get<OrganizationsService>(OrganizationsService)
     userRepository = setup.getRepository(User)
     organizationRepository = setup.getRepository(Organization)
-    membershipRepository = setup.getRepository(UserMembership)
+    membershipRepository = setup.getRepository(OrganizationMembership)
     featureFlagRepository = setup.getRepository(FeatureFlag)
 
     // FIXME: @Did: rollbackTransaction does not clear data as expected

@@ -4,7 +4,7 @@ import {
   setupTransactionalTestDatabase,
   teardownTestDatabase,
 } from "@/common/test/test-transaction-manager"
-import { UserMembership } from "@/domains/organizations/memberships/organization-membership.entity"
+import { OrganizationMembership } from "@/domains/organizations/memberships/organization-membership.entity"
 import { Organization } from "@/domains/organizations/organization.entity"
 import { Project } from "@/domains/projects/project.entity"
 import { User } from "@/domains/users/user.entity"
@@ -18,7 +18,7 @@ export function documentsServiceTestSetup() {
   let documentRepository: Repository<Document>
   let projectRepository: Repository<Project>
   let organizationRepository: Repository<Organization>
-  let membershipRepository: Repository<UserMembership>
+  let membershipRepository: Repository<OrganizationMembership>
   let userRepository: Repository<User>
   let setup: Awaited<ReturnType<typeof setupTransactionalTestDatabase>>
 
@@ -40,7 +40,7 @@ export function documentsServiceTestSetup() {
     documentRepository = setup.getRepository(Document)
     projectRepository = setup.getRepository(Project)
     organizationRepository = setup.getRepository(Organization)
-    membershipRepository = setup.getRepository(UserMembership)
+    membershipRepository = setup.getRepository(OrganizationMembership)
     userRepository = setup.getRepository(User)
   })
 

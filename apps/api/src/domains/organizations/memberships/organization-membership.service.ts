@@ -1,13 +1,13 @@
 import { Injectable } from "@nestjs/common"
 import { InjectRepository } from "@nestjs/typeorm"
 import type { Repository } from "typeorm"
-import { UserMembership } from "./organization-membership.entity"
+import { OrganizationMembership } from "./organization-membership.entity"
 
 @Injectable()
-export class UserMembershipService {
+export class OrganizationMembershipService {
   constructor(
-    @InjectRepository(UserMembership)
-    private readonly membershipRepository: Repository<UserMembership>,
+    @InjectRepository(OrganizationMembership)
+    private readonly repo: Repository<OrganizationMembership>,
   ) {}
 
   /**
@@ -15,15 +15,15 @@ export class UserMembershipService {
    * @param params - Object containing userId and organizationId
    * @param params.userId - The ID of the user
    * @param params.organizationId - The ID of the organization
-   * @returns The UserMembership if found, null otherwise
+   * @returns The OrganizationMembership if found, null otherwise
    */
-  async findUserMembership({
+  async findOrganizationMembership({
     userId,
     organizationId,
   }: {
     userId: string
     organizationId: string
-  }): Promise<UserMembership | null> {
-    return this.membershipRepository.findOne({ where: { userId, organizationId } })
+  }): Promise<OrganizationMembership | null> {
+    return this.repo.findOne({ where: { userId, organizationId } })
   }
 }

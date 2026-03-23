@@ -9,7 +9,7 @@ import {
   createOrganizationWithOwner,
   createOrganizationWithProject,
 } from "@/domains/organizations/organization.factory"
-import { createUserMembership } from "../organizations/memberships/organization-membership.factory"
+import { createOrganizationMembership } from "../organizations/memberships/organization-membership.factory"
 import { projectMembershipFactory } from "./memberships/project-membership.factory"
 import type { Project } from "./project.entity"
 import { projectFactory } from "./project.factory"
@@ -128,7 +128,7 @@ describe("ProjectsService", () => {
 
     it("should return projects the user is a member of", async () => {
       const { organization } = await createOrganizationWithOwner(repositories)
-      const { user } = await createUserMembership({ repositories, organization })
+      const { user } = await createOrganizationMembership({ repositories, organization })
 
       // create projects
       const project1 = projectFactory.transient({ organization }).build({ name: "Project 1" })

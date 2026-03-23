@@ -9,7 +9,7 @@ import {
 } from "@/common/test/test-transaction-manager"
 import type { Agent } from "@/domains/agents/agent.entity"
 import { agentFactory } from "@/domains/agents/agent.factory"
-import type { UserMembership } from "@/domains/organizations/memberships/organization-membership.entity"
+import type { OrganizationMembership } from "@/domains/organizations/memberships/organization-membership.entity"
 import type { Organization } from "@/domains/organizations/organization.entity"
 import {
   createOrganizationWithAgent,
@@ -28,7 +28,7 @@ describe("AgentsService", () => {
     agentRepository: Repository<Agent>
     projectRepository: Repository<Project>
     organizationRepository: Repository<Organization>
-    membershipRepository: Repository<UserMembership>
+    membershipRepository: Repository<OrganizationMembership>
     userRepository: Repository<User>
   }
 

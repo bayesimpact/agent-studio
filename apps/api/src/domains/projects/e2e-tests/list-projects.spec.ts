@@ -7,7 +7,7 @@ import {
   teardownTestDatabase,
 } from "@/common/test/test-transaction-manager"
 import { removeNullish } from "@/common/utils/remove-nullish"
-import { createUserMembership } from "@/domains/organizations/memberships/organization-membership.factory"
+import { createOrganizationMembership } from "@/domains/organizations/memberships/organization-membership.factory"
 import { createOrganizationWithOwner } from "@/domains/organizations/organization.factory"
 import { projectFactory } from "@/domains/projects/project.factory"
 import { setupUserGuardForTesting } from "../../../../test/e2e.helpers"
@@ -95,7 +95,7 @@ describe("Projects - listProjects", () => {
     const { organization } = await createContext()
 
     // create user
-    const { user } = await createUserMembership({
+    const { user } = await createOrganizationMembership({
       repositories,
       organization,
       user: { auth0Id: "auth0|456" },

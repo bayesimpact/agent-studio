@@ -5,18 +5,20 @@ import {
   Injectable,
   UnauthorizedException,
 } from "@nestjs/common"
-import type { EndpointRequestWithUserMembership } from "@/common/context/request.interface"
+import type { EndpointRequestWithOrganizationMembership } from "@/common/context/request.interface"
 import { AUTH_ERRORS } from "@/common/errors/auth-errors"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
-import { UserMembershipService } from "./memberships/organization-membership.service"
+import { OrganizationMembershipService } from "./memberships/organization-membership.service"
 
 @Injectable()
 export class OrganizationGuard implements CanActivate {
-  constructor(readonly userMembershipService: UserMembershipService) {}
+  constructor(readonly organizationMembershipService: OrganizationMembershipService) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     // since OrganizationGuard must be called after UserGuard, we can access the enhanced request object storing the user
-    const request = context.switchToHttp().getRequest() as EndpointRequestWithUserMembership & {
+    const request = context
+      .switchToHttp()
+      .getRequest() as EndpointRequestWithOrganizationMembership & {
       params: { organizationId: string }
     }
 
@@ -28,17 +30,18 @@ export class OrganizationGuard implements CanActivate {
     }
 
     // Step 2: Get the user membership for the user and organization
-    const userMembership = await this.userMembershipService.findUserMembership({
-      userId: request.user.id,
-      organizationId,
-    })
+    const organizationMembership =
+      await this.organizationMembershipService.findOrganizationMembership({
+        userId: request.user.id,
+        organizationId,
+      })
 
-    if (!userMembership) {
+    if (!organizationMembership) {
       throw new UnauthorizedException(AUTH_ERRORS.NOT_MEMBER_OF_ORG)
     }
 
     // Step 3: Store the user membership and organization ID in the request object
-    request.userMembership = userMembership
+    request.organizationMembership = organizationMembership
     request.organizationId = organizationId
 
     return true

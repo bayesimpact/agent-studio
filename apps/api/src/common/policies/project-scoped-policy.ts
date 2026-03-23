@@ -1,5 +1,5 @@
 import { BasePolicy } from "@/common/policies/base-policy"
-import type { UserMembership } from "@/domains/organizations/memberships/organization-membership.entity"
+import type { OrganizationMembership } from "@/domains/organizations/memberships/organization-membership.entity"
 import type { ProjectMembership } from "@/domains/projects/memberships/project-membership.entity"
 import type { Project } from "@/domains/projects/project.entity"
 
@@ -9,13 +9,13 @@ export class ProjectScopedPolicy<T> extends BasePolicy<T> {
 
   constructor(
     protected readonly context: {
-      userMembership: UserMembership
+      organizationMembership: OrganizationMembership
       projectMembership?: ProjectMembership
       project: Project
     },
     protected readonly entity?: T,
   ) {
-    super(context.userMembership, entity)
+    super(context.organizationMembership, entity)
     this.project = context.project
     this.projectMembership = context.projectMembership
   }

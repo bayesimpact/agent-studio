@@ -2,7 +2,7 @@ import type { EndpointRequestWithProject } from "@/common/context/request.interf
 
 export const requestToProjectPolicyContext = (request: EndpointRequestWithProject) => {
   return {
-    userMembership: request.userMembership,
+    organizationMembership: request.organizationMembership,
     projectMembership: request.projectMembership,
     project: request.project,
   }

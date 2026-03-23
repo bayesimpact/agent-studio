@@ -5,7 +5,7 @@ import { ProjectContextResolver } from "@/common/context/resolvers/project-conte
 import { ProjectMembershipContextResolver } from "@/common/context/resolvers/project-membership-context.resolver"
 import { ResourceContextGuard } from "@/common/context/resource-context.guard"
 import { AuthModule } from "@/domains/auth/auth.module"
-import { UserMembership } from "@/domains/organizations/memberships/organization-membership.entity"
+import { OrganizationMembership } from "@/domains/organizations/memberships/organization-membership.entity"
 import { Organization } from "@/domains/organizations/organization.entity"
 import { OrganizationsModule } from "@/domains/organizations/organizations.module"
 import { User } from "@/domains/users/user.entity"
@@ -21,7 +21,13 @@ import { ProjectsService } from "./projects.service"
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Project, Organization, UserMembership, ProjectMembership, User]),
+    TypeOrmModule.forFeature([
+      Project,
+      Organization,
+      OrganizationMembership,
+      ProjectMembership,
+      User,
+    ]),
     OrganizationsModule,
     UsersModule,
     AuthModule,

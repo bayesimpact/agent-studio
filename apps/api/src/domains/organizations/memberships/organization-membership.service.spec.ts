@@ -4,9 +4,9 @@ import {
   setupTransactionalTestDatabase,
   teardownTestDatabase,
 } from "@/common/test/test-transaction-manager"
-import { UserMembership } from "@/domains/organizations/memberships/organization-membership.entity"
-import { userMembershipFactory } from "@/domains/organizations/memberships/organization-membership.factory"
-import { UserMembershipService } from "@/domains/organizations/memberships/organization-membership.service"
+import { OrganizationMembership } from "@/domains/organizations/memberships/organization-membership.entity"
+import { organizationMembershipFactory } from "@/domains/organizations/memberships/organization-membership.factory"
+import { OrganizationMembershipService } from "@/domains/organizations/memberships/organization-membership.service"
 import { Organization } from "@/domains/organizations/organization.entity"
 import {
   createOrganizationWithOwner,
@@ -15,14 +15,14 @@ import {
 import { OrganizationsModule } from "@/domains/organizations/organizations.module"
 import { User } from "@/domains/users/user.entity"
 
-describe("UserMembershipService", () => {
-  let service: UserMembershipService
-  let membershipRepository: Repository<UserMembership>
+describe("OrganizationMembershipService", () => {
+  let service: OrganizationMembershipService
+  let membershipRepository: Repository<OrganizationMembership>
   let organizationRepository: Repository<Organization>
   let userRepository: Repository<User>
   let setup: Awaited<ReturnType<typeof setupTransactionalTestDatabase>>
   let mainRepositories: {
-    membershipRepository: Repository<UserMembership>
+    membershipRepository: Repository<OrganizationMembership>
     organizationRepository: Repository<Organization>
     userRepository: Repository<User>
   }
@@ -40,8 +40,8 @@ describe("UserMembershipService", () => {
 
   beforeEach(async () => {
     await setup.startTransaction()
-    service = setup.module.get<UserMembershipService>(UserMembershipService)
-    membershipRepository = setup.getRepository(UserMembership)
+    service = setup.module.get<OrganizationMembershipService>(OrganizationMembershipService)
+    membershipRepository = setup.getRepository(OrganizationMembership)
     organizationRepository = setup.getRepository(Organization)
     userRepository = setup.getRepository(User)
     mainRepositories = {
@@ -55,13 +55,13 @@ describe("UserMembershipService", () => {
     await setup.rollbackTransaction()
   })
 
-  describe("findUserMembership", () => {
+  describe("findOrganizationMembership", () => {
     it("should return membership when user is a member of the organization", async () => {
       // Arrange
       const { user, organization } = await createOrganizationWithOwner(mainRepositories)
 
       // Act
-      const result = await service.findUserMembership({
+      const result = await service.findOrganizationMembership({
         userId: user.id,
         organizationId: organization.id,
       })
@@ -84,7 +84,7 @@ describe("UserMembershipService", () => {
       })
 
       // Act
-      const result = await service.findUserMembership({
+      const result = await service.findOrganizationMembership({
         userId: user.id,
         organizationId: organization.id,
       })
@@ -102,7 +102,7 @@ describe("UserMembershipService", () => {
       const nonExistentOrganizationId = "00000000-0000-0000-0000-000000000000"
 
       // Act
-      const result = await service.findUserMembership({
+      const result = await service.findOrganizationMembership({
         userId: user.id,
         organizationId: nonExistentOrganizationId,
       })
@@ -118,7 +118,7 @@ describe("UserMembershipService", () => {
       const nonExistentUserId = "00000000-0000-0000-0000-000000000000"
 
       // Act
-      const result = await service.findUserMembership({
+      const result = await service.findOrganizationMembership({
         userId: nonExistentUserId,
         organizationId: organization.id,
       })
@@ -142,18 +142,18 @@ describe("UserMembershipService", () => {
         organizationFactory.build({ name: "Org 2" }),
       )
       await membershipRepository.save(
-        userMembershipFactory
+        organizationMembershipFactory
           .transient({ user, organization: savedOrganization2 })
           .member()
           .build(),
       )
 
       // Act
-      const result1 = await service.findUserMembership({
+      const result1 = await service.findOrganizationMembership({
         userId: user.id,
         organizationId: organization1.id,
       })
-      const result2 = await service.findUserMembership({
+      const result2 = await service.findOrganizationMembership({
         userId: user.id,
         organizationId: savedOrganization2.id,
       })

@@ -5,15 +5,18 @@ import type { Repository } from "typeorm"
 import type { RequiredConnectScope } from "@/common/entities/connect-required-fields"
 import { FeatureFlag } from "@/domains/feature-flags/feature-flag.entity"
 import { User } from "@/domains/users/user.entity"
-import { type MembershipRole, UserMembership } from "./memberships/organization-membership.entity"
+import {
+  type MembershipRole,
+  OrganizationMembership,
+} from "./memberships/organization-membership.entity"
 import { Organization } from "./organization.entity"
 
 @Injectable()
 export class OrganizationsService {
   constructor(
     @InjectRepository(Organization) readonly organizationRepository: Repository<Organization>,
-    @InjectRepository(UserMembership)
-    private readonly membershipRepository: Repository<UserMembership>,
+    @InjectRepository(OrganizationMembership)
+    private readonly membershipRepository: Repository<OrganizationMembership>,
     @InjectRepository(User) private readonly userRepository: Repository<User>,
     @InjectRepository(FeatureFlag) private readonly featureFlagRepository: Repository<FeatureFlag>,
   ) {}

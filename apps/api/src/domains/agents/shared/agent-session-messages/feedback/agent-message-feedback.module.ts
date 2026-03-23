@@ -7,7 +7,7 @@ import { ResourceContextGuard } from "@/common/context/resource-context.guard"
 import { ConversationAgentSessionsModule } from "@/domains/agents/conversation-agent-sessions/conversation-agent-sessions.module"
 import { FormAgentSession } from "@/domains/agents/form-agent-sessions/form-agent-session.entity"
 import { AuthModule } from "@/domains/auth/auth.module"
-import { UserMembership } from "@/domains/organizations/memberships/organization-membership.entity"
+import { OrganizationMembership } from "@/domains/organizations/memberships/organization-membership.entity"
 import { Organization } from "@/domains/organizations/organization.entity"
 import { OrganizationsModule } from "@/domains/organizations/organizations.module"
 import { ProjectMembership } from "@/domains/projects/memberships/project-membership.entity"
@@ -31,7 +31,7 @@ import { AgentMessageFeedbackService } from "./agent-message-feedback.service"
       Project,
       Agent,
       FormAgentSession,
-      UserMembership,
+      OrganizationMembership,
       ProjectMembership,
     ]),
     AuthModule,

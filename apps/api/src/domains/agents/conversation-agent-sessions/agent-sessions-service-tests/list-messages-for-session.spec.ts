@@ -1,6 +1,6 @@
 import { afterAll } from "@jest/globals"
 import type { RequiredConnectScope } from "@/common/entities/connect-required-fields"
-import { userMembershipFactory } from "@/domains/organizations/memberships/organization-membership.factory"
+import { organizationMembershipFactory } from "@/domains/organizations/memberships/organization-membership.factory"
 import { sdk } from "@/external/llm/open-telemetry-init"
 import { createChitChatConversation } from "../../shared/agent-session-messages/agent-messages.factory"
 import { agentSessionControllerTestSetup } from "./test-setup"
@@ -27,7 +27,7 @@ describe("listMessagesForSession", () => {
     }
 
     await membershipRepository.save(
-      userMembershipFactory
+      organizationMembershipFactory
         .transient({ organization: testOrganization, user: testUser })
         .owner()
         .build(),

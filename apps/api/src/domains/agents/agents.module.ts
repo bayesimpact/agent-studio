@@ -9,7 +9,7 @@ import { AuthModule } from "@/domains/auth/auth.module"
 import { DocumentsModule } from "@/domains/documents/documents.module"
 import { StorageModule } from "@/domains/documents/storage/storage.module"
 import { DocumentTagsModule } from "@/domains/documents/tags/document-tags.module"
-import { UserMembership } from "@/domains/organizations/memberships/organization-membership.entity"
+import { OrganizationMembership } from "@/domains/organizations/memberships/organization-membership.entity"
 import { OrganizationsModule } from "@/domains/organizations/organizations.module"
 import { ProjectMembership } from "@/domains/projects/memberships/project-membership.entity"
 import { Project } from "@/domains/projects/project.entity"
@@ -34,7 +34,7 @@ import { FormAgentSessionsService } from "./form-agent-sessions/form-agent-sessi
       ExtractionAgentSession,
       FormAgentSession,
       Project,
-      UserMembership,
+      OrganizationMembership,
       ProjectMembership,
     ]),
     LlmModule,

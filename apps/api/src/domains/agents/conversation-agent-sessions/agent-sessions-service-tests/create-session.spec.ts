@@ -1,6 +1,6 @@
 import { afterAll } from "@jest/globals"
 import type { RequiredConnectScope } from "@/common/entities/connect-required-fields"
-import { userMembershipFactory } from "@/domains/organizations/memberships/organization-membership.factory"
+import { organizationMembershipFactory } from "@/domains/organizations/memberships/organization-membership.factory"
 import { sdk } from "@/external/llm/open-telemetry-init"
 import { agentSessionControllerTestSetup } from "./test-setup"
 
@@ -18,7 +18,7 @@ describe("createSession", () => {
       projectId: testProject.id,
     }
 
-    const membership = userMembershipFactory
+    const membership = organizationMembershipFactory
       .transient({ user: testUser, organization: testOrganization })
       .member()
       .build()
@@ -47,7 +47,7 @@ describe("createSession", () => {
       projectId: testProject.id,
     }
 
-    const membership = userMembershipFactory
+    const membership = organizationMembershipFactory
       .transient({ user: testUser, organization: testOrganization })
       .member()
       .build()
