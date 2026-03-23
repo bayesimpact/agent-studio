@@ -4,7 +4,8 @@
       "type": "Type",
       "createdAt": "Created At",
       "updatedAt": "Updated At",
-      "traceUrl": "Trace URL"
+      "traceUrl": "Trace URL",
+      "result": "Form Result"
     },
     "create": {
       "button": "New Form Session"

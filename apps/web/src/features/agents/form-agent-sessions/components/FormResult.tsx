@@ -1,6 +1,7 @@
 import { Badge } from "@caseai-connect/ui/shad/badge"
 import { Item, ItemContent, ItemHeader, ItemTitle } from "@caseai-connect/ui/shad/item"
 import { Separator } from "@caseai-connect/ui/shad/separator"
+import { useTranslation } from "react-i18next"
 import type { Agent } from "@/features/agents/agents.models"
 import type { FormAgentSession } from "@/features/agents/form-agent-sessions/form-agent-sessions.models"
 
@@ -11,12 +12,12 @@ export function FormResult({
   agent: Agent
   agentSession: FormAgentSession
 }) {
+  const { t } = useTranslation()
   const form = buildForm({ agent, agentSession })
   return (
     <Item>
       <ItemHeader>
-        {/* // FIXME: i18n */}
-        <ItemTitle className="text-lg">Form output:</ItemTitle>
+        <ItemTitle className="text-lg">{t("formAgentSession:props.result")}</ItemTitle>
       </ItemHeader>
       <ItemContent>
         {Object.entries(form).map(([key, value], index) => {

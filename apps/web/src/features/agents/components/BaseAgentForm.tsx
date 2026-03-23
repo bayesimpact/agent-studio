@@ -218,7 +218,7 @@ export function BaseAgentForm({
 
             {
               // Only show the document tag picker if there are tags available to choose from
-              documentTags.length > 0 && (
+              agentType === "conversation" && documentTags.length > 0 && (
                 <Field>
                   <FieldLabel>{t("agent:props.documentTags")}</FieldLabel>
                   <Controller
