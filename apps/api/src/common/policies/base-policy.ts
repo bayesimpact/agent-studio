@@ -1,4 +1,4 @@
-import type { UserMembership } from "@/domains/organizations/user-membership.entity"
+import type { UserMembership } from "@/domains/organizations/memberships/organization-membership.entity"
 
 export class BasePolicy<T> {
   constructor(

@@ -8,8 +8,8 @@ import type {
 } from "@/common/context/request.interface"
 import type { Agent } from "@/domains/agents/agent.entity"
 import type { Document } from "@/domains/documents/document.entity"
+import { userMembershipFactory } from "@/domains/organizations/memberships/organization-membership.factory"
 import type { Organization } from "@/domains/organizations/organization.entity"
-import { userMembershipFactory } from "@/domains/organizations/user-membership.factory"
 import type { Project } from "@/domains/projects/project.entity"
 import type { User } from "@/domains/users/user.entity"
 

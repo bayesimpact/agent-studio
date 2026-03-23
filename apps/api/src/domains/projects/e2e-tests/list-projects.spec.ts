@@ -7,8 +7,8 @@ import {
   teardownTestDatabase,
 } from "@/common/test/test-transaction-manager"
 import { removeNullish } from "@/common/utils/remove-nullish"
+import { createUserMembership } from "@/domains/organizations/memberships/organization-membership.factory"
 import { createOrganizationWithOwner } from "@/domains/organizations/organization.factory"
-import { createUserMembership } from "@/domains/organizations/user-membership.factory"
 import { projectFactory } from "@/domains/projects/project.factory"
 import { setupUserGuardForTesting } from "../../../../test/e2e.helpers"
 import { expectResponse, type Requester, testRequester } from "../../../../test/request"

@@ -8,7 +8,7 @@ import {
 import type { EndpointRequestWithUserMembership } from "@/common/context/request.interface"
 import { AUTH_ERRORS } from "@/common/errors/auth-errors"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
-import { UserMembershipService } from "./user-membership.service"
+import { UserMembershipService } from "./memberships/organization-membership.service"
 
 @Injectable()
 export class OrganizationGuard implements CanActivate {

@@ -9,7 +9,7 @@ import {
   createOrganizationWithOwner,
   createOrganizationWithProject,
 } from "@/domains/organizations/organization.factory"
-import { createUserMembership } from "../organizations/user-membership.factory"
+import { createUserMembership } from "../organizations/memberships/organization-membership.factory"
 import { projectMembershipFactory } from "./memberships/project-membership.factory"
 import type { Project } from "./project.entity"
 import { projectFactory } from "./project.factory"

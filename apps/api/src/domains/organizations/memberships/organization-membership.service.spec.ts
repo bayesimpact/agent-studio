@@ -4,15 +4,15 @@ import {
   setupTransactionalTestDatabase,
   teardownTestDatabase,
 } from "@/common/test/test-transaction-manager"
+import { UserMembership } from "@/domains/organizations/memberships/organization-membership.entity"
+import { userMembershipFactory } from "@/domains/organizations/memberships/organization-membership.factory"
+import { UserMembershipService } from "@/domains/organizations/memberships/organization-membership.service"
 import { Organization } from "@/domains/organizations/organization.entity"
 import {
   createOrganizationWithOwner,
   organizationFactory,
 } from "@/domains/organizations/organization.factory"
 import { OrganizationsModule } from "@/domains/organizations/organizations.module"
-import { UserMembership } from "@/domains/organizations/user-membership.entity"
-import { userMembershipFactory } from "@/domains/organizations/user-membership.factory"
-import { UserMembershipService } from "@/domains/organizations/user-membership.service"
 import { User } from "@/domains/users/user.entity"
 
 describe("UserMembershipService", () => {

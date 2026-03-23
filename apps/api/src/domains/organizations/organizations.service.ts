@@ -5,8 +5,8 @@ import type { Repository } from "typeorm"
 import type { RequiredConnectScope } from "@/common/entities/connect-required-fields"
 import { FeatureFlag } from "@/domains/feature-flags/feature-flag.entity"
 import { User } from "@/domains/users/user.entity"
+import { type MembershipRole, UserMembership } from "./memberships/organization-membership.entity"
 import { Organization } from "./organization.entity"
-import { type MembershipRole, UserMembership } from "./user-membership.entity"
 
 @Injectable()
 export class OrganizationsService {

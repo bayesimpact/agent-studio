@@ -2,9 +2,9 @@ import { randomUUID } from "node:crypto"
 import { Factory } from "fishery"
 import type { Repository } from "typeorm"
 import type { User } from "@/domains/users/user.entity"
-import { userFactory } from "../users/user.factory"
-import type { Organization } from "./organization.entity"
-import type { MembershipRole, UserMembership } from "./user-membership.entity"
+import { userFactory } from "../../users/user.factory"
+import type { Organization } from "../organization.entity"
+import type { MembershipRole, UserMembership } from "./organization-membership.entity"
 
 type UserMembershipTransientParams = {
   user: User

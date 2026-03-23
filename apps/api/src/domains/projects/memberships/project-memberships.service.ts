@@ -8,7 +8,7 @@ import {
   INVITATION_SENDER,
   type InvitationSender,
 } from "@/domains/auth/invitation-sender.interface"
-import { UserMembership } from "@/domains/organizations/user-membership.entity"
+import { UserMembership } from "@/domains/organizations/memberships/organization-membership.entity"
 import { User } from "@/domains/users/user.entity"
 import { Project } from "../project.entity"
 import { ProjectMembership } from "./project-membership.entity"

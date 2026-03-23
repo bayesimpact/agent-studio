@@ -13,9 +13,9 @@ import type { User } from "@/domains/users/user.entity"
 import { userFactory } from "@/domains/users/user.factory"
 import type { AgentMessage } from "../agents/shared/agent-session-messages/agent-message.entity"
 import { agentMessageFactory } from "../agents/shared/agent-session-messages/agent-messages.factory"
+import type { UserMembership } from "./memberships/organization-membership.entity"
+import { userMembershipFactory } from "./memberships/organization-membership.factory"
 import type { Organization } from "./organization.entity"
-import type { UserMembership } from "./user-membership.entity"
-import { userMembershipFactory } from "./user-membership.factory"
 
 export const organizationFactory = Factory.define<Organization>(({ sequence, params }) => {
   const now = new Date()

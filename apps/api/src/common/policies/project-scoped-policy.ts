@@ -1,5 +1,5 @@
 import { BasePolicy } from "@/common/policies/base-policy"
-import type { UserMembership } from "@/domains/organizations/user-membership.entity"
+import type { UserMembership } from "@/domains/organizations/memberships/organization-membership.entity"
 import type { ProjectMembership } from "@/domains/projects/memberships/project-membership.entity"
 import type { Project } from "@/domains/projects/project.entity"
 

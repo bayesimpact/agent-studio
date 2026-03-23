@@ -9,12 +9,12 @@ import {
 } from "@/common/test/test-transaction-manager"
 import type { Agent } from "@/domains/agents/agent.entity"
 import { agentFactory } from "@/domains/agents/agent.factory"
+import type { UserMembership } from "@/domains/organizations/memberships/organization-membership.entity"
 import type { Organization } from "@/domains/organizations/organization.entity"
 import {
   createOrganizationWithAgent,
   createOrganizationWithProject,
 } from "@/domains/organizations/organization.factory"
-import type { UserMembership } from "@/domains/organizations/user-membership.entity"
 import type { Project } from "@/domains/projects/project.entity"
 import type { User } from "@/domains/users/user.entity"
 import { sdk } from "@/external/llm/open-telemetry-init"

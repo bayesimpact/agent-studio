@@ -1,7 +1,7 @@
 import { Column, Entity, JoinColumn, ManyToOne, Unique } from "typeorm"
 import { Base4AllEntity } from "@/common/entities/base4all.entity"
 import { User } from "@/domains/users/user.entity"
-import { Organization } from "./organization.entity"
+import { Organization } from "../organization.entity"
 
 export type MembershipRole = "owner" | "admin" | "member"
 

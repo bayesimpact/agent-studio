@@ -7,8 +7,8 @@ import {
   teardownTestDatabase,
 } from "@/common/test/test-transaction-manager"
 import { INVITATION_SENDER } from "@/domains/auth/invitation-sender.interface"
+import { createUserMembership } from "@/domains/organizations/memberships/organization-membership.factory"
 import { createOrganizationWithProject } from "@/domains/organizations/organization.factory"
-import { createUserMembership } from "@/domains/organizations/user-membership.factory"
 import { userFactory } from "@/domains/users/user.factory"
 import { ProjectsModule } from "../projects.module"
 import type { ProjectMembership } from "./project-membership.entity"
