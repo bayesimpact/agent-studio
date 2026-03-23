@@ -45,10 +45,14 @@ describe("ProjectsService", () => {
   describe("createProject", () => {
     it("should create a project", async () => {
       // Arrange
-      const { organization } = await createOrganizationWithOwner(repositories)
+      const { organization, user } = await createOrganizationWithOwner(repositories)
 
       // Act
-      const result = await service.createProject(organization.id, "New Project")
+      const result = await service.createProject({
+        organizationId: organization.id,
+        name: "New Project",
+        userId: user.id,
+      })
 
       // Assert
       expect(result.name).toBe("New Project")

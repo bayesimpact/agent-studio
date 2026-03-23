@@ -4,10 +4,11 @@
 - can't delete empty project
 
 # // TODO:
-- delete agent membership or project membership when deleting agent or project
-- invite user in project => create agent membership on every agent of the project
+- when deleting agent or project => delete agent membership or project membership
+- invite user in project => create agent membership (admin) on every agent of the project
 - remove user in project => remove project membership and remove agent membership on every agent of this project
-- 
+- remove user in agent => remove agent membership
+- list members by agent + invite user as member to agent
 
 
 - add zod i18n keys

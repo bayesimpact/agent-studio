@@ -12,7 +12,7 @@ export class MigMemberships1774297702954 implements MigrationInterface {
         p."id",
         om."user_id",
         om."role",
-        "migration_no_invitation_token" + '-' + gen_random_uuid(),
+        gen_random_uuid(),
         'accepted',
         NOW(),
         NOW()
@@ -29,7 +29,7 @@ export class MigMemberships1774297702954 implements MigrationInterface {
         a."id",
         om."user_id",
         om."role",
-        "migration_no_invitation_token" + '-' + gen_random_uuid(),
+        gen_random_uuid(),
         'accepted',
         NOW(),
         NOW()
