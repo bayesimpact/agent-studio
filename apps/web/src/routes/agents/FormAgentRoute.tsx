@@ -55,7 +55,7 @@ function WithData({
 
   if (outlet) return <Outlet />
   return (
-    <ListHeader path={getPath("agent")} title={t("formAgentSession:list.title")}>
+    <ListHeader path={getPath("agent")} title={t("formAgentSession:list.title")} agent={agent}>
       <FormAgentSessionCreator
         type="button"
         ids={{ organizationId, projectId, agentId: agent.id }}

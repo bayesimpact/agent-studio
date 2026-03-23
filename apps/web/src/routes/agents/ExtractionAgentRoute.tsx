@@ -26,6 +26,7 @@ export function ExtractionAgentRoute({
     <AsyncRoute data={[agentSessions]}>
       {([agentSessionsValue]) => (
         <ExtractionAgentWithData
+          agent={agent}
           organizationId={organizationId}
           projectId={projectId}
           agentSessions={agentSessionsValue}
@@ -36,10 +37,12 @@ export function ExtractionAgentRoute({
 }
 
 function ExtractionAgentWithData({
+  agent,
   organizationId,
   projectId,
   agentSessions,
 }: {
+  agent: Agent
   organizationId: string
   projectId: string
   agentSessions: ExtractionAgentSessionSummary[]
@@ -48,7 +51,11 @@ function ExtractionAgentWithData({
   const { t } = useTranslation("extractionAgentSession", { keyPrefix: "list" })
 
   return (
-    <ListHeader path={buildPath("project", { organizationId, projectId })} title={t("title")}>
+    <ListHeader
+      agent={agent}
+      path={buildPath("project", { organizationId, projectId })}
+      title={t("title")}
+    >
       <ExtractionSessionCreator />
 
       {agentSessions.map((run) => (
