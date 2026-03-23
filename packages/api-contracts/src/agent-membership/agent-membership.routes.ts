@@ -7,10 +7,7 @@ export const AgentMembershipRoutes = {
     method: "get",
     path: "organizations/:organizationId/projects/:projectId/agents/:agentId/memberships",
   }),
-  createOne: defineRoute<
-    ResponseData<AgentMembershipDto[]>,
-    RequestPayload<{ emails: string[] }>
-  >({
+  createOne: defineRoute<ResponseData<AgentMembershipDto[]>, RequestPayload<{ emails: string[] }>>({
     method: "post",
     path: "organizations/:organizationId/projects/:projectId/agents/:agentId/memberships/invite",
   }),

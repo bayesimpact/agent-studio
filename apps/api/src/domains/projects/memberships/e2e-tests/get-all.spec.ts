@@ -3,6 +3,7 @@ import type { INestApplication } from "@nestjs/common"
 import type { App } from "supertest/types"
 import { clearTestDatabase } from "@/common/test/test-database"
 import {
+  type AllRepositories,
   setupTransactionalTestDatabase,
   teardownTestDatabase,
 } from "@/common/test/test-transaction-manager"
@@ -12,15 +13,13 @@ import { userFactory } from "@/domains/users/user.factory"
 import { setupUserGuardForTesting } from "../../../../../test/e2e.helpers"
 import { expectResponse, type Requester, testRequester } from "../../../../../test/request"
 import { ProjectsModule } from "../../projects.module"
-import { projectMembershipFactory } from "../project-membership.factory"
+import { addUserToProject } from "../project-membership.factory"
 
 describe("Project membership - getAll", () => {
   let app: INestApplication<App>
   let request: Requester
   let setup: Awaited<ReturnType<typeof setupTransactionalTestDatabase>>
-  let repositories: ReturnType<
-    Awaited<ReturnType<typeof setupTransactionalTestDatabase>>["getAllRepositories"]
-  >
+  let repositories: AllRepositories
 
   let organizationId: string
   let projectId: string
@@ -82,8 +81,11 @@ describe("Project membership - getAll", () => {
     })
     await repositories.userRepository.save(invitedUser)
 
-    const membership = projectMembershipFactory.transient({ project, user: invitedUser }).build()
-    await repositories.projectMembershipRepository.save(membership)
+    await addUserToProject({
+      repositories,
+      project,
+      user: invitedUser,
+    })
 
     const response = await subject()
 

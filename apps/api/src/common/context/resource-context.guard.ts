@@ -77,7 +77,10 @@ export class ResourceContextGuard implements CanActivate {
       resolverEntries.push([agentContextResolver.resource, agentContextResolver])
     }
     if (agentMembershipContextResolver) {
-      resolverEntries.push([agentMembershipContextResolver.resource, agentMembershipContextResolver])
+      resolverEntries.push([
+        agentMembershipContextResolver.resource,
+        agentMembershipContextResolver,
+      ])
     }
     if (agentSessionContextResolver) {
       resolverEntries.push([agentSessionContextResolver.resource, agentSessionContextResolver])

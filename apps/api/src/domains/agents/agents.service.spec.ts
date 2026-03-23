@@ -1,22 +1,17 @@
 import { AgentLocale, AgentModel } from "@caseai-connect/api-contracts"
 import { afterAll } from "@jest/globals"
 import { UnprocessableEntityException } from "@nestjs/common"
-import type { Repository } from "typeorm"
 import { clearTestDatabase } from "@/common/test/test-database"
 import {
+  type AllRepositories,
   setupTransactionalTestDatabase,
   teardownTestDatabase,
 } from "@/common/test/test-transaction-manager"
-import type { Agent } from "@/domains/agents/agent.entity"
 import { agentFactory } from "@/domains/agents/agent.factory"
-import type { OrganizationMembership } from "@/domains/organizations/memberships/organization-membership.entity"
-import type { Organization } from "@/domains/organizations/organization.entity"
 import {
   createOrganizationWithAgent,
   createOrganizationWithProject,
 } from "@/domains/organizations/organization.factory"
-import type { Project } from "@/domains/projects/project.entity"
-import type { User } from "@/domains/users/user.entity"
 import { sdk } from "@/external/llm/open-telemetry-init"
 import { AgentsModule } from "./agents.module"
 import { AgentsService } from "./agents.service"
@@ -24,13 +19,7 @@ import { AgentsService } from "./agents.service"
 describe("AgentsService", () => {
   let service: AgentsService
   let setup: Awaited<ReturnType<typeof setupTransactionalTestDatabase>>
-  let repositories: {
-    agentRepository: Repository<Agent>
-    projectRepository: Repository<Project>
-    organizationRepository: Repository<Organization>
-    membershipRepository: Repository<OrganizationMembership>
-    userRepository: Repository<User>
-  }
+  let repositories: AllRepositories
 
   beforeAll(async () => {
     setup = await setupTransactionalTestDatabase({

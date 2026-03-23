@@ -3,7 +3,7 @@ import { Base4AllEntity } from "@/common/entities/base4all.entity"
 import { User } from "@/domains/users/user.entity"
 import { Organization } from "../organization.entity"
 
-export type OrganizationMembershipRole = "owner" | "admin"
+export type OrganizationMembershipRole = "owner" | "admin" | "member"
 
 @Entity("organization_membership")
 @Unique(["userId", "organizationId"])

@@ -3,6 +3,7 @@ import type { INestApplication } from "@nestjs/common"
 import type { App } from "supertest/types"
 import { clearTestDatabase } from "@/common/test/test-database"
 import {
+  type AllRepositories,
   setupTransactionalTestDatabase,
   teardownTestDatabase,
 } from "@/common/test/test-transaction-manager"
@@ -10,15 +11,13 @@ import { createOrganizationWithProject } from "@/domains/organizations/organizat
 import { mockInvitationSender, setupUserGuardForTesting } from "../../../../../test/e2e.helpers"
 import { expectResponse, type Requester, testRequester } from "../../../../../test/request"
 import { ProjectsModule } from "../../projects.module"
-import { createProjectMembership } from "../project-membership.factory"
+import { inviteUserToProject } from "../project-membership.factory"
 
 describe("Invitations - acceptInvitation", () => {
   let app: INestApplication<App>
   let request: Requester
   let setup: Awaited<ReturnType<typeof setupTransactionalTestDatabase>>
-  let repositories: ReturnType<
-    Awaited<ReturnType<typeof setupTransactionalTestDatabase>>["getAllRepositories"]
-  >
+  let repositories: AllRepositories
 
   let _organizationId: string
   let _projectId: string
@@ -62,7 +61,7 @@ describe("Invitations - acceptInvitation", () => {
     _projectId = project.id
     auth0Id = user.auth0Id
 
-    const { membership } = await createProjectMembership({
+    const { membership } = await inviteUserToProject({
       repositories,
       project,
       user: {
@@ -100,7 +99,7 @@ describe("Invitations - acceptInvitation", () => {
 
     await subject({ payload: { ticketId } })
 
-    const orgMembership = await repositories.membershipRepository.findOne({
+    const orgMembership = await repositories.organizationMembershipRepository.findOne({
       where: { userId: membership.userId, organizationId: organization.id },
     })
 

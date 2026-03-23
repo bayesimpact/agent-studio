@@ -17,7 +17,7 @@ describe("listMessagesForSession", () => {
       testAgent,
       testUser,
       testOrganization,
-      membershipRepository,
+      organizationMembershipRepository,
       agentMessageRepository,
       testProject,
     } = getTestContext()
@@ -26,7 +26,7 @@ describe("listMessagesForSession", () => {
       projectId: testProject.id,
     }
 
-    await membershipRepository.save(
+    await organizationMembershipRepository.save(
       organizationMembershipFactory
         .transient({ organization: testOrganization, user: testUser })
         .owner()

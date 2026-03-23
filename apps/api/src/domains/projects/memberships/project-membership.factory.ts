@@ -1,6 +1,9 @@
 import { randomUUID } from "node:crypto"
 import { Factory } from "fishery"
 import type { Repository } from "typeorm"
+import type { AllRepositories } from "@/common/test/test-transaction-manager"
+import { organizationMembershipFactory } from "@/domains/organizations/memberships/organization-membership.factory"
+import type { Organization } from "@/domains/organizations/organization.entity"
 import type { User } from "@/domains/users/user.entity"
 import { userFactory } from "@/domains/users/user.factory"
 import type { Project } from "../project.entity"
@@ -16,46 +19,88 @@ type ProjectMembershipTransientParams = {
   user: User
 }
 
-export const projectMembershipFactory = Factory.define<
+class ProjectMembershipFactory extends Factory<
   ProjectMembership,
   ProjectMembershipTransientParams
->(({ params, transientParams }) => {
-  if (!transientParams.project) {
-    throw new Error("project transient is required")
-  }
-  if (!transientParams.user) {
-    throw new Error("user transient is required")
+> {
+  member() {
+    return this.params({ role: "member" })
   }
 
-  const now = new Date()
-  return {
-    id: params.id || randomUUID(),
-    projectId: transientParams.project.id,
-    userId: transientParams.user.id,
-    invitationToken: params.invitationToken || randomUUID(),
-    status: (params.status || "sent") as ProjectMembershipStatus,
-    createdAt: params.createdAt || now,
-    updatedAt: params.updatedAt || now,
-    deletedAt: params.deletedAt || null,
-    project: transientParams.project,
-    user: transientParams.user,
-    role: (params.role || "admin") as ProjectMembershipRole,
-  } satisfies ProjectMembership
-})
+  admin() {
+    return this.params({ role: "admin" })
+  }
 
-export const createProjectMembership = async ({
+  owner() {
+    return this.params({ role: "owner" })
+  }
+}
+
+export const projectMembershipFactory = ProjectMembershipFactory.define(
+  ({ params, transientParams }) => {
+    if (!transientParams.project) {
+      throw new Error("project transient is required")
+    }
+    if (!transientParams.user) {
+      throw new Error("user transient is required")
+    }
+
+    const now = new Date()
+    return {
+      id: params.id || randomUUID(),
+      projectId: transientParams.project.id,
+      userId: transientParams.user.id,
+      invitationToken: params.invitationToken || randomUUID(),
+      status: (params.status || "sent") as ProjectMembershipStatus,
+      createdAt: params.createdAt || now,
+      updatedAt: params.updatedAt || now,
+      deletedAt: params.deletedAt || null,
+      project: transientParams.project,
+      user: transientParams.user,
+      role: (params.role || "member") as ProjectMembershipRole,
+    } satisfies ProjectMembership
+  },
+)
+
+export const addUserToProject = async ({
   repositories,
   project,
   user,
-  role,
+  membership,
 }: {
   repositories: {
     userRepository: Repository<User>
     projectMembershipRepository: Repository<ProjectMembership>
   }
   project: Project
+  user?: User
+  membership?: Partial<ProjectMembership>
+}) => {
+  const createMembership = async (user: User) => {
+    const newMembership = await repositories.projectMembershipRepository.save(
+      projectMembershipFactory.transient({ project, user }).build(membership),
+    )
+    return { membership: newMembership, user }
+  }
+
+  if (user) return await createMembership(user)
+
+  const newUser = await repositories.userRepository.save(userFactory.build(user))
+  return await createMembership(newUser)
+}
+
+export const inviteUserToProject = async ({
+  repositories,
+  organization,
+  project,
+  user,
+  role,
+}: {
+  repositories: AllRepositories
+  organization?: Organization
+  project: Project
   user?: Partial<User>
-  role?: "owner" | "admin"
+  role?: ProjectMembershipRole
 }) => {
   user = user ?? {
     email: "invited@example.com",
@@ -65,9 +110,17 @@ export const createProjectMembership = async ({
   const invitedUser = userFactory.build(user)
   await repositories.userRepository.save(invitedUser)
 
-  const membership = projectMembershipFactory
-    .transient({ project, user: invitedUser })
-    .build({ role: role || "admin" })
+  if (organization) {
+    await repositories.organizationMembershipRepository.save(
+      role
+        ? organizationMembershipFactory
+            .transient({ user: invitedUser, organization })
+            .build({ role })
+        : organizationMembershipFactory.transient({ user: invitedUser, organization }).build(),
+    )
+  }
+
+  const membership = projectMembershipFactory.transient({ project, user: invitedUser }).build()
   await repositories.projectMembershipRepository.save(membership)
 
   return { membership, invitedUser }

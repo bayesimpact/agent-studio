@@ -226,6 +226,7 @@ export class ProjectMembershipsService {
       userId: user.id,
       invitationToken: ticketId,
       status: "sent",
+      role: "admin",
     })
 
     const savedMembership = await membershipRepo.save(membership)

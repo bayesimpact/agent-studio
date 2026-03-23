@@ -11,8 +11,14 @@ describe("createSession", () => {
     await sdk.shutdown()
   })
   it("should create a live session", async () => {
-    const { service, testAgent, testUser, testOrganization, membershipRepository, testProject } =
-      getTestContext()
+    const {
+      service,
+      testAgent,
+      testUser,
+      testOrganization,
+      organizationMembershipRepository,
+      testProject,
+    } = getTestContext()
     const connectScope: RequiredConnectScope = {
       organizationId: testOrganization.id,
       projectId: testProject.id,
@@ -22,7 +28,7 @@ describe("createSession", () => {
       .transient({ user: testUser, organization: testOrganization })
       .member()
       .build()
-    await membershipRepository.save(membership)
+    await organizationMembershipRepository.save(membership)
 
     const session = await service.createSession({
       connectScope,
@@ -40,8 +46,14 @@ describe("createSession", () => {
     expect(session.expiresAt).toBeNull()
   })
   it("should create a playground session", async () => {
-    const { service, testAgent, testUser, testOrganization, membershipRepository, testProject } =
-      getTestContext()
+    const {
+      service,
+      testAgent,
+      testUser,
+      testOrganization,
+      organizationMembershipRepository,
+      testProject,
+    } = getTestContext()
     const connectScope: RequiredConnectScope = {
       organizationId: testOrganization.id,
       projectId: testProject.id,
@@ -51,7 +63,7 @@ describe("createSession", () => {
       .transient({ user: testUser, organization: testOrganization })
       .member()
       .build()
-    await membershipRepository.save(membership)
+    await organizationMembershipRepository.save(membership)
 
     const session = await service.createSession({
       connectScope,

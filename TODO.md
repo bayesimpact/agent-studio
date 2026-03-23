@@ -1,4 +1,9 @@
 # // FIXME: 
+
+- new mig: org-role-member => projects-role-member => agents-role-member
+- new mig: org-role-owner => projects-role-owner => agents-role-owner
+- new mig: org-role-admin => projects-role-admin => agents-role-admin
+
 - when user message is too long, it fails!!
 - can't delete empty project
 

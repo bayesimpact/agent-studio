@@ -5,6 +5,7 @@ import type { App } from "supertest/types"
 import { AUTH_ERRORS } from "@/common/errors/auth-errors"
 import { clearTestDatabase } from "@/common/test/test-database"
 import {
+  type AllRepositories,
   setupTransactionalTestDatabase,
   teardownTestDatabase,
 } from "@/common/test/test-transaction-manager"
@@ -19,9 +20,7 @@ describe("Agent Message Feedback - Auth", () => {
   let app: INestApplication<App>
   let request: Requester
   let setup: Awaited<ReturnType<typeof setupTransactionalTestDatabase>>
-  let repositories: ReturnType<
-    Awaited<ReturnType<typeof setupTransactionalTestDatabase>>["getAllRepositories"]
-  >
+  let repositories: AllRepositories
 
   // Variables for the tests
   let organizationId: string | null = "random-organization-id"
@@ -62,7 +61,7 @@ describe("Agent Message Feedback - Auth", () => {
   const createContextForRole = async (role: "owner" | "admin" | "member" = "owner") => {
     const { user, organization, project, agent, agentMessage } =
       await createOrganizationWithAgentMessage(repositories, {
-        membership: { role },
+        organizationMembership: { role },
       })
     organizationId = organization.id
     projectId = project.id

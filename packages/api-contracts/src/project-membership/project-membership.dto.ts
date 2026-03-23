@@ -1,6 +1,6 @@
 import type { TimeType } from "../generic"
 
-export type ProjectMembershipRoleDto = "owner" | "admin"
+export type ProjectMembershipRoleDto = "owner" | "admin" | "member"
 export type ProjectMembershipDto = {
   id: string
   projectId: string

@@ -3,6 +3,7 @@ import type { INestApplication } from "@nestjs/common"
 import type { App } from "supertest/types"
 import { clearTestDatabase } from "@/common/test/test-database"
 import {
+  type AllRepositories,
   setupTransactionalTestDatabase,
   teardownTestDatabase,
 } from "@/common/test/test-transaction-manager"
@@ -11,15 +12,13 @@ import { createOrganizationWithProject } from "@/domains/organizations/organizat
 import { mockInvitationSender, setupUserGuardForTesting } from "../../../../../test/e2e.helpers"
 import { expectResponse, type Requester, testRequester } from "../../../../../test/request"
 import { ProjectsModule } from "../../projects.module"
-import { createProjectMembership } from "../project-membership.factory"
+import { inviteUserToProject } from "../project-membership.factory"
 
 describe("Project membership - deleteOne", () => {
   let app: INestApplication<App>
   let request: Requester
   let setup: Awaited<ReturnType<typeof setupTransactionalTestDatabase>>
-  let repositories: ReturnType<
-    Awaited<ReturnType<typeof setupTransactionalTestDatabase>>["getAllRepositories"]
-  >
+  let repositories: AllRepositories
 
   let organizationId: string
   let projectId: string
@@ -58,7 +57,7 @@ describe("Project membership - deleteOne", () => {
     auth0Id = user.auth0Id
 
     // Create an invited user and membership
-    const { membership, invitedUser } = await createProjectMembership({
+    const { membership, invitedUser } = await inviteUserToProject({
       repositories,
       project,
     })
@@ -95,7 +94,7 @@ describe("Project membership - deleteOne", () => {
     projectId = project.id
     auth0Id = user.auth0Id
 
-    const { membership } = await createProjectMembership({ repositories, project })
+    const { membership } = await inviteUserToProject({ repositories, project })
     membershipId = membership.id
 
     // Now remove the membership

@@ -4,7 +4,7 @@ import { User } from "@/domains/users/user.entity"
 import { Project } from "../project.entity"
 
 export type ProjectMembershipStatus = "sent" | "accepted"
-export type ProjectMembershipRole = "owner" | "admin"
+export type ProjectMembershipRole = "owner" | "admin" | "member"
 
 @Entity("project_membership")
 @Unique(["projectId", "userId"])

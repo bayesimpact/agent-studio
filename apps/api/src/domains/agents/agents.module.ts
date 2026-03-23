@@ -74,6 +74,11 @@ import { AgentMembershipsService } from "./memberships/agent-memberships.service
     ExtractionAgentSessionsController,
     FormAgentSessionsController,
   ],
-  exports: [AgentsService, AgentMembershipsService, ExtractionAgentSessionsService, FormAgentSessionsService],
+  exports: [
+    AgentsService,
+    AgentMembershipsService,
+    ExtractionAgentSessionsService,
+    FormAgentSessionsService,
+  ],
 })
 export class AgentsModule {}

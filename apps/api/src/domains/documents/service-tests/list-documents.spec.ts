@@ -6,21 +6,9 @@ const getTestContext = documentsServiceTestSetup()
 
 describe("listDocuments", () => {
   it("should return documents for a project", async () => {
-    const {
-      service,
-      documentRepository,
-      projectRepository,
-      organizationRepository,
-      membershipRepository,
-      userRepository,
-    } = getTestContext()
+    const { service, repositories } = getTestContext()
 
-    const { organization, project } = await createOrganizationWithProject({
-      organizationRepository,
-      userRepository,
-      membershipRepository,
-      projectRepository,
-    })
+    const { organization, project } = await createOrganizationWithProject(repositories)
 
     const document1 = documentFactory.transient({ organization, project }).build({
       title: "Document 1",
@@ -35,7 +23,7 @@ describe("listDocuments", () => {
       fileName: "file2.pdf",
       deletedAt: new Date(),
     })
-    await documentRepository.save([document1, document2, deletedDocument])
+    await repositories.documentRepository.save([document1, document2, deletedDocument])
 
     const result = await service.listDocuments({
       organizationId: organization.id,

@@ -55,7 +55,7 @@ export const organizationMembershipFactory = OrganizationMembershipFactory.defin
   },
 )
 
-export const createOrganizationMembership = async ({
+export const addUserToOrganization = async ({
   repositories,
   organization,
   membership,
@@ -64,7 +64,7 @@ export const createOrganizationMembership = async ({
   repositories: {
     userRepository: Repository<User>
     organizationRepository: Repository<Organization>
-    membershipRepository: Repository<OrganizationMembership>
+    organizationMembershipRepository: Repository<OrganizationMembership>
   }
   organization: Organization
   user?: Partial<User>
@@ -72,7 +72,7 @@ export const createOrganizationMembership = async ({
 }) => {
   const newUser = userFactory.build(user)
   await repositories.userRepository.save(newUser)
-  const newMembership = await repositories.membershipRepository.save(
+  const newMembership = await repositories.organizationMembershipRepository.save(
     organizationMembershipFactory.transient({ user: newUser, organization }).build(membership),
   )
   return { user: newUser, membership: newMembership }

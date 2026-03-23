@@ -6,12 +6,13 @@ import type { INestApplication } from "@nestjs/common"
 import type { App } from "supertest/types"
 import { clearTestDatabase } from "@/common/test/test-database"
 import {
+  type AllRepositories,
   setupTransactionalTestDatabase,
   teardownTestDatabase,
 } from "@/common/test/test-transaction-manager"
 import { removeNullish } from "@/common/utils/remove-nullish"
 import { createOrganizationWithAgent } from "@/domains/organizations/organization.factory"
-import { createProjectMembership } from "@/domains/projects/memberships/project-membership.factory"
+import { inviteUserToProject } from "@/domains/projects/memberships/project-membership.factory"
 import { sdk } from "@/external/llm/open-telemetry-init"
 import { setupUserGuardForTesting } from "../../../../../test/e2e.helpers"
 import { expectResponse, type Requester, testRequester } from "../../../../../test/request"
@@ -22,9 +23,7 @@ describe("ConversationAgentSessionsRoutes.getAll", () => {
   let app: INestApplication<App>
   let request: Requester
   let setup: Awaited<ReturnType<typeof setupTransactionalTestDatabase>>
-  let repositories: ReturnType<
-    Awaited<ReturnType<typeof setupTransactionalTestDatabase>>["getAllRepositories"]
-  >
+  let repositories: AllRepositories
 
   let organizationId: string
   let projectId: string
@@ -57,8 +56,8 @@ describe("ConversationAgentSessionsRoutes.getAll", () => {
 
   const createContext = async () => {
     const { organization, project, agent } = await createOrganizationWithAgent(repositories)
-    const { invitedUser } = await createProjectMembership({ repositories, organization, project })
-    const { invitedUser: anotherUser } = await createProjectMembership({
+    const { invitedUser } = await inviteUserToProject({ repositories, organization, project })
+    const { invitedUser: anotherUser } = await inviteUserToProject({
       repositories,
       organization,
       project,

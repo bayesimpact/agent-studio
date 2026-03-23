@@ -6,6 +6,7 @@ import type { Repository } from "typeorm"
 import { AUTH_ERRORS } from "@/common/errors/auth-errors"
 import { clearTestDatabase } from "@/common/test/test-database"
 import {
+  type AllRepositories,
   setupTransactionalTestDatabase,
   teardownTestDatabase,
 } from "@/common/test/test-transaction-manager"
@@ -21,9 +22,7 @@ describe("Documents - Auth", () => {
   let app: INestApplication<App>
   let request: Requester
   let setup: Awaited<ReturnType<typeof setupTransactionalTestDatabase>>
-  let repositories: ReturnType<
-    Awaited<ReturnType<typeof setupTransactionalTestDatabase>>["getAllRepositories"]
-  >
+  let repositories: AllRepositories
   let _documentRepository: Repository<Document>
 
   // Variables for the tests
@@ -63,7 +62,7 @@ describe("Documents - Auth", () => {
   const createContextForRole = async (role: "owner" | "admin" | "member" = "owner") => {
     const { user, organization, project, document } = await createOrganizationWithDocument(
       repositories,
-      { membership: { role } },
+      { organizationMembership: { role } },
     )
     organizationId = organization.id
     projectId = project.id

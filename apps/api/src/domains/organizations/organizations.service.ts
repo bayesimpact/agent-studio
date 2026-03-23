@@ -16,7 +16,7 @@ export class OrganizationsService {
   constructor(
     @InjectRepository(Organization) readonly organizationRepository: Repository<Organization>,
     @InjectRepository(OrganizationMembership)
-    private readonly membershipRepository: Repository<OrganizationMembership>,
+    private readonly organizationMembershipRepository: Repository<OrganizationMembership>,
     @InjectRepository(User) private readonly userRepository: Repository<User>,
     @InjectRepository(FeatureFlag) private readonly featureFlagRepository: Repository<FeatureFlag>,
   ) {}
@@ -25,7 +25,7 @@ export class OrganizationsService {
     userId: string,
   ): Promise<Array<{ organization: Organization; role: OrganizationMembershipRole }>> {
     // Use query builder to ensure proper join and handle potential null organizations
-    const memberships = await this.membershipRepository
+    const memberships = await this.organizationMembershipRepository
       .createQueryBuilder("membership")
       .innerJoinAndSelect("membership.organization", "organization")
       .leftJoinAndSelect("organization.featureFlags", "featureFlags")
@@ -76,14 +76,14 @@ export class OrganizationsService {
 
     // Create the membership with owner role
     // Set both entity references and IDs to ensure proper foreign key handling in transactions
-    const membership = this.membershipRepository.create({
+    const membership = this.organizationMembershipRepository.create({
       user,
       organization: savedOrganization,
       userId: user.id,
       organizationId: savedOrganization.id,
       role: "owner",
     })
-    await this.membershipRepository.save(membership)
+    await this.organizationMembershipRepository.save(membership)
 
     return {
       organization: savedOrganization,
