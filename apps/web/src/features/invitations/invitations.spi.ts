@@ -1,3 +1,4 @@
 export interface IInvitationsSpi {
-  acceptInvitation: (ticketId: string) => Promise<void>
+  acceptProjectInvitation: (ticketId: string) => Promise<void>
+  acceptAgentInvitation: (ticketId: string) => Promise<void>
 }

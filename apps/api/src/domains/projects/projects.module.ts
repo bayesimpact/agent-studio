@@ -10,7 +10,7 @@ import { Organization } from "@/domains/organizations/organization.entity"
 import { OrganizationsModule } from "@/domains/organizations/organizations.module"
 import { User } from "@/domains/users/user.entity"
 import { UsersModule } from "@/domains/users/users.module"
-import { InvitationsController } from "./memberships/invitations.controller"
+import { ProjectInvitationsController } from "./memberships/project-invitations.controller"
 import { ProjectMembership } from "./memberships/project-membership.entity"
 import { ProjectMembershipsController } from "./memberships/project-memberships.controller"
 import { ProjectMembershipsService } from "./memberships/project-memberships.service"
@@ -41,7 +41,7 @@ import { ProjectsService } from "./projects.service"
     ProjectContextResolver,
     ProjectMembershipContextResolver,
   ],
-  controllers: [ProjectsController, ProjectMembershipsController, InvitationsController],
+  controllers: [ProjectsController, ProjectMembershipsController, ProjectInvitationsController],
   exports: [ProjectsService, ProjectMembershipsService],
 })
 export class ProjectsModule {}

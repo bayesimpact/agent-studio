@@ -1,6 +1,7 @@
 import { forwardRef, Module } from "@nestjs/common"
 import { TypeOrmModule } from "@nestjs/typeorm"
 import { AgentContextResolver } from "@/common/context/resolvers/agent-context.resolver"
+import { AgentMembershipContextResolver } from "@/common/context/resolvers/agent-membership-context.resolver"
 import { OrganizationContextResolver } from "@/common/context/resolvers/organization-context.resolver"
 import { ProjectContextResolver } from "@/common/context/resolvers/project-context.resolver"
 import { ResourceContextGuard } from "@/common/context/resource-context.guard"
@@ -26,11 +27,17 @@ import { ExtractionAgentSessionsService } from "./extraction-agent-sessions/extr
 import { FormAgentSession } from "./form-agent-sessions/form-agent-session.entity"
 import { FormAgentSessionsController } from "./form-agent-sessions/form-agent-sessions.controller"
 import { FormAgentSessionsService } from "./form-agent-sessions/form-agent-sessions.service"
+import { AgentInvitationsController } from "./memberships/agent-invitations.controller"
+import { AgentMembership } from "./memberships/agent-membership.entity"
+import { AgentMembershipsController } from "./memberships/agent-memberships.controller"
+import { AgentMembershipsGuard } from "./memberships/agent-memberships.guard"
+import { AgentMembershipsService } from "./memberships/agent-memberships.service"
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([
       Agent,
+      AgentMembership,
       ExtractionAgentSession,
       FormAgentSession,
       Project,
@@ -49,15 +56,24 @@ import { FormAgentSessionsService } from "./form-agent-sessions/form-agent-sessi
   ],
   providers: [
     AgentsService,
+    AgentMembershipsService,
     ExtractionAgentSessionsService,
     FormAgentSessionsService,
     AgentGuard,
+    AgentMembershipsGuard,
     ResourceContextGuard,
     OrganizationContextResolver,
     ProjectContextResolver,
     AgentContextResolver,
+    AgentMembershipContextResolver,
   ],
-  controllers: [AgentsController, ExtractionAgentSessionsController, FormAgentSessionsController],
-  exports: [AgentsService, ExtractionAgentSessionsService, FormAgentSessionsService],
+  controllers: [
+    AgentsController,
+    AgentMembershipsController,
+    AgentInvitationsController,
+    ExtractionAgentSessionsController,
+    FormAgentSessionsController,
+  ],
+  exports: [AgentsService, AgentMembershipsService, ExtractionAgentSessionsService, FormAgentSessionsService],
 })
 export class AgentsModule {}

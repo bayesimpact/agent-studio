@@ -77,5 +77,6 @@ function toDto(entity: ProjectMembership): ProjectMembershipDto {
     userEmail: entity.user.email,
     status: entity.status,
     createdAt: entity.createdAt.getTime(),
+    role: entity.role,
   }
 }

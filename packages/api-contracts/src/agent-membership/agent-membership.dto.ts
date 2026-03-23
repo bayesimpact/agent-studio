@@ -1,13 +1,14 @@
 import type { TimeType } from "../generic"
 
-export type ProjectMembershipRoleDto = "owner" | "admin"
-export type ProjectMembershipDto = {
+export type AgentMembershipRoleDto = "owner" | "admin" | "member"
+
+export type AgentMembershipDto = {
   id: string
-  projectId: string
+  agentId: string
   userId: string
   userName: string | null
   userEmail: string
+  role: AgentMembershipRoleDto
   status: "sent" | "accepted"
   createdAt: TimeType
-  role: ProjectMembershipRoleDto
 }

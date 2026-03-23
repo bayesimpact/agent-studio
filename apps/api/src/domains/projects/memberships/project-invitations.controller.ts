@@ -14,14 +14,14 @@ import { ProjectMembershipsService } from "@/domains/projects/memberships/projec
  */
 @UseGuards(JwtAuthGuard)
 @Controller()
-export class InvitationsController {
+export class ProjectInvitationsController {
   constructor(private readonly projectMembershipsService: ProjectMembershipsService) {}
 
-  @Post(InvitationsRoutes.acceptOne.path)
+  @Post(InvitationsRoutes.acceptProjectOne.path)
   async acceptInvitation(
     @Req() request: { user: JwtPayload },
-    @Body() body: typeof InvitationsRoutes.acceptOne.request,
-  ): Promise<typeof InvitationsRoutes.acceptOne.response> {
+    @Body() body: typeof InvitationsRoutes.acceptProjectOne.request,
+  ): Promise<typeof InvitationsRoutes.acceptProjectOne.response> {
     // request.user is the raw JWT payload (set by JwtAuthGuard), not a User entity
     const jwtPayload = request.user
 
