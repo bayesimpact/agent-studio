@@ -65,7 +65,7 @@ function AvatarWrapper({ user }: { user: User }) {
         <AvatarFallback className="rounded-lg">{extractInitials(user.name)}</AvatarFallback>
       </Avatar>
       <div className="grid flex-1 text-left text-sm leading-tight">
-        <span className="truncate font-medium">{user.name}</span>
+        <span className="truncate font-medium capitalize">{user.name}</span>
         <span className="truncate text-xs">{user.email}</span>
       </div>
     </>

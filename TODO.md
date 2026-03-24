@@ -12,7 +12,6 @@
 - list members by agent + invite user as member to agent
 - rework guards to check roles based on org-membership, project-membership, agent-membership
 - create lobby at root / => list invitations to agents and project(owner/admin) and org(owner/admin)
-- invite user : create org membership and project membership and if needed agent membership
 
 - add zod i18n keys
 - tools/helpers to seed store in storybook

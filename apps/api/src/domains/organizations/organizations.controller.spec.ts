@@ -1,3 +1,4 @@
+import type { OrganizationDto } from "@caseai-connect/api-contracts"
 import { buildEndpointRequest } from "@/common/test/request.factory"
 import { clearTestDatabase } from "@/common/test/test-database"
 import {
@@ -68,7 +69,6 @@ describe("OrganizationsController", () => {
       // Assert
       expect(result.id).toBeDefined()
       expect(result.name).toBe("New Organization")
-      expect(result.role).toBe("owner")
 
       // Verify organization was created
       const organization = await repositories.organizationRepository.findOne({
@@ -115,10 +115,6 @@ describe("OrganizationsController", () => {
       expect(result1.id).toBeDefined()
       expect(result2.id).toBeDefined()
       expect(result1.id).not.toBe(result2.id)
-
-      // Both should have owner role
-      expect(result1.role).toBe("owner")
-      expect(result2.role).toBe("owner")
     })
 
     it("should return organization in correct format", async () => {
@@ -132,9 +128,8 @@ describe("OrganizationsController", () => {
       expect(response.data).toEqual({
         id: expect.any(String),
         name: "Format Test Org",
-        role: "owner",
         featureFlags: [],
-      })
+      } satisfies OrganizationDto)
       expect(response.data).not.toHaveProperty("organization")
       expect(response.data).not.toHaveProperty("createdAt")
       expect(response.data).not.toHaveProperty("updatedAt")

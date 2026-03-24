@@ -5,10 +5,7 @@ import type { Repository } from "typeorm"
 import type { RequiredConnectScope } from "@/common/entities/connect-required-fields"
 import { FeatureFlag } from "@/domains/feature-flags/feature-flag.entity"
 import { User } from "@/domains/users/user.entity"
-import {
-  OrganizationMembership,
-  type OrganizationMembershipRole,
-} from "./memberships/organization-membership.entity"
+import { OrganizationMembership } from "./memberships/organization-membership.entity"
 import { Organization } from "./organization.entity"
 
 @Injectable()
@@ -21,9 +18,7 @@ export class OrganizationsService {
     @InjectRepository(FeatureFlag) private readonly featureFlagRepository: Repository<FeatureFlag>,
   ) {}
 
-  async getUserOrganizationsWithMemberships(
-    userId: string,
-  ): Promise<Array<{ organization: Organization; role: OrganizationMembershipRole }>> {
+  async getUserOrganizations(userId: string): Promise<Organization[]> {
     // Use query builder to ensure proper join and handle potential null organizations
     const memberships = await this.organizationMembershipRepository
       .createQueryBuilder("membership")
@@ -32,10 +27,7 @@ export class OrganizationsService {
       .where("membership.userId = :userId", { userId })
       .getMany()
 
-    return memberships.map((membership) => ({
-      organization: membership.organization,
-      role: membership.role,
-    }))
+    return memberships.map((membership) => membership.organization)
   }
 
   async hasFeature({
@@ -55,10 +47,13 @@ export class OrganizationsService {
     return flag !== null
   }
 
-  async createOrganization(
-    userId: string,
-    name: string,
-  ): Promise<{ organization: Organization; role: OrganizationMembershipRole }> {
+  async createOrganization({
+    userId,
+    name,
+  }: {
+    userId: string
+    name: string
+  }): Promise<Organization> {
     // Validate organization name (defense in depth)
     if (!name || name.trim().length < 3) {
       throw new Error("Organization name must be at least 3 characters long")
@@ -85,9 +80,6 @@ export class OrganizationsService {
     })
     await this.organizationMembershipRepository.save(membership)
 
-    return {
-      organization: savedOrganization,
-      role: "owner",
-    }
+    return savedOrganization
   }
 }

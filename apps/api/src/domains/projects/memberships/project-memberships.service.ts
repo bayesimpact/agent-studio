@@ -1,7 +1,7 @@
 import { randomUUID } from "node:crypto"
 import { Inject, Injectable, NotFoundException } from "@nestjs/common"
 import { InjectRepository } from "@nestjs/typeorm"
-import type { EntityManager, Repository } from "typeorm"
+import type { Repository } from "typeorm"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
 import { DataSource } from "typeorm"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
@@ -100,7 +100,6 @@ export class ProjectMembershipsService {
           projectId,
           email,
           inviterName,
-          manager,
           userRepo,
           membershipRepo,
         })
@@ -117,14 +116,12 @@ export class ProjectMembershipsService {
     projectId,
     email,
     inviterName,
-    manager,
     userRepo,
     membershipRepo,
   }: {
     projectId: string
     email: string
     inviterName: string
-    manager: EntityManager
     userRepo: Repository<User>
     membershipRepo: Repository<ProjectMembership>
   }): Promise<ProjectMembership | null> {
@@ -154,13 +151,6 @@ export class ProjectMembershipsService {
       invitationToken: ticketId,
       status: "sent",
       role: "admin",
-    })
-
-    // Also create admin agent memberships for this user in all agents of the project
-    await this.agentMembershipsService.createAdminAgentMembershipsForUserInProject({
-      manager,
-      userId: user.id,
-      projectId,
     })
 
     const savedMembership = await membershipRepo.save(membership)
@@ -203,6 +193,13 @@ export class ProjectMembershipsService {
         orgMembershipRepo,
         userId: user.id,
         organizationId: project.organizationId,
+      })
+
+      // Also create admin agent memberships for this user in all agents of the project
+      await this.agentMembershipsService.createAdminAgentMembershipsForUserInProject({
+        manager,
+        userId: user.id,
+        projectId: project.id,
       })
 
       // Reconcile the placeholder user's auth0Id with the real Auth0 identity

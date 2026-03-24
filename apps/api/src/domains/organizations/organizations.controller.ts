@@ -20,13 +20,10 @@ export class OrganizationsController {
     @Req() request: EndpointRequest,
     @Body() body: typeof OrganizationsRoutes.createOrganization.request,
   ): Promise<typeof OrganizationsRoutes.createOrganization.response> {
-    const user = request.user
-
-    // Create organization with the user as owner
-    const { organization, role } = await this.organizationsService.createOrganization(
-      user.id,
-      body.payload.name,
-    )
-    return { data: toDto({ organization, role }) }
+    const organization = await this.organizationsService.createOrganization({
+      userId: request.user.id,
+      name: body.payload.name,
+    })
+    return { data: toDto(organization) }
   }
 }
