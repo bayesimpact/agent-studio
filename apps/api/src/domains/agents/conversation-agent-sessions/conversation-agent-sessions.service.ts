@@ -11,6 +11,9 @@ import { ConversationAgentSession } from "./conversation-agent-session.entity"
 
 @Injectable()
 export class ConversationAgentSessionsService {
+  private readonly conversationAgentSessionConnectRepository: ConnectRepository<ConversationAgentSession>
+  private readonly agentMessageConnectRepository: ConnectRepository<AgentMessage>
+
   constructor(
     @InjectRepository(ConversationAgentSession)
     conversationAgentSessionRepository: Repository<ConversationAgentSession>,
@@ -18,22 +21,24 @@ export class ConversationAgentSessionsService {
     @InjectRepository(AgentMessage)
     agentMessageRepository: Repository<AgentMessage>,
   ) {
-    this.conversationAgentSessionRepository = conversationAgentSessionRepository
     this.conversationAgentSessionConnectRepository = new ConnectRepository(
       conversationAgentSessionRepository,
       "conversationAgentSession",
     )
-
-    this.agentMessageRepository = agentMessageRepository
+    this.agentMessageConnectRepository = new ConnectRepository(
+      agentMessageRepository,
+      "agentMessage",
+    )
   }
 
-  private readonly conversationAgentSessionRepository: Repository<ConversationAgentSession>
-  private readonly conversationAgentSessionConnectRepository: ConnectRepository<ConversationAgentSession>
-
-  private readonly agentMessageRepository: Repository<AgentMessage>
-
-  async listMessagesForSession(agentSessionId: string): Promise<AgentMessage[]> {
-    return this.agentMessageRepository.find({
+  async listMessagesForSession({
+    agentSessionId,
+    connectScope,
+  }: {
+    agentSessionId: string
+    connectScope: RequiredConnectScope
+  }): Promise<AgentMessage[]> {
+    return this.agentMessageConnectRepository.find(connectScope, {
       where: { sessionId: agentSessionId },
       order: { createdAt: "ASC" },
     })
@@ -84,46 +89,5 @@ export class ConversationAgentSessionsService {
     connectScope: RequiredConnectScope
   }): Promise<ConversationAgentSession | null> {
     return await this.conversationAgentSessionConnectRepository.getOneById(connectScope, id)
-  }
-
-  /**
-   * Deletes all playground sessions for a agent
-   * Called when agent configuration changes
-   */
-  async deletePlaygroundSessionsForAgent(agentId: string): Promise<void> {
-    await this.conversationAgentSessionRepository.delete({
-      agentId,
-      type: "playground",
-    })
-  }
-
-  /**
-   * Deletes all sessions for a agent
-   * Called when deleting a agent
-   */
-  async deleteAllSessionsForAgent(agentId: string): Promise<void> {
-    await this.conversationAgentSessionRepository.delete({
-      agentId,
-    })
-  }
-
-  /**
-   * Deletes expired playground sessions
-   * Called by cleanup cron job
-   * Uses 5-minute safety margin to avoid deleting active streams
-   */
-  async deleteExpiredPlaygroundSessions(): Promise<number> {
-    const fiveMinutesAgo = new Date()
-    fiveMinutesAgo.setMinutes(fiveMinutesAgo.getMinutes() - 5)
-
-    const result = await this.conversationAgentSessionRepository
-      .createQueryBuilder()
-      .delete()
-      .from(ConversationAgentSession)
-      .where("type = :type", { type: "playground" })
-      .andWhere("expires_at < :cutoff", { cutoff: fiveMinutesAgo })
-      .execute()
-
-    return result.affected || 0
   }
 }

@@ -7,8 +7,8 @@
 <!-- - when deleting agent or project => delete agent membership or project membership -->
 - invite user in project => create agent membership (admin) on every agent of the project
 - remove user in project => remove project membership and remove agent membership on every agent of this project
-- remove user in agent => remove agent membership
 - list members by agent + invite user as member to agent
+- remove user in agent => remove agent membership
 - rework guards to check roles based on org-membership, project-membership, agent-membership
 - create lobby at root / => list invitations to agents and project(owner/admin) and org(owner/admin)
 - invite user : create org membership and project membership and if needed agent membership

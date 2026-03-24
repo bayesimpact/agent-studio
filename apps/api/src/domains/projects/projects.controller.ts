@@ -4,6 +4,7 @@ import type {
   EndpointRequestWithOrganizationMembership,
   EndpointRequestWithProject,
 } from "@/common/context/request.interface"
+import { getRequiredConnectScope } from "@/common/context/request-context.helpers"
 import { AddContext, RequireContext } from "@/common/context/require-context.decorator"
 import { ResourceContextGuard } from "@/common/context/resource-context.guard"
 import { CheckPolicy } from "@/common/policies/check-policy.decorator"
@@ -65,11 +66,10 @@ export class ProjectsController {
   async deleteProject(
     @Req() request: EndpointRequestWithProject,
   ): Promise<typeof ProjectsRoutes.deleteOne.response> {
-    const { project } = request
-
-    // Delete project
-    await this.projectsService.deleteProject(project!)
-
+    await this.projectsService.deleteProject({
+      connectScope: getRequiredConnectScope(request),
+      project: request.project,
+    })
     return { data: { success: true } }
   }
 }

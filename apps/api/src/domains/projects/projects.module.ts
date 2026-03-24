@@ -1,4 +1,4 @@
-import { Module } from "@nestjs/common"
+import { forwardRef, Module } from "@nestjs/common"
 import { TypeOrmModule } from "@nestjs/typeorm"
 import { OrganizationContextResolver } from "@/common/context/resolvers/organization-context.resolver"
 import { ProjectContextResolver } from "@/common/context/resolvers/project-context.resolver"
@@ -10,6 +10,7 @@ import { Organization } from "@/domains/organizations/organization.entity"
 import { OrganizationsModule } from "@/domains/organizations/organizations.module"
 import { User } from "@/domains/users/user.entity"
 import { UsersModule } from "@/domains/users/users.module"
+import { AgentsModule } from "../agents/agents.module"
 import { ProjectInvitationsController } from "./memberships/project-invitations.controller"
 import { ProjectMembership } from "./memberships/project-membership.entity"
 import { ProjectMembershipsController } from "./memberships/project-memberships.controller"
@@ -29,6 +30,7 @@ import { ProjectsService } from "./projects.service"
       User,
     ]),
     OrganizationsModule,
+    forwardRef(() => AgentsModule),
     UsersModule,
     AuthModule,
   ],

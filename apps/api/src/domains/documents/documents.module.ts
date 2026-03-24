@@ -1,5 +1,5 @@
 import { join } from "node:path"
-import { Module } from "@nestjs/common"
+import { forwardRef, Module } from "@nestjs/common"
 import { ServeStaticModule } from "@nestjs/serve-static"
 import { TypeOrmModule } from "@nestjs/typeorm"
 import { DocumentContextResolver } from "@/common/context/resolvers/document-context.resolver"
@@ -34,7 +34,7 @@ import { DocumentTagsModule } from "./tags/document-tags.module"
       OrganizationMembership,
       ProjectMembership,
     ]),
-    DocumentTagsModule,
+    forwardRef(() => DocumentTagsModule),
     // Only serve static files in development/local environment
     ...(process.env.NODE_ENV !== "production"
       ? [
@@ -50,7 +50,7 @@ import { DocumentTagsModule } from "./tags/document-tags.module"
         ]
       : []),
     OrganizationsModule,
-    ProjectsModule,
+    forwardRef(() => ProjectsModule),
     UsersModule,
     AuthModule,
     StorageModule,

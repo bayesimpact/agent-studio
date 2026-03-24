@@ -44,7 +44,10 @@ describe("listMessagesForSession", () => {
       agentMessageRepository,
     })
 
-    const messages = await service.listMessagesForSession(session.id)
+    const messages = await service.listMessagesForSession({
+      agentSessionId: session.id,
+      connectScope,
+    })
 
     expect(messages).toHaveLength(2)
     expect(messages[0]?.role).toBe("user")

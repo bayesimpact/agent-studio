@@ -1,6 +1,15 @@
 import { Injectable } from "@nestjs/common"
 import { InjectRepository } from "@nestjs/typeorm"
-import type { Repository } from "typeorm"
+// biome-ignore lint/style/useImportType: DataSource required at runtime for NestJS DI
+import { DataSource, type Repository } from "typeorm"
+import type { RequiredConnectScope } from "@/common/entities/connect-required-fields"
+import { Agent } from "../agents/agent.entity"
+// biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
+import { AgentsService } from "../agents/agents.service"
+import { Document } from "../documents/document.entity"
+import { Evaluation } from "../evaluations/evaluation.entity"
+import { EvaluationReport } from "../evaluations/reports/evaluation-report.entity"
+import { ProjectMembership } from "./memberships/project-membership.entity"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
 import { ProjectMembershipsService } from "./memberships/project-memberships.service"
 import { Project } from "./project.entity"
@@ -10,6 +19,8 @@ export class ProjectsService {
   constructor(
     @InjectRepository(Project) private readonly projectRepository: Repository<Project>,
     private readonly projectMembershipsService: ProjectMembershipsService,
+    private readonly agentsService: AgentsService,
+    private readonly dataSource: DataSource,
   ) {}
 
   async createProject(params: {
@@ -39,9 +50,6 @@ export class ProjectsService {
     })
   }
 
-  /**
-   * Gets a project by its ID and organization ID.
-   */
   async getProject(organizationId: string, projectId: string): Promise<Project | undefined> {
     const project = await this.projectRepository.findOne({
       where: { id: projectId, organizationId },
@@ -49,20 +57,41 @@ export class ProjectsService {
     return project ?? undefined
   }
 
-  /**
-   * Updates a project.
-   */
   async updateProject(project: Project, name: string): Promise<Project> {
     // Update the project
     project.name = name
     return this.projectRepository.save(project)
   }
 
-  /**
-   * Deletes a project.
-   */
-  async deleteProject(project: Project): Promise<void> {
-    await this.projectRepository.remove(project)
-    await this.projectMembershipsService.deleteAllMembershipsForProject(project.id)
+  async deleteProject({
+    project,
+    connectScope,
+  }: {
+    project: Project
+    connectScope: RequiredConnectScope
+  }): Promise<void> {
+    await this.dataSource.transaction(async (entityManager) => {
+      const projectId = project.id
+
+      const agents = await entityManager.find(Agent, { where: { projectId }, select: { id: true } })
+
+      if (agents.length > 0) {
+        for (const agent of agents) {
+          await this.agentsService.deleteAgent({ connectScope, agentId: agent.id })
+        }
+      }
+
+      // Evaluations
+      await entityManager.delete(EvaluationReport, { projectId })
+      await entityManager.delete(Evaluation, { projectId })
+
+      // Documents
+      await entityManager.delete(Document, { projectId })
+
+      // Project memberships
+      await entityManager.delete(ProjectMembership, { projectId })
+
+      await entityManager.delete(Project, { id: projectId })
+    })
   }
 }
