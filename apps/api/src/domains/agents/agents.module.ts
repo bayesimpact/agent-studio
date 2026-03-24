@@ -21,6 +21,7 @@ import { Agent } from "./agent.entity"
 import { AgentGuard } from "./agent.guard"
 import { AgentsController } from "./agents.controller"
 import { AgentsService } from "./agents.service"
+import { BaseAgentSessionsService } from "./base-agent-sessions/base-agent-sessions.service"
 import { ExtractionAgentSession } from "./extraction-agent-sessions/extraction-agent-session.entity"
 import { ExtractionAgentSessionsController } from "./extraction-agent-sessions/extraction-agent-sessions.controller"
 import { ExtractionAgentSessionsService } from "./extraction-agent-sessions/extraction-agent-sessions.service"
@@ -56,6 +57,7 @@ import { AgentMembershipsService } from "./memberships/agent-memberships.service
   ],
   providers: [
     AgentsService,
+    BaseAgentSessionsService,
     AgentMembershipsService,
     ExtractionAgentSessionsService,
     FormAgentSessionsService,

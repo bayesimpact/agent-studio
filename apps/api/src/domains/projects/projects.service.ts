@@ -75,10 +75,8 @@ export class ProjectsService {
 
       const agents = await entityManager.find(Agent, { where: { projectId }, select: { id: true } })
 
-      if (agents.length > 0) {
-        for (const agent of agents) {
-          await this.agentsService.deleteAgent({ connectScope, agentId: agent.id })
-        }
+      for (const agent of agents) {
+        await this.agentsService.deleteAgent({ connectScope, agentId: agent.id })
       }
 
       // Evaluations

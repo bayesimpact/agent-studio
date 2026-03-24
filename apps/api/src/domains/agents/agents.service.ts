@@ -8,14 +8,11 @@ import type { RequiredConnectScope } from "@/common/entities/connect-required-fi
 import { DocumentTagsService } from "../documents/tags/document-tags.service"
 import type { DocumentTagsUpdateFields } from "../documents/tags/document-tags.types"
 import { Agent } from "./agent.entity"
-import { ConversationAgentSession } from "./conversation-agent-sessions/conversation-agent-session.entity"
-import { ExtractionAgentSession } from "./extraction-agent-sessions/extraction-agent-session.entity"
-import { FormAgentSession } from "./form-agent-sessions/form-agent-session.entity"
+// biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
+import { BaseAgentSessionsService } from "./base-agent-sessions/base-agent-sessions.service"
 import { AgentMembership } from "./memberships/agent-membership.entity"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
 import { AgentMembershipsService } from "./memberships/agent-memberships.service"
-import { AgentMessage } from "./shared/agent-session-messages/agent-message.entity"
-import { AgentMessageFeedback } from "./shared/agent-session-messages/feedback/agent-message-feedback.entity"
 
 @Injectable()
 export class AgentsService {
@@ -26,6 +23,7 @@ export class AgentsService {
     agentRepository: Repository<Agent>,
     private readonly documentTagsService: DocumentTagsService,
     private readonly agentMembershipsService: AgentMembershipsService,
+    private readonly baseAgentSessionsService: BaseAgentSessionsService,
     private readonly dataSource: DataSource,
   ) {
     this.agentConnectRepository = new ConnectRepository(agentRepository, "agents")
@@ -200,58 +198,7 @@ export class AgentsService {
     }
 
     await this.dataSource.transaction(async (entityManager) => {
-      const sessions: (ConversationAgentSession | FormAgentSession | ExtractionAgentSession)[] = []
-      switch (agent.type) {
-        case "conversation":
-          sessions.push(
-            ...(await entityManager.find(ConversationAgentSession, {
-              where: { agentId },
-              select: { id: true },
-            })),
-          )
-          break
-        case "form":
-          sessions.push(
-            ...(await entityManager.find(FormAgentSession, {
-              where: { agentId },
-              select: { id: true },
-            })),
-          )
-          break
-        case "extraction":
-          sessions.push(
-            ...(await entityManager.find(ExtractionAgentSession, {
-              where: { agentId },
-              select: { id: true },
-            })),
-          )
-          break
-      }
-
-      // Delete messages
-      for (const session of sessions) {
-        const agentMessages = await entityManager.find(AgentMessage, {
-          where: { sessionId: session.id },
-          select: { id: true },
-        })
-        for (const agentMessage of agentMessages) {
-          await entityManager.delete(AgentMessageFeedback, { agentMessageId: agentMessage.id })
-        }
-        await entityManager.delete(AgentMessage, { sessionId: session.id })
-      }
-
-      // Delete sessions
-      switch (agent.type) {
-        case "conversation":
-          await entityManager.delete(ConversationAgentSession, { agentId })
-          break
-        case "form":
-          await entityManager.delete(FormAgentSession, { agentId })
-          break
-        case "extraction":
-          await entityManager.delete(ExtractionAgentSession, { agentId })
-          break
-      }
+      await this.baseAgentSessionsService.deleteAgentSessions(entityManager, agentId, agent.type)
 
       // Delete memberships
       await entityManager.delete(AgentMembership, { agentId })
