@@ -180,9 +180,6 @@ export class AgentsService {
     return updatedAgent
   }
 
-  /**
-   * Deletes an agent.
-   */
   async deleteAgent({
     connectScope,
     agentId,
@@ -190,17 +187,19 @@ export class AgentsService {
     connectScope: RequiredConnectScope
     agentId: string
   }): Promise<void> {
-    // Find the agent
     const agent = await this.agentConnectRepository.getOneById(connectScope, agentId)
 
     if (!agent) {
       throw new NotFoundException(`Agent with id ${agentId} not found`)
     }
 
-    // Delete all sessions for the agent
+    // Delete sessions
     await this.conversationAgentSessionsService.deleteAllSessionsForAgent(agentId)
 
-    // Delete the agent
+    // Delete agent
     await this.agentConnectRepository.deleteOneById({ connectScope, id: agent.id })
+
+    // Delete memberships
+    await this.agentMembershipsService.deleteAllMembershipsForAgent(agentId)
   }
 }

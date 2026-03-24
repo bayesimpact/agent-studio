@@ -283,4 +283,11 @@ export class ProjectMembershipsService {
       }
     })
   }
+
+  async deleteAllMembershipsForProject(projectId: string): Promise<void> {
+    return this.dataSource.transaction(async (manager) => {
+      const membershipRepo = manager.getRepository(ProjectMembership)
+      await membershipRepo.delete({ projectId })
+    })
+  }
 }

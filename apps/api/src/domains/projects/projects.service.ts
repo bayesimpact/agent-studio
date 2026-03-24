@@ -63,5 +63,6 @@ export class ProjectsService {
    */
   async deleteProject(project: Project): Promise<void> {
     await this.projectRepository.remove(project)
+    await this.projectMembershipsService.deleteAllMembershipsForProject(project.id)
   }
 }

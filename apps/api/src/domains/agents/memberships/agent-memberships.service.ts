@@ -257,4 +257,11 @@ export class AgentMembershipsService {
 
     return savedMembership
   }
+
+  async deleteAllMembershipsForAgent(agentId: string): Promise<void> {
+    return this.dataSource.transaction(async (manager) => {
+      const membershipRepo = manager.getRepository(AgentMembership)
+      await membershipRepo.delete({ agentId })
+    })
+  }
 }
