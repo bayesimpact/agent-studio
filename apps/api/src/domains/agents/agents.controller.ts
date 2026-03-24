@@ -85,10 +85,7 @@ export class AgentsController {
   async deleteOne(
     @Req() request: EndpointRequestWithAgent,
   ): Promise<typeof AgentsRoutes.deleteOne.response> {
-    await this.agentsService.deleteAgent({
-      connectScope: getRequiredConnectScope(request),
-      agentId: request.agent.id,
-    })
+    await this.agentsService.deleteAgent(request.agent)
     return { data: { success: true } }
   }
 }

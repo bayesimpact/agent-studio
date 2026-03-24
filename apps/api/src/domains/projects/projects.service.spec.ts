@@ -108,10 +108,7 @@ describe("ProjectsService", () => {
     it("should delete a project", async () => {
       const { project } = await createOrganizationWithProject(repositories)
 
-      await service.deleteProject({
-        project,
-        connectScope: { organizationId: project.organizationId, projectId: project.id },
-      })
+      await service.deleteProject(project)
 
       const deletedProject = await repositories.projectRepository.findOne({
         where: { id: project.id },

@@ -2,7 +2,6 @@ import { Injectable } from "@nestjs/common"
 import { InjectRepository } from "@nestjs/typeorm"
 // biome-ignore lint/style/useImportType: DataSource required at runtime for NestJS DI
 import { DataSource, type Repository } from "typeorm"
-import type { RequiredConnectScope } from "@/common/entities/connect-required-fields"
 import { Agent } from "../agents/agent.entity"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
 import { AgentsService } from "../agents/agents.service"
@@ -63,20 +62,13 @@ export class ProjectsService {
     return this.projectRepository.save(project)
   }
 
-  async deleteProject({
-    project,
-    connectScope,
-  }: {
-    project: Project
-    connectScope: RequiredConnectScope
-  }): Promise<void> {
+  async deleteProject(project: Project): Promise<void> {
     await this.dataSource.transaction(async (entityManager) => {
       const projectId = project.id
 
       const agents = await entityManager.find(Agent, { where: { projectId }, select: { id: true } })
-
       for (const agent of agents) {
-        await this.agentsService.deleteAgent({ connectScope, agentId: agent.id })
+        await this.agentsService.deleteAgent(agent)
       }
 
       // Evaluations

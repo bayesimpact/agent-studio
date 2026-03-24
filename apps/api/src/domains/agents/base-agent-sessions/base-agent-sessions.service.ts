@@ -17,15 +17,19 @@ const sessionEntityByType: Record<Agent["type"], EntityTarget<AgentSession>> = {
 
 @Injectable()
 export class BaseAgentSessionsService {
-  async deleteAgentSessions(
-    entityManager: EntityManager,
-    agentId: string,
-    agentType: Agent["type"],
-  ): Promise<void> {
-    const sessions = await this.getAllSessions(entityManager, agentId, agentType)
+  async deleteAgentSessions({
+    entityManager,
+    agentId,
+    agentType,
+  }: {
+    entityManager: EntityManager
+    agentId: string
+    agentType: Agent["type"]
+  }): Promise<void> {
+    const sessions = await this.getAllSessions({ entityManager, agentId, agentType })
 
     for (const session of sessions) {
-      await this.deleteSessionMessages(entityManager, session.id)
+      await this.deleteSessionMessages({ entityManager, sessionId: session.id })
     }
 
     await entityManager.delete(sessionEntityByType[agentType] as EntityTarget<AgentSession>, {
@@ -33,21 +37,28 @@ export class BaseAgentSessionsService {
     })
   }
 
-  private async getAllSessions(
-    entityManager: EntityManager,
-    agentId: string,
-    agentType: Agent["type"],
-  ): Promise<{ id: string }[]> {
+  private async getAllSessions({
+    entityManager,
+    agentId,
+    agentType,
+  }: {
+    entityManager: EntityManager
+    agentId: string
+    agentType: Agent["type"]
+  }): Promise<{ id: string }[]> {
     return entityManager.find(sessionEntityByType[agentType] as EntityTarget<AgentSession>, {
       where: { agentId },
       select: { id: true },
     })
   }
 
-  private async deleteSessionMessages(
-    entityManager: EntityManager,
-    sessionId: string,
-  ): Promise<void> {
+  private async deleteSessionMessages({
+    entityManager,
+    sessionId,
+  }: {
+    entityManager: EntityManager
+    sessionId: string
+  }): Promise<void> {
     const agentMessages = await entityManager.find(AgentMessage, {
       where: { sessionId },
       select: { id: true },

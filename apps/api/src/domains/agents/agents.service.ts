@@ -184,27 +184,19 @@ export class AgentsService {
     return updatedAgent
   }
 
-  async deleteAgent({
-    connectScope,
-    agentId,
-  }: {
-    connectScope: RequiredConnectScope
-    agentId: string
-  }): Promise<void> {
-    const agent = await this.agentConnectRepository.getOneById(connectScope, agentId)
-
-    if (!agent) {
-      throw new NotFoundException(`Agent with id ${agentId} not found`)
-    }
-
+  async deleteAgent(agent: Agent): Promise<void> {
     await this.dataSource.transaction(async (entityManager) => {
-      await this.baseAgentSessionsService.deleteAgentSessions(entityManager, agentId, agent.type)
+      await this.baseAgentSessionsService.deleteAgentSessions({
+        entityManager,
+        agentId: agent.id,
+        agentType: agent.type,
+      })
 
       // Delete memberships
-      await entityManager.delete(AgentMembership, { agentId })
+      await entityManager.delete(AgentMembership, { agentId: agent.id })
 
       // Delete agent
-      await entityManager.delete(Agent, { id: agentId })
+      await entityManager.delete(Agent, { id: agent.id })
     })
   }
 }

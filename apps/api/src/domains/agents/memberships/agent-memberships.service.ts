@@ -1,9 +1,9 @@
 import { randomUUID } from "node:crypto"
 import { Inject, Injectable, NotFoundException } from "@nestjs/common"
 import { InjectRepository } from "@nestjs/typeorm"
-import type { Repository } from "typeorm"
+import type { EntityManager, Repository } from "typeorm"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
-import { DataSource } from "typeorm"
+import { DataSource, In } from "typeorm"
 import {
   INVITATION_SENDER,
   type InvitationSender,
@@ -29,13 +29,19 @@ export class AgentMembershipsService {
   async findById(membershipId: string): Promise<AgentMembership | null> {
     return this.agentMembershipRepository.findOne({
       where: { id: membershipId },
+      relations: ["user"],
     })
   }
 
-  async findByInvitationToken(token: string): Promise<AgentMembership | null> {
-    return this.agentMembershipRepository.findOne({
-      where: { invitationToken: token },
+  async findByInvitationToken(invitationToken: string): Promise<AgentMembership> {
+    const membership = await this.agentMembershipRepository.findOne({
+      where: { invitationToken },
+      relations: ["user"],
     })
+    if (!membership) {
+      throw new NotFoundException(`Invitation not found for ticket: ${invitationToken}`)
+    }
+    return membership
   }
 
   async listAgentMemberships(agentId: string): Promise<AgentMembership[]> {
@@ -96,6 +102,48 @@ export class AgentMembershipsService {
     })
   }
 
+  private async inviteAgentMember({
+    agentId,
+    email,
+    inviterName,
+    userRepo,
+    membershipRepo,
+  }: {
+    agentId: string
+    email: string
+    inviterName: string
+    userRepo: Repository<User>
+    membershipRepo: Repository<AgentMembership>
+  }): Promise<AgentMembership | null> {
+    const normalizedEmail = email.trim().toLowerCase()
+
+    const user = await this.findOrCreatePlaceholderUser({ userRepo, email: normalizedEmail })
+
+    const existingMembership = await membershipRepo.findOne({
+      where: { agentId, userId: user.id },
+    })
+
+    if (existingMembership) {
+      return null
+    }
+
+    const { ticketId } = await this.invitationSender.sendInvitation({
+      inviteeEmail: normalizedEmail,
+      inviterName,
+    })
+
+    const newMembership = membershipRepo.create({
+      agentId,
+      userId: user.id,
+      invitationToken: ticketId,
+      status: "sent",
+      role: "member",
+    })
+    const savedMembership = await membershipRepo.save(newMembership)
+    savedMembership.user = user
+    return savedMembership
+  }
+
   /**
    * Accepts an agent membership invitation.
    * Reconciles the placeholder user, creates OrganizationMembership and ProjectMembership
@@ -115,57 +163,30 @@ export class AgentMembershipsService {
       const projectMembershipRepo = manager.getRepository(ProjectMembership)
       const agentRepo = manager.getRepository(Agent)
 
-      const membership = await membershipRepo.findOne({
-        where: { invitationToken: ticketId },
-        relations: ["user"],
+      const membership = await this.findByInvitationToken(ticketId)
+      const { user } = membership
+
+      const agent = await agentRepo.findOneOrFail({ where: { id: membership.agentId } })
+      await this.ensureOrganizationMembership({
+        orgMembershipRepo,
+        userId: user.id,
+        organizationId: agent.organizationId,
+      })
+      await this.ensureProjectMembership({
+        projectMembershipRepo,
+        userId: user.id,
+        projectId: agent.projectId,
       })
 
-      if (!membership) {
-        throw new NotFoundException(`Invitation not found for ticket: ${ticketId}`)
-      }
-
-      if (membership.status === "accepted") {
-        return membership
-      }
-
       // Reconcile placeholder user with real Auth0 identity
-      const user = membership.user
       if (user.auth0Id.startsWith(PLACEHOLDER_AUTH0_ID_PREFIX)) {
         user.auth0Id = auth0Sub
         await userRepo.save(user)
       }
 
-      // Load agent to get projectId and organizationId
-      const agent = await agentRepo.findOneOrFail({ where: { id: membership.agentId } })
-
-      // Create OrganizationMembership if not exists
-      const existingOrgMembership = await orgMembershipRepo.findOne({
-        where: { userId: user.id, organizationId: agent.organizationId },
-      })
-      if (!existingOrgMembership) {
-        const orgMembership = orgMembershipRepo.create({
-          userId: user.id,
-          organizationId: agent.organizationId,
-          role: "member",
-        })
-        await orgMembershipRepo.save(orgMembership)
+      if (membership.status === "accepted") {
+        return membership
       }
-
-      // Create ProjectMembership if not exists
-      const existingProjectMembership = await projectMembershipRepo.findOne({
-        where: { userId: user.id, projectId: agent.projectId },
-      })
-      if (!existingProjectMembership) {
-        const projectMembership = projectMembershipRepo.create({
-          userId: user.id,
-          projectId: agent.projectId,
-          invitationToken: randomUUID(),
-          status: "accepted",
-          role: "admin",
-        })
-        await projectMembershipRepo.save(projectMembership)
-      }
-
       membership.status = "accepted"
       return membershipRepo.save(membership)
     })
@@ -186,82 +207,122 @@ export class AgentMembershipsService {
       const membershipRepo = manager.getRepository(AgentMembership)
       const userRepo = manager.getRepository(User)
 
-      const membership = await membershipRepo.findOne({
-        where: { id: membershipId, agentId },
-        relations: ["user"],
-      })
-
+      const membership = await this.findById(membershipId)
       if (!membership) return
 
       const { user } = membership
 
       await membershipRepo.delete({ id: membershipId, agentId })
 
+      // If the user is a placeholder (never signed up), clean them up
       if (user.auth0Id.startsWith(PLACEHOLDER_AUTH0_ID_PREFIX)) {
         await userRepo.delete({ id: user.id })
       }
     })
   }
 
-  private async inviteAgentMember({
-    agentId,
-    email,
-    inviterName,
-    userRepo,
-    membershipRepo,
+  async createAdminAgentMembershipsForUserInProject({
+    manager,
+    userId,
+    projectId,
   }: {
-    agentId: string
-    email: string
-    inviterName: string
-    userRepo: Repository<User>
-    membershipRepo: Repository<AgentMembership>
-  }): Promise<AgentMembership | null> {
-    const normalizedEmail = email.trim().toLowerCase()
+    manager: EntityManager
+    userId: string
+    projectId: string
+  }): Promise<void> {
+    const agents = await manager.find(Agent, {
+      where: { projectId },
+      select: { id: true },
+    })
 
-    let user = await userRepo.findOne({ where: { email: normalizedEmail } })
-
-    if (!user) {
-      const placeholderAuth0Id = `${PLACEHOLDER_AUTH0_ID_PREFIX}${randomUUID().slice(-12)}`
-      user = userRepo.create({
-        auth0Id: placeholderAuth0Id,
-        email: normalizedEmail,
-        name: null,
-        pictureUrl: null,
+    for (const agent of agents) {
+      const existing = await manager.findOne(AgentMembership, {
+        where: { agentId: agent.id, userId },
       })
-      user = await userRepo.save(user)
+      if (existing) continue
+
+      const membership = manager.create(AgentMembership, {
+        agentId: agent.id,
+        userId,
+        role: "admin",
+        status: "accepted",
+        invitationToken: `project_invite-${randomUUID()}`,
+      })
+      await manager.save(AgentMembership, membership)
     }
-
-    const existingMembership = await membershipRepo.findOne({
-      where: { agentId, userId: user.id },
-    })
-
-    if (existingMembership) {
-      return null
-    }
-
-    const { ticketId } = await this.invitationSender.sendInvitation({
-      inviteeEmail: normalizedEmail,
-      inviterName,
-    })
-
-    const membership = membershipRepo.create({
-      agentId,
-      userId: user.id,
-      invitationToken: ticketId,
-      status: "sent",
-      role: "member",
-    })
-
-    const savedMembership = await membershipRepo.save(membership)
-    savedMembership.user = user
-
-    return savedMembership
   }
 
-  async deleteAllMembershipsForAgent(agentId: string): Promise<void> {
-    return this.dataSource.transaction(async (manager) => {
-      const membershipRepo = manager.getRepository(AgentMembership)
-      await membershipRepo.delete({ agentId })
+  async deleteAgentMembershipsForUserInProject({
+    manager,
+    userId,
+    projectId,
+  }: {
+    manager: EntityManager
+    userId: string
+    projectId: string
+  }): Promise<void> {
+    const agents = await manager.find(Agent, { where: { projectId }, select: { id: true } })
+    if (agents.length === 0) return
+
+    const agentIds = agents.map((agent) => agent.id)
+    await manager.delete(AgentMembership, { agentId: In(agentIds), userId })
+  }
+
+  private async findOrCreatePlaceholderUser({
+    userRepo,
+    email,
+  }: {
+    userRepo: Repository<User>
+    email: string
+  }): Promise<User> {
+    const existing = await userRepo.findOne({ where: { email } })
+    if (existing) return existing
+
+    const placeholderAuth0Id = `${PLACEHOLDER_AUTH0_ID_PREFIX}${randomUUID().slice(-12)}`
+    const user = userRepo.create({
+      auth0Id: placeholderAuth0Id,
+      email,
+      name: null,
+      pictureUrl: null,
     })
+    return userRepo.save(user)
+  }
+
+  private async ensureProjectMembership({
+    projectId,
+    projectMembershipRepo,
+    userId,
+  }: {
+    projectMembershipRepo: Repository<ProjectMembership>
+    userId: string
+    projectId: string
+  }): Promise<void> {
+    const existing = await projectMembershipRepo.findOne({ where: { userId, projectId } })
+    if (existing) return
+
+    const projectMembership = projectMembershipRepo.create({
+      userId,
+      projectId,
+      invitationToken: randomUUID(),
+      status: "accepted",
+      role: "member",
+    })
+    await projectMembershipRepo.save(projectMembership)
+  }
+
+  private async ensureOrganizationMembership({
+    orgMembershipRepo,
+    userId,
+    organizationId,
+  }: {
+    orgMembershipRepo: Repository<OrganizationMembership>
+    userId: string
+    organizationId: string
+  }): Promise<void> {
+    const existing = await orgMembershipRepo.findOne({ where: { userId, organizationId } })
+    if (existing) return
+
+    const orgMembership = orgMembershipRepo.create({ userId, organizationId, role: "member" })
+    await orgMembershipRepo.save(orgMembership)
   }
 }

@@ -281,12 +281,9 @@ describe("AgentsService", () => {
 
   describe("deleteAgent", () => {
     it("should delete an Agent", async () => {
-      const { organization, project, agent } = await createOrganizationWithAgent(repositories)
+      const { agent } = await createOrganizationWithAgent(repositories)
 
-      await service.deleteAgent({
-        connectScope: { organizationId: organization.id, projectId: project.id },
-        agentId: agent.id,
-      })
+      await service.deleteAgent(agent)
 
       const deletedAgent = await repositories.agentRepository.findOne({
         where: { id: agent.id },
