@@ -139,7 +139,6 @@ export class AgentMembershipsService {
       status: "sent",
       role: "member",
     })
-    console.warn("AJ: newMembership", newMembership)
     const savedMembership = await membershipRepo.save(newMembership)
     savedMembership.user = user
     return savedMembership

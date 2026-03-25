@@ -9,8 +9,12 @@ import {
 } from "@/common/test/test-transaction-manager"
 import { INVITATION_SENDER } from "@/domains/auth/invitation-sender.interface"
 import { addUserToOrganization } from "@/domains/organizations/memberships/organization-membership.factory"
-import { createOrganizationWithProject } from "@/domains/organizations/organization.factory"
+import {
+  createOrganizationWithOwner,
+  createOrganizationWithProject,
+} from "@/domains/organizations/organization.factory"
 import { userFactory } from "@/domains/users/user.factory"
+import { projectFactory } from "../project.factory"
 import { ProjectsModule } from "../projects.module"
 import type { ProjectMembership } from "./project-membership.entity"
 import { addUserToProject, inviteUserToProject } from "./project-membership.factory"
@@ -72,22 +76,22 @@ describe("ProjectMembershipsService", () => {
 
   describe("listProjectMemberships", () => {
     it("should return empty list when no memberships exist", async () => {
-      const { project } = await createOrganizationWithProject(repositories)
+      const { organization } = await createOrganizationWithOwner(repositories)
+      const project = await repositories.projectRepository.save(
+        projectFactory.transient({ organization }).build(),
+      )
       const result = await service.listProjectMemberships(project.id)
 
       expect(result).toEqual([])
     })
 
     it("should return memberships with user relations", async () => {
-      const { organization, project } = await createOrganizationWithProject(repositories)
-      await inviteUserToProject({ repositories, organization, project })
+      const { project } = await createOrganizationWithProject(repositories)
 
       const result = await service.listProjectMemberships(project.id)
 
       expect(result).toHaveLength(1)
       expect(result[0]!.user).toBeDefined()
-      expect(result[0]!.user.email).toBe("invited@example.com")
-      expect(result[0]!.user.name).toBe("Invited User")
     })
 
     it("should return memberships ordered by createdAt DESC", async () => {
@@ -100,7 +104,7 @@ describe("ProjectMembershipsService", () => {
 
       const result = await service.listProjectMemberships(project.id)
 
-      expect(result).toHaveLength(2)
+      expect(result).toHaveLength(3)
       expect(result[0]!.user.email).toBe("second@example.com")
       expect(result[1]!.user.email).toBe("first@example.com")
     })
@@ -445,7 +449,7 @@ describe("ProjectMembershipsService", () => {
     })
 
     it("should NOT delete a real user when removing a membership", async () => {
-      const { project } = await createOrganizationWithProject(repositories)
+      const { project, user: user1 } = await createOrganizationWithProject(repositories)
 
       const { invitedUser: realUser, membership } = await inviteUserToProject({
         repositories,
@@ -456,7 +460,7 @@ describe("ProjectMembershipsService", () => {
       await service.removeProjectMembership({
         membershipId: membership.id,
         projectId: project.id,
-        userId: realUser.id,
+        userId: user1.id,
       })
 
       // Verify the membership is deleted

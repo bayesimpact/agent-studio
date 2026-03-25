@@ -26,8 +26,6 @@ export class AgentMembershipsController {
     @Req() request: EndpointRequestWithAgent,
   ): Promise<typeof AgentMembershipRoutes.getAll.response> {
     const { agent } = request
-    console.warn("AJ: agent", agent)
-
     const memberships = await this.agentMembershipsService.listAgentMemberships(agent.id)
 
     return { data: memberships.map(toDto) }

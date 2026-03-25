@@ -286,7 +286,6 @@ export class ProjectMembershipsService {
       if (!membership) return
 
       const { user } = membership
-      console.warn("AJ: invitedMembershipUser", membership.user)
 
       if (user.id === userId) {
         throw new Error("Cannot remove yourself from the project")

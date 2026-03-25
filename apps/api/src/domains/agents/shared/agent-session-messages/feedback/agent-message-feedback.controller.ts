@@ -13,6 +13,7 @@ import { ResourceContextGuard } from "@/common/context/resource-context.guard"
 import { CheckPolicy } from "@/common/policies/check-policy.decorator"
 import type { Agent } from "@/domains/agents/agent.entity"
 import { JwtAuthGuard } from "@/domains/auth/jwt-auth.guard"
+import { DocumentsGuard } from "@/domains/documents/documents.guard"
 import { UserGuard } from "@/domains/users/user.guard"
 import { getTraceUrl } from "@/external/langfuse/langfuse-helper"
 import { AgentGuard } from "../../../agent.guard"
@@ -27,8 +28,7 @@ import { AgentMessageFeedbackService } from "./agent-message-feedback.service"
 export class AgentMessageFeedbackController {
   constructor(private readonly feedbackService: AgentMessageFeedbackService) {}
 
-  // TODO: add a AgentMessageGuard
-  @CheckPolicy((policy) => policy.canList())
+  @CheckPolicy((policy) => policy.canCreate())
   @Post(AgentMessageFeedbackRoutes.createOne.path)
   async createOne(
     @Req() request: EndpointRequestWithProject,
@@ -49,7 +49,7 @@ export class AgentMessageFeedbackController {
     return { data: { success: true } }
   }
 
-  @UseGuards(AgentGuard)
+  @UseGuards(AgentGuard, DocumentsGuard) // FIXME: instead of AgentGuard, DocumentsGuard we need a dedicated guard
   @AddContext("agent")
   @CheckPolicy((policy) => policy.canList())
   @Get(AgentMessageFeedbackRoutes.getAll.path)

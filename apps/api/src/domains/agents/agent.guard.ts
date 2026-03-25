@@ -9,7 +9,7 @@ import { Reflector } from "@nestjs/core"
 import type { EndpointRequestWithAgent } from "@/common/context/request.interface"
 import { AUTH_ERRORS } from "@/common/errors/auth-errors"
 import { CHECK_POLICY_KEY, type PolicyHandler } from "@/common/policies/check-policy.decorator"
-import { requestToProjectPolicyContext } from "../projects/helpers"
+import { requestToAgentPolicyContext } from "../projects/helpers"
 import { AgentPolicy } from "./agent.policy"
 
 @Injectable()
@@ -20,7 +20,7 @@ export class AgentGuard implements CanActivate {
     const request = context.switchToHttp().getRequest() as EndpointRequestWithAgent
 
     const policy = new AgentPolicy(
-      requestToProjectPolicyContext(request),
+      requestToAgentPolicyContext(request),
       "agent" in request ? request.agent : undefined,
     )
 

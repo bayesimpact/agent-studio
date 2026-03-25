@@ -7,6 +7,7 @@ import {
   setupTransactionalTestDatabase,
   teardownTestDatabase,
 } from "@/common/test/test-transaction-manager"
+import { InvitationsModule } from "@/domains/agents/shared/memberships/invitations.module"
 import { createOrganizationWithProject } from "@/domains/organizations/organization.factory"
 import { mockInvitationSender, setupUserGuardForTesting } from "../../../../../test/e2e.helpers"
 import { expectResponse, type Requester, testRequester } from "../../../../../test/request"
@@ -19,14 +20,12 @@ describe("Invitations - acceptInvitation", () => {
   let setup: Awaited<ReturnType<typeof setupTransactionalTestDatabase>>
   let repositories: AllRepositories
 
-  let _organizationId: string
-  let _projectId: string
   let accessToken: string | undefined = "token"
   let auth0Id = "auth0|invitee-user"
 
   beforeAll(async () => {
     setup = await setupTransactionalTestDatabase({
-      additionalImports: [ProjectsModule],
+      additionalImports: [ProjectsModule, InvitationsModule],
       applyOverrides: (moduleBuilder) => setupUserGuardForTesting(moduleBuilder, () => auth0Id),
     })
     repositories = setup.getAllRepositories()
@@ -56,16 +55,16 @@ describe("Invitations - acceptInvitation", () => {
     })
 
   const createInvitation = async () => {
-    const { user, organization, project } = await createOrganizationWithProject(repositories)
-    _organizationId = organization.id
-    _projectId = project.id
-    auth0Id = user.auth0Id
+    const { organization, project } = await createOrganizationWithProject(repositories)
 
     const { membership } = await inviteUserToProject({
       repositories,
       project,
       user: {
-        email: "invitee@example.com",
+        email: "test@example.com",
+      },
+      projectMembership: {
+        status: "sent",
       },
     })
     const ticketId = membership.invitationToken

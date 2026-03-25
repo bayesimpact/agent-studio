@@ -2,15 +2,13 @@ import {
   type ResourceState,
   testPolicyScopedByProject,
 } from "@/common/test/test-project-scoped-policy.helpers"
-import type { Organization } from "../organizations/organization.entity"
 import type { ProjectMembershipRole } from "../projects/memberships/project-membership.entity"
-import type { Project } from "../projects/project.entity"
 import { agentFactory } from "./agent.factory"
 import { AgentPolicy } from "./agent.policy"
 
 describe("AgentPolicy", () => {
   const { buildPolicy } = testPolicyScopedByProject({
-    buildResource: (params: { organization: Organization; project: Project }) => {
+    buildResource: (params) => {
       return agentFactory.transient(params).build()
     },
     ResourcePolicy: AgentPolicy,
@@ -68,7 +66,7 @@ describe("AgentPolicy", () => {
       ["member", "noResource", false],
     ])("when user is %s with %s agent", (projectRole, resourceState, expected) => {
       it(`should return ${expected}`, () => {
-        const policy = buildPolicy({ resourceState, projectRole })
+        const policy = buildPolicy({ resourceState, projectRole, withAgentMembership: true })
 
         expect(policy.canUpdate()).toBe(expected)
       })
@@ -88,7 +86,7 @@ describe("AgentPolicy", () => {
       ["member", "noResource", false],
     ])("when user is %s with %s agent", (projectRole, resourceState, expected) => {
       it(`should return ${expected}`, () => {
-        const policy = buildPolicy({ resourceState, projectRole })
+        const policy = buildPolicy({ resourceState, projectRole, withAgentMembership: true })
 
         expect(policy.canDelete()).toBe(expected)
       })

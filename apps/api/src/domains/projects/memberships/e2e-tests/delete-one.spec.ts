@@ -51,10 +51,7 @@ describe("Project membership - deleteOne", () => {
   })
 
   const createContext = async () => {
-    const { organization, project, user, projectMembership } =
-      await createOrganizationWithProject(repositories)
-    console.warn("AJ: user", user)
-    console.warn("AJ: projectMembership", projectMembership)
+    const { organization, project, user } = await createOrganizationWithProject(repositories)
 
     organizationId = organization.id
     projectId = project.id
@@ -66,8 +63,6 @@ describe("Project membership - deleteOne", () => {
       project,
       projectMembership: { role: "member" },
     })
-    console.warn("AJ: invitedmembership", membership)
-    console.warn("AJ: invitedUser", invitedUser)
     membershipId = membership.id
 
     return { organization, project, user, invitedUser, membership }

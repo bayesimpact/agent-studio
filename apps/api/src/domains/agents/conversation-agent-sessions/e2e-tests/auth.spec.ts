@@ -12,38 +12,10 @@ import {
 } from "@/common/test/test-transaction-manager"
 import { removeNullish } from "@/common/utils/remove-nullish"
 import { createOrganizationWithAgent } from "@/domains/organizations/organization.factory"
-import { addUserToProject } from "@/domains/projects/memberships/project-membership.factory"
 import { sdk } from "@/external/llm/open-telemetry-init"
 import { setupUserGuardForTesting } from "../../../../../test/e2e.helpers"
 import { expectResponse, type Requester, testRequester } from "../../../../../test/request"
 import { ConversationAgentSessionsModule } from "../conversation-agent-sessions.module"
-
-// Mock Langfuse to avoid dynamic import issues in Jest
-jest.mock("langfuse", () => {
-  return {
-    Langfuse: class {
-      shutdownAsync() {
-        return Promise.resolve()
-      }
-      flushAsync() {
-        return Promise.resolve()
-      }
-      trace() {
-        return { update: jest.fn() }
-      }
-    },
-  }
-})
-jest.mock("langfuse-v2", () => ({
-  Langfuse: jest.fn().mockImplementation(() => ({
-    trace: jest.fn(),
-    span: jest.fn().mockReturnValue({ getTraceUrl: jest.fn() }),
-    generation: jest.fn(),
-    flushAsync: jest.fn().mockResolvedValue(undefined),
-    shutdownAsync: jest.fn().mockResolvedValue(undefined),
-    debug: jest.fn(),
-  })),
-}))
 
 describe("Agent Sessions - Auth", () => {
   let app: INestApplication<App>
@@ -87,13 +59,7 @@ describe("Agent Sessions - Auth", () => {
 
   const createContextForRole = async (role: "owner" | "admin" | "member" = "owner") => {
     const { user, organization, project, agent } = await createOrganizationWithAgent(repositories, {
-      organizationMembership: { role },
-    })
-    await addUserToProject({
-      repositories,
-      project,
-      user,
-      membership: { status: "accepted" },
+      projectMembership: { role },
     })
     organizationId = organization.id
     projectId = project.id

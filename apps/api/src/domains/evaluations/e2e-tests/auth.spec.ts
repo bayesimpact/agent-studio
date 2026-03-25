@@ -63,7 +63,7 @@ describe("Evaluations - Auth", () => {
 
   const createContextForRole = async (role: "owner" | "admin" | "member" = "owner") => {
     const { user, organization, project } = await createOrganizationWithProject(repositories, {
-      organizationMembership: { role },
+      projectMembership: { role },
     })
     const evaluation = evaluationRepository.create({
       organizationId: organization.id,
