@@ -4,7 +4,7 @@ import type {
   EndpointRequestWithProject,
   EndpointRequestWithProjectMembership,
 } from "@/common/context/request.interface"
-import { AddContext, RequireContext } from "@/common/context/require-context.decorator"
+import { RequireContext } from "@/common/context/require-context.decorator"
 import { ResourceContextGuard } from "@/common/context/resource-context.guard"
 import { CheckPolicy } from "@/common/policies/check-policy.decorator"
 import { JwtAuthGuard } from "@/domains/auth/jwt-auth.guard"
@@ -53,7 +53,7 @@ export class ProjectMembershipsController {
 
   @Delete(ProjectMembershipRoutes.deleteOne.path)
   @CheckPolicy((policy) => policy.canDelete())
-  @AddContext("projectMembership")
+  // @AddContext("projectMembership")
   async removeProjectMembership(
     @Req() request: EndpointRequestWithProjectMembership,
   ): Promise<typeof ProjectMembershipRoutes.deleteOne.response> {
@@ -62,6 +62,7 @@ export class ProjectMembershipsController {
     await this.projectMembershipsService.removeProjectMembership({
       membershipId: projectMembership.id,
       projectId: project.id,
+      userId: request.user.id,
     })
 
     return { data: { success: true } }

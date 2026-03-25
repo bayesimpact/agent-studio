@@ -1,159 +1,58 @@
 import type { BaseAgentSessionTypeDto } from "@caseai-connect/api-contracts"
-import type { OrganizationMembershipRole } from "@/domains/organizations/memberships/organization-membership.entity"
-import { organizationMembershipFactory } from "@/domains/organizations/memberships/organization-membership.factory"
-import { organizationFactory } from "@/domains/organizations/organization.factory"
-import { projectMembershipFactory } from "@/domains/projects/memberships/project-membership.factory"
-import { projectFactory } from "@/domains/projects/project.factory"
-import { userFactory } from "@/domains/users/user.factory"
+import {
+  type ResourceState,
+  testPolicyScopedByProject,
+} from "@/common/test/test-project-scoped-policy.helpers"
+import type { ProjectMembershipRole } from "@/domains/projects/memberships/project-membership.entity"
 import { BaseAgentSessionPolicy } from "./base-agent-session.policy"
 
-type ProjectMembershipState = "sameProject" | "differentProject" | "noProjectMembership"
-
 describe("BaseAgentSessionPolicy", () => {
-  const organization = organizationFactory.build()
-  const user = userFactory.build()
-
-  const project = projectFactory.transient({ organization }).build()
-  const otherProject = projectFactory.transient({ organization }).build()
-
-  const buildOrganizationMembership = (role: OrganizationMembershipRole) => {
-    return organizationMembershipFactory.transient({ user, organization }).params({ role }).build()
-  }
-
-  const buildProjectMembership = (projectMembershipState: ProjectMembershipState) => {
-    if (projectMembershipState === "sameProject") {
-      return projectMembershipFactory.transient({ project, user }).build()
-    }
-    if (projectMembershipState === "differentProject") {
-      return projectMembershipFactory.transient({ project: otherProject, user }).build()
-    }
-    return undefined
-  }
-
-  const buildPolicy = (
-    role: OrganizationMembershipRole,
-    projectMembershipState: ProjectMembershipState,
-    type: BaseAgentSessionTypeDto,
-  ) => {
-    return new BaseAgentSessionPolicy(
-      {
-        organizationMembership: buildOrganizationMembership(role),
-        projectMembership: buildProjectMembership(projectMembershipState),
-        project,
-      },
-      type,
-    )
-  }
-
-  describe('type: "live"', () => {
-    const type = "live"
-    describe("canList", () => {
-      it("should return true for owner", () => {
-        const policy = buildPolicy("owner", "noProjectMembership", type)
-        expect(policy.canList()).toBe(true)
-      })
-
-      it("should return true for admin", () => {
-        const policy = buildPolicy("admin", "noProjectMembership", type)
-        expect(policy.canList()).toBe(true)
-      })
-
-      it("should return true for member of the same project", () => {
-        const policy = buildPolicy("member", "sameProject", type)
-        expect(policy.canList()).toBe(true)
-      })
-
-      it("should return false for member without project membership", () => {
-        const policy = buildPolicy("member", "noProjectMembership", type)
-        expect(policy.canList()).toBe(false)
-      })
-
-      it("should return false for member of another project", () => {
-        const policy = buildPolicy("member", "differentProject", type)
-        expect(policy.canList()).toBe(false)
-      })
-    })
-
-    describe("canCreate", () => {
-      it("should return true for owner", () => {
-        const policy = buildPolicy("owner", "noProjectMembership", type)
-        expect(policy.canCreate()).toBe(true)
-      })
-
-      it("should return true for admin", () => {
-        const policy = buildPolicy("admin", "noProjectMembership", type)
-        expect(policy.canCreate()).toBe(true)
-      })
-
-      it("should return true for member of the same project", () => {
-        const policy = buildPolicy("member", "sameProject", type)
-        expect(policy.canCreate()).toBe(true)
-      })
-
-      it("should return false for member without project membership", () => {
-        const policy = buildPolicy("member", "noProjectMembership", type)
-        expect(policy.canCreate()).toBe(false)
-      })
-
-      it("should return false for member of another project", () => {
-        const policy = buildPolicy("member", "differentProject", type)
-        expect(policy.canCreate()).toBe(false)
-      })
-    })
+  const { buildPolicy } = testPolicyScopedByProject({
+    buildResource: () => undefined,
+    ResourcePolicy: BaseAgentSessionPolicy,
   })
-  describe('type: "playground"', () => {
-    const type = "playground"
-    describe("canList", () => {
-      it("should return true for owner", () => {
-        const policy = buildPolicy("owner", "noProjectMembership", type)
-        expect(policy.canList()).toBe(true)
-      })
 
-      it("should return true for admin", () => {
-        const policy = buildPolicy("admin", "noProjectMembership", type)
-        expect(policy.canList()).toBe(true)
-      })
-
-      it("should return false for member of the same project", () => {
-        const policy = buildPolicy("member", "sameProject", type)
-        expect(policy.canList()).toBe(false)
-      })
-
-      it("should return false for member without project membership", () => {
-        const policy = buildPolicy("member", "noProjectMembership", type)
-        expect(policy.canList()).toBe(false)
-      })
-
-      it("should return false for member of another project", () => {
-        const policy = buildPolicy("member", "differentProject", type)
-        expect(policy.canList()).toBe(false)
-      })
-    })
-
-    describe("canCreate", () => {
-      it("should return true for owner", () => {
-        const policy = buildPolicy("owner", "noProjectMembership", type)
-        expect(policy.canCreate()).toBe(true)
-      })
-
-      it("should return true for admin", () => {
-        const policy = buildPolicy("admin", "noProjectMembership", type)
-        expect(policy.canCreate()).toBe(true)
-      })
-
-      it("should return false for member of the same project", () => {
-        const policy = buildPolicy("member", "sameProject", type)
-        expect(policy.canCreate()).toBe(false)
-      })
-
-      it("should return false for member without project membership", () => {
-        const policy = buildPolicy("member", "noProjectMembership", type)
-        expect(policy.canCreate()).toBe(false)
-      })
-
-      it("should return false for member of another project", () => {
-        const policy = buildPolicy("member", "differentProject", type)
-        expect(policy.canCreate()).toBe(false)
+  describe.each<[BaseAgentSessionTypeDto, Array<[ProjectMembershipRole, ResourceState, boolean]>]>([
+    [
+      "live",
+      [
+        ["owner", "sameOrganization", true],
+        ["owner", "differentOrganization", false],
+        ["owner", "noResource", true],
+        ["admin", "sameOrganization", true],
+        ["admin", "differentOrganization", false],
+        ["admin", "noResource", true],
+        ["member", "sameOrganization", true],
+        ["member", "differentOrganization", false],
+        ["member", "noResource", true],
+      ],
+    ],
+    [
+      "playground",
+      [
+        ["owner", "sameOrganization", true],
+        ["owner", "differentOrganization", false],
+        ["owner", "noResource", true],
+        ["admin", "sameOrganization", true],
+        ["admin", "differentOrganization", false],
+        ["admin", "noResource", true],
+        ["member", "sameOrganization", false],
+        ["member", "differentOrganization", false],
+        ["member", "noResource", false],
+      ],
+    ],
+  ])('type: "%s"', (type, cases) => {
+    describe.each<[string, (policy: BaseAgentSessionPolicy) => boolean]>([
+      ["canList", (policy) => policy.canList()],
+      ["canCreate", (policy) => policy.canCreate()],
+    ])("%s", (_method, check) => {
+      describe.each<[ProjectMembershipRole, ResourceState, boolean]>(
+        cases,
+      )("when user is %s with %s session", (projectRole, resourceState, expected) => {
+        it(`should return ${expected}`, () => {
+          const policy = buildPolicy({ projectRole, resourceState, options: type })
+          expect(check(policy)).toBe(expected)
+        })
       })
     })
   })

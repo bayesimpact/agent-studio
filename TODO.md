@@ -9,8 +9,10 @@
 <!-- - remove user in project => remove project membership and remove agent membership on every agent of this project -->
 <!-- - invite user in project => create agent membership (admin) on every agent of the project -->
 <!-- - invite user in agent => create agent membership (member), project membership (member), org membership (member) -->
+<!-- - rework guards to check roles based on org-membership
+- rework guards to check roles based on project-membership -->
+<!-- - rework guards to check roles based on agent-membership -->
 - list members by agent + invite user as member to agent
-- rework guards to check roles based on org-membership, project-membership, agent-membership
 - create lobby at root / => list invitations to agents and project(owner/admin) and org(owner/admin)
 
 - add zod i18n keys

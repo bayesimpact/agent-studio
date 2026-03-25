@@ -2,6 +2,7 @@ import { randomUUID } from "node:crypto"
 import { Factory } from "fishery"
 import type { Repository } from "typeorm"
 import type { AllRepositories } from "@/common/test/test-transaction-manager"
+import type { OrganizationMembership } from "@/domains/organizations/memberships/organization-membership.entity"
 import { organizationMembershipFactory } from "@/domains/organizations/memberships/organization-membership.factory"
 import type { Organization } from "@/domains/organizations/organization.entity"
 import type { User } from "@/domains/users/user.entity"
@@ -94,13 +95,15 @@ export const inviteUserToProject = async ({
   organization,
   project,
   user,
-  role,
+  projectMembership,
+  organizationMembership,
 }: {
   repositories: AllRepositories
   organization?: Organization
   project: Project
   user?: Partial<User>
-  role?: ProjectMembershipRole
+  organizationMembership?: Partial<OrganizationMembership>
+  projectMembership?: Partial<ProjectMembership>
 }) => {
   user = user ?? {
     email: "invited@example.com",
@@ -112,15 +115,15 @@ export const inviteUserToProject = async ({
 
   if (organization) {
     await repositories.organizationMembershipRepository.save(
-      role
-        ? organizationMembershipFactory
-            .transient({ user: invitedUser, organization })
-            .build({ role })
-        : organizationMembershipFactory.transient({ user: invitedUser, organization }).build(),
+      organizationMembershipFactory
+        .transient({ user: invitedUser, organization })
+        .build(organizationMembership),
     )
   }
 
-  const membership = projectMembershipFactory.transient({ project, user: invitedUser }).build()
+  const membership = projectMembershipFactory
+    .transient({ project, user: invitedUser })
+    .build(projectMembership)
   await repositories.projectMembershipRepository.save(membership)
 
   return { membership, invitedUser }

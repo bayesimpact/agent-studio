@@ -381,11 +381,19 @@ describe("ProjectMembershipsService", () => {
 
   describe("removeProjectMembership", () => {
     it("should remove a membership", async () => {
-      const { project } = await createOrganizationWithProject(repositories)
+      const { project, user } = await createOrganizationWithProject(repositories)
 
-      const { membership } = await inviteUserToProject({ repositories, project })
+      const { membership } = await inviteUserToProject({
+        repositories,
+        project,
+        projectMembership: { role: "member" },
+      })
 
-      await service.removeProjectMembership({ membershipId: membership.id, projectId: project.id })
+      await service.removeProjectMembership({
+        membershipId: membership.id,
+        projectId: project.id,
+        userId: user.id,
+      })
 
       const deletedMembership = await projectMembershipRepository.findOne({
         where: { id: membership.id },
@@ -394,7 +402,7 @@ describe("ProjectMembershipsService", () => {
     })
 
     it("should also delete the placeholder user when removing a pending invitation", async () => {
-      const { project } = await createOrganizationWithProject(repositories)
+      const { project, user } = await createOrganizationWithProject(repositories)
 
       // Create a membership via invite (creates a placeholder user)
       const result = await service.inviteProjectMembers({
@@ -404,7 +412,11 @@ describe("ProjectMembershipsService", () => {
       })
       const membership = result[0]!
 
-      await service.removeProjectMembership({ membershipId: membership.id, projectId: project.id })
+      await service.removeProjectMembership({
+        membershipId: membership.id,
+        projectId: project.id,
+        userId: user.id,
+      })
 
       // Verify the membership is deleted
       const deletedMembership = await projectMembershipRepository.findOne({
@@ -428,7 +440,11 @@ describe("ProjectMembershipsService", () => {
         user: { email: "real@example.com", auth0Id: "auth0|real-user" },
       })
 
-      await service.removeProjectMembership({ membershipId: membership.id, projectId: project.id })
+      await service.removeProjectMembership({
+        membershipId: membership.id,
+        projectId: project.id,
+        userId: realUser.id,
+      })
 
       // Verify the membership is deleted
       const deletedMembership = await projectMembershipRepository.findOne({

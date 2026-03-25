@@ -3,17 +3,18 @@ import { Button } from "@caseai-connect/ui/shad/button"
 import { Item, ItemActions, ItemContent, ItemHeader, ItemTitle } from "@caseai-connect/ui/shad/item"
 import { Trash2Icon, UserIcon } from "lucide-react"
 import { useTranslation } from "react-i18next"
+import type { AgentMembership } from "@/features/agent-memberships/agent-memberships.models"
+import { removeAgentMembership } from "@/features/agent-memberships/agent-memberships.thunks"
 import { selectMe } from "@/features/me/me.selectors"
 import type { ProjectMembership } from "@/features/project-memberships/project-memberships.models"
-import { removeProjectMembership } from "@/features/project-memberships/project-memberships.thunks"
 import { useAppDispatch, useAppSelector } from "@/store/hooks"
 
-export function ProjectMembershipItem({ membership }: { membership: ProjectMembership }) {
+export function AgentMembershipItem({ membership }: { membership: AgentMembership }) {
   const dispatch = useAppDispatch()
 
   const me = useAppSelector(selectMe)
   const handleRemove = () => {
-    dispatch(removeProjectMembership({ membershipId: membership.id }))
+    dispatch(removeAgentMembership({ membershipId: membership.id }))
   }
 
   return (

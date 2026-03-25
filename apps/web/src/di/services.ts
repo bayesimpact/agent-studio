@@ -1,4 +1,5 @@
 import { services } from "@/external/axios.services"
+import type { IAgentMembershipsSpi } from "@/features/agent-memberships/agent-memberships.spi"
 import type { IAgentMessageFeedbackSpi } from "@/features/agent-message-feedback/agent-message-feedback.spi"
 import type { IAgentsSpi } from "@/features/agents/agents.spi"
 import type { IConversationAgentSessionsSpi } from "@/features/agents/conversation-agent-sessions/conversation-agent-sessions.spi"
@@ -16,16 +17,17 @@ import type { IProjectMembershipsSpi } from "@/features/project-memberships/proj
 import type { IProjectsSpi } from "@/features/projects/projects.spi"
 
 export type Services = {
-  agentSessionMessages: IAgentSessionMessagesSpi
+  agentMemberships: IAgentMembershipsSpi
   agentMessageFeedback: IAgentMessageFeedbackSpi
-  extractionAgentSessions: IExtractionAgentSessionsSpi
   agents: IAgentsSpi
+  agentSessionMessages: IAgentSessionMessagesSpi
   conversationAgentSessions: IConversationAgentSessionsSpi
-  formAgentSessions: IFormAgentSessionsSpi
-  documentTags: IDocumentTagsSpi
   documents: IDocumentsSpi
+  documentTags: IDocumentTagsSpi
   evaluationReports: IEvaluationReportsSpi
   evaluations: IEvaluationsSpi
+  extractionAgentSessions: IExtractionAgentSessionsSpi
+  formAgentSessions: IFormAgentSessionsSpi
   invitations: IInvitationsSpi
   me: IMeSpi
   organizations: IOrganizationsSpi

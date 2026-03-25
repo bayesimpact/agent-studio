@@ -49,8 +49,12 @@ describe("Documents - deleteOne", () => {
   })
 
   const createContext = async () => {
-    const { user, organization, project, document } =
-      await createOrganizationWithDocument(repositories)
+    const { user, organization, project, document } = await createOrganizationWithDocument(
+      repositories,
+      {
+        projectMembership: { role: "admin" },
+      },
+    )
     organizationId = organization.id
     projectId = project.id
     documentId = document.id

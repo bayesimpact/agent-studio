@@ -262,9 +262,11 @@ export class ProjectMembershipsService {
    * also deletes the placeholder user to avoid orphaned records.
    */
   async removeProjectMembership({
+    userId,
     membershipId,
     projectId,
   }: {
+    userId: string
     membershipId: string
     projectId: string
   }): Promise<void> {
@@ -276,6 +278,14 @@ export class ProjectMembershipsService {
       if (!membership) return
 
       const { user } = membership
+
+      if (user.id === userId) {
+        throw new Error("Cannot remove yourself from the project")
+      }
+
+      if (membership.role === "owner") {
+        throw new Error("Cannot remove owner from the project")
+      }
 
       // Also delete all agent memberships for this user in the project
       await this.agentMembershipsService.deleteAgentMembershipsForUserInProject({

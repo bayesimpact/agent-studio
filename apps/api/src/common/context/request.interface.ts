@@ -36,24 +36,25 @@ export interface EndpointRequestWithProject extends EndpointRequestWithOrganizat
   projectMembership: ProjectMembership | undefined
 }
 
-export interface EndpointRequestWithDocument extends EndpointRequestWithProject {
-  document: Document
-}
-
-export interface EndpointRequestWithDocumentTag extends EndpointRequestWithProject {
-  documentTag: DocumentTag
-}
-
 export interface EndpointRequestWithProjectMembership extends EndpointRequestWithProject {
   projectMembership: ProjectMembership
 }
 
 export interface EndpointRequestWithAgent extends EndpointRequestWithProject {
   agent: Agent
+  agentMembership: AgentMembership | undefined
 }
 
 export interface EndpointRequestWithAgentMembership extends EndpointRequestWithAgent {
   agentMembership: AgentMembership
+}
+
+export interface EndpointRequestWithDocument extends EndpointRequestWithProject {
+  document: Document
+}
+
+export interface EndpointRequestWithDocumentTag extends EndpointRequestWithProject {
+  documentTag: DocumentTag
 }
 
 export interface EndpointRequestWithAgentSession extends EndpointRequestWithAgent {

@@ -8,6 +8,7 @@ import { getElement } from "./Elements"
 import { buildAppPath, buildStudioPath, RouteNames } from "./helpers"
 import { OnboardingRoute } from "./OnboardingRoute"
 import { ProtectedRoute } from "./ProtectedRoute"
+import { AgentMembershipsRoute } from "./studio/AgentMembershipsRoute"
 import { DocumentsRoute } from "./studio/DocumentsRoute"
 import { EvaluationRoute } from "./studio/EvaluationRoute"
 import { FeedbackRoute } from "./studio/FeedbackRoute"
@@ -75,6 +76,10 @@ const router = () =>
                     {
                       path: buildStudioPath(RouteNames.FEEDBACK),
                       element: <FeedbackRoute />,
+                    },
+                    {
+                      path: buildStudioPath(RouteNames.AGENT_MEMBERSHIPS),
+                      element: <AgentMembershipsRoute />,
                     },
                   ],
                 },

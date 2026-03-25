@@ -139,6 +139,7 @@ export class AgentMembershipsService {
       status: "sent",
       role: "member",
     })
+    console.warn("AJ: newMembership", newMembership)
     const savedMembership = await membershipRepo.save(newMembership)
     savedMembership.user = user
     return savedMembership
@@ -197,9 +198,11 @@ export class AgentMembershipsService {
    * If the associated user is a placeholder (never accepted), also removes the user.
    */
   async removeAgentMembership({
+    userId,
     membershipId,
     agentId,
   }: {
+    userId: string
     membershipId: string
     agentId: string
   }): Promise<void> {
@@ -211,6 +214,12 @@ export class AgentMembershipsService {
       if (!membership) return
 
       const { user } = membership
+      if (user.id === userId) {
+        throw new Error("Cannot remove yourself from the agent")
+      }
+      if (membership.role === "owner") {
+        throw new Error("Cannot remove owner from the agent")
+      }
 
       await membershipRepo.delete({ id: membershipId, agentId })
 

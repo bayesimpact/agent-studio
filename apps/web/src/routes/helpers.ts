@@ -15,8 +15,9 @@ export enum RouteNames {
   DOCUMENTS = "/o/:organizationId/p/:projectId/d",
   DOCUMENT = "/o/:organizationId/p/:projectId/d/:documentId",
   EVALUATION = "/o/:organizationId/p/:projectId/eval",
-  FEEDBACK = "/o/:organizationId/p/:projectId/a/:agentId/f",
   PROJECT_MEMBERSHIPS = "/o/:organizationId/p/:projectId/members",
+  FEEDBACK = "/o/:organizationId/p/:projectId/a/:agentId/f",
+  AGENT_MEMBERSHIPS = "/o/:organizationId/p/:projectId/a/:agentId/members",
 
   // END USER ROUTES
   APP = "/app",
@@ -92,5 +93,22 @@ export const buildProjectMembershipsPath = ({
     RouteNames.PROJECT_MEMBERSHIPS.toString()
       .replace(":organizationId", organizationId)
       .replace(":projectId", projectId),
+  )
+}
+
+export const buildAgentMembershipsPath = ({
+  organizationId,
+  projectId,
+  agentId,
+}: {
+  organizationId: string
+  projectId: string
+  agentId: string
+}) => {
+  return buildStudioPath(
+    RouteNames.AGENT_MEMBERSHIPS.toString()
+      .replace(":organizationId", organizationId)
+      .replace(":projectId", projectId)
+      .replace(":agentId", agentId),
   )
 }

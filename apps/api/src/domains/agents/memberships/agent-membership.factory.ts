@@ -1,9 +1,7 @@
 import { randomUUID } from "node:crypto"
 import { Factory } from "fishery"
+import type { Repository } from "typeorm"
 import type { AllRepositories } from "@/common/test/test-transaction-manager"
-import type { Organization } from "@/domains/organizations/organization.entity"
-import { inviteUserToProject } from "@/domains/projects/memberships/project-membership.factory"
-import type { Project } from "@/domains/projects/project.entity"
 import type { User } from "@/domains/users/user.entity"
 import { userFactory } from "@/domains/users/user.factory"
 import type { Agent } from "../agent.entity"
@@ -59,35 +57,52 @@ export const agentMembershipFactory = AgentMembershipFactory.define(
   },
 )
 
-export const createAgentMembership = async ({
+export const addUserToAgent = async ({
   repositories,
-  organization,
-  project,
   agent,
   user,
-  role,
+  membership,
+}: {
+  repositories: {
+    userRepository: Repository<User>
+    agentMembershipRepository: Repository<AgentMembership>
+  }
+  agent: Agent
+  user?: User
+  membership?: Partial<AgentMembership>
+}) => {
+  const createMembership = async (user: User) => {
+    const newMembership = await repositories.agentMembershipRepository.save(
+      agentMembershipFactory.transient({ agent, user }).build(membership),
+    )
+    return { membership: newMembership, user }
+  }
+
+  if (user) return await createMembership(user)
+
+  const newUser = await repositories.userRepository.save(userFactory.build(user))
+  return await createMembership(newUser)
+}
+
+export const inviteUserToAgent = async ({
+  repositories,
+  agent,
+  user,
 }: {
   repositories: AllRepositories
-  organization?: Organization
-  project: Project
   agent: Agent
   user?: Partial<User>
-  role?: AgentMembershipRole
 }) => {
-  await inviteUserToProject({ repositories, organization, project, user, role })
-  const builtUser = userFactory.build(
-    user ?? {
-      email: "invited@example.com",
-      name: "Invited User",
-      auth0Id: `${PLACEHOLDER_AUTH0_ID_PREFIX}-test`,
-    },
-  )
-  await repositories.userRepository.save(builtUser)
+  user = user ?? {
+    email: "invited@example.com",
+    name: "Invited User",
+    auth0Id: `${PLACEHOLDER_AUTH0_ID_PREFIX}-test`,
+  }
+  const invitedUser = userFactory.build(user)
+  await repositories.userRepository.save(invitedUser)
 
-  const membership = agentMembershipFactory
-    .transient({ agent, user: builtUser })
-    .build({ role: role || "member" })
+  const membership = agentMembershipFactory.transient({ agent, user: invitedUser }).build()
   await repositories.agentMembershipRepository.save(membership)
 
-  return { membership, invitedUser: builtUser }
+  return { membership, invitedUser }
 }

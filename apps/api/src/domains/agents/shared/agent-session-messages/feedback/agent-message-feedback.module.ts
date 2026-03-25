@@ -17,6 +17,7 @@ import { UsersModule } from "@/domains/users/users.module"
 import { Agent } from "../../../agent.entity"
 import { AgentGuard } from "../../../agent.guard"
 import { AgentsModule } from "../../../agents.module"
+import { AgentMembership } from "../../../memberships/agent-membership.entity"
 import { AgentMessage } from "../agent-message.entity"
 import { AgentMessageFeedbackController } from "./agent-message-feedback.controller"
 import { AgentMessageFeedback } from "./agent-message-feedback.entity"
@@ -30,6 +31,7 @@ import { AgentMessageFeedbackService } from "./agent-message-feedback.service"
       Organization,
       Project,
       Agent,
+      AgentMembership,
       FormAgentSession,
       OrganizationMembership,
       ProjectMembership,

@@ -26,6 +26,7 @@ export class AgentMembershipsController {
     @Req() request: EndpointRequestWithAgent,
   ): Promise<typeof AgentMembershipRoutes.getAll.response> {
     const { agent } = request
+    console.warn("AJ: agent", agent)
 
     const memberships = await this.agentMembershipsService.listAgentMemberships(agent.id)
 
@@ -58,6 +59,7 @@ export class AgentMembershipsController {
     const { agent, agentMembership } = request
 
     await this.agentMembershipsService.removeAgentMembership({
+      userId: request.user.id,
       membershipId: agentMembership.id,
       agentId: agent.id,
     })

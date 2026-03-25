@@ -11,8 +11,12 @@ import type { Project } from "@/domains/projects/project.entity"
 import { projectFactory } from "@/domains/projects/project.factory"
 import type { User } from "@/domains/users/user.entity"
 import { userFactory } from "@/domains/users/user.factory"
+import type { AgentMembership } from "../agents/memberships/agent-membership.entity"
+import { agentMembershipFactory } from "../agents/memberships/agent-membership.factory"
 import type { AgentMessage } from "../agents/shared/agent-session-messages/agent-message.entity"
 import { agentMessageFactory } from "../agents/shared/agent-session-messages/agent-messages.factory"
+import type { ProjectMembership } from "../projects/memberships/project-membership.entity"
+import { projectMembershipFactory } from "../projects/memberships/project-membership.factory"
 import type { OrganizationMembership } from "./memberships/organization-membership.entity"
 import { organizationMembershipFactory } from "./memberships/organization-membership.factory"
 import type { Organization } from "./organization.entity"
@@ -33,17 +37,20 @@ export const organizationFactory = Factory.define<Organization>(({ sequence, par
   } satisfies Organization
 })
 
-type BaseParams = {
+type OrganizationParams = {
   organization?: Partial<Organization>
   user?: Partial<User>
   organizationMembership?: Partial<OrganizationMembership>
 }
 
-export function buildOrganizationWithOwner(params: BaseParams = {}): {
+type OrganizationReturnType = {
   organization: Organization
   user: User
   organizationMembership: OrganizationMembership
-} {
+}
+export function buildOrganizationWithOwner(
+  params: OrganizationParams = {},
+): OrganizationReturnType {
   const organization = organizationFactory.build(params.organization)
   const user = userFactory.build(params.user)
   const organizationMembership = organizationMembershipFactory
@@ -56,12 +63,8 @@ export function buildOrganizationWithOwner(params: BaseParams = {}): {
 
 export async function createOrganizationWithOwner(
   repositories: AllRepositories,
-  params: BaseParams = {},
-): Promise<{
-  organization: Organization
-  user: User
-  organizationMembership: OrganizationMembership
-}> {
+  params: OrganizationParams = {},
+): Promise<OrganizationReturnType> {
   const { organization, user, organizationMembership } = buildOrganizationWithOwner(params)
 
   await Promise.all([
@@ -73,114 +76,120 @@ export async function createOrganizationWithOwner(
   return { organization, user, organizationMembership }
 }
 
+type ProjectParams = OrganizationParams & {
+  project?: Partial<Project>
+  projectMembership?: Partial<ProjectMembership>
+}
+type ProjectReturnType = OrganizationReturnType & {
+  project: Project
+  projectMembership: ProjectMembership
+}
 export async function createOrganizationWithProject(
   repositories: AllRepositories,
-  params: BaseParams & { project?: Partial<Project> } = {},
-): Promise<{
-  organization: Organization
-  user: User
-  organizationMembership: OrganizationMembership
-  project: Project
-}> {
-  const { organization, user, organizationMembership } = await createOrganizationWithOwner(
-    repositories,
-    params,
-  )
+  params: ProjectParams = {},
+): Promise<ProjectReturnType> {
+  const data = await createOrganizationWithOwner(repositories, params)
+  const { organization, user } = data
 
   const project = projectFactory.transient({ organization }).build(params.project)
   await repositories.projectRepository.save(project)
 
-  return { organization, user, organizationMembership, project }
+  const projectMembership = projectMembershipFactory
+    .owner()
+    .transient({ user, project })
+    .build(params.projectMembership)
+  await repositories.projectMembershipRepository.save(projectMembership)
+
+  return { ...data, projectMembership, project }
 }
 
+type AgentParams = ProjectParams & {
+  agent?: Partial<Agent>
+  agentMembership?: Partial<AgentMembership>
+}
+type AgentReturnType = ProjectReturnType & {
+  agent: Agent
+  agentMembership: AgentMembership
+}
 export async function createOrganizationWithAgent(
   repositories: AllRepositories,
-  params: BaseParams & { project?: Partial<Project>; agent?: Partial<Agent> } = {},
-): Promise<{
-  organization: Organization
-  user: User
-  organizationMembership: OrganizationMembership
-  project: Project
-  agent: Agent
-}> {
-  const { organization, user, organizationMembership, project } =
-    await createOrganizationWithProject(repositories, params)
+  params: AgentParams = {},
+): Promise<AgentReturnType> {
+  const data = await createOrganizationWithProject(repositories, params)
+  const { organization, user, project } = data
 
   const agent = agentFactory.transient({ project, organization }).build(params.agent)
   await repositories.agentRepository.save(agent)
+  const agentMembership = agentMembershipFactory
+    .owner()
+    .transient({ user, agent })
+    .build(params.agentMembership)
+  await repositories.agentMembershipRepository.save(agentMembership)
 
-  return { organization, user, organizationMembership, project, agent }
+  return {
+    ...data,
+    agent,
+    agentMembership,
+  }
 }
 
+type AgentSessionParams = AgentParams & {
+  agentSession?: Partial<ConversationAgentSession>
+}
+type AgentSessionReturnType = AgentReturnType & {
+  agentSession: ConversationAgentSession
+}
 export async function createOrganizationWithAgentSession(
   repositories: AllRepositories,
-  params: BaseParams & {
-    project?: Partial<Project>
-    agent?: Partial<Agent>
-    agentSession?: Partial<ConversationAgentSession>
-  } = {},
-): Promise<{
-  organization: Organization
-  user: User
-  organizationMembership: OrganizationMembership
-  project: Project
-  agent: Agent
-  agentSession: ConversationAgentSession
-}> {
-  const { organization, user, organizationMembership, project, agent } =
-    await createOrganizationWithAgent(repositories, params)
+  params: AgentSessionParams = {},
+): Promise<AgentSessionReturnType> {
+  const data = await createOrganizationWithAgent(repositories, params)
+  const { organization, user, agent, project } = data
 
   const agentSession = conversationAgentSessionFactory
     .transient({ organization, project, user, agent })
     .build(params.agentSession)
   await repositories.conversationAgentSessionRepository.save(agentSession)
 
-  return { organization, user, organizationMembership, project, agent, agentSession }
+  return { ...data, agentSession }
 }
 
+type AgentMessageParams = AgentSessionParams & {
+  agentMessage?: Partial<AgentMessage>
+}
+type AgentMessageReturnType = AgentSessionReturnType & {
+  agentMessage: AgentMessage
+}
 export async function createOrganizationWithAgentMessage(
   repositories: AllRepositories,
-  params: BaseParams & {
-    project?: Partial<Project>
-    agent?: Partial<Agent>
-    agentSession?: Partial<ConversationAgentSession>
-    agentMessage?: Partial<AgentMessage>
-  } = {},
-): Promise<{
-  organization: Organization
-  user: User
-  organizationMembership: OrganizationMembership
-  project: Project
-  agent: Agent
-  agentSession: ConversationAgentSession
-  agentMessage: AgentMessage
-}> {
-  const { organization, user, organizationMembership, project, agent, agentSession } =
-    await createOrganizationWithAgentSession(repositories, params)
+  params: AgentMessageParams = {},
+): Promise<AgentMessageReturnType> {
+  const data = await createOrganizationWithAgentSession(repositories, params)
+  const { organization, project, agentSession } = data
 
   const agentMessage = agentMessageFactory
     .transient({ organization, project, session: agentSession })
     .build(params.agentMessage)
   await repositories.agentMessageRepository.save(agentMessage)
 
-  return { organization, user, organizationMembership, project, agent, agentSession, agentMessage }
+  return { ...data, agentMessage }
 }
 
+type DocumentParams = ProjectParams & {
+  document?: Partial<Document>
+}
+type DocumentReturnType = ProjectReturnType & {
+  document: Document
+}
 export async function createOrganizationWithDocument(
   repositories: AllRepositories,
-  params: BaseParams & { project?: Partial<Project>; document?: Partial<Document> } = {},
-): Promise<{
-  organization: Organization
-  user: User
-  organizationMembership: OrganizationMembership
-  project: Project
-  document: Document
-}> {
-  const { organization, user, organizationMembership, project } =
-    await createOrganizationWithProject(repositories, params)
+  params: DocumentParams = {},
+): Promise<DocumentReturnType> {
+  const data = await createOrganizationWithProject(repositories, params)
+  const { organization, project } = data
 
   const document = documentFactory.transient({ organization, project }).build(params.document)
   await repositories.documentRepository.save(document)
 
-  return { organization, user, organizationMembership, project, document }
+  return { ...data, document }
 }

@@ -85,7 +85,7 @@ describe("ConversationAgentSessionsRoutes.createOne", () => {
       repositories,
       organization,
       project,
-      role,
+      projectMembership: { role },
     })
 
     organizationId = organization.id
