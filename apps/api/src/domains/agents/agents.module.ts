@@ -28,7 +28,6 @@ import { ExtractionAgentSessionsService } from "./extraction-agent-sessions/extr
 import { FormAgentSession } from "./form-agent-sessions/form-agent-session.entity"
 import { FormAgentSessionsController } from "./form-agent-sessions/form-agent-sessions.controller"
 import { FormAgentSessionsService } from "./form-agent-sessions/form-agent-sessions.service"
-import { AgentInvitationsController } from "./memberships/agent-invitations.controller"
 import { AgentMembership } from "./memberships/agent-membership.entity"
 import { AgentMembershipsController } from "./memberships/agent-memberships.controller"
 import { AgentMembershipsGuard } from "./memberships/agent-memberships.guard"
@@ -72,7 +71,6 @@ import { AgentMembershipsService } from "./memberships/agent-memberships.service
   controllers: [
     AgentsController,
     AgentMembershipsController,
-    AgentInvitationsController,
     ExtractionAgentSessionsController,
     FormAgentSessionsController,
   ],

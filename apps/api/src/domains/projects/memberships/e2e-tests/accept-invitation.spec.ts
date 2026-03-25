@@ -48,9 +48,9 @@ describe("Invitations - acceptInvitation", () => {
     await app.close()
   })
 
-  const subject = async (payload?: typeof InvitationsRoutes.acceptProjectOne.request) =>
+  const subject = async (payload?: typeof InvitationsRoutes.acceptOne.request) =>
     request({
-      route: InvitationsRoutes.acceptProjectOne,
+      route: InvitationsRoutes.acceptOne,
       token: accessToken,
       request: payload,
     })
