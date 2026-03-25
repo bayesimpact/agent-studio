@@ -12,7 +12,8 @@
 <!-- - rework guards to check roles based on org-membership
 - rework guards to check roles based on project-membership -->
 <!-- - rework guards to check roles based on agent-membership -->
-- list members by agent + invite user as member to agent
+<!-- - list members by agent + invite user as member to agent -->
+<!-- - email must be unique -->
 - create lobby at root / => list invitations to agents and project(owner/admin) and org(owner/admin)
 
 - add zod i18n keys

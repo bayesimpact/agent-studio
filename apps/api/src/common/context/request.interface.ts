@@ -37,7 +37,7 @@ export interface EndpointRequestWithProject extends EndpointRequestWithOrganizat
 }
 
 export interface EndpointRequestWithProjectMembership extends EndpointRequestWithProject {
-  projectMembership: ProjectMembership
+  memberProjectMembership: ProjectMembership
 }
 
 export interface EndpointRequestWithAgent extends EndpointRequestWithProject {
@@ -46,7 +46,7 @@ export interface EndpointRequestWithAgent extends EndpointRequestWithProject {
 }
 
 export interface EndpointRequestWithAgentMembership extends EndpointRequestWithAgent {
-  agentMembership: AgentMembership
+  memberAgentMembership: AgentMembership
 }
 
 export interface EndpointRequestWithDocument extends EndpointRequestWithProject {

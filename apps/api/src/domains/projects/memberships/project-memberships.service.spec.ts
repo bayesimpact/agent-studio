@@ -236,10 +236,11 @@ describe("ProjectMembershipsService", () => {
     it("should accept an invitation and reconcile placeholder user", async () => {
       const { project } = await createOrganizationWithProject(repositories)
 
+      const email = "invite@example.com"
       // Create a membership via invite
       const result = await service.inviteProjectMembers({
         projectId: project.id,
-        emails: ["invite@example.com"],
+        emails: [email],
         inviterName: "Admin",
       })
       expect(result).toHaveLength(1)
@@ -248,6 +249,7 @@ describe("ProjectMembershipsService", () => {
       const realAuth0Sub = "auth0|real-user-sub-123"
 
       const accepted = await service.acceptInvitation({
+        email,
         ticketId: membership.invitationToken,
         auth0Sub: realAuth0Sub,
       })
@@ -265,14 +267,16 @@ describe("ProjectMembershipsService", () => {
     it("should create an organization membership for the user", async () => {
       const { project, organization } = await createOrganizationWithProject(repositories)
 
+      const email = "invite@example.com"
       const result = await service.inviteProjectMembers({
         projectId: project.id,
-        emails: ["invite@example.com"],
+        emails: [email],
         inviterName: "Admin",
       })
       const membership = result[0]!
 
       await service.acceptInvitation({
+        email,
         ticketId: membership.invitationToken,
         auth0Sub: "auth0|new-user",
       })
@@ -288,11 +292,12 @@ describe("ProjectMembershipsService", () => {
     it("should not duplicate organization membership if one already exists", async () => {
       const { project, organization } = await createOrganizationWithProject(repositories)
 
+      const email = "existing@example.com"
       // Create a real user who is already a member of the org
       const { user: existingUser } = await addUserToOrganization({
         repositories,
         organization,
-        user: { email: "existing@example.com", auth0Id: "auth0|existing" },
+        user: { email, auth0Id: "auth0|existing" },
       })
 
       // Create a project membership for this user
@@ -304,6 +309,7 @@ describe("ProjectMembershipsService", () => {
       })
 
       await service.acceptInvitation({
+        email,
         ticketId: "ticket_existing_org_member",
         auth0Sub: "auth0|existing",
       })
@@ -318,22 +324,24 @@ describe("ProjectMembershipsService", () => {
 
     it("should return the membership if already accepted", async () => {
       const { project } = await createOrganizationWithProject(repositories)
-
+      const email = "invite@example.com"
       const result = await service.inviteProjectMembers({
         projectId: project.id,
-        emails: ["invite@example.com"],
+        emails: [email],
         inviterName: "Admin",
       })
       const membership = result[0]!
 
       // Accept once
       await service.acceptInvitation({
+        email,
         ticketId: membership.invitationToken,
         auth0Sub: "auth0|user",
       })
 
       // Accept again — should not throw
       const secondAccept = await service.acceptInvitation({
+        email,
         ticketId: membership.invitationToken,
         auth0Sub: "auth0|user",
       })
@@ -343,7 +351,11 @@ describe("ProjectMembershipsService", () => {
 
     it("should throw NotFoundException for unknown ticketId", async () => {
       await expect(
-        service.acceptInvitation({ ticketId: "non-existent-ticket", auth0Sub: "auth0|user" }),
+        service.acceptInvitation({
+          ticketId: "non-existent-ticket",
+          auth0Sub: "auth0|user",
+          email: "invite@example.com",
+        }),
       ).rejects.toThrow(NotFoundException)
     })
 
@@ -367,6 +379,7 @@ describe("ProjectMembershipsService", () => {
       })
 
       await service.acceptInvitation({
+        email: realUser.email,
         ticketId: "ticket_existing",
         auth0Sub: "auth0|different-id",
       })

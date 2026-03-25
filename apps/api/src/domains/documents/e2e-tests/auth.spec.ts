@@ -62,7 +62,7 @@ describe("Documents - Auth", () => {
   const createContextForRole = async (role: "owner" | "admin" | "member" = "owner") => {
     const { user, organization, project, document } = await createOrganizationWithDocument(
       repositories,
-      { organizationMembership: { role } },
+      { projectMembership: { role } },
     )
     organizationId = organization.id
     projectId = project.id

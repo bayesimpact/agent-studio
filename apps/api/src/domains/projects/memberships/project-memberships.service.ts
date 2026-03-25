@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto"
-import { Inject, Injectable, NotFoundException } from "@nestjs/common"
+import { Inject, Injectable, NotFoundException, UnauthorizedException } from "@nestjs/common"
 import { InjectRepository } from "@nestjs/typeorm"
 import type { Repository } from "typeorm"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
@@ -171,9 +171,11 @@ export class ProjectMembershipsService {
    * @param auth0Sub The real Auth0 user ID from the JWT
    */
   async acceptInvitation({
+    email,
     ticketId,
     auth0Sub,
   }: {
+    email: string
     ticketId: string
     auth0Sub: string
   }): Promise<ProjectMembership> {
@@ -184,7 +186,13 @@ export class ProjectMembershipsService {
       const projectRepo = manager.getRepository(Project)
 
       const projectMembership = await this.findByInvitationToken(ticketId)
+
       const { user } = projectMembership
+
+      if (user.email !== email) {
+        // 401
+        throw new UnauthorizedException(`No invitation found for email: ${email}`)
+      }
 
       const project = await projectRepo.findOneOrFail({
         where: { id: projectMembership.projectId },
@@ -278,6 +286,7 @@ export class ProjectMembershipsService {
       if (!membership) return
 
       const { user } = membership
+      console.warn("AJ: invitedMembershipUser", membership.user)
 
       if (user.id === userId) {
         throw new Error("Cannot remove yourself from the project")

@@ -21,7 +21,6 @@ import type { Project } from "@/features/projects/projects.models"
 import { useBuildPath } from "@/hooks/use-build-path"
 import { ADS } from "@/store/async-data-status"
 import { useAppSelector } from "@/store/hooks"
-import { NavAgentMemberships } from "../nav/NavAgentMemberships"
 import { AppNavItem } from "../nav/NavItem"
 import { SidebarAgentSessionList } from "./SidebarAgentSessionList"
 
@@ -115,14 +114,6 @@ export function AgentList({
                 />
               )}
             </AppNavItem>
-
-            {isAdminInterface && (
-              <NavAgentMemberships
-                organizationId={project.organizationId}
-                projectId={project.id}
-                agentId={agent.id}
-              />
-            )}
 
             <div className="mr-4 mb-2 mt-1">
               <SidebarSeparator />

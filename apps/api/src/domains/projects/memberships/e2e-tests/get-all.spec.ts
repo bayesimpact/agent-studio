@@ -9,11 +9,9 @@ import {
 } from "@/common/test/test-transaction-manager"
 import { removeNullish } from "@/common/utils/remove-nullish"
 import { createOrganizationWithProject } from "@/domains/organizations/organization.factory"
-import { userFactory } from "@/domains/users/user.factory"
 import { setupUserGuardForTesting } from "../../../../../test/e2e.helpers"
 import { expectResponse, type Requester, testRequester } from "../../../../../test/request"
 import { ProjectsModule } from "../../projects.module"
-import { addUserToProject } from "../project-membership.factory"
 
 describe("Project membership - getAll", () => {
   let app: INestApplication<App>
@@ -63,38 +61,17 @@ describe("Project membership - getAll", () => {
       token: accessToken,
     })
 
-  it("should return empty list when no memberships exist", async () => {
-    await createContext()
-
-    const response = await subject()
-
-    expectResponse(response, 200)
-    expect(response.body.data).toEqual([])
-  })
-
   it("should return memberships with user name and email", async () => {
-    const { project } = await createContext()
-
-    const invitedUser = userFactory.build({
-      email: "invited@example.com",
-      name: "Invited User",
-    })
-    await repositories.userRepository.save(invitedUser)
-
-    await addUserToProject({
-      repositories,
-      project,
-      user: invitedUser,
-    })
+    const { user } = await createContext()
 
     const response = await subject()
 
     expectResponse(response, 200)
     const memberships = response.body.data
     expect(memberships).toHaveLength(1)
-    expect(memberships[0]!.userName).toBe("Invited User")
-    expect(memberships[0]!.userEmail).toBe("invited@example.com")
-    expect(memberships[0]!.status).toBe("sent")
+    expect(memberships[0]!.userName).toBe(user.name)
+    expect(memberships[0]!.userEmail).toBe(user.email)
+    expect(memberships[0]!.status).toBe("accepted")
     expect(memberships[0]!).toHaveProperty("id")
     expect(memberships[0]!).toHaveProperty("projectId")
     expect(memberships[0]!).toHaveProperty("userId")

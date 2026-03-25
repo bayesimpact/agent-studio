@@ -44,7 +44,7 @@ export class ProjectsService {
     userId: string
   }): Promise<Project[]> {
     return this.projectRepository.find({
-      where: { organizationId, projectMemberships: { userId } },
+      where: { organizationId, projectMemberships: { userId, status: "accepted" } },
       order: { createdAt: "DESC" },
     })
   }

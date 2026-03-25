@@ -56,11 +56,11 @@ export class AgentMembershipsController {
   async removeAgentMembership(
     @Req() request: EndpointRequestWithAgentMembership,
   ): Promise<typeof AgentMembershipRoutes.deleteOne.response> {
-    const { agent, agentMembership } = request
+    const { agent, memberAgentMembership } = request
 
     await this.agentMembershipsService.removeAgentMembership({
       userId: request.user.id,
-      membershipId: agentMembership.id,
+      membershipId: memberAgentMembership.id,
       agentId: agent.id,
     })
 

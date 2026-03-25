@@ -34,6 +34,6 @@ export class AgentMembershipContextResolver implements ContextResolver {
       })) ?? undefined
     if (!agentMembership) throw new NotFoundException()
 
-    requestWithAgentMembership.agentMembership = agentMembership
+    requestWithAgentMembership.memberAgentMembership = agentMembership
   }
 }

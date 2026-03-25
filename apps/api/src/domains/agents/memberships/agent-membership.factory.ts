@@ -46,7 +46,7 @@ export const agentMembershipFactory = AgentMembershipFactory.define(
       agentId: transientParams.agent.id,
       userId: transientParams.user.id,
       invitationToken: params.invitationToken || randomUUID(),
-      status: (params.status || "sent") as AgentMembershipStatus,
+      status: (params.status || "accepted") as AgentMembershipStatus,
       role: (params.role || "member") as AgentMembershipRole,
       createdAt: params.createdAt || now,
       updatedAt: params.updatedAt || now,

@@ -22,7 +22,12 @@ export default {
   remove: async ({ organizationId, projectId, agentId, membershipId }) => {
     const axios = getAxiosInstance()
     await axios.delete(
-      AgentMembershipRoutes.deleteOne.getPath({ organizationId, projectId, agentId, membershipId }),
+      AgentMembershipRoutes.deleteOne.getPath({
+        organizationId,
+        projectId,
+        agentId,
+        agentMembershipId: membershipId,
+      }),
     )
   },
 } satisfies IAgentMembershipsSpi

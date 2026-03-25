@@ -53,7 +53,10 @@ export class AgentsController {
   async getAll(
     @Req() request: EndpointRequestWithProject,
   ): Promise<typeof AgentsRoutes.getAll.response> {
-    const agents = await this.agentsService.listAgents(getRequiredConnectScope(request))
+    const agents = await this.agentsService.listAgents({
+      userId: request.user.id,
+      connectScope: getRequiredConnectScope(request),
+    })
 
     return { data: agents.map(toAgentDto) }
   }

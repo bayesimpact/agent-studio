@@ -52,7 +52,7 @@ export const projectMembershipFactory = ProjectMembershipFactory.define(
       projectId: transientParams.project.id,
       userId: transientParams.user.id,
       invitationToken: params.invitationToken || randomUUID(),
-      status: (params.status || "sent") as ProjectMembershipStatus,
+      status: (params.status || "accepted") as ProjectMembershipStatus,
       createdAt: params.createdAt || now,
       updatedAt: params.updatedAt || now,
       deletedAt: params.deletedAt || null,

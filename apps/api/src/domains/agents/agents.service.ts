@@ -78,9 +78,16 @@ export class AgentsService {
   /**
    * Lists all agents for a project.
    */
-  async listAgents(connectScope: RequiredConnectScope): Promise<Agent[]> {
+  async listAgents({
+    userId,
+    connectScope,
+  }: {
+    userId: string
+    connectScope: RequiredConnectScope
+  }): Promise<Agent[]> {
     return (
       await this.agentConnectRepository.find(connectScope, {
+        where: { agentMemberships: { userId, status: "accepted" } },
         relations: ["documentTags"],
       })
     )?.sort((a, b) => a.name.localeCompare(b.name))

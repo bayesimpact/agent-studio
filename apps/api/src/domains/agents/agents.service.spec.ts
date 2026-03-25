@@ -15,6 +15,7 @@ import {
 import { sdk } from "@/external/llm/open-telemetry-init"
 import { AgentsModule } from "./agents.module"
 import { AgentsService } from "./agents.service"
+import { addUserToAgent } from "./memberships/agent-membership.factory"
 
 describe("AgentsService", () => {
   let service: AgentsService
@@ -153,22 +154,26 @@ describe("AgentsService", () => {
 
   describe("listAgents", () => {
     it("should return Agents for a project", async () => {
-      const { organization, project } = await createOrganizationWithProject(repositories)
+      const { organization, project, user } = await createOrganizationWithProject(repositories)
 
-      const template1 = agentFactory.transient({ organization, project }).build({
+      const agent1 = agentFactory.transient({ organization, project }).build({
         name: "Template 1",
         defaultPrompt: "Prompt 1",
       })
-      const template2 = agentFactory.transient({ organization, project }).build({
+      const agent2 = agentFactory.transient({ organization, project }).build({
         name: "Template 2",
         defaultPrompt: "Prompt 2",
       })
-      await repositories.agentRepository.save([template1, template2])
-
+      await repositories.agentRepository.save([agent1, agent2])
+      await addUserToAgent({ repositories, agent: agent1, user })
+      await addUserToAgent({ repositories, agent: agent2, user })
       // Act
       const result = await service.listAgents({
-        organizationId: organization.id,
-        projectId: project.id,
+        connectScope: {
+          organizationId: organization.id,
+          projectId: project.id,
+        },
+        userId: user.id,
       })
 
       // Assert
@@ -178,12 +183,12 @@ describe("AgentsService", () => {
     })
 
     it("should return empty array when project has no Agents", async () => {
-      const { organization, project } = await createOrganizationWithProject(repositories)
+      const { organization, project, user } = await createOrganizationWithProject(repositories)
 
       // Act
       const result = await service.listAgents({
-        organizationId: organization.id,
-        projectId: project.id,
+        connectScope: { organizationId: organization.id, projectId: project.id },
+        userId: user.id,
       })
 
       // Assert
@@ -191,23 +196,24 @@ describe("AgentsService", () => {
     })
 
     it("should return Agents ordered by name DESC", async () => {
-      const { organization, project } = await createOrganizationWithProject(repositories)
+      const { organization, project, user } = await createOrganizationWithProject(repositories)
 
-      const template1 = agentFactory.transient({ organization, project }).build({
+      const agent1 = agentFactory.transient({ organization, project }).build({
         name: "Second Template",
         defaultPrompt: "Prompt 2",
       })
-      const template2 = agentFactory.transient({ organization, project }).build({
+      const agent2 = agentFactory.transient({ organization, project }).build({
         name: "First Template",
         defaultPrompt: "Prompt 1",
         createdAt: new Date("2024-01-02"),
       })
-      await repositories.agentRepository.save([template1, template2])
-
+      await repositories.agentRepository.save([agent1, agent2])
+      await addUserToAgent({ repositories, agent: agent1, user })
+      await addUserToAgent({ repositories, agent: agent2, user })
       // Act
       const result = await service.listAgents({
-        organizationId: organization.id,
-        projectId: project.id,
+        connectScope: { organizationId: organization.id, projectId: project.id },
+        userId: user.id,
       })
 
       // Assert

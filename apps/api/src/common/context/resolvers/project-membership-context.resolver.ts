@@ -23,15 +23,15 @@ export class ProjectMembershipContextResolver implements ContextResolver {
     if (!membershipId || membershipId === ":membershipId") throw new NotFoundException()
 
     const requestWithProjectMembership = request as EndpointRequestWithProjectMembership
-    const projectMembership =
+    const memberProjectMembership =
       (await this.projectMembershipRepository.findOne({
         where: {
           id: membershipId,
           projectId: requestWithProjectMembership.project.id,
         },
       })) ?? undefined
-    if (!projectMembership) throw new NotFoundException()
+    if (!memberProjectMembership) throw new NotFoundException()
 
-    requestWithProjectMembership.projectMembership = projectMembership
+    requestWithProjectMembership.memberProjectMembership = memberProjectMembership
   }
 }

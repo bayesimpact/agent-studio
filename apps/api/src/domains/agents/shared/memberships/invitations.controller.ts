@@ -1,6 +1,7 @@
 import { InvitationsRoutes } from "@caseai-connect/api-contracts"
 import { Body, Controller, Post, Req, UseGuards } from "@nestjs/common"
 import type { JwtPayload } from "@/common/context/request.interface"
+import { getAccessToken } from "@/common/utils/get-access-token"
 import { JwtAuthGuard } from "@/domains/auth/jwt-auth.guard"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
 import { InvitationsService } from "./invitations.service"
@@ -22,10 +23,13 @@ export class InvitationsController {
     @Body() body: typeof InvitationsRoutes.acceptOne.request,
   ): Promise<typeof InvitationsRoutes.acceptOne.response> {
     const jwtPayload = request.user
+    // @ts-expect-error
+    const accessToken = getAccessToken(request.headers.authorization)
 
     await this.invitationsService.acceptInvitation({
       ticketId: body.payload.ticketId,
       auth0Sub: jwtPayload.sub,
+      accessToken,
     })
 
     return { data: { success: true } }

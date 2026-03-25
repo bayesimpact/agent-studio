@@ -38,6 +38,11 @@ export const removeAgentMembership = createAsyncThunk<void, { membershipId: stri
       state,
       wantedIds: ["organizationId", "projectId", "agentId"],
     })
-    return await services.agentMemberships.remove({ organizationId, projectId, agentId, membershipId })
+    return await services.agentMemberships.remove({
+      organizationId,
+      projectId,
+      agentId,
+      membershipId,
+    })
   },
 )

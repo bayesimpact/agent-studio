@@ -11,10 +11,10 @@ export class AgentMembershipPolicy extends ProjectScopedPolicy<AgentMembership> 
   }
 
   canUpdate(): boolean {
-    return this.canAccess() && this.isProjectAdminOrOwner() && this.doesResourceBelongToScope()
+    return this.canList()
   }
 
   canDelete(): boolean {
-    return this.canUpdate()
+    return this.canList()
   }
 }

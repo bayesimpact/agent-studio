@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto"
-import { Inject, Injectable, NotFoundException } from "@nestjs/common"
+import { Inject, Injectable, NotFoundException, UnauthorizedException } from "@nestjs/common"
 import { InjectRepository } from "@nestjs/typeorm"
 import type { EntityManager, Repository } from "typeorm"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
@@ -153,7 +153,9 @@ export class AgentMembershipsService {
   async acceptInvitation({
     ticketId,
     auth0Sub,
+    email,
   }: {
+    email: string
     ticketId: string
     auth0Sub: string
   }): Promise<AgentMembership> {
@@ -166,6 +168,11 @@ export class AgentMembershipsService {
 
       const membership = await this.findByInvitationToken(ticketId)
       const { user } = membership
+
+      if (user.email !== email) {
+        // 401
+        throw new UnauthorizedException(`No invitation found for email: ${email}`)
+      }
 
       const agent = await agentRepo.findOneOrFail({ where: { id: membership.agentId } })
       await this.ensureOrganizationMembership({
