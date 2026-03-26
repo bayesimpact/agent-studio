@@ -129,12 +129,21 @@ export class ProjectMembershipsService {
 
     const user = await this.findOrCreatePlaceholderUser({ userRepo, email: normalizedEmail })
 
-    // Check if membership already exists
+    // Check if membership already exists — upgrade to admin if currently member
     const existingMembership = await membershipRepo.findOne({
       where: { projectId, userId: user.id },
     })
 
     if (existingMembership) {
+      if (existingMembership.role !== "admin") {
+        existingMembership.role = "admin"
+        await membershipRepo.save(existingMembership)
+        await this.agentMembershipsService.createAdminAgentMembershipsForUserInProject({
+          manager: membershipRepo.manager,
+          userId: user.id,
+          projectId,
+        })
+      }
       return null
     }
 

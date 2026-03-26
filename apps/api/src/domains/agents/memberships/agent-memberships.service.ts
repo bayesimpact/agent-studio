@@ -272,7 +272,13 @@ export class AgentMembershipsService {
       const existing = await manager.findOne(AgentMembership, {
         where: { agentId: agent.id, userId },
       })
-      if (existing) continue
+      if (existing) {
+        if (existing.role !== "admin") {
+          existing.role = "admin"
+          await manager.save(AgentMembership, existing)
+        }
+        continue
+      }
 
       const membership = manager.create(AgentMembership, {
         agentId: agent.id,
