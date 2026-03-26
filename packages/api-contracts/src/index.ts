@@ -1,4 +1,6 @@
-// Agents DTOs
+// Agent Membership
+export type * from "./agent-membership/agent-membership.dto"
+export { AgentMembershipRoutes } from "./agent-membership/agent-membership.routes"
 
 // Agent Message Feedback
 export type * from "./agent-message-feedback/agent-message-feedback.dto"
@@ -31,6 +33,7 @@ export { DocumentTagsRoutes } from "./document-tags/document-tag.routes"
 // Documents
 export * from "./documents/documents.dto"
 export { DocumentsRoutes } from "./documents/documents.routes"
+
 // Evaluation Reports
 export * from "./evaluations/evaluation-reports.dto"
 export { EvaluationReportsRoutes } from "./evaluations/evaluation-reports.routes"

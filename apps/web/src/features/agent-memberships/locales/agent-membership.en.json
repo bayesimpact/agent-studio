@@ -1,0 +1,32 @@
+{
+  "agentMembership": {
+    "members": "Members",
+    "props": {
+      "userName": "User Name",
+      "userEmail": "User Email",
+      "status": "Status",
+      "createdAt": "Created At",
+      "validation": {
+        "emailDuplicate": "Email already added",
+        "emailInvalid": "Invalid email address"
+      }
+    },
+    "statuses": {
+      "sent": "Sent",
+      "accepted": "Accepted"
+    },
+    "create": {
+      "button": "Invite a member",
+      "title": "Invite a member",
+      "description": "Enter the email address of the person you want to invite to join your project.",
+      "label": "Email address",
+      "placeholder": "Enter email address"
+    },
+    "list": {
+      "empty": {
+        "title": "No members",
+        "description": "Invite members to join your project to collaborate together."
+      }
+    }
+  }
+}

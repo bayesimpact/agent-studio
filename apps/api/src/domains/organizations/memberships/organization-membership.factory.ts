@@ -4,7 +4,10 @@ import type { Repository } from "typeorm"
 import type { User } from "@/domains/users/user.entity"
 import { userFactory } from "../../users/user.factory"
 import type { Organization } from "../organization.entity"
-import type { MembershipRole, OrganizationMembership } from "./organization-membership.entity"
+import type {
+  OrganizationMembership,
+  OrganizationMembershipRole,
+} from "./organization-membership.entity"
 
 type OrganizationMembershipTransientParams = {
   user: User
@@ -42,17 +45,17 @@ export const organizationMembershipFactory = OrganizationMembershipFactory.defin
       id: params.id || randomUUID(),
       userId: transientParams.user.id,
       organizationId: transientParams.organization.id,
-      role: (params.role || "member") as MembershipRole,
+      role: (params.role || "member") as OrganizationMembershipRole,
       createdAt: params.createdAt || now,
       updatedAt: params.updatedAt || now,
-      deletedAt: null,
+      deletedAt: params.deletedAt || null,
       user: transientParams.user,
       organization: transientParams.organization,
     } satisfies OrganizationMembership
   },
 )
 
-export const createOrganizationMembership = async ({
+export const addUserToOrganization = async ({
   repositories,
   organization,
   membership,
@@ -61,7 +64,7 @@ export const createOrganizationMembership = async ({
   repositories: {
     userRepository: Repository<User>
     organizationRepository: Repository<Organization>
-    membershipRepository: Repository<OrganizationMembership>
+    organizationMembershipRepository: Repository<OrganizationMembership>
   }
   organization: Organization
   user?: Partial<User>
@@ -69,7 +72,7 @@ export const createOrganizationMembership = async ({
 }) => {
   const newUser = userFactory.build(user)
   await repositories.userRepository.save(newUser)
-  const newMembership = await repositories.membershipRepository.save(
+  const newMembership = await repositories.organizationMembershipRepository.save(
     organizationMembershipFactory.transient({ user: newUser, organization }).build(membership),
   )
   return { user: newUser, membership: newMembership }

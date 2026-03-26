@@ -16,6 +16,8 @@ import {
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
 import { AgentContextResolver } from "./resolvers/agent-context.resolver"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
+import { AgentMembershipContextResolver } from "./resolvers/agent-membership-context.resolver"
+// biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
 import { AgentSessionContextResolver } from "./resolvers/agent-session-context.resolver"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
 import { DocumentContextResolver } from "./resolvers/document-context.resolver"
@@ -35,6 +37,7 @@ const RESOLUTION_ORDER: ContextResource[] = [
   "project",
   "projectMembership",
   "agent",
+  "agentMembership",
   "agentSession",
   "document",
   "documentTag",
@@ -51,6 +54,7 @@ export class ResourceContextGuard implements CanActivate {
     @Optional() projectContextResolver?: ProjectContextResolver,
     @Optional() projectMembershipContextResolver?: ProjectMembershipContextResolver,
     @Optional() agentContextResolver?: AgentContextResolver,
+    @Optional() agentMembershipContextResolver?: AgentMembershipContextResolver,
     @Optional() agentSessionContextResolver?: AgentSessionContextResolver,
     @Optional() documentContextResolver?: DocumentContextResolver,
     @Optional() documentTagContextResolver?: DocumentTagContextResolver,
@@ -71,6 +75,12 @@ export class ResourceContextGuard implements CanActivate {
     }
     if (agentContextResolver) {
       resolverEntries.push([agentContextResolver.resource, agentContextResolver])
+    }
+    if (agentMembershipContextResolver) {
+      resolverEntries.push([
+        agentMembershipContextResolver.resource,
+        agentMembershipContextResolver,
+      ])
     }
     if (agentSessionContextResolver) {
       resolverEntries.push([agentSessionContextResolver.resource, agentSessionContextResolver])

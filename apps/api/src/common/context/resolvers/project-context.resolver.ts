@@ -35,13 +35,15 @@ export class ProjectContextResolver implements ContextResolver {
       })) ?? undefined
     if (!project) throw new NotFoundException()
 
-    requestWithProject.project = project
-    requestWithProject.projectMembership =
+    const projectMembership =
       (await this.projectMembershipRepository.findOne({
         where: {
           projectId: project.id,
           userId: request.user.id,
         },
       })) ?? undefined
+
+    requestWithProject.project = project
+    requestWithProject.projectMembership = projectMembership
   }
 }

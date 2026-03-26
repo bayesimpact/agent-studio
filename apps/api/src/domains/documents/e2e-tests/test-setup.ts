@@ -20,7 +20,7 @@ export function documentsControllerTestSetup() {
   let setup: Awaited<ReturnType<typeof setupTransactionalTestDatabase>>
   let userRepository: Repository<User>
   let organizationRepository: Repository<Organization>
-  let membershipRepository: Repository<OrganizationMembership>
+  let organizationMembershipRepository: Repository<OrganizationMembership>
   let projectRepository: Repository<Project>
   let documentRepository: Repository<Document>
   let fileStorageService: IFileStorage
@@ -44,7 +44,7 @@ export function documentsControllerTestSetup() {
     fileStorageService = setup.module.get<IFileStorage>(FILE_STORAGE_SERVICE)
     userRepository = setup.getRepository(User)
     organizationRepository = setup.getRepository(Organization)
-    membershipRepository = setup.getRepository(OrganizationMembership)
+    organizationMembershipRepository = setup.getRepository(OrganizationMembership)
     projectRepository = setup.getRepository(Project)
     documentRepository = setup.getRepository(Document)
 
@@ -65,7 +65,7 @@ export function documentsControllerTestSetup() {
     return {
       organizationRepository,
       userRepository,
-      membershipRepository,
+      organizationMembershipRepository,
       projectRepository,
       documentRepository,
       fileStorageService,

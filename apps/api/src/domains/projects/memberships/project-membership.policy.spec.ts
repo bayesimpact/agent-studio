@@ -1,120 +1,46 @@
-import type { MembershipRole } from "@/domains/organizations/memberships/organization-membership.entity"
-import { organizationMembershipFactory } from "@/domains/organizations/memberships/organization-membership.factory"
-import { organizationFactory } from "@/domains/organizations/organization.factory"
+import {
+  type ResourceState,
+  testPolicyScopedByProject,
+} from "@/common/test/test-project-scoped-policy.helpers"
 import { userFactory } from "@/domains/users/user.factory"
+import type { Organization } from "../../organizations/organization.entity"
 import type { Project } from "../project.entity"
-import { projectFactory } from "../project.factory"
+import type { ProjectMembershipRole } from "./project-membership.entity"
 import { projectMembershipFactory } from "./project-membership.factory"
 import { ProjectMembershipPolicy } from "./project-membership.policy"
 
-type MembershipState = "sameProject" | "differentProject" | "noMembership"
-
 describe("ProjectMembershipPolicy", () => {
-  const organization = organizationFactory.build()
-  const otherOrganization = organizationFactory.build()
-  const user = userFactory.build()
-  const invitedUser = userFactory.build()
-
-  const project = projectFactory.transient({ organization }).build()
-  const otherProject = projectFactory.transient({ organization: otherOrganization }).build()
-
-  const buildOrganizationMembership = (role: MembershipRole) => {
-    return organizationMembershipFactory.transient({ user, organization }).params({ role }).build()
-  }
-
-  const buildMembership = (membershipState: MembershipState) => {
-    if (membershipState === "sameProject") {
-      return projectMembershipFactory.transient({ project, user: invitedUser }).build()
-    }
-    if (membershipState === "differentProject") {
+  const { buildPolicy } = testPolicyScopedByProject({
+    buildResource: (params: { organization: Organization; project: Project }) => {
+      const invitedUser = userFactory.build()
       return projectMembershipFactory
-        .transient({ project: otherProject, user: invitedUser })
+        .transient({ project: params.project, user: invitedUser })
         .build()
-    }
-    return undefined
-  }
-
-  const buildPolicyContext = (
-    role: MembershipRole,
-    project: Project,
-    membershipState?: MembershipState,
-  ) => {
-    return {
-      organizationMembership: buildOrganizationMembership(role),
-      projectMembership: membershipState ? buildMembership(membershipState) : undefined,
-      project: project,
-    }
-  }
-
-  describe("canList", () => {
-    it("should return true when user is owner", () => {
-      const policy = new ProjectMembershipPolicy(buildPolicyContext("owner", project))
-      expect(policy.canList()).toBe(true)
-    })
-
-    it("should return true when user is admin", () => {
-      const policy = new ProjectMembershipPolicy(buildPolicyContext("admin", project))
-      expect(policy.canList()).toBe(true)
-    })
-
-    it("should return false when user is member", () => {
-      const policy = new ProjectMembershipPolicy(buildPolicyContext("member", project))
-      expect(policy.canList()).toBe(false)
-    })
-
-    it("should return false when user is member of the project", () => {
-      const policy = new ProjectMembershipPolicy(
-        buildPolicyContext("member", project, "sameProject"),
-      )
-      expect(policy.canList()).toBe(false)
-    })
+    },
+    ResourcePolicy: ProjectMembershipPolicy,
   })
 
-  describe("canCreate", () => {
-    it("should return true when user is owner", () => {
-      const policy = new ProjectMembershipPolicy(buildPolicyContext("owner", project))
-      expect(policy.canCreate()).toBe(true)
-    })
-
-    it("should return true when user is admin", () => {
-      const policy = new ProjectMembershipPolicy(buildPolicyContext("admin", project))
-      expect(policy.canCreate()).toBe(true)
-    })
-
-    it("should return false when user is member", () => {
-      const policy = new ProjectMembershipPolicy(buildPolicyContext("member", project))
-      expect(policy.canCreate()).toBe(false)
-    })
-
-    it("should return false when user is member of the project", () => {
-      const policy = new ProjectMembershipPolicy(
-        buildPolicyContext("member", project, "sameProject"),
-      )
-      expect(policy.canCreate()).toBe(false)
-    })
-  })
-
-  describe("canDelete", () => {
-    it("should return true when user is owner", () => {
-      const policy = new ProjectMembershipPolicy(buildPolicyContext("owner", project))
-      expect(policy.canDelete()).toBe(true)
-    })
-
-    it("should return true when user is admin", () => {
-      const policy = new ProjectMembershipPolicy(buildPolicyContext("admin", project))
-      expect(policy.canDelete()).toBe(true)
-    })
-
-    it("should return false when user is member", () => {
-      const policy = new ProjectMembershipPolicy(buildPolicyContext("member", project))
-      expect(policy.canDelete()).toBe(false)
-    })
-
-    it("should return false when user is member of the project", () => {
-      const policy = new ProjectMembershipPolicy(
-        buildPolicyContext("member", project, "sameProject"),
-      )
-      expect(policy.canDelete()).toBe(false)
+  describe.each<[string, (policy: ProjectMembershipPolicy) => boolean]>([
+    ["canList", (policy) => policy.canList()],
+    ["canCreate", (policy) => policy.canCreate()],
+    ["canUpdate", (policy) => policy.canUpdate()],
+    ["canDelete", (policy) => policy.canDelete()],
+  ])("%s", (_method, check) => {
+    describe.each<[ProjectMembershipRole, ResourceState, boolean]>([
+      ["owner", "sameOrganization", true],
+      ["owner", "differentOrganization", false],
+      ["owner", "noResource", true],
+      ["admin", "sameOrganization", true],
+      ["admin", "differentOrganization", false],
+      ["admin", "noResource", true],
+      ["member", "sameOrganization", false],
+      ["member", "differentOrganization", false],
+      ["member", "noResource", false],
+    ])("when user is %s with %s membership", (projectRole, resourceState, expected) => {
+      it(`should return ${expected}`, () => {
+        const policy = buildPolicy({ resourceState, projectRole })
+        expect(check(policy)).toBe(expected)
+      })
     })
   })
 })

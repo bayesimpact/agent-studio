@@ -1,50 +1,54 @@
 import { Injectable } from "@nestjs/common"
 import { InjectRepository } from "@nestjs/typeorm"
-import type { FindOptionsWhere, Repository } from "typeorm"
-import { Organization } from "@/domains/organizations/organization.entity"
+// biome-ignore lint/style/useImportType: DataSource required at runtime for NestJS DI
+import { DataSource, type Repository } from "typeorm"
+import { Agent } from "../agents/agent.entity"
+// biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
+import { AgentsService } from "../agents/agents.service"
+import { Document } from "../documents/document.entity"
+import { Evaluation } from "../evaluations/evaluation.entity"
+import { EvaluationReport } from "../evaluations/reports/evaluation-report.entity"
+import { ProjectMembership } from "./memberships/project-membership.entity"
+// biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
+import { ProjectMembershipsService } from "./memberships/project-memberships.service"
 import { Project } from "./project.entity"
 
 @Injectable()
 export class ProjectsService {
   constructor(
     @InjectRepository(Project) private readonly projectRepository: Repository<Project>,
-    @InjectRepository(Organization) readonly _organizationRepository: Repository<Organization>,
+    private readonly projectMembershipsService: ProjectMembershipsService,
+    private readonly agentsService: AgentsService,
+    private readonly dataSource: DataSource,
   ) {}
 
-  /**
-   * Creates a new project for an organization.
-   */
-  async createProject(organizationId: string, name: string): Promise<Project> {
-    // Create the project
-    const project = this.projectRepository.create({
-      name,
-      organizationId,
+  async createProject(params: {
+    organizationId: string
+    userId: string
+    name: string
+  }): Promise<Project> {
+    const project = this.projectRepository.create(params)
+    await this.projectRepository.save(project)
+    await this.projectMembershipsService.createProjectOwnerMembership({
+      projectId: project.id,
+      userId: params.userId,
     })
-
-    return this.projectRepository.save(project)
+    return project
   }
 
-  /**
-   * Lists all projects for an organization.
-   * Verification has been handled in the ProjectsGuard.
-   * @param options.userId - The ID of the user to filter projects by.
-   */
-  async listProjects(organizationId: string, options?: { userId?: string }): Promise<Project[]> {
-    const whereClause: FindOptionsWhere<Project> = { organizationId }
-
-    if (options?.userId) {
-      whereClause.projectMemberships = { userId: options.userId }
-    }
-
+  async listProjects({
+    organizationId,
+    userId,
+  }: {
+    organizationId: string
+    userId: string
+  }): Promise<Project[]> {
     return this.projectRepository.find({
-      where: whereClause,
+      where: { organizationId, projectMemberships: { userId, status: "accepted" } },
       order: { createdAt: "DESC" },
     })
   }
 
-  /**
-   * Gets a project by its ID and organization ID.
-   */
   async getProject(organizationId: string, projectId: string): Promise<Project | undefined> {
     const project = await this.projectRepository.findOne({
       where: { id: projectId, organizationId },
@@ -52,19 +56,32 @@ export class ProjectsService {
     return project ?? undefined
   }
 
-  /**
-   * Updates a project.
-   */
   async updateProject(project: Project, name: string): Promise<Project> {
     // Update the project
     project.name = name
     return this.projectRepository.save(project)
   }
 
-  /**
-   * Deletes a project.
-   */
   async deleteProject(project: Project): Promise<void> {
-    await this.projectRepository.remove(project)
+    await this.dataSource.transaction(async (entityManager) => {
+      const projectId = project.id
+
+      const agents = await entityManager.find(Agent, { where: { projectId }, select: { id: true } })
+      for (const agent of agents) {
+        await this.agentsService.deleteAgent(agent)
+      }
+
+      // Evaluations
+      await entityManager.delete(EvaluationReport, { projectId })
+      await entityManager.delete(Evaluation, { projectId })
+
+      // Documents
+      await entityManager.delete(Document, { projectId })
+
+      // Project memberships
+      await entityManager.delete(ProjectMembership, { projectId })
+
+      await entityManager.delete(Project, { id: projectId })
+    })
   }
 }

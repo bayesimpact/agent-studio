@@ -11,7 +11,6 @@ export function useNavigateToFirstOrganization() {
   const { buildPath } = useBuildPath()
 
   const getPathForFirstOrganization = (organization: Organization): string => {
-    dispatch(authActions.setIsAdmin(organization.role))
     dispatch(authActions.setIsAdminInterface(true))
 
     const path = buildPath("organization", { organizationId: organization.id })

@@ -14,17 +14,21 @@ import { DataSource, EntityManager } from "typeorm"
 import { Agent } from "@/domains/agents/agent.entity"
 import { ConversationAgentSession } from "@/domains/agents/conversation-agent-sessions/conversation-agent-session.entity"
 import { ExtractionAgentSession } from "@/domains/agents/extraction-agent-sessions/extraction-agent-session.entity"
+import { AgentMembership } from "@/domains/agents/memberships/agent-membership.entity"
 import { AgentMessage } from "@/domains/agents/shared/agent-session-messages/agent-message.entity"
 import { AgentMessageFeedback } from "@/domains/agents/shared/agent-session-messages/feedback/agent-message-feedback.entity"
 import { Document } from "@/domains/documents/document.entity"
 import { Evaluation } from "@/domains/evaluations/evaluation.entity"
 import { EvaluationReport } from "@/domains/evaluations/reports/evaluation-report.entity"
+import { FeatureFlag } from "@/domains/feature-flags/feature-flag.entity"
 import { OrganizationMembership } from "@/domains/organizations/memberships/organization-membership.entity"
 import { Organization } from "@/domains/organizations/organization.entity"
 import { ProjectMembership } from "@/domains/projects/memberships/project-membership.entity"
 import { Project } from "@/domains/projects/project.entity"
 import { User } from "@/domains/users/user.entity"
 import { ALL_ENTITIES } from "../all-entities"
+
+export type AllRepositories = ReturnType<TransactionalTestSetup["getAllRepositories"]>
 
 export interface TransactionalTestSetup {
   module: TestingModule
@@ -35,16 +39,18 @@ export interface TransactionalTestSetup {
     agentMessageFeedbackRepository: Repository<AgentMessageFeedback>
     agentMessageRepository: Repository<AgentMessage>
     agentRepository: Repository<Agent>
+    agentMembershipRepository: Repository<AgentMembership>
     extractionAgentSessionRepository: Repository<ExtractionAgentSession>
     conversationAgentSessionRepository: Repository<ConversationAgentSession>
     documentRepository: Repository<Document>
     evaluationReportRepository: Repository<EvaluationReport>
     evaluationRepository: Repository<Evaluation>
-    membershipRepository: Repository<OrganizationMembership>
+    organizationMembershipRepository: Repository<OrganizationMembership>
     organizationRepository: Repository<Organization>
     projectMembershipRepository: Repository<ProjectMembership>
     projectRepository: Repository<Project>
     userRepository: Repository<User>
+    featureFlagRepository: Repository<FeatureFlag>
   }
   startTransaction: () => Promise<void>
   rollbackTransaction: () => Promise<void>
@@ -195,7 +201,7 @@ export async function setupTransactionalTestDatabase(
   const getAllRepositories = () => ({
     userRepository: getRepository(User),
     organizationRepository: getRepository(Organization),
-    membershipRepository: getRepository(OrganizationMembership),
+    organizationMembershipRepository: getRepository(OrganizationMembership),
     projectRepository: getRepository(Project),
     projectMembershipRepository: getRepository(ProjectMembership),
     agentRepository: getRepository(Agent),
@@ -206,6 +212,8 @@ export async function setupTransactionalTestDatabase(
     documentRepository: getRepository(Document),
     evaluationRepository: getRepository(Evaluation),
     evaluationReportRepository: getRepository(EvaluationReport),
+    agentMembershipRepository: getRepository(AgentMembership),
+    featureFlagRepository: getRepository(FeatureFlag),
   })
 
   return {

@@ -26,7 +26,6 @@ import { useAbility } from "@/hooks/use-ability"
 import { ADS } from "@/store/async-data-status"
 import { useAppSelector } from "@/store/hooks"
 import { useSetCurrentIds } from "../hooks/use-set-current-ids"
-import { useSetIsAdminInterface } from "../hooks/use-set-is-admin-interface"
 import { AsyncRoute } from "./AsyncRoute"
 
 export function DashboardRoute() {
@@ -35,7 +34,6 @@ export function DashboardRoute() {
   const organization = useAppSelector(selectCurrentOrganization)
 
   useSetCurrentIds()
-  useSetIsAdminInterface()
 
   return (
     <AsyncRoute data={[user, projects, organization]}>

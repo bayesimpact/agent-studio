@@ -12,12 +12,12 @@ export function useRedirectToStudio({
   to: "organization" | "project"
 }) {
   const navigate = useNavigate()
-  const { isAdmin, isAdminInterface } = useAbility()
+  const { abilities, isAdminInterface } = useAbility()
   const { getPath } = useGetPath()
   useEffect(() => {
-    if (isAdmin && !isAdminInterface && condition) {
+    if (abilities.canManageProjects && !isAdminInterface && condition) {
       const path = getPath(to, { forceInterface: RouteNames.STUDIO })
       navigate(path, { replace: true })
     }
-  }, [isAdmin, isAdminInterface, condition, navigate, getPath, to])
+  }, [abilities, isAdminInterface, condition, navigate, getPath, to])
 }

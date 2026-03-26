@@ -3,18 +3,18 @@ import type { ProjectMembership } from "./project-membership.entity"
 
 export class ProjectMembershipPolicy extends ProjectScopedPolicy<ProjectMembership> {
   canList(): boolean {
-    return this.isAdminOrOwner()
+    return this.canAccess() && this.isProjectAdminOrOwner()
   }
 
   canCreate(): boolean {
-    return this.isAdminOrOwner()
+    return this.canList()
   }
 
   canUpdate(): boolean {
-    return this.isAdminOrOwner()
+    return this.canList()
   }
 
   canDelete(): boolean {
-    return this.isAdminOrOwner()
+    return this.canList()
   }
 }

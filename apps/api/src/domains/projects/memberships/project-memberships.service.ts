@@ -1,9 +1,11 @@
 import { randomUUID } from "node:crypto"
-import { Inject, Injectable, NotFoundException } from "@nestjs/common"
+import { Inject, Injectable, NotFoundException, UnauthorizedException } from "@nestjs/common"
 import { InjectRepository } from "@nestjs/typeorm"
 import type { Repository } from "typeorm"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
 import { DataSource } from "typeorm"
+// biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
+import { AgentMembershipsService } from "@/domains/agents/memberships/agent-memberships.service"
 import {
   INVITATION_SENDER,
   type InvitationSender,
@@ -23,41 +25,50 @@ export class ProjectMembershipsService {
     @Inject(INVITATION_SENDER)
     private readonly invitationSender: InvitationSender,
     private readonly dataSource: DataSource,
+    private readonly agentMembershipsService: AgentMembershipsService,
   ) {}
 
-  /**
-   * Finds a project membership by its ID.
-   */
   async findById(membershipId: string): Promise<ProjectMembership | null> {
     return this.projectMembershipRepository.findOne({
       where: { id: membershipId },
+      relations: ["user"],
     })
   }
 
-  /**
-   * Find a project membership by projectId and userId.
-   */
-  async findByProjectIdAndUserId({
-    projectId,
-    userId,
-  }: {
-    projectId: string
-    userId: string
-  }): Promise<ProjectMembership | null> {
-    return this.projectMembershipRepository.findOne({
-      where: { projectId, userId },
+  async findByInvitationToken(invitationToken: string): Promise<ProjectMembership> {
+    const membership = await this.projectMembershipRepository.findOne({
+      where: { invitationToken },
+      relations: ["user"],
     })
+    if (!membership) {
+      throw new NotFoundException(`Invitation not found for ticket: ${invitationToken}`)
+    }
+    return membership
   }
 
-  /**
-   * Lists all project memberships for a project, with user relations eagerly loaded.
-   */
   async listProjectMemberships(projectId: string): Promise<ProjectMembership[]> {
     return this.projectMembershipRepository.find({
       where: { projectId },
       relations: ["user"],
       order: { createdAt: "DESC" },
     })
+  }
+
+  async createProjectOwnerMembership({
+    projectId,
+    userId,
+  }: {
+    projectId: string
+    userId: string
+  }): Promise<ProjectMembership> {
+    const membership = this.projectMembershipRepository.create({
+      projectId,
+      userId,
+      role: "owner",
+      status: "accepted",
+      invitationToken: `create_project_owner_membership-${randomUUID()}`,
+    })
+    return this.projectMembershipRepository.save(membership)
   }
 
   /**
@@ -101,78 +112,6 @@ export class ProjectMembershipsService {
     })
   }
 
-  /**
-   * Accepts a project membership invitation.
-   * Finds the membership by its invitation token (Auth0 ticket_id), reconciles the
-   * placeholder user's auth0Id with the real Auth0 identity, and marks the membership as accepted.
-   *
-   * This must be called BEFORE /me (UserGuard.findOrCreate) so that the placeholder user
-   * gets the real auth0Id first. Then /me will find this user instead of creating a duplicate.
-   *
-   * @param ticketId The Auth0 ticket_id stored as the membership's invitationToken
-   * @param auth0Sub The real Auth0 user ID from the JWT
-   */
-  async acceptInvitation({
-    ticketId,
-    auth0Sub,
-  }: {
-    ticketId: string
-    auth0Sub: string
-  }): Promise<ProjectMembership> {
-    return this.dataSource.transaction(async (manager) => {
-      const membershipRepo = manager.getRepository(ProjectMembership)
-      const userRepo = manager.getRepository(User)
-      const orgMembershipRepo = manager.getRepository(OrganizationMembership)
-      const projectRepo = manager.getRepository(Project)
-
-      // Find the membership by invitation token (ticket_id)
-      const membership = await membershipRepo.findOne({
-        where: { invitationToken: ticketId },
-        relations: ["user"],
-      })
-
-      if (!membership) {
-        throw new NotFoundException(`Invitation not found for ticket: ${ticketId}`)
-      }
-
-      if (membership.status === "accepted") {
-        // Already accepted — return as-is
-        return membership
-      }
-
-      // Reconcile the placeholder user's auth0Id with the real Auth0 identity.
-      // User profile info (name, email, picture) will be filled in by UserGuard.findOrCreate
-      // when /me is called right after this.
-      const user = membership.user
-      if (user.auth0Id.startsWith(PLACEHOLDER_AUTH0_ID_PREFIX)) {
-        user.auth0Id = auth0Sub
-        await userRepo.save(user)
-      }
-
-      // Create an organization membership for the user (as "member") if one doesn't exist yet
-      const project = await projectRepo.findOneOrFail({ where: { id: membership.projectId } })
-      const existingOrgMembership = await orgMembershipRepo.findOne({
-        where: { userId: user.id, organizationId: project.organizationId },
-      })
-      if (!existingOrgMembership) {
-        const orgMembership = orgMembershipRepo.create({
-          userId: user.id,
-          organizationId: project.organizationId,
-          role: "member",
-        })
-        await orgMembershipRepo.save(orgMembership)
-      }
-
-      // Mark the membership as accepted
-      membership.status = "accepted"
-      return membershipRepo.save(membership)
-    })
-  }
-
-  /**
-   * Invites a single user to a project by email.
-   * Returns the created membership, or null if the user is already a member.
-   */
   private async inviteProjectMember({
     projectId,
     email,
@@ -188,29 +127,23 @@ export class ProjectMembershipsService {
   }): Promise<ProjectMembership | null> {
     const normalizedEmail = email.trim().toLowerCase()
 
-    // Find or create user (using transactional manager)
-    let user = await userRepo.findOne({
-      where: { email: normalizedEmail },
-    })
+    const user = await this.findOrCreatePlaceholderUser({ userRepo, email: normalizedEmail })
 
-    if (!user) {
-      // Generate a unique placeholder auth0Id per user to avoid unique constraint violations
-      const placeholderAuth0Id = `${PLACEHOLDER_AUTH0_ID_PREFIX}${randomUUID().slice(-12)}`
-      user = userRepo.create({
-        auth0Id: placeholderAuth0Id,
-        email: normalizedEmail,
-        name: null,
-        pictureUrl: null,
-      })
-      user = await userRepo.save(user)
-    }
-
-    // Check if membership already exists
+    // Check if membership already exists — upgrade to admin if currently member
     const existingMembership = await membershipRepo.findOne({
       where: { projectId, userId: user.id },
     })
 
     if (existingMembership) {
+      if (existingMembership.role !== "admin") {
+        existingMembership.role = "admin"
+        await membershipRepo.save(existingMembership)
+        await this.agentMembershipsService.createAdminAgentMembershipsForUserInProject({
+          manager: membershipRepo.manager,
+          userId: user.id,
+          projectId,
+        })
+      }
       return null
     }
 
@@ -226,6 +159,7 @@ export class ProjectMembershipsService {
       userId: user.id,
       invitationToken: ticketId,
       status: "sent",
+      role: "admin",
     })
 
     const savedMembership = await membershipRepo.save(membership)
@@ -235,14 +169,127 @@ export class ProjectMembershipsService {
   }
 
   /**
+   * Accepts a project membership invitation.
+   * Finds the membership by its invitation token (Auth0 ticket_id), reconciles the
+   * placeholder user's auth0Id with the real Auth0 identity, and marks the membership as accepted.
+   *
+   * This must be called BEFORE /me (UserGuard.findOrCreate) so that the placeholder user
+   * gets the real auth0Id first. Then /me will find this user instead of creating a duplicate.
+   *
+   * @param ticketId The Auth0 ticket_id stored as the membership's invitationToken
+   * @param auth0Sub The real Auth0 user ID from the JWT
+   */
+  async acceptInvitation({
+    email,
+    ticketId,
+    auth0Sub,
+  }: {
+    email: string
+    ticketId: string
+    auth0Sub: string
+  }): Promise<ProjectMembership> {
+    return this.dataSource.transaction(async (manager) => {
+      const projectMembershipRepo = manager.getRepository(ProjectMembership)
+      const userRepo = manager.getRepository(User)
+      const orgMembershipRepo = manager.getRepository(OrganizationMembership)
+      const projectRepo = manager.getRepository(Project)
+
+      const projectMembership = await this.findByInvitationToken(ticketId)
+
+      const { user } = projectMembership
+
+      if (user.email !== email) {
+        // 401
+        throw new UnauthorizedException(`No invitation found for email: ${email}`)
+      }
+
+      const project = await projectRepo.findOneOrFail({
+        where: { id: projectMembership.projectId },
+      })
+      await this.ensureOrganizationMembership({
+        orgMembershipRepo,
+        userId: user.id,
+        organizationId: project.organizationId,
+      })
+
+      // Also create admin agent memberships for this user in all agents of the project
+      await this.agentMembershipsService.createAdminAgentMembershipsForUserInProject({
+        manager,
+        userId: user.id,
+        projectId: project.id,
+      })
+
+      // Reconcile the placeholder user's auth0Id with the real Auth0 identity
+      if (user.auth0Id.startsWith(PLACEHOLDER_AUTH0_ID_PREFIX)) {
+        user.auth0Id = auth0Sub
+        await userRepo.save(user)
+      }
+
+      if (projectMembership.status === "accepted") {
+        return projectMembership
+      }
+      projectMembership.status = "accepted"
+      return projectMembershipRepo.save(projectMembership)
+    })
+  }
+
+  /**
+   * Invites a single user to a project by email.
+   * Returns the created membership, or null if the user is already a member.
+   */
+  private async findOrCreatePlaceholderUser({
+    email,
+    userRepo,
+  }: {
+    userRepo: Repository<User>
+    email: string
+  }): Promise<User> {
+    const existing = await userRepo.findOne({ where: { email } })
+    if (existing) return existing
+
+    const placeholderAuth0Id = `${PLACEHOLDER_AUTH0_ID_PREFIX}${randomUUID().slice(-12)}`
+    const user = userRepo.create({
+      auth0Id: placeholderAuth0Id,
+      email,
+      name: null,
+      pictureUrl: null,
+    })
+    return userRepo.save(user)
+  }
+
+  private async ensureOrganizationMembership({
+    orgMembershipRepo,
+    organizationId,
+    userId,
+  }: {
+    orgMembershipRepo: Repository<OrganizationMembership>
+    userId: string
+    organizationId: string
+  }): Promise<void> {
+    const existing = await orgMembershipRepo.findOne({ where: { userId, organizationId } })
+    if (existing) {
+      if (existing.role === "member") {
+        existing.role = "admin"
+        await orgMembershipRepo.save(existing)
+      }
+      return
+    }
+
+    const orgMembership = orgMembershipRepo.create({ userId, organizationId, role: "admin" })
+    await orgMembershipRepo.save(orgMembership)
+  }
+
+  /**
    * Removes a project membership.
    * If the associated user is a placeholder (never accepted the invitation),
    * also deletes the placeholder user to avoid orphaned records.
    */
   async removeProjectMembership({
+    userId,
     membershipId,
     projectId,
   }: {
+    userId: string
     membershipId: string
     projectId: string
   }): Promise<void> {
@@ -250,16 +297,26 @@ export class ProjectMembershipsService {
       const membershipRepo = manager.getRepository(ProjectMembership)
       const userRepo = manager.getRepository(User)
 
-      const membership = await membershipRepo.findOne({
-        where: { id: membershipId, projectId },
-        relations: ["user"],
-      })
-
+      const membership = await this.findById(membershipId)
       if (!membership) return
 
       const { user } = membership
 
-      // Delete the membership first (foreign key constraint)
+      if (user.id === userId) {
+        throw new Error("Cannot remove yourself from the project")
+      }
+
+      if (membership.role === "owner") {
+        throw new Error("Cannot remove owner from the project")
+      }
+
+      // Also delete all agent memberships for this user in the project
+      await this.agentMembershipsService.deleteAgentMembershipsForUserInProject({
+        manager,
+        userId: user.id,
+        projectId,
+      })
+
       await membershipRepo.delete({ id: membershipId, projectId })
 
       // If the user is a placeholder (never signed up), clean them up

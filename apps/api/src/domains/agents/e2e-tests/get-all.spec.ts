@@ -4,6 +4,7 @@ import type { INestApplication } from "@nestjs/common"
 import type { App } from "supertest/types"
 import { clearTestDatabase } from "@/common/test/test-database"
 import {
+  type AllRepositories,
   setupTransactionalTestDatabase,
   teardownTestDatabase,
 } from "@/common/test/test-transaction-manager"
@@ -14,14 +15,13 @@ import { sdk } from "@/external/llm/open-telemetry-init"
 import { setupUserGuardForTesting } from "../../../../test/e2e.helpers"
 import { expectResponse, type Requester, testRequester } from "../../../../test/request"
 import { AgentsModule } from "../agents.module"
+import { addUserToAgent } from "../memberships/agent-membership.factory"
 
 describe("Agents - getAll", () => {
   let app: INestApplication<App>
   let request: Requester
   let setup: Awaited<ReturnType<typeof setupTransactionalTestDatabase>>
-  let repositories: ReturnType<
-    Awaited<ReturnType<typeof setupTransactionalTestDatabase>>["getAllRepositories"]
-  >
+  let repositories: AllRepositories
 
   let organizationId: string
   let projectId: string
@@ -56,7 +56,7 @@ describe("Agents - getAll", () => {
     organizationId = organization.id
     projectId = project.id
     auth0Id = user.auth0Id
-    return { organization, project }
+    return { organization, project, user }
   }
 
   const subject = async () =>
@@ -67,7 +67,7 @@ describe("Agents - getAll", () => {
     })
 
   it("should return agents for a project", async () => {
-    const { organization, project } = await createContext()
+    const { organization, project, user } = await createContext()
 
     const agent1 = agentFactory.transient({ organization, project }).build({
       name: "Agent 1",
@@ -78,6 +78,8 @@ describe("Agents - getAll", () => {
       defaultPrompt: "Prompt 2",
     })
     await repositories.agentRepository.save([agent1, agent2])
+    await addUserToAgent({ repositories, agent: agent1, user })
+    await addUserToAgent({ repositories, agent: agent2, user })
 
     const response = await subject()
 

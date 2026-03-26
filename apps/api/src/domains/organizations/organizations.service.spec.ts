@@ -16,7 +16,7 @@ import { OrganizationsService } from "./organizations.service"
 describe("OrganizationsService", () => {
   let service: OrganizationsService
   let organizationRepository: Repository<Organization>
-  let membershipRepository: Repository<OrganizationMembership>
+  let organizationMembershipRepository: Repository<OrganizationMembership>
   let userRepository: Repository<User>
   let setup: Awaited<ReturnType<typeof setupTransactionalTestDatabase>>
 
@@ -39,7 +39,7 @@ describe("OrganizationsService", () => {
     // Get service and repositories from transactional module
     service = setup.module.get<OrganizationsService>(OrganizationsService)
     organizationRepository = setup.getRepository(Organization)
-    membershipRepository = setup.getRepository(OrganizationMembership)
+    organizationMembershipRepository = setup.getRepository(OrganizationMembership)
     setup.getRepository(FeatureFlag)
     userRepository = setup.getRepository(User)
   })
@@ -58,26 +58,28 @@ describe("OrganizationsService", () => {
       const savedUser = await userRepository.save(user)
 
       // Act
-      const result = await service.createOrganization(savedUser.id, "Test Organization")
+      const result = await service.createOrganization({
+        userId: savedUser.id,
+        name: "Test Organization",
+      })
 
       // Assert
-      expect(result.organization.name).toBe("Test Organization")
-      expect(result.role).toBe("owner")
-      expect(result.organization.id).toBeDefined()
-      expect(result.organization.createdAt).toBeInstanceOf(Date)
+      expect(result.name).toBe("Test Organization")
+      expect(result.id).toBeDefined()
+      expect(result.createdAt).toBeInstanceOf(Date)
 
       // Verify organization was saved
       const savedOrganization = await organizationRepository.findOne({
-        where: { id: result.organization.id },
+        where: { id: result.id },
       })
       expect(savedOrganization).not.toBeNull()
       expect(savedOrganization?.name).toBe("Test Organization")
 
       // Verify membership was created with owner role
-      const membership = await membershipRepository.findOne({
+      const membership = await organizationMembershipRepository.findOne({
         where: {
           userId: savedUser.id,
-          organizationId: result.organization.id,
+          organizationId: result.id,
         },
       })
       expect(membership).not.toBeNull()
@@ -92,10 +94,13 @@ describe("OrganizationsService", () => {
       const savedUser = await userRepository.save(user)
 
       // Act
-      const { organization } = await service.createOrganization(savedUser.id, "My Org")
+      const organization = await service.createOrganization({
+        userId: savedUser.id,
+        name: "My Org",
+      })
 
       // Assert - Verify the membership links user and organization correctly
-      const membership = await membershipRepository.findOne({
+      const membership = await organizationMembershipRepository.findOne({
         where: {
           userId: savedUser.id,
           organizationId: organization.id,
@@ -115,16 +120,22 @@ describe("OrganizationsService", () => {
       const savedUser = await userRepository.save(user)
 
       // Act
-      const result1 = await service.createOrganization(savedUser.id, "Org 1")
-      const result2 = await service.createOrganization(savedUser.id, "Org 2")
+      const result1 = await service.createOrganization({
+        userId: savedUser.id,
+        name: "Org 1",
+      })
+      const result2 = await service.createOrganization({
+        userId: savedUser.id,
+        name: "Org 2",
+      })
 
       // Assert
-      expect(result1.organization.name).toBe("Org 1")
-      expect(result2.organization.name).toBe("Org 2")
-      expect(result1.organization.id).not.toBe(result2.organization.id)
+      expect(result1.name).toBe("Org 1")
+      expect(result2.name).toBe("Org 2")
+      expect(result1.id).not.toBe(result2.id)
 
       // Verify both memberships exist
-      const memberships = await membershipRepository.find({
+      const memberships = await organizationMembershipRepository.find({
         where: { userId: savedUser.id },
       })
       expect(memberships).toHaveLength(2)
@@ -139,13 +150,19 @@ describe("OrganizationsService", () => {
       const savedUser = await userRepository.save(user)
 
       // Act
-      const result1 = await service.createOrganization(savedUser.id, "Unique Org 1")
-      const result2 = await service.createOrganization(savedUser.id, "Unique Org 2")
+      const result1 = await service.createOrganization({
+        userId: savedUser.id,
+        name: "Unique Org 1",
+      })
+      const result2 = await service.createOrganization({
+        userId: savedUser.id,
+        name: "Unique Org 2",
+      })
 
       // Assert
-      expect(result1.organization.id).not.toBe(result2.organization.id)
-      expect(result1.organization.id).toBeDefined()
-      expect(result2.organization.id).toBeDefined()
+      expect(result1.id).not.toBe(result2.id)
+      expect(result1.id).toBeDefined()
+      expect(result2.id).toBeDefined()
     })
 
     it("should create organization with timestamps", async () => {
@@ -156,7 +173,10 @@ describe("OrganizationsService", () => {
       const savedUser = await userRepository.save(user)
 
       // Act
-      const { organization } = await service.createOrganization(savedUser.id, "Timestamp Org")
+      const organization = await service.createOrganization({
+        userId: savedUser.id,
+        name: "Timestamp Org",
+      })
 
       // Assert
       expect(organization.createdAt).toBeInstanceOf(Date)
@@ -165,7 +185,7 @@ describe("OrganizationsService", () => {
     })
   })
 
-  describe("getUserOrganizationsWithMemberships", () => {
+  describe("getUserOrganizations", () => {
     it("should return empty array when user has no organizations", async () => {
       // Arrange
       const user = userFactory.build({
@@ -174,7 +194,7 @@ describe("OrganizationsService", () => {
       const savedUser = await userRepository.save(user)
 
       // Act
-      const result = await service.getUserOrganizationsWithMemberships(savedUser.id)
+      const result = await service.getUserOrganizations(savedUser.id)
 
       // Assert
       expect(result).toEqual([])
@@ -193,22 +213,22 @@ describe("OrganizationsService", () => {
       const org2 = organizationFactory.build({ name: "Org 2" })
       const savedOrg2 = await organizationRepository.save(org2)
 
-      const membership1 = membershipRepository.create({
+      const membership1 = organizationMembershipRepository.create({
         userId: savedUser.id,
         organizationId: savedOrg1.id,
         role: "owner",
       })
-      await membershipRepository.save(membership1)
+      await organizationMembershipRepository.save(membership1)
 
-      const membership2 = membershipRepository.create({
+      const membership2 = organizationMembershipRepository.create({
         userId: savedUser.id,
         organizationId: savedOrg2.id,
         role: "member",
       })
-      await membershipRepository.save(membership2)
+      await organizationMembershipRepository.save(membership2)
 
       // Act
-      const result = await service.getUserOrganizationsWithMemberships(savedUser.id)
+      const result = await service.getUserOrganizations(savedUser.id)
 
       // Assert
       expect(result).toHaveLength(2)
@@ -216,18 +236,12 @@ describe("OrganizationsService", () => {
       expect(result).toEqual(
         expect.arrayContaining([
           expect.objectContaining({
-            organization: expect.objectContaining({
-              id: savedOrg1.id,
-              name: savedOrg1.name,
-            }),
-            role: "owner",
+            id: savedOrg1.id,
+            name: savedOrg1.name,
           }),
           expect.objectContaining({
-            organization: expect.objectContaining({
-              id: savedOrg2.id,
-              name: savedOrg2.name,
-            }),
-            role: "member",
+            id: savedOrg2.id,
+            name: savedOrg2.name,
           }),
         ]),
       )

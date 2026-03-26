@@ -3,6 +3,7 @@ import type { INestApplication } from "@nestjs/common"
 import type { App } from "supertest/types"
 import { clearTestDatabase } from "@/common/test/test-database"
 import {
+  type AllRepositories,
   setupTransactionalTestDatabase,
   teardownTestDatabase,
 } from "@/common/test/test-transaction-manager"
@@ -16,9 +17,7 @@ describe("Documents - deleteOne", () => {
   let app: INestApplication<App>
   let request: Requester
   let setup: Awaited<ReturnType<typeof setupTransactionalTestDatabase>>
-  let repositories: ReturnType<
-    Awaited<ReturnType<typeof setupTransactionalTestDatabase>>["getAllRepositories"]
-  >
+  let repositories: AllRepositories
 
   let organizationId: string
   let projectId: string
@@ -50,8 +49,12 @@ describe("Documents - deleteOne", () => {
   })
 
   const createContext = async () => {
-    const { user, organization, project, document } =
-      await createOrganizationWithDocument(repositories)
+    const { user, organization, project, document } = await createOrganizationWithDocument(
+      repositories,
+      {
+        projectMembership: { role: "admin" },
+      },
+    )
     organizationId = organization.id
     projectId = project.id
     documentId = document.id

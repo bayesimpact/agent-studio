@@ -14,17 +14,20 @@ import { useForm } from "react-hook-form"
 import { useTranslation } from "react-i18next"
 import { useNavigate } from "react-router-dom"
 import { z } from "zod"
+import { selectIsPremiumMember } from "@/features/me/me.selectors"
 import {
   selectOrganizationsError,
   selectOrganizationsStatus,
 } from "@/features/organizations/organizations.selectors"
 import { createOrganization } from "@/features/organizations/organizations.thunks"
+import { ErrorRoute } from "@/routes/ErrorRoute"
 import { buildOrganizationDashboardPath } from "@/routes/helpers"
 import { ADS } from "@/store/async-data-status"
 import { useAppDispatch, useAppSelector } from "@/store/hooks"
 import { FullPageCenterLayout } from "../layouts/FullPageCenterLayout"
 
 export function OrganizationCreator() {
+  const isPremiumUser = useAppSelector(selectIsPremiumMember)
   const { t } = useTranslation("organization", { keyPrefix: "createForm" })
   const dispatch = useAppDispatch()
   const navigate = useNavigate()
@@ -56,7 +59,11 @@ export function OrganizationCreator() {
   }
 
   const isLoading = ADS.isLoading(status)
-
+  if (!isPremiumUser) {
+    return (
+      <ErrorRoute error="You are not allowed to create an organization. Please contact support." />
+    )
+  }
   return (
     <FullPageCenterLayout className="min-h-screen">
       <Card className="w-full max-w-md">

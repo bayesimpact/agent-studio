@@ -1,87 +1,72 @@
-import type { MembershipRole } from "@/domains/organizations/memberships/organization-membership.entity"
-import { organizationMembershipFactory } from "@/domains/organizations/memberships/organization-membership.factory"
-import { organizationFactory } from "@/domains/organizations/organization.factory"
-import { userFactory } from "@/domains/users/user.factory"
-import { projectFactory } from "../projects/project.factory"
-import { ProjectPolicy } from "../projects/project.policy"
-
-type Project = ReturnType<typeof projectFactory.build>
-type AgentState = "sameOrganization" | "differentOrganization" | "noAgent"
+import {
+  type ResourceState,
+  testPolicyScopedByProject,
+} from "@/common/test/test-project-scoped-policy.helpers"
+import type { ProjectMembershipRole } from "../projects/memberships/project-membership.entity"
+import { agentFactory } from "./agent.factory"
+import { AgentPolicy } from "./agent.policy"
 
 describe("AgentPolicy", () => {
-  const organization = organizationFactory.build()
-  const otherOrganization = organizationFactory.build()
-  const user = userFactory.build()
-
-  const buildOrganizationMembership = (role: MembershipRole) => {
-    return organizationMembershipFactory.transient({ user, organization }).params({ role }).build()
-  }
-
-  const buildProject = (projectOrganization: typeof organization) => {
-    return projectFactory.transient({ organization: projectOrganization }).build()
-  }
-
-  const buildAgent = (agentState: AgentState): Project | undefined => {
-    if (agentState === "sameOrganization") {
-      return buildProject(organization)
-    }
-    if (agentState === "differentOrganization") {
-      return buildProject(otherOrganization)
-    }
-    return undefined
-  }
+  const { buildPolicy } = testPolicyScopedByProject({
+    buildResource: (params) => {
+      return agentFactory.transient(params).build()
+    },
+    ResourcePolicy: AgentPolicy,
+  })
 
   describe("canList", () => {
-    describe.each<[MembershipRole, AgentState]>([
-      ["owner", "sameOrganization"],
-      ["owner", "differentOrganization"],
-      ["owner", "noAgent"],
-      ["admin", "sameOrganization"],
-      ["admin", "differentOrganization"],
-      ["admin", "noAgent"],
-      ["member", "sameOrganization"],
-      ["member", "differentOrganization"],
-      ["member", "noAgent"],
-    ])("when user is %s with %s agent", (role, agentState) => {
-      it("should always return true", () => {
-        const policy = new ProjectPolicy(buildOrganizationMembership(role), buildAgent(agentState))
+    describe.each<[ProjectMembershipRole, ResourceState, boolean]>([
+      ["owner", "sameOrganization", true],
+      ["owner", "differentOrganization", false],
+      ["owner", "noResource", true],
+      ["admin", "sameOrganization", true],
+      ["admin", "differentOrganization", false],
+      ["admin", "noResource", true],
+      ["member", "sameOrganization", true],
+      ["member", "differentOrganization", false],
+      ["member", "noResource", true],
+    ])("when user is %s with %s agent", (projectRole, resourceState, expected) => {
+      it(`should return ${expected}`, () => {
+        const policy = buildPolicy({ resourceState, projectRole })
 
-        expect(policy.canList()).toBe(true)
+        expect(policy.canList()).toBe(expected)
       })
     })
   })
 
   describe("canCreate", () => {
-    it("should return true when user is owner", () => {
-      const policy = new ProjectPolicy(buildOrganizationMembership("owner"))
-      expect(policy.canCreate()).toBe(true)
-    })
-
-    it("should return true when user is admin", () => {
-      const policy = new ProjectPolicy(buildOrganizationMembership("admin"))
-      expect(policy.canCreate()).toBe(true)
-    })
-
-    it("should return false when user is member", () => {
-      const policy = new ProjectPolicy(buildOrganizationMembership("member"))
-      expect(policy.canCreate()).toBe(false)
+    describe.each<[ProjectMembershipRole, ResourceState, boolean]>([
+      ["owner", "sameOrganization", true],
+      ["owner", "differentOrganization", false],
+      ["owner", "noResource", true],
+      ["admin", "sameOrganization", true],
+      ["admin", "differentOrganization", false],
+      ["admin", "noResource", true],
+      ["member", "sameOrganization", false],
+      ["member", "differentOrganization", false],
+      ["member", "noResource", false],
+    ])("when user is %s with %s agent", (projectRole, resourceState, expected) => {
+      it(`should return ${expected}`, () => {
+        const policy = buildPolicy({ resourceState, projectRole })
+        expect(policy.canCreate()).toBe(expected)
+      })
     })
   })
 
   describe("canUpdate", () => {
-    describe.each<[MembershipRole, AgentState, boolean]>([
+    describe.each<[ProjectMembershipRole, ResourceState, boolean]>([
       ["owner", "sameOrganization", true],
       ["owner", "differentOrganization", false],
-      ["owner", "noAgent", false],
+      ["owner", "noResource", false],
       ["admin", "sameOrganization", true],
       ["admin", "differentOrganization", false],
-      ["admin", "noAgent", false],
+      ["admin", "noResource", false],
       ["member", "sameOrganization", false],
       ["member", "differentOrganization", false],
-      ["member", "noAgent", false],
-    ])("when user is %s with %s agent", (role, agentState, expected) => {
+      ["member", "noResource", false],
+    ])("when user is %s with %s agent", (projectRole, resourceState, expected) => {
       it(`should return ${expected}`, () => {
-        const policy = new ProjectPolicy(buildOrganizationMembership(role), buildAgent(agentState))
+        const policy = buildPolicy({ resourceState, projectRole, withAgentMembership: true })
 
         expect(policy.canUpdate()).toBe(expected)
       })
@@ -89,19 +74,19 @@ describe("AgentPolicy", () => {
   })
 
   describe("canDelete", () => {
-    describe.each<[MembershipRole, AgentState, boolean]>([
+    describe.each<[ProjectMembershipRole, ResourceState, boolean]>([
       ["owner", "sameOrganization", true],
       ["owner", "differentOrganization", false],
-      ["owner", "noAgent", false],
+      ["owner", "noResource", false],
       ["admin", "sameOrganization", true],
       ["admin", "differentOrganization", false],
-      ["admin", "noAgent", false],
+      ["admin", "noResource", false],
       ["member", "sameOrganization", false],
       ["member", "differentOrganization", false],
-      ["member", "noAgent", false],
-    ])("when user is %s with %s agent", (role, agentState, expected) => {
+      ["member", "noResource", false],
+    ])("when user is %s with %s agent", (projectRole, resourceState, expected) => {
       it(`should return ${expected}`, () => {
-        const policy = new ProjectPolicy(buildOrganizationMembership(role), buildAgent(agentState))
+        const policy = buildPolicy({ resourceState, projectRole, withAgentMembership: true })
 
         expect(policy.canDelete()).toBe(expected)
       })

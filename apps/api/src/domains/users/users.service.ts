@@ -1,4 +1,4 @@
-import { Injectable } from "@nestjs/common"
+import { Injectable, UnauthorizedException } from "@nestjs/common"
 import { InjectRepository } from "@nestjs/typeorm"
 import type { Repository } from "typeorm"
 import { normalizeAuth0Name } from "@/domains/auth/auth0-userinfo.helper"
@@ -14,6 +14,9 @@ export class UsersService {
 
   async findByAuth0Id(auth0Id: string): Promise<User | null> {
     return this.userRepository.findOne({ where: { auth0Id } })
+  }
+  async findByEmail(email: string): Promise<User | null> {
+    return this.userRepository.findOne({ where: { email } })
   }
 
   async findById(id: string): Promise<User | null> {
@@ -44,8 +47,25 @@ export class UsersService {
     getUserInfo: () => Promise<Auth0UserInfoResponse>
   }): Promise<User> {
     let user = await this.findByAuth0Id(sub)
+
     if (!user) {
       const auth0UserInfo = await getUserInfo()
+
+      if (!auth0UserInfo.email) {
+        throw new UnauthorizedException("Email is required from Auth0 token")
+      }
+
+      user = await this.findByEmail(auth0UserInfo.email)
+
+      if (user) {
+        return this.userRepository.save({
+          ...user,
+          auth0Id: auth0UserInfo.sub, // Link existing user to Auth0 ID
+          name: normalizeAuth0Name(auth0UserInfo.name, auth0UserInfo.email),
+          picture: auth0UserInfo.picture,
+        })
+      }
+
       user = await this.create({
         sub: auth0UserInfo.sub,
         email: auth0UserInfo.email,

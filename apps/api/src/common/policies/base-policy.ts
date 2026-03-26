@@ -13,6 +13,10 @@ export class BasePolicy<T> {
     return false
   }
 
+  canView(): boolean {
+    return false
+  }
+
   canCreate(): boolean {
     return false
   }
@@ -25,16 +29,20 @@ export class BasePolicy<T> {
     return false
   }
 
-  protected isOwner(): boolean {
+  protected canAccessOrganization(): boolean {
+    return !!this.organizationMembership
+  }
+
+  protected isOrganizationOwner(): boolean {
     return this.organizationMembership.role === "owner"
   }
 
-  protected isAdmin(): boolean {
+  protected isOrganizationAdmin(): boolean {
     return this.organizationMembership.role === "admin"
   }
 
-  protected isAdminOrOwner(): boolean {
-    return this.isAdmin() || this.isOwner()
+  protected isOrganizationAdminOrOwner(): boolean {
+    return this.isOrganizationAdmin() || this.isOrganizationOwner()
   }
 
   // TODO: once we have a better way to type the resource which has an organizationId property, we can remove this method
@@ -53,5 +61,9 @@ export class BasePolicy<T> {
     // TypeScript now knows organizationId exists, but we need to assert the type
     const resourceWithOrgId = this.entity as T & { organizationId: string }
     return resourceWithOrgId.organizationId === this.organizationMembership.organizationId
+  }
+
+  protected hasValidScope(organizationId: string): boolean {
+    return this.organizationMembership.organizationId === organizationId
   }
 }

@@ -42,6 +42,7 @@ export class AgentsController {
     const agent = await this.agentsService.createAgent({
       connectScope: getRequiredConnectScope(request),
       fields: payload,
+      userId: request.user.id,
     })
 
     return { data: toAgentDto(agent) }
@@ -52,7 +53,10 @@ export class AgentsController {
   async getAll(
     @Req() request: EndpointRequestWithProject,
   ): Promise<typeof AgentsRoutes.getAll.response> {
-    const agents = await this.agentsService.listAgents(getRequiredConnectScope(request))
+    const agents = await this.agentsService.listAgents({
+      userId: request.user.id,
+      connectScope: getRequiredConnectScope(request),
+    })
 
     return { data: agents.map(toAgentDto) }
   }
@@ -84,10 +88,7 @@ export class AgentsController {
   async deleteOne(
     @Req() request: EndpointRequestWithAgent,
   ): Promise<typeof AgentsRoutes.deleteOne.response> {
-    await this.agentsService.deleteAgent({
-      connectScope: getRequiredConnectScope(request),
-      agentId: request.agent.id,
-    })
+    await this.agentsService.deleteAgent(request.agent)
     return { data: { success: true } }
   }
 }

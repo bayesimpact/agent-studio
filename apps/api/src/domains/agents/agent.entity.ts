@@ -11,6 +11,7 @@ import { Project } from "@/domains/projects/project.entity"
 import type { DocumentTag } from "../documents/tags/document-tag.entity"
 import { EvaluationReport } from "../evaluations/reports/evaluation-report.entity"
 import { ExtractionAgentSession } from "./extraction-agent-sessions/extraction-agent-session.entity"
+import { AgentMembership } from "./memberships/agent-membership.entity"
 
 @ConnectEntity("agent")
 export class Agent extends ConnectEntityBase {
@@ -70,4 +71,10 @@ export class Agent extends ConnectEntityBase {
     inverseJoinColumn: { name: "document_tag_id", referencedColumnName: "id" },
   })
   documentTags!: DocumentTag[]
+
+  @OneToMany(
+    () => AgentMembership,
+    (agentMembership) => agentMembership.agent,
+  )
+  agentMemberships!: AgentMembership[]
 }

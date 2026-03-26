@@ -1,4 +1,5 @@
 import { useTranslation } from "react-i18next"
+import { Outlet, useOutlet } from "react-router-dom"
 import { ListHeader } from "@/components/layouts/ListHeader"
 import type { Agent } from "@/features/agents/agents.models"
 import { ExtractionSessionCreator } from "@/features/agents/extraction-agent-sessions/components/ExtractionAgentSessionCreator"
@@ -25,7 +26,7 @@ export function ExtractionAgentRoute({
   return (
     <AsyncRoute data={[agentSessions]}>
       {([agentSessionsValue]) => (
-        <ExtractionAgentWithData
+        <WithData
           agent={agent}
           organizationId={organizationId}
           projectId={projectId}
@@ -36,7 +37,7 @@ export function ExtractionAgentRoute({
   )
 }
 
-function ExtractionAgentWithData({
+function WithData({
   agent,
   organizationId,
   projectId,
@@ -47,9 +48,11 @@ function ExtractionAgentWithData({
   projectId: string
   agentSessions: ExtractionAgentSessionSummary[]
 }) {
+  const outlet = useOutlet()
   const { buildPath } = useBuildPath()
   const { t } = useTranslation("extractionAgentSession", { keyPrefix: "list" })
 
+  if (outlet) return <Outlet />
   return (
     <ListHeader
       agent={agent}

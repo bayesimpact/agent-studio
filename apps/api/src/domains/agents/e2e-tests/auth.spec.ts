@@ -7,6 +7,7 @@ import type { Repository } from "typeorm"
 import { AUTH_ERRORS } from "@/common/errors/auth-errors"
 import { clearTestDatabase } from "@/common/test/test-database"
 import {
+  type AllRepositories,
   setupTransactionalTestDatabase,
   teardownTestDatabase,
 } from "@/common/test/test-transaction-manager"
@@ -23,9 +24,7 @@ describe("Agents - Auth", () => {
   let app: INestApplication<App>
   let request: Requester
   let setup: Awaited<ReturnType<typeof setupTransactionalTestDatabase>>
-  let repositories: ReturnType<
-    Awaited<ReturnType<typeof setupTransactionalTestDatabase>>["getAllRepositories"]
-  >
+  let repositories: AllRepositories
   let _agentRepository: Repository<Agent>
 
   // Variables for the tests
@@ -64,7 +63,9 @@ describe("Agents - Auth", () => {
 
   const createContextForRole = async (role: "owner" | "admin" | "member" = "owner") => {
     const { user, organization, project, agent } = await createOrganizationWithAgent(repositories, {
-      membership: { role },
+      organizationMembership: { role: "member" },
+      projectMembership: { role },
+      agentMembership: { role: "member" },
     })
     organizationId = organization.id
     projectId = project.id
@@ -100,9 +101,9 @@ describe("Agents - Auth", () => {
       auth0Id = "another-auth0-id" // this will trigger a new user to be created in the database
       expectResponse(await subject(), 401, AUTH_ERRORS.NOT_MEMBER_OF_ORG)
     })
-    it("doesn't allow a simple member to get all agents", async () => {
+    it("allows a simple member to get all agents", async () => {
       await createContextForRole("member")
-      expectResponse(await subject(), 403, AUTH_ERRORS.UNAUTHORIZED_RESOURCE)
+      expectResponse(await subject(), 200)
     })
   })
 
