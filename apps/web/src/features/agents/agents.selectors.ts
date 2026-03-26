@@ -22,3 +22,9 @@ export const selectCurrentAgentData = createSelector(
     return { status: ADS.Fulfilled, value: agent, error: null }
   },
 )
+
+export const hasAgentChanged = (originalState: RootState, currentState: RootState) => {
+  const prevId = selectCurrentAgentId(originalState)
+  const nextId = selectCurrentAgentId(currentState)
+  return prevId !== nextId && !!nextId
+}

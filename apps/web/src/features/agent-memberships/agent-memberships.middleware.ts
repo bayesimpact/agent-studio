@@ -1,6 +1,7 @@
 import type { TypedStartListening } from "@reduxjs/toolkit"
 import { createListenerMiddleware, isAnyOf } from "@reduxjs/toolkit"
 import type { AppDispatch, RootState } from "@/store/types"
+import { hasAgentChanged } from "../agents/agents.selectors"
 import { hasInterfaceChanged, selectIsAdminInterface } from "../auth/auth.selectors"
 import { notificationsActions } from "../notifications/notifications.slice"
 import { hasProjectChanged } from "../projects/projects.selectors"
@@ -19,7 +20,8 @@ listenerMiddleware.startListening({
   predicate(_, currentState, originalState) {
     return (
       hasInterfaceChanged(originalState, currentState) ||
-      hasProjectChanged(originalState, currentState)
+      hasProjectChanged(originalState, currentState) ||
+      hasAgentChanged(originalState, currentState)
     )
   },
   effect: async (_, listenerApi) => {
