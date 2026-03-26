@@ -7,7 +7,6 @@ type MockModels =
   | AgentModel._MockGenerateObject
   | AgentModel._MockGenerateStructuredOutput
   | AgentModel._MockGenerateText
-  | AgentModel._MockProcessFiles
   | AgentModel._MockRate
   | AgentModel._MockStreamChatResponse
 export type LLMConfig =
@@ -87,18 +86,6 @@ export interface LLMProvider {
     config: LLMConfig
     metadata: LLMMetadata
   }): Promise<z.infer<T>>
-
-  processFiles({
-    prompt,
-    files,
-    config,
-    metadata,
-  }: {
-    prompt: string
-    files: LLMFile[]
-    config: LLMConfig
-    metadata: LLMMetadata
-  }): Promise<string>
 
   generateStructuredOutput(params: {
     message: LLMChatMessage

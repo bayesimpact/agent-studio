@@ -13,7 +13,6 @@ export const AgentModelToAgentProvider: Record<AgentModel, AgentProvider> = {
   [AgentModel._MockGenerateObject]: AgentProvider._Mock,
   [AgentModel._MockGenerateStructuredOutput]: AgentProvider._Mock,
   [AgentModel._MockGenerateText]: AgentProvider._Mock,
-  [AgentModel._MockProcessFiles]: AgentProvider._Mock,
   [AgentModel._MockRate]: AgentProvider._Mock,
   [AgentModel._MockStreamChatResponse]: AgentProvider._Mock,
 }

@@ -45,8 +45,6 @@ export class CustomMedGemmaLanguageModel implements LanguageModelV3 {
     switch (callOrigin) {
       case CallOrigin.generateStructuredOutput:
         return await this.doGenerateForGenerateStructuredOutput(options)
-      case CallOrigin.processFiles:
-        return await this.doGenerateForProcessFiles(options)
       default:
         throw new NotImplementedException(
           `DEV - doGenerate is not implemented for callOrigin = ${callOrigin}}`,
@@ -116,80 +114,6 @@ export class CustomMedGemmaLanguageModel implements LanguageModelV3 {
             .replace(/'''json/gi, "")
             .replace(/'''/g, "")
             .trim(),
-        })
-        usage = {
-          inputTokens: {
-            total: data.usage.prompt_tokens,
-            noCache: undefined,
-            cacheRead: undefined,
-            cacheWrite: undefined,
-          },
-          outputTokens: {
-            total: data.usage.completion_tokens,
-            text: data.usage.completion_tokens,
-            reasoning: undefined,
-          },
-        }
-      }
-    } else {
-      finishReason = { unified: "stop", raw: undefined }
-      content.push({
-        type: "text",
-        text: "invalid output",
-      })
-    }
-
-    return {
-      content,
-      finishReason,
-      usage,
-      request: { body: stringifiedBody },
-      response: { body: data },
-      warnings,
-    }
-  }
-
-  async doGenerateForProcessFiles(
-    options: LanguageModelV3CallOptions,
-  ): Promise<LanguageModelV3GenerateResult> {
-    const warnings: SharedV3Warning[] = []
-    const input = await this.extractPromptContentsAsInput(options.prompt)
-
-    const url = new URL("v1/chat/completions", this.baseUrl).toString()
-    const body = {
-      model: this.modelId,
-      messages: input,
-      temperature: options.temperature,
-      max_tokens: options.maxOutputTokens,
-      stop: options.stopSequences,
-      tools: undefined,
-    }
-    const stringifiedBody = JSON.stringify(body)
-
-    const res = await fetch(url, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${this.apiKey}`,
-        Connection: "close",
-      },
-      body: stringifiedBody,
-    })
-    // const raw = await res.text()
-    // const data = JSON.parse(raw)
-    const data: any = await res.json()
-
-    const content: LanguageModelV3Content[] = []
-    let usage: LanguageModelV3Usage = data.usage ?? null
-    let finishReason: LanguageModelV3FinishReason
-
-    if (data.choices && data.choices.length > 0) {
-      finishReason = data.choices?.[0]?.finish_reason ?? null
-      if (data.choices[0].message.content) {
-        const { answer } = extractThoughtAndAnswer(data.choices[0].message.content)
-        content.push({
-          type: "text",
-          text: answer,
         })
         usage = {
           inputTokens: {
@@ -348,6 +272,7 @@ export class CustomMedGemmaLanguageModel implements LanguageModelV3 {
             if (!value.mediaType.startsWith("image/"))
               throw new NotImplementedException(`DEV - Unsupported media type: ${value.mediaType}`)
             const buf = Buffer.from(value.data)
+            // fixme DOO: reduce file size ?
             // const resizedBuffer = await sharp(buf)
             //   .resize({ width: 100, height: 100, fit: "inside", withoutEnlargement: true })
             //   .jpeg({ quality: 60 })
@@ -384,17 +309,14 @@ class MedGemmaToolParserStream extends TransformStream<string, LanguageModelV3St
           const startTagIndex = buffer.indexOf("<tool_call>")
 
           if (startTagIndex !== -1) {
-            // Emit any text that came BEFORE the tool call
             const textBefore = buffer.slice(0, startTagIndex)
             if (textBefore.trim()) {
               controller.enqueue({ type: "text-delta", delta: textBefore, id: "" })
             }
 
-            // Switch state to 'parsing tool call'
             isToolCallOpen = true
             buffer = buffer.slice(startTagIndex)
           } else {
-            // Hold back text if it looks like the start of `<tool_call>`
             const possibleTagStart = buffer.lastIndexOf("<")
             if (
               possibleTagStart !== -1 &&
@@ -409,14 +331,12 @@ class MedGemmaToolParserStream extends TransformStream<string, LanguageModelV3St
                 buffer = buffer.slice(possibleTagStart)
               }
             } else {
-              // Safe to emit the whole buffer as normal text
               controller.enqueue({ type: "text-delta", delta: buffer, id: v4() })
               buffer = ""
             }
           }
         }
 
-        // If we are currently buffering a tool call
         if (isToolCallOpen) {
           const endTagIndex = buffer.indexOf("</tool_call>")
           if (endTagIndex !== -1) {
@@ -431,8 +351,7 @@ class MedGemmaToolParserStream extends TransformStream<string, LanguageModelV3St
                 input: JSON.parse(toolData.arguments),
               })
             } catch (_err) {
-              console.error("Failed to parse MedGemma tool call JSON:", jsonStr)
-              // Fallback: emit as text if parsing fails
+              console.error("Failed to parse tool call JSON:", jsonStr) //fixme DOO : tmp output => remove
               controller.enqueue({
                 type: "text-delta",
                 delta: buffer.slice(0, endTagIndex + "</tool_call>".length),
@@ -440,7 +359,6 @@ class MedGemmaToolParserStream extends TransformStream<string, LanguageModelV3St
               })
             }
 
-            // Reset state and continue parsing
             isToolCallOpen = false
             buffer = buffer.slice(endTagIndex + "</tool_call>".length)
           }
@@ -487,9 +405,7 @@ class SSEParserStream extends TransformStream<string, string> {
               const data = JSON.parse(line.slice(6))
               const text = data.choices?.[0]?.delta?.content
               if (text) controller.enqueue(text)
-            } catch (_e) {
-              // ignore parse errors for incomplete SSE lines
-            }
+            } catch (_e) {} //ignore exception
           }
         }
       },

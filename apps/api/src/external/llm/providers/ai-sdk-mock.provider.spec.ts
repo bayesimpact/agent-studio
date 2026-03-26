@@ -16,7 +16,7 @@ describe("AISDKMockProvider", () => {
   let messages: LLMChatMessage[]
   let config: LLMConfig
   let metadata: LLMMetadata
-  const files: LLMFile[] = [
+  const _files: LLMFile[] = [
     {
       type: "file",
       name: "file1.pdf",
@@ -122,27 +122,6 @@ describe("AISDKMockProvider", () => {
     const parsed = schema.parse(result)
     expect(parsed.source).toBe(mock.source)
     expect(parsed.content).toBe(mock.content)
-  })
-  it("processFiles - default mock value", async () => {
-    metadata.traceId = v4()
-    const prompt = ""
-    config = { model: AgentModel._MockProcessFiles, temperature: 1, systemPrompt: "" }
-    const result = await provider.processFiles({ prompt, files, config, metadata })
-    expect(result).toBeDefined()
-    expect(result).toBe("Hello, I'm the processFiles default mock response!")
-  })
-  it("processFiles - custom mock value", async () => {
-    metadata.traceId = v4()
-    const prompt = ""
-    config = {
-      model: AgentModel._MockGenerateStructuredOutput,
-      temperature: 1,
-      systemPrompt: "",
-      mockResult: "This text is from my custom processFiles Mock!",
-    }
-    const result = await provider.processFiles({ prompt, files, config, metadata })
-    expect(result).toBeDefined()
-    expect(result).toBe("This text is from my custom processFiles Mock!")
   })
   it("generateStructuredOutput - default mock value", async () => {
     metadata.traceId = v4()

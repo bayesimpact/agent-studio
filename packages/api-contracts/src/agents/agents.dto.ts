@@ -14,7 +14,6 @@ export enum AgentModel {
   _MockGenerateObject = "generate-object-mock-language-model-v3",
   _MockGenerateStructuredOutput = "generate-structured-output-mock-language-model-v3",
   _MockGenerateText = "generate-text-mock-language-model-v3",
-  _MockProcessFiles = "process-files-mock-language-model-v3",
   _MockRate = "rate-mock-language-model-v3",
   _MockStreamChatResponse = "stream-chat-response-mock-language-model-v3",
 }

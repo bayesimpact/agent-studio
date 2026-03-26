@@ -1,14 +1,6 @@
 import "./open-telemetry-init" // !!!! first import !!!!
 import { NotImplementedException } from "@nestjs/common"
-import {
-  type FilePart,
-  generateText,
-  type ImagePart,
-  jsonSchema,
-  Output,
-  type TextPart,
-  ToolLoopAgent,
-} from "ai"
+import { generateText, jsonSchema, Output, ToolLoopAgent } from "ai"
 import { type ZodObject, z } from "zod"
 import type {
   LLMChatMessage,
@@ -290,62 +282,6 @@ export abstract class AISDKLLMProviderBase implements LLMProvider {
     return z.any()
   }
 
-  async processFiles({
-    prompt,
-    files,
-    config,
-    metadata,
-  }: {
-    prompt: string
-    files: LLMFile[]
-    config: LLMConfig
-    metadata: LLMMetadata
-  }): Promise<string> {
-    const callOrigin = CallOrigin.processFiles
-    const content = [
-      {
-        type: "text",
-        text: prompt,
-      } as TextPart,
-      ...files
-        .filter((f) => f.type === "file")
-        .map<FilePart>((f) => ({
-          type: "file",
-          data: f.content,
-          mediaType: f.mediaType,
-          name: f.name,
-        })),
-      ...files
-        .filter((f) => f.type === "image")
-        .map<ImagePart>((f) => ({
-          type: "image",
-          image: f.content,
-          mediaType: f.mediaType,
-          name: f.name,
-        })),
-    ]
-    const { text } = await generateText({
-      model: this.getLanguageModel({ config, callOrigin }),
-      system: config.systemPrompt,
-      temperature: config.temperature,
-      experimental_telemetry: {
-        isEnabled: true,
-        functionId: "LLMProvider.processFiles",
-        metadata: this.buildMetadata({ config, metadata }),
-      },
-      messages: [
-        {
-          role: "user",
-          content,
-        },
-      ],
-      providerOptions: {
-        custom: { callOrigin },
-      },
-    })
-    return text
-  }
-
   private checkConfigProviderAndModel(config: LLMConfig): void {
     const provider = AgentModelToAgentProvider[config.model]
     if (provider !== this.getAgentProvider())
@@ -394,7 +330,6 @@ export enum CallOrigin {
   generateText = "generateText",
   generateObject = "generateObject",
   generateStructuredOutput = "generateStructuredOutput",
-  processFiles = "processFiles",
 }
 
 export function extractThoughtAndAnswer(raw: string) {
