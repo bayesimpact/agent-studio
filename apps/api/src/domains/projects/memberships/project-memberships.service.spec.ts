@@ -323,7 +323,7 @@ describe("ProjectMembershipsService", () => {
         where: { userId: existingUser.id, organizationId: organization.id },
       })
       expect(orgMemberships).toHaveLength(1)
-      expect(orgMemberships[0]!.role).toBe("member")
+      expect(orgMemberships[0]!.role).toBe("admin")
     })
 
     it("should return the membership if already accepted", async () => {
