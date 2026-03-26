@@ -13,9 +13,12 @@ export class DocumentPolicy extends ProjectScopedPolicy<Document> {
   canList(): boolean {
     return this.canAccess() && this.isProjectAdminOrOwner()
   }
+  canView(): boolean {
+    return this.canAccess()
+  }
 
   canCreate(): boolean {
-    if (this.sourceType === "agentSessionMessage") {
+    if (this.sourceType && ["agentSessionMessage", "extraction"].includes(this.sourceType)) {
       return this.canAccess()
     }
     return this.canAccess() && this.isProjectAdminOrOwner()

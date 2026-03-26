@@ -13,6 +13,10 @@ export class BasePolicy<T> {
     return false
   }
 
+  canView(): boolean {
+    return false
+  }
+
   canCreate(): boolean {
     return false
   }

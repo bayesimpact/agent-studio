@@ -14,6 +14,8 @@
 <!-- - rework guards to check roles based on agent-membership -->
 <!-- - list members by agent + invite user as member to agent -->
 <!-- - email must be unique -->
+<!-- - org-owner -> cannot create project -->
+<!-- - project-admin -> can create project -->
 - create lobby at root / => list invitations to agents and project(owner/admin) and org(owner/admin)
 
 - add zod i18n keys

@@ -260,7 +260,7 @@ export class ProjectMembershipsService {
     const existing = await orgMembershipRepo.findOne({ where: { userId, organizationId } })
     if (existing) return
 
-    const orgMembership = orgMembershipRepo.create({ userId, organizationId, role: "member" })
+    const orgMembership = orgMembershipRepo.create({ userId, organizationId, role: "admin" })
     await orgMembershipRepo.save(orgMembership)
   }
 

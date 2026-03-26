@@ -29,7 +29,7 @@ export class AgentMembershipsService {
   async findById(membershipId: string): Promise<AgentMembership | null> {
     return this.agentMembershipRepository.findOne({
       where: { id: membershipId },
-      relations: ["user"],
+      relations: ["user", "agent"],
     })
   }
 
@@ -215,12 +215,13 @@ export class AgentMembershipsService {
     return this.dataSource.transaction(async (manager) => {
       const membershipRepo = manager.getRepository(AgentMembership)
       const userRepo = manager.getRepository(User)
+      const projectMembershipRepo = manager.getRepository(ProjectMembership)
+      const organizationMembershipRepo = manager.getRepository(OrganizationMembership)
 
       const membership = await this.findById(membershipId)
       if (!membership) return
 
-      const { user } = membership
-      if (user.id === userId) {
+      if (membership.user.id === userId) {
         throw new Error("Cannot remove yourself from the agent")
       }
       if (membership.role === "owner") {
@@ -229,9 +230,26 @@ export class AgentMembershipsService {
 
       await membershipRepo.delete({ id: membershipId, agentId })
 
-      // If the user is a placeholder (never signed up), clean them up
-      if (user.auth0Id.startsWith(PLACEHOLDER_AUTH0_ID_PREFIX)) {
-        await userRepo.delete({ id: user.id })
+      const memberships = await membershipRepo.find({
+        where: { id: membershipId, agentId },
+        relations: ["user"],
+      })
+
+      if (memberships.length === 0) {
+        // If the user has no more memberships for this agent, also remove their ProjectMembership and OrganizationMembership related to this agent's project and organization
+        await projectMembershipRepo.delete({
+          userId: membership.user.id,
+          projectId: membership.agent.projectId,
+        })
+        await organizationMembershipRepo.delete({
+          userId: membership.user.id,
+          organizationId: membership.agent.organizationId,
+        })
+      }
+
+      if (membership.user.auth0Id.startsWith(PLACEHOLDER_AUTH0_ID_PREFIX)) {
+        // If the user is a placeholder (never signed up), clean them up
+        await userRepo.delete({ id: membership.user.id })
       }
     })
   }
