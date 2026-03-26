@@ -4,6 +4,7 @@ import {
 } from "@caseai-connect/api-contracts"
 import { Controller, Post, Req, UseGuards } from "@nestjs/common"
 import type { EndpointRequestWithAgentSession } from "@/common/context/request.interface"
+import { getRequiredConnectScope } from "@/common/context/request-context.helpers"
 import { RequireContext } from "@/common/context/require-context.decorator"
 import { ResourceContextGuard } from "@/common/context/resource-context.guard"
 import { CheckPolicy } from "@/common/policies/check-policy.decorator"
@@ -27,9 +28,12 @@ export class AgentMessagesController {
   async listMessages(
     @Req() request: EndpointRequestWithAgentSession,
   ): Promise<typeof AgentSessionMessagesRoutes.listMessages.response> {
+    const connectScope = getRequiredConnectScope(request)
     const agentSessionId = request.agentSession.id
-    const messages =
-      await this.conversationAgentSessionsService.listMessagesForSession(agentSessionId)
+    const messages = await this.conversationAgentSessionsService.listMessagesForSession({
+      agentSessionId,
+      connectScope,
+    })
     return { data: messages.map(toDto) }
   }
 }

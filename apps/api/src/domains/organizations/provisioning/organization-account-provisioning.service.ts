@@ -32,7 +32,7 @@ export type ProvisionOrganizationAccountResult =
 export class OrganizationAccountProvisioningService {
   constructor(
     @InjectRepository(OrganizationMembership)
-    private readonly membershipRepository: Repository<OrganizationMembership>,
+    private readonly organizationMembershipRepository: Repository<OrganizationMembership>,
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
     private readonly dataSource: DataSource,
@@ -46,7 +46,7 @@ export class OrganizationAccountProvisioningService {
 
     return this.dataSource.transaction(async (manager) => {
       const organizationRepository = manager.getRepository(Organization)
-      const membershipRepository = manager.getRepository(OrganizationMembership)
+      const organizationMembershipRepository = manager.getRepository(OrganizationMembership)
       const userRepository = manager.getRepository(User)
 
       const user = await this.upsertUser({
@@ -59,7 +59,7 @@ export class OrganizationAccountProvisioningService {
       const existingOwnerMembership = await this.findExistingOwnerMembershipByOrganizationName({
         userId: user.id,
         organizationName: normalizedOrganizationName,
-        membershipRepository,
+        organizationMembershipRepository,
       })
 
       if (existingOwnerMembership) {
@@ -75,12 +75,12 @@ export class OrganizationAccountProvisioningService {
       })
       const savedOrganization = await organizationRepository.save(organization)
 
-      const ownerMembership = membershipRepository.create({
+      const ownerMembership = organizationMembershipRepository.create({
         userId: user.id,
         organizationId: savedOrganization.id,
         role: "owner",
       })
-      await membershipRepository.save(ownerMembership)
+      await organizationMembershipRepository.save(ownerMembership)
 
       return {
         status: "created",
@@ -108,7 +108,7 @@ export class OrganizationAccountProvisioningService {
     const membership = await this.findExistingOwnerMembershipByOrganizationName({
       userId: user.id,
       organizationName: normalizedOrganizationName,
-      membershipRepository: this.membershipRepository,
+      organizationMembershipRepository: this.organizationMembershipRepository,
     })
     return Boolean(membership)
   }
@@ -180,9 +180,9 @@ export class OrganizationAccountProvisioningService {
   private async findExistingOwnerMembershipByOrganizationName(input: {
     userId: string
     organizationName: string
-    membershipRepository: Repository<OrganizationMembership>
+    organizationMembershipRepository: Repository<OrganizationMembership>
   }): Promise<OrganizationMembership | null> {
-    return input.membershipRepository
+    return input.organizationMembershipRepository
       .createQueryBuilder("membership")
       .innerJoin("membership.organization", "organization")
       .where("membership.userId = :userId", { userId: input.userId })

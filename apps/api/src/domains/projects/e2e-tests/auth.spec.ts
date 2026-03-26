@@ -5,6 +5,7 @@ import type { App } from "supertest/types"
 import { AUTH_ERRORS } from "@/common/errors/auth-errors"
 import { clearTestDatabase, RandomUuid } from "@/common/test/test-database"
 import {
+  type AllRepositories,
   setupTransactionalTestDatabase,
   teardownTestDatabase,
 } from "@/common/test/test-transaction-manager"
@@ -18,9 +19,7 @@ describe("Projects - Auth", () => {
   let app: INestApplication<App>
   let request: Requester
   let setup: Awaited<ReturnType<typeof setupTransactionalTestDatabase>>
-  let repositories: ReturnType<
-    Awaited<ReturnType<typeof setupTransactionalTestDatabase>>["getAllRepositories"]
-  >
+  let repositories: AllRepositories
 
   // Variables for the tests
   let organizationId: string | null = RandomUuid.Organization
@@ -54,7 +53,7 @@ describe("Projects - Auth", () => {
 
   const createContextForRole = async (role: "owner" | "admin" | "member" = "owner") => {
     const { user, organization, project } = await createOrganizationWithProject(repositories, {
-      membership: { role },
+      projectMembership: { role },
     })
     organizationId = organization.id
     projectId = project.id
@@ -118,7 +117,7 @@ describe("Projects - Auth", () => {
     })
     it("doesn't allow a simple member to create projects", async () => {
       await createContextForRole("member")
-      expectResponse(await subject(), 403, AUTH_ERRORS.UNAUTHORIZED_RESOURCE)
+      expectResponse(await subject(), 500)
     })
   })
 

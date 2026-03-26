@@ -1,31 +1,21 @@
-import type { Repository } from "typeorm"
 import { clearTestDatabase } from "@/common/test/test-database"
 import {
+  type AllRepositories,
   setupTransactionalTestDatabase,
   teardownTestDatabase,
 } from "@/common/test/test-transaction-manager"
-import { OrganizationMembership } from "@/domains/organizations/memberships/organization-membership.entity"
 import { organizationMembershipFactory } from "@/domains/organizations/memberships/organization-membership.factory"
 import { OrganizationMembershipService } from "@/domains/organizations/memberships/organization-membership.service"
-import { Organization } from "@/domains/organizations/organization.entity"
 import {
   createOrganizationWithOwner,
   organizationFactory,
 } from "@/domains/organizations/organization.factory"
 import { OrganizationsModule } from "@/domains/organizations/organizations.module"
-import { User } from "@/domains/users/user.entity"
 
 describe("OrganizationMembershipService", () => {
   let service: OrganizationMembershipService
-  let membershipRepository: Repository<OrganizationMembership>
-  let organizationRepository: Repository<Organization>
-  let userRepository: Repository<User>
   let setup: Awaited<ReturnType<typeof setupTransactionalTestDatabase>>
-  let mainRepositories: {
-    membershipRepository: Repository<OrganizationMembership>
-    organizationRepository: Repository<Organization>
-    userRepository: Repository<User>
-  }
+  let repositories: AllRepositories
 
   beforeAll(async () => {
     setup = await setupTransactionalTestDatabase({
@@ -41,14 +31,7 @@ describe("OrganizationMembershipService", () => {
   beforeEach(async () => {
     await setup.startTransaction()
     service = setup.module.get<OrganizationMembershipService>(OrganizationMembershipService)
-    membershipRepository = setup.getRepository(OrganizationMembership)
-    organizationRepository = setup.getRepository(Organization)
-    userRepository = setup.getRepository(User)
-    mainRepositories = {
-      membershipRepository,
-      organizationRepository,
-      userRepository,
-    }
+    repositories = setup.getAllRepositories()
   })
 
   afterEach(async () => {
@@ -58,7 +41,7 @@ describe("OrganizationMembershipService", () => {
   describe("findOrganizationMembership", () => {
     it("should return membership when user is a member of the organization", async () => {
       // Arrange
-      const { user, organization } = await createOrganizationWithOwner(mainRepositories)
+      const { user, organization } = await createOrganizationWithOwner(repositories)
 
       // Act
       const result = await service.findOrganizationMembership({
@@ -75,11 +58,11 @@ describe("OrganizationMembershipService", () => {
 
     it("should return null when user is not a member of the organization", async () => {
       // Arrange
-      const { user } = await createOrganizationWithOwner(mainRepositories, {
+      const { user } = await createOrganizationWithOwner(repositories, {
         user: { email: "nonmember@example.com" },
       })
 
-      const { organization } = await createOrganizationWithOwner(mainRepositories, {
+      const { organization } = await createOrganizationWithOwner(repositories, {
         organization: { name: "Other Org" },
       })
 
@@ -95,7 +78,7 @@ describe("OrganizationMembershipService", () => {
 
     it("should return null when organization does not exist", async () => {
       // Arrange
-      const { user } = await createOrganizationWithOwner(mainRepositories, {
+      const { user } = await createOrganizationWithOwner(repositories, {
         user: { email: "user@example.com" },
       })
 
@@ -113,7 +96,7 @@ describe("OrganizationMembershipService", () => {
 
     it("should return null when user does not exist", async () => {
       // Arrange
-      const { organization } = await createOrganizationWithOwner(mainRepositories)
+      const { organization } = await createOrganizationWithOwner(repositories)
 
       const nonExistentUserId = "00000000-0000-0000-0000-000000000000"
 
@@ -130,18 +113,18 @@ describe("OrganizationMembershipService", () => {
     it("should return the correct membership when user has multiple memberships", async () => {
       // Arrange
       const { user, organization: organization1 } = await createOrganizationWithOwner(
-        mainRepositories,
+        repositories,
         {
           user: { email: "multimember@example.com" },
           organization: { name: "Org 1" },
-          membership: { role: "owner" },
+          organizationMembership: { role: "owner" },
         },
       )
 
-      const savedOrganization2 = await organizationRepository.save(
+      const savedOrganization2 = await repositories.organizationRepository.save(
         organizationFactory.build({ name: "Org 2" }),
       )
-      await membershipRepository.save(
+      await repositories.organizationMembershipRepository.save(
         organizationMembershipFactory
           .transient({ user, organization: savedOrganization2 })
           .member()

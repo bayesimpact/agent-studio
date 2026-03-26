@@ -57,11 +57,12 @@ export class ProjectMembershipsController {
   async removeProjectMembership(
     @Req() request: EndpointRequestWithProjectMembership,
   ): Promise<typeof ProjectMembershipRoutes.deleteOne.response> {
-    const { project, projectMembership } = request
+    const { project, memberProjectMembership } = request
 
     await this.projectMembershipsService.removeProjectMembership({
-      membershipId: projectMembership.id,
+      membershipId: memberProjectMembership.id,
       projectId: project.id,
+      userId: request.user.id,
     })
 
     return { data: { success: true } }
@@ -77,5 +78,6 @@ function toDto(entity: ProjectMembership): ProjectMembershipDto {
     userEmail: entity.user.email,
     status: entity.status,
     createdAt: entity.createdAt.getTime(),
+    role: entity.role,
   }
 }

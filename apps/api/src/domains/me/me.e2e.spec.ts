@@ -1,4 +1,5 @@
-import { MeRoutes } from "@caseai-connect/api-contracts"
+import { MeRoutes, type OrganizationDto } from "@caseai-connect/api-contracts"
+import type { UserDto } from "@caseai-connect/api-contracts/src/me/me.dto"
 import type { INestApplication } from "@nestjs/common"
 import type { App } from "supertest/types"
 import { clearTestDatabase } from "@/common/test/test-database"
@@ -17,12 +18,7 @@ const mockOrganization = {
   name: "Test Org",
 }
 
-const mockOrganizationsWithMemberships = [
-  {
-    organization: mockOrganization,
-    role: "member",
-  },
-]
+const mockOrganizations = [mockOrganization]
 
 const mockAuth0UserInfoService = {
   getUserInfo: jest.fn().mockResolvedValue({
@@ -34,9 +30,7 @@ const mockAuth0UserInfoService = {
 }
 
 const mockOrganizationsService = {
-  getUserOrganizationsWithMemberships: jest
-    .fn()
-    .mockResolvedValue(mockOrganizationsWithMemberships),
+  getUserOrganizations: jest.fn().mockResolvedValue(mockOrganizations),
 }
 
 describe("MeController (e2e)", () => {
@@ -111,14 +105,18 @@ describe("MeController (e2e)", () => {
             id: expect.any(String),
             email: "test@example.com",
             name: "Test User",
-          },
+            memberships: {
+              organizationMemberships: [],
+              projectMemberships: [],
+              agentMemberships: [],
+            },
+          } satisfies UserDto,
           organizations: [
             {
               id: mockOrganization.id,
               name: mockOrganization.name,
-              role: "member",
               featureFlags: [],
-            },
+            } satisfies OrganizationDto,
           ],
         })
       })

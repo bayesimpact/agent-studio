@@ -6,9 +6,10 @@ import {
 } from "@nestjs/common"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
 import { Reflector } from "@nestjs/core"
-import type { EndpointRequestWithProject } from "@/common/context/request.interface"
+import type { EndpointRequestWithAgentSession } from "@/common/context/request.interface"
 import { AUTH_ERRORS } from "@/common/errors/auth-errors"
 import { CHECK_POLICY_KEY, type PolicyHandler } from "@/common/policies/check-policy.decorator"
+import { requestToProjectPolicyContext } from "@/domains/projects/helpers"
 import { BaseAgentSessionPolicy } from "./base-agent-session.policy"
 
 @Injectable()
@@ -16,7 +17,7 @@ export class BaseAgentSessionGuard implements CanActivate {
   constructor(private reflector: Reflector) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
-    const request = context.switchToHttp().getRequest() as EndpointRequestWithProject
+    const request = context.switchToHttp().getRequest() as EndpointRequestWithAgentSession
 
     const body = "body" in request && typeof request.body === "object" ? request.body : undefined
     if (!body) {
@@ -32,11 +33,8 @@ export class BaseAgentSessionGuard implements CanActivate {
     }
 
     const policy = new BaseAgentSessionPolicy(
-      {
-        organizationMembership: request.organizationMembership,
-        projectMembership: request.projectMembership,
-        project: request.project,
-      },
+      requestToProjectPolicyContext(request),
+      request.agentSession,
       type,
     )
 

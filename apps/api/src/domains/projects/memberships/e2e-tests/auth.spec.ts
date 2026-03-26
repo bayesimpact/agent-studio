@@ -5,6 +5,7 @@ import type { App } from "supertest/types"
 import { AUTH_ERRORS } from "@/common/errors/auth-errors"
 import { clearTestDatabase } from "@/common/test/test-database"
 import {
+  type AllRepositories,
   setupTransactionalTestDatabase,
   teardownTestDatabase,
 } from "@/common/test/test-transaction-manager"
@@ -13,15 +14,13 @@ import { createOrganizationWithProject } from "@/domains/organizations/organizat
 import { setupUserGuardForTesting } from "../../../../../test/e2e.helpers"
 import { expectResponse, type Requester, testRequester } from "../../../../../test/request"
 import { ProjectsModule } from "../../projects.module"
-import { createProjectMembership } from "../project-membership.factory"
+import { inviteUserToProject } from "../project-membership.factory"
 
 describe("Project Memberships - Auth", () => {
   let app: INestApplication<App>
   let request: Requester
   let setup: Awaited<ReturnType<typeof setupTransactionalTestDatabase>>
-  let repositories: ReturnType<
-    Awaited<ReturnType<typeof setupTransactionalTestDatabase>>["getAllRepositories"]
-  >
+  let repositories: AllRepositories
 
   // Variables for the tests
   let organizationId: string | null = "random-organization-id"
@@ -55,7 +54,7 @@ describe("Project Memberships - Auth", () => {
 
   const createContextForRole = async (role: "owner" | "admin" | "member" = "owner") => {
     const { user, organization, project } = await createOrganizationWithProject(repositories, {
-      membership: { role },
+      projectMembership: { role },
     })
     organizationId = organization.id
     projectId = project.id
@@ -153,7 +152,7 @@ describe("Project Memberships - Auth", () => {
       const { organization, project } = await createContextForRole(role)
 
       // Create an invited user and membership for the project
-      const { membership } = await createProjectMembership({ repositories, organization, project })
+      const { membership } = await inviteUserToProject({ repositories, organization, project })
       membershipId = membership.id
 
       return { organization, project, membership }

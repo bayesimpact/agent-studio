@@ -307,7 +307,9 @@ export class DocumentsController {
     return { data: { success: true } }
   }
 
-  @CheckPolicy((policy) => policy.canUpdate())
+  // FIXME: create a dedicated endpoint for every sourceType and check ownership
+  // because we can show any doc with its id
+  @CheckPolicy((policy) => policy.canView())
   @AddContext("document")
   @Get(DocumentsRoutes.getTemporaryUrl.path)
   @HttpCode(HttpStatus.CREATED)

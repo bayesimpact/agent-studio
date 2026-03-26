@@ -3,6 +3,7 @@ import { UnprocessableEntityException } from "@nestjs/common"
 import { z } from "zod"
 import { clearTestDatabase } from "@/common/test/test-database"
 import {
+  type AllRepositories,
   setupTransactionalTestDatabase,
   teardownTestDatabase,
 } from "@/common/test/test-transaction-manager"
@@ -15,9 +16,7 @@ import { ExtractionAgentSessionsService } from "./extraction-agent-sessions.serv
 describe("ExtractionAgentSessionsService", () => {
   let service: ExtractionAgentSessionsService
   let setup: Awaited<ReturnType<typeof setupTransactionalTestDatabase>>
-  let repositories: ReturnType<
-    Awaited<ReturnType<typeof setupTransactionalTestDatabase>>["getAllRepositories"]
-  >
+  let repositories: AllRepositories
 
   beforeAll(async () => {
     setup = await setupTransactionalTestDatabase({

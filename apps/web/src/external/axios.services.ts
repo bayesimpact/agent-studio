@@ -1,3 +1,4 @@
+import agentMembershipsApi from "@/features/agent-memberships/external/agent-memberships.api"
 import agentMessageFeedbackApi from "@/features/agent-message-feedback/external/agent-message-feedback.api"
 import conversationAgentSessionsApi from "@/features/agents/conversation-agent-sessions/external/conversation-agent-sessions.api"
 import agentsApi from "@/features/agents/external/agents.api"
@@ -15,16 +16,17 @@ import projectMembershipsApi from "@/features/project-memberships/external/proje
 import projectsApi from "@/features/projects/external/projects.api"
 
 export const services = {
-  agentSessionMessages: agentSessionMessagesApi,
+  agentMemberships: agentMembershipsApi,
   agentMessageFeedback: agentMessageFeedbackApi,
-  extractionAgentSessions: extractionAgentSessionsApi,
   agents: agentsApi,
+  agentSessionMessages: agentSessionMessagesApi,
   conversationAgentSessions: conversationAgentSessionsApi,
-  formAgentSessions: formAgentSessionsApi,
-  documentTags: documentTagsApi,
   documents: documentsApi,
+  documentTags: documentTagsApi,
   evaluationReports: evaluationReportsApi,
   evaluations: evaluationsApi,
+  extractionAgentSessions: extractionAgentSessionsApi,
+  formAgentSessions: formAgentSessionsApi,
   invitations: invitationsApi,
   me: meApi,
   organizations: organizationsApi,

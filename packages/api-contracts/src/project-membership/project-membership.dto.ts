@@ -1,5 +1,6 @@
 import type { TimeType } from "../generic"
 
+export type ProjectMembershipRoleDto = "owner" | "admin" | "member"
 export type ProjectMembershipDto = {
   id: string
   projectId: string
@@ -8,4 +9,5 @@ export type ProjectMembershipDto = {
   userEmail: string
   status: "sent" | "accepted"
   createdAt: TimeType
+  role: ProjectMembershipRoleDto
 }

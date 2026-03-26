@@ -6,6 +6,7 @@ import typeorm from "./config/typeorm"
 import { AgentsModule } from "./domains/agents/agents.module"
 import { ConversationAgentSessionsModule } from "./domains/agents/conversation-agent-sessions/conversation-agent-sessions.module"
 import { AgentMessageFeedbackModule } from "./domains/agents/shared/agent-session-messages/feedback/agent-message-feedback.module"
+import { InvitationsModule } from "./domains/agents/shared/memberships/invitations.module"
 import { AuthModule } from "./domains/auth/auth.module"
 import { DocumentsModule } from "./domains/documents/documents.module"
 import { StorageModule } from "./domains/documents/storage/storage.module"
@@ -27,20 +28,21 @@ import { UsersModule } from "./domains/users/users.module"
       inject: [ConfigService],
       useFactory: async (configService: ConfigService) => configService.get("typeorm")(),
     }),
-    AuthModule,
-    UsersModule,
-    OrganizationsModule,
-    ProjectsModule,
-    AgentsModule,
-    ConversationAgentSessionsModule,
     AgentMessageFeedbackModule,
-    MeModule,
-    EvaluationsModule,
-    OrganizationsModule,
-    ProjectsModule,
+    AgentsModule,
+    AuthModule,
+    ConversationAgentSessionsModule,
     DocumentsModule,
     DocumentTagsModule,
+    EvaluationsModule,
+    InvitationsModule,
+    MeModule,
+    OrganizationsModule,
+    OrganizationsModule,
+    ProjectsModule,
+    ProjectsModule,
     StorageModule,
+    UsersModule,
     UsersModule,
   ],
 })

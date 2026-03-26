@@ -1,4 +1,4 @@
-import { Module } from "@nestjs/common"
+import { forwardRef, Module } from "@nestjs/common"
 import { TypeOrmModule } from "@nestjs/typeorm"
 import { DocumentTagContextResolver } from "@/common/context/resolvers/document-tag-context.resolver"
 import { OrganizationContextResolver } from "@/common/context/resolvers/organization-context.resolver"
@@ -20,7 +20,7 @@ import { DocumentTagsService } from "./document-tags.service"
   imports: [
     TypeOrmModule.forFeature([DocumentTag, Project, OrganizationMembership, ProjectMembership]),
     OrganizationsModule,
-    ProjectsModule,
+    forwardRef(() => ProjectsModule),
     UsersModule,
     AuthModule,
   ],

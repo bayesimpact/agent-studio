@@ -17,8 +17,7 @@ export function ProtectedRoute({ children }: { children: React.ReactNode }) {
     }
   }, [isLoading, isAuthenticated, loginWithRedirect])
 
-  if (isLoading) return <LoadingRoute />
-  if (!isAuthenticated) return <LoadingRoute />
+  if (isLoading || !isAuthenticated) return <LoadingRoute />
 
   return <>{children}</>
 }

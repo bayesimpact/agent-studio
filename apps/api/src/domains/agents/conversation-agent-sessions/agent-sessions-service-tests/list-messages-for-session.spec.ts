@@ -17,7 +17,7 @@ describe("listMessagesForSession", () => {
       testAgent,
       testUser,
       testOrganization,
-      membershipRepository,
+      organizationMembershipRepository,
       agentMessageRepository,
       testProject,
     } = getTestContext()
@@ -26,7 +26,7 @@ describe("listMessagesForSession", () => {
       projectId: testProject.id,
     }
 
-    await membershipRepository.save(
+    await organizationMembershipRepository.save(
       organizationMembershipFactory
         .transient({ organization: testOrganization, user: testUser })
         .owner()
@@ -44,7 +44,10 @@ describe("listMessagesForSession", () => {
       agentMessageRepository,
     })
 
-    const messages = await service.listMessagesForSession(session.id)
+    const messages = await service.listMessagesForSession({
+      agentSessionId: session.id,
+      connectScope,
+    })
 
     expect(messages).toHaveLength(2)
     expect(messages[0]?.role).toBe("user")

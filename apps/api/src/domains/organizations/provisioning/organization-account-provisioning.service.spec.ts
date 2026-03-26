@@ -22,20 +22,20 @@ describe("OrganizationAccountProvisioningService", () => {
   let service: OrganizationAccountProvisioningService
   let userRepository: MockRepository<User>
   let organizationRepository: MockRepository<Organization>
-  let membershipRepository: MockRepository<OrganizationMembership>
+  let organizationMembershipRepository: MockRepository<OrganizationMembership>
   let dataSource: { transaction: jest.Mock }
 
   beforeEach(async () => {
     userRepository = createMockRepository<User>()
     organizationRepository = createMockRepository<Organization>()
-    membershipRepository = createMockRepository<OrganizationMembership>()
+    organizationMembershipRepository = createMockRepository<OrganizationMembership>()
     dataSource = {
       transaction: jest.fn(async (callback) =>
         callback({
           getRepository: jest.fn((entity) => {
             if (entity === User) return userRepository
             if (entity === Organization) return organizationRepository
-            if (entity === OrganizationMembership) return membershipRepository
+            if (entity === OrganizationMembership) return organizationMembershipRepository
             throw new Error("Unknown repository")
           }),
         }),
@@ -47,7 +47,10 @@ describe("OrganizationAccountProvisioningService", () => {
         OrganizationAccountProvisioningService,
         { provide: getRepositoryToken(User), useValue: userRepository },
         { provide: getRepositoryToken(Organization), useValue: organizationRepository },
-        { provide: getRepositoryToken(OrganizationMembership), useValue: membershipRepository },
+        {
+          provide: getRepositoryToken(OrganizationMembership),
+          useValue: organizationMembershipRepository,
+        },
         { provide: DataSource, useValue: dataSource },
       ],
     }).compile()
@@ -76,7 +79,9 @@ describe("OrganizationAccountProvisioningService", () => {
       andWhere: jest.fn().mockReturnThis(),
       getOne: jest.fn().mockResolvedValue(null),
     }
-    ;(membershipRepository.createQueryBuilder as jest.Mock).mockReturnValue(queryBuilder)
+    ;(organizationMembershipRepository.createQueryBuilder as jest.Mock).mockReturnValue(
+      queryBuilder,
+    )
     ;(organizationRepository.create as jest.Mock).mockReturnValue({
       id: "org1",
       name: "Demo Org",
@@ -85,13 +90,13 @@ describe("OrganizationAccountProvisioningService", () => {
       id: "org1",
       name: "Demo Org",
     })
-    ;(membershipRepository.create as jest.Mock).mockReturnValue({
+    ;(organizationMembershipRepository.create as jest.Mock).mockReturnValue({
       id: "mem1",
       userId: "user1",
       organizationId: "org1",
       role: "owner",
     })
-    ;(membershipRepository.save as jest.Mock).mockResolvedValue({
+    ;(organizationMembershipRepository.save as jest.Mock).mockResolvedValue({
       id: "mem1",
       userId: "user1",
       organizationId: "org1",
@@ -130,7 +135,9 @@ describe("OrganizationAccountProvisioningService", () => {
         role: "owner",
       }),
     }
-    ;(membershipRepository.createQueryBuilder as jest.Mock).mockReturnValue(queryBuilder)
+    ;(organizationMembershipRepository.createQueryBuilder as jest.Mock).mockReturnValue(
+      queryBuilder,
+    )
     ;(userRepository.save as jest.Mock).mockResolvedValue({
       id: "user1",
       auth0Id: "auth0|user1",

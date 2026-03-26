@@ -16,6 +16,7 @@ import { ProjectsModule } from "@/domains/projects/projects.module"
 import { UsersModule } from "@/domains/users/users.module"
 import { LlmModule } from "@/external/llm/llm.module"
 import { Agent } from "../agents/agent.entity"
+import { AgentMembership } from "../agents/memberships/agent-membership.entity"
 import { Evaluation } from "./evaluation.entity"
 import { EvaluationGuard } from "./evaluation.guard"
 import { EvaluationsController } from "./evaluations.controller"
@@ -36,6 +37,7 @@ import { EvaluationReportsService } from "./reports/evaluation-reports.service"
       ProjectMembership,
       EvaluationReport,
       Agent,
+      AgentMembership,
     ]),
     OrganizationsModule,
     ProjectsModule,

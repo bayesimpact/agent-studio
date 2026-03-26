@@ -1,18 +1,28 @@
 import { createSlice, type PayloadAction } from "@reduxjs/toolkit"
-import type { Organization } from "../organizations/organizations.models"
+import type { User } from "../me/me.models"
 
 interface State {
   isAuthenticated: boolean
-  isAdmin: boolean
   isAdminInterface: boolean
+  abilities: {
+    canManageOrganizations: boolean
+    canManageProjects: boolean
+    canReadAgent: boolean
+  }
 }
 
 const initialState: State = {
   isAuthenticated: false,
-  isAdmin: false,
   isAdminInterface: false,
+  abilities: {
+    canManageOrganizations: false,
+    canManageProjects: false,
+    canReadAgent: false,
+  },
 }
 
+const adminRoles = ["admin", "owner"]
+const roles = [...adminRoles, "member"]
 const slice = createSlice({
   name: "auth",
   initialState,
@@ -20,15 +30,38 @@ const slice = createSlice({
     setAuthenticated: (state, action: PayloadAction<boolean>) => {
       state.isAuthenticated = action.payload
     },
-    setIsAdmin: (state, action: PayloadAction<Organization["role"]>) => {
-      const isAdmin = action.payload === "admin" || action.payload === "owner"
-      state.isAdmin = isAdmin
-      if (!isAdmin && state.isAdminInterface) {
-        state.isAdminInterface = false
-      }
+    setCanManageOrganizations: (
+      state,
+      action: PayloadAction<{
+        organizationRole?: User["memberships"]["organizationMemberships"][number]["role"]
+      }>,
+    ) => {
+      state.abilities.canManageOrganizations = !!(
+        action.payload.organizationRole && adminRoles.includes(action.payload.organizationRole)
+      )
+    },
+    setCanManageProjects: (
+      state,
+      action: PayloadAction<{
+        projectRole?: User["memberships"]["projectMemberships"][number]["role"]
+      }>,
+    ) => {
+      state.abilities.canManageProjects = !!(
+        action.payload.projectRole && adminRoles.includes(action.payload.projectRole)
+      )
+    },
+    setCanReadAgent: (
+      state,
+      action: PayloadAction<{
+        agentRole?: User["memberships"]["agentMemberships"][number]["role"]
+      }>,
+    ) => {
+      state.abilities.canReadAgent = !!(
+        action.payload.agentRole && roles.includes(action.payload.agentRole)
+      )
     },
     setIsAdminInterface: (state, action: PayloadAction<boolean>) => {
-      if (state.isAdmin) {
+      if (state.abilities.canManageOrganizations || state.abilities.canManageProjects) {
         state.isAdminInterface = action.payload
       } else {
         state.isAdminInterface = false

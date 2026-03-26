@@ -4,6 +4,7 @@ import supertest from "supertest"
 import type { App } from "supertest/types"
 import { clearTestDatabase } from "@/common/test/test-database"
 import {
+  type AllRepositories,
   setupTransactionalTestDatabase,
   teardownTestDatabase,
 } from "@/common/test/test-transaction-manager"
@@ -14,9 +15,7 @@ import { withDocumentAuthAndEmbeddingsMocks } from "../test-overrides"
 describe("Documents - uploadOne", () => {
   let app: INestApplication<App>
   let setup: Awaited<ReturnType<typeof setupTransactionalTestDatabase>>
-  let repositories: ReturnType<
-    Awaited<ReturnType<typeof setupTransactionalTestDatabase>>["getAllRepositories"]
-  >
+  let repositories: AllRepositories
 
   let organizationId: string
   let projectId: string
@@ -45,7 +44,7 @@ describe("Documents - uploadOne", () => {
 
   const createContext = async (role: "owner" | "admin" | "member" = "owner") => {
     const { user, organization, project } = await createOrganizationWithProject(repositories, {
-      membership: { role },
+      projectMembership: { role },
     })
     organizationId = organization.id
     projectId = project.id

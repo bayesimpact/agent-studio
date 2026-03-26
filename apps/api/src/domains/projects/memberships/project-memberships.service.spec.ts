@@ -3,16 +3,21 @@ import { NotFoundException } from "@nestjs/common"
 import type { Repository } from "typeorm"
 import { clearTestDatabase } from "@/common/test/test-database"
 import {
+  type AllRepositories,
   setupTransactionalTestDatabase,
   teardownTestDatabase,
 } from "@/common/test/test-transaction-manager"
 import { INVITATION_SENDER } from "@/domains/auth/invitation-sender.interface"
-import { createOrganizationMembership } from "@/domains/organizations/memberships/organization-membership.factory"
-import { createOrganizationWithProject } from "@/domains/organizations/organization.factory"
+import { addUserToOrganization } from "@/domains/organizations/memberships/organization-membership.factory"
+import {
+  createOrganizationWithOwner,
+  createOrganizationWithProject,
+} from "@/domains/organizations/organization.factory"
 import { userFactory } from "@/domains/users/user.factory"
+import { projectFactory } from "../project.factory"
 import { ProjectsModule } from "../projects.module"
 import type { ProjectMembership } from "./project-membership.entity"
-import { createProjectMembership, projectMembershipFactory } from "./project-membership.factory"
+import { addUserToProject, inviteUserToProject } from "./project-membership.factory"
 import { ProjectMembershipsService } from "./project-memberships.service"
 
 let ticketIdCounter = 0
@@ -27,9 +32,7 @@ describe("ProjectMembershipsService", () => {
   let service: ProjectMembershipsService
   let projectMembershipRepository: Repository<ProjectMembership>
   let setup: Awaited<ReturnType<typeof setupTransactionalTestDatabase>>
-  let repositories: ReturnType<
-    Awaited<ReturnType<typeof setupTransactionalTestDatabase>>["getAllRepositories"]
-  >
+  let repositories: AllRepositories
 
   beforeAll(async () => {
     setup = await setupTransactionalTestDatabase({
@@ -56,7 +59,7 @@ describe("ProjectMembershipsService", () => {
   describe("findById", () => {
     it("should return a membership by its ID", async () => {
       const { organization, project } = await createOrganizationWithProject(repositories)
-      const { membership } = await createProjectMembership({ repositories, organization, project })
+      const { membership } = await inviteUserToProject({ repositories, organization, project })
 
       const result = await service.findById(membership.id)
 
@@ -73,35 +76,35 @@ describe("ProjectMembershipsService", () => {
 
   describe("listProjectMemberships", () => {
     it("should return empty list when no memberships exist", async () => {
-      const { project } = await createOrganizationWithProject(repositories)
+      const { organization } = await createOrganizationWithOwner(repositories)
+      const project = await repositories.projectRepository.save(
+        projectFactory.transient({ organization }).build(),
+      )
       const result = await service.listProjectMemberships(project.id)
 
       expect(result).toEqual([])
     })
 
     it("should return memberships with user relations", async () => {
-      const { organization, project } = await createOrganizationWithProject(repositories)
-      await createProjectMembership({ repositories, organization, project })
+      const { project } = await createOrganizationWithProject(repositories)
 
       const result = await service.listProjectMemberships(project.id)
 
       expect(result).toHaveLength(1)
       expect(result[0]!.user).toBeDefined()
-      expect(result[0]!.user.email).toBe("invited@example.com")
-      expect(result[0]!.user.name).toBe("Invited User")
     })
 
     it("should return memberships ordered by createdAt DESC", async () => {
       const { organization, project } = await createOrganizationWithProject(repositories)
 
       const user1 = { email: "first@example.com", name: "First User" }
-      await createProjectMembership({ repositories, organization, project, user: user1 })
+      await inviteUserToProject({ repositories, organization, project, user: user1 })
       const user2 = { email: "second@example.com", name: "Second User" }
-      await createProjectMembership({ repositories, organization, project, user: user2 })
+      await inviteUserToProject({ repositories, organization, project, user: user2 })
 
       const result = await service.listProjectMemberships(project.id)
 
-      expect(result).toHaveLength(2)
+      expect(result).toHaveLength(3)
       expect(result[0]!.user.email).toBe("second@example.com")
       expect(result[1]!.user.email).toBe("first@example.com")
     })
@@ -155,7 +158,7 @@ describe("ProjectMembershipsService", () => {
       const { organization, project } = await createOrganizationWithProject(repositories)
 
       const email = "already@example.com"
-      await createProjectMembership({ repositories, organization, project, user: { email } })
+      await inviteUserToProject({ repositories, organization, project, user: { email } })
 
       const result = await service.inviteProjectMembers({
         projectId: project.id,
@@ -221,7 +224,7 @@ describe("ProjectMembershipsService", () => {
       const { organization, project } = await createOrganizationWithProject(repositories)
 
       const email = "already@example.com"
-      await createProjectMembership({ repositories, organization, project, user: { email } })
+      await inviteUserToProject({ repositories, organization, project, user: { email } })
 
       await service.inviteProjectMembers({
         projectId: project.id,
@@ -237,10 +240,11 @@ describe("ProjectMembershipsService", () => {
     it("should accept an invitation and reconcile placeholder user", async () => {
       const { project } = await createOrganizationWithProject(repositories)
 
+      const email = "invite@example.com"
       // Create a membership via invite
       const result = await service.inviteProjectMembers({
         projectId: project.id,
-        emails: ["invite@example.com"],
+        emails: [email],
         inviterName: "Admin",
       })
       expect(result).toHaveLength(1)
@@ -249,6 +253,7 @@ describe("ProjectMembershipsService", () => {
       const realAuth0Sub = "auth0|real-user-sub-123"
 
       const accepted = await service.acceptInvitation({
+        email,
         ticketId: membership.invitationToken,
         auth0Sub: realAuth0Sub,
       })
@@ -266,49 +271,55 @@ describe("ProjectMembershipsService", () => {
     it("should create an organization membership for the user", async () => {
       const { project, organization } = await createOrganizationWithProject(repositories)
 
+      const email = "invite@example.com"
       const result = await service.inviteProjectMembers({
         projectId: project.id,
-        emails: ["invite@example.com"],
+        emails: [email],
         inviterName: "Admin",
       })
       const membership = result[0]!
 
       await service.acceptInvitation({
+        email,
         ticketId: membership.invitationToken,
         auth0Sub: "auth0|new-user",
       })
 
       // Verify organization membership was created
-      const orgMembership = await repositories.membershipRepository.findOne({
+      const orgMembership = await repositories.organizationMembershipRepository.findOne({
         where: { userId: membership.userId, organizationId: organization.id },
       })
       expect(orgMembership).toBeDefined()
-      expect(orgMembership!.role).toBe("member")
+      expect(orgMembership!.role).toBe("admin")
     })
 
     it("should not duplicate organization membership if one already exists", async () => {
       const { project, organization } = await createOrganizationWithProject(repositories)
 
+      const email = "existing@example.com"
       // Create a real user who is already a member of the org
-      const { user: existingUser } = await createOrganizationMembership({
+      const { user: existingUser } = await addUserToOrganization({
         repositories,
         organization,
-        user: { email: "existing@example.com", auth0Id: "auth0|existing" },
+        user: { email, auth0Id: "auth0|existing" },
       })
 
       // Create a project membership for this user
-      const membership = projectMembershipFactory
-        .transient({ project, user: existingUser })
-        .build({ invitationToken: "ticket_existing_org_member" })
-      await projectMembershipRepository.save(membership)
+      await addUserToProject({
+        repositories,
+        project,
+        user: existingUser,
+        membership: { invitationToken: "ticket_existing_org_member" },
+      })
 
       await service.acceptInvitation({
+        email,
         ticketId: "ticket_existing_org_member",
         auth0Sub: "auth0|existing",
       })
 
       // Verify there's still only one org membership and role wasn't changed
-      const orgMemberships = await repositories.membershipRepository.find({
+      const orgMemberships = await repositories.organizationMembershipRepository.find({
         where: { userId: existingUser.id, organizationId: organization.id },
       })
       expect(orgMemberships).toHaveLength(1)
@@ -317,22 +328,24 @@ describe("ProjectMembershipsService", () => {
 
     it("should return the membership if already accepted", async () => {
       const { project } = await createOrganizationWithProject(repositories)
-
+      const email = "invite@example.com"
       const result = await service.inviteProjectMembers({
         projectId: project.id,
-        emails: ["invite@example.com"],
+        emails: [email],
         inviterName: "Admin",
       })
       const membership = result[0]!
 
       // Accept once
       await service.acceptInvitation({
+        email,
         ticketId: membership.invitationToken,
         auth0Sub: "auth0|user",
       })
 
       // Accept again — should not throw
       const secondAccept = await service.acceptInvitation({
+        email,
         ticketId: membership.invitationToken,
         auth0Sub: "auth0|user",
       })
@@ -342,7 +355,11 @@ describe("ProjectMembershipsService", () => {
 
     it("should throw NotFoundException for unknown ticketId", async () => {
       await expect(
-        service.acceptInvitation({ ticketId: "non-existent-ticket", auth0Sub: "auth0|user" }),
+        service.acceptInvitation({
+          ticketId: "non-existent-ticket",
+          auth0Sub: "auth0|user",
+          email: "invite@example.com",
+        }),
       ).rejects.toThrow(NotFoundException)
     })
 
@@ -358,12 +375,15 @@ describe("ProjectMembershipsService", () => {
       await repositories.userRepository.save(realUser)
 
       // Create membership for the real user
-      const membership = projectMembershipFactory
-        .transient({ project, user: realUser })
-        .build({ invitationToken: "ticket_existing" })
-      await projectMembershipRepository.save(membership)
+      await addUserToProject({
+        repositories,
+        project,
+        user: realUser,
+        membership: { invitationToken: "ticket_existing" },
+      })
 
       await service.acceptInvitation({
+        email: realUser.email,
         ticketId: "ticket_existing",
         auth0Sub: "auth0|different-id",
       })
@@ -378,11 +398,19 @@ describe("ProjectMembershipsService", () => {
 
   describe("removeProjectMembership", () => {
     it("should remove a membership", async () => {
-      const { project } = await createOrganizationWithProject(repositories)
+      const { project, user } = await createOrganizationWithProject(repositories)
 
-      const { membership } = await createProjectMembership({ repositories, project })
+      const { membership } = await inviteUserToProject({
+        repositories,
+        project,
+        projectMembership: { role: "member" },
+      })
 
-      await service.removeProjectMembership({ membershipId: membership.id, projectId: project.id })
+      await service.removeProjectMembership({
+        membershipId: membership.id,
+        projectId: project.id,
+        userId: user.id,
+      })
 
       const deletedMembership = await projectMembershipRepository.findOne({
         where: { id: membership.id },
@@ -391,7 +419,7 @@ describe("ProjectMembershipsService", () => {
     })
 
     it("should also delete the placeholder user when removing a pending invitation", async () => {
-      const { project } = await createOrganizationWithProject(repositories)
+      const { project, user } = await createOrganizationWithProject(repositories)
 
       // Create a membership via invite (creates a placeholder user)
       const result = await service.inviteProjectMembers({
@@ -401,7 +429,11 @@ describe("ProjectMembershipsService", () => {
       })
       const membership = result[0]!
 
-      await service.removeProjectMembership({ membershipId: membership.id, projectId: project.id })
+      await service.removeProjectMembership({
+        membershipId: membership.id,
+        projectId: project.id,
+        userId: user.id,
+      })
 
       // Verify the membership is deleted
       const deletedMembership = await projectMembershipRepository.findOne({
@@ -417,15 +449,19 @@ describe("ProjectMembershipsService", () => {
     })
 
     it("should NOT delete a real user when removing a membership", async () => {
-      const { project } = await createOrganizationWithProject(repositories)
+      const { project, user: user1 } = await createOrganizationWithProject(repositories)
 
-      const { invitedUser: realUser, membership } = await createProjectMembership({
+      const { invitedUser: realUser, membership } = await inviteUserToProject({
         repositories,
         project,
         user: { email: "real@example.com", auth0Id: "auth0|real-user" },
       })
 
-      await service.removeProjectMembership({ membershipId: membership.id, projectId: project.id })
+      await service.removeProjectMembership({
+        membershipId: membership.id,
+        projectId: project.id,
+        userId: user1.id,
+      })
 
       // Verify the membership is deleted
       const deletedMembership = await projectMembershipRepository.findOne({

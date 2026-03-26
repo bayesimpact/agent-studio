@@ -1,13 +1,18 @@
+import { useEffect } from "react"
 import { createBrowserRouter, Outlet, RouterProvider } from "react-router-dom"
 import { RestrictedFeature } from "@/components/RestrictedFeature"
+import { selectAbilities } from "@/features/auth/auth.selectors"
+import { authActions } from "@/features/auth/auth.slice"
 import { HomeRoute } from "@/routes/HomeRoute"
 import { LoginRoute } from "@/routes/LoginRoute"
 import { LogoutRoute } from "@/routes/LogoutRoute"
 import { NotFoundRoute } from "@/routes/NotFoundRoute"
+import { useAppDispatch, useAppSelector } from "@/store/hooks"
 import { getElement } from "./Elements"
 import { buildAppPath, buildStudioPath, RouteNames } from "./helpers"
 import { OnboardingRoute } from "./OnboardingRoute"
 import { ProtectedRoute } from "./ProtectedRoute"
+import { AgentMembershipsRoute } from "./studio/AgentMembershipsRoute"
 import { DocumentsRoute } from "./studio/DocumentsRoute"
 import { EvaluationRoute } from "./studio/EvaluationRoute"
 import { FeedbackRoute } from "./studio/FeedbackRoute"
@@ -38,7 +43,11 @@ const router = () =>
 
     {
       path: RouteNames.STUDIO,
-      element: <Outlet />,
+      element: (
+        <ProtectedRoute>
+          <Studio />
+        </ProtectedRoute>
+      ),
       children: [
         {
           path: buildStudioPath(RouteNames.ORGANIZATION_DASHBOARD),
@@ -76,6 +85,10 @@ const router = () =>
                       path: buildStudioPath(RouteNames.FEEDBACK),
                       element: <FeedbackRoute />,
                     },
+                    {
+                      path: buildStudioPath(RouteNames.AGENT_MEMBERSHIPS),
+                      element: <AgentMembershipsRoute />,
+                    },
                   ],
                 },
               ],
@@ -86,7 +99,11 @@ const router = () =>
     },
     {
       path: RouteNames.APP,
-      element: <Outlet />,
+      element: (
+        <ProtectedRoute>
+          <Outlet />
+        </ProtectedRoute>
+      ),
       children: [
         {
           path: buildAppPath(RouteNames.ORGANIZATION_DASHBOARD),
@@ -121,4 +138,17 @@ const router = () =>
 
 export function Router() {
   return <RouterProvider router={router()} />
+}
+
+function Studio() {
+  const dispatch = useAppDispatch()
+  const abilities = useAppSelector(selectAbilities)
+
+  const isAdminInterface = abilities.canManageOrganizations || abilities.canManageProjects
+
+  useEffect(() => {
+    dispatch(authActions.setIsAdminInterface(isAdminInterface))
+  }, [dispatch, isAdminInterface])
+
+  return <Outlet />
 }
