@@ -19,4 +19,7 @@ export class DocumentChunkEmbedding extends ConnectEntityBase {
 
   @Column({ name: "model_name", type: "varchar" })
   modelName!: string
+
+  @Column({ name: "embedding", type: "vector", length: 3072, nullable: true })
+  ___dont_use_this_column_directly___!: number[]
 }
