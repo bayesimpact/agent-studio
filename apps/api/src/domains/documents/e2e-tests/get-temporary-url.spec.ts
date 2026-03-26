@@ -9,6 +9,7 @@ import {
 } from "@/common/test/test-transaction-manager"
 import { removeNullish } from "@/common/utils/remove-nullish"
 import { createOrganizationWithDocument } from "@/domains/organizations/organization.factory"
+import type { ProjectMembership } from "@/domains/projects/memberships/project-membership.entity"
 import { expectResponse, type Requester, testRequester } from "../../../../test/request"
 import { DocumentsModule } from "../documents.module"
 import { withDocumentAuthAndEmbeddingsMocks } from "../test-overrides"
@@ -49,10 +50,11 @@ describe("Documents - getTemporaryUrl", () => {
     await app.close()
   })
 
-  const createContext = async () => {
+  const createContext = async (projectMembership?: Partial<ProjectMembership>) => {
     const { user, organization, project, document } = await createOrganizationWithDocument(
       repositories,
       {
+        projectMembership,
         document: {
           storageRelativePath: "org-id/project-id/file-id.pdf",
         },
@@ -75,6 +77,17 @@ describe("Documents - getTemporaryUrl", () => {
 
   it("should return a temporary URL for a document", async () => {
     await createContext()
+
+    const response = await subject()
+
+    expectResponse(response, 201)
+    const { url } = response.body.data
+    expect(url).toBeDefined()
+    expect(typeof url).toBe("string")
+    expect(url).toContain(storagePath)
+  })
+  it("should return a temporary URL for a document for a simple member", async () => {
+    await createContext({ role: "member" })
 
     const response = await subject()
 

@@ -22,7 +22,7 @@ export class ProjectPolicy extends BasePolicy<Project> {
   }
 
   canCreate(): boolean {
-    return this.canList()
+    return this.canAccessOrganization() && this.isOrganizationAdminOrOwner()
   }
 
   canUpdate(): boolean {

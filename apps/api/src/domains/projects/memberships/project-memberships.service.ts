@@ -258,7 +258,13 @@ export class ProjectMembershipsService {
     organizationId: string
   }): Promise<void> {
     const existing = await orgMembershipRepo.findOne({ where: { userId, organizationId } })
-    if (existing) return
+    if (existing) {
+      if (existing.role === "member") {
+        existing.role = "admin"
+        await orgMembershipRepo.save(existing)
+      }
+      return
+    }
 
     const orgMembership = orgMembershipRepo.create({ userId, organizationId, role: "admin" })
     await orgMembershipRepo.save(orgMembership)

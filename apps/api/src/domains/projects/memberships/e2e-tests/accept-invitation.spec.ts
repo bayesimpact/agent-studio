@@ -103,7 +103,7 @@ describe("Invitations - acceptInvitation", () => {
     })
 
     expect(orgMembership).toBeDefined()
-    expect(orgMembership!.role).toBe("member")
+    expect(orgMembership!.role).toBe("admin")
   })
 
   it("should return 404 for an unknown ticketId", async () => {

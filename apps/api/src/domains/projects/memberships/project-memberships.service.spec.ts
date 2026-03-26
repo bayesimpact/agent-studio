@@ -290,7 +290,7 @@ describe("ProjectMembershipsService", () => {
         where: { userId: membership.userId, organizationId: organization.id },
       })
       expect(orgMembership).toBeDefined()
-      expect(orgMembership!.role).toBe("member")
+      expect(orgMembership!.role).toBe("admin")
     })
 
     it("should not duplicate organization membership if one already exists", async () => {

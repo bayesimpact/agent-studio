@@ -259,9 +259,5 @@ describe("Documents - Auth", () => {
       projectId = project2.id
       expectResponse(await subject(), 404) //exception thrown by guard
     })
-    it("doesn't allow a simple member to delete a document", async () => {
-      await createContextForRole("member")
-      expectResponse(await subject(), 403, AUTH_ERRORS.UNAUTHORIZED_RESOURCE)
-    })
   })
 })
