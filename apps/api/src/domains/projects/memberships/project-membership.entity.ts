@@ -21,7 +21,7 @@ export class ProjectMembership extends Base4AllEntity {
   @Column({ type: "varchar", default: "sent" })
   status!: ProjectMembershipStatus
 
-  @Column({ type: "varchar" })
+  @Column({ type: "varchar", default: "member" })
   role!: ProjectMembershipRole
 
   @ManyToOne(
