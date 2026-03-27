@@ -4,6 +4,7 @@ import {
   SidebarGroupContent,
   SidebarGroupLabel,
   SidebarMenu,
+  SidebarMenuButton,
   SidebarSeparator,
 } from "@caseai-connect/ui/shad/sidebar"
 import { PlusIcon } from "lucide-react"
@@ -36,7 +37,10 @@ export function SidebarAgentList({
   const agents = useAppSelector(selectAgentsData)
 
   if (!ADS.isFulfilled(agents)) return null
-  if (agents.value.length === 0) return null
+  if (agents.value.length === 0) {
+    if (!isAdminInterface) return null
+    return <AgentCreatorButton project={project} />
+  }
 
   return (
     <AgentList
@@ -78,7 +82,7 @@ export function AgentList({
 
         {isAdminInterface && (
           <SidebarGroupAction>
-            <AgentCreatorButton project={project} />
+            <AgentCreatorButton short project={project} />
           </SidebarGroupAction>
         )}
       </div>
@@ -140,11 +144,19 @@ export function AgentList({
   )
 }
 
-function AgentCreatorButton({ project }: { project: Project }) {
+function AgentCreatorButton({ project, short }: { project: Project; short?: boolean }) {
   const [open, setOpen] = useState(false)
+  const { t } = useTranslation()
   return (
     <>
-      <PlusIcon onClick={() => setOpen(true)} />
+      {short ? (
+        <PlusIcon onClick={() => setOpen(true)} />
+      ) : (
+        <SidebarMenuButton onClick={() => setOpen(true)}>
+          <PlusIcon />
+          {t("agent:create.button")}
+        </SidebarMenuButton>
+      )}
       <AgentCreator project={project} open={open} onOpenChange={setOpen} />
     </>
   )
