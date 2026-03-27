@@ -40,6 +40,7 @@ network = projects/YOUR_PROJECT/global/networks/default
 databaseUsername = connect_admin
 databaseName = connect
 cloudSqlCredentialsFile = $(CURDIR)/dontsave/your-credentials.json
+workerPoolRegion = europe-west4
 else ifeq ($(PROJECT),health)
 # Health
 baseImageUrl = REGION-docker.pkg.dev/YOUR_PROJECT/YOUR_REPO
@@ -67,6 +68,7 @@ network = projects/YOUR_PROJECT/global/networks/default
 databaseUsername = health_admin
 databaseName = health
 cloudSqlCredentialsFile = $(CURDIR)/dontsave/your-credentials.json
+workerPoolRegion = europe-west4
 else
 $(error Unsupported PROJECT '$(PROJECT)' for REGION '$(REGION)')
 endif
