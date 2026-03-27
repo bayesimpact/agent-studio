@@ -30,7 +30,24 @@ import { DocumentTagPicker } from "@/components/document/DocumentTagPicker"
 import type { Agent } from "@/features/agents/agents.models"
 import { getTagNameById } from "@/features/document-tags/document-tags.helpers"
 import type { DocumentTag } from "@/features/document-tags/document-tags.models"
+import { type HasFeature, useFeatureFlags } from "@/hooks/use-feature-flags.ts"
 import { type AgentFormData, getDefaultFormValues } from "./agent-form.shared"
+
+function extractModelListFromAgentType(
+  agentType: "conversation" | "extraction" | "form",
+  hasFeature: HasFeature,
+) {
+  const defaultModels = Object.entries(AgentModel).filter(
+    ([_key, value]) => AgentModelToAgentProvider[value] === AgentProvider.Vertex,
+  )
+  if (hasFeature("gemma") && agentType === "extraction") {
+    const _medGemmaModels = Object.entries(AgentModel).filter(
+      ([_key, value]) => AgentModelToAgentProvider[value] === AgentProvider.MedGemma,
+    )
+    return [...defaultModels, ..._medGemmaModels]
+  }
+  return defaultModels
+}
 
 export function BaseAgentForm({
   editableAgent,
@@ -43,6 +60,7 @@ export function BaseAgentForm({
   editableAgent?: Agent
   onSubmit: (values: AgentFormData) => Promise<void> | void
 }) {
+  const { hasFeature } = useFeatureFlags()
   const { t, i18n } = useTranslation()
 
   const hasOutputJsonSchema = agentType !== "conversation"
@@ -80,7 +98,6 @@ export function BaseAgentForm({
     await onSubmit(data as AgentFormData)
     reset(data)
   }
-
   return (
     <form onSubmit={handleSubmit(handleFormSubmit)}>
       <FieldGroup>
@@ -164,18 +181,11 @@ export function BaseAgentForm({
                       <SelectValue placeholder={t("agent:props.placeholders.model")} />
                     </SelectTrigger>
                     <SelectContent>
-                      {Object.entries(AgentModel)
-                        .filter(
-                          ([_key, value]) =>
-                            AgentModelToAgentProvider[value] !== AgentProvider._Mock &&
-                            (agentType === "extraction" ||
-                              AgentModelToAgentProvider[value] !== AgentProvider.MedGemma),
-                        )
-                        .map(([key, value]) => (
-                          <SelectItem key={key} value={value}>
-                            {value}
-                          </SelectItem>
-                        ))}
+                      {extractModelListFromAgentType(agentType, hasFeature).map(([key, value]) => (
+                        <SelectItem key={key} value={value}>
+                          {value}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 )}

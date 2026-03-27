@@ -16,6 +16,8 @@ export function useFeatureFlags() {
   }
 }
 
+export type HasFeature = (feature: FeatureFlagKey) => boolean
+
 export function hasFeatureOrThrow({
   state,
   feature,
