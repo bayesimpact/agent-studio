@@ -4,7 +4,11 @@ import { BatchSpanProcessor, ConsoleSpanExporter } from "@opentelemetry/sdk-trac
 import { NodeTracerProvider } from "@opentelemetry/sdk-trace-node"
 import { config as dotenvConfig } from "dotenv"
 import { LangfuseIntegrationExporter } from "@/external/langfuse/langfuse-integration-exporter"
-import { AgentModelToAgentProvider, AgentProvider } from "@/external/llm/agent-provider"
+import {
+  AgentModelToAgentProvider,
+  AgentProvider,
+  GetAgentModelKeyFromValue,
+} from "@/external/llm/agent-provider"
 import { sdk } from "@/external/llm/open-telemetry-init"
 import { AISDKVertexProvider } from "@/external/llm/providers/ai-sdk-vertex.provider"
 import { ProviderSpecs } from "@/external/llm/providers/provider-specs"
@@ -12,9 +16,12 @@ import { gcpCredentialsCheck } from "@/external/llm/providers/spec-gcp-tools"
 
 dotenvConfig({ path: ".env", override: true })
 dotenvConfig({ path: ".env.test", override: true })
-const testModels = Object.values(AgentModel).filter(
-  (am) => AgentModelToAgentProvider[am] === AgentProvider.Vertex,
-)
+const testModels = Object.values(AgentModel)
+  .filter((am) => AgentModelToAgentProvider[am] === AgentProvider.Vertex)
+  .map((m) => ({
+    name: GetAgentModelKeyFromValue(m),
+    model: m,
+  }))
 
 if (process.env.IS_TEST === "true" && process.env.VERTEX_TEST === "true") {
   describe("AISDKVertexProvider", () => {
@@ -48,35 +55,35 @@ if (process.env.IS_TEST === "true" && process.env.VERTEX_TEST === "true") {
       expect(check).toBeTruthy()
     })
 
-    it.each(testModels)("generateText - %s", async (model) => {
+    it.each(testModels)("generateText - $name", async ({ model }) => {
       await ProviderSpecs.testGenerateText({ provider, model })
     })
 
-    it.each(testModels)("generateObject - %s", async (model) => {
+    it.each(testModels)("generateObject - $name", async ({ model }) => {
       await ProviderSpecs.testGenerateObject({ provider, model })
     })
 
-    it.each(testModels)("generateStructuredOutput -pdf - %s", async (model) => {
+    it.each(testModels)("generateStructuredOutput -pdf - $name", async ({ model }) => {
       await ProviderSpecs.testGenerateStructuredOutputFromPdf({ provider, model })
     })
 
-    it.each(testModels)("generateStructuredOutput -jpg - %s", async (model) => {
+    it.each(testModels)("generateStructuredOutput -jpg - $name", async ({ model }) => {
       await ProviderSpecs.testGenerateStructuredOutputFromMathematicalJpg({ provider, model })
     })
 
-    it.each(testModels)("generateStructuredOutput -png - %s", async (model) => {
+    it.each(testModels)("generateStructuredOutput -png - $name", async ({ model }) => {
       await ProviderSpecs.testGenerateStructuredOutputFromXRayPng_FR({ provider, model })
     })
 
-    it.each(testModels)("generateStructuredOutput -png (low res) - %s", async (model) => {
+    it.each(testModels)("generateStructuredOutput -png (low res) - $name", async ({ model }) => {
       await ProviderSpecs.testGenerateStructuredOutputFromXRayLowPng_FR({ provider, model })
     })
 
-    it.each(testModels)("streamChatResponse - %s", async (model) => {
+    it.each(testModels)("streamChatResponse - $name", async ({ model }) => {
       await ProviderSpecs.testStreamChatResponse({ provider, model })
     })
 
-    it.each(testModels)("streamChatResponse with tools - %s", async (model) => {
+    it.each(testModels)("streamChatResponse with tools - $name", async ({ model }) => {
       await ProviderSpecs.testStreamChatResponseWithTools({
         provider,
         model,

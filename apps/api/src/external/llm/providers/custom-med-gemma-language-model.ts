@@ -4,13 +4,11 @@ import type {
   LanguageModelV3Content,
   LanguageModelV3FinishReason,
   LanguageModelV3GenerateResult,
-  LanguageModelV3StreamPart,
   LanguageModelV3StreamResult,
   LanguageModelV3Usage,
   SharedV3Warning,
 } from "@ai-sdk/provider"
 import { NotImplementedException } from "@nestjs/common"
-import { v4 } from "uuid"
 import type { LLMConfig } from "@/common/interfaces/llm-provider.interface"
 import { CallOrigin, extractThoughtAndAnswer } from "@/external/llm/ai-sdk-llm-provider-base"
 
@@ -23,13 +21,14 @@ export class CustomMedGemmaLanguageModel implements LanguageModelV3 {
   readonly baseUrl: string
   readonly apiKey: string
 
-  constructor(baseUrl: string, config: LLMConfig, apiKey?: string) {
+  constructor({ baseUrl, config, apiKey }: { baseUrl: string; config: LLMConfig; apiKey: string }) {
     this.baseUrl = new URL("v1", baseUrl).toString()
-    this.apiKey = apiKey ?? "nothing"
-    this.provider = "custom med-gemma"
+    this.apiKey = apiKey
+    this.provider = "Custom Medgemma"
     this.modelId = config.model.split(":")[0] ?? ""
   }
 
+  //required for LanguageModelV3 implementation
   get supportedUrls() {
     return {
       "image/*": [/^https:\/\/example\.com\/images\/.*/],
@@ -51,6 +50,7 @@ export class CustomMedGemmaLanguageModel implements LanguageModelV3 {
         )
     }
   }
+
   async doGenerateForGenerateStructuredOutput(
     options: LanguageModelV3CallOptions,
   ): Promise<LanguageModelV3GenerateResult> {
@@ -96,6 +96,7 @@ export class CustomMedGemmaLanguageModel implements LanguageModelV3 {
       },
       body: stringifiedBody,
     })
+    // biome-ignore lint/suspicious/noExplicitAny: external
     const data: any = await res.json()
 
     const content: LanguageModelV3Content[] = []
@@ -147,107 +148,6 @@ export class CustomMedGemmaLanguageModel implements LanguageModelV3 {
     }
   }
 
-  async doStream(options: LanguageModelV3CallOptions): Promise<LanguageModelV3StreamResult> {
-    const callOrigin = options.providerOptions?.custom?.callOrigin
-    if (!callOrigin)
-      throw new NotImplementedException(
-        "DEV - callOrigin is not specified in the options.providerOptions.custom",
-      )
-    switch (callOrigin) {
-      case CallOrigin.streamChatResponse:
-        return await this.doStreamWithTools(options)
-      default:
-        throw new NotImplementedException(
-          `DEV - doStream is not implemented for callOrigin = ${callOrigin}}`,
-        )
-    }
-  }
-  private convertToolsToDocs(tools: any) {
-    if (!tools) return undefined
-    return Object.entries(tools).map(
-      ([name, tool]: any) =>
-        `- ${name}: ${tool.description}\n  Parameters: ${JSON.stringify(tool.parameters)}`,
-    )
-  }
-  async doStreamWithTools(
-    options: LanguageModelV3CallOptions,
-  ): Promise<LanguageModelV3StreamResult> {
-    const { prompt, tools, abortSignal } = options
-
-    let appendToolsPrompt: string = ""
-    if (tools && tools.length > 0) {
-      // @ts-expect-error
-      const toolDocs = this.convertToolsToDocs(tools).join("\n")
-
-      appendToolsPrompt =
-        `\n\nYou have access to the following tools:\n${toolDocs}\n` +
-        `To call a tool, you MUST output valid JSON wrapped in XML tags exactly like this:\n` +
-        `<tool_call>{"name": "toolName", "arguments": {"key": "value"}}</tool_call>\n\n`
-    }
-    const formattedMessages = await this.formatMessages(prompt, appendToolsPrompt)
-    const url = new URL("v1/chat/completions", this.baseUrl).toString()
-    const body = {
-      model: this.modelId,
-      messages: formattedMessages,
-      temperature: options.temperature,
-      max_tokens: options.maxOutputTokens,
-      stop: options.stopSequences,
-      tools: undefined,
-    }
-    const stringifiedBody = JSON.stringify(body)
-    const response = await fetch(url, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${this.apiKey}`,
-        Connection: "close",
-      },
-      body: stringifiedBody,
-      signal: abortSignal,
-    })
-
-    if (!response.ok || !response.body) {
-      throw new Error(`vLLM request failed: ${response.statusText}`)
-    }
-
-    const stream = response.body
-      .pipeThrough(new TextDecoderStream())
-      .pipeThrough(new SSEParserStream()) // Extracts text from vLLM's Server-Sent Events
-      .pipeThrough(new MedGemmaToolParserStream()) // Extracts <tool_call> and yields SDK Tool parts
-
-    return {
-      stream,
-    }
-  }
-
-  private async formatMessages(prompt: any[], appendToolsPrompt: string) {
-    const messagesFromPrompt = await this.extractPromptContentsAsInput(prompt)
-
-    const messages: any[] = []
-    for (const msg of messagesFromPrompt) {
-      if (msg.role === "system") {
-        messages.push({ role: "system", content: msg.content + appendToolsPrompt })
-      } else if (msg.role === "tool") {
-        const resultsText = (msg.content as Array<any>)
-          .map(
-            (c: any) =>
-              `<tool_result name="${c.toolName}">${JSON.stringify(c.result)}</tool_result>`,
-          )
-          .join("\n")
-        messages.push({ role: "user", content: resultsText })
-      } else {
-        let content = ""
-        if (Array.isArray(msg.content)) {
-          content = msg.content.map((c: any) => c.text || "").join("")
-        } else {
-          content = msg.content || ""
-        }
-        messages.push({ role: msg.role, content })
-      }
-    }
-    return messages
-  }
-
   private async extractPromptContentsAsInput(prompt: LanguageModelV3Prompt) {
     return await Promise.all(
       (prompt as Array<{ role: string; content: string | LanguageModelV3Content[] }>).map((p) =>
@@ -255,10 +155,12 @@ export class CustomMedGemmaLanguageModel implements LanguageModelV3 {
       ),
     )
   }
+
   private async toInput(prompt: { role: string; content: string | LanguageModelV3Content[] }) {
     if (typeof prompt.content === "string") {
       return { role: prompt.role, content: prompt.content }
     } else {
+      // biome-ignore lint/suspicious/noExplicitAny: custom
       const contents: any[] = []
       for (const value of prompt.content) {
         switch (value.type) {
@@ -295,120 +197,26 @@ export class CustomMedGemmaLanguageModel implements LanguageModelV3 {
       return { role: prompt.role, content: contents }
     }
   }
-}
-class MedGemmaToolParserStream extends TransformStream<string, LanguageModelV3StreamPart> {
-  constructor() {
-    let buffer = ""
-    let isToolCallOpen = false
 
-    super({
-      transform(chunk, controller) {
-        buffer += chunk
-
-        if (!isToolCallOpen) {
-          const startTagIndex = buffer.indexOf("<tool_call>")
-
-          if (startTagIndex !== -1) {
-            const textBefore = buffer.slice(0, startTagIndex)
-            if (textBefore.trim()) {
-              controller.enqueue({ type: "text-delta", delta: textBefore, id: "" })
-            }
-
-            isToolCallOpen = true
-            buffer = buffer.slice(startTagIndex)
-          } else {
-            const possibleTagStart = buffer.lastIndexOf("<")
-            if (
-              possibleTagStart !== -1 &&
-              "<tool_call>".startsWith(buffer.slice(possibleTagStart))
-            ) {
-              if (possibleTagStart > 0) {
-                controller.enqueue({
-                  type: "text-delta",
-                  delta: buffer.slice(0, possibleTagStart),
-                  id: v4(),
-                })
-                buffer = buffer.slice(possibleTagStart)
-              }
-            } else {
-              controller.enqueue({ type: "text-delta", delta: buffer, id: v4() })
-              buffer = ""
-            }
-          }
-        }
-
-        if (isToolCallOpen) {
-          const endTagIndex = buffer.indexOf("</tool_call>")
-          if (endTagIndex !== -1) {
-            const jsonStr = buffer.slice("<tool_call>".length, endTagIndex)
-
-            try {
-              const toolData = JSON.parse(jsonStr)
-              controller.enqueue({
-                type: "tool-call",
-                toolCallId: `call_${v4()}`,
-                toolName: toolData.name,
-                input: JSON.parse(toolData.arguments),
-              })
-            } catch (_err) {
-              console.error("Failed to parse tool call JSON:", jsonStr) //fixme DOO : tmp output => remove
-              controller.enqueue({
-                type: "text-delta",
-                delta: buffer.slice(0, endTagIndex + "</tool_call>".length),
-                id: v4(),
-              })
-            }
-
-            isToolCallOpen = false
-            buffer = buffer.slice(endTagIndex + "</tool_call>".length)
-          }
-        }
-      },
-      flush(controller) {
-        if (buffer) {
-          controller.enqueue({ type: "text-delta", delta: buffer, id: v4() })
-        }
-        controller.enqueue({
-          type: "finish",
-          finishReason: { unified: "stop", raw: undefined },
-          usage: {
-            inputTokens: {
-              total: NaN,
-              noCache: NaN,
-              cacheRead: NaN,
-              cacheWrite: NaN,
-            },
-            outputTokens: {
-              total: NaN,
-              text: NaN,
-              reasoning: NaN,
-            },
-          },
-        })
-      },
-    })
+  async doStream(options: LanguageModelV3CallOptions): Promise<LanguageModelV3StreamResult> {
+    const callOrigin = options.providerOptions?.custom?.callOrigin
+    if (!callOrigin)
+      throw new NotImplementedException(
+        "DEV - callOrigin is not specified in the options.providerOptions.custom",
+      )
+    switch (callOrigin) {
+      case CallOrigin.streamChatResponse_withTools:
+        return await this.doStreamWithTools(options)
+      default:
+        throw new NotImplementedException(
+          `DEV - doStream is not implemented for callOrigin = ${callOrigin}}`,
+        )
+    }
   }
-}
 
-class SSEParserStream extends TransformStream<string, string> {
-  constructor() {
-    let buffer = ""
-    super({
-      transform(chunk, controller) {
-        buffer += chunk
-        const lines = buffer.split("\n")
-        buffer = lines.pop() || ""
-
-        for (const line of lines) {
-          if (line.startsWith("data: ") && line !== "data: [DONE]") {
-            try {
-              const data = JSON.parse(line.slice(6))
-              const text = data.choices?.[0]?.delta?.content
-              if (text) controller.enqueue(text)
-            } catch (_e) {} //ignore exception
-          }
-        }
-      },
-    })
+  async doStreamWithTools(
+    options: LanguageModelV3CallOptions,
+  ): Promise<LanguageModelV3StreamResult> {
+    throw new NotImplementedException(`DEV - doStreamWithTools is not (yet) implemented`)
   }
 }

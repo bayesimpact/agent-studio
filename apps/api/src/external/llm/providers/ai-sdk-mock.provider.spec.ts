@@ -16,20 +16,6 @@ describe("AISDKMockProvider", () => {
   let messages: LLMChatMessage[]
   let config: LLMConfig
   let metadata: LLMMetadata
-  const _files: LLMFile[] = [
-    {
-      type: "file",
-      name: "file1.pdf",
-      mediaType: "application/pdf",
-      content: Buffer.from("%PDF-1.4\n%%EOF"),
-    },
-    {
-      type: "image",
-      name: "image.png",
-      mediaType: "image/png",
-      content: Buffer.from([0x89, 0x50, 0x4e, 0x47]), // header PNG
-    },
-  ]
   beforeAll(async () => {
     provider = new AISDKMockProvider()
     messages = [{ role: "user", content: "for test purpose" }]

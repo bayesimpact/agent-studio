@@ -109,7 +109,6 @@ export class ProviderSpecs {
       hourOfSleep: z.int().describe("How many sleep hours per day?").nullable(),
       weight: z.number().describe("weight in kilogrammes (rounded .5)?").nullable(),
     })
-    // biome-ignore lint/correctness/noUnusedVariables: used in lambda
     let outputForm: Record<string, boolean | string | number | null> = {}
     let status: string = "NOT_STARTED"
     const fillFormTool = tool({

@@ -254,6 +254,7 @@ export abstract class AISDKLLMProviderBase implements LLMProvider {
     }
     return result.output
   }
+  // biome-ignore lint/suspicious/noExplicitAny: Zod def
   private recordToZodSchema(record: Record<string, unknown>): z.ZodObject<any> {
     const shape: Record<string, z.ZodTypeAny> = {}
 
