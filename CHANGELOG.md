@@ -1,0 +1,61 @@
+# Changelog
+
+All notable changes to this project will be documented in this file.
+
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
+This project uses [CalVer](https://calver.org/) (YY.MM.Micro) for product versioning.
+
+## [Unreleased]
+
+### Added
+- Medgemma available for Extraction Agent
+- In-app invitations: invite and remove users from agents and projects with role-based access
+- Role-based authorization: define rights levels between users and admins across organizations, projects, and agents
+- New navigation UI with breadcrumbs, organization/project selector, and agent member management
+- Multi-file upload: upload up to 400 files at once with progress indicators
+- Default prompt and schema for new agents
+- Agent-scoped document tag filtering for conversations
+- Document processing with Docling for extracting content from PDFs and other file formats
+- (beta) Sources tool: display document sources used by the AI directly in chat messages
+
+### Changed
+- Renamed "Project" to "Workspace" across the application
+
+### Fixed
+- Race condition causing infinite streaming status
+- Scroll issue in feedback modal
+
+### Security
+- Added Trivy vulnerability scanning for API and workers Docker images
+- Added Gitleaks workflow for secret detection in commits
+
+## [26.03.0] - 2026-03-13
+
+First public release of CaseAI Connect, open-sourced under the MIT license.
+
+### Added
+- AI agents: create conversation and extraction agents with configurable prompts, models, and JSON schemas
+- Agent sessions: chat with AI agents, with real-time SSE streaming and tool message display
+- Form-filling agents: LLM-powered form completion with side panel UI
+- Document management: upload, tag, and organize documents per project
+- RAG pipeline: PDF embedding generation, storage, and LLM tool to query embeddings with tag-based filtering
+- Document embedding status: display processing state of uploaded documents
+- Agent feedback: collect and review user feedback on agent messages
+- File attachments: upload PDFs and images as chat messages for AI analysis
+- Dictaphone: voice input for agent conversations
+- Multi-tenant architecture: organizations, projects, and membership-based access control
+- User onboarding: smoother first-time setup with automatic organization creation
+- CLI for user/org import: bulk import users and organizations from CSV
+- Async job processing: BullMQ-based worker system for background tasks (document processing, embeddings)
+- Observability: Langfuse tracing integration for agent sessions
+- Internationalization: English and French support with automatic locale discovery
+- Theming: configurable color themes (coral, blue) with environment variable support and dynamic favicon
+- Studio mode: admin interface renamed from "admin" with nav menu switch
+- GCP deployment: full production pipeline with Cloud Run, Cloud SQL, and GCS storage
+- Open-source release: MIT license, README, and GCP installation guide
+- (beta) Evaluation system: create evaluations with LLM-generated reports
+
+### Fixed
+- Missing embedding models in production
+- Workers not correctly launched in production
+- Onboarding redirect when no project exists
