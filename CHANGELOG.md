@@ -10,7 +10,6 @@ This project uses [CalVer](https://calver.org/) (YY.MM.Micro) for product versio
 ## [26.03.1] - 2026-03-27
 
 ### Added
-- Medgemma available for Extraction Agent
 - In-app invitations: invite and remove users from agents and projects with role-based access
 - Role-based authorization: define rights levels between users and admins across organizations, projects, and agents
 - New navigation UI with breadcrumbs, organization/project selector, and agent member management
@@ -18,6 +17,7 @@ This project uses [CalVer](https://calver.org/) (YY.MM.Micro) for product versio
 - Default prompt and schema for new agents
 - Agent-scoped document tag filtering for conversations
 - Document processing with Docling for extracting content from PDFs and other file formats
+- (beta) Medgemma available for Extraction Agent
 - (beta) Sources tool: display document sources used by the AI directly in chat messages
 
 ### Changed
