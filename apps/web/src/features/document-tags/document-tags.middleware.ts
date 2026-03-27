@@ -1,6 +1,7 @@
 import type { TypedStartListening } from "@reduxjs/toolkit"
 import { createListenerMiddleware, isAnyOf } from "@reduxjs/toolkit"
 import type { AppDispatch, RootState } from "@/store/types"
+import { selectIsAdminInterface } from "../auth/auth.selectors"
 import { notificationsActions } from "../notifications/notifications.slice"
 import { hasProjectChanged } from "../projects/projects.selectors"
 import {
@@ -20,6 +21,9 @@ listenerMiddleware.startListening({
     return hasProjectChanged(originalState, currentState)
   },
   effect: async (_, listenerApi) => {
+    const state = listenerApi.getState()
+    const isAdminInterface = selectIsAdminInterface(state)
+    if (!isAdminInterface) return
     await listenerApi.dispatch(listDocumentTags())
   },
 })

@@ -1,7 +1,7 @@
 # // FIXME: 
-- can see project without accepting invitation (status still sent)
+<!-- - can see project without accepting invitation (status still sent) -->
+<!-- - can't delete empty project -->
 - when user message is too long, it fails!!
-- can't delete empty project
 
 # // TODO:
 <!-- - when deleting agent or project => delete agent membership or project membership -->
