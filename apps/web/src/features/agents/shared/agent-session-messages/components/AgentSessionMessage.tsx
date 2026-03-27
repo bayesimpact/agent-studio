@@ -23,15 +23,18 @@ export function AgentSessionMessage({ message }: { message: AgentSessionMessageT
             className={cn("pb-8", isError && "bg-red-50 border border-red-200 text-red-800")}
           >
             {isStreaming && <ThinkingMessage />}
-            {isError && <ErrorMessage />}
-            <MarkdownWrapper
-              content={message.content}
-              end={
-                <RestrictedFeature feature="sources_tool">
-                  {sourcesTool && <SourcesTool toolCall={sourcesTool} />}
-                </RestrictedFeature>
-              }
-            />
+            {isError ? (
+              <ErrorMessage />
+            ) : (
+              <MarkdownWrapper
+                content={message.content}
+                end={
+                  <RestrictedFeature feature="sources_tool">
+                    {sourcesTool && <SourcesTool toolCall={sourcesTool} />}
+                  </RestrictedFeature>
+                }
+              />
+            )}
           </ChatBotMessage>
 
           <div className="absolute bottom-2">
@@ -56,7 +59,7 @@ export function AgentSessionMessage({ message }: { message: AgentSessionMessageT
 function ErrorMessage() {
   const { t } = useTranslation("status")
   return (
-    <div className="flex items-center gap-2 mb-2">
+    <div className="flex items-center gap-2 mb-2 w-30">
       <AlertCircleIcon className="size-4 text-red-600" />
       <span className="font-semibold text-red-700">{t("error")}</span>
     </div>

@@ -109,21 +109,22 @@ export class StreamingService extends ServiceWithLLM {
 
     yield this.sseEvent({ type: "start", messageId: assistantMessageId })
 
-    const llmRequest = await this.buildLLMRequest({
-      agent,
-      sessionId,
-      notifyClient,
-      session: updatedSession,
-      documentId,
-      connectScope,
-    })
-
     let fullContent = ""
 
     try {
-      for await (const chunk of this.getProviderForModel(
-        llmRequest.config.model,
-      ).streamChatResponse(llmRequest)) {
+      const llmRequest = await this.buildLLMRequest({
+        agent,
+        sessionId,
+        notifyClient,
+        session: updatedSession,
+        documentId,
+        connectScope,
+      })
+
+      const chunks = this.getProviderForModel(llmRequest.config.model).streamChatResponse(
+        llmRequest,
+      )
+      for await (const chunk of chunks) {
         fullContent += chunk
         yield this.sseEvent({ type: "chunk", content: chunk, messageId: assistantMessageId })
       }

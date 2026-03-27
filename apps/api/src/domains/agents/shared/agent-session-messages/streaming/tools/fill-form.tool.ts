@@ -54,13 +54,13 @@ function buildInputSchemaForFormTool(
     const description = value.description || ""
     switch (value.type) {
       case "string":
-        shape[key] = z.string().describe(description).optional()
+        shape[key] = z.string().describe(description).nullable()
         break
       case "number":
-        shape[key] = z.number().describe(description).optional()
+        shape[key] = z.number().describe(description).nullable()
         break
       case "boolean":
-        shape[key] = z.boolean().describe(description).optional()
+        shape[key] = z.boolean().describe(description).nullable()
         break
       default:
         throw new Error(`Unsupported property type: ${value.type}`)
