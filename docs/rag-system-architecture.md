@@ -73,7 +73,7 @@ When a file is uploaded through `DocumentsController.uploadOne`:
 
 If `sourceType === "project"`, the API enqueues a BullMQ job:
 
-- queue: `document-embeddings`
+- queue: `DOCUMENT_EMBEDDINGS_QUEUE_NAME` (defaults to `document-embeddings`)
 - job: `create-embeddings`
 - payload includes `documentId`, `organizationId`, `projectId`, `uploadedByUserId`, and trace metadata
 
@@ -85,7 +85,7 @@ This happens in:
 ### 3) Worker processing
 
 A separate workers process (`workers-main.ts`) consumes embedding jobs.
-At startup, workers run a Docling health check (`docling --version`) when Docling extraction is enabled.
+At startup, workers run a Docling health check (`docling_nodes --docling-version`) when Docling extraction is enabled.
 
 For each job, `DocumentEmbeddingsProcessorService.processDocument(...)`:
 
@@ -205,8 +205,9 @@ Tool executions are also persisted in message history as `"tool"` messages with 
 - `GOOGLE_VERTEX_LOCATION`
 - `DOCUMENT_EMBEDDING_MODELS` (comma-separated; first model is used for retrieval query embedding)
 - `BULLMQ_REDIS_URL` (defaults to `redis://localhost:6379` if unset)
+- `DOCUMENT_EMBEDDINGS_QUEUE_NAME` (optional, defaults to `document-embeddings`)
 - `DOCUMENT_EXTRACTOR_DOCLING_ENABLED` (optional, defaults to `true`)
-- `DOCUMENT_EXTRACTOR_DOCLING_COMMAND` (optional, defaults to `docling`)
+- `DOCUMENT_EXTRACTOR_DOCLING_NODES_COMMAND` (optional path override for `apps/api/bin/docling_nodes`)
 - `DOCUMENT_EXTRACTOR_DOCLING_TIMEOUT_MS` (optional, extraction timeout and worker health-check timeout source)
 
 ### Storage/Infra Variables Used in the Flow
@@ -221,7 +222,7 @@ Tool executions are also persisted in message history as `"tool"` messages with 
 - PostgreSQL with `pgvector`
 - Redis (BullMQ queue)
 - Google Cloud Storage (optional file storage backend)
-- Docling CLI runtime (`docling`) available in worker container/host
+- Docling runtime available through the `docling_nodes` wrapper script in worker container/host
 
 ---
 

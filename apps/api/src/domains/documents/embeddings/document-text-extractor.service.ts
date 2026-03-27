@@ -1,22 +1,26 @@
 import { PDFReader } from "@llamaindex/readers/pdf"
-import { Injectable, Logger, UnsupportedMediaTypeException } from "@nestjs/common"
+import { Injectable, UnsupportedMediaTypeException } from "@nestjs/common"
 import mammoth from "mammoth"
-import { extractTextWithDocling, isDoclingEnabled } from "@/external/docling/docling.cli"
+import {
+  type DoclingChunk,
+  extractTextWithDocling,
+  getDoclingVersion,
+  isDoclingEnabled,
+} from "@/external/docling/docling.cli"
 import { DOC_MIME_TYPES, DOCLING_SUPPORTED_MIME_TYPES } from "@/external/docling/docling.constants"
 
 const DOCLING_MAX_STDOUT_BUFFER = 50 * 1024 * 1024
 
-export type DocumentExtractionEngine = "docling" | null
+export type DocumentExtractionEngine = string | null
 
 export type DocumentTextExtractionResult = {
   text: string
+  chunks?: string[]
   extractionEngine: DocumentExtractionEngine
 }
 
 @Injectable()
 export class DocumentTextExtractorService {
-  private readonly logger = new Logger(DocumentTextExtractorService.name)
-
   async extract(buffer: Buffer, mimeType: string): Promise<DocumentTextExtractionResult> {
     if (mimeType === "text/plain" || mimeType === "text/csv") {
       return {
@@ -26,25 +30,26 @@ export class DocumentTextExtractorService {
     }
 
     if (isDoclingEnabled() && DOCLING_SUPPORTED_MIME_TYPES.has(mimeType)) {
-      try {
-        const extractedText = await extractTextWithDocling({
-          buffer,
-          mimeType,
-          maxBuffer: DOCLING_MAX_STDOUT_BUFFER,
-        })
-        if (extractedText.trim().length > 0) {
-          return {
-            text: extractedText,
-            extractionEngine: "docling",
-          }
-        }
-      } catch (error) {
-        this.logger.warn(
-          `Docling extraction failed for MIME type ${mimeType}, falling back to legacy extractors.`,
-        )
-        this.logger.debug(
-          `Docling error: ${error instanceof Error ? error.message : String(error)}`,
-        )
+      const doclingVersion = await getDoclingVersion()
+      const doclingChunks: DoclingChunk[] = await extractTextWithDocling({
+        buffer,
+        mimeType,
+        maxBuffer: DOCLING_MAX_STDOUT_BUFFER,
+      })
+
+      const embedTexts = doclingChunks
+        .map((chunk) => chunk.embed_text)
+        .map((text) => text.trim())
+        .filter((text) => text.length > 0)
+
+      if (embedTexts.length === 0) {
+        throw new Error(`Docling produced no embed_text chunks for MIME type: ${mimeType}`)
+      }
+
+      return {
+        text: embedTexts.join("\n"),
+        chunks: embedTexts,
+        extractionEngine: `docling@${doclingVersion}`,
       }
     }
 

@@ -3,7 +3,7 @@ import { createVertex } from "@ai-sdk/google-vertex"
 import { Inject, Injectable, Logger, NotFoundException } from "@nestjs/common"
 import { InjectDataSource } from "@nestjs/typeorm"
 import { embedMany } from "ai"
-import { SentenceSplitter } from "llamaindex"
+import { Document as LlamaDocument, MetadataMode, SentenceSplitter } from "llamaindex"
 import { toSql } from "pgvector"
 import type { DataSource } from "typeorm"
 import type { Document } from "../document.entity"
@@ -22,8 +22,8 @@ import type { DocumentExtractionEngine } from "./document-text-extractor.service
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
 import { DocumentTextExtractorService } from "./document-text-extractor.service"
 
-const CHUNK_SIZE = 512
-const CHUNK_OVERLAP = 50
+const DOCUMENT_EMBEDDING_CHUNK_SIZE = 1024
+const DOCUMENT_EMBEDDING_CHUNK_OVERLAP = 20
 
 @Injectable()
 export class DocumentEmbeddingsProcessorService {
@@ -88,13 +88,24 @@ export class DocumentEmbeddingsProcessorService {
   }> {
     const fileBuffer = await this.fileStorage.readFile(document.storageRelativePath)
     const extractionResult = await this.textExtractorService.extract(fileBuffer, document.mimeType)
-    const splitter = new SentenceSplitter({ chunkSize: CHUNK_SIZE, chunkOverlap: CHUNK_OVERLAP })
-    const chunks = splitter.splitText(extractionResult.text)
+    const chunks = extractionResult.chunks ?? this.splitTextForEmbeddings(extractionResult.text)
     this.logger.log(`Split document ${document.id} into ${chunks.length} chunks`)
     return {
       chunks,
       extractionEngine: extractionResult.extractionEngine,
     }
+  }
+
+  private splitTextForEmbeddings(text: string): string[] {
+    const sentenceSplitter = new SentenceSplitter({
+      chunkSize: DOCUMENT_EMBEDDING_CHUNK_SIZE,
+      chunkOverlap: DOCUMENT_EMBEDDING_CHUNK_OVERLAP,
+    })
+    const rootDocument = new LlamaDocument({ text })
+    return sentenceSplitter
+      .getNodesFromDocuments([rootDocument])
+      .map((textNode) => textNode.getContent(MetadataMode.NONE).trim())
+      .filter((chunk) => chunk.length > 0)
   }
 
   private async generateEmbeddingsByModel(chunks: string[]): Promise<Map<string, number[][]>> {

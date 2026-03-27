@@ -63,7 +63,7 @@ describe("DocumentEmbeddingsProcessorService", () => {
     jest.spyOn(serviceInternals, "findDocumentOrThrow").mockResolvedValue(document)
     jest.spyOn(serviceInternals, "extractDocumentChunks").mockResolvedValue({
       chunks: ["chunk content"],
-      extractionEngine: "docling",
+      extractionEngine: "docling@2.51.0",
     })
     jest
       .spyOn(serviceInternals, "generateEmbeddingsByModel")
@@ -87,7 +87,7 @@ describe("DocumentEmbeddingsProcessorService", () => {
 
     expect(statusTransitions).toEqual([
       { status: "processing", extractionEngine: null },
-      { status: "completed", extractionEngine: "docling" },
+      { status: "completed", extractionEngine: "docling@2.51.0" },
     ])
   })
 

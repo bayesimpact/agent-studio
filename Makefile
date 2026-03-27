@@ -9,6 +9,7 @@ PROJECT ?= connect
 TEST_DATABASE_URL ?= postgresql://connect_admin:passpass@localhost:5432/connect_test
 DOCUMENT_EMBEDDING_MODELS ?= gemini-embedding-001
 WORKER_DOCLING_HEALTH_CHECK_TIMEOUT_MS ?= 30000
+DOCUMENT_EXTRACTOR_DOCLING_TIMEOUT_MS ?= 60000
 MAX_VERTEX_EMBEDDING_BATCH_SIZE ?= 250
 
 ifeq ($(REGION),eu)
@@ -75,6 +76,9 @@ endif
 
 apiImageUrl = ${baseImageUrl}/api:${version}
 workersImageUrl = ${baseImageUrl}/workers:${version}
+workerPoolName ?= ${cloudRunName}-workers
+workerPoolRegion ?= ${zone}
+workerPoolGpuZonalRedundancyFlag ?= --no-gpu-zonal-redundancy
 smokeComposeFile = infra/docker-compose.api-workers-smoke.yaml
 
 # ==============================================================================
@@ -281,7 +285,7 @@ deploy-only:
 	--project ${gcpProjectId}
 
 deploy-workers-only:
-	gcloud beta run worker-pools deploy ${cloudRunName}-workers --image ${workersImageUrl} \
+	gcloud beta run worker-pools deploy ${workerPoolName} --image ${workersImageUrl} \
 	--update-secrets=LANGFUSE_SK=${secretsPrefix}LANGFUSE_SK:latest \
 	--update-secrets=DATABASE_PASSWORD=${secretsPrefix}DATABASE_PASSWORD:latest \
 	--update-secrets=BULLMQ_REDIS_URL=${secretsPrefix}BULLMQ_REDIS_URL:latest \
@@ -296,13 +300,17 @@ deploy-workers-only:
 	--set-env-vars=LANGFUSE_PK=${langfusePk},LANGFUSE_BASE_URL=${langfuseUrl},LOCATION=$(location) \
 	--set-env-vars=DATABASE_HOST=/cloudsql/${addCloudSqlInstances},DATABASE_USERNAME=${databaseUsername},DATABASE_NAME=${databaseName} \
 	--set-env-vars=DOCUMENT_EMBEDDING_MODELS=${DOCUMENT_EMBEDDING_MODELS} \
-	--set-env-vars=DOCUMENT_EXTRACTOR_DOCLING_ENABLED=false \
+	--set-env-vars=DOCUMENT_EXTRACTOR_DOCLING_ENABLED=true \
 	--set-env-vars=WORKER_DOCLING_HEALTH_CHECK_TIMEOUT_MS=${WORKER_DOCLING_HEALTH_CHECK_TIMEOUT_MS} \
+	--set-env-vars=DOCUMENT_EXTRACTOR_DOCLING_TIMEOUT_MS=${DOCUMENT_EXTRACTOR_DOCLING_TIMEOUT_MS} \
 	--set-env-vars=MAX_VERTEX_EMBEDDING_BATCH_SIZE=${MAX_VERTEX_EMBEDDING_BATCH_SIZE} \
 	--add-cloudsql-instances=${addCloudSqlInstances} \
 	--network=${network} \
 	--service-account=${serviceAccount} \
-	--region=${zone} \
+	--gpu 1 \
+	--gpu-type nvidia-l4 \
+	${workerPoolGpuZonalRedundancyFlag} \
+	--region=${workerPoolRegion} \
 	--project ${gcpProjectId}
 
 notify:
