@@ -5,6 +5,7 @@ import {
 } from "@caseai-connect/ui/shad/dropdown-menu"
 import { LogOutIcon, ShieldBanIcon, ShieldCheckIcon } from "lucide-react"
 import { useTranslation } from "react-i18next"
+import { useNavigate } from "react-router-dom"
 import { useAbility } from "@/hooks/use-ability"
 import { useAuthHandler } from "@/hooks/use-auth-handler"
 import { useGetPath } from "@/hooks/use-build-path"
@@ -25,28 +26,30 @@ export function NavUserMenuItems() {
 }
 
 function InterfaceToggle() {
+  const navigate = useNavigate()
   const { t } = useTranslation("actions")
   const { abilities, isAdminInterface } = useAbility()
   const { getPath } = useGetPath()
 
-  if (!abilities.canManageProjects) return null
+  const toStudio = !isAdminInterface && abilities.canManageOrganizations
 
-  const handleChange = (checked: boolean) => {
-    const newLocation = getPath("project").replace(
-      checked ? RouteNames.APP : RouteNames.STUDIO,
-      checked ? RouteNames.STUDIO : RouteNames.APP,
-    )
-    window.location.replace(newLocation)
+  const handleChange = () => {
+    const newLocation = getPath("project", {
+      forceInterface: toStudio ? RouteNames.STUDIO : RouteNames.APP,
+    })
+    navigate(newLocation)
   }
+
+  if (!abilities.canManageProjects) return null
   return (
     <DropdownMenuGroup>
       {isAdminInterface ? (
-        <DropdownMenuItem onSelect={() => handleChange(false)}>
+        <DropdownMenuItem onSelect={handleChange}>
           <ShieldBanIcon />
           {t("exitStudio")}
         </DropdownMenuItem>
       ) : (
-        <DropdownMenuItem onSelect={() => handleChange(true)}>
+        <DropdownMenuItem onSelect={handleChange}>
           <ShieldCheckIcon />
           {t("goToStudio")}
         </DropdownMenuItem>

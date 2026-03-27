@@ -1,7 +1,7 @@
 import { createSlice, type PayloadAction } from "@reduxjs/toolkit"
-import type { User } from "../me/me.models"
 
 interface State {
+  isLoading: boolean
   isAuthenticated: boolean
   isAdminInterface: boolean
   abilities: {
@@ -12,6 +12,7 @@ interface State {
 }
 
 const initialState: State = {
+  isLoading: true,
   isAuthenticated: false,
   isAdminInterface: false,
   abilities: {
@@ -21,8 +22,6 @@ const initialState: State = {
   },
 }
 
-const adminRoles = ["admin", "owner"]
-const roles = [...adminRoles, "member"]
 const slice = createSlice({
   name: "auth",
   initialState,
@@ -30,42 +29,18 @@ const slice = createSlice({
     setAuthenticated: (state, action: PayloadAction<boolean>) => {
       state.isAuthenticated = action.payload
     },
-    setCanManageOrganizations: (
-      state,
-      action: PayloadAction<{
-        organizationRole?: User["memberships"]["organizationMemberships"][number]["role"]
-      }>,
-    ) => {
-      state.abilities.canManageOrganizations = !!(
-        action.payload.organizationRole && adminRoles.includes(action.payload.organizationRole)
-      )
+    setAbilities: (state, action: PayloadAction<State["abilities"]>) => {
+      state.abilities = action.payload
     },
-    setCanManageProjects: (
-      state,
-      action: PayloadAction<{
-        projectRole?: User["memberships"]["projectMemberships"][number]["role"]
-      }>,
-    ) => {
-      state.abilities.canManageProjects = !!(
-        action.payload.projectRole && adminRoles.includes(action.payload.projectRole)
-      )
-    },
-    setCanReadAgent: (
-      state,
-      action: PayloadAction<{
-        agentRole?: User["memberships"]["agentMemberships"][number]["role"]
-      }>,
-    ) => {
-      state.abilities.canReadAgent = !!(
-        action.payload.agentRole && roles.includes(action.payload.agentRole)
-      )
-    },
-    setIsAdminInterface: (state, action: PayloadAction<boolean>) => {
+    setIsStudioInterface: (state, action: PayloadAction<boolean>) => {
       if (state.abilities.canManageOrganizations || state.abilities.canManageProjects) {
         state.isAdminInterface = action.payload
       } else {
         state.isAdminInterface = false
       }
+    },
+    setStopLoading: (state) => {
+      state.isLoading = false
     },
   },
 })

@@ -2,7 +2,7 @@ import { createSlice } from "@reduxjs/toolkit"
 import { ADS, type AsyncData, defaultAsyncData } from "@/store/async-data-status"
 import type { Agent } from "../agents.models"
 import type { ConversationAgentSession } from "./conversation-agent-sessions.models"
-import { listConversationAgentSessions } from "./conversation-agent-sessions.thunks"
+import { listConversationAgentSessionsForAgents } from "./conversation-agent-sessions.thunks"
 
 type DataType = Record<Agent["id"], ConversationAgentSession[]> // keyed by agentId
 type State = {
@@ -21,22 +21,24 @@ const slice = createSlice({
   },
   extraReducers: (builder) => {
     builder
-      .addCase(listConversationAgentSessions.pending, (state) => {
+      .addCase(listConversationAgentSessionsForAgents.pending, (state) => {
         if (!ADS.isFulfilled(state.data)) state.data.status = ADS.Loading
         state.data.error = null
       })
-      .addCase(listConversationAgentSessions.fulfilled, (state, action) => {
-        const agentId = action.meta.arg.agentId
+      .addCase(listConversationAgentSessionsForAgents.fulfilled, (state, action) => {
+        const sessionsByAgentId = action.payload.reduce((acc, curr) => {
+          return Object.assign(acc, curr)
+        }, {})
         state.data = {
           value: {
             ...state.data.value,
-            [agentId]: action.payload,
+            ...sessionsByAgentId,
           },
           status: ADS.Fulfilled,
           error: null,
         }
       })
-      .addCase(listConversationAgentSessions.rejected, (state, action) => {
+      .addCase(listConversationAgentSessionsForAgents.rejected, (state, action) => {
         state.data.status = ADS.Error
         state.data.error = action.error.message || "Failed to load sessions"
       })

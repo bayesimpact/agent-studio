@@ -10,8 +10,10 @@ import { useTranslation } from "react-i18next"
 import { useNavigate } from "react-router-dom"
 import type { Organization } from "@/features/organizations/organizations.models"
 import type { Project } from "@/features/projects/projects.models"
-import { useBuildPath } from "@/hooks/use-build-path"
+import { useAbility } from "@/hooks/use-ability"
+import { useBuildPath, useGetPath } from "@/hooks/use-build-path"
 import { useRedirectToStudio } from "@/hooks/use-redirect-to-studio"
+import { RouteNames } from "@/routes/helpers"
 import { buildDate } from "@/utils/build-date"
 import { ListHeader } from "./layouts/ListHeader"
 import { ProjectCreator } from "./project/ProjectCreator"
@@ -40,7 +42,31 @@ export function ProjectList({
       {projects.map((project) => (
         <ProjectItem key={project.id} organizationId={organization.id} project={project} />
       ))}
+
+      <InterfaceSwitcher />
     </ListHeader>
+  )
+}
+
+function InterfaceSwitcher() {
+  const navigate = useNavigate()
+  const { t } = useTranslation("actions")
+  const { isAdminInterface, abilities } = useAbility()
+  const { getPath } = useGetPath()
+
+  const toStudio = !isAdminInterface && abilities.canManageOrganizations
+
+  const path = getPath("organization", {
+    forceInterface: toStudio ? RouteNames.STUDIO : RouteNames.APP,
+  })
+
+  const handleClick = () => navigate(path)
+
+  if (!abilities.canManageOrganizations) return null
+  return (
+    <Button variant="outline" onClick={handleClick}>
+      {t(toStudio ? "goToStudio" : "exitStudio")}
+    </Button>
   )
 }
 

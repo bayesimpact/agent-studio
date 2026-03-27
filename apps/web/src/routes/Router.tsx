@@ -101,7 +101,7 @@ const router = () =>
       path: RouteNames.APP,
       element: (
         <ProtectedRoute>
-          <Outlet />
+          <App />
         </ProtectedRoute>
       ),
       children: [
@@ -144,11 +144,22 @@ function Studio() {
   const dispatch = useAppDispatch()
   const abilities = useAppSelector(selectAbilities)
 
-  const isAdminInterface = abilities.canManageOrganizations || abilities.canManageProjects
-
   useEffect(() => {
-    dispatch(authActions.setIsAdminInterface(isAdminInterface))
-  }, [dispatch, isAdminInterface])
+    dispatch(authActions.setIsStudioInterface(true))
+    return () => {
+      dispatch(authActions.setIsStudioInterface(false))
+    }
+  }, [dispatch])
 
+  const canAccessStudio = abilities.canManageOrganizations || abilities.canManageProjects
+  if (!canAccessStudio) return <NotFoundRoute />
+  return <Outlet />
+}
+
+function App() {
+  const dispatch = useAppDispatch()
+  useEffect(() => {
+    dispatch(authActions.setIsStudioInterface(false))
+  }, [dispatch])
   return <Outlet />
 }

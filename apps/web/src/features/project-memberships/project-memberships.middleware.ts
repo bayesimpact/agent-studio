@@ -1,4 +1,3 @@
-import type { TypedStartListening } from "@reduxjs/toolkit"
 import { createListenerMiddleware, isAnyOf } from "@reduxjs/toolkit"
 import type { AppDispatch, RootState } from "@/store/types"
 import { hasInterfaceChanged, selectIsAdminInterface } from "../auth/auth.selectors"
@@ -11,8 +10,6 @@ import {
 } from "./project-memberships.thunks"
 
 const listenerMiddleware = createListenerMiddleware<RootState, AppDispatch>()
-
-export type AppStartListening = TypedStartListening<RootState, AppDispatch>
 
 // Refresh project memberships when current project changes
 listenerMiddleware.startListening({

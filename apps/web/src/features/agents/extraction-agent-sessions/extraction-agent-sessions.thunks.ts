@@ -11,20 +11,29 @@ import type {
 
 type ThunkConfig = { state: RootState; extra: ThunkExtraArg }
 
-export const listExtractionAgentSessions = createAsyncThunk<
-  ExtractionAgentSessionSummary[],
-  { agentId: string },
+export const listExtractionAgentSessionsForAgents = createAsyncThunk<
+  { [agentId: string]: ExtractionAgentSessionSummary[] }[],
+  { agentIds: string[] },
   ThunkConfig
->("extractionAgentSessions/list", async ({ agentId }, { extra: { services }, getState }) => {
-  const state = getState()
-  const isAdminInterface = selectIsAdminInterface(state)
-  const params = getCurrentIds({ state, wantedIds: ["organizationId", "projectId"] })
-  return await services.extractionAgentSessions.getAll({
-    ...params,
-    agentId,
-    type: isAdminInterface ? "playground" : "live",
-  })
-})
+>(
+  "extractionAgentSessions/listExtractionAgentSessionsForAgents",
+  async ({ agentIds }, { extra: { services }, getState }) => {
+    const state = getState()
+    const isAdminInterface = selectIsAdminInterface(state)
+    const params = getCurrentIds({ state, wantedIds: ["organizationId", "projectId"] })
+    return await Promise.all(
+      agentIds.map(async (agentId) => {
+        return {
+          [agentId]: await services.extractionAgentSessions.getAll({
+            ...params,
+            agentId,
+            type: isAdminInterface ? "playground" : "live",
+          }),
+        }
+      }),
+    )
+  },
+)
 
 export const executeExtractionAgentSession = createAsyncThunk<
   ExtractionAgentSessionResult,

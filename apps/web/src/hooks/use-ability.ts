@@ -8,7 +8,7 @@ export function useAbility() {
   const isAdminInterface = useAppSelector(selectIsAdminInterface)
   const isPremiumMember = useAppSelector(selectIsPremiumMember)
   return useMemo(
-    () => ({ abilities, isAdminInterface: isAdminInterface, isPremiumMember }),
+    () => ({ abilities, isAdminInterface, isPremiumMember }),
     [abilities, isAdminInterface, isPremiumMember],
   )
 }

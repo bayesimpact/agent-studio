@@ -1,22 +1,22 @@
-import type { TypedStartListening } from "@reduxjs/toolkit"
 import { createListenerMiddleware, isAnyOf } from "@reduxjs/toolkit"
-import { listConversationAgentSessions } from "@/features/agents/conversation-agent-sessions/conversation-agent-sessions.thunks"
+import { listConversationAgentSessionsForAgents } from "@/features/agents/conversation-agent-sessions/conversation-agent-sessions.thunks"
 import type { AppDispatch, RootState } from "@/store"
 import {
   hasAgentSessionChanged,
   selectCurrentAgentSessionId,
 } from "../../current-agent-session-id/current-agent-session-id.selectors"
-import { listFormAgentSessions } from "../../form-agent-sessions/form-agent-sessions.thunks"
+import { listFormAgentSessionsForAgents } from "../../form-agent-sessions/form-agent-sessions.thunks"
 import { listMessages } from "./agent-session-messages.thunks"
 
 // Create typed listener middleware
 export const listenerMiddleware = createListenerMiddleware<RootState, AppDispatch>()
 
-export type AppStartListening = TypedStartListening<RootState, AppDispatch>
-
 // Refresh messages when current agent sessions are loaded and one is selected
 listenerMiddleware.startListening({
-  matcher: isAnyOf(listConversationAgentSessions.fulfilled, listFormAgentSessions.fulfilled),
+  matcher: isAnyOf(
+    listConversationAgentSessionsForAgents.fulfilled,
+    listFormAgentSessionsForAgents.fulfilled,
+  ),
   effect: async (_, listenerApi) => {
     const state = listenerApi.getState()
     const agentSessionId = selectCurrentAgentSessionId(state)

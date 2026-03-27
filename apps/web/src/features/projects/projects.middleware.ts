@@ -1,4 +1,3 @@
-import type { TypedStartListening } from "@reduxjs/toolkit"
 import { createListenerMiddleware, isAnyOf } from "@reduxjs/toolkit"
 import type { AppDispatch, RootState } from "@/store/types"
 import { notificationsActions } from "../notifications/notifications.slice"
@@ -7,8 +6,6 @@ import { createProject, deleteProject, listProjects, updateProject } from "./pro
 
 // Create typed listener middleware
 const listenerMiddleware = createListenerMiddleware<RootState, AppDispatch>()
-
-export type AppStartListening = TypedStartListening<RootState, AppDispatch>
 
 // List projects when the current organization changes
 listenerMiddleware.startListening({

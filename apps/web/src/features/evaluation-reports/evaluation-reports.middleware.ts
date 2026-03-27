@@ -1,4 +1,3 @@
-import type { TypedStartListening } from "@reduxjs/toolkit"
 import { createListenerMiddleware } from "@reduxjs/toolkit"
 import type { AppDispatch, RootState } from "@/store/types"
 import { listEvaluations } from "../evaluations/evaluations.thunks"
@@ -6,8 +5,6 @@ import { notificationsActions } from "../notifications/notifications.slice"
 import { createEvaluationReport, listEvaluationReports } from "./evaluation-reports.thunks"
 
 const listenerMiddleware = createListenerMiddleware<RootState, AppDispatch>()
-
-export type AppStartListening = TypedStartListening<RootState, AppDispatch>
 
 // Refresh evaluation reports when listEvaluations is fulfilled
 listenerMiddleware.startListening({

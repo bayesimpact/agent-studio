@@ -2,7 +2,7 @@ import { createSlice } from "@reduxjs/toolkit"
 import { ADS, type AsyncData, defaultAsyncData } from "@/store/async-data-status"
 import type { Agent } from "../agents.models"
 import type { ExtractionAgentSessionSummary } from "./extraction-agent-sessions.models"
-import { listExtractionAgentSessions } from "./extraction-agent-sessions.thunks"
+import { listExtractionAgentSessionsForAgents } from "./extraction-agent-sessions.thunks"
 
 type DataType = Record<Agent["id"], ExtractionAgentSessionSummary[]>
 interface State {
@@ -21,23 +21,26 @@ const slice = createSlice({
   },
   extraReducers: (builder) => {
     builder
-      .addCase(listExtractionAgentSessions.pending, (state) => {
+      .addCase(listExtractionAgentSessionsForAgents.pending, (state) => {
         if (!ADS.isFulfilled(state.data)) state.data.status = ADS.Loading
         state.data.error = null
       })
-      .addCase(listExtractionAgentSessions.fulfilled, (state, action) => {
+      .addCase(listExtractionAgentSessionsForAgents.fulfilled, (state, action) => {
+        const sessionsByAgentId = action.payload.reduce((acc, curr) => {
+          return Object.assign(acc, curr)
+        }, {})
         state.data = {
-          status: ADS.Fulfilled,
-          error: null,
           value: {
             ...state.data.value,
-            [action.meta.arg.agentId]: action.payload,
+            ...sessionsByAgentId,
           },
+          status: ADS.Fulfilled,
+          error: null,
         }
       })
-      .addCase(listExtractionAgentSessions.rejected, (state, action) => {
+      .addCase(listExtractionAgentSessionsForAgents.rejected, (state, action) => {
         state.data.status = ADS.Error
-        state.data.error = action.error.message || "Failed to list extraction runs"
+        state.data.error = action.error.message || "Failed to load sessions"
       })
   },
 })

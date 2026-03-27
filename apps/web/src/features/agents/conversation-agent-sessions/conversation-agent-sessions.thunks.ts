@@ -6,25 +6,31 @@ import type { ConversationAgentSession } from "./conversation-agent-sessions.mod
 
 type ThunkConfig = { state: RootState; extra: ThunkExtraArg }
 
-export const listConversationAgentSessions = createAsyncThunk<
-  ConversationAgentSession[],
-  { agentId: string },
+export const listConversationAgentSessionsForAgents = createAsyncThunk<
+  { [agentId: string]: ConversationAgentSession[] }[],
+  { agentIds: string[] },
   ThunkConfig
 >(
-  "conversationAgentSession/listConversationAgentSessions",
-  async ({ agentId }, { extra: { services }, getState }) => {
+  "conversationAgentSession/listConversationAgentSessionsForAgents",
+  async ({ agentIds }, { extra: { services }, getState }) => {
     const state = getState()
     const { organizationId, projectId } = getCurrentIds({
       state,
       wantedIds: ["organizationId", "projectId"],
     })
     const isAdminInterface = selectIsAdminInterface(state)
-    return services.conversationAgentSessions.getAll({
-      organizationId,
-      projectId,
-      agentId,
-      type: isAdminInterface ? "playground" : "live",
-    })
+    return await Promise.all(
+      agentIds.map(async (agentId) => {
+        return {
+          [agentId]: await services.conversationAgentSessions.getAll({
+            organizationId,
+            projectId,
+            agentId,
+            type: isAdminInterface ? "playground" : "live",
+          }),
+        }
+      }),
+    )
   },
 )
 

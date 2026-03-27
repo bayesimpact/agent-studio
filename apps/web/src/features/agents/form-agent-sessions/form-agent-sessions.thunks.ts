@@ -30,25 +30,31 @@ export const refreshFormResultForCurrentAgentSession = createAsyncThunk<
   },
 )
 
-export const listFormAgentSessions = createAsyncThunk<
-  FormAgentSession[],
-  { agentId: string },
+export const listFormAgentSessionsForAgents = createAsyncThunk<
+  { [agentId: string]: FormAgentSession[] }[],
+  { agentIds: string[] },
   ThunkConfig
 >(
-  "formAgentSession/listFormAgentSessions",
-  async ({ agentId }, { extra: { services }, getState }) => {
+  "formAgentSession/listFormAgentSessionsForAgents",
+  async ({ agentIds }, { extra: { services }, getState }) => {
     const state = getState()
     const { organizationId, projectId } = getCurrentIds({
       state,
       wantedIds: ["organizationId", "projectId"],
     })
     const isAdminInterface = selectIsAdminInterface(state)
-    return services.formAgentSessions.getAll({
-      organizationId,
-      projectId,
-      agentId,
-      type: isAdminInterface ? "playground" : "live",
-    })
+    return Promise.all(
+      agentIds.map(async (agentId) => {
+        return {
+          [agentId]: await services.formAgentSessions.getAll({
+            organizationId,
+            projectId,
+            agentId,
+            type: isAdminInterface ? "playground" : "live",
+          }),
+        }
+      }),
+    )
   },
 )
 

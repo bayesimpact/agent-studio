@@ -1,4 +1,3 @@
-import type { TypedStartListening } from "@reduxjs/toolkit"
 import { createListenerMiddleware, isAnyOf } from "@reduxjs/toolkit"
 import type { AppDispatch, RootState } from "@/store/types"
 import { deleteDocumentTag, updateDocumentTag } from "../document-tags/document-tags.thunks"
@@ -7,8 +6,6 @@ import { hasProjectChanged } from "../projects/projects.selectors"
 import { createAgent, deleteAgent, listAgents, updateAgent } from "./agents.thunks"
 
 const listenerMiddleware = createListenerMiddleware<RootState, AppDispatch>()
-
-export type AppStartListening = TypedStartListening<RootState, AppDispatch>
 
 // Refresh Agents when current project changes
 listenerMiddleware.startListening({
