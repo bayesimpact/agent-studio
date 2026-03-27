@@ -7,6 +7,8 @@ This project uses [CalVer](https://calver.org/) (YY.MM.Micro) for product versio
 
 ## [Unreleased]
 
+## [26.03.1] - 2026-03-27
+
 ### Added
 - Medgemma available for Extraction Agent
 - In-app invitations: invite and remove users from agents and projects with role-based access
