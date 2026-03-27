@@ -215,7 +215,7 @@ export class CustomMedGemmaLanguageModel implements LanguageModelV3 {
   }
 
   async doStreamWithTools(
-    options: LanguageModelV3CallOptions,
+    _options: LanguageModelV3CallOptions,
   ): Promise<LanguageModelV3StreamResult> {
     throw new NotImplementedException(`DEV - doStreamWithTools is not (yet) implemented`)
   }
