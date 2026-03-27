@@ -15,7 +15,7 @@ export function AgentSessionMessage({ message }: { message: AgentSessionMessageT
   switch (message.role) {
     case "assistant": {
       const isStreaming = message.status === "streaming"
-      const isError = message.status === "error"
+      const isError = message.status === "error" || message.content.trim().length === 0
       const sourcesTool = message.toolCalls?.find((call) => call.name === ToolName.Sources)
       return (
         <div key={message.id} className="max-w-3/4 relative">
