@@ -1,4 +1,4 @@
-import { AgentModel } from "@caseai-connect/api-contracts"
+import { AgentModel, AgentModelToAgentProvider, AgentProvider } from "@caseai-connect/api-contracts"
 import { Inject, Injectable, NotFoundException, UnprocessableEntityException } from "@nestjs/common"
 import { InjectRepository } from "@nestjs/typeorm"
 import type { Repository } from "typeorm"
@@ -7,7 +7,6 @@ import type { RequiredConnectScope } from "@/common/entities/connect-required-fi
 import type { LLMMetadata, LLMProvider } from "@/common/interfaces/llm-provider.interface"
 import type { Agent } from "@/domains/agents/agent.entity"
 import type { Evaluation } from "@/domains/evaluations/evaluation.entity"
-import { AgentModelToAgentProvider, AgentProvider } from "@/external/llm/agent-provider"
 import { ServiceWithLLM } from "@/external/llm/service-with-llm"
 import { EvaluationReport } from "./evaluation-report.entity"
 

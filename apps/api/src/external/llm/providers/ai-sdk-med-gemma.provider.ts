@@ -2,11 +2,12 @@ import "../open-telemetry-init" // !!!! first import !!!!
 import { createOpenResponses } from "@ai-sdk/open-responses"
 import { createOpenAI } from "@ai-sdk/openai"
 import type { LanguageModelV3 } from "@ai-sdk/provider"
+import { AgentProvider } from "@caseai-connect/api-contracts"
 import { Injectable, NotImplementedException } from "@nestjs/common"
 import type { LLMConfig } from "@/common/interfaces/llm-provider.interface"
+import { GetAgentModelKeyFromValue } from "@/external/llm/agent-provider"
 import { AISDKLLMProviderBase, CallOrigin } from "@/external/llm/ai-sdk-llm-provider-base"
 import { CustomMedGemmaLanguageModel } from "@/external/llm/providers/custom-med-gemma-language-model"
-import { AgentProvider, GetAgentModelKeyFromValue } from "../agent-provider"
 
 @Injectable()
 export class AISDKMedGemmaProvider extends AISDKLLMProviderBase {

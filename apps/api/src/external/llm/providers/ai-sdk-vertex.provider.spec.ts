@@ -1,14 +1,10 @@
-import { AgentModel } from "@caseai-connect/api-contracts"
+import { AgentModel, AgentModelToAgentProvider, AgentProvider } from "@caseai-connect/api-contracts"
 import { afterAll, beforeAll } from "@jest/globals"
 import { BatchSpanProcessor, ConsoleSpanExporter } from "@opentelemetry/sdk-trace-base"
 import { NodeTracerProvider } from "@opentelemetry/sdk-trace-node"
 import { config as dotenvConfig } from "dotenv"
 import { LangfuseIntegrationExporter } from "@/external/langfuse/langfuse-integration-exporter"
-import {
-  AgentModelToAgentProvider,
-  AgentProvider,
-  GetAgentModelKeyFromValue,
-} from "@/external/llm/agent-provider"
+import { GetAgentModelKeyFromValue } from "@/external/llm/agent-provider"
 import { sdk } from "@/external/llm/open-telemetry-init"
 import { AISDKVertexProvider } from "@/external/llm/providers/ai-sdk-vertex.provider"
 import { ProviderSpecs } from "@/external/llm/providers/provider-specs"

@@ -1,4 +1,5 @@
 import "./open-telemetry-init" // !!!! first import !!!!
+import { AgentModelToAgentProvider, AgentProvider } from "@caseai-connect/api-contracts"
 import { NotImplementedException } from "@nestjs/common"
 import { generateText, jsonSchema, Output, ToolLoopAgent } from "ai"
 import { type ZodObject, z } from "zod"
@@ -10,7 +11,6 @@ import type {
   LLMProvider,
 } from "@/common/interfaces/llm-provider.interface"
 import { removeNullish } from "@/common/utils/remove-nullish"
-import { AgentModelToAgentProvider, AgentProvider } from "@/external/llm/agent-provider"
 
 export abstract class AISDKLLMProviderBase implements LLMProvider {
   async *streamChatResponse({

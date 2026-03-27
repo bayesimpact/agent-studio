@@ -3,6 +3,8 @@
 import {
   AgentLocale,
   AgentModel,
+  AgentModelToAgentProvider,
+  AgentProvider,
   createAgentSchema,
   outputJsonSchemaSchema,
   updateAgentSchema,
@@ -163,7 +165,12 @@ export function BaseAgentForm({
                     </SelectTrigger>
                     <SelectContent>
                       {Object.entries(AgentModel)
-                        .filter(([key]) => !key.startsWith("_Mock"))
+                        .filter(
+                          ([_key, value]) =>
+                            AgentModelToAgentProvider[value] !== AgentProvider._Mock &&
+                            (agentType === "extraction" ||
+                              AgentModelToAgentProvider[value] !== AgentProvider.MedGemma),
+                        )
                         .map(([key, value]) => (
                           <SelectItem key={key} value={value}>
                             {value}
