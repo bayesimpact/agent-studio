@@ -261,6 +261,10 @@ deploy-only:
 	--update-secrets=DATABASE_PASSWORD=${secretsPrefix}DATABASE_PASSWORD:latest \
 	--update-secrets=BULLMQ_REDIS_URL=${secretsPrefix}BULLMQ_REDIS_URL:latest \
 	--update-secrets=AUTH0_M2M_CLIENT_SECRET=${secretsPrefix}AUTH0_M2M_CLIENT_SECRET:latest \
+	--update-secrets=VLLM_MEDGEMMA15_4B_URL=${secretsPrefix}VLLM_MEDGEMMA15_4B_URL:latest \
+	--update-secrets=VLLM_MEDGEMMA15_4B_APIKEY=${secretsPrefix}VLLM_MEDGEMMA15_4B_APIKEY:latest \
+	--update-secrets=VLLM_MEDGEMMA10_27B_URL=${secretsPrefix}VLLM_MEDGEMMA10_27B_URL:latest \
+	--update-secrets=VLLM_MEDGEMMA10_27B_APIKEY=${secretsPrefix}VLLM_MEDGEMMA10_27B_APIKEY:latest \
 	--set-env-vars=TZ=UTC \
 	--set-env-vars=AUTH0_ISSUER_URL=${auth0IssuerUrl},AUTH0_AUDIENCE=${auth0Audience} \
 	--set-env-vars=AUTH0_ORGANIZATION_ID=${auth0OrganizationId},AUTH0_CLIENT_ID=${auth0ClientId},AUTH0_M2M_CLIENT_ID=${auth0M2MClientId} \
