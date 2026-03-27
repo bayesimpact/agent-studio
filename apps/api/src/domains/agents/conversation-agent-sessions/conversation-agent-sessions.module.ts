@@ -25,8 +25,6 @@ import { Project } from "@/domains/projects/project.entity"
 import { ProjectsModule } from "@/domains/projects/projects.module"
 import { UsersModule } from "@/domains/users/users.module"
 import { LlmModule } from "@/external/llm/llm.module"
-import { AISDKMockProvider } from "@/external/llm/providers/ai-sdk-mock.provider"
-import { AISDKVertexProvider } from "@/external/llm/providers/ai-sdk-vertex.provider"
 import { AgentMessagesController } from "../shared/agent-session-messages/agent-messages.controller"
 import { ConversationAgentSessionsController } from "./conversation-agent-controller"
 import { ConversationAgentSession } from "./conversation-agent-session.entity"
@@ -64,14 +62,6 @@ import { ConversationAgentSessionsService } from "./conversation-agent-sessions.
     OrganizationContextResolver,
     ProjectContextResolver,
     ResourceContextGuard,
-    {
-      provide: "VertexLLMProvider",
-      useClass: AISDKVertexProvider,
-    },
-    {
-      provide: "_MockLLMProvider",
-      useClass: AISDKMockProvider,
-    },
   ],
   controllers: [AgentMessagesController, StreamingController, ConversationAgentSessionsController],
   exports: [ConversationAgentSessionsService, StreamingService],

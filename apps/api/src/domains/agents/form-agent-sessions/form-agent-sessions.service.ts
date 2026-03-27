@@ -1,28 +1,19 @@
-import { Inject, Injectable } from "@nestjs/common"
+import { Injectable } from "@nestjs/common"
 import { InjectRepository } from "@nestjs/typeorm"
 import type { Repository } from "typeorm"
 import { v4 } from "uuid"
 import { ConnectRepository } from "@/common/entities/connect-repository"
 import type { RequiredConnectScope } from "@/common/entities/connect-required-fields"
-import type { LLMProvider } from "@/common/interfaces/llm-provider.interface"
-import { FILE_STORAGE_SERVICE } from "@/domains/documents/storage/file-storage.interface"
-import { ServiceWithLLM } from "@/external/llm"
 import type { BaseAgentSessionType } from "../base-agent-sessions/base-agent-sessions.types"
 import { FormAgentSession } from "./form-agent-session.entity"
 
 @Injectable()
-export class FormAgentSessionsService extends ServiceWithLLM {
+export class FormAgentSessionsService {
   private readonly sessionConnectRepository: ConnectRepository<FormAgentSession>
   constructor(
     @InjectRepository(FormAgentSession)
     formAgentSessionRepository: Repository<FormAgentSession>,
-    @Inject(FILE_STORAGE_SERVICE)
-    @Inject("_MockLLMProvider")
-    mockLlmProvider: LLMProvider,
-    @Inject("VertexLLMProvider")
-    vertexLlmProvider: LLMProvider,
   ) {
-    super(mockLlmProvider, vertexLlmProvider)
     this.sessionConnectRepository = new ConnectRepository(
       formAgentSessionRepository,
       "formAgentSession",

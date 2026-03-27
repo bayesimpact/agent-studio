@@ -6,21 +6,20 @@ import { config as dotenvConfig } from "dotenv"
 import { LangfuseIntegrationExporter } from "@/external/langfuse/langfuse-integration-exporter"
 import { GetAgentModelKeyFromValue } from "@/external/llm/agent-provider"
 import { sdk } from "@/external/llm/open-telemetry-init"
-import { AISDKVertexProvider } from "@/external/llm/providers/ai-sdk-vertex.provider"
+import { AISDKMedGemmaProvider } from "@/external/llm/providers/ai-sdk-med-gemma.provider"
 import { ProviderSpecs } from "@/external/llm/providers/provider-specs"
-import { gcpCredentialsCheck } from "@/external/llm/providers/spec-gcp-tools"
 
 dotenvConfig({ path: ".env", override: true })
 dotenvConfig({ path: ".env.test", override: true })
 const testModels = Object.values(AgentModel)
-  .filter((am) => AgentModelToAgentProvider[am] === AgentProvider.Vertex)
+  .filter((am) => AgentModelToAgentProvider[am] === AgentProvider.MedGemma)
   .map((m) => ({
     name: GetAgentModelKeyFromValue(m),
     model: m,
   }))
 
-if (process.env.IS_TEST === "true" && process.env.VERTEX_TEST === "true") {
-  describe("AISDKVertexProvider", () => {
+if (process.env.IS_TEST === "true" && process.env.MEDGEMMA_TEST === "true") {
+  describe("AISDKMedGemmaProvider", () => {
     jest.setTimeout(60_000)
     const langfuse = new LangfuseIntegrationExporter({
       secretKey: process.env.LANGFUSE_SK,
@@ -33,11 +32,11 @@ if (process.env.IS_TEST === "true" && process.env.VERTEX_TEST === "true") {
         new BatchSpanProcessor(langfuse),
       ],
     })
-    let provider: AISDKVertexProvider
+    let provider: AISDKMedGemmaProvider
     beforeAll(async () => {
       const conf = process.env.GOOGLE_APPLICATION_CREDENTIALS
       if (!conf) return
-      provider = new AISDKVertexProvider()
+      provider = new AISDKMedGemmaProvider()
       traceProvider.register()
     })
     afterAll(async () => {
@@ -45,10 +44,6 @@ if (process.env.IS_TEST === "true" && process.env.VERTEX_TEST === "true") {
       await traceProvider.forceFlush()
       await traceProvider.shutdown()
       await sdk.shutdown()
-    })
-    it("gcpCredentialsCheck", async () => {
-      const check = await gcpCredentialsCheck()
-      expect(check).toBeTruthy()
     })
 
     it.each(testModels)("generateText - $name", async ({ model }) => {
@@ -83,12 +78,14 @@ if (process.env.IS_TEST === "true" && process.env.VERTEX_TEST === "true") {
       await ProviderSpecs.testStreamChatResponseWithTools({
         provider,
         model,
-        advancedExpectation: true,
+        advancedExpectation: false,
       })
     })
   })
 } else {
-  describe.skip("AISDKVertexProvider", () => {
-    it("skipped (requires process.env.IS_TEST=true and process.env.VERTEX_TEST=true)", () => {})
+  describe.skip("AISDKMedGemmaProvider", () => {
+    it.each(
+      testModels,
+    )("skipped (requires process.env.IS_TEST=true and process.env.MEDGEMMA_TEST=true)", () => {})
   })
 }

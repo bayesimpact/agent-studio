@@ -9,14 +9,31 @@ import type { TimeType } from "../generic"
 export enum AgentModel {
   Gemini25Flash = "gemini-2.5-flash",
   Gemini25Pro = "gemini-2.5-pro",
+  MedGemma10_27B = "google/medgemma-27b-it",
+  MedGemma15_4B = "google/medgemma-1.5-4b-it",
   _MockGenerateObject = "generate-object-mock-language-model-v3",
   _MockGenerateStructuredOutput = "generate-structured-output-mock-language-model-v3",
   _MockGenerateText = "generate-text-mock-language-model-v3",
-  _MockProcessFiles = "process-files-mock-language-model-v3",
   _MockRate = "rate-mock-language-model-v3",
   _MockStreamChatResponse = "stream-chat-response-mock-language-model-v3",
 }
 
+export enum AgentProvider {
+  MedGemma = "MED-GEMMA",
+  Vertex = "VERTEX",
+  _Mock = "MOCK",
+}
+export const AgentModelToAgentProvider: Record<AgentModel, AgentProvider> = {
+  [AgentModel.Gemini25Flash]: AgentProvider.Vertex,
+  [AgentModel.Gemini25Pro]: AgentProvider.Vertex,
+  [AgentModel.MedGemma10_27B]: AgentProvider.MedGemma,
+  [AgentModel.MedGemma15_4B]: AgentProvider.MedGemma,
+  [AgentModel._MockGenerateObject]: AgentProvider._Mock,
+  [AgentModel._MockGenerateStructuredOutput]: AgentProvider._Mock,
+  [AgentModel._MockGenerateText]: AgentProvider._Mock,
+  [AgentModel._MockRate]: AgentProvider._Mock,
+  [AgentModel._MockStreamChatResponse]: AgentProvider._Mock,
+}
 export enum AgentLocale {
   EN = "en",
   FR = "fr",

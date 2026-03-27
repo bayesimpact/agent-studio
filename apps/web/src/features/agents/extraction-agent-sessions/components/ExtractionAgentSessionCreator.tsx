@@ -64,7 +64,7 @@ export function ExtractionSessionCreator() {
             await dispatch(executeExtractionAgentSession({ file })).unwrap()
           }}
           onProcessEnd={resetState}
-          allowedMimeTypes={{ "application/pdf": true }}
+          allowedMimeTypes={{ "application/pdf": true, "image/jpeg": true }}
           shouldRun={isRunning}
           onDropFiles={(files) => setFile(files[0])}
         >

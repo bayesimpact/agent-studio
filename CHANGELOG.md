@@ -8,6 +8,7 @@ This project uses [CalVer](https://calver.org/) (YY.MM.Micro) for product versio
 ## [Unreleased]
 
 ### Added
+- Medgemma available for Extraction Agent
 - In-app invitations: invite and remove users from agents and projects with role-based access
 - Role-based authorization: define rights levels between users and admins across organizations, projects, and agents
 - New navigation UI with breadcrumbs, organization/project selector, and agent member management

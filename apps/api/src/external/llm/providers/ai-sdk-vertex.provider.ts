@@ -1,10 +1,10 @@
 import "../open-telemetry-init" // !!!! first import !!!!
 import { createVertex } from "@ai-sdk/google-vertex"
+import { AgentProvider } from "@caseai-connect/api-contracts"
 import { Injectable } from "@nestjs/common"
 import type { LanguageModel } from "ai"
 import type { LLMConfig } from "@/common/interfaces/llm-provider.interface"
-import { AISDKLLMProviderBase } from "@/external/llm/ai-sdk-llm-provider-base"
-import { AgentProvider } from "../agent-provider"
+import { AISDKLLMProviderBase, type CallOrigin } from "@/external/llm/ai-sdk-llm-provider-base"
 
 @Injectable()
 export class AISDKVertexProvider extends AISDKLLMProviderBase {
@@ -31,7 +31,7 @@ export class AISDKVertexProvider extends AISDKLLMProviderBase {
       })
   }
 
-  getLanguageModel(config: LLMConfig): LanguageModel {
+  getLanguageModel({ config }: { config: LLMConfig; callOrigin: CallOrigin }): LanguageModel {
     return this.vertexProvider(config.model)
   }
   getTags(config: LLMConfig): string[] {

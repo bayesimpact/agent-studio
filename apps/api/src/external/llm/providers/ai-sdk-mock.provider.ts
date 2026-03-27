@@ -1,21 +1,19 @@
 import type { LanguageModelV3StreamPart } from "@ai-sdk/provider"
-import { AgentModel } from "@caseai-connect/api-contracts"
+import { AgentModel, AgentProvider } from "@caseai-connect/api-contracts"
 import { Injectable, NotImplementedException } from "@nestjs/common"
 import { type LanguageModel, simulateReadableStream } from "ai"
 import { MockLanguageModelV3 } from "ai/test"
 import type { LLMConfig } from "@/common/interfaces/llm-provider.interface"
-import { AgentProvider } from "@/external/llm/agent-provider"
-import { AISDKLLMProviderBase } from "@/external/llm/ai-sdk-llm-provider-base"
+import { AISDKLLMProviderBase, type CallOrigin } from "@/external/llm/ai-sdk-llm-provider-base"
 
 @Injectable()
 export class AISDKMockProvider extends AISDKLLMProviderBase {
   getAgentProvider(): AgentProvider {
     return AgentProvider._Mock
   }
-  getLanguageModel(config: LLMConfig): LanguageModel {
+  getLanguageModel({ config }: { config: LLMConfig; callOrigin: CallOrigin }): LanguageModel {
     switch (config.model) {
       case AgentModel._MockGenerateText:
-      case AgentModel._MockProcessFiles:
       case AgentModel._MockRate:
         return this.getMockForGenerateText(config)
       case AgentModel._MockGenerateStructuredOutput:
@@ -32,7 +30,7 @@ export class AISDKMockProvider extends AISDKLLMProviderBase {
     let result: string =
       config.model === AgentModel._MockRate
         ? "76"
-        : `Hello, I'm the ${config.model === AgentModel._MockGenerateText ? "generateText" : "processFiles"} default mock response!` //<default mock result for generateText>
+        : `Hello, I'm the generateText default mock response!` //<default mock result for generateText>
     if (config.mockResult && !Array.isArray(config.mockResult)) {
       result = config.mockResult
     }
