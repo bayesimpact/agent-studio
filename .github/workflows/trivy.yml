@@ -1,0 +1,75 @@
+name: trivy
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+  schedule:
+    - cron: "0 4 * * *" # run once a day at 4 AM
+env:
+  SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+jobs:
+  scan:
+    name: trivy
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - id: Auth
+        uses: 'google-github-actions/auth@v2'
+        with:
+          credentials_json: '${{ secrets.GCP_CREDENTIALS }}'
+
+      - uses: google-github-actions/setup-gcloud@v2
+        with:
+          install_components: beta
+          version: "545.0.0"
+
+      - name: Docker connect to GCP
+        run: gcloud auth configure-docker REGION-docker.pkg.dev
+
+      - name: Extract image refs
+        id: image-refs
+        run: make docker-image-refs
+
+      - name: Run Trivy vulnerability scanner on API
+        uses: aquasecurity/trivy-action@0.35.0
+        with:
+          image-ref: '${{ steps.image-refs.outputs.api-image-ref }}'
+          format: 'table'
+          exit-code: '0'
+          ignore-unfixed: true
+          vuln-type: 'os,library'
+          severity: 'CRITICAL,HIGH'
+          output: 'trivy-api-results.txt'
+
+      - name: Run Trivy vulnerability scanner on Workers
+        uses: aquasecurity/trivy-action@0.35.0
+        with:
+          image-ref: '${{ steps.image-refs.outputs.workers-image-ref }}'
+          format: 'table'
+          exit-code: '0'
+          ignore-unfixed: true
+          vuln-type: 'os,library'
+          severity: 'CRITICAL,HIGH'
+          output: 'trivy-workers-results.txt'
+
+      - name: Trivy scan summary
+        run: |
+          echo "## Trivy Vulnerability Scan Results" >> $GITHUB_STEP_SUMMARY
+          echo "### API Image" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          cat trivy-api-results.txt >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          echo "### Workers Image" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          cat trivy-workers-results.txt >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+
+      - name: Notify on failure
+        if: ${{ failure() }}
+        run: make notify-error

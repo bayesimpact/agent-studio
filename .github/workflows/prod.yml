@@ -100,46 +100,8 @@ jobs:
       - name: Docker connect to GCP
         run: gcloud auth configure-docker REGION-docker.pkg.dev
 
-      - name: Extract image refs
-        id: image-refs
-        run: make docker-image-refs
-
       - name: 'Check docker image starts and push it'
         run: make docker-push
-
-      - name: Run Trivy vulnerability scanner on API
-        uses: aquasecurity/trivy-action@0.35.0
-        with:
-          image-ref: '${{ steps.image-refs.outputs.api-image-ref }}'
-          format: 'table'
-          exit-code: '0'
-          ignore-unfixed: true
-          vuln-type: 'os,library'
-          severity: 'CRITICAL,HIGH'
-          output: 'trivy-api-results.txt'
-
-      - name: Run Trivy vulnerability scanner on Workers
-        uses: aquasecurity/trivy-action@0.35.0
-        with:
-          image-ref: '${{ steps.image-refs.outputs.workers-image-ref }}'
-          format: 'table'
-          exit-code: '0'
-          ignore-unfixed: true
-          vuln-type: 'os,library'
-          severity: 'CRITICAL,HIGH'
-          output: 'trivy-workers-results.txt'
-
-      - name: Trivy scan summary
-        run: |
-          echo "## Trivy Vulnerability Scan Results" >> $GITHUB_STEP_SUMMARY
-          echo "### API Image" >> $GITHUB_STEP_SUMMARY
-          echo '```' >> $GITHUB_STEP_SUMMARY
-          cat trivy-api-results.txt >> $GITHUB_STEP_SUMMARY
-          echo '```' >> $GITHUB_STEP_SUMMARY
-          echo "### Workers Image" >> $GITHUB_STEP_SUMMARY
-          echo '```' >> $GITHUB_STEP_SUMMARY
-          cat trivy-workers-results.txt >> $GITHUB_STEP_SUMMARY
-          echo '```' >> $GITHUB_STEP_SUMMARY
 
       - name: Notify on failure
         if: ${{ failure() }}
