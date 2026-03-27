@@ -32,13 +32,18 @@ export function fillFormTool({
       ),
     }),
     execute: async (input, _options) => {
+      const cleandInput: Record<string, string | number | boolean | undefined> = {}
+      for (const [key, value] of Object.entries(input)) {
+        cleandInput[key] =
+          value === null ? undefined : (value as string | number | boolean | undefined)
+      }
       const { result: formState } = await formAgentSessionsService.updateSessionResult({
         connectScope,
         sessionId,
-        input,
+        input: cleandInput,
       })
 
-      onExecute({ toolName: ToolName.FillForm, arguments: input })
+      onExecute({ toolName: ToolName.FillForm, arguments: cleandInput })
 
       return { formState }
     },
@@ -54,13 +59,13 @@ function buildInputSchemaForFormTool(
     const description = value.description || ""
     switch (value.type) {
       case "string":
-        shape[key] = z.string().describe(description).nullable()
+        shape[key] = z.string().describe(description).nullable().optional()
         break
       case "number":
-        shape[key] = z.number().describe(description).nullable()
+        shape[key] = z.number().describe(description).nullable().optional()
         break
       case "boolean":
-        shape[key] = z.boolean().describe(description).nullable()
+        shape[key] = z.boolean().describe(description).nullable().optional()
         break
       default:
         throw new Error(`Unsupported property type: ${value.type}`)
