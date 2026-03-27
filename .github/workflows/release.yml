@@ -46,6 +46,14 @@ jobs:
             /^## \[Unreleased\]/ {
               print "## [Unreleased]"
               print ""
+              print "### Added"
+              print ""
+              print "### Changed"
+              print ""
+              print "### Fixed"
+              print ""
+              print "### Security"
+              print ""
               print "## [" ver "] - " date
               next
             }
