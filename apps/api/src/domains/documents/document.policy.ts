@@ -11,21 +11,24 @@ export class DocumentPolicy extends ProjectScopedPolicy<Document> {
   }
 
   canList(): boolean {
-    return this.isAdminOrOwner()
+    return this.canAccess() && this.isProjectAdminOrOwner()
+  }
+  canView(): boolean {
+    return this.canAccess()
   }
 
   canCreate(): boolean {
-    if (this.sourceType === "project") {
-      return this.isAdminOrOwner()
+    if (this.sourceType && ["agentSessionMessage", "extraction"].includes(this.sourceType)) {
+      return this.canAccess()
     }
-    return true
+    return this.canAccess() && this.isProjectAdminOrOwner()
   }
 
   canUpdate(): boolean {
-    return this.isAdminOrOwner()
+    return this.canAccess() && this.isProjectAdminOrOwner() && this.doesResourceBelongToScope()
   }
 
   canDelete(): boolean {
-    return this.isAdminOrOwner()
+    return this.canUpdate()
   }
 }

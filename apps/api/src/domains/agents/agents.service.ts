@@ -1,34 +1,43 @@
 import { Injectable, NotFoundException, UnprocessableEntityException } from "@nestjs/common"
 import { InjectRepository } from "@nestjs/typeorm"
-import type { Repository } from "typeorm"
+// biome-ignore lint/style/useImportType: DataSource required at runtime for NestJS DI
+import { DataSource, type Repository } from "typeorm"
 import { ConnectRepository } from "@/common/entities/connect-repository"
 import type { RequiredConnectScope } from "@/common/entities/connect-required-fields"
-// biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
-import { ConversationAgentSessionsService } from "@/domains/agents/conversation-agent-sessions/conversation-agent-sessions.service"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
 import { DocumentTagsService } from "../documents/tags/document-tags.service"
 import type { DocumentTagsUpdateFields } from "../documents/tags/document-tags.types"
 import { Agent } from "./agent.entity"
+// biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
+import { BaseAgentSessionsService } from "./base-agent-sessions/base-agent-sessions.service"
+import { AgentMembership } from "./memberships/agent-membership.entity"
+// biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
+import { AgentMembershipsService } from "./memberships/agent-memberships.service"
 
 @Injectable()
 export class AgentsService {
+  private readonly agentConnectRepository: ConnectRepository<Agent>
+
   constructor(
     @InjectRepository(Agent)
     agentRepository: Repository<Agent>,
     private readonly documentTagsService: DocumentTagsService,
-    private readonly conversationAgentSessionsService: ConversationAgentSessionsService,
+    private readonly agentMembershipsService: AgentMembershipsService,
+    private readonly baseAgentSessionsService: BaseAgentSessionsService,
+    private readonly dataSource: DataSource,
   ) {
     this.agentConnectRepository = new ConnectRepository(agentRepository, "agents")
   }
-  private readonly agentConnectRepository: ConnectRepository<Agent>
 
   /**
    * Creates a new agent for a project.
    */
   async createAgent({
+    userId,
     connectScope,
     fields,
   }: {
+    userId: string
     connectScope: RequiredConnectScope
     fields: Pick<RequiredConnectScope, never> &
       Pick<Agent, "defaultPrompt" | "name" | "model" | "temperature" | "locale" | "type"> &
@@ -52,20 +61,33 @@ export class AgentsService {
     })
 
     // Create the agent with defaults
-    return await this.agentConnectRepository.createAndSave(connectScope, {
+    const agent = await this.agentConnectRepository.createAndSave(connectScope, {
       ...agentFields,
       type: agentFields.type,
       outputJsonSchema,
       documentTags,
     })
+
+    await this.agentMembershipsService.createAgentOwnerMembership({
+      agentId: agent.id,
+      userId,
+    })
+    return agent
   }
 
   /**
    * Lists all agents for a project.
    */
-  async listAgents(connectScope: RequiredConnectScope): Promise<Agent[]> {
+  async listAgents({
+    userId,
+    connectScope,
+  }: {
+    userId: string
+    connectScope: RequiredConnectScope
+  }): Promise<Agent[]> {
     return (
       await this.agentConnectRepository.find(connectScope, {
+        where: { agentMemberships: { userId, status: "accepted" } },
         relations: ["documentTags"],
       })
     )?.sort((a, b) => a.name.localeCompare(b.name))
@@ -169,27 +191,19 @@ export class AgentsService {
     return updatedAgent
   }
 
-  /**
-   * Deletes an agent.
-   */
-  async deleteAgent({
-    connectScope,
-    agentId,
-  }: {
-    connectScope: RequiredConnectScope
-    agentId: string
-  }): Promise<void> {
-    // Find the agent
-    const agent = await this.agentConnectRepository.getOneById(connectScope, agentId)
+  async deleteAgent(agent: Agent): Promise<void> {
+    await this.dataSource.transaction(async (entityManager) => {
+      await this.baseAgentSessionsService.deleteAgentSessions({
+        entityManager,
+        agentId: agent.id,
+        agentType: agent.type,
+      })
 
-    if (!agent) {
-      throw new NotFoundException(`Agent with id ${agentId} not found`)
-    }
+      // Delete memberships
+      await entityManager.delete(AgentMembership, { agentId: agent.id })
 
-    // Delete all sessions for the agent
-    await this.conversationAgentSessionsService.deleteAllSessionsForAgent(agentId)
-
-    // Delete the agent
-    await this.agentConnectRepository.deleteOneById({ connectScope, id: agent.id })
+      // Delete agent
+      await entityManager.delete(Agent, { id: agent.id })
+    })
   }
 }

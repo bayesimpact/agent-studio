@@ -12,7 +12,7 @@ export class OrganizationContextResolver implements ContextResolver {
 
   constructor(
     @InjectRepository(OrganizationMembership)
-    private readonly membershipRepository: Repository<OrganizationMembership>,
+    private readonly organizationMembershipRepository: Repository<OrganizationMembership>,
   ) {}
 
   async resolve(request: ResolvableRequest): Promise<void> {
@@ -24,7 +24,7 @@ export class OrganizationContextResolver implements ContextResolver {
       throw new BadRequestException(AUTH_ERRORS.NO_ORGANIZATION_ID)
     }
 
-    const organizationMembership = await this.membershipRepository.findOne({
+    const organizationMembership = await this.organizationMembershipRepository.findOne({
       where: {
         userId: request.user.id,
         organizationId,

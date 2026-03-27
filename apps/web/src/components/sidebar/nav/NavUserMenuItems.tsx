@@ -26,10 +26,10 @@ export function NavUserMenuItems() {
 
 function InterfaceToggle() {
   const { t } = useTranslation("actions")
-  const { isAdmin, isAdminInterface } = useAbility()
+  const { abilities, isAdminInterface } = useAbility()
   const { getPath } = useGetPath()
 
-  if (!isAdmin) return null
+  if (!abilities.canManageProjects) return null
 
   const handleChange = (checked: boolean) => {
     const newLocation = getPath("project").replace(

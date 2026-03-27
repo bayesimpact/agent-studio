@@ -1,4 +1,8 @@
+import { Button } from "@caseai-connect/ui/shad/button"
+import { UsersIcon } from "lucide-react"
 import { useEffect } from "react"
+import { useTranslation } from "react-i18next"
+import { useNavigate } from "react-router-dom"
 import { useSidebarLayout } from "@/components/layouts/sidebar/context"
 import type { Agent } from "@/features/agents/agents.models"
 import { AgentDeletorWithTrigger } from "@/features/agents/components/AgentDeletor"
@@ -8,7 +12,7 @@ import { selectCurrentOrganizationId } from "@/features/organizations/organizati
 import { useAbility } from "@/hooks/use-ability"
 import { useIsRoute } from "@/hooks/use-is-route"
 import { useAppSelector } from "@/store/hooks"
-import { RouteNames } from "../helpers"
+import { buildAgentMembershipsPath, RouteNames } from "../helpers"
 
 export function useHandleHeader(agent: Agent) {
   const { isAdminInterface } = useAbility()
@@ -30,11 +34,40 @@ function HeaderRightSlot({ agent }: { agent: Agent }) {
   if (!organizationId) return null
   return (
     <div className="flex items-center gap-2">
+      <NavAgentMemberships
+        organizationId={organizationId}
+        projectId={agent.projectId}
+        agentId={agent.id}
+      />
+
       <DefaultPromptDialog buttonProps={{ variant: "outline" }} prompt={agent.defaultPrompt} />
 
       <AgentEditorWithTrigger agent={agent} />
 
       <AgentDeletorWithTrigger organizationId={organizationId} agent={agent} />
     </div>
+  )
+}
+
+function NavAgentMemberships({
+  organizationId,
+  projectId,
+  agentId,
+}: {
+  organizationId: string
+  projectId: string
+  agentId: string
+}) {
+  const { t } = useTranslation()
+  const navigate = useNavigate()
+  const { isAdminInterface } = useAbility()
+  if (!isAdminInterface) return null
+  const path = buildAgentMembershipsPath({ organizationId, projectId, agentId })
+  const handleClick = () => navigate(path)
+  return (
+    <Button variant="outline" size="lg" onClick={handleClick}>
+      <UsersIcon />
+      {t("agentMembership:members")}
+    </Button>
   )
 }

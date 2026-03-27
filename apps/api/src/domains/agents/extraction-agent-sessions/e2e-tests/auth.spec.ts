@@ -5,6 +5,7 @@ import type { App } from "supertest/types"
 import { AUTH_ERRORS } from "@/common/errors/auth-errors"
 import { clearTestDatabase } from "@/common/test/test-database"
 import {
+  type AllRepositories,
   setupTransactionalTestDatabase,
   teardownTestDatabase,
 } from "@/common/test/test-transaction-manager"
@@ -25,9 +26,7 @@ describe.skip("ExtractionAgentSessions - Auth", () => {
   let app: INestApplication<App>
   let request: Requester
   let setup: Awaited<ReturnType<typeof setupTransactionalTestDatabase>>
-  let repositories: ReturnType<
-    Awaited<ReturnType<typeof setupTransactionalTestDatabase>>["getAllRepositories"]
-  >
+  let repositories: AllRepositories
 
   let organizationId: string | null = "random-organization-id"
   let projectId: string | null = "random-project-id"
@@ -67,7 +66,7 @@ describe.skip("ExtractionAgentSessions - Auth", () => {
 
   const createContextForRole = async (role: "owner" | "admin" | "member" = "owner") => {
     const { user, organization, project, agent } = await createOrganizationWithAgent(repositories, {
-      membership: { role },
+      organizationMembership: { role },
       agent: {
         type: "extraction",
         outputJsonSchema: {

@@ -6,6 +6,7 @@ import { Agent } from "@/domains/agents/agent.entity"
 import { ConversationAgentSession } from "@/domains/agents/conversation-agent-sessions/conversation-agent-session.entity"
 import { ExtractionAgentSession } from "@/domains/agents/extraction-agent-sessions/extraction-agent-session.entity"
 import { FormAgentSession } from "@/domains/agents/form-agent-sessions/form-agent-session.entity"
+import { AgentMembership } from "@/domains/agents/memberships/agent-membership.entity"
 import { AgentMessage } from "@/domains/agents/shared/agent-session-messages/agent-message.entity"
 import { AgentMessageFeedback } from "@/domains/agents/shared/agent-session-messages/feedback/agent-message-feedback.entity"
 import { Document } from "@/domains/documents/document.entity"
@@ -21,6 +22,7 @@ import { User } from "@/domains/users/user.entity"
 
 export const ALL_ENTITIES = [
   Agent,
+  AgentMembership,
   AgentMessage,
   AgentMessageFeedback,
   ConversationAgentSession,
@@ -32,8 +34,8 @@ export const ALL_ENTITIES = [
   FeatureFlag,
   FormAgentSession,
   Organization,
+  OrganizationMembership,
   Project,
   ProjectMembership,
   User,
-  OrganizationMembership,
 ]

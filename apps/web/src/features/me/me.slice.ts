@@ -1,10 +1,10 @@
 import { createSlice } from "@reduxjs/toolkit"
 import { ADS, type AsyncData, defaultAsyncData } from "@/store/async-data-status"
-import type { Me } from "./me.models"
+import type { User } from "./me.models"
 import { fetchMe } from "./me.thunks"
 
 interface State {
-  data: AsyncData<Me["user"]>
+  data: AsyncData<User>
 }
 
 const initialState: State = {

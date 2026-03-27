@@ -2,6 +2,7 @@ import { Injectable, NotFoundException } from "@nestjs/common"
 import { InjectRepository } from "@nestjs/typeorm"
 import type { Repository } from "typeorm"
 import { Agent } from "@/domains/agents/agent.entity"
+import { AgentMembership } from "@/domains/agents/memberships/agent-membership.entity"
 import type { ContextResolver, ResolvableRequest } from "../context-resolver.interface"
 import type { EndpointRequestWithAgent, EndpointRequestWithProject } from "../request.interface"
 
@@ -12,6 +13,8 @@ export class AgentContextResolver implements ContextResolver {
   constructor(
     @InjectRepository(Agent)
     private readonly agentRepository: Repository<Agent>,
+    @InjectRepository(AgentMembership)
+    private readonly agentMembershipRepository: Repository<AgentMembership>,
   ) {}
 
   async resolve(request: ResolvableRequest): Promise<void> {
@@ -34,7 +37,16 @@ export class AgentContextResolver implements ContextResolver {
       })) ?? undefined
     if (!agent) throw new NotFoundException()
 
+    const agentMembership =
+      (await this.agentMembershipRepository.findOne({
+        where: {
+          agentId: agent.id,
+          userId: request.user.id,
+        },
+      })) ?? undefined
+
     const requestWithAgent = request as EndpointRequestWithAgent
     requestWithAgent.agent = agent
+    requestWithAgent.agentMembership = agentMembership
   }
 }

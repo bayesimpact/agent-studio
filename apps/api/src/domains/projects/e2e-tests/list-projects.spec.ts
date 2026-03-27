@@ -3,25 +3,24 @@ import type { INestApplication } from "@nestjs/common"
 import type { App } from "supertest/types"
 import { clearTestDatabase } from "@/common/test/test-database"
 import {
+  type AllRepositories,
   setupTransactionalTestDatabase,
   teardownTestDatabase,
 } from "@/common/test/test-transaction-manager"
 import { removeNullish } from "@/common/utils/remove-nullish"
-import { createOrganizationMembership } from "@/domains/organizations/memberships/organization-membership.factory"
+import { addUserToOrganization } from "@/domains/organizations/memberships/organization-membership.factory"
 import { createOrganizationWithOwner } from "@/domains/organizations/organization.factory"
 import { projectFactory } from "@/domains/projects/project.factory"
 import { setupUserGuardForTesting } from "../../../../test/e2e.helpers"
 import { expectResponse, type Requester, testRequester } from "../../../../test/request"
-import { projectMembershipFactory } from "../memberships/project-membership.factory"
+import { addUserToProject } from "../memberships/project-membership.factory"
 import { ProjectsModule } from "../projects.module"
 
 describe("Projects - listProjects", () => {
   let app: INestApplication<App>
   let request: Requester
   let setup: Awaited<ReturnType<typeof setupTransactionalTestDatabase>>
-  let repositories: ReturnType<
-    Awaited<ReturnType<typeof setupTransactionalTestDatabase>>["getAllRepositories"]
-  >
+  let repositories: AllRepositories
 
   let organizationId: string
   let accessToken: string | undefined = "token"
@@ -53,7 +52,7 @@ describe("Projects - listProjects", () => {
     const { user, organization } = await createOrganizationWithOwner(repositories)
     organizationId = organization.id
     auth0Id = user.auth0Id
-    return { organization }
+    return { organization, user }
   }
 
   const subject = async () =>
@@ -64,11 +63,13 @@ describe("Projects - listProjects", () => {
     })
 
   it("should return projects for an organization", async () => {
-    const { organization } = await createContext()
+    const { organization, user } = await createContext()
 
     const project1 = projectFactory.transient({ organization }).build({ name: "Project 1" })
     const project2 = projectFactory.transient({ organization }).build({ name: "Project 2" })
     await repositories.projectRepository.save([project1, project2])
+    await addUserToProject({ repositories, project: project1, user })
+    await addUserToProject({ repositories, project: project2, user })
 
     const response = await subject()
 
@@ -95,7 +96,7 @@ describe("Projects - listProjects", () => {
     const { organization } = await createContext()
 
     // create user
-    const { user } = await createOrganizationMembership({
+    const { user } = await addUserToOrganization({
       repositories,
       organization,
       user: { auth0Id: "auth0|456" },
@@ -107,9 +108,7 @@ describe("Projects - listProjects", () => {
     await repositories.projectRepository.save([project1, project2])
 
     // create project membership
-    await repositories.projectMembershipRepository.save(
-      projectMembershipFactory.transient({ project: project2, user }).build(),
-    )
+    await addUserToProject({ repositories, project: project2, user })
 
     // user is the one who will make the request
     auth0Id = user.auth0Id

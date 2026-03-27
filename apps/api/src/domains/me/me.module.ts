@@ -1,11 +1,22 @@
 import { Module } from "@nestjs/common"
+import { TypeOrmModule } from "@nestjs/typeorm"
+import { AgentMembership } from "@/domains/agents/memberships/agent-membership.entity"
 import { AuthModule } from "../auth/auth.module"
+import { OrganizationMembership } from "../organizations/memberships/organization-membership.entity"
 import { OrganizationsModule } from "../organizations/organizations.module"
+import { ProjectMembership } from "../projects/memberships/project-membership.entity"
 import { UsersModule } from "../users/users.module"
 import { MeController } from "./me.controller"
+import { MeService } from "./me.service"
 
 @Module({
-  imports: [UsersModule, OrganizationsModule, AuthModule],
+  imports: [
+    TypeOrmModule.forFeature([OrganizationMembership, ProjectMembership, AgentMembership]),
+    UsersModule,
+    OrganizationsModule,
+    AuthModule,
+  ],
   controllers: [MeController],
+  providers: [MeService],
 })
 export class MeModule {}

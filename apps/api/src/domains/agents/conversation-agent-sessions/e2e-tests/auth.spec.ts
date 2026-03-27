@@ -6,51 +6,22 @@ import type { App } from "supertest/types"
 import { AUTH_ERRORS } from "@/common/errors/auth-errors"
 import { clearTestDatabase } from "@/common/test/test-database"
 import {
+  type AllRepositories,
   setupTransactionalTestDatabase,
   teardownTestDatabase,
 } from "@/common/test/test-transaction-manager"
 import { removeNullish } from "@/common/utils/remove-nullish"
 import { createOrganizationWithAgent } from "@/domains/organizations/organization.factory"
-import { projectMembershipFactory } from "@/domains/projects/memberships/project-membership.factory"
 import { sdk } from "@/external/llm/open-telemetry-init"
 import { setupUserGuardForTesting } from "../../../../../test/e2e.helpers"
 import { expectResponse, type Requester, testRequester } from "../../../../../test/request"
 import { ConversationAgentSessionsModule } from "../conversation-agent-sessions.module"
 
-// Mock Langfuse to avoid dynamic import issues in Jest
-jest.mock("langfuse", () => {
-  return {
-    Langfuse: class {
-      shutdownAsync() {
-        return Promise.resolve()
-      }
-      flushAsync() {
-        return Promise.resolve()
-      }
-      trace() {
-        return { update: jest.fn() }
-      }
-    },
-  }
-})
-jest.mock("langfuse-v2", () => ({
-  Langfuse: jest.fn().mockImplementation(() => ({
-    trace: jest.fn(),
-    span: jest.fn().mockReturnValue({ getTraceUrl: jest.fn() }),
-    generation: jest.fn(),
-    flushAsync: jest.fn().mockResolvedValue(undefined),
-    shutdownAsync: jest.fn().mockResolvedValue(undefined),
-    debug: jest.fn(),
-  })),
-}))
-
 describe("Agent Sessions - Auth", () => {
   let app: INestApplication<App>
   let request: Requester
   let setup: Awaited<ReturnType<typeof setupTransactionalTestDatabase>>
-  let repositories: ReturnType<
-    Awaited<ReturnType<typeof setupTransactionalTestDatabase>>["getAllRepositories"]
-  >
+  let repositories: AllRepositories
 
   // Variables for the tests
   let organizationId: string | null = randomUUID()
@@ -88,18 +59,8 @@ describe("Agent Sessions - Auth", () => {
 
   const createContextForRole = async (role: "owner" | "admin" | "member" = "owner") => {
     const { user, organization, project, agent } = await createOrganizationWithAgent(repositories, {
-      membership: { role },
+      projectMembership: { role },
     })
-    await repositories.projectMembershipRepository.save(
-      projectMembershipFactory
-        .transient({
-          project,
-          user,
-        })
-        .build({
-          status: "accepted",
-        }),
-    )
     organizationId = organization.id
     projectId = project.id
     agentId = agent.id

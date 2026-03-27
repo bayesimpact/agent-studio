@@ -5,10 +5,7 @@ import type { Repository } from "typeorm"
 import type { RequiredConnectScope } from "@/common/entities/connect-required-fields"
 import { FeatureFlag } from "@/domains/feature-flags/feature-flag.entity"
 import { User } from "@/domains/users/user.entity"
-import {
-  type MembershipRole,
-  OrganizationMembership,
-} from "./memberships/organization-membership.entity"
+import { OrganizationMembership } from "./memberships/organization-membership.entity"
 import { Organization } from "./organization.entity"
 
 @Injectable()
@@ -16,26 +13,21 @@ export class OrganizationsService {
   constructor(
     @InjectRepository(Organization) readonly organizationRepository: Repository<Organization>,
     @InjectRepository(OrganizationMembership)
-    private readonly membershipRepository: Repository<OrganizationMembership>,
+    private readonly organizationMembershipRepository: Repository<OrganizationMembership>,
     @InjectRepository(User) private readonly userRepository: Repository<User>,
     @InjectRepository(FeatureFlag) private readonly featureFlagRepository: Repository<FeatureFlag>,
   ) {}
 
-  async getUserOrganizationsWithMemberships(
-    userId: string,
-  ): Promise<Array<{ organization: Organization; role: MembershipRole }>> {
+  async getUserOrganizations(userId: string): Promise<Organization[]> {
     // Use query builder to ensure proper join and handle potential null organizations
-    const memberships = await this.membershipRepository
+    const memberships = await this.organizationMembershipRepository
       .createQueryBuilder("membership")
       .innerJoinAndSelect("membership.organization", "organization")
       .leftJoinAndSelect("organization.featureFlags", "featureFlags")
       .where("membership.userId = :userId", { userId })
       .getMany()
 
-    return memberships.map((membership) => ({
-      organization: membership.organization,
-      role: membership.role,
-    }))
+    return memberships.map((membership) => membership.organization)
   }
 
   async hasFeature({
@@ -55,10 +47,13 @@ export class OrganizationsService {
     return flag !== null
   }
 
-  async createOrganization(
-    userId: string,
-    name: string,
-  ): Promise<{ organization: Organization; role: MembershipRole }> {
+  async createOrganization({
+    userId,
+    name,
+  }: {
+    userId: string
+    name: string
+  }): Promise<Organization> {
     // Validate organization name (defense in depth)
     if (!name || name.trim().length < 3) {
       throw new Error("Organization name must be at least 3 characters long")
@@ -76,18 +71,15 @@ export class OrganizationsService {
 
     // Create the membership with owner role
     // Set both entity references and IDs to ensure proper foreign key handling in transactions
-    const membership = this.membershipRepository.create({
+    const membership = this.organizationMembershipRepository.create({
       user,
       organization: savedOrganization,
       userId: user.id,
       organizationId: savedOrganization.id,
       role: "owner",
     })
-    await this.membershipRepository.save(membership)
+    await this.organizationMembershipRepository.save(membership)
 
-    return {
-      organization: savedOrganization,
-      role: "owner",
-    }
+    return savedOrganization
   }
 }

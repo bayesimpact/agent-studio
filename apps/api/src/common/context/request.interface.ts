@@ -1,6 +1,7 @@
 import type { Agent } from "@/domains/agents/agent.entity"
 import type { ConversationAgentSession } from "@/domains/agents/conversation-agent-sessions/conversation-agent-session.entity"
 import type { FormAgentSession } from "@/domains/agents/form-agent-sessions/form-agent-session.entity"
+import type { AgentMembership } from "@/domains/agents/memberships/agent-membership.entity"
 import type { Document } from "@/domains/documents/document.entity"
 import type { DocumentTag } from "@/domains/documents/tags/document-tag.entity"
 import type { Evaluation } from "@/domains/evaluations/evaluation.entity"
@@ -35,6 +36,19 @@ export interface EndpointRequestWithProject extends EndpointRequestWithOrganizat
   projectMembership: ProjectMembership | undefined
 }
 
+export interface EndpointRequestWithProjectMembership extends EndpointRequestWithProject {
+  memberProjectMembership: ProjectMembership
+}
+
+export interface EndpointRequestWithAgent extends EndpointRequestWithProject {
+  agent: Agent
+  agentMembership: AgentMembership | undefined
+}
+
+export interface EndpointRequestWithAgentMembership extends EndpointRequestWithAgent {
+  memberAgentMembership: AgentMembership
+}
+
 export interface EndpointRequestWithDocument extends EndpointRequestWithProject {
   document: Document
 }
@@ -43,13 +57,6 @@ export interface EndpointRequestWithDocumentTag extends EndpointRequestWithProje
   documentTag: DocumentTag
 }
 
-export interface EndpointRequestWithProjectMembership extends EndpointRequestWithProject {
-  projectMembership: ProjectMembership
-}
-
-export interface EndpointRequestWithAgent extends EndpointRequestWithProject {
-  agent: Agent
-}
 export interface EndpointRequestWithAgentSession extends EndpointRequestWithAgent {
   agentSession: ConversationAgentSession | FormAgentSession
 }

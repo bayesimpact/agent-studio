@@ -1,7 +1,7 @@
-# ADR 0003: Product Versioning Strategy
+# ADR 0003: Product Versioning and Release Notes Strategy
 
-* **Status**: Proposed
-* **Date**: 2026-02-25
+* **Status**: Accepted
+* **Date**: 2026-02-25 (updated 2026-03-27)
 * **Deciders**: Jérémie
 
 ---
@@ -17,7 +17,7 @@ SemVer is the industry standard for libraries but lacks chronological context. C
 
 ## 2. Decision
 
-We will implement a **Dual-Track Versioning System**:
+We will implement a **Dual-Track Versioning System** with a **manual changelog** following the [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) convention:
 
 ### Product Level (CalVer)
 
@@ -34,6 +34,16 @@ All internal packages and shared modules will use **SemVer** (`Major.Minor.Patch
 
 * Breaking changes are explicitly signaled to the engineering team via a major version bump.
 
+### Release Notes
+
+We follow the [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) format in `CHANGELOG.md`:
+
+* Developers update the `[Unreleased]` section as part of their PRs.
+* Standard categories: Added, Changed, Deprecated, Removed, Fixed, Security.
+* Features behind a feature flag are prefixed with `(beta)` and listed last in their category.
+* On release, a maintainer pushes a CalVer git tag (e.g., `git tag v26.03.0 && git push --tags`).
+* A GitHub Actions workflow (`release.yml`) promotes `[Unreleased]` to a versioned entry, commits the updated changelog, and creates a GitHub Release.
+
 ### Traceability
 
 Every CalVer release will embed the **Git Commit SHA** in its metadata for a full audit trail.
@@ -44,6 +54,7 @@ Every CalVer release will embed the **Git Commit SHA** in its metadata for a ful
 
 * **SemVer only**: Rejected because a `v2.0.0` label provides no intuitive signal to customers about when it was released or how outdated their installation is.
 * **CalVer only (across all packages)**: Rejected because internal libraries require explicit breaking-change signals that CalVer does not provide by convention.
+* **Automated changelogs (release-please, changesets)**: Rejected in favor of a simpler, manual Keep a Changelog approach with no tooling dependency. Developers have full control over wording and categorization.
 
 ## 4. Consequences
 
@@ -57,5 +68,5 @@ Every CalVer release will embed the **Git Commit SHA** in its metadata for a ful
 
 ## 5. Implementation Notes
 
-* CI/CD not sure how to handle it?
+* CI/CD: A `release.yml` GitHub Actions workflow triggers on CalVer tag pushes (e.g., `v26.03.0`). It extracts the `[Unreleased]` section from `CHANGELOG.md`, promotes it to a versioned entry, commits the update to `main`, and creates a GitHub Release. See `.github/workflows/release.yml`.
 * The project `README.md` must be updated to document this versioning standard once accepted.

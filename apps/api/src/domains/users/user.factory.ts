@@ -18,6 +18,7 @@ export const userFactory = Factory.define<User>(({ sequence, params }) => {
     conversationAgentSessions: params.conversationAgentSessions || [],
     agentMessageFeedbacks: params.agentMessageFeedbacks || [],
     projectMemberships: params.projectMemberships || [],
+    agentMemberships: params.agentMemberships || [],
   } satisfies User
 })
 

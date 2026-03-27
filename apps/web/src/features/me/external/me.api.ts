@@ -13,6 +13,11 @@ export default {
 } satisfies IMeSpi
 
 const toMe = (dto: MeResponseDto): Me => ({
-  user: { id: dto.user.id, email: dto.user.email, name: dto.user.name || "Unknown User Name" },
+  user: {
+    id: dto.user.id,
+    email: dto.user.email,
+    name: dto.user.name || dto.user.email.split("@")[0]?.replaceAll(".", " ") || "Unnamed User",
+    memberships: dto.user.memberships,
+  },
   organizations: dto.organizations.map(toOrganization),
 })
