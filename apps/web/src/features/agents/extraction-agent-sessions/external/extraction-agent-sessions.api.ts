@@ -13,45 +13,40 @@ import type {
 import type { IExtractionAgentSessionsSpi } from "../extraction-agent-sessions.spi"
 
 const api: IExtractionAgentSessionsSpi = {
-  getAll: async ({ organizationId, projectId, agentId, type }) => {
+  getAll: async ({ type, ...params }) => {
     const axios = getAxiosInstance()
     const response = await axios.post<typeof ExtractionAgentSessionsRoutes.getAll.response>(
-      ExtractionAgentSessionsRoutes.getAll.getPath({
-        organizationId,
-        projectId,
-        agentId,
-      }),
+      ExtractionAgentSessionsRoutes.getAll.getPath(params),
       { payload: { type } } satisfies typeof ExtractionAgentSessionsRoutes.getAll.request,
     )
     return response.data.data.map(fromExtractionAgentSessionSummaryDto)
   },
-  getOne: async ({ organizationId, projectId, agentId, runId, type }) => {
+  getOne: async ({ type, ...params }) => {
     const axios = getAxiosInstance()
     const response = await axios.post<typeof ExtractionAgentSessionsRoutes.getOne.response>(
-      ExtractionAgentSessionsRoutes.getOne.getPath({
-        organizationId,
-        projectId,
-        agentId,
-        runId,
-      }),
+      ExtractionAgentSessionsRoutes.getOne.getPath(params),
       { payload: { type } } satisfies typeof ExtractionAgentSessionsRoutes.getOne.request,
     )
     return fromExtractionAgentSessionDto(response.data.data)
   },
-  executeOne: async ({ organizationId, projectId, agentId, documentId, type }) => {
+  executeOne: async ({ documentId, type, ...params }) => {
     const axios = getAxiosInstance()
     const response = await axios.post<typeof ExtractionAgentSessionsRoutes.executeOne.response>(
-      ExtractionAgentSessionsRoutes.executeOne.getPath({
-        organizationId,
-        projectId,
-        agentId,
-      }),
+      ExtractionAgentSessionsRoutes.executeOne.getPath(params),
       {
         payload: { documentId, type },
       } satisfies typeof ExtractionAgentSessionsRoutes.executeOne.request,
       { timeout: 30 * 1000 }, // 30 seconds timeout for execution as it might take longer than regular API calls
     )
     return fromExtractionAgentSessionResultDto(response.data.data)
+  },
+  deleteOne: async ({ type, ...params }) => {
+    const axios = getAxiosInstance()
+    const response = await axios.post<typeof ExtractionAgentSessionsRoutes.deleteOne.response>(
+      ExtractionAgentSessionsRoutes.deleteOne.getPath(params),
+      { payload: { type } } satisfies typeof ExtractionAgentSessionsRoutes.deleteOne.request,
+    )
+    return response.data.data
   },
 }
 

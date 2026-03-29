@@ -2,10 +2,10 @@ import { useTranslation } from "react-i18next"
 import { Outlet, useOutlet } from "react-router-dom"
 import { ListHeader } from "@/components/layouts/ListHeader"
 import type { Agent } from "@/features/agents/agents.models"
-import { FormAgentSessionCreator } from "@/features/agents/form-agent-sessions/components/FormAgentSessionCreator"
 import { FormAgentSessionItem } from "@/features/agents/form-agent-sessions/components/FormAgentSessionItem"
 import type { FormAgentSession } from "@/features/agents/form-agent-sessions/form-agent-sessions.models"
 import { selectCurrentFormAgentSessionsData } from "@/features/agents/form-agent-sessions/form-agent-sessions.selectors"
+import { BaseAgentSessionCreator } from "@/features/agents/shared/base-agent-session/components/BaseAgentSessionCreator"
 import { useGetPath } from "@/hooks/use-build-path"
 import { useAppSelector } from "@/store/hooks"
 import { AsyncRoute } from "../AsyncRoute"
@@ -56,7 +56,8 @@ function WithData({
   if (outlet) return <Outlet />
   return (
     <ListHeader path={getPath("agent")} title={t("formAgentSession:list.title")} agent={agent}>
-      <FormAgentSessionCreator
+      <BaseAgentSessionCreator
+        agentType="form"
         type="button"
         ids={{ organizationId, projectId, agentId: agent.id }}
       />

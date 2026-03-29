@@ -113,7 +113,9 @@ export function AgentList({
             >
               {agent.type !== "extraction" && (
                 <SidebarAgentSessionList
-                  ids={{ organizationId, projectId: project.id, agentId: agent.id }}
+                  organizationId={organizationId}
+                  projectId={project.id}
+                  agentId={agent.id}
                   agentType={agent.type}
                 />
               )}

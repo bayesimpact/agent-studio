@@ -136,13 +136,14 @@ describe("ExtractionAgentSessionsService", () => {
       connectScope: { organizationId: organization.id, projectId: project.id },
       agentId: agent.id,
       type: "playground",
+      userId: user.id,
     })
     expect(runs).toHaveLength(1)
     expect(runs[0]!.id).toBe(createdRun.id)
 
-    const run = await service.findRunById({
+    const run = await service.findAgentSessionById({
       connectScope: { organizationId: organization.id, projectId: project.id },
-      runId: createdRun.id,
+      agentSessionId: createdRun.id,
       agentId: agent.id,
       type: "playground",
     })

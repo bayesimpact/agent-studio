@@ -56,7 +56,7 @@ describe("AgentMessageFeedbackRoutes.getAll", () => {
 
   const createContext = async () => {
     const { user, organization, project, agent, agentMessage, agentSession } =
-      await createOrganizationWithAgentMessage(repositories)
+      await createOrganizationWithAgentMessage({ repositories, agentType: "conversation" })
     organizationId = organization.id
     projectId = project.id
     agentId = agent.id

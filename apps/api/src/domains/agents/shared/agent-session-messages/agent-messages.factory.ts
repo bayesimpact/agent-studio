@@ -5,10 +5,12 @@ import type { RequiredScopeTransientParams } from "@/common/entities/connect-req
 import type { Organization } from "@/domains/organizations/organization.entity"
 import type { Project } from "@/domains/projects/project.entity"
 import type { ConversationAgentSession } from "../../conversation-agent-sessions/conversation-agent-session.entity"
+import type { FormAgentSession } from "../../form-agent-sessions/form-agent-session.entity"
 import type { AgentMessage } from "./agent-message.entity"
 
+type AgentSession = ConversationAgentSession | FormAgentSession
 type AgentMessageTransientParams = RequiredScopeTransientParams & {
-  session: ConversationAgentSession
+  session: AgentSession
 }
 
 class AgentMessageFactory extends Factory<AgentMessage, AgentMessageTransientParams> {
@@ -72,7 +74,7 @@ type BuildAgentConversationParams = {
 export function buildChitChatConversation(
   organization: Organization,
   project: Project,
-  session: ConversationAgentSession,
+  session: AgentSession,
   params: BuildAgentConversationParams = {},
 ): [AgentMessage, AgentMessage] {
   const userMessage = agentMessageFactory
@@ -101,7 +103,7 @@ type createConversationAgentSessionMessageRepositories = {
 export async function createChitChatConversation(
   organization: Organization,
   project: Project,
-  session: ConversationAgentSession,
+  session: AgentSession,
   repositories: createConversationAgentSessionMessageRepositories,
   params: BuildAgentConversationParams = {},
 ): Promise<[AgentMessage, AgentMessage]> {

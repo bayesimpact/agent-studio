@@ -5,7 +5,10 @@ import { RequestLoggerMiddleware } from "./common/middleware/request-logger.midd
 import typeorm from "./config/typeorm"
 import { AgentsModule } from "./domains/agents/agents.module"
 import { ConversationAgentSessionsModule } from "./domains/agents/conversation-agent-sessions/conversation-agent-sessions.module"
+import { ExtractionAgentSessionsModule } from "./domains/agents/extraction-agent-sessions/extraction-agent-sessions.module"
+import { FormAgentSessionsModule } from "./domains/agents/form-agent-sessions/form-agent-sessions.module"
 import { AgentMessageFeedbackModule } from "./domains/agents/shared/agent-session-messages/feedback/agent-message-feedback.module"
+import { StreamingModule } from "./domains/agents/shared/agent-session-messages/streaming/streaming.module"
 import { InvitationsModule } from "./domains/agents/shared/memberships/invitations.module"
 import { AuthModule } from "./domains/auth/auth.module"
 import { DocumentsModule } from "./domains/documents/documents.module"
@@ -35,6 +38,8 @@ import { UsersModule } from "./domains/users/users.module"
     DocumentsModule,
     DocumentTagsModule,
     EvaluationsModule,
+    ExtractionAgentSessionsModule,
+    FormAgentSessionsModule,
     InvitationsModule,
     MeModule,
     OrganizationsModule,
@@ -42,6 +47,7 @@ import { UsersModule } from "./domains/users/users.module"
     ProjectsModule,
     ProjectsModule,
     StorageModule,
+    StreamingModule,
     UsersModule,
     UsersModule,
   ],

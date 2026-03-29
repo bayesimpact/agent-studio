@@ -1,5 +1,7 @@
 import { Injectable } from "@nestjs/common"
 import type { EntityManager, EntityTarget } from "typeorm"
+// biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
+import { DataSource } from "typeorm"
 import type { Agent } from "../agent.entity"
 import { ConversationAgentSession } from "../conversation-agent-sessions/conversation-agent-session.entity"
 import { ExtractionAgentSession } from "../extraction-agent-sessions/extraction-agent-session.entity"
@@ -17,6 +19,8 @@ const sessionEntityByType: Record<Agent["type"], EntityTarget<AgentSession>> = {
 
 @Injectable()
 export class BaseAgentSessionsService {
+  constructor(private readonly dataSource: DataSource) {}
+
   async deleteAgentSessions({
     entityManager,
     agentId,
@@ -34,6 +38,43 @@ export class BaseAgentSessionsService {
 
     await entityManager.delete(sessionEntityByType[agentType] as EntityTarget<AgentSession>, {
       agentId,
+    })
+  }
+
+  async getSessionById({
+    entityManager,
+    agentId,
+    agentType,
+    sessionId,
+    userId,
+  }: {
+    entityManager: EntityManager
+    agentId: string
+    agentType: Agent["type"]
+    sessionId: string
+    userId: string
+  }): Promise<AgentSession | null> {
+    return entityManager.findOne(sessionEntityByType[agentType] as EntityTarget<AgentSession>, {
+      where: { agentId, id: sessionId, userId },
+      select: { id: true },
+    })
+  }
+
+  async deleteAgentSession({
+    agentType,
+    agentId,
+    agentSession,
+  }: {
+    agentType: Agent["type"]
+    agentId: string
+    agentSession: AgentSession
+  }): Promise<void> {
+    await this.dataSource.transaction(async (entityManager) => {
+      await this.deleteSessionMessages({ entityManager, sessionId: agentSession.id })
+      await entityManager.delete(sessionEntityByType[agentType] as EntityTarget<AgentSession>, {
+        agentId,
+        id: agentSession.id,
+      })
     })
   }
 

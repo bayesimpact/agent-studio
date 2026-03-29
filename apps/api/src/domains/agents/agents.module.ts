@@ -6,6 +6,8 @@ import { OrganizationContextResolver } from "@/common/context/resolvers/organiza
 import { ProjectContextResolver } from "@/common/context/resolvers/project-context.resolver"
 import { ResourceContextGuard } from "@/common/context/resource-context.guard"
 import { ConversationAgentSessionsModule } from "@/domains/agents/conversation-agent-sessions/conversation-agent-sessions.module"
+import { ExtractionAgentSessionsModule } from "@/domains/agents/extraction-agent-sessions/extraction-agent-sessions.module"
+import { FormAgentSessionsModule } from "@/domains/agents/form-agent-sessions/form-agent-sessions.module"
 import { AuthModule } from "@/domains/auth/auth.module"
 import { DocumentsModule } from "@/domains/documents/documents.module"
 import { StorageModule } from "@/domains/documents/storage/storage.module"
@@ -22,12 +24,6 @@ import { AgentGuard } from "./agent.guard"
 import { AgentsController } from "./agents.controller"
 import { AgentsService } from "./agents.service"
 import { BaseAgentSessionsService } from "./base-agent-sessions/base-agent-sessions.service"
-import { ExtractionAgentSession } from "./extraction-agent-sessions/extraction-agent-session.entity"
-import { ExtractionAgentSessionsController } from "./extraction-agent-sessions/extraction-agent-sessions.controller"
-import { ExtractionAgentSessionsService } from "./extraction-agent-sessions/extraction-agent-sessions.service"
-import { FormAgentSession } from "./form-agent-sessions/form-agent-session.entity"
-import { FormAgentSessionsController } from "./form-agent-sessions/form-agent-sessions.controller"
-import { FormAgentSessionsService } from "./form-agent-sessions/form-agent-sessions.service"
 import { AgentMembership } from "./memberships/agent-membership.entity"
 import { AgentMembershipsController } from "./memberships/agent-memberships.controller"
 import { AgentMembershipsGuard } from "./memberships/agent-memberships.guard"
@@ -38,8 +34,6 @@ import { AgentMembershipsService } from "./memberships/agent-memberships.service
     TypeOrmModule.forFeature([
       Agent,
       AgentMembership,
-      ExtractionAgentSession,
-      FormAgentSession,
       Project,
       OrganizationMembership,
       ProjectMembership,
@@ -53,13 +47,13 @@ import { AgentMembershipsService } from "./memberships/agent-memberships.service
     forwardRef(() => DocumentTagsModule),
     StorageModule,
     forwardRef(() => ConversationAgentSessionsModule),
+    forwardRef(() => ExtractionAgentSessionsModule),
+    forwardRef(() => FormAgentSessionsModule),
   ],
   providers: [
     AgentsService,
     BaseAgentSessionsService,
     AgentMembershipsService,
-    ExtractionAgentSessionsService,
-    FormAgentSessionsService,
     AgentGuard,
     AgentMembershipsGuard,
     ResourceContextGuard,
@@ -68,17 +62,7 @@ import { AgentMembershipsService } from "./memberships/agent-memberships.service
     AgentContextResolver,
     AgentMembershipContextResolver,
   ],
-  controllers: [
-    AgentsController,
-    AgentMembershipsController,
-    ExtractionAgentSessionsController,
-    FormAgentSessionsController,
-  ],
-  exports: [
-    AgentsService,
-    AgentMembershipsService,
-    ExtractionAgentSessionsService,
-    FormAgentSessionsService,
-  ],
+  controllers: [AgentsController, AgentMembershipsController],
+  exports: [AgentsService, AgentMembershipsService],
 })
 export class AgentsModule {}

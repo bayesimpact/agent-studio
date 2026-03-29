@@ -6,34 +6,9 @@ import { getCurrentIds } from "../../helpers"
 import type {
   ExtractionAgentSession,
   ExtractionAgentSessionResult,
-  ExtractionAgentSessionSummary,
 } from "./extraction-agent-sessions.models"
 
 type ThunkConfig = { state: RootState; extra: ThunkExtraArg }
-
-export const listExtractionAgentSessionsForAgents = createAsyncThunk<
-  { [agentId: string]: ExtractionAgentSessionSummary[] }[],
-  { agentIds: string[] },
-  ThunkConfig
->(
-  "extractionAgentSessions/listExtractionAgentSessionsForAgents",
-  async ({ agentIds }, { extra: { services }, getState }) => {
-    const state = getState()
-    const isAdminInterface = selectIsAdminInterface(state)
-    const params = getCurrentIds({ state, wantedIds: ["organizationId", "projectId"] })
-    return await Promise.all(
-      agentIds.map(async (agentId) => {
-        return {
-          [agentId]: await services.extractionAgentSessions.getAll({
-            ...params,
-            agentId,
-            type: isAdminInterface ? "playground" : "live",
-          }),
-        }
-      }),
-    )
-  },
-)
 
 export const executeExtractionAgentSession = createAsyncThunk<
   ExtractionAgentSessionResult,
@@ -69,20 +44,21 @@ export const executeExtractionAgentSession = createAsyncThunk<
 
 export const getExtractionAgentSession = createAsyncThunk<
   ExtractionAgentSession,
-  { runId: string },
+  { agentSessionId: string },
   ThunkConfig
->("extractionAgentSessions/getOne", async (params, { extra: { services }, getState }) => {
-  const state = getState()
-  const isAdminInterface = selectIsAdminInterface(state)
-  const { organizationId, projectId, agentId } = getCurrentIds({
-    state,
-    wantedIds: ["organizationId", "projectId", "agentId"],
-  })
-  return await services.extractionAgentSessions.getOne({
-    organizationId,
-    projectId,
-    agentId,
-    runId: params.runId,
-    type: isAdminInterface ? "playground" : "live",
-  })
-})
+>(
+  "extractionAgentSessions/getOne",
+  async ({ agentSessionId }, { extra: { services }, getState }) => {
+    const state = getState()
+    const isAdminInterface = selectIsAdminInterface(state)
+    const params = getCurrentIds({
+      state,
+      wantedIds: ["organizationId", "projectId", "agentId"],
+    })
+    return await services.extractionAgentSessions.getOne({
+      ...params,
+      agentSessionId,
+      type: isAdminInterface ? "playground" : "live",
+    })
+  },
+)

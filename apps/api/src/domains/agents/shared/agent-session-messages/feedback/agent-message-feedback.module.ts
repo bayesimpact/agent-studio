@@ -4,8 +4,6 @@ import { AgentContextResolver } from "@/common/context/resolvers/agent-context.r
 import { OrganizationContextResolver } from "@/common/context/resolvers/organization-context.resolver"
 import { ProjectContextResolver } from "@/common/context/resolvers/project-context.resolver"
 import { ResourceContextGuard } from "@/common/context/resource-context.guard"
-import { ConversationAgentSessionsModule } from "@/domains/agents/conversation-agent-sessions/conversation-agent-sessions.module"
-import { FormAgentSession } from "@/domains/agents/form-agent-sessions/form-agent-session.entity"
 import { AuthModule } from "@/domains/auth/auth.module"
 import { OrganizationMembership } from "@/domains/organizations/memberships/organization-membership.entity"
 import { Organization } from "@/domains/organizations/organization.entity"
@@ -32,7 +30,6 @@ import { AgentMessageFeedbackService } from "./agent-message-feedback.service"
       Project,
       Agent,
       AgentMembership,
-      FormAgentSession,
       OrganizationMembership,
       ProjectMembership,
     ]),
@@ -41,7 +38,6 @@ import { AgentMessageFeedbackService } from "./agent-message-feedback.service"
     OrganizationsModule,
     ProjectsModule,
     AgentsModule,
-    ConversationAgentSessionsModule,
   ],
   providers: [
     AgentMessageFeedbackService,

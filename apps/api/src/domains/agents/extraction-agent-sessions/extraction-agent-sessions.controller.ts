@@ -1,19 +1,23 @@
 import {
-  type BaseAgentSessionTypeDto,
   type ExtractionAgentSessionDto,
   type ExtractionAgentSessionSummaryDto,
   ExtractionAgentSessionsRoutes,
 } from "@caseai-connect/api-contracts"
-import { Body, Controller, NotFoundException, Param, Post, Req, UseGuards } from "@nestjs/common"
-import type { EndpointRequestWithAgent } from "@/common/context/request.interface"
+import { Body, Controller, Post, Req, UseGuards } from "@nestjs/common"
+import type {
+  EndpointRequestWithAgent,
+  EndpointRequestWithAgentSession,
+} from "@/common/context/request.interface"
 import { getRequiredConnectScope } from "@/common/context/request-context.helpers"
-import { RequireContext } from "@/common/context/require-context.decorator"
+import { AddContext, RequireContext } from "@/common/context/require-context.decorator"
 import { ResourceContextGuard } from "@/common/context/resource-context.guard"
 import { CheckPolicy } from "@/common/policies/check-policy.decorator"
 import { JwtAuthGuard } from "@/domains/auth/jwt-auth.guard"
 import { UserGuard } from "@/domains/users/user.guard"
 import { getTraceUrl } from "@/external/langfuse/langfuse-helper"
 import { BaseAgentSessionGuard } from "../base-agent-sessions/base-agent-session.guard"
+// biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
+import { BaseAgentSessionsService } from "../base-agent-sessions/base-agent-sessions.service"
 import type { BaseAgentSessionType } from "../base-agent-sessions/base-agent-sessions.types"
 import type { ExtractionAgentSession } from "./extraction-agent-session.entity"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
@@ -23,7 +27,10 @@ import { ExtractionAgentSessionsService } from "./extraction-agent-sessions.serv
 @RequireContext("organization", "project", "agent")
 @Controller()
 export class ExtractionAgentSessionsController {
-  constructor(private readonly extractionAgentSessionsService: ExtractionAgentSessionsService) {}
+  constructor(
+    private readonly extractionAgentSessionsService: ExtractionAgentSessionsService,
+    private readonly baseAgentSessionsService: BaseAgentSessionsService,
+  ) {}
 
   @Post(ExtractionAgentSessionsRoutes.executeOne.path)
   @CheckPolicy((policy) => policy.canCreate())
@@ -31,7 +38,14 @@ export class ExtractionAgentSessionsController {
     @Req() request: EndpointRequestWithAgent,
     @Body() { payload }: typeof ExtractionAgentSessionsRoutes.executeOne.request,
   ): Promise<typeof ExtractionAgentSessionsRoutes.executeOne.response> {
-    return this.executeOneByType({ request, payload, type: payload.type })
+    const run = await this.extractionAgentSessionsService.executeExtraction({
+      connectScope: getRequiredConnectScope(request),
+      agent: request.agent,
+      userId: request.user.id,
+      documentId: payload.documentId,
+      type: payload.type,
+    })
+    return { data: { runId: run.id, result: run.result ?? {} } }
   }
 
   @Post(ExtractionAgentSessionsRoutes.getAll.path)
@@ -40,76 +54,37 @@ export class ExtractionAgentSessionsController {
     @Req() request: EndpointRequestWithAgent,
     @Body() { payload }: typeof ExtractionAgentSessionsRoutes.getAll.request,
   ): Promise<typeof ExtractionAgentSessionsRoutes.getAll.response> {
-    return this.getAllByType({ request, type: payload.type })
+    const agentSessions = await this.extractionAgentSessionsService.listRuns({
+      connectScope: getRequiredConnectScope(request),
+      userId: request.user.id,
+      agentId: request.agent.id,
+      type: payload.type,
+    })
+    return { data: agentSessions.map(toSummaryDto(payload.type)) }
   }
 
   @Post(ExtractionAgentSessionsRoutes.getOne.path)
+  @AddContext("agentSession")
   @CheckPolicy((policy) => policy.canList())
   async getOne(
-    @Req() request: EndpointRequestWithAgent,
+    @Req() request: EndpointRequestWithAgentSession<ExtractionAgentSession>,
     @Body() { payload }: typeof ExtractionAgentSessionsRoutes.getOne.request,
-    @Param("runId") runId: string,
   ): Promise<typeof ExtractionAgentSessionsRoutes.getOne.response> {
-    return this.getOneByType({ request, runId, type: payload.type })
+    return { data: toDto(payload.type)(request.agentSession) }
   }
 
-  private async executeOneByType({
-    request,
-    payload,
-    type,
-  }: {
-    request: EndpointRequestWithAgent
-    payload: { documentId: string; promptOverride?: string }
-    type: BaseAgentSessionTypeDto
-  }) {
-    const run = await this.extractionAgentSessionsService.executeExtraction({
-      connectScope: getRequiredConnectScope(request),
-      agent: request.agent,
-      userId: request.user.id,
-      documentId: payload.documentId,
-      promptOverride: payload.promptOverride,
-      type,
-    })
-
-    return { data: { runId: run.id, result: run.result ?? {} } }
-  }
-
-  private async getAllByType({
-    request,
-    type,
-  }: {
-    request: EndpointRequestWithAgent
-    type: BaseAgentSessionTypeDto
-  }) {
-    const runs = await this.extractionAgentSessionsService.listRuns({
-      connectScope: getRequiredConnectScope(request),
+  @Post(ExtractionAgentSessionsRoutes.deleteOne.path)
+  @AddContext("agentSession")
+  @CheckPolicy((policy) => policy.canDelete())
+  async deleteOne(
+    @Req() request: EndpointRequestWithAgentSession<ExtractionAgentSession>,
+  ): Promise<typeof ExtractionAgentSessionsRoutes.deleteOne.response> {
+    await this.baseAgentSessionsService.deleteAgentSession({
+      agentType: "extraction",
       agentId: request.agent.id,
-      type,
+      agentSession: request.agentSession,
     })
-    return { data: runs.map(toSummaryDto(type)) }
-  }
-
-  private async getOneByType({
-    request,
-    runId,
-    type,
-  }: {
-    request: EndpointRequestWithAgent
-    runId: string
-    type: BaseAgentSessionTypeDto
-  }) {
-    const run = await this.extractionAgentSessionsService.findRunById({
-      connectScope: getRequiredConnectScope(request),
-      runId,
-      agentId: request.agent.id,
-      type,
-    })
-
-    if (!run) {
-      throw new NotFoundException(`ExtractionAgentSession with id ${runId} not found`)
-    }
-
-    return { data: toDto(type)(run) }
+    return { data: { success: true } }
   }
 }
 

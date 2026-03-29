@@ -33,7 +33,7 @@ export class ProjectScopedPolicy<T> extends BasePolicy<T> {
   }
 
   canDelete(): boolean {
-    return this.canUpdate()
+    return this.canAccess() && this.doesResourceBelongToScope() && this.isProjectAdminOrOwner()
   }
 
   protected canAccess(): boolean {

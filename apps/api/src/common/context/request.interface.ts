@@ -1,5 +1,6 @@
 import type { Agent } from "@/domains/agents/agent.entity"
 import type { ConversationAgentSession } from "@/domains/agents/conversation-agent-sessions/conversation-agent-session.entity"
+import type { ExtractionAgentSession } from "@/domains/agents/extraction-agent-sessions/extraction-agent-session.entity"
 import type { FormAgentSession } from "@/domains/agents/form-agent-sessions/form-agent-session.entity"
 import type { AgentMembership } from "@/domains/agents/memberships/agent-membership.entity"
 import type { Document } from "@/domains/documents/document.entity"
@@ -57,8 +58,10 @@ export interface EndpointRequestWithDocumentTag extends EndpointRequestWithProje
   documentTag: DocumentTag
 }
 
-export interface EndpointRequestWithAgentSession extends EndpointRequestWithAgent {
-  agentSession: ConversationAgentSession | FormAgentSession
+export interface EndpointRequestWithAgentSession<
+  T extends ConversationAgentSession | FormAgentSession | ExtractionAgentSession,
+> extends EndpointRequestWithAgent {
+  agentSession: T
 }
 
 export interface EndpointRequestWithEvaluation extends EndpointRequestWithProject {

@@ -2,6 +2,7 @@ import { Injectable, NotFoundException } from "@nestjs/common"
 import { InjectRepository } from "@nestjs/typeorm"
 import type { Repository } from "typeorm"
 import { ConversationAgentSession } from "@/domains/agents/conversation-agent-sessions/conversation-agent-session.entity"
+import { ExtractionAgentSession } from "@/domains/agents/extraction-agent-sessions/extraction-agent-session.entity"
 import { FormAgentSession } from "@/domains/agents/form-agent-sessions/form-agent-session.entity"
 import type { ContextResolver, ResolvableRequest } from "../context-resolver.interface"
 import type {
@@ -18,6 +19,8 @@ export class AgentSessionContextResolver implements ContextResolver {
     private readonly conversationAgentSessionRepository: Repository<ConversationAgentSession>,
     @InjectRepository(FormAgentSession)
     private readonly formAgentSessionRepository: Repository<FormAgentSession>,
+    @InjectRepository(ExtractionAgentSession)
+    private readonly extractionAgentSessionRepository: Repository<ExtractionAgentSession>,
   ) {}
 
   async resolve(request: ResolvableRequest): Promise<void> {
@@ -29,10 +32,18 @@ export class AgentSessionContextResolver implements ContextResolver {
     if (!agentSessionId || agentSessionId === ":agentSessionId") throw new NotFoundException()
 
     const requestWithAgent = request as EndpointRequestWithAgent
+
     const repository =
       requestWithAgent.agent.type === "conversation"
         ? this.conversationAgentSessionRepository
-        : this.formAgentSessionRepository
+        : requestWithAgent.agent.type === "form"
+          ? this.formAgentSessionRepository
+          : requestWithAgent.agent.type === "extraction"
+            ? this.extractionAgentSessionRepository
+            : undefined
+
+    if (!repository) throw new NotFoundException("Unsupported agent type")
+
     const agentSession =
       (await repository.findOne({
         where: {
@@ -43,9 +54,10 @@ export class AgentSessionContextResolver implements ContextResolver {
           agentId: requestWithAgent.agent.id,
         },
       })) ?? undefined
-    if (!agentSession) throw new NotFoundException()
 
-    const requestWithAgentSession = request as EndpointRequestWithAgentSession
+    if (!agentSession) throw new NotFoundException("Agent session not found")
+
+    const requestWithAgentSession = request as EndpointRequestWithAgentSession<typeof agentSession>
     requestWithAgentSession.agentSession = agentSession
   }
 }

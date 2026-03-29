@@ -11,6 +11,9 @@ import type { Project } from "@/domains/projects/project.entity"
 import { projectFactory } from "@/domains/projects/project.factory"
 import type { User } from "@/domains/users/user.entity"
 import { userFactory } from "@/domains/users/user.factory"
+import type { ExtractionAgentSession } from "../agents/extraction-agent-sessions/extraction-agent-session.entity"
+import { extractionAgentSessionFactory } from "../agents/extraction-agent-sessions/extraction-agent-session.factory"
+import type { FormAgentSession } from "../agents/form-agent-sessions/form-agent-session.entity"
 import type { AgentMembership } from "../agents/memberships/agent-membership.entity"
 import { agentMembershipFactory } from "../agents/memberships/agent-membership.factory"
 import type { AgentMessage } from "../agents/shared/agent-session-messages/agent-message.entity"
@@ -134,45 +137,105 @@ export async function createOrganizationWithAgent(
 }
 
 type AgentSessionParams = AgentParams & {
-  agentSession?: Partial<ConversationAgentSession>
+  agentSession?:
+    | Partial<ConversationAgentSession>
+    | Partial<FormAgentSession>
+    | Partial<ExtractionAgentSession>
+  document?: Partial<Document>
 }
-type AgentSessionReturnType = AgentReturnType & {
-  agentSession: ConversationAgentSession
+type AgentSessionReturnType<T> = AgentReturnType & {
+  agentSession: T
+  document?: Document
 }
-export async function createOrganizationWithAgentSession(
-  repositories: AllRepositories,
-  params: AgentSessionParams = {},
-): Promise<AgentSessionReturnType> {
+export async function createOrganizationWithAgentSession<T extends Agent["type"]>({
+  repositories,
+  params = {},
+  agentType,
+}: {
+  repositories: AllRepositories
+  params?: AgentSessionParams
+  agentType: T
+}): Promise<
+  AgentSessionReturnType<
+    T extends "conversation"
+      ? ConversationAgentSession
+      : T extends "extraction"
+        ? ExtractionAgentSession
+        : T extends "form"
+          ? FormAgentSession
+          : never
+  >
+> {
   const data = await createOrganizationWithAgent(repositories, params)
   const { organization, user, agent, project } = data
 
-  const agentSession = conversationAgentSessionFactory
-    .transient({ organization, project, user, agent })
-    .build(params.agentSession)
-  await repositories.conversationAgentSessionRepository.save(agentSession)
+  switch (agentType) {
+    case "conversation": {
+      const agentSession = conversationAgentSessionFactory
+        .transient({ organization, project, user, agent })
+        .build(params.agentSession)
+      await repositories.conversationAgentSessionRepository.save(agentSession)
 
-  return { ...data, agentSession }
+      // @ts-expect-error
+      return { ...data, agentSession }
+    }
+
+    case "extraction": {
+      const document = documentFactory.transient({ organization, project }).build(params.document)
+      await repositories.documentRepository.save(document)
+      const agentSession = extractionAgentSessionFactory
+        .transient({ organization, project, user, agent, document })
+        .build(params.agentSession)
+      await repositories.extractionAgentSessionRepository.save(agentSession)
+
+      // @ts-expect-error
+      return { ...data, agentSession, document }
+    }
+
+    // case "form": // TODO:
+
+    default:
+      throw new Error(`Unsupported agent type: ${agentType}`)
+  }
 }
 
 type AgentMessageParams = AgentSessionParams & {
   agentMessage?: Partial<AgentMessage>
 }
-type AgentMessageReturnType = AgentSessionReturnType & {
+type AgentMessageReturnType<T extends Agent["type"]> = AgentSessionReturnType<T> & {
   agentMessage: AgentMessage
 }
-export async function createOrganizationWithAgentMessage(
-  repositories: AllRepositories,
-  params: AgentMessageParams = {},
-): Promise<AgentMessageReturnType> {
-  const data = await createOrganizationWithAgentSession(repositories, params)
+export async function createOrganizationWithAgentMessage<T extends Agent["type"]>({
+  repositories,
+  params = {},
+  agentType,
+}: {
+  repositories: AllRepositories
+  params?: AgentMessageParams
+  agentType: T
+}): Promise<AgentMessageReturnType<T>> {
+  if (agentType === "extraction") {
+    throw new Error("Extraction agents do not support agent messages")
+  }
+
+  const data = await createOrganizationWithAgentSession({ repositories, params, agentType })
   const { organization, project, agentSession } = data
 
+  if (!agentSession) {
+    throw new Error("Agent session is required to create an agent message")
+  }
+
   const agentMessage = agentMessageFactory
-    .transient({ organization, project, session: agentSession })
+    .transient({
+      organization,
+      project,
+      session: agentSession as ConversationAgentSession | FormAgentSession,
+    })
     .build(params.agentMessage)
   await repositories.agentMessageRepository.save(agentMessage)
 
-  return { ...data, agentMessage }
+  // @ts-expect-error
+  return { ...data, agentMessage, agentSession }
 }
 
 type DocumentParams = ProjectParams & {

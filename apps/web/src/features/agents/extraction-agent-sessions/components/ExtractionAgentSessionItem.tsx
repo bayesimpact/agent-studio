@@ -16,7 +16,7 @@ import {
   ItemTitle,
 } from "@caseai-connect/ui/shad/item"
 import { Textarea } from "@caseai-connect/ui/shad/textarea"
-import { AlertCircleIcon } from "lucide-react"
+import { AlertCircleIcon, Trash2Icon } from "lucide-react"
 import { useState } from "react"
 import { useTranslation } from "react-i18next"
 import { DocumentOpener } from "@/components/document/DocumentOpener"
@@ -25,6 +25,7 @@ import { TraceUrlOpener } from "@/components/TraceUrlOpener"
 import type { ExtractionAgentSessionSummary } from "@/features/agents/extraction-agent-sessions/extraction-agent-sessions.models"
 import { useAppDispatch } from "@/store/hooks"
 import { buildDate } from "@/utils/build-date"
+import { deleteAgentSession } from "../../shared/base-agent-session/base-agent-sessions.thunks"
 import { getExtractionAgentSession } from "../extraction-agent-sessions.thunks"
 
 export function ExtractionSessionItem({ run }: { run: ExtractionAgentSessionSummary }) {
@@ -33,13 +34,15 @@ export function ExtractionSessionItem({ run }: { run: ExtractionAgentSessionSumm
   const [isLoading, setIsLoading] = useState(false)
   const [runResult, setRunResult] = useState<Record<string, unknown>>()
 
-  const handleGetRunResult = async (runId: string): Promise<Record<string, unknown> | null> => {
+  const handleGetRunResult = async (
+    agentSessionId: string,
+  ): Promise<Record<string, unknown> | null> => {
     if (runResult) return runResult // cache
 
     setIsLoading(true)
     try {
       // FIXME:
-      const runDetails = await dispatch(getExtractionAgentSession({ runId })).unwrap()
+      const runDetails = await dispatch(getExtractionAgentSession({ agentSessionId })).unwrap()
       if (!runDetails.result) {
         return null
       }
@@ -50,12 +53,22 @@ export function ExtractionSessionItem({ run }: { run: ExtractionAgentSessionSumm
     }
   }
 
+  const handleDelete = () => {
+    dispatch(
+      deleteAgentSession({ agentType: "extraction", agentId: run.agentId, agentSessionId: run.id }),
+    )
+  }
+
   const isSuccess = run.status === "success"
   return (
     <Item variant="outline">
       <ItemHeader>
         <ItemTitle>{buildDate(run.createdAt)}</ItemTitle>
-
+        <ItemActions>
+          <Button variant="outline" size="sm" onClick={handleDelete}>
+            <Trash2Icon />
+          </Button>
+        </ItemActions>
         {!isSuccess && (
           <ItemDescription className="flex items-center gap-2">
             <AlertCircleIcon className="size-4 text-red-500" />

@@ -1,4 +1,5 @@
-import type { RequestPayload, ResponseData } from "../../generic"
+import type { BaseAgentSessionTypeDto } from "../../agents/conversation-agent-sessions/conversation-agent-sessions.dto"
+import type { RequestPayload, ResponseData, SuccessResponseDTO } from "../../generic"
 import { defineRoute } from "../../helpers"
 import type {
   ExtractionAgentSessionDto,
@@ -6,26 +7,26 @@ import type {
   ExtractionAgentSessionSummaryDto,
 } from "./extraction-agent-sessions.dto"
 
+type Request<T = object> = RequestPayload<{ type: BaseAgentSessionTypeDto } & T>
+
 export const ExtractionAgentSessionsRoutes = {
   executeOne: defineRoute<
     ResponseData<ExtractionAgentSessionResultDto>,
-    RequestPayload<Pick<ExtractionAgentSessionSummaryDto, "documentId" | "type">>
+    Request<Pick<ExtractionAgentSessionSummaryDto, "documentId">>
   >({
     method: "post",
     path: "organizations/:organizationId/projects/:projectId/agents/:agentId/extraction-agent-sessions/execute",
   }),
-  getAll: defineRoute<
-    ResponseData<ExtractionAgentSessionSummaryDto[]>,
-    RequestPayload<Pick<ExtractionAgentSessionSummaryDto, "type">>
-  >({
+  getAll: defineRoute<ResponseData<ExtractionAgentSessionSummaryDto[]>, Request>({
     method: "post",
-    path: "organizations/:organizationId/projects/:projectId/agents/:agentId/extraction-agent-sessions",
+    path: "organizations/:organizationId/projects/:projectId/agents/:agentId/extraction-agent-sessions/list",
   }),
-  getOne: defineRoute<
-    ResponseData<ExtractionAgentSessionDto>,
-    RequestPayload<Pick<ExtractionAgentSessionSummaryDto, "type">>
-  >({
+  getOne: defineRoute<ResponseData<ExtractionAgentSessionDto>, Request>({
     method: "post",
-    path: "organizations/:organizationId/projects/:projectId/agents/:agentId/extraction-agent-sessions/:runId",
+    path: "organizations/:organizationId/projects/:projectId/agents/:agentId/extraction-agent-sessions/:agentSessionId/getOne",
+  }),
+  deleteOne: defineRoute<ResponseData<SuccessResponseDTO>, Request>({
+    method: "post",
+    path: "/organizations/:organizationId/projects/:projectId/agents/:agentId/extraction-agent-sessions/:agentSessionId/delete",
   }),
 }

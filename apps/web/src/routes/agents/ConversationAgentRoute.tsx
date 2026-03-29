@@ -2,10 +2,10 @@ import { useTranslation } from "react-i18next"
 import { Outlet, useOutlet } from "react-router-dom"
 import { ListHeader } from "@/components/layouts/ListHeader"
 import type { Agent } from "@/features/agents/agents.models"
-import { ConversationAgentSessionCreator } from "@/features/agents/conversation-agent-sessions/components/ConversationAgentSessionCreator"
 import { ConversationAgentSessionItem } from "@/features/agents/conversation-agent-sessions/components/ConversationAgentSessionItem"
 import type { ConversationAgentSession } from "@/features/agents/conversation-agent-sessions/conversation-agent-sessions.models"
 import { selectCurrentConversationAgentSessionsData } from "@/features/agents/conversation-agent-sessions/conversation-agent-sessions.selectors"
+import { BaseAgentSessionCreator } from "@/features/agents/shared/base-agent-session/components/BaseAgentSessionCreator"
 import { useGetPath } from "@/hooks/use-build-path"
 import { useAppSelector } from "@/store/hooks"
 import { AsyncRoute } from "../AsyncRoute"
@@ -60,7 +60,8 @@ function WithData({
       title={t("conversationAgentSession:list.title")}
       agent={agent}
     >
-      <ConversationAgentSessionCreator
+      <BaseAgentSessionCreator
+        agentType="conversation"
         type="button"
         ids={{ organizationId, projectId, agentId: agent.id }}
       />

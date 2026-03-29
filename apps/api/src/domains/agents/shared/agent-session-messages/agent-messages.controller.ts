@@ -11,8 +11,10 @@ import { CheckPolicy } from "@/common/policies/check-policy.decorator"
 import { BaseAgentSessionGuard } from "@/domains/agents/base-agent-sessions/base-agent-session.guard"
 import { JwtAuthGuard } from "@/domains/auth/jwt-auth.guard"
 import { UserGuard } from "@/domains/users/user.guard"
+import type { ConversationAgentSession } from "../../conversation-agent-sessions/conversation-agent-session.entity"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
 import { ConversationAgentSessionsService } from "../../conversation-agent-sessions/conversation-agent-sessions.service"
+import type { FormAgentSession } from "../../form-agent-sessions/form-agent-session.entity"
 import type { AgentMessage } from "./agent-message.entity"
 
 @UseGuards(JwtAuthGuard, UserGuard, ResourceContextGuard, BaseAgentSessionGuard)
@@ -26,7 +28,7 @@ export class AgentMessagesController {
   @CheckPolicy((policy) => policy.canList())
   @Post(AgentSessionMessagesRoutes.listMessages.path)
   async listMessages(
-    @Req() request: EndpointRequestWithAgentSession,
+    @Req() request: EndpointRequestWithAgentSession<ConversationAgentSession | FormAgentSession>,
   ): Promise<typeof AgentSessionMessagesRoutes.listMessages.response> {
     const connectScope = getRequiredConnectScope(request)
     const agentSessionId = request.agentSession.id

@@ -9,6 +9,7 @@ import {
 } from "@/common/test/test-transaction-manager"
 import { removeNullish } from "@/common/utils/remove-nullish"
 import { ConversationAgentSessionsModule } from "@/domains/agents/conversation-agent-sessions/conversation-agent-sessions.module"
+import { FormAgentSessionsModule } from "@/domains/agents/form-agent-sessions/form-agent-sessions.module"
 import { createOrganizationWithAgentSession } from "@/domains/organizations/organization.factory"
 import { sdk } from "@/external/llm/open-telemetry-init"
 import { setupUserGuardForTesting } from "../../../../../../test/e2e.helpers"
@@ -30,7 +31,7 @@ describe("AgentSessionMessagesRoutes.listMessages", () => {
 
   beforeAll(async () => {
     setup = await setupTransactionalTestDatabase({
-      additionalImports: [ConversationAgentSessionsModule],
+      additionalImports: [ConversationAgentSessionsModule, FormAgentSessionsModule],
       applyOverrides: (moduleBuilder) => setupUserGuardForTesting(moduleBuilder, () => auth0Id),
     })
     repositories = setup.getAllRepositories()
@@ -53,7 +54,7 @@ describe("AgentSessionMessagesRoutes.listMessages", () => {
 
   const createContext = async () => {
     const { organization, user, project, agent, agentSession } =
-      await createOrganizationWithAgentSession(repositories)
+      await createOrganizationWithAgentSession({ repositories, agentType: "conversation" })
 
     // add 2 messages (from the assistant and the user) to the session
     await createChitChatConversation(organization, project, agentSession, {

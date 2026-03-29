@@ -6,15 +6,14 @@ import { agentMessageFeedbackMiddleware } from "@/features/agent-message-feedbac
 import { agentMessageFeedbackSliceReducer } from "@/features/agent-message-feedback/agent-message-feedback.slice"
 import { agentsMiddleware } from "@/features/agents/agents.middleware"
 import { agentsSliceReducer } from "@/features/agents/agents.slice"
-import { conversationAgentSessionsMiddleware } from "@/features/agents/conversation-agent-sessions/conversation-agent-sessions.middleware"
 import { conversationAgentSessionsSliceReducer } from "@/features/agents/conversation-agent-sessions/conversation-agent-sessions.slice"
 import { currentAgentSessionIdSliceReducer } from "@/features/agents/current-agent-session-id/current-agent-session-id.slice"
 import { extractionAgentSessionsMiddleware } from "@/features/agents/extraction-agent-sessions/extraction-agent-sessions.middleware"
 import { extractionAgentSessionsSliceReducer } from "@/features/agents/extraction-agent-sessions/extraction-agent-sessions.slice"
-import { formAgentSessionsMiddleware } from "@/features/agents/form-agent-sessions/form-agent-sessions.middleware"
 import { formAgentSessionsSliceReducer } from "@/features/agents/form-agent-sessions/form-agent-sessions.slice"
 import { agentSessionMessagesMiddleware } from "@/features/agents/shared/agent-session-messages/agent-session-messages.middleware"
 import { agentSessionMessagesSliceReducer } from "@/features/agents/shared/agent-session-messages/agent-session-messages.slice"
+import { baseAgentSessionsMiddleware } from "@/features/agents/shared/base-agent-session/base-agent-sessions.middleware"
 import { authMiddleware } from "@/features/auth/auth.middleware"
 import { authSliceReducer } from "@/features/auth/auth.slice"
 import { documentTagsMiddleware } from "@/features/document-tags/document-tags.middleware"
@@ -68,13 +67,12 @@ export const store = configureStore({
       agentSessionMessagesMiddleware.middleware,
       agentsMiddleware.middleware,
       authMiddleware.middleware,
-      conversationAgentSessionsMiddleware.middleware,
       documentsMiddleware.middleware,
       documentTagsMiddleware.middleware,
       evaluationReportsMiddleware.middleware,
       evaluationsMiddleware.middleware,
       extractionAgentSessionsMiddleware.middleware,
-      formAgentSessionsMiddleware.middleware,
+      baseAgentSessionsMiddleware.middleware,
       meMiddleware.middleware,
       organizationsMiddleware.middleware,
       projectMembershipsMiddleware.middleware,

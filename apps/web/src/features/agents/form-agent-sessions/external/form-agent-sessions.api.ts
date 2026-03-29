@@ -4,26 +4,29 @@ import type { FormAgentSession } from "../form-agent-sessions.models"
 import type { IFormAgentSessionsSpi } from "../form-agent-sessions.spi"
 
 export default {
-  getAll: async ({ organizationId, projectId, agentId, type }) => {
+  getAll: async ({ type, ...params }) => {
     const axios = getAxiosInstance()
     const response = await axios.post<typeof FormAgentSessionsRoutes.getAll.response>(
-      FormAgentSessionsRoutes.getAll.getPath({ organizationId, projectId, agentId }),
+      FormAgentSessionsRoutes.getAll.getPath(params),
       { payload: { type } } satisfies typeof FormAgentSessionsRoutes.getAll.request,
     )
     return response.data.data.map(fromDto)
   },
-  createOne: async ({ organizationId, projectId, agentId, type }) => {
+  createOne: async ({ type, ...params }) => {
     const axios = getAxiosInstance()
     const response = await axios.post<typeof FormAgentSessionsRoutes.createOne.response>(
-      FormAgentSessionsRoutes.createOne.getPath({
-        organizationId,
-        projectId,
-        agentId,
-      }),
+      FormAgentSessionsRoutes.createOne.getPath(params),
       { payload: { type } } satisfies typeof FormAgentSessionsRoutes.createOne.request,
     )
-
     return fromDto(response.data.data)
+  },
+  deleteOne: async ({ type, ...params }) => {
+    const axios = getAxiosInstance()
+    const response = await axios.post<typeof FormAgentSessionsRoutes.deleteOne.response>(
+      FormAgentSessionsRoutes.deleteOne.getPath(params),
+      { payload: { type } } satisfies typeof FormAgentSessionsRoutes.deleteOne.request,
+    )
+    return response.data.data
   },
 } satisfies IFormAgentSessionsSpi
 

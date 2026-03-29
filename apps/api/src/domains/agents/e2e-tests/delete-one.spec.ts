@@ -85,7 +85,7 @@ describe("Agents - deleteOne", () => {
 
   it("should delete agent and its sessions", async () => {
     const { user, organization, project, agent, agentSession } =
-      await createOrganizationWithAgentSession(repositories)
+      await createOrganizationWithAgentSession({ repositories, agentType: "conversation" })
     organizationId = organization.id
     projectId = project.id
     agentId = agent.id

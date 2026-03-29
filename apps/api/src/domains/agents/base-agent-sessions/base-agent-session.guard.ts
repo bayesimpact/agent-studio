@@ -10,6 +10,9 @@ import type { EndpointRequestWithAgentSession } from "@/common/context/request.i
 import { AUTH_ERRORS } from "@/common/errors/auth-errors"
 import { CHECK_POLICY_KEY, type PolicyHandler } from "@/common/policies/check-policy.decorator"
 import { requestToProjectPolicyContext } from "@/domains/projects/helpers"
+import type { ConversationAgentSession } from "../conversation-agent-sessions/conversation-agent-session.entity"
+import type { ExtractionAgentSession } from "../extraction-agent-sessions/extraction-agent-session.entity"
+import type { FormAgentSession } from "../form-agent-sessions/form-agent-session.entity"
 import { BaseAgentSessionPolicy } from "./base-agent-session.policy"
 
 @Injectable()
@@ -17,7 +20,9 @@ export class BaseAgentSessionGuard implements CanActivate {
   constructor(private reflector: Reflector) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
-    const request = context.switchToHttp().getRequest() as EndpointRequestWithAgentSession
+    const request = context.switchToHttp().getRequest() as EndpointRequestWithAgentSession<
+      ConversationAgentSession | FormAgentSession | ExtractionAgentSession
+    >
 
     const body = "body" in request && typeof request.body === "object" ? request.body : undefined
     if (!body) {

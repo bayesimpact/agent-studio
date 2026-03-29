@@ -1,11 +1,9 @@
-import { createSlice, isAnyOf } from "@reduxjs/toolkit"
+import { createSlice } from "@reduxjs/toolkit"
 import { ADS, type AsyncData, defaultAsyncData } from "@/store/async-data-status"
 import type { Agent } from "../agents.models"
+import { listAgentSessionsForAgents } from "../shared/base-agent-session/base-agent-sessions.thunks"
 import type { FormAgentSession } from "./form-agent-sessions.models"
-import {
-  listFormAgentSessionsForAgents,
-  refreshFormResultForCurrentAgentSession,
-} from "./form-agent-sessions.thunks"
+import { refreshFormResultForCurrentAgentSession } from "./form-agent-sessions.thunks"
 
 type DataType = Record<Agent["id"], FormAgentSession[]> // keyed by agentId
 type State = {
@@ -24,6 +22,10 @@ const slice = createSlice({
   },
   extraReducers: (builder) => {
     builder
+      .addCase(refreshFormResultForCurrentAgentSession.pending, (state) => {
+        if (!ADS.isFulfilled(state.data)) state.data.status = ADS.Loading
+        state.data.error = null
+      })
       .addCase(refreshFormResultForCurrentAgentSession.fulfilled, (state, action) => {
         const agentId = action.meta.arg.agentId
         state.data = {
@@ -35,10 +37,22 @@ const slice = createSlice({
           error: null,
         }
       })
-      .addCase(listFormAgentSessionsForAgents.fulfilled, (state, action) => {
+      .addCase(refreshFormResultForCurrentAgentSession.rejected, (state, action) => {
+        state.data.status = ADS.Error
+        state.data.error = action.error.message || "Failed to load form sessions"
+      })
+
+    builder
+      .addCase(listAgentSessionsForAgents.pending, (state, action) => {
+        if (action.meta.arg.agentType !== "form") return
+        if (!ADS.isFulfilled(state.data)) state.data.status = ADS.Loading
+        state.data.error = null
+      })
+      .addCase(listAgentSessionsForAgents.fulfilled, (state, action) => {
+        if (action.meta.arg.agentType !== "form") return
         const sessionsByAgentId = action.payload.reduce((acc, curr) => {
           return Object.assign(acc, curr)
-        }, {})
+        }, {}) as DataType
         state.data = {
           value: {
             ...state.data.value,
@@ -48,28 +62,11 @@ const slice = createSlice({
           error: null,
         }
       })
-
-    builder
-      .addMatcher(
-        isAnyOf(
-          listFormAgentSessionsForAgents.pending,
-          refreshFormResultForCurrentAgentSession.pending,
-        ),
-        (state) => {
-          if (!ADS.isFulfilled(state.data)) state.data.status = ADS.Loading
-          state.data.error = null
-        },
-      )
-      .addMatcher(
-        isAnyOf(
-          listFormAgentSessionsForAgents.rejected,
-          refreshFormResultForCurrentAgentSession.rejected,
-        ),
-        (state, action) => {
-          state.data.status = ADS.Error
-          state.data.error = action.error.message || "Failed to load sessions"
-        },
-      )
+      .addCase(listAgentSessionsForAgents.rejected, (state, action) => {
+        if (action.meta.arg.agentType !== "form") return
+        state.data.status = ADS.Error
+        state.data.error = action.error.message || "Failed to load form sessions"
+      })
   },
 })
 

@@ -1,4 +1,4 @@
-import type { RequestPayload, ResponseData } from "../../generic"
+import type { RequestPayload, ResponseData, SuccessResponseDTO } from "../../generic"
 import { defineRoute } from "../../helpers"
 import type {
   BaseAgentSessionTypeDto,
@@ -14,5 +14,9 @@ export const ConversationAgentSessionsRoutes = {
   createOne: defineRoute<ResponseData<ConversationAgentSessionDto>, Request>({
     method: "post",
     path: "/organizations/:organizationId/projects/:projectId/agents/:agentId/conversation-agent-sessions/create",
+  }),
+  deleteOne: defineRoute<ResponseData<SuccessResponseDTO>, Request>({
+    method: "post",
+    path: "/organizations/:organizationId/projects/:projectId/agents/:agentId/conversation-agent-sessions/:agentSessionId/delete",
   }),
 }

@@ -146,31 +146,33 @@ export class ExtractionAgentSessionsService extends ServiceWithLLM {
     connectScope,
     agentId,
     type,
+    userId,
   }: {
     connectScope: RequiredConnectScope
     agentId: string
+    userId: string
     type: BaseAgentSessionType
   }): Promise<ExtractionAgentSession[]> {
     return this.sessionConnectRepository.find(connectScope, {
-      where: { agentId, type },
+      where: { agentId, type, userId },
       relations: { document: true },
       order: { createdAt: "DESC" },
     })
   }
 
-  async findRunById({
+  async findAgentSessionById({
     connectScope,
-    runId,
+    agentSessionId,
     agentId,
     type,
   }: {
     connectScope: RequiredConnectScope
-    runId: string
+    agentSessionId: string
     agentId: string
     type: BaseAgentSessionType
   }): Promise<ExtractionAgentSession | null> {
     const runs = await this.sessionConnectRepository.find(connectScope, {
-      where: { id: runId, agentId, type },
+      where: { id: agentSessionId, agentId, type },
       relations: { document: true },
       take: 1,
     })

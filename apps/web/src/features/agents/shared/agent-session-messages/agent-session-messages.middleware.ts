@@ -1,23 +1,26 @@
 import { createListenerMiddleware, isAnyOf } from "@reduxjs/toolkit"
-import { listConversationAgentSessionsForAgents } from "@/features/agents/conversation-agent-sessions/conversation-agent-sessions.thunks"
 import type { AppDispatch, RootState } from "@/store"
+import { selectCurrentConversationAgentSessionsData } from "../../conversation-agent-sessions/conversation-agent-sessions.selectors"
 import {
   hasAgentSessionChanged,
   selectCurrentAgentSessionId,
 } from "../../current-agent-session-id/current-agent-session-id.selectors"
-import { listFormAgentSessionsForAgents } from "../../form-agent-sessions/form-agent-sessions.thunks"
+import { selectCurrentFormAgentSessionsData } from "../../form-agent-sessions/form-agent-sessions.selectors"
+import { listAgentSessionsForAgents } from "../base-agent-session/base-agent-sessions.thunks"
 import { listMessages } from "./agent-session-messages.thunks"
 
 // Create typed listener middleware
 export const listenerMiddleware = createListenerMiddleware<RootState, AppDispatch>()
 
+const agentSessionTypeWithMessages = ["conversation", "form"] as const
 // Refresh messages when current agent sessions are loaded and one is selected
 listenerMiddleware.startListening({
-  matcher: isAnyOf(
-    listConversationAgentSessionsForAgents.fulfilled,
-    listFormAgentSessionsForAgents.fulfilled,
-  ),
-  effect: async (_, listenerApi) => {
+  matcher: isAnyOf(listAgentSessionsForAgents.fulfilled, listAgentSessionsForAgents.fulfilled),
+  effect: async (action, listenerApi) => {
+    // @ts-expect-error
+    const { agentType } = action.meta.arg
+    if (!agentSessionTypeWithMessages.includes(agentType)) return
+
     const state = listenerApi.getState()
     const agentSessionId = selectCurrentAgentSessionId(state)
     if (!agentSessionId) return
@@ -34,6 +37,14 @@ listenerMiddleware.startListening({
     const state = listenerApi.getState()
     const agentSessionId = selectCurrentAgentSessionId(state)
     if (!agentSessionId) return
+    const isFormAgentSession = selectCurrentFormAgentSessionsData(state)?.value?.find(
+      (session) => session.id === agentSessionId,
+    )
+    const isConversationAgentSession = selectCurrentConversationAgentSessionsData(
+      state,
+    )?.value?.find((session) => session.id === agentSessionId)
+    if (!isFormAgentSession && !isConversationAgentSession) return
+
     await listenerApi.dispatch(listMessages(agentSessionId))
   },
 })

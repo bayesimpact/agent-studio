@@ -60,10 +60,14 @@ describe("Agent Message Feedback - Auth", () => {
 
   const createContextForRole = async (role: "owner" | "admin" | "member" = "owner") => {
     const { user, organization, project, agent, agentMessage } =
-      await createOrganizationWithAgentMessage(repositories, {
-        organizationMembership: { role: "member" },
-        projectMembership: { role },
-        agentMembership: { role: "member" },
+      await createOrganizationWithAgentMessage({
+        repositories,
+        params: {
+          organizationMembership: { role: "member" },
+          projectMembership: { role },
+          agentMembership: { role: "member" },
+        },
+        agentType: "conversation",
       })
     organizationId = organization.id
     projectId = project.id

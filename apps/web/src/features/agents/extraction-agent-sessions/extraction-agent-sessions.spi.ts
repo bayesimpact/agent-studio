@@ -1,29 +1,27 @@
-import type { ExtractionAgentSessionDto } from "@caseai-connect/api-contracts"
+import type { BaseAgentSessionTypeDto, SuccessResponseDTO } from "@caseai-connect/api-contracts"
 import type {
   ExtractionAgentSession,
   ExtractionAgentSessionResult,
   ExtractionAgentSessionSummary,
 } from "./extraction-agent-sessions.models"
 
+type BaseParams = {
+  organizationId: string
+  projectId: string
+  agentId: string
+  type: BaseAgentSessionTypeDto
+}
 export interface IExtractionAgentSessionsSpi {
-  getAll: (params: {
-    organizationId: string
-    projectId: string
-    agentId: string
-    type: ExtractionAgentSessionDto["type"]
-  }) => Promise<ExtractionAgentSessionSummary[]>
-  getOne: (params: {
-    organizationId: string
-    projectId: string
-    agentId: string
-    runId: string
-    type: ExtractionAgentSessionDto["type"]
-  }) => Promise<ExtractionAgentSession>
-  executeOne: (params: {
-    organizationId: string
-    projectId: string
-    agentId: string
-    documentId: string
-    type: ExtractionAgentSessionDto["type"]
-  }) => Promise<ExtractionAgentSessionResult>
+  getAll: (params: BaseParams) => Promise<ExtractionAgentSessionSummary[]>
+  getOne: (
+    params: BaseParams & {
+      agentSessionId: string
+    },
+  ) => Promise<ExtractionAgentSession>
+  executeOne: (
+    params: BaseParams & {
+      documentId: string
+    },
+  ) => Promise<ExtractionAgentSessionResult>
+  deleteOne: (params: BaseParams & { agentSessionId: string }) => Promise<SuccessResponseDTO>
 }

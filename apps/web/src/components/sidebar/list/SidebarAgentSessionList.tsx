@@ -1,70 +1,81 @@
 import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@caseai-connect/ui/shad/dropdown-menu"
+import {
+  SidebarMenuAction,
   SidebarMenuSub,
   SidebarMenuSubButton,
   SidebarMenuSubItem,
+  useSidebar,
 } from "@caseai-connect/ui/shad/sidebar"
-import { MessagesSquareIcon } from "lucide-react"
-import { Link } from "react-router-dom"
-import { ConversationAgentSessionCreator } from "@/features/agents/conversation-agent-sessions/components/ConversationAgentSessionCreator"
+import { MessagesSquareIcon, MoreHorizontalIcon, Trash2Icon } from "lucide-react"
+import { useTranslation } from "react-i18next"
+import { Link, useNavigate } from "react-router-dom"
+import type { Agent } from "@/features/agents/agents.models"
 import type { ConversationAgentSession } from "@/features/agents/conversation-agent-sessions/conversation-agent-sessions.models"
 import { selectCurrentConversationAgentSessionsDataFromAgentId } from "@/features/agents/conversation-agent-sessions/conversation-agent-sessions.selectors"
 import { selectCurrentAgentSessionId } from "@/features/agents/current-agent-session-id/current-agent-session-id.selectors"
-import { FormAgentSessionCreator } from "@/features/agents/form-agent-sessions/components/FormAgentSessionCreator"
 import { selectCurrentFormAgentSessionsDataFromAgentId } from "@/features/agents/form-agent-sessions/form-agent-sessions.selectors"
-import { useBuildPath } from "@/hooks/use-build-path"
+import { deleteAgentSession } from "@/features/agents/shared/base-agent-session/base-agent-sessions.thunks"
+import { BaseAgentSessionCreator } from "@/features/agents/shared/base-agent-session/components/BaseAgentSessionCreator"
+import { useBuildPath, useGetPath } from "@/hooks/use-build-path"
 import { ADS } from "@/store/async-data-status"
-import { useAppSelector } from "@/store/hooks"
+import { useAppDispatch, useAppSelector } from "@/store/hooks"
 import { buildDate } from "@/utils/build-date"
 import { NavFeedback } from "../nav/NavFeedback"
 import type { MenuItem } from "../types"
 
-type Ids = {
+type AgentSessionProps = {
   organizationId: string
   projectId: string
   agentId: string
+  agentType: Agent["type"]
 }
-export function SidebarAgentSessionList({ ids, agentType }: { ids: Ids; agentType: string }) {
-  switch (agentType) {
+export function SidebarAgentSessionList(props: AgentSessionProps) {
+  switch (props.agentType) {
     case "conversation":
-      return <ConversationAgentSessionList {...ids} />
+      return <ConversationAgentSessionList {...props} />
     case "form":
-      return <FormAgentSessionList {...ids} />
+      return <FormAgentSessionList {...props} />
     default:
       return null
   }
 }
 
-function FormAgentSessionList(props: Ids) {
+function FormAgentSessionList(props: AgentSessionProps) {
   const sessionsData = useAppSelector(selectCurrentFormAgentSessionsDataFromAgentId(props.agentId))
   if (!ADS.isFulfilled(sessionsData)) return null
 
   return (
-    <SessionList sessions={sessionsData.value} ids={props}>
-      <FormAgentSessionCreator ids={props} type="menu" />
+    <SessionList sessions={sessionsData.value} agentSessionProps={props}>
+      <BaseAgentSessionCreator agentType="form" ids={props} type="menu" />
     </SessionList>
   )
 }
 
-function ConversationAgentSessionList(props: Ids) {
+function ConversationAgentSessionList(props: AgentSessionProps) {
   const sessionsData = useAppSelector(
     selectCurrentConversationAgentSessionsDataFromAgentId(props.agentId),
   )
   if (!ADS.isFulfilled(sessionsData)) return null
 
   return (
-    <SessionList sessions={sessionsData.value} ids={props}>
-      <ConversationAgentSessionCreator ids={props} type="menu" />
+    <SessionList sessions={sessionsData.value} agentSessionProps={props}>
+      <BaseAgentSessionCreator agentType="conversation" ids={props} type="menu" />
     </SessionList>
   )
 }
 
 function SessionList({
   sessions,
-  ids,
+  agentSessionProps,
   children,
 }: {
   sessions: ConversationAgentSession[]
-  ids: Ids
+  agentSessionProps: AgentSessionProps
   children?: React.ReactNode
 }) {
   const currentSessionId = useAppSelector(selectCurrentAgentSessionId)
@@ -72,7 +83,7 @@ function SessionList({
   const items: MenuItem[] = sessions.map((session) => ({
     id: session.id,
     title: buildDate(session.createdAt),
-    url: buildPath("agentSession", { ...ids, agentSessionId: session.id }),
+    url: buildPath("agentSession", { ...agentSessionProps, agentSessionId: session.id }),
     isActive: currentSessionId === session.id,
     icon: MessagesSquareIcon,
   }))
@@ -87,17 +98,65 @@ function SessionList({
             <Link to={item.url}>
               {item.icon && <item.icon />}
               <span>{item.title}</span>
-              {/* // TODO: dropdown with delete option */}
+
+              <OptionsMenu
+                agentId={agentSessionProps.agentId}
+                agentSessionId={item.id}
+                agentType={agentSessionProps.agentType}
+              />
             </Link>
           </SidebarMenuSubButton>
         </SidebarMenuSubItem>
       ))}
 
       <NavFeedback
-        organizationId={ids.organizationId}
-        projectId={ids.projectId}
-        agentId={ids.agentId}
+        organizationId={agentSessionProps.organizationId}
+        projectId={agentSessionProps.projectId}
+        agentId={agentSessionProps.agentId}
       />
     </SidebarMenuSub>
+  )
+}
+
+function OptionsMenu({
+  agentId,
+  agentSessionId,
+  agentType,
+}: {
+  agentId: string
+  agentSessionId: string
+  agentType: Agent["type"]
+}) {
+  const navigate = useNavigate()
+  const dispatch = useAppDispatch()
+  const { isMobile } = useSidebar()
+  const { t } = useTranslation()
+  const { getPath } = useGetPath()
+  const handleSuccess = () => navigate(getPath("agent"))
+  const handleDelete = () => {
+    dispatch(deleteAgentSession({ agentType, agentId, agentSessionId, onSuccess: handleSuccess }))
+  }
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <SidebarMenuAction showOnHover>
+          <MoreHorizontalIcon />
+          <span className="sr-only">{t("actions:more")}</span>
+        </SidebarMenuAction>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent
+        className="w-48 rounded-lg"
+        side={isMobile ? "bottom" : "right"}
+        align={isMobile ? "end" : "start"}
+      >
+        <DropdownMenuItem
+          onClick={handleDelete}
+          className="text-destructive focus:text-destructive"
+        >
+          <Trash2Icon className="text-muted-foreground" />
+          <span>{t("actions:delete")}</span>
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
   )
 }

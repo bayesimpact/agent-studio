@@ -14,6 +14,13 @@ export class BaseAgentSessionPolicy extends ProjectScopedPolicy<AgentSession> {
     super(context, entity)
   }
 
+  canList(): boolean {
+    if (this.isLive()) {
+      return this.canAccess()
+    }
+    return this.canAccess() && this.isProjectAdminOrOwner()
+  }
+
   canCreate(): boolean {
     if (this.isLive()) {
       return this.canAccess()
@@ -21,11 +28,11 @@ export class BaseAgentSessionPolicy extends ProjectScopedPolicy<AgentSession> {
     return this.canAccess() && this.isProjectAdminOrOwner()
   }
 
-  canList(): boolean {
+  canDelete(): boolean {
     if (this.isLive()) {
-      return this.canAccess()
+      return this.canAccess() && this.doesResourceBelongToScope()
     }
-    return this.canAccess() && this.isProjectAdminOrOwner()
+    return this.canAccess() && this.doesResourceBelongToScope() && this.isProjectAdminOrOwner()
   }
 
   protected isLive(): boolean {
