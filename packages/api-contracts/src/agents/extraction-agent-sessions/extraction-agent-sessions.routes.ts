@@ -19,7 +19,7 @@ export const ExtractionAgentSessionsRoutes = {
   }),
   getAll: defineRoute<ResponseData<ExtractionAgentSessionSummaryDto[]>, Request>({
     method: "post",
-    path: "organizations/:organizationId/projects/:projectId/agents/:agentId/extraction-agent-sessions/list",
+    path: "organizations/:organizationId/projects/:projectId/agents/:agentId/extraction-agent-sessions",
   }),
   getOne: defineRoute<ResponseData<ExtractionAgentSessionDto>, Request>({
     method: "post",

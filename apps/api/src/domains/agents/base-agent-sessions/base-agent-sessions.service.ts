@@ -7,6 +7,7 @@ import { ConversationAgentSession } from "../conversation-agent-sessions/convers
 import { ExtractionAgentSession } from "../extraction-agent-sessions/extraction-agent-session.entity"
 import { FormAgentSession } from "../form-agent-sessions/form-agent-session.entity"
 import { AgentMessage } from "../shared/agent-session-messages/agent-message.entity"
+import { Document } from "../../documents/document.entity"
 import { AgentMessageFeedback } from "../shared/agent-session-messages/feedback/agent-message-feedback.entity"
 
 type AgentSession = ConversationAgentSession | FormAgentSession | ExtractionAgentSession
