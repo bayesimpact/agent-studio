@@ -75,6 +75,10 @@ export class BaseAgentSessionsService {
         agentId,
         id: agentSession.id,
       })
+      if (agentType === "extraction") {
+        const documentId = (agentSession as ExtractionAgentSession).documentId
+        await entityManager.delete(Document, { id: documentId })
+      }
     })
   }
 
