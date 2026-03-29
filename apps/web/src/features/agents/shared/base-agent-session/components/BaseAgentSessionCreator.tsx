@@ -1,6 +1,8 @@
 import { Button } from "@caseai-connect/ui/shad/button"
 import { SidebarMenuSubButton } from "@caseai-connect/ui/shad/sidebar"
+import throttle from "lodash/throttle"
 import { PlusIcon } from "lucide-react"
+import { useCallback, useMemo } from "react"
 import { useTranslation } from "react-i18next"
 import { useNavigate } from "react-router-dom"
 import type { Agent } from "@/features/agents/agents.models"
@@ -21,13 +23,25 @@ export function BaseAgentSessionCreator({
   const { t } = useTranslation(`${agentType}AgentSession`, { keyPrefix: "create" })
   const dispatch = useAppDispatch()
   const { buildPath } = useBuildPath()
-  const onSuccess = (agentSessionId: string) => {
-    const path = buildPath("agentSession", { ...ids, agentSessionId })
-    navigate(path)
-  }
-  const handleClick = () => {
-    dispatch(createAgentSession({ agentType, agentId: ids.agentId, onSuccess }))
-  }
+  const onSuccess = useCallback(
+    (agentSessionId: string) => {
+      const path = buildPath("agentSession", { ...ids, agentSessionId })
+      navigate(path)
+    },
+    [buildPath, ids, navigate],
+  )
+
+  const handleClick = useMemo(
+    () =>
+      throttle(
+        () => {
+          dispatch(createAgentSession({ agentType, agentId: ids.agentId, onSuccess }))
+        },
+        2000,
+        { trailing: false },
+      ),
+    [agentType, ids.agentId, dispatch, onSuccess],
+  )
   const Comp = type === "button" ? Button : SidebarMenuSubButton
   return (
     <Comp onClick={handleClick} className="cursor-pointer">
