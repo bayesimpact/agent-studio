@@ -2,6 +2,7 @@ import { createAsyncThunk } from "@reduxjs/toolkit"
 import { isAxiosError } from "axios"
 import { RouteNames } from "@/routes/helpers"
 import type { RootState, ThunkExtraArg } from "@/store"
+import type { UserMembershipsDto } from "../../../../../packages/api-contracts/src/me/me.dto"
 import { selectCurrentAgentId } from "../agents/agents.selectors"
 import { authActions } from "../auth/auth.slice"
 import { selectCurrentOrganizationId } from "../organizations/organizations.selectors"
@@ -54,29 +55,14 @@ function computeAbilities(
 
 export const fetchMe = createAsyncThunk<Me, void, ThunkConfig>(
   "me/fetch",
-  async (_, { extra: { services }, rejectWithValue, getState, dispatch }) => {
+  async (_, { extra: { services }, rejectWithValue, dispatch }) => {
     try {
       const me = await services.me.getMe()
       const {
         user: { memberships },
       } = me
 
-      const state = getState()
-
-      const abilities = computeAbilities(
-        memberships,
-        selectCurrentOrganizationId(state),
-        selectCurrentProjectId(state),
-        selectCurrentAgentId(state),
-      )
-
-      dispatch(authActions.setAbilities(abilities))
-
-      const canAccessStudio = abilities.canManageOrganizations || abilities.canManageProjects
-      const isStudioPath = window.location.pathname.startsWith(RouteNames.STUDIO)
-      dispatch(authActions.setIsStudioInterface(canAccessStudio && isStudioPath))
-
-      dispatch(authActions.setStopLoading())
+      dispatch(setAbilities({ memberships }))
 
       return me
     } catch (error) {
@@ -87,3 +73,24 @@ export const fetchMe = createAsyncThunk<Me, void, ThunkConfig>(
     }
   },
 )
+export const setAbilities = createAsyncThunk<
+  void,
+  { memberships: UserMembershipsDto },
+  ThunkConfig
+>("me/setAbilities", async ({ memberships }, { getState, dispatch }) => {
+  const state = getState()
+  const abilities = computeAbilities(
+    memberships,
+    selectCurrentOrganizationId(state),
+    selectCurrentProjectId(state),
+    selectCurrentAgentId(state),
+  )
+
+  dispatch(authActions.setAbilities(abilities))
+
+  const canAccessStudio = abilities.canManageOrganizations || abilities.canManageProjects
+  const isStudioPath = window.location.pathname.startsWith(RouteNames.STUDIO)
+  dispatch(authActions.setIsStudioInterface(canAccessStudio && isStudioPath))
+
+  dispatch(authActions.setStopLoading())
+})
