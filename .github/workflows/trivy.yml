@@ -80,15 +80,35 @@ jobs:
 
       - name: Trivy scan summary
         run: |
-          echo "## Trivy Vulnerability Scan Results" >> $GITHUB_STEP_SUMMARY
-          echo "### API Image" >> $GITHUB_STEP_SUMMARY
-          echo '```' >> $GITHUB_STEP_SUMMARY
-          cat trivy-api-results.txt >> $GITHUB_STEP_SUMMARY
-          echo '```' >> $GITHUB_STEP_SUMMARY
-          echo "### Workers Image" >> $GITHUB_STEP_SUMMARY
-          echo '```' >> $GITHUB_STEP_SUMMARY
-          cat trivy-workers-results.txt >> $GITHUB_STEP_SUMMARY
-          echo '```' >> $GITHUB_STEP_SUMMARY
+          MAX_SIZE=400000
+          {
+            echo "## Trivy Vulnerability Scan Results"
+            echo "### API Image"
+            echo '```'
+            head -c $MAX_SIZE trivy-api-results.txt
+            if [ "$(wc -c < trivy-api-results.txt)" -gt "$MAX_SIZE" ]; then
+              echo ""
+              echo "... output truncated (see workflow artifacts for full results)"
+            fi
+            echo '```'
+            echo "### Workers Image"
+            echo '```'
+            head -c $MAX_SIZE trivy-workers-results.txt
+            if [ "$(wc -c < trivy-workers-results.txt)" -gt "$MAX_SIZE" ]; then
+              echo ""
+              echo "... output truncated (see workflow artifacts for full results)"
+            fi
+            echo '```'
+          } >> $GITHUB_STEP_SUMMARY
+
+      - name: Upload full results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: trivy-results
+          path: |
+            trivy-api-results.txt
+            trivy-workers-results.txt
 
       - name: Notify on failure
         if: ${{ failure() }}
