@@ -1,7 +1,10 @@
 import { createSlice } from "@reduxjs/toolkit"
 import { ADS, type AsyncData, defaultAsyncData } from "@/store/async-data-status"
 import type { Agent } from "../agents.models"
-import { listAgentSessionsForAgents } from "../shared/base-agent-session/base-agent-sessions.thunks"
+import {
+  createAgentSession,
+  listAgentSessionsForAgents,
+} from "../shared/base-agent-session/base-agent-sessions.thunks"
 import type { ConversationAgentSession } from "./conversation-agent-sessions.models"
 
 type DataType = Record<Agent["id"], ConversationAgentSession[]> // keyed by agentId
@@ -20,6 +23,16 @@ const slice = createSlice({
     reset: () => initialState,
   },
   extraReducers: (builder) => {
+    builder
+      .addCase(createAgentSession.pending, (state, action) => {
+        if (action.meta.arg.agentType !== "conversation") return
+        state.data.status = ADS.Loading
+      })
+      .addCase(createAgentSession.rejected, (state, action) => {
+        if (action.meta.arg.agentType !== "conversation") return
+        state.data.status = ADS.Fulfilled
+      })
+
     builder
       .addCase(listAgentSessionsForAgents.pending, (state, action) => {
         if (action.meta.arg.agentType !== "conversation") return

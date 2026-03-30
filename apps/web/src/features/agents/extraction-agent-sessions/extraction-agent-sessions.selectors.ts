@@ -5,6 +5,8 @@ import type { ExtractionAgentSessionSummary } from "./extraction-agent-sessions.
 
 export const selectExtractionAgentSessionsData = (state: RootState) =>
   state.extractionAgentSessions.data
+export const selectIsProcessingExecution = (state: RootState) =>
+  state.extractionAgentSessions.isProcesssingExecution
 
 const missingAgentId = { status: ADS.Error, value: null, error: "No agent selected" }
 

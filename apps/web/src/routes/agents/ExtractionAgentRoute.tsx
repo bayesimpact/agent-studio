@@ -1,11 +1,15 @@
 import { useTranslation } from "react-i18next"
 import { Outlet, useOutlet } from "react-router-dom"
+import { Loader } from "@/components/Loader"
 import { ListHeader } from "@/components/layouts/ListHeader"
 import type { Agent } from "@/features/agents/agents.models"
 import { ExtractionSessionCreator } from "@/features/agents/extraction-agent-sessions/components/ExtractionAgentSessionCreator"
 import { ExtractionSessionItem } from "@/features/agents/extraction-agent-sessions/components/ExtractionAgentSessionItem"
 import type { ExtractionAgentSessionSummary } from "@/features/agents/extraction-agent-sessions/extraction-agent-sessions.models"
-import { selectExtractionAgentSessionsFromAgentId } from "@/features/agents/extraction-agent-sessions/extraction-agent-sessions.selectors"
+import {
+  selectExtractionAgentSessionsFromAgentId,
+  selectIsProcessingExecution,
+} from "@/features/agents/extraction-agent-sessions/extraction-agent-sessions.selectors"
 import { useBuildPath } from "@/hooks/use-build-path"
 import { useAppSelector } from "@/store/hooks"
 import { AsyncRoute } from "../AsyncRoute"
@@ -51,6 +55,7 @@ function WithData({
   const outlet = useOutlet()
   const { buildPath } = useBuildPath()
   const { t } = useTranslation("extractionAgentSession", { keyPrefix: "list" })
+  const isProcessingExecution = useAppSelector(selectIsProcessingExecution)
 
   if (outlet) return <Outlet />
   return (
@@ -59,7 +64,9 @@ function WithData({
       path={buildPath("project", { organizationId, projectId })}
       title={t("title")}
     >
-      <ExtractionSessionCreator />
+      {isProcessingExecution && <Loader />}
+
+      <ExtractionSessionCreator disabled={isProcessingExecution} />
 
       {agentSessions.map((run) => (
         <ExtractionSessionItem key={run.id} run={run} />

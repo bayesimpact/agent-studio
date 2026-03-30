@@ -3,14 +3,17 @@ import { ADS, type AsyncData, defaultAsyncData } from "@/store/async-data-status
 import type { Agent } from "../agents.models"
 import { listAgentSessionsForAgents } from "../shared/base-agent-session/base-agent-sessions.thunks"
 import type { ExtractionAgentSessionSummary } from "./extraction-agent-sessions.models"
+import { executeExtractionAgentSession } from "./extraction-agent-sessions.thunks"
 
 type DataType = Record<Agent["id"], ExtractionAgentSessionSummary[]>
 interface State {
   data: AsyncData<DataType>
+  isProcesssingExecution: boolean
 }
 
 const initialState: State = {
   data: defaultAsyncData,
+  isProcesssingExecution: false,
 }
 
 const slice = createSlice({
@@ -20,6 +23,17 @@ const slice = createSlice({
     reset: () => initialState,
   },
   extraReducers: (builder) => {
+    builder
+      .addCase(executeExtractionAgentSession.pending, (state) => {
+        state.isProcesssingExecution = true
+      })
+      .addCase(executeExtractionAgentSession.fulfilled, (state) => {
+        state.isProcesssingExecution = false
+      })
+      .addCase(executeExtractionAgentSession.rejected, (state) => {
+        state.isProcesssingExecution = false
+      })
+
     builder
       .addCase(listAgentSessionsForAgents.pending, (state, action) => {
         if (action.meta.arg.agentType !== "extraction") return

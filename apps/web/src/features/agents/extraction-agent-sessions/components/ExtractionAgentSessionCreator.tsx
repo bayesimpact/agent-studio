@@ -14,7 +14,7 @@ import { FileUploader } from "@/components/FileUploader"
 import { useAppDispatch } from "@/store/hooks"
 import { executeExtractionAgentSession } from "../extraction-agent-sessions.thunks"
 
-export function ExtractionSessionCreator() {
+export function ExtractionSessionCreator({ disabled }: { disabled: boolean }) {
   const dispatch = useAppDispatch()
   const { t } = useTranslation()
 
@@ -44,7 +44,7 @@ export function ExtractionSessionCreator() {
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
-        <Button disabled={isRunning}>
+        <Button disabled={isRunning || disabled}>
           <PlusIcon />
           <span>{t("extractionAgentSession:create.button")}</span>
         </Button>
