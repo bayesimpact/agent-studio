@@ -22,7 +22,7 @@ type ThunkConfig = {
 const adminRoles = ["admin", "owner"]
 const roles = [...adminRoles, "member"]
 
-function computeAbilities(
+function compute(
   memberships: Me["user"]["memberships"],
   organizationId: string | null | undefined,
   projectId: string | null | undefined,
@@ -62,7 +62,7 @@ export const fetchMe = createAsyncThunk<Me, void, ThunkConfig>(
         user: { memberships },
       } = me
 
-      dispatch(setAbilities({ memberships }))
+      dispatch(computeAbilities({ memberships }))
 
       return me
     } catch (error) {
@@ -73,13 +73,14 @@ export const fetchMe = createAsyncThunk<Me, void, ThunkConfig>(
     }
   },
 )
-export const setAbilities = createAsyncThunk<
+export const computeAbilities = createAsyncThunk<
   void,
   { memberships: UserMembershipsDto },
   ThunkConfig
->("me/setAbilities", async ({ memberships }, { getState, dispatch }) => {
+>("me/computeAbilities", async ({ memberships }, { getState, dispatch }) => {
   const state = getState()
-  const abilities = computeAbilities(
+
+  const abilities = compute(
     memberships,
     selectCurrentOrganizationId(state),
     selectCurrentProjectId(state),

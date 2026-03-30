@@ -6,7 +6,7 @@ import { notificationsActions } from "../notifications/notifications.slice"
 import { hasOrganizationChanged } from "../organizations/organizations.selectors"
 import { hasProjectChanged } from "../projects/projects.selectors"
 import { selectMe } from "./me.selectors"
-import { fetchMe, setAbilities } from "./me.thunks"
+import { computeAbilities, fetchMe } from "./me.thunks"
 
 const listenerMiddleware = createListenerMiddleware<RootState, AppDispatch>()
 
@@ -21,7 +21,7 @@ listenerMiddleware.startListening({
     const state = listenerApi.getState()
     const me = selectMe(state)
     if (!ADS.isFulfilled(me)) return
-    listenerApi.dispatch(setAbilities({ memberships: me.value.memberships }))
+    listenerApi.dispatch(computeAbilities({ memberships: me.value.memberships }))
   },
 })
 
