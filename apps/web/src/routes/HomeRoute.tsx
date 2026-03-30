@@ -30,7 +30,7 @@ export function consumePendingInvitation(): string | null {
 }
 
 export function HomeRoute() {
-  const { isLoading, isAuthenticated, loginWithRedirect } = useAuth0()
+  const { isLoading, isAuthenticated, loginWithRedirect, logout } = useAuth0()
   const navigate = useNavigate()
   const organizations = useAppSelector(selectOrganizationsData)
   const [searchParams] = useSearchParams()
@@ -44,16 +44,22 @@ export function HomeRoute() {
     const organization = searchParams.get("organization")
 
     if (invitation && organization) {
-      // Store the ticket_id so we can accept the invitation after login
-      storePendingInvitation(invitation)
+      ;(async () => {
+        // Clear the local SDK cache first
+        await logout({ openUrl: false })
 
-      // Redirect to Auth0 with invitation params
-      loginWithRedirect({
-        authorizationParams: {
-          organization,
-          invitation,
-        },
-      })
+        // Store the ticket_id so we can accept the invitation after login
+        storePendingInvitation(invitation)
+
+        // Redirect to Auth0 with invitation params. Login forces the user to re-authenticate regardless of the existing session.
+        loginWithRedirect({
+          authorizationParams: {
+            organization,
+            invitation,
+            prompt: "login",
+          },
+        })
+      })()
       return
     }
 
@@ -85,6 +91,7 @@ export function HomeRoute() {
     isAuthenticated,
     isLoading,
     loginWithRedirect,
+    logout,
     navigate,
     organizations,
     searchParams,
