@@ -2,4 +2,4 @@
 # This file exists to trigger check-api-changes without code changes.
 # Bash:
 # > sed -i '' "s/^force-deploy: .*/force-deploy: $(date -u +%Y-%m-%dT%H:%M:%SZ)/" apps/api/src/.deploy-trigger
-force-deploy: 2026-03-31T16:04:02Z
+force-deploy: 2026-03-31T17:12:07Z
