@@ -61,7 +61,7 @@ jobs:
         with:
           image-ref: '${{ steps.image-refs.outputs.api-image-ref }}'
           format: 'table'
-          exit-code: '0'
+          exit-code: '1'
           ignore-unfixed: true
           vuln-type: 'os,library'
           severity: 'CRITICAL,HIGH'
@@ -73,7 +73,7 @@ jobs:
         with:
           image-ref: '${{ steps.image-refs.outputs.workers-image-ref }}'
           format: 'table'
-          exit-code: '0'
+          exit-code: '1'
           ignore-unfixed: true
           vuln-type: 'os,library'
           severity: 'CRITICAL,HIGH'
