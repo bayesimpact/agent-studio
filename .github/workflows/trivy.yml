@@ -65,6 +65,7 @@ jobs:
           ignore-unfixed: true
           vuln-type: 'os,library'
           severity: 'CRITICAL,HIGH'
+          trivyignores: '.trivyignore.yaml'
           output: 'trivy-api-results.txt'
 
       - name: Run Trivy vulnerability scanner on Workers
@@ -76,6 +77,7 @@ jobs:
           ignore-unfixed: true
           vuln-type: 'os,library'
           severity: 'CRITICAL,HIGH'
+          trivyignores: '.trivyignore.yaml'
           output: 'trivy-workers-results.txt'
 
       - name: Trivy scan summary
