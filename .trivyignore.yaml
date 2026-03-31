@@ -3,14 +3,14 @@ vulnerabilities:
     expired_at: 2026-05-01
     reason: "path-to-regexp 8.3.0 — waiting on @nestjs/core upstream fix (8.4.0)"
   - id: CVE-2026-27903
-    expired_at: 2026-05-01
-    reason: "minimatch — override applied but Trivy reads lockfile metadata (false positive)"
+    expired_at: 2026-06-01
+    reason: "minimatch — no upstream fix available in transitive deps"
   - id: CVE-2026-27904
-    expired_at: 2026-05-01
-    reason: "minimatch — override applied but Trivy reads lockfile metadata (false positive)"
+    expired_at: 2026-06-01
+    reason: "minimatch — no upstream fix available in transitive deps"
   - id: CVE-2026-33671
-    expired_at: 2026-05-01
-    reason: "picomatch — override applied but Trivy reads lockfile metadata (false positive)"
+    expired_at: 2026-06-01
+    reason: "picomatch — no upstream fix available in transitive deps (jest, vite, angular-devkit)"
   - id: CVE-2026-29786
     expired_at: 2026-05-01
     reason: "tar — Trivy reports 7.5.9 from lockfile, actual installed is 6.2.1 (no 6.x fix available)"
