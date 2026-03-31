@@ -1,0 +1,22 @@
+vulnerabilities:
+  - id: CVE-2026-4926
+    expired_at: 2026-05-01
+    reason: "path-to-regexp 8.3.0 — waiting on @nestjs/core upstream fix (8.4.0)"
+  - id: CVE-2026-27903
+    expired_at: 2026-06-01
+    reason: "minimatch — no upstream fix available in transitive deps"
+  - id: CVE-2026-27904
+    expired_at: 2026-06-01
+    reason: "minimatch — no upstream fix available in transitive deps"
+  - id: CVE-2026-33671
+    expired_at: 2026-06-01
+    reason: "picomatch — no upstream fix available in transitive deps (jest, vite, angular-devkit)"
+  - id: CVE-2026-29786
+    expired_at: 2026-05-01
+    reason: "tar — Trivy reports 7.5.9 from lockfile, actual installed is 6.2.1 (no 6.x fix available)"
+  - id: CVE-2026-31802
+    expired_at: 2026-05-01
+    reason: "tar — same as above"
+  - id: CVE-2025-32434
+    expired_at: 2026-05-01
+    reason: "torch 2.5.1+cu121 — fix requires 2.6.0+, only 2.11.0 available on cu121 (needs docling compat testing)"

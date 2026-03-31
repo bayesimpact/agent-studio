@@ -1,0 +1,30 @@
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Global allowlist"
+
+# Auth0 client IDs are public identifiers, not secrets.
+# They are embedded in frontend code and OAuth2 flows by design.
+regexTarget = "match"
+regexes = [
+  '''YOUR_AUTH0_M2M_CLIENT_ID''',
+  '''YOUR_AUTH0_CLIENT_ID''',
+  '''YOUR_AUTH0_M2M_CLIENT_ID''',
+  '''YOUR_AUTH0_CLIENT_ID''',
+]
+
+# Slack webhook URLs found in old commits — rotate the webhook and
+# allowlist these historical fingerprints.
+paths = [
+  '''docs/installation-on-gke\.md''',
+]
+
+[[rules]]
+id = "slack-webhook-url-makefile-historical"
+description = "Historical Slack webhook URLs in Makefile (rotated)"
+[rules.allowlist]
+commits = [
+  "347c8738e0924b75a2f3bcda04c8dadd861c2fc2",
+  "8cb10870624c740228b8cadfa3aae137f48b2cc8",
+]

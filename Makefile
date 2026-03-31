@@ -138,6 +138,10 @@ docker-image-refs:
 	@echo "api-image-ref=${apiImageUrl}" >> $(GITHUB_OUTPUT)
 	@echo "workers-image-ref=${workersImageUrl}" >> $(GITHUB_OUTPUT)
 
+trivy-scan: docker-build
+	trivy image --ignore-unfixed --vuln-type os,library --severity CRITICAL,HIGH --ignorefile .trivyignore.yaml ${apiImageUrl}
+	trivy image --ignore-unfixed --vuln-type os,library --severity CRITICAL,HIGH --ignorefile .trivyignore.yaml ${workersImageUrl}
+
 docker-build: docker-build-api docker-build-workers
 
 docker-build-api:

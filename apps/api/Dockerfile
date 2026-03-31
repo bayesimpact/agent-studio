@@ -17,6 +17,9 @@ RUN npm ci
 RUN cd apps/api && npm run build
 RUN cd packages/api-contracts && npm run build
 
+# Remove dev dependencies to keep only production deps in the runtime image
+RUN npm prune --omit=dev
+
 #
 # 🚀 Runtime Base (shared)
 #
