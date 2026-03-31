@@ -1,4 +1,4 @@
-.PHONY: docker
+.PHONY: docker requeue-document-embeddings
 
 version ?= `git rev-parse --short HEAD`
 
@@ -11,6 +11,9 @@ DOCUMENT_EMBEDDING_MODELS ?= gemini-embedding-001
 WORKER_DOCLING_HEALTH_CHECK_TIMEOUT_MS ?= 30000
 DOCUMENT_EXTRACTOR_DOCLING_TIMEOUT_MS ?= 60000
 MAX_VERTEX_EMBEDDING_BATCH_SIZE ?= 250
+REQUEUE_DOCUMENT_EMBEDDINGS_JOB_NAME ?= ${cloudRunName}-requeue-document-embeddings
+REQUEUE_DOCUMENT_EMBEDDINGS_ARGS ?= --dry-run,--limit,50
+REQUEUE_DOCUMENT_EMBEDDINGS_IMAGE ?=
 
 ifeq ($(REGION),eu)
 ifeq ($(PROJECT),connect)
@@ -322,6 +325,45 @@ deploy-workers-only:
 	${workerPoolGpuZonalRedundancyFlag} \
 	--region=${workerPoolRegion} \
 	--project ${gcpProjectId}
+
+requeue-document-embeddings:
+	@REQUEUE_IMAGE=$${REQUEUE_DOCUMENT_EMBEDDINGS_IMAGE:-$$(gcloud run services describe ${cloudRunName} --region=${zone} --project ${gcpProjectId} --format='value(spec.template.spec.containers[0].image)')}; \
+	if [ -z "$$REQUEUE_IMAGE" ]; then echo "Could not resolve API image from Cloud Run service ${cloudRunName}"; exit 1; fi; \
+	echo "Running job ${REQUEUE_DOCUMENT_EMBEDDINGS_JOB_NAME} with image: $$REQUEUE_IMAGE and args: ${REQUEUE_DOCUMENT_EMBEDDINGS_ARGS}"; \
+	gcloud run jobs deploy ${REQUEUE_DOCUMENT_EMBEDDINGS_JOB_NAME} --image $$REQUEUE_IMAGE \
+	--command=node \
+	--args=/app/apps/api/dist/scripts/requeue-document-embeddings.js,${REQUEUE_DOCUMENT_EMBEDDINGS_ARGS} \
+	--update-secrets=LANGFUSE_SK=${secretsPrefix}LANGFUSE_SK:latest \
+	--update-secrets=DATABASE_PASSWORD=${secretsPrefix}DATABASE_PASSWORD:latest \
+	--update-secrets=BULLMQ_REDIS_URL=${secretsPrefix}BULLMQ_REDIS_URL:latest \
+	--update-secrets=AUTH0_M2M_CLIENT_SECRET=${secretsPrefix}AUTH0_M2M_CLIENT_SECRET:latest \
+	--update-secrets=VLLM_MEDGEMMA15_4B_URL=${secretsPrefix}VLLM_MEDGEMMA15_4B_URL:latest \
+	--update-secrets=VLLM_MEDGEMMA15_4B_APIKEY=${secretsPrefix}VLLM_MEDGEMMA15_4B_APIKEY:latest \
+	--update-secrets=VLLM_MEDGEMMA10_27B_URL=${secretsPrefix}VLLM_MEDGEMMA10_27B_URL:latest \
+	--update-secrets=VLLM_MEDGEMMA10_27B_APIKEY=${secretsPrefix}VLLM_MEDGEMMA10_27B_APIKEY:latest \
+	--set-env-vars=TZ=UTC \
+	--set-env-vars=AUTH0_ISSUER_URL=${auth0IssuerUrl},AUTH0_AUDIENCE=${auth0Audience} \
+	--set-env-vars=AUTH0_ORGANIZATION_ID=${auth0OrganizationId},AUTH0_CLIENT_ID=${auth0ClientId},AUTH0_M2M_CLIENT_ID=${auth0M2MClientId} \
+	--set-env-vars=FRONTEND_URL=${frontendUrl} \
+	--set-env-vars=GCS_STORAGE_BUCKET_NAME=${gcsStorageBucketName} \
+	--set-env-vars=GOOGLE_VERTEX_PROJECT=${googleVertexProject} \
+	--set-env-vars=GOOGLE_VERTEX_LOCATION=${googleVertexLocation} \
+	--set-env-vars=LANGFUSE_PK=${langfusePk},LANGFUSE_BASE_URL=${langfuseUrl},LOCATION=$(location) \
+	--set-env-vars=DATABASE_HOST=/cloudsql/${addCloudSqlInstances},DATABASE_USERNAME=${databaseUsername},DATABASE_NAME=${databaseName} \
+	--set-env-vars=DOCUMENT_EMBEDDING_MODELS=${DOCUMENT_EMBEDDING_MODELS} \
+	--set-env-vars=DOCUMENT_EXTRACTOR_DOCLING_ENABLED=true \
+	--set-env-vars=WORKER_DOCLING_HEALTH_CHECK_TIMEOUT_MS=${WORKER_DOCLING_HEALTH_CHECK_TIMEOUT_MS} \
+	--set-env-vars=DOCUMENT_EXTRACTOR_DOCLING_TIMEOUT_MS=${DOCUMENT_EXTRACTOR_DOCLING_TIMEOUT_MS} \
+	--set-env-vars=MAX_VERTEX_EMBEDDING_BATCH_SIZE=${MAX_VERTEX_EMBEDDING_BATCH_SIZE} \
+	--set-cloudsql-instances=${addCloudSqlInstances} \
+	--network=${network} \
+	--service-account=${serviceAccount} \
+	--region=${zone} \
+	--project ${gcpProjectId}
+	gcloud run jobs execute ${REQUEUE_DOCUMENT_EMBEDDINGS_JOB_NAME} \
+	--region=${zone} \
+	--project ${gcpProjectId} \
+	--wait
 
 notify:
 	curl -X POST -H 'Content-type: application/json' --data '{"text":"$(shell git log -1 --pretty=%B)"}' ${SLACK_WEBHOOK_URL}

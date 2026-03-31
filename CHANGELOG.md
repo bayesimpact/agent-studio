@@ -11,6 +11,7 @@ This project uses [CalVer](https://calver.org/) (YY.MM.Micro) for product versio
 - Agent sessions can be deleted
 
 ### Changed
+- Expanded RAG document MIME support to include Word, Excel, PowerPoint, and additional image formats (TIFF, BMP, WebP), alongside PDF/CSV/plain text.
 
 ### Fixed
 
