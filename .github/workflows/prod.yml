@@ -30,7 +30,6 @@ jobs:
             echo "deploy=true" >> $GITHUB_OUTPUT
           else
             echo "deploy=false" >> $GITHUB_OUTPUT
-            make notify-skip
           fi
 
   tests:
@@ -50,138 +49,35 @@ jobs:
         with:
           fetch-depth: 1
 
-#      - name: Run tests and checks
-#        run: make ci
-
       - name: Run tests
         run: make tests
 
-#      - name: Publish Test Report
-#        uses: ctrf-io/github-test-reporter@v1
-#        with:
-#          report-path: '**/ctrf/*.json'
-#          github-report: true
-
       - name: Notify on failure
         if: ${{ failure() }}
         run: make notify-error
 
-  build-and-push:
-    needs: [check-changes]
+  dispatch:
+    needs: [check-changes, tests]
     if: needs.check-changes.outputs.deploy == 'true'
     runs-on: ubuntu-latest
-    environment: production
     steps:
-      - name: Use Node.js
-        uses: actions/setup-node@v4
+      - name: Generate GitHub App token
+        uses: actions/create-github-app-token@v1
+        id: app-token
         with:
-          node-version: '24.x'
+          app-id: ${{ secrets.DEPLOY_APP_ID }}
+          private-key: ${{ secrets.DEPLOY_APP_PRIVATE_KEY }}
+          owner: ${{ github.repository_owner }}
 
-      - name: Checkout code
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 1
-
-      - id: Auth
-        uses: 'google-github-actions/auth@v2'
-        with:
-          credentials_json: '${{ secrets.GCP_CREDENTIALS }}'
-
-      - name: gcloud caching
-        uses: actions/cache@v4
-        with:
-          path: ${{ runner.tool_cache }}/gcloud
-          key: ${{ runner.os }}-gcloud-beta-v545.0.0
-
-      - uses: google-github-actions/setup-gcloud@v2
-        with:
-          install_components: beta
-          version: "545.0.0"
-
-      - name: Docker connect to GCP
-        run: gcloud auth configure-docker REGION-docker.pkg.dev
-
-      - name: 'Check docker image starts and push it'
-        run: make docker-push
-
-      - name: Notify on failure
-        if: ${{ failure() }}
-        run: make notify-error
-
-  deploy:
-    needs: [check-changes, tests, build-and-push]
-    if: needs.check-changes.outputs.deploy == 'true'
-    runs-on: ubuntu-latest
-    environment: production
-    steps:
-      - name: Use Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '24.x'
-
-      - name: Checkout code
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 1
-
-      - id: Auth
-        uses: 'google-github-actions/auth@v2'
-        with:
-          credentials_json: '${{ secrets.GCP_CREDENTIALS }}'
-
-      - name: gcloud caching
-        uses: actions/cache@v4
-        with:
-          path: ${{ runner.tool_cache }}/gcloud
-          key: ${{ runner.os }}-beta-gcloud-v545.0.0
-
-      - uses: google-github-actions/setup-gcloud@v2
-        with:
-          install_components: beta
-          version: "545.0.0"
-
-      - id: Secrets
-        uses: 'google-github-actions/get-secretmanager-secrets@v2'
-        with:
-          secrets: |-
-            DATABASE_PASSWORD:caseai-connect/CONNECT_DATABASE_PASSWORD
-
-      - name: 'create cred file for cloudsql proxy'
-        run: 'mkdir -p dontsave && printf "%s" "$GCP_CREDENTIALS_JSON" > dontsave/key.json && chmod o+r dontsave/key.json'
-        shell: bash
+      - name: Dispatch to infra repo
+        run: |
+          gh api repos/${{ github.repository_owner }}/infra/dispatches \
+            -f event_type=deploy \
+            -f "client_payload[sha]=${{ github.sha }}" \
+            -f "client_payload[repo]=${{ github.repository }}"
         env:
-          GCP_CREDENTIALS_JSON: ${{secrets.GCP_CREDENTIALS}}
-
-      - name: migration
-        run: make migrations MIG_DATABASE_PASSWORD=${{ steps.Secrets.outputs.DATABASE_PASSWORD }} REGION=eu
-        env:
-          CLOUDSQL_CREDENTIALS_FILE: ${{ github.workspace }}/dontsave/key.json
-
-      - name: API deploy
-        run: make deploy-only REGION=eu
-
-      - name: Workers deploy
-        run: make deploy-workers-only REGION=eu
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
 
       - name: Notify on failure
         if: ${{ failure() }}
         run: make notify-error
-
-  notify:
-    needs: [check-changes, deploy]
-    if: needs.check-changes.outputs.deploy == 'true'
-    runs-on: ubuntu-latest
-    environment: production
-    steps:
-      - name: Use Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '24.x'
-
-      - name: Checkout code
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 1
-
-      - name: notify
-        run: make notify
