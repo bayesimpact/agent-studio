@@ -90,14 +90,14 @@ describe("Documents - uploadOne", () => {
     expect(response.body.data.embeddingStatus).toBe("pending")
   })
 
-  it("rejects a file with an unsupported extension", async () => {
+  it("rejects a file with an unsupported MIME type", async () => {
     await createContext()
 
     const response = await subject({
       file: {
-        buffer: Buffer.from("some text content"),
-        filename: "readme.txt",
-        contentType: "text/plain",
+        buffer: Buffer.from("{}"),
+        filename: "data.json",
+        contentType: "application/json",
       },
     })
 

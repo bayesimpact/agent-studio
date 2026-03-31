@@ -1,3 +1,4 @@
+import { allowedDocumentUploadMimeTypesForFileUploader } from "@caseai-connect/api-contracts"
 import { Button } from "@caseai-connect/ui/shad/button"
 import { PaperclipIcon } from "lucide-react"
 import { FileUploader } from "../FileUploader"
@@ -15,11 +16,7 @@ export function AttachDocument({
   return (
     <FileUploader
       onDropFiles={handleProcessFiles}
-      allowedMimeTypes={{
-        "application/pdf": true,
-        "image/png": true,
-        "image/jpeg": true,
-      }}
+      allowedMimeTypes={allowedDocumentUploadMimeTypesForFileUploader}
       maxFiles={1}
       shouldRun={false}
     >

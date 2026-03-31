@@ -3,6 +3,7 @@ import {
   type DocumentEmbeddingStatusChangedEventDto,
   type DocumentSourceType,
   DocumentsRoutes,
+  documentUploadAllowedMimeTypePattern,
   isAllowedMimeType,
   type MimeTypes,
   type PresignFileResponseItemDto,
@@ -82,7 +83,8 @@ export class DocumentsController {
         validators: [
           new MaxFileSizeValidator({ maxSize: 10 * mega * mega }), // 10 MB
           new FileTypeValidator({
-            fileType: ".(png|jpeg|jpg|pdf|txt|csv)", //".(png|jpeg|jpg|pdf|docx|doc|xlsx|xls|pptx|ppt|txt|csv)",
+            fileType: documentUploadAllowedMimeTypePattern,
+            skipMagicNumbersValidation: true,
           }),
         ],
         errorHttpStatusCode: HttpStatus.UNPROCESSABLE_ENTITY,
@@ -102,26 +104,9 @@ export class DocumentsController {
       throw new UnprocessableEntityException("File MIME type is required.")
     }
 
-    // Validate MIME type
-    // Note: This is a simplified check. In production, you might want to use a more robust MIME type validation library.
-    const isImage =
-      file.mimetype === "image/png" ||
-      file.mimetype === "image/jpeg" ||
-      file.mimetype === "image/jpg"
-    const isPdf = file.mimetype === "application/pdf"
-    const isMicrosoftDocument =
-      file.mimetype === "application/vnd.openxmlformats-officedocument.wordprocessingml.document" ||
-      file.mimetype === "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" ||
-      file.mimetype ===
-        "application/vnd.openxmlformats-officedocument.presentationml.presentation" ||
-      file.mimetype === "application/msword" ||
-      file.mimetype === "application/vnd.ms-excel" ||
-      file.mimetype === "application/vnd.ms-powerpoint"
-    const isCsv = file.mimetype === "text/csv"
-    const isText = file.mimetype === "text/plain"
-    if (!isImage && !isPdf && !isMicrosoftDocument && !isCsv && !isText) {
+    if (!isAllowedMimeType(file.mimetype)) {
       throw new UnprocessableEntityException(
-        `Invalid file type: ${file.mimetype}. Only images, PDFs, CSV, text, and Microsoft documents are allowed.`,
+        `Invalid file type: ${file.mimetype}. Allowed types: PDF, Microsoft Office (Word, Excel, PowerPoint), images (PNG, JPEG, TIFF, BMP, WebP), CSV, or plain text.`,
       )
     }
 
@@ -177,7 +162,7 @@ export class DocumentsController {
       }
       if (!isAllowedMimeType(fileInfo.mimeType)) {
         throw new UnprocessableEntityException(
-          `Invalid file type: ${fileInfo.mimeType}. Only images, PDFs, CSV, and text files are allowed.`,
+          `Invalid file type: ${fileInfo.mimeType}. Allowed types: PDF, Microsoft Office (Word, Excel, PowerPoint), images (PNG, JPEG, TIFF, BMP, WebP), CSV, or plain text.`,
         )
       }
 

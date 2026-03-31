@@ -125,21 +125,41 @@ export enum MimeTypes {
   _7z = "application/x-7z-compressed",
 }
 
+/** MIME types accepted for document upload (aligned with API + text extraction / Docling pipeline). */
 export const AllowedMimeTypes = [
   MimeTypes.png,
   MimeTypes.jpeg,
   MimeTypes.jpg,
+  MimeTypes.tiff,
+  MimeTypes.bmp,
+  MimeTypes.webp,
   MimeTypes.pdf,
-  // MimeTypes.docx,
-  // MimeTypes.xlsx,
-  // MimeTypes.pptx,
-  // MimeTypes.doc,
-  // MimeTypes.xls,
-  // MimeTypes.ppt,
+  MimeTypes.docx,
+  MimeTypes.doc,
+  MimeTypes.xlsx,
+  MimeTypes.xls,
+  MimeTypes.pptx,
+  MimeTypes.ppt,
   MimeTypes.csv,
   MimeTypes.txt,
 ] as const
 
-export function isAllowedMimeType(mimeType: MimeTypes): boolean {
-  return new Set<MimeTypes>(AllowedMimeTypes).has(mimeType)
+const ALLOWED_MIME_TYPE_STRINGS = [...new Set(AllowedMimeTypes as readonly string[])]
+
+function escapeRegexChars(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+}
+
+/** Use with NestJS `FileTypeValidator` and `skipMagicNumbersValidation: true`. */
+export const documentUploadAllowedMimeTypePattern = new RegExp(
+  `^(${ALLOWED_MIME_TYPE_STRINGS.map(escapeRegexChars).join("|")})$`,
+)
+
+/** For `FileUploader` / dropzone `accept` (one flag per distinct MIME string). */
+export const allowedDocumentUploadMimeTypesForFileUploader = Object.fromEntries(
+  ALLOWED_MIME_TYPE_STRINGS.map((mimeType) => [mimeType, true]),
+) as Partial<Record<(typeof AllowedMimeTypes)[number], boolean>>
+
+export function isAllowedMimeType(mimeType: string): boolean {
+  return new Set(ALLOWED_MIME_TYPE_STRINGS).has(mimeType)
 }
