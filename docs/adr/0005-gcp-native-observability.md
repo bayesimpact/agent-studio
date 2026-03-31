@@ -149,7 +149,7 @@ Notification channel: Slack (configured once in Cloud Monitoring → Notificatio
 
 ## Authentication
 
-No additional credentials or env vars needed. All GCP services auto-authenticate via the Cloud Run service account (`YOUR_SA@YOUR_PROJECT.iam.gserviceaccount.com`).
+No additional credentials or env vars needed. All GCP services auto-authenticate via the Cloud Run service account.
 
 ## Consequences
 

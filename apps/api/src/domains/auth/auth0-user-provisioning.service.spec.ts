@@ -6,7 +6,7 @@ import { Auth0UserProvisioningService } from "./auth0-user-provisioning.service"
 global.fetch = jest.fn()
 
 const configValues: Record<string, string> = {
-  AUTH0_ISSUER_URL: "https://your-tenant.auth0.com/",
+  AUTH0_ISSUER_URL: "https://test-tenant.auth0.com/",
   AUTH0_ORGANIZATION_ID: "org_test",
   AUTH0_CLIENT_ID: "client_test",
   AUTH0_M2M_CLIENT_ID: "m2m_client_test",
@@ -92,7 +92,7 @@ describe("Auth0UserProvisioningService", () => {
         userId: "auth0|new",
       })
 
-      expect(global.fetch).toHaveBeenCalledWith("https://your-tenant.auth0.com/api/v2/users", {
+      expect(global.fetch).toHaveBeenCalledWith("https://test-tenant.auth0.com/api/v2/users", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -114,7 +114,7 @@ describe("Auth0UserProvisioningService", () => {
       await service.ensureUserInDefaultOrganization("auth0|user123")
 
       expect(global.fetch).toHaveBeenCalledWith(
-        "https://your-tenant.auth0.com/api/v2/organizations/org_test/members",
+        "https://test-tenant.auth0.com/api/v2/organizations/org_test/members",
         {
           method: "POST",
           headers: {
@@ -150,7 +150,7 @@ describe("Auth0UserProvisioningService", () => {
       await service.sendPasswordResetEmail("reset@example.com")
 
       expect(global.fetch).toHaveBeenCalledWith(
-        "https://your-tenant.auth0.com/dbconnections/change_password",
+        "https://test-tenant.auth0.com/dbconnections/change_password",
         {
           method: "POST",
           headers: {

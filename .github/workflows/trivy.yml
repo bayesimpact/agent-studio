@@ -3,35 +3,12 @@ on:
   workflow_run:
     workflows: [prod]
     types: [completed]
-env:
-  SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
 jobs:
-  check-deploy:
-    name: Check if deploy ran
-    runs-on: ubuntu-latest
-    if: github.event.workflow_run.conclusion == 'success'
-    outputs:
-      deployed: ${{ steps.check.outputs.deployed }}
-    steps:
-      - name: Check deploy job conclusion
-        id: check
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          CONCLUSION=$(gh api repos/${{ github.repository }}/actions/runs/${{ github.event.workflow_run.id }}/jobs \
-            --jq '.jobs[] | select(.name == "deploy") | .conclusion')
-          if [ "$CONCLUSION" = "success" ]; then
-            echo "deployed=true" >> $GITHUB_OUTPUT
-          else
-            echo "Deploy job did not run (conclusion: ${CONCLUSION:-skipped}), skipping scan."
-          fi
-
   scan:
     name: trivy
-    needs: check-deploy
-    if: needs.check-deploy.outputs.deployed == 'true'
-    runs-on: ubuntu-latest
-    environment: production
+    runs-on:
+      labels: ubuntu-latest-m
+    if: github.event.workflow_run.conclusion == 'success'
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -39,27 +16,13 @@ jobs:
           ref: ${{ github.event.workflow_run.head_sha }}
           fetch-depth: 1
 
-      - id: Auth
-        uses: 'google-github-actions/auth@v2'
-        with:
-          credentials_json: '${{ secrets.GCP_CREDENTIALS }}'
-
-      - uses: google-github-actions/setup-gcloud@v2
-        with:
-          install_components: beta
-          version: "545.0.0"
-
-      - name: Docker connect to GCP
-        run: gcloud auth configure-docker REGION-docker.pkg.dev
-
-      - name: Extract image refs
-        id: image-refs
-        run: make docker-image-refs
+      - name: Build images
+        run: make docker-build
 
       - name: Run Trivy vulnerability scanner on API
         uses: aquasecurity/trivy-action@0.35.0
         with:
-          image-ref: '${{ steps.image-refs.outputs.api-image-ref }}'
+          image-ref: 'caseai-connect/api:local'
           format: 'table'
           exit-code: '1'
           ignore-unfixed: true
@@ -71,7 +34,7 @@ jobs:
       - name: Run Trivy vulnerability scanner on Workers
         uses: aquasecurity/trivy-action@0.35.0
         with:
-          image-ref: '${{ steps.image-refs.outputs.workers-image-ref }}'
+          image-ref: 'caseai-connect/workers:local'
           format: 'table'
           exit-code: '1'
           ignore-unfixed: true
@@ -111,7 +74,3 @@ jobs:
           path: |
             trivy-api-results.txt
             trivy-workers-results.txt
-
-      - name: Notify on failure
-        if: ${{ failure() }}
-        run: make notify-error

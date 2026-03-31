@@ -19,7 +19,7 @@ describe("Auth0UserInfoService", () => {
           useValue: {
             get: jest.fn((key: string) => {
               if (key === "AUTH0_ISSUER_URL") {
-                return "https://your-tenant.auth0.com/"
+                return "https://test-tenant.auth0.com/"
               }
               return undefined
             }),
@@ -58,7 +58,7 @@ describe("Auth0UserInfoService", () => {
       const result = await service.getUserInfo(accessToken)
 
       // Assert
-      expect(global.fetch).toHaveBeenCalledWith("https://your-tenant.auth0.com/userinfo", {
+      expect(global.fetch).toHaveBeenCalledWith("https://test-tenant.auth0.com/userinfo", {
         method: "GET",
         headers: {
           Authorization: "Bearer test-access-token",
@@ -73,7 +73,7 @@ describe("Auth0UserInfoService", () => {
       const configServiceWithSlash = {
         get: jest.fn((key: string) => {
           if (key === "AUTH0_ISSUER_URL") {
-            return "https://your-tenant.auth0.com/" // With trailing slash
+            return "https://test-tenant.auth0.com/" // With trailing slash
           }
           return undefined
         }),
@@ -107,7 +107,7 @@ describe("Auth0UserInfoService", () => {
 
       // Assert - Should remove trailing slash
       expect(global.fetch).toHaveBeenCalledWith(
-        "https://your-tenant.auth0.com/userinfo",
+        "https://test-tenant.auth0.com/userinfo",
         expect.any(Object),
       )
     })

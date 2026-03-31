@@ -6,7 +6,7 @@ import { Auth0InvitationSenderService } from "./auth0-invitation-sender.service"
 // Mock fetch globally
 global.fetch = jest.fn()
 
-const AUTH0_ISSUER_URL = "https://your-tenant.auth0.com/"
+const AUTH0_ISSUER_URL = "https://test-tenant.auth0.com/"
 const AUTH0_ORGANIZATION_ID = "org_test123"
 const AUTH0_CLIENT_ID = "spa_client_id"
 const AUTH0_M2M_CLIENT_ID = "m2m_client_id"
@@ -80,20 +80,20 @@ describe("Auth0InvitationSenderService", () => {
       expect(result).toEqual({ ticketId: "ticket_xyz789" })
 
       // Verify token request
-      expect(global.fetch).toHaveBeenCalledWith("https://your-tenant.auth0.com/oauth/token", {
+      expect(global.fetch).toHaveBeenCalledWith("https://test-tenant.auth0.com/oauth/token", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           client_id: AUTH0_M2M_CLIENT_ID,
           client_secret: AUTH0_M2M_CLIENT_SECRET,
-          audience: "https://your-tenant.auth0.com/api/v2/",
+          audience: "https://test-tenant.auth0.com/api/v2/",
           grant_type: "client_credentials",
         }),
       })
 
       // Verify invitation request (no user_metadata anymore)
       expect(global.fetch).toHaveBeenCalledWith(
-        `https://your-tenant.auth0.com/api/v2/organizations/${AUTH0_ORGANIZATION_ID}/invitations`,
+        `https://test-tenant.auth0.com/api/v2/organizations/${AUTH0_ORGANIZATION_ID}/invitations`,
         {
           method: "POST",
           headers: {
@@ -121,7 +121,7 @@ describe("Auth0InvitationSenderService", () => {
 
       // Token endpoint should be called only once
       const tokenCalls = (global.fetch as jest.Mock).mock.calls.filter(
-        (call: string[]) => call[0] === "https://your-tenant.auth0.com/oauth/token",
+        (call: string[]) => call[0] === "https://test-tenant.auth0.com/oauth/token",
       )
       expect(tokenCalls).toHaveLength(1)
 
@@ -129,7 +129,7 @@ describe("Auth0InvitationSenderService", () => {
       const invitationCalls = (global.fetch as jest.Mock).mock.calls.filter(
         (call: string[]) =>
           call[0] ===
-          `https://your-tenant.auth0.com/api/v2/organizations/${AUTH0_ORGANIZATION_ID}/invitations`,
+          `https://test-tenant.auth0.com/api/v2/organizations/${AUTH0_ORGANIZATION_ID}/invitations`,
       )
       expect(invitationCalls).toHaveLength(2)
     })
@@ -149,7 +149,7 @@ describe("Auth0InvitationSenderService", () => {
 
       // Token endpoint should be called twice
       const tokenCalls = (global.fetch as jest.Mock).mock.calls.filter(
-        (call: string[]) => call[0] === "https://your-tenant.auth0.com/oauth/token",
+        (call: string[]) => call[0] === "https://test-tenant.auth0.com/oauth/token",
       )
       expect(tokenCalls).toHaveLength(2)
     })
