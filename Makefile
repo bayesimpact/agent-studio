@@ -4,7 +4,7 @@
 BASE_REF ?= HEAD^1
 TEST_DATABASE_URL ?= postgresql://connect_admin:passpass@localhost:5432/connect_test
 WORKER_DOCLING_HEALTH_CHECK_TIMEOUT_MS ?= 30000
-DOCUMENT_EXTRACTOR_DOCLING_TIMEOUT_MS ?= 60000
+DOCUMENT_EXTRACTOR_DOCLING_TIMEOUT_MS ?= 300000
 
 # Local image tags (no GCP references)
 localApiImage = caseai-connect/api:local
