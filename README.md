@@ -5,6 +5,8 @@ As part of this work, we curate public and community resource datasets and make 
 
 # AgentStudio
 
+![Security](https://github.com/bayesimpact/caseai-connect/actions/workflows/security.yml/badge.svg)
+
 A SaaS platform for building multi-agent systems, built as a Turbo monorepo with a NestJS API and a React web frontend using Auth0 for authentication.
 
 ## Prerequisites
