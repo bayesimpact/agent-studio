@@ -4,6 +4,10 @@
   "private": true,
   "exports": {
     "./utils": "./src/lib/utils.ts",
+    "./lib/calendar-date-helpers": "./src/lib/calendar-date-helpers.ts",
+    "./lib/date-range-presets": "./src/lib/date-range-presets.ts",
+    "./components/DateRangeCalendarWithPresets": "./src/components/DateRangeCalendarWithPresets.tsx",
+    "./shad/calendar": "./src/shad/calendar.tsx",
     "./*": "./src/*.tsx",
     "./components/layouts/sidebar/types": "./src/components/layouts/sidebar/types.ts"
   },
@@ -57,6 +61,7 @@
     "lucide-react": "^0.576.0",
     "radix-ui": "^1.4.3",
     "react": "^19.2.0",
+    "react-day-picker": "^9.14.0",
     "react-dom": "^19.2.0",
     "react-hook-form": "^7.69.0",
     "tailwind-merge": "^3.4.0",

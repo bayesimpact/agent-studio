@@ -5,7 +5,6 @@ import ChartCard from "@/components/ChartCard"
 type StoryArgs = {
   title: string
   metricLabel: string
-  data: DailyMetricPoint[]
 }
 
 const meta: Meta<StoryArgs> = {
@@ -49,18 +48,18 @@ const chartData: DailyMetricPoint[] = [
   { date: "2026-01-30", value: 77 },
 ]
 
-export const ConversationsPerDay: Story = {
+/** Series stays outside `args` so Storybook does not traverse/freeze it (avoids HMR readonly errors). */
+export const ChartCardExample: Story = {
   args: {
     title: "Conversations per day",
     metricLabel: "Conversations",
-    data: chartData,
   },
   render: (args) => (
     <div className="max-w-5xl">
       <ChartCard
         title={args.title}
         metricLabel={args.metricLabel}
-        data={args.data}
+        data={chartData}
         description="Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua."
       />
     </div>
