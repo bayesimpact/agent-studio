@@ -16,16 +16,16 @@
       "accepted": "Accepted"
     },
     "create": {
-      "button": "Invite a member",
-      "title": "Invite a member",
-      "description": "Enter the email address of the person you want to invite to join your project.",
+      "button": "Invite an admin",
+      "title": "Invite an admin",
+      "description": "Enter the email address of the person you want to invite to join your workspace.",
       "label": "Email address",
       "placeholder": "Enter email address"
     },
     "list": {
       "empty": {
         "title": "No members",
-        "description": "Invite members to join your project to collaborate together."
+        "description": "Invite admins to join your workspace to collaborate together."
       }
     }
   }
