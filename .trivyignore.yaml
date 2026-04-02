@@ -20,3 +20,6 @@ vulnerabilities:
   - id: CVE-2025-32434
     expired_at: 2026-05-01
     reason: "torch 2.5.1+cu121 — fix requires 2.6.0+, blocked by docling compatibility"
+  - id: CVE-2026-4800
+    expired_at: 2026-05-02
+    reason: "lodash 4.17.23 — fix in 4.18.1, blocked by @nestjs/config, llamaindex, @auth0/auth0-spa-js"

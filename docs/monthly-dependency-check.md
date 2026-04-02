@@ -83,7 +83,7 @@ make trivy-scan
 
 `make trivy-scan` runs trivy against both `caseai-connect/api:local` and `caseai-connect/workers:local` images with:
 - `--ignore-unfixed` — only report CVEs that have a fix available
-- `--vuln-type os,library` — scan OS packages and language libraries
+- `--pkg-types os,library` — scan OS packages and language libraries
 - `--severity CRITICAL,HIGH` — ignore low/medium findings
 - `--ignorefile .trivyignore.yaml` — skip acknowledged upstream CVEs
 
