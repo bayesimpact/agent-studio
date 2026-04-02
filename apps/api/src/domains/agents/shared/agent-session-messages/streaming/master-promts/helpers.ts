@@ -22,6 +22,12 @@ ${names
       case ToolName.FillForm:
         return `[${name}]: You can use the ${name} tool to fill out the form fields. Just fill out the information you have and ask the user for the missing information. You can also update previously filled information if the user changes their answer. Pass undefined for fields that are not filled yet.`
 
+      case ToolName.McpSearchResources:
+        return `[${name}]: Search for workforce and social resources from a specific source (datainclusion, francetravail-jobs, francetravail-events, francetravail-labonneboite). Returns raw results without AI processing. Use this when the user asks about a specific type of resource.`
+
+      case ToolName.McpSmartSearch:
+        return `[${name}]: AI-powered search across multiple workforce and social sources. Rewrites the query for better results and reranks by relevance. Use this when the user's question spans multiple resource types or when you want the best results across all sources.`
+
       default:
         return `[${name}]: No specific instructions for this tool.`
     }

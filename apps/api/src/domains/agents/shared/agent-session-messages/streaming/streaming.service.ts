@@ -26,6 +26,8 @@ import {
 } from "@/domains/documents/storage/file-storage.interface"
 import { ProjectsService } from "@/domains/projects/projects.service"
 import { ServiceWithLLM } from "@/external/llm"
+// biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
+import { McpClientService } from "@/external/mcp"
 import { AgentMessage } from "../agent-message.entity"
 import { buildConversationAgentPrompt } from "./master-promts/conversation-agent.prompt"
 import { buildFormAgentPrompt } from "./master-promts/form-agent.prompt"
@@ -53,6 +55,7 @@ export class StreamingService extends ServiceWithLLM {
     private readonly projectsService: ProjectsService,
 
     private readonly documentChunkRetrievalService: DocumentChunkRetrievalService,
+    private readonly mcpClientService: McpClientService,
 
     @InjectRepository(ConversationAgentSession)
     conversationAgentSessionRepository: Repository<ConversationAgentSession>,
@@ -556,6 +559,30 @@ export class StreamingService extends ServiceWithLLM {
       connectScope,
       feature: "sources_tool",
     })
+    const hasMcpSocial = await this.projectsService.hasFeature({
+      connectScope,
+      feature: "bayes_social_mcp",
+    })
+
+    const mcpTools: ToolSet = {}
+    if (hasMcpSocial) {
+      const rawMcpTools = await this.mcpClientService.getTools()
+      for (const [toolName, toolDef] of Object.entries(rawMcpTools)) {
+        const originalExecute = toolDef.execute
+        if (!originalExecute) continue
+        mcpTools[toolName] = {
+          ...toolDef,
+          execute: (async (...executeArgs: Parameters<typeof originalExecute>) => {
+            onExecute({
+              toolName: toolName as ToolName,
+              arguments: (executeArgs[0] ?? {}) as Record<string, unknown>,
+            })
+            return originalExecute(...executeArgs)
+          }) as typeof originalExecute,
+        }
+      }
+    }
+
     switch (agent.type) {
       case "conversation":
         return {
@@ -566,6 +593,7 @@ export class StreamingService extends ServiceWithLLM {
             onExecute,
           }),
           ...(hasSourcesTool ? { [ToolName.Sources]: sourcesTool({ onExecute }) } : {}),
+          ...mcpTools,
         } as ToolSet
 
       case "form":
