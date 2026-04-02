@@ -305,10 +305,12 @@ export class StreamingService extends ServiceWithLLM {
         continue
       }
 
-      llmMessages.push({
-        role: message.role === "user" ? "user" : "assistant",
-        content: message.content,
-      })
+      if (message.role === "user" || message.role === "assistant") {
+        llmMessages.push({
+          role: message.role,
+          content: message.content,
+        })
+      }
     }
 
     return llmMessages

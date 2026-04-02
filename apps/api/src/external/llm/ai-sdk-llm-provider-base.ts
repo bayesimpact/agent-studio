@@ -26,19 +26,8 @@ export abstract class AISDKLLMProviderBase implements LLMProvider {
       ? CallOrigin.streamChatResponse_withTools
       : CallOrigin.streamChatResponse
     this.checkConfigProviderAndModel(config)
-    const aiSDKMessages: LLMChatMessage[] = messages
-      .map((message) => {
-        if (message.role === "system") {
-          return undefined
-        }
-        return {
-          role: message.role === "assistant" ? "assistant" : "user",
-          content: message.content,
-        }
-      })
-      .filter((msg) => msg !== undefined) as LLMChatMessage[]
 
-    if (aiSDKMessages.length === 0) {
+    if (messages.length === 0) {
       throw new Error("Cannot stream response: no valid messages provided")
     }
 
@@ -50,7 +39,7 @@ export abstract class AISDKLLMProviderBase implements LLMProvider {
       tools: config.tools,
       experimental_telemetry: {
         isEnabled: true,
-        functionId: this.buildFunctionIdForStreamChatResponse(aiSDKMessages),
+        functionId: this.buildFunctionIdForStreamChatResponse(messages),
         metadata: this.buildMetadata({ config, metadata }),
       },
       providerOptions: {
@@ -65,18 +54,12 @@ export abstract class AISDKLLMProviderBase implements LLMProvider {
       : []
 
     const streamer = agent.stream({
-      messages: [...systemMessagePart, ...aiSDKMessages],
+      messages: [...systemMessagePart, ...messages],
     })
 
     for await (const chunk of (await streamer).textStream) {
       yield chunk
     }
-    //fixme doo : debug
-    // let fullStream = ""
-    // for await (const chunk of (await streamer).textStream) {
-    //   fullStream += chunk
-    // }
-    // yield fullStream
   }
   async generateChatResponse({
     message,
