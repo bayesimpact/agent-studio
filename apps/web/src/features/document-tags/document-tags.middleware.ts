@@ -1,6 +1,6 @@
 import { createListenerMiddleware, isAnyOf } from "@reduxjs/toolkit"
 import type { AppDispatch, RootState } from "@/store/types"
-import { selectIsAdminInterface } from "../auth/auth.selectors"
+import { hasInterfaceChanged, selectIsAdminInterface } from "../auth/auth.selectors"
 import { notificationsActions } from "../notifications/notifications.slice"
 import { hasProjectChanged } from "../projects/projects.selectors"
 import {
@@ -12,10 +12,13 @@ import {
 
 const listenerMiddleware = createListenerMiddleware<RootState, AppDispatch>()
 
-// Refresh DocumentTags when current project changes
+// Refresh DocumentTags when current project or interface changes
 listenerMiddleware.startListening({
   predicate(_, currentState, originalState) {
-    return hasProjectChanged(originalState, currentState)
+    return (
+      hasInterfaceChanged(originalState, currentState) ||
+      hasProjectChanged(originalState, currentState)
+    )
   },
   effect: async (_, listenerApi) => {
     const state = listenerApi.getState()
