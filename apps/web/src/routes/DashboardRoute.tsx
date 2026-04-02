@@ -100,7 +100,9 @@ function SidebarFooterChildren({ project }: { project: Project }) {
 
           <NavDocuments organizationId={project.organizationId} projectId={project.id} />
 
-          <NavAnalytics organizationId={project.organizationId} projectId={project.id} />
+          <RestrictedFeature feature="project-analytics">
+            <NavAnalytics organizationId={project.organizationId} projectId={project.id} />
+          </RestrictedFeature>
 
           <NavProjectMemberships organizationId={project.organizationId} projectId={project.id} />
         </SidebarMenu>

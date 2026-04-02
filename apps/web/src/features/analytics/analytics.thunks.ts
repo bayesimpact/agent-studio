@@ -1,4 +1,5 @@
 import { createAsyncThunk } from "@reduxjs/toolkit"
+import { hasFeatureOrThrow } from "@/hooks/use-feature-flags"
 import type { RootState, ThunkExtraArg } from "@/store"
 import { getCurrentIds } from "../helpers"
 import type { AnalyticsDailyPoint } from "./analytics.models"
@@ -14,6 +15,7 @@ export const loadProjectAnalytics = createAsyncThunk<
   ThunkConfig
 >("analytics/loadProject", async ({ startAt, endAt }, { extra: { services }, getState }) => {
   const state = getState()
+  hasFeatureOrThrow({ state, feature: "project-analytics" })
   const { organizationId, projectId } = getCurrentIds({
     state,
     wantedIds: ["organizationId", "projectId"],

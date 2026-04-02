@@ -12,6 +12,10 @@ export const FeatureFlags = [
     key: "gemma",
     description: "Access and utilize gemma models.",
   },
+  {
+    key: "project-analytics",
+    description: "View project-level analytics and usage charts in the studio.",
+  },
 ] as const
 export type FeatureFlagKey = (typeof FeatureFlags)[number]["key"]
 export type FeatureFlagsDto = FeatureFlagKey[]

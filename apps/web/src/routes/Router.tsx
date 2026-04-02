@@ -72,7 +72,11 @@ const router = () =>
                 },
                 {
                   path: buildStudioPath(RouteNames.ANALYTICS),
-                  element: <AnalyticsRoute />,
+                  element: (
+                    <RestrictedFeature feature="project-analytics">
+                      <AnalyticsRoute />
+                    </RestrictedFeature>
+                  ),
                 },
                 {
                   path: buildStudioPath(RouteNames.PROJECT_MEMBERSHIPS),
