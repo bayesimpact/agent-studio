@@ -1,13 +1,16 @@
+import type { FeatureFlagKey } from "@caseai-connect/api-contracts"
 import { Injectable } from "@nestjs/common"
 import { InjectRepository } from "@nestjs/typeorm"
 // biome-ignore lint/style/useImportType: DataSource required at runtime for NestJS DI
 import { DataSource, type Repository } from "typeorm"
+import type { RequiredConnectScope } from "@/common/entities/connect-required-fields"
 import { Agent } from "../agents/agent.entity"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
 import { AgentsService } from "../agents/agents.service"
 import { Document } from "../documents/document.entity"
 import { Evaluation } from "../evaluations/evaluation.entity"
 import { EvaluationReport } from "../evaluations/reports/evaluation-report.entity"
+import { FeatureFlag } from "../feature-flags/feature-flag.entity"
 import { ProjectMembership } from "./memberships/project-membership.entity"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
 import { ProjectMembershipsService } from "./memberships/project-memberships.service"
@@ -17,6 +20,7 @@ import { Project } from "./project.entity"
 export class ProjectsService {
   constructor(
     @InjectRepository(Project) private readonly projectRepository: Repository<Project>,
+    @InjectRepository(FeatureFlag) private readonly featureFlagRepository: Repository<FeatureFlag>,
     private readonly projectMembershipsService: ProjectMembershipsService,
     private readonly agentsService: AgentsService,
     private readonly dataSource: DataSource,
@@ -45,6 +49,7 @@ export class ProjectsService {
   }): Promise<Project[]> {
     return this.projectRepository.find({
       where: { organizationId, projectMemberships: { userId, status: "accepted" } },
+      relations: { featureFlags: true },
       order: { createdAt: "DESC" },
     })
   }
@@ -52,6 +57,7 @@ export class ProjectsService {
   async getProject(organizationId: string, projectId: string): Promise<Project | undefined> {
     const project = await this.projectRepository.findOne({
       where: { id: projectId, organizationId },
+      relations: { featureFlags: true },
     })
     return project ?? undefined
   }
@@ -83,5 +89,22 @@ export class ProjectsService {
 
       await entityManager.delete(Project, { id: projectId })
     })
+  }
+
+  async hasFeature({
+    connectScope,
+    feature,
+  }: {
+    connectScope: RequiredConnectScope
+    feature: FeatureFlagKey
+  }): Promise<boolean> {
+    const flag = await this.featureFlagRepository.findOne({
+      where: {
+        projectId: connectScope.projectId,
+        featureFlagKey: feature,
+        enabled: true,
+      },
+    })
+    return flag !== null
   }
 }

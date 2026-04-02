@@ -5,6 +5,7 @@ import { Document } from "@/domains/documents/document.entity"
 import { Organization } from "@/domains/organizations/organization.entity"
 import { AgentMessageFeedback } from "../agents/shared/agent-session-messages/feedback/agent-message-feedback.entity"
 import { Evaluation } from "../evaluations/evaluation.entity"
+import { FeatureFlag } from "../feature-flags/feature-flag.entity"
 import { ProjectMembership } from "./memberships/project-membership.entity"
 
 @Entity("project")
@@ -51,4 +52,10 @@ export class Project extends Base4AllEntity {
     (projectMembership) => projectMembership.project,
   )
   projectMemberships!: ProjectMembership[]
+
+  @OneToMany(
+    () => FeatureFlag,
+    (featureFlag) => featureFlag.project,
+  )
+  featureFlags!: FeatureFlag[]
 }

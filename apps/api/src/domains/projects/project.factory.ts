@@ -28,5 +28,6 @@ export const projectFactory = ProjectFactory.define(({ sequence, params, transie
     agentMessageFeedbacks: params.agentMessageFeedbacks || [],
     projectMemberships: params.projectMemberships || [],
     evaluations: params.evaluations || [],
+    featureFlags: params.featureFlags || [],
   } satisfies Project
 })

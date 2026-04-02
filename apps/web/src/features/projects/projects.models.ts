@@ -1,4 +1,4 @@
-import type { TimeType } from "@caseai-connect/api-contracts"
+import type { FeatureFlagsDto, TimeType } from "@caseai-connect/api-contracts"
 
 export type Project = {
   id: string
@@ -6,4 +6,5 @@ export type Project = {
   organizationId: string
   createdAt: TimeType
   updatedAt: TimeType
+  featureFlags: FeatureFlagsDto
 }
