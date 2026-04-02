@@ -6,7 +6,7 @@ import {
   CardTitle,
 } from "@caseai-connect/ui/shad/card"
 import { useMemo } from "react"
-import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis } from "recharts"
+import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts"
 import type { ValueType } from "recharts/types/component/DefaultTooltipContent"
 
 export type DailyMetricPoint = {
@@ -43,6 +43,13 @@ function formatTooltipNumber(value: ValueType | undefined): string {
   return value?.toLocaleString() ?? "N/A"
 }
 
+function formatYAxisTick(value: number): string {
+  if (Number.isInteger(value)) {
+    return value.toLocaleString()
+  }
+  return value.toLocaleString(undefined, { maximumFractionDigits: 2, minimumFractionDigits: 0 })
+}
+
 function formatSummaryNumber(value: number): string {
   if (Number.isInteger(value)) {
     return value.toLocaleString()
@@ -72,7 +79,7 @@ function ChartCard({ title, description, metricLabel, data, getSummaryValue }: C
       <CardContent className="px-2 sm:p-6">
         <div className="h-[260px] w-full">
           <ResponsiveContainer width="100%" height="100%">
-            <BarChart accessibilityLayer data={data} margin={{ left: 12, right: 12 }}>
+            <BarChart accessibilityLayer data={data} margin={{ left: 4, right: 8, top: 8 }}>
               <CartesianGrid vertical={false} />
               <XAxis
                 dataKey="date"
@@ -81,6 +88,15 @@ function ChartCard({ title, description, metricLabel, data, getSummaryValue }: C
                 tickMargin={8}
                 minTickGap={24}
                 tickFormatter={formatDateTick}
+              />
+              <YAxis
+                tickLine={false}
+                axisLine={false}
+                tickMargin={8}
+                width={52}
+                domain={[0, "auto"]}
+                tickFormatter={formatYAxisTick}
+                tick={{ fill: "var(--muted-foreground)", fontSize: 12 }}
               />
               <Tooltip
                 formatter={(value) => [formatTooltipNumber(value), metricLabel]}
