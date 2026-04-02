@@ -61,8 +61,8 @@ check-web-changes:
 # ==============================================================================
 
 trivy-scan: docker-build
-	trivy image --ignore-unfixed --vuln-type os,library --severity CRITICAL,HIGH --ignorefile .trivyignore.yaml ${localApiImage}
-	trivy image --ignore-unfixed --vuln-type os,library --severity CRITICAL,HIGH --ignorefile .trivyignore.yaml ${localWorkersImage}
+	trivy image --ignore-unfixed --pkg-types os,library --severity CRITICAL,HIGH --ignorefile .trivyignore.yaml ${localApiImage}
+	trivy image --ignore-unfixed --pkg-types os,library --severity CRITICAL,HIGH --ignorefile .trivyignore.yaml ${localWorkersImage}
 
 docker-build: docker-build-api docker-build-workers
 
