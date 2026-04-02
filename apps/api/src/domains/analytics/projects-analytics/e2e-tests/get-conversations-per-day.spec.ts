@@ -112,11 +112,9 @@ describe("Projects Analytics - getConversationsPerDay", () => {
       route: AnalyticsRoutes.getConversationsPerDay,
       pathParams: removeNullish({ organizationId, projectId }),
       token: accessToken,
-      request: {
-        payload: {
-          startAt: day1Start.getTime(),
-          endAt: day3End.getTime(),
-        },
+      query: {
+        startAt: String(day1Start.getTime()),
+        endAt: String(day3End.getTime()),
       },
     })
 

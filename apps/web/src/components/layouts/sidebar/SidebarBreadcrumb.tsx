@@ -2,6 +2,7 @@ import { Breadcrumb, BreadcrumbList } from "@caseai-connect/ui/shad/breadcrumb"
 import type { Organization } from "@/features/organizations/organizations.models"
 import { BreadcrumbAgent } from "./breadcrumb/BreadcrumbAgent"
 import { BreadcrumbAgentSession } from "./breadcrumb/BreadcrumbAgentSession"
+import { BreadcrumbAnalytics } from "./breadcrumb/BreadcrumbAnalytics"
 import { BreadcrumbDocuments } from "./breadcrumb/BreadcrumbDocuments"
 import { BreadcrumbEvaluations } from "./breadcrumb/BreadcrumbEvaluations"
 import { BreadcrumbFeedback } from "./breadcrumb/BreadcrumbFeedback"
@@ -21,6 +22,8 @@ export function SidebarBreadcrumb({ organization }: { organization: Organization
         <BreadcrumbEvaluations />
 
         <BreadcrumbDocuments />
+
+        <BreadcrumbAnalytics />
 
         <BreadcrumbMembership />
 

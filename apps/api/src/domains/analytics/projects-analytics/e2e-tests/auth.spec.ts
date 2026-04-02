@@ -66,12 +66,17 @@ describe("Projects Analytics - Auth", () => {
     return { organization, project, user }
   }
 
+  const analyticsDateRangeQuery = {
+    startAt: String(dateRange.startAt),
+    endAt: String(dateRange.endAt),
+  }
+
   const subjectConversations = async () =>
     request({
       route: AnalyticsRoutes.getConversationsPerDay,
       pathParams: removeNullish({ organizationId, projectId }),
       token: accessToken ?? undefined,
-      request: { payload: dateRange },
+      query: analyticsDateRangeQuery,
     })
 
   const subjectAvg = async () =>
@@ -79,7 +84,7 @@ describe("Projects Analytics - Auth", () => {
       route: AnalyticsRoutes.getAvgUserQuestionsPerSessionPerDay,
       pathParams: removeNullish({ organizationId, projectId }),
       token: accessToken ?? undefined,
-      request: { payload: dateRange },
+      query: analyticsDateRangeQuery,
     })
 
   it("requires an authentication token", async () => {

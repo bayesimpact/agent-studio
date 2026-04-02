@@ -60,6 +60,7 @@ export const ChartCardExample: Story = {
         title={args.title}
         metricLabel={args.metricLabel}
         data={chartData}
+        getSummaryValue={(series) => series.reduce((sum, point) => sum + point.value, 0)}
         description="Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua."
       />
     </div>

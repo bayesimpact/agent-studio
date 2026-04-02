@@ -1,0 +1,16 @@
+{
+  "analytics": {
+    "title": "Analytique",
+    "dateRangePlaceholder": "Plage de dates",
+    "conversationsChart": {
+      "title": "Conversations par jour",
+      "description": "Nombre de sessions conversationnelles démarrées chaque jour",
+      "metricLabel": "Total des conversations"
+    },
+    "avgQuestionsChart": {
+      "title": "Questions utilisateur moy. par session",
+      "description": "Moyenne des messages utilisateur par session et par jour",
+      "metricLabel": "Par jour"
+    }
+  }
+}

@@ -10,6 +10,7 @@ import { SidebarLayout } from "@/components/layouts/SidebarLayout"
 import { ProjectList } from "@/components/ProjectList"
 import { RestrictedFeature } from "@/components/RestrictedFeature"
 import { SidebarAgentList } from "@/components/sidebar/list/SidebarAgentList"
+import { NavAnalytics } from "@/components/sidebar/nav/NavAnalytics"
 import { NavDocuments } from "@/components/sidebar/nav/NavDocuments"
 import { NavEvaluation } from "@/components/sidebar/nav/NavEvaluation"
 import { NavProjectMemberships } from "@/components/sidebar/nav/NavProjectMemberships"
@@ -98,6 +99,8 @@ function SidebarFooterChildren({ project }: { project: Project }) {
           </RestrictedFeature>
 
           <NavDocuments organizationId={project.organizationId} projectId={project.id} />
+
+          <NavAnalytics organizationId={project.organizationId} projectId={project.id} />
 
           <NavProjectMemberships organizationId={project.organizationId} projectId={project.id} />
         </SidebarMenu>
