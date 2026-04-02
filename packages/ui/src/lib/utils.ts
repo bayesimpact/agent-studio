@@ -1,8 +1,31 @@
 import { type ClassValue, clsx } from "clsx"
 import { twMerge } from "tailwind-merge"
 
+function normalizeImportantSuffixToken(token: string): string {
+  if (!token.endsWith("!") || token.startsWith("!")) {
+    return token
+  }
+
+  const tokenWithoutImportantSuffix = token.slice(0, -1)
+  const tokenParts = tokenWithoutImportantSuffix.split(":")
+  const utilityToken = tokenParts.pop()
+  if (!utilityToken || utilityToken.startsWith("!")) {
+    return token
+  }
+
+  return [...tokenParts, `!${utilityToken}`].join(":")
+}
+
+function normalizeImportantSuffixClasses(input: string): string {
+  return input
+    .split(/\s+/)
+    .filter(Boolean)
+    .map((token) => normalizeImportantSuffixToken(token))
+    .join(" ")
+}
+
 export function cn(...inputs: ClassValue[]) {
-  return twMerge(clsx(inputs))
+  return twMerge(normalizeImportantSuffixClasses(clsx(inputs)))
 }
 
 // Can be used to hash a string to a unique identifier (in order to avoid using the index as a key in a React list)

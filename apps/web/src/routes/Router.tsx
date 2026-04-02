@@ -13,6 +13,7 @@ import { buildAppPath, buildStudioPath, RouteNames } from "./helpers"
 import { OnboardingRoute } from "./OnboardingRoute"
 import { ProtectedRoute } from "./ProtectedRoute"
 import { AgentMembershipsRoute } from "./studio/AgentMembershipsRoute"
+import { AnalyticsRoute } from "./studio/AnalyticsRoute"
 import { DocumentsRoute } from "./studio/DocumentsRoute"
 import { EvaluationRoute } from "./studio/EvaluationRoute"
 import { FeedbackRoute } from "./studio/FeedbackRoute"
@@ -68,6 +69,14 @@ const router = () =>
                 {
                   path: buildStudioPath(RouteNames.DOCUMENTS),
                   element: <DocumentsRoute />,
+                },
+                {
+                  path: buildStudioPath(RouteNames.ANALYTICS),
+                  element: (
+                    <RestrictedFeature feature="project-analytics">
+                      <AnalyticsRoute />
+                    </RestrictedFeature>
+                  ),
                 },
                 {
                   path: buildStudioPath(RouteNames.PROJECT_MEMBERSHIPS),

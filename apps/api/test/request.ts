@@ -10,6 +10,8 @@ export const testRequester =
     route: T
     pathParams?: Record<string, string>
     token?: string
+    /** Query string for GET (and other methods that support it). Values should be strings. */
+    query?: Record<string, string>
     request?: T["request"]
   }): Promise<Omit<request.Response, "body"> & { body: T["response"] }> => {
     const { token, route } = params
@@ -18,6 +20,10 @@ export const testRequester =
     const path = getPath(params.pathParams)
 
     const req = request(app.getHttpServer())[method](path)
+
+    if (params.query) {
+      req.query(params.query)
+    }
 
     if (
       "request" in params &&

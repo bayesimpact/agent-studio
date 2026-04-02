@@ -1,5 +1,6 @@
 @import "tailwindcss";
 @import "tw-animate-css";
+@import "react-day-picker/style.css";
 
 @custom-variant dark (&:is(.dark *));
 
@@ -94,6 +95,7 @@
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
+  --color-chart-primary: var(--primary);
   --color-chart-1: var(--chart-1);
   --color-chart-2: var(--chart-2);
   --color-chart-3: var(--chart-3);
@@ -130,4 +132,50 @@
   &::first-letter {
     text-transform: uppercase;
   }
+}
+
+/*
+ * React DayPicker ships unlayered CSS. Declarations inside @layer base lose to it.
+ * Keep these overrides unlayered and after @import "react-day-picker/style.css" in this file
+ * so they win on equal specificity (.rdp-root).
+ */
+.rdp-root {
+  --rdp-accent-color: var(--primary);
+  --rdp-accent-background-color: color-mix(in oklab, var(--primary) 16%, transparent);
+  --rdp-range_middle-background-color: color-mix(in oklab, var(--primary) 14%, transparent);
+  --rdp-range_start-date-background-color: var(--primary);
+  --rdp-range_end-date-background-color: var(--primary);
+  --rdp-range_start-color: var(--primary-foreground);
+  --rdp-range_end-color: var(--primary-foreground);
+  --rdp-today-color: var(--primary);
+
+  /* Compact grid + range caps (library defaults: 42px circles + large selected type) */
+  --rdp-day-height: 2rem;
+  --rdp-day-width: 2rem;
+  --rdp-day_button-height: 1.625rem;
+  --rdp-day_button-width: 1.625rem;
+  --rdp-day_button-border-radius: 0.3125rem;
+  --rdp-selected-border: none;
+}
+
+/* Library default: .rdp-selected { font-weight: bold; font-size: large } */
+.rdp-root .rdp-selected {
+  font-size: 0.75rem;
+  line-height: 1;
+  font-weight: 500;
+}
+
+.rdp-root .rdp-selected .rdp-day_button {
+  font-size: inherit;
+  font-weight: inherit;
+}
+
+.rdp-root .rdp-button_next,
+.rdp-root .rdp-button_previous {
+  color: var(--primary);
+}
+
+.rdp-root .rdp-button_next:not(:disabled):not([aria-disabled="true"]):hover,
+.rdp-root .rdp-button_previous:not(:disabled):not([aria-disabled="true"]):hover {
+  color: color-mix(in oklab, var(--primary) 88%, transparent);
 }

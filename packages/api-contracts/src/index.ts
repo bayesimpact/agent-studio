@@ -25,51 +25,41 @@ export { FormAgentSessionsRoutes } from "./agents/form-agent-sessions/form-agent
 // Agent Session Messages
 export * from "./agents/shared/agent-session-messages/agent-session-messages.dto"
 export { AgentSessionMessagesRoutes } from "./agents/shared/agent-session-messages/agent-session-messages.routes"
-
+// Analytics
+export type * from "./analytics/analytics.dto"
+export { AnalyticsRoutes } from "./analytics/analytics.routes"
 // Document Tags
 export * from "./document-tags/document-tag.dto"
 export { DocumentTagsRoutes } from "./document-tags/document-tag.routes"
-
 // Documents
 export * from "./documents/documents.dto"
 export { DocumentsRoutes } from "./documents/documents.routes"
-
 // Evaluation Reports
 export * from "./evaluations/evaluation-reports.dto"
 export { EvaluationReportsRoutes } from "./evaluations/evaluation-reports.routes"
-
 // Evaluations
 export * from "./evaluations/evaluations.dto"
 export { EvaluationsRoutes } from "./evaluations/evaluations.routes"
-
 // Feature Flags
 export type * from "./feature-flags/feature-flags.dto"
 export { FeatureFlagsRoutes } from "./feature-flags/feature-flags.routes"
-
 // Generic
 export type * from "./generic"
 export type { ApiRoute } from "./helpers"
-
 // Helpers
 export { defineRoute } from "./helpers"
-
 // Invitations
 export { InvitationsRoutes } from "./invitations/invitations.routes"
-
 // Me
 export type { MeResponseDto } from "./me/me.dto"
-
 // Routes
 export { MeRoutes } from "./me/me.routes"
-
 // Organizations
 export type * from "./organizations/organizations.dto"
 export { OrganizationsRoutes } from "./organizations/organizations.routes"
-
 // Project Membership
 export type * from "./project-membership/project-membership.dto"
 export { ProjectMembershipRoutes } from "./project-membership/project-membership.routes"
-
 // Projects
 export type * from "./projects/projects.dto"
 export { ProjectsRoutes } from "./projects/projects.routes"

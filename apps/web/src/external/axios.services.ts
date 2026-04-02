@@ -5,6 +5,7 @@ import agentsApi from "@/features/agents/external/agents.api"
 import extractionAgentSessionsApi from "@/features/agents/extraction-agent-sessions/external/extraction-agent-sessions.api"
 import formAgentSessionsApi from "@/features/agents/form-agent-sessions/external/form-agent-sessions.api"
 import agentSessionMessagesApi from "@/features/agents/shared/agent-session-messages/external/agent-session-messages.api"
+import analyticsApi from "@/features/analytics/external/analytics.api"
 import documentTagsApi from "@/features/document-tags/external/document-tags.api"
 import documentsApi from "@/features/documents/external/documents.api"
 import evaluationReportsApi from "@/features/evaluation-reports/external/evaluation-reports.api"
@@ -16,6 +17,7 @@ import projectMembershipsApi from "@/features/project-memberships/external/proje
 import projectsApi from "@/features/projects/external/projects.api"
 
 export const services = {
+  analytics: analyticsApi,
   agentMemberships: agentMembershipsApi,
   agentMessageFeedback: agentMessageFeedbackApi,
   agents: agentsApi,

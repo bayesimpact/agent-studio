@@ -38,6 +38,7 @@
     "react-redux": "^9.2.0",
     "react-router-dom": "^7.11.0",
     "react-speech-recognition": "^4.0.1",
+    "recharts": "^3.8.1",
     "remark-breaks": "^4.0.0",
     "remark-gfm": "^4.0.1",
     "sonner": "^2.0.7",
@@ -45,7 +46,7 @@
     "zod": "^4.3.6"
   },
   "devDependencies": {
-    "@storybook/react-vite": "^10.1.10",
+    "@storybook/react-vite": "^10.3.3",
     "@types/lodash": "^4.17.23",
     "@types/node": "^24.10.1",
     "@types/react": "^19.2.5",
@@ -56,7 +57,7 @@
     "babel-plugin-react-compiler": "^1.0.0",
     "baseline-browser-mapping": "^2.9.11",
     "globals": "^16.5.0",
-    "storybook": "^10.1.10",
+    "storybook": "^10.3.3",
     "storybook-addon-remix-react-router": "^6.0.0",
     "typescript": "~5.9.3",
     "vite": "^7.2.4",

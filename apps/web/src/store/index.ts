@@ -14,6 +14,8 @@ import { formAgentSessionsSliceReducer } from "@/features/agents/form-agent-sess
 import { agentSessionMessagesMiddleware } from "@/features/agents/shared/agent-session-messages/agent-session-messages.middleware"
 import { agentSessionMessagesSliceReducer } from "@/features/agents/shared/agent-session-messages/agent-session-messages.slice"
 import { baseAgentSessionsMiddleware } from "@/features/agents/shared/base-agent-session/base-agent-sessions.middleware"
+import { analyticsMiddleware } from "@/features/analytics/analytics.middleware"
+import { analyticsSliceReducer } from "@/features/analytics/analytics.slice"
 import { authMiddleware } from "@/features/auth/auth.middleware"
 import { authSliceReducer } from "@/features/auth/auth.slice"
 import { documentTagsMiddleware } from "@/features/document-tags/document-tags.middleware"
@@ -37,6 +39,7 @@ import type { ThunkExtraArg } from "./types"
 
 export const store = configureStore({
   reducer: {
+    analytics: analyticsSliceReducer,
     agentMemberships: agentMembershipsSliceReducer,
     agentMessageFeedback: agentMessageFeedbackSliceReducer,
     agents: agentsSliceReducer,
@@ -62,6 +65,7 @@ export const store = configureStore({
         extraArgument: { services: getServices() } satisfies ThunkExtraArg,
       },
     }).prepend(
+      analyticsMiddleware.middleware,
       agentMembershipsMiddleware.middleware,
       agentMessageFeedbackMiddleware.middleware,
       agentSessionMessagesMiddleware.middleware,

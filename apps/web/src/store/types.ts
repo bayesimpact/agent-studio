@@ -8,6 +8,7 @@ import type { currentAgentSessionIdSliceReducer } from "@/features/agents/curren
 import type { extractionAgentSessionsSliceReducer } from "@/features/agents/extraction-agent-sessions/extraction-agent-sessions.slice"
 import type { formAgentSessionsSliceReducer } from "@/features/agents/form-agent-sessions/form-agent-sessions.slice"
 import type { agentSessionMessagesSliceReducer } from "@/features/agents/shared/agent-session-messages/agent-session-messages.slice"
+import type { analyticsSliceReducer } from "@/features/analytics/analytics.slice"
 import type { authSliceReducer } from "@/features/auth/auth.slice"
 import type { documentTagsSliceReducer } from "@/features/document-tags/document-tags.slice"
 import type { documentsSliceReducer } from "@/features/documents/documents.slice"
@@ -22,6 +23,7 @@ import type { projectsSliceReducer } from "@/features/projects/projects.slice"
 // Define the store state structure without creating the store
 // This allows us to use these types in listenerMiddleware without circular dependencies
 export type RootState = {
+  analytics: ReturnType<typeof analyticsSliceReducer>
   agentMemberships: ReturnType<typeof agentMembershipsSliceReducer>
   agentMessageFeedback: ReturnType<typeof agentMessageFeedbackSliceReducer>
   agents: ReturnType<typeof agentsSliceReducer>

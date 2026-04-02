@@ -14,6 +14,7 @@ export enum RouteNames {
   STUDIO = "/studio",
   DOCUMENTS = "/o/:organizationId/p/:projectId/d",
   DOCUMENT = "/o/:organizationId/p/:projectId/d/:documentId",
+  ANALYTICS = "/o/:organizationId/p/:projectId/analytics",
   EVALUATION = "/o/:organizationId/p/:projectId/eval",
   PROJECT_MEMBERSHIPS = "/o/:organizationId/p/:projectId/members",
   FEEDBACK = "/o/:organizationId/p/:projectId/a/:agentId/f",
@@ -46,6 +47,20 @@ export const buildDocumentsPath = ({
 }) => {
   return buildStudioPath(
     RouteNames.DOCUMENTS.toString()
+      .replace(":organizationId", organizationId)
+      .replace(":projectId", projectId),
+  )
+}
+
+export const buildAnalyticsPath = ({
+  organizationId,
+  projectId,
+}: {
+  organizationId: string
+  projectId: string
+}) => {
+  return buildStudioPath(
+    RouteNames.ANALYTICS.toString()
       .replace(":organizationId", organizationId)
       .replace(":projectId", projectId),
   )
