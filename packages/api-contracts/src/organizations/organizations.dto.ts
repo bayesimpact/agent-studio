@@ -1,5 +1,3 @@
-import type { FeatureFlagsDto } from "@caseai-connect/api-contracts"
-
 export type OrganizationMembershipRoleDto = "owner" | "admin" | "member"
 
 export type OrganizationMembershipDto = {
@@ -12,5 +10,4 @@ export type OrganizationMembershipDto = {
 export type OrganizationDto = {
   id: string
   name: string
-  featureFlags: FeatureFlagsDto
 }

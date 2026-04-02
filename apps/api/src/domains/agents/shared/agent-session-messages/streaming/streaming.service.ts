@@ -24,7 +24,7 @@ import {
   FILE_STORAGE_SERVICE,
   type IFileStorage,
 } from "@/domains/documents/storage/file-storage.interface"
-import { OrganizationsService } from "@/domains/organizations/organizations.service"
+import { ProjectsService } from "@/domains/projects/projects.service"
 import { ServiceWithLLM } from "@/external/llm"
 import { AgentMessage } from "../agent-message.entity"
 import { buildConversationAgentPrompt } from "./master-promts/conversation-agent.prompt"
@@ -49,8 +49,8 @@ export class StreamingService extends ServiceWithLLM {
 
     @Inject(FormAgentSessionsService)
     private readonly formAgentSessionsService: FormAgentSessionsService,
-    @Inject(OrganizationsService)
-    private readonly organizationsService: OrganizationsService,
+    @Inject(ProjectsService)
+    private readonly projectsService: ProjectsService,
 
     private readonly documentChunkRetrievalService: DocumentChunkRetrievalService,
 
@@ -550,7 +550,7 @@ export class StreamingService extends ServiceWithLLM {
     connectScope: RequiredConnectScope
     onExecute: (toolExecution: ToolExecutionLog) => void
   }): Promise<ToolSet | undefined> {
-    const hasSourcesTool = await this.organizationsService.hasFeature({
+    const hasSourcesTool = await this.projectsService.hasFeature({
       connectScope,
       feature: "sources_tool",
     })

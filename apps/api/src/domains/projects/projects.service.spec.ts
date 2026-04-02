@@ -116,4 +116,35 @@ describe("ProjectsService", () => {
       expect(deletedProject).toBeNull()
     })
   })
+
+  describe("hasFeature", () => {
+    it("should return true when the organization has the feature flag enabled", async () => {
+      const { organization, project } = await createOrganizationWithProject(repositories)
+      await repositories.featureFlagRepository.save(
+        repositories.featureFlagRepository.create({
+          projectId: project.id,
+          featureFlagKey: "sources_tool",
+          enabled: true,
+        }),
+      )
+
+      const result = await service.hasFeature({
+        connectScope: { organizationId: organization.id, projectId: project.id },
+        feature: "sources_tool",
+      })
+
+      expect(result).toBe(true)
+    })
+
+    it("should return false when the organization does not have the feature flag", async () => {
+      const { organization, project } = await createOrganizationWithProject(repositories)
+
+      const result = await service.hasFeature({
+        connectScope: { organizationId: organization.id, projectId: project.id },
+        feature: "evaluation",
+      })
+
+      expect(result).toBe(false)
+    })
+  })
 })

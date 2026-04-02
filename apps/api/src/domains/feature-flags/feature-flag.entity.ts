@@ -1,20 +1,20 @@
 import { Column, Entity, Index, JoinColumn, ManyToOne } from "typeorm"
 import { Base4AllEntity } from "@/common/entities/base4all.entity"
-import { Organization } from "../organizations/organization.entity"
+import { Project } from "../projects/project.entity"
 
 @Entity({ name: "feature_flag" })
-@Index("feature_flag_UNIQUE", ["featureFlagKey", "organizationId"], {
+@Index("feature_flag_UNIQUE", ["featureFlagKey", "projectId"], {
   unique: true,
 })
 export class FeatureFlag extends Base4AllEntity {
-  @Column({ type: "uuid", name: "organization_id", nullable: false })
-  organizationId!: string
+  @Column({ type: "uuid", name: "project_id", nullable: false })
+  projectId!: string
   @ManyToOne(
-    () => Organization,
-    (organization) => organization.featureFlags,
+    () => Project,
+    (project) => project.featureFlags,
   )
-  @JoinColumn({ name: "organization_id" })
-  organization!: Organization
+  @JoinColumn({ name: "project_id" })
+  project!: Project
 
   @Column({ name: "enabled", default: true, nullable: false })
   enabled!: boolean

@@ -1,9 +1,6 @@
-import type { FeatureFlagKey } from "@caseai-connect/api-contracts"
 import { Injectable } from "@nestjs/common"
 import { InjectRepository } from "@nestjs/typeorm"
 import type { Repository } from "typeorm"
-import type { RequiredConnectScope } from "@/common/entities/connect-required-fields"
-import { FeatureFlag } from "@/domains/feature-flags/feature-flag.entity"
 import { User } from "@/domains/users/user.entity"
 import { OrganizationMembership } from "./memberships/organization-membership.entity"
 import { Organization } from "./organization.entity"
@@ -15,7 +12,6 @@ export class OrganizationsService {
     @InjectRepository(OrganizationMembership)
     private readonly organizationMembershipRepository: Repository<OrganizationMembership>,
     @InjectRepository(User) private readonly userRepository: Repository<User>,
-    @InjectRepository(FeatureFlag) private readonly featureFlagRepository: Repository<FeatureFlag>,
   ) {}
 
   async getUserOrganizations(userId: string): Promise<Organization[]> {
@@ -23,28 +19,10 @@ export class OrganizationsService {
     const memberships = await this.organizationMembershipRepository
       .createQueryBuilder("membership")
       .innerJoinAndSelect("membership.organization", "organization")
-      .leftJoinAndSelect("organization.featureFlags", "featureFlags")
       .where("membership.userId = :userId", { userId })
       .getMany()
 
     return memberships.map((membership) => membership.organization)
-  }
-
-  async hasFeature({
-    connectScope,
-    feature,
-  }: {
-    connectScope: RequiredConnectScope
-    feature: FeatureFlagKey
-  }): Promise<boolean> {
-    const flag = await this.featureFlagRepository.findOne({
-      where: {
-        organizationId: connectScope.organizationId,
-        featureFlagKey: feature,
-        enabled: true,
-      },
-    })
-    return flag !== null
   }
 
   async createOrganization({

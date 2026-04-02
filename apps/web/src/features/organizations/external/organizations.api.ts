@@ -17,5 +17,4 @@ export default {
 export const toOrganization = (dto: OrganizationDto): Organization => ({
   id: dto.id,
   name: dto.name,
-  featureFlags: dto.featureFlags,
 })

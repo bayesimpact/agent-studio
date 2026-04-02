@@ -7,14 +7,13 @@ import {
   teardownTestDatabase,
 } from "@/common/test/test-transaction-manager"
 import { userFactory } from "@/domains/users/user.factory"
-import { createOrganizationWithOwner } from "./organization.factory"
 import { OrganizationsController } from "./organizations.controller"
 import { OrganizationsModule } from "./organizations.module"
 import { OrganizationsService } from "./organizations.service"
 
 describe("OrganizationsController", () => {
   let controller: OrganizationsController
-  let service: OrganizationsService
+  let _service: OrganizationsService
   let setup: Awaited<ReturnType<typeof setupTransactionalTestDatabase>>
   let repositories: AllRepositories
 
@@ -37,7 +36,7 @@ describe("OrganizationsController", () => {
     await setup.startTransaction()
     // Get controller and repositories from transactional module (important!)
     controller = setup.module.get<OrganizationsController>(OrganizationsController)
-    service = setup.module.get<OrganizationsService>(OrganizationsService)
+    _service = setup.module.get<OrganizationsService>(OrganizationsService)
     repositories = setup.getAllRepositories()
 
     // FIXME: @Did: rollbackTransaction does not clear data as expected
@@ -128,7 +127,6 @@ describe("OrganizationsController", () => {
       expect(response.data).toEqual({
         id: expect.any(String),
         name: "Format Test Org",
-        featureFlags: [],
       } satisfies OrganizationDto)
       expect(response.data).not.toHaveProperty("organization")
       expect(response.data).not.toHaveProperty("createdAt")
@@ -171,37 +169,6 @@ describe("OrganizationsController", () => {
       // Note: MinLength validator doesn't trim, so this might pass validation
       // but fail in the service layer. For now, we test that it throws.
       await expect(controller.createOrganization(request, body)).rejects.toThrow()
-    })
-  })
-
-  describe("hasFeature", () => {
-    it("should return true when the organization has the feature flag enabled", async () => {
-      const { organization } = await createOrganizationWithOwner(repositories)
-      await repositories.featureFlagRepository.save(
-        repositories.featureFlagRepository.create({
-          organizationId: organization.id,
-          featureFlagKey: "sources_tool",
-          enabled: true,
-        }),
-      )
-
-      const result = await service.hasFeature({
-        connectScope: { organizationId: organization.id, projectId: "" },
-        feature: "sources_tool",
-      })
-
-      expect(result).toBe(true)
-    })
-
-    it("should return false when the organization does not have the feature flag", async () => {
-      const { organization } = await createOrganizationWithOwner(repositories)
-
-      const result = await service.hasFeature({
-        connectScope: { organizationId: organization.id, projectId: "" },
-        feature: "evaluation",
-      })
-
-      expect(result).toBe(false)
     })
   })
 })

@@ -36,7 +36,6 @@ export const organizationFactory = Factory.define<Organization>(({ sequence, par
     projects: params.projects || [],
     conversationAgentSessions: params.conversationAgentSessions || [],
     agentMessageFeedbacks: params.agentMessageFeedbacks || [],
-    featureFlags: params.featureFlags || [],
   } satisfies Organization
 })
 

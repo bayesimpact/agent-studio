@@ -37,4 +37,5 @@ const toProject = (dto: ProjectDto): Project => ({
   organizationId: dto.organizationId,
   createdAt: dto.createdAt,
   updatedAt: dto.updatedAt,
+  featureFlags: dto.featureFlags,
 })

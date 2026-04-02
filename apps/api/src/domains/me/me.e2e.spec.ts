@@ -115,7 +115,6 @@ describe("MeController (e2e)", () => {
             {
               id: mockOrganization.id,
               name: mockOrganization.name,
-              featureFlags: [],
             } satisfies OrganizationDto,
           ],
         })
