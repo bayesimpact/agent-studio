@@ -1,5 +1,6 @@
 import { createListenerMiddleware, isAnyOf } from "@reduxjs/toolkit"
 import type { AppDispatch, RootState } from "@/store"
+import { ADS } from "@/store/async-data-status"
 import { selectCurrentConversationAgentSessionsData } from "../../conversation-agent-sessions/conversation-agent-sessions.selectors"
 import {
   hasAgentSessionChanged,
@@ -37,12 +38,17 @@ listenerMiddleware.startListening({
     const state = listenerApi.getState()
     const agentSessionId = selectCurrentAgentSessionId(state)
     if (!agentSessionId) return
-    const isFormAgentSession = selectCurrentFormAgentSessionsData(state)?.value?.find(
-      (session) => session.id === agentSessionId,
-    )
-    const isConversationAgentSession = selectCurrentConversationAgentSessionsData(
-      state,
-    )?.value?.find((session) => session.id === agentSessionId)
+
+    const formAgentSessions = selectCurrentFormAgentSessionsData(state)
+    const isFormAgentSession: boolean = ADS.isFulfilled(formAgentSessions)
+      ? formAgentSessions.value.some((session) => session.id === agentSessionId)
+      : false
+
+    const conversationAgentSessions = selectCurrentConversationAgentSessionsData(state)
+    const isConversationAgentSession: boolean = ADS.isFulfilled(conversationAgentSessions)
+      ? conversationAgentSessions.value.some((session) => session.id === agentSessionId)
+      : false
+
     if (!isFormAgentSession && !isConversationAgentSession) return
 
     await listenerApi.dispatch(listMessages(agentSessionId))
