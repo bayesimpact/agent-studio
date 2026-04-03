@@ -11,7 +11,6 @@ import type { agentSessionMessagesSliceReducer } from "@/features/agents/shared/
 import type { analyticsSliceReducer } from "@/features/analytics/analytics.slice"
 import type { authSliceReducer } from "@/features/auth/auth.slice"
 import type { documentTagsSliceReducer } from "@/features/document-tags/document-tags.slice"
-import type { documentsSliceReducer } from "@/features/documents/documents.slice"
 import type { evaluationReportsSliceReducer } from "@/features/evaluation-reports/evaluation-reports.slice"
 import type { evaluationsSliceReducer } from "@/features/evaluations/evaluations.slice"
 import type { meSliceReducer } from "@/features/me/me.slice"
@@ -19,6 +18,7 @@ import type { notificationsSliceReducer } from "@/features/notifications/notific
 import type { organizationsSliceReducer } from "@/features/organizations/organizations.slice"
 import type { projectMembershipsSliceReducer } from "@/features/project-memberships/project-memberships.slice"
 import type { projectsSliceReducer } from "@/features/projects/projects.slice"
+import type { documentsSliceReducer } from "@/studio/features/documents/documents.slice"
 
 // Define the store state structure without creating the store
 // This allows us to use these types in listenerMiddleware without circular dependencies

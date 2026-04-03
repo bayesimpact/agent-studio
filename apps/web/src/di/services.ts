@@ -8,7 +8,6 @@ import type { IFormAgentSessionsSpi } from "@/features/agents/form-agent-session
 import type { IAgentSessionMessagesSpi } from "@/features/agents/shared/agent-session-messages/agent-session-messages.spi"
 import type { IAnalyticsSpi } from "@/features/analytics/analytics.spi"
 import type { IDocumentTagsSpi } from "@/features/document-tags/document-tags.spi"
-import type { IDocumentsSpi } from "@/features/documents/documents.spi"
 import type { IEvaluationReportsSpi } from "@/features/evaluation-reports/evaluation-reports.spi"
 import type { IEvaluationsSpi } from "@/features/evaluations/evaluations.spi"
 import type { IInvitationsSpi } from "@/features/invitations/invitations.spi"
@@ -16,6 +15,7 @@ import type { IMeSpi } from "@/features/me/me.spi"
 import type { IOrganizationsSpi } from "@/features/organizations/organizations.spi"
 import type { IProjectMembershipsSpi } from "@/features/project-memberships/project-memberships.spi"
 import type { IProjectsSpi } from "@/features/projects/projects.spi"
+import type { IDocumentsSpi } from "@/studio/features/documents/documents.spi"
 
 export type Services = {
   analytics: IAnalyticsSpi

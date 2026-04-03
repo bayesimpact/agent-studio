@@ -1,5 +1,5 @@
+import { selectIsAdminInterface } from "@/features/auth/auth.selectors"
 import type { AppDispatch, RootState } from "@/store/types"
-import { selectIsAdminInterface } from "../auth/auth.selectors"
 import {
   selectHasDocumentsInProgress,
   selectIsEmbeddingStatusStreamActive,

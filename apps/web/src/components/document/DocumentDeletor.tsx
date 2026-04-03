@@ -12,9 +12,9 @@ import {
 import { Trash2Icon } from "lucide-react"
 import { useState } from "react"
 import { useTranslation } from "react-i18next"
-import type { Document } from "@/features/documents/documents.models"
-import { deleteDocument } from "@/features/documents/documents.thunks"
 import { useAppDispatch } from "@/store/hooks"
+import type { Document } from "@/studio/features/documents/documents.models"
+import { deleteDocument } from "@/studio/features/documents/documents.thunks"
 
 export function DocumentDeletor({ document }: { document: Document }) {
   const { t } = useTranslation()

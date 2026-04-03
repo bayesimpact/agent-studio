@@ -1,8 +1,8 @@
 import { createAsyncThunk } from "@reduxjs/toolkit"
+import { selectIsAdminInterface } from "@/features/auth/auth.selectors"
+import { getCurrentIds } from "@/features/helpers"
 import type { RootState, ThunkExtraArg } from "@/store"
-import { selectIsAdminInterface } from "../../auth/auth.selectors"
-import { uploadDocument } from "../../documents/documents.thunks"
-import { getCurrentIds } from "../../helpers"
+import { uploadDocument } from "@/studio/features/documents/documents.thunks"
 import type {
   ExtractionAgentSession,
   ExtractionAgentSessionResult,

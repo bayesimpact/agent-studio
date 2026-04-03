@@ -5,7 +5,7 @@ import {
 } from "@caseai-connect/ui/shad/collapsible"
 import { ChevronRight } from "lucide-react"
 import type { DocumentTag, TagNode } from "@/features/document-tags/document-tags.models"
-import type { Document } from "@/features/documents/documents.models"
+import type { Document } from "@/studio/features/documents/documents.models"
 import { DocumentItem } from "./DocumentItem"
 
 export function DocumentTagTreeNode({

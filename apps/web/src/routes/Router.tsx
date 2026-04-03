@@ -1,23 +1,23 @@
 import { useEffect } from "react"
 import { createBrowserRouter, Outlet, RouterProvider } from "react-router-dom"
 import { RestrictedFeature } from "@/components/RestrictedFeature"
-import { selectAbilities } from "@/features/auth/auth.selectors"
 import { authActions } from "@/features/auth/auth.slice"
 import { HomeRoute } from "@/routes/HomeRoute"
 import { LoginRoute } from "@/routes/LoginRoute"
 import { LogoutRoute } from "@/routes/LogoutRoute"
 import { NotFoundRoute } from "@/routes/NotFoundRoute"
-import { useAppDispatch, useAppSelector } from "@/store/hooks"
+import { useAppDispatch } from "@/store/hooks"
+import { Studio } from "@/studio/routes/StudioRoute"
+import { AgentMembershipsRoute } from "../studio/routes/AgentMembershipsRoute"
+import { AnalyticsRoute } from "../studio/routes/AnalyticsRoute"
+import { DocumentsRoute } from "../studio/routes/DocumentsRoute"
+import { EvaluationRoute } from "../studio/routes/EvaluationRoute"
+import { FeedbackRoute } from "../studio/routes/FeedbackRoute"
+import { ProjectMembershipsRoute } from "../studio/routes/ProjectMembershipsRoute"
 import { getElement } from "./Elements"
 import { buildAppPath, buildStudioPath, RouteNames } from "./helpers"
 import { OnboardingRoute } from "./OnboardingRoute"
 import { ProtectedRoute } from "./ProtectedRoute"
-import { AgentMembershipsRoute } from "./studio/AgentMembershipsRoute"
-import { AnalyticsRoute } from "./studio/AnalyticsRoute"
-import { DocumentsRoute } from "./studio/DocumentsRoute"
-import { EvaluationRoute } from "./studio/EvaluationRoute"
-import { FeedbackRoute } from "./studio/FeedbackRoute"
-import { ProjectMembershipsRoute } from "./studio/ProjectMembershipsRoute"
 
 const router = () =>
   createBrowserRouter([
@@ -147,22 +147,6 @@ const router = () =>
 
 export function Router() {
   return <RouterProvider router={router()} />
-}
-
-function Studio() {
-  const dispatch = useAppDispatch()
-  const abilities = useAppSelector(selectAbilities)
-
-  useEffect(() => {
-    dispatch(authActions.setIsStudioInterface(true))
-    return () => {
-      dispatch(authActions.setIsStudioInterface(false))
-    }
-  }, [dispatch])
-
-  const canAccessStudio = abilities.canManageOrganizations || abilities.canManageProjects
-  if (!canAccessStudio) return <NotFoundRoute />
-  return <Outlet />
 }
 
 function App() {

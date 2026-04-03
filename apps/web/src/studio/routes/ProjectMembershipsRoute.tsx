@@ -5,7 +5,7 @@ import { ProjectMembershipList } from "@/components/project-membership/ProjectMe
 import type { ProjectMembership } from "@/features/project-memberships/project-memberships.models"
 import { selectProjectMemberships } from "@/features/project-memberships/project-memberships.selectors"
 import { useAppSelector } from "@/store/hooks"
-import { AsyncRoute } from "../AsyncRoute"
+import { AsyncRoute } from "../../routes/AsyncRoute"
 
 export function ProjectMembershipsRoute() {
   const memberships = useAppSelector(selectProjectMemberships)

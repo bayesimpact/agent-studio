@@ -5,7 +5,7 @@ import { useSidebarLayout } from "@/components/layouts/sidebar/context"
 import type { AgentMembership } from "@/features/agent-memberships/agent-memberships.models"
 import { selectAgentMemberships } from "@/features/agent-memberships/agent-memberships.selectors"
 import { useAppSelector } from "@/store/hooks"
-import { AsyncRoute } from "../AsyncRoute"
+import { AsyncRoute } from "../../routes/AsyncRoute"
 
 export function AgentMembershipsRoute() {
   const memberships = useAppSelector(selectAgentMemberships)

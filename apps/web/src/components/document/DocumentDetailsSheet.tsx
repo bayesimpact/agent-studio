@@ -11,7 +11,7 @@ import { useTranslation } from "react-i18next"
 import { DocumentTagItem } from "@/components/document-tag/DocumentTagItem"
 import { MarkdownWrapper } from "@/features/agents/shared/agent-session-messages/components/MarkdownWrapper"
 import type { DocumentTag } from "@/features/document-tags/document-tags.models"
-import type { Document } from "@/features/documents/documents.models"
+import type { Document } from "@/studio/features/documents/documents.models"
 import { buildDate } from "@/utils/build-date"
 import { EmbeddingStatusBadge } from "./EmbeddingStatusBadge"
 

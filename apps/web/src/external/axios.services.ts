@@ -7,7 +7,6 @@ import formAgentSessionsApi from "@/features/agents/form-agent-sessions/external
 import agentSessionMessagesApi from "@/features/agents/shared/agent-session-messages/external/agent-session-messages.api"
 import analyticsApi from "@/features/analytics/external/analytics.api"
 import documentTagsApi from "@/features/document-tags/external/document-tags.api"
-import documentsApi from "@/features/documents/external/documents.api"
 import evaluationReportsApi from "@/features/evaluation-reports/external/evaluation-reports.api"
 import evaluationsApi from "@/features/evaluations/external/evaluations.api"
 import invitationsApi from "@/features/invitations/external/invitations.api"
@@ -15,6 +14,7 @@ import meApi from "@/features/me/external/me.api"
 import organizationsApi from "@/features/organizations/external/organizations.api"
 import projectMembershipsApi from "@/features/project-memberships/external/project-memberships.api"
 import projectsApi from "@/features/projects/external/projects.api"
+import documentsApi from "@/studio/features/documents/external/documents.api"
 
 export const services = {
   analytics: analyticsApi,

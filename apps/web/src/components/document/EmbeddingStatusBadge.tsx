@@ -1,7 +1,7 @@
 import { Badge, type BadgeVariant } from "@caseai-connect/ui/shad/badge"
 import { Loader2Icon } from "lucide-react"
 import { useTranslation } from "react-i18next"
-import type { Document } from "@/features/documents/documents.models"
+import type { Document } from "@/studio/features/documents/documents.models"
 
 export function EmbeddingStatusBadge({ status }: { status: Document["embeddingStatus"] }) {
   const { t } = useTranslation("document", { keyPrefix: "props.embeddingStatuses" })

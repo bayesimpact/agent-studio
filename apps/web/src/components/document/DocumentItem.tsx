@@ -1,7 +1,7 @@
 import { Item, ItemHeader, ItemTitle } from "@caseai-connect/ui/shad/item"
 import { FileIcon } from "lucide-react"
 import type { DocumentTag } from "@/features/document-tags/document-tags.models"
-import type { Document } from "@/features/documents/documents.models"
+import type { Document } from "@/studio/features/documents/documents.models"
 import { DocumentDeletor } from "./DocumentDeletor"
 import { DocumentDetailsSheet } from "./DocumentDetailsSheet"
 import { DocumentEditor } from "./DocumentEditor"

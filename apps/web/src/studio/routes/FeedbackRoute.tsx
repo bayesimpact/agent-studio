@@ -7,8 +7,8 @@ import { selectFeedbacksFromAgentId } from "@/features/agent-message-feedback/ag
 import type { Agent } from "@/features/agents/agents.models"
 import { selectCurrentAgentData, selectCurrentAgentId } from "@/features/agents/agents.selectors"
 import { useAppSelector } from "@/store/hooks"
-import { AsyncRoute } from "../AsyncRoute"
-import { ErrorRoute } from "../ErrorRoute"
+import { AsyncRoute } from "../../routes/AsyncRoute"
+import { ErrorRoute } from "../../routes/ErrorRoute"
 
 export function FeedbackRoute() {
   const agentId = useAppSelector(selectCurrentAgentId)

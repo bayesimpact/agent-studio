@@ -12,7 +12,7 @@ import type { Evaluation } from "@/features/evaluations/evaluations.models"
 import { selectEvaluationsData } from "@/features/evaluations/evaluations.selectors"
 import { createEvaluation } from "@/features/evaluations/evaluations.thunks"
 import { useAppDispatch, useAppSelector } from "@/store/hooks"
-import { AsyncRoute } from "../AsyncRoute"
+import { AsyncRoute } from "../../routes/AsyncRoute"
 
 export function EvaluationRoute() {
   const evaluations = useAppSelector(selectEvaluationsData)

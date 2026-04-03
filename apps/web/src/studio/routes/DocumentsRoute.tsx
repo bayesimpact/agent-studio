@@ -16,12 +16,15 @@ import { useSidebarLayout } from "@/components/layouts/sidebar/context"
 import type { DocumentTag } from "@/features/document-tags/document-tags.models"
 import { buildTagTree } from "@/features/document-tags/document-tags.models"
 import { selectDocumentTagsData } from "@/features/document-tags/document-tags.selectors"
-import type { Document } from "@/features/documents/documents.models"
-import { selectDocumentsData, selectUploaderState } from "@/features/documents/documents.selectors"
-import { documentsActions } from "@/features/documents/documents.slice"
 import { useAppDispatch, useAppSelector } from "@/store/hooks"
+import type { Document } from "@/studio/features/documents/documents.models"
+import {
+  selectDocumentsData,
+  selectUploaderState,
+} from "@/studio/features/documents/documents.selectors"
+import { documentsActions } from "@/studio/features/documents/documents.slice"
 import { DocumentItem } from "../../components/document/DocumentItem"
-import { AsyncRoute } from "../AsyncRoute"
+import { AsyncRoute } from "../../routes/AsyncRoute"
 
 export function DocumentsRoute() {
   useDocumentEmbeddingStatusStream()

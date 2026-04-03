@@ -1,7 +1,7 @@
 import { allowedDocumentUploadMimeTypesForFileUploader } from "@caseai-connect/api-contracts"
-import { selectUploaderState } from "@/features/documents/documents.selectors"
-import { uploadDocuments } from "@/features/documents/documents.thunks"
 import { useAppDispatch, useAppSelector } from "@/store/hooks"
+import { selectUploaderState } from "@/studio/features/documents/documents.selectors"
+import { uploadDocuments } from "@/studio/features/documents/documents.thunks"
 import { FileUploader } from "../FileUploader"
 
 export function UploadDocumentsButton() {

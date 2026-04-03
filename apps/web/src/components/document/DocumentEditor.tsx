@@ -15,9 +15,9 @@ import { PencilIcon, XIcon } from "lucide-react"
 import { useReducer, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { getTagNameById, useDocumentTags } from "@/features/document-tags/document-tags.helpers"
-import type { Document } from "@/features/documents/documents.models"
-import { updateDocument } from "@/features/documents/documents.thunks"
 import { useAppDispatch } from "@/store/hooks"
+import type { Document } from "@/studio/features/documents/documents.models"
+import { updateDocument } from "@/studio/features/documents/documents.thunks"
 import { DocumentTagPicker } from "./DocumentTagPicker"
 
 type EditorAction =

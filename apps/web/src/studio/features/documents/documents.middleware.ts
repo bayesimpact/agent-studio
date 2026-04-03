@@ -1,13 +1,13 @@
 import { createListenerMiddleware, isAnyOf } from "@reduxjs/toolkit"
-import type { AppDispatch, RootState } from "@/store/types"
-import { hasInterfaceChanged } from "../auth/auth.selectors"
+import { hasInterfaceChanged } from "@/features/auth/auth.selectors"
 import {
   createDocumentTag,
   deleteDocumentTag,
   updateDocumentTag,
-} from "../document-tags/document-tags.thunks"
-import { notificationsActions } from "../notifications/notifications.slice"
-import { hasProjectChanged } from "../projects/projects.selectors"
+} from "@/features/document-tags/document-tags.thunks"
+import { notificationsActions } from "@/features/notifications/notifications.slice"
+import { hasProjectChanged } from "@/features/projects/projects.selectors"
+import type { AppDispatch, RootState } from "@/store/types"
 import { selectUploaderState } from "./documents.selectors"
 import { documentsActions } from "./documents.slice"
 import {
@@ -87,7 +87,7 @@ listenerMiddleware.startListening({
 
 listenerMiddleware.startListening({
   predicate(_, currentState) {
-    return selectUploaderState(currentState).status === "completed"
+    return currentState.documents ? selectUploaderState(currentState).status === "completed" : false
   },
   effect: async (_, listenerApi) => {
     await listenerApi.delay(4000)

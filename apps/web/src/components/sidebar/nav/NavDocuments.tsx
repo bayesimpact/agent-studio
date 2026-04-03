@@ -3,10 +3,10 @@ import { CloudAlertIcon, DatabaseZapIcon, Loader2Icon } from "lucide-react"
 import { useMemo } from "react"
 import { useTranslation } from "react-i18next"
 import { Link, useLocation } from "react-router-dom"
-import { selectUploaderState } from "@/features/documents/documents.selectors"
 import { useAbility } from "@/hooks/use-ability"
 import { buildDocumentsPath } from "@/routes/helpers"
 import { useAppSelector } from "@/store/hooks"
+import { selectUploaderState } from "@/studio/features/documents/documents.selectors"
 
 export function NavDocuments({
   organizationId,

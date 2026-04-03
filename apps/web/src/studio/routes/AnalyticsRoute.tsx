@@ -11,7 +11,7 @@ import {
 import { loadProjectAnalytics } from "@/features/analytics/analytics.thunks"
 import { dateRangeToAnalyticsQueryBounds } from "@/features/analytics/analytics-date-range"
 import { useAppDispatch, useAppSelector } from "@/store/hooks"
-import { AsyncRoute } from "../AsyncRoute"
+import { AsyncRoute } from "../../routes/AsyncRoute"
 
 function sumDailyMetricValues(series: DailyMetricPoint[]): number {
   return series.reduce((sum, point) => sum + point.value, 0)
