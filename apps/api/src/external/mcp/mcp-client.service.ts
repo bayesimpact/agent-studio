@@ -4,6 +4,11 @@ import { Injectable, Logger } from "@nestjs/common"
 import { ConfigService } from "@nestjs/config"
 import type { ToolSet } from "ai"
 
+export type McpSession = {
+  tools: ToolSet
+  close: () => Promise<void>
+}
+
 @Injectable()
 export class McpClientService {
   private readonly logger = new Logger(McpClientService.name)
@@ -15,12 +20,12 @@ export class McpClientService {
     this.apiKey = this.configService.get<string>("MCP_SOCIAL_API_KEY")
   }
 
-  async getTools(): Promise<ToolSet> {
+  async connect(): Promise<McpSession> {
     if (!this.serverUrl || !this.apiKey) {
       this.logger.warn(
         "MCP social server not configured (missing MCP_SOCIAL_SERVER_URL or MCP_SOCIAL_API_KEY)",
       )
-      return {}
+      return { tools: {}, close: async () => {} }
     }
 
     let client: MCPClient | undefined
@@ -37,12 +42,18 @@ export class McpClientService {
         version: "1.0.0",
       })
 
-      return (await client.tools()) as ToolSet
+      const tools = (await client.tools()) as ToolSet
+      return {
+        tools,
+        close: () => client?.close() ?? Promise.resolve(),
+      }
     } catch (error) {
-      this.logger.error("Failed to get tools from MCP social server", error)
-      return {}
-    } finally {
+      this.logger.error(
+        `Failed to connect to MCP social server: ${error instanceof Error ? error.message : error}`,
+        error instanceof Error ? error.stack : undefined,
+      )
       await client?.close()
+      return { tools: {}, close: async () => {} }
     }
   }
 }
