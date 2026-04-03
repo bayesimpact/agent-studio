@@ -14,6 +14,7 @@ import { DataSource, EntityManager } from "typeorm"
 import { Agent } from "@/domains/agents/agent.entity"
 import { ConversationAgentSession } from "@/domains/agents/conversation-agent-sessions/conversation-agent-session.entity"
 import { ExtractionAgentSession } from "@/domains/agents/extraction-agent-sessions/extraction-agent-session.entity"
+import { FormAgentSession } from "@/domains/agents/form-agent-sessions/form-agent-session.entity"
 import { AgentMembership } from "@/domains/agents/memberships/agent-membership.entity"
 import { AgentMessage } from "@/domains/agents/shared/agent-session-messages/agent-message.entity"
 import { AgentMessageFeedback } from "@/domains/agents/shared/agent-session-messages/feedback/agent-message-feedback.entity"
@@ -42,6 +43,7 @@ export interface TransactionalTestSetup {
     agentMembershipRepository: Repository<AgentMembership>
     extractionAgentSessionRepository: Repository<ExtractionAgentSession>
     conversationAgentSessionRepository: Repository<ConversationAgentSession>
+    formAgentSessionRepository: Repository<FormAgentSession>
     documentRepository: Repository<Document>
     evaluationReportRepository: Repository<EvaluationReport>
     evaluationRepository: Repository<Evaluation>
@@ -207,6 +209,7 @@ export async function setupTransactionalTestDatabase(
     agentRepository: getRepository(Agent),
     extractionAgentSessionRepository: getRepository(ExtractionAgentSession),
     conversationAgentSessionRepository: getRepository(ConversationAgentSession),
+    formAgentSessionRepository: getRepository(FormAgentSession),
     agentMessageRepository: getRepository(AgentMessage),
     agentMessageFeedbackRepository: getRepository(AgentMessageFeedback),
     documentRepository: getRepository(Document),

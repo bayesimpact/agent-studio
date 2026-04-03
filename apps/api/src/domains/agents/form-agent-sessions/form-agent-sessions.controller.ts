@@ -39,6 +39,7 @@ export class FormAgentSessionsController {
       connectScope: getRequiredConnectScope(request),
       agentId: request.agent.id,
       type: payload.type,
+      userId: request.user.id,
     })
     return { data: sessions.map(toDto(payload.type)) }
   }
@@ -58,9 +59,9 @@ export class FormAgentSessionsController {
     return { data: toDto(payload.type)(session) }
   }
 
+  @Post(FormAgentSessionsRoutes.deleteOne.path)
   @AddContext("agentSession")
   @CheckPolicy((policy) => policy.canDelete())
-  @Post(FormAgentSessionsRoutes.deleteOne.path)
   async deleteOne(
     @Req() request: EndpointRequestWithAgentSession<FormAgentSession>,
   ): Promise<typeof FormAgentSessionsRoutes.deleteOne.response> {

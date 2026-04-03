@@ -14,6 +14,7 @@ import { userFactory } from "@/domains/users/user.factory"
 import type { ExtractionAgentSession } from "../agents/extraction-agent-sessions/extraction-agent-session.entity"
 import { extractionAgentSessionFactory } from "../agents/extraction-agent-sessions/extraction-agent-session.factory"
 import type { FormAgentSession } from "../agents/form-agent-sessions/form-agent-session.entity"
+import { formAgentSessionFactory } from "../agents/form-agent-sessions/form-agent-session.factory"
 import type { AgentMembership } from "../agents/memberships/agent-membership.entity"
 import { agentMembershipFactory } from "../agents/memberships/agent-membership.factory"
 import type { AgentMessage } from "../agents/shared/agent-session-messages/agent-message.entity"
@@ -165,7 +166,10 @@ export async function createOrganizationWithAgentSession<T extends Agent["type"]
           : never
   >
 > {
-  const data = await createOrganizationWithAgent(repositories, params)
+  const data = await createOrganizationWithAgent(repositories, {
+    ...params,
+    agent: { ...params.agent, type: agentType },
+  })
   const { organization, user, agent, project } = data
 
   switch (agentType) {
@@ -191,7 +195,15 @@ export async function createOrganizationWithAgentSession<T extends Agent["type"]
       return { ...data, agentSession, document }
     }
 
-    // case "form": // TODO:
+    case "form": {
+      const agentSession = formAgentSessionFactory
+        .transient({ organization, project, user, agent })
+        .build(params.agentSession)
+      await repositories.formAgentSessionRepository.save(agentSession)
+
+      // @ts-expect-error
+      return { ...data, agentSession }
+    }
 
     default:
       throw new Error(`Unsupported agent type: ${agentType}`)
