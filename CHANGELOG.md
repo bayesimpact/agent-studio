@@ -8,10 +8,12 @@ This project uses [CalVer](https://calver.org/) (YY.MM.Micro) for product versio
 ## [Unreleased]
 
 ### Added
+- (beta) Analytics
 
 ### Changed
 
 ### Fixed
+- Bad agent session listing (avoid 404 errors on some agent sessions)
 
 ### Security
 
