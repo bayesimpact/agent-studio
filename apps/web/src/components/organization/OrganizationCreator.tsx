@@ -24,7 +24,7 @@ import {
 } from "@/features/organizations/organizations.selectors"
 import { createOrganization } from "@/features/organizations/organizations.thunks"
 import { buildOrganizationDashboardPath } from "@/studio/routes/helpers"
-import { FullPageCenterLayout } from "../layouts/FullPageCenterLayout"
+import { FullPageCenterLayout } from "../../common/components/layouts/FullPageCenterLayout"
 
 export function OrganizationCreator() {
   const isPremiumUser = useAppSelector(selectIsPremiumMember)

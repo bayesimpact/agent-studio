@@ -1,7 +1,7 @@
 import { Item, ItemContent, ItemFooter, ItemHeader, ItemTitle } from "@caseai-connect/ui/shad/item"
 import { buildDate } from "@/common/utils/build-date"
-import { TraceUrlOpener } from "@/components/TraceUrlOpener"
 import { MarkdownWrapper } from "@/features/agents/shared/agent-session-messages/components/MarkdownWrapper"
+import { TraceUrlOpener } from "@/studio/components/TraceUrlOpener"
 import type { AgentMessageFeedback } from "@/studio/features/agent-message-feedback/agent-message-feedback.models"
 
 export function FeedbackItem({ feedback }: { feedback: AgentMessageFeedback }) {

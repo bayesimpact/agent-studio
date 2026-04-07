@@ -1,7 +1,7 @@
+import { FullPageCenterLayout } from "@/common/components/layouts/FullPageCenterLayout"
+import { OrganizationSelector } from "@/components/organization/OrganizationSelector"
 import type { Agent } from "@/features/agents/agents.models"
 import { getAgentIcon } from "@/features/agents/components/AgentIcon"
-import { OrganizationSelector } from "../organization/OrganizationSelector"
-import { FullPageCenterLayout } from "./FullPageCenterLayout"
 
 export function ListHeader({
   agent,

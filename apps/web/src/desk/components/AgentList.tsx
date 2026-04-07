@@ -1,6 +1,6 @@
 import { useTranslation } from "react-i18next"
 import { useOutlet } from "react-router-dom"
-import { ListHeader } from "@/components/layouts/ListHeader"
+import { ListHeader } from "@/desk/components/ListHeader"
 import { useDeskGetPath } from "@/desk/hooks/use-desk-build-path"
 import type { Agent } from "@/features/agents/agents.models"
 import { AgentItem } from "@/features/agents/components/AgentItem"

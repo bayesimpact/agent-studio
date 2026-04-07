@@ -13,11 +13,11 @@ import { useTranslation } from "react-i18next"
 import { useAppDispatch } from "@/common/store/hooks"
 import { buildDate, buildSince } from "@/common/utils/build-date"
 import { Loader } from "@/components/Loader"
-import { TraceUrlOpener } from "@/components/TraceUrlOpener"
 import type { ExtractionAgentSessionSummary } from "@/features/agents/extraction-agent-sessions/extraction-agent-sessions.models"
 import { getExtractionAgentSession } from "@/features/agents/extraction-agent-sessions/extraction-agent-sessions.thunks"
 import { deleteAgentSession } from "@/features/agents/shared/base-agent-session/base-agent-sessions.thunks"
 import { GridItem } from "@/studio/components/grid/Grid"
+import { TraceUrlOpener } from "@/studio/components/TraceUrlOpener"
 import { DocumentOpener } from "@/studio/features/documents/components/DocumentOpener"
 
 export function ExtractionSessionItem({

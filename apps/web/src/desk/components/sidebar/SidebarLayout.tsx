@@ -15,10 +15,10 @@ import {
 } from "@caseai-connect/ui/shad/sidebar"
 import { useState } from "react"
 import type { Organization } from "@/features/organizations/organizations.models"
-import { OrganizationSelector } from "../organization/OrganizationSelector"
-import { NavUserMenuItems } from "../sidebar/nav/NavUserMenuItems"
-import { SidebarLayoutContext } from "./sidebar/context"
-import { SidebarBreadcrumb } from "./sidebar/SidebarBreadcrumb"
+import { OrganizationSelector } from "../../../components/organization/OrganizationSelector"
+import { SidebarLayoutContext } from "./context"
+import { NavUserMenuItems } from "./nav/NavUserMenuItems"
+import { SidebarBreadcrumb } from "./SidebarBreadcrumb"
 
 export function SidebarLayout({
   user,
