@@ -1,10 +1,11 @@
 import { useAuth0 } from "@auth0/auth0-react"
 import { useEffect } from "react"
-import { useSearchParams } from "react-router-dom"
+import { useNavigate, useSearchParams } from "react-router-dom"
 import { ADS } from "@/common/store/async-data-status"
 import { useAppSelector } from "@/common/store/hooks"
 import { AUTH0_ORGANIZATION_ID } from "@/config/auth0.config"
 import { selectOrganizationsData } from "@/features/organizations/organizations.selectors"
+import { RouteNames } from "./helpers"
 import { LoadingRoute } from "./LoadingRoute"
 
 const INVITATION_STORAGE_KEY = "pendingInvitationTicketId"
@@ -28,6 +29,7 @@ export function consumePendingInvitation(): string | null {
 }
 
 export function HomeRoute() {
+  const navigate = useNavigate()
   const { isLoading, isAuthenticated, loginWithRedirect, logout } = useAuth0()
   const organizations = useAppSelector(selectOrganizationsData)
   const [searchParams] = useSearchParams()
@@ -69,7 +71,7 @@ export function HomeRoute() {
     }
 
     if (isAuthenticated) {
-      // FIXME: navigate to lobby
+      navigate(RouteNames.ONBOARDING)
     } else {
       loginWithRedirect({
         authorizationParams: {
@@ -77,7 +79,7 @@ export function HomeRoute() {
         },
       })
     }
-  }, [isAuthenticated, isLoading, loginWithRedirect, logout, organizations, searchParams])
+  }, [isAuthenticated, isLoading, loginWithRedirect, logout, organizations, searchParams, navigate])
 
   return <LoadingRoute />
 }

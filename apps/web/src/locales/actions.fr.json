@@ -1,6 +1,7 @@
 {
   "actions": {
     "accept": "Accepter",
+    "selectOrganization": "Sélectionner une organisation",
     "add": "Ajouter",
     "back": "Retour",
     "cancel": "Annuler",
