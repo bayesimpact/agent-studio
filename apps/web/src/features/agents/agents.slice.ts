@@ -42,7 +42,7 @@ const slice = createSlice({
   },
 })
 
-export type { State as agentsState }
+export type { State as AgentsState }
 export const agentsInitialState = initialState
 export const agentsActions = { ...slice.actions }
-export const agentsSliceReducer = slice.reducer
+export const agentsSlice = slice

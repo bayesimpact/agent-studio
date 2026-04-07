@@ -4,14 +4,14 @@ import { getLast7DaysRange } from "@caseai-connect/ui/lib/date-range-presets"
 import { useCallback, useEffect, useState } from "react"
 import type { DateRange } from "react-day-picker"
 import { useTranslation } from "react-i18next"
+import { useAppDispatch, useAppSelector } from "@/store/hooks"
 import {
   selectAnalyticsAvgUserQuestionsPerSessionPerDay,
   selectAnalyticsConversationsPerDay,
-} from "@/features/analytics/analytics.selectors"
-import { loadProjectAnalytics } from "@/features/analytics/analytics.thunks"
-import { dateRangeToAnalyticsQueryBounds } from "@/features/analytics/analytics-date-range"
-import { useAppDispatch, useAppSelector } from "@/store/hooks"
-import { AsyncRoute } from "../../routes/AsyncRoute"
+} from "@/studio/features/analytics/analytics.selectors"
+import { loadProjectAnalytics } from "@/studio/features/analytics/analytics.thunks"
+import { dateRangeToAnalyticsQueryBounds } from "@/studio/features/analytics/analytics-date-range"
+import { AsyncRoute } from "../../common/routes/AsyncRoute"
 
 function sumDailyMetricValues(series: DailyMetricPoint[]): number {
   return series.reduce((sum, point) => sum + point.value, 0)

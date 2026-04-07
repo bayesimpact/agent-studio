@@ -1,6 +1,7 @@
 import { createSelector } from "@reduxjs/toolkit"
 import type { RootState } from "@/store"
 import { ADS, type AsyncData } from "@/store/async-data-status"
+import { selectCurrentAgentData } from "../agents.selectors"
 import type { ExtractionAgentSessionSummary } from "./extraction-agent-sessions.models"
 
 export const selectExtractionAgentSessionsData = (state: RootState) =>
@@ -9,6 +10,11 @@ export const selectIsProcessingExecution = (state: RootState) =>
   state.extractionAgentSessions.isProcesssingExecution
 
 const missingAgentId = { status: ADS.Error, value: null, error: "No agent selected" }
+const missingAgentSessions = {
+  status: ADS.Error,
+  value: null,
+  error: "No agent sessions available",
+}
 
 export const selectExtractionAgentSessionsFromAgentId = (agentId?: string | null) =>
   createSelector(
@@ -24,3 +30,17 @@ export const selectExtractionAgentSessionsFromAgentId = (agentId?: string | null
       return { status: ADS.Fulfilled, value, error: null }
     },
   )
+
+export const selectCurrentExtractionAgentSessionsData = createSelector(
+  [selectCurrentAgentData, selectExtractionAgentSessionsData],
+  (agentData, sessionsData): AsyncData<ExtractionAgentSessionSummary[]> => {
+    if (!ADS.isFulfilled(agentData)) return { ...agentData }
+
+    if (!ADS.isFulfilled(sessionsData)) return { ...sessionsData }
+
+    const value = sessionsData.value[agentData.value.id]
+    if (!value) return missingAgentSessions
+
+    return { status: ADS.Fulfilled, value, error: null }
+  },
+)

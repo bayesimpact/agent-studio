@@ -32,6 +32,8 @@
     },
     "create": {
       "button": "Create Agent",
+      "title": "New Agent",
+      "description": "An agent can perform specific tasks based on its type and configuration.",
       "typeDialog": {
         "title": "Agent type",
         "description": "Choose the type before configuring your agent.",

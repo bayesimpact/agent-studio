@@ -53,4 +53,4 @@ const slice = createSlice({
 export type { State as OrganizationsState }
 export const organizationsInitialState = initialState
 export const organizationsActions = { ...slice.actions }
-export const organizationsSliceReducer = slice.reducer
+export const organizationsSlice = slice

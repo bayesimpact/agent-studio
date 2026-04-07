@@ -1,12 +1,6 @@
 import { createListenerMiddleware, isAnyOf } from "@reduxjs/toolkit"
-import { hasInterfaceChanged } from "@/features/auth/auth.selectors"
 import type { AppDispatch, RootState } from "@/store"
-import { ADS } from "@/store/async-data-status"
-import { selectAgentsData } from "../../agents.selectors"
 import { listAgents } from "../../agents.thunks"
-import { conversationAgentSessionsActions } from "../../conversation-agent-sessions/conversation-agent-sessions.slice"
-import { extractionAgentSessionsActions } from "../../extraction-agent-sessions/extraction-agent-sessions.slice"
-import { formAgentSessionsActions } from "../../form-agent-sessions/form-agent-sessions.slice"
 import {
   createAgentSession,
   deleteAgentSession,
@@ -24,34 +18,6 @@ listenerMiddleware.startListening({
     await loadAgentSessionsForAllAgents({ agentType: "conversation", agents, listenerApi })
     await loadAgentSessionsForAllAgents({ agentType: "form", agents, listenerApi })
     await loadAgentSessionsForAllAgents({ agentType: "extraction", agents, listenerApi })
-  },
-})
-
-// Refresh agent sessions when interface type changes
-listenerMiddleware.startListening({
-  predicate(_, currentState, originalState) {
-    return hasInterfaceChanged(originalState, currentState)
-  },
-  effect: async (_, listenerApi) => {
-    listenerApi.dispatch(formAgentSessionsActions.reset())
-    listenerApi.dispatch(conversationAgentSessionsActions.reset())
-    listenerApi.dispatch(extractionAgentSessionsActions.reset())
-
-    const state = listenerApi.getState()
-    const agents = selectAgentsData(state)
-    if (!ADS.isFulfilled(agents)) return
-
-    await loadAgentSessionsForAllAgents({ agentType: "form", agents: agents.value, listenerApi })
-    await loadAgentSessionsForAllAgents({
-      agentType: "conversation",
-      agents: agents.value,
-      listenerApi,
-    })
-    await loadAgentSessionsForAllAgents({
-      agentType: "extraction",
-      agents: agents.value,
-      listenerApi,
-    })
   },
 })
 

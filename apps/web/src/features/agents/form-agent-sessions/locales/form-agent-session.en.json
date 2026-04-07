@@ -8,7 +8,9 @@
       "result": "Form Result"
     },
     "create": {
-      "button": "New Form Session"
+      "button": "New Form Session",
+      "title": "New Form Session",
+      "description": "Start a form session with your agent."
     },
     "list": {
       "title": "Form Sessions"

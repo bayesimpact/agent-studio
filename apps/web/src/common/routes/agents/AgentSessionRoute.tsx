@@ -1,0 +1,92 @@
+import type { Agent } from "@/features/agents/agents.models"
+import { selectCurrentAgentData } from "@/features/agents/agents.selectors"
+import type { ConversationAgentSession } from "@/features/agents/conversation-agent-sessions/conversation-agent-sessions.models"
+import { selectCurrentConversationAgentSessionData } from "@/features/agents/conversation-agent-sessions/conversation-agent-sessions.selectors"
+import type { FormAgentSession } from "@/features/agents/form-agent-sessions/form-agent-sessions.models"
+import { selectCurrentFormAgentSessionData } from "@/features/agents/form-agent-sessions/form-agent-sessions.selectors"
+import type { AgentSessionMessage } from "@/features/agents/shared/agent-session-messages/agent-session-messages.models"
+import { selectCurrentMessagesData } from "@/features/agents/shared/agent-session-messages/agent-session-messages.selectors"
+import { useAppSelector } from "@/store/hooks"
+import { AsyncRoute } from "../AsyncRoute"
+import { ErrorRoute } from "../ErrorRoute"
+
+type AgentSession = ConversationAgentSession | FormAgentSession
+export function AgentSessionRoute({
+  children,
+}: {
+  children: (
+    agent: Agent,
+    agentSession: AgentSession,
+    messages: AgentSessionMessage[],
+  ) => React.ReactNode
+}) {
+  const agent = useAppSelector(selectCurrentAgentData)
+  const messages = useAppSelector(selectCurrentMessagesData)
+
+  return (
+    <AsyncRoute data={[agent, messages]}>
+      {([agentValue, messagesValue]) => {
+        switch (agentValue.type) {
+          case "conversation":
+            return (
+              <ConversationAgentSessionRoute agent={agentValue} messages={messagesValue}>
+                {(agent, agentSession, messages) => children(agent, agentSession, messages)}
+              </ConversationAgentSessionRoute>
+            )
+          case "form":
+            return (
+              <FormAgentSessionRoute agent={agentValue} messages={messagesValue}>
+                {(agent, agentSession, messages) => children(agent, agentSession, messages)}
+              </FormAgentSessionRoute>
+            )
+          default:
+            return <ErrorRoute error={"Unknown agent type"} />
+        }
+      }}
+    </AsyncRoute>
+  )
+}
+
+function ConversationAgentSessionRoute({
+  agent,
+  messages,
+  children,
+}: {
+  agent: Agent
+  messages: AgentSessionMessage[]
+  children: (
+    agent: Agent,
+    agentSession: ConversationAgentSession,
+    messages: AgentSessionMessage[],
+  ) => React.ReactNode
+}) {
+  const agentSession = useAppSelector(selectCurrentConversationAgentSessionData)
+
+  return (
+    <AsyncRoute data={[agentSession]}>
+      {([agentSessionValue]) => children(agent, agentSessionValue, messages)}
+    </AsyncRoute>
+  )
+}
+
+function FormAgentSessionRoute({
+  agent,
+  messages,
+  children,
+}: {
+  agent: Agent
+  messages: AgentSessionMessage[]
+  children: (
+    agent: Agent,
+    agentSession: FormAgentSession,
+    messages: AgentSessionMessage[],
+  ) => React.ReactNode
+}) {
+  const agentSession = useAppSelector(selectCurrentFormAgentSessionData)
+
+  return (
+    <AsyncRoute data={[agentSession]}>
+      {([agentSessionValue]) => children(agent, agentSessionValue, messages)}
+    </AsyncRoute>
+  )
+}

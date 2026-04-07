@@ -2,11 +2,11 @@ import { BreadcrumbItem, BreadcrumbSeparator } from "@caseai-connect/ui/shad/bre
 import { DotIcon } from "lucide-react"
 import { useTranslation } from "react-i18next"
 import { useIsRoute } from "@/hooks/use-is-route"
-import { RouteNames } from "@/routes/helpers"
+import { StudioRouteNames } from "@/studio/routes/helpers"
 
 export function BreadcrumbFeedback() {
   const { isRoute } = useIsRoute()
-  const isFeedbackRoute = isRoute(RouteNames.FEEDBACK)
+  const isFeedbackRoute = isRoute(StudioRouteNames.FEEDBACK)
   const { t } = useTranslation()
   if (!isFeedbackRoute) return null
   return (

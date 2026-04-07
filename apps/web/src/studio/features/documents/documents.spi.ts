@@ -1,5 +1,5 @@
 import type { DocumentSourceType } from "@caseai-connect/api-contracts"
-import type { DocumentTagsUpdateFields } from "@/features/document-tags/document-tags.models"
+import type { DocumentTagsUpdateFields } from "@/studio/features/document-tags/document-tags.models"
 import type { Document, DocumentEmbeddingStatusChangedEvent } from "./documents.models"
 
 export interface IDocumentsSpi {

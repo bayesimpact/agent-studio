@@ -1,13 +1,14 @@
 import { useCallback } from "react"
 import { useParams } from "react-router-dom"
+import { RouteNames } from "@/common/routes/helpers"
+import { buildDeskPath } from "@/desk/routes/helpers"
 import { selectAgentsData } from "@/features/agents/agents.selectors"
 import { selectCurrentConversationAgentSessionsData } from "@/features/agents/conversation-agent-sessions/conversation-agent-sessions.selectors"
 import { selectOrganizationsData } from "@/features/organizations/organizations.selectors"
 import { selectProjectsData } from "@/features/projects/projects.selectors"
-import { buildAppPath, buildStudioPath, RouteNames } from "@/routes/helpers"
 import { ADS } from "@/store/async-data-status"
 import { useAppSelector } from "@/store/hooks"
-import { useAbility } from "./use-ability"
+import { buildStudioPath, isStudioInterface } from "@/studio/routes/helpers"
 
 export type PathType = "organization" | "project" | "agent" | "agentSession"
 
@@ -18,185 +19,68 @@ export interface BuildPathOptions {
   agentSessionId?: string
 }
 
-export function useGetPath() {
-  const { isAdminInterface } = useAbility()
-  const {
-    organizationId: urlOrganizationId,
-    projectId: urlProjectId,
-    agentId: urlagentId,
-    agentSessionId: urlagentSessionId,
-  } = useParams()
-
-  const computePath = (isAdminInterface: boolean, pathType: PathType): string => {
-    const organizationId = urlOrganizationId
-    const projectId = urlProjectId
-    const agentId = urlagentId
-    const agentSessionId = urlagentSessionId
-
-    const organizationPath = organizationId
-      ? buildOrganizationPath({
-          organizationId,
-          isAdminInterface,
-        })
-      : RouteNames.HOME
-
-    if (pathType === "organization") {
-      return organizationPath
-    }
-
-    const projectPath =
-      organizationId && projectId
-        ? buildProjectPath({
-            organizationId,
-            projectId,
-            isAdminInterface,
-          })
-        : organizationPath
-
-    if (pathType === "project") {
-      return projectPath
-    }
-
-    const agentPath =
-      organizationId && projectId && agentId
-        ? buildAgentPath({
-            organizationId,
-            projectId,
-            agentId,
-            isAdminInterface,
-          })
-        : projectPath
-
-    if (pathType === "agent") {
-      return agentPath
-    }
-
-    const agentSessionPath =
-      organizationId && projectId && agentId && agentSessionId
-        ? buildAgentSessionPath({
-            organizationId,
-            projectId,
-            agentId,
-            agentSessionId,
-            isAdminInterface,
-          })
-        : agentPath
-
-    if (pathType === "agentSession") {
-      return agentSessionPath
-    }
-
-    return RouteNames.HOME
-  }
-
-  function getPath(
-    pathType: PathType,
-    options?: { forceInterface: RouteNames.STUDIO | RouteNames.APP },
-  ): string {
-    const interfaceToUse = options?.forceInterface
-      ? options.forceInterface === RouteNames.STUDIO
-      : isAdminInterface
-    return computePath(interfaceToUse, pathType)
-  }
-
-  return { getPath }
+export const buildOrganizationPath = ({
+  organizationId,
+  isStudioInterface,
+}: {
+  organizationId: string
+  isStudioInterface: boolean
+}) => {
+  const path = `/o/${organizationId}/`
+  if (isStudioInterface) return buildStudioPath(path)
+  return buildDeskPath(path)
 }
 
-export function useBuildPath() {
-  const { isAdminInterface } = useAbility()
+export const buildProjectPath = ({
+  organizationId,
+  projectId,
+  isStudioInterface,
+}: {
+  organizationId: string
+  projectId: string
+  isStudioInterface: boolean
+}) => {
+  const path = `/o/${organizationId}/p/${projectId}`
+  if (isStudioInterface) return buildStudioPath(path)
+  return buildDeskPath(path)
+}
 
-  const computePath = (
-    isAdminInterface: boolean,
-    pathType: PathType,
-    options: BuildPathOptions,
-  ): string => {
-    const organizationId = options.organizationId
-    const projectId = options.projectId
-    const agentId = options.agentId
-    const agentSessionId = options.agentSessionId
+export const buildAgentPath = ({
+  organizationId,
+  projectId,
+  agentId,
+  isStudioInterface,
+}: {
+  organizationId: string
+  projectId: string
+  agentId: string
+  isStudioInterface: boolean
+}) => {
+  const path = `/o/${organizationId}/p/${projectId}/a/${agentId}`
+  if (isStudioInterface) return buildStudioPath(path)
+  return buildDeskPath(path)
+}
 
-    const organizationPath = organizationId
-      ? buildOrganizationPath({
-          organizationId,
-          isAdminInterface,
-        })
-      : RouteNames.HOME
-
-    if (pathType === "organization") {
-      return organizationPath
-    }
-
-    const projectPath =
-      organizationId && projectId
-        ? buildProjectPath({
-            organizationId,
-            projectId,
-            isAdminInterface,
-          })
-        : organizationPath
-
-    if (pathType === "project") {
-      return projectPath
-    }
-
-    const agentPath =
-      organizationId && projectId && agentId
-        ? buildAgentPath({
-            organizationId,
-            projectId,
-            agentId,
-            isAdminInterface,
-          })
-        : projectPath
-
-    if (pathType === "agent") {
-      return agentPath
-    }
-
-    const agentSessionPath =
-      organizationId && projectId && agentId && agentSessionId
-        ? buildAgentSessionPath({
-            organizationId,
-            projectId,
-            agentId,
-            agentSessionId,
-            isAdminInterface,
-          })
-        : agentPath
-
-    if (pathType === "agentSession") {
-      return agentSessionPath
-    }
-
-    return RouteNames.HOME
-  }
-
-  const buildPath: {
-    (
-      pathType: "agentSession",
-      options: {
-        organizationId: string
-        projectId: string
-        agentId: string
-        agentSessionId: string
-      },
-    ): string
-    (
-      pathType: "agent",
-      options: { organizationId: string; projectId: string; agentId: string },
-    ): string
-
-    (pathType: "project", options: { organizationId: string; projectId: string }): string
-    (pathType: "organization", options: { organizationId: string }): string
-  } = (pathType: PathType, options: BuildPathOptions): string => {
-    return computePath(isAdminInterface, pathType, options)
-  }
-
-  return { buildPath }
+export const buildAgentSessionPath = ({
+  organizationId,
+  projectId,
+  agentId,
+  agentSessionId,
+  isStudioInterface,
+}: {
+  organizationId: string
+  projectId: string
+  agentId: string
+  agentSessionId: string
+  isStudioInterface: boolean
+}) => {
+  const path = `/o/${organizationId}/p/${projectId}/a/${agentId}/as/${agentSessionId}`
+  if (isStudioInterface) return buildStudioPath(path)
+  return buildDeskPath(path)
 }
 
 export function useClosestParentPath() {
-  const { isAdminInterface } = useAbility()
+  const isStudio = isStudioInterface()
   const {
     organizationId: urlOrganizationId,
     projectId: urlProjectId,
@@ -262,7 +146,7 @@ export function useClosestParentPath() {
     const organizationPath = organizationFound
       ? buildOrganizationPath({
           organizationId: organizationFound.id,
-          isAdminInterface,
+          isStudioInterface: isStudio,
         })
       : RouteNames.HOME
 
@@ -271,7 +155,7 @@ export function useClosestParentPath() {
         ? buildProjectPath({
             organizationId: organizationFound.id,
             projectId: projectFound.id,
-            isAdminInterface,
+            isStudioInterface: isStudio,
           })
         : organizationPath
 
@@ -281,7 +165,7 @@ export function useClosestParentPath() {
             organizationId: organizationFound.id,
             projectId: projectFound.id,
             agentId: agentFound.id,
-            isAdminInterface,
+            isStudioInterface: isStudio,
           })
         : projectPath
 
@@ -292,14 +176,14 @@ export function useClosestParentPath() {
             projectId: projectFound.id,
             agentId: agentFound.id,
             agentSessionId: agentSessionFound.id,
-            isAdminInterface,
+            isStudioInterface: isStudio,
           })
         : agentPath
 
     // closestParent
     return agentSessionPath || agentPath || projectPath || organizationPath || RouteNames.HOME
   }, [
-    isAdminInterface,
+    isStudio,
     foundagent,
     foundagentSession,
     foundOrganization,
@@ -311,64 +195,4 @@ export function useClosestParentPath() {
   ])
 
   return { getClosestParentPath }
-}
-
-export const buildOrganizationPath = ({
-  organizationId,
-  isAdminInterface,
-}: {
-  organizationId: string
-  isAdminInterface: boolean
-}) => {
-  const path = `/o/${organizationId}/`
-  if (isAdminInterface) return buildStudioPath(path)
-  return buildAppPath(path)
-}
-
-const buildProjectPath = ({
-  organizationId,
-  projectId,
-  isAdminInterface,
-}: {
-  organizationId: string
-  projectId: string
-  isAdminInterface: boolean
-}) => {
-  const path = `/o/${organizationId}/p/${projectId}`
-  if (isAdminInterface) return buildStudioPath(path)
-  return buildAppPath(path)
-}
-
-const buildAgentPath = ({
-  organizationId,
-  projectId,
-  agentId,
-  isAdminInterface,
-}: {
-  organizationId: string
-  projectId: string
-  agentId: string
-  isAdminInterface: boolean
-}) => {
-  const path = `/o/${organizationId}/p/${projectId}/a/${agentId}`
-  if (isAdminInterface) return buildStudioPath(path)
-  return buildAppPath(path)
-}
-
-const buildAgentSessionPath = ({
-  organizationId,
-  projectId,
-  agentId,
-  agentSessionId,
-  isAdminInterface,
-}: {
-  organizationId: string
-  projectId: string
-  agentId: string
-  agentSessionId: string
-  isAdminInterface: boolean
-}) => {
-  const path = `/o/${organizationId}/p/${projectId}/a/${agentId}/as/${agentSessionId}`
-  if (isAdminInterface) return buildStudioPath(path)
-  return buildAppPath(path)
 }

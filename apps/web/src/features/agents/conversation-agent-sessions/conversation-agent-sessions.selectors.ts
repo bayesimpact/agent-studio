@@ -17,15 +17,15 @@ const missingAgentSessions = {
 
 export const selectCurrentConversationAgentSessionsData = createSelector(
   [selectCurrentAgentData, selectConversationAgentSessionsData],
-  (agentData, conversationAgentSessionsData): AsyncData<ConversationAgentSession[]> => {
+  (agentData, sessionsData): AsyncData<ConversationAgentSession[]> => {
     if (!ADS.isFulfilled(agentData)) return { ...agentData }
 
-    if (!ADS.isFulfilled(conversationAgentSessionsData)) return { ...conversationAgentSessionsData }
+    if (!ADS.isFulfilled(sessionsData)) return { ...sessionsData }
 
-    const agentSessions = conversationAgentSessionsData.value[agentData.value.id]
-    if (!agentSessions) return missingAgentSessions
+    const value = sessionsData.value[agentData.value.id]
+    if (!value) return missingAgentSessions
 
-    return { status: ADS.Fulfilled, value: agentSessions, error: null }
+    return { status: ADS.Fulfilled, value, error: null }
   },
 )
 

@@ -121,4 +121,4 @@ const slice = createSlice({
 export type { State as agentSessionMessagesState }
 export const agentSessionMessagesInitialState = initialState
 export const agentSessionMessagesActions = { ...slice.actions }
-export const agentSessionMessagesSliceReducer = slice.reducer
+export const agentSessionMessagesSlice = slice

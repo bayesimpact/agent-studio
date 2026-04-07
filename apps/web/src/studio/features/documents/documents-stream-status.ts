@@ -1,4 +1,3 @@
-import { selectIsAdminInterface } from "@/features/auth/auth.selectors"
 import type { AppDispatch, RootState } from "@/store/types"
 import {
   selectHasDocumentsInProgress,
@@ -36,7 +35,6 @@ function shouldKeepDocumentEmbeddingStatusStreamRunning(params: {
   if (params.generation !== streamGeneration) return false
   const state = params.listenerApi.getState()
   if (!selectIsEmbeddingStatusStreamActive(state)) return false
-  if (!selectIsAdminInterface(state)) return false
   return true
 }
 
@@ -91,9 +89,7 @@ export function syncDocumentEmbeddingStatusStreamWithDocuments(
 ): void {
   const state = listenerApi.getState()
   const shouldKeepStreamRunning =
-    selectIsEmbeddingStatusStreamActive(state) &&
-    selectIsAdminInterface(state) &&
-    selectHasDocumentsInProgress(state)
+    selectIsEmbeddingStatusStreamActive(state) && selectHasDocumentsInProgress(state)
 
   if (!shouldKeepStreamRunning) {
     stopDocumentEmbeddingStatusStream()
@@ -109,13 +105,6 @@ export function syncDocumentEmbeddingStatusStreamWithDocuments(
 }
 
 export async function handleDocumentsContextChanged(listenerApi: StreamListenerApi): Promise<void> {
-  const state = listenerApi.getState()
-  const isAdminInterface = selectIsAdminInterface(state)
-  if (!isAdminInterface) {
-    stopDocumentEmbeddingStatusStream()
-    return
-  }
-
   await listenerApi.dispatch(listDocuments())
   syncDocumentEmbeddingStatusStreamWithDocuments(listenerApi)
 }
@@ -123,7 +112,6 @@ export async function handleDocumentsContextChanged(listenerApi: StreamListenerA
 export async function startDocumentEmbeddingStatusStream(
   listenerApi: StreamListenerApi,
 ): Promise<void> {
-  if (!selectIsAdminInterface(listenerApi.getState())) return
   await listenerApi.dispatch(listDocuments())
   syncDocumentEmbeddingStatusStreamWithDocuments(listenerApi)
 }

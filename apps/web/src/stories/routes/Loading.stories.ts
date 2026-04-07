@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite"
-import { LoadingRoute } from "@/routes/LoadingRoute"
+import { LoadingRoute } from "@/common/routes/LoadingRoute"
 
 const meta = {
   title: "routes/Loading",

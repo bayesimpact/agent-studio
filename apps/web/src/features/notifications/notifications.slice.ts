@@ -24,4 +24,4 @@ const slice = createSlice({
 export type { State as NotificationsState }
 export const notificationsInitialState = initialState
 export const notificationsActions = { ...slice.actions }
-export const notificationsSliceReducer = slice.reducer
+export const notificationsSlice = slice

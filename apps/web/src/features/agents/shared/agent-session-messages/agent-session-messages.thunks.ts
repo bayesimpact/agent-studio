@@ -1,8 +1,8 @@
 import { ToolName } from "@caseai-connect/api-contracts"
 import { createAsyncThunk } from "@reduxjs/toolkit"
 import type { RootState, ThunkExtraArg } from "@/store"
+import { isStudioInterface } from "@/studio/routes/helpers"
 import { generateId } from "@/utils/generate-id"
-import { selectIsAdminInterface } from "../../../auth/auth.selectors"
 import { getCurrentIds } from "../../../helpers"
 import { refreshFormResultForCurrentAgentSession } from "../../form-agent-sessions/form-agent-sessions.thunks"
 import type { AgentSessionMessage } from "./agent-session-messages.models"
@@ -19,13 +19,13 @@ export const listMessages = createAsyncThunk<AgentSessionMessage[], string, Thun
       state,
       wantedIds: ["organizationId", "projectId", "agentId"],
     })
-    const isAdminInterface = selectIsAdminInterface(state)
+    const isStudio = isStudioInterface()
     return services.agentSessionMessages.getAll({
       organizationId,
       projectId,
       agentId,
       agentSessionId,
-      type: isAdminInterface ? "playground" : "live",
+      type: isStudio ? "playground" : "live",
     })
   },
 )

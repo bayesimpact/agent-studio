@@ -13,8 +13,8 @@ import {
 } from "@caseai-connect/ui/shad/sheet"
 import { ChevronRight, TagsIcon } from "lucide-react"
 import { useTranslation } from "react-i18next"
-import type { DocumentTag } from "@/features/document-tags/document-tags.models"
-import { buildTagTree, type TagNode } from "@/features/document-tags/document-tags.models"
+import type { DocumentTag } from "@/studio/features/document-tags/document-tags.models"
+import { buildTagTree, type TagNode } from "@/studio/features/document-tags/document-tags.models"
 import { DocumentTagCreator } from "./DocumentTagCreator"
 import { DocumentTagItem } from "./DocumentTagItem"
 

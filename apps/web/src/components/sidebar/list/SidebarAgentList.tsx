@@ -1,25 +1,17 @@
 import {
   SidebarGroup,
-  SidebarGroupAction,
   SidebarGroupContent,
   SidebarGroupLabel,
   SidebarMenu,
-  SidebarMenuButton,
   SidebarSeparator,
 } from "@caseai-connect/ui/shad/sidebar"
-import { PlusIcon } from "lucide-react"
-import { useState } from "react"
 import { useTranslation } from "react-i18next"
 import { useParams } from "react-router-dom"
+import { useBuildDeskPath } from "@/desk/hooks/use-desk-build-path"
 import type { Agent } from "@/features/agents/agents.models"
 import { selectAgentsData } from "@/features/agents/agents.selectors"
-import { AgentCreator } from "@/features/agents/components/AgentCreator"
-import { AgentDeletorWithoutTrigger } from "@/features/agents/components/AgentDeletor"
-import { AgentEditorWithoutTrigger } from "@/features/agents/components/AgentEditor"
 import { getAgentIcon } from "@/features/agents/components/AgentIcon"
-import { AgentItemOptions } from "@/features/agents/components/AgentItemOptions"
 import type { Project } from "@/features/projects/projects.models"
-import { useBuildPath } from "@/hooks/use-build-path"
 import { ADS } from "@/store/async-data-status"
 import { useAppSelector } from "@/store/hooks"
 import { AppNavItem } from "../nav/NavItem"
@@ -28,50 +20,29 @@ import { SidebarAgentSessionList } from "./SidebarAgentSessionList"
 export function SidebarAgentList({
   organizationId,
   project,
-  isAdminInterface,
 }: {
   project: Project
   organizationId: string
-  isAdminInterface: boolean
 }) {
   const agents = useAppSelector(selectAgentsData)
 
   if (!ADS.isFulfilled(agents)) return null
-  if (agents.value.length === 0) {
-    if (!isAdminInterface) return null
-    return <AgentCreatorButton project={project} />
-  }
 
-  return (
-    <AgentList
-      organizationId={organizationId}
-      project={project}
-      agents={agents.value}
-      isAdminInterface={isAdminInterface}
-    />
-  )
+  return <AgentList organizationId={organizationId} project={project} agents={agents.value} />
 }
-
-type Item = { action: "edit" | "delete"; value: Agent }
 
 export function AgentList({
   organizationId,
   project,
   agents,
-  isAdminInterface,
 }: {
-  isAdminInterface: boolean
   organizationId: string
   project: Project
   agents: Agent[]
 }) {
   const { t } = useTranslation()
   const { agentId: urlagentId } = useParams()
-  const { buildPath } = useBuildPath()
-
-  const [item, setItem] = useState<Item | null>(null)
-  const handleItem = (item: Item) => setItem(item)
-  const handleClose = () => setItem(null)
+  const { buildDeskPath } = useBuildDeskPath()
 
   return (
     <SidebarGroup>
@@ -79,12 +50,6 @@ export function AgentList({
         <SidebarGroupLabel className="uppercase">
           {t(agents.length === 1 ? "agent:agent" : "agent:agents")}
         </SidebarGroupLabel>
-
-        {isAdminInterface && (
-          <SidebarGroupAction>
-            <AgentCreatorButton short project={project} />
-          </SidebarGroupAction>
-        )}
       </div>
 
       <SidebarGroupContent>
@@ -94,7 +59,7 @@ export function AgentList({
               item={{
                 id: agent.id,
                 title: agent.name,
-                url: buildPath("agent", {
+                url: buildDeskPath("agent", {
                   organizationId,
                   projectId: project.id,
                   agentId: agent.id,
@@ -102,14 +67,6 @@ export function AgentList({
                 isActive: urlagentId === agent.id,
                 icon: getAgentIcon(agent.type),
               }}
-              itemOptions={
-                isAdminInterface && (
-                  <AgentItemOptions
-                    onEdit={() => handleItem({ action: "edit", value: agent })}
-                    onDelete={() => handleItem({ action: "delete", value: agent })}
-                  />
-                )
-              }
             >
               {agent.type !== "extraction" && (
                 <SidebarAgentSessionList
@@ -126,40 +83,7 @@ export function AgentList({
             </div>
           </SidebarMenu>
         ))}
-
-        {isAdminInterface && (
-          <>
-            <AgentEditorWithoutTrigger
-              agent={item?.action === "edit" ? item.value : null}
-              onClose={handleClose}
-            />
-            <AgentDeletorWithoutTrigger
-              organizationId={organizationId}
-              projectId={project.id}
-              agent={item?.action === "delete" ? item.value : null}
-              onClose={handleClose}
-            />
-          </>
-        )}
       </SidebarGroupContent>
     </SidebarGroup>
-  )
-}
-
-function AgentCreatorButton({ project, short }: { project: Project; short?: boolean }) {
-  const [open, setOpen] = useState(false)
-  const { t } = useTranslation()
-  return (
-    <>
-      {short ? (
-        <PlusIcon onClick={() => setOpen(true)} />
-      ) : (
-        <SidebarMenuButton onClick={() => setOpen(true)}>
-          <PlusIcon />
-          {t("agent:create.button")}
-        </SidebarMenuButton>
-      )}
-      <AgentCreator project={project} open={open} onOpenChange={setOpen} />
-    </>
   )
 }

@@ -65,4 +65,4 @@ const slice = createSlice({
 export type { State as ExtractionAgentSessionsState }
 export const extractionAgentSessionsInitialState = initialState
 export const extractionAgentSessionsActions = { ...slice.actions }
-export const extractionAgentSessionsSliceReducer = slice.reducer
+export const extractionAgentSessionsSlice = slice

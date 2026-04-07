@@ -14,9 +14,7 @@ import {
   selectCurrentOrganization,
   selectOrganizationsData,
 } from "@/features/organizations/organizations.selectors"
-import { useAbility } from "@/hooks/use-ability"
 import { buildOrganizationPath } from "@/hooks/use-build-path"
-import { RouteNames } from "@/routes/helpers"
 import { ADS } from "@/store/async-data-status"
 import { useAppSelector } from "@/store/hooks"
 
@@ -31,16 +29,13 @@ export function OrganizationSelector({
 }) {
   const { t } = useTranslation()
   const navigate = useNavigate()
-  const { isAdminInterface } = useAbility()
   const organization = useAppSelector(selectCurrentOrganization)
   const organizations = useAppSelector(selectOrganizationsData)
 
   const handleOrganizationChange = (organizationId: string) => () => {
-    const path = buildOrganizationPath({ organizationId, isAdminInterface })
+    const path = buildOrganizationPath({ organizationId, isStudioInterface: false })
     navigate(path)
   }
-
-  const subname = isAdminInterface ? RouteNames.STUDIO.slice(1) : undefined
 
   if (!ADS.isFulfilled(organization) || !ADS.isFulfilled(organizations)) return null
 
@@ -69,8 +64,7 @@ export function OrganizationSelector({
           <Logo />
         </div>
         <div className="flex flex-col gap-0.5 leading-none text-left">
-          <span className="font-medium">{organization.value.name}</span>
-          {subname && <span className="text-primary capitalize-first">{subname}</span>}
+          <span className="font-medium text-base">{organization.value.name}</span>
         </div>
 
         {hasMultipleOrganizations && <ChevronsUpDownIcon className="ml-auto size-4" />}

@@ -1,0 +1,52 @@
+import { useNavigate } from "react-router-dom"
+import type { ConversationAgentSession } from "@/features/agents/conversation-agent-sessions/conversation-agent-sessions.models"
+import type { ExtractionAgentSession } from "@/features/agents/extraction-agent-sessions/extraction-agent-sessions.models"
+import type { FormAgentSession } from "@/features/agents/form-agent-sessions/form-agent-sessions.models"
+import { GridItem } from "@/studio/components/grid/Grid"
+import { useBuildStudioPath } from "@/studio/hooks/use-studio-build-path"
+import { buildDate, buildSince } from "@/utils/build-date"
+
+type AgentSession = ConversationAgentSession | FormAgentSession | ExtractionAgentSession
+
+export function AgentSessionItem({
+  agentSession,
+  organizationId,
+  agentId,
+  projectId,
+  className,
+  index,
+}: {
+  index: number
+  className?: string
+  agentSession: AgentSession
+  organizationId: string
+  agentId: string
+  projectId: string
+}) {
+  const navigate = useNavigate()
+  const { buildStudioPath } = useBuildStudioPath()
+  const handleClick = () => {
+    const path = buildStudioPath("agentSession", {
+      organizationId,
+      projectId,
+      agentId,
+      agentSessionId: agentSession.id,
+    })
+    navigate(path)
+  }
+
+  const title = buildSince(agentSession.updatedAt)
+  const badge = buildDate(agentSession.updatedAt)
+
+  return (
+    <GridItem
+      index={index}
+      className={className}
+      badge={badge}
+      onClick={handleClick}
+      title={title}
+      // FIXME: show last message
+      description=""
+    />
+  )
+}

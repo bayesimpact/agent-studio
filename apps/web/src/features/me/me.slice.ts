@@ -40,4 +40,4 @@ const slice = createSlice({
 export type { State as MeState }
 export const meInitialState = initialState
 export const meActions = { ...slice.actions }
-export const meSliceReducer = slice.reducer
+export const meSlice = slice

@@ -11,9 +11,9 @@ import {
 import { PlusIcon } from "lucide-react"
 import { useState } from "react"
 import { useTranslation } from "react-i18next"
-import type { DocumentTag } from "@/features/document-tags/document-tags.models"
-import { createDocumentTag } from "@/features/document-tags/document-tags.thunks"
 import { useAppDispatch } from "@/store/hooks"
+import type { DocumentTag } from "@/studio/features/document-tags/document-tags.models"
+import { createDocumentTag } from "@/studio/features/document-tags/document-tags.thunks"
 import { DocumentTagForm } from "./DocumentTagForm"
 
 export function DocumentTagCreator({ allTags }: { allTags: DocumentTag[] }) {

@@ -1,8 +1,8 @@
 import { createAsyncThunk } from "@reduxjs/toolkit"
-import { selectIsAdminInterface } from "@/features/auth/auth.selectors"
 import { getCurrentIds } from "@/features/helpers"
 import type { RootState, ThunkExtraArg } from "@/store"
 import { uploadDocument } from "@/studio/features/documents/documents.thunks"
+import { isStudioInterface } from "@/studio/routes/helpers"
 import type {
   ExtractionAgentSession,
   ExtractionAgentSessionResult,
@@ -18,7 +18,7 @@ export const executeExtractionAgentSession = createAsyncThunk<
   "extractionAgentSessions/executeOne",
   async (params, { extra: { services }, getState, dispatch }) => {
     const state = getState()
-    const isAdminInterface = selectIsAdminInterface(state)
+    const isStudio = isStudioInterface()
 
     const document = await dispatch(
       uploadDocument({
@@ -37,7 +37,7 @@ export const executeExtractionAgentSession = createAsyncThunk<
       projectId,
       agentId,
       documentId: document.id,
-      type: isAdminInterface ? "playground" : "live",
+      type: isStudio ? "playground" : "live",
     })
   },
 )
@@ -50,7 +50,7 @@ export const getExtractionAgentSession = createAsyncThunk<
   "extractionAgentSessions/getOne",
   async ({ agentSessionId }, { extra: { services }, getState }) => {
     const state = getState()
-    const isAdminInterface = selectIsAdminInterface(state)
+    const isStudio = isStudioInterface()
     const params = getCurrentIds({
       state,
       wantedIds: ["organizationId", "projectId", "agentId"],
@@ -58,7 +58,7 @@ export const getExtractionAgentSession = createAsyncThunk<
     return await services.extractionAgentSessions.getOne({
       ...params,
       agentSessionId,
-      type: isAdminInterface ? "playground" : "live",
+      type: isStudio ? "playground" : "live",
     })
   },
 )

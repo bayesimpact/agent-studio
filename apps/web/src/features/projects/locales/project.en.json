@@ -14,10 +14,17 @@
         "name": "Workspace name is required"
       }
     },
+    "list": {
+      "title": "Welcome, {{userName}}!"
+    },
     "create": {
       "button": "Create Workspace",
-      "title": "Create Workspace",
-      "description": "Create a new workspace for {{organizationName}}"
+      "title": "New Workspace",
+      "description": "Manage your conversational agents, form agents and other types of agents.",
+      "dialog": {
+        "title": "Create Workspace",
+        "description": "Create a new workspace for {{organizationName}}"
+      }
     },
     "update": {
       "title": "Update Workspace",

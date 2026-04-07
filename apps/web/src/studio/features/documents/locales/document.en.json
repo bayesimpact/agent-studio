@@ -31,6 +31,7 @@
       "description": "Are you sure you want to delete this document? This action cannot be undone."
     },
     "list": {
+      "description": "Enhance your agents' knowledge and capabilities by adding documents.",
       "empty": {
         "title": "No documents yet",
         "description": "Upload your first document to get started."

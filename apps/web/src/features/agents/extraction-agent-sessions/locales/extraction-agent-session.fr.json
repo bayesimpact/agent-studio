@@ -2,7 +2,7 @@
   "extractionAgentSession": {
     "create": {
       "button": "Nouvelle extraction",
-      "title": "Créer une session d'extraction",
+      "title": "Nouvelle extraction",
       "description": "Téléversez un PDF ou une image pour lancer l'extraction."
     },
     "list": {

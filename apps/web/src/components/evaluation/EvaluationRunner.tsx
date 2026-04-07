@@ -12,8 +12,8 @@ import {
 import { useState } from "react"
 import { useTranslation } from "react-i18next"
 import type { Agent } from "@/features/agents/agents.models"
-import { createEvaluationReport } from "@/features/evaluation-reports/evaluation-reports.thunks"
 import { useAppDispatch } from "@/store/hooks"
+import { createEvaluationReport } from "@/studio/features/evaluation-reports/evaluation-reports.thunks"
 
 export function EvaluationRunner({
   ids,

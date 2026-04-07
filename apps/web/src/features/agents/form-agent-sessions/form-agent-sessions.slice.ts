@@ -86,4 +86,4 @@ const slice = createSlice({
 export type { State as formAgentSessionsState }
 export const formAgentSessionsInitialState = initialState
 export const formAgentSessionsActions = { ...slice.actions }
-export const formAgentSessionsSliceReducer = slice.reducer
+export const formAgentSessionsSlice = slice

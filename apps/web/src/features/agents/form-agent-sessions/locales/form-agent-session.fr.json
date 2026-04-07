@@ -8,7 +8,9 @@
       "result": "Résultat du formulaire"
     },
     "create": {
-      "button": "Nouvelle session de formulaire"
+      "button": "Nouvelle session de formulaire",
+      "title": "Nouvelle session de formulaire",
+      "description": "Démarrez une session de formulaire avec votre agent."
     },
     "list": {
       "title": "Sessions de formulaire"

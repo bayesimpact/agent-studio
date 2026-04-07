@@ -9,9 +9,9 @@ import {
 import { ListChecksIcon } from "lucide-react"
 import { useCallback } from "react"
 import { useTranslation } from "react-i18next"
-import type { Evaluation } from "@/features/evaluations/evaluations.models"
-import { createEvaluation } from "@/features/evaluations/evaluations.thunks"
 import { useAppDispatch } from "@/store/hooks"
+import type { Evaluation } from "@/studio/features/evaluations/evaluations.models"
+import { createEvaluation } from "@/studio/features/evaluations/evaluations.thunks"
 import { EvaluationCreator } from "./EvaluationCreator"
 
 export function EmptyEvaluation() {

@@ -64,4 +64,4 @@ const slice = createSlice({
 export type { State as conversationAgentSessionsState }
 export const conversationAgentSessionsInitialState = initialState
 export const conversationAgentSessionsActions = { ...slice.actions }
-export const conversationAgentSessionsSliceReducer = slice.reducer
+export const conversationAgentSessionsSlice = slice

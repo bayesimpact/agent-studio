@@ -2,10 +2,10 @@ import type z from "zod"
 import { EvaluationReportTable } from "@/components/evaluation/table/EvaluationReportTable"
 import type { schema } from "@/components/evaluation/table/schema"
 import type { Agent } from "@/features/agents/agents.models"
-import type { EvaluationReport } from "@/features/evaluation-reports/evaluation-reports.models"
-import { selectEvaluationReportsForEvaluation } from "@/features/evaluation-reports/evaluation-reports.selectors"
 import { ADS } from "@/store/async-data-status"
 import { useAppSelector } from "@/store/hooks"
+import type { EvaluationReport } from "@/studio/features/evaluation-reports/evaluation-reports.models"
+import { selectEvaluationReportsForEvaluation } from "@/studio/features/evaluation-reports/evaluation-reports.selectors"
 import { Loader } from "../Loader"
 
 export function EvaluationReports({

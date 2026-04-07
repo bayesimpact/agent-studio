@@ -31,6 +31,7 @@
       "description": "Êtes-vous sûr de vouloir supprimer ce document ? Cette action est irréversible."
     },
     "list": {
+      "description": "Améliorez les connaissances et les capacités de vos agents en ajoutant des documents.",
       "empty": {
         "title": "Aucun document pour le moment",
         "description": "Téléversez votre premier document pour commencer."

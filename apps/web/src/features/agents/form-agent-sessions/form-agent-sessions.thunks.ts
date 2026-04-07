@@ -23,7 +23,7 @@ export const refreshFormResultForCurrentAgentSession = createAsyncThunk<
     return services.formAgentSessions.getAll({
       ...params,
       agentId,
-      type: buildType(state),
+      type: buildType(),
     })
   },
 )

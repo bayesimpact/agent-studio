@@ -7,7 +7,7 @@ import * as React from "react"
 import { useTranslation } from "react-i18next"
 import { ChatFooterContext, useChatFooter } from "./context"
 
-function Chat({ className, children, ...props }: React.ComponentProps<"div"> & {}) {
+function Chat({ className, children, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       data-slot="chat"

@@ -8,9 +8,9 @@ import { useState } from "react"
 import { useForm } from "react-hook-form"
 import { useTranslation } from "react-i18next"
 import { z } from "zod"
-import type { Evaluation } from "@/features/evaluations/evaluations.models"
-import { updateEvaluation } from "@/features/evaluations/evaluations.thunks"
 import { useAppDispatch } from "@/store/hooks"
+import type { Evaluation } from "@/studio/features/evaluations/evaluations.models"
+import { updateEvaluation } from "@/studio/features/evaluations/evaluations.thunks"
 
 type EvaluationFormData = {
   input: string

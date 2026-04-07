@@ -16,9 +16,12 @@ export async function loadLocales(): Promise<{
 }> {
   // Load all locale files from features and root locales directory
   const featureLocales = import.meta.glob("../features/**/locales/*.{en,fr}.json", { eager: true })
+  const studioFeatureLocales = import.meta.glob("../studio/features/**/locales/*.{en,fr}.json", {
+    eager: true,
+  })
   const globalLocales = import.meta.glob("../locales/*.{en,fr}.json", { eager: true })
 
-  const allLocales = { ...featureLocales, ...globalLocales }
+  const allLocales = { ...featureLocales, ...studioFeatureLocales, ...globalLocales }
 
   const resources: {
     en: LanguageResources

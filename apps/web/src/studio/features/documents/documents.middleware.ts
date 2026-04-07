@@ -1,13 +1,12 @@
 import { createListenerMiddleware, isAnyOf } from "@reduxjs/toolkit"
-import { hasInterfaceChanged } from "@/features/auth/auth.selectors"
+import { notificationsActions } from "@/features/notifications/notifications.slice"
+import { hasProjectChanged } from "@/features/projects/projects.selectors"
+import type { AppDispatch, RootState } from "@/store/types"
 import {
   createDocumentTag,
   deleteDocumentTag,
   updateDocumentTag,
-} from "@/features/document-tags/document-tags.thunks"
-import { notificationsActions } from "@/features/notifications/notifications.slice"
-import { hasProjectChanged } from "@/features/projects/projects.selectors"
-import type { AppDispatch, RootState } from "@/store/types"
+} from "@/studio/features/document-tags/document-tags.thunks"
 import { selectUploaderState } from "./documents.selectors"
 import { documentsActions } from "./documents.slice"
 import {
@@ -26,189 +25,190 @@ import {
 
 const listenerMiddleware = createListenerMiddleware<RootState, AppDispatch>()
 
-// Refresh documents when current project or interface changes
-listenerMiddleware.startListening({
-  predicate(_, currentState, originalState) {
-    return (
-      hasInterfaceChanged(originalState, currentState) ||
-      hasProjectChanged(originalState, currentState)
-    )
-  },
-  effect: async (_, listenerApi) => {
-    await handleDocumentsContextChanged(listenerApi)
-  },
-})
+function registerListeners() {
+  // Refresh documents when current project or interface changes
+  listenerMiddleware.startListening({
+    predicate(_, currentState, originalState) {
+      return hasProjectChanged(originalState, currentState)
+    },
+    effect: async (_, listenerApi) => {
+      await handleDocumentsContextChanged(listenerApi)
+    },
+  })
 
-listenerMiddleware.startListening({
-  actionCreator: documentsActions.startEmbeddingStatusStream,
-  effect: async (_, listenerApi) => {
-    await startDocumentEmbeddingStatusStream(listenerApi)
-  },
-})
+  listenerMiddleware.startListening({
+    actionCreator: documentsActions.startEmbeddingStatusStream,
+    effect: async (_, listenerApi) => {
+      await startDocumentEmbeddingStatusStream(listenerApi)
+    },
+  })
 
-listenerMiddleware.startListening({
-  actionCreator: documentsActions.stopEmbeddingStatusStream,
-  effect: async () => {
-    stopDocumentEmbeddingStatusStream()
-  },
-})
+  listenerMiddleware.startListening({
+    actionCreator: documentsActions.stopEmbeddingStatusStream,
+    effect: async () => {
+      stopDocumentEmbeddingStatusStream()
+    },
+  })
 
-listenerMiddleware.startListening({
-  actionCreator: documentsActions.patchDocumentEmbeddingStatus,
-  effect: async (_, listenerApi) => {
-    syncDocumentEmbeddingStatusStreamWithDocuments(listenerApi)
-  },
-})
+  listenerMiddleware.startListening({
+    actionCreator: documentsActions.patchDocumentEmbeddingStatus,
+    effect: async (_, listenerApi) => {
+      syncDocumentEmbeddingStatusStreamWithDocuments(listenerApi)
+    },
+  })
 
-listenerMiddleware.startListening({
-  actionCreator: listDocuments.fulfilled,
-  effect: async (_, listenerApi) => {
-    syncDocumentEmbeddingStatusStreamWithDocuments(listenerApi)
-  },
-})
+  listenerMiddleware.startListening({
+    actionCreator: listDocuments.fulfilled,
+    effect: async (_, listenerApi) => {
+      syncDocumentEmbeddingStatusStreamWithDocuments(listenerApi)
+    },
+  })
 
-// Refresh documents when one is uploaded, updated or deleted
-listenerMiddleware.startListening({
-  matcher: isAnyOf(
-    // Document changes
-    uploadDocument.fulfilled,
-    uploadDocuments.fulfilled,
-    updateDocument.fulfilled,
-    deleteDocument.fulfilled,
-    // DocumentTag changes
-    createDocumentTag.fulfilled,
-    updateDocumentTag.fulfilled,
-    deleteDocumentTag.fulfilled,
-  ),
-  effect: async (_, listenerApi) => {
-    listenerApi.dispatch(listDocuments())
-  },
-})
+  // Refresh documents when one is uploaded, updated or deleted
+  listenerMiddleware.startListening({
+    matcher: isAnyOf(
+      // Document changes
+      uploadDocument.fulfilled,
+      uploadDocuments.fulfilled,
+      updateDocument.fulfilled,
+      deleteDocument.fulfilled,
+      // DocumentTag changes
+      createDocumentTag.fulfilled,
+      updateDocumentTag.fulfilled,
+      deleteDocumentTag.fulfilled,
+    ),
+    effect: async (_, listenerApi) => {
+      listenerApi.dispatch(listDocuments())
+    },
+  })
 
-listenerMiddleware.startListening({
-  predicate(_, currentState) {
-    return currentState.documents ? selectUploaderState(currentState).status === "completed" : false
-  },
-  effect: async (_, listenerApi) => {
-    await listenerApi.delay(4000)
-    listenerApi.dispatch(documentsActions.resetUploaderCounters())
-  },
-})
+  listenerMiddleware.startListening({
+    predicate(_, currentState) {
+      return currentState.studio.documents.data.value
+        ? selectUploaderState(currentState).status === "completed"
+        : false
+    },
+    effect: async (_, listenerApi) => {
+      await listenerApi.delay(4000)
+      listenerApi.dispatch(documentsActions.resetUploaderCounters())
+    },
+  })
 
-listenerMiddleware.startListening({
-  actionCreator: uploadDocuments.fulfilled,
-  effect: async (action, listenerApi) => {
-    const state = listenerApi.getState()
-    const uploaderState = selectUploaderState(state)
-    const errors = uploaderState.errors || []
-    const totalCount = action.meta.arg.files.length
-    const successfulUploadCount = totalCount - errors.length
-    listenerApi.dispatch(
-      notificationsActions.show({
-        title: `${successfulUploadCount}/${totalCount} documents uploaded successfully`,
-        type: "success",
-      }),
-    )
-    await listenerApi.delay(500)
-    if (errors.length > 0) {
+  listenerMiddleware.startListening({
+    actionCreator: uploadDocuments.fulfilled,
+    effect: async (action, listenerApi) => {
+      const state = listenerApi.getState()
+      const uploaderState = selectUploaderState(state)
+      const errors = uploaderState.errors || []
+      const totalCount = action.meta.arg.files.length
+      const successfulUploadCount = totalCount - errors.length
       listenerApi.dispatch(
         notificationsActions.show({
-          title: `${errors.length} documents failed to upload`,
+          title: `${successfulUploadCount}/${totalCount} documents uploaded successfully`,
+          type: "success",
+        }),
+      )
+      await listenerApi.delay(500)
+      if (errors.length > 0) {
+        listenerApi.dispatch(
+          notificationsActions.show({
+            title: `${errors.length} documents failed to upload`,
+            type: "error",
+          }),
+        )
+      }
+    },
+  })
+
+  listenerMiddleware.startListening({
+    actionCreator: uploadDocument.pending,
+    effect: async (action, listenerApi) => {
+      listenerApi.dispatch(
+        notificationsActions.show({
+          title: `Uploading ${action.meta.arg.file.name}...`,
+          type: "info",
+        }),
+      )
+    },
+  })
+  listenerMiddleware.startListening({
+    actionCreator: uploadDocument.fulfilled,
+    effect: async (action, listenerApi) => {
+      listenerApi.dispatch(
+        notificationsActions.show({
+          title: `${action.meta.arg.file.name} uploaded successfully`,
+          type: "success",
+        }),
+      )
+
+      const onSuccess = action.meta.arg.onSuccess
+      const { id: documentId } = action.payload
+      onSuccess?.({ documentId })
+    },
+  })
+  listenerMiddleware.startListening({
+    actionCreator: uploadDocument.rejected,
+    effect: async (action, listenerApi) => {
+      listenerApi.dispatch(
+        notificationsActions.show({
+          title: `${action.meta.arg.file.name} upload failed`,
           type: "error",
         }),
       )
-    }
-  },
-})
+    },
+  })
 
-listenerMiddleware.startListening({
-  actionCreator: uploadDocument.pending,
-  effect: async (action, listenerApi) => {
-    listenerApi.dispatch(
-      notificationsActions.show({
-        title: `Uploading ${action.meta.arg.file.name}...`,
-        type: "info",
-      }),
-    )
-  },
-})
-listenerMiddleware.startListening({
-  actionCreator: uploadDocument.fulfilled,
-  effect: async (action, listenerApi) => {
-    listenerApi.dispatch(
-      notificationsActions.show({
-        title: `${action.meta.arg.file.name} uploaded successfully`,
-        type: "success",
-      }),
-    )
+  listenerMiddleware.startListening({
+    actionCreator: updateDocument.fulfilled,
+    effect: async (action, listenerApi) => {
+      listenerApi.dispatch(
+        notificationsActions.show({
+          title: "Document updated successfully",
+          type: "success",
+        }),
+      )
 
-    const onSuccess = action.meta.arg.onSuccess
-    const { id: documentId } = action.payload
-    onSuccess?.({ documentId })
-  },
-})
-listenerMiddleware.startListening({
-  actionCreator: uploadDocument.rejected,
-  effect: async (action, listenerApi) => {
-    listenerApi.dispatch(
-      notificationsActions.show({
-        title: `${action.meta.arg.file.name} upload failed`,
-        type: "error",
-      }),
-    )
-  },
-})
+      const onSuccess = action.meta.arg.onSuccess
+      onSuccess?.()
+    },
+  })
+  listenerMiddleware.startListening({
+    actionCreator: updateDocument.rejected,
+    effect: async (_, listenerApi) => {
+      listenerApi.dispatch(
+        notificationsActions.show({
+          title: "Document update failed",
+          type: "error",
+        }),
+      )
+    },
+  })
 
-listenerMiddleware.startListening({
-  actionCreator: updateDocument.fulfilled,
-  effect: async (action, listenerApi) => {
-    listenerApi.dispatch(
-      notificationsActions.show({
-        title: "Document updated successfully",
-        type: "success",
-      }),
-    )
+  listenerMiddleware.startListening({
+    actionCreator: deleteDocument.fulfilled,
+    effect: async (action, listenerApi) => {
+      listenerApi.dispatch(
+        notificationsActions.show({
+          title: "Document deleted successfully",
+          type: "success",
+        }),
+      )
 
-    const onSuccess = action.meta.arg.onSuccess
-    onSuccess?.()
-  },
-})
-listenerMiddleware.startListening({
-  actionCreator: updateDocument.rejected,
-  effect: async (_, listenerApi) => {
-    listenerApi.dispatch(
-      notificationsActions.show({
-        title: "Document update failed",
-        type: "error",
-      }),
-    )
-  },
-})
+      const onSuccess = action.meta.arg.onSuccess
+      onSuccess?.()
+    },
+  })
+  listenerMiddleware.startListening({
+    actionCreator: deleteDocument.rejected,
+    effect: async (_, listenerApi) => {
+      listenerApi.dispatch(
+        notificationsActions.show({
+          title: "Document deletion failed",
+          type: "error",
+        }),
+      )
+    },
+  })
+}
 
-listenerMiddleware.startListening({
-  actionCreator: deleteDocument.fulfilled,
-  effect: async (action, listenerApi) => {
-    listenerApi.dispatch(
-      notificationsActions.show({
-        title: "Document deleted successfully",
-        type: "success",
-      }),
-    )
-
-    const onSuccess = action.meta.arg.onSuccess
-    onSuccess?.()
-  },
-})
-listenerMiddleware.startListening({
-  actionCreator: deleteDocument.rejected,
-  effect: async (_, listenerApi) => {
-    listenerApi.dispatch(
-      notificationsActions.show({
-        title: "Document deletion failed",
-        type: "error",
-      }),
-    )
-  },
-})
-
-export { listenerMiddleware as documentsMiddleware }
+export const documentsMiddleware = { listenerMiddleware, registerListeners }

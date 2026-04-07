@@ -14,9 +14,9 @@ import {
   ItemTitle,
 } from "@caseai-connect/ui/shad/item"
 import { TagIcon } from "lucide-react"
-import type { DocumentTag } from "@/features/document-tags/document-tags.models"
-import { selectDocumentTagsData } from "@/features/document-tags/document-tags.selectors"
 import { useAppSelector } from "@/store/hooks"
+import type { DocumentTag } from "@/studio/features/document-tags/document-tags.models"
+import { selectDocumentTagsData } from "@/studio/features/document-tags/document-tags.selectors"
 import { DocumentTagDeletor } from "./DocumentTagDeletor"
 import { DocumentTagEditor } from "./DocumentTagEditor"
 

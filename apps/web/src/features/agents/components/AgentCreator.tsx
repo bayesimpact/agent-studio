@@ -22,10 +22,10 @@ import { useTranslation } from "react-i18next"
 import { useNavigate } from "react-router-dom"
 import type { Agent } from "@/features/agents/agents.models"
 import { createAgent } from "@/features/agents/agents.thunks"
-import { useDocumentTags } from "@/features/document-tags/document-tags.helpers"
 import type { Project } from "@/features/projects/projects.models"
-import { useBuildPath } from "@/hooks/use-build-path"
 import { useAppDispatch } from "@/store/hooks"
+import { useDocumentTags } from "@/studio/features/document-tags/document-tags.helpers"
+import { useBuildStudioPath } from "@/studio/hooks/use-studio-build-path"
 import type { AgentFormData } from "./agent-form.shared"
 import { BaseAgentForm } from "./BaseAgentForm"
 
@@ -159,10 +159,10 @@ function AgentCreation({
 }) {
   const { t } = useTranslation("agent", { keyPrefix: "create" })
   const navigate = useNavigate()
-  const { buildPath } = useBuildPath()
+  const { buildStudioPath } = useBuildStudioPath()
 
   const handleSuccess = (agent: Agent) => {
-    const path = buildPath("agent", {
+    const path = buildStudioPath("agent", {
       organizationId: project.organizationId,
       projectId: project.id,
       agentId: agent.id,

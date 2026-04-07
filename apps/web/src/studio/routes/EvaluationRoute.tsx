@@ -8,11 +8,11 @@ import { EvaluationRunner } from "@/components/evaluation/EvaluationRunner"
 import { useSidebarLayout } from "@/components/layouts/sidebar/context"
 import type { Agent } from "@/features/agents/agents.models"
 import { selectAgentsData } from "@/features/agents/agents.selectors"
-import type { Evaluation } from "@/features/evaluations/evaluations.models"
-import { selectEvaluationsData } from "@/features/evaluations/evaluations.selectors"
-import { createEvaluation } from "@/features/evaluations/evaluations.thunks"
 import { useAppDispatch, useAppSelector } from "@/store/hooks"
-import { AsyncRoute } from "../../routes/AsyncRoute"
+import type { Evaluation } from "@/studio/features/evaluations/evaluations.models"
+import { selectEvaluationsData } from "@/studio/features/evaluations/evaluations.selectors"
+import { createEvaluation } from "@/studio/features/evaluations/evaluations.thunks"
+import { AsyncRoute } from "../../common/routes/AsyncRoute"
 
 export function EvaluationRoute() {
   const evaluations = useAppSelector(selectEvaluationsData)

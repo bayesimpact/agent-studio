@@ -1,5 +1,5 @@
 import { Item, ItemContent, ItemFooter, ItemHeader, ItemTitle } from "@caseai-connect/ui/shad/item"
-import type { AgentMessageFeedback } from "@/features/agent-message-feedback/agent-message-feedback.models"
+import type { AgentMessageFeedback } from "@/studio/features/agent-message-feedback/agent-message-feedback.models"
 import { buildDate } from "@/utils/build-date"
 import { MarkdownWrapper } from "../../features/agents/shared/agent-session-messages/components/MarkdownWrapper"
 import { TraceUrlOpener } from "../TraceUrlOpener"

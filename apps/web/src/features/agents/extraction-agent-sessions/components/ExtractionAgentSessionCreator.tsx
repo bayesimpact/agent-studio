@@ -7,7 +7,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@caseai-connect/ui/shad/dialog"
-import { PlusIcon } from "lucide-react"
+import { PlusCircleIcon } from "lucide-react"
 import { useState } from "react"
 import { useTranslation } from "react-i18next"
 import { FileUploader } from "@/components/FileUploader"
@@ -44,9 +44,9 @@ export function ExtractionSessionCreator({ disabled }: { disabled: boolean }) {
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
-        <Button disabled={isRunning || disabled}>
-          <PlusIcon />
-          <span>{t("extractionAgentSession:create.button")}</span>
+        <Button size="lg" className="text-base" disabled={isRunning || disabled}>
+          {t("actions:create")}
+          <PlusCircleIcon className="ml-2 size-5" />
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-md">

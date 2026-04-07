@@ -1,6 +1,8 @@
 import { useCallback, useMemo } from "react"
 import { useLocation } from "react-router-dom"
-import { RouteNames } from "@/routes/helpers"
+import type { RouteNames } from "@/common/routes/helpers"
+import { DeskRouteNames } from "@/desk/routes/helpers"
+import { StudioRouteNames } from "@/studio/routes/helpers"
 
 export function useIsRoute() {
   const { pathname } = useLocation()
@@ -9,7 +11,7 @@ export function useIsRoute() {
   }, [pathname])
 
   const isRoute = useCallback(
-    (routeName: RouteNames) => {
+    (routeName: RouteNames | StudioRouteNames | DeskRouteNames) => {
       const routePieces = getRoutePieces(routeName)
       return pathPieces === routePieces
     },
@@ -28,13 +30,13 @@ function getPathPieces(pathname: string) {
       .filter(
         (piece) =>
           !idParamRegex.test(piece) &&
-          piece !== RouteNames.APP.slice(1) &&
-          piece !== RouteNames.STUDIO.slice(1),
+          piece !== DeskRouteNames.APP.slice(1) &&
+          piece !== StudioRouteNames.STUDIO.slice(1),
       )
       .toString()
   )
 }
-function getRoutePieces(routeName: RouteNames) {
+function getRoutePieces(routeName: RouteNames | StudioRouteNames | DeskRouteNames) {
   return routeName
     .split("/")
     .filter(Boolean)

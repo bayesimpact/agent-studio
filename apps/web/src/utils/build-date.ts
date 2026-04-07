@@ -1,5 +1,5 @@
 import type { TimeType } from "@caseai-connect/api-contracts"
-import { type FormatOptions, format } from "date-fns"
+import { type FormatOptions, format, formatDistanceToNow } from "date-fns"
 import { getLocale } from "./get-locale"
 
 export function buildDate(
@@ -8,4 +8,11 @@ export function buildDate(
   formatOptions?: FormatOptions,
 ) {
   return format(new Date(date), formatStr, { locale: getLocale(), ...formatOptions })
+}
+
+export function buildSince(date: TimeType) {
+  return formatDistanceToNow(new Date(date), {
+    addSuffix: true,
+    locale: getLocale(),
+  })
 }

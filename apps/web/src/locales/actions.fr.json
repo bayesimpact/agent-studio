@@ -19,6 +19,8 @@
     "enter": "Entrer",
     "filter": "Filtrer",
     "finish": "Terminer",
+    "goToApp": "Ouvrir l'application",
+    "goToStudio": "Ouvrir le Studio",
     "leave": "Quitter",
     "loadMore": "Charger plus",
     "more": "Plus",
@@ -40,8 +42,7 @@
     "submit": "Soumettre",
     "update": "Mettre à jour",
     "upload": "Téléverser",
-    "goToStudio": "Entrer dans le Studio",
-    "exitStudio": "Quitter le Studio",
+    "invite": "Inviter",
     "view": "Voir"
   }
 }

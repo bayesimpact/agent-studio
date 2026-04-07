@@ -16,15 +16,15 @@ const missingAgentSessions = {
 
 export const selectCurrentFormAgentSessionsData = createSelector(
   [selectCurrentAgentData, selectFormAgentSessionsData],
-  (agentData, formAgentSessionsData): AsyncData<FormAgentSession[]> => {
+  (agentData, sessionsData): AsyncData<FormAgentSession[]> => {
     if (!ADS.isFulfilled(agentData)) return { ...agentData }
 
-    if (!ADS.isFulfilled(formAgentSessionsData)) return { ...formAgentSessionsData }
+    if (!ADS.isFulfilled(sessionsData)) return { ...sessionsData }
 
-    const agentSessions = formAgentSessionsData.value[agentData.value.id]
-    if (!agentSessions) return missingAgentSessions
+    const value = sessionsData.value[agentData.value.id]
+    if (!value) return missingAgentSessions
 
-    return { status: ADS.Fulfilled, value: agentSessions, error: null }
+    return { status: ADS.Fulfilled, value, error: null }
   },
 )
 

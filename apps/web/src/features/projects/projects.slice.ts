@@ -45,4 +45,4 @@ const slice = createSlice({
 export type { State as ProjectsState }
 export const projectsInitialState = initialState
 export const projectsActions = { ...slice.actions }
-export const projectsSliceReducer = slice.reducer
+export const projectsSlice = slice

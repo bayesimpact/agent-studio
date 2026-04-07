@@ -14,10 +14,17 @@
         "name": "Le nom de l'espace de travail est requis"
       }
     },
+    "list": {
+      "title": "Bienvenue, {{userName}} !"
+    },
     "create": {
       "button": "Créer un espace de travail",
-      "title": "Créer un espace de travail",
-      "description": "Créer un nouvel espace de travail pour {{organizationName}}"
+      "title": "Nouvel espace de travail",
+      "description": "Gérez vos agents conversationnels, agents de formulaire et autres types d'agents.",
+      "dialog": {
+        "title": "Créer un espace de travail",
+        "description": "Créer un nouvel espace de travail pour {{organizationName}}"
+      }
     },
     "update": {
       "title": "Mettre à jour l'espace de travail",

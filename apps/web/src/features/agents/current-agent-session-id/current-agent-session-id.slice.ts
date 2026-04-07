@@ -22,4 +22,4 @@ const slice = createSlice({
 export type { State as currentAgentSessionIdState }
 export const currentAgentSessionIdInitialState = initialState
 export const currentAgentSessionIdActions = { ...slice.actions }
-export const currentAgentSessionIdSliceReducer = slice.reducer
+export const currentAgentSessionIdSlice = slice

@@ -3,13 +3,13 @@ import {
   DropdownMenuItem,
   DropdownMenuSeparator,
 } from "@caseai-connect/ui/shad/dropdown-menu"
-import { LogOutIcon, ShieldBanIcon, ShieldCheckIcon } from "lucide-react"
+import { ExternalLinkIcon, LogOutIcon, ShieldCheckIcon } from "lucide-react"
 import { useTranslation } from "react-i18next"
-import { useNavigate } from "react-router-dom"
+import { useDeskGetPath } from "@/desk/hooks/use-desk-build-path"
 import { useAbility } from "@/hooks/use-ability"
 import { useAuthHandler } from "@/hooks/use-auth-handler"
-import { useGetPath } from "@/hooks/use-build-path"
-import { RouteNames } from "@/routes/helpers"
+import { useGetStudioPath } from "@/studio/hooks/use-studio-build-path"
+import { isStudioInterface } from "@/studio/routes/helpers"
 
 export function NavUserMenuItems() {
   return (
@@ -26,32 +26,29 @@ export function NavUserMenuItems() {
 }
 
 function InterfaceToggle() {
-  const navigate = useNavigate()
   const { t } = useTranslation("actions")
-  const { abilities, isAdminInterface } = useAbility()
-  const { getPath } = useGetPath()
+  const { abilities } = useAbility()
+  const { getStudioPath } = useGetStudioPath()
+  const { getDeskPath } = useDeskGetPath()
 
-  const toStudio = !isAdminInterface && abilities.canManageOrganizations
+  const isStudio = isStudioInterface()
 
-  const handleChange = () => {
-    const newLocation = getPath("project", {
-      forceInterface: toStudio ? RouteNames.STUDIO : RouteNames.APP,
-    })
-    navigate(newLocation)
-  }
-
-  if (!abilities.canManageProjects) return null
+  if (!abilities.canAccessStudio) return null
   return (
     <DropdownMenuGroup>
-      {isAdminInterface ? (
-        <DropdownMenuItem onSelect={handleChange}>
-          <ShieldBanIcon />
-          {t("exitStudio")}
+      {isStudio ? (
+        <DropdownMenuItem asChild>
+          <a target="_blank" rel="noopener noreferrer" href={getDeskPath("organization")}>
+            <ExternalLinkIcon />
+            {t("goToApp")}
+          </a>
         </DropdownMenuItem>
       ) : (
-        <DropdownMenuItem onSelect={handleChange}>
-          <ShieldCheckIcon />
-          {t("goToStudio")}
+        <DropdownMenuItem asChild>
+          <a target="_blank" rel="noopener noreferrer" href={getStudioPath("organization")}>
+            <ShieldCheckIcon />
+            {t("goToStudio")}
+          </a>
         </DropdownMenuItem>
       )}
       <DropdownMenuSeparator />

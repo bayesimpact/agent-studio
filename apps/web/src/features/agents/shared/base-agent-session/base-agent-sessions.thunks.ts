@@ -1,8 +1,8 @@
 import type { SuccessResponseDTO } from "@caseai-connect/api-contracts"
 import { createAsyncThunk, type ListenerEffectAPI } from "@reduxjs/toolkit"
-import { selectIsAdminInterface } from "@/features/auth/auth.selectors"
 import { getCurrentIds } from "@/features/helpers"
 import type { AppDispatch, RootState, ThunkExtraArg } from "@/store"
+import { isStudioInterface } from "@/studio/routes/helpers"
 import type { Agent } from "../../agents.models"
 import type { ConversationAgentSession } from "../../conversation-agent-sessions/conversation-agent-sessions.models"
 import type { ExtractionAgentSession } from "../../extraction-agent-sessions/extraction-agent-sessions.models"
@@ -35,7 +35,7 @@ export const listAgentSessionsForAgents = createAsyncThunk<
           [agentId]: await map[agentType].getAll({
             ...params,
             agentId,
-            type: buildType(state),
+            type: buildType(),
           }),
         }
       }),
@@ -67,7 +67,7 @@ export const createAgentSession = createAsyncThunk<
     return map[agentType].createOne({
       ...params,
       agentId,
-      type: buildType(state),
+      type: buildType(),
     })
   },
 )
@@ -93,13 +93,13 @@ export const deleteAgentSession = createAsyncThunk<
       ...params,
       agentId,
       agentSessionId,
-      type: buildType(state),
+      type: buildType(),
     })
   },
 )
 
-export function buildType(state: RootState) {
-  return selectIsAdminInterface(state) ? "playground" : "live"
+export function buildType() {
+  return isStudioInterface() ? "playground" : "live"
 }
 
 export async function loadAgentSessionsForAllAgents({

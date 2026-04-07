@@ -3,13 +3,14 @@ import type { RootState } from "@/store"
 import { ADS, type AsyncData } from "@/store/async-data-status"
 import type { Document } from "./documents.models"
 
-export const selectDocumentsStatus = (state: RootState) => state.documents.data.status
+export const selectDocumentsStatus = (state: RootState) => state.studio.documents.data.status
 
-export const selectDocumentsError = (state: RootState) => state.documents.data.error
+export const selectDocumentsError = (state: RootState) => state.studio.documents.data.error
 
-export const selectDocumentsData = (state: RootState) => state.documents.data
+export const selectDocumentsData = (state: RootState) => state.studio.documents.data
 
-export const selectCurrentDocumentId = (state: RootState) => state.documents.currentDocumentId
+export const selectCurrentDocumentId = (state: RootState) =>
+  state.studio.documents.currentDocumentId
 
 export const selectDocumentData = createSelector(
   [selectDocumentsData, selectCurrentDocumentId],
@@ -23,9 +24,10 @@ export const selectDocumentData = createSelector(
   },
 )
 
-export const selectUploaderState = (state: RootState) => state.documents.uploader
+export const selectUploaderState = (state: RootState) => state.studio.documents.uploader
+
 export const selectIsEmbeddingStatusStreamActive = (state: RootState) =>
-  state.documents.embeddingStatusStream.isActive
+  state.studio.documents.embeddingStatusStream.isActive
 
 export const selectHasDocumentsInProgress = createSelector(
   [selectDocumentsData],

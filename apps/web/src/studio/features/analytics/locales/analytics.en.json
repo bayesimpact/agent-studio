@@ -1,0 +1,19 @@
+{
+  "analytics": {
+    "list": {
+      "title": "Analytics",
+      "description": "View analytics for your project, including conversations, average questions per session, and more."
+    },
+    "dateRangePlaceholder": "Date range",
+    "conversationsChart": {
+      "title": "Conversations per day",
+      "description": "Number of conversational sessions started each day",
+      "metricLabel": "Total conversations"
+    },
+    "avgQuestionsChart": {
+      "title": "Avg. user questions per session",
+      "description": "Average user messages per session per day",
+      "metricLabel": "Per day"
+    }
+  }
+}

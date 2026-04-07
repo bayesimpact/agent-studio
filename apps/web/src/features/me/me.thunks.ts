@@ -1,6 +1,5 @@
 import { createAsyncThunk } from "@reduxjs/toolkit"
 import { isAxiosError } from "axios"
-import { RouteNames } from "@/routes/helpers"
 import type { RootState, ThunkExtraArg } from "@/store"
 import type { UserMembershipsDto } from "../../../../../packages/api-contracts/src/me/me.dto"
 import { selectCurrentAgentId } from "../agents/agents.selectors"
@@ -44,11 +43,15 @@ function compute(
     memberships.organizationMemberships[0] &&
     adminRoles.includes(memberships.organizationMemberships[0].role)
   )
+
+  const canManageOrganizations = orgMembership
+    ? adminRoles.includes(orgMembership.role)
+    : canManageFirstOrganization
+
+  const canManageProjects = projectMembership ? adminRoles.includes(projectMembership.role) : false
+
   return {
-    canManageOrganizations: orgMembership
-      ? adminRoles.includes(orgMembership.role)
-      : canManageFirstOrganization,
-    canManageProjects: projectMembership ? adminRoles.includes(projectMembership.role) : false,
+    canAccessStudio: canManageOrganizations || canManageProjects,
     canReadAgent: agentMembership ? roles.includes(agentMembership.role) : false,
   }
 }
@@ -88,10 +91,6 @@ export const computeAbilities = createAsyncThunk<
   )
 
   dispatch(authActions.setAbilities(abilities))
-
-  const canAccessStudio = abilities.canManageOrganizations || abilities.canManageProjects
-  const isStudioPath = window.location.pathname.startsWith(RouteNames.STUDIO)
-  dispatch(authActions.setIsStudioInterface(canAccessStudio && isStudioPath))
 
   dispatch(authActions.setStopLoading())
 })

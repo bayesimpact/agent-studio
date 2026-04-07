@@ -1,10 +1,10 @@
 import type { DocumentSourceType } from "@caseai-connect/api-contracts"
 import { createAsyncThunk } from "@reduxjs/toolkit"
-import type { DocumentTagsUpdateFields } from "@/features/document-tags/document-tags.models"
 import { getCurrentIds } from "@/features/helpers"
 import { notificationsActions } from "@/features/notifications/notifications.slice"
 import type { RootState, ThunkExtraArg } from "@/store"
 import { ADS } from "@/store/async-data-status"
+import type { DocumentTagsUpdateFields } from "@/studio/features/document-tags/document-tags.models"
 import type { Document } from "./documents.models"
 import { documentsActions } from "./documents.slice"
 import { shouldTriggerResyncForUnknownDocumentEvent } from "./documents-stream-events"
@@ -139,10 +139,10 @@ export const streamDocumentEmbeddingStatuses = createAsyncThunk<void, void, Thun
       projectId,
       signal,
       onStatusChanged: ({ documentId, embeddingStatus, updatedAt }) => {
-        const currentState = getState()
+        const state = getState().studio
         if (
           shouldTriggerResyncForUnknownDocumentEvent({
-            documentsData: currentState.documents.data,
+            documentsData: state.documents.data,
             documentId,
             hasTriggeredUnknownDocumentResync,
           })
@@ -152,11 +152,11 @@ export const streamDocumentEmbeddingStatuses = createAsyncThunk<void, void, Thun
           return
         }
 
-        if (!ADS.isFulfilled(currentState.documents.data)) {
+        if (!ADS.isFulfilled(state.documents.data)) {
           return
         }
 
-        const documentExistsInCurrentList = currentState.documents.data.value.some(
+        const documentExistsInCurrentList = state.documents.data.value.some(
           (document) => document.id === documentId,
         )
         if (!documentExistsInCurrentList) {

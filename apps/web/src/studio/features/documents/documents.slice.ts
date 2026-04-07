@@ -58,6 +58,7 @@ const slice = createSlice({
   name: "documents",
   initialState,
   reducers: {
+    reset: () => initialState,
     resetUploaderCounters: (state) => {
       state.uploader.total = 0
       state.uploader.processed = 0
@@ -83,7 +84,6 @@ const slice = createSlice({
         state.uploader.status = "completed"
       }
     },
-    reset: () => initialState,
     setCurrentDocumentId: (state, action: PayloadAction<{ documentId: string | null }>) => {
       state.currentDocumentId = action.payload.documentId
     },
@@ -147,4 +147,4 @@ const slice = createSlice({
 export type { State as DocumentsState }
 export const documentsInitialState = initialState
 export const documentsActions = { ...slice.actions }
-export const documentsSliceReducer = slice.reducer
+export const documentsSlice = slice

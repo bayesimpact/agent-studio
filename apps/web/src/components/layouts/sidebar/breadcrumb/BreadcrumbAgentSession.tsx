@@ -14,6 +14,7 @@ import {
 import { cn } from "@caseai-connect/ui/utils"
 import { CheckIcon, ChevronDownIcon, DotIcon } from "lucide-react"
 import { Link } from "react-router-dom"
+import { useBuildDeskPath } from "@/desk/hooks/use-desk-build-path"
 import { selectCurrentAgentData } from "@/features/agents/agents.selectors"
 import type { ConversationAgentSession } from "@/features/agents/conversation-agent-sessions/conversation-agent-sessions.models"
 import {
@@ -26,9 +27,10 @@ import {
   selectCurrentFormAgentSessionsData,
 } from "@/features/agents/form-agent-sessions/form-agent-sessions.selectors"
 import { selectCurrentProjectId } from "@/features/projects/projects.selectors"
-import { useBuildPath } from "@/hooks/use-build-path"
 import { ADS } from "@/store/async-data-status"
 import { useAppSelector } from "@/store/hooks"
+import { useBuildStudioPath } from "@/studio/hooks/use-studio-build-path"
+import { isStudioInterface } from "@/studio/routes/helpers"
 import { buildDate } from "@/utils/build-date"
 
 export function BreadcrumbAgentSession({ organizationId }: { organizationId: string }) {
@@ -83,7 +85,9 @@ function WithData({
   sessions: (ConversationAgentSession | FormAgentSession)[]
 }) {
   const projectId = useAppSelector(selectCurrentProjectId)
-  const { buildPath } = useBuildPath()
+  const { buildStudioPath } = useBuildStudioPath()
+  const { buildDeskPath } = useBuildDeskPath()
+  const buildPath = isStudioInterface() ? buildStudioPath : buildDeskPath
 
   const currentSessionName = buildDate(currentSession.createdAt)
   const currentSessionPath = buildPath("agentSession", {

@@ -1,11 +1,10 @@
 import { Button } from "@caseai-connect/ui/shad/button"
+import { cn } from "@caseai-connect/ui/utils"
 import { FileCheckIcon, XIcon } from "lucide-react"
 import { useEffect, useRef, useState } from "react"
 import { useTranslation } from "react-i18next"
-import { DotsBackground } from "@/components/DotsBackground"
-import { AttachDocument } from "@/components/document/AttachDocument"
-import { TraceUrlOpener } from "@/components/TraceUrlOpener"
 import type { ConversationAgentSession } from "@/features/agents/conversation-agent-sessions/conversation-agent-sessions.models"
+import type { FormAgentSession } from "@/features/agents/form-agent-sessions/form-agent-sessions.models"
 import type { AgentSessionMessage as AgentSessionMessageType } from "@/features/agents/shared/agent-session-messages/agent-session-messages.models"
 import { AgentSessionMessage } from "@/features/agents/shared/agent-session-messages/components/AgentSessionMessage"
 import {
@@ -13,49 +12,27 @@ import {
   ChatActions,
   ChatContent,
   ChatFooter,
-  ChatHeader,
   ChatInput,
   ChatSubmit,
 } from "@/features/agents/shared/agent-session-messages/components/Chat"
 import { Dictaphone } from "@/features/agents/shared/agent-session-messages/components/Dictaphone"
 import { useScrollToEnd } from "@/hooks/use-scroll-to-end"
 import { useAppDispatch, useAppSelector } from "@/store/hooks"
+import { AttachDocument } from "@/studio/features/documents/components/AttachDocument"
 import { selectStreaming } from "../agent-session-messages.selectors"
 import { sendMessage } from "../agent-session-messages.thunks"
 
+type AgentSession = ConversationAgentSession | FormAgentSession
 export function AgentSessionMessages({
-  isAdminInterface,
   session,
   messages,
   rightSlot,
 }: {
   rightSlot?: React.ReactNode
-  isAdminInterface: boolean
-  session: ConversationAgentSession
+  session: AgentSession
   messages: AgentSessionMessageType[]
 }) {
   const isStreaming = useAppSelector(selectStreaming)
-
-  if (isAdminInterface)
-    return (
-      <div className="flex flex-1 max-h-[calc(100vh-4rem)] gap-4">
-        <div className="flex flex-1">
-          <DotsBackground className="p-10 w-full">
-            <Chat>
-              <ChatHeader>
-                <TraceUrlOpener traceUrl={session.traceUrl} />
-              </ChatHeader>
-
-              <Messages messages={messages} isStreaming={isStreaming} />
-
-              <Footer session={session} isStreaming={isStreaming} />
-            </Chat>
-          </DotsBackground>
-        </div>
-        {rightSlot && <div className="w-80 shrink-0 h-full border-l">{rightSlot}</div>}
-      </div>
-    )
-
   return (
     <div className="flex flex-1 items-center justify-center">
       <div className="flex flex-1 items-center justify-center">
@@ -68,6 +45,36 @@ export function AgentSessionMessages({
         </div>
       </div>
       {rightSlot && <div className="w-80 shrink-0 h-full border-l">{rightSlot}</div>}
+    </div>
+  )
+}
+
+export function StudioAgentSessionMessages({
+  session,
+  messages,
+  rightSlot,
+}: {
+  rightSlot?: React.ReactNode
+  session: AgentSession
+  messages: AgentSessionMessageType[]
+}) {
+  const isStreaming = useAppSelector(selectStreaming)
+
+  const heightClasses = "min-h-[calc(100vh-20rem)] max-h-[calc(100vh-20rem)]"
+  return (
+    <div className={cn("flex flex-1", heightClasses)}>
+      <div className="flex flex-1 p-4">
+        <Chat className="border shadow-none">
+          <Messages messages={messages} isStreaming={isStreaming} />
+
+          <Footer session={session} isStreaming={isStreaming} />
+        </Chat>
+      </div>
+      {rightSlot && (
+        <div className={cn("w-80 shrink-0 h-full border-l bg-white min-h-full", heightClasses)}>
+          {rightSlot}
+        </div>
+      )}
     </div>
   )
 }

@@ -1,0 +1,44 @@
+import { createAsyncThunk } from "@reduxjs/toolkit"
+import { getCurrentIds } from "@/features/helpers"
+import type { RootState, ThunkExtraArg } from "@/store"
+import type { ProjectMembership } from "./project-memberships.models"
+
+type ThunkConfig = { state: RootState; extra: ThunkExtraArg }
+
+export const listProjectMemberships = createAsyncThunk<ProjectMembership[], void, ThunkConfig>(
+  "projectMemberships/list",
+  async (_, { extra: { services }, getState }) => {
+    const state = getState()
+    const { organizationId, projectId } = getCurrentIds({
+      state,
+      wantedIds: ["organizationId", "projectId"],
+    })
+    return await services.projectMemberships.getAll({ organizationId, projectId })
+  },
+)
+
+export const inviteProjectMembers = createAsyncThunk<
+  ProjectMembership[],
+  { emails: string[] },
+  ThunkConfig
+>("projectMemberships/invite", async ({ emails }, { extra: { services }, getState }) => {
+  const state = getState()
+  const { organizationId, projectId } = getCurrentIds({
+    state,
+    wantedIds: ["organizationId", "projectId"],
+  })
+  return await services.projectMemberships.invite({ organizationId, projectId, emails })
+})
+
+export const removeProjectMembership = createAsyncThunk<
+  void,
+  { membershipId: string },
+  ThunkConfig
+>("projectMemberships/remove", async ({ membershipId }, { extra: { services }, getState }) => {
+  const state = getState()
+  const { organizationId, projectId } = getCurrentIds({
+    state,
+    wantedIds: ["organizationId", "projectId"],
+  })
+  return await services.projectMemberships.remove({ organizationId, projectId, membershipId })
+})

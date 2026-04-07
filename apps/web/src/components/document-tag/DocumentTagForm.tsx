@@ -18,7 +18,7 @@ import { useState } from "react"
 import { Controller, useForm } from "react-hook-form"
 import { useTranslation } from "react-i18next"
 import { z } from "zod"
-import type { DocumentTag } from "@/features/document-tags/document-tags.models"
+import type { DocumentTag } from "@/studio/features/document-tags/document-tags.models"
 import { generateId } from "@/utils/generate-id"
 
 const schema = z.object({

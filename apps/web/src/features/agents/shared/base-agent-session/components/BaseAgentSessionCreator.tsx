@@ -1,13 +1,15 @@
 import { Button } from "@caseai-connect/ui/shad/button"
 import { SidebarMenuSubButton } from "@caseai-connect/ui/shad/sidebar"
 import throttle from "lodash/throttle"
-import { PlusIcon } from "lucide-react"
+import { PlusCircleIcon, PlusIcon } from "lucide-react"
 import { useCallback, useMemo } from "react"
 import { useTranslation } from "react-i18next"
 import { useNavigate } from "react-router-dom"
+import { useBuildDeskPath } from "@/desk/hooks/use-desk-build-path"
 import type { Agent } from "@/features/agents/agents.models"
-import { useBuildPath } from "@/hooks/use-build-path"
 import { useAppDispatch } from "@/store/hooks"
+import { useBuildStudioPath } from "@/studio/hooks/use-studio-build-path"
+import { isStudioInterface } from "@/studio/routes/helpers"
 import { createAgentSession } from "../base-agent-sessions.thunks"
 
 export function BaseAgentSessionCreator({
@@ -20,15 +22,18 @@ export function BaseAgentSessionCreator({
   ids: { agentId: string; projectId: string; organizationId: string }
 }) {
   const navigate = useNavigate()
-  const { t } = useTranslation(`${agentType}AgentSession`, { keyPrefix: "create" })
+  const { t } = useTranslation()
   const dispatch = useAppDispatch()
-  const { buildPath } = useBuildPath()
+  const { buildDeskPath } = useBuildDeskPath()
+  const { buildStudioPath } = useBuildStudioPath()
   const onSuccess = useCallback(
     (agentSessionId: string) => {
+      const isStudio = isStudioInterface()
+      const buildPath = isStudio ? buildStudioPath : buildDeskPath
       const path = buildPath("agentSession", { ...ids, agentSessionId })
       navigate(path)
     },
-    [buildPath, ids, navigate],
+    [buildDeskPath, buildStudioPath, ids, navigate],
   )
 
   const handleClick = useMemo(
@@ -42,11 +47,18 @@ export function BaseAgentSessionCreator({
       ),
     [agentType, ids.agentId, dispatch, onSuccess],
   )
-  const Comp = type === "button" ? Button : SidebarMenuSubButton
+  if (type === "button") {
+    return (
+      <Button size="lg" className="text-base" onClick={handleClick}>
+        {t("actions:create")}
+        <PlusCircleIcon className="ml-2 size-5" />
+      </Button>
+    )
+  }
   return (
-    <Comp onClick={handleClick} className="cursor-pointer">
+    <SidebarMenuSubButton onClick={handleClick} className="cursor-pointer">
       <PlusIcon />
-      <span>{t("button")}</span>
-    </Comp>
+      <span>{t(`${agentType}AgentSession:create.button`)}</span>
+    </SidebarMenuSubButton>
   )
 }

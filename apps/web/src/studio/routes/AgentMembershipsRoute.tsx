@@ -1,37 +1,61 @@
-import { useEffect } from "react"
-import { AgentMembershipList } from "@/components/agent-membership/AgentMembershipList"
+import { useTranslation } from "react-i18next"
+import { useNavigate } from "react-router-dom"
+import { AgentMembershipItem } from "@/components/agent-membership/AgentMembershipItem"
 import { MembersCreator } from "@/components/agent-membership/MembersCreator"
-import { useSidebarLayout } from "@/components/layouts/sidebar/context"
-import type { AgentMembership } from "@/features/agent-memberships/agent-memberships.models"
-import { selectAgentMemberships } from "@/features/agent-memberships/agent-memberships.selectors"
+import type { Agent } from "@/features/agents/agents.models"
+import { selectCurrentAgentData } from "@/features/agents/agents.selectors"
 import { useAppSelector } from "@/store/hooks"
-import { AsyncRoute } from "../../routes/AsyncRoute"
+import type { AgentMembership } from "@/studio/features/agent-memberships/agent-memberships.models"
+import { selectAgentMemberships } from "@/studio/features/agent-memberships/agent-memberships.selectors"
+import { AsyncRoute } from "../../common/routes/AsyncRoute"
+import { Grid, GridContent, GridHeader, GridItem } from "../components/grid/Grid"
+import { useGetStudioPath } from "../hooks/use-studio-build-path"
 
 export function AgentMembershipsRoute() {
+  const agent = useAppSelector(selectCurrentAgentData)
   const memberships = useAppSelector(selectAgentMemberships)
 
   return (
-    <AsyncRoute data={[memberships]}>
-      {([membershipsValue]) => <WithData memberships={membershipsValue} />}
+    <AsyncRoute data={[memberships, agent]}>
+      {([membershipsValue, agentValue]) => (
+        <WithData memberships={membershipsValue} agent={agentValue} />
+      )}
     </AsyncRoute>
   )
 }
 
-function WithData({ memberships }: { memberships: AgentMembership[] }) {
-  useHandleHeader()
-  return (
-    <div className="p-6">
-      <AgentMembershipList memberships={memberships} />
-    </div>
-  )
-}
+function WithData({ memberships, agent }: { memberships: AgentMembership[]; agent: Agent }) {
+  const { t } = useTranslation()
+  const navigate = useNavigate()
+  const { getStudioPath } = useGetStudioPath()
+  const handleBack = () => {
+    const path = getStudioPath("agent")
+    navigate(path)
+  }
+  const cols = memberships.length === 0 ? 0 : 3
+  const total = memberships.length
 
-function useHandleHeader() {
-  const { setHeaderRightSlot } = useSidebarLayout()
-  useEffect(() => {
-    setHeaderRightSlot(<MembersCreator />)
-    return () => {
-      setHeaderRightSlot(undefined)
-    }
-  }, [setHeaderRightSlot])
+  return (
+    <Grid cols={cols} total={total} extraItems={1}>
+      <GridHeader
+        onBack={handleBack}
+        title={t("agentMembership:list.title", { agentName: agent.name })}
+        description={t("agentMembership:list.description")}
+      />
+
+      <GridContent>
+        {memberships.map((membership, index) => (
+          <AgentMembershipItem index={index} key={membership.id} membership={membership} />
+        ))}
+
+        <GridItem
+          index={total}
+          title={t("agentMembership:create.title")}
+          description={t("agentMembership:create.description")}
+          action={<MembersCreator />}
+          className="bg-muted/35"
+        />
+      </GridContent>
+    </Grid>
+  )
 }

@@ -13,9 +13,9 @@ import {
 import { Trash2Icon } from "lucide-react"
 import { useState } from "react"
 import { useTranslation } from "react-i18next"
-import type { DocumentTag } from "@/features/document-tags/document-tags.models"
-import { deleteDocumentTag } from "@/features/document-tags/document-tags.thunks"
 import { useAppDispatch } from "@/store/hooks"
+import type { DocumentTag } from "@/studio/features/document-tags/document-tags.models"
+import { deleteDocumentTag } from "@/studio/features/document-tags/document-tags.thunks"
 
 export function DocumentTagDeletor({ tag }: { tag: DocumentTag }) {
   const dispatch = useAppDispatch()

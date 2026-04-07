@@ -7,7 +7,9 @@
       "traceUrl": "URL de trace"
     },
     "create": {
-      "button": "Nouvelle discussion"
+      "button": "Nouvelle discussion",
+      "title": "Nouvelle discussion",
+      "description": "Démarrez une discussion avec votre agent."
     },
     "list": {
       "title": "Discussions"

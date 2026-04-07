@@ -10,16 +10,16 @@ import {
 import { Field, FieldGroup, FieldLabel, FieldSet } from "@caseai-connect/ui/shad/field"
 import { Input } from "@caseai-connect/ui/shad/input"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { PlusIcon, XIcon } from "lucide-react"
+import { PlusCircleIcon, XIcon } from "lucide-react"
 import { type KeyboardEvent, useEffect, useState } from "react"
 import { useForm, useWatch } from "react-hook-form"
 import { useTranslation } from "react-i18next"
 import { z } from "zod"
-import { inviteAgentMembers } from "@/features/agent-memberships/agent-memberships.thunks"
 import { useAppDispatch } from "@/store/hooks"
+import { inviteAgentMembers } from "@/studio/features/agent-memberships/agent-memberships.thunks"
 
 export function MembersCreator() {
-  const { t } = useTranslation("agentMembership", { keyPrefix: "create" })
+  const { t } = useTranslation()
   const [open, setOpen] = useState(false)
 
   const handleOpenChange = (nextOpen: boolean) => {
@@ -29,15 +29,15 @@ export function MembersCreator() {
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
-        <Button size="sm">
-          <PlusIcon className="h-4 w-4 mr-1" />
-          {t("button")}
+        <Button size="lg" className="text-base">
+          {t("actions:invite")}
+          <PlusCircleIcon className="ml-2 size-5" />
         </Button>
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>{t("title")}</DialogTitle>
-          <DialogDescription>{t("description")}</DialogDescription>
+          <DialogTitle>{t("agentMembership:create.title")}</DialogTitle>
+          <DialogDescription>{t("agentMembership:create.description")}</DialogDescription>
         </DialogHeader>
         <CreateForm isOpen={open} onClose={() => setOpen(false)} />
       </DialogContent>

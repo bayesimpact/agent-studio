@@ -2,7 +2,7 @@ import { Button } from "@caseai-connect/ui/shad/button"
 import { Item, ItemActions, ItemContent, ItemTitle } from "@caseai-connect/ui/shad/item"
 import { useTranslation } from "react-i18next"
 import { useNavigate } from "react-router-dom"
-import { useBuildPath } from "@/hooks/use-build-path"
+import { useBuildDeskPath } from "@/desk/hooks/use-desk-build-path"
 import { buildDate } from "@/utils/build-date"
 import type { FormAgentSession } from "../form-agent-sessions.models"
 
@@ -19,9 +19,9 @@ export function FormAgentSessionItem({
 }) {
   const navigate = useNavigate()
   const { t } = useTranslation()
-  const { buildPath } = useBuildPath()
+  const { buildDeskPath } = useBuildDeskPath()
   const handleClick = () => {
-    const path = buildPath("agentSession", {
+    const path = buildDeskPath("agentSession", {
       organizationId,
       projectId,
       agentId,

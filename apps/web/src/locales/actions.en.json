@@ -1,6 +1,7 @@
 {
   "actions": {
     "accept": "Accept",
+    "invite": "Invite",
     "add": "Add",
     "back": "Back",
     "cancel": "Cancel",
@@ -19,6 +20,8 @@
     "enter": "Enter",
     "filter": "Filter",
     "finish": "Finish",
+    "goToApp": "Open App",
+    "goToStudio": "Open the Studio",
     "leave": "Leave",
     "loadMore": "Load More",
     "more": "More",
@@ -40,8 +43,6 @@
     "submit": "Submit",
     "update": "Update",
     "upload": "Upload",
-    "goToStudio": "Enter the Studio",
-    "exitStudio": "Exit the Studio",
     "view": "View"
   }
 }
