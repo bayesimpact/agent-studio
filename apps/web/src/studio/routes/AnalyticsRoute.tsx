@@ -4,7 +4,7 @@ import { getLast7DaysRange } from "@caseai-connect/ui/lib/date-range-presets"
 import { useCallback, useEffect, useState } from "react"
 import type { DateRange } from "react-day-picker"
 import { useTranslation } from "react-i18next"
-import { useAppDispatch, useAppSelector } from "@/store/hooks"
+import { useAppDispatch, useAppSelector } from "@/common/store/hooks"
 import {
   selectAnalyticsAvgUserQuestionsPerSessionPerDay,
   selectAnalyticsConversationsPerDay,

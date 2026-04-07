@@ -1,3 +1,4 @@
+import { useAppSelector } from "@/common/store/hooks"
 import type { Agent } from "@/features/agents/agents.models"
 import { selectCurrentAgentData } from "@/features/agents/agents.selectors"
 import type { ConversationAgentSession } from "@/features/agents/conversation-agent-sessions/conversation-agent-sessions.models"
@@ -6,7 +7,6 @@ import type { FormAgentSession } from "@/features/agents/form-agent-sessions/for
 import { selectCurrentFormAgentSessionData } from "@/features/agents/form-agent-sessions/form-agent-sessions.selectors"
 import type { AgentSessionMessage } from "@/features/agents/shared/agent-session-messages/agent-session-messages.models"
 import { selectCurrentMessagesData } from "@/features/agents/shared/agent-session-messages/agent-session-messages.selectors"
-import { useAppSelector } from "@/store/hooks"
 import { AsyncRoute } from "../AsyncRoute"
 import { ErrorRoute } from "../ErrorRoute"
 

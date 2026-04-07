@@ -1,5 +1,5 @@
 import { createSlice, type PayloadAction } from "@reduxjs/toolkit"
-import { ADS, type AsyncData, defaultAsyncData } from "@/store/async-data-status"
+import { ADS, type AsyncData, defaultAsyncData } from "@/common/store/async-data-status"
 import type { AgentSessionMessage } from "./agent-session-messages.models"
 import { listMessages } from "./agent-session-messages.thunks"
 

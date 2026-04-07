@@ -11,7 +11,7 @@ import {
 } from "@caseai-connect/ui/shad/dropdown-menu"
 import { ChevronsUpDown } from "lucide-react"
 import type * as React from "react"
-import type { User } from "@/features/me/me.models"
+import type { User } from "@/common/features/me/me.models"
 
 export function NavUser({ children, user }: React.PropsWithChildren<{ user: User }>) {
   return (

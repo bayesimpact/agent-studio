@@ -10,6 +10,7 @@ import { ErrorRoute } from "@/common/routes/ErrorRoute"
 import { RouteNames } from "@/common/routes/helpers"
 import { ProjectRoute } from "@/common/routes/ProjectRoute"
 import { ProtectedRoute } from "@/common/routes/ProtectedRoute"
+import { useAppSelector } from "@/common/store/hooks"
 import { Loader } from "@/components/Loader"
 import { ListHeader } from "@/components/layouts/ListHeader"
 import type { Agent } from "@/features/agents/agents.models"
@@ -28,7 +29,6 @@ import { AgentSessionMessages } from "@/features/agents/shared/agent-session-mes
 import { BaseAgentSessionCreator } from "@/features/agents/shared/base-agent-session/components/BaseAgentSessionCreator"
 import { selectCurrentOrganizationId } from "@/features/organizations/organizations.selectors"
 import { selectCurrentProjectId } from "@/features/projects/projects.selectors"
-import { useAppSelector } from "@/store/hooks"
 import { useBuildDeskPath, useDeskGetPath } from "../hooks/use-desk-build-path"
 import { DeskDashboardRoute } from "./DeskDashboardRoute"
 import { buildDeskPath, DeskRouteNames } from "./helpers"
@@ -165,7 +165,6 @@ function FormAgentSessionList({
   agent: Agent
   agentSessions: FormAgentSession[]
 }) {
-  console.warn("AJ: FormAgentSessionList", FormAgentSessionList)
   const { t } = useTranslation()
   const { getDeskPath } = useDeskGetPath()
   const outlet = useOutlet()

@@ -1,4 +1,4 @@
-import { ADS, type AsyncData } from "@/store/async-data-status"
+import { ADS, type AsyncData } from "@/common/store/async-data-status"
 import type { Document } from "./documents.models"
 
 export function shouldTriggerResyncForUnknownDocumentEvent(params: {

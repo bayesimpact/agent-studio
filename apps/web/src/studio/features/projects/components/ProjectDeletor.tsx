@@ -13,9 +13,9 @@ import { Trash2Icon } from "lucide-react"
 import { useState } from "react"
 import { useTranslation } from "react-i18next"
 import { useNavigate } from "react-router-dom"
+import { useAppDispatch } from "@/common/store/hooks"
 import type { Project } from "@/features/projects/projects.models"
 import { deleteProject } from "@/features/projects/projects.thunks"
-import { useAppDispatch } from "@/store/hooks"
 import { useBuildStudioPath } from "@/studio/hooks/use-studio-build-path"
 
 export function ProjectDeletor({ project }: { project: Project }) {

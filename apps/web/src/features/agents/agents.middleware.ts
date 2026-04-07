@@ -1,10 +1,10 @@
 import { createListenerMiddleware, isAnyOf } from "@reduxjs/toolkit"
-import type { AppDispatch, RootState } from "@/store/types"
+import { notificationsActions } from "@/common/features/notifications/notifications.slice"
+import type { AppDispatch, RootState } from "@/common/store/types"
 import {
   deleteDocumentTag,
   updateDocumentTag,
 } from "@/studio/features/document-tags/document-tags.thunks"
-import { notificationsActions } from "../notifications/notifications.slice"
 import { hasProjectChanged } from "../projects/projects.selectors"
 import { createAgent, deleteAgent, listAgents, updateAgent } from "./agents.thunks"
 

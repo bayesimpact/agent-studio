@@ -10,9 +10,9 @@ import {
 import { PlusCircleIcon } from "lucide-react"
 import { useState } from "react"
 import { useTranslation } from "react-i18next"
+import { useAppDispatch } from "@/common/store/hooks"
 import type { Organization } from "@/features/organizations/organizations.models"
 import { createProject } from "@/features/projects/projects.thunks"
-import { useAppDispatch } from "@/store/hooks"
 import { ProjectForm } from "@/studio/features/projects/components/ProjectForm"
 import { useBuildStudioPath } from "@/studio/hooks/use-studio-build-path"
 

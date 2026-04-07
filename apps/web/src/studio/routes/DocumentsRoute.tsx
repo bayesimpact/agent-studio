@@ -41,10 +41,10 @@ import {
 import { useEffect, useReducer, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { useNavigate } from "react-router-dom"
-import { DocumentTagItem } from "@/components/document-tag/DocumentTagItem"
-import { DocumentTagsSheet } from "@/components/document-tag/DocumentTagsSheet"
+import { useAppDispatch, useAppSelector } from "@/common/store/hooks"
+import { buildDate, buildSince } from "@/common/utils/build-date"
+import { generateId } from "@/common/utils/generate-id"
 import { MarkdownWrapper } from "@/features/agents/shared/agent-session-messages/components/MarkdownWrapper"
-import { useAppDispatch, useAppSelector } from "@/store/hooks"
 import { GridHeader } from "@/studio/components/grid/Grid"
 import {
   getTagNameById,
@@ -67,9 +67,9 @@ import {
   getDocumentTemporaryUrl,
   updateDocument,
 } from "@/studio/features/documents/documents.thunks"
-import { buildDate, buildSince } from "@/utils/build-date"
-import { generateId } from "@/utils/generate-id"
 import { AsyncRoute } from "../../common/routes/AsyncRoute"
+import { DocumentTagItem } from "../features/document-tags/components/DocumentTagItem"
+import { DocumentTagsSheet } from "../features/document-tags/components/DocumentTagsSheet"
 import { useGetStudioPath } from "../hooks/use-studio-build-path"
 
 export function DocumentsRoute() {

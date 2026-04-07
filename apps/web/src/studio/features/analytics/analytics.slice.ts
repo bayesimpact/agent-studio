@@ -1,5 +1,5 @@
 import { createSlice } from "@reduxjs/toolkit"
-import { ADS, type AsyncData } from "@/store/async-data-status"
+import { ADS, type AsyncData } from "@/common/store/async-data-status"
 import type { AnalyticsDailyPoint } from "./analytics.models"
 import { loadProjectAnalytics } from "./analytics.thunks"
 

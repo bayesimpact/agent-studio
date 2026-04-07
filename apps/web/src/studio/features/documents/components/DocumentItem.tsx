@@ -1,7 +1,7 @@
+import { buildSince } from "@/common/utils/build-date"
 import { GridItem } from "@/studio/components/grid/Grid"
 import type { DocumentTag } from "@/studio/features/document-tags/document-tags.models"
 import type { Document } from "@/studio/features/documents/documents.models"
-import { buildSince } from "@/utils/build-date"
 import { DocumentDeletor } from "./DocumentDeletor"
 import { DocumentDetailsSheet } from "./DocumentDetailsSheet"
 import { DocumentEditor } from "./DocumentEditor"

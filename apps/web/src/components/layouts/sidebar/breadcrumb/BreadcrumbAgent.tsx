@@ -14,10 +14,10 @@ import {
 import { cn } from "@caseai-connect/ui/utils"
 import { CheckIcon, ChevronDownIcon, DotIcon } from "lucide-react"
 import { Link } from "react-router-dom"
+import { ADS } from "@/common/store/async-data-status"
+import { useAppSelector } from "@/common/store/hooks"
 import { useBuildDeskPath } from "@/desk/hooks/use-desk-build-path"
 import { selectAgentsData, selectCurrentAgentData } from "@/features/agents/agents.selectors"
-import { ADS } from "@/store/async-data-status"
-import { useAppSelector } from "@/store/hooks"
 import { useBuildStudioPath } from "@/studio/hooks/use-studio-build-path"
 import { isStudioInterface } from "@/studio/routes/helpers"
 

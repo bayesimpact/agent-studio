@@ -1,4 +1,4 @@
-import type { RootState } from "@/store"
+import type { RootState } from "@/common/store"
 
 export const selectCurrentAgentSessionId = (state: RootState) => state.currentAgentSessionId.value
 

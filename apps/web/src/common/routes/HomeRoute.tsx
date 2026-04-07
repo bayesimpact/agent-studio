@@ -1,10 +1,10 @@
 import { useAuth0 } from "@auth0/auth0-react"
 import { useEffect } from "react"
 import { useSearchParams } from "react-router-dom"
+import { ADS } from "@/common/store/async-data-status"
+import { useAppSelector } from "@/common/store/hooks"
 import { AUTH0_ORGANIZATION_ID } from "@/config/auth0.config"
 import { selectOrganizationsData } from "@/features/organizations/organizations.selectors"
-import { ADS } from "@/store/async-data-status"
-import { useAppSelector } from "@/store/hooks"
 import { LoadingRoute } from "./LoadingRoute"
 
 const INVITATION_STORAGE_KEY = "pendingInvitationTicketId"

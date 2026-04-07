@@ -1,6 +1,6 @@
 import { createAsyncThunk } from "@reduxjs/toolkit"
+import type { RootState, ThunkExtraArg } from "@/common/store"
 import { getCurrentIds } from "@/features/helpers"
-import type { RootState, ThunkExtraArg } from "@/store"
 import type { AgentMessageFeedback } from "./agent-message-feedback.models"
 
 type ThunkConfig = { state: RootState; extra: ThunkExtraArg }

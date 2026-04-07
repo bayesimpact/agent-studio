@@ -1,4 +1,4 @@
-import type { AppDispatch, RootState } from "@/store/types"
+import type { AppDispatch, RootState } from "@/common/store/types"
 import {
   selectHasDocumentsInProgress,
   selectIsEmbeddingStatusStreamActive,

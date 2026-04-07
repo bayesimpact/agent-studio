@@ -9,14 +9,14 @@ import { cn } from "@caseai-connect/ui/utils"
 import { CheckIcon, ChevronsUpDownIcon } from "lucide-react"
 import { useTranslation } from "react-i18next"
 import { useNavigate } from "react-router-dom"
+import { ADS } from "@/common/store/async-data-status"
+import { useAppSelector } from "@/common/store/hooks"
 import { Logo } from "@/components/themes/Logo"
 import {
   selectCurrentOrganization,
   selectOrganizationsData,
 } from "@/features/organizations/organizations.selectors"
 import { buildOrganizationPath } from "@/hooks/use-build-path"
-import { ADS } from "@/store/async-data-status"
-import { useAppSelector } from "@/store/hooks"
 
 export function OrganizationSelector({
   TriggerButton = "button",

@@ -1,4 +1,4 @@
-import type { RootState } from "@/store"
+import type { RootState } from "@/common/store"
 
 export const selectEvaluationsStatus = (state: RootState) => state.studio.evaluations.data.status
 

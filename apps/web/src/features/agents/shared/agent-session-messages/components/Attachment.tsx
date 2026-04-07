@@ -2,8 +2,8 @@ import { Button } from "@caseai-connect/ui/shad/button"
 import { ExternalLinkIcon, PaperclipIcon } from "lucide-react"
 import { useCallback, useEffect, useState } from "react"
 import { useTranslation } from "react-i18next"
+import { useAppDispatch } from "@/common/store/hooks"
 import type { AgentSessionMessage } from "@/features/agents/shared/agent-session-messages/agent-session-messages.models"
-import { useAppDispatch } from "@/store/hooks"
 import { getDocumentTemporaryUrl } from "@/studio/features/documents/documents.thunks"
 
 export function Attachment({ message }: { message: AgentSessionMessage }) {

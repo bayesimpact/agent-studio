@@ -1,5 +1,5 @@
-import type { RootState } from "@/store"
-import type { AsyncData } from "@/store/async-data-status"
+import type { RootState } from "@/common/store"
+import type { AsyncData } from "@/common/store/async-data-status"
 import type { AnalyticsDailyPoint } from "./analytics.models"
 
 export const selectAnalyticsConversationsPerDay = (

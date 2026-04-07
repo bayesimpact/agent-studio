@@ -8,11 +8,11 @@ import {
 } from "@caseai-connect/ui/shad/sheet"
 import { InfoIcon } from "lucide-react"
 import { useTranslation } from "react-i18next"
-import { DocumentTagItem } from "@/components/document-tag/DocumentTagItem"
+import { buildDate } from "@/common/utils/build-date"
 import { MarkdownWrapper } from "@/features/agents/shared/agent-session-messages/components/MarkdownWrapper"
+import { DocumentTagItem } from "@/studio/features/document-tags/components/DocumentTagItem"
 import type { DocumentTag } from "@/studio/features/document-tags/document-tags.models"
 import type { Document } from "@/studio/features/documents/documents.models"
-import { buildDate } from "@/utils/build-date"
 import { EmbeddingStatusBadge } from "./EmbeddingStatusBadge"
 
 export function DocumentDetailsSheet({

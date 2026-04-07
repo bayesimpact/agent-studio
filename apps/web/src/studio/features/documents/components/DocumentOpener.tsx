@@ -4,7 +4,7 @@ import { Button } from "@caseai-connect/ui/shad/button"
 import { FileDownIcon } from "lucide-react"
 import { useEffect, useRef, useState } from "react"
 import { useTranslation } from "react-i18next"
-import { useAppDispatch } from "@/store/hooks"
+import { useAppDispatch } from "@/common/store/hooks"
 import { getDocumentTemporaryUrl } from "@/studio/features/documents/documents.thunks"
 
 export function DocumentOpener({

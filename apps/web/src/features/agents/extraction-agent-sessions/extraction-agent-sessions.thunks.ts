@@ -1,6 +1,6 @@
 import { createAsyncThunk } from "@reduxjs/toolkit"
+import type { RootState, ThunkExtraArg } from "@/common/store"
 import { getCurrentIds } from "@/features/helpers"
-import type { RootState, ThunkExtraArg } from "@/store"
 import { uploadDocument } from "@/studio/features/documents/documents.thunks"
 import { isStudioInterface } from "@/studio/routes/helpers"
 import type {

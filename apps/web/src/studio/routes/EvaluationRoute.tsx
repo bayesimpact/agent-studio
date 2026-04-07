@@ -1,18 +1,18 @@
 import { Button } from "@caseai-connect/ui/shad/button"
 import { useCallback, useEffect, useState } from "react"
 import { useTranslation } from "react-i18next"
-import { EmptyEvaluation } from "@/components/evaluation/EmptyEvaluation"
-import { EvaluationCreator } from "@/components/evaluation/EvaluationCreator"
-import { EvaluationItem } from "@/components/evaluation/EvaluationItem"
-import { EvaluationRunner } from "@/components/evaluation/EvaluationRunner"
+import { useAppDispatch, useAppSelector } from "@/common/store/hooks"
 import { useSidebarLayout } from "@/components/layouts/sidebar/context"
 import type { Agent } from "@/features/agents/agents.models"
 import { selectAgentsData } from "@/features/agents/agents.selectors"
-import { useAppDispatch, useAppSelector } from "@/store/hooks"
 import type { Evaluation } from "@/studio/features/evaluations/evaluations.models"
 import { selectEvaluationsData } from "@/studio/features/evaluations/evaluations.selectors"
 import { createEvaluation } from "@/studio/features/evaluations/evaluations.thunks"
 import { AsyncRoute } from "../../common/routes/AsyncRoute"
+import { EmptyEvaluation } from "../features/evaluations/components/EmptyEvaluation"
+import { EvaluationCreator } from "../features/evaluations/components/EvaluationCreator"
+import { EvaluationItem } from "../features/evaluations/components/EvaluationItem"
+import { EvaluationRunner } from "../features/evaluations/components/EvaluationRunner"
 
 export function EvaluationRoute() {
   const evaluations = useAppSelector(selectEvaluationsData)

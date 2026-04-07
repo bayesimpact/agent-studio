@@ -1,4 +1,4 @@
-import type { RootState } from "@/store"
+import type { RootState } from "@/common/store"
 
 export const selectCurrentMessagesData = (state: RootState) => state.agentSessionMessages.data
 

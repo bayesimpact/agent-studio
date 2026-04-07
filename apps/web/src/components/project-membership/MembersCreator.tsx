@@ -15,7 +15,7 @@ import { type KeyboardEvent, useEffect, useState } from "react"
 import { useForm, useWatch } from "react-hook-form"
 import { useTranslation } from "react-i18next"
 import { z } from "zod"
-import { useAppDispatch } from "@/store/hooks"
+import { useAppDispatch } from "@/common/store/hooks"
 import { inviteProjectMembers } from "@/studio/features/project-memberships/project-memberships.thunks"
 
 export function MembersCreator() {

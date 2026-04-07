@@ -1,10 +1,10 @@
 import { useEffect } from "react"
 import { toast } from "sonner"
-import { Router } from "./common/routes/Router"
-import { Toaster } from "./components/Sonner"
-import { selectLastNotification } from "./features/notifications/notifications.selectors"
-import { useInitApi } from "./hooks/use-init-api"
-import { useAppSelector } from "./store/hooks"
+import { selectLastNotification } from "@/common/features/notifications/notifications.selectors"
+import { Router } from "@/common/routes/Router"
+import { useAppSelector } from "@/common/store/hooks"
+import { Toaster } from "@/components/Sonner"
+import { useInitApi } from "@/hooks/use-init-api"
 
 function App() {
   useInitApi()

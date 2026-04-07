@@ -10,8 +10,8 @@ import {
 import { PlusCircleIcon } from "lucide-react"
 import { useState } from "react"
 import { useTranslation } from "react-i18next"
+import { useAppDispatch } from "@/common/store/hooks"
 import { FileUploader } from "@/components/FileUploader"
-import { useAppDispatch } from "@/store/hooks"
 import { executeExtractionAgentSession } from "../extraction-agent-sessions.thunks"
 
 export function ExtractionSessionCreator({ disabled }: { disabled: boolean }) {

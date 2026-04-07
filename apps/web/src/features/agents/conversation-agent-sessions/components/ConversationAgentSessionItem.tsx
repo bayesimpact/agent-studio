@@ -2,9 +2,9 @@ import { Button } from "@caseai-connect/ui/shad/button"
 import { Item, ItemActions, ItemContent, ItemTitle } from "@caseai-connect/ui/shad/item"
 import { useTranslation } from "react-i18next"
 import { useNavigate } from "react-router-dom"
+import { buildDate } from "@/common/utils/build-date"
 import { useBuildDeskPath } from "@/desk/hooks/use-desk-build-path"
 import type { ConversationAgentSession } from "@/features/agents/conversation-agent-sessions/conversation-agent-sessions.models"
-import { buildDate } from "@/utils/build-date"
 
 export function ConversationAgentSessionItem({
   agentSession,

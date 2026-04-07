@@ -5,8 +5,8 @@ import { Loader2Icon, UploadCloudIcon } from "lucide-react"
 import { useCallback, useEffect, useState } from "react"
 import { useDropzone } from "react-dropzone"
 import { useTranslation } from "react-i18next"
-import { notificationsActions } from "@/features/notifications/notifications.slice"
-import { useAppDispatch } from "@/store/hooks"
+import { notificationsActions } from "@/common/features/notifications/notifications.slice"
+import { useAppDispatch } from "@/common/store/hooks"
 
 type UploaderProps = {
   allowedMimeTypes: Partial<Record<(typeof AllowedMimeTypes)[number], boolean>>

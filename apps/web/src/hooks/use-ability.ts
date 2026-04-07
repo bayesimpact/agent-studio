@@ -1,7 +1,7 @@
 import { useMemo } from "react"
-import { selectAbilities } from "@/features/auth/auth.selectors"
-import { selectIsPremiumMember } from "@/features/me/me.selectors"
-import { useAppSelector } from "@/store/hooks"
+import { selectAbilities } from "@/common/features/auth/auth.selectors"
+import { selectIsPremiumMember } from "@/common/features/me/me.selectors"
+import { useAppSelector } from "@/common/store/hooks"
 
 export function useAbility() {
   const abilities = useAppSelector(selectAbilities)

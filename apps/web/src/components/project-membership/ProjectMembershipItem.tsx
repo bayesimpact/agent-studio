@@ -1,12 +1,12 @@
 import { Button } from "@caseai-connect/ui/shad/button"
 import { CheckIcon, SendIcon, Trash2Icon } from "lucide-react"
 import { useTranslation } from "react-i18next"
-import { selectMe } from "@/features/me/me.selectors"
-import { useAppDispatch, useAppSelector } from "@/store/hooks"
+import { selectMe } from "@/common/features/me/me.selectors"
+import { useAppDispatch, useAppSelector } from "@/common/store/hooks"
+import { buildSince } from "@/common/utils/build-date"
 import { GridItem } from "@/studio/components/grid/Grid"
 import type { ProjectMembership } from "@/studio/features/project-memberships/project-memberships.models"
 import { removeProjectMembership } from "@/studio/features/project-memberships/project-memberships.thunks"
-import { buildSince } from "@/utils/build-date"
 
 export function ProjectMembershipItem({
   membership,

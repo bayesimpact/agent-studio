@@ -14,7 +14,7 @@ import { Input } from "@caseai-connect/ui/shad/input"
 import { PencilIcon, XIcon } from "lucide-react"
 import { useReducer, useState } from "react"
 import { useTranslation } from "react-i18next"
-import { useAppDispatch } from "@/store/hooks"
+import { useAppDispatch } from "@/common/store/hooks"
 import {
   getTagNameById,
   useDocumentTags,

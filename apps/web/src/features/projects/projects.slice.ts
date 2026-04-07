@@ -1,5 +1,5 @@
 import { createSlice, type PayloadAction } from "@reduxjs/toolkit"
-import { ADS, type AsyncData, defaultAsyncData } from "@/store/async-data-status"
+import { ADS, type AsyncData, defaultAsyncData } from "@/common/store/async-data-status"
 import type { Project } from "./projects.models"
 import { listProjects } from "./projects.thunks"
 

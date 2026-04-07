@@ -1,6 +1,6 @@
 import { MimeTypes } from "@caseai-connect/api-contracts"
 import { describe, expect, it } from "vitest"
-import { ADS, type AsyncData } from "@/store/async-data-status"
+import { ADS, type AsyncData } from "@/common/store/async-data-status"
 import type { Document } from "./documents.models"
 import { shouldTriggerResyncForUnknownDocumentEvent } from "./documents-stream-events"
 

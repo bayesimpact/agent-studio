@@ -1,10 +1,10 @@
-import type { User } from "@/features/me/me.models"
-import { selectMe } from "@/features/me/me.selectors"
+import type { User } from "@/common/features/me/me.models"
+import { selectMe } from "@/common/features/me/me.selectors"
+import { useAppSelector } from "@/common/store/hooks"
 import type { Organization } from "@/features/organizations/organizations.models"
 import { selectCurrentOrganization } from "@/features/organizations/organizations.selectors"
 import type { Project } from "@/features/projects/projects.models"
 import { selectProjectsData } from "@/features/projects/projects.selectors"
-import { useAppSelector } from "@/store/hooks"
 import { AsyncRoute } from "./AsyncRoute"
 
 export function DashboardRoute({

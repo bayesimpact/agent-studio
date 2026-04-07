@@ -2,8 +2,8 @@ import { Button } from "@caseai-connect/ui/shad/button"
 import { MicIcon } from "lucide-react"
 import { useCallback, useEffect } from "react"
 import SpeechRecognition, { useSpeechRecognition } from "react-speech-recognition"
+import { getLocale } from "@/common/utils/get-locale"
 import { useChatFooter } from "@/features/agents/shared/agent-session-messages/components/context"
-import { getLocale } from "@/utils/get-locale"
 
 export function Dictaphone({ disabled }: { disabled: boolean }) {
   const { input } = useChatFooter()

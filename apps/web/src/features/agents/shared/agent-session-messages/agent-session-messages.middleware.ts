@@ -1,6 +1,6 @@
 import { createListenerMiddleware, isAnyOf } from "@reduxjs/toolkit"
-import type { AppDispatch, RootState } from "@/store"
-import { ADS } from "@/store/async-data-status"
+import type { AppDispatch, RootState } from "@/common/store"
+import { ADS } from "@/common/store/async-data-status"
 import { selectCurrentConversationAgentSessionsData } from "../../conversation-agent-sessions/conversation-agent-sessions.selectors"
 import {
   hasAgentSessionChanged,

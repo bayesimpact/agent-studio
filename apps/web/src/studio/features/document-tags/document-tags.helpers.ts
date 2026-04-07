@@ -1,5 +1,5 @@
-import { ADS } from "@/store/async-data-status"
-import { useAppSelector } from "@/store/hooks"
+import { ADS } from "@/common/store/async-data-status"
+import { useAppSelector } from "@/common/store/hooks"
 import type { DocumentTag } from "./document-tags.models"
 import { selectDocumentTagsData } from "./document-tags.selectors"
 

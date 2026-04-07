@@ -1,7 +1,7 @@
 import { useAuth0 } from "@auth0/auth0-react"
 import { useEffect } from "react"
-import { authActions } from "@/features/auth/auth.slice"
-import { useAppDispatch } from "@/store/hooks"
+import { authActions } from "@/common/features/auth/auth.slice"
+import { useAppDispatch } from "@/common/store/hooks"
 
 /**
  * Hook to sync Auth0 authentication state with Redux.

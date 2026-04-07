@@ -14,7 +14,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@caseai-connect/ui/shad
 import { PlusIcon } from "lucide-react"
 import { useState } from "react"
 import { useTranslation } from "react-i18next"
-import { useAppDispatch } from "@/store/hooks"
+import { useAppDispatch } from "@/common/store/hooks"
 import type { DocumentTag } from "@/studio/features/document-tags/document-tags.models"
 import { createDocumentTag } from "@/studio/features/document-tags/document-tags.thunks"
 

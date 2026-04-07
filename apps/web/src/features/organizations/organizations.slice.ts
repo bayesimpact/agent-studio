@@ -1,6 +1,6 @@
 import { createSlice, type PayloadAction } from "@reduxjs/toolkit"
-import { fetchMe } from "@/features/me/me.thunks"
-import { ADS, type AsyncData, defaultAsyncData } from "@/store/async-data-status"
+import { fetchMe } from "@/common/features/me/me.thunks"
+import { ADS, type AsyncData, defaultAsyncData } from "@/common/store/async-data-status"
 import type { Organization } from "./organizations.models"
 import { createOrganization } from "./organizations.thunks"
 

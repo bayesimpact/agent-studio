@@ -1,6 +1,6 @@
 import type { ReactNode } from "react"
-import type { AsyncData } from "@/store/async-data-status"
-import { ADS } from "@/store/async-data-status"
+import type { AsyncData } from "@/common/store/async-data-status"
+import { ADS } from "@/common/store/async-data-status"
 import { ErrorRoute } from "./ErrorRoute"
 import { LoadingRoute } from "./LoadingRoute"
 

@@ -14,6 +14,9 @@ import {
 import { cn } from "@caseai-connect/ui/utils"
 import { CheckIcon, ChevronDownIcon, DotIcon } from "lucide-react"
 import { Link } from "react-router-dom"
+import { ADS } from "@/common/store/async-data-status"
+import { useAppSelector } from "@/common/store/hooks"
+import { buildDate } from "@/common/utils/build-date"
 import { useBuildDeskPath } from "@/desk/hooks/use-desk-build-path"
 import { selectCurrentAgentData } from "@/features/agents/agents.selectors"
 import type { ConversationAgentSession } from "@/features/agents/conversation-agent-sessions/conversation-agent-sessions.models"
@@ -27,11 +30,8 @@ import {
   selectCurrentFormAgentSessionsData,
 } from "@/features/agents/form-agent-sessions/form-agent-sessions.selectors"
 import { selectCurrentProjectId } from "@/features/projects/projects.selectors"
-import { ADS } from "@/store/async-data-status"
-import { useAppSelector } from "@/store/hooks"
 import { useBuildStudioPath } from "@/studio/hooks/use-studio-build-path"
 import { isStudioInterface } from "@/studio/routes/helpers"
-import { buildDate } from "@/utils/build-date"
 
 export function BreadcrumbAgentSession({ organizationId }: { organizationId: string }) {
   const agent = useAppSelector(selectCurrentAgentData)

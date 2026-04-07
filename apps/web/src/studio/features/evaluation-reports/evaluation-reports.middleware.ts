@@ -1,6 +1,6 @@
 import { createListenerMiddleware } from "@reduxjs/toolkit"
-import { notificationsActions } from "@/features/notifications/notifications.slice"
-import type { AppDispatch, RootState } from "@/store/types"
+import { notificationsActions } from "@/common/features/notifications/notifications.slice"
+import type { AppDispatch, RootState } from "@/common/store/types"
 import { listEvaluations } from "../evaluations/evaluations.thunks"
 import { createEvaluationReport, listEvaluationReports } from "./evaluation-reports.thunks"
 

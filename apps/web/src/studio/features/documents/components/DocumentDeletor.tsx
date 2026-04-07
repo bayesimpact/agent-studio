@@ -12,7 +12,7 @@ import {
 import { Trash2Icon } from "lucide-react"
 import { useState } from "react"
 import { useTranslation } from "react-i18next"
-import { useAppDispatch } from "@/store/hooks"
+import { useAppDispatch } from "@/common/store/hooks"
 import type { Document } from "@/studio/features/documents/documents.models"
 import { deleteDocument } from "@/studio/features/documents/documents.thunks"
 

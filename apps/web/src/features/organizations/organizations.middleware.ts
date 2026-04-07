@@ -1,7 +1,7 @@
 import { createListenerMiddleware } from "@reduxjs/toolkit"
-import type { AppDispatch, RootState } from "@/store/types"
-import { fetchMe } from "../me/me.thunks"
-import { notificationsActions } from "../notifications/notifications.slice"
+import { fetchMe } from "@/common/features/me/me.thunks"
+import { notificationsActions } from "@/common/features/notifications/notifications.slice"
+import type { AppDispatch, RootState } from "@/common/store/types"
 import { organizationsActions } from "./organizations.slice"
 import { createOrganization } from "./organizations.thunks"
 

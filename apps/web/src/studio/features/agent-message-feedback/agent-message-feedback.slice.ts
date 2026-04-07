@@ -1,6 +1,6 @@
 import { createSlice, type PayloadAction } from "@reduxjs/toolkit"
+import { ADS, type AsyncData, defaultAsyncData } from "@/common/store/async-data-status"
 import type { Agent } from "@/features/agents/agents.models"
-import { ADS, type AsyncData, defaultAsyncData } from "@/store/async-data-status"
 import type { AgentMessageFeedback } from "./agent-message-feedback.models"
 import { listAgentMessageFeedbacks } from "./agent-message-feedback.thunks"
 

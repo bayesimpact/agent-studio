@@ -13,9 +13,9 @@ import {
 import { PenLineIcon } from "lucide-react"
 import { useState } from "react"
 import { useTranslation } from "react-i18next"
+import { useAppDispatch } from "@/common/store/hooks"
 import type { Project } from "@/features/projects/projects.models"
 import { updateProject } from "@/features/projects/projects.thunks"
-import { useAppDispatch } from "@/store/hooks"
 import { ProjectForm } from "./ProjectForm"
 
 export function ProjectEditor({ project }: { project: Project }) {

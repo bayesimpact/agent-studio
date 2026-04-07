@@ -1,6 +1,6 @@
 import { createSelector } from "@reduxjs/toolkit"
-import type { RootState } from "@/store"
-import { ADS, type AsyncData } from "@/store/async-data-status"
+import type { RootState } from "@/common/store"
+import { ADS, type AsyncData } from "@/common/store/async-data-status"
 import type { EvaluationReport } from "./evaluation-reports.models"
 
 export const selectEvaluationReportsStatus = (state: RootState) =>

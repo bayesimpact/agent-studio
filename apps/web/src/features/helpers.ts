@@ -1,4 +1,4 @@
-import type { RootState } from "@/store/types"
+import type { RootState } from "@/common/store/types"
 import { selectCurrentAgentId } from "./agents/agents.selectors"
 import { selectCurrentAgentSessionId } from "./agents/current-agent-session-id/current-agent-session-id.selectors"
 import { selectCurrentOrganizationId } from "./organizations/organizations.selectors"

@@ -1,7 +1,7 @@
 import { Outlet } from "react-router-dom"
+import { selectAbilities } from "@/common/features/auth/auth.selectors"
 import { NotFoundRoute } from "@/common/routes/NotFoundRoute"
-import { selectAbilities } from "@/features/auth/auth.selectors"
-import { useAppSelector } from "@/store/hooks"
+import { useAppSelector } from "@/common/store/hooks"
 import { useInitStore } from "../hooks/use-init-store"
 
 export function Studio() {

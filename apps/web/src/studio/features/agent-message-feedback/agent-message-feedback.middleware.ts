@@ -1,8 +1,8 @@
 import { createListenerMiddleware } from "@reduxjs/toolkit"
+import { notificationsActions } from "@/common/features/notifications/notifications.slice"
+import type { AppDispatch, RootState } from "@/common/store/types"
 import { listAgents } from "@/features/agents/agents.thunks"
 import { getCurrentIds } from "@/features/helpers"
-import { notificationsActions } from "@/features/notifications/notifications.slice"
-import type { AppDispatch, RootState } from "@/store/types"
 import {
   createAgentMessageFeedback,
   listAgentMessageFeedbacks,

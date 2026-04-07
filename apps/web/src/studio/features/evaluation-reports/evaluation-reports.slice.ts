@@ -1,5 +1,5 @@
 import { createSlice } from "@reduxjs/toolkit"
-import { ADS, type AsyncData, defaultAsyncData } from "@/store/async-data-status"
+import { ADS, type AsyncData, defaultAsyncData } from "@/common/store/async-data-status"
 import type { Evaluation } from "../evaluations/evaluations.models"
 import type { EvaluationReport } from "./evaluation-reports.models"
 import { createEvaluationReport, listEvaluationReports } from "./evaluation-reports.thunks"

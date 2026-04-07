@@ -1,12 +1,12 @@
 import { Button } from "@caseai-connect/ui/shad/button"
 import { Trash2Icon } from "lucide-react"
 import { useNavigate } from "react-router-dom"
+import { useAppDispatch } from "@/common/store/hooks"
 import { TraceUrlOpener } from "@/components/TraceUrlOpener"
 import type { Agent } from "@/features/agents/agents.models"
 import type { ConversationAgentSession } from "@/features/agents/conversation-agent-sessions/conversation-agent-sessions.models"
 import type { FormAgentSession } from "@/features/agents/form-agent-sessions/form-agent-sessions.models"
 import { deleteAgentSession } from "@/features/agents/shared/base-agent-session/base-agent-sessions.thunks"
-import { useAppDispatch } from "@/store/hooks"
 import { useGetStudioPath } from "@/studio/hooks/use-studio-build-path"
 
 type AgentSession = ConversationAgentSession | FormAgentSession

@@ -1,6 +1,6 @@
 import { createListenerMiddleware } from "@reduxjs/toolkit"
+import type { AppDispatch, RootState } from "@/common/store/types"
 import { hasProjectChanged } from "@/features/projects/projects.selectors"
-import type { AppDispatch, RootState } from "@/store/types"
 import { analyticsActions } from "./analytics.slice"
 
 const listenerMiddleware = createListenerMiddleware<RootState, AppDispatch>()

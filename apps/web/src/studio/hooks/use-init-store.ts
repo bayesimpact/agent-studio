@@ -1,5 +1,5 @@
 import { useEffect } from "react"
-import { useAppDispatch } from "@/store/hooks"
+import { useAppDispatch } from "@/common/store/hooks"
 import { injectStudioSlices, resetStudioSlices } from "../store/slices"
 
 export function useInitStore(condition: boolean) {
