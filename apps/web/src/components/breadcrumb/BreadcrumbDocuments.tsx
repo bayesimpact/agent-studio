@@ -1,5 +1,5 @@
 import { BreadcrumbItem, BreadcrumbSeparator } from "@caseai-connect/ui/shad/breadcrumb"
-import { DotIcon } from "lucide-react"
+import { GitCommitHorizontalIcon } from "lucide-react"
 import { useTranslation } from "react-i18next"
 import { useIsRoute } from "@/hooks/use-is-route"
 import { StudioRouteNames } from "@/studio/routes/helpers"
@@ -12,7 +12,7 @@ export function BreadcrumbDocuments() {
   return (
     <>
       <BreadcrumbSeparator>
-        <DotIcon />
+        <GitCommitHorizontalIcon />
       </BreadcrumbSeparator>
       <BreadcrumbItem>{t("documents")}</BreadcrumbItem>
     </>

@@ -1,5 +1,5 @@
 import { BreadcrumbItem, BreadcrumbSeparator } from "@caseai-connect/ui/shad/breadcrumb"
-import { DotIcon } from "lucide-react"
+import { GitCommitHorizontalIcon } from "lucide-react"
 import { useTranslation } from "react-i18next"
 import { useFeatureFlags } from "@/hooks/use-feature-flags"
 import { useIsRoute } from "@/hooks/use-is-route"
@@ -14,7 +14,7 @@ export function BreadcrumbAnalytics() {
   return (
     <>
       <BreadcrumbSeparator>
-        <DotIcon />
+        <GitCommitHorizontalIcon />
       </BreadcrumbSeparator>
       <BreadcrumbItem className="capitalize">{t("analytics:analytics")}</BreadcrumbItem>
     </>

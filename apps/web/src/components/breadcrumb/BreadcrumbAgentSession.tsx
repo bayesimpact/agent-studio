@@ -12,7 +12,7 @@ import {
   DropdownMenuTrigger,
 } from "@caseai-connect/ui/shad/dropdown-menu"
 import { cn } from "@caseai-connect/ui/utils"
-import { CheckIcon, ChevronDownIcon, DotIcon } from "lucide-react"
+import { CheckIcon, ChevronDownIcon, GitCommitHorizontalIcon } from "lucide-react"
 import { Link } from "react-router-dom"
 import { ADS } from "@/common/store/async-data-status"
 import { useAppSelector } from "@/common/store/hooks"
@@ -112,7 +112,7 @@ function WithData({
     return (
       <>
         <BreadcrumbSeparator>
-          <DotIcon />
+          <GitCommitHorizontalIcon />
         </BreadcrumbSeparator>
         <BreadcrumbItem>
           <BreadcrumbLink asChild>
@@ -124,7 +124,7 @@ function WithData({
   return (
     <>
       <BreadcrumbSeparator>
-        <DotIcon />
+        <GitCommitHorizontalIcon />
       </BreadcrumbSeparator>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>

@@ -4,17 +4,17 @@ import { useTranslation } from "react-i18next"
 import { useIsRoute } from "@/hooks/use-is-route"
 import { StudioRouteNames } from "@/studio/routes/helpers"
 
-export function BreadcrumbEvaluations() {
+export function BreadcrumbProjectMembership() {
   const { isRoute } = useIsRoute()
-  const isEvaluationRoute = isRoute(StudioRouteNames.EVALUATION)
-  const { t } = useTranslation("evaluation")
-  if (!isEvaluationRoute) return null
+  const isProjectMembershipsRoute = isRoute(StudioRouteNames.PROJECT_MEMBERSHIPS)
+  const { t } = useTranslation("projectMembership")
+  if (!isProjectMembershipsRoute) return null
   return (
     <>
       <BreadcrumbSeparator>
         <GitCommitHorizontalIcon />
       </BreadcrumbSeparator>
-      <BreadcrumbItem>{t("evaluation")}</BreadcrumbItem>
+      <BreadcrumbItem>{t("members")}</BreadcrumbItem>
     </>
   )
 }
