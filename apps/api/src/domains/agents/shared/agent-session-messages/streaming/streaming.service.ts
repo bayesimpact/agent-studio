@@ -348,6 +348,7 @@ export class StreamingService extends ServiceWithLLM {
     const session = await repository.findOne({
       where: { id: sessionId },
       relations: ["messages"],
+      order: { messages: { createdAt: "ASC" } },
     })
 
     if (!session) {
@@ -361,6 +362,7 @@ export class StreamingService extends ServiceWithLLM {
     return repository.findOne({
       where: { id: sessionId },
       relations: ["messages"],
+      order: { messages: { createdAt: "ASC" } },
     })
   }
 
