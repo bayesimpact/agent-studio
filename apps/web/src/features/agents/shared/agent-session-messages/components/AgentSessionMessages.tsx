@@ -60,7 +60,8 @@ export function StudioAgentSessionMessages({
 }) {
   const isStreaming = useAppSelector(selectStreaming)
 
-  const heightClasses = "min-h-[calc(100vh-20rem)] max-h-[calc(100vh-20rem)]"
+  const heightClasses =
+    "min-h-[calc(100vh-15rem)] max-h-[calc(100vh-15rem)] xl:min-h-[calc(100vh-17rem)] xl:max-h-[calc(100vh-17rem)]"
   return (
     <div className={cn("flex flex-1", heightClasses)}>
       <div className="flex flex-1 p-4">

@@ -34,7 +34,7 @@ export function EvaluationItem({
   }
 
   return (
-    <Item variant="outline">
+    <Item variant="outline" className="bg-white">
       <ItemHeader>
         <ItemTitle>
           <div className="flex gap-2 text-muted-foreground text-xs">

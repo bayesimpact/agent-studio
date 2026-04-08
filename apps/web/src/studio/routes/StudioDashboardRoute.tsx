@@ -41,7 +41,7 @@ export function StudioDashboardRoute({
       </header>
 
       <DotsBackground className="flex-1">
-        <div className="mx-6 xl:max-w-2/3 xl:min-w-2/3 xl:mx-auto mt-30 mb-6 flex flex-col z-0 relative border border-foreground-muted">
+        <div className="mx-6 xl:max-w-2/3 xl:min-w-2/3 xl:mx-auto mt-24 xl:mt-30 mb-6 flex flex-col z-0 relative border border-foreground-muted">
           {outlet ? (
             outlet
           ) : (
