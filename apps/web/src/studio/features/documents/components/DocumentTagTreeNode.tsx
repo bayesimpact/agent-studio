@@ -4,7 +4,7 @@ import {
   CollapsibleTrigger,
 } from "@caseai-connect/ui/shad/collapsible"
 import { ChevronRight } from "lucide-react"
-import { Grid } from "@/studio/components/grid/Grid"
+import { Grid } from "@/common/components/grid/Grid"
 import type { DocumentTag, TagNode } from "@/studio/features/document-tags/document-tags.models"
 import type { Document } from "@/studio/features/documents/documents.models"
 import { DocumentItem } from "./DocumentItem"

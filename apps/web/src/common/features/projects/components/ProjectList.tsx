@@ -1,9 +1,9 @@
 import { useTranslation } from "react-i18next"
 import { useNavigate } from "react-router-dom"
+import { Grid, GridContent, GridHeader } from "@/common/components/grid/Grid"
 import type { Organization } from "@/common/features/organizations/organizations.models"
+import type { Project } from "@/common/features/projects/projects.models"
 import { RouteNames } from "@/common/routes/helpers"
-import type { Project } from "@/features/projects/projects.models"
-import { Grid, GridContent, GridHeader } from "@/studio/components/grid/Grid"
 import { ProjectItem } from "./ProjectItem"
 
 export function ProjectList({

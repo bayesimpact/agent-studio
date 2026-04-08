@@ -13,8 +13,8 @@ import {
 } from "@/studio/features/analytics/analytics.selectors"
 import { loadProjectAnalytics } from "@/studio/features/analytics/analytics.thunks"
 import { dateRangeToAnalyticsQueryBounds } from "@/studio/features/analytics/analytics-date-range"
+import { GridHeader } from "../../common/components/grid/Grid"
 import { AsyncRoute } from "../../common/routes/AsyncRoute"
-import { GridHeader } from "../components/grid/Grid"
 
 function sumDailyMetricValues(series: DailyMetricPoint[]): number {
   return series.reduce((sum, point) => sum + point.value, 0)

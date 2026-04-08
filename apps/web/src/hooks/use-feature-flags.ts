@@ -1,8 +1,8 @@
 import type { FeatureFlagKey } from "@caseai-connect/api-contracts"
+import { selectCurrentProjectData } from "@/common/features/projects/projects.selectors"
 import type { RootState } from "@/common/store"
 import { ADS } from "@/common/store/async-data-status"
 import { useAppSelector } from "@/common/store/hooks"
-import { selectCurrentProjectData } from "@/features/projects/projects.selectors"
 
 function check(flags: FeatureFlagKey[], feature: FeatureFlagKey): boolean {
   return flags.some((flag) => flag === feature)

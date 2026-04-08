@@ -1,10 +1,10 @@
 import { useTranslation } from "react-i18next"
 import { useNavigate } from "react-router-dom"
+import { GridItem } from "@/common/components/grid/Grid"
 import { buildSince } from "@/common/utils/build-date"
 import type { Agent } from "@/features/agents/agents.models"
 import { getAgentIcon } from "@/features/agents/components/AgentIcon"
 import { useBuildPath } from "@/hooks/use-build-path"
-import { GridItem } from "@/studio/components/grid/Grid"
 
 export function AgentItem({
   agent,

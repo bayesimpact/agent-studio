@@ -41,12 +41,12 @@ import {
 import { useEffect, useReducer, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { useNavigate } from "react-router-dom"
+import { GridHeader } from "@/common/components/grid/Grid"
 import { useAppDispatch, useAppSelector } from "@/common/store/hooks"
 import { buildDate, buildSince } from "@/common/utils/build-date"
 import { generateId } from "@/common/utils/generate-id"
 import { MarkdownWrapper } from "@/features/agents/agent-sessions/shared/agent-session-messages/components/MarkdownWrapper"
 import { useGetPath } from "@/hooks/use-build-path"
-import { GridHeader } from "@/studio/components/grid/Grid"
 import {
   getTagNameById,
   useDocumentTags,

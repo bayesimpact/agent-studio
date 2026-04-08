@@ -1,11 +1,11 @@
 import { cn } from "@caseai-connect/ui/utils"
 import { useTranslation } from "react-i18next"
 import { useNavigate } from "react-router-dom"
+import { Grid, GridContent, GridHeader, GridItem } from "@/common/components/grid/Grid"
 import { BaseAgentSessionCreator } from "@/features/agents/agent-sessions/shared/base-agent-session/components/BaseAgentSessionCreator"
 import type { Agent } from "@/features/agents/agents.models"
 import { getAgentIcon } from "@/features/agents/components/AgentIcon"
 import { useGetPath } from "@/hooks/use-build-path"
-import { Grid, GridContent, GridHeader, GridItem } from "@/studio/components/grid/Grid"
 import { AgentActions } from "./AgentActions"
 import { FeedbackButton } from "./FeedbackButton"
 

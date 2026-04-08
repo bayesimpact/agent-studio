@@ -5,7 +5,7 @@ import {
   deleteDocumentTag,
   updateDocumentTag,
 } from "@/studio/features/document-tags/document-tags.thunks"
-import { hasProjectChanged } from "../projects/projects.selectors"
+import { hasProjectChanged } from "../../common/features/projects/projects.selectors"
 import { createAgent, deleteAgent, listAgents, updateAgent } from "./agents.thunks"
 
 const listenerMiddleware = createListenerMiddleware<RootState, AppDispatch>()

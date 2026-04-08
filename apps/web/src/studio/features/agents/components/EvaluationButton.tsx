@@ -2,11 +2,11 @@ import { Item } from "@caseai-connect/ui/shad/item"
 import { StarIcon } from "lucide-react"
 import { useTranslation } from "react-i18next"
 import { useNavigate } from "react-router-dom"
+import { GridItem } from "@/common/components/grid/Grid"
 import { selectCurrentOrganizationId } from "@/common/features/organizations/organizations.selectors"
+import { selectCurrentProjectId } from "@/common/features/projects/projects.selectors"
 import { useAppSelector } from "@/common/store/hooks"
 import { RestrictedFeature } from "@/components/RestrictedFeature"
-import { selectCurrentProjectId } from "@/features/projects/projects.selectors"
-import { GridItem } from "@/studio/components/grid/Grid"
 import { buildEvaluationPath } from "@/studio/routes/helpers"
 
 export function EvaluationButton({ index }: { index: number }) {

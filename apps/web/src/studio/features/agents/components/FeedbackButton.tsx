@@ -3,7 +3,7 @@ import { cn } from "@caseai-connect/ui/utils"
 import { MessageSquareWarningIcon, ThumbsDownIcon } from "lucide-react"
 import { useTranslation } from "react-i18next"
 import { useNavigate } from "react-router-dom"
-import { GridItem } from "@/studio/components/grid/Grid"
+import { GridItem } from "@/common/components/grid/Grid"
 import { buildFeedbackPath } from "@/studio/routes/helpers"
 
 export function FeedbackButton({

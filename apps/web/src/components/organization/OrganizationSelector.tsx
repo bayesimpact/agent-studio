@@ -14,11 +14,11 @@ import {
   selectCurrentOrganization,
   selectOrganizationsData,
 } from "@/common/features/organizations/organizations.selectors"
+import { selectCurrentProjectId } from "@/common/features/projects/projects.selectors"
 import { RouteNames } from "@/common/routes/helpers"
 import { ADS } from "@/common/store/async-data-status"
 import { useAppSelector } from "@/common/store/hooks"
 import { Logo } from "@/components/themes/Logo"
-import { selectCurrentProjectId } from "@/features/projects/projects.selectors"
 import { buildOrganizationPath, useGetPath } from "@/hooks/use-build-path"
 import { isStudioInterface } from "@/studio/routes/helpers"
 

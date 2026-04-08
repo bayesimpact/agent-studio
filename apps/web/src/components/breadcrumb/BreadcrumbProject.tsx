@@ -12,12 +12,12 @@ import { CheckIcon, ChevronDownIcon, PlusIcon } from "lucide-react"
 import { useState } from "react"
 import { useTranslation } from "react-i18next"
 import type { Organization } from "@/common/features/organizations/organizations.models"
-import { ADS } from "@/common/store/async-data-status"
-import { useAppSelector } from "@/common/store/hooks"
 import {
   selectCurrentProjectData,
   selectProjectsData,
-} from "@/features/projects/projects.selectors"
+} from "@/common/features/projects/projects.selectors"
+import { ADS } from "@/common/store/async-data-status"
+import { useAppSelector } from "@/common/store/hooks"
 import { useBuildPath } from "@/hooks/use-build-path"
 import { ProjectCreator } from "@/studio/features/projects/components/ProjectCreator"
 import { isStudioInterface as isStudio } from "@/studio/routes/helpers"

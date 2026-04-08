@@ -13,10 +13,10 @@ import { Trash2Icon } from "lucide-react"
 import { useState } from "react"
 import { useTranslation } from "react-i18next"
 import { useNavigate } from "react-router-dom"
+import type { Project } from "@/common/features/projects/projects.models"
 import { useAppDispatch } from "@/common/store/hooks"
-import type { Project } from "@/features/projects/projects.models"
-import { deleteProject } from "@/features/projects/projects.thunks"
 import { useBuildPath } from "@/hooks/use-build-path"
+import { deleteProject } from "@/studio/features/projects/projects.thunks"
 
 export function ProjectDeletor({ project }: { project: Project }) {
   const navigate = useNavigate()

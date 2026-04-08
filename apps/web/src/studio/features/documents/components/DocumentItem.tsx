@@ -1,5 +1,5 @@
+import { GridItem } from "@/common/components/grid/Grid"
 import { buildSince } from "@/common/utils/build-date"
-import { GridItem } from "@/studio/components/grid/Grid"
 import type { DocumentTag } from "@/studio/features/document-tags/document-tags.models"
 import type { Document } from "@/studio/features/documents/documents.models"
 import { DocumentDeletor } from "./DocumentDeletor"

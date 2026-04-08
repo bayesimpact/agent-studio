@@ -1,8 +1,13 @@
 import { createListenerMiddleware, isAnyOf } from "@reduxjs/toolkit"
 import { notificationsActions } from "@/common/features/notifications/notifications.slice"
 import type { AppDispatch, RootState } from "@/common/store/types"
-import { hasOrganizationChanged } from "../../common/features/organizations/organizations.selectors"
-import { createProject, deleteProject, listProjects, updateProject } from "./projects.thunks"
+import {
+  createProject,
+  deleteProject,
+  listProjects,
+  updateProject,
+} from "../../../studio/features/projects/projects.thunks"
+import { hasOrganizationChanged } from "../organizations/organizations.selectors"
 
 // Create typed listener middleware
 const listenerMiddleware = createListenerMiddleware<RootState, AppDispatch>()

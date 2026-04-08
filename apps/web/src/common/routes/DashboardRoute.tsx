@@ -2,9 +2,9 @@ import type { User } from "@/common/features/me/me.models"
 import { selectMe } from "@/common/features/me/me.selectors"
 import type { Organization } from "@/common/features/organizations/organizations.models"
 import { selectCurrentOrganization } from "@/common/features/organizations/organizations.selectors"
+import type { Project } from "@/common/features/projects/projects.models"
+import { selectProjectsData } from "@/common/features/projects/projects.selectors"
 import { useAppSelector } from "@/common/store/hooks"
-import type { Project } from "@/features/projects/projects.models"
-import { selectProjectsData } from "@/features/projects/projects.selectors"
 import { AsyncRoute } from "./AsyncRoute"
 
 export function DashboardRoute({

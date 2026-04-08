@@ -15,6 +15,7 @@ import { cn } from "@caseai-connect/ui/utils"
 import { CheckIcon, ChevronDownIcon, GitCommitHorizontalIcon } from "lucide-react"
 import { useTranslation } from "react-i18next"
 import { Link } from "react-router-dom"
+import { selectCurrentProjectId } from "@/common/features/projects/projects.selectors"
 import { ADS } from "@/common/store/async-data-status"
 import { useAppSelector } from "@/common/store/hooks"
 import { buildSince } from "@/common/utils/build-date"
@@ -31,7 +32,6 @@ import {
 import type { Agent } from "@/features/agents/agents.models"
 import { selectCurrentAgentData } from "@/features/agents/agents.selectors"
 import { getAgentIcon } from "@/features/agents/components/AgentIcon"
-import { selectCurrentProjectId } from "@/features/projects/projects.selectors"
 import { useBuildPath } from "@/hooks/use-build-path"
 
 export function BreadcrumbAgentSession({ organizationId }: { organizationId: string }) {

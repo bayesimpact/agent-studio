@@ -8,8 +8,8 @@ import type { AgentMembership } from "@/studio/features/agent-memberships/agent-
 import { selectAgentMemberships } from "@/studio/features/agent-memberships/agent-memberships.selectors"
 import { AgentMembershipItem } from "@/studio/features/agent-memberships/components/AgentMembershipItem"
 import { MembersCreator } from "@/studio/features/agent-memberships/components/MembersCreator"
+import { Grid, GridContent, GridHeader, GridItem } from "../../common/components/grid/Grid"
 import { AsyncRoute } from "../../common/routes/AsyncRoute"
-import { Grid, GridContent, GridHeader, GridItem } from "../components/grid/Grid"
 
 export function AgentMembershipsRoute() {
   const agent = useAppSelector(selectCurrentAgentData)

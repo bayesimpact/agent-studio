@@ -1,5 +1,6 @@
 import { useTranslation } from "react-i18next"
 import { useNavigate } from "react-router-dom"
+import { GridHeader } from "@/common/components/grid/Grid"
 import { buildSince } from "@/common/utils/build-date"
 import type { ConversationAgentSession } from "@/features/agents/agent-sessions/conversation/conversation-agent-sessions.models"
 import { FormResult } from "@/features/agents/agent-sessions/form/components/FormResult"
@@ -9,7 +10,6 @@ import { AgentSessionMessages } from "@/features/agents/agent-sessions/shared/ag
 import type { Agent } from "@/features/agents/agents.models"
 import { getAgentIcon } from "@/features/agents/components/AgentIcon"
 import { useGetPath } from "@/hooks/use-build-path"
-import { GridHeader } from "@/studio/components/grid/Grid"
 import { AgentSessionActions } from "../features/agents/components/AgentSessionActions"
 
 type AgentSession = ConversationAgentSession | FormAgentSession

@@ -1,10 +1,10 @@
 import { createListenerMiddleware } from "@reduxjs/toolkit"
 import { notificationsActions } from "@/common/features/notifications/notifications.slice"
 import { hasOrganizationChanged } from "@/common/features/organizations/organizations.selectors"
+import { hasProjectChanged } from "@/common/features/projects/projects.selectors"
 import { ADS } from "@/common/store/async-data-status"
 import type { AppDispatch, RootState } from "@/common/store/types"
 import { logoutAuth0 } from "@/external/auth0Client"
-import { hasProjectChanged } from "@/features/projects/projects.selectors"
 import { selectMe } from "./me.selectors"
 import { computeAbilities, fetchMe } from "./me.thunks"
 

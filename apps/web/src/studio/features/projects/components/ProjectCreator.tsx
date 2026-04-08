@@ -10,12 +10,12 @@ import {
 import { PlusCircleIcon } from "lucide-react"
 import { useState } from "react"
 import { useTranslation } from "react-i18next"
+import { GridItem } from "@/common/components/grid/Grid"
 import type { Organization } from "@/common/features/organizations/organizations.models"
 import { useAppDispatch } from "@/common/store/hooks"
-import { createProject } from "@/features/projects/projects.thunks"
 import { useBuildPath } from "@/hooks/use-build-path"
-import { GridItem } from "@/studio/components/grid/Grid"
 import { ProjectForm } from "@/studio/features/projects/components/ProjectForm"
+import { createProject } from "@/studio/features/projects/projects.thunks"
 
 export function ProjectCreatorButton({
   organization,

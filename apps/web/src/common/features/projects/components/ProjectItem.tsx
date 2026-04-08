@@ -1,9 +1,9 @@
 import { useTranslation } from "react-i18next"
 import { useNavigate } from "react-router-dom"
+import { GridItem } from "@/common/components/grid/Grid"
+import type { Project } from "@/common/features/projects/projects.models"
 import { buildSince } from "@/common/utils/build-date"
-import type { Project } from "@/features/projects/projects.models"
 import { useBuildPath } from "@/hooks/use-build-path"
-import { GridItem } from "@/studio/components/grid/Grid"
 
 export function ProjectItem({
   project,

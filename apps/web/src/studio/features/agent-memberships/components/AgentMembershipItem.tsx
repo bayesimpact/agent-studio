@@ -1,10 +1,10 @@
 import { Button } from "@caseai-connect/ui/shad/button"
 import { CheckIcon, SendIcon, Trash2Icon } from "lucide-react"
 import { useTranslation } from "react-i18next"
+import { GridItem } from "@/common/components/grid/Grid"
 import { selectMe } from "@/common/features/me/me.selectors"
 import { useAppDispatch, useAppSelector } from "@/common/store/hooks"
 import { buildSince } from "@/common/utils/build-date"
-import { GridItem } from "@/studio/components/grid/Grid"
 import type { AgentMembership } from "@/studio/features/agent-memberships/agent-memberships.models"
 import { removeAgentMembership } from "@/studio/features/agent-memberships/agent-memberships.thunks"
 
