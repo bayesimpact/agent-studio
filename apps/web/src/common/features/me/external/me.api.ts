@@ -1,6 +1,6 @@
 import { type MeResponseDto, MeRoutes } from "@caseai-connect/api-contracts"
+import { toOrganization } from "@/common/features/organizations/external/organizations.api"
 import { getAxiosInstance } from "@/external/axios"
-import { toOrganization } from "@/features/organizations/external/organizations.api"
 import type { Me } from "../me.models"
 import type { IMeSpi } from "../me.spi"
 

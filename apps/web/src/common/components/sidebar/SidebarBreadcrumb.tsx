@@ -1,4 +1,5 @@
 import { Breadcrumb, BreadcrumbList } from "@caseai-connect/ui/shad/breadcrumb"
+import type { Organization } from "@/common/features/organizations/organizations.models"
 import { BreadcrumbAgent } from "@/components/breadcrumb/BreadcrumbAgent"
 import { BreadcrumbAgentMembership } from "@/components/breadcrumb/BreadcrumbAgentMembership"
 import { BreadcrumbAgentSession } from "@/components/breadcrumb/BreadcrumbAgentSession"
@@ -8,7 +9,6 @@ import { BreadcrumbEvaluations } from "@/components/breadcrumb/BreadcrumbEvaluat
 import { BreadcrumbFeedback } from "@/components/breadcrumb/BreadcrumbFeedback"
 import { BreadcrumbProject } from "@/components/breadcrumb/BreadcrumbProject"
 import { BreadcrumbProjectMembership } from "@/components/breadcrumb/BreadcrumbProjectMembership"
-import type { Organization } from "@/features/organizations/organizations.models"
 
 export function SidebarBreadcrumb({ organization }: { organization: Organization }) {
   return (

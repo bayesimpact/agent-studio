@@ -1,5 +1,5 @@
 import type { UserMembershipsDto } from "@caseai-connect/api-contracts"
-import type { Organization } from "@/features/organizations/organizations.models"
+import type { Organization } from "@/common/features/organizations/organizations.models"
 
 export type User = {
   id: string

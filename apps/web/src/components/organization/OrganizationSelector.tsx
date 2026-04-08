@@ -10,14 +10,14 @@ import { cn } from "@caseai-connect/ui/utils"
 import { CheckIcon, ChevronsUpDownIcon } from "lucide-react"
 import { useTranslation } from "react-i18next"
 import { useNavigate } from "react-router-dom"
+import {
+  selectCurrentOrganization,
+  selectOrganizationsData,
+} from "@/common/features/organizations/organizations.selectors"
 import { RouteNames } from "@/common/routes/helpers"
 import { ADS } from "@/common/store/async-data-status"
 import { useAppSelector } from "@/common/store/hooks"
 import { Logo } from "@/components/themes/Logo"
-import {
-  selectCurrentOrganization,
-  selectOrganizationsData,
-} from "@/features/organizations/organizations.selectors"
 import { selectCurrentProjectId } from "@/features/projects/projects.selectors"
 import { buildOrganizationPath, useGetPath } from "@/hooks/use-build-path"
 import { isStudioInterface } from "@/studio/routes/helpers"

@@ -1,10 +1,10 @@
 import { useAuth0 } from "@auth0/auth0-react"
 import { useEffect } from "react"
 import { useNavigate, useSearchParams } from "react-router-dom"
+import { selectOrganizationsData } from "@/common/features/organizations/organizations.selectors"
 import { ADS } from "@/common/store/async-data-status"
 import { useAppSelector } from "@/common/store/hooks"
 import { AUTH0_ORGANIZATION_ID } from "@/config/auth0.config"
-import { selectOrganizationsData } from "@/features/organizations/organizations.selectors"
 import { RouteNames } from "./helpers"
 import { LoadingRoute } from "./LoadingRoute"
 

@@ -15,14 +15,14 @@ import { useTranslation } from "react-i18next"
 import { useNavigate } from "react-router-dom"
 import { z } from "zod"
 import { selectIsPremiumMember } from "@/common/features/me/me.selectors"
-import { ErrorRoute } from "@/common/routes/ErrorRoute"
-import { ADS } from "@/common/store/async-data-status"
-import { useAppDispatch, useAppSelector } from "@/common/store/hooks"
 import {
   selectOrganizationsError,
   selectOrganizationsStatus,
-} from "@/features/organizations/organizations.selectors"
-import { createOrganization } from "@/features/organizations/organizations.thunks"
+} from "@/common/features/organizations/organizations.selectors"
+import { createOrganization } from "@/common/features/organizations/organizations.thunks"
+import { ErrorRoute } from "@/common/routes/ErrorRoute"
+import { ADS } from "@/common/store/async-data-status"
+import { useAppDispatch, useAppSelector } from "@/common/store/hooks"
 import { buildOrganizationDashboardPath } from "@/studio/routes/helpers"
 import { FullPageCenterLayout } from "../../common/components/layouts/FullPageCenterLayout"
 

@@ -1,7 +1,7 @@
 import { createListenerMiddleware, isAnyOf } from "@reduxjs/toolkit"
 import { notificationsActions } from "@/common/features/notifications/notifications.slice"
+import { hasOrganizationChanged } from "@/common/features/organizations/organizations.selectors"
 import type { AppDispatch, RootState } from "@/common/store/types"
-import { hasOrganizationChanged } from "@/features/organizations/organizations.selectors"
 import { hasProjectChanged } from "@/features/projects/projects.selectors"
 import {
   createEvaluation,

@@ -11,9 +11,9 @@ import { cn } from "@caseai-connect/ui/utils"
 import { CheckIcon, ChevronDownIcon, PlusIcon } from "lucide-react"
 import { useState } from "react"
 import { useTranslation } from "react-i18next"
+import type { Organization } from "@/common/features/organizations/organizations.models"
 import { ADS } from "@/common/store/async-data-status"
 import { useAppSelector } from "@/common/store/hooks"
-import type { Organization } from "@/features/organizations/organizations.models"
 import {
   selectCurrentProjectData,
   selectProjectsData,

@@ -12,7 +12,7 @@ import {
   SidebarProvider,
   useSidebar,
 } from "@caseai-connect/ui/shad/sidebar"
-import type { Organization } from "@/features/organizations/organizations.models"
+import type { Organization } from "@/common/features/organizations/organizations.models"
 import {
   MainButton,
   OrganizationSelector,

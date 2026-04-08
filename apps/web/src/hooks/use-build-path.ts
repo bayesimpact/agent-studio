@@ -1,12 +1,12 @@
 import { useCallback } from "react"
 import { useParams } from "react-router-dom"
+import { selectOrganizationsData } from "@/common/features/organizations/organizations.selectors"
 import { RouteNames } from "@/common/routes/helpers"
 import { ADS } from "@/common/store/async-data-status"
 import { useAppSelector } from "@/common/store/hooks"
 import { DeskRouteNames } from "@/desk/routes/helpers"
 import { selectAgentsData } from "@/features/agents/agents.selectors"
 import { selectCurrentConversationAgentSessionsData } from "@/features/agents/conversation-agent-sessions/conversation-agent-sessions.selectors"
-import { selectOrganizationsData } from "@/features/organizations/organizations.selectors"
 import { selectProjectsData } from "@/features/projects/projects.selectors"
 import { StudioRouteNames } from "@/studio/routes/helpers"
 

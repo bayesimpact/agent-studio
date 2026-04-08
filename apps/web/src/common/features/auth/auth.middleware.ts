@@ -2,9 +2,9 @@ import { createListenerMiddleware } from "@reduxjs/toolkit"
 import { authActions } from "@/common/features/auth/auth.slice"
 import { meActions } from "@/common/features/me/me.slice"
 import { fetchMe } from "@/common/features/me/me.thunks"
+import { organizationsActions } from "@/common/features/organizations/organizations.slice"
 import { consumePendingInvitation } from "@/common/routes/HomeRoute"
 import type { AppDispatch, RootState } from "@/common/store/types"
-import { organizationsActions } from "@/features/organizations/organizations.slice"
 import { acceptInvitation } from "@/studio/features/invitations/invitations.thunks"
 
 // Create typed listener middleware
