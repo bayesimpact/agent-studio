@@ -1,7 +1,7 @@
 import { createAsyncThunk } from "@reduxjs/toolkit"
 import type { RootState, ThunkExtraArg } from "@/common/store"
 import type { Project } from "../../../common/features/projects/projects.models"
-import { getCurrentIds } from "../../../features/helpers"
+import { getCurrentIds } from "../helpers"
 
 type ThunkConfig = { state: RootState; extra: ThunkExtraArg }
 

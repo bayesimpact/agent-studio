@@ -2,7 +2,7 @@ import type { CreateAgentDto, UpdateAgentDto } from "@caseai-connect/api-contrac
 import { createAsyncThunk } from "@reduxjs/toolkit"
 import type { Agent } from "@/common/features/agents/agents.models"
 import type { RootState, ThunkExtraArg } from "@/common/store"
-import { getCurrentIds } from "../../../features/helpers"
+import { getCurrentIds } from "../../../common/features/helpers"
 
 type ThunkConfig = { state: RootState; extra: ThunkExtraArg }
 

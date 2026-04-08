@@ -1,3 +1,4 @@
+import { RestrictedFeature } from "@/common/components/RestrictedFeature"
 import type { Agent } from "@/common/features/agents/agents.models"
 import { AgentList } from "@/common/features/agents/components/AgentList"
 import { AgentRoute } from "@/common/routes/AgentRoute"
@@ -10,7 +11,6 @@ import { ErrorRoute } from "@/common/routes/ErrorRoute"
 import { RouteNames } from "@/common/routes/helpers"
 import { ProjectRoute } from "@/common/routes/ProjectRoute"
 import { ProtectedRoute } from "@/common/routes/ProtectedRoute"
-import { RestrictedFeature } from "@/components/RestrictedFeature"
 import { AgentCreatorButton } from "@/studio/features/agents/components/AgentCreator"
 import {
   ConversationAgentSessionList,

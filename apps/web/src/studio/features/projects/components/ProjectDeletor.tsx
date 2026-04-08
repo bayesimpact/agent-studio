@@ -14,8 +14,8 @@ import { useState } from "react"
 import { useTranslation } from "react-i18next"
 import { useNavigate } from "react-router-dom"
 import type { Project } from "@/common/features/projects/projects.models"
+import { useBuildPath } from "@/common/hooks/use-build-path"
 import { useAppDispatch } from "@/common/store/hooks"
-import { useBuildPath } from "@/hooks/use-build-path"
 import { deleteProject } from "@/studio/features/projects/projects.thunks"
 
 export function ProjectDeletor({ project }: { project: Project }) {

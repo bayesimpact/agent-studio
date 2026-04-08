@@ -1,7 +1,7 @@
 import { Button } from "@caseai-connect/ui/shad/button"
 import { useTranslation } from "react-i18next"
 import { Link } from "react-router-dom"
-import { useClosestParentPath } from "@/hooks/use-build-path"
+import { useClosestParentPath } from "@/common/hooks/use-build-path"
 
 export function ErrorRoute({ error }: { error: string }) {
   const { t } = useTranslation("status", { keyPrefix: "notFound" })

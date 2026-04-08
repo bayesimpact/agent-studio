@@ -16,6 +16,7 @@ import { evaluationsSlice } from "@/studio/features/evaluations/evaluations.slic
 import { projectMembershipsMiddleware } from "@/studio/features/project-memberships/project-memberships.middleware"
 import { projectMembershipsSlice } from "@/studio/features/project-memberships/project-memberships.slice"
 import { dynamicMiddleware } from "../../common/store/dynamic-middleware"
+import { studioAgentsMiddleware } from "../features/agents/agents.middleware"
 import { documentsMiddleware } from "../features/documents/documents.middleware"
 import { documentsSlice } from "../features/documents/documents.slice"
 import { studioProjectsMiddleware } from "../features/projects/projects.middleware"
@@ -33,6 +34,7 @@ const studioMiddlewareList = [
   evaluationsMiddleware,
   projectMembershipsMiddleware,
   studioProjectsMiddleware,
+  studioAgentsMiddleware,
 ]
 
 export const studioSliceList = [

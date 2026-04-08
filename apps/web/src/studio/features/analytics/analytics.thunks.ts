@@ -1,7 +1,7 @@
 import { createAsyncThunk } from "@reduxjs/toolkit"
+import { getCurrentIds } from "@/common/features/helpers"
+import { hasFeatureOrThrow } from "@/common/hooks/use-feature-flags"
 import type { RootState, ThunkExtraArg } from "@/common/store"
-import { getCurrentIds } from "@/features/helpers"
-import { hasFeatureOrThrow } from "@/hooks/use-feature-flags"
 import type { AnalyticsDailyPoint } from "./analytics.models"
 
 type ThunkConfig = { state: RootState; extra: ThunkExtraArg }

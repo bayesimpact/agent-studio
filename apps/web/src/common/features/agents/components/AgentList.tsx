@@ -4,7 +4,7 @@ import { Grid, GridContent, GridHeader } from "@/common/components/grid/Grid"
 import type { Agent } from "@/common/features/agents/agents.models"
 import { AgentItem } from "@/common/features/agents/components/AgentItem"
 import type { Project } from "@/common/features/projects/projects.models"
-import { useGetPath } from "@/hooks/use-build-path"
+import { useGetPath } from "@/common/hooks/use-build-path"
 
 export function AgentList({
   project,

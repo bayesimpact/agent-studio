@@ -14,8 +14,8 @@ import { useState } from "react"
 import { useTranslation } from "react-i18next"
 import { useNavigate } from "react-router-dom"
 import type { Agent } from "@/common/features/agents/agents.models"
+import { useBuildPath } from "@/common/hooks/use-build-path"
 import { useAppDispatch } from "@/common/store/hooks"
-import { useBuildPath } from "@/hooks/use-build-path"
 import { deleteAgent } from "../agents.thunks"
 
 export function AgentDeletorWithTrigger({

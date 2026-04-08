@@ -6,10 +6,10 @@ import {
 import { ExternalLinkIcon, LogOutIcon } from "lucide-react"
 import { useTranslation } from "react-i18next"
 import { selectCurrentOrganizationId } from "@/common/features/organizations/organizations.selectors"
+import { useAbility } from "@/common/hooks/use-ability"
+import { useAuthHandler } from "@/common/hooks/use-auth-handler"
 import { useAppSelector } from "@/common/store/hooks"
 import { buildDeskPath } from "@/desk/routes/helpers"
-import { useAbility } from "@/hooks/use-ability"
-import { useAuthHandler } from "@/hooks/use-auth-handler"
 import { buildStudioPath, isStudioInterface } from "@/studio/routes/helpers"
 
 export function NavUserMenuItems() {

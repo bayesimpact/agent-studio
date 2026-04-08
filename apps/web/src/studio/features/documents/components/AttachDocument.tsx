@@ -1,7 +1,7 @@
 import { allowedDocumentUploadMimeTypesForFileUploader } from "@caseai-connect/api-contracts"
 import { Button } from "@caseai-connect/ui/shad/button"
 import { PaperclipIcon } from "lucide-react"
-import { FileUploader } from "@/components/FileUploader"
+import { FileUploader } from "@/common/components/FileUploader"
 
 export function AttachDocument({
   disabled,

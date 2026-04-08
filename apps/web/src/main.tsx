@@ -8,7 +8,7 @@ import { store } from "./common/store/index.ts"
 import { auth0ProviderConfig } from "./config/auth0.config.ts"
 import "./i18n"
 import "./index.css"
-import { defaultTheme } from "./components/themes/helpers.ts"
+import { defaultTheme } from "./common/components/themes/helpers.ts"
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>

@@ -1,5 +1,5 @@
+import { Loader } from "@/common/components/Loader"
 import { FullPageCenterLayout } from "@/common/components/layouts/FullPageCenterLayout"
-import { Loader } from "@/components/Loader"
 
 export function LoadingRoute() {
   return (

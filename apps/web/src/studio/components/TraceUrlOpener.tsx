@@ -1,7 +1,7 @@
 import { Button } from "@caseai-connect/ui/shad/button"
 import { ExternalLinkIcon } from "lucide-react"
 import { useEffect, useState } from "react"
-import { useAbility } from "@/hooks/use-ability"
+import { useAbility } from "@/common/hooks/use-ability"
 
 export function TraceUrlOpener({
   traceUrl,

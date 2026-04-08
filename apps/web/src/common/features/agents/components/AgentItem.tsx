@@ -2,9 +2,9 @@ import { useTranslation } from "react-i18next"
 import { useNavigate } from "react-router-dom"
 import { GridItem } from "@/common/components/grid/Grid"
 import type { Agent } from "@/common/features/agents/agents.models"
+import { getAgentIcon } from "@/common/features/agents/components/AgentIcon"
+import { useBuildPath } from "@/common/hooks/use-build-path"
 import { buildSince } from "@/common/utils/build-date"
-import { getAgentIcon } from "@/features/agents/components/AgentIcon"
-import { useBuildPath } from "@/hooks/use-build-path"
 
 export function AgentItem({
   agent,

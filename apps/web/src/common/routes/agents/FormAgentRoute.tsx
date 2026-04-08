@@ -1,6 +1,6 @@
+import type { FormAgentSession } from "@/common/features/agents/agent-sessions/form/form-agent-sessions.models"
+import { selectCurrentFormAgentSessionsData } from "@/common/features/agents/agent-sessions/form/form-agent-sessions.selectors"
 import { useAppSelector } from "@/common/store/hooks"
-import type { FormAgentSession } from "@/features/agents/agent-sessions/form/form-agent-sessions.models"
-import { selectCurrentFormAgentSessionsData } from "@/features/agents/agent-sessions/form/form-agent-sessions.selectors"
 import { AsyncRoute } from "../AsyncRoute"
 
 export function FormAgentRoute({

@@ -6,9 +6,9 @@ import {
   selectCurrentAgentData,
   selectCurrentAgentId,
 } from "@/common/features/agents/agents.selectors"
+import { getAgentIcon } from "@/common/features/agents/components/AgentIcon"
+import { useGetPath } from "@/common/hooks/use-build-path"
 import { useAppSelector } from "@/common/store/hooks"
-import { getAgentIcon } from "@/features/agents/components/AgentIcon"
-import { useGetPath } from "@/hooks/use-build-path"
 import type { AgentMessageFeedback } from "@/studio/features/agent-message-feedback/agent-message-feedback.models"
 import { selectFeedbacksFromAgentId } from "@/studio/features/agent-message-feedback/agent-message-feedback.selectors"
 import { AsyncRoute } from "../../common/routes/AsyncRoute"

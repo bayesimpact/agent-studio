@@ -13,10 +13,7 @@ import {
   useSidebar,
 } from "@caseai-connect/ui/shad/sidebar"
 import type { Organization } from "@/common/features/organizations/organizations.models"
-import {
-  MainButton,
-  OrganizationSelector,
-} from "../../../components/organization/OrganizationSelector"
+import { MainButton, OrganizationSelector } from "../organization/OrganizationSelector"
 import { NavUserMenuItems } from "./nav/NavUserMenuItems"
 import { SidebarBreadcrumb } from "./SidebarBreadcrumb"
 

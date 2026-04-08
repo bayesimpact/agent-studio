@@ -9,8 +9,8 @@ import type { Organization } from "@/common/features/organizations/organizations
 import { ProjectList } from "@/common/features/projects/components/ProjectList"
 import type { Project } from "@/common/features/projects/projects.models"
 import { selectCurrentProjectData } from "@/common/features/projects/projects.selectors"
+import { useAbility } from "@/common/hooks/use-ability"
 import { useAppSelector } from "@/common/store/hooks"
-import { useAbility } from "@/hooks/use-ability"
 import { buildStudioPath } from "@/studio/routes/helpers"
 
 export function DeskDashboardRoute({

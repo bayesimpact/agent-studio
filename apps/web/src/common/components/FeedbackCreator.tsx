@@ -15,9 +15,9 @@ import { ScrollArea } from "@caseai-connect/ui/shad/scroll-area"
 import { Textarea } from "@caseai-connect/ui/shad/textarea"
 import { useState } from "react"
 import { useTranslation } from "react-i18next"
+import type { AgentSessionMessage } from "@/common/features/agents/agent-sessions/shared/agent-session-messages/agent-session-messages.models"
+import { MarkdownWrapper } from "@/common/features/agents/agent-sessions/shared/agent-session-messages/components/MarkdownWrapper"
 import { useAppDispatch } from "@/common/store/hooks"
-import type { AgentSessionMessage } from "@/features/agents/agent-sessions/shared/agent-session-messages/agent-session-messages.models"
-import { MarkdownWrapper } from "@/features/agents/agent-sessions/shared/agent-session-messages/components/MarkdownWrapper"
 import { createAgentMessageFeedback } from "@/studio/features/agent-message-feedback/agent-message-feedback.thunks"
 
 export function FeedbackCreator({ message }: { message: AgentSessionMessage }) {

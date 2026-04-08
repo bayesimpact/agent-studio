@@ -5,8 +5,8 @@ import { useCallback, useEffect, useState } from "react"
 import type { DateRange } from "react-day-picker"
 import { useTranslation } from "react-i18next"
 import { useNavigate } from "react-router-dom"
+import { useGetPath } from "@/common/hooks/use-build-path"
 import { useAppDispatch, useAppSelector } from "@/common/store/hooks"
-import { useGetPath } from "@/hooks/use-build-path"
 import {
   selectAnalyticsAvgUserQuestionsPerSessionPerDay,
   selectAnalyticsConversationsPerDay,
