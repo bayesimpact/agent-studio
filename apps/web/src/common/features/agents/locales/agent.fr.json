@@ -1,0 +1,85 @@
+{
+  "agent": {
+    "agent": "Agent",
+    "agents": "Agents",
+    "selectAgent": "Sélectionner un agent",
+    "settings": "Paramètres de l'agent",
+    "props": {
+      "createdAt": "Créé le",
+      "defaultPrompt": "Prompt par défaut",
+      "locale": "Langue",
+      "name": "Nom",
+      "model": "Modèle",
+      "outputJsonSchema": "Schéma JSON de sortie",
+      "temperature": "Température",
+      "updatedAt": "Mis à jour le",
+      "documentTags": "Étiquettes de document",
+      "placeholders": {
+        "name": "Entrez le nom de l'agent",
+        "defaultPrompt": "Entrez le prompt par défaut",
+        "model": "Sélectionnez le modèle",
+        "outputJsonSchema": "{\n \"type\": \"object\", \"properties\": {\n    \"field\": { \"type\": \"string\", \"description\": \"blablabla\" }\n  },\n  \"required\": [\"field\"]\n}",
+        "temperature": "Entrez la température 0.0 - 2.0",
+        "locale": "Sélectionnez la langue pour les réponses de l'agent"
+      },
+      "validation": {
+        "nameMinLength": "Le nom doit comporter au moins 3 caractères",
+        "promptRequired": "Le prompt par défaut est requis",
+        "temperatureInvalid": "La température doit être comprise entre 0,0 et 2,0",
+        "outputJsonSchemaRequired": "Le schéma JSON de sortie est requis",
+        "outputJsonSchemaInvalid": "Le schéma JSON de sortie doit être un objet JSON valide"
+      }
+    },
+    "create": {
+      "button": "Créer un agent",
+      "title": "Nouvel agent",
+      "description": "Un agent peut effectuer des tâches spécifiques en fonction de son type et de sa configuration.",
+      "typeDialog": {
+        "title": "Type d'agent",
+        "description": "Choisissez le type avant de configurer votre agent.",
+        "conversation": "Conversation",
+        "extraction": "Extraction",
+        "form": "Formulaire"
+      },
+      "conversationDialog": {
+        "title": "Créer un agent conversationnel",
+        "description": "Créer un nouvel agent conversationnel pour {{projectName}}"
+      },
+      "extractionDialog": {
+        "title": "Créer un agent d'extraction",
+        "description": "Créer un nouvel agent d'extraction pour {{projectName}}"
+      },
+      "formDialog": {
+        "title": "Créer un agent de formulaire",
+        "description": "Créer un nouvel agent de formulaire pour {{projectName}}"
+      }
+    },
+    "update": {
+      "conversation": {
+        "title": "Modifier l'agent conversationnel",
+        "description": "Modifier les détails de cet agent conversationnel"
+      },
+      "extraction": {
+        "title": "Modifier l'agent d'extraction",
+        "description": "Modifier les détails de cet agent d'extraction"
+      },
+      "form": {
+        "title": "Modifier l'agent de formulaire",
+        "description": "Modifier les détails de cet agent de formulaire"
+      }
+    },
+    "delete": {
+      "title": "Supprimer l'agent",
+      "description": "Êtes-vous sûr de vouloir supprimer \"{{name}}\" ? Cette action est irréversible."
+    },
+    "list": {
+      "title": "Agents",
+      "description": "Gérer les agents pour {{projectName}}"
+    },
+    "defaultPromptDialog": {
+      "title": "Prompt par défaut",
+      "description": "Ce prompt définit le comportement de l'agent.",
+      "button": "Voir le prompt"
+    }
+  }
+}

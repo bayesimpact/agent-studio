@@ -78,7 +78,7 @@ const agentValidationSchema = z.object({
   documentTagIds: z.array(documentTagSchema.shape.id),
   locale: z.enum(AgentLocale),
   model: z.enum(AgentModel),
-  name: z.string().trim().min(2),
+  name: z.string().trim().min(3),
   outputJsonSchema: outputJsonSchemaSchema.optional(),
   temperature: z
     .float32()

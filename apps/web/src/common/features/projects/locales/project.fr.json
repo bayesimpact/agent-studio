@@ -1,0 +1,38 @@
+{
+  "project": {
+    "settings": "Paramètres",
+    "project": "Espace de travail",
+    "projects": "Espaces de travail",
+    "props": {
+      "name": "Nom",
+      "createdAt": "Créé le",
+      "updatedAt": "Mis à jour le",
+      "placeholders": {
+        "name": "Entrez le nom de l'espace de travail"
+      },
+      "validation": {
+        "name": "Le nom de l'espace de travail est requis"
+      }
+    },
+    "list": {
+      "title": "Gérez vos espaces de travail"
+    },
+    "create": {
+      "button": "Créer un espace de travail",
+      "title": "Nouvel espace de travail",
+      "description": "Gérez vos agents conversationnels, agents de formulaire et autres types d'agents.",
+      "dialog": {
+        "title": "Créer un espace de travail",
+        "description": "Créer un nouvel espace de travail pour {{organizationName}}"
+      }
+    },
+    "update": {
+      "title": "Mettre à jour l'espace de travail",
+      "description": "Mettre à jour les informations de l'espace de travail"
+    },
+    "delete": {
+      "title": "Supprimer l'espace de travail",
+      "description": "Êtes-vous sûr de vouloir supprimer {{name}} ? Cette action est irréversible."
+    }
+  }
+}

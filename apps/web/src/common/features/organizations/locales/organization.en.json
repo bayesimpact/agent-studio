@@ -1,0 +1,25 @@
+{
+  "organization": {
+    "organization": "Organization",
+    "organizations": "Organizations",
+    "createForm": {
+      "title": "Create organization",
+      "description": "Set up your organization to continue.",
+      "labelName": "Organization name",
+      "placeholderName": "Enter organization name",
+      "submit": "Create organization",
+      "submitting": "Creating organization...",
+      "validation": {
+        "minNameLength": "Organization name must be at least 3 characters"
+      }
+    },
+    "props": {
+      "name": "Name",
+      "role": "Role"
+    },
+    "list": {
+      "title": "Welcome, {{name}}!",
+      "description": "Select an organization."
+    }
+  }
+}

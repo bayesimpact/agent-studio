@@ -1,0 +1,82 @@
+import { combineReducers } from "@reduxjs/toolkit"
+import type { AppDispatch } from "@/common/store"
+import { rootSlices } from "@/common/store/root-slices"
+import { agentMembershipsMiddleware } from "@/studio/features/agent-memberships/agent-memberships.middleware"
+import { agentMembershipsSlice } from "@/studio/features/agent-memberships/agent-memberships.slice"
+import { agentMessageFeedbackMiddleware } from "@/studio/features/agent-message-feedback/agent-message-feedback.middleware"
+import { agentMessageFeedbackSlice } from "@/studio/features/agent-message-feedback/agent-message-feedback.slice"
+import { analyticsMiddleware } from "@/studio/features/analytics/analytics.middleware"
+import { analyticsSlice } from "@/studio/features/analytics/analytics.slice"
+import { documentTagsMiddleware } from "@/studio/features/document-tags/document-tags.middleware"
+import { documentTagsSlice } from "@/studio/features/document-tags/document-tags.slice"
+import { evaluationReportsMiddleware } from "@/studio/features/evaluation-reports/evaluation-reports.middleware"
+import { evaluationReportsSlice } from "@/studio/features/evaluation-reports/evaluation-reports.slice"
+import { evaluationsMiddleware } from "@/studio/features/evaluations/evaluations.middleware"
+import { evaluationsSlice } from "@/studio/features/evaluations/evaluations.slice"
+import { projectMembershipsMiddleware } from "@/studio/features/project-memberships/project-memberships.middleware"
+import { projectMembershipsSlice } from "@/studio/features/project-memberships/project-memberships.slice"
+import { dynamicMiddleware } from "../../common/store/dynamic-middleware"
+import { studioAgentsMiddleware } from "../features/agents/agents.middleware"
+import { documentsMiddleware } from "../features/documents/documents.middleware"
+import { documentsSlice } from "../features/documents/documents.slice"
+import { studioProjectsMiddleware } from "../features/projects/projects.middleware"
+import type { StudioState } from "./types"
+
+let middlewareInjected = false
+
+const studioMiddlewareList = [
+  analyticsMiddleware,
+  agentMembershipsMiddleware,
+  agentMessageFeedbackMiddleware,
+  documentsMiddleware,
+  documentTagsMiddleware,
+  evaluationReportsMiddleware,
+  evaluationsMiddleware,
+  projectMembershipsMiddleware,
+  studioProjectsMiddleware,
+  studioAgentsMiddleware,
+]
+
+export const studioSliceList = [
+  analyticsSlice,
+  agentMembershipsSlice,
+  agentMessageFeedbackSlice,
+  documentsSlice,
+  documentTagsSlice,
+  evaluationReportsSlice,
+  evaluationsSlice,
+  projectMembershipsSlice,
+]
+
+const studioReducers = combineReducers(
+  Object.assign({}, ...studioSliceList.map((slice) => ({ [slice.name]: slice.reducer }))),
+)
+
+export function injectStudioSlices() {
+  const rr = rootSlices.withLazyLoadedSlices<StudioState>()
+  // Reducers: inject() is idempotent — safe to call on every mount
+  rr.inject({
+    reducerPath: "studio",
+    // @ts-expect-error - TypeScript cannot infer the type of the combined reducers, but it is correct
+    reducer: studioReducers,
+  })
+
+  // Middleware: addMiddleware is NOT idempotent — guard against duplicate registration
+  if (!middlewareInjected) {
+    middlewareInjected = true
+    studioMiddlewareList.forEach((m) => {
+      dynamicMiddleware.addMiddleware(m.listenerMiddleware.middleware)
+      m.registerListeners()
+    })
+  }
+}
+
+export function resetStudioSlices(dispatch: AppDispatch) {
+  middlewareInjected = false // reset the guard so middleware can be re-added
+  studioSliceList.forEach((slice) => {
+    dispatch(slice.actions.reset())
+  })
+  studioMiddlewareList.forEach((m) => {
+    m.listenerMiddleware.clearListeners()
+  })
+}

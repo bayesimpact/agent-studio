@@ -1,0 +1,23 @@
+import type { ThunkDispatch, UnknownAction } from "@reduxjs/toolkit"
+import type { Services } from "@/di/services"
+import type { StudioState } from "@/studio/store/types"
+import type { rootSliceList } from "./root-slices"
+
+// Define the store state structure without creating the store
+// This allows us to use these types in listenerMiddleware without circular dependencies
+export type RootState =
+  typeof rootSliceList extends Array<infer R>
+    ? {
+        // @ts-expect-error - Mapped type over array of slices to construct RootState shape
+        [K in R as K["name"]]: ReturnType<K["reducer"]>
+      } & {
+        studio: StudioState
+      }
+    : never
+
+// Extra argument passed to thunks for dependency injection
+export type ThunkExtraArg = {
+  services: Services
+}
+
+export type AppDispatch = ThunkDispatch<RootState, ThunkExtraArg, UnknownAction>

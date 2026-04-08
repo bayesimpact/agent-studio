@@ -1,0 +1,139 @@
+import { Badge, type BadgeVariant } from "@caseai-connect/ui/shad/badge"
+import { Button } from "@caseai-connect/ui/shad/button"
+import {
+  Card,
+  CardAction,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@caseai-connect/ui/shad/card"
+import { cn } from "@caseai-connect/ui/utils"
+import { ArrowLeftIcon, ArrowRightIcon } from "lucide-react"
+import { GridContext, gridClass, useGrid } from "./context"
+import { getGridItemClassName } from "./GridItem.helpers"
+
+export function Grid({
+  children,
+  cols,
+  total,
+  extraItems = 0,
+  ...props
+}: React.ComponentProps<"div"> & {
+  cols: keyof typeof gridClass
+  total: number
+  extraItems?: number
+}) {
+  return (
+    <GridContext.Provider value={{ cols, total: total + extraItems }}>
+      <div data-slot="grid" {...props}>
+        {children}
+      </div>
+    </GridContext.Provider>
+  )
+}
+
+export function GridContent({ children }: { children: React.ReactNode }) {
+  const { cols } = useGrid()
+  return <div className={cn("grid", gridClass[cols])}>{children}</div>
+}
+
+export function GridItem({
+  className,
+  title,
+  description,
+  footer,
+  badge,
+  badgeVariant = "secondary",
+  index = -1,
+  ...props
+}: {
+  className?: string
+  title: React.ReactNode
+  description: React.ReactNode
+  index?: number
+  footer?: React.ReactNode
+  badge?: React.ReactNode
+  badgeVariant?: BadgeVariant
+} & (
+  | {
+      onClick: () => void
+    }
+  | { action: React.ReactNode }
+)) {
+  const { cols, total } = useGrid()
+  return (
+    <div
+      className={cn(
+        "p-4 flex flex-col items-start justify-center",
+        footer ? "pb-0" : "",
+        className,
+        getGridItemClassName({ index: index + 1, total, cols }),
+      )}
+    >
+      {badge && typeof badge === "string" ? (
+        <Badge variant={badgeVariant} className="capitalize">
+          {badge}
+        </Badge>
+      ) : (
+        badge
+      )}
+
+      <div className="py-2 px-1 w-full">
+        <h2 className="text-xl font-medium capitalize-first flex items-center gap-2">{title}</h2>
+
+        <h3 className="text-base text-muted-foreground leading-snug mt-1 mb-4">{description}</h3>
+
+        {"action" in props ? (
+          props.action
+        ) : (
+          <Button onClick={props.onClick} className="rounded-full" size="icon" variant="outline">
+            <ArrowRightIcon className="size-4" />
+          </Button>
+        )}
+      </div>
+
+      {footer && <div className="w-full mt-auto">{footer}</div>}
+    </div>
+  )
+}
+
+export function GridHeader({
+  onBack,
+  title,
+  description,
+  action,
+}: {
+  onBack?: () => void
+  title: string
+  description?: React.ReactNode
+  action?: React.ReactNode
+}) {
+  return (
+    <Card className="shadow-none rounded-none border-0 border-b border-foreground-muted">
+      <CardHeader className="gap-0">
+        <CardTitle className="text-2xl flex items-center gap-1">
+          {onBack && (
+            <Button variant="secondary" size="icon" className="rounded-full mr-2" onClick={onBack}>
+              <ArrowLeftIcon className="size-4" />
+            </Button>
+          )}
+
+          <div className="capitalize-first">{title}</div>
+        </CardTitle>
+
+        {description && (
+          <CardDescription
+            className={cn(
+              "text-xl flex items-center gap-2 capitalize-first max-w-2/3",
+              onBack && "pl-12",
+            )}
+          >
+            {description}
+          </CardDescription>
+        )}
+
+        {action && <CardAction className="flex items-center gap-2 min-h-full">{action}</CardAction>}
+      </CardHeader>
+    </Card>
+  )
+}

@@ -1,6 +1,7 @@
 {
   "actions": {
     "accept": "Accepter",
+    "selectOrganization": "Sélectionner une organisation",
     "add": "Ajouter",
     "back": "Retour",
     "cancel": "Annuler",
@@ -19,6 +20,8 @@
     "enter": "Entrer",
     "filter": "Filtrer",
     "finish": "Terminer",
+    "goToApp": "Ouvrir l'application",
+    "goToStudio": "Ouvrir le studio",
     "leave": "Quitter",
     "loadMore": "Charger plus",
     "more": "Plus",
@@ -40,8 +43,7 @@
     "submit": "Soumettre",
     "update": "Mettre à jour",
     "upload": "Téléverser",
-    "goToStudio": "Entrer dans le Studio",
-    "exitStudio": "Quitter le Studio",
+    "invite": "Inviter",
     "view": "Voir"
   }
 }

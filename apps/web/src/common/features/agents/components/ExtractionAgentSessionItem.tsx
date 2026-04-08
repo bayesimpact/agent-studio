@@ -1,0 +1,218 @@
+import { Button } from "@caseai-connect/ui/shad/button"
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@caseai-connect/ui/shad/dialog"
+import { Textarea } from "@caseai-connect/ui/shad/textarea"
+import { Trash2Icon } from "lucide-react"
+import { useState } from "react"
+import { useTranslation } from "react-i18next"
+import { GridItem } from "@/common/components/grid/Grid"
+import { Loader } from "@/common/components/Loader"
+import type { ExtractionAgentSessionSummary } from "@/common/features/agents/agent-sessions/extraction/extraction-agent-sessions.models"
+import { getExtractionAgentSession } from "@/common/features/agents/agent-sessions/extraction/extraction-agent-sessions.thunks"
+import { deleteAgentSession } from "@/common/features/agents/agent-sessions/shared/base-agent-session/base-agent-sessions.thunks"
+import { useAppDispatch } from "@/common/store/hooks"
+import { buildDate, buildSince } from "@/common/utils/build-date"
+import { TraceUrlOpener } from "@/studio/components/TraceUrlOpener"
+import { DocumentOpener } from "@/studio/features/documents/components/DocumentOpener"
+
+export function ExtractionSessionItem({
+  agentSession,
+  className,
+}: {
+  agentSession: ExtractionAgentSessionSummary
+  className?: string
+}) {
+  const { t } = useTranslation()
+  const isSuccess = agentSession.status === "success"
+  const badge = isSuccess ? buildDate(agentSession.updatedAt) : t(`status:${agentSession.status}`)
+  const date = buildSince(agentSession.updatedAt)
+  return (
+    <GridItem
+      index={0}
+      className={className}
+      badge={badge}
+      badgeVariant={isSuccess ? "secondary" : "destructive"}
+      title={date}
+      description={agentSession.documentFileName ?? agentSession.documentId}
+      action={<Actions agentSession={agentSession} isSuccess={isSuccess} />}
+    />
+  )
+}
+
+function Actions({
+  agentSession,
+  isSuccess,
+}: {
+  agentSession: ExtractionAgentSessionSummary
+  isSuccess: boolean
+}) {
+  const dispatch = useAppDispatch()
+  const [isLoading, setIsLoading] = useState(false)
+  const [runResult, setRunResult] = useState<Record<string, unknown>>()
+
+  const handleGetRunResult = async (
+    agentSessionId: string,
+  ): Promise<Record<string, unknown> | null> => {
+    if (runResult) return runResult // cache
+
+    setIsLoading(true)
+    try {
+      // FIXME:
+      const runDetails = await dispatch(getExtractionAgentSession({ agentSessionId })).unwrap()
+      if (!runDetails.result) {
+        return null
+      }
+      setRunResult(runDetails.result)
+      return runDetails.result as Record<string, unknown>
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const handleDelete = () => {
+    dispatch(
+      deleteAgentSession({
+        agentType: "extraction",
+        agentId: agentSession.agentId,
+        agentSessionId: agentSession.id,
+      }),
+    )
+  }
+
+  return (
+    <div className="flex items-center gap-2">
+      {isSuccess && (
+        <>
+          <JsonViewer
+            runId={agentSession.id}
+            result={runResult}
+            isLoading={isLoading}
+            onRequestRunResult={handleGetRunResult}
+          />
+
+          <JsonDownloader
+            result={runResult}
+            runId={agentSession.id}
+            isLoading={isLoading}
+            onRequestRunResult={handleGetRunResult}
+            fileName={buildRunResultFileName(agentSession.documentFileName, agentSession.id)}
+          />
+        </>
+      )}
+
+      <DocumentOpener noIcon buttonProps={{ size: "sm" }} documentId={agentSession.documentId} />
+
+      <TraceUrlOpener
+        traceUrl={agentSession.traceUrl}
+        buttonProps={{ size: "sm", variant: "outline" }}
+      />
+      <Button variant="outline" size="sm" onClick={handleDelete}>
+        <Trash2Icon />
+      </Button>
+    </div>
+  )
+}
+
+function JsonViewer({
+  runId,
+  result,
+  isLoading,
+  onRequestRunResult,
+}: {
+  runId: string
+  result?: Record<string, unknown>
+  isLoading: boolean
+  onRequestRunResult: (runId: string) => Promise<Record<string, unknown> | null>
+}) {
+  const { t } = useTranslation("extractionAgentSession", { keyPrefix: "result.view" })
+  const [open, setOpen] = useState(false)
+
+  const handleOpenChange = (nextOpen: boolean) => {
+    if (nextOpen && !result && !isLoading) {
+      onRequestRunResult(runId)
+    }
+    setOpen(nextOpen)
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={handleOpenChange}>
+      <DialogTrigger asChild>
+        <Button variant="outline" size="sm" disabled={isLoading}>
+          {t("button")}
+        </Button>
+      </DialogTrigger>
+
+      <DialogContent className="sm:max-w-2xl">
+        <DialogHeader>
+          <DialogTitle>{t("title")}</DialogTitle>
+        </DialogHeader>
+
+        {result ? (
+          <Textarea
+            value={JSON.stringify(result, null, 2)}
+            readOnly
+            className="font-mono min-h-56"
+          />
+        ) : isLoading ? (
+          <Loader />
+        ) : (
+          <p className="text-sm text-muted-foreground">{t("error")}</p>
+        )}
+      </DialogContent>
+    </Dialog>
+  )
+}
+
+function JsonDownloader({
+  runId,
+  result,
+  isLoading,
+  onRequestRunResult,
+  fileName,
+}: {
+  runId: string
+  result?: Record<string, unknown>
+  isLoading: boolean
+  onRequestRunResult: (runId: string) => Promise<Record<string, unknown> | null>
+  fileName: string
+}) {
+  const { t } = useTranslation("extractionAgentSession", { keyPrefix: "result.download" })
+  const handleDownload = async () => {
+    if (isLoading) {
+      return
+    }
+    const currentRunResult = result ?? (await onRequestRunResult(runId))
+    if (!currentRunResult) {
+      return
+    }
+    const serializedResult = JSON.stringify(currentRunResult, null, 2)
+    const blob = new Blob([serializedResult], { type: "application/json" })
+    const url = URL.createObjectURL(blob)
+    const linkElement = document.createElement("a")
+    linkElement.href = url
+    linkElement.download = fileName
+    linkElement.click()
+    URL.revokeObjectURL(url)
+  }
+
+  return (
+    <Button variant="outline" size="sm" onClick={handleDownload} disabled={isLoading}>
+      {t("button")}
+    </Button>
+  )
+}
+
+function buildRunResultFileName(documentFileName: string | null, runId: string): string {
+  if (!documentFileName) {
+    return `extraction-result-${runId}.json`
+  }
+
+  const lastDotIndex = documentFileName.lastIndexOf(".")
+  const baseFileName = lastDotIndex > 0 ? documentFileName.slice(0, lastDotIndex) : documentFileName
+  return `${baseFileName}-extraction-result.json`
+}

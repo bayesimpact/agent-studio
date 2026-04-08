@@ -1,0 +1,22 @@
+{
+  "conversationAgentSession": {
+    "props": {
+      "type": "Type",
+      "createdAt": "Created At",
+      "updatedAt": "Updated At",
+      "traceUrl": "Trace URL"
+    },
+    "create": {
+      "button": "New Chat",
+      "title": "New Chat",
+      "description": "Start a chat with your agent."
+    },
+    "list": {
+      "title": "Chat Sessions"
+    },
+    "chat": {
+      "title": "Playground",
+      "placeholder": "Ask your question..."
+    }
+  }
+}

@@ -1,0 +1,38 @@
+{
+  "project": {
+    "settings": "Settings",
+    "project": "Workspace",
+    "projects": "Workspaces",
+    "props": {
+      "name": "Name",
+      "createdAt": "Created At",
+      "updatedAt": "Updated At",
+      "placeholders": {
+        "name": "Enter workspace name"
+      },
+      "validation": {
+        "name": "Workspace name is required"
+      }
+    },
+    "list": {
+      "title": "Manage your workspaces"
+    },
+    "create": {
+      "button": "Create Workspace",
+      "title": "New Workspace",
+      "description": "Manage your conversational agents, form agents and other types of agents.",
+      "dialog": {
+        "title": "Create Workspace",
+        "description": "Create a new workspace for {{organizationName}}"
+      }
+    },
+    "update": {
+      "title": "Update Workspace",
+      "description": "Update the workspace information"
+    },
+    "delete": {
+      "title": "Delete Workspace",
+      "description": "Are you sure you want to delete {{name}}? This action is irreversible."
+    }
+  }
+}

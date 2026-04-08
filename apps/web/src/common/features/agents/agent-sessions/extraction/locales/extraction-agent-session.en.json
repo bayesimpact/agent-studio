@@ -1,0 +1,22 @@
+{
+  "extractionAgentSession": {
+    "create": {
+      "button": "New Extraction",
+      "title": "New Extraction",
+      "description": "Upload a PDF or image to run extraction."
+    },
+    "list": {
+      "title": "Extractions"
+    },
+    "result": {
+      "view": {
+        "button": "View JSON",
+        "title": "Extraction Result",
+        "error": "Extraction result is not available."
+      },
+      "download": {
+        "button": "Download JSON"
+      }
+    }
+  }
+}

@@ -1,27 +1,27 @@
-import agentMembershipsApi from "@/features/agent-memberships/external/agent-memberships.api"
-import agentMessageFeedbackApi from "@/features/agent-message-feedback/external/agent-message-feedback.api"
-import conversationAgentSessionsApi from "@/features/agents/conversation-agent-sessions/external/conversation-agent-sessions.api"
-import agentsApi from "@/features/agents/external/agents.api"
-import extractionAgentSessionsApi from "@/features/agents/extraction-agent-sessions/external/extraction-agent-sessions.api"
-import formAgentSessionsApi from "@/features/agents/form-agent-sessions/external/form-agent-sessions.api"
-import agentSessionMessagesApi from "@/features/agents/shared/agent-session-messages/external/agent-session-messages.api"
-import analyticsApi from "@/features/analytics/external/analytics.api"
-import documentTagsApi from "@/features/document-tags/external/document-tags.api"
-import documentsApi from "@/features/documents/external/documents.api"
-import evaluationReportsApi from "@/features/evaluation-reports/external/evaluation-reports.api"
-import evaluationsApi from "@/features/evaluations/external/evaluations.api"
-import invitationsApi from "@/features/invitations/external/invitations.api"
-import meApi from "@/features/me/external/me.api"
-import organizationsApi from "@/features/organizations/external/organizations.api"
-import projectMembershipsApi from "@/features/project-memberships/external/project-memberships.api"
-import projectsApi from "@/features/projects/external/projects.api"
+import conversationAgentSessionsApi from "@/common/features/agents/agent-sessions/conversation/external/conversation-agent-sessions.api"
+import extractionAgentSessionsApi from "@/common/features/agents/agent-sessions/extraction/external/extraction-agent-sessions.api"
+import formAgentSessionsApi from "@/common/features/agents/agent-sessions/form/external/form-agent-sessions.api"
+import agentSessionMessagesApi from "@/common/features/agents/agent-sessions/shared/agent-session-messages/external/agent-session-messages.api"
+import agentsApi from "@/common/features/agents/external/agents.api"
+import meApi from "@/common/features/me/external/me.api"
+import organizationsApi from "@/common/features/organizations/external/organizations.api"
+import projectsApi from "@/common/features/projects/external/projects.api"
+import agentMembershipsApi from "@/studio/features/agent-memberships/external/agent-memberships.api"
+import agentMessageFeedbackApi from "@/studio/features/agent-message-feedback/external/agent-message-feedback.api"
+import analyticsApi from "@/studio/features/analytics/external/analytics.api"
+import documentTagsApi from "@/studio/features/document-tags/external/document-tags.api"
+import documentsApi from "@/studio/features/documents/external/documents.api"
+import evaluationReportsApi from "@/studio/features/evaluation-reports/external/evaluation-reports.api"
+import evaluationsApi from "@/studio/features/evaluations/external/evaluations.api"
+import invitationsApi from "@/studio/features/invitations/external/invitations.api"
+import projectMembershipsApi from "@/studio/features/project-memberships/external/project-memberships.api"
 
 export const services = {
-  analytics: analyticsApi,
   agentMemberships: agentMembershipsApi,
   agentMessageFeedback: agentMessageFeedbackApi,
   agents: agentsApi,
   agentSessionMessages: agentSessionMessagesApi,
+  analytics: analyticsApi,
   conversationAgentSessions: conversationAgentSessionsApi,
   documents: documentsApi,
   documentTags: documentTagsApi,
