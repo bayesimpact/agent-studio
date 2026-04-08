@@ -19,15 +19,14 @@ export interface BuildPathOptions {
   agentSessionId?: string
 }
 
-const prefix = window.location.pathname.startsWith(`${StudioRouteNames.STUDIO}/`)
-  ? StudioRouteNames.STUDIO
-  : window.location.pathname.startsWith(`${StudioRouteNames.STUDIO2}/`)
-    ? StudioRouteNames.STUDIO2
+const getPrefix = () =>
+  window.location.pathname.startsWith(`${StudioRouteNames.STUDIO}/`)
+    ? StudioRouteNames.STUDIO
     : DeskRouteNames.APP
 
 export const buildOrganizationPath = ({ organizationId }: { organizationId: string }) => {
   const path = `/o/${organizationId}/`
-  return `${prefix}${path}`
+  return `${getPrefix()}${path}`
 }
 
 const buildProjectPath = ({
@@ -38,7 +37,7 @@ const buildProjectPath = ({
   projectId: string
 }) => {
   const path = `/o/${organizationId}/p/${projectId}`
-  return `${prefix}${path}`
+  return `${getPrefix()}${path}`
 }
 
 const buildAgentPath = ({
@@ -51,7 +50,7 @@ const buildAgentPath = ({
   agentId: string
 }) => {
   const path = `/o/${organizationId}/p/${projectId}/a/${agentId}`
-  return `${prefix}${path}`
+  return `${getPrefix()}${path}`
 }
 
 const buildAgentSessionPath = ({
@@ -66,7 +65,7 @@ const buildAgentSessionPath = ({
   agentSessionId: string
 }) => {
   const path = `/o/${organizationId}/p/${projectId}/a/${agentId}/as/${agentSessionId}`
-  return `${prefix}${path}`
+  return `${getPrefix()}${path}`
 }
 
 export function useClosestParentPath() {

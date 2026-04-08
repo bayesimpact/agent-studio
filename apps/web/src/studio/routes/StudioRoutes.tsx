@@ -28,10 +28,10 @@ import { AnalyticsRoute } from "./AnalyticsRoute"
 import { DocumentsRoute } from "./DocumentsRoute"
 import { EvaluationRoute } from "./EvaluationRoute"
 import { FeedbackRoute } from "./FeedbackRoute"
-import { buildStudio2Path, buildStudioPath, StudioRouteNames } from "./helpers"
+import { buildStudioPath, StudioRouteNames } from "./helpers"
 import { ProjectMembershipsRoute } from "./ProjectMembershipsRoute"
 import { StudioAgentSessionRoute } from "./StudioAgentSessionRoute"
-import { StudioDashboardRoute, StudioDashboardRoute2 } from "./StudioDashboardRoute"
+import { StudioDashboardRoute } from "./StudioDashboardRoute"
 import { Studio } from "./StudioRoute"
 
 const extraItems = [
@@ -136,91 +136,6 @@ export const studioRoutes = {
                 },
                 {
                   path: buildStudioPath(StudioRouteNames.AGENT_MEMBERSHIPS),
-                  element: <AgentMembershipsRoute />,
-                },
-              ],
-            },
-          ],
-        },
-      ],
-    },
-  ],
-}
-
-export const studio2Routes = {
-  path: StudioRouteNames.STUDIO2,
-  element: (
-    <ProtectedRoute>
-      <Studio />
-    </ProtectedRoute>
-  ),
-  children: [
-    {
-      path: buildStudio2Path(RouteNames.ORGANIZATION_DASHBOARD),
-      element: (
-        <DashboardRoute>
-          {(user, projects, organization) => (
-            <StudioDashboardRoute2 user={user} projects={projects} organization={organization} />
-          )}
-        </DashboardRoute>
-      ),
-      children: [
-        {
-          path: buildStudio2Path(RouteNames.PROJECT),
-          element: (
-            <ProjectRoute>
-              {(agents, project) => <AgentList project={project} agents={agents} />}
-            </ProjectRoute>
-          ),
-          children: [
-            {
-              path: buildStudio2Path(StudioRouteNames.EVALUATION),
-              element: (
-                <RestrictedFeature feature="evaluation">
-                  <EvaluationRoute />
-                </RestrictedFeature>
-              ),
-            },
-            {
-              path: buildStudio2Path(StudioRouteNames.DOCUMENTS),
-              element: <DocumentsRoute />,
-            },
-            {
-              path: buildStudio2Path(StudioRouteNames.ANALYTICS),
-              element: (
-                <RestrictedFeature feature="project-analytics">
-                  <AnalyticsRoute />
-                </RestrictedFeature>
-              ),
-            },
-            {
-              path: buildStudio2Path(StudioRouteNames.PROJECT_MEMBERSHIPS),
-              element: <ProjectMembershipsRoute />,
-            },
-            {
-              path: buildStudio2Path(RouteNames.AGENT),
-              element: <AgentRoute>{(agent) => <AgentHandler agent={agent} />}</AgentRoute>,
-              children: [
-                {
-                  path: buildStudio2Path(RouteNames.AGENT_SESSION),
-                  element: (
-                    <AgentSessionRoute>
-                      {(agent, agentSession, messages) => (
-                        <StudioAgentSessionRoute
-                          agent={agent}
-                          agentSession={agentSession}
-                          messages={messages}
-                        />
-                      )}
-                    </AgentSessionRoute>
-                  ),
-                },
-                {
-                  path: buildStudio2Path(StudioRouteNames.FEEDBACK),
-                  element: <FeedbackRoute />,
-                },
-                {
-                  path: buildStudio2Path(StudioRouteNames.AGENT_MEMBERSHIPS),
                   element: <AgentMembershipsRoute />,
                 },
               ],
