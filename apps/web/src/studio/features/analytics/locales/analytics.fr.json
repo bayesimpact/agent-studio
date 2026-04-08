@@ -1,5 +1,6 @@
 {
   "analytics": {
+    "analytics": "Analytique",
     "list": {
       "title": "Analytique",
       "description": "Affiche les analyses de votre projet, y compris les conversations, les questions moyennes par session, et plus encore."

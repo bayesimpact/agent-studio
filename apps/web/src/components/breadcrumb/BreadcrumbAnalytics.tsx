@@ -9,14 +9,14 @@ export function BreadcrumbAnalytics() {
   const { hasFeature } = useFeatureFlags()
   const { isRoute } = useIsRoute()
   const isAnalyticsRoute = isRoute(StudioRouteNames.ANALYTICS)
-  const { t } = useTranslation("analytics")
+  const { t } = useTranslation()
   if (!hasFeature("project-analytics") || !isAnalyticsRoute) return null
   return (
     <>
       <BreadcrumbSeparator>
         <DotIcon />
       </BreadcrumbSeparator>
-      <BreadcrumbItem>{t("title")}</BreadcrumbItem>
+      <BreadcrumbItem className="capitalize">{t("analytics:analytics")}</BreadcrumbItem>
     </>
   )
 }
