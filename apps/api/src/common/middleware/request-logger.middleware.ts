@@ -1,4 +1,4 @@
-import { Injectable, type NestMiddleware } from "@nestjs/common"
+import { Injectable, Logger, type NestMiddleware } from "@nestjs/common"
 import type { NextFunction, Request, Response } from "express"
 
 /**
@@ -8,33 +8,32 @@ import type { NextFunction, Request, Response } from "express"
  * Must be registered via AppModule.configure() so it runs AFTER body parsing.
  *
  * Example output:
- *   --> POST /invitations/accept
- *       body: {"payload":{"ticketId":"ticket_abc"}}
+ *   --> POST /invitations/accept body: {"payload":{"ticketId":"ticket_abc"}}
  *   <-- POST /invitations/accept 201 45ms
  */
 @Injectable()
 export class RequestLoggerMiddleware implements NestMiddleware {
+  private readonly logger = new Logger("HTTP")
+
   use(request: Request, response: Response, next: NextFunction) {
     const { method, originalUrl, body, query } = request
     const startTime = Date.now()
 
-    // Build the log parts
-    const parts = [`--> ${method} ${originalUrl} 📥`]
+    const parts = [`--> ${method} ${originalUrl}`]
 
     if (Object.keys(query).length > 0) {
-      parts.push(`    query: ${JSON.stringify(query)}`)
+      parts.push(`query: ${JSON.stringify(query)}`)
     }
 
     if (body && Object.keys(body).length > 0) {
-      parts.push(`    body: ${JSON.stringify(body)}`)
+      parts.push(`body: ${JSON.stringify(body)}`)
     }
 
-    console.log(parts.join("\n"))
+    this.logger.log(parts.join(" "))
 
-    // Log response when finished
     response.on("finish", () => {
       const duration = Date.now() - startTime
-      console.log(`<-- ${method} ${originalUrl} ${response.statusCode} ${duration}ms 📤`)
+      this.logger.log(`<-- ${method} ${originalUrl} ${response.statusCode} ${duration}ms`)
     })
 
     next()

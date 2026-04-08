@@ -6,11 +6,14 @@ import { NestFactory } from "@nestjs/core"
 import { NestExpressApplication } from "@nestjs/platform-express"
 import { AppModule } from "./app.module"
 import { StackTraceLoggingExceptionFilter } from "./common/filters/stack-trace-logging-exception.filter"
+import { StructuredLogger } from "./common/logger/structured-logger"
 
 async function bootstrap() {
   const frontendUrl = normalizeFrontendUrl(process.env.FRONTEND_URL)
   const httpsOptions = loadHttpsCertificates()
+  const logger = new StructuredLogger()
   const app = await NestFactory.create<NestExpressApplication>(AppModule, {
+    logger,
     ...(httpsOptions && { httpsOptions }),
   })
   app.useBodyParser("json", { limit: "500kb" })
@@ -33,7 +36,7 @@ async function bootstrap() {
   })
   const protocol = httpsOptions ? "https" : "http"
   await app.listen(3000)
-  console.log(`API server running on ${protocol}://connect.localhost:3000`)
+  logger.log(`API server running on ${protocol}://connect.localhost:3000`, "Bootstrap")
 }
 
 function normalizeFrontendUrl(frontendUrl: string | undefined): string | undefined {

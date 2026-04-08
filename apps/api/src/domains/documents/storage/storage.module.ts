@@ -1,4 +1,4 @@
-import { Module, type Provider } from "@nestjs/common"
+import { Logger, Module, type Provider } from "@nestjs/common"
 import { ConfigModule, ConfigService } from "@nestjs/config"
 import { isEmpty } from "lodash"
 import { FILE_STORAGE_SERVICE } from "./file-storage.interface"
@@ -11,10 +11,10 @@ const storageProvider: Provider = {
     const storageBucketName = configService.get<string>("GCS_STORAGE_BUCKET_NAME")
 
     if (isEmpty(storageBucketName)) {
-      console.log("Use LocalStorageService for file storage.")
+      Logger.log("Use LocalStorageService for file storage.", "StorageModule")
       return new LocalStorageService(configService)
     } else {
-      console.log("Use GcsStorageService for file storage.")
+      Logger.log("Use GcsStorageService for file storage.", "StorageModule")
       return new GcsStorageService(configService)
     }
   },
