@@ -13,12 +13,15 @@ import {
 } from "@caseai-connect/ui/shad/dropdown-menu"
 import { cn } from "@caseai-connect/ui/utils"
 import { CheckIcon, ChevronDownIcon, GitCommitHorizontalIcon } from "lucide-react"
+import { useTranslation } from "react-i18next"
 import { Link } from "react-router-dom"
 import { ADS } from "@/common/store/async-data-status"
 import { useAppSelector } from "@/common/store/hooks"
-import { buildDate } from "@/common/utils/build-date"
+import { buildSince } from "@/common/utils/build-date"
 import { useBuildDeskPath } from "@/desk/hooks/use-desk-build-path"
+import type { Agent } from "@/features/agents/agents.models"
 import { selectCurrentAgentData } from "@/features/agents/agents.selectors"
+import { getAgentIcon } from "@/features/agents/components/AgentIcon"
 import type { ConversationAgentSession } from "@/features/agents/conversation-agent-sessions/conversation-agent-sessions.models"
 import {
   selectCurrentConversationAgentSessionData,
@@ -39,15 +42,21 @@ export function BreadcrumbAgentSession({ organizationId }: { organizationId: str
 
   switch (agent.value.type) {
     case "conversation":
-      return <ConversationAgentSessionList organizationId={organizationId} />
+      return <ConversationAgentSessionList organizationId={organizationId} agent={agent.value} />
     case "form":
-      return <FormAgentSessionList organizationId={organizationId} />
+      return <FormAgentSessionList organizationId={organizationId} agent={agent.value} />
     default:
       return null
   }
 }
 
-function ConversationAgentSessionList({ organizationId }: { organizationId: string }) {
+function ConversationAgentSessionList({
+  organizationId,
+  agent,
+}: {
+  organizationId: string
+  agent: Agent
+}) {
   const sessions = useAppSelector(selectCurrentConversationAgentSessionsData)
   const currentSession = useAppSelector(selectCurrentConversationAgentSessionData)
   if (!ADS.isFulfilled(sessions) || !ADS.isFulfilled(currentSession)) return null
@@ -57,11 +66,12 @@ function ConversationAgentSessionList({ organizationId }: { organizationId: stri
       organizationId={organizationId}
       currentSession={currentSession.value}
       sessions={sessions.value}
+      agent={agent}
     />
   )
 }
 
-function FormAgentSessionList({ organizationId }: { organizationId: string }) {
+function FormAgentSessionList({ organizationId, agent }: { organizationId: string; agent: Agent }) {
   const sessions = useAppSelector(selectCurrentFormAgentSessionsData)
   const currentSession = useAppSelector(selectCurrentFormAgentSessionData)
   if (!ADS.isFulfilled(sessions) || !ADS.isFulfilled(currentSession)) return null
@@ -71,6 +81,7 @@ function FormAgentSessionList({ organizationId }: { organizationId: string }) {
       organizationId={organizationId}
       currentSession={currentSession.value}
       sessions={sessions.value}
+      agent={agent}
     />
   )
 }
@@ -79,17 +90,20 @@ function WithData({
   organizationId,
   currentSession,
   sessions,
+  agent,
 }: {
   organizationId: string
   currentSession: ConversationAgentSession | FormAgentSession
   sessions: (ConversationAgentSession | FormAgentSession)[]
+  agent: Agent
 }) {
+  const { t } = useTranslation()
   const projectId = useAppSelector(selectCurrentProjectId)
   const { buildStudioPath } = useBuildStudioPath()
   const { buildDeskPath } = useBuildDeskPath()
   const buildPath = isStudioInterface() ? buildStudioPath : buildDeskPath
-
-  const currentSessionName = buildDate(currentSession.createdAt)
+  const Icon = getAgentIcon(agent.type)
+  const currentSessionName = buildSince(currentSession.createdAt)
   const currentSessionPath = buildPath("agentSession", {
     organizationId,
     projectId: projectId!,
@@ -116,7 +130,10 @@ function WithData({
         </BreadcrumbSeparator>
         <BreadcrumbItem>
           <BreadcrumbLink asChild>
-            <Link to={currentSessionPath}>{currentSessionName}</Link>
+            <Link to={currentSessionPath}>
+              {t(`agent:create.typeDialog.${agent.type}`)} <Icon />
+              {currentSessionName}
+            </Link>
           </BreadcrumbLink>
         </BreadcrumbItem>
       </>
@@ -129,6 +146,7 @@ function WithData({
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button variant="ghost" size="sm">
+            {t(`agent:create.typeDialog.${agent.type}`)} <Icon />
             {currentSessionName}
             <ChevronDownIcon className="size-3.5" />
           </Button>
@@ -141,7 +159,7 @@ function WithData({
                 className={cn("justify-between", s.id === currentSession.id && "font-semibold")}
                 onClick={handleClick({ agentId: s.agentId, agentSessionId: s.id })}
               >
-                {buildDate(s.createdAt)}{" "}
+                {buildSince(s.createdAt)}{" "}
                 {s.id === currentSession.id && <CheckIcon className="size-4" />}
               </DropdownMenuItem>
             ))}
