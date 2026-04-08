@@ -1,3 +1,4 @@
+import { AgentList } from "@/common/features/agents/components/AgentList"
 import { AgentRoute } from "@/common/routes/AgentRoute"
 import { AgentSessionRoute } from "@/common/routes/agents/AgentSessionRoute"
 import { ConversationAgentRoute } from "@/common/routes/agents/ConversationAgentRoute"
@@ -10,10 +11,18 @@ import { ProjectRoute } from "@/common/routes/ProjectRoute"
 import { ProtectedRoute } from "@/common/routes/ProtectedRoute"
 import { RestrictedFeature } from "@/components/RestrictedFeature"
 import type { Agent } from "@/features/agents/agents.models"
-import { AgentList } from "@/studio/features/agents/components/AgentList"
-import { ConversationAgentSessionList } from "../features/agents/conversation-agent-sessions/components/ConversationAgentSessionList"
-import { ExtractionAgentSessionList } from "../features/agents/extraction-agent-sessions/components/ExtractionAgentSessionList"
-import { FormAgentSessionList } from "../features/agents/form-agent-sessions/components/FormAgentSessionList"
+import { AgentCreatorButton } from "@/features/agents/components/AgentCreator"
+import {
+  ConversationAgentSessionList,
+  ExtractionAgentSessionList,
+  FormAgentSessionList,
+} from "../features/agents/components/AgentSessionList"
+import { AnalyticsButton } from "../features/agents/components/AnalyticsButton"
+import { DocumentsButton } from "../features/agents/components/DocumentsButton"
+import { EvaluationButton } from "../features/agents/components/EvaluationButton"
+import { MembersButton } from "../features/agents/components/MembersButton"
+import { ProjectDeletor } from "../features/projects/components/ProjectDeletor"
+import { ProjectEditor } from "../features/projects/components/ProjectEditor"
 import { AgentMembershipsRoute } from "./AgentMembershipsRoute"
 import { AnalyticsRoute } from "./AnalyticsRoute"
 import { DocumentsRoute } from "./DocumentsRoute"
@@ -24,6 +33,14 @@ import { ProjectMembershipsRoute } from "./ProjectMembershipsRoute"
 import { StudioAgentSessionRoute } from "./StudioAgentSessionRoute"
 import { StudioDashboardRoute, StudioDashboardRoute2 } from "./StudioDashboardRoute"
 import { Studio } from "./StudioRoute"
+
+const extraItems = [
+  AgentCreatorButton,
+  DocumentsButton,
+  MembersButton,
+  AnalyticsButton,
+  EvaluationButton,
+]
 
 export const studioRoutes = {
   path: StudioRouteNames.STUDIO,
@@ -47,7 +64,27 @@ export const studioRoutes = {
           path: buildStudioPath(RouteNames.PROJECT),
           element: (
             <ProjectRoute>
-              {(agents, project) => <AgentList project={project} agents={agents} />}
+              {(agents, project) => (
+                <AgentList
+                  extraItems={extraItems.length}
+                  action={
+                    <>
+                      <ProjectEditor project={project} />
+                      <ProjectDeletor project={project} />
+                    </>
+                  }
+                  project={project}
+                  agents={agents}
+                >
+                  {extraItems.map((Component, index) => (
+                    <Component
+                      key={`${Component.name}-${index}`}
+                      project={project}
+                      index={agents.length + index}
+                    />
+                  ))}
+                </AgentList>
+              )}
             </ProjectRoute>
           ),
           children: [

@@ -3,7 +3,7 @@ import {
   DropdownMenuItem,
   DropdownMenuSeparator,
 } from "@caseai-connect/ui/shad/dropdown-menu"
-import { ExternalLinkIcon, LogOutIcon, ShieldCheckIcon } from "lucide-react"
+import { ExternalLinkIcon, LogOutIcon } from "lucide-react"
 import { useTranslation } from "react-i18next"
 import { useAppSelector } from "@/common/store/hooks"
 import { buildDeskPath } from "@/desk/routes/helpers"
@@ -50,7 +50,7 @@ function InterfaceToggle() {
             rel="noopener noreferrer"
             href={buildStudioPath(`/o/${organizationId}`)}
           >
-            <ShieldCheckIcon />
+            <ExternalLinkIcon />
             {t("goToStudio")}
           </a>
         </DropdownMenuItem>

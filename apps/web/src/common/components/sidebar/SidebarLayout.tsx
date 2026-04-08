@@ -8,13 +8,15 @@ import {
   SidebarHeader,
   SidebarInset,
   SidebarMenu,
-  SidebarMenuButton,
   SidebarMenuItem,
   SidebarProvider,
   useSidebar,
 } from "@caseai-connect/ui/shad/sidebar"
 import type { Organization } from "@/features/organizations/organizations.models"
-import { OrganizationSelector } from "../../../components/organization/OrganizationSelector"
+import {
+  MainButton,
+  OrganizationSelector,
+} from "../../../components/organization/OrganizationSelector"
 import { NavUserMenuItems } from "./nav/NavUserMenuItems"
 import { SidebarBreadcrumb } from "./SidebarBreadcrumb"
 
@@ -26,9 +28,9 @@ export function SidebarLayout({
   sidebarFooterChildren,
 }: {
   user: User
-  organization: Organization
+  organization?: Organization
   children: React.ReactNode
-  sidebarContentChildren: React.ReactNode
+  sidebarContentChildren?: React.ReactNode
   sidebarFooterChildren?: React.ReactNode
 }) {
   return (
@@ -44,7 +46,7 @@ export function SidebarLayout({
         <SidebarHeader>
           <SidebarMenu>
             <SidebarMenuItem>
-              <Selector />
+              {organization ? <Selector /> : <MainButton organizationName="" onClick={() => {}} />}
             </SidebarMenuItem>
           </SidebarMenu>
         </SidebarHeader>
@@ -61,7 +63,9 @@ export function SidebarLayout({
       </Sidebar>
 
       <SidebarInset>
-        <LayoutHeader title={<SidebarBreadcrumb organization={organization} />} />
+        <LayoutHeader
+          title={organization ? <SidebarBreadcrumb organization={organization} /> : ""}
+        />
 
         {children}
       </SidebarInset>
@@ -71,7 +75,5 @@ export function SidebarLayout({
 
 function Selector() {
   const { isMobile } = useSidebar()
-  return (
-    <OrganizationSelector TriggerButton={SidebarMenuButton} side={isMobile ? "bottom" : "right"} />
-  )
+  return <OrganizationSelector side={isMobile ? "bottom" : "right"} />
 }

@@ -20,25 +20,36 @@ import { SidebarAgentSessionList } from "./SidebarAgentSessionList"
 export function SidebarAgentList({
   organizationId,
   project,
+  action,
 }: {
-  project: Project
+  project: Project | null
   organizationId: string
+  action?: React.ReactNode
 }) {
   const agents = useAppSelector(selectAgentsData)
 
-  if (!ADS.isFulfilled(agents)) return null
+  if (!ADS.isFulfilled(agents) || !project) return null
 
-  return <AgentList organizationId={organizationId} project={project} agents={agents.value} />
+  return (
+    <AgentList
+      action={action}
+      organizationId={organizationId}
+      project={project}
+      agents={agents.value}
+    />
+  )
 }
 
 export function AgentList({
   organizationId,
   project,
   agents,
+  action,
 }: {
   organizationId: string
   project: Project
   agents: Agent[]
+  action?: React.ReactNode
 }) {
   const { t } = useTranslation()
   const { agentId: urlagentId } = useParams()
@@ -47,9 +58,10 @@ export function AgentList({
   return (
     <SidebarGroup>
       <div className="flex items-center gap-2">
-        <SidebarGroupLabel className="uppercase">
+        <SidebarGroupLabel className="uppercase flex-1">
           {t(agents.length === 1 ? "agent:agent" : "agent:agents")}
         </SidebarGroupLabel>
+        {action}
       </div>
 
       <SidebarGroupContent>

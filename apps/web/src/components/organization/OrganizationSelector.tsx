@@ -1,3 +1,4 @@
+import { Button } from "@caseai-connect/ui/shad/button"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -9,6 +10,7 @@ import { cn } from "@caseai-connect/ui/utils"
 import { CheckIcon, ChevronsUpDownIcon } from "lucide-react"
 import { useTranslation } from "react-i18next"
 import { useNavigate } from "react-router-dom"
+import { RouteNames } from "@/common/routes/helpers"
 import { ADS } from "@/common/store/async-data-status"
 import { useAppSelector } from "@/common/store/hooks"
 import { Logo } from "@/components/themes/Logo"
@@ -16,22 +18,23 @@ import {
   selectCurrentOrganization,
   selectOrganizationsData,
 } from "@/features/organizations/organizations.selectors"
-import { buildOrganizationPath } from "@/hooks/use-build-path"
+import { selectCurrentProjectId } from "@/features/projects/projects.selectors"
+import { buildOrganizationPath, useGetPath } from "@/hooks/use-build-path"
 import { isStudioInterface } from "@/studio/routes/helpers"
 
 export function OrganizationSelector({
-  TriggerButton = "button",
   side = "bottom",
   disabled,
 }: {
   disabled?: boolean
-  TriggerButton?: React.ElementType
   side?: "bottom" | "right"
 }) {
   const { t } = useTranslation()
   const navigate = useNavigate()
   const organization = useAppSelector(selectCurrentOrganization)
+  const projectId = useAppSelector(selectCurrentProjectId)
   const organizations = useAppSelector(selectOrganizationsData)
+  const { getPath } = useGetPath()
 
   const handleOrganizationChange = (organizationId: string) => () => {
     const path = buildOrganizationPath({ organizationId })
@@ -40,44 +43,22 @@ export function OrganizationSelector({
 
   if (!ADS.isFulfilled(organization) || !ADS.isFulfilled(organizations)) return null
 
-  const isButton = TriggerButton === "button"
-
   const hasMultipleOrganizations = organizations.value.length > 1 && !disabled
 
-  const triggerButton = (
-    <TriggerButton
-      size="lg"
-      className={cn(
-        "data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground",
-        isButton &&
-          "w-full rounded-md p-2 hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50",
-        !hasMultipleOrganizations && "cursor-default hover:bg-transparent",
-      )}
-      variant="ghost"
-    >
-      <div className="flex flex-1 gap-2 items-center">
-        <div
-          className={cn(
-            "size-10 contain-content p-1",
-            isButton && "flex items-center justify-center",
-          )}
-        >
-          <Logo />
-        </div>
-        <div className="flex flex-col gap-0.5 leading-none text-left">
-          <span className="font-medium text-base">{organization.value.name}</span>
-          {isStudioInterface() && <span className="text-primary capitalize-first">Studio</span>}
-        </div>
-
-        {hasMultipleOrganizations && <ChevronsUpDownIcon className="ml-auto size-4" />}
-      </div>
-    </TriggerButton>
-  )
+  const handleBack = () => {
+    navigate(projectId ? getPath("organization") : RouteNames.HOME)
+  }
 
   if (hasMultipleOrganizations)
     return (
       <DropdownMenu>
-        <DropdownMenuTrigger asChild>{triggerButton}</DropdownMenuTrigger>
+        <MainButton onClick={handleBack} organizationName={organization.value.name}>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="icon-lg">
+              <ChevronsUpDownIcon className="size-4" />
+            </Button>
+          </DropdownMenuTrigger>
+        </MainButton>
 
         <DropdownMenuContent
           className="w-(--radix-dropdown-menu-trigger-width) min-w-56 rounded-lg"
@@ -105,5 +86,32 @@ export function OrganizationSelector({
     )
 
   // Single organization, no dropdown needed
-  return triggerButton
+  return <MainButton onClick={handleBack} organizationName={organization.value.name} />
+}
+
+export function MainButton({
+  children,
+  onClick,
+  organizationName,
+}: {
+  children?: React.ReactNode
+  onClick: () => void
+  organizationName: string
+}) {
+  return (
+    <div className="flex flex-1 gap-2 items-center">
+      <button type="button" onClick={onClick} className="p-1 size-10 contain-content">
+        <Logo />
+      </button>
+
+      <button type="button" onClick={onClick} className="flex-1">
+        <div className="flex flex-col gap-0 leading-none text-left">
+          <span className="font-medium text-lg">{organizationName}</span>
+          {isStudioInterface() && <span className="text-primary capitalize-first">Studio</span>}
+        </div>
+      </button>
+
+      {children}
+    </div>
+  )
 }

@@ -1,5 +1,5 @@
-import { useTranslation } from "react-i18next"
-import { Outlet, useOutlet } from "react-router-dom"
+import { Outlet } from "react-router-dom"
+import { AgentList } from "@/common/features/agents/components/AgentList"
 import { AgentRoute } from "@/common/routes/AgentRoute"
 import { AgentSessionRoute } from "@/common/routes/agents/AgentSessionRoute"
 import { ConversationAgentRoute } from "@/common/routes/agents/ConversationAgentRoute"
@@ -10,26 +10,13 @@ import { ErrorRoute } from "@/common/routes/ErrorRoute"
 import { RouteNames } from "@/common/routes/helpers"
 import { ProjectRoute } from "@/common/routes/ProjectRoute"
 import { ProtectedRoute } from "@/common/routes/ProtectedRoute"
-import { useAppSelector } from "@/common/store/hooks"
-import { Loader } from "@/components/Loader"
-import { AgentList } from "@/desk/components/AgentList"
 import type { Agent } from "@/features/agents/agents.models"
-import { ConversationAgentSessionItem } from "@/features/agents/conversation-agent-sessions/components/ConversationAgentSessionItem"
-import type { ConversationAgentSession } from "@/features/agents/conversation-agent-sessions/conversation-agent-sessions.models"
-import { ExtractionSessionCreator } from "@/features/agents/extraction-agent-sessions/components/ExtractionAgentSessionCreator"
-import { ExtractionSessionItem } from "@/features/agents/extraction-agent-sessions/components/ExtractionAgentSessionItem"
-import type { ExtractionAgentSessionSummary } from "@/features/agents/extraction-agent-sessions/extraction-agent-sessions.models"
-import { selectIsProcessingExecution } from "@/features/agents/extraction-agent-sessions/extraction-agent-sessions.selectors"
-import { FormAgentSessionItem } from "@/features/agents/form-agent-sessions/components/FormAgentSessionItem"
-import { FormResult } from "@/features/agents/form-agent-sessions/components/FormResult"
-import type { FormAgentSession } from "@/features/agents/form-agent-sessions/form-agent-sessions.models"
-import type { AgentSessionMessage } from "@/features/agents/shared/agent-session-messages/agent-session-messages.models"
-import { AgentSessionMessages } from "@/features/agents/shared/agent-session-messages/components/AgentSessionMessages"
-import { BaseAgentSessionCreator } from "@/features/agents/shared/base-agent-session/components/BaseAgentSessionCreator"
-import { selectCurrentOrganizationId } from "@/features/organizations/organizations.selectors"
-import { selectCurrentProjectId } from "@/features/projects/projects.selectors"
-import { useBuildPath, useGetPath } from "@/hooks/use-build-path"
-import { ListHeader } from "../components/ListHeader"
+import {
+  ConversationAgentSessionList,
+  ExtractionAgentSessionList,
+  FormAgentSessionList,
+} from "../features/agents/components/AgentSessionList"
+import { DeskAgentSessionRoute } from "./DeskAgentSessionRoute"
 import { DeskDashboardRoute } from "./DeskDashboardRoute"
 import { buildDeskPath, DeskRouteNames } from "./helpers"
 
@@ -113,141 +100,4 @@ function AgentHandler({ agent }: { agent: Agent }) {
     default:
       return <ErrorRoute error={"Unknown agent type"} />
   }
-}
-
-function ConversationAgentSessionList({
-  agent,
-  agentSessions,
-}: {
-  agent: Agent
-  agentSessions: ConversationAgentSession[]
-}) {
-  const { t } = useTranslation()
-  const { getPath } = useGetPath()
-  const outlet = useOutlet()
-
-  const organizationId = useAppSelector(selectCurrentOrganizationId)
-  const projectId = useAppSelector(selectCurrentProjectId)
-
-  if (!organizationId || !projectId)
-    return <ErrorRoute error={"Missing organization or project ID"} />
-
-  if (outlet) return <Outlet />
-  return (
-    <ListHeader
-      path={getPath("agent")}
-      title={t("conversationAgentSession:list.title")}
-      agent={agent}
-    >
-      <BaseAgentSessionCreator
-        agentType="conversation"
-        type="button"
-        ids={{ organizationId, projectId, agentId: agent.id }}
-      />
-
-      {agentSessions.map((agentSession) => (
-        <ConversationAgentSessionItem
-          key={agentSession.id}
-          organizationId={organizationId}
-          projectId={projectId}
-          agentId={agent.id}
-          agentSession={agentSession}
-        />
-      ))}
-    </ListHeader>
-  )
-}
-
-function FormAgentSessionList({
-  agent,
-  agentSessions,
-}: {
-  agent: Agent
-  agentSessions: FormAgentSession[]
-}) {
-  const { t } = useTranslation()
-  const { getPath } = useGetPath()
-  const outlet = useOutlet()
-
-  const organizationId = useAppSelector(selectCurrentOrganizationId)
-  const projectId = useAppSelector(selectCurrentProjectId)
-
-  if (!organizationId || !projectId)
-    return <ErrorRoute error={"Missing organization or project ID"} />
-
-  if (outlet) return <Outlet />
-  return (
-    <ListHeader path={getPath("agent")} title={t("formAgentSession:list.title")} agent={agent}>
-      <BaseAgentSessionCreator
-        agentType="form"
-        type="button"
-        ids={{ organizationId, projectId, agentId: agent.id }}
-      />
-
-      {agentSessions.map((agentSession) => (
-        <FormAgentSessionItem
-          key={agentSession.id}
-          organizationId={organizationId}
-          projectId={projectId}
-          agentId={agent.id}
-          agentSession={agentSession}
-        />
-      ))}
-    </ListHeader>
-  )
-}
-
-function ExtractionAgentSessionList({
-  agent,
-  agentSessions,
-}: {
-  agent: Agent
-  agentSessions: ExtractionAgentSessionSummary[]
-}) {
-  const outlet = useOutlet()
-  const { buildPath } = useBuildPath()
-  const { t } = useTranslation("extractionAgentSession", { keyPrefix: "list" })
-  const isProcessingExecution = useAppSelector(selectIsProcessingExecution)
-  const organizationId = useAppSelector(selectCurrentOrganizationId)
-  const projectId = useAppSelector(selectCurrentProjectId)
-
-  if (!organizationId || !projectId)
-    return <ErrorRoute error={"Missing organization or project ID"} />
-
-  if (outlet) return <Outlet />
-  return (
-    <ListHeader
-      agent={agent}
-      path={buildPath("project", { organizationId, projectId })}
-      title={t("title")}
-    >
-      {isProcessingExecution && <Loader />}
-
-      <ExtractionSessionCreator disabled={isProcessingExecution} />
-
-      {agentSessions.map((run) => (
-        <ExtractionSessionItem key={run.id} run={run} />
-      ))}
-    </ListHeader>
-  )
-}
-
-function DeskAgentSessionRoute({
-  agentSession,
-  messages,
-  agent,
-}: {
-  agent: Agent
-  agentSession: ConversationAgentSession | FormAgentSession
-  messages: AgentSessionMessage[]
-}) {
-  return (
-    <AgentSessionMessages
-      session={agentSession}
-      messages={messages}
-      rightSlot={
-        agent.type === "form" ? <FormResult agent={agent} agentSession={agentSession} /> : undefined
-      }
-    />
-  )
 }

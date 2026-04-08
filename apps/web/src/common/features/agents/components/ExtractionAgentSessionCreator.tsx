@@ -12,7 +12,7 @@ import { useState } from "react"
 import { useTranslation } from "react-i18next"
 import { useAppDispatch } from "@/common/store/hooks"
 import { FileUploader } from "@/components/FileUploader"
-import { executeExtractionAgentSession } from "../extraction-agent-sessions.thunks"
+import { executeExtractionAgentSession } from "@/features/agents/extraction-agent-sessions/extraction-agent-sessions.thunks"
 
 export function ExtractionSessionCreator({ disabled }: { disabled: boolean }) {
   const dispatch = useAppDispatch()

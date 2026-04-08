@@ -15,7 +15,7 @@
       }
     },
     "list": {
-      "title": "Bienvenue, {{userName}} !"
+      "title": "Gérez vos espaces de travail"
     },
     "create": {
       "button": "Créer un espace de travail",

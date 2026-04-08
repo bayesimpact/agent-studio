@@ -15,7 +15,7 @@
       }
     },
     "list": {
-      "title": "Welcome, {{userName}}!"
+      "title": "Manage your workspaces"
     },
     "create": {
       "button": "Create Workspace",

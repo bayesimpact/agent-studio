@@ -14,7 +14,27 @@ import { useAppDispatch } from "@/common/store/hooks"
 import type { Organization } from "@/features/organizations/organizations.models"
 import { createProject } from "@/features/projects/projects.thunks"
 import { useBuildPath } from "@/hooks/use-build-path"
+import { GridItem } from "@/studio/components/grid/Grid"
 import { ProjectForm } from "@/studio/features/projects/components/ProjectForm"
+
+export function ProjectCreatorButton({
+  organization,
+  index,
+}: {
+  index: number
+  organization: Organization
+}) {
+  const { t } = useTranslation()
+  return (
+    <GridItem
+      index={index}
+      className="bg-muted/35"
+      title={t("project:create.title")}
+      description={t("project:create.description", { organizationName: organization.name })}
+      action={<ProjectCreator organization={organization} />}
+    />
+  )
+}
 
 export function ProjectCreator({
   organization,

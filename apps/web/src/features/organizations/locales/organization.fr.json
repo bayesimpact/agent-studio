@@ -16,6 +16,10 @@
     "props": {
       "name": "Nom",
       "role": "Rôle"
+    },
+    "list": {
+      "title": "Bienvenue, {{name}} !",
+      "description": "Sélectionnez une organisation."
     }
   }
 }

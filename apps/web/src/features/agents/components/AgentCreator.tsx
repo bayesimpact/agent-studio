@@ -17,6 +17,7 @@ import {
   SheetTitle,
 } from "@caseai-connect/ui/shad/sheet"
 import { cn } from "@caseai-connect/ui/utils"
+import { PlusCircleIcon, PlusIcon } from "lucide-react"
 import { useState } from "react"
 import { useTranslation } from "react-i18next"
 import { useNavigate } from "react-router-dom"
@@ -25,6 +26,7 @@ import type { Agent } from "@/features/agents/agents.models"
 import { createAgent } from "@/features/agents/agents.thunks"
 import type { Project } from "@/features/projects/projects.models"
 import { useBuildPath } from "@/hooks/use-build-path"
+import { GridItem } from "@/studio/components/grid/Grid"
 import { useDocumentTags } from "@/studio/features/document-tags/document-tags.helpers"
 import type { AgentFormData } from "./agent-form.shared"
 import { BaseAgentForm } from "./BaseAgentForm"
@@ -32,7 +34,39 @@ import { BaseAgentForm } from "./BaseAgentForm"
 const defaultStep = "typeSelection"
 const defaultType = "conversation"
 
-export function AgentCreator({
+export function AgentCreatorButton({ project, index }: { project: Project; index: number }) {
+  const { t } = useTranslation()
+  const [open, setOpen] = useState(false)
+  return (
+    <GridItem
+      className="bg-muted/35"
+      index={index}
+      title={t("agent:create.title")}
+      description={t("agent:create.description")}
+      action={
+        <>
+          <Button size="lg" className="text-base" onClick={() => setOpen(true)}>
+            {t("actions:create")}
+            <PlusCircleIcon className="ml-2 size-5" />
+          </Button>
+          <AgentCreator project={project} open={open} onOpenChange={setOpen} />
+        </>
+      }
+    />
+  )
+}
+
+export function SidebarAgentCreatorButton({ project }: { project: Project }) {
+  const [open, setOpen] = useState(false)
+  return (
+    <>
+      <PlusIcon className="size-4 cursor-pointer" onClick={() => setOpen(true)} />
+      <AgentCreator project={project} open={open} onOpenChange={setOpen} />
+    </>
+  )
+}
+
+function AgentCreator({
   project,
   open,
   onOpenChange,

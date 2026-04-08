@@ -10,10 +10,10 @@ import type { AgentSessionMessage } from "@/features/agents/shared/agent-session
 import { AgentSessionMessages } from "@/features/agents/shared/agent-session-messages/components/AgentSessionMessages"
 import { useGetPath } from "@/hooks/use-build-path"
 import { GridHeader } from "@/studio/components/grid/Grid"
-import { AgentSessionActions } from "../features/agents/components/AgentSessionActions"
+import { AgentSessionActions } from "@/studio/features/agents/components/AgentSessionActions"
 
 type AgentSession = ConversationAgentSession | FormAgentSession
-export function StudioAgentSessionRoute({
+export function DeskAgentSessionRoute({
   agent,
   agentSession,
   messages,
@@ -39,12 +39,12 @@ export function StudioAgentSessionRoute({
     <div className="flex flex-col h-full">
       <GridHeader
         onBack={handleBack}
-        title="Playground"
+        title={date}
         description={
           <div className="flex items-center gap-2 flex-wrap">
             <span className="capitalize-first">{agent.name}</span> •
             <span className="capitalize-first">{t(`agent:create.typeDialog.${agent.type}`)}</span>
-            <Icon /> • {date}
+            <Icon />
           </div>
         }
         action={<AgentSessionActions agent={agent} agentSession={agentSession} />}

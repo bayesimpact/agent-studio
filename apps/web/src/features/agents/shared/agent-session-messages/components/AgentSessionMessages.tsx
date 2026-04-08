@@ -23,33 +23,8 @@ import { selectStreaming } from "../agent-session-messages.selectors"
 import { sendMessage } from "../agent-session-messages.thunks"
 
 type AgentSession = ConversationAgentSession | FormAgentSession
+
 export function AgentSessionMessages({
-  session,
-  messages,
-  rightSlot,
-}: {
-  rightSlot?: React.ReactNode
-  session: AgentSession
-  messages: AgentSessionMessageType[]
-}) {
-  const isStreaming = useAppSelector(selectStreaming)
-  return (
-    <div className="flex flex-1 items-center justify-center">
-      <div className="flex flex-1 items-center justify-center">
-        <div className="flex flex-col gap-6 flex-1 max-w-2/3">
-          <Chat className="shadow-none">
-            <Messages messages={messages} isStreaming={isStreaming} />
-
-            <Footer session={session} isStreaming={isStreaming} />
-          </Chat>
-        </div>
-      </div>
-      {rightSlot && <div className="w-80 shrink-0 h-full border-l">{rightSlot}</div>}
-    </div>
-  )
-}
-
-export function StudioAgentSessionMessages({
   session,
   messages,
   rightSlot,
