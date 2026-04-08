@@ -8,6 +8,7 @@ This project uses [CalVer](https://calver.org/) (YY.MM.Micro) for product versio
 ## [Unreleased]
 
 ### Added
+- Add observability
 
 ### Changed
 - New user interface to list organizations, workspaces, agents, sessions
