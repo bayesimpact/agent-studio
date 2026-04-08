@@ -18,6 +18,7 @@ import { projectMembershipsSlice } from "@/studio/features/project-memberships/p
 import { dynamicMiddleware } from "../../common/store/dynamic-middleware"
 import { documentsMiddleware } from "../features/documents/documents.middleware"
 import { documentsSlice } from "../features/documents/documents.slice"
+import { studioProjectsMiddleware } from "../features/projects/projects.middleware"
 import type { StudioState } from "./types"
 
 let middlewareInjected = false
@@ -31,6 +32,7 @@ const studioMiddlewareList = [
   evaluationReportsMiddleware,
   evaluationsMiddleware,
   projectMembershipsMiddleware,
+  studioProjectsMiddleware,
 ]
 
 export const studioSliceList = [

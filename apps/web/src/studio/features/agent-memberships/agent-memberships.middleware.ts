@@ -1,8 +1,8 @@
 import { createListenerMiddleware, isAnyOf } from "@reduxjs/toolkit"
+import { hasAgentChanged } from "@/common/features/agents/agents.selectors"
 import { notificationsActions } from "@/common/features/notifications/notifications.slice"
 import { hasProjectChanged } from "@/common/features/projects/projects.selectors"
 import type { AppDispatch, RootState } from "@/common/store/types"
-import { hasAgentChanged } from "@/features/agents/agents.selectors"
 import {
   inviteAgentMembers,
   listAgentMemberships,

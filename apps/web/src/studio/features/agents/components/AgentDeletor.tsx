@@ -13,10 +13,10 @@ import { Trash2Icon } from "lucide-react"
 import { useState } from "react"
 import { useTranslation } from "react-i18next"
 import { useNavigate } from "react-router-dom"
+import type { Agent } from "@/common/features/agents/agents.models"
 import { useAppDispatch } from "@/common/store/hooks"
-import type { Agent } from "@/features/agents/agents.models"
-import { deleteAgent } from "@/features/agents/agents.thunks"
 import { useBuildPath } from "@/hooks/use-build-path"
+import { deleteAgent } from "../agents.thunks"
 
 export function AgentDeletorWithTrigger({
   organizationId,

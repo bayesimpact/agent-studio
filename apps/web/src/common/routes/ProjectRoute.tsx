@@ -1,8 +1,8 @@
+import type { Agent } from "@/common/features/agents/agents.models"
+import { selectAgentsData } from "@/common/features/agents/agents.selectors"
 import type { Project } from "@/common/features/projects/projects.models"
 import { selectCurrentProjectData } from "@/common/features/projects/projects.selectors"
 import { useAppSelector } from "@/common/store/hooks"
-import type { Agent } from "@/features/agents/agents.models"
-import { selectAgentsData } from "@/features/agents/agents.selectors"
 import { AsyncRoute } from "./AsyncRoute"
 
 export function ProjectRoute({

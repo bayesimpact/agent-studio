@@ -1,10 +1,10 @@
 import type { UserMembershipsDto } from "@caseai-connect/api-contracts"
 import { createAsyncThunk } from "@reduxjs/toolkit"
 import { isAxiosError } from "axios"
+import { selectCurrentAgentId } from "@/common/features/agents/agents.selectors"
 import { selectCurrentOrganizationId } from "@/common/features/organizations/organizations.selectors"
 import { selectCurrentProjectId } from "@/common/features/projects/projects.selectors"
 import type { RootState, ThunkExtraArg } from "@/common/store"
-import { selectCurrentAgentId } from "@/features/agents/agents.selectors"
 import { authActions } from "../auth/auth.slice"
 import type { Me } from "./me.models"
 

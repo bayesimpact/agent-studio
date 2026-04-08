@@ -1,8 +1,8 @@
 import type { RootState } from "@/common/store/types"
+import { selectCurrentAgentId } from "../common/features/agents/agents.selectors"
 import { selectCurrentOrganizationId } from "../common/features/organizations/organizations.selectors"
 import { selectCurrentProjectId } from "../common/features/projects/projects.selectors"
 import { selectCurrentAgentSessionId } from "./agents/agent-sessions/current-agent-session-id/current-agent-session-id.selectors"
-import { selectCurrentAgentId } from "./agents/agents.selectors"
 
 type IdKey = "organizationId" | "projectId" | "agentId" | "agentSessionId"
 type GetIdsResult<T extends readonly IdKey[]> = {

@@ -1,7 +1,7 @@
 import type { SuccessResponseDTO } from "@caseai-connect/api-contracts"
 import { createAsyncThunk, type ListenerEffectAPI } from "@reduxjs/toolkit"
+import type { Agent } from "@/common/features/agents/agents.models"
 import type { AppDispatch, RootState, ThunkExtraArg } from "@/common/store"
-import type { Agent } from "@/features/agents/agents.models"
 import { getCurrentIds } from "@/features/helpers"
 import { isStudioInterface } from "@/studio/routes/helpers"
 import type { ConversationAgentSession } from "../../conversation/conversation-agent-sessions.models"

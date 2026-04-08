@@ -7,7 +7,7 @@ import {
 } from "@caseai-connect/ui/shad/empty"
 import { MessageSquareWarningIcon } from "lucide-react"
 import { useTranslation } from "react-i18next"
-import type { Agent } from "@/features/agents/agents.models"
+import type { Agent } from "@/common/features/agents/agents.models"
 
 export function EmptyFeedback({ agent }: { agent: Agent }) {
   const { t } = useTranslation("agentMessageFeedback", { keyPrefix: "list.empty" })

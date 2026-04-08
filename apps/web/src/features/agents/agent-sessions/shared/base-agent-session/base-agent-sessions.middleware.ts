@@ -1,6 +1,6 @@
 import { createListenerMiddleware, isAnyOf } from "@reduxjs/toolkit"
+import { listAgents } from "@/common/features/agents/agents.thunks"
 import type { AppDispatch, RootState } from "@/common/store"
-import { listAgents } from "@/features/agents/agents.thunks"
 import {
   createAgentSession,
   deleteAgentSession,

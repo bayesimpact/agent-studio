@@ -17,14 +17,6 @@ export const createProject = createAsyncThunk<
   return await services.projects.createOne(params, payload)
 })
 
-export const listProjects = createAsyncThunk<Project[], void, ThunkConfig>(
-  "projects/list",
-  async (_, { extra: { services }, getState }) => {
-    const params = getCurrentIds({ state: getState(), wantedIds: ["organizationId"] })
-    return await services.projects.getAll(params)
-  },
-)
-
 export const updateProject = createAsyncThunk<
   void,
   { payload: Pick<Project, "name"> },

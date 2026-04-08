@@ -2,7 +2,7 @@ import { createListenerMiddleware, isAnyOf } from "@reduxjs/toolkit"
 import { notificationsActions } from "@/common/features/notifications/notifications.slice"
 import type { AppDispatch, RootState } from "@/common/store"
 import { getCurrentIds } from "@/features/helpers"
-import type { Agent } from "../../agents.models"
+import type { Agent } from "../../../../common/features/agents/agents.models"
 import { loadAgentSessionsForAllAgents } from "../shared/base-agent-session/base-agent-sessions.thunks"
 import { executeExtractionAgentSession } from "./extraction-agent-sessions.thunks"
 

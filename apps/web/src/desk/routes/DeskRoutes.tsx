@@ -1,4 +1,5 @@
 import { Outlet } from "react-router-dom"
+import type { Agent } from "@/common/features/agents/agents.models"
 import { AgentList } from "@/common/features/agents/components/AgentList"
 import { AgentRoute } from "@/common/routes/AgentRoute"
 import { AgentSessionRoute } from "@/common/routes/agents/AgentSessionRoute"
@@ -10,7 +11,6 @@ import { ErrorRoute } from "@/common/routes/ErrorRoute"
 import { RouteNames } from "@/common/routes/helpers"
 import { ProjectRoute } from "@/common/routes/ProjectRoute"
 import { ProtectedRoute } from "@/common/routes/ProtectedRoute"
-import type { Agent } from "@/features/agents/agents.models"
 import {
   ConversationAgentSessionList,
   ExtractionAgentSessionList,

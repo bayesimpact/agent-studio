@@ -13,10 +13,10 @@ import {
 import { PenLineIcon } from "lucide-react"
 import { useState } from "react"
 import { useTranslation } from "react-i18next"
+import type { Agent } from "@/common/features/agents/agents.models"
 import { useAppDispatch } from "@/common/store/hooks"
-import type { Agent } from "@/features/agents/agents.models"
-import { updateAgent } from "@/features/agents/agents.thunks"
 import { useDocumentTags } from "@/studio/features/document-tags/document-tags.helpers"
+import { updateAgent } from "../agents.thunks"
 import type { AgentFormData } from "./agent-form.shared"
 import { BaseAgentForm } from "./BaseAgentForm"
 

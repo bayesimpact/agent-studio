@@ -1,9 +1,12 @@
 import { useTranslation } from "react-i18next"
 import { useNavigate } from "react-router-dom"
 import { GridHeader } from "@/common/components/grid/Grid"
+import type { Agent } from "@/common/features/agents/agents.models"
+import {
+  selectCurrentAgentData,
+  selectCurrentAgentId,
+} from "@/common/features/agents/agents.selectors"
 import { useAppSelector } from "@/common/store/hooks"
-import type { Agent } from "@/features/agents/agents.models"
-import { selectCurrentAgentData, selectCurrentAgentId } from "@/features/agents/agents.selectors"
 import { getAgentIcon } from "@/features/agents/components/AgentIcon"
 import { useGetPath } from "@/hooks/use-build-path"
 import type { AgentMessageFeedback } from "@/studio/features/agent-message-feedback/agent-message-feedback.models"

@@ -11,8 +11,8 @@ import {
 } from "@caseai-connect/ui/shad/select"
 import { useState } from "react"
 import { useTranslation } from "react-i18next"
+import type { Agent } from "@/common/features/agents/agents.models"
 import { useAppDispatch } from "@/common/store/hooks"
-import type { Agent } from "@/features/agents/agents.models"
 import { createEvaluationReport } from "@/studio/features/evaluation-reports/evaluation-reports.thunks"
 
 export function EvaluationRunner({

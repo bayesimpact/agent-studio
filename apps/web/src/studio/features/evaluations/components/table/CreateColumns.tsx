@@ -5,8 +5,8 @@ import type { ColumnDef } from "@tanstack/react-table"
 import type { TFunction } from "i18next"
 import type { z } from "zod"
 import { buildDate } from "@/common/utils/build-date"
-import { DefaultPromptDialog } from "@/features/agents/components/DefaultPromptDialog"
 import { TraceUrlOpener } from "@/studio/components/TraceUrlOpener"
+import { DefaultPromptDialog } from "@/studio/features/agents/components/DefaultPromptDialog"
 import type { schema } from "./schema"
 
 export function createColumns({ t }: { t: TFunction }): ColumnDef<z.infer<typeof schema>>[] {

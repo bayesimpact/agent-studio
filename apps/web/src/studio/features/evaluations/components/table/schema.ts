@@ -1,5 +1,5 @@
 import { z } from "zod"
-import { agentSchema } from "@/features/agents/agents.models"
+import { agentSchema } from "@/common/features/agents/agents.models"
 
 export const schema = z.object({
   id: z.string(),

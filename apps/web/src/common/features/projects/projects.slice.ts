@@ -1,7 +1,7 @@
 import { createSlice, type PayloadAction } from "@reduxjs/toolkit"
 import { ADS, type AsyncData, defaultAsyncData } from "@/common/store/async-data-status"
-import { listProjects } from "../../../studio/features/projects/projects.thunks"
 import type { Project } from "./projects.models"
+import { listProjects } from "./projects.thunks"
 
 interface State {
   currentProjectId: string | null

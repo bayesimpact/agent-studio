@@ -1,7 +1,7 @@
 import { createSelector } from "@reduxjs/toolkit"
+import { selectCurrentAgentId } from "@/common/features/agents/agents.selectors"
 import type { RootState } from "@/common/store"
 import { ADS, type AsyncData } from "@/common/store/async-data-status"
-import { selectCurrentAgentId } from "@/features/agents/agents.selectors"
 import type { AgentMessageFeedback } from "./agent-message-feedback.models"
 
 export const selectAgentMessageFeedbackStatus = (state: RootState) =>

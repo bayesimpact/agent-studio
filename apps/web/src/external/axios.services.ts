@@ -1,3 +1,4 @@
+import agentsApi from "@/common/features/agents/external/agents.api"
 import meApi from "@/common/features/me/external/me.api"
 import organizationsApi from "@/common/features/organizations/external/organizations.api"
 import projectsApi from "@/common/features/projects/external/projects.api"
@@ -5,7 +6,6 @@ import conversationAgentSessionsApi from "@/features/agents/agent-sessions/conve
 import extractionAgentSessionsApi from "@/features/agents/agent-sessions/extraction/external/extraction-agent-sessions.api"
 import formAgentSessionsApi from "@/features/agents/agent-sessions/form/external/form-agent-sessions.api"
 import agentSessionMessagesApi from "@/features/agents/agent-sessions/shared/agent-session-messages/external/agent-session-messages.api"
-import agentsApi from "@/features/agents/external/agents.api"
 import agentMembershipsApi from "@/studio/features/agent-memberships/external/agent-memberships.api"
 import agentMessageFeedbackApi from "@/studio/features/agent-message-feedback/external/agent-message-feedback.api"
 import analyticsApi from "@/studio/features/analytics/external/analytics.api"

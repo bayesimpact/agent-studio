@@ -14,9 +14,9 @@ import {
 import { cn } from "@caseai-connect/ui/utils"
 import { CheckIcon, ChevronDownIcon, GitCommitHorizontalIcon } from "lucide-react"
 import { Link } from "react-router-dom"
+import { selectAgentsData, selectCurrentAgentData } from "@/common/features/agents/agents.selectors"
 import { ADS } from "@/common/store/async-data-status"
 import { useAppSelector } from "@/common/store/hooks"
-import { selectAgentsData, selectCurrentAgentData } from "@/features/agents/agents.selectors"
 import { useBuildPath } from "@/hooks/use-build-path"
 
 export function BreadcrumbAgent({ organizationId }: { organizationId: string }) {

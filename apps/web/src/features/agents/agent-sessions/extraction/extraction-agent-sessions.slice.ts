@@ -1,6 +1,6 @@
 import { createSlice } from "@reduxjs/toolkit"
 import { ADS, type AsyncData, defaultAsyncData } from "@/common/store/async-data-status"
-import type { Agent } from "../../agents.models"
+import type { Agent } from "../../../../common/features/agents/agents.models"
 import { listAgentSessionsForAgents } from "../shared/base-agent-session/base-agent-sessions.thunks"
 import type { ExtractionAgentSessionSummary } from "./extraction-agent-sessions.models"
 import { executeExtractionAgentSession } from "./extraction-agent-sessions.thunks"

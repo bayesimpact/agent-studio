@@ -1,6 +1,6 @@
 import { outputJsonSchemaSchema } from "@caseai-connect/api-contracts"
 import type { z } from "zod"
-import type { Agent } from "../../agents.models"
+import type { Agent } from "../../../../../common/features/agents/agents.models"
 import { conversationAgentDefaultValues } from "./conversation-agent-default-values"
 import { extractionAgentDefaultValues } from "./extraction-agent-default-values"
 import { formAgentDefaultValues } from "./form-agent-default-values"

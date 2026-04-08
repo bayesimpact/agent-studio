@@ -14,6 +14,7 @@ import {
 import { MessagesSquareIcon, MoreHorizontalIcon, Trash2Icon } from "lucide-react"
 import { useTranslation } from "react-i18next"
 import { Link, useNavigate } from "react-router-dom"
+import type { Agent } from "@/common/features/agents/agents.models"
 import { ADS } from "@/common/store/async-data-status"
 import { useAppDispatch, useAppSelector } from "@/common/store/hooks"
 import { buildSince } from "@/common/utils/build-date"
@@ -23,7 +24,6 @@ import { selectCurrentAgentSessionId } from "@/features/agents/agent-sessions/cu
 import { selectCurrentFormAgentSessionsDataFromAgentId } from "@/features/agents/agent-sessions/form/form-agent-sessions.selectors"
 import { deleteAgentSession } from "@/features/agents/agent-sessions/shared/base-agent-session/base-agent-sessions.thunks"
 import { BaseAgentSessionCreator } from "@/features/agents/agent-sessions/shared/base-agent-session/components/BaseAgentSessionCreator"
-import type { Agent } from "@/features/agents/agents.models"
 import { useBuildPath, useGetPath } from "@/hooks/use-build-path"
 import type { MenuItem } from "../types"
 

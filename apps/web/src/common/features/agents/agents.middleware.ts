@@ -1,12 +1,13 @@
 import { createListenerMiddleware, isAnyOf } from "@reduxjs/toolkit"
 import { notificationsActions } from "@/common/features/notifications/notifications.slice"
 import type { AppDispatch, RootState } from "@/common/store/types"
+import { createAgent, deleteAgent, updateAgent } from "@/studio/features/agents/agents.thunks"
 import {
   deleteDocumentTag,
   updateDocumentTag,
 } from "@/studio/features/document-tags/document-tags.thunks"
-import { hasProjectChanged } from "../../common/features/projects/projects.selectors"
-import { createAgent, deleteAgent, listAgents, updateAgent } from "./agents.thunks"
+import { hasProjectChanged } from "../projects/projects.selectors"
+import { listAgents } from "./agents.thunks"
 
 const listenerMiddleware = createListenerMiddleware<RootState, AppDispatch>()
 

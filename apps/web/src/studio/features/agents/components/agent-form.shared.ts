@@ -4,7 +4,7 @@ import {
   type CreateAgentDto,
   type UpdateAgentDto,
 } from "@caseai-connect/api-contracts"
-import type { Agent } from "@/features/agents/agents.models"
+import type { Agent } from "@/common/features/agents/agents.models"
 import {
   agentDefaultOutputJsonSchemaMap,
   agentDefaultPromptMap,
