@@ -45,7 +45,7 @@ export class ProjectsAnalyticsService {
       .newQueryBuilderWithConnectScope(connectScope)
       .select(dayExpr, "date")
       .addSelect("COUNT(*)::int", "value")
-      .where(`${createdAtCol} BETWEEN :startAt AND :endAt`, {
+      .andWhere(`${createdAtCol} BETWEEN :startAt AND :endAt`, {
         startAt: new Date(startAt),
         endAt: new Date(endAt),
       })
@@ -97,7 +97,7 @@ export class ProjectsAnalyticsService {
         `COALESCE((COUNT(${agentMessageIdCol})::float / NULLIF(COUNT(DISTINCT ${conversationIdCol}), 0)), 0)`,
         "value",
       )
-      .where(`${createdAtCol} BETWEEN :startAt AND :endAt`, {
+      .andWhere(`${createdAtCol} BETWEEN :startAt AND :endAt`, {
         startAt: new Date(startAt),
         endAt: new Date(endAt),
       })
