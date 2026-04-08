@@ -23,14 +23,16 @@ export class FormAgentSessionsService {
   async listSessions({
     connectScope,
     agentId,
+    userId,
     type,
   }: {
+    userId: string
     connectScope: RequiredConnectScope
     agentId: string
     type: BaseAgentSessionType
   }): Promise<FormAgentSession[]> {
     return this.sessionConnectRepository.find(connectScope, {
-      where: { agentId, type },
+      where: { agentId, type, userId },
       order: { createdAt: "DESC" },
     })
   }

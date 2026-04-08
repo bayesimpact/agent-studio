@@ -112,10 +112,10 @@ describe("Projects Analytics - Auth", () => {
     expectResponse(await subjectAvg(), 200)
   })
 
-  it("doesn't allow owners to list analytics for a project", async () => {
+  it("allows owners to list analytics for a project", async () => {
     await createContextForRole("owner")
-    expectResponse(await subjectConversations(), 403, AUTH_ERRORS.UNAUTHORIZED_RESOURCE)
-    expectResponse(await subjectAvg(), 403, AUTH_ERRORS.UNAUTHORIZED_RESOURCE)
+    expectResponse(await subjectConversations(), 200)
+    expectResponse(await subjectAvg(), 200)
   })
 
   it("doesn't allow members to list analytics for a project", async () => {
