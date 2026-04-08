@@ -60,27 +60,18 @@ jobs:
             echo "## Trivy Vulnerability Scan Results"
             echo "### API Image"
             echo '```'
-            head -c $MAX_SIZE trivy-api-results.txt
             if [ "$(wc -c < trivy-api-results.txt)" -gt "$MAX_SIZE" ]; then
+              echo "... output truncated (showing last ${MAX_SIZE} bytes)"
               echo ""
-              echo "... output truncated (see workflow artifacts for full results)"
             fi
+            tail -c $MAX_SIZE trivy-api-results.txt
             echo '```'
             echo "### Workers Image"
             echo '```'
-            head -c $MAX_SIZE trivy-workers-results.txt
             if [ "$(wc -c < trivy-workers-results.txt)" -gt "$MAX_SIZE" ]; then
+              echo "... output truncated (showing last ${MAX_SIZE} bytes)"
               echo ""
-              echo "... output truncated (see workflow artifacts for full results)"
             fi
+            tail -c $MAX_SIZE trivy-workers-results.txt
             echo '```'
           } >> $GITHUB_STEP_SUMMARY
-
-      - name: Upload full results
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: trivy-results
-          path: |
-            trivy-api-results.txt
-            trivy-workers-results.txt
