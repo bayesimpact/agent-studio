@@ -4,6 +4,7 @@ import { getLast7DaysRange } from "@caseai-connect/ui/lib/date-range-presets"
 import { useCallback, useEffect, useState } from "react"
 import type { DateRange } from "react-day-picker"
 import { useTranslation } from "react-i18next"
+import { useNavigate } from "react-router-dom"
 import { useAppDispatch, useAppSelector } from "@/common/store/hooks"
 import {
   selectAnalyticsAvgUserQuestionsPerSessionPerDay,
@@ -12,6 +13,8 @@ import {
 import { loadProjectAnalytics } from "@/studio/features/analytics/analytics.thunks"
 import { dateRangeToAnalyticsQueryBounds } from "@/studio/features/analytics/analytics-date-range"
 import { AsyncRoute } from "../../common/routes/AsyncRoute"
+import { GridHeader } from "../components/grid/Grid"
+import { useGetStudioPath } from "../hooks/use-studio-build-path"
 
 function sumDailyMetricValues(series: DailyMetricPoint[]): number {
   return series.reduce((sum, point) => sum + point.value, 0)
@@ -66,6 +69,13 @@ function WithData({
   onAnalyticsRangeChange: (nextBounds: { startAt: number; endAt: number }) => void
 }) {
   const { t } = useTranslation("analytics")
+  const navigate = useNavigate()
+  const { getStudioPath } = useGetStudioPath()
+
+  const handleBack = () => {
+    const path = getStudioPath("project")
+    navigate(path)
+  }
 
   const onRangeChange = useCallback(
     (range: DateRange | undefined) => {
@@ -78,32 +88,36 @@ function WithData({
   )
 
   return (
-    <div className="flex flex-col gap-6 p-6">
-      <div className="flex flex-wrap items-center justify-end gap-4">
-        <DateRangeCalendarWithPresetsPopover
-          defaultPreset="last7Days"
-          onRangeChange={onRangeChange}
-          placeholder={t("dateRangePlaceholder")}
-          align="end"
-        />
-      </div>
+    <>
+      <GridHeader onBack={handleBack} title={t("list.title")} description={t("list.description")} />
 
-      <div className="grid gap-6 lg:grid-cols-1 xl:grid-cols-2">
-        <ChartCard
-          title={t("conversationsChart.title")}
-          description={t("conversationsChart.description")}
-          metricLabel={t("conversationsChart.metricLabel")}
-          data={conversationsPoints}
-          getSummaryValue={sumDailyMetricValues}
-        />
-        <ChartCard
-          title={t("avgQuestionsChart.title")}
-          description={t("avgQuestionsChart.description")}
-          metricLabel={t("avgQuestionsChart.metricLabel")}
-          data={avgQuestionsPoints}
-          getSummaryValue={meanDailyMetricValues}
-        />
+      <div className="flex flex-col gap-6 p-6">
+        <div className="flex flex-wrap items-center justify-end gap-4">
+          <DateRangeCalendarWithPresetsPopover
+            defaultPreset="last7Days"
+            onRangeChange={onRangeChange}
+            placeholder={t("dateRangePlaceholder")}
+            align="end"
+          />
+        </div>
+
+        <div className="grid gap-6 lg:grid-cols-1 xl:grid-cols-2">
+          <ChartCard
+            title={t("conversationsChart.title")}
+            description={t("conversationsChart.description")}
+            metricLabel={t("conversationsChart.metricLabel")}
+            data={conversationsPoints}
+            getSummaryValue={sumDailyMetricValues}
+          />
+          <ChartCard
+            title={t("avgQuestionsChart.title")}
+            description={t("avgQuestionsChart.description")}
+            metricLabel={t("avgQuestionsChart.metricLabel")}
+            data={avgQuestionsPoints}
+            getSummaryValue={meanDailyMetricValues}
+          />
+        </div>
       </div>
-    </div>
+    </>
   )
 }
