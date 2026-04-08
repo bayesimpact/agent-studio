@@ -2,7 +2,7 @@ import { Button } from "@caseai-connect/ui/shad/button"
 import { Item, ItemTitle } from "@caseai-connect/ui/shad/item"
 import { Label } from "@caseai-connect/ui/shad/label"
 import { Popover, PopoverContent, PopoverTrigger } from "@caseai-connect/ui/shad/popover"
-import type { AgentSessionMessage as AgentSessionMessageType } from "@/features/agents/shared/agent-session-messages/agent-session-messages.models"
+import type { AgentSessionMessage as AgentSessionMessageType } from "@/features/agents/agent-sessions/shared/agent-session-messages/agent-session-messages.models"
 
 export function SourcesTool({
   toolCall,

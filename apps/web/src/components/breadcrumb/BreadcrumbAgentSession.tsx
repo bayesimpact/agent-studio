@@ -18,19 +18,19 @@ import { Link } from "react-router-dom"
 import { ADS } from "@/common/store/async-data-status"
 import { useAppSelector } from "@/common/store/hooks"
 import { buildSince } from "@/common/utils/build-date"
-import type { Agent } from "@/features/agents/agents.models"
-import { selectCurrentAgentData } from "@/features/agents/agents.selectors"
-import { getAgentIcon } from "@/features/agents/components/AgentIcon"
-import type { ConversationAgentSession } from "@/features/agents/conversation-agent-sessions/conversation-agent-sessions.models"
+import type { ConversationAgentSession } from "@/features/agents/agent-sessions/conversation/conversation-agent-sessions.models"
 import {
   selectCurrentConversationAgentSessionData,
   selectCurrentConversationAgentSessionsData,
-} from "@/features/agents/conversation-agent-sessions/conversation-agent-sessions.selectors"
-import type { FormAgentSession } from "@/features/agents/form-agent-sessions/form-agent-sessions.models"
+} from "@/features/agents/agent-sessions/conversation/conversation-agent-sessions.selectors"
+import type { FormAgentSession } from "@/features/agents/agent-sessions/form/form-agent-sessions.models"
 import {
   selectCurrentFormAgentSessionData,
   selectCurrentFormAgentSessionsData,
-} from "@/features/agents/form-agent-sessions/form-agent-sessions.selectors"
+} from "@/features/agents/agent-sessions/form/form-agent-sessions.selectors"
+import type { Agent } from "@/features/agents/agents.models"
+import { selectCurrentAgentData } from "@/features/agents/agents.selectors"
+import { getAgentIcon } from "@/features/agents/components/AgentIcon"
 import { selectCurrentProjectId } from "@/features/projects/projects.selectors"
 import { useBuildPath } from "@/hooks/use-build-path"
 

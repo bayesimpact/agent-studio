@@ -1,8 +1,8 @@
 import { useNavigate } from "react-router-dom"
 import { buildDate, buildSince } from "@/common/utils/build-date"
-import type { ConversationAgentSession } from "@/features/agents/conversation-agent-sessions/conversation-agent-sessions.models"
-import type { ExtractionAgentSession } from "@/features/agents/extraction-agent-sessions/extraction-agent-sessions.models"
-import type { FormAgentSession } from "@/features/agents/form-agent-sessions/form-agent-sessions.models"
+import type { ConversationAgentSession } from "@/features/agents/agent-sessions/conversation/conversation-agent-sessions.models"
+import type { ExtractionAgentSession } from "@/features/agents/agent-sessions/extraction/extraction-agent-sessions.models"
+import type { FormAgentSession } from "@/features/agents/agent-sessions/form/form-agent-sessions.models"
 import { useBuildPath } from "@/hooks/use-build-path"
 import { GridItem } from "@/studio/components/grid/Grid"
 

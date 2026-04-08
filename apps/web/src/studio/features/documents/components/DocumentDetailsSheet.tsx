@@ -9,7 +9,7 @@ import {
 import { InfoIcon } from "lucide-react"
 import { useTranslation } from "react-i18next"
 import { buildDate } from "@/common/utils/build-date"
-import { MarkdownWrapper } from "@/features/agents/shared/agent-session-messages/components/MarkdownWrapper"
+import { MarkdownWrapper } from "@/features/agents/agent-sessions/shared/agent-session-messages/components/MarkdownWrapper"
 import { DocumentTagItem } from "@/studio/features/document-tags/components/DocumentTagItem"
 import type { DocumentTag } from "@/studio/features/document-tags/document-tags.models"
 import type { Document } from "@/studio/features/documents/documents.models"

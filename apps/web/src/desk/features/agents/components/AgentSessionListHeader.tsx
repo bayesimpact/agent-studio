@@ -1,9 +1,9 @@
 import { cn } from "@caseai-connect/ui/utils"
 import { useTranslation } from "react-i18next"
 import { useNavigate } from "react-router-dom"
+import { BaseAgentSessionCreator } from "@/features/agents/agent-sessions/shared/base-agent-session/components/BaseAgentSessionCreator"
 import type { Agent } from "@/features/agents/agents.models"
 import { getAgentIcon } from "@/features/agents/components/AgentIcon"
-import { BaseAgentSessionCreator } from "@/features/agents/shared/base-agent-session/components/BaseAgentSessionCreator"
 import { useGetPath } from "@/hooks/use-build-path"
 import { Grid, GridContent, GridHeader, GridItem } from "@/studio/components/grid/Grid"
 

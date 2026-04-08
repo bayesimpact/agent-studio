@@ -1,12 +1,12 @@
 import { createListenerMiddleware, isAnyOf } from "@reduxjs/toolkit"
 import type { AppDispatch, RootState } from "@/common/store"
 import { ADS } from "@/common/store/async-data-status"
-import { selectCurrentConversationAgentSessionsData } from "../../conversation-agent-sessions/conversation-agent-sessions.selectors"
+import { selectCurrentConversationAgentSessionsData } from "../../conversation/conversation-agent-sessions.selectors"
 import {
   hasAgentSessionChanged,
   selectCurrentAgentSessionId,
 } from "../../current-agent-session-id/current-agent-session-id.selectors"
-import { selectCurrentFormAgentSessionsData } from "../../form-agent-sessions/form-agent-sessions.selectors"
+import { selectCurrentFormAgentSessionsData } from "../../form/form-agent-sessions.selectors"
 import { listAgentSessionsForAgents } from "../base-agent-session/base-agent-sessions.thunks"
 import { listMessages } from "./agent-session-messages.thunks"
 

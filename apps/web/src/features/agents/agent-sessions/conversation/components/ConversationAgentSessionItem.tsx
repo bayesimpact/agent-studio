@@ -3,7 +3,7 @@ import { Item, ItemActions, ItemContent, ItemTitle } from "@caseai-connect/ui/sh
 import { useTranslation } from "react-i18next"
 import { useNavigate } from "react-router-dom"
 import { buildDate } from "@/common/utils/build-date"
-import type { ConversationAgentSession } from "@/features/agents/conversation-agent-sessions/conversation-agent-sessions.models"
+import type { ConversationAgentSession } from "@/features/agents/agent-sessions/conversation/conversation-agent-sessions.models"
 import { useBuildPath } from "@/hooks/use-build-path"
 
 export function ConversationAgentSessionItem({

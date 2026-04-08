@@ -2,8 +2,8 @@ import { Badge } from "@caseai-connect/ui/shad/badge"
 import { Item, ItemContent, ItemHeader, ItemTitle } from "@caseai-connect/ui/shad/item"
 import { Separator } from "@caseai-connect/ui/shad/separator"
 import { useTranslation } from "react-i18next"
+import type { FormAgentSession } from "@/features/agents/agent-sessions/form/form-agent-sessions.models"
 import type { Agent } from "@/features/agents/agents.models"
-import type { FormAgentSession } from "@/features/agents/form-agent-sessions/form-agent-sessions.models"
 
 export function FormResult({
   agent,

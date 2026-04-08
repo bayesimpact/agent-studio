@@ -4,10 +4,10 @@ import { FileCheckIcon, XIcon } from "lucide-react"
 import { useEffect, useRef, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { useAppDispatch, useAppSelector } from "@/common/store/hooks"
-import type { ConversationAgentSession } from "@/features/agents/conversation-agent-sessions/conversation-agent-sessions.models"
-import type { FormAgentSession } from "@/features/agents/form-agent-sessions/form-agent-sessions.models"
-import type { AgentSessionMessage as AgentSessionMessageType } from "@/features/agents/shared/agent-session-messages/agent-session-messages.models"
-import { AgentSessionMessage } from "@/features/agents/shared/agent-session-messages/components/AgentSessionMessage"
+import type { ConversationAgentSession } from "@/features/agents/agent-sessions/conversation/conversation-agent-sessions.models"
+import type { FormAgentSession } from "@/features/agents/agent-sessions/form/form-agent-sessions.models"
+import type { AgentSessionMessage as AgentSessionMessageType } from "@/features/agents/agent-sessions/shared/agent-session-messages/agent-session-messages.models"
+import { AgentSessionMessage } from "@/features/agents/agent-sessions/shared/agent-session-messages/components/AgentSessionMessage"
 import {
   Chat,
   ChatActions,
@@ -15,8 +15,8 @@ import {
   ChatFooter,
   ChatInput,
   ChatSubmit,
-} from "@/features/agents/shared/agent-session-messages/components/Chat"
-import { Dictaphone } from "@/features/agents/shared/agent-session-messages/components/Dictaphone"
+} from "@/features/agents/agent-sessions/shared/agent-session-messages/components/Chat"
+import { Dictaphone } from "@/features/agents/agent-sessions/shared/agent-session-messages/components/Dictaphone"
 import { useScrollToEnd } from "@/hooks/use-scroll-to-end"
 import { AttachDocument } from "@/studio/features/documents/components/AttachDocument"
 import { selectStreaming } from "../agent-session-messages.selectors"

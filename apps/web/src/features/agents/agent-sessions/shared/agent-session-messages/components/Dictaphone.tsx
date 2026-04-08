@@ -3,7 +3,7 @@ import { MicIcon } from "lucide-react"
 import { useCallback, useEffect } from "react"
 import SpeechRecognition, { useSpeechRecognition } from "react-speech-recognition"
 import { getLocale } from "@/common/utils/get-locale"
-import { useChatFooter } from "@/features/agents/shared/agent-session-messages/components/context"
+import { useChatFooter } from "@/features/agents/agent-sessions/shared/agent-session-messages/components/context"
 
 export function Dictaphone({ disabled }: { disabled: boolean }) {
   const { input } = useChatFooter()

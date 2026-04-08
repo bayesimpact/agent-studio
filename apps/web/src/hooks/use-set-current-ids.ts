@@ -2,8 +2,8 @@ import { useEffect } from "react"
 import { useParams } from "react-router-dom"
 import { organizationsActions } from "@/common/features/organizations/organizations.slice"
 import { useAppDispatch } from "@/common/store/hooks"
+import { currentAgentSessionIdActions } from "@/features/agents/agent-sessions/current-agent-session-id/current-agent-session-id.slice"
 import { agentsActions } from "@/features/agents/agents.slice"
-import { currentAgentSessionIdActions } from "@/features/agents/current-agent-session-id/current-agent-session-id.slice"
 import { projectsActions } from "@/features/projects/projects.slice"
 
 export const useSetCurrentIds = () => {

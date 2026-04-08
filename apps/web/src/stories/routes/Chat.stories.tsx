@@ -13,7 +13,7 @@ import {
   ChatInput,
   ChatSubmit,
   ChatUserMessage,
-} from "@/features/agents/shared/agent-session-messages/components/Chat"
+} from "@/features/agents/agent-sessions/shared/agent-session-messages/components/Chat"
 import { DotsBackground } from "@/studio/components/DotsBackground"
 
 type Message = {

@@ -3,7 +3,7 @@ import { ExternalLinkIcon, PaperclipIcon } from "lucide-react"
 import { useCallback, useEffect, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { useAppDispatch } from "@/common/store/hooks"
-import type { AgentSessionMessage } from "@/features/agents/shared/agent-session-messages/agent-session-messages.models"
+import type { AgentSessionMessage } from "@/features/agents/agent-sessions/shared/agent-session-messages/agent-session-messages.models"
 import { getDocumentTemporaryUrl } from "@/studio/features/documents/documents.thunks"
 
 export function Attachment({ message }: { message: AgentSessionMessage }) {

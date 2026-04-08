@@ -1,7 +1,7 @@
 import { createSelector } from "@reduxjs/toolkit"
 import type { RootState } from "@/common/store"
 import { ADS, type AsyncData } from "@/common/store/async-data-status"
-import { selectCurrentAgentData } from "../agents.selectors"
+import { selectCurrentAgentData } from "../../agents.selectors"
 import type { ExtractionAgentSessionSummary } from "./extraction-agent-sessions.models"
 
 export const selectExtractionAgentSessionsData = (state: RootState) =>

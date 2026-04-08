@@ -1,7 +1,7 @@
 import type { RootState } from "@/common/store/types"
 import { selectCurrentOrganizationId } from "../common/features/organizations/organizations.selectors"
+import { selectCurrentAgentSessionId } from "./agents/agent-sessions/current-agent-session-id/current-agent-session-id.selectors"
 import { selectCurrentAgentId } from "./agents/agents.selectors"
-import { selectCurrentAgentSessionId } from "./agents/current-agent-session-id/current-agent-session-id.selectors"
 import { selectCurrentProjectId } from "./projects/projects.selectors"
 
 type IdKey = "organizationId" | "projectId" | "agentId" | "agentSessionId"

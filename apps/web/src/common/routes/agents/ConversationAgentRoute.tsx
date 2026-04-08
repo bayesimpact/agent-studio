@@ -1,6 +1,6 @@
 import { useAppSelector } from "@/common/store/hooks"
-import type { ConversationAgentSession } from "@/features/agents/conversation-agent-sessions/conversation-agent-sessions.models"
-import { selectCurrentConversationAgentSessionsData } from "@/features/agents/conversation-agent-sessions/conversation-agent-sessions.selectors"
+import type { ConversationAgentSession } from "@/features/agents/agent-sessions/conversation/conversation-agent-sessions.models"
+import { selectCurrentConversationAgentSessionsData } from "@/features/agents/agent-sessions/conversation/conversation-agent-sessions.selectors"
 import { AsyncRoute } from "../AsyncRoute"
 
 export function ConversationAgentRoute({

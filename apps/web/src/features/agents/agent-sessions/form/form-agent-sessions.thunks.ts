@@ -1,6 +1,6 @@
 import { createAsyncThunk } from "@reduxjs/toolkit"
 import type { RootState, ThunkExtraArg } from "@/common/store"
-import { getCurrentIds } from "../../helpers"
+import { getCurrentIds } from "@/features/helpers"
 import { buildType } from "../shared/base-agent-session/base-agent-sessions.thunks"
 import type { FormAgentSession } from "./form-agent-sessions.models"
 
