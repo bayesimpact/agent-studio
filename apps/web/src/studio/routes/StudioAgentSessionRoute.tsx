@@ -8,9 +8,9 @@ import { FormResult } from "@/features/agents/form-agent-sessions/components/For
 import type { FormAgentSession } from "@/features/agents/form-agent-sessions/form-agent-sessions.models"
 import type { AgentSessionMessage } from "@/features/agents/shared/agent-session-messages/agent-session-messages.models"
 import { StudioAgentSessionMessages } from "@/features/agents/shared/agent-session-messages/components/AgentSessionMessages"
+import { useGetPath } from "@/hooks/use-build-path"
 import { GridHeader } from "@/studio/components/grid/Grid"
 import { AgentSessionActions } from "../features/agents/components/AgentSessionActions"
-import { useGetStudioPath } from "../hooks/use-studio-build-path"
 
 type AgentSession = ConversationAgentSession | FormAgentSession
 export function StudioAgentSessionRoute({
@@ -24,14 +24,14 @@ export function StudioAgentSessionRoute({
 }) {
   const { t } = useTranslation()
   const navigate = useNavigate()
-  const { getStudioPath } = useGetStudioPath()
+  const { getPath } = useGetPath()
 
   const Icon = getAgentIcon(agent.type)
 
   const date = buildSince(agentSession.updatedAt)
 
   const handleBack = () => {
-    const path = getStudioPath("agent")
+    const path = getPath("agent")
     navigate(path)
   }
 

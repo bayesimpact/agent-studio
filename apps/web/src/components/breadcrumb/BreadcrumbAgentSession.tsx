@@ -18,7 +18,6 @@ import { Link } from "react-router-dom"
 import { ADS } from "@/common/store/async-data-status"
 import { useAppSelector } from "@/common/store/hooks"
 import { buildSince } from "@/common/utils/build-date"
-import { useBuildDeskPath } from "@/desk/hooks/use-desk-build-path"
 import type { Agent } from "@/features/agents/agents.models"
 import { selectCurrentAgentData } from "@/features/agents/agents.selectors"
 import { getAgentIcon } from "@/features/agents/components/AgentIcon"
@@ -33,8 +32,7 @@ import {
   selectCurrentFormAgentSessionsData,
 } from "@/features/agents/form-agent-sessions/form-agent-sessions.selectors"
 import { selectCurrentProjectId } from "@/features/projects/projects.selectors"
-import { useBuildStudioPath } from "@/studio/hooks/use-studio-build-path"
-import { isStudioInterface } from "@/studio/routes/helpers"
+import { useBuildPath } from "@/hooks/use-build-path"
 
 export function BreadcrumbAgentSession({ organizationId }: { organizationId: string }) {
   const agent = useAppSelector(selectCurrentAgentData)
@@ -99,9 +97,7 @@ function WithData({
 }) {
   const { t } = useTranslation()
   const projectId = useAppSelector(selectCurrentProjectId)
-  const { buildStudioPath } = useBuildStudioPath()
-  const { buildDeskPath } = useBuildDeskPath()
-  const buildPath = isStudioInterface() ? buildStudioPath : buildDeskPath
+  const { buildPath } = useBuildPath()
   const Icon = getAgentIcon(agent.type)
   const currentSessionName = buildSince(currentSession.createdAt)
   const currentSessionPath = buildPath("agentSession", {

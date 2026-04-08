@@ -17,7 +17,6 @@ import { Link, useNavigate } from "react-router-dom"
 import { ADS } from "@/common/store/async-data-status"
 import { useAppDispatch, useAppSelector } from "@/common/store/hooks"
 import { buildSince } from "@/common/utils/build-date"
-import { useBuildDeskPath, useDeskGetPath } from "@/desk/hooks/use-desk-build-path"
 import type { Agent } from "@/features/agents/agents.models"
 import type { ConversationAgentSession } from "@/features/agents/conversation-agent-sessions/conversation-agent-sessions.models"
 import { selectCurrentConversationAgentSessionsDataFromAgentId } from "@/features/agents/conversation-agent-sessions/conversation-agent-sessions.selectors"
@@ -25,6 +24,7 @@ import { selectCurrentAgentSessionId } from "@/features/agents/current-agent-ses
 import { selectCurrentFormAgentSessionsDataFromAgentId } from "@/features/agents/form-agent-sessions/form-agent-sessions.selectors"
 import { deleteAgentSession } from "@/features/agents/shared/base-agent-session/base-agent-sessions.thunks"
 import { BaseAgentSessionCreator } from "@/features/agents/shared/base-agent-session/components/BaseAgentSessionCreator"
+import { useBuildPath, useGetPath } from "@/hooks/use-build-path"
 import type { MenuItem } from "../types"
 
 type AgentSessionProps = {
@@ -78,11 +78,11 @@ function SessionList({
   children?: React.ReactNode
 }) {
   const currentSessionId = useAppSelector(selectCurrentAgentSessionId)
-  const { buildDeskPath } = useBuildDeskPath()
+  const { buildPath } = useBuildPath()
   const items: MenuItem[] = sessions.map((session) => ({
     id: session.id,
     title: buildSince(session.createdAt),
-    url: buildDeskPath("agentSession", { ...agentSessionProps, agentSessionId: session.id }),
+    url: buildPath("agentSession", { ...agentSessionProps, agentSessionId: session.id }),
     isActive: currentSessionId === session.id,
     icon: MessagesSquareIcon,
   }))
@@ -124,8 +124,8 @@ function OptionsMenu({
   const dispatch = useAppDispatch()
   const { isMobile } = useSidebar()
   const { t } = useTranslation()
-  const { getDeskPath } = useDeskGetPath()
-  const handleSuccess = () => navigate(getDeskPath("agent"))
+  const { getPath } = useGetPath()
+  const handleSuccess = () => navigate(getPath("agent"))
   const handleDelete = () => {
     dispatch(deleteAgentSession({ agentType, agentId, agentSessionId, onSuccess: handleSuccess }))
   }

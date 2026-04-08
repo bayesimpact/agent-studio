@@ -3,12 +3,12 @@ import { useParams } from "react-router-dom"
 import { RouteNames } from "@/common/routes/helpers"
 import { ADS } from "@/common/store/async-data-status"
 import { useAppSelector } from "@/common/store/hooks"
-import { buildDeskPath } from "@/desk/routes/helpers"
+import { DeskRouteNames } from "@/desk/routes/helpers"
 import { selectAgentsData } from "@/features/agents/agents.selectors"
 import { selectCurrentConversationAgentSessionsData } from "@/features/agents/conversation-agent-sessions/conversation-agent-sessions.selectors"
 import { selectOrganizationsData } from "@/features/organizations/organizations.selectors"
 import { selectProjectsData } from "@/features/projects/projects.selectors"
-import { buildStudioPath, isStudioInterface } from "@/studio/routes/helpers"
+import { StudioRouteNames } from "@/studio/routes/helpers"
 
 export type PathType = "organization" | "project" | "agent" | "agentSession"
 
@@ -19,68 +19,57 @@ export interface BuildPathOptions {
   agentSessionId?: string
 }
 
-export const buildOrganizationPath = ({
-  organizationId,
-  isStudioInterface,
-}: {
-  organizationId: string
-  isStudioInterface: boolean
-}) => {
+const prefix = window.location.pathname.startsWith(`${StudioRouteNames.STUDIO}/`)
+  ? StudioRouteNames.STUDIO
+  : window.location.pathname.startsWith(`${StudioRouteNames.STUDIO2}/`)
+    ? StudioRouteNames.STUDIO2
+    : DeskRouteNames.APP
+
+export const buildOrganizationPath = ({ organizationId }: { organizationId: string }) => {
   const path = `/o/${organizationId}/`
-  if (isStudioInterface) return buildStudioPath(path)
-  return buildDeskPath(path)
+  return `${prefix}${path}`
 }
 
-export const buildProjectPath = ({
+const buildProjectPath = ({
   organizationId,
   projectId,
-  isStudioInterface,
 }: {
   organizationId: string
   projectId: string
-  isStudioInterface: boolean
 }) => {
   const path = `/o/${organizationId}/p/${projectId}`
-  if (isStudioInterface) return buildStudioPath(path)
-  return buildDeskPath(path)
+  return `${prefix}${path}`
 }
 
-export const buildAgentPath = ({
+const buildAgentPath = ({
   organizationId,
   projectId,
   agentId,
-  isStudioInterface,
 }: {
   organizationId: string
   projectId: string
   agentId: string
-  isStudioInterface: boolean
 }) => {
   const path = `/o/${organizationId}/p/${projectId}/a/${agentId}`
-  if (isStudioInterface) return buildStudioPath(path)
-  return buildDeskPath(path)
+  return `${prefix}${path}`
 }
 
-export const buildAgentSessionPath = ({
+const buildAgentSessionPath = ({
   organizationId,
   projectId,
   agentId,
   agentSessionId,
-  isStudioInterface,
 }: {
   organizationId: string
   projectId: string
   agentId: string
   agentSessionId: string
-  isStudioInterface: boolean
 }) => {
   const path = `/o/${organizationId}/p/${projectId}/a/${agentId}/as/${agentSessionId}`
-  if (isStudioInterface) return buildStudioPath(path)
-  return buildDeskPath(path)
+  return `${prefix}${path}`
 }
 
 export function useClosestParentPath() {
-  const isStudio = isStudioInterface()
   const {
     organizationId: urlOrganizationId,
     projectId: urlProjectId,
@@ -146,7 +135,6 @@ export function useClosestParentPath() {
     const organizationPath = organizationFound
       ? buildOrganizationPath({
           organizationId: organizationFound.id,
-          isStudioInterface: isStudio,
         })
       : RouteNames.HOME
 
@@ -155,7 +143,6 @@ export function useClosestParentPath() {
         ? buildProjectPath({
             organizationId: organizationFound.id,
             projectId: projectFound.id,
-            isStudioInterface: isStudio,
           })
         : organizationPath
 
@@ -165,7 +152,6 @@ export function useClosestParentPath() {
             organizationId: organizationFound.id,
             projectId: projectFound.id,
             agentId: agentFound.id,
-            isStudioInterface: isStudio,
           })
         : projectPath
 
@@ -176,14 +162,12 @@ export function useClosestParentPath() {
             projectId: projectFound.id,
             agentId: agentFound.id,
             agentSessionId: agentSessionFound.id,
-            isStudioInterface: isStudio,
           })
         : agentPath
 
     // closestParent
     return agentSessionPath || agentPath || projectPath || organizationPath || RouteNames.HOME
   }, [
-    isStudio,
     foundagent,
     foundagentSession,
     foundOrganization,
@@ -195,4 +179,160 @@ export function useClosestParentPath() {
   ])
 
   return { getClosestParentPath }
+}
+
+export function useGetPath() {
+  const {
+    organizationId: urlOrganizationId,
+    projectId: urlProjectId,
+    agentId: urlagentId,
+    agentSessionId: urlagentSessionId,
+  } = useParams()
+
+  const computePath = (pathType: PathType): string => {
+    const organizationId = urlOrganizationId
+    const projectId = urlProjectId
+    const agentId = urlagentId
+    const agentSessionId = urlagentSessionId
+
+    const organizationPath = organizationId
+      ? buildOrganizationPath({
+          organizationId,
+        })
+      : RouteNames.HOME
+
+    if (pathType === "organization") {
+      return organizationPath
+    }
+
+    const projectPath =
+      organizationId && projectId
+        ? buildProjectPath({
+            organizationId,
+            projectId,
+          })
+        : organizationPath
+
+    if (pathType === "project") {
+      return projectPath
+    }
+
+    const agentPath =
+      organizationId && projectId && agentId
+        ? buildAgentPath({
+            organizationId,
+            projectId,
+            agentId,
+          })
+        : projectPath
+
+    if (pathType === "agent") {
+      return agentPath
+    }
+
+    const agentSessionPath =
+      organizationId && projectId && agentId && agentSessionId
+        ? buildAgentSessionPath({
+            organizationId,
+            projectId,
+            agentId,
+            agentSessionId,
+          })
+        : agentPath
+
+    if (pathType === "agentSession") {
+      return agentSessionPath
+    }
+
+    return RouteNames.HOME
+  }
+
+  function getPath(pathType: PathType): string {
+    return computePath(pathType)
+  }
+
+  return { getPath }
+}
+
+export function useBuildPath() {
+  const computePath = (pathType: PathType, options: BuildPathOptions): string => {
+    const organizationId = options.organizationId
+    const projectId = options.projectId
+    const agentId = options.agentId
+    const agentSessionId = options.agentSessionId
+
+    const organizationPath = organizationId
+      ? buildOrganizationPath({
+          organizationId,
+        })
+      : RouteNames.HOME
+
+    if (pathType === "organization") {
+      return organizationPath
+    }
+
+    const projectPath =
+      organizationId && projectId
+        ? buildProjectPath({
+            organizationId,
+            projectId,
+          })
+        : organizationPath
+
+    if (pathType === "project") {
+      return projectPath
+    }
+
+    const agentPath =
+      organizationId && projectId && agentId
+        ? buildAgentPath({
+            organizationId,
+            projectId,
+            agentId,
+          })
+        : projectPath
+
+    if (pathType === "agent") {
+      return agentPath
+    }
+
+    const agentSessionPath =
+      organizationId && projectId && agentId && agentSessionId
+        ? buildAgentSessionPath({
+            organizationId,
+            projectId,
+            agentId,
+            agentSessionId,
+          })
+        : agentPath
+
+    if (pathType === "agentSession") {
+      return agentSessionPath
+    }
+
+    return RouteNames.HOME
+  }
+
+  const buildPath: {
+    (
+      pathType: "agentSession",
+      options: {
+        organizationId: string
+        projectId: string
+        agentId: string
+        agentSessionId: string
+      },
+    ): string
+    (
+      pathType: "agent",
+      options: { organizationId: string; projectId: string; agentId: string },
+    ): string
+
+    (pathType: "project", options: { organizationId: string; projectId: string }): string
+    (pathType: "organization", options: { organizationId: string }): string
+  } = (pathType: PathType, options: BuildPathOptions): string => {
+    return computePath(pathType, options)
+  }
+
+  return { buildPath }
 }

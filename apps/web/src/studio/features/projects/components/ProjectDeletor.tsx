@@ -16,16 +16,16 @@ import { useNavigate } from "react-router-dom"
 import { useAppDispatch } from "@/common/store/hooks"
 import type { Project } from "@/features/projects/projects.models"
 import { deleteProject } from "@/features/projects/projects.thunks"
-import { useBuildStudioPath } from "@/studio/hooks/use-studio-build-path"
+import { useBuildPath } from "@/hooks/use-build-path"
 
 export function ProjectDeletor({ project }: { project: Project }) {
   const navigate = useNavigate()
-  const { buildStudioPath } = useBuildStudioPath()
+  const { buildPath } = useBuildPath()
   const { t } = useTranslation()
   const dispatch = useAppDispatch()
 
   const [open, setOpen] = useState<boolean>(false)
-  const path = buildStudioPath("organization", { organizationId: project.organizationId })
+  const path = buildPath("organization", { organizationId: project.organizationId })
 
   const onSuccess = () => {
     navigate(path, { replace: true })

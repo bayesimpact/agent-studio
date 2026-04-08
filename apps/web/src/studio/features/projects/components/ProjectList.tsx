@@ -1,11 +1,36 @@
 import { useTranslation } from "react-i18next"
+import { ListHeader } from "@/desk/components/ListHeader"
 import type { Organization } from "@/features/organizations/organizations.models"
 import type { Project } from "@/features/projects/projects.models"
 import { Grid, GridContent, GridHeader, GridItem } from "@/studio/components/grid/Grid"
 import { ProjectCreator } from "@/studio/features/projects/components/ProjectCreator"
-import { ProjectItem } from "./ProjectItem"
+import { ProjectItem, ProjectItem2 } from "./ProjectItem"
 
 export function ProjectList({
+  projects,
+  organization,
+}: {
+  projects: Project[]
+  organization: Organization
+}) {
+  const { t } = useTranslation()
+
+  return (
+    <ListHeader
+      title={t("project:projects")}
+      className="min-h-screen"
+      disableOrganizationSelector={false}
+    >
+      <ProjectCreator organization={organization} />
+
+      {projects.map((project) => (
+        <ProjectItem key={project.id} organizationId={organization.id} project={project} />
+      ))}
+    </ListHeader>
+  )
+}
+
+export function ProjectList2({
   projects,
   organization,
   userName,
@@ -21,7 +46,7 @@ export function ProjectList({
 
       <GridContent>
         {projects.map((project, index) => (
-          <ProjectItem
+          <ProjectItem2
             index={index}
             key={project.id}
             organizationId={organization.id}

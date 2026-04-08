@@ -45,6 +45,7 @@ import { useAppDispatch, useAppSelector } from "@/common/store/hooks"
 import { buildDate, buildSince } from "@/common/utils/build-date"
 import { generateId } from "@/common/utils/generate-id"
 import { MarkdownWrapper } from "@/features/agents/shared/agent-session-messages/components/MarkdownWrapper"
+import { useGetPath } from "@/hooks/use-build-path"
 import { GridHeader } from "@/studio/components/grid/Grid"
 import {
   getTagNameById,
@@ -70,7 +71,6 @@ import {
 import { AsyncRoute } from "../../common/routes/AsyncRoute"
 import { DocumentTagItem } from "../features/document-tags/components/DocumentTagItem"
 import { DocumentTagsSheet } from "../features/document-tags/components/DocumentTagsSheet"
-import { useGetStudioPath } from "../hooks/use-studio-build-path"
 
 export function DocumentsRoute() {
   useDocumentEmbeddingStatusStream()
@@ -94,10 +94,10 @@ function WithData({
 }) {
   const navigate = useNavigate()
   const { t } = useTranslation()
-  const { getStudioPath } = useGetStudioPath()
+  const { getPath } = useGetPath()
 
   const handleBack = () => {
-    const path = getStudioPath("project")
+    const path = getPath("project")
     navigate(path)
   }
   return (

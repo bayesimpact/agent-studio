@@ -16,19 +16,14 @@ import { CheckIcon, ChevronDownIcon, GitCommitHorizontalIcon } from "lucide-reac
 import { Link } from "react-router-dom"
 import { ADS } from "@/common/store/async-data-status"
 import { useAppSelector } from "@/common/store/hooks"
-import { useBuildDeskPath } from "@/desk/hooks/use-desk-build-path"
 import { selectAgentsData, selectCurrentAgentData } from "@/features/agents/agents.selectors"
-import { useBuildStudioPath } from "@/studio/hooks/use-studio-build-path"
-import { isStudioInterface } from "@/studio/routes/helpers"
+import { useBuildPath } from "@/hooks/use-build-path"
 
 export function BreadcrumbAgent({ organizationId }: { organizationId: string }) {
   const agents = useAppSelector(selectAgentsData)
   const agent = useAppSelector(selectCurrentAgentData)
-  const { buildStudioPath } = useBuildStudioPath()
-  const { buildDeskPath } = useBuildDeskPath()
+  const { buildPath } = useBuildPath()
   if (!ADS.isFulfilled(agents) || !ADS.isFulfilled(agent)) return null
-
-  const buildPath = isStudioInterface() ? buildStudioPath : buildDeskPath
 
   const currentAgentPath = buildPath("agent", {
     organizationId,

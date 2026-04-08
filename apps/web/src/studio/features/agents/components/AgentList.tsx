@@ -6,11 +6,11 @@ import { useNavigate, useOutlet } from "react-router-dom"
 import type { Agent } from "@/features/agents/agents.models"
 import { AgentCreator } from "@/features/agents/components/AgentCreator"
 import type { Project } from "@/features/projects/projects.models"
+import { useGetPath } from "@/hooks/use-build-path"
 import { Grid, GridContent, GridHeader, GridItem } from "@/studio/components/grid/Grid"
-import { AgentItem } from "@/studio/features/agents/components/AgentItem"
+import { AgentItem2 } from "@/studio/features/agents/components/AgentItem"
 import { ProjectDeletor } from "@/studio/features/projects/components/ProjectDeletor"
 import { ProjectEditor } from "@/studio/features/projects/components/ProjectEditor"
-import { useGetStudioPath } from "@/studio/hooks/use-studio-build-path"
 import { AnalyticsButton } from "./AnalyticsButton"
 import { DocumentsButton } from "./DocumentsButton"
 import { EvaluationButton } from "./EvaluationButton"
@@ -28,10 +28,10 @@ export function AgentList({ project, agents }: { project: Project; agents: Agent
   const { t } = useTranslation()
   const outlet = useOutlet()
   const navigate = useNavigate()
-  const { getStudioPath } = useGetStudioPath()
+  const { getPath } = useGetPath()
 
   const handleBack = () => {
-    const path = getStudioPath(outlet ? "project" : "organization")
+    const path = getPath(outlet ? "project" : "organization")
     navigate(path)
   }
 
@@ -52,7 +52,7 @@ export function AgentList({ project, agents }: { project: Project; agents: Agent
 
       <GridContent>
         {agents.map((agent, index) => (
-          <AgentItem
+          <AgentItem2
             index={index}
             key={agent.id}
             organizationId={project.organizationId}

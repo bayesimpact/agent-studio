@@ -6,6 +6,7 @@ import type { DateRange } from "react-day-picker"
 import { useTranslation } from "react-i18next"
 import { useNavigate } from "react-router-dom"
 import { useAppDispatch, useAppSelector } from "@/common/store/hooks"
+import { useGetPath } from "@/hooks/use-build-path"
 import {
   selectAnalyticsAvgUserQuestionsPerSessionPerDay,
   selectAnalyticsConversationsPerDay,
@@ -14,7 +15,6 @@ import { loadProjectAnalytics } from "@/studio/features/analytics/analytics.thun
 import { dateRangeToAnalyticsQueryBounds } from "@/studio/features/analytics/analytics-date-range"
 import { AsyncRoute } from "../../common/routes/AsyncRoute"
 import { GridHeader } from "../components/grid/Grid"
-import { useGetStudioPath } from "../hooks/use-studio-build-path"
 
 function sumDailyMetricValues(series: DailyMetricPoint[]): number {
   return series.reduce((sum, point) => sum + point.value, 0)
@@ -70,10 +70,10 @@ function WithData({
 }) {
   const { t } = useTranslation("analytics")
   const navigate = useNavigate()
-  const { getStudioPath } = useGetStudioPath()
+  const { getPath } = useGetPath()
 
   const handleBack = () => {
-    const path = getStudioPath("project")
+    const path = getPath("project")
     navigate(path)
   }
 

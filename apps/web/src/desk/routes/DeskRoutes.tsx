@@ -28,8 +28,8 @@ import { AgentSessionMessages } from "@/features/agents/shared/agent-session-mes
 import { BaseAgentSessionCreator } from "@/features/agents/shared/base-agent-session/components/BaseAgentSessionCreator"
 import { selectCurrentOrganizationId } from "@/features/organizations/organizations.selectors"
 import { selectCurrentProjectId } from "@/features/projects/projects.selectors"
+import { useBuildPath, useGetPath } from "@/hooks/use-build-path"
 import { ListHeader } from "../components/ListHeader"
-import { useBuildDeskPath, useDeskGetPath } from "../hooks/use-desk-build-path"
 import { DeskDashboardRoute } from "./DeskDashboardRoute"
 import { buildDeskPath, DeskRouteNames } from "./helpers"
 
@@ -123,7 +123,7 @@ function ConversationAgentSessionList({
   agentSessions: ConversationAgentSession[]
 }) {
   const { t } = useTranslation()
-  const { getDeskPath } = useDeskGetPath()
+  const { getPath } = useGetPath()
   const outlet = useOutlet()
 
   const organizationId = useAppSelector(selectCurrentOrganizationId)
@@ -135,7 +135,7 @@ function ConversationAgentSessionList({
   if (outlet) return <Outlet />
   return (
     <ListHeader
-      path={getDeskPath("agent")}
+      path={getPath("agent")}
       title={t("conversationAgentSession:list.title")}
       agent={agent}
     >
@@ -166,7 +166,7 @@ function FormAgentSessionList({
   agentSessions: FormAgentSession[]
 }) {
   const { t } = useTranslation()
-  const { getDeskPath } = useDeskGetPath()
+  const { getPath } = useGetPath()
   const outlet = useOutlet()
 
   const organizationId = useAppSelector(selectCurrentOrganizationId)
@@ -177,7 +177,7 @@ function FormAgentSessionList({
 
   if (outlet) return <Outlet />
   return (
-    <ListHeader path={getDeskPath("agent")} title={t("formAgentSession:list.title")} agent={agent}>
+    <ListHeader path={getPath("agent")} title={t("formAgentSession:list.title")} agent={agent}>
       <BaseAgentSessionCreator
         agentType="form"
         type="button"
@@ -205,7 +205,7 @@ function ExtractionAgentSessionList({
   agentSessions: ExtractionAgentSessionSummary[]
 }) {
   const outlet = useOutlet()
-  const { buildDeskPath } = useBuildDeskPath()
+  const { buildPath } = useBuildPath()
   const { t } = useTranslation("extractionAgentSession", { keyPrefix: "list" })
   const isProcessingExecution = useAppSelector(selectIsProcessingExecution)
   const organizationId = useAppSelector(selectCurrentOrganizationId)
@@ -218,7 +218,7 @@ function ExtractionAgentSessionList({
   return (
     <ListHeader
       agent={agent}
-      path={buildDeskPath("project", { organizationId, projectId })}
+      path={buildPath("project", { organizationId, projectId })}
       title={t("title")}
     >
       {isProcessingExecution && <Loader />}

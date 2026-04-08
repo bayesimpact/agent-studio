@@ -3,8 +3,8 @@ import { Item, ItemActions, ItemContent, ItemTitle } from "@caseai-connect/ui/sh
 import { useTranslation } from "react-i18next"
 import { useNavigate } from "react-router-dom"
 import { buildDate } from "@/common/utils/build-date"
-import { useBuildDeskPath } from "@/desk/hooks/use-desk-build-path"
 import type { ConversationAgentSession } from "@/features/agents/conversation-agent-sessions/conversation-agent-sessions.models"
+import { useBuildPath } from "@/hooks/use-build-path"
 
 export function ConversationAgentSessionItem({
   agentSession,
@@ -19,9 +19,9 @@ export function ConversationAgentSessionItem({
 }) {
   const navigate = useNavigate()
   const { t } = useTranslation()
-  const { buildDeskPath } = useBuildDeskPath()
+  const { buildPath } = useBuildPath()
   const handleClick = () => {
-    const path = buildDeskPath("agentSession", {
+    const path = buildPath("agentSession", {
       organizationId,
       projectId,
       agentId,

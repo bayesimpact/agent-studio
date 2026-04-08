@@ -6,10 +6,8 @@ import { useCallback, useMemo } from "react"
 import { useTranslation } from "react-i18next"
 import { useNavigate } from "react-router-dom"
 import { useAppDispatch } from "@/common/store/hooks"
-import { useBuildDeskPath } from "@/desk/hooks/use-desk-build-path"
 import type { Agent } from "@/features/agents/agents.models"
-import { useBuildStudioPath } from "@/studio/hooks/use-studio-build-path"
-import { isStudioInterface } from "@/studio/routes/helpers"
+import { useBuildPath } from "@/hooks/use-build-path"
 import { createAgentSession } from "../base-agent-sessions.thunks"
 
 export function BaseAgentSessionCreator({
@@ -24,16 +22,13 @@ export function BaseAgentSessionCreator({
   const navigate = useNavigate()
   const { t } = useTranslation()
   const dispatch = useAppDispatch()
-  const { buildDeskPath } = useBuildDeskPath()
-  const { buildStudioPath } = useBuildStudioPath()
+  const { buildPath } = useBuildPath()
   const onSuccess = useCallback(
     (agentSessionId: string) => {
-      const isStudio = isStudioInterface()
-      const buildPath = isStudio ? buildStudioPath : buildDeskPath
       const path = buildPath("agentSession", { ...ids, agentSessionId })
       navigate(path)
     },
-    [buildDeskPath, buildStudioPath, ids, navigate],
+    [buildPath, ids, navigate],
   )
 
   const handleClick = useMemo(

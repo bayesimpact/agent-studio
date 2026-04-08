@@ -16,7 +16,7 @@ import { useNavigate } from "react-router-dom"
 import { useAppDispatch } from "@/common/store/hooks"
 import type { Agent } from "@/features/agents/agents.models"
 import { deleteAgent } from "@/features/agents/agents.thunks"
-import { useBuildStudioPath } from "@/studio/hooks/use-studio-build-path"
+import { useBuildPath } from "@/hooks/use-build-path"
 
 export function AgentDeletorWithTrigger({
   organizationId,
@@ -28,8 +28,8 @@ export function AgentDeletorWithTrigger({
   const navigate = useNavigate()
   const [open, setOpen] = useState(false)
 
-  const { buildStudioPath } = useBuildStudioPath()
-  const path = buildStudioPath("project", { organizationId, projectId: agent.projectId })
+  const { buildPath } = useBuildPath()
+  const path = buildPath("project", { organizationId, projectId: agent.projectId })
 
   const handleSuccess = () => {
     navigate(path, { replace: true })
@@ -66,8 +66,8 @@ export function AgentDeletorWithoutTrigger({
   onClose: () => void
 }) {
   const navigate = useNavigate()
-  const { buildStudioPath } = useBuildStudioPath()
-  const path = buildStudioPath("project", { organizationId, projectId })
+  const { buildPath } = useBuildPath()
+  const path = buildPath("project", { organizationId, projectId })
   const handleSuccess = () => {
     navigate(path, { replace: true })
     onClose()

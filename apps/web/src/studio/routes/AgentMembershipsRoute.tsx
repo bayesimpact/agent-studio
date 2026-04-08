@@ -3,13 +3,13 @@ import { useNavigate } from "react-router-dom"
 import { useAppSelector } from "@/common/store/hooks"
 import type { Agent } from "@/features/agents/agents.models"
 import { selectCurrentAgentData } from "@/features/agents/agents.selectors"
+import { useGetPath } from "@/hooks/use-build-path"
 import type { AgentMembership } from "@/studio/features/agent-memberships/agent-memberships.models"
 import { selectAgentMemberships } from "@/studio/features/agent-memberships/agent-memberships.selectors"
 import { AgentMembershipItem } from "@/studio/features/agent-memberships/components/AgentMembershipItem"
 import { MembersCreator } from "@/studio/features/agent-memberships/components/MembersCreator"
 import { AsyncRoute } from "../../common/routes/AsyncRoute"
 import { Grid, GridContent, GridHeader, GridItem } from "../components/grid/Grid"
-import { useGetStudioPath } from "../hooks/use-studio-build-path"
 
 export function AgentMembershipsRoute() {
   const agent = useAppSelector(selectCurrentAgentData)
@@ -27,9 +27,9 @@ export function AgentMembershipsRoute() {
 function WithData({ memberships, agent }: { memberships: AgentMembership[]; agent: Agent }) {
   const { t } = useTranslation()
   const navigate = useNavigate()
-  const { getStudioPath } = useGetStudioPath()
+  const { getPath } = useGetPath()
   const handleBack = () => {
-    const path = getStudioPath("agent")
+    const path = getPath("agent")
     navigate(path)
   }
   const cols = memberships.length === 0 ? 0 : 3

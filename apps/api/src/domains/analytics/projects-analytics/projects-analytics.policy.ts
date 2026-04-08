@@ -6,6 +6,6 @@ export class ProjectsAnalyticsPolicy extends ProjectPolicy {
    * `owner` is explicitly not allowed.
    */
   canList(): boolean {
-    return this.canAccessProject() && this.isProjectAdmin()
+    return this.canAccessProject() && this.isProjectAdminOrOwner()
   }
 }

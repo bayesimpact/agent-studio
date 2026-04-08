@@ -6,11 +6,11 @@ import { ADS } from "@/common/store/async-data-status"
 import { useAppSelector } from "@/common/store/hooks"
 import { OrganizationCreator } from "@/components/organization/OrganizationCreator"
 import { Logo } from "@/components/themes/Logo"
-import { useBuildDeskPath } from "@/desk/hooks/use-desk-build-path"
+import { buildDeskPath } from "@/desk/routes/helpers"
 import type { Organization } from "@/features/organizations/organizations.models"
 import { selectOrganizationsData } from "@/features/organizations/organizations.selectors"
 import { useAbility } from "@/hooks/use-ability"
-import { useBuildStudioPath } from "@/studio/hooks/use-studio-build-path"
+import { buildStudioPath } from "@/studio/routes/helpers"
 import { FullPageCenterLayout } from "../components/layouts/FullPageCenterLayout"
 import { LoadingRoute } from "./LoadingRoute"
 
@@ -47,20 +47,15 @@ export function OnboardingRoute() {
 function OrganizationItem({ organization }: { organization: Organization }) {
   const navigate = useNavigate()
   const { t } = useTranslation()
-  const { buildDeskPath } = useBuildDeskPath()
-  const { buildStudioPath } = useBuildStudioPath()
   const { abilities } = useAbility()
 
   const handleGoToStudio = () => {
-    const path = buildStudioPath("organization", { organizationId: organization.id })
+    const path = buildStudioPath(`/o/${organization.id}/`)
     navigate(path)
   }
 
   const handleGoToApp = () => {
-    const path = buildDeskPath("project", {
-      organizationId: organization.id,
-      projectId: organization.id,
-    })
+    const path = buildDeskPath(`/o/${organization.id}/`)
     navigate(path)
   }
 

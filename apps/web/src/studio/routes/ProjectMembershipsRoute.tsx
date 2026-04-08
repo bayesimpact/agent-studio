@@ -3,13 +3,13 @@ import { useNavigate } from "react-router-dom"
 import { useAppSelector } from "@/common/store/hooks"
 import type { Project } from "@/features/projects/projects.models"
 import { selectCurrentProjectData } from "@/features/projects/projects.selectors"
+import { useGetPath } from "@/hooks/use-build-path"
 import { Grid, GridContent, GridHeader, GridItem } from "@/studio/components/grid/Grid"
 import { MembersCreator } from "@/studio/features/project-memberships/components/MembersCreator"
 import { ProjectMembershipItem } from "@/studio/features/project-memberships/components/ProjectMembershipItem"
 import type { ProjectMembership } from "@/studio/features/project-memberships/project-memberships.models"
 import { selectProjectMemberships } from "@/studio/features/project-memberships/project-memberships.selectors"
 import { AsyncRoute } from "../../common/routes/AsyncRoute"
-import { useGetStudioPath } from "../hooks/use-studio-build-path"
 
 export function ProjectMembershipsRoute() {
   const project = useAppSelector(selectCurrentProjectData)
@@ -33,9 +33,9 @@ function WithData({
 }) {
   const { t } = useTranslation()
   const navigate = useNavigate()
-  const { getStudioPath } = useGetStudioPath()
+  const { getPath } = useGetPath()
   const handleBack = () => {
-    const path = getStudioPath("project")
+    const path = getPath("project")
     navigate(path)
   }
   const cols = memberships.length === 0 ? 0 : 3

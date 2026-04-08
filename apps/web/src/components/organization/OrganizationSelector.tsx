@@ -17,6 +17,7 @@ import {
   selectOrganizationsData,
 } from "@/features/organizations/organizations.selectors"
 import { buildOrganizationPath } from "@/hooks/use-build-path"
+import { isStudioInterface } from "@/studio/routes/helpers"
 
 export function OrganizationSelector({
   TriggerButton = "button",
@@ -33,7 +34,7 @@ export function OrganizationSelector({
   const organizations = useAppSelector(selectOrganizationsData)
 
   const handleOrganizationChange = (organizationId: string) => () => {
-    const path = buildOrganizationPath({ organizationId, isStudioInterface: false })
+    const path = buildOrganizationPath({ organizationId })
     navigate(path)
   }
 
@@ -65,6 +66,7 @@ export function OrganizationSelector({
         </div>
         <div className="flex flex-col gap-0.5 leading-none text-left">
           <span className="font-medium text-base">{organization.value.name}</span>
+          {isStudioInterface() && <span className="text-primary capitalize-first">Studio</span>}
         </div>
 
         {hasMultipleOrganizations && <ChevronsUpDownIcon className="ml-auto size-4" />}

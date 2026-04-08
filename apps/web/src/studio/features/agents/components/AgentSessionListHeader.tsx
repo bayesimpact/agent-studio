@@ -4,8 +4,8 @@ import { useNavigate } from "react-router-dom"
 import type { Agent } from "@/features/agents/agents.models"
 import { getAgentIcon } from "@/features/agents/components/AgentIcon"
 import { BaseAgentSessionCreator } from "@/features/agents/shared/base-agent-session/components/BaseAgentSessionCreator"
+import { useGetPath } from "@/hooks/use-build-path"
 import { Grid, GridContent, GridHeader, GridItem } from "@/studio/components/grid/Grid"
-import { useGetStudioPath } from "@/studio/hooks/use-studio-build-path"
 import { AgentActions } from "./AgentActions"
 import { FeedbackButton } from "./FeedbackButton"
 
@@ -24,10 +24,10 @@ export function AgentSessionListHeader({
 }) {
   const { t } = useTranslation()
   const navigate = useNavigate()
-  const { getStudioPath } = useGetStudioPath()
+  const { getPath } = useGetPath()
 
   const handleBack = () => {
-    const path = getStudioPath(backTo)
+    const path = getPath(backTo)
     navigate(path)
   }
 

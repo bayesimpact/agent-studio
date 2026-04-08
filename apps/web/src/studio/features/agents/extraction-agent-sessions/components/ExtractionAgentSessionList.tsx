@@ -11,9 +11,9 @@ import type { ExtractionAgentSessionSummary } from "@/features/agents/extraction
 import { selectIsProcessingExecution } from "@/features/agents/extraction-agent-sessions/extraction-agent-sessions.selectors"
 import { selectCurrentOrganizationId } from "@/features/organizations/organizations.selectors"
 import { selectCurrentProjectId } from "@/features/projects/projects.selectors"
+import { useGetPath } from "@/hooks/use-build-path"
 import { Grid, GridHeader, GridItem } from "@/studio/components/grid/Grid"
 import { ExtractionSessionItem } from "@/studio/features/agents/extraction-agent-sessions/components/ExtractionAgentSessionItem"
-import { useGetStudioPath } from "@/studio/hooks/use-studio-build-path"
 import { AgentActions } from "../../components/AgentActions"
 
 export function ExtractionAgentSessionList({
@@ -26,13 +26,13 @@ export function ExtractionAgentSessionList({
   const outlet = useOutlet()
   const { t } = useTranslation()
   const navigate = useNavigate()
-  const { getStudioPath } = useGetStudioPath()
+  const { getPath } = useGetPath()
   const organizationId = useAppSelector(selectCurrentOrganizationId)
   const projectId = useAppSelector(selectCurrentProjectId)
   const isProcessingExecution = useAppSelector(selectIsProcessingExecution)
 
   const handleBack = () => {
-    const path = getStudioPath("project")
+    const path = getPath("project")
     navigate(path)
   }
 

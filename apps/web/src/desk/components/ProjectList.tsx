@@ -9,9 +9,9 @@ import {
 import { useTranslation } from "react-i18next"
 import { useNavigate } from "react-router-dom"
 import { buildDate } from "@/common/utils/build-date"
-import { useBuildDeskPath } from "@/desk/hooks/use-desk-build-path"
 import type { Organization } from "@/features/organizations/organizations.models"
 import type { Project } from "@/features/projects/projects.models"
+import { useBuildPath } from "@/hooks/use-build-path"
 import { ListHeader } from "./ListHeader"
 
 export function ProjectList({
@@ -39,9 +39,9 @@ export function ProjectList({
 function ProjectItem({ project, organizationId }: { project: Project; organizationId: string }) {
   const navigate = useNavigate()
   const { t } = useTranslation()
-  const { buildDeskPath } = useBuildDeskPath()
+  const { buildPath } = useBuildPath()
   const handleClick = () => {
-    const path = buildDeskPath("project", { organizationId, projectId: project.id })
+    const path = buildPath("project", { organizationId, projectId: project.id })
     navigate(path)
   }
   return (

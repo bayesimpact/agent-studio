@@ -24,8 +24,8 @@ import { useAppDispatch } from "@/common/store/hooks"
 import type { Agent } from "@/features/agents/agents.models"
 import { createAgent } from "@/features/agents/agents.thunks"
 import type { Project } from "@/features/projects/projects.models"
+import { useBuildPath } from "@/hooks/use-build-path"
 import { useDocumentTags } from "@/studio/features/document-tags/document-tags.helpers"
-import { useBuildStudioPath } from "@/studio/hooks/use-studio-build-path"
 import type { AgentFormData } from "./agent-form.shared"
 import { BaseAgentForm } from "./BaseAgentForm"
 
@@ -159,10 +159,10 @@ function AgentCreation({
 }) {
   const { t } = useTranslation("agent", { keyPrefix: "create" })
   const navigate = useNavigate()
-  const { buildStudioPath } = useBuildStudioPath()
+  const { buildPath } = useBuildPath()
 
   const handleSuccess = (agent: Agent) => {
-    const path = buildStudioPath("agent", {
+    const path = buildPath("agent", {
       organizationId: project.organizationId,
       projectId: project.id,
       agentId: agent.id,

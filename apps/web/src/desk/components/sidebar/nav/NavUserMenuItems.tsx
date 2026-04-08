@@ -5,11 +5,12 @@ import {
 } from "@caseai-connect/ui/shad/dropdown-menu"
 import { ExternalLinkIcon, LogOutIcon, ShieldCheckIcon } from "lucide-react"
 import { useTranslation } from "react-i18next"
-import { useDeskGetPath } from "@/desk/hooks/use-desk-build-path"
+import { useAppSelector } from "@/common/store/hooks"
+import { buildDeskPath } from "@/desk/routes/helpers"
+import { selectCurrentOrganizationId } from "@/features/organizations/organizations.selectors"
 import { useAbility } from "@/hooks/use-ability"
 import { useAuthHandler } from "@/hooks/use-auth-handler"
-import { useGetStudioPath } from "@/studio/hooks/use-studio-build-path"
-import { isStudioInterface } from "@/studio/routes/helpers"
+import { buildStudioPath, isStudioInterface } from "@/studio/routes/helpers"
 
 export function NavUserMenuItems() {
   return (
@@ -26,26 +27,29 @@ export function NavUserMenuItems() {
 }
 
 function InterfaceToggle() {
+  const organizationId = useAppSelector(selectCurrentOrganizationId)
   const { t } = useTranslation("actions")
   const { abilities } = useAbility()
-  const { getStudioPath } = useGetStudioPath()
-  const { getDeskPath } = useDeskGetPath()
 
   const isStudio = isStudioInterface()
 
-  if (!abilities.canAccessStudio) return null
+  if (!abilities.canAccessStudio || !organizationId) return null
   return (
     <DropdownMenuGroup>
       {isStudio ? (
         <DropdownMenuItem asChild>
-          <a target="_blank" rel="noopener noreferrer" href={getDeskPath("organization")}>
+          <a target="_blank" rel="noopener noreferrer" href={buildDeskPath(`/o/${organizationId}`)}>
             <ExternalLinkIcon />
             {t("goToApp")}
           </a>
         </DropdownMenuItem>
       ) : (
         <DropdownMenuItem asChild>
-          <a target="_blank" rel="noopener noreferrer" href={getStudioPath("organization")}>
+          <a
+            target="_blank"
+            rel="noopener noreferrer"
+            href={buildStudioPath(`/o/${organizationId}`)}
+          >
             <ShieldCheckIcon />
             {t("goToStudio")}
           </a>

@@ -13,8 +13,8 @@ import { useTranslation } from "react-i18next"
 import { useAppDispatch } from "@/common/store/hooks"
 import type { Organization } from "@/features/organizations/organizations.models"
 import { createProject } from "@/features/projects/projects.thunks"
+import { useBuildPath } from "@/hooks/use-build-path"
 import { ProjectForm } from "@/studio/features/projects/components/ProjectForm"
-import { useBuildStudioPath } from "@/studio/hooks/use-studio-build-path"
 
 export function ProjectCreator({
   organization,
@@ -26,7 +26,7 @@ export function ProjectCreator({
     setOpen: (open: boolean) => void
   }
 }) {
-  const { buildStudioPath } = useBuildStudioPath()
+  const { buildPath } = useBuildPath()
   const { t } = useTranslation()
 
   const [open, setOpen] = useState(false)
@@ -34,7 +34,7 @@ export function ProjectCreator({
   const handleSuccess = (projectId: string) => {
     modalHandler ? modalHandler.setOpen(false) : setOpen(false)
 
-    const path = buildStudioPath("project", { organizationId: organization.id, projectId })
+    const path = buildPath("project", { organizationId: organization.id, projectId })
     window.location.href = path
   }
 

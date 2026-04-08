@@ -5,6 +5,7 @@ import { useNavigate } from "react-router-dom"
 import { useAppDispatch, useAppSelector } from "@/common/store/hooks"
 import type { Agent } from "@/features/agents/agents.models"
 import { selectAgentsData } from "@/features/agents/agents.selectors"
+import { useGetPath } from "@/hooks/use-build-path"
 import type { Evaluation } from "@/studio/features/evaluations/evaluations.models"
 import { selectEvaluationsData } from "@/studio/features/evaluations/evaluations.selectors"
 import { createEvaluation } from "@/studio/features/evaluations/evaluations.thunks"
@@ -14,7 +15,6 @@ import { EmptyEvaluation } from "../features/evaluations/components/EmptyEvaluat
 import { EvaluationCreator } from "../features/evaluations/components/EvaluationCreator"
 import { EvaluationItem } from "../features/evaluations/components/EvaluationItem"
 import { EvaluationRunner } from "../features/evaluations/components/EvaluationRunner"
-import { useGetStudioPath } from "../hooks/use-studio-build-path"
 
 export function EvaluationRoute() {
   const evaluations = useAppSelector(selectEvaluationsData)
@@ -33,7 +33,7 @@ function WithData({ agents, evaluations }: { agents: Agent[]; evaluations: Evalu
   const dispatch = useAppDispatch()
   const navigate = useNavigate()
   const { t } = useTranslation()
-  const { getStudioPath } = useGetStudioPath()
+  const { getPath } = useGetPath()
   const [idsToRun, setIdsToRun] = useState<string[]>([])
 
   const handleCreate = useCallback(
@@ -44,7 +44,7 @@ function WithData({ agents, evaluations }: { agents: Agent[]; evaluations: Evalu
   )
 
   const handleBack = () => {
-    const path = getStudioPath("project")
+    const path = getPath("project")
     navigate(path)
   }
   return (

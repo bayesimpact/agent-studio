@@ -13,14 +13,13 @@ import { useState } from "react"
 import { useTranslation } from "react-i18next"
 import { ADS } from "@/common/store/async-data-status"
 import { useAppSelector } from "@/common/store/hooks"
-import { useBuildDeskPath } from "@/desk/hooks/use-desk-build-path"
 import type { Organization } from "@/features/organizations/organizations.models"
 import {
   selectCurrentProjectData,
   selectProjectsData,
 } from "@/features/projects/projects.selectors"
+import { useBuildPath } from "@/hooks/use-build-path"
 import { ProjectCreator } from "@/studio/features/projects/components/ProjectCreator"
-import { useBuildStudioPath } from "@/studio/hooks/use-studio-build-path"
 import { isStudioInterface as isStudio } from "@/studio/routes/helpers"
 
 export function BreadcrumbProject({ organization }: { organization: Organization }) {
@@ -29,14 +28,12 @@ export function BreadcrumbProject({ organization }: { organization: Organization
   const isStudioInterface = isStudio()
   const projects = useAppSelector(selectProjectsData)
   const project = useAppSelector(selectCurrentProjectData)
-  const { buildStudioPath } = useBuildStudioPath()
-  const { buildDeskPath } = useBuildDeskPath()
+  const { buildPath } = useBuildPath()
   const [openProjectCreator, setOpenProjectCreator] = useState(false)
 
   if (!ADS.isFulfilled(projects) || !ADS.isFulfilled(project)) return null
 
   const handleClick = (projectId: string) => () => {
-    const buildPath = isStudioInterface ? buildStudioPath : buildDeskPath
     const path = buildPath("project", { organizationId, projectId })
     window.location.replace(path)
   }

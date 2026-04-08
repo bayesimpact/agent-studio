@@ -4,6 +4,7 @@ import { useAppSelector } from "@/common/store/hooks"
 import type { Agent } from "@/features/agents/agents.models"
 import { selectCurrentAgentData, selectCurrentAgentId } from "@/features/agents/agents.selectors"
 import { getAgentIcon } from "@/features/agents/components/AgentIcon"
+import { useGetPath } from "@/hooks/use-build-path"
 import { GridHeader } from "@/studio/components/grid/Grid"
 import type { AgentMessageFeedback } from "@/studio/features/agent-message-feedback/agent-message-feedback.models"
 import { selectFeedbacksFromAgentId } from "@/studio/features/agent-message-feedback/agent-message-feedback.selectors"
@@ -11,7 +12,6 @@ import { AsyncRoute } from "../../common/routes/AsyncRoute"
 import { ErrorRoute } from "../../common/routes/ErrorRoute"
 import { EmptyFeedback } from "../features/agent-message-feedback/components/EmptyFeedback"
 import { FeedbackItem } from "../features/agent-message-feedback/components/FeedbackItem"
-import { useGetStudioPath } from "../hooks/use-studio-build-path"
 
 export function FeedbackRoute() {
   const agentId = useAppSelector(selectCurrentAgentId)
@@ -30,10 +30,10 @@ export function FeedbackRoute() {
 function WithData({ feedbacks, agent }: { feedbacks: AgentMessageFeedback[]; agent: Agent }) {
   const { t } = useTranslation()
   const navigate = useNavigate()
-  const { getStudioPath } = useGetStudioPath()
+  const { getPath } = useGetPath()
 
   const handleBack = () => {
-    const path = getStudioPath("agent")
+    const path = getPath("agent")
     navigate(path)
   }
 

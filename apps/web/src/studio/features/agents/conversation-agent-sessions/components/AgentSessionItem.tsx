@@ -3,8 +3,8 @@ import { buildDate, buildSince } from "@/common/utils/build-date"
 import type { ConversationAgentSession } from "@/features/agents/conversation-agent-sessions/conversation-agent-sessions.models"
 import type { ExtractionAgentSession } from "@/features/agents/extraction-agent-sessions/extraction-agent-sessions.models"
 import type { FormAgentSession } from "@/features/agents/form-agent-sessions/form-agent-sessions.models"
+import { useBuildPath } from "@/hooks/use-build-path"
 import { GridItem } from "@/studio/components/grid/Grid"
-import { useBuildStudioPath } from "@/studio/hooks/use-studio-build-path"
 
 type AgentSession = ConversationAgentSession | FormAgentSession | ExtractionAgentSession
 
@@ -24,9 +24,9 @@ export function AgentSessionItem({
   projectId: string
 }) {
   const navigate = useNavigate()
-  const { buildStudioPath } = useBuildStudioPath()
+  const { buildPath } = useBuildPath()
   const handleClick = () => {
-    const path = buildStudioPath("agentSession", {
+    const path = buildPath("agentSession", {
       organizationId,
       projectId,
       agentId,

@@ -9,11 +9,11 @@ import { useTranslation } from "react-i18next"
 import { useParams } from "react-router-dom"
 import { ADS } from "@/common/store/async-data-status"
 import { useAppSelector } from "@/common/store/hooks"
-import { useBuildDeskPath } from "@/desk/hooks/use-desk-build-path"
 import type { Agent } from "@/features/agents/agents.models"
 import { selectAgentsData } from "@/features/agents/agents.selectors"
 import { getAgentIcon } from "@/features/agents/components/AgentIcon"
 import type { Project } from "@/features/projects/projects.models"
+import { useBuildPath } from "@/hooks/use-build-path"
 import { AppNavItem } from "../nav/NavItem"
 import { SidebarAgentSessionList } from "./SidebarAgentSessionList"
 
@@ -42,7 +42,7 @@ export function AgentList({
 }) {
   const { t } = useTranslation()
   const { agentId: urlagentId } = useParams()
-  const { buildDeskPath } = useBuildDeskPath()
+  const { buildPath } = useBuildPath()
 
   return (
     <SidebarGroup>
@@ -59,7 +59,7 @@ export function AgentList({
               item={{
                 id: agent.id,
                 title: agent.name,
-                url: buildDeskPath("agent", {
+                url: buildPath("agent", {
                   organizationId,
                   projectId: project.id,
                   agentId: agent.id,
