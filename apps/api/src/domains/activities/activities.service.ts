@@ -11,7 +11,7 @@ export class ActivitiesService {
   ) {}
 
   async createActivity(params: {
-    organizationId: string
+    organizationId: string | null
     projectId: string | null
     userId: string
     action: string

@@ -3,8 +3,8 @@ import { Base4AllEntity } from "@/common/entities/base4all.entity"
 
 @Entity("activity")
 export class Activity extends Base4AllEntity {
-  @Column({ type: "uuid", name: "organization_id" })
-  organizationId!: string
+  @Column({ type: "uuid", name: "organization_id", nullable: true })
+  organizationId!: string | null
 
   @Column({ type: "uuid", name: "project_id", nullable: true })
   projectId!: string | null

@@ -1,6 +1,7 @@
 import { ProjectsRoutes } from "@caseai-connect/api-contracts"
 import type { INestApplication } from "@nestjs/common"
 import type { App } from "supertest/types"
+import { bindExpectActivityCreated } from "@/common/test/activity-test.helpers"
 import { clearTestDatabase } from "@/common/test/test-database"
 import {
   type AllRepositories,
@@ -23,6 +24,7 @@ describe("Projects - deleteProject", () => {
   let projectId: string
   let accessToken: string | undefined = "token"
   let auth0Id = "auth0|123"
+  let expectActivityCreated: ReturnType<typeof bindExpectActivityCreated>
 
   beforeAll(async () => {
     setup = await setupTransactionalTestDatabase({
@@ -33,6 +35,7 @@ describe("Projects - deleteProject", () => {
     app = setup.module.createNestApplication()
     await app.init()
     request = testRequester(app)
+    expectActivityCreated = bindExpectActivityCreated(repositories.activityRepository)
   })
 
   beforeEach(async () => {
@@ -73,5 +76,6 @@ describe("Projects - deleteProject", () => {
       where: { id: projectId },
     })
     expect(deletedProject).toBeNull()
+    await expectActivityCreated("project.delete")
   })
 })

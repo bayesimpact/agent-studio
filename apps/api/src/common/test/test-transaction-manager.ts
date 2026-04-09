@@ -243,6 +243,7 @@ export async function setupTransactionalTestDatabase(
  */
 export async function teardownTestDatabase(setup: TransactionalTestSetup): Promise<void> {
   if (setup.queryRunner) {
+    console.log("rolling back transaction")
     await setup.rollbackTransaction()
   }
   await setup.dataSource.destroy()

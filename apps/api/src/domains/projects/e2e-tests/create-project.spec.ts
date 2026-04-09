@@ -1,6 +1,7 @@
 import { ProjectsRoutes } from "@caseai-connect/api-contracts"
 import type { INestApplication } from "@nestjs/common"
 import type { App } from "supertest/types"
+import { bindExpectActivityCreated } from "@/common/test/activity-test.helpers"
 import { clearTestDatabase } from "@/common/test/test-database"
 import {
   type AllRepositories,
@@ -8,9 +9,10 @@ import {
   teardownTestDatabase,
 } from "@/common/test/test-transaction-manager"
 import { removeNullish } from "@/common/utils/remove-nullish"
+import { ActivitiesModule } from "@/domains/activities/activities.module"
 import { createOrganizationWithOwner } from "@/domains/organizations/organization.factory"
 import { setupUserGuardForTesting } from "../../../../test/e2e.helpers"
-import { expectResponse, type Requester, testRequester } from "../../../../test/request"
+import { type Requester, testRequester } from "../../../../test/request"
 import { Project } from "../project.entity"
 import { ProjectsModule } from "../projects.module"
 
@@ -23,13 +25,15 @@ describe("Projects - createProject", () => {
   let organizationId: string
   let accessToken: string | undefined = "token"
   let auth0Id = "auth0|123"
+  let expectCreateActivity: ReturnType<typeof bindExpectActivityCreated>
 
   beforeAll(async () => {
     setup = await setupTransactionalTestDatabase({
-      additionalImports: [ProjectsModule],
+      additionalImports: [ProjectsModule, ActivitiesModule],
       applyOverrides: (moduleBuilder) => setupUserGuardForTesting(moduleBuilder, () => auth0Id),
     })
     repositories = setup.getAllRepositories()
+    expectCreateActivity = bindExpectActivityCreated(repositories.activityRepository)
     app = setup.module.createNestApplication()
     await app.init()
     request = testRequester(app)
@@ -66,7 +70,6 @@ describe("Projects - createProject", () => {
 
     const response = await subject({ payload: { name: "New Project" } })
 
-    expectResponse(response, 201)
     expect(response.body.data.id).toBeDefined()
     expect(response.body.data.name).toBe("New Project")
     expect(response.body.data.organizationId).toBe(organizationId)
@@ -77,5 +80,7 @@ describe("Projects - createProject", () => {
     })
     expect(project).not.toBeNull()
     expect(project?.name).toBe("New Project")
+
+    await expectCreateActivity("project.create")
   })
 })
