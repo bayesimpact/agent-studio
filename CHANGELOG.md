@@ -14,6 +14,11 @@ This project uses [CalVer](https://calver.org/) (YY.MM.Micro) for product versio
 - Better support of cloud native loggers
 
 ### Fixed
+- Breadcrumb misalignment in navigation UI
+- Navigation path builder not generating correct URLs
+- Restricted access to Studio mode for non-admin users
+- Show loader while currentId is being set
+- Studio mode redirect to Home when route not found
 
 ### Security
 

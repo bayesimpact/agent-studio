@@ -1,5 +1,6 @@
 import type { ConversationAgentSession } from "@/common/features/agents/agent-sessions/conversation/conversation-agent-sessions.models"
 import { selectCurrentConversationAgentSessionData } from "@/common/features/agents/agent-sessions/conversation/conversation-agent-sessions.selectors"
+import { selectCurrentAgentSessionId } from "@/common/features/agents/agent-sessions/current-agent-session-id/current-agent-session-id.selectors"
 import type { FormAgentSession } from "@/common/features/agents/agent-sessions/form/form-agent-sessions.models"
 import { selectCurrentFormAgentSessionData } from "@/common/features/agents/agent-sessions/form/form-agent-sessions.selectors"
 import type { AgentSessionMessage } from "@/common/features/agents/agent-sessions/shared/agent-session-messages/agent-session-messages.models"
@@ -9,6 +10,7 @@ import { selectCurrentAgentData } from "@/common/features/agents/agents.selector
 import { useAppSelector } from "@/common/store/hooks"
 import { AsyncRoute } from "../AsyncRoute"
 import { ErrorRoute } from "../ErrorRoute"
+import { LoadingRoute } from "../LoadingRoute"
 
 type AgentSession = ConversationAgentSession | FormAgentSession
 export function AgentSessionRoute({
@@ -60,8 +62,10 @@ function ConversationAgentSessionRoute({
     messages: AgentSessionMessage[],
   ) => React.ReactNode
 }) {
+  const agentSessionId = useAppSelector(selectCurrentAgentSessionId)
   const agentSession = useAppSelector(selectCurrentConversationAgentSessionData)
 
+  if (!agentSessionId) return <LoadingRoute />
   return (
     <AsyncRoute data={[agentSession]}>
       {([agentSessionValue]) => children(agent, agentSessionValue, messages)}
@@ -82,8 +86,10 @@ function FormAgentSessionRoute({
     messages: AgentSessionMessage[],
   ) => React.ReactNode
 }) {
+  const agentSessionId = useAppSelector(selectCurrentAgentSessionId)
   const agentSession = useAppSelector(selectCurrentFormAgentSessionData)
 
+  if (!agentSessionId) return <LoadingRoute />
   return (
     <AsyncRoute data={[agentSession]}>
       {([agentSessionValue]) => children(agent, agentSessionValue, messages)}

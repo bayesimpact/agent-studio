@@ -127,8 +127,10 @@ function WithData({
         <BreadcrumbItem>
           <BreadcrumbLink asChild>
             <Link to={currentSessionPath}>
-              {t(`agent:create.typeDialog.${agent.type}`)} <Icon />
-              {currentSessionName}
+              <div className="flex items-center gap-2">
+                {t(`agent:create.typeDialog.${agent.type}`)} <Icon className="size-4" />
+                {currentSessionName}
+              </div>
             </Link>
           </BreadcrumbLink>
         </BreadcrumbItem>
@@ -142,7 +144,7 @@ function WithData({
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button variant="ghost" size="sm">
-            {t(`agent:create.typeDialog.${agent.type}`)} <Icon />
+            {t(`agent:create.typeDialog.${agent.type}`)} <Icon className="size-4" />
             {currentSessionName}
             <ChevronDownIcon className="size-3.5" />
           </Button>
