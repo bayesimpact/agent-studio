@@ -6,12 +6,11 @@ import { OrganizationCreator } from "@/common/components/organization/Organizati
 import { SidebarLayout } from "@/common/components/sidebar/SidebarLayout"
 import type { Organization } from "@/common/features/organizations/organizations.models"
 import { selectOrganizationsData } from "@/common/features/organizations/organizations.selectors"
-import { useAbility } from "@/common/hooks/use-ability"
 import { ADS } from "@/common/store/async-data-status"
 import { useAppSelector } from "@/common/store/hooks"
 import { buildDeskPath } from "@/desk/routes/helpers"
 import { buildStudioPath } from "@/studio/routes/helpers"
-import { selectMe } from "../features/me/me.selectors"
+import { selectCanAccessStudioForOrganizationId, selectMe } from "../features/me/me.selectors"
 import { LoadingRoute } from "./LoadingRoute"
 
 export function OnboardingRoute() {
@@ -49,7 +48,6 @@ export function OnboardingRoute() {
 function OrganizationItem({ organization, index }: { organization: Organization; index: number }) {
   const navigate = useNavigate()
   const { t } = useTranslation()
-  const { abilities } = useAbility()
 
   const handleGoToStudio = () => {
     const path = buildStudioPath(`/o/${organization.id}/`)
@@ -61,7 +59,7 @@ function OrganizationItem({ organization, index }: { organization: Organization;
     navigate(path)
   }
 
-  const canAccessStudio = abilities.canAccessStudio
+  const canAccessStudio = useAppSelector(selectCanAccessStudioForOrganizationId(organization.id))
   return (
     <GridItem
       index={index}
