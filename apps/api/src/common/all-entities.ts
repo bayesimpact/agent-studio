@@ -2,6 +2,7 @@
 // deterministic across app variants (API, workers, tests) and avoids
 // "hidden"  runtime failures from missing relation targets.
 
+import { Activity } from "@/domains/activities/activity.entity"
 import { Agent } from "@/domains/agents/agent.entity"
 import { ConversationAgentSession } from "@/domains/agents/conversation-agent-sessions/conversation-agent-session.entity"
 import { ExtractionAgentSession } from "@/domains/agents/extraction-agent-sessions/extraction-agent-session.entity"
@@ -25,6 +26,7 @@ export const ALL_ENTITIES = [
   AgentMembership,
   AgentMessage,
   AgentMessageFeedback,
+  Activity,
   ConversationAgentSession,
   Document,
   DocumentTag,

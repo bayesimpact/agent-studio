@@ -11,6 +11,7 @@ import { Test, type TestingModule, type TestingModuleBuilder } from "@nestjs/tes
 import { getRepositoryToken, TypeOrmModule } from "@nestjs/typeorm"
 import type { ObjectLiteral, QueryRunner, Repository } from "typeorm"
 import { DataSource, EntityManager } from "typeorm"
+import { Activity } from "@/domains/activities/activity.entity"
 import { Agent } from "@/domains/agents/agent.entity"
 import { ConversationAgentSession } from "@/domains/agents/conversation-agent-sessions/conversation-agent-session.entity"
 import { ExtractionAgentSession } from "@/domains/agents/extraction-agent-sessions/extraction-agent-session.entity"
@@ -37,6 +38,7 @@ export interface TransactionalTestSetup {
   queryRunner: QueryRunner | null
   getRepository: <T extends ObjectLiteral>(entity: new () => T) => Repository<T>
   getAllRepositories: () => {
+    activityRepository: Repository<Activity>
     agentMessageFeedbackRepository: Repository<AgentMessageFeedback>
     agentMessageRepository: Repository<AgentMessage>
     agentRepository: Repository<Agent>
@@ -201,6 +203,7 @@ export async function setupTransactionalTestDatabase(
   }
 
   const getAllRepositories = () => ({
+    activityRepository: getRepository(Activity),
     userRepository: getRepository(User),
     organizationRepository: getRepository(Organization),
     organizationMembershipRepository: getRepository(OrganizationMembership),

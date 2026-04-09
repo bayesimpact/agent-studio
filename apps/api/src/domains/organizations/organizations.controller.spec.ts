@@ -1,4 +1,8 @@
 import type { OrganizationDto } from "@caseai-connect/api-contracts"
+import {
+  expectActivityMatching,
+  whereOrganizationCreated,
+} from "@/common/test/activity-test.helpers"
 import { buildEndpointRequest } from "@/common/test/request.factory"
 import { clearTestDatabase } from "@/common/test/test-database"
 import {
@@ -44,6 +48,7 @@ describe("OrganizationsController", () => {
     // Delete in order to respect foreign key constraints
     // Use query builder to delete all records (delete({}) doesn't work with empty criteria)
     await repositories.featureFlagRepository.createQueryBuilder().delete().execute()
+    await repositories.activityRepository.createQueryBuilder().delete().execute()
     await repositories.organizationMembershipRepository.createQueryBuilder().delete().execute()
     await repositories.organizationRepository.createQueryBuilder().delete().execute()
     await repositories.userRepository.createQueryBuilder().delete().execute()
@@ -89,6 +94,11 @@ describe("OrganizationsController", () => {
       })
       expect(membership).not.toBeNull()
       expect(membership?.role).toBe("owner")
+
+      await expectActivityMatching(
+        repositories.activityRepository,
+        whereOrganizationCreated({ userId: user.id, organizationId: result.id }),
+      )
     })
 
     it("should reuse existing user", async () => {
