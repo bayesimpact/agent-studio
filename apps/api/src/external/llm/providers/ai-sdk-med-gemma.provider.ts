@@ -1,4 +1,3 @@
-import "../open-telemetry-init" // !!!! first import !!!!
 import { createOpenResponses } from "@ai-sdk/open-responses"
 import { createOpenAI } from "@ai-sdk/openai"
 import type { LanguageModelV3 } from "@ai-sdk/provider"

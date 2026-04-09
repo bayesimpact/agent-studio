@@ -1,3 +1,4 @@
+import "./external/llm/open-telemetry-init" // must be first — patches http/pg before they are imported
 import { Logger } from "@nestjs/common"
 import { NestFactory } from "@nestjs/core"
 import { getLogLevels, StructuredLogger } from "@/common/logger/structured-logger"

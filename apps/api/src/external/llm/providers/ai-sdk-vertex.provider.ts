@@ -1,4 +1,3 @@
-import "../open-telemetry-init" // !!!! first import !!!!
 import { createVertex } from "@ai-sdk/google-vertex"
 import { AgentProvider } from "@caseai-connect/api-contracts"
 import { Injectable } from "@nestjs/common"

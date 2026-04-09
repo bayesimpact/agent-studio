@@ -1,4 +1,3 @@
-import "./open-telemetry-init" // !!!! first import !!!!
 import { AgentModelToAgentProvider, AgentProvider } from "@caseai-connect/api-contracts"
 import { NotImplementedException } from "@nestjs/common"
 import { generateText, jsonSchema, Output, ToolLoopAgent } from "ai"

@@ -1,3 +1,4 @@
+import "./external/llm/open-telemetry-init" // must be first — patches http/pg before they are imported
 import { readFileSync } from "node:fs"
 import { join } from "node:path"
 import { Logger, ValidationPipe } from "@nestjs/common"
