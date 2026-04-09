@@ -20,6 +20,7 @@ import { buildOrganizationPath, useGetPath } from "@/common/hooks/use-build-path
 import { RouteNames } from "@/common/routes/helpers"
 import { ADS } from "@/common/store/async-data-status"
 import { useAppSelector } from "@/common/store/hooks"
+import { DeskRouteNames } from "@/desk/routes/helpers"
 import { isStudioInterface } from "@/studio/routes/helpers"
 
 export function OrganizationSelector({
@@ -37,7 +38,7 @@ export function OrganizationSelector({
   const { getPath } = useGetPath()
 
   const handleOrganizationChange = (organizationId: string) => () => {
-    const path = buildOrganizationPath({ organizationId })
+    const path = buildOrganizationPath({ organizationId, forceInterface: DeskRouteNames.APP })
     navigate(path)
   }
 
@@ -46,7 +47,10 @@ export function OrganizationSelector({
   const hasMultipleOrganizations = organizations.value.length > 1 && !disabled
 
   const handleBack = () => {
-    navigate(projectId ? getPath("organization") : RouteNames.HOME)
+    const path = projectId
+      ? getPath("organization", { forceInterface: DeskRouteNames.APP })
+      : RouteNames.HOME
+    navigate(path)
   }
 
   if (hasMultipleOrganizations)

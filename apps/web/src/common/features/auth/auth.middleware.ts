@@ -10,6 +10,13 @@ import { acceptInvitation } from "@/studio/features/invitations/invitations.thun
 // Create typed listener middleware
 const listenerMiddleware = createListenerMiddleware<RootState, AppDispatch>()
 
+listenerMiddleware.startListening({
+  actionCreator: fetchMe.fulfilled,
+  effect: async (_, listenerApi) => {
+    listenerApi.dispatch(authActions.setStopLoading())
+  },
+})
+
 // Listen for authentication state changes and automatically fetch user data
 listenerMiddleware.startListening({
   actionCreator: authActions.setAuthenticated,

@@ -5,6 +5,7 @@ import type { Agent } from "@/common/features/agents/agents.models"
 import { AgentItem } from "@/common/features/agents/components/AgentItem"
 import type { Project } from "@/common/features/projects/projects.models"
 import { useGetPath } from "@/common/hooks/use-build-path"
+import { DeskRouteNames } from "@/desk/routes/helpers"
 
 export function AgentList({
   project,
@@ -25,8 +26,13 @@ export function AgentList({
   const { getPath } = useGetPath()
 
   const handleBack = () => {
-    const path = getPath(outlet ? "project" : "organization")
-    navigate(path)
+    if (outlet) {
+      const path = getPath("project")
+      navigate(path)
+    } else {
+      const path = getPath("organization", { forceInterface: DeskRouteNames.APP })
+      navigate(path)
+    }
   }
 
   if (outlet) return outlet

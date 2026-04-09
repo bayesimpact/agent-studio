@@ -10,47 +10,56 @@ import { useAppSelector } from "@/common/store/hooks"
 import { DeskRouteNames } from "@/desk/routes/helpers"
 import { StudioRouteNames } from "@/studio/routes/helpers"
 
-export type PathType = "organization" | "project" | "agent" | "agentSession"
+type PathType = "organization" | "project" | "agent" | "agentSession"
 
-export interface BuildPathOptions {
+interface BuildPathOptions {
   organizationId?: string
   projectId?: string
   agentId?: string
   agentSessionId?: string
 }
+type ForceInterface = {
+  forceInterface?: StudioRouteNames.STUDIO | DeskRouteNames.APP
+}
 
-const getPrefix = () =>
-  window.location.pathname.startsWith(`${StudioRouteNames.STUDIO}/`)
+const getPrefix = ({ forceInterface }: ForceInterface) =>
+  forceInterface ||
+  (window.location.pathname.startsWith(`${StudioRouteNames.STUDIO}/`)
     ? StudioRouteNames.STUDIO
-    : DeskRouteNames.APP
+    : DeskRouteNames.APP)
 
-export const buildOrganizationPath = ({ organizationId }: { organizationId: string }) => {
-  const path = `/o/${organizationId}/`
-  return `${getPrefix()}${path}`
+export const buildOrganizationPath = ({
+  organizationId,
+  ...props
+}: { organizationId: string } & ForceInterface) => {
+  const path = `${RouteNames.ORGANIZATION_DASHBOARD.replace(":organizationId", organizationId)}/`
+  return `${getPrefix(props)}${path}`
 }
 
 const buildProjectPath = ({
   organizationId,
   projectId,
+  ...props
 }: {
   organizationId: string
   projectId: string
-}) => {
-  const path = `/o/${organizationId}/p/${projectId}`
-  return `${getPrefix()}${path}`
+} & ForceInterface) => {
+  const path = `${RouteNames.PROJECT.replace(":organizationId", organizationId).replace(":projectId", projectId)}/`
+  return `${getPrefix(props)}${path}`
 }
 
 const buildAgentPath = ({
   organizationId,
   projectId,
   agentId,
+  ...props
 }: {
   organizationId: string
   projectId: string
   agentId: string
-}) => {
-  const path = `/o/${organizationId}/p/${projectId}/a/${agentId}`
-  return `${getPrefix()}${path}`
+} & ForceInterface) => {
+  const path = `${RouteNames.AGENT.replace(":organizationId", organizationId).replace(":projectId", projectId).replace(":agentId", agentId)}/`
+  return `${getPrefix(props)}${path}`
 }
 
 const buildAgentSessionPath = ({
@@ -58,14 +67,15 @@ const buildAgentSessionPath = ({
   projectId,
   agentId,
   agentSessionId,
+  ...props
 }: {
   organizationId: string
   projectId: string
   agentId: string
   agentSessionId: string
-}) => {
-  const path = `/o/${organizationId}/p/${projectId}/a/${agentId}/as/${agentSessionId}`
-  return `${getPrefix()}${path}`
+} & ForceInterface) => {
+  const path = `${RouteNames.AGENT_SESSION.replace(":organizationId", organizationId).replace(":projectId", projectId).replace(":agentId", agentId).replace(":agentSessionId", agentSessionId)}/`
+  return `${getPrefix(props)}${path}`
 }
 
 export function useClosestParentPath() {
@@ -188,15 +198,17 @@ export function useGetPath() {
     agentSessionId: urlagentSessionId,
   } = useParams()
 
-  const computePath = (pathType: PathType): string => {
+  const computePath = (pathType: PathType, options?: ForceInterface): string => {
     const organizationId = urlOrganizationId
     const projectId = urlProjectId
     const agentId = urlagentId
     const agentSessionId = urlagentSessionId
+    const forceInterface = options?.forceInterface
 
     const organizationPath = organizationId
       ? buildOrganizationPath({
           organizationId,
+          forceInterface,
         })
       : RouteNames.HOME
 
@@ -209,6 +221,7 @@ export function useGetPath() {
         ? buildProjectPath({
             organizationId,
             projectId,
+            forceInterface,
           })
         : organizationPath
 
@@ -222,6 +235,7 @@ export function useGetPath() {
             organizationId,
             projectId,
             agentId,
+            forceInterface,
           })
         : projectPath
 
@@ -236,6 +250,7 @@ export function useGetPath() {
             projectId,
             agentId,
             agentSessionId,
+            forceInterface,
           })
         : agentPath
 
@@ -246,23 +261,25 @@ export function useGetPath() {
     return RouteNames.HOME
   }
 
-  function getPath(pathType: PathType): string {
-    return computePath(pathType)
+  function getPath(pathType: PathType, options?: ForceInterface): string {
+    return computePath(pathType, options)
   }
 
   return { getPath }
 }
 
 export function useBuildPath() {
-  const computePath = (pathType: PathType, options: BuildPathOptions): string => {
+  const computePath = (pathType: PathType, options: BuildPathOptions & ForceInterface): string => {
     const organizationId = options.organizationId
     const projectId = options.projectId
     const agentId = options.agentId
     const agentSessionId = options.agentSessionId
+    const forceInterface = options.forceInterface
 
     const organizationPath = organizationId
       ? buildOrganizationPath({
           organizationId,
+          forceInterface,
         })
       : RouteNames.HOME
 
@@ -275,6 +292,7 @@ export function useBuildPath() {
         ? buildProjectPath({
             organizationId,
             projectId,
+            forceInterface,
           })
         : organizationPath
 
@@ -288,6 +306,7 @@ export function useBuildPath() {
             organizationId,
             projectId,
             agentId,
+            forceInterface,
           })
         : projectPath
 
@@ -302,6 +321,7 @@ export function useBuildPath() {
             projectId,
             agentId,
             agentSessionId,
+            forceInterface,
           })
         : agentPath
 
@@ -320,15 +340,18 @@ export function useBuildPath() {
         projectId: string
         agentId: string
         agentSessionId: string
-      },
+      } & ForceInterface,
     ): string
     (
       pathType: "agent",
-      options: { organizationId: string; projectId: string; agentId: string },
+      options: { organizationId: string; projectId: string; agentId: string } & ForceInterface,
     ): string
 
-    (pathType: "project", options: { organizationId: string; projectId: string }): string
-    (pathType: "organization", options: { organizationId: string }): string
+    (
+      pathType: "project",
+      options: { organizationId: string; projectId: string } & ForceInterface,
+    ): string
+    (pathType: "organization", options: { organizationId: string } & ForceInterface): string
   } = (pathType: PathType, options: BuildPathOptions): string => {
     return computePath(pathType, options)
   }
