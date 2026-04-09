@@ -10,6 +10,6 @@ export function Studio() {
   const { abilities } = useAbility()
   const canAccessStudio = abilities.canAccessStudio(organizationId)
   useInitStore(canAccessStudio)
-  if (!canAccessStudio) return <NotFoundRoute />
+  if (!canAccessStudio) return <NotFoundRoute redirectToHome />
   return <Outlet />
 }

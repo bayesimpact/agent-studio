@@ -130,62 +130,69 @@ export function useClosestParentPath() {
     [agentSessions],
   )
 
-  const getClosestParentPath = useCallback((): string => {
-    const organizationId = urlOrganizationId
-    const projectId = urlProjectId
-    const agentId = urlagentId
-    const agentSessionId = urlagentSessionId
+  const getClosestParentPath = useCallback(
+    (redirectToHome?: boolean): string => {
+      const organizationId = urlOrganizationId
+      const projectId = urlProjectId
+      const agentId = urlagentId
+      const agentSessionId = urlagentSessionId
 
-    const organizationFound = foundOrganization(organizationId)
-    const projectFound = foundProject(projectId)
-    const agentFound = foundagent(agentId)
-    const agentSessionFound = foundagentSession(agentSessionId)
+      const organizationFound = foundOrganization(organizationId)
+      const projectFound = foundProject(projectId)
+      const agentFound = foundagent(agentId)
+      const agentSessionFound = foundagentSession(agentSessionId)
 
-    const organizationPath = organizationFound
-      ? buildOrganizationPath({
-          organizationId: organizationFound.id,
-        })
-      : RouteNames.HOME
+      if (redirectToHome) {
+        return RouteNames.HOME
+      }
 
-    const projectPath =
-      organizationFound && projectFound
-        ? buildProjectPath({
+      const organizationPath = organizationFound
+        ? buildOrganizationPath({
             organizationId: organizationFound.id,
-            projectId: projectFound.id,
           })
-        : organizationPath
+        : RouteNames.HOME
 
-    const agentPath =
-      organizationFound && projectFound && agentFound
-        ? buildAgentPath({
-            organizationId: organizationFound.id,
-            projectId: projectFound.id,
-            agentId: agentFound.id,
-          })
-        : projectPath
+      const projectPath =
+        organizationFound && projectFound
+          ? buildProjectPath({
+              organizationId: organizationFound.id,
+              projectId: projectFound.id,
+            })
+          : organizationPath
 
-    const agentSessionPath =
-      organizationFound && projectFound && agentFound && agentSessionFound
-        ? buildAgentSessionPath({
-            organizationId: organizationFound.id,
-            projectId: projectFound.id,
-            agentId: agentFound.id,
-            agentSessionId: agentSessionFound.id,
-          })
-        : agentPath
+      const agentPath =
+        organizationFound && projectFound && agentFound
+          ? buildAgentPath({
+              organizationId: organizationFound.id,
+              projectId: projectFound.id,
+              agentId: agentFound.id,
+            })
+          : projectPath
 
-    // closestParent
-    return agentSessionPath || agentPath || projectPath || organizationPath || RouteNames.HOME
-  }, [
-    foundagent,
-    foundagentSession,
-    foundOrganization,
-    foundProject,
-    urlagentId,
-    urlagentSessionId,
-    urlOrganizationId,
-    urlProjectId,
-  ])
+      const agentSessionPath =
+        organizationFound && projectFound && agentFound && agentSessionFound
+          ? buildAgentSessionPath({
+              organizationId: organizationFound.id,
+              projectId: projectFound.id,
+              agentId: agentFound.id,
+              agentSessionId: agentSessionFound.id,
+            })
+          : agentPath
+
+      // closestParent
+      return agentSessionPath || agentPath || projectPath || organizationPath || RouteNames.HOME
+    },
+    [
+      foundagent,
+      foundagentSession,
+      foundOrganization,
+      foundProject,
+      urlagentId,
+      urlagentSessionId,
+      urlOrganizationId,
+      urlProjectId,
+    ],
+  )
 
   return { getClosestParentPath }
 }
