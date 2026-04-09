@@ -3,19 +3,11 @@ import { createSlice, type PayloadAction } from "@reduxjs/toolkit"
 interface State {
   isLoading: boolean
   isAuthenticated: boolean
-  abilities: {
-    canAccessStudio: boolean
-    canReadAgent: boolean
-  }
 }
 
 const initialState: State = {
   isLoading: true,
   isAuthenticated: false,
-  abilities: {
-    canAccessStudio: false,
-    canReadAgent: false,
-  },
 }
 
 const slice = createSlice({
@@ -24,9 +16,6 @@ const slice = createSlice({
   reducers: {
     setAuthenticated: (state, action: PayloadAction<boolean>) => {
       state.isAuthenticated = action.payload
-    },
-    setAbilities: (state, action: PayloadAction<State["abilities"]>) => {
-      state.abilities = action.payload
     },
     setStopLoading: (state) => {
       state.isLoading = false

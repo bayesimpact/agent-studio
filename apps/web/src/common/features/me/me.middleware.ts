@@ -1,29 +1,10 @@
 import { createListenerMiddleware } from "@reduxjs/toolkit"
 import { notificationsActions } from "@/common/features/notifications/notifications.slice"
-import { hasOrganizationChanged } from "@/common/features/organizations/organizations.selectors"
-import { hasProjectChanged } from "@/common/features/projects/projects.selectors"
-import { ADS } from "@/common/store/async-data-status"
 import type { AppDispatch, RootState } from "@/common/store/types"
 import { logoutAuth0 } from "@/external/auth0Client"
-import { selectMe } from "./me.selectors"
-import { computeAbilities, fetchMe } from "./me.thunks"
+import { fetchMe } from "./me.thunks"
 
 const listenerMiddleware = createListenerMiddleware<RootState, AppDispatch>()
-
-listenerMiddleware.startListening({
-  predicate(_, currentState, originalState) {
-    return (
-      hasOrganizationChanged(originalState, currentState) ||
-      hasProjectChanged(originalState, currentState)
-    )
-  },
-  effect: async (_, listenerApi) => {
-    const state = listenerApi.getState()
-    const me = selectMe(state)
-    if (!ADS.isFulfilled(me)) return
-    listenerApi.dispatch(computeAbilities({ memberships: me.value.memberships }))
-  },
-})
 
 listenerMiddleware.startListening({
   actionCreator: fetchMe.rejected,

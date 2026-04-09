@@ -20,10 +20,11 @@ import {
   selectOrganizationsStatus,
 } from "@/common/features/organizations/organizations.selectors"
 import { createOrganization } from "@/common/features/organizations/organizations.thunks"
+import { useBuildPath } from "@/common/hooks/use-build-path"
 import { ErrorRoute } from "@/common/routes/ErrorRoute"
 import { ADS } from "@/common/store/async-data-status"
 import { useAppDispatch, useAppSelector } from "@/common/store/hooks"
-import { buildOrganizationDashboardPath } from "@/studio/routes/helpers"
+import { StudioRouteNames } from "@/studio/routes/helpers"
 import { FullPageCenterLayout } from "../layouts/FullPageCenterLayout"
 
 export function OrganizationCreator() {
@@ -33,6 +34,7 @@ export function OrganizationCreator() {
   const navigate = useNavigate()
   const status = useAppSelector(selectOrganizationsStatus)
   const error = useAppSelector(selectOrganizationsError)
+  const { buildPath } = useBuildPath()
 
   const createOrganizationSchema = z.object({
     name: z.string().min(3, t("validation.minNameLength")),
@@ -51,11 +53,11 @@ export function OrganizationCreator() {
   const onSubmit = async (data: CreateOrganizationFormData) => {
     const createdOrganization = await dispatch(createOrganization({ name: data.name })).unwrap()
 
-    navigate(
-      buildOrganizationDashboardPath({
-        organizationId: createdOrganization.id,
-      }),
-    )
+    const path = buildPath("organization", {
+      organizationId: createdOrganization.id,
+      forceInterface: StudioRouteNames.STUDIO,
+    })
+    navigate(path)
   }
 
   const isLoading = ADS.isLoading(status)

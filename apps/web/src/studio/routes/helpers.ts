@@ -1,5 +1,3 @@
-import { RouteNames } from "@/common/routes/helpers"
-
 export enum StudioRouteNames {
   // STUDIO ROUTES
   STUDIO = "/studio",
@@ -16,12 +14,6 @@ export const buildStudioPath = (path: string) => {
   return `${StudioRouteNames.STUDIO}${path}`
 }
 
-export const buildOrganizationDashboardPath = ({ organizationId }: { organizationId: string }) => {
-  return buildStudioPath(
-    RouteNames.ORGANIZATION_DASHBOARD.toString().replace(":organizationId", organizationId),
-  )
-}
-
 export const buildDocumentsPath = ({
   organizationId,
   projectId,
@@ -30,9 +22,10 @@ export const buildDocumentsPath = ({
   projectId: string
 }) => {
   return buildStudioPath(
-    StudioRouteNames.DOCUMENTS.toString()
-      .replace(":organizationId", organizationId)
-      .replace(":projectId", projectId),
+    StudioRouteNames.DOCUMENTS.replace(":organizationId", organizationId).replace(
+      ":projectId",
+      projectId,
+    ),
   )
 }
 
@@ -44,9 +37,10 @@ export const buildAnalyticsPath = ({
   projectId: string
 }) => {
   return buildStudioPath(
-    StudioRouteNames.ANALYTICS.toString()
-      .replace(":organizationId", organizationId)
-      .replace(":projectId", projectId),
+    StudioRouteNames.ANALYTICS.replace(":organizationId", organizationId).replace(
+      ":projectId",
+      projectId,
+    ),
   )
 }
 
@@ -58,9 +52,10 @@ export const buildEvaluationPath = ({
   projectId: string
 }) => {
   return buildStudioPath(
-    StudioRouteNames.EVALUATION.toString()
-      .replace(":organizationId", organizationId)
-      .replace(":projectId", projectId),
+    StudioRouteNames.EVALUATION.replace(":organizationId", organizationId).replace(
+      ":projectId",
+      projectId,
+    ),
   )
 }
 
@@ -74,8 +69,7 @@ export const buildFeedbackPath = ({
   agentId: string
 }) => {
   return buildStudioPath(
-    StudioRouteNames.FEEDBACK.toString()
-      .replace(":organizationId", organizationId)
+    StudioRouteNames.FEEDBACK.replace(":organizationId", organizationId)
       .replace(":projectId", projectId)
       .replace(":agentId", agentId),
   )
@@ -89,9 +83,10 @@ export const buildProjectMembershipsPath = ({
   projectId: string
 }) => {
   return buildStudioPath(
-    StudioRouteNames.PROJECT_MEMBERSHIPS.toString()
-      .replace(":organizationId", organizationId)
-      .replace(":projectId", projectId),
+    StudioRouteNames.PROJECT_MEMBERSHIPS.replace(":organizationId", organizationId).replace(
+      ":projectId",
+      projectId,
+    ),
   )
 }
 
@@ -105,8 +100,7 @@ export const buildAgentMembershipsPath = ({
   agentId: string
 }) => {
   return buildStudioPath(
-    StudioRouteNames.AGENT_MEMBERSHIPS.toString()
-      .replace(":organizationId", organizationId)
+    StudioRouteNames.AGENT_MEMBERSHIPS.replace(":organizationId", organizationId)
       .replace(":projectId", projectId)
       .replace(":agentId", agentId),
   )

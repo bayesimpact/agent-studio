@@ -1,7 +1,7 @@
 import { SidebarMenuButton } from "@caseai-connect/ui/shad/sidebar"
 import { ExternalLinkIcon } from "lucide-react"
 import { useTranslation } from "react-i18next"
-import { useOutlet } from "react-router-dom"
+import { useLocation, useOutlet } from "react-router-dom"
 import { SidebarAgentList } from "@/common/components/sidebar/list/SidebarAgentList"
 import { SidebarLayout } from "@/common/components/sidebar/SidebarLayout"
 import type { User } from "@/common/features/me/me.models"
@@ -11,7 +11,8 @@ import type { Project } from "@/common/features/projects/projects.models"
 import { selectCurrentProjectData } from "@/common/features/projects/projects.selectors"
 import { useAbility } from "@/common/hooks/use-ability"
 import { useAppSelector } from "@/common/store/hooks"
-import { buildStudioPath } from "@/studio/routes/helpers"
+import { StudioRouteNames } from "@/studio/routes/helpers"
+import { DeskRouteNames } from "./helpers"
 
 export function DeskDashboardRoute({
   user,
@@ -44,7 +45,11 @@ export function DeskDashboardRoute({
 function SidebarFooterChildren({ organizationId }: { organizationId: string }) {
   const { t } = useTranslation()
   const { abilities } = useAbility()
-  if (!abilities.canAccessStudio) return null
+  const location = useLocation()
+
+  const studioPath = location.pathname.replace(DeskRouteNames.APP, StudioRouteNames.STUDIO)
+
+  if (!abilities.canAccessStudio(organizationId)) return null
   return (
     <SidebarMenuButton
       variant="outline"
@@ -55,7 +60,7 @@ function SidebarFooterChildren({ organizationId }: { organizationId: string }) {
         target="_blank"
         className="text-center w-full flex items-center justify-center"
         rel="noopener noreferrer"
-        href={buildStudioPath(`/o/${organizationId}`)}
+        href={studioPath}
       >
         <ExternalLinkIcon />
         {t("actions:goToStudio")}

@@ -8,9 +8,10 @@ import type { Organization } from "@/common/features/organizations/organizations
 import { selectOrganizationsData } from "@/common/features/organizations/organizations.selectors"
 import { ADS } from "@/common/store/async-data-status"
 import { useAppSelector } from "@/common/store/hooks"
-import { buildDeskPath } from "@/desk/routes/helpers"
-import { buildStudioPath } from "@/studio/routes/helpers"
+import { DeskRouteNames } from "@/desk/routes/helpers"
+import { StudioRouteNames } from "@/studio/routes/helpers"
 import { selectCanAccessStudioForOrganizationId, selectMe } from "../features/me/me.selectors"
+import { useBuildPath } from "../hooks/use-build-path"
 import { LoadingRoute } from "./LoadingRoute"
 
 export function OnboardingRoute() {
@@ -48,18 +49,25 @@ export function OnboardingRoute() {
 function OrganizationItem({ organization, index }: { organization: Organization; index: number }) {
   const navigate = useNavigate()
   const { t } = useTranslation()
+  const canAccessStudio = useAppSelector(selectCanAccessStudioForOrganizationId(organization.id))
+  const { buildPath } = useBuildPath()
 
   const handleGoToStudio = () => {
-    const path = buildStudioPath(`/o/${organization.id}/`)
+    const path = buildPath("organization", {
+      organizationId: organization.id,
+      forceInterface: StudioRouteNames.STUDIO,
+    })
     navigate(path)
   }
 
   const handleGoToApp = () => {
-    const path = buildDeskPath(`/o/${organization.id}/`)
+    const path = buildPath("organization", {
+      organizationId: organization.id,
+      forceInterface: DeskRouteNames.APP,
+    })
     navigate(path)
   }
 
-  const canAccessStudio = useAppSelector(selectCanAccessStudioForOrganizationId(organization.id))
   return (
     <GridItem
       index={index}
@@ -71,6 +79,7 @@ function OrganizationItem({ organization, index }: { organization: Organization;
           <Button variant={canAccessStudio ? "outline" : "default"} onClick={handleGoToApp}>
             {t("actions:goToApp")}
           </Button>
+
           {canAccessStudio && <Button onClick={handleGoToStudio}>{t("actions:goToStudio")}</Button>}
         </div>
       }

@@ -11,9 +11,16 @@ export const selectIsPremiumMember = (state: RootState): boolean => {
   return !!state.me.data?.value?.email.endsWith(emailDomain)
 }
 
-const ownerOrAdmin = ["owner", "admin"] as Partial<
+export const ownerOrAdminRoles = ["owner", "admin"] as Partial<
   Me["user"]["memberships"]["organizationMemberships"][number]["role"]
 >[]
+
+export const selectOrganizationMemberships = (state: RootState) =>
+  state.me.data.value?.memberships.organizationMemberships
+
+export const selectProjectMemberships = (state: RootState) =>
+  state.me.data.value?.memberships.projectMemberships
+
 export const selectCanAccessStudioForOrganizationId =
   (organizationId: string) =>
   (state: RootState): boolean => {
@@ -21,6 +28,12 @@ export const selectCanAccessStudioForOrganizationId =
     if (!memberships) return false
     return memberships.organizationMemberships.some(
       (membership) =>
-        membership.organizationId === organizationId && ownerOrAdmin.includes(membership.role),
+        membership.organizationId === organizationId && ownerOrAdminRoles.includes(membership.role),
     )
   }
+
+export const selectCanAccessStudioForCurrentOrganizationId = (state: RootState): boolean => {
+  const organizationId = state.organizations.currentOrganizationId
+  if (!organizationId) return false
+  return selectCanAccessStudioForOrganizationId(organizationId)(state)
+}

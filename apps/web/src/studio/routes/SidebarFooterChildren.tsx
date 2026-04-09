@@ -14,11 +14,11 @@ import {
   Loader2Icon,
   UsersIcon,
 } from "lucide-react"
-import { useMemo } from "react"
 import { useTranslation } from "react-i18next"
-import { Link, useLocation } from "react-router-dom"
+import { Link } from "react-router-dom"
 import { RestrictedFeature } from "@/common/components/RestrictedFeature"
 import type { Project } from "@/common/features/projects/projects.models"
+import { useIsRoute } from "@/common/hooks/use-is-route"
 import { useAppSelector } from "@/common/store/hooks"
 import { selectUploaderState } from "../features/documents/documents.selectors"
 import {
@@ -26,6 +26,7 @@ import {
   buildDocumentsPath,
   buildEvaluationPath,
   buildProjectMembershipsPath,
+  StudioRouteNames,
 } from "./helpers"
 
 export function SidebarFooterChildren({ project }: { project: Project }) {
@@ -64,7 +65,8 @@ function NavProjectMemberships({
   projectId: string
 }) {
   const { t } = useTranslation()
-  const isActive = useIsProjectMembershipsActive(projectId)
+  const { isRoute } = useIsRoute()
+  const isActive = isRoute(StudioRouteNames.PROJECT_MEMBERSHIPS)
   const path = buildProjectMembershipsPath({ organizationId, projectId })
   return (
     <SidebarMenuItem>
@@ -78,11 +80,6 @@ function NavProjectMemberships({
   )
 }
 
-function useIsProjectMembershipsActive(projectId: string) {
-  const location = useLocation()
-  return useMemo(() => location.pathname.endsWith(`/p/${projectId}/members`), [location, projectId])
-}
-
 function NavAnalytics({
   organizationId,
   projectId,
@@ -91,7 +88,8 @@ function NavAnalytics({
   projectId: string
 }) {
   const { t } = useTranslation("analytics")
-  const isActive = useIsAnalyticsActive(projectId)
+  const { isRoute } = useIsRoute()
+  const isActive = isRoute(StudioRouteNames.ANALYTICS)
   const path = buildAnalyticsPath({ organizationId, projectId })
   return (
     <SidebarMenuItem>
@@ -105,14 +103,6 @@ function NavAnalytics({
   )
 }
 
-function useIsAnalyticsActive(projectId: string) {
-  const location = useLocation()
-  return useMemo(
-    () => location.pathname.endsWith(`/p/${projectId}/analytics`),
-    [location.pathname, projectId],
-  )
-}
-
 function NavDocuments({
   organizationId,
   projectId,
@@ -121,8 +111,8 @@ function NavDocuments({
   projectId: string
 }) {
   const { t } = useTranslation()
-  const isActive = useIsDocumentsActive(projectId)
-
+  const { isRoute } = useIsRoute()
+  const isActive = isRoute(StudioRouteNames.DOCUMENTS)
   const path = buildDocumentsPath({ organizationId, projectId })
   return (
     <SidebarMenuItem>
@@ -159,11 +149,6 @@ function UploaderState() {
   )
 }
 
-function useIsDocumentsActive(projectId: string) {
-  const location = useLocation()
-  return useMemo(() => location.pathname.endsWith(`/p/${projectId}/d`), [location, projectId])
-}
-
 export function NavEvaluation({
   organizationId,
   projectId,
@@ -172,7 +157,8 @@ export function NavEvaluation({
   projectId: string
 }) {
   const { t } = useTranslation()
-  const isActive = useIsEvaluationActive(projectId)
+  const { isRoute } = useIsRoute()
+  const isActive = isRoute(StudioRouteNames.EVALUATION)
   const path = buildEvaluationPath({ organizationId, projectId })
   return (
     <SidebarMenuItem>
@@ -184,9 +170,4 @@ export function NavEvaluation({
       </SidebarMenuButton>
     </SidebarMenuItem>
   )
-}
-
-function useIsEvaluationActive(projectId: string) {
-  const location = useLocation()
-  return useMemo(() => location.pathname.endsWith(`/p/${projectId}/eval`), [location, projectId])
 }
