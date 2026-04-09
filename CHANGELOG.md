@@ -8,6 +8,7 @@ This project uses [CalVer](https://calver.org/) (YY.MM.Micro) for product versio
 ## [Unreleased]
 
 ### Added
+- Link to Help Center
 
 ### Changed
 - New user interface to list organizations, workspaces, agents, sessions
