@@ -9,7 +9,6 @@ jobs:
   tests:
     runs-on:
       labels: ubuntu-latest-m
-    environment: test
     steps:
       - name: Use Node.js
         uses: actions/setup-node@v4

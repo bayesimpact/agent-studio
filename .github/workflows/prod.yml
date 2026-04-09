@@ -37,7 +37,6 @@ jobs:
     if: needs.check-changes.outputs.deploy == 'true'
     runs-on:
       labels: ubuntu-latest-m
-    environment: test
     steps:
       - name: Use Node.js
         uses: actions/setup-node@v4
@@ -58,7 +57,7 @@ jobs:
 
   dispatch:
     needs: [check-changes, tests]
-    if: needs.check-changes.outputs.deploy == 'true'
+    if: ${{ always() && needs.check-changes.result == 'success' && needs.tests.result != 'failure' }}
     runs-on: ubuntu-latest
     steps:
       - name: Generate GitHub App token
@@ -74,7 +73,8 @@ jobs:
           gh api repos/${{ github.repository_owner }}/infra/dispatches \
             -f event_type=deploy \
             -f "client_payload[sha]=${{ github.sha }}" \
-            -f "client_payload[repo]=${{ github.repository }}"
+            -f "client_payload[repo]=${{ github.repository }}" \
+            -f "client_payload[deploy_api]=${{ needs.check-changes.outputs.deploy }}"
         env:
           GH_TOKEN: ${{ steps.app-token.outputs.token }}
 
