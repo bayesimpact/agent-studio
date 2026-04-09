@@ -11,6 +11,7 @@ This project uses [CalVer](https://calver.org/) (YY.MM.Micro) for product versio
 
 ### Changed
 - New user interface to list organizations, workspaces, agents, sessions
+- Better support of cloud native loggers
 
 ### Fixed
 
