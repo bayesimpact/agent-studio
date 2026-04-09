@@ -1,16 +1,21 @@
 import { readFileSync } from "node:fs"
 import { join } from "node:path"
-import { ValidationPipe } from "@nestjs/common"
+import { Logger, ValidationPipe } from "@nestjs/common"
 import { NestFactory } from "@nestjs/core"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS
 import { NestExpressApplication } from "@nestjs/platform-express"
 import { AppModule } from "./app.module"
 import { StackTraceLoggingExceptionFilter } from "./common/filters/stack-trace-logging-exception.filter"
+import { getLogLevels, StructuredLogger } from "./common/logger/structured-logger"
+
+const isProduction = process.env.NODE_ENV === "production"
 
 async function bootstrap() {
   const frontendUrl = normalizeFrontendUrl(process.env.FRONTEND_URL)
   const httpsOptions = loadHttpsCertificates()
+  const logLevels = getLogLevels()
   const app = await NestFactory.create<NestExpressApplication>(AppModule, {
+    logger: isProduction ? new StructuredLogger(logLevels) : logLevels,
     ...(httpsOptions && { httpsOptions }),
   })
   app.useBodyParser("json", { limit: "500kb" })
@@ -33,7 +38,7 @@ async function bootstrap() {
   })
   const protocol = httpsOptions ? "https" : "http"
   await app.listen(3000)
-  console.log(`API server running on ${protocol}://connect.localhost:3000`)
+  Logger.log(`API server running on ${protocol}://connect.localhost:3000`, "Bootstrap")
 }
 
 function normalizeFrontendUrl(frontendUrl: string | undefined): string | undefined {

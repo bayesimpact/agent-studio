@@ -1,5 +1,5 @@
 import { InjectQueue } from "@nestjs/bullmq"
-import { Injectable } from "@nestjs/common"
+import { Injectable, Logger } from "@nestjs/common"
 import type { Queue } from "bullmq"
 import {
   DOCUMENT_EMBEDDINGS_JOB_NAME,
@@ -9,6 +9,8 @@ import type { CreateDocumentEmbeddingsJobPayload } from "./document-embeddings.t
 
 @Injectable()
 export class BullMqDocumentEmbeddingsBatchService {
+  private readonly logger = new Logger(BullMqDocumentEmbeddingsBatchService.name)
+
   constructor(
     @InjectQueue(DOCUMENT_EMBEDDINGS_QUEUE_NAME)
     private readonly documentEmbeddingsQueue: Queue<CreateDocumentEmbeddingsJobPayload>,
@@ -17,7 +19,7 @@ export class BullMqDocumentEmbeddingsBatchService {
   async enqueueCreateEmbeddingsForDocument(
     payload: CreateDocumentEmbeddingsJobPayload,
   ): Promise<void> {
-    console.log("Enqueuing document embeddings job", payload)
+    this.logger.log(`Enqueuing document embeddings job ${JSON.stringify(payload)}`)
     await this.documentEmbeddingsQueue.add(DOCUMENT_EMBEDDINGS_JOB_NAME, payload)
   }
 }

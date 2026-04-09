@@ -1,3 +1,4 @@
+import { Logger } from "@nestjs/common"
 import { GoogleAuth } from "google-auth-library"
 
 export const gcpCredentialsCheck = async (): Promise<boolean> => {
@@ -10,7 +11,7 @@ export const gcpCredentialsCheck = async (): Promise<boolean> => {
     const token = await client.getAccessToken()
     check = !!token
   } catch (err) {
-    console.error("AUTH ERROR:", JSON.stringify(err))
+    Logger.error(`GCP auth check failed: ${JSON.stringify(err)}`, undefined, "GcpTools")
   }
   return check
 }
