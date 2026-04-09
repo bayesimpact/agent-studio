@@ -7,10 +7,6 @@ export class OrganizationPolicy {
 
   canCreate(): boolean {
     const normalizedEmail = this.user.email.trim().toLowerCase()
-    console.log(
-      `❤️‍🩹 ❤️‍🩹 ❤️‍🩹 normalizedEmail: ${normalizedEmail}`,
-      `ALLOWED_ORGANIZATION_CREATOR_EMAIL_DOMAIN: ${ALLOWED_ORGANIZATION_CREATOR_EMAIL_DOMAIN}`,
-    )
     return normalizedEmail.endsWith(ALLOWED_ORGANIZATION_CREATOR_EMAIL_DOMAIN)
   }
 }

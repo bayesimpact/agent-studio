@@ -45,7 +45,7 @@ export class DocumentEmbeddingStatusStreamService implements OnModuleInit, OnMod
     })
 
     listenerClient.on("notification", (notification) => {
-      console.log("NOTIFICATION", notification)
+      this.logger.debug(`Received notification: ${JSON.stringify(notification)}`)
       if (!notification.payload) return
       try {
         const parsedPayload = JSON.parse(

@@ -42,7 +42,7 @@ COPY --from=build /app/node_modules node_modules
 #
 FROM runtime-base AS api-runtime
 
-CMD ["node", "/app/apps/api/dist/main.js"]
+CMD ["node", "--enable-source-maps", "/app/apps/api/dist/main.js"]
 
 #
 # 🚀 Workers Runtime (Docling enabled)
@@ -80,4 +80,4 @@ RUN python3 -m venv /opt/docling-venv \
     --max-nodes 1 \
   && ln -s /opt/docling-venv/bin/docling /usr/local/bin/docling
 
-CMD ["node", "/app/apps/api/dist/workers-main.js"]
+CMD ["node", "--enable-source-maps", "/app/apps/api/dist/workers-main.js"]

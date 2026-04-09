@@ -1,5 +1,6 @@
 import { Logger } from "@nestjs/common"
 import { NestFactory } from "@nestjs/core"
+import { getLogLevels, StructuredLogger } from "@/common/logger/structured-logger"
 import {
   getDoclingNodesCommand,
   getDoclingTimeoutMs,
@@ -27,7 +28,11 @@ async function bootstrapWorkersMain() {
   const healthCheckTimeoutMs = getWorkerDoclingHealthCheckTimeoutMs()
   await ensureDoclingIsReadyForWorkers(healthCheckTimeoutMs)
   await runDoclingSelfTestIfEnabled(healthCheckTimeoutMs)
-  await NestFactory.createApplicationContext(WorkersAppModule)
+  const isProduction = process.env.NODE_ENV === "production"
+  const logLevels = getLogLevels()
+  await NestFactory.createApplicationContext(WorkersAppModule, {
+    logger: isProduction ? new StructuredLogger(logLevels) : logLevels,
+  })
   Logger.log("Workers app started", "WorkersMain")
 }
 

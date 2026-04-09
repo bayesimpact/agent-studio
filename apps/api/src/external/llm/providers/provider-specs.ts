@@ -148,7 +148,6 @@ export class ProviderSpecs {
     let stream = provider.streamChatResponse({ messages: chatMessages, config, metadata })
     let results = await ProviderSpecs.streamToStringArray(stream)
     expect(results).toBeDefined()
-    console.log(JSON.stringify(results))
     expect(results.length).toBeGreaterThan(0)
     if (advancedExpectation) {
       expect(status).not.toEqual("completed")
