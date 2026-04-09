@@ -4,7 +4,8 @@
       "email": "Email",
       "name": "Nom"
     },
-    "logout": "Se déconnecter"
+    "logout": "Se déconnecter",
+    "helpCenter": "Centre d'aide"
   },
   "me": {
     "props": {
