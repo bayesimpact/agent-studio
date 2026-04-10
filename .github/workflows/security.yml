@@ -44,6 +44,7 @@ jobs:
           output: 'trivy-api-results.txt'
 
       - name: Run Trivy vulnerability scanner on Workers
+        if: always()
         uses: aquasecurity/trivy-action@0.35.0
         with:
           image-ref: 'caseai-connect/workers:local'
@@ -56,24 +57,26 @@ jobs:
           output: 'trivy-workers-results.txt'
 
       - name: Trivy scan summary
+        if: always()
         run: |
           MAX_SIZE=400000
+          print_report() {
+            local label="$1" file="$2"
+            echo "### $label"
+            echo '```'
+            if [ ! -f "$file" ]; then
+              echo "(scan did not run)"
+            elif [ "$(wc -c < "$file")" -gt "$MAX_SIZE" ]; then
+              echo "... output truncated (showing last ${MAX_SIZE} bytes)"
+              echo ""
+              tail -c $MAX_SIZE "$file"
+            else
+              cat "$file"
+            fi
+            echo '```'
+          }
           {
             echo "## Trivy Vulnerability Scan Results"
-            echo "### API Image"
-            echo '```'
-            if [ "$(wc -c < trivy-api-results.txt)" -gt "$MAX_SIZE" ]; then
-              echo "... output truncated (showing last ${MAX_SIZE} bytes)"
-              echo ""
-            fi
-            tail -c $MAX_SIZE trivy-api-results.txt
-            echo '```'
-            echo "### Workers Image"
-            echo '```'
-            if [ "$(wc -c < trivy-workers-results.txt)" -gt "$MAX_SIZE" ]; then
-              echo "... output truncated (showing last ${MAX_SIZE} bytes)"
-              echo ""
-            fi
-            tail -c $MAX_SIZE trivy-workers-results.txt
-            echo '```'
+            print_report "API Image" trivy-api-results.txt
+            print_report "Workers Image" trivy-workers-results.txt
           } >> $GITHUB_STEP_SUMMARY
