@@ -1,0 +1,49 @@
+import { Module } from "@nestjs/common"
+import { TypeOrmModule } from "@nestjs/typeorm"
+import { AgentContextResolver } from "@/common/context/resolvers/agent-context.resolver"
+import { OrganizationContextResolver } from "@/common/context/resolvers/organization-context.resolver"
+import { ProjectContextResolver } from "@/common/context/resolvers/project-context.resolver"
+import { ProjectMembershipContextResolver } from "@/common/context/resolvers/project-membership-context.resolver"
+import { ResourceContextGuard } from "@/common/context/resource-context.guard"
+import { Agent } from "@/domains/agents/agent.entity"
+import { ConversationAgentSession } from "@/domains/agents/conversation-agent-sessions/conversation-agent-session.entity"
+import { AgentMembership } from "@/domains/agents/memberships/agent-membership.entity"
+import { AgentMessage } from "@/domains/agents/shared/agent-session-messages/agent-message.entity"
+import { AuthModule } from "@/domains/auth/auth.module"
+import { OrganizationMembership } from "@/domains/organizations/memberships/organization-membership.entity"
+import { Organization } from "@/domains/organizations/organization.entity"
+import { ProjectMembership } from "@/domains/projects/memberships/project-membership.entity"
+import { Project } from "@/domains/projects/project.entity"
+import { UsersModule } from "@/domains/users/users.module"
+import { AgentsAnalyticsController } from "./agents-analytics.controller"
+import { AgentsAnalyticsGuard } from "./agents-analytics.guard"
+import { AgentsAnalyticsService } from "./agents-analytics.service"
+
+@Module({
+  imports: [
+    TypeOrmModule.forFeature([
+      ConversationAgentSession,
+      AgentMessage,
+      Agent,
+      AgentMembership,
+      Project,
+      Organization,
+      OrganizationMembership,
+      ProjectMembership,
+    ]),
+    AuthModule,
+    UsersModule,
+  ],
+  providers: [
+    AgentsAnalyticsService,
+    AgentsAnalyticsGuard,
+    ResourceContextGuard,
+    OrganizationContextResolver,
+    ProjectContextResolver,
+    ProjectMembershipContextResolver,
+    AgentContextResolver,
+  ],
+  controllers: [AgentsAnalyticsController],
+  exports: [AgentsAnalyticsService],
+})
+export class AgentsAnalyticsModule {}

@@ -5,12 +5,12 @@ import { useFeatureFlags } from "@/common/hooks/use-feature-flags"
 import { useIsRoute } from "@/common/hooks/use-is-route"
 import { StudioRouteNames } from "@/studio/routes/helpers"
 
-export function BreadcrumbAnalytics() {
+export function BreadcrumbProjectAnalytics() {
   const { hasFeature } = useFeatureFlags()
   const { isRoute } = useIsRoute()
-  const isAnalyticsRoute = isRoute(StudioRouteNames.ANALYTICS)
+  const isProjectAnalyticsRoute = isRoute(StudioRouteNames.PROJECT_ANALYTICS)
   const { t } = useTranslation()
-  if (!hasFeature("project-analytics") || !isAnalyticsRoute) return null
+  if (!hasFeature("project-analytics") || !isProjectAnalyticsRoute) return null
   return (
     <>
       <BreadcrumbSeparator>

@@ -5,8 +5,10 @@ import { agentMembershipsMiddleware } from "@/studio/features/agent-memberships/
 import { agentMembershipsSlice } from "@/studio/features/agent-memberships/agent-memberships.slice"
 import { agentMessageFeedbackMiddleware } from "@/studio/features/agent-message-feedback/agent-message-feedback.middleware"
 import { agentMessageFeedbackSlice } from "@/studio/features/agent-message-feedback/agent-message-feedback.slice"
-import { analyticsMiddleware } from "@/studio/features/analytics/analytics.middleware"
-import { analyticsSlice } from "@/studio/features/analytics/analytics.slice"
+import { agentAnalyticsMiddleware } from "@/studio/features/analytics/agent/agent-analytics.middleware"
+import { agentAnalyticsSlice } from "@/studio/features/analytics/agent/agent-analytics.slice"
+import { projectAnalyticsMiddleware } from "@/studio/features/analytics/project/analytics.middleware"
+import { projectAnalyticsSlice } from "@/studio/features/analytics/project/analytics.slice"
 import { documentTagsMiddleware } from "@/studio/features/document-tags/document-tags.middleware"
 import { documentTagsSlice } from "@/studio/features/document-tags/document-tags.slice"
 import { evaluationReportsMiddleware } from "@/studio/features/evaluation-reports/evaluation-reports.middleware"
@@ -25,7 +27,8 @@ import type { StudioState } from "./types"
 let middlewareInjected = false
 
 const studioMiddlewareList = [
-  analyticsMiddleware,
+  projectAnalyticsMiddleware,
+  agentAnalyticsMiddleware,
   agentMembershipsMiddleware,
   agentMessageFeedbackMiddleware,
   documentsMiddleware,
@@ -38,7 +41,8 @@ const studioMiddlewareList = [
 ]
 
 export const studioSliceList = [
-  analyticsSlice,
+  projectAnalyticsSlice,
+  agentAnalyticsSlice,
   agentMembershipsSlice,
   agentMessageFeedbackSlice,
   documentsSlice,

@@ -13,7 +13,7 @@ export const loadProjectAnalytics = createAsyncThunk<
   },
   { startAt: number; endAt: number },
   ThunkConfig
->("analytics/loadProject", async ({ startAt, endAt }, { extra: { services }, getState }) => {
+>("projectAnalytics/loadProject", async ({ startAt, endAt }, { extra: { services }, getState }) => {
   const state = getState()
   hasFeatureOrThrow({ state, feature: "project-analytics" })
   const { organizationId, projectId } = getCurrentIds({
@@ -21,8 +21,8 @@ export const loadProjectAnalytics = createAsyncThunk<
     wantedIds: ["organizationId", "projectId"],
   })
   const [conversationsPerDay, avgUserQuestionsPerSessionPerDay] = await Promise.all([
-    services.analytics.getConversationsPerDay({ organizationId, projectId, startAt, endAt }),
-    services.analytics.getAvgUserQuestionsPerSessionPerDay({
+    services.projectAnalytics.getConversationsPerDay({ organizationId, projectId, startAt, endAt }),
+    services.projectAnalytics.getAvgUserQuestionsPerSessionPerDay({
       organizationId,
       projectId,
       startAt,

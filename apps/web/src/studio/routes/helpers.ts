@@ -3,11 +3,12 @@ export enum StudioRouteNames {
   APP = "/studio",
   DOCUMENTS = "/o/:organizationId/p/:projectId/d",
   DOCUMENT = "/o/:organizationId/p/:projectId/d/:documentId",
-  ANALYTICS = "/o/:organizationId/p/:projectId/analytics",
+  PROJECT_ANALYTICS = "/o/:organizationId/p/:projectId/analytics",
   EVALUATION = "/o/:organizationId/p/:projectId/eval",
   PROJECT_MEMBERSHIPS = "/o/:organizationId/p/:projectId/members",
   FEEDBACK = "/o/:organizationId/p/:projectId/a/:agentId/f",
   AGENT_MEMBERSHIPS = "/o/:organizationId/p/:projectId/a/:agentId/members",
+  AGENT_ANALYTICS = "/o/:organizationId/p/:projectId/a/:agentId/analytics",
 }
 
 export const buildStudioPath = (path: string) => {
@@ -29,7 +30,7 @@ export const buildDocumentsPath = ({
   )
 }
 
-export const buildAnalyticsPath = ({
+export const buildProjectAnalyticsPath = ({
   organizationId,
   projectId,
 }: {
@@ -37,7 +38,7 @@ export const buildAnalyticsPath = ({
   projectId: string
 }) => {
   return buildStudioPath(
-    StudioRouteNames.ANALYTICS.replace(":organizationId", organizationId).replace(
+    StudioRouteNames.PROJECT_ANALYTICS.replace(":organizationId", organizationId).replace(
       ":projectId",
       projectId,
     ),
@@ -101,6 +102,22 @@ export const buildAgentMembershipsPath = ({
 }) => {
   return buildStudioPath(
     StudioRouteNames.AGENT_MEMBERSHIPS.replace(":organizationId", organizationId)
+      .replace(":projectId", projectId)
+      .replace(":agentId", agentId),
+  )
+}
+
+export const buildAgentAnalyticsPath = ({
+  organizationId,
+  projectId,
+  agentId,
+}: {
+  organizationId: string
+  projectId: string
+  agentId: string
+}) => {
+  return buildStudioPath(
+    StudioRouteNames.AGENT_ANALYTICS.replace(":organizationId", organizationId)
       .replace(":projectId", projectId)
       .replace(":agentId", agentId),
   )

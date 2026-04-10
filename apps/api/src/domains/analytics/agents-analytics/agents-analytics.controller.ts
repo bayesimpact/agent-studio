@@ -1,6 +1,6 @@
-import { AnalyticsRoutes as Routes } from "@caseai-connect/api-contracts"
+import { AgentAnalyticsRoutes as Routes } from "@caseai-connect/api-contracts"
 import { Controller, Get, ParseIntPipe, Query, Req, UseGuards } from "@nestjs/common"
-import type { EndpointRequestWithProject } from "@/common/context/request.interface"
+import type { EndpointRequestWithAgent } from "@/common/context/request.interface"
 import { getRequiredConnectScope } from "@/common/context/request-context.helpers"
 import { RequireContext } from "@/common/context/require-context.decorator"
 import { ResourceContextGuard } from "@/common/context/resource-context.guard"
@@ -9,25 +9,27 @@ import { toAnalyticsDailyPointDto } from "@/domains/analytics/shared/analytics-d
 import type { AnalyticsDailyPoint } from "@/domains/analytics/shared/analytics-metrics.types"
 import { JwtAuthGuard } from "@/domains/auth/jwt-auth.guard"
 import { UserGuard } from "@/domains/users/user.guard"
-import { ProjectsAnalyticsGuard } from "./projects-analytics.guard"
+import { AgentsAnalyticsGuard } from "./agents-analytics.guard"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
-import { ProjectsAnalyticsService } from "./projects-analytics.service"
-@UseGuards(JwtAuthGuard, UserGuard, ResourceContextGuard, ProjectsAnalyticsGuard)
-@RequireContext("organization", "project")
+import { AgentsAnalyticsService } from "./agents-analytics.service"
+
+@UseGuards(JwtAuthGuard, UserGuard, ResourceContextGuard, AgentsAnalyticsGuard)
+@RequireContext("organization", "project", "agent")
 @Controller()
-export class ProjectsAnalyticsController {
-  constructor(private readonly projectsAnalyticsService: ProjectsAnalyticsService) {}
+export class AgentsAnalyticsController {
+  constructor(private readonly agentsAnalyticsService: AgentsAnalyticsService) {}
 
   @Get(Routes.getConversationsPerDay.path)
   @CheckPolicy((policy) => policy.canList())
   async getConversationsPerDay(
-    @Req() request: EndpointRequestWithProject,
+    @Req() request: EndpointRequestWithAgent,
     @Query("startAt", ParseIntPipe) startAt: number,
     @Query("endAt", ParseIntPipe) endAt: number,
   ): Promise<typeof Routes.getConversationsPerDay.response> {
     const conversationsPerDay: AnalyticsDailyPoint[] =
-      await this.projectsAnalyticsService.getConversationsPerDay({
+      await this.agentsAnalyticsService.getConversationsPerDay({
         connectScope: getRequiredConnectScope(request),
+        agentId: request.agent.id,
         startAt,
         endAt,
       })
@@ -38,13 +40,14 @@ export class ProjectsAnalyticsController {
   @Get(Routes.getAvgUserQuestionsPerSessionPerDay.path)
   @CheckPolicy((policy) => policy.canList())
   async getAvgUserQuestionsPerSessionPerDay(
-    @Req() request: EndpointRequestWithProject,
+    @Req() request: EndpointRequestWithAgent,
     @Query("startAt", ParseIntPipe) startAt: number,
     @Query("endAt", ParseIntPipe) endAt: number,
   ): Promise<typeof Routes.getAvgUserQuestionsPerSessionPerDay.response> {
     const avgUserQuestionsPerSessionPerDay: AnalyticsDailyPoint[] =
-      await this.projectsAnalyticsService.getAvgUserQuestionsPerSessionPerDay({
+      await this.agentsAnalyticsService.getAvgUserQuestionsPerSessionPerDay({
         connectScope: getRequiredConnectScope(request),
+        agentId: request.agent.id,
         startAt,
         endAt,
       })

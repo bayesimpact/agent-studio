@@ -22,9 +22,9 @@ import { useIsRoute } from "@/common/hooks/use-is-route"
 import { useAppSelector } from "@/common/store/hooks"
 import { selectUploaderState } from "../features/documents/documents.selectors"
 import {
-  buildAnalyticsPath,
   buildDocumentsPath,
   buildEvaluationPath,
+  buildProjectAnalyticsPath,
   buildProjectMembershipsPath,
   StudioRouteNames,
 } from "./helpers"
@@ -89,8 +89,8 @@ function NavAnalytics({
 }) {
   const { t } = useTranslation("analytics")
   const { isRoute } = useIsRoute()
-  const isActive = isRoute(StudioRouteNames.ANALYTICS)
-  const path = buildAnalyticsPath({ organizationId, projectId })
+  const isActive = isRoute(StudioRouteNames.PROJECT_ANALYTICS)
+  const path = buildProjectAnalyticsPath({ organizationId, projectId })
   return (
     <SidebarMenuItem>
       <SidebarMenuButton isActive={isActive} asChild>
