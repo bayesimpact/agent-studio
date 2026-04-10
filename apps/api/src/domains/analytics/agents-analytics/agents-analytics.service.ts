@@ -12,10 +12,10 @@ import {
   getUtcDayKeys,
 } from "@/domains/analytics/shared/analytics-conversation-metrics.helpers"
 
-import type { AnalyticsDailyPoint } from "./projects-analytics.types"
+import type { AnalyticsDailyPoint } from "../projects-analytics/projects-analytics.types"
 
 @Injectable()
-export class ProjectsAnalyticsService {
+export class AgentsAnalyticsService {
   private readonly conversationAgentSessionConnectRepository: ConnectRepository<ConversationAgentSession>
   private readonly conversationAgentSessionAlias = "conversationAgentSession"
   private readonly agentMessageAlias = "agentMessage"
@@ -32,19 +32,23 @@ export class ProjectsAnalyticsService {
 
   async getConversationsPerDay({
     connectScope,
+    agentId,
     startAt,
     endAt,
   }: {
     connectScope: RequiredConnectScope
+    agentId: string
     startAt: TimeType
     endAt: TimeType
   }): Promise<AnalyticsDailyPoint[]> {
     const dayKeys = getUtcDayKeys(startAt, endAt)
     const dayExpr = getDayKeySql(this.conversationAgentSessionAlias, "created_at")
     const createdAtCol = getQualifiedColumnSql(this.conversationAgentSessionAlias, "created_at")
+    const agentIdCol = getQualifiedColumnSql(this.conversationAgentSessionAlias, "agent_id")
 
     const raw = await this.conversationAgentSessionConnectRepository
       .newQueryBuilderWithConnectScope(connectScope)
+      .andWhere(`${agentIdCol} = :agentId`, { agentId })
       .select(dayExpr, "date")
       .addSelect("COUNT(*)::int", "value")
       .andWhere(`${createdAtCol} BETWEEN :startAt AND :endAt`, {
@@ -68,10 +72,12 @@ export class ProjectsAnalyticsService {
 
   async getAvgUserQuestionsPerSessionPerDay({
     connectScope,
+    agentId,
     startAt,
     endAt,
   }: {
     connectScope: RequiredConnectScope
+    agentId: string
     startAt: TimeType
     endAt: TimeType
   }): Promise<AnalyticsDailyPoint[]> {
@@ -81,9 +87,11 @@ export class ProjectsAnalyticsService {
     const createdAtCol = getQualifiedColumnSql(this.conversationAgentSessionAlias, "created_at")
     const conversationIdCol = getQualifiedColumnSql(this.conversationAgentSessionAlias, "id")
     const agentMessageIdCol = getQualifiedColumnSql(this.agentMessageAlias, "id")
+    const agentIdCol = getQualifiedColumnSql(this.conversationAgentSessionAlias, "agent_id")
 
     const raw = await this.conversationAgentSessionConnectRepository
       .newQueryBuilderWithConnectScope(connectScope)
+      .andWhere(`${agentIdCol} = :agentId`, { agentId })
       .leftJoin(
         AgentMessage,
         this.agentMessageAlias,
