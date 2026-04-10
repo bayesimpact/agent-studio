@@ -7,6 +7,7 @@ import type {
 import { AddContext, RequireContext } from "@/common/context/require-context.decorator"
 import { ResourceContextGuard } from "@/common/context/resource-context.guard"
 import { CheckPolicy } from "@/common/policies/check-policy.decorator"
+import { TrackActivity } from "@/domains/activities/track-activity.decorator"
 import { JwtAuthGuard } from "@/domains/auth/jwt-auth.guard"
 import { UserGuard } from "@/domains/users/user.guard"
 import type { ProjectMembership } from "./project-membership.entity"
@@ -36,6 +37,7 @@ export class ProjectMembershipsController {
 
   @Post(ProjectMembershipRoutes.createOne.path)
   @CheckPolicy((policy) => policy.canCreate())
+  @TrackActivity({ action: "projectMembership.inviteMany" })
   async inviteProjectMembers(
     @Req() request: EndpointRequestWithProject,
     @Body() { payload }: typeof ProjectMembershipRoutes.createOne.request,
@@ -54,6 +56,7 @@ export class ProjectMembershipsController {
   @Delete(ProjectMembershipRoutes.deleteOne.path)
   @CheckPolicy((policy) => policy.canDelete())
   @AddContext("projectMembership")
+  @TrackActivity({ action: "projectMembership.delete", entityFrom: "memberProjectMembership" })
   async removeProjectMembership(
     @Req() request: EndpointRequestWithProjectMembership,
   ): Promise<typeof ProjectMembershipRoutes.deleteOne.response> {

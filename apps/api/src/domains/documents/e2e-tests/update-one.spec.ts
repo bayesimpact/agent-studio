@@ -2,6 +2,7 @@ import { DocumentsRoutes } from "@caseai-connect/api-contracts"
 import { afterAll } from "@jest/globals"
 import type { INestApplication } from "@nestjs/common"
 import type { App } from "supertest/types"
+import { bindExpectActivityCreated } from "@/common/test/activity-test.helpers"
 import { clearTestDatabase } from "@/common/test/test-database"
 import {
   type AllRepositories,
@@ -9,6 +10,7 @@ import {
   teardownTestDatabase,
 } from "@/common/test/test-transaction-manager"
 import { removeNullish } from "@/common/utils/remove-nullish"
+import { ActivitiesModule } from "@/domains/activities/activities.module"
 import { createOrganizationWithDocument } from "@/domains/organizations/organization.factory"
 import { expectResponse, type Requester, testRequester } from "../../../../test/request"
 import { Document } from "../document.entity"
@@ -30,14 +32,16 @@ describe("Documents - updateOne", () => {
   let auth0Id = "auth0|123"
   let tagAId: string
   let tagBId: string
+  let expectActivityCreated: ReturnType<typeof bindExpectActivityCreated>
 
   beforeAll(async () => {
     setup = await setupTransactionalTestDatabase({
-      additionalImports: [DocumentsModule],
+      additionalImports: [DocumentsModule, ActivitiesModule],
       applyOverrides: (moduleBuilder) =>
         withDocumentAuthAndEmbeddingsMocks(moduleBuilder, () => auth0Id),
     })
     repositories = setup.getAllRepositories()
+    expectActivityCreated = bindExpectActivityCreated(repositories.activityRepository)
     app = setup.module.createNestApplication()
     await app.init()
     request = testRequester(app)
@@ -90,6 +94,7 @@ describe("Documents - updateOne", () => {
     const documentRepository = setup.getRepository(Document)
     const updated = await documentRepository.findOne({ where: { id: documentId } })
     expect(updated?.title).toBe("Updated Title")
+    await expectActivityCreated("document.update")
   })
 
   it("should update tags", async () => {

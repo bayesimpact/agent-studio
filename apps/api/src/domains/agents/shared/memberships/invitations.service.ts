@@ -10,8 +10,6 @@ import { ProjectMembership } from "@/domains/projects/memberships/project-member
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
 import { ProjectMembershipsService } from "@/domains/projects/memberships/project-memberships.service"
 
-type InvitationType = "agent" | "project"
-
 @Injectable()
 export class InvitationsService {
   constructor(
@@ -24,18 +22,18 @@ export class InvitationsService {
     private readonly auth0UserInfoService: Auth0UserInfoService,
   ) {}
 
-  async resolveInvitationType(ticketId: string): Promise<InvitationType> {
+  async resolveInvitation(ticketId: string): Promise<AgentMembership | ProjectMembership> {
     const agentMembership = await this.agentMembershipRepository.findOne({
       where: { invitationToken: ticketId },
       select: { id: true },
     })
-    if (agentMembership) return "agent"
+    if (agentMembership) return agentMembership
 
     const projectMembership = await this.projectMembershipRepository.findOne({
       where: { invitationToken: ticketId },
       select: { id: true },
     })
-    if (projectMembership) return "project"
+    if (projectMembership) return projectMembership
 
     throw new NotFoundException(`No invitation found for ticket: ${ticketId}`)
   }
@@ -48,8 +46,9 @@ export class InvitationsService {
     accessToken: string
     ticketId: string
     auth0Sub: string
-  }): Promise<void> {
-    const type = await this.resolveInvitationType(ticketId)
+  }): Promise<AgentMembership | ProjectMembership> {
+    const invitation = await this.resolveInvitation(ticketId)
+    const type = "projectId" in invitation ? "project" : "agent"
 
     const { email } = await this.auth0UserInfoService.getUserInfo(accessToken)
     if (!email) throw new NotFoundException(`No email found for auth0Sub: ${auth0Sub}`)
@@ -59,5 +58,7 @@ export class InvitationsService {
     } else {
       await this.projectMembershipsService.acceptInvitation({ ticketId, auth0Sub, email })
     }
+
+    return invitation
   }
 }

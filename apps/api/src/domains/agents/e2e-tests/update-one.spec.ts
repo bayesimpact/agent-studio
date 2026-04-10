@@ -2,6 +2,7 @@ import { AgentsRoutes } from "@caseai-connect/api-contracts"
 import { afterAll } from "@jest/globals"
 import type { INestApplication } from "@nestjs/common"
 import type { App } from "supertest/types"
+import { bindExpectActivityCreated } from "@/common/test/activity-test.helpers"
 import { clearTestDatabase } from "@/common/test/test-database"
 import {
   type AllRepositories,
@@ -9,6 +10,7 @@ import {
   teardownTestDatabase,
 } from "@/common/test/test-transaction-manager"
 import { removeNullish } from "@/common/utils/remove-nullish"
+import { ActivitiesModule } from "@/domains/activities/activities.module"
 import { createOrganizationWithAgent } from "@/domains/organizations/organization.factory"
 import { sdk } from "@/external/llm/open-telemetry-init"
 import { setupUserGuardForTesting } from "../../../../test/e2e.helpers"
@@ -26,13 +28,15 @@ describe("Agents - updateOne", () => {
   let agentId: string
   let accessToken: string | undefined = "token"
   let auth0Id = "auth0|123"
+  let expectActivityCreated: ReturnType<typeof bindExpectActivityCreated>
 
   beforeAll(async () => {
     setup = await setupTransactionalTestDatabase({
-      additionalImports: [AgentsModule],
+      additionalImports: [AgentsModule, ActivitiesModule],
       applyOverrides: (moduleBuilder) => setupUserGuardForTesting(moduleBuilder, () => auth0Id),
     })
     repositories = setup.getAllRepositories()
+    expectActivityCreated = bindExpectActivityCreated(repositories.activityRepository)
     app = setup.module.createNestApplication()
     await app.init()
     request = testRequester(app)
@@ -90,6 +94,7 @@ describe("Agents - updateOne", () => {
     })
     expect(updatedAgent?.name).toBe("Updated Agent")
     expect(updatedAgent?.defaultPrompt).toBe("Updated Prompt")
+    await expectActivityCreated("agent.update")
   })
 
   it("should update only provided fields (partial update)", async () => {

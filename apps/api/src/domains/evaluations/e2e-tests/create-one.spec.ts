@@ -1,6 +1,7 @@
 import { EvaluationsRoutes } from "@caseai-connect/api-contracts"
 import type { INestApplication } from "@nestjs/common"
 import type { App } from "supertest/types"
+import { bindExpectActivityCreated } from "@/common/test/activity-test.helpers"
 import { clearTestDatabase } from "@/common/test/test-database"
 import {
   type AllRepositories,
@@ -8,6 +9,7 @@ import {
   teardownTestDatabase,
 } from "@/common/test/test-transaction-manager"
 import { removeNullish } from "@/common/utils/remove-nullish"
+import { ActivitiesModule } from "@/domains/activities/activities.module"
 import { EvaluationsModule } from "@/domains/evaluations/evaluations.module"
 import { createOrganizationWithProject } from "@/domains/organizations/organization.factory"
 import { sdk } from "@/external/llm/open-telemetry-init"
@@ -24,13 +26,15 @@ describe("Evaluations - createOne", () => {
   let projectId: string
   let accessToken: string | undefined = "token"
   let auth0Id = "auth0|123"
+  let expectActivityCreated: ReturnType<typeof bindExpectActivityCreated>
 
   beforeAll(async () => {
     setup = await setupTransactionalTestDatabase({
-      additionalImports: [EvaluationsModule],
+      additionalImports: [EvaluationsModule, ActivitiesModule],
       applyOverrides: (moduleBuilder) => setupUserGuardForTesting(moduleBuilder, () => auth0Id),
     })
     repositories = setup.getAllRepositories()
+    expectActivityCreated = bindExpectActivityCreated(repositories.activityRepository)
     app = setup.module.createNestApplication()
     await app.init()
     request = testRequester(app)
@@ -82,5 +86,6 @@ describe("Evaluations - createOne", () => {
     expect(res.body.data.id).toBeDefined()
     expect(res.body.data.createdAt).toBeDefined()
     expect(res.body.data.updatedAt).toBeDefined()
+    await expectActivityCreated("evaluation.create")
   })
 })

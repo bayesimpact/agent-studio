@@ -22,7 +22,7 @@ describe("ActivitiesInterceptor", () => {
     handle: () => of({ data: { success: true } }),
   }
 
-  it("should log create actions without organization/project/entity data", async () => {
+  it("should log create actions with available organization/project and no entity data", async () => {
     const reflector = {
       getAllAndOverride: jest.fn().mockReturnValue({ action: "project.create" }),
     } as unknown as Reflector
@@ -48,8 +48,8 @@ describe("ActivitiesInterceptor", () => {
     expect(activitiesService.createActivity).toHaveBeenCalledWith({
       action: "project.create",
       userId: "user-id",
-      organizationId: null,
-      projectId: null,
+      organizationId: "organization-id",
+      projectId: "project-id",
       entityId: null,
       entityType: null,
     })

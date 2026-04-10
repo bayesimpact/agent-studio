@@ -19,6 +19,7 @@ import { AddContext, RequireContext } from "@/common/context/require-context.dec
 import { ResourceContextGuard } from "@/common/context/resource-context.guard"
 import { CheckPolicy } from "@/common/policies/check-policy.decorator"
 import { ZodValidationPipe } from "@/common/zod-validation-pipe"
+import { TrackActivity } from "@/domains/activities/track-activity.decorator"
 import { JwtAuthGuard } from "@/domains/auth/jwt-auth.guard"
 import { UserGuard } from "@/domains/users/user.guard"
 import type { Agent } from "./agent.entity"
@@ -34,6 +35,7 @@ export class AgentsController {
 
   @Post(AgentsRoutes.createOne.path)
   @CheckPolicy((policy) => policy.canCreate())
+  @TrackActivity({ action: "agent.create" })
   @UsePipes(new ZodValidationPipe(createAgentSchema))
   async createOne(
     @Req() request: EndpointRequestWithProject,
@@ -64,6 +66,7 @@ export class AgentsController {
   @Patch(AgentsRoutes.updateOne.path)
   @CheckPolicy((policy) => policy.canUpdate())
   @AddContext("agent")
+  @TrackActivity({ action: "agent.update", entityFrom: "agent" })
   async updateOne(
     @Req() request: EndpointRequestWithAgent,
     @Body() { payload }: typeof AgentsRoutes.updateOne.request,
@@ -85,6 +88,7 @@ export class AgentsController {
   @Delete(AgentsRoutes.deleteOne.path)
   @CheckPolicy((policy) => policy.canDelete())
   @AddContext("agent")
+  @TrackActivity({ action: "agent.delete", entityFrom: "agent" })
   async deleteOne(
     @Req() request: EndpointRequestWithAgent,
   ): Promise<typeof AgentsRoutes.deleteOne.response> {

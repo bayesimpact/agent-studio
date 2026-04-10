@@ -1,4 +1,4 @@
-import { ConversationAgentSessionsRoutes } from "@caseai-connect/api-contracts"
+import { FormAgentSessionsRoutes } from "@caseai-connect/api-contracts"
 import type { INestApplication } from "@nestjs/common"
 import type { App } from "supertest/types"
 import { bindExpectActivityCreated } from "@/common/test/activity-test.helpers"
@@ -15,36 +15,9 @@ import { inviteUserToProject } from "@/domains/projects/memberships/project-memb
 import { sdk } from "@/external/llm/open-telemetry-init"
 import { setupUserGuardForTesting } from "../../../../../test/e2e.helpers"
 import { expectResponse, type Requester, testRequester } from "../../../../../test/request"
-import { ConversationAgentSessionsModule } from "../conversation-agent-sessions.module"
+import { FormAgentSessionsModule } from "../form-agent-sessions.module"
 
-// Mock Langfuse to avoid dynamic import issues in Jest
-jest.mock("langfuse", () => {
-  return {
-    Langfuse: class {
-      shutdownAsync() {
-        return Promise.resolve()
-      }
-      flushAsync() {
-        return Promise.resolve()
-      }
-      trace() {
-        return { update: jest.fn() }
-      }
-    },
-  }
-})
-jest.mock("langfuse-v2", () => ({
-  Langfuse: jest.fn().mockImplementation(() => ({
-    trace: jest.fn(),
-    span: jest.fn().mockReturnValue({ getTraceUrl: jest.fn() }),
-    generation: jest.fn(),
-    flushAsync: jest.fn().mockResolvedValue(undefined),
-    shutdownAsync: jest.fn().mockResolvedValue(undefined),
-    debug: jest.fn(),
-  })),
-}))
-
-describe("ConversationAgentSessionsRoutes.createOne", () => {
+describe("FormAgentSessionsRoutes.createOne", () => {
   let app: INestApplication<App>
   let request: Requester
   let setup: Awaited<ReturnType<typeof setupTransactionalTestDatabase>>
@@ -59,7 +32,7 @@ describe("ConversationAgentSessionsRoutes.createOne", () => {
 
   beforeAll(async () => {
     setup = await setupTransactionalTestDatabase({
-      additionalImports: [ConversationAgentSessionsModule, ActivitiesModule],
+      additionalImports: [FormAgentSessionsModule, ActivitiesModule],
       applyOverrides: (moduleBuilder) => setupUserGuardForTesting(moduleBuilder, () => auth0Id),
     })
     repositories = setup.getAllRepositories()
@@ -84,6 +57,7 @@ describe("ConversationAgentSessionsRoutes.createOne", () => {
   const createContext = async (role: "owner" | "member" | "admin") => {
     const { organization, project, agent } = await createOrganizationWithAgent(repositories, {
       organizationMembership: { role },
+      agent: { type: "form" },
     })
     const { invitedUser } = await inviteUserToProject({
       repositories,
@@ -98,51 +72,48 @@ describe("ConversationAgentSessionsRoutes.createOne", () => {
     auth0Id = invitedUser.auth0Id
   }
 
-  const subject = async (payload?: typeof ConversationAgentSessionsRoutes.createOne.request) =>
+  const subject = async (payload?: typeof FormAgentSessionsRoutes.createOne.request) =>
     request({
-      route: ConversationAgentSessionsRoutes.createOne,
+      route: FormAgentSessionsRoutes.createOne,
       pathParams: removeNullish({ organizationId, projectId, agentId }),
       token: accessToken,
       request: payload,
     })
 
-  describe("creating a live session", () => {
-    it("should create a live session", async () => {
-      await createContext("member")
+  it("should create a live session", async () => {
+    await createContext("member")
 
-      const response = await subject({ payload: { type: "live" } })
+    const response = await subject({ payload: { type: "live" } })
 
-      expectResponse(response, 201)
-      expect(response.body.data.id).toBeDefined()
-      expect(response.body.data.agentId).toBe(agentId)
-      expect(response.body.data.type).toBe("live")
-      expect(response.body.data.createdAt).toBeDefined()
-      expect(response.body.data.updatedAt).toBeDefined()
+    expectResponse(response, 201)
+    expect(response.body.data.id).toBeDefined()
+    expect(response.body.data.agentId).toBe(agentId)
+    expect(response.body.data.type).toBe("live")
+    expect(response.body.data.createdAt).toBeDefined()
+    expect(response.body.data.updatedAt).toBeDefined()
 
-      const createdSession = await repositories.conversationAgentSessionRepository.findOne({
-        where: { id: response.body.data.id },
-      })
-      expect(createdSession).not.toBeNull()
-      await expectActivityCreated("conversationAgentSession.create")
+    const createdSession = await repositories.formAgentSessionRepository.findOne({
+      where: { id: response.body.data.id },
     })
+    expect(createdSession).not.toBeNull()
+    await expectActivityCreated("formAgentSession.create")
   })
-  describe("creating a playground session", () => {
-    it("should create a playground session", async () => {
-      await createContext("owner")
 
-      const response = await subject({ payload: { type: "playground" } })
+  it("should create a playground session", async () => {
+    await createContext("owner")
 
-      expectResponse(response, 201)
-      expect(response.body.data.id).toBeDefined()
-      expect(response.body.data.agentId).toBe(agentId)
-      expect(response.body.data.type).toBe("playground")
-      expect(response.body.data.createdAt).toBeDefined()
-      expect(response.body.data.updatedAt).toBeDefined()
+    const response = await subject({ payload: { type: "playground" } })
 
-      const createdSession = await repositories.conversationAgentSessionRepository.findOne({
-        where: { id: response.body.data.id },
-      })
-      expect(createdSession).not.toBeNull()
+    expectResponse(response, 201)
+    expect(response.body.data.id).toBeDefined()
+    expect(response.body.data.agentId).toBe(agentId)
+    expect(response.body.data.type).toBe("playground")
+    expect(response.body.data.createdAt).toBeDefined()
+    expect(response.body.data.updatedAt).toBeDefined()
+
+    const createdSession = await repositories.formAgentSessionRepository.findOne({
+      where: { id: response.body.data.id },
     })
+    expect(createdSession).not.toBeNull()
   })
 })

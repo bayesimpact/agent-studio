@@ -6,7 +6,7 @@ import {
 } from "@nestjs/common"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
 import { Reflector } from "@nestjs/core"
-import { from, map, mergeMap, type Observable } from "rxjs"
+import { from, map, mergeMap, type Observable, of } from "rxjs"
 import type { EndpointRequest } from "@/common/context/request.interface"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
 import { ActivitiesService } from "./activities.service"
@@ -37,20 +37,19 @@ export class ActivitiesInterceptor implements NestInterceptor {
 
     return next.handle().pipe(
       mergeMap((handlerResult) => {
-        const isCreateAction = trackOptions.action.endsWith(".create")
-        const { entityId, entityType } = this.getEntityFromContext(
-          request,
-          trackOptions.entityFrom,
-          isCreateAction,
-        )
+        const userId = this.getUserId(request)
+        if (userId === null) {
+          return of(handlerResult)
+        }
 
-        const organizationId = isCreateAction ? null : this.getOrganizationId(request)
-        const projectId = isCreateAction ? null : this.getProjectId(request)
+        const { entityId, entityType } = this.getEntityFromContext(request, trackOptions.entityFrom)
+        const organizationId = this.getOrganizationId(request)
+        const projectId = this.getProjectId(request)
 
         return from(
           this.activitiesService.createActivity({
             action: trackOptions.action,
-            userId: request.user.id,
+            userId,
             organizationId,
             projectId,
             entityId,
@@ -66,6 +65,19 @@ export class ActivitiesInterceptor implements NestInterceptor {
     return typeof value === "string" ? value : null
   }
 
+  private getUserId(request: Record<string, unknown>): string | null {
+    const user = request.user
+    if (user && typeof user === "object" && "id" in user) {
+      const userId = (user as { id: unknown }).id
+      if (typeof userId === "string") {
+        return userId
+      }
+    }
+
+    const activityUserId = request.activityUserId
+    return typeof activityUserId === "string" ? activityUserId : null
+  }
+
   private getProjectId(request: Record<string, unknown>): string | null {
     const project = request.project
     if (project && typeof project === "object" && "id" in project) {
@@ -78,12 +90,11 @@ export class ActivitiesInterceptor implements NestInterceptor {
   private getEntityFromContext(
     request: Record<string, unknown>,
     entityFrom: TrackActivityEntityFrom | undefined,
-    isCreateAction: boolean,
   ): {
     entityId: string | null
     entityType: string | null
   } {
-    if (isCreateAction || entityFrom === undefined) {
+    if (entityFrom === undefined) {
       return { entityId: null, entityType: null }
     }
 

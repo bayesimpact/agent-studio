@@ -8,6 +8,7 @@ import { getRequiredConnectScope } from "@/common/context/request-context.helper
 import { AddContext, RequireContext } from "@/common/context/require-context.decorator"
 import { ResourceContextGuard } from "@/common/context/resource-context.guard"
 import { CheckPolicy } from "@/common/policies/check-policy.decorator"
+import { TrackActivity } from "@/domains/activities/track-activity.decorator"
 import { JwtAuthGuard } from "@/domains/auth/jwt-auth.guard"
 import { UserGuard } from "@/domains/users/user.guard"
 import { getTraceUrl } from "@/external/langfuse/langfuse-helper"
@@ -46,6 +47,7 @@ export class FormAgentSessionsController {
 
   @CheckPolicy((policy) => policy.canCreate())
   @Post(FormAgentSessionsRoutes.createOne.path)
+  @TrackActivity({ action: "formAgentSession.create" })
   async createOne(
     @Req() request: EndpointRequestWithAgent,
     @Body() { payload }: typeof FormAgentSessionsRoutes.createOne.request,
