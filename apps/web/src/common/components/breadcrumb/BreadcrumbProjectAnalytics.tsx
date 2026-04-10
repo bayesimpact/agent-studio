@@ -5,7 +5,7 @@ import { useFeatureFlags } from "@/common/hooks/use-feature-flags"
 import { useIsRoute } from "@/common/hooks/use-is-route"
 import { StudioRouteNames } from "@/studio/routes/helpers"
 
-export function BreadcrumbAnalytics() {
+export function BreadcrumbProjectAnalytics() {
   const { hasFeature } = useFeatureFlags()
   const { isRoute } = useIsRoute()
   const isProjectAnalyticsRoute = isRoute(StudioRouteNames.PROJECT_ANALYTICS)
