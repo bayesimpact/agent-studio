@@ -12,6 +12,7 @@ import { DocumentEmbeddingsWorker } from "./document-embeddings.worker"
 import { getDocumentEmbeddingsBullMqConnection } from "./document-embeddings-bullmq.config"
 import { DocumentEmbeddingsProcessorService } from "./document-embeddings-processor.service"
 import { DocumentTextExtractorService } from "./document-text-extractor.service"
+import { QueueMetricsService } from "./queue-metrics.service"
 
 @Module({
   imports: [
@@ -34,6 +35,7 @@ import { DocumentTextExtractorService } from "./document-text-extractor.service"
     DocumentTextExtractorService,
     DocumentsService,
     DocumentTagsService,
+    QueueMetricsService,
   ],
 })
 export class DocumentEmbeddingsWorkersModule {}

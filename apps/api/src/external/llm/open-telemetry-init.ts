@@ -1,9 +1,11 @@
 import "dotenv/config"
+import { MetricExporter } from "@google-cloud/opentelemetry-cloud-monitoring-exporter"
 import { TraceExporter } from "@google-cloud/opentelemetry-cloud-trace-exporter"
 import { HttpInstrumentation } from "@opentelemetry/instrumentation-http"
 import { NestInstrumentation } from "@opentelemetry/instrumentation-nestjs-core"
 import { PgInstrumentation } from "@opentelemetry/instrumentation-pg"
 import { NodeSDK } from "@opentelemetry/sdk-node"
+import { PeriodicExportingMetricReader } from "@opentelemetry/sdk-metrics"
 import { BatchSpanProcessor, ConsoleSpanExporter } from "@opentelemetry/sdk-trace-base"
 import { LangfuseIntegrationExporter } from "@/external/langfuse/langfuse-integration-exporter"
 
@@ -26,8 +28,13 @@ if (isProduction) {
   spanProcessors.push(new BatchSpanProcessor(new ConsoleSpanExporter()))
 }
 
+const metricReader = isProduction
+  ? new PeriodicExportingMetricReader({ exporter: new MetricExporter() })
+  : undefined
+
 export const sdk = new NodeSDK({
   spanProcessors,
+  ...(metricReader && { metricReader }),
   instrumentations: isTest
     ? []
     : [new HttpInstrumentation(), new NestInstrumentation(), new PgInstrumentation()],

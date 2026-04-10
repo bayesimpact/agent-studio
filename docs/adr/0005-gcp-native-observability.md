@@ -1,4 +1,4 @@
-# ADR-001: GCP-Native Observability Stack
+# ADR-0005: GCP-Native Observability Stack
 
 **Status:** Accepted
 **Date:** 2026-03-19
@@ -101,27 +101,15 @@ Redis/BullMQ instrumentation is deferred (nice-to-have, workers are async so tra
 
 ### 5. BullMQ Queue Metrics
 
-**Goal:** Monitor queue health (backlog, failures) via Cloud Monitoring.
+**Goal:** Monitor queue health (backlog, failures) via Cloud Monitoring with alerting.
 
-**Approach:** Log-based metrics (no custom metrics API needed).
+**Approach:** OTEL metrics exported to Cloud Monitoring via `@google-cloud/opentelemetry-cloud-monitoring-exporter`.
 
 - Add a periodic task (every 30s) in the Workers service
 - Calls `queue.getJobCounts()` → `{ waiting, active, completed, failed }`
-- Logs as structured JSON:
-
-```json
-{
-  "severity": "INFO",
-  "message": "queue_metrics",
-  "queue": "document-embeddings-queue",
-  "waiting": 5,
-  "active": 2,
-  "failed": 3
-}
-```
-
-- In GCP Console: create log-based metrics from `waiting` and `failed` fields
-- Set alerts on those metrics in Cloud Monitoring
+- Records values as OTEL gauge metrics (e.g. `bullmq.queue.waiting`, `bullmq.queue.failed`)
+- In production, metrics are exported directly to Cloud Monitoring — no log-based metrics needed
+- Alerts configured directly on OTEL metrics in Cloud Monitoring
 
 ### 6. Alerting (GCP Console config, not code)
 
@@ -144,8 +132,8 @@ Notification channel: Slack (configured once in Cloud Monitoring → Notificatio
 | Distributed tracing | Cloud Trace | New OTEL exporter + auto-instrumentations |
 | Logs | Cloud Logging | Structured JSON to stdout (no SDK) |
 | Error reporting | Cloud Error Reporting | Auto from structured logs with severity ERROR |
-| Metrics & dashboards | Cloud Monitoring | Built-in Cloud Run metrics + log-based custom metrics |
-| Alerting | Cloud Monitoring | Log-based + metric-based alerts → Slack |
+| Metrics & dashboards | Cloud Monitoring | Built-in Cloud Run metrics + OTEL custom metrics |
+| Alerting | Cloud Monitoring | OTEL metric-based alerts → Slack |
 
 ## Authentication
 
