@@ -1,5 +1,4 @@
-import { DocumentTagsRoutes } from "@caseai-connect/api-contracts"
-import { afterAll } from "@jest/globals"
+import { DocumentsRoutes } from "@caseai-connect/api-contracts"
 import type { INestApplication } from "@nestjs/common"
 import type { App } from "supertest/types"
 import { bindExpectActivityCreated } from "@/common/test/activity-test.helpers"
@@ -11,13 +10,13 @@ import {
 } from "@/common/test/test-transaction-manager"
 import { removeNullish } from "@/common/utils/remove-nullish"
 import { ActivitiesModule } from "@/domains/activities/activities.module"
+import { createDocumentForProject } from "@/domains/documents/document.factory"
 import { createOrganizationWithProject } from "@/domains/organizations/organization.factory"
-import { setupUserGuardForTesting } from "../../../../../test/e2e.helpers"
-import { expectResponse, type Requester, testRequester } from "../../../../../test/request"
-import { DocumentTag } from "../document-tag.entity"
-import { DocumentTagsModule } from "../document-tags.module"
+import { expectResponse, type Requester, testRequester } from "../../../../test/request"
+import { DocumentsModule } from "../documents.module"
+import { withDocumentAuthAndEmbeddingsMocks } from "../test-overrides"
 
-describe("DocumentTags - createOne", () => {
+describe("Documents - confirmMany", () => {
   let app: INestApplication<App>
   let request: Requester
   let setup: Awaited<ReturnType<typeof setupTransactionalTestDatabase>>
@@ -25,14 +24,16 @@ describe("DocumentTags - createOne", () => {
 
   let organizationId: string
   let projectId: string
+  let documentId: string
   let accessToken: string | undefined = "token"
   let auth0Id = "auth0|123"
   let expectActivityCreated: ReturnType<typeof bindExpectActivityCreated>
 
   beforeAll(async () => {
     setup = await setupTransactionalTestDatabase({
-      additionalImports: [DocumentTagsModule, ActivitiesModule],
-      applyOverrides: (moduleBuilder) => setupUserGuardForTesting(moduleBuilder, () => auth0Id),
+      additionalImports: [DocumentsModule, ActivitiesModule],
+      applyOverrides: (moduleBuilder) =>
+        withDocumentAuthAndEmbeddingsMocks(moduleBuilder, () => auth0Id),
     })
     repositories = setup.getAllRepositories()
     expectActivityCreated = bindExpectActivityCreated(repositories.activityRepository)
@@ -57,50 +58,44 @@ describe("DocumentTags - createOne", () => {
     organizationId = organization.id
     projectId = project.id
     auth0Id = user.auth0Id
-    return { organization, project }
+
+    const pendingDocument = await createDocumentForProject({
+      repositories,
+      organization,
+      project,
+      params: {
+        document: {
+          sourceType: "project",
+          uploadStatus: "pending",
+        },
+      },
+    })
+    documentId = pendingDocument.id
   }
 
-  const subject = async (payload?: typeof DocumentTagsRoutes.createOne.request) =>
+  const subject = async (payload?: typeof DocumentsRoutes.confirmMany.request) =>
     request({
-      route: DocumentTagsRoutes.createOne,
+      route: DocumentsRoutes.confirmMany,
       pathParams: removeNullish({ organizationId, projectId }),
       token: accessToken,
       request: payload,
     })
 
-  it("should create a document tag and return it", async () => {
+  it("should confirm uploaded documents", async () => {
     await createContext()
 
     const response = await subject({
       payload: {
-        name: "New Tag",
-        description: "A test tag",
+        documentIds: [documentId],
       },
     })
 
     expectResponse(response, 201)
-    expect(response.body.data.name).toBe("New Tag")
-    expect(response.body.data.description).toBe("A test tag")
-    expect(response.body.data.projectId).toBe(projectId)
-    expect(response.body.data.id).toBeDefined()
+    expect(response.body.data).toHaveLength(1)
+    expect(response.body.data[0]?.id).toBe(documentId)
 
-    const documentTagRepository = setup.getRepository(DocumentTag)
-    const documentTag = await documentTagRepository.findOne({
-      where: { id: response.body.data.id },
-    })
-    expect(documentTag).not.toBeNull()
-    expect(documentTag?.name).toBe("New Tag")
-    await expectActivityCreated("documentTag.create")
-  })
-
-  it("should create a document tag without description", async () => {
-    await createContext()
-
-    const response = await subject({ payload: { name: "Minimal Tag" } })
-
-    expectResponse(response, 201)
-    expect(response.body.data.name).toBe("Minimal Tag")
-    expect(response.body.data.description).toBeUndefined()
-    expect(response.body.data.parentId).toBeUndefined()
+    const document = await repositories.documentRepository.findOne({ where: { id: documentId } })
+    expect(document?.uploadStatus).toBe("uploaded")
+    await expectActivityCreated("document.createMany")
   })
 })

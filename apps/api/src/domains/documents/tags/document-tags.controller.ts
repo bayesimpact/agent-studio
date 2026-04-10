@@ -8,6 +8,7 @@ import { getRequiredConnectScope } from "@/common/context/request-context.helper
 import { AddContext, RequireContext } from "@/common/context/require-context.decorator"
 import { ResourceContextGuard } from "@/common/context/resource-context.guard"
 import { CheckPolicy } from "@/common/policies/check-policy.decorator"
+import { TrackActivity } from "@/domains/activities/track-activity.decorator"
 import { JwtAuthGuard } from "@/domains/auth/jwt-auth.guard"
 import { UserGuard } from "@/domains/users/user.guard"
 import type { DocumentTag } from "./document-tag.entity"
@@ -23,6 +24,7 @@ export class DocumentTagsController {
 
   @Post(DocumentTagsRoutes.createOne.path)
   @CheckPolicy((policy) => policy.canCreate())
+  @TrackActivity({ action: "documentTag.create" })
   async createOne(
     @Req() request: EndpointRequestWithProject,
     @Body() { payload }: typeof DocumentTagsRoutes.createOne.request,
@@ -54,6 +56,7 @@ export class DocumentTagsController {
   @Patch(DocumentTagsRoutes.updateOne.path)
   @CheckPolicy((policy) => policy.canUpdate())
   @AddContext("documentTag")
+  @TrackActivity({ action: "documentTag.update", entityFrom: "documentTag" })
   async updateOne(
     @Req() request: EndpointRequestWithDocumentTag,
     @Body() { payload }: typeof DocumentTagsRoutes.updateOne.request,
@@ -73,6 +76,7 @@ export class DocumentTagsController {
   @Delete(DocumentTagsRoutes.deleteOne.path)
   @CheckPolicy((policy) => policy.canDelete())
   @AddContext("documentTag")
+  @TrackActivity({ action: "documentTag.delete", entityFrom: "documentTag" })
   async deleteOne(
     @Req() request: EndpointRequestWithDocumentTag,
   ): Promise<typeof DocumentTagsRoutes.deleteOne.response> {

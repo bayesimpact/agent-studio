@@ -8,6 +8,7 @@ import { getRequiredConnectScope } from "@/common/context/request-context.helper
 import { AddContext, RequireContext } from "@/common/context/require-context.decorator"
 import { ResourceContextGuard } from "@/common/context/resource-context.guard"
 import { CheckPolicy } from "@/common/policies/check-policy.decorator"
+import { TrackActivity } from "@/domains/activities/track-activity.decorator"
 import { JwtAuthGuard } from "@/domains/auth/jwt-auth.guard"
 import { UserGuard } from "@/domains/users/user.guard"
 import type { Evaluation } from "./evaluation.entity"
@@ -23,6 +24,7 @@ export class EvaluationsController {
 
   @Post(EvaluationsRoutes.createOne.path)
   @CheckPolicy((policy) => policy.canCreate())
+  @TrackActivity({ action: "evaluation.create" })
   async createOne(
     @Req() request: EndpointRequestWithProject,
     @Body() { payload }: typeof EvaluationsRoutes.createOne.request,
@@ -50,6 +52,7 @@ export class EvaluationsController {
   @Patch(EvaluationsRoutes.updateOne.path)
   @CheckPolicy((policy) => policy.canUpdate())
   @AddContext("evaluation")
+  @TrackActivity({ action: "evaluation.update", entityFrom: "evaluation" })
   async updateOne(
     @Req() request: EndpointRequestWithEvaluation,
     @Body() { payload }: typeof EvaluationsRoutes.updateOne.request,
@@ -68,6 +71,7 @@ export class EvaluationsController {
   @Delete(EvaluationsRoutes.deleteOne.path)
   @CheckPolicy((policy) => policy.canDelete())
   @AddContext("evaluation")
+  @TrackActivity({ action: "evaluation.delete", entityFrom: "evaluation" })
   async deleteOne(
     @Req() request: EndpointRequestWithEvaluation,
   ): Promise<typeof EvaluationsRoutes.deleteOne.response> {

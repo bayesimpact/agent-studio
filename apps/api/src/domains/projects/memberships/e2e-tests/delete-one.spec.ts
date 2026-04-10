@@ -1,6 +1,7 @@
 import { ProjectMembershipRoutes } from "@caseai-connect/api-contracts"
 import type { INestApplication } from "@nestjs/common"
 import type { App } from "supertest/types"
+import { bindExpectActivityCreated } from "@/common/test/activity-test.helpers"
 import { clearTestDatabase } from "@/common/test/test-database"
 import {
   type AllRepositories,
@@ -8,6 +9,7 @@ import {
   teardownTestDatabase,
 } from "@/common/test/test-transaction-manager"
 import { removeNullish } from "@/common/utils/remove-nullish"
+import { ActivitiesModule } from "@/domains/activities/activities.module"
 import { createOrganizationWithProject } from "@/domains/organizations/organization.factory"
 import { mockInvitationSender, setupUserGuardForTesting } from "../../../../../test/e2e.helpers"
 import { expectResponse, type Requester, testRequester } from "../../../../../test/request"
@@ -25,13 +27,15 @@ describe("Project membership - deleteOne", () => {
   let membershipId: string
   let accessToken: string | undefined = "token"
   let auth0Id = "auth0|123"
+  let expectActivityCreated: ReturnType<typeof bindExpectActivityCreated>
 
   beforeAll(async () => {
     setup = await setupTransactionalTestDatabase({
-      additionalImports: [ProjectsModule],
+      additionalImports: [ProjectsModule, ActivitiesModule],
       applyOverrides: (moduleBuilder) => setupUserGuardForTesting(moduleBuilder, () => auth0Id),
     })
     repositories = setup.getAllRepositories()
+    expectActivityCreated = bindExpectActivityCreated(repositories.activityRepository)
     app = setup.module.createNestApplication()
     await app.init()
     request = testRequester(app)
@@ -88,6 +92,7 @@ describe("Project membership - deleteOne", () => {
       where: { id: membershipId },
     })
     expect(deletedMembership).toBeNull()
+    await expectActivityCreated("projectMembership.delete")
   })
 
   it("should also delete the placeholder user when removing a pending invitation", async () => {

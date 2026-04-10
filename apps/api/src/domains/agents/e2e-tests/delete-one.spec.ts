@@ -2,6 +2,7 @@ import { AgentsRoutes } from "@caseai-connect/api-contracts"
 import { afterAll } from "@jest/globals"
 import type { INestApplication } from "@nestjs/common"
 import type { App } from "supertest/types"
+import { bindExpectActivityCreated } from "@/common/test/activity-test.helpers"
 import { clearTestDatabase } from "@/common/test/test-database"
 import {
   type AllRepositories,
@@ -9,6 +10,7 @@ import {
   teardownTestDatabase,
 } from "@/common/test/test-transaction-manager"
 import { removeNullish } from "@/common/utils/remove-nullish"
+import { ActivitiesModule } from "@/domains/activities/activities.module"
 import {
   createOrganizationWithAgent,
   createOrganizationWithAgentSession,
@@ -29,13 +31,15 @@ describe("Agents - deleteOne", () => {
   let agentId: string
   let accessToken: string | undefined = "token"
   let auth0Id = "auth0|123"
+  let expectActivityCreated: ReturnType<typeof bindExpectActivityCreated>
 
   beforeAll(async () => {
     setup = await setupTransactionalTestDatabase({
-      additionalImports: [AgentsModule],
+      additionalImports: [AgentsModule, ActivitiesModule],
       applyOverrides: (moduleBuilder) => setupUserGuardForTesting(moduleBuilder, () => auth0Id),
     })
     repositories = setup.getAllRepositories()
+    expectActivityCreated = bindExpectActivityCreated(repositories.activityRepository)
     app = setup.module.createNestApplication()
     await app.init()
     request = testRequester(app)
@@ -81,6 +85,7 @@ describe("Agents - deleteOne", () => {
       where: { id: agentId },
     })
     expect(deletedAgent).toBeNull()
+    await expectActivityCreated("agent.delete")
   })
 
   it("should delete agent and its sessions", async () => {

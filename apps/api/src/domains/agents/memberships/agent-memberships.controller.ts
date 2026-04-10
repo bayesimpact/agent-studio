@@ -7,6 +7,7 @@ import type {
 import { AddContext, RequireContext } from "@/common/context/require-context.decorator"
 import { ResourceContextGuard } from "@/common/context/resource-context.guard"
 import { CheckPolicy } from "@/common/policies/check-policy.decorator"
+import { TrackActivity } from "@/domains/activities/track-activity.decorator"
 import { JwtAuthGuard } from "@/domains/auth/jwt-auth.guard"
 import { UserGuard } from "@/domains/users/user.guard"
 import type { AgentMembership } from "./agent-membership.entity"
@@ -33,6 +34,7 @@ export class AgentMembershipsController {
 
   @Post(AgentMembershipRoutes.createOne.path)
   @CheckPolicy((policy) => policy.canCreate())
+  @TrackActivity({ action: "agentMembership.invite" })
   async inviteAgentMembers(
     @Req() request: EndpointRequestWithAgent,
     @Body() { payload }: typeof AgentMembershipRoutes.createOne.request,
@@ -51,6 +53,7 @@ export class AgentMembershipsController {
   @Delete(AgentMembershipRoutes.deleteOne.path)
   @CheckPolicy((policy) => policy.canDelete())
   @AddContext("agentMembership")
+  @TrackActivity({ action: "agentMembership.delete", entityFrom: "memberAgentMembership" })
   async removeAgentMembership(
     @Req() request: EndpointRequestWithAgentMembership,
   ): Promise<typeof AgentMembershipRoutes.deleteOne.response> {

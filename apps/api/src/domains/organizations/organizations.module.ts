@@ -1,5 +1,6 @@
 import { Module } from "@nestjs/common"
 import { TypeOrmModule } from "@nestjs/typeorm"
+import { ActivitiesModule } from "@/domains/activities/activities.module"
 import { AuthModule } from "@/domains/auth/auth.module"
 import { User } from "@/domains/users/user.entity"
 import { UsersModule } from "@/domains/users/users.module"
@@ -15,6 +16,7 @@ import { OrganizationAccountProvisioningService } from "./provisioning/organizat
 @Module({
   imports: [
     TypeOrmModule.forFeature([Organization, OrganizationMembership, User]),
+    ActivitiesModule,
     UsersModule,
     AuthModule,
   ],

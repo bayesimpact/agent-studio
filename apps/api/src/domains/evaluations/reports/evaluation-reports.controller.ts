@@ -9,6 +9,7 @@ import { getRequiredConnectScope } from "@/common/context/request-context.helper
 import { AddContext, RequireContext } from "@/common/context/require-context.decorator"
 import { ResourceContextGuard } from "@/common/context/resource-context.guard"
 import { CheckPolicy } from "@/common/policies/check-policy.decorator"
+import { TrackActivity } from "@/domains/activities/track-activity.decorator"
 import { JwtAuthGuard } from "@/domains/auth/jwt-auth.guard"
 import { UserGuard } from "@/domains/users/user.guard"
 import { getTraceUrl } from "@/external/langfuse/langfuse-helper"
@@ -26,6 +27,7 @@ export class EvaluationReportsController {
   @Post(EvaluationReportsRoutes.createOne.path)
   @AddContext("agent")
   @CheckPolicy((policy) => policy.canCreate())
+  @TrackActivity({ action: "evaluationReport.create" })
   async createOne(
     @Req() request: EndpointRequestWithEvaluation & EndpointRequestWithAgent,
   ): Promise<typeof EvaluationReportsRoutes.createOne.response> {

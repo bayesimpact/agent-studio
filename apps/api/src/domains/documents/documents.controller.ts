@@ -44,6 +44,7 @@ import { ResourceContextGuard } from "@/common/context/resource-context.guard"
 import type { RequiredConnectScope } from "@/common/entities/connect-required-fields"
 import { CheckPolicy } from "@/common/policies/check-policy.decorator"
 import type { MulterFile } from "@/common/types"
+import { TrackActivity } from "@/domains/activities/track-activity.decorator"
 import { JwtAuthGuard } from "@/domains/auth/jwt-auth.guard"
 import { UserGuard } from "@/domains/users/user.guard"
 import type { Document } from "./document.entity"
@@ -75,6 +76,7 @@ export class DocumentsController {
 
   @CheckPolicy((policy) => policy.canCreate())
   @Post(DocumentsRoutes.uploadOne.path)
+  @TrackActivity({ action: "document.create" })
   @HttpCode(HttpStatus.CREATED)
   @UseInterceptors(FileInterceptor("file"))
   async uploadOne(
@@ -204,6 +206,7 @@ export class DocumentsController {
 
   @CheckPolicy((policy) => policy.canCreate())
   @Post(DocumentsRoutes.confirmMany.path)
+  @TrackActivity({ action: "document.createMany" })
   @HttpCode(HttpStatus.CREATED)
   async confirmMany(
     @Body() { payload }: typeof DocumentsRoutes.confirmMany.request,
@@ -263,6 +266,7 @@ export class DocumentsController {
   @CheckPolicy((policy) => policy.canUpdate())
   @AddContext("document")
   @Patch(DocumentsRoutes.updateOne.path)
+  @TrackActivity({ action: "document.update", entityFrom: "document" })
   async updateOne(
     @Request() req: EndpointRequestWithDocument,
     @Body() { payload }: typeof DocumentsRoutes.updateOne.request,
@@ -279,6 +283,7 @@ export class DocumentsController {
   @CheckPolicy((policy) => policy.canDelete())
   @AddContext("document")
   @Delete(DocumentsRoutes.deleteOne.path)
+  @TrackActivity({ action: "document.delete", entityFrom: "document" })
   async deleteOne(
     @Request() req: EndpointRequestWithDocument,
   ): Promise<typeof DocumentsRoutes.deleteOne.response> {

@@ -44,6 +44,7 @@ describe("OrganizationsController", () => {
     // Delete in order to respect foreign key constraints
     // Use query builder to delete all records (delete({}) doesn't work with empty criteria)
     await repositories.featureFlagRepository.createQueryBuilder().delete().execute()
+    await repositories.activityRepository.createQueryBuilder().delete().execute()
     await repositories.organizationMembershipRepository.createQueryBuilder().delete().execute()
     await repositories.organizationRepository.createQueryBuilder().delete().execute()
     await repositories.userRepository.createQueryBuilder().delete().execute()

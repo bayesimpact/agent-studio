@@ -2,6 +2,7 @@ import { InvitationsRoutes } from "@caseai-connect/api-contracts"
 import { Body, Controller, Post, Req, UseGuards } from "@nestjs/common"
 import type { JwtPayload } from "@/common/context/request.interface"
 import { getAccessToken } from "@/common/utils/get-access-token"
+import { TrackActivity } from "@/domains/activities/track-activity.decorator"
 import { JwtAuthGuard } from "@/domains/auth/jwt-auth.guard"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
 import { InvitationsService } from "./invitations.service"
@@ -18,6 +19,7 @@ export class InvitationsController {
   constructor(private readonly invitationsService: InvitationsService) {}
 
   @Post(InvitationsRoutes.acceptOne.path)
+  @TrackActivity({ action: "invitation.accept" })
   async acceptInvitation(
     @Req() request: { user: JwtPayload },
     @Body() body: typeof InvitationsRoutes.acceptOne.request,
@@ -26,11 +28,15 @@ export class InvitationsController {
     // @ts-expect-error
     const accessToken = getAccessToken(request.headers.authorization)
 
-    await this.invitationsService.acceptInvitation({
+    const { userId } = await this.invitationsService.acceptInvitation({
       ticketId: body.payload.ticketId,
       auth0Sub: jwtPayload.sub,
       accessToken,
     })
+
+    // we need to set the activity user id for the activity to be tracked and we can't rely on the UserGuard.
+    // so we need to set it manually.
+    ;(request as Record<string, unknown>).activityUserId = userId
 
     return { data: { success: true } }
   }

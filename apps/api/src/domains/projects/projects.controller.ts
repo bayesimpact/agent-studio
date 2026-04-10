@@ -13,6 +13,7 @@ import type {
 import { AddContext, RequireContext } from "@/common/context/require-context.decorator"
 import { ResourceContextGuard } from "@/common/context/resource-context.guard"
 import { CheckPolicy } from "@/common/policies/check-policy.decorator"
+import { TrackActivity } from "@/domains/activities/track-activity.decorator"
 import { JwtAuthGuard } from "@/domains/auth/jwt-auth.guard"
 import { UserGuard } from "@/domains/users/user.guard"
 import type { FeatureFlag } from "../feature-flags/feature-flag.entity"
@@ -29,6 +30,7 @@ export class ProjectsController {
 
   @Post(ProjectsRoutes.createOne.path)
   @CheckPolicy((policy) => policy.canCreate())
+  @TrackActivity({ action: "project.create" })
   async createProject(
     @Req() request: EndpointRequestWithOrganizationMembership,
     @Body() body: typeof ProjectsRoutes.createOne.request,
@@ -55,6 +57,7 @@ export class ProjectsController {
   @Patch(ProjectsRoutes.updateOne.path)
   @CheckPolicy((policy) => policy.canUpdate())
   @AddContext("project")
+  @TrackActivity({ action: "project.update", entityFrom: "project" })
   async updateProject(
     @Req() request: EndpointRequestWithProject,
     @Body() body: typeof ProjectsRoutes.updateOne.request,
@@ -69,6 +72,7 @@ export class ProjectsController {
   @Delete(ProjectsRoutes.deleteOne.path)
   @CheckPolicy((policy) => policy.canDelete())
   @AddContext("project")
+  @TrackActivity({ action: "project.delete", entityFrom: "project" })
   async deleteProject(
     @Req() request: EndpointRequestWithProject,
   ): Promise<typeof ProjectsRoutes.deleteOne.response> {

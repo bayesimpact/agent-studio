@@ -2,6 +2,7 @@ import { DocumentTagsRoutes } from "@caseai-connect/api-contracts"
 import { afterAll } from "@jest/globals"
 import type { INestApplication } from "@nestjs/common"
 import type { App } from "supertest/types"
+import { bindExpectActivityCreated } from "@/common/test/activity-test.helpers"
 import { clearTestDatabase } from "@/common/test/test-database"
 import {
   type AllRepositories,
@@ -9,6 +10,7 @@ import {
   teardownTestDatabase,
 } from "@/common/test/test-transaction-manager"
 import { removeNullish } from "@/common/utils/remove-nullish"
+import { ActivitiesModule } from "@/domains/activities/activities.module"
 import { createOrganizationWithProject } from "@/domains/organizations/organization.factory"
 import { setupUserGuardForTesting } from "../../../../../test/e2e.helpers"
 import { expectResponse, type Requester, testRequester } from "../../../../../test/request"
@@ -27,13 +29,15 @@ describe("DocumentTags - deleteOne", () => {
   let documentTagId: string
   let accessToken: string | undefined = "token"
   let auth0Id = "auth0|123"
+  let expectActivityCreated: ReturnType<typeof bindExpectActivityCreated>
 
   beforeAll(async () => {
     setup = await setupTransactionalTestDatabase({
-      additionalImports: [DocumentTagsModule],
+      additionalImports: [DocumentTagsModule, ActivitiesModule],
       applyOverrides: (moduleBuilder) => setupUserGuardForTesting(moduleBuilder, () => auth0Id),
     })
     repositories = setup.getAllRepositories()
+    expectActivityCreated = bindExpectActivityCreated(repositories.activityRepository)
     app = setup.module.createNestApplication()
     await app.init()
     request = testRequester(app)
@@ -82,6 +86,7 @@ describe("DocumentTags - deleteOne", () => {
     const documentTagRepository = setup.getRepository(DocumentTag)
     const deleted = await documentTagRepository.findOne({ where: { id: documentTagId } })
     expect(deleted).toBeNull()
+    await expectActivityCreated("documentTag.delete")
   })
 
   it("should return 404 for a non-existent document tag ID", async () => {

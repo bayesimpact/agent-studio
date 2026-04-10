@@ -2,6 +2,7 @@ import { OrganizationsRoutes } from "@caseai-connect/api-contracts"
 import { Body, Controller, Post, Req, UseGuards } from "@nestjs/common"
 import type { EndpointRequest } from "@/common/context/request.interface"
 import { CheckPolicy } from "@/common/policies/check-policy.decorator"
+import { TrackActivity } from "@/domains/activities/track-activity.decorator"
 import { JwtAuthGuard } from "@/domains/auth/jwt-auth.guard"
 import { UserGuard } from "@/domains/users/user.guard"
 import { toDto } from "./organization.helpers"
@@ -16,6 +17,7 @@ export class OrganizationsController {
 
   @Post(OrganizationsRoutes.createOrganization.path)
   @CheckPolicy((policy) => policy.canCreate())
+  @TrackActivity({ action: "organization.create" })
   async createOrganization(
     @Req() request: EndpointRequest,
     @Body() body: typeof OrganizationsRoutes.createOrganization.request,
