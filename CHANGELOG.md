@@ -9,6 +9,7 @@ This project uses [CalVer](https://calver.org/) (YY.MM.Micro) for product versio
 
 ### Added
 - Link to Help Center
+- Track user activities for further auditing
 
 ### Changed
 - New user interface to list organizations, workspaces, agents, sessions
