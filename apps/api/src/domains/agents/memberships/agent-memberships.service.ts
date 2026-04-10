@@ -291,6 +291,41 @@ export class AgentMembershipsService {
     }
   }
 
+  async createAdminAgentMembershipsForProjectAdmins({
+    agentId,
+    projectId,
+    excludeUserId,
+  }: {
+    agentId: string
+    projectId: string
+    excludeUserId: string
+  }): Promise<void> {
+    const projectMemberships = await this.dataSource.getRepository(ProjectMembership).find({
+      where: [
+        { projectId, role: "admin" },
+        { projectId, role: "owner" },
+      ],
+    })
+
+    for (const projectMembership of projectMemberships) {
+      if (projectMembership.userId === excludeUserId) continue
+
+      const existing = await this.agentMembershipRepository.findOne({
+        where: { agentId, userId: projectMembership.userId },
+      })
+      if (existing) continue
+
+      const membership = this.agentMembershipRepository.create({
+        agentId,
+        userId: projectMembership.userId,
+        role: "admin",
+        status: "accepted",
+        invitationToken: `project_admin_propagation-${randomUUID()}`,
+      })
+      await this.agentMembershipRepository.save(membership)
+    }
+  }
+
   async deleteAgentMembershipsForUserInProject({
     manager,
     userId,

@@ -12,6 +12,8 @@ import {
   createOrganizationWithAgent,
   createOrganizationWithProject,
 } from "@/domains/organizations/organization.factory"
+import { addUserToProject } from "@/domains/projects/memberships/project-membership.factory"
+import { userFactory } from "@/domains/users/user.factory"
 import { sdk } from "@/external/llm/open-telemetry-init"
 import { AgentsModule } from "./agents.module"
 import { AgentsService } from "./agents.service"
@@ -76,6 +78,67 @@ describe("AgentsService", () => {
       expect(savedTemplate).not.toBeNull()
       expect(savedTemplate?.name).toBe("My Template")
     })
+
+    it("should create admin agent memberships for existing project admins and owners", async () => {
+      const { organization, project, user } = await createOrganizationWithProject(repositories)
+
+      // Add a second user as a project admin
+      const adminUser = userFactory.build({ email: "admin@example.com" })
+      await repositories.userRepository.save(adminUser)
+      await addUserToProject({
+        repositories,
+        project,
+        user: adminUser,
+        membership: { role: "admin" },
+      })
+
+      // Add a third user as a project member (should NOT get agent membership)
+      const memberUser = userFactory.build({ email: "member@example.com" })
+      await repositories.userRepository.save(memberUser)
+      await addUserToProject({
+        repositories,
+        project,
+        user: memberUser,
+        membership: { role: "member" },
+      })
+
+      const result = await service.createAgent({
+        connectScope: {
+          organizationId: organization.id,
+          projectId: project.id,
+        },
+        fields: {
+          type: "conversation",
+          name: "New Agent",
+          defaultPrompt: "Prompt",
+          model: AgentModel.Gemini25Flash,
+          temperature: 0,
+          locale: AgentLocale.EN,
+        },
+        userId: user.id,
+      })
+
+      const memberships = await repositories.agentMembershipRepository.find({
+        where: { agentId: result.id },
+      })
+
+      // Owner (creator) + admin = 2 memberships
+      expect(memberships).toHaveLength(2)
+
+      const ownerMembership = memberships.find((membership) => membership.userId === user.id)
+      expect(ownerMembership).toBeDefined()
+      expect(ownerMembership?.role).toBe("owner")
+
+      const adminMembership = memberships.find((membership) => membership.userId === adminUser.id)
+      expect(adminMembership).toBeDefined()
+      expect(adminMembership?.role).toBe("admin")
+      expect(adminMembership?.status).toBe("accepted")
+
+      // Member should NOT have an agent membership
+      const memberMembership = memberships.find((membership) => membership.userId === memberUser.id)
+      expect(memberMembership).toBeUndefined()
+    })
+
     it("should throw UnprocessableEntityException when name is less than 3 characters", async () => {
       const { organization, project, user } = await createOrganizationWithProject(repositories)
 
