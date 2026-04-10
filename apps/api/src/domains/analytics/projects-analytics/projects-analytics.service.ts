@@ -12,7 +12,7 @@ import {
   getUtcDayKeys,
 } from "@/domains/analytics/shared/analytics-conversation-metrics.helpers"
 
-import type { AnalyticsDailyPoint } from "./projects-analytics.types"
+import type { AnalyticsDailyPoint } from "@/domains/analytics/shared/analytics-metrics.types"
 
 @Injectable()
 export class ProjectsAnalyticsService {

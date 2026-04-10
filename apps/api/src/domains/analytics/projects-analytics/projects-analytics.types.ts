@@ -1,1 +1,1 @@
-export type AnalyticsDailyPoint = { date: string; value: number }
+export type { AnalyticsDailyPoint } from "../shared/analytics-metrics.types"
