@@ -44,7 +44,6 @@
     "@opentelemetry/instrumentation-http": "^0.214.0",
     "@opentelemetry/instrumentation-nestjs-core": "^0.60.0",
     "@opentelemetry/instrumentation-pg": "^0.66.0",
-    "@opentelemetry/sdk-node": "^0.211.0",
     "ai": "^6.0.87",
     "axios": "^1.12.2",
     "bullmq": "^5.70.2",
