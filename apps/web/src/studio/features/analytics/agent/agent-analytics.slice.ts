@@ -1,7 +1,7 @@
 import { createSlice } from "@reduxjs/toolkit"
 import { ADS, type AsyncData } from "@/common/store/async-data-status"
-import type { AnalyticsDailyPoint } from "./analytics.models"
-import { loadProjectAnalytics } from "./analytics.thunks"
+import type { AnalyticsDailyPoint } from "../project/analytics.models"
+import { loadAgentAnalytics } from "./agent-analytics.thunks"
 
 interface State {
   conversationsPerDay: AsyncData<AnalyticsDailyPoint[]>
@@ -20,14 +20,14 @@ const initialState: State = {
 }
 
 const slice = createSlice({
-  name: "projectAnalytics",
+  name: "agentAnalytics",
   initialState,
   reducers: {
     reset: () => initialState,
   },
   extraReducers: (builder) => {
     builder
-      .addCase(loadProjectAnalytics.pending, (state) => {
+      .addCase(loadAgentAnalytics.pending, (state) => {
         if (!ADS.isFulfilled(state.conversationsPerDay)) {
           state.conversationsPerDay.status = ADS.Loading
         }
@@ -37,7 +37,7 @@ const slice = createSlice({
         state.conversationsPerDay.error = null
         state.avgUserQuestionsPerSessionPerDay.error = null
       })
-      .addCase(loadProjectAnalytics.fulfilled, (state, action) => {
+      .addCase(loadAgentAnalytics.fulfilled, (state, action) => {
         state.conversationsPerDay = {
           status: ADS.Fulfilled,
           error: null,
@@ -49,8 +49,8 @@ const slice = createSlice({
           value: action.payload.avgUserQuestionsPerSessionPerDay,
         }
       })
-      .addCase(loadProjectAnalytics.rejected, (state, action) => {
-        const message = action.error.message || "Failed to load analytics"
+      .addCase(loadAgentAnalytics.rejected, (state, action) => {
+        const message = action.error.message || "Failed to load agent analytics"
         state.conversationsPerDay = {
           status: ADS.Error,
           error: message,
@@ -65,7 +65,7 @@ const slice = createSlice({
   },
 })
 
-export type { State as ProjectAnalyticsState }
-export const projectAnalyticsInitialState = initialState
-export const projectAnalyticsActions = { ...slice.actions }
-export const projectAnalyticsSlice = slice
+export type { State as AgentAnalyticsState }
+export const agentAnalyticsInitialState = initialState
+export const agentAnalyticsActions = { ...slice.actions }
+export const agentAnalyticsSlice = slice

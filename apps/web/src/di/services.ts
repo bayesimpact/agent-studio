@@ -9,7 +9,8 @@ import type { IProjectsSpi } from "@/common/features/projects/projects.spi"
 import { services } from "@/external/axios.services"
 import type { IAgentMembershipsSpi } from "@/studio/features/agent-memberships/agent-memberships.spi"
 import type { IAgentMessageFeedbackSpi } from "@/studio/features/agent-message-feedback/agent-message-feedback.spi"
-import type { IAnalyticsSpi } from "@/studio/features/analytics/project/analytics.spi"
+import type { IAgentAnalyticsSpi } from "@/studio/features/analytics/agent/agent-analytics.spi"
+import type { IProjectAnalyticsSpi } from "@/studio/features/analytics/project/analytics.spi"
 import type { IDocumentTagsSpi } from "@/studio/features/document-tags/document-tags.spi"
 import type { IDocumentsSpi } from "@/studio/features/documents/documents.spi"
 import type { IEvaluationReportsSpi } from "@/studio/features/evaluation-reports/evaluation-reports.spi"
@@ -18,7 +19,7 @@ import type { IInvitationsSpi } from "@/studio/features/invitations/invitations.
 import type { IProjectMembershipsSpi } from "@/studio/features/project-memberships/project-memberships.spi"
 
 export type Services = {
-  analytics: IAnalyticsSpi
+  agentAnalytics: IAgentAnalyticsSpi
   agentMemberships: IAgentMembershipsSpi
   agentMessageFeedback: IAgentMessageFeedbackSpi
   agents: IAgentsSpi
@@ -33,6 +34,7 @@ export type Services = {
   invitations: IInvitationsSpi
   me: IMeSpi
   organizations: IOrganizationsSpi
+  projectAnalytics: IProjectAnalyticsSpi
   projectMemberships: IProjectMembershipsSpi
   projects: IProjectsSpi
 }
