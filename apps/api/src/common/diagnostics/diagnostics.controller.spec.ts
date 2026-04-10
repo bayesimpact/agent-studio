@@ -26,7 +26,9 @@ describe("DiagnosticsController", () => {
     it("returns 404 when secret does not match", async () => {
       process.env.DIAGNOSTICS_SECRET = "correct-secret"
       const app = await createApp()
-      const response = await request(app.getHttpServer()).get("/diagnostics/wrong-secret/test-error")
+      const response = await request(app.getHttpServer()).get(
+        "/diagnostics/wrong-secret/test-error",
+      )
       expect(response.status).toBe(404)
       await app.close()
     })
