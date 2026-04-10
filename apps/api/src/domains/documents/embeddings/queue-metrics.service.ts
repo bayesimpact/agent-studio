@@ -32,9 +32,13 @@ export class QueueMetricsService implements OnModuleInit, OnModuleDestroy {
     private readonly documentEmbeddingsQueue: Queue,
   ) {
     const queueAttr = { queue: DOCUMENT_EMBEDDINGS_QUEUE_NAME }
-    this.waitingGauge.addCallback((result) => result.observe(this.lastCounts.waiting ?? 0, queueAttr))
+    this.waitingGauge.addCallback((result) =>
+      result.observe(this.lastCounts.waiting ?? 0, queueAttr),
+    )
     this.activeGauge.addCallback((result) => result.observe(this.lastCounts.active ?? 0, queueAttr))
-    this.completedGauge.addCallback((result) => result.observe(this.lastCounts.completed ?? 0, queueAttr))
+    this.completedGauge.addCallback((result) =>
+      result.observe(this.lastCounts.completed ?? 0, queueAttr),
+    )
     this.failedGauge.addCallback((result) => result.observe(this.lastCounts.failed ?? 0, queueAttr))
   }
 
