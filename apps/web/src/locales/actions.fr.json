@@ -1,7 +1,6 @@
 {
   "actions": {
     "accept": "Accepter",
-    "selectOrganization": "Sélectionner une organisation",
     "add": "Ajouter",
     "back": "Retour",
     "cancel": "Annuler",
@@ -20,8 +19,10 @@
     "enter": "Entrer",
     "filter": "Filtrer",
     "finish": "Terminer",
-    "goToApp": "Ouvrir l'application",
-    "goToStudio": "Ouvrir le studio",
+    "goToApp": "Application",
+    "goToEval": "Évaluation",
+    "goToStudio": "Studio",
+    "invite": "Inviter",
     "leave": "Quitter",
     "loadMore": "Charger plus",
     "more": "Plus",
@@ -36,6 +37,7 @@
     "save": "Enregistrer",
     "search": "Rechercher",
     "select": "Sélectionner",
+    "selectOrganization": "Sélectionner une organisation",
     "send": "Envoyer",
     "sort": "Trier",
     "start": "Commencer",
@@ -43,7 +45,6 @@
     "submit": "Soumettre",
     "update": "Mettre à jour",
     "upload": "Téléverser",
-    "invite": "Inviter",
     "view": "Voir"
   }
 }

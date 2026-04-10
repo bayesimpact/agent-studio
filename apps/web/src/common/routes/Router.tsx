@@ -3,6 +3,7 @@ import { HomeRoute } from "@/common/routes/HomeRoute"
 import { LogoutRoute } from "@/common/routes/LogoutRoute"
 import { NotFoundRoute } from "@/common/routes/NotFoundRoute"
 import { deskRoutes } from "@/desk/routes/DeskRoutes"
+import { evalRoutes } from "@/eval/routes/EvalRoutes"
 import { studioRoutes } from "@/studio/routes/StudioRoutes"
 import { RouteNames } from "./helpers"
 import { OnboardingRoute } from "./OnboardingRoute"
@@ -29,6 +30,7 @@ const router = () =>
 
     studioRoutes,
     deskRoutes,
+    evalRoutes,
 
     {
       path: "*",

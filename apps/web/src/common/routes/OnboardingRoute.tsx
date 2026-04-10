@@ -9,9 +9,11 @@ import { selectOrganizationsData } from "@/common/features/organizations/organiz
 import { ADS } from "@/common/store/async-data-status"
 import { useAppSelector } from "@/common/store/hooks"
 import { DeskRouteNames } from "@/desk/routes/helpers"
+import { EvalRouteNames } from "@/eval/routes/helpers"
 import { StudioRouteNames } from "@/studio/routes/helpers"
 import { selectCanAccessStudioForOrganizationId, selectMe } from "../features/me/me.selectors"
-import { useBuildPath } from "../hooks/use-build-path"
+import { useAbility } from "../hooks/use-ability"
+import { buildOrganizationPath, useBuildPath } from "../hooks/use-build-path"
 import { LoadingRoute } from "./LoadingRoute"
 
 export function OnboardingRoute() {
@@ -47,26 +49,7 @@ export function OnboardingRoute() {
 }
 
 function OrganizationItem({ organization, index }: { organization: Organization; index: number }) {
-  const navigate = useNavigate()
   const { t } = useTranslation()
-  const canAccessStudio = useAppSelector(selectCanAccessStudioForOrganizationId(organization.id))
-  const { buildPath } = useBuildPath()
-
-  const handleGoToStudio = () => {
-    const path = buildPath("organization", {
-      organizationId: organization.id,
-      forceInterface: StudioRouteNames.STUDIO,
-    })
-    navigate(path)
-  }
-
-  const handleGoToApp = () => {
-    const path = buildPath("organization", {
-      organizationId: organization.id,
-      forceInterface: DeskRouteNames.APP,
-    })
-    navigate(path)
-  }
 
   return (
     <GridItem
@@ -76,13 +59,69 @@ function OrganizationItem({ organization, index }: { organization: Organization;
       description={""}
       action={
         <div className="flex items-center gap-2 flex-wrap">
-          <Button variant={canAccessStudio ? "outline" : "default"} onClick={handleGoToApp}>
-            {t("actions:goToApp")}
-          </Button>
+          <NavAppButton organizationId={organization.id} />
 
-          {canAccessStudio && <Button onClick={handleGoToStudio}>{t("actions:goToStudio")}</Button>}
+          <NavStudioButton organizationId={organization.id} />
+
+          <NavEvalButton organizationId={organization.id} />
         </div>
       }
     />
+  )
+}
+
+function NavAppButton({ organizationId }: { organizationId: string }) {
+  const navigate = useNavigate()
+  const { t } = useTranslation()
+  const { buildPath } = useBuildPath()
+
+  const handleClick = () => {
+    const path = buildPath("organization", {
+      organizationId,
+      forceInterface: DeskRouteNames.APP,
+    })
+    navigate(path)
+  }
+  return (
+    <Button variant="outline" onClick={handleClick}>
+      {t("actions:goToApp")}
+    </Button>
+  )
+}
+
+function NavStudioButton({ organizationId }: { organizationId: string }) {
+  const navigate = useNavigate()
+  const { t } = useTranslation()
+  const canAccessStudio = useAppSelector(selectCanAccessStudioForOrganizationId(organizationId))
+  const { buildPath } = useBuildPath()
+
+  const handleClick = () => {
+    const path = buildPath("organization", {
+      organizationId,
+      forceInterface: StudioRouteNames.STUDIO,
+    })
+    navigate(path)
+  }
+  if (!canAccessStudio) return null
+  return (
+    <Button variant="outline" onClick={handleClick}>
+      {t("actions:goToStudio")}
+    </Button>
+  )
+}
+
+function NavEvalButton({ organizationId }: { organizationId: string }) {
+  const navigate = useNavigate()
+  const { t } = useTranslation()
+  const { isPremiumMember } = useAbility()
+  const handleClick = () => {
+    const path = buildOrganizationPath({ organizationId, forceInterface: EvalRouteNames.APP })
+    navigate(path)
+  }
+  if (!isPremiumMember) return null
+  return (
+    <Button variant={"outline"} onClick={handleClick}>
+      {t("actions:goToEval")}
+    </Button>
   )
 }

@@ -31,7 +31,7 @@ export function SidebarAgentList({
   if (!ADS.isFulfilled(agents) || !project) return null
 
   return (
-    <AgentList
+    <WithData
       action={action}
       organizationId={organizationId}
       project={project}
@@ -40,7 +40,7 @@ export function SidebarAgentList({
   )
 }
 
-export function AgentList({
+function WithData({
   organizationId,
   project,
   agents,
