@@ -72,6 +72,13 @@ export class AgentsService {
       agentId: agent.id,
       userId,
     })
+
+    await this.agentMembershipsService.createAdminAgentMembershipsForProjectAdmins({
+      agentId: agent.id,
+      projectId: connectScope.projectId,
+      excludeUserId: userId,
+    })
+
     return agent
   }
 
