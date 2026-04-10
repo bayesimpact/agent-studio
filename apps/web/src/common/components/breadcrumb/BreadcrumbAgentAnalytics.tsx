@@ -5,18 +5,18 @@ import { useFeatureFlags } from "@/common/hooks/use-feature-flags"
 import { useIsRoute } from "@/common/hooks/use-is-route"
 import { StudioRouteNames } from "@/studio/routes/helpers"
 
-export function BreadcrumbAnalytics() {
+export function BreadcrumbAgentAnalytics() {
   const { hasFeature } = useFeatureFlags()
   const { isRoute } = useIsRoute()
-  const isProjectAnalyticsRoute = isRoute(StudioRouteNames.PROJECT_ANALYTICS)
-  const { t } = useTranslation()
-  if (!hasFeature("project-analytics") || !isProjectAnalyticsRoute) return null
+  const isAgentAnalyticsRoute = isRoute(StudioRouteNames.AGENT_ANALYTICS)
+  const { t } = useTranslation("agentAnalytics")
+  if (!hasFeature("agent-analytics") || !isAgentAnalyticsRoute) return null
   return (
     <>
       <BreadcrumbSeparator>
         <GitCommitHorizontalIcon />
       </BreadcrumbSeparator>
-      <BreadcrumbItem className="capitalize">{t("analytics:analytics")}</BreadcrumbItem>
+      <BreadcrumbItem className="capitalize">{t("list.pageTitle")}</BreadcrumbItem>
     </>
   )
 }

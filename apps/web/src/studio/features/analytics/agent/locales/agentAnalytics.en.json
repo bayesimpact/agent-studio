@@ -1,0 +1,10 @@
+{
+  "agentAnalytics": {
+    "list": {
+      "title": "Analytics",
+      "description": "Conversation metrics for this agent.",
+      "pageTitle": "Agent analytics",
+      "placeholder": "Charts will load here."
+    }
+  }
+}

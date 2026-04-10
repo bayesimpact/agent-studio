@@ -1,0 +1,10 @@
+{
+  "agentAnalytics": {
+    "list": {
+      "title": "Analytique",
+      "description": "Indicateurs de conversation pour cet agent.",
+      "pageTitle": "Analytique de l’agent",
+      "placeholder": "Les graphiques s’afficheront ici."
+    }
+  }
+}

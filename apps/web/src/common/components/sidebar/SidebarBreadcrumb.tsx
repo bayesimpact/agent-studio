@@ -1,5 +1,6 @@
 import { Breadcrumb, BreadcrumbList } from "@caseai-connect/ui/shad/breadcrumb"
 import { BreadcrumbAgent } from "@/common/components/breadcrumb/BreadcrumbAgent"
+import { BreadcrumbAgentAnalytics } from "@/common/components/breadcrumb/BreadcrumbAgentAnalytics"
 import { BreadcrumbAgentMembership } from "@/common/components/breadcrumb/BreadcrumbAgentMembership"
 import { BreadcrumbAgentSession } from "@/common/components/breadcrumb/BreadcrumbAgentSession"
 import { BreadcrumbAnalytics } from "@/common/components/breadcrumb/BreadcrumbAnalytics"
@@ -17,6 +18,8 @@ export function SidebarBreadcrumb({ organization }: { organization: Organization
         <BreadcrumbProject organization={organization} />
 
         <BreadcrumbAgent organizationId={organization.id} />
+
+        <BreadcrumbAgentAnalytics />
 
         <BreadcrumbAgentSession organizationId={organization.id} />
 

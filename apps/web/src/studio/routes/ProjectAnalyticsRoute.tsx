@@ -10,9 +10,9 @@ import { useAppDispatch, useAppSelector } from "@/common/store/hooks"
 import {
   selectAnalyticsAvgUserQuestionsPerSessionPerDay,
   selectAnalyticsConversationsPerDay,
-} from "@/studio/features/analytics/analytics.selectors"
-import { loadProjectAnalytics } from "@/studio/features/analytics/analytics.thunks"
-import { dateRangeToAnalyticsQueryBounds } from "@/studio/features/analytics/analytics-date-range"
+} from "@/studio/features/analytics/project/analytics.selectors"
+import { loadProjectAnalytics } from "@/studio/features/analytics/project/analytics.thunks"
+import { dateRangeToAnalyticsQueryBounds } from "@/studio/features/analytics/project/analytics-date-range"
 import { GridHeader } from "../../common/components/grid/Grid"
 import { AsyncRoute } from "../../common/routes/AsyncRoute"
 
@@ -35,7 +35,7 @@ function getInitialAnalyticsBounds() {
   })!
 }
 
-export function AnalyticsRoute() {
+export function ProjectAnalyticsRoute() {
   const dispatch = useAppDispatch()
   const [bounds, setBounds] = useState(getInitialAnalyticsBounds)
 

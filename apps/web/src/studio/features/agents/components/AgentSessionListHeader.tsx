@@ -6,7 +6,9 @@ import { BaseAgentSessionCreator } from "@/common/features/agents/agent-sessions
 import type { Agent } from "@/common/features/agents/agents.models"
 import { getAgentIcon } from "@/common/features/agents/components/AgentIcon"
 import { useGetPath } from "@/common/hooks/use-build-path"
+import { useFeatureFlags } from "@/common/hooks/use-feature-flags"
 import { AgentActions } from "./AgentActions"
+import { AgentAnalyticsCard } from "./AgentAnalyticsCard"
 import { FeedbackButton } from "./FeedbackButton"
 
 export function AgentSessionListHeader({
@@ -23,6 +25,7 @@ export function AgentSessionListHeader({
   backTo: "agent" | "project"
 }) {
   const { t } = useTranslation()
+  const { hasFeature } = useFeatureFlags()
   const navigate = useNavigate()
   const { getPath } = useGetPath()
 
@@ -33,8 +36,11 @@ export function AgentSessionListHeader({
 
   const Icon = getAgentIcon(agent.type)
 
+  const showAgentAnalytics = agent.type === "conversation" && hasFeature("agent-analytics")
+  const headerCardCount = showAgentAnalytics ? 3 : 2
+
   return (
-    <Grid cols={2} total={2}>
+    <Grid cols={headerCardCount} total={headerCardCount}>
       <GridHeader
         onBack={handleBack}
         title={agent.name}
@@ -56,8 +62,18 @@ export function AgentSessionListHeader({
           withBorderBottom={withBorderBottom}
         />
 
+        {showAgentAnalytics ? (
+          <AgentAnalyticsCard
+            agentId={agent.id}
+            index={1}
+            organizationId={organizationId}
+            projectId={projectId}
+            withBorderBottom={withBorderBottom}
+          />
+        ) : null}
+
         <FeedbackButton
-          index={1}
+          index={showAgentAnalytics ? 2 : 1}
           agentId={agent.id}
           organizationId={organizationId}
           projectId={projectId}
