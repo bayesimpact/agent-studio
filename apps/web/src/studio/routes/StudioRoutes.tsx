@@ -23,12 +23,13 @@ import { EvaluationButton } from "@/studio/features/agents/components/Evaluation
 import { MembersButton } from "@/studio/features/agents/components/MembersButton"
 import { ProjectDeletor } from "@/studio/features/projects/components/ProjectDeletor"
 import { ProjectEditor } from "@/studio/features/projects/components/ProjectEditor"
+import { AgentAnalyticsRoute } from "./AgentAnalyticsRoute"
 import { AgentMembershipsRoute } from "./AgentMembershipsRoute"
-import { AnalyticsRoute } from "./AnalyticsRoute"
 import { DocumentsRoute } from "./DocumentsRoute"
 import { EvaluationRoute } from "./EvaluationRoute"
 import { FeedbackRoute } from "./FeedbackRoute"
 import { buildStudioPath, StudioRouteNames } from "./helpers"
+import { ProjectAnalyticsRoute } from "./ProjectAnalyticsRoute"
 import { ProjectMembershipsRoute } from "./ProjectMembershipsRoute"
 import { StudioAgentSessionRoute } from "./StudioAgentSessionRoute"
 import { StudioDashboardRoute } from "./StudioDashboardRoute"
@@ -101,10 +102,10 @@ export const studioRoutes = {
               element: <DocumentsRoute />,
             },
             {
-              path: buildStudioPath(StudioRouteNames.ANALYTICS),
+              path: buildStudioPath(StudioRouteNames.PROJECT_ANALYTICS),
               element: (
                 <RestrictedFeature feature="project-analytics">
-                  <AnalyticsRoute />
+                  <ProjectAnalyticsRoute />
                 </RestrictedFeature>
               ),
             },
@@ -128,6 +129,14 @@ export const studioRoutes = {
                         />
                       )}
                     </AgentSessionRoute>
+                  ),
+                },
+                {
+                  path: buildStudioPath(StudioRouteNames.AGENT_ANALYTICS),
+                  element: (
+                    <RestrictedFeature feature="agent-analytics">
+                      <AgentAnalyticsRoute />
+                    </RestrictedFeature>
                   ),
                 },
                 {

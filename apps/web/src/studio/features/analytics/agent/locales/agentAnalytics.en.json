@@ -1,0 +1,20 @@
+{
+  "agentAnalytics": {
+    "list": {
+      "title": "Analytics",
+      "description": "Conversation metrics for this agent.",
+      "pageTitle": "Agent analytics"
+    },
+    "dateRangePlaceholder": "Date range",
+    "conversationsChart": {
+      "title": "Conversations per day",
+      "description": "Conversational sessions started each day for this agent",
+      "metricLabel": "Total conversations"
+    },
+    "avgQuestionsChart": {
+      "title": "Avg. user questions per session",
+      "description": "Average user messages per session per day for this agent",
+      "metricLabel": "Per day"
+    }
+  }
+}

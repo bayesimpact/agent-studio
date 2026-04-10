@@ -1,0 +1,20 @@
+{
+  "agentAnalytics": {
+    "list": {
+      "title": "Analytique",
+      "description": "Indicateurs de conversation pour cet agent.",
+      "pageTitle": "Analytique de l’agent"
+    },
+    "dateRangePlaceholder": "Plage de dates",
+    "conversationsChart": {
+      "title": "Conversations par jour",
+      "description": "Sessions conversationnelles démarrées chaque jour pour cet agent",
+      "metricLabel": "Total des conversations"
+    },
+    "avgQuestionsChart": {
+      "title": "Questions utilisateur moy. par session",
+      "description": "Moyenne des messages utilisateur par session et par jour pour cet agent",
+      "metricLabel": "Par jour"
+    }
+  }
+}

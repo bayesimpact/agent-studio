@@ -5,16 +5,23 @@ import { useCallback, useEffect, useState } from "react"
 import type { DateRange } from "react-day-picker"
 import { useTranslation } from "react-i18next"
 import { useNavigate } from "react-router-dom"
+import { GridHeader } from "@/common/components/grid/Grid"
+import type { Agent } from "@/common/features/agents/agents.models"
+import {
+  selectCurrentAgentData,
+  selectCurrentAgentId,
+} from "@/common/features/agents/agents.selectors"
+import { getAgentIcon } from "@/common/features/agents/components/AgentIcon"
 import { useGetPath } from "@/common/hooks/use-build-path"
 import { useAppDispatch, useAppSelector } from "@/common/store/hooks"
 import {
-  selectAnalyticsAvgUserQuestionsPerSessionPerDay,
-  selectAnalyticsConversationsPerDay,
-} from "@/studio/features/analytics/analytics.selectors"
-import { loadProjectAnalytics } from "@/studio/features/analytics/analytics.thunks"
-import { dateRangeToAnalyticsQueryBounds } from "@/studio/features/analytics/analytics-date-range"
-import { GridHeader } from "../../common/components/grid/Grid"
+  selectAgentAnalyticsAvgUserQuestionsPerSessionPerDay,
+  selectAgentAnalyticsConversationsPerDay,
+} from "@/studio/features/analytics/agent/agent-analytics.selectors"
+import { loadAgentAnalytics } from "@/studio/features/analytics/agent/agent-analytics.thunks"
+import { dateRangeToAnalyticsQueryBounds } from "@/studio/features/analytics/project/analytics-date-range"
 import { AsyncRoute } from "../../common/routes/AsyncRoute"
+import { ErrorRoute } from "../../common/routes/ErrorRoute"
 
 function sumDailyMetricValues(series: DailyMetricPoint[]): number {
   return series.reduce((sum, point) => sum + point.value, 0)
@@ -35,21 +42,33 @@ function getInitialAnalyticsBounds() {
   })!
 }
 
-export function AnalyticsRoute() {
+export function AgentAnalyticsRoute() {
+  const agentId = useAppSelector(selectCurrentAgentId)
+  const agent = useAppSelector(selectCurrentAgentData)
+
+  if (!agentId) return <ErrorRoute error="Missing valid agent ID" />
+
+  return (
+    <AsyncRoute data={[agent]}>{([agentValue]) => <WithAgent agent={agentValue} />}</AsyncRoute>
+  )
+}
+
+function WithAgent({ agent }: { agent: Agent }) {
   const dispatch = useAppDispatch()
   const [bounds, setBounds] = useState(getInitialAnalyticsBounds)
 
   useEffect(() => {
-    void dispatch(loadProjectAnalytics(bounds))
+    void dispatch(loadAgentAnalytics(bounds))
   }, [dispatch, bounds])
 
-  const conversations = useAppSelector(selectAnalyticsConversationsPerDay)
-  const avgQuestions = useAppSelector(selectAnalyticsAvgUserQuestionsPerSessionPerDay)
+  const conversations = useAppSelector(selectAgentAnalyticsConversationsPerDay)
+  const avgQuestions = useAppSelector(selectAgentAnalyticsAvgUserQuestionsPerSessionPerDay)
 
   return (
     <AsyncRoute data={[conversations, avgQuestions]}>
       {([conversationsPoints, avgQuestionsPoints]) => (
         <WithData
+          agent={agent}
           conversationsPoints={conversationsPoints}
           avgQuestionsPoints={avgQuestionsPoints}
           onAnalyticsRangeChange={setBounds}
@@ -60,20 +79,22 @@ export function AnalyticsRoute() {
 }
 
 function WithData({
+  agent,
   conversationsPoints,
   avgQuestionsPoints,
   onAnalyticsRangeChange,
 }: {
+  agent: Agent
   conversationsPoints: { date: string; value: number }[]
   avgQuestionsPoints: { date: string; value: number }[]
   onAnalyticsRangeChange: (nextBounds: { startAt: number; endAt: number }) => void
 }) {
-  const { t } = useTranslation("analytics")
+  const { t } = useTranslation("agentAnalytics")
   const navigate = useNavigate()
   const { getPath } = useGetPath()
 
   const handleBack = () => {
-    const path = getPath("project")
+    const path = getPath("agent")
     navigate(path)
   }
 
@@ -87,9 +108,21 @@ function WithData({
     [onAnalyticsRangeChange],
   )
 
+  const Icon = getAgentIcon(agent.type)
+
   return (
     <>
-      <GridHeader onBack={handleBack} title={t("list.title")} description={t("list.description")} />
+      <GridHeader
+        onBack={handleBack}
+        title={t("list.pageTitle")}
+        description={
+          <>
+            <div className="capitalize-first">{agent.name}</div> •
+            <div className="capitalize-first">{t(`agent:create.typeDialog.${agent.type}`)}</div>
+            <Icon />
+          </>
+        }
+      />
 
       <div className="flex flex-col gap-6 p-6">
         <div className="flex flex-wrap items-center justify-end gap-4">

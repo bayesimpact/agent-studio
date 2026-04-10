@@ -1,7 +1,7 @@
 import { type AnalyticsDailyPointDto, AnalyticsRoutes } from "@caseai-connect/api-contracts"
 import { getAxiosInstance } from "@/external/axios"
 import type { AnalyticsDailyPoint } from "../analytics.models"
-import type { IAnalyticsSpi } from "../analytics.spi"
+import type { IProjectAnalyticsSpi } from "../analytics.spi"
 
 export default {
   getConversationsPerDay: async ({ organizationId, projectId, startAt, endAt }) => {
@@ -22,7 +22,7 @@ export default {
     )
     return toAnalyticsDailyPoints(response.data.data)
   },
-} satisfies IAnalyticsSpi
+} satisfies IProjectAnalyticsSpi
 
 function dateRangeQueryParams(startAt: number, endAt: number) {
   return { params: { startAt, endAt } }

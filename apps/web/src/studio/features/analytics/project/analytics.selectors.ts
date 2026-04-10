@@ -4,8 +4,9 @@ import type { AnalyticsDailyPoint } from "./analytics.models"
 
 export const selectAnalyticsConversationsPerDay = (
   state: RootState,
-): AsyncData<AnalyticsDailyPoint[]> => state.studio.analytics.conversationsPerDay
+): AsyncData<AnalyticsDailyPoint[]> => state.studio.projectAnalytics.conversationsPerDay
 
 export const selectAnalyticsAvgUserQuestionsPerSessionPerDay = (
   state: RootState,
-): AsyncData<AnalyticsDailyPoint[]> => state.studio.analytics.avgUserQuestionsPerSessionPerDay
+): AsyncData<AnalyticsDailyPoint[]> =>
+  state.studio.projectAnalytics.avgUserQuestionsPerSessionPerDay

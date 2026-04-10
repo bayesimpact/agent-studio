@@ -27,7 +27,7 @@ export * from "./agents/shared/agent-session-messages/agent-session-messages.dto
 export { AgentSessionMessagesRoutes } from "./agents/shared/agent-session-messages/agent-session-messages.routes"
 // Analytics
 export type * from "./analytics/analytics.dto"
-export { AnalyticsRoutes } from "./analytics/analytics.routes"
+export { AgentAnalyticsRoutes, AnalyticsRoutes } from "./analytics/analytics.routes"
 // Document Tags
 export * from "./document-tags/document-tag.dto"
 export { DocumentTagsRoutes } from "./document-tags/document-tag.routes"

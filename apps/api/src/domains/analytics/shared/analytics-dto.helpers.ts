@@ -1,4 +1,4 @@
-import type { AnalyticsDailyPoint } from "./projects-analytics.types"
+import type { AnalyticsDailyPoint } from "./analytics-metrics.types"
 
 export function toAnalyticsDailyPointDto(
   points: AnalyticsDailyPoint[],

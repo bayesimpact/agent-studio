@@ -11,6 +11,7 @@ import { FormAgentSessionsModule } from "./domains/agents/form-agent-sessions/fo
 import { AgentMessageFeedbackModule } from "./domains/agents/shared/agent-session-messages/feedback/agent-message-feedback.module"
 import { StreamingModule } from "./domains/agents/shared/agent-session-messages/streaming/streaming.module"
 import { InvitationsModule } from "./domains/agents/shared/memberships/invitations.module"
+import { AgentsAnalyticsModule } from "./domains/analytics/agents-analytics/agents-analytics.module"
 import { ProjectsAnalyticsModule } from "./domains/analytics/projects-analytics/projects-analytics.module"
 import { AuthModule } from "./domains/auth/auth.module"
 import { DocumentsModule } from "./domains/documents/documents.module"
@@ -49,6 +50,7 @@ import { UsersModule } from "./domains/users/users.module"
     OrganizationsModule,
     ProjectsModule,
     ProjectsModule,
+    AgentsAnalyticsModule,
     ProjectsAnalyticsModule,
     StorageModule,
     StreamingModule,

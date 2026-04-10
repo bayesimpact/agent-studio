@@ -20,7 +20,7 @@ const initialState: State = {
 }
 
 const slice = createSlice({
-  name: "analytics",
+  name: "projectAnalytics",
   initialState,
   reducers: {
     reset: () => initialState,
@@ -65,7 +65,7 @@ const slice = createSlice({
   },
 })
 
-export type { State as AnalyticsState }
-export const analyticsInitialState = initialState
-export const analyticsActions = { ...slice.actions }
-export const analyticsSlice = slice
+export type { State as ProjectAnalyticsState }
+export const projectAnalyticsInitialState = initialState
+export const projectAnalyticsActions = { ...slice.actions }
+export const projectAnalyticsSlice = slice

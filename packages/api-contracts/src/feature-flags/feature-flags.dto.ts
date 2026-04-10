@@ -16,6 +16,10 @@ export const FeatureFlags = [
     key: "project-analytics",
     description: "View project-level analytics and usage charts in the studio.",
   },
+  {
+    key: "agent-analytics",
+    description: "View per-agent conversation analytics in the studio.",
+  },
 ] as const
 export type FeatureFlagKey = (typeof FeatureFlags)[number]["key"]
 export type FeatureFlagsDto = FeatureFlagKey[]
