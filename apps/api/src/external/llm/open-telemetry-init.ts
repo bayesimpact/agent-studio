@@ -1,7 +1,6 @@
 import "dotenv/config"
 import { MetricExporter } from "@google-cloud/opentelemetry-cloud-monitoring-exporter"
 import { TraceExporter } from "@google-cloud/opentelemetry-cloud-trace-exporter"
-import { HttpInstrumentation } from "@opentelemetry/instrumentation-http"
 import { NestInstrumentation } from "@opentelemetry/instrumentation-nestjs-core"
 import { PgInstrumentation } from "@opentelemetry/instrumentation-pg"
 import { PeriodicExportingMetricReader } from "@opentelemetry/sdk-metrics"
@@ -10,7 +9,6 @@ import { BatchSpanProcessor, ConsoleSpanExporter } from "@opentelemetry/sdk-trac
 import { LangfuseIntegrationExporter } from "@/external/langfuse/langfuse-integration-exporter"
 
 const isProduction = process.env.NODE_ENV === "production"
-const isTest = process.env.NODE_ENV === "test"
 
 const spanProcessors = [
   new BatchSpanProcessor(
@@ -32,12 +30,18 @@ const metricReader = isProduction
   ? new PeriodicExportingMetricReader({ exporter: new MetricExporter() })
   : undefined
 
+const isTest = process.env.NODE_ENV === "test"
+
 export const sdk = new NodeSDK({
   spanProcessors,
   ...(metricReader && { metricReader }),
-  instrumentations: isTest
-    ? []
-    : [new HttpInstrumentation(), new NestInstrumentation(), new PgInstrumentation()],
+  instrumentations: isTest ? [] : [new NestInstrumentation(), new PgInstrumentation()],
 })
 
 sdk.start()
+
+// console.error is intentional here — this file runs before NestJS bootstrap,
+// so the structured logger is not available yet
+process.on("unhandledRejection", (error) => {
+  console.error("[OTEL] Unhandled rejection:", error)
+})
