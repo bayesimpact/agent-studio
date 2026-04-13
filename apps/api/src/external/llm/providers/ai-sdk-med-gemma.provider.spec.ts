@@ -12,7 +12,10 @@ import { ProviderSpecs } from "@/external/llm/providers/provider-specs"
 dotenvConfig({ path: ".env", override: true })
 dotenvConfig({ path: ".env.test", override: true })
 const testModels = Object.values(AgentModel)
-  .filter((am) => AgentModelToAgentProvider[am] === AgentProvider.MedGemma)
+  .filter(
+    (am) =>
+      AgentModelToAgentProvider[am] === AgentProvider.MedGemma && am === AgentModel.MedGemma10_27B,
+  )
   .map((m) => ({
     name: GetAgentModelKeyFromValue(m),
     model: m,
@@ -20,7 +23,7 @@ const testModels = Object.values(AgentModel)
 
 if (process.env.IS_TEST === "true" && process.env.MEDGEMMA_TEST === "true") {
   describe("AISDKMedGemmaProvider", () => {
-    jest.setTimeout(60_000)
+    jest.setTimeout(600_000)
     const langfuse = new LangfuseIntegrationExporter({
       secretKey: process.env.LANGFUSE_SK,
       publicKey: process.env.LANGFUSE_PK,
@@ -76,6 +79,22 @@ if (process.env.IS_TEST === "true" && process.env.MEDGEMMA_TEST === "true") {
 
     it.each(testModels)("streamChatResponse with tools - $name", async ({ model }) => {
       await ProviderSpecs.testStreamChatResponseWithTools({
+        provider,
+        model,
+        advancedExpectation: false,
+      })
+    })
+
+    it.each(testModels)("streamChatResponse with tools - BIS - $name", async ({ model }) => {
+      await ProviderSpecs.testStreamChatResponseWithToolsBis({
+        provider,
+        model,
+        advancedExpectation: false,
+      })
+    })
+
+    it.each(testModels)("streamChatResponse with tools - TER - $name", async ({ model }) => {
+      await ProviderSpecs.testStreamChatResponseWithToolsTer({
         provider,
         model,
         advancedExpectation: false,

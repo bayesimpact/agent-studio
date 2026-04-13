@@ -3,10 +3,11 @@ import { createOpenAI } from "@ai-sdk/openai"
 import type { LanguageModelV3 } from "@ai-sdk/provider"
 import { AgentProvider } from "@caseai-connect/api-contracts"
 import { Injectable, NotImplementedException } from "@nestjs/common"
+import type { ToolSet } from "ai"
 import type { LLMConfig } from "@/common/interfaces/llm-provider.interface"
 import { GetAgentModelKeyFromValue } from "@/external/llm/agent-provider"
 import { AISDKLLMProviderBase, CallOrigin } from "@/external/llm/ai-sdk-llm-provider-base"
-import { CustomMedGemmaLanguageModel } from "@/external/llm/providers/custom-med-gemma-language-model"
+import { CustomMedGemmaLanguageModel } from "@/external/llm/providers/medgemma/custom-med-gemma-language-model"
 
 @Injectable()
 export class AISDKMedGemmaProvider extends AISDKLLMProviderBase {
@@ -41,6 +42,71 @@ export class AISDKMedGemmaProvider extends AISDKLLMProviderBase {
         throw new NotImplementedException(`DEV - Unknown callOrigin: ${callOrigin}`)
     }
   }
+  override applySpecificToSystemPrompt({
+    config,
+    systemPrompt,
+    callOrigin,
+  }: {
+    config: LLMConfig
+    systemPrompt: string
+    callOrigin: CallOrigin
+  }): string {
+    if (callOrigin === CallOrigin.streamChatResponse_withTools && config.tools) {
+      const toolDocs = this.convertToolsToDocs(config.tools) ?? [].join("\n")
+      return `${systemPrompt}
+
+##TOOLS
+You have access to the following tools:
+${toolDocs}
+
+(CRITICAL) To call a tool, you MUST output valid JSON exactly like this:
+        {type:"tool", name: "toolName", arguments: '{"key1": "value1", "key2": "value2", ... , "keyX": "valueX" }'}
+(CRITICAL) If no tool call is required, you MUST output your answer following exactly the output JSON format :
+        {type:"answer", content: '<your answer here>'}`
+    }
+
+    return systemPrompt
+  }
+
+  private convertToolsToDocs(tools: ToolSet) {
+    if (!tools) return undefined
+    return Object.entries(tools).map(
+      // biome-ignore lint/suspicious/noExplicitAny: custom unknown props
+      ([name, tool]: any) =>
+        `- ${name}: ${tool.description}\n  Parameters: ${this.jsonSchemaToArgumentString(tool.inputSchema)}`,
+    )
+  }
+  // biome-ignore lint/suspicious/noExplicitAny: custom
+  private jsonSchemaToArgumentString(schema: any): string {
+    if (!schema) return "unknown"
+
+    if (schema.def) {
+      return this.jsonSchemaToArgumentString(schema.def)
+    }
+
+    if (schema.type === "nullable") {
+      const inner = this.jsonSchemaToArgumentString(schema.innerType)
+      return `${inner} | null`
+    }
+
+    if (schema.type === "string") return "string"
+    if (schema.type === "number") return "number"
+    if (schema.type === "boolean") return "boolean"
+
+    // object with shape
+    if (schema.type === "object" && schema.shape) {
+      // biome-ignore lint/suspicious/noExplicitAny: custom
+      const props = Object.entries(schema.shape).map(([key, value]: [string, any]) => {
+        const typeStr = this.jsonSchemaToArgumentString(value)
+        return `${key}: ${typeStr}`
+      })
+
+      return `{ ${props.join("; ")} }`
+    }
+
+    return "unknown"
+  }
+
   getOpenResponsesProvider(config: LLMConfig): LanguageModelV3 {
     const { url, apiKey } = this.getModelEnvSettings(config.model)
     return createOpenResponses({

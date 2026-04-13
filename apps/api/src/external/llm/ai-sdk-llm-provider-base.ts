@@ -25,8 +25,19 @@ export abstract class AISDKLLMProviderBase implements LLMProvider {
       ? CallOrigin.streamChatResponse_withTools
       : CallOrigin.streamChatResponse
     this.checkConfigProviderAndModel(config)
+    const aiSDKMessages: LLMChatMessage[] = messages
+      .map((message) => {
+        if (message.role === "system") {
+          return undefined
+        }
+        return {
+          role: message.role === "assistant" ? "assistant" : "user",
+          content: message.content,
+        }
+      })
+      .filter((msg) => msg !== undefined) as LLMChatMessage[]
 
-    if (messages.length === 0) {
+    if (aiSDKMessages.length === 0) {
       throw new Error("Cannot stream response: no valid messages provided")
     }
 
@@ -38,22 +49,22 @@ export abstract class AISDKLLMProviderBase implements LLMProvider {
       tools: config.tools,
       experimental_telemetry: {
         isEnabled: true,
-        functionId: this.buildFunctionIdForStreamChatResponse(messages),
+        functionId: this.buildFunctionIdForStreamChatResponse(aiSDKMessages),
         metadata: this.buildMetadata({ config, metadata }),
       },
       providerOptions: {
-        custom: { callOrigin },
+        custom: { callOrigin, metadata: this.buildMetadata({ config, metadata }) },
       },
     })
 
-    const systemPrompt = systemMessage || config.systemPrompt
-
+    let systemPrompt = systemMessage || config.systemPrompt || ""
+    systemPrompt = this.applySpecificToSystemPrompt({ systemPrompt, config, callOrigin })
     const systemMessagePart = systemPrompt
       ? [{ role: "system" as const, content: systemPrompt }]
       : []
 
     const streamer = agent.stream({
-      messages: [...systemMessagePart, ...messages],
+      messages: [...systemMessagePart, ...aiSDKMessages],
     })
 
     for await (const chunk of (await streamer).textStream) {
@@ -98,7 +109,7 @@ export abstract class AISDKLLMProviderBase implements LLMProvider {
         metadata: this.buildMetadata({ config, metadata }),
       },
       providerOptions: {
-        custom: { callOrigin },
+        custom: { callOrigin, metadata: this.buildMetadata({ config, metadata }) },
       },
     })
     return result.text
@@ -124,7 +135,7 @@ export abstract class AISDKLLMProviderBase implements LLMProvider {
         metadata: this.buildMetadata({ config, metadata }),
       },
       providerOptions: {
-        custom: { callOrigin },
+        custom: { callOrigin, metadata: this.buildMetadata({ config, metadata }) },
       },
     })
     const { answer } = extractThoughtAndAnswer(text)
@@ -159,7 +170,7 @@ export abstract class AISDKLLMProviderBase implements LLMProvider {
         schema: schema,
       }),
       providerOptions: {
-        custom: { callOrigin },
+        custom: { callOrigin, metadata: this.buildMetadata({ config, metadata }) },
       },
     })
     return schema.parse(res.output)
@@ -227,7 +238,7 @@ export abstract class AISDKLLMProviderBase implements LLMProvider {
         metadata: this.buildMetadata({ config, metadata }),
       },
       providerOptions: {
-        custom: { callOrigin },
+        custom: { callOrigin, metadata: this.buildMetadata({ config, metadata }) },
       },
     })
     if (AgentModelToAgentProvider[config.model] === AgentProvider.MedGemma) {
@@ -296,13 +307,19 @@ export abstract class AISDKLLMProviderBase implements LLMProvider {
   abstract getLanguageModel({ config, callOrigin }: { config: LLMConfig; callOrigin: CallOrigin })
   abstract getTags(config: LLMConfig): string[]
   abstract getAgentProvider(): AgentProvider
-}
 
-// biome-ignore lint/correctness/noUnusedVariables: used in class AISDKLLMProvider
-namespace AISDKLLMProviderBase {
-  export type AiSDKMessages = {
-    role: "user" | "assistant"
-    content: string
+  applySpecificToSystemPrompt({
+    // biome-ignore lint/correctness/noUnusedFunctionParameters: used in override
+    config,
+    systemPrompt,
+    // biome-ignore lint/correctness/noUnusedFunctionParameters: used in override
+    callOrigin,
+  }: {
+    config: LLMConfig
+    systemPrompt: string
+    callOrigin: CallOrigin
+  }): string {
+    return systemPrompt
   }
 }
 
