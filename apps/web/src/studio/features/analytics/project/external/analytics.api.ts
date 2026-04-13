@@ -4,28 +4,34 @@ import type { AnalyticsDailyPoint } from "../analytics.models"
 import type { IProjectAnalyticsSpi } from "../analytics.spi"
 
 export default {
-  getConversationsPerDay: async ({ organizationId, projectId, startAt, endAt }) => {
+  getConversationsPerDay: async ({ organizationId, projectId, startAt, endAt, agentId }) => {
     const axios = getAxiosInstance()
     const response = await axios.get<typeof AnalyticsRoutes.getConversationsPerDay.response>(
       AnalyticsRoutes.getConversationsPerDay.getPath({ organizationId, projectId }),
-      dateRangeQueryParams(startAt, endAt),
+      dateRangeQueryParams(startAt, endAt, agentId),
     )
     return toAnalyticsDailyPoints(response.data.data)
   },
-  getAvgUserQuestionsPerSessionPerDay: async ({ organizationId, projectId, startAt, endAt }) => {
+  getAvgUserQuestionsPerSessionPerDay: async ({
+    organizationId,
+    projectId,
+    startAt,
+    endAt,
+    agentId,
+  }) => {
     const axios = getAxiosInstance()
     const response = await axios.get<
       typeof AnalyticsRoutes.getAvgUserQuestionsPerSessionPerDay.response
     >(
       AnalyticsRoutes.getAvgUserQuestionsPerSessionPerDay.getPath({ organizationId, projectId }),
-      dateRangeQueryParams(startAt, endAt),
+      dateRangeQueryParams(startAt, endAt, agentId),
     )
     return toAnalyticsDailyPoints(response.data.data)
   },
 } satisfies IProjectAnalyticsSpi
 
-function dateRangeQueryParams(startAt: number, endAt: number) {
-  return { params: { startAt, endAt } }
+function dateRangeQueryParams(startAt: number, endAt: number, agentId?: string) {
+  return { params: { startAt, endAt, agentId } }
 }
 
 function toAnalyticsDailyPoints(dtos: AnalyticsDailyPointDto[]): AnalyticsDailyPoint[] {

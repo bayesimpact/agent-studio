@@ -2,7 +2,7 @@ import type { ResponseData } from "../generic"
 import { defineRoute } from "../helpers"
 import type { AnalyticsDailyPointDto } from "./analytics.dto"
 
-/** Query: `startAt`, `endAt` — Unix ms (see `AnalyticsDateRangeRequestDto`). */
+/** Query: `startAt`, `endAt`, optional `agentId` — Unix ms (see `ProjectAnalyticsRequestDto`). */
 export const AnalyticsRoutes = {
   getConversationsPerDay: defineRoute<ResponseData<AnalyticsDailyPointDto[]>>({
     method: "get",

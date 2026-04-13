@@ -5,6 +5,10 @@ export type AnalyticsDateRangeRequestDto = {
   endAt: TimeType
 }
 
+export type ProjectAnalyticsRequestDto = AnalyticsDateRangeRequestDto & {
+  agentId?: string
+}
+
 export type AnalyticsDailyPointDto = {
   date: string
   value: number

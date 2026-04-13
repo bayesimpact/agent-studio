@@ -36,7 +36,7 @@ export function AgentSessionListHeader({
 
   const Icon = getAgentIcon(agent.type)
 
-  const showAgentAnalytics = agent.type === "conversation" && hasFeature("agent-analytics")
+  const showAgentAnalytics = agent.type === "conversation" && hasFeature("project-analytics")
   const headerCardCount = showAgentAnalytics ? 3 : 2
 
   return (

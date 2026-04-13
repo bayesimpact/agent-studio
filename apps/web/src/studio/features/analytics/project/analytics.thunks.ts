@@ -11,23 +11,33 @@ export const loadProjectAnalytics = createAsyncThunk<
     conversationsPerDay: AnalyticsDailyPoint[]
     avgUserQuestionsPerSessionPerDay: AnalyticsDailyPoint[]
   },
-  { startAt: number; endAt: number },
+  { startAt: number; endAt: number; agentId?: string },
   ThunkConfig
->("projectAnalytics/loadProject", async ({ startAt, endAt }, { extra: { services }, getState }) => {
-  const state = getState()
-  hasFeatureOrThrow({ state, feature: "project-analytics" })
-  const { organizationId, projectId } = getCurrentIds({
-    state,
-    wantedIds: ["organizationId", "projectId"],
-  })
-  const [conversationsPerDay, avgUserQuestionsPerSessionPerDay] = await Promise.all([
-    services.projectAnalytics.getConversationsPerDay({ organizationId, projectId, startAt, endAt }),
-    services.projectAnalytics.getAvgUserQuestionsPerSessionPerDay({
-      organizationId,
-      projectId,
-      startAt,
-      endAt,
-    }),
-  ])
-  return { conversationsPerDay, avgUserQuestionsPerSessionPerDay }
-})
+>(
+  "projectAnalytics/loadProject",
+  async ({ startAt, endAt, agentId }, { extra: { services }, getState }) => {
+    const state = getState()
+    hasFeatureOrThrow({ state, feature: "project-analytics" })
+    const { organizationId, projectId } = getCurrentIds({
+      state,
+      wantedIds: ["organizationId", "projectId"],
+    })
+    const [conversationsPerDay, avgUserQuestionsPerSessionPerDay] = await Promise.all([
+      services.projectAnalytics.getConversationsPerDay({
+        organizationId,
+        projectId,
+        startAt,
+        endAt,
+        agentId,
+      }),
+      services.projectAnalytics.getAvgUserQuestionsPerSessionPerDay({
+        organizationId,
+        projectId,
+        startAt,
+        endAt,
+        agentId,
+      }),
+    ])
+    return { conversationsPerDay, avgUserQuestionsPerSessionPerDay }
+  },
+)

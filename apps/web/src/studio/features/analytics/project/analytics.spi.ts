@@ -5,6 +5,7 @@ export type ProjectAnalyticsParams = {
   projectId: string
   startAt: number
   endAt: number
+  agentId?: string
 }
 
 export interface IProjectAnalyticsSpi {
