@@ -32,31 +32,36 @@ export class ProjectsAnalyticsService {
 
   async getConversationsPerDay({
     connectScope,
+    agentId,
     startAt,
     endAt,
   }: {
     connectScope: RequiredConnectScope
+    agentId?: string
     startAt: TimeType
     endAt: TimeType
   }): Promise<AnalyticsDailyPoint[]> {
     const dayKeys = getUtcDayKeys(startAt, endAt)
     const dayExpr = getDayKeySql(this.conversationAgentSessionAlias, "created_at")
     const createdAtCol = getQualifiedColumnSql(this.conversationAgentSessionAlias, "created_at")
+    const agentIdCol = getQualifiedColumnSql(this.conversationAgentSessionAlias, "agent_id")
 
-    const raw = await this.conversationAgentSessionConnectRepository
-      .newQueryBuilderWithConnectScope(connectScope)
-      .select(dayExpr, "date")
-      .addSelect("COUNT(*)::int", "value")
-      .andWhere(`${createdAtCol} BETWEEN :startAt AND :endAt`, {
-        startAt: new Date(startAt),
-        endAt: new Date(endAt),
-      })
-      .groupBy(dayExpr)
-      .orderBy("date", "ASC")
-      .getRawMany<{
-        date: string
-        value: string
-      }>()
+    const queryBuilder = this.buildConversationsPerDayQuery({
+      connectScope,
+      dayExpr,
+      createdAtCol,
+      startAt,
+      endAt,
+    })
+
+    if (agentId) {
+      queryBuilder.andWhere(`${agentIdCol} = :agentId`, { agentId })
+    }
+
+    const raw = await queryBuilder.getRawMany<{
+      date: string
+      value: string
+    }>()
 
     const valueByDay = new Map(raw.map((row) => [row.date, Number(row.value)]))
 
@@ -68,10 +73,12 @@ export class ProjectsAnalyticsService {
 
   async getAvgUserQuestionsPerSessionPerDay({
     connectScope,
+    agentId,
     startAt,
     endAt,
   }: {
     connectScope: RequiredConnectScope
+    agentId?: string
     startAt: TimeType
     endAt: TimeType
   }): Promise<AnalyticsDailyPoint[]> {
@@ -81,8 +88,78 @@ export class ProjectsAnalyticsService {
     const createdAtCol = getQualifiedColumnSql(this.conversationAgentSessionAlias, "created_at")
     const conversationIdCol = getQualifiedColumnSql(this.conversationAgentSessionAlias, "id")
     const agentMessageIdCol = getQualifiedColumnSql(this.agentMessageAlias, "id")
+    const agentIdCol = getQualifiedColumnSql(this.conversationAgentSessionAlias, "agent_id")
 
-    const raw = await this.conversationAgentSessionConnectRepository
+    const queryBuilder = this.buildAvgUserQuestionsPerSessionPerDayQuery({
+      connectScope,
+      dayExpr,
+      createdAtCol,
+      conversationIdCol,
+      agentMessageIdCol,
+      startAt,
+      endAt,
+    })
+
+    if (agentId) {
+      queryBuilder.andWhere(`${agentIdCol} = :agentId`, { agentId })
+    }
+
+    const raw = await queryBuilder.getRawMany<{
+      date: string
+      value: string
+    }>()
+
+    const valueByDay = new Map(raw.map((row) => [row.date, Number(row.value)]))
+
+    return dayKeys.map((day) => ({
+      date: day,
+      value: valueByDay.get(day) ?? 0,
+    }))
+  }
+
+  private buildConversationsPerDayQuery({
+    connectScope,
+    dayExpr,
+    createdAtCol,
+    startAt,
+    endAt,
+  }: {
+    connectScope: RequiredConnectScope
+    dayExpr: string
+    createdAtCol: string
+    startAt: TimeType
+    endAt: TimeType
+  }) {
+    return this.conversationAgentSessionConnectRepository
+      .newQueryBuilderWithConnectScope(connectScope)
+      .select(dayExpr, "date")
+      .addSelect("COUNT(*)::int", "value")
+      .andWhere(`${createdAtCol} BETWEEN :startAt AND :endAt`, {
+        startAt: new Date(startAt),
+        endAt: new Date(endAt),
+      })
+      .groupBy(dayExpr)
+      .orderBy("date", "ASC")
+  }
+
+  private buildAvgUserQuestionsPerSessionPerDayQuery({
+    connectScope,
+    dayExpr,
+    createdAtCol,
+    conversationIdCol,
+    agentMessageIdCol,
+    startAt,
+    endAt,
+  }: {
+    connectScope: RequiredConnectScope
+    dayExpr: string
+    createdAtCol: string
+    conversationIdCol: string
+    agentMessageIdCol: string
+    startAt: TimeType
+    endAt: TimeType
+  }) {
+    return this.conversationAgentSessionConnectRepository
       .newQueryBuilderWithConnectScope(connectScope)
       .leftJoin(
         AgentMessage,
@@ -102,16 +179,5 @@ export class ProjectsAnalyticsService {
       })
       .groupBy(dayExpr)
       .orderBy("date", "ASC")
-      .getRawMany<{
-        date: string
-        value: string
-      }>()
-
-    const valueByDay = new Map(raw.map((row) => [row.date, Number(row.value)]))
-
-    return dayKeys.map((day) => ({
-      date: day,
-      value: valueByDay.get(day) ?? 0,
-    }))
   }
 }

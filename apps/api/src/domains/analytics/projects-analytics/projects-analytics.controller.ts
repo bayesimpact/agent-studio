@@ -1,5 +1,5 @@
 import { AnalyticsRoutes as Routes } from "@caseai-connect/api-contracts"
-import { Controller, Get, ParseIntPipe, Query, Req, UseGuards } from "@nestjs/common"
+import { Controller, Get, ParseIntPipe, ParseUUIDPipe, Query, Req, UseGuards } from "@nestjs/common"
 import type { EndpointRequestWithProject } from "@/common/context/request.interface"
 import { getRequiredConnectScope } from "@/common/context/request-context.helpers"
 import { RequireContext } from "@/common/context/require-context.decorator"
@@ -24,10 +24,12 @@ export class ProjectsAnalyticsController {
     @Req() request: EndpointRequestWithProject,
     @Query("startAt", ParseIntPipe) startAt: number,
     @Query("endAt", ParseIntPipe) endAt: number,
+    @Query("agentId", new ParseUUIDPipe({ optional: true })) agentId?: string,
   ): Promise<typeof Routes.getConversationsPerDay.response> {
     const conversationsPerDay: AnalyticsDailyPoint[] =
       await this.projectsAnalyticsService.getConversationsPerDay({
         connectScope: getRequiredConnectScope(request),
+        agentId,
         startAt,
         endAt,
       })
@@ -41,10 +43,12 @@ export class ProjectsAnalyticsController {
     @Req() request: EndpointRequestWithProject,
     @Query("startAt", ParseIntPipe) startAt: number,
     @Query("endAt", ParseIntPipe) endAt: number,
+    @Query("agentId", new ParseUUIDPipe({ optional: true })) agentId?: string,
   ): Promise<typeof Routes.getAvgUserQuestionsPerSessionPerDay.response> {
     const avgUserQuestionsPerSessionPerDay: AnalyticsDailyPoint[] =
       await this.projectsAnalyticsService.getAvgUserQuestionsPerSessionPerDay({
         connectScope: getRequiredConnectScope(request),
+        agentId,
         startAt,
         endAt,
       })

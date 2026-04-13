@@ -34,7 +34,7 @@ describe("ProjectsAnalyticsService", () => {
     await clearTestDatabase(setup.dataSource)
   })
 
-  it("returns conversations per day and avg user questions per session per day", async () => {
+  it("returns analytics for all agents by default and can filter by agent", async () => {
     const day1Start = new Date("2026-01-01T00:00:00.000Z")
     const day2Start = days(1).after(day1Start)
     const day3Start = days(2).after(day1Start)
@@ -42,23 +42,28 @@ describe("ProjectsAnalyticsService", () => {
 
     const { organization, project, user } = await createOrganizationWithProject(repositories)
 
-    const agent = agentFactory.transient({ organization, project }).build()
-    await repositories.agentRepository.save(agent)
+    const primaryAgent = agentFactory.transient({ organization, project }).build()
+    const secondaryAgent = agentFactory.transient({ organization, project }).build()
+    await repositories.agentRepository.save([primaryAgent, secondaryAgent])
 
     const session1Day1 = conversationAgentSessionFactory
-      .transient({ organization, project, agent, user })
+      .transient({ organization, project, agent: primaryAgent, user })
       .build({ createdAt: hours(1).after(day1Start), updatedAt: new Date() })
     const session2Day1 = conversationAgentSessionFactory
-      .transient({ organization, project, agent, user })
+      .transient({ organization, project, agent: primaryAgent, user })
       .build({ createdAt: hours(2).after(day1Start), updatedAt: new Date() })
     const session3Day2 = conversationAgentSessionFactory
-      .transient({ organization, project, agent, user })
+      .transient({ organization, project, agent: primaryAgent, user })
       .build({ createdAt: hours(1).after(day2Start), updatedAt: new Date() })
+    const session4Day2 = conversationAgentSessionFactory
+      .transient({ organization, project, agent: secondaryAgent, user })
+      .build({ createdAt: hours(3).after(day2Start), updatedAt: new Date() })
 
     await repositories.conversationAgentSessionRepository.save([
       session1Day1,
       session2Day1,
       session3Day2,
+      session4Day2,
     ])
 
     const userMessagesSession1 = [
@@ -81,9 +86,21 @@ describe("ProjectsAnalyticsService", () => {
         }),
     )
 
+    const userMessagesSession4 = [
+      agentMessageFactory
+        .user()
+        .transient({ organization, project, session: session4Day2 })
+        .build({ createdAt: minutes(15).after(day2Start) }),
+      agentMessageFactory
+        .user()
+        .transient({ organization, project, session: session4Day2 })
+        .build({ createdAt: minutes(25).after(day2Start) }),
+    ]
+
     await repositories.agentMessageRepository.save([
       ...userMessagesSession1,
       ...userMessagesSession3,
+      ...userMessagesSession4,
     ])
 
     const connectScope = { organizationId: organization.id, projectId: project.id, userId: user.id }
@@ -96,7 +113,7 @@ describe("ProjectsAnalyticsService", () => {
 
     expect(conversations).toEqual([
       { date: day1Start.toISOString().slice(0, 10), value: 2 },
-      { date: day2Start.toISOString().slice(0, 10), value: 1 },
+      { date: day2Start.toISOString().slice(0, 10), value: 2 },
       { date: day3Start.toISOString().slice(0, 10), value: 0 },
     ])
 
@@ -107,6 +124,32 @@ describe("ProjectsAnalyticsService", () => {
     })
 
     expect(averages).toEqual([
+      { date: day1Start.toISOString().slice(0, 10), value: 1 },
+      { date: day2Start.toISOString().slice(0, 10), value: 3 },
+      { date: day3Start.toISOString().slice(0, 10), value: 0 },
+    ])
+
+    const filteredConversations = await service.getConversationsPerDay({
+      connectScope,
+      agentId: primaryAgent.id,
+      startAt: day1Start.getTime(),
+      endAt: day3End.getTime(),
+    })
+
+    expect(filteredConversations).toEqual([
+      { date: day1Start.toISOString().slice(0, 10), value: 2 },
+      { date: day2Start.toISOString().slice(0, 10), value: 1 },
+      { date: day3Start.toISOString().slice(0, 10), value: 0 },
+    ])
+
+    const filteredAverages = await service.getAvgUserQuestionsPerSessionPerDay({
+      connectScope,
+      agentId: primaryAgent.id,
+      startAt: day1Start.getTime(),
+      endAt: day3End.getTime(),
+    })
+
+    expect(filteredAverages).toEqual([
       { date: day1Start.toISOString().slice(0, 10), value: 1 },
       { date: day2Start.toISOString().slice(0, 10), value: 4 },
       { date: day3Start.toISOString().slice(0, 10), value: 0 },
