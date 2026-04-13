@@ -1,3 +1,6 @@
+import type { TimeType } from "../generic"
+import type { ProjectDto } from "../projects/projects.dto"
+
 export type OrganizationMembershipRoleDto = "owner" | "admin" | "member"
 
 export type OrganizationMembershipDto = {
@@ -10,4 +13,6 @@ export type OrganizationMembershipDto = {
 export type OrganizationDto = {
   id: string
   name: string
+  createdAt: TimeType
+  projects: ProjectDto[]
 }

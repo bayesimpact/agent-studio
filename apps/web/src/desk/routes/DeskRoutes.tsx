@@ -32,8 +32,8 @@ export const deskRoutes = {
       path: buildDeskPath(RouteNames.ORGANIZATION_DASHBOARD),
       element: (
         <DashboardRoute>
-          {(user, projects, organization) => (
-            <DeskDashboardRoute user={user} projects={projects} organization={organization} />
+          {(user, _projects, organization) => (
+            <DeskDashboardRoute user={user} organization={organization} />
           )}
         </DashboardRoute>
       ),

@@ -8,13 +8,13 @@ type ThunkConfig = { state: RootState; extra: ThunkExtraArg }
 export const createProject = createAsyncThunk<
   Project,
   {
+    organizationId: string
     payload: Pick<Project, "name">
     onSuccess?: (projectId: string) => void
   },
   ThunkConfig
->("projects/create", async ({ payload }, { extra: { services }, getState }) => {
-  const params = getCurrentIds({ state: getState(), wantedIds: ["organizationId"] })
-  return await services.projects.createOne(params, payload)
+>("projects/create", async ({ organizationId, payload }, { extra: { services } }) => {
+  return await services.projects.createOne({ organizationId }, payload)
 })
 
 export const updateProject = createAsyncThunk<

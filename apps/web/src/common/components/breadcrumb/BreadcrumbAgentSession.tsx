@@ -116,7 +116,7 @@ function WithData({
         agentId,
         agentSessionId,
       })
-      window.location.replace(path)
+      window.location.assign(path)
     }
   if (sessions.length === 1)
     return (

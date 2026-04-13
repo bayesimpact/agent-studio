@@ -31,9 +31,3 @@ export const selectCanAccessStudioForOrganizationId =
         membership.organizationId === organizationId && ownerOrAdminRoles.includes(membership.role),
     )
   }
-
-export const selectCanAccessStudioForCurrentOrganizationId = (state: RootState): boolean => {
-  const organizationId = state.organizations.currentOrganizationId
-  if (!organizationId) return false
-  return selectCanAccessStudioForOrganizationId(organizationId)(state)
-}

@@ -20,13 +20,13 @@ interface BuildPathOptions {
   agentSessionId?: string
 }
 type ForceInterface = {
-  forceInterface?: StudioRouteNames.STUDIO | DeskRouteNames.APP | EvalRouteNames.APP
+  forceInterface?: StudioRouteNames.APP | DeskRouteNames.APP | EvalRouteNames.APP
 }
 
 const getPrefix = ({ forceInterface }: ForceInterface) =>
   forceInterface ||
-  (window.location.pathname.startsWith(`${StudioRouteNames.STUDIO}/`)
-    ? StudioRouteNames.STUDIO
+  (window.location.pathname.startsWith(`${StudioRouteNames.APP}/`)
+    ? StudioRouteNames.APP
     : window.location.pathname.startsWith(`${EvalRouteNames.APP}/`)
       ? EvalRouteNames.APP
       : DeskRouteNames.APP)

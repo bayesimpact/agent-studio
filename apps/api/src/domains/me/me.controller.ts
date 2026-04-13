@@ -8,6 +8,8 @@ import { OrganizationsService } from "@/domains/organizations/organizations.serv
 import { UserGuard } from "@/domains/users/user.guard"
 import { toDto as toOrganizationDto } from "../organizations/organization.helpers"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
+import { ProjectsService } from "../projects/projects.service"
+// biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
 import { MeService } from "./me.service"
 
 @UseGuards(JwtAuthGuard, UserGuard)
@@ -16,12 +18,25 @@ export class MeController {
   constructor(
     private readonly organizationsService: OrganizationsService,
     private readonly meService: MeService,
+    private readonly projectsService: ProjectsService,
   ) {}
 
   @Get(MeRoutes.getMe.path)
   async getMe(@Req() request: EndpointRequest): Promise<typeof MeRoutes.getMe.response> {
     const user = request.user
     const organizations = await this.organizationsService.getUserOrganizations(user.id)
+    const organizationsWithProjects = await Promise.all(
+      organizations.map(async (org) => {
+        const projects = await this.projectsService.listProjects({
+          organizationId: org.id,
+          userId: user.id,
+        })
+        return {
+          ...org,
+          projects,
+        }
+      }),
+    )
     const memberships = await this.meService.getUserMemberships(user.id)
     return {
       data: {
@@ -31,7 +46,7 @@ export class MeController {
           name: user.name,
           memberships: toUserMembershipDto(memberships),
         },
-        organizations: organizations.map(toOrganizationDto),
+        organizations: organizationsWithProjects.map(toOrganizationDto),
       },
     }
   }

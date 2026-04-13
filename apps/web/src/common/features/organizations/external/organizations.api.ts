@@ -1,5 +1,6 @@
 import { type OrganizationDto, OrganizationsRoutes } from "@caseai-connect/api-contracts"
 import { getAxiosInstance } from "@/external/axios"
+import { toProject } from "../../projects/external/projects.api"
 import type { Organization } from "../organizations.models"
 import type { IOrganizationsSpi } from "../organizations.spi"
 
@@ -17,4 +18,6 @@ export default {
 export const toOrganization = (dto: OrganizationDto): Organization => ({
   id: dto.id,
   name: dto.name,
+  createdAt: dto.createdAt,
+  projects: dto.projects.map(toProject),
 })

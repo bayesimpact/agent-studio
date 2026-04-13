@@ -1,6 +1,6 @@
 export enum StudioRouteNames {
   // STUDIO ROUTES
-  STUDIO = "/studio",
+  APP = "/studio",
   DOCUMENTS = "/o/:organizationId/p/:projectId/d",
   DOCUMENT = "/o/:organizationId/p/:projectId/d/:documentId",
   ANALYTICS = "/o/:organizationId/p/:projectId/analytics",
@@ -11,7 +11,7 @@ export enum StudioRouteNames {
 }
 
 export const buildStudioPath = (path: string) => {
-  return `${StudioRouteNames.STUDIO}${path}`
+  return `${StudioRouteNames.APP}${path}`
 }
 
 export const buildDocumentsPath = ({
@@ -106,4 +106,4 @@ export const buildAgentMembershipsPath = ({
   )
 }
 
-export const isStudioInterface = () => window.location.pathname.startsWith(StudioRouteNames.STUDIO)
+export const isStudioInterface = () => window.location.pathname.startsWith(StudioRouteNames.APP)
