@@ -10,7 +10,7 @@ export function BreadcrumbAgentAnalytics() {
   const { isRoute } = useIsRoute()
   const isAgentAnalyticsRoute = isRoute(StudioRouteNames.AGENT_ANALYTICS)
   const { t } = useTranslation("agentAnalytics")
-  if (!hasFeature("agent-analytics") || !isAgentAnalyticsRoute) return null
+  if (!hasFeature("project-analytics") || !isAgentAnalyticsRoute) return null
   return (
     <>
       <BreadcrumbSeparator>
