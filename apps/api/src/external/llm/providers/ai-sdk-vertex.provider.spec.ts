@@ -70,7 +70,6 @@ if (process.env.IS_TEST === "true" && process.env.VERTEX_TEST === "true") {
     it.each(testModels)("generateStructuredOutput -png - $name", async ({ model }) => {
       await ProviderSpecs.testGenerateStructuredOutputFromXRayPng_FR({ provider, model })
     })
-
     it.each(testModels)("generateStructuredOutput -png (low res) - $name", async ({ model }) => {
       await ProviderSpecs.testGenerateStructuredOutputFromXRayLowPng_FR({ provider, model })
     })
@@ -81,6 +80,20 @@ if (process.env.IS_TEST === "true" && process.env.VERTEX_TEST === "true") {
 
     it.each(testModels)("streamChatResponse with tools - $name", async ({ model }) => {
       await ProviderSpecs.testStreamChatResponseWithTools({
+        provider,
+        model,
+        advancedExpectation: true,
+      })
+    })
+    it.each(testModels)("streamChatResponse with tools - BIS - $name", async ({ model }) => {
+      await ProviderSpecs.testStreamChatResponseWithToolsBis({
+        provider,
+        model,
+        advancedExpectation: true,
+      })
+    })
+    it.each(testModels)("streamChatResponse with tools - TER - $name", async ({ model }) => {
+      await ProviderSpecs.testStreamChatResponseWithToolsTer({
         provider,
         model,
         advancedExpectation: true,

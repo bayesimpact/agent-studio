@@ -11,6 +11,7 @@ This project uses [CalVer](https://calver.org/) (YY.MM.Micro) for product versio
 - Link to Help Center
 - Track user activities for further auditing
 - Display analytics per agent (sessions per day)
+- (beta) Medgemma available for Conversational Agent
 
 ### Changed
 - New user interface to list organizations, workspaces, agents, sessions
