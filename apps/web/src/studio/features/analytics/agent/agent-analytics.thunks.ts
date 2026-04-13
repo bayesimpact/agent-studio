@@ -15,7 +15,7 @@ export const loadAgentAnalytics = createAsyncThunk<
   ThunkConfig
 >("agentAnalytics/load", async ({ startAt, endAt }, { extra: { services }, getState }) => {
   const state = getState()
-  hasFeatureOrThrow({ state, feature: "agent-analytics" })
+  hasFeatureOrThrow({ state, feature: "project-analytics" })
   const { organizationId, projectId, agentId } = getCurrentIds({
     state,
     wantedIds: ["organizationId", "projectId", "agentId"],

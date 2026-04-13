@@ -134,7 +134,7 @@ export const studioRoutes = {
                 {
                   path: buildStudioPath(StudioRouteNames.AGENT_ANALYTICS),
                   element: (
-                    <RestrictedFeature feature="agent-analytics">
+                    <RestrictedFeature feature="project-analytics">
                       <AgentAnalyticsRoute />
                     </RestrictedFeature>
                   ),

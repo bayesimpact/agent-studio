@@ -5,6 +5,10 @@
       "title": "Analytique",
       "description": "Affiche les analyses de votre projet, y compris les conversations, les questions moyennes par session, et plus encore."
     },
+    "agentFilter": {
+      "placeholder": "Filtrer par agent",
+      "allAgents": "Tous les agents"
+    },
     "dateRangePlaceholder": "Plage de dates",
     "conversationsChart": {
       "title": "Conversations par jour",

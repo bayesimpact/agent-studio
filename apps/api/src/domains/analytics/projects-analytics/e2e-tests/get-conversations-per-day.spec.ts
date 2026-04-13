@@ -24,6 +24,7 @@ describe("Projects Analytics - getConversationsPerDay", () => {
 
   let organizationId: string
   let projectId: string
+  let primaryAgentId: string
   let accessToken: string | undefined = "token"
   let auth0Id = "auth0|123"
 
@@ -68,23 +69,29 @@ describe("Projects Analytics - getConversationsPerDay", () => {
     projectId = project.id
     auth0Id = user.auth0Id
 
-    const agent = agentFactory.transient({ organization, project }).build()
-    await repositories.agentRepository.save(agent)
+    const primaryAgent = agentFactory.transient({ organization, project }).build()
+    const secondaryAgent = agentFactory.transient({ organization, project }).build()
+    await repositories.agentRepository.save([primaryAgent, secondaryAgent])
+    primaryAgentId = primaryAgent.id
 
     const session1Day1 = conversationAgentSessionFactory
-      .transient({ organization, project, agent, user })
+      .transient({ organization, project, agent: primaryAgent, user })
       .build({ createdAt: new Date(day1Start.getTime() + 3600 * 1000), updatedAt: new Date() })
     const session2Day1 = conversationAgentSessionFactory
-      .transient({ organization, project, agent, user })
+      .transient({ organization, project, agent: primaryAgent, user })
       .build({ createdAt: new Date(day1Start.getTime() + 2 * 3600 * 1000), updatedAt: new Date() })
     const session3Day2 = conversationAgentSessionFactory
-      .transient({ organization, project, agent, user })
+      .transient({ organization, project, agent: primaryAgent, user })
       .build({ createdAt: new Date(day2Start.getTime() + 3600 * 1000), updatedAt: new Date() })
+    const session4Day2 = conversationAgentSessionFactory
+      .transient({ organization, project, agent: secondaryAgent, user })
+      .build({ createdAt: new Date(day2Start.getTime() + 2 * 3600 * 1000), updatedAt: new Date() })
 
     await repositories.conversationAgentSessionRepository.save([
       session1Day1,
       session2Day1,
       session3Day2,
+      session4Day2,
     ])
 
     await repositories.agentMessageRepository.save([
@@ -107,20 +114,32 @@ describe("Projects Analytics - getConversationsPerDay", () => {
     ])
   }
 
-  const subject = async () =>
+  const subject = async (agentId?: string) =>
     request({
       route: AnalyticsRoutes.getConversationsPerDay,
       pathParams: removeNullish({ organizationId, projectId }),
       token: accessToken,
-      query: {
+      query: removeNullish({
         startAt: String(day1Start.getTime()),
         endAt: String(day3End.getTime()),
-      },
+        agentId,
+      }),
     })
 
   it("returns conversations per day including zeros", async () => {
     await createContext()
     const response = await subject()
+    expectResponse(response, 200)
+    expect(response.body.data).toEqual([
+      { date: day1Start.toISOString().slice(0, 10), value: 2 },
+      { date: day2Start.toISOString().slice(0, 10), value: 2 },
+      { date: day3Start.toISOString().slice(0, 10), value: 0 },
+    ])
+  })
+
+  it("can filter conversations per day by agent id", async () => {
+    await createContext()
+    const response = await subject(primaryAgentId)
     expectResponse(response, 200)
     expect(response.body.data).toEqual(expectedDays)
   })

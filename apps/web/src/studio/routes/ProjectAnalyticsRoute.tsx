@@ -1,11 +1,20 @@
 import ChartCard, { type DailyMetricPoint } from "@caseai-connect/ui/components/ChartCard"
 import { DateRangeCalendarWithPresetsPopover } from "@caseai-connect/ui/components/DateRangeCalendarWithPresets"
 import { getLast7DaysRange } from "@caseai-connect/ui/lib/date-range-presets"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@caseai-connect/ui/shad/select"
 import { useCallback, useEffect, useState } from "react"
 import type { DateRange } from "react-day-picker"
 import { useTranslation } from "react-i18next"
 import { useNavigate } from "react-router-dom"
+import { selectAgentsData } from "@/common/features/agents/agents.selectors"
 import { useGetPath } from "@/common/hooks/use-build-path"
+import { ADS } from "@/common/store/async-data-status"
 import { useAppDispatch, useAppSelector } from "@/common/store/hooks"
 import {
   selectAnalyticsAvgUserQuestionsPerSessionPerDay,
@@ -38,13 +47,21 @@ function getInitialAnalyticsBounds() {
 export function ProjectAnalyticsRoute() {
   const dispatch = useAppDispatch()
   const [bounds, setBounds] = useState(getInitialAnalyticsBounds)
+  const [selectedAgentId, setSelectedAgentId] = useState<string>("all")
 
   useEffect(() => {
-    void dispatch(loadProjectAnalytics(bounds))
-  }, [dispatch, bounds])
+    void dispatch(
+      loadProjectAnalytics({
+        ...bounds,
+        agentId: selectedAgentId === "all" ? undefined : selectedAgentId,
+      }),
+    )
+  }, [dispatch, bounds, selectedAgentId])
 
   const conversations = useAppSelector(selectAnalyticsConversationsPerDay)
   const avgQuestions = useAppSelector(selectAnalyticsAvgUserQuestionsPerSessionPerDay)
+  const agentsData = useAppSelector(selectAgentsData)
+  const agents = ADS.isFulfilled(agentsData) ? agentsData.value : []
 
   return (
     <AsyncRoute data={[conversations, avgQuestions]}>
@@ -53,6 +70,9 @@ export function ProjectAnalyticsRoute() {
           conversationsPoints={conversationsPoints}
           avgQuestionsPoints={avgQuestionsPoints}
           onAnalyticsRangeChange={setBounds}
+          agents={agents}
+          selectedAgentId={selectedAgentId}
+          onAgentChange={setSelectedAgentId}
         />
       )}
     </AsyncRoute>
@@ -63,10 +83,16 @@ function WithData({
   conversationsPoints,
   avgQuestionsPoints,
   onAnalyticsRangeChange,
+  agents,
+  selectedAgentId,
+  onAgentChange,
 }: {
   conversationsPoints: { date: string; value: number }[]
   avgQuestionsPoints: { date: string; value: number }[]
   onAnalyticsRangeChange: (nextBounds: { startAt: number; endAt: number }) => void
+  agents: { id: string; name: string }[]
+  selectedAgentId: string
+  onAgentChange: (agentId: string) => void
 }) {
   const { t } = useTranslation("analytics")
   const navigate = useNavigate()
@@ -93,6 +119,19 @@ function WithData({
 
       <div className="flex flex-col gap-6 p-6">
         <div className="flex flex-wrap items-center justify-end gap-4">
+          <Select value={selectedAgentId} onValueChange={onAgentChange}>
+            <SelectTrigger className="w-[220px]">
+              <SelectValue placeholder={t("agentFilter.placeholder")} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">{t("agentFilter.allAgents")}</SelectItem>
+              {agents.map((agent) => (
+                <SelectItem key={agent.id} value={agent.id}>
+                  {agent.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
           <DateRangeCalendarWithPresetsPopover
             defaultPreset="last7Days"
             onRangeChange={onRangeChange}
