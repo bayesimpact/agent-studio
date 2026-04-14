@@ -42,14 +42,33 @@
       }
     },
     "dataset": {
+      "dataset": "Dataset",
+      "title": "Datasets",
+      "description": "Datasets d'évaluation créés à partir des fichiers téléversés",
       "create": {
-        "title": "Créer un dataset à partir de {{fileName}}",
-        "description": "Configurez les colonnes et les rôles du dataset avant de le créer."
+        "title": "Nouveau dataset",
+        "description": "Evaluez vos agents en utilisant des datasets personnalisés."
+      },
+      "update": {
+        "title": "Initialiser le dataset",
+        "description": "Configurez les colonnes et les rôles du dataset pour préparer l'évaluation."
       },
       "props": {
         "name": "Nom du dataset",
+        "createdAt": "Créé le",
         "placeholders": {
           "name": "Entrez le nom du dataset"
+        }
+      },
+      "list": {
+        "empty": {
+          "title": "Aucun dataset disponible",
+          "description": "Créez votre premier dataset d'évaluation."
+        }
+      },
+      "records": {
+        "view": {
+          "description": "{{count}} enregistrements"
         }
       },
       "columns": {

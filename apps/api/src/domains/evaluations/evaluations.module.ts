@@ -1,6 +1,7 @@
 import { Module } from "@nestjs/common"
 import { TypeOrmModule } from "@nestjs/typeorm"
 import { AgentContextResolver } from "@/common/context/resolvers/agent-context.resolver"
+import { DocumentContextResolver } from "@/common/context/resolvers/document-context.resolver"
 import { EvaluationContextResolver } from "@/common/context/resolvers/evaluation-context.resolver"
 import { EvaluationDatasetContextResolver } from "@/common/context/resolvers/evaluation-dataset-context.resolver"
 import { EvaluationReportContextResolver } from "@/common/context/resolvers/evaluation-report-context.resolver"
@@ -22,6 +23,7 @@ import { Agent } from "../agents/agent.entity"
 import { AgentMembership } from "../agents/memberships/agent-membership.entity"
 import { EvaluationDataset } from "./datasets/evaluation-dataset.entity"
 import { EvaluationDatasetGuard } from "./datasets/evaluation-dataset.guard"
+import { EvaluationDatasetDocument } from "./datasets/evaluation-dataset-document.entity"
 import { EvaluationDatasetsController } from "./datasets/evaluation-datasets.controller"
 import { EvaluationDatasetsService } from "./datasets/evaluation-datasets.service"
 import { EvaluationDatasetRecord } from "./datasets/records/evaluation-dataset-record.entity"
@@ -42,6 +44,7 @@ import { EvaluationReportsService } from "./reports/evaluation-reports.service"
       AgentMembership,
       Evaluation,
       EvaluationDataset,
+      EvaluationDatasetDocument,
       EvaluationDatasetRecord,
       EvaluationReport,
       Organization,
@@ -59,6 +62,7 @@ import { EvaluationReportsService } from "./reports/evaluation-reports.service"
   providers: [
     AgentContextResolver,
     EvaluationContextResolver,
+    DocumentContextResolver,
     EvaluationDatasetContextResolver,
     EvaluationDatasetGuard,
     EvaluationDatasetsService,

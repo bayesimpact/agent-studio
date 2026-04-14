@@ -11,7 +11,7 @@ import { ProjectRoute } from "@/common/routes/ProjectRoute"
 import { ProtectedRoute } from "@/common/routes/ProtectedRoute"
 import { useAppDispatch, useAppSelector } from "@/common/store/hooks"
 import { Dashboard } from "../components/Dashboard"
-import { selectFilesData } from "../features/datasets/datasets.selectors"
+import { selectDatasetsData, selectFilesData } from "../features/datasets/datasets.selectors"
 import { datasetsActions } from "../features/datasets/datasets.slice"
 import { useInitStore } from "../hooks/use-init-store"
 import { EvalDashboardRoute } from "./EvalDashboardRoute"
@@ -64,10 +64,13 @@ function ProjectRouteHandler() {
 function WithData() {
   const dispatch = useAppDispatch()
   const filesData = useAppSelector(selectFilesData)
+  const datasetsData = useAppSelector(selectDatasetsData)
   useEffect(() => {
     dispatch(datasetsActions.initData())
   }, [dispatch])
   return (
-    <AsyncRoute data={[filesData]}>{([filesValue]) => <Dashboard files={filesValue} />}</AsyncRoute>
+    <AsyncRoute data={[filesData, datasetsData]}>
+      {([filesValue, datasetsValue]) => <Dashboard files={filesValue} datasets={datasetsValue} />}
+    </AsyncRoute>
   )
 }

@@ -5,6 +5,7 @@ import type { ThunkConfig } from "@/common/store/types"
 import type {
   DatasetFile,
   DatasetFileColumn,
+  EvaluationDataset,
   EvaluationDatasetSchemaColumn,
 } from "./datasets.models"
 import { datasetsActions } from "./datasets.slice"
@@ -21,30 +22,59 @@ const listFiles = createAsyncThunk<DatasetFile[], void, ThunkConfig>(
   },
 )
 
-const getColumns = createAsyncThunk<DatasetFileColumn[], { documentId: string }, ThunkConfig>(
+const listDatasets = createAsyncThunk<EvaluationDataset[], void, ThunkConfig>(
+  "datasets/listDatasets",
+  async (_, { extra: { services }, getState }) => {
+    const state = getState()
+    const params = getCurrentIds({
+      state,
+      wantedIds: ["organizationId", "projectId"],
+    })
+    return await services.evaluationDatasets.getAll(params)
+  },
+)
+
+const getFileColumns = createAsyncThunk<DatasetFileColumn[], { documentId: string }, ThunkConfig>(
   "datasets/getColumns",
+  async ({ documentId }, { extra: { services }, getState }) => {
+    const state = getState()
+    const params = getCurrentIds({
+      state,
+      wantedIds: ["organizationId", "projectId"],
+    })
+    return await services.evaluationDatasets.getFileColumns({ ...params, documentId })
+  },
+)
+
+const createOne = createAsyncThunk<{ success: true }, { name: string }, ThunkConfig>(
+  "datasets/createOne",
   async (payload, { extra: { services }, getState }) => {
     const state = getState()
     const params = getCurrentIds({
       state,
       wantedIds: ["organizationId", "projectId"],
     })
-    return await services.evaluationDatasets.getColumns({ ...params, payload })
+    return await services.evaluationDatasets.createOne({ ...params, payload })
   },
 )
 
-const createOne = createAsyncThunk<
-  DatasetFile,
-  { documentId: string; name: string; columns: EvaluationDatasetSchemaColumn[] },
+const updateOne = createAsyncThunk<
+  { success: true },
+  { datasetId: string; documentId: string; name: string; columns: EvaluationDatasetSchemaColumn[] },
   ThunkConfig
->("datasets/createOne", async (payload, { extra: { services }, getState }) => {
-  const state = getState()
-  const params = getCurrentIds({
-    state,
-    wantedIds: ["organizationId", "projectId"],
-  })
-  return await services.evaluationDatasets.createOne({ ...params, payload })
-})
+>(
+  "datasets/updateOne",
+  async ({ datasetId, documentId, name, columns }, { extra: { services }, getState }) => {
+    const state = getState()
+    const { organizationId, projectId } = getCurrentIds({
+      state,
+      wantedIds: ["organizationId", "projectId"],
+    })
+    const params = { organizationId, projectId, datasetId, documentId }
+    const payload = { name, columns }
+    return await services.evaluationDatasets.updateOne({ ...params, payload })
+  },
+)
 
 const uploadFile = createAsyncThunk<void, { file: File }, ThunkConfig>(
   "datasets/uploadFile",
@@ -93,4 +123,12 @@ const deleteFile = createAsyncThunk<void, { fileId: string }, ThunkConfig>(
   },
 )
 
-export const datasetsThunks = { listFiles, createOne, getColumns, uploadFile, deleteFile }
+export const datasetsThunks = {
+  listDatasets,
+  listFiles,
+  createOne,
+  getFileColumns,
+  uploadFile,
+  updateOne,
+  deleteFile,
+}

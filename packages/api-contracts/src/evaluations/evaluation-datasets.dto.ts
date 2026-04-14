@@ -36,12 +36,14 @@ export type EvaluationDatasetSchemaMappingDto = Record<
   EvaluationDatasetSchemaColumnDto["id"],
   EvaluationDatasetSchemaColumnDto
 >
+export type EvaluationDatasetRecordDto = { columnId: string; columnName: string; values: unknown[] }
 export type EvaluationDatasetDto = {
   createdAt: TimeType
-  documentId: string
+  documentIds: string[]
   id: string
   name: string
   projectId: string
+  records: EvaluationDatasetRecordDto[]
   schemaMapping: EvaluationDatasetSchemaMappingDto
   updatedAt: TimeType
 }

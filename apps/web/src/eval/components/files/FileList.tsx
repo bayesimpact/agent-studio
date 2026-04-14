@@ -14,16 +14,14 @@ import { useAppDispatch } from "@/common/store/hooks"
 import { buildSince } from "@/common/utils/build-date"
 import type { DatasetFile } from "@/eval/features/datasets/datasets.models"
 import { datasetsActions } from "@/eval/features/datasets/datasets.slice"
-import { DatasetCreator } from "../DatasetCreator"
 import { EmptyFile } from "./EmptyFile"
 import { UploadFile } from "./UploadFile"
 import { UploaderState } from "./UploadState"
 
 export function FileList({ files }: { files: DatasetFile[] }) {
-  // FIXME: i18n
   const { t } = useTranslation()
   return (
-    <div>
+    <div className="rounded-2xl border overflow-hidden">
       <GridHeader
         title={t("evaluation:file.title")}
         description={t("evaluation:file.description")}
@@ -74,15 +72,28 @@ function FileRow({ file }: { file: DatasetFile }) {
 
 function FileActions({ file }: { file: DatasetFile }) {
   const dispatch = useAppDispatch()
-  const handleDelete = () => {
-    dispatch(datasetsActions.deleteFile({ fileId: file.id }))
+  const { t } = useTranslation()
+  const handleSelect = () => {
+    dispatch(datasetsActions.setCurrentFileId({ fileId: file.id }))
   }
   return (
     <div className="flex items-center gap-2">
-      <DatasetCreator file={file} />
-      <Button variant="outline" size="icon" onClick={handleDelete}>
-        <Trash2Icon />
+      <Button variant="outline" onClick={handleSelect}>
+        {t("actions:select")}
       </Button>
     </div>
+  )
+}
+
+function _FileDeletor({ file }: { file: DatasetFile }) {
+  const dispatch = useAppDispatch()
+  const handleDelete = () => {
+    dispatch(datasetsActions.deleteFile({ fileId: file.id }))
+  }
+
+  return (
+    <Button variant="outline" size="icon" onClick={handleDelete}>
+      <Trash2Icon />
+    </Button>
   )
 }

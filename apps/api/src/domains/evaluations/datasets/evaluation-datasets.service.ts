@@ -18,7 +18,11 @@ import {
   EvaluationDataset,
   type EvaluationDatasetSchemaMapping,
 } from "./evaluation-dataset.entity"
-import { EvaluationDatasetRecord } from "./records/evaluation-dataset-record.entity"
+import { EvaluationDatasetDocument } from "./evaluation-dataset-document.entity"
+import {
+  EvaluationDatasetRecord,
+  type EvaluationDatasetRecordData,
+} from "./records/evaluation-dataset-record.entity"
 
 export type DatasetFileColumn = {
   id: string
@@ -28,7 +32,13 @@ export type DatasetFileColumn = {
 
 @Injectable()
 export class EvaluationDatasetsService {
+  private readonly datasetConnectRepository: ConnectRepository<EvaluationDataset>
+  private readonly recordConnectRepository: ConnectRepository<EvaluationDatasetRecord>
+  private readonly evaluationDatasetDocumentRepository: Repository<EvaluationDatasetDocument>
+
   constructor(
+    @InjectRepository(EvaluationDatasetDocument)
+    evaluationDatasetDocumentRepository: Repository<EvaluationDatasetDocument>,
     @InjectRepository(EvaluationDataset)
     evaluationDatasetRepository: Repository<EvaluationDataset>,
     @InjectRepository(EvaluationDatasetRecord)
@@ -45,16 +55,10 @@ export class EvaluationDatasetsService {
       evaluationDatasetRecordRepository,
       "evaluationDatasetRecords",
     )
+    this.evaluationDatasetDocumentRepository = evaluationDatasetDocumentRepository
   }
 
-  private readonly datasetConnectRepository: ConnectRepository<EvaluationDataset>
-  private readonly recordConnectRepository: ConnectRepository<EvaluationDatasetRecord>
-
-  async listDatasetFiles({
-    connectScope,
-  }: {
-    connectScope: RequiredConnectScope
-  }): Promise<Document[]> {
+  async listFiles({ connectScope }: { connectScope: RequiredConnectScope }): Promise<Document[]> {
     return this.documentsService.listBySourceType({
       connectScope,
       sourceType: "evaluationDataset",
@@ -82,7 +86,52 @@ export class EvaluationDatasetsService {
     return columns
   }
 
+  private sortNewestFirst = (a: EvaluationDataset, b: EvaluationDataset) =>
+    b.updatedAt.getTime() - a.updatedAt.getTime()
+
+  async listDatasets({
+    connectScope,
+  }: {
+    connectScope: RequiredConnectScope
+  }): Promise<EvaluationDataset[]> {
+    const datasets = await this.datasetConnectRepository.find(connectScope, {
+      relations: ["evaluationDatasetDocuments", "evaluationDatasetDocuments.document"],
+    })
+    return datasets.sort(this.sortNewestFirst)
+  }
+
+  async listDatasetRecords({
+    connectScope,
+    datasetId,
+  }: {
+    connectScope: RequiredConnectScope
+    datasetId: string
+  }): Promise<EvaluationDatasetRecord[]> {
+    return this.recordConnectRepository.find(connectScope, {
+      where: { evaluationDatasetId: datasetId },
+    })
+  }
+
   async createDataset({
+    connectScope,
+    name,
+  }: {
+    connectScope: RequiredConnectScope
+    name: string
+  }): Promise<EvaluationDataset> {
+    if (!name.trim()) {
+      throw new UnprocessableEntityException("Dataset name is required")
+    }
+
+    const dataset = await this.datasetConnectRepository.createAndSave(connectScope, {
+      name,
+      schemaMapping: {}, // empty schema mapping by default, user can update the columns later
+    })
+
+    return dataset
+  }
+
+  async updateDataset({
     connectScope,
     fields: { name, documentId, columns },
   }: {
@@ -105,7 +154,14 @@ export class EvaluationDatasetsService {
     const dataset = await this.datasetConnectRepository.createAndSave(connectScope, {
       name,
       schemaMapping: this.buildSchemaMapping(columns),
+    })
+
+    // Link dataset to document
+    await this.evaluationDatasetDocumentRepository.save({
+      evaluationDatasetId: dataset.id,
       documentId,
+      organizationId: connectScope.organizationId,
+      projectId: connectScope.projectId,
     })
 
     return dataset
@@ -113,41 +169,38 @@ export class EvaluationDatasetsService {
 
   async createDatasetRecords({
     connectScope,
+    documentId,
     datasetId,
   }: {
     connectScope: RequiredConnectScope
+    documentId: string
     datasetId: string
   }): Promise<EvaluationDatasetRecord[]> {
+    // TODO: transaction
     const dataset = await this.datasetConnectRepository.getOneById(connectScope, datasetId)
     if (!dataset) {
       throw new NotFoundException(`Evaluation dataset with id ${datasetId} not found`)
     }
 
-    const columns = await this.getFileColumns({
+    const document = await this.documentsService.findById({
       connectScope,
-      documentId: dataset.documentId,
-      options: { header: true, preview: 10000, skipEmptyLines: true },
+      documentId,
     })
+    if (!document) {
+      throw new NotFoundException(`Document with id ${documentId} not found`)
+    }
+
+    const rows = await this.parseCsvRows({ schemaMapping: dataset.schemaMapping, document })
 
     const records: EvaluationDatasetRecord[] = []
-
-    for (const column of columns) {
-      for (const value of column.values) {
-        const columnId = column.id
-
-        const record = await this.recordConnectRepository.createAndSave(connectScope, {
-          evaluationDatasetId: datasetId,
-          data: { columnId, value },
-        })
-
-        if (!record) {
-          throw new UnprocessableEntityException(
-            `Failed to create record for column ${column.name} in dataset ${datasetId}`,
-          )
-        }
-        records.push(record)
-      }
+    for (const row of rows) {
+      const record = await this.recordConnectRepository.createAndSave(connectScope, {
+        evaluationDatasetId: datasetId,
+        data: row,
+      })
+      records.push(record)
     }
+
     return records
   }
 
@@ -239,7 +292,53 @@ export class EvaluationDatasetsService {
     return parsed.meta.fields.map((fieldName) => ({
       id: v4(),
       name: fieldName,
-      values: (parsed.data as Record<string, unknown>[]).map((row) => row[fieldName]),
+      values: (parsed.data as Record<string, unknown>[]).map((row) =>
+        this.standardizedNulls(row[fieldName]),
+      ),
     }))
+  }
+
+  private standardizedNulls(value: unknown): unknown {
+    if (
+      value === "N/A" ||
+      value === "NaN" ||
+      value === "" ||
+      value === "null" ||
+      value === "NULL" ||
+      value === "NA"
+    ) {
+      return null
+    }
+    return value
+  }
+
+  private async parseCsvRows({
+    schemaMapping,
+    document,
+  }: {
+    schemaMapping: EvaluationDatasetSchemaMapping
+    document: Document
+  }): Promise<EvaluationDatasetRecordData[]> {
+    const buffer = await this.fileStorageService.readFile(document.storageRelativePath)
+    const csvContent = buffer.toString("utf-8")
+
+    const parsed = Papa.parse(csvContent, {
+      skipEmptyLines: true,
+      header: true,
+    })
+
+    if (!parsed.meta.fields || parsed.meta.fields.length === 0) {
+      throw new UnprocessableEntityException("CSV file has no columns")
+    }
+
+    const columns = Object.values(schemaMapping)
+
+    return (parsed.data as Record<string, unknown>[]).map((csvRow) => {
+      const row: EvaluationDatasetRecordData = {}
+      for (const column of columns) {
+        row[column.id] = this.standardizedNulls(csvRow[column.originalName])
+      }
+      return row
+    })
   }
 }

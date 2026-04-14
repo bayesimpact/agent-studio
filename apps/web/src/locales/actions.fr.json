@@ -1,6 +1,7 @@
 {
   "actions": {
     "accept": "Accepter",
+    "initialize": "Initialiser",
     "add": "Ajouter",
     "back": "Retour",
     "cancel": "Annuler",

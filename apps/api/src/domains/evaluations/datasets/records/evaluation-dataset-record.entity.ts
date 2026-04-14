@@ -3,8 +3,7 @@ import { ConnectEntity, ConnectEntityBase } from "@/common/entities/connect-enti
 import { EvaluationDataset } from "../evaluation-dataset.entity"
 
 export type EvaluationDatasetRecordData = {
-  columnId: string
-  value: unknown
+  [columnId: string]: unknown
 }
 
 @ConnectEntity("evaluation-dataset-record")

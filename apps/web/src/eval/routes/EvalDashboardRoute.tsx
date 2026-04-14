@@ -17,7 +17,7 @@ export function EvalDashboardRoute({
   return (
     <>
       <Header user={user} organization={organization} />
-      <div className="w-4/5 lg:w-3/4 mx-auto my-10 border relative rounded-2xl overflow-hidden">
+      <div className="w-4/5 lg:w-3/4 mx-auto my-10 relative border rounded-2xl overflow-hidden">
         {outlet ? outlet : <Navigate to={RouteNames.HOME} />}
       </div>
     </>

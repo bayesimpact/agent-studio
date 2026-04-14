@@ -1,5 +1,6 @@
-import { Column, JoinColumn, JoinTable, ManyToMany, ManyToOne } from "typeorm"
+import { Column, JoinColumn, JoinTable, ManyToMany, ManyToOne, OneToMany } from "typeorm"
 import { ConnectEntity, ConnectEntityBase } from "@/common/entities/connect-entity"
+import { EvaluationDatasetDocument } from "@/domains/evaluations/datasets/evaluation-dataset-document.entity"
 import { Project } from "@/domains/projects/project.entity"
 import type { DocumentTag } from "./tags/document-tag.entity"
 
@@ -52,4 +53,10 @@ export class Document extends ConnectEntityBase {
     inverseJoinColumn: { name: "document_tag_id", referencedColumnName: "id" },
   })
   tags!: DocumentTag[]
+
+  @OneToMany(
+    () => EvaluationDatasetDocument,
+    (evaluationDatasetDocument: EvaluationDatasetDocument) => evaluationDatasetDocument.document,
+  )
+  evaluationDatasetDocuments!: EvaluationDatasetDocument[]
 }

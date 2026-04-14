@@ -1,6 +1,6 @@
 import { createSlice, type PayloadAction } from "@reduxjs/toolkit"
 import { ADS, type AsyncData, defaultAsyncData } from "@/common/store/async-data-status"
-import type { DatasetFile, DatasetFileColumn } from "./datasets.models"
+import type { DatasetFile, DatasetFileColumn, EvaluationDataset } from "./datasets.models"
 import { datasetsThunks } from "./datasets.thunks"
 
 export type UploaderError = { title: string; description: string }
@@ -12,18 +12,18 @@ type UploaderState = {
 }
 
 interface State {
-  currentDatasetId: string | null
-  data: AsyncData<Document[]>
+  currentFileId: string | null
+  data: AsyncData<EvaluationDataset[]>
   files: AsyncData<DatasetFile[]>
-  columns: AsyncData<DatasetFileColumn[]>
+  fileColumns: AsyncData<DatasetFileColumn[]>
   uploader: UploaderState
 }
 
 const initialState: State = {
-  currentDatasetId: null,
+  currentFileId: null,
   data: defaultAsyncData,
   files: defaultAsyncData,
-  columns: defaultAsyncData,
+  fileColumns: defaultAsyncData,
   uploader: {
     status: "idle",
     total: 0,
@@ -38,6 +38,9 @@ const slice = createSlice({
   reducers: {
     reset: () => initialState,
     initData: () => {},
+    setCurrentFileId: (state, action: PayloadAction<{ fileId: string | null }>) => {
+      state.currentFileId = action.payload.fileId
+    },
     resetUploaderCounters: (state) => {
       state.uploader.total = 0
       state.uploader.processed = 0
@@ -62,9 +65,6 @@ const slice = createSlice({
       ) {
         state.uploader.status = "completed"
       }
-    },
-    setCurrentDatasetId: (state, action: PayloadAction<{ datasetId: string | null }>) => {
-      state.currentDatasetId = action.payload.datasetId
     },
   },
   extraReducers: (builder) => {
@@ -92,20 +92,37 @@ const slice = createSlice({
       })
 
     builder
-      .addCase(datasetsThunks.getColumns.pending, (state) => {
-        if (!ADS.isFulfilled(state.columns)) state.columns.status = ADS.Loading
-        state.columns.error = null
+      .addCase(datasetsThunks.listDatasets.pending, (state) => {
+        if (!ADS.isFulfilled(state.data)) state.data.status = ADS.Loading
+        state.data.error = null
       })
-      .addCase(datasetsThunks.getColumns.fulfilled, (state, action) => {
-        state.columns = {
+      .addCase(datasetsThunks.listDatasets.fulfilled, (state, action) => {
+        state.data = {
           status: ADS.Fulfilled,
           error: null,
           value: action.payload,
         }
       })
-      .addCase(datasetsThunks.getColumns.rejected, (state, action) => {
-        state.columns.status = ADS.Error
-        state.columns.error = action.error.message || "Failed to get columns"
+      .addCase(datasetsThunks.listDatasets.rejected, (state, action) => {
+        state.data.status = ADS.Error
+        state.data.error = action.error.message || "Failed to list datasets"
+      })
+
+    builder
+      .addCase(datasetsThunks.getFileColumns.pending, (state) => {
+        if (!ADS.isFulfilled(state.fileColumns)) state.fileColumns.status = ADS.Loading
+        state.fileColumns.error = null
+      })
+      .addCase(datasetsThunks.getFileColumns.fulfilled, (state, action) => {
+        state.fileColumns = {
+          status: ADS.Fulfilled,
+          error: null,
+          value: action.payload,
+        }
+      })
+      .addCase(datasetsThunks.getFileColumns.rejected, (state, action) => {
+        state.fileColumns.status = ADS.Error
+        state.fileColumns.error = action.error.message || "Failed to get file columns"
       })
   },
 })

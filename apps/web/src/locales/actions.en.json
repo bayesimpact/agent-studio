@@ -45,6 +45,7 @@
     "submit": "Submit",
     "update": "Update",
     "upload": "Upload",
+    "initialize": "Initialize",
     "view": "View"
   }
 }

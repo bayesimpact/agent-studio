@@ -2,22 +2,27 @@ import {
   type DatasetFileColumnDto,
   type DatasetFileDto,
   type EvaluationDatasetDto,
+  type EvaluationDatasetRecordDto,
   EvaluationDatasetsRoutes,
 } from "@caseai-connect/api-contracts"
-import { Body, Controller, Get, Post, Req, UseGuards } from "@nestjs/common"
-import type { EndpointRequestWithProject } from "@/common/context/request.interface"
+import { Body, Controller, Get, Patch, Post, Req, UseGuards } from "@nestjs/common"
+import type {
+  EndpointRequestWithDocument,
+  EndpointRequestWithProject,
+} from "@/common/context/request.interface"
 import { getRequiredConnectScope } from "@/common/context/request-context.helpers"
-import { RequireContext } from "@/common/context/require-context.decorator"
+import { AddContext, RequireContext } from "@/common/context/require-context.decorator"
 import { ResourceContextGuard } from "@/common/context/resource-context.guard"
 import { CheckPolicy } from "@/common/policies/check-policy.decorator"
 import { TrackActivity } from "@/domains/activities/track-activity.decorator"
 import { JwtAuthGuard } from "@/domains/auth/jwt-auth.guard"
 import type { Document } from "@/domains/documents/document.entity"
 import { UserGuard } from "@/domains/users/user.guard"
-import type { EvaluationDataset } from "./evaluation-dataset.entity"
+import type { EvaluationDataset, EvaluationDatasetSchemaMapping } from "./evaluation-dataset.entity"
 import { EvaluationDatasetGuard } from "./evaluation-dataset.guard"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
 import { DatasetFileColumn, EvaluationDatasetsService } from "./evaluation-datasets.service"
+import type { EvaluationDatasetRecord } from "./records/evaluation-dataset-record.entity"
 
 @UseGuards(JwtAuthGuard, UserGuard, ResourceContextGuard, EvaluationDatasetGuard)
 @RequireContext("organization", "project")
@@ -25,90 +30,89 @@ import { DatasetFileColumn, EvaluationDatasetsService } from "./evaluation-datas
 export class EvaluationDatasetsController {
   constructor(private readonly evaluationDatasetsService: EvaluationDatasetsService) {}
 
+  @Get(EvaluationDatasetsRoutes.getAll.path)
+  @CheckPolicy((policy) => policy.canList())
+  async getAll(
+    @Req() request: EndpointRequestWithProject,
+  ): Promise<typeof EvaluationDatasetsRoutes.getAll.response> {
+    const datasets = await this.evaluationDatasetsService.listDatasets({
+      connectScope: getRequiredConnectScope(request),
+    })
+    const datasetWithRecords: EvaluationDatasetDto[] = []
+    for (const dataset of datasets) {
+      const records = await this.evaluationDatasetsService.listDatasetRecords({
+        connectScope: getRequiredConnectScope(request),
+        datasetId: dataset.id,
+      })
+      const evaluationDatasetDto = toEvaluationDatasetDto({ entity: dataset, records })
+      datasetWithRecords.push(evaluationDatasetDto)
+    }
+    return { data: datasetWithRecords }
+  }
+
   @Get(EvaluationDatasetsRoutes.getAllFiles.path)
   @CheckPolicy((policy) => policy.canList())
   async getAllFiles(
     @Req() request: EndpointRequestWithProject,
   ): Promise<typeof EvaluationDatasetsRoutes.getAllFiles.response> {
-    const files = await this.evaluationDatasetsService.listDatasetFiles({
+    const files = await this.evaluationDatasetsService.listFiles({
       connectScope: getRequiredConnectScope(request),
     })
-
     return { data: files.map(toDatasetFileDto) }
   }
 
-  @Post(EvaluationDatasetsRoutes.getColumns.path)
+  @Get(EvaluationDatasetsRoutes.getFileColumns.path)
+  @AddContext("document")
   @CheckPolicy((policy) => policy.canCreate())
-  // TODO: add context of the document to check if user can access the document
-  // TODO: @TrackActivity
   async getColumns(
-    @Req() request: EndpointRequestWithProject,
-    @Body() { payload }: typeof EvaluationDatasetsRoutes.getColumns.request,
-  ): Promise<typeof EvaluationDatasetsRoutes.getColumns.response> {
+    @Req() request: EndpointRequestWithDocument,
+  ): Promise<typeof EvaluationDatasetsRoutes.getFileColumns.response> {
     const columns = await this.evaluationDatasetsService.getFileColumns({
       connectScope: getRequiredConnectScope(request),
-      documentId: payload.documentId,
+      documentId: request.document.id,
     })
     return { data: columns.map(toDatasetFileColumnDto) }
   }
 
   @Post(EvaluationDatasetsRoutes.createOne.path)
   @CheckPolicy((policy) => policy.canCreate())
-  // TODO: add context of the document to check if user can access the document
   @TrackActivity({ action: "evaluationDataset.create" })
   async createOne(
     @Req() request: EndpointRequestWithProject,
     @Body() { payload }: typeof EvaluationDatasetsRoutes.createOne.request,
   ): Promise<typeof EvaluationDatasetsRoutes.createOne.response> {
-    const connectScope = getRequiredConnectScope(request)
+    await this.evaluationDatasetsService.createDataset({
+      connectScope: getRequiredConnectScope(request),
+      name: payload.name,
+    })
 
-    const dataset = await this.evaluationDatasetsService.createDataset({
+    return { data: { success: true } }
+  }
+
+  @Patch(EvaluationDatasetsRoutes.updateOne.path)
+  @CheckPolicy((policy) => policy.canCreate())
+  @AddContext("document")
+  @TrackActivity({ action: "evaluationDataset.update" })
+  async updateOne(
+    @Req() request: EndpointRequestWithDocument,
+    @Body() { payload: { name, columns } }: typeof EvaluationDatasetsRoutes.updateOne.request,
+  ): Promise<typeof EvaluationDatasetsRoutes.updateOne.response> {
+    const connectScope = getRequiredConnectScope(request)
+    const documentId = request.document.id
+
+    const dataset = await this.evaluationDatasetsService.updateDataset({
       connectScope,
-      fields: payload,
+      fields: { name, documentId, columns },
     })
 
     const _records = await this.evaluationDatasetsService.createDatasetRecords({
       connectScope,
       datasetId: dataset.id,
+      documentId,
     })
 
-    return { data: toEvaluationDatasetDto(dataset) }
+    return { data: { success: true } }
   }
-
-  // @Delete(EvaluationDatasetsRoutes.deleteOne.path)
-  // @CheckPolicy((policy) => policy.canDelete())
-  // @AddContext("evaluationDataset")
-  // @TrackActivity({ action: "evaluationDataset.delete", entityFrom: "evaluationDataset" })
-  // async deleteOne(
-  //   @Req() request: EndpointRequestWithEvaluationDataset,
-  // ): Promise<typeof EvaluationDatasetsRoutes.deleteOne.response> {
-  //   await this.evaluationDatasetsService.deleteDataset({
-  //     connectScope: getRequiredConnectScope(request),
-  //     datasetId: request.evaluationDataset.id,
-  //   })
-
-  //   return { data: { success: true } }
-  // }
-
-  // @Patch(EvaluationDatasetsRoutes.setColumnRoles.path)
-  // @CheckPolicy((policy) => policy.canUpdate())
-  // @AddContext("evaluationDataset")
-  // @TrackActivity({
-  //   action: "evaluationDataset.setColumnRoles",
-  //   entityFrom: "evaluationDataset",
-  // })
-  // async setColumnRoles(
-  //   @Req() request: EndpointRequestWithEvaluationDataset,
-  //   @Body() { payload }: typeof EvaluationDatasetsRoutes.setColumnRoles.request,
-  // ): Promise<typeof EvaluationDatasetsRoutes.setColumnRoles.response> {
-  //   const columns = await this.evaluationDatasetsService.setColumnRoles({
-  //     connectScope: getRequiredConnectScope(request),
-  //     datasetId: request.evaluationDataset.id,
-  //     columns: payload.columns,
-  //   })
-
-  //   return { data: { columns } }
-  // }
 }
 
 function toDatasetFileDto(document: Document): DatasetFileDto {
@@ -130,14 +134,36 @@ function toDatasetFileColumnDto(v: DatasetFileColumn): DatasetFileColumnDto {
   }
 }
 
-function toEvaluationDatasetDto(entity: EvaluationDataset): EvaluationDatasetDto {
+function toEvaluationDatasetDto({
+  entity,
+  records,
+}: {
+  entity: EvaluationDataset
+  records: EvaluationDatasetRecord[]
+}): EvaluationDatasetDto {
   return {
     createdAt: entity.createdAt.getTime(),
-    documentId: entity.documentId,
     id: entity.id,
     name: entity.name,
     projectId: entity.projectId,
     schemaMapping: entity.schemaMapping,
     updatedAt: entity.updatedAt.getTime(),
+    documentIds: entity.evaluationDatasetDocuments.map((d) => d.documentId),
+    records: toEvaluationDatasetRecordDto({ records, schemaMapping: entity.schemaMapping }),
   }
+}
+
+function toEvaluationDatasetRecordDto({
+  records,
+  schemaMapping,
+}: {
+  records: EvaluationDatasetRecord[]
+  schemaMapping: EvaluationDatasetSchemaMapping
+}): EvaluationDatasetRecordDto[] {
+  const columns = Object.values(schemaMapping)
+  return columns.map((column) => ({
+    columnId: column.id,
+    columnName: column.finalName,
+    values: records.map((record) => record.data[column.id]),
+  }))
 }

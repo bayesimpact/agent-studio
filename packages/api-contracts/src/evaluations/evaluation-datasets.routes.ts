@@ -1,4 +1,4 @@
-import type { RequestPayload, ResponseData } from "../generic"
+import type { RequestPayload, ResponseData, SuccessResponseDTO } from "../generic"
 import { defineRoute } from "../helpers"
 import type {
   DatasetFileColumnDto,
@@ -13,23 +13,27 @@ export const EvaluationDatasetsRoutes = {
     method: "get",
     path: `${prefix}/files`,
   }),
-  createOne: defineRoute<
-    ResponseData<EvaluationDatasetDto>,
+  getAll: defineRoute<ResponseData<EvaluationDatasetDto[]>>({
+    method: "get",
+    path: prefix,
+  }),
+  createOne: defineRoute<ResponseData<SuccessResponseDTO>, RequestPayload<{ name: string }>>({
+    method: "post",
+    path: `${prefix}/createOne`,
+  }),
+  updateOne: defineRoute<
+    ResponseData<SuccessResponseDTO>,
     RequestPayload<{
-      documentId: string
       name: string
       columns: EvaluationDatasetSchemaColumnDto[]
     }>
   >({
-    method: "post",
-    path: prefix,
+    method: "patch",
+    path: `${prefix}/:datasetId/file/:documentId/update`,
   }),
-  getColumns: defineRoute<
-    ResponseData<DatasetFileColumnDto[]>,
-    RequestPayload<{ documentId: string }>
-  >({
-    method: "post",
-    path: `${prefix}/columns`,
+  getFileColumns: defineRoute<ResponseData<DatasetFileColumnDto[]>>({
+    method: "get",
+    path: `${prefix}/file/:documentId/columns`,
   }),
   // getAll: defineRoute<ResponseData<EvaluationDatasetDto[]>>({
   //   method: "get",

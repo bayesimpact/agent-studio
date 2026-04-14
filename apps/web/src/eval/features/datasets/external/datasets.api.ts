@@ -9,6 +9,13 @@ import type { DatasetFile, DatasetFileColumn, EvaluationDataset } from "../datas
 import type { IDatasetsSpi } from "../datasets.spi"
 
 export default {
+  getAll: async (params) => {
+    const axios = getAxiosInstance()
+    const response = await axios.get<typeof EvaluationDatasetsRoutes.getAll.response>(
+      EvaluationDatasetsRoutes.getAll.getPath(params),
+    )
+    return response.data.data.map(toDataset)
+  },
   getAllFiles: async (params) => {
     const axios = getAxiosInstance()
     const response = await axios.get<typeof EvaluationDatasetsRoutes.getAllFiles.response>(
@@ -22,13 +29,20 @@ export default {
       EvaluationDatasetsRoutes.createOne.getPath(params),
       { payload } satisfies typeof EvaluationDatasetsRoutes.createOne.request,
     )
-    return toDataset(response.data.data)
+    return response.data.data
   },
-  getColumns: async ({ payload, ...params }) => {
+  updateOne: async ({ payload, ...params }) => {
     const axios = getAxiosInstance()
-    const response = await axios.post<typeof EvaluationDatasetsRoutes.getColumns.response>(
-      EvaluationDatasetsRoutes.getColumns.getPath(params),
-      { payload } satisfies typeof EvaluationDatasetsRoutes.getColumns.request,
+    const response = await axios.patch<typeof EvaluationDatasetsRoutes.updateOne.response>(
+      EvaluationDatasetsRoutes.updateOne.getPath(params),
+      { payload } satisfies typeof EvaluationDatasetsRoutes.updateOne.request,
+    )
+    return response.data.data
+  },
+  getFileColumns: async (params) => {
+    const axios = getAxiosInstance()
+    const response = await axios.get<typeof EvaluationDatasetsRoutes.getFileColumns.response>(
+      EvaluationDatasetsRoutes.getFileColumns.getPath(params),
     )
     return response.data.data.map(toDatasetFileColumn)
   },
@@ -49,10 +63,11 @@ function toDatasetFile(dto: DatasetFileDto): DatasetFile {
 function toDataset(dto: EvaluationDatasetDto): EvaluationDataset {
   return {
     createdAt: dto.createdAt,
-    documentId: dto.documentId,
+    documentIds: dto.documentIds,
     id: dto.id,
     name: dto.name,
     projectId: dto.projectId,
+    records: dto.records,
     schemaMapping: dto.schemaMapping,
     updatedAt: dto.updatedAt,
   }

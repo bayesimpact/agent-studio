@@ -1,6 +1,6 @@
-import { Column, JoinColumn, OneToMany, OneToOne } from "typeorm"
+import { Column, OneToMany } from "typeorm"
 import { ConnectEntity, ConnectEntityBase } from "@/common/entities/connect-entity"
-import { Document } from "@/domains/documents/document.entity"
+import type { EvaluationDatasetDocument } from "./evaluation-dataset-document.entity"
 import { EvaluationDatasetRecord } from "./records/evaluation-dataset-record.entity"
 
 export const COLUMN_ROLES = ["target", "input", "reference", "ignore"] as const
@@ -28,9 +28,10 @@ export class EvaluationDataset extends ConnectEntityBase {
   )
   records!: EvaluationDatasetRecord[]
 
-  @Column({ type: "uuid", name: "document_id", nullable: false })
-  documentId!: string
-  @OneToOne(() => Document, { nullable: false, onDelete: "CASCADE" })
-  @JoinColumn({ name: "document_id" })
-  document!: Document
+  @OneToMany(
+    "EvaluationDatasetDocument",
+    (evaluationDatasetDocument: EvaluationDatasetDocument) =>
+      evaluationDatasetDocument.evaluationDataset,
+  )
+  evaluationDatasetDocuments!: EvaluationDatasetDocument[]
 }
