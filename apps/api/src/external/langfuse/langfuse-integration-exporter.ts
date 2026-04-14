@@ -67,14 +67,13 @@ export class LangfuseIntegrationExporter implements SpanExporter {
         this.processTraceSpans(traceId, spans)
       }
 
-      // Schedule a flush. Necessary to ensure event delivery in Vercel Cloud Functions with streaming responses
       await this.langfuse.flushAsync()
 
-      const successCode: ExportResultCode.SUCCESS = 0 // Do not use enum directly to avoid adding a dependency on the enum
+      const successCode: ExportResultCode.SUCCESS = 0
 
       resultCallback({ code: successCode })
     } catch (err) {
-      const failureCode: ExportResultCode.FAILED = 1 // Do not use enum directly to avoid adding a dependency on the enum
+      const failureCode: ExportResultCode.FAILED = 1
 
       resultCallback({
         code: failureCode,
@@ -117,12 +116,20 @@ export class LangfuseIntegrationExporter implements SpanExporter {
 
     this.langfuse.trace(finalTraceParams)
 
-    for (const span of spans) {
+    let loopId = 0
+    for (const span of spans.sort((a, b) => {
+      const [as, an] = a.startTime
+      const [bs, bn] = b.startTime
+      if (as !== bs) return as - bs
+      return an - bn
+    })) {
+      loopId++
       if (this.isGenerationSpan(span)) {
         this.processSpanAsLangfuseGeneration(
           finalTraceId,
           span,
           this.isRootAiSdkSpan(span, spans),
+          loopId,
           langfusePrompt,
         )
       } else {
@@ -130,6 +137,7 @@ export class LangfuseIntegrationExporter implements SpanExporter {
           finalTraceId,
           span,
           this.isRootAiSdkSpan(span, spans),
+          loopId,
           currentTurn
             ? `Turn #${currentTurn}`
             : userProvidedTraceId
@@ -144,35 +152,48 @@ export class LangfuseIntegrationExporter implements SpanExporter {
     traceId: string,
     span: ReadableSpan,
     isRootSpan: boolean,
+    loopId: number,
     rootSpanName?: string,
   ): void {
     const spanContext = span.spanContext()
     const attributes = span.attributes
+    const isToolCall = "ai.toolCall.name" in attributes
 
-    const _spanClient = this.langfuse.span({
-      traceId,
-      parentObservationId: isRootSpan ? undefined : this.getParentSpanId(span),
-      id: spanContext.spanId,
-      name:
-        isRootSpan && rootSpanName
-          ? rootSpanName
-          : "ai.toolCall.name" in attributes
-            ? `ai.toolCall ${attributes["ai.toolCall.name"]?.toString()}`
-            : span.name,
-      startTime: this.hrTimeToDate(span.startTime),
-      endTime: this.hrTimeToDate(span.endTime),
+    if (isToolCall)
+      this.langfuse.event({
+        traceId,
+        parentObservationId: isRootSpan ? undefined : this.getParentSpanId(span),
+        id: spanContext.spanId,
+        name: `ai.toolCall ${attributes["ai.toolCall.name"]?.toString()}`,
+        startTime: this.hrTimeToDate(span.startTime),
+        input: this.parseInput(span),
+        output: this.parseOutput(span),
 
-      input: this.parseInput(span),
-      output: this.parseOutput(span),
+        // metadata: this.filterTraceAttributes(this.parseSpanMetadata(span)),
+        metadata: { ...this.parseSpanMetadata(span), loopId: loopId },
+      })
+    else
+      this.langfuse.span({
+        traceId,
+        parentObservationId: isRootSpan ? undefined : this.getParentSpanId(span),
+        id: spanContext.spanId,
+        name: isRootSpan && rootSpanName ? rootSpanName : span.name,
+        startTime: this.hrTimeToDate(span.startTime),
+        endTime: this.hrTimeToDate(span.endTime),
 
-      metadata: this.filterTraceAttributes(this.parseSpanMetadata(span)),
-    })
+        input: this.parseInput(span),
+        output: this.parseOutput(span),
+
+        // metadata: this.filterTraceAttributes(this.parseSpanMetadata(span)),
+        metadata: { ...this.parseSpanMetadata(span), loopId: loopId },
+      })
   }
 
   private processSpanAsLangfuseGeneration(
     traceId: string,
     span: ReadableSpan,
     isRootSpan: boolean,
+    loopId: number,
     langfusePrompt: LangfusePromptRecord | undefined,
   ): void {
     const spanContext = span.spanContext()
@@ -249,7 +270,8 @@ export class LangfuseIntegrationExporter implements SpanExporter {
       input: this.parseInput(span),
       output: this.parseOutput(span),
 
-      metadata: this.filterTraceAttributes(this.parseSpanMetadata(span)),
+      // metadata: this.filterTraceAttributes(this.parseSpanMetadata(span)),
+      metadata: { ...this.parseSpanMetadata(span), loopId: loopId },
       prompt: langfusePrompt,
     })
   }
@@ -291,6 +313,10 @@ export class LangfuseIntegrationExporter implements SpanExporter {
         "ai.prompt.format",
         "ai.toolCall.id",
         "ai.schema",
+        "ai.response.providerMetadata",
+        "ai.provider.model",
+        "ai.settings.temperature",
+        "ai.settings.maxRetries",
       ]
 
       if (spanKeysToAdd.includes(key) && value != null) {
@@ -303,7 +329,6 @@ export class LangfuseIntegrationExporter implements SpanExporter {
 
   private isGenerationSpan(span: ReadableSpan): boolean {
     const generationSpanNameParts = ["doGenerate", "doStream", "doEmbed"]
-
     return generationSpanNameParts.some((part) => span.name.includes(part))
   }
 
@@ -316,14 +341,6 @@ export class LangfuseIntegrationExporter implements SpanExporter {
     return instrumentationScopeName === "ai"
   }
 
-  /**
-   * Checks if a given span is the root AI SDK span in a trace.
-   * The root AI span is the span that has no parent span or its parent span is not part of the AI SDK.
-   *
-   * @param span - The span to check.
-   * @param spans - The list of all spans in the trace.
-   * @returns A boolean indicating whether the span is the root AI SDK span.
-   */
   private isRootAiSdkSpan(span: ReadableSpan, spans: ReadableSpan[]): boolean {
     const spanIds = new Set(spans.map((span) => span.spanContext().spanId))
     const parentSpanId = this.getParentSpanId(span)
