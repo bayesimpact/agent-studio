@@ -87,6 +87,6 @@ When `main` has moved far ahead and you need to release a hotfix from a specific
    git tag v26.04.3
    git push origin v26.04.3
    ```
-   The workflow detects the tag is not on `main` and automatically skips the changelog PR step, while still creating the GitHub Release with notes from the `[Unreleased]` section.
+   The workflow detects the tag is not on `main` and automatically skips the changelog update and PR steps, while still creating the GitHub Release with notes from the `[Unreleased]` section.
 
 4. **Reconcile the changelog on `main`** separately — cherry-pick the changelog entry or update it in a future PR.
