@@ -1,3 +1,4 @@
+import { EVALUATION_DATASET_SCHEMA_COLUMN_ROLES } from "@caseai-connect/api-contracts"
 import { Button } from "@caseai-connect/ui/shad/button"
 import {
   Dialog,
@@ -33,22 +34,20 @@ import z from "zod"
 import { Loader } from "@/common/components/Loader"
 import { ADS } from "@/common/store/async-data-status"
 import { useAppDispatch, useAppSelector } from "@/common/store/hooks"
-import {
-  COLUMN_ROLES,
-  type ColumnRole,
-  type DatasetFile,
-  type DatasetFileColumn,
+import type {
+  DatasetFile,
+  DatasetFileColumn,
+  EvaluationDatasetSchemaColumnRole,
 } from "@/eval/features/datasets/datasets.models"
 import { selectColumnsData } from "@/eval/features/datasets/datasets.selectors"
 import { datasetsActions } from "@/eval/features/datasets/datasets.slice"
 
 function buildPreviewData(columns: DatasetFileColumn[]) {
-  const rowCount = Math.max(...columns.map((column) => column.sampleValues.length))
+  const rowCount = Math.max(...columns.map((column) => column.values.length))
   return Array.from({ length: rowCount }, (_, rowIndex) => {
     const row: Record<string, string> = {}
     for (const column of columns) {
-      row[column.id] =
-        column.sampleValues[rowIndex] != null ? String(column.sampleValues[rowIndex]) : ""
+      row[column.id] = column.values[rowIndex] != null ? String(column.values[rowIndex]) : ""
     }
     return row
   })
@@ -113,15 +112,16 @@ export function DatasetCreator({ file }: { file: DatasetFile }) {
   const columnsData = useAppSelector(selectColumnsData)
 
   useEffect(() => {
+    if (!open) return
     dispatch(datasetsActions.getColumns({ documentId: file.id }))
-  }, [file, dispatch])
+  }, [file, open, dispatch])
 
   return (
     <Dialog modal open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button variant="default">{t("evaluation:file.actions.createDataset")}</Button>
       </DialogTrigger>
-      <DialogContent className="max-h-[85vh] min-w-1/2 max-w-2/3 overflow-y-auto min-h-1/2">
+      <DialogContent className="max-h-[85vh] min-w-4/5 lg:min-w-2/3 2xl:min-w-1/2 max-w-2/3 overflow-y-auto min-h-1/2">
         {ADS.isFulfilled(columnsData) ? (
           <FormWithColumns
             file={file}
@@ -155,7 +155,7 @@ function FormWithColumns({
         id: z.string(),
         originalName: z.string(),
         finalName: z.string(),
-        role: z.enum(COLUMN_ROLES),
+        role: z.enum(EVALUATION_DATASET_SCHEMA_COLUMN_ROLES),
         index: z.number(),
       }),
     ),
@@ -252,14 +252,17 @@ function FormWithColumns({
                     <Select
                       value={field.role}
                       onValueChange={(value) =>
-                        update(fieldIndex, { ...field, role: value as ColumnRole })
+                        update(fieldIndex, {
+                          ...field,
+                          role: value as EvaluationDatasetSchemaColumnRole,
+                        })
                       }
                     >
                       <SelectTrigger size="sm" className="w-40">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        {COLUMN_ROLES.map((role) => (
+                        {EVALUATION_DATASET_SCHEMA_COLUMN_ROLES.map((role) => (
                           <SelectItem key={role} value={role}>
                             {t(`evaluation:dataset.columns.roles.${role}`)}
                           </SelectItem>

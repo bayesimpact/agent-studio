@@ -1,3 +1,4 @@
+import type { EvaluationDatasetSchemaColumnDto } from "@caseai-connect/api-contracts"
 import { Inject, Injectable, NotFoundException, UnprocessableEntityException } from "@nestjs/common"
 import { InjectRepository } from "@nestjs/typeorm"
 import * as Papa from "papaparse"
@@ -12,13 +13,17 @@ import {
   FILE_STORAGE_SERVICE,
   type IFileStorage,
 } from "@/domains/documents/storage/file-storage.interface"
-import { EvaluationDataset } from "./evaluation-dataset.entity"
+import {
+  type DatasetSchemaColumn,
+  EvaluationDataset,
+  type EvaluationDatasetSchemaMapping,
+} from "./evaluation-dataset.entity"
 import { EvaluationDatasetRecord } from "./records/evaluation-dataset-record.entity"
 
 export type DatasetFileColumn = {
   id: string
   name: string
-  sampleValues: unknown[]
+  values: unknown[]
 }
 
 @Injectable()
@@ -59,27 +64,31 @@ export class EvaluationDatasetsService {
   async getFileColumns({
     connectScope,
     documentId,
+    options = { header: true, preview: 5, skipEmptyLines: true },
   }: {
     connectScope: RequiredConnectScope
     documentId: string
+    options?: {
+      header: boolean
+      preview: number
+      skipEmptyLines: boolean
+    }
   }): Promise<DatasetFileColumn[]> {
     const document = await this.documentsService.findById({ connectScope, documentId })
     if (!document) {
       throw new NotFoundException(`Document with id ${documentId} not found`)
     }
-    const columns = await this.parseCsvColumns(document)
+    const columns = await this.parseCsvColumns({ document, options })
     return columns
   }
 
   async createDataset({
     connectScope,
-    fields,
+    fields: { name, documentId, columns },
   }: {
     connectScope: RequiredConnectScope
-    fields: { name: string; documentId: string }
-  }): Promise<{ dataset: EvaluationDataset; columns: DatasetFileColumn[] }> {
-    const { name, documentId } = fields
-
+    fields: { name: string; documentId: string; columns: EvaluationDatasetSchemaColumnDto[] }
+  }): Promise<EvaluationDataset> {
     if (!name.trim()) {
       throw new UnprocessableEntityException("Dataset name is required")
     }
@@ -93,14 +102,69 @@ export class EvaluationDatasetsService {
       throw new NotFoundException(`Document with id ${documentId} not found`)
     }
 
-    const columns = await this.parseCsvColumns(document)
-
     const dataset = await this.datasetConnectRepository.createAndSave(connectScope, {
       name,
+      schemaMapping: this.buildSchemaMapping(columns),
       documentId,
     })
 
-    return { dataset, columns }
+    return dataset
+  }
+
+  async createDatasetRecords({
+    connectScope,
+    datasetId,
+  }: {
+    connectScope: RequiredConnectScope
+    datasetId: string
+  }): Promise<EvaluationDatasetRecord[]> {
+    const dataset = await this.datasetConnectRepository.getOneById(connectScope, datasetId)
+    if (!dataset) {
+      throw new NotFoundException(`Evaluation dataset with id ${datasetId} not found`)
+    }
+
+    const columns = await this.getFileColumns({
+      connectScope,
+      documentId: dataset.documentId,
+      options: { header: true, preview: 10000, skipEmptyLines: true },
+    })
+
+    const records: EvaluationDatasetRecord[] = []
+
+    for (const column of columns) {
+      for (const value of column.values) {
+        const columnId = column.id
+
+        const record = await this.recordConnectRepository.createAndSave(connectScope, {
+          evaluationDatasetId: datasetId,
+          data: { columnId, value },
+        })
+
+        if (!record) {
+          throw new UnprocessableEntityException(
+            `Failed to create record for column ${column.name} in dataset ${datasetId}`,
+          )
+        }
+        records.push(record)
+      }
+    }
+    return records
+  }
+
+  private buildSchemaMapping(
+    columns: EvaluationDatasetSchemaColumnDto[],
+  ): EvaluationDatasetSchemaMapping {
+    const schemaMapping: EvaluationDatasetSchemaMapping = {}
+    for (const column of columns) {
+      schemaMapping[column.id] = {
+        finalName: column.finalName,
+        id: column.id,
+        index: column.index,
+        originalName: column.originalName,
+        role: column.role,
+      }
+    }
+    return schemaMapping
   }
 
   async deleteDataset({
@@ -131,41 +195,42 @@ export class EvaluationDatasetsService {
     }
   }
 
-  async setColumnRoles({
+  async updateDatasetColumns({
     connectScope,
     datasetId,
     columns,
   }: {
     connectScope: RequiredConnectScope
     datasetId: string
-    columns: { name: string; role: "input" | "reference" | "target" | "ignore" }[]
-  }): Promise<{ name: string; role: "input" | "reference" | "target" | "ignore" }[]> {
+    columns: EvaluationDatasetSchemaColumnDto[]
+  }): Promise<DatasetSchemaColumn[]> {
     const dataset = await this.datasetConnectRepository.getOneById(connectScope, datasetId)
 
     if (!dataset) {
       throw new NotFoundException(`Evaluation dataset with id ${datasetId} not found`)
     }
 
-    const schemaMapping: Record<string, string> = {}
-    for (const column of columns) {
-      schemaMapping[column.name] = column.role
-    }
-
-    dataset.schemaMapping = schemaMapping
+    dataset.schemaMapping = this.buildSchemaMapping(columns)
     await this.datasetConnectRepository.saveOne(dataset)
 
     return columns
   }
 
-  private async parseCsvColumns(document: Document): Promise<DatasetFileColumn[]> {
+  private async parseCsvColumns({
+    document,
+    options,
+  }: {
+    document: Document
+    options: {
+      header: boolean
+      preview: number
+      skipEmptyLines: boolean
+    }
+  }): Promise<DatasetFileColumn[]> {
     const buffer = await this.fileStorageService.readFile(document.storageRelativePath)
     const csvContent = buffer.toString("utf-8")
 
-    const parsed = Papa.parse(csvContent, {
-      header: true,
-      preview: 5,
-      skipEmptyLines: true,
-    })
+    const parsed = Papa.parse(csvContent, options)
 
     if (!parsed.meta.fields || parsed.meta.fields.length === 0) {
       throw new UnprocessableEntityException("CSV file has no columns")
@@ -174,7 +239,7 @@ export class EvaluationDatasetsService {
     return parsed.meta.fields.map((fieldName) => ({
       id: v4(),
       name: fieldName,
-      sampleValues: (parsed.data as Record<string, unknown>[]).map((row) => row[fieldName]),
+      values: (parsed.data as Record<string, unknown>[]).map((row) => row[fieldName]),
     }))
   }
 }

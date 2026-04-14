@@ -10,6 +10,7 @@ import { getRequiredConnectScope } from "@/common/context/request-context.helper
 import { RequireContext } from "@/common/context/require-context.decorator"
 import { ResourceContextGuard } from "@/common/context/resource-context.guard"
 import { CheckPolicy } from "@/common/policies/check-policy.decorator"
+import { TrackActivity } from "@/domains/activities/track-activity.decorator"
 import { JwtAuthGuard } from "@/domains/auth/jwt-auth.guard"
 import type { Document } from "@/domains/documents/document.entity"
 import { UserGuard } from "@/domains/users/user.guard"
@@ -39,6 +40,7 @@ export class EvaluationDatasetsController {
   @Post(EvaluationDatasetsRoutes.getColumns.path)
   @CheckPolicy((policy) => policy.canCreate())
   // TODO: add context of the document to check if user can access the document
+  // TODO: @TrackActivity
   async getColumns(
     @Req() request: EndpointRequestWithProject,
     @Body() { payload }: typeof EvaluationDatasetsRoutes.getColumns.request,
@@ -48,6 +50,29 @@ export class EvaluationDatasetsController {
       documentId: payload.documentId,
     })
     return { data: columns.map(toDatasetFileColumnDto) }
+  }
+
+  @Post(EvaluationDatasetsRoutes.createOne.path)
+  @CheckPolicy((policy) => policy.canCreate())
+  // TODO: add context of the document to check if user can access the document
+  @TrackActivity({ action: "evaluationDataset.create" })
+  async createOne(
+    @Req() request: EndpointRequestWithProject,
+    @Body() { payload }: typeof EvaluationDatasetsRoutes.createOne.request,
+  ): Promise<typeof EvaluationDatasetsRoutes.createOne.response> {
+    const connectScope = getRequiredConnectScope(request)
+
+    const dataset = await this.evaluationDatasetsService.createDataset({
+      connectScope,
+      fields: payload,
+    })
+
+    const _records = await this.evaluationDatasetsService.createDatasetRecords({
+      connectScope,
+      datasetId: dataset.id,
+    })
+
+    return { data: toEvaluationDatasetDto(dataset) }
   }
 
   // @Delete(EvaluationDatasetsRoutes.deleteOne.path)
@@ -88,12 +113,12 @@ export class EvaluationDatasetsController {
 
 function toDatasetFileDto(document: Document): DatasetFileDto {
   return {
+    createdAt: document.createdAt.getTime(),
+    fileName: document.fileName,
     id: document.id,
     projectId: document.projectId,
-    fileName: document.fileName,
     size: document.size,
     storageRelativePath: document.storageRelativePath,
-    createdAt: document.createdAt.getTime(),
     updatedAt: document.updatedAt.getTime(),
   }
 }
@@ -101,18 +126,18 @@ function toDatasetFileColumnDto(v: DatasetFileColumn): DatasetFileColumnDto {
   return {
     id: v.id,
     name: v.name,
-    sampleValues: v.sampleValues,
+    values: v.values.map((v) => (typeof v === "string" ? v : JSON.stringify(v))),
   }
 }
 
-function _toEvaluationDatasetDto(entity: EvaluationDataset): EvaluationDatasetDto {
+function toEvaluationDatasetDto(entity: EvaluationDataset): EvaluationDatasetDto {
   return {
+    createdAt: entity.createdAt.getTime(),
+    documentId: entity.documentId,
     id: entity.id,
     name: entity.name,
-    documentId: entity.documentId,
-    schemaMapping: entity.schemaMapping as Record<string, string> | null,
     projectId: entity.projectId,
-    createdAt: entity.createdAt.getTime(),
+    schemaMapping: entity.schemaMapping,
     updatedAt: entity.updatedAt.getTime(),
   }
 }

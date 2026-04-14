@@ -5,7 +5,7 @@ import {
   EvaluationDatasetsRoutes,
 } from "@caseai-connect/api-contracts"
 import { getAxiosInstance } from "@/external/axios"
-import type { Dataset, DatasetFile, DatasetFileColumn } from "../datasets.models"
+import type { DatasetFile, DatasetFileColumn, EvaluationDataset } from "../datasets.models"
 import type { IDatasetsSpi } from "../datasets.spi"
 
 export default {
@@ -46,7 +46,7 @@ function toDatasetFile(dto: DatasetFileDto): DatasetFile {
   }
 }
 
-function toDataset(dto: EvaluationDatasetDto): Dataset {
+function toDataset(dto: EvaluationDatasetDto): EvaluationDataset {
   return {
     createdAt: dto.createdAt,
     documentId: dto.documentId,
@@ -59,9 +59,5 @@ function toDataset(dto: EvaluationDatasetDto): Dataset {
 }
 
 function toDatasetFileColumn(dto: DatasetFileColumnDto): DatasetFileColumn {
-  return {
-    id: dto.id,
-    name: dto.name,
-    sampleValues: dto.sampleValues,
-  }
+  return { id: dto.id, name: dto.name, values: dto.values }
 }

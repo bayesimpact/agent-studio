@@ -2,7 +2,11 @@ import { createAsyncThunk } from "@reduxjs/toolkit"
 import { getCurrentIds } from "@/common/features/helpers"
 import { notificationsActions } from "@/common/features/notifications/notifications.slice"
 import type { ThunkConfig } from "@/common/store/types"
-import type { ColumnToSave, DatasetFile, DatasetFileColumn } from "./datasets.models"
+import type {
+  DatasetFile,
+  DatasetFileColumn,
+  EvaluationDatasetSchemaColumn,
+} from "./datasets.models"
 import { datasetsActions } from "./datasets.slice"
 
 const listFiles = createAsyncThunk<DatasetFile[], void, ThunkConfig>(
@@ -31,7 +35,7 @@ const getColumns = createAsyncThunk<DatasetFileColumn[], { documentId: string },
 
 const createOne = createAsyncThunk<
   DatasetFile,
-  { documentId: string; name: string; columns: ColumnToSave[] },
+  { documentId: string; name: string; columns: EvaluationDatasetSchemaColumn[] },
   ThunkConfig
 >("datasets/createOne", async (payload, { extra: { services }, getState }) => {
   const state = getState()
@@ -39,7 +43,6 @@ const createOne = createAsyncThunk<
     state,
     wantedIds: ["organizationId", "projectId"],
   })
-  console.warn("AJ: payload", payload)
   return await services.evaluationDatasets.createOne({ ...params, payload })
 })
 

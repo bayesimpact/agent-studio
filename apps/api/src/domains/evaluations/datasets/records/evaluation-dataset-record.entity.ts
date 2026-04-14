@@ -2,6 +2,11 @@ import { Column, JoinColumn, ManyToOne } from "typeorm"
 import { ConnectEntity, ConnectEntityBase } from "@/common/entities/connect-entity"
 import { EvaluationDataset } from "../evaluation-dataset.entity"
 
+export type EvaluationDatasetRecordData = {
+  columnId: string
+  value: unknown
+}
+
 @ConnectEntity("evaluation-dataset-record")
 export class EvaluationDatasetRecord extends ConnectEntityBase {
   @Column({ type: "uuid", name: "evaluation_dataset_id", nullable: false })
@@ -14,6 +19,6 @@ export class EvaluationDatasetRecord extends ConnectEntityBase {
   @JoinColumn({ name: "evaluation_dataset_id" })
   evaluationDataset!: EvaluationDataset
 
-  @Column({ name: "data", nullable: true, type: "jsonb" })
-  data!: Record<string, unknown> | null
+  @Column({ name: "data", nullable: false, type: "jsonb" })
+  data!: EvaluationDatasetRecordData
 }

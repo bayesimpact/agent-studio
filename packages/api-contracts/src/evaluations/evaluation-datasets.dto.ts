@@ -1,5 +1,6 @@
 import type { TimeType } from "../generic"
 
+// DATASET FILE
 export type DatasetFileDto = {
   createdAt: TimeType
   fileName?: string
@@ -9,27 +10,38 @@ export type DatasetFileDto = {
   storageRelativePath?: string
   updatedAt: TimeType
 }
-
 export type DatasetFileColumnDto = {
   id: string
   name: string
-  sampleValues: unknown[]
+  values: string[]
 }
 
+// EVALUATION DATASET
+export const EVALUATION_DATASET_SCHEMA_COLUMN_ROLES = [
+  "target",
+  "input",
+  "reference",
+  "ignore",
+] as const
+export type EvaluationDatasetSchemaColumnRoleDto =
+  (typeof EVALUATION_DATASET_SCHEMA_COLUMN_ROLES)[number]
+export type EvaluationDatasetSchemaColumnDto = {
+  finalName: string
+  id: string
+  index: number
+  originalName: string
+  role: EvaluationDatasetSchemaColumnRoleDto
+}
+export type EvaluationDatasetSchemaMappingDto = Record<
+  EvaluationDatasetSchemaColumnDto["id"],
+  EvaluationDatasetSchemaColumnDto
+>
 export type EvaluationDatasetDto = {
   createdAt: TimeType
-  documentId: string | null
+  documentId: string
   id: string
   name: string
   projectId: string
-  schemaMapping: Record<string, string> | null
+  schemaMapping: EvaluationDatasetSchemaMappingDto
   updatedAt: TimeType
-}
-
-export type SetColumnRolesRequestDto = {
-  columns: { name: string; role: "input" | "reference" | "target" | "ignore" }[]
-}
-
-export type SetColumnRolesResponseDto = {
-  columns: { name: string; role: "input" | "reference" | "target" | "ignore" }[]
 }

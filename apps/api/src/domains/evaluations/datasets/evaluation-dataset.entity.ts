@@ -3,13 +3,24 @@ import { ConnectEntity, ConnectEntityBase } from "@/common/entities/connect-enti
 import { Document } from "@/domains/documents/document.entity"
 import { EvaluationDatasetRecord } from "./records/evaluation-dataset-record.entity"
 
+export const COLUMN_ROLES = ["target", "input", "reference", "ignore"] as const
+export type ColumnRole = (typeof COLUMN_ROLES)[number]
+export type DatasetSchemaColumn = {
+  finalName: string
+  id: string
+  index: number
+  originalName: string
+  role: ColumnRole
+}
+export type EvaluationDatasetSchemaMapping = Record<DatasetSchemaColumn["id"], DatasetSchemaColumn>
+
 @ConnectEntity("evaluation-dataset")
 export class EvaluationDataset extends ConnectEntityBase {
   @Column({ name: "name", nullable: false })
   name!: string
 
-  @Column({ name: "schema_mapping", nullable: true, type: "jsonb" })
-  schemaMapping!: Record<string, unknown> | null
+  @Column({ name: "schema_mapping", nullable: false, type: "jsonb" })
+  schemaMapping!: EvaluationDatasetSchemaMapping
 
   @OneToMany(
     () => EvaluationDatasetRecord,
@@ -17,9 +28,9 @@ export class EvaluationDataset extends ConnectEntityBase {
   )
   records!: EvaluationDatasetRecord[]
 
-  @Column({ type: "uuid", name: "document_id", nullable: true })
-  documentId!: string | null
-  @OneToOne(() => Document, { nullable: true, onDelete: "SET NULL" })
+  @Column({ type: "uuid", name: "document_id", nullable: false })
+  documentId!: string
+  @OneToOne(() => Document, { nullable: false, onDelete: "CASCADE" })
   @JoinColumn({ name: "document_id" })
-  document!: Document | null
+  document!: Document
 }

@@ -4,6 +4,7 @@ import type {
   DatasetFileColumnDto,
   DatasetFileDto,
   EvaluationDatasetDto,
+  EvaluationDatasetSchemaColumnDto,
 } from "./evaluation-datasets.dto"
 
 const prefix = "organizations/:organizationId/projects/:projectId/evaluation-datasets"
@@ -14,7 +15,11 @@ export const EvaluationDatasetsRoutes = {
   }),
   createOne: defineRoute<
     ResponseData<EvaluationDatasetDto>,
-    RequestPayload<{ documentId: string; name: string }>
+    RequestPayload<{
+      documentId: string
+      name: string
+      columns: EvaluationDatasetSchemaColumnDto[]
+    }>
   >({
     method: "post",
     path: prefix,

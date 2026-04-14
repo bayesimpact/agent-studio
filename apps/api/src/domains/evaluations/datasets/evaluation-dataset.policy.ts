@@ -7,7 +7,7 @@ export class EvaluationDatasetPolicy extends ProjectScopedPolicy<EvaluationDatas
   }
 
   canCreate(): boolean {
-    return this.canList()
+    return this.canAccess() && this.isProjectAdminOrOwner()
   }
 
   canUpdate(): boolean {
