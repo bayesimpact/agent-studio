@@ -1,14 +1,19 @@
+import { useEffect } from "react"
 import { Outlet } from "react-router-dom"
-import { FileUploader } from "@/common/components/FileUploader"
-import type { Agent } from "@/common/features/agents/agents.models"
-import type { Project } from "@/common/features/projects/projects.models"
 import { useAbility } from "@/common/hooks/use-ability"
 import { useFeatureFlags } from "@/common/hooks/use-feature-flags"
+import { AsyncRoute } from "@/common/routes/AsyncRoute"
 import { DashboardRoute } from "@/common/routes/DashboardRoute"
 import { RouteNames } from "@/common/routes/helpers"
+import { LoadingRoute } from "@/common/routes/LoadingRoute"
 import { NotFoundRoute } from "@/common/routes/NotFoundRoute"
 import { ProjectRoute } from "@/common/routes/ProjectRoute"
 import { ProtectedRoute } from "@/common/routes/ProtectedRoute"
+import { useAppDispatch, useAppSelector } from "@/common/store/hooks"
+import { Dashboard } from "../components/Dashboard"
+import { selectFilesData } from "../features/datasets/datasets.selectors"
+import { datasetsActions } from "../features/datasets/datasets.slice"
+import { useInitStore } from "../hooks/use-init-store"
 import { EvalDashboardRoute } from "./EvalDashboardRoute"
 import { buildEvalPath, EvalRouteNames } from "./helpers"
 
@@ -32,11 +37,7 @@ export const evalRoutes = {
       children: [
         {
           path: buildEvalPath(RouteNames.PROJECT),
-          element: (
-            <ProjectRoute>
-              {(agents, project) => <ProjectRouteHandler agents={agents} project={project} />}
-            </ProjectRoute>
-          ),
+          element: <ProjectRoute>{() => <ProjectRouteHandler />}</ProjectRoute>,
         },
       ],
     },
@@ -49,28 +50,24 @@ function EvalRoute() {
   return <Outlet />
 }
 
-function ProjectRouteHandler({ _agents, _project }: { agents: Agent[]; project: Project }) {
+function ProjectRouteHandler() {
   const { hasFeature } = useFeatureFlags()
-  if (hasFeature("evaluation"))
-    return (
-      <div>
-        <UploadDataset />
-        TODO: create and list datasets
-      </div>
-    )
+  const isAllowed = hasFeature("evaluation")
+  const { initDone } = useInitStore(isAllowed)
+  if (isAllowed) {
+    if (initDone) return <WithData />
+    return <LoadingRoute />
+  }
   return <NotFoundRoute redirectToHome />
 }
 
-function UploadDataset() {
+function WithData() {
+  const dispatch = useAppDispatch()
+  const filesData = useAppSelector(selectFilesData)
+  useEffect(() => {
+    dispatch(datasetsActions.initData())
+  }, [dispatch])
   return (
-    <FileUploader
-      maxFiles={1}
-      allowedMimeTypes={{
-        "text/csv": true,
-      }}
-      onDropFiles={() => {}}
-      onProcessFiles={async () => {}}
-      onProcessEnd={() => {}}
-    />
+    <AsyncRoute data={[filesData]}>{([filesValue]) => <Dashboard files={filesValue} />}</AsyncRoute>
   )
 }

@@ -29,6 +29,43 @@
     },
     "list": {
       "description": "Tester les performances de vos agents."
+    },
+    "file": {
+      "title": "Fichiers",
+      "description": "Fichiers téléversés pour créer des datasets d'évaluation",
+      "props": {
+        "name": "Nom",
+        "createdAt": "Créé le"
+      },
+      "actions": {
+        "createDataset": "Créer un dataset"
+      }
+    },
+    "dataset": {
+      "create": {
+        "title": "Créer un dataset à partir de {{fileName}}",
+        "description": "Configurez les colonnes et les rôles du dataset avant de le créer."
+      },
+      "props": {
+        "name": "Nom du dataset",
+        "placeholders": {
+          "name": "Entrez le nom du dataset"
+        }
+      },
+      "columns": {
+        "noColumns": "Erreur : Aucune colonne détectée dans le fichier.",
+        "preview": "Aperçu",
+        "roles": {
+          "title": "Rôles des colonnes",
+          "target": "Cible",
+          "input": "Entrée",
+          "reference": "Référence",
+          "ignore": "Ignorer"
+        }
+      }
+    },
+    "validation": {
+      "minNameLength": "Le nom doit contenir au moins 3 caractères"
     }
   }
 }

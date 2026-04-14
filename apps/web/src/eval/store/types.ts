@@ -1,7 +1,7 @@
-import type { studioSliceList } from "./slices"
+import type { evalSliceList } from "./slices"
 
-export type StudioState =
-  typeof studioSliceList extends Array<infer R>
+export type EvalState =
+  typeof evalSliceList extends Array<infer R>
     ? {
         // @ts-expect-error - Mapped type over array of slices to construct RootState shape
         [K in R as K["name"]]: ReturnType<K["reducer"]>

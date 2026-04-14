@@ -13,6 +13,7 @@ export type ContextResource =
   | "document"
   | "documentTag"
   | "evaluation"
+  | "evaluationDataset"
   | "evaluationReport"
 
 export const RequireContext = (...resources: ContextResource[]) =>

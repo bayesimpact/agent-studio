@@ -18,6 +18,7 @@ export type TrackActivityEntityFrom =
   | "documentTag"
   | "agentSession"
   | "evaluation"
+  | "evaluationDataset"
   | "evaluationReport"
 
 export type TrackActivityOptions = {

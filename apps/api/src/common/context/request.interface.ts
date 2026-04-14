@@ -5,6 +5,7 @@ import type { FormAgentSession } from "@/domains/agents/form-agent-sessions/form
 import type { AgentMembership } from "@/domains/agents/memberships/agent-membership.entity"
 import type { Document } from "@/domains/documents/document.entity"
 import type { DocumentTag } from "@/domains/documents/tags/document-tag.entity"
+import type { EvaluationDataset } from "@/domains/evaluations/datasets/evaluation-dataset.entity"
 import type { Evaluation } from "@/domains/evaluations/evaluation.entity"
 import type { EvaluationReport } from "@/domains/evaluations/reports/evaluation-report.entity"
 import type { OrganizationMembership } from "@/domains/organizations/memberships/organization-membership.entity"
@@ -62,6 +63,10 @@ export interface EndpointRequestWithAgentSession<
   T extends ConversationAgentSession | FormAgentSession | ExtractionAgentSession,
 > extends EndpointRequestWithAgent {
   agentSession: T
+}
+
+export interface EndpointRequestWithEvaluationDataset extends EndpointRequestWithProject {
+  evaluationDataset: EvaluationDataset
 }
 
 export interface EndpointRequestWithEvaluation extends EndpointRequestWithProject {

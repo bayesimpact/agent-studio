@@ -29,6 +29,43 @@
     },
     "list": {
       "description": "Test the performance of your agents."
+    },
+    "file": {
+      "title": "Files",
+      "description": "Uploaded files for creating evaluation datasets",
+      "props": {
+        "name": "Name",
+        "createdAt": "Created At"
+      },
+      "actions": {
+        "createDataset": "Create Dataset"
+      }
+    },
+    "dataset": {
+      "create": {
+        "title": "Create dataset from {{fileName}}",
+        "description": "Configure the dataset columns and roles before creating."
+      },
+      "props": {
+        "name": "Dataset Name",
+        "placeholders": {
+          "name": "Enter dataset name"
+        }
+      },
+      "columns": {
+        "noColumns": "Error: No columns detected in the file.",
+        "preview": "Preview",
+        "roles": {
+          "title": "Column Roles",
+          "target": "Target",
+          "input": "Input",
+          "reference": "Reference",
+          "ignore": "Ignore"
+        }
+      }
+    },
+    "validation": {
+      "minNameLength": "Name must be at least 3 characters"
     }
   }
 }

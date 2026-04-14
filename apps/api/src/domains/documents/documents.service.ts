@@ -59,13 +59,30 @@ export class DocumentsService {
     return this.documentConnectRepository.saveOne(document)
   }
 
+  private sortNewestFirst = (a: Document, b: Document) =>
+    b.createdAt.getTime() - a.createdAt.getTime()
+
   async listDocuments(connectScope: RequiredConnectScope): Promise<Document[]> {
     return (
       await this.documentConnectRepository.find(connectScope, {
         where: { sourceType: "project", uploadStatus: "uploaded" },
         relations: ["tags"],
       })
-    )?.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
+    )?.sort(this.sortNewestFirst)
+  }
+
+  async listBySourceType({
+    connectScope,
+    sourceType,
+  }: {
+    connectScope: RequiredConnectScope
+    sourceType: Document["sourceType"]
+  }): Promise<Document[]> {
+    return (
+      await this.documentConnectRepository.find(connectScope, {
+        where: { sourceType, uploadStatus: "uploaded" },
+      })
+    )?.sort(this.sortNewestFirst)
   }
 
   async findById({

@@ -1,16 +1,16 @@
 import { useEffect, useState } from "react"
 import { useAppDispatch } from "@/common/store/hooks"
-import { injectStudioSlices, resetStudioSlices } from "../store/slices"
+import { injectEvalSlices, resetEvalSlices } from "../store/slices"
 
 export function useInitStore(condition: boolean) {
   const [done, setDone] = useState(false)
   const dispatch = useAppDispatch()
   useEffect(() => {
     if (!condition) return
-    injectStudioSlices()
+    injectEvalSlices()
     setDone(true)
     return () => {
-      resetStudioSlices(dispatch)
+      resetEvalSlices(dispatch)
     }
   }, [dispatch, condition])
   return { initDone: done }
