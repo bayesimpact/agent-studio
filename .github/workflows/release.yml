@@ -60,7 +60,18 @@ jobs:
             { print }
           ' CHANGELOG.md > CHANGELOG.tmp && mv CHANGELOG.tmp CHANGELOG.md
 
+      - name: Check if tag is on main
+        id: on_main
+        run: |
+          if git merge-base --is-ancestor "$GITHUB_SHA" origin/main 2>/dev/null; then
+            echo "result=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "result=false" >> "$GITHUB_OUTPUT"
+            echo "⚠️ Tag is not on main — skipping changelog PR (hotfix release)"
+          fi
+
       - name: Create changelog PR
+        if: steps.on_main.outputs.result == 'true'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |

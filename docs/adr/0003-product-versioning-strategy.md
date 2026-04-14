@@ -70,3 +70,23 @@ Every CalVer release will embed the **Git Commit SHA** in its metadata for a ful
 
 * CI/CD: A `release.yml` GitHub Actions workflow triggers on CalVer tag pushes (e.g., `v26.03.0`). It extracts the `[Unreleased]` section from `CHANGELOG.md`, promotes it to a versioned entry, commits the update to `main`, and creates a GitHub Release. See `.github/workflows/release.yml`.
 * The project `README.md` must be updated to document this versioning standard once accepted.
+
+### Hotfix Release from an Existing Tag
+
+When `main` has moved far ahead and you need to release a hotfix from a specific branch or tag without merging to `main`:
+
+1. **Branch from the tag** (or work on an existing fix branch):
+   ```bash
+   git checkout -b hotfix/description v26.04.2
+   ```
+
+2. **Apply the fix**, update the `[Unreleased]` section in `CHANGELOG.md`, and push.
+
+3. **Tag and push** — the `release.yml` workflow handles the rest:
+   ```bash
+   git tag v26.04.3
+   git push origin v26.04.3
+   ```
+   The workflow detects the tag is not on `main` and automatically skips the changelog PR step, while still creating the GitHub Release with notes from the `[Unreleased]` section.
+
+4. **Reconcile the changelog on `main`** separately — cherry-pick the changelog entry or update it in a future PR.
