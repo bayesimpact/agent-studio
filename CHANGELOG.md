@@ -12,11 +12,23 @@ This project uses [CalVer](https://calver.org/) (YY.MM.Micro) for product versio
 ### Changed
 
 ### Fixed
+- Project administrators now automatically have access to newly created agents
+
+### Security
+
+## [26.04.2] - 2026-04-08
+
+### Added
+
+### Changed
+
+### Fixed
 - Form agent messages were sent to the LLM in wrong order, causing incoherent conversations when filling form fields
 
 ### Security
 
 ## [26.04.1] - 2026-04-03
+
 
 ### Added
 - (beta) Analytics
