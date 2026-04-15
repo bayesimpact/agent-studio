@@ -21,4 +21,4 @@ jobs:
           fetch-depth: 1
 
       - name: Run tests
-        run: make tests-parallel
+        run: TEST_WORKERS=2 make tests-parallel

@@ -1,4 +1,5 @@
 import { type ChildProcess, spawn } from "node:child_process"
+import { availableParallelism, cpus } from "node:os"
 
 type RunCommandResult = {
   exitCode: number
@@ -7,6 +8,35 @@ type RunCommandResult = {
 
 let activeChildProcess: ChildProcess | null = null
 let receivedTerminationSignal = false
+
+function getCpuCount(): number {
+  return typeof availableParallelism === "function" ? availableParallelism() : cpus().length
+}
+
+function resolveWorkerCount(maxWorkersValue?: string): number {
+  const envWorkers = Number(process.env.TEST_WORKERS)
+  if (Number.isFinite(envWorkers) && envWorkers > 0) {
+    return Math.floor(envWorkers)
+  }
+
+  if (!maxWorkersValue) {
+    return Math.max(1, Math.floor(getCpuCount() * 0.5))
+  }
+
+  if (maxWorkersValue.endsWith("%")) {
+    const percentValue = Number(maxWorkersValue.slice(0, -1))
+    if (Number.isFinite(percentValue) && percentValue > 0) {
+      return Math.max(1, Math.floor((getCpuCount() * percentValue) / 100))
+    }
+  }
+
+  const absoluteWorkersValue = Number(maxWorkersValue)
+  if (Number.isFinite(absoluteWorkersValue) && absoluteWorkersValue > 0) {
+    return Math.floor(absoluteWorkersValue)
+  }
+
+  return Math.max(1, Math.floor(getCpuCount() * 0.5))
+}
 
 function runCommand(
   command: string,
@@ -47,6 +77,8 @@ function forwardSignalToActiveChild(signal: NodeJS.Signals): void {
 async function main(): Promise<void> {
   process.env.TEST_USE_WORKER_DATABASE = "true"
   process.env.TEST_MAX_WORKERS ??= "50%"
+  const resolvedWorkerCount = resolveWorkerCount(process.env.TEST_MAX_WORKERS)
+  process.env.TEST_WORKERS = String(resolvedWorkerCount)
 
   process.on("SIGINT", () => forwardSignalToActiveChild("SIGINT"))
   process.on("SIGTERM", () => forwardSignalToActiveChild("SIGTERM"))
@@ -60,7 +92,7 @@ async function main(): Promise<void> {
   try {
     const prepareResult = await runCommand(
       "npm",
-      ["run", "test:workers:prepare"],
+      ["run", "test:workers:prepare", "--", `--workers=${resolvedWorkerCount}`],
       scriptEnvironment,
     )
     prepareExitCode = prepareResult.exitCode
@@ -72,7 +104,7 @@ async function main(): Promise<void> {
           "--experimental-vm-modules",
           "../../node_modules/jest/bin/jest.js",
           "--colors",
-          `--maxWorkers=${scriptEnvironment.TEST_MAX_WORKERS ?? "50%"}`,
+          `--maxWorkers=${resolvedWorkerCount}`,
           ...jestAdditionalArguments,
         ],
         scriptEnvironment,
@@ -82,7 +114,7 @@ async function main(): Promise<void> {
   } finally {
     const cleanupResult = await runCommand(
       "npm",
-      ["run", "test:workers:cleanup"],
+      ["run", "test:workers:cleanup", "--", `--workers=${resolvedWorkerCount}`],
       scriptEnvironment,
     )
     cleanupExitCode = cleanupResult.exitCode
