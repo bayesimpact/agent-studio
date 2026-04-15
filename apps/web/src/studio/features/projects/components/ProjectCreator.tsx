@@ -55,7 +55,8 @@ export function ProjectCreator({
     modalHandler ? modalHandler.setOpen(false) : setOpen(false)
 
     const path = buildPath("project", { organizationId: organization.id, projectId })
-    window.location.href = path
+    // NOTE: do not use navigate from react-router
+    window.location.assign(path)
   }
 
   return (
@@ -79,16 +80,22 @@ export function ProjectCreator({
           </DialogDescription>
         </DialogHeader>
 
-        <CreateForm onSuccess={handleSuccess} />
+        <CreateForm onSuccess={handleSuccess} organizationId={organization.id} />
       </DialogContent>
     </Dialog>
   )
 }
 
-function CreateForm({ onSuccess }: { onSuccess: (projectId: string) => void }) {
+function CreateForm({
+  onSuccess,
+  organizationId,
+}: {
+  onSuccess: (projectId: string) => void
+  organizationId: string
+}) {
   const dispatch = useAppDispatch()
   const handleSubmit = async (data: { name: string }) => {
-    dispatch(createProject({ payload: { name: data.name }, onSuccess }))
+    dispatch(createProject({ organizationId, payload: { name: data.name }, onSuccess }))
   }
   return <ProjectForm onSubmit={handleSubmit} />
 }

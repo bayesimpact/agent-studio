@@ -26,6 +26,8 @@ import { DocumentTagContextResolver } from "./resolvers/document-tag-context.res
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
 import { EvaluationContextResolver } from "./resolvers/evaluation-context.resolver"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
+import { EvaluationDatasetContextResolver } from "./resolvers/evaluation-dataset-context.resolver"
+// biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
 import { OrganizationContextResolver } from "./resolvers/organization-context.resolver"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
 import { ProjectContextResolver } from "./resolvers/project-context.resolver"
@@ -42,6 +44,7 @@ const RESOLUTION_ORDER: ContextResource[] = [
   "document",
   "documentTag",
   "evaluation",
+  "evaluationDataset",
 ]
 
 @Injectable()
@@ -59,6 +62,7 @@ export class ResourceContextGuard implements CanActivate {
     @Optional() documentContextResolver?: DocumentContextResolver,
     @Optional() documentTagContextResolver?: DocumentTagContextResolver,
     @Optional() evaluationContextResolver?: EvaluationContextResolver,
+    @Optional() evaluationDatasetContextResolver?: EvaluationDatasetContextResolver,
   ) {
     const resolverEntries: Array<[ContextResource, ContextResolver]> = []
     if (organizationContextResolver) {
@@ -93,6 +97,12 @@ export class ResourceContextGuard implements CanActivate {
     }
     if (evaluationContextResolver) {
       resolverEntries.push([evaluationContextResolver.resource, evaluationContextResolver])
+    }
+    if (evaluationDatasetContextResolver) {
+      resolverEntries.push([
+        evaluationDatasetContextResolver.resource,
+        evaluationDatasetContextResolver,
+      ])
     }
     this.resolverMap = new Map(resolverEntries)
   }

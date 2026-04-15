@@ -1,5 +1,6 @@
 import type { ThunkDispatch, UnknownAction } from "@reduxjs/toolkit"
 import type { Services } from "@/di/services"
+import type { EvalState } from "@/eval/store/types"
 import type { StudioState } from "@/studio/store/types"
 import type { rootSliceList } from "./root-slices"
 
@@ -12,6 +13,8 @@ export type RootState =
         [K in R as K["name"]]: ReturnType<K["reducer"]>
       } & {
         studio: StudioState
+      } & {
+        evaluation: EvalState
       }
     : never
 
@@ -19,5 +22,7 @@ export type RootState =
 export type ThunkExtraArg = {
   services: Services
 }
+
+export type ThunkConfig = { state: RootState; extra: ThunkExtraArg }
 
 export type AppDispatch = ThunkDispatch<RootState, ThunkExtraArg, UnknownAction>

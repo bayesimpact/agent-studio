@@ -55,7 +55,7 @@ export function OrganizationCreator() {
 
     const path = buildPath("organization", {
       organizationId: createdOrganization.id,
-      forceInterface: StudioRouteNames.STUDIO,
+      forceInterface: StudioRouteNames.APP,
     })
     navigate(path)
   }

@@ -1,7 +1,11 @@
 import type { DocumentTagDto } from "../document-tags/document-tag.dto"
 import type { TimeType } from "../generic"
 
-export type DocumentSourceType = "project" | "agentSessionMessage" | "extraction"
+export type DocumentSourceType =
+  | "project"
+  | "agentSessionMessage"
+  | "extraction"
+  | "evaluationDataset"
 export type DocumentEmbeddingStatus = "pending" | "processing" | "completed" | "failed"
 export type DocumentEmbeddingStatusChangedEventPayload = {
   type: "document_embedding_status_changed"

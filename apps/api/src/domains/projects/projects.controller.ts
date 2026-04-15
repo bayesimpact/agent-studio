@@ -1,10 +1,4 @@
-import {
-  type FeatureFlagKey,
-  type FeatureFlagsDto,
-  type ProjectDto,
-  ProjectsRoutes,
-  type TimeType,
-} from "@caseai-connect/api-contracts"
+import { ProjectsRoutes } from "@caseai-connect/api-contracts"
 import { Body, Controller, Delete, Get, Patch, Post, Req, UseGuards } from "@nestjs/common"
 import type {
   EndpointRequestWithOrganizationMembership,
@@ -16,8 +10,7 @@ import { CheckPolicy } from "@/common/policies/check-policy.decorator"
 import { TrackActivity } from "@/domains/activities/track-activity.decorator"
 import { JwtAuthGuard } from "@/domains/auth/jwt-auth.guard"
 import { UserGuard } from "@/domains/users/user.guard"
-import type { FeatureFlag } from "../feature-flags/feature-flag.entity"
-import type { Project } from "./project.entity"
+import { toProjectDto } from "./helpers"
 import { ProjectsGuard } from "./projects.guard"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
 import { ProjectsService } from "./projects.service"
@@ -79,23 +72,4 @@ export class ProjectsController {
     await this.projectsService.deleteProject(request.project)
     return { data: { success: true } }
   }
-}
-
-function toProjectDto(project: Project): ProjectDto {
-  return {
-    id: project.id,
-    name: project.name,
-    organizationId: project.organizationId,
-    createdAt: project.createdAt.getTime() as TimeType,
-    updatedAt: project.updatedAt.getTime() as TimeType,
-    featureFlags: toFeatureFlagsDto(project.featureFlags),
-  }
-}
-
-function toFeatureFlagsDto(featureFlags: FeatureFlag[]): FeatureFlagsDto {
-  return (
-    featureFlags
-      ?.filter((flag) => flag.enabled)
-      .map((flag) => flag.featureFlagKey as FeatureFlagKey) ?? []
-  )
 }

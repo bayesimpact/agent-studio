@@ -1,8 +1,6 @@
 {
   "actions": {
     "accept": "Accept",
-    "selectOrganization": "Select Organization",
-    "invite": "Invite",
     "add": "Add",
     "back": "Back",
     "cancel": "Cancel",
@@ -21,8 +19,10 @@
     "enter": "Enter",
     "filter": "Filter",
     "finish": "Finish",
-    "goToApp": "Open App",
-    "goToStudio": "Open Studio",
+    "goToApp": "App",
+    "goToEval": "Evaluation",
+    "goToStudio": "Studio",
+    "invite": "Invite",
     "leave": "Leave",
     "loadMore": "Load More",
     "more": "More",
@@ -37,6 +37,7 @@
     "save": "Save",
     "search": "Search",
     "select": "Select",
+    "selectOrganization": "Select Organization",
     "send": "Send",
     "sort": "Sort",
     "start": "Start",
@@ -44,6 +45,7 @@
     "submit": "Submit",
     "update": "Update",
     "upload": "Upload",
+    "initialize": "Initialize",
     "view": "View"
   }
 }

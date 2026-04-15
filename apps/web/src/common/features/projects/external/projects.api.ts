@@ -31,7 +31,7 @@ export default {
   },
 } satisfies IProjectsSpi
 
-const toProject = (dto: ProjectDto): Project => ({
+export const toProject = (dto: ProjectDto): Project => ({
   id: dto.id,
   name: dto.name,
   organizationId: dto.organizationId,

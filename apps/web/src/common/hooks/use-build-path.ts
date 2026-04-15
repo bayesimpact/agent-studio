@@ -8,6 +8,7 @@ import { RouteNames } from "@/common/routes/helpers"
 import { ADS } from "@/common/store/async-data-status"
 import { useAppSelector } from "@/common/store/hooks"
 import { DeskRouteNames } from "@/desk/routes/helpers"
+import { EvalRouteNames } from "@/eval/routes/helpers"
 import { StudioRouteNames } from "@/studio/routes/helpers"
 
 type PathType = "organization" | "project" | "agent" | "agentSession"
@@ -19,14 +20,16 @@ interface BuildPathOptions {
   agentSessionId?: string
 }
 type ForceInterface = {
-  forceInterface?: StudioRouteNames.STUDIO | DeskRouteNames.APP
+  forceInterface?: StudioRouteNames.APP | DeskRouteNames.APP | EvalRouteNames.APP
 }
 
 const getPrefix = ({ forceInterface }: ForceInterface) =>
   forceInterface ||
-  (window.location.pathname.startsWith(`${StudioRouteNames.STUDIO}/`)
-    ? StudioRouteNames.STUDIO
-    : DeskRouteNames.APP)
+  (window.location.pathname.startsWith(`${StudioRouteNames.APP}/`)
+    ? StudioRouteNames.APP
+    : window.location.pathname.startsWith(`${EvalRouteNames.APP}/`)
+      ? EvalRouteNames.APP
+      : DeskRouteNames.APP)
 
 export const buildOrganizationPath = ({
   organizationId,

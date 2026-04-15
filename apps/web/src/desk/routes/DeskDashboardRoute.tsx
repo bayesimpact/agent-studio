@@ -1,26 +1,23 @@
 import { SidebarMenuButton } from "@caseai-connect/ui/shad/sidebar"
 import { ExternalLinkIcon } from "lucide-react"
 import { useTranslation } from "react-i18next"
-import { useLocation, useOutlet } from "react-router-dom"
+import { Navigate, useLocation, useOutlet } from "react-router-dom"
 import { SidebarAgentList } from "@/common/components/sidebar/list/SidebarAgentList"
 import { SidebarLayout } from "@/common/components/sidebar/SidebarLayout"
 import type { User } from "@/common/features/me/me.models"
 import type { Organization } from "@/common/features/organizations/organizations.models"
-import { ProjectList } from "@/common/features/projects/components/ProjectList"
-import type { Project } from "@/common/features/projects/projects.models"
 import { selectCurrentProjectData } from "@/common/features/projects/projects.selectors"
 import { useAbility } from "@/common/hooks/use-ability"
+import { RouteNames } from "@/common/routes/helpers"
 import { useAppSelector } from "@/common/store/hooks"
 import { StudioRouteNames } from "@/studio/routes/helpers"
 import { DeskRouteNames } from "./helpers"
 
 export function DeskDashboardRoute({
   user,
-  projects,
   organization,
 }: {
   user: User
-  projects: Project[]
   organization: Organization
 }) {
   const outlet = useOutlet()
@@ -33,23 +30,23 @@ export function DeskDashboardRoute({
         <SidebarAgentList organizationId={organization.id} project={project.value} />
       }
       user={{ name: user.name, email: user.email }}
-      sidebarFooterChildren={<SidebarFooterChildren organizationId={organization.id} />}
+      sidebarFooterChildren={<SidebarFooterChildren projectId={project.value?.id} />}
     >
       <div className="mx-10 2xl:mx-30 my-10 border relative rounded-2xl overflow-hidden">
-        {outlet ? outlet : <ProjectList projects={projects} organization={organization} />}
+        {outlet ? outlet : <Navigate to={RouteNames.HOME} />}
       </div>
     </SidebarLayout>
   )
 }
 
-function SidebarFooterChildren({ organizationId }: { organizationId: string }) {
+function SidebarFooterChildren({ projectId }: { projectId?: string }) {
   const { t } = useTranslation()
   const { abilities } = useAbility()
   const location = useLocation()
 
-  const studioPath = location.pathname.replace(DeskRouteNames.APP, StudioRouteNames.STUDIO)
+  const studioPath = location.pathname.replace(DeskRouteNames.APP, StudioRouteNames.APP)
 
-  if (!abilities.canAccessStudio(organizationId)) return null
+  if (!projectId || !abilities.canAccessStudio({ projectId })) return null
   return (
     <SidebarMenuButton
       variant="outline"

@@ -62,7 +62,6 @@ export class AgentMessage extends ConnectEntityBase {
 
   @Column({ type: "uuid", name: "document_id", nullable: true })
   documentId!: string | null
-
   @OneToOne(() => Document, { nullable: true, onDelete: "SET NULL" })
   @JoinColumn({ name: "document_id" })
   document!: Document | null

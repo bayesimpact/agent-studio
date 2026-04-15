@@ -115,6 +115,7 @@ describe("MeController (e2e)", () => {
             {
               id: mockOrganization.id,
               name: mockOrganization.name,
+              projects: [],
             } satisfies OrganizationDto,
           ],
         })

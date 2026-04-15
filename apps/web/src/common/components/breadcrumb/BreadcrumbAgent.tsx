@@ -35,7 +35,7 @@ export function BreadcrumbAgent({ organizationId }: { organizationId: string }) 
     const nextAgent = agents.value.find((candidateAgent) => candidateAgent.id === agentId)
     if (!nextAgent) return
     const path = buildPath("agent", { organizationId, projectId: agent.value.projectId, agentId })
-    window.location.replace(path)
+    window.location.assign(path)
   }
 
   if (agents.value.length === 1)

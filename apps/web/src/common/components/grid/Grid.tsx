@@ -32,9 +32,15 @@ export function Grid({
   )
 }
 
-export function GridContent({ children }: { children: React.ReactNode }) {
+export function GridContent({
+  children,
+  className,
+}: {
+  children: React.ReactNode
+  className?: string
+}) {
   const { cols } = useGrid()
-  return <div className={cn("grid", gridClass[cols])}>{children}</div>
+  return <div className={cn("grid", gridClass[cols], className)}>{children}</div>
 }
 
 export function GridItem({
@@ -79,7 +85,7 @@ export function GridItem({
       )}
 
       <div className="py-2 px-1 w-full">
-        <h2 className="text-xl font-medium capitalize-first flex items-center gap-2">{title}</h2>
+        <h2 className="text-xl font-medium capitalize flex items-center gap-2">{title}</h2>
 
         <h3 className="text-base text-muted-foreground leading-snug mt-1 mb-4">{description}</h3>
 
@@ -102,14 +108,21 @@ export function GridHeader({
   title,
   description,
   action,
+  className,
 }: {
+  className?: string
   onBack?: () => void
   title: string
   description?: React.ReactNode
   action?: React.ReactNode
 }) {
   return (
-    <Card className="shadow-none rounded-none border-0 border-b border-foreground-muted">
+    <Card
+      className={cn(
+        "shadow-none rounded-none border-0 border-b border-foreground-muted",
+        className,
+      )}
+    >
       <CardHeader className="gap-0">
         <CardTitle className="text-2xl flex items-center gap-1">
           {onBack && (

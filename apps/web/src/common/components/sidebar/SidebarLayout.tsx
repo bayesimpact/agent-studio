@@ -10,10 +10,12 @@ import {
   SidebarMenu,
   SidebarMenuItem,
   SidebarProvider,
-  useSidebar,
 } from "@caseai-connect/ui/shad/sidebar"
+import { useNavigate } from "react-router-dom"
 import type { Organization } from "@/common/features/organizations/organizations.models"
-import { MainButton, OrganizationSelector } from "../organization/OrganizationSelector"
+import { RouteNames } from "@/common/routes/helpers"
+import { isStudioInterface } from "@/studio/routes/helpers"
+import { Logo } from "../themes/Logo"
 import { NavUserMenuItems } from "./nav/NavUserMenuItems"
 import { SidebarBreadcrumb } from "./SidebarBreadcrumb"
 
@@ -43,7 +45,7 @@ export function SidebarLayout({
         <SidebarHeader>
           <SidebarMenu>
             <SidebarMenuItem>
-              {organization ? <Selector /> : <MainButton organizationName="" onClick={() => {}} />}
+              <HeaderWithLogo organization={organization} />
             </SidebarMenuItem>
           </SidebarMenu>
         </SidebarHeader>
@@ -70,7 +72,24 @@ export function SidebarLayout({
   )
 }
 
-function Selector() {
-  const { isMobile } = useSidebar()
-  return <OrganizationSelector side={isMobile ? "bottom" : "right"} />
+export function HeaderWithLogo({ organization }: { organization?: Organization }) {
+  const navigate = useNavigate()
+  const onClick = () => {
+    navigate(RouteNames.HOME)
+  }
+  return (
+    <div className="flex flex-1 gap-2 items-center">
+      <button type="button" onClick={onClick} className="p-1 size-10 contain-content">
+        <Logo />
+      </button>
+
+      <button type="button" onClick={onClick} className="flex-1">
+        <div className="flex flex-col gap-0 leading-none text-left">
+          {organization && <span className="font-medium text-lg">{organization?.name}</span>}
+
+          {isStudioInterface() && <span className="text-primary capitalize-first">Studio</span>}
+        </div>
+      </button>
+    </div>
+  )
 }

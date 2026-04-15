@@ -44,7 +44,7 @@ const extraItems = [
 ]
 
 export const studioRoutes = {
-  path: StudioRouteNames.STUDIO,
+  path: StudioRouteNames.APP,
   element: (
     <ProtectedRoute>
       <Studio />
@@ -55,8 +55,8 @@ export const studioRoutes = {
       path: buildStudioPath(RouteNames.ORGANIZATION_DASHBOARD),
       element: (
         <DashboardRoute>
-          {(user, projects, organization) => (
-            <StudioDashboardRoute user={user} projects={projects} organization={organization} />
+          {(user, _projects, organization) => (
+            <StudioDashboardRoute user={user} organization={organization} />
           )}
         </DashboardRoute>
       ),

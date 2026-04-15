@@ -16,11 +16,13 @@ import {
   selectCurrentProjectData,
   selectProjectsData,
 } from "@/common/features/projects/projects.selectors"
+import { useAbility } from "@/common/hooks/use-ability"
 import { useBuildPath } from "@/common/hooks/use-build-path"
 import { ADS } from "@/common/store/async-data-status"
 import { useAppSelector } from "@/common/store/hooks"
+import { DeskRouteNames } from "@/desk/routes/helpers"
 import { ProjectCreator } from "@/studio/features/projects/components/ProjectCreator"
-import { isStudioInterface as isStudio } from "@/studio/routes/helpers"
+import { isStudioInterface as isStudio, StudioRouteNames } from "@/studio/routes/helpers"
 
 export function BreadcrumbProject({ organization }: { organization: Organization }) {
   const { t } = useTranslation()
@@ -30,12 +32,16 @@ export function BreadcrumbProject({ organization }: { organization: Organization
   const project = useAppSelector(selectCurrentProjectData)
   const { buildPath } = useBuildPath()
   const [openProjectCreator, setOpenProjectCreator] = useState(false)
+  const { abilities } = useAbility()
 
   if (!ADS.isFulfilled(projects) || !ADS.isFulfilled(project)) return null
 
   const handleClick = (projectId: string) => () => {
-    const path = buildPath("project", { organizationId, projectId })
-    window.location.replace(path)
+    const forceInterface = abilities.canAccessStudio({ projectId })
+      ? StudioRouteNames.APP
+      : DeskRouteNames.APP
+    const path = buildPath("project", { organizationId, projectId, forceInterface })
+    window.location.assign(path)
   }
   return (
     <>
