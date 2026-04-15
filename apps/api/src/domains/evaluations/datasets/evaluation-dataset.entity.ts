@@ -14,7 +14,7 @@ export type DatasetSchemaColumn = {
 }
 export type EvaluationDatasetSchemaMapping = Record<DatasetSchemaColumn["id"], DatasetSchemaColumn>
 
-@ConnectEntity("evaluation-dataset")
+@ConnectEntity("evaluation_dataset")
 export class EvaluationDataset extends ConnectEntityBase {
   @Column({ name: "name", nullable: false })
   name!: string

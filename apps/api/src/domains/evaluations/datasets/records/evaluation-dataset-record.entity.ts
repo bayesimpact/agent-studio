@@ -6,7 +6,7 @@ export type EvaluationDatasetRecordData = {
   [columnId: string]: unknown
 }
 
-@ConnectEntity("evaluation-dataset-record")
+@ConnectEntity("evaluation_dataset_record")
 export class EvaluationDatasetRecord extends ConnectEntityBase {
   @Column({ type: "uuid", name: "evaluation_dataset_id", nullable: false })
   evaluationDatasetId!: string
