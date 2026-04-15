@@ -1,36 +1,44 @@
 import { readFileSync } from "node:fs"
+import { createInterface } from "node:readline"
+import { Logger } from "@nestjs/common"
 import { NestFactory } from "@nestjs/core"
+import { config as dotenvConfig } from "dotenv"
+import { DataSource } from "typeorm"
 import { AppModule } from "@/app.module"
+
+const envPath = process.env.DOTENV_CONFIG_PATH
+if (envPath) {
+  dotenvConfig({ path: envPath, override: true })
+}
+import { INVITATION_SENDER } from "@/domains/auth/invitation-sender.interface"
 import {
-  type FirstUserProvisioningResult,
-  FirstUserProvisioningService,
-} from "@/domains/organizations/provisioning/first-user-provisioning.service"
+  type InviteWorkspaceOwnerResult,
+  type PreviewWorkspaceInvitationResult,
+  WorkspaceInvitationService,
+} from "@/domains/organizations/provisioning/workspace-invitation.service"
 
 type CliOptions = {
   csvFilePath: string
   dryRun: boolean
+  inviterName: string
 }
 
 type CsvRow = {
   email: string
   organizationName: string
+  workspaceName?: string
   fullName?: string
 }
 
 type CliRowResult =
-  | FirstUserProvisioningResult
+  | InviteWorkspaceOwnerResult
   | {
       status: "failed"
       email: string
       organizationName: string
       message: string
     }
-  | {
-      status: "would_create" | "would_skip_duplicate"
-      email: string
-      organizationName: string
-      message: string
-    }
+  | PreviewWorkspaceInvitationResult
 
 export function parseCliOptions(argv: string[]): CliOptions {
   const csvFilePathIndex = argv.indexOf("--file")
@@ -38,13 +46,20 @@ export function parseCliOptions(argv: string[]): CliOptions {
     throw new Error("Missing required argument: --file <path-to-csv>")
   }
 
+  const inviterNameIndex = argv.indexOf("--inviter-name")
+  const inviterName =
+    inviterNameIndex >= 0 && argv[inviterNameIndex + 1]
+      ? argv[inviterNameIndex + 1]!
+      : "CaseAI Connect"
+
   return {
     csvFilePath: argv[csvFilePathIndex + 1]!,
     dryRun: argv.includes("--dry-run"),
+    inviterName,
   }
 }
 
-export function parseProvisioningCsv(csvContent: string): CsvRow[] {
+export function parseInvitationCsv(csvContent: string): CsvRow[] {
   const lines = csvContent
     .split(/\r?\n/)
     .map((line) => line.trim())
@@ -57,6 +72,7 @@ export function parseProvisioningCsv(csvContent: string): CsvRow[] {
   const headerColumns = parseCsvLine(lines[0]!)
   const emailIndex = headerColumns.indexOf("email")
   const organizationNameIndex = headerColumns.indexOf("organizationName")
+  const workspaceNameIndex = headerColumns.indexOf("workspaceName")
   const fullNameIndex = headerColumns.indexOf("fullName")
 
   if (emailIndex < 0 || organizationNameIndex < 0) {
@@ -67,6 +83,7 @@ export function parseProvisioningCsv(csvContent: string): CsvRow[] {
     const values = parseCsvLine(line)
     const email = values[emailIndex]?.trim() ?? ""
     const organizationName = values[organizationNameIndex]?.trim() ?? ""
+    const workspaceName = workspaceNameIndex >= 0 ? values[workspaceNameIndex]?.trim() : undefined
     const fullName = fullNameIndex >= 0 ? values[fullNameIndex]?.trim() : undefined
 
     if (!email || !organizationName) {
@@ -78,41 +95,36 @@ export function parseProvisioningCsv(csvContent: string): CsvRow[] {
     return {
       email,
       organizationName,
+      ...(workspaceName ? { workspaceName } : {}),
       ...(fullName ? { fullName } : {}),
     }
   })
 }
 
-export async function runProvisioningBatch(params: {
+export async function runInvitationBatch(params: {
   rows: CsvRow[]
   dryRun: boolean
-  provisioningService: FirstUserProvisioningService
+  inviterName: string
+  invitationService: WorkspaceInvitationService
 }): Promise<CliRowResult[]> {
   const results: CliRowResult[] = []
 
   for (const row of params.rows) {
     try {
       if (params.dryRun) {
-        const preview = await params.provisioningService.previewProvisioning({
+        const preview = await params.invitationService.previewInvitation({
           email: row.email,
           organizationName: row.organizationName,
-          fullName: row.fullName,
         })
-        results.push({
-          status: preview.status,
-          email: preview.email,
-          organizationName: preview.organizationName,
-          message:
-            preview.status === "would_create"
-              ? "Would create account and send password reset email."
-              : "Would skip duplicate local account and still send password reset email.",
-        })
+        results.push(preview)
         continue
       }
 
-      const rowResult = await params.provisioningService.provisionFirstUser({
+      const rowResult = await params.invitationService.inviteWorkspaceOwner({
         email: row.email,
         organizationName: row.organizationName,
+        workspaceName: row.workspaceName,
+        inviterName: params.inviterName,
         fullName: row.fullName,
       })
       results.push(rowResult)
@@ -129,23 +141,47 @@ export async function runProvisioningBatch(params: {
   return results
 }
 
+const logger = new Logger("InviteOrganizationOwners")
+
+function ask(question: string): Promise<string> {
+  const rl = createInterface({ input: process.stdin, output: process.stdout })
+  return new Promise((resolve) => {
+    rl.question(question, (answer) => {
+      rl.close()
+      resolve(answer.trim())
+    })
+  })
+}
+
+async function confirmDatabaseTarget(): Promise<void> {
+  const databaseUrl = process.env.DATABASE_URL
+  const target = databaseUrl ?? `${process.env.DATABASE_HOST}:${process.env.DATABASE_PORT}/${process.env.DATABASE_NAME}`
+  logger.warn(`Target database: ${target}`)
+  const answer = await ask("Do you want to proceed? (yes/no): ")
+  if (answer.toLowerCase() !== "yes") {
+    logger.log("Aborted by user.")
+    process.exit(0)
+  }
+}
+
 function printSummary(results: CliRowResult[]): void {
-  const createdCount = results.filter((result) => result.status === "created").length
+  const invitedCount = results.filter((result) => result.status === "invited").length
   const skippedCount = results.filter((result) =>
-    ["skipped_duplicate", "would_skip_duplicate"].includes(result.status),
+    ["skipped_existing_membership", "would_skip_existing_membership"].includes(result.status),
   ).length
   const failedCount = results.filter((result) => result.status === "failed").length
-  const wouldCreateCount = results.filter((result) => result.status === "would_create").length
+  const wouldInviteCount = results.filter((result) => result.status === "would_invite").length
 
   for (const result of results) {
-    console.log(
-      `[${result.status}] email=${result.email} organization=${result.organizationName} message=${result.message}`,
+    const message = "message" in result ? ` message=${result.message}` : ""
+    logger.log(
+      `[${result.status}] email=${result.email} organization=${result.organizationName}${message}`,
     )
   }
 
-  console.log("-----")
-  console.log(
-    `Summary: total=${results.length} created=${createdCount} skipped=${skippedCount} failed=${failedCount} would_create=${wouldCreateCount}`,
+  logger.log("-----")
+  logger.log(
+    `Summary: total=${results.length} invited=${invitedCount} skipped=${skippedCount} failed=${failedCount} would_invite=${wouldInviteCount}`,
   )
 }
 
@@ -176,17 +212,22 @@ function parseCsvLine(line: string): string[] {
 async function bootstrapCli(): Promise<void> {
   const options = parseCliOptions(process.argv.slice(2))
   const csvContent = readFileSync(options.csvFilePath, "utf-8")
-  const rows = parseProvisioningCsv(csvContent)
+  const rows = parseInvitationCsv(csvContent)
+  await confirmDatabaseTarget()
   const app = await NestFactory.createApplicationContext(AppModule, {
     logger: ["error", "warn", "log"],
   })
 
   try {
-    const provisioningService = app.get(FirstUserProvisioningService)
-    const results = await runProvisioningBatch({
+    const dataSource = app.get(DataSource)
+    const invitationSender = app.get(INVITATION_SENDER)
+    const invitationService = new WorkspaceInvitationService(invitationSender, dataSource)
+    logger.log(`Processing ${rows.length} row(s)...`)
+    const results = await runInvitationBatch({
       rows,
       dryRun: options.dryRun,
-      provisioningService,
+      inviterName: options.inviterName,
+      invitationService,
     })
     printSummary(results)
   } finally {
