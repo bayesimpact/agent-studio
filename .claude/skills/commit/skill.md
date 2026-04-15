@@ -56,7 +56,20 @@ For non-trivial changes, add a body after a blank line with bullet points explai
    - The **scope** (if applicable)
    - A concise **summary** in imperative mood
 
-3. Copy the commit message to the system clipboard using `pbcopy` via the Bash tool. Use `printf` to build the message (no trailing newline). Format:
+3. **Update CHANGELOG.md** if the change is user-facing (`feat` or `fix` type). Skip for `refactor`, `chore`, `ci`, `test`, `style`, `perf`, `docs` — those are internal.
+
+   - Add a line under `## [Unreleased]` in the appropriate section:
+     - `feat` → `### Added` (new capability) or `### Changed` (modified existing behavior)
+     - `fix` → `### Fixed`
+   - **Write for end users, not developers.** Users don't know about entities, services, modules, or migrations. Describe the visible outcome.
+     - ❌ "Add mcp_server and agent_mcp_server tables with encrypted config"
+     - ✅ "Agents can now connect to external MCP servers for additional tools"
+     - ❌ "Fix race condition in streaming service timeout check"
+     - ✅ "Fix agent responses sometimes timing out prematurely"
+   - Use `(beta)` prefix for features behind a feature flag or not yet exposed in the UI.
+   - One line per feature/fix. Keep it short (under 100 chars).
+
+4. Copy the commit message to the system clipboard using `pbcopy` via the Bash tool. Use `printf` to build the message (no trailing newline). Format:
 
 ```
 <type>(<scope>): <summary>
@@ -66,7 +79,7 @@ For non-trivial changes, add a body after a blank line with bullet points explai
 Co-Authored-By: Claude Opus 4.6 (1M context) <noreply@anthropic.com>
 ```
 
-4. Tell the user the message is in their clipboard and they can Cmd+V in the WebStorm commit dialog.
+5. Tell the user the message is in their clipboard and they can Cmd+V in the WebStorm commit dialog.
 
 ## Examples from this repo
 

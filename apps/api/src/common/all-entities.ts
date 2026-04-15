@@ -15,6 +15,8 @@ import { DocumentTag } from "@/domains/documents/tags/document-tag.entity"
 import { Evaluation } from "@/domains/evaluations/evaluation.entity"
 import { EvaluationReport } from "@/domains/evaluations/reports/evaluation-report.entity"
 import { FeatureFlag } from "@/domains/feature-flags/feature-flag.entity"
+import { AgentMcpServer } from "@/domains/mcp-servers/agent-mcp-server.entity"
+import { McpServer } from "@/domains/mcp-servers/mcp-server.entity"
 import { OrganizationMembership } from "@/domains/organizations/memberships/organization-membership.entity"
 import { Organization } from "@/domains/organizations/organization.entity"
 import { ProjectMembership } from "@/domains/projects/memberships/project-membership.entity"
@@ -23,6 +25,7 @@ import { User } from "@/domains/users/user.entity"
 
 export const ALL_ENTITIES = [
   Agent,
+  AgentMcpServer,
   AgentMembership,
   AgentMessage,
   AgentMessageFeedback,
@@ -35,6 +38,7 @@ export const ALL_ENTITIES = [
   ExtractionAgentSession,
   FeatureFlag,
   FormAgentSession,
+  McpServer,
   Organization,
   OrganizationMembership,
   Project,
