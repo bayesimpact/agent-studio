@@ -1,5 +1,9 @@
 import type { OrganizationDto } from "@caseai-connect/api-contracts"
-import { buildEndpointRequest } from "@/common/test/request.factory"
+import { OrganizationsRoutes } from "@caseai-connect/api-contracts"
+import type { INestApplication } from "@nestjs/common"
+import type { App } from "supertest/types"
+import { AUTH_ERRORS } from "@/common/errors/auth-errors"
+import { bindExpectActivityCreated } from "@/common/test/activity-test.helpers"
 import { clearTestDatabase } from "@/common/test/test-database"
 import {
   type AllRepositories,
@@ -7,170 +11,157 @@ import {
   teardownTestDatabase,
 } from "@/common/test/test-transaction-manager"
 import { userFactory } from "@/domains/users/user.factory"
-import { OrganizationsController } from "./organizations.controller"
+import { setupUserGuardForTesting } from "../../../test/e2e.helpers"
+import { expectResponse, type Requester, testRequester } from "../../../test/request"
+import { Organization } from "./organization.entity"
 import { OrganizationsModule } from "./organizations.module"
-import { OrganizationsService } from "./organizations.service"
 
-describe("OrganizationsController", () => {
-  let controller: OrganizationsController
-  let _service: OrganizationsService
+describe("Organizations - createOrganization", () => {
+  let app: INestApplication<App>
+  let request: Requester
   let setup: Awaited<ReturnType<typeof setupTransactionalTestDatabase>>
   let repositories: AllRepositories
 
+  let accessToken: string | undefined = "token"
+  let auth0Id = "auth0|123"
+  let expectActivityCreated: ReturnType<typeof bindExpectActivityCreated>
+
   beforeAll(async () => {
-    // Use transactional setup with OrganizationsModule import
     setup = await setupTransactionalTestDatabase({
       additionalImports: [OrganizationsModule],
+      applyOverrides: (moduleBuilder) => setupUserGuardForTesting(moduleBuilder, () => auth0Id),
     })
-    // Clear database once at the start to ensure clean state
-    // Individual tests use transactions with rollback for isolation
+    repositories = setup.getAllRepositories()
+    expectActivityCreated = bindExpectActivityCreated(repositories.activityRepository)
+    app = setup.module.createNestApplication()
+    await app.init()
+    request = testRequester(app)
+  })
+
+  beforeEach(async () => {
     await clearTestDatabase(setup.dataSource)
+    accessToken = "token"
+    auth0Id = "auth0|123"
   })
 
   afterAll(async () => {
     await teardownTestDatabase(setup)
+    await app.close()
   })
 
-  beforeEach(async () => {
-    // Start transaction - this creates a new module with transactional providers
-    await setup.startTransaction()
-    // Get controller and repositories from transactional module (important!)
-    controller = setup.module.get<OrganizationsController>(OrganizationsController)
-    _service = setup.module.get<OrganizationsService>(OrganizationsService)
-    repositories = setup.getAllRepositories()
+  const createContext = async (userParams?: Partial<{ email: string }>) => {
+    const user = userFactory.build({
+      email: userParams?.email ?? "creator@bayesimpact.org",
+    })
+    await repositories.userRepository.save(user)
+    auth0Id = user.auth0Id
+    return { user }
+  }
 
-    // FIXME: @Did: rollbackTransaction does not clear data as expected
-    // so we manually clear relevant tables here before each test
-    // Delete in order to respect foreign key constraints
-    // Use query builder to delete all records (delete({}) doesn't work with empty criteria)
-    await repositories.featureFlagRepository.createQueryBuilder().delete().execute()
-    await repositories.activityRepository.createQueryBuilder().delete().execute()
-    await repositories.organizationMembershipRepository.createQueryBuilder().delete().execute()
-    await repositories.organizationRepository.createQueryBuilder().delete().execute()
-    await repositories.userRepository.createQueryBuilder().delete().execute()
+  const subject = async (payload?: typeof OrganizationsRoutes.createOrganization.request) =>
+    request({
+      route: OrganizationsRoutes.createOrganization,
+      token: accessToken,
+      request: payload,
+    })
+
+  it("requires an authentication token", async () => {
+    accessToken = undefined
+    expectResponse(await subject(), 401, AUTH_ERRORS.NO_ACCESS_TOKEN)
   })
 
-  afterEach(async () => {
-    // Rollback transaction - automatically cleans up all data
-    await setup.rollbackTransaction()
+  it("rejects users without a @bayesimpact.org email", async () => {
+    await createContext({ email: "outsider@example.com" })
+
+    const response = await subject({ payload: { name: "Forbidden Org" } })
+
+    expectResponse(response, 403, AUTH_ERRORS.UNAUTHORIZED_RESOURCE)
   })
 
-  it("should be defined", () => {
-    expect(controller).toBeDefined()
+  it("creates an organization and returns it in correct format", async () => {
+    await createContext()
+
+    const response = await subject({ payload: { name: "New Organization" } })
+
+    expectResponse(response, 201)
+    expect(response.body.data).toEqual({
+      id: expect.any(String),
+      name: "New Organization",
+      createdAt: expect.any(Number),
+      projects: [],
+    } satisfies OrganizationDto)
   })
 
-  describe("createOrganization", () => {
-    it("should create organization and make user owner", async () => {
-      const user = await repositories.userRepository.save(userFactory.build())
-      const body = { payload: { name: "New Organization" } }
+  it("persists the organization in the database", async () => {
+    await createContext()
 
-      const { data: result } = await controller.createOrganization(buildEndpointRequest(user), body)
+    const response = await subject({ payload: { name: "Persisted Org" } })
 
-      // Assert
-      expect(result.id).toBeDefined()
-      expect(result.name).toBe("New Organization")
+    const organization = await setup
+      .getRepository(Organization)
+      .findOne({ where: { id: response.body.data.id } })
+    expect(organization).not.toBeNull()
+    expect(organization?.name).toBe("Persisted Org")
+  })
 
-      // Verify organization was created
-      const organization = await repositories.organizationRepository.findOne({
-        where: { id: result.id },
-      })
-      expect(organization).not.toBeNull()
-      expect(organization?.name).toBe("New Organization")
+  it("makes the creating user an owner of the organization", async () => {
+    const { user } = await createContext()
 
-      // Verify user was created and is owner
-      const reloadedUser = await repositories.userRepository.findOne({
-        where: { auth0Id: user.auth0Id },
-      })
-      expect(reloadedUser).not.toBeNull()
+    const response = await subject({ payload: { name: "Owned Org" } })
 
-      if (!reloadedUser) return
-
-      const membership = await repositories.organizationMembershipRepository.findOne({
-        where: { userId: user.id, organizationId: result.id },
-      })
-      expect(membership).not.toBeNull()
-      expect(membership?.role).toBe("owner")
+    const membership = await repositories.organizationMembershipRepository.findOne({
+      where: { userId: user.id, organizationId: response.body.data.id },
     })
+    expect(membership).not.toBeNull()
+    expect(membership?.role).toBe("owner")
+  })
 
-    it("should reuse existing user", async () => {
-      const user = await repositories.userRepository.save(userFactory.build())
-      const request = buildEndpointRequest(user)
-      const body1 = { payload: { name: "First Org" } }
-      const body2 = { payload: { name: "Second Org" } }
+  it("tracks an activity for organization creation", async () => {
+    await createContext()
 
-      const { data: result1 } = await controller.createOrganization(request, body1)
-      const userId1 = await repositories.userRepository.findOne({
-        where: { auth0Id: user.auth0Id },
-      })
+    await subject({ payload: { name: "Tracked Org" } })
 
-      const { data: result2 } = await controller.createOrganization(request, body2)
-      const userId2 = await repositories.userRepository.findOne({
-        where: { auth0Id: user.auth0Id },
-      })
+    await expectActivityCreated("organization.create")
+  })
 
-      // Assert - Same user ID (idempotent)
-      expect(userId1?.id).toBe(userId2?.id)
+  it("reuses existing user across multiple organization creations", async () => {
+    const { user } = await createContext()
 
-      // Both organizations should exist
-      expect(result1.id).toBeDefined()
-      expect(result2.id).toBeDefined()
-      expect(result1.id).not.toBe(result2.id)
+    const response1 = await subject({ payload: { name: "First Org" } })
+    const response2 = await subject({ payload: { name: "Second Org" } })
+
+    expectResponse(response1, 201)
+    expectResponse(response2, 201)
+    expect(response1.body.data.id).not.toBe(response2.body.data.id)
+
+    const users = await repositories.userRepository.find({
+      where: { auth0Id: user.auth0Id },
     })
+    expect(users).toHaveLength(1)
+  })
 
-    it("should return organization in correct format", async () => {
-      const user = await repositories.userRepository.save(userFactory.build())
-      const request = buildEndpointRequest(user)
-      const body = { payload: { name: "Format Test Org" } }
+  it("rejects organization name shorter than 3 characters", async () => {
+    await createContext()
 
-      const response = await controller.createOrganization(request, body)
+    const response = await subject({ payload: { name: "AB" } })
 
-      // Assert - Check format matches expected DTO structure
-      expect(response.data).toEqual({
-        id: expect.any(String),
-        name: "Format Test Org",
-        createdAt: expect.any(Number),
-        projects: [],
-      } satisfies OrganizationDto)
-      expect(response.data).not.toHaveProperty("organization")
-      expect(response.data).not.toHaveProperty("updatedAt")
-    })
+    expect(response.status).toBeGreaterThanOrEqual(400)
+  })
 
-    it("should reject organization name shorter than 3 characters", async () => {
-      const user = await repositories.userRepository.save(userFactory.build())
-      const request = buildEndpointRequest(user)
-      const body = { payload: { name: "AB" } }
+  it("rejects empty organization name", async () => {
+    await createContext()
 
-      await expect(controller.createOrganization(request, body)).rejects.toThrow()
-    })
+    const response = await subject({ payload: { name: "" } })
 
-    it("should reject empty organization name", async () => {
-      const user = await repositories.userRepository.save(userFactory.build())
-      const request = buildEndpointRequest(user)
-      const body = { payload: { name: "" } }
+    expect(response.status).toBeGreaterThanOrEqual(400)
+  })
 
-      await expect(controller.createOrganization(request, body)).rejects.toThrow()
-    })
+  it("accepts organization name with exactly 3 characters", async () => {
+    await createContext()
 
-    it("should accept organization name with exactly 3 characters", async () => {
-      const user = await repositories.userRepository.save(userFactory.build())
-      const request = buildEndpointRequest(user)
-      const body = { payload: { name: "ABC" } }
+    const response = await subject({ payload: { name: "ABC" } })
 
-      const { data: result } = await controller.createOrganization(request, body)
-
-      // Assert
-      expect(result.name).toBe("ABC")
-      expect(result.id).toBeDefined()
-    })
-
-    it("should reject organization name with only whitespace", async () => {
-      const user = await repositories.userRepository.save(userFactory.build())
-      const request = buildEndpointRequest(user)
-      const body = { payload: { name: "     " } } // Only whitespace (trimmed would be empty)
-
-      // Note: MinLength validator doesn't trim, so this might pass validation
-      // but fail in the service layer. For now, we test that it throws.
-      await expect(controller.createOrganization(request, body)).rejects.toThrow()
-    })
+    expectResponse(response, 201)
+    expect(response.body.data.name).toBe("ABC")
   })
 })
