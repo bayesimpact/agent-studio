@@ -15,7 +15,7 @@ import {
   TableHeader,
   TableRow,
 } from "@caseai-connect/ui/shad/table"
-import { Loader, Trash2Icon } from "lucide-react"
+import { Loader } from "lucide-react"
 import { useTranslation } from "react-i18next"
 import { ADS } from "@/common/store/async-data-status"
 import { useAppDispatch, useAppSelector } from "@/common/store/hooks"
@@ -99,18 +99,5 @@ function FileActions({ file }: { file: DatasetFile }) {
         {t("actions:select")}
       </Button>
     </div>
-  )
-}
-
-function _FileDeletor({ file }: { file: DatasetFile }) {
-  const dispatch = useAppDispatch()
-  const handleDelete = () => {
-    dispatch(datasetsActions.deleteFile({ fileId: file.id }))
-  }
-
-  return (
-    <Button variant="outline" size="icon" onClick={handleDelete}>
-      <Trash2Icon />
-    </Button>
   )
 }

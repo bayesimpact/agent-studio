@@ -128,9 +128,10 @@ describe("OrganizationsController", () => {
       expect(response.data).toEqual({
         id: expect.any(String),
         name: "Format Test Org",
+        createdAt: expect.any(Number),
+        projects: [],
       } satisfies OrganizationDto)
       expect(response.data).not.toHaveProperty("organization")
-      expect(response.data).not.toHaveProperty("createdAt")
       expect(response.data).not.toHaveProperty("updatedAt")
     })
 
