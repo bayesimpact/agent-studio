@@ -23,6 +23,8 @@ import { Document } from "@/domains/documents/document.entity"
 import { Evaluation } from "@/domains/evaluations/evaluation.entity"
 import { EvaluationReport } from "@/domains/evaluations/reports/evaluation-report.entity"
 import { FeatureFlag } from "@/domains/feature-flags/feature-flag.entity"
+import { AgentMcpServer } from "@/domains/mcp-servers/agent-mcp-server.entity"
+import { McpServer } from "@/domains/mcp-servers/mcp-server.entity"
 import { OrganizationMembership } from "@/domains/organizations/memberships/organization-membership.entity"
 import { Organization } from "@/domains/organizations/organization.entity"
 import { ProjectMembership } from "@/domains/projects/memberships/project-membership.entity"
@@ -55,6 +57,8 @@ export interface TransactionalTestSetup {
     projectRepository: Repository<Project>
     userRepository: Repository<User>
     featureFlagRepository: Repository<FeatureFlag>
+    mcpServerRepository: Repository<McpServer>
+    agentMcpServerRepository: Repository<AgentMcpServer>
   }
   startTransaction: () => Promise<void>
   rollbackTransaction: () => Promise<void>
@@ -220,6 +224,8 @@ export async function setupTransactionalTestDatabase(
     evaluationReportRepository: getRepository(EvaluationReport),
     agentMembershipRepository: getRepository(AgentMembership),
     featureFlagRepository: getRepository(FeatureFlag),
+    mcpServerRepository: getRepository(McpServer),
+    agentMcpServerRepository: getRepository(AgentMcpServer),
   })
 
   return {

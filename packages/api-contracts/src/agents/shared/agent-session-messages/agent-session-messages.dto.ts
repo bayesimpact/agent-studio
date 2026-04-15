@@ -2,6 +2,8 @@ export enum ToolName {
   FillForm = "fillForm",
   RetrieveProjectDocumentChunks = "retrieveProjectDocumentChunks",
   Sources = "sources",
+  McpSearchResources = "search_resources",
+  McpSmartSearch = "smart_search",
 }
 
 export type AgentSessionMessageDto = {

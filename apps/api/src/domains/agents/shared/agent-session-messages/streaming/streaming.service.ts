@@ -1,6 +1,6 @@
 import { URL } from "node:url"
 import { type StreamEvent, type StreamEventPayload, ToolName } from "@caseai-connect/api-contracts"
-import { Inject, Injectable, NotFoundException } from "@nestjs/common"
+import { Inject, Injectable, Logger, NotFoundException } from "@nestjs/common"
 import { InjectRepository } from "@nestjs/typeorm"
 import type { FilePart, ImagePart, ToolSet } from "ai"
 import type { Repository } from "typeorm/repository/Repository"
@@ -24,8 +24,12 @@ import {
   FILE_STORAGE_SERVICE,
   type IFileStorage,
 } from "@/domains/documents/storage/file-storage.interface"
+// biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
+import { McpServersService } from "@/domains/mcp-servers/mcp-servers.service"
 import { ProjectsService } from "@/domains/projects/projects.service"
 import { ServiceWithLLM } from "@/external/llm"
+// biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
+import { McpClientService } from "@/external/mcp"
 import { AgentMessage } from "../agent-message.entity"
 import { buildConversationAgentPrompt } from "./master-promts/conversation-agent.prompt"
 import { buildFormAgentPrompt } from "./master-promts/form-agent.prompt"
@@ -36,6 +40,7 @@ import type { ToolExecutionLog } from "./tools/tool-execution-log"
 
 @Injectable()
 export class StreamingService extends ServiceWithLLM {
+  private readonly logger = new Logger(StreamingService.name)
   private readonly STREAM_TIMEOUT_MS = 5 * 60 * 1000 // 5 minutes
   private readonly agentMessageRepository: Repository<AgentMessage>
   private readonly agentMessageConnectRepository: ConnectRepository<AgentMessage>
@@ -53,6 +58,8 @@ export class StreamingService extends ServiceWithLLM {
     private readonly projectsService: ProjectsService,
 
     private readonly documentChunkRetrievalService: DocumentChunkRetrievalService,
+    private readonly mcpClientService: McpClientService,
+    private readonly mcpServersService: McpServersService,
 
     @InjectRepository(ConversationAgentSession)
     conversationAgentSessionRepository: Repository<ConversationAgentSession>,
@@ -112,6 +119,7 @@ export class StreamingService extends ServiceWithLLM {
     yield this.sseEvent({ type: "start", messageId: assistantMessageId })
 
     let fullContent = ""
+    let mcpClose: (() => Promise<void>) | undefined
 
     try {
       const llmRequest = await this.buildLLMRequest({
@@ -122,6 +130,7 @@ export class StreamingService extends ServiceWithLLM {
         documentId,
         connectScope,
       })
+      mcpClose = llmRequest.mcpClose
 
       const chunks = this.getProviderForModel(llmRequest.config.model).streamChatResponse(
         llmRequest,
@@ -152,6 +161,8 @@ export class StreamingService extends ServiceWithLLM {
       yield this.sseEvent({ type: "error", messageId: assistantMessageId, error: errorMessage })
 
       throw error
+    } finally {
+      await mcpClose?.()
     }
   }
 
@@ -176,7 +187,7 @@ export class StreamingService extends ServiceWithLLM {
     documentId?: string
     connectScope: RequiredConnectScope
   }) {
-    const tools = await this.buildTools({
+    const { tools, mcpClose } = await this.buildTools({
       agent,
       sessionId,
       connectScope,
@@ -211,7 +222,7 @@ export class StreamingService extends ServiceWithLLM {
     if (documentId)
       await this.handleFileInLLMMessage({ llmMessages: messages, documentId, connectScope })
 
-    return { config, metadata, messages }
+    return { config, metadata, messages, mcpClose }
   }
 
   private async handleFileInLLMMessage({
@@ -551,36 +562,83 @@ export class StreamingService extends ServiceWithLLM {
     sessionId: string
     connectScope: RequiredConnectScope
     onExecute: (toolExecution: ToolExecutionLog) => void
-  }): Promise<ToolSet | undefined> {
+  }): Promise<{ tools: ToolSet | undefined; mcpClose?: () => Promise<void> }> {
     const hasSourcesTool = await this.projectsService.hasFeature({
       connectScope,
       feature: "sources_tool",
     })
+    const mcpCloseFns: (() => Promise<void>)[] = []
+    const mcpTools: ToolSet = {}
+
+    const serverConfigs = await this.mcpServersService.getEnabledServersForAgent(agent.id)
+    for (const serverConfig of serverConfigs) {
+      const mcpSession = await this.mcpClientService.connect(serverConfig)
+      mcpCloseFns.push(mcpSession.close)
+      for (const [toolName, toolDef] of Object.entries(mcpSession.tools)) {
+        const originalExecute = toolDef.execute
+        if (!originalExecute) continue
+        mcpTools[toolName] = {
+          ...toolDef,
+          execute: (async (...executeArgs: Parameters<typeof originalExecute>) => {
+            this.logger.log(
+              `[MCP] Calling tool "${toolName}" with args: ${JSON.stringify(executeArgs[0])}`,
+            )
+            onExecute({
+              toolName: toolName as ToolName,
+              arguments: (executeArgs[0] ?? {}) as Record<string, unknown>,
+            })
+            try {
+              const result = await originalExecute(...executeArgs)
+              this.logger.log(`[MCP] Tool "${toolName}" returned: ${JSON.stringify(result)}`)
+              return result
+            } catch (error) {
+              this.logger.error(`[MCP] Tool "${toolName}" failed: ${error}`)
+              throw error
+            }
+          }) as typeof originalExecute,
+        }
+      }
+    }
+
+    const mcpClose =
+      mcpCloseFns.length > 0
+        ? async () => {
+            for (const closeFn of mcpCloseFns) await closeFn()
+          }
+        : undefined
+
     switch (agent.type) {
       case "conversation":
         return {
-          [ToolName.RetrieveProjectDocumentChunks]: retrieveProjectDocumentChunksTool({
-            connectScope,
-            documentTagIds: agent.documentTags?.map((documentTag) => documentTag.id) ?? [],
-            retrievalService: this.documentChunkRetrievalService,
-            onExecute,
-          }),
-          ...(hasSourcesTool ? { [ToolName.Sources]: sourcesTool({ onExecute }) } : {}),
-        } as ToolSet
+          mcpClose,
+          tools: {
+            [ToolName.RetrieveProjectDocumentChunks]: retrieveProjectDocumentChunksTool({
+              connectScope,
+              documentTagIds: agent.documentTags?.map((documentTag) => documentTag.id) ?? [],
+              retrievalService: this.documentChunkRetrievalService,
+              onExecute,
+            }),
+            ...(hasSourcesTool ? { [ToolName.Sources]: sourcesTool({ onExecute }) } : {}),
+            ...mcpTools,
+          } as ToolSet,
+        }
 
       case "form":
         return {
-          [ToolName.FillForm]: fillFormTool({
-            connectScope,
-            agent,
-            sessionId,
-            formAgentSessionsService: this.formAgentSessionsService,
-            onExecute,
-          }),
-        } as ToolSet
+          mcpClose,
+          tools: {
+            [ToolName.FillForm]: fillFormTool({
+              connectScope,
+              agent,
+              sessionId,
+              formAgentSessionsService: this.formAgentSessionsService,
+              onExecute,
+            }),
+          } as ToolSet,
+        }
 
       default:
-        return undefined
+        return { mcpClose, tools: undefined }
     }
   }
 

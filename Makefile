@@ -3,6 +3,7 @@
 # Change detection configuration
 BASE_REF ?= HEAD^1
 TEST_DATABASE_URL ?= postgresql://connect_admin:passpass@localhost:5432/connect_test
+TEST_MCP_ENCRYPTION_KEY ?= 0000000000000000000000000000000000000000000000000000000000000000
 
 # Local image tags (no GCP references)
 localApiImage = caseai-connect/api:local
@@ -168,5 +169,5 @@ db-tests:
 	docker compose -f infra/database/docker-compose.yaml up -d
 
 tests: db-tests ci-checks
-	cd apps/api && DATABASE_URL=${TEST_DATABASE_URL} npm run migration:test:run && DATABASE_URL=${TEST_DATABASE_URL} npm run test
+	cd apps/api && DATABASE_URL=${TEST_DATABASE_URL} MCP_ENCRYPTION_KEY=${TEST_MCP_ENCRYPTION_KEY} npm run migration:test:run && DATABASE_URL=${TEST_DATABASE_URL} MCP_ENCRYPTION_KEY=${TEST_MCP_ENCRYPTION_KEY} npm run test
 
