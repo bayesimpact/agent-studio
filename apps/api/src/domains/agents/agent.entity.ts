@@ -10,6 +10,7 @@ import { ConversationAgentSession } from "@/domains/agents/conversation-agent-se
 import { Project } from "@/domains/projects/project.entity"
 import type { DocumentTag } from "../documents/tags/document-tag.entity"
 import { EvaluationReport } from "../evaluations/reports/evaluation-report.entity"
+import { AgentMcpServer } from "../mcp-servers/agent-mcp-server.entity"
 import { ExtractionAgentSession } from "./extraction-agent-sessions/extraction-agent-session.entity"
 import { AgentMembership } from "./memberships/agent-membership.entity"
 
@@ -77,4 +78,10 @@ export class Agent extends ConnectEntityBase {
     (agentMembership) => agentMembership.agent,
   )
   agentMemberships!: AgentMembership[]
+
+  @OneToMany(
+    () => AgentMcpServer,
+    (agentMcpServer) => agentMcpServer.agent,
+  )
+  agentMcpServers!: AgentMcpServer[]
 }

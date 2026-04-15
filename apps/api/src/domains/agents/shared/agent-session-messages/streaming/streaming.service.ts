@@ -1,6 +1,6 @@
 import { URL } from "node:url"
 import { type StreamEvent, type StreamEventPayload, ToolName } from "@caseai-connect/api-contracts"
-import { Inject, Injectable, NotFoundException } from "@nestjs/common"
+import { Inject, Injectable, Logger, NotFoundException } from "@nestjs/common"
 import { InjectRepository } from "@nestjs/typeorm"
 import type { FilePart, ImagePart, ToolSet } from "ai"
 import type { Repository } from "typeorm/repository/Repository"
@@ -24,6 +24,8 @@ import {
   FILE_STORAGE_SERVICE,
   type IFileStorage,
 } from "@/domains/documents/storage/file-storage.interface"
+// biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
+import { McpServersService } from "@/domains/mcp-servers/mcp-servers.service"
 import { ProjectsService } from "@/domains/projects/projects.service"
 import { ServiceWithLLM } from "@/external/llm"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
@@ -38,6 +40,7 @@ import type { ToolExecutionLog } from "./tools/tool-execution-log"
 
 @Injectable()
 export class StreamingService extends ServiceWithLLM {
+  private readonly logger = new Logger(StreamingService.name)
   private readonly STREAM_TIMEOUT_MS = 5 * 60 * 1000 // 5 minutes
   private readonly agentMessageRepository: Repository<AgentMessage>
   private readonly agentMessageConnectRepository: ConnectRepository<AgentMessage>
@@ -56,6 +59,7 @@ export class StreamingService extends ServiceWithLLM {
 
     private readonly documentChunkRetrievalService: DocumentChunkRetrievalService,
     private readonly mcpClientService: McpClientService,
+    private readonly mcpServersService: McpServersService,
 
     @InjectRepository(ConversationAgentSession)
     conversationAgentSessionRepository: Repository<ConversationAgentSession>,
@@ -563,39 +567,45 @@ export class StreamingService extends ServiceWithLLM {
       connectScope,
       feature: "sources_tool",
     })
-    const hasMcpSocial = await this.projectsService.hasFeature({
-      connectScope,
-      feature: "bayes_social_mcp",
-    })
-
-    let mcpClose: (() => Promise<void>) | undefined
+    const mcpCloseFns: (() => Promise<void>)[] = []
     const mcpTools: ToolSet = {}
-    if (hasMcpSocial) {
-      const mcpSession = await this.mcpClientService.connect()
-      mcpClose = mcpSession.close
+
+    const serverConfigs = await this.mcpServersService.getEnabledServersForAgent(agent.id)
+    for (const serverConfig of serverConfigs) {
+      const mcpSession = await this.mcpClientService.connect(serverConfig)
+      mcpCloseFns.push(mcpSession.close)
       for (const [toolName, toolDef] of Object.entries(mcpSession.tools)) {
         const originalExecute = toolDef.execute
         if (!originalExecute) continue
         mcpTools[toolName] = {
           ...toolDef,
           execute: (async (...executeArgs: Parameters<typeof originalExecute>) => {
-            console.log(`[MCP] Calling tool "${toolName}" with args:`, JSON.stringify(executeArgs[0]))
+            this.logger.log(
+              `[MCP] Calling tool "${toolName}" with args: ${JSON.stringify(executeArgs[0])}`,
+            )
             onExecute({
               toolName: toolName as ToolName,
               arguments: (executeArgs[0] ?? {}) as Record<string, unknown>,
             })
             try {
               const result = await originalExecute(...executeArgs)
-              console.log(`[MCP] Tool "${toolName}" returned:`, JSON.stringify(result))
+              this.logger.log(`[MCP] Tool "${toolName}" returned: ${JSON.stringify(result)}`)
               return result
             } catch (error) {
-              console.error(`[MCP] Tool "${toolName}" failed:`, error)
+              this.logger.error(`[MCP] Tool "${toolName}" failed: ${error}`)
               throw error
             }
           }) as typeof originalExecute,
         }
       }
     }
+
+    const mcpClose =
+      mcpCloseFns.length > 0
+        ? async () => {
+            for (const closeFn of mcpCloseFns) await closeFn()
+          }
+        : undefined
 
     switch (agent.type) {
       case "conversation":

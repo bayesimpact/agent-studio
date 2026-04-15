@@ -21,7 +21,9 @@
     "migration:test:revert": "node -r tsconfig-paths/register -r ts-node/register ../../node_modules/typeorm/cli.js migration:revert -d src/config/typeorm.test.ts",
     "migration:test:show": "node -r tsconfig-paths/register -r ts-node/register ../../node_modules/typeorm/cli.js migration:show -d src/config/typeorm.test.ts",
     "provision:first-users": "ts-node -r tsconfig-paths/register src/scripts/provision-first-users.ts",
-    "requeue:document-embeddings": "ts-node -r tsconfig-paths/register src/scripts/requeue-document-embeddings.ts"
+    "requeue:document-embeddings": "ts-node -r tsconfig-paths/register src/scripts/requeue-document-embeddings.ts",
+    "seed:mcp-preset": "ts-node -r tsconfig-paths/register src/scripts/seed-mcp-preset.ts",
+    "mcp:link-to-project": "ts-node -r tsconfig-paths/register src/scripts/link-mcp-to-project.ts"
   },
   "dependencies": {
     "@ai-sdk/google": "^3.0.13",

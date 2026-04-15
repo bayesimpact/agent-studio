@@ -13,10 +13,6 @@ export const FeatureFlags = [
     description: "Access and utilize gemma models.",
   },
   {
-    key: "bayes_social_mcp",
-    description: "Connect Bayes social MCP server as a workspace source.",
-  },
-  {
     key: "project-analytics",
     description: "View project-level analytics and usage charts in the studio.",
   },

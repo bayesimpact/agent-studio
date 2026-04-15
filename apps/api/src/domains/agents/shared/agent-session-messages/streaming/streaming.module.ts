@@ -9,6 +9,7 @@ import { ConversationAgentSession } from "@/domains/agents/conversation-agent-se
 import { ConversationAgentSessionsModule } from "@/domains/agents/conversation-agent-sessions/conversation-agent-sessions.module"
 import { FormAgentSession } from "@/domains/agents/form-agent-sessions/form-agent-session.entity"
 import { FormAgentSessionsModule } from "@/domains/agents/form-agent-sessions/form-agent-sessions.module"
+import { McpServersModule } from "@/domains/mcp-servers/mcp-servers.module"
 import { McpModule } from "@/external/mcp"
 import { StreamingController } from "./streaming.controller"
 import { StreamingService } from "./streaming.service"
@@ -19,6 +20,7 @@ import { StreamingService } from "./streaming.service"
     ...moduleImports,
     forwardRef(() => FormAgentSessionsModule),
     McpModule,
+    McpServersModule,
     forwardRef(() => ConversationAgentSessionsModule),
   ],
   providers: [...moduleProviders, StreamingService],
