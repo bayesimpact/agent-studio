@@ -11,8 +11,9 @@ if (envPath) {
   dotenvConfig({ path: envPath, override: true })
 }
 
-import { INVITATION_SENDER } from "@/domains/auth/invitation-sender.interface"
 import type { InvitationSender } from "@/domains/auth/invitation-sender.interface"
+import { INVITATION_SENDER } from "@/domains/auth/invitation-sender.interface"
+
 const PLACEHOLDER_AUTH0_ID_PREFIX = "00000000-0000-0000-0000-"
 
 const logger = new Logger("ManageInvitations")
@@ -174,8 +175,7 @@ async function bootstrapCli(): Promise<void> {
       return
     }
 
-    const inviterName =
-      (await ask("Inviter name (default: CaseAI Connect): ")) || "CaseAI Connect"
+    const inviterName = (await ask("Inviter name (default: CaseAI Connect): ")) || "CaseAI Connect"
 
     let toResend: PendingInvitation[]
     if (selection.toLowerCase() === "all") {
