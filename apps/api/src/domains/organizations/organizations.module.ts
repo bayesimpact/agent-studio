@@ -10,7 +10,6 @@ import { Organization } from "./organization.entity"
 import { OrganizationsController } from "./organizations.controller"
 import { OrganizationsService } from "./organizations.service"
 import { OrganizationsPolicyGuard } from "./organizations-policy.guard"
-import { FirstUserProvisioningService } from "./provisioning/first-user-provisioning.service"
 import { OrganizationAccountProvisioningService } from "./provisioning/organization-account-provisioning.service"
 
 @Module({
@@ -25,14 +24,12 @@ import { OrganizationAccountProvisioningService } from "./provisioning/organizat
     OrganizationMembershipService,
     OrganizationsPolicyGuard,
     OrganizationAccountProvisioningService,
-    FirstUserProvisioningService,
   ],
   controllers: [OrganizationsController],
   exports: [
     OrganizationsService,
     OrganizationMembershipService,
     OrganizationAccountProvisioningService,
-    FirstUserProvisioningService,
   ],
 })
 export class OrganizationsModule {}

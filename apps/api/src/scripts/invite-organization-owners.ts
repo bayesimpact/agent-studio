@@ -1,7 +1,15 @@
 import { readFileSync } from "node:fs"
+import { createInterface } from "node:readline"
+import { Logger } from "@nestjs/common"
 import { NestFactory } from "@nestjs/core"
+import { config as dotenvConfig } from "dotenv"
 import { DataSource } from "typeorm"
 import { AppModule } from "@/app.module"
+
+const envPath = process.env.DOTENV_CONFIG_PATH
+if (envPath) {
+  dotenvConfig({ path: envPath, override: true })
+}
 import { INVITATION_SENDER } from "@/domains/auth/invitation-sender.interface"
 import {
   type InviteWorkspaceOwnerResult,
@@ -133,6 +141,29 @@ export async function runInvitationBatch(params: {
   return results
 }
 
+const logger = new Logger("InviteOrganizationOwners")
+
+function ask(question: string): Promise<string> {
+  const rl = createInterface({ input: process.stdin, output: process.stdout })
+  return new Promise((resolve) => {
+    rl.question(question, (answer) => {
+      rl.close()
+      resolve(answer.trim())
+    })
+  })
+}
+
+async function confirmDatabaseTarget(): Promise<void> {
+  const databaseUrl = process.env.DATABASE_URL
+  const target = databaseUrl ?? `${process.env.DATABASE_HOST}:${process.env.DATABASE_PORT}/${process.env.DATABASE_NAME}`
+  logger.warn(`Target database: ${target}`)
+  const answer = await ask("Do you want to proceed? (yes/no): ")
+  if (answer.toLowerCase() !== "yes") {
+    logger.log("Aborted by user.")
+    process.exit(0)
+  }
+}
+
 function printSummary(results: CliRowResult[]): void {
   const invitedCount = results.filter((result) => result.status === "invited").length
   const skippedCount = results.filter((result) =>
@@ -143,13 +174,13 @@ function printSummary(results: CliRowResult[]): void {
 
   for (const result of results) {
     const message = "message" in result ? ` message=${result.message}` : ""
-    console.log(
+    logger.log(
       `[${result.status}] email=${result.email} organization=${result.organizationName}${message}`,
     )
   }
 
-  console.log("-----")
-  console.log(
+  logger.log("-----")
+  logger.log(
     `Summary: total=${results.length} invited=${invitedCount} skipped=${skippedCount} failed=${failedCount} would_invite=${wouldInviteCount}`,
   )
 }
@@ -182,6 +213,7 @@ async function bootstrapCli(): Promise<void> {
   const options = parseCliOptions(process.argv.slice(2))
   const csvContent = readFileSync(options.csvFilePath, "utf-8")
   const rows = parseInvitationCsv(csvContent)
+  await confirmDatabaseTarget()
   const app = await NestFactory.createApplicationContext(AppModule, {
     logger: ["error", "warn", "log"],
   })
@@ -190,6 +222,7 @@ async function bootstrapCli(): Promise<void> {
     const dataSource = app.get(DataSource)
     const invitationSender = app.get(INVITATION_SENDER)
     const invitationService = new WorkspaceInvitationService(invitationSender, dataSource)
+    logger.log(`Processing ${rows.length} row(s)...`)
     const results = await runInvitationBatch({
       rows,
       dryRun: options.dryRun,
