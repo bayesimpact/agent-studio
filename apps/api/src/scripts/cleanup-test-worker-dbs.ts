@@ -1,4 +1,4 @@
-import { availableParallelism, cpus } from "node:os"
+import { cpus } from "node:os"
 import { resolve } from "node:path"
 import { config as dotenvConfig } from "dotenv"
 import { Client } from "pg"
@@ -18,7 +18,7 @@ function parseNumericArgument(argumentName: string): number | null {
 }
 
 function getCpuCount(): number {
-  return typeof availableParallelism === "function" ? availableParallelism() : cpus().length
+  return cpus().length
 }
 
 function resolveWorkerCount(): number {
