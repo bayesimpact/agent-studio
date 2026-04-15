@@ -3,6 +3,7 @@
 # Change detection configuration
 BASE_REF ?= HEAD^1
 TEST_DATABASE_URL ?= postgresql://connect_admin:passpass@localhost:5432/connect_test
+TEST_ADMIN_DATABASE_URL ?= postgresql://admin:passpass@localhost:5432/postgres
 TEST_MCP_ENCRYPTION_KEY ?= 0000000000000000000000000000000000000000000000000000000000000000
 
 # Local image tags (no GCP references)
@@ -171,3 +172,5 @@ db-tests:
 tests: db-tests ci-checks
 	cd apps/api && DATABASE_URL=${TEST_DATABASE_URL} MCP_ENCRYPTION_KEY=${TEST_MCP_ENCRYPTION_KEY} npm run migration:test:run && DATABASE_URL=${TEST_DATABASE_URL} MCP_ENCRYPTION_KEY=${TEST_MCP_ENCRYPTION_KEY} npm run test
 
+tests-parallel: db-tests ci-checks
+	cd apps/api && DATABASE_URL=${TEST_DATABASE_URL} MCP_ENCRYPTION_KEY=${TEST_MCP_ENCRYPTION_KEY} npm run migration:test:run && TEST_ADMIN_DATABASE_URL=${TEST_ADMIN_DATABASE_URL} TEST_MAX_WORKERS=${TEST_MAX_WORKERS} DATABASE_URL=${TEST_DATABASE_URL} MCP_ENCRYPTION_KEY=${TEST_MCP_ENCRYPTION_KEY} npm run test:parallel

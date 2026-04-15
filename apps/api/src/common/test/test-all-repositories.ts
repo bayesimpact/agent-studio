@@ -11,6 +11,8 @@ import { Document } from "@/domains/documents/document.entity"
 import { Evaluation } from "@/domains/evaluations/evaluation.entity"
 import { EvaluationReport } from "@/domains/evaluations/reports/evaluation-report.entity"
 import { FeatureFlag } from "@/domains/feature-flags/feature-flag.entity"
+import { AgentMcpServer } from "@/domains/mcp-servers/agent-mcp-server.entity"
+import { McpServer } from "@/domains/mcp-servers/mcp-server.entity"
 import { OrganizationMembership } from "@/domains/organizations/memberships/organization-membership.entity"
 import { Organization } from "@/domains/organizations/organization.entity"
 import { ProjectMembership } from "@/domains/projects/memberships/project-membership.entity"
@@ -23,12 +25,14 @@ export type AllRepositories = {
   agentMessageRepository: Repository<AgentMessage>
   agentRepository: Repository<Agent>
   agentMembershipRepository: Repository<AgentMembership>
+  agentMcpServerRepository: Repository<AgentMcpServer>
   extractionAgentSessionRepository: Repository<ExtractionAgentSession>
   conversationAgentSessionRepository: Repository<ConversationAgentSession>
   formAgentSessionRepository: Repository<FormAgentSession>
   documentRepository: Repository<Document>
   evaluationReportRepository: Repository<EvaluationReport>
   evaluationRepository: Repository<Evaluation>
+  mcpServerRepository: Repository<McpServer>
   organizationMembershipRepository: Repository<OrganizationMembership>
   organizationRepository: Repository<Organization>
   projectMembershipRepository: Repository<ProjectMembership>
@@ -48,6 +52,7 @@ export function buildAllRepositories(
     projectRepository: getRepository(Project),
     projectMembershipRepository: getRepository(ProjectMembership),
     agentRepository: getRepository(Agent),
+    agentMcpServerRepository: getRepository(AgentMcpServer),
     extractionAgentSessionRepository: getRepository(ExtractionAgentSession),
     conversationAgentSessionRepository: getRepository(ConversationAgentSession),
     formAgentSessionRepository: getRepository(FormAgentSession),
@@ -56,6 +61,7 @@ export function buildAllRepositories(
     documentRepository: getRepository(Document),
     evaluationRepository: getRepository(Evaluation),
     evaluationReportRepository: getRepository(EvaluationReport),
+    mcpServerRepository: getRepository(McpServer),
     agentMembershipRepository: getRepository(AgentMembership),
     featureFlagRepository: getRepository(FeatureFlag),
   }
