@@ -58,12 +58,12 @@ function Item({ dataset, index }: { dataset: EvaluationDataset; index: number })
       description={date}
       index={index}
       onClick={handleClick}
-      footer={<Actions dataset={dataset} />}
+      footer={<Actions />}
     />
   )
 }
 
-function Actions({ dataset }: { dataset: EvaluationDataset }) {
+function Actions() {
   const handleDelete = () => {
     // TODO:
   }

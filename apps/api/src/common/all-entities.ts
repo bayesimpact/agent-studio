@@ -12,6 +12,9 @@ import { AgentMessage } from "@/domains/agents/shared/agent-session-messages/age
 import { AgentMessageFeedback } from "@/domains/agents/shared/agent-session-messages/feedback/agent-message-feedback.entity"
 import { Document } from "@/domains/documents/document.entity"
 import { DocumentTag } from "@/domains/documents/tags/document-tag.entity"
+import { EvaluationDataset } from "@/domains/evaluations/datasets/evaluation-dataset.entity"
+import { EvaluationDatasetDocument } from "@/domains/evaluations/datasets/evaluation-dataset-document.entity"
+import { EvaluationDatasetRecord } from "@/domains/evaluations/datasets/records/evaluation-dataset-record.entity"
 import { Evaluation } from "@/domains/evaluations/evaluation.entity"
 import { EvaluationReport } from "@/domains/evaluations/reports/evaluation-report.entity"
 import { FeatureFlag } from "@/domains/feature-flags/feature-flag.entity"
@@ -24,16 +27,19 @@ import { Project } from "@/domains/projects/project.entity"
 import { User } from "@/domains/users/user.entity"
 
 export const ALL_ENTITIES = [
+  Activity,
   Agent,
   AgentMcpServer,
   AgentMembership,
   AgentMessage,
   AgentMessageFeedback,
-  Activity,
   ConversationAgentSession,
   Document,
   DocumentTag,
   Evaluation,
+  EvaluationDataset,
+  EvaluationDatasetRecord,
+  EvaluationDatasetDocument,
   EvaluationReport,
   ExtractionAgentSession,
   FeatureFlag,

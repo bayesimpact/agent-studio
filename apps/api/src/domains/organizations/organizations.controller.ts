@@ -26,6 +26,6 @@ export class OrganizationsController {
       userId: request.user.id,
       name: body.payload.name,
     })
-    return { data: toDto(organization) }
+    return { data: toDto({ ...organization, projects: [] }) }
   }
 }
