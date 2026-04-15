@@ -3,15 +3,15 @@ import { ProjectMembershipRoutes } from "@caseai-connect/api-contracts"
 import type { INestApplication } from "@nestjs/common"
 import type { App } from "supertest/types"
 import { AUTH_ERRORS } from "@/common/errors/auth-errors"
-import { clearTestDatabase } from "@/common/test/test-database"
 import {
   type AllRepositories,
-  setupTransactionalTestDatabase,
-  teardownTestDatabase,
-} from "@/common/test/test-transaction-manager"
+  clearTestDatabase,
+  setupE2eTestDatabase,
+  teardownE2eTestDatabase,
+} from "@/common/test/test-database"
 import { removeNullish } from "@/common/utils/remove-nullish"
 import { createOrganizationWithProject } from "@/domains/organizations/organization.factory"
-import { setupUserGuardForTesting } from "../../../../../test/e2e.helpers"
+import { mockForeignAuth0Id, setupUserGuardForTesting } from "../../../../../test/e2e.helpers"
 import { expectResponse, type Requester, testRequester } from "../../../../../test/request"
 import { ProjectsModule } from "../../projects.module"
 import { inviteUserToProject } from "../project-membership.factory"
@@ -19,17 +19,17 @@ import { inviteUserToProject } from "../project-membership.factory"
 describe("Project Memberships - Auth", () => {
   let app: INestApplication<App>
   let request: Requester
-  let setup: Awaited<ReturnType<typeof setupTransactionalTestDatabase>>
+  let setup: Awaited<ReturnType<typeof setupE2eTestDatabase>>
   let repositories: AllRepositories
 
   // Variables for the tests
-  let organizationId: string | null = "random-organization-id"
-  let projectId: string | null = "random-project-id"
+  let organizationId: string | null = randomUUID()
+  let projectId: string | null = randomUUID()
   let accessToken: string | null = "token"
-  let auth0Id = "auth0|123"
+  let auth0Id = `auth0|${randomUUID()}`
 
   beforeAll(async () => {
-    setup = await setupTransactionalTestDatabase({
+    setup = await setupE2eTestDatabase({
       additionalImports: [ProjectsModule],
       applyOverrides: (moduleBuilder) => setupUserGuardForTesting(moduleBuilder, () => auth0Id),
     })
@@ -41,25 +41,25 @@ describe("Project Memberships - Auth", () => {
 
   beforeEach(async () => {
     await clearTestDatabase(setup.dataSource)
-    organizationId = "random-organization-id"
-    projectId = "random-project-id"
+    organizationId = randomUUID()
+    projectId = randomUUID()
     accessToken = "token"
-    auth0Id = "auth0|123"
+    auth0Id = `auth0|${randomUUID()}`
   })
 
   afterAll(async () => {
-    await teardownTestDatabase(setup)
+    await teardownE2eTestDatabase(setup)
     await app.close()
   })
 
   const createContextForRole = async (role: "owner" | "admin" | "member" = "owner") => {
-    const { user, organization, project } = await createOrganizationWithProject(repositories, {
+    const { organization, project, user } = await createOrganizationWithProject(repositories, {
+      user: { auth0Id },
       projectMembership: { role },
     })
     organizationId = organization.id
     projectId = project.id
     accessToken = "token"
-    auth0Id = user.auth0Id
     return { organization, project, user }
   }
 
@@ -76,12 +76,13 @@ describe("Project Memberships - Auth", () => {
       expectResponse(await subject(), 401, AUTH_ERRORS.NO_ACCESS_TOKEN)
     })
     it("requires a valid organization ID", async () => {
+      await createContextForRole("owner")
       organizationId = null
       expectResponse(await subject(), 400, AUTH_ERRORS.NO_ORGANIZATION_ID)
     })
     it("requires the user to be a member of the organization", async () => {
       await createContextForRole("owner")
-      auth0Id = "another-auth0-id"
+      auth0Id = mockForeignAuth0Id()
       expectResponse(await subject(), 401, AUTH_ERRORS.NOT_MEMBER_OF_ORG)
     })
     it("requires an existing project ID", async () => {
@@ -117,12 +118,13 @@ describe("Project Memberships - Auth", () => {
       expectResponse(await subject(), 401, AUTH_ERRORS.NO_ACCESS_TOKEN)
     })
     it("requires a valid organization ID", async () => {
+      await createContextForRole("owner")
       organizationId = null
       expectResponse(await subject(), 400, AUTH_ERRORS.NO_ORGANIZATION_ID)
     })
     it("requires the user to be a member of the organization", async () => {
       await createContextForRole("owner")
-      auth0Id = "another-auth0-id"
+      auth0Id = mockForeignAuth0Id()
       expectResponse(await subject(), 401, AUTH_ERRORS.NOT_MEMBER_OF_ORG)
     })
     it("requires an existing project ID", async () => {
@@ -167,12 +169,13 @@ describe("Project Memberships - Auth", () => {
       expectResponse(await subject(), 401, AUTH_ERRORS.NO_ACCESS_TOKEN)
     })
     it("requires a valid organization ID", async () => {
+      await createContextForRoleWithMembership("owner")
       organizationId = null
       expectResponse(await subject(), 400, AUTH_ERRORS.NO_ORGANIZATION_ID)
     })
     it("requires the user to be a member of the organization", async () => {
       await createContextForRoleWithMembership("owner")
-      auth0Id = "another-auth0-id"
+      auth0Id = mockForeignAuth0Id()
       expectResponse(await subject(), 401, AUTH_ERRORS.NOT_MEMBER_OF_ORG)
     })
     it("requires an existing project ID", async () => {

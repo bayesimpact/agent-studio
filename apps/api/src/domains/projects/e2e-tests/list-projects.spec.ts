@@ -1,17 +1,18 @@
+import { randomUUID } from "node:crypto"
 import { ProjectsRoutes } from "@caseai-connect/api-contracts"
 import type { INestApplication } from "@nestjs/common"
 import type { App } from "supertest/types"
-import { clearTestDatabase } from "@/common/test/test-database"
 import {
   type AllRepositories,
-  setupTransactionalTestDatabase,
-  teardownTestDatabase,
-} from "@/common/test/test-transaction-manager"
+  clearTestDatabase,
+  setupE2eTestDatabase,
+  teardownE2eTestDatabase,
+} from "@/common/test/test-database"
 import { removeNullish } from "@/common/utils/remove-nullish"
 import { addUserToOrganization } from "@/domains/organizations/memberships/organization-membership.factory"
 import { createOrganizationWithOwner } from "@/domains/organizations/organization.factory"
 import { projectFactory } from "@/domains/projects/project.factory"
-import { setupUserGuardForTesting } from "../../../../test/e2e.helpers"
+import { mockForeignAuth0Id, setupUserGuardForTesting } from "../../../../test/e2e.helpers"
 import { expectResponse, type Requester, testRequester } from "../../../../test/request"
 import { addUserToProject } from "../memberships/project-membership.factory"
 import { ProjectsModule } from "../projects.module"
@@ -19,15 +20,15 @@ import { ProjectsModule } from "../projects.module"
 describe("Projects - listProjects", () => {
   let app: INestApplication<App>
   let request: Requester
-  let setup: Awaited<ReturnType<typeof setupTransactionalTestDatabase>>
+  let setup: Awaited<ReturnType<typeof setupE2eTestDatabase>>
   let repositories: AllRepositories
 
   let organizationId: string
   let accessToken: string | undefined = "token"
-  let auth0Id = "auth0|123"
+  let auth0Id = `auth0|${randomUUID()}`
 
   beforeAll(async () => {
-    setup = await setupTransactionalTestDatabase({
+    setup = await setupE2eTestDatabase({
       additionalImports: [ProjectsModule],
       applyOverrides: (moduleBuilder) => setupUserGuardForTesting(moduleBuilder, () => auth0Id),
     })
@@ -40,18 +41,19 @@ describe("Projects - listProjects", () => {
   beforeEach(async () => {
     await clearTestDatabase(setup.dataSource)
     accessToken = "token"
-    auth0Id = "auth0|123"
+    auth0Id = `auth0|${randomUUID()}`
   })
 
   afterAll(async () => {
-    await teardownTestDatabase(setup)
+    await teardownE2eTestDatabase(setup)
     await app.close()
   })
 
   const createContext = async () => {
-    const { user, organization } = await createOrganizationWithOwner(repositories)
+    const { user, organization } = await createOrganizationWithOwner(repositories, {
+      user: { auth0Id },
+    })
     organizationId = organization.id
-    auth0Id = user.auth0Id
     return { organization, user }
   }
 
@@ -99,7 +101,7 @@ describe("Projects - listProjects", () => {
     const { user } = await addUserToOrganization({
       repositories,
       organization,
-      user: { auth0Id: "auth0|456" },
+      user: { auth0Id: mockForeignAuth0Id() },
     })
 
     // create projects

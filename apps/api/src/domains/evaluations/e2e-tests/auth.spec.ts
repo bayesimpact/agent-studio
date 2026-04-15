@@ -5,25 +5,25 @@ import type { INestApplication } from "@nestjs/common"
 import type { App } from "supertest/types"
 import type { Repository } from "typeorm"
 import { AUTH_ERRORS } from "@/common/errors/auth-errors"
-import { clearTestDatabase } from "@/common/test/test-database"
 import {
   type AllRepositories,
-  setupTransactionalTestDatabase,
-  teardownTestDatabase,
-} from "@/common/test/test-transaction-manager"
+  clearTestDatabase,
+  setupE2eTestDatabase,
+  teardownE2eTestDatabase,
+} from "@/common/test/test-database"
 import { removeNullish } from "@/common/utils/remove-nullish"
 import { Evaluation } from "@/domains/evaluations/evaluation.entity"
 import { EvaluationsModule } from "@/domains/evaluations/evaluations.module"
 import { createOrganizationWithProject } from "@/domains/organizations/organization.factory"
 import { projectFactory } from "@/domains/projects/project.factory"
 import { sdk } from "@/external/llm/open-telemetry-init"
-import { setupUserGuardForTesting } from "../../../../test/e2e.helpers"
+import { mockForeignAuth0Id, setupUserGuardForTesting } from "../../../../test/e2e.helpers"
 import { expectResponse, type Requester, testRequester } from "../../../../test/request"
 
 describe("Evaluations - Auth", () => {
   let app: INestApplication<App>
   let request: Requester
-  let setup: Awaited<ReturnType<typeof setupTransactionalTestDatabase>>
+  let setup: Awaited<ReturnType<typeof setupE2eTestDatabase>>
   let repositories: AllRepositories
   let evaluationRepository: Repository<Evaluation>
 
@@ -32,10 +32,10 @@ describe("Evaluations - Auth", () => {
   let projectId: string | null = randomUUID()
   let evaluationId: string | null = randomUUID()
   let accessToken: string | null = "token"
-  let auth0Id = "auth0|123"
+  let auth0Id = `auth0|${randomUUID()}`
 
   beforeAll(async () => {
-    setup = await setupTransactionalTestDatabase({
+    setup = await setupE2eTestDatabase({
       additionalImports: [EvaluationsModule],
       applyOverrides: (moduleBuilder) => setupUserGuardForTesting(moduleBuilder, () => auth0Id),
     })
@@ -52,17 +52,18 @@ describe("Evaluations - Auth", () => {
     projectId = randomUUID()
     evaluationId = randomUUID()
     accessToken = "token"
-    auth0Id = "auth0|123"
+    auth0Id = `auth0|${randomUUID()}`
   })
 
   afterAll(async () => {
-    await teardownTestDatabase(setup)
+    await teardownE2eTestDatabase(setup)
     await sdk.shutdown()
     await app.close()
   })
 
   const createContextForRole = async (role: "owner" | "admin" | "member" = "owner") => {
-    const { user, organization, project } = await createOrganizationWithProject(repositories, {
+    const { organization, project } = await createOrganizationWithProject(repositories, {
+      user: { auth0Id },
       projectMembership: { role },
     })
     const evaluation = evaluationRepository.create({
@@ -77,7 +78,6 @@ describe("Evaluations - Auth", () => {
     projectId = project.id
     evaluationId = evaluation.id
     accessToken = "token"
-    auth0Id = user.auth0Id
     return { organization, project, evaluation }
   }
 
@@ -104,7 +104,7 @@ describe("Evaluations - Auth", () => {
     })
     it("requires the user to be an owner of the organization", async () => {
       await createContextForRole("owner")
-      auth0Id = "another-auth0-id"
+      auth0Id = mockForeignAuth0Id()
       expectResponse(await subject(), 401, AUTH_ERRORS.NOT_MEMBER_OF_ORG)
     })
     it("doesn't allow a simple member to get all evaluations", async () => {
@@ -144,7 +144,7 @@ describe("Evaluations - Auth", () => {
     })
     it("requires the user to be an owner of the organization", async () => {
       await createContextForRole("owner")
-      auth0Id = "another-auth0-id"
+      auth0Id = mockForeignAuth0Id()
       expectResponse(await subject(payload), 401, AUTH_ERRORS.NOT_MEMBER_OF_ORG)
     })
     it("doesn't allow a simple member to create evaluations", async () => {
@@ -176,7 +176,7 @@ describe("Evaluations - Auth", () => {
     })
     it("requires the user to be an owner of the organization", async () => {
       await createContextForRole("owner")
-      auth0Id = "another-auth0-id"
+      auth0Id = mockForeignAuth0Id()
       expectResponse(await subject(), 401, AUTH_ERRORS.NOT_MEMBER_OF_ORG)
     })
     it("requires the evaluation to be part of the project", async () => {
@@ -223,7 +223,7 @@ describe("Evaluations - Auth", () => {
     })
     it("requires the user to be an owner of the organization", async () => {
       await createContextForRole("owner")
-      auth0Id = "another-auth0-id"
+      auth0Id = mockForeignAuth0Id()
       expectResponse(await subject(payload), 401, AUTH_ERRORS.NOT_MEMBER_OF_ORG)
     })
     it("requires the evaluation to be part of the project", async () => {

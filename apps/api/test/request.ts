@@ -1,4 +1,4 @@
-import type { ApiRoute, ErrorResponseDTO } from "@caseai-connect/api-contracts"
+import type { ApiRoute } from "@caseai-connect/api-contracts"
 import type { INestApplication } from "@nestjs/common/interfaces"
 import request from "supertest"
 import type { App } from "supertest/types"
@@ -19,7 +19,9 @@ export const testRequester =
 
     const path = getPath(params.pathParams)
 
-    const req = request(app.getHttpServer())[method](path)
+    // Avoid pooled keep-alive connections: under a full suite load, reuse can
+    // rarely yield ECONNRESET / "socket hang up" (notably on SSE routes).
+    const req = request(app.getHttpServer())[method](path).set("Connection", "close")
 
     if (params.query) {
       req.query(params.query)
@@ -44,10 +46,43 @@ export const testRequester =
 
 export type Requester = ReturnType<typeof testRequester>
 
+const parseErrorMessageFromRawText = (rawText: unknown): string | undefined => {
+  if (typeof rawText !== "string") return undefined
+  if (!rawText) return undefined
+
+  try {
+    const parsedBody = JSON.parse(rawText) as { message?: unknown }
+    if (typeof parsedBody.message === "string") return parsedBody.message
+  } catch {
+    // Not JSON, continue with plain text fallback.
+  }
+
+  const trimmedText = rawText.trim()
+  return trimmedText || undefined
+}
+
+const getErrorMessageFromResponse = (res: request.Response): string | undefined => {
+  const responseBody = res.body as unknown
+
+  if (
+    typeof responseBody === "object" &&
+    responseBody !== null &&
+    "message" in responseBody &&
+    typeof responseBody.message === "string"
+  ) {
+    return responseBody.message
+  }
+
+  const errorMessageFromText = parseErrorMessageFromRawText(res.text)
+  if (errorMessageFromText) return errorMessageFromText
+
+  return parseErrorMessageFromRawText((res.error as { text?: unknown } | undefined)?.text)
+}
+
 export const expectErrorResponse = (res: request.Response, status: number, message: string) => {
   expect(res.status).toBe(status)
-  const errorResponse = res.body as unknown as ErrorResponseDTO
-  expect(errorResponse.message).toBe(message)
+  const errorMessage = getErrorMessageFromResponse(res)
+  expect(errorMessage).toBe(message)
 }
 
 export const expectResponse = (

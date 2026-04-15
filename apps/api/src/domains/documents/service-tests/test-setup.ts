@@ -1,9 +1,9 @@
-import { clearTestDatabase } from "@/common/test/test-database"
 import {
   type AllRepositories,
-  setupTransactionalTestDatabase,
-  teardownTestDatabase,
-} from "@/common/test/test-transaction-manager"
+  clearTestDatabase,
+  setupE2eTestDatabase,
+  teardownE2eTestDatabase,
+} from "@/common/test/test-database"
 import { DocumentsModule } from "../documents.module"
 import { DocumentsService } from "../documents.service"
 import { withDocumentEmbeddingsBatchServiceMock } from "../test-overrides"
@@ -11,28 +11,23 @@ import { withDocumentEmbeddingsBatchServiceMock } from "../test-overrides"
 export function documentsServiceTestSetup() {
   let service: DocumentsService
   let repositories: AllRepositories
-  let setup: Awaited<ReturnType<typeof setupTransactionalTestDatabase>>
+  let setup: Awaited<ReturnType<typeof setupE2eTestDatabase>>
 
   beforeAll(async () => {
-    setup = await setupTransactionalTestDatabase({
+    setup = await setupE2eTestDatabase({
       additionalImports: [DocumentsModule],
       applyOverrides: withDocumentEmbeddingsBatchServiceMock,
     })
-    await clearTestDatabase(setup.dataSource)
   })
 
   afterAll(async () => {
-    await teardownTestDatabase(setup)
+    await teardownE2eTestDatabase(setup)
   })
 
   beforeEach(async () => {
-    await setup.startTransaction()
+    await clearTestDatabase(setup.dataSource)
     service = setup.module.get<DocumentsService>(DocumentsService)
     repositories = setup.getAllRepositories()
-  })
-
-  afterEach(async () => {
-    await setup.rollbackTransaction()
   })
 
   return () => {

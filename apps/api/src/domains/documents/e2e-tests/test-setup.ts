@@ -1,9 +1,9 @@
 import type { Repository } from "typeorm"
-import { clearTestDatabase } from "@/common/test/test-database"
 import {
-  setupTransactionalTestDatabase,
-  teardownTestDatabase,
-} from "@/common/test/test-transaction-manager"
+  clearTestDatabase,
+  setupE2eTestDatabase,
+  teardownE2eTestDatabase,
+} from "@/common/test/test-database"
 import { OrganizationMembership } from "@/domains/organizations/memberships/organization-membership.entity"
 import { Organization } from "@/domains/organizations/organization.entity"
 import { organizationFactory } from "@/domains/organizations/organization.factory"
@@ -17,7 +17,7 @@ import { withDocumentEmbeddingsBatchServiceMock } from "../test-overrides"
 
 export function documentsControllerTestSetup() {
   let controller: DocumentsController
-  let setup: Awaited<ReturnType<typeof setupTransactionalTestDatabase>>
+  let setup: Awaited<ReturnType<typeof setupE2eTestDatabase>>
   let userRepository: Repository<User>
   let organizationRepository: Repository<Organization>
   let organizationMembershipRepository: Repository<OrganizationMembership>
@@ -27,7 +27,7 @@ export function documentsControllerTestSetup() {
   let organization: Organization
 
   beforeAll(async () => {
-    setup = await setupTransactionalTestDatabase({
+    setup = await setupE2eTestDatabase({
       additionalImports: [DocumentsModule],
       applyOverrides: withDocumentEmbeddingsBatchServiceMock,
     })
@@ -35,11 +35,11 @@ export function documentsControllerTestSetup() {
   })
 
   afterAll(async () => {
-    await teardownTestDatabase(setup)
+    await teardownE2eTestDatabase(setup)
   })
 
   beforeEach(async () => {
-    await setup.startTransaction()
+    await clearTestDatabase(setup.dataSource)
     controller = setup.module.get<DocumentsController>(DocumentsController)
     fileStorageService = setup.module.get<IFileStorage>(FILE_STORAGE_SERVICE)
     userRepository = setup.getRepository(User)
@@ -53,7 +53,6 @@ export function documentsControllerTestSetup() {
   })
 
   afterEach(async () => {
-    await setup.rollbackTransaction()
     await clearTestDatabase(setup.dataSource)
   })
 

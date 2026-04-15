@@ -1,12 +1,13 @@
+import { randomUUID } from "node:crypto"
 import { AnalyticsRoutes } from "@caseai-connect/api-contracts"
 import type { INestApplication } from "@nestjs/common"
 import type { App } from "supertest/types"
-import { clearTestDatabase } from "@/common/test/test-database"
 import {
   type AllRepositories,
-  setupTransactionalTestDatabase,
-  teardownTestDatabase,
-} from "@/common/test/test-transaction-manager"
+  clearTestDatabase,
+  setupE2eTestDatabase,
+  teardownE2eTestDatabase,
+} from "@/common/test/test-database"
 import { removeNullish } from "@/common/utils/remove-nullish"
 import { agentFactory } from "@/domains/agents/agent.factory"
 import { conversationAgentSessionFactory } from "@/domains/agents/conversation-agent-sessions/conversation-agent-session.factory"
@@ -19,14 +20,14 @@ import { ProjectsAnalyticsModule } from "../projects-analytics.module"
 describe("Projects Analytics - getAvgUserQuestionsPerSessionPerDay", () => {
   let app: INestApplication<App>
   let request: Requester
-  let setup: Awaited<ReturnType<typeof setupTransactionalTestDatabase>>
+  let setup: Awaited<ReturnType<typeof setupE2eTestDatabase>>
   let repositories: AllRepositories
 
   let organizationId: string
   let projectId: string
   let primaryAgentId: string
   let accessToken: string | undefined = "token"
-  let auth0Id = "auth0|123"
+  let auth0Id = `auth0|${randomUUID()}`
 
   const day1Start = new Date("2026-01-01T00:00:00.000Z")
   const day2Start = new Date("2026-01-02T00:00:00.000Z")
@@ -40,7 +41,7 @@ describe("Projects Analytics - getAvgUserQuestionsPerSessionPerDay", () => {
   ]
 
   beforeAll(async () => {
-    setup = await setupTransactionalTestDatabase({
+    setup = await setupE2eTestDatabase({
       additionalImports: [ProjectsAnalyticsModule],
       applyOverrides: (moduleBuilder) => setupUserGuardForTesting(moduleBuilder, () => auth0Id),
     })
@@ -53,21 +54,21 @@ describe("Projects Analytics - getAvgUserQuestionsPerSessionPerDay", () => {
   beforeEach(async () => {
     await clearTestDatabase(setup.dataSource)
     accessToken = "token"
-    auth0Id = "auth0|123"
+    auth0Id = `auth0|${randomUUID()}`
   })
 
   afterAll(async () => {
-    await teardownTestDatabase(setup)
+    await teardownE2eTestDatabase(setup)
     await app.close()
   })
 
   const createContext = async () => {
     const { organization, project, user } = await createOrganizationWithProject(repositories, {
+      user: { auth0Id },
       projectMembership: { role: "admin" },
     })
     organizationId = organization.id
     projectId = project.id
-    auth0Id = user.auth0Id
 
     const primaryAgent = agentFactory.transient({ organization, project }).build()
     const secondaryAgent = agentFactory.transient({ organization, project }).build()

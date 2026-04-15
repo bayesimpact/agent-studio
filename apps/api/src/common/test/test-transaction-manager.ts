@@ -1,65 +1,32 @@
 /**
- * SOLUTION: Override EntityManager provider to make ALL services transactional
+ * **Hybrid test DB strategy**
  *
- * This is the "other method" - by overriding the EntityManager provider,
- * all repositories (and thus all services) automatically use the transaction.
+ * - **Service tests** — `setupTransactionalTestDatabase` + `startTransaction` / `rollbackTransaction`
+ *   when all DB access goes through Nest-injected repositories on the overridden `EntityManager`.
+ *   Does not cover `@InjectDataSource()`, `DataSource.query()`, workers, or a second connection.
+ *
+ * - **E2E / full HTTP app** — `setupE2eTestDatabase` from `test-database.ts` + `clearTestDatabase`
+ *   for isolation when anything might use the pool or raw SQL directly.
  */
 
-import type { DynamicModule, Provider, Type } from "@nestjs/common"
 import { ConfigModule } from "@nestjs/config"
-import { Test, type TestingModule, type TestingModuleBuilder } from "@nestjs/testing"
+import { Test, type TestingModule } from "@nestjs/testing"
 import { getRepositoryToken, TypeOrmModule } from "@nestjs/typeorm"
 import type { ObjectLiteral, QueryRunner, Repository } from "typeorm"
 import { DataSource, EntityManager } from "typeorm"
-import { Activity } from "@/domains/activities/activity.entity"
-import { Agent } from "@/domains/agents/agent.entity"
-import { ConversationAgentSession } from "@/domains/agents/conversation-agent-sessions/conversation-agent-session.entity"
-import { ExtractionAgentSession } from "@/domains/agents/extraction-agent-sessions/extraction-agent-session.entity"
-import { FormAgentSession } from "@/domains/agents/form-agent-sessions/form-agent-session.entity"
-import { AgentMembership } from "@/domains/agents/memberships/agent-membership.entity"
-import { AgentMessage } from "@/domains/agents/shared/agent-session-messages/agent-message.entity"
-import { AgentMessageFeedback } from "@/domains/agents/shared/agent-session-messages/feedback/agent-message-feedback.entity"
-import { Document } from "@/domains/documents/document.entity"
-import { Evaluation } from "@/domains/evaluations/evaluation.entity"
-import { EvaluationReport } from "@/domains/evaluations/reports/evaluation-report.entity"
-import { FeatureFlag } from "@/domains/feature-flags/feature-flag.entity"
-import { AgentMcpServer } from "@/domains/mcp-servers/agent-mcp-server.entity"
-import { McpServer } from "@/domains/mcp-servers/mcp-server.entity"
-import { OrganizationMembership } from "@/domains/organizations/memberships/organization-membership.entity"
-import { Organization } from "@/domains/organizations/organization.entity"
-import { ProjectMembership } from "@/domains/projects/memberships/project-membership.entity"
-import { Project } from "@/domains/projects/project.entity"
-import { User } from "@/domains/users/user.entity"
 import { ALL_ENTITIES } from "../all-entities"
+import type { AllRepositories } from "./test-all-repositories"
+import { buildAllRepositories } from "./test-all-repositories"
+import type { SetupTestDatabaseParams } from "./test-database"
 
-export type AllRepositories = ReturnType<TransactionalTestSetup["getAllRepositories"]>
+export type { AllRepositories } from "./test-all-repositories"
 
 export interface TransactionalTestSetup {
   module: TestingModule
   dataSource: DataSource
   queryRunner: QueryRunner | null
   getRepository: <T extends ObjectLiteral>(entity: new () => T) => Repository<T>
-  getAllRepositories: () => {
-    activityRepository: Repository<Activity>
-    agentMessageFeedbackRepository: Repository<AgentMessageFeedback>
-    agentMessageRepository: Repository<AgentMessage>
-    agentRepository: Repository<Agent>
-    agentMembershipRepository: Repository<AgentMembership>
-    extractionAgentSessionRepository: Repository<ExtractionAgentSession>
-    conversationAgentSessionRepository: Repository<ConversationAgentSession>
-    formAgentSessionRepository: Repository<FormAgentSession>
-    documentRepository: Repository<Document>
-    evaluationReportRepository: Repository<EvaluationReport>
-    evaluationRepository: Repository<Evaluation>
-    organizationMembershipRepository: Repository<OrganizationMembership>
-    organizationRepository: Repository<Organization>
-    projectMembershipRepository: Repository<ProjectMembership>
-    projectRepository: Repository<Project>
-    userRepository: Repository<User>
-    featureFlagRepository: Repository<FeatureFlag>
-    mcpServerRepository: Repository<McpServer>
-    agentMcpServerRepository: Repository<AgentMcpServer>
-  }
+  getAllRepositories: () => AllRepositories
   startTransaction: () => Promise<void>
   rollbackTransaction: () => Promise<void>
 }
@@ -70,6 +37,9 @@ export interface TransactionalTestSetup {
  * The key insight: Override EntityManager provider to use transactional manager.
  * This makes ALL repositories (and thus services) automatically transactional.
  * All entities in ALL_ENTITIES are automatically registered.
+ *
+ * Prefer {@link setupE2eTestDatabase} from `test-database.ts` when testing a full HTTP app or any
+ * code that uses `@InjectDataSource()` / raw `DataSource` access (see module comment above).
  *
  * Usage:
  * ```typescript
@@ -101,7 +71,7 @@ export interface TransactionalTestSetup {
 export async function setupTransactionalTestDatabase(
   params: CreateTestingModuleParams = {},
 ): Promise<TransactionalTestSetup> {
-  const { providers = [], additionalImports = [] } = params
+  const { providers = [], additionalImports = [], applyOverrides } = params
   const baseModule = await createBaseTestingModule(params).compile()
 
   const testDatabaseUrl = process.env.DATABASE_URL
@@ -165,7 +135,10 @@ export async function setupTransactionalTestDatabase(
       ],
     })
 
-    transactionalModule = await moduleBuilder.compile()
+    const transactionalModuleBuilder = applyOverrides
+      ? applyOverrides(moduleBuilder)
+      : moduleBuilder
+    transactionalModule = await transactionalModuleBuilder.compile()
   }
 
   const rollbackTransaction = async (): Promise<void> => {
@@ -206,27 +179,7 @@ export async function setupTransactionalTestDatabase(
     return moduleToUse.get<Repository<T>>(getRepositoryToken(entity))
   }
 
-  const getAllRepositories = () => ({
-    activityRepository: getRepository(Activity),
-    userRepository: getRepository(User),
-    organizationRepository: getRepository(Organization),
-    organizationMembershipRepository: getRepository(OrganizationMembership),
-    projectRepository: getRepository(Project),
-    projectMembershipRepository: getRepository(ProjectMembership),
-    agentRepository: getRepository(Agent),
-    extractionAgentSessionRepository: getRepository(ExtractionAgentSession),
-    conversationAgentSessionRepository: getRepository(ConversationAgentSession),
-    formAgentSessionRepository: getRepository(FormAgentSession),
-    agentMessageRepository: getRepository(AgentMessage),
-    agentMessageFeedbackRepository: getRepository(AgentMessageFeedback),
-    documentRepository: getRepository(Document),
-    evaluationRepository: getRepository(Evaluation),
-    evaluationReportRepository: getRepository(EvaluationReport),
-    agentMembershipRepository: getRepository(AgentMembership),
-    featureFlagRepository: getRepository(FeatureFlag),
-    mcpServerRepository: getRepository(McpServer),
-    agentMcpServerRepository: getRepository(AgentMcpServer),
-  })
+  const getAllRepositories = (): AllRepositories => buildAllRepositories(getRepository)
 
   return {
     get module() {
@@ -289,8 +242,4 @@ export function createBaseTestingModule({
   return applyOverrides ? applyOverrides(baseModule) : baseModule
 }
 
-export type CreateTestingModuleParams = {
-  providers?: Provider[]
-  additionalImports?: Array<Type<unknown> | DynamicModule>
-  applyOverrides?: (moduleBuilder: TestingModuleBuilder) => TestingModuleBuilder
-}
+export type CreateTestingModuleParams = SetupTestDatabaseParams

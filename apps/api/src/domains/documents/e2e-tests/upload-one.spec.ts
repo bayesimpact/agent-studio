@@ -2,19 +2,19 @@ import { type DocumentSourceType, DocumentsRoutes } from "@caseai-connect/api-co
 import type { INestApplication } from "@nestjs/common"
 import supertest from "supertest"
 import type { App } from "supertest/types"
-import { clearTestDatabase } from "@/common/test/test-database"
 import {
   type AllRepositories,
-  setupTransactionalTestDatabase,
-  teardownTestDatabase,
-} from "@/common/test/test-transaction-manager"
+  clearTestDatabase,
+  setupE2eTestDatabase,
+  teardownE2eTestDatabase,
+} from "@/common/test/test-database"
 import { createOrganizationWithProject } from "@/domains/organizations/organization.factory"
 import { DocumentsModule } from "../documents.module"
 import { withDocumentAuthAndEmbeddingsMocks } from "../test-overrides"
 
 describe("Documents - uploadOne", () => {
   let app: INestApplication<App>
-  let setup: Awaited<ReturnType<typeof setupTransactionalTestDatabase>>
+  let setup: Awaited<ReturnType<typeof setupE2eTestDatabase>>
   let repositories: AllRepositories
 
   let organizationId: string
@@ -22,7 +22,7 @@ describe("Documents - uploadOne", () => {
   let auth0Id = "auth0|123"
 
   beforeAll(async () => {
-    setup = await setupTransactionalTestDatabase({
+    setup = await setupE2eTestDatabase({
       additionalImports: [DocumentsModule],
       applyOverrides: (moduleBuilder) =>
         withDocumentAuthAndEmbeddingsMocks(moduleBuilder, () => auth0Id),
@@ -38,7 +38,7 @@ describe("Documents - uploadOne", () => {
   })
 
   afterAll(async () => {
-    await teardownTestDatabase(setup)
+    await teardownE2eTestDatabase(setup)
     await app.close()
   })
 

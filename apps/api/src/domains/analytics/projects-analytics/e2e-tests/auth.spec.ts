@@ -3,28 +3,29 @@ import { AnalyticsRoutes } from "@caseai-connect/api-contracts"
 import type { INestApplication } from "@nestjs/common"
 import type { App } from "supertest/types"
 import { AUTH_ERRORS } from "@/common/errors/auth-errors"
-import { clearTestDatabase, RandomUuid } from "@/common/test/test-database"
 import {
   type AllRepositories,
-  setupTransactionalTestDatabase,
-  teardownTestDatabase,
-} from "@/common/test/test-transaction-manager"
+  clearTestDatabase,
+  RandomUuid,
+  setupE2eTestDatabase,
+  teardownE2eTestDatabase,
+} from "@/common/test/test-database"
 import { removeNullish } from "@/common/utils/remove-nullish"
 import { createOrganizationWithProject } from "@/domains/organizations/organization.factory"
-import { setupUserGuardForTesting } from "../../../../../test/e2e.helpers"
+import { mockForeignAuth0Id, setupUserGuardForTesting } from "../../../../../test/e2e.helpers"
 import { expectResponse, type Requester, testRequester } from "../../../../../test/request"
 import { ProjectsAnalyticsModule } from "../projects-analytics.module"
 
 describe("Projects Analytics - Auth", () => {
   let app: INestApplication<App>
   let request: Requester
-  let setup: Awaited<ReturnType<typeof setupTransactionalTestDatabase>>
+  let setup: Awaited<ReturnType<typeof setupE2eTestDatabase>>
   let repositories: AllRepositories
 
   let organizationId: string | null = RandomUuid.Organization
   let projectId: string | null = RandomUuid.Project
   let accessToken: string | null = "token"
-  let auth0Id = "auth0|123"
+  let auth0Id = `auth0|${randomUUID()}`
 
   const dateRange = {
     startAt: new Date("2026-01-01T00:00:00.000Z").getTime(),
@@ -32,7 +33,7 @@ describe("Projects Analytics - Auth", () => {
   }
 
   beforeAll(async () => {
-    setup = await setupTransactionalTestDatabase({
+    setup = await setupE2eTestDatabase({
       additionalImports: [ProjectsAnalyticsModule],
       applyOverrides: (moduleBuilder) => setupUserGuardForTesting(moduleBuilder, () => auth0Id),
     })
@@ -47,22 +48,22 @@ describe("Projects Analytics - Auth", () => {
     organizationId = RandomUuid.Organization
     projectId = RandomUuid.Project
     accessToken = "token"
-    auth0Id = "auth0|123"
+    auth0Id = `auth0|${randomUUID()}`
   })
 
   afterAll(async () => {
-    await teardownTestDatabase(setup)
+    await teardownE2eTestDatabase(setup)
     await app.close()
   })
 
   const createContextForRole = async (role: "owner" | "admin" | "member" = "owner") => {
     const { organization, project, user } = await createOrganizationWithProject(repositories, {
+      user: { auth0Id },
       projectMembership: { role },
     })
     organizationId = organization.id
     projectId = project.id
     accessToken = "token"
-    auth0Id = user.auth0Id
     return { organization, project, user }
   }
 
@@ -101,7 +102,7 @@ describe("Projects Analytics - Auth", () => {
 
   it("requires the user to be a member of the organization", async () => {
     await createContextForRole("owner")
-    auth0Id = "auth0|456"
+    auth0Id = mockForeignAuth0Id()
     expectResponse(await subjectConversations(), 401, AUTH_ERRORS.NOT_MEMBER_OF_ORG)
     expectResponse(await subjectAvg(), 401, AUTH_ERRORS.NOT_MEMBER_OF_ORG)
   })

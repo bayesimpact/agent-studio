@@ -1,10 +1,10 @@
 import { afterAll } from "@jest/globals"
 import type { Repository } from "typeorm"
-import { clearTestDatabase } from "@/common/test/test-database"
 import {
-  setupTransactionalTestDatabase,
-  teardownTestDatabase,
-} from "@/common/test/test-transaction-manager"
+  clearTestDatabase,
+  setupE2eTestDatabase,
+  teardownE2eTestDatabase,
+} from "@/common/test/test-database"
 import { Agent } from "@/domains/agents/agent.entity"
 import { agentFactory } from "@/domains/agents/agent.factory"
 import { OrganizationMembership } from "@/domains/organizations/memberships/organization-membership.entity"
@@ -31,7 +31,7 @@ export function agentSessionControllerTestSetup() {
   let organizationRepository: Repository<Organization>
   let projectRepository: Repository<Project>
   let organizationMembershipRepository: Repository<OrganizationMembership>
-  let setup: Awaited<ReturnType<typeof setupTransactionalTestDatabase>>
+  let setup: Awaited<ReturnType<typeof setupE2eTestDatabase>>
 
   // Test data
   let testUser: User
@@ -40,19 +40,18 @@ export function agentSessionControllerTestSetup() {
   let testAgent: Agent
 
   beforeAll(async () => {
-    setup = await setupTransactionalTestDatabase({
+    setup = await setupE2eTestDatabase({
       additionalImports: [ConversationAgentSessionsModule],
     })
-    await clearTestDatabase(setup.dataSource)
   })
 
   afterAll(async () => {
-    await teardownTestDatabase(setup)
+    await teardownE2eTestDatabase(setup)
     await sdk.shutdown()
   })
 
   beforeEach(async () => {
-    await setup.startTransaction()
+    await clearTestDatabase(setup.dataSource)
     service = setup.module.get<ConversationAgentSessionsService>(ConversationAgentSessionsService)
     streamingService = setup.module.get<StreamingService>(StreamingService)
     conversationAgentSessionRepository = setup.getRepository(ConversationAgentSession)
@@ -95,11 +94,6 @@ export function agentSessionControllerTestSetup() {
       })
     testAgent = agentRepository.create(agent)
     testAgent = await agentRepository.save(testAgent)
-  })
-
-  afterEach(async () => {
-    await setup.rollbackTransaction()
-    await clearTestDatabase(setup.dataSource)
   })
 
   return () => {

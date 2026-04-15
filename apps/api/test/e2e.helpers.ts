@@ -1,15 +1,31 @@
+import { randomUUID } from "node:crypto"
 import type { TestingModuleBuilder } from "@nestjs/testing"
 import { Auth0UserInfoService } from "@/domains/auth/auth0-userinfo.service"
 import { INVITATION_SENDER } from "@/domains/auth/invitation-sender.interface"
 import { JwtAuthGuard } from "@/domains/auth/jwt-auth.guard"
 
-const mockAuth0UserInfoService = {
-  getUserInfo: jest.fn().mockResolvedValue({
-    sub: "auth0|123",
-    email: "test@example.com",
-    name: "Test User",
-    picture: "http://picture.url",
-  }),
+/** Email returned by the test Auth0UserInfo mock for a given `sub` (must match seeded invite / user rows). */
+export function mockAuth0EmailForSub(sub: string): string {
+  return `e2e+${sub.replaceAll("|", "-")}@example.com`
+}
+
+/** Distinct Auth0 `sub` for "wrong user" e2e cases (avoids duplicate rows under parallel workers). */
+export function mockForeignAuth0Id(): string {
+  return `auth0|foreign-${randomUUID()}`
+}
+
+function createAuth0UserInfoServiceMock(buildAuth0Id: () => string) {
+  return {
+    getUserInfo: jest.fn().mockImplementation(() => {
+      const sub = buildAuth0Id()
+      return Promise.resolve({
+        sub,
+        email: mockAuth0EmailForSub(sub),
+        name: "Test User",
+        picture: "http://picture.url",
+      })
+    }),
+  }
 }
 
 let mockTicketCounter = 0
@@ -27,6 +43,7 @@ export const setupUserGuardForTesting = (
   moduleBuilder: TestingModuleBuilder,
   buildAuth0Id: () => string,
 ): TestingModuleBuilder => {
+  const auth0UserInfoServiceMock = createAuth0UserInfoServiceMock(buildAuth0Id)
   return moduleBuilder
     .overrideGuard(JwtAuthGuard)
     .useValue({
@@ -38,7 +55,7 @@ export const setupUserGuardForTesting = (
       },
     })
     .overrideProvider(Auth0UserInfoService)
-    .useValue(mockAuth0UserInfoService)
+    .useValue(auth0UserInfoServiceMock)
     .overrideProvider(INVITATION_SENDER)
     .useValue(mockInvitationSender)
 }

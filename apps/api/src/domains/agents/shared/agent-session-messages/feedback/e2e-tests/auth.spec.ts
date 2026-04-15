@@ -1,37 +1,38 @@
+import { randomUUID } from "node:crypto"
 import { AgentMessageFeedbackRoutes } from "@caseai-connect/api-contracts"
 import { afterAll } from "@jest/globals"
 import type { INestApplication } from "@nestjs/common"
 import type { App } from "supertest/types"
 import { AUTH_ERRORS } from "@/common/errors/auth-errors"
-import { clearTestDatabase } from "@/common/test/test-database"
 import {
   type AllRepositories,
-  setupTransactionalTestDatabase,
-  teardownTestDatabase,
-} from "@/common/test/test-transaction-manager"
+  clearTestDatabase,
+  setupE2eTestDatabase,
+  teardownE2eTestDatabase,
+} from "@/common/test/test-database"
 import { removeNullish } from "@/common/utils/remove-nullish"
 import { createOrganizationWithAgentMessage } from "@/domains/organizations/organization.factory"
 import { sdk } from "@/external/llm/open-telemetry-init"
-import { setupUserGuardForTesting } from "../../../../../../../test/e2e.helpers"
+import { mockForeignAuth0Id, setupUserGuardForTesting } from "../../../../../../../test/e2e.helpers"
 import { expectResponse, type Requester, testRequester } from "../../../../../../../test/request"
 import { AgentMessageFeedbackModule } from "../agent-message-feedback.module"
 
 describe("Agent Message Feedback - Auth", () => {
   let app: INestApplication<App>
   let request: Requester
-  let setup: Awaited<ReturnType<typeof setupTransactionalTestDatabase>>
+  let setup: Awaited<ReturnType<typeof setupE2eTestDatabase>>
   let repositories: AllRepositories
 
   // Variables for the tests
-  let organizationId: string | null = "random-organization-id"
-  let projectId: string | null = "random-project-id"
-  let agentId: string | null = "random-agent-id"
-  let agentMessageId: string | null = "random-agent-message-id"
+  let organizationId: string | null = randomUUID()
+  let projectId: string | null = randomUUID()
+  let agentId: string | null = randomUUID()
+  let agentMessageId: string | null = randomUUID()
   let accessToken: string | null = "token"
-  let auth0Id = "auth0|123"
+  let auth0Id = `auth0|${randomUUID()}`
 
   beforeAll(async () => {
-    setup = await setupTransactionalTestDatabase({
+    setup = await setupE2eTestDatabase({
       additionalImports: [AgentMessageFeedbackModule],
       applyOverrides: (moduleBuilder) => setupUserGuardForTesting(moduleBuilder, () => auth0Id),
     })
@@ -44,37 +45,38 @@ describe("Agent Message Feedback - Auth", () => {
 
   beforeEach(async () => {
     await clearTestDatabase(setup.dataSource)
-    organizationId = "random-organization-id"
-    projectId = "random-project-id"
-    agentId = "random-agent-id"
-    agentMessageId = "random-agent-message-id"
+    organizationId = randomUUID()
+    projectId = randomUUID()
+    agentId = randomUUID()
+    agentMessageId = randomUUID()
     accessToken = "token"
-    auth0Id = "auth0|123"
+    auth0Id = `auth0|${randomUUID()}`
   })
 
   afterAll(async () => {
-    await teardownTestDatabase(setup)
+    await teardownE2eTestDatabase(setup)
     await sdk.shutdown()
     await app.close()
   })
 
   const createContextForRole = async (role: "owner" | "admin" | "member" = "owner") => {
-    const { user, organization, project, agent, agentMessage } =
-      await createOrganizationWithAgentMessage({
+    const { organization, project, agent, agentMessage } = await createOrganizationWithAgentMessage(
+      {
         repositories,
         params: {
+          user: { auth0Id },
           organizationMembership: { role: "member" },
           projectMembership: { role },
           agentMembership: { role: "member" },
         },
         agentType: "conversation",
-      })
+      },
+    )
     organizationId = organization.id
     projectId = project.id
     agentId = agent.id
     agentMessageId = agentMessage.id
     accessToken = "token"
-    auth0Id = user.auth0Id
     return { organization, project }
   }
 
@@ -92,6 +94,7 @@ describe("Agent Message Feedback - Auth", () => {
       expectResponse(await subject(), 401, AUTH_ERRORS.NO_ACCESS_TOKEN)
     })
     it("requires a valid organization ID", async () => {
+      await createContextForRole("owner")
       organizationId = null
       expectResponse(await subject(), 400, AUTH_ERRORS.NO_ORGANIZATION_ID)
     })
@@ -102,7 +105,7 @@ describe("Agent Message Feedback - Auth", () => {
     })
     it("requires the user to be a member of the organization", async () => {
       await createContextForRole("member")
-      auth0Id = "another-auth0-id" // this will trigger a new user to be created in the database
+      auth0Id = mockForeignAuth0Id()
       expectResponse(await subject(), 401, AUTH_ERRORS.NOT_MEMBER_OF_ORG)
     })
   })
@@ -121,6 +124,7 @@ describe("Agent Message Feedback - Auth", () => {
       expectResponse(await subject(), 401, AUTH_ERRORS.NO_ACCESS_TOKEN)
     })
     it("requires a valid organization ID", async () => {
+      await createContextForRole("owner")
       organizationId = null
       expectResponse(await subject(), 400, AUTH_ERRORS.NO_ORGANIZATION_ID)
     })
@@ -136,7 +140,7 @@ describe("Agent Message Feedback - Auth", () => {
     })
     it("requires the user to be a member of the organization", async () => {
       await createContextForRole("owner")
-      auth0Id = "another-auth0-id" // this will trigger a new user to be created in the database
+      auth0Id = mockForeignAuth0Id()
       expectResponse(await subject(), 401, AUTH_ERRORS.NOT_MEMBER_OF_ORG)
     })
     it("doesn't allow a simple member to get all feedback", async () => {

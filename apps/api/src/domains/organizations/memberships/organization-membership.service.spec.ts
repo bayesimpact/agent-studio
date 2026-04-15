@@ -1,9 +1,9 @@
-import { clearTestDatabase } from "@/common/test/test-database"
 import {
   type AllRepositories,
-  setupTransactionalTestDatabase,
-  teardownTestDatabase,
-} from "@/common/test/test-transaction-manager"
+  clearTestDatabase,
+  setupE2eTestDatabase,
+  teardownE2eTestDatabase,
+} from "@/common/test/test-database"
 import { organizationMembershipFactory } from "@/domains/organizations/memberships/organization-membership.factory"
 import { OrganizationMembershipService } from "@/domains/organizations/memberships/organization-membership.service"
 import {
@@ -14,28 +14,23 @@ import { OrganizationsModule } from "@/domains/organizations/organizations.modul
 
 describe("OrganizationMembershipService", () => {
   let service: OrganizationMembershipService
-  let setup: Awaited<ReturnType<typeof setupTransactionalTestDatabase>>
+  let setup: Awaited<ReturnType<typeof setupE2eTestDatabase>>
   let repositories: AllRepositories
 
   beforeAll(async () => {
-    setup = await setupTransactionalTestDatabase({
+    setup = await setupE2eTestDatabase({
       additionalImports: [OrganizationsModule],
     })
-    await clearTestDatabase(setup.dataSource)
   })
 
   afterAll(async () => {
-    await teardownTestDatabase(setup)
+    await teardownE2eTestDatabase(setup)
   })
 
   beforeEach(async () => {
-    await setup.startTransaction()
+    await clearTestDatabase(setup.dataSource)
     service = setup.module.get<OrganizationMembershipService>(OrganizationMembershipService)
     repositories = setup.getAllRepositories()
-  })
-
-  afterEach(async () => {
-    await setup.rollbackTransaction()
   })
 
   describe("findOrganizationMembership", () => {
