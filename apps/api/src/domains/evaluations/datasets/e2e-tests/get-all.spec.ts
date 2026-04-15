@@ -1,0 +1,184 @@
+import { EvaluationDatasetsRoutes } from "@caseai-connect/api-contracts"
+import type { INestApplication } from "@nestjs/common"
+import type { App } from "supertest/types"
+import type { Repository } from "typeorm"
+import { clearTestDatabase } from "@/common/test/test-database"
+import {
+  type AllRepositories,
+  setupTransactionalTestDatabase,
+  teardownTestDatabase,
+} from "@/common/test/test-transaction-manager"
+import { removeNullish } from "@/common/utils/remove-nullish"
+import { createOrganizationWithDocument } from "@/domains/organizations/organization.factory"
+import { setupUserGuardForTesting } from "../../../../../test/e2e.helpers"
+import { expectResponse, type Requester, testRequester } from "../../../../../test/request"
+import { EvaluationDataset } from "../../datasets/evaluation-dataset.entity"
+import { evaluationDatasetFactory } from "../../datasets/evaluation-dataset.factory"
+import { EvaluationDatasetDocument } from "../../datasets/evaluation-dataset-document.entity"
+import { evaluationDatasetDocumentFactory } from "../../datasets/evaluation-dataset-document.factory"
+import { EvaluationDatasetRecord } from "../../datasets/records/evaluation-dataset-record.entity"
+import { evaluationDatasetRecordFactory } from "../../datasets/records/evaluation-dataset-record.factory"
+import { EvaluationsModule } from "../../evaluations.module"
+
+describe("EvaluationDatasets - getAll", () => {
+  let app: INestApplication<App>
+  let request: Requester
+  let setup: Awaited<ReturnType<typeof setupTransactionalTestDatabase>>
+  let repositories: AllRepositories
+  let datasetRepository: Repository<EvaluationDataset>
+  let datasetDocumentRepository: Repository<EvaluationDatasetDocument>
+  let recordRepository: Repository<EvaluationDatasetRecord>
+
+  let organizationId: string
+  let projectId: string
+  let accessToken: string | undefined = "token"
+  let auth0Id = "auth0|123"
+
+  beforeAll(async () => {
+    setup = await setupTransactionalTestDatabase({
+      additionalImports: [EvaluationsModule],
+      applyOverrides: (moduleBuilder) => setupUserGuardForTesting(moduleBuilder, () => auth0Id),
+    })
+    repositories = setup.getAllRepositories()
+    datasetRepository = setup.getRepository(EvaluationDataset)
+    datasetDocumentRepository = setup.getRepository(EvaluationDatasetDocument)
+    recordRepository = setup.getRepository(EvaluationDatasetRecord)
+    app = setup.module.createNestApplication()
+    await app.init()
+    request = testRequester(app)
+  })
+
+  beforeEach(async () => {
+    await clearTestDatabase(setup.dataSource)
+    accessToken = "token"
+    auth0Id = "auth0|123"
+  })
+
+  afterAll(async () => {
+    await teardownTestDatabase(setup)
+    await app.close()
+  })
+
+  const createContext = async () => {
+    const { user, organization, project, document } =
+      await createOrganizationWithDocument(repositories)
+    organizationId = organization.id
+    projectId = project.id
+    auth0Id = user.auth0Id
+    return { organization, project, document }
+  }
+
+  const subject = async () =>
+    request({
+      route: EvaluationDatasetsRoutes.getAll,
+      pathParams: removeNullish({ organizationId, projectId }),
+      token: accessToken,
+    })
+
+  it("should return an empty list when no datasets exist", async () => {
+    await createContext()
+
+    const res = await subject()
+
+    expectResponse(res)
+    expect(res.body.data).toEqual([])
+  })
+
+  it("should return a list of datasets", async () => {
+    const { organization, project, document } = await createContext()
+
+    const dataset = evaluationDatasetFactory
+      .transient({ organization, project })
+      .build({ name: "My Dataset" })
+    await datasetRepository.save(dataset)
+
+    const datasetDocument = evaluationDatasetDocumentFactory
+      .transient({ evaluationDataset: dataset, document })
+      .build()
+    await datasetDocumentRepository.save(datasetDocument)
+
+    const res = await subject()
+
+    expectResponse(res)
+    expect(res.body.data).toHaveLength(1)
+    expect(res.body.data[0]).toMatchObject({
+      id: dataset.id,
+      name: "My Dataset",
+      projectId,
+    })
+    expect(res.body.data[0].documentIds).toContain(document.id)
+  })
+
+  it("should return datasets with records", async () => {
+    const { organization, project } = await createContext()
+
+    const schemaMapping = {
+      col1: {
+        id: "col1",
+        finalName: "Column 1",
+        originalName: "col1",
+        index: 0,
+        role: "input" as const,
+      },
+    }
+    const dataset = evaluationDatasetFactory
+      .transient({ organization, project })
+      .build({ schemaMapping })
+    await datasetRepository.save(dataset)
+
+    const record = evaluationDatasetRecordFactory
+      .transient({ organization, project, evaluationDataset: dataset })
+      .build({ data: { col1: "value1" } })
+    await recordRepository.save(record)
+
+    const res = await subject()
+
+    expectResponse(res)
+    expect(res.body.data).toHaveLength(1)
+    expect(res.body.data[0].records).toBeDefined()
+    expect(res.body.data[0].records).toHaveLength(1)
+    expect(res.body.data[0].records[0].columnId).toBe("col1")
+    expect(res.body.data[0].records[0].values).toContain("value1")
+  })
+
+  it("should return datasets sorted by newest first", async () => {
+    const { organization, project } = await createContext()
+
+    const dataset1 = evaluationDatasetFactory
+      .transient({ organization, project })
+      .build({ name: "Older Dataset", updatedAt: new Date("2024-01-01") })
+    const dataset2 = evaluationDatasetFactory
+      .transient({ organization, project })
+      .build({ name: "Newer Dataset", updatedAt: new Date("2024-06-01") })
+    await datasetRepository.save([dataset1, dataset2])
+
+    const res = await subject()
+
+    expectResponse(res)
+    expect(res.body.data).toHaveLength(2)
+    expect(res.body.data[0].name).toBe("Newer Dataset")
+    expect(res.body.data[1].name).toBe("Older Dataset")
+  })
+
+  it("should return datasets with all required fields", async () => {
+    const { organization, project } = await createContext()
+
+    const dataset = evaluationDatasetFactory.transient({ organization, project }).build()
+    await datasetRepository.save(dataset)
+
+    const res = await subject()
+
+    expectResponse(res)
+    expect(res.body.data).toHaveLength(1)
+    expect(res.body.data[0]).toMatchObject({
+      id: expect.any(String),
+      name: expect.any(String),
+      projectId,
+      schemaMapping: expect.any(Object),
+      createdAt: expect.any(Number),
+      updatedAt: expect.any(Number),
+      documentIds: expect.any(Array),
+      records: expect.any(Array),
+    })
+  })
+})
