@@ -80,8 +80,8 @@ describe("EvaluationDatasets - createOne", () => {
 
     const datasets = await datasetRepository.find()
     expect(datasets).toHaveLength(1)
-    expect(datasets[0].name).toBe("My Test Dataset")
-    expect(datasets[0].schemaMapping).toEqual({})
+    expect(datasets[0]!.name).toBe("My Test Dataset")
+    expect(datasets[0]!.schemaMapping).toEqual({})
     await expectActivityCreated("evaluationDataset.create")
   })
 
@@ -100,7 +100,7 @@ describe("EvaluationDatasets - createOne", () => {
 
     const datasets = await datasetRepository.find()
     expect(datasets).toHaveLength(1)
-    expect(datasets[0].organizationId).toBe(organizationId)
-    expect(datasets[0].projectId).toBe(projectId)
+    expect(datasets[0]!.organizationId).toBe(organizationId)
+    expect(datasets[0]!.projectId).toBe(projectId)
   })
 })

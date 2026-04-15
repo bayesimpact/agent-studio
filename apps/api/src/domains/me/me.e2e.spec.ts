@@ -125,8 +125,8 @@ describe("MeController (e2e)", () => {
 
       expectResponse(response, 200)
       expect(response.body.data.organizations).toHaveLength(1)
-      expect(response.body.data.organizations[0].projects).toHaveLength(1)
-      expect(response.body.data.organizations[0].projects[0]).toMatchObject({
+      expect(response.body.data.organizations[0]!.projects).toHaveLength(1)
+      expect(response.body.data.organizations[0]!.projects[0]).toMatchObject({
         id: project.id,
         name: "Test Project",
         organizationId: organization.id,

@@ -103,9 +103,9 @@ describe("EvaluationDatasets - getFileColumns", () => {
     expectResponse(res)
     const nameColumn = res.body.data.find((column: { name: string }) => column.name === "name")
     expect(nameColumn).toBeDefined()
-    expect(nameColumn.values).toContain("Alice")
-    expect(nameColumn.values).toContain("Bob")
-    expect(nameColumn.values).toContain("Charlie")
+    expect(nameColumn!.values).toContain("Alice")
+    expect(nameColumn!.values).toContain("Bob")
+    expect(nameColumn!.values).toContain("Charlie")
   })
 
   it("should return columns with all required fields", async () => {
@@ -133,6 +133,6 @@ describe("EvaluationDatasets - getFileColumns", () => {
 
     expectResponse(res)
     const col1 = res.body.data.find((column: { name: string }) => column.name === "col1")
-    expect(col1.values).toEqual(["null", "null", "null"])
+    expect(col1!.values).toEqual(["null", "null", "null"])
   })
 })

@@ -108,7 +108,7 @@ describe("EvaluationDatasets - getAllFiles", () => {
 
     expectResponse(res)
     expect(res.body.data).toHaveLength(1)
-    expect(res.body.data[0].fileName).toBe("dataset.csv")
+    expect(res.body.data[0]!.fileName).toBe("dataset.csv")
   })
 
   it("should return files with all required fields", async () => {

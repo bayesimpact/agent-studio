@@ -148,7 +148,7 @@ describe("EvaluationDatasets - updateOne", () => {
       where: { evaluationDatasetId: datasetId },
     })
     expect(links).toHaveLength(1)
-    expect(links[0].documentId).toBe(documentId)
+    expect(links[0]!.documentId).toBe(documentId)
   })
 
   it("should create records from the CSV file", async () => {

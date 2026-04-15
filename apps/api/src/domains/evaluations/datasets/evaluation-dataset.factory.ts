@@ -20,7 +20,7 @@ export const evaluationDatasetFactory = EvaluationDatasetFactory.define(
     }
 
     const now = new Date()
-    const schemaMapping: EvaluationDatasetSchemaMapping = params.schemaMapping || {}
+    const schemaMapping = (params.schemaMapping || {}) as EvaluationDatasetSchemaMapping
 
     return {
       id: params.id || randomUUID(),

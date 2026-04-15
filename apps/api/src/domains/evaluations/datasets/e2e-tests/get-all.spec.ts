@@ -106,7 +106,7 @@ describe("EvaluationDatasets - getAll", () => {
       name: "My Dataset",
       projectId,
     })
-    expect(res.body.data[0].documentIds).toContain(document.id)
+    expect(res.body.data[0]!.documentIds).toContain(document.id)
   })
 
   it("should return datasets with records", async () => {
@@ -135,10 +135,10 @@ describe("EvaluationDatasets - getAll", () => {
 
     expectResponse(res)
     expect(res.body.data).toHaveLength(1)
-    expect(res.body.data[0].records).toBeDefined()
-    expect(res.body.data[0].records).toHaveLength(1)
-    expect(res.body.data[0].records[0].columnId).toBe("col1")
-    expect(res.body.data[0].records[0].values).toContain("value1")
+    expect(res.body.data[0]!.records).toBeDefined()
+    expect(res.body.data[0]!.records).toHaveLength(1)
+    expect(res.body.data[0]!.records[0]!.columnId).toBe("col1")
+    expect(res.body.data[0]!.records[0]!.values).toContain("value1")
   })
 
   it("should return datasets sorted by newest first", async () => {
@@ -156,8 +156,8 @@ describe("EvaluationDatasets - getAll", () => {
 
     expectResponse(res)
     expect(res.body.data).toHaveLength(2)
-    expect(res.body.data[0].name).toBe("Newer Dataset")
-    expect(res.body.data[1].name).toBe("Older Dataset")
+    expect(res.body.data[0]!.name).toBe("Newer Dataset")
+    expect(res.body.data[1]!.name).toBe("Older Dataset")
   })
 
   it("should return datasets with all required fields", async () => {
