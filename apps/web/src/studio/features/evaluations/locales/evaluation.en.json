@@ -33,6 +33,10 @@
     "file": {
       "title": "Files",
       "description": "Uploaded files for creating evaluation datasets",
+      "empty": {
+        "title": "No files uploaded",
+        "description": "Upload a file to start creating evaluation datasets."
+      },
       "props": {
         "name": "Name",
         "createdAt": "Created At"
@@ -50,7 +54,7 @@
         "description": "Evaluate your agents using custom datasets."
       },
       "update": {
-        "title": "Initialize dataset",
+        "title": "Initialize dataset {{datasetName}}",
         "description": "Configure the dataset columns and roles to prepare for evaluation."
       },
       "props": {
@@ -68,6 +72,7 @@
       },
       "records": {
         "view": {
+          "title": "Records",
           "description": "{{count}} records"
         }
       },
@@ -85,6 +90,12 @@
     },
     "validation": {
       "minNameLength": "Name must be at least 3 characters"
+    },
+    "dashboard": {
+      "title": "Evaluation Dashboard",
+      "description": "Evaluate and test the performance of your agents.",
+      "evaluateExtractionAgent": "Evaluate Extraction Agent",
+      "manageDatasets": "Manage datasets and run evaluations"
     }
   }
 }

@@ -26,7 +26,6 @@ export const selectLastFileData = (state: RootState) => {
   }
   return state.evaluation.datasets.files
 }
-
 export const selectCurrentFileId = (state: RootState) => state.evaluation.datasets.currentFileId
 export const selectCurrentFileData = createSelector(
   [selectFilesData, selectCurrentFileId],
@@ -47,3 +46,21 @@ export const selectUploaderState = (state: RootState) => state.evaluation.datase
 
 // DATASETS
 export const selectDatasetsData = (state: RootState) => state.evaluation.datasets.data
+export const selectCurrentDatasetId = (state: RootState) =>
+  state.evaluation.datasets.currentDatasetId
+export const selectCurrentDatasetData = createSelector(
+  [selectDatasetsData, selectCurrentDatasetId],
+  (datasetsData, datasetId) => {
+    if (ADS.isFulfilled(datasetsData)) {
+      const dataset = datasetsData.value.find((d) => d.id === datasetId)
+      if (dataset) {
+        return { status: ADS.Fulfilled, error: null, value: dataset }
+      } else {
+        return { status: ADS.Error, error: "Dataset not found", value: null }
+      }
+    }
+    return datasetsData
+  },
+)
+export const selectIsUpdatingDataset = (state: RootState) =>
+  state.evaluation.datasets.isUpdatingDataset

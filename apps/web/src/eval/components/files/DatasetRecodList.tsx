@@ -1,12 +1,12 @@
 import { Badge } from "@caseai-connect/ui/shad/badge"
-import { Input } from "@caseai-connect/ui/shad/input"
 import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-} from "@caseai-connect/ui/shad/sheet"
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@caseai-connect/ui/shad/card"
+import { Input } from "@caseai-connect/ui/shad/input"
 import {
   type Column,
   type ColumnDef,
@@ -145,13 +145,7 @@ function buildRecordColumns(
   return [indexColumn, ...dataColumns]
 }
 
-export function DatasetRecords({
-  dataset,
-  modalHandler,
-}: {
-  dataset: EvaluationDataset
-  modalHandler: { setOpen: (open: boolean) => void; open: boolean }
-}) {
+export function DatasetRecords({ dataset }: { dataset: EvaluationDataset }) {
   const { t } = useTranslation()
   const [sorting, setSorting] = useState<SortingState>([])
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
@@ -196,20 +190,19 @@ export function DatasetRecords({
   const paddingBottom =
     virtualRows.length > 0 ? totalSize - (virtualRows[virtualRows.length - 1]?.end ?? 0) : 0
 
+  const count = isFiltered ? filteredCount : totalCount
   return (
-    <Sheet modal open={modalHandler.open} onOpenChange={modalHandler.setOpen}>
-      <SheetContent side="bottom" className="h-screen flex flex-col">
-        <SheetHeader>
-          <SheetTitle>{dataset.name}</SheetTitle>
-          <SheetDescription>
-            {isFiltered
-              ? t("evaluation:dataset.records.view.description", { count: filteredCount })
-              : t("evaluation:dataset.records.view.description", { count: totalCount })}
-          </SheetDescription>
-        </SheetHeader>
+    <Card className="border-0 shadow-none">
+      <CardHeader>
+        <CardTitle>{t("evaluation:dataset.records.view.title")}</CardTitle>
+        <CardDescription>
+          {t("evaluation:dataset.records.view.description", { count })}
+        </CardDescription>
+      </CardHeader>
 
-        <div ref={setScrollElement} className="flex-1 overflow-auto px-6 pb-6">
-          <div className="rounded-lg border overflow-hidden">
+      <CardContent>
+        <div ref={setScrollElement} className="flex-1 overflow-auto pb-6">
+          <div className="rounded-lg border overflow-x-scroll">
             <table className="w-full caption-bottom text-sm">
               <thead className="bg-muted/50 sticky top-0 z-10 [&_tr]:border-b">
                 {table.getHeaderGroups().map((headerGroup) => (
@@ -278,7 +271,7 @@ export function DatasetRecords({
             </table>
           </div>
         </div>
-      </SheetContent>
-    </Sheet>
+      </CardContent>
+    </Card>
   )
 }

@@ -108,14 +108,21 @@ export function GridHeader({
   title,
   description,
   action,
+  className,
 }: {
+  className?: string
   onBack?: () => void
   title: string
   description?: React.ReactNode
   action?: React.ReactNode
 }) {
   return (
-    <Card className="shadow-none rounded-none border-0 border-b border-foreground-muted">
+    <Card
+      className={cn(
+        "shadow-none rounded-none border-0 border-b border-foreground-muted",
+        className,
+      )}
+    >
       <CardHeader className="gap-0">
         <CardTitle className="text-2xl flex items-center gap-1">
           {onBack && (

@@ -1,13 +1,6 @@
 import { EVALUATION_DATASET_SCHEMA_COLUMN_ROLES } from "@caseai-connect/api-contracts"
 import { Button } from "@caseai-connect/ui/shad/button"
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@caseai-connect/ui/shad/dialog"
+import { DialogFooter } from "@caseai-connect/ui/shad/dialog"
 import { Field, FieldGroup, FieldLabel, FieldSet } from "@caseai-connect/ui/shad/field"
 import { Input } from "@caseai-connect/ui/shad/input"
 import {
@@ -28,71 +21,30 @@ import { useAppDispatch, useAppSelector } from "@/common/store/hooks"
 import type {
   DatasetFile,
   DatasetFileColumn,
+  EvaluationDataset,
   EvaluationDatasetSchemaColumnRole,
 } from "@/eval/features/datasets/datasets.models"
 import {
   selectCurrentFileData,
   selectFileColumnsData,
-  selectFilesData,
 } from "@/eval/features/datasets/datasets.selectors"
 import { datasetsActions } from "@/eval/features/datasets/datasets.slice"
 import { FileList } from "./files/FileList"
 import { FilePreview } from "./files/FilePreview"
 
-export function DatasetEditor({
-  datasetId,
-  modalHandler,
-}: {
-  datasetId: string
-  modalHandler: { setOpen: (open: boolean) => void; open: boolean }
-}) {
+export function DatasetInitializer({ dataset }: { dataset: EvaluationDataset }) {
   const dispatch = useAppDispatch()
   const file = useAppSelector(selectCurrentFileData)
-  const { t } = useTranslation()
 
   useEffect(() => {
-    if (modalHandler.open) return
     dispatch(datasetsActions.setCurrentFileId({ fileId: null }))
-  }, [modalHandler.open, dispatch])
+  }, [dispatch])
 
   const hasFile = ADS.isFulfilled(file)
-  return (
-    <Dialog modal open={modalHandler.open} onOpenChange={modalHandler.setOpen}>
-      <DialogContent className="max-h-[85vh] min-w-4/5  2xl:min-w-2/3 max-w-2/3 overflow-y-auto min-h-1/2">
-        <DialogHeader>
-          <DialogTitle>{t("evaluation:dataset.update.title")}</DialogTitle>
-          <DialogDescription>{t("evaluation:dataset.update.description")}</DialogDescription>
-        </DialogHeader>
-
-        {hasFile ? (
-          <ColumnsEditor
-            file={file.value}
-            datasetId={datasetId}
-            onSubmit={() => modalHandler.setOpen(false)}
-          />
-        ) : (
-          <FileUploader />
-        )}
-      </DialogContent>
-    </Dialog>
-  )
+  return <div>{hasFile ? <ColumnsEditor file={file.value} dataset={dataset} /> : <FileList />}</div>
 }
 
-function FileUploader() {
-  const files = useAppSelector(selectFilesData)
-  if (ADS.isFulfilled(files)) return <FileList files={files.value} />
-  return <Loader />
-}
-
-function ColumnsEditor({
-  file,
-  datasetId,
-  onSubmit,
-}: {
-  file: DatasetFile
-  datasetId: string
-  onSubmit: () => void
-}) {
+function ColumnsEditor({ file, dataset }: { file: DatasetFile; dataset: EvaluationDataset }) {
   const dispatch = useAppDispatch()
   const columnsData = useAppSelector(selectFileColumnsData)
   useEffect(() => {
@@ -102,14 +54,11 @@ function ColumnsEditor({
   return (
     <div>
       {ADS.isFulfilled(columnsData) && file ? (
-        <FormEdition
-          file={file}
-          datasetId={datasetId}
-          originalColumns={columnsData.value}
-          onSubmit={onSubmit}
-        />
+        <FormEdition file={file} dataset={dataset} originalColumns={columnsData.value} />
       ) : (
-        <Loader />
+        <div className="my-12">
+          <Loader />
+        </div>
       )}
     </div>
   )
@@ -117,14 +66,12 @@ function ColumnsEditor({
 
 function FormEdition({
   file,
-  datasetId,
+  dataset,
   originalColumns,
-  onSubmit,
 }: {
   file: DatasetFile
-  datasetId: string
+  dataset: EvaluationDataset
   originalColumns: DatasetFileColumn[]
-  onSubmit: () => void
 }) {
   const dispatch = useAppDispatch()
   const { t } = useTranslation()
@@ -155,7 +102,7 @@ function FormEdition({
     resolver: zodResolver(schema),
     mode: "onChange",
     defaultValues: {
-      name: "",
+      name: dataset.name,
       columns: originalColumns.map((column, index) => ({
         id: column.id,
         originalName: column.name,
@@ -171,7 +118,7 @@ function FormEdition({
   const handleFormSubmit = (data: FormData) => {
     dispatch(
       datasetsActions.updateOne({
-        datasetId,
+        datasetId: dataset.id,
         documentId: file.id,
         name: data.name,
         columns: data.columns,
@@ -179,11 +126,10 @@ function FormEdition({
     )
 
     resetForm()
-    onSubmit()
   }
 
   return (
-    <form onSubmit={handleSubmit(handleFormSubmit)}>
+    <form className="px-6" onSubmit={handleSubmit(handleFormSubmit)}>
       <FieldGroup className="py-4">
         <FieldSet>
           <FieldGroup>
@@ -202,13 +148,14 @@ function FormEdition({
 
         {originalColumns.length > 0 ? (
           <>
-            <div className="max-w-full overflow-hidden">
+            <div>
               <FieldSet>
                 <details open>
                   <summary className="cursor-pointer text-sm font-medium select-none">
                     {t("evaluation:dataset.columns.preview")}
                   </summary>
-                  <div className="mt-2 max-w-1/2">
+                  {/* // FIXME: x scroll issue */}
+                  <div className="mt-2">
                     <FilePreview columns={originalColumns} />
                   </div>
                 </details>

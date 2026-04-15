@@ -5,7 +5,7 @@ import {
   type EvaluationDatasetRecordDto,
   EvaluationDatasetsRoutes,
 } from "@caseai-connect/api-contracts"
-import { Body, Controller, Get, Patch, Post, Req, UseGuards } from "@nestjs/common"
+import { Body, Controller, Get, Param, Patch, Post, Req, UseGuards } from "@nestjs/common"
 import type {
   EndpointRequestWithDocument,
   EndpointRequestWithProject,
@@ -96,18 +96,20 @@ export class EvaluationDatasetsController {
   async updateOne(
     @Req() request: EndpointRequestWithDocument,
     @Body() { payload: { name, columns } }: typeof EvaluationDatasetsRoutes.updateOne.request,
+    @Param("datasetId") datasetId: string, // FIXME: should be in request context
   ): Promise<typeof EvaluationDatasetsRoutes.updateOne.response> {
     const connectScope = getRequiredConnectScope(request)
     const documentId = request.document.id
 
-    const dataset = await this.evaluationDatasetsService.updateDataset({
+    await this.evaluationDatasetsService.updateDataset({
       connectScope,
+      datasetId,
       fields: { name, documentId, columns },
     })
 
-    const _records = await this.evaluationDatasetsService.createDatasetRecords({
+    await this.evaluationDatasetsService.createDatasetRecords({
       connectScope,
-      datasetId: dataset.id,
+      datasetId,
       documentId,
     })
 

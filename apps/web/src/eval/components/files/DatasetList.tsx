@@ -1,23 +1,27 @@
 import { Button } from "@caseai-connect/ui/shad/button"
 import { Trash2Icon } from "lucide-react"
-import { useState } from "react"
 import { useTranslation } from "react-i18next"
+import { useNavigate } from "react-router-dom"
 import { Grid, GridContent, GridHeader, GridItem } from "@/common/components/grid/Grid"
 import { buildSince } from "@/common/utils/build-date"
 import type { EvaluationDataset } from "@/eval/features/datasets/datasets.models"
+import { useDatasetPath } from "@/eval/hooks/use-dataset-path"
 import { DatasetCreator } from "../DatasetCreator"
-import { DatasetEditor } from "../DatasetEditor"
-import { DatasetRecords } from "./DatasetRecodList"
 import { EmptyDataset } from "./EmptyDataset"
 
 export function DatasetList({ datasets }: { datasets: EvaluationDataset[] }) {
+  const navigate = useNavigate()
   const { t } = useTranslation()
+  const handleBack = () => {
+    navigate(-1)
+  }
   if (datasets.length === 0) return <EmptyDataset />
   return (
     <Grid cols={3} total={datasets.length} extraItems={1}>
       <GridHeader
         title={t("evaluation:dataset.title")}
         description={t("evaluation:dataset.description")}
+        onBack={handleBack}
       />
 
       <GridContent>
@@ -38,39 +42,24 @@ export function DatasetList({ datasets }: { datasets: EvaluationDataset[] }) {
 }
 
 function Item({ dataset, index }: { dataset: EvaluationDataset; index: number }) {
+  const navigate = useNavigate()
   const { t } = useTranslation()
   const date = buildSince(dataset.createdAt)
-  const [open, setOpen] = useState<"editor" | "records" | null>(null)
+  const { buildDatasetPath } = useDatasetPath()
 
-  const isDatasetEmpty = Object.values(dataset.schemaMapping).length === 0
   const handleClick = () => {
-    setOpen(isDatasetEmpty ? "editor" : "records")
+    const path = buildDatasetPath({ datasetId: dataset.id })
+    navigate(path)
   }
   return (
-    <>
-      <GridItem
-        badge={t("evaluation:dataset.dataset")}
-        title={dataset.name}
-        description={date}
-        index={index}
-        onClick={handleClick}
-        footer={<Actions dataset={dataset} />}
-      />
-      <DatasetEditor
-        modalHandler={{
-          open: open === "editor",
-          setOpen: (value) => setOpen(value ? "editor" : null),
-        }}
-        datasetId={dataset.id}
-      />
-      <DatasetRecords
-        dataset={dataset}
-        modalHandler={{
-          open: open === "records",
-          setOpen: (value) => setOpen(value ? "records" : null),
-        }}
-      />
-    </>
+    <GridItem
+      badge={t("evaluation:dataset.dataset")}
+      title={dataset.name}
+      description={date}
+      index={index}
+      onClick={handleClick}
+      footer={<Actions dataset={dataset} />}
+    />
   )
 }
 

@@ -33,6 +33,10 @@
     "file": {
       "title": "Fichiers",
       "description": "Fichiers téléversés pour créer des datasets d'évaluation",
+      "empty": {
+        "title": "Aucun fichier téléversé",
+        "description": "Téléversez un fichier pour commencer à créer des datasets d'évaluation."
+      },
       "props": {
         "name": "Nom",
         "createdAt": "Créé le"
@@ -50,7 +54,7 @@
         "description": "Evaluez vos agents en utilisant des datasets personnalisés."
       },
       "update": {
-        "title": "Initialiser le dataset",
+        "title": "Initialiser le dataset  {{datasetName}}",
         "description": "Configurez les colonnes et les rôles du dataset pour préparer l'évaluation."
       },
       "props": {
@@ -68,6 +72,7 @@
       },
       "records": {
         "view": {
+          "title": "Enregistrements",
           "description": "{{count}} enregistrements"
         }
       },
@@ -85,6 +90,12 @@
     },
     "validation": {
       "minNameLength": "Le nom doit contenir au moins 3 caractères"
+    },
+    "dashboard": {
+      "title": "Tableau de bord d'évaluation",
+      "description": "Évaluez et testez les performances de vos agents.",
+      "evaluateExtractionAgent": "Évaluer l'agent d'extraction",
+      "manageDatasets": "Gérer les datasets et lancer les évaluations"
     }
   }
 }

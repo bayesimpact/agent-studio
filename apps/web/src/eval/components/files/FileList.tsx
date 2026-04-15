@@ -1,5 +1,13 @@
 import { Button } from "@caseai-connect/ui/shad/button"
 import {
+  Card,
+  CardAction,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@caseai-connect/ui/shad/card"
+import {
   Table,
   TableBody,
   TableCell,
@@ -7,28 +15,37 @@ import {
   TableHeader,
   TableRow,
 } from "@caseai-connect/ui/shad/table"
-import { Trash2Icon } from "lucide-react"
+import { Loader, Trash2Icon } from "lucide-react"
 import { useTranslation } from "react-i18next"
-import { GridHeader } from "@/common/components/grid/Grid"
-import { useAppDispatch } from "@/common/store/hooks"
+import { ADS } from "@/common/store/async-data-status"
+import { useAppDispatch, useAppSelector } from "@/common/store/hooks"
 import { buildSince } from "@/common/utils/build-date"
 import type { DatasetFile } from "@/eval/features/datasets/datasets.models"
+import { selectFilesData } from "@/eval/features/datasets/datasets.selectors"
 import { datasetsActions } from "@/eval/features/datasets/datasets.slice"
 import { EmptyFile } from "./EmptyFile"
 import { UploadFile } from "./UploadFile"
 import { UploaderState } from "./UploadState"
 
-export function FileList({ files }: { files: DatasetFile[] }) {
+export function FileList() {
+  const files = useAppSelector(selectFilesData)
+  if (ADS.isFulfilled(files)) return <WithData files={files.value} />
+  return <Loader />
+}
+
+function WithData({ files }: { files: DatasetFile[] }) {
   const { t } = useTranslation()
   return (
-    <div className="rounded-2xl border overflow-hidden">
-      <GridHeader
-        title={t("evaluation:file.title")}
-        description={t("evaluation:file.description")}
-        action={<UploadFile />}
-      />
+    <Card className="border-0 shadow-none">
+      <CardHeader>
+        <CardTitle>{t("evaluation:file.title")}</CardTitle>
+        <CardDescription>{t("evaluation:file.description")}</CardDescription>
+        <CardAction>
+          <UploadFile />
+        </CardAction>
+      </CardHeader>
 
-      <div className="p-6 flex flex-col gap-6 bg-white">
+      <CardContent>
         <UploaderState />
         {files.length === 0 ? (
           <EmptyFile />
@@ -52,8 +69,8 @@ export function FileList({ files }: { files: DatasetFile[] }) {
             </TableBody>
           </Table>
         )}
-      </div>
-    </div>
+      </CardContent>
+    </Card>
   )
 }
 

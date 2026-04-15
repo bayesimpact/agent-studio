@@ -133,17 +133,20 @@ export class EvaluationDatasetsService {
 
   async updateDataset({
     connectScope,
+    datasetId,
     fields: { name, documentId, columns },
   }: {
     connectScope: RequiredConnectScope
+    datasetId: string
     fields: { name: string; documentId: string; columns: EvaluationDatasetSchemaColumnDto[] }
   }): Promise<EvaluationDataset> {
     if (!name.trim()) {
       throw new UnprocessableEntityException("Dataset name is required")
     }
 
-    if (!documentId.trim()) {
-      throw new UnprocessableEntityException("Document ID is required")
+    const dataset = await this.datasetConnectRepository.getOneById(connectScope, datasetId)
+    if (!dataset) {
+      throw new NotFoundException(`Evaluation dataset with id ${datasetId} not found`)
     }
 
     const document = await this.documentsService.findById({ connectScope, documentId })
@@ -151,10 +154,12 @@ export class EvaluationDatasetsService {
       throw new NotFoundException(`Document with id ${documentId} not found`)
     }
 
-    const dataset = await this.datasetConnectRepository.createAndSave(connectScope, {
+    const newValues = {
       name,
       schemaMapping: this.buildSchemaMapping(columns),
-    })
+    }
+    Object.assign(dataset, newValues)
+    await this.datasetConnectRepository.saveOne(dataset)
 
     // Link dataset to document
     await this.evaluationDatasetDocumentRepository.save({

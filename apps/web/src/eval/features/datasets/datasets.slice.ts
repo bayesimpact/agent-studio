@@ -12,14 +12,17 @@ type UploaderState = {
 }
 
 interface State {
+  currentDatasetId: string | null
   currentFileId: string | null
   data: AsyncData<EvaluationDataset[]>
   files: AsyncData<DatasetFile[]>
   fileColumns: AsyncData<DatasetFileColumn[]>
   uploader: UploaderState
+  isUpdatingDataset: boolean
 }
 
 const initialState: State = {
+  currentDatasetId: null,
   currentFileId: null,
   data: defaultAsyncData,
   files: defaultAsyncData,
@@ -30,6 +33,7 @@ const initialState: State = {
     processed: 0,
     errors: null,
   },
+  isUpdatingDataset: false,
 }
 
 const slice = createSlice({
@@ -38,6 +42,9 @@ const slice = createSlice({
   reducers: {
     reset: () => initialState,
     initData: () => {},
+    setCurrentDatasetId: (state, action: PayloadAction<{ datasetId: string | null }>) => {
+      state.currentDatasetId = action.payload.datasetId
+    },
     setCurrentFileId: (state, action: PayloadAction<{ fileId: string | null }>) => {
       state.currentFileId = action.payload.fileId
     },
@@ -97,6 +104,7 @@ const slice = createSlice({
         state.data.error = null
       })
       .addCase(datasetsThunks.listDatasets.fulfilled, (state, action) => {
+        state.isUpdatingDataset = false
         state.data = {
           status: ADS.Fulfilled,
           error: null,
@@ -123,6 +131,14 @@ const slice = createSlice({
       .addCase(datasetsThunks.getFileColumns.rejected, (state, action) => {
         state.fileColumns.status = ADS.Error
         state.fileColumns.error = action.error.message || "Failed to get file columns"
+      })
+
+    builder
+      .addCase(datasetsThunks.updateOne.pending, (state) => {
+        state.isUpdatingDataset = true
+      })
+      .addCase(datasetsThunks.updateOne.rejected, (state) => {
+        state.isUpdatingDataset = false
       })
   },
 })
