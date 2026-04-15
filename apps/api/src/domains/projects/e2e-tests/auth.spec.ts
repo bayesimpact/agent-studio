@@ -76,8 +76,7 @@ describe("Projects - Auth", () => {
       expectResponse(await subject(), 401, AUTH_ERRORS.NO_ACCESS_TOKEN)
     })
     it("requires a valid organization ID", async () => {
-      await createContextForRole("owner")
-      organizationId = null
+      organizationId = ":organizationId"
       expectResponse(await subject(), 400, AUTH_ERRORS.NO_ORGANIZATION_ID)
     })
     it("requires the user to be a member of the organization", async () => {
@@ -110,7 +109,7 @@ describe("Projects - Auth", () => {
     })
     it("requires a valid organization ID", async () => {
       await createContextForRole("owner")
-      organizationId = null
+      organizationId = ":organizationId"
       expectResponse(await subject(), 400, AUTH_ERRORS.NO_ORGANIZATION_ID)
     })
     it("requires the user to be a member of the organization", async () => {
@@ -138,7 +137,7 @@ describe("Projects - Auth", () => {
     })
     it("requires a valid organization ID", async () => {
       await createContextForRole("owner")
-      organizationId = null
+      organizationId = ":organizationId"
       expectResponse(await subject(), 400, AUTH_ERRORS.NO_ORGANIZATION_ID)
     })
     it("requires the user to belong to the organization", async () => {
@@ -172,7 +171,7 @@ describe("Projects - Auth", () => {
     })
     it("requires a valid organization ID", async () => {
       await createContextForRole("owner")
-      organizationId = null
+      organizationId = ":organizationId"
       expectResponse(await subject(), 400, AUTH_ERRORS.NO_ORGANIZATION_ID)
     })
     it("requires the user to be a member of the organization", async () => {

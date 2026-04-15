@@ -77,6 +77,8 @@ function forwardSignalToActiveChild(signal: NodeJS.Signals): void {
 async function main(): Promise<void> {
   process.env.TEST_USE_WORKER_DATABASE = "true"
   process.env.TEST_MAX_WORKERS ??= "50%"
+  process.env.MCP_ENCRYPTION_KEY ??=
+    "0000000000000000000000000000000000000000000000000000000000000000"
   const resolvedWorkerCount = resolveWorkerCount(process.env.TEST_MAX_WORKERS)
   process.env.TEST_WORKERS = String(resolvedWorkerCount)
 
