@@ -24,6 +24,30 @@ To learn more about NestJs, take a look at the following resources:
 - [Official NestJS Courses](https://courses.nestjs.com) - Learn everything you need to master NestJS and tackle modern backend applications at any scale.
 - [GitHub Repo](https://github.com/nestjs/nest)
 
+## Scripts
+
+Admin scripts live in `src/scripts/` and are exposed as npm commands. They all bootstrap a full NestJS application context, so database and external service configuration must be available via environment variables.
+
+### Environment loading
+
+All scripts support `DOTENV_CONFIG_PATH` to load a specific `.env` file before the NestJS app bootstraps. This is useful for targeting a specific environment (e.g. platform):
+
+```bash
+DOTENV_CONFIG_PATH=.env.dontsave.platform npm run invite:manage
+```
+
+When `DOTENV_CONFIG_PATH` is set, the specified file is loaded with `override: true`, meaning its values take precedence over any previously set environment variables.
+
+### Available scripts
+
+| Command | Description |
+|---|---|
+| `npm run invite:manage` | List and resend pending invitations interactively |
+| `npm run invite:organization-owners` | Batch-invite organization owners from a CSV file (`--file <path>` required, supports `--dry-run` and `--inviter-name`) |
+| `npm run seed:mcp-preset` | Create an MCP server preset interactively |
+| `npm run mcp:link-to-project` | Link an MCP server preset to project agents interactively |
+| `npm run requeue:document-embeddings` | Re-enqueue documents for embedding generation (supports `--dry-run`, `--limit`, `--batch-size`, `--organization-id`, `--project-id`, `--all-project-documents`) |
+
 ## Force API Deployment (No TS Changes)
 
 Production CI only deploys when `make check-api-changes` finds meaningful API changes.

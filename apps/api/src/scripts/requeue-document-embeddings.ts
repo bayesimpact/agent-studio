@@ -1,4 +1,5 @@
 import { randomUUID } from "node:crypto"
+import { Logger } from "@nestjs/common"
 import { NestFactory } from "@nestjs/core"
 import { getRepositoryToken } from "@nestjs/typeorm"
 import type { Repository } from "typeorm"
@@ -8,6 +9,7 @@ import {
   DOCUMENT_EMBEDDINGS_BATCH_SERVICE,
   type DocumentEmbeddingsBatchService,
 } from "@/domains/documents/embeddings/document-embeddings-batch.interface"
+import { confirmDatabaseTarget } from "@/scripts/script-bootstrap"
 
 type CliOptions = {
   dryRun: boolean
@@ -41,6 +43,8 @@ function getOptionalArgValue(argv: string[], argName: string): string | undefine
   return argv[argIndex + 1]
 }
 
+const logger = new Logger("RequeueDocumentEmbeddings")
+
 function validateCliOptions(options: CliOptions): void {
   if (options.limit !== undefined && (Number.isNaN(options.limit) || options.limit <= 0)) {
     throw new Error("Invalid --limit value. It must be a positive integer.")
@@ -54,6 +58,7 @@ function validateCliOptions(options: CliOptions): void {
 async function bootstrapCli(): Promise<void> {
   const options = parseCliOptions(process.argv.slice(2))
   validateCliOptions(options)
+  await confirmDatabaseTarget(logger)
 
   const app = await NestFactory.createApplicationContext(AppModule, {
     logger: ["error", "warn", "log"],
@@ -71,24 +76,22 @@ async function bootstrapCli(): Promise<void> {
     })
 
     if (documentsToRequeue.length === 0) {
-      console.log("No documents matched the requeue filters.")
+      logger.log("No documents matched the requeue filters.")
       return
     }
 
-    console.log(
+    logger.log(
       `Found ${documentsToRequeue.length} documents to ${options.dryRun ? "preview" : "requeue"}.`,
     )
 
     if (options.dryRun) {
       for (const document of documentsToRequeue.slice(0, 20)) {
-        console.log(
+        logger.log(
           `[dry-run] ${document.id} org=${document.organizationId} project=${document.projectId} extractionEngine=${document.extractionEngine ?? "null"} embeddingStatus=${document.embeddingStatus}`,
         )
       }
       if (documentsToRequeue.length > 20) {
-        console.log(
-          `[dry-run] ... ${documentsToRequeue.length - 20} additional document(s) omitted`,
-        )
+        logger.log(`[dry-run] ... ${documentsToRequeue.length - 20} additional document(s) omitted`)
       }
       return
     }
@@ -106,7 +109,7 @@ async function bootstrapCli(): Promise<void> {
         })
         enqueuedCount += 1
       }
-      console.log(`Enqueued ${enqueuedCount}/${documentsToRequeue.length} documents`)
+      logger.log(`Enqueued ${enqueuedCount}/${documentsToRequeue.length} documents`)
     }
   } finally {
     await app.close()
