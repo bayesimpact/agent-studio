@@ -1,9 +1,9 @@
 import type { Repository } from "typeorm"
-import { clearTestDatabase } from "@/common/test/test-database"
 import {
-  setupTransactionalTestDatabase,
-  teardownTestDatabase,
-} from "@/common/test/test-transaction-manager"
+  clearTestDatabase,
+  setupE2eTestDatabase,
+  teardownE2eTestDatabase,
+} from "@/common/test/test-database"
 import type { Auth0UserInfoResponse } from "@/domains/auth/auth0-userinfo.service"
 import { User } from "./user.entity"
 import { userFactory } from "./user.factory"
@@ -12,32 +12,22 @@ import { UsersService } from "./users.service"
 describe("UsersService", () => {
   let service: UsersService
   let repository: Repository<User>
-  let setup: Awaited<ReturnType<typeof setupTransactionalTestDatabase>>
+  let setup: Awaited<ReturnType<typeof setupE2eTestDatabase>>
 
   beforeAll(async () => {
-    setup = await setupTransactionalTestDatabase({
+    setup = await setupE2eTestDatabase({
       providers: [UsersService],
     })
-    // Clear database once at the start to ensure clean state
-    // Individual tests use transactions with rollback for isolation
-    await clearTestDatabase(setup.dataSource)
   })
 
   afterAll(async () => {
-    await teardownTestDatabase(setup)
+    await teardownE2eTestDatabase(setup)
   })
 
   beforeEach(async () => {
-    // Start transaction - this creates a new module with transactional providers
-    await setup.startTransaction()
-    // Get service and repository from transactional module
+    await clearTestDatabase(setup.dataSource)
     service = setup.module.get<UsersService>(UsersService)
     repository = setup.getRepository(User)
-  })
-
-  afterEach(async () => {
-    // Rollback transaction - automatically cleans up all data
-    await setup.rollbackTransaction()
   })
 
   describe("findByAuth0Id", () => {

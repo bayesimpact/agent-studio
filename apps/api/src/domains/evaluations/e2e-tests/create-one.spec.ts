@@ -1,13 +1,14 @@
+import { randomUUID } from "node:crypto"
 import { EvaluationsRoutes } from "@caseai-connect/api-contracts"
 import type { INestApplication } from "@nestjs/common"
 import type { App } from "supertest/types"
 import { bindExpectActivityCreated } from "@/common/test/activity-test.helpers"
-import { clearTestDatabase } from "@/common/test/test-database"
 import {
   type AllRepositories,
-  setupTransactionalTestDatabase,
-  teardownTestDatabase,
-} from "@/common/test/test-transaction-manager"
+  clearTestDatabase,
+  setupE2eTestDatabase,
+  teardownE2eTestDatabase,
+} from "@/common/test/test-database"
 import { removeNullish } from "@/common/utils/remove-nullish"
 import { ActivitiesModule } from "@/domains/activities/activities.module"
 import { EvaluationsModule } from "@/domains/evaluations/evaluations.module"
@@ -19,17 +20,17 @@ import { expectResponse, type Requester, testRequester } from "../../../../test/
 describe("Evaluations - createOne", () => {
   let app: INestApplication<App>
   let request: Requester
-  let setup: Awaited<ReturnType<typeof setupTransactionalTestDatabase>>
+  let setup: Awaited<ReturnType<typeof setupE2eTestDatabase>>
   let repositories: AllRepositories
 
   let organizationId: string
   let projectId: string
   let accessToken: string | undefined = "token"
-  let auth0Id = "auth0|123"
+  let auth0Id = `auth0|${randomUUID()}`
   let expectActivityCreated: ReturnType<typeof bindExpectActivityCreated>
 
   beforeAll(async () => {
-    setup = await setupTransactionalTestDatabase({
+    setup = await setupE2eTestDatabase({
       additionalImports: [EvaluationsModule, ActivitiesModule],
       applyOverrides: (moduleBuilder) => setupUserGuardForTesting(moduleBuilder, () => auth0Id),
     })
@@ -43,20 +44,21 @@ describe("Evaluations - createOne", () => {
   beforeEach(async () => {
     await clearTestDatabase(setup.dataSource)
     accessToken = "token"
-    auth0Id = "auth0|123"
+    auth0Id = `auth0|${randomUUID()}`
   })
 
   afterAll(async () => {
-    await teardownTestDatabase(setup)
+    await teardownE2eTestDatabase(setup)
     await sdk.shutdown()
     await app.close()
   })
 
   const createContext = async () => {
-    const { user, organization, project } = await createOrganizationWithProject(repositories)
+    const { organization, project } = await createOrganizationWithProject(repositories, {
+      user: { auth0Id },
+    })
     organizationId = organization.id
     projectId = project.id
-    auth0Id = user.auth0Id
     return { organization, project }
   }
 

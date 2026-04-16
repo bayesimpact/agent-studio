@@ -1,9 +1,9 @@
 import type { Repository } from "typeorm"
-import { clearTestDatabase } from "@/common/test/test-database"
 import {
-  setupTransactionalTestDatabase,
-  teardownTestDatabase,
-} from "@/common/test/test-transaction-manager"
+  clearTestDatabase,
+  setupE2eTestDatabase,
+  teardownE2eTestDatabase,
+} from "@/common/test/test-database"
 import { User } from "@/domains/users/user.entity"
 import { userFactory } from "@/domains/users/user.factory"
 import { FeatureFlag } from "../feature-flags/feature-flag.entity"
@@ -18,35 +18,25 @@ describe("OrganizationsService", () => {
   let organizationRepository: Repository<Organization>
   let organizationMembershipRepository: Repository<OrganizationMembership>
   let userRepository: Repository<User>
-  let setup: Awaited<ReturnType<typeof setupTransactionalTestDatabase>>
+  let setup: Awaited<ReturnType<typeof setupE2eTestDatabase>>
 
   beforeAll(async () => {
-    setup = await setupTransactionalTestDatabase({
+    setup = await setupE2eTestDatabase({
       additionalImports: [OrganizationsModule],
     })
-    // Clear database once at the start to ensure clean state
-    // Individual tests use transactions with rollback for isolation
-    await clearTestDatabase(setup.dataSource)
   })
 
   afterAll(async () => {
-    await teardownTestDatabase(setup)
+    await teardownE2eTestDatabase(setup)
   })
 
   beforeEach(async () => {
-    // Start transaction - this creates a new module with transactional providers
-    await setup.startTransaction()
-    // Get service and repositories from transactional module
+    await clearTestDatabase(setup.dataSource)
     service = setup.module.get<OrganizationsService>(OrganizationsService)
     organizationRepository = setup.getRepository(Organization)
     organizationMembershipRepository = setup.getRepository(OrganizationMembership)
     setup.getRepository(FeatureFlag)
     userRepository = setup.getRepository(User)
-  })
-
-  afterEach(async () => {
-    // Rollback transaction - automatically cleans up all data
-    await setup.rollbackTransaction()
   })
 
   describe("createOrganization", () => {

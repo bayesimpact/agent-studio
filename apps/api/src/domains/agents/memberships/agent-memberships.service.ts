@@ -218,6 +218,7 @@ export class AgentMembershipsService {
       const projectMembershipRepo = manager.getRepository(ProjectMembership)
       const organizationMembershipRepo = manager.getRepository(OrganizationMembership)
 
+      // when calling findById, we use another DB transaction, it's not ideal but it's ok for this use case
       const membership = await this.findById(membershipId)
       if (!membership) return
 

@@ -2,12 +2,12 @@ import { AgentsRoutes } from "@caseai-connect/api-contracts"
 import { afterAll } from "@jest/globals"
 import type { INestApplication } from "@nestjs/common"
 import type { App } from "supertest/types"
-import { clearTestDatabase } from "@/common/test/test-database"
 import {
   type AllRepositories,
-  setupTransactionalTestDatabase,
-  teardownTestDatabase,
-} from "@/common/test/test-transaction-manager"
+  clearTestDatabase,
+  setupE2eTestDatabase,
+  teardownE2eTestDatabase,
+} from "@/common/test/test-database"
 import { removeNullish } from "@/common/utils/remove-nullish"
 import { agentFactory } from "@/domains/agents/agent.factory"
 import { createOrganizationWithProject } from "@/domains/organizations/organization.factory"
@@ -20,7 +20,7 @@ import { addUserToAgent } from "../memberships/agent-membership.factory"
 describe("Agents - getAll", () => {
   let app: INestApplication<App>
   let request: Requester
-  let setup: Awaited<ReturnType<typeof setupTransactionalTestDatabase>>
+  let setup: Awaited<ReturnType<typeof setupE2eTestDatabase>>
   let repositories: AllRepositories
 
   let organizationId: string
@@ -29,7 +29,7 @@ describe("Agents - getAll", () => {
   let auth0Id = "auth0|123"
 
   beforeAll(async () => {
-    setup = await setupTransactionalTestDatabase({
+    setup = await setupE2eTestDatabase({
       additionalImports: [AgentsModule],
       applyOverrides: (moduleBuilder) => setupUserGuardForTesting(moduleBuilder, () => auth0Id),
     })
@@ -46,7 +46,7 @@ describe("Agents - getAll", () => {
   })
 
   afterAll(async () => {
-    await teardownTestDatabase(setup)
+    await teardownE2eTestDatabase(setup)
     await sdk.shutdown()
     await app.close()
   })

@@ -1,12 +1,13 @@
+import { randomUUID } from "node:crypto"
 import { AgentAnalyticsRoutes } from "@caseai-connect/api-contracts"
 import type { INestApplication } from "@nestjs/common"
 import type { App } from "supertest/types"
-import { clearTestDatabase } from "@/common/test/test-database"
 import {
   type AllRepositories,
-  setupTransactionalTestDatabase,
-  teardownTestDatabase,
-} from "@/common/test/test-transaction-manager"
+  clearTestDatabase,
+  setupE2eTestDatabase,
+  teardownE2eTestDatabase,
+} from "@/common/test/test-database"
 import { removeNullish } from "@/common/utils/remove-nullish"
 import { agentFactory } from "@/domains/agents/agent.factory"
 import { conversationAgentSessionFactory } from "@/domains/agents/conversation-agent-sessions/conversation-agent-session.factory"
@@ -23,14 +24,14 @@ import { AgentsAnalyticsModule } from "../agents-analytics.module"
 describe("Agents Analytics - getConversationsPerDay", () => {
   let app: INestApplication<App>
   let request: Requester
-  let setup: Awaited<ReturnType<typeof setupTransactionalTestDatabase>>
+  let setup: Awaited<ReturnType<typeof setupE2eTestDatabase>>
   let repositories: AllRepositories
 
   let organizationId: string
   let projectId: string
   let agentId: string
   let accessToken: string | undefined = "token"
-  let auth0Id = "auth0|123"
+  let auth0Id = `auth0|${randomUUID()}`
 
   const day1Start = new Date("2026-01-01T00:00:00.000Z")
   const day2Start = new Date("2026-01-02T00:00:00.000Z")
@@ -44,7 +45,7 @@ describe("Agents Analytics - getConversationsPerDay", () => {
   ]
 
   beforeAll(async () => {
-    setup = await setupTransactionalTestDatabase({
+    setup = await setupE2eTestDatabase({
       additionalImports: [AgentsAnalyticsModule],
       applyOverrides: (moduleBuilder) => setupUserGuardForTesting(moduleBuilder, () => auth0Id),
     })
@@ -57,19 +58,20 @@ describe("Agents Analytics - getConversationsPerDay", () => {
   beforeEach(async () => {
     await clearTestDatabase(setup.dataSource)
     accessToken = "token"
-    auth0Id = "auth0|123"
+    auth0Id = `auth0|${randomUUID()}`
   })
 
   afterAll(async () => {
-    await teardownTestDatabase(setup)
+    await teardownE2eTestDatabase(setup)
     await app.close()
   })
 
   const createContext = async () => {
-    const { organization, project, user, agent } = await createOrganizationWithAgent(repositories)
+    const { organization, project, user, agent } = await createOrganizationWithAgent(repositories, {
+      user: { auth0Id },
+    })
     organizationId = organization.id
     projectId = project.id
-    auth0Id = user.auth0Id
     agentId = agent.id
 
     const session1Day1 = conversationAgentSessionFactory

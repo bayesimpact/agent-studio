@@ -1,12 +1,12 @@
 import { AgentModel, EvaluationReportsRoutes } from "@caseai-connect/api-contracts"
 import type { INestApplication } from "@nestjs/common"
 import type { App } from "supertest/types"
-import { clearTestDatabase } from "@/common/test/test-database"
 import {
   type AllRepositories,
-  setupTransactionalTestDatabase,
-  teardownTestDatabase,
-} from "@/common/test/test-transaction-manager"
+  clearTestDatabase,
+  setupE2eTestDatabase,
+  teardownE2eTestDatabase,
+} from "@/common/test/test-database"
 import { removeNullish } from "@/common/utils/remove-nullish"
 import { agentFactory } from "@/domains/agents/agent.factory"
 import { evaluationFactory } from "@/domains/evaluations/evaluation.factory"
@@ -20,7 +20,7 @@ import { expectResponse, type Requester, testRequester } from "../../../../../te
 describe("Evaluation Reports - getAll", () => {
   let app: INestApplication<App>
   let request: Requester
-  let setup: Awaited<ReturnType<typeof setupTransactionalTestDatabase>>
+  let setup: Awaited<ReturnType<typeof setupE2eTestDatabase>>
   let repositories: AllRepositories
 
   let organizationId: string
@@ -31,7 +31,7 @@ describe("Evaluation Reports - getAll", () => {
   let auth0Id = "auth0|123"
 
   beforeAll(async () => {
-    setup = await setupTransactionalTestDatabase({
+    setup = await setupE2eTestDatabase({
       additionalImports: [EvaluationsModule],
       applyOverrides: (moduleBuilder) => setupUserGuardForTesting(moduleBuilder, () => auth0Id),
     })
@@ -48,7 +48,7 @@ describe("Evaluation Reports - getAll", () => {
   })
 
   afterAll(async () => {
-    await teardownTestDatabase(setup)
+    await teardownE2eTestDatabase(setup)
     await sdk.shutdown()
     await app.close()
   })

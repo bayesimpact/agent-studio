@@ -5,17 +5,17 @@ import type { INestApplication } from "@nestjs/common"
 import type { App } from "supertest/types"
 import type { Repository } from "typeorm"
 import { AUTH_ERRORS } from "@/common/errors/auth-errors"
-import { clearTestDatabase } from "@/common/test/test-database"
 import {
   type AllRepositories,
-  setupTransactionalTestDatabase,
-  teardownTestDatabase,
-} from "@/common/test/test-transaction-manager"
+  clearTestDatabase,
+  setupE2eTestDatabase,
+  teardownE2eTestDatabase,
+} from "@/common/test/test-database"
 import { removeNullish } from "@/common/utils/remove-nullish"
 import { createOrganizationWithAgent } from "@/domains/organizations/organization.factory"
 import { projectFactory } from "@/domains/projects/project.factory"
 import { sdk } from "@/external/llm/open-telemetry-init"
-import { setupUserGuardForTesting } from "../../../../test/e2e.helpers"
+import { mockForeignAuth0Id, setupUserGuardForTesting } from "../../../../test/e2e.helpers"
 import { expectResponse, type Requester, testRequester } from "../../../../test/request"
 import { Agent } from "../agent.entity"
 import { AgentsModule } from "../agents.module"
@@ -23,19 +23,19 @@ import { AgentsModule } from "../agents.module"
 describe("Agents - Auth", () => {
   let app: INestApplication<App>
   let request: Requester
-  let setup: Awaited<ReturnType<typeof setupTransactionalTestDatabase>>
+  let setup: Awaited<ReturnType<typeof setupE2eTestDatabase>>
   let repositories: AllRepositories
   let _agentRepository: Repository<Agent>
 
   // Variables for the tests
-  let organizationId: string | null = "random-organization-id"
-  let projectId: string | null = "random-project-id"
-  let agentId: string | null = "random-agent-id"
+  let organizationId: string | null = randomUUID()
+  let projectId: string | null = randomUUID()
+  let agentId: string | null = randomUUID()
   let accessToken: string | null = "token"
-  let auth0Id = "auth0|123"
+  let auth0Id = `auth0|${randomUUID()}`
 
   beforeAll(async () => {
-    setup = await setupTransactionalTestDatabase({
+    setup = await setupE2eTestDatabase({
       additionalImports: [AgentsModule],
       applyOverrides: (moduleBuilder) => setupUserGuardForTesting(moduleBuilder, () => auth0Id),
     })
@@ -48,21 +48,22 @@ describe("Agents - Auth", () => {
 
   beforeEach(async () => {
     await clearTestDatabase(setup.dataSource)
-    organizationId = "random-organization-id"
-    projectId = "random-project-id"
-    agentId = "random-agent-id"
+    organizationId = randomUUID()
+    projectId = randomUUID()
+    agentId = randomUUID()
     accessToken = "token"
-    auth0Id = "auth0|123"
+    auth0Id = `auth0|${randomUUID()}`
   })
 
   afterAll(async () => {
-    await teardownTestDatabase(setup)
+    await teardownE2eTestDatabase(setup)
     await sdk.shutdown()
     await app.close()
   })
 
   const createContextForRole = async (role: "owner" | "admin" | "member" = "owner") => {
-    const { user, organization, project, agent } = await createOrganizationWithAgent(repositories, {
+    const { organization, project, agent } = await createOrganizationWithAgent(repositories, {
+      user: { auth0Id },
       organizationMembership: { role: "member" },
       projectMembership: { role },
       agentMembership: { role: "member" },
@@ -71,7 +72,6 @@ describe("Agents - Auth", () => {
     projectId = project.id
     agentId = agent.id
     accessToken = "token"
-    auth0Id = user.auth0Id
     return { organization, project }
   }
 
@@ -88,6 +88,7 @@ describe("Agents - Auth", () => {
       expectResponse(await subject(), 401, AUTH_ERRORS.NO_ACCESS_TOKEN)
     })
     it("requires a valid organization ID", async () => {
+      await createContextForRole("owner")
       organizationId = null
       expectResponse(await subject(), 400, AUTH_ERRORS.NO_ORGANIZATION_ID)
     })
@@ -98,7 +99,7 @@ describe("Agents - Auth", () => {
     })
     it("requires the user to be a member of the organization", async () => {
       await createContextForRole("owner")
-      auth0Id = "another-auth0-id" // this will trigger a new user to be created in the database
+      auth0Id = mockForeignAuth0Id()
       expectResponse(await subject(), 401, AUTH_ERRORS.NOT_MEMBER_OF_ORG)
     })
     it("allows a simple member to get all agents", async () => {
@@ -121,6 +122,7 @@ describe("Agents - Auth", () => {
       expectResponse(await subject(), 401, AUTH_ERRORS.NO_ACCESS_TOKEN)
     })
     it("requires a valid organization ID", async () => {
+      await createContextForRole("owner")
       organizationId = null
       expectResponse(await subject(), 400, AUTH_ERRORS.NO_ORGANIZATION_ID)
     })
@@ -131,7 +133,7 @@ describe("Agents - Auth", () => {
     })
     it("requires the user to be a member of the organization", async () => {
       await createContextForRole("owner")
-      auth0Id = "another-auth0-id" // this will trigger a new user to be created in the database
+      auth0Id = mockForeignAuth0Id()
       expectResponse(await subject(), 401, AUTH_ERRORS.NOT_MEMBER_OF_ORG)
     })
     it("doesn't allow a simple member to upload a agent", async () => {
@@ -153,6 +155,7 @@ describe("Agents - Auth", () => {
       expectResponse(await subject(), 401, AUTH_ERRORS.NO_ACCESS_TOKEN)
     })
     it("requires a valid organization ID", async () => {
+      await createContextForRole("owner")
       organizationId = null
       expectResponse(await subject(), 400, AUTH_ERRORS.NO_ORGANIZATION_ID)
     })
@@ -164,7 +167,7 @@ describe("Agents - Auth", () => {
     })
     it("requires the user to be a member of the organization", async () => {
       await createContextForRole("owner")
-      auth0Id = "another-auth0-id" // this will trigger a new user to be created in the database
+      auth0Id = mockForeignAuth0Id()
       expectResponse(await subject(), 401, AUTH_ERRORS.NOT_MEMBER_OF_ORG)
     })
     it("requires the agent to be part of the project", async () => {
@@ -194,6 +197,7 @@ describe("Agents - Auth", () => {
       expectResponse(await subject(), 401, AUTH_ERRORS.NO_ACCESS_TOKEN)
     })
     it("requires a valid organization ID", async () => {
+      await createContextForRole("owner")
       organizationId = null
       expectResponse(await subject(), 400, AUTH_ERRORS.NO_ORGANIZATION_ID)
     })
@@ -205,7 +209,7 @@ describe("Agents - Auth", () => {
     })
     it("requires the user to be a member of the organization", async () => {
       await createContextForRole("owner")
-      auth0Id = "another-auth0-id" // this will trigger a new user to be created in the database
+      auth0Id = mockForeignAuth0Id()
       expectResponse(await subject(), 401, AUTH_ERRORS.NOT_MEMBER_OF_ORG)
     })
     it("requires the agent to be part of the project", async () => {

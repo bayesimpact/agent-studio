@@ -4,16 +4,16 @@ import { afterAll } from "@jest/globals"
 import type { INestApplication } from "@nestjs/common"
 import type { App } from "supertest/types"
 import { AUTH_ERRORS } from "@/common/errors/auth-errors"
-import { clearTestDatabase } from "@/common/test/test-database"
 import {
   type AllRepositories,
-  setupTransactionalTestDatabase,
-  teardownTestDatabase,
-} from "@/common/test/test-transaction-manager"
+  clearTestDatabase,
+  setupE2eTestDatabase,
+  teardownE2eTestDatabase,
+} from "@/common/test/test-database"
 import { removeNullish } from "@/common/utils/remove-nullish"
 import { createOrganizationWithProject } from "@/domains/organizations/organization.factory"
 import { projectFactory } from "@/domains/projects/project.factory"
-import { setupUserGuardForTesting } from "../../../../../test/e2e.helpers"
+import { mockForeignAuth0Id, setupUserGuardForTesting } from "../../../../../test/e2e.helpers"
 import { expectResponse, type Requester, testRequester } from "../../../../../test/request"
 import { DocumentTag } from "../document-tag.entity"
 import { documentTagFactory } from "../document-tag.factory"
@@ -22,17 +22,17 @@ import { DocumentTagsModule } from "../document-tags.module"
 describe("DocumentTags - Auth", () => {
   let app: INestApplication<App>
   let request: Requester
-  let setup: Awaited<ReturnType<typeof setupTransactionalTestDatabase>>
+  let setup: Awaited<ReturnType<typeof setupE2eTestDatabase>>
   let repositories: AllRepositories
 
-  let organizationId: string | null = "random-organization-id"
-  let projectId: string | null = "random-project-id"
-  let documentTagId: string | null = "random-document-tag-id"
+  let organizationId: string | null = randomUUID()
+  let projectId: string | null = randomUUID()
+  let documentTagId: string | null = randomUUID()
   let accessToken: string | null = "token"
-  let auth0Id = "auth0|123"
+  let auth0Id = `auth0|${randomUUID()}`
 
   beforeAll(async () => {
-    setup = await setupTransactionalTestDatabase({
+    setup = await setupE2eTestDatabase({
       additionalImports: [DocumentTagsModule],
       applyOverrides: (moduleBuilder) => setupUserGuardForTesting(moduleBuilder, () => auth0Id),
     })
@@ -44,20 +44,21 @@ describe("DocumentTags - Auth", () => {
 
   beforeEach(async () => {
     await clearTestDatabase(setup.dataSource)
-    organizationId = "random-organization-id"
-    projectId = "random-project-id"
-    documentTagId = "random-document-tag-id"
+    organizationId = randomUUID()
+    projectId = randomUUID()
+    documentTagId = randomUUID()
     accessToken = "token"
-    auth0Id = "auth0|123"
+    auth0Id = `auth0|${randomUUID()}`
   })
 
   afterAll(async () => {
-    await teardownTestDatabase(setup)
+    await teardownE2eTestDatabase(setup)
     await app.close()
   })
 
   const createContextForRole = async (role: "owner" | "admin" | "member" = "owner") => {
-    const { user, organization, project } = await createOrganizationWithProject(repositories, {
+    const { organization, project } = await createOrganizationWithProject(repositories, {
+      user: { auth0Id },
       projectMembership: { role },
     })
     organizationId = organization.id
@@ -66,7 +67,6 @@ describe("DocumentTags - Auth", () => {
     await setup.getRepository(DocumentTag).save(documentTag)
     documentTagId = documentTag.id
     accessToken = "token"
-    auth0Id = user.auth0Id
     return { organization, project }
   }
 
@@ -93,7 +93,7 @@ describe("DocumentTags - Auth", () => {
     })
     it("requires the user to be a member of the organization", async () => {
       await createContextForRole("owner")
-      auth0Id = "another-auth0-id"
+      auth0Id = mockForeignAuth0Id()
       expectResponse(await subject(), 401, AUTH_ERRORS.NOT_MEMBER_OF_ORG)
     })
     it("doesn't allow a simple member to get all document tags", async () => {
@@ -126,7 +126,7 @@ describe("DocumentTags - Auth", () => {
     })
     it("requires the user to be a member of the organization", async () => {
       await createContextForRole("owner")
-      auth0Id = "another-auth0-id"
+      auth0Id = mockForeignAuth0Id()
       expectResponse(await subject(), 401, AUTH_ERRORS.NOT_MEMBER_OF_ORG)
     })
     it("doesn't allow a simple member to create a document tag", async () => {
@@ -158,7 +158,7 @@ describe("DocumentTags - Auth", () => {
     })
     it("requires the user to be a member of the organization", async () => {
       await createContextForRole("owner")
-      auth0Id = "another-auth0-id"
+      auth0Id = mockForeignAuth0Id()
       expectResponse(await subject(), 401, AUTH_ERRORS.NOT_MEMBER_OF_ORG)
     })
     it("requires the document tag to be part of the project", async () => {
@@ -198,7 +198,7 @@ describe("DocumentTags - Auth", () => {
     })
     it("requires the user to be a member of the organization", async () => {
       await createContextForRole("owner")
-      auth0Id = "another-auth0-id"
+      auth0Id = mockForeignAuth0Id()
       expectResponse(await subject(), 401, AUTH_ERRORS.NOT_MEMBER_OF_ORG)
     })
     it("requires the document tag to be part of the project", async () => {

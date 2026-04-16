@@ -1,12 +1,12 @@
 import { DocumentsRoutes } from "@caseai-connect/api-contracts"
 import type { INestApplication } from "@nestjs/common"
 import type { App } from "supertest/types"
-import { clearTestDatabase } from "@/common/test/test-database"
 import {
   type AllRepositories,
-  setupTransactionalTestDatabase,
-  teardownTestDatabase,
-} from "@/common/test/test-transaction-manager"
+  clearTestDatabase,
+  setupE2eTestDatabase,
+  teardownE2eTestDatabase,
+} from "@/common/test/test-database"
 import { removeNullish } from "@/common/utils/remove-nullish"
 import { createOrganizationWithDocument } from "@/domains/organizations/organization.factory"
 import type { ProjectMembership } from "@/domains/projects/memberships/project-membership.entity"
@@ -17,7 +17,7 @@ import { withDocumentAuthAndEmbeddingsMocks } from "../test-overrides"
 describe("Documents - getTemporaryUrl", () => {
   let app: INestApplication<App>
   let request: Requester
-  let setup: Awaited<ReturnType<typeof setupTransactionalTestDatabase>>
+  let setup: Awaited<ReturnType<typeof setupE2eTestDatabase>>
   let repositories: AllRepositories
 
   let organizationId: string
@@ -28,7 +28,7 @@ describe("Documents - getTemporaryUrl", () => {
   let auth0Id = "auth0|123"
 
   beforeAll(async () => {
-    setup = await setupTransactionalTestDatabase({
+    setup = await setupE2eTestDatabase({
       additionalImports: [DocumentsModule],
       applyOverrides: (moduleBuilder) =>
         withDocumentAuthAndEmbeddingsMocks(moduleBuilder, () => auth0Id),
@@ -46,7 +46,7 @@ describe("Documents - getTemporaryUrl", () => {
   })
 
   afterAll(async () => {
-    await teardownTestDatabase(setup)
+    await teardownE2eTestDatabase(setup)
     await app.close()
   })
 

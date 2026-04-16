@@ -2,12 +2,12 @@ import { DocumentsRoutes } from "@caseai-connect/api-contracts"
 import type { INestApplication } from "@nestjs/common"
 import type { App } from "supertest/types"
 import { bindExpectActivityCreated } from "@/common/test/activity-test.helpers"
-import { clearTestDatabase } from "@/common/test/test-database"
 import {
   type AllRepositories,
-  setupTransactionalTestDatabase,
-  teardownTestDatabase,
-} from "@/common/test/test-transaction-manager"
+  clearTestDatabase,
+  setupE2eTestDatabase,
+  teardownE2eTestDatabase,
+} from "@/common/test/test-database"
 import { removeNullish } from "@/common/utils/remove-nullish"
 import { ActivitiesModule } from "@/domains/activities/activities.module"
 import { createOrganizationWithDocument } from "@/domains/organizations/organization.factory"
@@ -18,7 +18,7 @@ import { withDocumentAuthAndEmbeddingsMocks } from "../test-overrides"
 describe("Documents - deleteOne", () => {
   let app: INestApplication<App>
   let request: Requester
-  let setup: Awaited<ReturnType<typeof setupTransactionalTestDatabase>>
+  let setup: Awaited<ReturnType<typeof setupE2eTestDatabase>>
   let repositories: AllRepositories
 
   let organizationId: string
@@ -29,7 +29,7 @@ describe("Documents - deleteOne", () => {
   let expectActivityCreated: ReturnType<typeof bindExpectActivityCreated>
 
   beforeAll(async () => {
-    setup = await setupTransactionalTestDatabase({
+    setup = await setupE2eTestDatabase({
       additionalImports: [DocumentsModule, ActivitiesModule],
       applyOverrides: (moduleBuilder) =>
         withDocumentAuthAndEmbeddingsMocks(moduleBuilder, () => auth0Id),
@@ -48,7 +48,7 @@ describe("Documents - deleteOne", () => {
   })
 
   afterAll(async () => {
-    await teardownTestDatabase(setup)
+    await teardownE2eTestDatabase(setup)
     await app.close()
   })
 

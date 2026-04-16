@@ -2,12 +2,12 @@ import { ConversationAgentSessionsRoutes } from "@caseai-connect/api-contracts"
 import type { INestApplication } from "@nestjs/common"
 import type { App } from "supertest/types"
 import { bindExpectActivityCreated } from "@/common/test/activity-test.helpers"
-import { clearTestDatabase } from "@/common/test/test-database"
 import {
   type AllRepositories,
-  setupTransactionalTestDatabase,
-  teardownTestDatabase,
-} from "@/common/test/test-transaction-manager"
+  clearTestDatabase,
+  setupE2eTestDatabase,
+  teardownE2eTestDatabase,
+} from "@/common/test/test-database"
 import { removeNullish } from "@/common/utils/remove-nullish"
 import { ActivitiesModule } from "@/domains/activities/activities.module"
 import { createOrganizationWithAgent } from "@/domains/organizations/organization.factory"
@@ -47,7 +47,7 @@ jest.mock("langfuse-v2", () => ({
 describe("ConversationAgentSessionsRoutes.createOne", () => {
   let app: INestApplication<App>
   let request: Requester
-  let setup: Awaited<ReturnType<typeof setupTransactionalTestDatabase>>
+  let setup: Awaited<ReturnType<typeof setupE2eTestDatabase>>
   let repositories: AllRepositories
 
   let organizationId: string
@@ -58,7 +58,7 @@ describe("ConversationAgentSessionsRoutes.createOne", () => {
   let expectActivityCreated: ReturnType<typeof bindExpectActivityCreated>
 
   beforeAll(async () => {
-    setup = await setupTransactionalTestDatabase({
+    setup = await setupE2eTestDatabase({
       additionalImports: [ConversationAgentSessionsModule, ActivitiesModule],
       applyOverrides: (moduleBuilder) => setupUserGuardForTesting(moduleBuilder, () => auth0Id),
     })
@@ -76,7 +76,7 @@ describe("ConversationAgentSessionsRoutes.createOne", () => {
   })
 
   afterAll(async () => {
-    await teardownTestDatabase(setup)
+    await teardownE2eTestDatabase(setup)
     await sdk.shutdown()
     await app.close()
   })

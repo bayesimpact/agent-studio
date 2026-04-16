@@ -1,11 +1,11 @@
 import { BadRequestException } from "@nestjs/common"
 import { days, endOfUtcDay, hours, minutes } from "@/common/test/date-helpers"
-import { clearTestDatabase } from "@/common/test/test-database"
 import {
   type AllRepositories,
-  setupTransactionalTestDatabase,
-  teardownTestDatabase,
-} from "@/common/test/test-transaction-manager"
+  clearTestDatabase,
+  setupE2eTestDatabase,
+  teardownE2eTestDatabase,
+} from "@/common/test/test-database"
 import { agentFactory } from "@/domains/agents/agent.factory"
 import { conversationAgentSessionFactory } from "@/domains/agents/conversation-agent-sessions/conversation-agent-session.factory"
 import { agentMessageFactory } from "@/domains/agents/shared/agent-session-messages/agent-messages.factory"
@@ -14,12 +14,12 @@ import { AgentsAnalyticsModule } from "./agents-analytics.module"
 import { AgentsAnalyticsService } from "./agents-analytics.service"
 
 describe("AgentsAnalyticsService", () => {
-  let setup: Awaited<ReturnType<typeof setupTransactionalTestDatabase>>
+  let setup: Awaited<ReturnType<typeof setupE2eTestDatabase>>
   let repositories: AllRepositories
   let service: AgentsAnalyticsService
 
   beforeAll(async () => {
-    setup = await setupTransactionalTestDatabase({
+    setup = await setupE2eTestDatabase({
       additionalImports: [AgentsAnalyticsModule],
     })
     repositories = setup.getAllRepositories()
@@ -28,7 +28,7 @@ describe("AgentsAnalyticsService", () => {
   })
 
   afterAll(async () => {
-    await teardownTestDatabase(setup)
+    await teardownE2eTestDatabase(setup)
   })
 
   beforeEach(async () => {

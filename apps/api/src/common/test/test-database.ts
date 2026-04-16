@@ -1,7 +1,7 @@
 import { randomUUID } from "node:crypto"
 import type { DynamicModule, Provider, Type } from "@nestjs/common"
 import { ConfigModule } from "@nestjs/config"
-import { Test, type TestingModule } from "@nestjs/testing"
+import { Test, type TestingModule, type TestingModuleBuilder } from "@nestjs/testing"
 import { getRepositoryToken, TypeOrmModule } from "@nestjs/typeorm"
 import {
   DataSource,
@@ -11,6 +11,9 @@ import {
   type Repository,
 } from "typeorm"
 import { ALL_ENTITIES } from "../all-entities"
+import { type AllRepositories, buildAllRepositories } from "./test-all-repositories"
+
+export type { AllRepositories } from "./test-all-repositories"
 
 export const RandomUuid = {
   Organization: randomUUID(),
@@ -18,19 +21,29 @@ export const RandomUuid = {
   Document: randomUUID(),
 } as const
 
-export interface TestDatabaseSetup {
+export type SetupTestDatabaseParams = {
+  providers?: Provider[]
+  additionalImports?: Array<Type<unknown> | DynamicModule>
+  applyOverrides?: (moduleBuilder: TestingModuleBuilder) => TestingModuleBuilder
+}
+
+/**
+ * **E2E / full Nest app tests** — use this with `clearTestDatabase` in `beforeEach` (or `afterEach`).
+ *
+ * One `DataSource` and the normal connection pool, so `@InjectDataSource()`, `DataSource.query()`,
+ * HTTP handlers, and anything else that does not go through the transactional `EntityManager`
+ * override still sees consistent data. Isolation comes from truncating tables, not from rolling
+ * back a per-test transaction.
+ */
+export interface E2eTestDatabaseSetup {
   module: TestingModule
   dataSource: DataSource
   getRepository: <T extends ObjectLiteral>(entity: new () => T) => Repository<T>
+  getAllRepositories: () => AllRepositories
   /**
-   * Starts a transaction and returns a QueryRunner.
-   * All repositories obtained via getRepository will use the transactional EntityManager.
-   * Remember to call rollbackTransaction() and release() when done.
+   * Prefer `clearTestDatabase` for e2e isolation. Kept for rare cases that need an explicit runner.
    */
   startTransaction: () => Promise<QueryRunner>
-  /**
-   * Gets a repository that uses the provided transactional EntityManager.
-   */
   getRepositoryForTransaction: <T extends ObjectLiteral>(
     entity: new () => T,
     entityManager: EntityManager,
@@ -38,19 +51,26 @@ export interface TestDatabaseSetup {
 }
 
 /**
- * Sets up a test database connection with all entities.
- * Automatically handles cleanup in the returned object.
+ * @deprecated Use {@link setupE2eTestDatabase} for new code; the name reflects the intended hybrid pattern.
  */
 export async function setupTestDatabase(
   providers: Provider[] = [],
   additionalImports: Array<Type<unknown> | DynamicModule> = [],
-): Promise<TestDatabaseSetup> {
+): Promise<E2eTestDatabaseSetup> {
+  return setupE2eTestDatabase({ providers, additionalImports })
+}
+
+export async function setupE2eTestDatabase(
+  params: SetupTestDatabaseParams = {},
+): Promise<E2eTestDatabaseSetup> {
+  const { providers = [], additionalImports = [], applyOverrides } = params
+
   const testDatabaseUrl = process.env.DATABASE_URL
   if (!testDatabaseUrl) {
     throw new Error("DATABASE_URL not found in environment. Make sure .env.test is loaded.")
   }
 
-  const module = await Test.createTestingModule({
+  let moduleBuilder = Test.createTestingModule({
     imports: [
       ConfigModule.forRoot({
         isGlobal: true,
@@ -67,13 +87,21 @@ export async function setupTestDatabase(
       ...additionalImports,
     ],
     providers,
-  }).compile()
+  })
+
+  if (applyOverrides) {
+    moduleBuilder = applyOverrides(moduleBuilder)
+  }
+
+  const module = await moduleBuilder.compile()
 
   const dataSource = module.get<DataSource>(DataSource)
 
   const getRepository = <T extends ObjectLiteral>(entity: new () => T): Repository<T> => {
     return module.get<Repository<T>>(getRepositoryToken(entity))
   }
+
+  const getAllRepositories = (): AllRepositories => buildAllRepositories(getRepository)
 
   const startTransaction = async (): Promise<QueryRunner> => {
     const queryRunner = dataSource.createQueryRunner()
@@ -93,6 +121,7 @@ export async function setupTestDatabase(
     module,
     dataSource,
     getRepository,
+    getAllRepositories,
     startTransaction,
     getRepositoryForTransaction,
   }
@@ -152,9 +181,12 @@ export async function clearTestDatabase(dataSource: DataSource): Promise<void> {
 }
 
 /**
- * Cleans up test database connection.
+ * Cleans up e2e test database connection (clears data, then closes the module).
+ * Pair with {@link setupE2eTestDatabase}; service tests that use
+ * {@link setupTransactionalTestDatabase} should use `teardownTestDatabase` from
+ * `test-transaction-manager` instead.
  */
-export async function teardownTestDatabase(setup: TestDatabaseSetup): Promise<void> {
+export async function teardownE2eTestDatabase(setup: E2eTestDatabaseSetup): Promise<void> {
   await clearTestDatabase(setup.dataSource)
   await setup.dataSource.destroy()
   await setup.module.close()

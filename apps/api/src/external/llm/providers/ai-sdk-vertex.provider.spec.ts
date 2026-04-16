@@ -10,8 +10,8 @@ import { AISDKVertexProvider } from "@/external/llm/providers/ai-sdk-vertex.prov
 import { ProviderSpecs } from "@/external/llm/providers/provider-specs"
 import { gcpCredentialsCheck } from "@/external/llm/providers/spec-gcp-tools"
 
-dotenvConfig({ path: ".env", override: true })
-dotenvConfig({ path: ".env.test", override: true })
+dotenvConfig({ path: ".env", override: true, quiet: true })
+dotenvConfig({ path: ".env.test", override: true, quiet: true })
 const testModels = Object.values(AgentModel)
   .filter((am) => AgentModelToAgentProvider[am] === AgentProvider.Vertex)
   .map((m) => ({

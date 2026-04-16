@@ -9,8 +9,8 @@ import { sdk } from "@/external/llm/open-telemetry-init"
 import { AISDKMedGemmaProvider } from "@/external/llm/providers/ai-sdk-med-gemma.provider"
 import { ProviderSpecs } from "@/external/llm/providers/provider-specs"
 
-dotenvConfig({ path: ".env", override: true })
-dotenvConfig({ path: ".env.test", override: true })
+dotenvConfig({ path: ".env", override: true, quiet: true })
+dotenvConfig({ path: ".env.test", override: true, quiet: true })
 const testModels = Object.values(AgentModel)
   .filter(
     (am) =>

@@ -3,7 +3,7 @@ name: CI
 on:
   pull_request:
     branches:
-      - main  
+      - main
 
 jobs:
   tests:
@@ -21,4 +21,4 @@ jobs:
           fetch-depth: 1
 
       - name: Run tests
-        run: make tests
+        run: TEST_WORKERS=5 make tests-parallel

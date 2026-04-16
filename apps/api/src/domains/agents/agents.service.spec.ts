@@ -1,12 +1,12 @@
 import { AgentLocale, AgentModel } from "@caseai-connect/api-contracts"
 import { afterAll } from "@jest/globals"
 import { UnprocessableEntityException } from "@nestjs/common"
-import { clearTestDatabase } from "@/common/test/test-database"
 import {
   type AllRepositories,
-  setupTransactionalTestDatabase,
-  teardownTestDatabase,
-} from "@/common/test/test-transaction-manager"
+  clearTestDatabase,
+  setupE2eTestDatabase,
+  teardownE2eTestDatabase,
+} from "@/common/test/test-database"
 import { agentFactory } from "@/domains/agents/agent.factory"
 import {
   createOrganizationWithAgent,
@@ -21,29 +21,24 @@ import { addUserToAgent } from "./memberships/agent-membership.factory"
 
 describe("AgentsService", () => {
   let service: AgentsService
-  let setup: Awaited<ReturnType<typeof setupTransactionalTestDatabase>>
+  let setup: Awaited<ReturnType<typeof setupE2eTestDatabase>>
   let repositories: AllRepositories
 
   beforeAll(async () => {
-    setup = await setupTransactionalTestDatabase({
+    setup = await setupE2eTestDatabase({
       additionalImports: [AgentsModule],
     })
-    await clearTestDatabase(setup.dataSource)
   })
 
   afterAll(async () => {
-    await teardownTestDatabase(setup)
+    await teardownE2eTestDatabase(setup)
     await sdk.shutdown()
   })
 
   beforeEach(async () => {
-    await setup.startTransaction()
+    await clearTestDatabase(setup.dataSource)
     service = setup.module.get<AgentsService>(AgentsService)
     repositories = setup.getAllRepositories()
-  })
-
-  afterEach(async () => {
-    await setup.rollbackTransaction()
   })
 
   describe("createAgent", () => {

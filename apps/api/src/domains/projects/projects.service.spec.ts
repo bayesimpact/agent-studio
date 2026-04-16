@@ -1,9 +1,9 @@
-import { clearTestDatabase } from "@/common/test/test-database"
 import {
   type AllRepositories,
-  setupTransactionalTestDatabase,
-  teardownTestDatabase,
-} from "@/common/test/test-transaction-manager"
+  clearTestDatabase,
+  setupE2eTestDatabase,
+  teardownE2eTestDatabase,
+} from "@/common/test/test-database"
 import { INVITATION_SENDER } from "@/domains/auth/invitation-sender.interface"
 import {
   createOrganizationWithOwner,
@@ -20,11 +20,11 @@ const mockInvitationSender = {
 
 describe("ProjectsService", () => {
   let service: ProjectsService
-  let setup: Awaited<ReturnType<typeof setupTransactionalTestDatabase>>
+  let setup: Awaited<ReturnType<typeof setupE2eTestDatabase>>
   let repositories: AllRepositories
 
   beforeAll(async () => {
-    setup = await setupTransactionalTestDatabase({
+    setup = await setupE2eTestDatabase({
       additionalImports: [ProjectsModule],
       applyOverrides: (moduleBuilder) =>
         moduleBuilder.overrideProvider(INVITATION_SENDER).useValue(mockInvitationSender),
@@ -35,7 +35,7 @@ describe("ProjectsService", () => {
   })
 
   afterAll(async () => {
-    await teardownTestDatabase(setup)
+    await teardownE2eTestDatabase(setup)
   })
 
   afterEach(async () => {

@@ -1,12 +1,12 @@
 import { AgentModel } from "@caseai-connect/api-contracts"
 import { UnprocessableEntityException } from "@nestjs/common"
 import { z } from "zod"
-import { clearTestDatabase } from "@/common/test/test-database"
 import {
   type AllRepositories,
-  setupTransactionalTestDatabase,
-  teardownTestDatabase,
-} from "@/common/test/test-transaction-manager"
+  clearTestDatabase,
+  setupE2eTestDatabase,
+  teardownE2eTestDatabase,
+} from "@/common/test/test-database"
 import { AgentsModule } from "@/domains/agents/agents.module"
 import { documentFactory } from "@/domains/documents/document.factory"
 import { createOrganizationWithAgent } from "@/domains/organizations/organization.factory"
@@ -15,11 +15,11 @@ import { ExtractionAgentSessionsService } from "./extraction-agent-sessions.serv
 
 describe("ExtractionAgentSessionsService", () => {
   let service: ExtractionAgentSessionsService
-  let setup: Awaited<ReturnType<typeof setupTransactionalTestDatabase>>
+  let setup: Awaited<ReturnType<typeof setupE2eTestDatabase>>
   let repositories: AllRepositories
 
   beforeAll(async () => {
-    setup = await setupTransactionalTestDatabase({
+    setup = await setupE2eTestDatabase({
       additionalImports: [AgentsModule],
       //   applyOverrides: (moduleBuilder) =>
       //     moduleBuilder.overrideProvider("LLMProvider").useValue(mockLlmProvider),
@@ -35,7 +35,7 @@ describe("ExtractionAgentSessionsService", () => {
 
   afterAll(async () => {
     await sdk.shutdown()
-    await teardownTestDatabase(setup)
+    await teardownE2eTestDatabase(setup)
   })
 
   it("should execute extraction and persist a successful run", async () => {
