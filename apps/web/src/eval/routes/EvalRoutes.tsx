@@ -9,10 +9,11 @@ import { ProjectRoute } from "@/common/routes/ProjectRoute"
 import { ProtectedRoute } from "@/common/routes/ProtectedRoute"
 import { useAppDispatch } from "@/common/store/hooks"
 import { Dashboard } from "../components/Dashboard"
-import { datasetsActions } from "../features/datasets/datasets.slice"
+import { evaluationExtractionDatasetsActions } from "../features/evaluation-extraction-datasets/evaluation-extraction-datasets.slice"
 import { useInitStore } from "../hooks/use-init-store"
-import { DatasetRoute } from "./DatasetRoute"
 import { EvalDashboardRoute } from "./EvalDashboardRoute"
+import { EvaluationExtractionDatasetRoute } from "./EvaluationExtractionDatasetRoute"
+import { EvaluationExtractionRunRoute } from "./EvaluationExtractionRunRoute"
 import { ExtractionRoute } from "./ExtractionRoute"
 import { buildEvalPath, EvalRouteNames } from "./helpers"
 
@@ -44,7 +45,13 @@ export const evalRoutes = {
               children: [
                 {
                   path: buildEvalPath(EvalRouteNames.EXTRACTION_DATASET),
-                  element: <DatasetRoute />,
+                  element: <EvaluationExtractionDatasetRoute />,
+                  children: [
+                    {
+                      path: buildEvalPath(EvalRouteNames.EVALUATION_RUN),
+                      element: <EvaluationExtractionRunRoute />,
+                    },
+                  ],
                 },
               ],
             },
@@ -64,7 +71,9 @@ const useSetCurrentIds = () => {
   const params = useParams()
   useEffect(() => {
     const { datasetId } = params
-    dispatch(datasetsActions.setCurrentDatasetId({ datasetId: datasetId || null }))
+    dispatch(
+      evaluationExtractionDatasetsActions.setCurrentDatasetId({ datasetId: datasetId || null }),
+    )
   }, [dispatch, params])
 }
 

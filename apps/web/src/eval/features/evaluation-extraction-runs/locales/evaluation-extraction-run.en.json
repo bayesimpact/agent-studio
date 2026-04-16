@@ -1,0 +1,50 @@
+{
+  "evaluationExtractionRun": {
+    "title": "Evaluation Runs",
+    "run": "Run Evaluation",
+    "running": "Running evaluation...",
+    "selectAgent": "Select an extraction agent",
+    "selectAgentDescription": "Choose which extraction agent to evaluate against this dataset.",
+    "agent": "Agent",
+    "agentPlaceholder": "Select an agent",
+    "keyMapping": {
+      "title": "Key Mapping",
+      "description": "Map agent output fields to dataset columns for comparison.",
+      "agentOutputKey": "Agent Output Key",
+      "datasetColumn": "Dataset Column",
+      "mode": "Mode",
+      "scored": "Scored",
+      "fyi": "FYI",
+      "columnPlaceholder": "Select column",
+      "noOutputSchema": "This agent has no output schema defined."
+    },
+    "results": {
+      "title": "Run Results",
+      "summary": "Summary",
+      "total": "Total Records",
+      "perfectMatches": "Perfect Matches",
+      "mismatches": "Mismatches",
+      "errors": "Errors",
+      "records": "Records",
+      "status": "Status",
+      "comparison": "Comparison",
+      "agentValue": "Agent Output",
+      "groundTruth": "Expected",
+      "match": "Match",
+      "mismatch": "Mismatch",
+      "error": "Error",
+      "fyi": "FYI",
+      "noRecords": "No records found",
+      "rawOutput": "Raw Output",
+      "errorDetails": "Error Details",
+      "pending": "Pending",
+      "completed": "Completed",
+      "failed": "Failed"
+    },
+    "history": {
+      "title": "Run History",
+      "empty": "No evaluation runs yet",
+      "description": "{{count}} runs"
+    }
+  }
+}

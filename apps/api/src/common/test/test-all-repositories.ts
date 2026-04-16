@@ -9,6 +9,11 @@ import { AgentMessage } from "@/domains/agents/shared/agent-session-messages/age
 import { AgentMessageFeedback } from "@/domains/agents/shared/agent-session-messages/feedback/agent-message-feedback.entity"
 import { Document } from "@/domains/documents/document.entity"
 import { Evaluation } from "@/domains/evaluations/evaluation.entity"
+import { EvaluationExtractionDataset } from "@/domains/evaluations/extraction/datasets/evaluation-extraction-dataset.entity"
+import { EvaluationExtractionDatasetDocument } from "@/domains/evaluations/extraction/datasets/evaluation-extraction-dataset-document.entity"
+import { EvaluationExtractionDatasetRecord } from "@/domains/evaluations/extraction/datasets/records/evaluation-extraction-dataset-record.entity"
+import { EvaluationExtractionRun } from "@/domains/evaluations/extraction/runs/evaluation-extraction-run.entity"
+import { EvaluationExtractionRunRecord } from "@/domains/evaluations/extraction/runs/records/evaluation-extraction-run-record.entity"
 import { EvaluationReport } from "@/domains/evaluations/reports/evaluation-report.entity"
 import { FeatureFlag } from "@/domains/feature-flags/feature-flag.entity"
 import { AgentMcpServer } from "@/domains/mcp-servers/agent-mcp-server.entity"
@@ -21,24 +26,29 @@ import { User } from "@/domains/users/user.entity"
 
 export type AllRepositories = {
   activityRepository: Repository<Activity>
+  agentMcpServerRepository: Repository<AgentMcpServer>
+  agentMembershipRepository: Repository<AgentMembership>
   agentMessageFeedbackRepository: Repository<AgentMessageFeedback>
   agentMessageRepository: Repository<AgentMessage>
   agentRepository: Repository<Agent>
-  agentMembershipRepository: Repository<AgentMembership>
-  agentMcpServerRepository: Repository<AgentMcpServer>
-  extractionAgentSessionRepository: Repository<ExtractionAgentSession>
   conversationAgentSessionRepository: Repository<ConversationAgentSession>
-  formAgentSessionRepository: Repository<FormAgentSession>
   documentRepository: Repository<Document>
+  evaluationExtractionDatasetDocumentRepository: Repository<EvaluationExtractionDatasetDocument>
+  evaluationExtractionDatasetRecordRepository: Repository<EvaluationExtractionDatasetRecord>
+  evaluationExtractionDatasetRepository: Repository<EvaluationExtractionDataset>
+  evaluationExtractionRunRecordRepository: Repository<EvaluationExtractionRunRecord>
+  evaluationExtractionRunRepository: Repository<EvaluationExtractionRun>
   evaluationReportRepository: Repository<EvaluationReport>
   evaluationRepository: Repository<Evaluation>
+  extractionAgentSessionRepository: Repository<ExtractionAgentSession>
+  featureFlagRepository: Repository<FeatureFlag>
+  formAgentSessionRepository: Repository<FormAgentSession>
   mcpServerRepository: Repository<McpServer>
   organizationMembershipRepository: Repository<OrganizationMembership>
   organizationRepository: Repository<Organization>
   projectMembershipRepository: Repository<ProjectMembership>
   projectRepository: Repository<Project>
   userRepository: Repository<User>
-  featureFlagRepository: Repository<FeatureFlag>
 }
 
 export function buildAllRepositories(
@@ -46,23 +56,30 @@ export function buildAllRepositories(
 ): AllRepositories {
   return {
     activityRepository: getRepository(Activity),
-    userRepository: getRepository(User),
-    organizationRepository: getRepository(Organization),
-    organizationMembershipRepository: getRepository(OrganizationMembership),
-    projectRepository: getRepository(Project),
-    projectMembershipRepository: getRepository(ProjectMembership),
-    agentRepository: getRepository(Agent),
     agentMcpServerRepository: getRepository(AgentMcpServer),
-    extractionAgentSessionRepository: getRepository(ExtractionAgentSession),
-    conversationAgentSessionRepository: getRepository(ConversationAgentSession),
-    formAgentSessionRepository: getRepository(FormAgentSession),
-    agentMessageRepository: getRepository(AgentMessage),
-    agentMessageFeedbackRepository: getRepository(AgentMessageFeedback),
-    documentRepository: getRepository(Document),
-    evaluationRepository: getRepository(Evaluation),
-    evaluationReportRepository: getRepository(EvaluationReport),
-    mcpServerRepository: getRepository(McpServer),
     agentMembershipRepository: getRepository(AgentMembership),
+    agentMessageFeedbackRepository: getRepository(AgentMessageFeedback),
+    agentMessageRepository: getRepository(AgentMessage),
+    agentRepository: getRepository(Agent),
+    conversationAgentSessionRepository: getRepository(ConversationAgentSession),
+    documentRepository: getRepository(Document),
+    evaluationExtractionDatasetDocumentRepository: getRepository(
+      EvaluationExtractionDatasetDocument,
+    ),
+    evaluationExtractionDatasetRecordRepository: getRepository(EvaluationExtractionDatasetRecord),
+    evaluationExtractionDatasetRepository: getRepository(EvaluationExtractionDataset),
+    evaluationExtractionRunRecordRepository: getRepository(EvaluationExtractionRunRecord),
+    evaluationExtractionRunRepository: getRepository(EvaluationExtractionRun),
+    evaluationReportRepository: getRepository(EvaluationReport),
+    evaluationRepository: getRepository(Evaluation),
+    extractionAgentSessionRepository: getRepository(ExtractionAgentSession),
     featureFlagRepository: getRepository(FeatureFlag),
+    formAgentSessionRepository: getRepository(FormAgentSession),
+    mcpServerRepository: getRepository(McpServer),
+    organizationMembershipRepository: getRepository(OrganizationMembership),
+    organizationRepository: getRepository(Organization),
+    projectMembershipRepository: getRepository(ProjectMembership),
+    projectRepository: getRepository(Project),
+    userRepository: getRepository(User),
   }
 }

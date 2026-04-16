@@ -3,7 +3,8 @@ import { TypeOrmModule } from "@nestjs/typeorm"
 import { AgentContextResolver } from "@/common/context/resolvers/agent-context.resolver"
 import { DocumentContextResolver } from "@/common/context/resolvers/document-context.resolver"
 import { EvaluationContextResolver } from "@/common/context/resolvers/evaluation-context.resolver"
-import { EvaluationDatasetContextResolver } from "@/common/context/resolvers/evaluation-dataset-context.resolver"
+import { EvaluationExtractionDatasetContextResolver } from "@/common/context/resolvers/evaluation-extraction-dataset-context.resolver"
+import { EvaluationExtractionRunContextResolver } from "@/common/context/resolvers/evaluation-extraction-run-context.resolver"
 import { EvaluationReportContextResolver } from "@/common/context/resolvers/evaluation-report-context.resolver"
 import { OrganizationContextResolver } from "@/common/context/resolvers/organization-context.resolver"
 import { ProjectContextResolver } from "@/common/context/resolvers/project-context.resolver"
@@ -21,16 +22,22 @@ import { UsersModule } from "@/domains/users/users.module"
 import { LlmModule } from "@/external/llm/llm.module"
 import { Agent } from "../agents/agent.entity"
 import { AgentMembership } from "../agents/memberships/agent-membership.entity"
-import { EvaluationDataset } from "./datasets/evaluation-dataset.entity"
-import { EvaluationDatasetGuard } from "./datasets/evaluation-dataset.guard"
-import { EvaluationDatasetDocument } from "./datasets/evaluation-dataset-document.entity"
-import { EvaluationDatasetsController } from "./datasets/evaluation-datasets.controller"
-import { EvaluationDatasetsService } from "./datasets/evaluation-datasets.service"
-import { EvaluationDatasetRecord } from "./datasets/records/evaluation-dataset-record.entity"
 import { Evaluation } from "./evaluation.entity"
 import { EvaluationGuard } from "./evaluation.guard"
 import { EvaluationsController } from "./evaluations.controller"
 import { EvaluationsService } from "./evaluations.service"
+import { EvaluationExtractionDataset } from "./extraction/datasets/evaluation-extraction-dataset.entity"
+import { EvaluationExtractionDatasetGuard } from "./extraction/datasets/evaluation-extraction-dataset.guard"
+import { EvaluationExtractionDatasetDocument } from "./extraction/datasets/evaluation-extraction-dataset-document.entity"
+import { EvaluationExtractionDatasetsController } from "./extraction/datasets/evaluation-extraction-datasets.controller"
+import { EvaluationExtractionDatasetsService } from "./extraction/datasets/evaluation-extraction-datasets.service"
+import { EvaluationExtractionDatasetRecord } from "./extraction/datasets/records/evaluation-extraction-dataset-record.entity"
+import { EvaluationExtractionRun } from "./extraction/runs/evaluation-extraction-run.entity"
+import { EvaluationExtractionRunGuard } from "./extraction/runs/evaluation-extraction-run.guard"
+import { EvaluationExtractionRunGraderService } from "./extraction/runs/evaluation-extraction-run-grader.service"
+import { EvaluationExtractionRunsController } from "./extraction/runs/evaluation-extraction-runs.controller"
+import { EvaluationExtractionRunsService } from "./extraction/runs/evaluation-extraction-runs.service"
+import { EvaluationExtractionRunRecord } from "./extraction/runs/records/evaluation-extraction-run-record.entity"
 import { EvaluationReport } from "./reports/evaluation-report.entity"
 import { EvaluationReportGuard } from "./reports/evaluation-report.guard"
 import { EvaluationReportsController } from "./reports/evaluation-reports.controller"
@@ -43,10 +50,12 @@ import { EvaluationReportsService } from "./reports/evaluation-reports.service"
       Agent,
       AgentMembership,
       Evaluation,
-      EvaluationDataset,
-      EvaluationDatasetDocument,
-      EvaluationDatasetRecord,
+      EvaluationExtractionDataset,
+      EvaluationExtractionDatasetDocument,
+      EvaluationExtractionDatasetRecord,
       EvaluationReport,
+      EvaluationExtractionRun,
+      EvaluationExtractionRunRecord,
       Organization,
       OrganizationMembership,
       Project,
@@ -63,10 +72,14 @@ import { EvaluationReportsService } from "./reports/evaluation-reports.service"
     AgentContextResolver,
     EvaluationContextResolver,
     DocumentContextResolver,
-    EvaluationDatasetContextResolver,
-    EvaluationDatasetGuard,
-    EvaluationDatasetsService,
+    EvaluationExtractionDatasetContextResolver,
+    EvaluationExtractionDatasetGuard,
+    EvaluationExtractionDatasetsService,
     EvaluationGuard,
+    EvaluationExtractionRunContextResolver,
+    EvaluationExtractionRunGraderService,
+    EvaluationExtractionRunGuard,
+    EvaluationExtractionRunsService,
     EvaluationReportContextResolver,
     EvaluationReportGuard,
     EvaluationReportsService,
@@ -75,7 +88,17 @@ import { EvaluationReportsService } from "./reports/evaluation-reports.service"
     ProjectContextResolver,
     ResourceContextGuard,
   ],
-  controllers: [EvaluationsController, EvaluationDatasetsController, EvaluationReportsController],
-  exports: [EvaluationsService, EvaluationDatasetsService, EvaluationReportsService],
+  controllers: [
+    EvaluationsController,
+    EvaluationExtractionDatasetsController,
+    EvaluationReportsController,
+    EvaluationExtractionRunsController,
+  ],
+  exports: [
+    EvaluationsService,
+    EvaluationExtractionDatasetsService,
+    EvaluationReportsService,
+    EvaluationExtractionRunsService,
+  ],
 })
 export class EvaluationsModule {}

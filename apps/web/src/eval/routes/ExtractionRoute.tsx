@@ -2,10 +2,13 @@ import { useEffect } from "react"
 import { useOutlet } from "react-router-dom"
 import { AsyncRoute } from "@/common/routes/AsyncRoute"
 import { useAppDispatch, useAppSelector } from "@/common/store/hooks"
-import { DatasetList } from "../components/files/DatasetList"
-import type { EvaluationDataset } from "../features/datasets/datasets.models"
-import { selectDatasetsData, selectFilesData } from "../features/datasets/datasets.selectors"
-import { datasetsActions } from "../features/datasets/datasets.slice"
+import { EvaluationExtractionDatasetList } from "../components/evaluation-extraction-datasets/EvaluationExtractionDatasetList"
+import type { EvaluationExtractionDataset } from "../features/evaluation-extraction-datasets/evaluation-extraction-datasets.models"
+import {
+  selectDatasetsData,
+  selectFilesData,
+} from "../features/evaluation-extraction-datasets/evaluation-extraction-datasets.selectors"
+import { evaluationExtractionDatasetsActions } from "../features/evaluation-extraction-datasets/evaluation-extraction-datasets.slice"
 
 export function ExtractionRoute() {
   const dispatch = useAppDispatch()
@@ -13,7 +16,7 @@ export function ExtractionRoute() {
   const datasetsData = useAppSelector(selectDatasetsData)
   // FIXME: should listen isInitDone from store instead
   useEffect(() => {
-    dispatch(datasetsActions.initData())
+    dispatch(evaluationExtractionDatasetsActions.initData())
   }, [dispatch])
   return (
     <AsyncRoute data={[filesData, datasetsData]}>
@@ -22,8 +25,8 @@ export function ExtractionRoute() {
   )
 }
 
-function WithData({ datasets }: { datasets: EvaluationDataset[] }) {
+function WithData({ datasets }: { datasets: EvaluationExtractionDataset[] }) {
   const outlet = useOutlet()
   if (outlet) return outlet
-  return <DatasetList datasets={datasets} />
+  return <EvaluationExtractionDatasetList datasets={datasets} />
 }

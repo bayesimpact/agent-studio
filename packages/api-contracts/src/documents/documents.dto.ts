@@ -5,7 +5,7 @@ export type DocumentSourceType =
   | "project"
   | "agentSessionMessage"
   | "extraction"
-  | "evaluationDataset"
+  | "evaluationExtractionDataset"
 export type DocumentEmbeddingStatus = "pending" | "processing" | "completed" | "failed"
 export type DocumentEmbeddingStatusChangedEventPayload = {
   type: "document_embedding_status_changed"

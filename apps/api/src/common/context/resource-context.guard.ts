@@ -26,7 +26,9 @@ import { DocumentTagContextResolver } from "./resolvers/document-tag-context.res
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
 import { EvaluationContextResolver } from "./resolvers/evaluation-context.resolver"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
-import { EvaluationDatasetContextResolver } from "./resolvers/evaluation-dataset-context.resolver"
+import { EvaluationExtractionDatasetContextResolver } from "./resolvers/evaluation-extraction-dataset-context.resolver"
+// biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
+import { EvaluationExtractionRunContextResolver } from "./resolvers/evaluation-extraction-run-context.resolver"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
 import { OrganizationContextResolver } from "./resolvers/organization-context.resolver"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
@@ -44,7 +46,8 @@ const RESOLUTION_ORDER: ContextResource[] = [
   "document",
   "documentTag",
   "evaluation",
-  "evaluationDataset",
+  "evaluationExtractionDataset",
+  "evaluationExtractionRun",
 ]
 
 @Injectable()
@@ -62,7 +65,9 @@ export class ResourceContextGuard implements CanActivate {
     @Optional() documentContextResolver?: DocumentContextResolver,
     @Optional() documentTagContextResolver?: DocumentTagContextResolver,
     @Optional() evaluationContextResolver?: EvaluationContextResolver,
-    @Optional() evaluationDatasetContextResolver?: EvaluationDatasetContextResolver,
+    @Optional()
+    evaluationExtractionDatasetContextResolver?: EvaluationExtractionDatasetContextResolver,
+    @Optional() evaluationExtractionRunContextResolver?: EvaluationExtractionRunContextResolver,
   ) {
     const resolverEntries: Array<[ContextResource, ContextResolver]> = []
     if (organizationContextResolver) {
@@ -98,10 +103,16 @@ export class ResourceContextGuard implements CanActivate {
     if (evaluationContextResolver) {
       resolverEntries.push([evaluationContextResolver.resource, evaluationContextResolver])
     }
-    if (evaluationDatasetContextResolver) {
+    if (evaluationExtractionDatasetContextResolver) {
       resolverEntries.push([
-        evaluationDatasetContextResolver.resource,
-        evaluationDatasetContextResolver,
+        evaluationExtractionDatasetContextResolver.resource,
+        evaluationExtractionDatasetContextResolver,
+      ])
+    }
+    if (evaluationExtractionRunContextResolver) {
+      resolverEntries.push([
+        evaluationExtractionRunContextResolver.resource,
+        evaluationExtractionRunContextResolver,
       ])
     }
     this.resolverMap = new Map(resolverEntries)

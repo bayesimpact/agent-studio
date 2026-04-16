@@ -12,10 +12,12 @@ import { AgentMessage } from "@/domains/agents/shared/agent-session-messages/age
 import { AgentMessageFeedback } from "@/domains/agents/shared/agent-session-messages/feedback/agent-message-feedback.entity"
 import { Document } from "@/domains/documents/document.entity"
 import { DocumentTag } from "@/domains/documents/tags/document-tag.entity"
-import { EvaluationDataset } from "@/domains/evaluations/datasets/evaluation-dataset.entity"
-import { EvaluationDatasetDocument } from "@/domains/evaluations/datasets/evaluation-dataset-document.entity"
-import { EvaluationDatasetRecord } from "@/domains/evaluations/datasets/records/evaluation-dataset-record.entity"
 import { Evaluation } from "@/domains/evaluations/evaluation.entity"
+import { EvaluationExtractionDataset } from "@/domains/evaluations/extraction/datasets/evaluation-extraction-dataset.entity"
+import { EvaluationExtractionDatasetDocument } from "@/domains/evaluations/extraction/datasets/evaluation-extraction-dataset-document.entity"
+import { EvaluationExtractionDatasetRecord } from "@/domains/evaluations/extraction/datasets/records/evaluation-extraction-dataset-record.entity"
+import { EvaluationExtractionRun } from "@/domains/evaluations/extraction/runs/evaluation-extraction-run.entity"
+import { EvaluationExtractionRunRecord } from "@/domains/evaluations/extraction/runs/records/evaluation-extraction-run-record.entity"
 import { EvaluationReport } from "@/domains/evaluations/reports/evaluation-report.entity"
 import { FeatureFlag } from "@/domains/feature-flags/feature-flag.entity"
 import { AgentMcpServer } from "@/domains/mcp-servers/agent-mcp-server.entity"
@@ -37,10 +39,12 @@ export const ALL_ENTITIES = [
   Document,
   DocumentTag,
   Evaluation,
-  EvaluationDataset,
-  EvaluationDatasetRecord,
-  EvaluationDatasetDocument,
+  EvaluationExtractionDataset,
+  EvaluationExtractionDatasetRecord,
+  EvaluationExtractionDatasetDocument,
   EvaluationReport,
+  EvaluationExtractionRun,
+  EvaluationExtractionRunRecord,
   ExtractionAgentSession,
   FeatureFlag,
   FormAgentSession,
