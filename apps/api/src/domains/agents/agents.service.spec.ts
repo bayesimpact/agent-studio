@@ -216,7 +216,6 @@ describe("AgentsService", () => {
         "Extraction agent requires outputJsonSchema",
       )
     })
-
   })
 
   describe("listAgents", () => {
