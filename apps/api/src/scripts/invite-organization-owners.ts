@@ -1,22 +1,15 @@
 import { readFileSync } from "node:fs"
-import { createInterface } from "node:readline"
 import { Logger } from "@nestjs/common"
 import { NestFactory } from "@nestjs/core"
-import { config as dotenvConfig } from "dotenv"
 import { DataSource } from "typeorm"
 import { AppModule } from "@/app.module"
-
-const envPath = process.env.DOTENV_CONFIG_PATH
-if (envPath) {
-  dotenvConfig({ path: envPath, override: true })
-}
-
 import { INVITATION_SENDER } from "@/domains/auth/invitation-sender.interface"
 import {
   type InviteWorkspaceOwnerResult,
   type PreviewWorkspaceInvitationResult,
   WorkspaceInvitationService,
 } from "@/domains/organizations/provisioning/workspace-invitation.service"
+import { confirmDatabaseTarget } from "@/scripts/script-bootstrap"
 
 type CliOptions = {
   csvFilePath: string
@@ -144,29 +137,6 @@ export async function runInvitationBatch(params: {
 
 const logger = new Logger("InviteOrganizationOwners")
 
-function ask(question: string): Promise<string> {
-  const rl = createInterface({ input: process.stdin, output: process.stdout })
-  return new Promise((resolve) => {
-    rl.question(question, (answer) => {
-      rl.close()
-      resolve(answer.trim())
-    })
-  })
-}
-
-async function confirmDatabaseTarget(): Promise<void> {
-  const databaseUrl = process.env.DATABASE_URL
-  const target =
-    databaseUrl ??
-    `${process.env.DATABASE_HOST}:${process.env.DATABASE_PORT}/${process.env.DATABASE_NAME}`
-  logger.warn(`Target database: ${target}`)
-  const answer = await ask("Do you want to proceed? (yes/no): ")
-  if (answer.toLowerCase() !== "yes") {
-    logger.log("Aborted by user.")
-    process.exit(0)
-  }
-}
-
 function printSummary(results: CliRowResult[]): void {
   const invitedCount = results.filter((result) => result.status === "invited").length
   const skippedCount = results.filter((result) =>
@@ -216,7 +186,7 @@ async function bootstrapCli(): Promise<void> {
   const options = parseCliOptions(process.argv.slice(2))
   const csvContent = readFileSync(options.csvFilePath, "utf-8")
   const rows = parseInvitationCsv(csvContent)
-  await confirmDatabaseTarget()
+  await confirmDatabaseTarget(logger)
   const app = await NestFactory.createApplicationContext(AppModule, {
     logger: ["error", "warn", "log"],
   })

@@ -1,45 +1,15 @@
 import { writeFileSync } from "node:fs"
-import { createInterface } from "node:readline"
 import { Logger } from "@nestjs/common"
 import { NestFactory } from "@nestjs/core"
-import { config as dotenvConfig } from "dotenv"
 import { DataSource } from "typeorm"
 import { AppModule } from "@/app.module"
-
-const envPath = process.env.DOTENV_CONFIG_PATH
-if (envPath) {
-  dotenvConfig({ path: envPath, override: true })
-}
-
 import type { InvitationSender } from "@/domains/auth/invitation-sender.interface"
 import { INVITATION_SENDER } from "@/domains/auth/invitation-sender.interface"
+import { ask, confirmDatabaseTarget } from "@/scripts/script-bootstrap"
 
 const PLACEHOLDER_AUTH0_ID_PREFIX = "00000000-0000-0000-0000-"
 
 const logger = new Logger("ManageInvitations")
-
-function ask(question: string): Promise<string> {
-  const rl = createInterface({ input: process.stdin, output: process.stdout })
-  return new Promise((resolve) => {
-    rl.question(question, (answer) => {
-      rl.close()
-      resolve(answer.trim())
-    })
-  })
-}
-
-async function confirmDatabaseTarget(): Promise<void> {
-  const databaseUrl = process.env.DATABASE_URL
-  const target =
-    databaseUrl ??
-    `${process.env.DATABASE_HOST}:${process.env.DATABASE_PORT}/${process.env.DATABASE_NAME}`
-  logger.warn(`Target database: ${target}`)
-  const answer = await ask("Do you want to proceed? (yes/no): ")
-  if (answer.toLowerCase() !== "yes") {
-    logger.log("Aborted by user.")
-    process.exit(0)
-  }
-}
 
 type PendingInvitation = {
   index: number
@@ -130,7 +100,7 @@ async function resendInvitation(
 }
 
 async function bootstrapCli(): Promise<void> {
-  await confirmDatabaseTarget()
+  await confirmDatabaseTarget(logger)
 
   const app = await NestFactory.createApplicationContext(AppModule, {
     logger: ["error", "warn", "log"],
