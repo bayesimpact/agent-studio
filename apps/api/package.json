@@ -64,7 +64,7 @@
     "bullmq": "^5.70.2",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.3",
-    "express-basic-auth": "^1.2.1",
+    "express-openid-connect": "^2.20.1",
     "jwks-rsa": "^3.2.0",
     "langfuse": "^3.38.6",
     "langfuse-core-v2": "npm:langfuse-core@3.16.2",

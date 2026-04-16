@@ -21,6 +21,7 @@ export const nestConfig = {
   ],
   coverageDirectory: "../coverage",
   testEnvironment: "node",
+  setupFiles: ["<rootDir>/../jest.setup-early.ts"],
   moduleNameMapper: {
     "^@/(.*)$": "<rootDir>/$1",
     "^@caseai-connect/api-contracts$": `${apiContractsPath}/index.ts`,
