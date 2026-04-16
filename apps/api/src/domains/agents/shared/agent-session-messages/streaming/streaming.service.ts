@@ -1,5 +1,10 @@
 import { URL } from "node:url"
-import { type StreamEvent, type StreamEventPayload, ToolName } from "@caseai-connect/api-contracts"
+import {
+  DocumentsRagMode,
+  type StreamEvent,
+  type StreamEventPayload,
+  ToolName,
+} from "@caseai-connect/api-contracts"
 import { Inject, Injectable, Logger, NotFoundException } from "@nestjs/common"
 import { InjectRepository } from "@nestjs/typeorm"
 import type { FilePart, ImagePart, ToolSet } from "ai"
@@ -552,6 +557,42 @@ export class StreamingService extends ServiceWithLLM {
     return elapsed > this.STREAM_TIMEOUT_MS
   }
 
+  private buildConversationTools({
+    agent,
+    connectScope,
+    hasSourcesTool,
+    mcpTools,
+    onExecute,
+  }: {
+    agent: Agent
+    connectScope: RequiredConnectScope
+    hasSourcesTool: boolean
+    mcpTools: ToolSet
+    onExecute: (toolExecution: ToolExecutionLog) => void
+  }): ToolSet {
+    const tools: ToolSet = {
+      ...(hasSourcesTool ? { [ToolName.Sources]: sourcesTool({ onExecute }) } : {}),
+      ...mcpTools,
+    }
+
+    if (agent.documentsRagMode === DocumentsRagMode.None) {
+      return tools
+    }
+
+    return {
+      [ToolName.RetrieveProjectDocumentChunks]: retrieveProjectDocumentChunksTool({
+        connectScope,
+        documentTagIds:
+          agent.documentsRagMode === DocumentsRagMode.Tags
+            ? (agent.documentTags?.map((documentTag) => documentTag.id) ?? [])
+            : [],
+        retrievalService: this.documentChunkRetrievalService,
+        onExecute,
+      }),
+      ...tools,
+    }
+  }
+
   private async buildTools({
     agent,
     sessionId,
@@ -611,16 +652,13 @@ export class StreamingService extends ServiceWithLLM {
       case "conversation":
         return {
           mcpClose,
-          tools: {
-            [ToolName.RetrieveProjectDocumentChunks]: retrieveProjectDocumentChunksTool({
-              connectScope,
-              documentTagIds: agent.documentTags?.map((documentTag) => documentTag.id) ?? [],
-              retrievalService: this.documentChunkRetrievalService,
-              onExecute,
-            }),
-            ...(hasSourcesTool ? { [ToolName.Sources]: sourcesTool({ onExecute }) } : {}),
-            ...mcpTools,
-          } as ToolSet,
+          tools: this.buildConversationTools({
+            agent,
+            connectScope,
+            hasSourcesTool,
+            mcpTools,
+            onExecute,
+          }),
         }
 
       case "form":

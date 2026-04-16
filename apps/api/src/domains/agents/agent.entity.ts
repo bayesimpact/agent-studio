@@ -3,6 +3,7 @@ import type {
   AgentModel,
   AgentTemperature,
   AgentType,
+  DocumentsRagMode,
 } from "@caseai-connect/api-contracts"
 import { Column, JoinColumn, JoinTable, ManyToMany, ManyToOne, OneToMany } from "typeorm"
 import { ConnectEntity, ConnectEntityBase } from "@/common/entities/connect-entity"
@@ -40,6 +41,9 @@ export class Agent extends ConnectEntityBase {
 
   @Column({ type: "varchar", default: "conversation" })
   type!: AgentType
+
+  @Column({ type: "varchar", name: "documents_rag_mode", default: "all" })
+  documentsRagMode!: DocumentsRagMode
 
   @Column({ type: "text", nullable: true, name: "instruction_prompt" })
   instructionPrompt!: string | null

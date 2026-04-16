@@ -1,4 +1,9 @@
-import { AgentLocale, AgentModel, AgentsRoutes } from "@caseai-connect/api-contracts"
+import {
+  AgentLocale,
+  AgentModel,
+  AgentsRoutes,
+  DocumentsRagMode,
+} from "@caseai-connect/api-contracts"
 import { afterAll } from "@jest/globals"
 import type { INestApplication } from "@nestjs/common"
 import type { App } from "supertest/types"
@@ -15,6 +20,8 @@ import { createOrganizationWithProject } from "@/domains/organizations/organizat
 import { sdk } from "@/external/llm/open-telemetry-init"
 import { setupUserGuardForTesting } from "../../../../test/e2e.helpers"
 import { expectResponse, type Requester, testRequester } from "../../../../test/request"
+import { DocumentTag } from "../../documents/tags/document-tag.entity"
+import { documentTagFactory } from "../../documents/tags/document-tag.factory"
 import { Agent } from "../agent.entity"
 import { AgentsModule } from "../agents.module"
 
@@ -78,6 +85,7 @@ describe("Agents - createOne", () => {
         type: "conversation",
         name: "New Agent",
         defaultPrompt: "This is a default prompt",
+        documentsRagMode: DocumentsRagMode.All,
         model: AgentModel.Gemini25Flash,
         temperature: 0,
         locale: AgentLocale.EN,
@@ -90,6 +98,7 @@ describe("Agents - createOne", () => {
     expect(response.body.data.defaultPrompt).toBe("This is a default prompt")
     expect(response.body.data.model).toBe(AgentModel.Gemini25Flash)
     expect(response.body.data.locale).toBe(AgentLocale.EN)
+    expect(response.body.data.documentsRagMode).toBe(DocumentsRagMode.All)
     expect(response.body.data.projectId).toBe(projectId)
     expect(response.body.data.id).toBeDefined()
 
@@ -100,5 +109,28 @@ describe("Agents - createOne", () => {
     expect(agent).not.toBeNull()
     expect(agent?.name).toBe("New Agent")
     await expectActivityCreated("agent.create")
+  })
+
+  it("should create a tagged agent when documentsRagMode is tags", async () => {
+    const { organization, project } = await createContext()
+    const documentTag = documentTagFactory.transient({ organization, project }).build()
+    await setup.getRepository(DocumentTag).save(documentTag)
+
+    const response = await subject({
+      payload: {
+        type: "conversation",
+        name: "Tagged Agent",
+        defaultPrompt: "This is a default prompt",
+        documentsRagMode: DocumentsRagMode.Tags,
+        model: AgentModel.Gemini25Flash,
+        temperature: 0,
+        locale: AgentLocale.EN,
+        tagsToAdd: [documentTag.id],
+      },
+    })
+
+    expectResponse(response, 201)
+    expect(response.body.data.documentsRagMode).toBe(DocumentsRagMode.Tags)
+    expect(response.body.data.documentTagIds).toEqual([documentTag.id])
   })
 })

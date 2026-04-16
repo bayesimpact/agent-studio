@@ -111,5 +111,6 @@ function toAgentDto(entity: Agent): AgentDto {
     type: entity.type,
     updatedAt: entity.updatedAt.getTime(),
     documentTagIds: entity.documentTags?.map((tag) => tag.id) || [],
+    documentsRagMode: entity.documentsRagMode,
   }
 }

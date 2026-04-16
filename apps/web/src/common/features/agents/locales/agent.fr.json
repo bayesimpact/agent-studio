@@ -7,6 +7,7 @@
     "props": {
       "createdAt": "Créé le",
       "defaultPrompt": "Prompt par défaut",
+      "documentsRagMode": "RAG des documents",
       "locale": "Langue",
       "name": "Nom",
       "model": "Modèle",
@@ -14,9 +15,15 @@
       "temperature": "Température",
       "updatedAt": "Mis à jour le",
       "documentTags": "Étiquettes de document",
+      "documentsRagModeOptions": {
+        "none": "Ne pas utiliser le RAG",
+        "all": "RAG sur tous les documents",
+        "tags": "RAG selon les étiquettes de document"
+      },
       "placeholders": {
         "name": "Entrez le nom de l'agent",
         "defaultPrompt": "Entrez le prompt par défaut",
+        "documentsRagMode": "Sélectionnez l'usage des documents",
         "model": "Sélectionnez le modèle",
         "outputJsonSchema": "{\n \"type\": \"object\", \"properties\": {\n    \"field\": { \"type\": \"string\", \"description\": \"blablabla\" }\n  },\n  \"required\": [\"field\"]\n}",
         "temperature": "Entrez la température 0.0 - 2.0",

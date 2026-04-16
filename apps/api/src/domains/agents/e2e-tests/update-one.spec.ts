@@ -1,4 +1,4 @@
-import { AgentsRoutes } from "@caseai-connect/api-contracts"
+import { AgentsRoutes, DocumentsRagMode } from "@caseai-connect/api-contracts"
 import { afterAll } from "@jest/globals"
 import type { INestApplication } from "@nestjs/common"
 import type { App } from "supertest/types"
@@ -15,6 +15,8 @@ import { createOrganizationWithAgent } from "@/domains/organizations/organizatio
 import { sdk } from "@/external/llm/open-telemetry-init"
 import { setupUserGuardForTesting } from "../../../../test/e2e.helpers"
 import { expectResponse, type Requester, testRequester } from "../../../../test/request"
+import { DocumentTag } from "../../documents/tags/document-tag.entity"
+import { documentTagFactory } from "../../documents/tags/document-tag.factory"
 import { AgentsModule } from "../agents.module"
 
 describe("Agents - updateOne", () => {
@@ -80,6 +82,7 @@ describe("Agents - updateOne", () => {
         name: "Updated Agent",
         defaultPrompt: "Updated Prompt",
         documentTagIds: [],
+        documentsRagMode: DocumentsRagMode.All,
         outputJsonSchema: undefined,
         tagsToAdd: [],
         tagsToRemove: [],
@@ -94,6 +97,7 @@ describe("Agents - updateOne", () => {
     })
     expect(updatedAgent?.name).toBe("Updated Agent")
     expect(updatedAgent?.defaultPrompt).toBe("Updated Prompt")
+    expect(updatedAgent?.documentsRagMode).toBe(DocumentsRagMode.All)
     await expectActivityCreated("agent.update")
   })
 
@@ -106,6 +110,7 @@ describe("Agents - updateOne", () => {
         ...agent,
         name: "Only Name Updated",
         documentTagIds: [],
+        documentsRagMode: DocumentsRagMode.All,
         outputJsonSchema: undefined,
         tagsToAdd: [],
         tagsToRemove: [],
@@ -119,5 +124,39 @@ describe("Agents - updateOne", () => {
     })
     expect(updatedAgent?.name).toBe("Only Name Updated")
     expect(updatedAgent?.defaultPrompt).toBe(originalPrompt)
+  })
+
+  it("should preserve stored tags when switching documentsRagMode to none", async () => {
+    const { organization, project, agent } = await createContext()
+    const documentTag = documentTagFactory.transient({ organization, project }).build()
+    await setup.getRepository(DocumentTag).save(documentTag)
+    await repositories.agentRepository.update(agent.id, {
+      documentsRagMode: DocumentsRagMode.Tags,
+    })
+    await repositories.agentRepository
+      .createQueryBuilder()
+      .relation("documentTags")
+      .of(agent.id)
+      .add(documentTag.id)
+
+    const response = await subject({
+      payload: {
+        ...agent,
+        documentTagIds: [documentTag.id],
+        documentsRagMode: DocumentsRagMode.None,
+        outputJsonSchema: undefined,
+        tagsToAdd: [],
+        tagsToRemove: [],
+      },
+    })
+
+    expectResponse(response, 200)
+
+    const updatedAgent = await repositories.agentRepository.findOne({
+      where: { id: agentId },
+      relations: ["documentTags"],
+    })
+    expect(updatedAgent?.documentsRagMode).toBe(DocumentsRagMode.None)
+    expect(updatedAgent?.documentTags.map((savedTag) => savedTag.id)).toEqual([documentTag.id])
   })
 })

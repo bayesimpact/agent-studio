@@ -40,22 +40,20 @@ export class AgentsService {
     userId: string
     connectScope: RequiredConnectScope
     fields: Pick<RequiredConnectScope, never> &
-      Pick<Agent, "defaultPrompt" | "name" | "model" | "temperature" | "locale" | "type"> &
+      Pick<
+        Agent,
+        "defaultPrompt" | "documentsRagMode" | "name" | "model" | "temperature" | "locale" | "type"
+      > &
       Partial<Pick<Agent, "outputJsonSchema">> &
       DocumentTagsUpdateFields
   }): Promise<Agent> {
-    // Validate name (min 3 characters)
-    if (fields.name.length < 3) {
-      throw new UnprocessableEntityException("Agent name must be at least 3 characters long")
-    }
+    this.validateAgentName(fields.name)
 
     const outputJsonSchema = fields.outputJsonSchema || null
-    if (fields.type === "extraction" && !outputJsonSchema) {
-      throw new UnprocessableEntityException("Extraction agent requires outputJsonSchema")
-    }
+    this.validateExtractionAgent({ type: fields.type, outputJsonSchema })
 
     const { tagsToAdd, ...agentFields } = fields
-    const documentTags = await this.documentTagsService.resolveTagChanges({
+    const documentTags = await this.resolveDocumentTags({
       currentTags: [],
       tagsToAdd,
     })
@@ -131,6 +129,7 @@ export class AgentsService {
           Agent,
           | "name"
           | "defaultPrompt"
+          | "documentsRagMode"
           | "model"
           | "temperature"
           | "locale"
@@ -140,17 +139,15 @@ export class AgentsService {
       > &
       DocumentTagsUpdateFields
   }): Promise<Agent> {
-    const { name, defaultPrompt, model, temperature, locale, type } = fieldsToUpdate
+    const { name, defaultPrompt, documentsRagMode, model, temperature, locale, type } =
+      fieldsToUpdate
 
-    // Validate name if provided (min 3 characters)
-    if (name !== undefined && name.length < 3) {
-      throw new UnprocessableEntityException("Agent name must be at least 3 characters long")
-    }
+    this.validateAgentName(name)
 
-    // Find the agent
     const needsTags =
-      (fieldsToUpdate.tagsToAdd !== undefined && fieldsToUpdate.tagsToAdd.length > 0) ||
-      (fieldsToUpdate.tagsToRemove !== undefined && fieldsToUpdate.tagsToRemove.length > 0)
+      documentsRagMode !== undefined ||
+      fieldsToUpdate.tagsToAdd !== undefined ||
+      fieldsToUpdate.tagsToRemove !== undefined
     const agent = await this.agentConnectRepository.getOneById(
       connectScope,
       agentId,
@@ -167,14 +164,13 @@ export class AgentsService {
         ? fieldsToUpdate.outputJsonSchema
         : agent.outputJsonSchema
 
-    if (nextType === "extraction" && !nextOutputJsonSchema) {
-      throw new UnprocessableEntityException("Extraction agent requires outputJsonSchema")
-    }
-
-    // Update the agent
+    this.validateExtractionAgent({
+      type: nextType,
+      outputJsonSchema: nextOutputJsonSchema,
+    })
 
     if (needsTags) {
-      agent.documentTags = await this.documentTagsService.resolveTagChanges({
+      agent.documentTags = await this.resolveDocumentTags({
         currentTags: agent.documentTags ?? [],
         tagsToAdd: fieldsToUpdate.tagsToAdd,
         tagsToRemove: fieldsToUpdate.tagsToRemove,
@@ -184,6 +180,7 @@ export class AgentsService {
     Object.assign(agent, {
       ...(name !== undefined && { name }),
       ...(defaultPrompt !== undefined && { defaultPrompt }),
+      ...(documentsRagMode !== undefined && { documentsRagMode }),
       ...(model !== undefined && { model }),
       ...(temperature !== undefined && { temperature }),
       ...(locale !== undefined && { locale }),
@@ -211,6 +208,40 @@ export class AgentsService {
 
       // Delete agent
       await entityManager.delete(Agent, { id: agent.id })
+    })
+  }
+
+  private validateAgentName(name: string | undefined): void {
+    if (name !== undefined && name.length < 3) {
+      throw new UnprocessableEntityException("Agent name must be at least 3 characters long")
+    }
+  }
+
+  private validateExtractionAgent({
+    type,
+    outputJsonSchema,
+  }: {
+    type: Agent["type"]
+    outputJsonSchema: Agent["outputJsonSchema"]
+  }): void {
+    if (type === "extraction" && !outputJsonSchema) {
+      throw new UnprocessableEntityException("Extraction agent requires outputJsonSchema")
+    }
+  }
+
+  private async resolveDocumentTags({
+    currentTags,
+    tagsToAdd,
+    tagsToRemove,
+  }: {
+    currentTags: Agent["documentTags"]
+    tagsToAdd?: string[]
+    tagsToRemove?: string[]
+  }) {
+    return await this.documentTagsService.resolveTagChanges({
+      currentTags,
+      tagsToAdd,
+      tagsToRemove,
     })
   }
 }
