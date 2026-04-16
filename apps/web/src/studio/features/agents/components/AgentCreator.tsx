@@ -241,6 +241,7 @@ function CreateForm({
         fields: {
           name: fields.name,
           defaultPrompt: fields.defaultPrompt,
+          documentsRagMode: fields.documentsRagMode,
           model: fields.model,
           temperature: fields.temperature,
           locale: fields.locale,

@@ -2,6 +2,7 @@ import {
   type AgentLocale,
   AgentModel,
   type CreateAgentDto,
+  DocumentsRagMode,
   type UpdateAgentDto,
 } from "@caseai-connect/api-contracts"
 import type { Agent } from "@/common/features/agents/agents.models"
@@ -32,6 +33,7 @@ export function getDefaultFormValues({
     type: agentType,
     name: "",
     defaultPrompt: agentDefaultPromptMap[agentType],
+    documentsRagMode: DocumentsRagMode.All,
     model: AgentModel.Gemini25Flash,
     temperature: 0.0,
     locale: language,

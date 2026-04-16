@@ -6,6 +6,7 @@ import {
   AgentModelToAgentProvider,
   AgentProvider,
   createAgentSchema,
+  DocumentsRagMode,
   outputJsonSchemaSchema,
   updateAgentSchema,
 } from "@caseai-connect/api-contracts"
@@ -89,10 +90,21 @@ export function BaseAgentForm({
     handleSubmit,
     formState: { errors },
     reset,
+    watch,
   } = useForm<FormValues>({
     resolver: zodResolver(agentSchema),
     defaultValues,
   })
+  const documentsRagMode = watch("documentsRagMode")
+  const documentTagErrorMessage = (() => {
+    if (editableAgent && "documentTagIds" in errors) {
+      return errors.documentTagIds?.message
+    }
+    if (!editableAgent && "tagsToAdd" in errors) {
+      return errors.tagsToAdd?.message
+    }
+    return undefined
+  })()
 
   const handleFormSubmit = async (data: FormValues) => {
     await onSubmit(data as AgentFormData)
@@ -170,6 +182,84 @@ export function BaseAgentForm({
               </Field>
             )}
 
+            {agentType === "conversation" && (
+              <div className="grid gap-4 md:grid-cols-2">
+                <Field>
+                  <FieldLabel htmlFor="documentsRagMode">
+                    {t("agent:props.documentsRagMode")}
+                  </FieldLabel>
+                  <Controller
+                    control={control}
+                    name="documentsRagMode"
+                    render={({ field }) => (
+                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <SelectTrigger
+                          id="documentsRagMode"
+                          aria-invalid={errors.documentsRagMode ? "true" : "false"}
+                        >
+                          <SelectValue
+                            placeholder={t("agent:props.placeholders.documentsRagMode")}
+                          />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value={DocumentsRagMode.None}>
+                            {t("agent:props.documentsRagModeOptions.none")}
+                          </SelectItem>
+                          <SelectItem value={DocumentsRagMode.All}>
+                            {t("agent:props.documentsRagModeOptions.all")}
+                          </SelectItem>
+                          <SelectItem value={DocumentsRagMode.Tags}>
+                            {t("agent:props.documentsRagModeOptions.tags")}
+                          </SelectItem>
+                        </SelectContent>
+                      </Select>
+                    )}
+                  />
+                  {errors.documentsRagMode && (
+                    <p className="text-sm text-destructive">{errors.documentsRagMode.message}</p>
+                  )}
+                </Field>
+
+                {documentsRagMode === DocumentsRagMode.Tags && documentTags.length > 0 && (
+                  <Field>
+                    <FieldLabel>{t("agent:props.documentTags")}</FieldLabel>
+                    <Controller
+                      control={control}
+                      name={"documentTagIds" in agentSchema.shape ? "documentTagIds" : "tagsToAdd"}
+                      render={({ field }) => {
+                        return (
+                          <div className="flex flex-wrap gap-2 items-center">
+                            {field.value.map((tagId) => (
+                              <Badge key={tagId} variant="secondary" className="gap-1">
+                                {getTagNameById(documentTags, tagId)}
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    field.onChange(field.value.filter((id) => id !== tagId))
+                                  }
+                                  className="opacity-60 hover:opacity-100"
+                                >
+                                  <XIcon className="size-3" />
+                                </button>
+                              </Badge>
+                            ))}
+                            <DocumentTagPicker
+                              documentTags={documentTags}
+                              attachedTagIds={field.value}
+                              onAdd={(tagId) => field.onChange([...field.value, tagId])}
+                            />
+                          </div>
+                        )
+                      }}
+                    />
+                    {documentTagErrorMessage && (
+                      <p className="text-sm text-destructive">{documentTagErrorMessage}</p>
+                    )}
+                  </Field>
+                )}
+              </div>
+            )}
+
             <Field>
               <FieldLabel htmlFor="model">{t("agent:props.model")}</FieldLabel>
               <Controller
@@ -232,44 +322,6 @@ export function BaseAgentForm({
               />
               {errors.locale && <p className="text-sm text-destructive">{errors.locale.message}</p>}
             </Field>
-
-            {
-              // Only show the document tag picker if there are tags available to choose from
-              agentType === "conversation" && documentTags.length > 0 && (
-                <Field>
-                  <FieldLabel>{t("agent:props.documentTags")}</FieldLabel>
-                  <Controller
-                    control={control}
-                    name={"documentTagIds" in agentSchema.shape ? "documentTagIds" : "tagsToAdd"}
-                    render={({ field }) => {
-                      return (
-                        <div className="flex flex-wrap gap-2 items-center">
-                          {field.value.map((tagId) => (
-                            <Badge key={tagId} variant="secondary" className="gap-1">
-                              {getTagNameById(documentTags, tagId)}
-                              <button
-                                type="button"
-                                onClick={() =>
-                                  field.onChange(field.value.filter((id) => id !== tagId))
-                                }
-                                className="opacity-60 hover:opacity-100"
-                              >
-                                <XIcon className="size-3" />
-                              </button>
-                            </Badge>
-                          ))}
-                          <DocumentTagPicker
-                            documentTags={documentTags}
-                            attachedTagIds={field.value}
-                            onAdd={(tagId) => field.onChange([...field.value, tagId])}
-                          />
-                        </div>
-                      )
-                    }}
-                  />
-                </Field>
-              )
-            }
 
             <Field orientation="horizontal" className="justify-end">
               <Button type="submit" className="w-fit">

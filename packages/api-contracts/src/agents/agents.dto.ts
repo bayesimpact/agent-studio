@@ -39,6 +39,12 @@ export enum AgentLocale {
   FR = "fr",
 }
 
+export enum DocumentsRagMode {
+  All = "all",
+  None = "none",
+  Tags = "tags",
+}
+
 export type AgentDto = {
   createdAt: TimeType
   defaultPrompt: string
@@ -52,6 +58,7 @@ export type AgentDto = {
   type: AgentType
   updatedAt: TimeType
   documentTagIds: DocumentTagDto["id"][]
+  documentsRagMode: DocumentsRagMode
 }
 
 export const outputJsonSchemaSchema = z
@@ -76,6 +83,7 @@ export const outputJsonSchemaSchema = z
 const agentValidationSchema = z.object({
   defaultPrompt: z.string(),
   documentTagIds: z.array(documentTagSchema.shape.id),
+  documentsRagMode: z.enum(DocumentsRagMode),
   locale: z.enum(AgentLocale),
   model: z.enum(AgentModel),
   name: z.string().trim().min(3),
@@ -104,9 +112,20 @@ const refineOutputJsonSchema = {
   },
 }
 
+const hasRequiredDocumentTags = (data: {
+  documentTagIds?: string[]
+  documentsRagMode: DocumentsRagMode
+  tagsToAdd?: string[]
+}) =>
+  data.documentsRagMode !== DocumentsRagMode.Tags ||
+  (data.documentTagIds !== undefined
+    ? data.documentTagIds.length > 0
+    : (data.tagsToAdd?.length ?? 0) > 0)
+
 export const createAgentSchema = agentValidationSchema
   .pick({
     defaultPrompt: true,
+    documentsRagMode: true,
     locale: true,
     model: true,
     name: true,
@@ -118,11 +137,16 @@ export const createAgentSchema = agentValidationSchema
     tagsToAdd: updateDocumentTagsSchema.required().shape.tagsToAdd,
   })
   .refine(refineOutputJsonSchema.fn, refineOutputJsonSchema.message)
+  .refine(hasRequiredDocumentTags, {
+    message: "At least one document tag is required when documentsRagMode is 'tags'",
+    path: ["tagsToAdd"],
+  })
 
 export const updateAgentSchema = agentValidationSchema
   .pick({
     defaultPrompt: true,
     documentTagIds: true,
+    documentsRagMode: true,
     locale: true,
     model: true,
     name: true,
@@ -132,6 +156,10 @@ export const updateAgentSchema = agentValidationSchema
   .extend({
     tagsToAdd: updateDocumentTagsSchema.required().shape.tagsToAdd,
     tagsToRemove: updateDocumentTagsSchema.required().shape.tagsToRemove,
+  })
+  .refine(hasRequiredDocumentTags, {
+    message: "At least one document tag is required when documentsRagMode is 'tags'",
+    path: ["documentTagIds"],
   })
 
 export type CreateAgentDto = z.infer<typeof createAgentSchema>

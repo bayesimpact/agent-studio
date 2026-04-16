@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto"
-import { AgentLocale, AgentModel } from "@caseai-connect/api-contracts"
+import { AgentLocale, AgentModel, DocumentsRagMode } from "@caseai-connect/api-contracts"
 import { Factory } from "fishery"
 import type { RequiredScopeTransientParams } from "@/common/entities/connect-required-fields"
 import type { Agent } from "./agent.entity"
@@ -25,6 +25,7 @@ export const agentFactory = AgentFactory.define(({ sequence, params, transientPa
     temperature: params.temperature ?? 0.7,
     locale: params.locale || AgentLocale.EN,
     type: params.type || "conversation",
+    documentsRagMode: params.documentsRagMode || DocumentsRagMode.All,
     instructionPrompt: params.instructionPrompt ?? null,
     outputJsonSchema: params.outputJsonSchema ?? null,
     organizationId: transientParams.organization.id,

@@ -1,4 +1,4 @@
-import { AgentLocale, AgentModel } from "@caseai-connect/api-contracts"
+import { AgentLocale, AgentModel, DocumentsRagMode } from "@caseai-connect/api-contracts"
 import { afterAll } from "@jest/globals"
 import { UnprocessableEntityException } from "@nestjs/common"
 import {
@@ -15,6 +15,9 @@ import {
 import { addUserToProject } from "@/domains/projects/memberships/project-membership.factory"
 import { userFactory } from "@/domains/users/user.factory"
 import { sdk } from "@/external/llm/open-telemetry-init"
+import { DocumentTag } from "../documents/tags/document-tag.entity"
+import { documentTagFactory } from "../documents/tags/document-tag.factory"
+import { Agent } from "./agent.entity"
 import { AgentsModule } from "./agents.module"
 import { AgentsService } from "./agents.service"
 import { addUserToAgent } from "./memberships/agent-membership.factory"
@@ -54,6 +57,7 @@ describe("AgentsService", () => {
           type: "conversation",
           name: "My Template",
           defaultPrompt: "This is a default prompt",
+          documentsRagMode: DocumentsRagMode.All,
           model: AgentModel.Gemini25Flash,
           temperature: 0,
           locale: AgentLocale.EN,
@@ -106,6 +110,7 @@ describe("AgentsService", () => {
           type: "conversation",
           name: "New Agent",
           defaultPrompt: "Prompt",
+          documentsRagMode: DocumentsRagMode.All,
           model: AgentModel.Gemini25Flash,
           temperature: 0,
           locale: AgentLocale.EN,
@@ -147,6 +152,7 @@ describe("AgentsService", () => {
             type: "conversation",
             name: "AB",
             defaultPrompt: "Prompt",
+            documentsRagMode: DocumentsRagMode.All,
             model: AgentModel.Gemini25Flash,
             temperature: 0,
             locale: AgentLocale.EN,
@@ -173,6 +179,7 @@ describe("AgentsService", () => {
           type: "conversation",
           name: "Conversation Agent",
           defaultPrompt: "This is a default prompt",
+          documentsRagMode: DocumentsRagMode.All,
           model: AgentModel.Gemini25Flash,
           temperature: 0,
           locale: AgentLocale.EN,
@@ -195,6 +202,7 @@ describe("AgentsService", () => {
           fields: {
             name: "Extraction Agent",
             defaultPrompt: "This is a default prompt",
+            documentsRagMode: DocumentsRagMode.All,
             model: AgentModel.Gemini25Flash,
             temperature: 0,
             locale: AgentLocale.EN,
@@ -208,6 +216,7 @@ describe("AgentsService", () => {
         "Extraction agent requires outputJsonSchema",
       )
     })
+
   })
 
   describe("listAgents", () => {
@@ -293,6 +302,7 @@ describe("AgentsService", () => {
         fieldsToUpdate: {
           name: "Updated Template",
           defaultPrompt: "Updated Prompt",
+          documentsRagMode: DocumentsRagMode.All,
         },
       })
 
@@ -340,6 +350,40 @@ describe("AgentsService", () => {
       await expect(createWrongfulUpdateAgent()).rejects.toThrow(
         "Agent name must be at least 3 characters long",
       )
+    })
+
+    it("should keep stored tags when switching documentsRagMode to none", async () => {
+      const { organization, project, agent } = await createOrganizationWithAgent(repositories, {
+        agent: { documentsRagMode: DocumentsRagMode.Tags },
+      })
+      const documentTag = documentTagFactory.transient({ organization, project }).build()
+      await setup.getRepository(DocumentTag).save(documentTag)
+      await repositories.agentRepository.update(agent.id, {
+        documentsRagMode: DocumentsRagMode.Tags,
+      })
+      await repositories.agentRepository
+        .createQueryBuilder()
+        .relation(Agent, "documentTags")
+        .of(agent.id)
+        .add(documentTag.id)
+
+      const result = await service.updateAgent({
+        connectScope: { organizationId: organization.id, projectId: project.id },
+        agentId: agent.id,
+        fieldsToUpdate: {
+          documentsRagMode: DocumentsRagMode.None,
+        },
+      })
+
+      expect(result.documentsRagMode).toBe(DocumentsRagMode.None)
+
+      const updatedAgent = await repositories.agentRepository.findOne({
+        where: { id: agent.id },
+        relations: ["documentTags"],
+      })
+      expect(updatedAgent?.documentTags.map((documentTag) => documentTag.id)).toEqual([
+        documentTag.id,
+      ])
     })
   })
 

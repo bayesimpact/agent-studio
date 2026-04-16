@@ -7,6 +7,7 @@
     "props": {
       "createdAt": "Created At",
       "defaultPrompt": "Default Prompt",
+      "documentsRagMode": "Documents RAG",
       "locale": "Locale",
       "name": "Name",
       "model": "Model",
@@ -14,9 +15,15 @@
       "temperature": "Temperature",
       "updatedAt": "Updated At",
       "documentTags": "Document Tags",
+      "documentsRagModeOptions": {
+        "none": "Don't RAG",
+        "all": "RAG on all documents",
+        "tags": "RAG based on document tags"
+      },
       "placeholders": {
         "name": "Enter agent name",
         "defaultPrompt": "Enter default prompt",
+        "documentsRagMode": "Select document usage",
         "model": "Select model",
         "outputJsonSchema": "{\n \"type\": \"object\", \"properties\": {\n    \"field\": { \"type\": \"string\", \"description\": \"blablabla\" }\n  },\n  \"required\": [\"field\"]\n}",
         "temperature": "Enter temperature 0.0 - 2.0",
