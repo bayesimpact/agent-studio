@@ -29,6 +29,11 @@ export type PresignFileResponseItemDto = {
   uploadUrl: string
 }
 
+/** Optional tag IDs sent with document upload or confirm (same tags apply to each document in the batch). */
+export type DocumentUploadOptionalTagFields = {
+  tagIds?: DocumentTagDto["id"][]
+}
+
 export type DocumentDto = {
   createdAt: TimeType
   id: string

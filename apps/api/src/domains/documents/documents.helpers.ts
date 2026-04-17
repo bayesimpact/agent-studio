@@ -8,6 +8,24 @@ export function extractFileExtension(fileName: string): string {
   return extension
 }
 
+/** Multer may expose repeated `tagIds` form fields as a string or string[]. */
+export function parseMultipartTagIdsField(value: unknown): string[] | undefined {
+  if (value === undefined || value === null) {
+    return undefined
+  }
+  if (typeof value === "string") {
+    const trimmed = value.trim()
+    return trimmed.length > 0 ? [trimmed] : undefined
+  }
+  if (!Array.isArray(value)) {
+    return undefined
+  }
+  const tagIds = value.filter(
+    (entry): entry is string => typeof entry === "string" && entry.trim().length > 0,
+  )
+  return tagIds.length > 0 ? tagIds : undefined
+}
+
 export function normalizeUploadedFileName(originalFileName: string): string {
   const likelyMojibake = /(?:Ã.|Â|â[\u0080-\u00BF])/.test(originalFileName)
   if (!likelyMojibake) {

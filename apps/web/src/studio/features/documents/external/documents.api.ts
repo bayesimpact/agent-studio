@@ -16,11 +16,14 @@ export default {
     )
     return response.data.data.map(toDocument)
   },
-  uploadOne: async ({ organizationId, projectId, file, sourceType }) => {
+  uploadOne: async ({ organizationId, projectId, file, sourceType, tagIds }) => {
     const axios = getAxiosInstance()
 
     const formData = new FormData()
     formData.append("file", file)
+    for (const tagId of tagIds ?? []) {
+      formData.append("tagIds", tagId)
+    }
 
     const response = await axios.post<typeof DocumentsRoutes.uploadOne.response>(
       DocumentsRoutes.uploadOne.getPath({ organizationId, projectId, sourceType }),
@@ -29,7 +32,7 @@ export default {
     )
     return toDocument(response.data.data)
   },
-  uploadMany: async ({ organizationId, projectId, files, sourceType, onFileProcessed }) => {
+  uploadMany: async ({ organizationId, projectId, files, sourceType, tagIds, onFileProcessed }) => {
     const axios = getAxiosInstance()
 
     for (const file of files) {
@@ -68,7 +71,10 @@ export default {
         const confirmResponse = await axios.post<typeof DocumentsRoutes.confirmMany.response>(
           DocumentsRoutes.confirmMany.getPath({ organizationId, projectId }),
           {
-            payload: { documentIds: [presigned.documentId] },
+            payload: {
+              documentIds: [presigned.documentId],
+              ...(tagIds !== undefined && tagIds.length > 0 ? { tagIds } : {}),
+            },
           } satisfies typeof DocumentsRoutes.confirmMany.request,
         )
 
