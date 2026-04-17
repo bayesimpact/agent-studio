@@ -35,8 +35,11 @@ export { DocumentTagsRoutes } from "./document-tags/document-tag.routes"
 export * from "./documents/documents.dto"
 export { DocumentsRoutes } from "./documents/documents.routes"
 // Evaluation Datasets
-export * from "./evaluations/evaluation-datasets.dto"
-export { EvaluationDatasetsRoutes } from "./evaluations/evaluation-datasets.routes"
+export * from "./evaluations/evaluation-extraction-datasets.dto"
+export { EvaluationExtractionDatasetsRoutes } from "./evaluations/evaluation-extraction-datasets.routes"
+// Evaluation Runs
+export * from "./evaluations/evaluation-extraction-runs.dto"
+export { EvaluationExtractionRunsRoutes } from "./evaluations/evaluation-extraction-runs.routes"
 // Evaluation Reports
 export * from "./evaluations/evaluation-reports.dto"
 export { EvaluationReportsRoutes } from "./evaluations/evaluation-reports.routes"

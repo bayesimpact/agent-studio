@@ -6,7 +6,8 @@ import agents from "@/common/features/agents/external/agents.api"
 import me from "@/common/features/me/external/me.api"
 import organizations from "@/common/features/organizations/external/organizations.api"
 import projects from "@/common/features/projects/external/projects.api"
-import evaluationDatasets from "@/eval/features/datasets/external/datasets.api"
+import evaluationExtractionDatasets from "@/eval/features/evaluation-extraction-datasets/external/evaluation-extraction-datasets.api"
+import evaluationExtractionRuns from "@/eval/features/evaluation-extraction-runs/external/evaluation-extraction-runs.api"
 import agentMemberships from "@/studio/features/agent-memberships/external/agent-memberships.api"
 import agentMessageFeedback from "@/studio/features/agent-message-feedback/external/agent-message-feedback.api"
 import agentAnalytics from "@/studio/features/analytics/agent/external/agent-analytics.api"
@@ -27,8 +28,9 @@ export const services = {
   conversationAgentSessions,
   documents,
   documentTags,
-  evaluationDatasets,
+  evaluationExtractionDatasets,
   evaluationReports,
+  evaluationExtractionRuns,
   evaluations,
   extractionAgentSessions,
   formAgentSessions,

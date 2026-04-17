@@ -1,14 +1,16 @@
 import type { DocumentTagDto } from "../document-tags/document-tag.dto"
 import type { TimeType } from "../generic"
 
+export const DOCUMENT_EMBEDDING_STATUS_CHANGED_CHANNEL_DTO = "document_embedding_status_changed"
+
 export type DocumentSourceType =
   | "project"
   | "agentSessionMessage"
   | "extraction"
-  | "evaluationDataset"
+  | "evaluationExtractionDataset"
 export type DocumentEmbeddingStatus = "pending" | "processing" | "completed" | "failed"
 export type DocumentEmbeddingStatusChangedEventPayload = {
-  type: "document_embedding_status_changed"
+  type: typeof DOCUMENT_EMBEDDING_STATUS_CHANGED_CHANNEL_DTO
   documentId: string
   organizationId: string
   projectId: string

@@ -1,6 +1,6 @@
 import { Column, JoinColumn, JoinTable, ManyToMany, ManyToOne, OneToMany } from "typeorm"
 import { ConnectEntity, ConnectEntityBase } from "@/common/entities/connect-entity"
-import { EvaluationDatasetDocument } from "@/domains/evaluations/datasets/evaluation-dataset-document.entity"
+import { EvaluationExtractionDatasetDocument } from "@/domains/evaluations/extraction/datasets/evaluation-extraction-dataset-document.entity"
 import { Project } from "@/domains/projects/project.entity"
 import type { DocumentTag } from "./tags/document-tag.entity"
 
@@ -35,7 +35,7 @@ export class Document extends ConnectEntityBase {
   storageRelativePath!: string
 
   @Column({ name: "source_type", nullable: false })
-  sourceType!: "project" | "agentSessionMessage" | "extraction" | "evaluationDataset"
+  sourceType!: "project" | "agentSessionMessage" | "extraction" | "evaluationExtractionDataset"
 
   @Column({ name: "embedding_status", nullable: false, default: "pending" })
   embeddingStatus!: "pending" | "processing" | "completed" | "failed"
@@ -55,8 +55,9 @@ export class Document extends ConnectEntityBase {
   tags!: DocumentTag[]
 
   @OneToMany(
-    () => EvaluationDatasetDocument,
-    (evaluationDatasetDocument: EvaluationDatasetDocument) => evaluationDatasetDocument.document,
+    () => EvaluationExtractionDatasetDocument,
+    (evaluationExtractionDatasetDocument: EvaluationExtractionDatasetDocument) =>
+      evaluationExtractionDatasetDocument.document,
   )
-  evaluationDatasetDocuments!: EvaluationDatasetDocument[]
+  evaluationExtractionDatasetDocuments!: EvaluationExtractionDatasetDocument[]
 }

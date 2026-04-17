@@ -1,0 +1,147 @@
+import { createListenerMiddleware, isAnyOf } from "@reduxjs/toolkit"
+import { notificationsActions } from "@/common/features/notifications/notifications.slice"
+import type { AppDispatch, RootState } from "@/common/store/types"
+import { evaluationExtractionDatasetsActions } from "./evaluation-extraction-datasets.slice"
+
+const listenerMiddleware = createListenerMiddleware<RootState, AppDispatch>()
+
+function registerListeners() {
+  listenerMiddleware.startListening({
+    actionCreator: evaluationExtractionDatasetsActions.initData,
+    effect: async (_, listenerApi) => {
+      await Promise.all([
+        listenerApi.dispatch(evaluationExtractionDatasetsActions.listDatasets()),
+        listenerApi.dispatch(evaluationExtractionDatasetsActions.listFiles()),
+      ])
+    },
+  })
+
+  listenerMiddleware.startListening({
+    matcher: isAnyOf(
+      evaluationExtractionDatasetsActions.createOne.fulfilled,
+      evaluationExtractionDatasetsActions.updateOne.fulfilled,
+    ),
+    effect: async (_, listenerApi) => {
+      listenerApi.dispatch(evaluationExtractionDatasetsActions.listDatasets())
+    },
+  })
+
+  listenerMiddleware.startListening({
+    actionCreator: evaluationExtractionDatasetsActions.createOne.fulfilled,
+    effect: async (action, listenerApi) => {
+      listenerApi.dispatch(
+        notificationsActions.show({
+          title: `${action.meta.arg.name} created successfully`,
+          type: "success",
+        }),
+      )
+    },
+  })
+  listenerMiddleware.startListening({
+    actionCreator: evaluationExtractionDatasetsActions.createOne.rejected,
+    effect: async (action, listenerApi) => {
+      listenerApi.dispatch(
+        notificationsActions.show({
+          title: `${action.meta.arg.name} creation failed`,
+          type: "error",
+        }),
+      )
+    },
+  })
+
+  listenerMiddleware.startListening({
+    actionCreator: evaluationExtractionDatasetsActions.updateOne.fulfilled,
+    effect: async (action, listenerApi) => {
+      listenerApi.dispatch(
+        notificationsActions.show({
+          title: `${action.meta.arg.name} updated successfully`,
+          type: "success",
+        }),
+      )
+    },
+  })
+  listenerMiddleware.startListening({
+    actionCreator: evaluationExtractionDatasetsActions.updateOne.rejected,
+    effect: async (action, listenerApi) => {
+      listenerApi.dispatch(
+        notificationsActions.show({
+          title: `${action.meta.arg.name} update failed`,
+          type: "error",
+        }),
+      )
+    },
+  })
+
+  registerFileListeners()
+}
+
+export const evaluationExtractionDatasetsMiddleware = { listenerMiddleware, registerListeners }
+
+function registerFileListeners() {
+  listenerMiddleware.startListening({
+    matcher: isAnyOf(
+      evaluationExtractionDatasetsActions.uploadFile.fulfilled,
+      evaluationExtractionDatasetsActions.deleteFile.fulfilled,
+    ),
+    effect: async (_, listenerApi) => {
+      await Promise.all([listenerApi.dispatch(evaluationExtractionDatasetsActions.listFiles())])
+    },
+  })
+
+  listenerMiddleware.startListening({
+    actionCreator: evaluationExtractionDatasetsActions.uploadFile.pending,
+    effect: async (action, listenerApi) => {
+      listenerApi.dispatch(
+        notificationsActions.show({
+          title: `Uploading ${action.meta.arg.file.name}...`,
+          type: "info",
+        }),
+      )
+    },
+  })
+  listenerMiddleware.startListening({
+    actionCreator: evaluationExtractionDatasetsActions.uploadFile.fulfilled,
+    effect: async (action, listenerApi) => {
+      listenerApi.dispatch(
+        notificationsActions.show({
+          title: `${action.meta.arg.file.name} uploaded successfully`,
+          type: "success",
+        }),
+      )
+    },
+  })
+  listenerMiddleware.startListening({
+    actionCreator: evaluationExtractionDatasetsActions.uploadFile.rejected,
+    effect: async (action, listenerApi) => {
+      listenerApi.dispatch(
+        notificationsActions.show({
+          title: `${action.meta.arg.file.name} upload failed`,
+          type: "error",
+        }),
+      )
+    },
+  })
+
+  listenerMiddleware.startListening({
+    actionCreator: evaluationExtractionDatasetsActions.deleteFile.fulfilled,
+    effect: async (_, listenerApi) => {
+      listenerApi.dispatch(
+        notificationsActions.show({
+          title: "File deleted successfully",
+          type: "success",
+        }),
+      )
+    },
+  })
+  listenerMiddleware.startListening({
+    actionCreator: evaluationExtractionDatasetsActions.deleteFile.rejected,
+    effect: async (_, listenerApi) => {
+      listenerApi.dispatch(
+        notificationsActions.show({
+          title: "File deletion failed",
+          type: "error",
+        }),
+      )
+    },
+  })
+}

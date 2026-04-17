@@ -6,7 +6,8 @@ import type { IAgentsSpi } from "@/common/features/agents/agents.spi"
 import type { IMeSpi } from "@/common/features/me/me.spi"
 import type { IOrganizationsSpi } from "@/common/features/organizations/organizations.spi"
 import type { IProjectsSpi } from "@/common/features/projects/projects.spi"
-import type { IDatasetsSpi } from "@/eval/features/datasets/datasets.spi"
+import type { IEvaluationExtractionDatasetsSpi } from "@/eval/features/evaluation-extraction-datasets/evaluation-extraction-datasets.spi"
+import type { IEvaluationExtractionRunsSpi } from "@/eval/features/evaluation-extraction-runs/evaluation-extraction-runs.spi"
 import { services } from "@/external/axios.services"
 import type { IAgentMembershipsSpi } from "@/studio/features/agent-memberships/agent-memberships.spi"
 import type { IAgentMessageFeedbackSpi } from "@/studio/features/agent-message-feedback/agent-message-feedback.spi"
@@ -28,8 +29,9 @@ export type Services = {
   conversationAgentSessions: IConversationAgentSessionsSpi
   documents: IDocumentsSpi
   documentTags: IDocumentTagsSpi
-  evaluationDatasets: IDatasetsSpi
+  evaluationExtractionDatasets: IEvaluationExtractionDatasetsSpi
   evaluationReports: IEvaluationReportsSpi
+  evaluationExtractionRuns: IEvaluationExtractionRunsSpi
   evaluations: IEvaluationsSpi
   extractionAgentSessions: IExtractionAgentSessionsSpi
   formAgentSessions: IFormAgentSessionsSpi

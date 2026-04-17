@@ -2,15 +2,20 @@ import { combineReducers } from "@reduxjs/toolkit"
 import type { AppDispatch } from "@/common/store"
 import { dynamicMiddleware } from "@/common/store/dynamic-middleware"
 import { rootSlices } from "@/common/store/root-slices"
-import { datasetsMiddleware } from "../features/datasets/datasets.middleware"
-import { datasetsSlice } from "../features/datasets/datasets.slice"
+import { evaluationExtractionDatasetsMiddleware } from "../features/evaluation-extraction-datasets/evaluation-extraction-datasets.middleware"
+import { evaluationExtractionDatasetsSlice } from "../features/evaluation-extraction-datasets/evaluation-extraction-datasets.slice"
+import { evaluationExtractionRunsMiddleware } from "../features/evaluation-extraction-runs/evaluation-extraction-runs.middleware"
+import { evaluationExtractionRunsSlice } from "../features/evaluation-extraction-runs/evaluation-extraction-runs.slice"
 import type { EvalState } from "./types"
 
 let middlewareInjected = false
 
-const evalMiddlewareList = [datasetsMiddleware]
+const evalMiddlewareList = [
+  evaluationExtractionDatasetsMiddleware,
+  evaluationExtractionRunsMiddleware,
+]
 
-export const evalSliceList = [datasetsSlice]
+export const evalSliceList = [evaluationExtractionDatasetsSlice, evaluationExtractionRunsSlice]
 
 const evalReducers = combineReducers(
   Object.assign({}, ...evalSliceList.map((slice) => ({ [slice.name]: slice.reducer }))),

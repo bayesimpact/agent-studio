@@ -10,49 +10,28 @@ import {
   type DocumentEmbeddingsBatchService,
 } from "@/domains/documents/embeddings/document-embeddings-batch.interface"
 import { confirmDatabaseTarget } from "@/scripts/script-bootstrap"
+import {
+  type BaseRequeueOptions,
+  chunk,
+  parseBaseRequeueOptions,
+  validateBaseRequeueOptions,
+} from "./shared/requeue-helpers"
 
-type CliOptions = {
-  dryRun: boolean
-  limit?: number
-  batchSize: number
+type CliOptions = BaseRequeueOptions & {
   onlyMissingDocling: boolean
-  organizationId?: string
-  projectId?: string
 }
 
 export function parseCliOptions(argv: string[]): CliOptions {
-  const limitArg = getOptionalArgValue(argv, "--limit")
-  const batchSizeArg = getOptionalArgValue(argv, "--batch-size")
-
   return {
-    dryRun: argv.includes("--dry-run"),
-    limit: limitArg ? Number.parseInt(limitArg, 10) : undefined,
-    batchSize: batchSizeArg ? Number.parseInt(batchSizeArg, 10) : 200,
+    ...parseBaseRequeueOptions(argv),
     onlyMissingDocling: !argv.includes("--all-project-documents"),
-    organizationId: getOptionalArgValue(argv, "--organization-id"),
-    projectId: getOptionalArgValue(argv, "--project-id"),
   }
-}
-
-function getOptionalArgValue(argv: string[], argName: string): string | undefined {
-  const argIndex = argv.indexOf(argName)
-  if (argIndex < 0) {
-    return undefined
-  }
-
-  return argv[argIndex + 1]
 }
 
 const logger = new Logger("RequeueDocumentEmbeddings")
 
 function validateCliOptions(options: CliOptions): void {
-  if (options.limit !== undefined && (Number.isNaN(options.limit) || options.limit <= 0)) {
-    throw new Error("Invalid --limit value. It must be a positive integer.")
-  }
-
-  if (Number.isNaN(options.batchSize) || options.batchSize <= 0) {
-    throw new Error("Invalid --batch-size value. It must be a positive integer.")
-  }
+  validateBaseRequeueOptions(options)
 }
 
 async function bootstrapCli(): Promise<void> {
@@ -97,7 +76,7 @@ async function bootstrapCli(): Promise<void> {
     }
 
     let enqueuedCount = 0
-    for (const documentsBatch of chunkDocuments(documentsToRequeue, options.batchSize)) {
+    for (const documentsBatch of chunk(documentsToRequeue, options.batchSize)) {
       for (const document of documentsBatch) {
         await embeddingsBatchService.enqueueCreateEmbeddingsForDocument({
           documentId: document.id,
@@ -151,14 +130,6 @@ async function loadDocumentsForRequeue({
   }
 
   return await queryBuilder.getMany()
-}
-
-function chunkDocuments(documents: Document[], batchSize: number): Document[][] {
-  const batches: Document[][] = []
-  for (let index = 0; index < documents.length; index += batchSize) {
-    batches.push(documents.slice(index, index + batchSize))
-  }
-  return batches
 }
 
 if (require.main === module) {

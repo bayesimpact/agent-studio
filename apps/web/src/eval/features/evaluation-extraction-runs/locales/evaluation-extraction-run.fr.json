@@ -1,0 +1,53 @@
+{
+  "evaluationExtractionRun": {
+    "title": "Exécutions d'évaluation",
+    "run": "Lancer l'évaluation",
+    "running": "Évaluation en cours...",
+    "selectAgent": "Sélectionner un agent d'extraction",
+    "selectAgentDescription": "Choisissez l'agent d'extraction à évaluer sur ce dataset.",
+    "agent": "Agent",
+    "agentPlaceholder": "Sélectionner un agent",
+    "keyMapping": {
+      "title": "Mapping des clés",
+      "description": "Associez les champs de sortie de l'agent aux colonnes du dataset pour comparaison.",
+      "agentOutputKey": "Clé de sortie agent",
+      "datasetColumn": "Colonne du dataset",
+      "mode": "Mode",
+      "scored": "Évalué",
+      "fyi": "Info",
+      "columnPlaceholder": "Sélectionner une colonne",
+      "noOutputSchema": "Cet agent n'a pas de schéma de sortie défini."
+    },
+    "results": {
+      "title": "Résultats",
+      "summary": "Résumé",
+      "total": "Total",
+      "perfectMatches": "Correspondances parfaites",
+      "mismatches": "Non-correspondances",
+      "errors": "Erreurs",
+      "records": "Enregistrements",
+      "status": "Statut",
+      "comparison": "Comparaison",
+      "agentValue": "Sortie agent",
+      "groundTruth": "Attendu",
+      "match": "Correspondance",
+      "mismatch": "Non-correspondance",
+      "error": "Erreur",
+      "fyi": "Info",
+      "noRecords": "Aucun enregistrement trouvé",
+      "processing": "Traitement des enregistrements...",
+      "processingDescription": "{{processed}} sur {{total}} enregistrements traités. Cela peut prendre quelques minutes.",
+      "rawOutput": "Sortie brute",
+      "errorDetails": "Détails de l'erreur",
+      "pending": "En attente",
+      "running": "En cours",
+      "completed": "Terminé",
+      "failed": "Échoué"
+    },
+    "history": {
+      "title": "Historique des exécutions",
+      "empty": "Aucune exécution d'évaluation",
+      "description": "{{count}} exécutions"
+    }
+  }
+}

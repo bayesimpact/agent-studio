@@ -13,8 +13,8 @@ import { GridHeader } from "../../common/components/grid/Grid"
 import { AsyncRoute } from "../../common/routes/AsyncRoute"
 import { EmptyEvaluation } from "../features/evaluations/components/EmptyEvaluation"
 import { EvaluationCreator } from "../features/evaluations/components/EvaluationCreator"
+import { EvaluationExtractionRunner } from "../features/evaluations/components/EvaluationExtractionRunner"
 import { EvaluationItem } from "../features/evaluations/components/EvaluationItem"
-import { EvaluationRunner } from "../features/evaluations/components/EvaluationRunner"
 
 export function EvaluationRoute() {
   const evaluations = useAppSelector(selectEvaluationsData)
@@ -63,7 +63,7 @@ function WithData({ agents, evaluations }: { agents: Agent[]; evaluations: Evalu
             >
               {t("evaluation:runAll")}
             </Button>
-            <EvaluationRunner
+            <EvaluationExtractionRunner
               ids={idsToRun}
               agents={agents}
               modalHandler={{

@@ -5,8 +5,9 @@ import type { FormAgentSession } from "@/domains/agents/form-agent-sessions/form
 import type { AgentMembership } from "@/domains/agents/memberships/agent-membership.entity"
 import type { Document } from "@/domains/documents/document.entity"
 import type { DocumentTag } from "@/domains/documents/tags/document-tag.entity"
-import type { EvaluationDataset } from "@/domains/evaluations/datasets/evaluation-dataset.entity"
 import type { Evaluation } from "@/domains/evaluations/evaluation.entity"
+import type { EvaluationExtractionDataset } from "@/domains/evaluations/extraction/datasets/evaluation-extraction-dataset.entity"
+import type { EvaluationExtractionRun } from "@/domains/evaluations/extraction/runs/evaluation-extraction-run.entity"
 import type { EvaluationReport } from "@/domains/evaluations/reports/evaluation-report.entity"
 import type { OrganizationMembership } from "@/domains/organizations/memberships/organization-membership.entity"
 import type { ProjectMembership } from "@/domains/projects/memberships/project-membership.entity"
@@ -65,8 +66,8 @@ export interface EndpointRequestWithAgentSession<
   agentSession: T
 }
 
-export interface EndpointRequestWithEvaluationDataset extends EndpointRequestWithProject {
-  evaluationDataset: EvaluationDataset
+export interface EndpointRequestWithEvaluationExtractionDataset extends EndpointRequestWithProject {
+  evaluationExtractionDataset: EvaluationExtractionDataset
 }
 
 export interface EndpointRequestWithEvaluation extends EndpointRequestWithProject {
@@ -75,4 +76,8 @@ export interface EndpointRequestWithEvaluation extends EndpointRequestWithProjec
 
 export interface EndpointRequestWithEvaluationReport extends EndpointRequestWithEvaluation {
   evaluationReport: EvaluationReport
+}
+
+export interface EndpointRequestWithEvaluationExtractionRun extends EndpointRequestWithProject {
+  evaluationExtractionRun: EvaluationExtractionRun
 }

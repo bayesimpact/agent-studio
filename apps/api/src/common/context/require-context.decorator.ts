@@ -13,8 +13,9 @@ export type ContextResource =
   | "document"
   | "documentTag"
   | "evaluation"
-  | "evaluationDataset"
+  | "evaluationExtractionDataset"
   | "evaluationReport"
+  | "evaluationExtractionRun"
 
 export const RequireContext = (...resources: ContextResource[]) =>
   SetMetadata(REQUIRE_CONTEXT_KEY, resources)

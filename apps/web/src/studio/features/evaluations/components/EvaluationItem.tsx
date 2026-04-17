@@ -11,8 +11,8 @@ import { buildDate } from "@/common/utils/build-date"
 import type { Evaluation } from "@/studio/features/evaluations/evaluations.models"
 import { deleteEvaluation } from "@/studio/features/evaluations/evaluations.thunks"
 import { EvaluationEditor } from "./EvaluationCreator"
+import { EvaluationExtractionRunner } from "./EvaluationExtractionRunner"
 import { EvaluationReports } from "./EvaluationReports"
-import { EvaluationRunner } from "./EvaluationRunner"
 
 export function EvaluationItem({
   evaluation,
@@ -59,7 +59,7 @@ export function EvaluationItem({
         <div className="flex gap-2 items-center">
           <Button onClick={handleRun}>{t("run")}</Button>
 
-          <EvaluationRunner
+          <EvaluationExtractionRunner
             ids={[evaluation.id]}
             agents={agents}
             modalHandler={{ open, setOpen }}
