@@ -57,4 +57,7 @@ export class EvaluationExtractionRunRecord extends ConnectEntityBase {
 
   @Column({ name: "error_details", type: "text", nullable: true })
   errorDetails!: string | null
+
+  @Column({ name: "trace_id", type: "varchar", nullable: true })
+  traceId!: string | null
 }

@@ -115,10 +115,14 @@ describe("EvaluationExtractionRuns - getRecords", () => {
     const res = await subject()
 
     expectResponse(res, 200)
-    expect(res.body.data).toHaveLength(1)
-    expect(res.body.data[0]!.id).toBe(runRecord.id)
-    expect(res.body.data[0]!.status).toBe("match")
-    expect(res.body.data[0]!.comparison).toBeDefined()
+    expect(res.body.data.records).toHaveLength(1)
+    expect(res.body.data.records[0]!.id).toBe(runRecord.id)
+    expect(res.body.data.records[0]!.status).toBe("match")
+    expect(res.body.data.records[0]!.comparison).toBeDefined()
+    expect(res.body.data.records[0]!.datasetRecordData).toEqual({ col1: "value1" })
+    expect(res.body.data.total).toBe(1)
+    expect(res.body.data.page).toBe(0)
+    expect(res.body.data.limit).toBe(10)
   })
 
   it("should return empty list when no records exist", async () => {
@@ -133,6 +137,7 @@ describe("EvaluationExtractionRuns - getRecords", () => {
     const res = await subject()
 
     expectResponse(res, 200)
-    expect(res.body.data).toEqual([])
+    expect(res.body.data.records).toEqual([])
+    expect(res.body.data.total).toBe(0)
   })
 })

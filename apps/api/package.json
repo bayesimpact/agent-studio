@@ -25,6 +25,7 @@
     "migration:test:revert": "node -r tsconfig-paths/register -r ts-node/register ../../node_modules/typeorm/cli.js migration:revert -d src/config/typeorm.test.ts",
     "migration:test:show": "node -r tsconfig-paths/register -r ts-node/register ../../node_modules/typeorm/cli.js migration:show -d src/config/typeorm.test.ts",
     "requeue:document-embeddings": "ts-node -r tsconfig-paths/register src/scripts/requeue-document-embeddings.ts",
+    "requeue:evaluation-extraction-runs": "ts-node -r tsconfig-paths/register src/scripts/requeue-evaluation-extraction-runs.ts",
     "seed:mcp-preset": "ts-node -r tsconfig-paths/register src/scripts/seed-mcp-preset.ts",
     "mcp:link-to-project": "ts-node -r tsconfig-paths/register src/scripts/link-mcp-to-project.ts",
     "invite:organization-owners": "ts-node -r tsconfig-paths/register src/scripts/invite-organization-owners.ts",

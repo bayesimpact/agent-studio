@@ -13,7 +13,9 @@ const listenerMiddleware = createListenerMiddleware<RootState, AppDispatch>()
 
 const throttledRefreshRecords = throttle(
   (dispatch: AppDispatch, evaluationExtractionRunId: string) => {
-    dispatch(evaluationExtractionRunsActions.getRecords({ evaluationExtractionRunId }))
+    dispatch(
+      evaluationExtractionRunsActions.getRecords({ evaluationExtractionRunId, page: 0, limit: 10 }),
+    )
   },
   5_000,
   { leading: true, trailing: false },
@@ -78,6 +80,8 @@ function registerListeners() {
         listenerApi.dispatch(
           evaluationExtractionRunsActions.getRecords({
             evaluationExtractionRunId,
+            page: 0,
+            limit: 10,
           }),
         )
 

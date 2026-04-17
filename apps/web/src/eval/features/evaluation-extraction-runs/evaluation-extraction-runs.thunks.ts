@@ -4,7 +4,7 @@ import { getCurrentIds } from "@/common/features/helpers"
 import type { ThunkConfig } from "@/common/store/types"
 import type {
   EvaluationExtractionRun,
-  EvaluationExtractionRunRecord,
+  PaginatedEvaluationExtractionRunRecords,
 } from "./evaluation-extraction-runs.models"
 import { evaluationExtractionRunsActions } from "./evaluation-extraction-runs.slice"
 
@@ -37,12 +37,22 @@ const getOne = createAsyncThunk<
 )
 
 const getRecords = createAsyncThunk<
-  EvaluationExtractionRunRecord[],
-  { evaluationExtractionRunId: string },
+  PaginatedEvaluationExtractionRunRecords,
+  {
+    evaluationExtractionRunId: string
+    page?: number
+    limit?: number
+    columnFilters?: Record<string, string>
+    sortBy?: string
+    sortOrder?: "asc" | "desc"
+  },
   ThunkConfig
 >(
   "evaluationExtractionRuns/getRecords",
-  async ({ evaluationExtractionRunId }, { extra: { services }, getState }) => {
+  async (
+    { evaluationExtractionRunId, page, limit, columnFilters, sortBy, sortOrder },
+    { extra: { services }, getState },
+  ) => {
     const params = getCurrentIds({
       state: getState(),
       wantedIds: ["organizationId", "projectId"],
@@ -50,6 +60,11 @@ const getRecords = createAsyncThunk<
     return await services.evaluationExtractionRuns.getRecords({
       ...params,
       evaluationExtractionRunId,
+      page,
+      limit,
+      columnFilters,
+      sortBy,
+      sortOrder,
     })
   },
 )

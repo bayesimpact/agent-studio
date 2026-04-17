@@ -66,7 +66,7 @@ export class EvaluationExtractionDatasetsController {
     @Query("sortOrder") sortOrder?: string,
   ): Promise<typeof EvaluationExtractionDatasetsRoutes.getRecords.response> {
     const page = Math.max(0, Number(pageParam) || 0)
-    const limit = Math.min(100, Math.max(1, Number(limitParam) || 50))
+    const limit = Math.min(100, Math.max(1, Number(limitParam) || 10))
     const validSortOrder = sortOrder === "asc" || sortOrder === "desc" ? sortOrder : undefined
 
     let columnFilters: Record<string, string> | undefined

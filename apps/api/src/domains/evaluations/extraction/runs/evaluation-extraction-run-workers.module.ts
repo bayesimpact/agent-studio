@@ -8,6 +8,7 @@ import { EvaluationExtractionRunWorker } from "./evaluation-extraction-run.worke
 import { EvaluationExtractionRunGraderService } from "./evaluation-extraction-run-grader.service"
 import { EvaluationExtractionRunProcessorService } from "./evaluation-extraction-run-processor.service"
 import { EvaluationExtractionRunStatusNotifierService } from "./evaluation-extraction-run-status-notifier.service"
+import { QueueMetricsService } from "./queue-metrics.service"
 
 @Module({
   imports: [
@@ -22,6 +23,7 @@ import { EvaluationExtractionRunStatusNotifierService } from "./evaluation-extra
     EvaluationExtractionRunProcessorService,
     EvaluationExtractionRunStatusNotifierService,
     EvaluationExtractionRunGraderService,
+    QueueMetricsService,
   ],
 })
 export class EvaluationExtractionRunWorkersModule {}

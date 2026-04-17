@@ -49,6 +49,8 @@ export type EvaluationExtractionRunRecordDto = {
   comparison: Record<string, EvaluationExtractionRunRecordFieldResultDto> | null
   agentRawOutput: Record<string, unknown> | null
   errorDetails: string | null
+  datasetRecordData: Record<string, unknown> | null
+  traceUrl: string | null
   createdAt: TimeType
   updatedAt: TimeType
 }
@@ -58,6 +60,14 @@ export type CreateEvaluationExtractionRunRequestDto = {
   evaluationExtractionDatasetId: string
   agentId: string
   keyMapping: EvaluationExtractionRunKeyMappingEntryDto[]
+}
+
+// Paginated response
+export type PaginatedEvaluationExtractionRunRecordsDto = {
+  records: EvaluationExtractionRunRecordDto[]
+  total: number
+  page: number
+  limit: number
 }
 
 // SSE Event DTOs

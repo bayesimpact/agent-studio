@@ -117,4 +117,103 @@ export class EvaluationExtractionRunsService {
       order: { createdAt: "ASC" },
     })
   }
+
+  async getRunRecordsPaginated({
+    connectScope,
+    runId,
+    page,
+    limit,
+    columnFilters,
+    sortBy,
+    sortOrder,
+  }: {
+    connectScope: RequiredConnectScope
+    runId: string
+    page: number
+    limit: number
+    columnFilters?: Record<string, string>
+    sortBy?: string
+    sortOrder?: "asc" | "desc"
+  }): Promise<{ records: EvaluationExtractionRunRecord[]; total: number }> {
+    const alias = "evaluationExtractionRunRecord"
+    const datasetRecordAlias = "datasetRecord"
+
+    const query = this.runRecordConnectRepository
+      .newQueryBuilderWithConnectScope(connectScope)
+      .leftJoinAndSelect(`${alias}.evaluationExtractionDatasetRecord`, datasetRecordAlias)
+      .andWhere(`${alias}.evaluation_extraction_run_id = :runId`, { runId })
+
+    const safeKeyPattern = /^[a-zA-Z0-9_-]+$/
+
+    if (columnFilters) {
+      for (const [columnId, filterValue] of Object.entries(columnFilters)) {
+        if (!filterValue) continue
+        const paramName = `filter_${columnId.replace(/[^a-zA-Z0-9_]/g, "_")}`
+
+        if (columnId === "status") {
+          query.andWhere(`${alias}.status ILIKE :${paramName}`, {
+            [paramName]: `%${filterValue}%`,
+          })
+        } else if (columnId === "errorDetails") {
+          query.andWhere(`${alias}.error_details ILIKE :${paramName}`, {
+            [paramName]: `%${filterValue}%`,
+          })
+        } else if (columnId.startsWith("input_") && safeKeyPattern.test(columnId.slice(6))) {
+          const dataKey = columnId.slice(6)
+          query.andWhere(`${datasetRecordAlias}.data ->> '${dataKey}' ILIKE :${paramName}`, {
+            [paramName]: `%${filterValue}%`,
+          })
+        } else if (columnId.startsWith("target_") && safeKeyPattern.test(columnId.slice(7))) {
+          const comparisonKey = columnId.slice(7)
+          query.andWhere(
+            `${alias}.comparison -> '${comparisonKey}' ->> 'groundTruth' ILIKE :${paramName}`,
+            { [paramName]: `%${filterValue}%` },
+          )
+        } else if (columnId.startsWith("agent_") && safeKeyPattern.test(columnId.slice(6))) {
+          const comparisonKey = columnId.slice(6)
+          query.andWhere(
+            `${alias}.comparison -> '${comparisonKey}' ->> 'agentValue' ILIKE :${paramName}`,
+            { [paramName]: `%${filterValue}%` },
+          )
+        }
+      }
+    }
+
+    // TypeORM's getManyAndCount with joins resolves orderBy expressions via
+    // findColumnWithPropertyPath, which expects entity property names (createdAt),
+    // not database column names (created_at). For JSON/JSONB path expressions that
+    // can't map to a property, use addSelect with an alias so TypeORM resolves
+    // the orderBy via the select alias instead.
+    const sortAlias = "__sort_val"
+    if (sortBy) {
+      const direction = sortOrder === "asc" ? "ASC" : "DESC"
+      if (sortBy === "status") {
+        query.orderBy(`${alias}.status`, direction)
+      } else if (sortBy === "errorDetails") {
+        query.orderBy(`${alias}.errorDetails`, direction)
+      } else if (sortBy.startsWith("input_") && safeKeyPattern.test(sortBy.slice(6))) {
+        const dataKey = sortBy.slice(6)
+        query.addSelect(`${datasetRecordAlias}.data ->> '${dataKey}'`, sortAlias)
+        query.orderBy(sortAlias, direction)
+      } else if (sortBy.startsWith("target_") && safeKeyPattern.test(sortBy.slice(7))) {
+        const comparisonKey = sortBy.slice(7)
+        query.addSelect(`${alias}.comparison -> '${comparisonKey}' ->> 'groundTruth'`, sortAlias)
+        query.orderBy(sortAlias, direction)
+      } else if (sortBy.startsWith("agent_") && safeKeyPattern.test(sortBy.slice(6))) {
+        const comparisonKey = sortBy.slice(6)
+        query.addSelect(`${alias}.comparison -> '${comparisonKey}' ->> 'agentValue'`, sortAlias)
+        query.orderBy(sortAlias, direction)
+      } else {
+        query.orderBy(`${alias}.createdAt`, "ASC")
+      }
+    } else {
+      query.orderBy(`${alias}.createdAt`, "ASC")
+    }
+
+    query.skip(page * limit).take(limit)
+
+    const [records, total] = await query.getManyAndCount()
+
+    return { records, total }
+  }
 }

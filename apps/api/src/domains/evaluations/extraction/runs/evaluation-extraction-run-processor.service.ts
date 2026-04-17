@@ -38,6 +38,7 @@ export class EvaluationExtractionRunProcessorService extends ServiceWithLLM {
   private readonly logger = new Logger(EvaluationExtractionRunProcessorService.name)
   private readonly runConnectRepository: ConnectRepository<EvaluationExtractionRun>
   private readonly runRecordConnectRepository: ConnectRepository<EvaluationExtractionRunRecord>
+  private readonly runRecordRepository: Repository<EvaluationExtractionRunRecord>
   private readonly datasetConnectRepository: ConnectRepository<EvaluationExtractionDataset>
   private readonly datasetRecordConnectRepository: ConnectRepository<EvaluationExtractionDatasetRecord>
   private readonly agentConnectRepository: ConnectRepository<Agent>
@@ -67,6 +68,7 @@ export class EvaluationExtractionRunProcessorService extends ServiceWithLLM {
       evaluationExtractionRunRepository,
       "evaluationExtractionRun",
     )
+    this.runRecordRepository = evaluationExtractionRunRecordRepository
     this.runRecordConnectRepository = new ConnectRepository(
       evaluationExtractionRunRecordRepository,
       "evaluationExtractionRunRecord",
@@ -93,13 +95,23 @@ export class EvaluationExtractionRunProcessorService extends ServiceWithLLM {
       throw new NotFoundException(`Evaluation run with id ${payload.runId} not found`)
     }
 
-    if (run.status !== "pending") {
+    if (run.status === "completed") {
       throw new UnprocessableEntityException(
-        `Evaluation run must be in "pending" status to execute. Current status: "${run.status}"`,
+        `Evaluation run has already completed and cannot be re-executed.`,
       )
     }
 
+    if (run.status === "running" || run.status === "failed") {
+      this.logger.warn(
+        `Evaluation run ${run.id} is being retried (previous status: "${run.status}"). Cleaning up partial results.`,
+      )
+      await this.runRecordRepository.delete({
+        evaluationExtractionRunId: run.id,
+      })
+    }
+
     run.status = "running"
+    run.summary = null
     await this.runConnectRepository.saveOne(run)
     await this.notifyStatusChanged(run)
 
@@ -158,7 +170,7 @@ export class EvaluationExtractionRunProcessorService extends ServiceWithLLM {
           schemaMapping: dataset.schemaMapping,
         })
 
-        const agentOutput = await this.invokeAgent({
+        const { output: agentOutput, traceId } = await this.invokeAgent({
           agent,
           inputText,
           connectScope,
@@ -178,6 +190,7 @@ export class EvaluationExtractionRunProcessorService extends ServiceWithLLM {
           comparison: gradeResult.comparison,
           agentRawOutput: agentOutput,
           errorDetails: null,
+          traceId,
         })
 
         summary.running--
@@ -255,7 +268,7 @@ export class EvaluationExtractionRunProcessorService extends ServiceWithLLM {
     agent: Agent
     inputText: string
     connectScope: RequiredConnectScope
-  }): Promise<Record<string, unknown>> {
+  }): Promise<{ output: Record<string, unknown>; traceId: string }> {
     if (!agent.outputJsonSchema) {
       throw new UnprocessableEntityException(
         "Agent must have an outputJsonSchema for evaluation runs",
@@ -286,11 +299,13 @@ export class EvaluationExtractionRunProcessorService extends ServiceWithLLM {
       tags: [agent.name, "evaluation-extraction-run"],
     }
 
-    return this.getProviderForModel(agent.model).generateStructuredOutput({
+    const output = await this.getProviderForModel(agent.model).generateStructuredOutput({
       message: llmMessage,
       schema: agent.outputJsonSchema,
       config: llmConfig,
       metadata: llmMetadata,
     })
+
+    return { output, traceId }
   }
 }

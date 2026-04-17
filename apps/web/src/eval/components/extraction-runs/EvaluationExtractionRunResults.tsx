@@ -1,3 +1,4 @@
+import type { EvaluationExtractionRunDto } from "@caseai-connect/api-contracts"
 import { Badge } from "@caseai-connect/ui/shad/badge"
 import {
   Card,
@@ -7,12 +8,24 @@ import {
   CardTitle,
 } from "@caseai-connect/ui/shad/card"
 import { Spinner } from "@caseai-connect/ui/shad/spinner"
-import { type ColumnDef, flexRender, getCoreRowModel, useReactTable } from "@tanstack/react-table"
-import { useMemo } from "react"
+import {
+  type Column,
+  type ColumnDef,
+  type ColumnFiltersState,
+  flexRender,
+  getCoreRowModel,
+  type OnChangeFn,
+  type PaginationState,
+  type SortingState,
+  useReactTable,
+} from "@tanstack/react-table"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { useTranslation } from "react-i18next"
+import { ADS } from "@/common/store/async-data-status"
+import { useAppDispatch, useAppSelector } from "@/common/store/hooks"
 import type {
   EvaluationExtractionDataset,
-  EvaluationExtractionDatasetRecordRow,
+  EvaluationExtractionDatasetSchemaColumn,
 } from "@/eval/features/evaluation-extraction-datasets/evaluation-extraction-datasets.models"
 import type {
   EvaluationExtractionRun,
@@ -20,7 +33,15 @@ import type {
   EvaluationExtractionRunRecordFieldStatus,
   EvaluationExtractionRunRecordStatus,
 } from "@/eval/features/evaluation-extraction-runs/evaluation-extraction-runs.models"
-import type { EvaluationExtractionRunDto } from "../../../../../../packages/api-contracts/src/evaluations/evaluation-extraction-runs.dto"
+import { selectCurrentRunRecords } from "@/eval/features/evaluation-extraction-runs/evaluation-extraction-runs.selectors"
+import { evaluationExtractionRunsActions } from "@/eval/features/evaluation-extraction-runs/evaluation-extraction-runs.slice"
+import { TraceUrlOpener } from "@/studio/components/TraceUrlOpener"
+import {
+  DEFAULT_PAGE_SIZE,
+  PaginationControls,
+  SortableFilterableHeader,
+  TruncatedCell,
+} from "../shared/RecordTableParts"
 
 function StatusBadge({ status }: { status: EvaluationExtractionRunRecordStatus }) {
   const { t } = useTranslation()
@@ -96,22 +117,17 @@ type ResultRow = {
     { agentValue: string; groundTruth: string; status: EvaluationExtractionRunRecordFieldStatus }
   >
   errorDetails: string | null
+  traceUrl: string | null
 }
 
 function buildResultRows(
   records: EvaluationExtractionRunRecord[],
-  dataset: EvaluationExtractionDataset,
-  datasetRecords: EvaluationExtractionDatasetRecordRow[],
+  inputColumns: EvaluationExtractionDatasetSchemaColumn[],
 ): ResultRow[] {
-  const inputColumns = Object.values(dataset.schemaMapping)
-    .filter((column) => column.role === "input")
-    .sort((columnA, columnB) => columnA.index - columnB.index)
-
   return records.map((record, recordIndex) => {
     const inputs: Record<string, string> = {}
-    const datasetRecord = datasetRecords[recordIndex]
     for (const column of inputColumns) {
-      inputs[column.finalName] = String(datasetRecord?.data[column.id] ?? "")
+      inputs[column.id] = String(record.datasetRecordData?.[column.id] ?? "")
     }
 
     const fields: ResultRow["fields"] = {}
@@ -131,35 +147,43 @@ function buildResultRows(
       inputs,
       fields,
       errorDetails: record.errorDetails,
+      traceUrl: record.traceUrl,
     }
   })
 }
 
 export function EvaluationExtractionRunRecordsTable({
-  records,
   run,
   dataset,
-  datasetRecords,
 }: {
-  records: EvaluationExtractionRunRecord[]
   run: EvaluationExtractionRun
   dataset: EvaluationExtractionDataset
-  datasetRecords: EvaluationExtractionDatasetRecordRow[]
 }) {
   const { t } = useTranslation()
+  const dispatch = useAppDispatch()
+  const recordsData = useAppSelector(selectCurrentRunRecords)
   const isRunning = run.status === "pending" || run.status === "running"
 
-  const inputColumnNames = useMemo(
+  const [sorting, setSorting] = useState<SortingState>([])
+  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
+  const [debouncedFilters, setDebouncedFilters] = useState<ColumnFiltersState>([])
+  const [pagination, setPagination] = useState<PaginationState>({
+    pageIndex: 0,
+    pageSize: DEFAULT_PAGE_SIZE,
+  })
+  const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  const inputColumns = useMemo(
     () =>
       Object.values(dataset.schemaMapping)
         .filter((column) => column.role === "input")
-        .sort((columnA, columnB) => columnA.index - columnB.index)
-        .map((column) => column.finalName),
+        .sort((columnA, columnB) => columnA.index - columnB.index),
     [dataset.schemaMapping],
   )
 
   const comparisonKeys = useMemo(() => {
     const keys = new Set<string>()
+    const records = ADS.isFulfilled(recordsData) ? recordsData.value.records : []
     for (const record of records) {
       if (record.comparison) {
         for (const key of Object.keys(record.comparison)) {
@@ -167,37 +191,96 @@ export function EvaluationExtractionRunRecordsTable({
         }
       }
     }
+    // Also derive from keyMapping so columns appear even before first page loads
+    for (const entry of run.keyMapping) {
+      keys.add(entry.agentOutputKey)
+    }
     return Array.from(keys)
-  }, [records])
+  }, [recordsData, run.keyMapping])
 
+  const records = ADS.isFulfilled(recordsData) ? recordsData.value.records : []
+  const total = ADS.isFulfilled(recordsData) ? recordsData.value.total : 0
+  const totalPages = Math.max(1, Math.ceil(total / DEFAULT_PAGE_SIZE))
   const hasErrors = records.some((record) => record.errorDetails)
 
-  const data = useMemo(
-    () => buildResultRows(records, dataset, datasetRecords),
-    [records, dataset, datasetRecords],
+  const fetchRecords = useCallback(
+    (params: { page: number; columnFilters: ColumnFiltersState; sorting: SortingState }) => {
+      const activeFilters: Record<string, string> = {}
+      for (const filter of params.columnFilters) {
+        if (typeof filter.value === "string" && filter.value.length > 0) {
+          activeFilters[filter.id] = filter.value
+        }
+      }
+
+      dispatch(
+        evaluationExtractionRunsActions.getRecords({
+          evaluationExtractionRunId: run.id,
+          page: params.page,
+          limit: DEFAULT_PAGE_SIZE,
+          columnFilters: Object.keys(activeFilters).length > 0 ? activeFilters : undefined,
+          sortBy: params.sorting[0]?.id,
+          sortOrder:
+            params.sorting[0]?.desc === true
+              ? "desc"
+              : params.sorting[0]?.desc === false
+                ? "asc"
+                : undefined,
+        }),
+      )
+    },
+    [dispatch, run.id],
   )
+
+  useEffect(() => {
+    fetchRecords({ page: pagination.pageIndex, columnFilters: debouncedFilters, sorting })
+  }, [fetchRecords, pagination.pageIndex, debouncedFilters, sorting])
+
+  const handleColumnFiltersChange: OnChangeFn<ColumnFiltersState> = useCallback(
+    (updaterOrValue) => {
+      setColumnFilters((prev) => {
+        const next = typeof updaterOrValue === "function" ? updaterOrValue(prev) : updaterOrValue
+        if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current)
+        debounceTimerRef.current = setTimeout(() => {
+          setDebouncedFilters(next)
+          setPagination((prev) => ({ ...prev, pageIndex: 0 }))
+        }, 300)
+        return next
+      })
+    },
+    [],
+  )
+
+  const handleSortingChange: OnChangeFn<SortingState> = useCallback((updaterOrValue) => {
+    setSorting((prev) => {
+      const next = typeof updaterOrValue === "function" ? updaterOrValue(prev) : updaterOrValue
+      return next
+    })
+    setPagination((prev) => ({ ...prev, pageIndex: 0 }))
+  }, [])
+
+  const data = useMemo(() => buildResultRows(records, inputColumns), [records, inputColumns])
 
   const columns = useMemo<ColumnDef<ResultRow>[]>(() => {
     const indexColumn: ColumnDef<ResultRow> = {
       id: "__index",
       header: () => "#",
-      cell: ({ row }) => (
-        <span className="font-mono text-xs text-muted-foreground/60">{row.original.index + 1}</span>
+      cell: ({ row, table }) => (
+        <span className="font-mono text-xs text-muted-foreground/60">
+          {table.getState().pagination.pageIndex * DEFAULT_PAGE_SIZE + row.original.index + 1}
+        </span>
       ),
       size: 48,
+      enableSorting: false,
+      enableColumnFilter: false,
     }
 
-    const inputColumns: ColumnDef<ResultRow>[] = inputColumnNames.map((columnName) => ({
-      id: `input_${columnName}`,
-      header: () => (
-        <div className="flex items-center gap-1.5">
-          {columnName}
-          <Badge variant="outline">input</Badge>
-        </div>
+    const inputColDefs: ColumnDef<ResultRow>[] = inputColumns.map((schemaColumn) => ({
+      id: `input_${schemaColumn.id}`,
+      accessorFn: (row: ResultRow) => row.inputs[schemaColumn.id] ?? "",
+      header: ({ column }) => (
+        <SortableFilterableHeader column={column} label={schemaColumn.finalName} badge="input" />
       ),
-      cell: ({ row }) => (
-        <span className="truncate block">{row.original.inputs[columnName] ?? ""}</span>
-      ),
+      cell: ({ row }) => <TruncatedCell value={row.original.inputs[schemaColumn.id] ?? ""} />,
       size: 250,
     }))
 
@@ -213,31 +296,27 @@ export function EvaluationExtractionRunRecordsTable({
       return [
         {
           id: `target_${comparisonKey}`,
-          header: () => (
-            <div className="flex items-center gap-1.5">
-              {targetName}
-              <Badge variant="outline">target</Badge>
-            </div>
+          accessorFn: (row: ResultRow) => row.fields[comparisonKey]?.groundTruth ?? "",
+          header: ({ column }: { column: Column<ResultRow, unknown> }) => (
+            <SortableFilterableHeader column={column} label={targetName} badge="target" />
           ),
-          cell: ({ row }) => {
+          cell: ({ row }: { row: { original: ResultRow } }) => {
             const field = row.original.fields[comparisonKey]
             if (!field) return <span className="text-muted-foreground">-</span>
-            return <span className="font-mono text-sm">{field.groundTruth}</span>
+            return <TruncatedCell value={String(field.groundTruth)} className="font-mono text-sm" />
           },
           size: 200,
         },
         {
           id: `agent_${comparisonKey}`,
-          header: () => (
-            <div className="flex items-center gap-1.5">
-              {targetName}
-              <Badge variant="default">agent</Badge>
-            </div>
+          accessorFn: (row: ResultRow) => row.fields[comparisonKey]?.agentValue ?? "",
+          header: ({ column }: { column: Column<ResultRow, unknown> }) => (
+            <SortableFilterableHeader column={column} label={targetName} badge="agent" />
           ),
-          cell: ({ row }) => {
+          cell: ({ row }: { row: { original: ResultRow } }) => {
             const field = row.original.fields[comparisonKey]
             if (!field) return <span className="text-muted-foreground">-</span>
-            return <span className="font-mono text-sm">{field.agentValue}</span>
+            return <TruncatedCell value={String(field.agentValue)} className="font-mono text-sm" />
           },
           size: 200,
         },
@@ -246,7 +325,13 @@ export function EvaluationExtractionRunRecordsTable({
 
     const statusColumn: ColumnDef<ResultRow> = {
       id: "status",
-      header: () => t("evaluationExtractionRun:results.status"),
+      accessorFn: (row: ResultRow) => row.status,
+      header: ({ column }) => (
+        <SortableFilterableHeader
+          column={column}
+          label={t("evaluationExtractionRun:results.status")}
+        />
+      ),
       cell: ({ row }) => {
         const fieldEntries = Object.entries(row.original.fields)
         return (
@@ -265,12 +350,32 @@ export function EvaluationExtractionRunRecordsTable({
       size: 150,
     }
 
-    const allColumns = [indexColumn, ...inputColumns, ...targetColumns, statusColumn]
+    const traceUrlColumn: ColumnDef<ResultRow> = {
+      id: "traceUrl",
+      header: () => <></>,
+      cell: ({ row }) => (
+        <TraceUrlOpener
+          traceUrl={row.original.traceUrl ?? undefined}
+          buttonProps={{ size: "sm" }}
+        />
+      ),
+      size: 100,
+      enableSorting: false,
+      enableColumnFilter: false,
+    }
+
+    const allColumns = [indexColumn, ...inputColDefs, ...targetColumns, statusColumn]
 
     if (hasErrors) {
       allColumns.push({
         id: "errorDetails",
-        header: () => t("evaluationExtractionRun:results.errorDetails"),
+        accessorFn: (row: ResultRow) => row.errorDetails ?? "",
+        header: ({ column }) => (
+          <SortableFilterableHeader
+            column={column}
+            label={t("evaluationExtractionRun:results.errorDetails")}
+          />
+        ),
         cell: ({ row }) => {
           if (!row.original.errorDetails) return null
           return (
@@ -283,21 +388,42 @@ export function EvaluationExtractionRunRecordsTable({
       })
     }
 
+    allColumns.push(traceUrlColumn)
+
     return allColumns
-  }, [inputColumnNames, comparisonKeys, run.keyMapping, dataset.schemaMapping, hasErrors, t])
+  }, [inputColumns, comparisonKeys, run.keyMapping, dataset.schemaMapping, hasErrors, t])
 
   const table = useReactTable({
     data,
     columns,
+    state: {
+      sorting,
+      columnFilters,
+      pagination,
+    },
+    onSortingChange: handleSortingChange,
+    onColumnFiltersChange: handleColumnFiltersChange,
+    onPaginationChange: setPagination,
+    manualPagination: true,
+    manualSorting: true,
+    manualFiltering: true,
+    autoResetAll: false,
+    pageCount: totalPages,
+    rowCount: total,
     getCoreRowModel: getCoreRowModel(),
   })
+
+  const hasFilters = columnFilters.some(
+    (filter) => typeof filter.value === "string" && filter.value.length > 0,
+  )
+  const showPagination = totalPages > 1 || hasFilters
 
   return (
     <Card className="border-0 shadow-none">
       <CardHeader>
         <CardTitle>{t("evaluationExtractionRun:results.records")}</CardTitle>
         <CardDescription>
-          {t("evaluation:dataset.records.view.description", { count: records.length })}
+          {t("evaluation:dataset.records.view.description", { count: total })}
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -309,7 +435,7 @@ export function EvaluationExtractionRunRecordsTable({
                   {headerGroup.headers.map((header) => (
                     <th
                       key={header.id}
-                      className="text-foreground h-10 px-3 text-left align-middle font-medium whitespace-nowrap"
+                      className="text-foreground h-auto px-3 py-2 text-left align-bottom font-medium whitespace-nowrap"
                       style={{ width: header.getSize() }}
                     >
                       {flexRender(header.column.columnDef.header, header.getContext())}
@@ -319,23 +445,7 @@ export function EvaluationExtractionRunRecordsTable({
               ))}
             </thead>
             <tbody>
-              {table.getRowModel().rows.map((row) => (
-                <tr
-                  key={row.id}
-                  className={`border-b transition-colors hover:bg-muted/50 ${row.index % 2 !== 0 ? "bg-muted/30" : ""}`}
-                >
-                  {row.getVisibleCells().map((cell) => (
-                    <td
-                      key={cell.id}
-                      className="p-3 align-middle"
-                      style={{ width: cell.column.getSize(), maxWidth: cell.column.getSize() }}
-                    >
-                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                    </td>
-                  ))}
-                </tr>
-              ))}
-              {table.getRowModel().rows.length === 0 && (
+              {records.length === 0 ? (
                 <tr>
                   <td colSpan={columns.length} className="h-24 text-center text-muted-foreground">
                     {isRunning ? (
@@ -345,10 +455,38 @@ export function EvaluationExtractionRunRecordsTable({
                     )}
                   </td>
                 </tr>
+              ) : (
+                table.getRowModel().rows.map((row) => (
+                  <tr
+                    key={row.id}
+                    className={`border-b transition-colors hover:bg-muted/50 ${row.index % 2 !== 0 ? "bg-muted/30" : ""}`}
+                  >
+                    {row.getVisibleCells().map((cell) => (
+                      <td
+                        key={cell.id}
+                        className="p-3 align-middle"
+                        style={{ width: cell.column.getSize(), maxWidth: cell.column.getSize() }}
+                      >
+                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                      </td>
+                    ))}
+                  </tr>
+                ))
               )}
             </tbody>
           </table>
         </div>
+
+        {showPagination && (
+          <PaginationControls
+            pageIndex={pagination.pageIndex}
+            pageCount={totalPages}
+            total={total}
+            onPageChange={(newPageIndex) =>
+              setPagination((prev) => ({ ...prev, pageIndex: newPageIndex }))
+            }
+          />
+        )}
       </CardContent>
     </Card>
   )

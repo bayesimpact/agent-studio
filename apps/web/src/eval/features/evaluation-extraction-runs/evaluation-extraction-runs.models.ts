@@ -18,6 +18,13 @@ export type EvaluationExtractionRunKeyMappingEntry = EvaluationExtractionRunKeyM
 export type EvaluationExtractionRunSummary = EvaluationExtractionRunSummaryDto
 export type EvaluationExtractionRunRecordFieldResult = EvaluationExtractionRunRecordFieldResultDto
 
+export type PaginatedEvaluationExtractionRunRecords = {
+  records: EvaluationExtractionRunRecord[]
+  total: number
+  page: number
+  limit: number
+}
+
 export type EvaluationExtractionRunStatusChangedEvent = {
   evaluationExtractionRunId: string
   status: EvaluationExtractionRunStatusDto

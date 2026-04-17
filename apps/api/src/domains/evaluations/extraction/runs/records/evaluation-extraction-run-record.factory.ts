@@ -44,6 +44,7 @@ export const evaluationExtractionRunRecordFactory = EvaluationExtractionRunRecor
       comparison: (params.comparison as EvaluationExtractionRunRecordComparison) || null,
       agentRawOutput: params.agentRawOutput || null,
       errorDetails: params.errorDetails || null,
+      traceId: params.traceId || null,
       organizationId: transientParams.organization.id,
       projectId: transientParams.project.id,
       createdAt: params.createdAt || now,

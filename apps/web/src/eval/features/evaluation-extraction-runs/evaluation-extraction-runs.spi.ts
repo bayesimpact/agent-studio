@@ -1,8 +1,8 @@
 import type { EvaluationExtractionRunKeyMappingEntryDto } from "@caseai-connect/api-contracts"
 import type {
   EvaluationExtractionRun,
-  EvaluationExtractionRunRecord,
   EvaluationExtractionRunStatusChangedEvent,
+  PaginatedEvaluationExtractionRunRecords,
 } from "./evaluation-extraction-runs.models"
 
 type BaseParams = { organizationId: string; projectId: string }
@@ -25,8 +25,15 @@ export interface IEvaluationExtractionRunsSpi {
   ): Promise<EvaluationExtractionRun>
   getAll(params: BaseParams): Promise<EvaluationExtractionRun[]>
   getRecords(
-    params: BaseParams & { evaluationExtractionRunId: string },
-  ): Promise<EvaluationExtractionRunRecord[]>
+    params: BaseParams & {
+      evaluationExtractionRunId: string
+      page?: number
+      limit?: number
+      columnFilters?: Record<string, string>
+      sortBy?: string
+      sortOrder?: "asc" | "desc"
+    },
+  ): Promise<PaginatedEvaluationExtractionRunRecords>
   streamRunStatus(params: {
     organizationId: string
     projectId: string

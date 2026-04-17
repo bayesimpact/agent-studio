@@ -4,7 +4,7 @@ import {
   type EvaluationExtractionRunStatusChangedEventDto,
   EvaluationExtractionRunsRoutes,
 } from "@caseai-connect/api-contracts"
-import { Body, Controller, Get, Inject, Post, Req, Sse, UseGuards } from "@nestjs/common"
+import { Body, Controller, Get, Inject, Post, Query, Req, Sse, UseGuards } from "@nestjs/common"
 import type { Observable } from "rxjs"
 import { filter, map } from "rxjs/operators"
 import type {
@@ -18,6 +18,7 @@ import { CheckPolicy } from "@/common/policies/check-policy.decorator"
 import { TrackActivity } from "@/domains/activities/track-activity.decorator"
 import { JwtAuthGuard } from "@/domains/auth/jwt-auth.guard"
 import { UserGuard } from "@/domains/users/user.guard"
+import { getTraceUrl } from "@/external/langfuse/langfuse-helper"
 import type { EvaluationExtractionRun } from "./evaluation-extraction-run.entity"
 import { EvaluationExtractionRunGuard } from "./evaluation-extraction-run.guard"
 import type { EvaluationExtractionRunBatchService } from "./evaluation-extraction-run-batch.interface"
@@ -101,12 +102,43 @@ export class EvaluationExtractionRunsController {
   @CheckPolicy((policy) => policy.canList())
   async getRecords(
     @Req() request: EndpointRequestWithEvaluationExtractionRun,
+    @Query("page") pageParam?: string,
+    @Query("limit") limitParam?: string,
+    @Query("columnFilters") columnFiltersParam?: string,
+    @Query("sortBy") sortBy?: string,
+    @Query("sortOrder") sortOrder?: string,
   ): Promise<typeof EvaluationExtractionRunsRoutes.getRecords.response> {
-    const records = await this.evaluationExtractionRunsService.getRunRecords({
+    const page = Math.max(0, Number(pageParam) || 0)
+    const limit = Math.min(100, Math.max(1, Number(limitParam) || 10))
+    const validSortOrder = sortOrder === "asc" || sortOrder === "desc" ? sortOrder : undefined
+
+    let columnFilters: Record<string, string> | undefined
+    if (columnFiltersParam) {
+      try {
+        columnFilters = JSON.parse(columnFiltersParam)
+      } catch {
+        columnFilters = undefined
+      }
+    }
+
+    const { records, total } = await this.evaluationExtractionRunsService.getRunRecordsPaginated({
       connectScope: getRequiredConnectScope(request),
       runId: request.evaluationExtractionRun.id,
+      page,
+      limit,
+      columnFilters,
+      sortBy: sortBy || undefined,
+      sortOrder: validSortOrder,
     })
-    return { data: records.map(toEvaluationExtractionRunRecordDto) }
+
+    return {
+      data: {
+        records: records.map(toEvaluationExtractionRunRecordDto),
+        total,
+        page,
+        limit,
+      },
+    }
   }
 
   @CheckPolicy((policy) => policy.canList())
@@ -151,6 +183,8 @@ function toEvaluationExtractionRunRecordDto(
     comparison: record.comparison,
     agentRawOutput: record.agentRawOutput,
     errorDetails: record.errorDetails,
+    datasetRecordData: record.evaluationExtractionDatasetRecord?.data ?? null,
+    traceUrl: record.traceId ? getTraceUrl(record.traceId) : null,
     createdAt: record.createdAt.getTime(),
     updatedAt: record.updatedAt.getTime(),
   }

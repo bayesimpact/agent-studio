@@ -41,12 +41,38 @@ export default {
     )
     return response.data.data.map(toEvaluationExtractionRun)
   },
-  getRecords: async (params) => {
+  getRecords: async ({
+    evaluationExtractionRunId,
+    page,
+    limit,
+    columnFilters,
+    sortBy,
+    sortOrder,
+    ...params
+  }) => {
     const axios = getAxiosInstance()
+    const queryParams: Record<string, string> = {}
+    if (page !== undefined) queryParams.page = String(page)
+    if (limit !== undefined) queryParams.limit = String(limit)
+    if (columnFilters && Object.keys(columnFilters).length > 0)
+      queryParams.columnFilters = JSON.stringify(columnFilters)
+    if (sortBy) queryParams.sortBy = sortBy
+    if (sortOrder) queryParams.sortOrder = sortOrder
+
     const response = await axios.get<typeof EvaluationExtractionRunsRoutes.getRecords.response>(
-      EvaluationExtractionRunsRoutes.getRecords.getPath(params),
+      EvaluationExtractionRunsRoutes.getRecords.getPath({
+        ...params,
+        evaluationExtractionRunId,
+      }),
+      { params: queryParams },
     )
-    return response.data.data.map(toEvaluationExtractionRunRecord)
+    const data = response.data.data
+    return {
+      records: data.records.map(toEvaluationExtractionRunRecord),
+      total: data.total,
+      page: data.page,
+      limit: data.limit,
+    }
   },
   streamRunStatus: async (params) => {
     await streamEvaluationExtractionRunStatus(params)
@@ -78,6 +104,8 @@ function toEvaluationExtractionRunRecord(
     comparison: dto.comparison,
     agentRawOutput: dto.agentRawOutput,
     errorDetails: dto.errorDetails,
+    datasetRecordData: dto.datasetRecordData,
+    traceUrl: dto.traceUrl,
     createdAt: dto.createdAt,
     updatedAt: dto.updatedAt,
   }

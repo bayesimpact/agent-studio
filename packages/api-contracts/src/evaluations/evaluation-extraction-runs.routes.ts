@@ -3,8 +3,8 @@ import { defineRoute } from "../helpers"
 import type {
   CreateEvaluationExtractionRunRequestDto,
   EvaluationExtractionRunDto,
-  EvaluationExtractionRunRecordDto,
   EvaluationExtractionRunStatusChangedEventDto,
+  PaginatedEvaluationExtractionRunRecordsDto,
 } from "./evaluation-extraction-runs.dto"
 
 const prefix = "organizations/:organizationId/projects/:projectId/evaluation-extraction-runs"
@@ -29,7 +29,7 @@ export const EvaluationExtractionRunsRoutes = {
     method: "get",
     path: prefix,
   }),
-  getRecords: defineRoute<ResponseData<EvaluationExtractionRunRecordDto[]>>({
+  getRecords: defineRoute<ResponseData<PaginatedEvaluationExtractionRunRecordsDto>>({
     method: "get",
     path: `${prefix}/:evaluationExtractionRunId/records`,
   }),

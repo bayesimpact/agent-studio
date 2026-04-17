@@ -2,9 +2,9 @@ import { createSlice, type PayloadAction } from "@reduxjs/toolkit"
 import { ADS, type AsyncData, defaultAsyncData } from "@/common/store/async-data-status"
 import type {
   EvaluationExtractionRun,
-  EvaluationExtractionRunRecord,
   EvaluationExtractionRunStatus,
   EvaluationExtractionRunSummary,
+  PaginatedEvaluationExtractionRunRecords,
 } from "./evaluation-extraction-runs.models"
 import { evaluationExtractionRunsThunks } from "./evaluation-extraction-runs.thunks"
 
@@ -12,7 +12,7 @@ interface State {
   currentRunId: string | null
   data: AsyncData<EvaluationExtractionRun[]>
   currentRun: AsyncData<EvaluationExtractionRun>
-  currentRunRecords: AsyncData<EvaluationExtractionRunRecord[]>
+  currentRunRecords: AsyncData<PaginatedEvaluationExtractionRunRecords>
   isExecuting: boolean
   runStatusStream: { isActive: boolean }
 }
