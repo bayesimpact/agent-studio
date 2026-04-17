@@ -1,5 +1,4 @@
 import { Injectable } from "@nestjs/common"
-import type { EvaluationExtractionDatasetSchemaMapping } from "../datasets/evaluation-extraction-dataset.entity"
 import type { EvaluationExtractionDatasetRecordData } from "../datasets/records/evaluation-extraction-dataset-record.entity"
 import type { EvaluationExtractionRunKeyMapping } from "./evaluation-extraction-run.entity"
 import type {
@@ -14,12 +13,10 @@ export class EvaluationExtractionRunGraderService {
     agentOutput,
     datasetRecordData,
     keyMapping,
-    schemaMapping,
   }: {
     agentOutput: Record<string, unknown>
     datasetRecordData: EvaluationExtractionDatasetRecordData
     keyMapping: EvaluationExtractionRunKeyMapping
-    schemaMapping: EvaluationExtractionDatasetSchemaMapping
   }): {
     comparison: EvaluationExtractionRunRecordComparison
     status: EvaluationExtractionRunRecordStatus
@@ -31,11 +28,8 @@ export class EvaluationExtractionRunGraderService {
       const agentValue = agentOutput[entry.agentOutputKey] ?? null
       const groundTruth = datasetRecordData[entry.datasetColumnId] ?? null
 
-      const column = schemaMapping[entry.datasetColumnId]
-      const columnKey = column ? column.finalName : entry.datasetColumnId
-
       if (entry.mode === "fyi") {
-        comparison[columnKey] = {
+        comparison[entry.agentOutputKey] = {
           agentValue,
           groundTruth,
           status: "fyi",
@@ -50,7 +44,7 @@ export class EvaluationExtractionRunGraderService {
         hasMismatch = true
       }
 
-      comparison[columnKey] = {
+      comparison[entry.agentOutputKey] = {
         agentValue,
         groundTruth,
         status: fieldStatus,

@@ -1,5 +1,4 @@
 import type { EvaluationExtractionRunKeyMappingEntryDto } from "@caseai-connect/api-contracts"
-import { Badge } from "@caseai-connect/ui/shad/badge"
 import { Button } from "@caseai-connect/ui/shad/button"
 import {
   Dialog,
@@ -288,15 +287,20 @@ function KeyMappingEditor({
                   ))}
                 </SelectContent>
               </Select>
-              <Badge
-                variant={entry?.mode === "scored" ? "default" : "outline"}
-                className="cursor-pointer select-none"
-                onClick={() => onModeChange(outputKey, entry?.mode === "scored" ? "fyi" : "scored")}
+              <Select
+                value={entry?.mode ?? "scored"}
+                onValueChange={(value) => onModeChange(outputKey, value as "scored" | "fyi")}
               >
-                {entry?.mode === "scored"
-                  ? t("evaluationExtractionRun:keyMapping.scored")
-                  : t("evaluationExtractionRun:keyMapping.fyi")}
-              </Badge>
+                <SelectTrigger className="w-[100px]" size="sm">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="scored">
+                    {t("evaluationExtractionRun:keyMapping.scored")}
+                  </SelectItem>
+                  <SelectItem value="fyi">{t("evaluationExtractionRun:keyMapping.fyi")}</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           )
         })}

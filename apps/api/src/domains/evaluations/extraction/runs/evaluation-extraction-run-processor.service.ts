@@ -180,7 +180,6 @@ export class EvaluationExtractionRunProcessorService extends ServiceWithLLM {
           agentOutput,
           datasetRecordData: datasetRecord.data,
           keyMapping: run.keyMapping,
-          schemaMapping: dataset.schemaMapping,
         })
 
         await this.runRecordConnectRepository.createAndSave(connectScope, {

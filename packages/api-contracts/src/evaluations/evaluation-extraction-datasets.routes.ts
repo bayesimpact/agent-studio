@@ -40,19 +40,4 @@ export const EvaluationExtractionDatasetsRoutes = {
     method: "get",
     path: `${prefix}/file/:documentId/columns`,
   }),
-  // getAll: defineRoute<ResponseData<EvaluationExtractionDatasetDto[]>>({
-  //   method: "get",
-  //   path: "organizations/:organizationId/projects/:projectId/evaluation-extraction-datasets",
-  // }),
-  // deleteOne: defineRoute<ResponseData<SuccessResponseDTO>>({
-  //   method: "delete",
-  //   path: "organizations/:organizationId/projects/:projectId/evaluation-extraction-datasets/:evaluationExtractionDatasetId",
-  // }),
-  // setColumnRoles: defineRoute<
-  //   ResponseData<SetColumnRolesResponseDto>,
-  //   RequestPayload<SetColumnRolesRequestDto>
-  // >({
-  //   method: "patch",
-  //   path: "organizations/:organizationId/projects/:projectId/evaluation-extraction-datasets/:evaluationExtractionDatasetId/columns",
-  // }),
 }
