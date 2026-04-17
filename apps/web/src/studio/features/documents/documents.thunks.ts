@@ -28,25 +28,35 @@ export const uploadDocument = createAsyncThunk<
   {
     file: File
     sourceType: DocumentSourceType
+    tagIds?: string[]
     onSuccess?: (params: { documentId: string }) => void
   },
   ThunkConfig
->("documents/uploadOne", async ({ file, sourceType }, { extra: { services }, getState }) => {
-  const state = getState()
-  const { organizationId, projectId } = getCurrentIds({
-    state,
-    wantedIds: ["organizationId", "projectId"],
-  })
-  return await services.documents.uploadOne({ organizationId, projectId, file, sourceType })
-})
+>(
+  "documents/uploadOne",
+  async ({ file, sourceType, tagIds }, { extra: { services }, getState }) => {
+    const state = getState()
+    const { organizationId, projectId } = getCurrentIds({
+      state,
+      wantedIds: ["organizationId", "projectId"],
+    })
+    return await services.documents.uploadOne({
+      organizationId,
+      projectId,
+      file,
+      sourceType,
+      tagIds,
+    })
+  },
+)
 
 export const uploadDocuments = createAsyncThunk<
   void,
-  { files: File[]; sourceType: DocumentSourceType },
+  { files: File[]; sourceType: DocumentSourceType; tagIds?: string[] },
   ThunkConfig
 >(
   "documents/uploadMany",
-  async ({ files, sourceType }, { extra: { services }, getState, dispatch }) => {
+  async ({ files, sourceType, tagIds }, { extra: { services }, getState, dispatch }) => {
     const state = getState()
     const { organizationId, projectId } = getCurrentIds({
       state,
@@ -57,6 +67,7 @@ export const uploadDocuments = createAsyncThunk<
       projectId,
       files,
       sourceType,
+      tagIds,
       onFileProcessed: (result) => {
         dispatch(documentsActions.setOneDocumentProcessed())
 

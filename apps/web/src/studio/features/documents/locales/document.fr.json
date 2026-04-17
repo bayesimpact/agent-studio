@@ -36,6 +36,15 @@
         "title": "Aucun document pour le moment",
         "description": "Téléversez votre premier document pour commencer."
       }
+    },
+    "upload": {
+      "tagDialog": {
+        "title": "Tags pour cet envoi",
+        "description": "Facultatif : choisissez des tags à appliquer à chaque fichier de cet envoi.",
+        "fileCountSentence_one": "Vous allez téléverser un fichier.",
+        "fileCountSentence_other": "Vous allez téléverser {{count}} fichiers.",
+        "confirm": "Téléverser"
+      }
     }
   }
 }

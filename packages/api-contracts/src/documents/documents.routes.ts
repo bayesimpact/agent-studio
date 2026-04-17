@@ -3,12 +3,16 @@ import type { RequestPayload, ResponseData, SuccessResponseDTO } from "../generi
 import { defineRoute } from "../helpers"
 import type {
   DocumentDto,
+  DocumentUploadOptionalTagFields,
   PresignFileRequestItemDto,
   PresignFileResponseItemDto,
 } from "./documents.dto"
 
 export const DocumentsRoutes = {
-  uploadOne: defineRoute<ResponseData<DocumentDto>, RequestPayload<{ file: File }>>({
+  uploadOne: defineRoute<
+    ResponseData<DocumentDto>,
+    RequestPayload<{ file: File } & DocumentUploadOptionalTagFields>
+  >({
     method: "post",
     path: "organizations/:organizationId/projects/:projectId/documents/:sourceType/upload/",
   }),
@@ -19,7 +23,10 @@ export const DocumentsRoutes = {
     method: "post",
     path: "organizations/:organizationId/projects/:projectId/documents/:sourceType/presign",
   }),
-  confirmMany: defineRoute<ResponseData<DocumentDto[]>, RequestPayload<{ documentIds: string[] }>>({
+  confirmMany: defineRoute<
+    ResponseData<DocumentDto[]>,
+    RequestPayload<{ documentIds: string[] } & DocumentUploadOptionalTagFields>
+  >({
     method: "post",
     path: "organizations/:organizationId/projects/:projectId/documents/confirm",
   }),

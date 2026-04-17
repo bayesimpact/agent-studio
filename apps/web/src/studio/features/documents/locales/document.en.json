@@ -36,6 +36,15 @@
         "title": "No documents yet",
         "description": "Upload your first document to get started."
       }
+    },
+    "upload": {
+      "tagDialog": {
+        "title": "Tags for this upload",
+        "description": "Optional: choose tags to apply to every file in this upload.",
+        "fileCountSentence_one": "You’re about to upload one file.",
+        "fileCountSentence_other": "You’re about to upload {{count}} files.",
+        "confirm": "Upload"
+      }
     }
   }
 }

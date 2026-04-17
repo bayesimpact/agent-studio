@@ -14,6 +14,8 @@ import { createDocumentForProject } from "@/domains/documents/document.factory"
 import { createOrganizationWithProject } from "@/domains/organizations/organization.factory"
 import { expectResponse, type Requester, testRequester } from "../../../../test/request"
 import { DocumentsModule } from "../documents.module"
+import { DocumentTag } from "../tags/document-tag.entity"
+import { documentTagFactory } from "../tags/document-tag.factory"
 import { withDocumentAuthAndEmbeddingsMocks } from "../test-overrides"
 
 describe("Documents - confirmMany", () => {
@@ -71,6 +73,7 @@ describe("Documents - confirmMany", () => {
       },
     })
     documentId = pendingDocument.id
+    return { organization, project }
   }
 
   const subject = async (payload?: typeof DocumentsRoutes.confirmMany.request) =>
@@ -97,5 +100,31 @@ describe("Documents - confirmMany", () => {
     const document = await repositories.documentRepository.findOne({ where: { id: documentId } })
     expect(document?.uploadStatus).toBe("uploaded")
     await expectActivityCreated("document.createMany")
+  })
+
+  it("should attach tags when tagIds are provided", async () => {
+    const { organization, project } = await createContext()
+
+    const documentTagRepository = setup.getRepository(DocumentTag)
+    const tag = documentTagFactory.transient({ organization, project }).build({
+      name: "Upload batch tag",
+    })
+    await documentTagRepository.save(tag)
+
+    const response = await subject({
+      payload: {
+        documentIds: [documentId],
+        tagIds: [tag.id],
+      },
+    })
+
+    expectResponse(response, 201)
+    expect(response.body.data[0]?.tagIds).toContain(tag.id)
+
+    const documentWithTags = await repositories.documentRepository.findOne({
+      where: { id: documentId },
+      relations: ["tags"],
+    })
+    expect(documentWithTags?.tags?.map((documentTag) => documentTag.id)).toContain(tag.id)
   })
 })

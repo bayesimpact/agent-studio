@@ -23,6 +23,7 @@ export class DocumentsService {
     documentId,
     fields,
     uploadStatus,
+    tagIds,
   }: {
     connectScope: RequiredConnectScope
     documentId: string
@@ -31,8 +32,9 @@ export class DocumentsService {
       "fileName" | "mimeType" | "size" | "storageRelativePath" | "title" | "sourceType"
     >
     uploadStatus: "pending" | "uploaded"
+    tagIds?: string[]
   }): Promise<Document> {
-    return await this.documentConnectRepository.createAndSave(connectScope, {
+    const document = await this.documentConnectRepository.createAndSave(connectScope, {
       id: documentId,
       fileName: fields.fileName,
       mimeType: fields.mimeType,
@@ -42,6 +44,17 @@ export class DocumentsService {
       sourceType: fields.sourceType,
       uploadStatus,
     })
+
+    if (tagIds === undefined || tagIds.length === 0) {
+      return document
+    }
+
+    document.tags = await this.documentTagsService.resolveTagChanges({
+      currentTags: [],
+      tagsToAdd: tagIds,
+    })
+
+    return this.documentConnectRepository.saveOne(document)
   }
 
   async markAsUploaded({

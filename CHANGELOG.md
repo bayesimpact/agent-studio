@@ -15,6 +15,7 @@ This project uses [CalVer](https://calver.org/) (YY.MM.Micro) for product versio
 - (beta) Agents can connect to external MCP servers for additional tools
 - Speed up tests
 - Define agent document RAG modes — off, all, or tagged
+- Add tag selection before document upload (single and batch).
 
 ### Changed
 - New user interface to list organizations, workspaces, agents, sessions

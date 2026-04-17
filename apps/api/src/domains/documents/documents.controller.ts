@@ -49,7 +49,11 @@ import { JwtAuthGuard } from "@/domains/auth/jwt-auth.guard"
 import { UserGuard } from "@/domains/users/user.guard"
 import type { Document } from "./document.entity"
 import { DocumentsGuard } from "./documents.guard"
-import { extractFileExtension, normalizeUploadedFileName } from "./documents.helpers"
+import {
+  extractFileExtension,
+  normalizeUploadedFileName,
+  parseMultipartTagIdsField,
+} from "./documents.helpers"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
 import { DocumentsService } from "./documents.service"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
@@ -93,6 +97,8 @@ export class DocumentsController {
       }),
     )
     file: MulterFile,
+    @Body()
+    body: { tagIds?: unknown } | undefined,
     @Request() req: EndpointRequestWithProject,
     @Param("sourceType") sourceType: DocumentSourceType,
   ): Promise<typeof DocumentsRoutes.uploadOne.response> {
@@ -116,11 +122,13 @@ export class DocumentsController {
     const extension = extractFileExtension(normalizedFileName)
     const connectScope = getRequiredConnectScope(req)
     const fileInfo = await this.fileStorageService.save({ file, connectScope, extension })
+    const tagIds = parseMultipartTagIdsField(body?.tagIds)
 
     const document = await this.documentsService.createDocument({
       uploadStatus: "uploaded",
       connectScope,
       documentId: fileInfo.fileId,
+      tagIds,
       fields: {
         fileName: normalizedFileName,
         mimeType: file.mimetype,
@@ -219,8 +227,19 @@ export class DocumentsController {
     const connectScope = getRequiredConnectScope(req)
     const documents: Document[] = []
 
+    const tagIds =
+      payload.tagIds !== undefined && payload.tagIds.length > 0 ? payload.tagIds : undefined
+
     for (const documentId of payload.documentIds) {
-      const document = await this.documentsService.markAsUploaded({ connectScope, documentId })
+      let document = await this.documentsService.markAsUploaded({ connectScope, documentId })
+
+      if (tagIds !== undefined) {
+        document = await this.documentsService.updateDocument({
+          connectScope,
+          documentId: document.id,
+          fieldsToUpdate: { tagsToAdd: tagIds },
+        })
+      }
 
       await this.createEmbeddingsIfSourceTypeProject({
         document,

@@ -9,12 +9,14 @@ export interface IDocumentsSpi {
     projectId: string
     file: File
     sourceType: DocumentSourceType
+    tagIds?: string[]
   }): Promise<Document>
   uploadMany(params: {
     organizationId: string
     projectId: string
     files: File[]
     sourceType: DocumentSourceType
+    tagIds?: string[]
     onFileProcessed: (
       result:
         | { file: File; status: "success"; document: Document }
