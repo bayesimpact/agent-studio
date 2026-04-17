@@ -2,6 +2,7 @@ import { createListenerMiddleware } from "@reduxjs/toolkit"
 import throttle from "lodash/throttle"
 import { notificationsActions } from "@/common/features/notifications/notifications.slice"
 import type { AppDispatch, RootState } from "@/common/store/types"
+import { selectCurrentRecordsQuery } from "./evaluation-extraction-runs.selectors"
 import { evaluationExtractionRunsActions } from "./evaluation-extraction-runs.slice"
 import {
   startRunStatusStream,
@@ -12,10 +13,9 @@ import {
 const listenerMiddleware = createListenerMiddleware<RootState, AppDispatch>()
 
 const throttledRefreshRecords = throttle(
-  (dispatch: AppDispatch, evaluationExtractionRunId: string) => {
-    dispatch(
-      evaluationExtractionRunsActions.getRecords({ evaluationExtractionRunId, page: 0, limit: 10 }),
-    )
+  (dispatch: AppDispatch, getState: () => RootState, evaluationExtractionRunId: string) => {
+    const query = selectCurrentRecordsQuery(getState())
+    dispatch(evaluationExtractionRunsActions.getRecords({ evaluationExtractionRunId, ...query }))
   },
   5_000,
   { leading: true, trailing: false },
@@ -70,18 +70,22 @@ function registerListeners() {
       const { status, evaluationExtractionRunId } = action.payload
 
       if (status === "running") {
-        throttledRefreshRecords(listenerApi.dispatch, evaluationExtractionRunId)
+        throttledRefreshRecords(
+          listenerApi.dispatch,
+          listenerApi.getState,
+          evaluationExtractionRunId,
+        )
       }
 
       // When a run completes or fails, refetch records and the full run list
       if (status === "completed" || status === "failed") {
         throttledRefreshRecords.cancel()
         listenerApi.dispatch(evaluationExtractionRunsActions.getAll())
+        const query = selectCurrentRecordsQuery(listenerApi.getState())
         listenerApi.dispatch(
           evaluationExtractionRunsActions.getRecords({
             evaluationExtractionRunId,
-            page: 0,
-            limit: 10,
+            ...query,
           }),
         )
 

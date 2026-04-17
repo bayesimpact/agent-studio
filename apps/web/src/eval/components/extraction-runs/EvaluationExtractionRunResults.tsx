@@ -181,23 +181,6 @@ export function EvaluationExtractionRunRecordsTable({
     [dataset.schemaMapping],
   )
 
-  const comparisonKeys = useMemo(() => {
-    const keys = new Set<string>()
-    const records = ADS.isFulfilled(recordsData) ? recordsData.value.records : []
-    for (const record of records) {
-      if (record.comparison) {
-        for (const key of Object.keys(record.comparison)) {
-          keys.add(key)
-        }
-      }
-    }
-    // Also derive from keyMapping so columns appear even before first page loads
-    for (const entry of run.keyMapping) {
-      keys.add(entry.agentOutputKey)
-    }
-    return Array.from(keys)
-  }, [recordsData, run.keyMapping])
-
   const records = ADS.isFulfilled(recordsData) ? recordsData.value.records : []
   const total = ADS.isFulfilled(recordsData) ? recordsData.value.total : 0
   const totalPages = Math.max(1, Math.ceil(total / DEFAULT_PAGE_SIZE))
@@ -284,43 +267,49 @@ export function EvaluationExtractionRunRecordsTable({
       size: 250,
     }))
 
-    const targetColumns: ColumnDef<ResultRow>[] = comparisonKeys.flatMap((comparisonKey) => {
-      const mapping = run.keyMapping.find((entry) => entry.agentOutputKey === comparisonKey)
-      const targetColumn = mapping
-        ? Object.values(dataset.schemaMapping).find(
-            (column) => column.id === mapping.datasetColumnId,
-          )
-        : null
-      const targetName = targetColumn?.finalName ?? comparisonKey
+    const targetColumns: ColumnDef<ResultRow>[] = run.keyMapping.flatMap((mappingEntry) => {
+      const datasetColumn = Object.values(dataset.schemaMapping).find(
+        (column) => column.id === mappingEntry.datasetColumnId,
+      )
+      const targetLabel = datasetColumn?.finalName ?? mappingEntry.datasetColumnId
+      const columnDefs: ColumnDef<ResultRow>[] = []
 
-      return [
-        {
-          id: `target_${comparisonKey}`,
-          accessorFn: (row: ResultRow) => row.fields[comparisonKey]?.groundTruth ?? "",
+      if (mappingEntry.mode === "scored") {
+        columnDefs.push({
+          id: `target_${mappingEntry.agentOutputKey}`,
+          accessorFn: (row: ResultRow) =>
+            row.fields[mappingEntry.agentOutputKey]?.groundTruth ?? "",
           header: ({ column }: { column: Column<ResultRow, unknown> }) => (
-            <SortableFilterableHeader column={column} label={targetName} badge="target" />
+            <SortableFilterableHeader column={column} label={targetLabel} badge="target" />
           ),
           cell: ({ row }: { row: { original: ResultRow } }) => {
-            const field = row.original.fields[comparisonKey]
+            const field = row.original.fields[mappingEntry.agentOutputKey]
             if (!field) return <span className="text-muted-foreground">-</span>
             return <TruncatedCell value={String(field.groundTruth)} className="font-mono text-sm" />
           },
           size: 200,
+        })
+      }
+
+      columnDefs.push({
+        id: `agent_${mappingEntry.agentOutputKey}`,
+        accessorFn: (row: ResultRow) => row.fields[mappingEntry.agentOutputKey]?.agentValue ?? "",
+        header: ({ column }: { column: Column<ResultRow, unknown> }) => (
+          <SortableFilterableHeader
+            column={column}
+            label={mappingEntry.agentOutputKey}
+            badge="agent"
+          />
+        ),
+        cell: ({ row }: { row: { original: ResultRow } }) => {
+          const field = row.original.fields[mappingEntry.agentOutputKey]
+          if (!field) return <span className="text-muted-foreground">-</span>
+          return <TruncatedCell value={String(field.agentValue)} className="font-mono text-sm" />
         },
-        {
-          id: `agent_${comparisonKey}`,
-          accessorFn: (row: ResultRow) => row.fields[comparisonKey]?.agentValue ?? "",
-          header: ({ column }: { column: Column<ResultRow, unknown> }) => (
-            <SortableFilterableHeader column={column} label={targetName} badge="agent" />
-          ),
-          cell: ({ row }: { row: { original: ResultRow } }) => {
-            const field = row.original.fields[comparisonKey]
-            if (!field) return <span className="text-muted-foreground">-</span>
-            return <TruncatedCell value={String(field.agentValue)} className="font-mono text-sm" />
-          },
-          size: 200,
-        },
-      ]
+        size: 200,
+      })
+
+      return columnDefs
     })
 
     const statusColumn: ColumnDef<ResultRow> = {
@@ -333,13 +322,15 @@ export function EvaluationExtractionRunRecordsTable({
         />
       ),
       cell: ({ row }) => {
-        const fieldEntries = Object.entries(row.original.fields)
+        const scoredEntries = Object.entries(row.original.fields).filter(
+          ([, field]) => field.status !== "fyi",
+        )
         return (
           <div className="flex items-center gap-1">
             <StatusBadge status={row.original.status} />
-            {fieldEntries.length > 1 && (
+            {scoredEntries.length > 1 && (
               <div className="flex gap-0.5">
-                {fieldEntries.map(([fieldKey, field]) => (
+                {scoredEntries.map(([fieldKey, field]) => (
                   <FieldStatusBadge key={fieldKey} status={field.status} />
                 ))}
               </div>
@@ -391,7 +382,7 @@ export function EvaluationExtractionRunRecordsTable({
     allColumns.push(traceUrlColumn)
 
     return allColumns
-  }, [inputColumns, comparisonKeys, run.keyMapping, dataset.schemaMapping, hasErrors, t])
+  }, [inputColumns, run.keyMapping, dataset.schemaMapping, hasErrors, t])
 
   const table = useReactTable({
     data,

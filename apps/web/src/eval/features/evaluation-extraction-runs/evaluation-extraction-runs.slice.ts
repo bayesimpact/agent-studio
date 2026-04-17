@@ -8,20 +8,32 @@ import type {
 } from "./evaluation-extraction-runs.models"
 import { evaluationExtractionRunsThunks } from "./evaluation-extraction-runs.thunks"
 
+interface RecordsQuery {
+  page: number
+  limit: number
+  columnFilters?: Record<string, string>
+  sortBy?: string
+  sortOrder?: "asc" | "desc"
+}
+
 interface State {
   currentRunId: string | null
   data: AsyncData<EvaluationExtractionRun[]>
   currentRun: AsyncData<EvaluationExtractionRun>
   currentRunRecords: AsyncData<PaginatedEvaluationExtractionRunRecords>
+  currentRecordsQuery: RecordsQuery
   isExecuting: boolean
   runStatusStream: { isActive: boolean }
 }
+
+const defaultRecordsQuery: RecordsQuery = { page: 0, limit: 10 }
 
 const initialState: State = {
   currentRunId: null,
   data: defaultAsyncData,
   currentRun: defaultAsyncData,
   currentRunRecords: defaultAsyncData,
+  currentRecordsQuery: defaultRecordsQuery,
   isExecuting: false,
   runStatusStream: { isActive: false },
 }
@@ -32,6 +44,11 @@ const slice = createSlice({
   reducers: {
     reset: () => initialState,
     setCurrentRunId: (state, action: PayloadAction<{ runId: string | null }>) => {
+      if (state.currentRunId !== action.payload.runId) {
+        state.currentRunRecords = defaultAsyncData
+        state.currentRecordsQuery = defaultRecordsQuery
+        state.currentRun = defaultAsyncData
+      }
       state.currentRunId = action.payload.runId
     },
     startRunStatusStream: (state) => {
@@ -103,14 +120,24 @@ const slice = createSlice({
 
     // getRecords
     builder
-      .addCase(evaluationExtractionRunsThunks.getRecords.pending, (state) => {
+      .addCase(evaluationExtractionRunsThunks.getRecords.pending, (state, action) => {
+        if (action.meta.arg.evaluationExtractionRunId !== state.currentRunId) return
         if (!ADS.isFulfilled(state.currentRunRecords)) state.currentRunRecords.status = ADS.Loading
         state.currentRunRecords.error = null
+        state.currentRecordsQuery = {
+          page: action.meta.arg.page ?? 0,
+          limit: action.meta.arg.limit ?? 10,
+          columnFilters: action.meta.arg.columnFilters,
+          sortBy: action.meta.arg.sortBy,
+          sortOrder: action.meta.arg.sortOrder,
+        }
       })
       .addCase(evaluationExtractionRunsThunks.getRecords.fulfilled, (state, action) => {
+        if (action.meta.arg.evaluationExtractionRunId !== state.currentRunId) return
         state.currentRunRecords = { status: ADS.Fulfilled, error: null, value: action.payload }
       })
       .addCase(evaluationExtractionRunsThunks.getRecords.rejected, (state, action) => {
+        if (action.meta.arg.evaluationExtractionRunId !== state.currentRunId) return
         state.currentRunRecords.status = ADS.Error
         state.currentRunRecords.error = action.error.message || "Failed to get run records"
       })

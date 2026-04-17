@@ -1,4 +1,3 @@
-import type { EvaluationExtractionDatasetSchemaMapping } from "../datasets/evaluation-extraction-dataset.entity"
 import type { EvaluationExtractionDatasetRecordData } from "../datasets/records/evaluation-extraction-dataset-record.entity"
 import type { EvaluationExtractionRunKeyMapping } from "./evaluation-extraction-run.entity"
 import { EvaluationExtractionRunGraderService } from "./evaluation-extraction-run-grader.service"
@@ -9,30 +8,6 @@ describe("EvaluationExtractionRunGraderService", () => {
   beforeEach(() => {
     grader = new EvaluationExtractionRunGraderService()
   })
-
-  const schemaMapping: EvaluationExtractionDatasetSchemaMapping = {
-    col_age: {
-      id: "col_age",
-      finalName: "Age",
-      originalName: "age",
-      index: 0,
-      role: "target",
-    },
-    col_category: {
-      id: "col_category",
-      finalName: "Category",
-      originalName: "category",
-      index: 1,
-      role: "target",
-    },
-    col_summary: {
-      id: "col_summary",
-      finalName: "Summary",
-      originalName: "summary",
-      index: 2,
-      role: "input",
-    },
-  }
 
   it("should return match when all scored fields match exactly", () => {
     const keyMapping: EvaluationExtractionRunKeyMapping = [
@@ -45,11 +20,11 @@ describe("EvaluationExtractionRunGraderService", () => {
       col_category: "A",
     }
 
-    const result = grader.gradeRecord({ agentOutput, datasetRecordData, keyMapping, schemaMapping })
+    const result = grader.gradeRecord({ agentOutput, datasetRecordData, keyMapping })
 
     expect(result.status).toBe("match")
-    expect(result.comparison.Age!.status).toBe("match")
-    expect(result.comparison.Category!.status).toBe("match")
+    expect(result.comparison.age_val!.status).toBe("match")
+    expect(result.comparison.cat_val!.status).toBe("match")
   })
 
   it("should return mismatch when a scored field differs", () => {
@@ -63,11 +38,11 @@ describe("EvaluationExtractionRunGraderService", () => {
       col_category: "A",
     }
 
-    const result = grader.gradeRecord({ agentOutput, datasetRecordData, keyMapping, schemaMapping })
+    const result = grader.gradeRecord({ agentOutput, datasetRecordData, keyMapping })
 
     expect(result.status).toBe("mismatch")
-    expect(result.comparison.Age!.status).toBe("match")
-    expect(result.comparison.Category!.status).toBe("mismatch")
+    expect(result.comparison.age_val!.status).toBe("match")
+    expect(result.comparison.cat_val!.status).toBe("mismatch")
   })
 
   it("should be case-insensitive", () => {
@@ -77,10 +52,10 @@ describe("EvaluationExtractionRunGraderService", () => {
     const agentOutput = { cat_val: "YES" }
     const datasetRecordData: EvaluationExtractionDatasetRecordData = { col_category: "yes" }
 
-    const result = grader.gradeRecord({ agentOutput, datasetRecordData, keyMapping, schemaMapping })
+    const result = grader.gradeRecord({ agentOutput, datasetRecordData, keyMapping })
 
     expect(result.status).toBe("match")
-    expect(result.comparison.Category!.status).toBe("match")
+    expect(result.comparison.cat_val!.status).toBe("match")
   })
 
   it("should trim whitespace before comparing", () => {
@@ -90,10 +65,10 @@ describe("EvaluationExtractionRunGraderService", () => {
     const agentOutput = { cat_val: "  hello  " }
     const datasetRecordData: EvaluationExtractionDatasetRecordData = { col_category: "hello" }
 
-    const result = grader.gradeRecord({ agentOutput, datasetRecordData, keyMapping, schemaMapping })
+    const result = grader.gradeRecord({ agentOutput, datasetRecordData, keyMapping })
 
     expect(result.status).toBe("match")
-    expect(result.comparison.Category!.status).toBe("match")
+    expect(result.comparison.cat_val!.status).toBe("match")
   })
 
   it("should match null to null", () => {
@@ -103,10 +78,10 @@ describe("EvaluationExtractionRunGraderService", () => {
     const agentOutput = { age_val: null }
     const datasetRecordData: EvaluationExtractionDatasetRecordData = { col_age: null }
 
-    const result = grader.gradeRecord({ agentOutput, datasetRecordData, keyMapping, schemaMapping })
+    const result = grader.gradeRecord({ agentOutput, datasetRecordData, keyMapping })
 
     expect(result.status).toBe("match")
-    expect(result.comparison.Age!.status).toBe("match")
+    expect(result.comparison.age_val!.status).toBe("match")
   })
 
   it("should match undefined to null", () => {
@@ -116,10 +91,10 @@ describe("EvaluationExtractionRunGraderService", () => {
     const agentOutput = {}
     const datasetRecordData: EvaluationExtractionDatasetRecordData = { col_age: null }
 
-    const result = grader.gradeRecord({ agentOutput, datasetRecordData, keyMapping, schemaMapping })
+    const result = grader.gradeRecord({ agentOutput, datasetRecordData, keyMapping })
 
     expect(result.status).toBe("match")
-    expect(result.comparison.Age!.status).toBe("match")
+    expect(result.comparison.missing_key!.status).toBe("match")
   })
 
   it("should mismatch null vs non-null", () => {
@@ -129,10 +104,10 @@ describe("EvaluationExtractionRunGraderService", () => {
     const agentOutput = { age_val: null }
     const datasetRecordData: EvaluationExtractionDatasetRecordData = { col_age: "45" }
 
-    const result = grader.gradeRecord({ agentOutput, datasetRecordData, keyMapping, schemaMapping })
+    const result = grader.gradeRecord({ agentOutput, datasetRecordData, keyMapping })
 
     expect(result.status).toBe("mismatch")
-    expect(result.comparison.Age!.status).toBe("mismatch")
+    expect(result.comparison.age_val!.status).toBe("mismatch")
   })
 
   it("should treat N/A, NaN, empty string, NA as null (match with null)", () => {
@@ -149,11 +124,10 @@ describe("EvaluationExtractionRunGraderService", () => {
         agentOutput,
         datasetRecordData,
         keyMapping,
-        schemaMapping,
       })
 
       expect(result.status).toBe("match")
-      expect(result.comparison.Age!.status).toBe("match")
+      expect(result.comparison.age_val!.status).toBe("match")
     }
   })
 
@@ -168,11 +142,11 @@ describe("EvaluationExtractionRunGraderService", () => {
       col_summary: "Different summary",
     }
 
-    const result = grader.gradeRecord({ agentOutput, datasetRecordData, keyMapping, schemaMapping })
+    const result = grader.gradeRecord({ agentOutput, datasetRecordData, keyMapping })
 
     expect(result.status).toBe("match")
-    expect(result.comparison.Summary!.status).toBe("fyi")
-    expect(result.comparison.Summary!.agentValue).toBe("A summary")
+    expect(result.comparison.summary_text!.status).toBe("fyi")
+    expect(result.comparison.summary_text!.agentValue).toBe("A summary")
   })
 
   it("should return match with an empty key mapping", () => {
@@ -180,7 +154,7 @@ describe("EvaluationExtractionRunGraderService", () => {
     const agentOutput = { some_key: "value" }
     const datasetRecordData: EvaluationExtractionDatasetRecordData = { col_age: "45" }
 
-    const result = grader.gradeRecord({ agentOutput, datasetRecordData, keyMapping, schemaMapping })
+    const result = grader.gradeRecord({ agentOutput, datasetRecordData, keyMapping })
 
     expect(result.status).toBe("match")
     expect(result.comparison).toEqual({})
@@ -193,23 +167,23 @@ describe("EvaluationExtractionRunGraderService", () => {
     const agentOutput = { age_val: 45 }
     const datasetRecordData: EvaluationExtractionDatasetRecordData = { col_age: "45" }
 
-    const result = grader.gradeRecord({ agentOutput, datasetRecordData, keyMapping, schemaMapping })
+    const result = grader.gradeRecord({ agentOutput, datasetRecordData, keyMapping })
 
     expect(result.status).toBe("match")
-    expect(result.comparison.Age!.status).toBe("match")
+    expect(result.comparison.age_val!.status).toBe("match")
   })
 
-  it("should use datasetColumnId as key when column not found in schemaMapping", () => {
+  it("should use agentOutputKey as comparison key", () => {
     const keyMapping: EvaluationExtractionRunKeyMapping = [
       { agentOutputKey: "val", datasetColumnId: "unknown_col", mode: "scored" },
     ]
     const agentOutput = { val: "test" }
     const datasetRecordData: EvaluationExtractionDatasetRecordData = { unknown_col: "test" }
 
-    const result = grader.gradeRecord({ agentOutput, datasetRecordData, keyMapping, schemaMapping })
+    const result = grader.gradeRecord({ agentOutput, datasetRecordData, keyMapping })
 
     expect(result.status).toBe("match")
-    expect(result.comparison.unknown_col).toBeDefined()
-    expect(result.comparison.unknown_col!.status).toBe("match")
+    expect(result.comparison.val).toBeDefined()
+    expect(result.comparison.val!.status).toBe("match")
   })
 })
