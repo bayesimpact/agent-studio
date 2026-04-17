@@ -2,10 +2,11 @@ import {
   type EvaluationExtractionDatasetDto,
   type EvaluationExtractionDatasetFileColumnDto,
   type EvaluationExtractionDatasetFileDto,
-  type EvaluationExtractionDatasetRecordDto,
+  type EvaluationExtractionDatasetRecordRowDto,
   EvaluationExtractionDatasetsRoutes,
+  type PaginatedEvaluationExtractionDatasetRecordsDto,
 } from "@caseai-connect/api-contracts"
-import { Body, Controller, Get, Param, Patch, Post, Req, UseGuards } from "@nestjs/common"
+import { Body, Controller, Get, Param, Patch, Post, Query, Req, UseGuards } from "@nestjs/common"
 import type {
   EndpointRequestWithDocument,
   EndpointRequestWithProject,
@@ -18,10 +19,7 @@ import { TrackActivity } from "@/domains/activities/track-activity.decorator"
 import { JwtAuthGuard } from "@/domains/auth/jwt-auth.guard"
 import type { Document } from "@/domains/documents/document.entity"
 import { UserGuard } from "@/domains/users/user.guard"
-import type {
-  EvaluationExtractionDataset,
-  EvaluationExtractionDatasetSchemaMapping,
-} from "./evaluation-extraction-dataset.entity"
+import type { EvaluationExtractionDataset } from "./evaluation-extraction-dataset.entity"
 import { EvaluationExtractionDatasetGuard } from "./evaluation-extraction-dataset.guard"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
 import {
@@ -43,22 +41,61 @@ export class EvaluationExtractionDatasetsController {
   async getAll(
     @Req() request: EndpointRequestWithProject,
   ): Promise<typeof EvaluationExtractionDatasetsRoutes.getAll.response> {
-    const datasets = await this.evaluationExtractionDatasetsService.listDatasets({
-      connectScope: getRequiredConnectScope(request),
-    })
-    const datasetWithRecords: EvaluationExtractionDatasetDto[] = []
+    const connectScope = getRequiredConnectScope(request)
+    const datasets = await this.evaluationExtractionDatasetsService.listDatasets({ connectScope })
+    const results: EvaluationExtractionDatasetDto[] = []
     for (const dataset of datasets) {
-      const records = await this.evaluationExtractionDatasetsService.listDatasetRecords({
-        connectScope: getRequiredConnectScope(request),
+      const recordCount = await this.evaluationExtractionDatasetsService.countDatasetRecords({
+        connectScope,
         datasetId: dataset.id,
       })
-      const evaluationExtractionDatasetDto = toEvaluationExtractionDatasetDto({
-        entity: dataset,
-        records,
-      })
-      datasetWithRecords.push(evaluationExtractionDatasetDto)
+      results.push(toEvaluationExtractionDatasetDto({ entity: dataset, recordCount }))
     }
-    return { data: datasetWithRecords }
+    return { data: results }
+  }
+
+  @Get(EvaluationExtractionDatasetsRoutes.getRecords.path)
+  @CheckPolicy((policy) => policy.canList())
+  async getRecords(
+    @Req() request: EndpointRequestWithProject,
+    @Param("datasetId") datasetId: string,
+    @Query("page") pageParam?: string,
+    @Query("limit") limitParam?: string,
+    @Query("columnFilters") columnFiltersParam?: string,
+    @Query("sortBy") sortBy?: string,
+    @Query("sortOrder") sortOrder?: string,
+  ): Promise<typeof EvaluationExtractionDatasetsRoutes.getRecords.response> {
+    const page = Math.max(0, Number(pageParam) || 0)
+    const limit = Math.min(100, Math.max(1, Number(limitParam) || 50))
+    const validSortOrder = sortOrder === "asc" || sortOrder === "desc" ? sortOrder : undefined
+
+    let columnFilters: Record<string, string> | undefined
+    if (columnFiltersParam) {
+      try {
+        columnFilters = JSON.parse(columnFiltersParam)
+      } catch {
+        columnFilters = undefined
+      }
+    }
+
+    const { records, total } =
+      await this.evaluationExtractionDatasetsService.listDatasetRecordsPaginated({
+        connectScope: getRequiredConnectScope(request),
+        datasetId,
+        page,
+        limit,
+        columnFilters,
+        sortBy: sortBy || undefined,
+        sortOrder: validSortOrder,
+      })
+
+    const data: PaginatedEvaluationExtractionDatasetRecordsDto = {
+      records: records.map(toEvaluationExtractionDatasetRecordRowDto),
+      total,
+      page,
+      limit,
+    }
+    return { data }
   }
 
   @Get(EvaluationExtractionDatasetsRoutes.getAllFiles.path)
@@ -155,10 +192,10 @@ function toEvaluationExtractionDatasetFileColumnDto(
 
 function toEvaluationExtractionDatasetDto({
   entity,
-  records,
+  recordCount,
 }: {
   entity: EvaluationExtractionDataset
-  records: EvaluationExtractionDatasetRecord[]
+  recordCount: number
 }): EvaluationExtractionDatasetDto {
   return {
     createdAt: entity.createdAt.getTime(),
@@ -168,24 +205,15 @@ function toEvaluationExtractionDatasetDto({
     schemaMapping: entity.schemaMapping,
     updatedAt: entity.updatedAt.getTime(),
     documentIds: entity.evaluationExtractionDatasetDocuments.map((d) => d.documentId),
-    records: toEvaluationExtractionDatasetRecordDto({
-      records,
-      schemaMapping: entity.schemaMapping,
-    }),
+    recordCount,
   }
 }
 
-function toEvaluationExtractionDatasetRecordDto({
-  records,
-  schemaMapping,
-}: {
-  records: EvaluationExtractionDatasetRecord[]
-  schemaMapping: EvaluationExtractionDatasetSchemaMapping
-}): EvaluationExtractionDatasetRecordDto[] {
-  const columns = Object.values(schemaMapping)
-  return columns.map((column) => ({
-    columnId: column.id,
-    columnName: column.finalName,
-    values: records.map((record) => record.data[column.id]),
-  }))
+function toEvaluationExtractionDatasetRecordRowDto(
+  record: EvaluationExtractionDatasetRecord,
+): EvaluationExtractionDatasetRecordRowDto {
+  return {
+    id: record.id,
+    data: record.data,
+  }
 }

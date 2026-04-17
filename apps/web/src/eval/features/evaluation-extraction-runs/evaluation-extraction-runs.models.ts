@@ -17,3 +17,10 @@ export type EvaluationExtractionRunRecordFieldStatus = EvaluationExtractionRunRe
 export type EvaluationExtractionRunKeyMappingEntry = EvaluationExtractionRunKeyMappingEntryDto
 export type EvaluationExtractionRunSummary = EvaluationExtractionRunSummaryDto
 export type EvaluationExtractionRunRecordFieldResult = EvaluationExtractionRunRecordFieldResultDto
+
+export type EvaluationExtractionRunStatusChangedEvent = {
+  evaluationExtractionRunId: string
+  status: EvaluationExtractionRunStatusDto
+  summary: EvaluationExtractionRunSummaryDto | null
+  updatedAt: number
+}

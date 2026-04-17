@@ -4,6 +4,7 @@ import type {
   CreateEvaluationExtractionRunRequestDto,
   EvaluationExtractionRunDto,
   EvaluationExtractionRunRecordDto,
+  EvaluationExtractionRunStatusChangedEventDto,
 } from "./evaluation-extraction-runs.dto"
 
 const prefix = "organizations/:organizationId/projects/:projectId/evaluation-extraction-runs"
@@ -31,5 +32,9 @@ export const EvaluationExtractionRunsRoutes = {
   getRecords: defineRoute<ResponseData<EvaluationExtractionRunRecordDto[]>>({
     method: "get",
     path: `${prefix}/:evaluationExtractionRunId/records`,
+  }),
+  streamRunStatus: defineRoute<EvaluationExtractionRunStatusChangedEventDto>({
+    method: "get",
+    path: `${prefix}/status/stream`,
   }),
 }

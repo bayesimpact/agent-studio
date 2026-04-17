@@ -6,16 +6,21 @@ import {
   CardHeader,
   CardTitle,
 } from "@caseai-connect/ui/shad/card"
+import { Spinner } from "@caseai-connect/ui/shad/spinner"
 import { type ColumnDef, flexRender, getCoreRowModel, useReactTable } from "@tanstack/react-table"
 import { useMemo } from "react"
 import { useTranslation } from "react-i18next"
-import type { EvaluationExtractionDataset } from "@/eval/features/evaluation-extraction-datasets/evaluation-extraction-datasets.models"
+import type {
+  EvaluationExtractionDataset,
+  EvaluationExtractionDatasetRecordRow,
+} from "@/eval/features/evaluation-extraction-datasets/evaluation-extraction-datasets.models"
 import type {
   EvaluationExtractionRun,
   EvaluationExtractionRunRecord,
   EvaluationExtractionRunRecordFieldStatus,
   EvaluationExtractionRunRecordStatus,
 } from "@/eval/features/evaluation-extraction-runs/evaluation-extraction-runs.models"
+import type { EvaluationExtractionRunDto } from "../../../../../../packages/api-contracts/src/evaluations/evaluation-extraction-runs.dto"
 
 function StatusBadge({ status }: { status: EvaluationExtractionRunRecordStatus }) {
   const { t } = useTranslation()
@@ -49,6 +54,7 @@ export function EvaluationExtractionRunSummary({ run }: { run: EvaluationExtract
     { label: t("evaluationExtractionRun:results.errors"), value: run.summary.errors },
   ]
 
+  const isRunning = run.status === "pending" || run.status === "running"
   const matchRate =
     run.summary.total > 0 ? Math.round((run.summary.perfectMatches / run.summary.total) * 100) : 0
 
@@ -56,7 +62,16 @@ export function EvaluationExtractionRunSummary({ run }: { run: EvaluationExtract
     <Card className="border-0 shadow-none">
       <CardHeader>
         <CardTitle>{t("evaluationExtractionRun:results.summary")}</CardTitle>
-        <CardDescription>{matchRate}% match rate</CardDescription>
+        <CardDescription>
+          {isRunning ? (
+            <span className="flex items-center gap-1.5">
+              <Spinner />
+              {t("evaluationExtractionRun:results.processing")}
+            </span>
+          ) : (
+            `${matchRate}% match rate`
+          )}
+        </CardDescription>
       </CardHeader>
       <CardContent>
         <div className="grid grid-cols-4 gap-4">
@@ -86,18 +101,17 @@ type ResultRow = {
 function buildResultRows(
   records: EvaluationExtractionRunRecord[],
   dataset: EvaluationExtractionDataset,
+  datasetRecords: EvaluationExtractionDatasetRecordRow[],
 ): ResultRow[] {
   const inputColumns = Object.values(dataset.schemaMapping)
     .filter((column) => column.role === "input")
     .sort((columnA, columnB) => columnA.index - columnB.index)
 
-  const recordsByColumnId = new Map(dataset.records.map((record) => [record.columnId, record]))
-
   return records.map((record, recordIndex) => {
     const inputs: Record<string, string> = {}
+    const datasetRecord = datasetRecords[recordIndex]
     for (const column of inputColumns) {
-      const datasetRecord = recordsByColumnId.get(column.id)
-      inputs[column.finalName] = String(datasetRecord?.values[recordIndex] ?? "")
+      inputs[column.finalName] = String(datasetRecord?.data[column.id] ?? "")
     }
 
     const fields: ResultRow["fields"] = {}
@@ -125,12 +139,15 @@ export function EvaluationExtractionRunRecordsTable({
   records,
   run,
   dataset,
+  datasetRecords,
 }: {
   records: EvaluationExtractionRunRecord[]
   run: EvaluationExtractionRun
   dataset: EvaluationExtractionDataset
+  datasetRecords: EvaluationExtractionDatasetRecordRow[]
 }) {
   const { t } = useTranslation()
+  const isRunning = run.status === "pending" || run.status === "running"
 
   const inputColumnNames = useMemo(
     () =>
@@ -155,7 +172,10 @@ export function EvaluationExtractionRunRecordsTable({
 
   const hasErrors = records.some((record) => record.errorDetails)
 
-  const data = useMemo(() => buildResultRows(records, dataset), [records, dataset])
+  const data = useMemo(
+    () => buildResultRows(records, dataset, datasetRecords),
+    [records, dataset, datasetRecords],
+  )
 
   const columns = useMemo<ColumnDef<ResultRow>[]>(() => {
     const indexColumn: ColumnDef<ResultRow> = {
@@ -318,7 +338,11 @@ export function EvaluationExtractionRunRecordsTable({
               {table.getRowModel().rows.length === 0 && (
                 <tr>
                   <td colSpan={columns.length} className="h-24 text-center text-muted-foreground">
-                    {t("evaluationExtractionRun:results.noRecords")}
+                    {isRunning ? (
+                      <LoadingState run={run} />
+                    ) : (
+                      t("evaluationExtractionRun:results.noRecords")
+                    )}
                   </td>
                 </tr>
               )}
@@ -327,5 +351,20 @@ export function EvaluationExtractionRunRecordsTable({
         </div>
       </CardContent>
     </Card>
+  )
+}
+
+function LoadingState({ run }: { run: EvaluationExtractionRunDto }) {
+  const { t } = useTranslation()
+  return (
+    <div className="flex flex-col items-center gap-2">
+      <Spinner className="size-5" />
+      <span>
+        {t("evaluationExtractionRun:results.processingDescription", {
+          processed: run.summary ? run.summary.total - run.summary.running : 0,
+          total: run.summary?.total ?? 0,
+        })}
+      </span>
+    </div>
   )
 }

@@ -1,6 +1,6 @@
 import type { ConnectionOptions } from "bullmq"
 
-export function getDocumentEmbeddingsBullMqConnection(): ConnectionOptions {
+export function getBullMqConnection(): ConnectionOptions {
   const redisUrl = process.env.BULLMQ_REDIS_URL ?? "redis://localhost:6379"
   const parsedRedisUrl = new URL(redisUrl)
 

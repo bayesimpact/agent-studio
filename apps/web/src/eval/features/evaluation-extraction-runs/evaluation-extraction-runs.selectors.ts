@@ -15,6 +15,23 @@ export const selectCurrentRunRecords = (state: RootState) =>
 
 export const selectIsExecuting = (state: RootState) => state.evaluation.extractionRuns.isExecuting
 
+export const selectIsRunStatusStreamActive = (state: RootState) =>
+  state.evaluation.extractionRuns.runStatusStream.isActive
+
+export const selectHasRunsInProgress = createSelector(
+  [selectEvaluationExtractionRunsData, selectCurrentRunData],
+  (runsData, currentRunData): boolean => {
+    if (ADS.isFulfilled(currentRunData)) {
+      const { status } = currentRunData.value
+      if (status === "pending" || status === "running") return true
+    }
+    if (ADS.isFulfilled(runsData)) {
+      return runsData.value.some((run) => run.status === "pending" || run.status === "running")
+    }
+    return false
+  },
+)
+
 export const selectRunsForDataset = createSelector(
   [selectEvaluationExtractionRunsData, (_state: RootState, datasetId: string) => datasetId],
   (runsData, datasetId): AsyncData<EvaluationExtractionRun[]> => {

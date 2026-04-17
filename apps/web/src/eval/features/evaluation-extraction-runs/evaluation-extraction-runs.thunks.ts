@@ -6,6 +6,9 @@ import type {
   EvaluationExtractionRun,
   EvaluationExtractionRunRecord,
 } from "./evaluation-extraction-runs.models"
+import { evaluationExtractionRunsActions } from "./evaluation-extraction-runs.slice"
+
+type ThunkConfigWithSignal = ThunkConfig & { serializedErrorType: Error }
 
 const getAll = createAsyncThunk<EvaluationExtractionRun[], void, ThunkConfig>(
   "evaluationExtractionRuns/getAll",
@@ -67,11 +70,37 @@ const createAndExecute = createAsyncThunk<
       wantedIds: ["organizationId", "projectId"],
     })
     const run = await services.evaluationExtractionRuns.createOne({ ...params, payload })
-    const executedRun = await services.evaluationExtractionRuns.executeOne({
+    // Fire-and-forget: enqueue execution via BullMQ worker, don't await completion
+    await services.evaluationExtractionRuns.executeOne({
       ...params,
       evaluationExtractionRunId: run.id,
     })
-    return executedRun
+    return run
+  },
+)
+
+const streamRunStatus = createAsyncThunk<void, void, ThunkConfigWithSignal>(
+  "evaluationExtractionRuns/streamRunStatus",
+  async (_, { extra: { services }, getState, dispatch, signal }) => {
+    const params = getCurrentIds({
+      state: getState(),
+      wantedIds: ["organizationId", "projectId"],
+    })
+
+    await services.evaluationExtractionRuns.streamRunStatus({
+      ...params,
+      signal,
+      onStatusChanged: (event) => {
+        dispatch(
+          evaluationExtractionRunsActions.patchRunStatus({
+            evaluationExtractionRunId: event.evaluationExtractionRunId,
+            status: event.status,
+            summary: event.summary,
+            updatedAt: event.updatedAt,
+          }),
+        )
+      },
+    })
   },
 )
 
@@ -80,4 +109,5 @@ export const evaluationExtractionRunsThunks = {
   getOne,
   getRecords,
   createAndExecute,
+  streamRunStatus,
 }

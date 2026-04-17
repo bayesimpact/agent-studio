@@ -1,9 +1,12 @@
+import { BullModule } from "@nestjs/bullmq"
 import { Module } from "@nestjs/common"
 import { ConfigModule, ConfigService } from "@nestjs/config"
 import { TypeOrmModule } from "@nestjs/typeorm"
+import { getBullMqConnection } from "./bullmq.config"
 import typeorm from "./config/typeorm"
 import { DocumentEmbeddingsWorkersModule } from "./domains/documents/embeddings/document-embeddings-workers.module"
 import { StorageModule } from "./domains/documents/storage/storage.module"
+import { EvaluationExtractionRunWorkersModule } from "./domains/evaluations/extraction/runs/evaluation-extraction-run-workers.module"
 
 @Module({
   imports: [
@@ -16,7 +19,14 @@ import { StorageModule } from "./domains/documents/storage/storage.module"
       inject: [ConfigService],
       useFactory: async (configService: ConfigService) => configService.get("typeorm")(),
     }),
+    BullModule.forRootAsync({
+      imports: [ConfigModule],
+      useFactory: () => ({
+        connection: getBullMqConnection(),
+      }),
+    }),
     DocumentEmbeddingsWorkersModule,
+    EvaluationExtractionRunWorkersModule,
     StorageModule,
   ],
 })

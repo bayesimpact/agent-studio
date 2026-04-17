@@ -4,6 +4,7 @@ import type {
   EvaluationExtractionDataset,
   EvaluationExtractionDatasetFile,
   EvaluationExtractionDatasetFileColumn,
+  PaginatedEvaluationExtractionDatasetRecords,
 } from "./evaluation-extraction-datasets.models"
 import { evaluationExtractionDatasetsThunks } from "./evaluation-extraction-datasets.thunks"
 
@@ -19,6 +20,7 @@ interface State {
   currentDatasetId: string | null
   currentFileId: string | null
   data: AsyncData<EvaluationExtractionDataset[]>
+  records: AsyncData<PaginatedEvaluationExtractionDatasetRecords>
   files: AsyncData<EvaluationExtractionDatasetFile[]>
   fileColumns: AsyncData<EvaluationExtractionDatasetFileColumn[]>
   uploader: UploaderState
@@ -29,6 +31,7 @@ const initialState: State = {
   currentDatasetId: null,
   currentFileId: null,
   data: defaultAsyncData,
+  records: defaultAsyncData,
   files: defaultAsyncData,
   fileColumns: defaultAsyncData,
   uploader: {
@@ -48,6 +51,7 @@ const slice = createSlice({
     initData: () => {},
     setCurrentDatasetId: (state, action: PayloadAction<{ datasetId: string | null }>) => {
       state.currentDatasetId = action.payload.datasetId
+      state.records = defaultAsyncData
     },
     setCurrentFileId: (state, action: PayloadAction<{ fileId: string | null }>) => {
       state.currentFileId = action.payload.fileId
@@ -118,6 +122,23 @@ const slice = createSlice({
       .addCase(evaluationExtractionDatasetsThunks.listDatasets.rejected, (state, action) => {
         state.data.status = ADS.Error
         state.data.error = action.error.message || "Failed to list datasets"
+      })
+
+    builder
+      .addCase(evaluationExtractionDatasetsThunks.listRecords.pending, (state) => {
+        if (!ADS.isFulfilled(state.records)) state.records.status = ADS.Loading
+        state.records.error = null
+      })
+      .addCase(evaluationExtractionDatasetsThunks.listRecords.fulfilled, (state, action) => {
+        state.records = {
+          status: ADS.Fulfilled,
+          error: null,
+          value: action.payload,
+        }
+      })
+      .addCase(evaluationExtractionDatasetsThunks.listRecords.rejected, (state, action) => {
+        state.records.status = ADS.Error
+        state.records.error = action.error.message || "Failed to list records"
       })
 
     builder

@@ -20,6 +20,24 @@ export default {
     )
     return response.data.data.map(toDataset)
   },
+  getRecords: async ({ datasetId, page, limit, columnFilters, sortBy, sortOrder, ...params }) => {
+    const axios = getAxiosInstance()
+    const queryParams: Record<string, string> = {}
+    if (page !== undefined) queryParams.page = String(page)
+    if (limit !== undefined) queryParams.limit = String(limit)
+    if (columnFilters && Object.keys(columnFilters).length > 0)
+      queryParams.columnFilters = JSON.stringify(columnFilters)
+    if (sortBy) queryParams.sortBy = sortBy
+    if (sortOrder) queryParams.sortOrder = sortOrder
+
+    const response = await axios.get<typeof EvaluationExtractionDatasetsRoutes.getRecords.response>(
+      EvaluationExtractionDatasetsRoutes.getRecords.getPath({ ...params, datasetId }),
+      {
+        params: queryParams,
+      },
+    )
+    return response.data.data
+  },
   getAllFiles: async (params) => {
     const axios = getAxiosInstance()
     const response = await axios.get<
@@ -74,7 +92,7 @@ function toDataset(dto: EvaluationExtractionDatasetDto): EvaluationExtractionDat
     id: dto.id,
     name: dto.name,
     projectId: dto.projectId,
-    records: dto.records,
+    recordCount: dto.recordCount,
     schemaMapping: dto.schemaMapping,
     updatedAt: dto.updatedAt,
   }

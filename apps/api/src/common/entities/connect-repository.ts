@@ -19,6 +19,13 @@ export class ConnectRepository<T extends ConnectEntityBase> {
     return await this.repository.find(this.addConnectScopeWhere(connectScope, options))
   }
 
+  public async findAndCount(
+    connectScope: RequiredConnectScope,
+    options: FindManyOptions<Pick<RequiredConnectScope, never> & T>,
+  ): Promise<[T[], number]> {
+    return await this.repository.findAndCount(this.addConnectScopeWhere(connectScope, options))
+  }
+
   addConnectScopeWhere<T extends RequiredConnectScope>(
     connectScope: RequiredConnectScope,
     options: FindManyOptions<T>,

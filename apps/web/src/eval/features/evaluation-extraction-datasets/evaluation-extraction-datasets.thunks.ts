@@ -7,6 +7,7 @@ import type {
   EvaluationExtractionDatasetFile,
   EvaluationExtractionDatasetFileColumn,
   EvaluationExtractionDatasetSchemaColumn,
+  PaginatedEvaluationExtractionDatasetRecords,
 } from "./evaluation-extraction-datasets.models"
 import { evaluationExtractionDatasetsActions } from "./evaluation-extraction-datasets.slice"
 
@@ -33,6 +34,26 @@ const listDatasets = createAsyncThunk<EvaluationExtractionDataset[], void, Thunk
     return await services.evaluationExtractionDatasets.getAll(params)
   },
 )
+
+const listRecords = createAsyncThunk<
+  PaginatedEvaluationExtractionDatasetRecords,
+  {
+    datasetId: string
+    page?: number
+    limit?: number
+    columnFilters?: Record<string, string>
+    sortBy?: string
+    sortOrder?: "asc" | "desc"
+  },
+  ThunkConfig
+>("datasets/listRecords", async (args, { extra: { services }, getState }) => {
+  const state = getState()
+  const params = getCurrentIds({
+    state,
+    wantedIds: ["organizationId", "projectId"],
+  })
+  return await services.evaluationExtractionDatasets.getRecords({ ...params, ...args })
+})
 
 const getFileColumns = createAsyncThunk<
   EvaluationExtractionDatasetFileColumn[],
@@ -133,6 +154,7 @@ const deleteFile = createAsyncThunk<void, { fileId: string }, ThunkConfig>(
 
 export const evaluationExtractionDatasetsThunks = {
   listDatasets,
+  listRecords,
   listFiles,
   createOne,
   getFileColumns,

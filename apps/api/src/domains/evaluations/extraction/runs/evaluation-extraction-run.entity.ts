@@ -24,6 +24,7 @@ export type EvaluationExtractionRunSummary = {
   perfectMatches: number
   mismatches: number
   errors: number
+  running: number
 }
 
 @ConnectEntity("evaluation_extraction_run")

@@ -47,7 +47,19 @@ export type EvaluationExtractionDatasetDto = {
   id: string
   name: string
   projectId: string
-  records: EvaluationExtractionDatasetRecordDto[]
+  recordCount: number
   schemaMapping: EvaluationExtractionDatasetSchemaMappingDto
   updatedAt: TimeType
+}
+
+// PAGINATED RECORDS
+export type EvaluationExtractionDatasetRecordRowDto = {
+  id: string
+  data: Record<string, unknown>
+}
+export type PaginatedEvaluationExtractionDatasetRecordsDto = {
+  records: EvaluationExtractionDatasetRecordRowDto[]
+  total: number
+  page: number
+  limit: number
 }

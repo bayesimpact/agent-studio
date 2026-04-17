@@ -1,8 +1,11 @@
 import type { TimeType } from "../generic"
 
+export const EVALUATION_EXTRACTION_RUN_STATUS_CHANGED_CHANNEL_DTO =
+  "evaluation_extraction_run_status_changed"
+
 // Types
 export type EvaluationExtractionRunStatusDto = "pending" | "running" | "completed" | "failed"
-export type EvaluationExtractionRunRecordStatusDto = "match" | "mismatch" | "error"
+export type EvaluationExtractionRunRecordStatusDto = "match" | "mismatch" | "error" | "running"
 export type EvaluationExtractionRunRecordFieldStatusDto = "match" | "mismatch" | "fyi"
 
 export type EvaluationExtractionRunKeyMappingEntryDto = {
@@ -16,6 +19,7 @@ export type EvaluationExtractionRunSummaryDto = {
   perfectMatches: number
   mismatches: number
   errors: number
+  running: number
 }
 
 export type EvaluationExtractionRunRecordFieldResultDto = {
@@ -55,3 +59,17 @@ export type CreateEvaluationExtractionRunRequestDto = {
   agentId: string
   keyMapping: EvaluationExtractionRunKeyMappingEntryDto[]
 }
+
+// SSE Event DTOs
+export type EvaluationExtractionRunStatusChangedEventPayload = {
+  type: typeof EVALUATION_EXTRACTION_RUN_STATUS_CHANGED_CHANNEL_DTO
+  evaluationExtractionRunId: string
+  organizationId: string
+  projectId: string
+  status: EvaluationExtractionRunStatusDto
+  summary: EvaluationExtractionRunSummaryDto | null
+  updatedAt: TimeType
+}
+
+export type EvaluationExtractionRunStatusChangedEventDto = MessageEvent &
+  EvaluationExtractionRunStatusChangedEventPayload

@@ -2,6 +2,7 @@ import type { EvaluationExtractionRunKeyMappingEntryDto } from "@caseai-connect/
 import type {
   EvaluationExtractionRun,
   EvaluationExtractionRunRecord,
+  EvaluationExtractionRunStatusChangedEvent,
 } from "./evaluation-extraction-runs.models"
 
 type BaseParams = { organizationId: string; projectId: string }
@@ -26,4 +27,10 @@ export interface IEvaluationExtractionRunsSpi {
   getRecords(
     params: BaseParams & { evaluationExtractionRunId: string },
   ): Promise<EvaluationExtractionRunRecord[]>
+  streamRunStatus(params: {
+    organizationId: string
+    projectId: string
+    signal?: AbortSignal
+    onStatusChanged: (event: EvaluationExtractionRunStatusChangedEvent) => void
+  }): Promise<void>
 }

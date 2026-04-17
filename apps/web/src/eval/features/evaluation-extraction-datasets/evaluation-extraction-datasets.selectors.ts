@@ -47,6 +47,9 @@ export const selectFileColumnsData = (state: RootState) =>
 export const selectUploaderState = (state: RootState) =>
   state.evaluation.extractionDatasets.uploader
 
+// RECORDS
+export const selectRecordsData = (state: RootState) => state.evaluation.extractionDatasets.records
+
 // DATASETS
 export const selectDatasetsData = (state: RootState) => state.evaluation.extractionDatasets.data
 export const selectCurrentDatasetId = (state: RootState) =>

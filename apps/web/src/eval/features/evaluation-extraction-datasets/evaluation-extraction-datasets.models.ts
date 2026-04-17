@@ -2,8 +2,10 @@ import type {
   EvaluationExtractionDatasetDto,
   EvaluationExtractionDatasetFileColumnDto,
   EvaluationExtractionDatasetFileDto,
+  EvaluationExtractionDatasetRecordRowDto,
   EvaluationExtractionDatasetSchemaColumnDto,
   EvaluationExtractionDatasetSchemaColumnRoleDto,
+  PaginatedEvaluationExtractionDatasetRecordsDto,
 } from "@caseai-connect/api-contracts"
 
 // DATASET FILE
@@ -15,3 +17,8 @@ export type EvaluationExtractionDataset = EvaluationExtractionDatasetDto
 export type EvaluationExtractionDatasetSchemaColumnRole =
   EvaluationExtractionDatasetSchemaColumnRoleDto
 export type EvaluationExtractionDatasetSchemaColumn = EvaluationExtractionDatasetSchemaColumnDto
+
+// PAGINATED RECORDS
+export type EvaluationExtractionDatasetRecordRow = EvaluationExtractionDatasetRecordRowDto
+export type PaginatedEvaluationExtractionDatasetRecords =
+  PaginatedEvaluationExtractionDatasetRecordsDto

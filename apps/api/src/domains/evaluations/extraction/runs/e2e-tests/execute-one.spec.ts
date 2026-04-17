@@ -15,7 +15,6 @@ import { createOrganizationWithProject } from "@/domains/organizations/organizat
 import { setupUserGuardForTesting } from "../../../../../../test/e2e.helpers"
 import { expectResponse, type Requester, testRequester } from "../../../../../../test/request"
 import { EvaluationsModule } from "../../../evaluations.module"
-import { EvaluationExtractionRunRecord } from "../records/evaluation-extraction-run-record.entity"
 import { createRunWithCsvDataset } from "./csv-dataset.helpers"
 
 describe("EvaluationExtractionRuns - executeOne", () => {
@@ -54,13 +53,7 @@ describe("EvaluationExtractionRuns - executeOne", () => {
     await app.close()
   })
 
-  const createContext = async ({
-    agentOutputKey = "answer",
-    mockResult,
-  }: {
-    agentOutputKey?: string
-    mockResult?: string
-  } = {}) => {
+  const createContext = async ({ agentOutputKey = "answer" }: { agentOutputKey?: string } = {}) => {
     const { user, organization, project } = await createOrganizationWithProject(repositories)
     organizationId = organization.id
     projectId = project.id
@@ -76,7 +69,6 @@ describe("EvaluationExtractionRuns - executeOne", () => {
       },
       model: AgentModel._MockGenerateStructuredOutput,
       defaultPrompt: "Extract the answer from the input",
-      ...(mockResult ? {} : {}),
     })
     await repositories.agentRepository.save(agent)
 
@@ -99,65 +91,17 @@ describe("EvaluationExtractionRuns - executeOne", () => {
       token: accessToken,
     })
 
-  it("should execute a pending run and produce one record per dataset row", async () => {
+  it("should enqueue a pending run and return it with pending status", async () => {
     await createContext()
 
     const res = await subject()
 
     expectResponse(res, 201)
-    expect(res.body.data.status).toBe("completed")
-    expect(res.body.data.summary).toBeDefined()
-    expect(res.body.data.summary!.total).toBe(3)
-
-    const records = await setup.getRepository(EvaluationExtractionRunRecord).find({
-      where: { evaluationExtractionRunId },
-      order: { createdAt: "ASC" },
-    })
-    expect(records).toHaveLength(3)
-
-    for (const record of records) {
-      expect(record.agentRawOutput).toBeDefined()
-      expect(record.comparison).toBeDefined()
-      expect(record.errorDetails).toBeNull()
-    }
+    // executeOne now enqueues the job asynchronously — the run stays pending until the worker picks it up
+    expect(res.body.data.status).toBe("pending")
+    expect(res.body.data.summary).toBeNull()
 
     await expectActivityCreated("evaluationExtractionRun.execute")
-  })
-
-  it("should correctly compute the summary counts", async () => {
-    await createContext()
-
-    const res = await subject()
-
-    expectResponse(res, 201)
-    const summary = res.body.data.summary!
-    expect(summary.total).toBe(3)
-    expect(summary.errors).toBe(0)
-    expect(summary.perfectMatches + summary.mismatches).toBe(3)
-  })
-
-  it("should persist the agent raw output on each record", async () => {
-    await createContext()
-    await subject()
-
-    const records = await setup.getRepository(EvaluationExtractionRunRecord).find({
-      where: { evaluationExtractionRunId },
-    })
-
-    for (const record of records) {
-      expect(record.agentRawOutput).not.toBeNull()
-      expect(typeof record.agentRawOutput).toBe("object")
-    }
-  })
-
-  it("should reject executing a non-pending run", async () => {
-    await createContext()
-
-    await subject()
-
-    const res = await subject()
-
-    expectResponse(res, 422)
   })
 
   it("should return 404 for a non-existent run", async () => {

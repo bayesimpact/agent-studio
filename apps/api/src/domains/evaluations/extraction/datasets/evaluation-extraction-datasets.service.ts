@@ -116,6 +116,69 @@ export class EvaluationExtractionDatasetsService {
     })
   }
 
+  async countDatasetRecords({
+    connectScope,
+    datasetId,
+  }: {
+    connectScope: RequiredConnectScope
+    datasetId: string
+  }): Promise<number> {
+    const [, count] = await this.recordConnectRepository.findAndCount(connectScope, {
+      where: { evaluationExtractionDatasetId: datasetId },
+    })
+    return count
+  }
+
+  async listDatasetRecordsPaginated({
+    connectScope,
+    datasetId,
+    page,
+    limit,
+    columnFilters,
+    sortBy,
+    sortOrder,
+  }: {
+    connectScope: RequiredConnectScope
+    datasetId: string
+    page: number
+    limit: number
+    columnFilters?: Record<string, string>
+    sortBy?: string
+    sortOrder?: "asc" | "desc"
+  }): Promise<{ records: EvaluationExtractionDatasetRecord[]; total: number }> {
+    const query = this.recordConnectRepository
+      .newQueryBuilderWithConnectScope(connectScope)
+      .andWhere(
+        "evaluationExtractionDatasetRecords.evaluation_extraction_dataset_id = :datasetId",
+        { datasetId },
+      )
+
+    if (columnFilters) {
+      const safeKeyPattern = /^[a-zA-Z0-9_-]+$/
+      for (const [columnId, filterValue] of Object.entries(columnFilters)) {
+        if (filterValue && safeKeyPattern.test(columnId)) {
+          const paramName = `filter_${columnId.replace(/-/g, "_")}`
+          query.andWhere(
+            `evaluationExtractionDatasetRecords.data ->> '${columnId}' ILIKE :${paramName}`,
+            { [paramName]: `%${filterValue}%` },
+          )
+        }
+      }
+    }
+
+    if (sortBy && /^[a-zA-Z0-9_-]+$/.test(sortBy)) {
+      const direction = sortOrder === "asc" ? "ASC" : "DESC"
+      query.orderBy(`evaluationExtractionDatasetRecords.data ->> '${sortBy}'`, direction)
+    } else {
+      query.orderBy("evaluationExtractionDatasetRecords.created_at", "ASC")
+    }
+
+    query.skip(page * limit).take(limit)
+
+    const [records, total] = await query.getManyAndCount()
+    return { records, total }
+  }
+
   async createDataset({
     connectScope,
     name,

@@ -16,7 +16,12 @@ export type EvaluationExtractionRunRecordComparison = Record<
   EvaluationExtractionRunRecordFieldResult
 >
 
-export const EVALUATION_EXTRACTION_RUN_RECORD_STATUSES = ["match", "mismatch", "error"] as const
+export const EVALUATION_EXTRACTION_RUN_RECORD_STATUSES = [
+  "match",
+  "mismatch",
+  "error",
+  "running",
+] as const
 export type EvaluationExtractionRunRecordStatus =
   (typeof EVALUATION_EXTRACTION_RUN_RECORD_STATUSES)[number]
 

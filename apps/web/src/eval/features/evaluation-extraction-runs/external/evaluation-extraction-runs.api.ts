@@ -9,6 +9,7 @@ import type {
   EvaluationExtractionRunRecord,
 } from "../evaluation-extraction-runs.models"
 import type { IEvaluationExtractionRunsSpi } from "../evaluation-extraction-runs.spi"
+import { streamEvaluationExtractionRunStatus } from "./evaluation-extraction-runs-streaming"
 
 export default {
   createOne: async ({ payload, ...params }) => {
@@ -46,6 +47,9 @@ export default {
       EvaluationExtractionRunsRoutes.getRecords.getPath(params),
     )
     return response.data.data.map(toEvaluationExtractionRunRecord)
+  },
+  streamRunStatus: async (params) => {
+    await streamEvaluationExtractionRunStatus(params)
   },
 } satisfies IEvaluationExtractionRunsSpi
 

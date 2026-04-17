@@ -1,9 +1,12 @@
 import {
   type EvaluationExtractionRunDto,
   type EvaluationExtractionRunRecordDto,
+  type EvaluationExtractionRunStatusChangedEventDto,
   EvaluationExtractionRunsRoutes,
 } from "@caseai-connect/api-contracts"
-import { Body, Controller, Get, Post, Req, UseGuards } from "@nestjs/common"
+import { Body, Controller, Get, Inject, Post, Req, Sse, UseGuards } from "@nestjs/common"
+import type { Observable } from "rxjs"
+import { filter, map } from "rxjs/operators"
 import type {
   EndpointRequestWithEvaluationExtractionRun,
   EndpointRequestWithProject,
@@ -17,6 +20,10 @@ import { JwtAuthGuard } from "@/domains/auth/jwt-auth.guard"
 import { UserGuard } from "@/domains/users/user.guard"
 import type { EvaluationExtractionRun } from "./evaluation-extraction-run.entity"
 import { EvaluationExtractionRunGuard } from "./evaluation-extraction-run.guard"
+import type { EvaluationExtractionRunBatchService } from "./evaluation-extraction-run-batch.interface"
+import { EVALUATION_EXTRACTION_RUN_BATCH_SERVICE } from "./evaluation-extraction-run-batch.interface"
+// biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
+import { EvaluationExtractionRunStatusStreamService } from "./evaluation-extraction-run-status-stream.service"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
 import { EvaluationExtractionRunsService } from "./evaluation-extraction-runs.service"
 import type { EvaluationExtractionRunRecord } from "./records/evaluation-extraction-run-record.entity"
@@ -25,7 +32,12 @@ import type { EvaluationExtractionRunRecord } from "./records/evaluation-extract
 @RequireContext("organization", "project")
 @Controller()
 export class EvaluationExtractionRunsController {
-  constructor(private readonly evaluationExtractionRunsService: EvaluationExtractionRunsService) {}
+  constructor(
+    private readonly evaluationExtractionRunsService: EvaluationExtractionRunsService,
+    @Inject(EVALUATION_EXTRACTION_RUN_BATCH_SERVICE)
+    private readonly batchService: EvaluationExtractionRunBatchService,
+    private readonly runStatusStreamService: EvaluationExtractionRunStatusStreamService,
+  ) {}
 
   @Post(EvaluationExtractionRunsRoutes.createOne.path)
   @CheckPolicy((policy) => policy.canCreate())
@@ -52,10 +64,15 @@ export class EvaluationExtractionRunsController {
   async executeOne(
     @Req() request: EndpointRequestWithEvaluationExtractionRun,
   ): Promise<typeof EvaluationExtractionRunsRoutes.executeOne.response> {
-    const run = await this.evaluationExtractionRunsService.executeRun({
-      connectScope: getRequiredConnectScope(request),
-      runId: request.evaluationExtractionRun.id,
+    const connectScope = getRequiredConnectScope(request)
+    const run = request.evaluationExtractionRun
+
+    await this.batchService.enqueueExecuteRun({
+      runId: run.id,
+      organizationId: connectScope.organizationId,
+      projectId: connectScope.projectId,
     })
+
     return { data: toEvaluationExtractionRunDto(run) }
   }
 
@@ -90,6 +107,22 @@ export class EvaluationExtractionRunsController {
       runId: request.evaluationExtractionRun.id,
     })
     return { data: records.map(toEvaluationExtractionRunRecordDto) }
+  }
+
+  @CheckPolicy((policy) => policy.canList())
+  @Sse(EvaluationExtractionRunsRoutes.streamRunStatus.path, { method: 0 /* GET */ })
+  streamRunStatus(
+    @Req() request: EndpointRequestWithProject,
+  ): Observable<EvaluationExtractionRunStatusChangedEventDto> {
+    const connectScope = getRequiredConnectScope(request)
+    return this.runStatusStreamService.events$.pipe(
+      filter(
+        (event) =>
+          event.organizationId === connectScope.organizationId &&
+          event.projectId === connectScope.projectId,
+      ),
+      map((event) => ({ ...event, data: JSON.stringify(event) })),
+    )
   }
 }
 

@@ -5,6 +5,7 @@ import type {
   EvaluationExtractionDatasetFileColumnDto,
   EvaluationExtractionDatasetFileDto,
   EvaluationExtractionDatasetSchemaColumnDto,
+  PaginatedEvaluationExtractionDatasetRecordsDto,
 } from "./evaluation-extraction-datasets.dto"
 
 const prefix = "organizations/:organizationId/projects/:projectId/evaluation-extraction-datasets"
@@ -16,6 +17,10 @@ export const EvaluationExtractionDatasetsRoutes = {
   getAll: defineRoute<ResponseData<EvaluationExtractionDatasetDto[]>>({
     method: "get",
     path: prefix,
+  }),
+  getRecords: defineRoute<ResponseData<PaginatedEvaluationExtractionDatasetRecordsDto>>({
+    method: "get",
+    path: `${prefix}/:datasetId/records`,
   }),
   createOne: defineRoute<ResponseData<SuccessResponseDTO>, RequestPayload<{ name: string }>>({
     method: "post",

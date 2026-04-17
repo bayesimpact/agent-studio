@@ -3,6 +3,8 @@ import { ADS, type AsyncData, defaultAsyncData } from "@/common/store/async-data
 import type {
   EvaluationExtractionRun,
   EvaluationExtractionRunRecord,
+  EvaluationExtractionRunStatus,
+  EvaluationExtractionRunSummary,
 } from "./evaluation-extraction-runs.models"
 import { evaluationExtractionRunsThunks } from "./evaluation-extraction-runs.thunks"
 
@@ -12,6 +14,7 @@ interface State {
   currentRun: AsyncData<EvaluationExtractionRun>
   currentRunRecords: AsyncData<EvaluationExtractionRunRecord[]>
   isExecuting: boolean
+  runStatusStream: { isActive: boolean }
 }
 
 const initialState: State = {
@@ -20,6 +23,7 @@ const initialState: State = {
   currentRun: defaultAsyncData,
   currentRunRecords: defaultAsyncData,
   isExecuting: false,
+  runStatusStream: { isActive: false },
 }
 
 const slice = createSlice({
@@ -29,6 +33,43 @@ const slice = createSlice({
     reset: () => initialState,
     setCurrentRunId: (state, action: PayloadAction<{ runId: string | null }>) => {
       state.currentRunId = action.payload.runId
+    },
+    startRunStatusStream: (state) => {
+      state.runStatusStream.isActive = true
+    },
+    stopRunStatusStream: (state) => {
+      state.runStatusStream.isActive = false
+    },
+    patchRunStatus: (
+      state,
+      action: PayloadAction<{
+        evaluationExtractionRunId: string
+        status: EvaluationExtractionRunStatus
+        summary: EvaluationExtractionRunSummary | null
+        updatedAt: number
+      }>,
+    ) => {
+      const { evaluationExtractionRunId, status, summary, updatedAt } = action.payload
+
+      // Patch current run if it matches
+      if (
+        ADS.isFulfilled(state.currentRun) &&
+        state.currentRun.value.id === evaluationExtractionRunId
+      ) {
+        state.currentRun.value.status = status
+        state.currentRun.value.summary = summary
+        state.currentRun.value.updatedAt = updatedAt
+      }
+
+      // Patch run in the list if it matches
+      if (ADS.isFulfilled(state.data)) {
+        const runInList = state.data.value.find((run) => run.id === evaluationExtractionRunId)
+        if (runInList) {
+          runInList.status = status
+          runInList.summary = summary
+          runInList.updatedAt = updatedAt
+        }
+      }
     },
   },
   extraReducers: (builder) => {

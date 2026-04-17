@@ -35,9 +35,12 @@
       "error": "Error",
       "fyi": "FYI",
       "noRecords": "No records found",
+      "processing": "Processing records...",
+      "processingDescription": "{{processed}} of {{total}} records processed. This may take a few minutes.",
       "rawOutput": "Raw Output",
       "errorDetails": "Error Details",
       "pending": "Pending",
+      "running": "Running",
       "completed": "Completed",
       "failed": "Failed"
     },

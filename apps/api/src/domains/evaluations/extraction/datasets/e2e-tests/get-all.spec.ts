@@ -109,7 +109,7 @@ describe("EvaluationExtractionDatasets - getAll", () => {
     expect(res.body.data[0]!.documentIds).toContain(document.id)
   })
 
-  it("should return datasets with records", async () => {
+  it("should return datasets with recordCount", async () => {
     const { organization, project } = await createContext()
 
     const schemaMapping = {
@@ -135,10 +135,7 @@ describe("EvaluationExtractionDatasets - getAll", () => {
 
     expectResponse(res)
     expect(res.body.data).toHaveLength(1)
-    expect(res.body.data[0]!.records).toBeDefined()
-    expect(res.body.data[0]!.records).toHaveLength(1)
-    expect(res.body.data[0]!.records[0]!.columnId).toBe("col1")
-    expect(res.body.data[0]!.records[0]!.values).toContain("value1")
+    expect(res.body.data[0]!.recordCount).toBe(1)
   })
 
   it("should return datasets sorted by newest first", async () => {
@@ -178,7 +175,7 @@ describe("EvaluationExtractionDatasets - getAll", () => {
       createdAt: expect.any(Number),
       updatedAt: expect.any(Number),
       documentIds: expect.any(Array),
-      records: expect.any(Array),
+      recordCount: expect.any(Number),
     })
   })
 })

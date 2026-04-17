@@ -34,7 +34,9 @@ import { EvaluationExtractionDatasetsService } from "./extraction/datasets/evalu
 import { EvaluationExtractionDatasetRecord } from "./extraction/datasets/records/evaluation-extraction-dataset-record.entity"
 import { EvaluationExtractionRun } from "./extraction/runs/evaluation-extraction-run.entity"
 import { EvaluationExtractionRunGuard } from "./extraction/runs/evaluation-extraction-run.guard"
+import { EvaluationExtractionRunBatchModule } from "./extraction/runs/evaluation-extraction-run-batch.module"
 import { EvaluationExtractionRunGraderService } from "./extraction/runs/evaluation-extraction-run-grader.service"
+import { EvaluationExtractionRunStatusStreamService } from "./extraction/runs/evaluation-extraction-run-status-stream.service"
 import { EvaluationExtractionRunsController } from "./extraction/runs/evaluation-extraction-runs.controller"
 import { EvaluationExtractionRunsService } from "./extraction/runs/evaluation-extraction-runs.service"
 import { EvaluationExtractionRunRecord } from "./extraction/runs/records/evaluation-extraction-run-record.entity"
@@ -61,6 +63,7 @@ import { EvaluationReportsService } from "./reports/evaluation-reports.service"
       Project,
       ProjectMembership,
     ]),
+    EvaluationExtractionRunBatchModule,
     DocumentsModule,
     StorageModule,
     OrganizationsModule,
@@ -79,6 +82,7 @@ import { EvaluationReportsService } from "./reports/evaluation-reports.service"
     EvaluationExtractionRunContextResolver,
     EvaluationExtractionRunGraderService,
     EvaluationExtractionRunGuard,
+    EvaluationExtractionRunStatusStreamService,
     EvaluationExtractionRunsService,
     EvaluationReportContextResolver,
     EvaluationReportGuard,
