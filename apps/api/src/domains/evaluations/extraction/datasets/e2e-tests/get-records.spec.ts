@@ -107,7 +107,7 @@ describe("EvaluationExtractionDatasets - getRecords", () => {
     expect(res.body.data.records).toEqual([])
     expect(res.body.data.total).toBe(0)
     expect(res.body.data.page).toBe(0)
-    expect(res.body.data.limit).toBe(50)
+    expect(res.body.data.limit).toBe(10)
   })
 
   it("should return paginated records", async () => {
