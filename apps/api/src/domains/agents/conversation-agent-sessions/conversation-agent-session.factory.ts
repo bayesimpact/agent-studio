@@ -65,6 +65,7 @@ export const conversationAgentSessionFactory = ConversationAgentSessionFactory.d
       user: transientParams.user,
       organization: transientParams.organization,
       messages: params.messages || [],
+      sessionCategories: params.sessionCategories || [],
       traceId: v4(),
       campaignId: params.campaignId ?? null,
       reviewCampaign: null,

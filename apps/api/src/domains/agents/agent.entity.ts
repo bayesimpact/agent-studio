@@ -7,6 +7,7 @@ import type {
 } from "@caseai-connect/api-contracts"
 import { Column, JoinColumn, JoinTable, ManyToMany, ManyToOne, OneToMany } from "typeorm"
 import { ConnectEntity, ConnectEntityBase } from "@/common/entities/connect-entity"
+import { AgentCategory } from "@/domains/agents/categories/agent-category.entity"
 import { ConversationAgentSession } from "@/domains/agents/conversation-agent-sessions/conversation-agent-session.entity"
 import { Project } from "@/domains/projects/project.entity"
 import { ReviewCampaign } from "@/domains/review-campaigns/review-campaign.entity"
@@ -98,4 +99,10 @@ export class Agent extends ConnectEntityBase {
     (reviewCampaign) => reviewCampaign.agent,
   )
   reviewCampaigns!: ReviewCampaign[]
+
+  @OneToMany(
+    () => AgentCategory,
+    (agentCategory) => agentCategory.agent,
+  )
+  categories!: AgentCategory[]
 }

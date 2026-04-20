@@ -6,6 +6,7 @@ import { ReviewCampaign } from "@/domains/review-campaigns/review-campaign.entit
 import { User } from "@/domains/users/user.entity"
 import type { BaseAgentSessionType } from "../base-agent-sessions/base-agent-sessions.types"
 import { AgentMessage } from "../shared/agent-session-messages/agent-message.entity"
+import { ConversationAgentSessionCategory } from "./conversation-agent-session-category.entity"
 
 @ConnectEntity("conversation_agent_session", "agentId", "type")
 export class ConversationAgentSession extends ConnectEntityBase {
@@ -61,4 +62,10 @@ export class ConversationAgentSession extends ConnectEntityBase {
   )
   @JoinColumn({ name: "campaign_id" })
   reviewCampaign?: ReviewCampaign | null
+
+  @OneToMany(
+    () => ConversationAgentSessionCategory,
+    (conversationAgentSessionCategory) => conversationAgentSessionCategory.conversationAgentSession,
+  )
+  sessionCategories!: ConversationAgentSessionCategory[]
 }
