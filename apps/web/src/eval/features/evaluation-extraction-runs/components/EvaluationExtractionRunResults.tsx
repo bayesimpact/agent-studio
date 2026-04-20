@@ -21,6 +21,7 @@ import {
 } from "@tanstack/react-table"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { useTranslation } from "react-i18next"
+import { Loader } from "@/common/components/Loader"
 import { ADS } from "@/common/store/async-data-status"
 import { useAppDispatch, useAppSelector } from "@/common/store/hooks"
 import type {
@@ -41,7 +42,7 @@ import {
   PaginationControls,
   SortableFilterableHeader,
   TruncatedCell,
-} from "../shared/RecordTableParts"
+} from "../../../components/shared/RecordTableParts"
 
 function StatusBadge({ status }: { status: EvaluationExtractionRunRecordStatus }) {
   const { t } = useTranslation()
@@ -408,7 +409,7 @@ export function EvaluationExtractionRunRecordsTable({
     (filter) => typeof filter.value === "string" && filter.value.length > 0,
   )
   const showPagination = totalPages > 1 || hasFilters
-
+  const isLoading = ADS.isLoading(recordsData)
   return (
     <Card className="border-0 shadow-none">
       <CardHeader>
@@ -417,68 +418,72 @@ export function EvaluationExtractionRunRecordsTable({
           {t("evaluation:dataset.records.view.description", { count: total })}
         </CardDescription>
       </CardHeader>
-      <CardContent>
-        <div className="rounded-lg border overflow-x-auto">
-          <table className="w-full caption-bottom text-sm">
-            <thead className="bg-muted/50 [&_tr]:border-b">
-              {table.getHeaderGroups().map((headerGroup) => (
-                <tr key={headerGroup.id} className="border-b transition-colors">
-                  {headerGroup.headers.map((header) => (
-                    <th
-                      key={header.id}
-                      className="text-foreground h-auto px-3 py-2 text-left align-bottom font-medium whitespace-nowrap"
-                      style={{ width: header.getSize() }}
-                    >
-                      {flexRender(header.column.columnDef.header, header.getContext())}
-                    </th>
-                  ))}
-                </tr>
-              ))}
-            </thead>
-            <tbody>
-              {records.length === 0 ? (
-                <tr>
-                  <td colSpan={columns.length} className="h-24 text-center text-muted-foreground">
-                    {isRunning ? (
-                      <LoadingState run={run} />
-                    ) : (
-                      t("evaluationExtractionRun:results.noRecords")
-                    )}
-                  </td>
-                </tr>
-              ) : (
-                table.getRowModel().rows.map((row) => (
-                  <tr
-                    key={row.id}
-                    className={`border-b transition-colors hover:bg-muted/50 ${row.index % 2 !== 0 ? "bg-muted/30" : ""}`}
-                  >
-                    {row.getVisibleCells().map((cell) => (
-                      <td
-                        key={cell.id}
-                        className="p-3 align-middle"
-                        style={{ width: cell.column.getSize(), maxWidth: cell.column.getSize() }}
+      {isLoading ? (
+        <Loader />
+      ) : (
+        <CardContent>
+          <div className="rounded-lg border overflow-x-auto">
+            <table className="w-full caption-bottom text-sm">
+              <thead className="bg-muted/50 [&_tr]:border-b">
+                {table.getHeaderGroups().map((headerGroup) => (
+                  <tr key={headerGroup.id} className="border-b transition-colors">
+                    {headerGroup.headers.map((header) => (
+                      <th
+                        key={header.id}
+                        className="text-foreground h-auto px-3 py-2 text-left align-bottom font-medium whitespace-nowrap"
+                        style={{ width: header.getSize() }}
                       >
-                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                      </td>
+                        {flexRender(header.column.columnDef.header, header.getContext())}
+                      </th>
                     ))}
                   </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
+                ))}
+              </thead>
+              <tbody>
+                {records.length === 0 ? (
+                  <tr>
+                    <td colSpan={columns.length} className="h-24 text-center text-muted-foreground">
+                      {isRunning ? (
+                        <LoadingState run={run} />
+                      ) : (
+                        t("evaluationExtractionRun:results.noRecords")
+                      )}
+                    </td>
+                  </tr>
+                ) : (
+                  table.getRowModel().rows.map((row) => (
+                    <tr
+                      key={row.id}
+                      className={`border-b transition-colors hover:bg-muted/50 ${row.index % 2 !== 0 ? "bg-muted/30" : ""}`}
+                    >
+                      {row.getVisibleCells().map((cell) => (
+                        <td
+                          key={cell.id}
+                          className="p-3 align-middle"
+                          style={{ width: cell.column.getSize(), maxWidth: cell.column.getSize() }}
+                        >
+                          {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                        </td>
+                      ))}
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
 
-        {showPagination && (
-          <PaginationControls
-            pageIndex={pagination.pageIndex}
-            pageCount={totalPages}
-            total={total}
-            onPageChange={(newPageIndex) =>
-              setPagination((prev) => ({ ...prev, pageIndex: newPageIndex }))
-            }
-          />
-        )}
-      </CardContent>
+          {showPagination && (
+            <PaginationControls
+              pageIndex={pagination.pageIndex}
+              pageCount={totalPages}
+              total={total}
+              onPageChange={(newPageIndex) =>
+                setPagination((prev) => ({ ...prev, pageIndex: newPageIndex }))
+              }
+            />
+          )}
+        </CardContent>
+      )}
     </Card>
   )
 }

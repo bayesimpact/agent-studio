@@ -42,6 +42,8 @@ const slice = createSlice({
   name: "extractionRuns",
   initialState,
   reducers: {
+    mount: () => {},
+    unmount: () => {},
     reset: () => initialState,
     setCurrentRunId: (state, action: PayloadAction<{ runId: string | null }>) => {
       if (state.currentRunId !== action.payload.runId) {

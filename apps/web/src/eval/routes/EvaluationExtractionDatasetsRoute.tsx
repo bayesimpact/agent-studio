@@ -2,7 +2,7 @@ import { useEffect } from "react"
 import { useOutlet } from "react-router-dom"
 import { AsyncRoute } from "@/common/routes/AsyncRoute"
 import { useAppDispatch, useAppSelector } from "@/common/store/hooks"
-import { EvaluationExtractionDatasetList } from "../components/evaluation-extraction-datasets/EvaluationExtractionDatasetList"
+import { EvaluationExtractionDatasetList } from "../features/evaluation-extraction-datasets/components/EvaluationExtractionDatasetList"
 import type { EvaluationExtractionDataset } from "../features/evaluation-extraction-datasets/evaluation-extraction-datasets.models"
 import {
   selectDatasetsData,
@@ -10,12 +10,12 @@ import {
 } from "../features/evaluation-extraction-datasets/evaluation-extraction-datasets.selectors"
 import { evaluationExtractionDatasetsActions } from "../features/evaluation-extraction-datasets/evaluation-extraction-datasets.slice"
 
-export function ExtractionRoute() {
+export function EvaluationExtractionDatasetsRoute() {
   const dispatch = useAppDispatch()
   const filesData = useAppSelector(selectFilesData)
   const datasetsData = useAppSelector(selectDatasetsData)
-  // FIXME: should listen isInitDone from store instead
   useEffect(() => {
+    // TODO: use mount/unmount actions
     dispatch(evaluationExtractionDatasetsActions.initData())
   }, [dispatch])
   return (

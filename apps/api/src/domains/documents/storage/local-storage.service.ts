@@ -1,5 +1,7 @@
+import { createReadStream } from "node:fs"
 import * as fs from "node:fs/promises"
 import * as path from "node:path"
+import type { Readable } from "node:stream"
 import { Injectable, Logger } from "@nestjs/common"
 import type { ConfigService } from "@nestjs/config"
 import { v4 as uuidv4 } from "uuid"
@@ -54,6 +56,10 @@ export class LocalStorageService implements IFileStorage {
 
   async readFile(storageRelativePath: string): Promise<Buffer> {
     return fs.readFile(path.join(this.dir, storageRelativePath))
+  }
+
+  createReadStream(storageRelativePath: string): Readable {
+    return createReadStream(path.join(this.dir, storageRelativePath))
   }
 
   async save({

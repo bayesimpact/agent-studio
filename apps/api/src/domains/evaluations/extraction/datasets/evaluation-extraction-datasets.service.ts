@@ -345,7 +345,7 @@ export class EvaluationExtractionDatasetsService {
     return columns
   }
 
-  private async parseCsvColumns({
+  private parseCsvColumns({
     document,
     options,
   }: {
@@ -356,22 +356,51 @@ export class EvaluationExtractionDatasetsService {
       skipEmptyLines: boolean
     }
   }): Promise<EvaluationExtractionDatasetFileColumn[]> {
-    const buffer = await this.fileStorageService.readFile(document.storageRelativePath)
-    const csvContent = buffer.toString("utf-8")
+    const sourceStream = this.fileStorageService.createReadStream(document.storageRelativePath)
 
-    const parsed = Papa.parse(csvContent, options)
+    return new Promise((resolve, reject) => {
+      const previewRows: Record<string, unknown>[] = []
+      let fields: string[] | undefined
+      let settled = false
 
-    if (!parsed.meta.fields || parsed.meta.fields.length === 0) {
-      throw new UnprocessableEntityException("CSV file has no columns")
-    }
+      const buildColumns = () => {
+        if (!fields || fields.length === 0) {
+          reject(new UnprocessableEntityException("CSV file has no columns"))
+          return
+        }
+        resolve(
+          fields.map((fieldName) => ({
+            id: v4(),
+            name: fieldName,
+            values: previewRows.map((row) => this.standardizedNulls(row[fieldName])),
+          })),
+        )
+      }
 
-    return parsed.meta.fields.map((fieldName) => ({
-      id: v4(),
-      name: fieldName,
-      values: (parsed.data as Record<string, unknown>[]).map((row) =>
-        this.standardizedNulls(row[fieldName]),
-      ),
-    }))
+      const settle = (fn: () => void) => {
+        if (settled) return
+        settled = true
+        sourceStream.destroy()
+        fn()
+      }
+
+      const parseStream = Papa.parse(Papa.NODE_STREAM_INPUT, {
+        header: options.header,
+        skipEmptyLines: options.skipEmptyLines,
+      })
+
+      parseStream.on("data", (row: Record<string, unknown>) => {
+        if (!fields) fields = Object.keys(row)
+        previewRows.push(row)
+        if (previewRows.length >= options.preview) {
+          settle(buildColumns)
+        }
+      })
+      parseStream.on("end", () => settle(buildColumns))
+      parseStream.on("error", (error) => settle(() => reject(error)))
+      sourceStream.on("error", (error) => settle(() => reject(error)))
+      sourceStream.pipe(parseStream)
+    })
   }
 
   private standardizedNulls(value: unknown): unknown {

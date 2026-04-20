@@ -1,40 +1,38 @@
 import { useEffect } from "react"
 import { useTranslation } from "react-i18next"
-import { useNavigate, useParams } from "react-router-dom"
+import { useNavigate } from "react-router-dom"
 import { GridHeader } from "@/common/components/grid/Grid"
 import { AsyncRoute } from "@/common/routes/AsyncRoute"
 import { LoadingRoute } from "@/common/routes/LoadingRoute"
 import { useAppDispatch, useAppSelector } from "@/common/store/hooks"
 import { buildSince } from "@/common/utils/build-date"
+import type { EvaluationExtractionDataset } from "../features/evaluation-extraction-datasets/evaluation-extraction-datasets.models"
+import { selectCurrentDatasetData } from "../features/evaluation-extraction-datasets/evaluation-extraction-datasets.selectors"
 import {
   EvaluationExtractionRunRecordsTable,
   EvaluationExtractionRunSummary,
-} from "../components/extraction-runs/EvaluationExtractionRunResults"
-import type { EvaluationExtractionDataset } from "../features/evaluation-extraction-datasets/evaluation-extraction-datasets.models"
-import { selectCurrentDatasetData } from "../features/evaluation-extraction-datasets/evaluation-extraction-datasets.selectors"
+} from "../features/evaluation-extraction-runs/components/EvaluationExtractionRunResults"
 import type { EvaluationExtractionRun } from "../features/evaluation-extraction-runs/evaluation-extraction-runs.models"
-import { selectCurrentRunData } from "../features/evaluation-extraction-runs/evaluation-extraction-runs.selectors"
+import {
+  selectCurrentRunData,
+  selectCurrentRunId,
+} from "../features/evaluation-extraction-runs/evaluation-extraction-runs.selectors"
 import { evaluationExtractionRunsActions } from "../features/evaluation-extraction-runs/evaluation-extraction-runs.slice"
 
 export function EvaluationExtractionRunRoute() {
   const dispatch = useAppDispatch()
-  const { runId } = useParams<{ runId: string }>()
+  const runId = useAppSelector(selectCurrentRunId)
   const runData = useAppSelector(selectCurrentRunData)
   const datasetData = useAppSelector(selectCurrentDatasetData)
 
   useEffect(() => {
-    if (!runId) return
-    dispatch(evaluationExtractionRunsActions.setCurrentRunId({ runId }))
-    dispatch(evaluationExtractionRunsActions.getOne({ evaluationExtractionRunId: runId }))
-    dispatch(evaluationExtractionRunsActions.startRunStatusStream())
-
+    dispatch(evaluationExtractionRunsActions.mount())
     return () => {
-      dispatch(evaluationExtractionRunsActions.stopRunStatusStream())
+      dispatch(evaluationExtractionRunsActions.unmount())
     }
-  }, [dispatch, runId])
+  }, [dispatch])
 
   if (!runId) return <LoadingRoute />
-
   return (
     <AsyncRoute data={[runData, datasetData]}>
       {([run, dataset]) => <WithData run={run} dataset={dataset} />}

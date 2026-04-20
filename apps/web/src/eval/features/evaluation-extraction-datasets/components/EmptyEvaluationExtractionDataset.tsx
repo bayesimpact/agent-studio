@@ -8,7 +8,7 @@ import {
 } from "@caseai-connect/ui/shad/empty"
 import { FileIcon } from "lucide-react"
 import { useTranslation } from "react-i18next"
-import { EvaluationExtractionDatasetCreator } from "../EvaluationExtractionDatasetCreator"
+import { EvaluationExtractionDatasetCreator } from "./EvaluationExtractionDatasetCreator"
 
 export function EmptyEvaluationExtractionDataset() {
   const { t } = useTranslation("evaluation", { keyPrefix: "dataset.list.empty" })

@@ -2,7 +2,10 @@ import { createListenerMiddleware } from "@reduxjs/toolkit"
 import throttle from "lodash/throttle"
 import { notificationsActions } from "@/common/features/notifications/notifications.slice"
 import type { AppDispatch, RootState } from "@/common/store/types"
-import { selectCurrentRecordsQuery } from "./evaluation-extraction-runs.selectors"
+import {
+  selectCurrentRecordsQuery,
+  selectCurrentRunId,
+} from "./evaluation-extraction-runs.selectors"
 import { evaluationExtractionRunsActions } from "./evaluation-extraction-runs.slice"
 import {
   startRunStatusStream,
@@ -22,6 +25,26 @@ const throttledRefreshRecords = throttle(
 )
 
 function registerListeners() {
+  listenerMiddleware.startListening({
+    actionCreator: evaluationExtractionRunsActions.mount,
+    effect: async (_, listenerApi) => {
+      const state = listenerApi.getState()
+      const runId = selectCurrentRunId(state)
+      if (!runId) return
+
+      listenerApi.dispatch(
+        evaluationExtractionRunsActions.getOne({ evaluationExtractionRunId: runId }),
+      )
+      listenerApi.dispatch(evaluationExtractionRunsActions.startRunStatusStream())
+    },
+  })
+  listenerMiddleware.startListening({
+    actionCreator: evaluationExtractionRunsActions.unmount,
+    effect: async (_, listenerApi) => {
+      listenerApi.dispatch(evaluationExtractionRunsActions.stopRunStatusStream())
+    },
+  })
+
   listenerMiddleware.startListening({
     actionCreator: evaluationExtractionRunsActions.createAndExecute.fulfilled,
     effect: async (_, listenerApi) => {
