@@ -6,6 +6,7 @@ import { NestFactory } from "@nestjs/core"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS
 import { NestExpressApplication } from "@nestjs/platform-express"
 import { AppModule } from "./app.module"
+import { registerBullBoardOpenIdConnect } from "./common/bull-board/bull-board-openid-registration"
 import { StackTraceLoggingExceptionFilter } from "./common/filters/stack-trace-logging-exception.filter"
 import { getLogLevels, StructuredLogger } from "./common/logger/structured-logger"
 
@@ -19,6 +20,11 @@ async function bootstrap() {
     logger: isProduction ? new StructuredLogger(logLevels) : logLevels,
     ...(httpsOptions && { httpsOptions }),
   })
+  if (isProduction) {
+    // Behind Cloud Run/reverse proxies, trust X-Forwarded-* so OIDC/cookies see HTTPS correctly.
+    app.set("trust proxy", true)
+  }
+  registerBullBoardOpenIdConnect(app)
   app.useBodyParser("json", { limit: "500kb" })
   app.useGlobalPipes(
     new ValidationPipe({

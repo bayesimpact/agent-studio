@@ -1,6 +1,7 @@
 import { type MiddlewareConsumer, Module, type NestModule } from "@nestjs/common"
 import { ConfigModule, ConfigService } from "@nestjs/config"
 import { TypeOrmModule } from "@nestjs/typeorm"
+import { BullBoardAdminModule } from "./common/bull-board/bull-board-admin.module"
 import { DiagnosticsModule } from "./common/diagnostics/diagnostics.module"
 import { RequestLoggerMiddleware } from "./common/middleware/request-logger.middleware"
 import typeorm from "./config/typeorm"
@@ -29,6 +30,7 @@ import { UsersModule } from "./domains/users/users.module"
       isGlobal: true,
       load: [typeorm],
     }),
+    BullBoardAdminModule.registerWhenEnabled(),
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
