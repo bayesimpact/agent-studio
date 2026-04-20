@@ -1,23 +1,39 @@
-import { Injectable } from "@nestjs/common"
+import { Injectable, NotFoundException } from "@nestjs/common"
 import { InjectRepository } from "@nestjs/typeorm"
 import type { Repository } from "typeorm"
 import { v4 } from "uuid"
 import { ConnectRepository } from "@/common/entities/connect-repository"
 import type { RequiredConnectScope } from "@/common/entities/connect-required-fields"
+import { Agent } from "../agent.entity"
 import type { BaseAgentSessionType } from "../base-agent-sessions/base-agent-sessions.types"
+import { AgentMessage } from "../shared/agent-session-messages/agent-message.entity"
 import { FormAgentSession } from "./form-agent-session.entity"
 
 @Injectable()
 export class FormAgentSessionsService {
   private readonly sessionConnectRepository: ConnectRepository<FormAgentSession>
+  private readonly agentMessageConnectRepository: ConnectRepository<AgentMessage>
+  private readonly agentConnectRepository: ConnectRepository<Agent>
+
   constructor(
     @InjectRepository(FormAgentSession)
     formAgentSessionRepository: Repository<FormAgentSession>,
+
+    @InjectRepository(AgentMessage)
+    agentMessageRepository: Repository<AgentMessage>,
+
+    @InjectRepository(Agent)
+    agentRepository: Repository<Agent>,
   ) {
     this.sessionConnectRepository = new ConnectRepository(
       formAgentSessionRepository,
       "formAgentSession",
     )
+    this.agentMessageConnectRepository = new ConnectRepository(
+      agentMessageRepository,
+      "agentMessage",
+    )
+    this.agentConnectRepository = new ConnectRepository(agentRepository, "agents")
   }
 
   async listSessions({
@@ -48,12 +64,30 @@ export class FormAgentSessionsService {
     agentId: string
     type: BaseAgentSessionType
   }): Promise<FormAgentSession> {
-    return await this.sessionConnectRepository.createAndSave(connectScope, {
+    const agent = await this.agentConnectRepository.getOneById(connectScope, agentId)
+    if (!agent) throw new NotFoundException(`Agent with id ${agentId} not found`)
+
+    const session = await this.sessionConnectRepository.createAndSave(connectScope, {
       agentId,
       userId,
       type,
       traceId: v4(),
     })
+
+    const defaultFirstMessage = agent.defaultFirstMessage
+    if (defaultFirstMessage && defaultFirstMessage.trim().length > 0) {
+      const now = new Date()
+      await this.agentMessageConnectRepository.createAndSave(connectScope, {
+        sessionId: session.id,
+        role: "assistant",
+        content: defaultFirstMessage,
+        status: "completed",
+        startedAt: now,
+        completedAt: now,
+      })
+    }
+
+    return session
   }
 
   async findSessionById({

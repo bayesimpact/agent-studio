@@ -145,4 +145,34 @@ describe("ConversationAgentSessionsRoutes.createOne", () => {
       expect(createdSession).not.toBeNull()
     })
   })
+
+  describe("with a defaultFirstMessage on the agent", () => {
+    it("should seed an assistant message when the agent has a defaultFirstMessage", async () => {
+      await createContext("owner")
+      const greeting = "Hi! How can I help you today?"
+      await repositories.agentRepository.update(agentId, { defaultFirstMessage: greeting })
+
+      const response = await subject({ payload: { type: "live" } })
+
+      expectResponse(response, 201)
+      const sessionId = response.body.data.id
+      const messages = await repositories.agentMessageRepository.find({ where: { sessionId } })
+      expect(messages).toHaveLength(1)
+      expect(messages[0]?.role).toBe("assistant")
+      expect(messages[0]?.content).toBe(greeting)
+      expect(messages[0]?.status).toBe("completed")
+    })
+
+    it("should not seed any message when the agent has no defaultFirstMessage", async () => {
+      await createContext("owner")
+
+      const response = await subject({ payload: { type: "live" } })
+
+      expectResponse(response, 201)
+      const messages = await repositories.agentMessageRepository.find({
+        where: { sessionId: response.body.data.id },
+      })
+      expect(messages).toHaveLength(0)
+    })
+  })
 })

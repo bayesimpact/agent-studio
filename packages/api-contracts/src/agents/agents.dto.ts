@@ -47,6 +47,7 @@ export enum DocumentsRagMode {
 
 export type AgentDto = {
   createdAt: TimeType
+  defaultFirstMessage?: string | null
   defaultPrompt: string
   id: string
   locale: AgentLocale
@@ -81,6 +82,7 @@ export const outputJsonSchemaSchema = z
   }, "All required keys must be defined in properties")
 
 const agentValidationSchema = z.object({
+  defaultFirstMessage: z.string().max(2000).nullable().optional(),
   defaultPrompt: z.string(),
   documentTagIds: z.array(documentTagSchema.shape.id),
   documentsRagMode: z.enum(DocumentsRagMode),
@@ -124,6 +126,7 @@ const hasRequiredDocumentTags = (data: {
 
 export const createAgentSchema = agentValidationSchema
   .pick({
+    defaultFirstMessage: true,
     defaultPrompt: true,
     documentsRagMode: true,
     locale: true,
@@ -144,6 +147,7 @@ export const createAgentSchema = agentValidationSchema
 
 export const updateAgentSchema = agentValidationSchema
   .pick({
+    defaultFirstMessage: true,
     defaultPrompt: true,
     documentTagIds: true,
     documentsRagMode: true,

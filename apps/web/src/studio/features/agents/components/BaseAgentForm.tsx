@@ -21,10 +21,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@caseai-connect/ui/shad/select"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@caseai-connect/ui/shad/tabs"
 import { Textarea } from "@caseai-connect/ui/shad/textarea"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { XIcon } from "lucide-react"
-import { Controller, useForm } from "react-hook-form"
+import { useState } from "react"
+import { Controller, type FieldErrors, useForm } from "react-hook-form"
 import { useTranslation } from "react-i18next"
 import type { z } from "zod"
 import type { Agent } from "@/common/features/agents/agents.models"
@@ -65,6 +67,8 @@ export function BaseAgentForm({
   const { t, i18n } = useTranslation()
 
   const hasOutputJsonSchema = agentType !== "conversation"
+  const hasSources = agentType === "conversation"
+  const hasDefaultFirstMessage = agentType === "conversation" || agentType === "form"
 
   const agentSchema = editableAgent ? updateAgentSchema : createAgentSchema
   type FormValues = z.infer<typeof agentSchema>
@@ -106,231 +110,344 @@ export function BaseAgentForm({
     return undefined
   })()
 
+  const [activeTab, setActiveTab] = useState<"general" | "model" | "output" | "sources">("general")
+
   const handleFormSubmit = async (data: FormValues) => {
     await onSubmit(data as AgentFormData)
     reset(data)
   }
+
+  const handleInvalidSubmit = (formErrors: FieldErrors<FormValues>) => {
+    const firstErrorTab = pickTabForErrors(formErrors as Record<string, unknown>)
+    if (firstErrorTab && firstErrorTab !== activeTab) {
+      setActiveTab(firstErrorTab)
+    }
+  }
+
   return (
-    <form onSubmit={handleSubmit(handleFormSubmit)}>
+    <form onSubmit={handleSubmit(handleFormSubmit, handleInvalidSubmit)}>
       <FieldGroup>
         <FieldSet>
-          <FieldGroup>
-            <Field>
-              <FieldLabel htmlFor="name">{t("agent:props.name")}</FieldLabel>
-              <Input
-                id="name"
-                placeholder={t("agent:props.placeholders.name")}
-                {...register("name")}
-                aria-invalid={errors.name ? "true" : "false"}
-              />
-              {errors.name && <p className="text-sm text-destructive">{errors.name.message}</p>}
-            </Field>
-
-            <Field>
-              <FieldLabel htmlFor="defaultPrompt">{t("agent:props.defaultPrompt")}</FieldLabel>
-              <Textarea
-                id="defaultPrompt"
-                placeholder={t("agent:props.placeholders.defaultPrompt")}
-                rows={8}
-                className="min-h-40"
-                {...register("defaultPrompt")}
-                aria-invalid={errors.defaultPrompt ? "true" : "false"}
-              />
-              {errors.defaultPrompt && (
-                <p className="text-sm text-destructive">{errors.defaultPrompt.message}</p>
+          <Tabs
+            value={activeTab}
+            onValueChange={(value) => setActiveTab(value as typeof activeTab)}
+          >
+            <TabsList>
+              <TabsTrigger value="general">{t("agent:tabs.general")}</TabsTrigger>
+              <TabsTrigger value="model">{t("agent:tabs.model")}</TabsTrigger>
+              {hasOutputJsonSchema && (
+                <TabsTrigger value="output">
+                  {agentType === "form" ? t("agent:tabs.form") : t("agent:tabs.output")}
+                </TabsTrigger>
               )}
-            </Field>
+              {hasSources && <TabsTrigger value="sources">{t("agent:tabs.sources")}</TabsTrigger>}
+            </TabsList>
 
-            {hasOutputJsonSchema && (
-              <Field>
-                <FieldLabel htmlFor="outputJsonSchema">
-                  {t("agent:props.outputJsonSchema")}
-                </FieldLabel>
-                <Controller
-                  control={control}
-                  name="outputJsonSchema"
-                  render={({ field }) => (
-                    <Textarea
-                      id="outputJsonSchema"
-                      placeholder={t("agent:props.placeholders.outputJsonSchema")}
-                      rows={10}
-                      className="font-mono min-h-56"
-                      defaultValue={!field.value ? "" : JSON.stringify(field.value, null, 2)}
-                      onChange={async (e) => {
-                        const raw = e.target.value
-                        try {
-                          const parsed = JSON.parse(raw)
-                          const validationResult = outputJsonSchemaSchema.safeParse(parsed)
-                          if (validationResult.success) {
-                            field.onChange(parsed)
-                          } else {
-                            // @ts-expect-error - We know there is at least one error because validation failed
-                            const firstError = validationResult.error.errors[0]
-                            field.onChange(raw, { errors: [{ message: firstError.message }] })
-                          }
-                        } catch {
-                          field.onChange(raw, { errors: [{ message: "Invalid JSON" }] })
-                        }
-                      }}
-                      aria-invalid={errors.outputJsonSchema ? "true" : "false"}
-                    />
-                  )}
-                />
-                {errors.outputJsonSchema && (
-                  <p className="text-sm text-destructive">{errors.outputJsonSchema.message}</p>
-                )}
-              </Field>
-            )}
-
-            {agentType === "conversation" && (
-              <div className="grid gap-4 md:grid-cols-2">
-                <Field>
-                  <FieldLabel htmlFor="documentsRagMode">
-                    {t("agent:props.documentsRagMode")}
-                  </FieldLabel>
-                  <Controller
-                    control={control}
-                    name="documentsRagMode"
-                    render={({ field }) => (
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
-                        <SelectTrigger
-                          id="documentsRagMode"
-                          aria-invalid={errors.documentsRagMode ? "true" : "false"}
-                        >
-                          <SelectValue
-                            placeholder={t("agent:props.placeholders.documentsRagMode")}
-                          />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value={DocumentsRagMode.None}>
-                            {t("agent:props.documentsRagModeOptions.none")}
-                          </SelectItem>
-                          <SelectItem value={DocumentsRagMode.All}>
-                            {t("agent:props.documentsRagModeOptions.all")}
-                          </SelectItem>
-                          <SelectItem value={DocumentsRagMode.Tags}>
-                            {t("agent:props.documentsRagModeOptions.tags")}
-                          </SelectItem>
-                        </SelectContent>
-                      </Select>
-                    )}
-                  />
-                  {errors.documentsRagMode && (
-                    <p className="text-sm text-destructive">{errors.documentsRagMode.message}</p>
-                  )}
-                </Field>
-
-                {documentsRagMode === DocumentsRagMode.Tags && documentTags.length > 0 && (
+            <TabsContent value="general">
+              <FieldGroup>
+                <div className="grid gap-4 md:grid-cols-2">
                   <Field>
-                    <FieldLabel>{t("agent:props.documentTags")}</FieldLabel>
+                    <FieldLabel htmlFor="name">{t("agent:props.name")}</FieldLabel>
+                    <Input
+                      id="name"
+                      placeholder={t("agent:props.placeholders.name")}
+                      {...register("name")}
+                      aria-invalid={errors.name ? "true" : "false"}
+                    />
+                    {errors.name && (
+                      <p className="text-sm text-destructive">{errors.name.message}</p>
+                    )}
+                  </Field>
+
+                  <Field>
+                    <FieldLabel htmlFor="locale">{t("agent:props.locale")}</FieldLabel>
                     <Controller
                       control={control}
-                      name={"documentTagIds" in agentSchema.shape ? "documentTagIds" : "tagsToAdd"}
-                      render={({ field }) => {
-                        return (
-                          <div className="flex flex-wrap gap-2 items-center">
-                            {field.value.map((tagId) => (
-                              <Badge key={tagId} variant="secondary" className="gap-1">
-                                {getTagNameById(documentTags, tagId)}
-                                <button
-                                  type="button"
-                                  onClick={() =>
-                                    field.onChange(field.value.filter((id) => id !== tagId))
-                                  }
-                                  className="opacity-60 hover:opacity-100"
-                                >
-                                  <XIcon className="size-3" />
-                                </button>
-                              </Badge>
+                      name="locale"
+                      render={({ field }) => (
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <SelectTrigger
+                            id="locale"
+                            aria-invalid={errors.locale ? "true" : "false"}
+                          >
+                            <SelectValue placeholder={t("agent:props.placeholders.locale")} />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {Object.entries(AgentLocale).map(([key, value]) => (
+                              <SelectItem key={key} value={value}>
+                                {value}
+                              </SelectItem>
                             ))}
-                            <DocumentTagPicker
-                              documentTags={documentTags}
-                              attachedTagIds={field.value}
-                              onAdd={(tagId) => field.onChange([...field.value, tagId])}
-                            />
-                          </div>
-                        )
-                      }}
+                          </SelectContent>
+                        </Select>
+                      )}
                     />
-                    {documentTagErrorMessage && (
-                      <p className="text-sm text-destructive">{documentTagErrorMessage}</p>
+                    {errors.locale && (
+                      <p className="text-sm text-destructive">{errors.locale.message}</p>
+                    )}
+                  </Field>
+                </div>
+
+                {hasDefaultFirstMessage && (
+                  <Field>
+                    <FieldLabel htmlFor="defaultFirstMessage">
+                      {t("agent:props.defaultFirstMessage")}
+                    </FieldLabel>
+                    <Textarea
+                      id="defaultFirstMessage"
+                      placeholder={t("agent:props.placeholders.defaultFirstMessage")}
+                      rows={3}
+                      {...register("defaultFirstMessage", {
+                        setValueAs: (value: string | null | undefined) => {
+                          if (value === null || value === undefined) return null
+                          const trimmed = value.trim()
+                          return trimmed.length === 0 ? null : value
+                        },
+                      })}
+                      aria-invalid={errors.defaultFirstMessage ? "true" : "false"}
+                    />
+                    {errors.defaultFirstMessage && (
+                      <p className="text-sm text-destructive">
+                        {errors.defaultFirstMessage.message}
+                      </p>
                     )}
                   </Field>
                 )}
-              </div>
+
+                <Field>
+                  <FieldLabel htmlFor="defaultPrompt">{t("agent:props.defaultPrompt")}</FieldLabel>
+                  <Textarea
+                    id="defaultPrompt"
+                    placeholder={t("agent:props.placeholders.defaultPrompt")}
+                    rows={8}
+                    className="min-h-40"
+                    {...register("defaultPrompt")}
+                    aria-invalid={errors.defaultPrompt ? "true" : "false"}
+                  />
+                  {errors.defaultPrompt && (
+                    <p className="text-sm text-destructive">{errors.defaultPrompt.message}</p>
+                  )}
+                </Field>
+              </FieldGroup>
+            </TabsContent>
+
+            <TabsContent value="model">
+              <FieldGroup>
+                <div className="grid gap-4 md:grid-cols-2">
+                  <Field>
+                    <FieldLabel htmlFor="model">{t("agent:props.model")}</FieldLabel>
+                    <Controller
+                      control={control}
+                      name="model"
+                      render={({ field }) => (
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <SelectTrigger id="model" aria-invalid={errors.model ? "true" : "false"}>
+                            <SelectValue placeholder={t("agent:props.placeholders.model")} />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {extractModelListFromAgentType(agentType, hasFeature).map(
+                              ([key, value]) => (
+                                <SelectItem key={key} value={value}>
+                                  {value}
+                                </SelectItem>
+                              ),
+                            )}
+                          </SelectContent>
+                        </Select>
+                      )}
+                    />
+                    {errors.model && (
+                      <p className="text-sm text-destructive">{errors.model.message}</p>
+                    )}
+                  </Field>
+
+                  <Field>
+                    <FieldLabel htmlFor="temperature">{t("agent:props.temperature")}</FieldLabel>
+                    <Input
+                      id="temperature"
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      max="2"
+                      placeholder={t("agent:props.placeholders.temperature")}
+                      {...register("temperature", { valueAsNumber: true })}
+                      aria-invalid={errors.temperature ? "true" : "false"}
+                    />
+                    {errors.temperature && (
+                      <p className="text-sm text-destructive">{errors.temperature.message}</p>
+                    )}
+                  </Field>
+                </div>
+              </FieldGroup>
+            </TabsContent>
+
+            {hasOutputJsonSchema && (
+              <TabsContent value="output">
+                <FieldGroup>
+                  <Field>
+                    <FieldLabel htmlFor="outputJsonSchema">
+                      {agentType === "form"
+                        ? t("agent:props.formConfiguration")
+                        : t("agent:props.outputJsonSchema")}
+                    </FieldLabel>
+                    <Controller
+                      control={control}
+                      name="outputJsonSchema"
+                      render={({ field }) => (
+                        <Textarea
+                          id="outputJsonSchema"
+                          placeholder={t("agent:props.placeholders.outputJsonSchema")}
+                          rows={10}
+                          className="font-mono min-h-56"
+                          defaultValue={!field.value ? "" : JSON.stringify(field.value, null, 2)}
+                          onChange={async (e) => {
+                            const raw = e.target.value
+                            try {
+                              const parsed = JSON.parse(raw)
+                              const validationResult = outputJsonSchemaSchema.safeParse(parsed)
+                              if (validationResult.success) {
+                                field.onChange(parsed)
+                              } else {
+                                // @ts-expect-error - We know there is at least one error because validation failed
+                                const firstError = validationResult.error.errors[0]
+                                field.onChange(raw, {
+                                  errors: [{ message: firstError.message }],
+                                })
+                              }
+                            } catch {
+                              field.onChange(raw, { errors: [{ message: "Invalid JSON" }] })
+                            }
+                          }}
+                          aria-invalid={errors.outputJsonSchema ? "true" : "false"}
+                        />
+                      )}
+                    />
+                    {errors.outputJsonSchema && (
+                      <p className="text-sm text-destructive">{errors.outputJsonSchema.message}</p>
+                    )}
+                  </Field>
+                </FieldGroup>
+              </TabsContent>
             )}
 
-            <Field>
-              <FieldLabel htmlFor="model">{t("agent:props.model")}</FieldLabel>
-              <Controller
-                control={control}
-                name="model"
-                render={({ field }) => (
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
-                    <SelectTrigger id="model" aria-invalid={errors.model ? "true" : "false"}>
-                      <SelectValue placeholder={t("agent:props.placeholders.model")} />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {extractModelListFromAgentType(agentType, hasFeature).map(([key, value]) => (
-                        <SelectItem key={key} value={value}>
-                          {value}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                )}
-              />
-              {errors.model && <p className="text-sm text-destructive">{errors.model.message}</p>}
-            </Field>
+            {hasSources && (
+              <TabsContent value="sources">
+                <FieldGroup>
+                  <div className="grid gap-4 md:grid-cols-2">
+                    <Field>
+                      <FieldLabel htmlFor="documentsRagMode">
+                        {t("agent:props.documentsRagMode")}
+                      </FieldLabel>
+                      <Controller
+                        control={control}
+                        name="documentsRagMode"
+                        render={({ field }) => (
+                          <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <SelectTrigger
+                              id="documentsRagMode"
+                              aria-invalid={errors.documentsRagMode ? "true" : "false"}
+                            >
+                              <SelectValue
+                                placeholder={t("agent:props.placeholders.documentsRagMode")}
+                              />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value={DocumentsRagMode.None}>
+                                {t("agent:props.documentsRagModeOptions.none")}
+                              </SelectItem>
+                              <SelectItem value={DocumentsRagMode.All}>
+                                {t("agent:props.documentsRagModeOptions.all")}
+                              </SelectItem>
+                              <SelectItem value={DocumentsRagMode.Tags}>
+                                {t("agent:props.documentsRagModeOptions.tags")}
+                              </SelectItem>
+                            </SelectContent>
+                          </Select>
+                        )}
+                      />
+                      {errors.documentsRagMode && (
+                        <p className="text-sm text-destructive">
+                          {errors.documentsRagMode.message}
+                        </p>
+                      )}
+                    </Field>
+                  </div>
 
-            <Field>
-              <FieldLabel htmlFor="temperature">{t("agent:props.temperature")}</FieldLabel>
-              <Input
-                id="temperature"
-                type="number"
-                step="0.01"
-                min="0"
-                max="2"
-                placeholder={t("agent:props.placeholders.temperature")}
-                {...register("temperature", { valueAsNumber: true })}
-                aria-invalid={errors.temperature ? "true" : "false"}
-              />
-              {errors.temperature && (
-                <p className="text-sm text-destructive">{errors.temperature.message}</p>
-              )}
-            </Field>
+                  {documentsRagMode === DocumentsRagMode.Tags && documentTags.length > 0 && (
+                    <Field>
+                      <FieldLabel>{t("agent:props.documentTags")}</FieldLabel>
+                      <Controller
+                        control={control}
+                        name={
+                          "documentTagIds" in agentSchema.shape ? "documentTagIds" : "tagsToAdd"
+                        }
+                        render={({ field }) => {
+                          return (
+                            <div className="flex flex-wrap gap-2 items-center">
+                              {field.value.map((tagId) => (
+                                <Badge key={tagId} variant="secondary" className="gap-1">
+                                  {getTagNameById(documentTags, tagId)}
+                                  <button
+                                    type="button"
+                                    onClick={() =>
+                                      field.onChange(field.value.filter((id) => id !== tagId))
+                                    }
+                                    className="opacity-60 hover:opacity-100"
+                                  >
+                                    <XIcon className="size-3" />
+                                  </button>
+                                </Badge>
+                              ))}
+                              <DocumentTagPicker
+                                documentTags={documentTags}
+                                attachedTagIds={field.value}
+                                onAdd={(tagId) => field.onChange([...field.value, tagId])}
+                              />
+                            </div>
+                          )
+                        }}
+                      />
+                      {documentTagErrorMessage && (
+                        <p className="text-sm text-destructive">{documentTagErrorMessage}</p>
+                      )}
+                    </Field>
+                  )}
+                </FieldGroup>
+              </TabsContent>
+            )}
+          </Tabs>
 
-            <Field>
-              <FieldLabel htmlFor="locale">{t("agent:props.locale")}</FieldLabel>
-              <Controller
-                control={control}
-                name="locale"
-                render={({ field }) => (
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
-                    <SelectTrigger id="locale" aria-invalid={errors.locale ? "true" : "false"}>
-                      <SelectValue placeholder={t("agent:props.placeholders.locale")} />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {Object.entries(AgentLocale).map(([key, value]) => (
-                        <SelectItem key={key} value={value}>
-                          {value}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                )}
-              />
-              {errors.locale && <p className="text-sm text-destructive">{errors.locale.message}</p>}
-            </Field>
-
-            <Field orientation="horizontal" className="justify-end">
-              <Button type="submit" className="w-fit">
-                {editableAgent ? t("actions:update") : t("actions:create")}
-              </Button>
-            </Field>
-          </FieldGroup>
+          <Field orientation="horizontal" className="justify-end">
+            <Button type="submit" className="w-fit">
+              {editableAgent ? t("actions:update") : t("actions:create")}
+            </Button>
+          </Field>
         </FieldSet>
       </FieldGroup>
     </form>
   )
+}
+
+const FIELD_TO_TAB: Record<string, "general" | "model" | "output" | "sources"> = {
+  name: "general",
+  locale: "general",
+  defaultPrompt: "general",
+  defaultFirstMessage: "general",
+  model: "model",
+  temperature: "model",
+  outputJsonSchema: "output",
+  documentsRagMode: "sources",
+  documentTagIds: "sources",
+  tagsToAdd: "sources",
+  tagsToRemove: "sources",
+}
+
+function pickTabForErrors(
+  errors: Record<string, unknown>,
+): "general" | "model" | "output" | "sources" | null {
+  for (const tab of ["general", "model", "output", "sources"] as const) {
+    const hasErrorOnTab = Object.keys(errors).some((field) => FIELD_TO_TAB[field] === tab)
+    if (hasErrorOnTab) return tab
+  }
+  return null
 }

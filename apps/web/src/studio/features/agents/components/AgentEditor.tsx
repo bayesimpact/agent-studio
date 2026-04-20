@@ -96,6 +96,7 @@ function UpdateForm({ agent, onSuccess }: { agent: Agent; onSuccess?: () => void
         fields: {
           name: fields.name,
           defaultPrompt: fields.defaultPrompt,
+          defaultFirstMessage: fields.defaultFirstMessage,
           documentsRagMode: fields.documentsRagMode,
           model: fields.model,
           temperature: fields.temperature,
