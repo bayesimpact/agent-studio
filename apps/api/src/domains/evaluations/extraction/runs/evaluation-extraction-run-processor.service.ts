@@ -28,6 +28,8 @@ import {
 } from "./evaluation-extraction-run.entity"
 import type { ExecuteEvaluationExtractionRunJobPayload } from "./evaluation-extraction-run.types"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
+import { EvaluationExtractionRunCsvExportService } from "./evaluation-extraction-run-csv-export.service"
+// biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
 import { EvaluationExtractionRunGraderService } from "./evaluation-extraction-run-grader.service"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
 import { EvaluationExtractionRunStatusNotifierService } from "./evaluation-extraction-run-status-notifier.service"
@@ -57,6 +59,7 @@ export class EvaluationExtractionRunProcessorService extends ServiceWithLLM {
     agentRepository: Repository<Agent>,
     private readonly graderService: EvaluationExtractionRunGraderService,
     private readonly statusNotifierService: EvaluationExtractionRunStatusNotifierService,
+    private readonly csvExportService: EvaluationExtractionRunCsvExportService,
     @Inject("_MockLLMProvider")
     mockLlmProvider: LLMProvider,
     @Inject("VertexLLMProvider")
@@ -331,7 +334,19 @@ export class EvaluationExtractionRunProcessorService extends ServiceWithLLM {
     run.status = "completed"
     run.summary = summary
     await this.runConnectRepository.saveOne(run)
+    await this.generateCsv(run)
     await this.notifyStatusChanged(run)
+  }
+
+  private async generateCsv(run: EvaluationExtractionRun): Promise<void> {
+    try {
+      await this.csvExportService.generateAndStoreDocument(run)
+    } catch (error) {
+      this.logger.error(
+        `Failed to generate CSV export for run ${run.id}: ${(error as Error).message}`,
+        (error as Error).stack,
+      )
+    }
   }
 
   private async notifyStatusChanged(run: EvaluationExtractionRun): Promise<void> {

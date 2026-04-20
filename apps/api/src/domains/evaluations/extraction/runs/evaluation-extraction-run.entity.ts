@@ -1,6 +1,7 @@
 import { Column, JoinColumn, ManyToOne, OneToMany } from "typeorm"
 import { ConnectEntity, ConnectEntityBase } from "@/common/entities/connect-entity"
 import type { Agent } from "@/domains/agents/agent.entity"
+import type { Document } from "@/domains/documents/document.entity"
 import { EvaluationExtractionDataset } from "../datasets/evaluation-extraction-dataset.entity"
 import { EvaluationExtractionRunRecord } from "./records/evaluation-extraction-run-record.entity"
 
@@ -59,4 +60,10 @@ export class EvaluationExtractionRun extends ConnectEntityBase {
     (record) => record.evaluationExtractionRun,
   )
   records!: EvaluationExtractionRunRecord[]
+
+  @Column({ type: "uuid", name: "csv_export_document_id", nullable: true })
+  csvExportDocumentId!: string | null
+  @ManyToOne("Document", (document: Document) => document.id, { nullable: true })
+  @JoinColumn({ name: "csv_export_document_id" })
+  csvExportDocument!: Document | null
 }

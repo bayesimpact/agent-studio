@@ -35,6 +35,7 @@ import { EvaluationExtractionDatasetRecord } from "./extraction/datasets/records
 import { EvaluationExtractionRun } from "./extraction/runs/evaluation-extraction-run.entity"
 import { EvaluationExtractionRunGuard } from "./extraction/runs/evaluation-extraction-run.guard"
 import { EvaluationExtractionRunBatchModule } from "./extraction/runs/evaluation-extraction-run-batch.module"
+import { EvaluationExtractionRunCsvExportService } from "./extraction/runs/evaluation-extraction-run-csv-export.service"
 import { EvaluationExtractionRunGraderService } from "./extraction/runs/evaluation-extraction-run-grader.service"
 import { EvaluationExtractionRunStatusNotifierService } from "./extraction/runs/evaluation-extraction-run-status-notifier.service"
 import { EvaluationExtractionRunStatusStreamService } from "./extraction/runs/evaluation-extraction-run-status-stream.service"
@@ -81,6 +82,7 @@ import { EvaluationReportsService } from "./reports/evaluation-reports.service"
     EvaluationExtractionDatasetsService,
     EvaluationGuard,
     EvaluationExtractionRunContextResolver,
+    EvaluationExtractionRunCsvExportService,
     EvaluationExtractionRunGraderService,
     EvaluationExtractionRunGuard,
     EvaluationExtractionRunStatusNotifierService,

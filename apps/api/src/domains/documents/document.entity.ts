@@ -35,7 +35,12 @@ export class Document extends ConnectEntityBase {
   storageRelativePath!: string
 
   @Column({ name: "source_type", nullable: false })
-  sourceType!: "project" | "agentSessionMessage" | "extraction" | "evaluationExtractionDataset"
+  sourceType!:
+    | "project"
+    | "agentSessionMessage"
+    | "extraction"
+    | "evaluationExtractionDataset"
+    | "evaluationExtractionRun"
 
   @Column({ name: "embedding_status", nullable: false, default: "pending" })
   embeddingStatus!: "pending" | "processing" | "completed" | "failed"

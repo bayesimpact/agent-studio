@@ -194,6 +194,7 @@ function toEvaluationExtractionRunDto(run: EvaluationExtractionRun): EvaluationE
     keyMapping: run.keyMapping,
     status: run.status,
     summary: run.summary,
+    csvExportDocumentId: run.csvExportDocumentId,
     projectId: run.projectId,
     createdAt: run.createdAt.getTime(),
     updatedAt: run.updatedAt.getTime(),

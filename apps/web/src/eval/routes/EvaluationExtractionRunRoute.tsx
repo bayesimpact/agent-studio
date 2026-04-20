@@ -7,6 +7,7 @@ import { AsyncRoute } from "@/common/routes/AsyncRoute"
 import { LoadingRoute } from "@/common/routes/LoadingRoute"
 import { useAppDispatch, useAppSelector } from "@/common/store/hooks"
 import { buildSince } from "@/common/utils/build-date"
+import { DocumentOpener } from "@/studio/features/documents/components/DocumentOpener"
 import type { EvaluationExtractionDataset } from "../features/evaluation-extraction-datasets/evaluation-extraction-datasets.models"
 import { selectCurrentDatasetData } from "../features/evaluation-extraction-datasets/evaluation-extraction-datasets.selectors"
 import {
@@ -71,6 +72,8 @@ function WithData({
             <Button variant="outline" onClick={handleCancel} disabled={isCancelling}>
               {t("evaluationExtractionRun:results.cancel")}
             </Button>
+          ) : run.csvExportDocumentId ? (
+            <DocumentOpener documentId={run.csvExportDocumentId} />
           ) : undefined
         }
       />

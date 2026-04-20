@@ -47,6 +47,8 @@ export const evaluationExtractionRunFactory = EvaluationExtractionRunFactory.def
       organizationId: transientParams.organization.id,
       projectId: transientParams.project.id,
       records: params.records || [],
+      csvExportDocumentId: params.csvExportDocumentId || null,
+      csvExportDocument: null,
       createdAt: params.createdAt || now,
       updatedAt: params.updatedAt || now,
       deletedAt: params.deletedAt ?? null,

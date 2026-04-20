@@ -8,6 +8,7 @@ export type DocumentSourceType =
   | "agentSessionMessage"
   | "extraction"
   | "evaluationExtractionDataset"
+  | "evaluationExtractionRun"
 export type DocumentEmbeddingStatus = "pending" | "processing" | "completed" | "failed"
 export type DocumentEmbeddingStatusChangedEventPayload = {
   type: typeof DOCUMENT_EMBEDDING_STATUS_CHANGED_CHANNEL_DTO
