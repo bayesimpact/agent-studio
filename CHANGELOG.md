@@ -17,6 +17,7 @@ This project uses [CalVer](https://calver.org/) (YY.MM.Micro) for product versio
 - Define agent document RAG modes — off, all, or tagged
 - Add tag selection before document upload (single and batch).
 - (beta) Evaluate extraction agents against datasets
+- Bull board UI for queue monitoring
 
 ### Changed
 - New user interface to list organizations, workspaces, agents, sessions
