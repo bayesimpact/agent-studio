@@ -33,6 +33,7 @@
     "requeue:evaluation-extraction-runs": "ts-node -r tsconfig-paths/register src/scripts/requeue-evaluation-extraction-runs.ts",
     "seed:mcp-preset": "ts-node -r tsconfig-paths/register src/scripts/seed-mcp-preset.ts",
     "mcp:link-to-project": "ts-node -r tsconfig-paths/register src/scripts/link-mcp-to-project.ts",
+    "agent:set-categories": "ts-node -r tsconfig-paths/register src/scripts/set-agent-categories.ts",
     "invite:organization-owners": "ts-node -r tsconfig-paths/register src/scripts/invite-organization-owners.ts",
     "invite:manage": "ts-node -r tsconfig-paths/register src/scripts/manage-invitations.ts"
   },
