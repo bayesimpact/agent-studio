@@ -30,7 +30,7 @@ import {
   PaginationControls,
   SortableFilterableHeader,
   TruncatedCell,
-} from "../shared/RecordTableParts"
+} from "../../../components/shared/RecordTableParts"
 
 export function EvaluationExtractionDatasetRecords({
   dataset,

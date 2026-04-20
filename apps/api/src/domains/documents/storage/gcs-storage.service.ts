@@ -1,3 +1,4 @@
+import type { Readable } from "node:stream"
 import { Storage } from "@google-cloud/storage"
 import { Injectable, InternalServerErrorException, Logger } from "@nestjs/common"
 import type { ConfigService } from "@nestjs/config"
@@ -39,6 +40,10 @@ export class GcsStorageService implements IFileStorage {
       .file(storageRelativePath)
       .download()
     return contents
+  }
+
+  createReadStream(storageRelativePath: string): Readable {
+    return this.storage.bucket(this.bucketName).file(storageRelativePath).createReadStream()
   }
 
   async getTemporaryUrl(storageRelativePath: string): Promise<string> {

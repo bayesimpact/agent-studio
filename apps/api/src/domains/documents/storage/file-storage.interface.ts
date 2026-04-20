@@ -1,3 +1,4 @@
+import type { Readable } from "node:stream"
 import type { RequiredConnectScope } from "@/common/entities/connect-required-fields"
 import type { MulterFile } from "@/common/types"
 
@@ -8,6 +9,7 @@ export interface IFileStorage {
   }>
   getTemporaryUrl(storageRelativePath: string): Promise<string>
   readFile(storageRelativePath: string): Promise<Buffer>
+  createReadStream(storageRelativePath: string): Readable
   generateSignedUploadUrl(p: {
     storagePath: string
     mimeType: string

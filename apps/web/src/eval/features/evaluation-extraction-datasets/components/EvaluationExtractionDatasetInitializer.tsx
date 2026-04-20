@@ -18,6 +18,8 @@ import z from "zod"
 import { Loader } from "@/common/components/Loader"
 import { ADS } from "@/common/store/async-data-status"
 import { useAppDispatch, useAppSelector } from "@/common/store/hooks"
+import { FileList } from "@/eval/features/evaluation-extraction-datasets/components/FileList"
+import { FilePreview } from "@/eval/features/evaluation-extraction-datasets/components/FilePreview"
 import type {
   EvaluationExtractionDataset,
   EvaluationExtractionDatasetFile,
@@ -29,8 +31,6 @@ import {
   selectFileColumnsData,
 } from "@/eval/features/evaluation-extraction-datasets/evaluation-extraction-datasets.selectors"
 import { evaluationExtractionDatasetsActions } from "@/eval/features/evaluation-extraction-datasets/evaluation-extraction-datasets.slice"
-import { FileList } from "./evaluation-extraction-datasets/FileList"
-import { FilePreview } from "./evaluation-extraction-datasets/FilePreview"
 
 export function EvaluationExtractionDatasetInitializer({
   dataset,
@@ -41,7 +41,9 @@ export function EvaluationExtractionDatasetInitializer({
   const file = useAppSelector(selectCurrentFileData)
 
   useEffect(() => {
-    dispatch(evaluationExtractionDatasetsActions.setCurrentFileId({ fileId: null }))
+    return () => {
+      dispatch(evaluationExtractionDatasetsActions.setCurrentFileId({ fileId: null }))
+    }
   }, [dispatch])
 
   const hasFile = ADS.isFulfilled(file)
@@ -158,19 +160,16 @@ function FormEdition({
 
         {originalColumns.length > 0 ? (
           <>
-            <div>
-              <FieldSet>
-                <details open>
-                  <summary className="cursor-pointer text-sm font-medium select-none">
-                    {t("evaluation:dataset.columns.preview")}
-                  </summary>
-                  {/* // FIXME: x scroll issue */}
-                  <div className="mt-2">
-                    <FilePreview columns={originalColumns} />
-                  </div>
-                </details>
-              </FieldSet>
-            </div>
+            <FieldSet className="min-w-0">
+              <details open>
+                <summary className="cursor-pointer text-sm font-medium select-none">
+                  {t("evaluation:dataset.columns.preview")}
+                </summary>
+                <div className="mt-2">
+                  <FilePreview columns={originalColumns} />
+                </div>
+              </details>
+            </FieldSet>
 
             <FieldSet>
               <FieldLabel>{t("evaluation:dataset.columns.roles.title")}</FieldLabel>

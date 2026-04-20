@@ -6,8 +6,8 @@ import { Grid, GridContent, GridHeader, GridItem } from "@/common/components/gri
 import { buildSince } from "@/common/utils/build-date"
 import type { EvaluationExtractionDataset } from "@/eval/features/evaluation-extraction-datasets/evaluation-extraction-datasets.models"
 import { useEvaluationExtractionDatasetPath } from "@/eval/hooks/use-evaluation-extraction-dataset-path"
-import { EvaluationExtractionDatasetCreator } from "../EvaluationExtractionDatasetCreator"
 import { EmptyEvaluationExtractionDataset } from "./EmptyEvaluationExtractionDataset"
+import { EvaluationExtractionDatasetCreator } from "./EvaluationExtractionDatasetCreator"
 
 export function EvaluationExtractionDatasetList({
   datasets,

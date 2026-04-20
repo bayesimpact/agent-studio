@@ -10,18 +10,19 @@ import { ProtectedRoute } from "@/common/routes/ProtectedRoute"
 import { useAppDispatch } from "@/common/store/hooks"
 import { Dashboard } from "../components/Dashboard"
 import { evaluationExtractionDatasetsActions } from "../features/evaluation-extraction-datasets/evaluation-extraction-datasets.slice"
+import { evaluationExtractionRunsActions } from "../features/evaluation-extraction-runs/evaluation-extraction-runs.slice"
 import { useInitStore } from "../hooks/use-init-store"
 import { EvalDashboardRoute } from "./EvalDashboardRoute"
 import { EvaluationExtractionDatasetRoute } from "./EvaluationExtractionDatasetRoute"
+import { EvaluationExtractionDatasetsRoute } from "./EvaluationExtractionDatasetsRoute"
 import { EvaluationExtractionRunRoute } from "./EvaluationExtractionRunRoute"
-import { ExtractionRoute } from "./ExtractionRoute"
 import { buildEvalPath, EvalRouteNames } from "./helpers"
 
 export const evalRoutes = {
   path: EvalRouteNames.APP,
   element: (
     <ProtectedRoute>
-      <EvalRoute />
+      <Outlet />
     </ProtectedRoute>
   ),
   children: [
@@ -41,7 +42,7 @@ export const evalRoutes = {
           children: [
             {
               path: buildEvalPath(EvalRouteNames.EXTRACTION),
-              element: <ExtractionRoute />,
+              element: <EvaluationExtractionDatasetsRoute />,
               children: [
                 {
                   path: buildEvalPath(EvalRouteNames.EXTRACTION_DATASET),
@@ -62,18 +63,16 @@ export const evalRoutes = {
   ],
 }
 
-function EvalRoute() {
-  return <Outlet />
-}
-
 const useSetCurrentIds = () => {
   const dispatch = useAppDispatch()
   const params = useParams()
   useEffect(() => {
-    const { datasetId } = params
+    const { datasetId, runId } = params
     dispatch(
       evaluationExtractionDatasetsActions.setCurrentDatasetId({ datasetId: datasetId || null }),
     )
+
+    dispatch(evaluationExtractionRunsActions.setCurrentRunId({ runId: runId || null }))
   }, [dispatch, params])
 }
 

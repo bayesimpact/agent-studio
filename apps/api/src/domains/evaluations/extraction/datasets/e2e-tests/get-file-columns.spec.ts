@@ -1,3 +1,4 @@
+import { Readable } from "node:stream"
 import { EvaluationExtractionDatasetsRoutes } from "@caseai-connect/api-contracts"
 import type { INestApplication } from "@nestjs/common"
 import type { App } from "supertest/types"
@@ -18,6 +19,7 @@ const CSV_CONTENT = "name,age,city\nAlice,30,Paris\nBob,25,London\nCharlie,35,Be
 
 const mockFileStorageService = {
   readFile: jest.fn().mockResolvedValue(Buffer.from(CSV_CONTENT)),
+  createReadStream: jest.fn().mockImplementation(() => Readable.from(Buffer.from(CSV_CONTENT))),
   save: jest.fn(),
   getTemporaryUrl: jest.fn(),
   generateSignedUploadUrl: jest.fn(),
@@ -55,6 +57,9 @@ describe("EvaluationExtractionDatasets - getFileColumns", () => {
     accessToken = "token"
     auth0Id = "auth0|123"
     mockFileStorageService.readFile.mockResolvedValue(Buffer.from(CSV_CONTENT))
+    mockFileStorageService.createReadStream.mockImplementation(() =>
+      Readable.from(Buffer.from(CSV_CONTENT)),
+    )
   })
 
   afterAll(async () => {
@@ -124,8 +129,10 @@ describe("EvaluationExtractionDatasets - getFileColumns", () => {
   })
 
   it("should standardize null-like values", async () => {
-    mockFileStorageService.readFile.mockResolvedValue(
-      Buffer.from("col1,col2\nN/A,real\nNaN,data\n,value"),
+    const nullContent = "col1,col2\nN/A,real\nNaN,data\n,value"
+    mockFileStorageService.readFile.mockResolvedValue(Buffer.from(nullContent))
+    mockFileStorageService.createReadStream.mockImplementation(() =>
+      Readable.from(Buffer.from(nullContent)),
     )
     await createContext()
 
