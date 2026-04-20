@@ -1,3 +1,4 @@
+import { Button } from "@caseai-connect/ui/shad/button"
 import { useEffect } from "react"
 import { useTranslation } from "react-i18next"
 import { useNavigate } from "react-router-dom"
@@ -16,6 +17,7 @@ import type { EvaluationExtractionRun } from "../features/evaluation-extraction-
 import {
   selectCurrentRunData,
   selectCurrentRunId,
+  selectIsCancelling,
 } from "../features/evaluation-extraction-runs/evaluation-extraction-runs.selectors"
 import { evaluationExtractionRunsActions } from "../features/evaluation-extraction-runs/evaluation-extraction-runs.slice"
 
@@ -48,9 +50,15 @@ function WithData({
   dataset: EvaluationExtractionDataset
 }) {
   const navigate = useNavigate()
+  const dispatch = useAppDispatch()
   const { t } = useTranslation()
+  const isCancelling = useAppSelector(selectIsCancelling)
 
   const handleBack = () => navigate(-1)
+  const canCancel = run.status === "pending" || run.status === "running"
+  const handleCancel = () => {
+    dispatch(evaluationExtractionRunsActions.cancelOne({ evaluationExtractionRunId: run.id }))
+  }
 
   return (
     <div>
@@ -58,6 +66,13 @@ function WithData({
         title={t("evaluationExtractionRun:results.title")}
         description={buildSince(run.createdAt)}
         onBack={handleBack}
+        action={
+          canCancel ? (
+            <Button variant="outline" onClick={handleCancel} disabled={isCancelling}>
+              {t("evaluationExtractionRun:results.cancel")}
+            </Button>
+          ) : undefined
+        }
       />
       <div className="p-6 flex flex-col gap-6">
         <EvaluationExtractionRunSummary run={run} />

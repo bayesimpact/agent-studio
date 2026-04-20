@@ -16,6 +16,7 @@ export const EVALUATION_EXTRACTION_RUN_STATUSES = [
   "running",
   "completed",
   "failed",
+  "cancelled",
 ] as const
 export type EvaluationExtractionRunStatus = (typeof EVALUATION_EXTRACTION_RUN_STATUSES)[number]
 

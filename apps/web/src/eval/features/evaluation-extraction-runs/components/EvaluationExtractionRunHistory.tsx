@@ -24,7 +24,9 @@ function RunStatusBadge({ status }: { status: EvaluationExtractionRunStatus }) {
         ? "destructive"
         : status === "running"
           ? "default"
-          : "secondary"
+          : status === "cancelled"
+            ? "outline"
+            : "secondary"
   return <Badge variant={variant}>{t(`evaluationExtractionRun:results.${status}`)}</Badge>
 }
 

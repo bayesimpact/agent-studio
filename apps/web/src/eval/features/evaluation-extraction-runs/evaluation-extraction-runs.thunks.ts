@@ -94,6 +94,24 @@ const createAndExecute = createAsyncThunk<
   },
 )
 
+const cancelOne = createAsyncThunk<
+  EvaluationExtractionRun,
+  { evaluationExtractionRunId: string },
+  ThunkConfig
+>(
+  "evaluationExtractionRuns/cancelOne",
+  async ({ evaluationExtractionRunId }, { extra: { services }, getState }) => {
+    const params = getCurrentIds({
+      state: getState(),
+      wantedIds: ["organizationId", "projectId"],
+    })
+    return await services.evaluationExtractionRuns.cancelOne({
+      ...params,
+      evaluationExtractionRunId,
+    })
+  },
+)
+
 const streamRunStatus = createAsyncThunk<void, void, ThunkConfigWithSignal>(
   "evaluationExtractionRuns/streamRunStatus",
   async (_, { extra: { services }, getState, dispatch, signal }) => {
@@ -124,5 +142,6 @@ export const evaluationExtractionRunsThunks = {
   getOne,
   getRecords,
   createAndExecute,
+  cancelOne,
   streamRunStatus,
 }

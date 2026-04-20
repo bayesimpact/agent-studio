@@ -23,6 +23,7 @@ interface State {
   currentRunRecords: AsyncData<PaginatedEvaluationExtractionRunRecords>
   currentRecordsQuery: RecordsQuery
   isExecuting: boolean
+  isCancelling: boolean
   runStatusStream: { isActive: boolean }
 }
 
@@ -35,6 +36,7 @@ const initialState: State = {
   currentRunRecords: defaultAsyncData,
   currentRecordsQuery: defaultRecordsQuery,
   isExecuting: false,
+  isCancelling: false,
   runStatusStream: { isActive: false },
 }
 
@@ -156,6 +158,30 @@ const slice = createSlice({
       })
       .addCase(evaluationExtractionRunsThunks.createAndExecute.rejected, (state) => {
         state.isExecuting = false
+      })
+
+    // cancelOne
+    builder
+      .addCase(evaluationExtractionRunsThunks.cancelOne.pending, (state) => {
+        state.isCancelling = true
+      })
+      .addCase(evaluationExtractionRunsThunks.cancelOne.fulfilled, (state, action) => {
+        state.isCancelling = false
+        const cancelledRun = action.payload
+        if (ADS.isFulfilled(state.currentRun) && state.currentRun.value.id === cancelledRun.id) {
+          state.currentRun.value = cancelledRun
+        }
+        if (ADS.isFulfilled(state.data)) {
+          const runInList = state.data.value.find((run) => run.id === cancelledRun.id)
+          if (runInList) {
+            runInList.status = cancelledRun.status
+            runInList.summary = cancelledRun.summary
+            runInList.updatedAt = cancelledRun.updatedAt
+          }
+        }
+      })
+      .addCase(evaluationExtractionRunsThunks.cancelOne.rejected, (state) => {
+        state.isCancelling = false
       })
   },
 })

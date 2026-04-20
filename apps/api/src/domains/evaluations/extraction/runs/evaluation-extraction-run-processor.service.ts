@@ -37,6 +37,7 @@ import { EvaluationExtractionRunRecord } from "./records/evaluation-extraction-r
 export class EvaluationExtractionRunProcessorService extends ServiceWithLLM {
   private readonly logger = new Logger(EvaluationExtractionRunProcessorService.name)
   private readonly runConnectRepository: ConnectRepository<EvaluationExtractionRun>
+  private readonly runRepository: Repository<EvaluationExtractionRun>
   private readonly runRecordConnectRepository: ConnectRepository<EvaluationExtractionRunRecord>
   private readonly runRecordRepository: Repository<EvaluationExtractionRunRecord>
   private readonly datasetConnectRepository: ConnectRepository<EvaluationExtractionDataset>
@@ -64,6 +65,7 @@ export class EvaluationExtractionRunProcessorService extends ServiceWithLLM {
     medGemmaLlmProvider: LLMProvider,
   ) {
     super({ mockLlmProvider, vertexLlmProvider, medGemmaLlmProvider })
+    this.runRepository = evaluationExtractionRunRepository
     this.runConnectRepository = new ConnectRepository(
       evaluationExtractionRunRepository,
       "evaluationExtractionRun",
@@ -101,7 +103,7 @@ export class EvaluationExtractionRunProcessorService extends ServiceWithLLM {
       )
     }
 
-    if (run.status === "running" || run.status === "failed") {
+    if (run.status === "running" || run.status === "failed" || run.status === "cancelled") {
       this.logger.warn(
         `Evaluation run ${run.id} is being retried (previous status: "${run.status}"). Cleaning up partial results.`,
       )
@@ -132,6 +134,48 @@ export class EvaluationExtractionRunProcessorService extends ServiceWithLLM {
     run: EvaluationExtractionRun
     connectScope: RequiredConnectScope
   }): Promise<void> {
+    const { dataset, datasetRecords, agent } = await this.loadExecutionContext({
+      run,
+      connectScope,
+    })
+
+    const summary = createInitialSummary({ recordCount: datasetRecords.length })
+    await this.initializeSummary({ run, summary })
+
+    for (const datasetRecord of datasetRecords) {
+      const cancelled = await this.loadRunIfCancelled({ runId: run.id, connectScope })
+      if (cancelled) {
+        await this.finalizeCancelledRun({ run: cancelled, summary })
+        return
+      }
+
+      await this.processOneRecord({
+        datasetRecord,
+        dataset,
+        agent,
+        run,
+        connectScope,
+        summary,
+      })
+
+      await this.persistSummaryProgress({ runId: run.id, summary, connectScope })
+    }
+
+    await this.markCompleted({ run, summary })
+    this.logger.log(`Evaluation run ${run.id} completed`)
+  }
+
+  private async loadExecutionContext({
+    run,
+    connectScope,
+  }: {
+    run: EvaluationExtractionRun
+    connectScope: RequiredConnectScope
+  }): Promise<{
+    dataset: EvaluationExtractionDataset
+    datasetRecords: EvaluationExtractionDatasetRecord[]
+    agent: Agent
+  }> {
     const dataset = await this.datasetConnectRepository.getOneById(
       connectScope,
       run.evaluationExtractionDatasetId,
@@ -151,81 +195,143 @@ export class EvaluationExtractionRunProcessorService extends ServiceWithLLM {
       throw new NotFoundException(`Agent with id ${run.agentId} not found`)
     }
 
-    const summary: EvaluationExtractionRunSummary = {
-      total: datasetRecords.length,
-      perfectMatches: 0,
-      mismatches: 0,
-      errors: 0,
-      running: datasetRecords.length,
-    }
+    return { dataset, datasetRecords, agent }
+  }
 
+  private async initializeSummary({
+    run,
+    summary,
+  }: {
+    run: EvaluationExtractionRun
+    summary: EvaluationExtractionRunSummary
+  }): Promise<void> {
     run.summary = summary
     await this.runConnectRepository.saveOne(run)
     await this.notifyStatusChanged(run)
+  }
 
-    for (const datasetRecord of datasetRecords) {
-      try {
-        const inputText = this.buildInputText({
-          datasetRecord,
-          schemaMapping: dataset.schemaMapping,
-        })
+  private async processOneRecord({
+    datasetRecord,
+    dataset,
+    agent,
+    run,
+    connectScope,
+    summary,
+  }: {
+    datasetRecord: EvaluationExtractionDatasetRecord
+    dataset: EvaluationExtractionDataset
+    agent: Agent
+    run: EvaluationExtractionRun
+    connectScope: RequiredConnectScope
+    summary: EvaluationExtractionRunSummary
+  }): Promise<void> {
+    try {
+      const inputText = this.buildInputText({
+        datasetRecord,
+        schemaMapping: dataset.schemaMapping,
+      })
 
-        const { output: agentOutput, traceId } = await this.invokeAgent({
-          agent,
-          inputText,
-          connectScope,
-        })
+      const { output: agentOutput, traceId } = await this.invokeAgent({
+        agent,
+        inputText,
+        connectScope,
+      })
 
-        const gradeResult = this.graderService.gradeRecord({
-          agentOutput,
-          datasetRecordData: datasetRecord.data,
-          keyMapping: run.keyMapping,
-        })
+      const gradeResult = this.graderService.gradeRecord({
+        agentOutput,
+        datasetRecordData: datasetRecord.data,
+        keyMapping: run.keyMapping,
+      })
 
-        await this.runRecordConnectRepository.createAndSave(connectScope, {
-          evaluationExtractionRunId: run.id,
-          evaluationExtractionDatasetRecordId: datasetRecord.id,
-          status: gradeResult.status,
-          comparison: gradeResult.comparison,
-          agentRawOutput: agentOutput,
-          errorDetails: null,
-          traceId,
-        })
+      await this.runRecordConnectRepository.createAndSave(connectScope, {
+        evaluationExtractionRunId: run.id,
+        evaluationExtractionDatasetRecordId: datasetRecord.id,
+        status: gradeResult.status,
+        comparison: gradeResult.comparison,
+        agentRawOutput: agentOutput,
+        errorDetails: null,
+        traceId,
+      })
 
-        summary.running--
-        if (gradeResult.status === "match") {
-          summary.perfectMatches++
-        } else {
-          summary.mismatches++
-        }
-      } catch (error) {
-        const errorMessage =
-          error instanceof Error ? error.message : "Unknown error during agent invocation"
-
-        await this.runRecordConnectRepository.createAndSave(connectScope, {
-          evaluationExtractionRunId: run.id,
-          evaluationExtractionDatasetRecordId: datasetRecord.id,
-          status: "error",
-          comparison: null,
-          agentRawOutput: null,
-          errorDetails: errorMessage,
-        })
-
-        summary.running--
-        summary.errors++
+      summary.running--
+      if (gradeResult.status === "match") {
+        summary.perfectMatches++
+      } else {
+        summary.mismatches++
       }
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : "Unknown error during agent invocation"
 
-      run.summary = summary
-      await this.runConnectRepository.saveOne(run)
-      await this.notifyStatusChanged(run)
+      await this.runRecordConnectRepository.createAndSave(connectScope, {
+        evaluationExtractionRunId: run.id,
+        evaluationExtractionDatasetRecordId: datasetRecord.id,
+        status: "error",
+        comparison: null,
+        agentRawOutput: null,
+        errorDetails: errorMessage,
+      })
+
+      summary.running--
+      summary.errors++
     }
+  }
 
+  /**
+   * Persists progress after a record completes. Uses a targeted summary-only update
+   * (not saveOne) so a concurrent cancel, which writes status="cancelled", isn't
+   * clobbered by a stale in-memory status="running". Reloads the run before notifying
+   * so the SSE event carries the authoritative status.
+   */
+  private async persistSummaryProgress({
+    runId,
+    summary,
+    connectScope,
+  }: {
+    runId: string
+    summary: EvaluationExtractionRunSummary
+    connectScope: RequiredConnectScope
+  }): Promise<void> {
+    await this.runRepository.update({ id: runId }, { summary })
+    const latest = await this.runConnectRepository.getOneById(connectScope, runId)
+    if (latest) await this.notifyStatusChanged(latest)
+  }
+
+  private async loadRunIfCancelled({
+    runId,
+    connectScope,
+  }: {
+    runId: string
+    connectScope: RequiredConnectScope
+  }): Promise<EvaluationExtractionRun | null> {
+    const latest = await this.runConnectRepository.getOneById(connectScope, runId)
+    return latest?.status === "cancelled" ? latest : null
+  }
+
+  private async finalizeCancelledRun({
+    run,
+    summary,
+  }: {
+    run: EvaluationExtractionRun
+    summary: EvaluationExtractionRunSummary
+  }): Promise<void> {
+    this.logger.log(`Evaluation run ${run.id} cancelled — stopping processing`)
+    run.summary = summary
+    await this.runConnectRepository.saveOne(run)
+    await this.notifyStatusChanged(run)
+  }
+
+  private async markCompleted({
+    run,
+    summary,
+  }: {
+    run: EvaluationExtractionRun
+    summary: EvaluationExtractionRunSummary
+  }): Promise<void> {
     run.status = "completed"
     run.summary = summary
     await this.runConnectRepository.saveOne(run)
     await this.notifyStatusChanged(run)
-
-    this.logger.log(`Evaluation run ${run.id} completed`)
   }
 
   private async notifyStatusChanged(run: EvaluationExtractionRun): Promise<void> {
@@ -306,5 +412,19 @@ export class EvaluationExtractionRunProcessorService extends ServiceWithLLM {
     })
 
     return { output, traceId }
+  }
+}
+
+function createInitialSummary({
+  recordCount,
+}: {
+  recordCount: number
+}): EvaluationExtractionRunSummary {
+  return {
+    total: recordCount,
+    perfectMatches: 0,
+    mismatches: 0,
+    errors: 0,
+    running: recordCount,
   }
 }

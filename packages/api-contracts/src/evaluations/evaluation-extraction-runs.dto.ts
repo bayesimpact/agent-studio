@@ -4,7 +4,12 @@ export const EVALUATION_EXTRACTION_RUN_STATUS_CHANGED_CHANNEL_DTO =
   "evaluation_extraction_run_status_changed"
 
 // Types
-export type EvaluationExtractionRunStatusDto = "pending" | "running" | "completed" | "failed"
+export type EvaluationExtractionRunStatusDto =
+  | "pending"
+  | "running"
+  | "completed"
+  | "failed"
+  | "cancelled"
 export type EvaluationExtractionRunRecordStatusDto = "match" | "mismatch" | "error" | "running"
 export type EvaluationExtractionRunRecordFieldStatusDto = "match" | "mismatch" | "fyi"
 

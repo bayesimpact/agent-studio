@@ -18,6 +18,28 @@ export class BullMqEvaluationExtractionRunBatchService {
 
   async enqueueExecuteRun(payload: ExecuteEvaluationExtractionRunJobPayload): Promise<void> {
     this.logger.log(`Enqueuing evaluation extraction run job ${JSON.stringify(payload)}`)
-    await this.evaluationExtractionRunQueue.add(EVALUATION_EXTRACTION_RUN_JOB_NAME, payload)
+    await this.evaluationExtractionRunQueue.add(EVALUATION_EXTRACTION_RUN_JOB_NAME, payload, {
+      jobId: payload.runId,
+    })
+  }
+
+  async removePendingJob(runId: string): Promise<void> {
+    const job = await this.evaluationExtractionRunQueue.getJob(runId)
+    if (!job) return
+
+    const state = await job.getState()
+    if (state === "active") {
+      this.logger.log(`Job ${runId} is active — relying on cooperative cancel in processor`)
+      return
+    }
+
+    try {
+      await job.remove()
+      this.logger.log(`Removed queued evaluation extraction run job ${runId}`)
+    } catch (error) {
+      this.logger.warn(
+        `Failed to remove job ${runId} (state=${state}): ${error instanceof Error ? error.message : error}`,
+      )
+    }
   }
 }
