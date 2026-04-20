@@ -29,6 +29,10 @@ export function normalizedBullBoardAllowedEmailDomain(): string {
   return raw.replace(/^@+/u, "").toLowerCase()
 }
 
+export function normalizedBullBoardAuth0Organization(): string {
+  return (process.env.BULL_BOARD_AUTH0_ORGANIZATION ?? "").trim()
+}
+
 export function buildBullBoardAccessMiddleware(): RequestHandler {
   const requireAuthentication = requiresAuth()
   const allowedEmailDomain = normalizedBullBoardAllowedEmailDomain()
@@ -61,6 +65,7 @@ export function buildBullBoardOpenIdConnectConfig(): ConfigParams {
   const clientSecret = process.env.BULL_BOARD_AUTH0_CLIENT_SECRET?.trim()
   const secret = process.env.BULL_BOARD_OIDC_SECRET?.trim()
   const issuerBaseURL = (process.env.AUTH0_ISSUER_URL ?? "").trim().replace(/\/+$/u, "")
+  const organization = normalizedBullBoardAuth0Organization()
 
   if (!baseURL) {
     throw new Error(
@@ -97,6 +102,7 @@ export function buildBullBoardOpenIdConnectConfig(): ConfigParams {
     authorizationParams: {
       response_type: "code",
       scope: "openid profile email",
+      ...(organization ? { organization } : {}),
     },
     routes: {
       login: `${boardPath}/oauth/login`,
