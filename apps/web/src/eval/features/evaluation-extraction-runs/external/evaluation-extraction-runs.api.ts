@@ -94,6 +94,7 @@ function toEvaluationExtractionRun(dto: EvaluationExtractionRunDto): EvaluationE
     keyMapping: dto.keyMapping,
     status: dto.status,
     summary: dto.summary,
+    csvExportDocumentId: dto.csvExportDocumentId,
     projectId: dto.projectId,
     createdAt: dto.createdAt,
     updatedAt: dto.updatedAt,

@@ -41,6 +41,7 @@ export type EvaluationExtractionRunDto = {
   keyMapping: EvaluationExtractionRunKeyMappingEntryDto[]
   status: EvaluationExtractionRunStatusDto
   summary: EvaluationExtractionRunSummaryDto | null
+  csvExportDocumentId: string | null
   projectId: string
   createdAt: TimeType
   updatedAt: TimeType
