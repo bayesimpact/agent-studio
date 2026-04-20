@@ -94,6 +94,21 @@ export class EvaluationExtractionRunsService {
     return this.runConnectRepository.getOneById(connectScope, runId)
   }
 
+  async markRunCancelled({
+    run,
+  }: {
+    run: EvaluationExtractionRun
+  }): Promise<EvaluationExtractionRun> {
+    if (run.status === "completed" || run.status === "failed" || run.status === "cancelled") {
+      throw new UnprocessableEntityException(
+        `Evaluation run is in status "${run.status}" and cannot be cancelled`,
+      )
+    }
+
+    run.status = "cancelled"
+    return this.runConnectRepository.saveOne(run)
+  }
+
   async listRuns({
     connectScope,
   }: {

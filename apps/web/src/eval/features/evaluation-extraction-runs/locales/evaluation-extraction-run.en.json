@@ -42,7 +42,9 @@
       "pending": "Pending",
       "running": "Running",
       "completed": "Completed",
-      "failed": "Failed"
+      "failed": "Failed",
+      "cancelled": "Cancelled",
+      "cancel": "Cancel run"
     },
     "history": {
       "title": "Run History",

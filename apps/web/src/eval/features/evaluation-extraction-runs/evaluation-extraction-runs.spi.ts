@@ -20,6 +20,9 @@ export interface IEvaluationExtractionRunsSpi {
   executeOne(
     params: BaseParams & { evaluationExtractionRunId: string },
   ): Promise<EvaluationExtractionRun>
+  cancelOne(
+    params: BaseParams & { evaluationExtractionRunId: string },
+  ): Promise<EvaluationExtractionRun>
   getOne(
     params: BaseParams & { evaluationExtractionRunId: string },
   ): Promise<EvaluationExtractionRun>

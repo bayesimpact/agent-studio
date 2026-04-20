@@ -27,6 +27,13 @@ export default {
     )
     return toEvaluationExtractionRun(response.data.data)
   },
+  cancelOne: async (params) => {
+    const axios = getAxiosInstance()
+    const response = await axios.post<typeof EvaluationExtractionRunsRoutes.cancelOne.response>(
+      EvaluationExtractionRunsRoutes.cancelOne.getPath(params),
+    )
+    return toEvaluationExtractionRun(response.data.data)
+  },
   getOne: async (params) => {
     const axios = getAxiosInstance()
     const response = await axios.get<typeof EvaluationExtractionRunsRoutes.getOne.response>(

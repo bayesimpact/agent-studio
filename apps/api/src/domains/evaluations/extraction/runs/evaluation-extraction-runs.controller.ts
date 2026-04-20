@@ -24,6 +24,8 @@ import { EvaluationExtractionRunGuard } from "./evaluation-extraction-run.guard"
 import type { EvaluationExtractionRunBatchService } from "./evaluation-extraction-run-batch.interface"
 import { EVALUATION_EXTRACTION_RUN_BATCH_SERVICE } from "./evaluation-extraction-run-batch.interface"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
+import { EvaluationExtractionRunStatusNotifierService } from "./evaluation-extraction-run-status-notifier.service"
+// biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
 import { EvaluationExtractionRunStatusStreamService } from "./evaluation-extraction-run-status-stream.service"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
 import { EvaluationExtractionRunsService } from "./evaluation-extraction-runs.service"
@@ -38,6 +40,7 @@ export class EvaluationExtractionRunsController {
     @Inject(EVALUATION_EXTRACTION_RUN_BATCH_SERVICE)
     private readonly batchService: EvaluationExtractionRunBatchService,
     private readonly runStatusStreamService: EvaluationExtractionRunStatusStreamService,
+    private readonly statusNotifierService: EvaluationExtractionRunStatusNotifierService,
   ) {}
 
   @Post(EvaluationExtractionRunsRoutes.createOne.path)
@@ -72,6 +75,31 @@ export class EvaluationExtractionRunsController {
       runId: run.id,
       organizationId: connectScope.organizationId,
       projectId: connectScope.projectId,
+    })
+
+    return { data: toEvaluationExtractionRunDto(run) }
+  }
+
+  @Post(EvaluationExtractionRunsRoutes.cancelOne.path)
+  @AddContext("evaluationExtractionRun")
+  @CheckPolicy((policy) => policy.canUpdate())
+  @TrackActivity({ action: "evaluationExtractionRun.cancel" })
+  async cancelOne(
+    @Req() request: EndpointRequestWithEvaluationExtractionRun,
+  ): Promise<typeof EvaluationExtractionRunsRoutes.cancelOne.response> {
+    const run = await this.evaluationExtractionRunsService.markRunCancelled({
+      run: request.evaluationExtractionRun,
+    })
+
+    await this.batchService.removePendingJob(run.id)
+
+    await this.statusNotifierService.notifyRunStatusChanged({
+      evaluationExtractionRunId: run.id,
+      organizationId: run.organizationId,
+      projectId: run.projectId,
+      status: run.status,
+      summary: run.summary,
+      updatedAt: run.updatedAt.getTime(),
     })
 
     return { data: toEvaluationExtractionRunDto(run) }
