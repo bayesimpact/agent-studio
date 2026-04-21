@@ -2,6 +2,12 @@ import { Logger, type OnModuleDestroy, type OnModuleInit } from "@nestjs/common"
 import { Client } from "pg"
 import { type Observable, Subject } from "rxjs"
 
+let dbListenersEnabled = false
+
+export function enableDbListeners(): void {
+  dbListenersEnabled = true
+}
+
 export interface PostgresStatusStreamConfig<TEventDto> {
   channel: string
   expectedType: string
@@ -35,6 +41,7 @@ export abstract class PostgresStatusStreamService<TEventDto>
 
   async onModuleInit(): Promise<void> {
     if (process.env.NODE_ENV === "test") return
+    if (!dbListenersEnabled) return
     await this.connectAndListen()
   }
 

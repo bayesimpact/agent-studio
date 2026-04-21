@@ -9,10 +9,12 @@ import { AppModule } from "./app.module"
 import { registerBullBoardOpenIdConnect } from "./common/bull-board/bull-board-openid-registration"
 import { StackTraceLoggingExceptionFilter } from "./common/filters/stack-trace-logging-exception.filter"
 import { getLogLevels, StructuredLogger } from "./common/logger/structured-logger"
+import { enableDbListeners } from "./common/sse/postgres-status-stream.service"
 
 const isProduction = process.env.NODE_ENV === "production"
 
 async function bootstrap() {
+  enableDbListeners()
   const frontendUrl = normalizeFrontendUrl(process.env.FRONTEND_URL)
   const httpsOptions = loadHttpsCertificates()
   const logLevels = getLogLevels()
