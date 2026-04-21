@@ -8,6 +8,7 @@ import {
   getDoclingVersion,
   isDoclingEnabled,
 } from "@/external/docling/docling.cli"
+import { runDoclingSelfTestIfEnabled } from "@/external/docling/docling.self-test"
 import { WorkersAppModule } from "./workers-app.module"
 
 const DEFAULT_WORKER_DOCLING_HEALTH_CHECK_TIMEOUT_MS = 30_000
@@ -36,9 +37,9 @@ function getWorkerHealthPort(): number {
 }
 
 async function bootstrapWorkersMain() {
-  const _healthCheckTimeoutMs = getWorkerDoclingHealthCheckTimeoutMs()
-  // await ensureDoclingIsReadyForWorkers(healthCheckTimeoutMs)
-  // await runDoclingSelfTestIfEnabled(healthCheckTimeoutMs)
+  const healthCheckTimeoutMs = getWorkerDoclingHealthCheckTimeoutMs()
+  await ensureDoclingIsReadyForWorkers(healthCheckTimeoutMs)
+  await runDoclingSelfTestIfEnabled(healthCheckTimeoutMs)
   const isProduction = process.env.NODE_ENV === "production"
   const logLevels = getLogLevels()
   const app = await NestFactory.create(WorkersAppModule, {
@@ -49,7 +50,7 @@ async function bootstrapWorkersMain() {
   Logger.log(`Workers app started, health endpoint listening on :${port}/healthz`, "WorkersMain")
 }
 
-async function _ensureDoclingIsReadyForWorkers(timeoutMs: number): Promise<void> {
+async function ensureDoclingIsReadyForWorkers(timeoutMs: number): Promise<void> {
   if (!isDoclingEnabled()) {
     Logger.log(
       "Docling check skipped because DOCUMENT_EXTRACTOR_DOCLING_ENABLED=false",
