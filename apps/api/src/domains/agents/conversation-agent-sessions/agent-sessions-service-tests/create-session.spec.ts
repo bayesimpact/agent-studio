@@ -1,5 +1,6 @@
 import { afterAll } from "@jest/globals"
 import type { RequiredConnectScope } from "@/common/entities/connect-required-fields"
+import { agentFactory } from "@/domains/agents/agent.factory"
 import { organizationMembershipFactory } from "@/domains/organizations/memberships/organization-membership.factory"
 import { sdk } from "@/external/llm/open-telemetry-init"
 import { agentSessionControllerTestSetup } from "./test-setup"
@@ -79,5 +80,122 @@ describe("createSession", () => {
     expect(session.organizationId).toBe(testOrganization.id)
     expect(session.messages).toBeUndefined()
     expect(session.expiresAt).toBeNull()
+  })
+
+  it("should seed an assistant message when the agent has a greetingMessage", async () => {
+    const {
+      service,
+      testUser,
+      testOrganization,
+      testProject,
+      agentRepository,
+      agentMessageRepository,
+      organizationMembershipRepository,
+    } = getTestContext()
+    const connectScope: RequiredConnectScope = {
+      organizationId: testOrganization.id,
+      projectId: testProject.id,
+    }
+
+    const membership = organizationMembershipFactory
+      .transient({ user: testUser, organization: testOrganization })
+      .member()
+      .build()
+    await organizationMembershipRepository.save(membership)
+
+    const greeting = "Hi! How can I help you today?"
+    const agentWithGreeting = await agentRepository.save(
+      agentRepository.create(
+        agentFactory
+          .transient({ organization: testOrganization, project: testProject })
+          .build({ greetingMessage: greeting }),
+      ),
+    )
+
+    const session = await service.createSession({
+      connectScope,
+      agentId: agentWithGreeting.id,
+      userId: testUser.id,
+      type: "live",
+    })
+
+    const messages = await agentMessageRepository.find({ where: { sessionId: session.id } })
+    expect(messages).toHaveLength(1)
+    const [seeded] = messages
+    expect(seeded!.role).toBe("assistant")
+    expect(seeded!.content).toBe(greeting)
+    expect(seeded!.status).toBe("completed")
+  })
+
+  it("should not seed any message when the agent has no greetingMessage", async () => {
+    const {
+      service,
+      testAgent,
+      testUser,
+      testOrganization,
+      testProject,
+      agentMessageRepository,
+      organizationMembershipRepository,
+    } = getTestContext()
+    const connectScope: RequiredConnectScope = {
+      organizationId: testOrganization.id,
+      projectId: testProject.id,
+    }
+
+    const membership = organizationMembershipFactory
+      .transient({ user: testUser, organization: testOrganization })
+      .member()
+      .build()
+    await organizationMembershipRepository.save(membership)
+
+    const session = await service.createSession({
+      connectScope,
+      agentId: testAgent.id,
+      userId: testUser.id,
+      type: "live",
+    })
+
+    const messages = await agentMessageRepository.find({ where: { sessionId: session.id } })
+    expect(messages).toHaveLength(0)
+  })
+
+  it("should not seed a message when the stored greetingMessage is only whitespace", async () => {
+    const {
+      service,
+      testUser,
+      testOrganization,
+      testProject,
+      agentRepository,
+      agentMessageRepository,
+      organizationMembershipRepository,
+    } = getTestContext()
+    const connectScope: RequiredConnectScope = {
+      organizationId: testOrganization.id,
+      projectId: testProject.id,
+    }
+
+    const membership = organizationMembershipFactory
+      .transient({ user: testUser, organization: testOrganization })
+      .member()
+      .build()
+    await organizationMembershipRepository.save(membership)
+
+    const whitespaceAgent = await agentRepository.save(
+      agentRepository.create(
+        agentFactory
+          .transient({ organization: testOrganization, project: testProject })
+          .build({ greetingMessage: "   \n   " }),
+      ),
+    )
+
+    const session = await service.createSession({
+      connectScope,
+      agentId: whitespaceAgent.id,
+      userId: testUser.id,
+      type: "live",
+    })
+
+    const messages = await agentMessageRepository.find({ where: { sessionId: session.id } })
+    expect(messages).toHaveLength(0)
   })
 })

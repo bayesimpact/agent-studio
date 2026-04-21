@@ -44,13 +44,15 @@ export class AgentsService {
         Agent,
         "defaultPrompt" | "documentsRagMode" | "name" | "model" | "temperature" | "locale" | "type"
       > &
-      Partial<Pick<Agent, "outputJsonSchema">> &
+      Partial<Pick<Agent, "outputJsonSchema" | "greetingMessage">> &
       DocumentTagsUpdateFields
   }): Promise<Agent> {
     this.validateAgentName(fields.name)
 
     const outputJsonSchema = fields.outputJsonSchema || null
     this.validateExtractionAgent({ type: fields.type, outputJsonSchema })
+
+    const greetingMessage = normalizeGreetingMessage(fields.greetingMessage)
 
     const { tagsToAdd, ...agentFields } = fields
     const documentTags = await this.resolveDocumentTags({
@@ -63,6 +65,7 @@ export class AgentsService {
       ...agentFields,
       type: agentFields.type,
       outputJsonSchema,
+      greetingMessage,
       documentTags,
     })
 
@@ -129,6 +132,7 @@ export class AgentsService {
           Agent,
           | "name"
           | "defaultPrompt"
+          | "greetingMessage"
           | "documentsRagMode"
           | "model"
           | "temperature"
@@ -188,6 +192,9 @@ export class AgentsService {
       ...(fieldsToUpdate.outputJsonSchema !== undefined && {
         outputJsonSchema: fieldsToUpdate.outputJsonSchema,
       }),
+      ...(fieldsToUpdate.greetingMessage !== undefined && {
+        greetingMessage: normalizeGreetingMessage(fieldsToUpdate.greetingMessage),
+      }),
     })
 
     const updatedAgent = await this.agentConnectRepository.saveOne(agent)
@@ -244,4 +251,11 @@ export class AgentsService {
       tagsToRemove,
     })
   }
+}
+
+function normalizeGreetingMessage(value: string | null | undefined): string | null {
+  if (value === undefined) return null
+  if (value === null) return null
+  const trimmed = value.trim()
+  return trimmed.length === 0 ? null : trimmed
 }

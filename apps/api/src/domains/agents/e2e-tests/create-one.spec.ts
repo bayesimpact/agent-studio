@@ -111,6 +111,57 @@ describe("Agents - createOne", () => {
     await expectActivityCreated("agent.create")
   })
 
+  it("should persist greetingMessage when provided", async () => {
+    await createContext()
+
+    const response = await subject({
+      payload: {
+        type: "conversation",
+        name: "Greeter Agent",
+        defaultPrompt: "This is a default prompt",
+        greetingMessage: "Hi! How can I help you today?",
+        documentsRagMode: DocumentsRagMode.All,
+        model: AgentModel.Gemini25Flash,
+        temperature: 0,
+        locale: AgentLocale.EN,
+        tagsToAdd: [],
+      },
+    })
+
+    expectResponse(response, 201)
+    expect(response.body.data.greetingMessage).toBe("Hi! How can I help you today?")
+
+    const agent = await setup.getRepository(Agent).findOne({
+      where: { id: response.body.data.id },
+    })
+    expect(agent?.greetingMessage).toBe("Hi! How can I help you today?")
+  })
+
+  it("should default greetingMessage to null when omitted", async () => {
+    await createContext()
+
+    const response = await subject({
+      payload: {
+        type: "conversation",
+        name: "Silent Agent",
+        defaultPrompt: "This is a default prompt",
+        documentsRagMode: DocumentsRagMode.All,
+        model: AgentModel.Gemini25Flash,
+        temperature: 0,
+        locale: AgentLocale.EN,
+        tagsToAdd: [],
+      },
+    })
+
+    expectResponse(response, 201)
+    expect(response.body.data.greetingMessage).toBeUndefined()
+
+    const agent = await setup.getRepository(Agent).findOne({
+      where: { id: response.body.data.id },
+    })
+    expect(agent?.greetingMessage).toBeNull()
+  })
+
   it("should create a tagged agent when documentsRagMode is tags", async () => {
     const { organization, project } = await createContext()
     const documentTag = documentTagFactory.transient({ organization, project }).build()

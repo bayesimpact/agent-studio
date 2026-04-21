@@ -22,6 +22,7 @@ import { BaseAgentForm } from "./BaseAgentForm"
 
 export function AgentEditorWithTrigger({ agent }: { agent: Agent }) {
   const [open, setOpen] = useState(false)
+  const { t } = useTranslation()
 
   const handleSuccess = () => {
     setOpen(false)
@@ -31,8 +32,9 @@ export function AgentEditorWithTrigger({ agent }: { agent: Agent }) {
   return (
     <Sheet modal open={open} onOpenChange={(open: boolean) => setOpen(open)}>
       <SheetTrigger asChild>
-        <Button variant="outline" size="icon">
+        <Button variant="outline">
           <PenLineIcon />
+          {t("actions:edit")}
         </Button>
       </SheetTrigger>
 
@@ -96,6 +98,7 @@ function UpdateForm({ agent, onSuccess }: { agent: Agent; onSuccess?: () => void
         fields: {
           name: fields.name,
           defaultPrompt: fields.defaultPrompt,
+          greetingMessage: fields.greetingMessage,
           documentsRagMode: fields.documentsRagMode,
           model: fields.model,
           temperature: fields.temperature,

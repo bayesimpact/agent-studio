@@ -100,6 +100,7 @@ export class AgentsController {
 function toAgentDto(entity: Agent): AgentDto {
   return {
     createdAt: entity.createdAt.getTime(),
+    greetingMessage: entity.greetingMessage ?? undefined,
     defaultPrompt: entity.defaultPrompt,
     id: entity.id,
     locale: entity.locale,
@@ -107,7 +108,7 @@ function toAgentDto(entity: Agent): AgentDto {
     name: entity.name,
     outputJsonSchema: (entity.outputJsonSchema as AgentDto["outputJsonSchema"]) ?? undefined,
     projectId: entity.projectId,
-    temperature: entity.temperature,
+    temperature: Number(entity.temperature),
     type: entity.type,
     updatedAt: entity.updatedAt.getTime(),
     documentTagIds: entity.documentTags?.map((tag) => tag.id) || [],

@@ -8,18 +8,19 @@ This project uses [CalVer](https://calver.org/) (YY.MM.Micro) for product versio
 ## [Unreleased]
 
 ### Added
+- Conversation and form agents can now send an optional greeting as the first message of a new session
 - Link to Help Center
 - Track user activities for further auditing
-- Display analytics per agent (sessions per day)
-- (beta) Medgemma available for Conversational Agent
-- (beta) Agents can connect to external MCP servers for additional tools
-- Speed up tests
 - Define agent document RAG modes — off, all, or tagged
 - Add tag selection before document upload (single and batch).
+- (beta) Display analytics per agent (sessions per day)
+- (beta) Medgemma available for Conversational Agent
+- (beta) Agents can connect to external MCP servers for additional tools
 - (beta) Evaluate extraction agents against datasets
 - Bull board UI for queue monitoring
 
 ### Changed
+- Agent configuration is now organized into tabs (General, Model, Sources, and Form or Output) for easier editing
 - New user interface to list organizations, workspaces, agents, sessions
 - Unified observability: structured logging, request tracing, error alerting, and queue health monitoring via GCP
 

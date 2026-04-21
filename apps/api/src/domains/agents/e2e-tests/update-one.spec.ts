@@ -126,6 +126,42 @@ describe("Agents - updateOne", () => {
     expect(updatedAgent?.defaultPrompt).toBe(originalPrompt)
   })
 
+  it("should update and clear greetingMessage", async () => {
+    const { agent } = await createContext()
+
+    const setResponse = await subject({
+      payload: {
+        ...agent,
+        greetingMessage: "Hi! How can I help you today?",
+        documentTagIds: [],
+        documentsRagMode: DocumentsRagMode.All,
+        outputJsonSchema: undefined,
+        tagsToAdd: [],
+        tagsToRemove: [],
+      },
+    })
+    expectResponse(setResponse, 200)
+
+    const afterSet = await repositories.agentRepository.findOne({ where: { id: agentId } })
+    expect(afterSet?.greetingMessage).toBe("Hi! How can I help you today?")
+
+    const clearResponse = await subject({
+      payload: {
+        ...agent,
+        greetingMessage: "",
+        documentTagIds: [],
+        documentsRagMode: DocumentsRagMode.All,
+        outputJsonSchema: undefined,
+        tagsToAdd: [],
+        tagsToRemove: [],
+      },
+    })
+    expectResponse(clearResponse, 200)
+
+    const afterClear = await repositories.agentRepository.findOne({ where: { id: agentId } })
+    expect(afterClear?.greetingMessage).toBeNull()
+  })
+
   it("should preserve stored tags when switching documentsRagMode to none", async () => {
     const { organization, project, agent } = await createContext()
     const documentTag = documentTagFactory.transient({ organization, project }).build()

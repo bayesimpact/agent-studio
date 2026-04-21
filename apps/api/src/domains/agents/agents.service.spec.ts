@@ -190,6 +190,68 @@ describe("AgentsService", () => {
       expect(result.type).toBe("conversation")
     })
 
+    it("should persist greetingMessage when provided", async () => {
+      const { organization, project, user } = await createOrganizationWithProject(repositories)
+
+      const result = await service.createAgent({
+        connectScope: { organizationId: organization.id, projectId: project.id },
+        fields: {
+          type: "conversation",
+          name: "Greeter Agent",
+          defaultPrompt: "Prompt",
+          greetingMessage: "Hi! How can I help you today?",
+          documentsRagMode: DocumentsRagMode.All,
+          model: AgentModel.Gemini25Flash,
+          temperature: 0,
+          locale: AgentLocale.EN,
+        },
+        userId: user.id,
+      })
+
+      expect(result.greetingMessage).toBe("Hi! How can I help you today?")
+    })
+
+    it("should default greetingMessage to null when not provided", async () => {
+      const { organization, project, user } = await createOrganizationWithProject(repositories)
+
+      const result = await service.createAgent({
+        connectScope: { organizationId: organization.id, projectId: project.id },
+        fields: {
+          type: "conversation",
+          name: "Silent Agent",
+          defaultPrompt: "Prompt",
+          documentsRagMode: DocumentsRagMode.All,
+          model: AgentModel.Gemini25Flash,
+          temperature: 0,
+          locale: AgentLocale.EN,
+        },
+        userId: user.id,
+      })
+
+      expect(result.greetingMessage).toBeNull()
+    })
+
+    it("should normalize empty greetingMessage to null", async () => {
+      const { organization, project, user } = await createOrganizationWithProject(repositories)
+
+      const result = await service.createAgent({
+        connectScope: { organizationId: organization.id, projectId: project.id },
+        fields: {
+          type: "conversation",
+          name: "Whitespace Agent",
+          defaultPrompt: "Prompt",
+          greetingMessage: "   ",
+          documentsRagMode: DocumentsRagMode.All,
+          model: AgentModel.Gemini25Flash,
+          temperature: 0,
+          locale: AgentLocale.EN,
+        },
+        userId: user.id,
+      })
+
+      expect(result.greetingMessage).toBeNull()
+    })
+
     it("should require extraction fields when type is extraction", async () => {
       const { organization, project, user } = await createOrganizationWithProject(repositories)
 
@@ -349,6 +411,39 @@ describe("AgentsService", () => {
       await expect(createWrongfulUpdateAgent()).rejects.toThrow(
         "Agent name must be at least 3 characters long",
       )
+    })
+
+    it("should update greetingMessage and clear it with empty string", async () => {
+      const { organization, project, agent } = await createOrganizationWithAgent(repositories, {
+        agent: { greetingMessage: "Original greeting" },
+      })
+
+      const afterSet = await service.updateAgent({
+        connectScope: { organizationId: organization.id, projectId: project.id },
+        agentId: agent.id,
+        fieldsToUpdate: { greetingMessage: "New greeting" },
+      })
+      expect(afterSet.greetingMessage).toBe("New greeting")
+
+      const afterClear = await service.updateAgent({
+        connectScope: { organizationId: organization.id, projectId: project.id },
+        agentId: agent.id,
+        fieldsToUpdate: { greetingMessage: "" },
+      })
+      expect(afterClear.greetingMessage).toBeNull()
+    })
+
+    it("should leave greetingMessage unchanged when not provided in update", async () => {
+      const { organization, project, agent } = await createOrganizationWithAgent(repositories, {
+        agent: { greetingMessage: "Keep me" },
+      })
+
+      const result = await service.updateAgent({
+        connectScope: { organizationId: organization.id, projectId: project.id },
+        agentId: agent.id,
+        fieldsToUpdate: { name: "Renamed" },
+      })
+      expect(result.greetingMessage).toBe("Keep me")
     })
 
     it("should keep stored tags when switching documentsRagMode to none", async () => {

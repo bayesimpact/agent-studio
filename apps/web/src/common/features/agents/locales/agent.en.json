@@ -7,6 +7,8 @@
     "props": {
       "createdAt": "Created At",
       "defaultPrompt": "Default Prompt",
+      "formConfiguration": "Form Configuration",
+      "greeting": "Greeting",
       "documentsRagMode": "Documents RAG",
       "locale": "Locale",
       "name": "Name",
@@ -23,6 +25,7 @@
       "placeholders": {
         "name": "Enter agent name",
         "defaultPrompt": "Enter default prompt",
+        "greeting": "Optional greeting the agent sends first when a new conversation starts",
         "documentsRagMode": "Select document usage",
         "model": "Select model",
         "outputJsonSchema": "{\n \"type\": \"object\", \"properties\": {\n    \"field\": { \"type\": \"string\", \"description\": \"blablabla\" }\n  },\n  \"required\": [\"field\"]\n}",
@@ -87,6 +90,13 @@
       "title": "Default Prompt",
       "description": "This prompt defines the behavior of the agent.",
       "button": "View Prompt"
+    },
+    "tabs": {
+      "general": "General",
+      "model": "Model",
+      "output": "Output",
+      "form": "Form",
+      "sources": "Sources"
     }
   }
 }

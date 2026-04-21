@@ -48,6 +48,9 @@ export class Agent extends ConnectEntityBase {
   @Column({ type: "text", nullable: true, name: "instruction_prompt" })
   instructionPrompt!: string | null
 
+  @Column({ type: "text", nullable: true, name: "greeting_message" })
+  greetingMessage!: string | null
+
   @Column({ type: "jsonb", nullable: true, name: "output_json_schema" })
   outputJsonSchema!: Record<string, unknown> | null
 
