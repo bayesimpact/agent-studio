@@ -25,6 +25,7 @@ This project uses [CalVer](https://calver.org/) (YY.MM.Micro) for product versio
 - Unified observability: structured logging, request tracing, error alerting, and queue health monitoring via GCP
 
 ### Fixed
+- Form result panel now scrolls when it has more fields than fit on screen
 - Breadcrumb misalignment in navigation UI
 - Navigation path builder not generating correct URLs
 - Restricted access to Studio mode for non-admin users
