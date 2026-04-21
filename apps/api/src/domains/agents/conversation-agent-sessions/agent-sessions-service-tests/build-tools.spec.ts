@@ -32,6 +32,7 @@ describe("buildTools", () => {
     })
 
     expect(tools?.[ToolName.RetrieveProjectDocumentChunks]).toBeUndefined()
+    expect(tools?.[ToolName.RecalculateConversationSessionMetadata]).toBeUndefined()
   })
 
   it("should expose document retrieval when documentsRagMode is all", async () => {
@@ -49,6 +50,7 @@ describe("buildTools", () => {
     })
 
     expect(tools?.[ToolName.RetrieveProjectDocumentChunks]).toBeDefined()
+    expect(tools?.[ToolName.RecalculateConversationSessionMetadata]).toBeUndefined()
   })
 
   it("should expose document retrieval when documentsRagMode is tags", async () => {
@@ -66,5 +68,48 @@ describe("buildTools", () => {
     })
 
     expect(tools?.[ToolName.RetrieveProjectDocumentChunks]).toBeDefined()
+    expect(tools?.[ToolName.RecalculateConversationSessionMetadata]).toBeUndefined()
+  })
+
+  it("should expose metadata recalculation tool when agent has categories", async () => {
+    const {
+      streamingService,
+      service,
+      testAgent,
+      testOrganization,
+      testProject,
+      testUser,
+      agentCategoryRepository,
+    } = getTestContext()
+    const connectScope: RequiredConnectScope = {
+      organizationId: testOrganization.id,
+      projectId: testProject.id,
+    }
+
+    const savedCategory = await agentCategoryRepository.save(
+      agentCategoryRepository.create({
+        agentId: testAgent.id,
+        name: "billing",
+      }),
+    )
+    const session = await service.createSession({
+      connectScope,
+      agentId: testAgent.id,
+      userId: testUser.id,
+      type: "playground",
+    })
+
+    const { tools } = await (streamingService as unknown as BuildToolsAccessor).buildTools({
+      agent: {
+        ...testAgent,
+        categories: [savedCategory],
+        documentsRagMode: DocumentsRagMode.None,
+      },
+      sessionId: session.id,
+      connectScope,
+      onExecute: () => undefined,
+    })
+
+    expect(tools?.[ToolName.RecalculateConversationSessionMetadata]).toBeDefined()
   })
 })

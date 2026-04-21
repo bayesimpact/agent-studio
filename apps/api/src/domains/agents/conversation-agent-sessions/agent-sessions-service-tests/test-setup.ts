@@ -7,6 +7,7 @@ import {
 } from "@/common/test/test-database"
 import { Agent } from "@/domains/agents/agent.entity"
 import { agentFactory } from "@/domains/agents/agent.factory"
+import { AgentCategory } from "@/domains/agents/categories/agent-category.entity"
 import { OrganizationMembership } from "@/domains/organizations/memberships/organization-membership.entity"
 import { Organization } from "@/domains/organizations/organization.entity"
 import { organizationFactory } from "@/domains/organizations/organization.factory"
@@ -18,6 +19,7 @@ import { sdk } from "@/external/llm/open-telemetry-init"
 import { AgentMessage } from "../../shared/agent-session-messages/agent-message.entity"
 import { StreamingService } from "../../shared/agent-session-messages/streaming/streaming.service"
 import { ConversationAgentSession } from "../conversation-agent-session.entity"
+import { ConversationAgentSessionCategory } from "../conversation-agent-session-category.entity"
 import { ConversationAgentSessionsModule } from "../conversation-agent-sessions.module"
 import { ConversationAgentSessionsService } from "../conversation-agent-sessions.service"
 
@@ -25,7 +27,9 @@ export function agentSessionControllerTestSetup() {
   let service: ConversationAgentSessionsService
   let streamingService: StreamingService
   let conversationAgentSessionRepository: Repository<ConversationAgentSession>
+  let conversationAgentSessionCategoryRepository: Repository<ConversationAgentSessionCategory>
   let agentRepository: Repository<Agent>
+  let agentCategoryRepository: Repository<AgentCategory>
   let agentMessageRepository: Repository<AgentMessage>
   let userRepository: Repository<User>
   let organizationRepository: Repository<Organization>
@@ -55,8 +59,12 @@ export function agentSessionControllerTestSetup() {
     service = setup.module.get<ConversationAgentSessionsService>(ConversationAgentSessionsService)
     streamingService = setup.module.get<StreamingService>(StreamingService)
     conversationAgentSessionRepository = setup.getRepository(ConversationAgentSession)
+    conversationAgentSessionCategoryRepository = setup.getRepository(
+      ConversationAgentSessionCategory,
+    )
     agentMessageRepository = setup.getRepository(AgentMessage)
     agentRepository = setup.getRepository(Agent)
+    agentCategoryRepository = setup.getRepository(AgentCategory)
     userRepository = setup.getRepository(User)
     organizationRepository = setup.getRepository(Organization)
     projectRepository = setup.getRepository(Project)
@@ -99,7 +107,9 @@ export function agentSessionControllerTestSetup() {
   return () => {
     return {
       agentRepository,
+      agentCategoryRepository,
       conversationAgentSessionRepository,
+      conversationAgentSessionCategoryRepository,
       agentMessageRepository,
       organizationMembershipRepository,
       organizationRepository,

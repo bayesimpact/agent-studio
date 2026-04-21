@@ -5,6 +5,10 @@ export class CreateAgentCategories1776699266245 implements MigrationInterface {
 
   public async up(queryRunner: QueryRunner): Promise<void> {
     await queryRunner.query(
+      `ALTER TABLE "conversation_agent_session" ADD "title" character varying`,
+    )
+
+    await queryRunner.query(
       `CREATE TABLE "conversation_agent_session_category" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "conversation_agent_session_id" uuid NOT NULL, "agent_category_id" uuid NOT NULL, "created_at" TIMESTAMP NOT NULL DEFAULT now(), "updated_at" TIMESTAMP NOT NULL DEFAULT now(), CONSTRAINT "UQ_fdfc7f508502cebc8affb5d5ae3" UNIQUE ("conversation_agent_session_id", "agent_category_id"), CONSTRAINT "PK_50c1c0629d797f65b4b74f7bd90" PRIMARY KEY ("id"))`,
     )
     await queryRunner.query(
@@ -33,5 +37,7 @@ export class CreateAgentCategories1776699266245 implements MigrationInterface {
     )
     await queryRunner.query(`DROP TABLE "agent_category"`)
     await queryRunner.query(`DROP TABLE "conversation_agent_session_category"`)
+
+    await queryRunner.query(`ALTER TABLE "conversation_agent_session" DROP COLUMN "title"`)
   }
 }

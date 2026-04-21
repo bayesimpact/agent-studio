@@ -85,6 +85,7 @@ function toDto(agentSessionType: BaseAgentSessionType) {
       id: entity.id,
       agentId: entity.agentId,
       type: entity.type,
+      ...(entity.title ? { title: entity.title } : {}),
       createdAt: entity.createdAt.getTime(),
       updatedAt: entity.updatedAt.getTime(),
       traceUrl,

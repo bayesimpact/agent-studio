@@ -33,7 +33,7 @@ export class AgentContextResolver implements ContextResolver {
           organizationId: requestWithProject.organizationId,
           projectId: requestWithProject.project.id,
         },
-        relations: ["documentTags"],
+        relations: ["documentTags", "categories"],
       })) ?? undefined
     if (!agent) throw new NotFoundException()
 

@@ -57,6 +57,7 @@ export const conversationAgentSessionFactory = ConversationAgentSessionFactory.d
       organizationId: transientParams.organization.id,
       projectId: transientParams.project.id,
       type: params.type || "playground",
+      title: params.title ?? null,
       expiresAt: params.expiresAt ?? defaultExpiresAt,
       createdAt: params.createdAt || now,
       updatedAt: params.updatedAt || now,

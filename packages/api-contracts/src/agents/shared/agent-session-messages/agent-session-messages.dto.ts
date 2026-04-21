@@ -2,6 +2,7 @@ export enum ToolName {
   FillForm = "fillForm",
   RetrieveProjectDocumentChunks = "retrieveProjectDocumentChunks",
   Sources = "sources",
+  RecalculateConversationSessionMetadata = "recalculateConversationSessionMetadata",
   McpSearchResources = "search_resources",
   McpSmartSearch = "smart_search",
 }

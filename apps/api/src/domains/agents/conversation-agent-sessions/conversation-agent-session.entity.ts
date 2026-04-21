@@ -22,6 +22,9 @@ export class ConversationAgentSession extends ConnectEntityBase {
   @Column({ type: "varchar" })
   type!: BaseAgentSessionType
 
+  @Column({ type: "varchar", nullable: true })
+  title!: string | null
+
   @Column({ type: "timestamp", nullable: true, name: "expires_at" }) // FIXME: to be removed
   expiresAt!: Date | null
 
