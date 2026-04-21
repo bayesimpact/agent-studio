@@ -44,7 +44,7 @@ export class AgentsService {
         Agent,
         "defaultPrompt" | "documentsRagMode" | "name" | "model" | "temperature" | "locale" | "type"
       > &
-      Partial<Pick<Agent, "outputJsonSchema" | "defaultFirstMessage">> &
+      Partial<Pick<Agent, "outputJsonSchema" | "greetingMessage">> &
       DocumentTagsUpdateFields
   }): Promise<Agent> {
     this.validateAgentName(fields.name)
@@ -52,7 +52,7 @@ export class AgentsService {
     const outputJsonSchema = fields.outputJsonSchema || null
     this.validateExtractionAgent({ type: fields.type, outputJsonSchema })
 
-    const defaultFirstMessage = normalizeDefaultFirstMessage(fields.defaultFirstMessage)
+    const greetingMessage = normalizeGreetingMessage(fields.greetingMessage)
 
     const { tagsToAdd, ...agentFields } = fields
     const documentTags = await this.resolveDocumentTags({
@@ -65,7 +65,7 @@ export class AgentsService {
       ...agentFields,
       type: agentFields.type,
       outputJsonSchema,
-      defaultFirstMessage,
+      greetingMessage,
       documentTags,
     })
 
@@ -132,7 +132,7 @@ export class AgentsService {
           Agent,
           | "name"
           | "defaultPrompt"
-          | "defaultFirstMessage"
+          | "greetingMessage"
           | "documentsRagMode"
           | "model"
           | "temperature"
@@ -192,8 +192,8 @@ export class AgentsService {
       ...(fieldsToUpdate.outputJsonSchema !== undefined && {
         outputJsonSchema: fieldsToUpdate.outputJsonSchema,
       }),
-      ...(fieldsToUpdate.defaultFirstMessage !== undefined && {
-        defaultFirstMessage: normalizeDefaultFirstMessage(fieldsToUpdate.defaultFirstMessage),
+      ...(fieldsToUpdate.greetingMessage !== undefined && {
+        greetingMessage: normalizeGreetingMessage(fieldsToUpdate.greetingMessage),
       }),
     })
 
@@ -253,7 +253,7 @@ export class AgentsService {
   }
 }
 
-function normalizeDefaultFirstMessage(value: string | null | undefined): string | null {
+function normalizeGreetingMessage(value: string | null | undefined): string | null {
   if (value === undefined) return null
   if (value === null) return null
   const trimmed = value.trim()

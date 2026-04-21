@@ -64,7 +64,7 @@ const mockConversationAgent: Agent = {
   type: "conversation",
   documentTagIds: ["tag-1"],
   documentsRagMode: DocumentsRagMode.Tags,
-  defaultFirstMessage: "Hi! How can I help you today?",
+  greetingMessage: "Hi! How can I help you today?",
 }
 
 const mockExtractionAgent: Agent = {
@@ -75,7 +75,7 @@ const mockExtractionAgent: Agent = {
   documentTagIds: [],
   documentsRagMode: DocumentsRagMode.None,
   outputJsonSchema: mockOutputJsonSchema,
-  defaultFirstMessage: null,
+  greetingMessage: null,
 }
 
 const mockFormAgent: Agent = {
@@ -86,7 +86,7 @@ const mockFormAgent: Agent = {
   documentTagIds: [],
   documentsRagMode: DocumentsRagMode.None,
   outputJsonSchema: mockOutputJsonSchema,
-  defaultFirstMessage: "Welcome — let's get started. I'll ask a few questions.",
+  greetingMessage: "Welcome — let's get started. I'll ask a few questions.",
 }
 
 const meta = {

@@ -100,7 +100,7 @@ export class AgentsController {
 function toAgentDto(entity: Agent): AgentDto {
   return {
     createdAt: entity.createdAt.getTime(),
-    defaultFirstMessage: entity.defaultFirstMessage ?? undefined,
+    greetingMessage: entity.greetingMessage ?? undefined,
     defaultPrompt: entity.defaultPrompt,
     id: entity.id,
     locale: entity.locale,

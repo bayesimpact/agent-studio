@@ -92,13 +92,13 @@ export class ConversationAgentSessionsService {
       },
     )
 
-    const defaultFirstMessage = agent.defaultFirstMessage
-    if (defaultFirstMessage && defaultFirstMessage.trim().length > 0) {
+    const greetingMessage = agent.greetingMessage
+    if (greetingMessage && greetingMessage.trim().length > 0) {
       const now = new Date()
       await this.agentMessageConnectRepository.createAndSave(connectScope, {
         sessionId: session.id,
         role: "assistant",
-        content: defaultFirstMessage,
+        content: greetingMessage,
         status: "completed",
         startedAt: now,
         completedAt: now,

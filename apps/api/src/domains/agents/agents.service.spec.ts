@@ -190,7 +190,7 @@ describe("AgentsService", () => {
       expect(result.type).toBe("conversation")
     })
 
-    it("should persist defaultFirstMessage when provided", async () => {
+    it("should persist greetingMessage when provided", async () => {
       const { organization, project, user } = await createOrganizationWithProject(repositories)
 
       const result = await service.createAgent({
@@ -199,7 +199,7 @@ describe("AgentsService", () => {
           type: "conversation",
           name: "Greeter Agent",
           defaultPrompt: "Prompt",
-          defaultFirstMessage: "Hi! How can I help you today?",
+          greetingMessage: "Hi! How can I help you today?",
           documentsRagMode: DocumentsRagMode.All,
           model: AgentModel.Gemini25Flash,
           temperature: 0,
@@ -208,10 +208,10 @@ describe("AgentsService", () => {
         userId: user.id,
       })
 
-      expect(result.defaultFirstMessage).toBe("Hi! How can I help you today?")
+      expect(result.greetingMessage).toBe("Hi! How can I help you today?")
     })
 
-    it("should default defaultFirstMessage to null when not provided", async () => {
+    it("should default greetingMessage to null when not provided", async () => {
       const { organization, project, user } = await createOrganizationWithProject(repositories)
 
       const result = await service.createAgent({
@@ -228,10 +228,10 @@ describe("AgentsService", () => {
         userId: user.id,
       })
 
-      expect(result.defaultFirstMessage).toBeNull()
+      expect(result.greetingMessage).toBeNull()
     })
 
-    it("should normalize empty defaultFirstMessage to null", async () => {
+    it("should normalize empty greetingMessage to null", async () => {
       const { organization, project, user } = await createOrganizationWithProject(repositories)
 
       const result = await service.createAgent({
@@ -240,7 +240,7 @@ describe("AgentsService", () => {
           type: "conversation",
           name: "Whitespace Agent",
           defaultPrompt: "Prompt",
-          defaultFirstMessage: "   ",
+          greetingMessage: "   ",
           documentsRagMode: DocumentsRagMode.All,
           model: AgentModel.Gemini25Flash,
           temperature: 0,
@@ -249,7 +249,7 @@ describe("AgentsService", () => {
         userId: user.id,
       })
 
-      expect(result.defaultFirstMessage).toBeNull()
+      expect(result.greetingMessage).toBeNull()
     })
 
     it("should require extraction fields when type is extraction", async () => {
@@ -413,29 +413,29 @@ describe("AgentsService", () => {
       )
     })
 
-    it("should update defaultFirstMessage and clear it with empty string", async () => {
+    it("should update greetingMessage and clear it with empty string", async () => {
       const { organization, project, agent } = await createOrganizationWithAgent(repositories, {
-        agent: { defaultFirstMessage: "Original greeting" },
+        agent: { greetingMessage: "Original greeting" },
       })
 
       const afterSet = await service.updateAgent({
         connectScope: { organizationId: organization.id, projectId: project.id },
         agentId: agent.id,
-        fieldsToUpdate: { defaultFirstMessage: "New greeting" },
+        fieldsToUpdate: { greetingMessage: "New greeting" },
       })
-      expect(afterSet.defaultFirstMessage).toBe("New greeting")
+      expect(afterSet.greetingMessage).toBe("New greeting")
 
       const afterClear = await service.updateAgent({
         connectScope: { organizationId: organization.id, projectId: project.id },
         agentId: agent.id,
-        fieldsToUpdate: { defaultFirstMessage: "" },
+        fieldsToUpdate: { greetingMessage: "" },
       })
-      expect(afterClear.defaultFirstMessage).toBeNull()
+      expect(afterClear.greetingMessage).toBeNull()
     })
 
-    it("should leave defaultFirstMessage unchanged when not provided in update", async () => {
+    it("should leave greetingMessage unchanged when not provided in update", async () => {
       const { organization, project, agent } = await createOrganizationWithAgent(repositories, {
-        agent: { defaultFirstMessage: "Keep me" },
+        agent: { greetingMessage: "Keep me" },
       })
 
       const result = await service.updateAgent({
@@ -443,7 +443,7 @@ describe("AgentsService", () => {
         agentId: agent.id,
         fieldsToUpdate: { name: "Renamed" },
       })
-      expect(result.defaultFirstMessage).toBe("Keep me")
+      expect(result.greetingMessage).toBe("Keep me")
     })
 
     it("should keep stored tags when switching documentsRagMode to none", async () => {

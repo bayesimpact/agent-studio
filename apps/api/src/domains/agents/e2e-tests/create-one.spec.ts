@@ -111,7 +111,7 @@ describe("Agents - createOne", () => {
     await expectActivityCreated("agent.create")
   })
 
-  it("should persist defaultFirstMessage when provided", async () => {
+  it("should persist greetingMessage when provided", async () => {
     await createContext()
 
     const response = await subject({
@@ -119,7 +119,7 @@ describe("Agents - createOne", () => {
         type: "conversation",
         name: "Greeter Agent",
         defaultPrompt: "This is a default prompt",
-        defaultFirstMessage: "Hi! How can I help you today?",
+        greetingMessage: "Hi! How can I help you today?",
         documentsRagMode: DocumentsRagMode.All,
         model: AgentModel.Gemini25Flash,
         temperature: 0,
@@ -129,15 +129,15 @@ describe("Agents - createOne", () => {
     })
 
     expectResponse(response, 201)
-    expect(response.body.data.defaultFirstMessage).toBe("Hi! How can I help you today?")
+    expect(response.body.data.greetingMessage).toBe("Hi! How can I help you today?")
 
     const agent = await setup.getRepository(Agent).findOne({
       where: { id: response.body.data.id },
     })
-    expect(agent?.defaultFirstMessage).toBe("Hi! How can I help you today?")
+    expect(agent?.greetingMessage).toBe("Hi! How can I help you today?")
   })
 
-  it("should default defaultFirstMessage to null when omitted", async () => {
+  it("should default greetingMessage to null when omitted", async () => {
     await createContext()
 
     const response = await subject({
@@ -154,12 +154,12 @@ describe("Agents - createOne", () => {
     })
 
     expectResponse(response, 201)
-    expect(response.body.data.defaultFirstMessage).toBeUndefined()
+    expect(response.body.data.greetingMessage).toBeUndefined()
 
     const agent = await setup.getRepository(Agent).findOne({
       where: { id: response.body.data.id },
     })
-    expect(agent?.defaultFirstMessage).toBeNull()
+    expect(agent?.greetingMessage).toBeNull()
   })
 
   it("should create a tagged agent when documentsRagMode is tags", async () => {

@@ -68,7 +68,7 @@ export function BaseAgentForm({
 
   const hasOutputJsonSchema = agentType !== "conversation"
   const hasSources = agentType === "conversation"
-  const hasDefaultFirstMessage = agentType === "conversation" || agentType === "form"
+  const hasGreetingMessage = agentType === "conversation" || agentType === "form"
 
   const agentSchema = editableAgent ? updateAgentSchema : createAgentSchema
   type FormValues = z.infer<typeof agentSchema>
@@ -188,28 +188,24 @@ export function BaseAgentForm({
                   </Field>
                 </div>
 
-                {hasDefaultFirstMessage && (
+                {hasGreetingMessage && (
                   <Field>
-                    <FieldLabel htmlFor="defaultFirstMessage">
-                      {t("agent:props.defaultFirstMessage")}
-                    </FieldLabel>
+                    <FieldLabel htmlFor="greetingMessage">{t("agent:props.greeting")}</FieldLabel>
                     <Textarea
-                      id="defaultFirstMessage"
-                      placeholder={t("agent:props.placeholders.defaultFirstMessage")}
+                      id="greetingMessage"
+                      placeholder={t("agent:props.placeholders.greeting")}
                       rows={3}
-                      {...register("defaultFirstMessage", {
+                      {...register("greetingMessage", {
                         setValueAs: (value: string | null | undefined) => {
                           if (value === null || value === undefined) return null
                           const trimmed = value.trim()
                           return trimmed.length === 0 ? null : value
                         },
                       })}
-                      aria-invalid={errors.defaultFirstMessage ? "true" : "false"}
+                      aria-invalid={errors.greetingMessage ? "true" : "false"}
                     />
-                    {errors.defaultFirstMessage && (
-                      <p className="text-sm text-destructive">
-                        {errors.defaultFirstMessage.message}
-                      </p>
+                    {errors.greetingMessage && (
+                      <p className="text-sm text-destructive">{errors.greetingMessage.message}</p>
                     )}
                   </Field>
                 )}
@@ -432,7 +428,7 @@ const FIELD_TO_TAB: Record<string, "general" | "model" | "output" | "sources"> =
   name: "general",
   locale: "general",
   defaultPrompt: "general",
-  defaultFirstMessage: "general",
+  greetingMessage: "general",
   model: "model",
   temperature: "model",
   outputJsonSchema: "output",

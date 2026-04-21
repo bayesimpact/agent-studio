@@ -146,11 +146,11 @@ describe("ConversationAgentSessionsRoutes.createOne", () => {
     })
   })
 
-  describe("with a defaultFirstMessage on the agent", () => {
-    it("should seed an assistant message when the agent has a defaultFirstMessage", async () => {
+  describe("with a greetingMessage on the agent", () => {
+    it("should seed an assistant message when the agent has a greetingMessage", async () => {
       await createContext("owner")
       const greeting = "Hi! How can I help you today?"
-      await repositories.agentRepository.update(agentId, { defaultFirstMessage: greeting })
+      await repositories.agentRepository.update(agentId, { greetingMessage: greeting })
 
       const response = await subject({ payload: { type: "live" } })
 
@@ -163,7 +163,7 @@ describe("ConversationAgentSessionsRoutes.createOne", () => {
       expect(messages[0]?.status).toBe("completed")
     })
 
-    it("should not seed any message when the agent has no defaultFirstMessage", async () => {
+    it("should not seed any message when the agent has no greetingMessage", async () => {
       await createContext("owner")
 
       const response = await subject({ payload: { type: "live" } })

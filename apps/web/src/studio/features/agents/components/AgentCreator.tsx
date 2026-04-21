@@ -241,7 +241,7 @@ function CreateForm({
         fields: {
           name: fields.name,
           defaultPrompt: fields.defaultPrompt,
-          defaultFirstMessage: fields.defaultFirstMessage,
+          greetingMessage: fields.greetingMessage,
           documentsRagMode: fields.documentsRagMode,
           model: fields.model,
           temperature: fields.temperature,

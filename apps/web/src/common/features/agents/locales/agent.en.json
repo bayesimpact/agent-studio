@@ -6,9 +6,9 @@
     "settings": "Agent Settings",
     "props": {
       "createdAt": "Created At",
-      "defaultFirstMessage": "Default First Message",
       "defaultPrompt": "Default Prompt",
       "formConfiguration": "Form Configuration",
+      "greeting": "Greeting",
       "documentsRagMode": "Documents RAG",
       "locale": "Locale",
       "name": "Name",
@@ -25,7 +25,7 @@
       "placeholders": {
         "name": "Enter agent name",
         "defaultPrompt": "Enter default prompt",
-        "defaultFirstMessage": "Optional greeting the agent sends first when a new conversation starts",
+        "greeting": "Optional greeting the agent sends first when a new conversation starts",
         "documentsRagMode": "Select document usage",
         "model": "Select model",
         "outputJsonSchema": "{\n \"type\": \"object\", \"properties\": {\n    \"field\": { \"type\": \"string\", \"description\": \"blablabla\" }\n  },\n  \"required\": [\"field\"]\n}",

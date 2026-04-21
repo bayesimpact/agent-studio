@@ -6,9 +6,9 @@
     "settings": "Paramètres de l'agent",
     "props": {
       "createdAt": "Créé le",
-      "defaultFirstMessage": "Premier message par défaut",
       "defaultPrompt": "Prompt par défaut",
       "formConfiguration": "Configuration du formulaire",
+      "greeting": "Message d'accueil",
       "documentsRagMode": "RAG des documents",
       "locale": "Langue",
       "name": "Nom",
@@ -25,7 +25,7 @@
       "placeholders": {
         "name": "Entrez le nom de l'agent",
         "defaultPrompt": "Entrez le prompt par défaut",
-        "defaultFirstMessage": "Message d'accueil facultatif envoyé par l'agent au début d'une nouvelle conversation",
+        "greeting": "Message d'accueil facultatif envoyé par l'agent au début d'une nouvelle conversation",
         "documentsRagMode": "Sélectionnez l'usage des documents",
         "model": "Sélectionnez le modèle",
         "outputJsonSchema": "{\n \"type\": \"object\", \"properties\": {\n    \"field\": { \"type\": \"string\", \"description\": \"blablabla\" }\n  },\n  \"required\": [\"field\"]\n}",

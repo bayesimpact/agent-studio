@@ -27,7 +27,7 @@ export const agentFactory = AgentFactory.define(({ sequence, params, transientPa
     type: params.type || "conversation",
     documentsRagMode: params.documentsRagMode || DocumentsRagMode.All,
     instructionPrompt: params.instructionPrompt ?? null,
-    defaultFirstMessage: params.defaultFirstMessage ?? null,
+    greetingMessage: params.greetingMessage ?? null,
     outputJsonSchema: params.outputJsonSchema ?? null,
     organizationId: transientParams.organization.id,
     projectId: transientParams.project.id,

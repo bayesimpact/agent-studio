@@ -117,10 +117,10 @@ describe("FormAgentSessionsRoutes.createOne", () => {
     expect(createdSession).not.toBeNull()
   })
 
-  it("should seed an assistant message when the form agent has a defaultFirstMessage", async () => {
+  it("should seed an assistant message when the form agent has a greetingMessage", async () => {
     await createContext("owner")
     const greeting = "Welcome — let's get started."
-    await repositories.agentRepository.update(agentId, { defaultFirstMessage: greeting })
+    await repositories.agentRepository.update(agentId, { greetingMessage: greeting })
 
     const response = await subject({ payload: { type: "live" } })
 
@@ -134,7 +134,7 @@ describe("FormAgentSessionsRoutes.createOne", () => {
     expect(messages[0]?.status).toBe("completed")
   })
 
-  it("should not seed any message when the form agent has no defaultFirstMessage", async () => {
+  it("should not seed any message when the form agent has no greetingMessage", async () => {
     await createContext("owner")
 
     const response = await subject({ payload: { type: "live" } })

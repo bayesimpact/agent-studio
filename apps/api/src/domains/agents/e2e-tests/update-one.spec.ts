@@ -126,13 +126,13 @@ describe("Agents - updateOne", () => {
     expect(updatedAgent?.defaultPrompt).toBe(originalPrompt)
   })
 
-  it("should update and clear defaultFirstMessage", async () => {
+  it("should update and clear greetingMessage", async () => {
     const { agent } = await createContext()
 
     const setResponse = await subject({
       payload: {
         ...agent,
-        defaultFirstMessage: "Hi! How can I help you today?",
+        greetingMessage: "Hi! How can I help you today?",
         documentTagIds: [],
         documentsRagMode: DocumentsRagMode.All,
         outputJsonSchema: undefined,
@@ -143,12 +143,12 @@ describe("Agents - updateOne", () => {
     expectResponse(setResponse, 200)
 
     const afterSet = await repositories.agentRepository.findOne({ where: { id: agentId } })
-    expect(afterSet?.defaultFirstMessage).toBe("Hi! How can I help you today?")
+    expect(afterSet?.greetingMessage).toBe("Hi! How can I help you today?")
 
     const clearResponse = await subject({
       payload: {
         ...agent,
-        defaultFirstMessage: "",
+        greetingMessage: "",
         documentTagIds: [],
         documentsRagMode: DocumentsRagMode.All,
         outputJsonSchema: undefined,
@@ -159,7 +159,7 @@ describe("Agents - updateOne", () => {
     expectResponse(clearResponse, 200)
 
     const afterClear = await repositories.agentRepository.findOne({ where: { id: agentId } })
-    expect(afterClear?.defaultFirstMessage).toBeNull()
+    expect(afterClear?.greetingMessage).toBeNull()
   })
 
   it("should preserve stored tags when switching documentsRagMode to none", async () => {

@@ -82,7 +82,7 @@ describe("createSession", () => {
     expect(session.expiresAt).toBeNull()
   })
 
-  it("should seed an assistant message when the agent has a defaultFirstMessage", async () => {
+  it("should seed an assistant message when the agent has a greetingMessage", async () => {
     const {
       service,
       testUser,
@@ -108,7 +108,7 @@ describe("createSession", () => {
       agentRepository.create(
         agentFactory
           .transient({ organization: testOrganization, project: testProject })
-          .build({ defaultFirstMessage: greeting }),
+          .build({ greetingMessage: greeting }),
       ),
     )
 
@@ -127,7 +127,7 @@ describe("createSession", () => {
     expect(seeded!.status).toBe("completed")
   })
 
-  it("should not seed any message when the agent has no defaultFirstMessage", async () => {
+  it("should not seed any message when the agent has no greetingMessage", async () => {
     const {
       service,
       testAgent,
@@ -159,7 +159,7 @@ describe("createSession", () => {
     expect(messages).toHaveLength(0)
   })
 
-  it("should not seed a message when the stored defaultFirstMessage is only whitespace", async () => {
+  it("should not seed a message when the stored greetingMessage is only whitespace", async () => {
     const {
       service,
       testUser,
@@ -184,7 +184,7 @@ describe("createSession", () => {
       agentRepository.create(
         agentFactory
           .transient({ organization: testOrganization, project: testProject })
-          .build({ defaultFirstMessage: "   \n   " }),
+          .build({ greetingMessage: "   \n   " }),
       ),
     )
 
