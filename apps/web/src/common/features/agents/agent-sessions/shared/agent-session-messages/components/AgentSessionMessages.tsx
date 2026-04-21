@@ -47,7 +47,12 @@ export function AgentSessionMessages({
         </Chat>
       </div>
       {rightSlot && (
-        <div className={cn("w-80 shrink-0 h-full border-l bg-white min-h-full", heightClasses)}>
+        <div
+          className={cn(
+            "w-80 shrink-0 h-full border-l bg-white min-h-full overflow-hidden relative",
+            heightClasses,
+          )}
+        >
           {rightSlot}
         </div>
       )}
