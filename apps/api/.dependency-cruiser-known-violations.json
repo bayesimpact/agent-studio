@@ -1,0 +1,2624 @@
+[
+  {
+    "type": "cycle",
+    "from": "../../packages/api-contracts/src/index.ts",
+    "to": "../../packages/api-contracts/src/me/me.dto.ts",
+    "rule": {
+      "severity": "error",
+      "name": "no-circular"
+    },
+    "cycle": [
+      {
+        "name": "../../packages/api-contracts/src/me/me.dto.ts",
+        "dependencyTypes": ["local", "type-only", "export"]
+      },
+      {
+        "name": "../../packages/api-contracts/src/organizations/organizations.dto.ts",
+        "dependencyTypes": ["local", "type-only", "import"]
+      },
+      {
+        "name": "../../packages/api-contracts/src/projects/projects.dto.ts",
+        "dependencyTypes": ["local", "type-only", "import"]
+      },
+      {
+        "name": "../../packages/api-contracts/src/index.ts",
+        "dependencyTypes": ["undetermined", "type-only", "import"]
+      }
+    ]
+  },
+  {
+    "type": "cycle",
+    "from": "../../packages/api-contracts/src/index.ts",
+    "to": "../../packages/api-contracts/src/me/me.routes.ts",
+    "rule": {
+      "severity": "error",
+      "name": "no-circular"
+    },
+    "cycle": [
+      {
+        "name": "../../packages/api-contracts/src/me/me.routes.ts",
+        "dependencyTypes": ["local", "export"]
+      },
+      {
+        "name": "../../packages/api-contracts/src/me/me.dto.ts",
+        "dependencyTypes": ["local", "type-only", "import"]
+      },
+      {
+        "name": "../../packages/api-contracts/src/organizations/organizations.dto.ts",
+        "dependencyTypes": ["local", "type-only", "import"]
+      },
+      {
+        "name": "../../packages/api-contracts/src/projects/projects.dto.ts",
+        "dependencyTypes": ["local", "type-only", "import"]
+      },
+      {
+        "name": "../../packages/api-contracts/src/index.ts",
+        "dependencyTypes": ["undetermined", "type-only", "import"]
+      }
+    ]
+  },
+  {
+    "type": "cycle",
+    "from": "../../packages/api-contracts/src/index.ts",
+    "to": "../../packages/api-contracts/src/organizations/organizations.dto.ts",
+    "rule": {
+      "severity": "error",
+      "name": "no-circular"
+    },
+    "cycle": [
+      {
+        "name": "../../packages/api-contracts/src/organizations/organizations.dto.ts",
+        "dependencyTypes": ["local", "type-only", "export"]
+      },
+      {
+        "name": "../../packages/api-contracts/src/projects/projects.dto.ts",
+        "dependencyTypes": ["local", "type-only", "import"]
+      },
+      {
+        "name": "../../packages/api-contracts/src/index.ts",
+        "dependencyTypes": ["undetermined", "type-only", "import"]
+      }
+    ]
+  },
+  {
+    "type": "cycle",
+    "from": "../../packages/api-contracts/src/index.ts",
+    "to": "../../packages/api-contracts/src/organizations/organizations.routes.ts",
+    "rule": {
+      "severity": "error",
+      "name": "no-circular"
+    },
+    "cycle": [
+      {
+        "name": "../../packages/api-contracts/src/organizations/organizations.routes.ts",
+        "dependencyTypes": ["local", "export"]
+      },
+      {
+        "name": "../../packages/api-contracts/src/organizations/organizations.dto.ts",
+        "dependencyTypes": ["local", "type-only", "import"]
+      },
+      {
+        "name": "../../packages/api-contracts/src/projects/projects.dto.ts",
+        "dependencyTypes": ["local", "type-only", "import"]
+      },
+      {
+        "name": "../../packages/api-contracts/src/index.ts",
+        "dependencyTypes": ["undetermined", "type-only", "import"]
+      }
+    ]
+  },
+  {
+    "type": "cycle",
+    "from": "../../packages/api-contracts/src/index.ts",
+    "to": "../../packages/api-contracts/src/projects/projects.dto.ts",
+    "rule": {
+      "severity": "error",
+      "name": "no-circular"
+    },
+    "cycle": [
+      {
+        "name": "../../packages/api-contracts/src/projects/projects.dto.ts",
+        "dependencyTypes": ["local", "type-only", "export"]
+      },
+      {
+        "name": "../../packages/api-contracts/src/index.ts",
+        "dependencyTypes": ["undetermined", "type-only", "import"]
+      }
+    ]
+  },
+  {
+    "type": "cycle",
+    "from": "../../packages/api-contracts/src/index.ts",
+    "to": "../../packages/api-contracts/src/projects/projects.routes.ts",
+    "rule": {
+      "severity": "error",
+      "name": "no-circular"
+    },
+    "cycle": [
+      {
+        "name": "../../packages/api-contracts/src/projects/projects.routes.ts",
+        "dependencyTypes": ["local", "export"]
+      },
+      {
+        "name": "../../packages/api-contracts/src/projects/projects.dto.ts",
+        "dependencyTypes": ["local", "type-only", "import"]
+      },
+      {
+        "name": "../../packages/api-contracts/src/index.ts",
+        "dependencyTypes": ["undetermined", "type-only", "import"]
+      }
+    ]
+  },
+  {
+    "type": "cycle",
+    "from": "src/domains/agents/agent.entity.ts",
+    "to": "src/domains/agents/conversation-agent-sessions/conversation-agent-session.entity.ts",
+    "rule": {
+      "severity": "error",
+      "name": "no-circular"
+    },
+    "cycle": [
+      {
+        "name": "src/domains/agents/conversation-agent-sessions/conversation-agent-session.entity.ts",
+        "dependencyTypes": [
+          "aliased",
+          "aliased-tsconfig",
+          "aliased-tsconfig-paths",
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "src/domains/agents/agent.entity.ts",
+        "dependencyTypes": [
+          "aliased",
+          "aliased-tsconfig",
+          "aliased-tsconfig-paths",
+          "local",
+          "import"
+        ]
+      }
+    ]
+  },
+  {
+    "type": "cycle",
+    "from": "src/domains/agents/agent.entity.ts",
+    "to": "src/domains/agents/extraction-agent-sessions/extraction-agent-session.entity.ts",
+    "rule": {
+      "severity": "error",
+      "name": "no-circular"
+    },
+    "cycle": [
+      {
+        "name": "src/domains/agents/extraction-agent-sessions/extraction-agent-session.entity.ts",
+        "dependencyTypes": ["local", "import"]
+      },
+      {
+        "name": "src/domains/agents/agent.entity.ts",
+        "dependencyTypes": ["local", "import"]
+      }
+    ]
+  },
+  {
+    "type": "cycle",
+    "from": "src/domains/agents/agent.entity.ts",
+    "to": "src/domains/agents/memberships/agent-membership.entity.ts",
+    "rule": {
+      "severity": "error",
+      "name": "no-circular"
+    },
+    "cycle": [
+      {
+        "name": "src/domains/agents/memberships/agent-membership.entity.ts",
+        "dependencyTypes": ["local", "import"]
+      },
+      {
+        "name": "src/domains/agents/agent.entity.ts",
+        "dependencyTypes": ["local", "import"]
+      }
+    ]
+  },
+  {
+    "type": "cycle",
+    "from": "src/domains/agents/agent.entity.ts",
+    "to": "src/domains/documents/tags/document-tag.entity.ts",
+    "rule": {
+      "severity": "error",
+      "name": "no-circular"
+    },
+    "cycle": [
+      {
+        "name": "src/domains/documents/tags/document-tag.entity.ts",
+        "dependencyTypes": ["local", "type-only", "import"]
+      },
+      {
+        "name": "src/domains/agents/agent.entity.ts",
+        "dependencyTypes": [
+          "aliased",
+          "aliased-tsconfig",
+          "aliased-tsconfig-paths",
+          "local",
+          "type-only",
+          "import"
+        ]
+      }
+    ]
+  },
+  {
+    "type": "cycle",
+    "from": "src/domains/agents/agent.entity.ts",
+    "to": "src/domains/evaluations/reports/evaluation-report.entity.ts",
+    "rule": {
+      "severity": "error",
+      "name": "no-circular"
+    },
+    "cycle": [
+      {
+        "name": "src/domains/evaluations/reports/evaluation-report.entity.ts",
+        "dependencyTypes": ["local", "import"]
+      },
+      {
+        "name": "src/domains/agents/agent.entity.ts",
+        "dependencyTypes": [
+          "aliased",
+          "aliased-tsconfig",
+          "aliased-tsconfig-paths",
+          "local",
+          "import"
+        ]
+      }
+    ]
+  },
+  {
+    "type": "cycle",
+    "from": "src/domains/agents/agent.entity.ts",
+    "to": "src/domains/mcp-servers/agent-mcp-server.entity.ts",
+    "rule": {
+      "severity": "error",
+      "name": "no-circular"
+    },
+    "cycle": [
+      {
+        "name": "src/domains/mcp-servers/agent-mcp-server.entity.ts",
+        "dependencyTypes": ["local", "import"]
+      },
+      {
+        "name": "src/domains/agents/agent.entity.ts",
+        "dependencyTypes": [
+          "aliased",
+          "aliased-tsconfig",
+          "aliased-tsconfig-paths",
+          "local",
+          "import"
+        ]
+      }
+    ]
+  },
+  {
+    "type": "cycle",
+    "from": "src/domains/agents/agent.entity.ts",
+    "to": "src/domains/projects/project.entity.ts",
+    "rule": {
+      "severity": "error",
+      "name": "no-circular"
+    },
+    "cycle": [
+      {
+        "name": "src/domains/projects/project.entity.ts",
+        "dependencyTypes": [
+          "aliased",
+          "aliased-tsconfig",
+          "aliased-tsconfig-paths",
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "src/domains/agents/agent.entity.ts",
+        "dependencyTypes": [
+          "aliased",
+          "aliased-tsconfig",
+          "aliased-tsconfig-paths",
+          "local",
+          "import"
+        ]
+      }
+    ]
+  },
+  {
+    "type": "cycle",
+    "from": "src/domains/agents/agents.module.ts",
+    "to": "src/domains/agents/conversation-agent-sessions/conversation-agent-sessions.module.ts",
+    "rule": {
+      "severity": "error",
+      "name": "no-circular"
+    },
+    "cycle": [
+      {
+        "name": "src/domains/agents/conversation-agent-sessions/conversation-agent-sessions.module.ts",
+        "dependencyTypes": [
+          "aliased",
+          "aliased-tsconfig",
+          "aliased-tsconfig-paths",
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "src/domains/agents/base-agent-sessions/base-agent-sessions-module.helpers.ts",
+        "dependencyTypes": ["local", "import"]
+      },
+      {
+        "name": "src/domains/agents/agents.module.ts",
+        "dependencyTypes": ["local", "require"]
+      }
+    ]
+  },
+  {
+    "type": "cycle",
+    "from": "src/domains/agents/agents.module.ts",
+    "to": "src/domains/agents/extraction-agent-sessions/extraction-agent-sessions.module.ts",
+    "rule": {
+      "severity": "error",
+      "name": "no-circular"
+    },
+    "cycle": [
+      {
+        "name": "src/domains/agents/extraction-agent-sessions/extraction-agent-sessions.module.ts",
+        "dependencyTypes": [
+          "aliased",
+          "aliased-tsconfig",
+          "aliased-tsconfig-paths",
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "src/domains/agents/base-agent-sessions/base-agent-sessions-module.helpers.ts",
+        "dependencyTypes": ["local", "import"]
+      },
+      {
+        "name": "src/domains/agents/agents.module.ts",
+        "dependencyTypes": ["local", "require"]
+      }
+    ]
+  },
+  {
+    "type": "cycle",
+    "from": "src/domains/agents/agents.module.ts",
+    "to": "src/domains/agents/form-agent-sessions/form-agent-sessions.module.ts",
+    "rule": {
+      "severity": "error",
+      "name": "no-circular"
+    },
+    "cycle": [
+      {
+        "name": "src/domains/agents/form-agent-sessions/form-agent-sessions.module.ts",
+        "dependencyTypes": [
+          "aliased",
+          "aliased-tsconfig",
+          "aliased-tsconfig-paths",
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "src/domains/agents/base-agent-sessions/base-agent-sessions-module.helpers.ts",
+        "dependencyTypes": ["local", "import"]
+      },
+      {
+        "name": "src/domains/agents/agents.module.ts",
+        "dependencyTypes": ["local", "require"]
+      }
+    ]
+  },
+  {
+    "type": "cycle",
+    "from": "src/domains/agents/agents.module.ts",
+    "to": "src/domains/documents/documents.module.ts",
+    "rule": {
+      "severity": "error",
+      "name": "no-circular"
+    },
+    "cycle": [
+      {
+        "name": "src/domains/documents/documents.module.ts",
+        "dependencyTypes": [
+          "aliased",
+          "aliased-tsconfig",
+          "aliased-tsconfig-paths",
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "src/domains/documents/tags/document-tags.module.ts",
+        "dependencyTypes": ["local", "import"]
+      },
+      {
+        "name": "src/domains/projects/projects.module.ts",
+        "dependencyTypes": [
+          "aliased",
+          "aliased-tsconfig",
+          "aliased-tsconfig-paths",
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "src/domains/agents/agents.module.ts",
+        "dependencyTypes": ["local", "import"]
+      }
+    ]
+  },
+  {
+    "type": "cycle",
+    "from": "src/domains/agents/agents.module.ts",
+    "to": "src/domains/documents/tags/document-tags.module.ts",
+    "rule": {
+      "severity": "error",
+      "name": "no-circular"
+    },
+    "cycle": [
+      {
+        "name": "src/domains/documents/tags/document-tags.module.ts",
+        "dependencyTypes": [
+          "aliased",
+          "aliased-tsconfig",
+          "aliased-tsconfig-paths",
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "src/domains/projects/projects.module.ts",
+        "dependencyTypes": [
+          "aliased",
+          "aliased-tsconfig",
+          "aliased-tsconfig-paths",
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "src/domains/agents/agents.module.ts",
+        "dependencyTypes": ["local", "import"]
+      }
+    ]
+  },
+  {
+    "type": "cycle",
+    "from": "src/domains/agents/agents.module.ts",
+    "to": "src/domains/projects/projects.module.ts",
+    "rule": {
+      "severity": "error",
+      "name": "no-circular"
+    },
+    "cycle": [
+      {
+        "name": "src/domains/projects/projects.module.ts",
+        "dependencyTypes": ["local", "import"]
+      },
+      {
+        "name": "src/domains/agents/agents.module.ts",
+        "dependencyTypes": ["local", "import"]
+      }
+    ]
+  },
+  {
+    "type": "cycle",
+    "from": "src/domains/agents/base-agent-sessions/base-agent-sessions-module.helpers.ts",
+    "to": "src/domains/documents/documents.module.ts",
+    "rule": {
+      "severity": "error",
+      "name": "no-circular"
+    },
+    "cycle": [
+      {
+        "name": "src/domains/documents/documents.module.ts",
+        "dependencyTypes": ["local", "require"]
+      },
+      {
+        "name": "src/domains/documents/tags/document-tags.module.ts",
+        "dependencyTypes": ["local", "import"]
+      },
+      {
+        "name": "src/domains/projects/projects.module.ts",
+        "dependencyTypes": [
+          "aliased",
+          "aliased-tsconfig",
+          "aliased-tsconfig-paths",
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "src/domains/agents/agents.module.ts",
+        "dependencyTypes": ["local", "import"]
+      },
+      {
+        "name": "src/domains/agents/conversation-agent-sessions/conversation-agent-sessions.module.ts",
+        "dependencyTypes": [
+          "aliased",
+          "aliased-tsconfig",
+          "aliased-tsconfig-paths",
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "src/domains/agents/base-agent-sessions/base-agent-sessions-module.helpers.ts",
+        "dependencyTypes": ["local", "import"]
+      }
+    ]
+  },
+  {
+    "type": "cycle",
+    "from": "src/domains/agents/base-agent-sessions/base-agent-sessions-module.helpers.ts",
+    "to": "src/domains/projects/projects.module.ts",
+    "rule": {
+      "severity": "error",
+      "name": "no-circular"
+    },
+    "cycle": [
+      {
+        "name": "src/domains/projects/projects.module.ts",
+        "dependencyTypes": ["local", "require"]
+      },
+      {
+        "name": "src/domains/agents/agents.module.ts",
+        "dependencyTypes": ["local", "import"]
+      },
+      {
+        "name": "src/domains/agents/conversation-agent-sessions/conversation-agent-sessions.module.ts",
+        "dependencyTypes": [
+          "aliased",
+          "aliased-tsconfig",
+          "aliased-tsconfig-paths",
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "src/domains/agents/base-agent-sessions/base-agent-sessions-module.helpers.ts",
+        "dependencyTypes": ["local", "import"]
+      }
+    ]
+  },
+  {
+    "type": "cycle",
+    "from": "src/domains/agents/conversation-agent-sessions/conversation-agent-session.entity.ts",
+    "to": "src/domains/agents/shared/agent-session-messages/agent-message.entity.ts",
+    "rule": {
+      "severity": "error",
+      "name": "no-circular"
+    },
+    "cycle": [
+      {
+        "name": "src/domains/agents/shared/agent-session-messages/agent-message.entity.ts",
+        "dependencyTypes": ["local", "import"]
+      },
+      {
+        "name": "src/domains/agents/conversation-agent-sessions/conversation-agent-session.entity.ts",
+        "dependencyTypes": ["local", "import"]
+      }
+    ]
+  },
+  {
+    "type": "cycle",
+    "from": "src/domains/agents/conversation-agent-sessions/conversation-agent-session.entity.ts",
+    "to": "src/domains/organizations/organization.entity.ts",
+    "rule": {
+      "severity": "error",
+      "name": "no-circular"
+    },
+    "cycle": [
+      {
+        "name": "src/domains/organizations/organization.entity.ts",
+        "dependencyTypes": [
+          "aliased",
+          "aliased-tsconfig",
+          "aliased-tsconfig-paths",
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "src/domains/agents/conversation-agent-sessions/conversation-agent-session.entity.ts",
+        "dependencyTypes": [
+          "aliased",
+          "aliased-tsconfig",
+          "aliased-tsconfig-paths",
+          "local",
+          "import"
+        ]
+      }
+    ]
+  },
+  {
+    "type": "cycle",
+    "from": "src/domains/agents/conversation-agent-sessions/conversation-agent-session.entity.ts",
+    "to": "src/domains/users/user.entity.ts",
+    "rule": {
+      "severity": "error",
+      "name": "no-circular"
+    },
+    "cycle": [
+      {
+        "name": "src/domains/users/user.entity.ts",
+        "dependencyTypes": [
+          "aliased",
+          "aliased-tsconfig",
+          "aliased-tsconfig-paths",
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "src/domains/agents/conversation-agent-sessions/conversation-agent-session.entity.ts",
+        "dependencyTypes": [
+          "aliased",
+          "aliased-tsconfig",
+          "aliased-tsconfig-paths",
+          "local",
+          "import"
+        ]
+      }
+    ]
+  },
+  {
+    "type": "cycle",
+    "from": "src/domains/agents/conversation-agent-sessions/conversation-agent-sessions.module.ts",
+    "to": "src/domains/agents/shared/agent-session-messages/streaming/streaming.module.ts",
+    "rule": {
+      "severity": "error",
+      "name": "no-circular"
+    },
+    "cycle": [
+      {
+        "name": "src/domains/agents/shared/agent-session-messages/streaming/streaming.module.ts",
+        "dependencyTypes": ["local", "import"]
+      },
+      {
+        "name": "src/domains/agents/conversation-agent-sessions/conversation-agent-sessions.module.ts",
+        "dependencyTypes": [
+          "aliased",
+          "aliased-tsconfig",
+          "aliased-tsconfig-paths",
+          "local",
+          "import"
+        ]
+      }
+    ]
+  },
+  {
+    "type": "cycle",
+    "from": "src/domains/agents/extraction-agent-sessions/extraction-agent-session.entity.ts",
+    "to": "src/domains/users/user.entity.ts",
+    "rule": {
+      "severity": "error",
+      "name": "no-circular"
+    },
+    "cycle": [
+      {
+        "name": "src/domains/users/user.entity.ts",
+        "dependencyTypes": [
+          "aliased",
+          "aliased-tsconfig",
+          "aliased-tsconfig-paths",
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "src/domains/agents/shared/agent-session-messages/feedback/agent-message-feedback.entity.ts",
+        "dependencyTypes": ["local", "import"]
+      },
+      {
+        "name": "src/domains/agents/shared/agent-session-messages/agent-message.entity.ts",
+        "dependencyTypes": ["local", "import"]
+      },
+      {
+        "name": "src/domains/agents/conversation-agent-sessions/conversation-agent-session.entity.ts",
+        "dependencyTypes": ["local", "import"]
+      },
+      {
+        "name": "src/domains/agents/agent.entity.ts",
+        "dependencyTypes": [
+          "aliased",
+          "aliased-tsconfig",
+          "aliased-tsconfig-paths",
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "src/domains/agents/extraction-agent-sessions/extraction-agent-session.entity.ts",
+        "dependencyTypes": ["local", "import"]
+      }
+    ]
+  },
+  {
+    "type": "cycle",
+    "from": "src/domains/agents/extraction-agent-sessions/extraction-agent-sessions.module.ts",
+    "to": "src/domains/agents/base-agent-sessions/base-agent-sessions-module.helpers.ts",
+    "rule": {
+      "severity": "error",
+      "name": "no-circular"
+    },
+    "cycle": [
+      {
+        "name": "src/domains/agents/base-agent-sessions/base-agent-sessions-module.helpers.ts",
+        "dependencyTypes": ["local", "import"]
+      },
+      {
+        "name": "src/domains/documents/documents.module.ts",
+        "dependencyTypes": ["local", "require"]
+      },
+      {
+        "name": "src/domains/documents/tags/document-tags.module.ts",
+        "dependencyTypes": ["local", "import"]
+      },
+      {
+        "name": "src/domains/projects/projects.module.ts",
+        "dependencyTypes": [
+          "aliased",
+          "aliased-tsconfig",
+          "aliased-tsconfig-paths",
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "src/domains/agents/agents.module.ts",
+        "dependencyTypes": ["local", "import"]
+      },
+      {
+        "name": "src/domains/agents/extraction-agent-sessions/extraction-agent-sessions.module.ts",
+        "dependencyTypes": [
+          "aliased",
+          "aliased-tsconfig",
+          "aliased-tsconfig-paths",
+          "local",
+          "import"
+        ]
+      }
+    ]
+  },
+  {
+    "type": "cycle",
+    "from": "src/domains/agents/form-agent-sessions/form-agent-session.entity.ts",
+    "to": "src/domains/agents/shared/agent-session-messages/agent-message.entity.ts",
+    "rule": {
+      "severity": "error",
+      "name": "no-circular"
+    },
+    "cycle": [
+      {
+        "name": "src/domains/agents/shared/agent-session-messages/agent-message.entity.ts",
+        "dependencyTypes": ["local", "import"]
+      },
+      {
+        "name": "src/domains/agents/form-agent-sessions/form-agent-session.entity.ts",
+        "dependencyTypes": ["local", "import"]
+      }
+    ]
+  },
+  {
+    "type": "cycle",
+    "from": "src/domains/agents/form-agent-sessions/form-agent-sessions.module.ts",
+    "to": "src/domains/agents/base-agent-sessions/base-agent-sessions-module.helpers.ts",
+    "rule": {
+      "severity": "error",
+      "name": "no-circular"
+    },
+    "cycle": [
+      {
+        "name": "src/domains/agents/base-agent-sessions/base-agent-sessions-module.helpers.ts",
+        "dependencyTypes": ["local", "import"]
+      },
+      {
+        "name": "src/domains/documents/documents.module.ts",
+        "dependencyTypes": ["local", "require"]
+      },
+      {
+        "name": "src/domains/documents/tags/document-tags.module.ts",
+        "dependencyTypes": ["local", "import"]
+      },
+      {
+        "name": "src/domains/projects/projects.module.ts",
+        "dependencyTypes": [
+          "aliased",
+          "aliased-tsconfig",
+          "aliased-tsconfig-paths",
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "src/domains/agents/agents.module.ts",
+        "dependencyTypes": ["local", "import"]
+      },
+      {
+        "name": "src/domains/agents/form-agent-sessions/form-agent-sessions.module.ts",
+        "dependencyTypes": [
+          "aliased",
+          "aliased-tsconfig",
+          "aliased-tsconfig-paths",
+          "local",
+          "import"
+        ]
+      }
+    ]
+  },
+  {
+    "type": "cycle",
+    "from": "src/domains/agents/form-agent-sessions/form-agent-sessions.module.ts",
+    "to": "src/domains/agents/shared/agent-session-messages/streaming/streaming.module.ts",
+    "rule": {
+      "severity": "error",
+      "name": "no-circular"
+    },
+    "cycle": [
+      {
+        "name": "src/domains/agents/shared/agent-session-messages/streaming/streaming.module.ts",
+        "dependencyTypes": ["local", "import"]
+      },
+      {
+        "name": "src/domains/agents/form-agent-sessions/form-agent-sessions.module.ts",
+        "dependencyTypes": [
+          "aliased",
+          "aliased-tsconfig",
+          "aliased-tsconfig-paths",
+          "local",
+          "import"
+        ]
+      }
+    ]
+  },
+  {
+    "type": "cycle",
+    "from": "src/domains/agents/memberships/agent-membership.entity.ts",
+    "to": "src/domains/users/user.entity.ts",
+    "rule": {
+      "severity": "error",
+      "name": "no-circular"
+    },
+    "cycle": [
+      {
+        "name": "src/domains/users/user.entity.ts",
+        "dependencyTypes": [
+          "aliased",
+          "aliased-tsconfig",
+          "aliased-tsconfig-paths",
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "src/domains/agents/memberships/agent-membership.entity.ts",
+        "dependencyTypes": [
+          "aliased",
+          "aliased-tsconfig",
+          "aliased-tsconfig-paths",
+          "local",
+          "import"
+        ]
+      }
+    ]
+  },
+  {
+    "type": "cycle",
+    "from": "src/domains/agents/shared/agent-session-messages/agent-message.entity.ts",
+    "to": "src/domains/agents/shared/agent-session-messages/feedback/agent-message-feedback.entity.ts",
+    "rule": {
+      "severity": "error",
+      "name": "no-circular"
+    },
+    "cycle": [
+      {
+        "name": "src/domains/agents/shared/agent-session-messages/feedback/agent-message-feedback.entity.ts",
+        "dependencyTypes": ["local", "import"]
+      },
+      {
+        "name": "src/domains/agents/shared/agent-session-messages/agent-message.entity.ts",
+        "dependencyTypes": ["local", "import"]
+      }
+    ]
+  },
+  {
+    "type": "cycle",
+    "from": "src/domains/agents/shared/agent-session-messages/agent-message.entity.ts",
+    "to": "src/domains/documents/document.entity.ts",
+    "rule": {
+      "severity": "error",
+      "name": "no-circular"
+    },
+    "cycle": [
+      {
+        "name": "src/domains/documents/document.entity.ts",
+        "dependencyTypes": [
+          "aliased",
+          "aliased-tsconfig",
+          "aliased-tsconfig-paths",
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "src/domains/projects/project.entity.ts",
+        "dependencyTypes": [
+          "aliased",
+          "aliased-tsconfig",
+          "aliased-tsconfig-paths",
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "src/domains/evaluations/evaluation.entity.ts",
+        "dependencyTypes": ["local", "import"]
+      },
+      {
+        "name": "src/domains/evaluations/reports/evaluation-report.entity.ts",
+        "dependencyTypes": ["local", "import"]
+      },
+      {
+        "name": "src/domains/agents/agent.entity.ts",
+        "dependencyTypes": [
+          "aliased",
+          "aliased-tsconfig",
+          "aliased-tsconfig-paths",
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "src/domains/agents/extraction-agent-sessions/extraction-agent-session.entity.ts",
+        "dependencyTypes": ["local", "import"]
+      },
+      {
+        "name": "src/domains/users/user.entity.ts",
+        "dependencyTypes": [
+          "aliased",
+          "aliased-tsconfig",
+          "aliased-tsconfig-paths",
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "src/domains/agents/conversation-agent-sessions/conversation-agent-session.entity.ts",
+        "dependencyTypes": [
+          "aliased",
+          "aliased-tsconfig",
+          "aliased-tsconfig-paths",
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "src/domains/agents/shared/agent-session-messages/agent-message.entity.ts",
+        "dependencyTypes": ["local", "import"]
+      }
+    ]
+  },
+  {
+    "type": "cycle",
+    "from": "src/domains/agents/shared/agent-session-messages/feedback/agent-message-feedback.entity.ts",
+    "to": "src/domains/organizations/organization.entity.ts",
+    "rule": {
+      "severity": "error",
+      "name": "no-circular"
+    },
+    "cycle": [
+      {
+        "name": "src/domains/organizations/organization.entity.ts",
+        "dependencyTypes": [
+          "aliased",
+          "aliased-tsconfig",
+          "aliased-tsconfig-paths",
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "src/domains/agents/shared/agent-session-messages/feedback/agent-message-feedback.entity.ts",
+        "dependencyTypes": ["local", "import"]
+      }
+    ]
+  },
+  {
+    "type": "cycle",
+    "from": "src/domains/agents/shared/agent-session-messages/feedback/agent-message-feedback.entity.ts",
+    "to": "src/domains/projects/project.entity.ts",
+    "rule": {
+      "severity": "error",
+      "name": "no-circular"
+    },
+    "cycle": [
+      {
+        "name": "src/domains/projects/project.entity.ts",
+        "dependencyTypes": [
+          "aliased",
+          "aliased-tsconfig",
+          "aliased-tsconfig-paths",
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "src/domains/agents/shared/agent-session-messages/feedback/agent-message-feedback.entity.ts",
+        "dependencyTypes": ["local", "import"]
+      }
+    ]
+  },
+  {
+    "type": "cycle",
+    "from": "src/domains/agents/shared/agent-session-messages/feedback/agent-message-feedback.entity.ts",
+    "to": "src/domains/users/user.entity.ts",
+    "rule": {
+      "severity": "error",
+      "name": "no-circular"
+    },
+    "cycle": [
+      {
+        "name": "src/domains/users/user.entity.ts",
+        "dependencyTypes": [
+          "aliased",
+          "aliased-tsconfig",
+          "aliased-tsconfig-paths",
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "src/domains/agents/shared/agent-session-messages/feedback/agent-message-feedback.entity.ts",
+        "dependencyTypes": ["local", "import"]
+      }
+    ]
+  },
+  {
+    "type": "cycle",
+    "from": "src/domains/agents/shared/agent-session-messages/streaming/streaming.module.ts",
+    "to": "src/domains/agents/base-agent-sessions/base-agent-sessions-module.helpers.ts",
+    "rule": {
+      "severity": "error",
+      "name": "no-circular"
+    },
+    "cycle": [
+      {
+        "name": "src/domains/agents/base-agent-sessions/base-agent-sessions-module.helpers.ts",
+        "dependencyTypes": [
+          "aliased",
+          "aliased-tsconfig",
+          "aliased-tsconfig-paths",
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "src/domains/documents/documents.module.ts",
+        "dependencyTypes": ["local", "require"]
+      },
+      {
+        "name": "src/domains/documents/tags/document-tags.module.ts",
+        "dependencyTypes": ["local", "import"]
+      },
+      {
+        "name": "src/domains/projects/projects.module.ts",
+        "dependencyTypes": [
+          "aliased",
+          "aliased-tsconfig",
+          "aliased-tsconfig-paths",
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "src/domains/agents/agents.module.ts",
+        "dependencyTypes": ["local", "import"]
+      },
+      {
+        "name": "src/domains/agents/conversation-agent-sessions/conversation-agent-sessions.module.ts",
+        "dependencyTypes": [
+          "aliased",
+          "aliased-tsconfig",
+          "aliased-tsconfig-paths",
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "src/domains/agents/shared/agent-session-messages/streaming/streaming.module.ts",
+        "dependencyTypes": ["local", "import"]
+      }
+    ]
+  },
+  {
+    "type": "cycle",
+    "from": "src/domains/agents/shared/agent-session-messages/streaming/tools/retrieve-project-document-chunks.tool.ts",
+    "to": "src/domains/documents/embeddings/document-chunk-retrieval.service.ts",
+    "rule": {
+      "severity": "error",
+      "name": "no-circular"
+    },
+    "cycle": [
+      {
+        "name": "src/domains/documents/embeddings/document-chunk-retrieval.service.ts",
+        "dependencyTypes": [
+          "aliased",
+          "aliased-tsconfig",
+          "aliased-tsconfig-paths",
+          "local",
+          "type-only",
+          "import"
+        ]
+      },
+      {
+        "name": "src/domains/agents/shared/agent-session-messages/streaming/tools/retrieve-project-document-chunks.tool.ts",
+        "dependencyTypes": [
+          "aliased",
+          "aliased-tsconfig",
+          "aliased-tsconfig-paths",
+          "local",
+          "import"
+        ]
+      }
+    ]
+  },
+  {
+    "type": "cycle",
+    "from": "src/domains/documents/document.entity.ts",
+    "to": "src/domains/documents/tags/document-tag.entity.ts",
+    "rule": {
+      "severity": "error",
+      "name": "no-circular"
+    },
+    "cycle": [
+      {
+        "name": "src/domains/documents/tags/document-tag.entity.ts",
+        "dependencyTypes": ["local", "type-only", "import"]
+      },
+      {
+        "name": "src/domains/documents/document.entity.ts",
+        "dependencyTypes": ["local", "type-only", "import"]
+      }
+    ]
+  },
+  {
+    "type": "cycle",
+    "from": "src/domains/documents/document.entity.ts",
+    "to": "src/domains/evaluations/extraction/datasets/evaluation-extraction-dataset-document.entity.ts",
+    "rule": {
+      "severity": "error",
+      "name": "no-circular"
+    },
+    "cycle": [
+      {
+        "name": "src/domains/evaluations/extraction/datasets/evaluation-extraction-dataset-document.entity.ts",
+        "dependencyTypes": [
+          "aliased",
+          "aliased-tsconfig",
+          "aliased-tsconfig-paths",
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "src/domains/documents/document.entity.ts",
+        "dependencyTypes": [
+          "aliased",
+          "aliased-tsconfig",
+          "aliased-tsconfig-paths",
+          "local",
+          "import"
+        ]
+      }
+    ]
+  },
+  {
+    "type": "cycle",
+    "from": "src/domains/documents/document.entity.ts",
+    "to": "src/domains/projects/project.entity.ts",
+    "rule": {
+      "severity": "error",
+      "name": "no-circular"
+    },
+    "cycle": [
+      {
+        "name": "src/domains/projects/project.entity.ts",
+        "dependencyTypes": [
+          "aliased",
+          "aliased-tsconfig",
+          "aliased-tsconfig-paths",
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "src/domains/documents/document.entity.ts",
+        "dependencyTypes": [
+          "aliased",
+          "aliased-tsconfig",
+          "aliased-tsconfig-paths",
+          "local",
+          "import"
+        ]
+      }
+    ]
+  },
+  {
+    "type": "cycle",
+    "from": "src/domains/documents/documents.module.ts",
+    "to": "src/domains/projects/projects.module.ts",
+    "rule": {
+      "severity": "error",
+      "name": "no-circular"
+    },
+    "cycle": [
+      {
+        "name": "src/domains/projects/projects.module.ts",
+        "dependencyTypes": [
+          "aliased",
+          "aliased-tsconfig",
+          "aliased-tsconfig-paths",
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "src/domains/agents/agents.module.ts",
+        "dependencyTypes": ["local", "import"]
+      },
+      {
+        "name": "src/domains/documents/documents.module.ts",
+        "dependencyTypes": [
+          "aliased",
+          "aliased-tsconfig",
+          "aliased-tsconfig-paths",
+          "local",
+          "import"
+        ]
+      }
+    ]
+  },
+  {
+    "type": "cycle",
+    "from": "src/domains/evaluations/evaluation.entity.ts",
+    "to": "src/domains/evaluations/reports/evaluation-report.entity.ts",
+    "rule": {
+      "severity": "error",
+      "name": "no-circular"
+    },
+    "cycle": [
+      {
+        "name": "src/domains/evaluations/reports/evaluation-report.entity.ts",
+        "dependencyTypes": ["local", "import"]
+      },
+      {
+        "name": "src/domains/evaluations/evaluation.entity.ts",
+        "dependencyTypes": ["local", "import"]
+      }
+    ]
+  },
+  {
+    "type": "cycle",
+    "from": "src/domains/evaluations/evaluation.entity.ts",
+    "to": "src/domains/projects/project.entity.ts",
+    "rule": {
+      "severity": "error",
+      "name": "no-circular"
+    },
+    "cycle": [
+      {
+        "name": "src/domains/projects/project.entity.ts",
+        "dependencyTypes": [
+          "aliased",
+          "aliased-tsconfig",
+          "aliased-tsconfig-paths",
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "src/domains/evaluations/evaluation.entity.ts",
+        "dependencyTypes": ["local", "import"]
+      }
+    ]
+  },
+  {
+    "type": "cycle",
+    "from": "src/domains/evaluations/extraction/datasets/evaluation-extraction-dataset-document.entity.ts",
+    "to": "src/domains/evaluations/extraction/datasets/evaluation-extraction-dataset.entity.ts",
+    "rule": {
+      "severity": "error",
+      "name": "no-circular"
+    },
+    "cycle": [
+      {
+        "name": "src/domains/evaluations/extraction/datasets/evaluation-extraction-dataset.entity.ts",
+        "dependencyTypes": ["local", "import"]
+      },
+      {
+        "name": "src/domains/evaluations/extraction/datasets/evaluation-extraction-dataset-document.entity.ts",
+        "dependencyTypes": ["local", "import"]
+      }
+    ]
+  },
+  {
+    "type": "cycle",
+    "from": "src/domains/evaluations/extraction/datasets/evaluation-extraction-dataset.entity.ts",
+    "to": "src/domains/evaluations/extraction/datasets/records/evaluation-extraction-dataset-record.entity.ts",
+    "rule": {
+      "severity": "error",
+      "name": "no-circular"
+    },
+    "cycle": [
+      {
+        "name": "src/domains/evaluations/extraction/datasets/records/evaluation-extraction-dataset-record.entity.ts",
+        "dependencyTypes": ["local", "import"]
+      },
+      {
+        "name": "src/domains/evaluations/extraction/datasets/evaluation-extraction-dataset.entity.ts",
+        "dependencyTypes": ["local", "import"]
+      }
+    ]
+  },
+  {
+    "type": "cycle",
+    "from": "src/domains/evaluations/extraction/runs/evaluation-extraction-run.entity.ts",
+    "to": "src/domains/evaluations/extraction/runs/records/evaluation-extraction-run-record.entity.ts",
+    "rule": {
+      "severity": "error",
+      "name": "no-circular"
+    },
+    "cycle": [
+      {
+        "name": "src/domains/evaluations/extraction/runs/records/evaluation-extraction-run-record.entity.ts",
+        "dependencyTypes": ["local", "import"]
+      },
+      {
+        "name": "src/domains/evaluations/extraction/runs/evaluation-extraction-run.entity.ts",
+        "dependencyTypes": ["local", "import"]
+      }
+    ]
+  },
+  {
+    "type": "cycle",
+    "from": "src/domains/feature-flags/feature-flag.entity.ts",
+    "to": "src/domains/projects/project.entity.ts",
+    "rule": {
+      "severity": "error",
+      "name": "no-circular"
+    },
+    "cycle": [
+      {
+        "name": "src/domains/projects/project.entity.ts",
+        "dependencyTypes": ["local", "import"]
+      },
+      {
+        "name": "src/domains/feature-flags/feature-flag.entity.ts",
+        "dependencyTypes": ["local", "import"]
+      }
+    ]
+  },
+  {
+    "type": "cycle",
+    "from": "src/domains/mcp-servers/agent-mcp-server.entity.ts",
+    "to": "src/domains/mcp-servers/mcp-server.entity.ts",
+    "rule": {
+      "severity": "error",
+      "name": "no-circular"
+    },
+    "cycle": [
+      {
+        "name": "src/domains/mcp-servers/mcp-server.entity.ts",
+        "dependencyTypes": ["local", "import"]
+      },
+      {
+        "name": "src/domains/mcp-servers/agent-mcp-server.entity.ts",
+        "dependencyTypes": ["local", "import"]
+      }
+    ]
+  },
+  {
+    "type": "cycle",
+    "from": "src/domains/mcp-servers/mcp-server.entity.ts",
+    "to": "src/domains/projects/project.entity.ts",
+    "rule": {
+      "severity": "error",
+      "name": "no-circular"
+    },
+    "cycle": [
+      {
+        "name": "src/domains/projects/project.entity.ts",
+        "dependencyTypes": [
+          "aliased",
+          "aliased-tsconfig",
+          "aliased-tsconfig-paths",
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "src/domains/agents/shared/agent-session-messages/feedback/agent-message-feedback.entity.ts",
+        "dependencyTypes": ["local", "import"]
+      },
+      {
+        "name": "src/domains/agents/shared/agent-session-messages/agent-message.entity.ts",
+        "dependencyTypes": ["local", "import"]
+      },
+      {
+        "name": "src/domains/agents/conversation-agent-sessions/conversation-agent-session.entity.ts",
+        "dependencyTypes": ["local", "import"]
+      },
+      {
+        "name": "src/domains/agents/agent.entity.ts",
+        "dependencyTypes": [
+          "aliased",
+          "aliased-tsconfig",
+          "aliased-tsconfig-paths",
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "src/domains/mcp-servers/agent-mcp-server.entity.ts",
+        "dependencyTypes": ["local", "import"]
+      },
+      {
+        "name": "src/domains/mcp-servers/mcp-server.entity.ts",
+        "dependencyTypes": ["local", "import"]
+      }
+    ]
+  },
+  {
+    "type": "cycle",
+    "from": "src/domains/organizations/memberships/organization-membership.entity.ts",
+    "to": "src/domains/organizations/organization.entity.ts",
+    "rule": {
+      "severity": "error",
+      "name": "no-circular"
+    },
+    "cycle": [
+      {
+        "name": "src/domains/organizations/organization.entity.ts",
+        "dependencyTypes": ["local", "import"]
+      },
+      {
+        "name": "src/domains/organizations/memberships/organization-membership.entity.ts",
+        "dependencyTypes": ["local", "import"]
+      }
+    ]
+  },
+  {
+    "type": "cycle",
+    "from": "src/domains/organizations/memberships/organization-membership.entity.ts",
+    "to": "src/domains/users/user.entity.ts",
+    "rule": {
+      "severity": "error",
+      "name": "no-circular"
+    },
+    "cycle": [
+      {
+        "name": "src/domains/users/user.entity.ts",
+        "dependencyTypes": [
+          "aliased",
+          "aliased-tsconfig",
+          "aliased-tsconfig-paths",
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "src/domains/organizations/memberships/organization-membership.entity.ts",
+        "dependencyTypes": [
+          "aliased",
+          "aliased-tsconfig",
+          "aliased-tsconfig-paths",
+          "local",
+          "import"
+        ]
+      }
+    ]
+  },
+  {
+    "type": "cycle",
+    "from": "src/domains/organizations/organization.entity.ts",
+    "to": "src/domains/projects/project.entity.ts",
+    "rule": {
+      "severity": "error",
+      "name": "no-circular"
+    },
+    "cycle": [
+      {
+        "name": "src/domains/projects/project.entity.ts",
+        "dependencyTypes": [
+          "aliased",
+          "aliased-tsconfig",
+          "aliased-tsconfig-paths",
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "src/domains/organizations/organization.entity.ts",
+        "dependencyTypes": [
+          "aliased",
+          "aliased-tsconfig",
+          "aliased-tsconfig-paths",
+          "local",
+          "import"
+        ]
+      }
+    ]
+  },
+  {
+    "type": "cycle",
+    "from": "src/domains/projects/memberships/project-membership.entity.ts",
+    "to": "src/domains/projects/project.entity.ts",
+    "rule": {
+      "severity": "error",
+      "name": "no-circular"
+    },
+    "cycle": [
+      {
+        "name": "src/domains/projects/project.entity.ts",
+        "dependencyTypes": ["local", "import"]
+      },
+      {
+        "name": "src/domains/projects/memberships/project-membership.entity.ts",
+        "dependencyTypes": ["local", "import"]
+      }
+    ]
+  },
+  {
+    "type": "cycle",
+    "from": "src/domains/projects/memberships/project-membership.entity.ts",
+    "to": "src/domains/users/user.entity.ts",
+    "rule": {
+      "severity": "error",
+      "name": "no-circular"
+    },
+    "cycle": [
+      {
+        "name": "src/domains/users/user.entity.ts",
+        "dependencyTypes": [
+          "aliased",
+          "aliased-tsconfig",
+          "aliased-tsconfig-paths",
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "src/domains/projects/memberships/project-membership.entity.ts",
+        "dependencyTypes": [
+          "aliased",
+          "aliased-tsconfig",
+          "aliased-tsconfig-paths",
+          "local",
+          "import"
+        ]
+      }
+    ]
+  },
+  {
+    "type": "dependency",
+    "from": "src/domains/agents/agent.policy.ts",
+    "to": "src/domains/organizations/memberships/organization-membership.entity.ts",
+    "rule": {
+      "severity": "error",
+      "name": "no-cross-domain-entity-import"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "src/domains/agents/agent.policy.ts",
+    "to": "src/domains/projects/memberships/project-membership.entity.ts",
+    "rule": {
+      "severity": "error",
+      "name": "no-cross-domain-entity-import"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "src/domains/agents/agents.module.ts",
+    "to": "src/domains/organizations/memberships/organization-membership.entity.ts",
+    "rule": {
+      "severity": "error",
+      "name": "no-cross-domain-entity-import"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "src/domains/agents/agents.module.ts",
+    "to": "src/domains/projects/memberships/project-membership.entity.ts",
+    "rule": {
+      "severity": "error",
+      "name": "no-cross-domain-entity-import"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "src/domains/agents/agents.module.ts",
+    "to": "src/domains/projects/project.entity.ts",
+    "rule": {
+      "severity": "error",
+      "name": "no-cross-domain-entity-import"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "src/domains/agents/base-agent-sessions/base-agent-sessions-module.helpers.ts",
+    "to": "src/domains/documents/document.entity.ts",
+    "rule": {
+      "severity": "error",
+      "name": "no-cross-domain-entity-import"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "src/domains/agents/base-agent-sessions/base-agent-sessions-module.helpers.ts",
+    "to": "src/domains/organizations/memberships/organization-membership.entity.ts",
+    "rule": {
+      "severity": "error",
+      "name": "no-cross-domain-entity-import"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "src/domains/agents/base-agent-sessions/base-agent-sessions-module.helpers.ts",
+    "to": "src/domains/organizations/organization.entity.ts",
+    "rule": {
+      "severity": "error",
+      "name": "no-cross-domain-entity-import"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "src/domains/agents/base-agent-sessions/base-agent-sessions-module.helpers.ts",
+    "to": "src/domains/projects/memberships/project-membership.entity.ts",
+    "rule": {
+      "severity": "error",
+      "name": "no-cross-domain-entity-import"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "src/domains/agents/base-agent-sessions/base-agent-sessions-module.helpers.ts",
+    "to": "src/domains/projects/project.entity.ts",
+    "rule": {
+      "severity": "error",
+      "name": "no-cross-domain-entity-import"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "src/domains/agents/base-agent-sessions/base-agent-sessions.service.ts",
+    "to": "src/domains/documents/document.entity.ts",
+    "rule": {
+      "severity": "error",
+      "name": "no-cross-domain-entity-import"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "src/domains/agents/conversation-agent-sessions/agent-sessions-service-tests/test-setup.ts",
+    "to": "src/domains/organizations/memberships/organization-membership.entity.ts",
+    "rule": {
+      "severity": "error",
+      "name": "no-cross-domain-entity-import"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "src/domains/agents/conversation-agent-sessions/agent-sessions-service-tests/test-setup.ts",
+    "to": "src/domains/organizations/organization.entity.ts",
+    "rule": {
+      "severity": "error",
+      "name": "no-cross-domain-entity-import"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "src/domains/agents/conversation-agent-sessions/agent-sessions-service-tests/test-setup.ts",
+    "to": "src/domains/projects/project.entity.ts",
+    "rule": {
+      "severity": "error",
+      "name": "no-cross-domain-entity-import"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "src/domains/agents/conversation-agent-sessions/agent-sessions-service-tests/test-setup.ts",
+    "to": "src/domains/users/user.entity.ts",
+    "rule": {
+      "severity": "error",
+      "name": "no-cross-domain-entity-import"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "src/domains/agents/memberships/agent-memberships.service.ts",
+    "to": "src/domains/organizations/memberships/organization-membership.entity.ts",
+    "rule": {
+      "severity": "error",
+      "name": "no-cross-domain-entity-import"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "src/domains/agents/memberships/agent-memberships.service.ts",
+    "to": "src/domains/projects/memberships/project-membership.entity.ts",
+    "rule": {
+      "severity": "error",
+      "name": "no-cross-domain-entity-import"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "src/domains/agents/memberships/agent-memberships.service.ts",
+    "to": "src/domains/users/user.entity.ts",
+    "rule": {
+      "severity": "error",
+      "name": "no-cross-domain-entity-import"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "src/domains/agents/shared/agent-session-messages/feedback/agent-message-feedback.module.ts",
+    "to": "src/domains/organizations/memberships/organization-membership.entity.ts",
+    "rule": {
+      "severity": "error",
+      "name": "no-cross-domain-entity-import"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "src/domains/agents/shared/agent-session-messages/feedback/agent-message-feedback.module.ts",
+    "to": "src/domains/organizations/organization.entity.ts",
+    "rule": {
+      "severity": "error",
+      "name": "no-cross-domain-entity-import"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "src/domains/agents/shared/agent-session-messages/feedback/agent-message-feedback.module.ts",
+    "to": "src/domains/projects/memberships/project-membership.entity.ts",
+    "rule": {
+      "severity": "error",
+      "name": "no-cross-domain-entity-import"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "src/domains/agents/shared/agent-session-messages/feedback/agent-message-feedback.module.ts",
+    "to": "src/domains/projects/project.entity.ts",
+    "rule": {
+      "severity": "error",
+      "name": "no-cross-domain-entity-import"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "src/domains/agents/shared/memberships/invitations.module.ts",
+    "to": "src/domains/projects/memberships/project-membership.entity.ts",
+    "rule": {
+      "severity": "error",
+      "name": "no-cross-domain-entity-import"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "src/domains/agents/shared/memberships/invitations.service.ts",
+    "to": "src/domains/projects/memberships/project-membership.entity.ts",
+    "rule": {
+      "severity": "error",
+      "name": "no-cross-domain-entity-import"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "src/domains/analytics/agents-analytics/agents-analytics.module.ts",
+    "to": "src/domains/agents/agent.entity.ts",
+    "rule": {
+      "severity": "error",
+      "name": "no-cross-domain-entity-import"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "src/domains/analytics/agents-analytics/agents-analytics.module.ts",
+    "to": "src/domains/agents/conversation-agent-sessions/conversation-agent-session.entity.ts",
+    "rule": {
+      "severity": "error",
+      "name": "no-cross-domain-entity-import"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "src/domains/analytics/agents-analytics/agents-analytics.module.ts",
+    "to": "src/domains/agents/memberships/agent-membership.entity.ts",
+    "rule": {
+      "severity": "error",
+      "name": "no-cross-domain-entity-import"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "src/domains/analytics/agents-analytics/agents-analytics.module.ts",
+    "to": "src/domains/agents/shared/agent-session-messages/agent-message.entity.ts",
+    "rule": {
+      "severity": "error",
+      "name": "no-cross-domain-entity-import"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "src/domains/analytics/agents-analytics/agents-analytics.module.ts",
+    "to": "src/domains/organizations/memberships/organization-membership.entity.ts",
+    "rule": {
+      "severity": "error",
+      "name": "no-cross-domain-entity-import"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "src/domains/analytics/agents-analytics/agents-analytics.module.ts",
+    "to": "src/domains/organizations/organization.entity.ts",
+    "rule": {
+      "severity": "error",
+      "name": "no-cross-domain-entity-import"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "src/domains/analytics/agents-analytics/agents-analytics.module.ts",
+    "to": "src/domains/projects/memberships/project-membership.entity.ts",
+    "rule": {
+      "severity": "error",
+      "name": "no-cross-domain-entity-import"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "src/domains/analytics/agents-analytics/agents-analytics.module.ts",
+    "to": "src/domains/projects/project.entity.ts",
+    "rule": {
+      "severity": "error",
+      "name": "no-cross-domain-entity-import"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "src/domains/analytics/agents-analytics/agents-analytics.service.ts",
+    "to": "src/domains/agents/conversation-agent-sessions/conversation-agent-session.entity.ts",
+    "rule": {
+      "severity": "error",
+      "name": "no-cross-domain-entity-import"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "src/domains/analytics/agents-analytics/agents-analytics.service.ts",
+    "to": "src/domains/agents/shared/agent-session-messages/agent-message.entity.ts",
+    "rule": {
+      "severity": "error",
+      "name": "no-cross-domain-entity-import"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "src/domains/analytics/projects-analytics/projects-analytics.module.ts",
+    "to": "src/domains/agents/conversation-agent-sessions/conversation-agent-session.entity.ts",
+    "rule": {
+      "severity": "error",
+      "name": "no-cross-domain-entity-import"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "src/domains/analytics/projects-analytics/projects-analytics.module.ts",
+    "to": "src/domains/agents/shared/agent-session-messages/agent-message.entity.ts",
+    "rule": {
+      "severity": "error",
+      "name": "no-cross-domain-entity-import"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "src/domains/analytics/projects-analytics/projects-analytics.module.ts",
+    "to": "src/domains/organizations/memberships/organization-membership.entity.ts",
+    "rule": {
+      "severity": "error",
+      "name": "no-cross-domain-entity-import"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "src/domains/analytics/projects-analytics/projects-analytics.module.ts",
+    "to": "src/domains/organizations/organization.entity.ts",
+    "rule": {
+      "severity": "error",
+      "name": "no-cross-domain-entity-import"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "src/domains/analytics/projects-analytics/projects-analytics.module.ts",
+    "to": "src/domains/projects/memberships/project-membership.entity.ts",
+    "rule": {
+      "severity": "error",
+      "name": "no-cross-domain-entity-import"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "src/domains/analytics/projects-analytics/projects-analytics.module.ts",
+    "to": "src/domains/projects/project.entity.ts",
+    "rule": {
+      "severity": "error",
+      "name": "no-cross-domain-entity-import"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "src/domains/analytics/projects-analytics/projects-analytics.service.ts",
+    "to": "src/domains/agents/conversation-agent-sessions/conversation-agent-session.entity.ts",
+    "rule": {
+      "severity": "error",
+      "name": "no-cross-domain-entity-import"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "src/domains/analytics/projects-analytics/projects-analytics.service.ts",
+    "to": "src/domains/agents/shared/agent-session-messages/agent-message.entity.ts",
+    "rule": {
+      "severity": "error",
+      "name": "no-cross-domain-entity-import"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "src/domains/documents/documents.module.ts",
+    "to": "src/domains/organizations/memberships/organization-membership.entity.ts",
+    "rule": {
+      "severity": "error",
+      "name": "no-cross-domain-entity-import"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "src/domains/documents/documents.module.ts",
+    "to": "src/domains/organizations/organization.entity.ts",
+    "rule": {
+      "severity": "error",
+      "name": "no-cross-domain-entity-import"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "src/domains/documents/documents.module.ts",
+    "to": "src/domains/projects/memberships/project-membership.entity.ts",
+    "rule": {
+      "severity": "error",
+      "name": "no-cross-domain-entity-import"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "src/domains/documents/documents.module.ts",
+    "to": "src/domains/projects/project.entity.ts",
+    "rule": {
+      "severity": "error",
+      "name": "no-cross-domain-entity-import"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "src/domains/documents/e2e-tests/test-setup.ts",
+    "to": "src/domains/organizations/memberships/organization-membership.entity.ts",
+    "rule": {
+      "severity": "error",
+      "name": "no-cross-domain-entity-import"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "src/domains/documents/e2e-tests/test-setup.ts",
+    "to": "src/domains/organizations/organization.entity.ts",
+    "rule": {
+      "severity": "error",
+      "name": "no-cross-domain-entity-import"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "src/domains/documents/e2e-tests/test-setup.ts",
+    "to": "src/domains/projects/project.entity.ts",
+    "rule": {
+      "severity": "error",
+      "name": "no-cross-domain-entity-import"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "src/domains/documents/e2e-tests/test-setup.ts",
+    "to": "src/domains/users/user.entity.ts",
+    "rule": {
+      "severity": "error",
+      "name": "no-cross-domain-entity-import"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "src/domains/documents/tags/document-tags.module.ts",
+    "to": "src/domains/organizations/memberships/organization-membership.entity.ts",
+    "rule": {
+      "severity": "error",
+      "name": "no-cross-domain-entity-import"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "src/domains/documents/tags/document-tags.module.ts",
+    "to": "src/domains/projects/memberships/project-membership.entity.ts",
+    "rule": {
+      "severity": "error",
+      "name": "no-cross-domain-entity-import"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "src/domains/documents/tags/document-tags.module.ts",
+    "to": "src/domains/projects/project.entity.ts",
+    "rule": {
+      "severity": "error",
+      "name": "no-cross-domain-entity-import"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "src/domains/evaluations/evaluations.module.ts",
+    "to": "src/domains/agents/agent.entity.ts",
+    "rule": {
+      "severity": "error",
+      "name": "no-cross-domain-entity-import"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "src/domains/evaluations/evaluations.module.ts",
+    "to": "src/domains/agents/memberships/agent-membership.entity.ts",
+    "rule": {
+      "severity": "error",
+      "name": "no-cross-domain-entity-import"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "src/domains/evaluations/evaluations.module.ts",
+    "to": "src/domains/organizations/memberships/organization-membership.entity.ts",
+    "rule": {
+      "severity": "error",
+      "name": "no-cross-domain-entity-import"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "src/domains/evaluations/evaluations.module.ts",
+    "to": "src/domains/organizations/organization.entity.ts",
+    "rule": {
+      "severity": "error",
+      "name": "no-cross-domain-entity-import"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "src/domains/evaluations/evaluations.module.ts",
+    "to": "src/domains/projects/memberships/project-membership.entity.ts",
+    "rule": {
+      "severity": "error",
+      "name": "no-cross-domain-entity-import"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "src/domains/evaluations/evaluations.module.ts",
+    "to": "src/domains/projects/project.entity.ts",
+    "rule": {
+      "severity": "error",
+      "name": "no-cross-domain-entity-import"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "src/domains/evaluations/extraction/datasets/evaluation-extraction-datasets.controller.ts",
+    "to": "src/domains/documents/document.entity.ts",
+    "rule": {
+      "severity": "error",
+      "name": "no-cross-domain-entity-import"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "src/domains/evaluations/extraction/datasets/evaluation-extraction-datasets.service.ts",
+    "to": "src/domains/documents/document.entity.ts",
+    "rule": {
+      "severity": "error",
+      "name": "no-cross-domain-entity-import"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "src/domains/evaluations/extraction/runs/e2e-tests/csv-dataset.helpers.ts",
+    "to": "src/domains/agents/agent.entity.ts",
+    "rule": {
+      "severity": "error",
+      "name": "no-cross-domain-entity-import"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "src/domains/evaluations/extraction/runs/e2e-tests/csv-dataset.helpers.ts",
+    "to": "src/domains/organizations/organization.entity.ts",
+    "rule": {
+      "severity": "error",
+      "name": "no-cross-domain-entity-import"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "src/domains/evaluations/extraction/runs/e2e-tests/csv-dataset.helpers.ts",
+    "to": "src/domains/projects/project.entity.ts",
+    "rule": {
+      "severity": "error",
+      "name": "no-cross-domain-entity-import"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "src/domains/evaluations/extraction/runs/evaluation-extraction-run-processor.service.ts",
+    "to": "src/domains/agents/agent.entity.ts",
+    "rule": {
+      "severity": "error",
+      "name": "no-cross-domain-entity-import"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "src/domains/evaluations/extraction/runs/evaluation-extraction-runs.service.ts",
+    "to": "src/domains/agents/agent.entity.ts",
+    "rule": {
+      "severity": "error",
+      "name": "no-cross-domain-entity-import"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "src/domains/evaluations/reports/evaluation-reports.service.ts",
+    "to": "src/domains/agents/agent.entity.ts",
+    "rule": {
+      "severity": "error",
+      "name": "no-cross-domain-entity-import"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "src/domains/me/me.module.ts",
+    "to": "src/domains/agents/memberships/agent-membership.entity.ts",
+    "rule": {
+      "severity": "error",
+      "name": "no-cross-domain-entity-import"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "src/domains/me/me.module.ts",
+    "to": "src/domains/organizations/memberships/organization-membership.entity.ts",
+    "rule": {
+      "severity": "error",
+      "name": "no-cross-domain-entity-import"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "src/domains/me/me.module.ts",
+    "to": "src/domains/projects/memberships/project-membership.entity.ts",
+    "rule": {
+      "severity": "error",
+      "name": "no-cross-domain-entity-import"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "src/domains/me/me.service.ts",
+    "to": "src/domains/agents/memberships/agent-membership.entity.ts",
+    "rule": {
+      "severity": "error",
+      "name": "no-cross-domain-entity-import"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "src/domains/me/me.service.ts",
+    "to": "src/domains/organizations/memberships/organization-membership.entity.ts",
+    "rule": {
+      "severity": "error",
+      "name": "no-cross-domain-entity-import"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "src/domains/me/me.service.ts",
+    "to": "src/domains/projects/memberships/project-membership.entity.ts",
+    "rule": {
+      "severity": "error",
+      "name": "no-cross-domain-entity-import"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "src/domains/organizations/organization.helpers.ts",
+    "to": "src/domains/projects/project.entity.ts",
+    "rule": {
+      "severity": "error",
+      "name": "no-cross-domain-entity-import"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "src/domains/organizations/organization.policy.ts",
+    "to": "src/domains/users/user.entity.ts",
+    "rule": {
+      "severity": "error",
+      "name": "no-cross-domain-entity-import"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "src/domains/organizations/organizations.module.ts",
+    "to": "src/domains/users/user.entity.ts",
+    "rule": {
+      "severity": "error",
+      "name": "no-cross-domain-entity-import"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "src/domains/organizations/organizations.service.ts",
+    "to": "src/domains/users/user.entity.ts",
+    "rule": {
+      "severity": "error",
+      "name": "no-cross-domain-entity-import"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "src/domains/organizations/provisioning/organization-account-provisioning.service.ts",
+    "to": "src/domains/users/user.entity.ts",
+    "rule": {
+      "severity": "error",
+      "name": "no-cross-domain-entity-import"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "src/domains/organizations/provisioning/workspace-invitation.service.ts",
+    "to": "src/domains/projects/memberships/project-membership.entity.ts",
+    "rule": {
+      "severity": "error",
+      "name": "no-cross-domain-entity-import"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "src/domains/organizations/provisioning/workspace-invitation.service.ts",
+    "to": "src/domains/projects/project.entity.ts",
+    "rule": {
+      "severity": "error",
+      "name": "no-cross-domain-entity-import"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "src/domains/organizations/provisioning/workspace-invitation.service.ts",
+    "to": "src/domains/users/user.entity.ts",
+    "rule": {
+      "severity": "error",
+      "name": "no-cross-domain-entity-import"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "src/domains/projects/helpers.ts",
+    "to": "src/domains/feature-flags/feature-flag.entity.ts",
+    "rule": {
+      "severity": "error",
+      "name": "no-cross-domain-entity-import"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "src/domains/projects/memberships/project-memberships.service.ts",
+    "to": "src/domains/organizations/memberships/organization-membership.entity.ts",
+    "rule": {
+      "severity": "error",
+      "name": "no-cross-domain-entity-import"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "src/domains/projects/memberships/project-memberships.service.ts",
+    "to": "src/domains/users/user.entity.ts",
+    "rule": {
+      "severity": "error",
+      "name": "no-cross-domain-entity-import"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "src/domains/projects/project.policy.ts",
+    "to": "src/domains/organizations/memberships/organization-membership.entity.ts",
+    "rule": {
+      "severity": "error",
+      "name": "no-cross-domain-entity-import"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "src/domains/projects/projects.module.ts",
+    "to": "src/domains/feature-flags/feature-flag.entity.ts",
+    "rule": {
+      "severity": "error",
+      "name": "no-cross-domain-entity-import"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "src/domains/projects/projects.module.ts",
+    "to": "src/domains/organizations/memberships/organization-membership.entity.ts",
+    "rule": {
+      "severity": "error",
+      "name": "no-cross-domain-entity-import"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "src/domains/projects/projects.module.ts",
+    "to": "src/domains/organizations/organization.entity.ts",
+    "rule": {
+      "severity": "error",
+      "name": "no-cross-domain-entity-import"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "src/domains/projects/projects.module.ts",
+    "to": "src/domains/users/user.entity.ts",
+    "rule": {
+      "severity": "error",
+      "name": "no-cross-domain-entity-import"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "src/domains/projects/projects.service.ts",
+    "to": "src/domains/agents/agent.entity.ts",
+    "rule": {
+      "severity": "error",
+      "name": "no-cross-domain-entity-import"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "src/domains/projects/projects.service.ts",
+    "to": "src/domains/documents/document.entity.ts",
+    "rule": {
+      "severity": "error",
+      "name": "no-cross-domain-entity-import"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "src/domains/projects/projects.service.ts",
+    "to": "src/domains/evaluations/evaluation.entity.ts",
+    "rule": {
+      "severity": "error",
+      "name": "no-cross-domain-entity-import"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "src/domains/projects/projects.service.ts",
+    "to": "src/domains/evaluations/reports/evaluation-report.entity.ts",
+    "rule": {
+      "severity": "error",
+      "name": "no-cross-domain-entity-import"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "src/domains/projects/projects.service.ts",
+    "to": "src/domains/feature-flags/feature-flag.entity.ts",
+    "rule": {
+      "severity": "error",
+      "name": "no-cross-domain-entity-import"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "src/domains/agents/agents.service.ts",
+    "to": "src/domains/documents/tags/document-tags.service.ts",
+    "rule": {
+      "severity": "warn",
+      "name": "no-cross-domain-service-reach"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "src/domains/agents/extraction-agent-sessions/extraction-agent-sessions.service.ts",
+    "to": "src/domains/documents/documents.service.ts",
+    "rule": {
+      "severity": "warn",
+      "name": "no-cross-domain-service-reach"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "src/domains/agents/shared/agent-session-messages/streaming/streaming.service.ts",
+    "to": "src/domains/documents/documents.service.ts",
+    "rule": {
+      "severity": "warn",
+      "name": "no-cross-domain-service-reach"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "src/domains/agents/shared/agent-session-messages/streaming/streaming.service.ts",
+    "to": "src/domains/documents/embeddings/document-chunk-retrieval.service.ts",
+    "rule": {
+      "severity": "warn",
+      "name": "no-cross-domain-service-reach"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "src/domains/agents/shared/agent-session-messages/streaming/streaming.service.ts",
+    "to": "src/domains/mcp-servers/mcp-servers.service.ts",
+    "rule": {
+      "severity": "warn",
+      "name": "no-cross-domain-service-reach"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "src/domains/agents/shared/agent-session-messages/streaming/streaming.service.ts",
+    "to": "src/domains/projects/projects.service.ts",
+    "rule": {
+      "severity": "warn",
+      "name": "no-cross-domain-service-reach"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "src/domains/agents/shared/agent-session-messages/streaming/tools/retrieve-project-document-chunks.tool.ts",
+    "to": "src/domains/documents/embeddings/document-chunk-retrieval.service.ts",
+    "rule": {
+      "severity": "warn",
+      "name": "no-cross-domain-service-reach"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "src/domains/agents/shared/memberships/invitations.module.ts",
+    "to": "src/domains/projects/memberships/project-memberships.service.ts",
+    "rule": {
+      "severity": "warn",
+      "name": "no-cross-domain-service-reach"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "src/domains/agents/shared/memberships/invitations.service.ts",
+    "to": "src/domains/auth/auth0-userinfo.service.ts",
+    "rule": {
+      "severity": "warn",
+      "name": "no-cross-domain-service-reach"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "src/domains/agents/shared/memberships/invitations.service.ts",
+    "to": "src/domains/projects/memberships/project-memberships.service.ts",
+    "rule": {
+      "severity": "warn",
+      "name": "no-cross-domain-service-reach"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "src/domains/evaluations/extraction/datasets/evaluation-extraction-datasets.service.ts",
+    "to": "src/domains/documents/documents.service.ts",
+    "rule": {
+      "severity": "warn",
+      "name": "no-cross-domain-service-reach"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "src/domains/evaluations/extraction/runs/evaluation-extraction-run-csv-export.service.ts",
+    "to": "src/domains/documents/documents.service.ts",
+    "rule": {
+      "severity": "warn",
+      "name": "no-cross-domain-service-reach"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "src/domains/me/me.controller.ts",
+    "to": "src/domains/organizations/organizations.service.ts",
+    "rule": {
+      "severity": "warn",
+      "name": "no-cross-domain-service-reach"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "src/domains/me/me.controller.ts",
+    "to": "src/domains/projects/projects.service.ts",
+    "rule": {
+      "severity": "warn",
+      "name": "no-cross-domain-service-reach"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "src/domains/organizations/provisioning/workspace-invitation.service.ts",
+    "to": "src/domains/projects/memberships/project-memberships.service.ts",
+    "rule": {
+      "severity": "warn",
+      "name": "no-cross-domain-service-reach"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "src/domains/projects/memberships/project-memberships.service.ts",
+    "to": "src/domains/agents/memberships/agent-memberships.service.ts",
+    "rule": {
+      "severity": "warn",
+      "name": "no-cross-domain-service-reach"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "src/domains/projects/projects.service.ts",
+    "to": "src/domains/agents/agents.service.ts",
+    "rule": {
+      "severity": "warn",
+      "name": "no-cross-domain-service-reach"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "src/domains/users/user.guard.ts",
+    "to": "src/domains/auth/auth0-userinfo.service.ts",
+    "rule": {
+      "severity": "warn",
+      "name": "no-cross-domain-service-reach"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "src/domains/users/users.service.ts",
+    "to": "src/domains/auth/auth0-userinfo.service.ts",
+    "rule": {
+      "severity": "warn",
+      "name": "no-cross-domain-service-reach"
+    }
+  }
+]
