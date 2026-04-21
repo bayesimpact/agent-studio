@@ -16,6 +16,7 @@
     "biome:check": "biome check --write --unsafe .",
     "biome:ci": "biome ci .",
     "typecheck": "turbo run typecheck",
+    "check:boundaries": "turbo run check:boundaries",
     "clean": "find . -name '.turbo' -type d -prune -exec rm -rf '{}' + && find . -name 'node_modules' -type d -prune -exec rm -rf '{}' + && rm -rf node_modules"
   },
   "devDependencies": {

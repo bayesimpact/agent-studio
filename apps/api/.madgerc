@@ -1,0 +1,11 @@
+{
+  "fileExtensions": ["ts"],
+  "tsConfig": "tsconfig.json",
+  "excludeRegExp": [
+    "\\.entity\\.ts$",
+    "^\\.\\./\\.\\./\\.\\./packages/",
+    "\\.spec\\.ts$",
+    "\\.factory\\.ts$",
+    "/test/"
+  ]
+}
