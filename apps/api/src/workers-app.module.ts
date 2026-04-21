@@ -3,6 +3,7 @@ import { Module } from "@nestjs/common"
 import { ConfigModule, ConfigService } from "@nestjs/config"
 import { TypeOrmModule } from "@nestjs/typeorm"
 import { getBullMqConnection } from "./bullmq.config"
+import { WorkersHealthModule } from "./common/workers-health/workers-health.module"
 import typeorm from "./config/typeorm"
 import { DocumentEmbeddingsWorkersModule } from "./domains/documents/embeddings/document-embeddings-workers.module"
 import { StorageModule } from "./domains/documents/storage/storage.module"
@@ -28,6 +29,7 @@ import { EvaluationExtractionRunWorkersModule } from "./domains/evaluations/extr
     DocumentEmbeddingsWorkersModule,
     EvaluationExtractionRunWorkersModule,
     StorageModule,
+    WorkersHealthModule,
   ],
 })
 export class WorkersAppModule {}
