@@ -7,7 +7,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 This is a Turborepo monorepo with the following structure:
 
 - `apps/api` - NestJS backend application (runs on port 3000)
-- `apps/web` - Next.js frontend application (runs on port 3001 with Turbopack)
+- `apps/web` - Vite + React frontend application (runs on port 5173)
 - `packages/@caseai-connect/api-contracts` - Shared API contracts and DTOs
 - `packages/@repo/jest-config` - Shared Jest configurations
 - `packages/@repo/typescript-config` - Shared TypeScript configurations
@@ -50,10 +50,10 @@ All commands should be run from the root directory using Turbo (via npm scripts)
 - See `apps/api/CLAUDE.md` for detailed API rules
 
 ### Web Application
-- Next.js 15 with App Router and Turbopack
+- Vite + React (SPA) with React Compiler enabled via `babel-plugin-react-compiler`
 - Redux for state management with feature-based slices/thunks/selectors
 - Integrates with shared UI component library from `@caseai-connect/ui`
-- Entry point: `apps/web/app/page.tsx`
+- Entry point: `apps/web/src/main.tsx`
 - See `apps/web/CLAUDE.md` for detailed web rules
 
 ### Shared Packages
