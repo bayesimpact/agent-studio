@@ -190,7 +190,7 @@ function ChatInput({
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (!input.value.trim()) return
 
-    if (e.key === "Enter" && e.metaKey) {
+    if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault()
       onMessageSubmit(input.value)
     }
