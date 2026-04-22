@@ -28,6 +28,10 @@ export function Dictaphone({ disabled }: { disabled: boolean }) {
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: do not add input to dependencies to avoid loop
   const handleRecognition = useCallback(async () => {
+    SpeechRecognition.getRecognition()?.addEventListener("error", (event) => {
+      console.error("SpeechRecognition error", event)
+    })
+
     if (listening) {
       input.setDisabled(false)
       await SpeechRecognition.stopListening()
