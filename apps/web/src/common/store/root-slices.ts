@@ -1,4 +1,5 @@
 import { combineSlices } from "@reduxjs/toolkit"
+import { backofficeSlice } from "@/backoffice/features/backoffice/backoffice.slice"
 import { conversationAgentSessionsSlice } from "@/common/features/agents/agent-sessions/conversation/conversation-agent-sessions.slice"
 import { currentAgentSessionIdSlice } from "@/common/features/agents/agent-sessions/current-agent-session-id/current-agent-session-id.slice"
 import { extractionAgentSessionsSlice } from "@/common/features/agents/agent-sessions/extraction/extraction-agent-sessions.slice"
@@ -18,6 +19,7 @@ export const rootSliceList = [
   agentSessionMessagesSlice,
   agentsSlice,
   authSlice,
+  backofficeSlice,
   conversationAgentSessionsSlice,
   currentAgentSessionIdSlice,
   extractionAgentSessionsSlice,

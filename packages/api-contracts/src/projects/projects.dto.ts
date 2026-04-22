@@ -1,4 +1,4 @@
-import type { FeatureFlagsDto } from "@caseai-connect/api-contracts"
+import type { FeatureFlagsDto } from "../feature-flags/feature-flags.dto"
 import type { TimeType } from "../generic"
 
 export type ProjectDto = {

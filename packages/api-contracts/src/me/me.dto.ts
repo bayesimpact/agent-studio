@@ -13,6 +13,7 @@ export type UserDto = {
   email: string
   name: string | null
   memberships: UserMembershipsDto
+  isBackofficeAuthorized: boolean
 }
 
 export type MeResponseDto = {

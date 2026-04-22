@@ -1,3 +1,4 @@
+import type { IBackofficeSpi } from "@/backoffice/features/backoffice/backoffice.spi"
 import type { IConversationAgentSessionsSpi } from "@/common/features/agents/agent-sessions/conversation/conversation-agent-sessions.spi"
 import type { IExtractionAgentSessionsSpi } from "@/common/features/agents/agent-sessions/extraction/extraction-agent-sessions.spi"
 import type { IFormAgentSessionsSpi } from "@/common/features/agents/agent-sessions/form/form-agent-sessions.spi"
@@ -26,6 +27,7 @@ export type Services = {
   agentMessageFeedback: IAgentMessageFeedbackSpi
   agents: IAgentsSpi
   agentSessionMessages: IAgentSessionMessagesSpi
+  backoffice: IBackofficeSpi
   conversationAgentSessions: IConversationAgentSessionsSpi
   documents: IDocumentsSpi
   documentTags: IDocumentTagsSpi

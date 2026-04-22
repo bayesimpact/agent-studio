@@ -9,25 +9,24 @@ export { AgentMessageFeedbackRoutes } from "./agent-message-feedback/agent-messa
 // Agent
 export * from "./agents/agents.dto"
 export { AgentsRoutes } from "./agents/agents.routes"
-
 // Conversation Agent Sessions
 export type * from "./agents/conversation-agent-sessions/conversation-agent-sessions.dto"
 export { ConversationAgentSessionsRoutes } from "./agents/conversation-agent-sessions/conversation-agent-sessions.routes"
-
 // Extraction Agent Sessions
 export type * from "./agents/extraction-agent-sessions/extraction-agent-sessions.dto"
 export { ExtractionAgentSessionsRoutes } from "./agents/extraction-agent-sessions/extraction-agent-sessions.routes"
-
 // Form Agent Sessions
 export type * from "./agents/form-agent-sessions/form-agent-sessions.dto"
 export { FormAgentSessionsRoutes } from "./agents/form-agent-sessions/form-agent-sessions.routes"
-
 // Agent Session Messages
 export * from "./agents/shared/agent-session-messages/agent-session-messages.dto"
 export { AgentSessionMessagesRoutes } from "./agents/shared/agent-session-messages/agent-session-messages.routes"
 // Analytics
 export type * from "./analytics/analytics.dto"
 export { AgentAnalyticsRoutes, AnalyticsRoutes } from "./analytics/analytics.routes"
+// Backoffice
+export type * from "./backoffice/backoffice.dto"
+export { BackofficeRoutes } from "./backoffice/backoffice.routes"
 // Document Tags
 export * from "./document-tags/document-tag.dto"
 export { DocumentTagsRoutes } from "./document-tags/document-tag.routes"
@@ -47,7 +46,7 @@ export { EvaluationReportsRoutes } from "./evaluations/evaluation-reports.routes
 export * from "./evaluations/evaluations.dto"
 export { EvaluationsRoutes } from "./evaluations/evaluations.routes"
 // Feature Flags
-export type * from "./feature-flags/feature-flags.dto"
+export * from "./feature-flags/feature-flags.dto"
 export { FeatureFlagsRoutes } from "./feature-flags/feature-flags.routes"
 // Generic
 export type * from "./generic"
