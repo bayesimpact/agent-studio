@@ -13,3 +13,20 @@ export type AnalyticsDailyPointDto = {
   date: string
   value: number
 }
+
+export type AnalyticsCategoryPointDto = {
+  categoryId?: string
+  categoryName: string
+  value: number
+  isUncategorized: boolean
+}
+
+export type AnalyticsCategoryDailyPointDto = {
+  date: string
+  agentId: string
+  agentName: string
+  categoryId?: string
+  categoryName: string
+  value: number
+  isUncategorized: boolean
+}

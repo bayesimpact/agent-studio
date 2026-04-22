@@ -6,7 +6,9 @@ import {
   teardownE2eTestDatabase,
 } from "@/common/test/test-database"
 import { agentFactory } from "@/domains/agents/agent.factory"
+import { AgentCategory } from "@/domains/agents/categories/agent-category.entity"
 import { conversationAgentSessionFactory } from "@/domains/agents/conversation-agent-sessions/conversation-agent-session.factory"
+import { ConversationAgentSessionCategory } from "@/domains/agents/conversation-agent-sessions/conversation-agent-session-category.entity"
 import { agentMessageFactory } from "@/domains/agents/shared/agent-session-messages/agent-messages.factory"
 import { createOrganizationWithProject } from "@/domains/organizations/organization.factory"
 import { ProjectsAnalyticsModule } from "./projects-analytics.module"
@@ -258,5 +260,181 @@ describe("ProjectsAnalyticsService", () => {
     })
 
     expect(averages).toEqual([{ date: dayStart.toISOString().slice(0, 10), value: 0 }])
+  })
+
+  it("returns category counts for the selected agent only", async () => {
+    const dayStart = new Date("2026-04-01T00:00:00.000Z")
+    const dayEnd = endOfUtcDay(dayStart)
+
+    const { organization, project, user } = await createOrganizationWithProject(repositories)
+    const primaryAgent = agentFactory.transient({ organization, project }).build()
+    const secondaryAgent = agentFactory.transient({ organization, project }).build()
+    await repositories.agentRepository.save([primaryAgent, secondaryAgent])
+
+    const billingCategory = await setup
+      .getRepository(AgentCategory)
+      .save({ agentId: primaryAgent.id, name: "billing" })
+    const supportCategory = await setup
+      .getRepository(AgentCategory)
+      .save({ agentId: primaryAgent.id, name: "support" })
+    const secondaryCategory = await setup
+      .getRepository(AgentCategory)
+      .save({ agentId: secondaryAgent.id, name: "secondary" })
+
+    const primaryUncategorized = conversationAgentSessionFactory
+      .transient({ organization, project, agent: primaryAgent, user })
+      .build({ createdAt: hours(1).after(dayStart), updatedAt: new Date() })
+    const primaryBilling = conversationAgentSessionFactory
+      .transient({ organization, project, agent: primaryAgent, user })
+      .build({ createdAt: hours(2).after(dayStart), updatedAt: new Date() })
+    const primaryMultiCategory = conversationAgentSessionFactory
+      .transient({ organization, project, agent: primaryAgent, user })
+      .build({ createdAt: hours(3).after(dayStart), updatedAt: new Date() })
+    const secondarySession = conversationAgentSessionFactory
+      .transient({ organization, project, agent: secondaryAgent, user })
+      .build({ createdAt: hours(4).after(dayStart), updatedAt: new Date() })
+    await repositories.conversationAgentSessionRepository.save([
+      primaryUncategorized,
+      primaryBilling,
+      primaryMultiCategory,
+      secondarySession,
+    ])
+
+    await setup.getRepository(ConversationAgentSessionCategory).save([
+      { conversationAgentSessionId: primaryBilling.id, agentCategoryId: billingCategory.id },
+      { conversationAgentSessionId: primaryMultiCategory.id, agentCategoryId: billingCategory.id },
+      { conversationAgentSessionId: primaryMultiCategory.id, agentCategoryId: supportCategory.id },
+      { conversationAgentSessionId: secondarySession.id, agentCategoryId: secondaryCategory.id },
+    ])
+
+    const connectScope = { organizationId: organization.id, projectId: project.id, userId: user.id }
+
+    const primaryOnly = await service.getConversationsByCategory({
+      connectScope,
+      agentId: primaryAgent.id,
+      startAt: dayStart.getTime(),
+      endAt: dayEnd.getTime(),
+    })
+    expect(primaryOnly).toEqual([
+      {
+        categoryId: billingCategory.id,
+        categoryName: "billing",
+        value: 2,
+        isUncategorized: false,
+      },
+      {
+        categoryId: supportCategory.id,
+        categoryName: "support",
+        value: 1,
+        isUncategorized: false,
+      },
+      {
+        categoryName: "uncategorized",
+        value: 1,
+        isUncategorized: true,
+      },
+    ])
+
+    const secondaryOnly = await service.getConversationsByCategory({
+      connectScope,
+      agentId: secondaryAgent.id,
+      startAt: dayStart.getTime(),
+      endAt: dayEnd.getTime(),
+    })
+    expect(secondaryOnly).toEqual([
+      {
+        categoryId: secondaryCategory.id,
+        categoryName: "secondary",
+        value: 1,
+        isUncategorized: false,
+      },
+    ])
+  })
+
+  it("returns conversations by category per day split by agent", async () => {
+    const day1Start = new Date("2026-05-01T00:00:00.000Z")
+    const day2Start = days(1).after(day1Start)
+    const day2End = endOfUtcDay(day2Start)
+
+    const { organization, project, user } = await createOrganizationWithProject(repositories)
+    const supportAgent = agentFactory
+      .transient({ organization, project })
+      .build({ name: "Support" })
+    const salesAgent = agentFactory.transient({ organization, project }).build({ name: "Sales" })
+    await repositories.agentRepository.save([supportAgent, salesAgent])
+
+    const billingCategory = await setup
+      .getRepository(AgentCategory)
+      .save({ agentId: supportAgent.id, name: "billing" })
+    const onboardingCategory = await setup
+      .getRepository(AgentCategory)
+      .save({ agentId: salesAgent.id, name: "onboarding" })
+
+    const supportDay1 = conversationAgentSessionFactory
+      .transient({ organization, project, agent: supportAgent, user })
+      .build({ createdAt: hours(1).after(day1Start), updatedAt: new Date() })
+    const supportDay2Uncategorized = conversationAgentSessionFactory
+      .transient({ organization, project, agent: supportAgent, user })
+      .build({ createdAt: hours(1).after(day2Start), updatedAt: new Date() })
+    const salesDay2 = conversationAgentSessionFactory
+      .transient({ organization, project, agent: salesAgent, user })
+      .build({ createdAt: hours(2).after(day2Start), updatedAt: new Date() })
+    await repositories.conversationAgentSessionRepository.save([
+      supportDay1,
+      supportDay2Uncategorized,
+      salesDay2,
+    ])
+
+    await setup.getRepository(ConversationAgentSessionCategory).save([
+      { conversationAgentSessionId: supportDay1.id, agentCategoryId: billingCategory.id },
+      { conversationAgentSessionId: salesDay2.id, agentCategoryId: onboardingCategory.id },
+    ])
+
+    const connectScope = { organizationId: organization.id, projectId: project.id, userId: user.id }
+    const supportPoints = await service.getConversationsByCategoryPerAgentPerDay({
+      connectScope,
+      agentId: supportAgent.id,
+      startAt: day1Start.getTime(),
+      endAt: day2End.getTime(),
+    })
+
+    expect(supportPoints).toEqual([
+      {
+        date: day1Start.toISOString().slice(0, 10),
+        agentId: supportAgent.id,
+        agentName: "Support",
+        categoryId: billingCategory.id,
+        categoryName: "billing",
+        value: 1,
+        isUncategorized: false,
+      },
+      {
+        date: day2Start.toISOString().slice(0, 10),
+        agentId: supportAgent.id,
+        agentName: "Support",
+        categoryName: "uncategorized",
+        value: 1,
+        isUncategorized: true,
+      },
+    ])
+
+    const salesPoints = await service.getConversationsByCategoryPerAgentPerDay({
+      connectScope,
+      agentId: salesAgent.id,
+      startAt: day1Start.getTime(),
+      endAt: day2End.getTime(),
+    })
+
+    expect(salesPoints).toEqual([
+      {
+        date: day2Start.toISOString().slice(0, 10),
+        agentId: salesAgent.id,
+        agentName: "Sales",
+        categoryId: onboardingCategory.id,
+        categoryName: "onboarding",
+        value: 1,
+        isUncategorized: false,
+      },
+    ])
   })
 })

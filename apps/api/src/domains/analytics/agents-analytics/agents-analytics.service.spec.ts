@@ -7,7 +7,9 @@ import {
   teardownE2eTestDatabase,
 } from "@/common/test/test-database"
 import { agentFactory } from "@/domains/agents/agent.factory"
+import { AgentCategory } from "@/domains/agents/categories/agent-category.entity"
 import { conversationAgentSessionFactory } from "@/domains/agents/conversation-agent-sessions/conversation-agent-session.factory"
+import { ConversationAgentSessionCategory } from "@/domains/agents/conversation-agent-sessions/conversation-agent-session-category.entity"
 import { agentMessageFactory } from "@/domains/agents/shared/agent-session-messages/agent-messages.factory"
 import { createOrganizationWithProject } from "@/domains/organizations/organization.factory"
 import { AgentsAnalyticsModule } from "./agents-analytics.module"
@@ -174,5 +176,143 @@ describe("AgentsAnalyticsService", () => {
     await expect(
       service.getConversationsPerDay({ connectScope, agentId: agent.id, startAt, endAt }),
     ).rejects.toThrow(BadRequestException)
+  })
+
+  it("returns category counts with an uncategorized bucket", async () => {
+    const dayStart = new Date("2026-03-10T00:00:00.000Z")
+    const dayEnd = endOfUtcDay(dayStart)
+
+    const { organization, project, user } = await createOrganizationWithProject(repositories)
+    const agent = agentFactory.transient({ organization, project }).build()
+    await repositories.agentRepository.save(agent)
+
+    const billingCategory = await setup
+      .getRepository(AgentCategory)
+      .save({ agentId: agent.id, name: "billing" })
+    const supportCategory = await setup
+      .getRepository(AgentCategory)
+      .save({ agentId: agent.id, name: "support" })
+    const deprecatedCategory = await setup
+      .getRepository(AgentCategory)
+      .save({ agentId: agent.id, name: "deprecated" })
+    await setup.getRepository(AgentCategory).softDelete(deprecatedCategory.id)
+
+    const uncategorizedSession = conversationAgentSessionFactory
+      .transient({ organization, project, agent, user })
+      .build({ createdAt: hours(1).after(dayStart), updatedAt: new Date() })
+    const billingSession = conversationAgentSessionFactory
+      .transient({ organization, project, agent, user })
+      .build({ createdAt: hours(2).after(dayStart), updatedAt: new Date() })
+    const multiCategorySession = conversationAgentSessionFactory
+      .transient({ organization, project, agent, user })
+      .build({ createdAt: hours(3).after(dayStart), updatedAt: new Date() })
+    const onlyDeletedCategorySession = conversationAgentSessionFactory
+      .transient({ organization, project, agent, user })
+      .build({ createdAt: hours(4).after(dayStart), updatedAt: new Date() })
+    await repositories.conversationAgentSessionRepository.save([
+      uncategorizedSession,
+      billingSession,
+      multiCategorySession,
+      onlyDeletedCategorySession,
+    ])
+
+    await setup.getRepository(ConversationAgentSessionCategory).save([
+      { conversationAgentSessionId: billingSession.id, agentCategoryId: billingCategory.id },
+      { conversationAgentSessionId: multiCategorySession.id, agentCategoryId: billingCategory.id },
+      { conversationAgentSessionId: multiCategorySession.id, agentCategoryId: supportCategory.id },
+      {
+        conversationAgentSessionId: onlyDeletedCategorySession.id,
+        agentCategoryId: deprecatedCategory.id,
+      },
+    ])
+
+    const connectScope = { organizationId: organization.id, projectId: project.id, userId: user.id }
+
+    const response = await service.getConversationsByCategory({
+      connectScope,
+      agentId: agent.id,
+      startAt: dayStart.getTime(),
+      endAt: dayEnd.getTime(),
+    })
+
+    expect(response).toEqual([
+      {
+        categoryId: billingCategory.id,
+        categoryName: "billing",
+        value: 2,
+        isUncategorized: false,
+      },
+      {
+        categoryName: "uncategorized",
+        value: 2,
+        isUncategorized: true,
+      },
+      {
+        categoryId: supportCategory.id,
+        categoryName: "support",
+        value: 1,
+        isUncategorized: false,
+      },
+    ])
+  })
+
+  it("returns category stats per day with uncategorized bucket", async () => {
+    const day1Start = new Date("2026-03-11T00:00:00.000Z")
+    const day2Start = new Date("2026-03-12T00:00:00.000Z")
+    const day2End = endOfUtcDay(day2Start)
+
+    const { organization, project, user } = await createOrganizationWithProject(repositories)
+    const agent = agentFactory.transient({ organization, project }).build({ name: "Support Agent" })
+    await repositories.agentRepository.save(agent)
+
+    const billingCategory = await setup
+      .getRepository(AgentCategory)
+      .save({ agentId: agent.id, name: "billing" })
+
+    const categorizedSession = conversationAgentSessionFactory
+      .transient({ organization, project, agent, user })
+      .build({ createdAt: hours(1).after(day1Start), updatedAt: new Date() })
+    const uncategorizedSession = conversationAgentSessionFactory
+      .transient({ organization, project, agent, user })
+      .build({ createdAt: hours(2).after(day2Start), updatedAt: new Date() })
+    await repositories.conversationAgentSessionRepository.save([
+      categorizedSession,
+      uncategorizedSession,
+    ])
+
+    await setup
+      .getRepository(ConversationAgentSessionCategory)
+      .save([
+        { conversationAgentSessionId: categorizedSession.id, agentCategoryId: billingCategory.id },
+      ])
+
+    const connectScope = { organizationId: organization.id, projectId: project.id, userId: user.id }
+
+    const response = await service.getConversationsByCategoryPerDay({
+      connectScope,
+      agentId: agent.id,
+      startAt: day1Start.getTime(),
+      endAt: day2End.getTime(),
+    })
+
+    expect(response).toEqual([
+      {
+        date: "2026-03-11",
+        agentId: agent.id,
+        agentName: "Support Agent",
+        categoryId: billingCategory.id,
+        categoryName: "billing",
+        value: 1,
+        isUncategorized: false,
+      },
+      {
+        date: "2026-03-12",
+        agentId: agent.id,
+        agentName: "Support Agent",
+        categoryName: "uncategorized",
+        value: 1,
+        isUncategorized: true,
+      },
+    ])
   })
 })

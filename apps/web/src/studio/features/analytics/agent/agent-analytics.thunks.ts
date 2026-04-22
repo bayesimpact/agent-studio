@@ -2,7 +2,7 @@ import { createAsyncThunk } from "@reduxjs/toolkit"
 import { getCurrentIds } from "@/common/features/helpers"
 import { hasFeatureOrThrow } from "@/common/hooks/use-feature-flags"
 import type { RootState, ThunkExtraArg } from "@/common/store"
-import type { AnalyticsDailyPoint } from "../project/analytics.models"
+import type { AnalyticsCategoryDailyPoint, AnalyticsDailyPoint } from "../project/analytics.models"
 
 type ThunkConfig = { state: RootState; extra: ThunkExtraArg }
 
@@ -10,6 +10,7 @@ export const loadAgentAnalytics = createAsyncThunk<
   {
     conversationsPerDay: AnalyticsDailyPoint[]
     avgUserQuestionsPerSessionPerDay: AnalyticsDailyPoint[]
+    conversationsByCategoryPerDay: AnalyticsCategoryDailyPoint[]
   },
   { startAt: number; endAt: number },
   ThunkConfig
@@ -20,21 +21,29 @@ export const loadAgentAnalytics = createAsyncThunk<
     state,
     wantedIds: ["organizationId", "projectId", "agentId"],
   })
-  const [conversationsPerDay, avgUserQuestionsPerSessionPerDay] = await Promise.all([
-    services.agentAnalytics.getConversationsPerDay({
-      organizationId,
-      projectId,
-      agentId,
-      startAt,
-      endAt,
-    }),
-    services.agentAnalytics.getAvgUserQuestionsPerSessionPerDay({
-      organizationId,
-      projectId,
-      agentId,
-      startAt,
-      endAt,
-    }),
-  ])
-  return { conversationsPerDay, avgUserQuestionsPerSessionPerDay }
+  const [conversationsPerDay, avgUserQuestionsPerSessionPerDay, conversationsByCategoryPerDay] =
+    await Promise.all([
+      services.agentAnalytics.getConversationsPerDay({
+        organizationId,
+        projectId,
+        agentId,
+        startAt,
+        endAt,
+      }),
+      services.agentAnalytics.getAvgUserQuestionsPerSessionPerDay({
+        organizationId,
+        projectId,
+        agentId,
+        startAt,
+        endAt,
+      }),
+      services.agentAnalytics.getConversationsByCategoryPerDay({
+        organizationId,
+        projectId,
+        agentId,
+        startAt,
+        endAt,
+      }),
+    ])
+  return { conversationsPerDay, avgUserQuestionsPerSessionPerDay, conversationsByCategoryPerDay }
 })

@@ -36,6 +36,7 @@ const toAgent = (dto: AgentDto): Agent => ({
   defaultPrompt: dto.defaultPrompt,
   documentsRagMode: dto.documentsRagMode,
   greetingMessage: dto.greetingMessage,
+  hasCategories: dto.hasCategories ?? false,
   id: dto.id,
   locale: dto.locale,
   model: dto.model,

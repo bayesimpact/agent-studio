@@ -1,6 +1,6 @@
 import type { RootState } from "@/common/store"
 import type { AsyncData } from "@/common/store/async-data-status"
-import type { AnalyticsDailyPoint } from "../project/analytics.models"
+import type { AnalyticsCategoryDailyPoint, AnalyticsDailyPoint } from "../project/analytics.models"
 
 export const selectAgentAnalyticsConversationsPerDay = (
   state: RootState,
@@ -9,3 +9,8 @@ export const selectAgentAnalyticsConversationsPerDay = (
 export const selectAgentAnalyticsAvgUserQuestionsPerSessionPerDay = (
   state: RootState,
 ): AsyncData<AnalyticsDailyPoint[]> => state.studio.agentAnalytics.avgUserQuestionsPerSessionPerDay
+
+export const selectAgentAnalyticsConversationsByCategoryPerDay = (
+  state: RootState,
+): AsyncData<AnalyticsCategoryDailyPoint[]> =>
+  state.studio.agentAnalytics.conversationsByCategoryPerDay

@@ -96,7 +96,7 @@ export class AgentsService {
     return (
       await this.agentConnectRepository.find(connectScope, {
         where: { agentMemberships: { userId, status: "accepted" } },
-        relations: ["documentTags"],
+        relations: ["documentTags", "categories"],
       })
     )?.sort((a, b) => a.name.localeCompare(b.name))
   }

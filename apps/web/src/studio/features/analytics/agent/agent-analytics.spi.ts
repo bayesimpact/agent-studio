@@ -1,4 +1,4 @@
-import type { AnalyticsDailyPoint } from "../project/analytics.models"
+import type { AnalyticsCategoryDailyPoint, AnalyticsDailyPoint } from "../project/analytics.models"
 
 export type AgentAnalyticsParams = {
   organizationId: string
@@ -11,4 +11,7 @@ export type AgentAnalyticsParams = {
 export interface IAgentAnalyticsSpi {
   getConversationsPerDay(params: AgentAnalyticsParams): Promise<AnalyticsDailyPoint[]>
   getAvgUserQuestionsPerSessionPerDay(params: AgentAnalyticsParams): Promise<AnalyticsDailyPoint[]>
+  getConversationsByCategoryPerDay(
+    params: AgentAnalyticsParams,
+  ): Promise<AnalyticsCategoryDailyPoint[]>
 }

@@ -8,6 +8,7 @@ export const agentSchema = z
     createdAt: z.number(),
     defaultPrompt: z.string(),
     documentsRagMode: z.enum(["all", "none", "tags"]),
+    hasCategories: z.boolean().optional(),
     id: z.string(),
     locale: z.string(),
     model: z.string(),
