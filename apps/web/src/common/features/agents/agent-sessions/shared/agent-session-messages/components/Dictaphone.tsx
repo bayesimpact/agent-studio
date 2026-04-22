@@ -26,12 +26,49 @@ export function Dictaphone({ disabled }: { disabled: boolean }) {
     if (input.value.trim().length === 0) resetTranscript()
   }, [input.value, resetTranscript])
 
+  useEffect(() => {
+    const mic = navigator.permissions
+      ?.query({ name: "microphone" as PermissionName })
+      .then((status) => status.state)
+      .catch(() => "unknown")
+    const featurePolicy = (
+      document as unknown as {
+        featurePolicy?: { getAllowlistForFeature?: (feature: string) => string[] }
+      }
+    ).featurePolicy
+    const allowlist = featurePolicy?.getAllowlistForFeature?.("microphone")
+    Promise.resolve(mic).then((state) => {
+      console.info("[Dictaphone] diagnostics", {
+        isSecureContext: window.isSecureContext,
+        hasSpeechRecognition: !!(
+          window.SpeechRecognition ||
+          (window as unknown as { webkitSpeechRecognition?: unknown }).webkitSpeechRecognition
+        ),
+        browserSupportsSpeechRecognition,
+        isMicrophoneAvailable,
+        micPermission: state,
+        microphoneAllowlist: allowlist,
+        origin: window.location.origin,
+      })
+    })
+  }, [browserSupportsSpeechRecognition, isMicrophoneAvailable])
+
+  useEffect(() => {
+    const recognition = SpeechRecognition.getRecognition()
+    if (!recognition) return
+    const onError = (event: Event) => {
+      console.error("[Dictaphone] SpeechRecognition error", {
+        error: (event as unknown as { error?: string }).error,
+        message: (event as unknown as { message?: string }).message,
+        event,
+      })
+    }
+    recognition.addEventListener("error", onError)
+    return () => recognition.removeEventListener("error", onError)
+  }, [])
+
   // biome-ignore lint/correctness/useExhaustiveDependencies: do not add input to dependencies to avoid loop
   const handleRecognition = useCallback(async () => {
-    SpeechRecognition.getRecognition()?.addEventListener("error", (event) => {
-      console.error("SpeechRecognition error", event)
-    })
-
     if (listening) {
       input.setDisabled(false)
       await SpeechRecognition.stopListening()

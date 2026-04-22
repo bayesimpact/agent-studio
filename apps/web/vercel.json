@@ -12,7 +12,7 @@
       "headers": [
         {
           "key": "Permissions-Policy",
-          "value": "microphone=(self \"https://platform.bayes.org/\")"
+          "value": "microphone=(self \"https://platform.bayes.org\")"
         }
       ]
     }
