@@ -22,6 +22,9 @@ ${names
       case ToolName.FillForm:
         return `[${name}]: You can use the ${name} tool to fill out the form fields. Just fill out the information you have and ask the user for the missing information. You can also update previously filled information if the user changes their answer. Pass undefined for fields that are not filled yet.`
 
+      case ToolName.RecalculateConversationSessionMetadata:
+        return `[${name}]: Call this tool after answering the user so session metadata stays aligned. Return the full category set that should remain on the session (including categories still relevant from earlier turns), not only categories from the latest message.`
+
       case ToolName.McpSearchResources:
         return `[${name}]: Search for workforce and social resources from a specific source (datainclusion, francetravail-jobs, francetravail-events, francetravail-labonneboite). Returns raw results without AI processing. Use this when the user asks about a specific type of resource.`
 

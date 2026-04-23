@@ -15,6 +15,12 @@
       "title": "Avg. user questions per session",
       "description": "Average user messages per session per day for this agent",
       "metricLabel": "Per day"
+    },
+    "categoriesChart": {
+      "title": "Sessions per day by category",
+      "description": "Daily session volume, split by category for this agent",
+      "noDataState": "No categorized sessions found in this date range.",
+      "uncategorizedLabel": "Uncategorized"
     }
   }
 }

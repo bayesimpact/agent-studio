@@ -16,12 +16,15 @@ import { selectAgentsData } from "@/common/features/agents/agents.selectors"
 import { useGetPath } from "@/common/hooks/use-build-path"
 import { ADS } from "@/common/store/async-data-status"
 import { useAppDispatch, useAppSelector } from "@/common/store/hooks"
+import type { AnalyticsCategoryDailyPoint } from "@/studio/features/analytics/project/analytics.models"
 import {
   selectAnalyticsAvgUserQuestionsPerSessionPerDay,
+  selectAnalyticsConversationsByCategoryPerDay,
   selectAnalyticsConversationsPerDay,
 } from "@/studio/features/analytics/project/analytics.selectors"
 import { loadProjectAnalytics } from "@/studio/features/analytics/project/analytics.thunks"
 import { dateRangeToAnalyticsQueryBounds } from "@/studio/features/analytics/project/analytics-date-range"
+import { ProjectCategoryChartCard } from "@/studio/features/analytics/project/components/ProjectCategoryChartCard"
 import { GridHeader } from "../../common/components/grid/Grid"
 import { AsyncRoute } from "../../common/routes/AsyncRoute"
 
@@ -60,15 +63,17 @@ export function ProjectAnalyticsRoute() {
 
   const conversations = useAppSelector(selectAnalyticsConversationsPerDay)
   const avgQuestions = useAppSelector(selectAnalyticsAvgUserQuestionsPerSessionPerDay)
+  const conversationsByCategoryPerDay = useAppSelector(selectAnalyticsConversationsByCategoryPerDay)
   const agentsData = useAppSelector(selectAgentsData)
   const agents = ADS.isFulfilled(agentsData) ? agentsData.value : []
 
   return (
-    <AsyncRoute data={[conversations, avgQuestions]}>
-      {([conversationsPoints, avgQuestionsPoints]) => (
+    <AsyncRoute data={[conversations, avgQuestions, conversationsByCategoryPerDay]}>
+      {([conversationsPoints, avgQuestionsPoints, categoryPoints]) => (
         <WithData
           conversationsPoints={conversationsPoints}
           avgQuestionsPoints={avgQuestionsPoints}
+          categoryPoints={categoryPoints}
           onAnalyticsRangeChange={setBounds}
           agents={agents}
           selectedAgentId={selectedAgentId}
@@ -82,6 +87,7 @@ export function ProjectAnalyticsRoute() {
 function WithData({
   conversationsPoints,
   avgQuestionsPoints,
+  categoryPoints,
   onAnalyticsRangeChange,
   agents,
   selectedAgentId,
@@ -89,6 +95,7 @@ function WithData({
 }: {
   conversationsPoints: { date: string; value: number }[]
   avgQuestionsPoints: { date: string; value: number }[]
+  categoryPoints: AnalyticsCategoryDailyPoint[]
   onAnalyticsRangeChange: (nextBounds: { startAt: number; endAt: number }) => void
   agents: { id: string; name: string }[]
   selectedAgentId: string
@@ -156,6 +163,16 @@ function WithData({
             getSummaryValue={meanDailyMetricValues}
           />
         </div>
+
+        <ProjectCategoryChartCard
+          points={categoryPoints}
+          allDates={conversationsPoints.map((point) => point.date)}
+          selectedAgentId={selectedAgentId}
+          title={t("categoriesChart.title")}
+          description={t("categoriesChart.description")}
+          noDataState={t("categoriesChart.noDataState")}
+          uncategorizedLabel={t("categoriesChart.uncategorizedLabel")}
+        />
       </div>
     </>
   )

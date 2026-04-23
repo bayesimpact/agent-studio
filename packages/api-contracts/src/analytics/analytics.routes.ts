@@ -1,6 +1,6 @@
 import type { ResponseData } from "../generic"
 import { defineRoute } from "../helpers"
-import type { AnalyticsDailyPointDto } from "./analytics.dto"
+import type { AnalyticsCategoryDailyPointDto, AnalyticsDailyPointDto } from "./analytics.dto"
 
 /** Query: `startAt`, `endAt`, optional `agentId` — Unix ms (see `ProjectAnalyticsRequestDto`). */
 export const AnalyticsRoutes = {
@@ -12,6 +12,13 @@ export const AnalyticsRoutes = {
   getAvgUserQuestionsPerSessionPerDay: defineRoute<ResponseData<AnalyticsDailyPointDto[]>>({
     method: "get",
     path: "organizations/:organizationId/projects/:projectId/analytics/avg-user-questions-per-session-per-day",
+  }),
+
+  getConversationsByCategoryPerAgentPerDay: defineRoute<
+    ResponseData<AnalyticsCategoryDailyPointDto[]>
+  >({
+    method: "get",
+    path: "organizations/:organizationId/projects/:projectId/analytics/conversations-by-category-per-agent-per-day",
   }),
 }
 
@@ -25,5 +32,10 @@ export const AgentAnalyticsRoutes = {
   getAvgUserQuestionsPerSessionPerDay: defineRoute<ResponseData<AnalyticsDailyPointDto[]>>({
     method: "get",
     path: "organizations/:organizationId/projects/:projectId/agents/:agentId/analytics/avg-user-questions-per-session-per-day",
+  }),
+
+  getConversationsByCategoryPerDay: defineRoute<ResponseData<AnalyticsCategoryDailyPointDto[]>>({
+    method: "get",
+    path: "organizations/:organizationId/projects/:projectId/agents/:agentId/analytics/conversations-by-category-per-day",
   }),
 }

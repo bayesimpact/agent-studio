@@ -17,6 +17,7 @@ This project uses [CalVer](https://calver.org/) (YY.MM.Micro) for product versio
 - (beta) Medgemma available for Conversational Agent
 - (beta) Agents can connect to external MCP servers for additional tools
 - (beta) Evaluate extraction agents against datasets
+- (beta) Project-level agent categories and category analytics
 - Bull board UI for queue monitoring
 
 ### Changed

@@ -24,6 +24,8 @@ import { AgentGuard } from "./agent.guard"
 import { AgentsController } from "./agents.controller"
 import { AgentsService } from "./agents.service"
 import { BaseAgentSessionsService } from "./base-agent-sessions/base-agent-sessions.service"
+import { AgentCategoriesService } from "./categories/agent-categories.service"
+import { AgentCategory } from "./categories/agent-category.entity"
 import { AgentMembership } from "./memberships/agent-membership.entity"
 import { AgentMembershipsController } from "./memberships/agent-memberships.controller"
 import { AgentMembershipsGuard } from "./memberships/agent-memberships.guard"
@@ -33,6 +35,7 @@ import { AgentMembershipsService } from "./memberships/agent-memberships.service
   imports: [
     TypeOrmModule.forFeature([
       Agent,
+      AgentCategory,
       AgentMembership,
       Project,
       OrganizationMembership,
@@ -52,6 +55,7 @@ import { AgentMembershipsService } from "./memberships/agent-memberships.service
   ],
   providers: [
     AgentsService,
+    AgentCategoriesService,
     BaseAgentSessionsService,
     AgentMembershipsService,
     AgentGuard,
@@ -63,6 +67,6 @@ import { AgentMembershipsService } from "./memberships/agent-memberships.service
     AgentMembershipContextResolver,
   ],
   controllers: [AgentsController, AgentMembershipsController],
-  exports: [AgentsService, AgentMembershipsService],
+  exports: [AgentsService, AgentCategoriesService, AgentMembershipsService],
 })
 export class AgentsModule {}

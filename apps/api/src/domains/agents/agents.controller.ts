@@ -102,6 +102,7 @@ function toAgentDto(entity: Agent): AgentDto {
     createdAt: entity.createdAt.getTime(),
     greetingMessage: entity.greetingMessage ?? undefined,
     defaultPrompt: entity.defaultPrompt,
+    hasCategories: (entity.categories?.length ?? 0) > 0,
     id: entity.id,
     locale: entity.locale,
     model: entity.model,

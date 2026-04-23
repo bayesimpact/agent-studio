@@ -49,6 +49,7 @@ export type AgentDto = {
   createdAt: TimeType
   greetingMessage?: string | null
   defaultPrompt: string
+  hasCategories?: boolean
   id: string
   locale: AgentLocale
   model: AgentModel

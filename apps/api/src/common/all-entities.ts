@@ -4,7 +4,10 @@
 
 import { Activity } from "@/domains/activities/activity.entity"
 import { Agent } from "@/domains/agents/agent.entity"
+import { AgentCategory } from "@/domains/agents/categories/agent-category.entity"
+import { ProjectAgentCategory } from "@/domains/agents/categories/project-agent-category.entity"
 import { ConversationAgentSession } from "@/domains/agents/conversation-agent-sessions/conversation-agent-session.entity"
+import { ConversationAgentSessionCategory } from "@/domains/agents/conversation-agent-sessions/conversation-agent-session-category.entity"
 import { ExtractionAgentSession } from "@/domains/agents/extraction-agent-sessions/extraction-agent-session.entity"
 import { FormAgentSession } from "@/domains/agents/form-agent-sessions/form-agent-session.entity"
 import { AgentMembership } from "@/domains/agents/memberships/agent-membership.entity"
@@ -35,11 +38,14 @@ import { User } from "@/domains/users/user.entity"
 export const ALL_ENTITIES = [
   Activity,
   Agent,
+  AgentCategory,
+  ProjectAgentCategory,
   AgentMcpServer,
   AgentMembership,
   AgentMessage,
   AgentMessageFeedback,
   ConversationAgentSession,
+  ConversationAgentSessionCategory,
   Document,
   DocumentTag,
   Evaluation,

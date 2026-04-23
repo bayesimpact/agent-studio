@@ -4,7 +4,7 @@ import ChartCard from "@/components/ChartCard"
 
 type StoryArgs = {
   title: string
-  metricLabel: string
+  metricLabel?: string
 }
 
 const meta: Meta<StoryArgs> = {
@@ -62,6 +62,22 @@ export const ChartCardExample: Story = {
         data={chartData}
         getSummaryValue={(series) => series.reduce((sum, point) => sum + point.value, 0)}
         description="Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua."
+      />
+    </div>
+  ),
+}
+
+export const ChartCardWithoutMetricLabel: Story = {
+  args: {
+    title: "Conversations per day (no metric label)",
+  },
+  render: (args) => (
+    <div className="max-w-5xl">
+      <ChartCard
+        title={args.title}
+        data={chartData}
+        hideSummary
+        description="Example without metricLabel and without getSummaryValue."
       />
     </div>
   ),

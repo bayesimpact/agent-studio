@@ -19,6 +19,7 @@ import type {
 } from "@/common/interfaces/llm-provider.interface"
 import type { Agent } from "@/domains/agents/agent.entity"
 import { ConversationAgentSession } from "@/domains/agents/conversation-agent-sessions/conversation-agent-session.entity"
+import { ConversationAgentSessionsService } from "@/domains/agents/conversation-agent-sessions/conversation-agent-sessions.service"
 import { FormAgentSession } from "@/domains/agents/form-agent-sessions/form-agent-session.entity"
 import { FormAgentSessionsService } from "@/domains/agents/form-agent-sessions/form-agent-sessions.service"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
@@ -39,6 +40,7 @@ import { AgentMessage } from "../agent-message.entity"
 import { buildConversationAgentPrompt } from "./master-promts/conversation-agent.prompt"
 import { buildFormAgentPrompt } from "./master-promts/form-agent.prompt"
 import { fillFormTool } from "./tools/fill-form.tool"
+import { recalculateConversationSessionMetadataTool } from "./tools/recalculate-conversation-session-metadata.tool"
 import { retrieveProjectDocumentChunksTool } from "./tools/retrieve-project-document-chunks.tool"
 import { sourcesTool } from "./tools/sources.tool"
 import type { ToolExecutionLog } from "./tools/tool-execution-log"
@@ -59,6 +61,8 @@ export class StreamingService extends ServiceWithLLM {
 
     @Inject(FormAgentSessionsService)
     private readonly formAgentSessionsService: FormAgentSessionsService,
+    @Inject(ConversationAgentSessionsService)
+    private readonly conversationAgentSessionsService: ConversationAgentSessionsService,
     @Inject(ProjectsService)
     private readonly projectsService: ProjectsService,
 
@@ -559,19 +563,42 @@ export class StreamingService extends ServiceWithLLM {
 
   private buildConversationTools({
     agent,
+    sessionId,
     connectScope,
+    currentCategoryNames,
     hasSourcesTool,
     mcpTools,
     onExecute,
   }: {
     agent: Agent
+    sessionId: string
     connectScope: RequiredConnectScope
+    currentCategoryNames: string[]
     hasSourcesTool: boolean
     mcpTools: ToolSet
     onExecute: (toolExecution: ToolExecutionLog) => void
   }): ToolSet {
+    const hasRecalculateConversationSessionMetadataTool = (agent.categories?.length ?? 0) > 0
+
     const tools: ToolSet = {
       ...(hasSourcesTool ? { [ToolName.Sources]: sourcesTool({ onExecute }) } : {}),
+      ...(hasRecalculateConversationSessionMetadataTool
+        ? {
+            [ToolName.RecalculateConversationSessionMetadata]:
+              recalculateConversationSessionMetadataTool({
+                connectScope,
+                sessionId,
+                availableCategoryNames: (agent.categories ?? [])
+                  .map((agentCategory) => agentCategory.name)
+                  .sort((leftCategoryName, rightCategoryName) =>
+                    leftCategoryName.localeCompare(rightCategoryName),
+                  ),
+                currentCategoryNames,
+                conversationAgentSessionsService: this.conversationAgentSessionsService,
+                onExecute,
+              }),
+          }
+        : {}),
       ...mcpTools,
     }
 
@@ -649,17 +676,28 @@ export class StreamingService extends ServiceWithLLM {
         : undefined
 
     switch (agent.type) {
-      case "conversation":
+      case "conversation": {
+        const currentCategoryNames =
+          (agent.categories?.length ?? 0) > 0
+            ? await this.conversationAgentSessionsService.getCurrentCategoryNamesForSession({
+                connectScope,
+                sessionId,
+              })
+            : []
+
         return {
           mcpClose,
           tools: this.buildConversationTools({
             agent,
+            sessionId,
             connectScope,
+            currentCategoryNames,
             hasSourcesTool,
             mcpTools,
             onExecute,
           }),
         }
+      }
 
       case "form":
         return {

@@ -1,11 +1,12 @@
 import { createSlice } from "@reduxjs/toolkit"
 import { ADS, type AsyncData } from "@/common/store/async-data-status"
-import type { AnalyticsDailyPoint } from "../project/analytics.models"
+import type { AnalyticsCategoryDailyPoint, AnalyticsDailyPoint } from "../project/analytics.models"
 import { loadAgentAnalytics } from "./agent-analytics.thunks"
 
 interface State {
   conversationsPerDay: AsyncData<AnalyticsDailyPoint[]>
   avgUserQuestionsPerSessionPerDay: AsyncData<AnalyticsDailyPoint[]>
+  conversationsByCategoryPerDay: AsyncData<AnalyticsCategoryDailyPoint[]>
 }
 
 const emptySeries: AsyncData<AnalyticsDailyPoint[]> = {
@@ -17,6 +18,7 @@ const emptySeries: AsyncData<AnalyticsDailyPoint[]> = {
 const initialState: State = {
   conversationsPerDay: { ...emptySeries },
   avgUserQuestionsPerSessionPerDay: { ...emptySeries },
+  conversationsByCategoryPerDay: { ...emptySeries },
 }
 
 const slice = createSlice({
@@ -34,8 +36,12 @@ const slice = createSlice({
         if (!ADS.isFulfilled(state.avgUserQuestionsPerSessionPerDay)) {
           state.avgUserQuestionsPerSessionPerDay.status = ADS.Loading
         }
+        if (!ADS.isFulfilled(state.conversationsByCategoryPerDay)) {
+          state.conversationsByCategoryPerDay.status = ADS.Loading
+        }
         state.conversationsPerDay.error = null
         state.avgUserQuestionsPerSessionPerDay.error = null
+        state.conversationsByCategoryPerDay.error = null
       })
       .addCase(loadAgentAnalytics.fulfilled, (state, action) => {
         state.conversationsPerDay = {
@@ -48,6 +54,11 @@ const slice = createSlice({
           error: null,
           value: action.payload.avgUserQuestionsPerSessionPerDay,
         }
+        state.conversationsByCategoryPerDay = {
+          status: ADS.Fulfilled,
+          error: null,
+          value: action.payload.conversationsByCategoryPerDay,
+        }
       })
       .addCase(loadAgentAnalytics.rejected, (state, action) => {
         const message = action.error.message || "Failed to load agent analytics"
@@ -57,6 +68,11 @@ const slice = createSlice({
           value: null,
         }
         state.avgUserQuestionsPerSessionPerDay = {
+          status: ADS.Error,
+          error: message,
+          value: null,
+        }
+        state.conversationsByCategoryPerDay = {
           status: ADS.Error,
           error: message,
           value: null,

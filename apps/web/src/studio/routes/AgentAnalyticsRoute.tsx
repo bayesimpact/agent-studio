@@ -16,10 +16,13 @@ import { useGetPath } from "@/common/hooks/use-build-path"
 import { useAppDispatch, useAppSelector } from "@/common/store/hooks"
 import {
   selectAgentAnalyticsAvgUserQuestionsPerSessionPerDay,
+  selectAgentAnalyticsConversationsByCategoryPerDay,
   selectAgentAnalyticsConversationsPerDay,
 } from "@/studio/features/analytics/agent/agent-analytics.selectors"
 import { loadAgentAnalytics } from "@/studio/features/analytics/agent/agent-analytics.thunks"
+import type { AnalyticsCategoryDailyPoint } from "@/studio/features/analytics/project/analytics.models"
 import { dateRangeToAnalyticsQueryBounds } from "@/studio/features/analytics/project/analytics-date-range"
+import { ProjectCategoryChartCard } from "@/studio/features/analytics/project/components/ProjectCategoryChartCard"
 import { AsyncRoute } from "../../common/routes/AsyncRoute"
 import { ErrorRoute } from "../../common/routes/ErrorRoute"
 
@@ -63,14 +66,18 @@ function WithAgent({ agent }: { agent: Agent }) {
 
   const conversations = useAppSelector(selectAgentAnalyticsConversationsPerDay)
   const avgQuestions = useAppSelector(selectAgentAnalyticsAvgUserQuestionsPerSessionPerDay)
+  const conversationsByCategoryPerDay = useAppSelector(
+    selectAgentAnalyticsConversationsByCategoryPerDay,
+  )
 
   return (
-    <AsyncRoute data={[conversations, avgQuestions]}>
-      {([conversationsPoints, avgQuestionsPoints]) => (
+    <AsyncRoute data={[conversations, avgQuestions, conversationsByCategoryPerDay]}>
+      {([conversationsPoints, avgQuestionsPoints, categoryPoints]) => (
         <WithData
           agent={agent}
           conversationsPoints={conversationsPoints}
           avgQuestionsPoints={avgQuestionsPoints}
+          categoryPoints={categoryPoints}
           onAnalyticsRangeChange={setBounds}
         />
       )}
@@ -82,11 +89,13 @@ function WithData({
   agent,
   conversationsPoints,
   avgQuestionsPoints,
+  categoryPoints,
   onAnalyticsRangeChange,
 }: {
   agent: Agent
   conversationsPoints: { date: string; value: number }[]
   avgQuestionsPoints: { date: string; value: number }[]
+  categoryPoints: AnalyticsCategoryDailyPoint[]
   onAnalyticsRangeChange: (nextBounds: { startAt: number; endAt: number }) => void
 }) {
   const { t } = useTranslation("agentAnalytics")
@@ -109,6 +118,7 @@ function WithData({
   )
 
   const Icon = getAgentIcon(agent.type)
+  const hasConfiguredCategoryTaxonomy = agent.hasCategories ?? false
 
   return (
     <>
@@ -150,6 +160,18 @@ function WithData({
             getSummaryValue={meanDailyMetricValues}
           />
         </div>
+
+        {hasConfiguredCategoryTaxonomy ? (
+          <ProjectCategoryChartCard
+            points={categoryPoints}
+            allDates={conversationsPoints.map((point) => point.date)}
+            selectedAgentId={agent.id}
+            title={t("categoriesChart.title")}
+            description={t("categoriesChart.description")}
+            noDataState={t("categoriesChart.noDataState")}
+            uncategorizedLabel={t("categoriesChart.uncategorizedLabel")}
+          />
+        ) : null}
       </div>
     </>
   )

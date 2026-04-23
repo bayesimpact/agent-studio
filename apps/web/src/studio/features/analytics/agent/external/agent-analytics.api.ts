@@ -1,6 +1,13 @@
-import { AgentAnalyticsRoutes, type AnalyticsDailyPointDto } from "@caseai-connect/api-contracts"
+import {
+  AgentAnalyticsRoutes,
+  type AnalyticsCategoryDailyPointDto,
+  type AnalyticsDailyPointDto,
+} from "@caseai-connect/api-contracts"
 import { getAxiosInstance } from "@/external/axios"
-import type { AnalyticsDailyPoint } from "../../project/analytics.models"
+import type {
+  AnalyticsCategoryDailyPoint,
+  AnalyticsDailyPoint,
+} from "../../project/analytics.models"
 import type { IAgentAnalyticsSpi } from "../agent-analytics.spi"
 
 export default {
@@ -36,6 +43,26 @@ export default {
     )
     return toAnalyticsDailyPoints(response.data.data)
   },
+  getConversationsByCategoryPerDay: async ({
+    organizationId,
+    projectId,
+    agentId,
+    startAt,
+    endAt,
+  }) => {
+    const axios = getAxiosInstance()
+    const response = await axios.get<
+      typeof AgentAnalyticsRoutes.getConversationsByCategoryPerDay.response
+    >(
+      AgentAnalyticsRoutes.getConversationsByCategoryPerDay.getPath({
+        organizationId,
+        projectId,
+        agentId,
+      }),
+      dateRangeQueryParams(startAt, endAt),
+    )
+    return toAnalyticsCategoryDailyPoints(response.data.data)
+  },
 } satisfies IAgentAnalyticsSpi
 
 function dateRangeQueryParams(startAt: number, endAt: number) {
@@ -46,5 +73,19 @@ function toAnalyticsDailyPoints(dtos: AnalyticsDailyPointDto[]): AnalyticsDailyP
   return dtos.map((dto) => ({
     date: dto.date,
     value: dto.value,
+  }))
+}
+
+function toAnalyticsCategoryDailyPoints(
+  dtos: AnalyticsCategoryDailyPointDto[],
+): AnalyticsCategoryDailyPoint[] {
+  return dtos.map((dto) => ({
+    date: dto.date,
+    agentId: dto.agentId,
+    agentName: dto.agentName,
+    categoryId: dto.categoryId,
+    categoryName: dto.categoryName,
+    value: dto.value,
+    isUncategorized: dto.isUncategorized,
   }))
 }
