@@ -1,4 +1,5 @@
 import {
+  type CampaignAggregatesDto,
   type ReviewCampaignDetailDto,
   type ReviewCampaignDto,
   type ReviewCampaignMembershipDto,
@@ -57,11 +58,11 @@ export class ReviewCampaignsController {
   async getOne(
     @Req() request: EndpointRequestWithReviewCampaign,
   ): Promise<typeof ReviewCampaignsRoutes.getOne.response> {
-    const { campaign, memberships } = await this.reviewCampaignsService.getDetail({
+    const { campaign, memberships, aggregates } = await this.reviewCampaignsService.getDetail({
       connectScope: getRequiredConnectScope(request),
       reviewCampaignId: request.reviewCampaign.id,
     })
-    return { data: toReviewCampaignDetailDto(campaign, memberships) }
+    return { data: toReviewCampaignDetailDto(campaign, memberships, aggregates) }
   }
 
   @Patch(ReviewCampaignsRoutes.updateOne.path)
@@ -161,9 +162,11 @@ function toReviewCampaignMembershipDto(
 function toReviewCampaignDetailDto(
   campaign: ReviewCampaign,
   memberships: ReviewCampaignMembership[],
+  aggregates: CampaignAggregatesDto | null,
 ): ReviewCampaignDetailDto {
   return {
     ...toReviewCampaignDto(campaign),
     memberships: memberships.map(toReviewCampaignMembershipDto),
+    aggregates,
   }
 }

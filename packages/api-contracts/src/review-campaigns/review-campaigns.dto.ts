@@ -41,8 +41,15 @@ export type ReviewCampaignMembershipDto = {
   acceptedAt: TimeType | null
 }
 
+export type CampaignAggregatesDto = {
+  meanTesterRating: number | null
+  surveyCount: number
+  sessionCount: number
+}
+
 export type ReviewCampaignDetailDto = ReviewCampaignDto & {
   memberships: ReviewCampaignMembershipDto[]
+  aggregates: CampaignAggregatesDto | null
 }
 
 export type CreateReviewCampaignRequestDto = {

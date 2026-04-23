@@ -81,5 +81,23 @@ export const ClosedReadOnly: Story = {
       reviewerQuestions: mockClosedCampaign.reviewerQuestions,
     },
     memberships: mockMemberships,
+    aggregates: { meanTesterRating: 4.36, surveyCount: 7, sessionCount: 18 },
+  },
+}
+
+export const ClosedNoActivity: Story = {
+  args: {
+    mode: "edit",
+    status: "closed",
+    defaultValues: {
+      name: mockClosedCampaign.name,
+      description: mockClosedCampaign.description,
+      agentId: mockClosedCampaign.agentId,
+      testerPerSessionQuestions: mockClosedCampaign.testerPerSessionQuestions,
+      testerEndOfPhaseQuestions: mockClosedCampaign.testerEndOfPhaseQuestions,
+      reviewerQuestions: mockClosedCampaign.reviewerQuestions,
+    },
+    memberships: [],
+    aggregates: { meanTesterRating: null, surveyCount: 0, sessionCount: 0 },
   },
 }

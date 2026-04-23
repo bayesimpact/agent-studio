@@ -1,6 +1,7 @@
 "use client"
 
 import type {
+  CampaignAggregatesDto,
   ReviewCampaignMembershipDto,
   ReviewCampaignMembershipRole,
   ReviewCampaignQuestionDto,
@@ -24,6 +25,7 @@ import { useState } from "react"
 import { Controller, useForm } from "react-hook-form"
 import { z } from "zod"
 import { CampaignStatusBadge } from "./CampaignStatusBadge"
+import { CampaignSummaryPanel } from "./CampaignSummaryPanel"
 import { FeedbackPreview } from "./FeedbackPreview"
 import { ParticipantsList } from "./ParticipantsList"
 import { QuestionListEditor } from "./QuestionListEditor"
@@ -48,6 +50,7 @@ type Props = {
   agents: CampaignFormAgentOption[]
   defaultValues?: Partial<CampaignFormValues>
   memberships?: ReviewCampaignMembershipDto[]
+  aggregates?: CampaignAggregatesDto | null
   onSubmit: (values: CampaignFormValues) => void
   onActivate?: () => void
   onClose?: () => void
@@ -71,6 +74,7 @@ export function CampaignForm({
   agents,
   defaultValues,
   memberships = [],
+  aggregates = null,
   onSubmit,
   onActivate,
   onClose,
@@ -83,7 +87,8 @@ export function CampaignForm({
   const isClosed = status === "closed"
   const configLocked = !isDraft
 
-  const [tab, setTab] = useState<"general" | "questions" | "participants" | "preview">("general")
+  type TabValue = "summary" | "general" | "questions" | "participants" | "preview"
+  const [tab, setTab] = useState<TabValue>(isClosed ? "summary" : "general")
 
   const {
     control,
@@ -150,13 +155,20 @@ export function CampaignForm({
         </div>
       </header>
 
-      <Tabs value={tab} onValueChange={(value) => setTab(value as typeof tab)}>
+      <Tabs value={tab} onValueChange={(value) => setTab(value as TabValue)}>
         <TabsList>
+          {isClosed && <TabsTrigger value="summary">Summary</TabsTrigger>}
           <TabsTrigger value="general">General</TabsTrigger>
           <TabsTrigger value="questions">Questions</TabsTrigger>
           <TabsTrigger value="participants">Participants</TabsTrigger>
           <TabsTrigger value="preview">Preview</TabsTrigger>
         </TabsList>
+
+        {isClosed && (
+          <TabsContent value="summary" className="pt-4">
+            <CampaignSummaryPanel aggregates={aggregates} />
+          </TabsContent>
+        )}
 
         <TabsContent value="general" className="pt-4">
           <FieldGroup>

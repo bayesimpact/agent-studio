@@ -49,7 +49,11 @@ export const EditDraft: Story = {
   decorators: [
     withRedux({
       currentProject: mockProject,
-      selectedReviewCampaignDetail: { ...mockDraftCampaign, memberships: [] },
+      selectedReviewCampaignDetail: {
+        ...mockDraftCampaign,
+        memberships: [],
+        aggregates: null,
+      },
       servicesMock: { reviewCampaigns: buildMockReviewCampaignsService() },
     }),
   ],
@@ -66,6 +70,7 @@ export const EditActive: Story = {
       selectedReviewCampaignDetail: {
         ...mockActiveCampaign,
         memberships: mockMemberships,
+        aggregates: null,
       },
       servicesMock: { reviewCampaigns: buildMockReviewCampaignsService() },
     }),

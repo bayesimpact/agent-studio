@@ -91,6 +91,7 @@ export function UpdateCampaignForm({ campaign, agents, onSuccess, onDeleted }: P
         status={campaign.status}
         agents={agents}
         memberships={campaign.memberships}
+        aggregates={campaign.aggregates}
         defaultValues={{
           name: campaign.name,
           description: campaign.description,

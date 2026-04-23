@@ -28,6 +28,12 @@ export type MyTesterSessionSummary = {
   feedbackStatus: "submitted" | "pending"
 }
 
+export type CampaignAggregates = {
+  meanTesterRating: number | null
+  surveyCount: number
+  sessionCount: number
+}
+
 export type TesterFeedbackFields = {
   overallRating: number
   comment?: string | null
@@ -245,6 +251,25 @@ export class TesterService {
     if (fields.comment !== undefined) feedback.comment = fields.comment
     if (fields.answers !== undefined) feedback.answers = fields.answers
     return this.feedbackRepository.save(feedback)
+  }
+
+  async computeCampaignAggregates(campaignId: string): Promise<CampaignAggregates> {
+    const [ratingRow, surveyCount, conversationSessionCount, formSessionCount] = await Promise.all([
+      this.feedbackRepository
+        .createQueryBuilder("feedback")
+        .select("AVG(feedback.overall_rating)", "mean")
+        .where("feedback.campaign_id = :campaignId", { campaignId })
+        .getRawOne<{ mean: string | null }>(),
+      this.surveyRepository.count({ where: { campaignId } }),
+      this.conversationSessionRepository.count({ where: { campaignId } }),
+      this.formSessionRepository.count({ where: { campaignId } }),
+    ])
+    const mean = ratingRow?.mean
+    return {
+      meanTesterRating: mean === null || mean === undefined ? null : Number(mean),
+      surveyCount,
+      sessionCount: conversationSessionCount + formSessionCount,
+    }
   }
 
   async getMyTesterSurvey({

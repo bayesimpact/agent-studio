@@ -370,4 +370,92 @@ describe("ReviewCampaigns - Tester happy path", () => {
     })
     expectResponse(deleteResponse, 409)
   })
+
+  it("getOne returns aggregates for closed campaigns and null for active ones", async () => {
+    const { campaign } = await seedActiveCampaignWithTester()
+
+    const firstSession = await request({
+      route: ReviewCampaignsRoutes.startTesterSession,
+      pathParams: removeNullish({ organizationId, projectId, reviewCampaignId }),
+      token: accessToken,
+      request: { payload: { type: "live" } },
+    })
+    const secondSession = await request({
+      route: ReviewCampaignsRoutes.startTesterSession,
+      pathParams: removeNullish({ organizationId, projectId, reviewCampaignId }),
+      token: accessToken,
+      request: { payload: { type: "live" } },
+    })
+    await request({
+      route: ReviewCampaignsRoutes.submitTesterFeedback,
+      pathParams: removeNullish({
+        organizationId,
+        projectId,
+        sessionId: firstSession.body.data.sessionId,
+      }),
+      token: accessToken,
+      request: { payload: { overallRating: 4 } },
+    })
+    await request({
+      route: ReviewCampaignsRoutes.submitTesterFeedback,
+      pathParams: removeNullish({
+        organizationId,
+        projectId,
+        sessionId: secondSession.body.data.sessionId,
+      }),
+      token: accessToken,
+      request: { payload: { overallRating: 5 } },
+    })
+    await request({
+      route: ReviewCampaignsRoutes.submitTesterSurvey,
+      pathParams: removeNullish({ organizationId, projectId, reviewCampaignId }),
+      token: accessToken,
+      request: { payload: { overallRating: 5 } },
+    })
+
+    const activeDetail = await request({
+      route: ReviewCampaignsRoutes.getOne,
+      pathParams: removeNullish({ organizationId, projectId, reviewCampaignId }),
+      token: accessToken,
+    })
+    expectResponse(activeDetail, 200)
+    expect(activeDetail.body.data.aggregates).toBeNull()
+
+    await repositories.reviewCampaignRepository.update(campaign.id, {
+      status: "closed",
+      closedAt: new Date(),
+    })
+
+    const closedDetail = await request({
+      route: ReviewCampaignsRoutes.getOne,
+      pathParams: removeNullish({ organizationId, projectId, reviewCampaignId }),
+      token: accessToken,
+    })
+    expectResponse(closedDetail, 200)
+    expect(closedDetail.body.data.aggregates).toEqual({
+      meanTesterRating: 4.5,
+      surveyCount: 1,
+      sessionCount: 2,
+    })
+  })
+
+  it("getOne returns zeroed aggregates for closed campaigns with no activity", async () => {
+    const { campaign } = await seedActiveCampaignWithTester()
+    await repositories.reviewCampaignRepository.update(campaign.id, {
+      status: "closed",
+      closedAt: new Date(),
+    })
+
+    const response = await request({
+      route: ReviewCampaignsRoutes.getOne,
+      pathParams: removeNullish({ organizationId, projectId, reviewCampaignId }),
+      token: accessToken,
+    })
+    expectResponse(response, 200)
+    expect(response.body.data.aggregates).toEqual({
+      meanTesterRating: null,
+      surveyCount: 0,
+      sessionCount: 0,
+    })
+  })
 })

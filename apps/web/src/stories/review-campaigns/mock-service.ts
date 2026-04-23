@@ -32,6 +32,10 @@ export function buildMockReviewCampaignsService(overrides: Overrides = {}): IRev
       return {
         ...campaign,
         memberships: campaign.status !== "draft" ? memberships : [],
+        aggregates:
+          campaign.status === "closed"
+            ? { meanTesterRating: 4.2, surveyCount: 3, sessionCount: 7 }
+            : null,
       }
     },
     async createOne(_params, payload) {

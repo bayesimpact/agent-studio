@@ -27,6 +27,9 @@ import type {
   ReviewCampaignQuestion,
   ReviewCampaignStatus,
 } from "./review-campaigns.types"
+import type { CampaignAggregates } from "./tester/tester.service"
+// biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
+import { TesterService } from "./tester/tester.service"
 
 export type CreateReviewCampaignFields = {
   agentId: string
@@ -60,6 +63,7 @@ export class ReviewCampaignsService {
     @Inject(INVITATION_SENDER)
     private readonly invitationSender: InvitationSender,
     private readonly dataSource: DataSource,
+    private readonly testerService: TesterService,
   ) {
     this.reviewCampaignConnectRepository = new ConnectRepository(
       reviewCampaignRepository,
@@ -124,7 +128,11 @@ export class ReviewCampaignsService {
   }: {
     connectScope: RequiredConnectScope
     reviewCampaignId: string
-  }): Promise<{ campaign: ReviewCampaign; memberships: ReviewCampaignMembership[] }> {
+  }): Promise<{
+    campaign: ReviewCampaign
+    memberships: ReviewCampaignMembership[]
+    aggregates: CampaignAggregates | null
+  }> {
     const campaign = await this.findById({ connectScope, reviewCampaignId })
     if (!campaign) {
       throw new NotFoundException(`Review campaign ${reviewCampaignId} not found`)
@@ -134,7 +142,11 @@ export class ReviewCampaignsService {
       relations: ["user"],
       order: { createdAt: "ASC" },
     })
-    return { campaign, memberships }
+    const aggregates =
+      campaign.status === "closed"
+        ? await this.testerService.computeCampaignAggregates(campaign.id)
+        : null
+    return { campaign, memberships, aggregates }
   }
 
   async updateCampaign({
