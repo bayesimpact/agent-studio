@@ -303,7 +303,7 @@ export class ReviewCampaignsService {
     })
     if (existing) return null
 
-    await this.invitationSender.sendInvitation({
+    const { ticketId } = await this.invitationSender.sendInvitation({
       inviteeEmail: normalizedEmail,
       inviterName,
     })
@@ -314,6 +314,7 @@ export class ReviewCampaignsService {
       campaignId: campaign.id,
       userId: user.id,
       role,
+      invitationToken: ticketId,
       invitedAt: new Date(),
       acceptedAt: null,
     })

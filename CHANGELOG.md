@@ -12,13 +12,14 @@ This project uses [CalVer](https://calver.org/) (YY.MM.Micro) for product versio
 - Link to Help Center
 - Track user activities for further auditing
 - Define agent document RAG modes — off, all, or tagged
-- Add tag selection before document upload (single and batch)
+- Add tag selection before document upload (single and batch).
 - (beta) Display analytics per agent (sessions per day)
 - (beta) Medgemma available for Conversational Agent
 - (beta) Agents can connect to external MCP servers for additional tools
 - (beta) Evaluate extraction agents against datasets
 - (beta) Project-level agent categories and category analytics
 - Bull board UI for queue monitoring
+- (beta) Review campaigns: invite testers and reviewers to evaluate an agent with structured feedback
 - Copy chat messages to clipboard
 - Warn before closing or refreshing the tab during document uploads
 

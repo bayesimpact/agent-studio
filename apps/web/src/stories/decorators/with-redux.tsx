@@ -10,6 +10,12 @@ import type {
   ReviewCampaign,
   ReviewCampaignDetail,
 } from "@/studio/features/review-campaigns/review-campaigns.models"
+import type {
+  MyReviewCampaign,
+  TesterCampaignSurvey,
+  TesterContext,
+} from "@/studio/features/review-campaigns/tester/tester.models"
+import type { LocalSessionSummary } from "@/studio/features/review-campaigns/tester/tester.slice"
 import { studioSliceList } from "@/studio/store/slices"
 
 const studioReducer = combineReducers(
@@ -29,6 +35,10 @@ export type StoryMockState = {
   documentTags?: DocumentTag[]
   reviewCampaigns?: ReviewCampaign[]
   selectedReviewCampaignDetail?: ReviewCampaignDetail
+  myReviewCampaigns?: MyReviewCampaign[]
+  testerContext?: TesterContext
+  testerLocalSessionsByCampaignId?: Record<string, LocalSessionSummary[]>
+  testerSurveyByCampaignId?: Record<string, TesterCampaignSurvey>
   /**
    * When set, thunks are enabled and `extra.services` uses these mocks.
    * Services not overridden will throw at dispatch time, which is fine for
@@ -42,6 +52,10 @@ function buildMockPreloadedState({
   documentTags,
   reviewCampaigns,
   selectedReviewCampaignDetail,
+  myReviewCampaigns,
+  testerContext,
+  testerLocalSessionsByCampaignId,
+  testerSurveyByCampaignId,
 }: StoryMockState): Partial<MockRootReducerState> {
   const studioInitial = studioReducer(undefined, { type: "@@INIT" }) as ReturnType<
     typeof studioReducer
@@ -85,6 +99,17 @@ function buildMockPreloadedState({
         selectedDetail: selectedReviewCampaignDetail
           ? { status: ADS.Fulfilled, error: null, value: selectedReviewCampaignDetail }
           : { status: ADS.Uninitialized, error: null, value: null },
+      },
+      reviewCampaignsTester: {
+        myCampaigns: myReviewCampaigns
+          ? { status: ADS.Fulfilled, error: null, value: myReviewCampaigns }
+          : { status: ADS.Uninitialized, error: null, value: null },
+        selectedContext: testerContext
+          ? { status: ADS.Fulfilled, error: null, value: testerContext }
+          : { status: ADS.Uninitialized, error: null, value: null },
+        selectedFeedbackBySessionId: {},
+        selectedSurveyByCampaignId: testerSurveyByCampaignId ?? {},
+        mySessionsByCampaignId: testerLocalSessionsByCampaignId ?? {},
       },
     },
   } as Partial<MockRootReducerState>

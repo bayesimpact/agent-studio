@@ -17,6 +17,8 @@ export type ContextResource =
   | "evaluationReport"
   | "evaluationExtractionRun"
   | "reviewCampaign"
+  | "reviewCampaignMembership"
+  | "agentSessionInCampaign"
 
 export const RequireContext = (...resources: ContextResource[]) =>
   SetMetadata(REQUIRE_CONTEXT_KEY, resources)

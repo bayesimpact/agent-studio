@@ -6,6 +6,7 @@ import { NotFoundRoute } from "@/common/routes/NotFoundRoute"
 import { deskRoutes } from "@/desk/routes/DeskRoutes"
 import { evalRoutes } from "@/eval/routes/EvalRoutes"
 import { studioRoutes } from "@/studio/routes/StudioRoutes"
+import { testerRoutes } from "@/studio/routes/TesterRoutes"
 import { RouteNames } from "./helpers"
 import { OnboardingRoute } from "./OnboardingRoute"
 import { ProtectedRoute } from "./ProtectedRoute"
@@ -33,6 +34,7 @@ const router = () =>
     deskRoutes,
     evalRoutes,
     backofficeRoutes,
+    testerRoutes,
 
     {
       path: "*",

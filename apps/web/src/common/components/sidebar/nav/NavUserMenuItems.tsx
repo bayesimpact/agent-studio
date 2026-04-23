@@ -1,11 +1,16 @@
 import { DropdownMenuItem, DropdownMenuSeparator } from "@caseai-connect/ui/shad/dropdown-menu"
-import { ExternalLinkIcon, LogOutIcon } from "lucide-react"
+import { ExternalLinkIcon, LogOutIcon, MegaphoneIcon } from "lucide-react"
 import { useTranslation } from "react-i18next"
+import { useNavigate } from "react-router-dom"
 import { useAuthHandler } from "@/common/hooks/use-auth-handler"
+import { useMyReviewCampaigns } from "@/studio/features/review-campaigns/tester/use-my-review-campaigns"
+import { buildTesterHomePath } from "@/studio/routes/helpers"
 
 export function NavUserMenuItems() {
   return (
     <>
+      <MyReviewCampaignsLink />
+
       <HelpCenter />
 
       <LanguageSelector />
@@ -14,6 +19,18 @@ export function NavUserMenuItems() {
 
       <LogOutButton />
     </>
+  )
+}
+
+function MyReviewCampaignsLink() {
+  const navigate = useNavigate()
+  const { hasCampaigns } = useMyReviewCampaigns()
+  if (!hasCampaigns) return null
+  return (
+    <DropdownMenuItem onSelect={() => navigate(buildTesterHomePath())}>
+      <MegaphoneIcon />
+      My review campaigns
+    </DropdownMenuItem>
   )
 }
 
