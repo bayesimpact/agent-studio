@@ -17,6 +17,7 @@ import { InvitationsModule } from "./domains/agents/shared/memberships/invitatio
 import { AgentsAnalyticsModule } from "./domains/analytics/agents-analytics/agents-analytics.module"
 import { ProjectsAnalyticsModule } from "./domains/analytics/projects-analytics/projects-analytics.module"
 import { AuthModule } from "./domains/auth/auth.module"
+import { BackofficeModule } from "./domains/backoffice/backoffice.module"
 import { DocumentsModule } from "./domains/documents/documents.module"
 import { StorageModule } from "./domains/documents/storage/storage.module"
 import { DocumentTagsModule } from "./domains/documents/tags/document-tags.module"
@@ -41,11 +42,13 @@ import { UsersModule } from "./domains/users/users.module"
       inject: [ConfigService],
       useFactory: async (configService: ConfigService) => configService.get("typeorm")(),
     }),
-    DiagnosticsModule,
     AgentMessageFeedbackModule,
+    AgentsAnalyticsModule,
     AgentsModule,
     AuthModule,
+    BackofficeModule,
     ConversationAgentSessionsModule,
+    DiagnosticsModule,
     DocumentsModule,
     DocumentTagsModule,
     EvaluationsModule,
@@ -55,10 +58,9 @@ import { UsersModule } from "./domains/users/users.module"
     MeModule,
     OrganizationsModule,
     OrganizationsModule,
-    ProjectsModule,
-    ProjectsModule,
-    AgentsAnalyticsModule,
     ProjectsAnalyticsModule,
+    ProjectsModule,
+    ProjectsModule,
     StorageModule,
     StreamingModule,
     UsersModule,

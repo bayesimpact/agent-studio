@@ -103,6 +103,7 @@ module.exports = {
         path: [
           "^src/domains/me/",
           "^src/domains/analytics/",
+          "^src/domains/backoffice/",
           "^src/domains/agents/shared/memberships/",
         ],
       },
@@ -127,6 +128,7 @@ module.exports = {
         path: [
           "^src/domains/me/",
           "^src/domains/analytics/",
+          "^src/domains/backoffice/",
           "^src/domains/agents/shared/memberships/",
         ],
       },

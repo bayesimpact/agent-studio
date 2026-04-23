@@ -6,6 +6,7 @@ export type User = {
   email: string
   name: string
   memberships: UserMembershipsDto
+  isBackofficeAuthorized: boolean
 }
 
 export type Me = {

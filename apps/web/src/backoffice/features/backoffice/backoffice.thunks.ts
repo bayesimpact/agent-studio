@@ -1,0 +1,45 @@
+import type { FeatureFlagKey } from "@caseai-connect/api-contracts"
+import { createAsyncThunk } from "@reduxjs/toolkit"
+import type { RootState, ThunkExtraArg } from "@/common/store"
+import type { BackofficeOrganization, BackofficeUser } from "./backoffice.models"
+
+type ThunkConfig = { state: RootState; extra: ThunkExtraArg }
+
+const listOrganizations = createAsyncThunk<BackofficeOrganization[], void, ThunkConfig>(
+  "backoffice/fetchOrganizations",
+  async (_, { extra: { services } }) => {
+    return services.backoffice.listOrganizations()
+  },
+)
+
+const listUsers = createAsyncThunk<BackofficeUser[], void, ThunkConfig>(
+  "backoffice/fetchUsers",
+  async (_, { extra: { services } }) => {
+    return services.backoffice.listUsers()
+  },
+)
+
+const addFeatureFlag = createAsyncThunk<
+  { projectId: string; featureFlagKey: FeatureFlagKey },
+  { projectId: string; featureFlagKey: FeatureFlagKey },
+  ThunkConfig
+>("backoffice/addFeatureFlag", async (params, { extra: { services } }) => {
+  await services.backoffice.addFeatureFlag(params)
+  return params
+})
+
+const removeFeatureFlag = createAsyncThunk<
+  { projectId: string; featureFlagKey: FeatureFlagKey },
+  { projectId: string; featureFlagKey: FeatureFlagKey },
+  ThunkConfig
+>("backoffice/removeFeatureFlag", async (params, { extra: { services } }) => {
+  await services.backoffice.removeFeatureFlag(params)
+  return params
+})
+
+export const backofficeThunks = {
+  listOrganizations,
+  listUsers,
+  addFeatureFlag,
+  removeFeatureFlag,
+}

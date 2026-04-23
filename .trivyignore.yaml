@@ -1,25 +1,7 @@
 vulnerabilities:
-  - id: CVE-2026-4926
-    expired_at: 2026-05-01
-    reason: "path-to-regexp 8.3.0 — fix in 8.4.0, blocked by @nestjs/core"
-  - id: CVE-2026-27903
-    expired_at: 2026-05-01
-    reason: "minimatch 10.2.2 — fix in 10.2.3, blocked by transitive deps"
-  - id: CVE-2026-27904
-    expired_at: 2026-05-01
-    reason: "minimatch 10.2.2 — fix in 10.2.3, blocked by transitive deps"
   - id: CVE-2026-33671
     expired_at: 2026-05-01
-    reason: "picomatch 4.0.3 — fix in 4.0.4, blocked by @angular-devkit/core via @nestjs/cli"
-  - id: CVE-2026-29786
-    expired_at: 2026-05-01
-    reason: "tar 7.5.9 — fix in 7.5.10, blocked by @mapbox/node-pre-gyp"
-  - id: CVE-2026-31802
-    expired_at: 2026-05-01
-    reason: "tar 7.5.9 — fix in 7.5.11, blocked by @mapbox/node-pre-gyp"
+    reason: "picomatch 4.0.3 — fix in 4.0.4, present via npm CLI's bundled tinyglobby in the base node image"
   - id: CVE-2025-32434
     expired_at: 2026-05-01
     reason: "torch 2.5.1+cu121 — fix requires 2.6.0+, blocked by docling compatibility"
-  - id: CVE-2026-4800
-    expired_at: 2026-05-02
-    reason: "lodash 4.17.23 — fix in 4.18.1, blocked by @nestjs/config, llamaindex, @auth0/auth0-spa-js"

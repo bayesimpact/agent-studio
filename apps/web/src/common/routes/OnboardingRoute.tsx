@@ -1,4 +1,6 @@
 import { Button } from "@caseai-connect/ui/shad/button"
+import { useSidebar } from "@caseai-connect/ui/shad/sidebar"
+import { useEffect } from "react"
 import { useTranslation } from "react-i18next"
 import { Grid, GridContent, GridHeader, GridItem } from "@/common/components/grid/Grid"
 import { OrganizationCreator } from "@/common/components/organization/OrganizationCreator"
@@ -33,26 +35,44 @@ export function OnboardingRoute() {
 }
 
 function WithData({ user, organizations }: { user: User; organizations: Organization[] }) {
-  const { t } = useTranslation()
   const orgsCount = organizations.length
   if (orgsCount === 0) return <OrganizationCreator />
 
   return (
     <SidebarLayout user={{ name: user.name, email: user.email }}>
-      <Wrap>
-        <Grid cols={1} total={orgsCount}>
-          <GridHeader
-            title={t("organization:list:title", { name: user.name })}
-            description={t("organization:list:description")}
-          />
-          <GridContent>
-            {organizations.map((organization, index) => (
-              <OrganizationItem key={organization.id} organization={organization} index={index} />
-            ))}
-          </GridContent>
-        </Grid>
-      </Wrap>
+      <SidebarContent organizations={organizations} user={user} orgsCount={orgsCount} />
     </SidebarLayout>
+  )
+}
+
+function SidebarContent({
+  organizations,
+  user,
+  orgsCount,
+}: {
+  organizations: Organization[]
+  user: User
+  orgsCount: number
+}) {
+  const { t } = useTranslation()
+  const { setOpen } = useSidebar()
+  useEffect(() => {
+    setOpen(false)
+  }, [setOpen])
+  return (
+    <Wrap>
+      <Grid cols={1} total={orgsCount}>
+        <GridHeader
+          title={t("organization:list:title", { name: user.name })}
+          description={t("organization:list:description")}
+        />
+        <GridContent>
+          {organizations.map((organization, index) => (
+            <OrganizationItem key={organization.id} organization={organization} index={index} />
+          ))}
+        </GridContent>
+      </Grid>
+    </Wrap>
   )
 }
 

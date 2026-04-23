@@ -1,0 +1,31 @@
+import { BackofficeRoutes } from "@caseai-connect/api-contracts"
+import { getAxiosInstance } from "@/external/axios"
+import { toBackofficeOrganization, toBackofficeUser } from "../backoffice.models"
+import type { IBackofficeSpi } from "../backoffice.spi"
+
+export default {
+  listOrganizations: async () => {
+    const axios = getAxiosInstance()
+    const response = await axios.get<typeof BackofficeRoutes.listOrganizations.response>(
+      BackofficeRoutes.listOrganizations.getPath(),
+    )
+    return response.data.data.map(toBackofficeOrganization)
+  },
+  listUsers: async () => {
+    const axios = getAxiosInstance()
+    const response = await axios.get<typeof BackofficeRoutes.listUsers.response>(
+      BackofficeRoutes.listUsers.getPath(),
+    )
+    return response.data.data.map(toBackofficeUser)
+  },
+  addFeatureFlag: async ({ projectId, featureFlagKey }) => {
+    const axios = getAxiosInstance()
+    await axios.post(BackofficeRoutes.addFeatureFlag.getPath({ projectId }), {
+      payload: { featureFlagKey },
+    } satisfies typeof BackofficeRoutes.addFeatureFlag.request)
+  },
+  removeFeatureFlag: async ({ projectId, featureFlagKey }) => {
+    const axios = getAxiosInstance()
+    await axios.delete(BackofficeRoutes.removeFeatureFlag.getPath({ projectId, featureFlagKey }))
+  },
+} satisfies IBackofficeSpi
