@@ -9,6 +9,7 @@ import {
   UpdateDateColumn,
 } from "typeorm"
 import { AgentCategory } from "@/domains/agents/categories/agent-category.entity"
+import { ProjectAgentCategory } from "@/domains/agents/categories/project-agent-category.entity"
 import { ConversationAgentSession } from "./conversation-agent-session.entity"
 
 @Entity("conversation_agent_session_category")
@@ -22,6 +23,9 @@ export class ConversationAgentSessionCategory {
 
   @Column({ type: "uuid", name: "agent_category_id" })
   agentCategoryId!: string
+
+  @Column({ type: "uuid", name: "project_agent_category_id", nullable: true })
+  projectAgentCategoryId!: string | null
 
   @CreateDateColumn({ name: "created_at" })
   createdAt!: Date
@@ -44,4 +48,12 @@ export class ConversationAgentSessionCategory {
   )
   @JoinColumn({ name: "agent_category_id" })
   agentCategory!: AgentCategory
+
+  @ManyToOne(
+    () => ProjectAgentCategory,
+    (projectAgentCategory) => projectAgentCategory.sessionCategories,
+    { onDelete: "CASCADE", nullable: true },
+  )
+  @JoinColumn({ name: "project_agent_category_id" })
+  projectAgentCategory!: ProjectAgentCategory | null
 }
