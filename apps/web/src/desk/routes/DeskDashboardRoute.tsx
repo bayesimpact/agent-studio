@@ -2,6 +2,7 @@ import { SidebarMenuButton } from "@caseai-connect/ui/shad/sidebar"
 import { ExternalLinkIcon } from "lucide-react"
 import { useTranslation } from "react-i18next"
 import { Navigate, useLocation, useOutlet } from "react-router-dom"
+import { Wrap } from "@/common/components/layouts/Wrap"
 import { SidebarAgentList } from "@/common/components/sidebar/list/SidebarAgentList"
 import { SidebarLayout } from "@/common/components/sidebar/SidebarLayout"
 import type { User } from "@/common/features/me/me.models"
@@ -32,9 +33,7 @@ export function DeskDashboardRoute({
       user={{ name: user.name, email: user.email }}
       sidebarFooterChildren={<SidebarFooterChildren projectId={project.value?.id} />}
     >
-      <div className="mx-10 2xl:mx-30 my-10 border relative rounded-2xl overflow-hidden">
-        {outlet ? outlet : <Navigate to={RouteNames.HOME} />}
-      </div>
+      <Wrap>{outlet ? outlet : <Navigate to={RouteNames.HOME} />}</Wrap>
     </SidebarLayout>
   )
 }

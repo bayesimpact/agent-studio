@@ -10,8 +10,11 @@ import { BreadcrumbProject } from "@/common/components/breadcrumb/BreadcrumbProj
 import { BreadcrumbProjectAnalytics } from "@/common/components/breadcrumb/BreadcrumbProjectAnalytics"
 import { BreadcrumbProjectMembership } from "@/common/components/breadcrumb/BreadcrumbProjectMembership"
 import type { Organization } from "@/common/features/organizations/organizations.models"
+import { useBreakpoint } from "@/common/hooks/use-breakpoint"
 
 export function SidebarBreadcrumb({ organization }: { organization: Organization }) {
+  const { isShortViewport } = useBreakpoint()
+  if (isShortViewport) return null
   return (
     <Breadcrumb>
       <BreadcrumbList>

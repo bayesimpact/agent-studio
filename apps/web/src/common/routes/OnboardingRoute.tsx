@@ -10,6 +10,7 @@ import { DeskRouteNames } from "@/desk/routes/helpers"
 import { EvalRouteNames } from "@/eval/routes/helpers"
 import { ProjectCreatorButton } from "@/studio/features/projects/components/ProjectCreator"
 import { StudioRouteNames } from "@/studio/routes/helpers"
+import { Wrap } from "../components/layouts/Wrap"
 import type { User } from "../features/me/me.models"
 import { selectMe } from "../features/me/me.selectors"
 import type { Project } from "../features/projects/projects.models"
@@ -38,7 +39,7 @@ function WithData({ user, organizations }: { user: User; organizations: Organiza
 
   return (
     <SidebarLayout user={{ name: user.name, email: user.email }}>
-      <div className="mx-10 2xl:mx-30 my-10 border relative rounded-2xl overflow-hidden">
+      <Wrap>
         <Grid cols={1} total={orgsCount}>
           <GridHeader
             title={t("organization:list:title", { name: user.name })}
@@ -50,7 +51,7 @@ function WithData({ user, organizations }: { user: User; organizations: Organiza
             ))}
           </GridContent>
         </Grid>
-      </div>
+      </Wrap>
     </SidebarLayout>
   )
 }
@@ -61,6 +62,7 @@ function OrganizationItem({ organization, index }: { organization: Organization;
   const canCreateProject = abilities.canCreateProject({
     organizationId: organization.id,
   })
+
   const extraItems = canCreateProject ? 1 : 0
   return (
     <GridItem

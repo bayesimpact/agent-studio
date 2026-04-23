@@ -36,10 +36,10 @@ export function AgentSessionMessages({
   const isStreaming = useAppSelector(selectStreaming)
 
   const heightClasses =
-    "min-h-[calc(100vh-15rem)] max-h-[calc(100vh-15rem)] xl:min-h-[calc(100vh-17rem)] xl:max-h-[calc(100vh-17rem)]"
+    "h-full min-h-[calc(100vh-15rem)] sm:min-h-[calc(100vh-11rem)] md:min-h-[calc(100vh-17rem)] md:max-h-[calc(100vh-17rem)] xl:max-h-[calc(100vh-17rem)]"
   return (
-    <div className={cn("flex flex-1", heightClasses)}>
-      <div className="flex flex-1 p-4">
+    <div className={cn("flex flex-1 flex-col md:flex-row", heightClasses)}>
+      <div className="flex flex-1 p-4 min-h-[calc(100vh-15rem)] md:min-h-full">
         <Chat className="border shadow-none">
           <Messages messages={messages} isStreaming={isStreaming} />
 
@@ -49,7 +49,7 @@ export function AgentSessionMessages({
       {rightSlot && (
         <div
           className={cn(
-            "w-80 shrink-0 h-full border-l bg-white min-h-full overflow-hidden relative",
+            "w-80 shrink-0 h-full min-h-fit md:min-h-full border-l bg-white overflow-hidden relative",
             heightClasses,
           )}
         >
