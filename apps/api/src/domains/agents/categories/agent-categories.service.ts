@@ -2,12 +2,15 @@ import { Injectable } from "@nestjs/common"
 import { InjectRepository } from "@nestjs/typeorm"
 import type { Repository } from "typeorm"
 import { AgentCategory } from "./agent-category.entity"
+import type { ProjectAgentCategory } from "./project-agent-category.entity"
 
 export type ReplaceAgentCategoriesResult = {
   createdCount: number
   restoredCount: number
   deletedCount: number
 }
+
+type SelectedProjectAgentCategory = Pick<ProjectAgentCategory, "id" | "name">
 
 @Injectable()
 export class AgentCategoriesService {
@@ -30,7 +33,7 @@ export class AgentCategoriesService {
    */
   async replaceActiveCategoriesForAgent(
     agentId: string,
-    categoryNames: string[],
+    selectedProjectCategories: SelectedProjectAgentCategory[],
   ): Promise<ReplaceAgentCategoriesResult> {
     const existingAgentCategories = await this.agentCategoryRepository.find({
       where: { agentId },
@@ -38,10 +41,12 @@ export class AgentCategoriesService {
       order: { name: "ASC" },
     })
 
-    const desiredCategoryNames = new Set(categoryNames)
-    const existingCategoryByName = new Map(
+    const desiredProjectCategoryIds = new Set(
+      selectedProjectCategories.map((projectCategory) => projectCategory.id),
+    )
+    const existingCategoryByProjectCategoryId = new Map(
       existingAgentCategories.map((existingAgentCategory) => [
-        existingAgentCategory.name,
+        existingAgentCategory.projectAgentCategoryId,
         existingAgentCategory,
       ]),
     )
@@ -50,12 +55,15 @@ export class AgentCategoriesService {
     let restoredCount = 0
     let deletedCount = 0
 
-    for (const categoryName of categoryNames) {
-      const existingAgentCategory = existingCategoryByName.get(categoryName)
+    for (const selectedProjectCategory of selectedProjectCategories) {
+      const existingAgentCategory = existingCategoryByProjectCategoryId.get(
+        selectedProjectCategory.id,
+      )
       if (!existingAgentCategory) {
         const createdAgentCategory = this.agentCategoryRepository.create({
           agentId,
-          name: categoryName,
+          projectAgentCategoryId: selectedProjectCategory.id,
+          name: selectedProjectCategory.name,
         })
         await this.agentCategoryRepository.save(createdAgentCategory)
         createdCount += 1
@@ -69,7 +77,9 @@ export class AgentCategoriesService {
     }
 
     for (const existingAgentCategory of existingAgentCategories) {
-      const shouldStayActive = desiredCategoryNames.has(existingAgentCategory.name)
+      const shouldStayActive =
+        existingAgentCategory.projectAgentCategoryId !== null &&
+        desiredProjectCategoryIds.has(existingAgentCategory.projectAgentCategoryId)
       const isCurrentlyActive = existingAgentCategory.deletedAt === null
       if (!shouldStayActive && isCurrentlyActive) {
         await this.agentCategoryRepository.softDelete(existingAgentCategory.id)

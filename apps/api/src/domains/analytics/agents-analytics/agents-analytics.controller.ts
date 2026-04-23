@@ -7,12 +7,10 @@ import { ResourceContextGuard } from "@/common/context/resource-context.guard"
 import { CheckPolicy } from "@/common/policies/check-policy.decorator"
 import {
   toAnalyticsCategoryDailyPointDto,
-  toAnalyticsCategoryPointDto,
   toAnalyticsDailyPointDto,
 } from "@/domains/analytics/shared/analytics-dto.helpers"
 import type {
   AnalyticsCategoryDailyPoint,
-  AnalyticsCategoryPoint,
   AnalyticsDailyPoint,
 } from "@/domains/analytics/shared/analytics-metrics.types"
 import { JwtAuthGuard } from "@/domains/auth/jwt-auth.guard"
@@ -61,24 +59,6 @@ export class AgentsAnalyticsController {
       })
 
     return { data: toAnalyticsDailyPointDto(avgUserQuestionsPerSessionPerDay) }
-  }
-
-  @Get(Routes.getConversationsByCategory.path)
-  @CheckPolicy((policy) => policy.canList())
-  async getConversationsByCategory(
-    @Req() request: EndpointRequestWithAgent,
-    @Query("startAt", ParseIntPipe) startAt: number,
-    @Query("endAt", ParseIntPipe) endAt: number,
-  ): Promise<typeof Routes.getConversationsByCategory.response> {
-    const conversationsByCategory: AnalyticsCategoryPoint[] =
-      await this.agentsAnalyticsService.getConversationsByCategory({
-        connectScope: getRequiredConnectScope(request),
-        agentId: request.agent.id,
-        startAt,
-        endAt,
-      })
-
-    return { data: toAnalyticsCategoryPointDto(conversationsByCategory) }
   }
 
   @Get(Routes.getConversationsByCategoryPerDay.path)

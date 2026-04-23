@@ -91,14 +91,6 @@ describe("Projects Analytics - Auth", () => {
       query: analyticsDateRangeQuery,
     })
 
-  const subjectByCategory = async () =>
-    request({
-      route: AnalyticsRoutes.getConversationsByCategory,
-      pathParams: removeNullish({ organizationId, projectId }),
-      token: accessToken ?? undefined,
-      query: { ...analyticsDateRangeQuery, agentId: categoryAgentId },
-    })
-
   const subjectByCategoryPerDay = async () =>
     request({
       route: AnalyticsRoutes.getConversationsByCategoryPerAgentPerDay,
@@ -111,7 +103,6 @@ describe("Projects Analytics - Auth", () => {
     accessToken = null
     expectResponse(await subjectConversations(), 401, AUTH_ERRORS.NO_ACCESS_TOKEN)
     expectResponse(await subjectAvg(), 401, AUTH_ERRORS.NO_ACCESS_TOKEN)
-    expectResponse(await subjectByCategory(), 401, AUTH_ERRORS.NO_ACCESS_TOKEN)
     expectResponse(await subjectByCategoryPerDay(), 401, AUTH_ERRORS.NO_ACCESS_TOKEN)
   })
 
@@ -119,7 +110,6 @@ describe("Projects Analytics - Auth", () => {
     organizationId = null
     expectResponse(await subjectConversations(), 400, AUTH_ERRORS.NO_ORGANIZATION_ID)
     expectResponse(await subjectAvg(), 400, AUTH_ERRORS.NO_ORGANIZATION_ID)
-    expectResponse(await subjectByCategory(), 400, AUTH_ERRORS.NO_ORGANIZATION_ID)
     expectResponse(await subjectByCategoryPerDay(), 400, AUTH_ERRORS.NO_ORGANIZATION_ID)
   })
 
@@ -128,7 +118,6 @@ describe("Projects Analytics - Auth", () => {
     auth0Id = mockForeignAuth0Id()
     expectResponse(await subjectConversations(), 401, AUTH_ERRORS.NOT_MEMBER_OF_ORG)
     expectResponse(await subjectAvg(), 401, AUTH_ERRORS.NOT_MEMBER_OF_ORG)
-    expectResponse(await subjectByCategory(), 401, AUTH_ERRORS.NOT_MEMBER_OF_ORG)
     expectResponse(await subjectByCategoryPerDay(), 401, AUTH_ERRORS.NOT_MEMBER_OF_ORG)
   })
 
@@ -136,7 +125,6 @@ describe("Projects Analytics - Auth", () => {
     await createContextForRole("admin")
     expectResponse(await subjectConversations(), 200)
     expectResponse(await subjectAvg(), 200)
-    expectResponse(await subjectByCategory(), 200)
     expectResponse(await subjectByCategoryPerDay(), 200)
   })
 
@@ -144,7 +132,6 @@ describe("Projects Analytics - Auth", () => {
     await createContextForRole("owner")
     expectResponse(await subjectConversations(), 200)
     expectResponse(await subjectAvg(), 200)
-    expectResponse(await subjectByCategory(), 200)
     expectResponse(await subjectByCategoryPerDay(), 200)
   })
 
@@ -152,7 +139,6 @@ describe("Projects Analytics - Auth", () => {
     await createContextForRole("member")
     expectResponse(await subjectConversations(), 403, AUTH_ERRORS.UNAUTHORIZED_RESOURCE)
     expectResponse(await subjectAvg(), 403, AUTH_ERRORS.UNAUTHORIZED_RESOURCE)
-    expectResponse(await subjectByCategory(), 403, AUTH_ERRORS.UNAUTHORIZED_RESOURCE)
     expectResponse(await subjectByCategoryPerDay(), 403, AUTH_ERRORS.UNAUTHORIZED_RESOURCE)
   })
 
@@ -161,7 +147,6 @@ describe("Projects Analytics - Auth", () => {
     projectId = randomUUID()
     expectResponse(await subjectConversations(), 404)
     expectResponse(await subjectAvg(), 404)
-    expectResponse(await subjectByCategory(), 404)
     expectResponse(await subjectByCategoryPerDay(), 404)
   })
 })

@@ -39,15 +39,13 @@ export const loadProjectAnalytics = createAsyncThunk<
           endAt,
           agentId,
         }),
-        agentId
-          ? services.projectAnalytics.getConversationsByCategoryPerAgentPerDay({
-              organizationId,
-              projectId,
-              startAt,
-              endAt,
-              agentId,
-            })
-          : Promise.resolve([]),
+        services.projectAnalytics.getConversationsByCategoryPerAgentPerDay({
+          organizationId,
+          projectId,
+          startAt,
+          endAt,
+          agentId,
+        }),
       ])
     return { conversationsPerDay, avgUserQuestionsPerSessionPerDay, conversationsByCategoryPerDay }
   },

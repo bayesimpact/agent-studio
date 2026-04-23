@@ -72,7 +72,7 @@ export function ProjectCategoryChartCard({
   uncategorizedLabel: string
 }) {
   const visiblePoints = points.filter((point) =>
-    selectedAgentId === "all" ? false : point.agentId === selectedAgentId,
+    selectedAgentId === "all" ? true : point.agentId === selectedAgentId,
   )
 
   const categoryLabels = Array.from(
@@ -92,7 +92,7 @@ export function ProjectCategoryChartCard({
     const categoryLabel = point.isUncategorized ? uncategorizedLabel : point.categoryName
     const existingRow = rowsByDate.get(point.date)
     if (existingRow) {
-      existingRow[categoryLabel] = point.value
+      existingRow[categoryLabel] = Number(existingRow[categoryLabel] ?? 0) + point.value
       continue
     }
     rowsByDate.set(point.date, { date: point.date, [categoryLabel]: point.value })

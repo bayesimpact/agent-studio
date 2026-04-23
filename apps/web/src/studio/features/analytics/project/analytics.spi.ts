@@ -14,6 +14,6 @@ export interface IProjectAnalyticsSpi {
     params: ProjectAnalyticsParams,
   ): Promise<AnalyticsDailyPoint[]>
   getConversationsByCategoryPerAgentPerDay(
-    params: ProjectAnalyticsParams & { agentId: string },
+    params: ProjectAnalyticsParams,
   ): Promise<AnalyticsCategoryDailyPoint[]>
 }

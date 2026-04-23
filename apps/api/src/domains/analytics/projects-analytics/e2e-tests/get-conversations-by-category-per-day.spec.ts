@@ -109,7 +109,7 @@ describe("Projects Analytics - getConversationsByCategoryPerDay", () => {
     ])
   }
 
-  const subject = async () =>
+  const subject = async (agentId?: string) =>
     request({
       route: AnalyticsRoutes.getConversationsByCategoryPerAgentPerDay,
       pathParams: removeNullish({ organizationId, projectId }),
@@ -117,11 +117,38 @@ describe("Projects Analytics - getConversationsByCategoryPerDay", () => {
       query: {
         startAt: String(day1Start.getTime()),
         endAt: String(day2End.getTime()),
-        agentId: supportAgentId,
+        ...(agentId ? { agentId } : {}),
       },
     })
 
   it("returns per-day category stats for the selected agent", async () => {
+    await createContext()
+
+    const response = await subject(supportAgentId)
+
+    expectResponse(response, 200)
+    expect(response.body.data).toEqual([
+      {
+        date: "2026-01-01",
+        agentName: "Support",
+        categoryName: "billing",
+        value: 1,
+        isUncategorized: false,
+        agentId: expect.any(String),
+        categoryId: expect.any(String),
+      },
+      {
+        date: "2026-01-02",
+        agentName: "Support",
+        categoryName: "uncategorized",
+        value: 1,
+        isUncategorized: true,
+        agentId: expect.any(String),
+      },
+    ])
+  })
+
+  it("returns per-day category stats across all agents when agentId is omitted", async () => {
     await createContext()
 
     const response = await subject()
@@ -132,6 +159,15 @@ describe("Projects Analytics - getConversationsByCategoryPerDay", () => {
         date: "2026-01-01",
         agentName: "Support",
         categoryName: "billing",
+        value: 1,
+        isUncategorized: false,
+        agentId: expect.any(String),
+        categoryId: expect.any(String),
+      },
+      {
+        date: "2026-01-02",
+        agentName: "Sales",
+        categoryName: "onboarding",
         value: 1,
         isUncategorized: false,
         agentId: expect.any(String),

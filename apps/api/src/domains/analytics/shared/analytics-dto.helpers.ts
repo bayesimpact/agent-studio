@@ -1,8 +1,4 @@
-import type {
-  AnalyticsCategoryDailyPoint,
-  AnalyticsCategoryPoint,
-  AnalyticsDailyPoint,
-} from "./analytics-metrics.types"
+import type { AnalyticsCategoryDailyPoint, AnalyticsDailyPoint } from "./analytics-metrics.types"
 
 export function toAnalyticsDailyPointDto(
   points: AnalyticsDailyPoint[],
@@ -10,20 +6,6 @@ export function toAnalyticsDailyPointDto(
   return points.map((point) => ({
     date: point.date,
     value: point.value,
-  }))
-}
-
-export function toAnalyticsCategoryPointDto(points: AnalyticsCategoryPoint[]): Array<{
-  categoryId?: string
-  categoryName: string
-  value: number
-  isUncategorized: boolean
-}> {
-  return points.map((point) => ({
-    ...(point.categoryId ? { categoryId: point.categoryId } : {}),
-    categoryName: point.categoryName,
-    value: point.value,
-    isUncategorized: point.isUncategorized,
   }))
 }
 

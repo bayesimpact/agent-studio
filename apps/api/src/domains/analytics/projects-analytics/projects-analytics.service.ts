@@ -17,7 +17,6 @@ import {
 
 import type {
   AnalyticsCategoryDailyPoint,
-  AnalyticsCategoryPoint,
   AnalyticsDailyPoint,
 } from "@/domains/analytics/shared/analytics-metrics.types"
 
@@ -127,115 +126,6 @@ export class ProjectsAnalyticsService {
     }))
   }
 
-  async getConversationsByCategory({
-    connectScope,
-    agentId,
-    startAt,
-    endAt,
-  }: {
-    connectScope: RequiredConnectScope
-    agentId: string
-    startAt: TimeType
-    endAt: TimeType
-  }): Promise<AnalyticsCategoryPoint[]> {
-    const createdAtCol = getQualifiedColumnSql(this.conversationAgentSessionAlias, "created_at")
-    const sessionIdCol = getQualifiedColumnSql(this.conversationAgentSessionAlias, "id")
-    const agentIdCol = getQualifiedColumnSql(this.conversationAgentSessionAlias, "agent_id")
-
-    const sessionCategoryTable = this.conversationAgentSessionConnectRepository
-      .newQueryBuilderWithConnectScope(connectScope)
-      .subQuery()
-      .select(
-        getQualifiedColumnSql(this.sessionCategoryAlias, "conversation_agent_session_id"),
-        "session_id",
-      )
-      .addSelect(getQualifiedColumnSql(this.categoryAlias, "id"), "category_id")
-      .addSelect(getQualifiedColumnSql(this.categoryAlias, "name"), "category_name")
-      .from(ConversationAgentSessionCategory, this.sessionCategoryAlias)
-      .innerJoin(
-        AgentCategory,
-        this.categoryAlias,
-        `${getQualifiedColumnSql(this.categoryAlias, "id")} = ${getQualifiedColumnSql(this.sessionCategoryAlias, "agent_category_id")} AND ${getQualifiedColumnSql(this.categoryAlias, "deleted_at")} IS NULL`,
-      )
-      .getQuery()
-
-    const categorizedRows = await this.conversationAgentSessionConnectRepository
-      .newQueryBuilderWithConnectScope(connectScope)
-      .select("active_categories.category_id", "categoryId")
-      .addSelect("active_categories.category_name", "categoryName")
-      .addSelect("COUNT(*)::int", "value")
-      .innerJoin(
-        `(${sessionCategoryTable})`,
-        "active_categories",
-        `active_categories.session_id = ${sessionIdCol}`,
-      )
-      .andWhere(`${createdAtCol} BETWEEN :startAt AND :endAt`, {
-        startAt: new Date(startAt),
-        endAt: new Date(endAt),
-      })
-      .andWhere(`${agentIdCol} = :agentId`, { agentId })
-      .groupBy("active_categories.category_id")
-      .addGroupBy("active_categories.category_name")
-      .orderBy("value", "DESC")
-      .addOrderBy("active_categories.category_name", "ASC")
-      .getRawMany<{
-        categoryId: string
-        categoryName: string
-        value: string
-      }>()
-
-    const uncategorizedRaw = await this.conversationAgentSessionConnectRepository
-      .newQueryBuilderWithConnectScope(connectScope)
-      .andWhere(`${createdAtCol} BETWEEN :startAt AND :endAt`, {
-        startAt: new Date(startAt),
-        endAt: new Date(endAt),
-      })
-      .andWhere(`${agentIdCol} = :agentId`, { agentId })
-      .andWhere(
-        `NOT EXISTS (${this.conversationAgentSessionConnectRepository
-          .newQueryBuilderWithConnectScope(connectScope)
-          .subQuery()
-          .select("1")
-          .from(ConversationAgentSessionCategory, this.sessionCategoryAlias)
-          .innerJoin(
-            AgentCategory,
-            this.categoryAlias,
-            `${getQualifiedColumnSql(this.categoryAlias, "id")} = ${getQualifiedColumnSql(this.sessionCategoryAlias, "agent_category_id")} AND ${getQualifiedColumnSql(this.categoryAlias, "deleted_at")} IS NULL`,
-          )
-          .where(
-            `${getQualifiedColumnSql(this.sessionCategoryAlias, "conversation_agent_session_id")} = ${sessionIdCol}`,
-          )
-          .getQuery()})`,
-      )
-      .select("COUNT(*)::int", "value")
-      .getRawOne<{ value: string }>()
-
-    const categorizedPoints: AnalyticsCategoryPoint[] = categorizedRows.map((row) => ({
-      categoryId: row.categoryId,
-      categoryName: row.categoryName,
-      value: Number(row.value),
-      isUncategorized: false,
-    }))
-
-    const uncategorizedValue = Number(uncategorizedRaw?.value ?? 0)
-    const uncategorizedPoint: AnalyticsCategoryPoint[] =
-      uncategorizedValue > 0
-        ? [
-            {
-              categoryName: "uncategorized",
-              value: uncategorizedValue,
-              isUncategorized: true,
-            },
-          ]
-        : []
-
-    return [...categorizedPoints, ...uncategorizedPoint].sort(
-      (firstPoint, secondPoint) =>
-        secondPoint.value - firstPoint.value ||
-        firstPoint.categoryName.localeCompare(secondPoint.categoryName),
-    )
-  }
-
   async getConversationsByCategoryPerAgentPerDay({
     connectScope,
     agentId,
@@ -243,7 +133,7 @@ export class ProjectsAnalyticsService {
     endAt,
   }: {
     connectScope: RequiredConnectScope
-    agentId: string
+    agentId?: string
     startAt: TimeType
     endAt: TimeType
   }): Promise<AnalyticsCategoryDailyPoint[]> {
@@ -270,7 +160,7 @@ export class ProjectsAnalyticsService {
       )
       .getQuery()
 
-    const categorizedRows = await this.conversationAgentSessionConnectRepository
+    const categorizedQueryBuilder = this.conversationAgentSessionConnectRepository
       .newQueryBuilderWithConnectScope(connectScope)
       .innerJoin(
         Agent,
@@ -292,7 +182,6 @@ export class ProjectsAnalyticsService {
         startAt: new Date(startAt),
         endAt: new Date(endAt),
       })
-      .andWhere(`${sessionAgentIdCol} = :agentId`, { agentId })
       .groupBy(dayExpr)
       .addGroupBy(sessionAgentIdCol)
       .addGroupBy(agentNameCol)
@@ -301,16 +190,19 @@ export class ProjectsAnalyticsService {
       .orderBy("date", "ASC")
       .addOrderBy(agentNameCol, "ASC")
       .addOrderBy("active_categories.category_name", "ASC")
-      .getRawMany<{
-        date: string
-        agentId: string
-        agentName: string
-        categoryId: string
-        categoryName: string
-        value: string
-      }>()
+    if (agentId) {
+      categorizedQueryBuilder.andWhere(`${sessionAgentIdCol} = :agentId`, { agentId })
+    }
+    const categorizedRows = await categorizedQueryBuilder.getRawMany<{
+      date: string
+      agentId: string
+      agentName: string
+      categoryId: string
+      categoryName: string
+      value: string
+    }>()
 
-    const uncategorizedRows = await this.conversationAgentSessionConnectRepository
+    const uncategorizedQueryBuilder = this.conversationAgentSessionConnectRepository
       .newQueryBuilderWithConnectScope(connectScope)
       .innerJoin(
         Agent,
@@ -325,7 +217,6 @@ export class ProjectsAnalyticsService {
         startAt: new Date(startAt),
         endAt: new Date(endAt),
       })
-      .andWhere(`${sessionAgentIdCol} = :agentId`, { agentId })
       .andWhere(
         `NOT EXISTS (${this.conversationAgentSessionConnectRepository
           .newQueryBuilderWithConnectScope(connectScope)
@@ -347,12 +238,15 @@ export class ProjectsAnalyticsService {
       .addGroupBy(agentNameCol)
       .orderBy("date", "ASC")
       .addOrderBy(agentNameCol, "ASC")
-      .getRawMany<{
-        date: string
-        agentId: string
-        agentName: string
-        value: string
-      }>()
+    if (agentId) {
+      uncategorizedQueryBuilder.andWhere(`${sessionAgentIdCol} = :agentId`, { agentId })
+    }
+    const uncategorizedRows = await uncategorizedQueryBuilder.getRawMany<{
+      date: string
+      agentId: string
+      agentName: string
+      value: string
+    }>()
 
     const categorizedPoints: AnalyticsCategoryDailyPoint[] = categorizedRows.map((row) => ({
       date: row.date,

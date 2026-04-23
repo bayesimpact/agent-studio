@@ -14,13 +14,6 @@ export type AnalyticsDailyPointDto = {
   value: number
 }
 
-export type AnalyticsCategoryPointDto = {
-  categoryId?: string
-  categoryName: string
-  value: number
-  isUncategorized: boolean
-}
-
 export type AnalyticsCategoryDailyPointDto = {
   date: string
   agentId: string

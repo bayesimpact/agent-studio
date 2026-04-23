@@ -1,15 +1,17 @@
-import { Logger } from "@nestjs/common"
+import { Logger, Module } from "@nestjs/common"
+import { ConfigModule, ConfigService } from "@nestjs/config"
 import { NestFactory } from "@nestjs/core"
-import { getRepositoryToken } from "@nestjs/typeorm"
+import { getRepositoryToken, TypeOrmModule } from "@nestjs/typeorm"
 import type { Repository } from "typeorm"
-import { AppModule } from "@/app.module"
+import typeorm from "@/config/typeorm"
 import { Agent } from "@/domains/agents/agent.entity"
 import { AgentCategoriesService } from "@/domains/agents/categories/agent-categories.service"
+import { AgentCategory } from "@/domains/agents/categories/agent-category.entity"
 import {
-  AGENT_DEFAULT_CATEGORIES_ENV,
   parseUniqueCommaSeparatedCategoryNames,
   resolveConfiguredDefaultAgentCategoryNames,
 } from "@/domains/agents/categories/agent-default-category-names"
+import { ProjectAgentCategory } from "@/domains/agents/categories/project-agent-category.entity"
 import { Organization } from "@/domains/organizations/organization.entity"
 import { Project } from "@/domains/projects/project.entity"
 import { ask, confirmDatabaseTarget } from "@/scripts/script-bootstrap"
@@ -19,6 +21,23 @@ const logger = new Logger("SetAgentCategories")
 type CliOptions = {
   categoryNames?: string[]
 }
+
+@Module({
+  imports: [
+    ConfigModule.forRoot({
+      isGlobal: true,
+      load: [typeorm],
+    }),
+    TypeOrmModule.forRootAsync({
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: async (configService: ConfigService) => configService.get("typeorm")(),
+    }),
+    TypeOrmModule.forFeature([Organization, Project, Agent, ProjectAgentCategory, AgentCategory]),
+  ],
+  providers: [AgentCategoriesService],
+})
+class SetAgentCategoriesCliModule {}
 
 function parseCliOptions(argv: string[]): CliOptions {
   const categoriesIndex = argv.indexOf("--categories")
@@ -32,24 +51,24 @@ function parseCliOptions(argv: string[]): CliOptions {
 }
 
 function mergeCategoryNameLists(primary: string[], secondary: string[]): string[] {
-  const merged: string[] = []
-  const seen = new Set<string>()
+  const mergedCategoryNames: string[] = []
+  const seenCategoryNames = new Set<string>()
 
   for (const categoryName of primary) {
-    if (!seen.has(categoryName)) {
-      seen.add(categoryName)
-      merged.push(categoryName)
+    if (!seenCategoryNames.has(categoryName)) {
+      seenCategoryNames.add(categoryName)
+      mergedCategoryNames.push(categoryName)
     }
   }
 
   for (const categoryName of secondary) {
-    if (!seen.has(categoryName)) {
-      seen.add(categoryName)
-      merged.push(categoryName)
+    if (!seenCategoryNames.has(categoryName)) {
+      seenCategoryNames.add(categoryName)
+      mergedCategoryNames.push(categoryName)
     }
   }
 
-  return merged
+  return mergedCategoryNames
 }
 
 async function selectFromList<T>(params: {
@@ -82,57 +101,98 @@ async function selectFromList<T>(params: {
   }
 }
 
-async function askIncludeDefaultCategories(configuredDefaults: string[]): Promise<boolean> {
-  if (configuredDefaults.length === 0) {
-    logger.log(
-      `\nNo default categories are available (${AGENT_DEFAULT_CATEGORIES_ENV} is set but empty, or only commas were provided). Unset it to use built-in defaults.`,
-    )
-    return false
+function parseMultiSelectIndexes(value: string, max: number): number[] | null {
+  if (value.trim().toLowerCase() === "all") {
+    return Array.from({ length: max }, (_unusedValue, itemIndex) => itemIndex)
   }
 
-  logger.log(`\nDefault categories available: ${configuredDefaults.join(", ")}`)
-  while (true) {
-    const answer = await ask("Include these default categories in this update? (yes/no): ")
-    const normalized = answer.toLowerCase()
-    if (normalized === "yes") {
-      return true
-    }
-    if (normalized === "no") {
-      return false
-    }
-    logger.warn("Please answer yes or no.")
-  }
-}
+  const selectedIndexes = new Set<number>()
+  const parts = value
+    .split(",")
+    .map((part) => part.trim())
+    .filter((part) => part.length > 0)
 
-async function resolveAdditionalCategoryNames(options: CliOptions): Promise<string[]> {
-  if (options.categoryNames && options.categoryNames.length > 0) {
-    return options.categoryNames
-  }
-
-  const categoryNamesRaw = await ask(
-    "Additional categories as comma-separated values (optional, Enter to skip): ",
-  )
-  if (!categoryNamesRaw) {
+  if (parts.length === 0) {
     return []
   }
-  return parseUniqueCommaSeparatedCategoryNames(categoryNamesRaw)
+
+  for (const part of parts) {
+    const selectedNumber = Number.parseInt(part, 10)
+    if (Number.isNaN(selectedNumber) || selectedNumber < 1 || selectedNumber > max) {
+      return null
+    }
+    selectedIndexes.add(selectedNumber - 1)
+  }
+
+  return Array.from(selectedIndexes)
 }
 
-async function resolveFinalCategoryNames(params: {
-  options: CliOptions
-  includeDefaults: boolean
-  configuredDefaults: string[]
-}): Promise<string[]> {
-  const primary = params.includeDefaults ? params.configuredDefaults : []
-  const secondary = await resolveAdditionalCategoryNames(params.options)
-  return mergeCategoryNameLists(primary, secondary)
+async function selectManyFromList<T>(params: {
+  title: string
+  items: T[]
+  toLine: (item: T, index: number) => string
+}): Promise<T[]> {
+  if (params.items.length === 0) {
+    throw new Error(`Cannot select from empty list for "${params.title}"`)
+  }
+
+  logger.log(`\n${params.title}`)
+  for (const [itemIndex, item] of params.items.entries()) {
+    logger.log(`  [${itemIndex + 1}] ${params.toLine(item, itemIndex)}`)
+  }
+  logger.log("Type comma-separated numbers (example: 1,3,4), 'all', or 'q' to quit.")
+
+  while (true) {
+    const answer = await ask(`Choose ${params.title.toLowerCase()}: `)
+    if (answer.toLowerCase() === "q") {
+      logger.log("Aborted.")
+      process.exit(0)
+    }
+
+    const selectedIndexes = parseMultiSelectIndexes(answer, params.items.length)
+    if (selectedIndexes === null) {
+      logger.warn("Invalid selection. Please enter listed numbers separated by commas, or 'all'.")
+      continue
+    }
+    if (selectedIndexes.length === 0) {
+      logger.warn("Select at least one category.")
+      continue
+    }
+
+    return selectedIndexes.map((selectedIndex) => params.items[selectedIndex]!)
+  }
+}
+
+function resolveCliSelectedProjectCategories(params: {
+  cliOptions: CliOptions
+  availableProjectCategories: ProjectAgentCategory[]
+}): ProjectAgentCategory[] {
+  if (!params.cliOptions.categoryNames || params.cliOptions.categoryNames.length === 0) {
+    return []
+  }
+
+  const categoryByName = new Map(
+    params.availableProjectCategories.map((projectCategory) => [
+      projectCategory.name,
+      projectCategory,
+    ]),
+  )
+  const requestedCategoryNames = mergeCategoryNameLists(
+    resolveConfiguredDefaultAgentCategoryNames(),
+    params.cliOptions.categoryNames,
+  )
+  return requestedCategoryNames
+    .map((requestedCategoryName) => categoryByName.get(requestedCategoryName))
+    .filter(
+      (projectCategory): projectCategory is ProjectAgentCategory => projectCategory !== undefined,
+    )
 }
 
 async function bootstrapCli(): Promise<void> {
   const options = parseCliOptions(process.argv.slice(2))
   await confirmDatabaseTarget(logger)
 
-  const app = await NestFactory.createApplicationContext(AppModule, {
+  const app = await NestFactory.createApplicationContext(SetAgentCategoriesCliModule, {
     logger: ["error", "warn", "log"],
   })
 
@@ -143,6 +203,9 @@ async function bootstrapCli(): Promise<void> {
     )
     const projectRepository = app.get<Repository<Project>>(getRepositoryToken(Project))
     const agentRepository = app.get<Repository<Agent>>(getRepositoryToken(Agent))
+    const projectAgentCategoryRepository = app.get<Repository<ProjectAgentCategory>>(
+      getRepositoryToken(ProjectAgentCategory),
+    )
 
     const organizations = await organizationRepository.find({ order: { name: "ASC" } })
     if (organizations.length === 0) {
@@ -189,33 +252,48 @@ async function bootstrapCli(): Promise<void> {
       toLine: (agent) => `${agent.name} (${agent.type}) - ${agent.id}`,
     })
 
+    const availableProjectCategories = await projectAgentCategoryRepository.find({
+      where: { projectId: selectedProject.id },
+      order: { name: "ASC" },
+    })
+    if (availableProjectCategories.length === 0) {
+      logger.log(
+        `No project categories found in workspace "${selectedProject.name}". Run project:set-agent-categories first.`,
+      )
+      return
+    }
+
     const activeCategoryNamesBeforeUpdate =
       await agentCategoriesService.listActiveCategoryNamesForAgent(selectedAgent.id)
     logger.log(
       `\nCurrent active categories: ${activeCategoryNamesBeforeUpdate.length > 0 ? activeCategoryNamesBeforeUpdate.join(", ") : "(none)"}`,
     )
 
-    const configuredDefaults = resolveConfiguredDefaultAgentCategoryNames()
-    const includeDefaults = await askIncludeDefaultCategories(configuredDefaults)
-
-    let categoryNames = await resolveFinalCategoryNames({
-      options,
-      includeDefaults,
-      configuredDefaults,
+    let selectedProjectCategories = resolveCliSelectedProjectCategories({
+      cliOptions: options,
+      availableProjectCategories,
     })
 
-    while (categoryNames.length === 0) {
-      logger.warn(
-        "At least one category is required (enable defaults, use --categories, or type additional names).",
-      )
-      const retryRaw = await ask("Enter categories as comma-separated values (required): ")
-      categoryNames = parseUniqueCommaSeparatedCategoryNames(retryRaw)
+    if (selectedProjectCategories.length === 0) {
+      selectedProjectCategories = await selectManyFromList({
+        title: `Project categories in ${selectedProject.name}`,
+        items: availableProjectCategories,
+        toLine: (projectCategory) => {
+          const isAssignedToSelectedAgent = activeCategoryNamesBeforeUpdate.includes(
+            projectCategory.name,
+          )
+          const assignmentMarker = isAssignedToSelectedAgent ? "x" : " "
+          return `[${assignmentMarker}] ${projectCategory.name} (${projectCategory.id})`
+        },
+      })
     }
 
-    logger.log(`Requested categories: ${categoryNames.join(", ")}`)
+    logger.log(
+      `Selected project categories: ${selectedProjectCategories.map((projectCategory) => projectCategory.name).join(", ")}`,
+    )
 
     const confirmation = await ask(
-      "This will replace current active categories for this agent. Continue? (yes/no): ",
+      "This will replace current active categories for this agent using project categories. Continue? (yes/no): ",
     )
     if (confirmation.toLowerCase() !== "yes") {
       logger.log("Aborted.")
@@ -224,7 +302,10 @@ async function bootstrapCli(): Promise<void> {
 
     const result = await agentCategoriesService.replaceActiveCategoriesForAgent(
       selectedAgent.id,
-      categoryNames,
+      selectedProjectCategories.map((projectCategory) => ({
+        id: projectCategory.id,
+        name: projectCategory.name,
+      })),
     )
 
     const activeCategoriesAfterUpdate =

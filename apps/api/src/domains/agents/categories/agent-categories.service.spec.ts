@@ -9,6 +9,7 @@ import { createOrganizationWithAgent } from "@/domains/organizations/organizatio
 import { sdk } from "@/external/llm/open-telemetry-init"
 import { AgentsModule } from "../agents.module"
 import { AgentCategoriesService } from "./agent-categories.service"
+import { ProjectAgentCategory } from "./project-agent-category.entity"
 
 describe("AgentCategoriesService", () => {
   let service: AgentCategoriesService
@@ -34,9 +35,18 @@ describe("AgentCategoriesService", () => {
 
   describe("replaceActiveCategoriesForAgent", () => {
     it("should create categories and list them", async () => {
-      const { agent } = await createOrganizationWithAgent(repositories)
+      const { agent, project } = await createOrganizationWithAgent(repositories)
+      const alphaCategory = await setup
+        .getRepository(ProjectAgentCategory)
+        .save({ projectId: project.id, name: "alpha" })
+      const betaCategory = await setup
+        .getRepository(ProjectAgentCategory)
+        .save({ projectId: project.id, name: "beta" })
 
-      const result = await service.replaceActiveCategoriesForAgent(agent.id, ["alpha", "beta"])
+      const result = await service.replaceActiveCategoriesForAgent(agent.id, [
+        alphaCategory,
+        betaCategory,
+      ])
 
       expect(result.createdCount).toBe(2)
       expect(result.restoredCount).toBe(0)
@@ -47,10 +57,16 @@ describe("AgentCategoriesService", () => {
     })
 
     it("should soft-delete categories not in the replacement set", async () => {
-      const { agent } = await createOrganizationWithAgent(repositories)
+      const { agent, project } = await createOrganizationWithAgent(repositories)
+      const keepCategory = await setup
+        .getRepository(ProjectAgentCategory)
+        .save({ projectId: project.id, name: "keep" })
+      const removeMeCategory = await setup
+        .getRepository(ProjectAgentCategory)
+        .save({ projectId: project.id, name: "remove-me" })
 
-      await service.replaceActiveCategoriesForAgent(agent.id, ["keep", "remove-me"])
-      const result = await service.replaceActiveCategoriesForAgent(agent.id, ["keep"])
+      await service.replaceActiveCategoriesForAgent(agent.id, [keepCategory, removeMeCategory])
+      const result = await service.replaceActiveCategoriesForAgent(agent.id, [keepCategory])
 
       expect(result.deletedCount).toBe(1)
       const names = await service.listActiveCategoryNamesForAgent(agent.id)
@@ -58,11 +74,20 @@ describe("AgentCategoriesService", () => {
     })
 
     it("should restore a soft-deleted category when it is included again", async () => {
-      const { agent } = await createOrganizationWithAgent(repositories)
+      const { agent, project } = await createOrganizationWithAgent(repositories)
+      const restoredCategory = await setup
+        .getRepository(ProjectAgentCategory)
+        .save({ projectId: project.id, name: "restored" })
+      const goneCategory = await setup
+        .getRepository(ProjectAgentCategory)
+        .save({ projectId: project.id, name: "gone" })
 
-      await service.replaceActiveCategoriesForAgent(agent.id, ["restored", "gone"])
-      await service.replaceActiveCategoriesForAgent(agent.id, ["gone"])
-      const result = await service.replaceActiveCategoriesForAgent(agent.id, ["restored", "gone"])
+      await service.replaceActiveCategoriesForAgent(agent.id, [restoredCategory, goneCategory])
+      await service.replaceActiveCategoriesForAgent(agent.id, [goneCategory])
+      const result = await service.replaceActiveCategoriesForAgent(agent.id, [
+        restoredCategory,
+        goneCategory,
+      ])
 
       expect(result.restoredCount).toBe(1)
       const names = await service.listActiveCategoryNamesForAgent(agent.id)

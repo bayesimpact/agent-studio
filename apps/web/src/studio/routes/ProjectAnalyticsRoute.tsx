@@ -164,17 +164,15 @@ function WithData({
           />
         </div>
 
-        {selectedAgentId !== "all" ? (
-          <ProjectCategoryChartCard
-            points={categoryPoints}
-            allDates={conversationsPoints.map((point) => point.date)}
-            selectedAgentId={selectedAgentId}
-            title={t("categoriesChart.title")}
-            description={t("categoriesChart.description")}
-            noDataState={t("categoriesChart.noDataState")}
-            uncategorizedLabel={t("categoriesChart.uncategorizedLabel")}
-          />
-        ) : null}
+        <ProjectCategoryChartCard
+          points={categoryPoints}
+          allDates={conversationsPoints.map((point) => point.date)}
+          selectedAgentId={selectedAgentId}
+          title={t("categoriesChart.title")}
+          description={t("categoriesChart.description")}
+          noDataState={t("categoriesChart.noDataState")}
+          uncategorizedLabel={t("categoriesChart.uncategorizedLabel")}
+        />
       </div>
     </>
   )

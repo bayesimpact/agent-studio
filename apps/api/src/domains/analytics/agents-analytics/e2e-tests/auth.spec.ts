@@ -122,14 +122,6 @@ describe("Agents Analytics - Auth", () => {
       query: analyticsDateRangeQuery,
     })
 
-  const subjectByCategory = async () =>
-    request({
-      route: AgentAnalyticsRoutes.getConversationsByCategory,
-      pathParams: removeNullish({ organizationId, projectId, agentId }),
-      token: accessToken ?? undefined,
-      query: analyticsDateRangeQuery,
-    })
-
   const subjectByCategoryPerDay = async () =>
     request({
       route: AgentAnalyticsRoutes.getConversationsByCategoryPerDay,
@@ -142,7 +134,6 @@ describe("Agents Analytics - Auth", () => {
     accessToken = null
     expectResponse(await subjectConversations(), 401, AUTH_ERRORS.NO_ACCESS_TOKEN)
     expectResponse(await subjectAvg(), 401, AUTH_ERRORS.NO_ACCESS_TOKEN)
-    expectResponse(await subjectByCategory(), 401, AUTH_ERRORS.NO_ACCESS_TOKEN)
     expectResponse(await subjectByCategoryPerDay(), 401, AUTH_ERRORS.NO_ACCESS_TOKEN)
   })
 
@@ -150,7 +141,6 @@ describe("Agents Analytics - Auth", () => {
     organizationId = null
     expectResponse(await subjectConversations(), 400, AUTH_ERRORS.NO_ORGANIZATION_ID)
     expectResponse(await subjectAvg(), 400, AUTH_ERRORS.NO_ORGANIZATION_ID)
-    expectResponse(await subjectByCategory(), 400, AUTH_ERRORS.NO_ORGANIZATION_ID)
     expectResponse(await subjectByCategoryPerDay(), 400, AUTH_ERRORS.NO_ORGANIZATION_ID)
   })
 
@@ -159,7 +149,6 @@ describe("Agents Analytics - Auth", () => {
     auth0Id = mockForeignAuth0Id()
     expectResponse(await subjectConversations(), 401, AUTH_ERRORS.NOT_MEMBER_OF_ORG)
     expectResponse(await subjectAvg(), 401, AUTH_ERRORS.NOT_MEMBER_OF_ORG)
-    expectResponse(await subjectByCategory(), 401, AUTH_ERRORS.NOT_MEMBER_OF_ORG)
     expectResponse(await subjectByCategoryPerDay(), 401, AUTH_ERRORS.NOT_MEMBER_OF_ORG)
   })
 
@@ -175,7 +164,6 @@ describe("Agents Analytics - Auth", () => {
     })
     expectResponse(await subjectConversations(), 200)
     expectResponse(await subjectAvg(), 200)
-    expectResponse(await subjectByCategory(), 200)
     expectResponse(await subjectByCategoryPerDay(), 200)
   })
 
@@ -183,7 +171,6 @@ describe("Agents Analytics - Auth", () => {
     await seedAgentOwnerViaFactory()
     expectResponse(await subjectConversations(), 200)
     expectResponse(await subjectAvg(), 200)
-    expectResponse(await subjectByCategory(), 200)
     expectResponse(await subjectByCategoryPerDay(), 200)
   })
 
@@ -191,7 +178,6 @@ describe("Agents Analytics - Auth", () => {
     await seedContext({ projectRole: "owner", agentMembership: "none" })
     expectResponse(await subjectConversations(), 403, AUTH_ERRORS.UNAUTHORIZED_RESOURCE)
     expectResponse(await subjectAvg(), 403, AUTH_ERRORS.UNAUTHORIZED_RESOURCE)
-    expectResponse(await subjectByCategory(), 403, AUTH_ERRORS.UNAUTHORIZED_RESOURCE)
     expectResponse(await subjectByCategoryPerDay(), 403, AUTH_ERRORS.UNAUTHORIZED_RESOURCE)
   })
 
@@ -199,7 +185,6 @@ describe("Agents Analytics - Auth", () => {
     await seedContext({ projectRole: "admin", agentMembership: "admin" })
     expectResponse(await subjectConversations(), 200)
     expectResponse(await subjectAvg(), 200)
-    expectResponse(await subjectByCategory(), 200)
     expectResponse(await subjectByCategoryPerDay(), 200)
   })
 
@@ -207,7 +192,6 @@ describe("Agents Analytics - Auth", () => {
     await seedContext({ projectRole: "member", agentMembership: "member" })
     expectResponse(await subjectConversations(), 403, AUTH_ERRORS.UNAUTHORIZED_RESOURCE)
     expectResponse(await subjectAvg(), 403, AUTH_ERRORS.UNAUTHORIZED_RESOURCE)
-    expectResponse(await subjectByCategory(), 403, AUTH_ERRORS.UNAUTHORIZED_RESOURCE)
     expectResponse(await subjectByCategoryPerDay(), 403, AUTH_ERRORS.UNAUTHORIZED_RESOURCE)
   })
 
@@ -224,7 +208,6 @@ describe("Agents Analytics - Auth", () => {
     projectId = otherProject.id
     expectResponse(await subjectConversations(), 404)
     expectResponse(await subjectAvg(), 404)
-    expectResponse(await subjectByCategory(), 404)
     expectResponse(await subjectByCategoryPerDay(), 404)
   })
 
@@ -233,7 +216,6 @@ describe("Agents Analytics - Auth", () => {
     agentId = randomUUID()
     expectResponse(await subjectConversations(), 404)
     expectResponse(await subjectAvg(), 404)
-    expectResponse(await subjectByCategory(), 404)
     expectResponse(await subjectByCategoryPerDay(), 404)
   })
 })

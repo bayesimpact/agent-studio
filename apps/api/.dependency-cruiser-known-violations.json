@@ -494,6 +494,25 @@
   {
     "type": "cycle",
     "from": "src/domains/agents/categories/agent-category.entity.ts",
+    "to": "src/domains/agents/categories/project-agent-category.entity.ts",
+    "rule": {
+      "severity": "error",
+      "name": "no-circular"
+    },
+    "cycle": [
+      {
+        "name": "src/domains/agents/categories/project-agent-category.entity.ts",
+        "dependencyTypes": ["local", "import"]
+      },
+      {
+        "name": "src/domains/agents/categories/agent-category.entity.ts",
+        "dependencyTypes": ["local", "import"]
+      }
+    ]
+  },
+  {
+    "type": "cycle",
+    "from": "src/domains/agents/categories/agent-category.entity.ts",
     "to": "src/domains/agents/conversation-agent-sessions/conversation-agent-session-category.entity.ts",
     "rule": {
       "severity": "error",
@@ -512,6 +531,68 @@
       },
       {
         "name": "src/domains/agents/categories/agent-category.entity.ts",
+        "dependencyTypes": [
+          "aliased",
+          "aliased-tsconfig",
+          "aliased-tsconfig-paths",
+          "local",
+          "import"
+        ]
+      }
+    ]
+  },
+  {
+    "type": "cycle",
+    "from": "src/domains/agents/categories/project-agent-category.entity.ts",
+    "to": "src/domains/agents/conversation-agent-sessions/conversation-agent-session-category.entity.ts",
+    "rule": {
+      "severity": "error",
+      "name": "no-circular"
+    },
+    "cycle": [
+      {
+        "name": "src/domains/agents/conversation-agent-sessions/conversation-agent-session-category.entity.ts",
+        "dependencyTypes": [
+          "aliased",
+          "aliased-tsconfig",
+          "aliased-tsconfig-paths",
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "src/domains/agents/categories/project-agent-category.entity.ts",
+        "dependencyTypes": [
+          "aliased",
+          "aliased-tsconfig",
+          "aliased-tsconfig-paths",
+          "local",
+          "import"
+        ]
+      }
+    ]
+  },
+  {
+    "type": "cycle",
+    "from": "src/domains/agents/categories/project-agent-category.entity.ts",
+    "to": "src/domains/projects/project.entity.ts",
+    "rule": {
+      "severity": "error",
+      "name": "no-circular"
+    },
+    "cycle": [
+      {
+        "name": "src/domains/projects/project.entity.ts",
+        "dependencyTypes": [
+          "aliased",
+          "aliased-tsconfig",
+          "aliased-tsconfig-paths",
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "src/domains/agents/categories/project-agent-category.entity.ts",
         "dependencyTypes": [
           "aliased",
           "aliased-tsconfig",
