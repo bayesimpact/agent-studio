@@ -828,6 +828,24 @@ const project = this.projectRepository.create({
 
 **Best Practice**: Prefer passing the foreign key ID for consistency and clarity, as it's the most common pattern in the codebase.
 
+## Boundary Check Baselines
+
+`apps/api/Makefile` boundary checks rely on committed baseline files:
+
+- `npm run check:circular` ↔ `apps/api/baselines/madge-circular.json`
+- `npm run check:deps` ↔ `apps/api/.dependency-cruiser-known-violations.json`
+
+When adding bidirectional TypeORM relations (`@OneToMany` ↔ `@ManyToOne`), new circular imports are expected and should be absorbed into the baselines:
+
+```bash
+cd apps/api
+npm run check:circular:baseline
+npm run check:deps:baseline
+npm run check:boundaries
+```
+
+Commit both baseline files alongside the entity change.
+
 ## Completion Criteria
 
 ### Required Checks Before Marking Work as Completed
@@ -846,6 +864,14 @@ Before marking any work as completed, you MUST successfully run and verify the f
    - All tests must pass
    - Fix any failing tests before completing
 
-**Rule**: Work is NOT considered complete until ALL three commands execute successfully with exit code 0. If any command fails, you must fix the issues and re-run the checks before marking the work as done.
+4. **Boundary Checks** (from `apps/api`): `npm run check:boundaries`
+   - Must pass without errors
+   - If new TypeORM bidirectional relations introduce circular imports, regenerate both baselines:
+     - `npm run check:circular:baseline` (rewrites `apps/api/baselines/madge-circular.json`)
+     - `npm run check:deps:baseline` (rewrites `apps/api/.dependency-cruiser-known-violations.json`)
+   - Re-run `npm run check:boundaries` and ensure it passes
+   - Commit both baseline files alongside the entity change
+
+**Rule**: Work is NOT considered complete until ALL four commands execute successfully with exit code 0. If any command fails, you must fix the issues and re-run the checks before marking the work as done.
 
 **Note**: These checks ensure code quality, type safety, and that existing functionality continues to work correctly.
