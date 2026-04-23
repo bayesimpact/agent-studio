@@ -22,6 +22,10 @@ import { OrganizationMembership } from "@/domains/organizations/memberships/orga
 import { Organization } from "@/domains/organizations/organization.entity"
 import { ProjectMembership } from "@/domains/projects/memberships/project-membership.entity"
 import { Project } from "@/domains/projects/project.entity"
+import { ReviewCampaignMembership } from "@/domains/review-campaigns/memberships/review-campaign-membership.entity"
+import { ReviewCampaign } from "@/domains/review-campaigns/review-campaign.entity"
+import { TesterCampaignSurvey } from "@/domains/review-campaigns/tester-campaign-surveys/tester-campaign-survey.entity"
+import { TesterSessionFeedback } from "@/domains/review-campaigns/tester-session-feedbacks/tester-session-feedback.entity"
 import { User } from "@/domains/users/user.entity"
 
 export type AllRepositories = {
@@ -48,6 +52,10 @@ export type AllRepositories = {
   organizationRepository: Repository<Organization>
   projectMembershipRepository: Repository<ProjectMembership>
   projectRepository: Repository<Project>
+  reviewCampaignMembershipRepository: Repository<ReviewCampaignMembership>
+  reviewCampaignRepository: Repository<ReviewCampaign>
+  testerCampaignSurveyRepository: Repository<TesterCampaignSurvey>
+  testerSessionFeedbackRepository: Repository<TesterSessionFeedback>
   userRepository: Repository<User>
 }
 
@@ -80,6 +88,10 @@ export function buildAllRepositories(
     organizationRepository: getRepository(Organization),
     projectMembershipRepository: getRepository(ProjectMembership),
     projectRepository: getRepository(Project),
+    reviewCampaignMembershipRepository: getRepository(ReviewCampaignMembership),
+    reviewCampaignRepository: getRepository(ReviewCampaign),
+    testerCampaignSurveyRepository: getRepository(TesterCampaignSurvey),
+    testerSessionFeedbackRepository: getRepository(TesterSessionFeedback),
     userRepository: getRepository(User),
   }
 }

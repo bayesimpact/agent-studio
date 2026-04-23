@@ -12,6 +12,7 @@ import type { EvaluationReport } from "@/domains/evaluations/reports/evaluation-
 import type { OrganizationMembership } from "@/domains/organizations/memberships/organization-membership.entity"
 import type { ProjectMembership } from "@/domains/projects/memberships/project-membership.entity"
 import type { Project } from "@/domains/projects/project.entity"
+import type { ReviewCampaign } from "@/domains/review-campaigns/review-campaign.entity"
 import type { User } from "@/domains/users/user.entity"
 
 export interface JwtPayload {
@@ -80,4 +81,8 @@ export interface EndpointRequestWithEvaluationReport extends EndpointRequestWith
 
 export interface EndpointRequestWithEvaluationExtractionRun extends EndpointRequestWithProject {
   evaluationExtractionRun: EvaluationExtractionRun
+}
+
+export interface EndpointRequestWithReviewCampaign extends EndpointRequestWithProject {
+  reviewCampaign: ReviewCampaign
 }

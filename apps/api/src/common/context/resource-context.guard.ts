@@ -35,6 +35,8 @@ import { OrganizationContextResolver } from "./resolvers/organization-context.re
 import { ProjectContextResolver } from "./resolvers/project-context.resolver"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
 import { ProjectMembershipContextResolver } from "./resolvers/project-membership-context.resolver"
+// biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
+import { ReviewCampaignContextResolver } from "./resolvers/review-campaign-context.resolver"
 
 const RESOLUTION_ORDER: ContextResource[] = [
   "organization",
@@ -48,6 +50,7 @@ const RESOLUTION_ORDER: ContextResource[] = [
   "evaluation",
   "evaluationExtractionDataset",
   "evaluationExtractionRun",
+  "reviewCampaign",
 ]
 
 @Injectable()
@@ -68,6 +71,7 @@ export class ResourceContextGuard implements CanActivate {
     @Optional()
     evaluationExtractionDatasetContextResolver?: EvaluationExtractionDatasetContextResolver,
     @Optional() evaluationExtractionRunContextResolver?: EvaluationExtractionRunContextResolver,
+    @Optional() reviewCampaignContextResolver?: ReviewCampaignContextResolver,
   ) {
     const resolverEntries: Array<[ContextResource, ContextResolver]> = []
     if (organizationContextResolver) {
@@ -114,6 +118,9 @@ export class ResourceContextGuard implements CanActivate {
         evaluationExtractionRunContextResolver.resource,
         evaluationExtractionRunContextResolver,
       ])
+    }
+    if (reviewCampaignContextResolver) {
+      resolverEntries.push([reviewCampaignContextResolver.resource, reviewCampaignContextResolver])
     }
     this.resolverMap = new Map(resolverEntries)
   }
