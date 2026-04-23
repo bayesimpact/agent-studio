@@ -44,6 +44,6 @@ export class TesterSessionFeedback extends ConnectEntityBase {
   @Column({ type: "text", nullable: true })
   comment!: string | null
 
-  @Column({ type: "jsonb", default: () => "'[]'::jsonb" })
+  @Column({ type: "jsonb" })
   answers!: ReviewCampaignAnswer[]
 }

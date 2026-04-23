@@ -38,13 +38,13 @@ export class ReviewCampaign extends ConnectEntityBase {
   @Column({ type: "varchar", default: "draft" })
   status!: ReviewCampaignStatus
 
-  @Column({ type: "jsonb", name: "tester_per_session_questions", default: () => "'[]'::jsonb" })
+  @Column({ type: "jsonb", name: "tester_per_session_questions" })
   testerPerSessionQuestions!: ReviewCampaignQuestion[]
 
-  @Column({ type: "jsonb", name: "tester_end_of_phase_questions", default: () => "'[]'::jsonb" })
+  @Column({ type: "jsonb", name: "tester_end_of_phase_questions" })
   testerEndOfPhaseQuestions!: ReviewCampaignQuestion[]
 
-  @Column({ type: "jsonb", name: "reviewer_questions", default: () => "'[]'::jsonb" })
+  @Column({ type: "jsonb", name: "reviewer_questions" })
   reviewerQuestions!: ReviewCampaignQuestion[]
 
   @Column({ type: "timestamp", name: "activated_at", nullable: true })
