@@ -73,3 +73,5 @@ llm-logs/
 
 # Smart IDEs
 .cursorrules
+
+*.venv*
