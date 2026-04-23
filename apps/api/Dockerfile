@@ -13,12 +13,26 @@ COPY package-lock.json ./
 COPY package.json ./
 
 # Generate the production build. The build script runs "nest build" to compile the application.
-RUN npm ci
+# Scope install to API + api-contracts so packages/ui's runtime deps (vite, tailwind, radix, react)
+# never enter node_modules/. Frontend workspaces are left on disk but their deps aren't installed.
+RUN npm ci \
+    --workspace=@caseai-connect/api \
+    --workspace=@caseai-connect/api-contracts \
+    --include-workspace-root
 RUN cd apps/api && npm run build
 RUN cd packages/api-contracts && npm run build
 
-# Remove dev dependencies to keep only production deps in the runtime image
-RUN npm prune --omit=dev
+# Discard the dev install and reinstall only production deps. A fresh `npm ci --omit=dev`
+# produces a cleaner tree than `npm prune --omit=dev`, which leaves extraneous packages
+# (e.g. next/react pulled by @repo/jest-config's devDeps) lingering in node_modules.
+RUN rm -rf node_modules apps/api/node_modules packages/*/node_modules
+RUN npm ci --omit=dev \
+    --workspace=@caseai-connect/api \
+    --workspace=@caseai-connect/api-contracts \
+    --include-workspace-root
+
+# Ensure apps/api/node_modules exists (npm may skip creating it when everything hoists to root).
+RUN mkdir -p /app/apps/api/node_modules
 
 #
 # 🚀 Runtime Base (shared)
