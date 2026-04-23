@@ -34,7 +34,7 @@ export class TesterCampaignSurvey extends ConnectEntityBase {
   @Column({ type: "text", nullable: true })
   comment!: string | null
 
-  @Column({ type: "jsonb", default: () => "'[]'::jsonb" })
+  @Column({ type: "jsonb" })
   answers!: ReviewCampaignAnswer[]
 
   @Column({ type: "timestamp", name: "submitted_at" })
