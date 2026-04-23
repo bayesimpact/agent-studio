@@ -1,0 +1,118 @@
+import type {
+  CreateReviewCampaignRequestDto,
+  InviteReviewCampaignMembersRequestDto,
+  UpdateReviewCampaignRequestDto,
+} from "@caseai-connect/api-contracts"
+import { createAsyncThunk } from "@reduxjs/toolkit"
+import { getCurrentIds } from "@/common/features/helpers"
+import type { RootState, ThunkExtraArg } from "@/common/store"
+import type {
+  ReviewCampaign,
+  ReviewCampaignDetail,
+  ReviewCampaignMembership,
+} from "./review-campaigns.models"
+
+type ThunkConfig = { state: RootState; extra: ThunkExtraArg }
+
+export const listReviewCampaigns = createAsyncThunk<ReviewCampaign[], void, ThunkConfig>(
+  "review-campaigns/list",
+  async (_, { extra: { services }, getState }) => {
+    const params = getCurrentIds({
+      state: getState(),
+      wantedIds: ["organizationId", "projectId"],
+    })
+    return await services.reviewCampaigns.getAll(params)
+  },
+)
+
+export const getReviewCampaignDetail = createAsyncThunk<
+  ReviewCampaignDetail,
+  { reviewCampaignId: string },
+  ThunkConfig
+>("review-campaigns/get", async ({ reviewCampaignId }, { extra: { services }, getState }) => {
+  const { organizationId, projectId } = getCurrentIds({
+    state: getState(),
+    wantedIds: ["organizationId", "projectId"],
+  })
+  return await services.reviewCampaigns.getOne({ organizationId, projectId, reviewCampaignId })
+})
+
+export const createReviewCampaign = createAsyncThunk<
+  ReviewCampaign,
+  { fields: CreateReviewCampaignRequestDto },
+  ThunkConfig
+>("review-campaigns/create", async ({ fields }, { extra: { services }, getState }) => {
+  const { organizationId, projectId } = getCurrentIds({
+    state: getState(),
+    wantedIds: ["organizationId", "projectId"],
+  })
+  return await services.reviewCampaigns.createOne({ organizationId, projectId }, fields)
+})
+
+export const updateReviewCampaign = createAsyncThunk<
+  ReviewCampaign,
+  { reviewCampaignId: string; fields: UpdateReviewCampaignRequestDto },
+  ThunkConfig
+>(
+  "review-campaigns/update",
+  async ({ reviewCampaignId, fields }, { extra: { services }, getState }) => {
+    const { organizationId, projectId } = getCurrentIds({
+      state: getState(),
+      wantedIds: ["organizationId", "projectId"],
+    })
+    return await services.reviewCampaigns.updateOne(
+      { organizationId, projectId, reviewCampaignId },
+      fields,
+    )
+  },
+)
+
+export const deleteReviewCampaign = createAsyncThunk<
+  void,
+  { reviewCampaignId: string },
+  ThunkConfig
+>("review-campaigns/delete", async ({ reviewCampaignId }, { extra: { services }, getState }) => {
+  const { organizationId, projectId } = getCurrentIds({
+    state: getState(),
+    wantedIds: ["organizationId", "projectId"],
+  })
+  await services.reviewCampaigns.deleteOne({ organizationId, projectId, reviewCampaignId })
+})
+
+export const inviteReviewCampaignMembers = createAsyncThunk<
+  ReviewCampaignMembership[],
+  { reviewCampaignId: string; fields: InviteReviewCampaignMembersRequestDto },
+  ThunkConfig
+>(
+  "review-campaigns/invite",
+  async ({ reviewCampaignId, fields }, { extra: { services }, getState }) => {
+    const { organizationId, projectId } = getCurrentIds({
+      state: getState(),
+      wantedIds: ["organizationId", "projectId"],
+    })
+    return await services.reviewCampaigns.inviteMembers(
+      { organizationId, projectId, reviewCampaignId },
+      fields,
+    )
+  },
+)
+
+export const revokeReviewCampaignMembership = createAsyncThunk<
+  void,
+  { reviewCampaignId: string; membershipId: string },
+  ThunkConfig
+>(
+  "review-campaigns/revoke",
+  async ({ reviewCampaignId, membershipId }, { extra: { services }, getState }) => {
+    const { organizationId, projectId } = getCurrentIds({
+      state: getState(),
+      wantedIds: ["organizationId", "projectId"],
+    })
+    await services.reviewCampaigns.revokeMembership({
+      organizationId,
+      projectId,
+      reviewCampaignId,
+      membershipId,
+    })
+  },
+)

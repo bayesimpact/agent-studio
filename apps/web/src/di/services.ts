@@ -20,6 +20,7 @@ import type { IEvaluationReportsSpi } from "@/studio/features/evaluation-reports
 import type { IEvaluationsSpi } from "@/studio/features/evaluations/evaluations.spi"
 import type { IInvitationsSpi } from "@/studio/features/invitations/invitations.spi"
 import type { IProjectMembershipsSpi } from "@/studio/features/project-memberships/project-memberships.spi"
+import type { IReviewCampaignsSpi } from "@/studio/features/review-campaigns/review-campaigns.spi"
 
 export type Services = {
   agentAnalytics: IAgentAnalyticsSpi
@@ -43,6 +44,7 @@ export type Services = {
   projectAnalytics: IProjectAnalyticsSpi
   projectMemberships: IProjectMembershipsSpi
   projects: IProjectsSpi
+  reviewCampaigns: IReviewCampaignsSpi
 }
 
 export const getServices = (): Services => {

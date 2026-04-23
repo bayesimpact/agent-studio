@@ -1,0 +1,141 @@
+{
+  "reviewCampaigns": {
+    "title": "Campagnes d'évaluation",
+    "subtitle": "Évaluez les agents avec des testeurs et des relecteurs invités.",
+    "new": "Nouvelle campagne",
+    "empty": {
+      "title": "Aucune campagne d'évaluation pour le moment",
+      "description": "Créez une campagne pour inviter des testeurs et des relecteurs à évaluer un agent."
+    },
+    "table": {
+      "name": "Nom",
+      "status": "Statut",
+      "members": "Membres",
+      "created": "Créée",
+      "updated": "Modifiée",
+      "actions": "Actions"
+    },
+    "status": {
+      "draft": "Brouillon",
+      "active": "Active",
+      "closed": "Clôturée"
+    },
+    "editor": {
+      "createTitle": "Nouvelle campagne d'évaluation",
+      "editTitle": "Modifier la campagne d'évaluation",
+      "createDescription": "Configurez l'agent, les questions et les invités avant d'activer.",
+      "editDescription": "Gérez la configuration, les participants et le cycle de vie.",
+      "tabs": {
+        "general": "Général",
+        "questions": "Questions",
+        "participants": "Participants",
+        "preview": "Aperçu"
+      },
+      "fields": {
+        "name": "Nom",
+        "namePlaceholder": "ex. Agent Support — revue T2",
+        "description": "Description",
+        "descriptionPlaceholder": "Que voulons-nous évaluer ?",
+        "agent": "Agent ciblé",
+        "agentPlaceholder": "Sélectionnez un agent"
+      },
+      "actions": {
+        "create": "Créer la campagne",
+        "save": "Enregistrer",
+        "activate": "Activer",
+        "close": "Clôturer",
+        "delete": "Supprimer"
+      },
+      "validation": {
+        "nameRequired": "Le nom de la campagne est requis",
+        "agentRequired": "L'agent est requis"
+      }
+    },
+    "questions": {
+      "perSession": {
+        "label": "Testeur — questions par session",
+        "description": "Posées après chaque session terminée par le testeur."
+      },
+      "endOfPhase": {
+        "label": "Testeur — questions de fin de phase",
+        "description": "Posées une fois lorsque le testeur termine sa participation."
+      },
+      "reviewer": {
+        "label": "Questions relecteur",
+        "description": "Affichées aux relecteurs lorsqu'ils relisent une session."
+      },
+      "types": {
+        "rating": "Note (1–5)",
+        "single-choice": "Choix unique",
+        "free-text": "Texte libre"
+      },
+      "prompt": "Question",
+      "promptPlaceholder": "ex. La réponse était-elle claire ?",
+      "type": "Type",
+      "options": "Options (une par ligne)",
+      "optionsPlaceholder": "Oui, Non, Incertain",
+      "required": "Obligatoire",
+      "add": "Ajouter une question",
+      "moveUp": "Monter",
+      "moveDown": "Descendre",
+      "remove": "Supprimer la question",
+      "empty": "Aucune question pour le moment."
+    },
+    "participants": {
+      "inviteTitle": "Inviter des participants",
+      "emailsLabel": "E-mails (séparés par des virgules ou des retours à la ligne)",
+      "emailsPlaceholder": "alice@exemple.com, bob@exemple.com",
+      "roleLabel": "Rôle",
+      "tester": "Testeur",
+      "reviewer": "Relecteur",
+      "send": "Envoyer les invitations",
+      "empty": "Aucun participant invité pour le moment.",
+      "email": "E-mail",
+      "invited": "Invité",
+      "accepted": "Accepté",
+      "pending": "en attente",
+      "revoke": "Révoquer"
+    },
+    "preview": {
+      "perSessionTitle": "Après chaque session",
+      "perSessionDescription": "Ce que voit un testeur à la fin d'une session.",
+      "endOfPhaseTitle": "Questionnaire de fin de phase",
+      "endOfPhaseDescription": "Ce que voit un testeur lorsqu'il termine sa participation.",
+      "overallRating": "Note globale",
+      "comment": "Commentaire",
+      "untitled": "Sans titre",
+      "noOptions": "Aucune option configurée.",
+      "noContent": "Aucun contenu pour le moment."
+    },
+    "dialogs": {
+      "activate": {
+        "title": "Activer « {{name}} » ?",
+        "description": "Une fois activée, la configuration (agent, questions) est verrouillée et la campagne est visible par les testeurs et relecteurs invités. Vous pouvez toujours inviter plus de participants.",
+        "confirm": "Activer"
+      },
+      "close": {
+        "title": "Clôturer « {{name}} » ?",
+        "description": "Clôturer une campagne fige tous les retours des testeurs et les revues des relecteurs. Les participants ne pourront plus soumettre de nouvelles sessions, de retours ou de questionnaires. Cette action est irréversible.",
+        "confirm": "Clôturer la campagne"
+      },
+      "delete": {
+        "title": "Supprimer « {{name}} » ?",
+        "description": "Cela supprime définitivement la campagne en brouillon et sa configuration. Seuls les brouillons peuvent être supprimés — les campagnes actives ou clôturées doivent être conservées pour audit.",
+        "confirm": "Supprimer"
+      },
+      "cancel": "Annuler"
+    },
+    "notifications": {
+      "createSuccess": "Campagne d'évaluation créée avec succès",
+      "createError": "La création de la campagne d'évaluation a échoué",
+      "updateSuccess": "Campagne d'évaluation mise à jour avec succès",
+      "updateError": "La mise à jour de la campagne d'évaluation a échoué",
+      "deleteSuccess": "Campagne d'évaluation supprimée avec succès",
+      "deleteError": "La suppression de la campagne d'évaluation a échoué",
+      "inviteSuccess": "Invitations envoyées",
+      "inviteError": "L'envoi des invitations a échoué",
+      "revokeSuccess": "Adhésion révoquée",
+      "revokeError": "La révocation de l'adhésion a échoué"
+    }
+  }
+}

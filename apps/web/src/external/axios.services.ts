@@ -19,6 +19,7 @@ import evaluationReports from "@/studio/features/evaluation-reports/external/eva
 import evaluations from "@/studio/features/evaluations/external/evaluations.api"
 import invitations from "@/studio/features/invitations/external/invitations.api"
 import projectMemberships from "@/studio/features/project-memberships/external/project-memberships.api"
+import reviewCampaigns from "@/studio/features/review-campaigns/external/review-campaigns.api"
 
 export const services = {
   agentAnalytics,
@@ -42,4 +43,5 @@ export const services = {
   projectAnalytics,
   projectMemberships,
   projects,
+  reviewCampaigns,
 }
