@@ -1,3 +1,4 @@
+import backoffice from "@/backoffice/features/backoffice/external/backoffice.api"
 import conversationAgentSessions from "@/common/features/agents/agent-sessions/conversation/external/conversation-agent-sessions.api"
 import extractionAgentSessions from "@/common/features/agents/agent-sessions/extraction/external/extraction-agent-sessions.api"
 import formAgentSessions from "@/common/features/agents/agent-sessions/form/external/form-agent-sessions.api"
@@ -25,6 +26,7 @@ export const services = {
   agentMessageFeedback,
   agents,
   agentSessionMessages,
+  backoffice,
   conversationAgentSessions,
   documents,
   documentTags,

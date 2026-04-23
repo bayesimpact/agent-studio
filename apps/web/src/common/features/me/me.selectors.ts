@@ -11,6 +11,9 @@ export const selectIsPremiumMember = (state: RootState): boolean => {
   return !!state.me.data?.value?.email.endsWith(emailDomain)
 }
 
+export const selectIsBackofficeAuthorized = (state: RootState): boolean =>
+  state.me.data.value?.isBackofficeAuthorized ?? false
+
 export const ownerOrAdminRoles = ["owner", "admin"] as Partial<
   Me["user"]["memberships"]["organizationMemberships"][number]["role"]
 >[]

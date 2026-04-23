@@ -1,0 +1,109 @@
+import type {
+  AgentMembershipRoleDto,
+  BackofficeOrganizationDto,
+  BackofficeProjectDto,
+  BackofficeUserAgentMembershipDto,
+  BackofficeUserDto,
+  BackofficeUserOrganizationMembershipDto,
+  BackofficeUserProjectMembershipDto,
+  FeatureFlagKey,
+  OrganizationMembershipRoleDto,
+  ProjectMembershipRoleDto,
+  TimeType,
+} from "@caseai-connect/api-contracts"
+
+export type BackofficeProject = {
+  id: string
+  name: string
+  organizationId: string
+  createdAt: TimeType
+  updatedAt: TimeType
+  featureFlags: FeatureFlagKey[]
+}
+
+export type BackofficeOrganization = {
+  id: string
+  name: string
+  createdAt: TimeType
+  projects: BackofficeProject[]
+}
+
+export type BackofficeUserOrganizationMembership = {
+  organizationId: string
+  organizationName: string
+  role: OrganizationMembershipRoleDto
+}
+
+export type BackofficeUserProjectMembership = {
+  projectId: string
+  projectName: string
+  role: ProjectMembershipRoleDto
+}
+
+export type BackofficeUserAgentMembership = {
+  agentId: string
+  agentName: string
+  role: AgentMembershipRoleDto
+}
+
+export type BackofficeUser = {
+  id: string
+  email: string
+  name: string | null
+  createdAt: TimeType
+  organizationMemberships: BackofficeUserOrganizationMembership[]
+  projectMemberships: BackofficeUserProjectMembership[]
+  agentMemberships: BackofficeUserAgentMembership[]
+}
+
+export const toBackofficeProject = (dto: BackofficeProjectDto): BackofficeProject => ({
+  id: dto.id,
+  name: dto.name,
+  organizationId: dto.organizationId,
+  createdAt: dto.createdAt,
+  updatedAt: dto.updatedAt,
+  featureFlags: dto.featureFlags,
+})
+
+export const toBackofficeOrganization = (
+  dto: BackofficeOrganizationDto,
+): BackofficeOrganization => ({
+  id: dto.id,
+  name: dto.name,
+  createdAt: dto.createdAt,
+  projects: dto.projects.map(toBackofficeProject),
+})
+
+const toBackofficeUserOrganizationMembership = (
+  dto: BackofficeUserOrganizationMembershipDto,
+): BackofficeUserOrganizationMembership => ({
+  organizationId: dto.organizationId,
+  organizationName: dto.organizationName,
+  role: dto.role,
+})
+
+const toBackofficeUserProjectMembership = (
+  dto: BackofficeUserProjectMembershipDto,
+): BackofficeUserProjectMembership => ({
+  projectId: dto.projectId,
+  projectName: dto.projectName,
+  role: dto.role,
+})
+
+const toBackofficeUserAgentMembership = (
+  dto: BackofficeUserAgentMembershipDto,
+): BackofficeUserAgentMembership => ({
+  agentId: dto.agentId,
+  agentName: dto.agentName,
+  role: dto.role,
+})
+
+export const toBackofficeUser = (dto: BackofficeUserDto): BackofficeUser => ({
+  id: dto.id,
+  email: dto.email,
+  name: dto.name,
+  createdAt: dto.createdAt,
+  organizationMemberships: dto.organizationMemberships.map(toBackofficeUserOrganizationMembership),
+  projectMemberships: dto.projectMemberships.map(toBackofficeUserProjectMembership),
+  agentMemberships: dto.agentMemberships.map(toBackofficeUserAgentMembership),
+})
