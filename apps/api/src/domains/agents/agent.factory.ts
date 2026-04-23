@@ -41,5 +41,6 @@ export const agentFactory = AgentFactory.define(({ sequence, params, transientPa
     documentTags: params.documentTags || [],
     agentMemberships: params.agentMemberships || [],
     agentMcpServers: params.agentMcpServers || [],
+    reviewCampaigns: params.reviewCampaigns || [],
   } satisfies Agent
 })

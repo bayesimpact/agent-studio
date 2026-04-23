@@ -68,6 +68,8 @@ export const extractionAgentSessionFactory = ExtractionAgentSessionFactory.defin
       result: params.result || null,
       status: params.status || "success",
       traceId: v4(),
+      campaignId: params.campaignId ?? null,
+      reviewCampaign: null,
     } satisfies ExtractionAgentSession
   },
 )

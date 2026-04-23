@@ -9,6 +9,7 @@ import { Column, JoinColumn, JoinTable, ManyToMany, ManyToOne, OneToMany } from 
 import { ConnectEntity, ConnectEntityBase } from "@/common/entities/connect-entity"
 import { ConversationAgentSession } from "@/domains/agents/conversation-agent-sessions/conversation-agent-session.entity"
 import { Project } from "@/domains/projects/project.entity"
+import { ReviewCampaign } from "@/domains/review-campaigns/review-campaign.entity"
 import type { DocumentTag } from "../documents/tags/document-tag.entity"
 import { EvaluationReport } from "../evaluations/reports/evaluation-report.entity"
 import { AgentMcpServer } from "../mcp-servers/agent-mcp-server.entity"
@@ -91,4 +92,10 @@ export class Agent extends ConnectEntityBase {
     (agentMcpServer) => agentMcpServer.agent,
   )
   agentMcpServers!: AgentMcpServer[]
+
+  @OneToMany(
+    () => ReviewCampaign,
+    (reviewCampaign) => reviewCampaign.agent,
+  )
+  reviewCampaigns!: ReviewCampaign[]
 }
