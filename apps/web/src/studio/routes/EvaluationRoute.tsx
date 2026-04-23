@@ -54,7 +54,7 @@ function WithData({ agents, evaluations }: { agents: Agent[]; evaluations: Evalu
         title={t("evaluation:evaluations")}
         description={t("evaluation:list.description")}
         action={
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
             <EvaluationCreator onSubmit={handleCreate} />
             <Button
               variant="outline"

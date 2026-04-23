@@ -9,6 +9,7 @@ import {
 } from "@caseai-connect/ui/shad/card"
 import { cn } from "@caseai-connect/ui/utils"
 import { ArrowLeftIcon, ArrowRightIcon } from "lucide-react"
+import { useBreakpoint } from "@/common/hooks/use-breakpoint"
 import { GridContext, gridClass, useGrid } from "./context"
 import { getGridItemClassName } from "./GridItem.helpers"
 
@@ -23,8 +24,10 @@ export function Grid({
   total: number
   extraItems?: number
 }) {
+  const { isShortViewport } = useBreakpoint()
+  const adjustedCols = isShortViewport ? 1 : cols
   return (
-    <GridContext.Provider value={{ cols, total: total + extraItems }}>
+    <GridContext.Provider value={{ cols: adjustedCols, total: total + extraItems }}>
       <div data-slot="grid" {...props}>
         {children}
       </div>
@@ -145,7 +148,9 @@ export function GridHeader({
           </CardDescription>
         )}
 
-        {action && <CardAction className="flex items-center gap-2 min-h-full">{action}</CardAction>}
+        {action && (
+          <CardAction className="flex items-center gap-2 min-h-full flex-wrap">{action}</CardAction>
+        )}
       </CardHeader>
     </Card>
   )

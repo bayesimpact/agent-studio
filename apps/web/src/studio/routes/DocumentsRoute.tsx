@@ -107,7 +107,7 @@ function WithData({
         title={t("document:documents")}
         description={t("document:list.description")}
         action={
-          <div className="flex items-center gap-2">
+          <div className="flex items-center flex-wrap gap-2">
             <UploadDocumentsButton />
             <DocumentTagsSheet documentTags={documentTags} />
           </div>
