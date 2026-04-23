@@ -6,10 +6,10 @@ import type {
   FeatureFlagsDto,
   TimeType,
 } from "@caseai-connect/api-contracts"
-import type { FeatureFlag } from "../feature-flags/feature-flag.entity"
-import type { Organization } from "../organizations/organization.entity"
-import type { Project } from "../projects/project.entity"
-import type { User } from "../users/user.entity"
+import type { FeatureFlag } from "@/domains/feature-flags/feature-flag.entity"
+import type { Organization } from "@/domains/organizations/organization.entity"
+import type { Project } from "@/domains/projects/project.entity"
+import type { User } from "@/domains/users/user.entity"
 
 function toFeatureFlagsDto(featureFlags: FeatureFlag[] | undefined): FeatureFlagsDto {
   return (

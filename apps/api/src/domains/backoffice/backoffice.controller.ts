@@ -11,6 +11,7 @@ import {
 } from "@nestjs/common"
 import { JwtAuthGuard } from "@/domains/auth/jwt-auth.guard"
 import { UserGuard } from "@/domains/users/user.guard"
+import { TrackActivity } from "../activities/track-activity.decorator"
 import { BackofficeGuard } from "./backoffice.guard"
 import { toBackofficeOrganizationDto, toBackofficeUserDto } from "./backoffice.helpers"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
@@ -47,6 +48,7 @@ export class BackofficeController {
   }
 
   @Post(BackofficeRoutes.addFeatureFlag.path)
+  @TrackActivity({ action: "add_feature_flag", entityFrom: "project" })
   async addFeatureFlag(
     @Param("projectId") projectId: string,
     @Body() body: typeof BackofficeRoutes.addFeatureFlag.request,
@@ -57,6 +59,7 @@ export class BackofficeController {
   }
 
   @Delete(BackofficeRoutes.removeFeatureFlag.path)
+  @TrackActivity({ action: "add_feature_flag", entityFrom: "project" })
   async removeFeatureFlag(
     @Param("projectId") projectId: string,
     @Param("featureFlagKey") featureFlagKey: string,

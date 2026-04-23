@@ -1,156 +1,6 @@
 [
   {
     "type": "cycle",
-    "from": "../../packages/api-contracts/src/index.ts",
-    "to": "../../packages/api-contracts/src/me/me.dto.ts",
-    "rule": {
-      "severity": "error",
-      "name": "no-circular"
-    },
-    "cycle": [
-      {
-        "name": "../../packages/api-contracts/src/me/me.dto.ts",
-        "dependencyTypes": ["local", "type-only", "export"]
-      },
-      {
-        "name": "../../packages/api-contracts/src/organizations/organizations.dto.ts",
-        "dependencyTypes": ["local", "type-only", "import"]
-      },
-      {
-        "name": "../../packages/api-contracts/src/projects/projects.dto.ts",
-        "dependencyTypes": ["local", "type-only", "import"]
-      },
-      {
-        "name": "../../packages/api-contracts/src/index.ts",
-        "dependencyTypes": ["undetermined", "type-only", "import"]
-      }
-    ]
-  },
-  {
-    "type": "cycle",
-    "from": "../../packages/api-contracts/src/index.ts",
-    "to": "../../packages/api-contracts/src/me/me.routes.ts",
-    "rule": {
-      "severity": "error",
-      "name": "no-circular"
-    },
-    "cycle": [
-      {
-        "name": "../../packages/api-contracts/src/me/me.routes.ts",
-        "dependencyTypes": ["local", "export"]
-      },
-      {
-        "name": "../../packages/api-contracts/src/me/me.dto.ts",
-        "dependencyTypes": ["local", "type-only", "import"]
-      },
-      {
-        "name": "../../packages/api-contracts/src/organizations/organizations.dto.ts",
-        "dependencyTypes": ["local", "type-only", "import"]
-      },
-      {
-        "name": "../../packages/api-contracts/src/projects/projects.dto.ts",
-        "dependencyTypes": ["local", "type-only", "import"]
-      },
-      {
-        "name": "../../packages/api-contracts/src/index.ts",
-        "dependencyTypes": ["undetermined", "type-only", "import"]
-      }
-    ]
-  },
-  {
-    "type": "cycle",
-    "from": "../../packages/api-contracts/src/index.ts",
-    "to": "../../packages/api-contracts/src/organizations/organizations.dto.ts",
-    "rule": {
-      "severity": "error",
-      "name": "no-circular"
-    },
-    "cycle": [
-      {
-        "name": "../../packages/api-contracts/src/organizations/organizations.dto.ts",
-        "dependencyTypes": ["local", "type-only", "export"]
-      },
-      {
-        "name": "../../packages/api-contracts/src/projects/projects.dto.ts",
-        "dependencyTypes": ["local", "type-only", "import"]
-      },
-      {
-        "name": "../../packages/api-contracts/src/index.ts",
-        "dependencyTypes": ["undetermined", "type-only", "import"]
-      }
-    ]
-  },
-  {
-    "type": "cycle",
-    "from": "../../packages/api-contracts/src/index.ts",
-    "to": "../../packages/api-contracts/src/organizations/organizations.routes.ts",
-    "rule": {
-      "severity": "error",
-      "name": "no-circular"
-    },
-    "cycle": [
-      {
-        "name": "../../packages/api-contracts/src/organizations/organizations.routes.ts",
-        "dependencyTypes": ["local", "export"]
-      },
-      {
-        "name": "../../packages/api-contracts/src/organizations/organizations.dto.ts",
-        "dependencyTypes": ["local", "type-only", "import"]
-      },
-      {
-        "name": "../../packages/api-contracts/src/projects/projects.dto.ts",
-        "dependencyTypes": ["local", "type-only", "import"]
-      },
-      {
-        "name": "../../packages/api-contracts/src/index.ts",
-        "dependencyTypes": ["undetermined", "type-only", "import"]
-      }
-    ]
-  },
-  {
-    "type": "cycle",
-    "from": "../../packages/api-contracts/src/index.ts",
-    "to": "../../packages/api-contracts/src/projects/projects.dto.ts",
-    "rule": {
-      "severity": "error",
-      "name": "no-circular"
-    },
-    "cycle": [
-      {
-        "name": "../../packages/api-contracts/src/projects/projects.dto.ts",
-        "dependencyTypes": ["local", "type-only", "export"]
-      },
-      {
-        "name": "../../packages/api-contracts/src/index.ts",
-        "dependencyTypes": ["undetermined", "type-only", "import"]
-      }
-    ]
-  },
-  {
-    "type": "cycle",
-    "from": "../../packages/api-contracts/src/index.ts",
-    "to": "../../packages/api-contracts/src/projects/projects.routes.ts",
-    "rule": {
-      "severity": "error",
-      "name": "no-circular"
-    },
-    "cycle": [
-      {
-        "name": "../../packages/api-contracts/src/projects/projects.routes.ts",
-        "dependencyTypes": ["local", "export"]
-      },
-      {
-        "name": "../../packages/api-contracts/src/projects/projects.dto.ts",
-        "dependencyTypes": ["local", "type-only", "import"]
-      },
-      {
-        "name": "../../packages/api-contracts/src/index.ts",
-        "dependencyTypes": ["undetermined", "type-only", "import"]
-      }
-    ]
-  },
-  {
-    "type": "cycle",
     "from": "src/domains/agents/agent.entity.ts",
     "to": "src/domains/agents/conversation-agent-sessions/conversation-agent-session.entity.ts",
     "rule": {
@@ -1977,6 +1827,114 @@
     "type": "dependency",
     "from": "src/domains/analytics/projects-analytics/projects-analytics.service.ts",
     "to": "src/domains/agents/shared/agent-session-messages/agent-message.entity.ts",
+    "rule": {
+      "severity": "error",
+      "name": "no-cross-domain-entity-import"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "src/domains/backoffice/backoffice.helpers.ts",
+    "to": "src/domains/feature-flags/feature-flag.entity.ts",
+    "rule": {
+      "severity": "error",
+      "name": "no-cross-domain-entity-import"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "src/domains/backoffice/backoffice.helpers.ts",
+    "to": "src/domains/organizations/organization.entity.ts",
+    "rule": {
+      "severity": "error",
+      "name": "no-cross-domain-entity-import"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "src/domains/backoffice/backoffice.helpers.ts",
+    "to": "src/domains/projects/project.entity.ts",
+    "rule": {
+      "severity": "error",
+      "name": "no-cross-domain-entity-import"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "src/domains/backoffice/backoffice.helpers.ts",
+    "to": "src/domains/users/user.entity.ts",
+    "rule": {
+      "severity": "error",
+      "name": "no-cross-domain-entity-import"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "src/domains/backoffice/backoffice.module.ts",
+    "to": "src/domains/feature-flags/feature-flag.entity.ts",
+    "rule": {
+      "severity": "error",
+      "name": "no-cross-domain-entity-import"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "src/domains/backoffice/backoffice.module.ts",
+    "to": "src/domains/organizations/organization.entity.ts",
+    "rule": {
+      "severity": "error",
+      "name": "no-cross-domain-entity-import"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "src/domains/backoffice/backoffice.module.ts",
+    "to": "src/domains/projects/project.entity.ts",
+    "rule": {
+      "severity": "error",
+      "name": "no-cross-domain-entity-import"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "src/domains/backoffice/backoffice.module.ts",
+    "to": "src/domains/users/user.entity.ts",
+    "rule": {
+      "severity": "error",
+      "name": "no-cross-domain-entity-import"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "src/domains/backoffice/backoffice.service.ts",
+    "to": "src/domains/feature-flags/feature-flag.entity.ts",
+    "rule": {
+      "severity": "error",
+      "name": "no-cross-domain-entity-import"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "src/domains/backoffice/backoffice.service.ts",
+    "to": "src/domains/organizations/organization.entity.ts",
+    "rule": {
+      "severity": "error",
+      "name": "no-cross-domain-entity-import"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "src/domains/backoffice/backoffice.service.ts",
+    "to": "src/domains/projects/project.entity.ts",
+    "rule": {
+      "severity": "error",
+      "name": "no-cross-domain-entity-import"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "src/domains/backoffice/backoffice.service.ts",
+    "to": "src/domains/users/user.entity.ts",
     "rule": {
       "severity": "error",
       "name": "no-cross-domain-entity-import"
