@@ -324,11 +324,15 @@ async verifyUserCanCreateProject(userId: string, organizationId: string): Promis
 
 ### Migration Workflow
 
-1. Modify entity files (`*.entity.ts`)
-2. Generate migration: `npm run migration:generate src/migrations/YourMigrationName`
-3. Review generated migration (check `down()` method)
-4. Test: `npm run migration:run`
-5. Revert if needed: `npm run migration:revert`
+1. Modify entity files (`*.entity.ts`).
+2. Make sure the local DB is up to date: `npm run migration:run`. The generator diffs entity metadata against the **live DB**, so any unapplied source migrations will otherwise show up as spurious drift in the generated file.
+3. Generate the migration: `npm run migration:generate`. Output lands at `src/migrations/pending/<timestamp>-dontsave-mig.ts` (both the `pending/` directory and files containing `dontsave` are gitignored, which is intentional — this is the staging area).
+4. **Rename and move** the file:
+   - Move out of `pending/` into `src/migrations/`.
+   - Rename to `<timestamp>-<kebab-case-slug>.ts` (e.g. `1776930037268-review-campaigns-foundation.ts`).
+   - Rename the class inside (`DontsaveMigXXX` → `YourSluggedNameXXX`) and its `name` property to match.
+5. Review `up()` and `down()` — confirm there's no unrelated drift.
+6. Apply: `npm run migration:run`. Revert to double-check `down()`: `npm run migration:revert` (only on a local / disposable DB).
 
 **Available commands**: `migration:generate`, `migration:create`, `migration:run`, `migration:revert`, `migration:show`
 
@@ -383,6 +387,39 @@ const project = this.projectRepository.create({ name: "My Project", organization
 
 Prefer passing the foreign key ID for consistency.
 
+### Register New Entities in `ALL_ENTITIES`
+
+The main datasource (`src/config/typeorm.ts`) picks up entities via a glob (`**/*.entity.ts`), so production + `migration:generate` work automatically. But the **test DB setup** uses an explicit list: `src/common/all-entities.ts` → `ALL_ENTITIES`.
+
+When adding a new entity, add both the import and the array entry. Otherwise tests that touch a related entity will fail with:
+
+```
+TypeORMError: Entity metadata for X#someRelation was not found.
+Check if you specified a correct entity object and if it's connected in the connection options.
+```
+
+---
+
+## Boundary Check Baselines
+
+`apps/api/Makefile` → `npm run check:boundaries` runs two checks, each with a committed baseline:
+
+| Check | Script | Baseline file |
+|---|---|---|
+| madge circular imports | `npm run check:circular` | `apps/api/baselines/madge-circular.json` |
+| dependency-cruiser rules | `npm run check:deps` | `apps/api/.dependency-cruiser-known-violations.json` |
+
+Adding bidirectional TypeORM relations (`@OneToMany` ↔ `@ManyToOne` pairs across two entities) creates new circular imports — the codebase's convention is to absorb them into the baseline rather than rewriting the pattern:
+
+```bash
+cd apps/api
+npm run check:circular:baseline   # rewrites baselines/madge-circular.json
+npm run check:deps:baseline       # rewrites .dependency-cruiser-known-violations.json
+npm run check:boundaries          # verify clean
+```
+
+Commit both baseline files alongside the entity change.
+
 ---
 
 ## Completion Criteria
@@ -392,5 +429,6 @@ Before marking API work as completed:
 1. `npm run biome:check` — must pass
 2. `npm run typecheck` — must pass
 3. `npm run test` — all tests must pass
+4. `npm run check:boundaries` (from `apps/api`) — must pass (regenerate baselines if new TypeORM relation cycles were introduced, see "Boundary Check Baselines" above)
 
-Work is NOT complete until all three commands exit with code 0.
+Work is NOT complete until all four commands exit with code 0.

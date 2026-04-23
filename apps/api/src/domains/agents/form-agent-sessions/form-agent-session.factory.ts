@@ -39,6 +39,8 @@ export const formAgentSessionFactory = FormAgentSessionFactory.define(
       messages: params.messages || [],
       traceId: v4(),
       result: params.result || null,
+      campaignId: params.campaignId ?? null,
+      reviewCampaign: null,
     } satisfies FormAgentSession
   },
 )

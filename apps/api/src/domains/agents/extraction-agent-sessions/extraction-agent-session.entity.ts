@@ -2,6 +2,7 @@ import type { ExtractionAgentSessionStatus } from "@caseai-connect/api-contracts
 import { Column, JoinColumn, ManyToOne } from "typeorm"
 import { ConnectEntity, ConnectEntityBase } from "@/common/entities/connect-entity"
 import { Document } from "@/domains/documents/document.entity"
+import { ReviewCampaign } from "@/domains/review-campaigns/review-campaign.entity"
 import { User } from "@/domains/users/user.entity"
 import { Agent } from "../agent.entity"
 import type { BaseAgentSessionType } from "../base-agent-sessions/base-agent-sessions.types"
@@ -56,4 +57,15 @@ export class ExtractionAgentSession extends ConnectEntityBase {
   @ManyToOne(() => Document)
   @JoinColumn({ name: "document_id" })
   document!: Document
+
+  @Column({ type: "uuid", name: "campaign_id", nullable: true })
+  campaignId!: string | null
+
+  @ManyToOne(
+    () => ReviewCampaign,
+    (campaign) => campaign.extractionAgentSessions,
+    { nullable: true },
+  )
+  @JoinColumn({ name: "campaign_id" })
+  reviewCampaign?: ReviewCampaign | null
 }

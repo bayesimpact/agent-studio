@@ -65,7 +65,8 @@ All entities extend `ConnectEntityBase` and follow existing TypeORM / column-nam
 | Column | Type | Notes |
 |---|---|---|
 | `id` | uuid (PK) | |
-| `workspace_id` | uuid (FK → `workspace`) | Scopes the campaign; drives auth. |
+| `organization_id` | uuid (FK → `organization`) | Inherited from `ConnectEntityBase`. Scopes the campaign; drives auth. |
+| `project_id` | uuid (FK → `project`) | Inherited from `ConnectEntityBase`. "Workspace" in the UI maps to Project in the code. |
 | `agent_id` | uuid (FK → `agent`) | The target agent. Future: `agent_version_id` (ADR §2.3). |
 | `name` | varchar | Admin-facing. |
 | `description` | text (nullable) | Admin-facing explanation, also shown to invitees on landing. |
@@ -126,13 +127,18 @@ Unique: `(campaign_id, user_id)`.
 
 Campaign access checks must resolve the session → agent → verify agent matches `campaign.agent_id`.
 
-### Workspace Entity
+### Inverse Relations on Existing Entities
 
-`Workspace` gains a `@OneToMany(() => ReviewCampaign, …)` inverse relation. No other entity changes.
+- `Project` gains `@OneToMany(() => ReviewCampaign, …) reviewCampaigns`.
+- `Agent` gains `@OneToMany(() => ReviewCampaign, …) reviewCampaigns`.
+- `User` gains `@OneToMany(() => ReviewCampaignMembership, …)` and `@OneToMany(() => TesterCampaignSurvey, …)`.
+- The three agent-session entities each gain a nullable `campaignId` column and `@ManyToOne(() => ReviewCampaign)` relation.
+
+> **Note on "workspace":** The product UI says "workspace"; in the codebase there is no `Workspace` entity — all multi-tenancy goes through `ConnectEntityBase` which provides `organizationId` + `projectId`. A "workspace" in the UI corresponds to a Project in the data model. Throughout this spec, "workspace admin" = admin on the campaign's Project (ADR 0004 explicit-membership model).
 
 ### Migrations
 
-One migration per entity (four total), generated via `npm run migration:generate` as required by the API CLAUDE.md. No manual migration files.
+All schema changes are generated in a single pass via `npm run migration:generate` (producing one migration file covering the four new tables + the three `campaign_id` column additions). Never hand-write migrations; the generated file is the source of truth. This supersedes any earlier "one migration per entity" guidance.
 
 ---
 
@@ -140,12 +146,12 @@ One migration per entity (four total), generated via `npm run migration:generate
 
 Follows ADR 0004 explicit-membership rules:
 
-- **Campaign CRUD:** caller must have a `WorkspaceMembership` with `admin` role on the campaign's workspace.
+- **Campaign CRUD:** caller must have a `ProjectMembership` with `admin` role on the campaign's project (the "workspace" in UI copy).
 - **Tester actions** (start session in campaign, submit feedback, submit survey): caller must have a `ReviewCampaignMembership` with role `tester` on the campaign, and the campaign must be `active`.
 - **Read campaign landing page** (post-invite-accept): same as tester actions, or reviewer (the reviewer spec handles that branch).
 - **Session creation within a campaign:** uses the existing agent session creation path, augmented with a `campaign_id` on the request. The agent session entities get a nullable `campaign_id` column (one migration on each of the three session tables) so sessions outside a campaign continue to work unchanged.
 
-No cascading inheritance: a workspace admin is not automatically a campaign tester. If they want to dogfood, they invite themselves (ADR §2.10 permits dual roles).
+No cascading inheritance: a project admin is not automatically a campaign tester. If they want to dogfood, they invite themselves (ADR §2.10 permits dual roles).
 
 ---
 
@@ -157,8 +163,8 @@ All routes use `defineRoute` and live in `packages/@caseai-connect/api-contracts
 
 | Method | Path | Purpose |
 |---|---|---|
-| POST | `workspaces/:workspaceId/review-campaigns` | Create (starts in `draft`). |
-| GET | `workspaces/:workspaceId/review-campaigns` | List campaigns in workspace. |
+| POST | `organizations/:organizationId/projects/:projectId/review-campaigns` | Create (starts in `draft`). |
+| GET | `organizations/:organizationId/projects/:projectId/review-campaigns` | List campaigns in workspace. |
 | GET | `review-campaigns/:campaignId` | Full detail (config + memberships + aggregates). |
 | PATCH | `review-campaigns/:campaignId` | Edit name/description/questions (draft only); activate/close (lifecycle transitions). |
 | DELETE | `review-campaigns/:campaignId` | Draft only. |

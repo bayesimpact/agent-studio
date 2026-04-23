@@ -1,5 +1,6 @@
-import { Column, OneToMany } from "typeorm"
+import { Column, JoinColumn, ManyToOne, OneToMany } from "typeorm"
 import { ConnectEntity, ConnectEntityBase } from "@/common/entities/connect-entity"
+import { ReviewCampaign } from "@/domains/review-campaigns/review-campaign.entity"
 import type { BaseAgentSessionType } from "../base-agent-sessions/base-agent-sessions.types"
 import { AgentMessage } from "../shared/agent-session-messages/agent-message.entity"
 
@@ -25,4 +26,15 @@ export class FormAgentSession extends ConnectEntityBase {
     (message) => message.formAgentSession,
   )
   messages!: AgentMessage[]
+
+  @Column({ type: "uuid", name: "campaign_id", nullable: true })
+  campaignId!: string | null
+
+  @ManyToOne(
+    () => ReviewCampaign,
+    (campaign) => campaign.formAgentSessions,
+    { nullable: true },
+  )
+  @JoinColumn({ name: "campaign_id" })
+  reviewCampaign?: ReviewCampaign | null
 }

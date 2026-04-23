@@ -4,6 +4,8 @@ import { ConversationAgentSession } from "@/domains/agents/conversation-agent-se
 import { AgentMembership } from "@/domains/agents/memberships/agent-membership.entity"
 import { OrganizationMembership } from "@/domains/organizations/memberships/organization-membership.entity"
 import { ProjectMembership } from "@/domains/projects/memberships/project-membership.entity"
+import { ReviewCampaignMembership } from "@/domains/review-campaigns/memberships/review-campaign-membership.entity"
+import { TesterCampaignSurvey } from "@/domains/review-campaigns/tester-campaign-surveys/tester-campaign-survey.entity"
 import { AgentMessageFeedback } from "../agents/shared/agent-session-messages/feedback/agent-message-feedback.entity"
 
 @Entity("user")
@@ -49,4 +51,16 @@ export class User extends Base4AllEntity {
     (agentMembership) => agentMembership.user,
   )
   agentMemberships!: AgentMembership[]
+
+  @OneToMany(
+    () => ReviewCampaignMembership,
+    (reviewCampaignMembership) => reviewCampaignMembership.user,
+  )
+  reviewCampaignMemberships!: ReviewCampaignMembership[]
+
+  @OneToMany(
+    () => TesterCampaignSurvey,
+    (testerCampaignSurvey) => testerCampaignSurvey.user,
+  )
+  testerCampaignSurveys!: TesterCampaignSurvey[]
 }
