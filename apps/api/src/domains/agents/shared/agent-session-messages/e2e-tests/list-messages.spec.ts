@@ -72,7 +72,7 @@ describe("AgentSessionMessagesRoutes.listMessages", () => {
 
   const subject = async () =>
     request({
-      route: AgentSessionMessagesRoutes.listMessages,
+      route: AgentSessionMessagesRoutes.getAll,
       pathParams: removeNullish({ organizationId, projectId, agentId, agentSessionId }),
       token: accessToken,
       request: { payload: { type: "live" } },
