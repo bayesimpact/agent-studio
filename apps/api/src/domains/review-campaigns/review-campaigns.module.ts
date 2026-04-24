@@ -26,6 +26,7 @@ import { ReviewCampaign } from "./review-campaign.entity"
 import { ReviewCampaignsController } from "./review-campaigns.controller"
 import { ReviewCampaignsGuard } from "./review-campaigns.guard"
 import { ReviewCampaignsService } from "./review-campaigns.service"
+import { ReviewerSessionReview } from "./reviewer-session-reviews/reviewer-session-review.entity"
 import {
   TesterController,
   TesterMeController,
@@ -49,6 +50,7 @@ import { TesterSessionFeedback } from "./tester-session-feedbacks/tester-session
       ProjectMembership,
       ReviewCampaign,
       ReviewCampaignMembership,
+      ReviewerSessionReview,
       TesterCampaignSurvey,
       TesterSessionFeedback,
       User,
