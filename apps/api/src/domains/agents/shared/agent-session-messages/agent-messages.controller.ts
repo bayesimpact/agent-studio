@@ -2,7 +2,7 @@ import {
   type AgentSessionMessageDto,
   AgentSessionMessagesRoutes,
 } from "@caseai-connect/api-contracts"
-import { Controller, Post, Req, UseGuards } from "@nestjs/common"
+import { Controller, NotFoundException, Param, Post, Req, UseGuards } from "@nestjs/common"
 import type { EndpointRequestWithAgentSession } from "@/common/context/request.interface"
 import { getRequiredConnectScope } from "@/common/context/request-context.helpers"
 import { RequireContext } from "@/common/context/require-context.decorator"
@@ -26,10 +26,10 @@ export class AgentMessagesController {
   ) {}
 
   @CheckPolicy((policy) => policy.canList())
-  @Post(AgentSessionMessagesRoutes.listMessages.path)
-  async listMessages(
+  @Post(AgentSessionMessagesRoutes.getAll.path)
+  async getAll(
     @Req() request: EndpointRequestWithAgentSession<ConversationAgentSession | FormAgentSession>,
-  ): Promise<typeof AgentSessionMessagesRoutes.listMessages.response> {
+  ): Promise<typeof AgentSessionMessagesRoutes.getAll.response> {
     const connectScope = getRequiredConnectScope(request)
     const agentSessionId = request.agentSession.id
     const messages = await this.conversationAgentSessionsService.listMessagesForSession({
@@ -37,6 +37,23 @@ export class AgentMessagesController {
       connectScope,
     })
     return { data: messages.map(toDto) }
+  }
+
+  @CheckPolicy((policy) => policy.canList())
+  @Post(AgentSessionMessagesRoutes.getOne.path)
+  async getOne(
+    @Req() request: EndpointRequestWithAgentSession<ConversationAgentSession | FormAgentSession>,
+    @Param("messageId") messageId: string, // TODO: add context
+  ): Promise<typeof AgentSessionMessagesRoutes.getOne.response> {
+    const connectScope = getRequiredConnectScope(request)
+    const message = await this.conversationAgentSessionsService.getMessageById({
+      id: messageId,
+      connectScope,
+    })
+    if (!message) {
+      throw new NotFoundException("Message not found")
+    }
+    return { data: toDto(message) }
   }
 }
 

@@ -2,6 +2,7 @@ import { Button } from "@caseai-connect/ui/shad/button"
 import { Item, ItemTitle } from "@caseai-connect/ui/shad/item"
 import { Label } from "@caseai-connect/ui/shad/label"
 import { Popover, PopoverContent, PopoverTrigger } from "@caseai-connect/ui/shad/popover"
+import { useTranslation } from "react-i18next"
 import type { AgentSessionMessage as AgentSessionMessageType } from "@/common/features/agents/agent-sessions/shared/agent-session-messages/agent-session-messages.models"
 
 export function SourcesTool({
@@ -9,6 +10,7 @@ export function SourcesTool({
 }: {
   toolCall: NonNullable<AgentSessionMessageType["toolCalls"]>[number]
 }) {
+  const { t } = useTranslation()
   const sources = toolCall.arguments.sources as unknown as {
     documentId: string
     chunks: {
@@ -25,11 +27,14 @@ export function SourcesTool({
           size="sm"
           className="text-muted-foreground text-xs p-0 font-normal hover:text-inherit data-[state=open]:text-inherit data-[state=open]:font-medium data-[state=open]:underline"
         >
-          ({sources.length})
+          {t("agent:source", { count: sources.length })}: ({sources.length})
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-80" align="start" sideOffset={-4}>
-        {sources.length > 1 && <Label className="text-base font-semibold">Sources</Label>}
+        <Label className="text-base font-semibold">
+          {t("agent:source", { count: sources.length })}: ({sources.length})
+        </Label>
+
         {sources.map((source) => (
           <div key={source.documentId} className="grid grid-cols-1 gap-4">
             {source.chunks.map((chunk) => (

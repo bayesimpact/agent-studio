@@ -138,6 +138,7 @@ export class StreamingService extends ServiceWithLLM {
         session: updatedSession,
         documentId,
         connectScope,
+        assistantMessageId,
       })
       mcpClose = llmRequest.mcpClose
 
@@ -188,7 +189,9 @@ export class StreamingService extends ServiceWithLLM {
     session,
     documentId,
     connectScope,
+    assistantMessageId,
   }: {
+    assistantMessageId: string
     agent: Agent
     sessionId: string
     notifyClient: NotifyClient
@@ -203,6 +206,7 @@ export class StreamingService extends ServiceWithLLM {
       onExecute: async (toolExecution) =>
         await this.persistToolExecutionAndNotifyClient({
           connectScope,
+          assistantMessageId,
           sessionId,
           notifyClient,
           toolExecution,
@@ -723,12 +727,20 @@ export class StreamingService extends ServiceWithLLM {
     sessionId,
     notifyClient,
     toolExecution,
+    assistantMessageId,
   }: {
+    assistantMessageId: string
     connectScope: RequiredConnectScope
     sessionId: string
     notifyClient: NotifyClient
     toolExecution: ToolExecutionLog
   }): Promise<void> {
+    const toolCall = {
+      id: v4(),
+      name: toolExecution.toolName,
+      arguments: toolExecution.arguments,
+    }
+
     // Create a tool message in the database for each tool call, so that the session history is complete and reflects what actually happened during the agent execution (including tool calls)
     await this.agentMessageConnectRepository.createAndSave(connectScope, {
       id: v4(),
@@ -738,14 +750,22 @@ export class StreamingService extends ServiceWithLLM {
       status: "completed",
       startedAt: new Date(),
       completedAt: null,
-      toolCalls: [
-        {
-          id: v4(),
-          name: toolExecution.toolName,
-          arguments: toolExecution.arguments,
-        },
-      ],
+      toolCalls: [toolCall],
     })
+
+    const assistantMessage = await this.agentMessageConnectRepository.getOneById(
+      connectScope,
+      assistantMessageId,
+    )
+    if (assistantMessage) {
+      await this.agentMessageConnectRepository.updateOneById({
+        connectScope,
+        id: assistantMessageId,
+        fields: {
+          toolCalls: [...(assistantMessage.toolCalls ?? []), toolCall],
+        },
+      })
+    }
 
     // Notify client about the form update so it can re-fetch the session and get the latest form state
     notifyClient(this.sseEvent({ type: "notify_client", toolName: toolExecution.toolName }))

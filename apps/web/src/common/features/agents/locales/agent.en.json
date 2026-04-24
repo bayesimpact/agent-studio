@@ -97,6 +97,9 @@
       "output": "Output",
       "form": "Form",
       "sources": "Sources"
-    }
+    },
+    "source_one": "Source",
+    "source_other": "Sources",
+    "source_zero": "No sources"
   }
 }

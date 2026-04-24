@@ -120,4 +120,22 @@ export class ConnectRepository<T extends ConnectEntityBase> {
   public async saveOne(entity: T): Promise<T> {
     return this.repository.save(entity)
   }
+
+  public async updateOneById({
+    connectScope,
+    id,
+    fields,
+  }: {
+    connectScope: RequiredConnectScope
+    id: string
+    fields: Pick<RequiredConnectScope, never> & DeepPartial<T>
+  }): Promise<{ success: boolean }> {
+    const entity = await this.getOneById(connectScope, id)
+    if (!entity) {
+      return { success: false }
+    }
+    Object.assign(entity, fields)
+    await this.repository.save(entity)
+    return { success: true }
+  }
 }

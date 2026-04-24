@@ -7,19 +7,28 @@ import type { AgentSessionMessageDto } from "./agent-session-messages.dto"
 // We still define a route for path/method typing. The response type is treated as unknown by clients.
 export type AgentSessionStreamResponse = unknown
 
+const basePath =
+  "organizations/:organizationId/projects/:projectId/agents/:agentId/agent-sessions/:agentSessionId"
 export const AgentSessionMessagesRoutes = {
-  listMessages: defineRoute<
+  getAll: defineRoute<
     ResponseData<AgentSessionMessageDto[]>,
     RequestPayload<{ type: BaseAgentSessionTypeDto }>
   >({
     method: "post",
-    path: "organizations/:organizationId/projects/:projectId/agents/:agentId/agent-sessions/:agentSessionId/messages",
+    path: `${basePath}/messages`,
+  }),
+  getOne: defineRoute<
+    ResponseData<AgentSessionMessageDto>,
+    RequestPayload<{ type: BaseAgentSessionTypeDto }>
+  >({
+    method: "post",
+    path: `${basePath}/messages/:messageId`,
   }),
   stream: defineRoute<
     ResponseData<AgentSessionStreamResponse>,
     RequestPayload<{ content: string; documentId?: string }>
   >({
     method: "post",
-    path: "organizations/:organizationId/projects/:projectId/agents/:agentId/agent-sessions/:agentSessionId/stream",
+    path: `${basePath}/stream`,
   }),
 }
