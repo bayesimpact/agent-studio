@@ -19,6 +19,12 @@ export enum TesterRouteNames {
   SESSION = "/tester/o/:organizationId/p/:projectId/review-campaigns/:reviewCampaignId/a/:agentId/as/:agentSessionId",
 }
 
+export enum ReviewerRouteNames {
+  HOME = "/reviewer",
+  CAMPAIGN = "/reviewer/o/:organizationId/p/:projectId/review-campaigns/:reviewCampaignId",
+  SESSION = "/reviewer/o/:organizationId/p/:projectId/review-campaigns/:reviewCampaignId/sessions/:sessionId",
+}
+
 export const buildStudioPath = (path: string) => {
   return `${StudioRouteNames.APP}${path}`
 }
@@ -192,5 +198,36 @@ export const buildTesterSessionPath = ({
     .replace(":reviewCampaignId", reviewCampaignId)
     .replace(":agentId", agentId)
     .replace(":agentSessionId", agentSessionId)
+
+export const buildReviewerHomePath = () => ReviewerRouteNames.HOME
+
+export const buildReviewerCampaignPath = ({
+  organizationId,
+  projectId,
+  reviewCampaignId,
+}: {
+  organizationId: string
+  projectId: string
+  reviewCampaignId: string
+}) =>
+  ReviewerRouteNames.CAMPAIGN.replace(":organizationId", organizationId)
+    .replace(":projectId", projectId)
+    .replace(":reviewCampaignId", reviewCampaignId)
+
+export const buildReviewerSessionPath = ({
+  organizationId,
+  projectId,
+  reviewCampaignId,
+  sessionId,
+}: {
+  organizationId: string
+  projectId: string
+  reviewCampaignId: string
+  sessionId: string
+}) =>
+  ReviewerRouteNames.SESSION.replace(":organizationId", organizationId)
+    .replace(":projectId", projectId)
+    .replace(":reviewCampaignId", reviewCampaignId)
+    .replace(":sessionId", sessionId)
 
 export const isStudioInterface = () => window.location.pathname.startsWith(StudioRouteNames.APP)

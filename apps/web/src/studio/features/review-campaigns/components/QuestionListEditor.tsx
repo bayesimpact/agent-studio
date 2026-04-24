@@ -27,6 +27,14 @@ type Props = {
   questions: ReviewCampaignQuestionDto[]
   onChange: (next: ReviewCampaignQuestionDto[]) => void
   disabled?: boolean
+  /**
+   * When true, renders an "Is factual" toggle on rating / single-choice
+   * questions. Only relevant for tester per-session questions — controls
+   * whether the tester's answer stays visible to reviewers during blind
+   * review. Free-text questions never show the toggle (they're always
+   * treated as opinion).
+   */
+  showFactualToggle?: boolean
 }
 
 const makeEmptyQuestion = (): ReviewCampaignQuestionDto => ({
@@ -42,6 +50,7 @@ export function QuestionListEditor({
   questions,
   onChange,
   disabled = false,
+  showFactualToggle = false,
 }: Props) {
   const update = (index: number, patch: Partial<ReviewCampaignQuestionDto>) => {
     onChange(
@@ -145,16 +154,37 @@ export function QuestionListEditor({
             )}
 
             <div className="flex items-center justify-between gap-2">
-              <div className="flex items-center gap-2">
-                <Switch
-                  id={`required-${question.id}`}
-                  checked={question.required}
-                  disabled={disabled}
-                  onCheckedChange={(checked) => update(index, { required: checked })}
-                />
-                <label htmlFor={`required-${question.id}`} className="text-sm">
-                  Required
-                </label>
+              <div className="flex flex-wrap items-center gap-4">
+                <div className="flex items-center gap-2">
+                  <Switch
+                    id={`required-${question.id}`}
+                    checked={question.required}
+                    disabled={disabled}
+                    onCheckedChange={(checked) => update(index, { required: checked })}
+                  />
+                  <label htmlFor={`required-${question.id}`} className="text-sm">
+                    Required
+                  </label>
+                </div>
+                {showFactualToggle && question.type !== "free-text" && (
+                  <div className="flex items-center gap-2">
+                    <Switch
+                      id={`factual-${question.id}`}
+                      checked={question.isFactual === true}
+                      disabled={disabled}
+                      onCheckedChange={(checked) => update(index, { isFactual: checked })}
+                    />
+                    <label htmlFor={`factual-${question.id}`} className="text-sm">
+                      Factual
+                    </label>
+                    <span
+                      className="text-muted-foreground text-xs"
+                      title="Factual questions (what happened in the session) stay visible to reviewers during blind review. Opinion questions are hidden until the reviewer submits their own review."
+                    >
+                      (visible to reviewers during blind)
+                    </span>
+                  </div>
+                )}
               </div>
 
               <div className="flex items-center gap-1">

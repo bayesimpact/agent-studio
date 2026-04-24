@@ -21,6 +21,7 @@ import type { IEvaluationsSpi } from "@/studio/features/evaluations/evaluations.
 import type { IInvitationsSpi } from "@/studio/features/invitations/invitations.spi"
 import type { IProjectMembershipsSpi } from "@/studio/features/project-memberships/project-memberships.spi"
 import type { IReviewCampaignsSpi } from "@/studio/features/review-campaigns/review-campaigns.spi"
+import type { IReviewerSpi } from "@/studio/features/review-campaigns/reviewer/reviewer.spi"
 import type { ITesterSpi } from "@/studio/features/review-campaigns/tester/tester.spi"
 
 export type Services = {
@@ -46,6 +47,7 @@ export type Services = {
   projectMemberships: IProjectMembershipsSpi
   projects: IProjectsSpi
   reviewCampaigns: IReviewCampaignsSpi
+  reviewCampaignsReviewer: IReviewerSpi
   reviewCampaignsTester: ITesterSpi
 }
 

@@ -19,12 +19,16 @@ export class ReviewCampaignMembershipContextResolver implements ContextResolver 
 
   async resolve(request: ResolvableRequest): Promise<void> {
     const requestWithCampaign = request as EndpointRequestWithReviewCampaign
+    // Find any membership for (campaign, user). Policies check the role —
+    // TesterPolicy wants role=tester, ReviewerPolicy wants role=reviewer.
+    // A user with both roles on the same campaign picks up whichever row
+    // the DB returns first; we refine this (array or role-hinted resolver)
+    // when that edge case becomes load-bearing.
     const membership =
       (await this.membershipRepository.findOne({
         where: {
           campaignId: requestWithCampaign.reviewCampaign.id,
           userId: request.user.id,
-          role: "tester",
         },
       })) ?? undefined
 

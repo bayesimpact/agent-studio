@@ -12,6 +12,12 @@ export type ReviewCampaignQuestion = {
   type: ReviewCampaignQuestionType
   required: boolean
   options?: string[]
+  /**
+   * Tester per-session questions only. When true and the question type is
+   * `rating` or `single-choice`, the tester's answer stays visible to reviewers
+   * during blind review. See `filterFactualAnswers` in reviewer.service.ts.
+   */
+  isFactual?: boolean
 }
 
 export type ReviewCampaignAnswer = {

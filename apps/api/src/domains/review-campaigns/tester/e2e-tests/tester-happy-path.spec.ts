@@ -123,6 +123,57 @@ describe("ReviewCampaigns - Tester happy path", () => {
     expect(response.body.data.reviewCampaigns[0]?.id).toBe(reviewCampaignId)
   })
 
+  it("getMyReviewCampaigns filters by role=reviewer when the caller is only a reviewer", async () => {
+    const { organization, project } = await seedActiveCampaignWithTester()
+    // The caller from the seed is a tester. Add a second active campaign on
+    // which the same caller is a reviewer.
+    const reviewerAgent = agentFactory.transient({ organization, project }).build()
+    await repositories.agentRepository.save(reviewerAgent)
+    const reviewerCampaign = await repositories.reviewCampaignRepository.save(
+      reviewCampaignFactory
+        .active()
+        .transient({ organization, project, agent: reviewerAgent })
+        .build(),
+    )
+    const callerUser = await repositories.userRepository.findOneByOrFail({ auth0Id })
+    await repositories.reviewCampaignMembershipRepository.save(
+      reviewCampaignMembershipFactory
+        .reviewer()
+        .accepted()
+        .transient({ organization, project, campaign: reviewerCampaign, user: callerUser })
+        .build(),
+    )
+
+    // Default (no role → tester): returns only the tester campaign.
+    const testerResponse = await request({
+      route: ReviewCampaignsRoutes.getMyReviewCampaigns,
+      token: accessToken,
+    })
+    expectResponse(testerResponse, 200)
+    expect(testerResponse.body.data.reviewCampaigns).toHaveLength(1)
+    expect(testerResponse.body.data.reviewCampaigns[0]?.id).toBe(reviewCampaignId)
+
+    // role=reviewer: returns only the reviewer campaign.
+    const reviewerResponse = await request({
+      route: ReviewCampaignsRoutes.getMyReviewCampaigns,
+      token: accessToken,
+      query: { role: "reviewer" },
+    })
+    expectResponse(reviewerResponse, 200)
+    expect(reviewerResponse.body.data.reviewCampaigns).toHaveLength(1)
+    expect(reviewerResponse.body.data.reviewCampaigns[0]?.id).toBe(reviewerCampaign.id)
+  })
+
+  it("getMyReviewCampaigns rejects an unknown role filter (400)", async () => {
+    await seedActiveCampaignWithTester()
+    const response = await request({
+      route: ReviewCampaignsRoutes.getMyReviewCampaigns,
+      token: accessToken,
+      query: { role: "admin" },
+    })
+    expectResponse(response, 400)
+  })
+
   it("startTesterSession creates a conversation session stamped with campaign_id", async () => {
     await seedActiveCampaignWithTester("conversation")
     const response = await request({

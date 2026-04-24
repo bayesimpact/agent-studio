@@ -25,6 +25,8 @@ This project uses [CalVer](https://calver.org/) (YY.MM.Micro) for product versio
 - Warn before closing or refreshing the tab during document uploads
 - (beta) Review campaigns: see mean rating, session count, and survey count on closed campaigns
 - (beta) Review campaigns: testers can jump into their campaigns from a Test button on the home page
+- (beta) Review campaigns: reviewers can open campaigns, read sessions, and submit blind reviews
+- (beta) Review campaigns: admins can mark tester questions as factual so reviewers see them during blind review
 
 ### Changed
 - Agent configuration is now organized into tabs (General, Model, Sources, and Form or Output) for easier editing

@@ -11,6 +11,7 @@ import { meSlice } from "@/common/features/me/me.slice"
 import { notificationsSlice } from "@/common/features/notifications/notifications.slice"
 import { organizationsSlice } from "@/common/features/organizations/organizations.slice"
 import { projectsSlice } from "@/common/features/projects/projects.slice"
+import { reviewCampaignsReviewerSlice } from "@/studio/features/review-campaigns/reviewer/reviewer.slice"
 import { reviewCampaignsTesterSlice } from "@/studio/features/review-campaigns/tester/tester.slice"
 
 // Shared slices: always available in both Studio and Desk interfaces.
@@ -29,6 +30,7 @@ export const rootSliceList = [
   notificationsSlice,
   organizationsSlice,
   projectsSlice,
+  reviewCampaignsReviewerSlice,
   reviewCampaignsTesterSlice,
 ]
 

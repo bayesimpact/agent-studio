@@ -232,6 +232,7 @@ export function CampaignForm({
             description="Asked after every session the tester completes."
             questions={perSessionQuestions}
             disabled={configLocked}
+            showFactualToggle
             onChange={(next) => setValue("testerPerSessionQuestions", next, { shouldDirty: true })}
           />
           <QuestionListEditor

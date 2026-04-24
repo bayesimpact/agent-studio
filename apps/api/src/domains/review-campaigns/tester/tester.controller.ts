@@ -6,7 +6,18 @@ import {
   type TesterCampaignSurveyDto,
   type TesterSessionFeedbackDto,
 } from "@caseai-connect/api-contracts"
-import { Body, Controller, Delete, Get, Patch, Post, Req, UseGuards } from "@nestjs/common"
+import {
+  BadRequestException,
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Patch,
+  Post,
+  Query,
+  Req,
+  UseGuards,
+} from "@nestjs/common"
 import type {
   EndpointRequest,
   EndpointRequestWithAgentSessionInCampaign,
@@ -35,10 +46,18 @@ export class TesterMeController {
   @Get(ReviewCampaignsRoutes.getMyReviewCampaigns.path)
   async getMyReviewCampaigns(
     @Req() request: EndpointRequest,
+    @Query("role") roleParam?: string,
   ): Promise<typeof ReviewCampaignsRoutes.getMyReviewCampaigns.response> {
-    const campaigns = await this.testerService.listMyCampaigns(request.user.id)
+    const role = parseRoleQuery(roleParam)
+    const campaigns = await this.testerService.listMyCampaigns(request.user.id, role)
     return { data: { reviewCampaigns: campaigns.map(toMyCampaignDto) } }
   }
+}
+
+function parseRoleQuery(role: string | undefined): "tester" | "reviewer" {
+  if (role === undefined) return "tester"
+  if (role === "tester" || role === "reviewer") return role
+  throw new BadRequestException(`Invalid role filter: ${role} (expected "tester" or "reviewer")`)
 }
 
 @UseGuards(JwtAuthGuard, UserGuard, ResourceContextGuard, TesterGuard)

@@ -20,6 +20,7 @@ import evaluations from "@/studio/features/evaluations/external/evaluations.api"
 import invitations from "@/studio/features/invitations/external/invitations.api"
 import projectMemberships from "@/studio/features/project-memberships/external/project-memberships.api"
 import reviewCampaigns from "@/studio/features/review-campaigns/external/review-campaigns.api"
+import reviewCampaignsReviewer from "@/studio/features/review-campaigns/reviewer/external/reviewer.api"
 import reviewCampaignsTester from "@/studio/features/review-campaigns/tester/external/tester.api"
 
 export const services = {
@@ -45,5 +46,6 @@ export const services = {
   projectMemberships,
   projects,
   reviewCampaigns,
+  reviewCampaignsReviewer,
   reviewCampaignsTester,
 }

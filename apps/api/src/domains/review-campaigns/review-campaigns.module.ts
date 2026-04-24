@@ -12,6 +12,7 @@ import { ConversationAgentSessionsModule } from "@/domains/agents/conversation-a
 import { ExtractionAgentSession } from "@/domains/agents/extraction-agent-sessions/extraction-agent-session.entity"
 import { FormAgentSession } from "@/domains/agents/form-agent-sessions/form-agent-session.entity"
 import { FormAgentSessionsModule } from "@/domains/agents/form-agent-sessions/form-agent-sessions.module"
+import { AgentMessage } from "@/domains/agents/shared/agent-session-messages/agent-message.entity"
 import { AuthModule } from "@/domains/auth/auth.module"
 import { OrganizationMembership } from "@/domains/organizations/memberships/organization-membership.entity"
 import { Organization } from "@/domains/organizations/organization.entity"
@@ -26,6 +27,11 @@ import { ReviewCampaign } from "./review-campaign.entity"
 import { ReviewCampaignsController } from "./review-campaigns.controller"
 import { ReviewCampaignsGuard } from "./review-campaigns.guard"
 import { ReviewCampaignsService } from "./review-campaigns.service"
+import { ReviewerSessionReviewController } from "./reviewer/reviewer.controller"
+import { ReviewerGuard } from "./reviewer/reviewer.guard"
+import { ReviewerService } from "./reviewer/reviewer.service"
+import { ReviewerSessionDetailController } from "./reviewer/reviewer-session-detail.controller"
+import { ReviewerSessionsController } from "./reviewer/reviewer-sessions.controller"
 import { ReviewerSessionReview } from "./reviewer-session-reviews/reviewer-session-review.entity"
 import {
   TesterController,
@@ -41,6 +47,7 @@ import { TesterSessionFeedback } from "./tester-session-feedbacks/tester-session
   imports: [
     TypeOrmModule.forFeature([
       Agent,
+      AgentMessage,
       ConversationAgentSession,
       ExtractionAgentSession,
       FormAgentSession,
@@ -71,15 +78,20 @@ import { TesterSessionFeedback } from "./tester-session-feedbacks/tester-session
     ReviewCampaignMembershipContextResolver,
     ReviewCampaignsGuard,
     ReviewCampaignsService,
+    ReviewerGuard,
+    ReviewerService,
     TesterGuard,
     TesterService,
   ],
   controllers: [
     ReviewCampaignsController,
+    ReviewerSessionDetailController,
+    ReviewerSessionReviewController,
+    ReviewerSessionsController,
     TesterController,
     TesterMeController,
     TesterSessionFeedbackController,
   ],
-  exports: [ReviewCampaignsService, TesterService],
+  exports: [ReviewCampaignsService, ReviewerService, TesterService],
 })
 export class ReviewCampaignsModule {}

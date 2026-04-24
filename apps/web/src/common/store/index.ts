@@ -8,6 +8,7 @@ import { meMiddleware } from "@/common/features/me/me.middleware"
 import { organizationsMiddleware } from "@/common/features/organizations/organizations.middleware"
 import { projectsMiddleware } from "@/common/features/projects/projects.middleware"
 import { getServices } from "@/di/services"
+import { reviewCampaignsReviewerMiddleware } from "@/studio/features/review-campaigns/reviewer/reviewer.middleware"
 import { reviewCampaignsTesterMiddleware } from "@/studio/features/review-campaigns/tester/tester.middleware"
 import { dynamicMiddleware } from "./dynamic-middleware"
 import { rootSlices } from "./root-slices"
@@ -34,6 +35,7 @@ export const buildStore = () =>
         meMiddleware.middleware,
         organizationsMiddleware.middleware,
         projectsMiddleware.middleware,
+        reviewCampaignsReviewerMiddleware.middleware,
         reviewCampaignsTesterMiddleware.middleware,
       ),
   })

@@ -12,6 +12,13 @@ export type ReviewCampaignQuestionDto = {
   type: ReviewCampaignQuestionType
   required: boolean
   options?: string[]
+  /**
+   * Tester per-session questions only. When true and the question type is
+   * `rating` or `single-choice`, the tester's answer stays visible to reviewers
+   * during blind review (factual: describes what happened). When false/absent,
+   * the answer is hidden until the reviewer submits (opinion).
+   */
+  isFactual?: boolean
 }
 
 export type ReviewCampaignDto = {
@@ -183,3 +190,95 @@ export type ListMyTesterSessionsResponseDto = {
 export type GetMyTesterSurveyResponseDto = {
   survey: TesterCampaignSurveyDto | null
 }
+
+// === Reviewer API ===
+
+export type ReviewerSessionReviewDto = {
+  id: string
+  campaignId: string
+  sessionId: string
+  sessionType: "conversation" | "extraction" | "form"
+  reviewerUserId: string
+  overallRating: number
+  comment: string | null
+  answers: ReviewCampaignTesterFeedbackAnswerDto[]
+  submittedAt: TimeType
+  createdAt: TimeType
+  updatedAt: TimeType
+}
+
+export type SubmitReviewerSessionReviewRequestDto = {
+  overallRating: number
+  comment?: string | null
+  answers?: ReviewCampaignTesterFeedbackAnswerDto[]
+}
+
+export type UpdateReviewerSessionReviewRequestDto = Partial<SubmitReviewerSessionReviewRequestDto>
+
+export type ReviewerSessionListItemDto = {
+  sessionId: string
+  sessionType: "conversation" | "form"
+  testerUserId: string
+  startedAt: TimeType
+  messageCount: number
+  reviewerCount: number
+  callerHasReviewed: boolean
+  callerIsSessionOwner: boolean
+}
+
+export type ListReviewerSessionsResponseDto = {
+  sessions: ReviewerSessionListItemDto[]
+}
+
+export type ReviewerSessionTranscriptMessageDto = {
+  id: string
+  role: string
+  content: string
+  createdAt: TimeType
+}
+
+export type ReviewerAgentSnapshotDto = {
+  id: string
+  name: string
+  type: "conversation" | "extraction" | "form"
+}
+
+export type ReviewerFormResultDto = {
+  /** The agent's outputJsonSchema (JSON Schema object) describing the form fields. */
+  schema: Record<string, unknown>
+  /** The collected values; null when the user abandoned the session before completion. */
+  value: Record<string, unknown> | null
+}
+
+type ReviewerSessionMetaDto = {
+  sessionId: string
+  sessionType: "conversation" | "extraction" | "form"
+  testerUserId: string
+  startedAt: TimeType
+  agent: ReviewerAgentSnapshotDto
+  transcript: ReviewerSessionTranscriptMessageDto[]
+  reviewerQuestions: ReviewCampaignQuestionDto[]
+  otherReviewerCount: number
+  /** Populated only for `sessionType === "form"` sessions. */
+  formResult: ReviewerFormResultDto | null
+}
+
+export type ReviewerSessionBlindDto = ReviewerSessionMetaDto & {
+  blind: true
+  factualTesterQuestions: ReviewCampaignQuestionDto[]
+  factualTesterAnswers: ReviewCampaignTesterFeedbackAnswerDto[]
+}
+
+export type ReviewerSessionFullDto = ReviewerSessionMetaDto & {
+  blind: false
+  testerPerSessionQuestions: ReviewCampaignQuestionDto[]
+  testerFeedback: {
+    overallRating: number
+    comment: string | null
+    answers: ReviewCampaignTesterFeedbackAnswerDto[]
+  } | null
+  myReview: ReviewerSessionReviewDto
+  otherReviews: ReviewerSessionReviewDto[]
+}
+
+export type GetReviewerSessionResponseDto = ReviewerSessionBlindDto | ReviewerSessionFullDto

@@ -3,21 +3,26 @@ import { defineRoute } from "../helpers"
 import type {
   CreateReviewCampaignRequestDto,
   GetMyTesterSurveyResponseDto,
+  GetReviewerSessionResponseDto,
   InviteReviewCampaignMembersRequestDto,
   InviteReviewCampaignMembersResponseDto,
   ListMyReviewCampaignsResponseDto,
   ListMyTesterSessionsResponseDto,
   ListReviewCampaignsResponseDto,
+  ListReviewerSessionsResponseDto,
   ReviewCampaignDetailDto,
   ReviewCampaignDto,
   ReviewCampaignTesterContextDto,
+  ReviewerSessionReviewDto,
   StartTesterSessionRequestDto,
   StartTesterSessionResponseDto,
+  SubmitReviewerSessionReviewRequestDto,
   SubmitTesterCampaignSurveyRequestDto,
   SubmitTesterSessionFeedbackRequestDto,
   TesterCampaignSurveyDto,
   TesterSessionFeedbackDto,
   UpdateReviewCampaignRequestDto,
+  UpdateReviewerSessionReviewRequestDto,
   UpdateTesterCampaignSurveyRequestDto,
   UpdateTesterSessionFeedbackRequestDto,
 } from "./review-campaigns.dto"
@@ -117,5 +122,30 @@ export const ReviewCampaignsRoutes = {
   deleteTesterSession: defineRoute<ResponseData<SuccessResponseDTO>>({
     method: "delete",
     path: "organizations/:organizationId/projects/:projectId/agent-sessions/:sessionId/tester-session",
+  }),
+
+  // === Reviewer API ===
+
+  listReviewerSessions: defineRoute<ResponseData<ListReviewerSessionsResponseDto>>({
+    method: "get",
+    path: "organizations/:organizationId/projects/:projectId/review-campaigns/:reviewCampaignId/reviewer-sessions",
+  }),
+  getReviewerSession: defineRoute<ResponseData<GetReviewerSessionResponseDto>>({
+    method: "get",
+    path: "organizations/:organizationId/projects/:projectId/review-campaigns/:reviewCampaignId/agent-sessions/:sessionId/reviewer-view",
+  }),
+  submitReviewerSessionReview: defineRoute<
+    ResponseData<ReviewerSessionReviewDto>,
+    RequestPayload<SubmitReviewerSessionReviewRequestDto>
+  >({
+    method: "post",
+    path: "organizations/:organizationId/projects/:projectId/review-campaigns/:reviewCampaignId/agent-sessions/:sessionId/reviewer-reviews",
+  }),
+  updateReviewerSessionReview: defineRoute<
+    ResponseData<ReviewerSessionReviewDto>,
+    RequestPayload<UpdateReviewerSessionReviewRequestDto>
+  >({
+    method: "patch",
+    path: "organizations/:organizationId/projects/:projectId/review-campaigns/:reviewCampaignId/agent-sessions/:sessionId/reviewer-reviews/:reviewId",
   }),
 }

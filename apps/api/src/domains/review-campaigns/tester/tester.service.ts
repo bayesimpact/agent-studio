@@ -61,9 +61,12 @@ export class TesterService {
     private readonly formAgentSessionsService: FormAgentSessionsService,
   ) {}
 
-  async listMyCampaigns(userId: string): Promise<ReviewCampaign[]> {
+  async listMyCampaigns(
+    userId: string,
+    role: "tester" | "reviewer" = "tester",
+  ): Promise<ReviewCampaign[]> {
     const memberships = await this.membershipRepository.find({
-      where: { userId, role: "tester" },
+      where: { userId, role },
       relations: ["campaign"],
     })
     return memberships
