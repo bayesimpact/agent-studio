@@ -75,6 +75,41 @@ export function UploadDocumentsButton() {
   const isDialogOpen = dialog.status === "open"
   const dialogFiles = dialog.status === "open" ? dialog.files : []
   const dialogTagIds = dialog.status === "open" ? dialog.tagIds : []
+  const hasAvailableTags = documentTags.length > 0
+  const handleDropFiles = async (files: File[]) => {
+    if (hasAvailableTags) {
+      dispatchDialog({ type: "OPEN", files })
+      return
+    }
+
+    try {
+      await dispatch(
+        uploadDocuments({
+          files,
+          sourceType: "project",
+        }),
+      ).unwrap()
+    } catch {
+      // Errors are surfaced via notifications middleware.
+    }
+  }
+  const handleConfirmUpload = async () => {
+    if (dialog.status !== "open") {
+      return
+    }
+    try {
+      await dispatch(
+        uploadDocuments({
+          files: dialog.files,
+          sourceType: "project",
+          tagIds: dialog.tagIds.length > 0 ? dialog.tagIds : undefined,
+        }),
+      ).unwrap()
+      dispatchDialog({ type: "CLOSE" })
+    } catch {
+      // Errors are surfaced via notifications middleware.
+    }
+  }
 
   return (
     <>
@@ -83,9 +118,7 @@ export function UploadDocumentsButton() {
         maxFiles={400}
         disabled={uploaderState.status === "uploading"}
         maxSize={40 * 1024 * 1024} // 40MB
-        onDropFiles={(files) => {
-          dispatchDialog({ type: "OPEN", files })
-        }}
+        onDropFiles={handleDropFiles}
       />
       <Dialog
         open={isDialogOpen}
@@ -139,23 +172,7 @@ export function UploadDocumentsButton() {
             <Button
               type="button"
               disabled={uploaderState.status === "uploading"}
-              onClick={async () => {
-                if (dialog.status !== "open") {
-                  return
-                }
-                try {
-                  await dispatch(
-                    uploadDocuments({
-                      files: dialog.files,
-                      sourceType: "project",
-                      tagIds: dialog.tagIds.length > 0 ? dialog.tagIds : undefined,
-                    }),
-                  ).unwrap()
-                  dispatchDialog({ type: "CLOSE" })
-                } catch {
-                  // Errors are surfaced via notifications middleware.
-                }
-              }}
+              onClick={handleConfirmUpload}
             >
               {t("document:upload.tagDialog.confirm")}
             </Button>
