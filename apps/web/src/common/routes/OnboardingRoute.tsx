@@ -7,11 +7,14 @@ import { OrganizationCreator } from "@/common/components/organization/Organizati
 import { SidebarLayout } from "@/common/components/sidebar/SidebarLayout"
 import type { Organization } from "@/common/features/organizations/organizations.models"
 import { selectOrganizationsData } from "@/common/features/organizations/organizations.selectors"
+import { ADS } from "@/common/store/async-data-status"
 import { useAppSelector } from "@/common/store/hooks"
 import { DeskRouteNames } from "@/desk/routes/helpers"
 import { EvalRouteNames } from "@/eval/routes/helpers"
 import { ProjectCreatorButton } from "@/studio/features/projects/components/ProjectCreator"
-import { StudioRouteNames } from "@/studio/routes/helpers"
+import type { MyReviewCampaign } from "@/studio/features/review-campaigns/tester/tester.models"
+import { useMyReviewCampaigns } from "@/studio/features/review-campaigns/tester/use-my-review-campaigns"
+import { buildTesterHomePath, StudioRouteNames } from "@/studio/routes/helpers"
 import { Wrap } from "../components/layouts/Wrap"
 import type { User } from "../features/me/me.models"
 import { selectMe } from "../features/me/me.selectors"
@@ -82,7 +85,6 @@ function OrganizationItem({ organization, index }: { organization: Organization;
   const canCreateProject = abilities.canCreateProject({
     organizationId: organization.id,
   })
-
   const extraItems = canCreateProject ? 1 : 0
   return (
     <GridItem
@@ -107,6 +109,8 @@ function OrganizationItem({ organization, index }: { organization: Organization;
                     <NavStudioButton organizationId={organization.id} projectId={project.id} />
 
                     <NavEvalButton organizationId={organization.id} project={project} />
+
+                    <NavTesterButton projectId={project.id} />
                   </div>
                 }
               />
@@ -201,6 +205,25 @@ function NavEvalButton({ organizationId, project }: { organizationId: string; pr
   return (
     <Button variant={"outline"} onClick={handleClick}>
       {t("actions:goToEval")}
+    </Button>
+  )
+}
+
+function NavTesterButton({ projectId }: { projectId: string }) {
+  const { data } = useMyReviewCampaigns()
+  const hasTesterCampaignInProject =
+    ADS.isFulfilled(data) &&
+    data.value.some((campaign: MyReviewCampaign) => campaign.projectId === projectId)
+
+  const handleClick = () => {
+    // NOTE: do not use navigate from react-router — tester is its own route tree
+    window.location.assign(buildTesterHomePath())
+  }
+
+  if (!hasTesterCampaignInProject) return null
+  return (
+    <Button variant="outline" onClick={handleClick}>
+      Test
     </Button>
   )
 }

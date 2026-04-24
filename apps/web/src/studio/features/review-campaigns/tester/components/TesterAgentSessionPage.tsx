@@ -103,7 +103,11 @@ export function TesterAgentSessionPage() {
     <TesterAgentSessionContent
       organizationId={params.organizationId}
       projectId={params.projectId}
-      agent={contextState.value.agent}
+      // Tester context carries a trimmed agent snapshot, not the full AgentDto.
+      // Safe for the conversation branch; the form-agent `FormResult` reads
+      // `outputJsonSchema`, which will need a full-agent fetch when form-agent
+      // tester support lands.
+      agent={contextState.value.agent as Agent}
       agentSession={syntheticSession}
       messages={messages}
       campaignName={contextState.value.name}

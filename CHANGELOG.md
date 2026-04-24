@@ -13,6 +13,7 @@ This project uses [CalVer](https://calver.org/) (YY.MM.Micro) for product versio
 - Track user activities for further auditing
 - Define agent document RAG modes — off, all, or tagged
 - Add tag selection before document upload (single and batch).
+- Bull board UI for queue monitoring
 - (beta) Display analytics per agent (sessions per day)
 - (beta) Medgemma available for Conversational Agent
 - (beta) Agents can connect to external MCP servers for additional tools
@@ -22,6 +23,8 @@ This project uses [CalVer](https://calver.org/) (YY.MM.Micro) for product versio
 - (beta) Review campaigns: invite testers and reviewers to evaluate an agent with structured feedback
 - Copy chat messages to clipboard
 - Warn before closing or refreshing the tab during document uploads
+- (beta) Review campaigns: see mean rating, session count, and survey count on closed campaigns
+- (beta) Review campaigns: testers can jump into their campaigns from a Test button on the home page
 
 ### Changed
 - Agent configuration is now organized into tabs (General, Model, Sources, and Form or Output) for easier editing

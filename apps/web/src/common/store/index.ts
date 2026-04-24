@@ -8,6 +8,7 @@ import { meMiddleware } from "@/common/features/me/me.middleware"
 import { organizationsMiddleware } from "@/common/features/organizations/organizations.middleware"
 import { projectsMiddleware } from "@/common/features/projects/projects.middleware"
 import { getServices } from "@/di/services"
+import { reviewCampaignsTesterMiddleware } from "@/studio/features/review-campaigns/tester/tester.middleware"
 import { dynamicMiddleware } from "./dynamic-middleware"
 import { rootSlices } from "./root-slices"
 import type { RootState, ThunkExtraArg } from "./types"
@@ -33,6 +34,7 @@ export const buildStore = () =>
         meMiddleware.middleware,
         organizationsMiddleware.middleware,
         projectsMiddleware.middleware,
+        reviewCampaignsTesterMiddleware.middleware,
       ),
   })
 export const store = buildStore()
