@@ -97,6 +97,9 @@
       "output": "Sortie",
       "form": "Formulaire",
       "sources": "Sources"
-    }
+    },
+    "source_one": "Source",
+    "source_other": "Sources",
+    "source_zero": "Aucune source"
   }
 }

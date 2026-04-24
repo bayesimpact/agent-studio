@@ -1,7 +1,7 @@
 import { createSlice, type PayloadAction } from "@reduxjs/toolkit"
 import { ADS, type AsyncData, defaultAsyncData } from "@/common/store/async-data-status"
 import type { AgentSessionMessage } from "./agent-session-messages.models"
-import { listMessages } from "./agent-session-messages.thunks"
+import { getMessage, listMessages } from "./agent-session-messages.thunks"
 
 type State = {
   data: AsyncData<AgentSessionMessage[]>
@@ -93,20 +93,8 @@ const slice = createSlice({
         state.data.error = null
       })
       .addCase(listMessages.fulfilled, (state, action) => {
-        const originalMessages = action.payload
-        const mergedMessages: AgentSessionMessage[] = []
-        originalMessages.forEach((msg) => {
-          if (msg.role === "tool") {
-            const lastMessage = mergedMessages[mergedMessages.length - 1]
-            if (!lastMessage || lastMessage.role !== "assistant") return
-            // Merge tool calls into the last message
-            lastMessage.toolCalls = [...(lastMessage.toolCalls || []), ...(msg.toolCalls || [])]
-            return
-          }
-          mergedMessages.push(msg)
-        })
         state.data = {
-          value: mergedMessages,
+          value: action.payload,
           status: ADS.Fulfilled,
           error: null,
         }
@@ -115,6 +103,15 @@ const slice = createSlice({
         state.data.status = ADS.Error
         state.data.error = action.error.message || "Failed to load session messages"
       })
+
+    builder.addCase(getMessage.fulfilled, (state, action) => {
+      if (!ADS.isFulfilled(state.data)) return
+      const updatedMessage = action.payload
+      const messageIndex = state.data.value.findIndex((msg) => msg.id === updatedMessage.id)
+      if (messageIndex !== -1) {
+        state.data.value[messageIndex] = updatedMessage
+      }
+    })
   },
 })
 

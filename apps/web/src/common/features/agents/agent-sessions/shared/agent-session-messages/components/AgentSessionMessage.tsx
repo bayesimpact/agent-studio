@@ -24,22 +24,14 @@ export function AgentSessionMessage({ message }: { message: AgentSessionMessageT
             className={cn("pb-8", isError && "bg-red-50 border border-red-200 text-red-800")}
           >
             {isStreaming && <ThinkingMessage />}
-            {isError ? (
-              <ErrorMessage />
-            ) : (
-              <MarkdownWrapper
-                content={message.content}
-                end={
-                  <RestrictedFeature feature="sources_tool">
-                    {sourcesTool && <SourcesTool toolCall={sourcesTool} />}
-                  </RestrictedFeature>
-                }
-              />
-            )}
+            {isError ? <ErrorMessage /> : <MarkdownWrapper content={message.content} />}
           </ChatBotMessage>
 
           <div className="absolute bottom-2">
             <FeedbackCreator message={message} />
+            <RestrictedFeature feature="sources_tool">
+              {sourcesTool && <SourcesTool toolCall={sourcesTool} />}
+            </RestrictedFeature>
           </div>
         </div>
       )

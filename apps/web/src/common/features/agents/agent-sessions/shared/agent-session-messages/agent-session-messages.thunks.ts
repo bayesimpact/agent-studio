@@ -3,31 +3,42 @@ import { createAsyncThunk } from "@reduxjs/toolkit"
 import { getCurrentIds } from "@/common/features/helpers"
 import type { RootState, ThunkExtraArg } from "@/common/store"
 import { generateId } from "@/common/utils/generate-id"
-import { isStudioInterface } from "@/studio/routes/helpers"
 import { refreshFormResultForCurrentAgentSession } from "../../form/form-agent-sessions.thunks"
+import { buildType } from "../base-agent-session/base-agent-sessions.thunks"
 import type { AgentSessionMessage } from "./agent-session-messages.models"
 import { agentSessionMessagesActions } from "./agent-session-messages.slice"
 import { streamChatResponse } from "./external/agent-session-messages-streaming"
 
 type ThunkConfig = { state: RootState; extra: ThunkExtraArg }
 
-// FIXME:
-
 export const listMessages = createAsyncThunk<AgentSessionMessage[], string, ThunkConfig>(
   "agentSessionMessages/listMessages",
   async (agentSessionId, { extra: { services }, getState }) => {
     const state = getState()
-    const { organizationId, projectId, agentId } = getCurrentIds({
+    const params = getCurrentIds({
       state,
       wantedIds: ["organizationId", "projectId", "agentId"],
     })
-    const isStudio = isStudioInterface()
     return services.agentSessionMessages.getAll({
-      organizationId,
-      projectId,
-      agentId,
+      ...params,
       agentSessionId,
-      type: isStudio ? "playground" : "live",
+      payload: { type: buildType() },
+    })
+  },
+)
+
+export const getMessage = createAsyncThunk<AgentSessionMessage, string, ThunkConfig>(
+  "agentSessionMessages/getMessage",
+  async (messageId, { extra: { services }, getState }) => {
+    const state = getState()
+    const params = getCurrentIds({
+      state,
+      wantedIds: ["organizationId", "projectId", "agentId", "agentSessionId"],
+    })
+    return services.agentSessionMessages.getOne({
+      ...params,
+      messageId,
+      payload: { type: buildType() },
     })
   },
 )
@@ -107,13 +118,14 @@ export const sendMessage = createAsyncThunk<void, { content: string; file?: File
                 break
             }
           },
-          onEnd: (event) => {
+          onEnd: async (event) => {
             dispatch(
               agentSessionMessagesActions.completeAssistantMessage({
                 messageId: event.messageId,
                 fullContent: event.fullContent,
               }),
             )
+            dispatch(getMessage(event.messageId))
           },
           onError: (event) => {
             dispatch(

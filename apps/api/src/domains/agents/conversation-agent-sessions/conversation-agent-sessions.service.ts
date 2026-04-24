@@ -60,6 +60,16 @@ export class ConversationAgentSessionsService {
     })
   }
 
+  async getMessageById({
+    id,
+    connectScope,
+  }: {
+    id: string
+    connectScope: RequiredConnectScope
+  }): Promise<AgentMessage | null> {
+    return this.agentMessageConnectRepository.getOneById(connectScope, id)
+  }
+
   async getAllSessionsForAgent({
     connectScope,
     agentId,
