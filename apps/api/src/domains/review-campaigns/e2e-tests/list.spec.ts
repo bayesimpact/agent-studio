@@ -14,6 +14,7 @@ import { INVITATION_SENDER } from "@/domains/auth/invitation-sender.interface"
 import { createOrganizationWithProject } from "@/domains/organizations/organization.factory"
 import { setupUserGuardForTesting } from "../../../../test/e2e.helpers"
 import { expectResponse, type Requester, testRequester } from "../../../../test/request"
+import { reviewCampaignMembershipFactory } from "../memberships/review-campaign-membership.factory"
 import { reviewCampaignFactory } from "../review-campaign.factory"
 import { ReviewCampaignsModule } from "../review-campaigns.module"
 
@@ -81,6 +82,43 @@ describe("ReviewCampaigns - list", () => {
     expectResponse(response, 200)
     expect(response.body.data.reviewCampaigns).toHaveLength(2)
     expect(response.body.data.reviewCampaigns.map((c) => c.name).sort()).toEqual(["A", "B"])
+  })
+
+  it("returns memberCount for each campaign (0 when no members)", async () => {
+    const { organization, project, user } = await createOrganizationWithProject(repositories, {
+      user: { auth0Id },
+    })
+    const agent = agentFactory.transient({ organization, project }).build()
+    await repositories.agentRepository.save(agent)
+    const [withMembers, empty] = await repositories.reviewCampaignRepository.save([
+      reviewCampaignFactory
+        .transient({ organization, project, agent })
+        .build({ name: "with-members" }),
+      reviewCampaignFactory.transient({ organization, project, agent }).build({ name: "empty" }),
+    ])
+    if (!withMembers || !empty) throw new Error("factory returned empty")
+    await repositories.reviewCampaignMembershipRepository.save([
+      reviewCampaignMembershipFactory
+        .tester()
+        .transient({ organization, project, campaign: withMembers, user })
+        .build(),
+      reviewCampaignMembershipFactory
+        .reviewer()
+        .transient({ organization, project, campaign: withMembers, user })
+        .build(),
+    ])
+    organizationId = organization.id
+    projectId = project.id
+
+    const response = await subject()
+    expectResponse(response, 200)
+    const byName = new Map(
+      (response.body.data.reviewCampaigns as Array<{ name: string; memberCount: number }>).map(
+        (campaign) => [campaign.name, campaign.memberCount],
+      ),
+    )
+    expect(byName.get("with-members")).toBe(2)
+    expect(byName.get("empty")).toBe(0)
   })
 
   it("does not leak campaigns from other projects", async () => {

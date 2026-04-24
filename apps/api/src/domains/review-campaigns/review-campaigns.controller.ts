@@ -46,10 +46,15 @@ export class ReviewCampaignsController {
   async getAll(
     @Req() request: EndpointRequestWithProject,
   ): Promise<typeof ReviewCampaignsRoutes.getAll.response> {
-    const campaigns = await this.reviewCampaignsService.listCampaigns(
-      getRequiredConnectScope(request),
-    )
-    return { data: { reviewCampaigns: campaigns.map(toReviewCampaignDto) } }
+    const items = await this.reviewCampaignsService.listCampaigns(getRequiredConnectScope(request))
+    return {
+      data: {
+        reviewCampaigns: items.map(({ campaign, memberCount }) => ({
+          ...toReviewCampaignDto(campaign),
+          memberCount,
+        })),
+      },
+    }
   }
 
   @Get(ReviewCampaignsRoutes.getOne.path)

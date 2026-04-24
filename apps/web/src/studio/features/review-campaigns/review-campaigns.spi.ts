@@ -6,6 +6,7 @@ import type {
 import type {
   ReviewCampaign,
   ReviewCampaignDetail,
+  ReviewCampaignListItem,
   ReviewCampaignMembership,
 } from "./review-campaigns.models"
 
@@ -13,7 +14,7 @@ type ProjectScope = { organizationId: string; projectId: string }
 type CampaignScope = ProjectScope & { reviewCampaignId: string }
 
 export interface IReviewCampaignsSpi {
-  getAll(params: ProjectScope): Promise<ReviewCampaign[]>
+  getAll(params: ProjectScope): Promise<ReviewCampaignListItem[]>
 
   getOne(params: CampaignScope): Promise<ReviewCampaignDetail>
 

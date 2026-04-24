@@ -75,8 +75,12 @@ export type InviteReviewCampaignMembersRequestDto = {
   emails: string[]
 }
 
+export type ReviewCampaignListItemDto = ReviewCampaignDto & {
+  memberCount: number
+}
+
 export type ListReviewCampaignsResponseDto = {
-  reviewCampaigns: ReviewCampaignDto[]
+  reviewCampaigns: ReviewCampaignListItemDto[]
 }
 
 export type InviteReviewCampaignMembersResponseDto = {

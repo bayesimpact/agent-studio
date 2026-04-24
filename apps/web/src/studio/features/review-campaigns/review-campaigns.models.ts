@@ -1,6 +1,7 @@
 import type {
   ReviewCampaignDetailDto,
   ReviewCampaignDto,
+  ReviewCampaignListItemDto,
   ReviewCampaignMembershipDto,
   ReviewCampaignMembershipRole,
   ReviewCampaignQuestionDto,
@@ -9,6 +10,7 @@ import type {
 } from "@caseai-connect/api-contracts"
 
 export type ReviewCampaign = ReviewCampaignDto
+export type ReviewCampaignListItem = ReviewCampaignListItemDto
 export type ReviewCampaignDetail = ReviewCampaignDetailDto
 export type ReviewCampaignMembership = ReviewCampaignMembershipDto
 export type ReviewCampaignQuestion = ReviewCampaignQuestionDto

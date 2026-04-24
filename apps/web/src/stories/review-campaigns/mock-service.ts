@@ -24,7 +24,10 @@ export function buildMockReviewCampaignsService(overrides: Overrides = {}): IRev
 
   return {
     async getAll() {
-      return campaigns
+      return campaigns.map((campaign) => ({
+        ...campaign,
+        memberCount: campaign.status !== "draft" ? memberships.length : 0,
+      }))
     },
     async getOne({ reviewCampaignId }) {
       const campaign = campaigns.find((c) => c.id === reviewCampaignId) ?? campaigns[0]

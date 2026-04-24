@@ -9,12 +9,13 @@ import type { RootState, ThunkExtraArg } from "@/common/store"
 import type {
   ReviewCampaign,
   ReviewCampaignDetail,
+  ReviewCampaignListItem,
   ReviewCampaignMembership,
 } from "./review-campaigns.models"
 
 type ThunkConfig = { state: RootState; extra: ThunkExtraArg }
 
-export const listReviewCampaigns = createAsyncThunk<ReviewCampaign[], void, ThunkConfig>(
+export const listReviewCampaigns = createAsyncThunk<ReviewCampaignListItem[], void, ThunkConfig>(
   "review-campaigns/list",
   async (_, { extra: { services }, getState }) => {
     const params = getCurrentIds({

@@ -32,6 +32,9 @@ export function CampaignListPage() {
   }, [agentsData])
 
   const campaigns = ADS.isFulfilled(campaignsData) ? campaignsData.value : []
+  const membershipCountByCampaign = Object.fromEntries(
+    campaigns.map((campaign) => [campaign.id, campaign.memberCount]),
+  )
 
   return (
     <div className="flex flex-col gap-4 p-6">
@@ -54,6 +57,7 @@ export function CampaignListPage() {
       {(ADS.isFulfilled(campaignsData) || campaigns.length > 0) && (
         <CampaignListTable
           campaigns={campaigns}
+          membershipCountByCampaign={membershipCountByCampaign}
           onEdit={(campaignId) => setEditor({ mode: "edit", campaignId })}
           onDelete={(campaignId) => setEditor({ mode: "edit", campaignId })}
           onCreate={() => setEditor({ mode: "create" })}

@@ -55,7 +55,7 @@ export class ReviewCampaignsService {
 
   constructor(
     @InjectRepository(ReviewCampaign)
-    reviewCampaignRepository: Repository<ReviewCampaign>,
+    private readonly reviewCampaignRepository: Repository<ReviewCampaign>,
     @InjectRepository(ReviewCampaignMembership)
     private readonly reviewCampaignMembershipRepository: Repository<ReviewCampaignMembership>,
     @InjectRepository(Agent)
@@ -106,10 +106,25 @@ export class ReviewCampaignsService {
     })
   }
 
-  async listCampaigns(connectScope: RequiredConnectScope): Promise<ReviewCampaign[]> {
-    return (await this.reviewCampaignConnectRepository.getMany(connectScope)).sort(
-      (a, b) => b.createdAt.getTime() - a.createdAt.getTime(),
-    )
+  async listCampaigns(
+    connectScope: RequiredConnectScope,
+  ): Promise<Array<{ campaign: ReviewCampaign; memberCount: number }>> {
+    const { entities, raw } = await this.reviewCampaignRepository
+      .createQueryBuilder("campaign")
+      .leftJoin(ReviewCampaignMembership, "membership", "membership.campaign_id = campaign.id")
+      .where("campaign.organization_id = :organizationId", {
+        organizationId: connectScope.organizationId,
+      })
+      .andWhere("campaign.project_id = :projectId", { projectId: connectScope.projectId })
+      .addSelect("COUNT(membership.id)::int", "memberCount")
+      .groupBy("campaign.id")
+      .orderBy("campaign.created_at", "DESC")
+      .getRawAndEntities<{ memberCount: number }>()
+
+    return entities.map((campaign, index) => ({
+      campaign,
+      memberCount: Number(raw[index]?.memberCount ?? 0),
+    }))
   }
 
   async findById({

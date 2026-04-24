@@ -1,10 +1,10 @@
 import { createSlice } from "@reduxjs/toolkit"
 import { ADS, type AsyncData, defaultAsyncData } from "@/common/store/async-data-status"
-import type { ReviewCampaign, ReviewCampaignDetail } from "./review-campaigns.models"
+import type { ReviewCampaignDetail, ReviewCampaignListItem } from "./review-campaigns.models"
 import { getReviewCampaignDetail, listReviewCampaigns } from "./review-campaigns.thunks"
 
 interface State {
-  data: AsyncData<ReviewCampaign[]>
+  data: AsyncData<ReviewCampaignListItem[]>
   selectedDetail: AsyncData<ReviewCampaignDetail>
 }
 
