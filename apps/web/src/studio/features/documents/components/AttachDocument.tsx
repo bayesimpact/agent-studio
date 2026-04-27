@@ -18,7 +18,7 @@ export function AttachDocument({
       onDropFiles={handleProcessFiles}
       allowedMimeTypes={allowedDocumentUploadMimeTypesForFileUploader}
       maxFiles={1}
-      shouldRun={false}
+      startProcessingFiles={false}
     >
       <Button variant="ghost" className="w-fit" disabled={disabled}>
         <PaperclipIcon />

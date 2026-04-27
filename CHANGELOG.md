@@ -26,6 +26,7 @@ This project uses [CalVer](https://calver.org/) (YY.MM.Micro) for product versio
 - New user interface to list organizations, workspaces, agents, sessions
 - Unified observability: structured logging, request tracing, error alerting, and queue health monitoring via GCP
 - Only list sessions belonging to the selected agent
+- Expand document upload dropzone to cover the entire page
 
 ### Fixed
 - Form result panel now scrolls when it has more fields than fit on screen

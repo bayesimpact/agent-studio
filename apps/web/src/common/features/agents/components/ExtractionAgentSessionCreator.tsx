@@ -20,17 +20,17 @@ export function ExtractionSessionCreator({ disabled }: { disabled: boolean }) {
 
   const [open, setOpen] = useState(false)
   const [file, setFile] = useState<File>()
-  const [isRunning, setIsRunning] = useState(false)
+  const [startProcessingFiles, setStartProcessingFiles] = useState(false)
 
   const resetState = () => {
     setOpen(false)
-    setIsRunning(false)
+    setStartProcessingFiles(false)
     setFile(undefined)
   }
 
   const handleOpenChange = (nextOpen: boolean) => {
     if (!nextOpen) {
-      setIsRunning(false)
+      setStartProcessingFiles(false)
       setFile(undefined)
     }
     setOpen(nextOpen)
@@ -38,13 +38,13 @@ export function ExtractionSessionCreator({ disabled }: { disabled: boolean }) {
 
   const handleSubmit = async () => {
     if (!file) return
-    setIsRunning(true)
+    setStartProcessingFiles(true)
   }
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
-        <Button size="lg" className="text-base" disabled={isRunning || disabled}>
+        <Button size="lg" className="text-base" disabled={startProcessingFiles || disabled}>
           {t("actions:create")}
           <PlusCircleIcon className="ml-2 size-5" />
         </Button>
@@ -65,13 +65,13 @@ export function ExtractionSessionCreator({ disabled }: { disabled: boolean }) {
           }}
           onProcessEnd={resetState}
           allowedMimeTypes={{ "application/pdf": true, "image/jpeg": true }}
-          shouldRun={isRunning}
+          startProcessingFiles={startProcessingFiles}
           onDropFiles={(files) => setFile(files[0])}
         >
           <Button
             className="w-full max-w-full justify-start"
             variant={file ? "secondary" : "outline"}
-            disabled={isRunning}
+            disabled={startProcessingFiles}
           >
             {file ? (
               file.name
@@ -81,9 +81,9 @@ export function ExtractionSessionCreator({ disabled }: { disabled: boolean }) {
           </Button>
         </FileUploader>
 
-        <Button disabled={isRunning} onClick={handleSubmit}>
+        <Button disabled={startProcessingFiles} onClick={handleSubmit}>
           <span className=" capitalize-first">
-            {isRunning ? t("status:loading") : t("actions:run")}
+            {startProcessingFiles ? t("status:loading") : t("actions:run")}
           </span>
         </Button>
       </DialogContent>
