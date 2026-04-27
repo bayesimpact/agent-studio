@@ -96,19 +96,10 @@ function registerListeners() {
 
   listenerMiddleware.startListening({
     actionCreator: uploadDocuments.fulfilled,
-    effect: async (action, listenerApi) => {
+    effect: async (_, listenerApi) => {
       const state = listenerApi.getState()
       const uploaderState = selectUploaderState(state)
       const errors = uploaderState.errors || []
-      const totalCount = action.meta.arg.files.length
-      const successfulUploadCount = totalCount - errors.length
-      listenerApi.dispatch(
-        notificationsActions.show({
-          title: `${successfulUploadCount}/${totalCount} documents uploaded successfully`,
-          type: "success",
-        }),
-      )
-      await listenerApi.delay(500)
       if (errors.length > 0) {
         listenerApi.dispatch(
           notificationsActions.show({
