@@ -15,9 +15,10 @@ type UploaderProps = {
   onDropFiles?: (files: File[]) => void
   onProcessFiles?: (files: File[]) => Promise<void>
   onProcessEnd?: () => void
-  shouldRun?: boolean
+  startProcessingFiles?: boolean
   disabled?: boolean
   maxSize?: number
+  noClick?: boolean
 }
 
 export function FileUploader({
@@ -28,9 +29,10 @@ export function FileUploader({
   maxFiles = 1,
   onProcessFiles,
   onProcessEnd,
-  shouldRun = true,
+  startProcessingFiles = true, // NOTE: trigger to start processing files. Easier than using a ref to control when to process after files are dropped.
   maxSize = 10 * 1024 * 1024, // 10MB
   disabled: disabledProp,
+  noClick = false,
 }: UploaderProps & { children?: React.ReactNode }) {
   const dispatch = useAppDispatch()
   const { t } = useTranslation("actions")
@@ -60,11 +62,11 @@ export function FileUploader({
   )
 
   useEffect(() => {
-    if (!shouldRun) return
+    if (!startProcessingFiles) return
     if (files.length === 0) return
 
     if (onProcessFiles) handleFiles(files)
-  }, [shouldRun, files, handleFiles, onProcessFiles])
+  }, [startProcessingFiles, files, handleFiles, onProcessFiles])
 
   const { getRootProps, getInputProps } = useDropzone({
     accept: buildAccept(allowedMimeTypes),
@@ -108,10 +110,11 @@ export function FileUploader({
     },
     disabled,
     maxFiles,
+    noClick,
   })
 
   return (
-    <div {...getRootProps()} className={cn("w-fit cursor-pointer", className)}>
+    <div {...getRootProps()} className={cn("w-fit", !children && "cursor-pointer", className)}>
       {children ? (
         children
       ) : (

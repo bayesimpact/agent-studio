@@ -25,12 +25,14 @@ export function SidebarLayout({
   children,
   sidebarContentChildren,
   sidebarFooterChildren,
+  hideIcon,
 }: {
   user: User
   organization?: Organization
   children: React.ReactNode
   sidebarContentChildren?: React.ReactNode
   sidebarFooterChildren?: React.ReactNode
+  hideIcon?: boolean
 }) {
   return (
     <SidebarProvider
@@ -63,6 +65,7 @@ export function SidebarLayout({
 
       <SidebarInset>
         <LayoutHeader
+          hideIcon={hideIcon}
           title={organization ? <SidebarBreadcrumb organization={organization} /> : ""}
         />
 

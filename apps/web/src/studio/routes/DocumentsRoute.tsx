@@ -43,7 +43,6 @@ import { useTranslation } from "react-i18next"
 import { useNavigate } from "react-router-dom"
 import { GridHeader } from "@/common/components/grid/Grid"
 import { MarkdownWrapper } from "@/common/features/agents/agent-sessions/shared/agent-session-messages/components/MarkdownWrapper"
-import { useGetPath } from "@/common/hooks/use-build-path"
 import { useAppDispatch, useAppSelector } from "@/common/store/hooks"
 import { buildDate, buildSince } from "@/common/utils/build-date"
 import { generateId } from "@/common/utils/generate-id"
@@ -94,14 +93,13 @@ function WithData({
 }) {
   const navigate = useNavigate()
   const { t } = useTranslation()
-  const { getPath } = useGetPath()
 
   const handleBack = () => {
-    const path = getPath("project")
-    navigate(path)
+    navigate(-1)
   }
+
   return (
-    <>
+    <UploadDocumentsButton className="w-full">
       <GridHeader
         onBack={handleBack}
         title={t("document:documents")}
@@ -115,7 +113,7 @@ function WithData({
       />
 
       <div className="p-6 flex flex-col gap-6 bg-white">
-        <UploaderState />
+        <UploaderStateComp />
         {documents.length === 0 ? (
           <EmptyDocument />
         ) : (
@@ -143,7 +141,7 @@ function WithData({
           </Table>
         )}
       </div>
-    </>
+    </UploadDocumentsButton>
   )
 }
 
@@ -462,9 +460,9 @@ function useDocumentEmbeddingStatusStream() {
   }, [dispatch])
 }
 
-function UploaderState() {
-  const uploaderState = useAppSelector(selectUploaderState)
+function UploaderStateComp() {
   const { t } = useTranslation("document")
+  const uploaderState = useAppSelector(selectUploaderState)
   return (
     <div className="flex flex-col gap-4 items-center justify-center">
       {uploaderState.status === "uploading" && (

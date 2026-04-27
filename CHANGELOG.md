@@ -12,18 +12,22 @@ This project uses [CalVer](https://calver.org/) (YY.MM.Micro) for product versio
 - Link to Help Center
 - Track user activities for further auditing
 - Define agent document RAG modes — off, all, or tagged
-- Add tag selection before document upload (single and batch).
+- Add tag selection before document upload (single and batch)
 - (beta) Display analytics per agent (sessions per day)
 - (beta) Medgemma available for Conversational Agent
 - (beta) Agents can connect to external MCP servers for additional tools
 - (beta) Evaluate extraction agents against datasets
 - (beta) Project-level agent categories and category analytics
 - Bull board UI for queue monitoring
+- Copy chat messages to clipboard
+- Warn before closing or refreshing the tab during document uploads
 
 ### Changed
 - Agent configuration is now organized into tabs (General, Model, Sources, and Form or Output) for easier editing
 - New user interface to list organizations, workspaces, agents, sessions
 - Unified observability: structured logging, request tracing, error alerting, and queue health monitoring via GCP
+- Only list sessions belonging to the selected agent
+- Expand document upload dropzone to cover the entire page
 
 ### Fixed
 - Form result panel now scrolls when it has more fields than fit on screen
@@ -33,6 +37,7 @@ This project uses [CalVer](https://calver.org/) (YY.MM.Micro) for product versio
 - Show loader while currentId is being set
 - Studio mode redirect to Home when route not found
 - Make UI responsive across devices
+- Hide the sidebar toggle icon when the sidebar is unused
 
 ### Security
 

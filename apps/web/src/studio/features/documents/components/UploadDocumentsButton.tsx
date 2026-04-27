@@ -12,7 +12,7 @@ import {
 } from "@caseai-connect/ui/shad/dialog"
 import { FieldLabel } from "@caseai-connect/ui/shad/field"
 import { XIcon } from "lucide-react"
-import { useReducer } from "react"
+import { useEffect, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { FileUploader } from "@/common/components/FileUploader"
 import { useAppDispatch, useAppSelector } from "@/common/store/hooks"
@@ -20,114 +20,90 @@ import {
   getTagNameById,
   useDocumentTags,
 } from "@/studio/features/document-tags/document-tags.helpers"
-import { selectUploaderState } from "@/studio/features/documents/documents.selectors"
 import { uploadDocuments } from "@/studio/features/documents/documents.thunks"
+import { selectUploaderState } from "../documents.selectors"
 import { DocumentTagPicker } from "./DocumentTagPicker"
 
-type UploadDialogAction =
-  | { type: "OPEN"; files: File[] }
-  | { type: "CLOSE" }
-  | { type: "ADD_TAG"; tagId: string }
-  | { type: "REMOVE_TAG"; tagId: string }
-
-// Keep this state local to the component:
-// - it contains browser File objects (non-serializable for Redux state),
-// - it is ephemeral pre-submit dialog state (open/close + temporary tag picks),
-// - only this component needs it before dispatching uploadDocuments.
-type UploadDialogState = { status: "closed" } | { status: "open"; files: File[]; tagIds: string[] }
-
-function uploadDialogReducer(
-  state: UploadDialogState,
-  action: UploadDialogAction,
-): UploadDialogState {
-  switch (action.type) {
-    case "OPEN":
-      return { status: "open", files: action.files, tagIds: [] }
-    case "CLOSE":
-      return { status: "closed" }
-    case "ADD_TAG": {
-      if (state.status !== "open") {
-        return state
-      }
-      if (state.tagIds.includes(action.tagId)) {
-        return state
-      }
-      return { ...state, tagIds: [...state.tagIds, action.tagId] }
-    }
-    case "REMOVE_TAG": {
-      if (state.status !== "open") {
-        return state
-      }
-      return { ...state, tagIds: state.tagIds.filter((id) => id !== action.tagId) }
-    }
-  }
-}
-
-export function UploadDocumentsButton() {
+export function UploadDocumentsButton({
+  children,
+  className,
+}: {
+  children?: React.ReactNode
+  className?: string
+}) {
   const dispatch = useAppDispatch()
+  const { t } = useTranslation()
   const uploaderState = useAppSelector(selectUploaderState)
   const { documentTags } = useDocumentTags()
-  const { t } = useTranslation()
-  const [dialog, dispatchDialog] = useReducer(uploadDialogReducer, {
-    status: "closed",
-  } satisfies UploadDialogState)
-
-  const isDialogOpen = dialog.status === "open"
-  const dialogFiles = dialog.status === "open" ? dialog.files : []
-  const dialogTagIds = dialog.status === "open" ? dialog.tagIds : []
+  const [open, setOpen] = useState(false)
+  const [tagIds, setTagIds] = useState<string[]>([])
+  const [filesCount, setFilesCount] = useState(0)
   const hasAvailableTags = documentTags.length > 0
-  const handleDropFiles = async (files: File[]) => {
-    if (hasAvailableTags) {
-      dispatchDialog({ type: "OPEN", files })
-      return
-    }
+  const [startProcessingFiles, setStartProcessingFiles] = useState(!hasAvailableTags)
 
-    try {
-      await dispatch(
-        uploadDocuments({
-          files,
-          sourceType: "project",
-        }),
-      ).unwrap()
-    } catch {
-      // Errors are surfaced via notifications middleware.
+  const handleAddTag = (tagId: string) => {
+    if (!tagIds.includes(tagId)) {
+      setTagIds((prev) => [...prev, tagId])
     }
   }
-  const handleConfirmUpload = async () => {
-    if (dialog.status !== "open") {
-      return
-    }
-    try {
-      await dispatch(
-        uploadDocuments({
-          files: dialog.files,
-          sourceType: "project",
-          tagIds: dialog.tagIds.length > 0 ? dialog.tagIds : undefined,
-        }),
-      ).unwrap()
-      dispatchDialog({ type: "CLOSE" })
-    } catch {
-      // Errors are surfaced via notifications middleware.
-    }
+
+  const handleRemoveTag = (tagId: string) => {
+    setTagIds((prev) => prev.filter((id) => id !== tagId))
   }
+
+  const handleDropFiles = async (files: File[]) => {
+    setFilesCount(files.length)
+    if (hasAvailableTags) setOpen(true)
+    else setStartProcessingFiles(true)
+  }
+
+  const handleProcessFiles = async (files: File[]) => {
+    await dispatch(
+      uploadDocuments({
+        files,
+        sourceType: "project",
+        tagIds: tagIds.length > 0 ? tagIds : undefined,
+      }),
+    ).unwrap()
+  }
+
+  const isUploading = uploaderState.status === "uploading"
+
+  const handleConfirmDialog = () => {
+    setStartProcessingFiles(true)
+    handleClose()
+  }
+
+  const handleClose = () => setOpen(false)
+
+  useEffect(() => {
+    if (!open) {
+      setTagIds([])
+      setFilesCount(0)
+      setStartProcessingFiles(false)
+    }
+    return () => {
+      // setOpen(false)
+    }
+  }, [open])
 
   return (
     <>
       <FileUploader
+        className={className}
         allowedMimeTypes={allowedDocumentUploadMimeTypesForFileUploader}
         maxFiles={400}
-        disabled={uploaderState.status === "uploading"}
+        disabled={isUploading}
         maxSize={40 * 1024 * 1024} // 40MB
         onDropFiles={handleDropFiles}
-      />
-      <Dialog
-        open={isDialogOpen}
-        onOpenChange={(open) => {
-          if (!open) {
-            dispatchDialog({ type: "CLOSE" })
-          }
-        }}
+        onProcessFiles={handleProcessFiles}
+        startProcessingFiles={startProcessingFiles}
+        onProcessEnd={handleClose}
+        noClick={!!children}
       >
+        {children}
+      </FileUploader>
+      <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-lg">
           <DialogHeader>
             <DialogTitle>{t("document:upload.tagDialog.title")}</DialogTitle>
@@ -136,17 +112,17 @@ export function UploadDocumentsButton() {
             {t("document:upload.tagDialog.description")}
           </p>
           <p className="text-foreground text-sm font-medium">
-            {t("document:upload.tagDialog.fileCountSentence", { count: dialogFiles.length })}
+            {t("document:upload.tagDialog.fileCountSentence", { count: filesCount })}
           </p>
           <div className="flex flex-col gap-2">
             <FieldLabel>{t("document:props.tags")}</FieldLabel>
             <div className="flex flex-wrap items-center gap-2">
-              {dialogTagIds.map((tagId) => (
+              {tagIds.map((tagId) => (
                 <Badge key={tagId} variant="secondary" className="gap-1">
                   {getTagNameById(documentTags, tagId)}
                   <button
                     type="button"
-                    onClick={() => dispatchDialog({ type: "REMOVE_TAG", tagId })}
+                    onClick={() => handleRemoveTag(tagId)}
                     className="opacity-60 hover:opacity-100"
                   >
                     <XIcon className="size-3" />
@@ -155,25 +131,16 @@ export function UploadDocumentsButton() {
               ))}
               <DocumentTagPicker
                 documentTags={documentTags}
-                attachedTagIds={dialogTagIds}
-                onAdd={(tagId) => dispatchDialog({ type: "ADD_TAG", tagId })}
+                attachedTagIds={tagIds}
+                onAdd={(tagId) => handleAddTag(tagId)}
               />
             </div>
           </div>
           <DialogFooter className="gap-3 sm:gap-4">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => dispatchDialog({ type: "CLOSE" })}
-              disabled={uploaderState.status === "uploading"}
-            >
+            <Button type="button" variant="outline" onClick={handleClose} disabled={isUploading}>
               {t("actions:cancel")}
             </Button>
-            <Button
-              type="button"
-              disabled={uploaderState.status === "uploading"}
-              onClick={handleConfirmUpload}
-            >
+            <Button type="button" disabled={isUploading} onClick={handleConfirmDialog}>
               {t("document:upload.tagDialog.confirm")}
             </Button>
           </DialogFooter>

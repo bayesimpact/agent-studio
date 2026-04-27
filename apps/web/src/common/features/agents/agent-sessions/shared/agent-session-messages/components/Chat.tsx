@@ -40,13 +40,7 @@ function ChatHeader({ className, children, ...props }: React.ComponentProps<"div
 }
 
 function ChatBotMessage({ className, ...props }: React.ComponentProps<"div">) {
-  return (
-    <div
-      data-slot="chat-bot-message"
-      className={cn("rounded-2xl p-4 bg-muted w-fit h-fit whitespace-break-spaces", className)}
-      {...props}
-    />
-  )
+  return <div data-slot="chat-bot-message" className={cn("w-fit h-fit", className)} {...props} />
 }
 
 function ChatUserMessage({ className, children, ...props }: React.ComponentProps<"div">) {

@@ -13,6 +13,7 @@ import { Field, FieldGroup, FieldLabel, FieldSet } from "@caseai-connect/ui/shad
 import { Item, ItemContent } from "@caseai-connect/ui/shad/item"
 import { ScrollArea } from "@caseai-connect/ui/shad/scroll-area"
 import { Textarea } from "@caseai-connect/ui/shad/textarea"
+import { ThumbsDownIcon, ThumbsUpIcon } from "lucide-react"
 import { useState } from "react"
 import { useTranslation } from "react-i18next"
 import type { AgentSessionMessage } from "@/common/features/agents/agent-sessions/shared/agent-session-messages/agent-session-messages.models"
@@ -29,11 +30,8 @@ export function FeedbackCreator({ message }: { message: AgentSessionMessage }) {
   return (
     <Dialog modal open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button
-          variant="link"
-          className={"text-muted-foreground text-xs font-normal hover:text-inherit"}
-        >
-          {t("button")}
+        <Button variant="ghost" size="sm" className="text-muted-foreground">
+          <ThumbsUpIcon className="size-3.5" /> <ThumbsDownIcon className="size-3.5" />
         </Button>
       </DialogTrigger>
       <DialogContent>
