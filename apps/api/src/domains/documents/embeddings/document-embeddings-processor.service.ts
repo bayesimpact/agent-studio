@@ -24,6 +24,12 @@ import { DocumentTextExtractorService } from "./document-text-extractor.service"
 
 const DOCUMENT_EMBEDDING_CHUNK_SIZE = 1024
 const DOCUMENT_EMBEDDING_CHUNK_OVERLAP = 20
+const MAX_EMBEDDING_ERROR_LENGTH = 2_000
+
+function getEmbeddingErrorMessage(error: unknown): string {
+  const message = error instanceof Error ? error.message : String(error)
+  return message.slice(0, MAX_EMBEDDING_ERROR_LENGTH)
+}
 
 @Injectable()
 export class DocumentEmbeddingsProcessorService {
@@ -58,6 +64,7 @@ export class DocumentEmbeddingsProcessorService {
 
       this.logger.log(`Embeddings created for document ${document.id}`)
     } catch (error) {
+      document.embeddingError = getEmbeddingErrorMessage(error)
       await this.markDocumentStatus(document, "failed")
       throw error
     }
@@ -148,6 +155,9 @@ export class DocumentEmbeddingsProcessorService {
     status: Document["embeddingStatus"],
   ): Promise<void> {
     document.embeddingStatus = status
+    if (status === "processing" || status === "completed") {
+      document.embeddingError = null
+    }
     await this.saveDocumentAndNotify(document)
   }
 
@@ -158,6 +168,7 @@ export class DocumentEmbeddingsProcessorService {
       organizationId: savedDocument.organizationId,
       projectId: savedDocument.projectId,
       embeddingStatus: savedDocument.embeddingStatus,
+      embeddingError: savedDocument.embeddingError ?? null,
       updatedAt: savedDocument.updatedAt.getTime(),
     })
   }

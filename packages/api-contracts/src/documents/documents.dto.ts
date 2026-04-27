@@ -16,6 +16,7 @@ export type DocumentEmbeddingStatusChangedEventPayload = {
   organizationId: string
   projectId: string
   embeddingStatus: DocumentEmbeddingStatus
+  embeddingError: string | null
   updatedAt: TimeType
 }
 export type DocumentEmbeddingStatusChangedEventDto = MessageEvent &
@@ -51,6 +52,7 @@ export type DocumentDto = {
   size?: number
   storageRelativePath?: string
   embeddingStatus: DocumentEmbeddingStatus
+  embeddingError: string | null
   tagIds: DocumentTagDto["id"][]
 }
 

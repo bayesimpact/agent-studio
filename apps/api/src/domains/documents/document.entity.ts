@@ -45,6 +45,9 @@ export class Document extends ConnectEntityBase {
   @Column({ name: "embedding_status", nullable: false, default: "pending" })
   embeddingStatus!: "pending" | "processing" | "completed" | "failed"
 
+  @Column({ name: "embedding_error", type: "text", nullable: true })
+  embeddingError!: string | null
+
   @Column({ name: "extraction_engine", type: "varchar", nullable: true })
   extractionEngine!: string | null
 

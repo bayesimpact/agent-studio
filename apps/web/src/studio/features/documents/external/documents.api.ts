@@ -134,6 +134,7 @@ function toDocument(dto: DocumentDto): Document {
     size: dto.size,
     storageRelativePath: dto.storageRelativePath,
     embeddingStatus: dto.embeddingStatus,
+    embeddingError: dto.embeddingError ?? null,
     title: dto.title,
     updatedAt: dto.updatedAt,
     tagIds: dto.tagIds,

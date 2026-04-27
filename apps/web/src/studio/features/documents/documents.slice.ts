@@ -98,6 +98,7 @@ const slice = createSlice({
       action: PayloadAction<{
         documentId: string
         embeddingStatus: Document["embeddingStatus"]
+        embeddingError: Document["embeddingError"]
         updatedAt: number
       }>,
     ) => {
@@ -108,6 +109,7 @@ const slice = createSlice({
       if (!document) return
       if (document.updatedAt > action.payload.updatedAt) return
       document.embeddingStatus = action.payload.embeddingStatus
+      document.embeddingError = action.payload.embeddingError
       document.updatedAt = action.payload.updatedAt
     },
   },
