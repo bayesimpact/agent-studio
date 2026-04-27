@@ -21,6 +21,7 @@ import { selectCurrentFormAgentSessionsDataFromAgentId } from "@/common/features
 import { deleteAgentSession } from "@/common/features/agents/agent-sessions/shared/base-agent-session/base-agent-sessions.thunks"
 import { BaseAgentSessionCreator } from "@/common/features/agents/agent-sessions/shared/base-agent-session/components/BaseAgentSessionCreator"
 import type { Agent } from "@/common/features/agents/agents.models"
+import { selectCurrentAgentId } from "@/common/features/agents/agents.selectors"
 import { useBuildPath, useGetPath } from "@/common/hooks/use-build-path"
 import { ADS } from "@/common/store/async-data-status"
 import { useAppDispatch, useAppSelector } from "@/common/store/hooks"
@@ -45,25 +46,29 @@ export function SidebarAgentSessionList(props: AgentSessionProps) {
 }
 
 function FormAgentSessionList(props: AgentSessionProps) {
+  const currentAgentId = useAppSelector(selectCurrentAgentId)
   const sessionsData = useAppSelector(selectCurrentFormAgentSessionsDataFromAgentId(props.agentId))
   if (!ADS.isFulfilled(sessionsData)) return null
 
+  const isActive = currentAgentId === props.agentId
   return (
-    <SessionList sessions={sessionsData.value} agentSessionProps={props}>
-      <BaseAgentSessionCreator agentType="form" ids={props} type="menu" />
+    <SessionList isActive={isActive} sessions={sessionsData.value} agentSessionProps={props}>
+      {isActive && <BaseAgentSessionCreator agentType="form" ids={props} type="menu" />}
     </SessionList>
   )
 }
 
 function ConversationAgentSessionList(props: AgentSessionProps) {
+  const currentAgentId = useAppSelector(selectCurrentAgentId)
   const sessionsData = useAppSelector(
     selectCurrentConversationAgentSessionsDataFromAgentId(props.agentId),
   )
   if (!ADS.isFulfilled(sessionsData)) return null
 
+  const isActive = currentAgentId === props.agentId
   return (
-    <SessionList sessions={sessionsData.value} agentSessionProps={props}>
-      <BaseAgentSessionCreator agentType="conversation" ids={props} type="menu" />
+    <SessionList sessions={sessionsData.value} isActive={isActive} agentSessionProps={props}>
+      {isActive && <BaseAgentSessionCreator agentType="conversation" ids={props} type="menu" />}
     </SessionList>
   )
 }
@@ -71,13 +76,16 @@ function ConversationAgentSessionList(props: AgentSessionProps) {
 function SessionList({
   sessions,
   agentSessionProps,
+  isActive,
   children,
 }: {
+  isActive: boolean
   sessions: ConversationAgentSession[]
   agentSessionProps: AgentSessionProps
   children?: React.ReactNode
 }) {
   const currentSessionId = useAppSelector(selectCurrentAgentSessionId)
+
   const { buildPath } = useBuildPath()
   const items: MenuItem[] = sessions.map((session) => ({
     id: session.id,
@@ -91,22 +99,23 @@ function SessionList({
     <SidebarMenuSub>
       {children}
 
-      {items.map((item) => (
-        <SidebarMenuSubItem key={item.id}>
-          <SidebarMenuSubButton asChild isActive={item.isActive}>
-            <Link to={item.url}>
-              {item.icon && <item.icon />}
-              <span>{item.title}</span>
+      {isActive &&
+        items.map((item) => (
+          <SidebarMenuSubItem key={item.id}>
+            <SidebarMenuSubButton asChild isActive={item.isActive}>
+              <Link to={item.url}>
+                {item.icon && <item.icon />}
+                <span>{item.title}</span>
 
-              <OptionsMenu
-                agentId={agentSessionProps.agentId}
-                agentSessionId={item.id}
-                agentType={agentSessionProps.agentType}
-              />
-            </Link>
-          </SidebarMenuSubButton>
-        </SidebarMenuSubItem>
-      ))}
+                <OptionsMenu
+                  agentId={agentSessionProps.agentId}
+                  agentSessionId={item.id}
+                  agentType={agentSessionProps.agentType}
+                />
+              </Link>
+            </SidebarMenuSubButton>
+          </SidebarMenuSubItem>
+        ))}
     </SidebarMenuSub>
   )
 }
