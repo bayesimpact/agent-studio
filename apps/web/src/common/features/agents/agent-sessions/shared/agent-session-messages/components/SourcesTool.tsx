@@ -22,11 +22,7 @@ export function SourcesTool({
   return (
     <Popover>
       <PopoverTrigger asChild>
-        <Button
-          variant="link"
-          size="sm"
-          className="text-muted-foreground text-xs p-0 font-normal hover:text-inherit data-[state=open]:text-inherit data-[state=open]:font-medium data-[state=open]:underline"
-        >
+        <Button variant="ghost" size="sm" className="text-muted-foreground text-xs">
           {t("agent:source", { count: sources.length })}: ({sources.length})
         </Button>
       </PopoverTrigger>
