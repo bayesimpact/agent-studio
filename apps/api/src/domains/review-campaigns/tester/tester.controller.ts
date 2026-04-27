@@ -34,6 +34,7 @@ import type { ReviewCampaign } from "../review-campaign.entity"
 import type { TesterCampaignSurvey } from "../tester-campaign-surveys/tester-campaign-survey.entity"
 import type { TesterSessionFeedback } from "../tester-session-feedbacks/tester-session-feedback.entity"
 import { TesterGuard } from "./tester.guard"
+import type { TesterPolicy } from "./tester.policy"
 import type { MyTesterSessionSummary } from "./tester.service"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
 import { TesterService } from "./tester.service"
@@ -67,7 +68,7 @@ export class TesterController {
   constructor(private readonly testerService: TesterService) {}
 
   @Get(ReviewCampaignsRoutes.getTesterContext.path)
-  @CheckPolicy((policy) => policy.canView())
+  @CheckPolicy((policy) => (policy as TesterPolicy).canViewSharedContext())
   async getTesterContext(
     @Req() request: EndpointRequestWithReviewCampaignMembership,
   ): Promise<typeof ReviewCampaignsRoutes.getTesterContext.response> {

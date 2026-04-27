@@ -135,9 +135,56 @@ describe("ReviewCampaigns - Tester auth", () => {
       await seedAsNonMember()
       expectResponse(await subject(), 403)
     })
-    it("forbids members when campaign is not active (403)", async () => {
+    it("forbids testers when campaign is draft (403)", async () => {
       await seedAsTester("draft")
       expectResponse(await subject(), 403)
+    })
+
+    // Reviewers reuse this endpoint to fetch the campaign metadata for their
+    // landing page (see ReviewerCampaignLandingPage). Earlier versions only
+    // allowed testers, which 403'd reviewer-only users.
+    it("allows a reviewer-only member on an active campaign (200)", async () => {
+      const { organization, project, user } = await createOrganizationWithProject(repositories, {
+        user: { auth0Id },
+      })
+      const agent = agentFactory.transient({ organization, project }).build()
+      await repositories.agentRepository.save(agent)
+      const campaign = await repositories.reviewCampaignRepository.save(
+        reviewCampaignFactory.active().transient({ organization, project, agent }).build(),
+      )
+      await repositories.reviewCampaignMembershipRepository.save(
+        reviewCampaignMembershipFactory
+          .reviewer()
+          .accepted()
+          .transient({ organization, project, campaign, user })
+          .build(),
+      )
+      organizationId = organization.id
+      projectId = project.id
+      reviewCampaignId = campaign.id
+      expectResponse(await subject(), 200)
+    })
+
+    it("allows a reviewer on a closed campaign (read access stays for closed)", async () => {
+      const { organization, project, user } = await createOrganizationWithProject(repositories, {
+        user: { auth0Id },
+      })
+      const agent = agentFactory.transient({ organization, project }).build()
+      await repositories.agentRepository.save(agent)
+      const campaign = await repositories.reviewCampaignRepository.save(
+        reviewCampaignFactory.closed().transient({ organization, project, agent }).build(),
+      )
+      await repositories.reviewCampaignMembershipRepository.save(
+        reviewCampaignMembershipFactory
+          .reviewer()
+          .accepted()
+          .transient({ organization, project, campaign, user })
+          .build(),
+      )
+      organizationId = organization.id
+      projectId = project.id
+      reviewCampaignId = campaign.id
+      expectResponse(await subject(), 200)
     })
   })
 

@@ -43,6 +43,7 @@ This project uses [CalVer](https://calver.org/) (YY.MM.Micro) for product versio
 - Restricted access to Studio mode for non-admin users
 - Show loader while currentId is being set
 - Studio mode redirect to Home when route not found
+- (beta) Review campaigns: reviewer-only members can now open the reviewer landing page
 - Make UI responsive across devices
 - Hide the sidebar toggle icon when the sidebar is unused
 

@@ -44,6 +44,21 @@ export class TesterPolicy extends BasePolicy<ReviewCampaign> {
     return this.isActiveTesterMember() && this.isCampaignActive()
   }
 
+  /**
+   * Used only by `getTesterContext`, which is intentionally shared with the
+   * reviewer landing page (campaign name / description / agent snapshot are
+   * neutral metadata, and the tester per-session questions are already visible
+   * to reviewers via blind review). Testers need an active campaign; reviewers
+   * keep read access on closed campaigns too.
+   */
+  canViewSharedContext(): boolean {
+    if (!this.reviewCampaignMembership) return false
+    if (this.reviewCampaignMembership.campaignId !== this.reviewCampaign.id) return false
+    if (this.reviewCampaignMembership.role === "tester") return this.isCampaignActive()
+    if (this.reviewCampaignMembership.role === "reviewer") return this.isCampaignNotDraft()
+    return false
+  }
+
   private isActiveTesterMember(): boolean {
     return (
       !!this.reviewCampaignMembership &&
@@ -54,5 +69,9 @@ export class TesterPolicy extends BasePolicy<ReviewCampaign> {
 
   private isCampaignActive(): boolean {
     return this.reviewCampaign.status === "active"
+  }
+
+  private isCampaignNotDraft(): boolean {
+    return this.reviewCampaign.status !== "draft"
   }
 }
