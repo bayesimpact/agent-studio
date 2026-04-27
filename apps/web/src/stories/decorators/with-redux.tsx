@@ -5,26 +5,38 @@ import type { Project } from "@/common/features/projects/projects.models"
 import { ADS } from "@/common/store/async-data-status"
 import { rootSliceList } from "@/common/store/root-slices"
 import type { Services } from "@/di/services"
+import { reviewerSliceList } from "@/reviewer/store/slices"
 import type { DocumentTag } from "@/studio/features/document-tags/document-tags.models"
 import type {
   ReviewCampaign,
   ReviewCampaignDetail,
 } from "@/studio/features/review-campaigns/review-campaigns.models"
+import { studioSliceList } from "@/studio/store/slices"
 import type {
   MyReviewCampaign,
   TesterCampaignSurvey,
   TesterContext,
-} from "@/studio/features/review-campaigns/tester/tester.models"
-import type { LocalSessionSummary } from "@/studio/features/review-campaigns/tester/tester.slice"
-import { studioSliceList } from "@/studio/store/slices"
+} from "@/tester/features/review-campaigns/tester.models"
+import type { LocalSessionSummary } from "@/tester/features/review-campaigns/tester.slice"
+import { testerSliceList } from "@/tester/store/slices"
 
 const studioReducer = combineReducers(
   Object.assign({}, ...studioSliceList.map((slice) => ({ [slice.name]: slice.reducer }))),
 )
 
+const testerReducer = combineReducers(
+  Object.assign({}, ...testerSliceList.map((slice) => ({ [slice.name]: slice.reducer }))),
+)
+
+const reviewerReducer = combineReducers(
+  Object.assign({}, ...reviewerSliceList.map((slice) => ({ [slice.name]: slice.reducer }))),
+)
+
 const mockRootReducer = combineReducers(
   Object.assign({}, ...rootSliceList.map((slice) => ({ [slice.name]: slice.reducer })), {
     studio: studioReducer,
+    tester: testerReducer,
+    reviewer: reviewerReducer,
   }),
 )
 
@@ -100,6 +112,8 @@ function buildMockPreloadedState({
           ? { status: ADS.Fulfilled, error: null, value: selectedReviewCampaignDetail }
           : { status: ADS.Uninitialized, error: null, value: null },
       },
+    },
+    tester: {
       reviewCampaignsTester: {
         myCampaigns: myReviewCampaigns
           ? { status: ADS.Fulfilled, error: null, value: myReviewCampaigns }

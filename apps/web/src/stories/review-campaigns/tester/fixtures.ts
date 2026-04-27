@@ -5,7 +5,7 @@ import type {
   ReviewCampaignTesterContextDto,
   TesterCampaignSurveyDto,
 } from "@caseai-connect/api-contracts"
-import type { TesterSessionSummary } from "@/studio/features/review-campaigns/tester/components/SessionCard"
+import type { TesterSessionSummary } from "@/tester/features/review-campaigns/components/SessionCard"
 
 const MS_PER_HOUR = 3_600_000
 const MS_PER_DAY = 86_400_000

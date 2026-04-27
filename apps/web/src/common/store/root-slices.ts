@@ -12,11 +12,10 @@ import { notificationsSlice } from "@/common/features/notifications/notification
 import { organizationsSlice } from "@/common/features/organizations/organizations.slice"
 import { projectsSlice } from "@/common/features/projects/projects.slice"
 import { reviewCampaignsReportsSlice } from "@/studio/features/review-campaigns/reports/reports.slice"
-import { reviewCampaignsReviewerSlice } from "@/studio/features/review-campaigns/reviewer/reviewer.slice"
-import { reviewCampaignsTesterSlice } from "@/studio/features/review-campaigns/tester/tester.slice"
 
 // Shared slices: always available in both Studio and Desk interfaces.
-// Studio-only slices are declared as lazy and injected via injectStudioSlices().
+// Tester / reviewer slices are scoped to their respective interfaces and
+// injected lazily via injectTesterSlices / injectReviewerSlices.
 
 export const rootSliceList = [
   agentSessionMessagesSlice,
@@ -32,8 +31,6 @@ export const rootSliceList = [
   organizationsSlice,
   projectsSlice,
   reviewCampaignsReportsSlice,
-  reviewCampaignsReviewerSlice,
-  reviewCampaignsTesterSlice,
 ]
 
 export const rootSlices = combineSlices(

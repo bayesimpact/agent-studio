@@ -8,11 +8,15 @@ import {
   teardownE2eTestDatabase,
 } from "@/common/test/test-database"
 import type { AllRepositories } from "@/common/test/test-transaction-manager"
+import { agentFactory } from "@/domains/agents/agent.factory"
 import {
   createOrganizationWithAgent,
   createOrganizationWithOwner,
+  createOrganizationWithProject,
 } from "@/domains/organizations/organization.factory"
 import { projectFactory } from "@/domains/projects/project.factory"
+import { reviewCampaignMembershipFactory } from "@/domains/review-campaigns/memberships/review-campaign-membership.factory"
+import { reviewCampaignFactory } from "@/domains/review-campaigns/review-campaign.factory"
 import { userFactory } from "@/domains/users/user.factory"
 import { setupUserGuardForTesting } from "../../../test/e2e.helpers"
 import { expectResponse, type Requester, testRequester } from "../../../test/request"
@@ -156,6 +160,58 @@ describe("MeController (e2e)", () => {
       expect(memberships.agentMemberships[0]).toMatchObject({
         agentId: agent.id,
         role: "owner",
+      })
+    })
+
+    it("returns review-campaign memberships with role + campaign status", async () => {
+      const { user, organization, project } = await createOrganizationWithProject(repositories)
+      const agent = agentFactory
+        .transient({ organization, project })
+        .build({ type: "conversation" })
+      await repositories.agentRepository.save(agent)
+      const activeCampaign = await repositories.reviewCampaignRepository.save(
+        reviewCampaignFactory.active().transient({ organization, project, agent }).build(),
+      )
+      const draftCampaign = await repositories.reviewCampaignRepository.save(
+        reviewCampaignFactory.transient({ organization, project, agent }).build(),
+      )
+      await repositories.reviewCampaignMembershipRepository.save(
+        reviewCampaignMembershipFactory
+          .reviewer()
+          .accepted()
+          .transient({ organization, project, campaign: activeCampaign, user })
+          .build(),
+      )
+      await repositories.reviewCampaignMembershipRepository.save(
+        reviewCampaignMembershipFactory
+          .tester()
+          .accepted()
+          .transient({ organization, project, campaign: draftCampaign, user })
+          .build(),
+      )
+      auth0Id = user.auth0Id
+
+      const response = await subject()
+      expectResponse(response, 200)
+
+      const memberships = response.body.data.user.memberships.reviewCampaignMemberships as Array<{
+        campaignId: string
+        role: "tester" | "reviewer"
+        campaignStatus: "draft" | "active" | "closed"
+        projectId: string
+      }>
+      expect(memberships).toHaveLength(2)
+      const reviewer = memberships.find((m) => m.role === "reviewer")
+      expect(reviewer).toMatchObject({
+        campaignId: activeCampaign.id,
+        projectId: project.id,
+        campaignStatus: "active",
+      })
+      const tester = memberships.find((m) => m.role === "tester")
+      expect(tester).toMatchObject({
+        campaignId: draftCampaign.id,
+        projectId: project.id,
+        campaignStatus: "draft",
       })
     })
   })

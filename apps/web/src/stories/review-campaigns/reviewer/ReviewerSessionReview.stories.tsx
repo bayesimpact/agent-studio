@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite"
 import { fn } from "storybook/test"
-import { ReviewerSessionReview } from "@/studio/features/review-campaigns/reviewer/components/ReviewerSessionReview"
+import { ReviewerSessionReview } from "@/reviewer/features/review-campaigns/components/ReviewerSessionReview"
 import {
   mockBlindFormSession,
   mockBlindSession,

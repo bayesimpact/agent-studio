@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite"
 import { fn } from "storybook/test"
-import { EndOfPhaseSurveyForm } from "@/studio/features/review-campaigns/tester/components/EndOfPhaseSurveyForm"
-import { FinishParticipatingDialog } from "@/studio/features/review-campaigns/tester/components/FinishParticipatingDialog"
+import { EndOfPhaseSurveyForm } from "@/tester/features/review-campaigns/components/EndOfPhaseSurveyForm"
+import { FinishParticipatingDialog } from "@/tester/features/review-campaigns/components/FinishParticipatingDialog"
 import { mockEndOfPhaseQuestions } from "./fixtures"
 
 const meta = {

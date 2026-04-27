@@ -7,8 +7,8 @@ import { Button } from "@caseai-connect/ui/shad/button"
 import { Field, FieldLabel } from "@caseai-connect/ui/shad/field"
 import { Textarea } from "@caseai-connect/ui/shad/textarea"
 import { useMemo, useState } from "react"
-import { DynamicQuestionField } from "../../tester/components/DynamicQuestionField"
-import { StarRatingInput } from "../../tester/components/StarRatingInput"
+import { DynamicQuestionField } from "@/tester/features/review-campaigns/components/DynamicQuestionField"
+import { StarRatingInput } from "@/tester/features/review-campaigns/components/StarRatingInput"
 
 type AnswerValue = string | number | string[] | null
 

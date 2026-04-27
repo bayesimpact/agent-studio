@@ -1,19 +1,11 @@
 import { DropdownMenuItem, DropdownMenuSeparator } from "@caseai-connect/ui/shad/dropdown-menu"
-import { ClipboardCheckIcon, ExternalLinkIcon, LogOutIcon, MegaphoneIcon } from "lucide-react"
+import { ExternalLinkIcon, LogOutIcon } from "lucide-react"
 import { useTranslation } from "react-i18next"
-import { useNavigate } from "react-router-dom"
 import { useAuthHandler } from "@/common/hooks/use-auth-handler"
-import { useMyReviewerCampaigns } from "@/studio/features/review-campaigns/reviewer/use-my-reviewer-campaigns"
-import { useMyReviewCampaigns } from "@/studio/features/review-campaigns/tester/use-my-review-campaigns"
-import { buildReviewerHomePath, buildTesterHomePath } from "@/studio/routes/helpers"
 
 export function NavUserMenuItems() {
   return (
     <>
-      <MyReviewCampaignsLink />
-
-      <MyReviewerCampaignsLink />
-
       <HelpCenter />
 
       <LanguageSelector />
@@ -22,30 +14,6 @@ export function NavUserMenuItems() {
 
       <LogOutButton />
     </>
-  )
-}
-
-function MyReviewCampaignsLink() {
-  const navigate = useNavigate()
-  const { hasCampaigns } = useMyReviewCampaigns()
-  if (!hasCampaigns) return null
-  return (
-    <DropdownMenuItem onSelect={() => navigate(buildTesterHomePath())}>
-      <MegaphoneIcon />
-      My review campaigns
-    </DropdownMenuItem>
-  )
-}
-
-function MyReviewerCampaignsLink() {
-  const navigate = useNavigate()
-  const { hasCampaigns } = useMyReviewerCampaigns()
-  if (!hasCampaigns) return null
-  return (
-    <DropdownMenuItem onSelect={() => navigate(buildReviewerHomePath())}>
-      <ClipboardCheckIcon />
-      Campaigns I'm reviewing
-    </DropdownMenuItem>
   )
 }
 

@@ -3317,6 +3317,15 @@
   },
   {
     "type": "dependency",
+    "from": "src/domains/me/me.module.ts",
+    "to": "src/domains/review-campaigns/memberships/review-campaign-membership.entity.ts",
+    "rule": {
+      "severity": "error",
+      "name": "no-cross-domain-entity-import"
+    }
+  },
+  {
+    "type": "dependency",
     "from": "src/domains/me/me.service.ts",
     "to": "src/domains/agents/memberships/agent-membership.entity.ts",
     "rule": {
@@ -3337,6 +3346,15 @@
     "type": "dependency",
     "from": "src/domains/me/me.service.ts",
     "to": "src/domains/projects/memberships/project-membership.entity.ts",
+    "rule": {
+      "severity": "error",
+      "name": "no-cross-domain-entity-import"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "src/domains/me/me.service.ts",
+    "to": "src/domains/review-campaigns/memberships/review-campaign-membership.entity.ts",
     "rule": {
       "severity": "error",
       "name": "no-cross-domain-entity-import"

@@ -7,22 +7,16 @@ import { OrganizationCreator } from "@/common/components/organization/Organizati
 import { SidebarLayout } from "@/common/components/sidebar/SidebarLayout"
 import type { Organization } from "@/common/features/organizations/organizations.models"
 import { selectOrganizationsData } from "@/common/features/organizations/organizations.selectors"
-import { ADS } from "@/common/store/async-data-status"
 import { useAppSelector } from "@/common/store/hooks"
 import { DeskRouteNames } from "@/desk/routes/helpers"
 import { EvalRouteNames } from "@/eval/routes/helpers"
+import { buildReviewerHomePath } from "@/reviewer/routes/helpers"
 import { ProjectCreatorButton } from "@/studio/features/projects/components/ProjectCreator"
-import { useMyReviewerCampaigns } from "@/studio/features/review-campaigns/reviewer/use-my-reviewer-campaigns"
-import type { MyReviewCampaign } from "@/studio/features/review-campaigns/tester/tester.models"
-import { useMyReviewCampaigns } from "@/studio/features/review-campaigns/tester/use-my-review-campaigns"
-import {
-  buildReviewerHomePath,
-  buildTesterHomePath,
-  StudioRouteNames,
-} from "@/studio/routes/helpers"
+import { StudioRouteNames } from "@/studio/routes/helpers"
+import { buildTesterHomePath } from "@/tester/routes/helpers"
 import { Wrap } from "../components/layouts/Wrap"
 import type { User } from "../features/me/me.models"
-import { selectMe } from "../features/me/me.selectors"
+import { selectMe, selectMyActiveReviewCampaignMemberships } from "../features/me/me.selectors"
 import type { Project } from "../features/projects/projects.models"
 import { useAbility } from "../hooks/use-ability"
 import { useBuildPath } from "../hooks/use-build-path"
@@ -217,10 +211,9 @@ function NavEvalButton({ organizationId, project }: { organizationId: string; pr
 }
 
 function NavTesterButton({ projectId }: { projectId: string }) {
-  const { data } = useMyReviewCampaigns()
-  const hasTesterCampaignInProject =
-    ADS.isFulfilled(data) &&
-    data.value.some((campaign: MyReviewCampaign) => campaign.projectId === projectId)
+  // Reads from /me — no extra round-trip on Onboarding.
+  const memberships = useAppSelector(selectMyActiveReviewCampaignMemberships("tester"))
+  const hasTesterCampaignInProject = memberships.some((m) => m.projectId === projectId)
 
   const handleClick = () => {
     // NOTE: do not use navigate from react-router — tester is its own route tree
@@ -236,10 +229,8 @@ function NavTesterButton({ projectId }: { projectId: string }) {
 }
 
 function NavReviewerButton({ projectId }: { projectId: string }) {
-  const { data } = useMyReviewerCampaigns()
-  const hasReviewerCampaignInProject =
-    ADS.isFulfilled(data) &&
-    data.value.some((campaign: MyReviewCampaign) => campaign.projectId === projectId)
+  const memberships = useAppSelector(selectMyActiveReviewCampaignMemberships("reviewer"))
+  const hasReviewerCampaignInProject = memberships.some((m) => m.projectId === projectId)
 
   const handleClick = () => {
     // NOTE: do not use navigate from react-router — reviewer is its own route tree

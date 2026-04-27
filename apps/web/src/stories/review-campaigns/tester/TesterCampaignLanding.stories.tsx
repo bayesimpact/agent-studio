@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite"
 import { fn } from "storybook/test"
-import { CampaignLanding } from "@/studio/features/review-campaigns/tester/components/CampaignLanding"
+import { CampaignLanding } from "@/tester/features/review-campaigns/components/CampaignLanding"
 import { mockSessions, mockTesterContext } from "./fixtures"
 
 const meta = {

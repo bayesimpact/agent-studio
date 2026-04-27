@@ -42,9 +42,9 @@ const extraItems = [
   AgentCreatorButton,
   DocumentsButton,
   MembersButton,
+  ReviewCampaignsButton,
   AnalyticsButton,
   EvaluationButton,
-  ReviewCampaignsButton,
 ]
 
 export const studioRoutes = {

@@ -10,6 +10,7 @@ import type { IProjectsSpi } from "@/common/features/projects/projects.spi"
 import type { IEvaluationExtractionDatasetsSpi } from "@/eval/features/evaluation-extraction-datasets/evaluation-extraction-datasets.spi"
 import type { IEvaluationExtractionRunsSpi } from "@/eval/features/evaluation-extraction-runs/evaluation-extraction-runs.spi"
 import { services } from "@/external/axios.services"
+import type { IReviewerSpi } from "@/reviewer/features/review-campaigns/reviewer.spi"
 import type { IAgentMembershipsSpi } from "@/studio/features/agent-memberships/agent-memberships.spi"
 import type { IAgentMessageFeedbackSpi } from "@/studio/features/agent-message-feedback/agent-message-feedback.spi"
 import type { IAgentAnalyticsSpi } from "@/studio/features/analytics/agent/agent-analytics.spi"
@@ -22,8 +23,7 @@ import type { IInvitationsSpi } from "@/studio/features/invitations/invitations.
 import type { IProjectMembershipsSpi } from "@/studio/features/project-memberships/project-memberships.spi"
 import type { IReportsSpi } from "@/studio/features/review-campaigns/reports/reports.spi"
 import type { IReviewCampaignsSpi } from "@/studio/features/review-campaigns/review-campaigns.spi"
-import type { IReviewerSpi } from "@/studio/features/review-campaigns/reviewer/reviewer.spi"
-import type { ITesterSpi } from "@/studio/features/review-campaigns/tester/tester.spi"
+import type { ITesterSpi } from "@/tester/features/review-campaigns/tester.spi"
 
 export type Services = {
   agentAnalytics: IAgentAnalyticsSpi

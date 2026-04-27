@@ -5,7 +5,7 @@ import { useEffect, useState } from "react"
 import { useNavigate, useParams } from "react-router-dom"
 import { ADS } from "@/common/store/async-data-status"
 import { useAppDispatch, useAppSelector } from "@/common/store/hooks"
-import { buildTesterSessionPath, buildTesterSurveyPath } from "@/studio/routes/helpers"
+import { buildTesterSessionPath, buildTesterSurveyPath } from "@/tester/routes/helpers"
 import {
   selectMyLocalSessions,
   selectMySurveyForCampaign,

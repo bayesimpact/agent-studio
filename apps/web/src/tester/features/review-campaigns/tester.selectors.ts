@@ -1,7 +1,7 @@
 import type { RootState } from "@/common/store"
 import { defaultAsyncData } from "@/common/store/async-data-status"
 
-const testerState = (state: RootState) => state.reviewCampaignsTester
+const testerState = (state: RootState) => state.tester.reviewCampaignsTester
 
 export const selectMyReviewCampaigns = (state: RootState) =>
   testerState(state).myCampaigns ?? defaultAsyncData

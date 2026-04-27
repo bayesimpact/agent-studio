@@ -4,6 +4,7 @@ import type { Repository } from "typeorm"
 import { AgentMembership } from "@/domains/agents/memberships/agent-membership.entity"
 import { OrganizationMembership } from "@/domains/organizations/memberships/organization-membership.entity"
 import { ProjectMembership } from "@/domains/projects/memberships/project-membership.entity"
+import { ReviewCampaignMembership } from "@/domains/review-campaigns/memberships/review-campaign-membership.entity"
 
 @Injectable()
 export class MeService {
@@ -14,14 +15,22 @@ export class MeService {
     private readonly projectMembershipRepository: Repository<ProjectMembership>,
     @InjectRepository(AgentMembership)
     private readonly agentMembershipRepository: Repository<AgentMembership>,
+    @InjectRepository(ReviewCampaignMembership)
+    private readonly reviewCampaignMembershipRepository: Repository<ReviewCampaignMembership>,
   ) {}
 
   async getUserMemberships(userId: string): Promise<{
     organizationMemberships: OrganizationMembership[]
     projectMemberships: ProjectMembership[]
     agentMemberships: AgentMembership[]
+    reviewCampaignMemberships: ReviewCampaignMembership[]
   }> {
-    const [organizationMemberships, projectMemberships, agentMemberships] = await Promise.all([
+    const [
+      organizationMemberships,
+      projectMemberships,
+      agentMemberships,
+      reviewCampaignMemberships,
+    ] = await Promise.all([
       this.organizationMembershipRepository.find({
         where: { userId },
         relations: ["organization"],
@@ -34,8 +43,17 @@ export class MeService {
         where: { userId },
         relations: ["agent"],
       }),
+      this.reviewCampaignMembershipRepository.find({
+        where: { userId },
+        relations: ["campaign"],
+      }),
     ])
 
-    return { organizationMemberships, projectMemberships, agentMemberships }
+    return {
+      organizationMemberships,
+      projectMemberships,
+      agentMemberships,
+      reviewCampaignMemberships,
+    }
   }
 }

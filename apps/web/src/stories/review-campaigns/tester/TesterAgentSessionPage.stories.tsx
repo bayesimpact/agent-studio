@@ -10,7 +10,7 @@ import {
 import type { Meta, StoryObj } from "@storybook/react-vite"
 import { withRouter } from "storybook-addon-remix-react-router"
 import type { Project } from "@/common/features/projects/projects.models"
-import { TesterAgentSessionContent } from "@/studio/features/review-campaigns/tester/components/TesterAgentSessionPage"
+import { TesterAgentSessionContent } from "@/tester/features/review-campaigns/components/TesterAgentSessionPage"
 import { withRedux } from "../../decorators/with-redux"
 import { mockPerSessionQuestions, mockTesterContext } from "./fixtures"
 import { buildMockTesterService } from "./mock-service"

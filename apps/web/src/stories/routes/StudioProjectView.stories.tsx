@@ -46,9 +46,9 @@ const extraItems = [
   AgentCreatorButton,
   DocumentsButton,
   MembersButton,
+  ReviewCampaignsButton,
   AnalyticsButton,
   EvaluationButton,
-  ReviewCampaignsButton,
 ]
 
 function StudioProjectView({ project, agents }: { project: Project; agents: Agent[] }) {

@@ -4,7 +4,7 @@ import type {
   ReviewCampaignTesterContextDto,
   TesterCampaignSurveyDto,
 } from "@caseai-connect/api-contracts"
-import type { ITesterSpi } from "@/studio/features/review-campaigns/tester/tester.spi"
+import type { ITesterSpi } from "@/tester/features/review-campaigns/tester.spi"
 import { mockMyCampaigns, mockTesterContext } from "./fixtures"
 
 const now = () => Date.now()

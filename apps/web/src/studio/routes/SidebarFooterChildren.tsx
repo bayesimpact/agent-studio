@@ -1,17 +1,27 @@
 import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@caseai-connect/ui/shad/collapsible"
+import {
   SidebarGroup,
   SidebarGroupContent,
   SidebarGroupLabel,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  SidebarMenuSub,
+  SidebarMenuSubButton,
+  SidebarMenuSubItem,
 } from "@caseai-connect/ui/shad/sidebar"
 import {
   BarChart3Icon,
+  ChevronRightIcon,
   CloudAlertIcon,
   DatabaseZapIcon,
   ListChecksIcon,
   Loader2Icon,
+  MegaphoneIcon,
   UsersIcon,
 } from "lucide-react"
 import { useTranslation } from "react-i18next"
@@ -23,9 +33,9 @@ import { useAppSelector } from "@/common/store/hooks"
 import { selectUploaderState } from "../features/documents/documents.selectors"
 import {
   buildDocumentsPath,
-  buildEvaluationPath,
   buildProjectAnalyticsPath,
   buildProjectMembershipsPath,
+  buildReviewCampaignsPath,
   StudioRouteNames,
 } from "./helpers"
 
@@ -40,20 +50,38 @@ export function SidebarFooterChildren({ project }: { project: Project }) {
 
       <SidebarGroupContent>
         <SidebarMenu>
-          <RestrictedFeature feature="evaluation">
-            <NavEvaluation organizationId={project.organizationId} projectId={project.id} />
-          </RestrictedFeature>
-
-          <NavDocuments organizationId={project.organizationId} projectId={project.id} />
-
+          <NavEvaluation organizationId={project.organizationId} projectId={project.id} />
           <RestrictedFeature feature="project-analytics">
             <NavAnalytics organizationId={project.organizationId} projectId={project.id} />
           </RestrictedFeature>
-
+          <NavDocuments organizationId={project.organizationId} projectId={project.id} />
           <NavProjectMemberships organizationId={project.organizationId} projectId={project.id} />
         </SidebarMenu>
       </SidebarGroupContent>
     </SidebarGroup>
+  )
+}
+
+function NavReviewCampaigns({
+  organizationId,
+  projectId,
+}: {
+  organizationId: string
+  projectId: string
+}) {
+  const { isRoute } = useIsRoute()
+  const isActive =
+    isRoute(StudioRouteNames.REVIEW_CAMPAIGNS) || isRoute(StudioRouteNames.REVIEW_CAMPAIGN_REPORT)
+  const path = buildReviewCampaignsPath({ organizationId, projectId })
+  return (
+    <SidebarMenuSubItem>
+      <SidebarMenuSubButton isActive={isActive} asChild>
+        <Link to={path}>
+          <MegaphoneIcon />
+          <span>Review campaigns</span>
+        </Link>
+      </SidebarMenuSubButton>
+    </SidebarMenuSubItem>
   )
 }
 
@@ -149,6 +177,12 @@ function UploaderState() {
   )
 }
 
+/**
+ * Evaluation is a foldable category. The trigger toggles open/close instead of
+ * navigating — children (currently only Review campaigns) are the destinations.
+ * Once more evaluation surfaces are linked into Studio, they'll be added here as
+ * additional `SidebarMenuSub*` entries.
+ */
 export function NavEvaluation({
   organizationId,
   projectId,
@@ -157,17 +191,22 @@ export function NavEvaluation({
   projectId: string
 }) {
   const { t } = useTranslation()
-  const { isRoute } = useIsRoute()
-  const isActive = isRoute(StudioRouteNames.EVALUATION)
-  const path = buildEvaluationPath({ organizationId, projectId })
   return (
-    <SidebarMenuItem>
-      <SidebarMenuButton isActive={isActive} asChild>
-        <Link to={path}>
-          <ListChecksIcon />
-          <span>{t("evaluation:evaluations")}</span>
-        </Link>
-      </SidebarMenuButton>
-    </SidebarMenuItem>
+    <Collapsible asChild className="group/evaluation">
+      <SidebarMenuItem>
+        <CollapsibleTrigger asChild>
+          <SidebarMenuButton>
+            <ListChecksIcon />
+            <span>{t("evaluation:evaluations")}</span>
+            <ChevronRightIcon className="ml-auto transition-transform group-data-[state=open]/evaluation:rotate-90" />
+          </SidebarMenuButton>
+        </CollapsibleTrigger>
+        <CollapsibleContent>
+          <SidebarMenuSub>
+            <NavReviewCampaigns organizationId={organizationId} projectId={projectId} />
+          </SidebarMenuSub>
+        </CollapsibleContent>
+      </SidebarMenuItem>
+    </Collapsible>
   )
 }

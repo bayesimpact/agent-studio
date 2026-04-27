@@ -16,7 +16,7 @@ import { AgentSessionMessages } from "@/common/features/agents/agent-sessions/sh
 import type { Agent } from "@/common/features/agents/agents.models"
 import { ADS } from "@/common/store/async-data-status"
 import { useAppDispatch, useAppSelector } from "@/common/store/hooks"
-import { buildTesterCampaignPath } from "@/studio/routes/helpers"
+import { buildTesterCampaignPath } from "@/tester/routes/helpers"
 import { selectTesterContext } from "../tester.selectors"
 import { reviewCampaignsTesterActions } from "../tester.slice"
 import { getTesterContext, submitTesterFeedback } from "../tester.thunks"

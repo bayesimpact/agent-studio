@@ -1,8 +1,8 @@
 import { ProtectedRoute } from "@/common/routes/ProtectedRoute"
-import { TesterAgentSessionPage } from "@/studio/features/review-campaigns/tester/components/TesterAgentSessionPage"
-import { TesterCampaignLandingPage } from "@/studio/features/review-campaigns/tester/components/TesterCampaignLandingPage"
-import { TesterEndOfPhaseSurveyPage } from "@/studio/features/review-campaigns/tester/components/TesterEndOfPhaseSurveyPage"
-import { TesterMyCampaignsPage } from "@/studio/features/review-campaigns/tester/components/TesterMyCampaignsPage"
+import { TesterAgentSessionPage } from "@/tester/features/review-campaigns/components/TesterAgentSessionPage"
+import { TesterCampaignLandingPage } from "@/tester/features/review-campaigns/components/TesterCampaignLandingPage"
+import { TesterEndOfPhaseSurveyPage } from "@/tester/features/review-campaigns/components/TesterEndOfPhaseSurveyPage"
+import { TesterMyCampaignsPage } from "@/tester/features/review-campaigns/components/TesterMyCampaignsPage"
 import { TesterRouteNames } from "./helpers"
 import { TesterShell } from "./TesterShell"
 

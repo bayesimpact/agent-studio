@@ -8,7 +8,7 @@ import { useEffect } from "react"
 import { useNavigate, useParams } from "react-router-dom"
 import { ADS } from "@/common/store/async-data-status"
 import { useAppDispatch, useAppSelector } from "@/common/store/hooks"
-import { buildTesterCampaignPath } from "@/studio/routes/helpers"
+import { buildTesterCampaignPath } from "@/tester/routes/helpers"
 import { selectMySurveyForCampaign, selectTesterContext } from "../tester.selectors"
 import { reviewCampaignsTesterActions } from "../tester.slice"
 import {

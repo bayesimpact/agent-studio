@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite"
 import { withRouter } from "storybook-addon-remix-react-router"
 import type { Project } from "@/common/features/projects/projects.models"
-import { TesterMyCampaignsPage } from "@/studio/features/review-campaigns/tester/components/TesterMyCampaignsPage"
+import { TesterMyCampaignsPage } from "@/tester/features/review-campaigns/components/TesterMyCampaignsPage"
 import { withRedux } from "../../decorators/with-redux"
 import { mockMyCampaigns } from "./fixtures"
 import { buildMockTesterService } from "./mock-service"
