@@ -35,6 +35,7 @@ This project uses [CalVer](https://calver.org/) (YY.MM.Micro) for product versio
 - Unified observability: structured logging, request tracing, error alerting, and queue health monitoring via GCP
 - Only list sessions belonging to the selected agent
 - Expand document upload dropzone to cover the entire page
+- (beta) Review campaigns: campaigns must be active before participants can be invited
 
 ### Fixed
 - Form result panel now scrolls when it has more fields than fit on screen
@@ -44,8 +45,7 @@ This project uses [CalVer](https://calver.org/) (YY.MM.Micro) for product versio
 - Show loader while currentId is being set
 - Studio mode redirect to Home when route not found
 - (beta) Review campaigns: reviewer-only members can now open the reviewer landing page
-- Make UI responsive across devices
-- Hide the sidebar toggle icon when the sidebar is unused
+- (beta) Review campaigns: participants list now refreshes immediately after inviting or revoking
 
 ### Security
 

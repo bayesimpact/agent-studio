@@ -7,6 +7,7 @@ import { buildReviewCampaignReportPath } from "@/studio/routes/helpers"
 import type { ReviewCampaignDetail } from "../review-campaigns.models"
 import {
   deleteReviewCampaign,
+  getReviewCampaignDetail,
   inviteReviewCampaignMembers,
   revokeReviewCampaignMembership,
   updateReviewCampaign,
@@ -84,17 +85,23 @@ export function UpdateCampaignForm({ campaign, agents, onSuccess, onDeleted }: P
     onDeleted?.()
   }
 
-  const handleInvite = (role: "tester" | "reviewer", emails: string[]) => {
-    dispatch(
+  const handleInvite = async (role: "tester" | "reviewer", emails: string[]) => {
+    await dispatch(
       inviteReviewCampaignMembers({
         reviewCampaignId: campaign.id,
         fields: { role, emails },
       }),
-    )
+    ).unwrap()
+    // The slice only updates `selectedDetail` from `getReviewCampaignDetail` —
+    // refetch so the Participants table reflects the new membership.
+    dispatch(getReviewCampaignDetail({ reviewCampaignId: campaign.id }))
   }
 
-  const handleRevoke = (membershipId: string) => {
-    dispatch(revokeReviewCampaignMembership({ reviewCampaignId: campaign.id, membershipId }))
+  const handleRevoke = async (membershipId: string) => {
+    await dispatch(
+      revokeReviewCampaignMembership({ reviewCampaignId: campaign.id, membershipId }),
+    ).unwrap()
+    dispatch(getReviewCampaignDetail({ reviewCampaignId: campaign.id }))
   }
 
   return (

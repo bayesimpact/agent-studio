@@ -112,4 +112,14 @@ describe("ReviewCampaigns - inviteMembers", () => {
     await seed({ closed: true })
     expectResponse(await subject({ payload: { role: "tester", emails: ["x@example.com"] } }), 409)
   })
+
+  // Inviting on draft used to be allowed, but the invitee would accept and land
+  // on an empty /tester or /reviewer (those listings filter to active campaigns).
+  // Forcing activation first keeps invitees from being sent to a dead-end UI.
+  it("refuses to invite on a draft campaign", async () => {
+    await seed({})
+    const response = await subject({ payload: { role: "tester", emails: ["x@example.com"] } })
+    expectResponse(response, 409)
+    expect(mockInvitationSender.sendInvitation).not.toHaveBeenCalled()
+  })
 })

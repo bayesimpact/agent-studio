@@ -277,8 +277,12 @@ export class ReviewCampaignsService {
     if (!campaign) {
       throw new NotFoundException(`Review campaign ${reviewCampaignId} not found`)
     }
-    if (campaign.status === "closed") {
-      throw new ConflictException("Cannot invite members to a closed campaign")
+    if (campaign.status !== "active") {
+      // Block draft (invitee would accept and land on a campaign that doesn't
+      // appear in their listings) and closed (no point).
+      throw new ConflictException(
+        `Cannot invite members to a ${campaign.status} campaign — activate it first`,
+      )
     }
 
     return this.dataSource.transaction(async (manager) => {

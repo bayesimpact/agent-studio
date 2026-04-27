@@ -254,12 +254,23 @@ export function CampaignForm({
         </TabsContent>
 
         <TabsContent value="participants" className="pt-4">
-          <ParticipantsList
-            memberships={memberships}
-            disabled={isClosed}
-            onInvite={(role, emails) => onInviteMember?.(role, emails)}
-            onRevoke={(membershipId) => onRevokeMember?.(membershipId)}
-          />
+          {mode === "create" ? (
+            <p className="text-muted-foreground text-sm italic">
+              Save the campaign first — invitations send a real email and need a persisted campaign.
+            </p>
+          ) : isDraft ? (
+            <p className="text-muted-foreground text-sm italic">
+              Activate the campaign before inviting participants — otherwise invitees would accept
+              and land on a campaign that doesn't yet appear in their list.
+            </p>
+          ) : (
+            <ParticipantsList
+              memberships={memberships}
+              disabled={isClosed}
+              onInvite={(role, emails) => onInviteMember?.(role, emails)}
+              onRevoke={(membershipId) => onRevokeMember?.(membershipId)}
+            />
+          )}
         </TabsContent>
 
         <TabsContent value="preview" className="pt-4">
