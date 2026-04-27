@@ -14,9 +14,30 @@ const DEFAULT_DOCLING_TIMEOUT_MS = 60_000
 const runCommand = promisify(execFile)
 
 export type DoclingChunk = {
+  chunk_id: string
   embed_text: string
-  // Keep other keys if the JSON schema changes; we only require embed_text.
-  [key: string]: unknown
+  text: string
+  parent_id: string | null
+  prev_chunk_id: string | null
+  next_chunk_id: string | null
+  headings: string[]
+  captions: string[]
+  metadata: Record<string, unknown>
+}
+
+export type DoclingParentChunk = {
+  chunk_id: string
+  embed_text: string
+  text: string
+  prev_chunk_id: string | null
+  next_chunk_id: string | null
+  headings: string[]
+  captions: string[]
+}
+
+export type DoclingOutput = {
+  child_chunks: DoclingChunk[]
+  parent_chunks: DoclingParentChunk[]
 }
 
 export function isDoclingEnabled(): boolean {
@@ -71,7 +92,7 @@ export async function extractTextWithDocling({
   mimeType: string
   timeoutMs?: number
   maxBuffer: number
-}): Promise<DoclingChunk[]> {
+}): Promise<DoclingOutput> {
   const extension = EXTENSION_BY_MIME_TYPE[mimeType]
   if (!extension) {
     throw new Error(`Docling does not support MIME type mapping: ${mimeType}`)
@@ -83,7 +104,7 @@ export async function extractTextWithDocling({
   try {
     const { stdout } = await runCommand(
       getDoclingNodesCommand(),
-      ["--doc-path", inputPath, "--output-stdout", "--no-all-content"],
+      ["--doc-path", inputPath, "--output-stdout"],
       {
         timeout: timeoutMs ?? getDoclingTimeoutMs(),
         maxBuffer,
@@ -96,25 +117,20 @@ export async function extractTextWithDocling({
     }
 
     const parsed: unknown = JSON.parse(stdoutTrimmed)
-    if (!Array.isArray(parsed)) {
+    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
       throw new Error(
-        `Docling nodes returned non-array JSON for MIME type ${mimeType}: ${stdoutTrimmed.slice(0, 200)}`,
+        `Docling nodes returned unexpected JSON shape for MIME type ${mimeType}: ${stdoutTrimmed.slice(0, 200)}`,
       )
     }
 
-    const chunks = parsed.map((item: unknown, index: number) => {
-      if (!item || typeof item !== "object") {
-        throw new Error(`Docling node at index ${index} is not an object`)
-      }
-      const maybeRecord = item as Record<string, unknown>
-      const embedText = maybeRecord.embed_text
-      if (typeof embedText !== "string") {
-        throw new Error(`Docling node at index ${index} missing embed_text string`)
-      }
-      return maybeRecord as DoclingChunk
-    })
+    const record = parsed as Record<string, unknown>
+    if (!Array.isArray(record.child_chunks) || !Array.isArray(record.parent_chunks)) {
+      throw new Error(
+        `Docling nodes output missing child_chunks or parent_chunks for MIME type ${mimeType}`,
+      )
+    }
 
-    return chunks
+    return parsed as DoclingOutput
   } finally {
     await unlink(inputPath).catch(() => undefined)
   }

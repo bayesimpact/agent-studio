@@ -5,7 +5,7 @@ import type { RequiredConnectScope } from "@/common/entities/connect-required-fi
 import type { DocumentChunkRetrievalService } from "@/domains/documents/embeddings/document-chunk-retrieval.service"
 import type { ToolExecutionLog } from "./tool-execution-log"
 
-export const DEFAULT_TOP_K = 20
+export const DEFAULT_TOP_K = 30
 
 const retrieveProjectDocumentChunksInputSchema = z.object({
   conversationSummary: z
@@ -34,6 +34,7 @@ const retrievedChunkSchema = z.object({
   content: z.string(),
   distance: z.number(),
   modelName: z.string(),
+  isParentChunk: z.boolean(),
 })
 
 export type RetrieveProjectDocumentChunksExecution = {
