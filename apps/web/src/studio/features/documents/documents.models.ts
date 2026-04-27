@@ -6,5 +6,6 @@ export type Document = DocumentDto
 export type DocumentEmbeddingStatusChangedEvent = {
   documentId: string
   embeddingStatus: Document["embeddingStatus"]
+  embeddingError: Document["embeddingError"]
   updatedAt: number
 }

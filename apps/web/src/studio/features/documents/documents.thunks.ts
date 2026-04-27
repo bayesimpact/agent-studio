@@ -149,7 +149,7 @@ export const streamDocumentEmbeddingStatuses = createAsyncThunk<void, void, Thun
       organizationId,
       projectId,
       signal,
-      onStatusChanged: ({ documentId, embeddingStatus, updatedAt }) => {
+      onStatusChanged: ({ documentId, embeddingStatus, embeddingError, updatedAt }) => {
         const state = getState().studio
         if (
           shouldTriggerResyncForUnknownDocumentEvent({
@@ -178,6 +178,7 @@ export const streamDocumentEmbeddingStatuses = createAsyncThunk<void, void, Thun
           documentsActions.patchDocumentEmbeddingStatus({
             documentId,
             embeddingStatus,
+            embeddingError,
             updatedAt,
           }),
         )

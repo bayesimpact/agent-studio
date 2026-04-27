@@ -20,6 +20,7 @@ const documentEmbeddingSSEConfig: SSEStreamConfig<
   fromDto: (dto) => ({
     documentId: dto.documentId,
     embeddingStatus: dto.embeddingStatus,
+    embeddingError: dto.embeddingError ?? null,
     updatedAt: dto.updatedAt,
   }),
 }

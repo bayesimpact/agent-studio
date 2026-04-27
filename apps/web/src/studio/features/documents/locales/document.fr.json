@@ -13,6 +13,7 @@
       "language": "Langue",
       "mimeType": "Type MIME",
       "embeddingStatus": "Statut des embeddings",
+      "embeddingError": "Erreur des embeddings",
       "embeddingStatuses": {
         "pending": "En attente",
         "processing": "En cours",
