@@ -2107,7 +2107,11 @@
         "dependencyTypes": ["local", "import"]
       },
       {
-        "name": "src/domains/agents/agent.entity.ts",
+        "name": "src/domains/agents/conversation-agent-sessions/conversation-agent-session-category.entity.ts",
+        "dependencyTypes": ["local", "import"]
+      },
+      {
+        "name": "src/domains/agents/categories/agent-category.entity.ts",
         "dependencyTypes": [
           "aliased",
           "aliased-tsconfig",
@@ -2115,6 +2119,10 @@
           "local",
           "import"
         ]
+      },
+      {
+        "name": "src/domains/agents/agent.entity.ts",
+        "dependencyTypes": ["local", "import"]
       },
       {
         "name": "src/domains/documents/tags/document-tag.entity.ts",
