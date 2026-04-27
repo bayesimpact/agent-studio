@@ -21,7 +21,7 @@ import time
 from pathlib import Path
 from typing import Any
 
-from llama_index.core.schema import MetadataMode
+from llama_index.core.schema import MetadataMode, TextNode
 
 
 def _resolve_docling_sdk_version() -> str:
@@ -165,6 +165,44 @@ def _collect_runtime_info() -> dict[str, Any]:
     return runtime_info
 
 
+def _build_markdown_fallback_nodes(documents: list[Any]) -> list[Any]:
+    """
+    Some Docling documents, notably image-only inputs whose OCR result is a
+    single section header, are valid Docling documents but produce no chunks
+    through DoclingNodeParser's default HierarchicalChunker. Preserve the
+    extracted text by falling back to Docling's markdown export.
+    """
+    from docling_core.types.doc import DoclingDocument
+
+    fallback_nodes: list[Any] = []
+
+    for document_index, document in enumerate(documents):
+        document_content = (
+            document.get_content() if hasattr(document, "get_content") else document.text
+        )
+        docling_document = DoclingDocument.model_validate_json(document_content)
+        markdown_text = docling_document.export_to_markdown(image_placeholder="").strip()
+
+        if not markdown_text:
+            continue
+
+        metadata = {
+            "docling_parse_mode": "markdown_fallback",
+            "docling_document_index": document_index,
+        }
+        excluded_metadata_keys = list(metadata.keys())
+        fallback_nodes.append(
+            TextNode(
+                text=markdown_text,
+                metadata=metadata,
+                excluded_embed_metadata_keys=excluded_metadata_keys,
+                excluded_llm_metadata_keys=excluded_metadata_keys,
+            )
+        )
+
+    return fallback_nodes
+
+
 def main() -> int:
     arguments = parse_arguments()
 
@@ -202,6 +240,8 @@ def main() -> int:
         started_at = time.perf_counter()
         documents = docling_reader.load_data(file_path=str(doc_path))
         nodes = docling_node_parser.get_nodes_from_documents(documents=documents)
+        if not nodes:
+            nodes = _build_markdown_fallback_nodes(documents=documents)
         elapsed_ms = int((time.perf_counter() - started_at) * 1000)
     except Exception as error:  # noqa: BLE001
         print(
