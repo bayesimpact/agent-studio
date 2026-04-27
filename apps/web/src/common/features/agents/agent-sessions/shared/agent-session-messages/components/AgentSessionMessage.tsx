@@ -91,7 +91,7 @@ function CopyToClipboard({ content }: { content: string }) {
       disabled={isCopied}
       onClick={() => void copy(content)}
     >
-      <CopyIcon className="size-4" />
+      <CopyIcon className="size-3.5" />
     </Button>
   )
 }

@@ -31,7 +31,7 @@ export function FeedbackCreator({ message }: { message: AgentSessionMessage }) {
     <Dialog modal open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button variant="ghost" size="sm" className="text-muted-foreground">
-          <ThumbsUpIcon /> <ThumbsDownIcon />
+          <ThumbsUpIcon className="size-3.5" /> <ThumbsDownIcon className="size-3.5" />
         </Button>
       </DialogTrigger>
       <DialogContent>
