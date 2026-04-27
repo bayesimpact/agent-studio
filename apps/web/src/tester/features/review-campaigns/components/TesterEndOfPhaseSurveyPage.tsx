@@ -1,10 +1,9 @@
-"use client"
-
 import type {
   SubmitTesterCampaignSurveyRequestDto,
   UpdateTesterCampaignSurveyRequestDto,
 } from "@caseai-connect/api-contracts"
 import { useEffect } from "react"
+import { useTranslation } from "react-i18next"
 import { useNavigate, useParams } from "react-router-dom"
 import { ADS } from "@/common/store/async-data-status"
 import { useAppDispatch, useAppSelector } from "@/common/store/hooks"
@@ -28,6 +27,7 @@ type Params = {
 export function TesterEndOfPhaseSurveyPage() {
   const dispatch = useAppDispatch()
   const navigate = useNavigate()
+  const { t } = useTranslation()
   const params = useParams<Params>()
   const contextState = useAppSelector(selectTesterContext)
   const existingSurvey = useAppSelector(selectMySurveyForCampaign(params.reviewCampaignId ?? ""))
@@ -94,7 +94,9 @@ export function TesterEndOfPhaseSurveyPage() {
   }
 
   if (ADS.isLoading(contextState)) {
-    return <p className="p-6 text-muted-foreground text-sm">Loading…</p>
+    return (
+      <p className="p-6 text-muted-foreground text-sm">{t("testerCampaigns:common.loading")}</p>
+    )
   }
   if (ADS.isError(contextState)) {
     return <p className="p-6 text-destructive text-sm">{contextState.error}</p>
@@ -115,7 +117,11 @@ export function TesterEndOfPhaseSurveyPage() {
       }
       onSubmit={handleSubmit}
       onCancel={backToLanding}
-      submitLabel={existingSurvey ? "Save changes" : "Submit survey"}
+      submitLabel={
+        existingSurvey
+          ? t("testerCampaigns:endOfPhaseForm.saveChanges")
+          : t("testerCampaigns:endOfPhaseForm.submit")
+      }
     />
   )
 }

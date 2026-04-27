@@ -12,6 +12,7 @@ import {
   CardTitle,
 } from "@caseai-connect/ui/shad/card"
 import { BarChartIcon } from "lucide-react"
+import { useTranslation } from "react-i18next"
 import { ReviewerSessionsTable } from "./ReviewerSessionsTable"
 
 type Props = {
@@ -27,16 +28,17 @@ type Props = {
   onOpenReport?: () => void
 }
 
-const AGENT_TYPE_LABEL: Record<ReviewCampaignTesterContextDto["agent"]["type"], string> = {
-  conversation: "Conversation agent",
-  extraction: "Extraction agent",
-  form: "Form agent",
-}
-
 export function ReviewerCampaignLanding({ context, sessions, onOpenSession, onOpenReport }: Props) {
+  const { t } = useTranslation()
   const pendingCount = sessions.filter(
     (session) => !session.callerHasReviewed && !session.callerIsSessionOwner,
   ).length
+
+  const agentTypeLabel: Record<ReviewCampaignTesterContextDto["agent"]["type"], string> = {
+    conversation: t("reviewerCampaigns:landing.agentType.conversation"),
+    extraction: t("reviewerCampaigns:landing.agentType.extraction"),
+    form: t("reviewerCampaigns:landing.agentType.form"),
+  }
 
   return (
     <div className="flex flex-col gap-6 p-6">
@@ -47,7 +49,7 @@ export function ReviewerCampaignLanding({ context, sessions, onOpenSession, onOp
         </div>
         {onOpenReport && (
           <Button variant="outline" size="sm" onClick={onOpenReport}>
-            <BarChartIcon /> Campaign report
+            <BarChartIcon /> {t("reviewerCampaigns:landing.campaignReport")}
           </Button>
         )}
       </header>
@@ -57,7 +59,7 @@ export function ReviewerCampaignLanding({ context, sessions, onOpenSession, onOp
           <div className="flex flex-col gap-1">
             <CardTitle>{context.agent.name}</CardTitle>
             <CardDescription>
-              <Badge variant="outline">{AGENT_TYPE_LABEL[context.agent.type]}</Badge>
+              <Badge variant="outline">{agentTypeLabel[context.agent.type]}</Badge>
             </CardDescription>
           </div>
         </CardHeader>
@@ -72,9 +74,14 @@ export function ReviewerCampaignLanding({ context, sessions, onOpenSession, onOp
 
       <section className="flex flex-col gap-3">
         <header className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold">Sessions to review</h2>
+          <h2 className="text-lg font-semibold">
+            {t("reviewerCampaigns:landing.sessionsHeading")}
+          </h2>
           <span className="text-muted-foreground text-sm">
-            {sessions.length} total{pendingCount > 0 ? ` · ${pendingCount} pending` : ""}
+            {t("reviewerCampaigns:landing.sessionsCount", { count: sessions.length })}
+            {pendingCount > 0
+              ? t("reviewerCampaigns:landing.pendingSuffix", { count: pendingCount })
+              : ""}
           </span>
         </header>
         <ReviewerSessionsTable sessions={sessions} onOpen={onOpenSession} />

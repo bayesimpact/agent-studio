@@ -5,6 +5,7 @@ import type {
   UpdateReviewerSessionReviewRequestDto,
 } from "@caseai-connect/api-contracts"
 import { useEffect } from "react"
+import { useTranslation } from "react-i18next"
 import { useNavigate, useParams } from "react-router-dom"
 import { ADS } from "@/common/store/async-data-status"
 import { useAppDispatch, useAppSelector } from "@/common/store/hooks"
@@ -21,6 +22,7 @@ type Params = {
 }
 
 export function ReviewerSessionReviewPage() {
+  const { t } = useTranslation()
   const dispatch = useAppDispatch()
   const navigate = useNavigate()
   const params = useParams<Params>()
@@ -121,10 +123,14 @@ export function ReviewerSessionReviewPage() {
           )
         }}
       >
-        ← Back to campaign
+        {t("reviewerCampaigns:sessionPage.back")}
       </button>
 
-      {ADS.isLoading(detailState) && <p className="text-muted-foreground text-sm">Loading…</p>}
+      {ADS.isLoading(detailState) && (
+        <p className="text-muted-foreground text-sm">
+          {t("reviewerCampaigns:sessionPage.loading")}
+        </p>
+      )}
       {ADS.isError(detailState) && <p className="text-destructive text-sm">{detailState.error}</p>}
       {ADS.isFulfilled(detailState) && (
         <ReviewerSessionReview

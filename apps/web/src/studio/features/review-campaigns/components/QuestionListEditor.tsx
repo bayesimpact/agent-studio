@@ -14,12 +14,9 @@ import {
 } from "@caseai-connect/ui/shad/select"
 import { Switch } from "@caseai-connect/ui/shad/switch"
 import { ArrowDownIcon, ArrowUpIcon, PlusIcon, Trash2Icon } from "lucide-react"
+import { useTranslation } from "react-i18next"
 
-const QUESTION_TYPE_LABELS: Record<ReviewCampaignQuestionType, string> = {
-  rating: "Rating (1–5)",
-  "single-choice": "Single choice",
-  "free-text": "Free text",
-}
+const QUESTION_TYPES: ReviewCampaignQuestionType[] = ["rating", "single-choice", "free-text"]
 
 type Props = {
   label: string
@@ -52,6 +49,8 @@ export function QuestionListEditor({
   disabled = false,
   showFactualToggle = false,
 }: Props) {
+  const { t } = useTranslation()
+
   const update = (index: number, patch: Partial<ReviewCampaignQuestionDto>) => {
     onChange(
       questions.map((question, currentIndex) =>
@@ -86,7 +85,9 @@ export function QuestionListEditor({
       </header>
 
       {questions.length === 0 && (
-        <p className="text-muted-foreground text-sm italic">No questions yet.</p>
+        <p className="text-muted-foreground text-sm italic">
+          {t("reviewCampaigns:questions.empty")}
+        </p>
       )}
 
       <ol className="flex flex-col gap-3">
@@ -98,18 +99,22 @@ export function QuestionListEditor({
           >
             <div className="flex flex-col gap-3 md:flex-row md:items-start">
               <Field className="md:flex-1">
-                <FieldLabel htmlFor={`prompt-${question.id}`}>Prompt</FieldLabel>
+                <FieldLabel htmlFor={`prompt-${question.id}`}>
+                  {t("reviewCampaigns:questions.prompt")}
+                </FieldLabel>
                 <Input
                   id={`prompt-${question.id}`}
                   value={question.prompt}
                   disabled={disabled}
                   onChange={(event) => update(index, { prompt: event.target.value })}
-                  placeholder="e.g. Was the response clear?"
+                  placeholder={t("reviewCampaigns:questions.promptPlaceholder")}
                 />
               </Field>
 
               <Field className="md:w-48">
-                <FieldLabel htmlFor={`type-${question.id}`}>Type</FieldLabel>
+                <FieldLabel htmlFor={`type-${question.id}`}>
+                  {t("reviewCampaigns:questions.type")}
+                </FieldLabel>
                 <Select
                   value={question.type}
                   disabled={disabled}
@@ -121,13 +126,11 @@ export function QuestionListEditor({
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    {(Object.keys(QUESTION_TYPE_LABELS) as ReviewCampaignQuestionType[]).map(
-                      (type) => (
-                        <SelectItem key={type} value={type}>
-                          {QUESTION_TYPE_LABELS[type]}
-                        </SelectItem>
-                      ),
-                    )}
+                    {QUESTION_TYPES.map((type) => (
+                      <SelectItem key={type} value={type}>
+                        {t(`reviewCampaigns:questions.types.${type}`)}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </Field>
@@ -135,12 +138,14 @@ export function QuestionListEditor({
 
             {question.type === "single-choice" && (
               <Field>
-                <FieldLabel htmlFor={`options-${question.id}`}>Options (one per line)</FieldLabel>
+                <FieldLabel htmlFor={`options-${question.id}`}>
+                  {t("reviewCampaigns:questions.options")}
+                </FieldLabel>
                 <Input
                   id={`options-${question.id}`}
                   value={(question.options ?? []).join(", ")}
                   disabled={disabled}
-                  placeholder="Yes, No, Not sure"
+                  placeholder={t("reviewCampaigns:questions.optionsPlaceholder")}
                   onChange={(event) =>
                     update(index, {
                       options: event.target.value
@@ -163,7 +168,7 @@ export function QuestionListEditor({
                     onCheckedChange={(checked) => update(index, { required: checked })}
                   />
                   <label htmlFor={`required-${question.id}`} className="text-sm">
-                    Required
+                    {t("reviewCampaigns:questions.required")}
                   </label>
                 </div>
                 {showFactualToggle && question.type !== "free-text" && (
@@ -175,13 +180,13 @@ export function QuestionListEditor({
                       onCheckedChange={(checked) => update(index, { isFactual: checked })}
                     />
                     <label htmlFor={`factual-${question.id}`} className="text-sm">
-                      Factual
+                      {t("reviewCampaigns:questions.factual")}
                     </label>
                     <span
                       className="text-muted-foreground text-xs"
-                      title="Factual questions (what happened in the session) stay visible to reviewers during blind review. Opinion questions are hidden until the reviewer submits their own review."
+                      title={t("reviewCampaigns:questions.factualTooltip")}
                     >
-                      (visible to reviewers during blind)
+                      {t("reviewCampaigns:questions.factualHint")}
                     </span>
                   </div>
                 )}
@@ -194,7 +199,7 @@ export function QuestionListEditor({
                   size="icon-sm"
                   disabled={disabled || index === 0}
                   onClick={() => move(index, -1)}
-                  aria-label="Move up"
+                  aria-label={t("reviewCampaigns:questions.moveUp")}
                 >
                   <ArrowUpIcon />
                 </Button>
@@ -204,7 +209,7 @@ export function QuestionListEditor({
                   size="icon-sm"
                   disabled={disabled || index === questions.length - 1}
                   onClick={() => move(index, 1)}
-                  aria-label="Move down"
+                  aria-label={t("reviewCampaigns:questions.moveDown")}
                 >
                   <ArrowDownIcon />
                 </Button>
@@ -214,7 +219,7 @@ export function QuestionListEditor({
                   size="icon-sm"
                   disabled={disabled}
                   onClick={() => remove(index)}
-                  aria-label="Remove question"
+                  aria-label={t("reviewCampaigns:questions.remove")}
                 >
                   <Trash2Icon />
                 </Button>
@@ -232,7 +237,7 @@ export function QuestionListEditor({
         onClick={add}
         className="self-start"
       >
-        <PlusIcon /> Add question
+        <PlusIcon /> {t("reviewCampaigns:questions.add")}
       </Button>
     </section>
   )

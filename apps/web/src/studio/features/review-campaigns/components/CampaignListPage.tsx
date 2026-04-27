@@ -3,6 +3,7 @@
 import { Button } from "@caseai-connect/ui/shad/button"
 import { PlusIcon } from "lucide-react"
 import { useEffect, useMemo, useState } from "react"
+import { useTranslation } from "react-i18next"
 import { selectAgentsData } from "@/common/features/agents/agents.selectors"
 import { ADS } from "@/common/store/async-data-status"
 import { useAppDispatch, useAppSelector } from "@/common/store/hooks"
@@ -17,6 +18,7 @@ type EditorState =
   | null
 
 export function CampaignListPage() {
+  const { t } = useTranslation()
   const dispatch = useAppDispatch()
   const campaignsData = useAppSelector(selectReviewCampaignsData)
   const agentsData = useAppSelector(selectAgentsData)
@@ -40,17 +42,17 @@ export function CampaignListPage() {
     <div className="flex flex-col gap-4 p-6">
       <header className="flex items-center justify-between gap-4">
         <div className="flex flex-col gap-1">
-          <h1 className="text-2xl font-semibold">Review campaigns</h1>
-          <p className="text-muted-foreground text-sm">
-            Evaluate agents with invited testers and reviewers.
-          </p>
+          <h1 className="text-2xl font-semibold">{t("reviewCampaigns:title")}</h1>
+          <p className="text-muted-foreground text-sm">{t("reviewCampaigns:subtitle")}</p>
         </div>
         <Button onClick={() => setEditor({ mode: "create" })}>
-          <PlusIcon /> New campaign
+          <PlusIcon /> {t("reviewCampaigns:new")}
         </Button>
       </header>
 
-      {ADS.isLoading(campaignsData) && <p className="text-muted-foreground text-sm">Loading…</p>}
+      {ADS.isLoading(campaignsData) && (
+        <p className="text-muted-foreground text-sm">{t("reviewCampaigns:loading")}</p>
+      )}
       {ADS.isError(campaignsData) && (
         <p className="text-destructive text-sm">{campaignsData.error}</p>
       )}

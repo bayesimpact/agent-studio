@@ -1,5 +1,6 @@
 import type { ReviewerFormResultDto } from "@caseai-connect/api-contracts"
 import { Badge } from "@caseai-connect/ui/shad/badge"
+import { useTranslation } from "react-i18next"
 
 type Props = {
   result: ReviewerFormResultDto
@@ -21,15 +22,16 @@ type SchemaProperty = {
  *    user abandoned mid-session.
  */
 export function FormResultPanel({ result }: Props) {
+  const { t } = useTranslation()
   const properties = extractProperties(result.schema)
   const keys = Object.keys(properties)
 
   if (keys.length === 0) {
     return (
       <section className="flex flex-col gap-2 rounded-lg border bg-card p-4">
-        <h3 className="text-sm font-semibold">Captured form</h3>
+        <h3 className="text-sm font-semibold">{t("reviewerCampaigns:formResult.title")}</h3>
         <p className="text-muted-foreground text-sm italic">
-          This form agent has no fields configured on its output schema.
+          {t("reviewerCampaigns:formResult.noFields")}
         </p>
       </section>
     )
@@ -38,10 +40,10 @@ export function FormResultPanel({ result }: Props) {
   return (
     <section className="flex flex-col gap-3 rounded-lg border bg-card p-4">
       <header>
-        <h3 className="text-sm font-semibold">Captured form</h3>
+        <h3 className="text-sm font-semibold">{t("reviewerCampaigns:formResult.title")}</h3>
         {result.value === null && (
           <p className="text-muted-foreground text-xs">
-            The tester abandoned before a final value was produced.
+            {t("reviewerCampaigns:formResult.abandoned")}
           </p>
         )}
       </header>
@@ -60,7 +62,9 @@ export function FormResultPanel({ result }: Props) {
                   </Badge>
                 )}
               </dt>
-              <dd>{renderValue(captured)}</dd>
+              <dd>
+                <RenderedValue value={captured} />
+              </dd>
             </div>
           )
         })}
@@ -89,9 +93,14 @@ function extractProperties(schema: Record<string, unknown>): Record<string, Sche
   return Object.fromEntries(entries)
 }
 
-function renderValue(value: unknown): React.ReactNode {
+function RenderedValue({ value }: { value: unknown }) {
+  const { t } = useTranslation()
   if (value === undefined || value === null || value === "") {
-    return <span className="text-muted-foreground text-sm italic">Not collected</span>
+    return (
+      <span className="text-muted-foreground text-sm italic">
+        {t("reviewerCampaigns:formResult.notCollected")}
+      </span>
+    )
   }
   if (Array.isArray(value)) {
     return <span className="font-mono text-sm">{value.join(", ")}</span>

@@ -1,7 +1,6 @@
-"use client"
-
 import type { SubmitTesterSessionFeedbackRequestDto } from "@caseai-connect/api-contracts"
 import { useEffect, useState } from "react"
+import { useTranslation } from "react-i18next"
 import { useNavigate, useParams } from "react-router-dom"
 import { ADS } from "@/common/store/async-data-status"
 import { useAppDispatch, useAppSelector } from "@/common/store/hooks"
@@ -33,6 +32,7 @@ type Params = {
 export function TesterCampaignLandingPage() {
   const dispatch = useAppDispatch()
   const navigate = useNavigate()
+  const { t } = useTranslation()
   const params = useParams<Params>()
 
   const contextState = useAppSelector(selectTesterContext)
@@ -74,7 +74,9 @@ export function TesterCampaignLandingPage() {
   if (!params.organizationId || !params.projectId || !params.reviewCampaignId) return null
 
   if (ADS.isLoading(contextState)) {
-    return <p className="p-6 text-muted-foreground text-sm">Loading…</p>
+    return (
+      <p className="p-6 text-muted-foreground text-sm">{t("testerCampaigns:common.loading")}</p>
+    )
   }
   if (ADS.isError(contextState)) {
     return <p className="p-6 text-destructive text-sm">{contextState.error}</p>

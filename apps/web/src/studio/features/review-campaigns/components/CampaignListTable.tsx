@@ -16,6 +16,7 @@ import {
   TableRow,
 } from "@caseai-connect/ui/shad/table"
 import { MegaphoneIcon, PencilIcon, Trash2Icon } from "lucide-react"
+import { useTranslation } from "react-i18next"
 import { CampaignStatusBadge } from "./CampaignStatusBadge"
 
 type Props = {
@@ -40,6 +41,8 @@ export function CampaignListTable({
   onDelete,
   onCreate,
 }: Props) {
+  const { t } = useTranslation()
+
   if (campaigns.length === 0) {
     return (
       <Empty>
@@ -47,12 +50,10 @@ export function CampaignListTable({
           <EmptyMedia variant="icon">
             <MegaphoneIcon />
           </EmptyMedia>
-          <EmptyTitle>No review campaigns yet</EmptyTitle>
-          <EmptyDescription>
-            Create a campaign to invite testers and reviewers to evaluate an agent.
-          </EmptyDescription>
+          <EmptyTitle>{t("reviewCampaigns:empty.title")}</EmptyTitle>
+          <EmptyDescription>{t("reviewCampaigns:empty.description")}</EmptyDescription>
         </EmptyHeader>
-        {onCreate && <Button onClick={onCreate}>New campaign</Button>}
+        {onCreate && <Button onClick={onCreate}>{t("reviewCampaigns:new")}</Button>}
       </Empty>
     )
   }
@@ -61,12 +62,12 @@ export function CampaignListTable({
     <Table>
       <TableHeader>
         <TableRow>
-          <TableHead>Name</TableHead>
-          <TableHead>Status</TableHead>
-          <TableHead>Members</TableHead>
-          <TableHead>Created</TableHead>
-          <TableHead>Updated</TableHead>
-          <TableHead className="text-right">Actions</TableHead>
+          <TableHead>{t("reviewCampaigns:table.name")}</TableHead>
+          <TableHead>{t("reviewCampaigns:table.status")}</TableHead>
+          <TableHead>{t("reviewCampaigns:table.members")}</TableHead>
+          <TableHead>{t("reviewCampaigns:table.created")}</TableHead>
+          <TableHead>{t("reviewCampaigns:table.updated")}</TableHead>
+          <TableHead className="text-right">{t("reviewCampaigns:table.actions")}</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
@@ -87,7 +88,7 @@ export function CampaignListTable({
                     variant="ghost"
                     size="icon-sm"
                     onClick={() => onEdit(campaign.id)}
-                    aria-label={`Edit ${campaign.name}`}
+                    aria-label={t("reviewCampaigns:table.editAria", { name: campaign.name })}
                   >
                     <PencilIcon />
                   </Button>
@@ -96,7 +97,7 @@ export function CampaignListTable({
                       variant="ghost"
                       size="icon-sm"
                       onClick={() => onDelete(campaign.id)}
-                      aria-label={`Delete ${campaign.name}`}
+                      aria-label={t("reviewCampaigns:table.deleteAria", { name: campaign.name })}
                     >
                       <Trash2Icon />
                     </Button>

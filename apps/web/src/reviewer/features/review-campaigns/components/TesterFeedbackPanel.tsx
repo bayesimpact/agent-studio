@@ -3,6 +3,7 @@ import type {
   ReviewCampaignTesterFeedbackAnswerDto,
 } from "@caseai-connect/api-contracts"
 import { StarIcon } from "lucide-react"
+import { useTranslation } from "react-i18next"
 import { AnswerList } from "./AnswerList"
 
 type Props = {
@@ -15,12 +16,13 @@ type Props = {
 }
 
 export function TesterFeedbackPanel({ questions, feedback }: Props) {
+  const { t } = useTranslation()
   if (!feedback) {
     return (
       <section className="flex flex-col gap-2 rounded-lg border bg-card p-4">
-        <h3 className="text-sm font-semibold">Tester feedback</h3>
+        <h3 className="text-sm font-semibold">{t("reviewerCampaigns:testerFeedback.title")}</h3>
         <p className="text-muted-foreground text-sm italic">
-          The tester did not submit feedback for this session.
+          {t("reviewerCampaigns:testerFeedback.empty")}
         </p>
       </section>
     )
@@ -28,14 +30,18 @@ export function TesterFeedbackPanel({ questions, feedback }: Props) {
   return (
     <section className="flex flex-col gap-3 rounded-lg border bg-card p-4">
       <header>
-        <h3 className="text-sm font-semibold">Tester feedback</h3>
+        <h3 className="text-sm font-semibold">{t("reviewerCampaigns:testerFeedback.title")}</h3>
       </header>
       <div className="flex flex-col gap-1">
-        <span className="text-muted-foreground text-xs">Overall rating</span>
+        <span className="text-muted-foreground text-xs">
+          {t("reviewerCampaigns:testerFeedback.overallRating")}
+        </span>
         <span
           role="img"
           className="flex items-center gap-1"
-          aria-label={`Tester rated ${feedback.overallRating} out of 5`}
+          aria-label={t("reviewerCampaigns:testerFeedback.ratingAriaLabel", {
+            rating: feedback.overallRating,
+          })}
         >
           {Array.from({ length: 5 }).map((_, index) => (
             <StarIcon
@@ -53,13 +59,17 @@ export function TesterFeedbackPanel({ questions, feedback }: Props) {
       </div>
       {feedback.comment && (
         <div className="flex flex-col gap-1">
-          <span className="text-muted-foreground text-xs">Comment</span>
+          <span className="text-muted-foreground text-xs">
+            {t("reviewerCampaigns:testerFeedback.comment")}
+          </span>
           <p className="text-sm">{feedback.comment}</p>
         </div>
       )}
       {questions.length > 0 && (
         <div className="flex flex-col gap-2">
-          <span className="text-muted-foreground text-xs">Per-session answers</span>
+          <span className="text-muted-foreground text-xs">
+            {t("reviewerCampaigns:testerFeedback.perSessionAnswers")}
+          </span>
           <AnswerList questions={questions} answers={feedback.answers} />
         </div>
       )}

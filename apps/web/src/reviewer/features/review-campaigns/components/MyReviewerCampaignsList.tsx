@@ -16,6 +16,7 @@ import {
   EmptyTitle,
 } from "@caseai-connect/ui/shad/empty"
 import { ClipboardCheckIcon } from "lucide-react"
+import { useTranslation } from "react-i18next"
 
 type Campaign = ListMyReviewCampaignsResponseDto["reviewCampaigns"][number]
 
@@ -25,6 +26,7 @@ type Props = {
 }
 
 export function MyReviewerCampaignsList({ campaigns, onOpen }: Props) {
+  const { t } = useTranslation()
   if (campaigns.length === 0) {
     return (
       <Empty>
@@ -32,9 +34,9 @@ export function MyReviewerCampaignsList({ campaigns, onOpen }: Props) {
           <EmptyMedia variant="icon">
             <ClipboardCheckIcon />
           </EmptyMedia>
-          <EmptyTitle>No review campaigns yet</EmptyTitle>
+          <EmptyTitle>{t("reviewerCampaigns:myCampaigns.empty.title")}</EmptyTitle>
           <EmptyDescription>
-            When you're invited to review an agent, the campaign will appear here.
+            {t("reviewerCampaigns:myCampaigns.empty.description")}
           </EmptyDescription>
         </EmptyHeader>
       </Empty>
@@ -49,10 +51,12 @@ export function MyReviewerCampaignsList({ campaigns, onOpen }: Props) {
             {campaign.description && <CardDescription>{campaign.description}</CardDescription>}
           </CardHeader>
           <CardContent className="text-muted-foreground text-sm flex-1">
-            Review tester sessions and submit your own rating.
+            {t("reviewerCampaigns:myCampaigns.card.description")}
           </CardContent>
           <CardFooter className="justify-end">
-            <Button onClick={() => onOpen(campaign)}>Open</Button>
+            <Button onClick={() => onOpen(campaign)}>
+              {t("reviewerCampaigns:myCampaigns.card.open")}
+            </Button>
           </CardFooter>
         </Card>
       ))}

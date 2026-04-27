@@ -7,6 +7,7 @@ import { Button } from "@caseai-connect/ui/shad/button"
 import { Field, FieldLabel } from "@caseai-connect/ui/shad/field"
 import { Textarea } from "@caseai-connect/ui/shad/textarea"
 import { useMemo, useState } from "react"
+import { useTranslation } from "react-i18next"
 import { DynamicQuestionField } from "./DynamicQuestionField"
 import { StarRatingInput } from "./StarRatingInput"
 
@@ -31,8 +32,9 @@ export function EndOfPhaseSurveyForm({
   defaults,
   onSubmit,
   onCancel,
-  submitLabel = "Submit survey",
+  submitLabel,
 }: Props) {
+  const { t } = useTranslation()
   const [overallRating, setOverallRating] = useState<number | null>(defaults?.overallRating ?? null)
   const [comment, setComment] = useState(defaults?.comment ?? "")
   const [answers, setAnswers] = useState<Record<string, AnswerValue>>(() =>
@@ -71,31 +73,34 @@ export function EndOfPhaseSurveyForm({
       }}
     >
       <header className="flex flex-col gap-1">
-        <h1 className="text-2xl font-semibold">End-of-phase survey</h1>
+        <h1 className="text-2xl font-semibold">{t("testerCampaigns:endOfPhaseForm.title")}</h1>
         <p className="text-muted-foreground text-sm">
-          Share your overall experience so the team can evaluate this agent.
+          {t("testerCampaigns:endOfPhaseForm.description")}
         </p>
       </header>
 
       <Field>
         <FieldLabel>
-          Overall rating <span className="text-destructive ml-1">*</span>
+          {t("testerCampaigns:endOfPhaseForm.overallRating")}{" "}
+          <span className="text-destructive ml-1">*</span>
         </FieldLabel>
         <StarRatingInput
           value={overallRating}
           onChange={setOverallRating}
-          aria-label="Overall rating"
+          aria-label={t("testerCampaigns:endOfPhaseForm.overallRatingAriaLabel")}
         />
       </Field>
 
       <Field>
-        <FieldLabel htmlFor="survey-comment">Comment</FieldLabel>
+        <FieldLabel htmlFor="survey-comment">
+          {t("testerCampaigns:endOfPhaseForm.comment")}
+        </FieldLabel>
         <Textarea
           id="survey-comment"
           rows={4}
           value={comment}
           onChange={(event) => setComment(event.target.value)}
-          placeholder="What went well? What could be better?"
+          placeholder={t("testerCampaigns:endOfPhaseForm.commentPlaceholder")}
         />
       </Field>
 
@@ -111,11 +116,11 @@ export function EndOfPhaseSurveyForm({
       <div className="flex items-center justify-end gap-2">
         {onCancel && (
           <Button type="button" variant="ghost" onClick={onCancel}>
-            Cancel
+            {t("testerCampaigns:endOfPhaseForm.cancel")}
           </Button>
         )}
         <Button type="submit" disabled={!canSubmit}>
-          {submitLabel}
+          {submitLabel ?? t("testerCampaigns:endOfPhaseForm.submit")}
         </Button>
       </div>
     </form>

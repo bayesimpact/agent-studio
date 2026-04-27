@@ -7,6 +7,7 @@ import { Button } from "@caseai-connect/ui/shad/button"
 import { Field, FieldLabel } from "@caseai-connect/ui/shad/field"
 import { Textarea } from "@caseai-connect/ui/shad/textarea"
 import { useMemo, useState } from "react"
+import { useTranslation } from "react-i18next"
 import { DynamicQuestionField } from "@/tester/features/review-campaigns/components/DynamicQuestionField"
 import { StarRatingInput } from "@/tester/features/review-campaigns/components/StarRatingInput"
 
@@ -35,10 +36,12 @@ type Props = {
 export function ReviewerReviewForm({
   questions,
   defaults,
-  submitLabel = "Submit review",
+  submitLabel,
   disabled = false,
   onSubmit,
 }: Props) {
+  const { t } = useTranslation()
+  const resolvedSubmitLabel = submitLabel ?? t("reviewerCampaigns:reviewForm.submitReview")
   const [overallRating, setOverallRating] = useState<number | null>(defaults?.overallRating ?? null)
   const [comment, setComment] = useState(defaults?.comment ?? "")
   const [answers, setAnswers] = useState<Record<string, AnswerValue>>(() =>
@@ -78,25 +81,28 @@ export function ReviewerReviewForm({
     >
       <Field>
         <FieldLabel>
-          Your rating <span className="text-destructive ml-1">*</span>
+          {t("reviewerCampaigns:reviewForm.ratingLabel")}{" "}
+          <span className="text-destructive ml-1">*</span>
         </FieldLabel>
         <StarRatingInput
           value={overallRating}
           onChange={setOverallRating}
           disabled={disabled}
-          aria-label="Reviewer overall rating"
+          aria-label={t("reviewerCampaigns:reviewForm.ratingAriaLabel")}
         />
       </Field>
 
       <Field>
-        <FieldLabel htmlFor="reviewer-comment">Comment</FieldLabel>
+        <FieldLabel htmlFor="reviewer-comment">
+          {t("reviewerCampaigns:reviewForm.commentLabel")}
+        </FieldLabel>
         <Textarea
           id="reviewer-comment"
           rows={4}
           disabled={disabled}
           value={comment}
           onChange={(event) => setComment(event.target.value)}
-          placeholder="What worked, what didn't?"
+          placeholder={t("reviewerCampaigns:reviewForm.commentPlaceholder")}
         />
       </Field>
 
@@ -112,7 +118,7 @@ export function ReviewerReviewForm({
 
       <div className="flex items-center justify-end gap-2">
         <Button type="submit" disabled={!canSubmit}>
-          {submitLabel}
+          {resolvedSubmitLabel}
         </Button>
       </div>
     </form>

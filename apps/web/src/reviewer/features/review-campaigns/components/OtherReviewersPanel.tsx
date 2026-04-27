@@ -3,6 +3,7 @@ import type {
   ReviewerSessionReviewDto,
 } from "@caseai-connect/api-contracts"
 import { StarIcon } from "lucide-react"
+import { useTranslation } from "react-i18next"
 import { AnswerList } from "./AnswerList"
 
 type Props = {
@@ -13,12 +14,13 @@ type Props = {
 const shortenId = (id: string) => `${id.slice(0, 8)}…`
 
 export function OtherReviewersPanel({ reviews, reviewerQuestions }: Props) {
+  const { t } = useTranslation()
   if (reviews.length === 0) {
     return (
       <section className="flex flex-col gap-2 rounded-lg border bg-card p-4">
-        <h3 className="text-sm font-semibold">Other reviewers</h3>
+        <h3 className="text-sm font-semibold">{t("reviewerCampaigns:otherReviewers.title")}</h3>
         <p className="text-muted-foreground text-sm italic">
-          You are the only reviewer on this session so far.
+          {t("reviewerCampaigns:otherReviewers.empty")}
         </p>
       </section>
     )
@@ -26,7 +28,9 @@ export function OtherReviewersPanel({ reviews, reviewerQuestions }: Props) {
   return (
     <section className="flex flex-col gap-3 rounded-lg border bg-card p-4">
       <header>
-        <h3 className="text-sm font-semibold">Other reviewers ({reviews.length})</h3>
+        <h3 className="text-sm font-semibold">
+          {t("reviewerCampaigns:otherReviewers.titleWithCount", { count: reviews.length })}
+        </h3>
       </header>
       <ol className="flex flex-col gap-4">
         {reviews.map((review) => (
@@ -36,12 +40,16 @@ export function OtherReviewersPanel({ reviews, reviewerQuestions }: Props) {
           >
             <div className="flex items-center justify-between">
               <span className="text-muted-foreground text-xs">
-                Reviewer {shortenId(review.reviewerUserId)}
+                {t("reviewerCampaigns:otherReviewers.reviewerLabel", {
+                  id: shortenId(review.reviewerUserId),
+                })}
               </span>
               <span
                 role="img"
                 className="flex items-center gap-0.5"
-                aria-label={`Rated ${review.overallRating} out of 5`}
+                aria-label={t("reviewerCampaigns:otherReviewers.ratingAriaLabel", {
+                  rating: review.overallRating,
+                })}
               >
                 {Array.from({ length: 5 }).map((_, index) => (
                   <StarIcon

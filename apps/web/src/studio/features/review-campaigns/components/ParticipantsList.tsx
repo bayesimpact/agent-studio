@@ -22,17 +22,13 @@ import {
 } from "@caseai-connect/ui/shad/table"
 import { Textarea } from "@caseai-connect/ui/shad/textarea"
 import { useState } from "react"
+import { useTranslation } from "react-i18next"
 
 type Props = {
   memberships: ReviewCampaignMembershipDto[]
   onInvite: (role: ReviewCampaignMembershipRole, emails: string[]) => void
   onRevoke: (membershipId: string) => void
   disabled?: boolean
-}
-
-const ROLE_LABELS: Record<ReviewCampaignMembershipRole, string> = {
-  tester: "Tester",
-  reviewer: "Reviewer",
 }
 
 const formatDate = (millis: number): string =>
@@ -49,8 +45,14 @@ const parseEmails = (raw: string): string[] =>
     .filter(Boolean)
 
 export function ParticipantsList({ memberships, onInvite, onRevoke, disabled = false }: Props) {
+  const { t } = useTranslation()
   const [emailsInput, setEmailsInput] = useState("")
   const [role, setRole] = useState<ReviewCampaignMembershipRole>("tester")
+
+  const roleLabel = (membershipRole: ReviewCampaignMembershipRole): string =>
+    membershipRole === "tester"
+      ? t("reviewCampaigns:participants.tester")
+      : t("reviewCampaigns:participants.reviewer")
 
   const handleInvite = () => {
     const emails = parseEmails(emailsInput)
@@ -62,21 +64,25 @@ export function ParticipantsList({ memberships, onInvite, onRevoke, disabled = f
   return (
     <section className="flex flex-col gap-4">
       <div className="flex flex-col gap-3 rounded-md border p-3">
-        <h3 className="text-sm font-semibold">Invite participants</h3>
+        <h3 className="text-sm font-semibold">{t("reviewCampaigns:participants.inviteTitle")}</h3>
         <div className="flex flex-col gap-3 md:flex-row">
           <Field className="md:flex-1">
-            <FieldLabel htmlFor="invite-emails">Emails (comma or newline separated)</FieldLabel>
+            <FieldLabel htmlFor="invite-emails">
+              {t("reviewCampaigns:participants.emailsLabel")}
+            </FieldLabel>
             <Textarea
               id="invite-emails"
               rows={3}
               value={emailsInput}
               disabled={disabled}
-              placeholder="alice@example.com, bob@example.com"
+              placeholder={t("reviewCampaigns:participants.emailsPlaceholder")}
               onChange={(event) => setEmailsInput(event.target.value)}
             />
           </Field>
           <Field className="md:w-40">
-            <FieldLabel htmlFor="invite-role">Role</FieldLabel>
+            <FieldLabel htmlFor="invite-role">
+              {t("reviewCampaigns:participants.roleLabel")}
+            </FieldLabel>
             <Select
               value={role}
               disabled={disabled}
@@ -86,8 +92,10 @@ export function ParticipantsList({ memberships, onInvite, onRevoke, disabled = f
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="tester">Tester</SelectItem>
-                <SelectItem value="reviewer">Reviewer</SelectItem>
+                <SelectItem value="tester">{t("reviewCampaigns:participants.tester")}</SelectItem>
+                <SelectItem value="reviewer">
+                  {t("reviewCampaigns:participants.reviewer")}
+                </SelectItem>
               </SelectContent>
             </Select>
           </Field>
@@ -98,22 +106,26 @@ export function ParticipantsList({ memberships, onInvite, onRevoke, disabled = f
             onClick={handleInvite}
             disabled={disabled || parseEmails(emailsInput).length === 0}
           >
-            Send invitations
+            {t("reviewCampaigns:participants.send")}
           </Button>
         </div>
       </div>
 
       {memberships.length === 0 ? (
-        <p className="text-muted-foreground text-sm italic">No participants invited yet.</p>
+        <p className="text-muted-foreground text-sm italic">
+          {t("reviewCampaigns:participants.empty")}
+        </p>
       ) : (
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Email</TableHead>
-              <TableHead>Role</TableHead>
-              <TableHead>Invited</TableHead>
-              <TableHead>Accepted</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
+              <TableHead>{t("reviewCampaigns:participants.email")}</TableHead>
+              <TableHead>{t("reviewCampaigns:participants.roleLabel")}</TableHead>
+              <TableHead>{t("reviewCampaigns:participants.invited")}</TableHead>
+              <TableHead>{t("reviewCampaigns:participants.accepted")}</TableHead>
+              <TableHead className="text-right">
+                {t("reviewCampaigns:participants.actions")}
+              </TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -121,14 +133,16 @@ export function ParticipantsList({ memberships, onInvite, onRevoke, disabled = f
               <TableRow key={membership.id}>
                 <TableCell className="font-medium">{membership.userEmail}</TableCell>
                 <TableCell>
-                  <Badge variant="outline">{ROLE_LABELS[membership.role]}</Badge>
+                  <Badge variant="outline">{roleLabel(membership.role)}</Badge>
                 </TableCell>
                 <TableCell>{formatDate(membership.invitedAt)}</TableCell>
                 <TableCell>
                   {membership.acceptedAt ? (
                     formatDate(membership.acceptedAt)
                   ) : (
-                    <span className="text-muted-foreground text-sm italic">pending</span>
+                    <span className="text-muted-foreground text-sm italic">
+                      {t("reviewCampaigns:participants.pending")}
+                    </span>
                   )}
                 </TableCell>
                 <TableCell className="text-right">
@@ -138,7 +152,7 @@ export function ParticipantsList({ memberships, onInvite, onRevoke, disabled = f
                     disabled={disabled}
                     onClick={() => onRevoke(membership.id)}
                   >
-                    Revoke
+                    {t("reviewCampaigns:participants.revoke")}
                   </Button>
                 </TableCell>
               </TableRow>

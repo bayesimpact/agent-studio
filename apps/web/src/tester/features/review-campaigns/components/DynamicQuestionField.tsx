@@ -2,6 +2,7 @@ import type { ReviewCampaignQuestionDto } from "@caseai-connect/api-contracts"
 import { Field, FieldLabel } from "@caseai-connect/ui/shad/field"
 import { RadioGroup, RadioGroupItem } from "@caseai-connect/ui/shad/radio-group"
 import { Textarea } from "@caseai-connect/ui/shad/textarea"
+import { useTranslation } from "react-i18next"
 import { StarRatingInput } from "./StarRatingInput"
 
 type AnswerValue = string | number | string[] | null
@@ -14,16 +15,21 @@ type Props = {
 }
 
 export function DynamicQuestionField({ question, value, onChange, disabled = false }: Props) {
+  const { t } = useTranslation()
   return (
     <Field>
       <FieldLabel htmlFor={`q-${question.id}`}>
-        {question.prompt || <span className="text-muted-foreground italic">Untitled</span>}
+        {question.prompt || (
+          <span className="text-muted-foreground italic">
+            {t("testerCampaigns:common.untitled")}
+          </span>
+        )}
         {question.required && <span className="text-destructive ml-1">*</span>}
       </FieldLabel>
 
       {question.type === "rating" && (
         <StarRatingInput
-          aria-label={question.prompt || "Rating"}
+          aria-label={question.prompt || t("testerCampaigns:dynamicQuestion.ratingAriaLabel")}
           value={typeof value === "number" ? value : null}
           disabled={disabled}
           onChange={(next) => onChange(next)}
@@ -55,7 +61,9 @@ export function DynamicQuestionField({ question, value, onChange, disabled = fal
             </div>
           ))}
           {(question.options ?? []).length === 0 && (
-            <p className="text-muted-foreground text-sm italic">No options configured.</p>
+            <p className="text-muted-foreground text-sm italic">
+              {t("testerCampaigns:dynamicQuestion.noOptions")}
+            </p>
           )}
         </RadioGroup>
       )}

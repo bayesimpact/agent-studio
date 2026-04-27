@@ -17,6 +17,7 @@ import {
   TableRow,
 } from "@caseai-connect/ui/shad/table"
 import { CheckCircle2Icon, CircleIcon, InboxIcon } from "lucide-react"
+import { useTranslation } from "react-i18next"
 
 type Props = {
   sessions: ReviewerSessionListItemDto[]
@@ -28,6 +29,7 @@ const formatDate = (millis: number) =>
   new Date(millis).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" })
 
 export function ReviewerSessionsTable({ sessions, onOpen }: Props) {
+  const { t } = useTranslation()
   if (sessions.length === 0) {
     return (
       <Empty>
@@ -35,9 +37,9 @@ export function ReviewerSessionsTable({ sessions, onOpen }: Props) {
           <EmptyMedia variant="icon">
             <InboxIcon />
           </EmptyMedia>
-          <EmptyTitle>No sessions yet</EmptyTitle>
+          <EmptyTitle>{t("reviewerCampaigns:sessionsTable.empty.title")}</EmptyTitle>
           <EmptyDescription>
-            Testers haven't submitted any sessions on this campaign yet.
+            {t("reviewerCampaigns:sessionsTable.empty.description")}
           </EmptyDescription>
         </EmptyHeader>
       </Empty>
@@ -48,11 +50,15 @@ export function ReviewerSessionsTable({ sessions, onOpen }: Props) {
     <Table>
       <TableHeader>
         <TableRow>
-          <TableHead>Session</TableHead>
-          <TableHead>Started</TableHead>
-          <TableHead className="text-right">Messages</TableHead>
-          <TableHead className="text-right">Reviewers</TableHead>
-          <TableHead>My review</TableHead>
+          <TableHead>{t("reviewerCampaigns:sessionsTable.headers.session")}</TableHead>
+          <TableHead>{t("reviewerCampaigns:sessionsTable.headers.started")}</TableHead>
+          <TableHead className="text-right">
+            {t("reviewerCampaigns:sessionsTable.headers.messages")}
+          </TableHead>
+          <TableHead className="text-right">
+            {t("reviewerCampaigns:sessionsTable.headers.reviewers")}
+          </TableHead>
+          <TableHead>{t("reviewerCampaigns:sessionsTable.headers.myReview")}</TableHead>
           <TableHead />
         </TableRow>
       </TableHeader>
@@ -67,7 +73,7 @@ export function ReviewerSessionsTable({ sessions, onOpen }: Props) {
                 </Badge>
                 {session.callerIsSessionOwner && (
                   <Badge variant="secondary" className="text-xs">
-                    your session
+                    {t("reviewerCampaigns:sessionsTable.yourSession")}
                   </Badge>
                 )}
               </div>
@@ -78,11 +84,12 @@ export function ReviewerSessionsTable({ sessions, onOpen }: Props) {
             <TableCell>
               {session.callerHasReviewed ? (
                 <span className="flex items-center gap-1 text-sm">
-                  <CheckCircle2Icon className="size-4 text-green-600" /> Submitted
+                  <CheckCircle2Icon className="size-4 text-green-600" />{" "}
+                  {t("reviewerCampaigns:sessionsTable.submitted")}
                 </span>
               ) : (
                 <span className="text-muted-foreground flex items-center gap-1 text-sm">
-                  <CircleIcon className="size-4" /> Pending
+                  <CircleIcon className="size-4" /> {t("reviewerCampaigns:sessionsTable.pending")}
                 </span>
               )}
             </TableCell>
@@ -93,7 +100,9 @@ export function ReviewerSessionsTable({ sessions, onOpen }: Props) {
                 disabled={session.callerIsSessionOwner}
                 onClick={() => onOpen(session.sessionId)}
               >
-                {session.callerHasReviewed ? "View" : "Review"}
+                {session.callerHasReviewed
+                  ? t("reviewerCampaigns:sessionsTable.view")
+                  : t("reviewerCampaigns:sessionsTable.review")}
               </Button>
             </TableCell>
           </TableRow>

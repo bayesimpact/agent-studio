@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect } from "react"
+import { useTranslation } from "react-i18next"
 import { useNavigate, useParams } from "react-router-dom"
 import { ADS } from "@/common/store/async-data-status"
 import { useAppDispatch, useAppSelector } from "@/common/store/hooks"
@@ -24,6 +25,7 @@ type Params = {
  * Reviewer-specific data (the session list) is fetched by `listReviewerSessions`.
  */
 export function ReviewerCampaignLandingPage() {
+  const { t } = useTranslation()
   const dispatch = useAppDispatch()
   const navigate = useNavigate()
   const params = useParams<Params>()
@@ -45,7 +47,9 @@ export function ReviewerCampaignLandingPage() {
   if (!params.organizationId || !params.projectId || !params.reviewCampaignId) return null
 
   if (ADS.isLoading(contextState)) {
-    return <p className="p-6 text-muted-foreground text-sm">Loading…</p>
+    return (
+      <p className="p-6 text-muted-foreground text-sm">{t("reviewerCampaigns:landing.loading")}</p>
+    )
   }
   if (ADS.isError(contextState)) {
     return <p className="p-6 text-destructive text-sm">{contextState.error}</p>

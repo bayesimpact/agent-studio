@@ -1,4 +1,5 @@
 import type { CampaignReportDto } from "@caseai-connect/api-contracts"
+import { useTranslation } from "react-i18next"
 import { QuestionDistributionChart } from "./QuestionDistributionChart"
 import { ReportHeadlineCards } from "./ReportHeadlineCards"
 import { ReportSessionMatrix } from "./ReportSessionMatrix"
@@ -8,32 +9,34 @@ type Props = {
 }
 
 export function CampaignReport({ report }: Props) {
+  const { t } = useTranslation()
   return (
     <div className="flex flex-col gap-8">
       <ReportHeadlineCards headline={report.headline} />
 
       <DistributionSection
-        title="Tester — per-session questions"
-        description="One response per tester session."
+        title={t("reviewCampaigns:report.testerPerSession.title")}
+        description={t("reviewCampaigns:report.testerPerSession.description")}
         distributions={report.testerPerSessionDistributions}
       />
       <DistributionSection
-        title="Tester — end-of-phase questions"
-        description="One response per tester who completed the final survey."
+        title={t("reviewCampaigns:report.testerEndOfPhase.title")}
+        description={t("reviewCampaigns:report.testerEndOfPhase.description")}
         distributions={report.testerEndOfPhaseDistributions}
       />
       <DistributionSection
-        title="Reviewer questions"
-        description="One response per reviewer review across all sessions."
+        title={t("reviewCampaigns:report.reviewer.title")}
+        description={t("reviewCampaigns:report.reviewer.description")}
         distributions={report.reviewerDistributions}
       />
 
       <section className="flex flex-col gap-3">
         <header>
-          <h3 className="text-lg font-semibold">Session matrix</h3>
+          <h3 className="text-lg font-semibold">
+            {t("reviewCampaigns:report.sessionMatrix.title")}
+          </h3>
           <p className="text-muted-foreground text-sm">
-            Per-session tester vs. reviewer ratings. Spread is the difference between the lowest and
-            highest reviewer rating — high spread suggests reviewer disagreement.
+            {t("reviewCampaigns:report.sessionMatrix.description")}
           </p>
         </header>
         <ReportSessionMatrix rows={report.sessionMatrix} />

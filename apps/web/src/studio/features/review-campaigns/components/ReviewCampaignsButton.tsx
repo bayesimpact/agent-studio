@@ -1,5 +1,6 @@
 import { Item } from "@caseai-connect/ui/shad/item"
 import { MegaphoneIcon, UsersIcon } from "lucide-react"
+import { useTranslation } from "react-i18next"
 import { useNavigate } from "react-router-dom"
 import { GridItem } from "@/common/components/grid/Grid"
 import { selectCurrentOrganizationId } from "@/common/features/organizations/organizations.selectors"
@@ -8,6 +9,7 @@ import { useAppSelector } from "@/common/store/hooks"
 import { buildReviewCampaignsPath } from "@/studio/routes/helpers"
 
 export function ReviewCampaignsButton({ index }: { index: number }) {
+  const { t } = useTranslation()
   const navigate = useNavigate()
   const organizationId = useAppSelector(selectCurrentOrganizationId)
   const projectId = useAppSelector(selectCurrentProjectId)
@@ -20,8 +22,8 @@ export function ReviewCampaignsButton({ index }: { index: number }) {
     <GridItem
       index={index}
       className="bg-white"
-      title="Review campaigns"
-      description="Invite testers and reviewers to evaluate an agent."
+      title={t("reviewCampaigns:dashboardCard.title")}
+      description={t("reviewCampaigns:dashboardCard.description")}
       onClick={handleClick}
       footer={
         <div className="mt-4 flex items-center flex-col max-h-20 overflow-hidden bg-white max-w-full">

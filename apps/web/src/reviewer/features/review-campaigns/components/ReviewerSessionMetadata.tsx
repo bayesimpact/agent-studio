@@ -1,6 +1,7 @@
 import type { ReviewerAgentSnapshotDto } from "@caseai-connect/api-contracts"
 import { Badge } from "@caseai-connect/ui/shad/badge"
 import { CalendarIcon, UserIcon } from "lucide-react"
+import { useTranslation } from "react-i18next"
 
 type Props = {
   startedAt: number
@@ -14,6 +15,7 @@ const formatDate = (millis: number) =>
 const shortenId = (id: string) => `${id.slice(0, 8)}…`
 
 export function ReviewerSessionMetadata({ startedAt, agent, testerUserId }: Props) {
+  const { t } = useTranslation()
   return (
     <div className="flex flex-col gap-2 rounded-lg border bg-card p-3 text-sm">
       <div className="flex items-center gap-2">
@@ -24,7 +26,8 @@ export function ReviewerSessionMetadata({ startedAt, agent, testerUserId }: Prop
         <CalendarIcon className="size-4" /> {formatDate(startedAt)}
       </div>
       <div className="flex items-center gap-2 text-muted-foreground">
-        <UserIcon className="size-4" /> Tester {shortenId(testerUserId)}
+        <UserIcon className="size-4" />{" "}
+        {t("reviewerCampaigns:metadata.tester", { id: shortenId(testerUserId) })}
       </div>
     </div>
   )

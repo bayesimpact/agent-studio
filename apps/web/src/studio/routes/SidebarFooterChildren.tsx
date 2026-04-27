@@ -69,6 +69,7 @@ function NavReviewCampaigns({
   organizationId: string
   projectId: string
 }) {
+  const { t } = useTranslation()
   const { isRoute } = useIsRoute()
   const isActive =
     isRoute(StudioRouteNames.REVIEW_CAMPAIGNS) || isRoute(StudioRouteNames.REVIEW_CAMPAIGN_REPORT)
@@ -78,7 +79,7 @@ function NavReviewCampaigns({
       <SidebarMenuSubButton isActive={isActive} asChild>
         <Link to={path}>
           <MegaphoneIcon />
-          <span>Review campaigns</span>
+          <span>{t("reviewCampaigns:title")}</span>
         </Link>
       </SidebarMenuSubButton>
     </SidebarMenuSubItem>

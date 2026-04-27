@@ -23,6 +23,7 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { RocketIcon, Trash2Icon } from "lucide-react"
 import { useState } from "react"
 import { Controller, useForm } from "react-hook-form"
+import { useTranslation } from "react-i18next"
 import { z } from "zod"
 import { CampaignStatusBadge } from "./CampaignStatusBadge"
 import { CampaignSummaryPanel } from "./CampaignSummaryPanel"
@@ -60,15 +61,6 @@ type Props = {
   onOpenReport?: () => void
 }
 
-const schema = z.object({
-  name: z.string().min(1, "Campaign name is required"),
-  description: z.string().nullable(),
-  agentId: z.string().min(1, "Agent is required"),
-  testerPerSessionQuestions: z.array(z.any()),
-  testerEndOfPhaseQuestions: z.array(z.any()),
-  reviewerQuestions: z.array(z.any()),
-})
-
 export function CampaignForm({
   mode,
   status,
@@ -84,6 +76,17 @@ export function CampaignForm({
   onRevokeMember,
   onOpenReport,
 }: Props) {
+  const { t } = useTranslation()
+
+  const schema = z.object({
+    name: z.string().min(1, t("reviewCampaigns:editor.validation.nameRequired")),
+    description: z.string().nullable(),
+    agentId: z.string().min(1, t("reviewCampaigns:editor.validation.agentRequired")),
+    testerPerSessionQuestions: z.array(z.any()),
+    testerEndOfPhaseQuestions: z.array(z.any()),
+    reviewerQuestions: z.array(z.any()),
+  })
+
   const isDraft = status === "draft"
   const isActive = status === "active"
   const isClosed = status === "closed"
@@ -127,7 +130,9 @@ export function CampaignForm({
       <header className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
         <div className="flex flex-col gap-2">
           <h2 className="text-xl font-semibold">
-            {mode === "create" ? "New review campaign" : "Edit review campaign"}
+            {mode === "create"
+              ? t("reviewCampaigns:editor.createTitle")
+              : t("reviewCampaigns:editor.editTitle")}
           </h2>
           <div>
             <CampaignStatusBadge status={status} />
@@ -136,22 +141,26 @@ export function CampaignForm({
         <div className="flex flex-wrap items-center gap-2">
           {isDraft && onDelete && (
             <Button type="button" variant="ghost" onClick={onDelete}>
-              <Trash2Icon /> Delete
+              <Trash2Icon /> {t("reviewCampaigns:editor.actions.delete")}
             </Button>
           )}
           <div className="ml-auto flex items-center gap-2">
             {isDraft && onActivate && (
               <Button type="button" variant="outline" onClick={onActivate}>
-                <RocketIcon /> Activate
+                <RocketIcon /> {t("reviewCampaigns:editor.actions.activate")}
               </Button>
             )}
             {isActive && onClose && (
               <Button type="button" variant="outline" onClick={onClose}>
-                Close
+                {t("reviewCampaigns:editor.actions.close")}
               </Button>
             )}
             {!isClosed && (
-              <Button type="submit">{mode === "create" ? "Create campaign" : "Save"}</Button>
+              <Button type="submit">
+                {mode === "create"
+                  ? t("reviewCampaigns:editor.actions.create")
+                  : t("reviewCampaigns:editor.actions.save")}
+              </Button>
             )}
           </div>
         </div>
@@ -159,11 +168,15 @@ export function CampaignForm({
 
       <Tabs value={tab} onValueChange={(value) => setTab(value as TabValue)}>
         <TabsList>
-          {isClosed && <TabsTrigger value="summary">Summary</TabsTrigger>}
-          <TabsTrigger value="general">General</TabsTrigger>
-          <TabsTrigger value="questions">Questions</TabsTrigger>
-          <TabsTrigger value="participants">Participants</TabsTrigger>
-          <TabsTrigger value="preview">Preview</TabsTrigger>
+          {isClosed && (
+            <TabsTrigger value="summary">{t("reviewCampaigns:editor.tabs.summary")}</TabsTrigger>
+          )}
+          <TabsTrigger value="general">{t("reviewCampaigns:editor.tabs.general")}</TabsTrigger>
+          <TabsTrigger value="questions">{t("reviewCampaigns:editor.tabs.questions")}</TabsTrigger>
+          <TabsTrigger value="participants">
+            {t("reviewCampaigns:editor.tabs.participants")}
+          </TabsTrigger>
+          <TabsTrigger value="preview">{t("reviewCampaigns:editor.tabs.preview")}</TabsTrigger>
         </TabsList>
 
         {isClosed && (
@@ -175,11 +188,11 @@ export function CampaignForm({
         <TabsContent value="general" className="pt-4">
           <FieldGroup>
             <Field>
-              <FieldLabel htmlFor="name">Name</FieldLabel>
+              <FieldLabel htmlFor="name">{t("reviewCampaigns:editor.fields.name")}</FieldLabel>
               <Input
                 id="name"
                 disabled={configLocked}
-                placeholder="e.g. Support agent — Q2 review"
+                placeholder={t("reviewCampaigns:editor.fields.namePlaceholder")}
                 {...register("name")}
                 aria-invalid={errors.name ? "true" : "false"}
               />
@@ -187,18 +200,20 @@ export function CampaignForm({
             </Field>
 
             <Field>
-              <FieldLabel htmlFor="description">Description</FieldLabel>
+              <FieldLabel htmlFor="description">
+                {t("reviewCampaigns:editor.fields.description")}
+              </FieldLabel>
               <Textarea
                 id="description"
                 rows={3}
                 disabled={configLocked}
-                placeholder="What are we evaluating?"
+                placeholder={t("reviewCampaigns:editor.fields.descriptionPlaceholder")}
                 {...register("description")}
               />
             </Field>
 
             <Field>
-              <FieldLabel htmlFor="agentId">Target agent</FieldLabel>
+              <FieldLabel htmlFor="agentId">{t("reviewCampaigns:editor.fields.agent")}</FieldLabel>
               <Controller
                 name="agentId"
                 control={control}
@@ -209,7 +224,9 @@ export function CampaignForm({
                     onValueChange={field.onChange}
                   >
                     <SelectTrigger id="agentId">
-                      <SelectValue placeholder="Select an agent" />
+                      <SelectValue
+                        placeholder={t("reviewCampaigns:editor.fields.agentPlaceholder")}
+                      />
                     </SelectTrigger>
                     <SelectContent>
                       {agents.map((agent) => (
@@ -230,23 +247,23 @@ export function CampaignForm({
 
         <TabsContent value="questions" className="flex flex-col gap-6 pt-4">
           <QuestionListEditor
-            label="Tester — per-session questions"
-            description="Asked after every session the tester completes."
+            label={t("reviewCampaigns:questions.perSession.label")}
+            description={t("reviewCampaigns:questions.perSession.description")}
             questions={perSessionQuestions}
             disabled={configLocked}
             showFactualToggle
             onChange={(next) => setValue("testerPerSessionQuestions", next, { shouldDirty: true })}
           />
           <QuestionListEditor
-            label="Tester — end-of-phase questions"
-            description="Asked once when the tester finishes participating."
+            label={t("reviewCampaigns:questions.endOfPhase.label")}
+            description={t("reviewCampaigns:questions.endOfPhase.description")}
             questions={endOfPhaseQuestions}
             disabled={configLocked}
             onChange={(next) => setValue("testerEndOfPhaseQuestions", next, { shouldDirty: true })}
           />
           <QuestionListEditor
-            label="Reviewer questions"
-            description="Shown to reviewers while reviewing a session."
+            label={t("reviewCampaigns:questions.reviewer.label")}
+            description={t("reviewCampaigns:questions.reviewer.description")}
             questions={reviewerQuestions}
             disabled={configLocked}
             onChange={(next) => setValue("reviewerQuestions", next, { shouldDirty: true })}
@@ -256,12 +273,11 @@ export function CampaignForm({
         <TabsContent value="participants" className="pt-4">
           {mode === "create" ? (
             <p className="text-muted-foreground text-sm italic">
-              Save the campaign first — invitations send a real email and need a persisted campaign.
+              {t("reviewCampaigns:editor.noticeSaveFirst")}
             </p>
           ) : isDraft ? (
             <p className="text-muted-foreground text-sm italic">
-              Activate the campaign before inviting participants — otherwise invitees would accept
-              and land on a campaign that doesn't yet appear in their list.
+              {t("reviewCampaigns:editor.noticeActivateFirst")}
             </p>
           ) : (
             <ParticipantsList

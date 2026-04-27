@@ -7,6 +7,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@caseai-connect/ui/shad/dialog"
+import { useTranslation } from "react-i18next"
 
 type Props = {
   open: boolean
@@ -16,22 +17,22 @@ type Props = {
 }
 
 export function ActivateCampaignDialog({ open, campaignName, onConfirm, onCancel }: Props) {
+  const { t } = useTranslation()
   return (
     <Dialog open={open} onOpenChange={(isOpen) => !isOpen && onCancel()}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Activate “{campaignName}”?</DialogTitle>
-          <DialogDescription>
-            Once activated, the configuration (agent, questions) is locked and the campaign is
-            visible to invited testers and reviewers. You can still invite more participants.
-          </DialogDescription>
+          <DialogTitle>
+            {t("reviewCampaigns:dialogs.activate.title", { name: campaignName })}
+          </DialogTitle>
+          <DialogDescription>{t("reviewCampaigns:dialogs.activate.description")}</DialogDescription>
         </DialogHeader>
         <DialogFooter>
           <Button type="button" variant="outline" onClick={onCancel}>
-            Cancel
+            {t("reviewCampaigns:dialogs.cancel")}
           </Button>
           <Button type="button" onClick={onConfirm}>
-            Activate
+            {t("reviewCampaigns:dialogs.activate.confirm")}
           </Button>
         </DialogFooter>
       </DialogContent>

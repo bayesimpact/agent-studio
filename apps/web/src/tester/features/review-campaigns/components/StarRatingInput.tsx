@@ -1,5 +1,6 @@
 import { cn } from "@caseai-connect/ui/utils"
 import { StarIcon } from "lucide-react"
+import { useTranslation } from "react-i18next"
 
 type Props = {
   value: number | null
@@ -22,13 +23,15 @@ export function StarRatingInput({
   disabled = false,
   size = "md",
   max = 5,
-  "aria-label": ariaLabel = "Rating",
+  "aria-label": ariaLabel,
 }: Props) {
+  const { t } = useTranslation()
   const interactive = !disabled && !!onChange
+  const fieldsetAriaLabel = ariaLabel ?? t("testerCampaigns:starRating.ariaLabel")
   return (
     <fieldset
       className="flex items-center gap-1 border-0 p-0"
-      aria-label={ariaLabel}
+      aria-label={fieldsetAriaLabel}
       disabled={disabled}
     >
       {Array.from({ length: max }, (_, index) => {
@@ -40,7 +43,7 @@ export function StarRatingInput({
             type="button"
             disabled={!interactive}
             onClick={() => onChange?.(starValue)}
-            aria-label={`${starValue} ${starValue === 1 ? "star" : "stars"}`}
+            aria-label={t("testerCampaigns:starRating.starAriaLabel", { count: starValue })}
             className={cn(
               "rounded p-0.5 transition-colors",
               interactive ? "hover:bg-accent" : "cursor-default",

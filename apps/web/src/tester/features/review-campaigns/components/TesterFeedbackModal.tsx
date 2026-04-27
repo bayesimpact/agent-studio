@@ -15,6 +15,7 @@ import {
 import { Field, FieldLabel } from "@caseai-connect/ui/shad/field"
 import { Textarea } from "@caseai-connect/ui/shad/textarea"
 import { useMemo, useState } from "react"
+import { useTranslation } from "react-i18next"
 import { DynamicQuestionField } from "./DynamicQuestionField"
 import { StarRatingInput } from "./StarRatingInput"
 
@@ -28,6 +29,7 @@ type Props = {
 }
 
 export function TesterFeedbackModal({ open, questions, onSubmit, onAbandon }: Props) {
+  const { t } = useTranslation()
   const [overallRating, setOverallRating] = useState<number | null>(null)
   const [comment, setComment] = useState("")
   const [answers, setAnswers] = useState<Record<string, AnswerValue>>({})
@@ -60,33 +62,33 @@ export function TesterFeedbackModal({ open, questions, onSubmit, onAbandon }: Pr
     <Dialog open={open}>
       <DialogContent showCloseButton={false} className="sm:max-w-xl">
         <DialogHeader>
-          <DialogTitle>How was this session?</DialogTitle>
-          <DialogDescription>
-            Your feedback helps improve the agent. Rate the session and fill in the questions below
-            before finishing.
-          </DialogDescription>
+          <DialogTitle>{t("testerCampaigns:feedbackModal.title")}</DialogTitle>
+          <DialogDescription>{t("testerCampaigns:feedbackModal.description")}</DialogDescription>
         </DialogHeader>
 
         <div className="flex flex-col gap-4 py-2">
           <Field>
             <FieldLabel>
-              Overall rating <span className="text-destructive ml-1">*</span>
+              {t("testerCampaigns:feedbackModal.overallRating")}{" "}
+              <span className="text-destructive ml-1">*</span>
             </FieldLabel>
             <StarRatingInput
               value={overallRating}
               onChange={setOverallRating}
-              aria-label="Overall session rating"
+              aria-label={t("testerCampaigns:feedbackModal.overallRatingAriaLabel")}
             />
           </Field>
 
           <Field>
-            <FieldLabel htmlFor="tester-comment">Comment</FieldLabel>
+            <FieldLabel htmlFor="tester-comment">
+              {t("testerCampaigns:feedbackModal.comment")}
+            </FieldLabel>
             <Textarea
               id="tester-comment"
               rows={3}
               value={comment}
               onChange={(event) => setComment(event.target.value)}
-              placeholder="Anything we should know about this session?"
+              placeholder={t("testerCampaigns:feedbackModal.commentPlaceholder")}
             />
           </Field>
 
@@ -104,10 +106,10 @@ export function TesterFeedbackModal({ open, questions, onSubmit, onAbandon }: Pr
 
         <DialogFooter>
           <Button type="button" variant="ghost" onClick={onAbandon}>
-            Skip and abandon session
+            {t("testerCampaigns:feedbackModal.skipAndAbandon")}
           </Button>
           <Button type="button" disabled={!canSubmit} onClick={handleSubmit}>
-            Submit feedback
+            {t("testerCampaigns:feedbackModal.submit")}
           </Button>
         </DialogFooter>
       </DialogContent>

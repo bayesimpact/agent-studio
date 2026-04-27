@@ -3,6 +3,7 @@
 import { Button } from "@caseai-connect/ui/shad/button"
 import { ArrowLeftIcon, DownloadIcon } from "lucide-react"
 import { useEffect, useState } from "react"
+import { useTranslation } from "react-i18next"
 import { useNavigate, useParams } from "react-router-dom"
 import { ADS } from "@/common/store/async-data-status"
 import { useAppDispatch, useAppSelector } from "@/common/store/hooks"
@@ -24,7 +25,8 @@ type Props = {
   backLabel?: string
 }
 
-export function CampaignReportPage({ backPath, backLabel = "Back" }: Props) {
+export function CampaignReportPage({ backPath, backLabel }: Props) {
+  const { t } = useTranslation()
   const dispatch = useAppDispatch()
   const navigate = useNavigate()
   const params = useParams<Params>()
@@ -69,9 +71,9 @@ export function CampaignReportPage({ backPath, backLabel = "Back" }: Props) {
     <div className="flex flex-col gap-6 p-6">
       <header className="flex items-center gap-3">
         <Button variant="ghost" size="sm" onClick={() => navigate(backPath)}>
-          <ArrowLeftIcon /> {backLabel}
+          <ArrowLeftIcon /> {backLabel ?? t("reviewCampaigns:report.back")}
         </Button>
-        <h1 className="text-2xl font-semibold">Campaign report</h1>
+        <h1 className="text-2xl font-semibold">{t("reviewCampaigns:report.title")}</h1>
         <div className="ml-auto">
           <Button
             variant="outline"
@@ -79,13 +81,16 @@ export function CampaignReportPage({ backPath, backLabel = "Back" }: Props) {
             onClick={handleDownloadCsv}
             disabled={isDownloading || !ADS.isFulfilled(reportState)}
           >
-            <DownloadIcon /> {isDownloading ? "Downloading…" : "Download CSV"}
+            <DownloadIcon />{" "}
+            {isDownloading
+              ? t("reviewCampaigns:report.downloading")
+              : t("reviewCampaigns:report.downloadCsv")}
           </Button>
         </div>
       </header>
 
       {ADS.isLoading(reportState) && (
-        <p className="text-muted-foreground text-sm">Loading report…</p>
+        <p className="text-muted-foreground text-sm">{t("reviewCampaigns:report.loading")}</p>
       )}
       {ADS.isError(reportState) && <p className="text-destructive text-sm">{reportState.error}</p>}
       {ADS.isFulfilled(reportState) && <CampaignReport report={reportState.value} />}

@@ -1,14 +1,9 @@
 import type { CampaignReportQuestionDistributionDto } from "@caseai-connect/api-contracts"
 import { Badge } from "@caseai-connect/ui/shad/badge"
+import { useTranslation } from "react-i18next"
 
 type Props = {
   distribution: CampaignReportQuestionDistributionDto
-}
-
-const QUESTION_TYPE_LABEL: Record<CampaignReportQuestionDistributionDto["type"], string> = {
-  rating: "Rating",
-  "single-choice": "Single choice",
-  "free-text": "Free text",
 }
 
 /**
@@ -17,6 +12,7 @@ const QUESTION_TYPE_LABEL: Record<CampaignReportQuestionDistributionDto["type"],
  * Storybook / printing). Free-text questions only show the response count.
  */
 export function QuestionDistributionChart({ distribution }: Props) {
+  const { t } = useTranslation()
   const total = distribution.buckets.reduce((accumulator, bucket) => accumulator + bucket.count, 0)
 
   return (
@@ -25,10 +21,13 @@ export function QuestionDistributionChart({ distribution }: Props) {
         <div className="flex flex-col gap-1">
           <h4 className="text-sm font-semibold">{distribution.prompt}</h4>
           <div className="flex items-center gap-2">
-            <Badge variant="outline">{QUESTION_TYPE_LABEL[distribution.type]}</Badge>
+            <Badge variant="outline">
+              {t(`reviewCampaigns:report.distribution.types.${distribution.type}`)}
+            </Badge>
             <span className="text-muted-foreground text-xs">
-              {distribution.responseCount}{" "}
-              {distribution.responseCount === 1 ? "response" : "responses"}
+              {t("reviewCampaigns:report.distribution.responses", {
+                count: distribution.responseCount,
+              })}
             </span>
           </div>
         </div>
@@ -36,10 +35,12 @@ export function QuestionDistributionChart({ distribution }: Props) {
 
       {distribution.type === "free-text" ? (
         <p className="text-muted-foreground text-sm italic">
-          Free-text answers aren't summarized here — review individual sessions to read them.
+          {t("reviewCampaigns:report.distribution.freeTextNotice")}
         </p>
       ) : distribution.buckets.length === 0 ? (
-        <p className="text-muted-foreground text-sm italic">No responses yet.</p>
+        <p className="text-muted-foreground text-sm italic">
+          {t("reviewCampaigns:report.distribution.noResponses")}
+        </p>
       ) : (
         <ul className="flex flex-col gap-2">
           {distribution.buckets.map((bucket) => {
@@ -52,7 +53,10 @@ export function QuestionDistributionChart({ distribution }: Props) {
                 <div
                   className="bg-muted relative h-5 flex-1 overflow-hidden rounded"
                   role="img"
-                  aria-label={`${bucket.count} responses (${percent.toFixed(0)}%)`}
+                  aria-label={t("reviewCampaigns:report.distribution.barAria", {
+                    count: bucket.count,
+                    percent: percent.toFixed(0),
+                  })}
                 >
                   <div className="bg-primary h-full" style={{ width: `${percent}%` }} />
                 </div>

@@ -2,6 +2,7 @@ import type {
   ReviewCampaignQuestionDto,
   ReviewCampaignTesterFeedbackAnswerDto,
 } from "@caseai-connect/api-contracts"
+import { useTranslation } from "react-i18next"
 import { AnswerList } from "./AnswerList"
 
 type Props = {
@@ -10,18 +11,19 @@ type Props = {
 }
 
 export function FactualAnswersPanel({ questions, answers }: Props) {
+  const { t } = useTranslation()
   return (
     <section className="flex flex-col gap-2 rounded-lg border bg-card p-4">
       <header className="flex flex-col gap-0.5">
-        <h3 className="text-sm font-semibold">Session facts</h3>
+        <h3 className="text-sm font-semibold">{t("reviewerCampaigns:factualAnswers.title")}</h3>
         <p className="text-muted-foreground text-xs">
-          Objective answers the tester provided about this session.
+          {t("reviewerCampaigns:factualAnswers.description")}
         </p>
       </header>
       <AnswerList
         questions={questions}
         answers={answers}
-        emptyLabel="No factual questions were configured for this campaign."
+        emptyLabel={t("reviewerCampaigns:factualAnswers.empty")}
       />
     </section>
   )

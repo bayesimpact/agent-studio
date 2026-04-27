@@ -1,13 +1,19 @@
 import type { ReviewerSessionTranscriptMessageDto } from "@caseai-connect/api-contracts"
 import { cn } from "@caseai-connect/ui/utils"
+import { useTranslation } from "react-i18next"
 
 type Props = {
   messages: ReviewerSessionTranscriptMessageDto[]
 }
 
 export function ReviewerSessionTranscript({ messages }: Props) {
+  const { t } = useTranslation()
   if (messages.length === 0) {
-    return <p className="text-muted-foreground p-4 text-sm italic">This session has no messages.</p>
+    return (
+      <p className="text-muted-foreground p-4 text-sm italic">
+        {t("reviewerCampaigns:transcript.empty")}
+      </p>
+    )
   }
   return (
     <ol className="flex flex-col gap-3">

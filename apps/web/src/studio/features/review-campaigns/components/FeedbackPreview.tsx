@@ -5,6 +5,7 @@ import { Input } from "@caseai-connect/ui/shad/input"
 import { RadioGroup, RadioGroupItem } from "@caseai-connect/ui/shad/radio-group"
 import { Textarea } from "@caseai-connect/ui/shad/textarea"
 import { StarIcon } from "lucide-react"
+import { useTranslation } from "react-i18next"
 
 type Props = {
   perSessionQuestions: ReviewCampaignQuestionDto[]
@@ -12,8 +13,12 @@ type Props = {
 }
 
 function StarRatingPreview() {
+  const { t } = useTranslation()
   return (
-    <fieldset className="flex items-center gap-1 border-0 p-0" aria-label="5-star rating (preview)">
+    <fieldset
+      className="flex items-center gap-1 border-0 p-0"
+      aria-label={t("reviewCampaigns:preview.ratingAria")}
+    >
       {[1, 2, 3, 4, 5].map((value) => (
         <Button
           key={value}
@@ -21,7 +26,7 @@ function StarRatingPreview() {
           variant="ghost"
           size="icon-sm"
           tabIndex={-1}
-          aria-label={`${value} stars`}
+          aria-label={t("reviewCampaigns:preview.starsAria", { count: value })}
         >
           <StarIcon />
         </Button>
@@ -31,15 +36,25 @@ function StarRatingPreview() {
 }
 
 function QuestionPreview({ question }: { question: ReviewCampaignQuestionDto }) {
+  const { t } = useTranslation()
   return (
     <Field>
       <FieldLabel htmlFor={`preview-${question.id}`}>
-        {question.prompt || <span className="text-muted-foreground italic">Untitled</span>}
+        {question.prompt || (
+          <span className="text-muted-foreground italic">
+            {t("reviewCampaigns:preview.untitled")}
+          </span>
+        )}
         {question.required && <span className="text-destructive ml-1">*</span>}
       </FieldLabel>
       {question.type === "rating" && <StarRatingPreview />}
       {question.type === "free-text" && (
-        <Textarea id={`preview-${question.id}`} rows={2} disabled placeholder="Tester answer…" />
+        <Textarea
+          id={`preview-${question.id}`}
+          rows={2}
+          disabled
+          placeholder={t("reviewCampaigns:preview.answerPlaceholder")}
+        />
       )}
       {question.type === "single-choice" && (
         <RadioGroup disabled>
@@ -52,7 +67,9 @@ function QuestionPreview({ question }: { question: ReviewCampaignQuestionDto }) 
             </div>
           ))}
           {(question.options ?? []).length === 0 && (
-            <p className="text-muted-foreground text-sm italic">No options configured.</p>
+            <p className="text-muted-foreground text-sm italic">
+              {t("reviewCampaigns:preview.noOptions")}
+            </p>
           )}
         </RadioGroup>
       )}
@@ -73,6 +90,7 @@ function PreviewSection({
   includeOverallRating: boolean
   includeComment: boolean
 }) {
+  const { t } = useTranslation()
   return (
     <section className="rounded-lg border p-4 flex flex-col gap-4">
       <header>
@@ -82,15 +100,20 @@ function PreviewSection({
 
       {includeOverallRating && (
         <Field>
-          <FieldLabel>Overall rating</FieldLabel>
+          <FieldLabel>{t("reviewCampaigns:preview.overallRating")}</FieldLabel>
           <StarRatingPreview />
         </Field>
       )}
 
       {includeComment && (
         <Field>
-          <FieldLabel htmlFor="preview-comment">Comment</FieldLabel>
-          <Textarea id="preview-comment" rows={3} disabled placeholder="Tester comment…" />
+          <FieldLabel htmlFor="preview-comment">{t("reviewCampaigns:preview.comment")}</FieldLabel>
+          <Textarea
+            id="preview-comment"
+            rows={3}
+            disabled
+            placeholder={t("reviewCampaigns:preview.commentPlaceholder")}
+          />
         </Field>
       )}
 
@@ -99,29 +122,37 @@ function PreviewSection({
       ))}
 
       {questions.length === 0 && !includeOverallRating && !includeComment && (
-        <p className="text-muted-foreground text-sm italic">No content yet.</p>
+        <p className="text-muted-foreground text-sm italic">
+          {t("reviewCampaigns:preview.noContent")}
+        </p>
       )}
 
       <Field>
-        <Input disabled value="Submit" readOnly className="max-w-fit" />
+        <Input
+          disabled
+          value={t("reviewCampaigns:preview.submit")}
+          readOnly
+          className="max-w-fit"
+        />
       </Field>
     </section>
   )
 }
 
 export function FeedbackPreview({ perSessionQuestions, endOfPhaseQuestions }: Props) {
+  const { t } = useTranslation()
   return (
     <div className="flex flex-col gap-4">
       <PreviewSection
-        title="After each session"
-        description="What a tester sees when closing a session."
+        title={t("reviewCampaigns:preview.perSessionTitle")}
+        description={t("reviewCampaigns:preview.perSessionDescription")}
         questions={perSessionQuestions}
         includeOverallRating
         includeComment
       />
       <PreviewSection
-        title="End-of-phase survey"
-        description="What a tester sees when they finish participating."
+        title={t("reviewCampaigns:preview.endOfPhaseTitle")}
+        description={t("reviewCampaigns:preview.endOfPhaseDescription")}
         questions={endOfPhaseQuestions}
         includeOverallRating
         includeComment

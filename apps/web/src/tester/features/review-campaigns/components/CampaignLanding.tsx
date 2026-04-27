@@ -9,6 +9,7 @@ import {
   CardTitle,
 } from "@caseai-connect/ui/shad/card"
 import { ArrowRightIcon, CheckCircle2Icon, FlagIcon } from "lucide-react"
+import { useTranslation } from "react-i18next"
 import { SessionCard, type TesterSessionSummary } from "./SessionCard"
 
 type Props = {
@@ -23,12 +24,6 @@ type Props = {
   onEditSurvey: () => void
 }
 
-const AGENT_TYPE_LABEL: Record<ReviewCampaignTesterContextDto["agent"]["type"], string> = {
-  conversation: "Conversation agent",
-  extraction: "Extraction agent",
-  form: "Form agent",
-}
-
 export function CampaignLanding({
   context,
   sessions,
@@ -40,6 +35,7 @@ export function CampaignLanding({
   onFinishParticipating,
   onEditSurvey,
 }: Props) {
+  const { t } = useTranslation()
   return (
     <div className="flex flex-col gap-6 p-6">
       <header className="flex flex-col gap-2">
@@ -53,11 +49,13 @@ export function CampaignLanding({
             <div className="flex flex-col gap-1">
               <CardTitle>{context.agent.name}</CardTitle>
               <CardDescription>
-                <Badge variant="outline">{AGENT_TYPE_LABEL[context.agent.type]}</Badge>
+                <Badge variant="outline">
+                  {t(`testerCampaigns:landing.agentTypeLabel.${context.agent.type}`)}
+                </Badge>
               </CardDescription>
             </div>
             <Button onClick={onStartSession} className="gap-2">
-              Start a conversation <ArrowRightIcon className="size-4" />
+              {t("testerCampaigns:landing.startSession")} <ArrowRightIcon className="size-4" />
             </Button>
           </div>
         </CardHeader>
@@ -72,15 +70,16 @@ export function CampaignLanding({
 
       <section className="flex flex-col gap-3">
         <header className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold">Your past sessions</h2>
+          <h2 className="text-lg font-semibold">
+            {t("testerCampaigns:landing.pastSessions.title")}
+          </h2>
           <span className="text-muted-foreground text-sm">
-            {sessions.length} {sessions.length === 1 ? "session" : "sessions"}
+            {t("testerCampaigns:landing.pastSessions.count", { count: sessions.length })}
           </span>
         </header>
         {sessions.length === 0 ? (
           <p className="text-muted-foreground text-sm italic">
-            You haven't started any sessions yet. Your past sessions and their feedback status will
-            appear here.
+            {t("testerCampaigns:landing.pastSessions.empty")}
           </p>
         ) : (
           <div className="flex flex-col gap-2">
@@ -99,29 +98,28 @@ export function CampaignLanding({
 
       <section className="flex flex-col gap-2 rounded-lg border p-4">
         <h2 className="flex items-center gap-2 text-lg font-semibold">
-          <FlagIcon className="size-4" /> End-of-phase survey
+          <FlagIcon className="size-4" /> {t("testerCampaigns:landing.endOfPhase.title")}
         </h2>
         {participationFinished ? (
           <>
             <p className="text-muted-foreground text-sm flex items-center gap-2">
-              <CheckCircle2Icon className="size-4 text-green-600" /> Participation finished — thanks
-              for the feedback!
+              <CheckCircle2Icon className="size-4 text-green-600" />{" "}
+              {t("testerCampaigns:landing.endOfPhase.finishedMessage")}
             </p>
             <div>
               <Button variant="outline" onClick={onEditSurvey}>
-                Edit my survey
+                {t("testerCampaigns:landing.endOfPhase.editSurvey")}
               </Button>
             </div>
           </>
         ) : (
           <>
             <p className="text-muted-foreground text-sm">
-              When you're done testing, share an overall rating and thoughts about the experience.
-              This is optional — your per-session feedback already counts.
+              {t("testerCampaigns:landing.endOfPhase.description")}
             </p>
             <div>
               <Button variant="outline" onClick={onFinishParticipating}>
-                Finish participating
+                {t("testerCampaigns:landing.endOfPhase.finishParticipating")}
               </Button>
             </div>
           </>

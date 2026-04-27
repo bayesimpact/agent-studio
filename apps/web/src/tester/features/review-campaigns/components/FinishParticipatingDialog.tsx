@@ -7,6 +7,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@caseai-connect/ui/shad/dialog"
+import { useTranslation } from "react-i18next"
 
 type Props = {
   open: boolean
@@ -15,22 +16,20 @@ type Props = {
 }
 
 export function FinishParticipatingDialog({ open, onConfirm, onCancel }: Props) {
+  const { t } = useTranslation()
   return (
     <Dialog open={open} onOpenChange={(isOpen) => !isOpen && onCancel()}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Finish participating?</DialogTitle>
-          <DialogDescription>
-            You'll be taken to the end-of-phase survey. You can still start new sessions and edit
-            your survey until the campaign closes.
-          </DialogDescription>
+          <DialogTitle>{t("testerCampaigns:finishDialog.title")}</DialogTitle>
+          <DialogDescription>{t("testerCampaigns:finishDialog.description")}</DialogDescription>
         </DialogHeader>
         <DialogFooter>
           <Button type="button" variant="outline" onClick={onCancel}>
-            Not yet
+            {t("testerCampaigns:finishDialog.notYet")}
           </Button>
           <Button type="button" onClick={onConfirm}>
-            Go to the survey
+            {t("testerCampaigns:finishDialog.goToSurvey")}
           </Button>
         </DialogFooter>
       </DialogContent>

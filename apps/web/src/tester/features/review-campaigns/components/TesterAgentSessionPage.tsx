@@ -1,10 +1,9 @@
-"use client"
-
 import type { SubmitTesterSessionFeedbackRequestDto } from "@caseai-connect/api-contracts"
 import { Badge } from "@caseai-connect/ui/shad/badge"
 import { Button } from "@caseai-connect/ui/shad/button"
 import { ArrowLeftIcon, CheckCircle2Icon, XCircleIcon } from "lucide-react"
 import { useEffect, useMemo, useState } from "react"
+import { useTranslation } from "react-i18next"
 import { useNavigate, useParams } from "react-router-dom"
 import type { ConversationAgentSession } from "@/common/features/agents/agent-sessions/conversation/conversation-agent-sessions.models"
 import { FormResult } from "@/common/features/agents/agent-sessions/form/components/FormResult"
@@ -32,6 +31,7 @@ type Params = {
 
 export function TesterAgentSessionPage() {
   const dispatch = useAppDispatch()
+  const { t } = useTranslation()
   const params = useParams<Params>()
   const contextState = useAppSelector(selectTesterContext)
   const messagesData = useAppSelector(selectCurrentMessagesData)
@@ -90,7 +90,9 @@ export function TesterAgentSessionPage() {
   }
 
   if (ADS.isLoading(contextState) || !ADS.isFulfilled(contextState)) {
-    return <p className="p-6 text-muted-foreground text-sm">Loading…</p>
+    return (
+      <p className="p-6 text-muted-foreground text-sm">{t("testerCampaigns:common.loading")}</p>
+    )
   }
   if (ADS.isError(contextState)) {
     return <p className="p-6 text-destructive text-sm">{contextState.error}</p>
@@ -144,6 +146,7 @@ export function TesterAgentSessionContent({
 }: TesterAgentSessionContentProps) {
   const dispatch = useAppDispatch()
   const navigate = useNavigate()
+  const { t } = useTranslation()
   const [feedbackOpen, setFeedbackOpen] = useState(false)
 
   const handleSubmitFeedback = async (payload: SubmitTesterSessionFeedbackRequestDto) => {
@@ -164,10 +167,10 @@ export function TesterAgentSessionContent({
       <header className="flex items-center justify-between gap-4 border-b px-4 py-3">
         <div className="flex items-center gap-3">
           <Button variant="ghost" size="sm" onClick={() => navigate(backPath)}>
-            <ArrowLeftIcon /> Back to campaign
+            <ArrowLeftIcon /> {t("testerCampaigns:agentSession.back")}
           </Button>
           <div className="hidden md:flex items-center gap-2 text-sm">
-            <Badge variant="outline">Review campaign</Badge>
+            <Badge variant="outline">{t("testerCampaigns:agentSession.badge")}</Badge>
             <span className="font-medium">{campaignName}</span>
             <span className="text-muted-foreground">·</span>
             <span className="text-muted-foreground">{agent.name}</span>
@@ -175,10 +178,10 @@ export function TesterAgentSessionContent({
         </div>
         <div className="flex items-center gap-2">
           <Button variant="outline" onClick={() => navigate(backPath)}>
-            <XCircleIcon /> Abandon
+            <XCircleIcon /> {t("testerCampaigns:agentSession.abandon")}
           </Button>
           <Button onClick={() => setFeedbackOpen(true)}>
-            <CheckCircle2Icon /> End session & give feedback
+            <CheckCircle2Icon /> {t("testerCampaigns:agentSession.endSession")}
           </Button>
         </div>
       </header>

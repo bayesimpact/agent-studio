@@ -7,6 +7,7 @@ import {
   CardTitle,
 } from "@caseai-connect/ui/shad/card"
 import { ClipboardListIcon, MessageSquareIcon, StarIcon, UsersIcon } from "lucide-react"
+import { useTranslation } from "react-i18next"
 
 type Props = {
   headline: CampaignReportHeadlineDto
@@ -15,31 +16,38 @@ type Props = {
 const formatRating = (rating: number | null): string => (rating === null ? "—" : rating.toFixed(2))
 
 export function ReportHeadlineCards({ headline }: Props) {
+  const { t } = useTranslation()
   return (
     <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
       <HeadlineCard
         icon={<MessageSquareIcon className="size-4" />}
-        label="Sessions"
+        label={t("reviewCampaigns:report.headline.sessions")}
         value={headline.sessionCount}
-        hint={`${headline.participantCount} unique testers`}
+        hint={t("reviewCampaigns:report.headline.sessionsHint", {
+          count: headline.participantCount,
+        })}
       />
       <HeadlineCard
         icon={<StarIcon className="size-4" />}
-        label="Mean tester rating"
+        label={t("reviewCampaigns:report.headline.meanTesterRating")}
         value={formatRating(headline.meanTesterRating)}
-        hint={`${headline.testerFeedbackCount} per-session responses`}
+        hint={t("reviewCampaigns:report.headline.meanTesterRatingHint", {
+          count: headline.testerFeedbackCount,
+        })}
       />
       <HeadlineCard
         icon={<UsersIcon className="size-4" />}
-        label="Mean reviewer rating"
+        label={t("reviewCampaigns:report.headline.meanReviewerRating")}
         value={formatRating(headline.meanReviewerRating)}
-        hint={`${headline.reviewerReviewCount} reviewer reviews`}
+        hint={t("reviewCampaigns:report.headline.meanReviewerRatingHint", {
+          count: headline.reviewerReviewCount,
+        })}
       />
       <HeadlineCard
         icon={<ClipboardListIcon className="size-4" />}
-        label="Mean end-of-phase"
+        label={t("reviewCampaigns:report.headline.meanEndOfPhase")}
         value={formatRating(headline.meanEndOfPhaseRating)}
-        hint="From final tester surveys"
+        hint={t("reviewCampaigns:report.headline.meanEndOfPhaseHint")}
       />
     </div>
   )

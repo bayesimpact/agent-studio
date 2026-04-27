@@ -9,6 +9,7 @@ import {
   SheetTitle,
 } from "@caseai-connect/ui/shad/sheet"
 import { useEffect } from "react"
+import { useTranslation } from "react-i18next"
 import { ADS } from "@/common/store/async-data-status"
 import { useAppDispatch, useAppSelector } from "@/common/store/hooks"
 import { selectReviewCampaignDetail } from "../review-campaigns.selectors"
@@ -27,6 +28,7 @@ type Props = {
 }
 
 export function CampaignEditorSheet({ open, agents, mode, reviewCampaignId, onClose }: Props) {
+  const { t } = useTranslation()
   const dispatch = useAppDispatch()
   const detail = useAppSelector(selectReviewCampaignDetail)
 
@@ -45,12 +47,14 @@ export function CampaignEditorSheet({ open, agents, mode, reviewCampaignId, onCl
         <ScrollArea className="h-full">
           <SheetHeader>
             <SheetTitle>
-              {mode === "create" ? "New review campaign" : "Edit review campaign"}
+              {mode === "create"
+                ? t("reviewCampaigns:editor.createTitle")
+                : t("reviewCampaigns:editor.editTitle")}
             </SheetTitle>
             <SheetDescription>
               {mode === "create"
-                ? "Configure the agent, questions, and invitees before activating."
-                : "Manage configuration, participants, and lifecycle."}
+                ? t("reviewCampaigns:editor.createDescription")
+                : t("reviewCampaigns:editor.editDescription")}
             </SheetDescription>
           </SheetHeader>
           <div className="px-4 pb-4">
@@ -66,7 +70,7 @@ export function CampaignEditorSheet({ open, agents, mode, reviewCampaignId, onCl
             ) : ADS.isError(detail) ? (
               <p className="text-destructive text-sm">{detail.error}</p>
             ) : (
-              <p className="text-muted-foreground text-sm">Loading…</p>
+              <p className="text-muted-foreground text-sm">{t("reviewCampaigns:loading")}</p>
             )}
           </div>
         </ScrollArea>

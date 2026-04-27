@@ -16,6 +16,7 @@ import {
   TableRow,
 } from "@caseai-connect/ui/shad/table"
 import { InboxIcon } from "lucide-react"
+import { useTranslation } from "react-i18next"
 
 type Props = {
   rows: CampaignReportSessionRowDto[]
@@ -27,6 +28,8 @@ const formatDate = (millis: number) =>
 const formatRating = (rating: number | null): string => (rating === null ? "—" : rating.toFixed(2))
 
 export function ReportSessionMatrix({ rows }: Props) {
+  const { t } = useTranslation()
+
   if (rows.length === 0) {
     return (
       <Empty>
@@ -34,9 +37,9 @@ export function ReportSessionMatrix({ rows }: Props) {
           <EmptyMedia variant="icon">
             <InboxIcon />
           </EmptyMedia>
-          <EmptyTitle>No sessions yet</EmptyTitle>
+          <EmptyTitle>{t("reviewCampaigns:report.sessionMatrix.emptyTitle")}</EmptyTitle>
           <EmptyDescription>
-            The session matrix fills in as testers start sessions in this campaign.
+            {t("reviewCampaigns:report.sessionMatrix.emptyDescription")}
           </EmptyDescription>
         </EmptyHeader>
       </Empty>
@@ -47,12 +50,20 @@ export function ReportSessionMatrix({ rows }: Props) {
     <Table>
       <TableHeader>
         <TableRow>
-          <TableHead>Session</TableHead>
-          <TableHead>Started</TableHead>
-          <TableHead className="text-right">Tester</TableHead>
-          <TableHead className="text-right">Reviewers</TableHead>
-          <TableHead className="text-right">Mean reviewer</TableHead>
-          <TableHead className="text-right">Spread</TableHead>
+          <TableHead>{t("reviewCampaigns:report.sessionMatrix.session")}</TableHead>
+          <TableHead>{t("reviewCampaigns:report.sessionMatrix.started")}</TableHead>
+          <TableHead className="text-right">
+            {t("reviewCampaigns:report.sessionMatrix.tester")}
+          </TableHead>
+          <TableHead className="text-right">
+            {t("reviewCampaigns:report.sessionMatrix.reviewers")}
+          </TableHead>
+          <TableHead className="text-right">
+            {t("reviewCampaigns:report.sessionMatrix.meanReviewer")}
+          </TableHead>
+          <TableHead className="text-right">
+            {t("reviewCampaigns:report.sessionMatrix.spread")}
+          </TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>

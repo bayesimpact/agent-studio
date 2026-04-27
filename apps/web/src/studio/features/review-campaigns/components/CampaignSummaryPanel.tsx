@@ -8,6 +8,7 @@ import {
   CardTitle,
 } from "@caseai-connect/ui/shad/card"
 import { BarChartIcon, ClipboardListIcon, MessageSquareIcon, StarIcon } from "lucide-react"
+import { useTranslation } from "react-i18next"
 
 type Props = {
   aggregates: CampaignAggregatesDto | null
@@ -17,11 +18,11 @@ type Props = {
 const formatRating = (rating: number | null): string => (rating === null ? "—" : rating.toFixed(2))
 
 export function CampaignSummaryPanel({ aggregates, onOpenReport }: Props) {
+  const { t } = useTranslation()
+
   if (!aggregates) {
     return (
-      <p className="text-muted-foreground text-sm italic">
-        Aggregated results become available once the campaign is closed.
-      </p>
+      <p className="text-muted-foreground text-sm italic">{t("reviewCampaigns:summary.pending")}</p>
     )
   }
 
@@ -30,7 +31,7 @@ export function CampaignSummaryPanel({ aggregates, onOpenReport }: Props) {
       {onOpenReport && (
         <div className="flex justify-end">
           <Button type="button" variant="outline" size="sm" onClick={onOpenReport}>
-            <BarChartIcon /> View full report
+            <BarChartIcon /> {t("reviewCampaigns:summary.viewFullReport")}
           </Button>
         </div>
       )}
@@ -38,13 +39,13 @@ export function CampaignSummaryPanel({ aggregates, onOpenReport }: Props) {
         <Card>
           <CardHeader>
             <CardDescription className="flex items-center gap-2">
-              <StarIcon className="size-4" /> Mean tester rating
+              <StarIcon className="size-4" /> {t("reviewCampaigns:summary.meanTesterRating")}
             </CardDescription>
             <CardTitle className="text-3xl">{formatRating(aggregates.meanTesterRating)}</CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-muted-foreground text-xs">
-              Average of the per-session overall ratings.
+              {t("reviewCampaigns:summary.meanTesterRatingHint")}
             </p>
           </CardContent>
         </Card>
@@ -52,24 +53,29 @@ export function CampaignSummaryPanel({ aggregates, onOpenReport }: Props) {
         <Card>
           <CardHeader>
             <CardDescription className="flex items-center gap-2">
-              <MessageSquareIcon className="size-4" /> Sessions
+              <MessageSquareIcon className="size-4" /> {t("reviewCampaigns:summary.sessions")}
             </CardDescription>
             <CardTitle className="text-3xl">{aggregates.sessionCount}</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-muted-foreground text-xs">Total sessions started by testers.</p>
+            <p className="text-muted-foreground text-xs">
+              {t("reviewCampaigns:summary.sessionsHint")}
+            </p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader>
             <CardDescription className="flex items-center gap-2">
-              <ClipboardListIcon className="size-4" /> End-of-phase surveys
+              <ClipboardListIcon className="size-4" />{" "}
+              {t("reviewCampaigns:summary.endOfPhaseSurveys")}
             </CardDescription>
             <CardTitle className="text-3xl">{aggregates.surveyCount}</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-muted-foreground text-xs">Testers who submitted the final survey.</p>
+            <p className="text-muted-foreground text-xs">
+              {t("reviewCampaigns:summary.endOfPhaseSurveysHint")}
+            </p>
           </CardContent>
         </Card>
       </div>

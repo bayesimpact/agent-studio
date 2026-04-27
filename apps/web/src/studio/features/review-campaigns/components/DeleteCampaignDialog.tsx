@@ -7,6 +7,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@caseai-connect/ui/shad/dialog"
+import { useTranslation } from "react-i18next"
 
 type Props = {
   open: boolean
@@ -16,22 +17,22 @@ type Props = {
 }
 
 export function DeleteCampaignDialog({ open, campaignName, onConfirm, onCancel }: Props) {
+  const { t } = useTranslation()
   return (
     <Dialog open={open} onOpenChange={(isOpen) => !isOpen && onCancel()}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Delete “{campaignName}”?</DialogTitle>
-          <DialogDescription>
-            This permanently deletes the draft campaign and its configuration. Only drafts can be
-            deleted — active or closed campaigns must be kept for audit.
-          </DialogDescription>
+          <DialogTitle>
+            {t("reviewCampaigns:dialogs.delete.title", { name: campaignName })}
+          </DialogTitle>
+          <DialogDescription>{t("reviewCampaigns:dialogs.delete.description")}</DialogDescription>
         </DialogHeader>
         <DialogFooter>
           <Button type="button" variant="outline" onClick={onCancel}>
-            Cancel
+            {t("reviewCampaigns:dialogs.cancel")}
           </Button>
           <Button type="button" variant="destructive" onClick={onConfirm}>
-            Delete
+            {t("reviewCampaigns:dialogs.delete.confirm")}
           </Button>
         </DialogFooter>
       </DialogContent>

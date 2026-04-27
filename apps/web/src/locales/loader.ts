@@ -27,6 +27,13 @@ export async function loadLocales(): Promise<{
   const evalFeatureLocales = import.meta.glob("../eval/features/**/locales/*.{en,fr}.json", {
     eager: true,
   })
+  const testerFeatureLocales = import.meta.glob("../tester/features/**/locales/*.{en,fr}.json", {
+    eager: true,
+  })
+  const reviewerFeatureLocales = import.meta.glob(
+    "../reviewer/features/**/locales/*.{en,fr}.json",
+    { eager: true },
+  )
   const globalLocales = import.meta.glob("../locales/*.{en,fr}.json", { eager: true })
 
   const allLocales = {
@@ -34,6 +41,8 @@ export async function loadLocales(): Promise<{
     ...deskFeatureLocales,
     ...studioFeatureLocales,
     ...evalFeatureLocales,
+    ...testerFeatureLocales,
+    ...reviewerFeatureLocales,
     ...globalLocales,
   }
 

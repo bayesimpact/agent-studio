@@ -3,6 +3,7 @@ import type {
   SubmitReviewerSessionReviewRequestDto,
   UpdateReviewerSessionReviewRequestDto,
 } from "@caseai-connect/api-contracts"
+import { useTranslation } from "react-i18next"
 import { BlindBanner } from "./BlindBanner"
 import { FactualAnswersPanel } from "./FactualAnswersPanel"
 import { FormResultPanel } from "./FormResultPanel"
@@ -25,6 +26,7 @@ type Props = {
  * revealed, other reviewers, editable submitted review).
  */
 export function ReviewerSessionReview({ session, onSubmitReview, onUpdateReview }: Props) {
+  const { t } = useTranslation()
   return (
     <div className="grid gap-6 lg:grid-cols-[3fr_2fr]">
       {/* Left pane: transcript + session context */}
@@ -47,7 +49,7 @@ export function ReviewerSessionReview({ session, onSubmitReview, onUpdateReview 
         )}
         {session.formResult && <FormResultPanel result={session.formResult} />}
         <section className="flex flex-col gap-2 rounded-lg border bg-card p-4">
-          <h3 className="text-sm font-semibold">Transcript</h3>
+          <h3 className="text-sm font-semibold">{t("reviewerCampaigns:transcript.title")}</h3>
           <ReviewerSessionTranscript messages={session.transcript} />
         </section>
       </div>
@@ -57,25 +59,27 @@ export function ReviewerSessionReview({ session, onSubmitReview, onUpdateReview 
         {session.blind ? (
           <section className="flex flex-col gap-4 rounded-lg border bg-card p-4">
             <header className="flex flex-col gap-1">
-              <h2 className="text-lg font-semibold">Your review</h2>
+              <h2 className="text-lg font-semibold">{t("reviewerCampaigns:review.yourReview")}</h2>
               <p className="text-muted-foreground text-sm">
-                {session.otherReviewerCount} other{" "}
-                {session.otherReviewerCount === 1 ? "reviewer has" : "reviewers have"} submitted a
-                review.
+                {t("reviewerCampaigns:review.blindOtherReviewers", {
+                  count: session.otherReviewerCount,
+                })}
               </p>
             </header>
             <BlindBanner />
             <ReviewerReviewForm
               questions={session.reviewerQuestions}
               onSubmit={onSubmitReview}
-              submitLabel="Submit review"
+              submitLabel={t("reviewerCampaigns:reviewForm.submitReview")}
             />
           </section>
         ) : (
           <>
             <section className="flex flex-col gap-4 rounded-lg border bg-card p-4">
               <header>
-                <h2 className="text-lg font-semibold">Your review</h2>
+                <h2 className="text-lg font-semibold">
+                  {t("reviewerCampaigns:review.yourReview")}
+                </h2>
               </header>
               <ReviewerReviewForm
                 questions={session.reviewerQuestions}
@@ -85,7 +89,7 @@ export function ReviewerSessionReview({ session, onSubmitReview, onUpdateReview 
                   answers: session.myReview.answers,
                 }}
                 onSubmit={onUpdateReview}
-                submitLabel="Save changes"
+                submitLabel={t("reviewerCampaigns:reviewForm.saveChanges")}
               />
             </section>
             <OtherReviewersPanel
