@@ -1,7 +1,9 @@
 "use client"
 
 import { useState } from "react"
+import { useNavigate } from "react-router-dom"
 import { useAppDispatch } from "@/common/store/hooks"
+import { buildReviewCampaignReportPath } from "@/studio/routes/helpers"
 import type { ReviewCampaignDetail } from "../review-campaigns.models"
 import {
   deleteReviewCampaign,
@@ -25,7 +27,18 @@ type DialogKind = "activate" | "close" | "delete" | null
 
 export function UpdateCampaignForm({ campaign, agents, onSuccess, onDeleted }: Props) {
   const dispatch = useAppDispatch()
+  const navigate = useNavigate()
   const [dialog, setDialog] = useState<DialogKind>(null)
+
+  const handleOpenReport = () => {
+    navigate(
+      buildReviewCampaignReportPath({
+        organizationId: campaign.organizationId,
+        projectId: campaign.projectId,
+        reviewCampaignId: campaign.id,
+      }),
+    )
+  }
 
   const handleSubmit = async (values: CampaignFormValues) => {
     await dispatch(
@@ -106,6 +119,7 @@ export function UpdateCampaignForm({ campaign, agents, onSuccess, onDeleted }: P
         onDelete={() => setDialog("delete")}
         onInviteMember={handleInvite}
         onRevokeMember={handleRevoke}
+        onOpenReport={handleOpenReport}
       />
 
       <ActivateCampaignDialog

@@ -4,7 +4,7 @@ import { useEffect } from "react"
 import { useNavigate, useParams } from "react-router-dom"
 import { ADS } from "@/common/store/async-data-status"
 import { useAppDispatch, useAppSelector } from "@/common/store/hooks"
-import { buildReviewerSessionPath } from "@/studio/routes/helpers"
+import { buildReviewerReportPath, buildReviewerSessionPath } from "@/studio/routes/helpers"
 import { selectTesterContext } from "../../tester/tester.selectors"
 import { getTesterContext } from "../../tester/tester.thunks"
 import { selectReviewerSessions } from "../reviewer.selectors"
@@ -66,6 +66,16 @@ export function ReviewerCampaignLandingPage() {
             projectId: params.projectId,
             reviewCampaignId: params.reviewCampaignId,
             sessionId,
+          }),
+        )
+      }}
+      onOpenReport={() => {
+        if (!params.organizationId || !params.projectId || !params.reviewCampaignId) return
+        navigate(
+          buildReviewerReportPath({
+            organizationId: params.organizationId,
+            projectId: params.projectId,
+            reviewCampaignId: params.reviewCampaignId,
           }),
         )
       }}

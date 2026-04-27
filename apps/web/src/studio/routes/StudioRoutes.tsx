@@ -33,6 +33,7 @@ import { FeedbackRoute } from "./FeedbackRoute"
 import { buildStudioPath, StudioRouteNames } from "./helpers"
 import { ProjectAnalyticsRoute } from "./ProjectAnalyticsRoute"
 import { ProjectMembershipsRoute } from "./ProjectMembershipsRoute"
+import { ReviewCampaignReportRoute } from "./ReviewCampaignReportRoute"
 import { StudioAgentSessionRoute } from "./StudioAgentSessionRoute"
 import { StudioDashboardRoute } from "./StudioDashboardRoute"
 import { Studio } from "./StudioRoute"
@@ -119,6 +120,10 @@ export const studioRoutes = {
             {
               path: buildStudioPath(StudioRouteNames.REVIEW_CAMPAIGNS),
               element: <CampaignListPage />,
+            },
+            {
+              path: buildStudioPath(StudioRouteNames.REVIEW_CAMPAIGN_REPORT),
+              element: <ReviewCampaignReportRoute />,
             },
             {
               path: buildStudioPath(RouteNames.AGENT),

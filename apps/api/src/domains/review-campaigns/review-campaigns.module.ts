@@ -23,6 +23,9 @@ import { ProjectsModule } from "@/domains/projects/projects.module"
 import { User } from "@/domains/users/user.entity"
 import { UsersModule } from "@/domains/users/users.module"
 import { ReviewCampaignMembership } from "./memberships/review-campaign-membership.entity"
+import { CampaignReportGuard } from "./reports/campaign-report.guard"
+import { ReportsController } from "./reports/reports.controller"
+import { ReportsService } from "./reports/reports.service"
 import { ReviewCampaign } from "./review-campaign.entity"
 import { ReviewCampaignsController } from "./review-campaigns.controller"
 import { ReviewCampaignsGuard } from "./review-campaigns.guard"
@@ -71,8 +74,10 @@ import { TesterSessionFeedback } from "./tester-session-feedbacks/tester-session
   ],
   providers: [
     AgentSessionInCampaignContextResolver,
+    CampaignReportGuard,
     OrganizationContextResolver,
     ProjectContextResolver,
+    ReportsService,
     ResourceContextGuard,
     ReviewCampaignContextResolver,
     ReviewCampaignMembershipContextResolver,
@@ -84,6 +89,7 @@ import { TesterSessionFeedback } from "./tester-session-feedbacks/tester-session
     TesterService,
   ],
   controllers: [
+    ReportsController,
     ReviewCampaignsController,
     ReviewerSessionDetailController,
     ReviewerSessionReviewController,
@@ -92,6 +98,6 @@ import { TesterSessionFeedback } from "./tester-session-feedbacks/tester-session
     TesterMeController,
     TesterSessionFeedbackController,
   ],
-  exports: [ReviewCampaignsService, ReviewerService, TesterService],
+  exports: [ReportsService, ReviewCampaignsService, ReviewerService, TesterService],
 })
 export class ReviewCampaignsModule {}

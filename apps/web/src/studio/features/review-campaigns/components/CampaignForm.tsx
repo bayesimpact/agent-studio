@@ -57,6 +57,7 @@ type Props = {
   onDelete?: () => void
   onInviteMember?: (role: ReviewCampaignMembershipRole, emails: string[]) => void
   onRevokeMember?: (membershipId: string) => void
+  onOpenReport?: () => void
 }
 
 const schema = z.object({
@@ -81,6 +82,7 @@ export function CampaignForm({
   onDelete,
   onInviteMember,
   onRevokeMember,
+  onOpenReport,
 }: Props) {
   const isDraft = status === "draft"
   const isActive = status === "active"
@@ -166,7 +168,7 @@ export function CampaignForm({
 
         {isClosed && (
           <TabsContent value="summary" className="pt-4">
-            <CampaignSummaryPanel aggregates={aggregates} />
+            <CampaignSummaryPanel aggregates={aggregates} onOpenReport={onOpenReport} />
           </TabsContent>
         )}
 

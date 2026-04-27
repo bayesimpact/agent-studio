@@ -282,3 +282,51 @@ export type ReviewerSessionFullDto = ReviewerSessionMetaDto & {
 }
 
 export type GetReviewerSessionResponseDto = ReviewerSessionBlindDto | ReviewerSessionFullDto
+
+// === Aggregate report ===
+
+export type CampaignReportHeadlineDto = {
+  sessionCount: number
+  testerFeedbackCount: number
+  reviewerReviewCount: number
+  meanTesterRating: number | null
+  meanReviewerRating: number | null
+  meanEndOfPhaseRating: number | null
+  participantCount: number
+}
+
+export type CampaignReportBucketDto = {
+  label: string
+  count: number
+}
+
+export type CampaignReportQuestionDistributionDto = {
+  questionId: string
+  prompt: string
+  type: ReviewCampaignQuestionType
+  responseCount: number
+  /** Empty for `free-text` questions (only responseCount is meaningful). */
+  buckets: CampaignReportBucketDto[]
+}
+
+export type CampaignReportSessionRowDto = {
+  sessionId: string
+  sessionType: "conversation" | "form"
+  testerUserId: string
+  startedAt: TimeType
+  testerRating: number | null
+  reviewerRatings: number[]
+  reviewerCount: number
+  meanReviewerRating: number | null
+  /** max(reviewerRatings) − min(reviewerRatings); null when < 2 reviewers. */
+  reviewerRatingSpread: number | null
+}
+
+export type CampaignReportDto = {
+  campaignId: string
+  headline: CampaignReportHeadlineDto
+  testerPerSessionDistributions: CampaignReportQuestionDistributionDto[]
+  testerEndOfPhaseDistributions: CampaignReportQuestionDistributionDto[]
+  reviewerDistributions: CampaignReportQuestionDistributionDto[]
+  sessionMatrix: CampaignReportSessionRowDto[]
+}

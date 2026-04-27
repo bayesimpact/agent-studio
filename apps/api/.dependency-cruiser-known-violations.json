@@ -3552,6 +3552,51 @@
   },
   {
     "type": "dependency",
+    "from": "src/domains/review-campaigns/reports/campaign-report.policy.ts",
+    "to": "src/domains/organizations/memberships/organization-membership.entity.ts",
+    "rule": {
+      "severity": "error",
+      "name": "no-cross-domain-entity-import"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "src/domains/review-campaigns/reports/campaign-report.policy.ts",
+    "to": "src/domains/projects/memberships/project-membership.entity.ts",
+    "rule": {
+      "severity": "error",
+      "name": "no-cross-domain-entity-import"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "src/domains/review-campaigns/reports/campaign-report.policy.ts",
+    "to": "src/domains/projects/project.entity.ts",
+    "rule": {
+      "severity": "error",
+      "name": "no-cross-domain-entity-import"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "src/domains/review-campaigns/reports/reports.service.ts",
+    "to": "src/domains/agents/conversation-agent-sessions/conversation-agent-session.entity.ts",
+    "rule": {
+      "severity": "error",
+      "name": "no-cross-domain-entity-import"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "src/domains/review-campaigns/reports/reports.service.ts",
+    "to": "src/domains/agents/form-agent-sessions/form-agent-session.entity.ts",
+    "rule": {
+      "severity": "error",
+      "name": "no-cross-domain-entity-import"
+    }
+  },
+  {
+    "type": "dependency",
     "from": "src/domains/review-campaigns/review-campaigns.module.ts",
     "to": "src/domains/agents/agent.entity.ts",
     "rule": {

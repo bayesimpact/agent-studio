@@ -1,6 +1,7 @@
 import type { RequestPayload, ResponseData, SuccessResponseDTO } from "../generic"
 import { defineRoute } from "../helpers"
 import type {
+  CampaignReportDto,
   CreateReviewCampaignRequestDto,
   GetMyTesterSurveyResponseDto,
   GetReviewerSessionResponseDto,
@@ -147,5 +148,22 @@ export const ReviewCampaignsRoutes = {
   >({
     method: "patch",
     path: "organizations/:organizationId/projects/:projectId/review-campaigns/:reviewCampaignId/agent-sessions/:sessionId/reviewer-reviews/:reviewId",
+  }),
+
+  // === Aggregate report (admin + accepted reviewer) ===
+
+  getCampaignReport: defineRoute<ResponseData<CampaignReportDto>>({
+    method: "get",
+    path: "organizations/:organizationId/projects/:projectId/review-campaigns/:reviewCampaignId/report",
+  }),
+
+  /**
+   * Returns the session matrix as RFC 4180 CSV (Content-Type: text/csv).
+   * The response is raw CSV text, not wrapped in `{ data }` — clients must
+   * request it with `responseType: "text"` or `"blob"`.
+   */
+  getCampaignReportCsv: defineRoute<ResponseData<string>>({
+    method: "get",
+    path: "organizations/:organizationId/projects/:projectId/review-campaigns/:reviewCampaignId/report.csv",
   }),
 }

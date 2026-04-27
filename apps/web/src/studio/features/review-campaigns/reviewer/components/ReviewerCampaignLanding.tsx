@@ -3,6 +3,7 @@ import type {
   ReviewerSessionListItemDto,
 } from "@caseai-connect/api-contracts"
 import { Badge } from "@caseai-connect/ui/shad/badge"
+import { Button } from "@caseai-connect/ui/shad/button"
 import {
   Card,
   CardContent,
@@ -10,6 +11,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@caseai-connect/ui/shad/card"
+import { BarChartIcon } from "lucide-react"
 import { ReviewerSessionsTable } from "./ReviewerSessionsTable"
 
 type Props = {
@@ -22,6 +24,7 @@ type Props = {
   context: ReviewCampaignTesterContextDto
   sessions: ReviewerSessionListItemDto[]
   onOpenSession: (sessionId: string) => void
+  onOpenReport?: () => void
 }
 
 const AGENT_TYPE_LABEL: Record<ReviewCampaignTesterContextDto["agent"]["type"], string> = {
@@ -30,16 +33,23 @@ const AGENT_TYPE_LABEL: Record<ReviewCampaignTesterContextDto["agent"]["type"], 
   form: "Form agent",
 }
 
-export function ReviewerCampaignLanding({ context, sessions, onOpenSession }: Props) {
+export function ReviewerCampaignLanding({ context, sessions, onOpenSession, onOpenReport }: Props) {
   const pendingCount = sessions.filter(
     (session) => !session.callerHasReviewed && !session.callerIsSessionOwner,
   ).length
 
   return (
     <div className="flex flex-col gap-6 p-6">
-      <header className="flex flex-col gap-2">
-        <h1 className="text-2xl font-semibold">{context.name}</h1>
-        {context.description && <p className="text-muted-foreground">{context.description}</p>}
+      <header className="flex flex-col gap-2 md:flex-row md:items-start md:justify-between">
+        <div className="flex flex-col gap-2">
+          <h1 className="text-2xl font-semibold">{context.name}</h1>
+          {context.description && <p className="text-muted-foreground">{context.description}</p>}
+        </div>
+        {onOpenReport && (
+          <Button variant="outline" size="sm" onClick={onOpenReport}>
+            <BarChartIcon /> Campaign report
+          </Button>
+        )}
       </header>
 
       <Card>

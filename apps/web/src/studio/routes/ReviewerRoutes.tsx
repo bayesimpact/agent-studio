@@ -3,6 +3,7 @@ import { ReviewerCampaignLandingPage } from "@/studio/features/review-campaigns/
 import { ReviewerMyCampaignsPage } from "@/studio/features/review-campaigns/reviewer/components/ReviewerMyCampaignsPage"
 import { ReviewerSessionReviewPage } from "@/studio/features/review-campaigns/reviewer/components/ReviewerSessionReviewPage"
 import { ReviewerRouteNames } from "./helpers"
+import { ReviewerReportRoute } from "./ReviewerReportRoute"
 import { ReviewerShell } from "./ReviewerShell"
 
 export const reviewerRoutes = {
@@ -19,6 +20,10 @@ export const reviewerRoutes = {
     {
       path: ReviewerRouteNames.CAMPAIGN,
       element: <ReviewerCampaignLandingPage />,
+    },
+    {
+      path: ReviewerRouteNames.REPORT,
+      element: <ReviewerReportRoute />,
     },
     {
       path: ReviewerRouteNames.SESSION,
