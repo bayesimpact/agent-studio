@@ -20,6 +20,7 @@ This project uses [CalVer](https://calver.org/) (YY.MM.Micro) for product versio
 - (beta) Project-level agent categories and category analytics
 - Bull board UI for queue monitoring
 - Copy chat messages to clipboard
+- Warn before closing or refreshing the tab during document uploads
 
 ### Changed
 - Agent configuration is now organized into tabs (General, Model, Sources, and Form or Output) for easier editing
@@ -36,6 +37,7 @@ This project uses [CalVer](https://calver.org/) (YY.MM.Micro) for product versio
 - Show loader while currentId is being set
 - Studio mode redirect to Home when route not found
 - Make UI responsive across devices
+- Hide the sidebar toggle icon when the sidebar is unused
 
 ### Security
 

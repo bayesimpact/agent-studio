@@ -39,7 +39,7 @@ function WithData({ user, organizations }: { user: User; organizations: Organiza
   if (orgsCount === 0) return <OrganizationCreator />
 
   return (
-    <SidebarLayout user={{ name: user.name, email: user.email }}>
+    <SidebarLayout hideIcon user={{ name: user.name, email: user.email }}>
       <SidebarContent organizations={organizations} user={user} orgsCount={orgsCount} />
     </SidebarLayout>
   )

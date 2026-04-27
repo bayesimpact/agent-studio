@@ -20,8 +20,8 @@ import {
   getTagNameById,
   useDocumentTags,
 } from "@/studio/features/document-tags/document-tags.helpers"
-import { selectUploaderState } from "@/studio/features/documents/documents.selectors"
 import { uploadDocuments } from "@/studio/features/documents/documents.thunks"
+import { selectUploaderState } from "../documents.selectors"
 import { DocumentTagPicker } from "./DocumentTagPicker"
 
 export function UploadDocumentsButton({
@@ -54,6 +54,7 @@ export function UploadDocumentsButton({
   const handleDropFiles = async (files: File[]) => {
     setFilesCount(files.length)
     if (hasAvailableTags) setOpen(true)
+    else setStartProcessingFiles(true)
   }
 
   const handleProcessFiles = async (files: File[]) => {

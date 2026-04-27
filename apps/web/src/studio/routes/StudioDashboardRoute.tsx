@@ -5,10 +5,12 @@ import { SidebarLayout } from "@/common/components/sidebar/SidebarLayout"
 import type { User } from "@/common/features/me/me.models"
 import type { Organization } from "@/common/features/organizations/organizations.models"
 import { selectCurrentProjectData } from "@/common/features/projects/projects.selectors"
+import { usePreventLeave } from "@/common/hooks/use-prevent-leave"
 import { RouteNames } from "@/common/routes/helpers"
 import { useAppSelector } from "@/common/store/hooks"
 import { DotsBackground } from "@/studio/components/DotsBackground"
 import { SidebarAgentCreatorButton } from "@/studio/features/agents/components/AgentCreator"
+import { selectUploaderState } from "../features/documents/documents.selectors"
 import { SidebarFooterChildren } from "./SidebarFooterChildren"
 
 export function StudioDashboardRoute({
@@ -20,6 +22,9 @@ export function StudioDashboardRoute({
 }) {
   const outlet = useOutlet()
   const project = useAppSelector(selectCurrentProjectData)
+
+  const uploaderState = useAppSelector(selectUploaderState)
+  usePreventLeave(uploaderState.status === "uploading")
 
   return (
     <SidebarLayout

@@ -97,6 +97,7 @@ function WithData({
   const handleBack = () => {
     navigate(-1)
   }
+
   return (
     <UploadDocumentsButton className="w-full">
       <GridHeader
@@ -112,7 +113,7 @@ function WithData({
       />
 
       <div className="p-6 flex flex-col gap-6 bg-white">
-        <UploaderState />
+        <UploaderStateComp />
         {documents.length === 0 ? (
           <EmptyDocument />
         ) : (
@@ -459,9 +460,9 @@ function useDocumentEmbeddingStatusStream() {
   }, [dispatch])
 }
 
-function UploaderState() {
-  const uploaderState = useAppSelector(selectUploaderState)
+function UploaderStateComp() {
   const { t } = useTranslation("document")
+  const uploaderState = useAppSelector(selectUploaderState)
   return (
     <div className="flex flex-col gap-4 items-center justify-center">
       {uploaderState.status === "uploading" && (
