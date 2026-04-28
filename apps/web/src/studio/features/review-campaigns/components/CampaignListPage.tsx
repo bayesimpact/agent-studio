@@ -28,9 +28,13 @@ export function CampaignListPage() {
     dispatch(listReviewCampaigns())
   }, [dispatch])
 
+  // Review campaigns only support conversation + form agents as targets;
+  // testerService.startSession rejects extraction agents (apps/api/.../tester.service.ts).
   const agentOptions = useMemo(() => {
     if (!ADS.isFulfilled(agentsData)) return []
-    return agentsData.value.map((agent) => ({ id: agent.id, name: agent.name }))
+    return agentsData.value
+      .filter((agent) => agent.type === "conversation" || agent.type === "form")
+      .map((agent) => ({ id: agent.id, name: agent.name }))
   }, [agentsData])
 
   const campaigns = ADS.isFulfilled(campaignsData) ? campaignsData.value : []
