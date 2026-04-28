@@ -21,12 +21,13 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@caseai-connect/ui/sha
 import { Textarea } from "@caseai-connect/ui/shad/textarea"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { RocketIcon, Trash2Icon } from "lucide-react"
-import { useState } from "react"
-import { Controller, useForm } from "react-hook-form"
+import { useEffect, useState } from "react"
+import { Controller, useForm, useWatch } from "react-hook-form"
 import { useTranslation } from "react-i18next"
 import { z } from "zod"
 import { CampaignStatusBadge } from "./CampaignStatusBadge"
 import { CampaignSummaryPanel } from "./CampaignSummaryPanel"
+import { computeAutoCampaignName } from "./campaign-form.shared"
 import { FeedbackPreview } from "./FeedbackPreview"
 import { ParticipantsList } from "./ParticipantsList"
 import { QuestionListEditor } from "./QuestionListEditor"
@@ -76,7 +77,7 @@ export function CampaignForm({
   onRevokeMember,
   onOpenReport,
 }: Props) {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
 
   const schema = z.object({
     name: z.string().min(1, t("reviewCampaigns:editor.validation.nameRequired")),
@@ -101,6 +102,7 @@ export function CampaignForm({
     handleSubmit,
     watch,
     setValue,
+    getValues,
     formState: { errors },
   } = useForm<CampaignFormValues>({
     resolver: zodResolver(schema),
@@ -117,6 +119,23 @@ export function CampaignForm({
   const perSessionQuestions = watch("testerPerSessionQuestions")
   const endOfPhaseQuestions = watch("testerEndOfPhaseQuestions")
   const reviewerQuestions = watch("reviewerQuestions")
+
+  // Agent-reactive auto-name (create mode only). When the user picks/changes
+  // an agent and the current `name` still equals the last auto-generated
+  // value (i.e. the user hasn't manually edited it), recompute the name
+  // with the new agent's name.
+  const watchedAgentId = useWatch({ control, name: "agentId" })
+  const [lastAutoName, setLastAutoName] = useState(defaultValues?.name ?? "")
+  useEffect(() => {
+    if (mode !== "create") return
+    const currentName = getValues("name")
+    if (currentName !== lastAutoName && currentName !== "") return
+    const agentName = agents.find((agent) => agent.id === watchedAgentId)?.name
+    const nextName = computeAutoCampaignName({ t, language: i18n.language, agentName })
+    if (nextName === currentName) return
+    setValue("name", nextName, { shouldDirty: false })
+    setLastAutoName(nextName)
+  }, [mode, watchedAgentId, agents, t, i18n.language, getValues, setValue, lastAutoName])
 
   const submitHandler = handleSubmit((values) => {
     onSubmit({

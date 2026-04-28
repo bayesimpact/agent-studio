@@ -61,6 +61,24 @@
         "agentRequired": "Agent is required"
       }
     },
+    "defaults": {
+      "campaignName": "Campaign for {{agent}} — {{date}}",
+      "campaignNameNoAgent": "New review campaign — {{date}}",
+      "description": "Evaluate the agent's answers and share your feedback.",
+      "perSession": {
+        "q1": { "prompt": "Was the agent's answer clear?" },
+        "q2": {
+          "prompt": "Did the agent address your question?",
+          "options": { "yes": "Yes", "partially": "Partially", "no": "No" }
+        }
+      },
+      "endOfPhase": {
+        "q1": { "prompt": "Overall satisfaction with this agent?" }
+      },
+      "reviewer": {
+        "q1": { "prompt": "Were the agent's answers factually correct?" }
+      }
+    },
     "questions": {
       "perSession": {
         "label": "Tester — per-session questions",
@@ -82,7 +100,7 @@
       "prompt": "Prompt",
       "promptPlaceholder": "e.g. Was the response clear?",
       "type": "Type",
-      "options": "Options (one per line)",
+      "options": "Options (comma separated)",
       "optionsPlaceholder": "Yes, No, Not sure",
       "required": "Required",
       "factual": "Factual",
