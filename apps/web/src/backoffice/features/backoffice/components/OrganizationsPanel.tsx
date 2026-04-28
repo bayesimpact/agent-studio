@@ -214,6 +214,7 @@ function AgentCategoriesCell({
   onReplace: (categoryNames: string[]) => void
 }) {
   const [newCategoryName, setNewCategoryName] = useState("")
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
   const [categoryToRemove, setCategoryToRemove] = useState<BackofficeProjectAgentCategory | null>(
     null,
   )
@@ -223,11 +224,13 @@ function AgentCategoriesCell({
     if (!trimmedCategoryName) return
     if (categories.some((category) => category.name === trimmedCategoryName)) {
       setNewCategoryName("")
+      setIsAddDialogOpen(false)
       return
     }
 
     onReplace([...categories.map((category) => category.name), trimmedCategoryName])
     setNewCategoryName("")
+    setIsAddDialogOpen(false)
   }
 
   const handleRemoveCategory = (categoryToRemove: BackofficeProjectAgentCategory) => {
@@ -266,25 +269,60 @@ function AgentCategoriesCell({
             </button>
           </Badge>
         ))}
-        <div className="flex items-center gap-1">
-          <Input
-            value={newCategoryName}
-            onChange={(event) => setNewCategoryName(event.target.value)}
-            onKeyDown={(event) => {
-              if (event.key === "Enter") {
-                event.preventDefault()
-                handleAddCategory()
-              }
-            }}
-            className="h-8 w-36"
-            placeholder="New category"
-          />
-          <Button type="button" variant="outline" size="sm" onClick={handleAddCategory}>
-            <PlusIcon className="h-3 w-3 mr-1" />
-            Add
-          </Button>
-        </div>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          className="h-7 px-2 text-xs"
+          onClick={() => setIsAddDialogOpen(true)}
+        >
+          <PlusIcon className="mr-1 h-3 w-3" />
+          Add
+        </Button>
       </div>
+      <Dialog
+        open={isAddDialogOpen}
+        onOpenChange={(open) => {
+          setIsAddDialogOpen(open)
+          if (!open) {
+            setNewCategoryName("")
+          }
+        }}
+      >
+        <DialogContent>
+          <form
+            onSubmit={(event) => {
+              event.preventDefault()
+              handleAddCategory()
+            }}
+          >
+            <DialogHeader>
+              <DialogTitle>Add agent category</DialogTitle>
+              <DialogDescription>
+                Create a new category in this project category list.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="py-4">
+              <Input
+                autoFocus
+                value={newCategoryName}
+                onChange={(event) => setNewCategoryName(event.target.value)}
+                placeholder="New category"
+              />
+            </div>
+            <DialogFooter>
+              <DialogClose asChild>
+                <Button type="button" variant="outline">
+                  Cancel
+                </Button>
+              </DialogClose>
+              <Button type="submit" disabled={newCategoryName.trim().length === 0}>
+                Add category
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
       <Dialog
         open={categoryToRemove !== null}
         onOpenChange={(open) => !open && setCategoryToRemove(null)}
@@ -349,8 +387,8 @@ function FeatureFlagCell({
       {availableFlags.length > 0 && (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="outline" size="sm">
-              <PlusIcon className="h-3 w-3 mr-1" />
+            <Button variant="outline" size="sm" className="h-7 px-2 text-xs">
+              <PlusIcon className="mr-1 h-3 w-3" />
               Add flag
             </Button>
           </DropdownMenuTrigger>
