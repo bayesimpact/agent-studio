@@ -11,6 +11,8 @@ import { meSlice } from "@/common/features/me/me.slice"
 import { notificationsSlice } from "@/common/features/notifications/notifications.slice"
 import { organizationsSlice } from "@/common/features/organizations/organizations.slice"
 import { projectsSlice } from "@/common/features/projects/projects.slice"
+import { currentReviewCampaignIdSlice } from "@/common/features/review-campaigns/current-review-campaign-id/current-review-campaign-id.slice"
+import { currentReviewerSessionIdSlice } from "@/common/features/review-campaigns/current-reviewer-session-id/current-reviewer-session-id.slice"
 import { reviewCampaignsReportsSlice } from "@/studio/features/review-campaigns/reports/reports.slice"
 
 // Shared slices: always available in both Studio and Desk interfaces.
@@ -24,6 +26,8 @@ export const rootSliceList = [
   backofficeSlice,
   conversationAgentSessionsSlice,
   currentAgentSessionIdSlice,
+  currentReviewCampaignIdSlice,
+  currentReviewerSessionIdSlice,
   extractionAgentSessionsSlice,
   formAgentSessionsSlice,
   meSlice,

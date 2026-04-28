@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react"
 import { useAppDispatch } from "@/common/store/hooks"
 import { injectTesterSlices, resetTesterSlices } from "@/tester/store/slices"
+import { reviewCampaignsReviewerActions } from "../features/review-campaigns/reviewer.slice"
 import { injectReviewerSlices, resetReviewerSlices } from "../store/slices"
 
 /**
@@ -15,6 +16,11 @@ export function useInitStore(condition: boolean) {
     if (!condition) return
     injectTesterSlices()
     injectReviewerSlices()
+    // Tell the reviewer middleware that the scope is now active so it can
+    // bootstrap (e.g. listMyReviewerCampaigns). The tester scope marker is
+    // intentionally not dispatched here — reviewers piggyback on tester
+    // selectors but are not in the tester scope.
+    dispatch(reviewCampaignsReviewerActions.enteredScope())
     setDone(true)
     return () => {
       resetReviewerSlices(dispatch)

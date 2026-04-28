@@ -54,6 +54,13 @@ const slice = createSlice({
     clearSelectedContext: (state) => {
       state.selectedContext = defaultAsyncData
     },
+    /**
+     * Marker action dispatched by `useInitStore` after `injectTesterSlices()`.
+     * The tester listener middleware uses it as a one-shot trigger for
+     * scope-bootstrap loaders (e.g. `listMyReviewCampaigns`) instead of relying
+     * on a component `useEffect` on mount.
+     */
+    enteredScope: () => {},
   },
   extraReducers: (builder) => {
     builder

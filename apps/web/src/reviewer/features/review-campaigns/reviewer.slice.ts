@@ -33,6 +33,13 @@ const slice = createSlice({
     clearSessionDetail: (state, action: { payload: { sessionId: string } }) => {
       delete state.sessionDetailBySessionId[action.payload.sessionId]
     },
+    /**
+     * Marker action dispatched by `useInitStore` after `injectReviewerSlices()`.
+     * The reviewer listener middleware uses it as a one-shot trigger for
+     * scope-bootstrap loaders (e.g. `listMyReviewerCampaigns`) instead of
+     * relying on a component `useEffect` on mount.
+     */
+    enteredScope: () => {},
   },
   extraReducers: (builder) => {
     builder
