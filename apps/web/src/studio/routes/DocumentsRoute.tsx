@@ -324,6 +324,12 @@ function DocumentActions({
                 <span className="font-medium">{t("document:props.embeddingStatus")}:</span>
                 <EmbeddingStatusBadge status={document.embeddingStatus} />
               </div>
+              {document.embeddingError && (
+                <MetaField
+                  label={t("document:props.embeddingError")}
+                  value={document.embeddingError}
+                />
+              )}
             </div>
             {document.tagIds.length > 0 && (
               <div className="flex flex-col gap-2">

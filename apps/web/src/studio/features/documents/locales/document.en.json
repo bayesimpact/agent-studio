@@ -13,6 +13,7 @@
       "language": "Language",
       "mimeType": "MIME Type",
       "embeddingStatus": "Embedding Status",
+      "embeddingError": "Embedding Error",
       "embeddingStatuses": {
         "pending": "Pending",
         "processing": "Processing",

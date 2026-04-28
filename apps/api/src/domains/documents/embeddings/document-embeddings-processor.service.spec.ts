@@ -51,11 +51,13 @@ describe("DocumentEmbeddingsProcessorService", () => {
       projectId: "project-id",
       mimeType: "application/pdf",
       storageRelativePath: "documents/path/file.pdf",
+      embeddingError: null,
       extractionEngine: null,
     } as Document
 
     const statusTransitions: Array<{
       status: string
+      embeddingError: Document["embeddingError"]
       extractionEngine: Document["extractionEngine"]
     }> = []
     const serviceInternals = service as unknown as DocumentEmbeddingsProcessorInternals
@@ -72,6 +74,7 @@ describe("DocumentEmbeddingsProcessorService", () => {
     jest.spyOn(serviceInternals, "markDocumentStatus").mockImplementation(async (doc, status) => {
       statusTransitions.push({
         status,
+        embeddingError: doc.embeddingError,
         extractionEngine: doc.extractionEngine,
       })
     })
@@ -86,9 +89,76 @@ describe("DocumentEmbeddingsProcessorService", () => {
     })
 
     expect(statusTransitions).toEqual([
-      { status: "processing", extractionEngine: null },
-      { status: "completed", extractionEngine: "docling@2.51.0" },
+      { status: "processing", embeddingError: null, extractionEngine: null },
+      { status: "completed", embeddingError: null, extractionEngine: "docling@2.51.0" },
     ])
+  })
+
+  it("persists a readable embedding error before marking failed", async () => {
+    const documentsService = {} as DocumentsService
+    const textExtractorService = {} as DocumentTextExtractorService
+    const embeddingStatusNotifierService = {} as DocumentEmbeddingStatusNotifierService
+    const fileStorage = {} as IFileStorage
+    const dataSource = { query: jest.fn() } as unknown as DataSource
+
+    const service = new DocumentEmbeddingsProcessorService(
+      documentsService,
+      textExtractorService,
+      embeddingStatusNotifierService,
+      fileStorage,
+      dataSource,
+    )
+
+    const document = {
+      id: "document-id",
+      organizationId: "organization-id",
+      projectId: "project-id",
+      mimeType: "application/pdf",
+      storageRelativePath: "documents/path/file.pdf",
+      embeddingError: null,
+      extractionEngine: null,
+    } as Document
+
+    const statusTransitions: Array<{
+      status: string
+      embeddingError: Document["embeddingError"]
+    }> = []
+    const serviceInternals = service as unknown as DocumentEmbeddingsProcessorInternals
+    const extractionError = new Error(
+      "Docling produced no embed_text chunks for MIME type: image/png",
+    )
+
+    jest.spyOn(serviceInternals, "findDocumentOrThrow").mockResolvedValue(document)
+    jest.spyOn(serviceInternals, "extractDocumentChunks").mockRejectedValue(extractionError)
+    jest.spyOn(serviceInternals, "generateEmbeddingsByModel")
+    jest.spyOn(serviceInternals, "insertChunks")
+    jest.spyOn(serviceInternals, "markDocumentStatus").mockImplementation(async (doc, status) => {
+      statusTransitions.push({
+        status,
+        embeddingError: doc.embeddingError,
+      })
+    })
+
+    await expect(
+      service.processDocument({
+        documentId: "document-id",
+        organizationId: "organization-id",
+        projectId: "project-id",
+        uploadedByUserId: "user-id",
+        origin: "document-upload",
+        currentTraceId: "trace-id",
+      }),
+    ).rejects.toThrow(extractionError)
+
+    expect(statusTransitions).toEqual([
+      { status: "processing", embeddingError: null },
+      {
+        status: "failed",
+        embeddingError: "Docling produced no embed_text chunks for MIME type: image/png",
+      },
+    ])
+    expect(serviceInternals.generateEmbeddingsByModel).not.toHaveBeenCalled()
+    expect(serviceInternals.insertChunks).not.toHaveBeenCalled()
   })
 
   it("batches embedding requests to stay under Vertex instance limits", async () => {

@@ -46,6 +46,9 @@ export function DocumentDetailsSheet({
               <span className="font-medium">{t("embeddingStatus")}:</span>
               <EmbeddingStatusBadge status={document.embeddingStatus} />
             </div>
+            {document.embeddingError && (
+              <MetaData label={t("embeddingError")} value={document.embeddingError} />
+            )}
           </div>
           {document.tagIds.length > 0 && (
             <div className="flex flex-col gap-2">

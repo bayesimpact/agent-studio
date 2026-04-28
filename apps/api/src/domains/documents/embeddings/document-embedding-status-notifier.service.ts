@@ -16,6 +16,7 @@ export class DocumentEmbeddingStatusNotifierService extends PostgresStatusNotifi
     organizationId: string
     projectId: string
     embeddingStatus: DocumentEmbeddingStatus
+    embeddingError: string | null
     updatedAt: number
   }): Promise<void> {
     await this.notify({
@@ -24,6 +25,7 @@ export class DocumentEmbeddingStatusNotifierService extends PostgresStatusNotifi
       organizationId: params.organizationId,
       projectId: params.projectId,
       embeddingStatus: params.embeddingStatus,
+      embeddingError: params.embeddingError,
       updatedAt: params.updatedAt,
     })
   }

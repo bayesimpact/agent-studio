@@ -18,6 +18,7 @@ function buildDocument(documentId: string): Document {
     size: 123,
     storageRelativePath: "/documents/file.pdf",
     embeddingStatus: "processing",
+    embeddingError: null,
     tagIds: [],
   }
 }
