@@ -5,6 +5,7 @@ import { Grid, GridContent, GridHeader, GridItem } from "@/common/components/gri
 import { BaseAgentSessionCreator } from "@/common/features/agents/agent-sessions/shared/base-agent-session/components/BaseAgentSessionCreator"
 import type { Agent } from "@/common/features/agents/agents.models"
 import { getAgentIcon } from "@/common/features/agents/components/AgentIcon"
+import { useAbility } from "@/common/hooks/use-ability"
 import { useGetPath } from "@/common/hooks/use-build-path"
 import { useFeatureFlags } from "@/common/hooks/use-feature-flags"
 import { AgentActions } from "./AgentActions"
@@ -36,9 +37,15 @@ export function AgentSessionListHeader({
 
   const Icon = getAgentIcon(agent.type)
 
-  const showAgentAnalytics = agent.type === "conversation" && hasFeature("project-analytics")
-  const headerCardCount = showAgentAnalytics ? 3 : 2
+  const { abilities } = useAbility()
+  const canManageAgent = abilities.canManageAgent({ agentId: agent.id })
 
+  const showAgentAnalytics =
+    canManageAgent && agent.type === "conversation" && hasFeature("project-analytics")
+
+  const headerCardCount = (1 + // Create Session button
+    (showAgentAnalytics ? 1 : 0) +
+    (canManageAgent ? 1 : 0)) as 1 | 2 | 3
   return (
     <Grid cols={headerCardCount} total={headerCardCount}>
       <GridHeader
@@ -50,11 +57,13 @@ export function AgentSessionListHeader({
             <Icon />
           </>
         }
-        action={<AgentActions agent={agent} organizationId={organizationId} />}
+        action={
+          canManageAgent ? <AgentActions agent={agent} organizationId={organizationId} /> : null
+        }
       />
 
       <GridContent>
-        <CreateButton
+        <CreateSessionButton
           index={0}
           agent={agent}
           organizationId={organizationId}
@@ -62,7 +71,7 @@ export function AgentSessionListHeader({
           withBorderBottom={withBorderBottom}
         />
 
-        {showAgentAnalytics ? (
+        {showAgentAnalytics && (
           <AgentAnalyticsCard
             agentId={agent.id}
             index={1}
@@ -70,21 +79,23 @@ export function AgentSessionListHeader({
             projectId={projectId}
             withBorderBottom={withBorderBottom}
           />
-        ) : null}
+        )}
 
-        <FeedbackButton
-          index={showAgentAnalytics ? 2 : 1}
-          agentId={agent.id}
-          organizationId={organizationId}
-          projectId={projectId}
-          withBorderBottom={withBorderBottom}
-        />
+        {canManageAgent && (
+          <FeedbackButton
+            index={showAgentAnalytics ? 2 : 1}
+            agentId={agent.id}
+            organizationId={organizationId}
+            projectId={projectId}
+            withBorderBottom={withBorderBottom}
+          />
+        )}
       </GridContent>
     </Grid>
   )
 }
 
-function CreateButton({
+function CreateSessionButton({
   agent,
   organizationId,
   projectId,

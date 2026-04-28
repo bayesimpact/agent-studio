@@ -1,6 +1,7 @@
 import { useCallback, useMemo } from "react"
 import {
   ownerOrAdminRoles,
+  selectAgentMemberships,
   selectIsPremiumMember,
   selectOrganizationMemberships,
   selectProjectMemberships,
@@ -10,6 +11,7 @@ import { useAppSelector } from "@/common/store/hooks"
 export function useAbility() {
   const organizationMemberships = useAppSelector(selectOrganizationMemberships)
   const projectMemberships = useAppSelector(selectProjectMemberships)
+  const agentMemberships = useAppSelector(selectAgentMemberships)
 
   const canCreateProject = useCallback(
     ({ organizationId }: { organizationId: string | null }) => {
@@ -36,12 +38,23 @@ export function useAbility() {
     [projectMemberships],
   )
 
+  const canManageAgent = useCallback(
+    ({ agentId }: { agentId: string | null }) => {
+      const isAgentOwnerOrAdmin = [...(agentMemberships ?? [])].some(
+        (membership) =>
+          membership.agentId === agentId && ownerOrAdminRoles.includes(membership.role),
+      )
+      return isAgentOwnerOrAdmin
+    },
+    [agentMemberships],
+  )
+
   const isPremiumMember = useAppSelector(selectIsPremiumMember)
   return useMemo(
     () => ({
-      abilities: { canAccessStudio, canCreateProject },
+      abilities: { canAccessStudio, canCreateProject, canManageAgent },
       isPremiumMember,
     }),
-    [canAccessStudio, canCreateProject, isPremiumMember],
+    [canAccessStudio, canCreateProject, canManageAgent, isPremiumMember],
   )
 }
