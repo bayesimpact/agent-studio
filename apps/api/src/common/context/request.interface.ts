@@ -91,7 +91,8 @@ export interface EndpointRequestWithReviewCampaign extends EndpointRequestWithPr
 
 export interface EndpointRequestWithReviewCampaignMembership
   extends EndpointRequestWithReviewCampaign {
-  reviewCampaignMembership: ReviewCampaignMembership | undefined
+  testerMembership: ReviewCampaignMembership | undefined
+  reviewerMembership: ReviewCampaignMembership | undefined
 }
 
 export interface EndpointRequestWithAgentSessionInCampaign extends EndpointRequestWithProject {

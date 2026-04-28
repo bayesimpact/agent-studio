@@ -29,31 +29,35 @@ describe("TesterPolicy", () => {
     it("returns true when tester membership on active campaign", () => {
       const policy = new TesterPolicy({
         reviewCampaign: campaign({ status: "active" }),
-        reviewCampaignMembership: membership({ role: "tester" }),
+        testerMembership: membership({ role: "tester" }),
+        reviewerMembership: undefined,
       })
       expect(policy.canActAsTester()).toBe(true)
     })
 
-    it("returns false when membership is missing", () => {
+    it("returns false when tester membership is missing", () => {
       const policy = new TesterPolicy({
         reviewCampaign: campaign({ status: "active" }),
-        reviewCampaignMembership: undefined,
+        testerMembership: undefined,
+        reviewerMembership: undefined,
       })
       expect(policy.canActAsTester()).toBe(false)
     })
 
-    it("returns false when membership role is reviewer (not tester)", () => {
+    it("returns false when only a reviewer membership exists (no tester role)", () => {
       const policy = new TesterPolicy({
         reviewCampaign: campaign({ status: "active" }),
-        reviewCampaignMembership: membership({ role: "reviewer" }),
+        testerMembership: undefined,
+        reviewerMembership: membership({ role: "reviewer" }),
       })
       expect(policy.canActAsTester()).toBe(false)
     })
 
-    it("returns false when membership is for a different campaign", () => {
+    it("returns false when tester membership is for a different campaign", () => {
       const policy = new TesterPolicy({
         reviewCampaign: campaign({ id: "campaign-1" }),
-        reviewCampaignMembership: membership({ campaignId: "campaign-2" }),
+        testerMembership: membership({ campaignId: "campaign-2", role: "tester" }),
+        reviewerMembership: undefined,
       })
       expect(policy.canActAsTester()).toBe(false)
     })
@@ -61,7 +65,8 @@ describe("TesterPolicy", () => {
     it("returns false when campaign is draft", () => {
       const policy = new TesterPolicy({
         reviewCampaign: campaign({ status: "draft" }),
-        reviewCampaignMembership: membership({ role: "tester" }),
+        testerMembership: membership({ role: "tester" }),
+        reviewerMembership: undefined,
       })
       expect(policy.canActAsTester()).toBe(false)
     })
@@ -69,9 +74,21 @@ describe("TesterPolicy", () => {
     it("returns false when campaign is closed", () => {
       const policy = new TesterPolicy({
         reviewCampaign: campaign({ status: "closed" }),
-        reviewCampaignMembership: membership({ role: "tester" }),
+        testerMembership: membership({ role: "tester" }),
+        reviewerMembership: undefined,
       })
       expect(policy.canActAsTester()).toBe(false)
+    })
+
+    it("returns true even when the user also has a reviewer membership on the same campaign", () => {
+      // Regression: previously the resolver did findOne(...) and could return
+      // the reviewer row, making canActAsTester reject a legitimate tester.
+      const policy = new TesterPolicy({
+        reviewCampaign: campaign({ status: "active" }),
+        testerMembership: membership({ role: "tester" }),
+        reviewerMembership: membership({ role: "reviewer" }),
+      })
+      expect(policy.canActAsTester()).toBe(true)
     })
   })
 
@@ -79,7 +96,8 @@ describe("TesterPolicy", () => {
     it("allows a tester on an active campaign", () => {
       const policy = new TesterPolicy({
         reviewCampaign: campaign({ status: "active" }),
-        reviewCampaignMembership: membership({ role: "tester" }),
+        testerMembership: membership({ role: "tester" }),
+        reviewerMembership: undefined,
       })
       expect(policy.canViewSharedContext()).toBe(true)
     })
@@ -87,7 +105,8 @@ describe("TesterPolicy", () => {
     it("rejects a tester on a closed campaign (testers don't see closed campaigns)", () => {
       const policy = new TesterPolicy({
         reviewCampaign: campaign({ status: "closed" }),
-        reviewCampaignMembership: membership({ role: "tester" }),
+        testerMembership: membership({ role: "tester" }),
+        reviewerMembership: undefined,
       })
       expect(policy.canViewSharedContext()).toBe(false)
     })
@@ -95,7 +114,8 @@ describe("TesterPolicy", () => {
     it("allows a reviewer on an active campaign (shared landing-page metadata)", () => {
       const policy = new TesterPolicy({
         reviewCampaign: campaign({ status: "active" }),
-        reviewCampaignMembership: membership({ role: "reviewer" }),
+        testerMembership: undefined,
+        reviewerMembership: membership({ role: "reviewer" }),
       })
       expect(policy.canViewSharedContext()).toBe(true)
     })
@@ -103,7 +123,8 @@ describe("TesterPolicy", () => {
     it("allows a reviewer on a closed campaign (read access stays for closed)", () => {
       const policy = new TesterPolicy({
         reviewCampaign: campaign({ status: "closed" }),
-        reviewCampaignMembership: membership({ role: "reviewer" }),
+        testerMembership: undefined,
+        reviewerMembership: membership({ role: "reviewer" }),
       })
       expect(policy.canViewSharedContext()).toBe(true)
     })
@@ -111,15 +132,17 @@ describe("TesterPolicy", () => {
     it("rejects a reviewer on a draft campaign", () => {
       const policy = new TesterPolicy({
         reviewCampaign: campaign({ status: "draft" }),
-        reviewCampaignMembership: membership({ role: "reviewer" }),
+        testerMembership: undefined,
+        reviewerMembership: membership({ role: "reviewer" }),
       })
       expect(policy.canViewSharedContext()).toBe(false)
     })
 
-    it("rejects when membership is for a different campaign", () => {
+    it("rejects when memberships are for a different campaign", () => {
       const policy = new TesterPolicy({
         reviewCampaign: campaign({ id: "campaign-1", status: "active" }),
-        reviewCampaignMembership: membership({ campaignId: "campaign-2", role: "reviewer" }),
+        testerMembership: undefined,
+        reviewerMembership: membership({ campaignId: "campaign-2", role: "reviewer" }),
       })
       expect(policy.canViewSharedContext()).toBe(false)
     })
@@ -127,20 +150,32 @@ describe("TesterPolicy", () => {
     it("rejects when there is no membership at all", () => {
       const policy = new TesterPolicy({
         reviewCampaign: campaign({ status: "active" }),
-        reviewCampaignMembership: undefined,
+        testerMembership: undefined,
+        reviewerMembership: undefined,
       })
       expect(policy.canViewSharedContext()).toBe(false)
+    })
+
+    it("allows when both roles are held and the campaign is closed (reviewer gate opens)", () => {
+      const policy = new TesterPolicy({
+        reviewCampaign: campaign({ status: "closed" }),
+        testerMembership: membership({ role: "tester" }),
+        reviewerMembership: membership({ role: "reviewer" }),
+      })
+      expect(policy.canViewSharedContext()).toBe(true)
     })
   })
 
   describe("BasePolicy method aliases", () => {
     const happyPolicy = new TesterPolicy({
       reviewCampaign: campaign({ status: "active" }),
-      reviewCampaignMembership: membership({ role: "tester" }),
+      testerMembership: membership({ role: "tester" }),
+      reviewerMembership: undefined,
     })
     const sadPolicy = new TesterPolicy({
       reviewCampaign: campaign({ status: "closed" }),
-      reviewCampaignMembership: membership({ role: "tester" }),
+      testerMembership: membership({ role: "tester" }),
+      reviewerMembership: undefined,
     })
 
     it("canList / canView / canCreate / canUpdate all route through canActAsTester", () => {

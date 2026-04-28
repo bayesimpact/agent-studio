@@ -28,6 +28,7 @@ This project uses [CalVer](https://calver.org/) (YY.MM.Micro) for product versio
 - (beta) Review campaigns: reviewers can open campaigns, read sessions, and submit blind reviews
 - (beta) Review campaigns: admins can mark tester questions as factual so reviewers see them during blind review
 - (beta) Review campaigns: aggregate report with rating distributions and per-session matrix, plus CSV export
+- (beta) Review campaigns: tester and reviewer pages now show a top header with a signout menu
 
 ### Changed
 - Agent configuration is now organized into tabs (General, Model, Sources, and Form or Output) for easier editing
@@ -46,6 +47,7 @@ This project uses [CalVer](https://calver.org/) (YY.MM.Micro) for product versio
 - Studio mode redirect to Home when route not found
 - (beta) Review campaigns: reviewer-only members can now open the reviewer landing page
 - (beta) Review campaigns: participants list now refreshes immediately after inviting or revoking
+- (beta) Review campaigns: testers who are also reviewers on the same campaign can now start sessions
 
 ### Security
 

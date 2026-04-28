@@ -11,7 +11,7 @@ type CampaignReportPolicyContext = {
   project: Project | undefined
   projectMembership: ProjectMembership | undefined
   reviewCampaign: ReviewCampaign
-  reviewCampaignMembership: ReviewCampaignMembership | undefined
+  reviewerMembership: ReviewCampaignMembership | undefined
 }
 
 /**
@@ -41,7 +41,7 @@ export class CampaignReportPolicy {
   private canViewAsReviewer(): boolean {
     const reviewerPolicy = new ReviewerPolicy({
       reviewCampaign: this.context.reviewCampaign,
-      reviewCampaignMembership: this.context.reviewCampaignMembership,
+      reviewerMembership: this.context.reviewerMembership,
     })
     return reviewerPolicy.canView()
   }

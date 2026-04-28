@@ -1,5 +1,8 @@
 {
   "reviewerCampaigns": {
+    "shell": {
+      "title": "Relecteur"
+    },
     "myCampaigns": {
       "title": "Mes campagnes d'évaluation",
       "subtitle": "Campagnes actives où vous êtes relecteur.",

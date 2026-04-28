@@ -1,10 +1,10 @@
 import { Navigate, useNavigate, useOutlet } from "react-router-dom"
+import { NavUser } from "@/common/components/sidebar/nav/NavUser"
 import { NavUserMenuItems } from "@/common/components/sidebar/nav/NavUserMenuItems"
 import { Logo } from "@/common/components/themes/Logo"
 import type { User } from "@/common/features/me/me.models"
 import type { Organization } from "@/common/features/organizations/organizations.models"
 import { RouteNames } from "@/common/routes/helpers"
-import { NavUser } from "@/eval/components/NavUser"
 
 export function EvalDashboardRoute({
   user,

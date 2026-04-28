@@ -19,20 +19,23 @@ export class ReviewCampaignMembershipContextResolver implements ContextResolver 
 
   async resolve(request: ResolvableRequest): Promise<void> {
     const requestWithCampaign = request as EndpointRequestWithReviewCampaign
-    // Find any membership for (campaign, user). Policies check the role —
-    // TesterPolicy wants role=tester, ReviewerPolicy wants role=reviewer.
-    // A user with both roles on the same campaign picks up whichever row
-    // the DB returns first; we refine this (array or role-hinted resolver)
-    // when that edge case becomes load-bearing.
-    const membership =
-      (await this.membershipRepository.findOne({
-        where: {
-          campaignId: requestWithCampaign.reviewCampaign.id,
-          userId: request.user.id,
-        },
-      })) ?? undefined
+    // Load both role-memberships for (campaign, user). A user can hold tester
+    // AND reviewer roles on the same campaign; each domain guard reads the
+    // field matching its role, and dual-role policies (e.g. shared landing
+    // context, report access) consult both.
+    const memberships = await this.membershipRepository.find({
+      where: {
+        campaignId: requestWithCampaign.reviewCampaign.id,
+        userId: request.user.id,
+      },
+    })
 
     const requestWithMembership = request as EndpointRequestWithReviewCampaignMembership
-    requestWithMembership.reviewCampaignMembership = membership
+    requestWithMembership.testerMembership = memberships.find(
+      (membership) => membership.role === "tester",
+    )
+    requestWithMembership.reviewerMembership = memberships.find(
+      (membership) => membership.role === "reviewer",
+    )
   }
 }

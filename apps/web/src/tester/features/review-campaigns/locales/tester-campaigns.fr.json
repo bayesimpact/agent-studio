@@ -1,5 +1,8 @@
 {
   "testerCampaigns": {
+    "shell": {
+      "title": "Testeur"
+    },
     "common": {
       "loading": "Chargement…",
       "untitled": "Sans titre"

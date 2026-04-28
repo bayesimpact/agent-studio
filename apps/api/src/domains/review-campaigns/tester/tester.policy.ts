@@ -4,12 +4,14 @@ import type { ReviewCampaign } from "../review-campaign.entity"
 
 type TesterPolicyContext = {
   reviewCampaign: ReviewCampaign
-  reviewCampaignMembership: ReviewCampaignMembership | undefined
+  testerMembership: ReviewCampaignMembership | undefined
+  reviewerMembership: ReviewCampaignMembership | undefined
 }
 
 export class TesterPolicy extends BasePolicy<ReviewCampaign> {
   private readonly reviewCampaign: ReviewCampaign
-  private readonly reviewCampaignMembership: ReviewCampaignMembership | undefined
+  private readonly testerMembership: ReviewCampaignMembership | undefined
+  private readonly reviewerMembership: ReviewCampaignMembership | undefined
 
   constructor(context: TesterPolicyContext) {
     // BasePolicy's organizationMembership is not relevant for tester auth — the
@@ -18,7 +20,8 @@ export class TesterPolicy extends BasePolicy<ReviewCampaign> {
     // policy methods never read it.
     super({} as never, context.reviewCampaign)
     this.reviewCampaign = context.reviewCampaign
-    this.reviewCampaignMembership = context.reviewCampaignMembership
+    this.testerMembership = context.testerMembership
+    this.reviewerMembership = context.reviewerMembership
   }
 
   // These BasePolicy methods are all gated by the same tester access rule;
@@ -49,22 +52,27 @@ export class TesterPolicy extends BasePolicy<ReviewCampaign> {
    * reviewer landing page (campaign name / description / agent snapshot are
    * neutral metadata, and the tester per-session questions are already visible
    * to reviewers via blind review). Testers need an active campaign; reviewers
-   * keep read access on closed campaigns too.
+   * keep read access on closed campaigns too. A user holding both roles on
+   * the same campaign passes if either role's gate is open.
    */
   canViewSharedContext(): boolean {
-    if (!this.reviewCampaignMembership) return false
-    if (this.reviewCampaignMembership.campaignId !== this.reviewCampaign.id) return false
-    if (this.reviewCampaignMembership.role === "tester") return this.isCampaignActive()
-    if (this.reviewCampaignMembership.role === "reviewer") return this.isCampaignNotDraft()
+    if (this.isMembershipForCampaign(this.testerMembership) && this.isCampaignActive()) {
+      return true
+    }
+    if (this.isMembershipForCampaign(this.reviewerMembership) && this.isCampaignNotDraft()) {
+      return true
+    }
     return false
   }
 
   private isActiveTesterMember(): boolean {
-    return (
-      !!this.reviewCampaignMembership &&
-      this.reviewCampaignMembership.role === "tester" &&
-      this.reviewCampaignMembership.campaignId === this.reviewCampaign.id
-    )
+    return this.isMembershipForCampaign(this.testerMembership)
+  }
+
+  private isMembershipForCampaign(
+    membership: ReviewCampaignMembership | undefined,
+  ): membership is ReviewCampaignMembership {
+    return !!membership && membership.campaignId === this.reviewCampaign.id
   }
 
   private isCampaignActive(): boolean {

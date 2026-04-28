@@ -22,7 +22,7 @@ export class ReviewerGuard implements CanActivate {
 
     const policy = new ReviewerPolicy({
       reviewCampaign: request.reviewCampaign,
-      reviewCampaignMembership: request.reviewCampaignMembership,
+      reviewerMembership: request.reviewerMembership,
     })
 
     const policyHandler = this.reflector.getAllAndOverride<PolicyHandler>(CHECK_POLICY_KEY, [

@@ -1,5 +1,8 @@
 {
   "reviewerCampaigns": {
+    "shell": {
+      "title": "Reviewer"
+    },
     "myCampaigns": {
       "title": "My review campaigns",
       "subtitle": "Active campaigns where you're a reviewer.",

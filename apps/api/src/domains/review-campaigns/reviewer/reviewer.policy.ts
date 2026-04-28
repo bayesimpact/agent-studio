@@ -4,19 +4,19 @@ import type { ReviewCampaign } from "../review-campaign.entity"
 
 type ReviewerPolicyContext = {
   reviewCampaign: ReviewCampaign
-  reviewCampaignMembership: ReviewCampaignMembership | undefined
+  reviewerMembership: ReviewCampaignMembership | undefined
 }
 
 export class ReviewerPolicy extends BasePolicy<ReviewCampaign> {
   private readonly reviewCampaign: ReviewCampaign
-  private readonly reviewCampaignMembership: ReviewCampaignMembership | undefined
+  private readonly reviewerMembership: ReviewCampaignMembership | undefined
 
   constructor(context: ReviewerPolicyContext) {
     // Mirrors TesterPolicy: no organization-membership gate; access is
     // (reviewer role on this campaign) × (campaign status).
     super({} as never, context.reviewCampaign)
     this.reviewCampaign = context.reviewCampaign
-    this.reviewCampaignMembership = context.reviewCampaignMembership
+    this.reviewerMembership = context.reviewerMembership
   }
 
   canList(): boolean {
@@ -46,9 +46,7 @@ export class ReviewerPolicy extends BasePolicy<ReviewCampaign> {
 
   private isActiveReviewerMember(): boolean {
     return (
-      !!this.reviewCampaignMembership &&
-      this.reviewCampaignMembership.role === "reviewer" &&
-      this.reviewCampaignMembership.campaignId === this.reviewCampaign.id
+      !!this.reviewerMembership && this.reviewerMembership.campaignId === this.reviewCampaign.id
     )
   }
 

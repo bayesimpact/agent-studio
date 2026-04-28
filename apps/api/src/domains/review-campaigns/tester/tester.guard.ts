@@ -22,7 +22,8 @@ export class TesterGuard implements CanActivate {
 
     const policy = new TesterPolicy({
       reviewCampaign: request.reviewCampaign,
-      reviewCampaignMembership: request.reviewCampaignMembership,
+      testerMembership: request.testerMembership,
+      reviewerMembership: request.reviewerMembership,
     })
 
     const policyHandler = this.reflector.getAllAndOverride<PolicyHandler>(CHECK_POLICY_KEY, [

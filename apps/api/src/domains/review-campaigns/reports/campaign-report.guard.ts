@@ -20,7 +20,7 @@ export class CampaignReportGuard implements CanActivate {
       project: request.project,
       projectMembership: request.projectMembership,
       reviewCampaign: request.reviewCampaign,
-      reviewCampaignMembership: request.reviewCampaignMembership,
+      reviewerMembership: request.reviewerMembership,
     })
 
     if (!policy.canView()) {

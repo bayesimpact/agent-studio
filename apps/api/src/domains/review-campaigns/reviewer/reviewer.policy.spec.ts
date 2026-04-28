@@ -29,23 +29,15 @@ describe("ReviewerPolicy", () => {
     it("allows reviewer membership on active campaign", () => {
       const policy = new ReviewerPolicy({
         reviewCampaign: campaign({ status: "active" }),
-        reviewCampaignMembership: membership({ role: "reviewer" }),
+        reviewerMembership: membership({ role: "reviewer" }),
       })
       expect(policy.canReview()).toBe(true)
     })
 
-    it("rejects missing membership", () => {
+    it("rejects missing reviewer membership", () => {
       const policy = new ReviewerPolicy({
         reviewCampaign: campaign({ status: "active" }),
-        reviewCampaignMembership: undefined,
-      })
-      expect(policy.canReview()).toBe(false)
-    })
-
-    it("rejects tester-role membership", () => {
-      const policy = new ReviewerPolicy({
-        reviewCampaign: campaign({ status: "active" }),
-        reviewCampaignMembership: membership({ role: "tester" }),
+        reviewerMembership: undefined,
       })
       expect(policy.canReview()).toBe(false)
     })
@@ -53,7 +45,7 @@ describe("ReviewerPolicy", () => {
     it("rejects membership for a different campaign", () => {
       const policy = new ReviewerPolicy({
         reviewCampaign: campaign({ id: "campaign-1" }),
-        reviewCampaignMembership: membership({ campaignId: "campaign-2" }),
+        reviewerMembership: membership({ campaignId: "campaign-2" }),
       })
       expect(policy.canReview()).toBe(false)
     })
@@ -61,7 +53,7 @@ describe("ReviewerPolicy", () => {
     it("rejects draft campaigns", () => {
       const policy = new ReviewerPolicy({
         reviewCampaign: campaign({ status: "draft" }),
-        reviewCampaignMembership: membership({ role: "reviewer" }),
+        reviewerMembership: membership({ role: "reviewer" }),
       })
       expect(policy.canReview()).toBe(false)
     })
@@ -69,7 +61,7 @@ describe("ReviewerPolicy", () => {
     it("rejects closed campaigns (writes freeze on close)", () => {
       const policy = new ReviewerPolicy({
         reviewCampaign: campaign({ status: "closed" }),
-        reviewCampaignMembership: membership({ role: "reviewer" }),
+        reviewerMembership: membership({ role: "reviewer" }),
       })
       expect(policy.canReview()).toBe(false)
     })
@@ -79,7 +71,7 @@ describe("ReviewerPolicy", () => {
     it("allows active campaign", () => {
       const policy = new ReviewerPolicy({
         reviewCampaign: campaign({ status: "active" }),
-        reviewCampaignMembership: membership({ role: "reviewer" }),
+        reviewerMembership: membership({ role: "reviewer" }),
       })
       expect(policy.canView()).toBe(true)
     })
@@ -87,7 +79,7 @@ describe("ReviewerPolicy", () => {
     it("allows closed campaign (reviewers keep read access)", () => {
       const policy = new ReviewerPolicy({
         reviewCampaign: campaign({ status: "closed" }),
-        reviewCampaignMembership: membership({ role: "reviewer" }),
+        reviewerMembership: membership({ role: "reviewer" }),
       })
       expect(policy.canView()).toBe(true)
     })
@@ -95,15 +87,15 @@ describe("ReviewerPolicy", () => {
     it("rejects draft campaign", () => {
       const policy = new ReviewerPolicy({
         reviewCampaign: campaign({ status: "draft" }),
-        reviewCampaignMembership: membership({ role: "reviewer" }),
+        reviewerMembership: membership({ role: "reviewer" }),
       })
       expect(policy.canView()).toBe(false)
     })
 
-    it("rejects tester-role membership", () => {
+    it("rejects when no reviewer membership is provided", () => {
       const policy = new ReviewerPolicy({
         reviewCampaign: campaign({ status: "active" }),
-        reviewCampaignMembership: membership({ role: "tester" }),
+        reviewerMembership: undefined,
       })
       expect(policy.canView()).toBe(false)
     })
@@ -113,7 +105,7 @@ describe("ReviewerPolicy", () => {
     it("canList / canCreate / canUpdate route to the right gate", () => {
       const active = new ReviewerPolicy({
         reviewCampaign: campaign({ status: "active" }),
-        reviewCampaignMembership: membership({ role: "reviewer" }),
+        reviewerMembership: membership({ role: "reviewer" }),
       })
       expect(active.canList()).toBe(true)
       expect(active.canCreate()).toBe(true)
@@ -121,7 +113,7 @@ describe("ReviewerPolicy", () => {
 
       const closed = new ReviewerPolicy({
         reviewCampaign: campaign({ status: "closed" }),
-        reviewCampaignMembership: membership({ role: "reviewer" }),
+        reviewerMembership: membership({ role: "reviewer" }),
       })
       // Closed: list (read) allowed, create/update (write) rejected.
       expect(closed.canList()).toBe(true)
