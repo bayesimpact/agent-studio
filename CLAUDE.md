@@ -84,6 +84,10 @@ projects.map((p) => p.name)
 projects.map((project) => project.name)
 ```
 
+### Neutral Sample Data in Mocks, Stories, and Fixtures
+
+**Rule**: When generating sample/mock data (Storybook stories, test fixtures, seed scripts, factory overrides), use domain-neutral examples — generic agent names like "Helpful Assistant", tags like "Product/Pricing/Support", schemas with `{ title, summary }`. Do NOT infer a vertical from weak signals (the `MedGemma` model enum, a `gemma` feature flag, the repo name). Only use domain-specific samples if the user explicitly asks for them; if unsure, ask rather than guess.
+
 ## Completion Criteria
 
 Before marking any work as completed, run and verify:

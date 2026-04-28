@@ -398,6 +398,10 @@ TypeORMError: Entity metadata for X#someRelation was not found.
 Check if you specified a correct entity object and if it's connected in the connection options.
 ```
 
+Also update:
+- `src/common/test/test-all-repositories.ts` — add the new repository to both the `AllRepositories` type and `buildAllRepositories()` so e2e tests can read/write via `repositories.<entity>Repository`.
+- `src/common/test/test-database.ts` — `clearTestDatabase` has a hand-maintained list of `DELETE FROM "<table>"` calls in FK-respecting order. The new table's DELETE must come **before** any parent it FK-references, or tests fail in `beforeEach`/`afterEach` with `update or delete on table "<parent>" violates foreign key constraint "FK_..." on table "<child>"`.
+
 ---
 
 ## Boundary Check Baselines
@@ -419,6 +423,39 @@ npm run check:boundaries          # verify clean
 ```
 
 Commit both baseline files alongside the entity change.
+
+---
+
+## Test Commands
+
+- **Full suite**: `npm run test:parallel` (from `apps/api`). Provisions per-worker DBs (`connect_test_w1`..`w6`), isolates each worker's transactional state, cleans up after. Do NOT use plain `npm run test` for the full suite — it runs `--runInBand` against a single DB and leaks state across suites, producing flaky failures.
+- **Single file iteration**: `npx jest --colors --runInBand --forceExit <path>`. `--forceExit` is required — leaked async handles otherwise hang the runner. Don't pipe Jest output through `| tail` etc.; it can block the runner indefinitely.
+- **Per-worker DB bootstrap is off-limits**: `apps/api/src/scripts/prepare-test-worker-dbs.ts` and adjacent worker-DB scripts are user-owned infrastructure. If `test:parallel` fails with a `permission denied for schema public` or similar bootstrap error, **stop and report** — don't patch the script.
+
+---
+
+## Logging
+
+Use the NestJS `Logger` from `@nestjs/common`, never `console.log` / `console.error`. The production app uses a `StructuredLogger` that emits JSON for Cloud Logging; `console.*` bypasses it and produces unstructured output.
+
+```typescript
+// ✅ Correct
+import { Logger } from "@nestjs/common"
+private readonly logger = new Logger(MyService.name)
+this.logger.log("starting", { jobId })
+this.logger.error("failed", error.stack)
+
+// ❌ Wrong
+console.log("starting", jobId)
+```
+
+Exception: files that run before NestJS bootstrap (e.g. `open-telemetry-init.ts`) where the structured logger isn't yet available — `console.error` is OK there with a comment explaining why.
+
+---
+
+## Security & Dependencies
+
+Never use npm `overrides` in `package.json` to work around transitive-dependency CVEs. `npm install` after adding overrides regenerates the lockfile for the current platform only, dropping cross-platform optional native binaries (e.g. `@rollup/rollup-linux-x64-gnu`) and breaking CI/Linux builds. Add an entry to `.trivyignore.yaml` instead with a 30–60 day expiry (use the `/trivy-ignore` skill). `npm audit fix` (without `--force`) is OK for direct, non-breaking fixes.
 
 ---
 
