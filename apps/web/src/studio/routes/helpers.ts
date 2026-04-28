@@ -9,6 +9,8 @@ export enum StudioRouteNames {
   FEEDBACK = "/o/:organizationId/p/:projectId/a/:agentId/f",
   AGENT_MEMBERSHIPS = "/o/:organizationId/p/:projectId/a/:agentId/members",
   AGENT_ANALYTICS = "/o/:organizationId/p/:projectId/a/:agentId/analytics",
+  REVIEW_CAMPAIGNS = "/o/:organizationId/p/:projectId/review-campaigns",
+  REVIEW_CAMPAIGN_REPORT = "/o/:organizationId/p/:projectId/review-campaigns/:reviewCampaignId/report",
 }
 
 export const buildStudioPath = (path: string) => {
@@ -120,6 +122,37 @@ export const buildAgentAnalyticsPath = ({
     StudioRouteNames.AGENT_ANALYTICS.replace(":organizationId", organizationId)
       .replace(":projectId", projectId)
       .replace(":agentId", agentId),
+  )
+}
+
+export const buildReviewCampaignsPath = ({
+  organizationId,
+  projectId,
+}: {
+  organizationId: string
+  projectId: string
+}) => {
+  return buildStudioPath(
+    StudioRouteNames.REVIEW_CAMPAIGNS.replace(":organizationId", organizationId).replace(
+      ":projectId",
+      projectId,
+    ),
+  )
+}
+
+export const buildReviewCampaignReportPath = ({
+  organizationId,
+  projectId,
+  reviewCampaignId,
+}: {
+  organizationId: string
+  projectId: string
+  reviewCampaignId: string
+}) => {
+  return buildStudioPath(
+    StudioRouteNames.REVIEW_CAMPAIGN_REPORT.replace(":organizationId", organizationId)
+      .replace(":projectId", projectId)
+      .replace(":reviewCampaignId", reviewCampaignId),
   )
 }
 

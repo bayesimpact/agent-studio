@@ -1,0 +1,385 @@
+import {
+  ConflictException,
+  Injectable,
+  NotFoundException,
+  UnprocessableEntityException,
+} from "@nestjs/common"
+import { InjectRepository } from "@nestjs/typeorm"
+import type { Repository } from "typeorm"
+import type { RequiredConnectScope } from "@/common/entities/connect-required-fields"
+import { Agent } from "@/domains/agents/agent.entity"
+import type { BaseAgentSessionType } from "@/domains/agents/base-agent-sessions/base-agent-sessions.types"
+import { ConversationAgentSession } from "@/domains/agents/conversation-agent-sessions/conversation-agent-session.entity"
+// biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
+import { ConversationAgentSessionsService } from "@/domains/agents/conversation-agent-sessions/conversation-agent-sessions.service"
+import { FormAgentSession } from "@/domains/agents/form-agent-sessions/form-agent-session.entity"
+// biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
+import { FormAgentSessionsService } from "@/domains/agents/form-agent-sessions/form-agent-sessions.service"
+import { ReviewCampaignMembership } from "../memberships/review-campaign-membership.entity"
+import type { ReviewCampaign } from "../review-campaign.entity"
+import type { ReviewCampaignAnswer, ReviewCampaignSessionType } from "../review-campaigns.types"
+import { TesterCampaignSurvey } from "../tester-campaign-surveys/tester-campaign-survey.entity"
+import { TesterSessionFeedback } from "../tester-session-feedbacks/tester-session-feedback.entity"
+
+export type MyTesterSessionSummary = {
+  sessionId: string
+  sessionType: "conversation" | "form"
+  startedAt: Date
+  feedbackStatus: "submitted" | "pending"
+}
+
+export type CampaignAggregates = {
+  meanTesterRating: number | null
+  surveyCount: number
+  sessionCount: number
+}
+
+export type TesterFeedbackFields = {
+  overallRating: number
+  comment?: string | null
+  answers?: ReviewCampaignAnswer[]
+}
+
+export type TesterSurveyFields = TesterFeedbackFields
+
+@Injectable()
+export class TesterService {
+  constructor(
+    @InjectRepository(ReviewCampaignMembership)
+    private readonly membershipRepository: Repository<ReviewCampaignMembership>,
+    @InjectRepository(Agent)
+    private readonly agentRepository: Repository<Agent>,
+    @InjectRepository(ConversationAgentSession)
+    private readonly conversationSessionRepository: Repository<ConversationAgentSession>,
+    @InjectRepository(FormAgentSession)
+    private readonly formSessionRepository: Repository<FormAgentSession>,
+    @InjectRepository(TesterSessionFeedback)
+    private readonly feedbackRepository: Repository<TesterSessionFeedback>,
+    @InjectRepository(TesterCampaignSurvey)
+    private readonly surveyRepository: Repository<TesterCampaignSurvey>,
+    private readonly conversationAgentSessionsService: ConversationAgentSessionsService,
+    private readonly formAgentSessionsService: FormAgentSessionsService,
+  ) {}
+
+  async listMyCampaigns(
+    userId: string,
+    role: "tester" | "reviewer" = "tester",
+  ): Promise<ReviewCampaign[]> {
+    const memberships = await this.membershipRepository.find({
+      where: { userId, role },
+      relations: ["campaign"],
+    })
+    return memberships
+      .map((membership) => membership.campaign)
+      .filter((campaign): campaign is ReviewCampaign => !!campaign && campaign.status === "active")
+  }
+
+  async getAgentForCampaign({
+    connectScope,
+    campaign,
+  }: {
+    connectScope: RequiredConnectScope
+    campaign: ReviewCampaign
+  }): Promise<Agent> {
+    const agent = await this.agentRepository.findOne({
+      where: {
+        id: campaign.agentId,
+        organizationId: connectScope.organizationId,
+        projectId: connectScope.projectId,
+      },
+    })
+    if (!agent) throw new NotFoundException(`Agent ${campaign.agentId} not found`)
+    return agent
+  }
+
+  async listMyTesterSessions({
+    userId,
+    campaignId,
+  }: {
+    userId: string
+    campaignId: string
+  }): Promise<MyTesterSessionSummary[]> {
+    const [conversationSessions, formSessions] = await Promise.all([
+      this.conversationSessionRepository.find({
+        where: { userId, campaignId },
+        select: { id: true, createdAt: true },
+      }),
+      this.formSessionRepository.find({
+        where: { userId, campaignId },
+        select: { id: true, createdAt: true },
+      }),
+    ])
+
+    const sessionIds = [
+      ...conversationSessions.map((session) => session.id),
+      ...formSessions.map((session) => session.id),
+    ]
+    const feedbacks =
+      sessionIds.length > 0
+        ? await this.feedbackRepository
+            .createQueryBuilder("feedback")
+            .select("feedback.session_id", "sessionId")
+            .where("feedback.session_id IN (:...sessionIds)", { sessionIds })
+            .getRawMany<{ sessionId: string }>()
+        : []
+    const feedbackBySessionId = new Set(feedbacks.map((feedback) => feedback.sessionId))
+
+    const summaries: MyTesterSessionSummary[] = [
+      ...conversationSessions.map((session) => ({
+        sessionId: session.id,
+        sessionType: "conversation" as const,
+        startedAt: session.createdAt,
+        feedbackStatus: feedbackBySessionId.has(session.id)
+          ? ("submitted" as const)
+          : ("pending" as const),
+      })),
+      ...formSessions.map((session) => ({
+        sessionId: session.id,
+        sessionType: "form" as const,
+        startedAt: session.createdAt,
+        feedbackStatus: feedbackBySessionId.has(session.id)
+          ? ("submitted" as const)
+          : ("pending" as const),
+      })),
+    ]
+    return summaries.sort((left, right) => right.startedAt.getTime() - left.startedAt.getTime())
+  }
+
+  async startSession({
+    connectScope,
+    campaign,
+    userId,
+    type,
+  }: {
+    connectScope: RequiredConnectScope
+    campaign: ReviewCampaign
+    userId: string
+    type: BaseAgentSessionType
+  }): Promise<{ sessionId: string; sessionType: "conversation" | "form" }> {
+    const agent = await this.getAgentForCampaign({ connectScope, campaign })
+
+    if (agent.type === "extraction") {
+      throw new UnprocessableEntityException(
+        "Extraction agents cannot be started directly from a tester campaign yet",
+      )
+    }
+
+    if (agent.type === "conversation") {
+      const session = await this.conversationAgentSessionsService.createSession({
+        connectScope,
+        agentId: agent.id,
+        userId,
+        type,
+      })
+      session.campaignId = campaign.id
+      await this.conversationSessionRepository.save(session)
+      return { sessionId: session.id, sessionType: "conversation" }
+    }
+
+    if (agent.type === "form") {
+      const session = await this.formAgentSessionsService.createSession({
+        connectScope,
+        agentId: agent.id,
+        userId,
+        type,
+      })
+      session.campaignId = campaign.id
+      await this.formSessionRepository.save(session)
+      return { sessionId: session.id, sessionType: "form" }
+    }
+
+    throw new UnprocessableEntityException(`Unsupported agent type: ${agent.type}`)
+  }
+
+  async submitFeedback({
+    connectScope,
+    sessionId,
+    sessionType,
+    sessionOwnerUserId,
+    campaign,
+    callerUserId,
+    fields,
+  }: {
+    connectScope: RequiredConnectScope
+    sessionId: string
+    sessionType: ReviewCampaignSessionType
+    sessionOwnerUserId: string
+    campaign: ReviewCampaign
+    callerUserId: string
+    fields: TesterFeedbackFields
+  }): Promise<TesterSessionFeedback> {
+    this.validateRating(fields.overallRating)
+    this.assertSessionOwnedByCaller(sessionOwnerUserId, callerUserId)
+
+    const existing = await this.feedbackRepository.findOne({ where: { sessionId } })
+    if (existing) {
+      throw new ConflictException(
+        `Feedback already submitted for session ${sessionId}; use PATCH to update`,
+      )
+    }
+
+    const feedback = this.feedbackRepository.create({
+      organizationId: connectScope.organizationId,
+      projectId: connectScope.projectId,
+      campaignId: campaign.id,
+      sessionId,
+      sessionType,
+      overallRating: fields.overallRating,
+      comment: fields.comment ?? null,
+      answers: fields.answers ?? [],
+    })
+    return this.feedbackRepository.save(feedback)
+  }
+
+  async updateFeedback({
+    sessionId,
+    sessionOwnerUserId,
+    callerUserId,
+    fields,
+  }: {
+    sessionId: string
+    sessionOwnerUserId: string
+    callerUserId: string
+    fields: Partial<TesterFeedbackFields>
+  }): Promise<TesterSessionFeedback> {
+    if (fields.overallRating !== undefined) this.validateRating(fields.overallRating)
+    this.assertSessionOwnedByCaller(sessionOwnerUserId, callerUserId)
+
+    const feedback = await this.feedbackRepository.findOne({ where: { sessionId } })
+    if (!feedback) {
+      throw new NotFoundException(`No feedback found for session ${sessionId}`)
+    }
+
+    if (fields.overallRating !== undefined) feedback.overallRating = fields.overallRating
+    if (fields.comment !== undefined) feedback.comment = fields.comment
+    if (fields.answers !== undefined) feedback.answers = fields.answers
+    return this.feedbackRepository.save(feedback)
+  }
+
+  async computeCampaignAggregates(campaignId: string): Promise<CampaignAggregates> {
+    const [ratingRow, surveyCount, conversationSessionCount, formSessionCount] = await Promise.all([
+      this.feedbackRepository
+        .createQueryBuilder("feedback")
+        .select("AVG(feedback.overall_rating)", "mean")
+        .where("feedback.campaign_id = :campaignId", { campaignId })
+        .getRawOne<{ mean: string | null }>(),
+      this.surveyRepository.count({ where: { campaignId } }),
+      this.conversationSessionRepository.count({ where: { campaignId } }),
+      this.formSessionRepository.count({ where: { campaignId } }),
+    ])
+    const mean = ratingRow?.mean
+    return {
+      meanTesterRating: mean === null || mean === undefined ? null : Number(mean),
+      surveyCount,
+      sessionCount: conversationSessionCount + formSessionCount,
+    }
+  }
+
+  async getMyTesterSurvey({
+    userId,
+    campaignId,
+  }: {
+    userId: string
+    campaignId: string
+  }): Promise<TesterCampaignSurvey | null> {
+    return this.surveyRepository.findOne({ where: { campaignId, userId } })
+  }
+
+  async deleteTesterSession({
+    sessionId,
+    sessionType,
+    sessionOwnerUserId,
+    callerUserId,
+  }: {
+    sessionId: string
+    sessionType: ReviewCampaignSessionType
+    sessionOwnerUserId: string
+    callerUserId: string
+  }): Promise<void> {
+    this.assertSessionOwnedByCaller(sessionOwnerUserId, callerUserId)
+
+    const feedback = await this.feedbackRepository.findOne({ where: { sessionId } })
+    if (feedback) {
+      throw new ConflictException(
+        "Cannot delete a session that has feedback; remove the feedback first",
+      )
+    }
+
+    if (sessionType === "conversation") {
+      await this.conversationSessionRepository.delete({ id: sessionId })
+    } else {
+      await this.formSessionRepository.delete({ id: sessionId })
+    }
+  }
+
+  async submitSurvey({
+    connectScope,
+    campaign,
+    userId,
+    fields,
+  }: {
+    connectScope: RequiredConnectScope
+    campaign: ReviewCampaign
+    userId: string
+    fields: TesterSurveyFields
+  }): Promise<TesterCampaignSurvey> {
+    this.validateRating(fields.overallRating)
+
+    const existing = await this.surveyRepository.findOne({
+      where: { campaignId: campaign.id, userId },
+    })
+    if (existing) {
+      throw new ConflictException(
+        "End-of-phase survey already submitted for this campaign; use PATCH to update",
+      )
+    }
+
+    const survey = this.surveyRepository.create({
+      organizationId: connectScope.organizationId,
+      projectId: connectScope.projectId,
+      campaignId: campaign.id,
+      userId,
+      overallRating: fields.overallRating,
+      comment: fields.comment ?? null,
+      answers: fields.answers ?? [],
+      submittedAt: new Date(),
+    })
+    return this.surveyRepository.save(survey)
+  }
+
+  async updateSurvey({
+    campaign,
+    userId,
+    fields,
+  }: {
+    campaign: ReviewCampaign
+    userId: string
+    fields: Partial<TesterSurveyFields>
+  }): Promise<TesterCampaignSurvey> {
+    if (fields.overallRating !== undefined) this.validateRating(fields.overallRating)
+
+    const survey = await this.surveyRepository.findOne({
+      where: { campaignId: campaign.id, userId },
+    })
+    if (!survey) {
+      throw new NotFoundException("No end-of-phase survey submitted yet for this campaign")
+    }
+
+    if (fields.overallRating !== undefined) survey.overallRating = fields.overallRating
+    if (fields.comment !== undefined) survey.comment = fields.comment
+    if (fields.answers !== undefined) survey.answers = fields.answers
+    return this.surveyRepository.save(survey)
+  }
+
+  private assertSessionOwnedByCaller(sessionOwnerUserId: string, callerUserId: string): void {
+    if (sessionOwnerUserId !== callerUserId) {
+      throw new NotFoundException("Agent session not found")
+    }
+  }
+
+  private validateRating(rating: number): void {
+    if (!Number.isInteger(rating) || rating < 1 || rating > 5) {
+      throw new UnprocessableEntityException("Overall rating must be an integer between 1 and 5")
+    }
+  }
+}

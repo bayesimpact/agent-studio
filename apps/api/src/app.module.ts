@@ -25,6 +25,7 @@ import { EvaluationsModule } from "./domains/evaluations/evaluations.module"
 import { MeModule } from "./domains/me/me.module"
 import { OrganizationsModule } from "./domains/organizations/organizations.module"
 import { ProjectsModule } from "./domains/projects/projects.module"
+import { ReviewCampaignsModule } from "./domains/review-campaigns/review-campaigns.module"
 import { UsersModule } from "./domains/users/users.module"
 
 @Module({
@@ -61,6 +62,7 @@ import { UsersModule } from "./domains/users/users.module"
     ProjectsAnalyticsModule,
     ProjectsModule,
     ProjectsModule,
+    ReviewCampaignsModule,
     StorageModule,
     StreamingModule,
     UsersModule,

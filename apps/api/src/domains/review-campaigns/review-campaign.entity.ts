@@ -7,6 +7,7 @@ import { FormAgentSession } from "@/domains/agents/form-agent-sessions/form-agen
 import { Project } from "@/domains/projects/project.entity"
 import { ReviewCampaignMembership } from "./memberships/review-campaign-membership.entity"
 import type { ReviewCampaignQuestion, ReviewCampaignStatus } from "./review-campaigns.types"
+import { ReviewerSessionReview } from "./reviewer-session-reviews/reviewer-session-review.entity"
 import { TesterCampaignSurvey } from "./tester-campaign-surveys/tester-campaign-survey.entity"
 import { TesterSessionFeedback } from "./tester-session-feedbacks/tester-session-feedback.entity"
 
@@ -70,6 +71,12 @@ export class ReviewCampaign extends ConnectEntityBase {
     (survey) => survey.campaign,
   )
   testerCampaignSurveys!: TesterCampaignSurvey[]
+
+  @OneToMany(
+    () => ReviewerSessionReview,
+    (review) => review.campaign,
+  )
+  reviewerSessionReviews!: ReviewerSessionReview[]
 
   @OneToMany(
     () => ConversationAgentSession,

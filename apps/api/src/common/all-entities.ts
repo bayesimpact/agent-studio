@@ -31,6 +31,7 @@ import { ProjectMembership } from "@/domains/projects/memberships/project-member
 import { Project } from "@/domains/projects/project.entity"
 import { ReviewCampaignMembership } from "@/domains/review-campaigns/memberships/review-campaign-membership.entity"
 import { ReviewCampaign } from "@/domains/review-campaigns/review-campaign.entity"
+import { ReviewerSessionReview } from "@/domains/review-campaigns/reviewer-session-reviews/reviewer-session-review.entity"
 import { TesterCampaignSurvey } from "@/domains/review-campaigns/tester-campaign-surveys/tester-campaign-survey.entity"
 import { TesterSessionFeedback } from "@/domains/review-campaigns/tester-session-feedbacks/tester-session-feedback.entity"
 import { User } from "@/domains/users/user.entity"
@@ -65,6 +66,7 @@ export const ALL_ENTITIES = [
   ProjectMembership,
   ReviewCampaign,
   ReviewCampaignMembership,
+  ReviewerSessionReview,
   TesterCampaignSurvey,
   TesterSessionFeedback,
   User,

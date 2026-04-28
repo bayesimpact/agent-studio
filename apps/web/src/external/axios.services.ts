@@ -9,6 +9,7 @@ import organizations from "@/common/features/organizations/external/organization
 import projects from "@/common/features/projects/external/projects.api"
 import evaluationExtractionDatasets from "@/eval/features/evaluation-extraction-datasets/external/evaluation-extraction-datasets.api"
 import evaluationExtractionRuns from "@/eval/features/evaluation-extraction-runs/external/evaluation-extraction-runs.api"
+import reviewCampaignsReviewer from "@/reviewer/features/review-campaigns/external/reviewer.api"
 import agentMemberships from "@/studio/features/agent-memberships/external/agent-memberships.api"
 import agentMessageFeedback from "@/studio/features/agent-message-feedback/external/agent-message-feedback.api"
 import agentAnalytics from "@/studio/features/analytics/agent/external/agent-analytics.api"
@@ -19,6 +20,9 @@ import evaluationReports from "@/studio/features/evaluation-reports/external/eva
 import evaluations from "@/studio/features/evaluations/external/evaluations.api"
 import invitations from "@/studio/features/invitations/external/invitations.api"
 import projectMemberships from "@/studio/features/project-memberships/external/project-memberships.api"
+import reviewCampaigns from "@/studio/features/review-campaigns/external/review-campaigns.api"
+import reviewCampaignsReports from "@/studio/features/review-campaigns/reports/external/reports.api"
+import reviewCampaignsTester from "@/tester/features/review-campaigns/external/tester.api"
 
 export const services = {
   agentAnalytics,
@@ -42,4 +46,8 @@ export const services = {
   projectAnalytics,
   projectMemberships,
   projects,
+  reviewCampaigns,
+  reviewCampaignsReports,
+  reviewCampaignsReviewer,
+  reviewCampaignsTester,
 }

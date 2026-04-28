@@ -1,0 +1,223 @@
+{
+  "reviewCampaigns": {
+    "title": "Campagnes d'évaluation",
+    "subtitle": "Évaluez les agents avec des testeurs et des relecteurs invités.",
+    "new": "Nouvelle campagne",
+    "loading": "Chargement…",
+    "dashboardCard": {
+      "title": "Campagnes d'évaluation",
+      "description": "Invitez des testeurs et des relecteurs à évaluer un agent."
+    },
+    "empty": {
+      "title": "Aucune campagne d'évaluation pour le moment",
+      "description": "Créez une campagne pour inviter des testeurs et des relecteurs à évaluer un agent."
+    },
+    "table": {
+      "name": "Nom",
+      "status": "Statut",
+      "members": "Membres",
+      "created": "Créée",
+      "updated": "Modifiée",
+      "actions": "Actions",
+      "editAria": "Modifier {{name}}",
+      "deleteAria": "Supprimer {{name}}"
+    },
+    "status": {
+      "draft": "Brouillon",
+      "active": "Active",
+      "closed": "Clôturée"
+    },
+    "editor": {
+      "createTitle": "Nouvelle campagne d'évaluation",
+      "editTitle": "Modifier la campagne d'évaluation",
+      "createDescription": "Configurez l'agent, les questions et les invités avant d'activer.",
+      "editDescription": "Gérez la configuration, les participants et le cycle de vie.",
+      "noticeSaveFirst": "Enregistrez d'abord la campagne — les invitations envoient un véritable e-mail et nécessitent une campagne persistée.",
+      "noticeActivateFirst": "Activez la campagne avant d'inviter des participants — sinon les invités accepteraient et arriveraient sur une campagne qui n'apparaît pas encore dans leur liste.",
+      "tabs": {
+        "summary": "Synthèse",
+        "general": "Général",
+        "questions": "Questions",
+        "participants": "Participants",
+        "preview": "Aperçu"
+      },
+      "fields": {
+        "name": "Nom",
+        "namePlaceholder": "ex. Agent Support — revue T2",
+        "description": "Description",
+        "descriptionPlaceholder": "Que voulons-nous évaluer ?",
+        "agent": "Agent ciblé",
+        "agentPlaceholder": "Sélectionnez un agent"
+      },
+      "actions": {
+        "create": "Créer la campagne",
+        "save": "Enregistrer",
+        "activate": "Activer",
+        "close": "Clôturer",
+        "delete": "Supprimer"
+      },
+      "validation": {
+        "nameRequired": "Le nom de la campagne est requis",
+        "agentRequired": "L'agent est requis"
+      }
+    },
+    "questions": {
+      "perSession": {
+        "label": "Testeur — questions par session",
+        "description": "Posées après chaque session terminée par le testeur."
+      },
+      "endOfPhase": {
+        "label": "Testeur — questions de fin de phase",
+        "description": "Posées une fois lorsque le testeur termine sa participation."
+      },
+      "reviewer": {
+        "label": "Questions relecteur",
+        "description": "Affichées aux relecteurs lorsqu'ils relisent une session."
+      },
+      "types": {
+        "rating": "Note (1–5)",
+        "single-choice": "Choix unique",
+        "free-text": "Texte libre"
+      },
+      "prompt": "Question",
+      "promptPlaceholder": "ex. La réponse était-elle claire ?",
+      "type": "Type",
+      "options": "Options (une par ligne)",
+      "optionsPlaceholder": "Oui, Non, Incertain",
+      "required": "Obligatoire",
+      "factual": "Factuelle",
+      "factualHint": "(visible aux relecteurs en mode aveugle)",
+      "factualTooltip": "Les questions factuelles (ce qui s'est passé pendant la session) restent visibles aux relecteurs lors de la relecture en aveugle. Les questions d'opinion sont masquées tant que le relecteur n'a pas soumis sa propre revue.",
+      "add": "Ajouter une question",
+      "moveUp": "Monter",
+      "moveDown": "Descendre",
+      "remove": "Supprimer la question",
+      "empty": "Aucune question pour le moment."
+    },
+    "participants": {
+      "inviteTitle": "Inviter des participants",
+      "emailsLabel": "E-mails (séparés par des virgules ou des retours à la ligne)",
+      "emailsPlaceholder": "alice@exemple.com, bob@exemple.com",
+      "roleLabel": "Rôle",
+      "tester": "Testeur",
+      "reviewer": "Relecteur",
+      "send": "Envoyer les invitations",
+      "empty": "Aucun participant invité pour le moment.",
+      "email": "E-mail",
+      "invited": "Invité",
+      "accepted": "Accepté",
+      "actions": "Actions",
+      "pending": "en attente",
+      "revoke": "Révoquer"
+    },
+    "preview": {
+      "perSessionTitle": "Après chaque session",
+      "perSessionDescription": "Ce que voit un testeur à la fin d'une session.",
+      "endOfPhaseTitle": "Questionnaire de fin de phase",
+      "endOfPhaseDescription": "Ce que voit un testeur lorsqu'il termine sa participation.",
+      "overallRating": "Note globale",
+      "comment": "Commentaire",
+      "commentPlaceholder": "Commentaire du testeur…",
+      "answerPlaceholder": "Réponse du testeur…",
+      "submit": "Envoyer",
+      "starsAria": "{{count}} étoiles",
+      "ratingAria": "Notation 5 étoiles (aperçu)",
+      "untitled": "Sans titre",
+      "noOptions": "Aucune option configurée.",
+      "noContent": "Aucun contenu pour le moment."
+    },
+    "summary": {
+      "pending": "Les résultats agrégés seront disponibles une fois la campagne clôturée.",
+      "viewFullReport": "Voir le rapport complet",
+      "meanTesterRating": "Note moyenne des testeurs",
+      "meanTesterRatingHint": "Moyenne des notes globales par session.",
+      "sessions": "Sessions",
+      "sessionsHint": "Total des sessions démarrées par les testeurs.",
+      "endOfPhaseSurveys": "Questionnaires de fin de phase",
+      "endOfPhaseSurveysHint": "Testeurs ayant soumis le questionnaire final."
+    },
+    "dialogs": {
+      "activate": {
+        "title": "Activer « {{name}} » ?",
+        "description": "Une fois activée, la configuration (agent, questions) est verrouillée et la campagne est visible par les testeurs et relecteurs invités. Vous pouvez toujours inviter plus de participants.",
+        "confirm": "Activer"
+      },
+      "close": {
+        "title": "Clôturer « {{name}} » ?",
+        "description": "Clôturer une campagne fige tous les retours des testeurs et les revues des relecteurs. Les participants ne pourront plus soumettre de nouvelles sessions, de retours ou de questionnaires. Cette action est irréversible.",
+        "confirm": "Clôturer la campagne"
+      },
+      "delete": {
+        "title": "Supprimer « {{name}} » ?",
+        "description": "Cela supprime définitivement la campagne en brouillon et sa configuration. Seuls les brouillons peuvent être supprimés — les campagnes actives ou clôturées doivent être conservées pour audit.",
+        "confirm": "Supprimer"
+      },
+      "cancel": "Annuler"
+    },
+    "notifications": {
+      "createSuccess": "Campagne d'évaluation créée avec succès",
+      "createError": "La création de la campagne d'évaluation a échoué",
+      "updateSuccess": "Campagne d'évaluation mise à jour avec succès",
+      "updateError": "La mise à jour de la campagne d'évaluation a échoué",
+      "deleteSuccess": "Campagne d'évaluation supprimée avec succès",
+      "deleteError": "La suppression de la campagne d'évaluation a échoué",
+      "inviteSuccess": "Invitations envoyées",
+      "inviteError": "L'envoi des invitations a échoué",
+      "revokeSuccess": "Adhésion révoquée",
+      "revokeError": "La révocation de l'adhésion a échoué"
+    },
+    "report": {
+      "title": "Rapport de campagne",
+      "back": "Retour",
+      "loading": "Chargement du rapport…",
+      "downloadCsv": "Télécharger le CSV",
+      "downloading": "Téléchargement…",
+      "testerPerSession": {
+        "title": "Testeur — questions par session",
+        "description": "Une réponse par session de testeur."
+      },
+      "testerEndOfPhase": {
+        "title": "Testeur — questions de fin de phase",
+        "description": "Une réponse par testeur ayant terminé le questionnaire final."
+      },
+      "reviewer": {
+        "title": "Questions relecteur",
+        "description": "Une réponse par revue de relecteur, toutes sessions confondues."
+      },
+      "sessionMatrix": {
+        "title": "Matrice des sessions",
+        "description": "Notes des testeurs et des relecteurs par session. L'écart est la différence entre la note la plus basse et la plus haute des relecteurs — un écart élevé suggère un désaccord entre relecteurs.",
+        "session": "Session",
+        "started": "Démarrée",
+        "tester": "Testeur",
+        "reviewers": "Relecteurs",
+        "meanReviewer": "Moyenne relecteurs",
+        "spread": "Écart",
+        "emptyTitle": "Aucune session pour le moment",
+        "emptyDescription": "La matrice des sessions se remplit au fur et à mesure que les testeurs démarrent des sessions dans cette campagne."
+      },
+      "headline": {
+        "sessions": "Sessions",
+        "sessionsHint": "{{count}} testeurs uniques",
+        "meanTesterRating": "Note moyenne des testeurs",
+        "meanTesterRatingHint": "{{count}} réponses par session",
+        "meanReviewerRating": "Note moyenne des relecteurs",
+        "meanReviewerRatingHint": "{{count}} revues de relecteurs",
+        "meanEndOfPhase": "Moyenne fin de phase",
+        "meanEndOfPhaseHint": "Issue des questionnaires finaux des testeurs"
+      },
+      "distribution": {
+        "types": {
+          "rating": "Note",
+          "single-choice": "Choix unique",
+          "free-text": "Texte libre"
+        },
+        "responses_one": "{{count}} réponse",
+        "responses_other": "{{count}} réponses",
+        "freeTextNotice": "Les réponses libres ne sont pas synthétisées ici — consultez les sessions individuelles pour les lire.",
+        "noResponses": "Aucune réponse pour le moment.",
+        "barAria": "{{count}} réponses ({{percent}} %)"
+      }
+    }
+  }
+}

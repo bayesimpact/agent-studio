@@ -23,6 +23,8 @@ import { EvaluationButton } from "@/studio/features/agents/components/Evaluation
 import { MembersButton } from "@/studio/features/agents/components/MembersButton"
 import { ProjectDeletor } from "@/studio/features/projects/components/ProjectDeletor"
 import { ProjectEditor } from "@/studio/features/projects/components/ProjectEditor"
+import { CampaignListPage } from "@/studio/features/review-campaigns/components/CampaignListPage"
+import { ReviewCampaignsButton } from "@/studio/features/review-campaigns/components/ReviewCampaignsButton"
 import { AgentAnalyticsRoute } from "./AgentAnalyticsRoute"
 import { AgentMembershipsRoute } from "./AgentMembershipsRoute"
 import { DocumentsRoute } from "./DocumentsRoute"
@@ -31,6 +33,7 @@ import { FeedbackRoute } from "./FeedbackRoute"
 import { buildStudioPath, StudioRouteNames } from "./helpers"
 import { ProjectAnalyticsRoute } from "./ProjectAnalyticsRoute"
 import { ProjectMembershipsRoute } from "./ProjectMembershipsRoute"
+import { ReviewCampaignReportRoute } from "./ReviewCampaignReportRoute"
 import { StudioAgentSessionRoute } from "./StudioAgentSessionRoute"
 import { StudioDashboardRoute } from "./StudioDashboardRoute"
 import { Studio } from "./StudioRoute"
@@ -39,6 +42,7 @@ const extraItems = [
   AgentCreatorButton,
   DocumentsButton,
   MembersButton,
+  ReviewCampaignsButton,
   AnalyticsButton,
   EvaluationButton,
 ]
@@ -112,6 +116,14 @@ export const studioRoutes = {
             {
               path: buildStudioPath(StudioRouteNames.PROJECT_MEMBERSHIPS),
               element: <ProjectMembershipsRoute />,
+            },
+            {
+              path: buildStudioPath(StudioRouteNames.REVIEW_CAMPAIGNS),
+              element: <CampaignListPage />,
+            },
+            {
+              path: buildStudioPath(StudioRouteNames.REVIEW_CAMPAIGN_REPORT),
+              element: <ReviewCampaignReportRoute />,
             },
             {
               path: buildStudioPath(RouteNames.AGENT),

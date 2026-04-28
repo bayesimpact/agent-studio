@@ -65,7 +65,7 @@ const buildAgentPath = ({
   return `${getPrefix(props)}${path}`
 }
 
-const buildAgentSessionPath = ({
+export const buildAgentSessionPath = ({
   organizationId,
   projectId,
   agentId,

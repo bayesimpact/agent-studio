@@ -20,6 +20,8 @@ import { AgentMembershipContextResolver } from "./resolvers/agent-membership-con
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
 import { AgentSessionContextResolver } from "./resolvers/agent-session-context.resolver"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
+import { AgentSessionInCampaignContextResolver } from "./resolvers/agent-session-in-campaign-context.resolver"
+// biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
 import { DocumentContextResolver } from "./resolvers/document-context.resolver"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
 import { DocumentTagContextResolver } from "./resolvers/document-tag-context.resolver"
@@ -35,6 +37,10 @@ import { OrganizationContextResolver } from "./resolvers/organization-context.re
 import { ProjectContextResolver } from "./resolvers/project-context.resolver"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
 import { ProjectMembershipContextResolver } from "./resolvers/project-membership-context.resolver"
+// biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
+import { ReviewCampaignContextResolver } from "./resolvers/review-campaign-context.resolver"
+// biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
+import { ReviewCampaignMembershipContextResolver } from "./resolvers/review-campaign-membership-context.resolver"
 
 const RESOLUTION_ORDER: ContextResource[] = [
   "organization",
@@ -48,6 +54,9 @@ const RESOLUTION_ORDER: ContextResource[] = [
   "evaluation",
   "evaluationExtractionDataset",
   "evaluationExtractionRun",
+  "agentSessionInCampaign",
+  "reviewCampaign",
+  "reviewCampaignMembership",
 ]
 
 @Injectable()
@@ -68,6 +77,11 @@ export class ResourceContextGuard implements CanActivate {
     @Optional()
     evaluationExtractionDatasetContextResolver?: EvaluationExtractionDatasetContextResolver,
     @Optional() evaluationExtractionRunContextResolver?: EvaluationExtractionRunContextResolver,
+    @Optional() reviewCampaignContextResolver?: ReviewCampaignContextResolver,
+    @Optional()
+    reviewCampaignMembershipContextResolver?: ReviewCampaignMembershipContextResolver,
+    @Optional()
+    agentSessionInCampaignContextResolver?: AgentSessionInCampaignContextResolver,
   ) {
     const resolverEntries: Array<[ContextResource, ContextResolver]> = []
     if (organizationContextResolver) {
@@ -113,6 +127,21 @@ export class ResourceContextGuard implements CanActivate {
       resolverEntries.push([
         evaluationExtractionRunContextResolver.resource,
         evaluationExtractionRunContextResolver,
+      ])
+    }
+    if (reviewCampaignContextResolver) {
+      resolverEntries.push([reviewCampaignContextResolver.resource, reviewCampaignContextResolver])
+    }
+    if (reviewCampaignMembershipContextResolver) {
+      resolverEntries.push([
+        reviewCampaignMembershipContextResolver.resource,
+        reviewCampaignMembershipContextResolver,
+      ])
+    }
+    if (agentSessionInCampaignContextResolver) {
+      resolverEntries.push([
+        agentSessionInCampaignContextResolver.resource,
+        agentSessionInCampaignContextResolver,
       ])
     }
     this.resolverMap = new Map(resolverEntries)

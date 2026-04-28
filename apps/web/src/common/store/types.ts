@@ -1,7 +1,9 @@
 import type { ThunkDispatch, UnknownAction } from "@reduxjs/toolkit"
 import type { Services } from "@/di/services"
 import type { EvalState } from "@/eval/store/types"
+import type { ReviewerState } from "@/reviewer/store/types"
 import type { StudioState } from "@/studio/store/types"
+import type { TesterState } from "@/tester/store/types"
 import type { rootSliceList } from "./root-slices"
 
 // Define the store state structure without creating the store
@@ -15,6 +17,10 @@ export type RootState =
         studio: StudioState
       } & {
         evaluation: EvalState
+      } & {
+        tester: TesterState
+      } & {
+        reviewer: ReviewerState
       }
     : never
 

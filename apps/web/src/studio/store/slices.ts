@@ -17,6 +17,8 @@ import { evaluationsMiddleware } from "@/studio/features/evaluations/evaluations
 import { evaluationsSlice } from "@/studio/features/evaluations/evaluations.slice"
 import { projectMembershipsMiddleware } from "@/studio/features/project-memberships/project-memberships.middleware"
 import { projectMembershipsSlice } from "@/studio/features/project-memberships/project-memberships.slice"
+import { reviewCampaignsMiddleware } from "@/studio/features/review-campaigns/review-campaigns.middleware"
+import { reviewCampaignsSlice } from "@/studio/features/review-campaigns/review-campaigns.slice"
 import { dynamicMiddleware } from "../../common/store/dynamic-middleware"
 import { studioAgentsMiddleware } from "../features/agents/agents.middleware"
 import { documentsMiddleware } from "../features/documents/documents.middleware"
@@ -36,6 +38,7 @@ const studioMiddlewareList = [
   evaluationReportsMiddleware,
   evaluationsMiddleware,
   projectMembershipsMiddleware,
+  reviewCampaignsMiddleware,
   studioProjectsMiddleware,
   studioAgentsMiddleware,
 ]
@@ -50,6 +53,7 @@ export const studioSliceList = [
   evaluationReportsSlice,
   evaluationsSlice,
   projectMembershipsSlice,
+  reviewCampaignsSlice,
 ]
 
 const studioReducers = combineReducers(

@@ -21,6 +21,7 @@ export const userFactory = Factory.define<User>(({ sequence, params }) => {
     agentMemberships: params.agentMemberships || [],
     reviewCampaignMemberships: params.reviewCampaignMemberships || [],
     testerCampaignSurveys: params.testerCampaignSurveys || [],
+    reviewerSessionReviews: params.reviewerSessionReviews || [],
   } satisfies User
 })
 

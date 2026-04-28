@@ -10,11 +10,13 @@ import { selectOrganizationsData } from "@/common/features/organizations/organiz
 import { useAppSelector } from "@/common/store/hooks"
 import { DeskRouteNames } from "@/desk/routes/helpers"
 import { EvalRouteNames } from "@/eval/routes/helpers"
+import { buildReviewerHomePath } from "@/reviewer/routes/helpers"
 import { ProjectCreatorButton } from "@/studio/features/projects/components/ProjectCreator"
 import { StudioRouteNames } from "@/studio/routes/helpers"
+import { buildTesterHomePath } from "@/tester/routes/helpers"
 import { Wrap } from "../components/layouts/Wrap"
 import type { User } from "../features/me/me.models"
-import { selectMe } from "../features/me/me.selectors"
+import { selectMe, selectMyActiveReviewCampaignMemberships } from "../features/me/me.selectors"
 import type { Project } from "../features/projects/projects.models"
 import { useAbility } from "../hooks/use-ability"
 import { useBuildPath } from "../hooks/use-build-path"
@@ -82,7 +84,6 @@ function OrganizationItem({ organization, index }: { organization: Organization;
   const canCreateProject = abilities.canCreateProject({
     organizationId: organization.id,
   })
-
   const extraItems = canCreateProject ? 1 : 0
   return (
     <GridItem
@@ -107,6 +108,10 @@ function OrganizationItem({ organization, index }: { organization: Organization;
                     <NavStudioButton organizationId={organization.id} projectId={project.id} />
 
                     <NavEvalButton organizationId={organization.id} project={project} />
+
+                    <NavTesterButton projectId={project.id} />
+
+                    <NavReviewerButton projectId={project.id} />
                   </div>
                 }
               />
@@ -201,6 +206,41 @@ function NavEvalButton({ organizationId, project }: { organizationId: string; pr
   return (
     <Button variant={"outline"} onClick={handleClick}>
       {t("actions:goToEval")}
+    </Button>
+  )
+}
+
+function NavTesterButton({ projectId }: { projectId: string }) {
+  // Reads from /me — no extra round-trip on Onboarding.
+  const memberships = useAppSelector(selectMyActiveReviewCampaignMemberships("tester"))
+  const hasTesterCampaignInProject = memberships.some((m) => m.projectId === projectId)
+
+  const handleClick = () => {
+    // NOTE: do not use navigate from react-router — tester is its own route tree
+    window.location.assign(buildTesterHomePath())
+  }
+
+  if (!hasTesterCampaignInProject) return null
+  return (
+    <Button variant="outline" onClick={handleClick}>
+      Test
+    </Button>
+  )
+}
+
+function NavReviewerButton({ projectId }: { projectId: string }) {
+  const memberships = useAppSelector(selectMyActiveReviewCampaignMemberships("reviewer"))
+  const hasReviewerCampaignInProject = memberships.some((m) => m.projectId === projectId)
+
+  const handleClick = () => {
+    // NOTE: do not use navigate from react-router — reviewer is its own route tree
+    window.location.assign(buildReviewerHomePath())
+  }
+
+  if (!hasReviewerCampaignInProject) return null
+  return (
+    <Button variant="outline" onClick={handleClick}>
+      Review
     </Button>
   )
 }

@@ -1,0 +1,223 @@
+{
+  "reviewCampaigns": {
+    "title": "Review campaigns",
+    "subtitle": "Evaluate agents with invited testers and reviewers.",
+    "new": "New campaign",
+    "loading": "Loading…",
+    "dashboardCard": {
+      "title": "Review campaigns",
+      "description": "Invite testers and reviewers to evaluate an agent."
+    },
+    "empty": {
+      "title": "No review campaigns yet",
+      "description": "Create a campaign to invite testers and reviewers to evaluate an agent."
+    },
+    "table": {
+      "name": "Name",
+      "status": "Status",
+      "members": "Members",
+      "created": "Created",
+      "updated": "Updated",
+      "actions": "Actions",
+      "editAria": "Edit {{name}}",
+      "deleteAria": "Delete {{name}}"
+    },
+    "status": {
+      "draft": "Draft",
+      "active": "Active",
+      "closed": "Closed"
+    },
+    "editor": {
+      "createTitle": "New review campaign",
+      "editTitle": "Edit review campaign",
+      "createDescription": "Configure the agent, questions, and invitees before activating.",
+      "editDescription": "Manage configuration, participants, and lifecycle.",
+      "noticeSaveFirst": "Save the campaign first — invitations send a real email and need a persisted campaign.",
+      "noticeActivateFirst": "Activate the campaign before inviting participants — otherwise invitees would accept and land on a campaign that doesn't yet appear in their list.",
+      "tabs": {
+        "summary": "Summary",
+        "general": "General",
+        "questions": "Questions",
+        "participants": "Participants",
+        "preview": "Preview"
+      },
+      "fields": {
+        "name": "Name",
+        "namePlaceholder": "e.g. Support agent — Q2 review",
+        "description": "Description",
+        "descriptionPlaceholder": "What are we evaluating?",
+        "agent": "Target agent",
+        "agentPlaceholder": "Select an agent"
+      },
+      "actions": {
+        "create": "Create campaign",
+        "save": "Save",
+        "activate": "Activate",
+        "close": "Close",
+        "delete": "Delete"
+      },
+      "validation": {
+        "nameRequired": "Campaign name is required",
+        "agentRequired": "Agent is required"
+      }
+    },
+    "questions": {
+      "perSession": {
+        "label": "Tester — per-session questions",
+        "description": "Asked after every session the tester completes."
+      },
+      "endOfPhase": {
+        "label": "Tester — end-of-phase questions",
+        "description": "Asked once when the tester finishes participating."
+      },
+      "reviewer": {
+        "label": "Reviewer questions",
+        "description": "Shown to reviewers while reviewing a session."
+      },
+      "types": {
+        "rating": "Rating (1–5)",
+        "single-choice": "Single choice",
+        "free-text": "Free text"
+      },
+      "prompt": "Prompt",
+      "promptPlaceholder": "e.g. Was the response clear?",
+      "type": "Type",
+      "options": "Options (one per line)",
+      "optionsPlaceholder": "Yes, No, Not sure",
+      "required": "Required",
+      "factual": "Factual",
+      "factualHint": "(visible to reviewers during blind)",
+      "factualTooltip": "Factual questions (what happened in the session) stay visible to reviewers during blind review. Opinion questions are hidden until the reviewer submits their own review.",
+      "add": "Add question",
+      "moveUp": "Move up",
+      "moveDown": "Move down",
+      "remove": "Remove question",
+      "empty": "No questions yet."
+    },
+    "participants": {
+      "inviteTitle": "Invite participants",
+      "emailsLabel": "Emails (comma or newline separated)",
+      "emailsPlaceholder": "alice@example.com, bob@example.com",
+      "roleLabel": "Role",
+      "tester": "Tester",
+      "reviewer": "Reviewer",
+      "send": "Send invitations",
+      "empty": "No participants invited yet.",
+      "email": "Email",
+      "invited": "Invited",
+      "accepted": "Accepted",
+      "actions": "Actions",
+      "pending": "pending",
+      "revoke": "Revoke"
+    },
+    "preview": {
+      "perSessionTitle": "After each session",
+      "perSessionDescription": "What a tester sees when closing a session.",
+      "endOfPhaseTitle": "End-of-phase survey",
+      "endOfPhaseDescription": "What a tester sees when they finish participating.",
+      "overallRating": "Overall rating",
+      "comment": "Comment",
+      "commentPlaceholder": "Tester comment…",
+      "answerPlaceholder": "Tester answer…",
+      "submit": "Submit",
+      "starsAria": "{{count}} stars",
+      "ratingAria": "5-star rating (preview)",
+      "untitled": "Untitled",
+      "noOptions": "No options configured.",
+      "noContent": "No content yet."
+    },
+    "summary": {
+      "pending": "Aggregated results become available once the campaign is closed.",
+      "viewFullReport": "View full report",
+      "meanTesterRating": "Mean tester rating",
+      "meanTesterRatingHint": "Average of the per-session overall ratings.",
+      "sessions": "Sessions",
+      "sessionsHint": "Total sessions started by testers.",
+      "endOfPhaseSurveys": "End-of-phase surveys",
+      "endOfPhaseSurveysHint": "Testers who submitted the final survey."
+    },
+    "dialogs": {
+      "activate": {
+        "title": "Activate “{{name}}”?",
+        "description": "Once activated, the configuration (agent, questions) is locked and the campaign is visible to invited testers and reviewers. You can still invite more participants.",
+        "confirm": "Activate"
+      },
+      "close": {
+        "title": "Close “{{name}}”?",
+        "description": "Closing a campaign freezes all tester feedback and reviewer reviews. Participants will no longer be able to submit new sessions, feedback, or surveys. This cannot be undone.",
+        "confirm": "Close campaign"
+      },
+      "delete": {
+        "title": "Delete “{{name}}”?",
+        "description": "This permanently deletes the draft campaign and its configuration. Only drafts can be deleted — active or closed campaigns must be kept for audit.",
+        "confirm": "Delete"
+      },
+      "cancel": "Cancel"
+    },
+    "notifications": {
+      "createSuccess": "Review campaign created successfully",
+      "createError": "Review campaign creation failed",
+      "updateSuccess": "Review campaign updated successfully",
+      "updateError": "Review campaign update failed",
+      "deleteSuccess": "Review campaign deleted successfully",
+      "deleteError": "Review campaign deletion failed",
+      "inviteSuccess": "Invitations sent",
+      "inviteError": "Failed to send invitations",
+      "revokeSuccess": "Membership revoked",
+      "revokeError": "Failed to revoke membership"
+    },
+    "report": {
+      "title": "Campaign report",
+      "back": "Back",
+      "loading": "Loading report…",
+      "downloadCsv": "Download CSV",
+      "downloading": "Downloading…",
+      "testerPerSession": {
+        "title": "Tester — per-session questions",
+        "description": "One response per tester session."
+      },
+      "testerEndOfPhase": {
+        "title": "Tester — end-of-phase questions",
+        "description": "One response per tester who completed the final survey."
+      },
+      "reviewer": {
+        "title": "Reviewer questions",
+        "description": "One response per reviewer review across all sessions."
+      },
+      "sessionMatrix": {
+        "title": "Session matrix",
+        "description": "Per-session tester vs. reviewer ratings. Spread is the difference between the lowest and highest reviewer rating — high spread suggests reviewer disagreement.",
+        "session": "Session",
+        "started": "Started",
+        "tester": "Tester",
+        "reviewers": "Reviewers",
+        "meanReviewer": "Mean reviewer",
+        "spread": "Spread",
+        "emptyTitle": "No sessions yet",
+        "emptyDescription": "The session matrix fills in as testers start sessions in this campaign."
+      },
+      "headline": {
+        "sessions": "Sessions",
+        "sessionsHint": "{{count}} unique testers",
+        "meanTesterRating": "Mean tester rating",
+        "meanTesterRatingHint": "{{count}} per-session responses",
+        "meanReviewerRating": "Mean reviewer rating",
+        "meanReviewerRatingHint": "{{count}} reviewer reviews",
+        "meanEndOfPhase": "Mean end-of-phase",
+        "meanEndOfPhaseHint": "From final tester surveys"
+      },
+      "distribution": {
+        "types": {
+          "rating": "Rating",
+          "single-choice": "Single choice",
+          "free-text": "Free text"
+        },
+        "responses_one": "{{count}} response",
+        "responses_other": "{{count}} responses",
+        "freeTextNotice": "Free-text answers aren't summarized here — review individual sessions to read them.",
+        "noResponses": "No responses yet.",
+        "barAria": "{{count}} responses ({{percent}}%)"
+      }
+    }
+  }
+}

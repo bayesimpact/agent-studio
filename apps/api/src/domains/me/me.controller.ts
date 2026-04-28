@@ -73,5 +73,18 @@ function toUserMembershipDto(
       agentId: agentMembership.agentId,
       role: agentMembership.role,
     })),
+    // Skip rows where the campaign was somehow not loaded (defensive — relation
+    // is non-null in the schema). Surface campaignStatus so the UI can mirror
+    // listMyCampaigns' active-only filter without an extra round-trip.
+    reviewCampaignMemberships: membership.reviewCampaignMemberships
+      .filter((m) => !!m.campaign)
+      .map((m) => ({
+        id: m.id,
+        campaignId: m.campaignId,
+        organizationId: m.organizationId,
+        projectId: m.projectId,
+        role: m.role,
+        campaignStatus: m.campaign.status,
+      })),
   }
 }
