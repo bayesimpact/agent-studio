@@ -114,5 +114,18 @@ function toAgentDto(entity: Agent): AgentDto {
     updatedAt: entity.updatedAt.getTime(),
     documentTagIds: entity.documentTags?.map((tag) => tag.id) || [],
     documentsRagMode: entity.documentsRagMode,
+    projectAgentCategoryIds: (entity.categories ?? [])
+      .map((category) => category.projectAgentCategoryId)
+      .filter(
+        (projectAgentCategoryId): projectAgentCategoryId is string =>
+          projectAgentCategoryId !== null,
+      ),
+    usedProjectAgentCategoryIds: (entity.categories ?? [])
+      .filter((category) => (category.sessionCategories?.length ?? 0) > 0)
+      .map((category) => category.projectAgentCategoryId)
+      .filter(
+        (projectAgentCategoryId): projectAgentCategoryId is string =>
+          projectAgentCategoryId !== null,
+      ),
   }
 }

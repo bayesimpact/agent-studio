@@ -14,6 +14,15 @@ const mockProject: Project = {
   createdAt: Date.now(),
   updatedAt: Date.now(),
   featureFlags: [],
+  agentCategories: [
+    { id: "category-1", name: "Billing" },
+    { id: "category-2", name: "Support" },
+  ],
+}
+
+const mockProjectWithoutAgentCategories: Project = {
+  ...mockProject,
+  agentCategories: [],
 }
 
 const mockDocumentTags: DocumentTag[] = [
@@ -65,6 +74,8 @@ const baseAgent = {
   locale: AgentLocale.EN,
   createdAt: Date.now(),
   updatedAt: Date.now(),
+  projectAgentCategoryIds: [],
+  usedProjectAgentCategoryIds: [],
 }
 
 const mockConversationAgent: Agent = {
@@ -72,6 +83,8 @@ const mockConversationAgent: Agent = {
   id: "agent-conv-1",
   type: "conversation",
   documentTagIds: ["tag-1"],
+  projectAgentCategoryIds: ["category-1"],
+  usedProjectAgentCategoryIds: ["category-1"],
   documentsRagMode: DocumentsRagMode.Tags,
   greetingMessage: "Hi! How can I help you today?",
 }
@@ -105,6 +118,7 @@ const meta = {
   parameters: { layout: "padded" },
   args: {
     documentTags: mockDocumentTags,
+    projectAgentCategories: mockProject.agentCategories,
     onSubmit: fn(),
   },
 } satisfies Meta<typeof BaseAgentForm>
@@ -116,6 +130,24 @@ export const ConversationEdit: Story = {
   args: {
     agentType: "conversation",
     editableAgent: mockConversationAgent,
+  },
+}
+
+export const ConversationEditWithoutProjectCategories: Story = {
+  decorators: [
+    withRedux({
+      currentProject: mockProjectWithoutAgentCategories,
+      documentTags: mockDocumentTags,
+    }),
+  ],
+  args: {
+    agentType: "conversation",
+    editableAgent: {
+      ...mockConversationAgent,
+      projectAgentCategoryIds: [],
+      usedProjectAgentCategoryIds: [],
+    },
+    projectAgentCategories: [],
   },
 }
 

@@ -62,7 +62,7 @@ describe("Agents - updateOne", () => {
     projectId = project.id
     agentId = agent.id
     auth0Id = user.auth0Id
-    return { organization, project, agent }
+    return { organization, project, agent, user }
   }
 
   const subject = async (payload?: typeof AgentsRoutes.updateOne.request) =>
@@ -86,6 +86,7 @@ describe("Agents - updateOne", () => {
         outputJsonSchema: undefined,
         tagsToAdd: [],
         tagsToRemove: [],
+        projectAgentCategoryIds: [],
       },
     })
 
@@ -114,6 +115,7 @@ describe("Agents - updateOne", () => {
         outputJsonSchema: undefined,
         tagsToAdd: [],
         tagsToRemove: [],
+        projectAgentCategoryIds: [],
       },
     })
 
@@ -138,6 +140,7 @@ describe("Agents - updateOne", () => {
         outputJsonSchema: undefined,
         tagsToAdd: [],
         tagsToRemove: [],
+        projectAgentCategoryIds: [],
       },
     })
     expectResponse(setResponse, 200)
@@ -154,6 +157,7 @@ describe("Agents - updateOne", () => {
         outputJsonSchema: undefined,
         tagsToAdd: [],
         tagsToRemove: [],
+        projectAgentCategoryIds: [],
       },
     })
     expectResponse(clearResponse, 200)
@@ -183,6 +187,7 @@ describe("Agents - updateOne", () => {
         outputJsonSchema: undefined,
         tagsToAdd: [],
         tagsToRemove: [],
+        projectAgentCategoryIds: [],
       },
     })
 
@@ -194,5 +199,84 @@ describe("Agents - updateOne", () => {
     })
     expect(updatedAgent?.documentsRagMode).toBe(DocumentsRagMode.None)
     expect(updatedAgent?.documentTags.map((savedTag) => savedTag.id)).toEqual([documentTag.id])
+  })
+
+  it("should update selected project categories", async () => {
+    const { project, agent } = await createContext()
+    const projectCategory = await repositories.projectAgentCategoryRepository.save(
+      repositories.projectAgentCategoryRepository.create({
+        projectId: project.id,
+        name: "Billing",
+      }),
+    )
+
+    const response = await subject({
+      payload: {
+        ...agent,
+        documentTagIds: [],
+        documentsRagMode: DocumentsRagMode.All,
+        outputJsonSchema: undefined,
+        tagsToAdd: [],
+        tagsToRemove: [],
+        projectAgentCategoryIds: [projectCategory.id],
+      },
+    })
+
+    expectResponse(response, 200)
+    const agentCategories = await repositories.agentCategoryRepository.find({
+      where: { agentId },
+    })
+    expect(agentCategories).toHaveLength(1)
+    expect(agentCategories[0]?.projectAgentCategoryId).toBe(projectCategory.id)
+  })
+
+  it("should reject removing a category already used by a conversation", async () => {
+    const { organization, project, agent, user } = await createContext()
+    const projectCategory = await repositories.projectAgentCategoryRepository.save(
+      repositories.projectAgentCategoryRepository.create({
+        projectId: project.id,
+        name: "Billing",
+      }),
+    )
+    const agentCategory = await repositories.agentCategoryRepository.save(
+      repositories.agentCategoryRepository.create({
+        agentId: agent.id,
+        projectAgentCategoryId: projectCategory.id,
+        name: projectCategory.name,
+      }),
+    )
+    const session = await repositories.conversationAgentSessionRepository.save(
+      repositories.conversationAgentSessionRepository.create({
+        organizationId: organization.id,
+        projectId: project.id,
+        agentId: agent.id,
+        userId: user.id,
+        type: "playground",
+      }),
+    )
+    await repositories.conversationAgentSessionCategoryRepository.save(
+      repositories.conversationAgentSessionCategoryRepository.create({
+        conversationAgentSessionId: session.id,
+        agentCategoryId: agentCategory.id,
+      }),
+    )
+
+    const response = await subject({
+      payload: {
+        ...agent,
+        documentTagIds: [],
+        documentsRagMode: DocumentsRagMode.All,
+        outputJsonSchema: undefined,
+        tagsToAdd: [],
+        tagsToRemove: [],
+        projectAgentCategoryIds: [],
+      },
+    })
+
+    expectResponse(response, 400)
+    const activeCategory = await repositories.agentCategoryRepository.findOne({
+      where: { id: agentCategory.id },
+    })
+    expect(activeCategory).not.toBeNull()
   })
 })

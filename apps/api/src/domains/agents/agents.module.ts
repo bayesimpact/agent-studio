@@ -26,6 +26,7 @@ import { AgentsService } from "./agents.service"
 import { BaseAgentSessionsService } from "./base-agent-sessions/base-agent-sessions.service"
 import { AgentCategoriesService } from "./categories/agent-categories.service"
 import { AgentCategory } from "./categories/agent-category.entity"
+import { ProjectAgentCategory } from "./categories/project-agent-category.entity"
 import { AgentMembership } from "./memberships/agent-membership.entity"
 import { AgentMembershipsController } from "./memberships/agent-memberships.controller"
 import { AgentMembershipsGuard } from "./memberships/agent-memberships.guard"
@@ -36,6 +37,7 @@ import { AgentMembershipsService } from "./memberships/agent-memberships.service
     TypeOrmModule.forFeature([
       Agent,
       AgentCategory,
+      ProjectAgentCategory,
       AgentMembership,
       Project,
       OrganizationMembership,

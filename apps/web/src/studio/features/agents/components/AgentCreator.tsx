@@ -217,7 +217,11 @@ function AgentCreation({
             <SheetDescription>{sheetDescription}</SheetDescription>
           </SheetHeader>
           <div className="px-4 pb-4">
-            <CreateForm agentType={selectedType} onSuccess={handleSuccess} />
+            <CreateForm
+              agentType={selectedType}
+              projectAgentCategories={project.agentCategories}
+              onSuccess={handleSuccess}
+            />
           </div>
         </ScrollArea>
       </SheetContent>
@@ -227,9 +231,11 @@ function AgentCreation({
 
 function CreateForm({
   agentType,
+  projectAgentCategories,
   onSuccess,
 }: {
   agentType: Agent["type"]
+  projectAgentCategories: Project["agentCategories"]
   onSuccess: (agent: Agent) => void
 }) {
   const dispatch = useAppDispatch()
@@ -249,11 +255,19 @@ function CreateForm({
           type: agentType,
           outputJsonSchema: fields.outputJsonSchema,
           tagsToAdd: fields.tagsToAdd,
+          projectAgentCategoryIds: fields.projectAgentCategoryIds,
         },
         onSuccess,
       }),
     )
   }
 
-  return <BaseAgentForm agentType={agentType} onSubmit={handleCreate} documentTags={documentTags} />
+  return (
+    <BaseAgentForm
+      agentType={agentType}
+      onSubmit={handleCreate}
+      documentTags={documentTags}
+      projectAgentCategories={projectAgentCategories}
+    />
+  )
 }
