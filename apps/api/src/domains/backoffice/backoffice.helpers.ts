@@ -1,5 +1,6 @@
 import type {
   BackofficeOrganizationDto,
+  BackofficeProjectAgentCategoryDto,
   BackofficeProjectDto,
   BackofficeUserDto,
   FeatureFlagKey,
@@ -11,6 +12,20 @@ import type { Organization } from "@/domains/organizations/organization.entity"
 import type { Project } from "@/domains/projects/project.entity"
 import type { User } from "@/domains/users/user.entity"
 
+export type BackofficeProjectAgentCategoryView = {
+  id: string
+  name: string
+  isUsedInConversation: boolean
+}
+
+export type BackofficeProjectView = Omit<Project, "projectAgentCategories"> & {
+  projectAgentCategories?: BackofficeProjectAgentCategoryView[]
+}
+
+export type BackofficeOrganizationView = Omit<Organization, "projects"> & {
+  projects: BackofficeProjectView[]
+}
+
 function toFeatureFlagsDto(featureFlags: FeatureFlag[] | undefined): FeatureFlagsDto {
   return (
     featureFlags
@@ -19,7 +34,17 @@ function toFeatureFlagsDto(featureFlags: FeatureFlag[] | undefined): FeatureFlag
   )
 }
 
-export function toBackofficeProjectDto(project: Project): BackofficeProjectDto {
+export function toBackofficeProjectAgentCategoryDto(
+  projectAgentCategory: BackofficeProjectAgentCategoryView,
+): BackofficeProjectAgentCategoryDto {
+  return {
+    id: projectAgentCategory.id,
+    name: projectAgentCategory.name,
+    isUsedInConversation: projectAgentCategory.isUsedInConversation,
+  }
+}
+
+export function toBackofficeProjectDto(project: BackofficeProjectView): BackofficeProjectDto {
   return {
     id: project.id,
     name: project.name,
@@ -27,11 +52,14 @@ export function toBackofficeProjectDto(project: Project): BackofficeProjectDto {
     createdAt: project.createdAt.getTime() as TimeType,
     updatedAt: project.updatedAt.getTime() as TimeType,
     featureFlags: toFeatureFlagsDto(project.featureFlags),
+    agentCategories: (project.projectAgentCategories ?? []).map(
+      toBackofficeProjectAgentCategoryDto,
+    ),
   }
 }
 
 export function toBackofficeOrganizationDto(
-  organization: Organization & { projects: Project[] },
+  organization: BackofficeOrganizationView,
 ): BackofficeOrganizationDto {
   return {
     id: organization.id,

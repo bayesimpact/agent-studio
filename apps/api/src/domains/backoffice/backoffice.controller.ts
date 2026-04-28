@@ -6,6 +6,7 @@ import {
   Delete,
   Get,
   Param,
+  Patch,
   Post,
   UseGuards,
 } from "@nestjs/common"
@@ -13,7 +14,11 @@ import { JwtAuthGuard } from "@/domains/auth/jwt-auth.guard"
 import { UserGuard } from "@/domains/users/user.guard"
 import { TrackActivity } from "../activities/track-activity.decorator"
 import { BackofficeGuard } from "./backoffice.guard"
-import { toBackofficeOrganizationDto, toBackofficeUserDto } from "./backoffice.helpers"
+import {
+  toBackofficeOrganizationDto,
+  toBackofficeProjectAgentCategoryDto,
+  toBackofficeUserDto,
+} from "./backoffice.helpers"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
 import { BackofficeService } from "./backoffice.service"
 
@@ -67,5 +72,18 @@ export class BackofficeController {
     const validatedKey = assertValidFeatureFlagKey(featureFlagKey)
     await this.backofficeService.removeFeatureFlag({ projectId, featureFlagKey: validatedKey })
     return { data: { success: true } }
+  }
+
+  @Patch(BackofficeRoutes.replaceProjectAgentCategories.path)
+  @TrackActivity({ action: "replace_project_agent_categories", entityFrom: "project" })
+  async replaceProjectAgentCategories(
+    @Param("projectId") projectId: string,
+    @Body() body: typeof BackofficeRoutes.replaceProjectAgentCategories.request,
+  ): Promise<typeof BackofficeRoutes.replaceProjectAgentCategories.response> {
+    const categories = await this.backofficeService.replaceProjectAgentCategories({
+      projectId,
+      categoryNames: body.payload.categoryNames,
+    })
+    return { data: categories.map(toBackofficeProjectAgentCategoryDto) }
   }
 }

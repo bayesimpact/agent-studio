@@ -6,11 +6,13 @@ import {
   selectBackofficeUsers,
 } from "@/backoffice/features/backoffice/backoffice.selectors"
 import { GridHeader } from "@/common/components/grid/Grid"
-import type { Organization } from "@/common/features/organizations/organizations.models"
 import { AsyncRoute } from "@/common/routes/AsyncRoute"
 import { RouteNames } from "@/common/routes/helpers"
 import { useAppDispatch, useAppSelector } from "@/common/store/hooks"
-import type { BackofficeUser } from "../features/backoffice/backoffice.models"
+import type {
+  BackofficeOrganization,
+  BackofficeUser,
+} from "../features/backoffice/backoffice.models"
 import { backofficeActions } from "../features/backoffice/backoffice.slice"
 import { OrganizationsPanel } from "../features/backoffice/components/OrganizationsPanel"
 import { UsersPanel } from "../features/backoffice/components/UsersPanel"
@@ -40,7 +42,7 @@ function WithData({
   organizations,
   users,
 }: {
-  organizations: Organization[]
+  organizations: BackofficeOrganization[]
   users: BackofficeUser[]
 }) {
   const navigate = useNavigate()

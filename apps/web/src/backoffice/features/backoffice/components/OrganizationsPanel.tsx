@@ -2,11 +2,21 @@ import { type FeatureFlagKey, FeatureFlags } from "@caseai-connect/api-contracts
 import { Badge } from "@caseai-connect/ui/shad/badge"
 import { Button } from "@caseai-connect/ui/shad/button"
 import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@caseai-connect/ui/shad/dialog"
+import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@caseai-connect/ui/shad/dropdown-menu"
+import { Input } from "@caseai-connect/ui/shad/input"
 import {
   Table,
   TableBody,
@@ -26,8 +36,8 @@ import {
 } from "@tanstack/react-table"
 import { PlusIcon, XIcon } from "lucide-react"
 import { useMemo, useState } from "react"
-import type { Organization } from "@/common/features/organizations/organizations.models"
 import { useAppDispatch } from "@/common/store/hooks"
+import type { BackofficeOrganization, BackofficeProjectAgentCategory } from "../backoffice.models"
 import { backofficeActions } from "../backoffice.slice"
 import { SearchField, SortableHeader } from "./BackofficeTable"
 
@@ -37,9 +47,10 @@ type OrganizationRow = {
   projectId: string | null
   projectName: string
   featureFlags: FeatureFlagKey[]
+  agentCategories: BackofficeProjectAgentCategory[]
 }
 
-export function OrganizationsPanel({ organizations }: { organizations: Organization[] }) {
+export function OrganizationsPanel({ organizations }: { organizations: BackofficeOrganization[] }) {
   const dispatch = useAppDispatch()
   const [sorting, setSorting] = useState<SortingState>([{ id: "organizationName", desc: false }])
   const [globalFilter, setGlobalFilter] = useState("")
@@ -55,6 +66,7 @@ export function OrganizationsPanel({ organizations }: { organizations: Organizat
               projectId: null,
               projectName: "",
               featureFlags: [],
+              agentCategories: [],
             },
           ]
         }
@@ -64,6 +76,7 @@ export function OrganizationsPanel({ organizations }: { organizations: Organizat
           projectId: project.id,
           projectName: project.name,
           featureFlags: project.featureFlags as FeatureFlagKey[],
+          agentCategories: project.agentCategories,
         }))
       }),
     [organizations],
@@ -102,6 +115,26 @@ export function OrganizationsPanel({ organizations }: { organizations: Organizat
               }
               onRemove={(featureFlagKey) =>
                 dispatch(backofficeActions.removeFeatureFlag({ projectId, featureFlagKey }))
+              }
+            />
+          )
+        },
+      },
+      {
+        id: "agentCategories",
+        accessorFn: (row) => row.agentCategories.map((category) => category.name).join(" "),
+        enableSorting: false,
+        header: () => <span className="text-muted-foreground">Agent categories</span>,
+        cell: ({ row }) => {
+          const { projectId, agentCategories } = row.original
+          if (!projectId) return null
+          return (
+            <AgentCategoriesCell
+              categories={agentCategories}
+              onReplace={(categoryNames) =>
+                dispatch(
+                  backofficeActions.replaceProjectAgentCategories({ projectId, categoryNames }),
+                )
               }
             />
           )
@@ -169,6 +202,118 @@ export function OrganizationsPanel({ organizations }: { organizations: Organizat
           )}
         </TableBody>
       </Table>
+    </>
+  )
+}
+
+function AgentCategoriesCell({
+  categories,
+  onReplace,
+}: {
+  categories: BackofficeProjectAgentCategory[]
+  onReplace: (categoryNames: string[]) => void
+}) {
+  const [newCategoryName, setNewCategoryName] = useState("")
+  const [categoryToRemove, setCategoryToRemove] = useState<BackofficeProjectAgentCategory | null>(
+    null,
+  )
+
+  const handleAddCategory = () => {
+    const trimmedCategoryName = newCategoryName.trim()
+    if (!trimmedCategoryName) return
+    if (categories.some((category) => category.name === trimmedCategoryName)) {
+      setNewCategoryName("")
+      return
+    }
+
+    onReplace([...categories.map((category) => category.name), trimmedCategoryName])
+    setNewCategoryName("")
+  }
+
+  const handleRemoveCategory = (categoryToRemove: BackofficeProjectAgentCategory) => {
+    if (categoryToRemove.isUsedInConversation) return
+    onReplace(
+      categories
+        .filter((category) => category.id !== categoryToRemove.id)
+        .map((category) => category.name),
+    )
+    setCategoryToRemove(null)
+  }
+
+  return (
+    <>
+      <div className="flex max-w-md flex-wrap items-center gap-2">
+        {categories.map((category) => (
+          <Badge
+            key={category.id}
+            variant={category.isUsedInConversation ? "outline" : "secondary"}
+            className="gap-1 pr-1"
+            title={
+              category.isUsedInConversation
+                ? "This category is already assigned to a conversation and cannot be removed."
+                : undefined
+            }
+          >
+            {category.name}
+            <button
+              type="button"
+              disabled={category.isUsedInConversation}
+              onClick={() => setCategoryToRemove(category)}
+              className="rounded-full p-0.5 hover:bg-muted-foreground/20 disabled:cursor-not-allowed disabled:opacity-40"
+              aria-label={`Remove ${category.name}`}
+            >
+              <XIcon className="h-3 w-3" />
+            </button>
+          </Badge>
+        ))}
+        <div className="flex items-center gap-1">
+          <Input
+            value={newCategoryName}
+            onChange={(event) => setNewCategoryName(event.target.value)}
+            onKeyDown={(event) => {
+              if (event.key === "Enter") {
+                event.preventDefault()
+                handleAddCategory()
+              }
+            }}
+            className="h-8 w-36"
+            placeholder="New category"
+          />
+          <Button type="button" variant="outline" size="sm" onClick={handleAddCategory}>
+            <PlusIcon className="h-3 w-3 mr-1" />
+            Add
+          </Button>
+        </div>
+      </div>
+      <Dialog
+        open={categoryToRemove !== null}
+        onOpenChange={(open) => !open && setCategoryToRemove(null)}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete agent category?</DialogTitle>
+            <DialogDescription>
+              {categoryToRemove
+                ? `This will remove "${categoryToRemove.name}" from the project category list.`
+                : "This will remove the category from the project category list."}
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <DialogClose asChild>
+              <Button type="button" variant="outline">
+                Cancel
+              </Button>
+            </DialogClose>
+            <Button
+              type="button"
+              variant="destructive"
+              onClick={() => categoryToRemove && handleRemoveCategory(categoryToRemove)}
+            >
+              Delete category
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   )
 }
