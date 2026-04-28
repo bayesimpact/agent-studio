@@ -12,6 +12,7 @@ const mockProject: Project = {
   createdAt: Date.now(),
   updatedAt: Date.now(),
   featureFlags: [],
+  agentCategories: [],
 }
 
 const meta = {

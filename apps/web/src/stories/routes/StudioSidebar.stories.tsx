@@ -20,6 +20,7 @@ const baseProject: Project = {
   createdAt: Date.now(),
   updatedAt: Date.now(),
   featureFlags: [],
+  agentCategories: [],
 }
 
 function StudioSidebar({ project }: { project: Project }) {

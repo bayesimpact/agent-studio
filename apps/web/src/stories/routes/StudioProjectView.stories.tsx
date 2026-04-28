@@ -19,6 +19,7 @@ const mockProject: Project = {
   createdAt: Date.now(),
   updatedAt: Date.now(),
   featureFlags: ["evaluation"],
+  agentCategories: [],
 }
 
 const baseAgent = {
@@ -30,6 +31,8 @@ const baseAgent = {
   locale: AgentLocale.EN,
   documentsRagMode: DocumentsRagMode.All,
   documentTagIds: [],
+  projectAgentCategoryIds: [],
+  usedProjectAgentCategoryIds: [],
   instructionPrompt: null,
   greetingMessage: null,
   createdAt: Date.now(),
