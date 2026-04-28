@@ -34,12 +34,14 @@ const slice = createSlice({
       delete state.sessionDetailBySessionId[action.payload.sessionId]
     },
     /**
-     * Marker action dispatched by `useInitStore` after `injectReviewerSlices()`.
-     * The reviewer listener middleware uses it as a one-shot trigger for
-     * scope-bootstrap loaders (e.g. `listMyReviewerCampaigns`) instead of
-     * relying on a component `useEffect` on mount.
+     * Marker actions dispatched by each reviewer route from a `useEffect`.
+     * The reviewer listener middleware reacts to `mount` by reading current
+     * URL-driven state (`currentReviewCampaignId`, `currentReviewerSessionId`)
+     * and dispatching the appropriate loaders. Mirrors the pattern in
+     * `eval/features/evaluation-extraction-runs/evaluation-extraction-runs.middleware.ts`.
      */
-    enteredScope: () => {},
+    mount: () => {},
+    unmount: () => {},
   },
   extraReducers: (builder) => {
     builder

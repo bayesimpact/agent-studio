@@ -5,7 +5,7 @@ import { ADS } from "@/common/store/async-data-status"
 import { useAppDispatch, useAppSelector } from "@/common/store/hooks"
 import { buildTesterCampaignPath } from "@/tester/routes/helpers"
 import { selectMyReviewCampaigns } from "../tester.selectors"
-import { listMyReviewCampaigns } from "../tester.thunks"
+import { reviewCampaignsTesterActions } from "../tester.slice"
 import { MyCampaignsList } from "./MyCampaignsList"
 
 export function TesterMyCampaignsPage() {
@@ -15,7 +15,10 @@ export function TesterMyCampaignsPage() {
   const myCampaigns = useAppSelector(selectMyReviewCampaigns)
 
   useEffect(() => {
-    dispatch(listMyReviewCampaigns())
+    dispatch(reviewCampaignsTesterActions.mount())
+    return () => {
+      dispatch(reviewCampaignsTesterActions.unmount())
+    }
   }, [dispatch])
 
   return (

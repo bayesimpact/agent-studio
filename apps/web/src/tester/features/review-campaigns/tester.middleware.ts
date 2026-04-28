@@ -1,17 +1,11 @@
 import { createListenerMiddleware, isAnyOf } from "@reduxjs/toolkit"
-import {
-  hasAgentSessionChanged,
-  selectCurrentAgentSessionId,
-} from "@/common/features/agents/agent-sessions/current-agent-session-id/current-agent-session-id.selectors"
+import { selectCurrentAgentSessionId } from "@/common/features/agents/agent-sessions/current-agent-session-id/current-agent-session-id.selectors"
 import { agentSessionMessagesActions } from "@/common/features/agents/agent-sessions/shared/agent-session-messages/agent-session-messages.slice"
 import { listMessages } from "@/common/features/agents/agent-sessions/shared/agent-session-messages/agent-session-messages.thunks"
 import { notificationsActions } from "@/common/features/notifications/notifications.slice"
 import { selectCurrentOrganizationId } from "@/common/features/organizations/organizations.selectors"
 import { selectCurrentProjectId } from "@/common/features/projects/projects.selectors"
-import {
-  hasReviewCampaignIdChanged,
-  selectCurrentReviewCampaignId,
-} from "@/common/features/review-campaigns/current-review-campaign-id/current-review-campaign-id.selectors"
+import { selectCurrentReviewCampaignId } from "@/common/features/review-campaigns/current-review-campaign-id/current-review-campaign-id.selectors"
 import type { AppDispatch, RootState } from "@/common/store/types"
 import { reviewCampaignsTesterActions } from "./tester.slice"
 import {
@@ -30,67 +24,50 @@ const listenerMiddleware = createListenerMiddleware<RootState, AppDispatch>()
 
 function registerListeners() {
   // ---------------------------------------------------------------------------
-  // Data-loading listeners (replace fetch-on-mount useEffects in pages).
-  // The tester listener middleware is only registered while the tester scope is
-  // active (see `injectTesterSlices` / `resetTesterSlices`), so these listeners
-  // implicitly only fire while the user is somewhere under /tester.
+  // Mount listener — replaces fetch-on-mount useEffects.
+  //
+  // Each tester route fires `reviewCampaignsTesterActions.mount()` from a
+  // `useEffect` (and `unmount()` on cleanup). This listener reads URL-driven
+  // state (via the `current*Id` slices populated by `useSetCurrentIds`) and
+  // dispatches the loaders relevant to whichever route just mounted. Mirrors
+  // the pattern in `eval/.../evaluation-extraction-runs.middleware.ts`.
+  //
+  // Why state-based dispatch and not URL-change predicates: on a hard reload,
+  // `useSetCurrentIds` (in ProtectedRoute) dispatches the URL → state setters
+  // before this scope-bound middleware is registered (the Shell only mounts
+  // after Auth0 resolves). A predicate listener would miss that initial null
+  // → id transition. Dispatching from the route's own mount sidesteps the
+  // ordering issue entirely.
   // ---------------------------------------------------------------------------
-
-  // Bootstrap: load the tester's campaign list when the scope opens.
   listenerMiddleware.startListening({
-    actionCreator: reviewCampaignsTesterActions.enteredScope,
-    effect: async (_, listenerApi) => {
-      await listenerApi.dispatch(listMyReviewCampaigns())
-    },
-  })
-
-  // URL-driven: when the route lands on a specific campaign, fetch the shared
-  // context, the user's sessions for that campaign, and the existing survey.
-  listenerMiddleware.startListening({
-    predicate: (_, currentState, originalState) =>
-      hasReviewCampaignIdChanged(originalState, currentState) &&
-      selectCurrentReviewCampaignId(currentState) !== null,
+    actionCreator: reviewCampaignsTesterActions.mount,
     effect: async (_, listenerApi) => {
       const state = listenerApi.getState()
       const organizationId = selectCurrentOrganizationId(state)
       const projectId = selectCurrentProjectId(state)
       const reviewCampaignId = selectCurrentReviewCampaignId(state)
-      if (!organizationId || !projectId || !reviewCampaignId) return
-      const scope = { organizationId, projectId, reviewCampaignId }
-      await Promise.all([
-        listenerApi.dispatch(getTesterContext(scope)),
-        listenerApi.dispatch(listMyTesterSessions(scope)),
-        listenerApi.dispatch(getMyTesterSurvey(scope)),
-      ])
-    },
-  })
+      const agentSessionId = selectCurrentAgentSessionId(state)
 
-  // URL-driven: when leaving a campaign (id goes from non-null to null), drop
-  // the cached selected context so the next campaign starts clean.
-  listenerMiddleware.startListening({
-    predicate: (_, currentState, originalState) =>
-      hasReviewCampaignIdChanged(originalState, currentState) &&
-      selectCurrentReviewCampaignId(currentState) === null &&
-      selectCurrentReviewCampaignId(originalState) !== null,
-    effect: async (_, listenerApi) => {
-      listenerApi.dispatch(reviewCampaignsTesterActions.clearSelectedContext())
-    },
-  })
+      // Always available under /tester: the user's own campaign list.
+      listenerApi.dispatch(listMyReviewCampaigns())
 
-  // URL-driven: when the route lands on a specific agent session under the
-  // tester scope, reset the streaming-messages slice and load the past
-  // transcript. The shared `agent-session-messages.middleware` gates on the
-  // studio sessions slice (which the tester flow doesn't populate), so this
-  // listener compensates within the tester scope.
-  listenerMiddleware.startListening({
-    predicate: (_, currentState, originalState) =>
-      hasAgentSessionChanged(originalState, currentState) &&
-      selectCurrentAgentSessionId(currentState) !== null,
-    effect: async (_, listenerApi) => {
-      const agentSessionId = selectCurrentAgentSessionId(listenerApi.getState())
-      if (!agentSessionId) return
-      listenerApi.dispatch(agentSessionMessagesActions.reset())
-      await listenerApi.dispatch(listMessages(agentSessionId))
+      // On a campaign-scoped URL: load the shared context, the user's
+      // sessions for that campaign, and any existing survey.
+      if (organizationId && projectId && reviewCampaignId) {
+        const scope = { organizationId, projectId, reviewCampaignId }
+        listenerApi.dispatch(getTesterContext(scope))
+        listenerApi.dispatch(listMyTesterSessions(scope))
+        listenerApi.dispatch(getMyTesterSurvey(scope))
+      }
+
+      // On a session-scoped URL: reset the streaming-messages slice and
+      // load the past transcript. The shared agent-session-messages
+      // middleware gates on the studio sessions slice (which the tester
+      // flow doesn't populate), so this is the tester-side compensation.
+      if (agentSessionId) {
+        listenerApi.dispatch(agentSessionMessagesActions.reset())
+        listenerApi.dispatch(listMessages(agentSessionId))
+      }
     },
   })
 

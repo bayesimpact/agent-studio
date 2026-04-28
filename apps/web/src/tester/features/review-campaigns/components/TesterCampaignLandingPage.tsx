@@ -11,14 +11,7 @@ import {
   selectTesterContext,
 } from "../tester.selectors"
 import { reviewCampaignsTesterActions } from "../tester.slice"
-import {
-  deleteTesterSession,
-  getMyTesterSurvey,
-  getTesterContext,
-  listMyTesterSessions,
-  startTesterSession,
-  submitTesterFeedback,
-} from "../tester.thunks"
+import { deleteTesterSession, startTesterSession, submitTesterFeedback } from "../tester.thunks"
 import { CampaignLanding } from "./CampaignLanding"
 import { FinishParticipatingDialog } from "./FinishParticipatingDialog"
 import { TesterFeedbackModal } from "./TesterFeedbackModal"
@@ -43,33 +36,11 @@ export function TesterCampaignLandingPage() {
   const [finishOpen, setFinishOpen] = useState(false)
 
   useEffect(() => {
-    if (params.organizationId && params.projectId && params.reviewCampaignId) {
-      dispatch(
-        getTesterContext({
-          organizationId: params.organizationId,
-          projectId: params.projectId,
-          reviewCampaignId: params.reviewCampaignId,
-        }),
-      )
-      dispatch(
-        listMyTesterSessions({
-          organizationId: params.organizationId,
-          projectId: params.projectId,
-          reviewCampaignId: params.reviewCampaignId,
-        }),
-      )
-      dispatch(
-        getMyTesterSurvey({
-          organizationId: params.organizationId,
-          projectId: params.projectId,
-          reviewCampaignId: params.reviewCampaignId,
-        }),
-      )
-    }
+    dispatch(reviewCampaignsTesterActions.mount())
     return () => {
-      dispatch(reviewCampaignsTesterActions.clearSelectedContext())
+      dispatch(reviewCampaignsTesterActions.unmount())
     }
-  }, [dispatch, params.organizationId, params.projectId, params.reviewCampaignId])
+  }, [dispatch])
 
   if (!params.organizationId || !params.projectId || !params.reviewCampaignId) return null
 

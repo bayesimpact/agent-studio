@@ -7,17 +7,20 @@ import { ADS } from "@/common/store/async-data-status"
 import { useAppDispatch, useAppSelector } from "@/common/store/hooks"
 import { buildReviewerCampaignPath } from "@/reviewer/routes/helpers"
 import { selectMyReviewerCampaigns } from "../reviewer.selectors"
-import { listMyReviewerCampaigns } from "../reviewer.thunks"
+import { reviewCampaignsReviewerActions } from "../reviewer.slice"
 import { MyReviewerCampaignsList } from "./MyReviewerCampaignsList"
 
 export function ReviewerMyCampaignsPage() {
-  const { t } = useTranslation()
   const dispatch = useAppDispatch()
+  const { t } = useTranslation()
   const navigate = useNavigate()
   const myCampaigns = useAppSelector(selectMyReviewerCampaigns)
 
   useEffect(() => {
-    dispatch(listMyReviewerCampaigns())
+    dispatch(reviewCampaignsReviewerActions.mount())
+    return () => {
+      dispatch(reviewCampaignsReviewerActions.unmount())
+    }
   }, [dispatch])
 
   return (

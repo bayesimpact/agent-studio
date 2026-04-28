@@ -10,8 +10,6 @@ import { FormResult } from "@/common/features/agents/agent-sessions/form/compone
 import type { FormAgentSession } from "@/common/features/agents/agent-sessions/form/form-agent-sessions.models"
 import type { AgentSessionMessage } from "@/common/features/agents/agent-sessions/shared/agent-session-messages/agent-session-messages.models"
 import { selectCurrentMessagesData } from "@/common/features/agents/agent-sessions/shared/agent-session-messages/agent-session-messages.selectors"
-import { agentSessionMessagesActions } from "@/common/features/agents/agent-sessions/shared/agent-session-messages/agent-session-messages.slice"
-import { listMessages } from "@/common/features/agents/agent-sessions/shared/agent-session-messages/agent-session-messages.thunks"
 import { AgentSessionMessages } from "@/common/features/agents/agent-sessions/shared/agent-session-messages/components/AgentSessionMessages"
 import type { Agent } from "@/common/features/agents/agents.models"
 import { ADS } from "@/common/store/async-data-status"
@@ -19,7 +17,7 @@ import { useAppDispatch, useAppSelector } from "@/common/store/hooks"
 import { buildTesterCampaignPath } from "@/tester/routes/helpers"
 import { selectTesterContext } from "../tester.selectors"
 import { reviewCampaignsTesterActions } from "../tester.slice"
-import { getTesterContext, submitTesterFeedback } from "../tester.thunks"
+import { submitTesterFeedback } from "../tester.thunks"
 import { TesterFeedbackModal } from "./TesterFeedbackModal"
 
 type Params = {
@@ -38,39 +36,11 @@ export function TesterAgentSessionPage() {
   const messagesData = useAppSelector(selectCurrentMessagesData)
 
   useEffect(() => {
-    if (
-      params.organizationId &&
-      params.projectId &&
-      params.reviewCampaignId &&
-      !ADS.isFulfilled(contextState)
-    ) {
-      dispatch(
-        getTesterContext({
-          organizationId: params.organizationId,
-          projectId: params.projectId,
-          reviewCampaignId: params.reviewCampaignId,
-        }),
-      )
-    }
+    dispatch(reviewCampaignsTesterActions.mount())
     return () => {
-      if (!params.reviewCampaignId) {
-        dispatch(reviewCampaignsTesterActions.clearSelectedContext())
-      }
+      dispatch(reviewCampaignsTesterActions.unmount())
     }
-  }, [dispatch, params.organizationId, params.projectId, params.reviewCampaignId, contextState])
-
-  // Reset the shared messages slice whenever the selected session changes, then
-  // load past messages from the server. The listener middleware that auto-fires
-  // listMessages (agent-session-messages.middleware) gates on the session being
-  // in the studio/desk conversation/form slices, which the tester flow doesn't
-  // populate — so we dispatch explicitly. Returns [] for a fresh session
-  // (greeting included if configured); past sessions get their full transcript.
-  const agentSessionId = params.agentSessionId
-  useEffect(() => {
-    if (!agentSessionId) return
-    dispatch(agentSessionMessagesActions.reset())
-    dispatch(listMessages(agentSessionId))
-  }, [dispatch, agentSessionId])
+  }, [dispatch])
 
   const syntheticSession = useMemo<ConversationAgentSession | FormAgentSession | null>(() => {
     if (!params.agentId || !params.agentSessionId || !ADS.isFulfilled(contextState)) return null

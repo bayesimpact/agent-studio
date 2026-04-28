@@ -2,14 +2,8 @@ import { createListenerMiddleware, isAnyOf } from "@reduxjs/toolkit"
 import { notificationsActions } from "@/common/features/notifications/notifications.slice"
 import { selectCurrentOrganizationId } from "@/common/features/organizations/organizations.selectors"
 import { selectCurrentProjectId } from "@/common/features/projects/projects.selectors"
-import {
-  hasReviewCampaignIdChanged,
-  selectCurrentReviewCampaignId,
-} from "@/common/features/review-campaigns/current-review-campaign-id/current-review-campaign-id.selectors"
-import {
-  hasReviewerSessionIdChanged,
-  selectCurrentReviewerSessionId,
-} from "@/common/features/review-campaigns/current-reviewer-session-id/current-reviewer-session-id.selectors"
+import { selectCurrentReviewCampaignId } from "@/common/features/review-campaigns/current-review-campaign-id/current-review-campaign-id.selectors"
+import { selectCurrentReviewerSessionId } from "@/common/features/review-campaigns/current-reviewer-session-id/current-reviewer-session-id.selectors"
 import type { AppDispatch, RootState } from "@/common/store/types"
 import { getTesterContext } from "@/tester/features/review-campaigns/tester.thunks"
 import { reviewCampaignsReviewerActions } from "./reviewer.slice"
@@ -25,57 +19,48 @@ const listenerMiddleware = createListenerMiddleware<RootState, AppDispatch>()
 
 function registerListeners() {
   // ---------------------------------------------------------------------------
-  // Data-loading listeners (replace fetch-on-mount useEffects in pages).
-  // The reviewer listener middleware is only registered while the reviewer
-  // scope is active (see `injectReviewerSlices` / `resetReviewerSlices`), so
-  // these listeners implicitly only fire while the user is somewhere under
-  // /reviewer.
+  // Mount listener — replaces fetch-on-mount useEffects.
+  //
+  // Each reviewer route fires `reviewCampaignsReviewerActions.mount()` from a
+  // `useEffect` (and `unmount()` on cleanup). This listener reads URL-driven
+  // state (via the `current*Id` slices populated by `useSetCurrentIds`) and
+  // dispatches the loaders relevant to whichever route just mounted. Mirrors
+  // the pattern in `eval/.../evaluation-extraction-runs.middleware.ts`.
+  //
+  // Why state-based dispatch and not URL-change predicates: on a hard reload,
+  // `useSetCurrentIds` (in ProtectedRoute) dispatches the URL → state setters
+  // before this scope-bound middleware is registered (the Shell only mounts
+  // after Auth0 resolves). A predicate listener would miss that initial null
+  // → id transition. Dispatching from the route's own mount sidesteps the
+  // ordering issue entirely.
   // ---------------------------------------------------------------------------
-
-  // Bootstrap: load the reviewer's campaign list when the scope opens.
   listenerMiddleware.startListening({
-    actionCreator: reviewCampaignsReviewerActions.enteredScope,
-    effect: async (_, listenerApi) => {
-      await listenerApi.dispatch(listMyReviewerCampaigns())
-    },
-  })
-
-  // URL-driven: when the route lands on a specific campaign, load the shared
-  // tester context (campaign metadata + agent snapshot) and the reviewer's
-  // session list for that campaign.
-  listenerMiddleware.startListening({
-    predicate: (_, currentState, originalState) =>
-      hasReviewCampaignIdChanged(originalState, currentState) &&
-      selectCurrentReviewCampaignId(currentState) !== null,
-    effect: async (_, listenerApi) => {
-      const state = listenerApi.getState()
-      const organizationId = selectCurrentOrganizationId(state)
-      const projectId = selectCurrentProjectId(state)
-      const reviewCampaignId = selectCurrentReviewCampaignId(state)
-      if (!organizationId || !projectId || !reviewCampaignId) return
-      const scope = { organizationId, projectId, reviewCampaignId }
-      await Promise.all([
-        listenerApi.dispatch(getTesterContext(scope)),
-        listenerApi.dispatch(listReviewerSessions(scope)),
-      ])
-    },
-  })
-
-  // URL-driven: when the route lands on a specific session, load its detail.
-  listenerMiddleware.startListening({
-    predicate: (_, currentState, originalState) =>
-      hasReviewerSessionIdChanged(originalState, currentState) &&
-      selectCurrentReviewerSessionId(currentState) !== null,
+    actionCreator: reviewCampaignsReviewerActions.mount,
     effect: async (_, listenerApi) => {
       const state = listenerApi.getState()
       const organizationId = selectCurrentOrganizationId(state)
       const projectId = selectCurrentProjectId(state)
       const reviewCampaignId = selectCurrentReviewCampaignId(state)
       const sessionId = selectCurrentReviewerSessionId(state)
-      if (!organizationId || !projectId || !reviewCampaignId || !sessionId) return
-      await listenerApi.dispatch(
-        getReviewerSession({ organizationId, projectId, reviewCampaignId, sessionId }),
-      )
+
+      // Always available under /reviewer: the user's own campaign list.
+      listenerApi.dispatch(listMyReviewerCampaigns())
+
+      // On a campaign-scoped URL: load the shared tester context (campaign
+      // metadata + agent snapshot — the reviewer spec reuses the tester
+      // endpoint) and the reviewer's session list for that campaign.
+      if (organizationId && projectId && reviewCampaignId) {
+        const scope = { organizationId, projectId, reviewCampaignId }
+        listenerApi.dispatch(getTesterContext(scope))
+        listenerApi.dispatch(listReviewerSessions(scope))
+      }
+
+      // On a session-scoped URL: load the session detail for review.
+      if (organizationId && projectId && reviewCampaignId && sessionId) {
+        listenerApi.dispatch(
+          getReviewerSession({ organizationId, projectId, reviewCampaignId, sessionId }),
+        )
+      }
     },
   })
 

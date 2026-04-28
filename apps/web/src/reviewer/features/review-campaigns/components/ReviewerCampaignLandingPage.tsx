@@ -7,9 +7,8 @@ import { ADS } from "@/common/store/async-data-status"
 import { useAppDispatch, useAppSelector } from "@/common/store/hooks"
 import { buildReviewerReportPath, buildReviewerSessionPath } from "@/reviewer/routes/helpers"
 import { selectTesterContext } from "@/tester/features/review-campaigns/tester.selectors"
-import { getTesterContext } from "@/tester/features/review-campaigns/tester.thunks"
 import { selectReviewerSessions } from "../reviewer.selectors"
-import { listReviewerSessions } from "../reviewer.thunks"
+import { reviewCampaignsReviewerActions } from "../reviewer.slice"
 import { ReviewerCampaignLanding } from "./ReviewerCampaignLanding"
 
 type Params = {
@@ -21,12 +20,13 @@ type Params = {
 /**
  * Reuses the tester `getTesterContext` endpoint to fetch campaign name +
  * description + target agent snapshot — the reviewer spec deliberately reuses
- * the same shape rather than duplicating a "reviewer-context" endpoint.
- * Reviewer-specific data (the session list) is fetched by `listReviewerSessions`.
+ * the same shape rather than duplicating a "reviewer-context" endpoint. The
+ * fetch is dispatched by the reviewer listener middleware on `mount`, which
+ * the route fires from useEffect, alongside `listReviewerSessions`.
  */
 export function ReviewerCampaignLandingPage() {
-  const { t } = useTranslation()
   const dispatch = useAppDispatch()
+  const { t } = useTranslation()
   const navigate = useNavigate()
   const params = useParams<Params>()
 
@@ -34,15 +34,11 @@ export function ReviewerCampaignLandingPage() {
   const sessionsState = useAppSelector(selectReviewerSessions(params.reviewCampaignId ?? ""))
 
   useEffect(() => {
-    if (!params.organizationId || !params.projectId || !params.reviewCampaignId) return
-    const scope = {
-      organizationId: params.organizationId,
-      projectId: params.projectId,
-      reviewCampaignId: params.reviewCampaignId,
+    dispatch(reviewCampaignsReviewerActions.mount())
+    return () => {
+      dispatch(reviewCampaignsReviewerActions.unmount())
     }
-    dispatch(getTesterContext(scope))
-    dispatch(listReviewerSessions(scope))
-  }, [dispatch, params.organizationId, params.projectId, params.reviewCampaignId])
+  }, [dispatch])
 
   if (!params.organizationId || !params.projectId || !params.reviewCampaignId) return null
 

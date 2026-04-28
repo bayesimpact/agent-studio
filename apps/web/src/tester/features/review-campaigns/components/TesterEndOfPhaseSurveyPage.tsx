@@ -10,12 +10,7 @@ import { useAppDispatch, useAppSelector } from "@/common/store/hooks"
 import { buildTesterCampaignPath } from "@/tester/routes/helpers"
 import { selectMySurveyForCampaign, selectTesterContext } from "../tester.selectors"
 import { reviewCampaignsTesterActions } from "../tester.slice"
-import {
-  getMyTesterSurvey,
-  getTesterContext,
-  submitTesterSurvey,
-  updateTesterSurvey,
-} from "../tester.thunks"
+import { submitTesterSurvey, updateTesterSurvey } from "../tester.thunks"
 import { EndOfPhaseSurveyForm } from "./EndOfPhaseSurveyForm"
 
 type Params = {
@@ -33,26 +28,11 @@ export function TesterEndOfPhaseSurveyPage() {
   const existingSurvey = useAppSelector(selectMySurveyForCampaign(params.reviewCampaignId ?? ""))
 
   useEffect(() => {
-    if (params.organizationId && params.projectId && params.reviewCampaignId) {
-      dispatch(
-        getTesterContext({
-          organizationId: params.organizationId,
-          projectId: params.projectId,
-          reviewCampaignId: params.reviewCampaignId,
-        }),
-      )
-      dispatch(
-        getMyTesterSurvey({
-          organizationId: params.organizationId,
-          projectId: params.projectId,
-          reviewCampaignId: params.reviewCampaignId,
-        }),
-      )
-    }
+    dispatch(reviewCampaignsTesterActions.mount())
     return () => {
-      dispatch(reviewCampaignsTesterActions.clearSelectedContext())
+      dispatch(reviewCampaignsTesterActions.unmount())
     }
-  }, [dispatch, params.organizationId, params.projectId, params.reviewCampaignId])
+  }, [dispatch])
 
   if (!params.organizationId || !params.projectId || !params.reviewCampaignId) return null
 

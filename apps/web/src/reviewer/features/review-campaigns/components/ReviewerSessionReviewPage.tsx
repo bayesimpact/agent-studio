@@ -11,6 +11,7 @@ import { ADS } from "@/common/store/async-data-status"
 import { useAppDispatch, useAppSelector } from "@/common/store/hooks"
 import { buildReviewerCampaignPath } from "@/reviewer/routes/helpers"
 import { selectReviewerSessionDetail } from "../reviewer.selectors"
+import { reviewCampaignsReviewerActions } from "../reviewer.slice"
 import { getReviewerSession, submitReviewerReview, updateReviewerReview } from "../reviewer.thunks"
 import { ReviewerSessionReview } from "./ReviewerSessionReview"
 
@@ -29,22 +30,11 @@ export function ReviewerSessionReviewPage() {
   const detailState = useAppSelector(selectReviewerSessionDetail(params.sessionId ?? ""))
 
   useEffect(() => {
-    if (
-      !params.organizationId ||
-      !params.projectId ||
-      !params.reviewCampaignId ||
-      !params.sessionId
-    )
-      return
-    dispatch(
-      getReviewerSession({
-        organizationId: params.organizationId,
-        projectId: params.projectId,
-        reviewCampaignId: params.reviewCampaignId,
-        sessionId: params.sessionId,
-      }),
-    )
-  }, [dispatch, params.organizationId, params.projectId, params.reviewCampaignId, params.sessionId])
+    dispatch(reviewCampaignsReviewerActions.mount())
+    return () => {
+      dispatch(reviewCampaignsReviewerActions.unmount())
+    }
+  }, [dispatch])
 
   if (!params.organizationId || !params.projectId || !params.reviewCampaignId || !params.sessionId)
     return null

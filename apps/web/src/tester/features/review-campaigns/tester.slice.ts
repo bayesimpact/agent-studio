@@ -55,12 +55,14 @@ const slice = createSlice({
       state.selectedContext = defaultAsyncData
     },
     /**
-     * Marker action dispatched by `useInitStore` after `injectTesterSlices()`.
-     * The tester listener middleware uses it as a one-shot trigger for
-     * scope-bootstrap loaders (e.g. `listMyReviewCampaigns`) instead of relying
-     * on a component `useEffect` on mount.
+     * Marker actions dispatched by each tester route from a `useEffect`.
+     * The tester listener middleware reacts to `mount` by reading current
+     * URL-driven state (`currentReviewCampaignId`, `currentAgentSessionId`)
+     * and dispatching the appropriate loaders. Mirrors the pattern in
+     * `eval/features/evaluation-extraction-runs/evaluation-extraction-runs.middleware.ts`.
      */
-    enteredScope: () => {},
+    mount: () => {},
+    unmount: () => {},
   },
   extraReducers: (builder) => {
     builder
