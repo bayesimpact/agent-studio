@@ -29,6 +29,7 @@ This project uses [CalVer](https://calver.org/) (YY.MM.Micro) for product versio
 - (beta) Review campaigns: admins can mark tester questions as factual so reviewers see them during blind review
 - (beta) Review campaigns: aggregate report with rating distributions and per-session matrix, plus CSV export
 - (beta) Review campaigns: tester and reviewer pages now show a top header with a signout menu
+- (beta) Review campaigns: create form now pre-fills a default name, description, and starter questions
 
 ### Changed
 - Agent configuration is now organized into tabs (General, Model, Sources, and Form or Output) for easier editing

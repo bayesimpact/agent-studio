@@ -14,7 +14,6 @@ import { ADS } from "@/common/store/async-data-status"
 import { useAppDispatch, useAppSelector } from "@/common/store/hooks"
 import { selectReviewCampaignDetail } from "../review-campaigns.selectors"
 import { reviewCampaignsActions } from "../review-campaigns.slice"
-import { getReviewCampaignDetail } from "../review-campaigns.thunks"
 import type { CampaignFormAgentOption } from "./CampaignForm"
 import { CreateCampaignForm } from "./CreateCampaignForm"
 import { UpdateCampaignForm } from "./UpdateCampaignForm"
@@ -34,7 +33,7 @@ export function CampaignEditorSheet({ open, agents, mode, reviewCampaignId, onCl
 
   useEffect(() => {
     if (open && mode === "edit" && reviewCampaignId) {
-      dispatch(getReviewCampaignDetail({ reviewCampaignId }))
+      dispatch(reviewCampaignsActions.selectDetail({ reviewCampaignId }))
     }
     return () => {
       if (!open) dispatch(reviewCampaignsActions.clearSelectedDetail())

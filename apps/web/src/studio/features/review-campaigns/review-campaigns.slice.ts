@@ -1,4 +1,4 @@
-import { createSlice } from "@reduxjs/toolkit"
+import { createSlice, type PayloadAction } from "@reduxjs/toolkit"
 import { ADS, type AsyncData, defaultAsyncData } from "@/common/store/async-data-status"
 import type { ReviewCampaignDetail, ReviewCampaignListItem } from "./review-campaigns.models"
 import { getReviewCampaignDetail, listReviewCampaigns } from "./review-campaigns.thunks"
@@ -21,6 +21,13 @@ const slice = createSlice({
     clearSelectedDetail: (state) => {
       state.selectedDetail = defaultAsyncData
     },
+    /**
+     * Marker action dispatched by `CampaignEditorSheet` when it opens in
+     * edit mode. The studio review-campaigns listener middleware reacts by
+     * dispatching `getReviewCampaignDetail`. Lets the sheet stay free of
+     * fetch-on-mount useEffects (see `apps/web/CLAUDE.md`).
+     */
+    selectDetail: (_state, _action: PayloadAction<{ reviewCampaignId: string }>) => {},
   },
   extraReducers: (builder) => {
     builder

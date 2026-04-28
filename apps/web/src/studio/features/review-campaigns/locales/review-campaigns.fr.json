@@ -61,6 +61,24 @@
         "agentRequired": "L'agent est requis"
       }
     },
+    "defaults": {
+      "campaignName": "Campagne sur {{agent}} — {{date}}",
+      "campaignNameNoAgent": "Nouvelle campagne d'évaluation — {{date}}",
+      "description": "Évaluez les réponses de l'agent et partagez vos retours.",
+      "perSession": {
+        "q1": { "prompt": "L'agent a-t-il été clair ?" },
+        "q2": {
+          "prompt": "L'agent a-t-il répondu à votre question ?",
+          "options": { "yes": "Oui", "partially": "Partiellement", "no": "Non" }
+        }
+      },
+      "endOfPhase": {
+        "q1": { "prompt": "Satisfaction globale vis-à-vis de l'agent ?" }
+      },
+      "reviewer": {
+        "q1": { "prompt": "Les réponses de l'agent étaient-elles factuellement correctes ?" }
+      }
+    },
     "questions": {
       "perSession": {
         "label": "Testeur — questions par session",
@@ -82,7 +100,7 @@
       "prompt": "Question",
       "promptPlaceholder": "ex. La réponse était-elle claire ?",
       "type": "Type",
-      "options": "Options (une par ligne)",
+      "options": "Options (séparées par des virgules)",
       "optionsPlaceholder": "Oui, Non, Incertain",
       "required": "Obligatoire",
       "factual": "Factuelle",
