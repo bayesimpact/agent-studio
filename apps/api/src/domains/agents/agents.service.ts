@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException, UnprocessableEntityException } from "@nestjs/common"
 import { InjectRepository } from "@nestjs/typeorm"
 // biome-ignore lint/style/useImportType: DataSource required at runtime for NestJS DI
-import { DataSource, type Repository } from "typeorm"
+import { DataSource, In, type Repository } from "typeorm"
 import { ConnectRepository } from "@/common/entities/connect-repository"
 import type { RequiredConnectScope } from "@/common/entities/connect-required-fields"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
@@ -10,9 +10,16 @@ import type { DocumentTagsUpdateFields } from "../documents/tags/document-tags.t
 import { Agent } from "./agent.entity"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
 import { BaseAgentSessionsService } from "./base-agent-sessions/base-agent-sessions.service"
+// biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
+import { AgentCategoriesService } from "./categories/agent-categories.service"
+import { ProjectAgentCategory } from "./categories/project-agent-category.entity"
 import { AgentMembership } from "./memberships/agent-membership.entity"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
 import { AgentMembershipsService } from "./memberships/agent-memberships.service"
+
+type AgentProjectCategoriesUpdateFields = {
+  projectAgentCategoryIds?: string[]
+}
 
 @Injectable()
 export class AgentsService {
@@ -21,7 +28,10 @@ export class AgentsService {
   constructor(
     @InjectRepository(Agent)
     agentRepository: Repository<Agent>,
+    @InjectRepository(ProjectAgentCategory)
+    private readonly projectAgentCategoryRepository: Repository<ProjectAgentCategory>,
     private readonly documentTagsService: DocumentTagsService,
+    private readonly agentCategoriesService: AgentCategoriesService,
     private readonly agentMembershipsService: AgentMembershipsService,
     private readonly baseAgentSessionsService: BaseAgentSessionsService,
     private readonly dataSource: DataSource,
@@ -45,7 +55,8 @@ export class AgentsService {
         "defaultPrompt" | "documentsRagMode" | "name" | "model" | "temperature" | "locale" | "type"
       > &
       Partial<Pick<Agent, "outputJsonSchema" | "greetingMessage">> &
-      DocumentTagsUpdateFields
+      DocumentTagsUpdateFields &
+      AgentProjectCategoriesUpdateFields
   }): Promise<Agent> {
     this.validateAgentName(fields.name)
 
@@ -54,7 +65,7 @@ export class AgentsService {
 
     const greetingMessage = normalizeGreetingMessage(fields.greetingMessage)
 
-    const { tagsToAdd, ...agentFields } = fields
+    const { tagsToAdd, projectAgentCategoryIds, ...agentFields } = fields
     const documentTags = await this.resolveDocumentTags({
       currentTags: [],
       tagsToAdd,
@@ -68,6 +79,19 @@ export class AgentsService {
       greetingMessage,
       documentTags,
     })
+
+    if (projectAgentCategoryIds !== undefined) {
+      const selectedProjectCategories = await this.resolveProjectAgentCategories({
+        projectId: connectScope.projectId,
+        projectAgentCategoryIds,
+        withDeleted: false,
+      })
+      await this.agentCategoriesService.replaceActiveCategoriesForAgent(
+        agent.id,
+        selectedProjectCategories,
+      )
+      agent.categories = await this.agentCategoriesService.listActiveCategoriesForAgent(agent.id)
+    }
 
     await this.agentMembershipsService.createAgentOwnerMembership({
       agentId: agent.id,
@@ -96,7 +120,10 @@ export class AgentsService {
     return (
       await this.agentConnectRepository.find(connectScope, {
         where: { agentMemberships: { userId, status: "accepted" } },
-        relations: ["documentTags", "categories"],
+        relations: {
+          documentTags: true,
+          categories: { sessionCategories: true },
+        },
       })
     )?.sort((a, b) => a.name.localeCompare(b.name))
   }
@@ -141,7 +168,8 @@ export class AgentsService {
           | "outputJsonSchema"
         >
       > &
-      DocumentTagsUpdateFields
+      DocumentTagsUpdateFields &
+      AgentProjectCategoriesUpdateFields
   }): Promise<Agent> {
     const { name, defaultPrompt, documentsRagMode, model, temperature, locale, type } =
       fieldsToUpdate
@@ -181,6 +209,18 @@ export class AgentsService {
       })
     }
 
+    if (fieldsToUpdate.projectAgentCategoryIds !== undefined) {
+      const selectedProjectCategories = await this.resolveProjectAgentCategories({
+        projectId: connectScope.projectId,
+        projectAgentCategoryIds: fieldsToUpdate.projectAgentCategoryIds,
+        withDeleted: true,
+      })
+      await this.agentCategoriesService.replaceActiveCategoriesForAgent(
+        agent.id,
+        selectedProjectCategories,
+      )
+    }
+
     Object.assign(agent, {
       ...(name !== undefined && { name }),
       ...(defaultPrompt !== undefined && { defaultPrompt }),
@@ -198,6 +238,9 @@ export class AgentsService {
     })
 
     const updatedAgent = await this.agentConnectRepository.saveOne(agent)
+    updatedAgent.categories = await this.agentCategoriesService.listActiveCategoriesForAgent(
+      agent.id,
+    )
 
     return updatedAgent
   }
@@ -250,6 +293,39 @@ export class AgentsService {
       tagsToAdd,
       tagsToRemove,
     })
+  }
+
+  private async resolveProjectAgentCategories({
+    projectId,
+    projectAgentCategoryIds,
+    withDeleted,
+  }: {
+    projectId: string
+    projectAgentCategoryIds: string[]
+    withDeleted: boolean
+  }): Promise<Array<Pick<ProjectAgentCategory, "id" | "name">>> {
+    if (projectAgentCategoryIds.length === 0) {
+      return []
+    }
+
+    const uniqueProjectAgentCategoryIds = [...new Set(projectAgentCategoryIds)]
+    const projectCategories = await this.projectAgentCategoryRepository.find({
+      where: {
+        id: In(uniqueProjectAgentCategoryIds),
+        projectId,
+      },
+      withDeleted,
+      order: { name: "ASC" },
+    })
+
+    if (projectCategories.length !== uniqueProjectAgentCategoryIds.length) {
+      throw new UnprocessableEntityException("One or more agent categories do not exist")
+    }
+
+    return projectCategories.map((projectCategory) => ({
+      id: projectCategory.id,
+      name: projectCategory.name,
+    }))
   }
 }
 

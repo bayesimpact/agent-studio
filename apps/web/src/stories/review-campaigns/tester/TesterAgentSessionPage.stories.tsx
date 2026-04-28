@@ -22,6 +22,7 @@ const mockProject: Project = {
   createdAt: Date.now(),
   updatedAt: Date.now(),
   featureFlags: [],
+  agentCategories: [],
 }
 
 const mockConversationAgent: AgentDto = {
@@ -36,6 +37,8 @@ const mockConversationAgent: AgentDto = {
   temperature: 0.5,
   documentTagIds: [],
   documentsRagMode: DocumentsRagMode.All,
+  projectAgentCategoryIds: [],
+  usedProjectAgentCategoryIds: [],
   createdAt: Date.now(),
   updatedAt: Date.now(),
 }

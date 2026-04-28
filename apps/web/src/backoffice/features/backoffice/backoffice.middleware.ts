@@ -24,11 +24,12 @@ function registerListeners() {
     matcher: isAnyOf(
       backofficeActions.addFeatureFlag.fulfilled,
       backofficeActions.removeFeatureFlag.fulfilled,
+      backofficeActions.replaceProjectAgentCategories.fulfilled,
     ),
     effect: async (_, listenerApi) => {
       listenerApi.dispatch(
         notificationsActions.show({
-          title: "Feature flag updated",
+          title: "Backoffice project updated",
           type: "success",
         }),
       )
@@ -39,11 +40,12 @@ function registerListeners() {
     matcher: isAnyOf(
       backofficeActions.addFeatureFlag.rejected,
       backofficeActions.removeFeatureFlag.rejected,
+      backofficeActions.replaceProjectAgentCategories.rejected,
     ),
     effect: async (_, listenerApi) => {
       listenerApi.dispatch(
         notificationsActions.show({
-          title: "Feature flag update failed",
+          title: "Backoffice project update failed",
           type: "error",
         }),
       )

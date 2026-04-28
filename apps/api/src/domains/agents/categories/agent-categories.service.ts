@@ -1,4 +1,4 @@
-import { Injectable } from "@nestjs/common"
+import { BadRequestException, Injectable } from "@nestjs/common"
 import { InjectRepository } from "@nestjs/typeorm"
 import type { Repository } from "typeorm"
 import { AgentCategory } from "./agent-category.entity"
@@ -27,6 +27,14 @@ export class AgentCategoriesService {
     return activeCategories.map((agentCategory) => agentCategory.name)
   }
 
+  async listActiveCategoriesForAgent(agentId: string): Promise<AgentCategory[]> {
+    return this.agentCategoryRepository.find({
+      where: { agentId },
+      relations: { sessionCategories: true },
+      order: { name: "ASC" },
+    })
+  }
+
   /**
    * Sets the active category set for an agent: creates missing rows, restores soft-deleted
    * matches, and soft-deletes active rows not in `categoryNames`.
@@ -38,6 +46,7 @@ export class AgentCategoriesService {
     const existingAgentCategories = await this.agentCategoryRepository.find({
       where: { agentId },
       withDeleted: true,
+      relations: { sessionCategories: true },
       order: { name: "ASC" },
     })
 
@@ -81,6 +90,12 @@ export class AgentCategoriesService {
         existingAgentCategory.projectAgentCategoryId !== null &&
         desiredProjectCategoryIds.has(existingAgentCategory.projectAgentCategoryId)
       const isCurrentlyActive = existingAgentCategory.deletedAt === null
+      const isUsedInConversation = (existingAgentCategory.sessionCategories?.length ?? 0) > 0
+      if (!shouldStayActive && isCurrentlyActive && isUsedInConversation) {
+        throw new BadRequestException(
+          `Category "${existingAgentCategory.name}" cannot be removed because it is already assigned to a conversation.`,
+        )
+      }
       if (!shouldStayActive && isCurrentlyActive) {
         await this.agentCategoryRepository.softDelete(existingAgentCategory.id)
         deletedCount += 1

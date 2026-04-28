@@ -39,6 +39,7 @@ export function getDefaultFormValues({
     temperature: 0.0,
     locale: language,
     tagsToAdd: [],
+    projectAgentCategoryIds: [],
   }
 
   if (["form", "extraction"].includes(agentType)) {

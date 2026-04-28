@@ -14,7 +14,9 @@ import { PenLineIcon } from "lucide-react"
 import { useState } from "react"
 import { useTranslation } from "react-i18next"
 import type { Agent } from "@/common/features/agents/agents.models"
-import { useAppDispatch } from "@/common/store/hooks"
+import { selectCurrentProjectData } from "@/common/features/projects/projects.selectors"
+import { ADS } from "@/common/store/async-data-status"
+import { useAppDispatch, useAppSelector } from "@/common/store/hooks"
 import { useDocumentTags } from "@/studio/features/document-tags/document-tags.helpers"
 import { updateAgent } from "../agents.thunks"
 import type { AgentFormData } from "./agent-form.shared"
@@ -84,7 +86,11 @@ function Content({ agent, onSuccess }: { agent: Agent; onSuccess: () => void }) 
 
 function UpdateForm({ agent, onSuccess }: { agent: Agent; onSuccess?: () => void }) {
   const dispatch = useAppDispatch()
+  const currentProject = useAppSelector(selectCurrentProjectData)
   const { documentTags } = useDocumentTags()
+  const projectAgentCategories = ADS.isFulfilled(currentProject)
+    ? currentProject.value.agentCategories
+    : []
 
   const handleSubmit = (fields: AgentFormData) => {
     if (!("documentTagIds" in fields)) {
@@ -107,6 +113,7 @@ function UpdateForm({ agent, onSuccess }: { agent: Agent; onSuccess?: () => void
           documentTagIds: fields.documentTagIds,
           tagsToAdd: fields.documentTagIds.filter((id) => !originalTagIds.includes(id)),
           tagsToRemove: originalTagIds.filter((id) => !fields.documentTagIds.includes(id)),
+          projectAgentCategoryIds: fields.projectAgentCategoryIds,
         },
       }),
     )
@@ -119,6 +126,7 @@ function UpdateForm({ agent, onSuccess }: { agent: Agent; onSuccess?: () => void
       editableAgent={agent}
       onSubmit={handleSubmit}
       documentTags={documentTags}
+      projectAgentCategories={projectAgentCategories}
     />
   )
 }

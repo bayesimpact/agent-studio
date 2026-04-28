@@ -49,7 +49,7 @@ export class ProjectsService {
   }): Promise<Project[]> {
     return this.projectRepository.find({
       where: { organizationId, projectMemberships: { userId, status: "accepted" } },
-      relations: { featureFlags: true },
+      relations: { featureFlags: true, projectAgentCategories: true },
       order: { createdAt: "DESC" },
     })
   }
@@ -57,7 +57,7 @@ export class ProjectsService {
   async getProject(organizationId: string, projectId: string): Promise<Project | undefined> {
     const project = await this.projectRepository.findOne({
       where: { id: projectId, organizationId },
-      relations: { featureFlags: true },
+      relations: { featureFlags: true, projectAgentCategories: true },
     })
     return project ?? undefined
   }

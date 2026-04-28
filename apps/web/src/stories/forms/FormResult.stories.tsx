@@ -16,6 +16,8 @@ const mockAgent: Agent = {
   locale: AgentLocale.EN,
   documentTagIds: [],
   documentsRagMode: DocumentsRagMode.None,
+  projectAgentCategoryIds: [],
+  usedProjectAgentCategoryIds: [],
   outputJsonSchema: {
     type: "object",
     properties: {

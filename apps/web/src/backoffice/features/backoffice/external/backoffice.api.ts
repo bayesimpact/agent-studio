@@ -1,6 +1,10 @@
 import { BackofficeRoutes } from "@caseai-connect/api-contracts"
 import { getAxiosInstance } from "@/external/axios"
-import { toBackofficeOrganization, toBackofficeUser } from "../backoffice.models"
+import {
+  toBackofficeOrganization,
+  toBackofficeProjectAgentCategory,
+  toBackofficeUser,
+} from "../backoffice.models"
 import type { IBackofficeSpi } from "../backoffice.spi"
 
 export default {
@@ -27,5 +31,14 @@ export default {
   removeFeatureFlag: async ({ projectId, featureFlagKey }) => {
     const axios = getAxiosInstance()
     await axios.delete(BackofficeRoutes.removeFeatureFlag.getPath({ projectId, featureFlagKey }))
+  },
+  replaceProjectAgentCategories: async ({ projectId, categoryNames }) => {
+    const axios = getAxiosInstance()
+    const response = await axios.patch<
+      typeof BackofficeRoutes.replaceProjectAgentCategories.response
+    >(BackofficeRoutes.replaceProjectAgentCategories.getPath({ projectId }), {
+      payload: { categoryNames },
+    } satisfies typeof BackofficeRoutes.replaceProjectAgentCategories.request)
+    return response.data.data.map(toBackofficeProjectAgentCategory)
   },
 } satisfies IBackofficeSpi

@@ -12,7 +12,14 @@ import {
 } from "@caseai-connect/api-contracts"
 import { Badge } from "@caseai-connect/ui/shad/badge"
 import { Button } from "@caseai-connect/ui/shad/button"
-import { Field, FieldGroup, FieldLabel, FieldSet } from "@caseai-connect/ui/shad/field"
+import { Checkbox } from "@caseai-connect/ui/shad/checkbox"
+import {
+  Field,
+  FieldDescription,
+  FieldGroup,
+  FieldLabel,
+  FieldSet,
+} from "@caseai-connect/ui/shad/field"
 import { Input } from "@caseai-connect/ui/shad/input"
 import {
   Select,
@@ -30,6 +37,7 @@ import { Controller, type FieldErrors, useForm } from "react-hook-form"
 import { useTranslation } from "react-i18next"
 import type { z } from "zod"
 import type { Agent } from "@/common/features/agents/agents.models"
+import type { ProjectAgentCategory } from "@/common/features/projects/projects.models"
 import { type HasFeature, useFeatureFlags } from "@/common/hooks/use-feature-flags"
 import { getTagNameById } from "@/studio/features/document-tags/document-tags.helpers"
 import type { DocumentTag } from "@/studio/features/document-tags/document-tags.models"
@@ -57,8 +65,10 @@ export function BaseAgentForm({
   onSubmit,
   agentType,
   documentTags,
+  projectAgentCategories,
 }: {
   documentTags: DocumentTag[]
+  projectAgentCategories: ProjectAgentCategory[]
   agentType: Agent["type"]
   editableAgent?: Agent
   onSubmit: (values: AgentFormData) => Promise<void> | void
@@ -69,6 +79,7 @@ export function BaseAgentForm({
   const hasOutputJsonSchema = agentType !== "conversation"
   const hasSources = agentType === "conversation"
   const hasGreetingMessage = agentType === "conversation" || agentType === "form"
+  const hasAgentCategories = agentType === "conversation" && projectAgentCategories.length > 0
 
   const agentSchema = editableAgent ? updateAgentSchema : createAgentSchema
   type FormValues = z.infer<typeof agentSchema>
@@ -224,6 +235,58 @@ export function BaseAgentForm({
                     <p className="text-sm text-destructive">{errors.defaultPrompt.message}</p>
                   )}
                 </Field>
+
+                {hasAgentCategories && (
+                  <Field>
+                    <FieldLabel>Agent categories</FieldLabel>
+                    <Controller
+                      control={control}
+                      name="projectAgentCategoryIds"
+                      render={({ field }) => (
+                        <FieldGroup data-slot="checkbox-group">
+                          {projectAgentCategories.map((projectAgentCategory) => {
+                            const isChecked = field.value.includes(projectAgentCategory.id)
+                            const isDisabled =
+                              editableAgent?.usedProjectAgentCategoryIds.includes(
+                                projectAgentCategory.id,
+                              ) ?? false
+                            const checkboxId = `agent-category-${projectAgentCategory.id}`
+                            return (
+                              <Field
+                                key={projectAgentCategory.id}
+                                orientation="horizontal"
+                                data-disabled={isDisabled ? true : undefined}
+                              >
+                                <Checkbox
+                                  id={checkboxId}
+                                  checked={isChecked}
+                                  disabled={isDisabled}
+                                  onCheckedChange={(checked) => {
+                                    if (checked) {
+                                      field.onChange([...field.value, projectAgentCategory.id])
+                                      return
+                                    }
+                                    field.onChange(
+                                      field.value.filter(
+                                        (categoryId) => categoryId !== projectAgentCategory.id,
+                                      ),
+                                    )
+                                  }}
+                                />
+                                <FieldLabel htmlFor={checkboxId}>
+                                  {projectAgentCategory.name}
+                                </FieldLabel>
+                              </Field>
+                            )
+                          })}
+                        </FieldGroup>
+                      )}
+                    />
+                    <FieldDescription>
+                      Categories already used in this agent's conversations cannot be unchecked.
+                    </FieldDescription>
+                  </Field>
+                )}
               </FieldGroup>
             </TabsContent>
 
@@ -429,6 +492,7 @@ const FIELD_TO_TAB: Record<string, "general" | "model" | "output" | "sources"> =
   locale: "general",
   defaultPrompt: "general",
   greetingMessage: "general",
+  projectAgentCategoryIds: "general",
   model: "model",
   temperature: "model",
   outputJsonSchema: "output",

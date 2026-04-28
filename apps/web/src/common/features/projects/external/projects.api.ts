@@ -38,4 +38,5 @@ export const toProject = (dto: ProjectDto): Project => ({
   createdAt: dto.createdAt,
   updatedAt: dto.updatedAt,
   featureFlags: dto.featureFlags,
+  agentCategories: dto.agentCategories,
 })

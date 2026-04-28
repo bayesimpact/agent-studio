@@ -1,7 +1,10 @@
 import type { ObjectLiteral, Repository } from "typeorm"
 import { Activity } from "@/domains/activities/activity.entity"
 import { Agent } from "@/domains/agents/agent.entity"
+import { AgentCategory } from "@/domains/agents/categories/agent-category.entity"
+import { ProjectAgentCategory } from "@/domains/agents/categories/project-agent-category.entity"
 import { ConversationAgentSession } from "@/domains/agents/conversation-agent-sessions/conversation-agent-session.entity"
+import { ConversationAgentSessionCategory } from "@/domains/agents/conversation-agent-sessions/conversation-agent-session-category.entity"
 import { ExtractionAgentSession } from "@/domains/agents/extraction-agent-sessions/extraction-agent-session.entity"
 import { FormAgentSession } from "@/domains/agents/form-agent-sessions/form-agent-session.entity"
 import { AgentMembership } from "@/domains/agents/memberships/agent-membership.entity"
@@ -31,12 +34,14 @@ import { User } from "@/domains/users/user.entity"
 
 export type AllRepositories = {
   activityRepository: Repository<Activity>
+  agentCategoryRepository: Repository<AgentCategory>
   agentMcpServerRepository: Repository<AgentMcpServer>
   agentMembershipRepository: Repository<AgentMembership>
   agentMessageFeedbackRepository: Repository<AgentMessageFeedback>
   agentMessageRepository: Repository<AgentMessage>
   agentRepository: Repository<Agent>
   conversationAgentSessionRepository: Repository<ConversationAgentSession>
+  conversationAgentSessionCategoryRepository: Repository<ConversationAgentSessionCategory>
   documentRepository: Repository<Document>
   evaluationExtractionDatasetDocumentRepository: Repository<EvaluationExtractionDatasetDocument>
   evaluationExtractionDatasetRecordRepository: Repository<EvaluationExtractionDatasetRecord>
@@ -52,6 +57,7 @@ export type AllRepositories = {
   organizationMembershipRepository: Repository<OrganizationMembership>
   organizationRepository: Repository<Organization>
   projectMembershipRepository: Repository<ProjectMembership>
+  projectAgentCategoryRepository: Repository<ProjectAgentCategory>
   projectRepository: Repository<Project>
   reviewCampaignMembershipRepository: Repository<ReviewCampaignMembership>
   reviewCampaignRepository: Repository<ReviewCampaign>
@@ -66,12 +72,14 @@ export function buildAllRepositories(
 ): AllRepositories {
   return {
     activityRepository: getRepository(Activity),
+    agentCategoryRepository: getRepository(AgentCategory),
     agentMcpServerRepository: getRepository(AgentMcpServer),
     agentMembershipRepository: getRepository(AgentMembership),
     agentMessageFeedbackRepository: getRepository(AgentMessageFeedback),
     agentMessageRepository: getRepository(AgentMessage),
     agentRepository: getRepository(Agent),
     conversationAgentSessionRepository: getRepository(ConversationAgentSession),
+    conversationAgentSessionCategoryRepository: getRepository(ConversationAgentSessionCategory),
     documentRepository: getRepository(Document),
     evaluationExtractionDatasetDocumentRepository: getRepository(
       EvaluationExtractionDatasetDocument,
@@ -89,6 +97,7 @@ export function buildAllRepositories(
     organizationMembershipRepository: getRepository(OrganizationMembership),
     organizationRepository: getRepository(Organization),
     projectMembershipRepository: getRepository(ProjectMembership),
+    projectAgentCategoryRepository: getRepository(ProjectAgentCategory),
     projectRepository: getRepository(Project),
     reviewCampaignMembershipRepository: getRepository(ReviewCampaignMembership),
     reviewCampaignRepository: getRepository(ReviewCampaign),

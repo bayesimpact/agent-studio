@@ -90,6 +90,7 @@ describe("Agents - createOne", () => {
         temperature: 0,
         locale: AgentLocale.EN,
         tagsToAdd: [],
+        projectAgentCategoryIds: [],
       },
     })
 
@@ -125,6 +126,7 @@ describe("Agents - createOne", () => {
         temperature: 0,
         locale: AgentLocale.EN,
         tagsToAdd: [],
+        projectAgentCategoryIds: [],
       },
     })
 
@@ -150,6 +152,7 @@ describe("Agents - createOne", () => {
         temperature: 0,
         locale: AgentLocale.EN,
         tagsToAdd: [],
+        projectAgentCategoryIds: [],
       },
     })
 
@@ -177,11 +180,45 @@ describe("Agents - createOne", () => {
         temperature: 0,
         locale: AgentLocale.EN,
         tagsToAdd: [documentTag.id],
+        projectAgentCategoryIds: [],
       },
     })
 
     expectResponse(response, 201)
     expect(response.body.data.documentsRagMode).toBe(DocumentsRagMode.Tags)
     expect(response.body.data.documentTagIds).toEqual([documentTag.id])
+  })
+
+  it("should create an agent with selected project categories", async () => {
+    const { project } = await createContext()
+    const projectCategory = await repositories.projectAgentCategoryRepository.save(
+      repositories.projectAgentCategoryRepository.create({
+        projectId: project.id,
+        name: "Billing",
+      }),
+    )
+
+    const response = await subject({
+      payload: {
+        type: "conversation",
+        name: "Categorized Agent",
+        defaultPrompt: "This is a default prompt",
+        documentsRagMode: DocumentsRagMode.All,
+        model: AgentModel.Gemini25Flash,
+        temperature: 0,
+        locale: AgentLocale.EN,
+        tagsToAdd: [],
+        projectAgentCategoryIds: [projectCategory.id],
+      },
+    })
+
+    expectResponse(response, 201)
+    expect(response.body.data.projectAgentCategoryIds).toEqual([projectCategory.id])
+
+    const agentCategories = await repositories.agentCategoryRepository.find({
+      where: { agentId: response.body.data.id },
+    })
+    expect(agentCategories).toHaveLength(1)
+    expect(agentCategories[0]?.projectAgentCategoryId).toBe(projectCategory.id)
   })
 })

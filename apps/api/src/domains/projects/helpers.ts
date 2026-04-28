@@ -1,6 +1,7 @@
 import type {
   FeatureFlagKey,
   FeatureFlagsDto,
+  ProjectAgentCategoryDto,
   ProjectDto,
   TimeType,
 } from "@caseai-connect/api-contracts"
@@ -36,6 +37,17 @@ export function toProjectDto(project: Project): ProjectDto {
     createdAt: project.createdAt.getTime() as TimeType,
     updatedAt: project.updatedAt.getTime() as TimeType,
     featureFlags: toFeatureFlagsDto(project.featureFlags),
+    agentCategories: (project.projectAgentCategories ?? []).map(toProjectAgentCategoryDto),
+  }
+}
+
+function toProjectAgentCategoryDto(projectAgentCategory: {
+  id: string
+  name: string
+}): ProjectAgentCategoryDto {
+  return {
+    id: projectAgentCategory.id,
+    name: projectAgentCategory.name,
   }
 }
 

@@ -1,6 +1,7 @@
 import type {
   AgentMembershipRoleDto,
   BackofficeOrganizationDto,
+  BackofficeProjectAgentCategoryDto,
   BackofficeProjectDto,
   BackofficeUserAgentMembershipDto,
   BackofficeUserDto,
@@ -19,6 +20,13 @@ export type BackofficeProject = {
   createdAt: TimeType
   updatedAt: TimeType
   featureFlags: FeatureFlagKey[]
+  agentCategories: BackofficeProjectAgentCategory[]
+}
+
+export type BackofficeProjectAgentCategory = {
+  id: string
+  name: string
+  isUsedInConversation: boolean
 }
 
 export type BackofficeOrganization = {
@@ -63,6 +71,15 @@ export const toBackofficeProject = (dto: BackofficeProjectDto): BackofficeProjec
   createdAt: dto.createdAt,
   updatedAt: dto.updatedAt,
   featureFlags: dto.featureFlags,
+  agentCategories: dto.agentCategories.map(toBackofficeProjectAgentCategory),
+})
+
+export const toBackofficeProjectAgentCategory = (
+  dto: BackofficeProjectAgentCategoryDto,
+): BackofficeProjectAgentCategory => ({
+  id: dto.id,
+  name: dto.name,
+  isUsedInConversation: dto.isUsedInConversation,
 })
 
 export const toBackofficeOrganization = (
