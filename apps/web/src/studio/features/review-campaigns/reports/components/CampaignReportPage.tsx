@@ -9,7 +9,7 @@ import { ADS } from "@/common/store/async-data-status"
 import { useAppDispatch, useAppSelector } from "@/common/store/hooks"
 import { getServices } from "@/di/services"
 import { selectCampaignReport } from "../reports.selectors"
-import { getCampaignReport } from "../reports.thunks"
+import { reviewCampaignsReportsActions } from "../reports.slice"
 import { CampaignReport } from "./CampaignReport"
 
 type Params = {
@@ -34,15 +34,11 @@ export function CampaignReportPage({ backPath, backLabel }: Props) {
   const [isDownloading, setIsDownloading] = useState(false)
 
   useEffect(() => {
-    if (!params.organizationId || !params.projectId || !params.reviewCampaignId) return
-    dispatch(
-      getCampaignReport({
-        organizationId: params.organizationId,
-        projectId: params.projectId,
-        reviewCampaignId: params.reviewCampaignId,
-      }),
-    )
-  }, [dispatch, params.organizationId, params.projectId, params.reviewCampaignId])
+    dispatch(reviewCampaignsReportsActions.mount())
+    return () => {
+      dispatch(reviewCampaignsReportsActions.unmount())
+    }
+  }, [dispatch])
 
   if (!params.organizationId || !params.projectId || !params.reviewCampaignId) return null
   const { organizationId, projectId, reviewCampaignId } = params

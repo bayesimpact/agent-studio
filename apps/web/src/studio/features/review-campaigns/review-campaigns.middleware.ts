@@ -3,9 +3,11 @@ import { notificationsActions } from "@/common/features/notifications/notificati
 import { hasOrganizationChanged } from "@/common/features/organizations/organizations.selectors"
 import { hasProjectChanged } from "@/common/features/projects/projects.selectors"
 import type { AppDispatch, RootState } from "@/common/store/types"
+import { reviewCampaignsActions } from "./review-campaigns.slice"
 import {
   createReviewCampaign,
   deleteReviewCampaign,
+  getReviewCampaignDetail,
   inviteReviewCampaignMembers,
   listReviewCampaigns,
   revokeReviewCampaignMembership,
@@ -25,6 +27,18 @@ function registerListeners() {
     },
     effect: async (_, listenerApi) => {
       await listenerApi.dispatch(listReviewCampaigns())
+    },
+  })
+
+  // Load campaign detail when the editor sheet opens in edit mode.
+  // CampaignEditorSheet dispatches `selectDetail({ reviewCampaignId })`;
+  // see `apps/web/CLAUDE.md` → "Data Loading: Marker Action + Middleware".
+  listenerMiddleware.startListening({
+    actionCreator: reviewCampaignsActions.selectDetail,
+    effect: async (action, listenerApi) => {
+      await listenerApi.dispatch(
+        getReviewCampaignDetail({ reviewCampaignId: action.payload.reviewCampaignId }),
+      )
     },
   })
 

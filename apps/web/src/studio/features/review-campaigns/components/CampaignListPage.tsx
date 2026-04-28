@@ -2,13 +2,12 @@
 
 import { Button } from "@caseai-connect/ui/shad/button"
 import { PlusIcon } from "lucide-react"
-import { useEffect, useMemo, useState } from "react"
+import { useMemo, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { selectAgentsData } from "@/common/features/agents/agents.selectors"
 import { ADS } from "@/common/store/async-data-status"
-import { useAppDispatch, useAppSelector } from "@/common/store/hooks"
+import { useAppSelector } from "@/common/store/hooks"
 import { selectReviewCampaignsData } from "../review-campaigns.selectors"
-import { listReviewCampaigns } from "../review-campaigns.thunks"
 import { CampaignEditorSheet } from "./CampaignEditorSheet"
 import { CampaignListTable } from "./CampaignListTable"
 
@@ -19,14 +18,9 @@ type EditorState =
 
 export function CampaignListPage() {
   const { t } = useTranslation()
-  const dispatch = useAppDispatch()
   const campaignsData = useAppSelector(selectReviewCampaignsData)
   const agentsData = useAppSelector(selectAgentsData)
   const [editor, setEditor] = useState<EditorState>(null)
-
-  useEffect(() => {
-    dispatch(listReviewCampaigns())
-  }, [dispatch])
 
   // Review campaigns only support conversation + form agents as targets;
   // testerService.startSession rejects extraction agents (apps/api/.../tester.service.ts).

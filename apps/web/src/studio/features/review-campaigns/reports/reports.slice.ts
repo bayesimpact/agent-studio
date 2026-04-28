@@ -16,6 +16,14 @@ const slice = createSlice({
   initialState,
   reducers: {
     reset: () => initialState,
+    /**
+     * Marker actions dispatched by `CampaignReportPage` from a `useEffect`.
+     * The reports listener middleware reacts to `mount` by reading
+     * `currentReviewCampaignId` and dispatching `getCampaignReport`. See
+     * `apps/web/CLAUDE.md` → "Data Loading: Marker Action + Middleware".
+     */
+    mount: () => {},
+    unmount: () => {},
   },
   extraReducers: (builder) => {
     builder
