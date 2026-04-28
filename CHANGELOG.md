@@ -49,7 +49,7 @@ This project uses [CalVer](https://calver.org/) (YY.MM.Micro) for product versio
 - (beta) Review campaigns: reviewer-only members can now open the reviewer landing page
 - (beta) Review campaigns: participants list now refreshes immediately after inviting or revoking
 - (beta) Review campaigns: testers who are also reviewers on the same campaign can now start sessions
-- (beta) Review campaigns: tester and reviewer pages no longer crash on hard reload in production
+- (beta) Review campaigns: opening the tester or reviewer interface no longer crashes in production
 
 ### Security
 
