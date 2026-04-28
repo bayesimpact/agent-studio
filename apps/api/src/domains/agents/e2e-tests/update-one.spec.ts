@@ -230,6 +230,52 @@ describe("Agents - updateOne", () => {
     expect(agentCategories[0]?.projectAgentCategoryId).toBe(projectCategory.id)
   })
 
+  it("should preserve an existing soft-deleted project category while adding a new category", async () => {
+    const { project, agent } = await createContext()
+    const legacyProjectCategory = await repositories.projectAgentCategoryRepository.save(
+      repositories.projectAgentCategoryRepository.create({
+        projectId: project.id,
+        name: "Legacy",
+      }),
+    )
+    const newProjectCategory = await repositories.projectAgentCategoryRepository.save(
+      repositories.projectAgentCategoryRepository.create({
+        projectId: project.id,
+        name: "New",
+      }),
+    )
+    await repositories.agentCategoryRepository.save(
+      repositories.agentCategoryRepository.create({
+        agentId: agent.id,
+        projectAgentCategoryId: legacyProjectCategory.id,
+        name: legacyProjectCategory.name,
+      }),
+    )
+    await repositories.projectAgentCategoryRepository.softDelete(legacyProjectCategory.id)
+
+    const response = await subject({
+      payload: {
+        ...agent,
+        documentTagIds: [],
+        documentsRagMode: DocumentsRagMode.All,
+        outputJsonSchema: undefined,
+        tagsToAdd: [],
+        tagsToRemove: [],
+        projectAgentCategoryIds: [legacyProjectCategory.id, newProjectCategory.id],
+      },
+    })
+
+    expectResponse(response, 200)
+    const agentCategories = await repositories.agentCategoryRepository.find({
+      where: { agentId },
+      order: { name: "ASC" },
+    })
+    expect(agentCategories.map((category) => category.projectAgentCategoryId)).toEqual([
+      legacyProjectCategory.id,
+      newProjectCategory.id,
+    ])
+  })
+
   it("should reject removing a category already used by a conversation", async () => {
     const { organization, project, agent, user } = await createContext()
     const projectCategory = await repositories.projectAgentCategoryRepository.save(

@@ -84,6 +84,7 @@ export class AgentsService {
       const selectedProjectCategories = await this.resolveProjectAgentCategories({
         projectId: connectScope.projectId,
         projectAgentCategoryIds,
+        withDeleted: false,
       })
       await this.agentCategoriesService.replaceActiveCategoriesForAgent(
         agent.id,
@@ -212,6 +213,7 @@ export class AgentsService {
       const selectedProjectCategories = await this.resolveProjectAgentCategories({
         projectId: connectScope.projectId,
         projectAgentCategoryIds: fieldsToUpdate.projectAgentCategoryIds,
+        withDeleted: true,
       })
       await this.agentCategoriesService.replaceActiveCategoriesForAgent(
         agent.id,
@@ -296,9 +298,11 @@ export class AgentsService {
   private async resolveProjectAgentCategories({
     projectId,
     projectAgentCategoryIds,
+    withDeleted,
   }: {
     projectId: string
     projectAgentCategoryIds: string[]
+    withDeleted: boolean
   }): Promise<Array<Pick<ProjectAgentCategory, "id" | "name">>> {
     if (projectAgentCategoryIds.length === 0) {
       return []
@@ -310,6 +314,7 @@ export class AgentsService {
         id: In(uniqueProjectAgentCategoryIds),
         projectId,
       },
+      withDeleted,
       order: { name: "ASC" },
     })
 
