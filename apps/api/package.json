@@ -53,7 +53,7 @@
     "@google-cloud/opentelemetry-cloud-trace-exporter": "^3.0.0",
     "@google-cloud/storage": "^7.18.0",
     "@google/genai": "^1.21.0",
-    "@llamaindex/readers": "^3.1.21",
+    "@llamaindex/readers": "^3.1.22",
     "@nestjs/bullmq": "^11.0.4",
     "@nestjs/common": "^11.0.0",
     "@nestjs/config": "^4.0.2",
@@ -94,7 +94,7 @@
   },
   "devDependencies": {
     "@jest/globals": "^29.7.0",
-    "@nestjs/cli": "^11.0.0",
+    "@nestjs/cli": "^11.0.21",
     "@nestjs/schematics": "^11.0.0",
     "@nestjs/testing": "^11.0.0",
     "@repo/jest-config": "*",

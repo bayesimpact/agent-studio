@@ -1,7 +1,10 @@
 vulnerabilities:
   - id: CVE-2026-33671
-    expired_at: 2026-05-01
+    expired_at: 2026-06-30
     reason: "picomatch 4.0.3 — fix in 4.0.4, present via npm CLI's bundled tinyglobby in the base node image"
   - id: CVE-2025-32434
-    expired_at: 2026-05-01
-    reason: "torch 2.5.1+cu121 — fix requires 2.6.0+, blocked by docling compatibility"
+    expired_at: 2026-06-30
+    reason: "torch 2.5.1+cu121 — fix requires 2.6.0+; bump deferred pending GCP/CUDA compatibility validation (docling itself supports torch <3.0.0)"
+  - id: CVE-2026-40192
+    expired_at: 2026-06-30
+    reason: "pillow 12.1.1 — fix in 12.2.0, pulled in transitively by docling; deferred together with the docling/torch refresh pending GCP/CUDA compatibility validation"
