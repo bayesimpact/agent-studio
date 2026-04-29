@@ -40,13 +40,19 @@ function extractModelListFromAgentType(
   const defaultModels = Object.entries(AgentModel).filter(
     ([_key, value]) => AgentModelToAgentProvider[value] === AgentProvider.Vertex,
   )
-  if (hasFeature("gemma") && agentType === "extraction") {
-    const _medGemmaModels = Object.entries(AgentModel).filter(
+  let medGemmaModels: [string, AgentModel][] = []
+  let gemmaModels: [string, AgentModel][] = []
+  if (hasFeature("gemma")) {
+    gemmaModels = Object.entries(AgentModel).filter(
+      ([_key, value]) => AgentModelToAgentProvider[value] === AgentProvider.Gemma,
+    )
+  }
+  if (hasFeature("medgemma") && agentType === "extraction") {
+    medGemmaModels = Object.entries(AgentModel).filter(
       ([_key, value]) => AgentModelToAgentProvider[value] === AgentProvider.MedGemma,
     )
-    return [...defaultModels, ..._medGemmaModels]
   }
-  return defaultModels
+  return [...defaultModels, ...medGemmaModels, ...gemmaModels]
 }
 
 export function BaseAgentForm({
