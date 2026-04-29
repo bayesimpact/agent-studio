@@ -1,5 +1,5 @@
 import type {
-  MyReviewerCampaign,
+  ReviewerCampaign,
   ReviewerSessionDetail,
   ReviewerSessionListItem,
   ReviewerSessionReview,
@@ -12,7 +12,7 @@ type CampaignScope = ProjectScope & { reviewCampaignId: string }
 type SessionScope = CampaignScope & { sessionId: string }
 
 export interface IReviewerSpi {
-  listMyCampaigns(): Promise<MyReviewerCampaign[]>
+  listMyCampaigns(): Promise<ReviewerCampaign[]>
   listSessions(params: CampaignScope): Promise<ReviewerSessionListItem[]>
   getSession(params: SessionScope): Promise<ReviewerSessionDetail>
   submitReview(

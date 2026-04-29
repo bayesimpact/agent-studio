@@ -1,8 +1,10 @@
 import type { Meta, StoryObj } from "@storybook/react-vite"
+import { withRouter } from "storybook-addon-remix-react-router"
+import type { Agent } from "@/common/features/agents/agents.models"
 import type { Project } from "@/common/features/projects/projects.models"
 import { CampaignListPage } from "@/studio/features/review-campaigns/components/CampaignListPage"
 import { withRedux } from "../decorators/with-redux"
-import { mockActiveCampaign, mockClosedCampaign, mockDraftCampaign } from "./fixtures"
+import { mockActiveCampaign, mockAgents, mockClosedCampaign, mockDraftCampaign } from "./fixtures"
 import { buildMockReviewCampaignsService } from "./mock-service"
 
 const mockProject: Project = {
@@ -19,6 +21,7 @@ const meta = {
   title: "review-campaigns/CampaignListPage",
   component: CampaignListPage,
   parameters: { layout: "fullscreen" },
+  decorators: [withRouter],
 } satisfies Meta<typeof CampaignListPage>
 
 export default meta
@@ -28,6 +31,7 @@ export const Empty: Story = {
   decorators: [
     withRedux({
       currentProject: mockProject,
+      agents: [],
       reviewCampaigns: [],
       servicesMock: {
         reviewCampaigns: buildMockReviewCampaignsService({ campaigns: [] }),
@@ -40,6 +44,7 @@ export const WithCampaigns: Story = {
   decorators: [
     withRedux({
       currentProject: mockProject,
+      agents: mockAgents as Agent[],
       reviewCampaigns: [mockDraftCampaign, mockActiveCampaign, mockClosedCampaign],
       servicesMock: {
         reviewCampaigns: buildMockReviewCampaignsService({

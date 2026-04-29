@@ -11,7 +11,7 @@ type GetIdsResult<T extends readonly IdKey[]> = {
 
 export const getCurrentIds = <T extends readonly IdKey[]>({
   state,
-  wantedIds, // TODO: remove this and always return all ids
+  wantedIds,
 }: {
   state: RootState
   wantedIds: T

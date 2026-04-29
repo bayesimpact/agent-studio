@@ -4,9 +4,9 @@ import type {
   SubmitReviewerSessionReviewRequestDto,
   UpdateReviewerSessionReviewRequestDto,
 } from "@caseai-connect/api-contracts"
-import { useEffect } from "react"
 import { useTranslation } from "react-i18next"
 import { useNavigate, useParams } from "react-router-dom"
+import { useMount } from "@/common/hooks/use-mount"
 import { ADS } from "@/common/store/async-data-status"
 import { useAppDispatch, useAppSelector } from "@/common/store/hooks"
 import { buildReviewerCampaignPath } from "@/reviewer/routes/helpers"
@@ -22,6 +22,7 @@ type Params = {
   sessionId: string
 }
 
+// FIXME:
 export function ReviewerSessionReviewPage() {
   const { t } = useTranslation()
   const dispatch = useAppDispatch()
@@ -29,12 +30,10 @@ export function ReviewerSessionReviewPage() {
   const params = useParams<Params>()
   const detailState = useAppSelector(selectReviewerSessionDetail(params.sessionId ?? ""))
 
-  useEffect(() => {
-    dispatch(reviewCampaignsReviewerActions.mount())
-    return () => {
-      dispatch(reviewCampaignsReviewerActions.unmount())
-    }
-  }, [dispatch])
+  useMount({
+    actions: reviewCampaignsReviewerActions,
+    condition: !!params.sessionId,
+  })
 
   if (!params.organizationId || !params.projectId || !params.reviewCampaignId || !params.sessionId)
     return null

@@ -1,7 +1,7 @@
 import { createAsyncThunk } from "@reduxjs/toolkit"
 import type { RootState, ThunkExtraArg } from "@/common/store"
 import type {
-  MyReviewerCampaign,
+  ReviewerCampaign,
   ReviewerSessionDetail,
   ReviewerSessionListItem,
   ReviewerSessionReview,
@@ -14,7 +14,7 @@ type ThunkConfig = { state: RootState; extra: ThunkExtraArg }
 type CampaignScopeArg = { organizationId: string; projectId: string; reviewCampaignId: string }
 type SessionScopeArg = CampaignScopeArg & { sessionId: string }
 
-export const listMyReviewerCampaigns = createAsyncThunk<MyReviewerCampaign[], void, ThunkConfig>(
+export const listMyReviewerCampaigns = createAsyncThunk<ReviewerCampaign[], void, ThunkConfig>(
   "reviewer/listMyCampaigns",
   async (_, { extra: { services } }) => {
     return await services.reviewCampaignsReviewer.listMyCampaigns()

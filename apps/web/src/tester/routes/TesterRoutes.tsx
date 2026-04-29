@@ -4,12 +4,13 @@ import { TesterCampaignLandingPage } from "@/tester/features/review-campaigns/co
 import { TesterEndOfPhaseSurveyPage } from "@/tester/features/review-campaigns/components/TesterEndOfPhaseSurveyPage"
 import { TesterMyCampaignsPage } from "@/tester/features/review-campaigns/components/TesterMyCampaignsPage"
 import { TesterRouteNames } from "./helpers"
-import { TesterShell } from "./TesterShell"
+import { TesterRoute } from "./TesterRoute"
 
+// FIXME:
 export const testerRoutes = {
   element: (
     <ProtectedRoute>
-      <TesterShell />
+      <TesterRoute />
     </ProtectedRoute>
   ),
   children: [

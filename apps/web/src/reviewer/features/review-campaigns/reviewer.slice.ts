@@ -1,7 +1,7 @@
 import { createSlice } from "@reduxjs/toolkit"
 import { ADS, type AsyncData, defaultAsyncData } from "@/common/store/async-data-status"
 import type {
-  MyReviewerCampaign,
+  ReviewerCampaign,
   ReviewerSessionDetail,
   ReviewerSessionListItem,
 } from "./reviewer.models"
@@ -14,7 +14,7 @@ import {
 } from "./reviewer.thunks"
 
 interface State {
-  myCampaigns: AsyncData<MyReviewerCampaign[]>
+  myCampaigns: AsyncData<ReviewerCampaign[]>
   sessionsByCampaignId: Record<string, AsyncData<ReviewerSessionListItem[]>>
   sessionDetailBySessionId: Record<string, AsyncData<ReviewerSessionDetail>>
 }

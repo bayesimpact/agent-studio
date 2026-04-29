@@ -5,14 +5,22 @@ import { buildReviewCampaignsPath } from "./helpers"
 type Params = {
   organizationId: string
   projectId: string
+  reviewCampaignId: string
 }
 
 export function ReviewCampaignReportRoute() {
   const params = useParams<Params>()
-  if (!params.organizationId || !params.projectId) return null
+  if (!params.organizationId || !params.projectId || !params.reviewCampaignId) return null
   const backPath = buildReviewCampaignsPath({
     organizationId: params.organizationId,
     projectId: params.projectId,
   })
-  return <CampaignReportPage backPath={backPath} backLabel="Campaigns" />
+  return (
+    <CampaignReportPage
+      backPath={backPath}
+      organizationId={params.organizationId}
+      projectId={params.projectId}
+      reviewCampaignId={params.reviewCampaignId}
+    />
+  )
 }

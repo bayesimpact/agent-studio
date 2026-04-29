@@ -1,6 +1,7 @@
 import { combineReducers, configureStore } from "@reduxjs/toolkit"
 import type { Decorator } from "@storybook/react-vite"
 import { Provider } from "react-redux"
+import type { Agent } from "@/common/features/agents/agents.models"
 import type { Project } from "@/common/features/projects/projects.models"
 import { ADS } from "@/common/store/async-data-status"
 import { rootSliceList } from "@/common/store/root-slices"
@@ -43,6 +44,7 @@ const mockRootReducer = combineReducers(
 type MockRootReducerState = ReturnType<typeof mockRootReducer>
 
 export type StoryMockState = {
+  agents?: Agent[]
   currentProject?: Project
   documentTags?: DocumentTag[]
   reviewCampaigns?: ReviewCampaign[]
@@ -60,6 +62,7 @@ export type StoryMockState = {
 }
 
 function buildMockPreloadedState({
+  agents,
   currentProject,
   documentTags,
   reviewCampaigns,
@@ -95,6 +98,12 @@ function buildMockPreloadedState({
       currentProjectId: currentProject?.id ?? null,
       data: currentProject
         ? { status: ADS.Fulfilled, error: null, value: [currentProject] }
+        : { status: ADS.Uninitialized, error: null, value: null },
+    },
+    agents: {
+      currentAgentId: null,
+      data: agents
+        ? { status: ADS.Fulfilled, error: null, value: agents }
         : { status: ADS.Uninitialized, error: null, value: null },
     },
     studio: {

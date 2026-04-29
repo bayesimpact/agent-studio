@@ -29,7 +29,9 @@ export function TesterCampaignLandingPage() {
   const params = useParams<Params>()
 
   const contextState = useAppSelector(selectTesterContext)
+  // FIXME:
   const sessions = useAppSelector(selectMyLocalSessions(params.reviewCampaignId ?? ""))
+  // FIXME:
   const existingSurvey = useAppSelector(selectMySurveyForCampaign(params.reviewCampaignId ?? ""))
 
   const [feedbackSessionId, setFeedbackSessionId] = useState<string | null>(null)
@@ -42,6 +44,7 @@ export function TesterCampaignLandingPage() {
     }
   }, [dispatch])
 
+  // FIXME:
   if (!params.organizationId || !params.projectId || !params.reviewCampaignId) return null
 
   if (ADS.isLoading(contextState)) {

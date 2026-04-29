@@ -1,8 +1,8 @@
 import { Button } from "@caseai-connect/ui/shad/button"
-import { useEffect } from "react"
 import { useTranslation } from "react-i18next"
 import { useNavigate } from "react-router-dom"
 import { GridHeader } from "@/common/components/grid/Grid"
+import { useMount } from "@/common/hooks/use-mount"
 import { AsyncRoute } from "@/common/routes/AsyncRoute"
 import { LoadingRoute } from "@/common/routes/LoadingRoute"
 import { useAppDispatch, useAppSelector } from "@/common/store/hooks"
@@ -23,17 +23,11 @@ import {
 import { evaluationExtractionRunsActions } from "../features/evaluation-extraction-runs/evaluation-extraction-runs.slice"
 
 export function EvaluationExtractionRunRoute() {
-  const dispatch = useAppDispatch()
   const runId = useAppSelector(selectCurrentRunId)
   const runData = useAppSelector(selectCurrentRunData)
   const datasetData = useAppSelector(selectCurrentDatasetData)
 
-  useEffect(() => {
-    dispatch(evaluationExtractionRunsActions.mount())
-    return () => {
-      dispatch(evaluationExtractionRunsActions.unmount())
-    }
-  }, [dispatch])
+  useMount({ actions: evaluationExtractionRunsActions, condition: !!runId })
 
   if (!runId) return <LoadingRoute />
   return (

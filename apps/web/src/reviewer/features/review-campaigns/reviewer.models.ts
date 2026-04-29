@@ -1,16 +1,18 @@
 import type {
   GetReviewerSessionResponseDto,
   ListMyReviewCampaignsResponseDto,
+  ReviewCampaignTesterContextDto,
   ReviewerSessionListItemDto,
   ReviewerSessionReviewDto,
   SubmitReviewerSessionReviewRequestDto,
   UpdateReviewerSessionReviewRequestDto,
 } from "@caseai-connect/api-contracts"
 
-export type MyReviewerCampaign = ListMyReviewCampaignsResponseDto["reviewCampaigns"][number]
+export type ReviewerCampaign = ListMyReviewCampaignsResponseDto["reviewCampaigns"][number]
 export type ReviewerSessionListItem = ReviewerSessionListItemDto
 export type ReviewerSessionDetail = GetReviewerSessionResponseDto
 export type ReviewerSessionReview = ReviewerSessionReviewDto
+export type ReviewCampaignTesterContext = ReviewCampaignTesterContextDto
 
 export type { SubmitReviewerSessionReviewRequestDto as SubmitReviewerReviewFields }
 export type { UpdateReviewerSessionReviewRequestDto as UpdateReviewerReviewFields }

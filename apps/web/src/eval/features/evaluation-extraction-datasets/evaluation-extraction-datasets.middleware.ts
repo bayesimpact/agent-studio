@@ -7,7 +7,7 @@ const listenerMiddleware = createListenerMiddleware<RootState, AppDispatch>()
 
 function registerListeners() {
   listenerMiddleware.startListening({
-    actionCreator: evaluationExtractionDatasetsActions.initData,
+    actionCreator: evaluationExtractionDatasetsActions.mount,
     effect: async (_, listenerApi) => {
       await Promise.all([
         listenerApi.dispatch(evaluationExtractionDatasetsActions.listDatasets()),
