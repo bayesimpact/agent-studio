@@ -23,8 +23,6 @@ import { ConversationAgentSessionsService } from "@/domains/agents/conversation-
 import { FormAgentSession } from "@/domains/agents/form-agent-sessions/form-agent-session.entity"
 import { FormAgentSessionsService } from "@/domains/agents/form-agent-sessions/form-agent-sessions.service"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
-import { DocumentsService } from "@/domains/documents/documents.service"
-// biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
 import { DocumentChunkRetrievalService } from "@/domains/documents/embeddings/document-chunk-retrieval.service"
 import {
   FILE_STORAGE_SERVICE,
@@ -59,7 +57,6 @@ export class StreamingService extends ServiceWithLLM {
   constructor(
     @Inject(FILE_STORAGE_SERVICE)
     private readonly fileStorageService: IFileStorage,
-    private readonly documentsService: DocumentsService,
     private readonly agentMessageAttachmentDocumentsService: AgentMessageAttachmentDocumentsService,
 
     @Inject(FormAgentSessionsService)
@@ -111,7 +108,6 @@ export class StreamingService extends ServiceWithLLM {
     agent,
     userContent,
     attachmentDocumentId,
-    documentId,
     notifyClient,
   }: {
     connectScope: RequiredConnectScope
@@ -119,7 +115,6 @@ export class StreamingService extends ServiceWithLLM {
     agent: Agent
     userContent: string
     attachmentDocumentId?: string
-    documentId?: string
     notifyClient: NotifyClient
   }): AsyncGenerator<StreamEvent, void, unknown> {
     const { session: updatedSession, assistantMessageId } = await this.prepareForStreaming({
@@ -127,7 +122,6 @@ export class StreamingService extends ServiceWithLLM {
       sessionId,
       userContent,
       attachmentDocumentId,
-      documentId,
       agentType: agent.type,
     })
 
@@ -143,7 +137,6 @@ export class StreamingService extends ServiceWithLLM {
         notifyClient,
         session: updatedSession,
         attachmentDocumentId,
-        documentId,
         connectScope,
         assistantMessageId,
       })
@@ -195,7 +188,6 @@ export class StreamingService extends ServiceWithLLM {
     notifyClient,
     session,
     attachmentDocumentId,
-    documentId,
     connectScope,
     assistantMessageId,
   }: {
@@ -205,7 +197,6 @@ export class StreamingService extends ServiceWithLLM {
     notifyClient: NotifyClient
     session: ConversationAgentSession | FormAgentSession
     attachmentDocumentId?: string
-    documentId?: string
     connectScope: RequiredConnectScope
   }) {
     const { tools, mcpClose } = await this.buildTools({
@@ -247,8 +238,6 @@ export class StreamingService extends ServiceWithLLM {
         attachmentDocumentId,
         connectScope,
       })
-    else if (documentId)
-      await this.handleFileInLLMMessage({ llmMessages: messages, documentId, connectScope })
 
     return { config, metadata, messages, mcpClose }
   }
@@ -322,73 +311,6 @@ export class StreamingService extends ServiceWithLLM {
     }
 
     llmMessages.push(llmMessage)
-  }
-
-  private async handleFileInLLMMessage({
-    llmMessages,
-    documentId,
-    connectScope,
-  }: {
-    llmMessages: LLMChatMessage[]
-    documentId: string
-    connectScope: RequiredConnectScope
-  }) {
-    const message = llmMessages.pop() // remove last message
-    if (documentId && message) {
-      const document = await this.documentsService.findById({ connectScope, documentId })
-      if (!document) {
-        throw new Error(`Document with ID ${documentId} not found`)
-      }
-
-      const url = await this.fileStorageService.getTemporaryUrl(document.storageRelativePath)
-
-      const llmMessage: LLMChatMessage = {
-        role: "user",
-        content: [{ type: "text", text: message.content as string }],
-      }
-
-      const hasStorageBucketName: boolean = !!process.env.GCS_STORAGE_BUCKET_NAME
-
-      switch (document.mimeType) {
-        case "application/pdf":
-          {
-            const data = new URL(
-              hasStorageBucketName
-                ? url
-                : "https://www.impots.gouv.fr/sites/default/files/formulaires/2042/2025/2042_5180.pdf",
-            )
-
-            const content = llmMessage.content as Array<FilePart>
-            content.push({
-              type: "file",
-              mediaType: "application/pdf",
-              data,
-              filename: document.fileName, // optional, not used by all providers
-            })
-          }
-          break
-
-        case "image/png":
-        case "image/jpeg":
-        case "image/jpg":
-          {
-            const image = new URL(
-              hasStorageBucketName
-                ? url
-                : "https://www.oiseaux.net/photos/marc.fasol/images/id/canard.colvert.mafa.3p.230.h.jpg",
-            )
-
-            const content = llmMessage.content as Array<ImagePart>
-            content.push({ type: "image", image })
-          }
-          break
-
-        default:
-          throw new Error(`Unsupported document type: ${document.mimeType}`)
-      }
-
-      llmMessages.push(llmMessage) // re-insert message in the stack
-    }
   }
 
   /**
@@ -484,14 +406,12 @@ export class StreamingService extends ServiceWithLLM {
     agentType,
     connectScope,
     attachmentDocumentId,
-    documentId,
     sessionId,
     userContent,
   }: {
     agentType: Agent["type"]
     connectScope: RequiredConnectScope
     attachmentDocumentId?: string
-    documentId?: string
     sessionId: string
     userContent: string
   }): Promise<{
@@ -513,7 +433,6 @@ export class StreamingService extends ServiceWithLLM {
       startedAt: null,
       completedAt: null,
       toolCalls: null,
-      documentId: documentId ?? null,
       attachmentDocumentId: attachmentDocumentId ?? null,
     })
 

@@ -29,7 +29,6 @@ export class StreamingController {
       const parsedQuery = JSON.parse(query) as typeof AgentSessionMessagesRoutes.stream.request
       const userContent = parsedQuery.payload.content
       const attachmentDocumentId = parsedQuery.payload.attachmentDocumentId
-      const documentId = parsedQuery.payload.documentId
       const organizationId = request.organizationId
       const projectId = request.project.id
       const agent = request.agent
@@ -43,10 +42,6 @@ export class StreamingController {
         throw new ForbiddenException("User content must not be empty")
       }
 
-      if (attachmentDocumentId && documentId) {
-        throw new ForbiddenException("Only one attachment document can be provided")
-      }
-
       return new Observable<StreamEvent>((subscriber) => {
         void (async () => {
           try {
@@ -56,7 +51,6 @@ export class StreamingController {
               sessionId,
               userContent,
               attachmentDocumentId,
-              documentId,
               notifyClient: (event) => {
                 subscriber.next(event)
               },

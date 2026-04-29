@@ -71,6 +71,20 @@ describe("AgentSessionMessagesRoutes.presignAttachmentDocument", () => {
       request: { payload },
     })
 
+  const getTemporaryUrlSubject = async (attachmentDocumentId: string) =>
+    request({
+      route: AgentSessionMessagesRoutes.getAttachmentDocumentTemporaryUrl,
+      pathParams: removeNullish({
+        organizationId,
+        projectId,
+        agentId,
+        agentSessionId,
+        attachmentDocumentId,
+      }),
+      token: accessToken,
+      request: { payload: { type: "live" } },
+    })
+
   it("should create an attachment document and return a signed upload URL", async () => {
     const { organization, project } = await createContext()
 
@@ -97,6 +111,21 @@ describe("AgentSessionMessagesRoutes.presignAttachmentDocument", () => {
     expect(attachmentDocument?.storageRelativePath).toBe(
       `${organization.id}/${project.id}/${response.body.data.attachmentDocumentId}.pdf`,
     )
+  })
+
+  it("should return a temporary URL for an attachment document", async () => {
+    await createContext()
+    const presignResponse = await subject({
+      type: "live",
+      fileName: "support-notes.pdf",
+      mimeType: "application/pdf",
+      size: 1234,
+    })
+
+    const response = await getTemporaryUrlSubject(presignResponse.body.data.attachmentDocumentId)
+
+    expectResponse(response, 201)
+    expect(response.body.data.url).toContain("/documents/")
   })
 
   it("should reject unsupported attachment document MIME types", async () => {

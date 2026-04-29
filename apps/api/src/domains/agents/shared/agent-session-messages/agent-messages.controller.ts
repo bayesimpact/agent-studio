@@ -133,6 +133,27 @@ export class AgentMessagesController {
 
     return { data: { attachmentDocumentId, uploadUrl } }
   }
+
+  @CheckPolicy((policy) => policy.canList())
+  @Post(AgentSessionMessagesRoutes.getAttachmentDocumentTemporaryUrl.path)
+  async getAttachmentDocumentTemporaryUrl(
+    @Req() request: EndpointRequestWithAgentSession<ConversationAgentSession | FormAgentSession>,
+    @Param("attachmentDocumentId") attachmentDocumentId: string,
+  ): Promise<typeof AgentSessionMessagesRoutes.getAttachmentDocumentTemporaryUrl.response> {
+    const attachmentDocument = await this.agentMessageAttachmentDocumentsService.findById({
+      connectScope: getRequiredConnectScope(request),
+      attachmentDocumentId,
+    })
+    if (!attachmentDocument) {
+      throw new NotFoundException("Attachment document not found")
+    }
+
+    return {
+      data: {
+        url: await this.fileStorageService.getTemporaryUrl(attachmentDocument.storageRelativePath),
+      },
+    }
+  }
 }
 
 function toDto(message: AgentMessage): AgentSessionMessageDto {
@@ -145,7 +166,6 @@ function toDto(message: AgentMessage): AgentSessionMessageDto {
     startedAt: message.startedAt?.toISOString(),
     completedAt: message.completedAt?.toISOString(),
     toolCalls: (message.toolCalls as AgentSessionMessageDto["toolCalls"]) ?? undefined,
-    documentId: message.documentId ?? undefined,
     attachmentDocumentId: message.attachmentDocumentId ?? undefined,
   }
 }

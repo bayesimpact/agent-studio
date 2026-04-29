@@ -37,9 +37,16 @@ export const AgentSessionMessagesRoutes = {
     method: "post",
     path: `${basePath}/messages/attachment-document/presign`,
   }),
+  getAttachmentDocumentTemporaryUrl: defineRoute<
+    ResponseData<{ url: string }>,
+    RequestPayload<{ type: BaseAgentSessionTypeDto }>
+  >({
+    method: "post",
+    path: `${basePath}/messages/attachment-document/:attachmentDocumentId/temporary-url`,
+  }),
   stream: defineRoute<
     ResponseData<AgentSessionStreamResponse>,
-    RequestPayload<{ content: string; attachmentDocumentId?: string; documentId?: string }>
+    RequestPayload<{ content: string; attachmentDocumentId?: string }>
   >({
     method: "post",
     path: `${basePath}/stream`,

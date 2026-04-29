@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState } from "react"
 import { useTranslation } from "react-i18next"
 import type { AgentSessionMessage } from "@/common/features/agents/agent-sessions/shared/agent-session-messages/agent-session-messages.models"
 import { useAppDispatch } from "@/common/store/hooks"
-import { getDocumentTemporaryUrl } from "@/studio/features/documents/documents.thunks"
+import { getAttachmentDocumentTemporaryUrl } from "../agent-session-messages.thunks"
 
 export function Attachment({ message }: { message: AgentSessionMessage }) {
   const { t } = useTranslation("agentSessionMessage")
@@ -13,16 +13,19 @@ export function Attachment({ message }: { message: AgentSessionMessage }) {
   const [url, setUrl] = useState<string>()
 
   const loadDocument = useCallback(async () => {
-    if (!message.documentId) return
-    const res = await dispatch(getDocumentTemporaryUrl({ documentId: message.documentId })).unwrap() // FIXME: onSuccess callback
-    if (res.url) setUrl(res.url)
-  }, [dispatch, message.documentId])
+    const attachmentDocumentId = message.attachmentDocumentId
+
+    if (!attachmentDocumentId) return
+
+    const res = await dispatch(getAttachmentDocumentTemporaryUrl({ attachmentDocumentId })).unwrap()
+    if (res?.url) setUrl(res.url)
+  }, [dispatch, message.attachmentDocumentId])
 
   useEffect(() => {
     loadDocument()
   }, [loadDocument])
 
-  if (!message.documentId) return null
+  if (!message.attachmentDocumentId) return null
   return (
     <Button variant="outline" size="sm" onClick={() => window.open(url, "_blank")} disabled={!url}>
       <PaperclipIcon className="size-4" /> {t("attachment")}

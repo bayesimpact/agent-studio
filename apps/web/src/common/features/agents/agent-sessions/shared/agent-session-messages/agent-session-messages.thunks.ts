@@ -43,6 +43,26 @@ export const getMessage = createAsyncThunk<AgentSessionMessage, string, ThunkCon
   },
 )
 
+export const getAttachmentDocumentTemporaryUrl = createAsyncThunk<
+  { url: string },
+  { attachmentDocumentId: string },
+  ThunkConfig
+>(
+  "agentSessionMessages/getAttachmentDocumentTemporaryUrl",
+  async ({ attachmentDocumentId }, { extra: { services }, getState }) => {
+    const state = getState()
+    const params = getCurrentIds({
+      state,
+      wantedIds: ["organizationId", "projectId", "agentId", "agentSessionId"],
+    })
+    return services.agentSessionMessages.getAttachmentDocumentTemporaryUrl({
+      ...params,
+      attachmentDocumentId,
+      payload: { type: buildType() },
+    })
+  },
+)
+
 export const sendMessage = createAsyncThunk<void, { content: string; file?: File }, ThunkConfig>(
   "agentSessionMessages/sendMessage",
   async ({ content, file }, { extra: { services }, dispatch, getState, signal }) => {
@@ -60,23 +80,25 @@ export const sendMessage = createAsyncThunk<void, { content: string; file?: File
     const userMessageId = generateId()
     const assistantMessageId = generateId()
 
-    let documentId: string | undefined
+    let attachmentDocumentId: string | undefined
 
     if (file) {
-      const document = await services.documents.uploadOne({
+      const attachmentDocument = await services.agentSessionMessages.uploadAttachmentDocument({
         organizationId,
         projectId,
+        agentId,
+        agentSessionId,
         file,
-        sourceType: "agentSessionMessage",
+        payload: { type: buildType() },
       })
-      documentId = document.id
+      attachmentDocumentId = attachmentDocument.attachmentDocumentId
     }
 
     const userMessage: AgentSessionMessage = {
       id: userMessageId,
       role: "user",
       content,
-      documentId,
+      attachmentDocumentId,
       createdAt: new Date().toISOString(),
     }
 
@@ -89,7 +111,7 @@ export const sendMessage = createAsyncThunk<void, { content: string; file?: File
         agentId,
         agentSessionId,
         content,
-        documentId,
+        attachmentDocumentId,
         handlers: {
           onStart: (event) => {
             // Update the optimistic message ID to match the backend's ID

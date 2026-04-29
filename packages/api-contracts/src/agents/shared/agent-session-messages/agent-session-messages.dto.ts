@@ -11,7 +11,6 @@ export type AgentSessionMessageDto = {
   id: string
   role: "user" | "assistant" | "tool"
   content: string
-  documentId?: string
   attachmentDocumentId?: string
   status?: "streaming" | "completed" | "aborted" | "error"
   createdAt?: string
