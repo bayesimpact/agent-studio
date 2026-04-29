@@ -15,7 +15,7 @@ const isProduction = process.env.NODE_ENV === "production"
 
 async function bootstrap() {
   enableDbListeners()
-  const frontendUrl = normalizeFrontendUrl(process.env.FRONTEND_URL)
+  const frontendUrls = parseFrontendUrls(process.env.FRONTEND_URL)
   const httpsOptions = loadHttpsCertificates()
   const logLevels = getLogLevels()
   const app = await NestFactory.create<NestExpressApplication>(AppModule, {
@@ -36,13 +36,12 @@ async function bootstrap() {
     }),
   )
   app.useGlobalFilters(new StackTraceLoggingExceptionFilter(app.getHttpAdapter()))
+  // CORS origins come exclusively from `FRONTEND_URL` (comma-separated).
+  // For local dev, set e.g.
+  //   FRONTEND_URL="https://connect.localhost:5173,https://connect.localhost:5174"
+  // (5173 = `vite dev`, 5174 = `vite preview` — see apps/web/vite.config.ts).
   app.enableCors({
-    origin: [
-      "http://localhost:5173",
-      "https://localhost:5173",
-      "https://connect.localhost:5173",
-      ...(frontendUrl ? [frontendUrl] : []),
-    ],
+    origin: frontendUrls,
     credentials: true,
   })
   const protocol = httpsOptions ? "https" : "http"
@@ -50,16 +49,31 @@ async function bootstrap() {
   Logger.log(`API server running on ${protocol}://connect.localhost:3000`, "Bootstrap")
 }
 
-function normalizeFrontendUrl(frontendUrl: string | undefined): string | undefined {
+const DEFAULT_LOCAL_FRONTEND_URLS = [
+  // `vite dev` and `vite preview` — see apps/web/vite.config.ts.
+  "https://connect.localhost:5173",
+  "https://connect.localhost:5174",
+]
+
+/**
+ * Parses `FRONTEND_URL` into a list of CORS origins. Accepts a single URL or
+ * a comma-separated list. Each entry is trimmed and normalized to https://
+ * if no scheme is given. When the env var is unset and we're not in
+ * production, falls back to the local dev/preview URLs so a fresh checkout
+ * works without extra `.env` setup. In production, an unset env var yields
+ * an empty array (no origins allowed).
+ */
+function parseFrontendUrls(frontendUrl: string | undefined): string[] {
   if (!frontendUrl) {
-    return undefined
+    return isProduction ? [] : DEFAULT_LOCAL_FRONTEND_URLS
   }
-
-  if (frontendUrl.startsWith("http://") || frontendUrl.startsWith("https://")) {
-    return frontendUrl
-  }
-
-  return `https://${frontendUrl}`
+  return frontendUrl
+    .split(",")
+    .map((url) => url.trim())
+    .filter(Boolean)
+    .map((url) =>
+      url.startsWith("http://") || url.startsWith("https://") ? url : `https://${url}`,
+    )
 }
 
 /**
