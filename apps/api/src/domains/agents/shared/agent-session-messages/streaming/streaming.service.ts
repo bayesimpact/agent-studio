@@ -37,6 +37,8 @@ import { ServiceWithLLM } from "@/external/llm"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
 import { McpClientService } from "@/external/mcp"
 import { AgentMessage } from "../agent-message.entity"
+// biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
+import { AgentMessageAttachmentDocumentsService } from "../agent-message-attachment-documents.service"
 import { buildConversationAgentPrompt } from "./master-promts/conversation-agent.prompt"
 import { buildFormAgentPrompt } from "./master-promts/form-agent.prompt"
 import { fillFormTool } from "./tools/fill-form.tool"
@@ -58,6 +60,7 @@ export class StreamingService extends ServiceWithLLM {
     @Inject(FILE_STORAGE_SERVICE)
     private readonly fileStorageService: IFileStorage,
     private readonly documentsService: DocumentsService,
+    private readonly agentMessageAttachmentDocumentsService: AgentMessageAttachmentDocumentsService,
 
     @Inject(FormAgentSessionsService)
     private readonly formAgentSessionsService: FormAgentSessionsService,
@@ -107,6 +110,7 @@ export class StreamingService extends ServiceWithLLM {
     sessionId,
     agent,
     userContent,
+    attachmentDocumentId,
     documentId,
     notifyClient,
   }: {
@@ -114,6 +118,7 @@ export class StreamingService extends ServiceWithLLM {
     sessionId: string
     agent: Agent
     userContent: string
+    attachmentDocumentId?: string
     documentId?: string
     notifyClient: NotifyClient
   }): AsyncGenerator<StreamEvent, void, unknown> {
@@ -121,6 +126,7 @@ export class StreamingService extends ServiceWithLLM {
       connectScope,
       sessionId,
       userContent,
+      attachmentDocumentId,
       documentId,
       agentType: agent.type,
     })
@@ -136,6 +142,7 @@ export class StreamingService extends ServiceWithLLM {
         sessionId,
         notifyClient,
         session: updatedSession,
+        attachmentDocumentId,
         documentId,
         connectScope,
         assistantMessageId,
@@ -187,6 +194,7 @@ export class StreamingService extends ServiceWithLLM {
     sessionId,
     notifyClient,
     session,
+    attachmentDocumentId,
     documentId,
     connectScope,
     assistantMessageId,
@@ -196,6 +204,7 @@ export class StreamingService extends ServiceWithLLM {
     sessionId: string
     notifyClient: NotifyClient
     session: ConversationAgentSession | FormAgentSession
+    attachmentDocumentId?: string
     documentId?: string
     connectScope: RequiredConnectScope
   }) {
@@ -232,10 +241,87 @@ export class StreamingService extends ServiceWithLLM {
     }
 
     const messages = await this.convertToLLMFormat(session.messages)
-    if (documentId)
+    if (attachmentDocumentId)
+      await this.handleAttachmentDocumentInLLMMessage({
+        llmMessages: messages,
+        attachmentDocumentId,
+        connectScope,
+      })
+    else if (documentId)
       await this.handleFileInLLMMessage({ llmMessages: messages, documentId, connectScope })
 
     return { config, metadata, messages, mcpClose }
+  }
+
+  private async handleAttachmentDocumentInLLMMessage({
+    llmMessages,
+    attachmentDocumentId,
+    connectScope,
+  }: {
+    llmMessages: LLMChatMessage[]
+    attachmentDocumentId: string
+    connectScope: RequiredConnectScope
+  }) {
+    const message = llmMessages.pop()
+    if (!message) return
+
+    const attachmentDocument = await this.agentMessageAttachmentDocumentsService.findById({
+      connectScope,
+      attachmentDocumentId,
+    })
+    if (!attachmentDocument) {
+      throw new Error(`Attachment document with ID ${attachmentDocumentId} not found`)
+    }
+
+    const url = await this.fileStorageService.getTemporaryUrl(
+      attachmentDocument.storageRelativePath,
+    )
+    const llmMessage: LLMChatMessage = {
+      role: "user",
+      content: [{ type: "text", text: message.content as string }],
+    }
+
+    const hasStorageBucketName: boolean = !!process.env.GCS_STORAGE_BUCKET_NAME
+
+    switch (attachmentDocument.mimeType) {
+      case "application/pdf":
+        {
+          const data = new URL(
+            hasStorageBucketName
+              ? url
+              : "https://www.impots.gouv.fr/sites/default/files/formulaires/2042/2025/2042_5180.pdf",
+          )
+
+          const content = llmMessage.content as Array<FilePart>
+          content.push({
+            type: "file",
+            mediaType: "application/pdf",
+            data,
+            filename: attachmentDocument.fileName,
+          })
+        }
+        break
+
+      case "image/png":
+      case "image/jpeg":
+      case "image/jpg":
+        {
+          const image = new URL(
+            hasStorageBucketName
+              ? url
+              : "https://www.oiseaux.net/photos/marc.fasol/images/id/canard.colvert.mafa.3p.230.h.jpg",
+          )
+
+          const content = llmMessage.content as Array<ImagePart>
+          content.push({ type: "image", image })
+        }
+        break
+
+      default:
+        throw new Error(`Unsupported attachment document type: ${attachmentDocument.mimeType}`)
+    }
+
+    llmMessages.push(llmMessage)
   }
 
   private async handleFileInLLMMessage({
@@ -397,12 +483,14 @@ export class StreamingService extends ServiceWithLLM {
   async prepareForStreaming({
     agentType,
     connectScope,
+    attachmentDocumentId,
     documentId,
     sessionId,
     userContent,
   }: {
     agentType: Agent["type"]
     connectScope: RequiredConnectScope
+    attachmentDocumentId?: string
     documentId?: string
     sessionId: string
     userContent: string
@@ -426,6 +514,7 @@ export class StreamingService extends ServiceWithLLM {
       completedAt: null,
       toolCalls: null,
       documentId: documentId ?? null,
+      attachmentDocumentId: attachmentDocumentId ?? null,
     })
 
     // Create empty assistant message with streaming status

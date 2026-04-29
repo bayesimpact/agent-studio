@@ -9,6 +9,7 @@ import { ExtractionAgentSession } from "@/domains/agents/extraction-agent-sessio
 import { FormAgentSession } from "@/domains/agents/form-agent-sessions/form-agent-session.entity"
 import { AgentMembership } from "@/domains/agents/memberships/agent-membership.entity"
 import { AgentMessage } from "@/domains/agents/shared/agent-session-messages/agent-message.entity"
+import { AgentMessageAttachmentDocument } from "@/domains/agents/shared/agent-session-messages/agent-message-attachment-document.entity"
 import { AgentMessageFeedback } from "@/domains/agents/shared/agent-session-messages/feedback/agent-message-feedback.entity"
 import { Document } from "@/domains/documents/document.entity"
 import { Evaluation } from "@/domains/evaluations/evaluation.entity"
@@ -37,6 +38,7 @@ export type AllRepositories = {
   agentCategoryRepository: Repository<AgentCategory>
   agentMcpServerRepository: Repository<AgentMcpServer>
   agentMembershipRepository: Repository<AgentMembership>
+  agentMessageAttachmentDocumentRepository: Repository<AgentMessageAttachmentDocument>
   agentMessageFeedbackRepository: Repository<AgentMessageFeedback>
   agentMessageRepository: Repository<AgentMessage>
   agentRepository: Repository<Agent>
@@ -75,6 +77,7 @@ export function buildAllRepositories(
     agentCategoryRepository: getRepository(AgentCategory),
     agentMcpServerRepository: getRepository(AgentMcpServer),
     agentMembershipRepository: getRepository(AgentMembership),
+    agentMessageAttachmentDocumentRepository: getRepository(AgentMessageAttachmentDocument),
     agentMessageFeedbackRepository: getRepository(AgentMessageFeedback),
     agentMessageRepository: getRepository(AgentMessage),
     agentRepository: getRepository(Agent),

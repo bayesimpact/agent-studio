@@ -3,6 +3,7 @@ import { ConnectEntity, ConnectEntityBase } from "@/common/entities/connect-enti
 import { Document } from "@/domains/documents/document.entity"
 import { ConversationAgentSession } from "../../conversation-agent-sessions/conversation-agent-session.entity"
 import { FormAgentSession } from "../../form-agent-sessions/form-agent-session.entity"
+import { AgentMessageAttachmentDocument } from "./agent-message-attachment-document.entity"
 import { AgentMessageFeedback } from "./feedback/agent-message-feedback.entity"
 
 export type MessageStatus = "streaming" | "completed" | "aborted" | "error"
@@ -65,6 +66,12 @@ export class AgentMessage extends ConnectEntityBase {
   @OneToOne(() => Document, { nullable: true, onDelete: "SET NULL" })
   @JoinColumn({ name: "document_id" })
   document!: Document | null
+
+  @Column({ type: "uuid", name: "attachment_document_id", nullable: true })
+  attachmentDocumentId!: string | null
+  @OneToOne(() => AgentMessageAttachmentDocument, { nullable: true, onDelete: "SET NULL" })
+  @JoinColumn({ name: "attachment_document_id" })
+  attachmentDocument!: AgentMessageAttachmentDocument | null
 
   @OneToMany(
     () => AgentMessageFeedback,

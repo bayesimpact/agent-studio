@@ -1,7 +1,11 @@
 import type { RequestPayload, ResponseData } from "../../../generic"
 import { defineRoute } from "../../../helpers"
 import type { BaseAgentSessionTypeDto } from "../../conversation-agent-sessions/conversation-agent-sessions.dto"
-import type { AgentSessionMessageDto } from "./agent-session-messages.dto"
+import type {
+  AgentSessionMessageDto,
+  PresignAgentSessionMessageAttachmentDocumentRequestDto,
+  PresignAgentSessionMessageAttachmentDocumentResponseDto,
+} from "./agent-session-messages.dto"
 
 // Streaming responses are sent as text/event-stream (SSE) and do not follow the usual ResponseData<T> shape.
 // We still define a route for path/method typing. The response type is treated as unknown by clients.
@@ -24,9 +28,18 @@ export const AgentSessionMessagesRoutes = {
     method: "post",
     path: `${basePath}/messages/:messageId`,
   }),
+  presignAttachmentDocument: defineRoute<
+    ResponseData<PresignAgentSessionMessageAttachmentDocumentResponseDto>,
+    RequestPayload<
+      { type: BaseAgentSessionTypeDto } & PresignAgentSessionMessageAttachmentDocumentRequestDto
+    >
+  >({
+    method: "post",
+    path: `${basePath}/messages/attachment-document/presign`,
+  }),
   stream: defineRoute<
     ResponseData<AgentSessionStreamResponse>,
-    RequestPayload<{ content: string; documentId?: string }>
+    RequestPayload<{ content: string; attachmentDocumentId?: string; documentId?: string }>
   >({
     method: "post",
     path: `${basePath}/stream`,

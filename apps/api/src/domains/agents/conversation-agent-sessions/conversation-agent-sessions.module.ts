@@ -5,6 +5,7 @@ import {
   moduleImports,
   moduleProviders,
 } from "../base-agent-sessions/base-agent-sessions-module.helpers"
+import { AgentMessageAttachmentDocumentsService } from "../shared/agent-session-messages/agent-message-attachment-documents.service"
 import { AgentMessagesController } from "../shared/agent-session-messages/agent-messages.controller"
 import { StreamingModule } from "../shared/agent-session-messages/streaming/streaming.module"
 import { ConversationAgentSessionsController } from "./conversation-agent-sessions.controller"
@@ -16,7 +17,11 @@ import { ConversationAgentSessionsService } from "./conversation-agent-sessions.
     ...moduleImports,
     forwardRef(() => StreamingModule),
   ],
-  providers: [...moduleProviders, ConversationAgentSessionsService],
+  providers: [
+    ...moduleProviders,
+    AgentMessageAttachmentDocumentsService,
+    ConversationAgentSessionsService,
+  ],
   controllers: [AgentMessagesController, ConversationAgentSessionsController],
   exports: [ConversationAgentSessionsService],
 })

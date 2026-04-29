@@ -12,6 +12,7 @@ export type AgentSessionMessageDto = {
   role: "user" | "assistant" | "tool"
   content: string
   documentId?: string
+  attachmentDocumentId?: string
   status?: "streaming" | "completed" | "aborted" | "error"
   createdAt?: string
   startedAt?: string
@@ -21,6 +22,27 @@ export type AgentSessionMessageDto = {
     name: ToolName
     arguments: Record<string, unknown>
   }>
+}
+
+export const agentSessionMessageAttachmentAllowedMimeTypes = [
+  "application/pdf",
+  "image/png",
+  "image/jpeg",
+  "image/jpg",
+] as const
+
+export type AgentSessionMessageAttachmentMimeType =
+  (typeof agentSessionMessageAttachmentAllowedMimeTypes)[number]
+
+export type PresignAgentSessionMessageAttachmentDocumentRequestDto = {
+  fileName: string
+  mimeType: AgentSessionMessageAttachmentMimeType
+  size: number
+}
+
+export type PresignAgentSessionMessageAttachmentDocumentResponseDto = {
+  attachmentDocumentId: string
+  uploadUrl: string
 }
 
 export type StreamEventPayload =
