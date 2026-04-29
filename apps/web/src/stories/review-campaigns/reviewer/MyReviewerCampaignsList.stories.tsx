@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite"
+import { withRouter } from "storybook-addon-remix-react-router"
 import { ReviewerCampaignsList } from "@/reviewer/features/review-campaigns/components/ReviewerCampaignsList"
-import { withRouter } from "@/stories/decorators/with-redux"
 import { mockMyReviewerCampaigns } from "./fixtures"
 
 const meta = {
