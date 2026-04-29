@@ -16,7 +16,7 @@ import { useForm, useWatch } from "react-hook-form"
 import { useTranslation } from "react-i18next"
 import { z } from "zod"
 import { useAppDispatch } from "@/common/store/hooks"
-import { inviteAgentMembers } from "@/studio/features/agent-memberships/agent-memberships.thunks"
+import { agentMembershipsActions } from "../agent-memberships.slice"
 
 export function MembersCreator() {
   const { t } = useTranslation()
@@ -115,7 +115,7 @@ function CreateForm({ isOpen, onClose }: { isOpen: boolean; onClose: () => void 
 
   const handleFormSubmit = (data: FormValues) => {
     if (data.emails.length === 0) return
-    dispatch(inviteAgentMembers({ emails: data.emails }))
+    dispatch(agentMembershipsActions.invite({ emails: data.emails }))
     onClose()
   }
 

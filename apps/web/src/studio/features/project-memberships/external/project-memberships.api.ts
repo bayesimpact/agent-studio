@@ -1,6 +1,10 @@
-import { type ProjectMembershipDto, ProjectMembershipRoutes } from "@caseai-connect/api-contracts"
+import {
+  type ProjectMemberAgentDto,
+  type ProjectMembershipDto,
+  ProjectMembershipRoutes,
+} from "@caseai-connect/api-contracts"
 import { getAxiosInstance } from "@/external/axios"
-import type { ProjectMembership } from "../project-memberships.models"
+import type { ProjectMemberAgent, ProjectMembership } from "../project-memberships.models"
 import type { IProjectMembershipsSpi } from "../project-memberships.spi"
 
 export default {
@@ -25,6 +29,17 @@ export default {
       ProjectMembershipRoutes.deleteOne.getPath({ organizationId, projectId, membershipId }),
     )
   },
+  getMemberAgents: async ({ organizationId, projectId, membershipId }) => {
+    const axios = getAxiosInstance()
+    const response = await axios.get<typeof ProjectMembershipRoutes.getMemberAgents.response>(
+      ProjectMembershipRoutes.getMemberAgents.getPath({
+        organizationId,
+        projectId,
+        membershipId,
+      }),
+    )
+    return response.data.data.map(memberAgentFromDto)
+  },
 } satisfies IProjectMembershipsSpi
 
 const fromDto = (dto: ProjectMembershipDto): ProjectMembership => ({
@@ -36,4 +51,13 @@ const fromDto = (dto: ProjectMembershipDto): ProjectMembership => ({
   status: dto.status,
   createdAt: dto.createdAt,
   role: dto.role,
+})
+
+const memberAgentFromDto = (dto: ProjectMemberAgentDto): ProjectMemberAgent => ({
+  agentId: dto.agentId,
+  agentName: dto.agentName,
+  agentType: dto.agentType,
+  membershipId: dto.membershipId,
+  role: dto.role,
+  status: dto.status,
 })

@@ -1,19 +1,30 @@
+import { useEffect } from "react"
 import { useTranslation } from "react-i18next"
 import { useNavigate } from "react-router-dom"
+import { Grid, GridContent, GridHeader, GridItem } from "@/common/components/grid/Grid"
 import type { Agent } from "@/common/features/agents/agents.models"
 import { selectCurrentAgentData } from "@/common/features/agents/agents.selectors"
 import { useGetPath } from "@/common/hooks/use-build-path"
-import { useAppSelector } from "@/common/store/hooks"
+import { AsyncRoute } from "@/common/routes/AsyncRoute"
+import { useAppDispatch, useAppSelector } from "@/common/store/hooks"
 import type { AgentMembership } from "@/studio/features/agent-memberships/agent-memberships.models"
 import { selectAgentMemberships } from "@/studio/features/agent-memberships/agent-memberships.selectors"
 import { AgentMembershipItem } from "@/studio/features/agent-memberships/components/AgentMembershipItem"
 import { MembersCreator } from "@/studio/features/agent-memberships/components/MembersCreator"
-import { Grid, GridContent, GridHeader, GridItem } from "../../common/components/grid/Grid"
-import { AsyncRoute } from "../../common/routes/AsyncRoute"
+import { agentMembershipsActions } from "../features/agent-memberships/agent-memberships.slice"
 
 export function AgentMembershipsRoute() {
+  const dispatch = useAppDispatch()
   const agent = useAppSelector(selectCurrentAgentData)
   const memberships = useAppSelector(selectAgentMemberships)
+
+  // FIXME: Alexis -> replace with useMount hook when it will be available
+  useEffect(() => {
+    dispatch(agentMembershipsActions.mount())
+    return () => {
+      dispatch(agentMembershipsActions.unmount())
+    }
+  }, [dispatch])
 
   return (
     <AsyncRoute data={[memberships, agent]}>

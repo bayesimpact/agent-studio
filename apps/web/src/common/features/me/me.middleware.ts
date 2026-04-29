@@ -2,9 +2,18 @@ import { createListenerMiddleware } from "@reduxjs/toolkit"
 import { notificationsActions } from "@/common/features/notifications/notifications.slice"
 import type { AppDispatch, RootState } from "@/common/store/types"
 import { logoutAuth0 } from "@/external/auth0Client"
-import { fetchMe } from "./me.thunks"
+import { acceptInvitation } from "@/studio/features/invitations/invitations.thunks"
+import { fetchMe, fetchPendingInvitations } from "./me.thunks"
 
 const listenerMiddleware = createListenerMiddleware<RootState, AppDispatch>()
+
+listenerMiddleware.startListening({
+  actionCreator: acceptInvitation.fulfilled,
+  effect: async (_, listenerApi) => {
+    listenerApi.dispatch(fetchPendingInvitations())
+    listenerApi.dispatch(fetchMe())
+  },
+})
 
 listenerMiddleware.startListening({
   actionCreator: fetchMe.rejected,

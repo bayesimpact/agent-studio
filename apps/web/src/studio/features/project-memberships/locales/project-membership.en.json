@@ -4,12 +4,22 @@
     "props": {
       "userName": "User Name",
       "userEmail": "User Email",
+      "role": "Role",
       "status": "Status",
       "createdAt": "Created At",
       "validation": {
         "emailDuplicate": "Email already added",
         "emailInvalid": "Invalid email address"
       }
+    },
+    "profile": {
+      "joined": "Joined {{date}}",
+      "invited": "Invited {{date}}",
+      "remove": "Remove member",
+      "agent": "Agent",
+      "agentRole": "Role",
+      "noAccess": "No access",
+      "noAgents": "This project has no agents."
     },
     "statuses": {
       "sent": "Sent",
@@ -25,6 +35,7 @@
     "list": {
       "title": "Members of {{projectName}}",
       "description": "Invite members to join your workspace to collaborate together.",
+      "searchPlaceholder": "Search by name or email…",
       "empty": {
         "title": "No members",
         "description": "Invite admins to join your workspace to collaborate together."

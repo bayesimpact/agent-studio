@@ -1,18 +1,21 @@
 import { createSlice } from "@reduxjs/toolkit"
 import { ADS, type AsyncData, defaultAsyncData } from "@/common/store/async-data-status"
-import type { ProjectMembership } from "./project-memberships.models"
+import type { ProjectMemberAgent, ProjectMembership } from "./project-memberships.models"
 import {
   inviteProjectMembers,
+  listProjectMemberAgents,
   listProjectMemberships,
   removeProjectMembership,
 } from "./project-memberships.thunks"
 
 interface State {
   data: AsyncData<ProjectMembership[]>
+  memberAgents: AsyncData<ProjectMemberAgent[]>
 }
 
 const initialState: State = {
   data: defaultAsyncData,
+  memberAgents: defaultAsyncData,
 }
 
 const slice = createSlice({
@@ -51,6 +54,23 @@ const slice = createSlice({
         state.data.value = state.data.value.filter((membership) => membership.id !== membershipId)
       }
     })
+
+    builder
+      .addCase(listProjectMemberAgents.pending, (state) => {
+        if (!ADS.isFulfilled(state.memberAgents)) state.memberAgents.status = ADS.Loading
+        state.memberAgents.error = null
+      })
+      .addCase(listProjectMemberAgents.fulfilled, (state, action) => {
+        state.memberAgents = {
+          status: ADS.Fulfilled,
+          error: null,
+          value: action.payload,
+        }
+      })
+      .addCase(listProjectMemberAgents.rejected, (state, action) => {
+        state.memberAgents.status = ADS.Error
+        state.memberAgents.error = action.error.message || "Failed to list member agents"
+      })
   },
 })
 

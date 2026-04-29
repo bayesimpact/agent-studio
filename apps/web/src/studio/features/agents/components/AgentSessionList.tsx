@@ -11,12 +11,12 @@ import type { Agent } from "@/common/features/agents/agents.models"
 import { getAgentIcon } from "@/common/features/agents/components/AgentIcon"
 import { AgentSessionItem } from "@/common/features/agents/components/AgentSessionItem"
 import { ExtractionSessionCreator } from "@/common/features/agents/components/ExtractionAgentSessionCreator"
+import { ExtractionSessionItem } from "@/common/features/agents/components/ExtractionAgentSessionItem"
 import { selectCurrentOrganizationId } from "@/common/features/organizations/organizations.selectors"
 import { selectCurrentProjectId } from "@/common/features/projects/projects.selectors"
 import { useGetPath } from "@/common/hooks/use-build-path"
 import { ErrorRoute } from "@/common/routes/ErrorRoute"
 import { useAppSelector } from "@/common/store/hooks"
-import { ExtractionSessionItem } from "../../../../common/features/agents/components/ExtractionAgentSessionItem"
 import { AgentActions } from "./AgentActions"
 import { AgentSessionListHeader } from "./AgentSessionListHeader"
 
@@ -56,6 +56,7 @@ export function ConversationAgentSessionList({
               projectId={projectId}
               agentSession={session}
               agentId={agent.id}
+              agentType={agent.type}
             />
           ))}
         </GridContent>
@@ -99,6 +100,7 @@ export function FormAgentSessionList({
               projectId={projectId}
               agentSession={session}
               agentId={agent.id}
+              agentType={agent.type}
             />
           ))}
         </GridContent>

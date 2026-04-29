@@ -4,3 +4,6 @@ export const selectProjectMemberships = (state: RootState) => state.studio.proje
 
 export const selectProjectMembershipsStatus = (state: RootState) =>
   state.studio.projectMemberships.data.status
+
+export const selectProjectMemberAgents = (state: RootState) =>
+  state.studio.projectMemberships.memberAgents

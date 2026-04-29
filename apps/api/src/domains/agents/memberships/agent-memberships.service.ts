@@ -4,6 +4,7 @@ import { InjectRepository } from "@nestjs/typeorm"
 import type { EntityManager, Repository } from "typeorm"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
 import { DataSource, In } from "typeorm"
+import { v4 } from "uuid"
 import {
   INVITATION_SENDER,
   type InvitationSender,
@@ -50,6 +51,39 @@ export class AgentMembershipsService {
       relations: ["user"],
       order: { createdAt: "DESC" },
     })
+  }
+
+  async listProjectMemberAgents({
+    projectId,
+    userId,
+  }: {
+    projectId: string
+    userId: string
+  }): Promise<
+    Array<{
+      agent: Pick<Agent, "id" | "name" | "type">
+      membership: AgentMembership | null
+    }>
+  > {
+    const agents = await this.dataSource.getRepository(Agent).find({
+      where: { projectId },
+      select: { id: true, name: true, type: true },
+      order: { createdAt: "ASC" },
+    })
+
+    if (agents.length === 0) return []
+
+    const memberships = await this.agentMembershipRepository.find({
+      where: { userId, agentId: In(agents.map((agent) => agent.id)) },
+    })
+    const membershipByAgentId = new Map(
+      memberships.map((membership) => [membership.agentId, membership]),
+    )
+
+    return agents.map((agent) => ({
+      agent,
+      membership: membershipByAgentId.get(agent.id) ?? null,
+    }))
   }
 
   async createAgentOwnerMembership(params: {
@@ -115,33 +149,44 @@ export class AgentMembershipsService {
     userRepo: Repository<User>
     membershipRepo: Repository<AgentMembership>
   }): Promise<AgentMembership | null> {
-    const normalizedEmail = email.trim().toLowerCase()
+    async function handleMembership(ticketId: string, user: User): Promise<AgentMembership | null> {
+      const existingMembership = await membershipRepo.findOne({
+        where: { agentId, userId: user.id },
+      })
 
-    const user = await this.findOrCreatePlaceholderUser({ userRepo, email: normalizedEmail })
+      if (existingMembership) {
+        return existingMembership
+      }
 
-    const existingMembership = await membershipRepo.findOne({
-      where: { agentId, userId: user.id },
-    })
-
-    if (existingMembership) {
-      return null
+      const newMembership = membershipRepo.create({
+        agentId,
+        userId: user.id,
+        invitationToken: ticketId,
+        status: "sent",
+        role: "member",
+      })
+      const savedMembership = await membershipRepo.save(newMembership)
+      savedMembership.user = user
+      return savedMembership
     }
+
+    const existingUser = await userRepo.findOne({ where: { email } })
+    if (existingUser) {
+      return handleMembership(
+        v4(), // fake ticketId
+        existingUser,
+      )
+    }
+
+    const normalizedEmail = email.trim().toLowerCase()
+    const user = await this.createPlaceholderUser({ userRepo, email: normalizedEmail })
 
     const { ticketId } = await this.invitationSender.sendInvitation({
       inviteeEmail: normalizedEmail,
       inviterName,
     })
 
-    const newMembership = membershipRepo.create({
-      agentId,
-      userId: user.id,
-      invitationToken: ticketId,
-      status: "sent",
-      role: "member",
-    })
-    const savedMembership = await membershipRepo.save(newMembership)
-    savedMembership.user = user
-    return savedMembership
+    return handleMembership(ticketId, user)
   }
 
   /**
@@ -343,16 +388,13 @@ export class AgentMembershipsService {
     await manager.delete(AgentMembership, { agentId: In(agentIds), userId })
   }
 
-  private async findOrCreatePlaceholderUser({
+  private async createPlaceholderUser({
     userRepo,
     email,
   }: {
     userRepo: Repository<User>
     email: string
   }): Promise<User> {
-    const existing = await userRepo.findOne({ where: { email } })
-    if (existing) return existing
-
     const placeholderAuth0Id = `${PLACEHOLDER_AUTH0_ID_PREFIX}${randomUUID().slice(-12)}`
     const user = userRepo.create({
       auth0Id: placeholderAuth0Id,
@@ -373,7 +415,13 @@ export class AgentMembershipsService {
     projectId: string
   }): Promise<void> {
     const existing = await projectMembershipRepo.findOne({ where: { userId, projectId } })
-    if (existing) return
+    if (existing) {
+      if (existing.status !== "accepted") {
+        existing.status = "accepted"
+        await projectMembershipRepo.save(existing)
+      }
+      return
+    }
 
     const projectMembership = projectMembershipRepo.create({
       userId,

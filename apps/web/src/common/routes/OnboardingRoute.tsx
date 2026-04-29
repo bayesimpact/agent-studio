@@ -1,5 +1,6 @@
 import { Button } from "@caseai-connect/ui/shad/button"
 import { useSidebar } from "@caseai-connect/ui/shad/sidebar"
+import { CheckCircleIcon } from "lucide-react"
 import { useEffect } from "react"
 import { useTranslation } from "react-i18next"
 import { Grid, GridContent, GridHeader, GridItem } from "@/common/components/grid/Grid"
@@ -7,16 +8,26 @@ import { OrganizationCreator } from "@/common/components/organization/Organizati
 import { SidebarLayout } from "@/common/components/sidebar/SidebarLayout"
 import type { Organization } from "@/common/features/organizations/organizations.models"
 import { selectOrganizationsData } from "@/common/features/organizations/organizations.selectors"
-import { useAppSelector } from "@/common/store/hooks"
+import { useAppDispatch, useAppSelector } from "@/common/store/hooks"
 import { DeskRouteNames } from "@/desk/routes/helpers"
 import { EvalRouteNames } from "@/eval/routes/helpers"
 import { buildReviewerHomePath } from "@/reviewer/routes/helpers"
+import { acceptInvitation } from "@/studio/features/invitations/invitations.thunks"
 import { ProjectCreatorButton } from "@/studio/features/projects/components/ProjectCreator"
 import { StudioRouteNames } from "@/studio/routes/helpers"
 import { buildTesterHomePath } from "@/tester/routes/helpers"
 import { Wrap } from "../components/layouts/Wrap"
-import type { User } from "../features/me/me.models"
-import { selectMe, selectMyActiveReviewCampaignMemberships } from "../features/me/me.selectors"
+import type {
+  PendingAgentInvitation,
+  PendingInvitations,
+  PendingProjectInvitation,
+  User,
+} from "../features/me/me.models"
+import {
+  selectMe,
+  selectMyActiveReviewCampaignMemberships,
+  selectPendingInvitations,
+} from "../features/me/me.selectors"
 import type { Project } from "../features/projects/projects.models"
 import { useAbility } from "../hooks/use-ability"
 import { useBuildPath } from "../hooks/use-build-path"
@@ -27,22 +38,42 @@ import { AsyncRoute } from "./AsyncRoute"
 export function OnboardingRoute() {
   const user = useAppSelector(selectMe)
   const organizations = useAppSelector(selectOrganizationsData)
+  const invitations = useAppSelector(selectPendingInvitations)
   return (
-    <AsyncRoute data={[user, organizations]}>
-      {([userValue, organizationsValue]) => (
-        <WithData user={userValue} organizations={organizationsValue} />
+    <AsyncRoute data={[user, organizations, invitations]}>
+      {([userValue, organizationsValue, invitationsValue]) => (
+        <WithData
+          user={userValue}
+          organizations={organizationsValue}
+          invitations={invitationsValue}
+        />
       )}
     </AsyncRoute>
   )
 }
 
-function WithData({ user, organizations }: { user: User; organizations: Organization[] }) {
+function WithData({
+  user,
+  organizations,
+  invitations,
+}: {
+  user: User
+  organizations: Organization[]
+  invitations: PendingInvitations
+}) {
   const orgsCount = organizations.length
-  if (orgsCount === 0) return <OrganizationCreator />
+  const hasPendingInvitations =
+    invitations.projectInvitations.length > 0 || invitations.agentInvitations.length > 0
+  if (orgsCount === 0 && !hasPendingInvitations) return <OrganizationCreator />
 
   return (
     <SidebarLayout hideIcon user={{ name: user.name, email: user.email }}>
-      <SidebarContent organizations={organizations} user={user} orgsCount={orgsCount} />
+      <SidebarContent
+        organizations={organizations}
+        user={user}
+        orgsCount={orgsCount}
+        invitations={invitations}
+      />
     </SidebarLayout>
   )
 }
@@ -51,30 +82,120 @@ function SidebarContent({
   organizations,
   user,
   orgsCount,
+  invitations,
 }: {
   organizations: Organization[]
   user: User
   orgsCount: number
+  invitations: PendingInvitations
 }) {
   const { t } = useTranslation()
   const { setOpen } = useSidebar()
   useEffect(() => {
     setOpen(false)
   }, [setOpen])
+  const hasPendingInvitations =
+    invitations.projectInvitations.length > 0 || invitations.agentInvitations.length > 0
   return (
-    <Wrap>
-      <Grid cols={1} total={orgsCount}>
-        <GridHeader
-          title={t("organization:list:title", { name: user.name })}
-          description={t("organization:list:description")}
-        />
-        <GridContent>
-          {organizations.map((organization, index) => (
-            <OrganizationItem key={organization.id} organization={organization} index={index} />
-          ))}
-        </GridContent>
-      </Grid>
-    </Wrap>
+    <div className="flex flex-col">
+      <Wrap>
+        <Grid cols={1} total={orgsCount}>
+          <GridHeader title={t("organization:list:title", { name: user.name })} />
+
+          {hasPendingInvitations && (
+            <div className="m-6 border rounded-2xl overflow-hidden">
+              <PendingInvitationList invitations={invitations} />
+            </div>
+          )}
+
+          <GridContent>
+            {organizations.map((organization, index) => (
+              <OrganizationItem key={organization.id} organization={organization} index={index} />
+            ))}
+          </GridContent>
+        </Grid>
+      </Wrap>
+    </div>
+  )
+}
+
+function PendingInvitationList({ invitations }: { invitations: PendingInvitations }) {
+  const { t } = useTranslation()
+  const { projectInvitations, agentInvitations } = invitations
+  const total = projectInvitations.length + agentInvitations.length
+  if (total === 0) return null
+  return (
+    <Grid cols={3} total={total}>
+      <GridHeader title={t("me:invitations:title")} description={t("me:invitations:description")} />
+
+      <GridContent>
+        {projectInvitations.map((invitation, index) => (
+          <PendingProjectInvitationItem key={invitation.id} invitation={invitation} index={index} />
+        ))}
+
+        {agentInvitations.map((invitation, index) => (
+          <PendingAgentInvitationItem
+            key={invitation.id}
+            invitation={invitation}
+            index={projectInvitations.length + index}
+          />
+        ))}
+      </GridContent>
+    </Grid>
+  )
+}
+
+function PendingProjectInvitationItem({
+  invitation,
+  index,
+}: {
+  invitation: PendingProjectInvitation
+  index: number
+}) {
+  const dispatch = useAppDispatch()
+  const { t } = useTranslation()
+  const handleClick = () => {
+    dispatch(acceptInvitation({ ticketId: invitation.invitationToken }))
+  }
+  return (
+    <GridItem
+      index={index}
+      badge={t("me:invitations:projectBadge")}
+      title={invitation.projectName}
+      description={`${invitation.organizationName} · ${t("me:invitations:roleLabel")}: ${invitation.role}`}
+      action={
+        <Button onClick={handleClick}>
+          {t("actions:accept")} <CheckCircleIcon />
+        </Button>
+      }
+    />
+  )
+}
+
+function PendingAgentInvitationItem({
+  invitation,
+  index,
+}: {
+  invitation: PendingAgentInvitation
+  index: number
+}) {
+  const dispatch = useAppDispatch()
+  const { t } = useTranslation()
+  const handleClick = () => {
+    dispatch(acceptInvitation({ ticketId: invitation.invitationToken }))
+  }
+  return (
+    <GridItem
+      index={index}
+      badge={t("me:invitations:agentBadge")}
+      title={invitation.agentName}
+      description={`${invitation.organizationName} · ${invitation.projectName} · ${t("me:invitations:roleLabel")}: ${invitation.role}`}
+      action={
+        <Button onClick={handleClick}>
+          {t("actions:accept")} <CheckCircleIcon />
+        </Button>
+      }
+    />
   )
 }
 
@@ -85,6 +206,7 @@ function OrganizationItem({ organization, index }: { organization: Organization;
     organizationId: organization.id,
   })
   const extraItems = canCreateProject ? 1 : 0
+  if (organization.projects.length === 0) return
   return (
     <GridItem
       className="bg-gray-50"

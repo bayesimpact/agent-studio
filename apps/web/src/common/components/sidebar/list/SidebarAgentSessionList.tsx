@@ -11,6 +11,7 @@ import {
   SidebarMenuSubItem,
   useSidebar,
 } from "@caseai-connect/ui/shad/sidebar"
+import { cn } from "@caseai-connect/ui/utils"
 import { MessagesSquareIcon, MoreHorizontalIcon, Trash2Icon } from "lucide-react"
 import { useTranslation } from "react-i18next"
 import { Link, useNavigate } from "react-router-dom"
@@ -102,7 +103,11 @@ function SessionList({
       {isActive &&
         items.map((item) => (
           <SidebarMenuSubItem key={item.id}>
-            <SidebarMenuSubButton asChild isActive={item.isActive}>
+            <SidebarMenuSubButton
+              asChild
+              isActive={item.isActive}
+              className={cn(item.isActive && "font-semibold")}
+            >
               <Link to={item.url}>
                 {item.icon && <item.icon />}
                 <span>{item.title}</span>

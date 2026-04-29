@@ -4,6 +4,7 @@ import { InjectRepository } from "@nestjs/typeorm"
 import type { Repository } from "typeorm"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
 import { DataSource } from "typeorm"
+import { v4 } from "uuid"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
 import { AgentMembershipsService } from "@/domains/agents/memberships/agent-memberships.service"
 import {
@@ -52,6 +53,10 @@ export class ProjectMembershipsService {
       relations: ["user"],
       order: { createdAt: "DESC" },
     })
+  }
+
+  async listMemberAgents(params: { projectId: string; userId: string }) {
+    return this.agentMembershipsService.listProjectMemberAgents(params)
   }
 
   async createProjectOwnerMembership({
@@ -125,27 +130,54 @@ export class ProjectMembershipsService {
     userRepo: Repository<User>
     membershipRepo: Repository<ProjectMembership>
   }): Promise<ProjectMembership | null> {
-    const normalizedEmail = email.trim().toLowerCase()
+    async function handleMembership(
+      ticketId: string,
+      user: User,
+      agentMembershipsService: AgentMembershipsService,
+    ): Promise<ProjectMembership | null> {
+      // Check if membership already exists — upgrade to admin if currently member
+      const existingMembership = await membershipRepo.findOne({
+        where: { projectId, userId: user.id },
+      })
 
-    const user = await this.findOrCreatePlaceholderUser({ userRepo, email: normalizedEmail })
-
-    // Check if membership already exists — upgrade to admin if currently member
-    const existingMembership = await membershipRepo.findOne({
-      where: { projectId, userId: user.id },
-    })
-
-    if (existingMembership) {
-      if (existingMembership.role !== "admin") {
-        existingMembership.role = "admin"
-        await membershipRepo.save(existingMembership)
-        await this.agentMembershipsService.createAdminAgentMembershipsForUserInProject({
-          manager: membershipRepo.manager,
-          userId: user.id,
-          projectId,
-        })
+      if (existingMembership) {
+        if (existingMembership.role !== "admin") {
+          existingMembership.role = "admin"
+          await membershipRepo.save(existingMembership)
+          await agentMembershipsService.createAdminAgentMembershipsForUserInProject({
+            manager: membershipRepo.manager,
+            userId: user.id,
+            projectId,
+          })
+        }
+        return null
       }
-      return null
+
+      const newMembership = membershipRepo.create({
+        projectId,
+        userId: user.id,
+        invitationToken: ticketId,
+        status: "sent",
+        role: "admin",
+      })
+
+      const savedMembership = await membershipRepo.save(newMembership)
+      savedMembership.user = user
+
+      return savedMembership
     }
+
+    const existingUser = await userRepo.findOne({ where: { email } })
+    if (existingUser) {
+      return handleMembership(
+        v4(), // fake ticketId
+        existingUser,
+        this.agentMembershipsService,
+      )
+    }
+
+    const normalizedEmail = email.trim().toLowerCase()
+    const user = await this.createPlaceholderUser({ userRepo, email: normalizedEmail })
 
     // Send Auth0 invitation — if this throws, the entire transaction rolls back
     const { ticketId } = await this.invitationSender.sendInvitation({
@@ -153,19 +185,7 @@ export class ProjectMembershipsService {
       inviterName,
     })
 
-    // Create membership with the Auth0 ticket_id as the invitation token
-    const membership = membershipRepo.create({
-      projectId,
-      userId: user.id,
-      invitationToken: ticketId,
-      status: "sent",
-      role: "admin",
-    })
-
-    const savedMembership = await membershipRepo.save(membership)
-    savedMembership.user = user
-
-    return savedMembership
+    return handleMembership(ticketId, user, this.agentMembershipsService)
   }
 
   /**
@@ -237,16 +257,13 @@ export class ProjectMembershipsService {
    * Invites a single user to a project by email.
    * Returns the created membership, or null if the user is already a member.
    */
-  private async findOrCreatePlaceholderUser({
+  private async createPlaceholderUser({
     email,
     userRepo,
   }: {
     userRepo: Repository<User>
     email: string
   }): Promise<User> {
-    const existing = await userRepo.findOne({ where: { email } })
-    if (existing) return existing
-
     const placeholderAuth0Id = `${PLACEHOLDER_AUTH0_ID_PREFIX}${randomUUID().slice(-12)}`
     const user = userRepo.create({
       auth0Id: placeholderAuth0Id,

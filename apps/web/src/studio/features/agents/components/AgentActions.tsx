@@ -3,6 +3,7 @@ import { ExternalLinkIcon, UsersIcon } from "lucide-react"
 import { useTranslation } from "react-i18next"
 import { useNavigate } from "react-router-dom"
 import type { Agent } from "@/common/features/agents/agents.models"
+import { useAbility } from "@/common/hooks/use-ability"
 import { useGetPath } from "@/common/hooks/use-build-path"
 import { DeskRouteNames } from "@/desk/routes/helpers"
 import { AgentDeletorWithTrigger } from "@/studio/features/agents/components/AgentDeletor"
@@ -13,6 +14,8 @@ export function AgentActions({ organizationId, agent }: { organizationId: string
   const { t } = useTranslation()
   const { getPath } = useGetPath()
   const path = getPath("agent", { forceInterface: DeskRouteNames.APP })
+  const { abilities } = useAbility()
+  const canManageAgent = abilities.canManageAgent({ agentId: agent.id })
   return (
     <>
       <Button variant="secondary" asChild>
@@ -22,15 +25,19 @@ export function AgentActions({ organizationId, agent }: { organizationId: string
         </a>
       </Button>
 
-      <NavAgentMemberships
-        organizationId={organizationId}
-        projectId={agent.projectId}
-        agentId={agent.id}
-      />
+      {canManageAgent && (
+        <>
+          <NavAgentMemberships
+            organizationId={organizationId}
+            projectId={agent.projectId}
+            agentId={agent.id}
+          />
 
-      <AgentEditorWithTrigger agent={agent} />
+          <AgentEditorWithTrigger agent={agent} />
 
-      <AgentDeletorWithTrigger organizationId={organizationId} agent={agent} />
+          <AgentDeletorWithTrigger organizationId={organizationId} agent={agent} />
+        </>
+      )}
     </>
   )
 }

@@ -14,6 +14,7 @@ import {
   SidebarMenuSubButton,
   SidebarMenuSubItem,
 } from "@caseai-connect/ui/shad/sidebar"
+import { cn } from "@caseai-connect/ui/utils"
 import {
   BarChart3Icon,
   ChevronRightIcon,
@@ -102,7 +103,9 @@ function NavProjectMemberships({
       <SidebarMenuButton isActive={isActive} asChild>
         <Link to={path}>
           <UsersIcon />
-          <span>{t("projectMembership:members")}</span>
+          <span className={cn(isActive && "font-semibold capitalize-first")}>
+            {t("projectMembership:members")}
+          </span>
         </Link>
       </SidebarMenuButton>
     </SidebarMenuItem>
@@ -125,7 +128,7 @@ function NavAnalytics({
       <SidebarMenuButton isActive={isActive} asChild>
         <Link to={path}>
           <BarChart3Icon className="size-4" />
-          <span className="capitalize-first">{t("analytics")}</span>
+          <span className={cn(isActive && "font-semibold capitalize-first")}>{t("analytics")}</span>
         </Link>
       </SidebarMenuButton>
     </SidebarMenuItem>
@@ -149,7 +152,9 @@ function NavDocuments({
         <Link to={path}>
           <div className="flex flex-1 gap-2 items-center">
             <DatabaseZapIcon className="size-4" />
-            <span className="capitalize-first">{t("document:documents")}</span>
+            <span className={cn(isActive && "font-semibold capitalize-first")}>
+              {t("document:documents")}
+            </span>
           </div>
           <UploaderState />
         </Link>

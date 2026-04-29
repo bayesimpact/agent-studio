@@ -4,12 +4,22 @@
     "props": {
       "userName": "Nom d'utilisateur",
       "userEmail": "Email d'utilisateur",
+      "role": "Rôle",
       "status": "Statut",
       "createdAt": "Créé le",
       "validation": {
         "emailDuplicate": "Email déjà ajouté",
         "emailInvalid": "Email invalide"
       }
+    },
+    "profile": {
+      "joined": "A rejoint {{date}}",
+      "invited": "Invité {{date}}",
+      "remove": "Retirer le membre",
+      "agent": "Agent",
+      "agentRole": "Rôle",
+      "noAccess": "Pas d'accès",
+      "noAgents": "Ce projet n'a aucun agent."
     },
     "statuses": {
       "sent": "Envoyé",
@@ -25,6 +35,7 @@
     "list": {
       "title": "Membres de {{projectName}}",
       "description": "Invitez des membres à rejoindre votre espace de travail pour collaborer ensemble.",
+      "searchPlaceholder": "Rechercher par nom ou email…",
       "empty": {
         "title": "Aucun membre",
         "description": "Invitez des membres à rejoindre votre espace de travail pour collaborer ensemble."
