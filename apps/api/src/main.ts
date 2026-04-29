@@ -41,6 +41,8 @@ async function bootstrap() {
       "http://localhost:5173",
       "https://localhost:5173",
       "https://connect.localhost:5173",
+      // `vite preview` (prod-build locally) — see apps/web/vite.config.ts.
+      "https://connect.localhost:5174",
       ...(frontendUrl ? [frontendUrl] : []),
     ],
     credentials: true,

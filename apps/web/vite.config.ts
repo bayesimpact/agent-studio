@@ -11,6 +11,13 @@ export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, __dirname, "")
   const appTitle = env.VITE_APP_TITLE?.trim() || "AgentStudio"
 
+  const httpsConfig = fs.existsSync(path.join(certsDir, "key.pem"))
+    ? {
+        key: fs.readFileSync(path.join(certsDir, "key.pem")),
+        cert: fs.readFileSync(path.join(certsDir, "cert.pem")),
+      }
+    : undefined
+
   return {
     plugins: [
       react({
@@ -37,12 +44,16 @@ export default defineConfig(({ mode }) => {
     },
     server: {
       port: 5173,
-      https: fs.existsSync(path.join(certsDir, "key.pem"))
-        ? {
-            key: fs.readFileSync(path.join(certsDir, "key.pem")),
-            cert: fs.readFileSync(path.join(certsDir, "cert.pem")),
-          }
-        : undefined,
+      https: httpsConfig,
+      allowedHosts: ["connect.localhost"],
+    },
+    // `vite preview` serves the production build locally. Same HTTPS certs
+    // and host as `server` so Auth0 callbacks (configured against
+    // connect.localhost) keep working when validating prod builds locally.
+    // Port 5174 so dev (5173) and preview can run together.
+    preview: {
+      port: 5174,
+      https: httpsConfig,
       allowedHosts: ["connect.localhost"],
     },
   }
