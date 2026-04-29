@@ -6,6 +6,7 @@ export enum StudioRouteNames {
   PROJECT_ANALYTICS = "/o/:organizationId/p/:projectId/analytics",
   EVALUATION = "/o/:organizationId/p/:projectId/eval",
   PROJECT_MEMBERSHIPS = "/o/:organizationId/p/:projectId/members",
+  PROJECT_MEMBERSHIP = "/o/:organizationId/p/:projectId/members/:membershipId",
   FEEDBACK = "/o/:organizationId/p/:projectId/a/:agentId/f",
   AGENT_MEMBERSHIPS = "/o/:organizationId/p/:projectId/a/:agentId/members",
   AGENT_ANALYTICS = "/o/:organizationId/p/:projectId/a/:agentId/analytics",
@@ -90,6 +91,22 @@ export const buildProjectMembershipsPath = ({
       ":projectId",
       projectId,
     ),
+  )
+}
+
+export const buildProjectMembershipPath = ({
+  organizationId,
+  projectId,
+  membershipId,
+}: {
+  organizationId: string
+  projectId: string
+  membershipId: string
+}) => {
+  return buildStudioPath(
+    StudioRouteNames.PROJECT_MEMBERSHIP.replace(":organizationId", organizationId)
+      .replace(":projectId", projectId)
+      .replace(":membershipId", membershipId),
   )
 }
 

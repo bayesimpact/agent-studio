@@ -52,6 +52,39 @@ export class AgentMembershipsService {
     })
   }
 
+  async listProjectMemberAgents({
+    projectId,
+    userId,
+  }: {
+    projectId: string
+    userId: string
+  }): Promise<
+    Array<{
+      agent: Pick<Agent, "id" | "name" | "type">
+      membership: AgentMembership | null
+    }>
+  > {
+    const agents = await this.dataSource.getRepository(Agent).find({
+      where: { projectId },
+      select: { id: true, name: true, type: true },
+      order: { createdAt: "ASC" },
+    })
+
+    if (agents.length === 0) return []
+
+    const memberships = await this.agentMembershipRepository.find({
+      where: { userId, agentId: In(agents.map((agent) => agent.id)) },
+    })
+    const membershipByAgentId = new Map(
+      memberships.map((membership) => [membership.agentId, membership]),
+    )
+
+    return agents.map((agent) => ({
+      agent,
+      membership: membershipByAgentId.get(agent.id) ?? null,
+    }))
+  }
+
   async createAgentOwnerMembership(params: {
     agentId: string
     userId: string

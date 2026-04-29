@@ -55,6 +55,7 @@ export function ConversationAgentSessionList({
               projectId={projectId}
               agentSession={session}
               agentId={agent.id}
+              agentType={agent.type}
             />
           ))}
         </GridContent>
@@ -99,6 +100,7 @@ export function FormAgentSessionList({
               projectId={projectId}
               agentSession={session}
               agentId={agent.id}
+              agentType={agent.type}
             />
           ))}
         </GridContent>

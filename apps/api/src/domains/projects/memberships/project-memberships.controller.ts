@@ -1,4 +1,8 @@
-import { type ProjectMembershipDto, ProjectMembershipRoutes } from "@caseai-connect/api-contracts"
+import {
+  type ProjectMemberAgentDto,
+  type ProjectMembershipDto,
+  ProjectMembershipRoutes,
+} from "@caseai-connect/api-contracts"
 import { Body, Controller, Delete, Get, Post, Req, UseGuards } from "@nestjs/common"
 import type {
   EndpointRequestWithProject,
@@ -31,6 +35,31 @@ export class ProjectMembershipsController {
     const memberships = await this.projectMembershipsService.listProjectMemberships(project.id)
 
     return { data: memberships.map(toDto) }
+  }
+
+  @Get(ProjectMembershipRoutes.getMemberAgents.path)
+  @AddContext("projectMembership")
+  @CheckPolicy((policy) => policy.canList())
+  async getMemberAgents(
+    @Req() request: EndpointRequestWithProjectMembership,
+  ): Promise<typeof ProjectMembershipRoutes.getMemberAgents.response> {
+    const { project, memberProjectMembership } = request
+
+    const entries = await this.projectMembershipsService.listMemberAgents({
+      projectId: project.id,
+      userId: memberProjectMembership.userId,
+    })
+
+    const data: ProjectMemberAgentDto[] = entries.map(({ agent, membership }) => ({
+      agentId: agent.id,
+      agentName: agent.name,
+      agentType: agent.type,
+      membershipId: membership?.id ?? null,
+      role: membership?.role ?? null,
+      status: membership?.status ?? null,
+    }))
+
+    return { data }
   }
 
   // TODO: edit role

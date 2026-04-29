@@ -54,6 +54,10 @@ export class ProjectMembershipsService {
     })
   }
 
+  async listMemberAgents(params: { projectId: string; userId: string }) {
+    return this.agentMembershipsService.listProjectMemberAgents(params)
+  }
+
   async createProjectOwnerMembership({
     projectId,
     userId,

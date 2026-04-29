@@ -6,7 +6,7 @@ import { selectMe } from "@/common/features/me/me.selectors"
 import { useAppDispatch, useAppSelector } from "@/common/store/hooks"
 import { buildSince } from "@/common/utils/build-date"
 import type { AgentMembership } from "@/studio/features/agent-memberships/agent-memberships.models"
-import { removeAgentMembership } from "@/studio/features/agent-memberships/agent-memberships.thunks"
+import { agentMembershipsActions } from "../agent-memberships.slice"
 
 export function AgentMembershipItem({
   membership,
@@ -19,7 +19,7 @@ export function AgentMembershipItem({
   const { t } = useTranslation()
   const me = useAppSelector(selectMe)
   const handleRemove = () => {
-    dispatch(removeAgentMembership({ membershipId: membership.id }))
+    dispatch(agentMembershipsActions.remove({ membershipId: membership.id }))
   }
 
   const disabled = membership.role === "owner" || membership.userId === me?.value?.id

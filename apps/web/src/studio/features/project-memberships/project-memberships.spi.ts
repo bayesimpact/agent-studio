@@ -1,4 +1,4 @@
-import type { ProjectMembership } from "./project-memberships.models"
+import type { ProjectMemberAgent, ProjectMembership } from "./project-memberships.models"
 
 export interface IProjectMembershipsSpi {
   getAll: (params: { organizationId: string; projectId: string }) => Promise<ProjectMembership[]>
@@ -12,4 +12,9 @@ export interface IProjectMembershipsSpi {
     projectId: string
     membershipId: string
   }) => Promise<void>
+  getMemberAgents: (params: {
+    organizationId: string
+    projectId: string
+    membershipId: string
+  }) => Promise<ProjectMemberAgent[]>
 }

@@ -1,7 +1,7 @@
 import { createAsyncThunk } from "@reduxjs/toolkit"
 import { getCurrentIds } from "@/common/features/helpers"
 import type { RootState, ThunkExtraArg } from "@/common/store"
-import type { ProjectMembership } from "./project-memberships.models"
+import type { ProjectMemberAgent, ProjectMembership } from "./project-memberships.models"
 
 type ThunkConfig = { state: RootState; extra: ThunkExtraArg }
 
@@ -42,3 +42,23 @@ export const removeProjectMembership = createAsyncThunk<
   })
   return await services.projectMemberships.remove({ organizationId, projectId, membershipId })
 })
+
+export const listProjectMemberAgents = createAsyncThunk<
+  ProjectMemberAgent[],
+  { membershipId: string },
+  ThunkConfig
+>(
+  "projectMemberships/listMemberAgents",
+  async ({ membershipId }, { extra: { services }, getState }) => {
+    const state = getState()
+    const { organizationId, projectId } = getCurrentIds({
+      state,
+      wantedIds: ["organizationId", "projectId"],
+    })
+    return await services.projectMemberships.getMemberAgents({
+      organizationId,
+      projectId,
+      membershipId,
+    })
+  },
+)

@@ -1,6 +1,7 @@
 "use client"
 
 import { SidebarMenuButton, SidebarMenuItem } from "@caseai-connect/ui/shad/sidebar"
+import { cn } from "@caseai-connect/ui/utils"
 import { Link } from "react-router-dom"
 import type { MenuItem } from "../types"
 
@@ -16,9 +17,9 @@ export function AppNavItem({
   return (
     <SidebarMenuItem>
       <SidebarMenuButton isActive={item.isActive} asChild>
-        <Link to={item.url} className="font-medium">
+        <Link to={item.url}>
           {item.icon && <item.icon />}
-          <span>{item.title}</span>
+          <span className={cn(item.isActive && "font-semibold")}>{item.title}</span>
 
           {itemOptions}
         </Link>

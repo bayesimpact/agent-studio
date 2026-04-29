@@ -1,3 +1,4 @@
+import type { ProjectMemberAgentDto } from "../agent-membership/agent-membership.dto"
 import type { RequestPayload, ResponseData, SuccessResponseDTO } from "../generic"
 import { defineRoute } from "../helpers"
 import type { ProjectMembershipDto } from "./project-membership.dto"
@@ -17,5 +18,9 @@ export const ProjectMembershipRoutes = {
   deleteOne: defineRoute<ResponseData<SuccessResponseDTO>>({
     method: "delete",
     path: "organizations/:organizationId/projects/:projectId/memberships/:membershipId",
+  }),
+  getMemberAgents: defineRoute<ResponseData<ProjectMemberAgentDto[]>>({
+    method: "get",
+    path: "organizations/:organizationId/projects/:projectId/memberships/:membershipId/agents",
   }),
 }
