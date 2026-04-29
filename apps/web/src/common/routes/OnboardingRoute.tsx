@@ -62,7 +62,9 @@ function WithData({
   invitations: PendingInvitations
 }) {
   const orgsCount = organizations.length
-  if (orgsCount === 0) return <OrganizationCreator />
+  const hasPendingInvitations =
+    invitations.projectInvitations.length > 0 || invitations.agentInvitations.length > 0
+  if (orgsCount === 0 && !hasPendingInvitations) return <OrganizationCreator />
 
   return (
     <SidebarLayout hideIcon user={{ name: user.name, email: user.email }}>
@@ -96,18 +98,16 @@ function SidebarContent({
     invitations.projectInvitations.length > 0 || invitations.agentInvitations.length > 0
   return (
     <div className="flex flex-col">
-      {hasPendingInvitations && (
-        <Wrap>
-          <PendingInvitationList invitations={invitations} />
-        </Wrap>
-      )}
-
       <Wrap>
         <Grid cols={1} total={orgsCount}>
-          <GridHeader
-            title={t("organization:list:title", { name: user.name })}
-            description={t("organization:list:description")}
-          />
+          <GridHeader title={t("organization:list:title", { name: user.name })} />
+
+          {hasPendingInvitations && (
+            <div className="m-6 border rounded-2xl overflow-hidden">
+              <PendingInvitationList invitations={invitations} />
+            </div>
+          )}
+
           <GridContent>
             {organizations.map((organization, index) => (
               <OrganizationItem key={organization.id} organization={organization} index={index} />
@@ -206,6 +206,7 @@ function OrganizationItem({ organization, index }: { organization: Organization;
     organizationId: organization.id,
   })
   const extraItems = canCreateProject ? 1 : 0
+  if (organization.projects.length === 0) return
   return (
     <GridItem
       className="bg-gray-50"

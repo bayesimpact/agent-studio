@@ -4,6 +4,7 @@ import { InjectRepository } from "@nestjs/typeorm"
 import type { EntityManager, Repository } from "typeorm"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
 import { DataSource, In } from "typeorm"
+import { v4 } from "uuid"
 import {
   INVITATION_SENDER,
   type InvitationSender,
@@ -148,33 +149,44 @@ export class AgentMembershipsService {
     userRepo: Repository<User>
     membershipRepo: Repository<AgentMembership>
   }): Promise<AgentMembership | null> {
-    const normalizedEmail = email.trim().toLowerCase()
+    async function handleMembership(ticketId: string, user: User): Promise<AgentMembership | null> {
+      const existingMembership = await membershipRepo.findOne({
+        where: { agentId, userId: user.id },
+      })
 
-    const user = await this.findOrCreatePlaceholderUser({ userRepo, email: normalizedEmail })
+      if (existingMembership) {
+        return existingMembership
+      }
 
-    const existingMembership = await membershipRepo.findOne({
-      where: { agentId, userId: user.id },
-    })
-
-    if (existingMembership) {
-      return null
+      const newMembership = membershipRepo.create({
+        agentId,
+        userId: user.id,
+        invitationToken: ticketId,
+        status: "sent",
+        role: "member",
+      })
+      const savedMembership = await membershipRepo.save(newMembership)
+      savedMembership.user = user
+      return savedMembership
     }
+
+    const existingUser = await userRepo.findOne({ where: { email } })
+    if (existingUser) {
+      return handleMembership(
+        v4(), // fake ticketId
+        existingUser,
+      )
+    }
+
+    const normalizedEmail = email.trim().toLowerCase()
+    const user = await this.createPlaceholderUser({ userRepo, email: normalizedEmail })
 
     const { ticketId } = await this.invitationSender.sendInvitation({
       inviteeEmail: normalizedEmail,
       inviterName,
     })
 
-    const newMembership = membershipRepo.create({
-      agentId,
-      userId: user.id,
-      invitationToken: ticketId,
-      status: "sent",
-      role: "member",
-    })
-    const savedMembership = await membershipRepo.save(newMembership)
-    savedMembership.user = user
-    return savedMembership
+    return handleMembership(ticketId, user)
   }
 
   /**
@@ -376,16 +388,13 @@ export class AgentMembershipsService {
     await manager.delete(AgentMembership, { agentId: In(agentIds), userId })
   }
 
-  private async findOrCreatePlaceholderUser({
+  private async createPlaceholderUser({
     userRepo,
     email,
   }: {
     userRepo: Repository<User>
     email: string
   }): Promise<User> {
-    const existing = await userRepo.findOne({ where: { email } })
-    if (existing) return existing
-
     const placeholderAuth0Id = `${PLACEHOLDER_AUTH0_ID_PREFIX}${randomUUID().slice(-12)}`
     const user = userRepo.create({
       auth0Id: placeholderAuth0Id,
