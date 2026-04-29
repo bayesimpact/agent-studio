@@ -1,14 +1,15 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@caseai-connect/ui/shad/tabs"
-import { useEffect, useState } from "react"
+import { useState } from "react"
 import { useNavigate } from "react-router-dom"
 import {
   selectBackofficeOrganizations,
   selectBackofficeUsers,
 } from "@/backoffice/features/backoffice/backoffice.selectors"
 import { GridHeader } from "@/common/components/grid/Grid"
+import { useMount } from "@/common/hooks/use-mount"
 import { AsyncRoute } from "@/common/routes/AsyncRoute"
 import { RouteNames } from "@/common/routes/helpers"
-import { useAppDispatch, useAppSelector } from "@/common/store/hooks"
+import { useAppSelector } from "@/common/store/hooks"
 import type {
   BackofficeOrganization,
   BackofficeUser,
@@ -18,16 +19,10 @@ import { OrganizationsPanel } from "../features/backoffice/components/Organizati
 import { UsersPanel } from "../features/backoffice/components/UsersPanel"
 
 export function BackofficeRoute() {
-  const dispatch = useAppDispatch()
   const organizations = useAppSelector(selectBackofficeOrganizations)
   const users = useAppSelector(selectBackofficeUsers)
 
-  useEffect(() => {
-    dispatch(backofficeActions.mount())
-    return () => {
-      dispatch(backofficeActions.unmount())
-    }
-  }, [dispatch])
+  useMount({ actions: backofficeActions })
 
   return (
     <AsyncRoute data={[organizations, users]}>

@@ -48,7 +48,8 @@ const slice = createSlice({
   initialState,
   reducers: {
     reset: () => initialState,
-    initData: () => {},
+    mount: () => {},
+    unmount: () => {},
     setCurrentDatasetId: (state, action: PayloadAction<{ datasetId: string | null }>) => {
       state.currentDatasetId = action.payload.datasetId
       state.records = defaultAsyncData

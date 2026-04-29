@@ -1,12 +1,23 @@
 "use client"
 
 import { Button } from "@caseai-connect/ui/shad/button"
-import { PlusIcon } from "lucide-react"
+import {
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from "@caseai-connect/ui/shad/empty"
+import { ClipboardCheckIcon, PlusIcon } from "lucide-react"
 import { useMemo, useState } from "react"
 import { useTranslation } from "react-i18next"
+import { useNavigate } from "react-router-dom"
+import { GridHeader } from "@/common/components/grid/Grid"
+import type { Agent } from "@/common/features/agents/agents.models"
 import { selectAgentsData } from "@/common/features/agents/agents.selectors"
-import { ADS } from "@/common/store/async-data-status"
+import { AsyncRoute } from "@/common/routes/AsyncRoute"
 import { useAppSelector } from "@/common/store/hooks"
+import type { ReviewCampaignListItem } from "../review-campaigns.models"
 import { selectReviewCampaignsData } from "../review-campaigns.selectors"
 import { CampaignEditorSheet } from "./CampaignEditorSheet"
 import { CampaignListTable } from "./CampaignListTable"
@@ -18,43 +29,70 @@ type EditorState =
 
 export function CampaignListPage() {
   const { t } = useTranslation()
-  const campaignsData = useAppSelector(selectReviewCampaignsData)
-  const agentsData = useAppSelector(selectAgentsData)
+  const navigate = useNavigate()
+  const campaigns = useAppSelector(selectReviewCampaignsData)
+  const agents = useAppSelector(selectAgentsData)
   const [editor, setEditor] = useState<EditorState>(null)
+  const handleBack = () => {
+    navigate(-1)
+  }
+  return (
+    <div className="flex flex-col bg-white">
+      <GridHeader
+        onBack={handleBack}
+        title={t("reviewCampaigns:title")}
+        description={t("reviewCampaigns:subtitle")}
+        action={
+          <Button onClick={() => setEditor({ mode: "create" })}>
+            <PlusIcon /> {t("reviewCampaigns:new")}
+          </Button>
+        }
+      />
 
+      <div className="p-6">
+        <AsyncRoute data={[campaigns, agents]}>
+          {([campaignsValue, agentsValue]) => (
+            <WithData
+              campaigns={campaignsValue}
+              agents={agentsValue}
+              editor={editor}
+              setEditor={setEditor}
+            />
+          )}
+        </AsyncRoute>
+      </div>
+    </div>
+  )
+}
+
+function WithData({
+  campaigns,
+  agents,
+  editor,
+  setEditor,
+}: {
+  campaigns: ReviewCampaignListItem[]
+  agents: Agent[]
+  editor: EditorState
+  setEditor: React.Dispatch<React.SetStateAction<EditorState>>
+}) {
   // Review campaigns only support conversation + form agents as targets;
   // testerService.startSession rejects extraction agents (apps/api/.../tester.service.ts).
   const agentOptions = useMemo(() => {
-    if (!ADS.isFulfilled(agentsData)) return []
-    return agentsData.value
+    return agents
       .filter((agent) => agent.type === "conversation" || agent.type === "form")
       .map((agent) => ({ id: agent.id, name: agent.name }))
-  }, [agentsData])
+  }, [agents])
 
-  const campaigns = ADS.isFulfilled(campaignsData) ? campaignsData.value : []
   const membershipCountByCampaign = Object.fromEntries(
     campaigns.map((campaign) => [campaign.id, campaign.memberCount]),
   )
 
   return (
-    <div className="flex flex-col gap-4 p-6">
-      <header className="flex items-center justify-between gap-4">
-        <div className="flex flex-col gap-1">
-          <h1 className="text-2xl font-semibold">{t("reviewCampaigns:title")}</h1>
-          <p className="text-muted-foreground text-sm">{t("reviewCampaigns:subtitle")}</p>
-        </div>
-        <Button onClick={() => setEditor({ mode: "create" })}>
-          <PlusIcon /> {t("reviewCampaigns:new")}
-        </Button>
-      </header>
-
-      {ADS.isLoading(campaignsData) && (
-        <p className="text-muted-foreground text-sm">{t("reviewCampaigns:loading")}</p>
-      )}
-      {ADS.isError(campaignsData) && (
-        <p className="text-destructive text-sm">{campaignsData.error}</p>
-      )}
-      {(ADS.isFulfilled(campaignsData) || campaigns.length > 0) && (
+    <>
+      {campaigns.length === 0 ? (
+        <EmptyCampaigns />
+      ) : (
         <CampaignListTable
           campaigns={campaigns}
           membershipCountByCampaign={membershipCountByCampaign}
@@ -63,7 +101,6 @@ export function CampaignListPage() {
           onCreate={() => setEditor({ mode: "create" })}
         />
       )}
-
       {editor && (
         <CampaignEditorSheet
           open
@@ -73,6 +110,21 @@ export function CampaignListPage() {
           onClose={() => setEditor(null)}
         />
       )}
-    </div>
+    </>
+  )
+}
+
+function EmptyCampaigns() {
+  const { t } = useTranslation()
+  return (
+    <Empty>
+      <EmptyHeader>
+        <EmptyMedia variant="icon">
+          <ClipboardCheckIcon />
+        </EmptyMedia>
+        <EmptyTitle>{t("reviewCampaigns:empty.title")}</EmptyTitle>
+        <EmptyDescription>{t("reviewCampaigns:empty.description")}</EmptyDescription>
+      </EmptyHeader>
+    </Empty>
   )
 }

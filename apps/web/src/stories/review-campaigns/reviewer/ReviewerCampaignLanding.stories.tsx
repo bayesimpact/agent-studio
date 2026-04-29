@@ -1,6 +1,8 @@
 import type { Meta, StoryObj } from "@storybook/react-vite"
 import { fn } from "storybook/test"
-import { ReviewerCampaignLanding } from "@/reviewer/features/review-campaigns/components/ReviewerCampaignLanding"
+import { withRouter } from "storybook-addon-remix-react-router"
+import { ReviewerCampaignLanding } from "@/reviewer/routes/ReviewerCampaignRoute"
+import { withRedux } from "@/stories/decorators/with-redux"
 import { mockCampaignContext, mockReviewerSessions } from "./fixtures"
 
 const meta = {
@@ -11,19 +13,31 @@ const meta = {
     context: mockCampaignContext,
     onOpenSession: fn(),
   },
+  decorators: [withRouter],
 } satisfies Meta<typeof ReviewerCampaignLanding>
 
 export default meta
 type Story = StoryObj<typeof meta>
 
 export const Empty: Story = {
-  args: { sessions: [] },
+  args: { sessions: [], onOpenReport: fn(), context: mockCampaignContext, onOpenSession: fn() },
+  decorators: [withRedux()],
 }
 
 export const WithMixedSessions: Story = {
-  args: { sessions: mockReviewerSessions },
+  args: {
+    sessions: mockReviewerSessions,
+    onOpenReport: fn(),
+    context: mockCampaignContext,
+    onOpenSession: fn(),
+  },
 }
 
 export const SingleSession: Story = {
-  args: { sessions: [mockReviewerSessions[0]!] },
+  args: {
+    sessions: [mockReviewerSessions[0]!],
+    onOpenReport: fn(),
+    context: mockCampaignContext,
+    onOpenSession: fn(),
+  },
 }

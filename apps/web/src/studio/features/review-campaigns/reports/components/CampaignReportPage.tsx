@@ -1,47 +1,86 @@
 "use client"
 
 import { Button } from "@caseai-connect/ui/shad/button"
-import { ArrowLeftIcon, DownloadIcon } from "lucide-react"
-import { useEffect, useState } from "react"
+import { DownloadIcon } from "lucide-react"
+import { useState } from "react"
 import { useTranslation } from "react-i18next"
-import { useNavigate, useParams } from "react-router-dom"
+import { useNavigate } from "react-router-dom"
+import { GridHeader } from "@/common/components/grid/Grid"
+import { useMount } from "@/common/hooks/use-mount"
+import { AsyncRoute } from "@/common/routes/AsyncRoute"
 import { ADS } from "@/common/store/async-data-status"
-import { useAppDispatch, useAppSelector } from "@/common/store/hooks"
+import { useAppSelector } from "@/common/store/hooks"
 import { getServices } from "@/di/services"
+import type { CampaignReport as CampaignReportType } from "../reports.models"
 import { selectCampaignReport } from "../reports.selectors"
 import { reviewCampaignsReportsActions } from "../reports.slice"
 import { CampaignReport } from "./CampaignReport"
 
-type Params = {
+type Props = {
+  backPath: string
   organizationId: string
   projectId: string
   reviewCampaignId: string
 }
 
-type Props = {
-  /** Path to navigate back to when the user clicks "Back". */
-  backPath: string
-  /** Label for the back button. */
-  backLabel?: string
+export function CampaignReportPage({
+  backPath,
+  organizationId,
+  projectId,
+  reviewCampaignId,
+}: Props) {
+  const { t } = useTranslation()
+  const navigate = useNavigate()
+  const report = useAppSelector(selectCampaignReport(reviewCampaignId))
+
+  useMount({
+    actions: reviewCampaignsReportsActions,
+    condition: !!reviewCampaignId,
+  })
+
+  const handleBack = () => {
+    navigate(backPath)
+  }
+  return (
+    <>
+      <GridHeader
+        onBack={handleBack}
+        title={t("reviewCampaigns:report.title")}
+        action={
+          ADS.isFulfilled(report) && (
+            <DownloadCsvButton
+              organizationId={organizationId}
+              projectId={projectId}
+              reviewCampaignId={reviewCampaignId}
+            />
+          )
+        }
+      />
+
+      <div className="flex flex-col gap-6 p-6">
+        <AsyncRoute data={[report]}>
+          {([reportValue]) => <WithData report={reportValue} />}
+        </AsyncRoute>
+      </div>
+    </>
+  )
 }
 
-export function CampaignReportPage({ backPath, backLabel }: Props) {
+function WithData({ report }: { report: CampaignReportType }) {
+  return <CampaignReport report={report} />
+}
+
+function DownloadCsvButton({
+  reviewCampaignId,
+  organizationId,
+  projectId,
+}: {
+  reviewCampaignId: string
+  organizationId: string
+  projectId: string
+}) {
   const { t } = useTranslation()
-  const dispatch = useAppDispatch()
-  const navigate = useNavigate()
-  const params = useParams<Params>()
-  const reportState = useAppSelector(selectCampaignReport(params.reviewCampaignId ?? ""))
   const [isDownloading, setIsDownloading] = useState(false)
-
-  useEffect(() => {
-    dispatch(reviewCampaignsReportsActions.mount())
-    return () => {
-      dispatch(reviewCampaignsReportsActions.unmount())
-    }
-  }, [dispatch])
-
-  if (!params.organizationId || !params.projectId || !params.reviewCampaignId) return null
-  const { organizationId, projectId, reviewCampaignId } = params
 
   const handleDownloadCsv = async () => {
     if (isDownloading) return
@@ -64,32 +103,11 @@ export function CampaignReportPage({ backPath, backLabel }: Props) {
   }
 
   return (
-    <div className="flex flex-col gap-6 p-6">
-      <header className="flex items-center gap-3">
-        <Button variant="ghost" size="sm" onClick={() => navigate(backPath)}>
-          <ArrowLeftIcon /> {backLabel ?? t("reviewCampaigns:report.back")}
-        </Button>
-        <h1 className="text-2xl font-semibold">{t("reviewCampaigns:report.title")}</h1>
-        <div className="ml-auto">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleDownloadCsv}
-            disabled={isDownloading || !ADS.isFulfilled(reportState)}
-          >
-            <DownloadIcon />{" "}
-            {isDownloading
-              ? t("reviewCampaigns:report.downloading")
-              : t("reviewCampaigns:report.downloadCsv")}
-          </Button>
-        </div>
-      </header>
-
-      {ADS.isLoading(reportState) && (
-        <p className="text-muted-foreground text-sm">{t("reviewCampaigns:report.loading")}</p>
-      )}
-      {ADS.isError(reportState) && <p className="text-destructive text-sm">{reportState.error}</p>}
-      {ADS.isFulfilled(reportState) && <CampaignReport report={reportState.value} />}
-    </div>
+    <Button variant="outline" size="sm" onClick={handleDownloadCsv} disabled={isDownloading}>
+      <DownloadIcon />{" "}
+      {isDownloading
+        ? t("reviewCampaigns:report.downloading")
+        : t("reviewCampaigns:report.downloadCsv")}
+    </Button>
   )
 }

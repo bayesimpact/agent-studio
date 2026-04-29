@@ -1,25 +1,25 @@
 import { ProtectedRoute } from "@/common/routes/ProtectedRoute"
-import { ReviewerCampaignLandingPage } from "@/reviewer/features/review-campaigns/components/ReviewerCampaignLandingPage"
-import { ReviewerMyCampaignsPage } from "@/reviewer/features/review-campaigns/components/ReviewerMyCampaignsPage"
 import { ReviewerSessionReviewPage } from "@/reviewer/features/review-campaigns/components/ReviewerSessionReviewPage"
+import { ReviewerCampaignRoute } from "@/reviewer/routes/ReviewerCampaignRoute"
 import { ReviewerRouteNames } from "./helpers"
+import { ReviewerCampaignsRoute } from "./ReviewerCampaignsRoute"
 import { ReviewerReportRoute } from "./ReviewerReportRoute"
-import { ReviewerShell } from "./ReviewerShell"
+import { ReviewerRoute } from "./ReviewerRoute"
 
 export const reviewerRoutes = {
   element: (
     <ProtectedRoute>
-      <ReviewerShell />
+      <ReviewerRoute />
     </ProtectedRoute>
   ),
   children: [
     {
       path: ReviewerRouteNames.HOME,
-      element: <ReviewerMyCampaignsPage />,
+      element: <ReviewerCampaignsRoute />,
     },
     {
       path: ReviewerRouteNames.CAMPAIGN,
-      element: <ReviewerCampaignLandingPage />,
+      element: <ReviewerCampaignRoute />,
     },
     {
       path: ReviewerRouteNames.REPORT,
@@ -27,6 +27,7 @@ export const reviewerRoutes = {
     },
     {
       path: ReviewerRouteNames.SESSION,
+      // FIXME:
       element: <ReviewerSessionReviewPage />,
     },
   ],

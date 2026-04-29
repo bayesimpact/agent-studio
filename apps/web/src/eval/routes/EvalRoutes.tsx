@@ -1,6 +1,7 @@
 import { useEffect } from "react"
 import { Outlet, useParams } from "react-router-dom"
 import { useFeatureFlags } from "@/common/hooks/use-feature-flags"
+import { useInitStore } from "@/common/hooks/use-init-store"
 import { DashboardRoute } from "@/common/routes/DashboardRoute"
 import { RouteNames } from "@/common/routes/helpers"
 import { LoadingRoute } from "@/common/routes/LoadingRoute"
@@ -11,7 +12,7 @@ import { useAppDispatch } from "@/common/store/hooks"
 import { Dashboard } from "../components/Dashboard"
 import { evaluationExtractionDatasetsActions } from "../features/evaluation-extraction-datasets/evaluation-extraction-datasets.slice"
 import { evaluationExtractionRunsActions } from "../features/evaluation-extraction-runs/evaluation-extraction-runs.slice"
-import { useInitStore } from "../hooks/use-init-store"
+import { injectEvalSlices, resetEvalSlices } from "../store/slices"
 import { EvalDashboardRoute } from "./EvalDashboardRoute"
 import { EvaluationExtractionDatasetRoute } from "./EvaluationExtractionDatasetRoute"
 import { EvaluationExtractionDatasetsRoute } from "./EvaluationExtractionDatasetsRoute"
@@ -30,9 +31,7 @@ export const evalRoutes = {
       path: buildEvalPath(RouteNames.ORGANIZATION_DASHBOARD),
       element: (
         <DashboardRoute>
-          {(user, _projects, organization) => (
-            <EvalDashboardRoute user={user} organization={organization} />
-          )}
+          {(user, _projects, _organization) => <EvalDashboardRoute user={user} />}
         </DashboardRoute>
       ),
       children: [
@@ -79,7 +78,11 @@ const useSetCurrentIds = () => {
 function ProjectRouteHandler() {
   const { hasFeature } = useFeatureFlags()
   const isAllowed = hasFeature("evaluation")
-  const { initDone } = useInitStore(isAllowed)
+  const { initDone } = useInitStore({
+    inject: injectEvalSlices,
+    reset: resetEvalSlices,
+    condition: isAllowed,
+  })
   useSetCurrentIds()
   if (isAllowed) {
     if (initDone) return <Dashboard />

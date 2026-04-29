@@ -1,5 +1,3 @@
-import { Button } from "@caseai-connect/ui/shad/button"
-import { Trash2Icon } from "lucide-react"
 import { useTranslation } from "react-i18next"
 import { useNavigate } from "react-router-dom"
 import { Grid, GridContent, GridHeader, GridItem } from "@/common/components/grid/Grid"
@@ -62,20 +60,6 @@ function Item({ dataset, index }: { dataset: EvaluationExtractionDataset; index:
       description={date}
       index={index}
       onClick={handleClick}
-      footer={<Actions />}
     />
-  )
-}
-
-function Actions() {
-  const handleDelete = () => {
-    // TODO:
-  }
-  return (
-    <div className="flex items-center justify-end pb-4 gap-2">
-      <Button variant="outline" size="icon" disabled onClick={handleDelete}>
-        <Trash2Icon />
-      </Button>
-    </div>
   )
 }

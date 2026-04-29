@@ -1,15 +1,20 @@
 import { selectIsBackofficeAuthorized, selectMeStatus } from "@/common/features/me/me.selectors"
+import { useInitStore } from "@/common/hooks/use-init-store"
 import { ErrorRoute } from "@/common/routes/ErrorRoute"
 import { LoadingRoute } from "@/common/routes/LoadingRoute"
 import { ADS } from "@/common/store/async-data-status"
 import { useAppSelector } from "@/common/store/hooks"
-import { useInitStore } from "../hooks/use-init-store"
+import { injectBackofficeSlices, resetBackofficeSlices } from "../store/slices"
 
 export function BackofficeGuard({ children }: { children: React.ReactNode }) {
   const meStatus = useAppSelector(selectMeStatus)
   const isBackofficeAuthorized = useAppSelector(selectIsBackofficeAuthorized)
 
-  const { initDone } = useInitStore(isBackofficeAuthorized)
+  const { initDone } = useInitStore({
+    inject: injectBackofficeSlices,
+    reset: resetBackofficeSlices,
+    condition: isBackofficeAuthorized,
+  })
   if (ADS.isLoading(meStatus) || ADS.isUninitialized(meStatus) || !initDone) {
     return <LoadingRoute />
   }

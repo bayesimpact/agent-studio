@@ -43,6 +43,7 @@ function registerListeners() {
     actionCreator: reviewCampaignsTesterActions.mount,
     effect: async (_, listenerApi) => {
       const state = listenerApi.getState()
+      // FIXME:
       const organizationId = selectCurrentOrganizationId(state)
       const projectId = selectCurrentProjectId(state)
       const reviewCampaignId = selectCurrentReviewCampaignId(state)
@@ -92,6 +93,7 @@ function registerListeners() {
       listenerApi.dispatch(notificationsActions.show({ title: "Survey saved", type: "success" }))
     },
   })
+  // FIXME:
   listenerMiddleware.startListening({
     matcher: isAnyOf(
       startTesterSession.rejected,
