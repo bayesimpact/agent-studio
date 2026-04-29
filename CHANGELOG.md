@@ -30,6 +30,7 @@ This project uses [CalVer](https://calver.org/) (YY.MM.Micro) for product versio
 - (beta) Review campaigns: aggregate report with rating distributions and per-session matrix, plus CSV export
 - (beta) Review campaigns: tester and reviewer pages now show a top header with a signout menu
 - (beta) Review campaigns: create form now pre-fills a default name, description, and starter questions
+- List pending invitations
 
 ### Changed
 - Agent configuration is now organized into tabs (General, Model, Sources, and Form or Output) for easier editing

@@ -11,6 +11,13 @@
     "props": {
       "user": "User",
       "organizations": "Organizations"
+    },
+    "invitations": {
+      "title": "Pending invitations",
+      "description": "Invitations waiting for you to accept.",
+      "projectBadge": "Project",
+      "agentBadge": "Agent",
+      "roleLabel": "Role"
     }
   }
 }

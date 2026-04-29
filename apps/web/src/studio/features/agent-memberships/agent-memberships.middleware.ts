@@ -7,6 +7,19 @@ import { agentMembershipsActions } from "./agent-memberships.slice"
 const listenerMiddleware = createListenerMiddleware<RootState, AppDispatch>()
 
 function registerListeners() {
+  listenerMiddleware.startListening({
+    actionCreator: agentMembershipsActions.mount,
+    effect: async (_, listenerApi) => {
+      await listenerApi.dispatch(agentMembershipsActions.list())
+    },
+  })
+  listenerMiddleware.startListening({
+    actionCreator: agentMembershipsActions.unmount,
+    effect: async (_, listenerApi) => {
+      listenerApi.dispatch(agentMembershipsActions.reset())
+    },
+  })
+
   // Refresh agent memberships when current agent changes
   listenerMiddleware.startListening({
     predicate(_, currentState, originalState) {

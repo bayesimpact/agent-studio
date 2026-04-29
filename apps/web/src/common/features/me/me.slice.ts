@@ -1,14 +1,16 @@
 import { createSlice } from "@reduxjs/toolkit"
 import { ADS, type AsyncData, defaultAsyncData } from "@/common/store/async-data-status"
-import type { User } from "./me.models"
-import { fetchMe } from "./me.thunks"
+import type { PendingInvitations, User } from "./me.models"
+import { fetchMe, fetchPendingInvitations } from "./me.thunks"
 
 interface State {
   data: AsyncData<User>
+  pendingInvitations: AsyncData<PendingInvitations>
 }
 
 const initialState: State = {
   data: defaultAsyncData,
+  pendingInvitations: defaultAsyncData,
 }
 
 const slice = createSlice({
@@ -20,7 +22,7 @@ const slice = createSlice({
   extraReducers: (builder) => {
     builder
       .addCase(fetchMe.pending, (state) => {
-        state.data.status = ADS.Loading
+        if (!ADS.isFulfilled(state.data)) state.data.status = ADS.Loading
         state.data.error = null
       })
       .addCase(fetchMe.fulfilled, (state, action) => {
@@ -33,6 +35,25 @@ const slice = createSlice({
       .addCase(fetchMe.rejected, (state, action) => {
         state.data.status = ADS.Error
         state.data.error = action.error.message || "Failed to fetch user data"
+      })
+
+    builder
+      .addCase(fetchPendingInvitations.pending, (state) => {
+        if (!ADS.isFulfilled(state.pendingInvitations))
+          state.pendingInvitations.status = ADS.Loading
+        state.pendingInvitations.error = null
+      })
+      .addCase(fetchPendingInvitations.fulfilled, (state, action) => {
+        state.pendingInvitations = {
+          status: ADS.Fulfilled,
+          error: null,
+          value: action.payload,
+        }
+      })
+      .addCase(fetchPendingInvitations.rejected, (state, action) => {
+        state.pendingInvitations.status = ADS.Error
+        state.pendingInvitations.error =
+          action.error.message || "Failed to fetch pending invitations"
       })
   },
 })

@@ -1,6 +1,13 @@
-import type { AgentMembershipDto } from "../agent-membership/agent-membership.dto"
+import type {
+  AgentMembershipDto,
+  AgentMembershipRoleDto,
+} from "../agent-membership/agent-membership.dto"
+import type { TimeType } from "../generic"
 import type { OrganizationDto, OrganizationMembershipDto } from "../organizations/organizations.dto"
-import type { ProjectMembershipDto } from "../project-membership/project-membership.dto"
+import type {
+  ProjectMembershipDto,
+  ProjectMembershipRoleDto,
+} from "../project-membership/project-membership.dto"
 import type {
   ReviewCampaignMembershipRole,
   ReviewCampaignStatus,
@@ -33,4 +40,33 @@ export type UserDto = {
 export type MeResponseDto = {
   user: UserDto
   organizations: OrganizationDto[]
+}
+
+export type PendingProjectInvitationDto = {
+  id: string
+  projectId: string
+  projectName: string
+  organizationId: string
+  organizationName: string
+  role: ProjectMembershipRoleDto
+  invitationToken: string
+  createdAt: TimeType
+}
+
+export type PendingAgentInvitationDto = {
+  id: string
+  agentId: string
+  agentName: string
+  projectId: string
+  projectName: string
+  organizationId: string
+  organizationName: string
+  role: AgentMembershipRoleDto
+  invitationToken: string
+  createdAt: TimeType
+}
+
+export type PendingInvitationsResponseDto = {
+  projectInvitations: PendingProjectInvitationDto[]
+  agentInvitations: PendingAgentInvitationDto[]
 }

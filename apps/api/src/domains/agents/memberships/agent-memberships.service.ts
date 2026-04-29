@@ -406,7 +406,13 @@ export class AgentMembershipsService {
     projectId: string
   }): Promise<void> {
     const existing = await projectMembershipRepo.findOne({ where: { userId, projectId } })
-    if (existing) return
+    if (existing) {
+      if (existing.status !== "accepted") {
+        existing.status = "accepted"
+        await projectMembershipRepo.save(existing)
+      }
+      return
+    }
 
     const projectMembership = projectMembershipRepo.create({
       userId,

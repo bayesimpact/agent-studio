@@ -1,7 +1,7 @@
 import { createListenerMiddleware } from "@reduxjs/toolkit"
 import { authActions } from "@/common/features/auth/auth.slice"
 import { meActions } from "@/common/features/me/me.slice"
-import { fetchMe } from "@/common/features/me/me.thunks"
+import { fetchMe, fetchPendingInvitations } from "@/common/features/me/me.thunks"
 import { organizationsActions } from "@/common/features/organizations/organizations.slice"
 import { consumePendingInvitation } from "@/common/routes/HomeRoute"
 import type { AppDispatch, RootState } from "@/common/store/types"
@@ -35,6 +35,7 @@ listenerMiddleware.startListening({
 
       // Now fetch user data (will find the reconciled user, not create a new one)
       await listenerApi.dispatch(fetchMe())
+      listenerApi.dispatch(fetchPendingInvitations())
     } else {
       // User logged out - clear user and organizations state
       listenerApi.dispatch(meActions.reset())
