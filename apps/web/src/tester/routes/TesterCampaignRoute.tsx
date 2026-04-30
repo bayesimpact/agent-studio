@@ -4,14 +4,14 @@ import { useMount } from "@/common/hooks/use-mount"
 import { AsyncRoute } from "@/common/routes/AsyncRoute"
 import { LoadingRoute } from "@/common/routes/LoadingRoute"
 import { useAppSelector } from "@/common/store/hooks"
-import { selectTesterContext } from "@/tester/features/review-campaigns/tester.selectors"
-import { reviewCampaignsReviewerActions } from "../features/review-campaigns/reviewer.slice"
+import { selectTesterContext } from "../features/review-campaigns/tester.selectors"
+import { reviewCampaignsTesterActions } from "../features/review-campaigns/tester.slice"
 
-export function ReviewerCampaignRoute() {
+export function TesterCampaignRoute() {
   const reviewCampaignId = useAppSelector(selectCurrentReviewCampaignId)
   const testerContext = useAppSelector(selectTesterContext)
 
-  useMount({ actions: reviewCampaignsReviewerActions, condition: !!reviewCampaignId })
+  useMount({ actions: reviewCampaignsTesterActions, condition: !!reviewCampaignId })
 
   if (!reviewCampaignId) return <LoadingRoute />
   return <AsyncRoute data={[testerContext]}>{() => <Outlet />}</AsyncRoute>

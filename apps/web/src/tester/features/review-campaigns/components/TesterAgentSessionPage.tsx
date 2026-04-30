@@ -2,7 +2,7 @@ import type { SubmitTesterSessionFeedbackRequestDto } from "@caseai-connect/api-
 import { Badge } from "@caseai-connect/ui/shad/badge"
 import { Button } from "@caseai-connect/ui/shad/button"
 import { ArrowLeftIcon, CheckCircle2Icon, XCircleIcon } from "lucide-react"
-import { useEffect, useMemo, useState } from "react"
+import { useMemo, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { useNavigate, useParams } from "react-router-dom"
 import type { ConversationAgentSession } from "@/common/features/agents/agent-sessions/conversation/conversation-agent-sessions.models"
@@ -16,7 +16,6 @@ import { ADS } from "@/common/store/async-data-status"
 import { useAppDispatch, useAppSelector } from "@/common/store/hooks"
 import { buildTesterCampaignPath } from "@/tester/routes/helpers"
 import { selectTesterContext } from "../tester.selectors"
-import { reviewCampaignsTesterActions } from "../tester.slice"
 import { submitTesterFeedback } from "../tester.thunks"
 import { TesterFeedbackModal } from "./TesterFeedbackModal"
 
@@ -29,21 +28,11 @@ type Params = {
 }
 
 export function TesterAgentSessionPage() {
-  const dispatch = useAppDispatch()
-  const { t } = useTranslation()
-  const params = useParams<Params>()
+  const params = useParams<Params>() as Params
   const contextState = useAppSelector(selectTesterContext)
   const messagesData = useAppSelector(selectCurrentMessagesData)
 
-  useEffect(() => {
-    dispatch(reviewCampaignsTesterActions.mount())
-    return () => {
-      dispatch(reviewCampaignsTesterActions.unmount())
-    }
-  }, [dispatch])
-
-  const syntheticSession = useMemo<ConversationAgentSession | FormAgentSession | null>(() => {
-    if (!params.agentId || !params.agentSessionId || !ADS.isFulfilled(contextState)) return null
+  const syntheticSession = useMemo<ConversationAgentSession | FormAgentSession>(() => {
     const now = Date.now()
     return {
       id: params.agentSessionId,
@@ -52,27 +41,9 @@ export function TesterAgentSessionPage() {
       createdAt: now,
       updatedAt: now,
     }
-  }, [params.agentId, params.agentSessionId, contextState])
+  }, [params.agentId, params.agentSessionId])
 
-  if (
-    !params.organizationId ||
-    !params.projectId ||
-    !params.reviewCampaignId ||
-    !params.agentId ||
-    !params.agentSessionId
-  ) {
-    return null
-  }
-
-  if (ADS.isLoading(contextState) || !ADS.isFulfilled(contextState)) {
-    return (
-      <p className="p-6 text-muted-foreground text-sm">{t("testerCampaigns:common.loading")}</p>
-    )
-  }
-  if (ADS.isError(contextState)) {
-    return <p className="p-6 text-destructive text-sm">{contextState.error}</p>
-  }
-  if (!syntheticSession) return null
+  if (!ADS.isFulfilled(contextState)) return null
 
   const messages: AgentSessionMessage[] = ADS.isFulfilled(messagesData) ? messagesData.value : []
 
@@ -80,10 +51,6 @@ export function TesterAgentSessionPage() {
     <TesterAgentSessionContent
       organizationId={params.organizationId}
       projectId={params.projectId}
-      // Tester context carries a trimmed agent snapshot, not the full AgentDto.
-      // Safe for the conversation branch; the form-agent `FormResult` reads
-      // `outputJsonSchema`, which will need a full-agent fetch when form-agent
-      // tester support lands.
       agent={contextState.value.agent as Agent}
       agentSession={syntheticSession}
       messages={messages}

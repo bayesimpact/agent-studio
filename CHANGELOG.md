@@ -12,25 +12,18 @@ This project uses [CalVer](https://calver.org/) (YY.MM.Micro) for product versio
 - Link to Help Center
 - Track user activities for further auditing
 - Define agent document RAG modes — off, all, or tagged
-- Add tag selection before document upload (single and batch).
+- Add tag selection before document upload (single and batch)
 - Bull board UI for queue monitoring
-- (beta) Display analytics per agent (sessions per day)
+- Copy chat messages to clipboard
+- Warn before closing or refreshing the tab during document uploads
+- List pending invitations
+- Add a backoffice
+- Display analytics per agent (sessions per day)
 - (beta) Medgemma available for Conversational Agent
 - (beta) Agents can connect to external MCP servers for additional tools
 - (beta) Evaluate extraction agents against datasets
 - (beta) Project-level agent categories and category analytics
-- Bull board UI for queue monitoring
-- (beta) Review campaigns: invite testers and reviewers to evaluate an agent with structured feedback
-- Copy chat messages to clipboard
-- Warn before closing or refreshing the tab during document uploads
-- (beta) Review campaigns: see mean rating, session count, and survey count on closed campaigns
-- (beta) Review campaigns: testers can jump into their campaigns from a Test button on the home page
-- (beta) Review campaigns: reviewers can open campaigns, read sessions, and submit blind reviews
-- (beta) Review campaigns: admins can mark tester questions as factual so reviewers see them during blind review
-- (beta) Review campaigns: aggregate report with rating distributions and per-session matrix, plus CSV export
-- (beta) Review campaigns: tester and reviewer pages now show a top header with a signout menu
-- (beta) Review campaigns: create form now pre-fills a default name, description, and starter questions
-- List pending invitations
+- (beta) Review campaigns: invite testers and reviewers to evaluate an agent with structured feedback, blind reviews, factual question marking, and aggregate reporting with CSV export
 
 ### Changed
 - Agent configuration is now organized into tabs (General, Model, Sources, and Form or Output) for easier editing
@@ -38,21 +31,10 @@ This project uses [CalVer](https://calver.org/) (YY.MM.Micro) for product versio
 - Unified observability: structured logging, request tracing, error alerting, and queue health monitoring via GCP
 - Only list sessions belonging to the selected agent
 - Expand document upload dropzone to cover the entire page
-- (beta) Review campaigns: campaigns must be active before participants can be invited
-- Tighter vertical spacing in chat message markdown rendering
 
 ### Fixed
-- (beta) Review campaigns: save button no longer appears on active campaigns where edits are not allowed
 - Form result panel now scrolls when it has more fields than fit on screen
-- Breadcrumb misalignment in navigation UI
-- Navigation path builder not generating correct URLs
 - Restricted access to Studio mode for non-admin users
-- Show loader while currentId is being set
-- Studio mode redirect to Home when route not found
-- (beta) Review campaigns: reviewer-only members can now open the reviewer landing page
-- (beta) Review campaigns: participants list now refreshes immediately after inviting or revoking
-- (beta) Review campaigns: testers who are also reviewers on the same campaign can now start sessions
-- (beta) Review campaigns: opening the tester or reviewer interface no longer crashes in production
 
 ### Security
 

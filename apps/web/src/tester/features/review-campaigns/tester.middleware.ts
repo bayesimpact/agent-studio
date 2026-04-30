@@ -43,32 +43,28 @@ function registerListeners() {
     actionCreator: reviewCampaignsTesterActions.mount,
     effect: async (_, listenerApi) => {
       const state = listenerApi.getState()
-      // FIXME:
       const organizationId = selectCurrentOrganizationId(state)
       const projectId = selectCurrentProjectId(state)
       const reviewCampaignId = selectCurrentReviewCampaignId(state)
-      const agentSessionId = selectCurrentAgentSessionId(state)
 
-      // Always available under /tester: the user's own campaign list.
       listenerApi.dispatch(listMyReviewCampaigns())
 
-      // On a campaign-scoped URL: load the shared context, the user's
-      // sessions for that campaign, and any existing survey.
       if (organizationId && projectId && reviewCampaignId) {
         const scope = { organizationId, projectId, reviewCampaignId }
         listenerApi.dispatch(getTesterContext(scope))
         listenerApi.dispatch(listMyTesterSessions(scope))
         listenerApi.dispatch(getMyTesterSurvey(scope))
       }
+    },
+  })
 
-      // On a session-scoped URL: reset the streaming-messages slice and
-      // load the past transcript. The shared agent-session-messages
-      // middleware gates on the studio sessions slice (which the tester
-      // flow doesn't populate), so this is the tester-side compensation.
-      if (agentSessionId) {
-        listenerApi.dispatch(agentSessionMessagesActions.reset())
-        listenerApi.dispatch(listMessages(agentSessionId))
-      }
+  listenerMiddleware.startListening({
+    actionCreator: reviewCampaignsTesterActions.sessionMount,
+    effect: async (_, listenerApi) => {
+      const agentSessionId = selectCurrentAgentSessionId(listenerApi.getState())
+      if (!agentSessionId) return
+      listenerApi.dispatch(agentSessionMessagesActions.reset())
+      listenerApi.dispatch(listMessages(agentSessionId))
     },
   })
 
