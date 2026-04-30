@@ -25,11 +25,11 @@ export function AgentSessionMessage({ message }: { message: AgentSessionMessageT
           <ChatBotMessage>
             <div
               className={cn(
-                "rounded-2xl px-4 pt-4 pb-px bg-muted w-fit h-fit whitespace-break-spaces",
+                "rounded-2xl p-4 bg-muted w-fit h-fit",
                 isError && "bg-red-50 border border-red-200 text-red-800",
               )}
             >
-              {isStreaming && <ThinkingMessage className="pb-2.5" />}
+              {isStreaming && <ThinkingMessage />}
               {isError ? <ErrorMessage /> : <MarkdownWrapper content={message.content} />}
             </div>
 
