@@ -174,7 +174,7 @@ export function CampaignForm({
                 {t("reviewCampaigns:editor.actions.close")}
               </Button>
             )}
-            {!isClosed && (
+            {!configLocked && (
               <Button type="submit">
                 {mode === "create"
                   ? t("reviewCampaigns:editor.actions.create")
