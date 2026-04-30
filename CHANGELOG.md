@@ -41,6 +41,7 @@ This project uses [CalVer](https://calver.org/) (YY.MM.Micro) for product versio
 - (beta) Review campaigns: campaigns must be active before participants can be invited
 
 ### Fixed
+- (beta) Review campaigns: save button no longer appears on active campaigns where edits are not allowed
 - Form result panel now scrolls when it has more fields than fit on screen
 - Breadcrumb misalignment in navigation UI
 - Navigation path builder not generating correct URLs
