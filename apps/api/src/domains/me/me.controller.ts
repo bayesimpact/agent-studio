@@ -1,4 +1,4 @@
-import { MeRoutes } from "@caseai-connect/api-contracts"
+import { buildNameFromEmail, MeRoutes } from "@caseai-connect/api-contracts"
 import type {
   PendingAgentInvitationDto,
   PendingProjectInvitationDto,
@@ -48,7 +48,7 @@ export class MeController {
         user: {
           id: user.id,
           email: user.email,
-          name: user.name,
+          name: user.name ?? buildNameFromEmail(user.email),
           memberships: toUserMembershipDto(memberships),
           isBackofficeAuthorized: isEmailBackofficeAuthorized(user.email),
         },

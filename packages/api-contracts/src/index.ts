@@ -56,8 +56,7 @@ export { defineRoute } from "./helpers"
 // Invitations
 export { InvitationsRoutes } from "./invitations/invitations.routes"
 // Me
-export type * from "./me/me.dto"
-// Routes
+export * from "./me/me.dto"
 export { MeRoutes } from "./me/me.routes"
 // Organizations
 export type * from "./organizations/organizations.dto"

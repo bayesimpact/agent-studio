@@ -34,7 +34,7 @@ const toMe = (dto: MeResponseDto): Me => ({
   user: {
     id: dto.user.id,
     email: dto.user.email,
-    name: dto.user.name || dto.user.email.split("@")[0]?.replaceAll(".", " ") || "Unnamed User",
+    name: dto.user.name,
     memberships: dto.user.memberships,
     isBackofficeAuthorized: dto.user.isBackofficeAuthorized,
   },
