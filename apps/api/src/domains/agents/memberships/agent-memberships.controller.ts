@@ -1,4 +1,8 @@
-import { type AgentMembershipDto, AgentMembershipRoutes } from "@caseai-connect/api-contracts"
+import {
+  type AgentMembershipDto,
+  AgentMembershipRoutes,
+  buildNameFromEmail,
+} from "@caseai-connect/api-contracts"
 import { Body, Controller, Delete, Get, Post, Req, UseGuards } from "@nestjs/common"
 import type {
   EndpointRequestWithAgent,
@@ -74,7 +78,7 @@ function toDto(entity: AgentMembership): AgentMembershipDto {
     id: entity.id,
     agentId: entity.agentId,
     userId: entity.userId,
-    userName: entity.user.name,
+    userName: entity.user.name ?? buildNameFromEmail(entity.user.email),
     userEmail: entity.user.email,
     role: entity.role,
     status: entity.status,

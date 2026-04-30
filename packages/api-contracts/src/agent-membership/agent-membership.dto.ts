@@ -7,7 +7,7 @@ export type AgentMembershipDto = {
   id: string
   agentId: string
   userId: string
-  userName: string | null
+  userName: string
   userEmail: string
   role: AgentMembershipRoleDto
   status: "sent" | "accepted"

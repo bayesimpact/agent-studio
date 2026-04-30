@@ -32,7 +32,7 @@ export type UserMembershipsDto = {
 export type UserDto = {
   id: string
   email: string
-  name: string | null
+  name: string
   memberships: UserMembershipsDto
   isBackofficeAuthorized: boolean
 }
@@ -69,4 +69,8 @@ export type PendingAgentInvitationDto = {
 export type PendingInvitationsResponseDto = {
   projectInvitations: PendingProjectInvitationDto[]
   agentInvitations: PendingAgentInvitationDto[]
+}
+
+export function buildNameFromEmail(email: string): string {
+  return email.split("@")[0]?.replaceAll(".", " ") ?? "Unnamed User"
 }
