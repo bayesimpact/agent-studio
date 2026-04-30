@@ -17,35 +17,45 @@ export function MarkdownWrapper({ content, end, theme = "light" }: MarkdownProps
       components={{
         // Headings
         h1: ({ children }) => (
-          <h1 className={cn("mb-6 mt-8 text-3xl font-bold first:mt-0")}>{children}</h1>
+          <h1 className={cn("mt-4 mb-2 text-3xl font-bold first:mt-0")}>{children}</h1>
         ),
         h2: ({ children }) => (
-          <h2 className={cn("mb-4 mt-8 text-2xl font-semibold first:mt-0")}>{children}</h2>
+          <h2 className={cn("mt-4 mb-2 text-2xl font-semibold first:mt-0")}>{children}</h2>
         ),
         h3: ({ children }) => (
-          <h3 className={cn("mb-3 mt-6 text-xl font-semibold first:mt-0")}>{children}</h3>
+          <h3 className={cn("mt-3 mb-2 text-xl font-semibold first:mt-0")}>{children}</h3>
         ),
         h4: ({ children }) => (
-          <h4 className={cn("mb-2 mt-4 text-lg font-medium first:mt-0")}>{children}</h4>
+          <h4 className={cn("mt-3 mb-2 text-lg font-medium first:mt-0")}>{children}</h4>
         ),
         h5: ({ children }) => (
-          <h5 className={cn("mb-2 mt-4 text-base font-medium first:mt-0")}>{children}</h5>
+          <h5 className={cn("mt-2 mb-2 text-base font-medium first:mt-0")}>{children}</h5>
         ),
         h6: ({ children }) => (
-          <h6 className={cn("mb-2 mt-4 text-sm font-medium first:mt-0")}>{children}</h6>
+          <h6 className={cn("mt-2 mb-2 text-sm font-medium first:mt-0")}>{children}</h6>
         ),
         // Paragraphs
         p: ({ children }) => (
-          <p className={cn("mb-4 leading-relaxed")}>
+          <p className={cn("mb-2 leading-normal last:mb-0")}>
             {children} {end}
           </p>
         ),
         // Lists
-        ul: ({ children }) => <ul className={cn("mb-4 ml-6 list-disc space-y-1")}>{children}</ul>,
-        ol: ({ children }) => (
-          <ol className={cn("mb-4 ml-6 list-decimal space-y-1")}>{children}</ol>
+        ul: ({ children }) => (
+          <ul className={cn("pb-4 pl-8 list-disc last:mb-0 [&_ul]:mb-0 [&_ol]:mb-0")}>
+            {children}
+          </ul>
         ),
-        li: ({ children }) => <li className={cn("leading-relaxed")}>{children}</li>,
+        ol: ({ children }) => (
+          <ol className={cn("pb-4 pl-8 list-decimal last:mb-0 [&_ul]:mb-0 [&_ol]:mb-0")}>
+            {children}
+          </ol>
+        ),
+        li: ({ children }) => (
+          <li className={cn("leading-normal mb-px [&>p]:mb-0 [&>p:last-child]:mb-0")}>
+            {children}
+          </li>
+        ),
         // Code
         // code: ({ children, ...props }) => {
         //   const isInline = !props.className?.includes("language-")

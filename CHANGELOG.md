@@ -39,6 +39,7 @@ This project uses [CalVer](https://calver.org/) (YY.MM.Micro) for product versio
 - Only list sessions belonging to the selected agent
 - Expand document upload dropzone to cover the entire page
 - (beta) Review campaigns: campaigns must be active before participants can be invited
+- Tighter vertical spacing in chat message markdown rendering
 
 ### Fixed
 - (beta) Review campaigns: save button no longer appears on active campaigns where edits are not allowed
