@@ -57,46 +57,91 @@ Each feature MUST follow this canonical pattern (the "me" feature is the referen
 
 **Migration note**: Legacy features (`projects`, `organizations`, `agents`, etc.) that use `services/{domain}.ts` and return DTOs directly SHOULD be refactored over time to follow this pattern.
 
-### Data Loading: Marker Action + Middleware, Not `useEffect`
+### Data Loading: Route-Level `useMount` + Middleware + `AsyncRoute` Gate
 
-**Rule**: page components MUST NOT dispatch fetch thunks from `useEffect`. They dispatch a `mount` / `unmount` marker action; a Redux listener middleware reacts to `mount` and dispatches the loaders by reading current URL-driven state (the `selectCurrent*Id` slices populated by `useSetCurrentIds`).
+**Rule**: page components MUST NOT dispatch fetch thunks from `useEffect`. Data loading is handled by **route wrapper components** using `useMount` + listener middleware + `AsyncRoute`. See [ADR 0009](../../docs/adr/0009-subroute-data-loading.md) for full rationale.
 
-**Pattern** (mirrors `apps/web/src/eval/features/evaluation-extraction-runs/evaluation-extraction-runs.middleware.ts`):
+**Three-layer pattern** (reference: `apps/web/src/eval/routes/EvalRoutes.tsx`):
 
-1. Slice exposes no-op `mount` / `unmount` reducers:
-   ```ts
-   reducers: {
-     mount: () => {},
-     unmount: () => {},
-     // ...
-   }
-   ```
-2. Each route component fires them from a single `useEffect`:
-   ```ts
-   useEffect(() => {
-     dispatch(featureActions.mount())
-     return () => dispatch(featureActions.unmount())
-   }, [dispatch])
-   ```
-3. Middleware listens on `featureActions.mount`, reads URL-driven state, dispatches loaders:
-   ```ts
-   listenerMiddleware.startListening({
-     actionCreator: featureActions.mount,
-     effect: async (_, listenerApi) => {
-       const state = listenerApi.getState()
-       const id = selectCurrentXxxId(state)
-       if (id) listenerApi.dispatch(loadXxx(id))
-     },
-   })
-   ```
+#### Layer 1 — Root route: `useInitStore` + `useSetCurrentIds` + `initDone` gate
 
-**Why not `dispatch(thunk())` in `useEffect` directly**: silent failure mode — different entry points (e.g. tester flow re-using a studio component) end up with no fetcher because nobody remembers to add the useEffect, OR the page's useEffect duplicates work the listener already does.
+The root route (e.g. `TesterRoute`, eval's `ProjectRouteHandler`) injects dynamic slices and sets ALL URL-driven IDs at the **same component level**. The `initDone` gate creates two-phase rendering: effects fire in phase 1 (slices injected + IDs set), children mount in phase 2 with correct state.
 
-**Why not URL-change predicates only** (`hasXxxIdChanged`): scope-bound middleware (registered via `injectXxxSlices`) only sees state changes after registration. On hard reload to a deep URL, `useSetCurrentIds` runs in `ProtectedRoute` *before* the Shell mounts (because `ProtectedRoute` shows `<LoadingRoute />` while Auth0 resolves), so a predicate listener misses the initial null → id transition. The `mount` marker fires *after* Shell mount, sidestepping the ordering issue. Predicate listeners ARE fine for **tier-1 (static) middleware** registered at boot — see `common/features/agents/agents.middleware.ts` listening for `hasProjectChanged`.
+```ts
+// Local to the route file — sets only the IDs this feature needs.
+const useSetCurrentIds = () => {
+  const dispatch = useAppDispatch()
+  const params = useParams()
+  useEffect(() => {
+    const { organizationId, projectId, reviewCampaignId, agentSessionId } = params
+    dispatch(organizationsActions.setCurrentOrganizationId({ organizationId: organizationId || null }))
+    dispatch(projectsActions.setCurrentProjectId({ projectId: projectId || null }))
+    // ... all IDs for this feature scope
+  }, [dispatch, params])
+}
 
-**Cleanup actions** (e.g. `clearSelectedContext`) belong in middleware too — listener on `unmount` or post-action — not in `useEffect` cleanups.
+function FeatureRoute() {
+  const { initDone } = useInitStore({ inject, reset, condition: true })
+  useSetCurrentIds()
+  if (!initDone) return <LoadingRoute />
+  return <AsyncRoute data={[me]}>{() => <Outlet />}</AsyncRoute>
+}
+```
 
-**Exceptions where `useEffect` is fine**: dynamic slice injection lifecycle (`use-init-store.ts`), DOM subscriptions, focus/scroll, third-party widget mount/unmount, AND the `mount`/`unmount` marker dispatches described above.
+#### Layer 2+ — Sub-routes: `useMount` + `condition` + `AsyncRoute`
+
+Each nested route wrapper reads its condition from a **Redux selector** (not `useParams`), calls `useMount`, and blocks with `AsyncRoute` until its data is loaded.
+
+```ts
+function CampaignRoute() {
+  const campaignId = useAppSelector(selectCurrentReviewCampaignId)
+  const context = useAppSelector(selectTesterContext)
+
+  useMount({ actions: featureActions, condition: !!campaignId })
+
+  if (!campaignId) return <LoadingRoute />
+  return <AsyncRoute data={[context]}>{() => <Outlet />}</AsyncRoute>
+}
+```
+
+Each sub-route level that needs its own data MUST have its own `mount`/`unmount` actions and a dedicated middleware listener:
+
+```ts
+function SessionRoute() {
+  const sessionId = useAppSelector(selectCurrentAgentSessionId)
+  const messages = useAppSelector(selectCurrentMessagesData)
+
+  useMount({
+    actions: { mount: featureActions.sessionMount, unmount: featureActions.sessionUnmount },
+    condition: !!sessionId,
+  })
+
+  if (!sessionId) return <LoadingRoute />
+  return <AsyncRoute data={[messages]}>{() => <Outlet />}</AsyncRoute>
+}
+```
+
+#### Middleware: one listener per mount action
+
+```ts
+listenerMiddleware.startListening({
+  actionCreator: featureActions.mount,
+  effect: async (_, listenerApi) => {
+    const id = selectCurrentXxxId(listenerApi.getState())
+    if (id) listenerApi.dispatch(loadXxx(id))
+  },
+})
+```
+
+#### Key constraints
+
+- **`useSetCurrentIds` MUST be at the same level as `useInitStore`** — the `initDone` gate ensures IDs are set before children mount. Putting `useSetCurrentIds` in a child creates a race condition (React fires child effects before parent effects).
+- **Page/leaf components MUST NOT dispatch data loading** — all loading is in route wrappers + middleware. Leaf components assume data is available.
+- **Use `useMount` hook, not raw `useEffect`** for mount/unmount — `useMount` standardizes the pattern and prevents mistakes.
+- **Conditions come from Redux selectors, not `useParams`** — the route reads `useAppSelector(selectCurrentXxxId)` to match the eval pattern.
+- **Each sub-route level needing its own data gets its own `mount`/`unmount` actions** — allows dedicated middleware listeners and avoids overloading a single `mount` action.
+
+**Exceptions where `useEffect` is fine**: dynamic slice injection lifecycle (`use-init-store.ts`), the local `useSetCurrentIds` in the root route, DOM subscriptions, focus/scroll, third-party widget mount/unmount.
 
 ---
 

@@ -4,9 +4,10 @@ import { TesterCampaignLandingPage } from "@/tester/features/review-campaigns/co
 import { TesterEndOfPhaseSurveyPage } from "@/tester/features/review-campaigns/components/TesterEndOfPhaseSurveyPage"
 import { TesterMyCampaignsPage } from "@/tester/features/review-campaigns/components/TesterMyCampaignsPage"
 import { TesterRouteNames } from "./helpers"
+import { TesterCampaignRoute } from "./TesterCampaignRoute"
 import { TesterRoute } from "./TesterRoute"
+import { TesterSessionRoute } from "./TesterSessionRoute"
 
-// FIXME:
 export const testerRoutes = {
   element: (
     <ProtectedRoute>
@@ -19,16 +20,26 @@ export const testerRoutes = {
       element: <TesterMyCampaignsPage />,
     },
     {
-      path: TesterRouteNames.CAMPAIGN,
-      element: <TesterCampaignLandingPage />,
-    },
-    {
-      path: TesterRouteNames.SESSION,
-      element: <TesterAgentSessionPage />,
-    },
-    {
-      path: TesterRouteNames.SURVEY,
-      element: <TesterEndOfPhaseSurveyPage />,
+      element: <TesterCampaignRoute />,
+      children: [
+        {
+          path: TesterRouteNames.CAMPAIGN,
+          element: <TesterCampaignLandingPage />,
+        },
+        {
+          element: <TesterSessionRoute />,
+          children: [
+            {
+              path: TesterRouteNames.SESSION,
+              element: <TesterAgentSessionPage />,
+            },
+          ],
+        },
+        {
+          path: TesterRouteNames.SURVEY,
+          element: <TesterEndOfPhaseSurveyPage />,
+        },
+      ],
     },
   ],
 }

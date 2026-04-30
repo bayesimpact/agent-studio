@@ -63,6 +63,8 @@ const slice = createSlice({
      */
     mount: () => {},
     unmount: () => {},
+    sessionMount: () => {},
+    sessionUnmount: () => {},
   },
   extraReducers: (builder) => {
     builder

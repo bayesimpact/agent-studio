@@ -45,13 +45,13 @@ import { DocumentTagPicker } from "@/studio/features/documents/components/Docume
 import { type AgentFormData, getDefaultFormValues } from "./agent-form.shared"
 
 function extractModelListFromAgentType(
-  agentType: "conversation" | "extraction" | "form",
+  _: "conversation" | "extraction" | "form",
   hasFeature: HasFeature,
 ) {
   const defaultModels = Object.entries(AgentModel).filter(
     ([_key, value]) => AgentModelToAgentProvider[value] === AgentProvider.Vertex,
   )
-  if (hasFeature("gemma") && agentType === "extraction") {
+  if (hasFeature("gemma")) {
     const _medGemmaModels = Object.entries(AgentModel).filter(
       ([_key, value]) => AgentModelToAgentProvider[value] === AgentProvider.MedGemma,
     )
