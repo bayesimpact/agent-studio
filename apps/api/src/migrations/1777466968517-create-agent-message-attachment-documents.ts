@@ -56,10 +56,11 @@ export class CreateAgentMessageAttachmentDocuments1777466968517 implements Migra
       ) AS legacy_document
     `)
     await queryRunner.query(`
-      UPDATE "agent_message"
-      SET "attachment_document_id" = "document_id"
-      WHERE "document_id" IS NOT NULL
-        AND "attachment_document_id" IS NULL
+      UPDATE "agent_message" AS agent_message
+      SET "attachment_document_id" = agent_message."document_id"
+      FROM "agent_message_attachment_document" AS attachment_document
+      WHERE attachment_document."id" = agent_message."document_id"
+        AND agent_message."attachment_document_id" IS NULL
     `)
     await queryRunner.query(
       `ALTER TABLE "agent_message" ADD CONSTRAINT "FK_109b1087b59ce1a36320432f5d8" FOREIGN KEY ("attachment_document_id") REFERENCES "agent_message_attachment_document"("id") ON DELETE SET NULL ON UPDATE NO ACTION`,
