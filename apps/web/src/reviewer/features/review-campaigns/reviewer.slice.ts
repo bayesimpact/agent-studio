@@ -33,15 +33,10 @@ const slice = createSlice({
     clearSessionDetail: (state, action: { payload: { sessionId: string } }) => {
       delete state.sessionDetailBySessionId[action.payload.sessionId]
     },
-    /**
-     * Marker actions dispatched by each reviewer route from a `useEffect`.
-     * The reviewer listener middleware reacts to `mount` by reading current
-     * URL-driven state (`currentReviewCampaignId`, `currentReviewerSessionId`)
-     * and dispatching the appropriate loaders. Mirrors the pattern in
-     * `eval/features/evaluation-extraction-runs/evaluation-extraction-runs.middleware.ts`.
-     */
     mount: () => {},
     unmount: () => {},
+    sessionMount: () => {},
+    sessionUnmount: () => {},
   },
   extraReducers: (builder) => {
     builder

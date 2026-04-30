@@ -6,12 +6,10 @@ import type {
 } from "@caseai-connect/api-contracts"
 import { useTranslation } from "react-i18next"
 import { useNavigate, useParams } from "react-router-dom"
-import { useMount } from "@/common/hooks/use-mount"
 import { ADS } from "@/common/store/async-data-status"
 import { useAppDispatch, useAppSelector } from "@/common/store/hooks"
 import { buildReviewerCampaignPath } from "@/reviewer/routes/helpers"
 import { selectReviewerSessionDetail } from "../reviewer.selectors"
-import { reviewCampaignsReviewerActions } from "../reviewer.slice"
 import { getReviewerSession, submitReviewerReview, updateReviewerReview } from "../reviewer.thunks"
 import { ReviewerSessionReview } from "./ReviewerSessionReview"
 
@@ -22,30 +20,16 @@ type Params = {
   sessionId: string
 }
 
-// FIXME:
 export function ReviewerSessionReviewPage() {
   const { t } = useTranslation()
   const dispatch = useAppDispatch()
   const navigate = useNavigate()
-  const params = useParams<Params>()
-  const detailState = useAppSelector(selectReviewerSessionDetail(params.sessionId ?? ""))
+  const params = useParams<Params>() as Params
+  const detailState = useAppSelector(selectReviewerSessionDetail(params.sessionId))
 
-  useMount({
-    actions: reviewCampaignsReviewerActions,
-    condition: !!params.sessionId,
-  })
-
-  if (!params.organizationId || !params.projectId || !params.reviewCampaignId || !params.sessionId)
-    return null
+  if (!ADS.isFulfilled(detailState)) return null
 
   const handleSubmit = async (payload: SubmitReviewerSessionReviewRequestDto) => {
-    if (
-      !params.sessionId ||
-      !params.organizationId ||
-      !params.projectId ||
-      !params.reviewCampaignId
-    )
-      return
     await dispatch(
       submitReviewerReview({
         organizationId: params.organizationId,
@@ -55,7 +39,6 @@ export function ReviewerSessionReviewPage() {
         fields: payload,
       }),
     ).unwrap()
-    // Slice invalidates the detail cache; re-fetch the freshly "full" payload.
     dispatch(
       getReviewerSession({
         organizationId: params.organizationId,
@@ -67,15 +50,7 @@ export function ReviewerSessionReviewPage() {
   }
 
   const handleUpdate = async (payload: UpdateReviewerSessionReviewRequestDto) => {
-    if (
-      !params.sessionId ||
-      !params.organizationId ||
-      !params.projectId ||
-      !params.reviewCampaignId ||
-      !ADS.isFulfilled(detailState) ||
-      detailState.value.blind
-    )
-      return
+    if (detailState.value.blind) return
     await dispatch(
       updateReviewerReview({
         organizationId: params.organizationId,
@@ -101,8 +76,7 @@ export function ReviewerSessionReviewPage() {
       <button
         type="button"
         className="text-muted-foreground w-fit text-sm hover:underline"
-        onClick={() => {
-          if (!params.organizationId || !params.projectId || !params.reviewCampaignId) return
+        onClick={() =>
           navigate(
             buildReviewerCampaignPath({
               organizationId: params.organizationId,
@@ -110,24 +84,16 @@ export function ReviewerSessionReviewPage() {
               reviewCampaignId: params.reviewCampaignId,
             }),
           )
-        }}
+        }
       >
         {t("reviewerCampaigns:sessionPage.back")}
       </button>
 
-      {ADS.isLoading(detailState) && (
-        <p className="text-muted-foreground text-sm">
-          {t("reviewerCampaigns:sessionPage.loading")}
-        </p>
-      )}
-      {ADS.isError(detailState) && <p className="text-destructive text-sm">{detailState.error}</p>}
-      {ADS.isFulfilled(detailState) && (
-        <ReviewerSessionReview
-          session={detailState.value}
-          onSubmitReview={handleSubmit}
-          onUpdateReview={handleUpdate}
-        />
-      )}
+      <ReviewerSessionReview
+        session={detailState.value}
+        onSubmitReview={handleSubmit}
+        onUpdateReview={handleUpdate}
+      />
     </div>
   )
 }
