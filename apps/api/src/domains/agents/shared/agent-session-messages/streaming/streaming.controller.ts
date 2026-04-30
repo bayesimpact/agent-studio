@@ -28,7 +28,7 @@ export class StreamingController {
     try {
       const parsedQuery = JSON.parse(query) as typeof AgentSessionMessagesRoutes.stream.request
       const userContent = parsedQuery.payload.content
-      const documentId = parsedQuery.payload.documentId
+      const attachmentDocumentId = parsedQuery.payload.attachmentDocumentId
       const organizationId = request.organizationId
       const projectId = request.project.id
       const agent = request.agent
@@ -50,7 +50,7 @@ export class StreamingController {
               agent,
               sessionId,
               userContent,
-              documentId,
+              attachmentDocumentId,
               notifyClient: (event) => {
                 subscriber.next(event)
               },

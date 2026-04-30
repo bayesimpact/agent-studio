@@ -61,7 +61,7 @@ export async function streamChatResponse({
   agentId,
   agentSessionId,
   content,
-  documentId,
+  attachmentDocumentId,
   handlers,
   signal,
 }: {
@@ -70,7 +70,7 @@ export async function streamChatResponse({
   agentId: string
   agentSessionId: string
   content: string
-  documentId?: string
+  attachmentDocumentId?: string
   handlers: StreamEventHandler
   signal?: AbortSignal
 }): Promise<void> {
@@ -78,7 +78,7 @@ export async function streamChatResponse({
     const token = await getAccessToken()
     const baseURL = import.meta.env.VITE_API_URL as string
     const body = {
-      payload: { content, documentId },
+      payload: { content, attachmentDocumentId },
     } satisfies typeof AgentSessionMessagesRoutes.stream.request
     const url = `${baseURL}${AgentSessionMessagesRoutes.stream.getPath({ organizationId, projectId, agentId, agentSessionId })}?q=${encodeURIComponent(JSON.stringify(body))}`
 

@@ -62,6 +62,8 @@ export const agentMessageFactory = AgentMessageFactory.define(
       projectId: transientParams.project.id,
       documentId: params.documentId ?? null,
       document: null, // TODO: transientParams??
+      attachmentDocumentId: params.attachmentDocumentId ?? null,
+      attachmentDocument: null,
     } satisfies AgentMessage
   },
 )

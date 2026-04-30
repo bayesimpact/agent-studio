@@ -1,6 +1,7 @@
 import {
   type AgentSessionMessageDto,
   AgentSessionMessagesRoutes,
+  type PresignAgentSessionMessageAttachmentDocumentRequestDto,
 } from "@caseai-connect/api-contracts"
 import { getAxiosInstance } from "@/external/axios"
 import type { AgentSessionMessage } from "../agent-session-messages.models"
@@ -23,6 +24,41 @@ export default {
     )
     return fromDto(response.data.data)
   },
+  uploadAttachmentDocument: async ({ file, payload, ...params }) => {
+    const axios = getAxiosInstance()
+    const response = await axios.post<
+      typeof AgentSessionMessagesRoutes.presignAttachmentDocument.response
+    >(AgentSessionMessagesRoutes.presignAttachmentDocument.getPath(params), {
+      payload: {
+        type: payload.type,
+        fileName: file.name,
+        mimeType: file.type as PresignAgentSessionMessageAttachmentDocumentRequestDto["mimeType"],
+        size: file.size,
+      },
+    } satisfies typeof AgentSessionMessagesRoutes.presignAttachmentDocument.request)
+
+    const uploadResponse = await fetch(response.data.data.uploadUrl, {
+      method: "PUT",
+      headers: { "Content-Type": file.type },
+      body: file,
+    })
+
+    if (!uploadResponse.ok) {
+      throw new Error(`Attachment upload failed: ${uploadResponse.status}`)
+    }
+
+    return { attachmentDocumentId: response.data.data.attachmentDocumentId }
+  },
+  getAttachmentDocumentTemporaryUrl: async ({ payload, ...params }) => {
+    const axios = getAxiosInstance()
+    const response = await axios.post<
+      typeof AgentSessionMessagesRoutes.getAttachmentDocumentTemporaryUrl.response
+    >(AgentSessionMessagesRoutes.getAttachmentDocumentTemporaryUrl.getPath(params), {
+      payload,
+    } satisfies typeof AgentSessionMessagesRoutes.getAttachmentDocumentTemporaryUrl.request)
+
+    return response.data.data
+  },
 } satisfies IAgentSessionMessagesSpi
 
 const fromDto = (dto: AgentSessionMessageDto): AgentSessionMessage => ({
@@ -30,7 +66,7 @@ const fromDto = (dto: AgentSessionMessageDto): AgentSessionMessage => ({
   role: dto.role,
   content: dto.content,
   createdAt: dto.createdAt,
-  documentId: dto.documentId,
+  attachmentDocumentId: dto.attachmentDocumentId,
   status: dto.status,
   startedAt: dto.startedAt,
   completedAt: dto.completedAt,

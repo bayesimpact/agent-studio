@@ -11,6 +11,7 @@ import { FormAgentSession } from "@/domains/agents/form-agent-sessions/form-agen
 import { FormAgentSessionsModule } from "@/domains/agents/form-agent-sessions/form-agent-sessions.module"
 import { McpServersModule } from "@/domains/mcp-servers/mcp-servers.module"
 import { McpModule } from "@/external/mcp"
+import { AgentMessageAttachmentDocumentsService } from "../agent-message-attachment-documents.service"
 import { StreamingController } from "./streaming.controller"
 import { StreamingService } from "./streaming.service"
 
@@ -23,7 +24,7 @@ import { StreamingService } from "./streaming.service"
     McpServersModule,
     forwardRef(() => ConversationAgentSessionsModule),
   ],
-  providers: [...moduleProviders, StreamingService],
+  providers: [...moduleProviders, AgentMessageAttachmentDocumentsService, StreamingService],
   controllers: [StreamingController],
   exports: [StreamingService],
 })
