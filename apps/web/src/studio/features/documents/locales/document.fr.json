@@ -16,6 +16,7 @@
       "embeddingError": "Erreur des embeddings",
       "embeddingStatuses": {
         "pending": "En attente",
+        "queued": "En file",
         "processing": "En cours",
         "completed": "Prêt",
         "failed": "Échoué"

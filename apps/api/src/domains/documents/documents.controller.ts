@@ -58,6 +58,7 @@ import {
 import { DocumentsService } from "./documents.service"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
 import { DocumentEmbeddingStatusStreamService } from "./embeddings/document-embedding-status-stream.service"
+import type { DocumentEmbeddingAfterEnqueuePatch } from "./embeddings/document-embeddings.types"
 import {
   DOCUMENT_EMBEDDINGS_BATCH_SERVICE,
   type DocumentEmbeddingsBatchService,
@@ -241,12 +242,16 @@ export class DocumentsController {
         })
       }
 
-      await this.createEmbeddingsIfSourceTypeProject({
+      const embeddingPatch = await this.createEmbeddingsIfSourceTypeProject({
         document,
         connectScope,
         userId: req.user.id,
       })
-
+      if (embeddingPatch !== undefined) {
+        document.embeddingStatus = embeddingPatch.embeddingStatus
+        document.embeddingError = embeddingPatch.embeddingError
+        document.updatedAt = embeddingPatch.updatedAt
+      }
       documents.push(document)
     }
 
@@ -261,9 +266,9 @@ export class DocumentsController {
     document: Document
     connectScope: RequiredConnectScope
     userId: string
-  }): Promise<void> {
-    if (document.sourceType !== "project") return
-    await this.documentEmbeddingsBatchService.enqueueCreateEmbeddingsForDocument({
+  }): Promise<DocumentEmbeddingAfterEnqueuePatch | undefined> {
+    if (document.sourceType !== "project") return undefined
+    return await this.documentEmbeddingsBatchService.enqueueCreateEmbeddingsForDocument({
       documentId: document.id,
       organizationId: connectScope.organizationId,
       projectId: connectScope.projectId,
