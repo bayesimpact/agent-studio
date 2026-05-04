@@ -8,6 +8,16 @@ This project uses [CalVer](https://calver.org/) (YY.MM.Micro) for product versio
 ## [Unreleased]
 
 ### Added
+
+### Changed
+
+### Fixed
+
+### Security
+
+## [26.05.0] - 2026-05-04
+
+### Added
 - Conversation and form agents can now send an optional greeting as the first message of a new session
 - Link to Help Center
 - Track user activities for further auditing
