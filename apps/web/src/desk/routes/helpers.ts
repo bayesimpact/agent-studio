@@ -1,7 +1,7 @@
 export enum DeskRouteNames {
-  APP = "/app",
+  HOME = "/app",
 }
 
 export const buildDeskPath = (path: string) => {
-  return `${DeskRouteNames.APP}${path}`
+  return `${DeskRouteNames.HOME}${path}`
 }

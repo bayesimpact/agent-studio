@@ -1,13 +1,11 @@
-import { selectIsBackofficeAuthorized, selectMeStatus } from "@/common/features/me/me.selectors"
+import { selectIsBackofficeAuthorized } from "@/common/features/me/me.selectors"
 import { useInitStore } from "@/common/hooks/use-init-store"
-import { ErrorRoute } from "@/common/routes/ErrorRoute"
 import { LoadingRoute } from "@/common/routes/LoadingRoute"
-import { ADS } from "@/common/store/async-data-status"
+import { NotFoundRoute } from "@/common/routes/NotFoundRoute"
 import { useAppSelector } from "@/common/store/hooks"
 import { injectBackofficeSlices, resetBackofficeSlices } from "../store/slices"
 
 export function BackofficeGuard({ children }: { children: React.ReactNode }) {
-  const meStatus = useAppSelector(selectMeStatus)
   const isBackofficeAuthorized = useAppSelector(selectIsBackofficeAuthorized)
 
   const { initDone } = useInitStore({
@@ -15,12 +13,10 @@ export function BackofficeGuard({ children }: { children: React.ReactNode }) {
     reset: resetBackofficeSlices,
     condition: isBackofficeAuthorized,
   })
-  if (ADS.isLoading(meStatus) || ADS.isUninitialized(meStatus) || !initDone) {
+
+  if (isBackofficeAuthorized) {
+    if (initDone) return <>{children}</>
     return <LoadingRoute />
   }
-
-  if (!isBackofficeAuthorized) {
-    return <ErrorRoute error="You are not authorized to access the backoffice." />
-  }
-  return <>{children}</>
+  return <NotFoundRoute redirectToHome />
 }

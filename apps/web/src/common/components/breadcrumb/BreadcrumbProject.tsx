@@ -38,8 +38,8 @@ export function BreadcrumbProject({ organization }: { organization: Organization
 
   const handleClick = (projectId: string) => () => {
     const forceInterface = abilities.canAccessStudio({ projectId })
-      ? StudioRouteNames.APP
-      : DeskRouteNames.APP
+      ? StudioRouteNames.HOME
+      : DeskRouteNames.HOME
     const path = buildPath("project", { organizationId, projectId, forceInterface })
     window.location.assign(path)
   }

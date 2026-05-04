@@ -13,3 +13,10 @@ export function isEmailBackofficeAuthorized(email: string | null | undefined): b
   if (authorizedEmails.length === 0) return false
   return authorizedEmails.includes(email.trim().toLowerCase())
 }
+
+export function isDomainBackofficeAuthorized(email: string | null | undefined): boolean {
+  if (!email) return false
+  const authorizedDomain = process.env.BACKOFFICE_AUTHORIZED_DOMAIN
+  if (!authorizedDomain) return false
+  return email.endsWith(authorizedDomain)
+}

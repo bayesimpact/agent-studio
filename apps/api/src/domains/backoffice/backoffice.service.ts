@@ -1,10 +1,18 @@
 import type { FeatureFlagKey } from "@caseai-connect/api-contracts"
-import { BadRequestException, Injectable, NotFoundException } from "@nestjs/common"
+import {
+  BadRequestException,
+  ForbiddenException,
+  Injectable,
+  NotFoundException,
+} from "@nestjs/common"
 import { InjectRepository } from "@nestjs/typeorm"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
-import { DataSource, type Repository } from "typeorm"
+import { DataSource, In, type Repository } from "typeorm"
+import { AgentMembership } from "../agents/memberships/agent-membership.entity"
 import { FeatureFlag } from "../feature-flags/feature-flag.entity"
+import { OrganizationMembership } from "../organizations/memberships/organization-membership.entity"
 import { Organization } from "../organizations/organization.entity"
+import { ProjectMembership } from "../projects/memberships/project-membership.entity"
 import { Project } from "../projects/project.entity"
 import { User } from "../users/user.entity"
 import type {
@@ -21,6 +29,8 @@ type ProjectAgentCategoryRow = {
   usageCount: number
 }
 
+const adminRoles = In(["admin", "owner"])
+
 @Injectable()
 export class BackofficeService {
   constructor(
@@ -30,10 +40,22 @@ export class BackofficeService {
     @InjectRepository(FeatureFlag)
     private readonly featureFlagRepository: Repository<FeatureFlag>,
     @InjectRepository(User) private readonly userRepository: Repository<User>,
+    @InjectRepository(OrganizationMembership)
+    private readonly organizationMembershipRepository: Repository<OrganizationMembership>,
+    @InjectRepository(ProjectMembership)
+    private readonly projectMembershipRepository: Repository<ProjectMembership>,
+    @InjectRepository(AgentMembership)
+    private readonly agentMembershipRepository: Repository<AgentMembership>,
     private readonly dataSource: DataSource,
   ) {}
 
-  async listOrganizationsWithProjects(): Promise<BackofficeOrganizationView[]> {
+  async listOrganizationsWithProjects({
+    canListAll,
+    userId,
+  }: {
+    canListAll: boolean
+    userId: string
+  }): Promise<BackofficeOrganizationView[]> {
     const organizations = await this.organizationRepository.find({
       relations: {
         projects: { featureFlags: true },
@@ -41,12 +63,16 @@ export class BackofficeService {
       order: { createdAt: "DESC" },
     })
 
-    const projects = organizations.flatMap((organization) => organization.projects ?? [])
+    const visibleOrganizations = canListAll
+      ? organizations
+      : await this.filterOrganizationsForAdmin(organizations, userId)
+
+    const projects = visibleOrganizations.flatMap((organization) => organization.projects ?? [])
     const categoriesByProjectId = await this.listProjectAgentCategoriesByProjectIds(
       projects.map((project) => project.id),
     )
 
-    return organizations.map((organization) => ({
+    return visibleOrganizations.map((organization) => ({
       ...organization,
       projects: (organization.projects ?? []).map(
         (project): BackofficeProjectView => ({
@@ -57,8 +83,47 @@ export class BackofficeService {
     }))
   }
 
-  async listUsersWithMemberships(): Promise<User[]> {
-    return this.userRepository.find({
+  private async filterOrganizationsForAdmin(
+    organizations: Organization[],
+    userId: string,
+  ): Promise<Organization[]> {
+    const [adminOrganizationMemberships, adminProjectMemberships] = await Promise.all([
+      this.organizationMembershipRepository.find({
+        where: { userId, role: adminRoles },
+      }),
+      this.projectMembershipRepository.find({
+        where: { userId, role: adminRoles },
+      }),
+    ])
+    const adminOrganizationIds = new Set(
+      adminOrganizationMemberships.map((membership) => membership.organizationId),
+    )
+    const adminProjectIds = new Set(
+      adminProjectMemberships.map((membership) => membership.projectId),
+    )
+
+    const filteredOrganizations: Organization[] = []
+    for (const organization of organizations) {
+      const isAdminOfOrganization = adminOrganizationIds.has(organization.id)
+      const visibleProjects = (organization.projects ?? []).filter(
+        (project) => isAdminOfOrganization || adminProjectIds.has(project.id),
+      )
+      if (!isAdminOfOrganization && visibleProjects.length === 0) {
+        continue
+      }
+      filteredOrganizations.push({ ...organization, projects: visibleProjects })
+    }
+    return filteredOrganizations
+  }
+
+  async listUsersWithMemberships({
+    canListAll,
+    userId,
+  }: {
+    canListAll: boolean
+    userId: string
+  }): Promise<User[]> {
+    const users = await this.userRepository.find({
       relations: {
         memberships: { organization: true },
         projectMemberships: { project: true },
@@ -66,19 +131,74 @@ export class BackofficeService {
       },
       order: { createdAt: "DESC" },
     })
+
+    if (canListAll) {
+      return users
+    }
+
+    const visibleUserIds = await this.findVisibleUserIdsForAdmin(userId)
+    return users.filter((listedUser) => visibleUserIds.has(listedUser.id))
+  }
+
+  private async findVisibleUserIdsForAdmin(userId: string): Promise<Set<string>> {
+    const [adminOrganizationMemberships, adminProjectMemberships, adminAgentMemberships] =
+      await Promise.all([
+        this.organizationMembershipRepository.find({ where: { userId, role: adminRoles } }),
+        this.projectMembershipRepository.find({ where: { userId, role: adminRoles } }),
+        this.agentMembershipRepository.find({ where: { userId, role: adminRoles } }),
+      ])
+
+    const adminOrganizationIds = adminOrganizationMemberships.map(
+      (membership) => membership.organizationId,
+    )
+    const adminProjectIds = adminProjectMemberships.map((membership) => membership.projectId)
+    const adminAgentIds = adminAgentMemberships.map((membership) => membership.agentId)
+
+    const [sharedOrganizationMemberships, sharedProjectMemberships, sharedAgentMemberships] =
+      await Promise.all([
+        adminOrganizationIds.length === 0
+          ? []
+          : this.organizationMembershipRepository.find({
+              where: { organizationId: In(adminOrganizationIds) },
+            }),
+        adminProjectIds.length === 0
+          ? []
+          : this.projectMembershipRepository.find({
+              where: { projectId: In(adminProjectIds) },
+            }),
+        adminAgentIds.length === 0
+          ? []
+          : this.agentMembershipRepository.find({
+              where: { agentId: In(adminAgentIds) },
+            }),
+      ])
+
+    const visibleUserIds = new Set<string>([userId])
+    for (const membership of sharedOrganizationMemberships) {
+      visibleUserIds.add(membership.userId)
+    }
+    for (const membership of sharedProjectMemberships) {
+      visibleUserIds.add(membership.userId)
+    }
+    for (const membership of sharedAgentMemberships) {
+      visibleUserIds.add(membership.userId)
+    }
+    return visibleUserIds
   }
 
   async addFeatureFlag({
     projectId,
     featureFlagKey,
+    canListAll,
+    userId,
   }: {
     projectId: string
     featureFlagKey: FeatureFlagKey
+    canListAll: boolean
+    userId: string
   }): Promise<void> {
-    const project = await this.projectRepository.findOne({ where: { id: projectId } })
-    if (!project) {
-      throw new NotFoundException(`Project ${projectId} not found`)
-    }
+    await this.assertProjectEditable({ canListAll, userId, projectId })
+
     const existing = await this.featureFlagRepository.findOne({
       where: { projectId, featureFlagKey },
     })
@@ -100,21 +220,30 @@ export class BackofficeService {
   async removeFeatureFlag({
     projectId,
     featureFlagKey,
+    canListAll,
+    userId,
   }: {
     projectId: string
     featureFlagKey: FeatureFlagKey
+    canListAll: boolean
+    userId: string
   }): Promise<void> {
+    await this.assertProjectEditable({ canListAll, userId, projectId })
     await this.featureFlagRepository.delete({ projectId, featureFlagKey })
   }
 
   async replaceProjectAgentCategories({
     projectId,
     categoryNames,
+    canListAll,
+    userId,
   }: {
     projectId: string
     categoryNames: string[]
+    canListAll: boolean
+    userId: string
   }): Promise<BackofficeProjectAgentCategoryView[]> {
-    await this.assertProjectExists(projectId)
+    await this.assertProjectEditable({ canListAll, userId, projectId })
 
     const normalizedCategoryNames = normalizeCategoryNames(categoryNames)
     const existingProjectAgentCategories =
@@ -255,10 +384,29 @@ export class BackofficeService {
     )
   }
 
-  private async assertProjectExists(projectId: string): Promise<void> {
-    const projectExists = await this.projectRepository.exists({ where: { id: projectId } })
-    if (!projectExists) {
+  private async assertProjectEditable({
+    canListAll,
+    userId,
+    projectId,
+  }: {
+    canListAll: boolean
+    userId: string
+    projectId: string
+  }): Promise<void> {
+    const project = await this.projectRepository.findOne({ where: { id: projectId } })
+    if (!project) {
       throw new NotFoundException(`Project ${projectId} not found`)
+    }
+    if (canListAll) {
+      return
+    }
+
+    const projectMembership = await this.projectMembershipRepository.findOne({
+      where: { userId, projectId, role: adminRoles },
+    })
+
+    if (!projectMembership) {
+      throw new ForbiddenException(`User does not have admin access to project ${projectId}`)
     }
   }
 }

@@ -30,8 +30,8 @@ function getPathPieces(pathname: string) {
       .filter(
         (piece) =>
           !idParamRegex.test(piece) &&
-          piece !== DeskRouteNames.APP.slice(1) &&
-          piece !== StudioRouteNames.APP.slice(1),
+          piece !== DeskRouteNames.HOME.slice(1) &&
+          piece !== StudioRouteNames.HOME.slice(1),
       )
       .toString()
   )

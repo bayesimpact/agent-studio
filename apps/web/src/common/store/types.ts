@@ -1,4 +1,5 @@
 import type { ThunkDispatch, UnknownAction } from "@reduxjs/toolkit"
+import type { BackofficeState } from "@/backoffice/store/types"
 import type { Services } from "@/di/services"
 import type { EvalState } from "@/eval/store/types"
 import type { ReviewerState } from "@/reviewer/store/types"
@@ -21,6 +22,8 @@ export type RootState =
         tester: TesterState
       } & {
         reviewer: ReviewerState
+      } & {
+        backoffice: BackofficeState
       }
     : never
 

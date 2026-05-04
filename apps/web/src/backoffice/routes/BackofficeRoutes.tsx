@@ -4,7 +4,7 @@ import { BackofficeRoute } from "./BackofficeRoute"
 import { BackofficeRouteNames } from "./helpers"
 
 export const backofficeRoutes = {
-  path: BackofficeRouteNames.APP,
+  path: BackofficeRouteNames.HOME,
   element: (
     <ProtectedRoute>
       <BackofficeGuard>

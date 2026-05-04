@@ -7,7 +7,7 @@ import type {
 import { Controller, Get, Req, UseGuards } from "@nestjs/common"
 import type { EndpointRequest } from "@/common/context/request.interface"
 import { JwtAuthGuard } from "@/domains/auth/jwt-auth.guard"
-import { isEmailBackofficeAuthorized } from "@/domains/backoffice/backoffice.authorization"
+import { isDomainBackofficeAuthorized } from "@/domains/backoffice/backoffice.authorization"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
 import { OrganizationsService } from "@/domains/organizations/organizations.service"
 import { UserGuard } from "@/domains/users/user.guard"
@@ -50,7 +50,7 @@ export class MeController {
           email: user.email,
           name: user.name ?? buildNameFromEmail(user.email),
           memberships: toUserMembershipDto(memberships),
-          isBackofficeAuthorized: isEmailBackofficeAuthorized(user.email),
+          isBackofficeAuthorized: isDomainBackofficeAuthorized(user.email),
         },
         organizations: organizationsWithProjects.map(toOrganizationDto),
       },

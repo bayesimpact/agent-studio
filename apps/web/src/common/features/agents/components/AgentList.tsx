@@ -30,7 +30,7 @@ export function AgentList({
       const path = getPath("project")
       navigate(path)
     } else {
-      const path = getPath("organization", { forceInterface: DeskRouteNames.APP })
+      const path = getPath("organization", { forceInterface: DeskRouteNames.HOME })
       navigate(path)
     }
   }
