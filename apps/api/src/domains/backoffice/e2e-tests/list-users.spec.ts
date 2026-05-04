@@ -22,6 +22,7 @@ describe("Backoffice - list users", () => {
   let auth0Id = `auth0|${randomUUID()}`
 
   const originalAuthorizedEmails = process.env.BACKOFFICE_AUTHORIZED_EMAILS
+  const originalAuthorizedDomain = process.env.BACKOFFICE_AUTHORIZED_DOMAIN
 
   beforeAll(async () => {
     setup = await setupE2eTestDatabase({
@@ -37,6 +38,8 @@ describe("Backoffice - list users", () => {
   beforeEach(async () => {
     await clearTestDatabase(setup.dataSource)
     auth0Id = `auth0|${randomUUID()}`
+    delete process.env.BACKOFFICE_AUTHORIZED_DOMAIN
+    delete process.env.BACKOFFICE_AUTHORIZED_EMAILS
   })
 
   afterEach(() => {
@@ -44,6 +47,11 @@ describe("Backoffice - list users", () => {
       delete process.env.BACKOFFICE_AUTHORIZED_EMAILS
     } else {
       process.env.BACKOFFICE_AUTHORIZED_EMAILS = originalAuthorizedEmails
+    }
+    if (originalAuthorizedDomain === undefined) {
+      delete process.env.BACKOFFICE_AUTHORIZED_DOMAIN
+    } else {
+      process.env.BACKOFFICE_AUTHORIZED_DOMAIN = originalAuthorizedDomain
     }
   })
 
@@ -57,6 +65,7 @@ describe("Backoffice - list users", () => {
     const context = await createOrganizationWithAgent(repositories, {
       user: { auth0Id, email },
     })
+    process.env.BACKOFFICE_AUTHORIZED_DOMAIN = "@example.com"
     process.env.BACKOFFICE_AUTHORIZED_EMAILS = email
     return context
   }

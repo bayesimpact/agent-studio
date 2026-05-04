@@ -20,7 +20,7 @@ import { EvaluationExtractionRunRoute } from "./EvaluationExtractionRunRoute"
 import { buildEvalPath, EvalRouteNames } from "./helpers"
 
 export const evalRoutes = {
-  path: EvalRouteNames.APP,
+  path: EvalRouteNames.HOME,
   element: (
     <ProtectedRoute>
       <Outlet />

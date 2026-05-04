@@ -21,7 +21,7 @@ import { DeskDashboardRoute } from "./DeskDashboardRoute"
 import { buildDeskPath, DeskRouteNames } from "./helpers"
 
 export const deskRoutes = {
-  path: DeskRouteNames.APP,
+  path: DeskRouteNames.HOME,
   element: (
     <ProtectedRoute>
       <Outlet />

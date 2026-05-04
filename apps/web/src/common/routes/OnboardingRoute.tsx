@@ -266,7 +266,7 @@ function NavAppButton({
     const path = buildPath("project", {
       organizationId,
       projectId,
-      forceInterface: DeskRouteNames.APP,
+      forceInterface: DeskRouteNames.HOME,
     })
     // NOTE: do not use navigate from react-router
     window.location.assign(path)
@@ -295,7 +295,7 @@ function NavStudioButton({
     const path = buildPath("project", {
       organizationId,
       projectId,
-      forceInterface: StudioRouteNames.APP,
+      forceInterface: StudioRouteNames.HOME,
     })
     // NOTE: do not use navigate from react-router
     window.location.assign(path)
@@ -318,7 +318,7 @@ function NavEvalButton({ organizationId, project }: { organizationId: string; pr
     const path = buildPath("project", {
       organizationId,
       projectId: project.id,
-      forceInterface: EvalRouteNames.APP,
+      forceInterface: EvalRouteNames.HOME,
     })
     // NOTE: do not use navigate from react-router
     window.location.assign(path)

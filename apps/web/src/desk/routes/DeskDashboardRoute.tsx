@@ -43,7 +43,7 @@ function SidebarFooterChildren({ projectId }: { projectId?: string }) {
   const { abilities } = useAbility()
   const location = useLocation()
 
-  const studioPath = location.pathname.replace(DeskRouteNames.APP, StudioRouteNames.APP)
+  const studioPath = location.pathname.replace(DeskRouteNames.HOME, StudioRouteNames.HOME)
 
   if (!projectId || !abilities.canAccessStudio({ projectId })) return null
   return (

@@ -1,3 +1,3 @@
 export enum BackofficeRouteNames {
-  APP = "/backoffice",
+  HOME = "/backoffice",
 }

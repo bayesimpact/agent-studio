@@ -24,6 +24,7 @@ describe("Backoffice - Auth", () => {
   let auth0Id = `auth0|${randomUUID()}`
 
   const originalAuthorizedEmails = process.env.BACKOFFICE_AUTHORIZED_EMAILS
+  const originalAuthorizedDomain = process.env.BACKOFFICE_AUTHORIZED_DOMAIN
 
   beforeAll(async () => {
     setup = await setupE2eTestDatabase({
@@ -40,6 +41,8 @@ describe("Backoffice - Auth", () => {
     await clearTestDatabase(setup.dataSource)
     accessToken = "token"
     auth0Id = `auth0|${randomUUID()}`
+    delete process.env.BACKOFFICE_AUTHORIZED_DOMAIN
+    delete process.env.BACKOFFICE_AUTHORIZED_EMAILS
   })
 
   afterEach(() => {
@@ -47,6 +50,11 @@ describe("Backoffice - Auth", () => {
       delete process.env.BACKOFFICE_AUTHORIZED_EMAILS
     } else {
       process.env.BACKOFFICE_AUTHORIZED_EMAILS = originalAuthorizedEmails
+    }
+    if (originalAuthorizedDomain === undefined) {
+      delete process.env.BACKOFFICE_AUTHORIZED_DOMAIN
+    } else {
+      process.env.BACKOFFICE_AUTHORIZED_DOMAIN = originalAuthorizedDomain
     }
   })
 
@@ -59,6 +67,7 @@ describe("Backoffice - Auth", () => {
     const { user } = await createOrganizationWithOwner(repositories, {
       user: { auth0Id, email: mockAuth0EmailForSub(auth0Id) },
     })
+    process.env.BACKOFFICE_AUTHORIZED_DOMAIN = "@example.com"
     process.env.BACKOFFICE_AUTHORIZED_EMAILS = user.email
     return user
   }
@@ -75,19 +84,19 @@ describe("Backoffice - Auth", () => {
       expectResponse(await subject(), 401, AUTH_ERRORS.NO_ACCESS_TOKEN)
     })
 
-    it("rejects users whose email is not in BACKOFFICE_AUTHORIZED_EMAILS", async () => {
+    it("rejects users whose email domain is not in BACKOFFICE_AUTHORIZED_DOMAIN", async () => {
       await createOrganizationWithOwner(repositories, {
         user: { auth0Id, email: mockAuth0EmailForSub(auth0Id) },
       })
-      process.env.BACKOFFICE_AUTHORIZED_EMAILS = "someone-else@example.com"
+      process.env.BACKOFFICE_AUTHORIZED_DOMAIN = "@other-domain.test"
       expectResponse(await subject(), 403, AUTH_ERRORS.UNAUTHORIZED_RESOURCE)
     })
 
-    it("rejects when BACKOFFICE_AUTHORIZED_EMAILS is unset", async () => {
+    it("rejects when BACKOFFICE_AUTHORIZED_DOMAIN is unset", async () => {
       await createOrganizationWithOwner(repositories, {
         user: { auth0Id, email: mockAuth0EmailForSub(auth0Id) },
       })
-      delete process.env.BACKOFFICE_AUTHORIZED_EMAILS
+      delete process.env.BACKOFFICE_AUTHORIZED_DOMAIN
       expectResponse(await subject(), 403, AUTH_ERRORS.UNAUTHORIZED_RESOURCE)
     })
 
@@ -109,11 +118,11 @@ describe("Backoffice - Auth", () => {
       expectResponse(await subject(), 401, AUTH_ERRORS.NO_ACCESS_TOKEN)
     })
 
-    it("rejects users whose email is not in BACKOFFICE_AUTHORIZED_EMAILS", async () => {
+    it("rejects users whose email domain is not in BACKOFFICE_AUTHORIZED_DOMAIN", async () => {
       await createOrganizationWithOwner(repositories, {
         user: { auth0Id, email: mockAuth0EmailForSub(auth0Id) },
       })
-      process.env.BACKOFFICE_AUTHORIZED_EMAILS = "someone-else@example.com"
+      process.env.BACKOFFICE_AUTHORIZED_DOMAIN = "@other-domain.test"
       expectResponse(await subject(), 403, AUTH_ERRORS.UNAUTHORIZED_RESOURCE)
     })
 
@@ -141,7 +150,7 @@ describe("Backoffice - Auth", () => {
       await createOrganizationWithOwner(repositories, {
         user: { auth0Id, email: mockAuth0EmailForSub(auth0Id) },
       })
-      process.env.BACKOFFICE_AUTHORIZED_EMAILS = "someone-else@example.com"
+      process.env.BACKOFFICE_AUTHORIZED_DOMAIN = "@other-domain.test"
       expectResponse(await subject(randomUUID()), 403, AUTH_ERRORS.UNAUTHORIZED_RESOURCE)
     })
   })
@@ -163,7 +172,7 @@ describe("Backoffice - Auth", () => {
       await createOrganizationWithOwner(repositories, {
         user: { auth0Id, email: mockAuth0EmailForSub(auth0Id) },
       })
-      process.env.BACKOFFICE_AUTHORIZED_EMAILS = "someone-else@example.com"
+      process.env.BACKOFFICE_AUTHORIZED_DOMAIN = "@other-domain.test"
       expectResponse(await subject(randomUUID()), 403, AUTH_ERRORS.UNAUTHORIZED_RESOURCE)
     })
   })
@@ -186,7 +195,7 @@ describe("Backoffice - Auth", () => {
       await createOrganizationWithOwner(repositories, {
         user: { auth0Id, email: mockAuth0EmailForSub(auth0Id) },
       })
-      process.env.BACKOFFICE_AUTHORIZED_EMAILS = "someone-else@example.com"
+      process.env.BACKOFFICE_AUTHORIZED_DOMAIN = "@other-domain.test"
       expectResponse(await subject(randomUUID()), 403, AUTH_ERRORS.UNAUTHORIZED_RESOURCE)
     })
   })

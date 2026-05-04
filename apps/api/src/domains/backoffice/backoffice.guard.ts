@@ -6,14 +6,15 @@ import {
 } from "@nestjs/common"
 import type { EndpointRequest } from "@/common/context/request.interface"
 import { AUTH_ERRORS } from "@/common/errors/auth-errors"
-import { isEmailBackofficeAuthorized } from "./backoffice.authorization"
+import { isDomainBackofficeAuthorized } from "./backoffice.authorization"
 
 @Injectable()
 export class BackofficeGuard implements CanActivate {
   canActivate(context: ExecutionContext): boolean {
     const request = context.switchToHttp().getRequest<EndpointRequest>()
     const user = request.user
-    if (!user || !isEmailBackofficeAuthorized(user.email)) {
+
+    if (!user || !isDomainBackofficeAuthorized(user.email)) {
       throw new ForbiddenException(AUTH_ERRORS.UNAUTHORIZED_RESOURCE)
     }
     return true

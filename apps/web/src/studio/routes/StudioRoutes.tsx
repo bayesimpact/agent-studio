@@ -37,7 +37,7 @@ import { ProjectMembershipsRoute } from "./ProjectMembershipsRoute"
 import { ReviewCampaignReportRoute } from "./ReviewCampaignReportRoute"
 import { StudioAgentSessionRoute } from "./StudioAgentSessionRoute"
 import { StudioDashboardRoute } from "./StudioDashboardRoute"
-import { Studio } from "./StudioRoute"
+import { StudioRoute } from "./StudioRoute"
 
 const extraItems = [
   AgentCreatorButton,
@@ -49,10 +49,10 @@ const extraItems = [
 ]
 
 export const studioRoutes = {
-  path: StudioRouteNames.APP,
+  path: StudioRouteNames.HOME,
   element: (
     <ProtectedRoute>
-      <Studio />
+      <StudioRoute />
     </ProtectedRoute>
   ),
   children: [

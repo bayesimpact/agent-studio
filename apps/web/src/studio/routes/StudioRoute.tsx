@@ -7,7 +7,7 @@ import { NotFoundRoute } from "@/common/routes/NotFoundRoute"
 import { useAppSelector } from "@/common/store/hooks"
 import { injectStudioSlices, resetStudioSlices } from "../store/slices"
 
-export function Studio() {
+export function StudioRoute() {
   const projectId = useAppSelector(selectCurrentProjectId)
   const { abilities } = useAbility()
   const canAccessStudio = abilities.canAccessStudio({ projectId })

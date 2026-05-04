@@ -13,7 +13,7 @@ import { buildAgentMembershipsPath } from "@/studio/routes/helpers"
 export function AgentActions({ organizationId, agent }: { organizationId: string; agent: Agent }) {
   const { t } = useTranslation()
   const { getPath } = useGetPath()
-  const path = getPath("agent", { forceInterface: DeskRouteNames.APP })
+  const path = getPath("agent", { forceInterface: DeskRouteNames.HOME })
   const { abilities } = useAbility()
   const canManageAgent = abilities.canManageAgent({ agentId: agent.id })
   return (
