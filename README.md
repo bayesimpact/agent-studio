@@ -3,6 +3,8 @@
 Bayes Impact is a technology nonprofit organization building AI recommendation systems for the public interest.
 As part of this work, we curate public and community resource datasets and make them usable by AI agents.
 
+Product updates: https://bayesimpact.notion.site/bayes-platform-product-updates
+
 # AgentStudio
 
 ![Security](https://github.com/bayesimpact/caseai-connect/actions/workflows/security.yml/badge.svg)

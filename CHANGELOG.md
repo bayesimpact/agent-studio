@@ -18,7 +18,7 @@ This project uses [CalVer](https://calver.org/) (YY.MM.Micro) for product versio
 - Warn before closing or refreshing the tab during document uploads
 - List pending invitations
 - Add a backoffice
-- Display analytics per agent (sessions per day)
+- (beta) Display analytics per agent (sessions per day)
 - (beta) Medgemma available for Conversational Agent
 - (beta) Agents can connect to external MCP servers for additional tools
 - (beta) Evaluate extraction agents against datasets
@@ -100,7 +100,7 @@ This project uses [CalVer](https://calver.org/) (YY.MM.Micro) for product versio
 
 ## [26.03.0] - 2026-03-13
 
-First public release of CaseAI Connect, open-sourced under the MIT license.
+First public release of Bayes Platform, open-sourced under the MIT license.
 
 ### Added
 - AI agents: create conversation and extraction agents with configurable prompts, models, and JSON schemas
