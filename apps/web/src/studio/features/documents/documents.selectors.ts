@@ -38,7 +38,9 @@ export const selectHasDocumentsInProgress = createSelector(
 
     return documentsData.value.some(
       (document) =>
-        document.embeddingStatus === "pending" || document.embeddingStatus === "processing",
+        document.embeddingStatus === "pending" ||
+        document.embeddingStatus === "queued" ||
+        document.embeddingStatus === "processing",
     )
   },
 )

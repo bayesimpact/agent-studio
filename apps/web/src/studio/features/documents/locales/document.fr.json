@@ -16,6 +16,7 @@
       "embeddingError": "Erreur des embeddings",
       "embeddingStatuses": {
         "pending": "En attente",
+        "queued": "En file",
         "processing": "En cours",
         "completed": "Prêt",
         "failed": "Échoué"
@@ -30,6 +31,9 @@
     "delete": {
       "title": "Supprimer {{documentTitle}}",
       "description": "Êtes-vous sûr de vouloir supprimer ce document ? Cette action est irréversible."
+    },
+    "reprocess": {
+      "cta": "Relancer le traitement"
     },
     "list": {
       "description": "Améliorez les connaissances et les capacités de vos agents en ajoutant des documents.",

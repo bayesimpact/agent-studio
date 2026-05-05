@@ -29,6 +29,11 @@ export interface IDocumentsSpi {
     documentId: string
     payload: Partial<Pick<Document, "title">> & DocumentTagsUpdateFields
   }): Promise<void>
+  reprocessOne(params: {
+    organizationId: string
+    projectId: string
+    documentId: string
+  }): Promise<void>
   deleteOne(params: {
     organizationId: string
     projectId: string

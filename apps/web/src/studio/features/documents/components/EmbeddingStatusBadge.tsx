@@ -5,10 +5,13 @@ import type { Document } from "@/studio/features/documents/documents.models"
 
 export function EmbeddingStatusBadge({ status }: { status: Document["embeddingStatus"] }) {
   const { t } = useTranslation("document", { keyPrefix: "props.embeddingStatuses" })
-  const normalizedStatus = status === "pending" ? "processing" : status
+  const showsProcessingSpinner =
+    status === "pending" || status === "queued" || status === "processing"
+  const displayStatus = showsProcessingSpinner ? "processing" : status
 
   const statusBadgeVariant: Record<Document["embeddingStatus"], BadgeVariant> = {
     pending: "outline",
+    queued: "outline",
     processing: "outline",
     completed: "success",
     failed: "destructive",
@@ -16,8 +19,8 @@ export function EmbeddingStatusBadge({ status }: { status: Document["embeddingSt
 
   return (
     <Badge variant={statusBadgeVariant[status]} className="gap-1.5">
-      {normalizedStatus === "processing" && <Loader2Icon className="size-3 animate-spin" />}
-      {t(normalizedStatus)}
+      {displayStatus === "processing" && <Loader2Icon className="size-3 animate-spin" />}
+      {t(displayStatus)}
     </Badge>
   )
 }

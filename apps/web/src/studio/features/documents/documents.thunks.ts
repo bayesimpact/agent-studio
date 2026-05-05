@@ -122,6 +122,26 @@ export const deleteDocument = createAsyncThunk<
   return await services.documents.deleteOne({ organizationId, projectId, documentId })
 })
 
+export const reprocessDocument = createAsyncThunk<void, { documentId: string }, ThunkConfig>(
+  "documents/reprocess",
+  async ({ documentId }, { extra: { services }, getState, dispatch }) => {
+    const state = getState()
+    const { organizationId, projectId } = getCurrentIds({
+      state,
+      wantedIds: ["organizationId", "projectId"],
+    })
+    await services.documents.reprocessOne({ organizationId, projectId, documentId })
+    dispatch(
+      documentsActions.patchDocumentEmbeddingStatus({
+        documentId,
+        embeddingStatus: "queued",
+        embeddingError: null,
+        updatedAt: Date.now(),
+      }),
+    )
+  },
+)
+
 export const getDocumentTemporaryUrl = createAsyncThunk<
   { url: string },
   { documentId: string },

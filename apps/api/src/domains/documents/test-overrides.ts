@@ -4,7 +4,11 @@ import { DOCUMENT_EMBEDDINGS_BATCH_SERVICE } from "./embeddings/document-embeddi
 
 function createDocumentEmbeddingsBatchServiceMock() {
   return {
-    enqueueCreateEmbeddingsForDocument: jest.fn().mockResolvedValue(undefined),
+    enqueueCreateEmbeddingsForDocument: jest.fn().mockResolvedValue({
+      embeddingStatus: "queued" as const,
+      embeddingError: null,
+      updatedAt: new Date(),
+    }),
   }
 }
 

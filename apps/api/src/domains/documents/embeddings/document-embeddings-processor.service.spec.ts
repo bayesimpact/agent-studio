@@ -23,10 +23,7 @@ type DocumentEmbeddingsProcessorInternals = {
   ) => Promise<{ chunks: string[]; extractionEngine: Document["extractionEngine"] }>
   generateEmbeddingsByModel: (chunks: string[]) => Promise<Map<string, number[][]>>
   insertChunks: (params: Record<string, unknown>) => Promise<void>
-  markDocumentStatus: (
-    document: Document,
-    status: "pending" | "processing" | "completed" | "failed",
-  ) => Promise<void>
+  markDocumentStatus: (document: Document, status: Document["embeddingStatus"]) => Promise<void>
 }
 
 describe("DocumentEmbeddingsProcessorService", () => {

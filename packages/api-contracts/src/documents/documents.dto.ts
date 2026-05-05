@@ -9,7 +9,7 @@ export type DocumentSourceType =
   | "extraction"
   | "evaluationExtractionDataset"
   | "evaluationExtractionRun"
-export type DocumentEmbeddingStatus = "pending" | "processing" | "completed" | "failed"
+export type DocumentEmbeddingStatus = "pending" | "queued" | "processing" | "completed" | "failed"
 export type DocumentEmbeddingStatusChangedEventPayload = {
   type: typeof DOCUMENT_EMBEDDING_STATUS_CHANGED_CHANNEL_DTO
   documentId: string
