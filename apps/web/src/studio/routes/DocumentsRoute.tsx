@@ -35,6 +35,7 @@ import {
   InfoIcon,
   Loader2Icon,
   PencilIcon,
+  RotateCcwIcon,
   Trash2Icon,
   XIcon,
 } from "lucide-react"
@@ -65,6 +66,7 @@ import { documentsActions } from "@/studio/features/documents/documents.slice"
 import {
   deleteDocument,
   getDocumentTemporaryUrl,
+  reprocessDocument,
   updateDocument,
 } from "@/studio/features/documents/documents.thunks"
 import { AsyncRoute } from "../../common/routes/AsyncRoute"
@@ -229,6 +231,10 @@ function DocumentActions({
     )
   }
 
+  const handleReprocess = () => {
+    dispatch(reprocessDocument({ documentId: document.id }))
+  }
+
   return (
     <>
       <DropdownMenu>
@@ -250,6 +256,12 @@ function DocumentActions({
             <PencilIcon className="size-4" />
             {t("actions:edit")}
           </DropdownMenuItem>
+          {document.embeddingStatus === "failed" && (
+            <DropdownMenuItem onSelect={handleReprocess}>
+              <RotateCcwIcon className="size-4" />
+              {t("document:reprocess.cta")}
+            </DropdownMenuItem>
+          )}
           <DropdownMenuSeparator />
           <DropdownMenuItem variant="destructive" onSelect={() => setActiveAction("delete")}>
             <Trash2Icon className="size-4" />

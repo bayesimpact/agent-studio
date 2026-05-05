@@ -49,6 +49,10 @@ export const DocumentsRoutes = {
     method: "delete",
     path: "organizations/:organizationId/projects/:projectId/documents/:documentId",
   }),
+  reprocessOne: defineRoute<ResponseData<SuccessResponseDTO>>({
+    method: "post",
+    path: "organizations/:organizationId/projects/:projectId/documents/:documentId/reprocess",
+  }),
   // Streaming responses are sent as text/event-stream (SSE) and do not follow ResponseData<T>.
   streamEmbeddingStatus: defineRoute<ResponseData<unknown>>({
     method: "get",

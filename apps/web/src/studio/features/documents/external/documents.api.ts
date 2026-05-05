@@ -100,6 +100,13 @@ export default {
       { payload } satisfies typeof DocumentsRoutes.updateOne.request,
     )
   },
+  reprocessOne: async ({ organizationId, projectId, documentId }) => {
+    const axios = getAxiosInstance()
+    await axios.post<typeof DocumentsRoutes.reprocessOne.response>(
+      DocumentsRoutes.reprocessOne.getPath({ organizationId, projectId, documentId }),
+      {},
+    )
+  },
   deleteOne: async (params) => {
     const axios = getAxiosInstance()
     await axios.delete<typeof DocumentsRoutes.deleteOne>(DocumentsRoutes.deleteOne.getPath(params))

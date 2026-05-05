@@ -41,7 +41,6 @@ import type {
 import { getRequiredConnectScope } from "@/common/context/request-context.helpers"
 import { AddContext, RequireContext } from "@/common/context/require-context.decorator"
 import { ResourceContextGuard } from "@/common/context/resource-context.guard"
-import type { RequiredConnectScope } from "@/common/entities/connect-required-fields"
 import { CheckPolicy } from "@/common/policies/check-policy.decorator"
 import type { MulterFile } from "@/common/types"
 import { TrackActivity } from "@/domains/activities/track-activity.decorator"
@@ -58,7 +57,6 @@ import {
 import { DocumentsService } from "./documents.service"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
 import { DocumentEmbeddingStatusStreamService } from "./embeddings/document-embedding-status-stream.service"
-import type { DocumentEmbeddingAfterEnqueuePatch } from "./embeddings/document-embeddings.types"
 import {
   DOCUMENT_EMBEDDINGS_BATCH_SERVICE,
   type DocumentEmbeddingsBatchService,
@@ -144,7 +142,16 @@ export class DocumentsController {
       throw new NotFoundException("Document not found or you do not have permission to access it.")
     }
 
-    await this.createEmbeddingsIfSourceTypeProject({ document, connectScope, userId: req.user.id })
+    if (document.sourceType === "project") {
+      await this.documentEmbeddingsBatchService.enqueueCreateEmbeddingsForDocument({
+        documentId: document.id,
+        organizationId: connectScope.organizationId,
+        projectId: connectScope.projectId,
+        uploadedByUserId: req.user.id,
+        origin: "document-upload",
+        currentTraceId: v4(),
+      })
+    }
 
     return { data: toDocumentDto(document) }
   }
@@ -242,12 +249,16 @@ export class DocumentsController {
         })
       }
 
-      const embeddingPatch = await this.createEmbeddingsIfSourceTypeProject({
-        document,
-        connectScope,
-        userId: req.user.id,
-      })
-      if (embeddingPatch !== undefined) {
+      if (document.sourceType === "project") {
+        const embeddingPatch =
+          await this.documentEmbeddingsBatchService.enqueueCreateEmbeddingsForDocument({
+            documentId: document.id,
+            organizationId: connectScope.organizationId,
+            projectId: connectScope.projectId,
+            uploadedByUserId: req.user.id,
+            origin: "document-upload",
+            currentTraceId: v4(),
+          })
         document.embeddingStatus = embeddingPatch.embeddingStatus
         document.embeddingError = embeddingPatch.embeddingError
         document.updatedAt = embeddingPatch.updatedAt
@@ -258,24 +269,31 @@ export class DocumentsController {
     return { data: documents.map(toDocumentDto) }
   }
 
-  private async createEmbeddingsIfSourceTypeProject({
-    document,
-    connectScope,
-    userId,
-  }: {
-    document: Document
-    connectScope: RequiredConnectScope
-    userId: string
-  }): Promise<DocumentEmbeddingAfterEnqueuePatch | undefined> {
-    if (document.sourceType !== "project") return undefined
-    return await this.documentEmbeddingsBatchService.enqueueCreateEmbeddingsForDocument({
+  @CheckPolicy((policy) => policy.canUpdate())
+  @AddContext("document")
+  @Post(DocumentsRoutes.reprocessOne.path)
+  async reprocessOne(
+    @Request() req: EndpointRequestWithDocument,
+  ): Promise<typeof DocumentsRoutes.reprocessOne.response> {
+    const document = req.document
+    if (document.sourceType !== "project") {
+      throw new UnprocessableEntityException("Only project documents can be reprocessed.")
+    }
+    if (document.embeddingStatus !== "failed") {
+      throw new UnprocessableEntityException("Only failed documents can be reprocessed.")
+    }
+
+    const connectScope = getRequiredConnectScope(req)
+    await this.documentEmbeddingsBatchService.enqueueCreateEmbeddingsForDocument({
       documentId: document.id,
       organizationId: connectScope.organizationId,
       projectId: connectScope.projectId,
-      uploadedByUserId: userId,
+      uploadedByUserId: req.user.id,
       origin: "document-upload",
       currentTraceId: v4(),
     })
+
+    return { data: { success: true } }
   }
 
   @CheckPolicy((policy) => policy.canList())
