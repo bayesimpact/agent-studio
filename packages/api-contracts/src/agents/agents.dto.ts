@@ -59,6 +59,10 @@ export type AgentDto = {
   hasCategories?: boolean
   id: string
   revision: number
+  revisionName: string
+  revisionDesc: string
+  isDraft: boolean
+  isArchived: boolean
   locale: AgentLocale
   model: AgentModel
   name: string
@@ -378,3 +382,9 @@ export type UpdateAgentResourcesDto = z.infer<typeof updateAgentResourcesSchema>
 export type UpdateAgentToolsDto = z.infer<typeof updateAgentToolsSchema>
 export type UpdateAgentCategoriesDto = z.infer<typeof updateAgentCategoriesSchema>
 export type PartialUpdateAgentDto = z.infer<typeof partialUpdateAgentSchema>
+
+const agentPublishSchema = z.object({
+  revisionName: z.string().optional(),
+  revisionDesc: z.string().optional(),
+})
+export type PublishAgentDto = z.infer<typeof agentPublishSchema>

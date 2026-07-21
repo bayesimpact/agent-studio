@@ -1,4 +1,4 @@
-import { AgentHistoryRoutes } from "@caseai-connect/api-contracts"
+import { AgentSettingsRoutes } from "@caseai-connect/api-contracts"
 import { afterAll } from "@jest/globals"
 import type { INestApplication } from "@nestjs/common"
 import type { App } from "supertest/types"
@@ -16,7 +16,7 @@ import { setupUserGuardForTesting } from "../../../../test/e2e.helpers"
 import { expectResponse, type Requester, testRequester } from "../../../../test/request"
 import { AgentsModule } from "../agents.module"
 
-describe("Agent History - getAll", () => {
+describe("Agent Settings - getAll", () => {
   let app: INestApplication<App>
   let request: Requester
   let setup: Awaited<ReturnType<typeof setupE2eTestDatabase>>
@@ -63,7 +63,7 @@ describe("Agent History - getAll", () => {
 
   const subject = async () =>
     request({
-      route: AgentHistoryRoutes.getAll,
+      route: AgentSettingsRoutes.getAll,
       pathParams: removeNullish({ organizationId, projectId, agentId }),
       token: accessToken,
     })

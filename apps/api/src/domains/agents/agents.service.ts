@@ -106,7 +106,7 @@ export class AgentsService {
       resourceLibraries,
     })
     const agentSettingsValues = extractAgentSettingsCreateFields(agentFields)
-    const agentSettings = await this.agentSettingsService.createSettingsIfChanged({
+    const agentSettings = await this.agentSettingsService.updateSettings({
       connectScope,
       agentId: agent.id,
       agentSettings: { ...agentSettingsValues, outputJsonSchema, greetingMessage },
@@ -243,6 +243,7 @@ export class AgentsService {
     const agentSettings = await this.agentSettingsService.getLast({
       connectScope,
       agentId,
+      includesDraft: true,
     })
 
     const nextType = type ?? agent.type
@@ -302,7 +303,7 @@ export class AgentsService {
     updatedAgent.sessionCategories =
       await this.agentSessionCategoriesService.listActiveCategoriesForAgent(agent.id)
 
-    const updatedAgentSettings = await this.agentSettingsService.createSettingsIfChanged({
+    const updatedAgentSettings = await this.agentSettingsService.updateSettings({
       connectScope,
       agentId: agent.id,
       agentSettings: {
