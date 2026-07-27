@@ -5,16 +5,17 @@ export type Agent = AgentDto
 
 export const agentSchema = z
   .object({
-    createdAt: z.number(),
-    instructions: z.string(),
-    documentsRagMode: z.enum(["all", "none", "tags"]),
-    hasCategories: z.boolean().optional(),
     id: z.string(),
-    locale: z.string(),
-    model: z.string(),
+    projectId: z.string(),
     name: z.string(),
-    temperature: z.number(),
+    type: z.enum(["conversation", "extraction"]),
+    createdAt: z.number(),
     updatedAt: z.number(),
-    documentTags: z.array(z.object({ id: z.string(), name: z.string() })).optional(),
+    hasCategories: z.boolean().optional(),
+    documentTagIds: z.array(z.string()),
+    resourceLibraryIds: z.array(z.string()),
+    projectAgentSessionCategoryIds: z.array(z.string()),
+    usedProjectAgentSessionCategoryIds: z.array(z.string()),
+    mcpServers: z.array(z.object({ id: z.string(), name: z.string(), enabled: z.boolean() })),
   })
   .strict()

@@ -2,6 +2,7 @@ import { AgentModel } from "@caseai-connect/api-contracts"
 import { faker } from "@faker-js/faker"
 import { Factory } from "fishery"
 import type { Agent } from "@/common/features/agents/agents.models"
+import { agentSettingsFactory } from "@/common/features/agents/settings/agent-settings.factory"
 import type { EvaluationConversationDataset } from "../evaluation-conversation-datasets/evaluation-conversation-datasets.models"
 import type {
   EvaluationConversationRun,
@@ -52,18 +53,21 @@ export const evaluationConversationRunFactory = EvaluationConversationRunFactory
       )
     }
 
+    // Snapshot of the agent settings pinned on the run, defaulted from a fresh settings build.
+    const defaultAgentSettings = agentSettingsFactory.transient({ agent }).build()
+
     return {
       id: params.id ?? faker.string.uuid(),
       evaluationConversationDatasetId: dataset.id,
       agentId: agent.id,
-      // Snapshot of the agent settings pinned on the run, defaulted from the transient agent.
       agentSettings: {
-        documentsRagMode: params.agentSettings?.documentsRagMode ?? agent.documentsRagMode,
-        instructions: params.agentSettings?.instructions ?? agent.instructions,
-        locale: params.agentSettings?.locale ?? agent.locale,
-        model: params.agentSettings?.model ?? agent.model,
-        revision: params.agentSettings?.revision ?? agent.revision,
-        temperature: params.agentSettings?.temperature ?? agent.temperature,
+        documentsRagMode:
+          params.agentSettings?.documentsRagMode ?? defaultAgentSettings.documentsRagMode,
+        instructions: params.agentSettings?.instructions ?? defaultAgentSettings.instructions,
+        locale: params.agentSettings?.locale ?? defaultAgentSettings.locale,
+        model: params.agentSettings?.model ?? defaultAgentSettings.model,
+        revision: params.agentSettings?.revision ?? defaultAgentSettings.revision,
+        temperature: params.agentSettings?.temperature ?? defaultAgentSettings.temperature,
       },
       judgeModel: params.judgeModel ?? AgentModel.Gemini25Flash,
       judgeInstructions: params.judgeInstructions ?? null,
