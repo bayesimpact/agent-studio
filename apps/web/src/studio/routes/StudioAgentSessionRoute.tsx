@@ -54,7 +54,7 @@ export function StudioAgentSessionRoute({ agentSession }: { agentSession: AgentS
           session={agentSession}
           messages={messages}
           formSubSessions={formSubSessions}
-          formResultSchema={agent.fillFormEnabled ? agent.outputJsonSchema : undefined}
+          formResultSchema={agentSession.outputJsonSchema}
         />
       </div>
     </div>

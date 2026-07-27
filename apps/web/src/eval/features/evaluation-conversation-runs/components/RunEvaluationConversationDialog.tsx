@@ -42,6 +42,9 @@ import { z } from "zod"
 import { RunScopeSelector } from "@/common/components/shared/RunScopeSelector"
 import type { Agent } from "@/common/features/agents/agents.models"
 import { selectAgentsData } from "@/common/features/agents/agents.selectors"
+import type { AgentSettings } from "@/common/features/agents/settings/agent-settings.models"
+import { selectAgentSettingsData } from "@/common/features/agents/settings/agent-settings.selectors"
+import { listAgentSettings } from "@/common/features/agents/settings/agent-settings.thunks"
 import { selectCurrentProjectData } from "@/common/features/projects/projects.selectors"
 import { useFeatureFlags } from "@/common/hooks/use-feature-flags"
 import { useValue } from "@/common/hooks/use-value"
@@ -49,10 +52,7 @@ import { ADS } from "@/common/store/async-data-status"
 import { useAppDispatch, useAppSelector } from "@/common/store/hooks"
 import { buildDate } from "@/common/utils/build-date"
 import type { EvaluationConversationDataset } from "@/eval/features/evaluation-conversation-datasets/evaluation-conversation-datasets.models"
-import {
-  selectConversationRunAgentHistory,
-  selectIsExecutingConversationRun,
-} from "@/eval/features/evaluation-conversation-runs/evaluation-conversation-runs.selectors"
+import { selectIsExecutingConversationRun } from "@/eval/features/evaluation-conversation-runs/evaluation-conversation-runs.selectors"
 import { evaluationConversationRunsActions } from "@/eval/features/evaluation-conversation-runs/evaluation-conversation-runs.slice"
 import { useEvaluationConversationRunPath } from "@/eval/hooks/use-evaluation-conversation-run-path"
 
@@ -106,9 +106,15 @@ export function RunEvaluationConversationDialog({
   const agentsData = useValue(selectAgentsData)
   const project = useValue(selectCurrentProjectData)
   const { hasFeature } = useFeatureFlags(project)
-  const agentHistoryData = useAppSelector(selectConversationRunAgentHistory)
+  const settingsData = useAppSelector(selectAgentSettingsData)
   const isExecuting = useAppSelector(selectIsExecutingConversationRun)
   const [open, setOpen] = useState(false)
+  // Tracks the agent currently picked in this dialog, set synchronously by handleAgentChange.
+  // settingsData is a single-slot value shared across consumers: while a newly picked agent's
+  // settings are loading, the slot can still hold the previous agent's revisions. Comparing
+  // against this id (rather than the redux request state) guards against ever showing or
+  // running against another agent's history.
+  const [selectedAgentIdForHistory, setSelectedAgentIdForHistory] = useState("")
 
   const judgeModels = useMemo(() => extractJudgeModelList(hasFeature), [hasFeature])
 
@@ -117,11 +123,10 @@ export function RunEvaluationConversationDialog({
   }, [agentsData])
 
   const agentHistory = useMemo(() => {
-    if (!ADS.isFulfilled(agentHistoryData)) return []
-    return [...agentHistoryData.value].sort(
-      (olderVersion, newerVersion) => newerVersion.revision - olderVersion.revision,
-    )
-  }, [agentHistoryData])
+    if (!ADS.isFulfilled(settingsData)) return []
+    if (settingsData.value[0]?.agentId !== selectedAgentIdForHistory) return []
+    return settingsData.value
+  }, [settingsData, selectedAgentIdForHistory])
 
   const latestRevision = agentHistory[0]?.revision ?? null
 
@@ -162,7 +167,8 @@ export function RunEvaluationConversationDialog({
   const runScope = watch("runScope")
   const limitedCount = watch("limitedCount")
 
-  const isHistoryLoading = selectedAgentId !== "" && !ADS.isFulfilled(agentHistoryData)
+  const isHistoryLoading =
+    selectedAgentId !== "" && settingsData.value?.[0]?.agentId !== selectedAgentId
   const effectiveRevision = selectedRevision ?? latestRevision
 
   const handleOpenChange = useCallback(
@@ -170,17 +176,17 @@ export function RunEvaluationConversationDialog({
       setOpen(nextOpen)
       if (!nextOpen) {
         form.reset(defaultRunFormValues)
-        dispatch(evaluationConversationRunsActions.resetAgentHistory())
+        setSelectedAgentIdForHistory("")
       }
     },
-    [dispatch, form],
+    [form],
   )
 
   const handleAgentChange = useCallback(
     (agentId: string) => {
       setValue("selectedRevision", null)
-      dispatch(evaluationConversationRunsActions.resetAgentHistory())
-      dispatch(evaluationConversationRunsActions.getAgentHistory({ agentId }))
+      setSelectedAgentIdForHistory(agentId)
+      dispatch(listAgentSettings({ agentId }))
     },
     [dispatch, setValue],
   )
@@ -333,7 +339,7 @@ function AgentVersionField({
   effectiveRevision,
 }: {
   control: Control<RunFormValues>
-  history: Agent[]
+  history: AgentSettings[]
   isLoading: boolean
   effectiveRevision: number | null
 }) {
