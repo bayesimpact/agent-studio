@@ -187,6 +187,52 @@ describe("ConversationAgentSessionsRoutes.getAll", () => {
     expect(returnedSession?.outputJsonSchema).toEqual(agentSettings.outputJsonSchema)
   })
 
+  it("should return the newest qualifying revision's schema when a session ran under several revisions", async () => {
+    const { organization, project, agent } = await createOrganizationWithAgent(repositories)
+    const { invitedUser } = await inviteUserToProject({ repositories, organization, project })
+
+    const olderAgentSettings = agentSettingsFactory
+      .transient({ organization, project, agent })
+      .build({
+        fillFormEnabled: true,
+        outputJsonSchema: { type: "object", properties: { title: { type: "string" } } },
+        revision: 2,
+      })
+    const newerAgentSettings = agentSettingsFactory
+      .transient({ organization, project, agent })
+      .build({
+        fillFormEnabled: true,
+        outputJsonSchema: { type: "object", properties: { summary: { type: "string" } } },
+        revision: 3,
+      })
+    await repositories.agentSettingsRepository.save([olderAgentSettings, newerAgentSettings])
+
+    const session = conversationAgentSessionFactory
+      .transient({ organization, project, user: invitedUser, agent })
+      .live()
+      .build({ result: { title: "some result" } })
+    await repositories.conversationAgentSessionRepository.save(session)
+
+    const olderMessage = agentMessageFactory
+      .transient({ organization, project, session, agentSettings: olderAgentSettings })
+      .build({ createdAt: new Date("2024-01-01T10:00:00.000Z") })
+    const newerMessage = agentMessageFactory
+      .transient({ organization, project, session, agentSettings: newerAgentSettings })
+      .build({ createdAt: new Date("2024-01-01T11:00:00.000Z") })
+    await repositories.agentMessageRepository.save([olderMessage, newerMessage])
+
+    organizationId = organization.id
+    projectId = project.id
+    agentId = agent.id
+    auth0Id = invitedUser.auth0Id
+
+    const response = await subject("live")
+
+    expectResponse(response, 201)
+    const returnedSession = response.body.data[0]
+    expect(returnedSession?.outputJsonSchema).toEqual(newerAgentSettings.outputJsonSchema)
+  })
+
   it("should return no fillForm schema when the session's revision has fillForm disabled", async () => {
     const { organization, project, agent } = await createOrganizationWithAgent(repositories)
     const { invitedUser } = await inviteUserToProject({ repositories, organization, project })

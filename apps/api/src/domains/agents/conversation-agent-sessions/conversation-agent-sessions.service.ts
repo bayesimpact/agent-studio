@@ -112,6 +112,16 @@ export class ConversationAgentSessionsService {
     if (sessionIds.length === 0) return new Map()
 
     const messages = await this.agentMessageConnectRepository.find(connectScope, {
+      // Narrowed to the columns this resolution actually reads: this query runs on every
+      // session list render, and AgentMessage rows otherwise carry arbitrarily large `content`
+      // and `toolCalls` payloads that would be wasted here.
+      select: {
+        id: true,
+        sessionId: true,
+        createdAt: true,
+        agentSettingsId: true,
+        agentSettings: { fillFormEnabled: true, outputJsonSchema: true },
+      },
       where: { sessionId: In(sessionIds) },
       relations: { agentSettings: true },
       order: { createdAt: "DESC" },
