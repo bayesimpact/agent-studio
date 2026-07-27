@@ -127,8 +127,8 @@ export const saveAgentGeneral = createAsyncThunk<
 >("agents/saveGeneral", async ({ agentId, fields }, { dispatch }) => {
   const { name, ...settingsFields } = fields
   if (Object.keys(settingsFields).length > 0) {
-    // silent: true — this composite thunk's own fulfilled/rejected owns the single
-    // notification and the single listAgents() refetch; see agents.middleware.ts.
+    // silent: true, since this composite thunk's own fulfilled/rejected owns the single
+    // notification and the single listAgents() refetch (see agents.middleware.ts).
     await dispatch(updateAgentSettings({ agentId, fields: settingsFields, silent: true })).unwrap()
   }
   if (name !== undefined) {
@@ -143,7 +143,7 @@ export const saveAgentSources = createAsyncThunk<
   ThunkConfig
 >("agents/saveSources", async ({ agentId, documentsRagMode, documentTagIds }, { dispatch }) => {
   if (documentsRagMode !== undefined) {
-    // silent: true — see saveAgentGeneral above; this composite thunk owns the notification.
+    // silent: true, following saveAgentGeneral above (this composite thunk owns the notification).
     await dispatch(
       updateAgentSettings({ agentId, fields: { documentsRagMode }, silent: true }),
     ).unwrap()

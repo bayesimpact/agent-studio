@@ -22,9 +22,10 @@ import {
 const listenerMiddleware = createListenerMiddleware<RootState, AppDispatch>()
 
 /**
- * True when the thunk that dispatched this action was told `silent: true` — set by a composite
- * thunk (saveAgentGeneral, saveAgentSources) on the sub-thunks it dispatches internally, so its
- * own fulfilled/rejected is the only one that produces a user-facing notification and refetch.
+ * True when the thunk that dispatched this action was told `silent: true`. Composite thunks
+ * (saveAgentGeneral, saveAgentSources) set this on the sub-thunks they dispatch internally, so
+ * their own fulfilled/rejected is the only one that produces a user-facing notification and
+ * refetch.
  */
 function isSilent(action: UnknownAction): boolean {
   const meta = action.meta

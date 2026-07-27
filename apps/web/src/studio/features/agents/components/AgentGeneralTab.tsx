@@ -1,4 +1,8 @@
-import { AgentLocale, updateAgentNameSchema } from "@caseai-connect/api-contracts"
+import {
+  AgentLocale,
+  updateAgentNameSchema,
+  updateAgentSettingsSchema,
+} from "@caseai-connect/api-contracts"
 import {
   Form,
   FormControl,
@@ -19,22 +23,18 @@ import { Textarea } from "@caseai-connect/ui/shad/textarea"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import { useTranslation } from "react-i18next"
-import { z } from "zod"
+import type { z } from "zod"
 import { useAppDispatch } from "@/common/store/hooks"
 import { saveAgentGeneral } from "../agents.thunks"
 import { AgentTabSaveButton } from "./AgentTabSaveButton"
 import { type AgentTabFormProps, pickDirtyFields, useReportDirty } from "./agent-tab-form.shared"
 
-// Assembled from both sides of the split: `name` is the agent's own field, the rest live on the
-// settings revision. See UpdateAgentSettingsDto for why those three are declared here rather
-// than picked from updateAgentSettingsSchema with `.required()` — this form always submits all
-// three together as part of the general tab, independent of the settings schema's optionality.
-const generalFormSchema = z.object({
-  name: updateAgentNameSchema.shape.name,
-  locale: z.enum(AgentLocale),
-  instructions: z.string(),
-  greetingMessage: z.string().max(2000).nullable(),
-})
+// `name` is the agent's own field; the other three live on the settings revision, so the picked
+// settings schema is extended with it rather than picked from a single contract schema.
+const generalFormSchema = updateAgentSettingsSchema
+  .pick({ instructions: true, locale: true, greetingMessage: true })
+  .required()
+  .extend({ name: updateAgentNameSchema.shape.name })
 
 type FormValues = z.infer<typeof generalFormSchema>
 
