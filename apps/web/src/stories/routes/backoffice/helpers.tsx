@@ -181,6 +181,9 @@ export function buildMockBackofficeService(overrides: {
     async listOrganizations() {
       return organizations
     },
+    async createOrganization({ name }) {
+      return backofficeOrganizationFactory.build({ name })
+    },
     async getOrganization(organizationId) {
       const detail = organizationDetails[organizationId]
       if (!detail) {
