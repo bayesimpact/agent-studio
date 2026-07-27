@@ -8,6 +8,8 @@ import { agentsMiddleware } from "@/common/features/agents/agents.middleware"
 import { agentsSlice } from "@/common/features/agents/agents.slice"
 import { agentCsvExtractionRunsMiddleware } from "@/common/features/agents/csv-extraction-runs/agent-csv-extraction-runs.middleware"
 import { agentCsvExtractionRunsSlice } from "@/common/features/agents/csv-extraction-runs/agent-csv-extraction-runs.slice"
+import { agentSettingsMiddleware } from "@/common/features/agents/settings/agent-settings.middleware"
+import { agentSettingsSlice } from "@/common/features/agents/settings/agent-settings.slice"
 import { projectsSlice } from "@/common/features/projects/projects.slice"
 import { agentEmbedConfigsMiddleware } from "@/studio/features/agent-embed-configs/agent-embed-configs.middleware"
 import { agentEmbedConfigsSlice } from "@/studio/features/agent-embed-configs/agent-embed-configs.slice"
@@ -50,6 +52,7 @@ const studioMiddlewareList = [
   agentMembershipsMiddleware,
   agentMessageFeedbackMiddleware,
   agentsMiddleware,
+  agentSettingsMiddleware,
   agentSubAgentsMiddleware,
   baseAgentSessionsMiddleware,
   conversationAgentSessionsMiddleware,
@@ -75,6 +78,7 @@ export const studioSliceList = [
   agentMessageFeedbackSlice,
   agentSessionMessagesSlice,
   agentsSlice,
+  agentSettingsSlice,
   agentSubAgentsSlice,
   conversationAgentSessionsSlice,
   currentIdsSlice,
