@@ -191,9 +191,11 @@ describe("ConversationAgentSessionsRoutes.getAll", () => {
     const { organization, project, agent } = await createOrganizationWithAgent(repositories)
     const { invitedUser } = await inviteUserToProject({ repositories, organization, project })
 
-    const agentSettings = agentSettingsFactory
-      .transient({ organization, project, agent })
-      .build({ fillFormEnabled: false, revision: 2 })
+    const agentSettings = agentSettingsFactory.transient({ organization, project, agent }).build({
+      fillFormEnabled: false,
+      outputJsonSchema: { type: "object", properties: { title: { type: "string" } } },
+      revision: 2,
+    })
     await repositories.agentSettingsRepository.save(agentSettings)
 
     const session = conversationAgentSessionFactory
