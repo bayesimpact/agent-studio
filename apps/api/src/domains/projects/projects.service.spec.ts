@@ -8,6 +8,7 @@ import {
 import { INVITATION_SENDER } from "@/domains/auth/invitation-sender.interface"
 import { DocumentTag } from "@/domains/documents/tags/document-tag.entity"
 import { userMembershipFactory } from "@/domains/memberships/user-membership.factory"
+import { addUserToOrganization } from "@/domains/organizations/memberships/organization-membership.factory"
 import {
   createOrganizationWithOwner,
   createOrganizationWithProject,
@@ -116,13 +117,25 @@ describe("ProjectsService", () => {
       expect(result.map((project) => project.name)).toContain("Project 2")
     })
 
-    it("should return empty array when user has no project membership", async () => {
+    it("should return all organization projects to an org owner (inherited project.read)", async () => {
       const { organization, user } = await createOrganizationWithOwner(repositories)
       const project = projectFactory.transient({ organization }).build()
       await repositories.projectRepository.save(project)
       const result = await service.listProjects({
         organizationId: organization.id,
         userId: user.id,
+      })
+      expect(result.map((organizationProject) => organizationProject.id)).toEqual([project.id])
+    })
+
+    it("should return empty array when a plain org member has no project membership", async () => {
+      const { organization } = await createOrganizationWithOwner(repositories)
+      const project = projectFactory.transient({ organization }).build()
+      await repositories.projectRepository.save(project)
+      const { user: memberUser } = await addUserToOrganization({ repositories, organization })
+      const result = await service.listProjects({
+        organizationId: organization.id,
+        userId: memberUser.id,
       })
       expect(result).toEqual([])
     })

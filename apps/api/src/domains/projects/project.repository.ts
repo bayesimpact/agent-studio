@@ -4,19 +4,38 @@ import { ALL_ENTITIES } from "@/common/all-entities"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
 import { TransactionService } from "@/common/transaction/transaction.service"
 import { Project } from "./project.entity"
+import { ProjectModel } from "./project.model"
 
 @Injectable()
 export class ProjectRepository {
   constructor(private readonly transactionService: TransactionService) {}
 
-  async findAllByIds(ids: string[]): Promise<Project[]> {
+  /** Hydrates the projects of the map keys as models carrying their permissions. */
+  async findAllByIds(permissionsByProjectId: Map<string, string[]>): Promise<ProjectModel[]> {
+    const projectIds = [...permissionsByProjectId.keys()]
+    if (projectIds.length === 0) {
+      return []
+    }
+
+    const projects = await this.repo().find({
+      where: { id: In(projectIds) },
+      relations: { featureFlags: true },
+      order: { createdAt: "DESC" },
+    })
+
+    return projects.map((project) =>
+      ProjectModel.fromEntity(project, permissionsByProjectId.get(project.id) ?? []),
+    )
+  }
+
+  async findAllByOrganizationIdAndIds(organizationId: string, ids: string[]): Promise<Project[]> {
     if (ids.length === 0) {
       return []
     }
 
     return this.repo().find({
-      where: { id: In(ids) },
-      relations: { featureFlags: true },
+      where: { organizationId, id: In(ids) },
+      relations: { featureFlags: true, projectAgentSessionCategories: true },
       order: { createdAt: "DESC" },
     })
   }

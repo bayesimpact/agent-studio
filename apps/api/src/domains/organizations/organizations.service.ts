@@ -1,4 +1,3 @@
-import type { OrganizationPermission } from "@caseai-connect/api-contracts"
 import { Injectable, NotFoundException } from "@nestjs/common"
 import { InjectRepository } from "@nestjs/typeorm"
 import type { Repository } from "typeorm"
@@ -8,8 +7,7 @@ import { User } from "@/domains/users/user.entity"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
 import { OrganizationMembershipsService } from "./memberships/organization-memberships.service"
 import { Organization } from "./organization.entity"
-import { toModel } from "./organization.helpers"
-import type { OrganizationModel } from "./organization.model"
+import { OrganizationModel } from "./organization.model"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
 import { OrganizationRepository } from "./organization.repository"
 
@@ -25,21 +23,18 @@ export class OrganizationsService {
   ) {}
 
   async listOrganizations(userId: string): Promise<OrganizationModel[]> {
+    /**
+     * {
+     *    "XXXX": ['organization.read', 'organization.write'],
+     *    "YYYY": ['organization.read', 'organization.write', 'project.read'],
+     *  }
+     */
     const permissionsByOrganizationId = await this.permissionService.listResourcePermissions(
       userId,
       "organization",
     )
 
-    const organizations = await this.organizationRepository.findByIds([
-      ...permissionsByOrganizationId.keys(),
-    ])
-
-    return organizations.map((organization) =>
-      toModel(
-        organization,
-        (permissionsByOrganizationId.get(organization.id) ?? []) as OrganizationPermission[],
-      ),
-    )
+    return this.organizationRepository.findByIds(permissionsByOrganizationId)
   }
 
   async createOrganization({
@@ -70,7 +65,7 @@ export class OrganizationsService {
     const permissions = membership.roleId
       ? await this.permissionService.listPermissionsForRole(membership.roleId)
       : []
-    return toModel(savedOrganization, permissions as OrganizationPermission[])
+    return OrganizationModel.fromEntity(savedOrganization, permissions)
   }
 
   async updateOrganizationName({

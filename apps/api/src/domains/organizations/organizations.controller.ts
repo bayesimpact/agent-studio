@@ -40,10 +40,10 @@ export class OrganizationsController {
       userId: request.user.id,
       name: body.payload.name,
     })
-    // TODO: get permissions for the organization OR return { success: true } and let the client fetch them later
     return { data: toDto(organization) }
   }
 
+  // We might not need the OrganizationGuard if our check-permission guard is really checking the permission for the organization
   @Patch(OrganizationsRoutes.updateOne.path)
   @UseGuards(JwtAuthGuard, UserGuard, OrganizationGuard, CheckPermissionGuard)
   @CheckPermission("organization.update", "organization")

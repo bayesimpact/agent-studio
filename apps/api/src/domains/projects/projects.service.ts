@@ -1,7 +1,7 @@
 import type { FeatureFlagKey } from "@caseai-connect/api-contracts"
 import { Injectable } from "@nestjs/common"
 import { InjectRepository } from "@nestjs/typeorm"
-import { In, type Repository } from "typeorm"
+import type { Repository } from "typeorm"
 import type { RequiredConnectScope } from "@/common/entities/connect-required-fields"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
 import { TransactionService } from "@/common/transaction/transaction.service"
@@ -13,7 +13,6 @@ import { FeatureFlag } from "../feature-flags/feature-flag.entity"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
 import { ProjectMembershipsService } from "./memberships/project-memberships.service"
 import { Project } from "./project.entity"
-import { toProjectModel } from "./project.helpers"
 import type { ProjectModel } from "./project.model"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
 import { ProjectRepository } from "./project.repository"
@@ -49,18 +48,19 @@ export class ProjectsService {
   }
 
   async listUserProjects(userId: string): Promise<ProjectModel[]> {
+    // all the project ids the user has access to, along with their permissions
     const permissionsByProjectId = await this.permissionService.listResourcePermissions(
       userId,
       "project",
     )
 
-    const projects = await this.projectRepository.findAllByIds([...permissionsByProjectId.keys()])
-
-    return projects.map((project) =>
-      toProjectModel(project, permissionsByProjectId.get(project.id) ?? []),
-    )
+    return this.projectRepository.findAllByIds(permissionsByProjectId)
   }
 
+  /**
+   * Org-scoped listing: RBAC decides WHICH projects the user sees, but the
+   * response (ProjectDto) carries no permissions, so entities are returned.
+   */
   async listProjects({
     organizationId,
     userId,
@@ -68,47 +68,14 @@ export class ProjectsService {
     organizationId: string
     userId: string
   }): Promise<Project[]> {
-    const projectsByOrganizationId = await this.listProjectsForUserByOrganizationIds({
+    const permissionsByProjectId = await this.permissionService.listResourcePermissions(
       userId,
-      organizationIds: [organizationId],
-    })
-
-    return projectsByOrganizationId.get(organizationId) ?? []
-  }
-
-  async listProjectsForUserByOrganizationIds({
-    userId,
-    organizationIds,
-  }: {
-    userId: string
-    organizationIds: string[]
-  }): Promise<Map<string, Project[]>> {
-    const projectsByOrganizationId = new Map<string, Project[]>(
-      organizationIds.map((organizationId) => [organizationId, []]),
+      "project",
     )
-    if (organizationIds.length === 0) {
-      return projectsByOrganizationId
-    }
 
-    const memberships = await this.projectMembershipsService.listMembershipsForUser(userId)
-    const projectIds = memberships.map((membership) => membership.projectId)
-    if (projectIds.length === 0) {
-      return projectsByOrganizationId
-    }
-
-    const projects = await this.projectEntityRepository.find({
-      where: { organizationId: In(organizationIds), id: In(projectIds) },
-      relations: { featureFlags: true, projectAgentSessionCategories: true },
-      order: { createdAt: "DESC" },
-    })
-
-    for (const project of projects) {
-      const organizationProjects = projectsByOrganizationId.get(project.organizationId) ?? []
-      organizationProjects.push(project)
-      projectsByOrganizationId.set(project.organizationId, organizationProjects)
-    }
-
-    return projectsByOrganizationId
+    return this.projectRepository.findAllByOrganizationIdAndIds(organizationId, [
+      ...permissionsByProjectId.keys(),
+    ])
   }
 
   async getProject(organizationId: string, projectId: string): Promise<Project | undefined> {
