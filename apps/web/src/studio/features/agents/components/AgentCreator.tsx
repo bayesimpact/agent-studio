@@ -15,15 +15,14 @@ import { useState } from "react"
 import { useTranslation } from "react-i18next"
 import { useNavigate } from "react-router-dom"
 import { GridCard } from "@/common/components/grid/Grid"
-import type { Agent } from "@/common/features/agents/agents.models"
 import type { Project } from "@/common/features/projects/projects.models"
 import { useAppDispatch } from "@/common/store/hooks"
 import { StudioRoutes } from "@/studio/routes/helpers"
 import { createAgent } from "../agents.thunks"
-import { getDefaultFormValues } from "./agent-form.shared"
+import { type AgentCreationChoice, getDefaultFormValues } from "./agent-form.shared"
 
-const defaultType: Agent["type"] = "conversation"
-const agentTypes: Agent["type"][] = ["conversation", "extraction"]
+const defaultChoice: AgentCreationChoice = "conversation"
+const creationChoices: AgentCreationChoice[] = ["conversation", "extraction", "form"]
 const minNameLength = 3
 
 export function AgentCreatorButton({ project }: { project: Project }) {
@@ -66,12 +65,12 @@ function AgentCreatorDialog({
   const { t, i18n } = useTranslation()
   const dispatch = useAppDispatch()
   const navigate = useNavigate()
-  const [selectedType, setSelectedType] = useState<Agent["type"]>(defaultType)
+  const [selectedChoice, setSelectedChoice] = useState<AgentCreationChoice>(defaultChoice)
   const [name, setName] = useState("")
 
   const handleOpenChange = (nextOpen: boolean) => {
     if (!nextOpen) {
-      setSelectedType(defaultType)
+      setSelectedChoice(defaultChoice)
       setName("")
     }
     onOpenChange(nextOpen)
@@ -82,8 +81,7 @@ function AgentCreatorDialog({
   const handleCreate = () => {
     const language = i18n.language.startsWith("fr") ? AgentLocale.FR : AgentLocale.EN
     const fields: CreateAgentDto = {
-      ...getDefaultFormValues({ agentType: selectedType, language }),
-      type: selectedType,
+      ...getDefaultFormValues({ creationChoice: selectedChoice, language }),
       name: name.trim(),
       projectAgentSessionCategoryIds: project.agentSessionCategories.map((category) => category.id),
     }
@@ -122,18 +120,18 @@ function AgentCreatorDialog({
         >
           <Field>
             <FieldLabel>{t("agent:create.typeDialog.title")}</FieldLabel>
-            <div className="grid grid-cols-2 gap-2">
-              {agentTypes.map((agentType) => (
+            <div className="grid grid-cols-3 gap-2">
+              {creationChoices.map((creationChoice) => (
                 <button
-                  key={agentType}
+                  key={creationChoice}
                   type="button"
                   className={cn(
                     "border rounded-md px-3 py-2 text-sm text-center",
-                    selectedType === agentType ? "border-primary" : "border-muted",
+                    selectedChoice === creationChoice ? "border-primary" : "border-muted",
                   )}
-                  onClick={() => setSelectedType(agentType)}
+                  onClick={() => setSelectedChoice(creationChoice)}
                 >
-                  {t(`agent:create.typeDialog.${agentType}`)}
+                  {t(`agent:create.typeDialog.${creationChoice}`)}
                 </button>
               ))}
             </div>
