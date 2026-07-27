@@ -13,7 +13,7 @@ import { FeatureFlag } from "../feature-flags/feature-flag.entity"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
 import { ProjectMembershipsService } from "./memberships/project-memberships.service"
 import { Project } from "./project.entity"
-import type { ProjectModel } from "./project.model"
+import { ProjectModel } from "./project.model"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
 import { ProjectRepository } from "./project.repository"
 
@@ -33,10 +33,10 @@ export class ProjectsService {
     organizationId: string
     userId: string
     name: string
-  }): Promise<Project> {
+  }): Promise<ProjectModel> {
     const project = this.projectEntityRepository.create(params)
     await this.projectEntityRepository.save(project)
-    await this.projectMembershipsService.createProjectOwnerMembership({
+    const membership = await this.projectMembershipsService.createProjectOwnerMembership({
       projectId: project.id,
       userId: params.userId,
     })
@@ -44,7 +44,12 @@ export class ProjectsService {
       organizationId: params.organizationId,
       projectId: project.id,
     })
-    return project
+
+    // the membership carries the RBAC role it was created with: ask RBAC what that role grants
+    const permissions = membership.roleId
+      ? await this.permissionService.listPermissionsForRole(membership.roleId)
+      : []
+    return ProjectModel.fromEntity(project, permissions)
   }
 
   async listUserProjects(userId: string): Promise<ProjectModel[]> {
@@ -67,15 +72,16 @@ export class ProjectsService {
   }: {
     organizationId: string
     userId: string
-  }): Promise<Project[]> {
+  }): Promise<ProjectModel[]> {
     const permissionsByProjectId = await this.permissionService.listResourcePermissions(
       userId,
       "project",
     )
 
-    return this.projectRepository.findAllByOrganizationIdAndIds(organizationId, [
-      ...permissionsByProjectId.keys(),
-    ])
+    return this.projectRepository.findAllByOrganizationIdAndIds(
+      organizationId,
+      permissionsByProjectId,
+    )
   }
 
   async getProject(organizationId: string, projectId: string): Promise<Project | undefined> {
@@ -86,10 +92,23 @@ export class ProjectsService {
     return project ?? undefined
   }
 
-  async updateProject(project: Project, name: string): Promise<Project> {
-    // Update the project
+  async updateProject({
+    project,
+    name,
+    userId,
+  }: {
+    project: Project
+    name: string
+    userId: string
+  }): Promise<ProjectModel> {
     project.name = name
-    return this.projectEntityRepository.save(project)
+    const saved = await this.projectEntityRepository.save(project)
+
+    const permissionsByProjectId = await this.permissionService.listResourcePermissions(
+      userId,
+      "project",
+    )
+    return ProjectModel.fromEntity(saved, permissionsByProjectId.get(saved.id) ?? [])
   }
 
   async deleteProject(project: Project): Promise<void> {

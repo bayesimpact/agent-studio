@@ -251,6 +251,7 @@ export class ProjectMembershipRepository {
       userId: membership.userId,
       projectId: getMembershipResourceId(membership),
       role: membership.role as ProjectMembershipRole,
+      roleId: membership.roleId,
       createdAt: membership.createdAt,
       updatedAt: membership.updatedAt,
       deletedAt: membership.deletedAt,

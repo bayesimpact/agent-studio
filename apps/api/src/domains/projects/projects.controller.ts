@@ -69,9 +69,13 @@ export class ProjectsController {
     @Req() request: EndpointRequestWithProject,
     @Body() body: typeof ProjectsRoutes.updateOne.request,
   ): Promise<typeof ProjectsRoutes.updateOne.response> {
-    const { project } = request
+    const { project, user } = request
 
-    const updatedProject = await this.projectsService.updateProject(project!, body.payload.name)
+    const updatedProject = await this.projectsService.updateProject({
+      project: project!,
+      name: body.payload.name,
+      userId: user.id,
+    })
 
     return { data: toProjectDto(updatedProject) }
   }

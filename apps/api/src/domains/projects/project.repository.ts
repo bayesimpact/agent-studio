@@ -19,7 +19,7 @@ export class ProjectRepository {
 
     const projects = await this.repo().find({
       where: { id: In(projectIds) },
-      relations: { featureFlags: true },
+      relations: { featureFlags: true, projectAgentSessionCategories: true },
       order: { createdAt: "DESC" },
     })
 
@@ -28,16 +28,25 @@ export class ProjectRepository {
     )
   }
 
-  async findAllByOrganizationIdAndIds(organizationId: string, ids: string[]): Promise<Project[]> {
-    if (ids.length === 0) {
+  /** Same as findAllByIds, restricted to the projects of one organization. */
+  async findAllByOrganizationIdAndIds(
+    organizationId: string,
+    permissionsByProjectId: Map<string, string[]>,
+  ): Promise<ProjectModel[]> {
+    const projectIds = [...permissionsByProjectId.keys()]
+    if (projectIds.length === 0) {
       return []
     }
 
-    return this.repo().find({
-      where: { organizationId, id: In(ids) },
+    const projects = await this.repo().find({
+      where: { organizationId, id: In(projectIds) },
       relations: { featureFlags: true, projectAgentSessionCategories: true },
       order: { createdAt: "DESC" },
     })
+
+    return projects.map((project) =>
+      ProjectModel.fromEntity(project, permissionsByProjectId.get(project.id) ?? []),
+    )
   }
 
   async softDelete(projectId: string): Promise<void> {

@@ -1,17 +1,20 @@
 import { BasePolicy } from "@/common/policies/base-policy"
 import type { OrganizationMembershipContextModel } from "@/domains/organizations/memberships/organization-membership.model"
-import type { ProjectMembershipFixture } from "@/domains/projects/memberships/project-membership.types"
-import type { Project } from "@/domains/projects/project.entity"
+import type { ProjectMembershipRole } from "@/domains/projects/memberships/project-membership.types"
 
-export class ProjectsAnalyticsPolicy extends BasePolicy<Project> {
-  private readonly projectMembership?: ProjectMembershipFixture
+/** Structural shapes: only what the policy reads (avoids cross-domain entity imports). */
+type ProjectLike = { id: string }
+type ProjectMembershipLike = { projectId: string; role: ProjectMembershipRole }
+
+export class ProjectsAnalyticsPolicy extends BasePolicy<ProjectLike> {
+  private readonly projectMembership?: ProjectMembershipLike
 
   constructor(
     context: {
       organizationMembership: OrganizationMembershipContextModel
-      projectMembership?: ProjectMembershipFixture
+      projectMembership?: ProjectMembershipLike
     },
-    entity?: Project,
+    entity?: ProjectLike,
   ) {
     super(context.organizationMembership, entity)
     this.projectMembership = context.projectMembership
