@@ -4,14 +4,16 @@ import type { ConversationAgentSession } from "../conversation-agent-session.ent
 import type { ConversationAgentSessionPurgeService } from "./conversation-agent-session-purge.service"
 import { ConversationRetentionSweepService } from "./conversation-retention-sweep.service"
 
-function buildService(sessions: Partial<ConversationAgentSession>[]) {
+function buildService(...batches: Partial<ConversationAgentSession>[][]) {
+  const getMany = jest.fn().mockResolvedValue([])
+  for (const batch of batches) getMany.mockResolvedValueOnce(batch)
   const queryBuilder = {
     innerJoin: jest.fn().mockReturnThis(),
     where: jest.fn().mockReturnThis(),
     andWhere: jest.fn().mockReturnThis(),
     orderBy: jest.fn().mockReturnThis(),
     limit: jest.fn().mockReturnThis(),
-    getMany: jest.fn().mockResolvedValue(sessions),
+    getMany,
   }
   const sessionRepository = {
     createQueryBuilder: jest.fn().mockReturnValue(queryBuilder),
@@ -65,5 +67,19 @@ describe("ConversationRetentionSweepService", () => {
 
     const { purgedCount } = await service.sweepExpiredConversations()
     expect(purgedCount).toBe(1)
+  })
+
+  it("drains full batches until the backlog is empty", async () => {
+    const fullBatch = Array.from({ length: 200 }, (_, index) => ({
+      id: `session-${index}`,
+      traceId: null as unknown as string,
+    }))
+    const lastBatch = [{ id: "session-last", traceId: null as unknown as string }]
+    const { service, purgeService } = buildService(fullBatch, lastBatch)
+
+    const { purgedCount } = await service.sweepExpiredConversations()
+
+    expect(purgedCount).toBe(201)
+    expect(purgeService.purgeSessionContent).toHaveBeenCalledTimes(201)
   })
 })

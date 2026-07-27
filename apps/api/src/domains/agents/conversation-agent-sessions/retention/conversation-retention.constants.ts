@@ -8,5 +8,8 @@ export const CONVERSATION_RETENTION_SWEEP_JOB_NAME = "sweep-expired-conversation
 
 export const CONVERSATION_RETENTION_SWEEP_SCHEDULER_ID = "conversation-retention-sweep"
 
-/** Max sessions purged per sweep run; the next run picks up the rest. */
+/** Sessions fetched per batch; the sweep loops until drained. */
 export const CONVERSATION_RETENTION_SWEEP_BATCH_LIMIT = 200
+
+/** Safety cap on batches per run (200 x 100 = 20k sessions); leftovers wait for the next run. */
+export const CONVERSATION_RETENTION_SWEEP_MAX_BATCHES_PER_RUN = 100

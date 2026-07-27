@@ -1,27 +1,12 @@
-const DEFAULT_SWEEP_INTERVAL_SECONDS = 3600
+const DEFAULT_SWEEP_CRON_PATTERN = "0 4 * * *" // daily at 04:00
 
 /**
- * How often the BullMQ scheduler enqueues a retention sweep. Optional env —
- * unlike the stuck-embedding sweep the retention sweep must not crash worker
- * startup on deployments that never set it, so it falls back to hourly.
+ * Cron pattern anchoring the retention sweep to wall-clock time
+ * (CONVERSATION_RETENTION_SWEEP_CRON, default: daily at 04:00). The sweep
+ * drains all expired sessions in batches on each run, so a daily anchor is
+ * enough regardless of volume.
  */
-export function getConversationRetentionSweepIntervalSeconds(): number {
-  const rawValue = process.env.CONVERSATION_RETENTION_SWEEP_INTERVAL_SECONDS
-  if (rawValue === undefined || rawValue === "") return DEFAULT_SWEEP_INTERVAL_SECONDS
-  const parsed = Number.parseInt(rawValue, 10)
-  if (!Number.isFinite(parsed) || parsed <= 0) {
-    throw new Error(
-      "CONVERSATION_RETENTION_SWEEP_INTERVAL_SECONDS must be a positive integer (seconds).",
-    )
-  }
-  return parsed
-}
-
-/**
- * Optional cron pattern (e.g. "0 4 * * *" for 4am daily). When set it takes
- * precedence over the interval, anchoring the sweep to wall-clock time.
- */
-export function getConversationRetentionSweepCronPattern(): string | undefined {
+export function getConversationRetentionSweepCronPattern(): string {
   const rawValue = process.env.CONVERSATION_RETENTION_SWEEP_CRON
-  return rawValue === undefined || rawValue === "" ? undefined : rawValue
+  return rawValue === undefined || rawValue === "" ? DEFAULT_SWEEP_CRON_PATTERN : rawValue
 }
