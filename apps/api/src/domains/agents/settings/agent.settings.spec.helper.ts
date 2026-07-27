@@ -13,6 +13,7 @@ export const agentSettingsValuesRev1: AgentSettingsValues = {
     properties: { aRequiredProperty1: { type: "string" } },
     required: ["aRequiredProperty1"],
   },
+  fillFormEnabled: false,
 }
 export const agentSettingsValuesRev2Archived: AgentSettingsValues = {
   instructions: "This is a default prompt 2",
@@ -26,6 +27,7 @@ export const agentSettingsValuesRev2Archived: AgentSettingsValues = {
     properties: { aRequiredProperty2: { type: "number" } },
     required: ["aRequiredProperty2"],
   },
+  fillFormEnabled: false,
 }
 export const agentSettingsValuesRev3Draft: AgentSettingsValues = {
   instructions: "This is a default prompt 3",
@@ -39,6 +41,7 @@ export const agentSettingsValuesRev3Draft: AgentSettingsValues = {
     properties: { aRequiredProperty3: { type: "number" } },
     required: ["aRequiredProperty3"],
   },
+  fillFormEnabled: false,
 }
 
 export function assertOnSettings(expected: object, value: AgentSettingsValues | undefined) {
