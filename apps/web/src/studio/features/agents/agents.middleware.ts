@@ -1,19 +1,10 @@
 import { createListenerMiddleware, isAnyOf } from "@reduxjs/toolkit"
 import { listAgents } from "@/common/features/agents/agents.thunks"
+import { updateAgentSettings } from "@/common/features/agents/settings/agent-settings.thunks"
 import { fetchMe } from "@/common/features/me/me.thunks"
 import { notificationsActions } from "@/common/features/notifications/notifications.slice"
 import type { AppDispatch, RootState } from "@/common/store/types"
-import {
-  createAgent,
-  deleteAgent,
-  updateAgentCategories,
-  updateAgentGeneral,
-  updateAgentModel,
-  updateAgentOutput,
-  updateAgentResources,
-  updateAgentSources,
-  updateAgentTools,
-} from "@/studio/features/agents/agents.thunks"
+import { createAgent, deleteAgent } from "@/studio/features/agents/agents.thunks"
 import {
   deleteDocumentTag,
   updateDocumentTag,
@@ -84,16 +75,10 @@ function registerListeners() {
     },
   })
 
+  // Task 11 adds its collection thunks (sources, resource libraries, categories, general) to
+  // both matchers below alongside updateAgentSettings.
   listenerMiddleware.startListening({
-    matcher: isAnyOf(
-      updateAgentGeneral.fulfilled,
-      updateAgentModel.fulfilled,
-      updateAgentOutput.fulfilled,
-      updateAgentSources.fulfilled,
-      updateAgentResources.fulfilled,
-      updateAgentCategories.fulfilled,
-      updateAgentTools.fulfilled,
-    ),
+    matcher: isAnyOf(updateAgentSettings.fulfilled),
     effect: async (_, listenerApi) => {
       listenerApi.dispatch(listAgents())
 
@@ -106,19 +91,8 @@ function registerListeners() {
     },
   })
 
-  // Note (Task 8): the restoreAgentRevision success/failure notifications used to live here.
-  // The thunk moved to the settings feature as restoreAgentSettings; Task 10 is expected to
-  // strip this comment and add the equivalent notification listener in agent-settings.middleware.ts.
   listenerMiddleware.startListening({
-    matcher: isAnyOf(
-      updateAgentGeneral.rejected,
-      updateAgentModel.rejected,
-      updateAgentOutput.rejected,
-      updateAgentSources.rejected,
-      updateAgentResources.rejected,
-      updateAgentCategories.rejected,
-      updateAgentTools.rejected,
-    ),
+    matcher: isAnyOf(updateAgentSettings.rejected),
     effect: async (_, listenerApi) => {
       listenerApi.dispatch(
         notificationsActions.show({

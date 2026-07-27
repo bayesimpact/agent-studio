@@ -216,7 +216,8 @@
       "fillForm": {
         "title": "Form filling",
         "description": "Let the agent fill a structured form from the user's answers during the conversation.",
-        "schemaDescription": "Define the form fields the agent should fill. The field order is the order in which the agent asks its questions."
+        "schemaDescription": "Define the form fields the agent should fill. The field order is the order in which the agent asks its questions.",
+        "schemaRequired": "Define the form schema before enabling form filling."
       }
     }
   }

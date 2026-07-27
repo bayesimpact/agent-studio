@@ -216,7 +216,8 @@
       "fillForm": {
         "title": "Remplissage de formulaire",
         "description": "Permet à l'agent de remplir un formulaire structuré à partir des réponses de l'utilisateur pendant la conversation.",
-        "schemaDescription": "Définissez les champs du formulaire que l'agent doit remplir. L'ordre des champs est l'ordre dans lequel l'agent pose ses questions."
+        "schemaDescription": "Définissez les champs du formulaire que l'agent doit remplir. L'ordre des champs est l'ordre dans lequel l'agent pose ses questions.",
+        "schemaRequired": "Définissez le schéma du formulaire avant d'activer le remplissage de formulaire."
       }
     }
   }

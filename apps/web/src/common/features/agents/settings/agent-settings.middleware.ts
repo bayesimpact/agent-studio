@@ -1,5 +1,6 @@
 import { createListenerMiddleware } from "@reduxjs/toolkit"
 import { getCurrentId } from "@/common/features/helpers"
+import { notificationsActions } from "@/common/features/notifications/notifications.slice"
 import type { AppDispatch, RootState } from "@/common/store/types"
 import { agentSettingsActions } from "./agent-settings.slice"
 import {
@@ -41,6 +42,29 @@ function registerListeners() {
       },
     })
   }
+
+  listenerMiddleware.startListening({
+    actionCreator: restoreAgentSettings.fulfilled,
+    effect: async (_, listenerApi) => {
+      listenerApi.dispatch(
+        notificationsActions.show({
+          title: "Agent version restored successfully",
+          type: "success",
+        }),
+      )
+    },
+  })
+  listenerMiddleware.startListening({
+    actionCreator: restoreAgentSettings.rejected,
+    effect: async (_, listenerApi) => {
+      listenerApi.dispatch(
+        notificationsActions.show({
+          title: "Agent version restore failed",
+          type: "error",
+        }),
+      )
+    },
+  })
 }
 
 export const agentSettingsMiddleware = { listenerMiddleware, registerListeners }
