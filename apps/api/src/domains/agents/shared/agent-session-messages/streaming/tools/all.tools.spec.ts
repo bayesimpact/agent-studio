@@ -313,7 +313,7 @@ describe("Tools execution", () => {
     })
 
     // Other conversation tools are still built; only fillForm is gated off.
-    expect(tools?.[ToolName.RetrieveProjectDocumentChunks]).toBeDefined()
+    expect(tools?.[ToolName.LookupKnowledgeBase]).toBeDefined()
     expect(tools?.[ToolName.FillForm]).toBeUndefined()
   })
 
@@ -345,11 +345,11 @@ describe("Tools execution", () => {
       onExecute: () => undefined,
     })
 
-    expect(tools?.[ToolName.RetrieveProjectDocumentChunks]).toBeDefined()
+    expect(tools?.[ToolName.LookupKnowledgeBase]).toBeDefined()
     expect(tools?.[ToolName.FillForm]).toBeUndefined()
   })
 
-  it("ToolName.RetrieveProjectDocumentChunks - should works", async () => {
+  it("ToolName.LookupKnowledgeBase - should works", async () => {
     const { connectScope, agent, agentSettings, session } = await createContextWithSession()
     const ragAgentSettings = { ...agentSettings, documentsRagMode: DocumentsRagMode.All }
     mockDocumentChunkRetrievalService.retrieveTopChunks.mockResolvedValue([])
@@ -359,12 +359,12 @@ describe("Tools execution", () => {
       agentSettings: ragAgentSettings,
       session,
       connectScope,
-      toolName: ToolName.RetrieveProjectDocumentChunks,
-      toolInput: { conversationSummary: "", latestUserQuestion: "What is Bayes?", topK: 5 },
+      toolName: ToolName.LookupKnowledgeBase,
+      toolInput: { conversationSummary: "", query: "What is Bayes?", topK: 5 },
     })
 
     expect(mockDocumentChunkRetrievalService.retrieveTopChunks).toHaveBeenCalledWith(
-      expect.objectContaining({ latestUserQuestion: "What is Bayes?", topK: 5 }),
+      expect.objectContaining({ query: "What is Bayes?", topK: 5 }),
     )
     expect(agentCalls).toHaveLength(2)
     expect(agentCalls[1]?.prompt).toContain("retrievalMetadata")

@@ -62,11 +62,11 @@ Always answer in ${locale === "en" ? "English" : locale === "fr" ? "French" : "u
 ${names
   .map((name) => {
     switch (name) {
-      case ToolName.RetrieveProjectDocumentChunks:
-        return `[${name}]: When the user asks about information that may exist in project documents, call the ${name} tool before answering. Use the returned chunks as primary context and avoid inventing facts not present in those chunks.`
+      case ToolName.LookupKnowledgeBase:
+        return `[${name}]: The knowledge base holds information that is not in your training data, so you do not know the answer to the user's question — assume you must look it up. Call the ${name} tool BEFORE replying to anything except greetings and questions about what was already said in this conversation, including follow-up questions and questions that feel familiar. Rewrite the question as a standalone sentence before passing it. Answer only from the returned passages; if they do not contain the answer, say so instead of inventing one.`
 
       case ToolName.Sources:
-        return `[${name}]: You MUST call the ${name} tool whenever you use information from the ${ToolName.RetrieveProjectDocumentChunks} tool to answer the user, regardless of whether the chunks come from uploaded documents (documentSourceType="project") or crawled web pages (documentSourceType="webCrawl"). Include EVERY document whose chunks you actually used — do not omit web-crawled pages. For each source, copy the documentId, documentTitle, and documentSourceType verbatim from the retrieved chunks. Do NOT cite sources inline in your text response; the ${name} tool is the only way to show sources to the user.`
+        return `[${name}]: You MUST call the ${name} tool whenever you use information from the ${ToolName.LookupKnowledgeBase} tool to answer the user, regardless of whether the chunks come from uploaded documents (documentSourceType="project") or crawled web pages (documentSourceType="webCrawl"). Include EVERY document whose chunks you actually used — do not omit web-crawled pages. For each source, copy the documentId, documentTitle, and documentSourceType verbatim from the retrieved chunks. Do NOT cite sources inline in your text response; the ${name} tool is the only way to show sources to the user.`
 
       case ToolName.FillForm: {
         const parsedSchema = outputJsonSchemaSchema.safeParse(agentSettings.outputJsonSchema)

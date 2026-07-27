@@ -5,7 +5,7 @@ import { embed } from "ai"
 import { toSql } from "pgvector"
 import type { DataSource, SelectQueryBuilder } from "typeorm"
 import type { RequiredConnectScope } from "@/common/entities/connect-required-fields"
-import { DEFAULT_TOP_K } from "@/domains/agents/shared/agent-session-messages/streaming/tools/retrieve-project-document-chunks.tool"
+import { DEFAULT_TOP_K } from "@/domains/agents/shared/agent-session-messages/streaming/tools/lookup-knowledge-base.tool"
 import type { RetrievedDocumentChunk } from "./document-chunk.types"
 import { resolveEmbeddingModelNames, resolveVertexConfig } from "./document-embeddings.config"
 
@@ -18,19 +18,19 @@ export class DocumentChunkRetrievalService {
   async retrieveTopChunks({
     connectScope,
     conversationSummary,
-    latestUserQuestion,
+    query,
     topK = DEFAULT_TOP_K,
     documentTagIds = [],
   }: {
     connectScope: RequiredConnectScope
     conversationSummary: string
-    latestUserQuestion: string
+    query: string
     topK?: number
     documentTagIds?: string[]
   }): Promise<RetrievedDocumentChunk[]> {
     const retrievalQueryText = this.buildRetrievalQueryText({
       conversationSummary,
-      latestUserQuestion,
+      query,
     })
     const modelName = this.resolvePrimaryModelName()
     if (!modelName) {
@@ -225,18 +225,14 @@ export class DocumentChunkRetrievalService {
 
   private buildRetrievalQueryText({
     conversationSummary,
-    latestUserQuestion,
+    query,
   }: {
     conversationSummary: string
-    latestUserQuestion: string
+    query: string
   }): string {
-    return [
-      "Conversation summary:",
-      conversationSummary.trim(),
-      "",
-      "Latest user question:",
-      latestUserQuestion.trim(),
-    ].join("\n")
+    return ["Conversation summary:", conversationSummary.trim(), "", "Query:", query.trim()].join(
+      "\n",
+    )
   }
 
   private async embedQuery({

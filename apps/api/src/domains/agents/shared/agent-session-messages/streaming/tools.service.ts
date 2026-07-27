@@ -18,8 +18,8 @@ import { generateMasterPrompt } from "./master-promts/generate-master-prompt"
 import type { AgentSessionScope, OnExecute } from "./streaming-session.types"
 import { type BuiltTools, buildSubAgentTools } from "./sub-agent-tools"
 import { fillFormTool } from "./tools/fill-form.tool"
+import { lookupKnowledgeBaseTool } from "./tools/lookup-knowledge-base.tool"
 import { recalculateConversationSessionMetadataTool } from "./tools/recalculate-conversation-session-metadata.tool"
-import { retrieveProjectDocumentChunksTool } from "./tools/retrieve-project-document-chunks.tool"
 import { sourcesTool } from "./tools/sources.tool"
 import { surfaceResourcesTool } from "./tools/surface-resources.tool"
 
@@ -229,7 +229,7 @@ export class ToolsService extends ServiceWithLLM {
       ...(agentSettings.documentsRagMode === DocumentsRagMode.None
         ? {}
         : {
-            [ToolName.RetrieveProjectDocumentChunks]: retrieveProjectDocumentChunksTool({
+            [ToolName.LookupKnowledgeBase]: lookupKnowledgeBaseTool({
               connectScope,
               documentTagIds:
                 agentSettings.documentsRagMode === DocumentsRagMode.Tags

@@ -47,7 +47,7 @@ describe("buildTools", () => {
       onExecute: () => undefined,
     })
 
-    expect(tools?.[ToolName.RetrieveProjectDocumentChunks]).toBeUndefined()
+    expect(tools?.[ToolName.LookupKnowledgeBase]).toBeUndefined()
     expect(tools?.[ToolName.RecalculateConversationSessionMetadata]).toBeUndefined()
   })
 
@@ -69,7 +69,7 @@ describe("buildTools", () => {
       onExecute: () => undefined,
     })
 
-    expect(tools?.[ToolName.RetrieveProjectDocumentChunks]).toBeDefined()
+    expect(tools?.[ToolName.LookupKnowledgeBase]).toBeDefined()
     expect(tools?.[ToolName.RecalculateConversationSessionMetadata]).toBeUndefined()
   })
 
@@ -91,7 +91,7 @@ describe("buildTools", () => {
       onExecute: () => undefined,
     })
 
-    expect(tools?.[ToolName.RetrieveProjectDocumentChunks]).toBeDefined()
+    expect(tools?.[ToolName.LookupKnowledgeBase]).toBeDefined()
     expect(tools?.[ToolName.RecalculateConversationSessionMetadata]).toBeUndefined()
   })
 

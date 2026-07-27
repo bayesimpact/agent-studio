@@ -1484,7 +1484,7 @@
   },
   {
     "type": "cycle",
-    "from": "src/domains/agents/shared/agent-session-messages/streaming/tools/retrieve-project-document-chunks.tool.ts",
+    "from": "src/domains/agents/shared/agent-session-messages/streaming/tools/lookup-knowledge-base.tool.ts",
     "to": "src/domains/documents/embeddings/document-chunk-retrieval.service.ts",
     "rule": {
       "severity": "error",
@@ -1503,7 +1503,7 @@
         ]
       },
       {
-        "name": "src/domains/agents/shared/agent-session-messages/streaming/tools/retrieve-project-document-chunks.tool.ts",
+        "name": "src/domains/agents/shared/agent-session-messages/streaming/tools/lookup-knowledge-base.tool.ts",
         "dependencyTypes": [
           "aliased",
           "aliased-tsconfig",
@@ -3807,7 +3807,7 @@
   },
   {
     "type": "dependency",
-    "from": "src/domains/agents/shared/agent-session-messages/streaming/tools/retrieve-project-document-chunks.tool.ts",
+    "from": "src/domains/agents/shared/agent-session-messages/streaming/tools/lookup-knowledge-base.tool.ts",
     "to": "src/domains/documents/embeddings/document-chunk-retrieval.service.ts",
     "rule": {
       "severity": "warn",
