@@ -50,9 +50,11 @@ describe("Agent Settings - updateOne", () => {
     await app.close()
   })
 
-  const createContext = async () => {
-    const { user, organization, project, agent, agentSettings } =
-      await createOrganizationWithAgent(repositories)
+  const createContext = async (params: Parameters<typeof createOrganizationWithAgent>[1] = {}) => {
+    const { user, organization, project, agent, agentSettings } = await createOrganizationWithAgent(
+      repositories,
+      params,
+    )
     organizationId = organization.id
     projectId = project.id
     agentId = agent.id
@@ -115,5 +117,17 @@ describe("Agent Settings - updateOne", () => {
     const response = await subject()
 
     expectResponse(response, 422)
+  })
+
+  it("should allow enabling fillForm alone when the current revision already has an output schema", async () => {
+    const outputJsonSchema = { type: "object", properties: { summary: { type: "string" } } }
+    await createContext({ agentSettings: { outputJsonSchema } })
+    payload = { fillFormEnabled: true }
+
+    const response = await subject()
+
+    expectResponse(response, 200)
+    expect(response.body.data.fillFormEnabled).toBe(true)
+    expect(response.body.data.outputJsonSchema).toEqual(outputJsonSchema)
   })
 })
