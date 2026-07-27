@@ -7,12 +7,12 @@ import type {
 } from "@/common/context/request.interface"
 import { AddContext, RequireContext } from "@/common/context/require-context.decorator"
 import { ResourceContextGuard } from "@/common/context/resource-context.guard"
-import { CheckPolicy } from "@/common/policies/check-policy.decorator"
 import { TrackActivity } from "@/domains/activities/track-activity.decorator"
 import { JwtAuthGuard } from "@/domains/auth/jwt-auth.guard"
+import { CheckPermission } from "@/domains/rbac/check-permission.decorator"
+import { CheckPermissionGuard } from "@/domains/rbac/check-permission.guard"
 import { UserGuard } from "@/domains/users/user.guard"
 import { toMyProjectDto, toProjectDto } from "./helpers"
-import { ProjectsGuard } from "./projects.guard"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
 import { ProjectsService } from "./projects.service"
 
@@ -30,9 +30,9 @@ export class ProjectsController {
   }
 
   @Post(ProjectsRoutes.createOne.path)
-  @UseGuards(JwtAuthGuard, UserGuard, ResourceContextGuard, ProjectsGuard)
+  @UseGuards(JwtAuthGuard, UserGuard, ResourceContextGuard, CheckPermissionGuard)
   @RequireContext("organization")
-  @CheckPolicy((policy) => policy.canCreate())
+  @CheckPermission("project.create", "organization")
   @TrackActivity({ action: "project.create" })
   async createProject(
     @Req() request: EndpointRequestWithOrganizationMembership,
@@ -48,9 +48,9 @@ export class ProjectsController {
   }
 
   @Get(ProjectsRoutes.getAll.path)
-  @UseGuards(JwtAuthGuard, UserGuard, ResourceContextGuard, ProjectsGuard)
+  @UseGuards(JwtAuthGuard, UserGuard, ResourceContextGuard, CheckPermissionGuard)
   @RequireContext("organization")
-  @CheckPolicy((policy) => policy.canList())
+  @CheckPermission("organization.read", "organization")
   async listProjects(
     @Req() request: EndpointRequestWithOrganizationMembership,
   ): Promise<typeof ProjectsRoutes.getAll.response> {
@@ -60,9 +60,9 @@ export class ProjectsController {
   }
 
   @Patch(ProjectsRoutes.updateOne.path)
-  @UseGuards(JwtAuthGuard, UserGuard, ResourceContextGuard, ProjectsGuard)
+  @UseGuards(JwtAuthGuard, UserGuard, ResourceContextGuard, CheckPermissionGuard)
   @RequireContext("organization")
-  @CheckPolicy((policy) => policy.canUpdate())
+  @CheckPermission("project.update", "project")
   @AddContext("project")
   @TrackActivity({ action: "project.update", entityFrom: "project" })
   async updateProject(
@@ -77,9 +77,9 @@ export class ProjectsController {
   }
 
   @Delete(ProjectsRoutes.deleteOne.path)
-  @UseGuards(JwtAuthGuard, UserGuard, ResourceContextGuard, ProjectsGuard)
+  @UseGuards(JwtAuthGuard, UserGuard, ResourceContextGuard, CheckPermissionGuard)
   @RequireContext("organization")
-  @CheckPolicy((policy) => policy.canDelete())
+  @CheckPermission("project.delete", "project")
   @AddContext("project")
   @TrackActivity({ action: "project.delete", entityFrom: "project" })
   async deleteProject(

@@ -11,7 +11,14 @@ type PermissionRequest = EndpointRequestWithOrganizationMembership &
     params?: Record<string, string | undefined>
   }
 
-/** Reads the resource id already resolved onto the request by context guards. */
+/**
+ * Reads the resource id already resolved onto the request by context guards.
+ *
+ * Child resources (project, agent) intentionally have no fallback to raw route
+ * params: their context resolver cross-checks that the resource belongs to the
+ * organization in the URL, so a missing resolver must fail loudly instead of
+ * silently checking an unvalidated id.
+ */
 export function resolvePermissionResourceId(
   request: PermissionRequest,
   resourceType: PermissionResourceType,
@@ -20,8 +27,8 @@ export function resolvePermissionResourceId(
     case "organization":
       return request.organizationId ?? request.params?.organizationId
     case "project":
-      return request.project?.id ?? request.params?.projectId
+      return request.project?.id
     case "agent":
-      return request.agent?.id ?? request.params?.agentId
+      return request.agent?.id
   }
 }

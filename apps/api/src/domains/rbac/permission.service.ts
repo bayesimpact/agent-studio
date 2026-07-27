@@ -269,7 +269,51 @@ export class PermissionService {
     return matches.length > 0
   }
 
+  /**
+   * Whether the user holds the permission on the resource, either through a
+   * role held directly on the resource, or inherited from a role on an
+   * ancestor resource (e.g. an org role granting `project.read` applies to
+   * every project of the org).
+   *
+   * Inheritance is gated by RESOURCE_TYPE_PERMISSIONS_MAP, with the same
+   * semantics as listResourcePermissions: a parent role only conveys the
+   * permissions that apply to the child resource type.
+   */
   async has(userId: string, permission: string, resource: PermissionResource): Promise<boolean> {
+    if (await this.hasDirectly(userId, permission, resource)) {
+      return true
+    }
+
+    // a permission that does not apply to this resource type can never be inherited
+    const resourceTypePermissions: readonly string[] = RESOURCE_TYPE_PERMISSIONS_MAP[resource.type]
+    if (!resourceTypePermissions.includes(permission)) {
+      return false
+    }
+
+    for (const parentResourceType of PARENT_RESOURCE_TYPE_MAP[resource.type]) {
+      const parentResourceId = await this.fetchParentResourceId(resource, parentResourceType)
+      if (!parentResourceId) {
+        continue
+      }
+
+      const hasPermissionOnParent = await this.hasDirectly(userId, permission, {
+        type: parentResourceType,
+        id: parentResourceId,
+      })
+      if (hasPermissionOnParent) {
+        return true
+      }
+    }
+
+    return false
+  }
+
+  /** Whether a role held directly on the resource grants the permission. */
+  private async hasDirectly(
+    userId: string,
+    permission: string,
+    resource: PermissionResource,
+  ): Promise<boolean> {
     const matches: { allowed: number }[] = await this.dataSource.query(
       `SELECT 1 AS allowed
        FROM user_membership membership
@@ -285,6 +329,20 @@ export class PermissionService {
     )
 
     return matches.length > 0
+  }
+
+  /** Resolves the id of the resource's ancestor of the given type, if any. */
+  private async fetchParentResourceId(
+    resource: PermissionResource,
+    parentResourceType: PermissionResourceType,
+  ): Promise<string | null> {
+    const query = PARENT_RESOURCE_ID_QUERIES[resource.type]?.[parentResourceType]
+    if (!query) {
+      return null
+    }
+
+    const rows: { parentResourceId: string }[] = await this.dataSource.query(query, [resource.id])
+    return rows[0]?.parentResourceId ?? null
   }
 
   private groupPermissionsByResourceId(rows: ResourcePermissionRow[]): Map<string, string[]> {
@@ -314,6 +372,32 @@ export class PermissionService {
 
     return this.dataSource.query(query, [parentResourceIds])
   }
+}
+
+/**
+ * One declarative SQL query per (child resource type -> parent resource type) pair,
+ * resolving the parent id of a single child resource ($1 = child id).
+ * Mirror of CHILD_RESOURCE_ROWS_QUERIES.
+ */
+const PARENT_RESOURCE_ID_QUERIES: Partial<
+  Record<PermissionResourceType, Partial<Record<PermissionResourceType, string>>>
+> = {
+  project: {
+    organization: `SELECT project.organization_id AS "parentResourceId"
+                   FROM project
+                   WHERE project.id = $1
+                     AND project.deleted_at IS NULL`,
+  },
+  agent: {
+    organization: `SELECT agent.organization_id AS "parentResourceId"
+                   FROM agent
+                   WHERE agent.id = $1
+                     AND agent.deleted_at IS NULL`,
+    project: `SELECT agent.project_id AS "parentResourceId"
+              FROM agent
+              WHERE agent.id = $1
+                AND agent.deleted_at IS NULL`,
+  },
 }
 
 /** One declarative SQL query per (child resource type -> parent resource type) pair. */

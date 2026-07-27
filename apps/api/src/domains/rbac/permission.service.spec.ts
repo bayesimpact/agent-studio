@@ -353,6 +353,150 @@ describe("PermissionService", () => {
       expect(permissionsByProjectId.size).toBe(0)
     })
   })
+
+  describe("has (scoped, with inheritance)", () => {
+    it("grants an inheritable permission on a child project to the org owner", async () => {
+      const repositories = setup.getAllRepositories()
+      // the org owner holds project.read on the organization, but no project membership
+      const { organization, user } = await createOrganizationWithOwner(repositories)
+      const project = projectFactory.transient({ organization }).build()
+      await repositories.projectRepository.save(project)
+
+      await expect(
+        service.has(user.id, PROJECT_READ_PERMISSION, { type: "project", id: project.id }),
+      ).resolves.toBe(true)
+    })
+
+    it("denies a non-inheritable permission on a child project to the org owner", async () => {
+      const repositories = setup.getAllRepositories()
+      const { organization, user } = await createOrganizationWithOwner(repositories)
+      const project = projectFactory.transient({ organization }).build()
+      await repositories.projectRepository.save(project)
+
+      // project.update is not in RESOURCE_TYPE_PERMISSIONS_MAP.project:
+      // only a direct project role can grant it
+      await expect(
+        service.has(user.id, "project.update", { type: "project", id: project.id }),
+      ).resolves.toBe(false)
+    })
+
+    it("grants a direct project permission to the project owner", async () => {
+      const repositories = setup.getAllRepositories()
+      const { organization } = await createOrganizationWithOwner(repositories)
+      const project = projectFactory.transient({ organization }).build()
+      await repositories.projectRepository.save(project)
+
+      const projectOwnerRole = await repositories.roleRepository.findOneOrFail({
+        where: { key: PROJECT_ROLES.owner },
+      })
+      const projectUser = userFactory.build()
+      await repositories.userRepository.save(projectUser)
+      await repositories.userMembershipRepository.save(
+        userMembershipFactory.build({
+          userId: projectUser.id,
+          resourceType: "project",
+          resourceId: project.id,
+          role: "owner",
+          roleId: projectOwnerRole.id,
+        }),
+      )
+
+      await expect(
+        service.has(projectUser.id, "project.update", { type: "project", id: project.id }),
+      ).resolves.toBe(true)
+    })
+
+    it("does not inherit across organizations", async () => {
+      const repositories = setup.getAllRepositories()
+      // owner of org A asking about a project of org B
+      const { user: otherOrgOwner } = await createOrganizationWithOwner(repositories)
+      const { organization } = await createOrganizationWithOwner(repositories)
+      const project = projectFactory.transient({ organization }).build()
+      await repositories.projectRepository.save(project)
+
+      await expect(
+        service.has(otherOrgOwner.id, PROJECT_READ_PERMISSION, {
+          type: "project",
+          id: project.id,
+        }),
+      ).resolves.toBe(false)
+    })
+
+    it("denies inherited project.read to a plain org member", async () => {
+      const repositories = setup.getAllRepositories()
+      const { organization } = await createOrganizationWithOwner(repositories)
+      const project = projectFactory.transient({ organization }).build()
+      await repositories.projectRepository.save(project)
+
+      const memberRole = await repositories.roleRepository.findOneOrFail({
+        where: { key: ORGANIZATION_ROLES.member },
+      })
+      const memberUser = userFactory.build()
+      await repositories.userRepository.save(memberUser)
+      await repositories.userMembershipRepository.save(
+        userMembershipFactory.build({
+          userId: memberUser.id,
+          resourceType: "organization",
+          resourceId: organization.id,
+          role: "member",
+          roleId: memberRole.id,
+        }),
+      )
+
+      await expect(
+        service.has(memberUser.id, PROJECT_READ_PERMISSION, { type: "project", id: project.id }),
+      ).resolves.toBe(false)
+    })
+
+    it("never inherits a permission excluded by the resource type map, even if the parent role grants it", async () => {
+      const repositories = setup.getAllRepositories()
+      // roles are not wiped by clearTestDatabase: remove any leftover ad-hoc role
+      await repositories.roleRepository.delete({ key: "test_org_project_updater" })
+
+      try {
+        const { organization } = await createOrganizationWithOwner(repositories)
+        const project = projectFactory.transient({ organization }).build()
+        await repositories.projectRepository.save(project)
+
+        // ad-hoc org role granting project.update: the map gate must still block inheritance
+        const orgRole = await repositories.roleRepository.save(
+          repositories.roleRepository.create({
+            key: "test_org_project_updater",
+            name: "Test Org Project Updater",
+            scopeType: "organization",
+          }),
+        )
+        await setup.dataSource.query(
+          `INSERT INTO role_permission (role_id, permission_key) VALUES ($1, $2)`,
+          [orgRole.id, "project.update"],
+        )
+
+        const orgUser = userFactory.build()
+        await repositories.userRepository.save(orgUser)
+        await repositories.userMembershipRepository.save(
+          userMembershipFactory.build({
+            userId: orgUser.id,
+            resourceType: "organization",
+            resourceId: organization.id,
+            role: "member",
+            roleId: orgRole.id,
+          }),
+        )
+
+        await expect(
+          service.has(orgUser.id, "project.update", { type: "project", id: project.id }),
+        ).resolves.toBe(false)
+      } finally {
+        const testRole = await repositories.roleRepository.findOne({
+          where: { key: "test_org_project_updater" },
+        })
+        if (testRole) {
+          await repositories.userMembershipRepository.delete({ roleId: testRole.id })
+          await repositories.roleRepository.delete({ id: testRole.id })
+        }
+      }
+    })
+  })
 })
 
 describe("RbacService", () => {

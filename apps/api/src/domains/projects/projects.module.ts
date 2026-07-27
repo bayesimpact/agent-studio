@@ -21,7 +21,6 @@ import { ProjectMembershipsService } from "./memberships/project-memberships.ser
 import { Project } from "./project.entity"
 import { ProjectRepository } from "./project.repository"
 import { ProjectsController } from "./projects.controller"
-import { ProjectsGuard } from "./projects.guard"
 import { ProjectsService } from "./projects.service"
 
 @Module({
@@ -41,7 +40,6 @@ import { ProjectsService } from "./projects.service"
     ProjectRepository,
     ProjectMembershipRepository,
     ProjectMembershipsService,
-    ProjectsGuard,
     ResourceContextGuard,
     OrganizationContextResolver,
     ProjectContextResolver,
