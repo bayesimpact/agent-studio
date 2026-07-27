@@ -35,19 +35,30 @@ export const deleteAgent = createAsyncThunk<void, { agentId: string }, ThunkConf
   },
 )
 
-export const renameAgent = createAsyncThunk<void, { agentId: string; name: string }, ThunkConfig>(
-  "agents/rename",
-  async ({ agentId, name }, { extra: { services }, getState }) => {
-    const state = getState()
-    const organizationId = getCurrentId({ state, name: "organizationId" })
-    const projectId = getCurrentId({ state, name: "projectId" })
-    await services.agents.updateOne({ organizationId, projectId, agentId }, { name })
+export const renameAgent = createAsyncThunk<
+  void,
+  {
+    agentId: string
+    name: string
+    /** Set when this dispatch is part of a composite save that will notify on its own behalf. */
+    silent?: boolean
   },
-)
+  ThunkConfig
+>("agents/rename", async ({ agentId, name }, { extra: { services }, getState }) => {
+  const state = getState()
+  const organizationId = getCurrentId({ state, name: "organizationId" })
+  const projectId = getCurrentId({ state, name: "projectId" })
+  await services.agents.updateOne({ organizationId, projectId, agentId }, { name })
+})
 
 export const updateAgentDocumentTags = createAsyncThunk<
   void,
-  { agentId: string; documentTagIds: string[] },
+  {
+    agentId: string
+    documentTagIds: string[]
+    /** Set when this dispatch is part of a composite save that will notify on its own behalf. */
+    silent?: boolean
+  },
   ThunkConfig
 >(
   "agents/updateDocumentTags",
@@ -116,10 +127,12 @@ export const saveAgentGeneral = createAsyncThunk<
 >("agents/saveGeneral", async ({ agentId, fields }, { dispatch }) => {
   const { name, ...settingsFields } = fields
   if (Object.keys(settingsFields).length > 0) {
-    await dispatch(updateAgentSettings({ agentId, fields: settingsFields })).unwrap()
+    // silent: true — this composite thunk's own fulfilled/rejected owns the single
+    // notification and the single listAgents() refetch; see agents.middleware.ts.
+    await dispatch(updateAgentSettings({ agentId, fields: settingsFields, silent: true })).unwrap()
   }
   if (name !== undefined) {
-    await dispatch(renameAgent({ agentId, name })).unwrap()
+    await dispatch(renameAgent({ agentId, name, silent: true })).unwrap()
   }
 })
 
@@ -130,9 +143,12 @@ export const saveAgentSources = createAsyncThunk<
   ThunkConfig
 >("agents/saveSources", async ({ agentId, documentsRagMode, documentTagIds }, { dispatch }) => {
   if (documentsRagMode !== undefined) {
-    await dispatch(updateAgentSettings({ agentId, fields: { documentsRagMode } })).unwrap()
+    // silent: true — see saveAgentGeneral above; this composite thunk owns the notification.
+    await dispatch(
+      updateAgentSettings({ agentId, fields: { documentsRagMode }, silent: true }),
+    ).unwrap()
   }
   if (documentTagIds !== undefined) {
-    await dispatch(updateAgentDocumentTags({ agentId, documentTagIds })).unwrap()
+    await dispatch(updateAgentDocumentTags({ agentId, documentTagIds, silent: true })).unwrap()
   }
 })

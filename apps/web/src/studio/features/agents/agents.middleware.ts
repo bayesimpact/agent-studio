@@ -1,4 +1,4 @@
-import { createListenerMiddleware, isAnyOf } from "@reduxjs/toolkit"
+import { createListenerMiddleware, isAnyOf, type UnknownAction } from "@reduxjs/toolkit"
 import { listAgents } from "@/common/features/agents/agents.thunks"
 import { updateAgentSettings } from "@/common/features/agents/settings/agent-settings.thunks"
 import { fetchMe } from "@/common/features/me/me.thunks"
@@ -20,6 +20,19 @@ import {
 } from "@/studio/features/document-tags/document-tags.thunks"
 
 const listenerMiddleware = createListenerMiddleware<RootState, AppDispatch>()
+
+/**
+ * True when the thunk that dispatched this action was told `silent: true` — set by a composite
+ * thunk (saveAgentGeneral, saveAgentSources) on the sub-thunks it dispatches internally, so its
+ * own fulfilled/rejected is the only one that produces a user-facing notification and refetch.
+ */
+function isSilent(action: UnknownAction): boolean {
+  const meta = action.meta
+  if (typeof meta !== "object" || meta === null || !("arg" in meta)) return false
+  const arg = meta.arg
+  if (typeof arg !== "object" || arg === null || !("silent" in arg)) return false
+  return arg.silent === true
+}
 
 function registerListeners() {
   listenerMiddleware.startListening({
@@ -94,7 +107,11 @@ function registerListeners() {
       updateAgentSessionCategories.fulfilled,
       updateAgentSettings.fulfilled,
     ),
-    effect: async (_, listenerApi) => {
+    effect: async (action, listenerApi) => {
+      // A composite thunk's sub-dispatches are silent: the composite's own fulfilled/rejected
+      // (matched separately here, since it isn't silent) owns the single notification + refetch.
+      if (isSilent(action)) return
+
       listenerApi.dispatch(listAgents())
 
       listenerApi.dispatch(
@@ -116,7 +133,9 @@ function registerListeners() {
       updateAgentSessionCategories.rejected,
       updateAgentSettings.rejected,
     ),
-    effect: async (_, listenerApi) => {
+    effect: async (action, listenerApi) => {
+      if (isSilent(action)) return
+
       listenerApi.dispatch(
         notificationsActions.show({
           title: "Agent update failed",

@@ -19,7 +19,12 @@ export const listAgentSettings = createAsyncThunk<
 
 export const updateAgentSettings = createAsyncThunk<
   AgentSettings,
-  { agentId: string; fields: UpdateAgentSettingsDto },
+  {
+    agentId: string
+    fields: UpdateAgentSettingsDto
+    /** Set when this dispatch is part of a composite save that will notify on its own behalf. */
+    silent?: boolean
+  },
   ThunkConfig
 >("agentSettings/update", async ({ agentId, fields }, { extra: { services }, getState }) => {
   const state = getState()
