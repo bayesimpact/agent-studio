@@ -8,7 +8,6 @@ import { User } from "@/domains/users/user.entity"
 import { UsersModule } from "@/domains/users/users.module"
 import { OrganizationMembershipRepository } from "./memberships/organization-membership.repository"
 import { OrganizationMembershipsService } from "./memberships/organization-memberships.service"
-import { Organization } from "./organization.entity"
 import { OrganizationGuard } from "./organization.guard"
 import { OrganizationRepository } from "./organization.repository"
 import { OrganizationsController } from "./organizations.controller"
@@ -17,7 +16,7 @@ import { OrganizationAccountProvisioningService } from "./provisioning/organizat
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Organization, User]),
+    TypeOrmModule.forFeature([User]),
     ActivitiesModule,
     MembershipsModule,
     RbacModule,
