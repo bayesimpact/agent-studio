@@ -44,13 +44,24 @@ export class ConversationAgentSessionsController {
     @Req() request: EndpointRequestWithAgent,
     @Body() { payload }: typeof ConversationAgentSessionsRoutes.getAll.request,
   ): Promise<typeof ConversationAgentSessionsRoutes.getAll.response> {
+    const connectScope = getRequiredConnectScope(request)
     const sessions = await this.conversationAgentSessionsService.getAllSessionsForAgent({
-      connectScope: getRequiredConnectScope(request),
+      connectScope,
       agentId: request.agent.id,
       userId: request.user.id,
       type: payload.type,
     })
-    return { data: sessions.map(toDto(payload.type)) }
+    const formSchemasBySessionId =
+      await this.conversationAgentSessionsService.mapSessionsToFormSchemas({
+        connectScope,
+        sessions,
+      })
+    return {
+      data: sessions.map((session) => ({
+        ...toDto(payload.type)(session),
+        outputJsonSchema: formSchemasBySessionId.get(session.id),
+      })),
+    }
   }
 
   @CheckPolicy((policy) => policy.canCreate())
