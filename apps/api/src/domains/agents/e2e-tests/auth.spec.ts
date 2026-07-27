@@ -226,6 +226,132 @@ describe("Agents - Auth", () => {
     })
   })
 
+  describe("AgentsRoutes.updateDocumentTags", () => {
+    const subject = async () =>
+      request({
+        route: AgentsRoutes.updateDocumentTags,
+        pathParams: removeNullish({ organizationId, projectId, agentId }),
+        token: accessToken ?? undefined,
+      })
+
+    it("requires an authentication token", async () => {
+      accessToken = null
+      expectResponse(await subject(), 401, AUTH_ERRORS.NO_ACCESS_TOKEN)
+    })
+    it("requires a valid organization ID", async () => {
+      await createContextForRole("owner")
+      organizationId = null
+      expectResponse(await subject(), 400, AUTH_ERRORS.NO_ORGANIZATION_ID)
+    })
+    it("requires a valid project ID", async () => {
+      await createContextForRole("owner")
+      // Use a valid UUID format that doesn't exist in the database
+      projectId = randomUUID()
+      expectResponse(await subject(), 404)
+    })
+    it("requires the user to be a member of the organization", async () => {
+      await createContextForRole("owner")
+      auth0Id = mockForeignAuth0Id()
+      expectResponse(await subject(), 401, AUTH_ERRORS.NOT_MEMBER_OF_ORG)
+    })
+    it("requires the agent to be part of the project", async () => {
+      const { organization } = await createContextForRole("owner")
+      const project2 = await repositories.projectRepository.save(
+        projectFactory.transient({ organization }).build(),
+      )
+      projectId = project2.id
+      expectResponse(await subject(), 404) //exception thrown by guard
+    })
+    it("doesn't allow a simple member to delete a agent", async () => {
+      await createContextForRole("member")
+      expectResponse(await subject(), 403, AUTH_ERRORS.UNAUTHORIZED_RESOURCE)
+    })
+  })
+
+  describe("AgentsRoutes.updateResourceLibraries", () => {
+    const subject = async () =>
+      request({
+        route: AgentsRoutes.updateResourceLibraries,
+        pathParams: removeNullish({ organizationId, projectId, agentId }),
+        token: accessToken ?? undefined,
+      })
+
+    it("requires an authentication token", async () => {
+      accessToken = null
+      expectResponse(await subject(), 401, AUTH_ERRORS.NO_ACCESS_TOKEN)
+    })
+    it("requires a valid organization ID", async () => {
+      await createContextForRole("owner")
+      organizationId = null
+      expectResponse(await subject(), 400, AUTH_ERRORS.NO_ORGANIZATION_ID)
+    })
+    it("requires a valid project ID", async () => {
+      await createContextForRole("owner")
+      // Use a valid UUID format that doesn't exist in the database
+      projectId = randomUUID()
+      expectResponse(await subject(), 404)
+    })
+    it("requires the user to be a member of the organization", async () => {
+      await createContextForRole("owner")
+      auth0Id = mockForeignAuth0Id()
+      expectResponse(await subject(), 401, AUTH_ERRORS.NOT_MEMBER_OF_ORG)
+    })
+    it("requires the agent to be part of the project", async () => {
+      const { organization } = await createContextForRole("owner")
+      const project2 = await repositories.projectRepository.save(
+        projectFactory.transient({ organization }).build(),
+      )
+      projectId = project2.id
+      expectResponse(await subject(), 404) //exception thrown by guard
+    })
+    it("doesn't allow a simple member to delete a agent", async () => {
+      await createContextForRole("member")
+      expectResponse(await subject(), 403, AUTH_ERRORS.UNAUTHORIZED_RESOURCE)
+    })
+  })
+
+  describe("AgentsRoutes.updateSessionCategories", () => {
+    const subject = async () =>
+      request({
+        route: AgentsRoutes.updateSessionCategories,
+        pathParams: removeNullish({ organizationId, projectId, agentId }),
+        token: accessToken ?? undefined,
+      })
+
+    it("requires an authentication token", async () => {
+      accessToken = null
+      expectResponse(await subject(), 401, AUTH_ERRORS.NO_ACCESS_TOKEN)
+    })
+    it("requires a valid organization ID", async () => {
+      await createContextForRole("owner")
+      organizationId = null
+      expectResponse(await subject(), 400, AUTH_ERRORS.NO_ORGANIZATION_ID)
+    })
+    it("requires a valid project ID", async () => {
+      await createContextForRole("owner")
+      // Use a valid UUID format that doesn't exist in the database
+      projectId = randomUUID()
+      expectResponse(await subject(), 404)
+    })
+    it("requires the user to be a member of the organization", async () => {
+      await createContextForRole("owner")
+      auth0Id = mockForeignAuth0Id()
+      expectResponse(await subject(), 401, AUTH_ERRORS.NOT_MEMBER_OF_ORG)
+    })
+    it("requires the agent to be part of the project", async () => {
+      const { organization } = await createContextForRole("owner")
+      const project2 = await repositories.projectRepository.save(
+        projectFactory.transient({ organization }).build(),
+      )
+      projectId = project2.id
+      expectResponse(await subject(), 404) //exception thrown by guard
+    })
+    it("doesn't allow a simple member to delete a agent", async () => {
+      await createContextForRole("member")
+      expectResponse(await subject(), 403, AUTH_ERRORS.UNAUTHORIZED_RESOURCE)
+    })
+  })
+
   describe("AgentSettingsRoutes.updateOne", () => {
     const subject = async () =>
       request({

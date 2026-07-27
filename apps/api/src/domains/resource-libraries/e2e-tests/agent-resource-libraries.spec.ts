@@ -111,9 +111,6 @@ describe("Agents - resource library selection", () => {
     expect(joinRows).toHaveLength(1)
   })
 
-  // NOTE(Task 4): resource libraries used to be updatable through PATCH /agents; that field moved
-  // to its own PUT .../resource-libraries route (see AgentsRoutes.updateResourceLibraries). A test
-  // exercising an update through that new route belongs here once Task 4 lands its handler.
   it("rejects attaching resource libraries to an extraction agent", async () => {
     const { organization, project } = await createContext()
     const resourceLibrary = await createResourceLibraryForProject({

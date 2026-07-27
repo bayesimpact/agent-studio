@@ -5,7 +5,10 @@ import {
   AgentsRoutes,
   createAgentSchema,
   replaceAgentSubAgentsSchema,
+  updateAgentDocumentTagsSchema,
   updateAgentNameSchema,
+  updateAgentResourceLibrariesSchema,
+  updateAgentSessionCategoriesSchema,
 } from "@caseai-connect/api-contracts"
 import {
   Body,
@@ -97,6 +100,57 @@ export class AgentsController {
     if (!agent) {
       throw new Error("Agent not updated")
     }
+    return { data: { success: true } }
+  }
+
+  @Put(AgentsRoutes.updateDocumentTags.path)
+  @CheckPolicy((policy) => policy.canUpdate())
+  @AddContext("agent")
+  @TrackActivity({ action: "agent.update", entityFrom: "agent" })
+  @UsePipes(new ZodValidationPipe(updateAgentDocumentTagsSchema))
+  async updateDocumentTags(
+    @Req() request: EndpointRequestWithAgent,
+    @Body() { payload }: typeof AgentsRoutes.updateDocumentTags.request,
+  ): Promise<typeof AgentsRoutes.updateDocumentTags.response> {
+    await this.agentsService.replaceDocumentTags({
+      connectScope: getRequiredConnectScope(request),
+      agentId: request.agent.id,
+      documentTagIds: payload.documentTagIds,
+    })
+    return { data: { success: true } }
+  }
+
+  @Put(AgentsRoutes.updateResourceLibraries.path)
+  @CheckPolicy((policy) => policy.canUpdate())
+  @AddContext("agent")
+  @TrackActivity({ action: "agent.update", entityFrom: "agent" })
+  @UsePipes(new ZodValidationPipe(updateAgentResourceLibrariesSchema))
+  async updateResourceLibraries(
+    @Req() request: EndpointRequestWithAgent,
+    @Body() { payload }: typeof AgentsRoutes.updateResourceLibraries.request,
+  ): Promise<typeof AgentsRoutes.updateResourceLibraries.response> {
+    await this.agentsService.replaceResourceLibraries({
+      connectScope: getRequiredConnectScope(request),
+      agentId: request.agent.id,
+      resourceLibraryIds: payload.resourceLibraryIds,
+    })
+    return { data: { success: true } }
+  }
+
+  @Put(AgentsRoutes.updateSessionCategories.path)
+  @CheckPolicy((policy) => policy.canUpdate())
+  @AddContext("agent")
+  @TrackActivity({ action: "agent.update", entityFrom: "agent" })
+  @UsePipes(new ZodValidationPipe(updateAgentSessionCategoriesSchema))
+  async updateSessionCategories(
+    @Req() request: EndpointRequestWithAgent,
+    @Body() { payload }: typeof AgentsRoutes.updateSessionCategories.request,
+  ): Promise<typeof AgentsRoutes.updateSessionCategories.response> {
+    await this.agentsService.replaceSessionCategories({
+      connectScope: getRequiredConnectScope(request),
+      agentId: request.agent.id,
+      projectAgentSessionCategoryIds: payload.projectAgentSessionCategoryIds,
+    })
     return { data: { success: true } }
   }
 

@@ -212,6 +212,87 @@ export class AgentsService {
     return updatedAgent
   }
 
+  /** Replaces the agent's document tags with exactly the given ids. */
+  async replaceDocumentTags({
+    connectScope,
+    agentId,
+    documentTagIds,
+  }: {
+    connectScope: RequiredConnectScope
+    agentId: string
+    documentTagIds: string[]
+  }): Promise<void> {
+    const agent = await this.agentConnectRepository.getOneById(connectScope, agentId, {
+      relations: ["documentTags"],
+    })
+    if (!agent) throw new NotFoundException(`Agent with id ${agentId} not found`)
+
+    const currentTagIds = (agent.documentTags ?? []).map((tag) => tag.id)
+    const tagsToAdd = documentTagIds.filter((tagId) => !currentTagIds.includes(tagId))
+    const tagsToRemove = currentTagIds.filter((tagId) => !documentTagIds.includes(tagId))
+
+    const resolvedDocumentTags = await this.resolveDocumentTags({
+      currentTags: agent.documentTags ?? [],
+      tagsToAdd,
+      tagsToRemove,
+    })
+
+    // `resolveDocumentTags` silently drops unknown ids (it just looks up whatever matches),
+    // so an id that doesn't resolve to a real tag would otherwise be dropped instead of
+    // rejected. Compare against the deduplicated request to catch that case explicitly.
+    const uniqueRequestedTagIds = new Set(documentTagIds)
+    if (resolvedDocumentTags.length !== uniqueRequestedTagIds.size) {
+      throw new UnprocessableEntityException("One or more document tags do not exist")
+    }
+
+    agent.documentTags = resolvedDocumentTags
+    await this.agentConnectRepository.saveOne(agent)
+  }
+
+  /** Replaces the agent's resource libraries with exactly the given ids. */
+  async replaceResourceLibraries({
+    connectScope,
+    agentId,
+    resourceLibraryIds,
+  }: {
+    connectScope: RequiredConnectScope
+    agentId: string
+    resourceLibraryIds: string[]
+  }): Promise<void> {
+    const agent = await this.agentConnectRepository.getOneById(connectScope, agentId, {
+      relations: ["resourceLibraries"],
+    })
+    if (!agent) throw new NotFoundException(`Agent with id ${agentId} not found`)
+
+    agent.resourceLibraries = await this.resolveResourceLibraries({
+      connectScope,
+      resourceLibraryIds,
+      agentType: agent.type,
+    })
+    await this.agentConnectRepository.saveOne(agent)
+  }
+
+  /** Replaces the agent's active session categories with exactly the given project category ids. */
+  async replaceSessionCategories({
+    connectScope,
+    agentId,
+    projectAgentSessionCategoryIds,
+  }: {
+    connectScope: RequiredConnectScope
+    agentId: string
+    projectAgentSessionCategoryIds: string[]
+  }): Promise<void> {
+    const selectedProjectCategories = await this.resolveProjectAgentSessionCategories({
+      projectId: connectScope.projectId,
+      projectAgentSessionCategoryIds,
+      withDeleted: true,
+    })
+    await this.agentSessionCategoriesService.replaceActiveCategoriesForAgent(
+      agentId,
+      selectedProjectCategories,
+    )
+  }
+
   async deleteAgent(agent: Agent): Promise<void> {
     await this.transactionService.run(async () => {
       await this.agentsRepository.softDelete(agent.id)
