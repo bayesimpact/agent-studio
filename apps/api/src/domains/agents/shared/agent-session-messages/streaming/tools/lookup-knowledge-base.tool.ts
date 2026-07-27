@@ -28,25 +28,12 @@ export const LOOKUP_KNOWLEDGE_BASE_DESCRIPTION = [
 ].join("\n")
 
 const lookupKnowledgeBaseInputSchema = z.object({
-  conversationSummary: z
-    .string()
-    .default("")
-    .describe(
-      "One or two sentences of context from earlier in the conversation that help disambiguate the question. Leave empty on the first question.",
-    ),
   query: z
     .string()
     .min(1)
     .describe(
-      'The question to look up, rewritten as a standalone sentence that makes sense on its own. Resolve pronouns and shorthand ("it", "that one", "and for last year?") from the conversation, and keep the user\'s own wording and language.',
+      'The question to look up, rewritten as a standalone sentence that makes sense on its own. Resolve pronouns and shorthand ("it", "that one", "and for last year?") from the conversation.',
     ),
-  topK: z
-    .number()
-    .int()
-    .positive()
-    .max(DEFAULT_TOP_K)
-    .default(DEFAULT_TOP_K)
-    .describe(`How many passages to return. Always use the default (${DEFAULT_TOP_K}).`),
 })
 
 const retrievedChunkSchema = z.object({
@@ -79,9 +66,8 @@ export function buildLookupKnowledgeBaseToolExecutionLog(
   return {
     toolName: ToolName.LookupKnowledgeBase,
     arguments: {
-      conversationSummary: execution.input.conversationSummary,
       query: execution.input.query,
-      topK: execution.input.topK,
+      topK: DEFAULT_TOP_K,
       documentTagIds: execution.result.documentTagIds,
       returnedChunkCount: execution.result.returnedChunkCount,
       chunkIds: execution.result.chunkIds,
@@ -114,9 +100,8 @@ export function lookupKnowledgeBaseTool({
     execute: async (input) => {
       const retrievedChunks = await retrievalService.retrieveTopChunks({
         connectScope,
-        conversationSummary: input.conversationSummary,
         query: input.query,
-        topK: input.topK,
+        topK: DEFAULT_TOP_K,
         documentTagIds,
       })
       const documentIds = [...new Set(retrievedChunks.map((chunk) => chunk.documentId))]
@@ -128,7 +113,7 @@ export function lookupKnowledgeBaseTool({
             documentIds,
             documentTagIds,
             returnedChunkCount: retrievedChunks.length,
-            topK: input.topK,
+            topK: DEFAULT_TOP_K,
           },
         }),
       )
@@ -136,7 +121,7 @@ export function lookupKnowledgeBaseTool({
         retrievedChunks,
         retrievalMetadata: {
           returnedChunkCount: retrievedChunks.length,
-          topK: input.topK,
+          topK: DEFAULT_TOP_K,
         },
       }
     },
