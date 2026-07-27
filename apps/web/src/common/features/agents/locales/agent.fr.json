@@ -81,7 +81,8 @@
         "promptRequired": "Les instructions sont requises",
         "temperatureInvalid": "La température doit être comprise entre 0,0 et 2,0",
         "outputJsonSchemaRequired": "Le schéma JSON de sortie est requis",
-        "outputJsonSchemaInvalid": "Le schéma JSON de sortie doit être un objet JSON valide"
+        "outputJsonSchemaInvalid": "Le schéma JSON de sortie doit être un objet JSON valide",
+        "documentTagsRequired": "Au moins une étiquette de document est requise pour la recherche par étiquettes"
       }
     },
     "create": {

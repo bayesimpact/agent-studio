@@ -1,7 +1,8 @@
-import type { CreateAgentDto } from "@caseai-connect/api-contracts"
+import type { AgentLocale, CreateAgentDto, DocumentsRagMode } from "@caseai-connect/api-contracts"
 import { createAsyncThunk } from "@reduxjs/toolkit"
 import type { Agent } from "@/common/features/agents/agents.models"
 import { listAgents } from "@/common/features/agents/agents.thunks"
+import { updateAgentSettings } from "@/common/features/agents/settings/agent-settings.thunks"
 import type { RootState, ThunkExtraArg } from "@/common/store"
 import { getCurrentId } from "../../../common/features/helpers"
 
@@ -33,3 +34,105 @@ export const deleteAgent = createAsyncThunk<void, { agentId: string }, ThunkConf
     return
   },
 )
+
+export const renameAgent = createAsyncThunk<void, { agentId: string; name: string }, ThunkConfig>(
+  "agents/rename",
+  async ({ agentId, name }, { extra: { services }, getState }) => {
+    const state = getState()
+    const organizationId = getCurrentId({ state, name: "organizationId" })
+    const projectId = getCurrentId({ state, name: "projectId" })
+    await services.agents.updateOne({ organizationId, projectId, agentId }, { name })
+  },
+)
+
+export const updateAgentDocumentTags = createAsyncThunk<
+  void,
+  { agentId: string; documentTagIds: string[] },
+  ThunkConfig
+>(
+  "agents/updateDocumentTags",
+  async ({ agentId, documentTagIds }, { extra: { services }, getState }) => {
+    const state = getState()
+    const organizationId = getCurrentId({ state, name: "organizationId" })
+    const projectId = getCurrentId({ state, name: "projectId" })
+    await services.agents.updateDocumentTags(
+      { organizationId, projectId, agentId },
+      { documentTagIds },
+    )
+  },
+)
+
+export const updateAgentResourceLibraries = createAsyncThunk<
+  void,
+  { agentId: string; resourceLibraryIds: string[] },
+  ThunkConfig
+>(
+  "agents/updateResourceLibraries",
+  async ({ agentId, resourceLibraryIds }, { extra: { services }, getState }) => {
+    const state = getState()
+    const organizationId = getCurrentId({ state, name: "organizationId" })
+    const projectId = getCurrentId({ state, name: "projectId" })
+    await services.agents.updateResourceLibraries(
+      { organizationId, projectId, agentId },
+      { resourceLibraryIds },
+    )
+  },
+)
+
+export const updateAgentSessionCategories = createAsyncThunk<
+  void,
+  { agentId: string; projectAgentSessionCategoryIds: string[] },
+  ThunkConfig
+>(
+  "agents/updateSessionCategories",
+  async ({ agentId, projectAgentSessionCategoryIds }, { extra: { services }, getState }) => {
+    const state = getState()
+    const organizationId = getCurrentId({ state, name: "organizationId" })
+    const projectId = getCurrentId({ state, name: "projectId" })
+    await services.agents.updateSessionCategories(
+      { organizationId, projectId, agentId },
+      { projectAgentSessionCategoryIds },
+    )
+  },
+)
+
+/**
+ * The General tab edits one agent field (name) and three settings fields, so it saves through
+ * two endpoints. Settings go first: if the second call fails the agent row is untouched, and the
+ * agentSettings middleware refetches both on rejected so the form shows the true state.
+ */
+export const saveAgentGeneral = createAsyncThunk<
+  void,
+  {
+    agentId: string
+    fields: {
+      name?: string
+      instructions?: string
+      locale?: AgentLocale
+      greetingMessage?: string | null
+    }
+  },
+  ThunkConfig
+>("agents/saveGeneral", async ({ agentId, fields }, { dispatch }) => {
+  const { name, ...settingsFields } = fields
+  if (Object.keys(settingsFields).length > 0) {
+    await dispatch(updateAgentSettings({ agentId, fields: settingsFields })).unwrap()
+  }
+  if (name !== undefined) {
+    await dispatch(renameAgent({ agentId, name })).unwrap()
+  }
+})
+
+/** The Sources tab edits documentsRagMode (settings) and the tag set (agent). */
+export const saveAgentSources = createAsyncThunk<
+  void,
+  { agentId: string; documentsRagMode?: DocumentsRagMode; documentTagIds?: string[] },
+  ThunkConfig
+>("agents/saveSources", async ({ agentId, documentsRagMode, documentTagIds }, { dispatch }) => {
+  if (documentsRagMode !== undefined) {
+    await dispatch(updateAgentSettings({ agentId, fields: { documentsRagMode } })).unwrap()
+  }
+  if (documentTagIds !== undefined) {
+    await dispatch(updateAgentDocumentTags({ agentId, documentTagIds })).unwrap()
+  }
+})

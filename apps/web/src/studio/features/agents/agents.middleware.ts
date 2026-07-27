@@ -4,7 +4,16 @@ import { updateAgentSettings } from "@/common/features/agents/settings/agent-set
 import { fetchMe } from "@/common/features/me/me.thunks"
 import { notificationsActions } from "@/common/features/notifications/notifications.slice"
 import type { AppDispatch, RootState } from "@/common/store/types"
-import { createAgent, deleteAgent } from "@/studio/features/agents/agents.thunks"
+import {
+  createAgent,
+  deleteAgent,
+  renameAgent,
+  saveAgentGeneral,
+  saveAgentSources,
+  updateAgentDocumentTags,
+  updateAgentResourceLibraries,
+  updateAgentSessionCategories,
+} from "@/studio/features/agents/agents.thunks"
 import {
   deleteDocumentTag,
   updateDocumentTag,
@@ -75,10 +84,16 @@ function registerListeners() {
     },
   })
 
-  // Task 11 adds its collection thunks (sources, resource libraries, categories, general) to
-  // both matchers below alongside updateAgentSettings.
   listenerMiddleware.startListening({
-    matcher: isAnyOf(updateAgentSettings.fulfilled),
+    matcher: isAnyOf(
+      saveAgentGeneral.fulfilled,
+      saveAgentSources.fulfilled,
+      renameAgent.fulfilled,
+      updateAgentDocumentTags.fulfilled,
+      updateAgentResourceLibraries.fulfilled,
+      updateAgentSessionCategories.fulfilled,
+      updateAgentSettings.fulfilled,
+    ),
     effect: async (_, listenerApi) => {
       listenerApi.dispatch(listAgents())
 
@@ -92,7 +107,15 @@ function registerListeners() {
   })
 
   listenerMiddleware.startListening({
-    matcher: isAnyOf(updateAgentSettings.rejected),
+    matcher: isAnyOf(
+      saveAgentGeneral.rejected,
+      saveAgentSources.rejected,
+      renameAgent.rejected,
+      updateAgentDocumentTags.rejected,
+      updateAgentResourceLibraries.rejected,
+      updateAgentSessionCategories.rejected,
+      updateAgentSettings.rejected,
+    ),
     effect: async (_, listenerApi) => {
       listenerApi.dispatch(
         notificationsActions.show({

@@ -1,4 +1,4 @@
-import { AgentLocale, updateAgentGeneralSchema } from "@caseai-connect/api-contracts"
+import { AgentLocale, updateAgentNameSchema } from "@caseai-connect/api-contracts"
 import {
   Form,
   FormControl,
@@ -19,33 +19,44 @@ import { Textarea } from "@caseai-connect/ui/shad/textarea"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import { useTranslation } from "react-i18next"
-import type { z } from "zod"
+import { z } from "zod"
 import { useAppDispatch } from "@/common/store/hooks"
-import { updateAgentGeneral } from "../agents.thunks"
+import { saveAgentGeneral } from "../agents.thunks"
 import { AgentTabSaveButton } from "./AgentTabSaveButton"
 import { type AgentTabFormProps, pickDirtyFields, useReportDirty } from "./agent-tab-form.shared"
 
-type FormValues = z.infer<typeof updateAgentGeneralSchema>
+// Assembled from both sides of the split: `name` is the agent's own field, the rest live on the
+// settings revision. See UpdateAgentSettingsDto for why those three are declared here rather
+// than picked from updateAgentSettingsSchema with `.required()` — this form always submits all
+// three together as part of the general tab, independent of the settings schema's optionality.
+const generalFormSchema = z.object({
+  name: updateAgentNameSchema.shape.name,
+  locale: z.enum(AgentLocale),
+  instructions: z.string(),
+  greetingMessage: z.string().max(2000).nullable(),
+})
 
-export function AgentGeneralTab({ agent, onDirtyChange }: AgentTabFormProps) {
+type FormValues = z.infer<typeof generalFormSchema>
+
+export function AgentGeneralTab({ agent, settings, onDirtyChange }: AgentTabFormProps) {
   const { t } = useTranslation()
   const dispatch = useAppDispatch()
   const hasGreetingMessage = agent.type === "conversation"
 
   const form = useForm<FormValues>({
-    resolver: zodResolver(updateAgentGeneralSchema),
+    resolver: zodResolver(generalFormSchema),
     defaultValues: {
       name: agent.name,
-      locale: agent.locale,
-      instructions: agent.instructions,
-      greetingMessage: agent.greetingMessage ?? null,
+      locale: settings.locale,
+      instructions: settings.instructions,
+      greetingMessage: settings.greetingMessage ?? null,
     },
   })
   useReportDirty(form.formState.isDirty, onDirtyChange)
 
   const handleSubmit = form.handleSubmit(async (values) => {
     const fields = pickDirtyFields(values, form.formState.dirtyFields)
-    await dispatch(updateAgentGeneral({ agentId: agent.id, fields })).unwrap()
+    await dispatch(saveAgentGeneral({ agentId: agent.id, fields })).unwrap()
     form.reset(values)
   })
 
