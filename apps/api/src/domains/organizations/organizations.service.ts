@@ -21,8 +21,8 @@ export class OrganizationsService {
   async listOrganizations(userId: string): Promise<OrganizationModel[]> {
     /**
      * {
-     *    "XXXX": ['organization.read', 'organization.write'],
-     *    "YYYY": ['organization.read', 'organization.write', 'project.read'],
+     *    "ORG_XXXX": ['organization.read', 'organization.write'],
+     *    "ORG_YYYY": ['organization.read', 'organization.write', 'project.read'],
      *  }
      */
     const permissionsByOrganizationId = await this.permissionService.listResourcePermissions(

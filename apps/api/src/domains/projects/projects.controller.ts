@@ -72,7 +72,7 @@ export class ProjectsController {
     const { project, user } = request
 
     const updatedProject = await this.projectsService.updateProject({
-      project: project!,
+      projectId: project.id,
       name: body.payload.name,
       userId: user.id,
     })
@@ -89,7 +89,7 @@ export class ProjectsController {
   async deleteProject(
     @Req() request: EndpointRequestWithProject,
   ): Promise<typeof ProjectsRoutes.deleteOne.response> {
-    await this.projectsService.deleteProject(request.project)
+    await this.projectsService.deleteProject(request.project.id)
     return { data: { success: true } }
   }
 }

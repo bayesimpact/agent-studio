@@ -1,7 +1,5 @@
 import type { FeatureFlagKey } from "@caseai-connect/api-contracts"
-import { Injectable } from "@nestjs/common"
-import { InjectRepository } from "@nestjs/typeorm"
-import type { Repository } from "typeorm"
+import { Injectable, NotFoundException } from "@nestjs/common"
 import type { RequiredConnectScope } from "@/common/entities/connect-required-fields"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
 import { TransactionService } from "@/common/transaction/transaction.service"
@@ -9,10 +7,8 @@ import { TransactionService } from "@/common/transaction/transaction.service"
 import { PermissionService } from "@/domains/rbac/permission.service"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
 import { DocumentTagsService } from "../documents/tags/document-tags.service"
-import { FeatureFlag } from "../feature-flags/feature-flag.entity"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
 import { ProjectMembershipsService } from "./memberships/project-memberships.service"
-import { Project } from "./project.entity"
 import { ProjectModel } from "./project.model"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
 import { ProjectRepository } from "./project.repository"
@@ -20,8 +16,6 @@ import { ProjectRepository } from "./project.repository"
 @Injectable()
 export class ProjectsService {
   constructor(
-    @InjectRepository(Project) private readonly projectEntityRepository: Repository<Project>,
-    @InjectRepository(FeatureFlag) private readonly featureFlagRepository: Repository<FeatureFlag>,
     private readonly projectRepository: ProjectRepository,
     private readonly projectMembershipsService: ProjectMembershipsService,
     private readonly documentTagsService: DocumentTagsService,
@@ -34,8 +28,10 @@ export class ProjectsService {
     userId: string
     name: string
   }): Promise<ProjectModel> {
-    const project = this.projectEntityRepository.create(params)
-    await this.projectEntityRepository.save(project)
+    const project = await this.projectRepository.createProject({
+      organizationId: params.organizationId,
+      name: params.name,
+    })
     const membership = await this.projectMembershipsService.createProjectOwnerMembership({
       projectId: project.id,
       userId: params.userId,
@@ -49,7 +45,10 @@ export class ProjectsService {
     const permissions = membership.roleId
       ? await this.permissionService.listPermissionsForRole(membership.roleId)
       : []
-    return ProjectModel.fromEntity(project, permissions)
+    return new ProjectModel(
+      { ...project, featureFlags: [], agentSessionCategories: [] },
+      permissions,
+    )
   }
 
   async listUserProjects(userId: string): Promise<ProjectModel[]> {
@@ -85,28 +84,33 @@ export class ProjectsService {
   }
 
   async updateProject({
-    project,
+    projectId,
     name,
     userId,
   }: {
-    project: Project
+    projectId: string
     name: string
     userId: string
   }): Promise<ProjectModel> {
-    project.name = name
-    const saved = await this.projectEntityRepository.save(project)
+    const updated = await this.projectRepository.updateName(projectId, name)
+    if (!updated) {
+      throw new NotFoundException(`Project ${projectId} not found`)
+    }
 
     const permissionsByProjectId = await this.permissionService.listResourcePermissions(
       userId,
       "project",
     )
-    return ProjectModel.fromEntity(saved, permissionsByProjectId.get(saved.id) ?? [])
+    return new ProjectModel(
+      { ...updated, featureFlags: [], agentSessionCategories: [] },
+      permissionsByProjectId.get(updated.id) ?? [],
+    )
   }
 
-  async deleteProject(project: Project): Promise<void> {
+  async deleteProject(projectId: string): Promise<void> {
     await this.transactionService.run(async () => {
-      await this.projectRepository.softDelete(project.id)
-      await this.projectMembershipsService.deleteMembership({ projectId: project.id })
+      await this.projectRepository.softDelete(projectId)
+      await this.projectMembershipsService.deleteMembership({ projectId })
     })
   }
 
@@ -117,13 +121,9 @@ export class ProjectsService {
     connectScope: RequiredConnectScope
     feature: FeatureFlagKey
   }): Promise<boolean> {
-    const flag = await this.featureFlagRepository.findOne({
-      where: {
-        projectId: connectScope.projectId,
-        featureFlagKey: feature,
-        enabled: true,
-      },
+    return this.projectRepository.isFeatureEnabled({
+      projectId: connectScope.projectId,
+      feature,
     })
-    return flag !== null
   }
 }

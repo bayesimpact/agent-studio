@@ -184,7 +184,7 @@ describe("ProjectsService", () => {
     it("should delete a project", async () => {
       const { project } = await createOrganizationWithProject(repositories)
 
-      await service.deleteProject(project)
+      await service.deleteProject(project.id)
 
       const deletedProject = await repositories.projectRepository.findOne({
         where: { id: project.id },
@@ -195,7 +195,7 @@ describe("ProjectsService", () => {
     it("should soft-delete project memberships when deleting a project", async () => {
       const { project } = await createOrganizationWithProject(repositories)
 
-      await service.deleteProject(project)
+      await service.deleteProject(project.id)
 
       const activeMemberships = await repositories.userMembershipRepository.find({
         where: { resourceType: "project", resourceId: project.id },
@@ -215,7 +215,7 @@ describe("ProjectsService", () => {
       const member = await repositories.userRepository.save(userFactory.build())
       await addUserToProject({ repositories, project, user: member })
 
-      await service.deleteProject(project)
+      await service.deleteProject(project.id)
 
       for (const userId of [owner.id, member.id]) {
         const activeMembership = await repositories.userMembershipRepository.findOne({
