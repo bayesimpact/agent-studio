@@ -23,6 +23,7 @@ export const projectFactory = ProjectFactory.define(({ params, transientParams }
     createdAt: params.createdAt ?? faker.date.past().getTime(),
     updatedAt: params.updatedAt ?? faker.date.recent().getTime(),
     featureFlags: params.featureFlags ?? [],
+    conversationRetentionDays: params.conversationRetentionDays ?? null,
     agentSessionCategories: params.agentSessionCategories ?? [],
   }
 })

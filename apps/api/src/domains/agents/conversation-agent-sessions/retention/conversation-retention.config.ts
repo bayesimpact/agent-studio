@@ -16,3 +16,12 @@ export function getConversationRetentionSweepIntervalSeconds(): number {
   }
   return parsed
 }
+
+/**
+ * Optional cron pattern (e.g. "0 4 * * *" for 4am daily). When set it takes
+ * precedence over the interval, anchoring the sweep to wall-clock time.
+ */
+export function getConversationRetentionSweepCronPattern(): string | undefined {
+  const rawValue = process.env.CONVERSATION_RETENTION_SWEEP_CRON
+  return rawValue === undefined || rawValue === "" ? undefined : rawValue
+}

@@ -8,7 +8,7 @@ This project uses [CalVer](https://calver.org/) (YY.MM.Micro) for product versio
 ## [Unreleased]
 
 ### Added
-- Conversation retention (GDPR): projects can set a retention period in days; a periodic job then erases the content of older conversations (messages, tool calls, titles, form state, feedback text, attachments) and their Langfuse traces, while conversation counts, categories and feedback votes remain available in analytics
+- Conversation retention (GDPR): workspace admins can set a retention period in days in the workspace settings; a periodic job then erases the content of older conversations (messages, tool calls, titles, form state, feedback text, attachments) and their Langfuse traces, while conversation counts, categories and feedback votes remain available in analytics
 - Back-office administrators can create an organization directly from the organizations panel; the creating administrator becomes its owner
 
 ### Changed
