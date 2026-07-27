@@ -1,4 +1,9 @@
-import { BackofficeRoutes, type FeatureFlagKey, FeatureFlags } from "@caseai-connect/api-contracts"
+import {
+  BackofficeRoutes,
+  createBackofficeOrganizationSchema,
+  type FeatureFlagKey,
+  FeatureFlags,
+} from "@caseai-connect/api-contracts"
 import {
   BadRequestException,
   Body,
@@ -11,8 +16,10 @@ import {
   Query,
   Req,
   UseGuards,
+  UsePipes,
 } from "@nestjs/common"
 import type { EndpointRequest } from "@/common/context/request.interface"
+import { ZodValidationPipe } from "@/common/zod-validation-pipe"
 import { JwtAuthGuard } from "@/domains/auth/jwt-auth.guard"
 import { UserGuard } from "@/domains/users/user.guard"
 import { TrackActivity } from "../activities/track-activity.decorator"
@@ -231,6 +238,20 @@ export class BackofficeController {
     return {
       data: toBackofficeProjectDetailDto(result.project, result.members, result.agents),
     }
+  }
+
+  @Post(BackofficeRoutes.createOrganization.path)
+  @TrackActivity({ action: "backoffice.organization.create" })
+  @UsePipes(new ZodValidationPipe(createBackofficeOrganizationSchema))
+  async createOrganization(
+    @Req() request: EndpointRequest,
+    @Body() body: typeof BackofficeRoutes.createOrganization.request,
+  ): Promise<typeof BackofficeRoutes.createOrganization.response> {
+    const organization = await this.backofficeService.createOrganization({
+      actingUserId: request.user.id,
+      name: body.payload.name,
+    })
+    return { data: toBackofficeOrganizationDto(organization) }
   }
 
   @Post(BackofficeRoutes.addFeatureFlag.path)

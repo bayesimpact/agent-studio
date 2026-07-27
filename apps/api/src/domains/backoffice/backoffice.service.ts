@@ -1,5 +1,10 @@
 import type { FeatureFlagKey } from "@caseai-connect/api-contracts"
-import { ForbiddenException, Injectable, NotFoundException } from "@nestjs/common"
+import {
+  BadRequestException,
+  ForbiddenException,
+  Injectable,
+  NotFoundException,
+} from "@nestjs/common"
 import { InjectRepository } from "@nestjs/typeorm"
 import { In, type Repository } from "typeorm"
 import type { AgentMembershipModel } from "@/domains/agents/memberships/agent-membership.model"
@@ -81,6 +86,29 @@ export class BackofficeService {
     private readonly agentMembershipsService: AgentMembershipsService,
     private readonly reviewCampaignMembershipsService: ReviewCampaignMembershipsService,
   ) {}
+
+  async createOrganization({
+    actingUserId,
+    name,
+  }: {
+    actingUserId: string
+    name: string
+  }): Promise<Organization> {
+    const trimmedName = name?.trim() ?? ""
+    if (trimmedName.length < 3) {
+      throw new BadRequestException("Organization name must be at least 3 characters long")
+    }
+
+    const organization = this.organizationRepository.create({ name: trimmedName })
+    const savedOrganization = await this.organizationRepository.save(organization)
+
+    await this.organizationMembershipsService.createOrganizationOwnerMembership({
+      userId: actingUserId,
+      organizationId: savedOrganization.id,
+    })
+
+    return savedOrganization
+  }
 
   async listOrganizations({
     canListAll,

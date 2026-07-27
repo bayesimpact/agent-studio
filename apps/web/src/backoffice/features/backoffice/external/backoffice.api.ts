@@ -2,6 +2,7 @@ import { BackofficeRoutes } from "@caseai-connect/api-contracts"
 import { getAxiosInstance } from "@/external/axios"
 import {
   toBackofficeAgentDetail,
+  toBackofficeOrganization,
   toBackofficeOrganizationDetail,
   toBackofficeProjectDetail,
   toBackofficeUserDetail,
@@ -32,6 +33,14 @@ export default {
       BackofficeRoutes.getOrganization.getPath({ organizationId }),
     )
     return toBackofficeOrganizationDetail(response.data.data)
+  },
+  createOrganization: async ({ name }) => {
+    const axios = getAxiosInstance()
+    const response = await axios.post<typeof BackofficeRoutes.createOrganization.response>(
+      BackofficeRoutes.createOrganization.getPath(),
+      { payload: { name } } satisfies typeof BackofficeRoutes.createOrganization.request,
+    )
+    return toBackofficeOrganization(response.data.data)
   },
   listAgents: async ({ page, limit, search }) => {
     const axios = getAxiosInstance()

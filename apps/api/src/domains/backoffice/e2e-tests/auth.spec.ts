@@ -132,6 +132,33 @@ describe("Backoffice - Auth", () => {
     })
   })
 
+  describe("BackofficeRoutes.createOrganization", () => {
+    const subject = async () =>
+      request({
+        route: BackofficeRoutes.createOrganization,
+        token: accessToken ?? undefined,
+        request: { payload: { name: "Sample Organization" } },
+      })
+
+    it("requires an authentication token", async () => {
+      accessToken = null
+      expectResponse(await subject(), 401, AUTH_ERRORS.NO_ACCESS_TOKEN)
+    })
+
+    it("rejects users whose email domain is not in BACKOFFICE_AUTHORIZED_DOMAIN", async () => {
+      await createOrganizationWithOwner(repositories, {
+        user: { auth0Id, email: mockAuth0EmailForSub(auth0Id) },
+      })
+      process.env.BACKOFFICE_AUTHORIZED_DOMAIN = "@other-domain.test"
+      expectResponse(await subject(), 403, AUTH_ERRORS.UNAUTHORIZED_RESOURCE)
+    })
+
+    it("allows authorized users to create an organization", async () => {
+      await createAuthorizedUser()
+      expectResponse(await subject(), 201)
+    })
+  })
+
   describe("BackofficeRoutes.addFeatureFlag", () => {
     const subject = async (projectId: string) =>
       request({

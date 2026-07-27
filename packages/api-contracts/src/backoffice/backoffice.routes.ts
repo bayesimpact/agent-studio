@@ -4,8 +4,10 @@ import { defineRoute } from "../helpers"
 import type {
   BackofficeAgentDetailDto,
   BackofficeOrganizationDetailDto,
+  BackofficeOrganizationDto,
   BackofficeProjectDetailDto,
   BackofficeUserDetailDto,
+  CreateBackofficeOrganizationRequestDto,
   ListTermsDocumentsResponseDto,
   PaginatedBackofficeAgentsDto,
   PaginatedBackofficeOrganizationsDto,
@@ -22,6 +24,13 @@ export const BackofficeRoutes = {
   getOrganization: defineRoute<ResponseData<BackofficeOrganizationDetailDto>>({
     method: "get",
     path: "backoffice/organizations/:organizationId",
+  }),
+  createOrganization: defineRoute<
+    ResponseData<BackofficeOrganizationDto>,
+    RequestPayload<CreateBackofficeOrganizationRequestDto>
+  >({
+    method: "post",
+    path: "backoffice/organizations",
   }),
   listAgents: defineRoute<ResponseData<PaginatedBackofficeAgentsDto>>({
     method: "get",
