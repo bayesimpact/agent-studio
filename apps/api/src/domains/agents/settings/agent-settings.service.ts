@@ -52,7 +52,7 @@ export class AgentSettingsService {
   }: {
     connectScope: RequiredConnectScope
     agentId: string
-    includesDraft?: true
+    includesDraft: boolean
   }): Promise<AgentSettings | undefined> {
     const found = await this.agentSettingsConnectRepository.find(connectScope, {
       where: { agentId, ...(includesDraft ? {} : { isDraft: false }), isArchived: false },
@@ -63,11 +63,11 @@ export class AgentSettingsService {
   async getLast({
     connectScope,
     agentId,
-    includesDraft,
+    includesDraft = false,
   }: {
     connectScope: RequiredConnectScope
     agentId: string
-    includesDraft?: true
+    includesDraft?: boolean
   }): Promise<AgentSettings> {
     const last = await this.getLastOrUndefined({ connectScope, agentId, includesDraft })
     if (!last) throw new NotFoundException(`AgentSettings with agentId ${agentId} not found`)
@@ -77,13 +77,13 @@ export class AgentSettingsService {
   async getAll({
     connectScope,
     agentId,
-    includesDraft,
-    includesArchived,
+    includesDraft = false,
+    includesArchived = false,
   }: {
     connectScope: RequiredConnectScope
     agentId: string
-    includesDraft?: true
-    includesArchived?: true
+    includesDraft?: boolean
+    includesArchived?: boolean
   }): Promise<AgentSettings[]> {
     return await this.agentSettingsConnectRepository.find(connectScope, {
       where: {

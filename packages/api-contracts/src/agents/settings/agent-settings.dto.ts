@@ -29,22 +29,20 @@ export type AgentSettingsDto = {
 }
 
 // Every field is optional: each editor tab PATCHes only the fields it owns, and an omitted
-// field must keep its current value rather than being wiped.
-export const updateAgentSettingsSchema = z
-  .object({
-    instructions: z.string().optional(),
-    // `null` clears the greeting; `undefined` leaves it untouched.
-    greetingMessage: z.string().max(2000).nullable().optional(),
-    model: z.enum(AgentModel).optional(),
-    temperature: z.float32().min(0).max(2).optional(),
-    locale: z.enum(AgentLocale).optional(),
-    documentsRagMode: z.enum(DocumentsRagMode).optional(),
-    outputJsonSchema: outputJsonSchemaSchema.optional(),
-    fillFormEnabled: z.boolean().optional(),
-  })
-  .refine((data) => data.fillFormEnabled !== true || data.outputJsonSchema !== undefined, {
-    message: "outputJsonSchema is required when the fillForm tool is enabled",
-    path: ["outputJsonSchema"],
-  })
+// field must keep its current value rather than being wiped. Because of that, whether
+// fillFormEnabled requires an outputJsonSchema can only be decided once the payload is merged
+// with the current revision (a tab may enable fillForm while the schema was set by another tab
+// in an earlier update) - the controller enforces that check, not this schema.
+export const updateAgentSettingsSchema = z.object({
+  instructions: z.string().optional(),
+  // `null` clears the greeting; `undefined` leaves it untouched.
+  greetingMessage: z.string().max(2000).nullable().optional(),
+  model: z.enum(AgentModel).optional(),
+  temperature: z.float32().min(0).max(2).optional(),
+  locale: z.enum(AgentLocale).optional(),
+  documentsRagMode: z.enum(DocumentsRagMode).optional(),
+  outputJsonSchema: outputJsonSchemaSchema.optional(),
+  fillFormEnabled: z.boolean().optional(),
+})
 
 export type UpdateAgentSettingsDto = z.infer<typeof updateAgentSettingsSchema>

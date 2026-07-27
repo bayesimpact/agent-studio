@@ -1,4 +1,4 @@
-import { type AgentDto, AgentSettingsRoutes } from "@caseai-connect/api-contracts"
+import { type AgentSettingsDto, AgentSettingsRoutes } from "@caseai-connect/api-contracts"
 import { afterAll } from "@jest/globals"
 import type { INestApplication } from "@nestjs/common"
 import type { App } from "supertest/types"
@@ -113,11 +113,11 @@ describe("Agents - publishOne", () => {
     })
     expectResponse(response, 201)
     expect(response.body).toBeDefined()
-    const agent: AgentDto = response.body.data
-    expect(agent.revision).toBe(3)
-    expect(agent.isDraft).toBeFalsy()
-    expect(agent.revisionName).toBe("revisionName")
-    expect(agent.revisionDesc).toBe("revisionDesc")
+    const agentSettings: AgentSettingsDto = response.body.data
+    expect(agentSettings.revision).toBe(3)
+    expect(agentSettings.isDraft).toBeFalsy()
+    expect(agentSettings.revisionName).toBe("revisionName")
+    expect(agentSettings.revisionDesc).toBe("revisionDesc")
 
     const updatedAgentSettings = await repositories.agentSettingsRepository.findOne({
       where: { agentId, revision: 3 },
@@ -146,11 +146,11 @@ describe("Agents - publishOne", () => {
     })
     expectResponse(response, 201)
     expect(response.body).toBeDefined()
-    const agent: AgentDto = response.body.data
-    expect(agent.revision).toBe(1)
-    expect(agent.isDraft).toBeFalsy()
-    expect(agent.revisionName).toBe("revisionName")
-    expect(agent.revisionDesc).toBe("revisionDesc")
+    const agentSettings: AgentSettingsDto = response.body.data
+    expect(agentSettings.revision).toBe(1)
+    expect(agentSettings.isDraft).toBeFalsy()
+    expect(agentSettings.revisionName).toBe("revisionName")
+    expect(agentSettings.revisionDesc).toBe("revisionDesc")
 
     const updatedAgentSettings = await repositories.agentSettingsRepository.findOne({
       where: { agentId, revision: 1 },

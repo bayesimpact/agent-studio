@@ -1,4 +1,4 @@
-import { AgentSettingsRoutes } from "@caseai-connect/api-contracts"
+import { AgentSettingsRoutes, type UpdateAgentSettingsDto } from "@caseai-connect/api-contracts"
 import { afterAll } from "@jest/globals"
 import type { INestApplication } from "@nestjs/common"
 import type { App } from "supertest/types"
@@ -9,14 +9,13 @@ import {
   teardownE2eTestDatabase,
 } from "@/common/test/test-database"
 import { removeNullish } from "@/common/utils/remove-nullish"
-import { agentSettingsFactory } from "@/domains/agents/settings/agent.settings.factory"
 import { createOrganizationWithAgent } from "@/domains/organizations/organization.factory"
 import { sdk } from "@/external/llm/open-telemetry-init"
 import { setupUserGuardForTesting } from "../../../../test/e2e.helpers"
 import { expectResponse, type Requester, testRequester } from "../../../../test/request"
 import { AgentsModule } from "../agents.module"
 
-describe("Agent Settings - getAll", () => {
+describe("Agent Settings - updateOne", () => {
   let app: INestApplication<App>
   let request: Requester
   let setup: Awaited<ReturnType<typeof setupE2eTestDatabase>>
@@ -61,69 +60,60 @@ describe("Agent Settings - getAll", () => {
     return { organization, project, agent, agentSettings, user }
   }
 
+  let payload: UpdateAgentSettingsDto = {}
+
   const subject = async () =>
     request({
-      route: AgentSettingsRoutes.getAll,
+      route: AgentSettingsRoutes.updateOne,
       pathParams: removeNullish({ organizationId, projectId, agentId }),
+      request: { payload },
       token: accessToken,
     })
 
-  it("should return revisions for agent", async () => {
-    const { organization, project, agent, agentSettings } = await createContext()
-
-    const agentSettingsRev2 = agentSettingsFactory
-      .transient({ organization, project, agent })
-      .build({
-        instructions: "Rev 2",
-        revision: 2,
-      })
-    const agentSettingsRev3 = agentSettingsFactory
-      .transient({ organization, project, agent })
-      .build({
-        instructions: "Rev 3",
-        revision: 3,
-      })
-    await repositories.agentSettingsRepository.save([agentSettingsRev2, agentSettingsRev3])
-
-    const response = await subject()
-
-    expectResponse(response, 200)
-    const agentHistory = response.body.data
-    expect(agentHistory[0]?.instructions).toBe("Rev 3")
-    expect(agentHistory[0]?.revision).toBe(3)
-    expect(agentHistory[1]?.instructions).toBe("Rev 2")
-    expect(agentHistory[1]?.revision).toBe(2)
-    expect(agentHistory[2]?.instructions).toBe(agentSettings.instructions)
-    expect(agentHistory[2]?.revision).toBe(1)
-  })
-
-  it("should return one item array when agent has only one revision has no agents", async () => {
+  it("should create a draft revision carrying the updated field", async () => {
     const { agentSettings } = await createContext()
+    payload = { instructions: "Updated instructions" }
 
     const response = await subject()
 
     expectResponse(response, 200)
-    const agentHistory = response.body.data
-    expect(agentHistory).toHaveLength(1)
-    expect(agentHistory[0]?.instructions).toBe(agentSettings.instructions)
-    expect(agentHistory[0]?.revision).toBe(1)
+    expect(response.body.data.instructions).toBe("Updated instructions")
+    expect(response.body.data.revision).toBe(agentSettings.revision + 1)
+    expect(response.body.data.isDraft).toBe(true)
+    expect(response.body.data.agentId).toBe(agentId)
   })
 
-  it("should include drafts and exclude archived revisions", async () => {
-    const { organization, project, agent } = await createContext()
-
-    const draft = agentSettingsFactory
-      .transient({ organization, project, agent })
-      .build({ instructions: "Draft", revision: 2, isDraft: true })
-    const archived = agentSettingsFactory
-      .transient({ organization, project, agent })
-      .build({ instructions: "Archived", revision: 3, isArchived: true })
-    await repositories.agentSettingsRepository.save([draft, archived])
+  it("should keep fields the payload omits", async () => {
+    const { agentSettings } = await createContext()
+    payload = { instructions: "Only the instructions change" }
 
     const response = await subject()
 
     expectResponse(response, 200)
-    const revisions = response.body.data
-    expect(revisions.map((revision: { revision: number }) => revision.revision)).toEqual([2, 1])
+    expect(response.body.data.model).toBe(agentSettings.model)
+    expect(response.body.data.locale).toBe(agentSettings.locale)
+  })
+
+  it("should reuse the open draft instead of creating a second one", async () => {
+    await createContext()
+    payload = { instructions: "First edit" }
+    await subject()
+    payload = { instructions: "Second edit" }
+
+    const response = await subject()
+
+    expectResponse(response, 200)
+    expect(response.body.data.revision).toBe(2)
+    const stored = await repositories.agentSettingsRepository.find({ where: { agentId } })
+    expect(stored).toHaveLength(2)
+  })
+
+  it("should reject enabling fillForm without an output schema", async () => {
+    await createContext()
+    payload = { fillFormEnabled: true }
+
+    const response = await subject()
+
+    expectResponse(response, 422)
   })
 })
