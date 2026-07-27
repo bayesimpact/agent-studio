@@ -1,7 +1,7 @@
 import { Badge } from "@caseai-connect/ui/shad/badge"
 import { cn } from "@caseai-connect/ui/utils"
 import { useTranslation } from "react-i18next"
-import type { Agent } from "@/common/features/agents/agents.models"
+import type { AgentSettings } from "@/common/features/agents/settings/agent-settings.models"
 import { buildDate, buildSince } from "@/common/utils/build-date"
 
 /** Timeline of an agent's settings revisions, newest first. */
@@ -10,7 +10,7 @@ export function AgentVersionList({
   selectedRevision,
   onSelect,
 }: {
-  versions: Agent[]
+  versions: AgentSettings[]
   selectedRevision: number
   onSelect: (revision: number) => void
 }) {

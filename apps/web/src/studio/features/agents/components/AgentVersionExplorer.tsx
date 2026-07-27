@@ -1,25 +1,25 @@
 import { useMemo, useState } from "react"
-import type { Agent } from "@/common/features/agents/agents.models"
+import type { AgentSettings } from "@/common/features/agents/settings/agent-settings.models"
+import { selectAgentSettingsData } from "@/common/features/agents/settings/agent-settings.selectors"
 import { useValue } from "@/common/hooks/use-value"
-import { selectAgentHistoryData } from "../agent-history.selectors"
 import { AgentVersionCompare, type AgentVersionCompareMode } from "./AgentVersionCompare"
 import { AgentVersionList } from "./AgentVersionList"
 
 interface AgentVersionComparison {
   /** The most recent version (`versions[0]`). */
-  current: Agent
+  current: AgentSettings
   /** The version highlighted in the timeline and shown in the diff. */
-  selected: Agent
+  selected: AgentSettings
   /** The version immediately older than `selected`, if any. */
-  previous: Agent | undefined
+  previous: AgentSettings | undefined
   isCurrent: boolean
   canComparePrevious: boolean
   canCompareCurrent: boolean
   /** The requested `mode`, downgraded to whichever comparison is actually possible. */
   effectiveMode: AgentVersionCompareMode
   /** Older/newer versions fed to the diff, derived from `effectiveMode`. */
-  before: Agent
-  after: Agent
+  before: AgentSettings
+  after: AgentSettings
 }
 
 /**
@@ -29,7 +29,7 @@ interface AgentVersionComparison {
  * each following index is one step older. Returns `null` when there is no version to show.
  */
 function buildComparison(
-  versions: Agent[],
+  versions: AgentSettings[],
   selectedRevision: number | null,
   mode: AgentVersionCompareMode,
 ): AgentVersionComparison | null {
@@ -74,7 +74,7 @@ function buildComparison(
  * Two-pane version explorer: revision timeline on the left, comparison on the right.
  */
 export function AgentVersionExplorer() {
-  const versions = useValue(selectAgentHistoryData)
+  const versions = useValue(selectAgentSettingsData)
   const [selectedRevision, setSelectedRevision] = useState<number | null>(null)
   const [mode, setMode] = useState<AgentVersionCompareMode>("current")
 

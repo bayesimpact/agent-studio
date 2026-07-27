@@ -2,13 +2,7 @@ import { createListenerMiddleware, isAnyOf } from "@reduxjs/toolkit"
 import { listAgents } from "@/common/features/agents/agents.thunks"
 import { fetchMe } from "@/common/features/me/me.thunks"
 import { notificationsActions } from "@/common/features/notifications/notifications.slice"
-import { ADS } from "@/common/store/async-data-status"
 import type { AppDispatch, RootState } from "@/common/store/types"
-import { selectAgentHistoryData } from "@/studio/features/agents/agent-history.selectors"
-import {
-  listAgentHistory,
-  restoreAgentRevision,
-} from "@/studio/features/agents/agent-history.thunks"
 import {
   createAgent,
   deleteAgent,
@@ -103,11 +97,6 @@ function registerListeners() {
     effect: async (_, listenerApi) => {
       listenerApi.dispatch(listAgents())
 
-      // Keep the version history in sync when it has already been opened.
-      if (ADS.isFulfilled(selectAgentHistoryData(listenerApi.getState()))) {
-        listenerApi.dispatch(listAgentHistory())
-      }
-
       listenerApi.dispatch(
         notificationsActions.show({
           title: "Agent updated successfully",
@@ -117,31 +106,9 @@ function registerListeners() {
     },
   })
 
-  listenerMiddleware.startListening({
-    actionCreator: restoreAgentRevision.fulfilled,
-    effect: async (_, listenerApi) => {
-      listenerApi.dispatch(listAgents())
-      listenerApi.dispatch(listAgentHistory())
-
-      listenerApi.dispatch(
-        notificationsActions.show({
-          title: "Agent version restored successfully",
-          type: "success",
-        }),
-      )
-    },
-  })
-  listenerMiddleware.startListening({
-    actionCreator: restoreAgentRevision.rejected,
-    effect: async (_, listenerApi) => {
-      listenerApi.dispatch(
-        notificationsActions.show({
-          title: "Agent version restore failed",
-          type: "error",
-        }),
-      )
-    },
-  })
+  // Note (Task 8): the restoreAgentRevision success/failure notifications used to live here.
+  // The thunk moved to the settings feature as restoreAgentSettings; Task 10 is expected to
+  // strip this comment and add the equivalent notification listener in agent-settings.middleware.ts.
   listenerMiddleware.startListening({
     matcher: isAnyOf(
       updateAgentGeneral.rejected,
