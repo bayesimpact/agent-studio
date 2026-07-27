@@ -29,6 +29,7 @@ import {
 import { sdk } from "@/external/llm/open-telemetry-init"
 import type { AISDKMockProvider } from "@/external/llm/providers/ai-sdk-mock.provider"
 import { McpClientService } from "@/external/mcp"
+import { DEFAULT_TOP_K } from "./lookup-knowledge-base.tool"
 
 const mockDocumentChunkRetrievalService = { retrieveTopChunks: jest.fn() }
 const mockMcpServersService = { getEnabledServersForAgent: jest.fn() }
@@ -360,11 +361,11 @@ describe("Tools execution", () => {
       session,
       connectScope,
       toolName: ToolName.LookupKnowledgeBase,
-      toolInput: { conversationSummary: "", query: "What is Bayes?", topK: 5 },
+      toolInput: { query: "What is Bayes?" },
     })
 
     expect(mockDocumentChunkRetrievalService.retrieveTopChunks).toHaveBeenCalledWith(
-      expect.objectContaining({ query: "What is Bayes?", topK: 5 }),
+      expect.objectContaining({ query: "What is Bayes?", topK: DEFAULT_TOP_K }),
     )
     expect(agentCalls).toHaveLength(2)
     expect(agentCalls[1]?.prompt).toContain("retrievalMetadata")

@@ -141,9 +141,9 @@ Tool registration and schema live in:
 
 Tool input:
 
-- `conversationSummary` (optional)
-- `query` (required)
-- `topK` (default 20, max 20)
+- `query` (required) — the only parameter the model provides
+
+`topK` is not exposed to the model; retrieval always uses the `DEFAULT_TOP_K` constant (20).
 
 ### 3) Prompt instruction to use retrieval
 
@@ -159,10 +159,7 @@ This instruction is in:
 
 ### 4) Retrieval query construction
 
-`DocumentChunkRetrievalService` builds retrieval text as:
-
-- `Conversation summary: ...`
-- `Latest user question: ...`
+`DocumentChunkRetrievalService` embeds the `query` as-is — the standalone question the model wrote, with no extra framing around it.
 
 That text is embedded using the **first model** from `DOCUMENT_EMBEDDING_MODELS`.
 

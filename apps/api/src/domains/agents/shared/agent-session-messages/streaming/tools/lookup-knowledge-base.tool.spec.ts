@@ -1,7 +1,7 @@
-import { lookupKnowledgeBaseTool } from "./lookup-knowledge-base.tool"
+import { DEFAULT_TOP_K, lookupKnowledgeBaseTool } from "./lookup-knowledge-base.tool"
 
 describe("lookupKnowledgeBaseTool", () => {
-  it("accepts an empty conversation summary for first-turn questions", async () => {
+  it("retrieves chunks for a query alone", async () => {
     const onExecute = jest.fn()
     const retrievalService = {
       retrieveTopChunks: jest.fn().mockResolvedValue([]),
@@ -18,9 +18,7 @@ describe("lookupKnowledgeBaseTool", () => {
 
     await sdkTool.execute?.(
       {
-        conversationSummary: "",
         query: "Combien d'enfants sont restes sans solution ?",
-        topK: 3,
       },
       {} as never,
     )
@@ -30,9 +28,8 @@ describe("lookupKnowledgeBaseTool", () => {
         organizationId: "organization-1",
         projectId: "project-1",
       },
-      conversationSummary: "",
       query: "Combien d'enfants sont restes sans solution ?",
-      topK: 3,
+      topK: DEFAULT_TOP_K,
       documentTagIds: [],
     })
   })
@@ -65,9 +62,7 @@ describe("lookupKnowledgeBaseTool", () => {
 
     const result = (await sdkTool.execute?.(
       {
-        conversationSummary: "The user wants onboarding details.",
         query: "How long does onboarding take?",
-        topK: 3,
       },
       {} as never,
     )) as {
@@ -84,17 +79,15 @@ describe("lookupKnowledgeBaseTool", () => {
         organizationId: "organization-1",
         projectId: "project-1",
       },
-      conversationSummary: "The user wants onboarding details.",
       query: "How long does onboarding take?",
-      topK: 3,
+      topK: DEFAULT_TOP_K,
       documentTagIds: [],
     })
     expect(onExecute).toHaveBeenCalledWith({
       toolName: "lookup_knowledge_base",
       arguments: {
-        conversationSummary: "The user wants onboarding details.",
         query: "How long does onboarding take?",
-        topK: 3,
+        topK: DEFAULT_TOP_K,
         documentTagIds: [],
         returnedChunkCount: 1,
         chunkIds: ["chunk-1"],
@@ -103,7 +96,7 @@ describe("lookupKnowledgeBaseTool", () => {
     })
     expect(result.retrievalMetadata).toEqual({
       returnedChunkCount: 1,
-      topK: 3,
+      topK: DEFAULT_TOP_K,
     })
   })
 
@@ -125,9 +118,7 @@ describe("lookupKnowledgeBaseTool", () => {
 
     await sdkTool.execute?.(
       {
-        conversationSummary: "Summary",
         query: "Question",
-        topK: 2,
       },
       {} as never,
     )
@@ -137,17 +128,15 @@ describe("lookupKnowledgeBaseTool", () => {
         organizationId: "organization-1",
         projectId: "project-1",
       },
-      conversationSummary: "Summary",
       query: "Question",
-      topK: 2,
+      topK: DEFAULT_TOP_K,
       documentTagIds: ["tag-1", "tag-2"],
     })
     expect(onExecute).toHaveBeenCalledWith({
       toolName: "lookup_knowledge_base",
       arguments: {
-        conversationSummary: "Summary",
         query: "Question",
-        topK: 2,
+        topK: DEFAULT_TOP_K,
         documentTagIds: ["tag-1", "tag-2"],
         returnedChunkCount: 0,
         chunkIds: [],

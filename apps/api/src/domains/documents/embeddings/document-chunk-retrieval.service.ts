@@ -17,19 +17,16 @@ export class DocumentChunkRetrievalService {
 
   async retrieveTopChunks({
     connectScope,
-    conversationSummary,
     query,
     topK = DEFAULT_TOP_K,
     documentTagIds = [],
   }: {
     connectScope: RequiredConnectScope
-    conversationSummary: string
     query: string
     topK?: number
     documentTagIds?: string[]
   }): Promise<RetrievedDocumentChunk[]> {
     const retrievalQueryText = this.buildRetrievalQueryText({
-      conversationSummary,
       query,
     })
     const modelName = this.resolvePrimaryModelName()
@@ -223,16 +220,8 @@ export class DocumentChunkRetrievalService {
     )
   }
 
-  private buildRetrievalQueryText({
-    conversationSummary,
-    query,
-  }: {
-    conversationSummary: string
-    query: string
-  }): string {
-    return ["Conversation summary:", conversationSummary.trim(), "", "Query:", query.trim()].join(
-      "\n",
-    )
+  private buildRetrievalQueryText({ query }: { query: string }): string {
+    return query.trim()
   }
 
   private async embedQuery({

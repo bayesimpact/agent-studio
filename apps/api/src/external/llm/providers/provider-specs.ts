@@ -432,9 +432,7 @@ Your purpose is to assist users by answering their questions about a tabletop wa
 ## Response language:
 Always answer in English.`
     const inputSchema = z.object({
-      conversationSummary: z.string().describe("Summary of the conversation"),
       query: z.string().describe("The question to look up, as a standalone sentence"),
-      topK: z.number().describe("topK value"),
     })
     const lookupKnowledgeBaseTool = tool({
       description: LOOKUP_KNOWLEDGE_BASE_DESCRIPTION,
@@ -526,9 +524,7 @@ Your purpose is to assist users by answering their questions about a tabletop wa
 ## Response language:
 Always answer in English.`
     const inputSchemaLookupKnowledgeBaseTool = z.object({
-      conversationSummary: z.string().describe("Summary of the conversation"),
       query: z.string().describe("The question to look up, as a standalone sentence"),
-      topK: z.number().describe("topK value"),
     })
     const lookupKnowledgeBaseTool = tool({
       description: LOOKUP_KNOWLEDGE_BASE_DESCRIPTION,
