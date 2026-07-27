@@ -1,3 +1,4 @@
+import { useOutlet } from "react-router-dom"
 import { selectCurrentExtractionAgentSessionsData } from "@/common/features/agents/agent-sessions/extraction/extraction-agent-sessions.selectors"
 import { extractionAgentSessionsActions } from "@/common/features/agents/agent-sessions/extraction/extraction-agent-sessions.slice"
 import { selectCurrentAgentId } from "@/common/features/agents/agents.selectors"
@@ -15,9 +16,17 @@ import { AsyncRoute } from "../AsyncRoute"
 export function ExtractionAgentSessionsRoute({ children }: { children: React.ReactNode }) {
   const agentId = useCurrentId(selectCurrentAgentId)
   const agentSessions = useAppSelector(selectCurrentExtractionAgentSessionsData)
+  // This route is the element for the parent `agent.path` route, so it renders unconditionally
+  // for every nested route under it, including `agentEdit`. `ExtractionAgentSessionList` swaps in
+  // that nested route's outlet in place of its own list UI, but this wrapper still runs on every
+  // render regardless of which child matched. `AgentEditorRoute` already owns the settings load
+  // while it is the active child (it needs the load blocking, this one doesn't), so this route
+  // only owns the load while showing its own list UI (no child route matched) to avoid a
+  // duplicate `listAgentSettings` dispatch on every visit to the edit page.
+  const outlet = useOutlet()
 
   useMount({ actions: extractionAgentSessionsActions, refreshOn: [agentId] })
-  useMount({ actions: agentSettingsActions, refreshOn: [agentId] })
+  useMount({ actions: agentSettingsActions, condition: !outlet, refreshOn: [agentId] })
 
   return <AsyncRoute data={[agentSessions]}>{children}</AsyncRoute>
 }
