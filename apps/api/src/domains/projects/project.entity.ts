@@ -17,8 +17,9 @@ export class Project extends Base4AllEntity {
   organizationId!: string
 
   // GDPR retention: conversation content older than this is purged by the
-  // retention sweep (rows and metadata are kept for analytics). Null = never purge.
-  @Column({ type: "int", name: "conversation_retention_days", nullable: true })
+  // retention sweep (rows and metadata are kept for analytics). Defaults to
+  // 30 days; null = never purge (explicit opt-out).
+  @Column({ type: "int", name: "conversation_retention_days", nullable: true, default: 30 })
   conversationRetentionDays!: number | null
 
   @ManyToOne(
