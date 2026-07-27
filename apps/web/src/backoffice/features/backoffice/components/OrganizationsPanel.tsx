@@ -132,12 +132,14 @@ function WithData() {
 
   return (
     <>
-      <div className="p-4 border-b flex items-center gap-2">
-        <SearchField
-          value={searchInput}
-          onChange={setSearchInput}
-          placeholder="Search by name or UUID…"
-        />
+      <div className="p-4 border-b flex items-center justify-between gap-2">
+        <div className="flex-1">
+          <SearchField
+            value={searchInput}
+            onChange={setSearchInput}
+            placeholder="Search by name or UUID…"
+          />
+        </div>
         <CreateOrganizationDialog />
       </div>
       <Table>
