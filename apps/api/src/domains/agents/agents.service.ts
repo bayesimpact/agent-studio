@@ -5,14 +5,8 @@ import { ConnectRepository } from "@/common/entities/connect-repository"
 import type { RequiredConnectScope } from "@/common/entities/connect-required-fields"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
 import { TransactionService } from "@/common/transaction/transaction.service"
-import {
-  extractAgentSettingsCreateFields,
-  extractAgentSettingsUpdateFields,
-} from "@/domains/agents/settings/agent.settings.functions"
-import type {
-  AgentSettingsCreateFields,
-  AgentSettingsUpdateFields,
-} from "@/domains/agents/settings/agent.settings.types"
+import { extractAgentSettingsCreateFields } from "@/domains/agents/settings/agent.settings.functions"
+import type { AgentSettingsCreateFields } from "@/domains/agents/settings/agent.settings.types"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
 import { DocumentTagsService } from "../documents/tags/document-tags.service"
 import type { DocumentTagsUpdateFields } from "../documents/tags/document-tags.types"
@@ -190,9 +184,8 @@ export class AgentsService {
   }
 
   /**
-   * Updates an agent.
-   * Verifies that the user is an owner or admin of the agent's project's organization before updating.
-   * Deletes playground sessions if configuration fields change.
+   * Renames an agent. Settings live on their own revisions (see AgentSettingsService) and the
+   * agent's collections have their own replace methods below.
    */
   async updateAgent({
     connectScope,
@@ -201,121 +194,22 @@ export class AgentsService {
   }: {
     connectScope: RequiredConnectScope
     agentId: string
-    fieldsToUpdate: Pick<RequiredConnectScope, never> &
-      Partial<Pick<Agent, "name" | "type">> &
-      AgentSettingsUpdateFields &
-      DocumentTagsUpdateFields &
-      AgentProjectCategoriesUpdateFields &
-      AgentResourceLibrariesUpdateFields
-  }): Promise<{ agent: Agent; agentSettings: AgentSettings }> {
-    const { name, type, tagsToAdd, tagsToRemove, projectAgentSessionCategoryIds, ...fields } =
-      fieldsToUpdate
-
-    let agentSettingsFieldsToUpdate = extractAgentSettingsUpdateFields(fields)
-    agentSettingsFieldsToUpdate = {
-      ...agentSettingsFieldsToUpdate,
-      ...(agentSettingsFieldsToUpdate.greetingMessage !== undefined && {
-        greetingMessage: normalizeGreetingMessage(agentSettingsFieldsToUpdate.greetingMessage),
-      }),
-    }
-
+    fieldsToUpdate: Partial<Pick<Agent, "name">>
+  }): Promise<Agent> {
+    const { name } = fieldsToUpdate
     this.validateAgentName(name)
 
-    const needsTags =
-      agentSettingsFieldsToUpdate.documentsRagMode !== undefined ||
-      fieldsToUpdate.tagsToAdd !== undefined ||
-      fieldsToUpdate.tagsToRemove !== undefined
-    const needsResourceLibraries = fieldsToUpdate.resourceLibraryIds !== undefined
-    const relationsToLoad = [
-      ...(needsTags ? ["documentTags"] : []),
-      ...(needsResourceLibraries ? ["resourceLibraries"] : []),
-    ]
-    const agent = await this.agentConnectRepository.getOneById(
-      connectScope,
-      agentId,
-      relationsToLoad.length > 0 ? { relations: relationsToLoad } : undefined,
-    )
-
+    const agent = await this.agentConnectRepository.getOneById(connectScope, agentId)
     if (!agent) {
       throw new NotFoundException(`Agent with id ${agentId} not found`)
     }
 
-    const agentSettings = await this.agentSettingsService.getLast({
-      connectScope,
-      agentId,
-      includesDraft: true,
-    })
-
-    const nextType = type ?? agent.type
-    const nextOutputJsonSchema =
-      agentSettingsFieldsToUpdate.outputJsonSchema !== undefined
-        ? agentSettingsFieldsToUpdate.outputJsonSchema
-        : agentSettings.outputJsonSchema
-
-    this.validateExtractionAgent({
-      type: nextType,
-      outputJsonSchema: nextOutputJsonSchema,
-    })
-
-    const nextFillFormEnabled =
-      agentSettingsFieldsToUpdate.fillFormEnabled !== undefined
-        ? agentSettingsFieldsToUpdate.fillFormEnabled
-        : agentSettings.fillFormEnabled
-    this.validateFillFormAgent({
-      fillFormEnabled: nextFillFormEnabled,
-      outputJsonSchema: nextOutputJsonSchema,
-    })
-
-    if (needsTags) {
-      agent.documentTags = await this.resolveDocumentTags({
-        currentTags: agent.documentTags ?? [],
-        tagsToAdd: tagsToAdd,
-        tagsToRemove: tagsToRemove,
-      })
-    }
-
-    if (needsResourceLibraries) {
-      agent.resourceLibraries = await this.resolveResourceLibraries({
-        connectScope,
-        resourceLibraryIds: fieldsToUpdate.resourceLibraryIds,
-        agentType: nextType,
-      })
-    }
-
-    if (fieldsToUpdate.projectAgentSessionCategoryIds !== undefined) {
-      const selectedProjectCategories = await this.resolveProjectAgentSessionCategories({
-        projectId: connectScope.projectId,
-        projectAgentSessionCategoryIds: fieldsToUpdate.projectAgentSessionCategoryIds,
-        withDeleted: true,
-      })
-      await this.agentSessionCategoriesService.replaceActiveCategoriesForAgent(
-        agent.id,
-        selectedProjectCategories,
-      )
-    }
-
-    Object.assign(agent, {
-      ...(name !== undefined && { name }),
-      ...(type !== undefined && { type }),
-    })
+    if (name !== undefined) agent.name = name
 
     const updatedAgent = await this.agentConnectRepository.saveOne(agent)
     updatedAgent.sessionCategories =
       await this.agentSessionCategoriesService.listActiveCategoriesForAgent(agent.id)
-
-    const updatedAgentSettings = await this.agentSettingsService.updateSettings({
-      connectScope,
-      agentId: agent.id,
-      agentSettings: {
-        ...extractAgentSettingsUpdateFields(agentSettings),
-        // `agentSettingsFieldsToUpdate.greetingMessage` is already normalized above and is only
-        // present when the caller provided it, so omitting a per-tab field preserves the existing
-        // greeting instead of wiping it. Sending `null` clears it.
-        ...agentSettingsFieldsToUpdate,
-      },
-    })
-
-    return { agent: updatedAgent, agentSettings: updatedAgentSettings }
+    return updatedAgent
   }
 
   async deleteAgent(agent: Agent): Promise<void> {

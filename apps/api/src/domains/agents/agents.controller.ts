@@ -4,8 +4,8 @@ import {
   AgentSubAgentsRoutes,
   AgentsRoutes,
   createAgentSchema,
-  partialUpdateAgentSchema,
   replaceAgentSubAgentsSchema,
+  updateAgentNameSchema,
 } from "@caseai-connect/api-contracts"
 import {
   Body,
@@ -29,9 +29,6 @@ import { ResourceContextGuard } from "@/common/context/resource-context.guard"
 import { CheckPolicy } from "@/common/policies/check-policy.decorator"
 import { ZodValidationPipe } from "@/common/zod-validation-pipe"
 import { TrackActivity } from "@/domains/activities/track-activity.decorator"
-import type { AgentSettings } from "@/domains/agents/settings/agent-settings.entity"
-// biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
-import { AgentSettingsService } from "@/domains/agents/settings/agent-settings.service"
 import { JwtAuthGuard } from "@/domains/auth/jwt-auth.guard"
 import { UserGuard } from "@/domains/users/user.guard"
 import type { Agent } from "./agent.entity"
@@ -48,7 +45,6 @@ import { AgentSubAgentsService } from "./sub-agents/agent-sub-agents.service"
 export class AgentsController {
   constructor(
     private readonly agentsService: AgentsService,
-    private readonly agentSettingsService: AgentSettingsService,
     private readonly agentSubAgentsService: AgentSubAgentsService,
   ) {}
 
@@ -60,13 +56,13 @@ export class AgentsController {
     @Req() request: EndpointRequestWithProject,
     @Body() { payload }: typeof AgentsRoutes.createOne.request,
   ): Promise<typeof AgentsRoutes.createOne.response> {
-    const { agent, agentSettings } = await this.agentsService.createAgent({
+    const { agent } = await this.agentsService.createAgent({
       connectScope: getRequiredConnectScope(request),
       fields: payload,
       userId: request.user.id,
     })
 
-    return { data: toAgentDto({ agent, agentSettings }) }
+    return { data: toAgentDto(agent) }
   }
 
   @Get(AgentsRoutes.getAll.path)
@@ -74,28 +70,18 @@ export class AgentsController {
   async getAll(
     @Req() request: EndpointRequestWithProject,
   ): Promise<typeof AgentsRoutes.getAll.response> {
-    const connectScope = getRequiredConnectScope(request)
     const agents = await this.agentsService.listAgents({
       userId: request.user.id,
-      connectScope,
+      connectScope: getRequiredConnectScope(request),
     })
-    const results = await Promise.all(
-      agents.map(async (agent) => {
-        const agentSettings = await this.agentSettingsService.getLast({
-          connectScope,
-          agentId: agent.id,
-        })
-        return toAgentDto({ agent, agentSettings })
-      }),
-    )
-    return { data: results }
+    return { data: agents.map(toAgentDto) }
   }
 
   @Patch(AgentsRoutes.updateOne.path)
   @CheckPolicy((policy) => policy.canUpdate())
   @AddContext("agent")
   @TrackActivity({ action: "agent.update", entityFrom: "agent" })
-  @UsePipes(new ZodValidationPipe(partialUpdateAgentSchema))
+  @UsePipes(new ZodValidationPipe(updateAgentNameSchema))
   async updateOne(
     @Req() request: EndpointRequestWithAgent,
     @Body() { payload }: typeof AgentsRoutes.updateOne.request,
@@ -178,36 +164,17 @@ function toAgentSubAgentDto(entity: AgentSubAgent): AgentSubAgentDto {
   }
 }
 
-function toAgentDto({
-  agent,
-  agentSettings,
-}: {
-  agent: Agent
-  agentSettings: AgentSettings
-}): AgentDto {
+function toAgentDto(agent: Agent): AgentDto {
   return {
-    createdAt: agent.createdAt.getTime(),
-    greetingMessage: agentSettings.greetingMessage ?? undefined,
-    instructions: agentSettings.instructions,
-    hasCategories: (agent.sessionCategories?.length ?? 0) > 0,
     id: agent.id,
-    revision: agentSettings.revision,
-    revisionName: agentSettings.revisionName ?? "",
-    revisionDesc: agentSettings.revisionDesc ?? "",
-    isDraft: agentSettings.isDraft,
-    isArchived: agentSettings.isArchived,
-    locale: agentSettings.locale,
-    model: agentSettings.model,
-    name: agent.name,
-    outputJsonSchema: (agentSettings.outputJsonSchema as AgentDto["outputJsonSchema"]) ?? undefined,
     projectId: agent.projectId,
-    temperature: Number(agentSettings.temperature),
+    name: agent.name,
     type: agent.type,
-    updatedAt: agentSettings.updatedAt.getTime(),
-    documentTagIds: agent.documentTags?.map((tag) => tag.id) || [],
-    resourceLibraryIds: agent.resourceLibraries?.map((library) => library.id) || [],
-    documentsRagMode: agentSettings.documentsRagMode,
-    fillFormEnabled: agentSettings.fillFormEnabled,
+    createdAt: agent.createdAt.getTime(),
+    updatedAt: agent.updatedAt.getTime(),
+    hasCategories: (agent.sessionCategories?.length ?? 0) > 0,
+    documentTagIds: agent.documentTags?.map((tag) => tag.id) ?? [],
+    resourceLibraryIds: agent.resourceLibraries?.map((library) => library.id) ?? [],
     projectAgentSessionCategoryIds: (agent.sessionCategories ?? [])
       .map((category) => category.projectAgentSessionCategoryId)
       .filter(

@@ -272,7 +272,7 @@ describe("AgentSettings", () => {
       expect(savedSettings?.isDraft).toBeTruthy()
       expect(savedSettings?.revision).toBe(1)
     })
-    it("updateAgent should also create draft settings with revision = last revision +1 - no existing draft", async () => {
+    it("updateSettings should also create draft settings with revision = last revision +1 - no existing draft", async () => {
       const { organization, project, agent } = await createAgentWithSettings(
         setup,
         repositories,
@@ -293,15 +293,14 @@ describe("AgentSettings", () => {
       const updatedFields = {
         ...agentSettingsValuesRev1,
         instructions: "My new instructions",
-        name: "My new agent name",
       }
 
-      const { agentSettings: updatedAgentSettings } = await agentService.updateAgent({
+      const updatedAgentSettings = await service.updateSettings({
         connectScope: {
           organizationId: organization.id,
           projectId: project.id,
         },
-        fieldsToUpdate: updatedFields,
+        agentSettings: updatedFields,
         agentId: agent.id,
       })
       assertOnSettings(updatedFields, updatedAgentSettings)
@@ -321,7 +320,7 @@ describe("AgentSettings", () => {
       expect(savedSettings[0]?.isDraft).toBeTruthy()
     })
 
-    it("updateAgent should update existing draft settings - existing draft", async () => {
+    it("updateSettings should update existing draft settings - existing draft", async () => {
       const { organization, project, agent } = await createAgentWithSettings(setup, repositories)
 
       const savedSettings = await service.getLast({
@@ -338,15 +337,14 @@ describe("AgentSettings", () => {
       const updatedFields = {
         ...agentSettingsValuesRev3Draft,
         instructions: "My updated instructions",
-        name: "My updated agent name",
       }
 
-      const { agentSettings: updatedAgentSettings } = await agentService.updateAgent({
+      const updatedAgentSettings = await service.updateSettings({
         connectScope: {
           organizationId: organization.id,
           projectId: project.id,
         },
-        fieldsToUpdate: updatedFields,
+        agentSettings: updatedFields,
         agentId: agent.id,
       })
       assertOnSettings(updatedFields, updatedAgentSettings)
