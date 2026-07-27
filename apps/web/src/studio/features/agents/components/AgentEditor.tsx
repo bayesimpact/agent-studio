@@ -5,6 +5,7 @@ import { useTranslation } from "react-i18next"
 import { useBlocker } from "react-router-dom"
 import { ConfirmDialog } from "@/common/components/ConfirmDialog"
 import type { Agent } from "@/common/features/agents/agents.models"
+import type { AgentSettings } from "@/common/features/agents/settings/agent-settings.models"
 import { selectCurrentProjectData } from "@/common/features/projects/projects.selectors"
 import { useFeatureFlags } from "@/common/hooks/use-feature-flags"
 import { usePreventLeave } from "@/common/hooks/use-prevent-leave"
@@ -55,10 +56,12 @@ type TabConfig = {
  */
 export function AgentEditor({
   agent,
+  settings,
   className,
   orchestration,
 }: {
   agent: Agent
+  settings: AgentSettings
   className?: string
   orchestration?: AgentEditorOrchestration
 }) {
@@ -73,12 +76,16 @@ export function AgentEditor({
       {
         value: "general",
         label: t("agent:tabs.general"),
-        render: (onDirtyChange) => <AgentGeneralTab agent={agent} onDirtyChange={onDirtyChange} />,
+        render: (onDirtyChange) => (
+          <AgentGeneralTab agent={agent} settings={settings} onDirtyChange={onDirtyChange} />
+        ),
       },
       {
         value: "model",
         label: t("agent:tabs.model"),
-        render: (onDirtyChange) => <AgentModelTab agent={agent} onDirtyChange={onDirtyChange} />,
+        render: (onDirtyChange) => (
+          <AgentModelTab agent={agent} settings={settings} onDirtyChange={onDirtyChange} />
+        ),
       },
     ]
 
@@ -87,21 +94,29 @@ export function AgentEditor({
       list.push({
         value: "sources",
         label: t("agent:tabs.sources"),
-        render: (onDirtyChange) => <AgentSourcesTab agent={agent} onDirtyChange={onDirtyChange} />,
+        render: (onDirtyChange) => (
+          <AgentSourcesTab agent={agent} settings={settings} onDirtyChange={onDirtyChange} />
+        ),
       })
 
       list.push({
         value: "resourceLibraries",
         label: t("agent:tabs.resourceLibraries"),
         render: (onDirtyChange) => (
-          <AgentResourceLibrariesTab agent={agent} onDirtyChange={onDirtyChange} />
+          <AgentResourceLibrariesTab
+            agent={agent}
+            settings={settings}
+            onDirtyChange={onDirtyChange}
+          />
         ),
       })
 
       list.push({
         value: "tools",
         label: t("agent:tabs.tools"),
-        render: (onDirtyChange) => <AgentToolsTab agent={agent} onDirtyChange={onDirtyChange} />,
+        render: (onDirtyChange) => (
+          <AgentToolsTab agent={agent} settings={settings} onDirtyChange={onDirtyChange} />
+        ),
       })
 
       if (project.agentSessionCategories.length > 0) {
@@ -109,7 +124,11 @@ export function AgentEditor({
           value: "categories",
           label: t("agent:tabs.categories"),
           render: (onDirtyChange) => (
-            <AgentSessionCategoriesTab agent={agent} onDirtyChange={onDirtyChange} />
+            <AgentSessionCategoriesTab
+              agent={agent}
+              settings={settings}
+              onDirtyChange={onDirtyChange}
+            />
           ),
         })
       }
@@ -142,7 +161,9 @@ export function AgentEditor({
       list.push({
         value: "output",
         label: t("agent:tabs.output"),
-        render: (onDirtyChange) => <AgentOutputTab agent={agent} onDirtyChange={onDirtyChange} />,
+        render: (onDirtyChange) => (
+          <AgentOutputTab agent={agent} settings={settings} onDirtyChange={onDirtyChange} />
+        ),
       })
     }
 
@@ -155,7 +176,7 @@ export function AgentEditor({
     }
 
     return list
-  }, [agent, project, hasFeature, orchestration, projectMcpServers, t])
+  }, [agent, settings, project, hasFeature, orchestration, projectMcpServers, t])
 
   const [nav, setNav] = useState<{ active: TabKey; pending: TabKey | null }>({
     active: "general",
@@ -209,12 +230,12 @@ export function AgentEditor({
               </TabsTrigger>
             ))}
           </TabsList>
-          <AgentVersionHistory agent={agent} />
+          <AgentVersionHistory agent={agent} settings={settings} />
         </div>
-        {/* Also keyed on the revision so the active tab form reloads fresh defaults after a
-            version is restored from the history sheet. */}
+        {/* Also keyed on the settings revision so the active tab form reloads fresh defaults
+            after a version is restored or published from the history sheet. */}
         <TabsContent
-          key={`${activeTab.value}-${agent.revision}`}
+          key={`${activeTab.value}-${settings.revision}`}
           value={activeTab.value}
           className="mt-4"
         >
