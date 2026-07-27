@@ -2,7 +2,7 @@ import { OrganizationsRoutes, updateOrganizationSchema } from "@caseai-connect/a
 import { Body, Controller, Get, Patch, Post, Req, UseGuards, UsePipes } from "@nestjs/common"
 import type {
   EndpointRequest,
-  EndpointRequestWithOrganizationMembership,
+  EndpointRequestWithOrganizationId,
 } from "@/common/context/request.interface"
 import { ZodValidationPipe } from "@/common/zod-validation-pipe"
 import { TrackActivity } from "@/domains/activities/track-activity.decorator"
@@ -49,7 +49,7 @@ export class OrganizationsController {
   @CheckPermission("organization.update", "organization")
   @UsePipes(new ZodValidationPipe(updateOrganizationSchema))
   async updateOrganization(
-    @Req() request: EndpointRequestWithOrganizationMembership,
+    @Req() request: EndpointRequestWithOrganizationId,
     @Body() body: typeof OrganizationsRoutes.updateOne.request,
   ): Promise<typeof OrganizationsRoutes.updateOne.response> {
     await this.organizationsService.updateOrganizationName({

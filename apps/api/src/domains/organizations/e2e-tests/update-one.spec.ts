@@ -103,10 +103,11 @@ describe("Organizations - updateOne", () => {
     })
     auth0Id = otherUser.auth0Id
 
+    // non-members hold no role on the organization, so the RBAC permission check rejects them
     expectResponse(
       await subject({ payload: { name: "New Name" } }),
-      401,
-      AUTH_ERRORS.NOT_MEMBER_OF_ORG,
+      403,
+      AUTH_ERRORS.UNAUTHORIZED_RESOURCE,
     )
   })
 
