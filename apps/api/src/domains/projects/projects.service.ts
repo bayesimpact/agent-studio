@@ -84,14 +84,6 @@ export class ProjectsService {
     )
   }
 
-  async getProject(organizationId: string, projectId: string): Promise<Project | undefined> {
-    const project = await this.projectEntityRepository.findOne({
-      where: { id: projectId, organizationId },
-      relations: { featureFlags: true, projectAgentSessionCategories: true },
-    })
-    return project ?? undefined
-  }
-
   async updateProject({
     project,
     name,
