@@ -9,22 +9,27 @@ import {
   agentDefaultOutputJsonSchemaMap,
   agentDefaultPromptMap,
 } from "./default-agent-values/default-agent-values.helpers"
+import { formAgentDefaultValues } from "./default-agent-values/form-agent-default-values"
+
+/**
+ * A choice offered by the agent creator dialog. "form" is not an agent type: it
+ * creates a conversation agent with the fillForm tool enabled.
+ */
+export type AgentCreationChoice = Agent["type"] | "form"
 
 /**
  * Default field values used when creating an agent (see AgentCreator). The agent editor itself
  * is update-only and seeds each tab form from the existing agent, so it does not use this.
  */
 export function getDefaultFormValues({
-  agentType,
+  creationChoice,
   language,
 }: {
-  agentType: Agent["type"]
+  creationChoice: AgentCreationChoice
   language: AgentLocale
 }): CreateAgentDto {
-  const value = {
-    type: agentType,
+  const sharedValues = {
     name: "",
-    instructions: agentDefaultPromptMap[agentType],
     greetingMessage: undefined,
     documentsRagMode: DocumentsRagMode.All,
     model: AgentModel.Gemini25Flash,
@@ -35,10 +40,28 @@ export function getDefaultFormValues({
     resourceLibraryIds: [],
   }
 
-  if (["form", "extraction"].includes(agentType)) {
-    // @ts-expect-error - This is valid because of the conditional check on agentType, but TypeScript can't infer that for some reason
-    value.outputJsonSchema = agentDefaultOutputJsonSchemaMap[agentType]
+  if (creationChoice === "extraction") {
+    return {
+      ...sharedValues,
+      type: "extraction",
+      instructions: agentDefaultPromptMap.extraction,
+      outputJsonSchema: agentDefaultOutputJsonSchemaMap.extraction,
+    }
   }
 
-  return value
+  if (creationChoice === "form") {
+    return {
+      ...sharedValues,
+      type: "conversation",
+      instructions: formAgentDefaultValues.prompt,
+      fillFormEnabled: true,
+      outputJsonSchema: formAgentDefaultValues.getOutputJsonSchema(),
+    }
+  }
+
+  return {
+    ...sharedValues,
+    type: "conversation",
+    instructions: agentDefaultPromptMap.conversation,
+  }
 }
