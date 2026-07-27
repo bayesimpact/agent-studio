@@ -86,7 +86,7 @@ describe("DocumentChunkRetrievalService", () => {
         projectId: "project-1",
       },
       conversationSummary: "User discussed parental leave policy.",
-      latestUserQuestion: "What documents mention paid leave duration?",
+      query: "What documents mention paid leave duration?",
       topK: 3,
     })
 
@@ -134,7 +134,7 @@ describe("DocumentChunkRetrievalService", () => {
         projectId: "project-1",
       },
       conversationSummary: "User asked for policies.",
-      latestUserQuestion: "Show me tagged docs only.",
+      query: "Show me tagged docs only.",
       topK: 3,
       documentTagIds: ["tag-1", "tag-2", "tag-1"],
     })

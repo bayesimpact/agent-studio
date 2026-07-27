@@ -2,7 +2,7 @@ import type { TimeType } from "../../../generic"
 
 export enum ToolName {
   FillForm = "fillForm",
-  RetrieveProjectDocumentChunks = "retrieveProjectDocumentChunks",
+  LookupKnowledgeBase = "lookup_knowledge_base",
   Sources = "sources",
   RecalculateConversationSessionMetadata = "recalculateConversationSessionMetadata",
   McpSearchResources = "search_resources",

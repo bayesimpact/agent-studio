@@ -7,22 +7,46 @@ import type { ToolExecutionLog } from "./tool-execution-log"
 
 export const DEFAULT_TOP_K = 20
 
-const retrieveProjectDocumentChunksInputSchema = z.object({
+/**
+ * Wording is tuned for small open-weight models (Gemma class), which under-call
+ * retrieval tools whenever the decision to call is left to them as a judgement.
+ *
+ * The framing is deliberately epistemic rather than topical: users never ask
+ * "about documents", they just ask questions, and the model has no way to
+ * recognise a question as document-shaped. So the description does not describe
+ * what the knowledge base holds — it tells the model that the knowledge base is
+ * absent from its training data and that it therefore does not know the answer.
+ * That turns "should I call this?" into a default ("assume you do not know")
+ * with a short, closed list of exceptions, which is a decision a small model
+ * makes reliably.
+ */
+export const LOOKUP_KNOWLEDGE_BASE_DESCRIPTION = [
+  "Look up this assistant's knowledge base and return the passages that answer a question.",
+  "The knowledge base holds information that is not in your training data. You have never seen it and cannot know what it says — so you do not know the answer to the user's question, even when it feels familiar.",
+  "Assume you do not know. Call this tool before replying, and answer only from the passages it returns.",
+  "The only exceptions are greetings, thanks and goodbyes, and questions about what was already said in this conversation.",
+].join("\n")
+
+const lookupKnowledgeBaseInputSchema = z.object({
   conversationSummary: z
     .string()
     .default("")
-    .describe("Short summary of the conversation so far, including relevant context."),
-  latestUserQuestion: z
+    .describe(
+      "One or two sentences of context from earlier in the conversation that help disambiguate the question. Leave empty on the first question.",
+    ),
+  query: z
     .string()
     .min(1)
-    .describe("The latest user question that must be answered with project documents."),
+    .describe(
+      'The question to look up, rewritten as a standalone sentence that makes sense on its own. Resolve pronouns and shorthand ("it", "that one", "and for last year?") from the conversation, and keep the user\'s own wording and language.',
+    ),
   topK: z
     .number()
     .int()
     .positive()
     .max(DEFAULT_TOP_K)
     .default(DEFAULT_TOP_K)
-    .describe(`How many chunks to return. Default is ${DEFAULT_TOP_K}.`),
+    .describe(`How many passages to return. Always use the default (${DEFAULT_TOP_K}).`),
 })
 
 const retrievedChunkSchema = z.object({
@@ -38,8 +62,8 @@ const retrievedChunkSchema = z.object({
   isParentChunk: z.boolean(),
 })
 
-export type RetrieveProjectDocumentChunksExecution = {
-  input: z.infer<typeof retrieveProjectDocumentChunksInputSchema>
+export type LookupKnowledgeBaseExecution = {
+  input: z.infer<typeof lookupKnowledgeBaseInputSchema>
   result: {
     chunkIds: string[]
     documentIds: string[]
@@ -49,14 +73,14 @@ export type RetrieveProjectDocumentChunksExecution = {
   }
 }
 
-export function buildRetrieveProjectDocumentChunksToolExecutionLog(
-  execution: RetrieveProjectDocumentChunksExecution,
+export function buildLookupKnowledgeBaseToolExecutionLog(
+  execution: LookupKnowledgeBaseExecution,
 ): ToolExecutionLog {
   return {
-    toolName: ToolName.RetrieveProjectDocumentChunks,
+    toolName: ToolName.LookupKnowledgeBase,
     arguments: {
       conversationSummary: execution.input.conversationSummary,
-      latestUserQuestion: execution.input.latestUserQuestion,
+      query: execution.input.query,
       topK: execution.input.topK,
       documentTagIds: execution.result.documentTagIds,
       returnedChunkCount: execution.result.returnedChunkCount,
@@ -66,7 +90,7 @@ export function buildRetrieveProjectDocumentChunksToolExecutionLog(
   }
 }
 
-export function retrieveProjectDocumentChunksTool({
+export function lookupKnowledgeBaseTool({
   connectScope,
   documentTagIds = [],
   retrievalService,
@@ -78,9 +102,8 @@ export function retrieveProjectDocumentChunksTool({
   onExecute: (toolExecution: ToolExecutionLog) => void
 }) {
   return tool({
-    description:
-      "Retrieve the most relevant project document chunks for the current conversation context and latest user question.",
-    inputSchema: retrieveProjectDocumentChunksInputSchema,
+    description: LOOKUP_KNOWLEDGE_BASE_DESCRIPTION,
+    inputSchema: lookupKnowledgeBaseInputSchema,
     outputSchema: z.object({
       retrievedChunks: z.array(retrievedChunkSchema),
       retrievalMetadata: z.object({
@@ -92,13 +115,13 @@ export function retrieveProjectDocumentChunksTool({
       const retrievedChunks = await retrievalService.retrieveTopChunks({
         connectScope,
         conversationSummary: input.conversationSummary,
-        latestUserQuestion: input.latestUserQuestion,
+        query: input.query,
         topK: input.topK,
         documentTagIds,
       })
       const documentIds = [...new Set(retrievedChunks.map((chunk) => chunk.documentId))]
       onExecute(
-        buildRetrieveProjectDocumentChunksToolExecutionLog({
+        buildLookupKnowledgeBaseToolExecutionLog({
           input,
           result: {
             chunkIds: retrievedChunks.map((chunk) => chunk.chunkId),

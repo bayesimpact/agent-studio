@@ -11,10 +11,10 @@
     "thinking": "En réflexion",
     "activity": {
       "default": "En réflexion…",
-      "usingTool": "Appel d’un outil…",
+      "usingTool": "Appel d'un outil…",
       "searchingResources": "Recherche de ressources…",
       "smartSearch": "Recherche…",
-      "retrievingDocuments": "Recherche dans la base de connaissances…",
+      "lookupKnowledgeBase": "Recherche dans la base de connaissances…",
       "gatheringSources": "Collecte des sources…",
       "surfacingResources": "Mise en avant des ressources…",
       "fillingForm": "Remplissage du formulaire…",
