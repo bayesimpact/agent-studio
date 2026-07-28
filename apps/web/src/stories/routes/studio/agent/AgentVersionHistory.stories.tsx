@@ -17,10 +17,15 @@ const baseAgent = agentFactory.transient({ project }).build({
   name: "Helpful Assistant",
 })
 
-/** Revisions ordered newest first, as returned by the settings endpoint. */
+/**
+ * Revisions ordered newest first, as returned by the settings endpoint. Naming a revision is
+ * optional, so 4 and 2 carry a name and description while 3 and 1 stay unnamed.
+ */
 const versions: AgentSettings[] = [
   agentSettingsFactory.transient({ agent: baseAgent }).build({
     revision: 4,
+    revisionName: "Cite sources",
+    revisionDesc: "Requires a source for every answer and widens retrieval to all documents.",
     instructions:
       "You are a helpful assistant.\nAnswer clearly and concisely.\nAlways cite your sources.",
     model: AgentModel.Gemini25Flash,
@@ -41,6 +46,8 @@ const versions: AgentSettings[] = [
   }),
   agentSettingsFactory.transient({ agent: baseAgent }).build({
     revision: 2,
+    revisionName: "Friendlier tone",
+    revisionDesc: "Adds a greeting message and raises the temperature for warmer replies.",
     instructions: "You are a helpful assistant.\nAnswer clearly and concisely.",
     model: AgentModel.Gemini25Pro,
     temperature: 0.7,
@@ -68,6 +75,8 @@ const draftVersions: AgentSettings[] = [
   agentSettingsFactory.transient({ agent: baseAgent }).build({
     revision: 2,
     isDraft: true,
+    revisionName: "Double-check facts",
+    revisionDesc: "Asks the agent to verify claims before answering.",
     instructions:
       "You are a helpful assistant.\nAnswer clearly, concisely, and always double-check facts before responding.",
     model: AgentModel.Gemini25Flash,

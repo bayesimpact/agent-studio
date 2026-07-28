@@ -332,6 +332,11 @@ function AgentField({
   )
 }
 
+// Radix renders the selected item's content inside the trigger, so a version's name and
+// description would make the fixed-height trigger overflow. They are marked with
+// data-version-detail and hidden there, keeping the trigger to the revision line alone.
+const hideVersionDetailsInTrigger = "[&_[data-slot=select-value]_[data-version-detail]]:hidden"
+
 function AgentVersionField({
   control,
   history,
@@ -361,7 +366,7 @@ function AgentVersionField({
             disabled={isLoading || history.length === 0}
           >
             <FormControl>
-              <SelectTrigger className="w-full">
+              <SelectTrigger className={`w-full ${hideVersionDetailsInTrigger}`}>
                 <SelectValue
                   placeholder={
                     isLoading
@@ -374,14 +379,33 @@ function AgentVersionField({
             <SelectContent>
               {history.map((agentVersion, index) => (
                 <SelectItem key={agentVersion.revision} value={String(agentVersion.revision)}>
-                  {index === 0
-                    ? t("evaluationConversationRun:version.latest", {
-                        revision: agentVersion.revision,
-                      })
-                    : t("evaluationConversationRun:version.item", {
-                        revision: agentVersion.revision,
-                        date: buildDate(agentVersion.updatedAt),
-                      })}
+                  <span className="flex flex-col items-start gap-0.5">
+                    <span>
+                      {index === 0
+                        ? t("evaluationConversationRun:version.latest", {
+                            revision: agentVersion.revision,
+                          })
+                        : t("evaluationConversationRun:version.item", {
+                            revision: agentVersion.revision,
+                            date: buildDate(agentVersion.updatedAt),
+                          })}
+                    </span>
+                    {/* Name and description are set at publish time and stored as "" when
+                        unset, so truthiness is the has-a-value test. */}
+                    {agentVersion.revisionName && (
+                      <span data-version-detail className="text-xs font-medium">
+                        {agentVersion.revisionName}
+                      </span>
+                    )}
+                    {agentVersion.revisionDesc && (
+                      <span
+                        data-version-detail
+                        className="line-clamp-2 max-w-sm text-xs text-muted-foreground"
+                      >
+                        {agentVersion.revisionDesc}
+                      </span>
+                    )}
+                  </span>
                 </SelectItem>
               ))}
             </SelectContent>
