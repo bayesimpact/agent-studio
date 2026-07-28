@@ -173,7 +173,7 @@
       "restore": "Restore this version",
       "restoreDialog": {
         "title": "Restore version {{revision}}?",
-        "description": "The settings of version {{revision}} will be copied as a new version and become the current settings. No version is deleted."
+        "description": "The settings of version {{revision}} will be copied into a draft that needs publishing to go live. No version is deleted."
       },
       "publish": "Publish this version",
       "publishDialog": {

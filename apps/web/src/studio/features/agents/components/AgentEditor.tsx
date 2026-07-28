@@ -232,10 +232,12 @@ export function AgentEditor({
           </TabsList>
           <AgentVersionHistory agent={agent} settings={settings} />
         </div>
-        {/* Also keyed on the settings revision so the active tab form reloads fresh defaults
-            after a version is restored or published from the history sheet. */}
+        {/* Also keyed on the settings revision and updatedAt so the active tab form reloads
+            fresh defaults after a version is restored or published from the history sheet.
+            The revision alone is not enough: a restore into an already-open draft updates
+            that draft in place and keeps its revision number, so updatedAt is what changes. */}
         <TabsContent
-          key={`${activeTab.value}-${settings.revision}`}
+          key={`${activeTab.value}-${settings.revision}-${settings.updatedAt}`}
           value={activeTab.value}
           className="mt-4"
         >

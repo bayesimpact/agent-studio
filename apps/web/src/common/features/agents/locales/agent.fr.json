@@ -173,7 +173,7 @@
       "restore": "Restaurer cette version",
       "restoreDialog": {
         "title": "Restaurer la version {{revision}} ?",
-        "description": "Les paramètres de la version {{revision}} seront copiés comme nouvelle version et deviendront les paramètres actuels. Aucune version n'est supprimée."
+        "description": "Les paramètres de la version {{revision}} seront copiés dans un brouillon à publier pour devenir actifs. Aucune version n'est supprimée."
       },
       "publish": "Publier cette version",
       "publishDialog": {

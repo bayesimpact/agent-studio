@@ -50,17 +50,6 @@ export const publishAgentSettings = createAsyncThunk<
   },
 )
 
-export const archiveAgentSettings = createAsyncThunk<
-  void,
-  { agentId: string; revision: number },
-  ThunkConfig
->("agentSettings/archive", async ({ agentId, revision }, { extra: { services }, getState }) => {
-  const state = getState()
-  const organizationId = getCurrentId({ state, name: "organizationId" })
-  const projectId = getCurrentId({ state, name: "projectId" })
-  await services.agentSettings.archiveOne({ organizationId, projectId, agentId, revision })
-})
-
 export const restoreAgentSettings = createAsyncThunk<
   void,
   { agentId: string; revision: number },

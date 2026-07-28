@@ -4,7 +4,6 @@ import { notificationsActions } from "@/common/features/notifications/notificati
 import type { AppDispatch, RootState } from "@/common/store/types"
 import { agentSettingsActions } from "./agent-settings.slice"
 import {
-  archiveAgentSettings,
   listAgentSettings,
   publishAgentSettings,
   restoreAgentSettings,
@@ -20,7 +19,6 @@ const mutationsToRefetchOn = [
   updateAgentSettings.fulfilled,
   updateAgentSettings.rejected,
   publishAgentSettings.fulfilled,
-  archiveAgentSettings.fulfilled,
   restoreAgentSettings.fulfilled,
 ] as const
 
