@@ -24,8 +24,11 @@ type FormValues = z.infer<typeof agentPublishSchema>
 
 /**
  * Publishes a draft revision: makes it the live settings the running agent serves. The name
- * and description are optional; leaving them blank preserves whatever is already stored for
- * this revision (the API keeps the stored values when the field is omitted).
+ * and description are optional; leaving a field untouched preserves whatever is already stored
+ * for this revision (the API keeps the stored value when the field is omitted). Deliberately
+ * clearing a field (the user typed into it and left it empty) clears the stored value instead,
+ * so submission reads the form's dirty state rather than guessing from the string alone: an
+ * untouched field and an emptied one both arrive as an empty string.
  */
 export function AgentVersionPublishButton({
   agentId,
@@ -51,13 +54,16 @@ export function AgentVersionPublishButton({
 
   const handleSubmit = async (values: FormValues) => {
     setIsPublishing(true)
+    const { dirtyFields } = form.formState
     try {
       await dispatch(
         publishAgentSettings({
           agentId,
           revision,
-          revisionName: values.revisionName?.trim() || undefined,
-          revisionDesc: values.revisionDesc?.trim() || undefined,
+          // Untouched (not dirty): undefined, preserve the stored value. Touched but emptied:
+          // null, clear it. Touched with content: the trimmed string.
+          revisionName: dirtyFields.revisionName ? values.revisionName?.trim() || null : undefined,
+          revisionDesc: dirtyFields.revisionDesc ? values.revisionDesc?.trim() || null : undefined,
         }),
       ).unwrap()
       handleOpenChange(false)
@@ -95,6 +101,7 @@ export function AgentVersionPublishButton({
                       <FormControl>
                         <Input
                           {...field}
+                          value={field.value ?? ""}
                           placeholder={t("agent:history.publishDialog.namePlaceholder")}
                         />
                       </FormControl>
@@ -110,6 +117,7 @@ export function AgentVersionPublishButton({
                       <FormControl>
                         <Textarea
                           {...field}
+                          value={field.value ?? ""}
                           placeholder={t("agent:history.publishDialog.descPlaceholder")}
                         />
                       </FormControl>

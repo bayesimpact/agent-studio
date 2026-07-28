@@ -35,7 +35,12 @@ export const updateAgentSettings = createAsyncThunk<
 
 export const publishAgentSettings = createAsyncThunk<
   AgentSettings,
-  { agentId: string; revision: number; revisionName?: string; revisionDesc?: string },
+  {
+    agentId: string
+    revision: number
+    revisionName?: string | null
+    revisionDesc?: string | null
+  },
   ThunkConfig
 >(
   "agentSettings/publish",

@@ -8,7 +8,7 @@ export interface IAgentSettingsSpi {
   updateOne: (params: AgentParams, payload: UpdateAgentSettingsDto) => Promise<AgentSettings>
   publishOne: (
     params: AgentParams & { revision: number },
-    payload: { revisionName?: string; revisionDesc?: string },
+    payload: { revisionName?: string | null; revisionDesc?: string | null },
   ) => Promise<AgentSettings>
   archiveOne: (params: AgentParams & { revision: number }) => Promise<void>
   restoreOne: (params: AgentParams & { revision: number }) => Promise<void>

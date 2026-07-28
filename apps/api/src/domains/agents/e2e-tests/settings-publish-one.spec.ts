@@ -197,6 +197,32 @@ describe("Agents - publishOne", () => {
     expect(updatedAgentSettings?.revisionName).toBe("RenamedRev")
     expect(updatedAgentSettings?.revisionDesc).toBe("The first revision")
   })
+  it("should clear the existing name and description when publishing with explicit nulls", async () => {
+    await createContext()
+
+    const initialAgentSettings = await repositories.agentSettingsRepository.findOne({
+      where: { agentId, revision: 1 },
+    })
+    expect(initialAgentSettings?.revisionName).toBe("FirstRev")
+    expect(initialAgentSettings?.revisionDesc).toBe("The first revision")
+
+    revision = "1"
+    const response = await subject({
+      payload: { revisionName: null, revisionDesc: null },
+    })
+    expectResponse(response, 201)
+    const agentSettings: AgentSettingsDto = response.body.data
+    // The DTO still presents a cleared value as an empty string, matching how a revision
+    // that never had a name is presented; the UI does not need to special-case this.
+    expect(agentSettings.revisionName).toBe("")
+    expect(agentSettings.revisionDesc).toBe("")
+
+    const updatedAgentSettings = await repositories.agentSettingsRepository.findOne({
+      where: { agentId, revision: 1 },
+    })
+    expect(updatedAgentSettings?.revisionName).toBeNull()
+    expect(updatedAgentSettings?.revisionDesc).toBeNull()
+  })
   it("should reject a payload where revisionName is not a string", async () => {
     await createContext()
 

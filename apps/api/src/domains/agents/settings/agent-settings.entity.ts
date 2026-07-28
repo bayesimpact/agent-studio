@@ -21,10 +21,10 @@ export class AgentSettings extends ConnectEntityBase {
   revision!: number
 
   @Column({ type: "text", name: "revision_name", nullable: true })
-  revisionName?: string
+  revisionName?: string | null
 
   @Column({ type: "text", name: "revision_desc", nullable: true })
-  revisionDesc?: string
+  revisionDesc?: string | null
 
   @Column({ type: "boolean", name: "is_draft", default: false })
   isDraft!: boolean

@@ -129,8 +129,8 @@ export class AgentSettingsService {
     connectScope: RequiredConnectScope
     agentId: string
     revision: number
-    revisionName?: string
-    revisionDesc?: string
+    revisionName?: string | null
+    revisionDesc?: string | null
   }): Promise<AgentSettings | undefined> {
     const found = await this.agentSettingsConnectRepository.find(connectScope, {
       where: { agentId, revision },
@@ -139,8 +139,9 @@ export class AgentSettingsService {
     // if (!found[0].isDraft) return undefined  => disable check so we can call publish again to update name and/or desc
     if (found[0].isArchived) return undefined
     const toUpdate: AgentSettings = found[0]
-    toUpdate.revisionName = revisionName ?? toUpdate.revisionName
-    toUpdate.revisionDesc = revisionDesc ?? toUpdate.revisionDesc
+    // A string sets, `null` clears, `undefined` (an omitted field) preserves what is stored.
+    if (revisionName !== undefined) toUpdate.revisionName = revisionName
+    if (revisionDesc !== undefined) toUpdate.revisionDesc = revisionDesc
     toUpdate.isDraft = false
 
     const updated = await this.agentSettingsConnectRepository.updateOneById({

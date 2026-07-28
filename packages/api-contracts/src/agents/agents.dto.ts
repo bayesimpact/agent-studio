@@ -298,7 +298,9 @@ export type UpdateAgentResourceLibrariesDto = z.infer<typeof updateAgentResource
 export type UpdateAgentSessionCategoriesDto = z.infer<typeof updateAgentSessionCategoriesSchema>
 
 export const agentPublishSchema = z.object({
-  revisionName: z.string().optional(),
-  revisionDesc: z.string().optional(),
+  // `null` clears the stored value; `undefined` (an omitted field) preserves it. Same convention
+  // as `updateAgentSettingsSchema`'s `greetingMessage`.
+  revisionName: z.string().nullable().optional(),
+  revisionDesc: z.string().nullable().optional(),
 })
 export type PublishAgentDto = z.infer<typeof agentPublishSchema>
