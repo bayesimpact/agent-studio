@@ -35,9 +35,13 @@ export interface EndpointRequest {
   user: User
 }
 
-export interface EndpointRequestWithOrganizationMembership extends EndpointRequest {
-  organizationMembership: OrganizationMembershipContextModel
+export interface EndpointRequestWithOrganizationId extends EndpointRequest {
   organizationId: string
+}
+
+export interface EndpointRequestWithOrganizationMembership
+  extends EndpointRequestWithOrganizationId {
+  organizationMembership: OrganizationMembershipContextModel
 }
 
 export interface EndpointRequestWithProject extends EndpointRequestWithOrganizationMembership {
