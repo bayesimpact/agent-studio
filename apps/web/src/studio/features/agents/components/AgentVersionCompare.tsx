@@ -56,7 +56,12 @@ export function AgentVersionCompare({
         </ToggleGroup>
         <div className="flex items-center gap-2">
           {selected.isDraft && (
-            <AgentVersionPublishButton agentId={selected.agentId} revision={selected.revision} />
+            <AgentVersionPublishButton
+              agentId={selected.agentId}
+              revision={selected.revision}
+              revisionName={selected.revisionName}
+              revisionDesc={selected.revisionDesc}
+            />
           )}
           <AgentVersionRestoreButton
             agentId={selected.agentId}

@@ -23,19 +23,26 @@ import { useAppDispatch } from "@/common/store/hooks"
 type FormValues = z.infer<typeof agentPublishSchema>
 
 /**
- * Publishes a draft revision: makes it the live settings the running agent serves. The name
- * and description are optional; leaving a field untouched preserves whatever is already stored
- * for this revision (the API keeps the stored value when the field is omitted). Deliberately
- * clearing a field (the user typed into it and left it empty) clears the stored value instead,
- * so submission reads the form's dirty state rather than guessing from the string alone: an
- * untouched field and an emptied one both arrive as an empty string.
+ * Publishes a draft revision: makes it the live settings the running agent serves. The dialog
+ * pre-fills the name and description already stored for this revision, so leaving a field as-is
+ * preserves it (the API keeps the stored value when the field is omitted). Deliberately clearing
+ * a field (the user edits it and leaves it empty) clears the stored value instead, so submission
+ * reads the form's dirty state rather than guessing from the string alone: an untouched,
+ * pre-filled field and a field the user cleared can both end up empty.
  */
 export function AgentVersionPublishButton({
   agentId,
   revision,
+  revisionName,
+  revisionDesc,
 }: {
   agentId: string
   revision: number
+  /** The name and description already stored for this revision, so the dialog pre-fills them:
+   * an untouched pre-filled field stays non-dirty and preserves the stored value, and clearing a
+   * pre-filled field makes it dirty and empty, which is a real clear. */
+  revisionName: string
+  revisionDesc: string
 }) {
   const { t } = useTranslation()
   const dispatch = useAppDispatch()
@@ -44,12 +51,15 @@ export function AgentVersionPublishButton({
 
   const form = useForm<FormValues>({
     resolver: zodResolver(agentPublishSchema),
-    defaultValues: { revisionName: "", revisionDesc: "" },
+    defaultValues: { revisionName, revisionDesc },
   })
 
   const handleOpenChange = (nextOpen: boolean) => {
     setOpen(nextOpen)
-    if (!nextOpen) form.reset()
+    // Re-read the stored values on every open: the revision being published (or its stored
+    // name/desc) may have changed since the form was last reset, e.g. a different revision was
+    // selected in the history sheet while this dialog was closed.
+    if (nextOpen) form.reset({ revisionName, revisionDesc })
   }
 
   const handleSubmit = async (values: FormValues) => {
@@ -76,7 +86,7 @@ export function AgentVersionPublishButton({
 
   return (
     <>
-      <Button size="sm" disabled={isPublishing} onClick={() => setOpen(true)}>
+      <Button size="sm" disabled={isPublishing} onClick={() => handleOpenChange(true)}>
         <UploadCloudIcon className="size-4" />
         {t("agent:history.publish")}
       </Button>
