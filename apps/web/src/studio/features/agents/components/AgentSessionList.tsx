@@ -88,10 +88,10 @@ export function ExtractionAgentSessionList() {
 
   const { abilities } = useAbility()
   const canManageAgent = abilities.canManageAgent({ agentId: agent.id })
-  // The settings load is mounted by `ExtractionAgentSessionsRoute`, not this leaf component, but
-  // it is not part of that route's `AsyncRoute` gate: it only feeds this inline editor panel, so
-  // the slot can still be loading or hold a previous agent's revisions here. Only render the
-  // editor once the loaded revision matches this agent.
+  // The settings load is mounted by `AgentRoute`, not this leaf component, and it is not part of
+  // that route's `AsyncRoute` gate: it only feeds this inline editor panel, so the slot can still
+  // be loading or hold a previous agent's revisions here. Only render the editor once the loaded
+  // revision matches this agent.
   const settings = useAppSelector(selectLastAgentSettings)
   const canEditSettings = canManageAgent && settings !== null && settings.agentId === agent.id
 

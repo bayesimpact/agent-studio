@@ -161,7 +161,6 @@
       "description": "Parcourez, comparez et restaurez les paramètres précédents de {{name}}.",
       "loadError": "Échec du chargement de l'historique des versions",
       "revisionLabel": "Version {{revision}}",
-      "versionLabel": "Version des paramètres {{revision}}",
       "currentBadge": "Actuelle",
       "draftBadge": "Brouillon",
       "compareWithPrevious": "Changements de cette version",

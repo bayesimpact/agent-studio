@@ -1,32 +1,20 @@
 import { selectCurrentExtractionAgentSessionsData } from "@/common/features/agents/agent-sessions/extraction/extraction-agent-sessions.selectors"
 import { extractionAgentSessionsActions } from "@/common/features/agents/agent-sessions/extraction/extraction-agent-sessions.slice"
 import { selectCurrentAgentId } from "@/common/features/agents/agents.selectors"
-import { agentSettingsActions } from "@/common/features/agents/settings/agent-settings.slice"
 import { useMount } from "@/common/hooks/use-mount"
 import { useCurrentId } from "@/common/hooks/use-value"
 import { useAppSelector } from "@/common/store/hooks"
 import { AsyncRoute } from "../AsyncRoute"
 
-// Load agent settings for the inline editor in `ExtractionAgentSessionList`. Opt-in per scope:
-// Studio already loads them for the whole `agent.path` subtree via `AgentRoute`, so only Desk,
-// which does not, asks for them here.
-export function ExtractionAgentSessionsRoute({
-  children,
-  loadSettings = false,
-}: {
-  children: React.ReactNode
-  /**
-   * Load the agent's settings revisions for `ExtractionAgentSessionList`'s inline editor. Opt-in
-   * per scope: Studio already loads them for the whole `agent.path` subtree via `AgentRoute`, so
-   * only Desk, which does not, asks for them here.
-   */
-  loadSettings?: boolean
-}) {
+// Neither scope loads agent settings here: Studio's `ExtractionAgentSessionList` reads them from
+// the single slot `AgentRoute` loads for the whole `agent.path` subtree, and Desk's own
+// `ExtractionAgentSessionList` (in `desk/features/agents/components/AgentSessionList.tsx`) has no
+// inline editor and never reads the settings selectors, so Desk has nothing to load them for.
+export function ExtractionAgentSessionsRoute({ children }: { children: React.ReactNode }) {
   const agentId = useCurrentId(selectCurrentAgentId)
   const agentSessions = useAppSelector(selectCurrentExtractionAgentSessionsData)
 
   useMount({ actions: extractionAgentSessionsActions, refreshOn: [agentId] })
-  useMount({ actions: agentSettingsActions, condition: loadSettings, refreshOn: [agentId] })
 
   return <AsyncRoute data={[agentSessions]}>{children}</AsyncRoute>
 }

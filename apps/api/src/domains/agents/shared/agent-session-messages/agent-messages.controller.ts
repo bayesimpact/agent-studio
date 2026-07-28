@@ -67,7 +67,10 @@ export class AgentMessagesController {
       agentSessionId,
       connectScope,
     })
-    const settingsById = await this.resolveMessageSettings({ connectScope, messages })
+    const settingsById =
+      request.agentSession.type === "playground"
+        ? await this.resolveMessageSettings({ connectScope, messages })
+        : new Map<string, AgentMessageSettingsDto>()
     return { data: messages.map((message) => toDto(message, settingsById)) }
   }
 
@@ -85,10 +88,10 @@ export class AgentMessagesController {
     if (!message) {
       throw new NotFoundException("Message not found")
     }
-    const settingsById = await this.resolveMessageSettings({
-      connectScope,
-      messages: [message],
-    })
+    const settingsById =
+      request.agentSession.type === "playground"
+        ? await this.resolveMessageSettings({ connectScope, messages: [message] })
+        : new Map<string, AgentMessageSettingsDto>()
     return { data: toDto(message, settingsById) }
   }
 
@@ -96,6 +99,11 @@ export class AgentMessagesController {
    * Revision identity for the messages being returned, keyed by settings id. One query for the
    * whole response: a session's messages share a handful of revisions at most, so resolving them
    * per message would be a needless fan-out.
+   *
+   * Callers only invoke this for playground sessions: `revisionName` is operator-authored copy and
+   * nothing outside the studio playground renders any of this, so a live session's readers (which
+   * include any project member with access, not just agent members) never trigger the query or
+   * receive the revision.
    */
   private async resolveMessageSettings({
     connectScope,

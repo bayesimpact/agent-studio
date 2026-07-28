@@ -31,7 +31,11 @@ export function AgentRoute({
   // Deliberately outside the `AsyncRoute` gate below: revisions only feed secondary UI, and
   // blocking on them would delay the session list for every visitor. Consumers honour the
   // single-slot staleness rule from `agent-settings.selectors.ts` instead.
-  useMount({ actions: agentSettingsActions, condition: loadSettings, refreshOn: [agentId] })
+  useMount({
+    actions: agentSettingsActions,
+    condition: loadSettings && Boolean(agentId),
+    refreshOn: [agentId],
+  })
 
   if (!agentId) return <LoadingRoute />
   return <AsyncRoute data={[agent]}>{children}</AsyncRoute>

@@ -161,7 +161,6 @@
       "description": "Browse, compare and restore previous settings of {{name}}.",
       "loadError": "Failed to load version history",
       "revisionLabel": "Version {{revision}}",
-      "versionLabel": "Settings version {{revision}}",
       "currentBadge": "Current",
       "draftBadge": "Draft",
       "compareWithPrevious": "Changes in this version",

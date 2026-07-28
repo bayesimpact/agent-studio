@@ -1,4 +1,7 @@
-import { AgentSessionMessagesRoutes } from "@caseai-connect/api-contracts"
+import {
+  AgentSessionMessagesRoutes,
+  type BaseAgentSessionTypeDto,
+} from "@caseai-connect/api-contracts"
 import type { INestApplication } from "@nestjs/common"
 import type { App } from "supertest/types"
 import {
@@ -53,9 +56,19 @@ describe("AgentSessionMessagesRoutes.listMessages", () => {
     await app.close()
   })
 
-  const createContext = async () => {
+  // Payload `type` (a policy input) and the session row's actual `type` (what the controller
+  // checks to decide whether to stamp `agentSettings`) must agree, or a test exercising one only
+  // looks like it is exercising the other.
+  let sessionType: BaseAgentSessionTypeDto = "playground"
+
+  const createContext = async (params: { sessionType?: BaseAgentSessionTypeDto } = {}) => {
+    sessionType = params.sessionType ?? "playground"
     const { organization, user, project, agent, agentSettings, agentSession } =
-      await createOrganizationWithAgentSession({ repositories, agentType: "conversation" })
+      await createOrganizationWithAgentSession({
+        repositories,
+        agentType: "conversation",
+        params: { agentSession: { type: sessionType } },
+      })
 
     // add 2 messages (from the assistant and the user) to the session
     await createChitChatConversation(organization, project, agentSession, agentSettings, {
@@ -76,7 +89,7 @@ describe("AgentSessionMessagesRoutes.listMessages", () => {
       route: AgentSessionMessagesRoutes.getAll,
       pathParams: removeNullish({ organizationId, projectId, agentId, agentSessionId }),
       token: accessToken,
-      request: { payload: { type: "live" } },
+      request: { payload: { type: sessionType } },
     })
 
   describe("listMessages", () => {
@@ -97,7 +110,7 @@ describe("AgentSessionMessagesRoutes.listMessages", () => {
 
   describe("revision attribution", () => {
     it("should expose the revision that produced each message", async () => {
-      const { agentSettings } = await createContext()
+      const { agentSettings } = await createContext({ sessionType: "playground" })
       await repositories.agentSettingsRepository.update(agentSettings.id, {
         revisionName: "Warmer replies",
       })
@@ -117,7 +130,7 @@ describe("AgentSessionMessagesRoutes.listMessages", () => {
     })
 
     it("should report an unnamed revision with an empty name", async () => {
-      await createContext()
+      await createContext({ sessionType: "playground" })
 
       const response = await subject()
 
@@ -126,7 +139,9 @@ describe("AgentSessionMessagesRoutes.listMessages", () => {
     })
 
     it("should attribute each message to its own revision when a session spans two", async () => {
-      const { organization, project, agent, agentSession, agentSettings } = await createContext()
+      const { organization, project, agent, agentSession, agentSettings } = await createContext({
+        sessionType: "playground",
+      })
       const draft = agentSettingsFactory
         .transient({ organization, project, agent })
         .build({ revision: 2, revisionName: "Draft tone", isDraft: true })
@@ -148,6 +163,21 @@ describe("AgentSessionMessagesRoutes.listMessages", () => {
         revisionName: "Draft tone",
         isDraft: true,
       })
+    })
+  })
+
+  describe("live sessions", () => {
+    it("should not carry any revision attribution", async () => {
+      await createContext({ sessionType: "live" })
+
+      const response = await subject()
+
+      expect(response.status).toBe(201)
+      const messages = response.body.data
+      expect(messages).toHaveLength(2)
+      for (const message of messages) {
+        expect(message.agentSettings).toBeUndefined()
+      }
     })
   })
 })

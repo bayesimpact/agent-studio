@@ -32,7 +32,6 @@ export function AgentSettingsVersionBadge({
   const badge = (
     <Badge
       variant={isDraft ? "outline" : "secondary"}
-      aria-label={t("agent:history.versionLabel", { revision })}
       className={cn(compact && "text-xs font-normal text-muted-foreground")}
     >
       v{revision}
