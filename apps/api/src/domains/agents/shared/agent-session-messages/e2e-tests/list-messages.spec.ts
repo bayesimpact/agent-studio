@@ -9,11 +9,13 @@ import {
 } from "@/common/test/test-database"
 import { removeNullish } from "@/common/utils/remove-nullish"
 import { ConversationAgentSessionsModule } from "@/domains/agents/conversation-agent-sessions/conversation-agent-sessions.module"
+import { agentSettingsFactory } from "@/domains/agents/settings/agent.settings.factory"
+import { AgentSettings } from "@/domains/agents/settings/agent-settings.entity"
 import { createOrganizationWithAgentSession } from "@/domains/organizations/organization.factory"
 import { sdk } from "@/external/llm/open-telemetry-init"
 import { setupUserGuardForTesting } from "../../../../../../test/e2e.helpers"
 import { type Requester, testRequester } from "../../../../../../test/request"
-import { createChitChatConversation } from "../agent-messages.factory"
+import { agentMessageFactory, createChitChatConversation } from "../agent-messages.factory"
 
 describe("AgentSessionMessagesRoutes.listMessages", () => {
   let app: INestApplication<App>
@@ -66,7 +68,7 @@ describe("AgentSessionMessagesRoutes.listMessages", () => {
     agentSessionId = agentSession.id
     auth0Id = user.auth0Id
 
-    return { organization, user, project, agent, agentSession }
+    return { organization, user, project, agent, agentSettings, agentSession }
   }
 
   const subject = async () =>
@@ -90,6 +92,62 @@ describe("AgentSessionMessagesRoutes.listMessages", () => {
       expect(messages[0]?.content).toBe("Hello")
       expect(messages[1]?.role).toBe("assistant")
       expect(messages[1]?.content).toBe("Hi!")
+    })
+  })
+
+  describe("revision attribution", () => {
+    it("should expose the revision that produced each message", async () => {
+      const { agentSettings } = await createContext()
+      await repositories.agentSettingsRepository.update(agentSettings.id, {
+        revisionName: "Warmer replies",
+      })
+
+      const response = await subject()
+
+      expect(response.status).toBe(201)
+      const messages = response.body.data
+      expect(messages).toHaveLength(2)
+      for (const message of messages) {
+        expect(message.agentSettings).toEqual({
+          revision: agentSettings.revision,
+          revisionName: "Warmer replies",
+          isDraft: false,
+        })
+      }
+    })
+
+    it("should report an unnamed revision with an empty name", async () => {
+      await createContext()
+
+      const response = await subject()
+
+      expect(response.status).toBe(201)
+      expect(response.body.data[0]?.agentSettings?.revisionName).toBe("")
+    })
+
+    it("should attribute each message to its own revision when a session spans two", async () => {
+      const { organization, project, agent, agentSession, agentSettings } = await createContext()
+      const draft = agentSettingsFactory
+        .transient({ organization, project, agent })
+        .build({ revision: 2, revisionName: "Draft tone", isDraft: true })
+      await setup.getRepository(AgentSettings).save(draft)
+      const laterMessage = agentMessageFactory
+        .assistant()
+        .transient({ organization, project, session: agentSession, agentSettings: draft })
+        .build({ content: "Answer from the draft", createdAt: new Date(Date.now() + 60_000) })
+      await repositories.agentMessageRepository.save(laterMessage)
+
+      const response = await subject()
+
+      expect(response.status).toBe(201)
+      const messages = response.body.data
+      expect(messages).toHaveLength(3)
+      expect(messages[0]?.agentSettings?.revision).toBe(agentSettings.revision)
+      expect(messages[2]?.agentSettings).toEqual({
+        revision: 2,
+        revisionName: "Draft tone",
+        isDraft: true,
+      })
     })
   })
 })
