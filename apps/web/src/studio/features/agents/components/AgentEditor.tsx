@@ -73,7 +73,10 @@ export function AgentEditor({
   // MCP servers load on the project route via a listener middleware that is not part of the
   // route's `AsyncRoute` gate (see AgentEditorRoute), so this editor can render before the list
   // resolves. Treat "not loaded yet" the same as "no servers yet": the tab below is already
-  // gated on a non-empty list, so it simply appears once the data arrives.
+  // gated on a non-empty list, so it simply appears once the data arrives. A failed
+  // `listMcpServers` folds into the same empty fallback, so the tab silently stays hidden rather
+  // than surfacing the error; that is intentional here since the rest of the editor does not
+  // depend on MCP servers.
   const mcpServersData = useAppSelector(selectMcpServersData)
   const projectMcpServers = ADS.isFulfilled(mcpServersData) ? mcpServersData.value : []
 

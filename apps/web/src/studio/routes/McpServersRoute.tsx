@@ -10,10 +10,10 @@ import { createMcpServer, deleteMcpServer } from "@/studio/features/mcp-servers/
 import { StudioRoutes } from "./helpers"
 
 // `mcpServers` loads via a listener on `projectsActions.mount`, which `OrganizationRoute` (an
-// ancestor of every project route, including this one) dispatches unconditionally on its own
-// mount. So the load already fires when this route is entered directly; no dedicated `useMount`
-// is needed here, only the gate below to cover the render that can otherwise happen before that
-// load resolves.
+// ancestor of every project route, including this one) dispatches once the organization is
+// fulfilled, regardless of which child path is entered. So the load already fires when this
+// route is entered directly; no dedicated `useMount` is needed here, only the gate below to
+// cover the render that can otherwise happen before that load resolves.
 export function McpServersRoute() {
   const mcpServers = useAppSelector(selectMcpServersData)
   return (

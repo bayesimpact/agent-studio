@@ -92,9 +92,6 @@ export const Default: Story = {
             [currentAgent.id]: { csvSessions: [], others: extractionSessions },
           }),
           seed.studio.agentSettings([currentAgentSettings]),
-          // `AgentEditor` (mounted inline by the extraction session list) reads the project's
-          // MCP servers unconditionally, so the slice needs a seeded (empty) value here.
-          seed.studio.mcpServers([]),
         ),
       }
     }),
