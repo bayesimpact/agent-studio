@@ -20,6 +20,7 @@ import { type BuiltTools, buildSubAgentTools } from "./sub-agent-tools"
 import { fillFormTool } from "./tools/fill-form.tool"
 import { lookupKnowledgeBaseTool } from "./tools/lookup-knowledge-base.tool"
 import { recalculateConversationSessionMetadataTool } from "./tools/recalculate-conversation-session-metadata.tool"
+import { RetrievedPassageRegistry } from "./tools/retrieved-passage-registry"
 import { sourcesTool } from "./tools/sources.tool"
 import { surfaceResourcesTool } from "./tools/surface-resources.tool"
 
@@ -112,6 +113,7 @@ export class ToolsService extends ServiceWithLLM {
           mcpClose: mcp.disconnect,
           toolDescriptions: {},
           tools: undefined,
+          terminalToolNames: [],
           hasSubAgentTools: false,
         }
     }
@@ -188,8 +190,9 @@ export class ToolsService extends ServiceWithLLM {
     // streaming sessions (proxy, no DB row) can't accumulate form state.
     const hasFillFormTool =
       agentSettings.fillFormEnabled && agentSettings.outputJsonSchema != null && "result" in session
+    const hasLookupKnowledgeBaseTool = agentSettings.documentsRagMode !== DocumentsRagMode.None
     const [
-      hasSourcesTool,
+      hasSourcesToolFeature,
       currentCategoryNames,
       { tools: subAgentTools, toolDescriptions: subAgentToolDescriptions },
     ] = await Promise.all([
@@ -224,24 +227,36 @@ export class ToolsService extends ServiceWithLLM {
     const hasRecalculateConversationSessionMetadataTool =
       includeSessionMetadataTools && (agent.sessionCategories?.length ?? 0) > 0
 
+    // The sources tool cites passages retrieved by the lookup tool, so it is
+    // pointless — and can only produce empty sources — without retrieval.
+    const hasSourcesTool = hasSourcesToolFeature && hasLookupKnowledgeBaseTool
+
+    // Holds the passages retrieved during this turn, so the sources tool resolves
+    // the refs the model cites back to the real chunks instead of trusting ids the
+    // model copied.
+    const passageRegistry = new RetrievedPassageRegistry()
+
     const tools: ToolSet = {
       // Add the document retrieval tool if the agent has a RAG mode enabled
-      ...(agentSettings.documentsRagMode === DocumentsRagMode.None
-        ? {}
-        : {
+      ...(hasLookupKnowledgeBaseTool
+        ? {
             [ToolName.LookupKnowledgeBase]: lookupKnowledgeBaseTool({
               connectScope,
               documentTagIds:
                 agentSettings.documentsRagMode === DocumentsRagMode.Tags
                   ? (agent.documentTags?.map((documentTag) => documentTag.id) ?? [])
                   : [],
+              passageRegistry,
               retrievalService: this.documentChunkRetrievalService,
               onExecute,
             }),
-          }),
+          }
+        : {}),
 
       // Add the sources tool if the agent has the sources tool feature enabled
-      ...(hasSourcesTool ? { [ToolName.Sources]: sourcesTool({ onExecute }) } : {}),
+      ...(hasSourcesTool
+        ? { [ToolName.Sources]: sourcesTool({ passageRegistry, onExecute }) }
+        : {}),
 
       // Add the surface resources tool if the agent has any resource libraries
       ...((agent.resourceLibraries?.length ?? 0) > 0
@@ -292,6 +307,9 @@ export class ToolsService extends ServiceWithLLM {
     return {
       mcpClose: mcp.disconnect,
       tools,
+      // Calling sources ends the turn: it logs the answer's sources and returns
+      // nothing the model can use, so there is no point in another LLM round-trip.
+      terminalToolNames: hasSourcesTool ? [ToolName.Sources] : [],
       toolDescriptions: this.filterToolDescriptions({
         descriptions: { ...mcp.toolDescriptions, ...subAgentToolDescriptions },
         tools,

@@ -79,9 +79,13 @@ function SourceItem({ source }: { source: Source }) {
         </div>
       )}
 
+      {/* The excerpt is the retrieved passage verbatim, so it reads as a quoted
+          paragraph rather than a one-line heading. */}
       {source.chunks.map((chunk) => (
         <Item variant="muted" key={chunk.chunkId}>
-          <ItemTitle>{chunk.partialContent}</ItemTitle>
+          <ItemTitle className="block w-full font-normal whitespace-pre-wrap">
+            {chunk.partialContent}
+          </ItemTitle>
         </Item>
       ))}
 

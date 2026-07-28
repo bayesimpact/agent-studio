@@ -25,6 +25,8 @@ export type BuiltTools = {
   tools: ToolSet | undefined
   mcpClose?: () => Promise<void>
   toolDescriptions: Record<string, string>
+  /** Tools whose call ends the tool loop (see `buildToolLoopStopConditions`). */
+  terminalToolNames: string[]
   hasSubAgentTools: boolean
 }
 
@@ -33,6 +35,7 @@ type BuildLLMConfig = (params: {
   systemPrompt: string
   temperature: AgentSettings["temperature"]
   tools?: ToolSet
+  terminalToolNames?: string[]
 }) => LLMConfig
 
 type GenerateMasterPrompt = (params: {
@@ -185,7 +188,7 @@ async function runSubAgentTool({
     .getActiveSpan()
     ?.setAttribute("ai.telemetry.metadata.subAgentTraceUrl", getTraceUrl(subAgentTraceId))
 
-  const { tools, mcpClose, toolDescriptions } = await buildTools({
+  const { tools, mcpClose, toolDescriptions, terminalToolNames } = await buildTools({
     agentSessionScope: childScope,
     includeSessionMetadataTools: false,
     includeSubAgentTools: false,
@@ -210,6 +213,7 @@ async function runSubAgentTool({
       model: childAgentSettings.model,
       temperature: childAgentSettings.temperature,
       tools,
+      terminalToolNames,
     })
 
     const metadata = buildSubAgentMetadata({

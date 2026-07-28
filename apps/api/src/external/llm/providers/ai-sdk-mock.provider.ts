@@ -15,7 +15,7 @@ export type MockCall = {
 
 type ResolvedMock =
   | { type: "text"; chunks: string[] }
-  | { type: "toolCall"; toolName: string; params: unknown }
+  | { type: "toolCall"; toolName: string; params: unknown; text?: string }
 
 @Injectable()
 export class AISDKMockProvider extends AISDKLLMProviderBase {
@@ -43,6 +43,15 @@ export class AISDKMockProvider extends AISDKLLMProviderBase {
   }
   addToolCallTurn(agentId: string, toolName: string, input: unknown = {}): void {
     this.enqueue(agentId, [{ type: "toolCall", toolName, input }])
+  }
+  /** A single step where the model answers the user and calls a tool at once. */
+  addTextWithToolCallTurn(
+    agentId: string,
+    text: string,
+    toolName: string,
+    input: unknown = {},
+  ): void {
+    this.enqueue(agentId, [{ type: "toolCall", toolName, input, text }])
   }
   private enqueue(agentId: string, values: MockValue[]): void {
     const queue = this.queuesByAgentId.get(agentId) ?? []
@@ -75,6 +84,9 @@ export class AISDKMockProvider extends AISDKLLMProviderBase {
         if (resolved.type === "toolCall") {
           return {
             content: [
+              ...(resolved.text === undefined
+                ? []
+                : [{ type: "text" as const, text: resolved.text }]),
               {
                 type: "tool-call",
                 toolCallId: this.getNextToolCallId(),
@@ -99,7 +111,7 @@ export class AISDKMockProvider extends AISDKLLMProviderBase {
         return {
           stream:
             resolved.type === "toolCall"
-              ? this.toToolCallStream(resolved.toolName, resolved.params)
+              ? this.toToolCallStream(resolved.toolName, resolved.params, resolved.text)
               : this.toTextStream(resolved.chunks),
         }
       },
@@ -128,7 +140,12 @@ export class AISDKMockProvider extends AISDKLLMProviderBase {
         case "stream":
           return { type: "text", chunks: next.chunks }
         case "toolCall":
-          return { type: "toolCall", toolName: next.toolName, params: next.input }
+          return {
+            type: "toolCall",
+            toolName: next.toolName,
+            params: next.input,
+            text: next.text,
+          }
       }
     }
 
@@ -165,8 +182,15 @@ export class AISDKMockProvider extends AISDKLLMProviderBase {
     return `mock-tool-call-${this.toolCallCounter}`
   }
 
-  private toToolCallStream(toolName: string, input: unknown) {
+  private toToolCallStream(toolName: string, input: unknown, text?: string) {
     const parts: LanguageModelV3StreamPart[] = [
+      ...(text === undefined
+        ? []
+        : ([
+            { type: "text-start", id: "text-1" },
+            { type: "text-delta", id: "text-1", delta: text },
+            { type: "text-end", id: "text-1" },
+          ] satisfies LanguageModelV3StreamPart[])),
       {
         type: "tool-call",
         toolCallId: this.getNextToolCallId(),

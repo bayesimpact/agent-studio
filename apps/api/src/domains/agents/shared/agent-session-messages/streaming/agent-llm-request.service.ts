@@ -95,7 +95,7 @@ export class AgentLlmRequestService extends ServiceWithLLM {
   }): Promise<BuiltLLMRequest> {
     const { session, agent, agentSettings, connectScope } = agentSessionScope
 
-    const { tools, mcpClose, toolDescriptions, hasSubAgentTools } =
+    const { tools, mcpClose, toolDescriptions, terminalToolNames, hasSubAgentTools } =
       await this.toolsService.buildTools({
         agentSessionScope,
         includeSessionMetadataTools,
@@ -113,6 +113,7 @@ export class AgentLlmRequestService extends ServiceWithLLM {
       model: agentSettings.model,
       temperature: agentSettings.temperature,
       tools,
+      terminalToolNames,
     })
 
     const metadata: LLMMetadata = this.buildLLMData({

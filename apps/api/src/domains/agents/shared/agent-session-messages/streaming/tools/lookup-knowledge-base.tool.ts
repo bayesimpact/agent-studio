@@ -3,6 +3,7 @@ import { tool } from "ai"
 import { z } from "zod"
 import type { RequiredConnectScope } from "@/common/entities/connect-required-fields"
 import type { DocumentChunkRetrievalService } from "@/domains/documents/embeddings/document-chunk-retrieval.service"
+import type { RetrievedPassageRegistry } from "./retrieved-passage-registry"
 import type { ToolExecutionLog } from "./tool-execution-log"
 
 export const DEFAULT_TOP_K = 20
@@ -36,17 +37,20 @@ const lookupKnowledgeBaseInputSchema = z.object({
     ),
 })
 
-const retrievedChunkSchema = z.object({
-  chunkId: z.string(),
-  documentId: z.string(),
-  documentTitle: z.string(),
-  documentFileName: z.string().nullable(),
-  documentSourceType: z.enum(["project", "webCrawl"]),
-  chunkIndex: z.number().int(),
-  content: z.string(),
-  distance: z.number(),
-  modelName: z.string(),
-  isParentChunk: z.boolean(),
+/**
+ * What the model sees of a retrieved chunk: the passage itself, the document it
+ * comes from, and the short `ref` used to cite it in the {@link ToolName.Sources}
+ * call.
+ *
+ * Deliberately free of chunk/document ids, distances and embedding metadata. The
+ * model used to have to copy those ids back into the sources tool, which it did
+ * unreliably; the real records now live in the {@link RetrievedPassageRegistry} and
+ * are resolved server-side from the refs.
+ */
+const passageSchema = z.object({
+  ref: z.number().int().describe("Short reference for this passage — cite it by this number."),
+  documentTitle: z.string().describe("Title of the document this passage comes from."),
+  content: z.string().describe("The passage text."),
 })
 
 export type LookupKnowledgeBaseExecution = {
@@ -79,11 +83,13 @@ export function buildLookupKnowledgeBaseToolExecutionLog(
 export function lookupKnowledgeBaseTool({
   connectScope,
   documentTagIds = [],
+  passageRegistry,
   retrievalService,
   onExecute,
 }: {
   connectScope: RequiredConnectScope
   documentTagIds?: string[]
+  passageRegistry: RetrievedPassageRegistry
   retrievalService: DocumentChunkRetrievalService
   onExecute: (toolExecution: ToolExecutionLog) => void
 }) {
@@ -91,11 +97,7 @@ export function lookupKnowledgeBaseTool({
     description: LOOKUP_KNOWLEDGE_BASE_DESCRIPTION,
     inputSchema: lookupKnowledgeBaseInputSchema,
     outputSchema: z.object({
-      retrievedChunks: z.array(retrievedChunkSchema),
-      retrievalMetadata: z.object({
-        returnedChunkCount: z.number().int(),
-        topK: z.number().int(),
-      }),
+      passages: z.array(passageSchema),
     }),
     execute: async (input) => {
       const retrievedChunks = await retrievalService.retrieveTopChunks({
@@ -118,11 +120,11 @@ export function lookupKnowledgeBaseTool({
         }),
       )
       return {
-        retrievedChunks,
-        retrievalMetadata: {
-          returnedChunkCount: retrievedChunks.length,
-          topK: DEFAULT_TOP_K,
-        },
+        passages: passageRegistry.register(retrievedChunks).map((passage) => ({
+          ref: passage.ref,
+          documentTitle: passage.documentTitle,
+          content: passage.content,
+        })),
       }
     },
   })

@@ -1,4 +1,5 @@
 import { DEFAULT_TOP_K, lookupKnowledgeBaseTool } from "./lookup-knowledge-base.tool"
+import { RetrievedPassageRegistry } from "./retrieved-passage-registry"
 
 describe("lookupKnowledgeBaseTool", () => {
   it("retrieves chunks for a query alone", async () => {
@@ -12,6 +13,7 @@ describe("lookupKnowledgeBaseTool", () => {
         organizationId: "organization-1",
         projectId: "project-1",
       },
+      passageRegistry: new RetrievedPassageRegistry(),
       retrievalService: retrievalService as never,
       onExecute,
     })
@@ -34,7 +36,7 @@ describe("lookupKnowledgeBaseTool", () => {
     })
   })
 
-  it("retrieves chunks and returns metadata", async () => {
+  it("returns citable passages and keeps ids out of the model's view", async () => {
     const onExecute = jest.fn()
     const retrievalService = {
       retrieveTopChunks: jest.fn().mockResolvedValue([
@@ -43,19 +45,23 @@ describe("lookupKnowledgeBaseTool", () => {
           documentId: "document-1",
           documentTitle: "Onboarding Guide",
           documentFileName: "guide.pdf",
+          documentSourceType: "project",
           chunkIndex: 2,
           content: "The onboarding process lasts two weeks.",
           distance: 0.09,
           modelName: "gemini-embedding-001",
+          isParentChunk: false,
         },
       ]),
     }
 
+    const passageRegistry = new RetrievedPassageRegistry()
     const sdkTool = lookupKnowledgeBaseTool({
       connectScope: {
         organizationId: "organization-1",
         projectId: "project-1",
       },
+      passageRegistry,
       retrievalService: retrievalService as never,
       onExecute,
     })
@@ -66,13 +72,8 @@ describe("lookupKnowledgeBaseTool", () => {
       },
       {} as never,
     )) as {
-      retrievedChunks: unknown[]
-      retrievalMetadata: {
-        returnedChunkCount: number
-        topK: number
-      }
+      passages: { ref: number; documentTitle: string; content: string }[]
     }
-    expect(result).toBeDefined()
 
     expect(retrievalService.retrieveTopChunks).toHaveBeenCalledWith({
       connectScope: {
@@ -83,6 +84,7 @@ describe("lookupKnowledgeBaseTool", () => {
       topK: DEFAULT_TOP_K,
       documentTagIds: [],
     })
+    // The execution log keeps the real ids for tracing…
     expect(onExecute).toHaveBeenCalledWith({
       toolName: "lookup_knowledge_base",
       arguments: {
@@ -94,10 +96,15 @@ describe("lookupKnowledgeBaseTool", () => {
         documentIds: ["document-1"],
       },
     })
-    expect(result.retrievalMetadata).toEqual({
-      returnedChunkCount: 1,
-      topK: DEFAULT_TOP_K,
-    })
+    // …while the model only gets a ref to cite, so it cannot mistype an id.
+    expect(result.passages).toEqual([
+      {
+        ref: 1,
+        documentTitle: "Onboarding Guide",
+        content: "The onboarding process lasts two weeks.",
+      },
+    ])
+    expect(passageRegistry.resolve([1]).passages[0]?.chunkId).toBe("chunk-1")
   })
 
   it("passes agent document tags to retrieval", async () => {
@@ -112,6 +119,7 @@ describe("lookupKnowledgeBaseTool", () => {
         projectId: "project-1",
       },
       documentTagIds: ["tag-1", "tag-2"],
+      passageRegistry: new RetrievedPassageRegistry(),
       retrievalService: retrievalService as never,
       onExecute,
     })

@@ -9,7 +9,15 @@ export type MockValue =
   | { type: "text"; value: string }
   | { type: "object"; value: unknown }
   | { type: "stream"; chunks: string[] }
-  | { type: "toolCall"; toolName: string; input: unknown }
+  /** `text` reproduces a step where the model answers and calls a tool at once. */
+  | { type: "toolCall"; toolName: string; input: unknown; text?: string }
+
+/**
+ * Names of tools whose call ends the tool loop, with no further LLM turn to read
+ * their result (see `buildToolLoopStopConditions`). For internal side-effect tools
+ * such as `sources`, which return nothing the model can act on.
+ */
+type TerminalToolNames = string[]
 
 export type LLMConfig =
   | {
@@ -17,6 +25,7 @@ export type LLMConfig =
       temperature: number
       systemPrompt?: string
       tools?: ToolSet
+      terminalToolNames?: TerminalToolNames
       useExtendedTimeouts?: never
     }
   | {
@@ -24,6 +33,7 @@ export type LLMConfig =
       temperature: number
       systemPrompt?: string
       tools?: ToolSet
+      terminalToolNames?: TerminalToolNames
       /**
        * Opt in to the extended network timeouts on the underlying provider fetch
        * (see {@link AISDKVertexProvider}). Reserved for long-running calls such as

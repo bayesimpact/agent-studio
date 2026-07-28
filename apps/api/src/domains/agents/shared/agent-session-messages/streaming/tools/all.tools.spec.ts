@@ -131,34 +131,181 @@ describe("Tools execution", () => {
     return { fulltextStream, agentCalls }
   }
 
-  it("ToolName.Sources - should works", async () => {
-    const { connectScope, agent, agentSettings, session, project } =
-      await createContextWithSession()
+  const retrievedChunk = {
+    chunkId: "chunk-1",
+    documentId: "document-1",
+    documentTitle: "Onboarding Guide",
+    documentFileName: "guide.pdf",
+    documentSourceType: "project",
+    chunkIndex: 0,
+    content: "Onboarding lasts two weeks.",
+    distance: 0.1,
+    modelName: "gemini-embedding-001",
+    isParentChunk: false,
+  }
 
+  /**
+   * Runs a sourced answer in one of the two shapes real models produce:
+   *
+   * - `citeWithAnswer`: one step that answers AND cites (Gemini-class models).
+   *   The turn must end there instead of spending a step on the tool result.
+   * - `citeThenAnswer`: a citation step of its own, then the answer (models that
+   *   cannot mix text and tool calls in a step, e.g. Gemma through vLLM). The
+   *   loop must keep going, or the user never gets an answer.
+   */
+  const runSourcedAnswer = async ({
+    agent,
+    agentSettings,
+    session,
+    connectScope,
+    refs,
+    shape = "citeWithAnswer",
+  }: {
+    agent: AgentSessionScope["agent"]
+    agentSettings: AgentSessionScope["agentSettings"]
+    session: AgentSessionScope["session"]
+    connectScope: AgentSessionScope["connectScope"]
+    refs: number[]
+    shape?: "citeWithAnswer" | "citeThenAnswer"
+  }) => {
+    mockProvider.addToolCallTurn(agent.id, ToolName.LookupKnowledgeBase, {
+      query: "How long does onboarding take?",
+    })
+    if (shape === "citeWithAnswer") {
+      mockProvider.addTextWithToolCallTurn(
+        agent.id,
+        "Onboarding lasts two weeks.",
+        ToolName.Sources,
+        { refs },
+      )
+      // Would be consumed by a third LLM turn, which must not happen.
+      mockProvider.addTextTurn(agent.id, "Should never be streamed.")
+    } else {
+      mockProvider.addToolCallTurn(agent.id, ToolName.Sources, { refs })
+      mockProvider.addTextTurn(agent.id, "Onboarding lasts two weeks.")
+    }
+
+    const { fulltextStream } = await aggregateStream(
+      service.streamAgentResponse({
+        agentSessionScope: { agent, agentSettings, session, connectScope },
+        userContent: "How long does onboarding take?",
+        notifyClient: () => undefined,
+      }),
+    )
+    const agentCalls = mockProvider.getCalls().filter((call) => call.agentId === agent.id)
+    // The sources panel reads the assistant message's tool calls.
+    const sourcesToolCalls = (
+      await repositories.agentMessageRepository.find({
+        where: { sessionId: session.id, role: "assistant" },
+      })
+    ).flatMap((message) =>
+      (message.toolCalls ?? []).filter((call) => call.name === ToolName.Sources),
+    )
+
+    return { agentCalls, fulltextStream, sourcesToolCalls }
+  }
+
+  const createSourcesContextWithSession = async () => {
+    const context = await createContextWithSession()
     await addFeature({
       featureFlagRepository: repositories.featureFlagRepository,
-      projectId: project.id,
+      projectId: context.project.id,
       featureFlagKey: "sources-tool",
     })
+    mockDocumentChunkRetrievalService.retrieveTopChunks.mockResolvedValue([retrievedChunk])
+    return {
+      ...context,
+      agentSettings: { ...context.agentSettings, documentsRagMode: DocumentsRagMode.All },
+    }
+  }
 
-    const { agentCalls } = await runWithToolCall({
+  it("ToolName.Sources - resolves cited refs to the real retrieved passages", async () => {
+    const { connectScope, agent, agentSettings, session } = await createSourcesContextWithSession()
+
+    const { sourcesToolCalls } = await runSourcedAnswer({
       agent,
       agentSettings,
       session,
       connectScope,
-      toolName: ToolName.Sources,
-      toolInput: {
-        sources: [
-          {
-            documentId: "doc-1",
-            chunks: [{ chunkId: "chunk-1", partialContent: "some content" }],
-          },
-        ],
-      },
+      refs: [1],
     })
 
+    // The model only passed a ref: ids, title, source type and quote come from
+    // the retrieval itself.
+    expect(sourcesToolCalls[0]?.arguments).toEqual({
+      sources: [
+        {
+          documentId: "document-1",
+          documentTitle: "Onboarding Guide",
+          documentSourceType: "project",
+          chunks: [{ chunkId: "chunk-1", partialContent: "Onboarding lasts two weeks." }],
+        },
+      ],
+    })
+  })
+
+  it("ToolName.Sources - ends the turn instead of asking the LLM once more", async () => {
+    const { connectScope, agent, agentSettings, session } = await createSourcesContextWithSession()
+
+    const { agentCalls, fulltextStream } = await runSourcedAnswer({
+      agent,
+      agentSettings,
+      session,
+      connectScope,
+      refs: [1],
+    })
+
+    // One call to look the knowledge base up, one to answer and cite — no third.
     expect(agentCalls).toHaveLength(2)
-    expect(agentCalls[1]?.prompt).toContain("Sources received")
+    expect(fulltextStream).toBe("Onboarding lasts two weeks.")
+  })
+
+  it("ToolName.Sources - still answers when the model cites before answering", async () => {
+    const { connectScope, agent, agentSettings, session } = await createSourcesContextWithSession()
+
+    const { agentCalls, fulltextStream, sourcesToolCalls } = await runSourcedAnswer({
+      agent,
+      agentSettings,
+      session,
+      connectScope,
+      refs: [1],
+      shape: "citeThenAnswer",
+    })
+
+    expect(agentCalls).toHaveLength(3)
+    expect(fulltextStream).toBe("Onboarding lasts two weeks.")
+    expect(sourcesToolCalls).toHaveLength(1)
+  })
+
+  it("ToolName.Sources - shows no source when the model cites an unknown ref", async () => {
+    const { connectScope, agent, agentSettings, session } = await createSourcesContextWithSession()
+
+    const { sourcesToolCalls } = await runSourcedAnswer({
+      agent,
+      agentSettings,
+      session,
+      connectScope,
+      refs: [99],
+    })
+
+    expect(sourcesToolCalls).toEqual([])
+  })
+
+  it("ToolName.Sources - is not built without knowledge base retrieval", async () => {
+    const { connectScope, agent, agentSettings, session } = await createSourcesContextWithSession()
+    const toolsService = setup.module.get<ToolsService>(ToolsService)
+
+    const { tools } = await toolsService.buildTools({
+      agentSessionScope: {
+        agent,
+        agentSettings: { ...agentSettings, documentsRagMode: DocumentsRagMode.None },
+        session,
+        connectScope,
+      },
+      onExecute: () => undefined,
+    })
+
+    expect(tools?.[ToolName.Sources]).toBeUndefined()
   })
 
   it("ToolName.SurfaceResources - should works", async () => {
@@ -368,7 +515,7 @@ describe("Tools execution", () => {
       expect.objectContaining({ query: "What is Bayes?", topK: DEFAULT_TOP_K }),
     )
     expect(agentCalls).toHaveLength(2)
-    expect(agentCalls[1]?.prompt).toContain("retrievalMetadata")
+    expect(agentCalls[1]?.prompt).toContain("passages")
   })
 
   it("ToolName.McpSearchResources - should works", async () => {

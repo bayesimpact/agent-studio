@@ -61,9 +61,11 @@ export abstract class ServiceWithLLM {
     model,
     temperature,
     tools,
+    terminalToolNames,
     useExtendedTimeouts,
   }: {
     tools?: ToolSet
+    terminalToolNames?: string[]
     systemPrompt: string
     model: AgentModel
     temperature: AgentTemperature
@@ -84,6 +86,7 @@ export abstract class ServiceWithLLM {
       temperature: safeTemperature,
       systemPrompt,
       tools,
+      terminalToolNames,
       useExtendedTimeouts,
     } as LLMConfig
   }

@@ -68,6 +68,7 @@ describe("buildSubAgentTools", () => {
         onExecute: (toolExecution: ToolExecutionLog) => void
       }) => ({
         toolDescriptions: {},
+        terminalToolNames: [],
         hasSubAgentTools: false,
         tools: {
           child_lookup: tool({
@@ -198,7 +199,12 @@ describe("buildSubAgentTools", () => {
       agentSettingsService: {
         getLast: jest.fn().mockResolvedValue(childAgentSettings),
       } as never,
-      buildTools: async () => ({ toolDescriptions: {}, tools: {}, hasSubAgentTools: false }),
+      buildTools: async () => ({
+        toolDescriptions: {},
+        tools: {},
+        terminalToolNames: [],
+        hasSubAgentTools: false,
+      }),
       generateMasterPrompt: () => "system prompt",
       getProviderForModel: () =>
         ({
@@ -313,7 +319,12 @@ describe("buildSubAgentTools", () => {
       agentSettingsService: {
         getLast: jest.fn().mockResolvedValue(childAgentSettings),
       } as never,
-      buildTools: async () => ({ toolDescriptions: {}, tools: {}, hasSubAgentTools: false }),
+      buildTools: async () => ({
+        toolDescriptions: {},
+        tools: {},
+        terminalToolNames: [],
+        hasSubAgentTools: false,
+      }),
       generateMasterPrompt: () => "system prompt",
       getProviderForModel: () =>
         ({

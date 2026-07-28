@@ -134,10 +134,12 @@ Conversation requests go through `StreamingService.streamAgentResponse(...)`:
 For `agent.type === "conversation"`, `buildTools(...)` registers:
 
 - `lookup_knowledge_base`
+- `sources` — only when the project has the `sources-tool` feature AND retrieval is enabled
 
 Tool registration and schema live in:
 
 - `lookup-knowledge-base.tool.ts`
+- `sources.tool.ts`
 
 Tool input:
 
@@ -186,7 +188,15 @@ Returned chunk shape includes:
 - `chunkId`, `documentId`, `documentTitle`, `documentFileName`
 - `chunkIndex`, `content`, `distance`, `modelName`
 
-### 6) Final answer generation
+### 6) Passage refs and the sources tool
+
+The model never sees that shape. Each retrieved chunk is registered in a per-turn `RetrievedPassageRegistry` (`tools/retrieved-passage-registry.ts`), which assigns it a small `ref` number, and the tool returns only `{ ref, documentTitle, content }`. Refs keep counting across successive lookups in the same turn, and a chunk retrieved twice keeps its first ref.
+
+When the `sources-tool` feature is enabled (and only alongside retrieval), the `sources` tool takes a single `refs` array. It resolves those refs against the registry and rebuilds the payload the UI reads — document id, title, source type and verbatim excerpt — so ids and quotes always come from the retrieval itself; refs with no matching passage are logged and dropped. The prompt asks the model to call `sources` **before writing its answer**, right after reading the passages: models served through vLLM (Gemma) emit either a tool call or text in a step, never both, so an instruction to cite "alongside the answer" makes them skip the citation entirely.
+
+`sources` is also registered as a **terminal tool**: when a model does cite *within the same step as its answer* (Gemini-class), `buildToolLoopStopConditions` ends the tool loop there instead of spending another LLM turn to read the acknowledgement. A citation step with no text keeps the loop running, since the answer is still owed.
+
+### 7) Final answer generation
 
 The tool output is fed back into the model through the AI SDK tool loop, and the assistant continues generation. Output tokens are streamed to client via SSE.
 

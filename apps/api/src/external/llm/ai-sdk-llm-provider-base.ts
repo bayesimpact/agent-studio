@@ -22,6 +22,7 @@ import type {
 import { removeNullish } from "@/common/utils/remove-nullish"
 import { ResponseHelper } from "@/external/llm/response-helper"
 import { ThoughtTokensHelper } from "@/external/llm/thought-tokens-helper"
+import { buildToolLoopStopConditions } from "@/external/llm/tool-loop-stop-conditions"
 
 // OTel attribute keys under which we publish the raw LLM request body and
 // response. The `ai.telemetry.metadata.` prefix is required so the AI SDK
@@ -245,6 +246,7 @@ export abstract class AISDKLLMProviderBase implements LLMProvider {
       model: this.getLanguageModelWithRawCapture({ config, callOrigin }),
       temperature: config.temperature,
       tools: config.tools,
+      stopWhen: buildToolLoopStopConditions(config.terminalToolNames),
       experimental_telemetry: {
         isEnabled: true,
         functionId: this.buildFunctionIdForStreamChatResponse(aiSDKMessages),

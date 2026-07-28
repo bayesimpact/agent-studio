@@ -14,6 +14,7 @@ This project uses [CalVer](https://calver.org/) (YY.MM.Micro) for product versio
 - Form agents are no longer a separate agent type: any conversation agent can now turn on "Form filling" from a new Tools tab, define the form fields with the visual schema editor (drag to set the order the agent asks its questions), and the agent fills the form from the user's answers during the chat; the collected values open from a "Show form state" button on the agent's replies; the agent creator still offers a "Form" choice, which now creates a conversation agent with form filling already enabled — existing form agents, with their sessions and settings history, are migrated to conversation agents with form filling enabled
 
 ### Fixed
+- Conversation agents show the right sources under their answers: the sources panel is rebuilt from the passages the knowledge base actually returned instead of the document details the agent retyped, so mismatched documents and silently dropped web pages disappear; agents that list their sources together with their answer also stop spending an extra model turn on it
 - Fix some scanned PDF documents importing with no extracted text
 
 ### Security
