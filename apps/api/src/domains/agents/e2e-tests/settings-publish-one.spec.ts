@@ -192,6 +192,27 @@ describe("Agents - publishOne", () => {
     expect(updatedAgentSettings?.revisionName).toBe("RenamedRev")
     expect(updatedAgentSettings?.revisionDesc).toBe("The first revision")
   })
+  it("should reject a payload where revisionName is not a string", async () => {
+    await createContext()
+
+    revision = "1"
+    // Deliberately malformed at the wire level (a number where the schema wants a string), to
+    // prove `agentPublishSchema` is actually enforced and not just present as an unused pipe.
+    const invalidPayload = {
+      payload: { revisionName: 123 },
+    } as unknown as typeof AgentSettingsRoutes.publishOne.request
+    const response = await subject(invalidPayload)
+
+    // ZodValidationPipe throws BadRequestException (400) for a schema violation elsewhere in
+    // this codebase; see create-one.spec.ts's "should reject enabling the fillForm tool without
+    // an outputJsonSchema" case.
+    expectResponse(response, 400)
+
+    const untouchedAgentSettings = await repositories.agentSettingsRepository.findOne({
+      where: { agentId, revision: 1 },
+    })
+    expect(untouchedAgentSettings?.revisionName).toBe("FirstRev")
+  })
   it("should fail with an archived revision - archived", async () => {
     await createContext()
 

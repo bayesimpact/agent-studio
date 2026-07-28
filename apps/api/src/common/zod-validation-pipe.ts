@@ -8,8 +8,8 @@ export class ZodValidationPipe implements PipeTransform {
   transform(value: RequestPayload<unknown> | undefined, _metadata: ArgumentMetadata) {
     try {
       // A request with no body at all (e.g. a POST with every payload field optional) arrives
-      // here as `undefined`, not `{ payload: undefined }` — body-parser never populates `req.body`
-      // when no body was sent. Fall back to `{}` so schemas whose fields are all optional still
+      // here as `undefined`, not `{ payload: undefined }` (body-parser never populates `req.body`
+      // when no body was sent). Fall back to `{}` so schemas whose fields are all optional still
       // validate instead of throwing on `undefined.payload`.
       const parsedValue = this.schema.parse(value?.payload ?? {})
       return { payload: parsedValue }
