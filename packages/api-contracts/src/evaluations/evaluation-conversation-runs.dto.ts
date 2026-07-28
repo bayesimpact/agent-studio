@@ -37,6 +37,10 @@ export type AgentRunSettingsSnapshotDto = {
   locale: AgentLocale
   model: AgentModel
   revision: number
+  // Both are set at publish time and optional, normalised to "" when unset
+  // (mirrors AgentSettingsDto).
+  revisionName: string
+  revisionDesc: string
   temperature: AgentTemperature
 }
 
