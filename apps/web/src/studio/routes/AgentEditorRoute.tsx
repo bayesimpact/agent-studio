@@ -6,7 +6,6 @@ import {
   selectAgentSettingsData,
   selectLastAgentSettings,
 } from "@/common/features/agents/settings/agent-settings.selectors"
-import { agentSettingsActions } from "@/common/features/agents/settings/agent-settings.slice"
 import { selectCurrentProjectData } from "@/common/features/projects/projects.selectors"
 import { useGetAgentRoute } from "@/common/hooks/use-get-path"
 import { useMount } from "@/common/hooks/use-mount"
@@ -31,9 +30,6 @@ export function AgentEditorRoute() {
     agent.type === "conversation" && project.featureFlags.includes("agent-orchestration")
 
   useMount({ actions: agentSubAgentsActions, condition: hasOrchestration })
-  // The route stays mounted while the current agent changes (e.g. navigating from one agent's
-  // editor to another's), so the settings load must re-run whenever the agent id changes.
-  useMount({ actions: agentSettingsActions, refreshOn: [agent.id] })
 
   if (hasOrchestration) {
     return (
