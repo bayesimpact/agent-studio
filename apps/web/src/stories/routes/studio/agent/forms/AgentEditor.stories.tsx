@@ -50,6 +50,17 @@ const conversationAgentSettings = agentSettingsFactory
     greetingMessage: "Hi! How can I help you today?",
   })
 
+// Same agent, but its newest settings revision is an unpublished draft: the version-history
+// trigger in the editor header must mark it as a draft rather than looking live.
+const conversationAgentDraftSettings = agentSettingsFactory
+  .transient({ agent: conversationAgent })
+  .build({
+    revision: conversationAgentSettings.revision + 1,
+    isDraft: true,
+    documentsRagMode: DocumentsRagMode.Tags,
+    greetingMessage: "Hi! How can I help you today?",
+  })
+
 const resourceAgent = agentFactory.transient({ project }).build({
   type: "conversation",
   name: "Resource Navigator",
@@ -119,6 +130,26 @@ export const ConversationEdit: Story = {
   args: {
     agent: conversationAgent,
     settings: conversationAgentSettings,
+  },
+}
+
+export const ConversationEditDraft: Story = {
+  decorators: [
+    withRedux({
+      state: mergeSeeds(
+        seed.currentProject(projectWithOrchestration),
+        seed.studio.documentTags(documentTags),
+        seed.studio.mcpServers([]),
+        seed.agents([conversationAgent, resourceAgent, policyAgent], {
+          currentId: conversationAgent.id,
+        }),
+        seed.studio.agentSettings([conversationAgentDraftSettings, conversationAgentSettings]),
+      ),
+    }),
+  ],
+  args: {
+    agent: conversationAgent,
+    settings: conversationAgentDraftSettings,
   },
 }
 

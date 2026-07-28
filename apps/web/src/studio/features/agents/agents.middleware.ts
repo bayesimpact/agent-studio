@@ -4,6 +4,7 @@ import { updateAgentSettings } from "@/common/features/agents/settings/agent-set
 import { fetchMe } from "@/common/features/me/me.thunks"
 import { notificationsActions } from "@/common/features/notifications/notifications.slice"
 import type { AppDispatch, RootState } from "@/common/store/types"
+import i18n from "@/i18n"
 import {
   createAgent,
   deleteAgent,
@@ -33,6 +34,28 @@ function isSilent(action: UnknownAction): boolean {
   const arg = meta.arg
   if (typeof arg !== "object" || arg === null || !("silent" in arg)) return false
   return arg.silent === true
+}
+
+/**
+ * True when the save this action represents left the agent's settings in an unpublished draft
+ * revision, rather than live. `updateAgentSettings` always does that (the API never republishes
+ * in place). The two composite thunks (`saveAgentGeneral`, `saveAgentSources`) only sometimes
+ * touch settings: a General-tab save of just the name, or a Sources-tab save of just the
+ * document tag set, never calls `updateAgentSettings` at all. So their own `fulfilled` is
+ * checked against which fields were actually submitted, mirroring the check each thunk itself
+ * makes before dispatching `updateAgentSettings`. Every other action here (rename, tags,
+ * resource libraries, session categories) is agent-level only and is live immediately.
+ */
+function producedSettingsDraft(action: UnknownAction): boolean {
+  if (updateAgentSettings.fulfilled.match(action)) return true
+  if (saveAgentGeneral.fulfilled.match(action)) {
+    const { name: _name, ...settingsFields } = action.meta.arg.fields
+    return Object.keys(settingsFields).length > 0
+  }
+  if (saveAgentSources.fulfilled.match(action)) {
+    return action.meta.arg.documentsRagMode !== undefined
+  }
+  return false
 }
 
 function registerListeners() {
@@ -117,7 +140,9 @@ function registerListeners() {
 
       listenerApi.dispatch(
         notificationsActions.show({
-          title: "Agent updated successfully",
+          title: producedSettingsDraft(action)
+            ? i18n.t("agent:draftSaveNotification")
+            : "Agent updated successfully",
           type: "success",
         }),
       )

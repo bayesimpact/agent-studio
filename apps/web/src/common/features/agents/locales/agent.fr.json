@@ -4,6 +4,7 @@
     "agents": "Agents",
     "selectAgent": "Sélectionner un agent",
     "settings": "Paramètres de l'agent",
+    "draftSaveNotification": "Paramètres enregistrés comme brouillon, à publier pour devenir actifs.",
     "props": {
       "createdAt": "Créé le",
       "instructions": "Instructions",

@@ -4,6 +4,7 @@
     "agents": "Agents",
     "selectAgent": "Select Agent",
     "settings": "Agent Settings",
+    "draftSaveNotification": "Settings saved as a draft that needs publishing to go live.",
     "props": {
       "createdAt": "Created At",
       "instructions": "Instructions",

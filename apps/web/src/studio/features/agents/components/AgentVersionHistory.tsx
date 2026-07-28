@@ -19,8 +19,10 @@ import { useAppSelector } from "@/common/store/hooks"
 import { AgentVersionExplorer } from "./AgentVersionExplorer"
 
 /**
- * Entry point of the agent settings versioning UI: a trigger button showing the current
- * revision, opening a side sheet with the revision timeline, per-field diffs and restore.
+ * Entry point of the agent settings versioning UI: a trigger button showing the newest
+ * revision (marked as a draft when it is not yet published, so an edit that only produced a
+ * draft doesn't look live from outside the sheet), opening a side sheet with the revision
+ * timeline, per-field diffs, restore and publish.
  */
 export function AgentVersionHistory({
   agent,
@@ -43,7 +45,10 @@ export function AgentVersionHistory({
         <Button type="button" variant="outline" size="sm">
           <HistoryIcon className="size-4" />
           {t("agent:history.button")}
-          <Badge variant="secondary">v{settings.revision}</Badge>
+          <Badge variant={settings.isDraft ? "outline" : "secondary"}>
+            v{settings.revision}
+            {settings.isDraft && ` · ${t("agent:history.draftBadge")}`}
+          </Badge>
         </Button>
       </SheetTrigger>
       <SheetContent side="right" className="w-full gap-0 sm:max-w-4xl">

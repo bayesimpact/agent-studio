@@ -46,11 +46,14 @@ function buildComparison(
 
   const live = versions.find((version) => !version.isDraft)
 
-  // Default to the previous version (index 1) — the one users open the history to inspect —
-  // until they pick another revision from the timeline. Clamp to the current version when it
-  // is the only one available.
+  // Default to the draft when one is pending publish: that's what a user opens the sheet to
+  // act on, and it is always `current` (index 0) since a draft is always the newest revision.
+  // Otherwise default to the previous version (index 1), the one users open the history to
+  // inspect, until they pick another revision from the timeline. Clamp to the current version
+  // when it is the only one available.
   const requestedIndex = versions.findIndex((version) => version.revision === selectedRevision)
-  const selectedIndex = requestedIndex === -1 ? Math.min(1, versions.length - 1) : requestedIndex
+  const defaultIndex = current.isDraft ? 0 : Math.min(1, versions.length - 1)
+  const selectedIndex = requestedIndex === -1 ? defaultIndex : requestedIndex
 
   const selected = versions[selectedIndex] ?? current
   const previous = versions[selectedIndex + 1]
