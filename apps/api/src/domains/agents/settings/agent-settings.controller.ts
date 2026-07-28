@@ -1,6 +1,7 @@
 import {
   type AgentSettingsDto,
   AgentSettingsRoutes,
+  agentPublishSchema,
   updateAgentSettingsSchema,
 } from "@caseai-connect/api-contracts"
 import {
@@ -37,11 +38,12 @@ import { AgentSettingsService } from "./agent-settings.service"
 export class AgentSettingsController {
   constructor(private readonly agentSettingsService: AgentSettingsService) {}
 
-  // canList, not canUpdate: the eval scope reads the published revision of an agent it does not
-  // manage (see the extraction run dialog in Task 12). The old handler on AgentsController used
-  // canUpdate, which would 403 there.
+  // canView, not canUpdate or canList: the eval scope reads the published revision of an agent it
+  // does not manage, so canUpdate (agent admin/owner) would 403 it. canList only checks
+  // project-level access with no agent membership check, which would let any project member read
+  // any agent's revisions by id; canView requires agent membership too.
   @Get(AgentSettingsRoutes.getAll.path)
-  @CheckPolicy((policy) => policy.canList())
+  @CheckPolicy((policy) => policy.canView())
   @AddContext("agent")
   async getAll(
     @Req() request: EndpointRequestWithAgent,
@@ -140,7 +142,11 @@ export class AgentSettingsController {
   @TrackActivity({ action: "agentSettings.publish", entityFrom: "agentSettings" })
   async publishOne(
     @Req() request: EndpointRequestWithAgent,
-    @Body() { payload }: typeof AgentSettingsRoutes.publishOne.request,
+    // Scoped to this parameter rather than `@UsePipes()` at the method level: this handler also
+    // has a `@Param("revision")` argument, and a method-scoped pipe runs against every parameter,
+    // which would feed the revision string through `agentPublishSchema` too and corrupt it.
+    @Body(new ZodValidationPipe(agentPublishSchema))
+    { payload }: typeof AgentSettingsRoutes.publishOne.request,
     @Param("revision") revisionParam: string,
   ): Promise<typeof AgentSettingsRoutes.publishOne.response> {
     const revision = Number(revisionParam)

@@ -77,7 +77,17 @@ describe("Agents - archiveOne", () => {
       .transient({ organization: organization, project, agent })
       .build({ ...agentSettingsValuesRev3Draft, revision: 3, isDraft: true })
 
-    await repositories.agentSettingsRepository.save([agentSettings2, agentSettings3])
+    // A second published, non-archived revision so revision 1 is not the agent's only readable
+    // one: several tests below archive revision 1 and expect it to still be allowed.
+    const agentSettings4 = agentSettingsFactory
+      .transient({ organization: organization, project, agent })
+      .build({ ...agentSettingsValuesRev1, revision: 4 })
+
+    await repositories.agentSettingsRepository.save([
+      agentSettings2,
+      agentSettings3,
+      agentSettings4,
+    ])
 
     organizationId = organization.id
     projectId = project.id
@@ -112,6 +122,26 @@ describe("Agents - archiveOne", () => {
     })
     expect(updatedAgentSettings?.isArchived).toBeTruthy()
     await expectActivityCreated("agentSettings.archive")
+  })
+
+  it("should refuse to archive the only remaining published, non-archived revision", async () => {
+    const { agent } = await createContext()
+
+    // Archive revision 4 first so revision 1 becomes the agent's only non-archived published
+    // revision.
+    await repositories.agentSettingsRepository.update(
+      { agentId: agent.id, revision: 4 },
+      { isArchived: true },
+    )
+
+    revision = "1"
+    const response = await subject()
+    expectResponse(response, 422)
+
+    const untouched = await repositories.agentSettingsRepository.findOne({
+      where: { agentId, revision: 1 },
+    })
+    expect(untouched?.isArchived).toBeFalsy()
   })
 
   it("should fail with a draft revision - draft", async () => {

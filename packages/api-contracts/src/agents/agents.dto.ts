@@ -297,7 +297,7 @@ export type UpdateAgentDocumentTagsDto = z.infer<typeof updateAgentDocumentTagsS
 export type UpdateAgentResourceLibrariesDto = z.infer<typeof updateAgentResourceLibrariesSchema>
 export type UpdateAgentSessionCategoriesDto = z.infer<typeof updateAgentSessionCategoriesSchema>
 
-const agentPublishSchema = z.object({
+export const agentPublishSchema = z.object({
   revisionName: z.string().optional(),
   revisionDesc: z.string().optional(),
 })

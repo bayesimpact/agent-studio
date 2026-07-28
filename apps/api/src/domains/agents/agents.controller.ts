@@ -91,15 +91,12 @@ export class AgentsController {
   ): Promise<typeof AgentsRoutes.updateOne.response> {
     const agentId = request.agent.id
 
-    const agent = await this.agentsService.updateAgent({
+    await this.agentsService.updateAgent({
       connectScope: getRequiredConnectScope(request),
       agentId,
       fieldsToUpdate: payload,
     })
 
-    if (!agent) {
-      throw new Error("Agent not updated")
-    }
     return { data: { success: true } }
   }
 

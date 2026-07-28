@@ -114,6 +114,7 @@ describe("Agents - createOne", () => {
     expect(agentSettings?.model).toBe(AgentModel.Gemini25Flash)
     expect(agentSettings?.locale).toBe(AgentLocale.EN)
     expect(agentSettings?.documentsRagMode).toBe(DocumentsRagMode.All)
+    expect(agentSettings?.isDraft).toBe(false)
     await expectActivityCreated("agent.create")
   })
 

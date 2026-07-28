@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from "@nestjs/common"
 import { InjectRepository } from "@nestjs/typeorm"
-import type { Repository } from "typeorm"
+import { Not, type Repository } from "typeorm"
 import { ConnectRepository } from "@/common/entities/connect-repository"
 import type { RequiredConnectScope } from "@/common/entities/connect-required-fields"
 import { requiresUpdateAgentSettings } from "@/domains/agents/settings/agent.settings.functions"
@@ -95,6 +95,30 @@ export class AgentSettingsService {
     })
   }
 
+  /**
+   * Writes revision 1 as already published, in a single row. Used by `createAgent`: a brand new
+   * agent must have a readable revision from the moment it exists, since every runtime read
+   * (playground sessions, streaming, extraction, campaigns, eval runs) goes through `getLast`,
+   * which excludes drafts by default. Do not route through `updateSettings` here: that would open
+   * a draft first and require a second write to publish it.
+   */
+  async createInitialRevision({
+    connectScope,
+    agentId,
+    agentSettings,
+  }: {
+    connectScope: RequiredConnectScope
+    agentId: string
+    agentSettings: Partial<AgentSettingsValues>
+  }): Promise<AgentSettings> {
+    return await this.agentSettingsConnectRepository.createAndSave(connectScope, {
+      ...agentSettings,
+      revision: 1,
+      agentId,
+      isDraft: false,
+    })
+  }
+
   async publish({
     connectScope,
     agentId,
@@ -115,8 +139,8 @@ export class AgentSettingsService {
     // if (!found[0].isDraft) return undefined  => disable check so we can call publish again to update name and/or desc
     if (found[0].isArchived) return undefined
     const toUpdate: AgentSettings = found[0]
-    toUpdate.revisionName = revisionName
-    toUpdate.revisionDesc = revisionDesc
+    toUpdate.revisionName = revisionName ?? toUpdate.revisionName
+    toUpdate.revisionDesc = revisionDesc ?? toUpdate.revisionDesc
     toUpdate.isDraft = false
 
     const updated = await this.agentSettingsConnectRepository.updateOneById({
@@ -143,6 +167,14 @@ export class AgentSettingsService {
     })
     if (!found || found.length !== 1) return { success: false }
     if (!found[0] || found[0].isDraft) return { success: false }
+
+    // An agent must always have at least one non-archived published revision for `getLast` to
+    // find, so refuse to archive this one if no other published, non-archived revision would
+    // remain.
+    const otherPublishedRevisions = await this.agentSettingsConnectRepository.find(connectScope, {
+      where: { agentId, isDraft: false, isArchived: false, revision: Not(revision) },
+    })
+    if (otherPublishedRevisions.length === 0) return { success: false }
 
     return this.agentSettingsConnectRepository.updateOneById({
       connectScope,

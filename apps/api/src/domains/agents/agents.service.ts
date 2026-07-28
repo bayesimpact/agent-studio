@@ -100,7 +100,7 @@ export class AgentsService {
       resourceLibraries,
     })
     const agentSettingsValues = extractAgentSettingsCreateFields(agentFields)
-    const agentSettings = await this.agentSettingsService.updateSettings({
+    const agentSettings = await this.agentSettingsService.createInitialRevision({
       connectScope,
       agentId: agent.id,
       agentSettings: { ...agentSettingsValues, outputJsonSchema, greetingMessage },

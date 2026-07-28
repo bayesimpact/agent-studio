@@ -160,6 +160,38 @@ describe("Agents - publishOne", () => {
     expect(updatedAgentSettings?.revisionDesc).toBe("revisionDesc")
     await expectActivityCreated("agentSettings.publish")
   })
+  it("should preserve the existing name and description when publishing with no body", async () => {
+    await createContext()
+
+    revision = "1"
+    const response = await subject()
+    expectResponse(response, 201)
+    const agentSettings: AgentSettingsDto = response.body.data
+    expect(agentSettings.revisionName).toBe("FirstRev")
+    expect(agentSettings.revisionDesc).toBe("The first revision")
+
+    const updatedAgentSettings = await repositories.agentSettingsRepository.findOne({
+      where: { agentId, revision: 1 },
+    })
+    expect(updatedAgentSettings?.revisionName).toBe("FirstRev")
+    expect(updatedAgentSettings?.revisionDesc).toBe("The first revision")
+  })
+  it("should set the name while preserving the existing description when only a name is provided", async () => {
+    await createContext()
+
+    revision = "1"
+    const response = await subject({ payload: { revisionName: "RenamedRev" } })
+    expectResponse(response, 201)
+    const agentSettings: AgentSettingsDto = response.body.data
+    expect(agentSettings.revisionName).toBe("RenamedRev")
+    expect(agentSettings.revisionDesc).toBe("The first revision")
+
+    const updatedAgentSettings = await repositories.agentSettingsRepository.findOne({
+      where: { agentId, revision: 1 },
+    })
+    expect(updatedAgentSettings?.revisionName).toBe("RenamedRev")
+    expect(updatedAgentSettings?.revisionDesc).toBe("The first revision")
+  })
   it("should fail with an archived revision - archived", async () => {
     await createContext()
 

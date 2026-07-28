@@ -146,6 +146,13 @@ describe("AgentSettings", () => {
         repositories,
         true,
       )
+      // A second published, non-archived revision so revision 1 is not the agent's only
+      // readable one: an agent must always keep at least one for `getLast` to find.
+      const agentSettings2 = agentSettingsFactory
+        .transient({ organization, project, agent })
+        .build({ ...agentSettingsValuesRev1, revision: 2 })
+      await setup.getRepository(AgentSettings).save(agentSettings2)
+
       const { success } = await service.archive({
         connectScope: { organizationId: organization.id, projectId: project.id },
         agentId: agent.id,
@@ -158,9 +165,29 @@ describe("AgentSettings", () => {
         includesDraft: true,
         includesArchived: true,
       })
+      expect(settings.length).toBe(2)
+      const archivedSetting = settings.find((setting) => setting.revision === 1)
+      assertOnSettings(agentSettingsValuesRev1, archivedSetting)
+      expect(archivedSetting?.isArchived).toBeTruthy()
+    })
+    it("archive should NOT work - only remaining published revision", async () => {
+      const { organization, project, agent } = await createAgentWithSettings(
+        setup,
+        repositories,
+        true,
+      )
+      const { success } = await service.archive({
+        connectScope: { organizationId: organization.id, projectId: project.id },
+        agentId: agent.id,
+        revision: 1,
+      })
+      expect(success).toBeFalsy()
+      const settings = await service.getAll({
+        connectScope: { organizationId: organization.id, projectId: project.id },
+        agentId: agent.id,
+      })
       expect(settings.length).toBe(1)
-      assertOnSettings(agentSettingsValuesRev1, settings[0])
-      expect(settings[0]?.isArchived).toBeTruthy()
+      expect(settings[0]?.isArchived).toBeFalsy()
     })
     it("archive should NOT works - draft", async () => {
       const { organization, project, agent } = await createAgentWithSettings(setup, repositories)
@@ -242,7 +269,7 @@ describe("AgentSettings", () => {
   })
 
   describe("AgentService extension", () => {
-    it("createAgent should also create draft settings with revision = 1", async () => {
+    it("createAgent should create published settings with revision = 1", async () => {
       const { organization, project, user } = await createOrganizationWithProject(repositories)
       const { agent, agentSettings } = await agentService.createAgent({
         connectScope: {
@@ -259,17 +286,20 @@ describe("AgentSettings", () => {
       })
 
       assertOnSettings(agentSettingsValuesRev1, agentSettings)
+      expect(agentSettings.isDraft).toBe(false)
 
+      // `getLast` excludes drafts by default: a freshly created agent must be readable through
+      // this same default, since every runtime read (playground sessions, streaming, extraction,
+      // campaigns, eval runs) goes through it.
       const savedSettings = await service.getLast({
         connectScope: {
           organizationId: organization.id,
           projectId: project.id,
         },
         agentId: agent.id,
-        includesDraft: true,
       })
       assertOnSettings(agentSettingsValuesRev1, savedSettings)
-      expect(savedSettings?.isDraft).toBeTruthy()
+      expect(savedSettings?.isDraft).toBe(false)
       expect(savedSettings?.revision).toBe(1)
     })
     it("updateSettings should also create draft settings with revision = last revision +1 - no existing draft", async () => {
