@@ -11,6 +11,8 @@ import { useFeatureFlags } from "@/common/hooks/use-feature-flags"
 import { usePreventLeave } from "@/common/hooks/use-prevent-leave"
 import { useValue } from "@/common/hooks/use-value"
 import { ErrorRoute } from "@/common/routes/ErrorRoute"
+import { ADS } from "@/common/store/async-data-status"
+import { useAppSelector } from "@/common/store/hooks"
 import { AgentEmbedTab } from "@/studio/features/agent-embed-configs/components/AgentEmbedTab"
 import type { AgentSubAgent } from "@/studio/features/agent-sub-agents/agent-sub-agents.models"
 import { selectMcpServersData } from "@/studio/features/mcp-servers/mcp-servers.selectors"
@@ -68,7 +70,12 @@ export function AgentEditor({
   const { t } = useTranslation()
   const project = useValue(selectCurrentProjectData)
   const { hasFeature } = useFeatureFlags(project)
-  const projectMcpServers = useValue(selectMcpServersData)
+  // MCP servers load on the project route via a listener middleware that is not part of the
+  // route's `AsyncRoute` gate (see AgentEditorRoute), so this editor can render before the list
+  // resolves. Treat "not loaded yet" the same as "no servers yet": the tab below is already
+  // gated on a non-empty list, so it simply appears once the data arrives.
+  const mcpServersData = useAppSelector(selectMcpServersData)
+  const projectMcpServers = ADS.isFulfilled(mcpServersData) ? mcpServersData.value : []
 
   const tabs = useMemo<TabConfig[]>(() => {
     const isConversation = agent.type === "conversation"

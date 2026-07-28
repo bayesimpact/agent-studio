@@ -126,9 +126,6 @@ export const ConversationAgent: Story = {
           // `ConversationAgentSessionsRoute` wraps every nested route under the agent, including
           // this edit page, and gates on the session list being loaded.
           seed.conversationAgentSessions({ [parentAgent.id]: [] }),
-          // `AgentEditor` reads the project's MCP servers unconditionally, even when the
-          // "agent-mcp" feature flag is off, so the slice needs a seeded (empty) value here.
-          seed.studio.mcpServers([]),
         ),
         services: {
           agents: buildMockAgentsService(allAgents),

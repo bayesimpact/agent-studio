@@ -117,9 +117,6 @@ export const ConversationEdit: Story = {
       state: mergeSeeds(
         seed.currentProject(projectWithOrchestration),
         seed.studio.documentTags(documentTags),
-        // `AgentEditor` reads the project's MCP servers unconditionally, even when the
-        // "agent-mcp" feature flag is off, so the slice needs a seeded (empty) value here.
-        seed.studio.mcpServers([]),
         seed.agents([conversationAgent, resourceAgent, policyAgent], {
           currentId: conversationAgent.id,
         }),
@@ -139,7 +136,6 @@ export const ConversationEditDraft: Story = {
       state: mergeSeeds(
         seed.currentProject(projectWithOrchestration),
         seed.studio.documentTags(documentTags),
-        seed.studio.mcpServers([]),
         seed.agents([conversationAgent, resourceAgent, policyAgent], {
           currentId: conversationAgent.id,
         }),
@@ -159,7 +155,6 @@ export const ExtractionEdit: Story = {
       state: mergeSeeds(
         seed.currentProject(project),
         seed.studio.documentTags(documentTags),
-        seed.studio.mcpServers([]),
         seed.agents([extractionAgent], { currentId: extractionAgent.id }),
         seed.studio.agentSettings([extractionAgentSettings]),
       ),
@@ -177,7 +172,6 @@ export const ConversationWithFillForm: Story = {
       state: mergeSeeds(
         seed.currentProject(project),
         seed.studio.documentTags(documentTags),
-        seed.studio.mcpServers([]),
         seed.agents([fillFormAgent], { currentId: fillFormAgent.id }),
         seed.studio.agentSettings([fillFormAgentSettings]),
       ),
