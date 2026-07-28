@@ -220,6 +220,79 @@ describe("PermissionService", () => {
 
       await expect(service.listResourceIds(user.id, "organization")).resolves.toEqual([])
     })
+
+    it("combines ids inherited from an organization role and a project role", async () => {
+      const repositories = setup.getAllRepositories()
+      // roles are not wiped by clearTestDatabase: remove any leftover ad-hoc role
+      await repositories.roleRepository.delete({ key: "test_org_agent_reader_ids" })
+
+      try {
+        // org A: ad-hoc org role granting agent.read, one agent
+        const { organization: organizationA } = await createOrganizationWithOwner(repositories)
+        const projectA = projectFactory.transient({ organization: organizationA }).build()
+        await repositories.projectRepository.save(projectA)
+        const agentA = agentFactory
+          .transient({ organization: organizationA, project: projectA })
+          .build()
+        await repositories.agentRepository.save(agentA)
+
+        // org B: project role granting agent.read, one agent
+        const { organization: organizationB } = await createOrganizationWithOwner(repositories)
+        const projectB = projectFactory.transient({ organization: organizationB }).build()
+        await repositories.projectRepository.save(projectB)
+        const agentB = agentFactory
+          .transient({ organization: organizationB, project: projectB })
+          .build()
+        await repositories.agentRepository.save(agentB)
+
+        const orgRole = await repositories.roleRepository.save(
+          repositories.roleRepository.create({
+            key: "test_org_agent_reader_ids",
+            name: "Test Org Agent Reader (ids)",
+            scopeType: "organization",
+          }),
+        )
+        await setup.dataSource.query(
+          `INSERT INTO role_permission (role_id, permission_key) VALUES ($1, $2)`,
+          [orgRole.id, "agent.read"],
+        )
+        const projectOwnerRole = await repositories.roleRepository.findOneOrFail({
+          where: { key: PROJECT_ROLES.owner },
+        })
+
+        const user = userFactory.build()
+        await repositories.userRepository.save(user)
+        await repositories.userMembershipRepository.save([
+          userMembershipFactory.build({
+            userId: user.id,
+            resourceType: "organization",
+            resourceId: organizationA.id,
+            role: "member",
+            roleId: orgRole.id,
+          }),
+          userMembershipFactory.build({
+            userId: user.id,
+            resourceType: "project",
+            resourceId: projectB.id,
+            role: "owner",
+            roleId: projectOwnerRole.id,
+          }),
+        ])
+
+        // both inheritance sources must contribute: matching the organization
+        // parent type must not shadow the project parent type
+        const agentIds = await service.listResourceIds(user.id, "agent")
+        expect(agentIds.sort()).toEqual([agentA.id, agentB.id].sort())
+      } finally {
+        const testRole = await repositories.roleRepository.findOne({
+          where: { key: "test_org_agent_reader_ids" },
+        })
+        if (testRole) {
+          await repositories.userMembershipRepository.delete({ roleId: testRole.id })
+          await repositories.roleRepository.delete({ id: testRole.id })
+        }
+      }
+    })
   })
 
   describe("listResourcePermissions", () => {
@@ -535,6 +608,85 @@ describe("PermissionService", () => {
       const permissionsByProjectId = await service.listResourcePermissions(user.id, "project")
 
       expect(permissionsByProjectId.size).toBe(0)
+    })
+
+    it("combines permissions inherited from an organization role and a project role, agreeing with has()", async () => {
+      const repositories = setup.getAllRepositories()
+      // roles are not wiped by clearTestDatabase: remove any leftover ad-hoc role
+      await repositories.roleRepository.delete({ key: "test_org_agent_reader_perms" })
+
+      try {
+        // org A: ad-hoc org role granting agent.read, one agent
+        const { organization: organizationA } = await createOrganizationWithOwner(repositories)
+        const projectA = projectFactory.transient({ organization: organizationA }).build()
+        await repositories.projectRepository.save(projectA)
+        const agentA = agentFactory
+          .transient({ organization: organizationA, project: projectA })
+          .build()
+        await repositories.agentRepository.save(agentA)
+
+        // org B: project role granting agent.read, one agent
+        const { organization: organizationB } = await createOrganizationWithOwner(repositories)
+        const projectB = projectFactory.transient({ organization: organizationB }).build()
+        await repositories.projectRepository.save(projectB)
+        const agentB = agentFactory
+          .transient({ organization: organizationB, project: projectB })
+          .build()
+        await repositories.agentRepository.save(agentB)
+
+        const orgRole = await repositories.roleRepository.save(
+          repositories.roleRepository.create({
+            key: "test_org_agent_reader_perms",
+            name: "Test Org Agent Reader (perms)",
+            scopeType: "organization",
+          }),
+        )
+        await setup.dataSource.query(
+          `INSERT INTO role_permission (role_id, permission_key) VALUES ($1, $2)`,
+          [orgRole.id, "agent.read"],
+        )
+        const projectOwnerRole = await repositories.roleRepository.findOneOrFail({
+          where: { key: PROJECT_ROLES.owner },
+        })
+
+        const user = userFactory.build()
+        await repositories.userRepository.save(user)
+        await repositories.userMembershipRepository.save([
+          userMembershipFactory.build({
+            userId: user.id,
+            resourceType: "organization",
+            resourceId: organizationA.id,
+            role: "member",
+            roleId: orgRole.id,
+          }),
+          userMembershipFactory.build({
+            userId: user.id,
+            resourceType: "project",
+            resourceId: projectB.id,
+            role: "owner",
+            roleId: projectOwnerRole.id,
+          }),
+        ])
+
+        // has() grants agent B through the project parent...
+        await expect(
+          service.has(user.id, "agent.read", { type: "agent", id: agentB.id }),
+        ).resolves.toBe(true)
+
+        // ...so the listing must surface it too: matching the organization
+        // parent type must not shadow the project parent type
+        const permissionsByAgentId = await service.listResourcePermissions(user.id, "agent")
+        expect([...permissionsByAgentId.keys()].sort()).toEqual([agentA.id, agentB.id].sort())
+        expect(permissionsByAgentId.get(agentB.id)).toEqual(["agent.read"])
+      } finally {
+        const testRole = await repositories.roleRepository.findOne({
+          where: { key: "test_org_agent_reader_perms" },
+        })
+        if (testRole) {
+          await repositories.userMembershipRepository.delete({ roleId: testRole.id })
+          await repositories.roleRepository.delete({ id: testRole.id })
+        }
+      }
     })
   })
 

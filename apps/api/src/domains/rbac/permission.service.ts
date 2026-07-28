@@ -61,29 +61,30 @@ export class PermissionService {
     // - access through parent resources (slightly harder)
 
     const directResourceIds = await this.listResourceIdsFromDirectAccess(userId, resourceType)
-    let resourceIdsFromParent = [] as string[]
+    const resourceIdsFromParents: string[] = []
 
-    // from top level resource types (org) to child resource types (project), find a parent resource which
-    // owns the read permission for the requested resource type.
+    // every parent resource type contributes: a user can inherit access through
+    // several sources at once (e.g. an org role AND a project role for agents),
+    // so the loop accumulates instead of stopping at the first match
     for (const parentResourceType of PARENT_RESOURCE_TYPE_MAP[resourceType]) {
+      // parent resources qualify when their role grants the read permission
+      // for the requested resource type
       const parentResourceIds = await this.listResourceIdsMatchingPermission(
         userId,
         parentResourceType,
         RESOURCE_TYPE_READ_PERMISSION_MAP[resourceType],
       )
+      if (parentResourceIds.length === 0) continue
 
-      if (parentResourceIds.length > 0) {
-        const childRows = await this.fetchChildResourceRows(
-          resourceType,
-          parentResourceType,
-          parentResourceIds,
-        )
-        resourceIdsFromParent = childRows.map((row) => row.resourceId)
-        break
-      }
+      const childRows = await this.fetchChildResourceRows(
+        resourceType,
+        parentResourceType,
+        parentResourceIds,
+      )
+      resourceIdsFromParents.push(...childRows.map((row) => row.resourceId))
     }
 
-    return [...new Set([...directResourceIds, ...resourceIdsFromParent])]
+    return [...new Set([...directResourceIds, ...resourceIdsFromParents])]
   }
 
   /**
@@ -100,21 +101,18 @@ export class PermissionService {
     // permissions that apply to the requested resource type (e.g. project -> project.*)
     const resourceTypePermissions: readonly string[] = RESOURCE_TYPE_PERMISSIONS_MAP[resourceType]
 
-    // from top level resource types (org) to child resource types (project), find a parent resource which
-    // owns the read permission for the requested resource type.
+    // every parent resource type contributes: a user can inherit access through
+    // several sources at once (e.g. an org role AND a project role for agents),
+    // so the loop accumulates instead of stopping at the first match
     for (const parentResourceType of PARENT_RESOURCE_TYPE_MAP[resourceType]) {
-      // find all resources of the parent resource type that the user has access to
-      // AND have the read permission for the requested resource type.
+      // parent resources qualify when their role grants the read permission
+      // for the requested resource type (the full permission set is then conveyed)
       const parentPermissionsByParentId =
         await this.listDirectResourcePermissionsMatchingPermission(
           userId,
           parentResourceType,
           RESOURCE_TYPE_READ_PERMISSION_MAP[resourceType],
         )
-
-      // we haven't found any parent resources that the user has access to
-      // and have the read permission for the requested resource type.
-      // No problem, let's move on to the next parent resource type (ex: org -> project if we were looking for agents)
       if (parentPermissionsByParentId.size === 0) continue
 
       const childResourceRows = await this.fetchChildResourceRows(
@@ -129,14 +127,12 @@ export class PermissionService {
           parentPermissionsByParentId.get(parentResourceId) ?? []
         ).filter((permission) => resourceTypePermissions.includes(permission))
 
-        // union: inherited permissions add to (never replace) permissions from a direct role
-        const directPermissions = permissionsByResourceId.get(resourceId) ?? []
+        // union: inherited permissions add to (never replace) already collected ones
+        const collectedPermissions = permissionsByResourceId.get(resourceId) ?? []
         permissionsByResourceId.set(resourceId, [
-          ...new Set([...directPermissions, ...inheritedPermissions]),
+          ...new Set([...collectedPermissions, ...inheritedPermissions]),
         ])
       }
-
-      break
     }
 
     return permissionsByResourceId
