@@ -69,6 +69,25 @@ export function AgentMetadataDialog({
               <MetadataField label={t("evaluationExtractionRun:agent")} value={agent.name} />
             )}
             <MetadataField
+              label={t("evaluationExtractionRun:version.label")}
+              value={t("evaluationExtractionRun:version.revision", {
+                revision: agentSettings.revision,
+              })}
+            />
+            {/* Naming a revision is optional; both fields are "" when unset. */}
+            {agentSettings.revisionName && (
+              <MetadataField
+                label={t("evaluationExtractionRun:agentMetadata.revisionName")}
+                value={agentSettings.revisionName}
+              />
+            )}
+            {agentSettings.revisionDesc && (
+              <MetadataField
+                label={t("evaluationExtractionRun:agentMetadata.revisionDesc")}
+                value={agentSettings.revisionDesc}
+              />
+            )}
+            <MetadataField
               label={t("evaluationExtractionRun:agentMetadata.model")}
               value={agentSettings.model}
               mono
