@@ -352,6 +352,9 @@ export class PermissionService {
  * One declarative SQL query per (child resource type -> parent resource type) pair,
  * resolving the parent id of a single child resource ($1 = child id).
  * Mirror of CHILD_RESOURCE_ROWS_QUERIES.
+ *
+ * Every resource on the path (child, intermediate, parent) must be alive:
+ * a soft-deleted resource never conveys permissions.
  */
 const PARENT_RESOURCE_ID_QUERIES: Partial<
   Record<PermissionResourceType, Partial<Record<PermissionResourceType, string>>>
@@ -359,22 +362,35 @@ const PARENT_RESOURCE_ID_QUERIES: Partial<
   project: {
     organization: `SELECT project.organization_id AS "parentResourceId"
                    FROM project
+                   INNER JOIN organization ON organization.id = project.organization_id
+                     AND organization.deleted_at IS NULL
                    WHERE project.id = $1
                      AND project.deleted_at IS NULL`,
   },
   agent: {
     organization: `SELECT agent.organization_id AS "parentResourceId"
                    FROM agent
+                   INNER JOIN project ON project.id = agent.project_id
+                     AND project.deleted_at IS NULL
+                   INNER JOIN organization ON organization.id = agent.organization_id
+                     AND organization.deleted_at IS NULL
                    WHERE agent.id = $1
                      AND agent.deleted_at IS NULL`,
     project: `SELECT agent.project_id AS "parentResourceId"
               FROM agent
+              INNER JOIN project ON project.id = agent.project_id
+                AND project.deleted_at IS NULL
               WHERE agent.id = $1
                 AND agent.deleted_at IS NULL`,
   },
 }
 
-/** One declarative SQL query per (child resource type -> parent resource type) pair. */
+/**
+ * One declarative SQL query per (child resource type -> parent resource type) pair.
+ *
+ * Every resource on the path (child, intermediate, parent) must be alive:
+ * a soft-deleted resource never conveys permissions.
+ */
 const CHILD_RESOURCE_ROWS_QUERIES: Partial<
   Record<PermissionResourceType, Partial<Record<PermissionResourceType, string>>>
 > = {
@@ -382,6 +398,8 @@ const CHILD_RESOURCE_ROWS_QUERIES: Partial<
     organization: `SELECT project.id AS "resourceId",
                           project.organization_id AS "parentResourceId"
                    FROM project
+                   INNER JOIN organization ON organization.id = project.organization_id
+                     AND organization.deleted_at IS NULL
                    WHERE project.organization_id = ANY($1)
                      AND project.deleted_at IS NULL`,
   },
@@ -389,11 +407,17 @@ const CHILD_RESOURCE_ROWS_QUERIES: Partial<
     organization: `SELECT agent.id AS "resourceId",
                           agent.organization_id AS "parentResourceId"
                    FROM agent
+                   INNER JOIN project ON project.id = agent.project_id
+                     AND project.deleted_at IS NULL
+                   INNER JOIN organization ON organization.id = agent.organization_id
+                     AND organization.deleted_at IS NULL
                    WHERE agent.organization_id = ANY($1)
                      AND agent.deleted_at IS NULL`,
     project: `SELECT agent.id AS "resourceId",
                      agent.project_id AS "parentResourceId"
               FROM agent
+              INNER JOIN project ON project.id = agent.project_id
+                AND project.deleted_at IS NULL
               WHERE agent.project_id = ANY($1)
                 AND agent.deleted_at IS NULL`,
   },

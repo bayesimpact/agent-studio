@@ -451,6 +451,51 @@ describe("PermissionService", () => {
       expect(permissionsByProjectId.size).toBe(0)
     })
 
+    it("excludes projects of a soft-deleted organization from inheritance", async () => {
+      const repositories = setup.getAllRepositories()
+      const { organization, user } = await createOrganizationWithOwner(repositories)
+      const project = projectFactory.transient({ organization }).build()
+      await repositories.projectRepository.save(project)
+
+      // the org membership survives (only the organization is soft-deleted)
+      await repositories.organizationRepository.softDelete(organization.id)
+
+      const permissionsByProjectId = await service.listResourcePermissions(user.id, "project")
+
+      expect(permissionsByProjectId.size).toBe(0)
+    })
+
+    it("excludes agents of a soft-deleted project from inheritance", async () => {
+      const repositories = setup.getAllRepositories()
+      const { organization } = await createOrganizationWithOwner(repositories)
+      const project = projectFactory.transient({ organization }).build()
+      await repositories.projectRepository.save(project)
+      const agent = agentFactory.transient({ organization, project }).build()
+      await repositories.agentRepository.save(agent)
+
+      const projectOwnerRole = await repositories.roleRepository.findOneOrFail({
+        where: { key: PROJECT_ROLES.owner },
+      })
+      const projectUser = userFactory.build()
+      await repositories.userRepository.save(projectUser)
+      await repositories.userMembershipRepository.save(
+        userMembershipFactory.build({
+          userId: projectUser.id,
+          resourceType: "project",
+          resourceId: project.id,
+          role: "owner",
+          roleId: projectOwnerRole.id,
+        }),
+      )
+
+      // the membership survives (only the project is soft-deleted): it must convey nothing
+      await repositories.projectRepository.softDelete(project.id)
+
+      const permissionsByAgentId = await service.listResourcePermissions(projectUser.id, "agent")
+
+      expect(permissionsByAgentId.size).toBe(0)
+    })
+
     it("inherits agent.read on the project's agents from a project role, gated by the type map", async () => {
       const repositories = setup.getAllRepositories()
       const { organization } = await createOrganizationWithOwner(repositories)
@@ -693,6 +738,19 @@ describe("PermissionService", () => {
         await expect(
           service.has(orgUser.id, "agent.read", { type: "agent", id: agent.id }),
         ).resolves.toBe(true)
+
+        // an agent of a soft-deleted project must not be reachable, even org-wide
+        const deletedProject = projectFactory.transient({ organization }).build()
+        await repositories.projectRepository.save(deletedProject)
+        const orphanedAgent = agentFactory
+          .transient({ organization, project: deletedProject })
+          .build()
+        await repositories.agentRepository.save(orphanedAgent)
+        await repositories.projectRepository.softDelete(deletedProject.id)
+
+        await expect(
+          service.has(orgUser.id, "agent.read", { type: "agent", id: orphanedAgent.id }),
+        ).resolves.toBe(false)
       } finally {
         const testRole = await repositories.roleRepository.findOne({
           where: { key: "test_org_agent_reader" },
@@ -702,6 +760,50 @@ describe("PermissionService", () => {
           await repositories.roleRepository.delete({ id: testRole.id })
         }
       }
+    })
+
+    it("does not inherit agent.read through a soft-deleted project", async () => {
+      const repositories = setup.getAllRepositories()
+      const { organization } = await createOrganizationWithOwner(repositories)
+      const project = projectFactory.transient({ organization }).build()
+      await repositories.projectRepository.save(project)
+      const agent = agentFactory.transient({ organization, project }).build()
+      await repositories.agentRepository.save(agent)
+
+      const projectOwnerRole = await repositories.roleRepository.findOneOrFail({
+        where: { key: PROJECT_ROLES.owner },
+      })
+      const projectUser = userFactory.build()
+      await repositories.userRepository.save(projectUser)
+      await repositories.userMembershipRepository.save(
+        userMembershipFactory.build({
+          userId: projectUser.id,
+          resourceType: "project",
+          resourceId: project.id,
+          role: "owner",
+          roleId: projectOwnerRole.id,
+        }),
+      )
+
+      // the membership survives (only the project is soft-deleted): it must convey nothing
+      await repositories.projectRepository.softDelete(project.id)
+
+      await expect(
+        service.has(projectUser.id, "agent.read", { type: "agent", id: agent.id }),
+      ).resolves.toBe(false)
+    })
+
+    it("does not inherit project.read when the organization is soft-deleted", async () => {
+      const repositories = setup.getAllRepositories()
+      const { organization, user } = await createOrganizationWithOwner(repositories)
+      const project = projectFactory.transient({ organization }).build()
+      await repositories.projectRepository.save(project)
+
+      await repositories.organizationRepository.softDelete(organization.id)
+
+      await expect(
+        service.has(user.id, PROJECT_READ_PERMISSION, { type: "project", id: project.id }),
+      ).resolves.toBe(false)
     })
 
     it("denies agent.create on an agent even to the project owner (type map gate)", async () => {
