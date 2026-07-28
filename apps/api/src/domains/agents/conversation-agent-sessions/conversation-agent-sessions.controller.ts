@@ -74,6 +74,9 @@ export class ConversationAgentSessionsController {
     const agentSettings = await this.agentSettingsService.getLast({
       connectScope: getRequiredConnectScope(request),
       agentId: request.agent.id,
+      // The playground exists to try an agent before publishing, so it runs the pending draft.
+      // Every other surface stays on the published revision.
+      includesDraft: payload.type === "playground",
     })
     const session = await this.conversationAgentSessionsService.createSession({
       connectScope: getRequiredConnectScope(request),
