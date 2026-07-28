@@ -60,15 +60,9 @@ export const evaluationConversationRunFactory = EvaluationConversationRunFactory
       id: params.id ?? faker.string.uuid(),
       evaluationConversationDatasetId: dataset.id,
       agentId: agent.id,
-      agentSettings: {
-        documentsRagMode:
-          params.agentSettings?.documentsRagMode ?? defaultAgentSettings.documentsRagMode,
-        instructions: params.agentSettings?.instructions ?? defaultAgentSettings.instructions,
-        locale: params.agentSettings?.locale ?? defaultAgentSettings.locale,
-        model: params.agentSettings?.model ?? defaultAgentSettings.model,
-        revision: params.agentSettings?.revision ?? defaultAgentSettings.revision,
-        temperature: params.agentSettings?.temperature ?? defaultAgentSettings.temperature,
-      },
+      // Spread the freshly built settings and let explicit overrides win, rather than
+      // hand-listing every snapshot field: a hand-picked list silently drops new fields.
+      agentSettings: { ...defaultAgentSettings, ...params.agentSettings },
       judgeModel: params.judgeModel ?? AgentModel.Gemini25Flash,
       judgeInstructions: params.judgeInstructions ?? null,
       status: params.status ?? "completed",

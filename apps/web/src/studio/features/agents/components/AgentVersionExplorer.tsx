@@ -6,8 +6,14 @@ import { AgentVersionCompare, type AgentVersionCompareMode } from "./AgentVersio
 import { AgentVersionList } from "./AgentVersionList"
 
 interface AgentVersionComparison {
-  /** The most recent version (`versions[0]`). */
+  /** The newest version (`versions[0]`), which may be an unpublished draft. */
   current: AgentSettings
+  /**
+   * The newest published version: what the running agent actually serves. Distinct from
+   * `current` whenever the newest revision is a draft. Undefined only if every revision were
+   * somehow a draft, which the API does not allow.
+   */
+  live: AgentSettings | undefined
   /** The version highlighted in the timeline and shown in the diff. */
   selected: AgentSettings
   /** The version immediately older than `selected`, if any. */
@@ -25,8 +31,10 @@ interface AgentVersionComparison {
 /**
  * Resolve everything the two panes need from the raw version list plus the current UI state.
  *
- * `versions` is ordered by revision descending, so `versions[0]` is the current version and
- * each following index is one step older. Returns `null` when there is no version to show.
+ * `versions` is ordered by revision descending, so `versions[0]` is the newest version and each
+ * following index is one step older. That newest version may be an unpublished draft, so it is
+ * kept separate from `live`, the newest published version. Returns `null` when there is no
+ * version to show.
  */
 function buildComparison(
   versions: AgentSettings[],
@@ -35,6 +43,8 @@ function buildComparison(
 ): AgentVersionComparison | null {
   const current = versions[0]
   if (!current) return null
+
+  const live = versions.find((version) => !version.isDraft)
 
   // Default to the previous version (index 1) — the one users open the history to inspect —
   // until they pick another revision from the timeline. Clamp to the current version when it
@@ -59,6 +69,7 @@ function buildComparison(
 
   return {
     current,
+    live,
     selected,
     previous,
     isCurrent,
@@ -85,6 +96,7 @@ export function AgentVersionExplorer() {
   if (!comparison) return null
 
   const {
+    live,
     selected,
     before,
     after,
@@ -99,6 +111,7 @@ export function AgentVersionExplorer() {
       <AgentVersionList
         versions={versions}
         selectedRevision={selected.revision}
+        liveRevision={live?.revision}
         onSelect={setSelectedRevision}
       />
       <AgentVersionCompare

@@ -4,14 +4,21 @@ import { useTranslation } from "react-i18next"
 import type { AgentSettings } from "@/common/features/agents/settings/agent-settings.models"
 import { buildDate, buildSince } from "@/common/utils/build-date"
 
-/** Timeline of an agent's settings revisions, newest first. */
+/**
+ * Timeline of an agent's settings revisions, newest first.
+ *
+ * The newest revision may be an unpublished draft, so it is badged separately from
+ * `liveRevision`, the newest published revision the running agent actually serves.
+ */
 export function AgentVersionList({
   versions,
   selectedRevision,
+  liveRevision,
   onSelect,
 }: {
   versions: AgentSettings[]
   selectedRevision: number
+  liveRevision: number | undefined
   onSelect: (revision: number) => void
 }) {
   const { t } = useTranslation()
@@ -19,7 +26,7 @@ export function AgentVersionList({
   return (
     <aside className="w-52 shrink-0 overflow-y-auto border-r">
       <ol>
-        {versions.map((version, index) => (
+        {versions.map((version) => (
           <li key={version.revision}>
             <button
               type="button"
@@ -32,8 +39,12 @@ export function AgentVersionList({
             >
               <span className="flex items-center justify-between gap-2 text-sm font-medium">
                 {t("agent:history.revisionLabel", { revision: version.revision })}
-                {index === 0 && (
-                  <Badge variant="secondary">{t("agent:history.currentBadge")}</Badge>
+                {version.isDraft ? (
+                  <Badge variant="outline">{t("agent:history.draftBadge")}</Badge>
+                ) : (
+                  version.revision === liveRevision && (
+                    <Badge variant="secondary">{t("agent:history.currentBadge")}</Badge>
+                  )
                 )}
               </span>
               <span

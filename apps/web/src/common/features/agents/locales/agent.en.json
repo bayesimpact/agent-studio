@@ -161,6 +161,7 @@
       "loadError": "Failed to load version history",
       "revisionLabel": "Version {{revision}}",
       "currentBadge": "Current",
+      "draftBadge": "Draft",
       "compareWithPrevious": "Changes in this version",
       "compareWithCurrent": "Compare with current",
       "comparing": "Showing changes from version {{before}} to version {{after}}.",
@@ -172,6 +173,15 @@
       "restoreDialog": {
         "title": "Restore version {{revision}}?",
         "description": "The settings of version {{revision}} will be copied as a new version and become the current settings. No version is deleted."
+      },
+      "publish": "Publish this version",
+      "publishDialog": {
+        "title": "Publish version {{revision}}?",
+        "description": "Version {{revision}} will become the live settings this agent serves. Name and description are optional and left blank keeps what is already stored.",
+        "nameLabel": "Name (optional)",
+        "namePlaceholder": "e.g. Friendlier tone",
+        "descLabel": "Description (optional)",
+        "descPlaceholder": "What changed in this version?"
       }
     },
     "orchestration": {

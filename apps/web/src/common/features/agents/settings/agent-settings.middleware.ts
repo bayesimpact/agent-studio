@@ -65,6 +65,29 @@ function registerListeners() {
       )
     },
   })
+
+  listenerMiddleware.startListening({
+    actionCreator: publishAgentSettings.fulfilled,
+    effect: async (_, listenerApi) => {
+      listenerApi.dispatch(
+        notificationsActions.show({
+          title: "Agent version published successfully",
+          type: "success",
+        }),
+      )
+    },
+  })
+  listenerMiddleware.startListening({
+    actionCreator: publishAgentSettings.rejected,
+    effect: async (_, listenerApi) => {
+      listenerApi.dispatch(
+        notificationsActions.show({
+          title: "Agent version publish failed",
+          type: "error",
+        }),
+      )
+    },
+  })
 }
 
 export const agentSettingsMiddleware = { listenerMiddleware, registerListeners }

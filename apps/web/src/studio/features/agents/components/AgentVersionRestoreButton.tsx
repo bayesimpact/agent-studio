@@ -26,7 +26,7 @@ export function AgentVersionRestoreButton({
     try {
       await dispatch(restoreAgentSettings({ agentId, revision })).unwrap()
     } catch {
-      // Task 10 wires the error notification into the settings middleware.
+      // The success and failure notifications are wired in the settings middleware.
     } finally {
       setIsRestoring(false)
       setConfirmOpen(false)

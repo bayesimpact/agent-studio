@@ -109,15 +109,9 @@ function toEvaluationExtractionRun(dto: EvaluationExtractionRunDto): EvaluationE
     status: dto.status,
     summary: dto.summary,
     csvExportDocumentId: dto.csvExportDocumentId,
-    agentSettings: {
-      documentsRagMode: dto.agentSettings.documentsRagMode,
-      instructions: dto.agentSettings.instructions,
-      locale: dto.agentSettings.locale,
-      model: dto.agentSettings.model,
-      revision: dto.agentSettings.revision,
-      temperature: dto.agentSettings.temperature,
-      outputJsonSchema: dto.agentSettings.outputJsonSchema,
-    },
+    // Spread the DTO's own snapshot shape rather than hand-listing fields: it already matches
+    // the domain type field for field, and a hand-picked list silently drops new fields.
+    agentSettings: { ...dto.agentSettings },
     projectId: dto.projectId,
     createdAt: dto.createdAt,
     updatedAt: dto.updatedAt,

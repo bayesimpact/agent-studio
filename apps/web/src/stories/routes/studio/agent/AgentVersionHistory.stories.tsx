@@ -60,6 +60,33 @@ const versions: AgentSettings[] = [
   }),
 ]
 
+/**
+ * A draft newest revision sitting on top of an older published one: the draft badge, the live
+ * badge on the published revision below it, and the publish action must all be visible.
+ */
+const draftVersions: AgentSettings[] = [
+  agentSettingsFactory.transient({ agent: baseAgent }).build({
+    revision: 2,
+    isDraft: true,
+    instructions:
+      "You are a helpful assistant.\nAnswer clearly, concisely, and always double-check facts before responding.",
+    model: AgentModel.Gemini25Flash,
+    temperature: 0.3,
+    locale: AgentLocale.EN,
+    documentsRagMode: DocumentsRagMode.All,
+    updatedAt: Date.now() - 1000 * 60 * 10,
+  }),
+  agentSettingsFactory.transient({ agent: baseAgent }).build({
+    revision: 1,
+    instructions: "You are a helpful assistant.",
+    model: AgentModel.Gemini25Flash,
+    temperature: 0.7,
+    locale: AgentLocale.EN,
+    documentsRagMode: DocumentsRagMode.None,
+    updatedAt: Date.now() - 1000 * 60 * 60 * 24 * 30,
+  }),
+]
+
 const schemaAgent = agentFactory.transient({ project }).build({
   type: "extraction",
   name: "Document Extractor",
@@ -103,6 +130,10 @@ export const ManyVersions: Story = {
 
 export const SchemaChange: Story = {
   decorators: [withRedux({ state: seed.studio.agentSettings(schemaVersions) })],
+}
+
+export const DraftPendingPublish: Story = {
+  decorators: [withRedux({ state: seed.studio.agentSettings(draftVersions) })],
 }
 
 export const SingleVersion: Story = {

@@ -29,6 +29,9 @@ const slice = createSlice({
         state.data.error = null
       })
       .addCase(listAgentSettings.fulfilled, (state, action) => {
+        // A slower, stale request for a previously selected agent can resolve after a newer one
+        // was already dispatched. Drop it so it does not overwrite the current agent's data.
+        if (action.meta.arg.agentId !== state.agentId) return
         state.data = {
           status: ADS.Fulfilled,
           error: null,
@@ -36,6 +39,7 @@ const slice = createSlice({
         }
       })
       .addCase(listAgentSettings.rejected, (state, action) => {
+        if (action.meta.arg.agentId !== state.agentId) return
         state.data.status = ADS.Error
         state.data.error = action.error.message || "Failed to load agent settings"
       })
