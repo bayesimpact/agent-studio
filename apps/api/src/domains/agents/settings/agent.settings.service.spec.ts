@@ -266,6 +266,53 @@ describe("AgentSettings", () => {
       })
       expect(published).toBeUndefined()
     })
+
+    it("getByIds should return the revision identity of the requested settings", async () => {
+      const { organization, project, agent } = await createAgentWithSettings(setup, repositories)
+      const connectScope = { organizationId: organization.id, projectId: project.id }
+      const published = await service.get({ connectScope, agentId: agent.id, revision: 1 })
+      const draft = await service.get({ connectScope, agentId: agent.id, revision: 3 })
+      if (!published || !draft) throw new Error("fixture revisions missing")
+
+      const found = await service.getByIds({ connectScope, ids: [published.id, draft.id] })
+
+      const byId = new Map(found.map((settings) => [settings.id, settings]))
+      expect(byId.get(published.id)).toMatchObject({
+        revision: 1,
+        revisionName: "FirstRev",
+        isDraft: false,
+      })
+      expect(byId.get(draft.id)).toMatchObject({ revision: 3, isDraft: true })
+    })
+
+    it("getByIds should not query for an empty id list", async () => {
+      const { organization, project } = await createAgentWithSettings(setup, repositories)
+
+      const found = await service.getByIds({
+        connectScope: { organizationId: organization.id, projectId: project.id },
+        ids: [],
+      })
+
+      expect(found).toEqual([])
+    })
+
+    it("getByIds should not return settings from another organization", async () => {
+      const first = await createAgentWithSettings(setup, repositories)
+      const second = await createAgentWithSettings(setup, repositories)
+      const secondSettings = await service.get({
+        connectScope: { organizationId: second.organization.id, projectId: second.project.id },
+        agentId: second.agent.id,
+        revision: 1,
+      })
+      if (!secondSettings) throw new Error("fixture revision missing")
+
+      const found = await service.getByIds({
+        connectScope: { organizationId: first.organization.id, projectId: first.project.id },
+        ids: [secondSettings.id],
+      })
+
+      expect(found).toEqual([])
+    })
   })
 
   describe("AgentService extension", () => {

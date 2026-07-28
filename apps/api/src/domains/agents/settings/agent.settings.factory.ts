@@ -27,6 +27,8 @@ export const agentSettingsFactory = AgentSettingsFactory.define(
     return {
       id: params.id || randomUUID(),
       revision: params.revision ?? 1,
+      revisionName: params.revisionName ?? null,
+      revisionDesc: params.revisionDesc ?? null,
       instructions: params.instructions || `This is a test default prompt for bot ${sequence}`,
       model: params.model || AgentModel._Mock,
       temperature: params.temperature ?? 0.7,

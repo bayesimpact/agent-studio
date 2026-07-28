@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from "@nestjs/common"
 import { InjectRepository } from "@nestjs/typeorm"
-import { Not, type Repository } from "typeorm"
+import { In, Not, type Repository } from "typeorm"
 import { ConnectRepository } from "@/common/entities/connect-repository"
 import type { RequiredConnectScope } from "@/common/entities/connect-required-fields"
 import { requiresUpdateAgentSettings } from "@/domains/agents/settings/agent.settings.functions"
@@ -92,6 +92,27 @@ export class AgentSettingsService {
         ...(includesArchived ? {} : { isArchived: false }),
       },
       order: { revision: "DESC" },
+    })
+  }
+
+  /**
+   * Revision identity for a set of settings ids. For callers that hold `agentSettingsId` foreign
+   * keys (agent messages) rather than an agent id and revision number.
+   *
+   * `select` is narrowed on purpose: `agent_settings` rows carry `instructions` and
+   * `outputJsonSchema`, which are arbitrarily large and unused by every caller of this method.
+   */
+  async getByIds({
+    connectScope,
+    ids,
+  }: {
+    connectScope: RequiredConnectScope
+    ids: string[]
+  }): Promise<Pick<AgentSettings, "id" | "revision" | "revisionName" | "isDraft">[]> {
+    if (ids.length === 0) return []
+    return this.agentSettingsConnectRepository.find(connectScope, {
+      where: { id: In(ids) },
+      select: { id: true, revision: true, revisionName: true, isDraft: true },
     })
   }
 
