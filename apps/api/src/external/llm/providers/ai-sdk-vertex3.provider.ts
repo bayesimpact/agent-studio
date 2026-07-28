@@ -32,7 +32,7 @@ export class AISDKVertex3Provider extends AISDKLLMProviderBase {
   constructor() {
     super()
     this.vertexProject = process.env.GOOGLE_VERTEX_PROJECT || "caseai-connect"
-    this.vertexLocation = "eu"
+    this.vertexLocation = "global"
 
     // Default provider: relies on the AI SDK / undici default fetch timeouts.
     this.vertexProvider = createVertex({
