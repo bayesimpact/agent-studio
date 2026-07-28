@@ -1,9 +1,11 @@
+import { randomUUID } from "node:crypto"
 import { In } from "typeorm"
 import {
   clearTestDatabase,
   setupE2eTestDatabase,
   teardownE2eTestDatabase,
 } from "@/common/test/test-database"
+import { agentFactory } from "@/domains/agents/agent.factory"
 import { UserMembership } from "@/domains/memberships/user-membership.entity"
 import { userMembershipFactory } from "@/domains/memberships/user-membership.factory"
 import { createOrganizationWithOwner } from "@/domains/organizations/organization.factory"
@@ -14,6 +16,7 @@ import {
   ORGANIZATION_CREATE_PERMISSION,
   ORGANIZATION_ROLE_PERMISSIONS,
   ORGANIZATION_ROLES,
+  PROJECT_CREATE_PERMISSION,
   PROJECT_READ_PERMISSION,
   PROJECT_ROLE_PERMISSIONS,
   PROJECT_ROLES,
@@ -343,6 +346,142 @@ describe("PermissionService", () => {
       }
     })
 
+    it("lists direct organization permissions", async () => {
+      const repositories = setup.getAllRepositories()
+      const { organization, user } = await createOrganizationWithOwner(repositories)
+
+      const permissionsByOrganizationId = await service.listResourcePermissions(
+        user.id,
+        "organization",
+      )
+
+      expect([...permissionsByOrganizationId.keys()]).toEqual([organization.id])
+      expect(permissionsByOrganizationId.get(organization.id)?.sort()).toEqual(
+        [...ORGANIZATION_ROLE_PERMISSIONS[ORGANIZATION_ROLES.owner]].sort(),
+      )
+    })
+
+    it("does not leak project permissions across organizations", async () => {
+      const repositories = setup.getAllRepositories()
+      // owner of org A asking about projects: org B's project must not appear
+      const { user: otherOrgOwner } = await createOrganizationWithOwner(repositories)
+      const { organization } = await createOrganizationWithOwner(repositories)
+      const project = projectFactory.transient({ organization }).build()
+      await repositories.projectRepository.save(project)
+
+      const permissionsByProjectId = await service.listResourcePermissions(
+        otherOrgOwner.id,
+        "project",
+      )
+
+      expect(permissionsByProjectId.size).toBe(0)
+    })
+
+    it("keeps permissions scoped per resource id", async () => {
+      const repositories = setup.getAllRepositories()
+      // org owner inherits on both projects, but holds a direct role on only one
+      const { organization, user } = await createOrganizationWithOwner(repositories)
+      const inheritedOnlyProject = projectFactory.transient({ organization }).build()
+      const ownedProject = projectFactory.transient({ organization }).build()
+      await repositories.projectRepository.save([inheritedOnlyProject, ownedProject])
+
+      const projectOwnerRole = await repositories.roleRepository.findOneOrFail({
+        where: { key: PROJECT_ROLES.owner },
+      })
+      await repositories.userMembershipRepository.save(
+        userMembershipFactory.build({
+          userId: user.id,
+          resourceType: "project",
+          resourceId: ownedProject.id,
+          role: "owner",
+          roleId: projectOwnerRole.id,
+        }),
+      )
+
+      const permissionsByProjectId = await service.listResourcePermissions(user.id, "project")
+
+      expect(permissionsByProjectId.size).toBe(2)
+      expect(permissionsByProjectId.get(inheritedOnlyProject.id)?.sort()).toEqual(
+        ["project.create", "project.read"].sort(),
+      )
+      expect(permissionsByProjectId.get(ownedProject.id)?.sort()).toEqual(
+        [...new Set([...PROJECT_ROLE_PERMISSIONS.project_owner, "project.create"])].sort(),
+      )
+    })
+
+    it("ignores soft-deleted memberships", async () => {
+      const repositories = setup.getAllRepositories()
+      const { organization } = await createOrganizationWithOwner(repositories)
+      const project = projectFactory.transient({ organization }).build()
+      await repositories.projectRepository.save(project)
+
+      const projectMemberRole = await repositories.roleRepository.findOneOrFail({
+        where: { key: PROJECT_ROLES.member },
+      })
+      const projectUser = userFactory.build()
+      await repositories.userRepository.save(projectUser)
+      await repositories.userMembershipRepository.save(
+        userMembershipFactory.build({
+          userId: projectUser.id,
+          resourceType: "project",
+          resourceId: project.id,
+          role: "member",
+          roleId: projectMemberRole.id,
+          deletedAt: new Date(),
+        }),
+      )
+
+      const permissionsByProjectId = await service.listResourcePermissions(
+        projectUser.id,
+        "project",
+      )
+
+      expect(permissionsByProjectId.size).toBe(0)
+    })
+
+    it("excludes soft-deleted projects from inheritance", async () => {
+      const repositories = setup.getAllRepositories()
+      const { organization, user } = await createOrganizationWithOwner(repositories)
+      const project = projectFactory.transient({ organization }).build()
+      await repositories.projectRepository.save(project)
+      await repositories.projectRepository.softDelete(project.id)
+
+      const permissionsByProjectId = await service.listResourcePermissions(user.id, "project")
+
+      expect(permissionsByProjectId.size).toBe(0)
+    })
+
+    it("inherits agent.read on the project's agents from a project role, gated by the type map", async () => {
+      const repositories = setup.getAllRepositories()
+      const { organization } = await createOrganizationWithOwner(repositories)
+      const project = projectFactory.transient({ organization }).build()
+      await repositories.projectRepository.save(project)
+      const agent = agentFactory.transient({ organization, project }).build()
+      await repositories.agentRepository.save(agent)
+
+      // project_owner grants agent.read AND agent.create, but only agent.read
+      // applies to an agent resource (RESOURCE_TYPE_PERMISSIONS_MAP.agent)
+      const projectOwnerRole = await repositories.roleRepository.findOneOrFail({
+        where: { key: PROJECT_ROLES.owner },
+      })
+      const projectUser = userFactory.build()
+      await repositories.userRepository.save(projectUser)
+      await repositories.userMembershipRepository.save(
+        userMembershipFactory.build({
+          userId: projectUser.id,
+          resourceType: "project",
+          resourceId: project.id,
+          role: "owner",
+          roleId: projectOwnerRole.id,
+        }),
+      )
+
+      const permissionsByAgentId = await service.listResourcePermissions(projectUser.id, "agent")
+
+      expect([...permissionsByAgentId.keys()]).toEqual([agent.id])
+      expect(permissionsByAgentId.get(agent.id)).toEqual(["agent.read"])
+    })
+
     it("returns an empty map when the user has no access", async () => {
       const repositories = setup.getAllRepositories()
       const user = userFactory.build()
@@ -445,6 +584,178 @@ describe("PermissionService", () => {
 
       await expect(
         service.has(memberUser.id, PROJECT_READ_PERMISSION, { type: "project", id: project.id }),
+      ).resolves.toBe(false)
+    })
+
+    it("scopes project.create to the organization the role is held on", async () => {
+      const repositories = setup.getAllRepositories()
+      // owner of org A (role grants project.create), plain member of org B
+      const { organization: organizationA, user } = await createOrganizationWithOwner(repositories)
+      const { organization: organizationB } = await createOrganizationWithOwner(repositories)
+
+      const memberRole = await repositories.roleRepository.findOneOrFail({
+        where: { key: ORGANIZATION_ROLES.member },
+      })
+      await repositories.userMembershipRepository.save(
+        userMembershipFactory.build({
+          userId: user.id,
+          resourceType: "organization",
+          resourceId: organizationB.id,
+          role: "member",
+          roleId: memberRole.id,
+        }),
+      )
+
+      await expect(
+        service.has(user.id, PROJECT_CREATE_PERMISSION, {
+          type: "organization",
+          id: organizationA.id,
+        }),
+      ).resolves.toBe(true)
+
+      // the permission held on org A must not leak onto org B
+      await expect(
+        service.has(user.id, PROJECT_CREATE_PERMISSION, {
+          type: "organization",
+          id: organizationB.id,
+        }),
+      ).resolves.toBe(false)
+    })
+
+    it("grants inherited agent.read via a role on the parent project", async () => {
+      const repositories = setup.getAllRepositories()
+      const { organization } = await createOrganizationWithOwner(repositories)
+      const project = projectFactory.transient({ organization }).build()
+      await repositories.projectRepository.save(project)
+      const agent = agentFactory.transient({ organization, project }).build()
+      await repositories.agentRepository.save(agent)
+
+      // the organization parent is probed first and grants nothing:
+      // the loop must fall through to the project parent
+      const projectOwnerRole = await repositories.roleRepository.findOneOrFail({
+        where: { key: PROJECT_ROLES.owner },
+      })
+      const projectUser = userFactory.build()
+      await repositories.userRepository.save(projectUser)
+      await repositories.userMembershipRepository.save(
+        userMembershipFactory.build({
+          userId: projectUser.id,
+          resourceType: "project",
+          resourceId: project.id,
+          role: "owner",
+          roleId: projectOwnerRole.id,
+        }),
+      )
+
+      await expect(
+        service.has(projectUser.id, "agent.read", { type: "agent", id: agent.id }),
+      ).resolves.toBe(true)
+    })
+
+    it("grants inherited agent.read via a role on the parent organization", async () => {
+      const repositories = setup.getAllRepositories()
+      // roles are not wiped by clearTestDatabase: remove any leftover ad-hoc role
+      await repositories.roleRepository.delete({ key: "test_org_agent_reader" })
+
+      try {
+        const { organization } = await createOrganizationWithOwner(repositories)
+        const project = projectFactory.transient({ organization }).build()
+        await repositories.projectRepository.save(project)
+        const agent = agentFactory.transient({ organization, project }).build()
+        await repositories.agentRepository.save(agent)
+
+        // no catalog org role grants agent.read: an ad-hoc one exercises the
+        // agent -> organization ancestor path
+        const orgRole = await repositories.roleRepository.save(
+          repositories.roleRepository.create({
+            key: "test_org_agent_reader",
+            name: "Test Org Agent Reader",
+            scopeType: "organization",
+          }),
+        )
+        await setup.dataSource.query(
+          `INSERT INTO role_permission (role_id, permission_key) VALUES ($1, $2)`,
+          [orgRole.id, "agent.read"],
+        )
+
+        const orgUser = userFactory.build()
+        await repositories.userRepository.save(orgUser)
+        await repositories.userMembershipRepository.save(
+          userMembershipFactory.build({
+            userId: orgUser.id,
+            resourceType: "organization",
+            resourceId: organization.id,
+            role: "member",
+            roleId: orgRole.id,
+          }),
+        )
+
+        await expect(
+          service.has(orgUser.id, "agent.read", { type: "agent", id: agent.id }),
+        ).resolves.toBe(true)
+      } finally {
+        const testRole = await repositories.roleRepository.findOne({
+          where: { key: "test_org_agent_reader" },
+        })
+        if (testRole) {
+          await repositories.userMembershipRepository.delete({ roleId: testRole.id })
+          await repositories.roleRepository.delete({ id: testRole.id })
+        }
+      }
+    })
+
+    it("denies agent.create on an agent even to the project owner (type map gate)", async () => {
+      const repositories = setup.getAllRepositories()
+      const { organization } = await createOrganizationWithOwner(repositories)
+      const project = projectFactory.transient({ organization }).build()
+      await repositories.projectRepository.save(project)
+      const agent = agentFactory.transient({ organization, project }).build()
+      await repositories.agentRepository.save(agent)
+
+      // project_owner grants agent.create (on the project), but agent.create is
+      // not in RESOURCE_TYPE_PERMISSIONS_MAP.agent so it never applies to an agent
+      const projectOwnerRole = await repositories.roleRepository.findOneOrFail({
+        where: { key: PROJECT_ROLES.owner },
+      })
+      const projectUser = userFactory.build()
+      await repositories.userRepository.save(projectUser)
+      await repositories.userMembershipRepository.save(
+        userMembershipFactory.build({
+          userId: projectUser.id,
+          resourceType: "project",
+          resourceId: project.id,
+          role: "owner",
+          roleId: projectOwnerRole.id,
+        }),
+      )
+
+      await expect(
+        service.has(projectUser.id, "agent.create", { type: "agent", id: agent.id }),
+      ).resolves.toBe(false)
+    })
+
+    it("ignores soft-deleted memberships", async () => {
+      const repositories = setup.getAllRepositories()
+      const { organization, user } = await createOrganizationWithOwner(repositories)
+      await repositories.userMembershipRepository.update(
+        { userId: user.id, resourceType: "organization", resourceId: organization.id },
+        { deletedAt: new Date() },
+      )
+
+      await expect(
+        service.has(user.id, "organization.update", {
+          type: "organization",
+          id: organization.id,
+        }),
+      ).resolves.toBe(false)
+    })
+
+    it("returns false for an unknown resource id", async () => {
+      const repositories = setup.getAllRepositories()
+      const { user } = await createOrganizationWithOwner(repositories)
+
+      await expect(
+        service.has(user.id, PROJECT_READ_PERMISSION, { type: "project", id: randomUUID() }),
       ).resolves.toBe(false)
     })
 

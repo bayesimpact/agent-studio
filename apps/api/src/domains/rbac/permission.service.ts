@@ -225,32 +225,6 @@ export class PermissionService {
     return rows.map((row) => row.resourceId)
   }
 
-  // async listPermissionsForResourceIds(
-  //   userId: string,
-  //   resourceType: PermissionResourceType,
-  //   resourceIds: string[],
-  // ): Promise<Map<string, string[]>> {
-  //   if (resourceIds.length === 0) {
-  //     return new Map()
-  //   }
-
-  //   const rows: ResourcePermissionRow[] = await this.dataSource.query(
-  //     `SELECT membership.resource_id AS "resourceId",
-  //             role_permission.permission_key AS "permissionKey"
-  //      FROM user_membership membership
-  //      INNER JOIN role_permission ON role_permission.role_id = membership.role_id
-  //      WHERE membership.user_id = $1
-  //        AND membership.resource_type = $2
-  //        AND membership.resource_id = ANY($3)
-  //        AND membership.role_id IS NOT NULL
-  //        AND membership.deleted_at IS NULL
-  //      ORDER BY membership.resource_id, role_permission.permission_key`,
-  //     [userId, resourceType, resourceIds],
-  //   )
-
-  //   return this.groupPermissionsByResourceId(rows)
-  // }
-
   async hasGlobal(userId: string, permission: string): Promise<boolean> {
     const matches: { allowed: number }[] = await this.dataSource.query(
       `SELECT 1 AS allowed
