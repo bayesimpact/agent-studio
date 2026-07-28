@@ -31,21 +31,20 @@ export const ORGANIZATION_PERMISSIONS = [
   PROJECT_READ_PERMISSION,
 ] as const
 
-/** Permissions granted per org role key. */
+/**
+ * Permissions granted per org role key.
+ * Org roles deliberately do NOT grant `project.read`: project visibility is
+ * governed by project memberships only, so org owners/admins do not implicitly
+ * see every project of the org.
+ */
 export const ORGANIZATION_ROLE_PERMISSIONS = {
   org_owner: [
     "organization.read",
     "organization.update",
     "organization.delete",
     PROJECT_CREATE_PERMISSION,
-    PROJECT_READ_PERMISSION,
   ],
-  org_admin: [
-    "organization.read",
-    "organization.update",
-    PROJECT_CREATE_PERMISSION,
-    PROJECT_READ_PERMISSION,
-  ],
+  org_admin: ["organization.read", "organization.update", PROJECT_CREATE_PERMISSION],
   org_member: ["organization.read"],
   [ORG_CREATOR_ROLE]: [ORGANIZATION_CREATE_PERMISSION],
 } as const satisfies Record<string, readonly string[]>
