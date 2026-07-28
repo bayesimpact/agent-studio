@@ -71,6 +71,7 @@ export function StudioAgentSessionRoute({ agentSession }: { agentSession: AgentS
           messages={messages}
           formSubSessions={formSubSessions}
           formResultSchema={agentSession.outputJsonSchema}
+          showMessageRevisions
         />
       </div>
     </div>

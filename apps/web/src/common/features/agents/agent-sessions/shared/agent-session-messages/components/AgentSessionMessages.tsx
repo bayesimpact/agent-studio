@@ -39,6 +39,7 @@ import { Dictaphone } from "@/common/features/agents/agent-sessions/shared/agent
 import { FormResultProvider } from "@/common/features/agents/agent-sessions/shared/agent-session-messages/components/form-result-context"
 import { FormSubSessionsProvider } from "@/common/features/agents/agent-sessions/shared/agent-session-messages/components/form-sub-sessions-context"
 import { useAppDispatch, useAppSelector } from "@/common/store/hooks"
+import { AgentSettingsVersionBadge } from "@/studio/features/agents/components/AgentSettingsVersionBadge"
 import { AttachDocument } from "@/studio/features/documents/components/AttachDocument"
 import { selectStreaming } from "../agent-session-messages.selectors"
 import { sendMessage } from "../agent-session-messages.thunks"
@@ -51,12 +52,19 @@ export function AgentSessionMessages({
   onFillFormToolEvent,
   formSubSessions = [],
   formResultSchema,
+  showMessageRevisions = false,
 }: {
   session: AgentSession
   messages: AgentSessionMessageType[]
   onFillFormToolEvent?: () => void
   formSubSessions?: ConversationSubSession[]
   formResultSchema?: Record<string, unknown>
+  /**
+   * Mark assistant turns with the settings revision that produced them, where it changes.
+   * Studio playground only: the tester and public chat run one published revision and would
+   * only be cluttered by it.
+   */
+  showMessageRevisions?: boolean
 }) {
   const isStreaming = useAppSelector(selectStreaming)
 
@@ -72,7 +80,7 @@ export function AgentSessionMessages({
           <MessageScrollerProvider scrollPreviousItemPeek={168} defaultScrollPosition="end">
             <FormSubSessionsProvider value={formSubSessions}>
               <FormResultProvider value={formResult}>
-                <Messages messages={messages} />
+                <Messages messages={messages} showMessageRevisions={showMessageRevisions} />
               </FormResultProvider>
             </FormSubSessionsProvider>
 
@@ -89,21 +97,66 @@ export function AgentSessionMessages({
   )
 }
 
-function Messages({ messages }: { messages: AgentSessionMessageType[] }) {
+/**
+ * Revision to mark above each message, by message id. An assistant turn is marked only when its
+ * revision differs from the previous assistant turn's, so a conversation that ran entirely on one
+ * revision carries a single marker and a mid-session settings change is obvious.
+ */
+function buildRevisionMarkers(
+  messages: AgentSessionMessageType[],
+): Map<string, NonNullable<AgentSessionMessageType["agentSettings"]>> {
+  const markers = new Map<string, NonNullable<AgentSessionMessageType["agentSettings"]>>()
+  let lastRevision: number | undefined
+
+  for (const message of messages) {
+    if (message.role !== "assistant") continue
+    const settings = message.agentSettings
+    if (!settings) continue
+    if (settings.revision !== lastRevision) markers.set(message.id, settings)
+    lastRevision = settings.revision
+  }
+
+  return markers
+}
+
+function Messages({
+  messages,
+  showMessageRevisions,
+}: {
+  messages: AgentSessionMessageType[]
+  showMessageRevisions: boolean
+}) {
+  const revisionMarkers = showMessageRevisions
+    ? buildRevisionMarkers(messages)
+    : new Map<string, NonNullable<AgentSessionMessageType["agentSettings"]>>()
+
   return (
     <MessageScroller className="flex-1">
       <MessageScrollerViewport className="p-6">
         <MessageScrollerContent className="gap-4">
-          {messages.map((message, index) => (
-            <MessageScrollerItem
-              key={index.toString()}
-              messageId={message.id}
-              // Anchor on user turns so jumps land on a question with prior context peeking above.
-              scrollAnchor={message.role === "user"}
-            >
-              <AgentSessionMessage message={message} />
-            </MessageScrollerItem>
-          ))}
+          {messages.map((message, index) => {
+            const marker = revisionMarkers.get(message.id)
+            return (
+              <MessageScrollerItem
+                key={index.toString()}
+                messageId={message.id}
+                // Anchor on user turns so jumps land on a question with prior context peeking above.
+                scrollAnchor={message.role === "user"}
+              >
+                {marker && (
+                  <div className="mb-1.5 flex">
+                    <AgentSettingsVersionBadge
+                      compact
+                      revision={marker.revision}
+                      revisionName={marker.revisionName}
+                      isDraft={marker.isDraft}
+                    />
+                  </div>
+                )}
+                <AgentSessionMessage message={message} />
+              </MessageScrollerItem>
+            )
+          })}
         </MessageScrollerContent>
       </MessageScrollerViewport>
       <MessageScrollerButton className="shadow-md" direction="end" />

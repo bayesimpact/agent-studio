@@ -24,6 +24,7 @@ type StoryArgs = StudioStoryArgs & {
   withMessages?: boolean
   withSubAgentForms?: boolean
   draftVersion?: boolean
+  spanTwoVersions?: boolean
 }
 
 const meta = {
@@ -36,6 +37,7 @@ const meta = {
     withMessages: { control: "boolean" },
     withSubAgentForms: { control: "boolean" },
     draftVersion: { control: "boolean" },
+    spanTwoVersions: { control: "boolean" },
   },
   args: {
     ...studioStoryArgs,
@@ -44,6 +46,7 @@ const meta = {
     withMessages: true,
     withSubAgentForms: false,
     draftVersion: false,
+    spanTwoVersions: false,
   },
   render: render({ routes: studioRoutes, path: StudioRoutes.agentSession.path }),
 } satisfies Meta<StoryArgs>
@@ -54,7 +57,7 @@ type Story = StoryObj<typeof meta>
 export const Default: Story = {
   decorators: [
     buildDecorator<StoryArgs>(
-      ({ fillForm, withMessages, withSubAgentForms, draftVersion, ...args }) => {
+      ({ fillForm, withMessages, withSubAgentForms, draftVersion, spanTwoVersions, ...args }) => {
         const { baseSeeds, project, agents } = buildStudioData(args)
         const [firstAgent, ...restAgents] = agents
 
@@ -76,9 +79,8 @@ export const Default: Story = {
           isDraft: true,
         })
         // Revision desc order, newest first, matching the API's list order.
-        const settingsRevisions = draftVersion
-          ? [draftSettings, publishedSettings]
-          : [publishedSettings]
+        const settingsRevisions =
+          draftVersion || spanTwoVersions ? [draftSettings, publishedSettings] : [publishedSettings]
 
         const sessionFactory = conversationAgentSessionFactory.transient({ agent: currentAgent })
         // fillForm-enabled agents accumulate a form result on the session, shown in the sheet.
@@ -116,12 +118,28 @@ export const Default: Story = {
           toolCalls: toolCalls.length > 0 ? toolCalls : undefined,
         })
 
+        // A revision the assistant turns ran on. When the session spans two, the later turn ran on
+        // the draft, which is what puts a second marker in the transcript.
+        const ranOn = (settings: typeof publishedSettings) => ({
+          revision: settings.revision,
+          revisionName: settings.revisionName,
+          isDraft: settings.isDraft,
+        })
+        const firstTurnSettings = ranOn(publishedSettings)
+        const secondTurnSettings = spanTwoVersions ? ranOn(draftSettings) : firstTurnSettings
+
         const messages = withMessages
           ? [
               agentSessionMessageFactory.build({ role: "user" }),
-              assistantMessage,
+              agentSessionMessageFactory.build({
+                ...assistantMessage,
+                agentSettings: firstTurnSettings,
+              }),
               agentSessionMessageFactory.build({ role: "user" }),
-              agentSessionMessageFactory.build({ role: "assistant" }),
+              agentSessionMessageFactory.build({
+                role: "assistant",
+                agentSettings: secondTurnSettings,
+              }),
             ]
           : []
 
@@ -155,5 +173,10 @@ export const WithSubAgentForms: Story = {
 
 export const DraftVersion: Story = {
   args: { draftVersion: true },
+  decorators: Default.decorators,
+}
+
+export const SpanningTwoVersions: Story = {
+  args: { withMessages: true, spanTwoVersions: true },
   decorators: Default.decorators,
 }
