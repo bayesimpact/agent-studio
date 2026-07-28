@@ -106,7 +106,6 @@ describe("Organizations - createOrganization", () => {
         "organization.read",
         "organization.update",
         "project.create",
-        "project.read",
       ],
     } satisfies OrganizationDto)
   })

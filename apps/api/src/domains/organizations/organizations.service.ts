@@ -22,7 +22,7 @@ export class OrganizationsService {
     /**
      * {
      *    "ORG_XXXX": ['organization.read', 'organization.write'],
-     *    "ORG_YYYY": ['organization.read', 'organization.write', 'project.read'],
+     *    "ORG_YYYY": ['organization.read', 'organization.write', 'project.create'],
      *  }
      */
     const permissionsByOrganizationId = await this.permissionService.listResourcePermissions(

@@ -88,7 +88,6 @@ describe("Organizations - listOrganizations", () => {
         "organization.read",
         "organization.update",
         "project.create",
-        "project.read",
       ]),
     })
     expect(listedOrganization?.permissions).not.toContain("organization.create")

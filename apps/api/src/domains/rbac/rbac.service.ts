@@ -3,7 +3,7 @@ import { Injectable } from "@nestjs/common"
 import { ConfigService } from "@nestjs/config"
 import { InjectDataSource, InjectRepository } from "@nestjs/typeorm"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
-import { DataSource, type Repository } from "typeorm"
+import { DataSource, In, Not, type Repository } from "typeorm"
 import {
   ORG_CREATOR_ROLE,
   ORGANIZATION_ROLE_PERMISSIONS,
@@ -174,6 +174,12 @@ export class RbacService {
     for (const [roleKey, permissionKeys] of Object.entries(rolePermissions)) {
       const role = rolesByKey.get(roleKey)
       if (!role) continue
+
+      // reconcile: drop grants removed from the catalog (e.g. project.read on org roles)
+      await this.rolePermissionRepository.delete({
+        roleId: role.id,
+        permissionKey: Not(In([...permissionKeys])),
+      })
 
       for (const permissionKey of permissionKeys) {
         const exists = await this.rolePermissionRepository.findOne({

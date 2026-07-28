@@ -117,7 +117,7 @@ describe("ProjectsService", () => {
       expect(result.map((project) => project.name)).toContain("Project 2")
     })
 
-    it("should return all organization projects to an org owner (inherited project.read)", async () => {
+    it("should not return projects to an org owner without a project membership", async () => {
       const { organization, user } = await createOrganizationWithOwner(repositories)
       const project = projectFactory.transient({ organization }).build()
       await repositories.projectRepository.save(project)
@@ -125,7 +125,7 @@ describe("ProjectsService", () => {
         organizationId: organization.id,
         userId: user.id,
       })
-      expect(result.map((organizationProject) => organizationProject.id)).toEqual([project.id])
+      expect(result).toEqual([])
     })
 
     it("should return empty array when a plain org member has no project membership", async () => {
@@ -142,16 +142,14 @@ describe("ProjectsService", () => {
   })
 
   describe("listUserProjects", () => {
-    it("returns projects with permissions inherited from the organization role", async () => {
+    it("does not return projects to an org owner without a project membership", async () => {
       const { organization, user } = await createOrganizationWithOwner(repositories)
       const project = projectFactory.transient({ organization }).build()
       await repositories.projectRepository.save(project)
 
       const result = await service.listUserProjects(user.id)
 
-      expect(result).toHaveLength(1)
-      expect(result[0]?.id).toBe(project.id)
-      expect(result[0]?.permissions.sort()).toEqual(["project.create", "project.read"])
+      expect(result).toEqual([])
     })
 
     it("returns project.read for a plain project member", async () => {
