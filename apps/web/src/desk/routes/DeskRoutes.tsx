@@ -94,7 +94,7 @@ function AgentSessionsHandler() {
       )
     case "extraction":
       return (
-        <ExtractionAgentSessionsRoute>
+        <ExtractionAgentSessionsRoute loadSettings>
           <ExtractionAgentSessionList />
         </ExtractionAgentSessionsRoute>
       )
