@@ -95,7 +95,7 @@ describe("Agents - publishOne", () => {
     })
 
   it("should publish a revision - draft", async () => {
-    await createContext()
+    const { agent } = await createContext()
 
     const initialAgentSettings = await repositories.agentSettingsRepository.findOne({
       where: { agentId, revision: 3 },
@@ -125,7 +125,12 @@ describe("Agents - publishOne", () => {
     expect(updatedAgentSettings?.isDraft).toBeFalsy()
     expect(updatedAgentSettings?.revisionName).toBe("revisionName")
     expect(updatedAgentSettings?.revisionDesc).toBe("revisionDesc")
-    await expectActivityCreated("agentSettings.publish")
+    // The activity must link back to the agent, not the settings revision: `agentSettings` is
+    // not a resolved context property, only `agent` is (see AgentContextResolver).
+    await expectActivityCreated("agentSettings.publish", {
+      entityId: agent.id,
+      entityType: "agent",
+    })
   })
   it("should updated a published revision - not draft", async () => {
     await createContext()

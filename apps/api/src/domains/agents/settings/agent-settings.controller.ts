@@ -139,7 +139,7 @@ export class AgentSettingsController {
   @Post(AgentSettingsRoutes.publishOne.path)
   @CheckPolicy((policy) => policy.canUpdate())
   @AddContext("agent")
-  @TrackActivity({ action: "agentSettings.publish", entityFrom: "agentSettings" })
+  @TrackActivity({ action: "agentSettings.publish", entityFrom: "agent" })
   async publishOne(
     @Req() request: EndpointRequestWithAgent,
     // Scoped to this parameter rather than `@UsePipes()` at the method level: this handler also
@@ -184,7 +184,7 @@ export class AgentSettingsController {
   @Post(AgentSettingsRoutes.archiveOne.path)
   @CheckPolicy((policy) => policy.canDelete())
   @AddContext("agent")
-  @TrackActivity({ action: "agentSettings.archive", entityFrom: "agentSettings" })
+  @TrackActivity({ action: "agentSettings.archive", entityFrom: "agent" })
   async archiveOne(
     @Req() request: EndpointRequestWithAgent,
     @Param("revision") revisionParam: string,

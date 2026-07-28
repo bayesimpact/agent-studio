@@ -104,7 +104,7 @@ describe("Agents - archiveOne", () => {
     })
 
   it("should archive a revision - not draft", async () => {
-    await createContext()
+    const { agent } = await createContext()
 
     const initialAgentSettings = await repositories.agentSettingsRepository.findOne({
       where: { agentId, revision: 1 },
@@ -121,7 +121,12 @@ describe("Agents - archiveOne", () => {
       where: { agentId, revision: 1 },
     })
     expect(updatedAgentSettings?.isArchived).toBeTruthy()
-    await expectActivityCreated("agentSettings.archive")
+    // The activity must link back to the agent, not the settings revision: `agentSettings` is
+    // not a resolved context property, only `agent` is (see AgentContextResolver).
+    await expectActivityCreated("agentSettings.archive", {
+      entityId: agent.id,
+      entityType: "agent",
+    })
   })
 
   it("should refuse to archive the only remaining published, non-archived revision", async () => {
