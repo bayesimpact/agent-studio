@@ -130,6 +130,9 @@ export class ConversationAgentSessionsController {
         const settings = await this.agentSettingsService.getLast({
           connectScope,
           agentId: subAgent.childAgentId,
+          // Must agree with sub-agent-tools.ts: a playground request describes the draft the
+          // playground will actually run.
+          includesDraft: payload.type === "playground",
         })
         // Only fillForm-enabled sub-agents accumulate a form result worth surfacing.
         if (!settings.fillFormEnabled) return []
