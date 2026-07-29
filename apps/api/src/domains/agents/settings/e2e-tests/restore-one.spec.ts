@@ -12,11 +12,11 @@ import { removeNullish } from "@/common/utils/remove-nullish"
 import { agentSettingsFactory } from "@/domains/agents/settings/agent.settings.factory"
 import { createOrganizationWithAgent } from "@/domains/organizations/organization.factory"
 import { sdk } from "@/external/llm/open-telemetry-init"
-import { setupUserGuardForTesting } from "../../../../test/e2e.helpers"
-import { expectResponse, type Requester, testRequester } from "../../../../test/request"
-import { AgentsModule } from "../agents.module"
+import { setupUserGuardForTesting } from "../../../../../test/e2e.helpers"
+import { expectResponse, type Requester, testRequester } from "../../../../../test/request"
+import { AgentsModule } from "../../agents.module"
 
-describe("Agent History - restoreOne", () => {
+describe("Agent Settings - restoreOne", () => {
   let app: INestApplication<App>
   let request: Requester
   let setup: Awaited<ReturnType<typeof setupE2eTestDatabase>>

@@ -19,11 +19,11 @@ import {
 } from "@/domains/agents/settings/agent.settings.spec.helper"
 import { createOrganizationWithAgent } from "@/domains/organizations/organization.factory"
 import { sdk } from "@/external/llm/open-telemetry-init"
-import { setupUserGuardForTesting } from "../../../../test/e2e.helpers"
-import { expectResponse, type Requester, testRequester } from "../../../../test/request"
-import { AgentsModule } from "../agents.module"
+import { setupUserGuardForTesting } from "../../../../../test/e2e.helpers"
+import { expectResponse, type Requester, testRequester } from "../../../../../test/request"
+import { AgentsModule } from "../../agents.module"
 
-describe("Agents - archiveOne", () => {
+describe("Agent Settings - archiveOne", () => {
   let app: INestApplication<App>
   let request: Requester
   let setup: Awaited<ReturnType<typeof setupE2eTestDatabase>>

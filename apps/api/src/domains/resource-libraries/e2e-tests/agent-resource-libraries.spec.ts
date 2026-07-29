@@ -127,7 +127,6 @@ describe("Agents - resource library selection", () => {
     })
 
     expectResponse(response, 201)
-    expect(response.body.data.resourceLibraryIds).toEqual([resourceLibrary.id])
 
     const joinRows = await setup.dataSource.query(
       "SELECT * FROM agent_resource_library WHERE resource_library_id = $1 AND agent_id= $2",

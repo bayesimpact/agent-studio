@@ -19,11 +19,11 @@ import {
 } from "@/domains/agents/settings/agent.settings.spec.helper"
 import { createOrganizationWithAgent } from "@/domains/organizations/organization.factory"
 import { sdk } from "@/external/llm/open-telemetry-init"
-import { setupUserGuardForTesting } from "../../../../test/e2e.helpers"
-import { expectResponse, type Requester, testRequester } from "../../../../test/request"
-import { AgentsModule } from "../agents.module"
+import { setupUserGuardForTesting } from "../../../../../test/e2e.helpers"
+import { expectResponse, type Requester, testRequester } from "../../../../../test/request"
+import { AgentsModule } from "../../agents.module"
 
-describe("Agents - publishOne", () => {
+describe("Agent Settings - publishOne", () => {
   let app: INestApplication<App>
   let request: Requester
   let setup: Awaited<ReturnType<typeof setupE2eTestDatabase>>
@@ -114,10 +114,10 @@ describe("Agents - publishOne", () => {
     expectResponse(response, 201)
     expect(response.body).toBeDefined()
     const agent: AgentDto = response.body.data
-    expect(agent.revision).toBe(3)
-    expect(agent.isDraft).toBeFalsy()
-    expect(agent.revisionName).toBe("revisionName")
-    expect(agent.revisionDesc).toBe("revisionDesc")
+    expect(agent.id).toBe(agentId)
+    expect(agent.currentRevision.number).toBe(3)
+    expect(agent.currentRevision.name).toBe("revisionName")
+    expect(agent.currentRevision.description).toBe("revisionDesc")
 
     const updatedAgentSettings = await repositories.agentSettingsRepository.findOne({
       where: { agentId, revision: 3 },
@@ -147,10 +147,10 @@ describe("Agents - publishOne", () => {
     expectResponse(response, 201)
     expect(response.body).toBeDefined()
     const agent: AgentDto = response.body.data
-    expect(agent.revision).toBe(1)
-    expect(agent.isDraft).toBeFalsy()
-    expect(agent.revisionName).toBe("revisionName")
-    expect(agent.revisionDesc).toBe("revisionDesc")
+    expect(agent.id).toBe(agentId)
+    expect(agent.currentRevision.number).toBe(1)
+    expect(agent.currentRevision.name).toBe("revisionName")
+    expect(agent.currentRevision.description).toBe("revisionDesc")
 
     const updatedAgentSettings = await repositories.agentSettingsRepository.findOne({
       where: { agentId, revision: 1 },

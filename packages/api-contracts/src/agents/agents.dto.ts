@@ -222,10 +222,8 @@ export type ReplaceAgentSubAgentsDto = z.infer<typeof replaceAgentSubAgentsSchem
 export type AgentSubAgentDto = z.infer<typeof agentSubAgentSchema>
 
 const refineOutputJsonSchema = {
-  fn: (data: {
-    type: Pick<AgentDto, "type">
-    outputJsonSchema?: Pick<AgentSettingsDto, "outputJsonSchema">
-  }) => data.type === "conversation" || data.outputJsonSchema !== undefined,
+  fn: (data: { type: AgentDto["type"]; outputJsonSchema?: AgentSettingsDto["outputJsonSchema"] }) =>
+    data.type === "conversation" || data.outputJsonSchema !== undefined,
   message: {
     message: "outputJsonSchema is required when type is not 'conversation'",
     path: ["outputJsonSchema"],

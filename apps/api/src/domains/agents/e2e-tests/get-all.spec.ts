@@ -98,7 +98,59 @@ describe("Agents - getAll", () => {
     expect(agents.map((agent) => agent.name)).toContain("Agent 2")
     expect(agents[0]).toHaveProperty("id")
     expect(agents[0]).toHaveProperty("createdAt")
-    expect(agents[0]).toHaveProperty("updatedAt")
+    expect(agents[0]?.projectId).toBe(projectId)
+    expect(agents[0]?.currentRevision.number).toBe(1)
+    expect(agents[0]?.currentRevision.updatedAt).toBeDefined()
+  })
+
+  it("should expose the revision name and description on the current revision", async () => {
+    const { organization, project, user } = await createContext()
+
+    const agent = agentFactory.transient({ organization, project }).build({ name: "Named Agent" })
+    await repositories.agentRepository.save(agent)
+    const agentSettings = agentSettingsFactory.transient({ organization, project, agent }).build({
+      revisionName: "Launch",
+      revisionDesc: "The revision we launched with",
+    })
+    await repositories.agentSettingsRepository.save(agentSettings)
+    await addUserToAgent({ repositories, agent, user })
+    const storedSettings = await repositories.agentSettingsRepository.findOneOrFail({
+      where: { id: agentSettings.id },
+    })
+
+    const response = await subject()
+
+    expectResponse(response, 200)
+    expect(response.body.data[0]?.currentRevision).toEqual({
+      number: 1,
+      name: "Launch",
+      description: "The revision we launched with",
+      updatedAt: storedSettings.updatedAt.getTime(),
+    })
+  })
+
+  it("should return the last published revision and ignore a newer draft", async () => {
+    const { organization, project, user } = await createContext()
+
+    const agent = agentFactory.transient({ organization, project }).build({ name: "Drafted Agent" })
+    await repositories.agentRepository.save(agent)
+    const publishedRevision = agentSettingsFactory
+      .transient({ organization, project, agent })
+      .build({ revision: 1, revisionName: "Published" })
+    const draftRevision = agentSettingsFactory
+      .transient({ organization, project, agent })
+      .build({ revision: 2, revisionName: "Draft", isDraft: true })
+    await repositories.agentSettingsRepository.save([publishedRevision, draftRevision])
+    await addUserToAgent({ repositories, agent, user })
+
+    const response = await subject()
+
+    expectResponse(response, 200)
+    expect(response.body.data).toHaveLength(1)
+    expect(response.body.data[0]?.currentRevision.number).toBe(1)
+    expect(response.body.data[0]?.currentRevision.name).toBe("Published")
+    // getAll is the draft-free view; the draft is only exposed by getAllWithDrafts.
+    expect(response.body.data[0]).not.toHaveProperty("draftRevision")
   })
 
   it("should return empty array when project has no agents", async () => {

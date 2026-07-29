@@ -1,4 +1,9 @@
-import { AgentSettingsRoutes } from "@caseai-connect/api-contracts"
+import {
+  AgentLocale,
+  AgentModel,
+  AgentSettingsRoutes,
+  DocumentsRagMode,
+} from "@caseai-connect/api-contracts"
 import { afterAll } from "@jest/globals"
 import type { INestApplication } from "@nestjs/common"
 import type { App } from "supertest/types"
@@ -9,12 +14,13 @@ import {
   teardownE2eTestDatabase,
 } from "@/common/test/test-database"
 import { removeNullish } from "@/common/utils/remove-nullish"
+import { agentFactory } from "@/domains/agents/agent.factory"
 import { agentSettingsFactory } from "@/domains/agents/settings/agent.settings.factory"
 import { createOrganizationWithAgent } from "@/domains/organizations/organization.factory"
 import { sdk } from "@/external/llm/open-telemetry-init"
-import { setupUserGuardForTesting } from "../../../../test/e2e.helpers"
-import { expectResponse, type Requester, testRequester } from "../../../../test/request"
-import { AgentsModule } from "../agents.module"
+import { setupUserGuardForTesting } from "../../../../../test/e2e.helpers"
+import { expectResponse, type Requester, testRequester } from "../../../../../test/request"
+import { AgentsModule } from "../../agents.module"
 
 describe("Agent Settings - getAll", () => {
   let app: INestApplication<App>
@@ -128,5 +134,91 @@ describe("Agent Settings - getAll", () => {
     expect(agentHistory).toHaveLength(1)
     expect(agentHistory[0]?.instructions).toBe(agentSettings.instructions)
     expect(agentHistory[0]?.revision).toBe(1)
+  })
+
+  it("should return the settings fields of each revision", async () => {
+    const { organization, project, agent } = await createContext()
+
+    const revision2 = agentSettingsFactory.transient({ organization, project, agent }).build({
+      revision: 2,
+      revisionName: "Second",
+      revisionDesc: "The second revision",
+      instructions: "Rev 2 instructions",
+      greetingMessage: "Hello there",
+      locale: AgentLocale.FR,
+      model: AgentModel.Gemini25Flash,
+      temperature: 1.5,
+      documentsRagMode: DocumentsRagMode.None,
+      fillFormEnabled: true,
+      outputJsonSchema: { type: "object", properties: { title: { type: "string" } } },
+    })
+    await repositories.agentSettingsRepository.save(revision2)
+    const storedRevision2 = await repositories.agentSettingsRepository.findOneOrFail({
+      where: { id: revision2.id },
+    })
+
+    const response = await subject()
+
+    expectResponse(response, 200)
+    const [latest] = response.body.data
+    expect(latest).toEqual({
+      id: revision2.id,
+      agentId: agent.id,
+      revision: 2,
+      name: "Second",
+      description: "The second revision",
+      instructions: "Rev 2 instructions",
+      greetingMessage: "Hello there",
+      locale: AgentLocale.FR,
+      model: AgentModel.Gemini25Flash,
+      temperature: 1.5,
+      documentsRagMode: DocumentsRagMode.None,
+      fillFormEnabled: true,
+      outputJsonSchema: { type: "object", properties: { title: { type: "string" } } },
+      isDraft: false,
+      isArchived: false,
+      hasCategories: false,
+      documentTagIds: [],
+      resourceLibraryIds: expect.any(Array),
+      mcpServers: [],
+      projectAgentSessionCategoryIds: [],
+      usedProjectAgentSessionCategoryIds: [],
+      createdAt: storedRevision2.createdAt.getTime(),
+      updatedAt: storedRevision2.updatedAt.getTime(),
+    })
+  })
+
+  it("should omit archived revisions from the history", async () => {
+    const { organization, project, agent } = await createContext()
+
+    const archivedRevision2 = agentSettingsFactory
+      .transient({ organization, project, agent })
+      .build({ revision: 2, isArchived: true })
+    await repositories.agentSettingsRepository.save(archivedRevision2)
+
+    const response = await subject()
+
+    expectResponse(response, 200)
+    expect(response.body.data.map((settings) => settings.revision)).toEqual([1])
+  })
+
+  it("should not leak revisions belonging to another agent", async () => {
+    const { organization, project } = await createContext()
+
+    const otherAgent = agentFactory
+      .transient({ organization, project })
+      .build({ name: "Other Agent" })
+    await repositories.agentRepository.save(otherAgent)
+    await repositories.agentSettingsRepository.save(
+      agentSettingsFactory
+        .transient({ organization, project, agent: otherAgent })
+        .build({ instructions: "Other agent instructions" }),
+    )
+
+    const response = await subject()
+
+    expectResponse(response, 200)
+    expect(response.body.data).toHaveLength(1)
+    expect(response.body.data.map((settings) => settings.agentId)).toEqual([agentId])
   })
 })
