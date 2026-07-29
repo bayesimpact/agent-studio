@@ -320,7 +320,108 @@ describe("AgentSettings", () => {
       expect(savedSettings[0]?.revision).toBe(2)
       expect(savedSettings[0]?.isDraft).toBeTruthy()
     })
+    it("updateAgent should also create draft settings with revision = last revision +1 - no existing draft - last (first) revision archived", async () => {
+      const { organization, project, agent } = await createAgentWithSettings(
+        setup,
+        repositories,
+        true,
+      )
 
+      let savedSettings = await service.getAll({
+        connectScope: {
+          organizationId: organization.id,
+          projectId: project.id,
+        },
+        agentId: agent.id,
+        includesDraft: true,
+        includesArchived: true,
+      })
+      expect(savedSettings.length).toBe(1)
+      // @ts-expect-error
+      const archivedSettings: AgentSettings = savedSettings[0]
+      archivedSettings.isArchived = true
+      repositories.agentSettingsRepository.save(archivedSettings)
+
+      const updatedFields = {
+        ...agentSettingsValuesRev1,
+        instructions: "My new instructions",
+        name: "My new agent name",
+      }
+
+      const { agentSettings: updatedAgentSettings } = await agentService.updateAgent({
+        connectScope: {
+          organizationId: organization.id,
+          projectId: project.id,
+        },
+        fieldsToUpdate: updatedFields,
+        agentId: agent.id,
+      })
+      assertOnSettings(updatedFields, updatedAgentSettings)
+
+      savedSettings = await service.getAll({
+        connectScope: {
+          organizationId: organization.id,
+          projectId: project.id,
+        },
+        agentId: agent.id,
+        includesDraft: true,
+        includesArchived: true,
+      })
+      expect(savedSettings.length).toBe(2)
+      assertOnSettings(updatedFields, savedSettings[0])
+      expect(savedSettings[0]?.revision).toBe(2)
+      expect(savedSettings[0]?.isDraft).toBeTruthy()
+    })
+
+    it("updateAgent should also create draft settings with revision = last revision +1 - no existing draft - last revision archived", async () => {
+      const { organization, project, agent } = await createAgentWithSettings(setup, repositories)
+
+      let savedSettings = await service.getAll({
+        connectScope: {
+          organizationId: organization.id,
+          projectId: project.id,
+        },
+        agentId: agent.id,
+        includesDraft: true,
+        includesArchived: true,
+      })
+      expect(savedSettings.length).toBe(3)
+      // @ts-expect-error
+      const archivedSettings: AgentSettings = savedSettings[0]
+      archivedSettings.isArchived = true
+      archivedSettings.isDraft = false
+      repositories.agentSettingsRepository.save(archivedSettings)
+
+      const updatedFields = {
+        ...agentSettingsValuesRev3Draft,
+        instructions: "My new instructions",
+        name: "My new agent name",
+      }
+
+      const { agentSettings: updatedAgentSettings } = await agentService.updateAgent({
+        connectScope: {
+          organizationId: organization.id,
+          projectId: project.id,
+        },
+        fieldsToUpdate: updatedFields,
+        agentId: agent.id,
+      })
+      assertOnSettings(updatedFields, updatedAgentSettings)
+
+      savedSettings = await service.getAll({
+        connectScope: {
+          organizationId: organization.id,
+          projectId: project.id,
+        },
+        agentId: agent.id,
+        includesDraft: true,
+        includesArchived: true,
+      })
+      expect(savedSettings.length).toBe(4)
+      assertOnSettings(updatedFields, savedSettings[0])
+      expect(savedSettings[0]?.revision).toBe(4)
+      expect(savedSettings[0]?.isDraft).toBeTruthy()
+    })
     it("updateAgent should update existing draft settings - existing draft", async () => {
       const { organization, project, agent } = await createAgentWithSettings(setup, repositories)
 

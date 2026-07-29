@@ -23,7 +23,7 @@ export class AgentSettingsService {
   private readonly agentSettingsConnectRepository: ConnectRepository<AgentSettings>
   constructor(
     @InjectRepository(AgentSettings)
-    agentSettingsRepository: Repository<AgentSettings>,
+    private agentSettingsRepository: Repository<AgentSettings>,
   ) {
     this.agentSettingsConnectRepository = new ConnectRepository(agentSettingsRepository, "agents")
   }
@@ -45,6 +45,16 @@ export class AgentSettingsService {
     }
     return undefined
   }
+  private async getMaxRevision(agentId: string): Promise<number> {
+    const last = await this.agentSettingsRepository
+      .createQueryBuilder("as")
+      .where("as.agentId = :agentId", { agentId })
+      .orderBy("as.revision", "DESC")
+      .getOne()
+    if (last) return last.revision
+    return 0
+  }
+
   private async getLastOrUndefined({
     connectScope,
     agentId,
@@ -185,7 +195,10 @@ export class AgentSettingsService {
 
       isDraft = last.isDraft
       if (isDraft) revision = last.revision
-      else revision = last.revision + 1
+      else {
+        const rev = await this.getMaxRevision(agentId)
+        revision = rev + 1
+      }
 
       const {
         id,
@@ -198,7 +211,8 @@ export class AgentSettingsService {
       } = last
       previousSettings = cleanedSettings
     } else {
-      revision = 1
+      const rev = await this.getMaxRevision(agentId)
+      revision = rev + 1
     }
 
     if (isDraft && last) {
