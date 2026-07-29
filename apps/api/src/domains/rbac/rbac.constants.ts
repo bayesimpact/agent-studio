@@ -8,7 +8,7 @@ export const ORGANIZATION_ROLES = {
   member: "org_member",
 } as const
 
-export const ORG_CREATOR_ROLE = "org_creator" as const
+export const PLATFORM_STAFF_ROLE = "platform_staff" as const
 
 export const PROJECT_ROLES = {
   owner: "project_owner",
@@ -17,6 +17,8 @@ export const PROJECT_ROLES = {
 } as const
 
 export const ORGANIZATION_CREATE_PERMISSION = "organization.create" as const
+
+export const TRACE_VIEW_PERMISSION = "trace.view" as const
 
 export const PROJECT_CREATE_PERMISSION = "project.create" as const
 
@@ -46,7 +48,7 @@ export const ORGANIZATION_ROLE_PERMISSIONS = {
   ],
   org_admin: ["organization.read", "organization.update", PROJECT_CREATE_PERMISSION],
   org_member: ["organization.read"],
-  [ORG_CREATOR_ROLE]: [ORGANIZATION_CREATE_PERMISSION],
+  [PLATFORM_STAFF_ROLE]: [ORGANIZATION_CREATE_PERMISSION, TRACE_VIEW_PERMISSION],
 } as const satisfies Record<string, readonly string[]>
 
 /** Permissions granted per project role key. */

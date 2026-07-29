@@ -1,5 +1,7 @@
 export const ORGANIZATION_CREATE_PERMISSION = "organization.create" as const
 
+export const TRACE_VIEW_PERMISSION = "trace.view" as const
+
 export const PROJECT_CREATE_PERMISSION = "project.create" as const
 
 export const PROJECT_READ_PERMISSION = "project.read" as const
@@ -15,6 +17,6 @@ export const ORGANIZATION_SCOPED_PERMISSIONS = [
 
 export type OrganizationScopedPermission = (typeof ORGANIZATION_SCOPED_PERMISSIONS)[number]
 
-export type GlobalPermission = typeof ORGANIZATION_CREATE_PERMISSION
+export type GlobalPermission = typeof ORGANIZATION_CREATE_PERMISSION | typeof TRACE_VIEW_PERMISSION
 
 export type OrganizationPermission = OrganizationScopedPermission

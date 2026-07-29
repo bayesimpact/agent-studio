@@ -5,9 +5,9 @@ import { InjectDataSource, InjectRepository } from "@nestjs/typeorm"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
 import { DataSource, In, Not, type Repository } from "typeorm"
 import {
-  ORG_CREATOR_ROLE,
   ORGANIZATION_ROLE_PERMISSIONS,
   ORGANIZATION_ROLES,
+  PLATFORM_STAFF_ROLE,
   PROJECT_ROLE_PERMISSIONS,
   PROJECT_ROLES,
 } from "./rbac.constants"
@@ -18,7 +18,7 @@ const ORGANIZATION_ROLE_LABELS: Record<string, string> = {
   org_owner: "Organization Owner",
   org_admin: "Organization Admin",
   org_member: "Organization Member",
-  [ORG_CREATOR_ROLE]: "Organization Creator",
+  [PLATFORM_STAFF_ROLE]: "Platform Staff",
 }
 
 const PROJECT_ROLE_LABELS: Record<string, string> = {
@@ -28,7 +28,7 @@ const PROJECT_ROLE_LABELS: Record<string, string> = {
 }
 
 const GLOBAL_ROLE_SCOPE: Record<string, Role["scopeType"]> = {
-  [ORG_CREATOR_ROLE]: "global",
+  [PLATFORM_STAFF_ROLE]: "global",
 }
 
 @Injectable()
@@ -48,7 +48,7 @@ export class RbacService {
    */
   async seedOrganizationRolesAndPermissions(): Promise<void> {
     const rolesByKey = await this.upsertRoles({
-      roleKeys: [...Object.values(ORGANIZATION_ROLES), ORG_CREATOR_ROLE],
+      roleKeys: [...Object.values(ORGANIZATION_ROLES), PLATFORM_STAFF_ROLE],
       labels: ORGANIZATION_ROLE_LABELS,
       defaultScope: "organization",
     })
@@ -103,8 +103,8 @@ export class RbacService {
     return updatedCount
   }
 
-  /** Grants org_creator to users whose email matches ORGANIZATION_CREATOR_EMAIL_DOMAIN. */
-  async assignOrgCreatorToEligibleUsers(): Promise<number> {
+  /** Grants platform_staff to users whose email matches ORGANIZATION_CREATOR_EMAIL_DOMAIN. */
+  async assignPlatformStaffToEligibleUsers(): Promise<number> {
     const allowedDomain = this.configService
       .get<string>("ORGANIZATION_CREATOR_EMAIL_DOMAIN")
       ?.trim()
@@ -112,8 +112,10 @@ export class RbacService {
       return 0
     }
 
-    const orgCreatorRole = await this.roleRepository.findOne({ where: { key: ORG_CREATOR_ROLE } })
-    if (!orgCreatorRole) {
+    const platformStaffRole = await this.roleRepository.findOne({
+      where: { key: PLATFORM_STAFF_ROLE },
+    })
+    if (!platformStaffRole) {
       return 0
     }
 
@@ -132,7 +134,7 @@ export class RbacService {
              AND membership.deleted_at IS NULL
          )
        RETURNING id`,
-      [orgCreatorRole.id, allowedDomain],
+      [platformStaffRole.id, allowedDomain],
     )
 
     return insertedRows.length

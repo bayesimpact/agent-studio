@@ -1,7 +1,7 @@
 import type { TestingModule } from "@nestjs/testing"
 import type { AllRepositories } from "@/common/test/test-transaction-manager"
 import { userMembershipFactory } from "@/domains/memberships/user-membership.factory"
-import { ORG_CREATOR_ROLE } from "@/domains/rbac/rbac.constants"
+import { PLATFORM_STAFF_ROLE } from "@/domains/rbac/rbac.constants"
 import { RbacService } from "@/domains/rbac/rbac.service"
 import type { User } from "@/domains/users/user.entity"
 
@@ -19,15 +19,15 @@ export async function ensureRbacCatalog(module: TestingModule): Promise<void> {
   rbacCatalogReady = true
 }
 
-export async function assignOrgCreatorToUser({
+export async function assignPlatformStaffToUser({
   repositories,
   user,
 }: {
   repositories: AllRepositories
   user: User
 }): Promise<void> {
-  const orgCreatorRole = await repositories.roleRepository.findOneOrFail({
-    where: { key: ORG_CREATOR_ROLE },
+  const platformStaffRole = await repositories.roleRepository.findOneOrFail({
+    where: { key: PLATFORM_STAFF_ROLE },
   })
 
   await repositories.userMembershipRepository.save(
@@ -36,7 +36,7 @@ export async function assignOrgCreatorToUser({
       resourceType: "global",
       resourceId: null,
       role: "member",
-      roleId: orgCreatorRole.id,
+      roleId: platformStaffRole.id,
     }),
   )
 }

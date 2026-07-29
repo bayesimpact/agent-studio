@@ -14,7 +14,7 @@ import { createOrganizationWithOwner } from "@/domains/organizations/organizatio
 import { RbacModule } from "@/domains/rbac/rbac.module"
 import { userFactory } from "@/domains/users/user.factory"
 import { setupUserGuardForTesting } from "../../../../test/e2e.helpers"
-import { assignOrgCreatorToUser, ensureRbacCatalog } from "../../../../test/rbac-test.helpers"
+import { assignPlatformStaffToUser, ensureRbacCatalog } from "../../../../test/rbac-test.helpers"
 import { expectResponse, type Requester, testRequester } from "../../../../test/request"
 import { OrganizationsModule } from "../organizations.module"
 
@@ -115,7 +115,7 @@ describe("Organizations - listOrganizations", () => {
   it("does not expose global organization.create on listed organizations", async () => {
     const user = userFactory.build({ auth0Id, email: "creator@bayesimpact.org" })
     await repositories.userRepository.save(user)
-    await assignOrgCreatorToUser({ repositories, user })
+    await assignPlatformStaffToUser({ repositories, user })
 
     const response = await subject()
 

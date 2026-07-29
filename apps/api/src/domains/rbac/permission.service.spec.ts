@@ -12,14 +12,15 @@ import { createOrganizationWithOwner } from "@/domains/organizations/organizatio
 import { projectFactory } from "@/domains/projects/project.factory"
 import { PermissionService } from "@/domains/rbac/permission.service"
 import {
-  ORG_CREATOR_ROLE,
   ORGANIZATION_CREATE_PERMISSION,
   ORGANIZATION_ROLE_PERMISSIONS,
   ORGANIZATION_ROLES,
+  PLATFORM_STAFF_ROLE,
   PROJECT_CREATE_PERMISSION,
   PROJECT_READ_PERMISSION,
   PROJECT_ROLE_PERMISSIONS,
   PROJECT_ROLES,
+  TRACE_VIEW_PERMISSION,
 } from "@/domains/rbac/rbac.constants"
 import { RbacModule } from "@/domains/rbac/rbac.module"
 import { RbacService } from "@/domains/rbac/rbac.service"
@@ -161,12 +162,12 @@ describe("PermissionService", () => {
     ).resolves.toBe(false)
   })
 
-  it("grants organization.create via global org_creator membership", async () => {
+  it("grants organization.create via global platform_staff membership", async () => {
     const repositories = setup.getAllRepositories()
     const user = userFactory.build({ email: "creator@bayesimpact.org" })
     await repositories.userRepository.save(user)
-    const orgCreatorRole = await repositories.roleRepository.findOneOrFail({
-      where: { key: ORG_CREATOR_ROLE },
+    const platformStaffRole = await repositories.roleRepository.findOneOrFail({
+      where: { key: PLATFORM_STAFF_ROLE },
     })
     await repositories.userMembershipRepository.save(
       userMembershipFactory.build({
@@ -174,14 +175,14 @@ describe("PermissionService", () => {
         resourceType: "global",
         resourceId: null,
         role: "member",
-        roleId: orgCreatorRole.id,
+        roleId: platformStaffRole.id,
       }),
     )
 
     await expect(service.hasGlobal(user.id, ORGANIZATION_CREATE_PERMISSION)).resolves.toBe(true)
   })
 
-  it("denies organization.create without global org_creator membership", async () => {
+  it("denies organization.create without global platform_staff membership", async () => {
     const repositories = setup.getAllRepositories()
     const user = userFactory.build({ email: "outsider@example.com" })
     await repositories.userRepository.save(user)
@@ -189,12 +190,12 @@ describe("PermissionService", () => {
     await expect(service.hasGlobal(user.id, ORGANIZATION_CREATE_PERMISSION)).resolves.toBe(false)
   })
 
-  it("lists global permissions for org_creator users", async () => {
+  it("lists global permissions for platform_staff users", async () => {
     const repositories = setup.getAllRepositories()
     const user = userFactory.build({ email: "creator@bayesimpact.org" })
     await repositories.userRepository.save(user)
-    const orgCreatorRole = await repositories.roleRepository.findOneOrFail({
-      where: { key: ORG_CREATOR_ROLE },
+    const platformStaffRole = await repositories.roleRepository.findOneOrFail({
+      where: { key: PLATFORM_STAFF_ROLE },
     })
     await repositories.userMembershipRepository.save(
       userMembershipFactory.build({
@@ -202,13 +203,12 @@ describe("PermissionService", () => {
         resourceType: "global",
         resourceId: null,
         role: "member",
-        roleId: orgCreatorRole.id,
+        roleId: platformStaffRole.id,
       }),
     )
 
-    await expect(service.listGlobalPermissions(user.id)).resolves.toEqual([
-      ORGANIZATION_CREATE_PERMISSION,
-    ])
+    const permissions = await service.listGlobalPermissions(user.id)
+    expect(permissions.sort()).toEqual([ORGANIZATION_CREATE_PERMISSION, TRACE_VIEW_PERMISSION])
   })
 
   describe("listResourceIds", () => {
@@ -1234,7 +1234,7 @@ describe("RbacService", () => {
   it("seeds org roles and permissions idempotently", async () => {
     await service.seedOrganizationRolesAndPermissions()
 
-    const orgRoleKeys = [...Object.values(ORGANIZATION_ROLES), ORG_CREATOR_ROLE]
+    const orgRoleKeys = [...Object.values(ORGANIZATION_ROLES), PLATFORM_STAFF_ROLE]
     const roles = await setup.getRepository(Role).find({ where: { key: In(orgRoleKeys) } })
     expect(roles.map((role) => role.key).sort()).toEqual([...orgRoleKeys].sort())
 
@@ -1313,30 +1313,30 @@ describe("RbacService", () => {
     expect(membership.roleId).toBe(projectMemberRole.id)
   })
 
-  it("assigns org_creator to eligible users", async () => {
+  it("assigns platform_staff to eligible users", async () => {
     const repositories = setup.getAllRepositories()
     const eligibleUser = userFactory.build({ email: "member@bayesimpact.org" })
     const ineligibleUser = userFactory.build({ email: "member@example.com" })
     await repositories.userRepository.save([eligibleUser, ineligibleUser])
 
-    const assignedCount = await service.assignOrgCreatorToEligibleUsers()
+    const assignedCount = await service.assignPlatformStaffToEligibleUsers()
     expect(assignedCount).toBe(1)
 
-    const orgCreatorRole = await setup.getRepository(Role).findOneOrFail({
-      where: { key: ORG_CREATOR_ROLE },
+    const platformStaffRole = await setup.getRepository(Role).findOneOrFail({
+      where: { key: PLATFORM_STAFF_ROLE },
     })
     const eligibleMembership = await setup.getRepository(UserMembership).findOne({
       where: {
         userId: eligibleUser.id,
         resourceType: "global",
-        roleId: orgCreatorRole.id,
+        roleId: platformStaffRole.id,
       },
     })
     const ineligibleMembership = await setup.getRepository(UserMembership).findOne({
       where: {
         userId: ineligibleUser.id,
         resourceType: "global",
-        roleId: orgCreatorRole.id,
+        roleId: platformStaffRole.id,
       },
     })
 
