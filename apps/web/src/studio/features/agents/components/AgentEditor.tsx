@@ -18,6 +18,7 @@ import { AgentMcpServersTab } from "./AgentMcpServersTab"
 import { AgentModelTab } from "./AgentModelTab"
 import { AgentOrchestrationTab } from "./AgentOrchestrationTab"
 import { AgentOutputTab } from "./AgentOutputTab"
+import { AgentPublishButton } from "./AgentPublishButton"
 import { AgentResourceLibrariesTab } from "./AgentResourceLibrariesTab"
 import { AgentSessionCategoriesTab } from "./AgentSessionCategoriesTab"
 import { AgentSourcesTab } from "./AgentSourcesTab"
@@ -57,10 +58,13 @@ export function AgentEditor({
   agent,
   className,
   orchestration,
+  onDirtyChange,
 }: {
   agent: Agent
   className?: string
   orchestration?: AgentEditorOrchestration
+  /** Reports whether the active tab has unsaved changes, e.g. to disable a publish action. */
+  onDirtyChange?: (dirty: boolean) => void
 }) {
   const { t } = useTranslation()
   const project = useValue(selectCurrentProjectData)
@@ -163,6 +167,11 @@ export function AgentEditor({
   })
   const [dirty, setDirty] = useState(false)
 
+  const handleDirtyChange = (next: boolean) => {
+    setDirty(next)
+    onDirtyChange?.(next)
+  }
+
   // Browser-level leave (refresh / close tab); in-app navigation is handled by the blocker below.
   usePreventLeave(dirty)
   const blocker = useBlocker(dirty)
@@ -184,7 +193,7 @@ export function AgentEditor({
   const handleConfirm = () => {
     if (nav.pending) {
       setNav({ active: nav.pending, pending: null })
-      setDirty(false)
+      handleDirtyChange(false)
     } else if (isLeavingEditor) {
       blocker.proceed?.()
     }
@@ -209,16 +218,25 @@ export function AgentEditor({
               </TabsTrigger>
             ))}
           </TabsList>
-          <AgentVersionHistory agent={agent} />
+          <div className="flex items-center gap-2">
+            <AgentVersionHistory agent={agent} />
+            {/* Extraction agents edit their settings from the playground, which has no editor
+                route to host a publish action, so it sits next to the history button here. */}
+            {agent.type === "extraction" && (
+              <AgentPublishButton agent={agent} size="sm" hasUnsavedChanges={dirty} />
+            )}
+          </div>
         </div>
-        {/* Also keyed on the revision so the active tab form reloads fresh defaults after a
-            version is restored from the history sheet. */}
+        {/* Also keyed on the revision and updatedAt so the active tab form reloads fresh defaults
+            after a version is restored from the history sheet. Restoring over an existing draft
+            keeps the same revision (the draft is overwritten in place), so revision alone is not
+            enough to detect it. */}
         <TabsContent
-          key={`${activeTab.value}-${agent.revision}`}
+          key={`${activeTab.value}-${agent.revision}-${agent.updatedAt}`}
           value={activeTab.value}
           className="mt-4"
         >
-          {activeTab.render(setDirty)}
+          {activeTab.render(handleDirtyChange)}
         </TabsContent>
       </Tabs>
 

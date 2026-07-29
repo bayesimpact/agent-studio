@@ -7,6 +7,7 @@ import type { AppDispatch, RootState } from "@/common/store/types"
 import { selectAgentHistoryData } from "@/studio/features/agents/agent-history.selectors"
 import {
   listAgentHistory,
+  publishAgentRevision,
   restoreAgentRevision,
 } from "@/studio/features/agents/agent-history.thunks"
 import {
@@ -131,6 +132,34 @@ function registerListeners() {
       )
     },
   })
+  listenerMiddleware.startListening({
+    actionCreator: publishAgentRevision.fulfilled,
+    effect: async (_, listenerApi) => {
+      // Refetch so `agent.isDraft` flips to false (which disables the publish button) and the
+      // newly published revision shows up in the history sheet.
+      listenerApi.dispatch(listAgents())
+      listenerApi.dispatch(listAgentHistory())
+
+      listenerApi.dispatch(
+        notificationsActions.show({
+          title: "Agent version published successfully",
+          type: "success",
+        }),
+      )
+    },
+  })
+  listenerMiddleware.startListening({
+    actionCreator: publishAgentRevision.rejected,
+    effect: async (_, listenerApi) => {
+      listenerApi.dispatch(
+        notificationsActions.show({
+          title: "Agent version publication failed",
+          type: "error",
+        }),
+      )
+    },
+  })
+
   listenerMiddleware.startListening({
     actionCreator: restoreAgentRevision.rejected,
     effect: async (_, listenerApi) => {

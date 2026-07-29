@@ -12,6 +12,7 @@ export type TrackActivityEntityFrom =
   | "projectMembership"
   | "memberProjectMembership"
   | "agent"
+  | "agentSettings"
   | "agentMembership"
   | "memberAgentMembership"
   | "document"

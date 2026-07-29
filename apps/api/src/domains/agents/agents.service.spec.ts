@@ -387,6 +387,7 @@ describe("AgentsService", () => {
       })
       expect(updatedPrompt).toBeDefined()
       expect(updatedPrompt?.instructions).toBe("Updated Prompt")
+      expect(updatedPrompt?.isDraft).toBeTruthy()
     })
 
     it("should update only name when instructions is not provided", async () => {
@@ -408,6 +409,7 @@ describe("AgentsService", () => {
       expect(agentSettings).toBeDefined()
       expect(agentSettings?.instructions).toBe(initialAgentSettings.instructions) // Unchanged
       expect(agentSettings?.revision).toBe(initialAgentSettings.revision) // Unchanged
+      expect(agentSettings?.isDraft).toBeFalsy() // Unchanged
     })
 
     it("should throw UnprocessableEntityException when name is less than 3 characters", async () => {
@@ -444,9 +446,11 @@ describe("AgentsService", () => {
           projectId: project.id,
         },
         agentId: agent.id,
+        includesDraft: true,
       })
       expect(updatedAgentSettings.greetingMessage).not.toBe(agentSettings.greetingMessage)
       expect(updatedAgentSettings.greetingMessage).toBe("New greeting")
+      expect(updatedAgentSettings?.isDraft).toBeTruthy()
 
       const _afterClear = await service.updateAgent({
         connectScope: { organizationId: organization.id, projectId: project.id },
@@ -460,8 +464,10 @@ describe("AgentsService", () => {
           projectId: project.id,
         },
         agentId: agent.id,
+        includesDraft: true,
       })
       expect(updatedAgentSettings.greetingMessage).toBeNull()
+      expect(updatedAgentSettings?.isDraft).toBeTruthy()
     })
 
     it("should preserve greetingMessage when not provided in a partial update", async () => {
@@ -510,6 +516,7 @@ describe("AgentsService", () => {
           projectId: project.id,
         },
         agentId: agent.id,
+        includesDraft: true,
       })
       expect(updatedAgentSettings?.documentsRagMode).toBe(DocumentsRagMode.None)
 

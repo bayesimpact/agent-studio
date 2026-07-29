@@ -38,6 +38,7 @@ import { ResourceLibraryCreatorRoute } from "./ResourceLibraryCreatorRoute"
 import { ResourceLibraryEditorRoute } from "./ResourceLibraryEditorRoute"
 import { RestrictedAccess } from "./RestrictedAccess"
 import { ReviewCampaignReportRoute } from "./ReviewCampaignReportRoute"
+import { StudioAgentRoute } from "./StudioAgentRoute"
 import { StudioAgentSessionRoute } from "./StudioAgentSessionRoute"
 import { StudioRoute } from "./StudioRoute"
 import { WebSourcesRoute } from "./WebSourcesRoute"
@@ -146,7 +147,9 @@ export const studioRoutes = {
           path: StudioRoutes.agent.path,
           element: (
             <AgentRoute>
-              <AgentSessionsHandler />
+              <StudioAgentRoute>
+                <AgentSessionsHandler />
+              </StudioAgentRoute>
             </AgentRoute>
           ),
           children: [

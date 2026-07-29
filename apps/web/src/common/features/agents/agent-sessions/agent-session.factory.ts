@@ -100,5 +100,6 @@ export const agentSessionMessageFactory = AgentSessionMessageFactory.define(({ p
   role: params.role ?? "user",
   content: params.content ?? faker.lorem.sentence(),
   status: params.status ?? "completed",
+  agentRevision: params.agentRevision,
   toolCalls: params.toolCalls,
 }))

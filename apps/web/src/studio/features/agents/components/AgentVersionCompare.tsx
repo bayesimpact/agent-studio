@@ -6,35 +6,41 @@ import { listChangedAgentSettingsFields } from "../agent-history.functions"
 import { AgentSettingsFieldDiff } from "./AgentSettingsFieldDiff"
 import { AgentVersionRestoreButton } from "./AgentVersionRestoreButton"
 
-export type AgentVersionCompareMode = "previous" | "current"
+/**
+ * What the selected revision is diffed against: the revision right before it, the published
+ * version the agent runs with, or the pending draft.
+ */
+export type AgentVersionCompareMode = "previous" | "current" | "draft"
+
+export type AgentVersionCompareAvailability = Record<AgentVersionCompareMode, boolean>
 
 /**
- * Right pane of the version history: pick what the selected revision is compared against
- * ("what this version changed" vs "how it differs from the current version"), review the
- * per-field diffs, and restore the selected revision.
+ * Right pane of the version history: pick what the selected revision is compared against,
+ * review the per-field diffs, and restore the selected revision.
  */
 export function AgentVersionCompare({
   before,
   after,
   selected,
-  isCurrent,
+  isLatest,
+  hasDraft,
+  availability,
   mode,
   onModeChange,
-  canComparePrevious,
-  canCompareCurrent,
 }: {
   before: Agent
   after: Agent
   selected: Agent
-  isCurrent: boolean
+  isLatest: boolean
+  /** Drives the third toggle: only offered when the agent has a pending draft. */
+  hasDraft: boolean
+  availability: AgentVersionCompareAvailability
   mode: AgentVersionCompareMode
   onModeChange: (mode: AgentVersionCompareMode) => void
-  canComparePrevious: boolean
-  canCompareCurrent: boolean
 }) {
   const { t } = useTranslation()
   const changedFields = listChangedAgentSettingsFields(before, after)
-  const canCompare = canComparePrevious || canCompareCurrent
+  const canCompare = availability.previous || availability.current || availability.draft
 
   return (
     <div className="flex min-w-0 flex-1 flex-col">
@@ -46,14 +52,19 @@ export function AgentVersionCompare({
           value={mode}
           onValueChange={(next) => next && onModeChange(next as AgentVersionCompareMode)}
         >
-          <ToggleGroupItem value="previous" disabled={!canComparePrevious}>
+          <ToggleGroupItem value="previous" disabled={!availability.previous}>
             {t("agent:history.compareWithPrevious")}
           </ToggleGroupItem>
-          <ToggleGroupItem value="current" disabled={!canCompareCurrent}>
+          <ToggleGroupItem value="current" disabled={!availability.current}>
             {t("agent:history.compareWithCurrent")}
           </ToggleGroupItem>
+          {hasDraft && (
+            <ToggleGroupItem value="draft" disabled={!availability.draft}>
+              {t("agent:history.compareWithDraft")}
+            </ToggleGroupItem>
+          )}
         </ToggleGroup>
-        <AgentVersionRestoreButton revision={selected.revision} disabled={isCurrent} />
+        <AgentVersionRestoreButton revision={selected.revision} disabled={isLatest} />
       </div>
 
       <div className="min-h-0 flex-1 space-y-6 overflow-y-auto p-4">

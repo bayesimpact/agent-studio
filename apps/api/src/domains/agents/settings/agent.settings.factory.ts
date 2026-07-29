@@ -39,6 +39,8 @@ export const agentSettingsFactory = AgentSettingsFactory.define(
       projectId: transientParams.project.id,
       agentId: transientParams.agent.id,
       agent: transientParams.agent,
+      isDraft: false,
+      isArchived: false,
       createdAt: params.createdAt || now,
       updatedAt: params.updatedAt || now,
       deletedAt: params.deletedAt || null,

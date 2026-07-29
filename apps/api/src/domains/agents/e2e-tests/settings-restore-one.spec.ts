@@ -1,4 +1,4 @@
-import { AgentHistoryRoutes } from "@caseai-connect/api-contracts"
+import { AgentModel, AgentSettingsRoutes } from "@caseai-connect/api-contracts"
 import { afterAll } from "@jest/globals"
 import type { INestApplication } from "@nestjs/common"
 import type { App } from "supertest/types"
@@ -16,7 +16,7 @@ import { setupUserGuardForTesting } from "../../../../test/e2e.helpers"
 import { expectResponse, type Requester, testRequester } from "../../../../test/request"
 import { AgentsModule } from "../agents.module"
 
-describe("Agent History - getAll", () => {
+describe("Agent History - restoreOne", () => {
   let app: INestApplication<App>
   let request: Requester
   let setup: Awaited<ReturnType<typeof setupE2eTestDatabase>>
@@ -25,6 +25,7 @@ describe("Agent History - getAll", () => {
   let organizationId: string
   let projectId: string
   let agentId: string
+  let revision = "1"
   let accessToken: string | undefined = "token"
   let auth0Id = "auth0|123"
 
@@ -43,6 +44,7 @@ describe("Agent History - getAll", () => {
     await clearTestDatabase(setup.dataSource)
     accessToken = "token"
     auth0Id = "auth0|123"
+    revision = "1"
   })
 
   afterAll(async () => {
@@ -63,49 +65,63 @@ describe("Agent History - getAll", () => {
 
   const subject = async () =>
     request({
-      route: AgentHistoryRoutes.getAll,
-      pathParams: removeNullish({ organizationId, projectId, agentId }),
+      route: AgentSettingsRoutes.restoreOne,
+      pathParams: removeNullish({ organizationId, projectId, agentId, revision }),
       token: accessToken,
     })
 
-  it("should return revisions for agent", async () => {
+  it("should copy the target revision as a new revision", async () => {
     const { organization, project, agent, agentSettings } = await createContext()
 
     const agentSettingsRev2 = agentSettingsFactory
       .transient({ organization, project, agent })
       .build({
         instructions: "Rev 2",
+        model: AgentModel.Gemini25Flash,
         revision: 2,
       })
-    const agentSettingsRev3 = agentSettingsFactory
-      .transient({ organization, project, agent })
-      .build({
-        instructions: "Rev 3",
-        revision: 3,
-      })
-    await repositories.agentSettingsRepository.save([agentSettingsRev2, agentSettingsRev3])
+    await repositories.agentSettingsRepository.save(agentSettingsRev2)
 
+    revision = "1"
     const response = await subject()
 
-    expectResponse(response, 200)
-    const agentHistory = response.body.data
-    expect(agentHistory[0]?.instructions).toBe("Rev 3")
-    expect(agentHistory[0]?.revision).toBe(3)
-    expect(agentHistory[1]?.instructions).toBe("Rev 2")
-    expect(agentHistory[1]?.revision).toBe(2)
-    expect(agentHistory[2]?.instructions).toBe(agentSettings.instructions)
-    expect(agentHistory[2]?.revision).toBe(1)
+    expectResponse(response, 201)
+    expect(response.body.data).toEqual({ success: true })
+
+    const revisions = await repositories.agentSettingsRepository.find({
+      where: { agentId: agent.id },
+      order: { revision: "DESC" },
+    })
+    expect(revisions).toHaveLength(3)
+    expect(revisions[0]?.revision).toBe(3)
+    expect(revisions[0]?.instructions).toBe(agentSettings.instructions)
+    expect(revisions[0]?.model).toBe(agentSettings.model)
   })
 
-  it("should return one item array when agent has only one revision has no agents", async () => {
-    const { agentSettings } = await createContext()
+  it("should not create a new revision when the target equals the latest revision", async () => {
+    const { agent } = await createContext()
 
+    revision = "1"
     const response = await subject()
 
-    expectResponse(response, 200)
-    const agentHistory = response.body.data
-    expect(agentHistory).toHaveLength(1)
-    expect(agentHistory[0]?.instructions).toBe(agentSettings.instructions)
-    expect(agentHistory[0]?.revision).toBe(1)
+    expectResponse(response, 201)
+    const revisions = await repositories.agentSettingsRepository.find({
+      where: { agentId: agent.id },
+    })
+    expect(revisions).toHaveLength(1)
+  })
+
+  it("should return 404 when the revision does not exist", async () => {
+    await createContext()
+
+    revision = "42"
+    expectResponse(await subject(), 404)
+  })
+
+  it("should return 422 when the revision is not a number", async () => {
+    await createContext()
+
+    revision = "not-a-number"
+    expectResponse(await subject(), 422)
   })
 })

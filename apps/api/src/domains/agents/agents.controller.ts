@@ -1,6 +1,6 @@
 import {
   type AgentDto,
-  AgentHistoryRoutes,
+  AgentSettingsRoutes,
   type AgentSubAgentDto,
   AgentSubAgentsRoutes,
   AgentsRoutes,
@@ -96,6 +96,29 @@ export class AgentsController {
     return { data: results }
   }
 
+  @Get(AgentsRoutes.getAllWithDrafts.path)
+  @CheckPolicy((policy) => policy.canList())
+  async getAllWithDrafts(
+    @Req() request: EndpointRequestWithProject,
+  ): Promise<typeof AgentsRoutes.getAllWithDrafts.response> {
+    const connectScope = getRequiredConnectScope(request)
+    const agents = await this.agentsService.listAgents({
+      userId: request.user.id,
+      connectScope,
+    })
+    const results = await Promise.all(
+      agents.map(async (agent) => {
+        const agentSettings = await this.agentSettingsService.getLast({
+          connectScope,
+          agentId: agent.id,
+          includesDraft: true,
+        })
+        return toAgentDto({ agent, agentSettings })
+      }),
+    )
+    return { data: results }
+  }
+
   @Patch(AgentsRoutes.updateOne.path)
   @CheckPolicy((policy) => policy.canUpdate())
   @AddContext("agent")
@@ -119,15 +142,18 @@ export class AgentsController {
     return { data: { success: true } }
   }
 
-  @Get(AgentHistoryRoutes.getAll.path)
+  @Get(AgentSettingsRoutes.getAll.path)
   @CheckPolicy((policy) => policy.canUpdate())
   @AddContext("agent")
   async getAllHistory(
     @Req() request: EndpointRequestWithAgent,
-  ): Promise<typeof AgentHistoryRoutes.getAll.response> {
+  ): Promise<typeof AgentSettingsRoutes.getAll.response> {
+    // Drafts are included so the history timeline can show the pending draft revision and diff
+    // it against the last published one.
     const agentSettings = await this.agentSettingsService.getAll({
       connectScope: getRequiredConnectScope(request),
       agentId: request.agent.id,
+      includesDraft: true,
     })
     const results = agentSettings.map((as) => {
       return toAgentDto({ agent: request.agent, agentSettings: as })
@@ -135,14 +161,14 @@ export class AgentsController {
     return { data: results }
   }
 
-  @Post(AgentHistoryRoutes.restoreOne.path)
+  @Post(AgentSettingsRoutes.restoreOne.path)
   @CheckPolicy((policy) => policy.canUpdate())
   @AddContext("agent")
   @TrackActivity({ action: "agent.update", entityFrom: "agent" })
-  async restoreOneHistory(
+  async restoreOne(
     @Req() request: EndpointRequestWithAgent,
     @Param("revision") revisionParam: string,
-  ): Promise<typeof AgentHistoryRoutes.restoreOne.response> {
+  ): Promise<typeof AgentSettingsRoutes.restoreOne.response> {
     const revision = Number(revisionParam)
     if (!Number.isInteger(revision) || revision < 1) {
       throw new UnprocessableEntityException(`Invalid revision "${revisionParam}"`)
@@ -166,6 +192,85 @@ export class AgentsController {
       fieldsToUpdate: extractAgentSettingsUpdateFields(targetSettings),
     })
 
+    return { data: { success: true } }
+  }
+
+  @Post(AgentSettingsRoutes.publishOne.path)
+  @CheckPolicy((policy) => policy.canUpdate())
+  @AddContext("agent")
+  @TrackActivity({ action: "agentSettings.publish", entityFrom: "agentSettings" })
+  async publishOne(
+    @Req() request: EndpointRequestWithAgent,
+    @Body() { payload }: typeof AgentSettingsRoutes.publishOne.request,
+    @Param("revision") revisionParam: string,
+  ): Promise<typeof AgentSettingsRoutes.publishOne.response> {
+    const revision = Number(revisionParam)
+    if (!Number.isInteger(revision) || revision < 1) {
+      throw new UnprocessableEntityException(`Invalid revision "${revisionParam}"`)
+    }
+
+    const connectScope = getRequiredConnectScope(request)
+    const targetSettings = await this.agentSettingsService.get({
+      connectScope,
+      agentId: request.agent.id,
+      revision,
+    })
+    if (!targetSettings) {
+      throw new NotFoundException(
+        `Revision ${revision} not found for agent with id ${request.agent.id}`,
+      )
+    }
+    const { revisionName, revisionDesc } = payload
+    const updated = await this.agentSettingsService.publish({
+      connectScope,
+      agentId: request.agent.id,
+      revision,
+      revisionName,
+      revisionDesc,
+    })
+    if (!updated) {
+      throw new UnprocessableEntityException(
+        `Unable to publish revision ${revision} for agent with id ${request.agent.id}`,
+      )
+    }
+    return { data: toAgentDto({ agent: request.agent, agentSettings: updated }) }
+  }
+
+  @Post(AgentSettingsRoutes.archiveOne.path)
+  @CheckPolicy((policy) => policy.canDelete())
+  @AddContext("agent")
+  @TrackActivity({ action: "agentSettings.archive", entityFrom: "agentSettings" })
+  async archiveOne(
+    @Req() request: EndpointRequestWithAgent,
+    @Param("revision") revisionParam: string,
+  ): Promise<typeof AgentSettingsRoutes.archiveOne.response> {
+    const revision = Number(revisionParam)
+    if (!Number.isInteger(revision) || revision < 1) {
+      throw new UnprocessableEntityException(`Invalid revision "${revisionParam}"`)
+    }
+
+    const connectScope = getRequiredConnectScope(request)
+
+    const targetSettings = await this.agentSettingsService.get({
+      connectScope,
+      agentId: request.agent.id,
+      revision,
+    })
+    if (!targetSettings) {
+      throw new NotFoundException(
+        `Revision ${revision} not found for agent with id ${request.agent.id}`,
+      )
+    }
+    const archived = await this.agentSettingsService.archive({
+      connectScope,
+      agentId: request.agent.id,
+      revision,
+    })
+    if (!archived || !archived.success) {
+      throw new UnprocessableEntityException(
+        `Unable to archive revision ${revision} for agent with id ${request.agent.id}`,
+      )
+    }
     return { data: { success: true } }
   }
 
@@ -247,6 +352,10 @@ function toAgentDto({
     hasCategories: (agent.sessionCategories?.length ?? 0) > 0,
     id: agent.id,
     revision: agentSettings.revision,
+    revisionName: agentSettings.revisionName ?? "",
+    revisionDesc: agentSettings.revisionDesc ?? "",
+    isDraft: agentSettings.isDraft,
+    isArchived: agentSettings.isArchived,
     locale: agentSettings.locale,
     model: agentSettings.model,
     name: agent.name,

@@ -21,6 +21,11 @@ export type AgentSessionMessageDto = {
   createdAt?: TimeType
   startedAt?: TimeType
   completedAt?: TimeType
+  /**
+   * Revision of the agent settings that produced this message. Absent on messages built
+   * client-side during a live stream, which are never refetched.
+   */
+  agentRevision?: number
   toolCalls?: Array<{
     id: string
     name: AgentSessionToolName

@@ -1,12 +1,14 @@
 {
   "status": {
     "done": "Terminé",
+    "draft": "Brouillon",
     "error": "Erreur",
     "failed": "Échec",
     "idle": "Inactif",
     "loading": "Chargement",
     "noResults": "Aucun résultat trouvé.",
     "pending": "En attente",
+    "published": "Publié",
     "success": "Succès",
     "thinking": "En réflexion",
     "activity": {

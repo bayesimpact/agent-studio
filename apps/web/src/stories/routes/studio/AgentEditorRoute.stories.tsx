@@ -15,6 +15,8 @@ import { studioRoutes } from "@/studio/routes/StudioRoutes"
 
 type StoryArgs = StudioStoryArgs & {
   withSubAgents?: boolean
+  /** Unpublished draft revision — drives whether the header's publish button is enabled. */
+  withDraft?: boolean
 }
 
 /** Older revisions of the agent so the version history sheet has content to compare. */
@@ -24,12 +26,17 @@ function buildVersions(agent: Agent): Agent[] {
     {
       ...agent,
       revision: 2,
+      isDraft: false,
+      revisionName: "Stricter sourcing",
+      revisionDesc: "Requires the agent to cite a source for every factual claim.",
       temperature: 0.2,
       instructions: `${agent.instructions}\nAlways cite your sources.`,
     },
     {
       ...agent,
       revision: 1,
+      isDraft: false,
+      revisionName: "Initial setup",
       instructions: "You are a helpful assistant.",
     },
   ]
@@ -39,6 +46,7 @@ function buildVersions(agent: Agent): Agent[] {
 function buildMockAgentsService(agents: Agent[], versions: Agent[]): IAgentsSpi {
   return {
     getAll: async () => agents,
+    getAllWithDrafts: async () => agents,
     createOne: async () => {
       throw new Error("createOne is not supported in this story")
     },
@@ -46,6 +54,11 @@ function buildMockAgentsService(agents: Agent[], versions: Agent[]): IAgentsSpi 
     deleteOne: async () => {},
     getHistory: async () => versions,
     restoreRevision: async () => {},
+    publishRevision: async ({ revision }, payload) => {
+      const published = agents.find((agent) => agent.revision === revision) ?? agents[0]
+      if (!published) throw new Error("publishRevision has no agent to publish in this story")
+      return { ...published, ...payload, isDraft: false }
+    },
   }
 }
 
@@ -55,12 +68,14 @@ const meta = {
   argTypes: {
     ...studioStoryArgTypes,
     withSubAgents: { control: "boolean" },
+    withDraft: { control: "boolean" },
   },
   args: {
     ...studioStoryArgs,
     featureFlags: [...studioStoryArgs.featureFlags, "agent-orchestration"],
     withAgents: true,
     withSubAgents: true,
+    withDraft: true,
   },
   render: render({ routes: studioRoutes, path: StudioRoutes.agentEdit.path }),
 } satisfies Meta<StoryArgs>
@@ -70,7 +85,7 @@ type Story = StoryObj<typeof meta>
 
 export const ConversationAgent: Story = {
   decorators: [
-    buildDecorator<StoryArgs>(({ withSubAgents, ...args }) => {
+    buildDecorator<StoryArgs>(({ withSubAgents, withDraft, ...args }) => {
       const { baseSeeds, agents } = buildStudioData({ ...args, withAgents: true })
       const [rawParentAgent, ...rawChildAgents] = agents
       if (!rawParentAgent) {
@@ -81,6 +96,7 @@ export const ConversationAgent: Story = {
         name: "Helpful Assistant",
         type: "conversation" as const,
         revision: 3,
+        isDraft: !!withDraft,
       }
       const childAgents = rawChildAgents.map((agent, index) => ({
         ...agent,

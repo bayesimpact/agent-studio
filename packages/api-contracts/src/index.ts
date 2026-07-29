@@ -24,7 +24,7 @@ export * from "./agents/extraction-agent-sessions/extraction-agent-sessions.dto"
 export { ExtractionAgentSessionsRoutes } from "./agents/extraction-agent-sessions/extraction-agent-sessions.routes"
 // Form Agent Sessions
 // Agent History
-export { AgentHistoryRoutes } from "./agents/settings/agent-history.routes"
+export { AgentSettingsRoutes } from "./agents/settings/agent-settings.routes"
 // Agent Session Messages
 export * from "./agents/shared/agent-session-messages/agent-session-messages.dto"
 export { AgentSessionMessagesRoutes } from "./agents/shared/agent-session-messages/agent-session-messages.routes"

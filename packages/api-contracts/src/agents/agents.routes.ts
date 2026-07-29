@@ -11,6 +11,10 @@ export const AgentsRoutes = {
     method: "get",
     path: "organizations/:organizationId/projects/:projectId/agents",
   }),
+  getAllWithDrafts: defineRoute<ResponseData<AgentDto[]>>({
+    method: "get",
+    path: "organizations/:organizationId/projects/:projectId/agents-with-drafts",
+  }),
   updateOne: defineRoute<ResponseData<SuccessResponseDTO>, RequestPayload<PartialUpdateAgentDto>>({
     method: "patch",
     path: "organizations/:organizationId/projects/:projectId/agents/:agentId",

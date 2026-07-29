@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto"
-import { AgentHistoryRoutes, AgentsRoutes } from "@caseai-connect/api-contracts"
+import { AgentSettingsRoutes, AgentsRoutes } from "@caseai-connect/api-contracts"
 import { afterAll } from "@jest/globals"
 import type { INestApplication } from "@nestjs/common"
 import type { App } from "supertest/types"
@@ -229,7 +229,7 @@ describe("Agents - Auth", () => {
   describe("AgentHistoryRoutes.restoreOne", () => {
     const subject = async () =>
       request({
-        route: AgentHistoryRoutes.restoreOne,
+        route: AgentSettingsRoutes.restoreOne,
         pathParams: removeNullish({ organizationId, projectId, agentId, revision: "1" }),
         token: accessToken ?? undefined,
       })

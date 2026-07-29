@@ -70,5 +70,6 @@ const fromDto = (dto: AgentSessionMessageDto): AgentSessionMessage => ({
   status: dto.status,
   startedAt: dto.startedAt,
   completedAt: dto.completedAt,
+  agentRevision: dto.agentRevision,
   toolCalls: dto.toolCalls,
 })

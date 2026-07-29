@@ -1,3 +1,4 @@
+import type { AgentSessionMessage } from "@/common/features/agents/agent-sessions/shared/agent-session-messages/agent-session-messages.models"
 import type { Agent } from "@/common/features/agents/agents.models"
 
 /** Settings fields that are versioned by the backend (one revision per change). */
@@ -51,4 +52,37 @@ export function listChangedAgentSettingsFields(
   return agentSettingsDiffKeys.filter(
     (key) => serializeAgentSettingsField(before, key) !== serializeAgentSettingsField(after, key),
   )
+}
+
+/**
+ * The published revision the agent actually runs with: the newest one that is not a draft.
+ * `versions` is ordered by revision descending, as the history endpoint returns it.
+ */
+export function findPublishedVersion(versions: Agent[]): Agent | undefined {
+  return versions.find((version) => !version.isDraft)
+}
+
+/** The version carrying `revision`, when the history list is loaded and contains it. */
+export function findVersion(versions: Agent[], revision: number): Agent | undefined {
+  return versions.find((version) => version.revision === revision)
+}
+
+/**
+ * Revision to label a message with: the one the API recorded on it.
+ *
+ * Messages built client-side during streaming have no revision yet and are never refetched,
+ * so they fall back to the published revision — which is exactly what streaming ran. Those
+ * are recognisable by having no `createdAt`; every persisted message carries one.
+ *
+ * A persisted message with no revision must NOT fall back: labelling an old message with the
+ * published revision would claim it is the latest version. Returns `undefined` instead, so
+ * the caller hides the badge rather than showing a wrong number.
+ */
+export function resolveMessageRevision(
+  message: AgentSessionMessage,
+  versions: Agent[],
+): number | undefined {
+  if (message.agentRevision !== undefined) return message.agentRevision
+  const isPersisted = message.createdAt !== undefined
+  return isPersisted ? undefined : findPublishedVersion(versions)?.revision
 }

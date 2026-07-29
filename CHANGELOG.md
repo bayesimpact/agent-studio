@@ -8,12 +8,16 @@ This project uses [CalVer](https://calver.org/) (YY.MM.Micro) for product versio
 ## [Unreleased]
 
 ### Added
+- Agent settings drafts and publishing: saving any tab of the agent editor now updates a draft version instead of changing the agent directly, and a new Publish button makes the draft the version the agent runs with, with an optional name and description shown in the version history; extraction agents get the Publish button next to the History button of their inline editor; the Publish button is disabled while the editor has unsaved changes
+- Studio playground: the header shows the published version new messages run with, and each agent reply carries a version badge showing which settings version produced it; clicking a badge opens the version history preselected on that version
 - Back-office administrators can create an organization directly from the organizations panel; the creating administrator becomes its owner
 
 ### Changed
+- Evaluations: the agent version picker in the conversation run dialog labels each version as draft, and marks the published version the agent runs with as "Current" with its date, so runs are no longer launched on an unpublished draft by accident
 - Form agents are no longer a separate agent type: any conversation agent can now turn on "Form filling" from a new Tools tab, define the form fields with the visual schema editor (drag to set the order the agent asks its questions), and the agent fills the form from the user's answers during the chat; the collected values open from a "Show form state" button on the agent's replies; the agent creator still offers a "Form" choice, which now creates a conversation agent with form filling already enabled — existing form agents, with their sessions and settings history, are migrated to conversation agents with form filling enabled
 
 ### Fixed
+- Agent editor: restoring a version from the history now updates the form fields immediately
 - Fix some scanned PDF documents importing with no extracted text
 
 ### Security
