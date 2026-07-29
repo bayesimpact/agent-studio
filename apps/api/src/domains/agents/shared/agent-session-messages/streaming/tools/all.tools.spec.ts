@@ -131,7 +131,7 @@ describe("Tools execution", () => {
     return { fulltextStream, agentCalls }
   }
 
-  it("ToolName.Sources - should works", async () => {
+  it("ToolName.SubmitTurnSummary (sources part) - runs via the systematic end-of-turn call", async () => {
     const { connectScope, agent, agentSettings, session, project } =
       await createContextWithSession()
 
@@ -141,25 +141,159 @@ describe("Tools execution", () => {
       featureFlagKey: "sources-tool",
     })
 
-    const { agentCalls } = await runWithToolCall({
-      agent,
-      agentSettings,
-      session,
-      connectScope,
-      toolName: ToolName.Sources,
-      toolInput: {
-        sources: [
-          {
-            documentId: "doc-1",
-            chunks: [{ chunkId: "chunk-1", partialContent: "some content" }],
-          },
-        ],
+    // Generation 1: the answer (the loop never sees submit_turn_summary).
+    // Generation 2: the forced end-of-turn call.
+    mockProvider.addTextTurn(agent.id, "Voici la réponse.")
+    mockProvider.addToolCallTurn(agent.id, ToolName.SubmitTurnSummary, { chunkIds: ["c1"] })
+
+    const { events, fulltextStream } = await aggregateStream(
+      service.streamAgentResponse({
+        agentSessionScope: { agent, agentSettings, session, connectScope },
+        userContent: "Bonjour",
+        notifyClient: () => undefined,
+      }),
+    )
+
+    expect(fulltextStream).toBe("Voici la réponse.")
+    expect(events.at(-1)?.type).toBe("end")
+
+    const agentCalls = mockProvider.getCalls().filter((call) => call.agentId === agent.id)
+    expect(agentCalls).toHaveLength(2)
+  }, 15000)
+
+  it("ToolName.SubmitTurnSummary - voluntary in-loop call skips the forced generation (dedupe)", async () => {
+    // A cooperative model (Gemma) calls the report in the SAME generation as
+    // its answer: the loop stops (fire-and-forget) and the provider must NOT
+    // force a second call — the report side effects would run twice.
+    const { connectScope, agent, agentSettings, session } = await createContextWithSession()
+
+    const category = await repositories.agentSessionCategoryRepository.save(
+      repositories.agentSessionCategoryRepository.create({ agentId: agent.id, name: "Bayes" }),
+    )
+    agent.sessionCategories = [category]
+
+    mockProvider.addTextWithToolCallTurn(
+      agent.id,
+      "Réponse avec le call.",
+      ToolName.SubmitTurnSummary,
+      {
+        suggestedTitle: "Voluntary title",
+        categoryNames: ["Bayes"],
       },
+    )
+
+    const { events, fulltextStream } = await aggregateStream(
+      service.streamAgentResponse({
+        agentSessionScope: { agent, agentSettings, session, connectScope },
+        userContent: "Bonjour",
+        notifyClient: () => undefined,
+      }),
+    )
+
+    expect(fulltextStream).toBe("Réponse avec le call.")
+    expect(events.at(-1)?.type).toBe("end")
+
+    // Single generation: the voluntary call satisfied the guarantee.
+    const agentCalls = mockProvider.getCalls().filter((call) => call.agentId === agent.id)
+    expect(agentCalls).toHaveLength(1)
+    const updatedSession = await repositories.conversationAgentSessionRepository.findOneByOrFail({
+      id: session.id,
+    })
+    expect(updatedSession.title).toBe("Voluntary title")
+  }, 15000)
+
+  it("ToolName.SubmitTurnSummary (session metadata part) - systematic forced call updates the session", async () => {
+    // The report is invoked through a forced generation after the answer, on
+    // every turn — the model has no way to skip it (Gemini Flash never
+    // volunteers bookkeeping calls in auto mode).
+    const { connectScope, agent, agentSettings, session } = await createContextWithSession()
+
+    const category = await repositories.agentSessionCategoryRepository.save(
+      repositories.agentSessionCategoryRepository.create({ agentId: agent.id, name: "Bayes" }),
+    )
+    agent.sessionCategories = [category]
+
+    // Generation 1: the answer. Generation 2: the forced end-of-turn call.
+    mockProvider.addTextTurn(agent.id, "Réponse sans aucun tool call.")
+    mockProvider.addToolCallTurn(agent.id, ToolName.SubmitTurnSummary, {
+      suggestedTitle: "About Bayes",
+      categoryNames: ["Bayes"],
     })
 
+    const { events, fulltextStream } = await aggregateStream(
+      service.streamAgentResponse({
+        agentSessionScope: { agent, agentSettings, session, connectScope },
+        userContent: "Bonjour",
+        notifyClient: () => undefined,
+      }),
+    )
+
+    expect(fulltextStream).toBe("Réponse sans aucun tool call.")
+    expect(events.at(-1)?.type).toBe("end")
+
+    // The forced generation ran and its tool execution went through the
+    // normal dispatch: the session metadata was actually recalculated.
+    const agentCalls = mockProvider.getCalls().filter((call) => call.agentId === agent.id)
     expect(agentCalls).toHaveLength(2)
-    expect(agentCalls[1]?.prompt).toContain("Sources received")
-  })
+    const updatedSession = await repositories.conversationAgentSessionRepository.findOneByOrFail({
+      id: session.id,
+    })
+    expect(updatedSession.title).toBe("About Bayes")
+  }, 15000)
+
+  it("ToolName.SubmitTurnSummary - declared to the model only AFTER a knowledge base call (RAG agent)", async () => {
+    // For a RAG agent, the turn summary (with its chunkIds field) is gated:
+    // step 1 (before any lookup) must NOT declare it; once the knowledge
+    // base was queried, it appears.
+    const { connectScope, agent, agentSettings, session, project } =
+      await createContextWithSession()
+
+    await addFeature({
+      featureFlagRepository: repositories.featureFlagRepository,
+      projectId: project.id,
+      featureFlagKey: "sources-tool",
+    })
+
+    const ragAgentSettings = { ...agentSettings, documentsRagMode: DocumentsRagMode.All }
+    mockDocumentChunkRetrievalService.retrieveTopChunks.mockResolvedValue([
+      {
+        chunkId: "chunk-uuid-1",
+        documentId: "document-uuid-1",
+        documentTitle: "Guide",
+        documentFileName: "guide.pdf",
+        documentSourceType: "project",
+        chunkIndex: 0,
+        content: "Guide content.",
+        distance: 0.1,
+        modelName: "embedding-model",
+        isParentChunk: false,
+      },
+    ])
+
+    mockProvider.addToolCallTurn(agent.id, ToolName.LookupKnowledgeBase, { query: "question" })
+    mockProvider.addTextWithToolCallTurn(agent.id, "Réponse.", ToolName.SubmitTurnSummary, {
+      chunkIds: ["c1"],
+    })
+
+    const { events, fulltextStream } = await aggregateStream(
+      service.streamAgentResponse({
+        agentSessionScope: { agent, agentSettings: ragAgentSettings, session, connectScope },
+        userContent: "Question documentaire",
+        notifyClient: () => undefined,
+      }),
+    )
+
+    expect(fulltextStream).toBe("Réponse.")
+    expect(events.at(-1)?.type).toBe("end")
+
+    const agentCalls = mockProvider.getCalls().filter((call) => call.agentId === agent.id)
+    expect(agentCalls).toHaveLength(2)
+    // Step 1: lookup declared, summary hidden (no KB call happened yet).
+    expect(agentCalls[0]?.toolNames).toContain(ToolName.LookupKnowledgeBase)
+    expect(agentCalls[0]?.toolNames).not.toContain(ToolName.SubmitTurnSummary)
+    // Step 2: the knowledge base ran — the summary is now declared.
+    expect(agentCalls[1]?.toolNames).toContain(ToolName.SubmitTurnSummary)
+  }, 15000)
 
   it("ToolName.SurfaceResources - should works", async () => {
     const { connectScope, agent, agentSettings, session } = await createContextWithSession()
@@ -179,36 +313,6 @@ describe("Tools execution", () => {
 
     expect(agentCalls).toHaveLength(2)
     expect(agentCalls[1]?.prompt).toContain("Resources received and shown")
-  })
-
-  it("ToolName.RecalculateConversationSessionMetadata - should works", async () => {
-    const { connectScope, agent, agentSettings, session } = await createContextWithSession()
-
-    const category = await repositories.agentSessionCategoryRepository.save(
-      repositories.agentSessionCategoryRepository.create({ agentId: agent.id, name: "Bayes" }),
-    )
-    agent.sessionCategories = [category]
-
-    const { agentCalls } = await runWithToolCall({
-      agent,
-      agentSettings,
-      session,
-      connectScope,
-      toolName: ToolName.RecalculateConversationSessionMetadata,
-      toolInput: {
-        currentCategoryNames: [],
-        suggestedTitle: "About Bayes",
-        categoryNames: ["Bayes"],
-      },
-    })
-
-    expect(agentCalls).toHaveLength(2)
-    expect(agentCalls[1]?.prompt).toContain("Bayes")
-
-    const updatedSession = await repositories.conversationAgentSessionRepository.findOneByOrFail({
-      id: session.id,
-    })
-    expect(updatedSession.title).toBe("About Bayes")
   })
 
   const fillFormOutputJsonSchema = {

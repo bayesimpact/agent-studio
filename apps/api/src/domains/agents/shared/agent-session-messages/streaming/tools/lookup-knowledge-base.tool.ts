@@ -3,6 +3,7 @@ import { tool } from "ai"
 import { z } from "zod"
 import type { RequiredConnectScope } from "@/common/entities/connect-required-fields"
 import type { DocumentChunkRetrievalService } from "@/domains/documents/embeddings/document-chunk-retrieval.service"
+import type { RetrievedChunksRegistry } from "./retrieved-chunks-registry"
 import type { ToolExecutionLog } from "./tool-execution-log"
 
 export const DEFAULT_TOP_K = 20
@@ -27,6 +28,17 @@ export const LOOKUP_KNOWLEDGE_BASE_DESCRIPTION = [
   "The only exceptions are greetings, thanks and goodbyes, and questions about what was already said in this conversation.",
 ].join("\n")
 
+/**
+ * Master-prompt instruction for the lookup tool. Complements the tool
+ * description: the description carries the epistemic call-decision framing,
+ * this instruction adds the usage rules (standalone rewriting, answer only
+ * from passages). Exported so the live regression scenarios use the exact
+ * production wording instead of drifting hand-written copies.
+ */
+export function lookupKnowledgeBaseInstruction(): string {
+  return `The knowledge base holds information that is not in your training data, so you do not know the answer to the user's question — assume you must look it up. Call the ${ToolName.LookupKnowledgeBase} tool BEFORE replying to anything except greetings and questions about what was already said in this conversation, including follow-up questions and questions that feel familiar. Rewrite the question as a standalone sentence before passing it. Answer only from the returned passages; if they do not contain the answer, say so instead of inventing one.`
+}
+
 const lookupKnowledgeBaseInputSchema = z.object({
   query: z
     .string()
@@ -36,17 +48,17 @@ const lookupKnowledgeBaseInputSchema = z.object({
     ),
 })
 
+/**
+ * The model-visible shape of a retrieved chunk: a short alias id (c1, c2, ...)
+ * plus only what the model actually uses to answer. UUIDs, distances, file
+ * names, etc. stay server-side (in the retrieved-chunks registry) — they cost
+ * hundreds of prompt tokens per turn and small models mangle UUIDs when
+ * asked to copy them back.
+ */
 const retrievedChunkSchema = z.object({
-  chunkId: z.string(),
-  documentId: z.string(),
+  id: z.string().describe("Short chunk id (c1, c2, ...) — cite it in submit_turn_summary."),
   documentTitle: z.string(),
-  documentFileName: z.string().nullable(),
-  documentSourceType: z.enum(["project", "webCrawl"]),
-  chunkIndex: z.number().int(),
   content: z.string(),
-  distance: z.number(),
-  modelName: z.string(),
-  isParentChunk: z.boolean(),
 })
 
 export type LookupKnowledgeBaseExecution = {
@@ -80,12 +92,14 @@ export function lookupKnowledgeBaseTool({
   connectScope,
   documentTagIds = [],
   retrievalService,
+  retrievedChunksRegistry,
   onExecute,
 }: {
   connectScope: RequiredConnectScope
   documentTagIds?: string[]
   retrievalService: DocumentChunkRetrievalService
-  onExecute: (toolExecution: ToolExecutionLog) => void
+  retrievedChunksRegistry?: RetrievedChunksRegistry
+  onExecute: (toolExecution: ToolExecutionLog) => void | Promise<void>
 }) {
   return tool({
     description: LOOKUP_KNOWLEDGE_BASE_DESCRIPTION,
@@ -104,8 +118,13 @@ export function lookupKnowledgeBaseTool({
         topK: DEFAULT_TOP_K,
         documentTagIds,
       })
+      const modelVisibleChunks = retrievedChunks.map((chunk) => ({
+        id: retrievedChunksRegistry?.register(chunk) ?? chunk.chunkId,
+        documentTitle: chunk.documentTitle,
+        content: chunk.content,
+      }))
       const documentIds = [...new Set(retrievedChunks.map((chunk) => chunk.documentId))]
-      onExecute(
+      await onExecute(
         buildLookupKnowledgeBaseToolExecutionLog({
           input,
           result: {
@@ -118,7 +137,7 @@ export function lookupKnowledgeBaseTool({
         }),
       )
       return {
-        retrievedChunks,
+        retrievedChunks: modelVisibleChunks,
         retrievalMetadata: {
           returnedChunkCount: retrievedChunks.length,
           topK: DEFAULT_TOP_K,

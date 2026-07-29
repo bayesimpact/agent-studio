@@ -23,6 +23,14 @@ const tracer = trace.getTracer("caseai-sub-agent")
 
 export type BuiltTools = {
   tools: ToolSet | undefined
+  fireAndForgetToolNames: string[]
+  /**
+   * Tools the provider invokes through a forced generation after the
+   * answering loop, on every turn (submit_turn_summary). Not part of `tools`.
+   */
+  endOfTurnTools: ToolSet
+  /** Loop visibility gates: tool name -> prerequisite tool call name. */
+  toolActivationPrerequisites: Record<string, string>
   mcpClose?: () => Promise<void>
   toolDescriptions: Record<string, string>
   hasSubAgentTools: boolean
@@ -33,6 +41,9 @@ type BuildLLMConfig = (params: {
   systemPrompt: string
   temperature: AgentSettings["temperature"]
   tools?: ToolSet
+  fireAndForgetToolNames?: string[]
+  endOfTurnTools?: ToolSet
+  toolActivationPrerequisites?: Record<string, string>
 }) => LLMConfig
 
 type GenerateMasterPrompt = (params: {
@@ -185,7 +196,14 @@ async function runSubAgentTool({
     .getActiveSpan()
     ?.setAttribute("ai.telemetry.metadata.subAgentTraceUrl", getTraceUrl(subAgentTraceId))
 
-  const { tools, mcpClose, toolDescriptions } = await buildTools({
+  const {
+    tools,
+    mcpClose,
+    toolDescriptions,
+    fireAndForgetToolNames,
+    endOfTurnTools,
+    toolActivationPrerequisites,
+  } = await buildTools({
     agentSessionScope: childScope,
     includeSessionMetadataTools: false,
     includeSubAgentTools: false,
@@ -210,6 +228,9 @@ async function runSubAgentTool({
       model: childAgentSettings.model,
       temperature: childAgentSettings.temperature,
       tools,
+      fireAndForgetToolNames,
+      endOfTurnTools,
+      toolActivationPrerequisites,
     })
 
     const metadata = buildSubAgentMetadata({

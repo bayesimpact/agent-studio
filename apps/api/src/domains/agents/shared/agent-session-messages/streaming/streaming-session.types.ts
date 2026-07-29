@@ -25,4 +25,9 @@ export type AgentSessionScope = {
   connectScope: RequiredConnectScope
 }
 
-export type OnExecute = (toolExecution: ToolExecutionLog) => void
+/**
+ * Tool-execution log callback. May persist the tool call and notify the SSE
+ * client — tools MUST await it so persistence and notify events complete
+ * before the step (and therefore the stream) ends.
+ */
+export type OnExecute = (toolExecution: ToolExecutionLog) => void | Promise<void>

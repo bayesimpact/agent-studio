@@ -6,7 +6,7 @@ import type { ToolExecutionLog } from "./tool-execution-log"
 export function surfaceResourcesTool({
   onExecute,
 }: {
-  onExecute: (toolExecution: ToolExecutionLog) => void
+  onExecute: (toolExecution: ToolExecutionLog) => void | Promise<void>
 }) {
   return tool({
     description:
@@ -26,7 +26,7 @@ export function surfaceResourcesTool({
       content: z.string().describe("The content of the system message."),
     }),
     execute: async (input, _options) => {
-      onExecute({ toolName: ToolName.SurfaceResources, arguments: input })
+      await onExecute({ toolName: ToolName.SurfaceResources, arguments: input })
       return {
         role: "system",
         content: `Resources received and shown to the user as cards. The ${ToolName.SurfaceResources} tool renders the matching resources to the user as rich cards (title, description, and a clickable link). The cards stand on their own. Add text only if you have something genuinely useful to say that the cards do not already convey. Never restate the resources' titles, descriptions, or links — doing so would duplicate the cards. NEVER include any matching hints in your response.`,

@@ -4,6 +4,7 @@ import {
   ToolName,
 } from "@caseai-connect/api-contracts"
 import type { AgentSettings } from "@/domains/agents/settings/agent-settings.entity"
+import { lookupKnowledgeBaseInstruction } from "@/domains/agents/shared/agent-session-messages/streaming/tools/lookup-knowledge-base.tool"
 import type { ResourceLibrary } from "@/domains/resource-libraries/resource-library.entity"
 import { buildResourceLink } from "@/domains/resource-libraries/resource-library-link.helper"
 
@@ -63,10 +64,7 @@ ${names
   .map((name) => {
     switch (name) {
       case ToolName.LookupKnowledgeBase:
-        return `[${name}]: The knowledge base holds information that is not in your training data, so you do not know the answer to the user's question — assume you must look it up. Call the ${name} tool BEFORE replying to anything except greetings and questions about what was already said in this conversation, including follow-up questions and questions that feel familiar. Rewrite the question as a standalone sentence before passing it. Answer only from the returned passages; if they do not contain the answer, say so instead of inventing one.`
-
-      case ToolName.Sources:
-        return `[${name}]: You MUST call the ${name} tool whenever you use information from the ${ToolName.LookupKnowledgeBase} tool to answer the user, regardless of whether the chunks come from uploaded documents (documentSourceType="project") or crawled web pages (documentSourceType="webCrawl"). Include EVERY document whose chunks you actually used — do not omit web-crawled pages. For each source, copy the documentId, documentTitle, and documentSourceType verbatim from the retrieved chunks. Do NOT cite sources inline in your text response; the ${name} tool is the only way to show sources to the user.`
+        return `[${name}]: ${lookupKnowledgeBaseInstruction()}`
 
       case ToolName.FillForm: {
         const parsedSchema = outputJsonSchemaSchema.safeParse(agentSettings.outputJsonSchema)
@@ -85,9 +83,6 @@ ${orderedFields
   })
   .join("\n")}\n\n`
       }
-
-      case ToolName.RecalculateConversationSessionMetadata:
-        return `[${name}]: Call this tool after answering the user so session metadata stays aligned. Return the full category set that should remain on the session (including categories still relevant from earlier turns), not only categories from the latest message.`
 
       case ToolName.McpSearchResources:
         return `[${name}]: Search for workforce and social resources from a specific source (datainclusion, francetravail-jobs, francetravail-events, francetravail-labonneboite). Returns raw results without AI processing. Use this when the user asks about a specific type of resource.`

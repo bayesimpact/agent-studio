@@ -61,9 +61,15 @@ export abstract class ServiceWithLLM {
     model,
     temperature,
     tools,
+    fireAndForgetToolNames,
+    endOfTurnTools,
+    toolActivationPrerequisites,
     useExtendedTimeouts,
   }: {
     tools?: ToolSet
+    fireAndForgetToolNames?: string[]
+    endOfTurnTools?: ToolSet
+    toolActivationPrerequisites?: Record<string, string>
     systemPrompt: string
     model: AgentModel
     temperature: AgentTemperature
@@ -84,6 +90,9 @@ export abstract class ServiceWithLLM {
       temperature: safeTemperature,
       systemPrompt,
       tools,
+      fireAndForgetToolNames,
+      endOfTurnTools,
+      toolActivationPrerequisites,
       useExtendedTimeouts,
     } as LLMConfig
   }

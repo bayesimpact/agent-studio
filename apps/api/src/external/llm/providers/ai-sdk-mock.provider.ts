@@ -11,11 +11,14 @@ export type MockCall = {
   agentId: string | undefined
   callOrigin: CallOrigin
   prompt: string
+  /** Names of the tools DECLARED to the model for this generation. */
+  toolNames: string[]
 }
 
 type ResolvedMock =
   | { type: "text"; chunks: string[] }
   | { type: "toolCall"; toolName: string; params: unknown }
+  | { type: "textWithToolCall"; text: string; toolName: string; params: unknown }
 
 @Injectable()
 export class AISDKMockProvider extends AISDKLLMProviderBase {
@@ -43,6 +46,15 @@ export class AISDKMockProvider extends AISDKLLMProviderBase {
   }
   addToolCallTurn(agentId: string, toolName: string, input: unknown = {}): void {
     this.enqueue(agentId, [{ type: "toolCall", toolName, input }])
+  }
+  /** Text answer + tool call in the SAME generation (fire-and-forget shape). */
+  addTextWithToolCallTurn(
+    agentId: string,
+    text: string,
+    toolName: string,
+    input: unknown = {},
+  ): void {
+    this.enqueue(agentId, [{ type: "textWithToolCall", text, toolName, input }])
   }
   private enqueue(agentId: string, values: MockValue[]): void {
     const queue = this.queuesByAgentId.get(agentId) ?? []
@@ -88,7 +100,12 @@ export class AISDKMockProvider extends AISDKLLMProviderBase {
           }
         }
         return {
-          content: [{ type: "text", text: resolved.chunks.join("") }],
+          content: [
+            {
+              type: "text",
+              text: resolved.type === "textWithToolCall" ? resolved.text : resolved.chunks.join(""),
+            },
+          ],
           finishReason: { unified: "stop", raw: undefined },
           usage: this.usage,
           warnings: [],
@@ -100,7 +117,9 @@ export class AISDKMockProvider extends AISDKLLMProviderBase {
           stream:
             resolved.type === "toolCall"
               ? this.toToolCallStream(resolved.toolName, resolved.params)
-              : this.toTextStream(resolved.chunks),
+              : resolved.type === "textWithToolCall"
+                ? this.toTextWithToolCallStream(resolved.text, resolved.toolName, resolved.params)
+                : this.toTextStream(resolved.chunks),
         }
       },
     })
@@ -116,7 +135,12 @@ export class AISDKMockProvider extends AISDKLLMProviderBase {
     options: LanguageModelV3CallOptions
   }): ResolvedMock {
     const agentId = this.getAgentId(options)
-    this.calls.push({ agentId, callOrigin, prompt: JSON.stringify(options.prompt) })
+    this.calls.push({
+      agentId,
+      callOrigin,
+      prompt: JSON.stringify(options.prompt),
+      toolNames: (options.tools ?? []).map((declaredTool) => declaredTool.name),
+    })
 
     const next = agentId !== undefined ? this.queuesByAgentId.get(agentId)?.shift() : undefined
     if (next !== undefined) {
@@ -129,6 +153,13 @@ export class AISDKMockProvider extends AISDKLLMProviderBase {
           return { type: "text", chunks: next.chunks }
         case "toolCall":
           return { type: "toolCall", toolName: next.toolName, params: next.input }
+        case "textWithToolCall":
+          return {
+            type: "textWithToolCall",
+            text: next.text,
+            toolName: next.toolName,
+            params: next.input,
+          }
       }
     }
 
@@ -167,6 +198,26 @@ export class AISDKMockProvider extends AISDKLLMProviderBase {
 
   private toToolCallStream(toolName: string, input: unknown) {
     const parts: LanguageModelV3StreamPart[] = [
+      {
+        type: "tool-call",
+        toolCallId: this.getNextToolCallId(),
+        toolName,
+        input: JSON.stringify(input),
+      },
+      {
+        type: "finish",
+        finishReason: { unified: "tool-calls", raw: undefined },
+        usage: this.usage,
+      },
+    ]
+    return simulateReadableStream({ chunks: parts })
+  }
+
+  private toTextWithToolCallStream(text: string, toolName: string, input: unknown) {
+    const parts: LanguageModelV3StreamPart[] = [
+      { type: "text-start", id: "text-1" },
+      { type: "text-delta", id: "text-1", delta: text },
+      { type: "text-end", id: "text-1" },
       {
         type: "tool-call",
         toolCallId: this.getNextToolCallId(),

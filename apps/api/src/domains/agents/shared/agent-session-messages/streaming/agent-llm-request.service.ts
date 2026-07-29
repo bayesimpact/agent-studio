@@ -95,14 +95,23 @@ export class AgentLlmRequestService extends ServiceWithLLM {
   }): Promise<BuiltLLMRequest> {
     const { session, agent, agentSettings, connectScope } = agentSessionScope
 
-    const { tools, mcpClose, toolDescriptions, hasSubAgentTools } =
-      await this.toolsService.buildTools({
-        agentSessionScope,
-        includeSessionMetadataTools,
-        onExecute: onToolExecute,
-      })
+    const {
+      tools,
+      mcpClose,
+      toolDescriptions,
+      fireAndForgetToolNames,
+      endOfTurnTools,
+      toolActivationPrerequisites,
+      hasSubAgentTools,
+    } = await this.toolsService.buildTools({
+      agentSessionScope,
+      includeSessionMetadataTools,
+      onExecute: onToolExecute,
+    })
 
-    const toolNames = tools ? Object.keys(tools) : []
+    // End-of-turn tool names are included so the master prompt can explain
+    // the automatic report (e.g. "do not cite sources inline").
+    const toolNames = [...(tools ? Object.keys(tools) : []), ...Object.keys(endOfTurnTools)]
     const config = this.buildLLMConfig({
       systemPrompt: generateMasterPrompt({
         agent,
@@ -113,6 +122,9 @@ export class AgentLlmRequestService extends ServiceWithLLM {
       model: agentSettings.model,
       temperature: agentSettings.temperature,
       tools,
+      fireAndForgetToolNames,
+      endOfTurnTools,
+      toolActivationPrerequisites,
     })
 
     const metadata: LLMMetadata = this.buildLLMData({

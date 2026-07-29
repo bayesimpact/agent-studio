@@ -1,4 +1,5 @@
 import { DEFAULT_TOP_K, lookupKnowledgeBaseTool } from "./lookup-knowledge-base.tool"
+import { createRetrievedChunksRegistry } from "./retrieved-chunks-registry"
 
 describe("lookupKnowledgeBaseTool", () => {
   it("retrieves chunks for a query alone", async () => {
@@ -51,12 +52,14 @@ describe("lookupKnowledgeBaseTool", () => {
       ]),
     }
 
+    const retrievedChunksRegistry = createRetrievedChunksRegistry()
     const sdkTool = lookupKnowledgeBaseTool({
       connectScope: {
         organizationId: "organization-1",
         projectId: "project-1",
       },
       retrievalService: retrievalService as never,
+      retrievedChunksRegistry,
       onExecute,
     })
 
@@ -73,6 +76,17 @@ describe("lookupKnowledgeBaseTool", () => {
       }
     }
     expect(result).toBeDefined()
+
+    // The model only sees the alias + what it needs to answer; UUIDs and
+    // retrieval internals stay server-side in the registry.
+    expect(result.retrievedChunks).toEqual([
+      {
+        id: "c1",
+        documentTitle: "Onboarding Guide",
+        content: "The onboarding process lasts two weeks.",
+      },
+    ])
+    expect(retrievedChunksRegistry.get("c1")?.chunkId).toBe("chunk-1")
 
     expect(retrievalService.retrieveTopChunks).toHaveBeenCalledWith({
       connectScope: {

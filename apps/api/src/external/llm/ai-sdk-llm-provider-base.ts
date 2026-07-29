@@ -1,6 +1,6 @@
 import type { LanguageModelV3 } from "@ai-sdk/provider"
 import { AgentModelToAgentProvider, AgentProvider } from "@caseai-connect/api-contracts"
-import { NotImplementedException } from "@nestjs/common"
+import { Logger, NotImplementedException } from "@nestjs/common"
 import { trace } from "@opentelemetry/api"
 import {
   type FilePart,
@@ -8,6 +8,7 @@ import {
   type JSONSchema7,
   jsonSchema,
   Output,
+  stepCountIs,
   ToolLoopAgent,
   wrapLanguageModel,
 } from "ai"
@@ -20,6 +21,7 @@ import type {
   LLMProvider,
 } from "@/common/interfaces/llm-provider.interface"
 import { removeNullish } from "@/common/utils/remove-nullish"
+import { fireAndForgetStopCondition } from "@/external/llm/fire-and-forget-stop-condition"
 import { ResponseHelper } from "@/external/llm/response-helper"
 import { ThoughtTokensHelper } from "@/external/llm/thought-tokens-helper"
 
@@ -64,6 +66,7 @@ function extractTextFromStreamChunks(chunks: unknown[]): string {
 }
 
 export abstract class AISDKLLMProviderBase implements LLMProvider {
+  private readonly endOfTurnLogger = new Logger("EndOfTurnTools")
   protected getLanguageModelWithRawCapture(args: {
     config: LLMConfig
     callOrigin: CallOrigin
@@ -240,14 +243,53 @@ export abstract class AISDKLLMProviderBase implements LLMProvider {
     }
 
     const systemMessage = messages.find((msg) => msg.role === "system")?.content
+    const functionId = this.buildFunctionIdForStreamChatResponse(aiSDKMessages)
 
+    const toolActivationPrerequisites = config.toolActivationPrerequisites ?? {}
     const agent = new ToolLoopAgent({
       model: this.getLanguageModelWithRawCapture({ config, callOrigin }),
       temperature: config.temperature,
       tools: config.tools,
+      // Hide gated tools until their prerequisite tool was called in this
+      // turn (e.g. the turn summary's sources variant only exists once the
+      // knowledge base was actually queried).
+      ...(Object.keys(toolActivationPrerequisites).length > 0
+        ? {
+            prepareStep: ({
+              steps,
+            }: {
+              steps: Array<{ toolCalls: Array<{ toolName: string }> }>
+            }) => {
+              const calledToolNames = new Set(
+                steps.flatMap((step) => step.toolCalls.map((toolCall) => toolCall.toolName)),
+              )
+              const inactiveToolNames = Object.entries(toolActivationPrerequisites)
+                .filter(([, prerequisite]) => !calledToolNames.has(prerequisite))
+                .map(([toolName]) => toolName)
+              if (inactiveToolNames.length === 0) return {}
+              return {
+                activeTools: Object.keys(config.tools ?? {}).filter(
+                  (toolName) => !inactiveToolNames.includes(toolName),
+                ),
+              }
+            },
+          }
+        : {}),
+      // Keep the default step safety net, but skip the follow-up generation
+      // when a step only ran fire-and-forget tools (their output is noise).
+      ...(config.fireAndForgetToolNames?.length
+        ? {
+            stopWhen: [
+              stepCountIs(20),
+              fireAndForgetStopCondition({
+                fireAndForgetToolNames: config.fireAndForgetToolNames,
+              }),
+            ],
+          }
+        : {}),
       experimental_telemetry: {
         isEnabled: true,
-        functionId: this.buildFunctionIdForStreamChatResponse(aiSDKMessages),
+        functionId,
         metadata: this.buildMetadata({ config, metadata }),
       },
       providerOptions: {
@@ -261,12 +303,118 @@ export abstract class AISDKLLMProviderBase implements LLMProvider {
       ? [{ role: "system" as const, content: systemPrompt }]
       : []
 
-    const streamer = agent.stream({
-      messages: [...systemMessagePart, ...aiSDKMessages],
-    })
+    const fullMessages = [...systemMessagePart, ...aiSDKMessages]
+    const streamResult = await agent.stream({ messages: fullMessages })
 
-    for await (const chunk of (await streamer).textStream) {
+    for await (const chunk of streamResult.textStream) {
       yield chunk
+    }
+
+    await this.runEndOfTurnTools({
+      config,
+      callOrigin,
+      metadata,
+      functionId,
+      messages: fullMessages,
+      streamResult,
+    })
+  }
+
+  /**
+   * Guarantees the end-of-turn tools (e.g. submit_turn_summary) ran on this turn.
+   * They are declared in the answering loop, so a cooperative model (Gemma)
+   * calls them in the same generation as its answer — zero extra cost. When
+   * the loop finished without calling them (Gemini Flash never volunteers
+   * bookkeeping calls), ONE forced generation (toolChoice "required",
+   * restricted to the missing tools) runs on top of the produced answer.
+   * Already-called tools are skipped so nothing executes twice.
+   * "required" is used rather than a named tool_choice because named forcing
+   * is silently ignored by the vLLM gemma4 parser on 0.26.0.
+   *
+   * Best-effort: the user already received the streamed answer, so a failure
+   * here is logged but never breaks the stream.
+   */
+  private async runEndOfTurnTools({
+    config,
+    callOrigin,
+    metadata,
+    functionId,
+    messages,
+    streamResult,
+  }: {
+    config: LLMConfig
+    callOrigin: CallOrigin
+    metadata: LLMMetadata
+    /**
+     * MUST be the same functionId as the answering loop: the langfuse
+     * exporter names the whole trace after the first resource.name it sees,
+     * and langfuse.trace() upserts — a distinct functionId here renames the
+     * user-facing trace to the bookkeeping call's name.
+     */
+    functionId: string
+    messages: LLMChatMessage[]
+    streamResult: {
+      steps: PromiseLike<Array<{ toolCalls: Array<{ toolName: string }> }>>
+      response: PromiseLike<{ messages: LLMChatMessage[] }>
+    }
+  }): Promise<void> {
+    const endOfTurnTools = config.endOfTurnTools
+    if (!endOfTurnTools || Object.keys(endOfTurnTools).length === 0) return
+
+    try {
+      // Skip the tools the loop already called — forcing them again would
+      // execute their side effects twice.
+      const steps = await streamResult.steps
+      const calledToolNames = new Set(
+        steps.flatMap((step) => step.toolCalls.map((toolCall) => toolCall.toolName)),
+      )
+      const missingEndOfTurnTools = Object.fromEntries(
+        Object.entries(endOfTurnTools).filter(([toolName]) => !calledToolNames.has(toolName)),
+      )
+      if (Object.keys(missingEndOfTurnTools).length === 0) return
+
+      const responseMessages = (await streamResult.response).messages
+      const endOfTurnResult = await generateText({
+        model: this.getLanguageModelWithRawCapture({ config, callOrigin }),
+        messages: [
+          ...messages,
+          ...responseMessages,
+          // Some providers (Vertex gemini-3.5-flash-lite and newer) reject
+          // requests ending with a model turn — close with an explicit user
+          // instruction for the bookkeeping call.
+          {
+            role: "user",
+            content: "Submit the turn summary for your previous answer now.",
+          },
+        ],
+        temperature: config.temperature,
+        tools: missingEndOfTurnTools,
+        toolChoice: "required",
+        experimental_telemetry: {
+          isEnabled: true,
+          functionId,
+          // Distinguish the forced bookkeeping generation from the answering
+          // loop in langfuse via metadata, not functionId (see above).
+          metadata: { ...this.buildMetadata({ config, metadata }), endOfTurnTools: true },
+        },
+        providerOptions: {
+          custom: this.buildCustomProviderOptions({ config, callOrigin, metadata }),
+        },
+      })
+      // toolChoice "required" guarantees a call was EMITTED, not that it was
+      // EXECUTED: invalid arguments or a provider quirk leave toolResults
+      // empty and the report silently skipped — make that loud.
+      if (endOfTurnResult.toolResults.length === 0) {
+        this.endOfTurnLogger.error(
+          `end-of-turn tools produced no executed result (calls: ${JSON.stringify(
+            endOfTurnResult.toolCalls.map((toolCall) => toolCall.toolName),
+          )}, finishReason: ${endOfTurnResult.finishReason})`,
+        )
+      }
+    } catch (error) {
+      this.endOfTurnLogger.error(
+        `end-of-turn tools call failed: ${error instanceof Error ? error.message : error}`,
+      )
     }
   }
   async generateChatResponse({
