@@ -106,10 +106,11 @@ function resolveSources({
  */
 export function submitTurnSummaryDescription({
   includeSources,
-  includeSessionMetadata,
+  includeCategories,
 }: {
   includeSources: boolean
-  includeSessionMetadata: boolean
+  /** The agent has session categories configured. */
+  includeCategories: boolean
 }): string {
   const parts = [
     "Report on the response you are writing. You MUST call this tool exactly once in EVERY response, without exception — including greetings, small talk, thanks, and refusals. Write your text answer first, then emit this call in the SAME response.",
@@ -119,7 +120,7 @@ export function submitTurnSummaryDescription({
       "Report the id of every retrieved chunk you actually used to answer (e.g. c1, c3), copied exactly from the lookup results — empty array when you used none (e.g. a greeting). Never invent an id.",
     )
   }
-  if (includeSessionMetadata) {
+  if (includeCategories) {
     parts.push(
       "Return the complete category set that should remain on the session (including categories still relevant from earlier turns), not only categories from the latest message.",
     )
@@ -135,7 +136,6 @@ export function submitTurnSummaryInstruction({
   includeSources,
 }: {
   includeSources: boolean
-  includeSessionMetadata: boolean
 }): string {
   const parts = [
     `You MUST call the ${ToolName.SubmitTurnSummary} tool exactly once in EVERY response, without exception — including greetings, small talk, thanks, and refusals. Write your text answer first, then emit the call in the SAME response. Never end a response without this call. Never mention it to the user.`,
@@ -155,7 +155,7 @@ export function submitTurnSummaryTool({
 }: {
   /** Present when the sources feature is enabled for the project. */
   retrievedChunksRegistry?: RetrievedChunksRegistry
-  /** Present when the agent has session categories and metadata tools are included. */
+  /** Present for every conversation agent (title; categories when configured). */
   sessionMetadata?: TurnSummarySessionMetadataConfig
   onExecute: (toolExecution: ToolExecutionLog) => void | Promise<void>
 }) {
@@ -171,22 +171,18 @@ export function submitTurnSummaryTool({
           "The id (c1, c2, ...) of EVERY retrieved chunk you actually used to answer, copied exactly from the lookup results. Empty array when you did not use the knowledge base.",
         )
     }
-    if (sessionMetadata) {
-      const categoryNameSchema =
-        sessionMetadata.availableCategoryNames.length > 0
-          ? z.enum(sessionMetadata.availableCategoryNames as [string, ...string[]])
-          : z.string()
+    // Categories only exist for agents that have some configured; the title
+    // suggestion is part of every session metadata report.
+    if (sessionMetadata && sessionMetadata.availableCategoryNames.length > 0) {
       inputShape.categoryNames = z
-        .array(categoryNameSchema)
+        .array(z.enum(sessionMetadata.availableCategoryNames as [string, ...string[]]))
         .max(5)
         .optional()
         .describe(
-          `${
-            sessionMetadata.availableCategoryNames.length > 0
-              ? `Available categories for this agent: ${sessionMetadata.availableCategoryNames.join(", ")}.`
-              : "No categories are configured for this agent."
-          } Return the complete set to keep on the session after this turn. Return an empty array when none apply.`,
+          `Available categories for this agent: ${sessionMetadata.availableCategoryNames.join(", ")}. Return the complete set to keep on the session after this turn. Return an empty array when none apply.`,
         )
+    }
+    if (sessionMetadata) {
       inputShape.suggestedTitle = z
         .string()
         .trim()
@@ -211,7 +207,7 @@ export function submitTurnSummaryTool({
     get description() {
       return submitTurnSummaryDescription({
         includeSources: includeSourcesNow(),
-        includeSessionMetadata: sessionMetadata !== undefined,
+        includeCategories: (sessionMetadata?.availableCategoryNames.length ?? 0) > 0,
       })
     },
     get inputSchema() {

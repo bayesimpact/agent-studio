@@ -225,14 +225,16 @@ export class ToolsService extends ServiceWithLLM {
           : Promise.resolve({ tools: {}, toolDescriptions: {} }),
       ])
 
-    const hasSessionCategorization =
-      includeSessionMetadataTools && (agent.sessionCategories?.length ?? 0) > 0
     // chunkIds only make sense when the agent can actually retrieve chunks:
     // the sources part of the turn summary requires BOTH the project feature
     // flag and an active RAG mode (lookup tool present).
     const hasSourcesReporting =
       hasSourcesTool && agentSettings.documentsRagMode !== DocumentsRagMode.None
-    const hasSubmitTurnSummaryTool = hasSourcesReporting || hasSessionCategorization
+    // Every conversation agent submits a turn summary: suggestedTitle is
+    // always reported; categories only when the agent has some configured;
+    // chunkIds only per hasSourcesReporting. Sub-agents are excluded
+    // (includeSessionMetadataTools=false) unless they report sources.
+    const hasSubmitTurnSummaryTool = hasSourcesReporting || includeSessionMetadataTools
 
     // Shared between lookup (writer) and submit_turn_summary (reader) within this
     // request: the report resolves the chunkIds cited by the model against
@@ -250,7 +252,7 @@ export class ToolsService extends ServiceWithLLM {
       ? {
           [ToolName.SubmitTurnSummary]: submitTurnSummaryTool({
             retrievedChunksRegistry: hasSourcesReporting ? retrievedChunksRegistry : undefined,
-            sessionMetadata: hasSessionCategorization
+            sessionMetadata: includeSessionMetadataTools
               ? {
                   connectScope,
                   sessionId: session.id,
@@ -328,7 +330,6 @@ export class ToolsService extends ServiceWithLLM {
           ? {
               [ToolName.SubmitTurnSummary]: submitTurnSummaryInstruction({
                 includeSources: hasSourcesReporting,
-                includeSessionMetadata: hasSessionCategorization,
               }),
             }
           : {}),

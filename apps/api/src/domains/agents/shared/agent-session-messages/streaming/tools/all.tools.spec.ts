@@ -119,6 +119,9 @@ describe("Tools execution", () => {
   }) => {
     mockProvider.addToolCallTurn(agent.id, toolName, toolInput)
     mockProvider.addTextTurn(agent.id, "Done.")
+    // Every conversation agent now submits the turn summary: the provider
+    // forces it in a third generation when the loop did not call it.
+    mockProvider.addToolCallTurn(agent.id, ToolName.SubmitTurnSummary, { suggestedTitle: null })
 
     const { fulltextStream } = await aggregateStream(
       service.streamAgentResponse({
@@ -505,7 +508,7 @@ describe("Tools execution", () => {
       },
     })
 
-    expect(agentCalls).toHaveLength(2)
+    expect(agentCalls).toHaveLength(3)
     expect(agentCalls[1]?.prompt).toContain("Resources received and shown")
   })
 
@@ -588,7 +591,7 @@ describe("Tools execution", () => {
       toolName: ToolName.FillForm,
       toolInput: { getFormState: true },
     })
-    expect(agentCalls).toHaveLength(2)
+    expect(agentCalls).toHaveLength(3)
     expect(agentCalls[1]?.prompt).toContain("Lara Croft")
   })
 
@@ -665,7 +668,7 @@ describe("Tools execution", () => {
     expect(mockDocumentChunkRetrievalService.retrieveTopChunks).toHaveBeenCalledWith(
       expect.objectContaining({ query: "What is Bayes?", topK: DEFAULT_TOP_K }),
     )
-    expect(agentCalls).toHaveLength(2)
+    expect(agentCalls).toHaveLength(3)
     expect(agentCalls[1]?.prompt).toContain("retrievalMetadata")
   })
 
@@ -694,7 +697,7 @@ describe("Tools execution", () => {
     })
 
     expect(searchResourcesExecute).toHaveBeenCalled()
-    expect(agentCalls).toHaveLength(2)
+    expect(agentCalls).toHaveLength(3)
     expect(agentCalls[1]?.prompt).toContain("resource-1")
   })
 
@@ -723,7 +726,7 @@ describe("Tools execution", () => {
     })
 
     expect(smartSearchExecute).toHaveBeenCalled()
-    expect(agentCalls).toHaveLength(2)
+    expect(agentCalls).toHaveLength(3)
     expect(agentCalls[1]?.prompt).toContain("smart answer")
   })
 })

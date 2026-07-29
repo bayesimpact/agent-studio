@@ -213,6 +213,34 @@ describe("submitTurnSummaryTool - runtime-dynamic schema", () => {
   })
 })
 
+describe("submitTurnSummaryTool - categories depend on the agent", () => {
+  it("declares suggestedTitle alone when the agent has no categories", () => {
+    const { config } = buildSessionMetadata()
+    const sdkTool = submitTurnSummaryTool({
+      sessionMetadata: { ...config, availableCategoryNames: [] },
+      onExecute: () => undefined,
+    })
+
+    const schema = JSON.stringify(z.toJSONSchema(sdkTool.inputSchema as z.ZodType))
+    expect(schema).toContain("suggestedTitle")
+    expect(schema).not.toContain("categoryNames")
+    expect(sdkTool.description).not.toContain("category")
+  })
+
+  it("declares categoryNames with the agent's enum when categories exist", () => {
+    const { config } = buildSessionMetadata()
+    const sdkTool = submitTurnSummaryTool({
+      sessionMetadata: config,
+      onExecute: () => undefined,
+    })
+
+    const schema = JSON.stringify(z.toJSONSchema(sdkTool.inputSchema as z.ZodType))
+    expect(schema).toContain("suggestedTitle")
+    expect(schema).toContain("categoryNames")
+    expect(schema).toContain('"HR"')
+  })
+})
+
 describe("submitTurnSummaryExecutionCounts", () => {
   it("keeps executions that saw the chunks, and any execution without the marker", () => {
     const registry = createRetrievedChunksRegistry()
@@ -248,7 +276,7 @@ describe("submitTurnSummaryDescription", () => {
   it("mentions chunk ids only when sources are enabled", () => {
     const description = submitTurnSummaryDescription({
       includeSources: true,
-      includeSessionMetadata: false,
+      includeCategories: false,
     })
     expect(description).toContain("Never invent an id")
     expect(description).not.toContain("category")
@@ -257,7 +285,7 @@ describe("submitTurnSummaryDescription", () => {
   it("mentions categories only when session metadata is enabled", () => {
     const description = submitTurnSummaryDescription({
       includeSources: false,
-      includeSessionMetadata: true,
+      includeCategories: true,
     })
     expect(description).toContain("category set")
     expect(description).not.toContain("Never invent an id")
@@ -266,7 +294,7 @@ describe("submitTurnSummaryDescription", () => {
   it("demands the call on every response including trivial turns, with no escape hatch", () => {
     const description = submitTurnSummaryDescription({
       includeSources: true,
-      includeSessionMetadata: true,
+      includeCategories: true,
     })
     expect(description).toContain("EVERY response")
     expect(description).toContain("greetings")
@@ -277,10 +305,7 @@ describe("submitTurnSummaryDescription", () => {
 
 describe("submitTurnSummaryInstruction", () => {
   it("is a short reminder demanding the call even on greetings, without the full contract", () => {
-    const instruction = submitTurnSummaryInstruction({
-      includeSources: false,
-      includeSessionMetadata: true,
-    })
+    const instruction = submitTurnSummaryInstruction({ includeSources: false })
     expect(instruction).toContain("EVERY response")
     expect(instruction).toContain("greetings")
     expect(instruction).not.toContain("category set")
@@ -288,16 +313,10 @@ describe("submitTurnSummaryInstruction", () => {
   })
 
   it("keeps the no-inline-citation rule only when sources are enabled", () => {
-    const withSources = submitTurnSummaryInstruction({
-      includeSources: true,
-      includeSessionMetadata: true,
-    })
+    const withSources = submitTurnSummaryInstruction({ includeSources: true })
     expect(withSources).toContain("Do NOT cite sources inline")
 
-    const withoutSources = submitTurnSummaryInstruction({
-      includeSources: false,
-      includeSessionMetadata: true,
-    })
+    const withoutSources = submitTurnSummaryInstruction({ includeSources: false })
     expect(withoutSources).not.toContain("Do NOT cite sources inline")
   })
 })

@@ -65,7 +65,7 @@ function buildModel(): LanguageModel {
 const summaryCategoriesOnly = tool({
   description: submitTurnSummaryDescription({
     includeSources: false,
-    includeSessionMetadata: true,
+    includeCategories: true,
   }),
   inputSchema: z.object({
     categoryNames: z.array(z.string()).max(5),
@@ -75,7 +75,7 @@ const summaryCategoriesOnly = tool({
 })
 
 const summaryWithSources = tool({
-  description: submitTurnSummaryDescription({ includeSources: true, includeSessionMetadata: true }),
+  description: submitTurnSummaryDescription({ includeSources: true, includeCategories: true }),
   inputSchema: z.object({
     chunkIds: z.array(z.string()),
     categoryNames: z.array(z.string()).max(5),
@@ -105,7 +105,6 @@ const SCENARIOS: Record<
     systemPrompt: buildFatSystemPrompt({
       toolsSection: `## Tools:\n[${ToolName.SubmitTurnSummary}]: ${submitTurnSummaryInstruction({
         includeSources: false,
-        includeSessionMetadata: true,
       })}`,
     }),
     tools: { [ToolName.SubmitTurnSummary]: summaryCategoriesOnly },
@@ -126,7 +125,7 @@ Your purpose is to assist users by answering their questions about the company e
 
 ## Tools:
 [${ToolName.LookupKnowledgeBase}]: ${lookupKnowledgeBaseInstruction()}
-[${ToolName.SubmitTurnSummary}]: ${submitTurnSummaryInstruction({ includeSources: true, includeSessionMetadata: true })}
+[${ToolName.SubmitTurnSummary}]: ${submitTurnSummaryInstruction({ includeSources: true })}
 
 ## Response language:
 Always answer in French.`,

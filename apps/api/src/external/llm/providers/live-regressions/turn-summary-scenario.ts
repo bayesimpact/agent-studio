@@ -80,7 +80,7 @@ Your purpose is to assist users by answering their questions about the company e
 
 ## Tools:
 [${ToolName.LookupKnowledgeBase}]: ${lookupKnowledgeBaseInstruction()}
-[${ToolName.SubmitTurnSummary}]: ${submitTurnSummaryInstruction({ includeSources: true, includeSessionMetadata: true })}
+[${ToolName.SubmitTurnSummary}]: ${submitTurnSummaryInstruction({ includeSources: true })}
 
 ## Response language:
 Always answer in French.`
@@ -171,10 +171,7 @@ export async function runFatPromptTurnScenario({
   })
 
   const systemPrompt = buildFatSystemPrompt({
-    toolsSection: `## Tools:\n[${ToolName.SubmitTurnSummary}]: ${submitTurnSummaryInstruction({
-      includeSources: false,
-      includeSessionMetadata: true,
-    })}`,
+    toolsSection: `## Tools:\n[${ToolName.SubmitTurnSummary}]: ${submitTurnSummaryInstruction({ includeSources: false })}`,
   })
 
   const chunks = provider.streamChatResponse({
