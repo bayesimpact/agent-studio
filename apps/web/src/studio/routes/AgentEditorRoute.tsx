@@ -1,3 +1,4 @@
+import { useState } from "react"
 import { useTranslation } from "react-i18next"
 import { useNavigate } from "react-router-dom"
 import { Grid, GridHeader } from "@/common/components/grid/Grid"
@@ -48,6 +49,7 @@ function WithData({ orchestration }: { orchestration?: AgentEditorOrchestration 
   const navigate = useNavigate()
   const agentRoute = useGetAgentRoute()
   const handleBack = () => navigate(agentRoute)
+  const [editorDirty, setEditorDirty] = useState(false)
 
   return (
     <Grid cols={0}>
@@ -55,13 +57,14 @@ function WithData({ orchestration }: { orchestration?: AgentEditorOrchestration 
         onBack={handleBack}
         title={t(`agent:update.${agent.type}.title`)}
         description={t(`agent:update.${agent.type}.description`)}
-        action={<AgentPublishButton agent={agent} />}
+        action={<AgentPublishButton agent={agent} hasUnsavedChanges={editorDirty} />}
       />
       <AgentEditor
         key={agent.id}
         agent={agent}
         className="bg-white p-6"
         orchestration={orchestration}
+        onDirtyChange={setEditorDirty}
       />
     </Grid>
   )

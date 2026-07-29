@@ -33,17 +33,26 @@ import { publishAgentRevision } from "../agent-history.thunks"
 /**
  * Publishes the agent's draft revision. Saving any tab creates or updates a draft revision;
  * publishing freezes it and makes it the settings the agent actually runs with. Disabled while
- * there is no draft to publish.
+ * there is no draft to publish, or while the editor has unsaved changes (`hasUnsavedChanges`) —
+ * publishing would freeze the draft without them.
  */
 export function AgentPublishButton({
   agent,
   size,
+  hasUnsavedChanges = false,
 }: {
   agent: Agent
   size?: React.ComponentProps<typeof Button>["size"]
+  hasUnsavedChanges?: boolean
 }) {
   const { t } = useTranslation()
   const [open, setOpen] = useState(false)
+
+  const disabledTitle = hasUnsavedChanges
+    ? t("agent:publish.unsavedChanges")
+    : agent.isDraft
+      ? undefined
+      : t("agent:publish.noDraft")
 
   return (
     <Dialog modal open={open} onOpenChange={setOpen}>
@@ -51,8 +60,8 @@ export function AgentPublishButton({
         <Button
           type="button"
           size={size}
-          disabled={!agent.isDraft}
-          title={agent.isDraft ? undefined : t("agent:publish.noDraft")}
+          disabled={!agent.isDraft || hasUnsavedChanges}
+          title={disabledTitle}
         >
           <CheckSquareIcon className="size-4" />
           {t("agent:publish.button")}

@@ -156,6 +156,7 @@
     "publish": {
       "button": "Publier",
       "noDraft": "Aucun brouillon à publier. Enregistrez une modification pour créer une nouvelle version brouillon.",
+      "unsavedChanges": "Enregistrez ou annulez vos modifications avant de publier.",
       "optional": "Facultatif",
       "props": {
         "revisionName": "Nom de la version",

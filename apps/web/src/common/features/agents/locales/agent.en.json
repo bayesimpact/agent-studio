@@ -156,6 +156,7 @@
     "publish": {
       "button": "Publish",
       "noDraft": "No draft to publish. Save a change first to create a new draft version.",
+      "unsavedChanges": "Save or discard your changes before publishing.",
       "optional": "Optional",
       "props": {
         "revisionName": "Version name",
