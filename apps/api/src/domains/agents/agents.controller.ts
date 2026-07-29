@@ -96,6 +96,29 @@ export class AgentsController {
     return { data: results }
   }
 
+  @Get(AgentsRoutes.getAllWithDrafts.path)
+  @CheckPolicy((policy) => policy.canList())
+  async getAllWithDrafts(
+    @Req() request: EndpointRequestWithProject,
+  ): Promise<typeof AgentsRoutes.getAllWithDrafts.response> {
+    const connectScope = getRequiredConnectScope(request)
+    const agents = await this.agentsService.listAgents({
+      userId: request.user.id,
+      connectScope,
+    })
+    const results = await Promise.all(
+      agents.map(async (agent) => {
+        const agentSettings = await this.agentSettingsService.getLast({
+          connectScope,
+          agentId: agent.id,
+          includesDraft: true,
+        })
+        return toAgentDto({ agent, agentSettings })
+      }),
+    )
+    return { data: results }
+  }
+
   @Patch(AgentsRoutes.updateOne.path)
   @CheckPolicy((policy) => policy.canUpdate())
   @AddContext("agent")
@@ -125,9 +148,12 @@ export class AgentsController {
   async getAllHistory(
     @Req() request: EndpointRequestWithAgent,
   ): Promise<typeof AgentSettingsRoutes.getAll.response> {
+    // Drafts are included so the history timeline can show the pending draft revision and diff
+    // it against the last published one.
     const agentSettings = await this.agentSettingsService.getAll({
       connectScope: getRequiredConnectScope(request),
       agentId: request.agent.id,
+      includesDraft: true,
     })
     const results = agentSettings.map((as) => {
       return toAgentDto({ agent: request.agent, agentSettings: as })

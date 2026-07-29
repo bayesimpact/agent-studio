@@ -1,8 +1,13 @@
-import type { CreateAgentDto, PartialUpdateAgentDto } from "@caseai-connect/api-contracts"
+import type {
+  CreateAgentDto,
+  PartialUpdateAgentDto,
+  PublishAgentDto,
+} from "@caseai-connect/api-contracts"
 import type { Agent } from "./agents.models"
 
 export interface IAgentsSpi {
   getAll: (params: { organizationId: string; projectId: string }) => Promise<Agent[]>
+  getAllWithDrafts: (params: { organizationId: string; projectId: string }) => Promise<Agent[]>
   createOne: (
     params: { organizationId: string; projectId: string },
     payload: CreateAgentDto,
@@ -27,4 +32,13 @@ export interface IAgentsSpi {
     agentId: string
     revision: number
   }) => Promise<void>
+  publishRevision: (
+    params: {
+      organizationId: string
+      projectId: string
+      agentId: string
+      revision: number
+    },
+    payload: PublishAgentDto,
+  ) => Promise<Agent>
 }

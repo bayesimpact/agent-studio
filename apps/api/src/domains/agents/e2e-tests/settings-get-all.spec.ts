@@ -97,6 +97,27 @@ describe("Agent Settings - getAll", () => {
     expect(agentHistory[2]?.revision).toBe(1)
   })
 
+  it("should return the draft revision so the history can diff it against the published one", async () => {
+    const { organization, project, agent } = await createContext()
+
+    const draftRev2 = agentSettingsFactory.transient({ organization, project, agent }).build({
+      instructions: "Rev 2 draft",
+      revision: 2,
+      isDraft: true,
+    })
+    await repositories.agentSettingsRepository.save(draftRev2)
+
+    const response = await subject()
+
+    expectResponse(response, 200)
+    const agentHistory = response.body.data
+    expect(agentHistory).toHaveLength(2)
+    expect(agentHistory[0]?.revision).toBe(2)
+    expect(agentHistory[0]?.isDraft).toBe(true)
+    expect(agentHistory[1]?.revision).toBe(1)
+    expect(agentHistory[1]?.isDraft).toBe(false)
+  })
+
   it("should return one item array when agent has only one revision has no agents", async () => {
     const { agentSettings } = await createContext()
 

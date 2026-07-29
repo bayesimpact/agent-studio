@@ -28,7 +28,13 @@ import { SourcesTool } from "./SourcesTool"
 import { SubAgentFormResultSheet } from "./SubAgentFormResultSheet"
 import { SurfaceResourcesTool } from "./SurfaceResourcesTool"
 
-export function AgentSessionMessage({ message }: { message: AgentSessionMessageType }) {
+export function AgentSessionMessage({
+  message,
+  renderMessageVersion,
+}: {
+  message: AgentSessionMessageType
+  renderMessageVersion?: (message: AgentSessionMessageType) => React.ReactNode
+}) {
   const formSubSessions = useFormSubSessions()
   const formResult = useFormResult()
 
@@ -84,6 +90,8 @@ export function AgentSessionMessage({ message }: { message: AgentSessionMessageT
                 <FeedbackCreator message={message} />
 
                 <CopyToClipboard content={message.content} />
+
+                {renderMessageVersion?.(message)}
 
                 {filledForm && formResult && (
                   <FormResultSheet

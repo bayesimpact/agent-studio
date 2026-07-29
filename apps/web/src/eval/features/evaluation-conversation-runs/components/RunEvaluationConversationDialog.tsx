@@ -339,6 +339,15 @@ function AgentVersionField({
 }) {
   const { t } = useTranslation()
 
+  // The newest non-draft revision: the one the agent actually runs with.
+  const publishedRevision = history.find((agentVersion) => !agentVersion.isDraft)?.revision
+
+  const buildVersionDetail = (agentVersion: Agent) => {
+    if (agentVersion.isDraft) return t("status:draft")
+    if (agentVersion.revision === publishedRevision) return t("status:published")
+    return buildDate(agentVersion.updatedAt)
+  }
+
   return (
     <FormField
       control={control}
@@ -366,16 +375,12 @@ function AgentVersionField({
               </SelectTrigger>
             </FormControl>
             <SelectContent>
-              {history.map((agentVersion, index) => (
+              {history.map((agentVersion) => (
                 <SelectItem key={agentVersion.revision} value={String(agentVersion.revision)}>
-                  {index === 0
-                    ? t("evaluationConversationRun:version.latest", {
-                        revision: agentVersion.revision,
-                      })
-                    : t("evaluationConversationRun:version.item", {
-                        revision: agentVersion.revision,
-                        date: buildDate(agentVersion.updatedAt),
-                      })}
+                  {t("evaluationConversationRun:version.item", {
+                    revision: agentVersion.revision,
+                    detail: buildVersionDetail(agentVersion),
+                  })}
                 </SelectItem>
               ))}
             </SelectContent>

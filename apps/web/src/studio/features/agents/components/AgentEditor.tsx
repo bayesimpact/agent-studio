@@ -18,6 +18,7 @@ import { AgentMcpServersTab } from "./AgentMcpServersTab"
 import { AgentModelTab } from "./AgentModelTab"
 import { AgentOrchestrationTab } from "./AgentOrchestrationTab"
 import { AgentOutputTab } from "./AgentOutputTab"
+import { AgentPublishButton } from "./AgentPublishButton"
 import { AgentResourceLibrariesTab } from "./AgentResourceLibrariesTab"
 import { AgentSessionCategoriesTab } from "./AgentSessionCategoriesTab"
 import { AgentSourcesTab } from "./AgentSourcesTab"
@@ -209,7 +210,12 @@ export function AgentEditor({
               </TabsTrigger>
             ))}
           </TabsList>
-          <AgentVersionHistory agent={agent} />
+          <div className="flex items-center gap-2">
+            <AgentVersionHistory agent={agent} />
+            {/* Extraction agents edit their settings from the playground, which has no editor
+                route to host a publish action, so it sits next to the history button here. */}
+            {agent.type === "extraction" && <AgentPublishButton agent={agent} size="sm" />}
+          </div>
         </div>
         {/* Also keyed on the revision so the active tab form reloads fresh defaults after a
             version is restored from the history sheet. */}

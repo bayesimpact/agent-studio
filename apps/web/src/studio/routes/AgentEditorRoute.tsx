@@ -14,6 +14,7 @@ import {
   AgentEditor,
   type AgentEditorOrchestration,
 } from "@/studio/features/agents/components/AgentEditor"
+import { AgentPublishButton } from "@/studio/features/agents/components/AgentPublishButton"
 
 export function AgentEditorRoute() {
   const agent = useValue(selectCurrentAgentData)
@@ -54,6 +55,7 @@ function WithData({ orchestration }: { orchestration?: AgentEditorOrchestration 
         onBack={handleBack}
         title={t(`agent:update.${agent.type}.title`)}
         description={t(`agent:update.${agent.type}.description`)}
+        action={<AgentPublishButton agent={agent} />}
       />
       <AgentEditor
         key={agent.id}

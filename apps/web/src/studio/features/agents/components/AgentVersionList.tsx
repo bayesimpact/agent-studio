@@ -15,11 +15,13 @@ export function AgentVersionList({
   onSelect: (revision: number) => void
 }) {
   const { t } = useTranslation()
+  // The published revision the agent actually runs with: the newest one that is not a draft.
+  const currentRevision = versions.find((version) => !version.isDraft)?.revision
 
   return (
-    <aside className="w-52 shrink-0 overflow-y-auto border-r">
+    <aside className="w-fit min-w-52 max-w-72 shrink-0 overflow-y-auto border-r">
       <ol>
-        {versions.map((version, index) => (
+        {versions.map((version) => (
           <li key={version.revision}>
             <button
               type="button"
@@ -32,10 +34,24 @@ export function AgentVersionList({
             >
               <span className="flex items-center justify-between gap-2 text-sm font-medium">
                 {t("agent:history.revisionLabel", { revision: version.revision })}
-                {index === 0 && (
-                  <Badge variant="secondary">{t("agent:history.currentBadge")}</Badge>
+                {version.isDraft && <Badge variant="warning">{t("status:draft")}</Badge>}
+                {version.revision === currentRevision && (
+                  <Badge variant="success">{t("agent:history.currentBadge")}</Badge>
                 )}
               </span>
+              {version.revisionName.trim() && (
+                <span className="mt-1 block text-sm line-clamp-2" title={version.revisionName}>
+                  {version.revisionName}
+                </span>
+              )}
+              {version.revisionDesc.trim() && (
+                <span
+                  className="mt-0.5 block text-xs text-muted-foreground line-clamp-3"
+                  title={version.revisionDesc}
+                >
+                  {version.revisionDesc}
+                </span>
+              )}
               <span
                 className="mt-1 block text-xs text-muted-foreground"
                 title={buildDate(version.updatedAt)}

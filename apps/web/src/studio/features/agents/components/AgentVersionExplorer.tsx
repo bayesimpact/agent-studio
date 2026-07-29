@@ -2,19 +2,22 @@ import { useMemo, useState } from "react"
 import type { Agent } from "@/common/features/agents/agents.models"
 import { useValue } from "@/common/hooks/use-value"
 import { selectAgentHistoryData } from "../agent-history.selectors"
-import { AgentVersionCompare, type AgentVersionCompareMode } from "./AgentVersionCompare"
+import {
+  AgentVersionCompare,
+  type AgentVersionCompareAvailability,
+  type AgentVersionCompareMode,
+} from "./AgentVersionCompare"
 import { AgentVersionList } from "./AgentVersionList"
 
 interface AgentVersionComparison {
-  /** The most recent version (`versions[0]`). */
-  current: Agent
   /** The version highlighted in the timeline and shown in the diff. */
   selected: Agent
-  /** The version immediately older than `selected`, if any. */
-  previous: Agent | undefined
-  isCurrent: boolean
-  canComparePrevious: boolean
-  canCompareCurrent: boolean
+  /** `selected` is the newest version, so there is nothing newer to restore from. */
+  isLatest: boolean
+  /** The agent has a pending draft, so the "draft" mode is offered as a third comparison. */
+  hasDraft: boolean
+  /** Which of the three comparisons are possible for `selected`. */
+  availability: AgentVersionCompareAvailability
   /** The requested `mode`, downgraded to whichever comparison is actually possible. */
   effectiveMode: AgentVersionCompareMode
   /** Older/newer versions fed to the diff, derived from `effectiveMode`. */
@@ -22,48 +25,60 @@ interface AgentVersionComparison {
   after: Agent
 }
 
+/** Tried in order when the requested mode is not available for the selected version. */
+const modeFallbackOrder: AgentVersionCompareMode[] = ["previous", "current", "draft"]
+
 /**
  * Resolve everything the two panes need from the raw version list plus the current UI state.
  *
- * `versions` is ordered by revision descending, so `versions[0]` is the current version and
- * each following index is one step older. Returns `null` when there is no version to show.
+ * `versions` is ordered by revision descending, so `versions[0]` is the newest version — the
+ * pending draft when there is one — and each following index is one step older. Returns `null`
+ * when there is no version to show.
  */
-function buildComparison(
+export function buildComparison(
   versions: Agent[],
   selectedRevision: number | null,
   mode: AgentVersionCompareMode,
 ): AgentVersionComparison | null {
-  const current = versions[0]
-  if (!current) return null
+  const latest = versions[0]
+  if (!latest) return null
 
-  // Default to the previous version (index 1) — the one users open the history to inspect —
-  // until they pick another revision from the timeline. Clamp to the current version when it
-  // is the only one available.
+  // The draft (at most one, always the newest revision) and the published version the agent
+  // actually runs with — the two things an older revision can be compared against.
+  const draft = latest.isDraft ? latest : undefined
+  const published = versions.find((version) => !version.isDraft)
+
+  // Default selection, until the user picks a revision from the timeline: the pending draft when
+  // there is one (its diff against the last published version is what users open the history for),
+  // otherwise the previous version (index 1). Clamp when the list has a single entry.
+  const defaultIndex = draft ? 0 : Math.min(1, versions.length - 1)
   const requestedIndex = versions.findIndex((version) => version.revision === selectedRevision)
-  const selectedIndex = requestedIndex === -1 ? Math.min(1, versions.length - 1) : requestedIndex
+  const selectedIndex = requestedIndex === -1 ? defaultIndex : requestedIndex
 
-  const selected = versions[selectedIndex] ?? current
+  const selected = versions[selectedIndex] ?? latest
   const previous = versions[selectedIndex + 1]
 
-  const isCurrent = selected.revision === current.revision
-  const canComparePrevious = previous !== undefined
-  const canCompareCurrent = !isCurrent
+  // A comparison target only makes sense when it is strictly newer than the selected version,
+  // otherwise the diff would run backwards or against the selection itself.
+  const availability: AgentVersionCompareAvailability = {
+    previous: previous !== undefined,
+    current: published !== undefined && selected.revision < published.revision,
+    draft: draft !== undefined && selected.revision < draft.revision,
+  }
 
-  // Honour the requested mode, but fall back to whichever comparison is possible.
-  let effectiveMode = mode
-  if (mode === "current" && !canCompareCurrent) effectiveMode = "previous"
-  if (mode === "previous" && !canComparePrevious) effectiveMode = "current"
+  const effectiveMode = availability[mode]
+    ? mode
+    : (modeFallbackOrder.find((candidate) => availability[candidate]) ?? "previous")
 
+  const newer = effectiveMode === "draft" ? draft : published
   const [before, after] =
-    effectiveMode === "current" ? [selected, current] : [previous ?? selected, selected]
+    effectiveMode === "previous" ? [previous ?? selected, selected] : [selected, newer ?? selected]
 
   return {
-    current,
     selected,
-    previous,
-    isCurrent,
-    canComparePrevious,
-    canCompareCurrent,
+    isLatest: selected.revision === latest.revision,
+    hasDraft: draft !== undefined,
+    availability,
     effectiveMode,
     before,
     after,
@@ -72,10 +87,12 @@ function buildComparison(
 
 /**
  * Two-pane version explorer: revision timeline on the left, comparison on the right.
+ * `initialRevision` preselects a revision — used when the explorer is opened from a
+ * revision badge rather than from the editor's history button.
  */
-export function AgentVersionExplorer() {
+export function AgentVersionExplorer({ initialRevision }: { initialRevision?: number }) {
   const versions = useValue(selectAgentHistoryData)
-  const [selectedRevision, setSelectedRevision] = useState<number | null>(null)
+  const [selectedRevision, setSelectedRevision] = useState<number | null>(initialRevision ?? null)
   const [mode, setMode] = useState<AgentVersionCompareMode>("current")
 
   const comparison = useMemo(
@@ -84,15 +101,7 @@ export function AgentVersionExplorer() {
   )
   if (!comparison) return null
 
-  const {
-    selected,
-    before,
-    after,
-    isCurrent,
-    effectiveMode,
-    canComparePrevious,
-    canCompareCurrent,
-  } = comparison
+  const { selected, before, after, isLatest, hasDraft, availability, effectiveMode } = comparison
 
   return (
     <div className="flex min-h-0 flex-1">
@@ -105,11 +114,11 @@ export function AgentVersionExplorer() {
         before={before}
         after={after}
         selected={selected}
-        isCurrent={isCurrent}
+        isLatest={isLatest}
+        hasDraft={hasDraft}
+        availability={availability}
         mode={effectiveMode}
         onModeChange={setMode}
-        canComparePrevious={canComparePrevious}
-        canCompareCurrent={canCompareCurrent}
       />
     </div>
   )

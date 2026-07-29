@@ -387,7 +387,7 @@ export type UpdateAgentToolsDto = z.infer<typeof updateAgentToolsSchema>
 export type UpdateAgentCategoriesDto = z.infer<typeof updateAgentCategoriesSchema>
 export type PartialUpdateAgentDto = z.infer<typeof partialUpdateAgentSchema>
 
-const agentPublishSchema = z.object({
+export const agentPublishSchema = z.object({
   revisionName: z.string().optional(),
   revisionDesc: z.string().optional(),
 })

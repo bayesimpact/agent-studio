@@ -1,12 +1,14 @@
 {
   "status": {
     "done": "Done",
+    "draft": "Draft",
     "error": "Error",
     "failed": "Failed",
     "idle": "Idle",
     "loading": "Loading",
     "noResults": "No results found.",
     "pending": "Pending",
+    "published": "Published",
     "success": "Success",
     "thinking": "Thinking",
     "activity": {

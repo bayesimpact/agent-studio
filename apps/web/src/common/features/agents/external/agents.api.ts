@@ -11,6 +11,13 @@ export default {
     )
     return response.data.data.map(toAgent)
   },
+  getAllWithDrafts: async (params) => {
+    const axios = getAxiosInstance()
+    const response = await axios.get<typeof AgentsRoutes.getAllWithDrafts.response>(
+      AgentsRoutes.getAllWithDrafts.getPath(params),
+    )
+    return response.data.data.map(toAgent)
+  },
   createOne: async (params, payload) => {
     const axios = getAxiosInstance()
     const response = await axios.post<typeof AgentsRoutes.createOne.response>(
@@ -41,6 +48,14 @@ export default {
     await axios.post(
       AgentSettingsRoutes.restoreOne.getPath({ ...params, revision: String(revision) }),
     )
+  },
+  publishRevision: async ({ revision, ...params }, payload) => {
+    const axios = getAxiosInstance()
+    const response = await axios.post<typeof AgentSettingsRoutes.publishOne.response>(
+      AgentSettingsRoutes.publishOne.getPath({ ...params, revision: String(revision) }),
+      { payload } satisfies typeof AgentSettingsRoutes.publishOne.request,
+    )
+    return toAgent(response.data.data)
   },
 } satisfies IAgentsSpi
 

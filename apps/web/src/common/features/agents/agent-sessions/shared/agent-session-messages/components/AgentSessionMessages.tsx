@@ -51,12 +51,18 @@ export function AgentSessionMessages({
   onFillFormToolEvent,
   formSubSessions = [],
   formResultSchema,
+  renderMessageVersion,
 }: {
   session: AgentSession
   messages: AgentSessionMessageType[]
   onFillFormToolEvent?: () => void
   formSubSessions?: ConversationSubSession[]
   formResultSchema?: Record<string, unknown>
+  /**
+   * Optional per-message affordance rendered in the footer, after the copy button.
+   * Studio uses it for the agent settings revision badge; the other surfaces omit it.
+   */
+  renderMessageVersion?: (message: AgentSessionMessageType) => React.ReactNode
 }) {
   const isStreaming = useAppSelector(selectStreaming)
 
@@ -72,7 +78,7 @@ export function AgentSessionMessages({
           <MessageScrollerProvider scrollPreviousItemPeek={168} defaultScrollPosition="end">
             <FormSubSessionsProvider value={formSubSessions}>
               <FormResultProvider value={formResult}>
-                <Messages messages={messages} />
+                <Messages messages={messages} renderMessageVersion={renderMessageVersion} />
               </FormResultProvider>
             </FormSubSessionsProvider>
 
@@ -89,7 +95,13 @@ export function AgentSessionMessages({
   )
 }
 
-function Messages({ messages }: { messages: AgentSessionMessageType[] }) {
+function Messages({
+  messages,
+  renderMessageVersion,
+}: {
+  messages: AgentSessionMessageType[]
+  renderMessageVersion?: (message: AgentSessionMessageType) => React.ReactNode
+}) {
   return (
     <MessageScroller className="flex-1">
       <MessageScrollerViewport className="p-6">
@@ -101,7 +113,7 @@ function Messages({ messages }: { messages: AgentSessionMessageType[] }) {
               // Anchor on user turns so jumps land on a question with prior context peeking above.
               scrollAnchor={message.role === "user"}
             >
-              <AgentSessionMessage message={message} />
+              <AgentSessionMessage message={message} renderMessageVersion={renderMessageVersion} />
             </MessageScrollerItem>
           ))}
         </MessageScrollerContent>

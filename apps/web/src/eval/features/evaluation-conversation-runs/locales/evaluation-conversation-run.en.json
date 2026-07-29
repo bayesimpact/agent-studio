@@ -12,8 +12,7 @@
       "label": "Version",
       "placeholder": "Select a version",
       "loading": "Loading versions...",
-      "latest": "Latest — v{{revision}}",
-      "item": "v{{revision}} — {{date}}",
+      "item": "v{{revision}} — {{detail}}",
       "revision": "v{{revision}}"
     },
     "judgeModel": {
