@@ -102,3 +102,18 @@ vulnerabilities:
   - id: CVE-2026-48779
     expired_at: 2026-09-05T00:00:00Z
     statement: "ws 8.20.1 -> 8.21.0 transitive DoS; lift on parent release (#601)"
+  # protobufjs 8.0.1: pinned exactly by @opentelemetry/otlp-transformer (overrides
+  # banned). Used only to serialize our own telemetry; no attacker-controlled
+  # decoding. Fixed in 8.0.2. Tracked in bayes-platform#601.
+  - id: CVE-2026-44289
+    expired_at: 2026-09-05T00:00:00Z
+    statement: "protobufjs 8.0.1, pinned by @opentelemetry/otlp-transformer; telemetry-only, not reachable; fix 8.0.2 (#601)"
+  - id: CVE-2026-44290
+    expired_at: 2026-09-05T00:00:00Z
+    statement: "protobufjs 8.0.1, pinned by @opentelemetry/otlp-transformer; telemetry-only, not reachable; fix 8.0.2 (#601)"
+  - id: CVE-2026-44291
+    expired_at: 2026-09-05T00:00:00Z
+    statement: "protobufjs 8.0.1, pinned by @opentelemetry/otlp-transformer; telemetry-only, not reachable; fix 8.0.2 (#601)"
+  - id: CVE-2026-44293
+    expired_at: 2026-09-05T00:00:00Z
+    statement: "protobufjs 8.0.1, pinned by @opentelemetry/otlp-transformer; telemetry-only, not reachable; fix 8.0.2 (#601)"
