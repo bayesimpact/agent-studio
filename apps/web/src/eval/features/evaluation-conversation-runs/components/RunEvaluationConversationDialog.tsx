@@ -344,7 +344,10 @@ function AgentVersionField({
 
   const buildVersionDetail = (agentVersion: Agent) => {
     if (agentVersion.isDraft) return t("status:draft")
-    if (agentVersion.revision === publishedRevision) return t("status:published")
+    if (agentVersion.revision === publishedRevision)
+      return t("evaluationConversationRun:version.current", {
+        date: buildDate(agentVersion.updatedAt),
+      })
     return buildDate(agentVersion.updatedAt)
   }
 

@@ -13,6 +13,7 @@
       "placeholder": "Select a version",
       "loading": "Loading versions...",
       "item": "v{{revision}} — {{detail}}",
+      "current": "Current ({{date}})",
       "revision": "v{{revision}}"
     },
     "judgeModel": {
