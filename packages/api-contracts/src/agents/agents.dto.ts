@@ -1,10 +1,7 @@
 import { z } from "zod"
-import {
-  type DocumentTagDto,
-  documentTagSchema,
-  updateDocumentTagsSchema,
-} from "../document-tags/document-tag.dto"
+import { documentTagSchema, updateDocumentTagsSchema } from "../document-tags/document-tag.dto"
 import { type TimeType, timeTypeSchema } from "../generic"
+import type { AgentSettingsDto } from "./settings/agent-settings.dto"
 
 export enum AgentModel {
   Gemini25Flash = "gemini-2.5-flash",
@@ -58,30 +55,25 @@ export type AgentMcpServerDto = {
 
 export type AgentDto = {
   createdAt: TimeType
-  greetingMessage?: string
-  instructions: string
-  hasCategories?: boolean
   id: string
-  revision: number
-  revisionName: string
-  revisionDesc: string
-  isDraft: boolean
-  isArchived: boolean
-  locale: AgentLocale
-  model: AgentModel
   name: string
-  outputJsonSchema?: Record<string, unknown>
   projectId: string
-  temperature: AgentTemperature
   type: AgentType
-  updatedAt: TimeType
-  documentTagIds: DocumentTagDto["id"][]
-  documentsRagMode: DocumentsRagMode
-  fillFormEnabled: boolean
-  projectAgentSessionCategoryIds: string[]
-  usedProjectAgentSessionCategoryIds: string[]
-  resourceLibraryIds: string[]
-  mcpServers: AgentMcpServerDto[]
+  currentRevision: {
+    updatedAt: TimeType
+    name?: string
+    description?: string
+    number: number
+  }
+}
+
+export type AgentWithDraftDto = AgentDto & {
+  draftRevision?: {
+    updatedAt: TimeType
+    name?: string
+    description?: string
+    number: number
+  }
 }
 
 // Constraint keywords (enum/minimum/maximum/items) mirror the subset of JSON Schema
@@ -159,6 +151,7 @@ export function getOrderedPropertyEntries(
   ][]
 }
 
+// FIXME:
 const agentValidationSchema = z.object({
   greetingMessage: z.string().max(2000).optional(),
   instructions: z.string(),
@@ -229,8 +222,10 @@ export type ReplaceAgentSubAgentsDto = z.infer<typeof replaceAgentSubAgentsSchem
 export type AgentSubAgentDto = z.infer<typeof agentSubAgentSchema>
 
 const refineOutputJsonSchema = {
-  fn: (data: Partial<AgentDto>) =>
-    data.type === "conversation" || data.outputJsonSchema !== undefined,
+  fn: (data: {
+    type: Pick<AgentDto, "type">
+    outputJsonSchema?: Pick<AgentSettingsDto, "outputJsonSchema">
+  }) => data.type === "conversation" || data.outputJsonSchema !== undefined,
   message: {
     message: "outputJsonSchema is required when type is not 'conversation'",
     path: ["outputJsonSchema"],

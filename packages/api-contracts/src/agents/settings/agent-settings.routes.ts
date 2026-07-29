@@ -1,9 +1,10 @@
 import type { RequestPayload, ResponseData, SuccessResponseDTO } from "../../generic"
 import { defineRoute } from "../../helpers"
 import type { AgentDto, PublishAgentDto } from "../agents.dto"
+import type { AgentSettingsDto } from "./agent-settings.dto"
 
 export const AgentSettingsRoutes = {
-  getAll: defineRoute<ResponseData<AgentDto[]>>({
+  getAll: defineRoute<ResponseData<AgentSettingsDto[]>>({
     method: "get",
     path: "organizations/:organizationId/projects/:projectId/agents/:agentId/settings",
   }),
