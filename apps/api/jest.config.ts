@@ -9,6 +9,11 @@ export const nestConfig = {
   moduleFileExtensions: ["js", "ts", "json"],
   rootDir: "src",
   testRegex: ".*\\.spec\\.ts$",
+  // Live-regression suites call real LLM endpoints (vLLM, Vertex). They must
+  // NEVER run in CI: without LIVE_PROVIDER_REGRESSIONS=1 they are not even
+  // collected (importing them requires network creds and node flags).
+  testPathIgnorePatterns:
+    process.env.LIVE_PROVIDER_REGRESSIONS === "1" ? [] : [".*\\.live\\.spec\\.ts$"],
   transform: {
     "^.+\\.(t|j)s$": "ts-jest",
   },
