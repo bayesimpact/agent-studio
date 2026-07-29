@@ -1,7 +1,9 @@
+import { z } from "zod"
 import type { RetrievedDocumentChunk } from "@/domains/documents/embeddings/document-chunk.types"
 import { createRetrievedChunksRegistry } from "./retrieved-chunks-registry"
 import {
   submitTurnSummaryDescription,
+  submitTurnSummaryExecutionCounts,
   submitTurnSummaryInstruction,
   submitTurnSummaryTool,
 } from "./submit-turn-summary.tool"
@@ -183,7 +185,62 @@ describe("submitTurnSummaryTool", () => {
       content: expect.stringContaining("Report received"),
       // Nothing was recorded: flagged so the end-of-turn guarantee retries.
       endOfTurnNoOp: true,
+      // Registry snapshot for the end-of-turn freshness check.
+      sawKnowledgeBaseChunks: false,
     })
+  })
+})
+
+describe("submitTurnSummaryTool - runtime-dynamic schema", () => {
+  it("declares chunkIds (and mentions it) only once the registry has chunks", () => {
+    const registry = createRetrievedChunksRegistry()
+    const sdkTool = submitTurnSummaryTool({
+      retrievedChunksRegistry: registry,
+      onExecute: () => undefined,
+    })
+
+    // Before any lookup: no chunkIds in the schema, none in the description.
+    expect(JSON.stringify(z.toJSONSchema(sdkTool.inputSchema as z.ZodType))).not.toContain(
+      "chunkIds",
+    )
+    expect(sdkTool.description).not.toContain("chunk")
+
+    registry.register(buildChunk({ chunkId: "chunk-1" }))
+
+    // After a lookup registered chunks: chunkIds appears in both.
+    expect(JSON.stringify(z.toJSONSchema(sdkTool.inputSchema as z.ZodType))).toContain("chunkIds")
+    expect(sdkTool.description).toContain("Never invent an id")
+  })
+})
+
+describe("submitTurnSummaryExecutionCounts", () => {
+  it("keeps executions that saw the chunks, and any execution without the marker", () => {
+    const registry = createRetrievedChunksRegistry()
+    registry.register(buildChunk({ chunkId: "chunk-1" }))
+    const executionCounts = submitTurnSummaryExecutionCounts(registry)
+
+    expect(
+      executionCounts({
+        toolName: "submit_turn_summary",
+        output: { sawKnowledgeBaseChunks: true },
+      }),
+    ).toBe(true)
+    expect(executionCounts({ toolName: "other_tool", output: {} })).toBe(true)
+  })
+
+  it("invalidates a report submitted before the lookup registered chunks", () => {
+    const registry = createRetrievedChunksRegistry()
+    const executionCounts = submitTurnSummaryExecutionCounts(registry)
+    const prematureOutput = { sawKnowledgeBaseChunks: false }
+
+    // No chunks registered by end of turn (greeting): the execution counts.
+    expect(executionCounts({ toolName: "submit_turn_summary", output: prematureOutput })).toBe(true)
+
+    // A lookup later filled the registry: the same execution is now stale.
+    registry.register(buildChunk({ chunkId: "chunk-1" }))
+    expect(executionCounts({ toolName: "submit_turn_summary", output: prematureOutput })).toBe(
+      false,
+    )
   })
 })
 

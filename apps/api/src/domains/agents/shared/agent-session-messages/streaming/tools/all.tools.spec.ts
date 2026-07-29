@@ -131,24 +131,40 @@ describe("Tools execution", () => {
     return { fulltextStream, agentCalls }
   }
 
+  const retrievedChunkFixture = {
+    chunkId: "3f9f2f6e-0000-4000-8000-000000000001",
+    documentId: "3f9f2f6e-0000-4000-8000-000000000002",
+    documentTitle: "Employee Handbook",
+    documentFileName: "handbook.pdf",
+    documentSourceType: "project",
+    chunkIndex: 0,
+    content: "Employees get 27 days of paid leave.",
+    distance: 0.1,
+    modelName: "embedding-model",
+    isParentChunk: false,
+  }
+
   it("ToolName.SubmitTurnSummary (sources part) - runs via the systematic end-of-turn call", async () => {
     const { connectScope, agent, agentSettings, session, project } =
       await createContextWithSession()
+    const ragAgentSettings = { ...agentSettings, documentsRagMode: DocumentsRagMode.All }
 
     await addFeature({
       featureFlagRepository: repositories.featureFlagRepository,
       projectId: project.id,
       featureFlagKey: "sources-tool",
     })
+    mockDocumentChunkRetrievalService.retrieveTopChunks.mockResolvedValue([retrievedChunkFixture])
 
-    // Generation 1: the answer (the loop never sees submit_turn_summary).
-    // Generation 2: the forced end-of-turn call.
+    // Generation 1: the lookup. Generation 2: the answer, without the
+    // voluntary report. Generation 3: the forced end-of-turn call.
+    mockProvider.addToolCallTurn(agent.id, ToolName.LookupKnowledgeBase, { query: "paid leave" })
     mockProvider.addTextTurn(agent.id, "Voici la réponse.")
     mockProvider.addToolCallTurn(agent.id, ToolName.SubmitTurnSummary, { chunkIds: ["c1"] })
 
     const { events, fulltextStream } = await aggregateStream(
       service.streamAgentResponse({
-        agentSessionScope: { agent, agentSettings, session, connectScope },
+        agentSessionScope: { agent, agentSettings: ragAgentSettings, session, connectScope },
         userContent: "Bonjour",
         notifyClient: () => undefined,
       }),
@@ -158,7 +174,138 @@ describe("Tools execution", () => {
     expect(events.at(-1)?.type).toBe("end")
 
     const agentCalls = mockProvider.getCalls().filter((call) => call.agentId === agent.id)
+    expect(agentCalls).toHaveLength(3)
+  }, 15000)
+
+  it("ToolName.SubmitTurnSummary - chunkIds enters the declared schema only after a lookup ran", async () => {
+    // The user-visible contract: on a step where no knowledge base call
+    // happened yet, the declared schema (and description) must not mention
+    // chunkIds at all — including in the forced end-of-turn generation.
+    const { connectScope, agent, agentSettings, session, project } =
+      await createContextWithSession()
+    const ragAgentSettings = { ...agentSettings, documentsRagMode: DocumentsRagMode.All }
+
+    await addFeature({
+      featureFlagRepository: repositories.featureFlagRepository,
+      projectId: project.id,
+      featureFlagKey: "sources-tool",
+    })
+    mockDocumentChunkRetrievalService.retrieveTopChunks.mockResolvedValue([retrievedChunkFixture])
+
+    // Generation 1: the lookup. Generation 2: answer + voluntary report.
+    mockProvider.addToolCallTurn(agent.id, ToolName.LookupKnowledgeBase, { query: "paid leave" })
+    mockProvider.addTextWithToolCallTurn(agent.id, "27 jours.", ToolName.SubmitTurnSummary, {
+      chunkIds: ["c1"],
+    })
+
+    await aggregateStream(
+      service.streamAgentResponse({
+        agentSessionScope: { agent, agentSettings: ragAgentSettings, session, connectScope },
+        userContent: "Combien de jours de congés ?",
+        notifyClient: () => undefined,
+      }),
+    )
+
+    const agentCalls = mockProvider.getCalls().filter((call) => call.agentId === agent.id)
     expect(agentCalls).toHaveLength(2)
+    // Step 0 (before any lookup): declared, but without chunkIds.
+    expect(agentCalls[0]?.toolNames).toContain(ToolName.SubmitTurnSummary)
+    expect(agentCalls[0]?.toolSchemas[ToolName.SubmitTurnSummary]).not.toContain("chunkIds")
+    // Step 1 (the lookup registered chunks): chunkIds is now declared.
+    expect(agentCalls[1]?.toolSchemas[ToolName.SubmitTurnSummary]).toContain("chunkIds")
+  }, 15000)
+
+  it("ToolName.SubmitTurnSummary - a report submitted BEFORE the lookup is stale: the forced retry still reports sources", async () => {
+    // Gemini Flash sometimes calls the report alongside/before the lookup in
+    // the first step (metadata only — no chunk exists yet). That execution
+    // must not consume the end-of-turn guarantee: once the lookup registered
+    // chunks, the forced generation retries and the sources get reported.
+    const { connectScope, agent, agentSettings, session, project } =
+      await createContextWithSession()
+    const ragAgentSettings = { ...agentSettings, documentsRagMode: DocumentsRagMode.All }
+
+    await addFeature({
+      featureFlagRepository: repositories.featureFlagRepository,
+      projectId: project.id,
+      featureFlagKey: "sources-tool",
+    })
+    mockDocumentChunkRetrievalService.retrieveTopChunks.mockResolvedValue([retrievedChunkFixture])
+
+    const category = await repositories.agentSessionCategoryRepository.save(
+      repositories.agentSessionCategoryRepository.create({ agentId: agent.id, name: "Bayes" }),
+    )
+    agent.sessionCategories = [category]
+
+    // Generation 1: PREMATURE report (before any lookup). Generation 2: the
+    // lookup. Generation 3: the answer. Generation 4: the forced retry.
+    mockProvider.addToolCallTurn(agent.id, ToolName.SubmitTurnSummary, {
+      suggestedTitle: "Congés",
+      categoryNames: ["Bayes"],
+    })
+    mockProvider.addToolCallTurn(agent.id, ToolName.LookupKnowledgeBase, { query: "congés" })
+    mockProvider.addTextTurn(agent.id, "27 jours.")
+    mockProvider.addToolCallTurn(agent.id, ToolName.SubmitTurnSummary, {
+      chunkIds: ["c1"],
+      suggestedTitle: "Congés",
+      categoryNames: ["Bayes"],
+    })
+
+    const { events } = await aggregateStream(
+      service.streamAgentResponse({
+        agentSessionScope: { agent, agentSettings: ragAgentSettings, session, connectScope },
+        userContent: "Combien de jours de congés ?",
+        notifyClient: () => undefined,
+      }),
+    )
+
+    expect(events.at(-1)?.type).toBe("end")
+    const agentCalls = mockProvider.getCalls().filter((call) => call.agentId === agent.id)
+    // The forced retry DID run (4 generations) despite the premature report,
+    // and its declared schema carried chunkIds (the lookup ran by then).
+    expect(agentCalls).toHaveLength(4)
+    expect(agentCalls[3]?.toolSchemas[ToolName.SubmitTurnSummary]).toContain("chunkIds")
+  }, 15000)
+
+  it("ToolName.SubmitTurnSummary - no lookup in the turn: chunkIds never declared, forced call included", async () => {
+    // Greeting turn on a RAG agent: the forced end-of-turn generation must
+    // use the same runtime-dynamic schema — no chunkIds without a lookup.
+    const { connectScope, agent, agentSettings, session, project } =
+      await createContextWithSession()
+    const ragAgentSettings = { ...agentSettings, documentsRagMode: DocumentsRagMode.All }
+
+    await addFeature({
+      featureFlagRepository: repositories.featureFlagRepository,
+      projectId: project.id,
+      featureFlagKey: "sources-tool",
+    })
+
+    const category = await repositories.agentSessionCategoryRepository.save(
+      repositories.agentSessionCategoryRepository.create({ agentId: agent.id, name: "Greeting" }),
+    )
+    agent.sessionCategories = [category]
+
+    // Generation 1: the greeting answer. Generation 2: the forced report.
+    mockProvider.addTextTurn(agent.id, "Bonjour !")
+    mockProvider.addToolCallTurn(agent.id, ToolName.SubmitTurnSummary, {
+      suggestedTitle: "Salutations",
+      categoryNames: ["Greeting"],
+    })
+
+    const { events } = await aggregateStream(
+      service.streamAgentResponse({
+        agentSessionScope: { agent, agentSettings: ragAgentSettings, session, connectScope },
+        userContent: "salut",
+        notifyClient: () => undefined,
+      }),
+    )
+
+    expect(events.at(-1)?.type).toBe("end")
+    const agentCalls = mockProvider.getCalls().filter((call) => call.agentId === agent.id)
+    expect(agentCalls).toHaveLength(2)
+    for (const call of agentCalls) {
+      expect(call.toolSchemas[ToolName.SubmitTurnSummary]).toBeDefined()
+      expect(call.toolSchemas[ToolName.SubmitTurnSummary]).not.toContain("chunkIds")
+    }
   }, 15000)
 
   it("ToolName.SubmitTurnSummary - voluntary in-loop call skips the forced generation (dedupe)", async () => {
@@ -239,60 +386,6 @@ describe("Tools execution", () => {
       id: session.id,
     })
     expect(updatedSession.title).toBe("About Bayes")
-  }, 15000)
-
-  it("ToolName.SubmitTurnSummary - declared to the model only AFTER a knowledge base call (RAG agent)", async () => {
-    // For a RAG agent, the turn summary (with its chunkIds field) is gated:
-    // step 1 (before any lookup) must NOT declare it; once the knowledge
-    // base was queried, it appears.
-    const { connectScope, agent, agentSettings, session, project } =
-      await createContextWithSession()
-
-    await addFeature({
-      featureFlagRepository: repositories.featureFlagRepository,
-      projectId: project.id,
-      featureFlagKey: "sources-tool",
-    })
-
-    const ragAgentSettings = { ...agentSettings, documentsRagMode: DocumentsRagMode.All }
-    mockDocumentChunkRetrievalService.retrieveTopChunks.mockResolvedValue([
-      {
-        chunkId: "chunk-uuid-1",
-        documentId: "document-uuid-1",
-        documentTitle: "Guide",
-        documentFileName: "guide.pdf",
-        documentSourceType: "project",
-        chunkIndex: 0,
-        content: "Guide content.",
-        distance: 0.1,
-        modelName: "embedding-model",
-        isParentChunk: false,
-      },
-    ])
-
-    mockProvider.addToolCallTurn(agent.id, ToolName.LookupKnowledgeBase, { query: "question" })
-    mockProvider.addTextWithToolCallTurn(agent.id, "Réponse.", ToolName.SubmitTurnSummary, {
-      chunkIds: ["c1"],
-    })
-
-    const { events, fulltextStream } = await aggregateStream(
-      service.streamAgentResponse({
-        agentSessionScope: { agent, agentSettings: ragAgentSettings, session, connectScope },
-        userContent: "Question documentaire",
-        notifyClient: () => undefined,
-      }),
-    )
-
-    expect(fulltextStream).toBe("Réponse.")
-    expect(events.at(-1)?.type).toBe("end")
-
-    const agentCalls = mockProvider.getCalls().filter((call) => call.agentId === agent.id)
-    expect(agentCalls).toHaveLength(2)
-    // Step 1: lookup declared, summary hidden (no KB call happened yet).
-    expect(agentCalls[0]?.toolNames).toContain(ToolName.LookupKnowledgeBase)
-    expect(agentCalls[0]?.toolNames).not.toContain(ToolName.SubmitTurnSummary)
-    // Step 2: the knowledge base ran — the summary is now declared.
-    expect(agentCalls[1]?.toolNames).toContain(ToolName.SubmitTurnSummary)
   }, 15000)
 
   it("ToolName.SubmitTurnSummary - tolerates an empty voluntary call (Gemma greeting shape)", async () => {

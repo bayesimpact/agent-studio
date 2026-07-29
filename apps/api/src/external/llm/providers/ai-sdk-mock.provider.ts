@@ -13,6 +13,8 @@ export type MockCall = {
   prompt: string
   /** Names of the tools DECLARED to the model for this generation. */
   toolNames: string[]
+  /** Serialized JSON schema DECLARED per tool for this generation. */
+  toolSchemas: Record<string, string>
 }
 
 type ResolvedMock =
@@ -140,6 +142,11 @@ export class AISDKMockProvider extends AISDKLLMProviderBase {
       callOrigin,
       prompt: JSON.stringify(options.prompt),
       toolNames: (options.tools ?? []).map((declaredTool) => declaredTool.name),
+      toolSchemas: Object.fromEntries(
+        (options.tools ?? [])
+          .filter((declaredTool) => declaredTool.type === "function")
+          .map((declaredTool) => [declaredTool.name, JSON.stringify(declaredTool.inputSchema)]),
+      ),
     })
 
     const next = agentId !== undefined ? this.queuesByAgentId.get(agentId)?.shift() : undefined

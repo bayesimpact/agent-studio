@@ -21,6 +21,7 @@ import { fillFormTool } from "./tools/fill-form.tool"
 import { lookupKnowledgeBaseTool } from "./tools/lookup-knowledge-base.tool"
 import { createRetrievedChunksRegistry } from "./tools/retrieved-chunks-registry"
 import {
+  submitTurnSummaryExecutionCounts,
   submitTurnSummaryInstruction,
   submitTurnSummaryTool,
 } from "./tools/submit-turn-summary.tool"
@@ -126,7 +127,6 @@ export class ToolsService extends ServiceWithLLM {
           tools: undefined,
           fireAndForgetToolNames: [],
           endOfTurnTools: {},
-          toolActivationPrerequisites: {},
           hasSubAgentTools: false,
         }
     }
@@ -243,8 +243,9 @@ export class ToolsService extends ServiceWithLLM {
     // can call it in the same generation as its answer — no extra call) AND
     // referenced in endOfTurnTools: the provider forces it after the answer
     // whenever the loop did not call it, so it runs on every turn no matter
-    // what. Only the tool's fields stay dynamic (sources / categorization
-    // per agent config).
+    // what. The SAME tool instance backs both paths: its schema getters read
+    // the chunks registry, so chunkIds only appears (in loop steps and in
+    // the forced call alike) once a lookup registered chunks this turn.
     const endOfTurnTools: ToolSet = hasSubmitTurnSummaryTool
       ? {
           [ToolName.SubmitTurnSummary]: submitTurnSummaryTool({
@@ -326,7 +327,7 @@ export class ToolsService extends ServiceWithLLM {
         ...(hasSubmitTurnSummaryTool
           ? {
               [ToolName.SubmitTurnSummary]: submitTurnSummaryInstruction({
-                includeSources: hasSourcesTool,
+                includeSources: hasSourcesReporting,
                 includeSessionMetadata: hasSessionCategorization,
               }),
             }
@@ -334,12 +335,11 @@ export class ToolsService extends ServiceWithLLM {
       },
       fireAndForgetToolNames: FIRE_AND_FORGET_TOOL_NAMES.filter((toolName) => toolName in tools),
       endOfTurnTools,
-      // The turn summary carries a chunkIds field only for RAG agents — and
-      // even then it is only DECLARED to the model once the knowledge base
-      // was actually queried in the turn.
-      toolActivationPrerequisites: hasSourcesReporting
-        ? { [ToolName.SubmitTurnSummary]: ToolName.LookupKnowledgeBase }
-        : {},
+      // A report submitted before the lookup registered chunks is stale for
+      // the sources part: the forced end-of-turn retry must still run.
+      endOfTurnExecutionCounts: hasSourcesReporting
+        ? submitTurnSummaryExecutionCounts(retrievedChunksRegistry)
+        : undefined,
       hasSubAgentTools: Object.keys(subAgentTools).length > 0,
     }
   }

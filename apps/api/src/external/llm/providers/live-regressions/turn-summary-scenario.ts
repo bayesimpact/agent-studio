@@ -8,6 +8,7 @@ import {
 } from "@/domains/agents/shared/agent-session-messages/streaming/tools/lookup-knowledge-base.tool"
 import { createRetrievedChunksRegistry } from "@/domains/agents/shared/agent-session-messages/streaming/tools/retrieved-chunks-registry"
 import {
+  submitTurnSummaryExecutionCounts,
   submitTurnSummaryInstruction,
   submitTurnSummaryTool,
 } from "@/domains/agents/shared/agent-session-messages/streaming/tools/submit-turn-summary.tool"
@@ -101,10 +102,10 @@ Always answer in French.`
       endOfTurnTools: {
         [ToolName.SubmitTurnSummary]: turnSummary,
       },
+      // A report submitted alongside/before the lookup is stale for the
+      // sources part — the forced retry must still run (production wiring).
+      endOfTurnExecutionCounts: submitTurnSummaryExecutionCounts(registry),
       fireAndForgetToolNames: [ToolName.SubmitTurnSummary],
-      toolActivationPrerequisites: {
-        [ToolName.SubmitTurnSummary]: ToolName.LookupKnowledgeBase,
-      },
     },
     metadata: {
       traceId: `live-regression-${model}`,

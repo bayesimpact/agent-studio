@@ -245,36 +245,10 @@ export abstract class AISDKLLMProviderBase implements LLMProvider {
     const systemMessage = messages.find((msg) => msg.role === "system")?.content
     const functionId = this.buildFunctionIdForStreamChatResponse(aiSDKMessages)
 
-    const toolActivationPrerequisites = config.toolActivationPrerequisites ?? {}
     const agent = new ToolLoopAgent({
       model: this.getLanguageModelWithRawCapture({ config, callOrigin }),
       temperature: config.temperature,
       tools: config.tools,
-      // Hide gated tools until their prerequisite tool was called in this
-      // turn (e.g. the turn summary's sources variant only exists once the
-      // knowledge base was actually queried).
-      ...(Object.keys(toolActivationPrerequisites).length > 0
-        ? {
-            prepareStep: ({
-              steps,
-            }: {
-              steps: Array<{ toolCalls: Array<{ toolName: string }> }>
-            }) => {
-              const calledToolNames = new Set(
-                steps.flatMap((step) => step.toolCalls.map((toolCall) => toolCall.toolName)),
-              )
-              const inactiveToolNames = Object.entries(toolActivationPrerequisites)
-                .filter(([, prerequisite]) => !calledToolNames.has(prerequisite))
-                .map(([toolName]) => toolName)
-              if (inactiveToolNames.length === 0) return {}
-              return {
-                activeTools: Object.keys(config.tools ?? {}).filter(
-                  (toolName) => !inactiveToolNames.includes(toolName),
-                ),
-              }
-            },
-          }
-        : {}),
       // Keep the default step safety net, but skip the follow-up generation
       // when a step only ran fire-and-forget tools (their output is noise).
       ...(config.fireAndForgetToolNames?.length
@@ -367,6 +341,10 @@ export abstract class AISDKLLMProviderBase implements LLMProvider {
       // a voluntary call with invalid arguments never executes and must not
       // suppress the forced retry. Executions flagged endOfTurnNoOp recorded
       // nothing (e.g. an empty {} report) and do not count either.
+      // A tool can also invalidate an execution after the fact through
+      // config.endOfTurnExecutionCounts (e.g. a turn summary submitted
+      // BEFORE the knowledge base lookup cannot have cited sources).
+      const executionCounts = config.endOfTurnExecutionCounts ?? (() => true)
       const steps = await streamResult.steps
       const executedToolNames = new Set(
         steps.flatMap((step) =>
@@ -374,7 +352,7 @@ export abstract class AISDKLLMProviderBase implements LLMProvider {
             .filter(
               (toolResult) =>
                 (toolResult.output as { endOfTurnNoOp?: boolean } | undefined)?.endOfTurnNoOp !==
-                true,
+                  true && executionCounts(toolResult),
             )
             .map((toolResult) => toolResult.toolName),
         ),

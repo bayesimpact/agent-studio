@@ -29,8 +29,8 @@ export type BuiltTools = {
    * answering loop, on every turn (submit_turn_summary). Not part of `tools`.
    */
   endOfTurnTools: ToolSet
-  /** Loop visibility gates: tool name -> prerequisite tool call name. */
-  toolActivationPrerequisites: Record<string, string>
+  /** Optional freshness check for loop executions of end-of-turn tools. */
+  endOfTurnExecutionCounts?: (toolResult: { toolName: string; output: unknown }) => boolean
   mcpClose?: () => Promise<void>
   toolDescriptions: Record<string, string>
   hasSubAgentTools: boolean
@@ -43,7 +43,6 @@ type BuildLLMConfig = (params: {
   tools?: ToolSet
   fireAndForgetToolNames?: string[]
   endOfTurnTools?: ToolSet
-  toolActivationPrerequisites?: Record<string, string>
 }) => LLMConfig
 
 type GenerateMasterPrompt = (params: {
@@ -196,23 +195,17 @@ async function runSubAgentTool({
     .getActiveSpan()
     ?.setAttribute("ai.telemetry.metadata.subAgentTraceUrl", getTraceUrl(subAgentTraceId))
 
-  const {
-    tools,
-    mcpClose,
-    toolDescriptions,
-    fireAndForgetToolNames,
-    endOfTurnTools,
-    toolActivationPrerequisites,
-  } = await buildTools({
-    agentSessionScope: childScope,
-    includeSessionMetadataTools: false,
-    includeSubAgentTools: false,
-    onExecute: (toolExecution) =>
-      onExecute({
-        ...toolExecution,
-        notifyToolName: subAgent.toolName,
-      }),
-  })
+  const { tools, mcpClose, toolDescriptions, fireAndForgetToolNames, endOfTurnTools } =
+    await buildTools({
+      agentSessionScope: childScope,
+      includeSessionMetadataTools: false,
+      includeSubAgentTools: false,
+      onExecute: (toolExecution) =>
+        onExecute({
+          ...toolExecution,
+          notifyToolName: subAgent.toolName,
+        }),
+    })
 
   try {
     const toolNames = tools ? Object.keys(tools) : []
@@ -230,7 +223,6 @@ async function runSubAgentTool({
       tools,
       fireAndForgetToolNames,
       endOfTurnTools,
-      toolActivationPrerequisites,
     })
 
     const metadata = buildSubAgentMetadata({

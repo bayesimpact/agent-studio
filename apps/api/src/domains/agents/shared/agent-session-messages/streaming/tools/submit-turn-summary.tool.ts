@@ -19,8 +19,11 @@ const MAX_PARTIAL_CONTENT_LENGTH = 500
  * answering loop (a cooperative model calls it in the same generation as
  * its answer — no extra cost) AND guaranteed by the provider, which forces
  * it through one extra generation (toolChoice "required") whenever the loop
- * did not call it. Only its fields stay dynamic, following the agent's
- * config/feature flags.
+ * did not call it. Its fields are dynamic at two levels: the agent's
+ * config/feature flags decide which features exist at all, and the TURN
+ * state decides what is declared per generation — chunkIds only enters the
+ * schema (and its description) once a knowledge base lookup actually
+ * registered chunks in the turn.
  *
  * Execution dispatches to the SAME ToolExecutionLog entries the previous
  * sources / recalculateConversationSessionMetadata tools produced, so
@@ -158,55 +161,71 @@ export function submitTurnSummaryTool({
 }) {
   // Every field is OPTIONAL: on trivial turns small models (Gemma 4) call
   // the tool with {} — that must be a valid no-op report, not a Zod error.
-  const inputShape: Record<string, z.ZodType> = {}
-  if (retrievedChunksRegistry) {
-    inputShape.chunkIds = z
-      .array(z.string())
-      .optional()
-      .describe(
-        "The id (c1, c2, ...) of EVERY retrieved chunk you actually used to answer, copied exactly from the lookup results. Empty array when you did not use the knowledge base.",
-      )
+  const buildInputSchema = ({ includeChunkIds }: { includeChunkIds: boolean }) => {
+    const inputShape: Record<string, z.ZodType> = {}
+    if (includeChunkIds) {
+      inputShape.chunkIds = z
+        .array(z.string())
+        .optional()
+        .describe(
+          "The id (c1, c2, ...) of EVERY retrieved chunk you actually used to answer, copied exactly from the lookup results. Empty array when you did not use the knowledge base.",
+        )
+    }
+    if (sessionMetadata) {
+      const categoryNameSchema =
+        sessionMetadata.availableCategoryNames.length > 0
+          ? z.enum(sessionMetadata.availableCategoryNames as [string, ...string[]])
+          : z.string()
+      inputShape.categoryNames = z
+        .array(categoryNameSchema)
+        .max(5)
+        .optional()
+        .describe(
+          `${
+            sessionMetadata.availableCategoryNames.length > 0
+              ? `Available categories for this agent: ${sessionMetadata.availableCategoryNames.join(", ")}.`
+              : "No categories are configured for this agent."
+          } Return the complete set to keep on the session after this turn. Return an empty array when none apply.`,
+        )
+      inputShape.suggestedTitle = z
+        .string()
+        .trim()
+        .max(120)
+        .nullable()
+        .optional()
+        .describe("A concise session title suggestion. Can be null when no good title exists.")
+    }
+    // The shape is assembled dynamically (fields depend on enabled features),
+    // which zod cannot express as a static object type — narrow it explicitly.
+    return z.object(inputShape) as unknown as z.ZodType<SubmitTurnSummaryInput>
   }
-  if (sessionMetadata) {
-    const categoryNameSchema =
-      sessionMetadata.availableCategoryNames.length > 0
-        ? z.enum(sessionMetadata.availableCategoryNames as [string, ...string[]])
-        : z.string()
-    inputShape.categoryNames = z
-      .array(categoryNameSchema)
-      .max(5)
-      .optional()
-      .describe(
-        `${
-          sessionMetadata.availableCategoryNames.length > 0
-            ? `Available categories for this agent: ${sessionMetadata.availableCategoryNames.join(", ")}.`
-            : "No categories are configured for this agent."
-        } Return the complete set to keep on the session after this turn. Return an empty array when none apply.`,
-      )
-    inputShape.suggestedTitle = z
-      .string()
-      .trim()
-      .max(120)
-      .nullable()
-      .optional()
-      .describe("A concise session title suggestion. Can be null when no good title exists.")
-  }
-  // The shape is assembled dynamically (fields depend on enabled features),
-  // which zod cannot express as a static object type — narrow it explicitly.
-  const inputSchema = z.object(inputShape) as unknown as z.ZodType<SubmitTurnSummaryInput>
+
+  // ai-sdk re-reads `description` and `inputSchema` on EVERY generation
+  // (each loop step and the forced end-of-turn call), so these getters make
+  // the declared schema follow the turn state: chunkIds (and the sentence
+  // describing it) only exist once a lookup actually registered chunks.
+  // Before that, a stray chunkIds argument is stripped by zod, not an error.
+  const includeSourcesNow = () => retrievedChunksRegistry?.hasChunks() ?? false
 
   return tool({
-    description: submitTurnSummaryDescription({
-      includeSources: retrievedChunksRegistry !== undefined,
-      includeSessionMetadata: sessionMetadata !== undefined,
-    }),
-    inputSchema,
+    get description() {
+      return submitTurnSummaryDescription({
+        includeSources: includeSourcesNow(),
+        includeSessionMetadata: sessionMetadata !== undefined,
+      })
+    },
+    get inputSchema() {
+      return buildInputSchema({ includeChunkIds: includeSourcesNow() })
+    },
     outputSchema: z.object({
       role: z.literal("system"),
       content: z.string().describe("The content of the system message."),
       // Marks an execution that recorded nothing — the provider's
       // end-of-turn guarantee ignores no-op executions and retries.
       endOfTurnNoOp: z.boolean().optional(),
+      // Snapshot of the chunks registry at execution time — see
+      // {@link submitTurnSummaryExecutionCounts}.
+      sawKnowledgeBaseChunks: z.boolean().optional(),
     }),
     execute: async (input: SubmitTurnSummaryInput) => {
       let dispatchedSources = false
@@ -250,7 +269,30 @@ export function submitTurnSummaryTool({
         content:
           "Report received. Say nothing in response to the user. This tool is only for logging purposes.",
         ...(dispatched ? {} : { endOfTurnNoOp: true }),
+        ...(retrievedChunksRegistry
+          ? { sawKnowledgeBaseChunks: retrievedChunksRegistry.hasChunks() }
+          : {}),
       }
     },
   })
+}
+
+/**
+ * End-of-turn freshness check for the report, wired as
+ * LLMConfig.endOfTurnExecutionCounts. Some models (Gemini Flash) call the
+ * report ALONGSIDE the knowledge base lookup in the first step — before any
+ * chunk exists, so the report cannot cite sources. Such an execution is
+ * meaningful for the session metadata but STALE for the sources: when the
+ * turn later registered chunks, it must not suppress the forced end-of-turn
+ * retry (whose schema, by then, declares chunkIds).
+ */
+export function submitTurnSummaryExecutionCounts(retrievedChunksRegistry: {
+  hasChunks(): boolean
+}): (toolResult: { toolName: string; output: unknown }) => boolean {
+  return ({ output }) => {
+    const sawKnowledgeBaseChunks = (output as { sawKnowledgeBaseChunks?: boolean } | undefined)
+      ?.sawKnowledgeBaseChunks
+    if (sawKnowledgeBaseChunks === undefined) return true
+    return sawKnowledgeBaseChunks || !retrievedChunksRegistry.hasChunks()
+  }
 }

@@ -23,6 +23,8 @@ export type RetrievedChunksRegistry = {
   register(chunk: RetrievedDocumentChunk): string
   /** Resolves a model-cited alias (case/whitespace tolerant). */
   get(alias: string): RetrievedDocumentChunk | undefined
+  /** True once at least one lookup registered chunks in this turn. */
+  hasChunks(): boolean
 }
 
 export function createRetrievedChunksRegistry(): RetrievedChunksRegistry {
@@ -35,6 +37,9 @@ export function createRetrievedChunksRegistry(): RetrievedChunksRegistry {
     },
     get(alias) {
       return chunksByAlias.get(alias.trim().toLowerCase())
+    },
+    hasChunks() {
+      return chunksByAlias.size > 0
     },
   }
 }

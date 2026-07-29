@@ -22,7 +22,7 @@ export type LLMConfig =
       tools?: ToolSet
       fireAndForgetToolNames?: string[]
       endOfTurnTools?: ToolSet
-      toolActivationPrerequisites?: Record<string, string>
+      endOfTurnExecutionCounts?: (toolResult: { toolName: string; output: unknown }) => boolean
       useExtendedTimeouts?: never
     }
   | {
@@ -44,13 +44,13 @@ export type LLMConfig =
        */
       endOfTurnTools?: ToolSet
       /**
-       * Gates a tool's visibility within the loop: the key tool is only
-       * declared to the model in steps AFTER the value tool was called (e.g.
-       * submit_turn_summary's chunkIds variant only exists once
-       * lookup_knowledge_base ran). Keeps step-0 declarations minimal and
-       * contextual.
+       * Decides whether a loop execution of an end-of-turn tool satisfies
+       * the guarantee. Lets the tool declare an execution STALE after the
+       * fact (e.g. a turn summary submitted before the knowledge base call
+       * cannot have cited sources) so the forced retry still runs. Default:
+       * every execution counts.
        */
-      toolActivationPrerequisites?: Record<string, string>
+      endOfTurnExecutionCounts?: (toolResult: { toolName: string; output: unknown }) => boolean
       /**
        * Opt in to the extended network timeouts on the underlying provider fetch
        * (see {@link AISDKVertexProvider}). Reserved for long-running calls such as

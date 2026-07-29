@@ -101,7 +101,7 @@ export class AgentLlmRequestService extends ServiceWithLLM {
       toolDescriptions,
       fireAndForgetToolNames,
       endOfTurnTools,
-      toolActivationPrerequisites,
+      endOfTurnExecutionCounts,
       hasSubAgentTools,
     } = await this.toolsService.buildTools({
       agentSessionScope,
@@ -126,7 +126,7 @@ export class AgentLlmRequestService extends ServiceWithLLM {
       tools,
       fireAndForgetToolNames,
       endOfTurnTools,
-      toolActivationPrerequisites,
+      endOfTurnExecutionCounts,
     })
 
     const metadata: LLMMetadata = this.buildLLMData({
