@@ -4,6 +4,11 @@ export class SeedPlatformStaffByEmailDomain1785345241003 implements MigrationInt
   public async up(queryRunner: QueryRunner): Promise<void> {
     const allowedDomain = process.env.ORGANIZATION_CREATOR_EMAIL_DOMAIN?.trim()
     if (!allowedDomain) {
+      // CI sets CI=true; test migrations should run with NODE_ENV=test
+      if (process.env.CI === "true" || process.env.NODE_ENV === "test") {
+        return
+      }
+
       throw new Error(
         "ORGANIZATION_CREATOR_EMAIL_DOMAIN must be set to run this migration: " +
           "it assigns the platform_staff role to users whose email matches this domain",
