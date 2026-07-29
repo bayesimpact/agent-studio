@@ -181,6 +181,8 @@ describe("submitTurnSummaryTool", () => {
     expect(result).toEqual({
       role: "system",
       content: expect.stringContaining("Report received"),
+      // Nothing was recorded: flagged so the end-of-turn guarantee retries.
+      endOfTurnNoOp: true,
     })
   })
 })

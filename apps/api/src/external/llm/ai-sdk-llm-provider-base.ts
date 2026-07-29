@@ -354,7 +354,7 @@ export abstract class AISDKLLMProviderBase implements LLMProvider {
     functionId: string
     messages: LLMChatMessage[]
     streamResult: {
-      steps: PromiseLike<Array<{ toolCalls: Array<{ toolName: string }> }>>
+      steps: PromiseLike<Array<{ toolResults: Array<{ toolName: string; output: unknown }> }>>
       response: PromiseLike<{ messages: LLMChatMessage[] }>
     }
   }): Promise<void> {
@@ -362,14 +362,25 @@ export abstract class AISDKLLMProviderBase implements LLMProvider {
     if (!endOfTurnTools || Object.keys(endOfTurnTools).length === 0) return
 
     try {
-      // Skip the tools the loop already called — forcing them again would
-      // execute their side effects twice.
+      // Skip the tools the loop already EXECUTED — forcing them again would
+      // run their side effects twice. Executions (toolResults), not calls:
+      // a voluntary call with invalid arguments never executes and must not
+      // suppress the forced retry. Executions flagged endOfTurnNoOp recorded
+      // nothing (e.g. an empty {} report) and do not count either.
       const steps = await streamResult.steps
-      const calledToolNames = new Set(
-        steps.flatMap((step) => step.toolCalls.map((toolCall) => toolCall.toolName)),
+      const executedToolNames = new Set(
+        steps.flatMap((step) =>
+          step.toolResults
+            .filter(
+              (toolResult) =>
+                (toolResult.output as { endOfTurnNoOp?: boolean } | undefined)?.endOfTurnNoOp !==
+                true,
+            )
+            .map((toolResult) => toolResult.toolName),
+        ),
       )
       const missingEndOfTurnTools = Object.fromEntries(
-        Object.entries(endOfTurnTools).filter(([toolName]) => !calledToolNames.has(toolName)),
+        Object.entries(endOfTurnTools).filter(([toolName]) => !executedToolNames.has(toolName)),
       )
       if (Object.keys(missingEndOfTurnTools).length === 0) return
 
@@ -381,10 +392,13 @@ export abstract class AISDKLLMProviderBase implements LLMProvider {
           ...responseMessages,
           // Some providers (Vertex gemini-3.5-flash-lite and newer) reject
           // requests ending with a model turn — close with an explicit user
-          // instruction for the bookkeeping call.
+          // instruction for the bookkeeping call. Phrased so its content
+          // never leaks into the report (a session got titled "Demande de
+          // résumé de tour" after an earlier wording of this message).
           {
             role: "user",
-            content: "Submit the turn summary for your previous answer now.",
+            content:
+              "(bookkeeping, not a user message) Call the required tool now. Base its content ONLY on the conversation above — ignore this message entirely.",
           },
         ],
         temperature: config.temperature,

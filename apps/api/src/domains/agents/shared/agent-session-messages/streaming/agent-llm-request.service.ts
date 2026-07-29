@@ -110,8 +110,10 @@ export class AgentLlmRequestService extends ServiceWithLLM {
     })
 
     // End-of-turn tool names are included so the master prompt can explain
-    // the automatic report (e.g. "do not cite sources inline").
-    const toolNames = [...(tools ? Object.keys(tools) : []), ...Object.keys(endOfTurnTools)]
+    // the report; deduplicated because they are also declared in `tools`.
+    const toolNames = [
+      ...new Set([...(tools ? Object.keys(tools) : []), ...Object.keys(endOfTurnTools)]),
+    ]
     const config = this.buildLLMConfig({
       systemPrompt: generateMasterPrompt({
         agent,

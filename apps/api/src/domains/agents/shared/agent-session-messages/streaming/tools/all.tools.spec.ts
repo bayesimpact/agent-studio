@@ -295,6 +295,107 @@ describe("Tools execution", () => {
     expect(agentCalls[1]?.toolNames).toContain(ToolName.SubmitTurnSummary)
   }, 15000)
 
+  it("ToolName.SubmitTurnSummary - tolerates an empty voluntary call (Gemma greeting shape)", async () => {
+    // On greeting turns Gemma 4 sometimes calls the summary with {} — no
+    // chunkIds, no categories, no title. This must NOT error the stream and
+    // must NOT touch the session metadata (a no-op report). A no-op does not
+    // consume the end-of-turn guarantee: the forced generation retries.
+    const { connectScope, agent, agentSettings, session } = await createContextWithSession()
+
+    const category = await repositories.agentSessionCategoryRepository.save(
+      repositories.agentSessionCategoryRepository.create({ agentId: agent.id, name: "Bayes" }),
+    )
+    agent.sessionCategories = [category]
+    const initialTitle = session.title
+
+    mockProvider.addTextWithToolCallTurn(agent.id, "Bonjour !", ToolName.SubmitTurnSummary, {})
+
+    const { events, fulltextStream } = await aggregateStream(
+      service.streamAgentResponse({
+        agentSessionScope: { agent, agentSettings, session, connectScope },
+        userContent: "salut",
+        notifyClient: () => undefined,
+      }),
+    )
+
+    expect(fulltextStream).toBe("Bonjour !")
+    expect(events.at(-1)?.type).toBe("end")
+    expect(events.some((event) => event.type === "error")).toBe(false)
+
+    // The no-op voluntary call did not consume the guarantee: the forced
+    // generation ran as a second chance (the mock answers it with text, so
+    // nothing is recorded — the point is the retry happened).
+    const agentCalls = mockProvider.getCalls().filter((call) => call.agentId === agent.id)
+    expect(agentCalls).toHaveLength(2)
+    const updatedSession = await repositories.conversationAgentSessionRepository.findOneByOrFail({
+      id: session.id,
+    })
+    expect(updatedSession.title).toBe(initialTitle)
+  }, 15000)
+
+  it("ToolName.SubmitTurnSummary - an INVALID voluntary call still triggers the forced generation", async () => {
+    // A voluntary call with arguments that fail validation never executes —
+    // the end-of-turn guarantee must be based on EXECUTIONS, not calls, so
+    // the forced generation still runs and the report happens.
+    const { connectScope, agent, agentSettings, session } = await createContextWithSession()
+
+    const category = await repositories.agentSessionCategoryRepository.save(
+      repositories.agentSessionCategoryRepository.create({ agentId: agent.id, name: "Bayes" }),
+    )
+    agent.sessionCategories = [category]
+
+    mockProvider.addTextWithToolCallTurn(agent.id, "Réponse.", ToolName.SubmitTurnSummary, {
+      categoryNames: "not-an-array",
+    })
+    mockProvider.addToolCallTurn(agent.id, ToolName.SubmitTurnSummary, {
+      suggestedTitle: "Recovered title",
+      categoryNames: ["Bayes"],
+    })
+
+    const { events, fulltextStream } = await aggregateStream(
+      service.streamAgentResponse({
+        agentSessionScope: { agent, agentSettings, session, connectScope },
+        userContent: "Question",
+        notifyClient: () => undefined,
+      }),
+    )
+
+    expect(fulltextStream).toBe("Réponse.")
+    expect(events.at(-1)?.type).toBe("end")
+
+    const updatedSession = await repositories.conversationAgentSessionRepository.findOneByOrFail({
+      id: session.id,
+    })
+    expect(updatedSession.title).toBe("Recovered title")
+  }, 15000)
+
+  it("master prompt lists the submit_turn_summary instruction exactly once", async () => {
+    const { connectScope, agent, agentSettings, session } = await createContextWithSession()
+
+    const category = await repositories.agentSessionCategoryRepository.save(
+      repositories.agentSessionCategoryRepository.create({ agentId: agent.id, name: "Bayes" }),
+    )
+    agent.sessionCategories = [category]
+
+    mockProvider.addTextTurn(agent.id, "Bonjour !")
+    mockProvider.addToolCallTurn(agent.id, ToolName.SubmitTurnSummary, {
+      suggestedTitle: null,
+      categoryNames: [],
+    })
+
+    await aggregateStream(
+      service.streamAgentResponse({
+        agentSessionScope: { agent, agentSettings, session, connectScope },
+        userContent: "salut",
+        notifyClient: () => undefined,
+      }),
+    )
+
+    const agentCalls = mockProvider.getCalls().filter((call) => call.agentId === agent.id)
+    const occurrences = (agentCalls[0]?.prompt.match(/\[submit_turn_summary\]:/g) ?? []).length
+    expect(occurrences).toBe(1)
+  }, 15000)
+
   it("ToolName.SurfaceResources - should works", async () => {
     const { connectScope, agent, agentSettings, session } = await createContextWithSession()
 

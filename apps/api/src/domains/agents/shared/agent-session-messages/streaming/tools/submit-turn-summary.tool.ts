@@ -156,10 +156,13 @@ export function submitTurnSummaryTool({
   sessionMetadata?: TurnSummarySessionMetadataConfig
   onExecute: (toolExecution: ToolExecutionLog) => void | Promise<void>
 }) {
+  // Every field is OPTIONAL: on trivial turns small models (Gemma 4) call
+  // the tool with {} — that must be a valid no-op report, not a Zod error.
   const inputShape: Record<string, z.ZodType> = {}
   if (retrievedChunksRegistry) {
     inputShape.chunkIds = z
       .array(z.string())
+      .optional()
       .describe(
         "The id (c1, c2, ...) of EVERY retrieved chunk you actually used to answer, copied exactly from the lookup results. Empty array when you did not use the knowledge base.",
       )
@@ -172,6 +175,7 @@ export function submitTurnSummaryTool({
     inputShape.categoryNames = z
       .array(categoryNameSchema)
       .max(5)
+      .optional()
       .describe(
         `${
           sessionMetadata.availableCategoryNames.length > 0
@@ -184,6 +188,7 @@ export function submitTurnSummaryTool({
       .trim()
       .max(120)
       .nullable()
+      .optional()
       .describe("A concise session title suggestion. Can be null when no good title exists.")
   }
   // The shape is assembled dynamically (fields depend on enabled features),
@@ -199,8 +204,13 @@ export function submitTurnSummaryTool({
     outputSchema: z.object({
       role: z.literal("system"),
       content: z.string().describe("The content of the system message."),
+      // Marks an execution that recorded nothing — the provider's
+      // end-of-turn guarantee ignores no-op executions and retries.
+      endOfTurnNoOp: z.boolean().optional(),
     }),
     execute: async (input: SubmitTurnSummaryInput) => {
+      let dispatchedSources = false
+      let dispatchedMetadata = false
       if (retrievedChunksRegistry && (input.chunkIds?.length ?? 0) > 0) {
         const { sources, unknownChunkIds } = resolveSources({
           chunkIds: input.chunkIds ?? [],
@@ -210,9 +220,14 @@ export function submitTurnSummaryTool({
           toolName: ToolName.Sources,
           arguments: { sources, ...(unknownChunkIds.length > 0 ? { unknownChunkIds } : {}) },
         })
+        dispatchedSources = true
       }
 
-      if (sessionMetadata) {
+      // An entirely empty report (e.g. {} on a greeting) is a no-op: never
+      // wipe existing session categories with an implicit empty set.
+      const hasMetadataInput =
+        input.categoryNames !== undefined || input.suggestedTitle !== undefined
+      if (sessionMetadata && hasMetadataInput) {
         const { suggestedTitle, selectedCategoryNames } =
           await sessionMetadata.conversationAgentSessionsService.recalculateSessionMetadataFromMessages(
             {
@@ -226,12 +241,15 @@ export function submitTurnSummaryTool({
           toolName: ToolName.RecalculateConversationSessionMetadata,
           arguments: { suggestedTitle, categoryNames: selectedCategoryNames },
         })
+        dispatchedMetadata = true
       }
 
+      const dispatched = dispatchedSources || dispatchedMetadata
       return {
         role: "system",
         content:
           "Report received. Say nothing in response to the user. This tool is only for logging purposes.",
+        ...(dispatched ? {} : { endOfTurnNoOp: true }),
       }
     },
   })
