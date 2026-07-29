@@ -2,7 +2,6 @@ import type { OrganizationPermission } from "@caseai-connect/api-contracts"
 import { useCallback, useMemo } from "react"
 import {
   selectAgentMemberships,
-  selectIsPremiumMember,
   selectProjectMemberships,
   selectReviewCampaignMemberships,
 } from "@/common/features/me/me.selectors"
@@ -85,7 +84,6 @@ export function useAbility() {
     [agentMemberships],
   )
 
-  const isPremiumMember = useAppSelector(selectIsPremiumMember)
   return useMemo(
     () => ({
       abilities: {
@@ -96,7 +94,6 @@ export function useAbility() {
         canAccessReviewer,
         canRenameOrganization,
       },
-      isPremiumMember,
     }),
     [
       canAccessStudio,
@@ -105,7 +102,6 @@ export function useAbility() {
       canAccessTester,
       canAccessReviewer,
       canRenameOrganization,
-      isPremiumMember,
     ],
   )
 }

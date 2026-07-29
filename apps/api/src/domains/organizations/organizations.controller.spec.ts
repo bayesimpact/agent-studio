@@ -14,7 +14,7 @@ import {
 import { RbacModule } from "@/domains/rbac/rbac.module"
 import { userFactory } from "@/domains/users/user.factory"
 import { setupUserGuardForTesting } from "../../../test/e2e.helpers"
-import { assignOrgCreatorToUser, ensureRbacCatalog } from "../../../test/rbac-test.helpers"
+import { assignPlatformStaffToUser, ensureRbacCatalog } from "../../../test/rbac-test.helpers"
 import { expectResponse, type Requester, testRequester } from "../../../test/request"
 import { Organization } from "./organization.entity"
 import { OrganizationsModule } from "./organizations.module"
@@ -64,7 +64,7 @@ describe("Organizations - createOrganization", () => {
     })
     await repositories.userRepository.save(user)
     if (email.endsWith("@bayesimpact.org")) {
-      await assignOrgCreatorToUser({ repositories, user })
+      await assignPlatformStaffToUser({ repositories, user })
     }
     auth0Id = user.auth0Id
     return { user }

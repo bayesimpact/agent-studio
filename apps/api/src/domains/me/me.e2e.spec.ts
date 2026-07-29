@@ -20,7 +20,7 @@ import {
 import { reviewCampaignFactory } from "@/domains/review-campaigns/review-campaign.factory"
 import { userFactory } from "@/domains/users/user.factory"
 import { setupUserGuardForTesting } from "../../../test/e2e.helpers"
-import { assignOrgCreatorToUser, ensureRbacCatalog } from "../../../test/rbac-test.helpers"
+import { assignPlatformStaffToUser, ensureRbacCatalog } from "../../../test/rbac-test.helpers"
 import { expectResponse, type Requester, testRequester } from "../../../test/request"
 import { MeModule } from "./me.module"
 
@@ -231,12 +231,15 @@ describe("MeController (e2e)", () => {
     it("returns global permissions such as organization.create", async () => {
       const user = userFactory.build({ auth0Id })
       await repositories.userRepository.save(user)
-      await assignOrgCreatorToUser({ repositories, user })
+      await assignPlatformStaffToUser({ repositories, user })
 
       const response = await subject()
 
       expectResponse(response, 200)
-      expect(response.body.data.user.globalPermissions).toEqual(["organization.create"])
+      expect([...response.body.data.user.globalPermissions].sort()).toEqual([
+        "organization.create",
+        "trace.view",
+      ])
     })
   })
 })
