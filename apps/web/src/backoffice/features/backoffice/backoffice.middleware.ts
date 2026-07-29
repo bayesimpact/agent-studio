@@ -50,6 +50,32 @@ function registerListeners() {
   })
 
   listenerMiddleware.startListening({
+    actionCreator: backofficeActions.createOrganization.fulfilled,
+    effect: async (_, listenerApi) => {
+      listenerApi.dispatch(
+        notificationsActions.show({
+          title: "Organization created",
+          type: "success",
+        }),
+      )
+      listenerApi.dispatch(backofficeActions.listOrganizations({ page: 0, limit: 10 }))
+    },
+  })
+
+  listenerMiddleware.startListening({
+    actionCreator: backofficeActions.createOrganization.rejected,
+    effect: async (action, listenerApi) => {
+      listenerApi.dispatch(
+        notificationsActions.show({
+          title: "Failed to create organization",
+          description: action.error.message,
+          type: "error",
+        }),
+      )
+    },
+  })
+
+  listenerMiddleware.startListening({
     matcher: isAnyOf(
       backofficeActions.addFeatureFlag.fulfilled,
       backofficeActions.removeFeatureFlag.fulfilled,

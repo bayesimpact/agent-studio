@@ -8,6 +8,7 @@ This project uses [CalVer](https://calver.org/) (YY.MM.Micro) for product versio
 ## [Unreleased]
 
 ### Added
+- Back-office administrators can create an organization directly from the organizations panel; the creating administrator becomes its owner
 
 ### Changed
 - Form agents are no longer a separate agent type: any conversation agent can now turn on "Form filling" from a new Tools tab, define the form fields with the visual schema editor (drag to set the order the agent asks its questions), and the agent fills the form from the user's answers during the chat; the collected values open from a "Show form state" button on the agent's replies; the agent creator still offers a "Form" choice, which now creates a conversation agent with form filling already enabled — existing form agents, with their sessions and settings history, are migrated to conversation agents with form filling enabled

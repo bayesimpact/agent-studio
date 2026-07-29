@@ -35,6 +35,7 @@ export type * from "./analytics/analytics.dto"
 export { AgentAnalyticsRoutes, AnalyticsRoutes } from "./analytics/analytics.routes"
 // Backoffice
 export type * from "./backoffice/backoffice.dto"
+export { createBackofficeOrganizationSchema } from "./backoffice/backoffice.dto"
 export { BackofficeRoutes } from "./backoffice/backoffice.routes"
 // Document Tags
 export * from "./document-tags/document-tag.dto"
@@ -86,6 +87,8 @@ export { ProjectsRoutes } from "./projects/projects.routes"
 // Public Chat (anonymous embed access)
 export type * from "./public-chat/public-chat.dto"
 export { PublicChatRoutes } from "./public-chat/public-chat.routes"
+// RBAC
+export * from "./rbac/permissions"
 // Resource Libraries
 export * from "./resource-libraries/resource-library.dto"
 export { ResourceLibrariesRoutes } from "./resource-libraries/resource-library.routes"

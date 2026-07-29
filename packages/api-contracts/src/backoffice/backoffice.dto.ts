@@ -1,3 +1,4 @@
+import { z } from "zod"
 import type { AgentMembershipRoleDto } from "../agent-membership/agent-membership.dto"
 import type { FeatureFlagsDto } from "../feature-flags/feature-flags.dto"
 import type { TimeType } from "../generic"
@@ -26,6 +27,16 @@ export type PaginatedBackofficeOrganizationsDto = {
   page: number
   limit: number
 }
+
+export const createBackofficeOrganizationSchema = z
+  .object({
+    name: z.string().min(3).max(100).trim(),
+  })
+  .strict()
+
+export type CreateBackofficeOrganizationRequestDto = z.infer<
+  typeof createBackofficeOrganizationSchema
+>
 
 export type BackofficeOrganizationMemberDto = {
   userId: string
