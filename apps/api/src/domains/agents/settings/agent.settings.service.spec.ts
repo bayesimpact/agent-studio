@@ -242,7 +242,7 @@ describe("AgentSettings", () => {
   })
 
   describe("AgentService extension", () => {
-    it("createAgent should also create draft settings with revision = 1", async () => {
+    it("createAgent should also create published settings with revision = 1", async () => {
       const { organization, project, user } = await createOrganizationWithProject(repositories)
       const { agent, agentSettings } = await agentService.createAgent({
         connectScope: {
@@ -269,7 +269,7 @@ describe("AgentSettings", () => {
         includesDraft: true,
       })
       assertOnSettings(agentSettingsValuesRev1, savedSettings)
-      expect(savedSettings?.isDraft).toBeTruthy()
+      expect(savedSettings?.isDraft).toBeFalsy()
       expect(savedSettings?.revision).toBe(1)
     })
     it("updateAgent should also create draft settings with revision = last revision +1 - no existing draft", async () => {

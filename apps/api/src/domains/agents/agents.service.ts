@@ -137,7 +137,20 @@ export class AgentsService {
       excludeUserId: userId,
     })
 
-    return { agent, agentSettings }
+    //first settings are automatically published
+    const publishedAgentSettings = await this.agentSettingsService.publish({
+      connectScope,
+      agentId: agent.id,
+      revision: agentSettings.revision,
+      revisionName: "",
+    })
+    if (!publishedAgentSettings) {
+      throw new UnprocessableEntityException(
+        `Unable to publish revision ${agentSettings.revision} for agent with id ${agent.id}`,
+      )
+    }
+
+    return { agent, agentSettings: publishedAgentSettings }
   }
 
   /**
