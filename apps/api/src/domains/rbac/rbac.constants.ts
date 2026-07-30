@@ -39,7 +39,7 @@ export const BACKOFFICE_AGENT_READ_PERMISSION = "backoffice.agent.read" as const
 
 export const BACKOFFICE_USER_READ_PERMISSION = "backoffice.user.read" as const
 
-export const TERMS_UPDATE_PERMISSION = "terms.update" as const
+export const BACKOFFICE_TERMS_UPDATE_PERMISSION = "backoffice.terms.update" as const
 
 /** See the users who are members of a resource you hold this permission on. */
 export const USER_READ_PERMISSION = "user.read" as const
@@ -87,12 +87,12 @@ export const ORGANIZATION_ROLE_PERMISSIONS = {
   [PLATFORM_STAFF_ROLE]: [
     BACKOFFICE_READ_PERMISSION,
     TRACE_READ_PERMISSION,
-    TERMS_UPDATE_PERMISSION,
+    BACKOFFICE_TERMS_UPDATE_PERMISSION,
   ],
   [PLATFORM_SUPERADMIN_ROLE]: [
     BACKOFFICE_READ_PERMISSION,
     TRACE_READ_PERMISSION,
-    TERMS_UPDATE_PERMISSION,
+    BACKOFFICE_TERMS_UPDATE_PERMISSION,
     BACKOFFICE_ORGANIZATION_READ_PERMISSION,
     BACKOFFICE_PROJECT_READ_PERMISSION,
     BACKOFFICE_AGENT_READ_PERMISSION,

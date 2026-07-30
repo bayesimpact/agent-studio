@@ -87,7 +87,7 @@ export const Unauthorized: Story = {
           userFactory.build({
             globalPermissions: [
               ...(args.isBackofficeAuthorized ? (["backoffice.read"] as const) : []),
-              ...(args.isTermsManagementAuthorized ? (["terms.update"] as const) : []),
+              ...(args.isTermsManagementAuthorized ? (["backoffice.terms.update"] as const) : []),
             ],
           }),
         ),

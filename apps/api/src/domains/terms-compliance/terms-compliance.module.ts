@@ -7,7 +7,6 @@ import { TermsAcceptance } from "./terms-acceptance.entity"
 import { TermsComplianceController } from "./terms-compliance.controller"
 import { TermsComplianceService } from "./terms-compliance.service"
 import { TermsDocument } from "./terms-document.entity"
-import { TermsManagementGuard } from "./terms-management.guard"
 
 @Module({
   imports: [
@@ -17,7 +16,7 @@ import { TermsManagementGuard } from "./terms-management.guard"
     RbacModule,
   ],
   controllers: [TermsComplianceController],
-  providers: [TermsComplianceService, TermsManagementGuard],
+  providers: [TermsComplianceService],
   exports: [TermsComplianceService],
 })
 export class TermsComplianceModule {}

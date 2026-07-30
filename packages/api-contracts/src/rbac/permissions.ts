@@ -13,7 +13,7 @@ export const BACKOFFICE_AGENT_READ_PERMISSION = "backoffice.agent.read" as const
 
 export const BACKOFFICE_USER_READ_PERMISSION = "backoffice.user.read" as const
 
-export const TERMS_UPDATE_PERMISSION = "terms.update" as const
+export const BACKOFFICE_TERMS_UPDATE_PERMISSION = "backoffice.terms.update" as const
 
 export const PROJECT_CREATE_PERMISSION = "project.create" as const
 
@@ -45,6 +45,6 @@ export type GlobalPermission =
   | typeof BACKOFFICE_PROJECT_READ_PERMISSION
   | typeof BACKOFFICE_AGENT_READ_PERMISSION
   | typeof BACKOFFICE_USER_READ_PERMISSION
-  | typeof TERMS_UPDATE_PERMISSION
+  | typeof BACKOFFICE_TERMS_UPDATE_PERMISSION
 
 export type OrganizationPermission = OrganizationScopedPermission

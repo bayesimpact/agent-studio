@@ -74,7 +74,7 @@ export function buildBackofficeData(args: BackofficeStoryArgs): {
   const user = userFactory.build({
     globalPermissions: [
       ...(args.isBackofficeAuthorized ? (["backoffice.read"] as const) : []),
-      ...(args.isTermsManagementAuthorized ? (["terms.update"] as const) : []),
+      ...(args.isTermsManagementAuthorized ? (["backoffice.terms.update"] as const) : []),
     ],
   })
 

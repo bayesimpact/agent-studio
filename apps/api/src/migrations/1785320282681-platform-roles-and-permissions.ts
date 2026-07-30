@@ -3,10 +3,10 @@ import type { MigrationInterface, QueryRunner } from "typeorm"
 /**
  * Replaces the last env-based authorization checks with RBAC:
  * - renames `trace.view` to `trace.read` (CRUD-verb catalog)
- * - platform_staff: grants `backoffice.read` + `terms.update`,
+ * - platform_staff: grants `backoffice.read` + `backoffice.terms.update`,
  *   revokes `organization.create` (moves to the superadmin role)
  * - creates the global `platform_superadmin` role granting
- *   `backoffice.read`, `trace.read`, `terms.update`, `organization.create`
+ *   `backoffice.read`, `trace.read`, `backoffice.terms.update`, `organization.create`
  *   and the backoffice "list all" permissions
  *   `backoffice.{organization,project,agent,user}.read`
  *   (ex BACKOFFICE_AUTHORIZED_EMAILS)
@@ -43,7 +43,7 @@ export class PlatformRolesAndPermissions1785320282681 implements MigrationInterf
       INSERT INTO "role_permission" ("role_id", "permission_key")
       SELECT role.id, permission.key
       FROM "role" AS role
-      CROSS JOIN (VALUES ('backoffice.read'), ('terms.update')) AS permission(key)
+      CROSS JOIN (VALUES ('backoffice.read'), ('backoffice.terms.update')) AS permission(key)
       WHERE role.key = 'platform_staff'
       ON CONFLICT ("role_id", "permission_key") DO NOTHING
     `)
@@ -64,7 +64,7 @@ export class PlatformRolesAndPermissions1785320282681 implements MigrationInterf
         VALUES
           ('backoffice.read'),
           ('trace.read'),
-          ('terms.update'),
+          ('backoffice.terms.update'),
           ('backoffice.organization.read'),
           ('backoffice.project.read'),
           ('backoffice.agent.read'),
@@ -292,7 +292,7 @@ export class PlatformRolesAndPermissions1785320282681 implements MigrationInterf
       USING "role" AS role
       WHERE role_permission.role_id = role.id
         AND role.key = 'platform_staff'
-        AND role_permission.permission_key IN ('backoffice.read', 'terms.update')
+        AND role_permission.permission_key IN ('backoffice.read', 'backoffice.terms.update')
     `)
 
     await queryRunner.query(`
