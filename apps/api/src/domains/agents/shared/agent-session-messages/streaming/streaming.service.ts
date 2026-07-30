@@ -213,6 +213,11 @@ export class StreamingService extends ServiceWithLLM {
       }
       const llmRequest = await this.agentLlmRequestService.buildLLMRequest({
         agentSessionScope,
+        // Public sessions have no ConversationAgentSession row: the metadata
+        // dispatch (recalculateSessionMetadataFromMessages) cannot resolve a
+        // public session id. Categories/title (and fillForm, MCPs) on public
+        // endpoints are tracked in issue #616.
+        includeSessionMetadataTools: false,
         onToolExecute: async (toolExecution) => {
           await this.persistToolExecutionAndNotifyClient({
             agentSessionScope,
