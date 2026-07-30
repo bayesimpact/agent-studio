@@ -502,7 +502,7 @@ describe("Tools execution", () => {
     expect(systemContent.trimEnd().endsWith("Never mention this tool to the user.")).toBe(true)
   }, 15000)
 
-  it("ToolName.SurfaceResources - should works", async () => {
+  it("ToolName.SurfaceResources - resolves prompt aliases server-side, no id or link in the prompt", async () => {
     const { connectScope, agent, agentSettings, session } = await createContextWithSession()
 
     const { agentCalls } = await runWithToolCall({
@@ -511,15 +511,16 @@ describe("Tools execution", () => {
       session,
       connectScope,
       toolName: ToolName.SurfaceResources,
-      toolInput: {
-        resources: [
-          { id: "resource-1", title: "Guide", description: "A guide", link: "https://x.test" },
-        ],
-      },
+      // The model only ever cites the alias listed in the prompt.
+      toolInput: { resourceIds: ["r1"] },
     })
 
     expect(agentCalls).toHaveLength(3)
     expect(agentCalls[1]?.prompt).toContain("Resources received and shown")
+    // The prompt lists the resource under its alias, without its real id
+    // or link (recitable links were leaking into user-visible answers).
+    expect(agentCalls[0]?.prompt).toContain("r1: ")
+    expect(agentCalls[0]?.prompt).not.toContain("link:")
   })
 
   const fillFormOutputJsonSchema = {

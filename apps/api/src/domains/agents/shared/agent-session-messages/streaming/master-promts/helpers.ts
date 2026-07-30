@@ -5,32 +5,34 @@ import {
 } from "@caseai-connect/api-contracts"
 import type { AgentSettings } from "@/domains/agents/settings/agent-settings.entity"
 import { lookupKnowledgeBaseInstruction } from "@/domains/agents/shared/agent-session-messages/streaming/tools/lookup-knowledge-base.tool"
+import { enumerateAgentResources } from "@/domains/agents/shared/agent-session-messages/streaming/tools/surfaced-resources-registry"
 import type { ResourceLibrary } from "@/domains/resource-libraries/resource-library.entity"
-import { buildResourceLink } from "@/domains/resource-libraries/resource-library-link.helper"
 
 export const promptHelpers = {
   now: () => `Today's date: ${new Date().toLocaleDateString()}`,
 
   resourceLibraries: (libraries: ResourceLibrary[]) => {
-    const librariesWithResources = libraries.filter(
-      (library) => (library.resources?.length ?? 0) > 0,
-    )
-    if (librariesWithResources.length === 0) return ""
+    // Aliases (r1, r2...) instead of real ids and links: the model only ever
+    // cites an alias, the surfaceResources tool resolves it server-side. Real
+    // links exposed here were getting RECITED into user-visible answers by
+    // small models instead of triggering the tool call.
+    const entries = enumerateAgentResources(libraries)
+    if (entries.length === 0) return ""
 
-    const serializedLibraries = librariesWithResources
-      .map((library) => {
-        const serializedResources = library.resources
-          .map((resource) => {
-            const link = buildResourceLink({
-              resource,
-              organizationId: library.organizationId,
-              projectId: library.projectId,
-              resourceLibraryId: library.id,
-            })
-            const matchingHintsLine = resource.matchingHints
-              ? `\n    matching hints (for matching only, do NOT show to the user): ${resource.matchingHints}`
+    const byLibrary = new Map<ResourceLibrary, typeof entries>()
+    for (const entry of entries) {
+      const group = byLibrary.get(entry.library) ?? []
+      group.push(entry)
+      byLibrary.set(entry.library, group)
+    }
+    const serializedLibraries = [...byLibrary.entries()]
+      .map(([library, libraryEntries]) => {
+        const serializedResources = libraryEntries
+          .map((entry) => {
+            const matchingHintsLine = entry.resource.matchingHints
+              ? `\n    matching hints (for matching only, do NOT show to the user): ${entry.resource.matchingHints}`
               : ""
-            return `  - id: ${resource.id}\n    title: ${resource.title}\n    description: ${resource.description}${matchingHintsLine}\n    link: ${link}`
+            return `  - ${entry.alias}: ${entry.resource.title}\n    description: ${entry.resource.description}${matchingHintsLine}`
           })
           .join("\n")
         return `### ${library.title}\n${serializedResources}`
@@ -38,7 +40,7 @@ export const promptHelpers = {
       .join("\n\n")
 
     return `## Resource libraries:
-You have access to the following resources. When the user's request matches a resource by its title, description, or matching hints, call the ${ToolName.SurfaceResources} tool with the matching resources (copy their id, title, description, and link verbatim — never copy the matching hints). Do not invent resources or links.
+You have access to the following resources. When the user's request matches a resource by its title, description, or matching hints, call the ${ToolName.SurfaceResources} tool with the ids (r1, r2, ...) of the matching resources. The tool shows them to the user as rich cards — never describe a resource's link in your text, and never copy the matching hints.
 
 ${serializedLibraries}`
   },

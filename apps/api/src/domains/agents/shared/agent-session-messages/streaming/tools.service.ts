@@ -26,6 +26,7 @@ import {
 } from "./tools/mandatory.tool"
 import { createRetrievedChunksRegistry } from "./tools/retrieved-chunks-registry"
 import { surfaceResourcesTool } from "./tools/surface-resources.tool"
+import { createSurfacedResourcesRegistry } from "./tools/surfaced-resources-registry"
 
 /**
  * Tools whose output the model never needs: they only log/notify (sources,
@@ -289,9 +290,18 @@ export class ToolsService extends ServiceWithLLM {
             }),
           }),
 
-      // Add the surface resources tool if the agent has any resource libraries
+      // Add the surface resources tool if the agent has any resource libraries.
+      // The registry resolves the prompt aliases (r1, r2...) back to real
+      // resources server-side — same pattern as the chunks registry.
       ...((agent.resourceLibraries?.length ?? 0) > 0
-        ? { [ToolName.SurfaceResources]: surfaceResourcesTool({ onExecute }) }
+        ? {
+            [ToolName.SurfaceResources]: surfaceResourcesTool({
+              surfacedResourcesRegistry: createSurfacedResourcesRegistry(
+                agent.resourceLibraries ?? [],
+              ),
+              onExecute,
+            }),
+          }
         : {}),
 
       // Add the fillForm tool if the agent has it enabled (with a form definition)
