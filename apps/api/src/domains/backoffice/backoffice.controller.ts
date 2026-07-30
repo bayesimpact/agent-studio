@@ -27,7 +27,7 @@ import { CheckPermissionGuard } from "@/domains/rbac/check-permission.guard"
 import { PermissionService } from "@/domains/rbac/permission.service"
 import {
   BACKOFFICE_AGENT_READ_PERMISSION,
-  BACKOFFICE_ORGANIZATION_READ_PERMISSION,
+  type BACKOFFICE_ORGANIZATION_READ_PERMISSION,
   BACKOFFICE_PROJECT_READ_PERMISSION,
   ORGANIZATION_CREATE_PERMISSION,
 } from "@/domains/rbac/rbac.constants"
@@ -107,9 +107,7 @@ export class BackofficeController {
     @Param("organizationId") organizationId: string,
   ): Promise<typeof BackofficeRoutes.getOrganization.response> {
     const { user } = request
-    const canListAll = await this.canListAll(user.id, BACKOFFICE_ORGANIZATION_READ_PERMISSION)
     const result = await this.backofficeService.getOrganizationDetail({
-      canListAll,
       requestingUserId: user.id,
       targetOrganizationId: organizationId,
     })

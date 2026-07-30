@@ -157,11 +157,9 @@ export class BackofficeService {
   }
 
   async getOrganizationDetail({
-    canListAll,
     requestingUserId,
     targetOrganizationId,
   }: {
-    canListAll: boolean
     requestingUserId: string
     targetOrganizationId: string
   }): Promise<{
@@ -169,21 +167,12 @@ export class BackofficeService {
     members: OrganizationMembershipModel[]
     projects: Project[]
   } | null> {
-    if (!canListAll) {
-      const { organizationIds, projectIds } =
-        await this.findAdminOrganizationAndProjectIds(requestingUserId)
-      const hasDirectAccess = organizationIds.has(targetOrganizationId)
-      if (!hasDirectAccess) {
-        const hasProjectAccess =
-          projectIds.size > 0
-            ? await this.projectRepository.existsBy({
-                organizationId: targetOrganizationId,
-                id: In(Array.from(projectIds)),
-              })
-            : false
-        if (!hasProjectAccess) return null
-      }
-    }
+    const canRead = await this.permissionService.has(
+      requestingUserId,
+      BACKOFFICE_ORGANIZATION_READ_PERMISSION,
+      { type: "organization", id: targetOrganizationId },
+    )
+    if (!canRead) return null
 
     const organization = await this.organizationRepository.findOne({
       where: { id: targetOrganizationId },
