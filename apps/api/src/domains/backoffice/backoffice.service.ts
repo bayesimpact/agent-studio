@@ -156,24 +156,11 @@ export class BackofficeService {
     return { organizations, total }
   }
 
-  async getOrganizationDetail({
-    requestingUserId,
-    targetOrganizationId,
-  }: {
-    requestingUserId: string
-    targetOrganizationId: string
-  }): Promise<{
+  async getOrganizationDetail({ targetOrganizationId }: { targetOrganizationId: string }): Promise<{
     organization: Organization
     members: OrganizationMembershipModel[]
     projects: Project[]
   } | null> {
-    const canRead = await this.permissionService.has(
-      requestingUserId,
-      BACKOFFICE_ORGANIZATION_READ_PERMISSION,
-      { type: "organization", id: targetOrganizationId },
-    )
-    if (!canRead) return null
-
     const organization = await this.organizationRepository.findOne({
       where: { id: targetOrganizationId },
     })

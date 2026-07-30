@@ -27,7 +27,7 @@ import { CheckPermissionGuard } from "@/domains/rbac/check-permission.guard"
 import { PermissionService } from "@/domains/rbac/permission.service"
 import {
   BACKOFFICE_AGENT_READ_PERMISSION,
-  type BACKOFFICE_ORGANIZATION_READ_PERMISSION,
+  BACKOFFICE_ORGANIZATION_READ_PERMISSION,
   BACKOFFICE_PROJECT_READ_PERMISSION,
   ORGANIZATION_CREATE_PERMISSION,
 } from "@/domains/rbac/rbac.constants"
@@ -102,13 +102,11 @@ export class BackofficeController {
   }
 
   @Get(BackofficeRoutes.getOrganization.path)
+  @CheckPermission(BACKOFFICE_ORGANIZATION_READ_PERMISSION, "organization")
   async getOrganization(
-    @Req() request: EndpointRequest,
     @Param("organizationId") organizationId: string,
   ): Promise<typeof BackofficeRoutes.getOrganization.response> {
-    const { user } = request
     const result = await this.backofficeService.getOrganizationDetail({
-      requestingUserId: user.id,
       targetOrganizationId: organizationId,
     })
     if (!result) throw new NotFoundException(`Organization ${organizationId} not found`)
