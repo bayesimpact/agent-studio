@@ -72,8 +72,10 @@ export function buildBackofficeData(args: BackofficeStoryArgs): {
   baseSeeds: StoryPreloadedState
 } {
   const user = userFactory.build({
-    isBackofficeAuthorized: args.isBackofficeAuthorized,
-    isTermsManagementAuthorized: args.isTermsManagementAuthorized,
+    globalPermissions: [
+      ...(args.isBackofficeAuthorized ? (["backoffice.read"] as const) : []),
+      ...(args.isTermsManagementAuthorized ? (["terms.update"] as const) : []),
+    ],
   })
 
   const organizations: PaginatedBackofficeOrganizations = args.withOrganizations

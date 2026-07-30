@@ -14,7 +14,7 @@ import {
 import { RbacModule } from "@/domains/rbac/rbac.module"
 import { userFactory } from "@/domains/users/user.factory"
 import { setupUserGuardForTesting } from "../../../test/e2e.helpers"
-import { assignPlatformStaffToUser, ensureRbacCatalog } from "../../../test/rbac-test.helpers"
+import { assignPlatformSuperadminToUser, ensureRbacCatalog } from "../../../test/rbac-test.helpers"
 import { expectResponse, type Requester, testRequester } from "../../../test/request"
 import { Organization } from "./organization.entity"
 import { OrganizationsModule } from "./organizations.module"
@@ -30,7 +30,6 @@ describe("Organizations - createOrganization", () => {
   let expectActivityCreated: ReturnType<typeof bindExpectActivityCreated>
 
   beforeAll(async () => {
-    process.env.ORGANIZATION_CREATOR_EMAIL_DOMAIN = "@bayesimpact.org"
     setup = await setupE2eTestDatabase({
       additionalImports: [OrganizationsModule, RbacModule],
       applyOverrides: (moduleBuilder) => setupUserGuardForTesting(moduleBuilder, () => auth0Id),
@@ -44,14 +43,12 @@ describe("Organizations - createOrganization", () => {
   })
 
   beforeEach(async () => {
-    process.env.ORGANIZATION_CREATOR_EMAIL_DOMAIN = "@bayesimpact.org"
     await clearTestDatabase(setup.dataSource)
     accessToken = "token"
     auth0Id = `auth0|${randomUUID()}`
   })
 
   afterAll(async () => {
-    delete process.env.ORGANIZATION_CREATOR_EMAIL_DOMAIN
     await teardownE2eTestDatabase(setup)
     await app.close()
   })
@@ -64,7 +61,7 @@ describe("Organizations - createOrganization", () => {
     })
     await repositories.userRepository.save(user)
     if (email.endsWith("@bayesimpact.org")) {
-      await assignPlatformStaffToUser({ repositories, user })
+      await assignPlatformSuperadminToUser({ repositories, user })
     }
     auth0Id = user.auth0Id
     return { user }
@@ -102,10 +99,12 @@ describe("Organizations - createOrganization", () => {
       createdAt: expect.any(Number),
       // alphabetical: listPermissionsForRole orders by permission_key
       permissions: [
+        "backoffice.organization.read",
         "organization.delete",
         "organization.read",
         "organization.update",
         "project.create",
+        "user.read",
       ],
     } satisfies OrganizationDto)
   })

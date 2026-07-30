@@ -27,7 +27,7 @@ export class OrganizationsService {
      */
     const permissionsByOrganizationId = await this.permissionService.listResourcePermissions(
       userId,
-      "organization",
+      "organization.read",
     )
 
     return this.organizationRepository.findByIds(permissionsByOrganizationId)

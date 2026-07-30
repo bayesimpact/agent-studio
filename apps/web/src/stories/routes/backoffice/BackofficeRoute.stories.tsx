@@ -85,8 +85,10 @@ export const Unauthorized: Story = {
       state: mergeSeeds(
         seed.me(
           userFactory.build({
-            isBackofficeAuthorized: args.isBackofficeAuthorized,
-            isTermsManagementAuthorized: args.isTermsManagementAuthorized,
+            globalPermissions: [
+              ...(args.isBackofficeAuthorized ? (["backoffice.read"] as const) : []),
+              ...(args.isTermsManagementAuthorized ? (["terms.update"] as const) : []),
+            ],
           }),
         ),
       ),

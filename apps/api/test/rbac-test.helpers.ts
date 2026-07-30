@@ -1,7 +1,7 @@
 import type { TestingModule } from "@nestjs/testing"
 import type { AllRepositories } from "@/common/test/test-transaction-manager"
 import { userMembershipFactory } from "@/domains/memberships/user-membership.factory"
-import { PLATFORM_STAFF_ROLE } from "@/domains/rbac/rbac.constants"
+import { PLATFORM_STAFF_ROLE, PLATFORM_SUPERADMIN_ROLE } from "@/domains/rbac/rbac.constants"
 import { RbacService } from "@/domains/rbac/rbac.service"
 import type { User } from "@/domains/users/user.entity"
 
@@ -19,15 +19,17 @@ export async function ensureRbacCatalog(module: TestingModule): Promise<void> {
   rbacCatalogReady = true
 }
 
-export async function assignPlatformStaffToUser({
+async function assignGlobalRoleToUser({
   repositories,
   user,
+  roleKey,
 }: {
   repositories: AllRepositories
   user: User
+  roleKey: string
 }): Promise<void> {
-  const platformStaffRole = await repositories.roleRepository.findOneOrFail({
-    where: { key: PLATFORM_STAFF_ROLE },
+  const globalRole = await repositories.roleRepository.findOneOrFail({
+    where: { key: roleKey },
   })
 
   await repositories.userMembershipRepository.save(
@@ -36,7 +38,21 @@ export async function assignPlatformStaffToUser({
       resourceType: "global",
       resourceId: null,
       role: "member",
-      roleId: platformStaffRole.id,
+      roleId: globalRole.id,
     }),
   )
+}
+
+export async function assignPlatformStaffToUser(params: {
+  repositories: AllRepositories
+  user: User
+}): Promise<void> {
+  await assignGlobalRoleToUser({ ...params, roleKey: PLATFORM_STAFF_ROLE })
+}
+
+export async function assignPlatformSuperadminToUser(params: {
+  repositories: AllRepositories
+  user: User
+}): Promise<void> {
+  await assignGlobalRoleToUser({ ...params, roleKey: PLATFORM_SUPERADMIN_ROLE })
 }

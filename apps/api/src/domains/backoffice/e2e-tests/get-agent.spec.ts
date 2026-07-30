@@ -10,7 +10,12 @@ import {
 } from "@/common/test/test-database"
 import { agentFactory } from "@/domains/agents/agent.factory"
 import { createOrganizationWithAgent } from "@/domains/organizations/organization.factory"
+import { RbacModule } from "@/domains/rbac/rbac.module"
 import { mockAuth0EmailForSub, setupUserGuardForTesting } from "../../../../test/e2e.helpers"
+import {
+  assignPlatformSuperadminToUser,
+  ensureRbacCatalog,
+} from "../../../../test/rbac-test.helpers"
 import { expectResponse, type Requester, testRequester } from "../../../../test/request"
 import { BackofficeModule } from "../backoffice.module"
 
@@ -22,14 +27,12 @@ describe("Backoffice - get agent", () => {
 
   let auth0Id = `auth0|${randomUUID()}`
 
-  const originalAuthorizedEmails = process.env.BACKOFFICE_AUTHORIZED_EMAILS
-  const originalAuthorizedDomain = process.env.BACKOFFICE_AUTHORIZED_DOMAIN
-
   beforeAll(async () => {
     setup = await setupE2eTestDatabase({
-      additionalImports: [BackofficeModule],
+      additionalImports: [BackofficeModule, RbacModule],
       applyOverrides: (moduleBuilder) => setupUserGuardForTesting(moduleBuilder, () => auth0Id),
     })
+    await ensureRbacCatalog(setup.module)
     repositories = setup.getAllRepositories()
     app = setup.module.createNestApplication()
     await app.init()
@@ -39,21 +42,6 @@ describe("Backoffice - get agent", () => {
   beforeEach(async () => {
     await clearTestDatabase(setup.dataSource)
     auth0Id = `auth0|${randomUUID()}`
-    delete process.env.BACKOFFICE_AUTHORIZED_DOMAIN
-    delete process.env.BACKOFFICE_AUTHORIZED_EMAILS
-  })
-
-  afterEach(() => {
-    if (originalAuthorizedEmails === undefined) {
-      delete process.env.BACKOFFICE_AUTHORIZED_EMAILS
-    } else {
-      process.env.BACKOFFICE_AUTHORIZED_EMAILS = originalAuthorizedEmails
-    }
-    if (originalAuthorizedDomain === undefined) {
-      delete process.env.BACKOFFICE_AUTHORIZED_DOMAIN
-    } else {
-      process.env.BACKOFFICE_AUTHORIZED_DOMAIN = originalAuthorizedDomain
-    }
   })
 
   afterAll(async () => {
@@ -66,8 +54,7 @@ describe("Backoffice - get agent", () => {
     const context = await createOrganizationWithAgent(repositories, {
       user: { auth0Id, email },
     })
-    process.env.BACKOFFICE_AUTHORIZED_DOMAIN = "@example.com"
-    process.env.BACKOFFICE_AUTHORIZED_EMAILS = email
+    await assignPlatformSuperadminToUser({ repositories, user: context.user })
     return context
   }
 

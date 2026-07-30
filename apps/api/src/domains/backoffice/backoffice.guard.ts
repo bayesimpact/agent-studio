@@ -6,15 +6,19 @@ import {
 } from "@nestjs/common"
 import type { EndpointRequest } from "@/common/context/request.interface"
 import { AUTH_ERRORS } from "@/common/errors/auth-errors"
-import { isDomainBackofficeAuthorized } from "./backoffice.authorization"
+// biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
+import { PermissionService } from "@/domains/rbac/permission.service"
+import { BACKOFFICE_READ_PERMISSION } from "@/domains/rbac/rbac.constants"
 
 @Injectable()
 export class BackofficeGuard implements CanActivate {
-  canActivate(context: ExecutionContext): boolean {
+  constructor(private readonly permissionService: PermissionService) {}
+
+  async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest<EndpointRequest>()
     const user = request.user
 
-    if (!user || !isDomainBackofficeAuthorized(user.email)) {
+    if (!user || !(await this.permissionService.hasGlobal(user.id, BACKOFFICE_READ_PERMISSION))) {
       throw new ForbiddenException(AUTH_ERRORS.UNAUTHORIZED_RESOURCE)
     }
     return true

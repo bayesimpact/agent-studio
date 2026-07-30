@@ -16,6 +16,9 @@ import { OrganizationMembershipsService } from "@/domains/organizations/membersh
 import type { ProjectMembershipModel } from "@/domains/projects/memberships/project-membership.model"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
 import { ProjectMembershipsService } from "@/domains/projects/memberships/project-memberships.service"
+// biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
+import { PermissionService, type ResourceIdsScope } from "@/domains/rbac/permission.service"
+import { BACKOFFICE_ORGANIZATION_READ_PERMISSION } from "@/domains/rbac/rbac.constants"
 import { Agent } from "../agents/agent.entity"
 import { FeatureFlag } from "../feature-flags/feature-flag.entity"
 import { Organization } from "../organizations/organization.entity"
@@ -85,6 +88,7 @@ export class BackofficeService {
     private readonly projectMembershipsService: ProjectMembershipsService,
     private readonly agentMembershipsService: AgentMembershipsService,
     private readonly reviewCampaignMembershipsService: ReviewCampaignMembershipsService,
+    private readonly permissionService: PermissionService,
   ) {}
 
   async createOrganization({
@@ -111,13 +115,11 @@ export class BackofficeService {
   }
 
   async listOrganizations({
-    canListAll,
     userId,
     page,
     limit,
     search,
   }: {
-    canListAll: boolean
     userId: string
     page: number
     limit: number
@@ -127,41 +129,16 @@ export class BackofficeService {
       .createQueryBuilder("organization")
       .orderBy("LOWER(organization.name)", "ASC")
 
-    if (!canListAll) {
-      const { organizationIds, projectIds } = await this.findAdminOrganizationAndProjectIds(userId)
-      if (organizationIds.size === 0 && projectIds.size === 0) {
-        return { organizations: [], total: 0 }
-      }
-      if (organizationIds.size > 0 && projectIds.size > 0) {
-        qb.andWhere(
-          `(
-            organization.id IN (:...organizationIds)
-            OR EXISTS (
-              SELECT 1 FROM "project" "p"
-              WHERE "p"."organization_id" = "organization"."id"
-                AND "p"."id" IN (:...projectIds)
-            )
-          )`,
-          {
-            organizationIds: Array.from(organizationIds),
-            projectIds: Array.from(projectIds),
-          },
-        )
-      } else if (organizationIds.size > 0) {
-        qb.andWhere("organization.id IN (:...organizationIds)", {
-          organizationIds: Array.from(organizationIds),
-        })
-      } else {
-        qb.andWhere(
-          `EXISTS (
-            SELECT 1 FROM "project" "p"
-            WHERE "p"."organization_id" = "organization"."id"
-              AND "p"."id" IN (:...projectIds)
-          )`,
-          { projectIds: Array.from(projectIds) },
-        )
-      }
+    const organizationIds = await this.permissionService.listResourceIds(
+      userId,
+      BACKOFFICE_ORGANIZATION_READ_PERMISSION,
+    )
+    if (organizationIds.length === 0) {
+      return { organizations: [], total: 0 }
     }
+    qb.andWhere("organization.id IN (:...organizationIds)", {
+      organizationIds,
+    })
 
     const trimmedSearch = search?.trim()
     if (trimmedSearch) {
@@ -342,13 +319,11 @@ export class BackofficeService {
   }
 
   async listUsers({
-    canListAll,
     userId,
     page,
     limit,
     search,
   }: {
-    canListAll: boolean
     userId: string
     page: number
     limit: number
@@ -356,13 +331,13 @@ export class BackofficeService {
   }): Promise<{ users: User[]; total: number }> {
     const qb = this.userRepository.createQueryBuilder("user").orderBy("LOWER(user.email)", "ASC")
 
-    if (!canListAll) {
-      const visibleUserIds = await this.findVisibleUserIdsForAdmin(userId)
-      if (visibleUserIds.size === 0) {
+    const visibleUsers = await this.findVisibleUserIds(userId)
+    if (visibleUsers.scope === "ids") {
+      if (visibleUsers.ids.length === 0) {
         return { users: [], total: 0 }
       }
       qb.andWhere("user.id IN (:...visibleUserIds)", {
-        visibleUserIds: Array.from(visibleUserIds),
+        visibleUserIds: visibleUsers.ids,
       })
     }
 
@@ -523,11 +498,9 @@ export class BackofficeService {
   }
 
   async getUserDetail({
-    canListAll,
     requestingUserId,
     targetUserId,
   }: {
-    canListAll: boolean
     requestingUserId: string
     targetUserId: string
   }): Promise<{
@@ -537,9 +510,9 @@ export class BackofficeService {
     agentMemberships: AgentMembershipModel[]
     reviewCampaignMemberships: ReviewCampaignMembershipModel[]
   } | null> {
-    if (!canListAll) {
-      const visibleUserIds = await this.findVisibleUserIdsForAdmin(requestingUserId)
-      if (!visibleUserIds.has(targetUserId)) return null
+    const visibleUsers = await this.findVisibleUserIds(requestingUserId)
+    if (visibleUsers.scope === "ids" && !visibleUsers.ids.includes(targetUserId)) {
+      return null
     }
 
     const user = await this.userRepository.findOne({ where: { id: targetUserId } })
@@ -574,38 +547,30 @@ export class BackofficeService {
     }
   }
 
-  private async findVisibleUserIdsForAdmin(userId: string): Promise<Set<string>> {
-    const [adminOrganizationMemberships, adminProjectMemberships, adminAgentMemberships] =
-      await Promise.all([
-        this.organizationMembershipsService.listAdminAndOwnerMembershipsForUser(userId),
-        this.projectMembershipsService.listAdminAndOwnerMembershipsForUser(userId),
-        this.agentMembershipsService.listAdminAndOwnerMembershipsForUser(userId),
-      ])
+  /**
+   * Users visible to the requesting user:
+   * - `backoffice.user.read` held globally: the whole directory
+   * - otherwise: self + members of resources granting `user.read`
+   *   (PermissionService), plus members of agents the user administers
+   *   (legacy union: agent roles are not in the RBAC catalog yet)
+   */
+  private async findVisibleUserIds(userId: string): Promise<ResourceIdsScope> {
+    const userScope = await this.permissionService.listUserIds(userId)
+    if (userScope.scope === "all") {
+      return userScope
+    }
 
-    const adminOrganizationIds = adminOrganizationMemberships.map(
-      (membership) => membership.organizationId,
+    const adminAgentMemberships =
+      await this.agentMembershipsService.listAdminAndOwnerMembershipsForUser(userId)
+    const sharedAgentMemberships = await this.agentMembershipsService.listMembershipsByAgentIds(
+      adminAgentMemberships.map((membership) => membership.agentId),
     )
-    const adminProjectIds = adminProjectMemberships.map((membership) => membership.projectId)
-    const adminAgentIds = adminAgentMemberships.map((membership) => membership.agentId)
 
-    const [sharedOrganizationMemberships, sharedProjectMemberships, sharedAgentMemberships] =
-      await Promise.all([
-        this.organizationMembershipsService.listMembershipsByOrganizationIds(adminOrganizationIds),
-        this.projectMembershipsService.listMembershipsByProjectIds(adminProjectIds),
-        this.agentMembershipsService.listMembershipsByAgentIds(adminAgentIds),
-      ])
-
-    const visibleUserIds = new Set<string>([userId])
-    for (const membership of sharedOrganizationMemberships) {
-      visibleUserIds.add(membership.userId)
-    }
-    for (const membership of sharedProjectMemberships) {
-      visibleUserIds.add(membership.userId)
-    }
+    const visibleUserIds = new Set<string>(userScope.ids)
     for (const membership of sharedAgentMemberships) {
       visibleUserIds.add(membership.userId)
     }
-    return visibleUserIds
+    return { scope: "ids", ids: [...visibleUserIds] }
   }
 
   async addFeatureFlag({

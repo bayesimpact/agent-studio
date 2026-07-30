@@ -19,10 +19,8 @@ async function main(): Promise<void> {
     await rbacService.seedProjectRolesAndPermissions()
     const updatedOrganizationCount = await rbacService.assignRoleIdsToOrganizationMemberships()
     const updatedProjectCount = await rbacService.assignRoleIdsToProjectMemberships()
-    const platformStaffCount = await rbacService.assignPlatformStaffToEligibleUsers()
     logger.log(`Assigned role_id on ${updatedOrganizationCount} organization membership(s)`)
     logger.log(`Assigned role_id on ${updatedProjectCount} project membership(s)`)
-    logger.log(`Assigned platform_staff on ${platformStaffCount} user(s)`)
   } finally {
     await app.close()
   }
