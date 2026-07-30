@@ -278,7 +278,9 @@ describe("StreamingService", () => {
     const subAgentCall = calls.find((call) => call.agentId === subAgent.id)
     expect(subAgentCall?.prompt).toContain("Collect the user's form")
     const parentCalls = calls.filter((call) => call.agentId === agent.id)
-    expect(parentCalls).toHaveLength(2)
+    // 3 generations: sub-agent call, answer, and the forced end-of-turn
+    // mandatory_tool report (every conversation agent now submits it).
+    expect(parentCalls).toHaveLength(3)
     expect(parentCalls[1]?.prompt).toContain("sub_answer")
   })
 
