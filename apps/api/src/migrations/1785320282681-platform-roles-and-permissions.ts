@@ -12,7 +12,8 @@ import type { MigrationInterface, QueryRunner } from "typeorm"
  *   (ex BACKOFFICE_AUTHORIZED_EMAILS)
  * - grants `user.read` to org/project owner+admin roles
  * - grants `backoffice.organization.read` to org owner+admin roles
- *   (scoped backoffice org listing without a global grant)
+ * - grants `backoffice.project.read` to org and project owner+admin roles
+ *   (scoped backoffice listings without a global grant)
  * - assigns platform_staff to users whose email matches
  *   ORGANIZATION_CREATOR_EMAIL_DOMAIN (throws if the env var is missing:
  *   the earlier seed migration skipped silently and never ran in production)
@@ -87,6 +88,14 @@ export class PlatformRolesAndPermissions1785320282681 implements MigrationInterf
       ON CONFLICT ("role_id", "permission_key") DO NOTHING
     `)
 
+    await queryRunner.query(`
+      INSERT INTO "role_permission" ("role_id", "permission_key")
+      SELECT role.id, 'backoffice.project.read'
+      FROM "role" AS role
+      WHERE role.key IN ('org_owner', 'org_admin', 'project_owner', 'project_admin')
+      ON CONFLICT ("role_id", "permission_key") DO NOTHING
+    `)
+
     const allowedDomain = process.env.ORGANIZATION_CREATOR_EMAIL_DOMAIN?.trim()
     if (!allowedDomain) {
       throw new Error(
@@ -124,6 +133,14 @@ export class PlatformRolesAndPermissions1785320282681 implements MigrationInterf
       WHERE membership.resource_type = 'global'
         AND membership.role_id = role.id
         AND role.key = 'platform_staff'
+    `)
+
+    await queryRunner.query(`
+      DELETE FROM "role_permission" AS role_permission
+      USING "role" AS role
+      WHERE role_permission.role_id = role.id
+        AND role.key IN ('org_owner', 'org_admin', 'project_owner', 'project_admin')
+        AND role_permission.permission_key = 'backoffice.project.read'
     `)
 
     await queryRunner.query(`

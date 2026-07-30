@@ -65,6 +65,7 @@ export const ORGANIZATION_ROLE_PERMISSIONS = {
     PROJECT_CREATE_PERMISSION,
     USER_READ_PERMISSION,
     BACKOFFICE_ORGANIZATION_READ_PERMISSION,
+    BACKOFFICE_PROJECT_READ_PERMISSION,
   ],
   org_admin: [
     "organization.read",
@@ -72,6 +73,7 @@ export const ORGANIZATION_ROLE_PERMISSIONS = {
     PROJECT_CREATE_PERMISSION,
     USER_READ_PERMISSION,
     BACKOFFICE_ORGANIZATION_READ_PERMISSION,
+    BACKOFFICE_PROJECT_READ_PERMISSION,
   ],
   org_member: ["organization.read"],
   [PLATFORM_STAFF_ROLE]: [
@@ -100,6 +102,7 @@ export const PROJECT_ROLE_PERMISSIONS = {
     "agent.create",
     "agent.read",
     USER_READ_PERMISSION,
+    BACKOFFICE_PROJECT_READ_PERMISSION,
   ],
   project_admin: [
     "project.read",
@@ -108,6 +111,7 @@ export const PROJECT_ROLE_PERMISSIONS = {
     "agent.create",
     "agent.read",
     USER_READ_PERMISSION,
+    BACKOFFICE_PROJECT_READ_PERMISSION,
   ],
   project_member: ["project.read"],
 } as const satisfies Record<string, readonly string[]>

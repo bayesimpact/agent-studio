@@ -215,11 +215,9 @@ export class BackofficeController {
     @Query("search") search?: string,
   ): Promise<typeof BackofficeRoutes.listProjects.response> {
     const { user } = request
-    const canListAll = await this.canListAll(user.id, BACKOFFICE_PROJECT_READ_PERMISSION)
     const page = Math.max(0, Number(pageParam) || 0)
     const limit = Math.min(100, Math.max(1, Number(limitParam) || 10))
     const { projects, total } = await this.backofficeService.listProjects({
-      canListAll,
       userId: user.id,
       page,
       limit,

@@ -34,6 +34,7 @@ Scoped to one organization via `user_membership` (`resource_type = 'organization
 | `project.create` | ✅ | ✅ | — |
 | `user.read` — see the organization's members | ✅ | ✅ | — |
 | `backoffice.organization.read` — see the organization in the backoffice | ✅ | ✅ | — |
+| `backoffice.project.read` — see the organization's projects in the backoffice | ✅ | ✅ | — |
 
 ## Project roles
 
@@ -47,3 +48,4 @@ Scoped to one project via `user_membership` (`resource_type = 'project'`).
 | `agent.create` | ✅ | ✅ | — |
 | `agent.read` | ✅ | ✅ | — |
 | `user.read` — see the project's members | ✅ | ✅ | — |
+| `backoffice.project.read` — see the project in the backoffice | ✅ | ✅ | — |

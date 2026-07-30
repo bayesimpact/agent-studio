@@ -100,6 +100,7 @@ describe("Organizations - createOrganization", () => {
       // alphabetical: listPermissionsForRole orders by permission_key
       permissions: [
         "backoffice.organization.read",
+        "backoffice.project.read",
         "organization.delete",
         "organization.read",
         "organization.update",

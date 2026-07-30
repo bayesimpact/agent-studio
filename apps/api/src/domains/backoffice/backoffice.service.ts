@@ -18,7 +18,10 @@ import type { ProjectMembershipModel } from "@/domains/projects/memberships/proj
 import { ProjectMembershipsService } from "@/domains/projects/memberships/project-memberships.service"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
 import { PermissionService, type ResourceIdsScope } from "@/domains/rbac/permission.service"
-import { BACKOFFICE_ORGANIZATION_READ_PERMISSION } from "@/domains/rbac/rbac.constants"
+import {
+  BACKOFFICE_ORGANIZATION_READ_PERMISSION,
+  BACKOFFICE_PROJECT_READ_PERMISSION,
+} from "@/domains/rbac/rbac.constants"
 import { Agent } from "../agents/agent.entity"
 import { FeatureFlag } from "../feature-flags/feature-flag.entity"
 import { Organization } from "../organizations/organization.entity"
@@ -339,13 +342,11 @@ export class BackofficeService {
   }
 
   async listProjects({
-    canListAll,
     userId,
     page,
     limit,
     search,
   }: {
-    canListAll: boolean
     userId: string
     page: number
     limit: number
@@ -357,29 +358,14 @@ export class BackofficeService {
       .addSelect(["org.id", "org.name"])
       .orderBy("project.name", "ASC")
 
-    if (!canListAll) {
-      const { organizationIds, projectIds } = await this.findAdminOrganizationAndProjectIds(userId)
-      if (organizationIds.size === 0 && projectIds.size === 0) {
-        return { projects: [], total: 0 }
-      }
-      if (organizationIds.size > 0 && projectIds.size > 0) {
-        qb.andWhere(
-          "(project.organizationId IN (:...organizationIds) OR project.id IN (:...projectIds))",
-          {
-            organizationIds: Array.from(organizationIds),
-            projectIds: Array.from(projectIds),
-          },
-        )
-      } else if (organizationIds.size > 0) {
-        qb.andWhere("project.organizationId IN (:...organizationIds)", {
-          organizationIds: Array.from(organizationIds),
-        })
-      } else {
-        qb.andWhere("project.id IN (:...projectIds)", {
-          projectIds: Array.from(projectIds),
-        })
-      }
+    const projectIds = await this.permissionService.listResourceIds(
+      userId,
+      BACKOFFICE_PROJECT_READ_PERMISSION,
+    )
+    if (projectIds.length === 0) {
+      return { projects: [], total: 0 }
     }
+    qb.andWhere("project.id IN (:...projectIds)", { projectIds })
 
     const trimmedSearch = search?.trim()
     if (trimmedSearch) {
