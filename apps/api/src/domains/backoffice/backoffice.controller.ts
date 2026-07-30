@@ -278,20 +278,16 @@ export class BackofficeController {
   }
 
   @Delete(BackofficeRoutes.removeFeatureFlag.path)
+  @CheckPermission(BACKOFFICE_PROJECT_READ_PERMISSION, "project")
   @TrackActivity({ action: "add_feature_flag", entityFrom: "project" })
   async removeFeatureFlag(
-    @Req() request: EndpointRequest,
     @Param("projectId") projectId: string,
     @Param("featureFlagKey") featureFlagKey: string,
   ): Promise<typeof BackofficeRoutes.removeFeatureFlag.response> {
-    const { user } = request
-    const canListAll = await this.canListAll(user.id, BACKOFFICE_PROJECT_READ_PERMISSION)
     const validatedKey = assertValidFeatureFlagKey(featureFlagKey)
     await this.backofficeService.removeFeatureFlag({
       projectId,
       featureFlagKey: validatedKey,
-      canListAll,
-      userId: user.id,
     })
     return { data: { success: true } }
   }

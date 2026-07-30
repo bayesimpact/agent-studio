@@ -1,10 +1,5 @@
 import type { FeatureFlagKey } from "@caseai-connect/api-contracts"
-import {
-  BadRequestException,
-  ForbiddenException,
-  Injectable,
-  NotFoundException,
-} from "@nestjs/common"
+import { BadRequestException, Injectable, NotFoundException } from "@nestjs/common"
 import { InjectRepository } from "@nestjs/typeorm"
 import { In, type Repository } from "typeorm"
 import type { AgentMembershipModel } from "@/domains/agents/memberships/agent-membership.model"
@@ -547,45 +542,14 @@ export class BackofficeService {
   async removeFeatureFlag({
     projectId,
     featureFlagKey,
-    canListAll,
-    userId,
   }: {
     projectId: string
     featureFlagKey: FeatureFlagKey
-    canListAll: boolean
-    userId: string
-  }): Promise<void> {
-    await this.assertProjectEditable({ canListAll, userId, projectId })
-    await this.featureFlagRepository.delete({ projectId, featureFlagKey })
-  }
-
-  private async assertProjectEditable({
-    canListAll,
-    userId,
-    projectId,
-  }: {
-    canListAll: boolean
-    userId: string
-    projectId: string
   }): Promise<void> {
     const project = await this.projectRepository.findOne({ where: { id: projectId } })
     if (!project) {
       throw new NotFoundException(`Project ${projectId} not found`)
     }
-    if (canListAll) {
-      return
-    }
-
-    const projectMembership = await this.projectMembershipsService.findProjectMembership({
-      userId,
-      projectId,
-    })
-
-    if (
-      !projectMembership ||
-      (projectMembership.role !== "admin" && projectMembership.role !== "owner")
-    ) {
-      throw new ForbiddenException(`User does not have admin access to project ${projectId}`)
-    }
+    await this.featureFlagRepository.delete({ projectId, featureFlagKey })
   }
 }
