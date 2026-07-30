@@ -13,10 +13,14 @@ This project uses [CalVer](https://calver.org/) (YY.MM.Micro) for product versio
 - Back-office administrators can create an organization directly from the organizations panel; the creating administrator becomes its owner
 
 ### Changed
+- Session bookkeeping is now guaranteed on every reply: conversation agents report their session title, categories, and cited sources through a single mandatory report, enforced by the platform when the model skips it — titles now appear even on agents without categories, and categories can no longer be invented outside the configured list (schema enforced at generation time on Gemini models)
+- Gemini models other than 3.6-flash are served from the EU endpoint again (EU data processing); only gemini-3.6-flash, unavailable in the EU region, uses the global endpoint
 - Evaluations: the agent version picker in the conversation run dialog labels each version as draft, and marks the published version the agent runs with as "Current" with its date, so runs are no longer launched on an unpublished draft by accident
 - Form agents are no longer a separate agent type: any conversation agent can now turn on "Form filling" from a new Tools tab, define the form fields with the visual schema editor (drag to set the order the agent asks its questions), and the agent fills the form from the user's answers during the chat; the collected values open from a "Show form state" button on the agent's replies; the agent creator still offers a "Form" choice, which now creates a conversation agent with form filling already enabled — existing form agents, with their sessions and settings history, are migrated to conversation agents with form filling enabled
 
 ### Fixed
+- Model tool-call syntax (pseudo-XML fragments) no longer leaks into chat replies when the model mishandles its bookkeeping call
+- Agent prompts that referenced the old retrieval tool name are rewritten to the new one at deploy time, so hand-written instructions keep working
 - Agent editor: restoring a version from the history now updates the form fields immediately
 - Fix some scanned PDF documents importing with no extracted text
 
@@ -30,13 +34,9 @@ This project uses [CalVer](https://calver.org/) (YY.MM.Micro) for product versio
 - (beta) Evaluations: optional judge instructions per conversation-evaluation run — add extra grading guidance in the run dialog and the LLM judge applies it on top of the expected output when scoring; the instructions used are shown on the run report and, when they differ, in the run comparison
 
 ### Changed
-- Session bookkeeping is now guaranteed on every reply: conversation agents report their session title, categories, and cited sources through a single mandatory report, enforced by the platform when the model skips it — titles now appear even on agents without categories, and categories can no longer be invented outside the configured list (schema enforced at generation time on Gemini models)
-- Gemini models other than 3.6-flash are served from the EU endpoint again (EU data processing); only gemini-3.6-flash, unavailable in the EU region, uses the global endpoint
 - (beta) Evaluations: conversation-agent evaluation moved from the Studio into the Evaluation app — build datasets of input/expected-output records (add them inline one after another or paste a batch as CSV), run them against a chosen version of an agent's settings in the background, and follow each run's scores (rated 0–5 by an LLM judge whose model you pick per run) live on its own report page; the run's "view agent" panel shows the exact settings version that was scored, and existing Studio evaluations are migrated into a "Studio evaluations" dataset per project
 
 ### Fixed
-- Model tool-call syntax (pseudo-XML fragments) no longer leaks into chat replies when the model mishandles its bookkeeping call
-- Agent prompts that referenced the old retrieval tool name are rewritten to the new one at deploy time, so hand-written instructions keep working
 - Conversation agents answer from their knowledge base instead of from memory: the retrieval tool was renamed and its description rewritten so that smaller models stop skipping the lookup and inventing an answer
 - Extraction runs: the run page updates live after cancelling a run, and refreshes when switching runs
 - Extraction document uploads are capped at 25 MB, with files over the limit rejected upfront
