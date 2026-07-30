@@ -103,20 +103,18 @@ const SCENARIOS: Record<
 > = {
   fat: {
     systemPrompt: buildFatSystemPrompt({
-      toolsSection: `## Tools:\n[${ToolName.SubmitTurnSummary}]: ${submitTurnSummaryInstruction({
-        includeSources: false,
-      })}`,
+      toolsSection: `## Tools:\n[${ToolName.SubmitTurnSummary}]: ${submitTurnSummaryInstruction()}`,
     }),
     tools: { [ToolName.SubmitTurnSummary]: summaryCategoriesOnly },
     cases: [
-      { label: "greeting", userMessage: "bonjour" },
+      { label: "greeting", userMessage: "hello" },
       { label: "thanks", userMessage: "merci beaucoup !" },
-      { label: "service question", userMessage: "comment je change mon mot de passe ?" },
+      { label: "service question", userMessage: "how do I change my password?" },
       {
         label: "strict refusal",
-        userMessage: "combien je vais toucher d'indemnités exactement ce mois-ci ?",
+        userMessage: "exactly how much will I receive in allowances this month?",
       },
-      { label: "off-topic", userMessage: "raconte-moi une blague" },
+      { label: "off-topic", userMessage: "tell me a joke" },
     ],
   },
   rag: {
@@ -125,19 +123,19 @@ Your purpose is to assist users by answering their questions about the company e
 
 ## Tools:
 [${ToolName.LookupKnowledgeBase}]: ${lookupKnowledgeBaseInstruction()}
-[${ToolName.SubmitTurnSummary}]: ${submitTurnSummaryInstruction({ includeSources: true })}
+[${ToolName.SubmitTurnSummary}]: ${submitTurnSummaryInstruction()}
 
 ## Response language:
-Always answer in French.`,
+Always answer in English.`,
     tools: {
       [ToolName.LookupKnowledgeBase]: lookupStub,
       [ToolName.SubmitTurnSummary]: summaryWithSources,
     },
     cases: [
-      { label: "greeting", userMessage: "bonjour" },
+      { label: "greeting", userMessage: "hello" },
       {
         label: "document question",
-        userMessage: "j'ai droit a combien de jours de conges payes ?",
+        userMessage: "how many days of paid leave am I entitled to?",
       },
     ],
   },
@@ -159,7 +157,7 @@ async function runOnce(userMessage: string) {
       { role: "system", content: scenario.systemPrompt },
       {
         role: "assistant",
-        content: "Bonjour ! Je suis votre assistant virtuel. Comment puis-je vous aider ?",
+        content: "Hello! I am your virtual assistant. How can I help you?",
       },
       { role: "user", content: userMessage },
     ],

@@ -22,7 +22,7 @@ export const HANDBOOK_DOCUMENT_ID = "b7a3f1c2-8d4e-4a91-b2c5-6e7f8a9d0c1b"
  * Provider-agnostic production-shaped turn: the FULL provider pipeline (real
  * tool loop, alias registry, submit_turn_summary declared in the loop AND
  * guaranteed at end of turn) over a realistic top-20 retrieval on a fictional
- * employee handbook, with a French question.
+ * employee handbook.
  *
  * Returns the streamed text and the tool-execution logs, so specs can assert
  * the reliability contract on any provider: an answer for the user, and the
@@ -80,15 +80,15 @@ Your purpose is to assist users by answering their questions about the company e
 
 ## Tools:
 [${ToolName.LookupKnowledgeBase}]: ${lookupKnowledgeBaseInstruction()}
-[${ToolName.SubmitTurnSummary}]: ${submitTurnSummaryInstruction({ includeSources: true })}
+[${ToolName.SubmitTurnSummary}]: ${submitTurnSummaryInstruction()}
 
 ## Response language:
-Always answer in French.`
+Always answer in English.`
 
   const chunks = provider.streamChatResponse({
     messages: [
       { role: "system", content: systemPrompt },
-      { role: "user", content: "j'ai droit a combien de jours de conges payes ?" },
+      { role: "user", content: "how many days of paid leave am I entitled to?" },
     ],
     config: {
       model,
@@ -125,11 +125,11 @@ Always answer in French.`
 }
 
 export const FAT_AGENT_CATEGORY_NAMES = [
-  "Mobilité",
-  "Formation",
-  "Indemnités",
-  "Compte",
-  "Hors périmètre",
+  "Mobility",
+  "Training",
+  "Allowances",
+  "Account",
+  "Out of scope",
 ]
 
 /**
@@ -171,7 +171,7 @@ export async function runFatPromptTurnScenario({
   })
 
   const systemPrompt = buildFatSystemPrompt({
-    toolsSection: `## Tools:\n[${ToolName.SubmitTurnSummary}]: ${submitTurnSummaryInstruction({ includeSources: false })}`,
+    toolsSection: `## Tools:\n[${ToolName.SubmitTurnSummary}]: ${submitTurnSummaryInstruction()}`,
   })
 
   const chunks = provider.streamChatResponse({
@@ -179,8 +179,7 @@ export async function runFatPromptTurnScenario({
       { role: "system", content: systemPrompt },
       {
         role: "assistant",
-        content:
-          "Bonjour ! Je suis votre assistant virtuel. Comment puis-je vous renseigner aujourd'hui ?",
+        content: "Hello! I am your virtual assistant. How can I help you today?",
       },
       { role: "user", content: userMessage },
     ],

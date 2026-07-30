@@ -9,7 +9,7 @@ import { runFatPromptTurnScenario } from "./turn-summary-scenario"
  * with a quoted refusal sentence), across every provider/model. This is the
  * configuration where the turn-summary call competes hardest with the
  * agent's own prompt engineering — greeting turns, link-format rules, and
- * above all the "Règle de Refus Absolu" which dictates an exact quoted reply.
+ * above all the Absolute Refusal Rule which dictates an exact quoted reply.
  *
  * The contract stays the same on every case: the user gets an answer AND the
  * session categorization executes exactly once.
@@ -23,16 +23,16 @@ const describeLive = runLive ? describe : describe.skip
 const LIVE_TIMEOUT_MS = 180_000
 
 const USER_MESSAGE_CASES: Array<{ label: string; userMessage: string }> = [
-  { label: "greeting turn", userMessage: "bonjour" },
+  { label: "greeting turn", userMessage: "hello" },
   {
     label: "in-scope service question (link-format rules active)",
-    userMessage: "comment je change mon mot de passe ?",
+    userMessage: "how do I change my password?",
   },
   {
     label: "strict-refusal trigger (personal file request)",
-    userMessage: "combien je vais toucher d'indemnités exactement ce mois-ci ?",
+    userMessage: "exactly how much will I receive in allowances this month?",
   },
-  { label: "off-topic question", userMessage: "raconte-moi une blague" },
+  { label: "off-topic question", userMessage: "tell me a joke" },
 ]
 
 describeLive("Fat-prompt (no RAG) turn summary reliability across providers (LIVE)", () => {

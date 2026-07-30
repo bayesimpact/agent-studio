@@ -118,6 +118,7 @@ export function submitTurnSummaryDescription({
   if (includeSources) {
     parts.push(
       "Report the id of every retrieved chunk you actually used to answer (e.g. c1, c3), copied exactly from the lookup results — empty array when you used none (e.g. a greeting). Never invent an id.",
+      "Do NOT cite sources inline in your text response; this report is the only way sources are shown to the user.",
     )
   }
   if (includeCategories) {
@@ -132,20 +133,8 @@ export function submitTurnSummaryDescription({
  * Short master-prompt reminder — the contract itself is in the tool
  * description (see {@link submitTurnSummaryDescription}).
  */
-export function submitTurnSummaryInstruction({
-  includeSources,
-}: {
-  includeSources: boolean
-}): string {
-  const parts = [
-    `You MUST call the ${ToolName.SubmitTurnSummary} tool exactly once in EVERY response, without exception — including greetings, small talk, thanks, and refusals. Write your text answer first, then emit the call in the SAME response. Never end a response without this call. Never mention it to the user.`,
-  ]
-  if (includeSources) {
-    parts.push(
-      `Do NOT cite sources inline in your text response; the ${ToolName.SubmitTurnSummary} report is the only way sources are shown to the user.`,
-    )
-  }
-  return parts.join(" ")
+export function submitTurnSummaryInstruction(): string {
+  return `You MUST call the ${ToolName.SubmitTurnSummary} tool exactly once in EVERY response, without exception — including greetings, small talk, thanks, and refusals. Write your text answer first, then emit the call in the SAME response. Never end a response without this call. Never mention it to the user.`
 }
 
 export function submitTurnSummaryTool({

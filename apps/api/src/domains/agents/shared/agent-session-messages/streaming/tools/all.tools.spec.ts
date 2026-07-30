@@ -126,7 +126,7 @@ describe("Tools execution", () => {
     const { fulltextStream } = await aggregateStream(
       service.streamAgentResponse({
         agentSessionScope: { agent, agentSettings, session, connectScope },
-        userContent: "Bonjour",
+        userContent: "Hello",
         notifyClient: () => undefined,
       }),
     )
@@ -162,18 +162,18 @@ describe("Tools execution", () => {
     // Generation 1: the lookup. Generation 2: the answer, without the
     // voluntary report. Generation 3: the forced end-of-turn call.
     mockProvider.addToolCallTurn(agent.id, ToolName.LookupKnowledgeBase, { query: "paid leave" })
-    mockProvider.addTextTurn(agent.id, "Voici la réponse.")
+    mockProvider.addTextTurn(agent.id, "Here is the answer.")
     mockProvider.addToolCallTurn(agent.id, ToolName.SubmitTurnSummary, { chunkIds: ["c1"] })
 
     const { events, fulltextStream } = await aggregateStream(
       service.streamAgentResponse({
         agentSessionScope: { agent, agentSettings: ragAgentSettings, session, connectScope },
-        userContent: "Bonjour",
+        userContent: "Hello",
         notifyClient: () => undefined,
       }),
     )
 
-    expect(fulltextStream).toBe("Voici la réponse.")
+    expect(fulltextStream).toBe("Here is the answer.")
     expect(events.at(-1)?.type).toBe("end")
 
     const agentCalls = mockProvider.getCalls().filter((call) => call.agentId === agent.id)
@@ -197,14 +197,14 @@ describe("Tools execution", () => {
 
     // Generation 1: the lookup. Generation 2: answer + voluntary report.
     mockProvider.addToolCallTurn(agent.id, ToolName.LookupKnowledgeBase, { query: "paid leave" })
-    mockProvider.addTextWithToolCallTurn(agent.id, "27 jours.", ToolName.SubmitTurnSummary, {
+    mockProvider.addTextWithToolCallTurn(agent.id, "27 days.", ToolName.SubmitTurnSummary, {
       chunkIds: ["c1"],
     })
 
     await aggregateStream(
       service.streamAgentResponse({
         agentSessionScope: { agent, agentSettings: ragAgentSettings, session, connectScope },
-        userContent: "Combien de jours de congés ?",
+        userContent: "How many days of leave?",
         notifyClient: () => undefined,
       }),
     )
@@ -242,21 +242,21 @@ describe("Tools execution", () => {
     // Generation 1: PREMATURE report (before any lookup). Generation 2: the
     // lookup. Generation 3: the answer. Generation 4: the forced retry.
     mockProvider.addToolCallTurn(agent.id, ToolName.SubmitTurnSummary, {
-      suggestedTitle: "Congés",
+      suggestedTitle: "Leave days",
       categoryNames: ["Bayes"],
     })
-    mockProvider.addToolCallTurn(agent.id, ToolName.LookupKnowledgeBase, { query: "congés" })
-    mockProvider.addTextTurn(agent.id, "27 jours.")
+    mockProvider.addToolCallTurn(agent.id, ToolName.LookupKnowledgeBase, { query: "leave days" })
+    mockProvider.addTextTurn(agent.id, "27 days.")
     mockProvider.addToolCallTurn(agent.id, ToolName.SubmitTurnSummary, {
       chunkIds: ["c1"],
-      suggestedTitle: "Congés",
+      suggestedTitle: "Leave days",
       categoryNames: ["Bayes"],
     })
 
     const { events } = await aggregateStream(
       service.streamAgentResponse({
         agentSessionScope: { agent, agentSettings: ragAgentSettings, session, connectScope },
-        userContent: "Combien de jours de congés ?",
+        userContent: "How many days of leave?",
         notifyClient: () => undefined,
       }),
     )
@@ -288,16 +288,16 @@ describe("Tools execution", () => {
     agent.sessionCategories = [category]
 
     // Generation 1: the greeting answer. Generation 2: the forced report.
-    mockProvider.addTextTurn(agent.id, "Bonjour !")
+    mockProvider.addTextTurn(agent.id, "Hello!")
     mockProvider.addToolCallTurn(agent.id, ToolName.SubmitTurnSummary, {
-      suggestedTitle: "Salutations",
+      suggestedTitle: "Greetings",
       categoryNames: ["Greeting"],
     })
 
     const { events } = await aggregateStream(
       service.streamAgentResponse({
         agentSessionScope: { agent, agentSettings: ragAgentSettings, session, connectScope },
-        userContent: "salut",
+        userContent: "hi",
         notifyClient: () => undefined,
       }),
     )
@@ -324,7 +324,7 @@ describe("Tools execution", () => {
 
     mockProvider.addTextWithToolCallTurn(
       agent.id,
-      "Réponse avec le call.",
+      "Answer with the call.",
       ToolName.SubmitTurnSummary,
       {
         suggestedTitle: "Voluntary title",
@@ -335,12 +335,12 @@ describe("Tools execution", () => {
     const { events, fulltextStream } = await aggregateStream(
       service.streamAgentResponse({
         agentSessionScope: { agent, agentSettings, session, connectScope },
-        userContent: "Bonjour",
+        userContent: "Hello",
         notifyClient: () => undefined,
       }),
     )
 
-    expect(fulltextStream).toBe("Réponse avec le call.")
+    expect(fulltextStream).toBe("Answer with the call.")
     expect(events.at(-1)?.type).toBe("end")
 
     // Single generation: the voluntary call satisfied the guarantee.
@@ -364,7 +364,7 @@ describe("Tools execution", () => {
     agent.sessionCategories = [category]
 
     // Generation 1: the answer. Generation 2: the forced end-of-turn call.
-    mockProvider.addTextTurn(agent.id, "Réponse sans aucun tool call.")
+    mockProvider.addTextTurn(agent.id, "Answer without any tool call.")
     mockProvider.addToolCallTurn(agent.id, ToolName.SubmitTurnSummary, {
       suggestedTitle: "About Bayes",
       categoryNames: ["Bayes"],
@@ -373,12 +373,12 @@ describe("Tools execution", () => {
     const { events, fulltextStream } = await aggregateStream(
       service.streamAgentResponse({
         agentSessionScope: { agent, agentSettings, session, connectScope },
-        userContent: "Bonjour",
+        userContent: "Hello",
         notifyClient: () => undefined,
       }),
     )
 
-    expect(fulltextStream).toBe("Réponse sans aucun tool call.")
+    expect(fulltextStream).toBe("Answer without any tool call.")
     expect(events.at(-1)?.type).toBe("end")
 
     // The forced generation ran and its tool execution went through the
@@ -404,17 +404,17 @@ describe("Tools execution", () => {
     agent.sessionCategories = [category]
     const initialTitle = session.title
 
-    mockProvider.addTextWithToolCallTurn(agent.id, "Bonjour !", ToolName.SubmitTurnSummary, {})
+    mockProvider.addTextWithToolCallTurn(agent.id, "Hello!", ToolName.SubmitTurnSummary, {})
 
     const { events, fulltextStream } = await aggregateStream(
       service.streamAgentResponse({
         agentSessionScope: { agent, agentSettings, session, connectScope },
-        userContent: "salut",
+        userContent: "hi",
         notifyClient: () => undefined,
       }),
     )
 
-    expect(fulltextStream).toBe("Bonjour !")
+    expect(fulltextStream).toBe("Hello!")
     expect(events.at(-1)?.type).toBe("end")
     expect(events.some((event) => event.type === "error")).toBe(false)
 
@@ -440,7 +440,7 @@ describe("Tools execution", () => {
     )
     agent.sessionCategories = [category]
 
-    mockProvider.addTextWithToolCallTurn(agent.id, "Réponse.", ToolName.SubmitTurnSummary, {
+    mockProvider.addTextWithToolCallTurn(agent.id, "Answer.", ToolName.SubmitTurnSummary, {
       categoryNames: "not-an-array",
     })
     mockProvider.addToolCallTurn(agent.id, ToolName.SubmitTurnSummary, {
@@ -456,7 +456,7 @@ describe("Tools execution", () => {
       }),
     )
 
-    expect(fulltextStream).toBe("Réponse.")
+    expect(fulltextStream).toBe("Answer.")
     expect(events.at(-1)?.type).toBe("end")
 
     const updatedSession = await repositories.conversationAgentSessionRepository.findOneByOrFail({
@@ -473,7 +473,7 @@ describe("Tools execution", () => {
     )
     agent.sessionCategories = [category]
 
-    mockProvider.addTextTurn(agent.id, "Bonjour !")
+    mockProvider.addTextTurn(agent.id, "Hello!")
     mockProvider.addToolCallTurn(agent.id, ToolName.SubmitTurnSummary, {
       suggestedTitle: null,
       categoryNames: [],
@@ -482,7 +482,7 @@ describe("Tools execution", () => {
     await aggregateStream(
       service.streamAgentResponse({
         agentSessionScope: { agent, agentSettings, session, connectScope },
-        userContent: "salut",
+        userContent: "hi",
         notifyClient: () => undefined,
       }),
     )

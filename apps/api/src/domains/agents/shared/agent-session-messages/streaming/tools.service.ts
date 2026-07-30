@@ -328,9 +328,7 @@ export class ToolsService extends ServiceWithLLM {
         // assembled from the same switches as its schema.
         ...(hasSubmitTurnSummaryTool
           ? {
-              [ToolName.SubmitTurnSummary]: submitTurnSummaryInstruction({
-                includeSources: hasSourcesReporting,
-              }),
+              [ToolName.SubmitTurnSummary]: submitTurnSummaryInstruction(),
             }
           : {}),
       },

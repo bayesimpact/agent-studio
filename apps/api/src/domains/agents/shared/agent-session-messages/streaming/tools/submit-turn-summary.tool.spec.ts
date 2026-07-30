@@ -273,13 +273,20 @@ describe("submitTurnSummaryExecutionCounts", () => {
 })
 
 describe("submitTurnSummaryDescription", () => {
-  it("mentions chunk ids only when sources are enabled", () => {
+  it("carries the full sources contract (chunk ids + no inline citations) only when sources are enabled", () => {
     const description = submitTurnSummaryDescription({
       includeSources: true,
       includeCategories: false,
     })
     expect(description).toContain("Never invent an id")
+    expect(description).toContain("Do NOT cite sources inline")
     expect(description).not.toContain("category")
+
+    const withoutSources = submitTurnSummaryDescription({
+      includeSources: false,
+      includeCategories: false,
+    })
+    expect(withoutSources).not.toContain("Do NOT cite sources inline")
   })
 
   it("mentions categories only when session metadata is enabled", () => {
@@ -304,19 +311,12 @@ describe("submitTurnSummaryDescription", () => {
 })
 
 describe("submitTurnSummaryInstruction", () => {
-  it("is a short reminder demanding the call even on greetings, without the full contract", () => {
-    const instruction = submitTurnSummaryInstruction({ includeSources: false })
+  it("is a short generic reminder: no sources or categories content in the prompt", () => {
+    const instruction = submitTurnSummaryInstruction()
     expect(instruction).toContain("EVERY response")
     expect(instruction).toContain("greetings")
     expect(instruction).not.toContain("category set")
     expect(instruction).not.toContain("invoked automatically")
-  })
-
-  it("keeps the no-inline-citation rule only when sources are enabled", () => {
-    const withSources = submitTurnSummaryInstruction({ includeSources: true })
-    expect(withSources).toContain("Do NOT cite sources inline")
-
-    const withoutSources = submitTurnSummaryInstruction({ includeSources: false })
-    expect(withoutSources).not.toContain("Do NOT cite sources inline")
+    expect(instruction).not.toContain("sources")
   })
 })
