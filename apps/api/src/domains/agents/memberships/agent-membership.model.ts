@@ -14,6 +14,7 @@ export type AgentMembershipModel = {
   userId: string
   agentId: string
   role: AgentMembershipRole
+  roleId: string | null
   createdAt: Date
   updatedAt: Date
   deletedAt: Date | null
