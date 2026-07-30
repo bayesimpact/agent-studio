@@ -23,6 +23,7 @@ import type {
 import { removeNullish } from "@/common/utils/remove-nullish"
 import { fireAndForgetStopCondition } from "@/external/llm/fire-and-forget-stop-condition"
 import { ResponseHelper } from "@/external/llm/response-helper"
+import { withStrictTools } from "@/external/llm/strict-tools"
 import { ThoughtTokensHelper } from "@/external/llm/thought-tokens-helper"
 
 // OTel attribute keys under which we publish the raw LLM request body and
@@ -248,7 +249,7 @@ export abstract class AISDKLLMProviderBase implements LLMProvider {
     const agent = new ToolLoopAgent({
       model: this.getLanguageModelWithRawCapture({ config, callOrigin }),
       temperature: config.temperature,
-      tools: config.tools,
+      tools: this.supportsStrictTools() ? withStrictTools(config.tools) : config.tools,
       // Keep the default step safety net, but skip the follow-up generation
       // when a step only ran fire-and-forget tools (their output is noise).
       ...(config.fireAndForgetToolNames?.length
@@ -704,6 +705,16 @@ export abstract class AISDKLLMProviderBase implements LLMProvider {
   abstract getLanguageModel({ config, callOrigin }: { config: LLMConfig; callOrigin: CallOrigin })
   abstract getTags(config: LLMConfig): string[]
   abstract getAgentProvider(): AgentProvider
+
+  /**
+   * Providers whose backend enforces tool argument schemas when tools are
+   * marked `strict` opt in here (Vertex Gemini: mode VALIDATED). Applied to
+   * the answering loop only — never to the forced end-of-turn generation,
+   * which needs mode ANY to actually force the call.
+   */
+  protected supportsStrictTools(): boolean {
+    return false
+  }
 
   applySpecificToSystemPrompt({
     // biome-ignore lint/correctness/noUnusedFunctionParameters: used in override

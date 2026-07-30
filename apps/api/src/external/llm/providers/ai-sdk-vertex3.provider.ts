@@ -24,6 +24,17 @@ export class AISDKVertex3Provider extends AISDKLLMProviderBase {
   getAgentProvider(): AgentProvider {
     return AgentProvider.Vertex3
   }
+
+  /**
+   * Gemini enforces tool argument schemas for strict tools (mode VALIDATED):
+   * enums hold even under adversarial user injections, while the model still
+   * answers with text in the same generation — measured on 3.6-flash and
+   * 3.5-flash-lite (probe 2026-07-30). Length constraints are NOT enforced;
+   * Zod remains the application-side barrier.
+   */
+  protected override supportsStrictTools(): boolean {
+    return true
+  }
   private readonly vertexProvider: ReturnType<typeof createVertex>
   private readonly vertexProviderWithExtendedTimeouts: ReturnType<typeof createVertex>
   private readonly vertexProject: string
