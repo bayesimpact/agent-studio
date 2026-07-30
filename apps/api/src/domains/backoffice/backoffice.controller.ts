@@ -263,20 +263,16 @@ export class BackofficeController {
   }
 
   @Post(BackofficeRoutes.addFeatureFlag.path)
+  @CheckPermission(BACKOFFICE_PROJECT_READ_PERMISSION, "project")
   @TrackActivity({ action: "add_feature_flag", entityFrom: "project" })
   async addFeatureFlag(
-    @Req() request: EndpointRequest,
     @Param("projectId") projectId: string,
     @Body() body: typeof BackofficeRoutes.addFeatureFlag.request,
   ): Promise<typeof BackofficeRoutes.addFeatureFlag.response> {
-    const { user } = request
-    const canListAll = await this.canListAll(user.id, BACKOFFICE_PROJECT_READ_PERMISSION)
     const featureFlagKey = assertValidFeatureFlagKey(body.payload.featureFlagKey)
     await this.backofficeService.addFeatureFlag({
       projectId,
       featureFlagKey,
-      canListAll,
-      userId: user.id,
     })
     return { data: { success: true } }
   }

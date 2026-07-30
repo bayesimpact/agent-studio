@@ -517,15 +517,14 @@ export class BackofficeService {
   async addFeatureFlag({
     projectId,
     featureFlagKey,
-    canListAll,
-    userId,
   }: {
     projectId: string
     featureFlagKey: FeatureFlagKey
-    canListAll: boolean
-    userId: string
   }): Promise<void> {
-    await this.assertProjectEditable({ canListAll, userId, projectId })
+    const project = await this.projectRepository.findOne({ where: { id: projectId } })
+    if (!project) {
+      throw new NotFoundException(`Project ${projectId} not found`)
+    }
 
     const existing = await this.featureFlagRepository.findOne({
       where: { projectId, featureFlagKey },
