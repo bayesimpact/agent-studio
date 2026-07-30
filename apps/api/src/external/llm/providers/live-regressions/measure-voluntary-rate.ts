@@ -2,7 +2,7 @@
  * MANUAL measurement harness — makes LIVE LLM calls. Never wire this into
  * jest or CI: it is a plain ts-node script, deliberately NOT a *.spec.ts.
  *
- * Measures the VOLUNTARY call rate of submit_turn_summary (the contract
+ * Measures the VOLUNTARY call rate of mandatory_tool (the contract
  * suites only assert the outcome; this script observes the steps and tells
  * voluntary calls apart from what would need the forced end-of-turn
  * generation). Use it to evaluate prompt-engineering iterations before
@@ -28,9 +28,9 @@ import {
   lookupKnowledgeBaseInstruction,
 } from "@/domains/agents/shared/agent-session-messages/streaming/tools/lookup-knowledge-base.tool"
 import {
-  submitTurnSummaryDescription,
-  submitTurnSummaryInstruction,
-} from "@/domains/agents/shared/agent-session-messages/streaming/tools/submit-turn-summary.tool"
+  mandatoryToolDescription,
+  mandatoryToolInstruction,
+} from "@/domains/agents/shared/agent-session-messages/streaming/tools/mandatory.tool"
 import { fireAndForgetStopCondition } from "@/external/llm/fire-and-forget-stop-condition"
 import { MODEL_VISIBLE_CHUNKS } from "./employee-handbook.fixture"
 import { buildFatSystemPrompt } from "./fat-prompt.fixture"
@@ -52,7 +52,9 @@ function buildModel(): LanguageModel {
     return createVertex({ project, location: "europe-west1" })(modelId)
   }
   if (modelId.startsWith("gemini-")) {
-    return createVertex({ project, location: "eu" })(modelId)
+    // Gemini 3.x models are served from the global endpoint (like the
+    // production Vertex3 provider).
+    return createVertex({ project, location: "global" })(modelId)
   }
   if (modelId === AgentModel.Gemma4_26B) {
     const baseURL = process.env.VLLM_GEMMA4_26B_URL
@@ -63,7 +65,7 @@ function buildModel(): LanguageModel {
 }
 
 const summaryCategoriesOnly = tool({
-  description: submitTurnSummaryDescription({
+  description: mandatoryToolDescription({
     includeSources: false,
     includeCategories: true,
   }),
@@ -75,7 +77,7 @@ const summaryCategoriesOnly = tool({
 })
 
 const summaryWithSources = tool({
-  description: submitTurnSummaryDescription({ includeSources: true, includeCategories: true }),
+  description: mandatoryToolDescription({ includeSources: true, includeCategories: true }),
   inputSchema: z.object({
     chunkIds: z.array(z.string()),
     categoryNames: z.array(z.string()).max(5),
@@ -102,10 +104,10 @@ const SCENARIOS: Record<
   }
 > = {
   fat: {
-    systemPrompt: buildFatSystemPrompt({
-      toolsSection: `## Tools:\n[${ToolName.SubmitTurnSummary}]: ${submitTurnSummaryInstruction()}`,
-    }),
-    tools: { [ToolName.SubmitTurnSummary]: summaryCategoriesOnly },
+    systemPrompt: `${buildFatSystemPrompt({ toolsSection: "" })}
+
+${mandatoryToolInstruction()}`,
+    tools: { [ToolName.MandatoryTool]: summaryCategoriesOnly },
     cases: [
       { label: "greeting", userMessage: "hello" },
       { label: "thanks", userMessage: "merci beaucoup !" },
@@ -123,13 +125,14 @@ Your purpose is to assist users by answering their questions about the company e
 
 ## Tools:
 [${ToolName.LookupKnowledgeBase}]: ${lookupKnowledgeBaseInstruction()}
-[${ToolName.SubmitTurnSummary}]: ${submitTurnSummaryInstruction()}
 
 ## Response language:
-Always answer in English.`,
+Always answer in English.
+
+${mandatoryToolInstruction()}`,
     tools: {
       [ToolName.LookupKnowledgeBase]: lookupStub,
-      [ToolName.SubmitTurnSummary]: summaryWithSources,
+      [ToolName.MandatoryTool]: summaryWithSources,
     },
     cases: [
       { label: "greeting", userMessage: "hello" },
@@ -149,7 +152,7 @@ async function runOnce(userMessage: string) {
     tools: scenario.tools,
     stopWhen: [
       stepCountIs(6),
-      fireAndForgetStopCondition({ fireAndForgetToolNames: [ToolName.SubmitTurnSummary] }),
+      fireAndForgetStopCondition({ fireAndForgetToolNames: [ToolName.MandatoryTool] }),
     ],
   })
   const result = await agent.stream({
@@ -168,7 +171,7 @@ async function runOnce(userMessage: string) {
   return {
     answered: text.trim().length > 0,
     voluntary: steps.some((step) =>
-      step.toolCalls.some((toolCall) => toolCall.toolName === ToolName.SubmitTurnSummary),
+      step.toolCalls.some((toolCall) => toolCall.toolName === ToolName.MandatoryTool),
     ),
     lookupRan: steps.some((step) =>
       step.toolCalls.some((toolCall) => toolCall.toolName === ToolName.LookupKnowledgeBase),

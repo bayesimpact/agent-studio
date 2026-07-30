@@ -296,7 +296,7 @@ export abstract class AISDKLLMProviderBase implements LLMProvider {
   }
 
   /**
-   * Guarantees the end-of-turn tools (e.g. submit_turn_summary) ran on this turn.
+   * Guarantees the end-of-turn tools (e.g. mandatory_tool) ran on this turn.
    * They are declared in the answering loop, so a cooperative model (Gemma)
    * calls them in the same generation as its answer — zero extra cost. When
    * the loop finished without calling them (Gemini Flash never volunteers

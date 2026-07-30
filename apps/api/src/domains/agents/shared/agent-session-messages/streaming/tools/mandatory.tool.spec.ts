@@ -1,12 +1,12 @@
 import { z } from "zod"
 import type { RetrievedDocumentChunk } from "@/domains/documents/embeddings/document-chunk.types"
-import { createRetrievedChunksRegistry } from "./retrieved-chunks-registry"
 import {
-  submitTurnSummaryDescription,
-  submitTurnSummaryExecutionCounts,
-  submitTurnSummaryInstruction,
-  submitTurnSummaryTool,
-} from "./submit-turn-summary.tool"
+  mandatoryTool,
+  mandatoryToolDescription,
+  mandatoryToolExecutionCounts,
+  mandatoryToolInstruction,
+} from "./mandatory.tool"
+import { createRetrievedChunksRegistry } from "./retrieved-chunks-registry"
 
 function buildChunk(overrides: Partial<RetrievedDocumentChunk>): RetrievedDocumentChunk {
   return {
@@ -43,7 +43,7 @@ function buildSessionMetadata(
   }
 }
 
-describe("submitTurnSummaryTool", () => {
+describe("mandatoryTool", () => {
   it("resolves cited chunkIds into full sources grouped by document", async () => {
     const onExecute = jest.fn()
     const registry = createRetrievedChunksRegistry()
@@ -59,7 +59,7 @@ describe("submitTurnSummaryTool", () => {
     )
     expect([firstAlias, secondAlias]).toEqual(["c1", "c2"])
 
-    const sdkTool = submitTurnSummaryTool({ retrievedChunksRegistry: registry, onExecute })
+    const sdkTool = mandatoryTool({ retrievedChunksRegistry: registry, onExecute })
     await sdkTool.execute?.({ chunkIds: [firstAlias, secondAlias] }, {} as never)
 
     expect(onExecute).toHaveBeenCalledWith({
@@ -89,7 +89,7 @@ describe("submitTurnSummaryTool", () => {
     const onExecute = jest.fn()
     const { config, recalculate } = buildSessionMetadata()
 
-    const sdkTool = submitTurnSummaryTool({ sessionMetadata: config, onExecute })
+    const sdkTool = mandatoryTool({ sessionMetadata: config, onExecute })
     await sdkTool.execute?.(
       { categoryNames: ["HR"], suggestedTitle: "Onboarding questions" },
       {} as never,
@@ -113,7 +113,7 @@ describe("submitTurnSummaryTool", () => {
     const alias = registry.register(buildChunk({ chunkId: "chunk-1" }))
     const { config } = buildSessionMetadata()
 
-    const sdkTool = submitTurnSummaryTool({
+    const sdkTool = mandatoryTool({
       retrievedChunksRegistry: registry,
       sessionMetadata: config,
       onExecute,
@@ -134,7 +134,7 @@ describe("submitTurnSummaryTool", () => {
     const onExecute = jest.fn()
     const { config } = buildSessionMetadata()
 
-    const sdkTool = submitTurnSummaryTool({
+    const sdkTool = mandatoryTool({
       retrievedChunksRegistry: createRetrievedChunksRegistry(),
       sessionMetadata: config,
       onExecute,
@@ -150,7 +150,7 @@ describe("submitTurnSummaryTool", () => {
     const registry = createRetrievedChunksRegistry()
     const alias = registry.register(buildChunk({ chunkId: "chunk-1" }))
 
-    const sdkTool = submitTurnSummaryTool({ retrievedChunksRegistry: registry, onExecute })
+    const sdkTool = mandatoryTool({ retrievedChunksRegistry: registry, onExecute })
     await sdkTool.execute?.({ chunkIds: [alias, "c99"] }, {} as never)
 
     const loggedArguments = onExecute.mock.calls[0]?.[0]?.arguments
@@ -163,7 +163,7 @@ describe("submitTurnSummaryTool", () => {
     const registry = createRetrievedChunksRegistry()
     registry.register(buildChunk({ chunkId: "chunk-1", content: "x".repeat(2000) }))
 
-    const sdkTool = submitTurnSummaryTool({ retrievedChunksRegistry: registry, onExecute })
+    const sdkTool = mandatoryTool({ retrievedChunksRegistry: registry, onExecute })
     await sdkTool.execute?.({ chunkIds: ["c1"] }, {} as never)
 
     const partialContent = onExecute.mock.calls[0]?.[0]?.arguments.sources[0].chunks[0]
@@ -174,7 +174,7 @@ describe("submitTurnSummaryTool", () => {
 
   it("keeps returning the logging-only system message", async () => {
     const onExecute = jest.fn()
-    const sdkTool = submitTurnSummaryTool({
+    const sdkTool = mandatoryTool({
       retrievedChunksRegistry: createRetrievedChunksRegistry(),
       onExecute,
     })
@@ -191,10 +191,10 @@ describe("submitTurnSummaryTool", () => {
   })
 })
 
-describe("submitTurnSummaryTool - runtime-dynamic schema", () => {
+describe("mandatoryTool - runtime-dynamic schema", () => {
   it("declares chunkIds (and mentions it) only once the registry has chunks", () => {
     const registry = createRetrievedChunksRegistry()
-    const sdkTool = submitTurnSummaryTool({
+    const sdkTool = mandatoryTool({
       retrievedChunksRegistry: registry,
       onExecute: () => undefined,
     })
@@ -213,10 +213,10 @@ describe("submitTurnSummaryTool - runtime-dynamic schema", () => {
   })
 })
 
-describe("submitTurnSummaryTool - categories depend on the agent", () => {
+describe("mandatoryTool - categories depend on the agent", () => {
   it("declares suggestedTitle alone when the agent has no categories", () => {
     const { config } = buildSessionMetadata()
-    const sdkTool = submitTurnSummaryTool({
+    const sdkTool = mandatoryTool({
       sessionMetadata: { ...config, availableCategoryNames: [] },
       onExecute: () => undefined,
     })
@@ -229,7 +229,7 @@ describe("submitTurnSummaryTool - categories depend on the agent", () => {
 
   it("declares categoryNames with the agent's enum when categories exist", () => {
     const { config } = buildSessionMetadata()
-    const sdkTool = submitTurnSummaryTool({
+    const sdkTool = mandatoryTool({
       sessionMetadata: config,
       onExecute: () => undefined,
     })
@@ -241,15 +241,15 @@ describe("submitTurnSummaryTool - categories depend on the agent", () => {
   })
 })
 
-describe("submitTurnSummaryExecutionCounts", () => {
+describe("mandatoryToolExecutionCounts", () => {
   it("keeps executions that saw the chunks, and any execution without the marker", () => {
     const registry = createRetrievedChunksRegistry()
     registry.register(buildChunk({ chunkId: "chunk-1" }))
-    const executionCounts = submitTurnSummaryExecutionCounts(registry)
+    const executionCounts = mandatoryToolExecutionCounts(registry)
 
     expect(
       executionCounts({
-        toolName: "submit_turn_summary",
+        toolName: "mandatory_tool",
         output: { sawKnowledgeBaseChunks: true },
       }),
     ).toBe(true)
@@ -258,23 +258,21 @@ describe("submitTurnSummaryExecutionCounts", () => {
 
   it("invalidates a report submitted before the lookup registered chunks", () => {
     const registry = createRetrievedChunksRegistry()
-    const executionCounts = submitTurnSummaryExecutionCounts(registry)
+    const executionCounts = mandatoryToolExecutionCounts(registry)
     const prematureOutput = { sawKnowledgeBaseChunks: false }
 
     // No chunks registered by end of turn (greeting): the execution counts.
-    expect(executionCounts({ toolName: "submit_turn_summary", output: prematureOutput })).toBe(true)
+    expect(executionCounts({ toolName: "mandatory_tool", output: prematureOutput })).toBe(true)
 
     // A lookup later filled the registry: the same execution is now stale.
     registry.register(buildChunk({ chunkId: "chunk-1" }))
-    expect(executionCounts({ toolName: "submit_turn_summary", output: prematureOutput })).toBe(
-      false,
-    )
+    expect(executionCounts({ toolName: "mandatory_tool", output: prematureOutput })).toBe(false)
   })
 })
 
-describe("submitTurnSummaryDescription", () => {
+describe("mandatoryToolDescription", () => {
   it("carries the full sources contract (chunk ids + no inline citations) only when sources are enabled", () => {
-    const description = submitTurnSummaryDescription({
+    const description = mandatoryToolDescription({
       includeSources: true,
       includeCategories: false,
     })
@@ -282,7 +280,7 @@ describe("submitTurnSummaryDescription", () => {
     expect(description).toContain("Do NOT cite sources inline")
     expect(description).not.toContain("category")
 
-    const withoutSources = submitTurnSummaryDescription({
+    const withoutSources = mandatoryToolDescription({
       includeSources: false,
       includeCategories: false,
     })
@@ -290,7 +288,7 @@ describe("submitTurnSummaryDescription", () => {
   })
 
   it("mentions categories only when session metadata is enabled", () => {
-    const description = submitTurnSummaryDescription({
+    const description = mandatoryToolDescription({
       includeSources: false,
       includeCategories: true,
     })
@@ -299,7 +297,7 @@ describe("submitTurnSummaryDescription", () => {
   })
 
   it("demands the call on every response including trivial turns, with no escape hatch", () => {
-    const description = submitTurnSummaryDescription({
+    const description = mandatoryToolDescription({
       includeSources: true,
       includeCategories: true,
     })
@@ -310,9 +308,9 @@ describe("submitTurnSummaryDescription", () => {
   })
 })
 
-describe("submitTurnSummaryInstruction", () => {
+describe("mandatoryToolInstruction", () => {
   it("is a short generic reminder: no sources or categories content in the prompt", () => {
-    const instruction = submitTurnSummaryInstruction()
+    const instruction = mandatoryToolInstruction()
     expect(instruction).toContain("EVERY response")
     expect(instruction).toContain("greetings")
     expect(instruction).not.toContain("category set")

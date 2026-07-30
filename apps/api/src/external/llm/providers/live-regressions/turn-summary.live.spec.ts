@@ -6,7 +6,7 @@ import { HANDBOOK_DOCUMENT_ID, runTurnSummaryScenario } from "./turn-summary-sce
 /**
  * Centralized LIVE reliability suite, one production-shaped RAG turn per
  * provider/model: the model must answer the user (grounded on the handbook
- * fixture) and the submit_turn_summary bookkeeping must execute EXACTLY once
+ * fixture) and the mandatory_tool bookkeeping must execute EXACTLY once
  * — voluntarily during the loop or through the forced end-of-turn generation.
  *
  * Run it with (NODE_OPTIONS required by google-auth dynamic imports):
@@ -25,7 +25,7 @@ describeLive("Turn summary reliability across providers (LIVE)", () => {
     const testFn = reason ? it.skip : it
 
     testFn(
-      `${providerCase.label}${reason ? ` — SKIPPED: ${reason}` : ""} — answers AND executes submit_turn_summary exactly once`,
+      `${providerCase.label}${reason ? ` — SKIPPED: ${reason}` : ""} — answers AND executes mandatory_tool exactly once`,
       async () => {
         const { text, toolExecutions } = await runTurnSummaryScenario({
           provider: providerCase.buildProvider(),

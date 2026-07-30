@@ -6,7 +6,7 @@ import type { RetrievedDocumentChunk } from "@/domains/documents/embeddings/docu
  * Each registered chunk gets a short sequential alias (c1, c2, ...) — the
  * ONLY id the model ever sees. UUIDs are unreliable for small models to copy
  * (a single dropped character silently loses the source) and cost ~15 tokens
- * each; a 2-character alias is practically un-manglable. The submit_turn_summary
+ * each; a 2-character alias is practically un-manglable. The mandatory_tool
  * tool resolves the cited aliases back to the real chunks server-side, so
  * persisted sources keep their real UUIDs.
  *

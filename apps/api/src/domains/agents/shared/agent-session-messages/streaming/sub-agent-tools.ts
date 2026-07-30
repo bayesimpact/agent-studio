@@ -26,11 +26,13 @@ export type BuiltTools = {
   fireAndForgetToolNames: string[]
   /**
    * Tools the provider invokes through a forced generation after the
-   * answering loop, on every turn (submit_turn_summary). Not part of `tools`.
+   * answering loop, on every turn (mandatory_tool). Not part of `tools`.
    */
   endOfTurnTools: ToolSet
   /** Optional freshness check for loop executions of end-of-turn tools. */
   endOfTurnExecutionCounts?: (toolResult: { toolName: string; output: unknown }) => boolean
+  /** Final master-prompt section (e.g. the turn-summary response protocol). */
+  masterPromptEpilogue?: string
   mcpClose?: () => Promise<void>
   toolDescriptions: Record<string, string>
   hasSubAgentTools: boolean
@@ -50,6 +52,7 @@ type GenerateMasterPrompt = (params: {
   agentSettings: AgentSettings
   toolDescriptions?: Record<string, string>
   toolNames: string[]
+  epilogue?: string
 }) => string
 
 type BuildTools = (params: {
@@ -195,17 +198,23 @@ async function runSubAgentTool({
     .getActiveSpan()
     ?.setAttribute("ai.telemetry.metadata.subAgentTraceUrl", getTraceUrl(subAgentTraceId))
 
-  const { tools, mcpClose, toolDescriptions, fireAndForgetToolNames, endOfTurnTools } =
-    await buildTools({
-      agentSessionScope: childScope,
-      includeSessionMetadataTools: false,
-      includeSubAgentTools: false,
-      onExecute: (toolExecution) =>
-        onExecute({
-          ...toolExecution,
-          notifyToolName: subAgent.toolName,
-        }),
-    })
+  const {
+    tools,
+    mcpClose,
+    toolDescriptions,
+    fireAndForgetToolNames,
+    endOfTurnTools,
+    masterPromptEpilogue,
+  } = await buildTools({
+    agentSessionScope: childScope,
+    includeSessionMetadataTools: false,
+    includeSubAgentTools: false,
+    onExecute: (toolExecution) =>
+      onExecute({
+        ...toolExecution,
+        notifyToolName: subAgent.toolName,
+      }),
+  })
 
   try {
     const toolNames = tools ? Object.keys(tools) : []
@@ -214,6 +223,7 @@ async function runSubAgentTool({
       agentSettings: childAgentSettings,
       toolNames,
       toolDescriptions,
+      epilogue: masterPromptEpilogue,
     })
 
     const config = buildLLMConfig({

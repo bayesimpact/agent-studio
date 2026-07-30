@@ -14,7 +14,7 @@ describe("withStrictTools", () => {
   })
 
   it("preserves getter-based dynamic properties instead of materializing them", () => {
-    // submit_turn_summary exposes description/inputSchema as getters that
+    // mandatory_tool exposes description/inputSchema as getters that
     // follow the turn state (chunkIds after a lookup): the strict wrapper
     // must keep re-evaluating them, not snapshot them at wrap time.
     let lookupRan = false

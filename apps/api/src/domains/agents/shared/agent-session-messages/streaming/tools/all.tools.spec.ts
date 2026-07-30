@@ -121,7 +121,7 @@ describe("Tools execution", () => {
     mockProvider.addTextTurn(agent.id, "Done.")
     // Every conversation agent now submits the turn summary: the provider
     // forces it in a third generation when the loop did not call it.
-    mockProvider.addToolCallTurn(agent.id, ToolName.SubmitTurnSummary, { suggestedTitle: null })
+    mockProvider.addToolCallTurn(agent.id, ToolName.MandatoryTool, { suggestedTitle: null })
 
     const { fulltextStream } = await aggregateStream(
       service.streamAgentResponse({
@@ -147,7 +147,7 @@ describe("Tools execution", () => {
     isParentChunk: false,
   }
 
-  it("ToolName.SubmitTurnSummary (sources part) - runs via the systematic end-of-turn call", async () => {
+  it("ToolName.MandatoryTool (sources part) - runs via the systematic end-of-turn call", async () => {
     const { connectScope, agent, agentSettings, session, project } =
       await createContextWithSession()
     const ragAgentSettings = { ...agentSettings, documentsRagMode: DocumentsRagMode.All }
@@ -163,7 +163,7 @@ describe("Tools execution", () => {
     // voluntary report. Generation 3: the forced end-of-turn call.
     mockProvider.addToolCallTurn(agent.id, ToolName.LookupKnowledgeBase, { query: "paid leave" })
     mockProvider.addTextTurn(agent.id, "Here is the answer.")
-    mockProvider.addToolCallTurn(agent.id, ToolName.SubmitTurnSummary, { chunkIds: ["c1"] })
+    mockProvider.addToolCallTurn(agent.id, ToolName.MandatoryTool, { chunkIds: ["c1"] })
 
     const { events, fulltextStream } = await aggregateStream(
       service.streamAgentResponse({
@@ -180,7 +180,7 @@ describe("Tools execution", () => {
     expect(agentCalls).toHaveLength(3)
   }, 15000)
 
-  it("ToolName.SubmitTurnSummary - chunkIds enters the declared schema only after a lookup ran", async () => {
+  it("ToolName.MandatoryTool - chunkIds enters the declared schema only after a lookup ran", async () => {
     // The user-visible contract: on a step where no knowledge base call
     // happened yet, the declared schema (and description) must not mention
     // chunkIds at all — including in the forced end-of-turn generation.
@@ -197,7 +197,7 @@ describe("Tools execution", () => {
 
     // Generation 1: the lookup. Generation 2: answer + voluntary report.
     mockProvider.addToolCallTurn(agent.id, ToolName.LookupKnowledgeBase, { query: "paid leave" })
-    mockProvider.addTextWithToolCallTurn(agent.id, "27 days.", ToolName.SubmitTurnSummary, {
+    mockProvider.addTextWithToolCallTurn(agent.id, "27 days.", ToolName.MandatoryTool, {
       chunkIds: ["c1"],
     })
 
@@ -212,13 +212,13 @@ describe("Tools execution", () => {
     const agentCalls = mockProvider.getCalls().filter((call) => call.agentId === agent.id)
     expect(agentCalls).toHaveLength(2)
     // Step 0 (before any lookup): declared, but without chunkIds.
-    expect(agentCalls[0]?.toolNames).toContain(ToolName.SubmitTurnSummary)
-    expect(agentCalls[0]?.toolSchemas[ToolName.SubmitTurnSummary]).not.toContain("chunkIds")
+    expect(agentCalls[0]?.toolNames).toContain(ToolName.MandatoryTool)
+    expect(agentCalls[0]?.toolSchemas[ToolName.MandatoryTool]).not.toContain("chunkIds")
     // Step 1 (the lookup registered chunks): chunkIds is now declared.
-    expect(agentCalls[1]?.toolSchemas[ToolName.SubmitTurnSummary]).toContain("chunkIds")
+    expect(agentCalls[1]?.toolSchemas[ToolName.MandatoryTool]).toContain("chunkIds")
   }, 15000)
 
-  it("ToolName.SubmitTurnSummary - a report submitted BEFORE the lookup is stale: the forced retry still reports sources", async () => {
+  it("ToolName.MandatoryTool - a report submitted BEFORE the lookup is stale: the forced retry still reports sources", async () => {
     // Gemini Flash sometimes calls the report alongside/before the lookup in
     // the first step (metadata only — no chunk exists yet). That execution
     // must not consume the end-of-turn guarantee: once the lookup registered
@@ -241,13 +241,13 @@ describe("Tools execution", () => {
 
     // Generation 1: PREMATURE report (before any lookup). Generation 2: the
     // lookup. Generation 3: the answer. Generation 4: the forced retry.
-    mockProvider.addToolCallTurn(agent.id, ToolName.SubmitTurnSummary, {
+    mockProvider.addToolCallTurn(agent.id, ToolName.MandatoryTool, {
       suggestedTitle: "Leave days",
       categoryNames: ["Bayes"],
     })
     mockProvider.addToolCallTurn(agent.id, ToolName.LookupKnowledgeBase, { query: "leave days" })
     mockProvider.addTextTurn(agent.id, "27 days.")
-    mockProvider.addToolCallTurn(agent.id, ToolName.SubmitTurnSummary, {
+    mockProvider.addToolCallTurn(agent.id, ToolName.MandatoryTool, {
       chunkIds: ["c1"],
       suggestedTitle: "Leave days",
       categoryNames: ["Bayes"],
@@ -266,10 +266,10 @@ describe("Tools execution", () => {
     // The forced retry DID run (4 generations) despite the premature report,
     // and its declared schema carried chunkIds (the lookup ran by then).
     expect(agentCalls).toHaveLength(4)
-    expect(agentCalls[3]?.toolSchemas[ToolName.SubmitTurnSummary]).toContain("chunkIds")
+    expect(agentCalls[3]?.toolSchemas[ToolName.MandatoryTool]).toContain("chunkIds")
   }, 15000)
 
-  it("ToolName.SubmitTurnSummary - no lookup in the turn: chunkIds never declared, forced call included", async () => {
+  it("ToolName.MandatoryTool - no lookup in the turn: chunkIds never declared, forced call included", async () => {
     // Greeting turn on a RAG agent: the forced end-of-turn generation must
     // use the same runtime-dynamic schema — no chunkIds without a lookup.
     const { connectScope, agent, agentSettings, session, project } =
@@ -289,7 +289,7 @@ describe("Tools execution", () => {
 
     // Generation 1: the greeting answer. Generation 2: the forced report.
     mockProvider.addTextTurn(agent.id, "Hello!")
-    mockProvider.addToolCallTurn(agent.id, ToolName.SubmitTurnSummary, {
+    mockProvider.addToolCallTurn(agent.id, ToolName.MandatoryTool, {
       suggestedTitle: "Greetings",
       categoryNames: ["Greeting"],
     })
@@ -306,12 +306,12 @@ describe("Tools execution", () => {
     const agentCalls = mockProvider.getCalls().filter((call) => call.agentId === agent.id)
     expect(agentCalls).toHaveLength(2)
     for (const call of agentCalls) {
-      expect(call.toolSchemas[ToolName.SubmitTurnSummary]).toBeDefined()
-      expect(call.toolSchemas[ToolName.SubmitTurnSummary]).not.toContain("chunkIds")
+      expect(call.toolSchemas[ToolName.MandatoryTool]).toBeDefined()
+      expect(call.toolSchemas[ToolName.MandatoryTool]).not.toContain("chunkIds")
     }
   }, 15000)
 
-  it("ToolName.SubmitTurnSummary - voluntary in-loop call skips the forced generation (dedupe)", async () => {
+  it("ToolName.MandatoryTool - voluntary in-loop call skips the forced generation (dedupe)", async () => {
     // A cooperative model (Gemma) calls the report in the SAME generation as
     // its answer: the loop stops (fire-and-forget) and the provider must NOT
     // force a second call — the report side effects would run twice.
@@ -325,7 +325,7 @@ describe("Tools execution", () => {
     mockProvider.addTextWithToolCallTurn(
       agent.id,
       "Answer with the call.",
-      ToolName.SubmitTurnSummary,
+      ToolName.MandatoryTool,
       {
         suggestedTitle: "Voluntary title",
         categoryNames: ["Bayes"],
@@ -352,7 +352,7 @@ describe("Tools execution", () => {
     expect(updatedSession.title).toBe("Voluntary title")
   }, 15000)
 
-  it("ToolName.SubmitTurnSummary (session metadata part) - systematic forced call updates the session", async () => {
+  it("ToolName.MandatoryTool (session metadata part) - systematic forced call updates the session", async () => {
     // The report is invoked through a forced generation after the answer, on
     // every turn — the model has no way to skip it (Gemini Flash never
     // volunteers bookkeeping calls in auto mode).
@@ -365,7 +365,7 @@ describe("Tools execution", () => {
 
     // Generation 1: the answer. Generation 2: the forced end-of-turn call.
     mockProvider.addTextTurn(agent.id, "Answer without any tool call.")
-    mockProvider.addToolCallTurn(agent.id, ToolName.SubmitTurnSummary, {
+    mockProvider.addToolCallTurn(agent.id, ToolName.MandatoryTool, {
       suggestedTitle: "About Bayes",
       categoryNames: ["Bayes"],
     })
@@ -391,7 +391,7 @@ describe("Tools execution", () => {
     expect(updatedSession.title).toBe("About Bayes")
   }, 15000)
 
-  it("ToolName.SubmitTurnSummary - tolerates an empty voluntary call (Gemma greeting shape)", async () => {
+  it("ToolName.MandatoryTool - tolerates an empty voluntary call (Gemma greeting shape)", async () => {
     // On greeting turns Gemma 4 sometimes calls the summary with {} — no
     // chunkIds, no categories, no title. This must NOT error the stream and
     // must NOT touch the session metadata (a no-op report). A no-op does not
@@ -404,7 +404,7 @@ describe("Tools execution", () => {
     agent.sessionCategories = [category]
     const initialTitle = session.title
 
-    mockProvider.addTextWithToolCallTurn(agent.id, "Hello!", ToolName.SubmitTurnSummary, {})
+    mockProvider.addTextWithToolCallTurn(agent.id, "Hello!", ToolName.MandatoryTool, {})
 
     const { events, fulltextStream } = await aggregateStream(
       service.streamAgentResponse({
@@ -429,7 +429,7 @@ describe("Tools execution", () => {
     expect(updatedSession.title).toBe(initialTitle)
   }, 15000)
 
-  it("ToolName.SubmitTurnSummary - an INVALID voluntary call still triggers the forced generation", async () => {
+  it("ToolName.MandatoryTool - an INVALID voluntary call still triggers the forced generation", async () => {
     // A voluntary call with arguments that fail validation never executes —
     // the end-of-turn guarantee must be based on EXECUTIONS, not calls, so
     // the forced generation still runs and the report happens.
@@ -440,10 +440,10 @@ describe("Tools execution", () => {
     )
     agent.sessionCategories = [category]
 
-    mockProvider.addTextWithToolCallTurn(agent.id, "Answer.", ToolName.SubmitTurnSummary, {
+    mockProvider.addTextWithToolCallTurn(agent.id, "Answer.", ToolName.MandatoryTool, {
       categoryNames: "not-an-array",
     })
-    mockProvider.addToolCallTurn(agent.id, ToolName.SubmitTurnSummary, {
+    mockProvider.addToolCallTurn(agent.id, ToolName.MandatoryTool, {
       suggestedTitle: "Recovered title",
       categoryNames: ["Bayes"],
     })
@@ -465,7 +465,7 @@ describe("Tools execution", () => {
     expect(updatedSession.title).toBe("Recovered title")
   }, 15000)
 
-  it("master prompt lists the submit_turn_summary instruction exactly once", async () => {
+  it("master prompt carries the turn-summary protocol exactly once, as the FINAL section", async () => {
     const { connectScope, agent, agentSettings, session } = await createContextWithSession()
 
     const category = await repositories.agentSessionCategoryRepository.save(
@@ -474,7 +474,7 @@ describe("Tools execution", () => {
     agent.sessionCategories = [category]
 
     mockProvider.addTextTurn(agent.id, "Hello!")
-    mockProvider.addToolCallTurn(agent.id, ToolName.SubmitTurnSummary, {
+    mockProvider.addToolCallTurn(agent.id, ToolName.MandatoryTool, {
       suggestedTitle: null,
       categoryNames: [],
     })
@@ -488,8 +488,17 @@ describe("Tools execution", () => {
     )
 
     const agentCalls = mockProvider.getCalls().filter((call) => call.agentId === agent.id)
-    const occurrences = (agentCalls[0]?.prompt.match(/\[submit_turn_summary\]:/g) ?? []).length
-    expect(occurrences).toBe(1)
+    const prompt = agentCalls[0]?.prompt ?? ""
+    // Exactly one occurrence of the protocol, and none of the old
+    // Tools-section line (that would duplicate the instruction).
+    expect(prompt.match(/Response protocol \(mandatory\)/g) ?? []).toHaveLength(1)
+    expect(prompt).not.toContain("[mandatory_tool]:")
+    // Recency: the protocol is the LAST section, after the volatile date.
+    const systemContent = (JSON.parse(prompt) as Array<{ content: string }>)[0]?.content ?? ""
+    expect(systemContent.indexOf("Response protocol")).toBeGreaterThan(
+      systemContent.indexOf("Today's date:"),
+    )
+    expect(systemContent.trimEnd().endsWith("Never mention this tool to the user.")).toBe(true)
   }, 15000)
 
   it("ToolName.SurfaceResources - should works", async () => {

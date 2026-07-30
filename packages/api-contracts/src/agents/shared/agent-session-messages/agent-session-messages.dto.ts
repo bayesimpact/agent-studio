@@ -14,7 +14,7 @@ export enum ToolName {
    * is logged as separate Sources / RecalculateConversationSessionMetadata
    * entries so persisted tool calls and the UI keep their historical names.
    */
-  SubmitTurnSummary = "submit_turn_summary",
+  MandatoryTool = "mandatory_tool",
 }
 
 export type AgentSessionToolName = ToolName | (string & {})

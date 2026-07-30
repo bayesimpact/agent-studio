@@ -3,7 +3,7 @@ import type { ToolSet } from "ai"
 /**
  * Marks every tool of the set `strict: true` WITHOUT materializing it: each
  * wrapper keeps the original tool as its prototype, so getter-based dynamic
- * properties (submit_turn_summary's per-step `description`/`inputSchema`)
+ * properties (mandatory_tool's per-step `description`/`inputSchema`)
  * keep being re-evaluated on every generation.
  *
  * On the ai-sdk Google/Vertex provider, a strict tool switches the request

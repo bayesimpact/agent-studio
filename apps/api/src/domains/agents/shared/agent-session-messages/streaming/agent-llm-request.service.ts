@@ -102,6 +102,7 @@ export class AgentLlmRequestService extends ServiceWithLLM {
       fireAndForgetToolNames,
       endOfTurnTools,
       endOfTurnExecutionCounts,
+      masterPromptEpilogue,
       hasSubAgentTools,
     } = await this.toolsService.buildTools({
       agentSessionScope,
@@ -120,6 +121,7 @@ export class AgentLlmRequestService extends ServiceWithLLM {
         agentSettings,
         toolNames,
         toolDescriptions,
+        epilogue: masterPromptEpilogue,
       }),
       model: agentSettings.model,
       temperature: agentSettings.temperature,

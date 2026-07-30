@@ -56,7 +56,7 @@ const lookupKnowledgeBaseInputSchema = z.object({
  * asked to copy them back.
  */
 const retrievedChunkSchema = z.object({
-  id: z.string().describe("Short chunk id (c1, c2, ...) — cite it in submit_turn_summary."),
+  id: z.string().describe("Short chunk id (c1, c2, ...) — cite it in mandatory_tool."),
   documentTitle: z.string(),
   content: z.string(),
 })

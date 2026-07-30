@@ -19,12 +19,12 @@ import type { AgentSessionScope, OnExecute } from "./streaming-session.types"
 import { type BuiltTools, buildSubAgentTools } from "./sub-agent-tools"
 import { fillFormTool } from "./tools/fill-form.tool"
 import { lookupKnowledgeBaseTool } from "./tools/lookup-knowledge-base.tool"
-import { createRetrievedChunksRegistry } from "./tools/retrieved-chunks-registry"
 import {
-  submitTurnSummaryExecutionCounts,
-  submitTurnSummaryInstruction,
-  submitTurnSummaryTool,
-} from "./tools/submit-turn-summary.tool"
+  mandatoryTool,
+  mandatoryToolExecutionCounts,
+  mandatoryToolInstruction,
+} from "./tools/mandatory.tool"
+import { createRetrievedChunksRegistry } from "./tools/retrieved-chunks-registry"
 import { surfaceResourcesTool } from "./tools/surface-resources.tool"
 
 /**
@@ -34,7 +34,7 @@ import { surfaceResourcesTool } from "./tools/surface-resources.tool"
  * follow-up. Round-trip tools (lookup_knowledge_base, fillForm, MCP,
  * sub-agents) stay out of this list because the model consumes their output.
  */
-const FIRE_AND_FORGET_TOOL_NAMES: string[] = [ToolName.SurfaceResources, ToolName.SubmitTurnSummary]
+const FIRE_AND_FORGET_TOOL_NAMES: string[] = [ToolName.SurfaceResources, ToolName.MandatoryTool]
 
 /**
  * The tools exposed by an agent's enabled MCP servers
@@ -234,9 +234,9 @@ export class ToolsService extends ServiceWithLLM {
     // always reported; categories only when the agent has some configured;
     // chunkIds only per hasSourcesReporting. Sub-agents are excluded
     // (includeSessionMetadataTools=false) unless they report sources.
-    const hasSubmitTurnSummaryTool = hasSourcesReporting || includeSessionMetadataTools
+    const hasMandatoryToolTool = hasSourcesReporting || includeSessionMetadataTools
 
-    // Shared between lookup (writer) and submit_turn_summary (reader) within this
+    // Shared between lookup (writer) and mandatory_tool (reader) within this
     // request: the report resolves the chunkIds cited by the model against
     // the chunks lookup actually retrieved.
     const retrievedChunksRegistry = createRetrievedChunksRegistry()
@@ -248,9 +248,9 @@ export class ToolsService extends ServiceWithLLM {
     // what. The SAME tool instance backs both paths: its schema getters read
     // the chunks registry, so chunkIds only appears (in loop steps and in
     // the forced call alike) once a lookup registered chunks this turn.
-    const endOfTurnTools: ToolSet = hasSubmitTurnSummaryTool
+    const endOfTurnTools: ToolSet = hasMandatoryToolTool
       ? {
-          [ToolName.SubmitTurnSummary]: submitTurnSummaryTool({
+          [ToolName.MandatoryTool]: mandatoryTool({
             retrievedChunksRegistry: hasSourcesReporting ? retrievedChunksRegistry : undefined,
             sessionMetadata: includeSessionMetadataTools
               ? {
@@ -324,20 +324,16 @@ export class ToolsService extends ServiceWithLLM {
           descriptions: { ...mcp.toolDescriptions, ...subAgentToolDescriptions },
           tools,
         }),
-        // Master-prompt note about the automatic end-of-turn report,
-        // assembled from the same switches as its schema.
-        ...(hasSubmitTurnSummaryTool
-          ? {
-              [ToolName.SubmitTurnSummary]: submitTurnSummaryInstruction(),
-            }
-          : {}),
       },
+      // Final section of the master prompt (recency): the response protocol
+      // demanding the turn summary on every response.
+      masterPromptEpilogue: hasMandatoryToolTool ? mandatoryToolInstruction() : undefined,
       fireAndForgetToolNames: FIRE_AND_FORGET_TOOL_NAMES.filter((toolName) => toolName in tools),
       endOfTurnTools,
       // A report submitted before the lookup registered chunks is stale for
       // the sources part: the forced end-of-turn retry must still run.
       endOfTurnExecutionCounts: hasSourcesReporting
-        ? submitTurnSummaryExecutionCounts(retrievedChunksRegistry)
+        ? mandatoryToolExecutionCounts(retrievedChunksRegistry)
         : undefined,
       hasSubAgentTools: Object.keys(subAgentTools).length > 0,
     }

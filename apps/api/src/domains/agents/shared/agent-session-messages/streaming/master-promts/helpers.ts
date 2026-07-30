@@ -63,6 +63,11 @@ Always answer in ${locale === "en" ? "English" : locale === "fr" ? "French" : "u
 ${names
   .map((name) => {
     switch (name) {
+      // Covered by the prompt epilogue (response protocol) — listing it here
+      // too would duplicate the instruction.
+      case ToolName.MandatoryTool:
+        return undefined
+
       case ToolName.LookupKnowledgeBase:
         return `[${name}]: ${lookupKnowledgeBaseInstruction()}`
 
@@ -98,5 +103,6 @@ ${orderedFields
         return `[${name}]: No specific instructions for this tool.`
     }
   })
+  .filter((line) => line !== undefined)
   .join("\n")}`,
 }

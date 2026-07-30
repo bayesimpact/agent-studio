@@ -38,7 +38,7 @@ export type LLMConfig =
       fireAndForgetToolNames?: string[]
       /**
        * Tools invoked by a forced generation (toolChoice "required") after
-       * the tool loop completes, on EVERY turn (e.g. the submit_turn_summary
+       * the tool loop completes, on EVERY turn (e.g. the mandatory_tool
        * bookkeeping). Kept out of {@link tools} so the answering loop never
        * depends on the model volunteering the call.
        */

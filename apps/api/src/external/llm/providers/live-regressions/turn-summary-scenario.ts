@@ -6,12 +6,12 @@ import {
   LOOKUP_KNOWLEDGE_BASE_DESCRIPTION,
   lookupKnowledgeBaseInstruction,
 } from "@/domains/agents/shared/agent-session-messages/streaming/tools/lookup-knowledge-base.tool"
-import { createRetrievedChunksRegistry } from "@/domains/agents/shared/agent-session-messages/streaming/tools/retrieved-chunks-registry"
 import {
-  submitTurnSummaryExecutionCounts,
-  submitTurnSummaryInstruction,
-  submitTurnSummaryTool,
-} from "@/domains/agents/shared/agent-session-messages/streaming/tools/submit-turn-summary.tool"
+  mandatoryTool,
+  mandatoryToolExecutionCounts,
+  mandatoryToolInstruction,
+} from "@/domains/agents/shared/agent-session-messages/streaming/tools/mandatory.tool"
+import { createRetrievedChunksRegistry } from "@/domains/agents/shared/agent-session-messages/streaming/tools/retrieved-chunks-registry"
 import type { ToolExecutionLog } from "@/domains/agents/shared/agent-session-messages/streaming/tools/tool-execution-log"
 import { HANDBOOK_CHUNKS } from "./employee-handbook.fixture"
 import { buildFatSystemPrompt } from "./fat-prompt.fixture"
@@ -20,7 +20,7 @@ export const HANDBOOK_DOCUMENT_ID = "b7a3f1c2-8d4e-4a91-b2c5-6e7f8a9d0c1b"
 
 /**
  * Provider-agnostic production-shaped turn: the FULL provider pipeline (real
- * tool loop, alias registry, submit_turn_summary declared in the loop AND
+ * tool loop, alias registry, mandatory_tool declared in the loop AND
  * guaranteed at end of turn) over a realistic top-20 retrieval on a fictional
  * employee handbook.
  *
@@ -56,7 +56,7 @@ export async function runTurnSummaryScenario({
     }),
   })
 
-  const turnSummary = submitTurnSummaryTool({
+  const turnSummary = mandatoryTool({
     retrievedChunksRegistry: registry,
     sessionMetadata: {
       connectScope: { organizationId: "org-1", projectId: "project-1" },
@@ -75,15 +75,18 @@ export async function runTurnSummaryScenario({
     onExecute,
   })
 
+  // Mirrors the production master-prompt layout: the turn-summary protocol
+  // is the FINAL section (recency), not a line in the Tools section.
   const systemPrompt = `## Purpose
 Your purpose is to assist users by answering their questions about the company employee handbook, always refer to your knowledge base.
 
 ## Tools:
 [${ToolName.LookupKnowledgeBase}]: ${lookupKnowledgeBaseInstruction()}
-[${ToolName.SubmitTurnSummary}]: ${submitTurnSummaryInstruction()}
 
 ## Response language:
-Always answer in English.`
+Always answer in English.
+
+${mandatoryToolInstruction()}`
 
   const chunks = provider.streamChatResponse({
     messages: [
@@ -96,16 +99,16 @@ Always answer in English.`
       tools: {
         [ToolName.LookupKnowledgeBase]: lookupTool,
         // Declared in the loop (callable from turn 1, like the KB)...
-        [ToolName.SubmitTurnSummary]: turnSummary,
+        [ToolName.MandatoryTool]: turnSummary,
       },
       // ...and guaranteed at end of turn if the loop did not call it.
       endOfTurnTools: {
-        [ToolName.SubmitTurnSummary]: turnSummary,
+        [ToolName.MandatoryTool]: turnSummary,
       },
       // A report submitted alongside/before the lookup is stale for the
       // sources part — the forced retry must still run (production wiring).
-      endOfTurnExecutionCounts: submitTurnSummaryExecutionCounts(registry),
-      fireAndForgetToolNames: [ToolName.SubmitTurnSummary],
+      endOfTurnExecutionCounts: mandatoryToolExecutionCounts(registry),
+      fireAndForgetToolNames: [ToolName.MandatoryTool],
     },
     metadata: {
       traceId: `live-regression-${model}`,
@@ -152,7 +155,7 @@ export async function runFatPromptTurnScenario({
     toolExecutions.push(toolExecution)
   }
 
-  const turnSummary = submitTurnSummaryTool({
+  const turnSummary = mandatoryTool({
     sessionMetadata: {
       connectScope: { organizationId: "org-1", projectId: "project-1" },
       sessionId: "session-1",
@@ -170,9 +173,11 @@ export async function runFatPromptTurnScenario({
     onExecute,
   })
 
-  const systemPrompt = buildFatSystemPrompt({
-    toolsSection: `## Tools:\n[${ToolName.SubmitTurnSummary}]: ${submitTurnSummaryInstruction()}`,
-  })
+  // The protocol is appended AFTER the fat prompt (recency), mirroring the
+  // production layout; the toolsSection stays empty of it.
+  const systemPrompt = `${buildFatSystemPrompt({ toolsSection: "" })}
+
+${mandatoryToolInstruction()}`
 
   const chunks = provider.streamChatResponse({
     messages: [
@@ -186,9 +191,9 @@ export async function runFatPromptTurnScenario({
     config: {
       model,
       temperature: 0,
-      tools: { [ToolName.SubmitTurnSummary]: turnSummary },
-      endOfTurnTools: { [ToolName.SubmitTurnSummary]: turnSummary },
-      fireAndForgetToolNames: [ToolName.SubmitTurnSummary],
+      tools: { [ToolName.MandatoryTool]: turnSummary },
+      endOfTurnTools: { [ToolName.MandatoryTool]: turnSummary },
+      fireAndForgetToolNames: [ToolName.MandatoryTool],
     },
     metadata: {
       traceId: `live-regression-fat-${model}`,

@@ -38,7 +38,7 @@ export type TurnSummarySessionMetadataConfig = {
   conversationAgentSessionsService: ConversationAgentSessionsService
 }
 
-type SubmitTurnSummaryInput = {
+type MandatoryToolInput = {
   chunkIds?: string[]
   categoryNames?: string[]
   suggestedTitle?: string | null
@@ -104,7 +104,7 @@ function resolveSources({
  * - no "it is invoked automatically otherwise" escape hatch: telling the
  *   model a fallback exists invites it to skip the call.
  */
-export function submitTurnSummaryDescription({
+export function mandatoryToolDescription({
   includeSources,
   includeCategories,
 }: {
@@ -130,14 +130,22 @@ export function submitTurnSummaryDescription({
 }
 
 /**
- * Short master-prompt reminder — the contract itself is in the tool
- * description (see {@link submitTurnSummaryDescription}).
+ * Master-prompt reminder, placed as the FINAL section of the system prompt
+ * (maximal recency — on big prompts the voluntary-call rate collapses when
+ * this is buried mid-prompt) and phrased as a numbered protocol (models
+ * follow a structured protocol better than imperative prose). The full
+ * contract itself is in the tool description (see
+ * {@link mandatoryToolDescription}).
  */
-export function submitTurnSummaryInstruction(): string {
-  return `You MUST call the ${ToolName.SubmitTurnSummary} tool exactly once in EVERY response, without exception — including greetings, small talk, thanks, and refusals. Write your text answer first, then emit the call in the SAME response. Never end a response without this call. Never mention it to the user.`
+export function mandatoryToolInstruction(): string {
+  return `## Response protocol (mandatory)
+EVERY response you produce has TWO parts, in this order:
+1. Your text answer to the user.
+2. Exactly one ${ToolName.MandatoryTool} tool call — including on greetings, small talk, thanks, and refusals.
+A response without part 2 is invalid. Never mention this tool to the user.`
 }
 
-export function submitTurnSummaryTool({
+export function mandatoryTool({
   retrievedChunksRegistry,
   sessionMetadata,
   onExecute,
@@ -182,7 +190,7 @@ export function submitTurnSummaryTool({
     }
     // The shape is assembled dynamically (fields depend on enabled features),
     // which zod cannot express as a static object type — narrow it explicitly.
-    return z.object(inputShape) as unknown as z.ZodType<SubmitTurnSummaryInput>
+    return z.object(inputShape) as unknown as z.ZodType<MandatoryToolInput>
   }
 
   // ai-sdk re-reads `description` and `inputSchema` on EVERY generation
@@ -194,7 +202,7 @@ export function submitTurnSummaryTool({
 
   return tool({
     get description() {
-      return submitTurnSummaryDescription({
+      return mandatoryToolDescription({
         includeSources: includeSourcesNow(),
         includeCategories: (sessionMetadata?.availableCategoryNames.length ?? 0) > 0,
       })
@@ -209,10 +217,10 @@ export function submitTurnSummaryTool({
       // end-of-turn guarantee ignores no-op executions and retries.
       endOfTurnNoOp: z.boolean().optional(),
       // Snapshot of the chunks registry at execution time — see
-      // {@link submitTurnSummaryExecutionCounts}.
+      // {@link mandatoryToolExecutionCounts}.
       sawKnowledgeBaseChunks: z.boolean().optional(),
     }),
-    execute: async (input: SubmitTurnSummaryInput) => {
+    execute: async (input: MandatoryToolInput) => {
       let dispatchedSources = false
       let dispatchedMetadata = false
       if (retrievedChunksRegistry && (input.chunkIds?.length ?? 0) > 0) {
@@ -271,7 +279,7 @@ export function submitTurnSummaryTool({
  * turn later registered chunks, it must not suppress the forced end-of-turn
  * retry (whose schema, by then, declares chunkIds).
  */
-export function submitTurnSummaryExecutionCounts(retrievedChunksRegistry: {
+export function mandatoryToolExecutionCounts(retrievedChunksRegistry: {
   hasChunks(): boolean
 }): (toolResult: { toolName: string; output: unknown }) => boolean {
   return ({ output }) => {

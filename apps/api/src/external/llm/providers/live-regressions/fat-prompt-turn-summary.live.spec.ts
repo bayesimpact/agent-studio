@@ -42,7 +42,7 @@ describeLive("Fat-prompt (no RAG) turn summary reliability across providers (LIV
 
     for (const userMessageCase of USER_MESSAGE_CASES) {
       testFn(
-        `${providerCase.label}${reason ? ` — SKIPPED: ${reason}` : ""} — ${userMessageCase.label} — answers AND executes submit_turn_summary exactly once`,
+        `${providerCase.label}${reason ? ` — SKIPPED: ${reason}` : ""} — ${userMessageCase.label} — answers AND executes mandatory_tool exactly once`,
         async () => {
           const { text, toolExecutions } = await runFatPromptTurnScenario({
             provider: providerCase.buildProvider(),

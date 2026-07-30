@@ -20,7 +20,7 @@ shared matrix; unavailable providers auto-skip with a visible reason):
 
 - `turn-summary.live.spec.ts` — RAG turn on the handbook fixture: grounded
   answer (the fixture value is deliberately NOT the statutory number, so a
-  correct answer proves retrieval) + `submit_turn_summary` executed exactly
+  correct answer proves retrieval) + `mandatory_tool` executed exactly
   once (voluntarily or through the forced end-of-turn generation, never both).
 - `fat-prompt-turn-summary.live.spec.ts` — no-RAG agent with a ~9k-token
   system prompt and strict guardrails (anonymized production shape), across
