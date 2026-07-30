@@ -13,6 +13,9 @@ import type { MigrationInterface, QueryRunner } from "typeorm"
  * - grants `user.read` to org/project/agent owner+admin roles
  * - grants `backoffice.organization.read` to org owner+admin roles
  * - grants `backoffice.project.read` to org and project owner+admin roles
+ * - grants `backoffice.project.update` to project owner+admin roles
+ *   (and globally on platform_superadmin; not on org roles — write stays
+ *   project-scoped)
  * - grants `backoffice.agent.read` to org, project, and agent owner+admin roles
  * - seeds agent RBAC roles (`agent_owner` / `agent_admin` / `agent_member`)
  *   and backfills `role_id` on agent memberships
@@ -67,6 +70,7 @@ export class PlatformRolesAndPermissions1785320282681 implements MigrationInterf
           ('backoffice.terms.update'),
           ('backoffice.organization.read'),
           ('backoffice.project.read'),
+          ('backoffice.project.update'),
           ('backoffice.agent.read'),
           ('backoffice.user.read'),
           ('organization.create')
@@ -96,6 +100,14 @@ export class PlatformRolesAndPermissions1785320282681 implements MigrationInterf
       SELECT role.id, 'backoffice.project.read'
       FROM "role" AS role
       WHERE role.key IN ('org_owner', 'org_admin', 'project_owner', 'project_admin')
+      ON CONFLICT ("role_id", "permission_key") DO NOTHING
+    `)
+
+    await queryRunner.query(`
+      INSERT INTO "role_permission" ("role_id", "permission_key")
+      SELECT role.id, 'backoffice.project.update'
+      FROM "role" AS role
+      WHERE role.key IN ('project_owner', 'project_admin')
       ON CONFLICT ("role_id", "permission_key") DO NOTHING
     `)
 
@@ -245,6 +257,14 @@ export class PlatformRolesAndPermissions1785320282681 implements MigrationInterf
       WHERE role_permission.role_id = role.id
         AND role.key IN ('org_owner', 'org_admin', 'project_owner', 'project_admin')
         AND role_permission.permission_key = 'backoffice.project.read'
+    `)
+
+    await queryRunner.query(`
+      DELETE FROM "role_permission" AS role_permission
+      USING "role" AS role
+      WHERE role_permission.role_id = role.id
+        AND role.key IN ('project_owner', 'project_admin')
+        AND role_permission.permission_key = 'backoffice.project.update'
     `)
 
     await queryRunner.query(`

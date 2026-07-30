@@ -27,6 +27,7 @@ import {
   BACKOFFICE_AGENT_READ_PERMISSION,
   BACKOFFICE_ORGANIZATION_READ_PERMISSION,
   BACKOFFICE_PROJECT_READ_PERMISSION,
+  BACKOFFICE_PROJECT_UPDATE_PERMISSION,
   ORGANIZATION_CREATE_PERMISSION,
 } from "@/domains/rbac/rbac.constants"
 import { UserGuard } from "@/domains/users/user.guard"
@@ -241,7 +242,7 @@ export class BackofficeController {
   }
 
   @Post(BackofficeRoutes.addFeatureFlag.path)
-  @CheckPermission(BACKOFFICE_PROJECT_READ_PERMISSION, "project")
+  @CheckPermission(BACKOFFICE_PROJECT_UPDATE_PERMISSION, "project")
   @TrackActivity({ action: "add_feature_flag", entityFrom: "project" })
   async addFeatureFlag(
     @Param("projectId") projectId: string,
@@ -256,7 +257,7 @@ export class BackofficeController {
   }
 
   @Delete(BackofficeRoutes.removeFeatureFlag.path)
-  @CheckPermission(BACKOFFICE_PROJECT_READ_PERMISSION, "project")
+  @CheckPermission(BACKOFFICE_PROJECT_UPDATE_PERMISSION, "project")
   @TrackActivity({ action: "add_feature_flag", entityFrom: "project" })
   async removeFeatureFlag(
     @Param("projectId") projectId: string,

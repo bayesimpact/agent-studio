@@ -9,9 +9,11 @@ import {
   teardownE2eTestDatabase,
 } from "@/common/test/test-database"
 import { createOrganizationWithProject } from "@/domains/organizations/organization.factory"
+import { projectFactory } from "@/domains/projects/project.factory"
 import { RbacModule } from "@/domains/rbac/rbac.module"
 import { mockAuth0EmailForSub, setupUserGuardForTesting } from "../../../../test/e2e.helpers"
 import {
+  assignPlatformStaffToUser,
   assignPlatformSuperadminToUser,
   ensureRbacCatalog,
 } from "../../../../test/rbac-test.helpers"
@@ -113,6 +115,28 @@ describe("Backoffice - feature flag lifecycle", () => {
       where: { projectId: project.id, featureFlagKey: "evaluation" },
     })
     expect(flag).toBeNull()
+  })
+
+  it("rejects org owners who lack a project membership (no backoffice.project.update)", async () => {
+    const email = mockAuth0EmailForSub(auth0Id)
+    const { organization, user } = await createOrganizationWithProject(repositories, {
+      user: { auth0Id, email },
+    })
+    // staff can enter the backoffice; org role grants project *read* via inheritance
+    // but not project *update*
+    await assignPlatformStaffToUser({ repositories, user })
+
+    const otherProject = await repositories.projectRepository.save(
+      projectFactory.transient({ organization }).build(),
+    )
+
+    const response = await request({
+      route: BackofficeRoutes.addFeatureFlag,
+      pathParams: { projectId: otherProject.id },
+      token: "token",
+      request: { payload: { featureFlagKey: "evaluation" } },
+    })
+    expectResponse(response, 403)
   })
 
   it("rejects unknown feature flag keys", async () => {

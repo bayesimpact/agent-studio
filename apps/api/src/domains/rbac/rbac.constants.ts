@@ -35,6 +35,9 @@ export const BACKOFFICE_ORGANIZATION_READ_PERMISSION = "backoffice.organization.
 
 export const BACKOFFICE_PROJECT_READ_PERMISSION = "backoffice.project.read" as const
 
+/** Mutate a project from the backoffice (e.g. feature flags). Not granted on org roles. */
+export const BACKOFFICE_PROJECT_UPDATE_PERMISSION = "backoffice.project.update" as const
+
 export const BACKOFFICE_AGENT_READ_PERMISSION = "backoffice.agent.read" as const
 
 export const BACKOFFICE_USER_READ_PERMISSION = "backoffice.user.read" as const
@@ -95,6 +98,7 @@ export const ORGANIZATION_ROLE_PERMISSIONS = {
     BACKOFFICE_TERMS_UPDATE_PERMISSION,
     BACKOFFICE_ORGANIZATION_READ_PERMISSION,
     BACKOFFICE_PROJECT_READ_PERMISSION,
+    BACKOFFICE_PROJECT_UPDATE_PERMISSION,
     BACKOFFICE_AGENT_READ_PERMISSION,
     BACKOFFICE_USER_READ_PERMISSION,
     ORGANIZATION_CREATE_PERMISSION,
@@ -111,6 +115,7 @@ export const PROJECT_ROLE_PERMISSIONS = {
     "agent.read",
     USER_READ_PERMISSION,
     BACKOFFICE_PROJECT_READ_PERMISSION,
+    BACKOFFICE_PROJECT_UPDATE_PERMISSION,
     BACKOFFICE_AGENT_READ_PERMISSION,
   ],
   project_admin: [
@@ -121,6 +126,7 @@ export const PROJECT_ROLE_PERMISSIONS = {
     "agent.read",
     USER_READ_PERMISSION,
     BACKOFFICE_PROJECT_READ_PERMISSION,
+    BACKOFFICE_PROJECT_UPDATE_PERMISSION,
     BACKOFFICE_AGENT_READ_PERMISSION,
   ],
   project_member: ["project.read"],
@@ -183,7 +189,12 @@ export const RESOURCE_TYPE_PERMISSIONS_MAP = {
     "organization.delete",
     BACKOFFICE_ORGANIZATION_READ_PERMISSION,
   ],
-  project: [PROJECT_CREATE_PERMISSION, PROJECT_READ_PERMISSION, BACKOFFICE_PROJECT_READ_PERMISSION],
+  project: [
+    PROJECT_CREATE_PERMISSION,
+    PROJECT_READ_PERMISSION,
+    BACKOFFICE_PROJECT_READ_PERMISSION,
+    BACKOFFICE_PROJECT_UPDATE_PERMISSION,
+  ],
   agent: ["agent.read", "agent.update", "agent.delete", BACKOFFICE_AGENT_READ_PERMISSION],
 } as const satisfies Record<PermissionResourceType, readonly string[]>
 

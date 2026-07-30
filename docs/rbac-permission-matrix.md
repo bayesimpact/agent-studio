@@ -18,13 +18,14 @@ Global roles are stored as `user_membership` rows with `resource_type = 'global'
 | `backoffice.terms.update` — manage terms documents | ✅ | ✅ |
 | `backoffice.organization.read` — see every organization in the backoffice | — | ✅ |
 | `backoffice.project.read` — see every project in the backoffice | — | ✅ |
+| `backoffice.project.update` — mutate projects from the backoffice (e.g. feature flags) | — | ✅ |
 | `backoffice.agent.read` — see every agent in the backoffice | — | ✅ |
 | `backoffice.user.read` — see every user in the backoffice | — | ✅ |
 | `organization.create` — create organizations | — | ✅ |
 
 ## Organization roles
 
-Scoped to one organization via `user_membership` (`resource_type = 'organization'`). Org roles deliberately do not grant `project.read`: project visibility is governed by project memberships only. They do grant `backoffice.project.read` / `backoffice.agent.read` so org admins see those resources in the backoffice via inheritance.
+Scoped to one organization via `user_membership` (`resource_type = 'organization'`). Org roles deliberately do not grant `project.read`: project visibility is governed by project memberships only. They do grant `backoffice.project.read` / `backoffice.agent.read` so org admins see those resources in the backoffice via inheritance. They do **not** grant `backoffice.project.update` — feature-flag writes stay on project memberships.
 
 | Permission | `org_owner` | `org_admin` | `org_member` |
 |---|---|---|---|
@@ -50,6 +51,7 @@ Scoped to one project via `user_membership` (`resource_type = 'project'`).
 | `agent.read` | ✅ | ✅ | — |
 | `user.read` — see the project's members | ✅ | ✅ | — |
 | `backoffice.project.read` — see the project in the backoffice | ✅ | ✅ | — |
+| `backoffice.project.update` — mutate the project from the backoffice (e.g. feature flags) | ✅ | ✅ | — |
 | `backoffice.agent.read` — see the project's agents in the backoffice | ✅ | ✅ | — |
 
 ## Agent roles

@@ -9,6 +9,9 @@ export const BACKOFFICE_ORGANIZATION_READ_PERMISSION = "backoffice.organization.
 
 export const BACKOFFICE_PROJECT_READ_PERMISSION = "backoffice.project.read" as const
 
+/** Mutate a project from the backoffice (e.g. feature flags). Not granted on org roles. */
+export const BACKOFFICE_PROJECT_UPDATE_PERMISSION = "backoffice.project.update" as const
+
 export const BACKOFFICE_AGENT_READ_PERMISSION = "backoffice.agent.read" as const
 
 export const BACKOFFICE_USER_READ_PERMISSION = "backoffice.user.read" as const
@@ -43,6 +46,7 @@ export type GlobalPermission =
   | typeof BACKOFFICE_READ_PERMISSION
   | typeof BACKOFFICE_ORGANIZATION_READ_PERMISSION
   | typeof BACKOFFICE_PROJECT_READ_PERMISSION
+  | typeof BACKOFFICE_PROJECT_UPDATE_PERMISSION
   | typeof BACKOFFICE_AGENT_READ_PERMISSION
   | typeof BACKOFFICE_USER_READ_PERMISSION
   | typeof BACKOFFICE_TERMS_UPDATE_PERMISSION
