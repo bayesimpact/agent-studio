@@ -409,32 +409,11 @@ export class BackofficeService {
     }))
   }
 
-  async getProjectDetail({
-    canListAll,
-    requestingUserId,
-    targetProjectId,
-  }: {
-    canListAll: boolean
-    requestingUserId: string
-    targetProjectId: string
-  }): Promise<{
+  async getProjectDetail({ targetProjectId }: { targetProjectId: string }): Promise<{
     project: Project
     members: ProjectMembershipModel[]
     agents: Agent[]
   } | null> {
-    if (!canListAll) {
-      const { organizationIds, projectIds } =
-        await this.findAdminOrganizationAndProjectIds(requestingUserId)
-      const targetProject = await this.projectRepository.findOne({
-        where: { id: targetProjectId },
-        select: ["id", "organizationId"],
-      })
-      if (!targetProject) return null
-      const canAccess =
-        organizationIds.has(targetProject.organizationId) || projectIds.has(targetProjectId)
-      if (!canAccess) return null
-    }
-
     const project = await this.projectRepository
       .createQueryBuilder("project")
       .leftJoin("project.organization", "org")

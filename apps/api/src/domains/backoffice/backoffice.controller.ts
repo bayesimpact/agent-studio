@@ -234,15 +234,11 @@ export class BackofficeController {
   }
 
   @Get(BackofficeRoutes.getProject.path)
+  @CheckPermission(BACKOFFICE_PROJECT_READ_PERMISSION, "project")
   async getProject(
-    @Req() request: EndpointRequest,
     @Param("projectId") projectId: string,
   ): Promise<typeof BackofficeRoutes.getProject.response> {
-    const { user } = request
-    const canListAll = await this.canListAll(user.id, BACKOFFICE_PROJECT_READ_PERMISSION)
     const result = await this.backofficeService.getProjectDetail({
-      canListAll,
-      requestingUserId: user.id,
       targetProjectId: projectId,
     })
     if (!result) throw new NotFoundException(`Project ${projectId} not found`)
