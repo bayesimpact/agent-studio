@@ -56,17 +56,17 @@ Always answer in ${locale === "en" ? "English" : locale === "fr" ? "French" : "u
     names: string[]
     descriptions?: Record<string, string>
     agentSettings: AgentSettings
-  }) =>
-    names.length === 0
-      ? ""
-      : `## Tools:
+  }) => {
+    if (names.length === 0) return ""
+    return `## Tools:
 ${names
   .map((name) => {
     switch (name) {
-      // Covered by the prompt epilogue (response protocol) — listing it here
-      // too would duplicate the instruction.
+      // Every declared tool is listed, this one included. The line POINTS
+      // to the response protocol (the prompt epilogue) instead of repeating
+      // it — the imperative lives there, in recency position.
       case ToolName.MandatoryTool:
-        return undefined
+        return `[${name}]: mandatory bookkeeping report (session categories, title, sources) attached to every response — see the "Response protocol" section at the end of this prompt.`
 
       case ToolName.LookupKnowledgeBase:
         return `[${name}]: ${lookupKnowledgeBaseInstruction()}`
@@ -103,6 +103,6 @@ ${orderedFields
         return `[${name}]: No specific instructions for this tool.`
     }
   })
-  .filter((line) => line !== undefined)
-  .join("\n")}`,
+  .join("\n")}`
+  },
 }

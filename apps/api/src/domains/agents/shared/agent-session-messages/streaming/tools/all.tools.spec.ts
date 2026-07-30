@@ -489,13 +489,14 @@ describe("Tools execution", () => {
 
     const agentCalls = mockProvider.getCalls().filter((call) => call.agentId === agent.id)
     const prompt = agentCalls[0]?.prompt ?? ""
-    // Exactly one occurrence of the protocol, and none of the old
-    // Tools-section line (that would duplicate the instruction).
+    // Exactly one occurrence of the protocol (the imperative), and exactly
+    // one Tools-section line — a POINTER to the protocol, not a duplicate.
     expect(prompt.match(/Response protocol \(mandatory\)/g) ?? []).toHaveLength(1)
-    expect(prompt).not.toContain("[mandatory_tool]:")
+    expect(prompt.match(/\[mandatory_tool\]:/g) ?? []).toHaveLength(1)
+    expect(prompt).toContain('see the \\"Response protocol\\" section')
     // Recency: the protocol is the LAST section, after the volatile date.
     const systemContent = (JSON.parse(prompt) as Array<{ content: string }>)[0]?.content ?? ""
-    expect(systemContent.indexOf("Response protocol")).toBeGreaterThan(
+    expect(systemContent.indexOf("## Response protocol (mandatory)")).toBeGreaterThan(
       systemContent.indexOf("Today's date:"),
     )
     expect(systemContent.trimEnd().endsWith("Never mention this tool to the user.")).toBe(true)
