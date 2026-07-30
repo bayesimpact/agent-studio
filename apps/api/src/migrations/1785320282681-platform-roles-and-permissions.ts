@@ -22,7 +22,9 @@ import type { MigrationInterface, QueryRunner } from "typeorm"
  *   (scoped backoffice listings without a global grant)
  * - assigns platform_staff to users whose email matches
  *   ORGANIZATION_CREATOR_EMAIL_DOMAIN (throws if the env var is missing:
- *   the earlier seed migration skipped silently and never ran in production)
+ *   the earlier seed migration skipped silently and never ran in production).
+ *   down() does not remove those memberships: platform_staff predated this
+ *   migration and up() only inserts missing rows.
  *
  * platform_superadmin memberships are not seeded: assigned manually.
  */
@@ -212,13 +214,10 @@ export class PlatformRolesAndPermissions1785320282681 implements MigrationInterf
   }
 
   public async down(queryRunner: QueryRunner): Promise<void> {
-    await queryRunner.query(`
-      DELETE FROM "user_membership" AS membership
-      USING "role" AS role
-      WHERE membership.resource_type = 'global'
-        AND membership.role_id = role.id
-        AND role.key = 'platform_staff'
-    `)
+    // Do not delete platform_staff memberships: that role and many of its
+    // memberships predate this migration (org_creator → platform_staff rename).
+    // up() only inserts missing ones; wiping all rows here would strip users
+    // who already held the role before this migration ran.
 
     await queryRunner.query(`
       UPDATE "user_membership" AS membership
