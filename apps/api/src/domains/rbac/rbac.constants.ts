@@ -18,6 +18,12 @@ export const PROJECT_ROLES = {
   member: "project_member",
 } as const
 
+export const AGENT_ROLES = {
+  owner: "agent_owner",
+  admin: "agent_admin",
+  member: "agent_member",
+} as const
+
 export const ORGANIZATION_CREATE_PERMISSION = "organization.create" as const
 
 export const TRACE_READ_PERMISSION = "trace.read" as const
@@ -66,6 +72,7 @@ export const ORGANIZATION_ROLE_PERMISSIONS = {
     USER_READ_PERMISSION,
     BACKOFFICE_ORGANIZATION_READ_PERMISSION,
     BACKOFFICE_PROJECT_READ_PERMISSION,
+    BACKOFFICE_AGENT_READ_PERMISSION,
   ],
   org_admin: [
     "organization.read",
@@ -74,6 +81,7 @@ export const ORGANIZATION_ROLE_PERMISSIONS = {
     USER_READ_PERMISSION,
     BACKOFFICE_ORGANIZATION_READ_PERMISSION,
     BACKOFFICE_PROJECT_READ_PERMISSION,
+    BACKOFFICE_AGENT_READ_PERMISSION,
   ],
   org_member: ["organization.read"],
   [PLATFORM_STAFF_ROLE]: [
@@ -103,6 +111,7 @@ export const PROJECT_ROLE_PERMISSIONS = {
     "agent.read",
     USER_READ_PERMISSION,
     BACKOFFICE_PROJECT_READ_PERMISSION,
+    BACKOFFICE_AGENT_READ_PERMISSION,
   ],
   project_admin: [
     "project.read",
@@ -112,8 +121,28 @@ export const PROJECT_ROLE_PERMISSIONS = {
     "agent.read",
     USER_READ_PERMISSION,
     BACKOFFICE_PROJECT_READ_PERMISSION,
+    BACKOFFICE_AGENT_READ_PERMISSION,
   ],
   project_member: ["project.read"],
+} as const satisfies Record<string, readonly string[]>
+
+/** Permissions granted per agent role key. */
+export const AGENT_ROLE_PERMISSIONS = {
+  agent_owner: [
+    "agent.read",
+    "agent.update",
+    "agent.delete",
+    USER_READ_PERMISSION,
+    BACKOFFICE_AGENT_READ_PERMISSION,
+  ],
+  agent_admin: [
+    "agent.read",
+    "agent.update",
+    "agent.delete",
+    USER_READ_PERMISSION,
+    BACKOFFICE_AGENT_READ_PERMISSION,
+  ],
+  agent_member: ["agent.read"],
 } as const satisfies Record<string, readonly string[]>
 
 export const RESOURCE_TYPE_READ_PERMISSION_MAP = {
@@ -155,7 +184,7 @@ export const RESOURCE_TYPE_PERMISSIONS_MAP = {
     BACKOFFICE_ORGANIZATION_READ_PERMISSION,
   ],
   project: [PROJECT_CREATE_PERMISSION, PROJECT_READ_PERMISSION, BACKOFFICE_PROJECT_READ_PERMISSION],
-  agent: ["agent.read", BACKOFFICE_AGENT_READ_PERMISSION],
+  agent: ["agent.read", "agent.update", "agent.delete", BACKOFFICE_AGENT_READ_PERMISSION],
 } as const satisfies Record<PermissionResourceType, readonly string[]>
 
 export const PARENT_RESOURCE_TYPE_MAP = {

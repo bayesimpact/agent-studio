@@ -10,9 +10,12 @@ import type { MigrationInterface, QueryRunner } from "typeorm"
  *   and the backoffice "list all" permissions
  *   `backoffice.{organization,project,agent,user}.read`
  *   (ex BACKOFFICE_AUTHORIZED_EMAILS)
- * - grants `user.read` to org/project owner+admin roles
+ * - grants `user.read` to org/project/agent owner+admin roles
  * - grants `backoffice.organization.read` to org owner+admin roles
  * - grants `backoffice.project.read` to org and project owner+admin roles
+ * - grants `backoffice.agent.read` to org, project, and agent owner+admin roles
+ * - seeds agent RBAC roles (`agent_owner` / `agent_admin` / `agent_member`)
+ *   and backfills `role_id` on agent memberships
  *   (scoped backoffice listings without a global grant)
  * - assigns platform_staff to users whose email matches
  *   ORGANIZATION_CREATOR_EMAIL_DOMAIN (throws if the env var is missing:
@@ -96,6 +99,76 @@ export class PlatformRolesAndPermissions1785320282681 implements MigrationInterf
       ON CONFLICT ("role_id", "permission_key") DO NOTHING
     `)
 
+    await queryRunner.query(`
+      INSERT INTO "role" ("key", "name", "scope_type")
+      VALUES
+        ('agent_owner', 'Agent Owner', 'agent'),
+        ('agent_admin', 'Agent Admin', 'agent'),
+        ('agent_member', 'Agent Member', 'agent')
+      ON CONFLICT ("key") DO NOTHING
+    `)
+
+    await queryRunner.query(`
+      INSERT INTO "role_permission" ("role_id", "permission_key")
+      SELECT role.id, permission.permission_key
+      FROM "role" AS role
+      INNER JOIN (
+        VALUES
+          ('agent_owner', 'agent.read'),
+          ('agent_owner', 'agent.update'),
+          ('agent_owner', 'agent.delete'),
+          ('agent_owner', 'user.read'),
+          ('agent_owner', 'backoffice.agent.read'),
+          ('agent_admin', 'agent.read'),
+          ('agent_admin', 'agent.update'),
+          ('agent_admin', 'agent.delete'),
+          ('agent_admin', 'user.read'),
+          ('agent_admin', 'backoffice.agent.read'),
+          ('agent_member', 'agent.read')
+      ) AS permission(role_key, permission_key)
+        ON role.key = permission.role_key
+      ON CONFLICT ("role_id", "permission_key") DO NOTHING
+    `)
+
+    await queryRunner.query(`
+      INSERT INTO "role_permission" ("role_id", "permission_key")
+      SELECT role.id, 'backoffice.agent.read'
+      FROM "role" AS role
+      WHERE role.key IN (
+        'org_owner', 'org_admin',
+        'project_owner', 'project_admin'
+      )
+      ON CONFLICT ("role_id", "permission_key") DO NOTHING
+    `)
+
+    await queryRunner.query(`
+      UPDATE "user_membership" AS membership
+      SET role_id = role.id
+      FROM "role" AS role
+      WHERE membership.resource_type = 'agent'
+        AND membership.role_id IS NULL
+        AND membership.role = 'owner'
+        AND role.key = 'agent_owner'
+    `)
+    await queryRunner.query(`
+      UPDATE "user_membership" AS membership
+      SET role_id = role.id
+      FROM "role" AS role
+      WHERE membership.resource_type = 'agent'
+        AND membership.role_id IS NULL
+        AND membership.role = 'admin'
+        AND role.key = 'agent_admin'
+    `)
+    await queryRunner.query(`
+      UPDATE "user_membership" AS membership
+      SET role_id = role.id
+      FROM "role" AS role
+      WHERE membership.resource_type = 'agent'
+        AND membership.role_id IS NULL
+        AND membership.role = 'member'
+        AND role.key = 'agent_member'
+    `)
+
     const allowedDomain = process.env.ORGANIZATION_CREATOR_EMAIL_DOMAIN?.trim()
     if (!allowedDomain) {
       throw new Error(
@@ -133,6 +206,37 @@ export class PlatformRolesAndPermissions1785320282681 implements MigrationInterf
       WHERE membership.resource_type = 'global'
         AND membership.role_id = role.id
         AND role.key = 'platform_staff'
+    `)
+
+    await queryRunner.query(`
+      UPDATE "user_membership" AS membership
+      SET role_id = NULL
+      FROM "role" AS role
+      WHERE membership.role_id = role.id
+        AND role.key IN ('agent_owner', 'agent_admin', 'agent_member')
+    `)
+
+    await queryRunner.query(`
+      DELETE FROM "role_permission" AS role_permission
+      USING "role" AS role
+      WHERE role_permission.role_id = role.id
+        AND role.key IN ('agent_owner', 'agent_admin', 'agent_member')
+    `)
+
+    await queryRunner.query(`
+      DELETE FROM "role"
+      WHERE key IN ('agent_owner', 'agent_admin', 'agent_member')
+    `)
+
+    await queryRunner.query(`
+      DELETE FROM "role_permission" AS role_permission
+      USING "role" AS role
+      WHERE role_permission.role_id = role.id
+        AND role.key IN (
+          'org_owner', 'org_admin',
+          'project_owner', 'project_admin'
+        )
+        AND role_permission.permission_key = 'backoffice.agent.read'
     `)
 
     await queryRunner.query(`

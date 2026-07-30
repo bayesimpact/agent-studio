@@ -3,6 +3,8 @@ import { InjectDataSource, InjectRepository } from "@nestjs/typeorm"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
 import { DataSource, In, Not, type Repository } from "typeorm"
 import {
+  AGENT_ROLE_PERMISSIONS,
+  AGENT_ROLES,
   ORGANIZATION_ROLE_PERMISSIONS,
   ORGANIZATION_ROLES,
   PLATFORM_STAFF_ROLE,
@@ -25,6 +27,12 @@ const PROJECT_ROLE_LABELS: Record<string, string> = {
   project_owner: "Project Owner",
   project_admin: "Project Admin",
   project_member: "Project Member",
+}
+
+const AGENT_ROLE_LABELS: Record<string, string> = {
+  agent_owner: "Agent Owner",
+  agent_admin: "Agent Admin",
+  agent_member: "Agent Member",
 }
 
 const GLOBAL_ROLE_SCOPE: Record<string, Role["scopeType"]> = {
@@ -73,6 +81,20 @@ export class RbacService {
     await this.linkRolePermissions(rolesByKey, PROJECT_ROLE_PERMISSIONS)
   }
 
+  /**
+   * Idempotent catalog seed for the agent domain.
+   * Production/deploy also seeds via migration `PlatformRolesAndPermissions1785320282681`.
+   * Kept for tests (`synchronize: true`) and local `seed:rbac`.
+   */
+  async seedAgentRolesAndPermissions(): Promise<void> {
+    const rolesByKey = await this.upsertRoles({
+      roleKeys: Object.values(AGENT_ROLES),
+      labels: AGENT_ROLE_LABELS,
+      defaultScope: "agent",
+    })
+    await this.linkRolePermissions(rolesByKey, AGENT_ROLE_PERMISSIONS)
+  }
+
   /** Maps legacy org membership roles to RBAC role_id. Org rows only. */
   async assignRoleIdsToOrganizationMemberships(): Promise<number> {
     return this.assignRoleIdsToMemberships("organization", ORGANIZATION_ROLES)
@@ -83,8 +105,13 @@ export class RbacService {
     return this.assignRoleIdsToMemberships("project", PROJECT_ROLES)
   }
 
+  /** Maps legacy agent membership roles to RBAC role_id. Agent rows only. */
+  async assignRoleIdsToAgentMemberships(): Promise<number> {
+    return this.assignRoleIdsToMemberships("agent", AGENT_ROLES)
+  }
+
   private async assignRoleIdsToMemberships(
-    resourceType: "organization" | "project",
+    resourceType: "organization" | "project" | "agent",
     rolesByLegacyRole: Record<string, string>,
   ): Promise<number> {
     let updatedCount = 0

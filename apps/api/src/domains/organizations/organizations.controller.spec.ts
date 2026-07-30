@@ -99,6 +99,7 @@ describe("Organizations - createOrganization", () => {
       createdAt: expect.any(Number),
       // alphabetical: listPermissionsForRole orders by permission_key
       permissions: [
+        "backoffice.agent.read",
         "backoffice.organization.read",
         "backoffice.project.read",
         "organization.delete",

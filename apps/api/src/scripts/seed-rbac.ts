@@ -17,10 +17,13 @@ async function main(): Promise<void> {
     const rbacService = app.get(RbacService)
     await rbacService.seedOrganizationRolesAndPermissions()
     await rbacService.seedProjectRolesAndPermissions()
+    await rbacService.seedAgentRolesAndPermissions()
     const updatedOrganizationCount = await rbacService.assignRoleIdsToOrganizationMemberships()
     const updatedProjectCount = await rbacService.assignRoleIdsToProjectMemberships()
+    const updatedAgentCount = await rbacService.assignRoleIdsToAgentMemberships()
     logger.log(`Assigned role_id on ${updatedOrganizationCount} organization membership(s)`)
     logger.log(`Assigned role_id on ${updatedProjectCount} project membership(s)`)
+    logger.log(`Assigned role_id on ${updatedAgentCount} agent membership(s)`)
   } finally {
     await app.close()
   }

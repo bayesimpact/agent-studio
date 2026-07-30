@@ -254,8 +254,8 @@ export class PermissionService {
    *   an org role granting user.read shows the org's members, not the members
    *   of every project of the org)
    *
-   * NOTE: agent memberships are not covered yet: agent roles are not part of
-   * the RBAC catalog, so agent-derived visibility stays with the caller.
+   * NOTE: agent memberships are covered when the agent role grants `user.read`
+   * (agent_owner / agent_admin) and `role_id` is set on the membership.
    */
   async listUserIds(userId: string): Promise<ResourceIdsScope> {
     if (await this.hasGlobal(userId, BACKOFFICE_USER_READ_PERMISSION)) {

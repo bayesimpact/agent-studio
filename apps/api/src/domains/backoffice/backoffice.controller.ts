@@ -23,8 +23,6 @@ import { ZodValidationPipe } from "@/common/zod-validation-pipe"
 import { JwtAuthGuard } from "@/domains/auth/jwt-auth.guard"
 import { CheckPermission } from "@/domains/rbac/check-permission.decorator"
 import { CheckPermissionGuard } from "@/domains/rbac/check-permission.guard"
-// biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
-import { PermissionService } from "@/domains/rbac/permission.service"
 import {
   BACKOFFICE_AGENT_READ_PERMISSION,
   BACKOFFICE_ORGANIZATION_READ_PERMISSION,
@@ -59,21 +57,7 @@ function assertValidFeatureFlagKey(value: string): FeatureFlagKey {
 @UseGuards(JwtAuthGuard, UserGuard, BackofficeGuard, CheckPermissionGuard)
 @Controller()
 export class BackofficeController {
-  constructor(
-    private readonly backofficeService: BackofficeService,
-    private readonly permissionService: PermissionService,
-  ) {}
-
-  /** Superadmins see every resource of the type; staff only what they administer. */
-  private canListAll(
-    userId: string,
-    backofficeReadPermission:
-      | typeof BACKOFFICE_ORGANIZATION_READ_PERMISSION
-      | typeof BACKOFFICE_PROJECT_READ_PERMISSION
-      | typeof BACKOFFICE_AGENT_READ_PERMISSION,
-  ): Promise<boolean> {
-    return this.permissionService.hasGlobal(userId, backofficeReadPermission)
-  }
+  constructor(private readonly backofficeService: BackofficeService) {}
 
   @Get(BackofficeRoutes.listOrganizations.path)
   async listOrganizations(
@@ -123,11 +107,9 @@ export class BackofficeController {
     @Query("search") search?: string,
   ): Promise<typeof BackofficeRoutes.listAgents.response> {
     const { user } = request
-    const canListAll = await this.canListAll(user.id, BACKOFFICE_AGENT_READ_PERMISSION)
     const page = Math.max(0, Number(pageParam) || 0)
     const limit = Math.min(100, Math.max(1, Number(limitParam) || 10))
     const { agents, total } = await this.backofficeService.listAgents({
-      canListAll,
       userId: user.id,
       page,
       limit,
@@ -144,15 +126,11 @@ export class BackofficeController {
   }
 
   @Get(BackofficeRoutes.getAgent.path)
+  @CheckPermission(BACKOFFICE_AGENT_READ_PERMISSION, "agent")
   async getAgent(
-    @Req() request: EndpointRequest,
     @Param("agentId") agentId: string,
   ): Promise<typeof BackofficeRoutes.getAgent.response> {
-    const { user } = request
-    const canListAll = await this.canListAll(user.id, BACKOFFICE_AGENT_READ_PERMISSION)
     const result = await this.backofficeService.getAgentDetail({
-      canListAll,
-      requestingUserId: user.id,
       targetAgentId: agentId,
     })
     if (!result) throw new NotFoundException(`Agent ${agentId} not found`)

@@ -24,7 +24,7 @@ Global roles are stored as `user_membership` rows with `resource_type = 'global'
 
 ## Organization roles
 
-Scoped to one organization via `user_membership` (`resource_type = 'organization'`). Org roles deliberately do not grant `project.read`: project visibility is governed by project memberships only.
+Scoped to one organization via `user_membership` (`resource_type = 'organization'`). Org roles deliberately do not grant `project.read`: project visibility is governed by project memberships only. They do grant `backoffice.project.read` / `backoffice.agent.read` so org admins see those resources in the backoffice via inheritance.
 
 | Permission | `org_owner` | `org_admin` | `org_member` |
 |---|---|---|---|
@@ -35,6 +35,7 @@ Scoped to one organization via `user_membership` (`resource_type = 'organization
 | `user.read` — see the organization's members | ✅ | ✅ | — |
 | `backoffice.organization.read` — see the organization in the backoffice | ✅ | ✅ | — |
 | `backoffice.project.read` — see the organization's projects in the backoffice | ✅ | ✅ | — |
+| `backoffice.agent.read` — see the organization's agents in the backoffice | ✅ | ✅ | — |
 
 ## Project roles
 
@@ -49,3 +50,16 @@ Scoped to one project via `user_membership` (`resource_type = 'project'`).
 | `agent.read` | ✅ | ✅ | — |
 | `user.read` — see the project's members | ✅ | ✅ | — |
 | `backoffice.project.read` — see the project in the backoffice | ✅ | ✅ | — |
+| `backoffice.agent.read` — see the project's agents in the backoffice | ✅ | ✅ | — |
+
+## Agent roles
+
+Scoped to one agent via `user_membership` (`resource_type = 'agent'`).
+
+| Permission | `agent_owner` | `agent_admin` | `agent_member` |
+|---|---|---|---|
+| `agent.read` | ✅ | ✅ | ✅ |
+| `agent.update` | ✅ | ✅ | — |
+| `agent.delete` | ✅ | ✅ | — |
+| `user.read` — see the agent's members | ✅ | ✅ | — |
+| `backoffice.agent.read` — see the agent in the backoffice | ✅ | ✅ | — |

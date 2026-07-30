@@ -12,6 +12,8 @@ import { createOrganizationWithOwner } from "@/domains/organizations/organizatio
 import { projectFactory } from "@/domains/projects/project.factory"
 import { PermissionService } from "@/domains/rbac/permission.service"
 import {
+  AGENT_ROLE_PERMISSIONS,
+  AGENT_ROLES,
   BACKOFFICE_AGENT_READ_PERMISSION,
   BACKOFFICE_ORGANIZATION_READ_PERMISSION,
   BACKOFFICE_PROJECT_READ_PERMISSION,
@@ -955,8 +957,9 @@ describe("PermissionService", () => {
       const agent = agentFactory.transient({ organization, project }).build()
       await repositories.agentRepository.save(agent)
 
-      // project_owner grants agent.read AND agent.create, but only agent.read
-      // applies to an agent resource (RESOURCE_TYPE_PERMISSIONS_MAP.agent)
+      // project_owner grants agent.read, agent.create, and backoffice.agent.read;
+      // only agent.* + backoffice.agent.read apply to an agent resource
+      // (RESOURCE_TYPE_PERMISSIONS_MAP.agent)
       const projectOwnerRole = await repositories.roleRepository.findOneOrFail({
         where: { key: PROJECT_ROLES.owner },
       })
@@ -978,7 +981,9 @@ describe("PermissionService", () => {
       )
 
       expect([...permissionsByAgentId.keys()]).toEqual([agent.id])
-      expect(permissionsByAgentId.get(agent.id)).toEqual(["agent.read"])
+      expect(permissionsByAgentId.get(agent.id)?.sort()).toEqual(
+        ["agent.read", BACKOFFICE_AGENT_READ_PERMISSION].sort(),
+      )
     })
 
     it("returns an empty map when the user has no access", async () => {
@@ -1058,7 +1063,9 @@ describe("PermissionService", () => {
         // parent type must not shadow the project parent type
         const permissionsByAgentId = await service.listResourcePermissions(user.id, "agent.read")
         expect([...permissionsByAgentId.keys()].sort()).toEqual([agentA.id, agentB.id].sort())
-        expect(permissionsByAgentId.get(agentB.id)).toEqual(["agent.read"])
+        expect(permissionsByAgentId.get(agentB.id)?.sort()).toEqual(
+          ["agent.read", BACKOFFICE_AGENT_READ_PERMISSION].sort(),
+        )
       } finally {
         const testRole = await repositories.roleRepository.findOne({
           where: { key: "test_org_agent_reader_perms" },
@@ -1548,6 +1555,25 @@ describe("RbacService", () => {
     )
   })
 
+  it("seeds agent roles and permissions idempotently", async () => {
+    await service.seedAgentRolesAndPermissions()
+    await service.seedAgentRolesAndPermissions()
+
+    const agentRoleKeys = Object.values(AGENT_ROLES)
+    const roles = await setup.getRepository(Role).find({ where: { key: In(agentRoleKeys) } })
+    expect(roles.map((role) => role.key).sort()).toEqual([...agentRoleKeys].sort())
+    expect(roles.every((role) => role.scopeType === "agent")).toBe(true)
+
+    const rolePermissions = await setup.getRepository(RolePermission).find({
+      where: { roleId: In(roles.map((role) => role.id)) },
+    })
+    const expectedLinks = Object.values(AGENT_ROLE_PERMISSIONS).flatMap((keys) => [...keys])
+    expect(rolePermissions).toHaveLength(expectedLinks.length)
+    expect([...new Set(rolePermissions.map((row) => row.permissionKey))].sort()).toEqual(
+      [...new Set(expectedLinks)].sort(),
+    )
+  })
+
   it("assigns role_id on organization memberships", async () => {
     const repositories = setup.getAllRepositories()
     const { user, organization } = await createOrganizationWithOwner(repositories)
@@ -1592,5 +1618,37 @@ describe("RbacService", () => {
       where: { key: PROJECT_ROLES.member },
     })
     expect(membership.roleId).toBe(projectMemberRole.id)
+  })
+
+  it("assigns role_id on agent memberships", async () => {
+    await service.seedAgentRolesAndPermissions()
+    const repositories = setup.getAllRepositories()
+    const { organization } = await createOrganizationWithOwner(repositories)
+    const project = projectFactory.transient({ organization }).build()
+    await repositories.projectRepository.save(project)
+    const agent = agentFactory.transient({ project, organization }).build()
+    await repositories.agentRepository.save(agent)
+
+    const agentUser = userFactory.build()
+    await repositories.userRepository.save(agentUser)
+    await repositories.userMembershipRepository.save(
+      userMembershipFactory.build({
+        userId: agentUser.id,
+        resourceType: "agent",
+        resourceId: agent.id,
+        role: "member",
+        roleId: null,
+      }),
+    )
+
+    await service.assignRoleIdsToAgentMemberships()
+
+    const membership = await setup.getRepository(UserMembership).findOneOrFail({
+      where: { userId: agentUser.id, resourceId: agent.id, resourceType: "agent" },
+    })
+    const agentMemberRole = await setup.getRepository(Role).findOneOrFail({
+      where: { key: AGENT_ROLES.member },
+    })
+    expect(membership.roleId).toBe(agentMemberRole.id)
   })
 })

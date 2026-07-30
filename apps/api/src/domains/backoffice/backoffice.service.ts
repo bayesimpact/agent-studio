@@ -14,6 +14,7 @@ import { ProjectMembershipsService } from "@/domains/projects/memberships/projec
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
 import { PermissionService, type ResourceIdsScope } from "@/domains/rbac/permission.service"
 import {
+  BACKOFFICE_AGENT_READ_PERMISSION,
   BACKOFFICE_ORGANIZATION_READ_PERMISSION,
   BACKOFFICE_PROJECT_READ_PERMISSION,
 } from "@/domains/rbac/rbac.constants"
@@ -180,13 +181,11 @@ export class BackofficeService {
   }
 
   async listAgents({
-    canListAll,
     userId,
     page,
     limit,
     search,
   }: {
-    canListAll: boolean
     userId: string
     page: number
     limit: number
@@ -198,29 +197,14 @@ export class BackofficeService {
       .addSelect(["project.id", "project.name"])
       .orderBy("agent.name", "ASC")
 
-    if (!canListAll) {
-      const { organizationIds, projectIds } = await this.findAdminOrganizationAndProjectIds(userId)
-      if (organizationIds.size === 0 && projectIds.size === 0) {
-        return { agents: [], total: 0 }
-      }
-      if (organizationIds.size > 0 && projectIds.size > 0) {
-        qb.andWhere(
-          `(agent.projectId IN (:...projectIds) OR project.organizationId IN (:...organizationIds))`,
-          {
-            projectIds: Array.from(projectIds),
-            organizationIds: Array.from(organizationIds),
-          },
-        )
-      } else if (organizationIds.size > 0) {
-        qb.andWhere("project.organizationId IN (:...organizationIds)", {
-          organizationIds: Array.from(organizationIds),
-        })
-      } else {
-        qb.andWhere("agent.projectId IN (:...projectIds)", {
-          projectIds: Array.from(projectIds),
-        })
-      }
+    const agentIds = await this.permissionService.listResourceIds(
+      userId,
+      BACKOFFICE_AGENT_READ_PERMISSION,
+    )
+    if (agentIds.length === 0) {
+      return { agents: [], total: 0 }
     }
+    qb.andWhere("agent.id IN (:...agentIds)", { agentIds })
 
     const trimmedSearch = search?.trim()
     if (trimmedSearch) {
@@ -239,12 +223,8 @@ export class BackofficeService {
   }
 
   async getAgentDetail({
-    canListAll,
-    requestingUserId,
     targetAgentId,
   }: {
-    canListAll: boolean
-    requestingUserId: string
     targetAgentId: string
   }): Promise<{ agent: Agent; members: AgentMembershipModel[] } | null> {
     const agent = await this.agentRepository
@@ -259,37 +239,11 @@ export class BackofficeService {
 
     if (!agent) return null
 
-    if (!canListAll) {
-      const { organizationIds, projectIds } =
-        await this.findAdminOrganizationAndProjectIds(requestingUserId)
-      const projectId = agent.project?.id
-      const organizationId = agent.project?.organization?.id
-      const hasAccess =
-        (projectId !== undefined && projectIds.has(projectId)) ||
-        (organizationId !== undefined && organizationIds.has(organizationId))
-      if (!hasAccess) return null
-    }
-
     const members = sortMembershipsByUserEmail(
       await this.agentMembershipsService.listAgentMemberships(targetAgentId),
     )
 
     return { agent, members }
-  }
-
-  private async findAdminOrganizationAndProjectIds(
-    userId: string,
-  ): Promise<{ organizationIds: Set<string>; projectIds: Set<string> }> {
-    const [adminOrganizationMemberships, adminProjectMemberships] = await Promise.all([
-      this.organizationMembershipsService.listAdminAndOwnerMembershipsForUser(userId),
-      this.projectMembershipsService.listAdminAndOwnerMembershipsForUser(userId),
-    ])
-    return {
-      organizationIds: new Set(
-        adminOrganizationMemberships.map((membership) => membership.organizationId),
-      ),
-      projectIds: new Set(adminProjectMemberships.map((membership) => membership.projectId)),
-    }
   }
 
   async listUsers({
@@ -487,26 +441,10 @@ export class BackofficeService {
    * Users visible to the requesting user:
    * - `backoffice.user.read` held globally: the whole directory
    * - otherwise: self + members of resources granting `user.read`
-   *   (PermissionService), plus members of agents the user administers
-   *   (legacy union: agent roles are not in the RBAC catalog yet)
+   *   (org / project / agent memberships via PermissionService)
    */
   private async findVisibleUserIds(userId: string): Promise<ResourceIdsScope> {
-    const userScope = await this.permissionService.listUserIds(userId)
-    if (userScope.scope === "all") {
-      return userScope
-    }
-
-    const adminAgentMemberships =
-      await this.agentMembershipsService.listAdminAndOwnerMembershipsForUser(userId)
-    const sharedAgentMemberships = await this.agentMembershipsService.listMembershipsByAgentIds(
-      adminAgentMemberships.map((membership) => membership.agentId),
-    )
-
-    const visibleUserIds = new Set<string>(userScope.ids)
-    for (const membership of sharedAgentMemberships) {
-      visibleUserIds.add(membership.userId)
-    }
-    return { scope: "ids", ids: [...visibleUserIds] }
+    return this.permissionService.listUserIds(userId)
   }
 
   async addFeatureFlag({
