@@ -1,13 +1,13 @@
-import { ThoughtTokensHelper } from "./thought-tokens-helper"
+import { findLeakedToolCallNames, ThoughtTokensHelper } from "./thought-tokens-helper"
 
-// The exact leak observed in production (gemini-3.5-flash-lite verbalizing
-// its tool call as pseudo-XML in the user-visible text instead of emitting a
-// functionCall part).
+// A leak captured from gemini-3.5-flash-lite: the model verbalizes its tool
+// call as pseudo-XML in the user-visible text instead of emitting a
+// functionCall part.
 const LEAKED_PSEUDO_CALL =
   '<call:default_api:mandatory_tool xmlns:default_api="default_api" categoryNames:[greetings,QA],suggestedTitle:Règles de Warmachine et pays de pays/>'
 
 describe("ThoughtTokensHelper - hallucinated tool-call XML", () => {
-  it("removes the production pseudo-call tag from a complete text", () => {
+  it("removes a pseudo-call tag from a complete text", () => {
     const text = `C'est noté, tu habites en France !\n\n${LEAKED_PSEUDO_CALL}`
     const cleaned = ThoughtTokensHelper.removeThoughtTokens(text)
 
@@ -56,5 +56,29 @@ describe("ThoughtTokensHelper - hallucinated tool-call XML", () => {
     // still deliver the surrounding text once the hold-back cap is passed.
     expect(out).toContain("Début.")
     expect(out).toContain("fin du texte.")
+  })
+})
+
+describe("findLeakedToolCallNames", () => {
+  it("extracts the tool name from the brace-argument variant", () => {
+    const text =
+      "Voici votre réponse.\n\n<call:default_api:notify_operator{severity:high," +
+      "summary:Escalation requested by the user.,reference:ABC-123}/>"
+
+    expect(findLeakedToolCallNames(text)).toEqual(["notify_operator"])
+  })
+
+  it("extracts the tool name from the attribute-style variant", () => {
+    expect(findLeakedToolCallNames(LEAKED_PSEUDO_CALL)).toEqual(["mandatory_tool"])
+  })
+
+  it("returns nothing for legitimate text, including angle brackets and markup", () => {
+    expect(findLeakedToolCallNames("2 < 3 and <b>bold</b> and a call: to action")).toEqual([])
+    expect(findLeakedToolCallNames("Voici ma réponse, sans balise.")).toEqual([])
+  })
+
+  it("deduplicates repeated leaks of the same tool", () => {
+    const text = `${LEAKED_PSEUDO_CALL} then again ${LEAKED_PSEUDO_CALL}`
+    expect(findLeakedToolCallNames(text)).toEqual(["mandatory_tool"])
   })
 })
