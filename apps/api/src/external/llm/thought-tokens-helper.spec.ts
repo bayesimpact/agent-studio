@@ -1,4 +1,4 @@
-import { ThoughtTokensHelper } from "./thought-tokens-helper"
+import { findLeakedToolCallNames, ThoughtTokensHelper } from "./thought-tokens-helper"
 
 // The exact leak observed in production (gemini-3.5-flash-lite verbalizing
 // its tool call as pseudo-XML in the user-visible text instead of emitting a
@@ -56,5 +56,31 @@ describe("ThoughtTokensHelper - hallucinated tool-call XML", () => {
     // still deliver the surrounding text once the hold-back cap is passed.
     expect(out).toContain("Début.")
     expect(out).toContain("fin du texte.")
+  })
+})
+
+describe("findLeakedToolCallNames", () => {
+  it("extracts the tool name from a leaked safety-alert call (production case)", () => {
+    // Real production leak: the alert never reached the MCP server.
+    const text =
+      "Prenez soin de vous.\n\n<call:default_api:report_danger{category:self_harm," +
+      "severity:critical,summary:L'utilisateur exprime l'intention de mourir.," +
+      "verbatim:je veux mourrir}/>"
+
+    expect(findLeakedToolCallNames(text)).toEqual(["report_danger"])
+  })
+
+  it("extracts the tool name from the attribute-style variant", () => {
+    expect(findLeakedToolCallNames(LEAKED_PSEUDO_CALL)).toEqual(["mandatory_tool"])
+  })
+
+  it("returns nothing for legitimate text, including angle brackets and markup", () => {
+    expect(findLeakedToolCallNames("2 < 3 and <b>bold</b> and a call: to action")).toEqual([])
+    expect(findLeakedToolCallNames("Voici ma réponse, sans balise.")).toEqual([])
+  })
+
+  it("deduplicates repeated leaks of the same tool", () => {
+    const text = `${LEAKED_PSEUDO_CALL} then again ${LEAKED_PSEUDO_CALL}`
+    expect(findLeakedToolCallNames(text)).toEqual(["mandatory_tool"])
   })
 })

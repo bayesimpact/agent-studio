@@ -24,7 +24,7 @@ import { removeNullish } from "@/common/utils/remove-nullish"
 import { fireAndForgetStopCondition } from "@/external/llm/fire-and-forget-stop-condition"
 import { ResponseHelper } from "@/external/llm/response-helper"
 import { withStrictTools } from "@/external/llm/strict-tools"
-import { ThoughtTokensHelper } from "@/external/llm/thought-tokens-helper"
+import { findLeakedToolCallNames, ThoughtTokensHelper } from "@/external/llm/thought-tokens-helper"
 
 // OTel attribute keys under which we publish the raw LLM request body and
 // response. The `ai.telemetry.metadata.` prefix is required so the AI SDK
@@ -68,11 +68,47 @@ function extractTextFromStreamChunks(chunks: unknown[]): string {
 
 export abstract class AISDKLLMProviderBase implements LLMProvider {
   private readonly endOfTurnLogger = new Logger("EndOfTurnTools")
+  /**
+   * A model that VERBALIZES a tool call in the text channel instead of
+   * emitting it (documented Gemini failure family) means the tool never
+   * ran: the sanitizer hides the tag from the user, so without this log the
+   * failure is completely silent. Observed in production on a safety-alert
+   * tool — the alert was lost. Logged loudly so monitoring can catch it.
+   */
+  private readonly leakedToolCallLogger = new Logger("LeakedToolCall")
+
+  private logLeakedToolCalls({
+    originalText,
+    config,
+  }: {
+    originalText: string
+    config?: LLMConfig
+  }): void {
+    try {
+      const leakedToolNames = findLeakedToolCallNames(originalText)
+      if (leakedToolNames.length === 0) return
+      const declaredToolNames = [
+        ...Object.keys(config?.tools ?? {}),
+        ...Object.keys(config?.endOfTurnTools ?? {}),
+      ]
+      this.leakedToolCallLogger.error(
+        `model verbalized tool call(s) in the text channel instead of calling them — NOT executed: ${JSON.stringify(
+          leakedToolNames,
+        )} (declared: ${JSON.stringify(declaredToolNames)}, model: ${config?.model})`,
+      )
+    } catch {
+      // never let diagnostics break the generation
+    }
+  }
   protected getLanguageModelWithRawCapture(args: {
     config: LLMConfig
     callOrigin: CallOrigin
   }): LanguageModelV3 {
     const baseModel = this.getLanguageModel(args)
+    // Bound for use inside the stream TransformStream, where `this` is the
+    // transformer, not the provider.
+    const logLeaked = ({ originalText }: { originalText: string }) =>
+      this.logLeakedToolCalls({ originalText, config: args.config })
     return wrapLanguageModel({
       model: baseModel,
       middleware: {
@@ -97,6 +133,7 @@ export abstract class AISDKLLMProviderBase implements LLMProvider {
               if (strippedText !== originalText) {
                 activeSpan?.setAttribute(RAW_LLM_RESPONSE_STRIPPED_ATTR, strippedText)
               }
+              this.logLeakedToolCalls({ originalText, config: args.config })
             }
           } catch {
             // never let telemetry capture break the generation
@@ -201,6 +238,7 @@ export abstract class AISDKLLMProviderBase implements LLMProvider {
                     if (strippedText !== originalText) {
                       activeSpan?.setAttribute(RAW_LLM_RESPONSE_STRIPPED_ATTR, strippedText)
                     }
+                    logLeaked({ originalText })
                   }
                 } catch {
                   // never let telemetry capture break the stream

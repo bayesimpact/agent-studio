@@ -45,6 +45,28 @@ function stripStrayChannelTokens(text: string): string {
     .replace(/<unused\d+>/g, "")
 }
 
+/**
+ * Names of the tools the model tried to call by VERBALIZING the call in the
+ * text channel instead of emitting a real tool call. Extracted from the
+ * leaked pseudo-XML (`<call:default_api:report_danger{...}/>`), so callers
+ * can react — the call itself never reached the provider's tool channel and
+ * the platform did NOT execute it.
+ */
+export function findLeakedToolCallNames(text: string): string[] {
+  const names = new Set<string>()
+  // The leaked tag is malformed and comes in variants; the tool name is the
+  // last `:`-separated segment of the tag opener, before its arguments
+  // (`{...}`, ` attr=...`, or the closing `>`).
+  for (const match of text.matchAll(/<\/?(?:call|default_api)[:\s]([^>{(\s]+)/gi)) {
+    const segments = (match[1] ?? "").split(":").filter(Boolean)
+    const name = segments.at(-1)
+    if (name && name !== "default_api" && /^[a-zA-Z_][a-zA-Z0-9_]*$/.test(name)) {
+      names.add(name)
+    }
+  }
+  return [...names]
+}
+
 // biome-ignore lint/complexity/noStaticOnlyClass: helper
 export class ThoughtTokensHelper {
   /**
