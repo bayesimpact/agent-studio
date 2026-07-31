@@ -155,6 +155,7 @@ export class StreamingService extends ServiceWithLLM {
     notifyClient,
     sessionState,
     sessionResult,
+    externalVisitorId,
   }: {
     connectScope: RequiredConnectScope
     publicSessionId: string
@@ -169,6 +170,8 @@ export class StreamingService extends ServiceWithLLM {
     sessionState: SessionStateTarget
     /** Current fillForm state from public_agent_session.result. */
     sessionResult: Record<string, unknown> | null
+    /** Identifier the embedding page attached to the session, if any. */
+    externalVisitorId?: string | null
   }): AsyncGenerator<StreamEvent, void, unknown> {
     await this.recoverAbortedStreams(publicSessionId)
 
@@ -208,6 +211,7 @@ export class StreamingService extends ServiceWithLLM {
       id: publicSessionId,
       traceId: publicSessionId,
       organizationId: connectScope.organizationId,
+      externalVisitorId,
       messages,
       result: sessionResult,
     }

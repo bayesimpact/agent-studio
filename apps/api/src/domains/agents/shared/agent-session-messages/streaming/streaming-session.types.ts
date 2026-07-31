@@ -15,6 +15,11 @@ export type PublicStreamingSessionProxy = {
   id: string
   traceId: string
   organizationId: string
+  /**
+   * Identifier the embedding page attached to this session (for France
+   * Travail: the "identifiant DE"). Forwarded to MCP servers as context.
+   */
+  externalVisitorId?: string | null
   messages: AgentMessage[]
 }
 
