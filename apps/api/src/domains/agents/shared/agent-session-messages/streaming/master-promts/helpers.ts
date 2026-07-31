@@ -5,13 +5,15 @@ import {
 } from "@caseai-connect/api-contracts"
 import type { AgentSettings } from "@/domains/agents/settings/agent-settings.entity"
 import { lookupKnowledgeBaseInstruction } from "@/domains/agents/shared/agent-session-messages/streaming/tools/lookup-knowledge-base.tool"
-import { enumerateAgentResources } from "@/domains/agents/shared/agent-session-messages/streaming/tools/surfaced-resources-registry"
-import type { ResourceLibrary } from "@/domains/resource-libraries/resource-library.entity"
+import {
+  enumerateAgentResources,
+  type SurfaceableLibrary,
+} from "@/domains/agents/shared/agent-session-messages/streaming/tools/surfaced-resources-registry"
 
 export const promptHelpers = {
   now: () => `Today's date: ${new Date().toLocaleDateString()}`,
 
-  resourceLibraries: (libraries: ResourceLibrary[]) => {
+  resourceLibraries: (libraries: SurfaceableLibrary[]) => {
     // Aliases (r1, r2...) instead of real ids and links: the model only ever
     // cites an alias, the surfaceResources tool resolves it server-side. Real
     // links exposed here were getting RECITED into user-visible answers by
@@ -19,7 +21,7 @@ export const promptHelpers = {
     const entries = enumerateAgentResources(libraries)
     if (entries.length === 0) return ""
 
-    const byLibrary = new Map<ResourceLibrary, typeof entries>()
+    const byLibrary = new Map<SurfaceableLibrary, typeof entries>()
     for (const entry of entries) {
       const group = byLibrary.get(entry.library) ?? []
       group.push(entry)

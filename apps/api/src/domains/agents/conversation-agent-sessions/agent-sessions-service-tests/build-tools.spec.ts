@@ -48,7 +48,10 @@ describe("buildTools", () => {
     })
 
     expect(tools?.[ToolName.LookupKnowledgeBase]).toBeUndefined()
+    // The legacy recalculate tool is gone: session metadata lives in the
+    // composite mandatory_tool, present on every conversation agent.
     expect(tools?.[ToolName.RecalculateConversationSessionMetadata]).toBeUndefined()
+    expect(tools?.[ToolName.MandatoryTool]).toBeDefined()
   })
 
   it("should expose document retrieval when documentsRagMode is all", async () => {
@@ -95,7 +98,7 @@ describe("buildTools", () => {
     expect(tools?.[ToolName.RecalculateConversationSessionMetadata]).toBeUndefined()
   })
 
-  it("should expose metadata recalculation tool when agent has categories", async () => {
+  it("exposes the mandatory tool with categories when the agent has some", async () => {
     const {
       toolsService,
       service,
@@ -143,7 +146,10 @@ describe("buildTools", () => {
       onExecute: () => undefined,
     })
 
-    expect(tools?.[ToolName.RecalculateConversationSessionMetadata]).toBeDefined()
+    // Metadata reporting is part of the composite mandatory_tool; the
+    // legacy tool name only survives in execution logs.
+    expect(tools?.[ToolName.RecalculateConversationSessionMetadata]).toBeUndefined()
+    expect(tools?.[ToolName.MandatoryTool]).toBeDefined()
   })
 
   it("should omit configured sub-agent tools when orchestration feature is disabled", async () => {

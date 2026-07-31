@@ -1,6 +1,17 @@
 import type { ResourceDto } from "@caseai-connect/api-contracts"
-import type { ResourceLibrary } from "@/domains/resource-libraries/resource-library.entity"
 import { buildResourceLink } from "@/domains/resource-libraries/resource-library-link.helper"
+
+/**
+ * Structural subset of ResourceLibrary — everything the registry needs,
+ * without a cross-domain entity import (boundary rule).
+ */
+export type SurfaceableLibrary = {
+  id: string
+  organizationId: string
+  projectId: string
+  title: string
+  resources: ResourceDto[]
+}
 
 /**
  * Per-request registry of the agent's surfaceable resources, keyed by short
@@ -22,7 +33,7 @@ import { buildResourceLink } from "@/domains/resource-libraries/resource-library
 
 export type SurfacedResourceEntry = {
   alias: string
-  library: ResourceLibrary
+  library: SurfaceableLibrary
   resource: ResourceDto
   link: string
 }
@@ -38,7 +49,7 @@ export type SurfacedResourcesRegistry = {
  * Stable enumeration of the agent's resources: library order, then resource
  * order. Both the prompt helper and the registry rely on it.
  */
-export function enumerateAgentResources(libraries: ResourceLibrary[]): SurfacedResourceEntry[] {
+export function enumerateAgentResources(libraries: SurfaceableLibrary[]): SurfacedResourceEntry[] {
   const entries: SurfacedResourceEntry[] = []
   for (const library of libraries) {
     for (const resource of library.resources ?? []) {
@@ -59,7 +70,7 @@ export function enumerateAgentResources(libraries: ResourceLibrary[]): SurfacedR
 }
 
 export function createSurfacedResourcesRegistry(
-  libraries: ResourceLibrary[],
+  libraries: SurfaceableLibrary[],
 ): SurfacedResourcesRegistry {
   const entries = enumerateAgentResources(libraries)
   const byAlias = new Map(entries.map((entry) => [entry.alias, entry]))
