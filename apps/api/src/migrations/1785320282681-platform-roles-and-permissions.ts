@@ -4,11 +4,14 @@ import type { MigrationInterface, QueryRunner } from "typeorm"
  * Replaces the last env-based authorization checks with RBAC:
  * - renames `trace.view` to `trace.read` (CRUD-verb catalog)
  * - platform_staff: grants `backoffice.read` + `backoffice.terms.update`,
- *   revokes `organization.create` (moves to the superadmin role)
+ *   revokes `organization.create` (moves to the superadmin role).
+ *   Expects `platform_staff` to already exist (see
+ *   `RenameOrgCreatorToPlatformStaff1785254576514`). Membership seeding by
+ *   email domain lives in `SeedPlatformStaffByEmailDomain1785345241003`.
  * - creates the global `platform_superadmin` role granting
  *   `backoffice.read`, `trace.read`, `backoffice.terms.update`, `organization.create`
  *   and the backoffice "list all" permissions
- *   `backoffice.{organization,project,agent,user}.read`
+ *   `backoffice.{organization,project,agent,user}.read` + `backoffice.project.update`
  *   (ex BACKOFFICE_AUTHORIZED_EMAILS)
  * - grants `user.read` to org/project/agent owner+admin roles
  * - grants `backoffice.organization.read` to org owner+admin roles
@@ -20,11 +23,6 @@ import type { MigrationInterface, QueryRunner } from "typeorm"
  * - seeds agent RBAC roles (`agent_owner` / `agent_admin` / `agent_member`)
  *   and backfills `role_id` on agent memberships
  *   (scoped backoffice listings without a global grant)
- * - assigns platform_staff to users whose email matches
- *   ORGANIZATION_CREATOR_EMAIL_DOMAIN (throws if the env var is missing:
- *   the earlier seed migration skipped silently and never ran in production).
- *   down() does not remove those memberships: platform_staff predated this
- *   migration and up() only inserts missing rows.
  *
  * platform_superadmin memberships are not seeded: assigned manually.
  */
@@ -182,43 +180,9 @@ export class PlatformRolesAndPermissions1785320282681 implements MigrationInterf
         AND membership.role = 'member'
         AND role.key = 'agent_member'
     `)
-
-    const allowedDomain = process.env.ORGANIZATION_CREATOR_EMAIL_DOMAIN?.trim()
-    if (!allowedDomain) {
-      throw new Error(
-        "ORGANIZATION_CREATOR_EMAIL_DOMAIN must be set to run this migration: " +
-          "it assigns the platform_staff role to users whose email matches this domain",
-      )
-    }
-
-    await queryRunner.query(
-      `
-      INSERT INTO "user_membership" ("user_id", "resource_type", "resource_id", "role", "role_id")
-      SELECT user_account.id, 'global', NULL, 'member', role.id
-      FROM "user" AS user_account
-      CROSS JOIN "role" AS role
-      WHERE role.key = 'platform_staff'
-        AND lower(trim(user_account.email)) LIKE '%' || lower(trim($1))
-        AND user_account.deleted_at IS NULL
-        AND NOT EXISTS (
-          SELECT 1
-          FROM "user_membership" AS membership
-          WHERE membership.user_id = user_account.id
-            AND membership.resource_type = 'global'
-            AND membership.role_id = role.id
-            AND membership.deleted_at IS NULL
-        )
-      `,
-      [allowedDomain],
-    )
   }
 
   public async down(queryRunner: QueryRunner): Promise<void> {
-    // Do not delete platform_staff memberships: that role and many of its
-    // memberships predate this migration (org_creator → platform_staff rename).
-    // up() only inserts missing ones; wiping all rows here would strip users
-    // who already held the role before this migration ran.
-
     await queryRunner.query(`
       UPDATE "user_membership" AS membership
       SET role_id = NULL
