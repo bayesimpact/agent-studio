@@ -10,10 +10,10 @@ export type McpServerConfig = {
   url: string
   apiKey?: string
   /**
-   * Static headers sent on every call to this server. Stored in the encrypted
-   * config blob, so adding them needs no migration. Typical use: tagging the
-   * deployment a server is called from (`X-Deployment: recette`) when the same
-   * MCP server serves several agents.
+   * Static headers sent on every call to this server, for whatever a given
+   * server expects beyond its auth (an API version, a tenant). Stored in the
+   * encrypted config blob, so adding them needs no migration. The conversation
+   * context is applied after them and cannot be overridden here.
    */
   headers?: Record<string, string>
 }

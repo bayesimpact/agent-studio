@@ -27,12 +27,12 @@ describe("buildMcpRequestHeaders", () => {
   it("keeps the server's auth and its static headers", () => {
     const headers = buildMcpRequestHeaders({
       apiKey: "secret",
-      staticHeaders: { "X-Deployment": "recette" },
+      staticHeaders: { "X-Api-Version": "2" },
       context,
     })
 
     expect(headers.Authorization).toBe("Bearer secret")
-    expect(headers["X-Deployment"]).toBe("recette")
+    expect(headers["X-Api-Version"]).toBe("2")
   })
 
   it("does not let static headers spoof the conversation context", () => {

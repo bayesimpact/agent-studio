@@ -26,11 +26,10 @@ export const MCP_CONTEXT_HEADERS = {
 } as const
 
 /**
- * Builds the headers of an MCP transport: the server's own auth, then the
- * per-server static headers from its configuration (how a deployment tags
- * itself, e.g. `X-Deployment: recette` on a test agent's server), then the
- * conversation context. Context wins over static headers so a configuration
- * cannot spoof it.
+ * Builds the headers of an MCP transport: the server's own auth, then any
+ * static headers from its configuration (whatever a given server expects on
+ * every call, e.g. `X-Api-Version`), then the conversation context. Context
+ * wins over static headers so a configuration cannot spoof it.
  */
 export function buildMcpRequestHeaders({
   apiKey,

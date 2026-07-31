@@ -15,8 +15,8 @@ export const createMcpServerSchema = z.object({
   url: z.string().url(),
   apiKey: z.string().optional(),
   /**
-   * Static headers sent on every call to this server, e.g. tagging which
-   * deployment calls it when one server serves several agents.
+   * Static headers sent on every call to this server, for whatever it expects
+   * beyond its auth (an API version, a tenant).
    */
   headers: z.record(z.string().trim().min(1), z.string()).optional(),
 })
