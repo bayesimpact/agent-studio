@@ -23,7 +23,7 @@ describe("promptHelpers.resourceLibraries", () => {
     expect(promptHelpers.resourceLibraries([buildLibrary({ resources: [] })])).toBe("")
   })
 
-  it("serializes url resources with their url as the link", () => {
+  it("lists resources under short aliases, with NO real id and NO link", () => {
     const text = promptHelpers.resourceLibraries([
       buildLibrary({
         title: "Videos",
@@ -40,9 +40,48 @@ describe("promptHelpers.resourceLibraries", () => {
     ])
 
     expect(text).toContain("### Videos")
-    expect(text).toContain("id: res-1")
-    expect(text).toContain("link: https://example.com/video")
+    expect(text).toContain("r1: Intro")
     expect(text).toContain(ToolName.SurfaceResources)
+    // Real ids and links must never reach the prompt: exposed links were
+    // getting recited into user-visible answers by small models.
+    expect(text).not.toContain("res-1")
+    expect(text).not.toContain("https://example.com/video")
+    expect(text).not.toContain("link:")
+  })
+
+  it("numbers aliases across libraries in listing order", () => {
+    const text = promptHelpers.resourceLibraries([
+      buildLibrary({
+        title: "Videos",
+        resources: [
+          { id: "a", title: "Intro", description: "d", linkType: "url", url: "https://x.test/1" },
+          {
+            id: "b",
+            title: "Deep dive",
+            description: "d",
+            linkType: "url",
+            url: "https://x.test/2",
+          },
+        ],
+      }),
+      buildLibrary({
+        id: "lib-2",
+        title: "Docs",
+        resources: [
+          {
+            id: "c",
+            title: "Handbook",
+            description: "d",
+            linkType: "url",
+            url: "https://x.test/3",
+          },
+        ],
+      }),
+    ])
+
+    expect(text).toContain("r1: Intro")
+    expect(text).toContain("r2: Deep dive")
+    expect(text).toContain("r3: Handbook")
   })
 
   it("serializes matching hints only when present, labeling them as match-only", () => {
@@ -79,7 +118,7 @@ describe("promptHelpers.resourceLibraries", () => {
     expect(withHints).toContain("do NOT show to the user")
   })
 
-  it("serializes file resources with the public download path as the link", () => {
+  it("keeps file resources' internal download path out of the prompt", () => {
     const resourceId = randomUUID()
     const text = promptHelpers.resourceLibraries([
       buildLibrary({
@@ -102,8 +141,8 @@ describe("promptHelpers.resourceLibraries", () => {
       }),
     ])
 
-    expect(text).toContain(
-      `link: /organizations/org-9/projects/proj-9/resource-libraries/lib-9/resources/${resourceId}/file`,
-    )
+    expect(text).toContain("r1: Handbook")
+    expect(text).not.toContain("/organizations/")
+    expect(text).not.toContain(resourceId)
   })
 })

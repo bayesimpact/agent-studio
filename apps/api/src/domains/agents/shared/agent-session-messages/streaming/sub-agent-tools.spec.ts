@@ -68,6 +68,8 @@ describe("buildSubAgentTools", () => {
         onExecute: (toolExecution: ToolExecutionLog) => void
       }) => ({
         toolDescriptions: {},
+        fireAndForgetToolNames: [],
+        endOfTurnTools: {},
         hasSubAgentTools: false,
         tools: {
           child_lookup: tool({
@@ -95,7 +97,9 @@ describe("buildSubAgentTools", () => {
             yield "answer"
           },
         }) as never,
-      onExecute: (toolExecution) => toolExecutions.push(toolExecution),
+      onExecute: (toolExecution) => {
+        toolExecutions.push(toolExecution)
+      },
       projectsService: {
         hasFeature: jest.fn().mockResolvedValue(true),
       } as never,
@@ -198,7 +202,13 @@ describe("buildSubAgentTools", () => {
       agentSettingsService: {
         getLast: jest.fn().mockResolvedValue(childAgentSettings),
       } as never,
-      buildTools: async () => ({ toolDescriptions: {}, tools: {}, hasSubAgentTools: false }),
+      buildTools: async () => ({
+        toolDescriptions: {},
+        tools: {},
+        fireAndForgetToolNames: [],
+        endOfTurnTools: {},
+        hasSubAgentTools: false,
+      }),
       generateMasterPrompt: () => "system prompt",
       getProviderForModel: () =>
         ({
@@ -313,7 +323,13 @@ describe("buildSubAgentTools", () => {
       agentSettingsService: {
         getLast: jest.fn().mockResolvedValue(childAgentSettings),
       } as never,
-      buildTools: async () => ({ toolDescriptions: {}, tools: {}, hasSubAgentTools: false }),
+      buildTools: async () => ({
+        toolDescriptions: {},
+        tools: {},
+        fireAndForgetToolNames: [],
+        endOfTurnTools: {},
+        hasSubAgentTools: false,
+      }),
       generateMasterPrompt: () => "system prompt",
       getProviderForModel: () =>
         ({

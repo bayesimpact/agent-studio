@@ -4,11 +4,26 @@
 // stripped), we treat it as leaked-marker content and drop it too.
 const CHANNEL_KEYWORDS = "thought|analysis|reasoning|finalize|commentary|final"
 
+// Hallucinated tool-call syntax that Gemini models (lite especially) leak
+// into the TEXT stream instead of emitting a real functionCall — observed in
+// production: `<call:default_api:mandatory_tool xmlns:default_api=... />`.
+// `default_api` is an internal Gemini tool namespace; none of these tags can
+// ever be legitimate user-facing content.
+const PSEUDO_TOOL_CALL_RE = /<\/?(?:call|default_api)[:\s][^>]*\/?>/gi
+// An opener of that family that has no closing `>` yet (still streaming).
+const PSEUDO_TOOL_CALL_OPEN_RE = /<\/?(?:call|default_api)[:\s][^>]*$/i
+// Give up holding the stream back after this many buffered characters: a
+// legitimate `<call:`-looking text (vanishingly unlikely) must not stall the
+// stream forever.
+const PSEUDO_TOOL_CALL_MAX_LEN = 600
+
 // Composite removals that need a full self-contained match. Safe to run on a
 // partial streaming buffer because they only fire once both ends are present.
 function stripPairedChannelMarkers(text: string): string {
   return (
     text
+      // Hallucinated tool-call tags verbalized into the text
+      .replace(PSEUDO_TOOL_CALL_RE, "")
       // <|channel>thought<channel|> ... <channel|> (eats nested openers too)
       .replace(new RegExp(`<\\|channel>(?:${CHANNEL_KEYWORDS})[\\s\\S]*?<channel\\|>`, "gi"), "")
       // Gemma 3 legacy: <unused N>thought ... <unused N>
@@ -68,6 +83,13 @@ export class ThoughtTokensHelper {
 
         let safeUntil = pending.length - HOLD_TAIL
         if (safeUntil <= 0) return ""
+        // A pseudo tool-call tag can be far longer than MAX_MARKER_LEN: if
+        // one is still open in the buffer, hold everything back from its
+        // `<` (bounded — a never-closing lookalike must not stall the stream).
+        const pseudoOpen = pending.search(PSEUDO_TOOL_CALL_OPEN_RE)
+        if (pseudoOpen !== -1 && pending.length - pseudoOpen < PSEUDO_TOOL_CALL_MAX_LEN) {
+          safeUntil = Math.min(safeUntil, pseudoOpen)
+        }
         const ltBeforeCut = pending.lastIndexOf("<", safeUntil - 1)
         if (ltBeforeCut !== -1 && safeUntil - ltBeforeCut < MAX_MARKER_LEN) {
           safeUntil = ltBeforeCut

@@ -4,32 +4,37 @@ import {
   ToolName,
 } from "@caseai-connect/api-contracts"
 import type { AgentSettings } from "@/domains/agents/settings/agent-settings.entity"
-import type { ResourceLibrary } from "@/domains/resource-libraries/resource-library.entity"
-import { buildResourceLink } from "@/domains/resource-libraries/resource-library-link.helper"
+import { lookupKnowledgeBaseInstruction } from "@/domains/agents/shared/agent-session-messages/streaming/tools/lookup-knowledge-base.tool"
+import {
+  enumerateAgentResources,
+  type SurfaceableLibrary,
+} from "@/domains/agents/shared/agent-session-messages/streaming/tools/surfaced-resources-registry"
 
 export const promptHelpers = {
   now: () => `Today's date: ${new Date().toLocaleDateString()}`,
 
-  resourceLibraries: (libraries: ResourceLibrary[]) => {
-    const librariesWithResources = libraries.filter(
-      (library) => (library.resources?.length ?? 0) > 0,
-    )
-    if (librariesWithResources.length === 0) return ""
+  resourceLibraries: (libraries: SurfaceableLibrary[]) => {
+    // Aliases (r1, r2...) instead of real ids and links: the model only ever
+    // cites an alias, the surfaceResources tool resolves it server-side. Real
+    // links exposed here were getting RECITED into user-visible answers by
+    // small models instead of triggering the tool call.
+    const entries = enumerateAgentResources(libraries)
+    if (entries.length === 0) return ""
 
-    const serializedLibraries = librariesWithResources
-      .map((library) => {
-        const serializedResources = library.resources
-          .map((resource) => {
-            const link = buildResourceLink({
-              resource,
-              organizationId: library.organizationId,
-              projectId: library.projectId,
-              resourceLibraryId: library.id,
-            })
-            const matchingHintsLine = resource.matchingHints
-              ? `\n    matching hints (for matching only, do NOT show to the user): ${resource.matchingHints}`
+    const byLibrary = new Map<SurfaceableLibrary, typeof entries>()
+    for (const entry of entries) {
+      const group = byLibrary.get(entry.library) ?? []
+      group.push(entry)
+      byLibrary.set(entry.library, group)
+    }
+    const serializedLibraries = [...byLibrary.entries()]
+      .map(([library, libraryEntries]) => {
+        const serializedResources = libraryEntries
+          .map((entry) => {
+            const matchingHintsLine = entry.resource.matchingHints
+              ? `\n    matching hints (for matching only, do NOT show to the user): ${entry.resource.matchingHints}`
               : ""
-            return `  - id: ${resource.id}\n    title: ${resource.title}\n    description: ${resource.description}${matchingHintsLine}\n    link: ${link}`
+            return `  - ${entry.alias}: ${entry.resource.title}\n    description: ${entry.resource.description}${matchingHintsLine}`
           })
           .join("\n")
         return `### ${library.title}\n${serializedResources}`
@@ -37,7 +42,7 @@ export const promptHelpers = {
       .join("\n\n")
 
     return `## Resource libraries:
-You have access to the following resources. When the user's request matches a resource by its title, description, or matching hints, call the ${ToolName.SurfaceResources} tool with the matching resources (copy their id, title, description, and link verbatim — never copy the matching hints). Do not invent resources or links.
+You have access to the following resources. When the user's request matches a resource by its title, description, or matching hints, call the ${ToolName.SurfaceResources} tool with the ids (r1, r2, ...) of the matching resources. The tool shows them to the user as rich cards — never describe a resource's link in your text, and never copy the matching hints.
 
 ${serializedLibraries}`
   },
@@ -55,18 +60,20 @@ Always answer in ${locale === "en" ? "English" : locale === "fr" ? "French" : "u
     names: string[]
     descriptions?: Record<string, string>
     agentSettings: AgentSettings
-  }) =>
-    names.length === 0
-      ? ""
-      : `## Tools:
+  }) => {
+    if (names.length === 0) return ""
+    return `## Tools:
 ${names
   .map((name) => {
     switch (name) {
-      case ToolName.RetrieveProjectDocumentChunks:
-        return `[${name}]: When the user asks about information that may exist in project documents, call the ${name} tool before answering. Use the returned chunks as primary context and avoid inventing facts not present in those chunks.`
+      // Every declared tool is listed, this one included. The line POINTS
+      // to the response protocol (the prompt epilogue) instead of repeating
+      // it — the imperative lives there, in recency position.
+      case ToolName.MandatoryTool:
+        return `[${name}]: mandatory bookkeeping report (session categories, title, sources) attached to every response — see the "Response protocol" section at the end of this prompt.`
 
-      case ToolName.Sources:
-        return `[${name}]: You MUST call the ${name} tool whenever you use information from the ${ToolName.RetrieveProjectDocumentChunks} tool to answer the user, regardless of whether the chunks come from uploaded documents (documentSourceType="project") or crawled web pages (documentSourceType="webCrawl"). Include EVERY document whose chunks you actually used — do not omit web-crawled pages. For each source, copy the documentId, documentTitle, and documentSourceType verbatim from the retrieved chunks. Do NOT cite sources inline in your text response; the ${name} tool is the only way to show sources to the user.`
+      case ToolName.LookupKnowledgeBase:
+        return `[${name}]: ${lookupKnowledgeBaseInstruction()}`
 
       case ToolName.FillForm: {
         const parsedSchema = outputJsonSchemaSchema.safeParse(agentSettings.outputJsonSchema)
@@ -86,9 +93,6 @@ ${orderedFields
   .join("\n")}\n\n`
       }
 
-      case ToolName.RecalculateConversationSessionMetadata:
-        return `[${name}]: Call this tool after answering the user so session metadata stays aligned. Return the full category set that should remain on the session (including categories still relevant from earlier turns), not only categories from the latest message.`
-
       case ToolName.McpSearchResources:
         return `[${name}]: Search for workforce and social resources from a specific source (datainclusion, francetravail-jobs, francetravail-events, francetravail-labonneboite). Returns raw results without AI processing. Use this when the user asks about a specific type of resource.`
 
@@ -103,5 +107,6 @@ ${orderedFields
         return `[${name}]: No specific instructions for this tool.`
     }
   })
-  .join("\n")}`,
+  .join("\n")}`
+  },
 }
