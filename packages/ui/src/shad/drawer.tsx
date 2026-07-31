@@ -1,9 +1,28 @@
+import { useOverlayContext } from "@caseai-connect/ui/shad/overlay-context"
 import { cn } from "@caseai-connect/ui/utils"
 import type * as React from "react"
 import { Drawer as DrawerPrimitive } from "vaul"
 
-function Drawer({ ...props }: React.ComponentProps<typeof DrawerPrimitive.Root>) {
-  return <DrawerPrimitive.Root data-slot="drawer" {...props} />
+function Drawer({
+  modal,
+  container,
+  dismissible,
+  ...props
+}: React.ComponentProps<typeof DrawerPrimitive.Root>) {
+  // vaul takes `modal`, the portal `container`, AND `dismissible` on the Root. Honor ambient
+  // overrides (embedded/preview hosts) unless set explicitly. `dismissable: false` from the host
+  // maps to vaul's `dismissible={false}` (no outside/drag close). NOTE: vaul also disables Escape in
+  // that mode — fine for the walkthroughs (they don't drive a drawer); revisit if one ever does.
+  const ctx = useOverlayContext()
+  return (
+    <DrawerPrimitive.Root
+      data-slot="drawer"
+      modal={modal ?? ctx.modal}
+      container={container ?? ctx.container ?? undefined}
+      dismissible={dismissible ?? (ctx.dismissable === false ? false : undefined)}
+      {...props}
+    />
+  )
 }
 
 function DrawerTrigger({ ...props }: React.ComponentProps<typeof DrawerPrimitive.Trigger>) {

@@ -1,15 +1,19 @@
 ---
 /**
- * Resource libraries walkthrough — v2. Mounts the static React island built from the REAL
- * imported `@caseai-connect/ui` components, with the page assembly transcribed from
- * `apps/web` and labels auto-synced from the app locales (see `src/walkthroughs/` and
- * `apps/help/CLAUDE.md` → "Walkthrough generation v2"). Lightweight, no live app.
- * `.wt-scope` product tokens come from `global.css` (imported by BaseLayout).
- * Pass `lang="fr"` for the French copy.
+ * Resource libraries walkthrough — v3 LIVE. Mounts the REAL studioRoutes app once (shared engine)
+ * and drives the resource-libraries flow — zero drift (real components, labels, states). See
+ * `src/walkthroughs/ResourceLibrariesLive.tsx` + `apps/help/CLAUDE.md`. `.wt-scope` product tokens
+ * come from `global.css`. Pass `lang="fr"` for the French copy.
  */
-import ResourceLibrariesWalkthroughIsland from "@/walkthroughs/ResourceLibrariesScene.tsx"
+import ResourceLibrariesWalkthroughIsland from "@/walkthroughs/ResourceLibrariesLive.tsx"
 type Lang = "en" | "fr"
 const { lang = "en" } = Astro.props as { lang?: Lang }
 ---
 
-<ResourceLibrariesWalkthroughIsland client:only="react" lang={lang} />
+<div class="wt-embed">
+  <ResourceLibrariesWalkthroughIsland client:only="react" lang={lang}>
+    <div slot="fallback" class="wt-embed-loading">
+      {lang === "fr" ? "Chargement de la démonstration…" : "Loading the walkthrough…"}
+    </div>
+  </ResourceLibrariesWalkthroughIsland>
+</div>

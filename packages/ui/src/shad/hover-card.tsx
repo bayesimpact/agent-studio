@@ -1,3 +1,4 @@
+import { useOverlayContext, useOverlayDismissProps } from "@caseai-connect/ui/shad/overlay-context"
 import { cn } from "@caseai-connect/ui/utils"
 import * as HoverCardPrimitive from "@radix-ui/react-hover-card"
 import type * as React from "react"
@@ -16,8 +17,11 @@ function HoverCardContent({
   sideOffset = 4,
   ...props
 }: React.ComponentProps<typeof HoverCardPrimitive.Content>) {
+  // Portal into an ambient container (walkthrough window) when provided; else body.
+  const ctx = useOverlayContext()
+  const dismiss = useOverlayDismissProps()
   return (
-    <HoverCardPrimitive.Portal data-slot="hover-card-portal">
+    <HoverCardPrimitive.Portal data-slot="hover-card-portal" container={ctx.container ?? undefined}>
       <HoverCardPrimitive.Content
         data-slot="hover-card-content"
         align={align}
@@ -27,6 +31,7 @@ function HoverCardContent({
           className,
         )}
         {...props}
+        {...dismiss}
       />
     </HoverCardPrimitive.Portal>
   )

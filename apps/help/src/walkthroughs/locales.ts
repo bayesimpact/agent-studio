@@ -7,6 +7,8 @@
 //
 // Namespaced keys use the i18next form "namespace:path.to.key", with {{var}} interpolation
 // and _one/_other pluralization on a numeric `count`.
+import agentMembershipEn from "../../../web/src/studio/features/agent-memberships/locales/agent-membership.en.json"
+import agentMembershipFr from "../../../web/src/studio/features/agent-memberships/locales/agent-membership.fr.json"
 import agentEn from "../../../web/src/common/features/agents/locales/agent.en.json"
 import agentFr from "../../../web/src/common/features/agents/locales/agent.fr.json"
 import projectEn from "../../../web/src/common/features/projects/locales/project.en.json"

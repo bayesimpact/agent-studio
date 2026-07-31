@@ -1,3 +1,7 @@
+import {
+  useOverlayContext,
+  useOverlayPointerDismissProps,
+} from "@caseai-connect/ui/shad/overlay-context"
 import { cn } from "@caseai-connect/ui/utils"
 import * as SelectPrimitive from "@radix-ui/react-select"
 import { CheckIcon, ChevronDownIcon, ChevronUpIcon } from "lucide-react"
@@ -48,8 +52,11 @@ function SelectContent({
   align = "center",
   ...props
 }: React.ComponentProps<typeof SelectPrimitive.Content>) {
+  // Portal into an ambient container (walkthrough window) when provided; else body.
+  const ctx = useOverlayContext()
+  const dismiss = useOverlayPointerDismissProps()
   return (
-    <SelectPrimitive.Portal>
+    <SelectPrimitive.Portal container={ctx.container ?? undefined}>
       <SelectPrimitive.Content
         data-slot="select-content"
         className={cn(
@@ -61,6 +68,7 @@ function SelectContent({
         position={position}
         align={align}
         {...props}
+        {...dismiss}
       >
         <SelectScrollUpButton />
         <SelectPrimitive.Viewport

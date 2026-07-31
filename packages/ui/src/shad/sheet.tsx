@@ -1,11 +1,14 @@
+import { useOverlayContext, useOverlayDismissProps } from "@caseai-connect/ui/shad/overlay-context"
 import * as SheetPrimitive from "@radix-ui/react-dialog"
 import { XIcon } from "lucide-react"
 import type * as React from "react"
 
 import { cn } from "../lib/utils"
 
-function Sheet({ ...props }: React.ComponentProps<typeof SheetPrimitive.Root>) {
-  return <SheetPrimitive.Root data-slot="sheet" {...props} />
+function Sheet({ modal, ...props }: React.ComponentProps<typeof SheetPrimitive.Root>) {
+  // Honor an ambient non-modal override (embedded/preview hosts) unless set explicitly.
+  const ctx = useOverlayContext()
+  return <SheetPrimitive.Root data-slot="sheet" modal={modal ?? ctx.modal} {...props} />
 }
 
 function SheetTrigger({ ...props }: React.ComponentProps<typeof SheetPrimitive.Trigger>) {
@@ -44,8 +47,11 @@ function SheetContent({
 }: React.ComponentProps<typeof SheetPrimitive.Content> & {
   side?: "top" | "right" | "bottom" | "left"
 }) {
+  // Portal into an ambient container (walkthrough window) when provided; else body.
+  const ctx = useOverlayContext()
+  const dismiss = useOverlayDismissProps()
   return (
-    <SheetPortal>
+    <SheetPortal container={ctx.container ?? undefined}>
       <SheetOverlay />
       <SheetPrimitive.Content
         data-slot="sheet-content"
@@ -62,6 +68,7 @@ function SheetContent({
           className,
         )}
         {...props}
+        {...dismiss}
       >
         {children}
         <SheetPrimitive.Close className="ring-offset-background focus:ring-ring data-[state=open]:bg-secondary absolute top-4 right-4 rounded-xs opacity-70 transition-opacity hover:opacity-100 focus:ring-2 focus:ring-offset-2 focus:outline-hidden disabled:pointer-events-none">

@@ -1,3 +1,7 @@
+import {
+  useOverlayContext,
+  useOverlayPointerDismissProps,
+} from "@caseai-connect/ui/shad/overlay-context"
 import * as TooltipPrimitive from "@radix-ui/react-tooltip"
 import type * as React from "react"
 
@@ -34,8 +38,11 @@ function TooltipContent({
   children,
   ...props
 }: React.ComponentProps<typeof TooltipPrimitive.Content>) {
+  // Portal into an ambient container (walkthrough window) when provided; else body.
+  const ctx = useOverlayContext()
+  const dismiss = useOverlayPointerDismissProps()
   return (
-    <TooltipPrimitive.Portal>
+    <TooltipPrimitive.Portal container={ctx.container ?? undefined}>
       <TooltipPrimitive.Content
         data-slot="tooltip-content"
         sideOffset={sideOffset}
@@ -44,6 +51,7 @@ function TooltipContent({
           className,
         )}
         {...props}
+        {...dismiss}
       >
         {children}
         <TooltipPrimitive.Arrow className="bg-foreground fill-foreground z-50 size-2.5 translate-y-[calc(-50%-2px)] rotate-45 rounded-[2px]" />

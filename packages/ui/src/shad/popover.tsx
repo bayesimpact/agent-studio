@@ -1,9 +1,12 @@
+import { useOverlayContext, useOverlayDismissProps } from "@caseai-connect/ui/shad/overlay-context"
 import { cn } from "@caseai-connect/ui/utils"
 import * as PopoverPrimitive from "@radix-ui/react-popover"
 import type * as React from "react"
 
-function Popover({ ...props }: React.ComponentProps<typeof PopoverPrimitive.Root>) {
-  return <PopoverPrimitive.Root data-slot="popover" {...props} />
+function Popover({ modal, ...props }: React.ComponentProps<typeof PopoverPrimitive.Root>) {
+  // Honor an ambient non-modal override (embedded/preview hosts) unless set explicitly.
+  const ctx = useOverlayContext()
+  return <PopoverPrimitive.Root data-slot="popover" modal={modal ?? ctx.modal} {...props} />
 }
 
 function PopoverTrigger({ ...props }: React.ComponentProps<typeof PopoverPrimitive.Trigger>) {
@@ -16,8 +19,11 @@ function PopoverContent({
   sideOffset = 4,
   ...props
 }: React.ComponentProps<typeof PopoverPrimitive.Content>) {
+  // Portal into an ambient container (walkthrough window) when provided; else body.
+  const ctx = useOverlayContext()
+  const dismiss = useOverlayDismissProps()
   return (
-    <PopoverPrimitive.Portal>
+    <PopoverPrimitive.Portal container={ctx.container ?? undefined}>
       <PopoverPrimitive.Content
         data-slot="popover-content"
         align={align}
@@ -27,6 +33,7 @@ function PopoverContent({
           className,
         )}
         {...props}
+        {...dismiss}
       />
     </PopoverPrimitive.Portal>
   )

@@ -122,6 +122,7 @@ export function StudioChrome({
   overlay,
   modal,
   agentActive = false,
+  activeSettings = null,
 }: {
   lang: Lang
   sourcesOpen: boolean
@@ -131,6 +132,7 @@ export function StudioChrome({
   overlay?: ReactNode
   modal?: ReactNode
   agentActive?: boolean
+  activeSettings?: "members" | "admin" | null
 }) {
   const s = chrome(lang)
   return (
@@ -342,14 +344,18 @@ export function StudioChrome({
                   </SidebarMenuButton>
                 </SidebarMenuItem>
                 <SidebarMenuItem>
-                  <SidebarMenuButton>
-                    <Users style={ico} /> <span>{s.members}</span>
-                  </SidebarMenuButton>
+                  <Anchor name="navMembers">
+                    <SidebarMenuButton isActive={activeSettings === "members"}>
+                      <Users style={ico} /> <span>{s.members}</span>
+                    </SidebarMenuButton>
+                  </Anchor>
                 </SidebarMenuItem>
                 <SidebarMenuItem>
-                  <SidebarMenuButton>
-                    <Settings2 style={ico} /> <span>{s.admin}</span>
-                  </SidebarMenuButton>
+                  <Anchor name="navAdmin">
+                    <SidebarMenuButton isActive={activeSettings === "admin"}>
+                      <Settings2 style={ico} /> <span>{s.admin}</span>
+                    </SidebarMenuButton>
+                  </Anchor>
                 </SidebarMenuItem>
               </SidebarMenu>
             </SidebarGroup>

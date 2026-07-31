@@ -11,500 +11,309 @@ shared packages (`packages/**`).
 - If a task appears to require a change outside `apps/help/` (e.g. a root config
   tweak, wiring `VITE_HELP_CENTER_URL` in `apps/web`, adding a workspace-wide
   dependency), **STOP and ask the user first**. Do not make the change yourself.
-- Explain what the outside change would be and why, then let the user decide
-  whether to do it themselves or explicitly authorize you for that one change.
+- Explain what the outside change would be and why, then let the user decide.
 - This applies to every tool that mutates files (Write, Edit, mv/rm via shell,
-  formatters run with `--write`, etc.). Read-only inspection of files outside
-  `apps/help/` is fine.
+  formatters run with `--write`, etc.). Read-only inspection outside `apps/help/` is fine.
 - Running commands is fine as long as they do not write outside `apps/help/`.
-  Prefer scoping commands to this app (e.g. run Biome as
-  `npx biome check --write apps/help`, not on the repo root).
+  Prefer scoping commands to this app (e.g. `npx biome check --write apps/help`).
+
+**Exception, one-time granted**: the v3 live walkthrough required wiring
+`OverlayProvider` into `packages/ui` shad overlay primitives (dialog, dropdown-menu,
+popover, sheet, select, tooltip, hover-card, drawer). That is **done and
+backward-compatible** — do not redo it, and it does not loosen the rule above.
 
 **Rationale**: the help center is a self-contained static Astro app. Keeping all
-changes within its folder makes the work reviewable in isolation and avoids
-unintended side effects on the rest of the monorepo.
+changes within its folder makes the work reviewable in isolation.
 
 ---
 
 # When asked to "make a guide" — the one-shot checklist
 
-This is the authoritative procedure. Follow it end-to-end; the sections below are the
-detail. Everything here was learned the hard way — don't skip a step.
+Authoritative procedure; the sections below are the detail.
 
-1. **Scope.** Only touch `apps/help/`. Anything outside → STOP and ask (§Scope
-   Confinement).
+1. **Scope.** Only touch `apps/help/`. Anything outside → STOP and ask (§Scope).
 2. **Feature & placement.** Map the feature to a `guides-*` sub-category
    (§Guide categories); `order` = next free integer within it; pick EN+FR slugs. Only
-   ask the user if the feature name is genuinely ambiguous (several candidates share
-   it) — otherwise infer and proceed.
-3. **Derive from the CURRENT code — never from memory or an earlier read**
-   (§Fidelity method, Phase 0–1). Re-read the real components NOW (the code moves);
-   follow imports from the feature's entry component. Write the **render inventory**:
-   every screen / dialog / tab / field AND its render condition (feature flag,
-   project state). Depict the **fully-provisioned superset** and annotate the
-   conditional surfaces — **never silently drop one** (that's how tabs get missed).
-4. **Labels & icons verbatim** (§Fidelity Phase 2, §Writing style): copy each label
-   from the **EN + FR** locale files; exact Lucide names/paths; keep
-   hardcoded-English labels as-is; **neutral** sample data; terminology is always
-   **"workspace" / "espace de travail"**, never "project".
-5. **Build the walkthrough** = a NEW hand-built `*Walkthrough.astro` with a **unique
-   scoped root class**. Copy only the shared **FORM** (208px/680px shell, controls,
-   `DUR = 6000`, spot/observe mechanics, the Studio sidebar with the **Settings group
-   anchored to the bottom**). Use the **PRODUCT coral palette, pinned locally** —
-   never the site's Bayes beige/gold, never global tokens, never real-component
-   markup (§Walkthrough animations, §Consistency). **Re-derive the content** (tabs /
-   fields / labels / steps) for THIS feature; never copy a sibling guide's content
-   without re-verifying it against the code.
-6. **Model state consequences** (§Actions have consequences): the animation's state
-   must change with the actions — a created agent appears (active) in the sidebar, an
-   uploaded document becomes a row, an invite becomes a Pending entry, etc.
+   ask the user if the feature name is genuinely ambiguous.
+3. **Audit the CURRENT code first — never from memory** (§v3 → Audit first). Re-read the
+   real `apps/web` route(s) NOW (the code moves): follow imports from the feature's entry
+   component and write the **flow inventory** — every screen/dialog/tab/field/action AND
+   its render condition (feature flag / project state). This tells you what to **drive**
+   and what to **document**. Depict the fully-provisioned superset; never silently drop a
+   conditional surface.
+4. **Labels & icons come from the REAL app** — in v3 the walkthrough renders the real
+   components, so the on-screen labels are always correct automatically. For the **MDX
+   prose** you still quote them verbatim from the EN+FR locale files (§Fidelity Phase 2 is
+   gone; labels are read for the doc, not to redraw). Keep hardcoded-English labels as-is;
+   neutral sample data; terminology is always **"workspace" / "espace de travail"**.
+5. **Build the walkthrough = the v3 LIVE island** (§Walkthrough generation v3). One
+   per-feature file `src/walkthroughs/<Feature>Live.tsx` (a seed + a `steps` array that
+   drives the real app), mounted `client:only` from `src/components/<Feature>Walkthrough.astro`.
+   **Do NOT hand-draw or transcribe** the UI — drive the real thing.
+6. **Model state consequences** (§v3 → State evolution): the walkthrough's state must
+   change with the actions — a sent invite appears under **Pending invitations**, an
+   uploaded doc becomes a **Processing** then **Ready** row, etc. — done via seed + Redux
+   dispatch, not by redrawing.
 7. **Write both MDX** (EN + FR) on the skeleton (§MDX skeleton), importing the
-   walkthrough; one `### n` sub-section per animation step. **Exhaustive by rule —
-   no step omitted** (§Writing style → Level of detail): from the entry point to the
-   final result, every screen/dialog/tab/field/label in bold verbatim, serving end
-   users *and* AI agents. If it's not in the guide, the AI cannot answer it.
-   **If the feature is feature-flagged, add the flag callout** (§Feature-flag
-   callout) — a blockquote in both EN + FR telling the reader the feature is optional
-   and how to get it enabled.
-8. **Verify — the gate** (§Fidelity Phase 5, §Validate): `astro build` **and**
-   `astro check` at 0 errors; grep the built HTML for **every** tab/label; **diff the
-   tab set (count + order) against the component**; confirm the pages render.
-9. **Guard** (§Fidelity Phase 6): header comment in the `.astro` naming the source
-   components + the date; re-run the inventory on any later edit.
+   walkthrough; one `### n` sub-section per animation step. **Exhaustive by rule — no step
+   omitted** (§Writing style → Level of detail), serving end users *and* AI agents. **If
+   the feature is feature-flagged, add the flag callout** (§Feature-flag callout).
+8. **Verify** (§Validate): `astro build` **and** `astro check` at 0 errors; the pages
+   render; eyeball the walkthrough **inside a real guide page** (`/en/<slug>`), not just in
+   isolation (host `.prose` can bleed — §v3 → Isolation).
+9. **Guard** (§v3 → Drift): the engine's dev self-check logs a step whose drive found no
+   target (structure moved); `npm run build` runs `check-walkthroughs.mjs`.
 
-Golden rule: put nothing in a guide you can't point to in the code (component, locale
-key, icon) — and prove it in the Phase-5 check before saying it's done. Conversely,
-leave **nothing out**: a guide is complete only when a first-time user could finish
-the feature end-to-end from it *and* an AI agent could answer any "where is X / how
-do I Y" from its words alone (§Writing style → Level of detail). The **site chrome**
-is the Bayes brand DA (§Design System); the **animations** are not — they stay
-Studio/coral.
+Golden rule: a guide is complete only when a first-time user could finish the feature
+end-to-end from it *and* an AI agent could answer any "where is X / how do I Y" from its
+words alone (§Level of detail). The **site chrome** is the Bayes brand DA (§Design System);
+the **walkthrough** is the real Studio app, isolated under `.wt-scope`.
 
 ---
 
 # Design System — Bayes brand DA (light-only)
 
-The help center follows the **Bayes Impact brand DA** (bayesimpact.org), NOT a
-generic docs/shadcn theme. **Source of truth: `@bayes/ui` `tokens.css` +
-`components.css`** (the website's shared files) — values are *mirrored, never
-reinvented*. Everything below lives in `src/styles/global.css` unless noted.
+The help center follows the **Bayes Impact brand DA** (bayesimpact.org), NOT a generic
+docs/shadcn theme. **Source of truth: `@bayes/ui` `tokens.css` + `components.css`** —
+values are *mirrored, never reinvented*. Everything below lives in `src/styles/global.css`.
 
 ## Tokens (values in `global.css`, keep the shadcn `--color-*` names)
-
-- Surface **beige `#F2EFE9`** (`--background`) · ink **`#000`** text
-  (`--foreground`) · cards **`#FFF`** (`--card`) · cream **`#F7F7F2`**
-  (`--secondary`/`--muted`) · muted text **`#657180`** (`--muted-foreground`).
-- **Gold `#DBCCAF`** = hairlines/borders (`--border`, `--input`) and the brand
-  accent surface.
-- **Orange `#FF8400`** (`--primary`, `--accent-orange`) = **PUNCTUATION ONLY** —
-  eyebrow text, focus ring, active dot/rule, link hover. Never large orange fills,
-  never orange body text/buttons.
-- Emphasis highlight = gold marker **`#EBE092`** (`--gold-mark`, via `.hl` /
-  `<mark>`); in-text link accent = gold-deep **`#9A6F24`** (`--gold-deep`).
-- Radius **14px** (`--radius`).
-- Because the token *names* stay shadcn-compatible, **use the Tailwind utilities**
-  (`bg-background`, `text-foreground`, `border-border`, `bg-card`, `bg-secondary`,
-  `text-muted-foreground`, `bg-primary`) — **never hardcode a hex in a component.**
-  Missing token? Add it by mirroring `@bayes/ui`, don't guess a colour.
+- Surface **beige `#F2EFE9`** (`--background`) · ink **`#000`** (`--foreground`) · cards
+  **`#FFF`** (`--card`) · cream **`#F7F7F2`** (`--secondary`/`--muted`) · muted text
+  **`#657180`** (`--muted-foreground`).
+- **Gold `#DBCCAF`** = hairlines/borders (`--border`, `--input`) and brand accent surface.
+- **Orange `#FF8400`** (`--primary`) = **PUNCTUATION ONLY** — eyebrow, focus ring, active
+  dot, link hover. Never large orange fills or orange body text/buttons.
+- Emphasis highlight = gold marker **`#EBE092`** (`.hl` / `<mark>`); in-text link accent =
+  gold-deep **`#9A6F24`**. Radius **14px**.
+- Token *names* stay shadcn-compatible → **use the Tailwind utilities** (`bg-background`,
+  `text-foreground`, `border-border`…), **never hardcode a hex**. Missing token? Mirror
+  `@bayes/ui`, don't guess.
 
 ## Typography
-
-- Body: **Inter** (`--font-sans`). Display/titles: **Archivo Black** via the
-  `.font-display` class (home hero, article H1, prose `h2`). Serif available:
-  **Kaisei Decol** (`--font-serif`). Headings are **not** uppercase.
-- Google Fonts are loaded in `BaseLayout.astro` (Inter / Archivo Black / Kaisei).
-
-## Component vocabulary (`global.css @layer components`, from `@bayes/ui`)
-
-- **Buttons** — pills: `.btn` + `.btn-primary` (ink bg / beige text), `.btn-outline`,
-  size `.btn-sm`.
-- **`.eyebrow`** (uppercase tracked, orange) · **`.label`** (same, muted) ·
-  **`.pill`** (gold-bordered chip) · **`.chip`** (cream tag).
-- **Cards**: white + `border-border` (gold) + `rounded-[14px]` + hover lift &
-  soft shadow.
+- Body: **Inter** (`--font-sans`). Display/titles: **Archivo Black** via `.font-display`
+  (home hero, article H1, prose `h2`). Serif: **Kaisei Decol** (`--font-serif`). Google
+  Fonts loaded in `BaseLayout.astro`.
 
 ## Chrome patterns
-
-- **Header** container is `max-w-[96rem] px-4 sm:px-6` — it MUST match
-  `DocsLayout.astro` so the logo aligns with the sidebar's left edge. "Back to app"
-  is a `.btn-outline .btn-sm` pill.
-- **Footer** is a near-black brand surface (`#0e0e13`, light text) — a design
-  surface, not a theme.
-- **Language switcher**: globe + current code (`EN`/`FR`) + chevron; menu lists
-  full names, the active one is **bold + `bg-secondary`** (NO check icon —
-  bayesimpact.org has none).
+- **Header** container `max-w-[96rem] px-4 sm:px-6` (must match `DocsLayout.astro`). "Back
+  to app" = `.btn-outline .btn-sm`. **Footer** = near-black brand surface (`#0e0e13`).
+- **Language switcher**: globe + `EN`/`FR` + chevron; active = bold + `bg-secondary`, no check.
 
 ## Hard rules
+- **Light-only. NEVER reintroduce dark mode.** No `.dark` block, no `dark:` utilities, no
+  `@custom-variant dark`, no `prefers-color-scheme`, no toggle. (The platform's "theme" is a
+  brand *colour* key, `coral` — not a light/dark toggle.)
+- **Orange = punctuation, gold = accent.** Don't turn buttons/links orange.
 
-- **Light-only. NEVER reintroduce dark mode.** No `.dark` block, no `dark:`
-  utilities, no `@custom-variant dark`, no `prefers-color-scheme`, no theme toggle.
-  It was removed on purpose. (The platform itself has no user light/dark toggle
-  either — its "theme" is a brand *colour* key, `coral`.)
-- **Orange = punctuation, gold = accent.** Don't turn buttons or links orange.
-- Match bayesimpact.org / `@bayes/ui`; when in doubt, look at those files.
-
-## Walkthrough animations are the EXCEPTION — they use the PRODUCT palette
-
-Every `*Walkthrough.astro` widget is a **hand-built replica** that declares the
-platform palette (coral `--primary`, neutral greys) on its **own scoped root class**
-(`.msw` / `.anw` / `.caw` / …), so the site-wide Bayes beige/gold rebrand never leaks
-in — the animation must look like **apps/web / `packages/ui`** Studio, NOT the brand
-DA. Do NOT restyle animations to beige/gold, and do NOT mix in a different form:
-every widget shares the same shell (208px sidebar, 680px height — save the non-Studio
-exception in §Walkthrough component spec), controls, `DUR = 6000`, and mechanics (see
-"Consistency" below). A one-off that uses global
-tokens or the real component markup will clash with the other guides — don't.
+## The walkthrough is the EXCEPTION — it renders the real Studio app
+A walkthrough is NOT styled with the brand DA: it's the **real Studio app** (product palette
+— coral `--primary` via `--brand-primary`, neutral greys) rendered inside a scoped root
+`.wt-scope` so the site-wide beige/gold rebrand never leaks in. `global.css` declares the
+product tokens under `.wt-scope` and neutralizes the guide's `.prose` bleed there. Do NOT
+restyle the walkthrough to beige/gold. (In dev, `--brand-primary` falls back to the app's
+dev-default violet; production injects the tenant coral — same behaviour as the app itself.)
 
 ---
 
-# Fidelity method — derive from the real components, verify, never copy blind
+# Walkthrough generation v3 — LIVE (driven real app) — PREFERRED
 
-Animations are hand-built HTML replicas of the platform. They drift and miss things
-(conditional tabs, renamed fields, per-tab behaviour) unless authored against the
-**current** code with a verification gate. Follow this every time.
-
-## Per-animation procedure
-
-- **Phase 0 — Freshness.** Re-read the target components **now** — the code moves
-  (merges, refactors). Never trust an earlier read. From the feature's entry
-  component, follow the imports to the components that actually render.
-- **Phase 1 — Render inventory (before any HTML).** Write the real structure:
-  route(s), screens/dialogs, and for every container (e.g. a tab list) **list EVERY
-  item AND its render condition** (always / feature-flag X / project-state Y).
-  Depict the **fully-provisioned superset** and annotate the conditional ones —
-  never silently drop a conditional surface (that's how the orchestration/embed
-  tabs got missed).
-- **Phase 2 — Labels & icons verbatim.** Copy each label from the **EN + FR** locale
-  files (note where from); exact Lucide names/paths; keep hardcoded-English labels
-  as-is; neutral sample data.
-- **Phase 3 — Cut the steps.** One step per action/screen, covering **every**
-  inventory item. An inventoried surface with no step is a gap to fill.
-- **Phase 4 — Build.** Reuse only the shared shell/mechanics/CSS; **re-derive the
-  content** (tabs, fields, labels, steps) for THIS feature — never copy a sibling
-  guide's content without re-verifying it against this feature's code.
-- **Phase 5 — Verify against the code (the gate).** 1:1 checklist inventory→replica;
-  **diff the tab set (count + order) against the component**; grep the built HTML for
-  every tab label; `astro build` + `astro check` at 0 errors.
-- **Phase 6 — Guard.** Record the source components + date in a header comment in the
-  `.astro` file; re-run Phase 1 on any future edit.
-
-**Golden rule:** put nothing in an animation you can't point to in the code
-(component, locale key, icon) — and prove it in the Phase-5 checklist before finishing.
-
-## Actions have state consequences
-
-The animation's state must evolve with the actions, like the real app:
-
-- Creating an agent → it appears in the **AGENTS** sidebar list and becomes the
-  **active** item from the editor steps on (see `navNewAgent` in the agent
-  walkthroughs: a hidden nav item revealed + `.on` once `step.page` is an editor
-  page).
-- Uploading a document → a new table row; sending an invite → a **Pending** entry
-  then a member card; etc.
-
-Model these per step (reveal/activate elements as the flow progresses) — a static
-sidebar/table through a create flow is a fidelity bug.
-
-## Studio sidebar layout (all walkthroughs)
-
-The **SETTINGS** group (workspace name + Evaluations / Analytics / Sources / Members
-/ Admin) is anchored to the **bottom**: the AGENTS list fills the space and pushes it
-down, mirroring the platform (`SidebarContent` is `flex-1`). Implement with
-`.grp-label.stack { margin-top: auto }`. The active nav item uses
-`bg-sidebar-accent`.
-
-## Agent editor reference (verified 2026-07-13 — RE-VERIFY before reuse)
-
-Source of truth: `AgentCreator.tsx` (dialog) + `AgentEditor.tsx` (tab order &
-conditions) + each `Agent*Tab.tsx`.
-
-- **Create:** New Agent dialog → **Agent type** [Conversation / Extraction / Form] →
-  **Name** (≥3 chars) → **Create** → navigates to the editor. Conversation is the
-  default type.
-- **Editor = tabs; each tab is its own form with its own `Save` button
-  (`actions:save`)** — EXCEPT the **Embed** tab, which saves with **`Update`**
-  (`actions:update`). Leaving a tab with unsaved changes prompts a confirm dialog.
-- **Conversation** tabs: General, Model, Sources, Resource libraries, then
-  **Conversation categories** (only if the project has categories), **Orchestration**
-  (flag `agent-orchestration`), **Embed** (flag `agent-embed`).
-- **Extraction / Form** (non-conversation): General, Model, **Output** (labeled
-  **Form** for form agents). No Sources / Resource libraries / Categories /
-  Orchestration / Embed.
-- **General** fields: Name, Locale, **Greeting** (conversation & form only),
-  **Instructions** (`agent:props.instructions` — NOT "Default Prompt", renamed). ·
-  **Model:** Model, Temperature. · **Sources:** Answer source (`documentsRagMode`:
-  model-only / all documents / by tags) + Document Tags. · **Resource libraries:**
-  label `resourceLibrary:agentTab.label`, **Add library** (hardcoded EN), **Manage
-  libraries**.
-
----
-
-# Walkthrough generation v2 — real imported components (PREFERRED)
-
-> The hand-built HTML/CSS/JS replica method (§Fidelity method, §Walkthrough
-> animations, §Walkthrough component spec) is **kept as a BACKUP — do not remove or
-> edit it**. For NEW walkthroughs, prefer this v2 method: it removes component drift
-> by using the product's REAL components, while staying light (no live app on the
-> site).
+> Legacy methods (v1 hand-built HTML replicas; v2 static real-component islands) still power
+> some existing guides — see §Legacy. Do **not** build new walkthroughs those ways.
 
 ## Principle
-A walkthrough is a **static React island** that renders the feature's screens as
-**per-step scenes composed of the REAL `@caseai-connect/ui` components** (imported,
-never redrawn), with the page **assembly transcribed faithfully from the real
-`apps/web` code**. A lightweight player cross-fades steps and overlays the
-spot/observe highlights. **No live app, no iframe, no screenshots.**
+A walkthrough **mounts the REAL `apps/web` Studio app once** (its `studioRoutes` render tree +
+a mock Redux store with thunks disabled + a memory router) and a per-step **director drives
+it** — navigates, dispatches state, opens the real overlays, ticks real checkboxes. No redraw,
+no transcription.
 
-## The audit comes FIRST — audit, then build (never build, then audit)
-The exhaustive fidelity audit is **Phase 0**, done BEFORE writing a single line of the
-scene — not a check run afterwards. Building first and auditing later is backwards and
-forbidden: it wastes a pass and bakes in drift. The order is always:
-1. **Audit the real code first.** Read `apps/web` (and `@caseai-connect/ui`,
-   `apps/web-embed`, locale files) exhaustively and extract the ground truth for the
-   WHOLE flow up front — every screen, component, label (EN+FR verbatim), icon, Button
-   `variant`/`size`, column order, badge variant, menu order/conditionals, empty state,
-   dialog/sheet copy, state transitions. Write it down as a spec. For a big flow, fan
-   out read-only Explore agents (one per feature area) to gather it in parallel.
-   - **The SHARED CHROME is audited like everything else — "reused" ≠ "verified".** The
-     `StudioChrome`/`Overview` shell (sidebar, group actions, icons, footer, top bar,
-     dots, wrap, bubble) is NOT exempt because a previous walkthrough already used it:
-     carry it INTO the audit scope, compare it to the real render tree, and remember a
-     bug in a shared component drifts onto every walkthrough at once. (A real miss: the
-     AGENTS "+" was `PlusCircle` instead of the app's bare `PlusIcon` — it survived a
-     feature-scoped audit precisely because the chrome was assumed good.)
-2. **Then build the scene once, already faithful** — transcribe from that spec, don't
-   guess and don't "approximate now, fix later".
-3. A final `astro build` + a quick self-check confirm the build is clean; they are NOT
-   the moment you discover fidelity gaps. If you find yourself auditing after building,
-   you skipped Phase 0 — stop and do it.
+**What this eliminates vs. what remains — important:**
+- **The RENDERING auto-updates** (this is the whole point). Components, styles, layout, labels
+  (real i18n), icons, column order, badge variants, empty states — all are the app's own, so
+  when the app changes they change here too, with zero edits. Visual/label drift is gone.
+- **The DIRECTOR script does NOT auto-update.** The `steps` locate elements to click/highlight
+  by selector or label (`findControl(win, "Invite")`, `[data-slot="dropdown-menu-trigger"]`, …).
+  Like an E2E test / guided-tour script, this drives the always-current real app, but the
+  *path* ("click Invite, open the ⋮ menu") can break if the app renames a label, changes a
+  `data-slot`, or reorders the flow. That residual is authored — the §Drift self-check watches it.
 
-## The one non-negotiable rule: READ, don't guess
-Every component, label, icon, order, class, and state MUST come from the real code —
-never memory or approximation:
-- **Leaf UI = the real components, IMPORTED** from `@caseai-connect/ui` (`Button`,
-  `Table*`, `Sidebar*`, `Badge`, `Checkbox`, `LayoutHeader`, `Breadcrumb`, …). Zero
-  redraw. If you're tempted to hand-draw a widget (e.g. a bubble/icon), stop and find
-  the real component/source first.
-- **Page ASSEMBLY** (what lives in `apps/web` and can't be imported — the route's
-  layout: which blocks, in what order, with what wrappers) = **transcribed by reading
-  the real render tree**, faithfully.
-- **Map the FULL render tree first.** For Documents that is:
-  `StudioLayout → SidebarLayout (HeaderWithLogo · SidebarAgentList · SidebarFooterChildren · NavUser) → SidebarInset (variant=inset: floating rounded card) → LayoutHeader (SidebarTrigger + breadcrumb) → DotsBackground (dotted) → Wrap (bordered card) → DocumentList`.
-- **The exhaustive read IS the audit, and it happens up front** (see "The audit comes
-  FIRST" above): compare against the real code file-by-file BEFORE building, capture
-  every detail — structure, order, icons, exact EN+FR locale strings,
-  sizes/spacing/colors, states — and build faithfully the first time. Do NOT wait for
-  review, and do NOT build-then-audit: reading is cheap, and the whole point is 100%
-  adherence from the start.
+Trade-off (accepted): the island is a `client:only` chunk (~2.8 MB → ~1.3 s to boot in prod,
+loaded **async/non-blocking**, shared between guides and cached after first view). A
+placeholder + reserved height (`.wt-embed`) avoid any reflow. If a guide ever needs
+instant-on-arrival, the only real options are a static poster or trimming the import graph —
+both were considered and set aside; the ~1.3 s is accepted.
 
-## Labels: import the REAL locales (auto-sync, no hand-copying)
-Do NOT re-type UI strings into the scene — they drift the moment the app renames a
-button. Instead **import the real i18next locale JSON from `apps/web`** and resolve keys
-at build time via `src/walkthroughs/locales.ts` (`makeT(lang)` → `t("namespace:path.to.key", vars)`,
-with `{{var}}` interpolation and `_one`/`_other` pluralization). When a label changes in
-the product, the walkthrough picks it up on the next `astro build` — zero intervention.
-- Each scene builds its strings in a `strings(lang)` function: **CHROME labels = `t(...)`**
-  (e.g. `t("document:crawl.button")`, `t("actions:create")`, `t("resourceLibrary:title")`),
-  **sample DATA stays authored** (source/library/resource names, counts, urls, relative
-  times, chat lines) and domain-neutral.
-- Namespaces already wired in `locales.ts`: `document`, `documentTag`, `resourceLibrary`,
-  `actions` (shared verbs — reuse before inventing), `agent`. Add more imports there.
-- Missing keys render the raw `namespace:key` on screen (LOUD failure) — so a broken/moved
-  key is obvious, never silently wrong.
-- **Only exception:** a help-center terminology override (the "workspace"/"espace de
-  travail" rule) may force an authored string even when the app locale says "project" —
-  mark it with a comment. This is content/structure drift, still manual (see NEXT below).
+## The engine (shared, do not re-implement per feature)
+`src/walkthroughs/liveWalkthrough.tsx` → `createLiveWalkthrough({ seed, initialPath, routes,
+lang, currentIds })` returns `{ Mount, store, dispatch, navigate, resetTransient }`:
+- **Single instance**: the app mounts ONCE; the player never remounts it. The director
+  `navigate`s (in-memory router — layout/sidebar persist, no flash) and evolves state with
+  `dispatch` (e.g. a thunk's `.fulfilled` action) — so overlays/menus stay put and state
+  changes in place, exactly like using the app.
+- **`resetTransient(win)`**: between steps, closes any open menu/dialog (Escape) and clears
+  any selection — only when there is something to undo (no blind sleeps).
+- **`currentIds`** (guardrail): the mock store combines every scope's `currentIds` slice and a
+  later scope can win, dropping studio-specific keys (`membershipId`, `resourceLibraryId`,
+  `reviewCampaignId`, `resourceId`, …), and `useSetCurrentIds` can't read deep params from the
+  root. **Declare the deep ids the walkthrough opens here** and the engine seeds them so
+  detail/scope routes resolve. (`organizationId`/`projectId` come from the org/project seeds.)
 
-## Still manual (what auto-sync does NOT cover) — NEXT
-Auto-sync fixes label drift and component drift. It does NOT fix **structure/flow drift**
-(a new column, a reordered menu, a changed step, an added dialog): those still need a
-re-audit. A planned guard (a CI check that fingerprints the real strings/structure and
-fails the build when the app moves) would DETECT this; not yet built.
+`src/walkthroughs/LiveWalkthroughPlayer.tsx` — the generic player: `{ Mount, steps, lang }`.
+Renders the app once inside a bounded, non-interactive `.wt-scope` window; per step runs the
+step's `drive(win)` then places the coral **spot** (click target) / dashed **observe** (watch
+zone) highlights; controls (Prev/Next/pause + progress, `DUR = 7000`); re-adds the grey
+**dialog scrim** (Radix drops its Overlay in non-modal mode). Exposes helpers: `fireOpen`
+(dispatches the real pointerdown/up/click Radix listens for), `wait`, `waitFor`, `nextFrame`.
 
-## Honest reserve (~99%, not 100%)
-The leaf *components* are byte-identical (imported); the page *assembly* is a
-transcription (the app's page layout is store-coupled and not an importable
-standalone component), so fidelity is **~99%**. True 100% would require rendering the
-**live app** (full Redux/router/store harness → heavy bundle, loading, lag) — this was
-prototyped and **rejected** as the wrong tool for animations. **External embeds** are
-not app components: e.g. the help-launcher "bubble" is `useHelpLauncher` injecting
-`apps/web-embed`'s `launcher.js` — reproduce its visible element from the embed's own
-source (`apps/web-embed/src/launcher/…`, `TriggerButton`), not by guessing.
+## The director toolkit (from `liveWalkthrough.tsx`)
+- **Finders** — `findControl(root, label, exact)` is the canonical one: matches a
+  button/link/menu-item by its `textContent`, **robust to icon children** (a `<button>` with
+  text + `<svg>` has no leaf text node — `leaf` misses it). `leaf(root, text, exact)` = first
+  leaf text node; `clickable(el)` = its closest button/link.
+- **Layout scopes** — `sidebarOf` (`[data-slot="sidebar-wrapper"]`), `navOf`
+  (`[data-slot="sidebar-inner"]` — nav only, not the page), `insetOf`
+  (`[data-slot="sidebar-inset"]` — page body), `toolbarOf` (the bulk toolbar before a table).
+- **Input** — `typeInto(input, text)` sets a controlled React input's value the tracked way.
+- **Timing** — `fireOpen`, `wait(ms)`, `waitFor(root, selector, timeout)`, `nextFrame()`
+  (2 rAF; prefer it over guessed sleeps).
+
+## The one-shot per-feature file (the ONLY thing you write per feature)
+`src/walkthroughs/<Feature>Live.tsx`:
+1. `buildEntities()` — build the seed with the **apps/web factories** (`organizationFactory`,
+   `projectFactory`, `agentFactory`, `documentFactory`, the memberships/invitations factories,
+   …). Use the fixed sample identity below and override display values (names/titles). Do NOT
+   re-implement the factories by hand (that reintroduces model drift — the factories track the
+   models; faker comes along but is a minor part of the chunk).
+2. `createLiveWalkthrough({ lang, routes: studioRoutes, initialPath, currentIds, seed:
+   mergeSeeds(seed.me(...), seed.organizations(...), seed.projects(...), seed.agents(...),
+   seed.studio.<slice>(...) ) })`.
+3. `steps: LiveStep[]` — each `{ caption: { en, fr }, drive: async (win) => ({ spot?, observe? }) }`.
+   A typical `drive` does: `resetTransient` + `navigate(path)` + evolve state (`dispatch`) +
+   open the target overlay (`fireOpen`) + return the element(s) to highlight (found via
+   `findControl`/`leaf`). Start on the workspace **overview** and show the nav path first.
+4. `export default function <Feature>Live({ lang }) { return <LiveWalkthroughPlayer …/> }`.
+
+Then `src/components/<Feature>Walkthrough.astro` mounts it:
+```astro
+import <Feature>Island from "@/walkthroughs/<Feature>Live.tsx"
+const { lang = "en" } = Astro.props
+---
+<div class="wt-embed">
+  <<Feature>Island client:only="react" lang={lang}>
+    <div slot="fallback" class="wt-embed-loading">{lang === "fr" ? "Chargement…" : "Loading the walkthrough…"}</div>
+  </<Feature>Island>
+</div>
+```
+`DocumentsLive.tsx` (Sources-group nav, upload dialog, ⋮ menu, bulk, select-all) and
+`AddAdminLive.tsx` (Settings nav, invite dialog, pending, member detail, remove/cancel) are
+the references.
+
+## Fixed sample identity (in the seed)
+Org **Bayes Impact Demo**, workspace **Demo**, user **Alex Martin** /
+`alex.martin@example.com` (owner). Neutral agents (**Helpful Assistant**, **Support Agent**,
+**Summary Bot**, **Drafting Helper**), neutral docs (`handbook.pdf`, `faq.pdf`, `policy.pdf`).
+Seed the feature-flag superset on the project (`web-sources`, `project-analytics`, `agent-mcp`,
+`evaluation`, `agent-orchestration`, `agent-embed`) so every gated sidebar item shows.
 
 ## Start on the main menu (show the path to the feature)
-Every walkthrough that takes place INSIDE the platform MUST start on the **main menu —
-the workspace overview** (the `Overview` agent-list backdrop with the sidebar in
-workspace context), NOT already deep inside the feature or on an agent/sub-page. Step 0
-opens from the top level; the first steps then show the NAVIGATION path to reach the
-feature (e.g. open *Sources* → click *Resource libraries*). This is deliberate: the guide
-must teach HOW to get there, not assume the user is already there.
-- Reuse the shared `Overview` from `StudioChrome.tsx` for those opening steps (Documents,
-  Web sources, Resource libraries all do). Do NOT start on an agent page or a feature's
-  own screen.
-- A later part of a flow MAY move into a sub-context (e.g. attaching a resource library to
-  an agent enters the agent editor) — that is fine as a *continuation*, but the ENTRY
-  point is always the main menu.
-- (Fixed once: Resource libraries used to open on an agent page — a leftover from the old
-  hand-built trame — and was recut to open on the workspace overview like the others.)
+Every walkthrough starts on the **workspace overview** (`StudioRoutes.project.path`), then the
+first steps drive the NAVIGATION to the feature (open Sources → Documents; or Settings →
+Members). Never start deep inside the feature — the guide must teach how to get there.
 
-## Coherent state evolution
-Each step is one authored state, and states MUST evolve logically across steps —
-**nothing appears from nowhere**. Existing content shows from the start; a
-created/uploaded item appears only at/after its creation step (Documents: two existing
-**Ready** docs from the start; the uploaded doc appears **Processing** at the upload
-step, not before). Forward/backward is trivial (render step N) — no reset/replay.
+## State evolution — nothing appears before its step (AUTHORING RULE, not auto-enforced)
+The seed is the **"before" state**: it holds ONLY pre-existing content. Anything the walkthrough
+**creates / uploads / invites** must be absent from the seed and appear at/after its own step,
+pushed with a `dispatch` of the real slice's `*.fulfilled` action via a small `setX` helper (skip
+when the data is unchanged — avoids a table re-render/flash). Per created entity:
+- keep it OUT of the initial seed **and** out of every step BEFORE its create step;
+- give it a **distinct identity** — never reuse the name/id of an already-listed item (e.g. don't
+  "upload `handbook.pdf`" when `handbook.pdf` is already in the list — that reads as creating
+  something that already exists);
+- from its create step onward, the dispatched state INCLUDES it **and only it** — don't smuggle in
+  extra siblings the walkthrough never created.
 
-## Files & mechanics — SHARED, DRY (all three walkthroughs under `src/walkthroughs/`)
-**Naming:** one feature token drives everything — `<Feature>` (PascalCase) + `<feature-slug>`
-(kebab, = the guide's MDX slug). Per walkthrough: scene `src/walkthroughs/<Feature>Scene.tsx`
-(named `<Feature>Scene`, default `<Feature>Walkthrough`), guide mount
-`src/components/<Feature>Walkthrough.astro`, doc `content/docs/{en,fr}/<feature-slug>.mdx`.
-Shared infra uses PascalCase for components (`StudioChrome.tsx`, `WalkthroughPlayer.tsx`,
-`Anchor.tsx`) and lowercase for pure modules (`locales.ts`).
+The engine CANNOT enforce this (only the author knows what's "created" vs pre-existing) and
+`check:walkthrough` does NOT catch it — it's on the author for every guide. References:
+`DocumentsLive` (`BASE` → +`faq` Processing → Ready), `AddAdminLive` (`PENDING_NONE` →
+`PENDING_ONE`), `ResourceLibrariesLive` (`BEFORE` → `CREATED_EMPTY` → `CREATED_FULL`).
 
-Everything is factored so a scene only encodes what is unique to its feature; the shell,
-player and label resolution are shared. Do NOT re-implement these per feature.
-- **`StudioChrome.tsx`** — the SHARED `StudioChrome` (sidebar + inset + `LayoutHeader` +
-  dots + `Wrap` + launcher bubble) and `Overview` (workspace main-menu backdrop). Audited
-  once against `apps/web`; reused by every scene. Fix chrome bugs HERE (they propagate to
-  all). Labels come from `chrome(lang)` (locales, auto-sync).
-- **`WalkthroughPlayer.tsx`** — the GENERIC player: `{ Scene, steps, captions, lang }`.
-  Renders the scene per step, cross-fades (opacity only — never a transform, it shifts the
-  anchors), measures the `data-anchor` wrappers to place the coral **spot** (click target)
-  / dashed **observe** (watch zone), and the controls (Prev/Next/pause + progress bar,
-  `DUR = 7000`). One player for all walkthroughs — no per-feature player.
-- **`locales.ts`** — `makeT(lang)` → labels resolved from the real `apps/web` locale JSON
-  (auto-sync; see "Labels" above). Add namespaces here.
-- **`<Feature>Scene.tsx`** — the ONLY per-feature file. A named `export function
-  <Feature>Scene({ step, lang })` renders `<StudioChrome …>` with the feature's page as
-  children + a `strings(lang)` builder (chrome labels via `t()`, sample data authored),
-  and a `export default` thin wrapper: `<WalkthroughPlayer Scene={…} steps={…}
-  captions={…} lang={lang} />` (Astro islands can't take a component prop across the
-  boundary, hence the wrapper). `DocumentsScene`, `WebSourcesScene`,
-  `ResourceLibrariesScene` are the references.
-- **`Anchor.tsx`** — `<Anchor name>` (`display:contents`) so highlights anchor on a
-  marker WE own, never on the components' internal (generated) classes.
-- The `.astro` page mounts the scene's default export `client:only="react"`.
+## Isolation & host-bleed contract (GUARDED)
+The walkthrough must be an isolated, faithful replay independent of the guide page. Invariants:
+1. **Dark mode is class-based** (`@custom-variant dark (&:where(.dark, .dark *))`); the help
+   ships no `.dark` → the app's `dark:` variants stay inert → always light.
+2. **Prose is neutralized** by `.wt-scope :is(…)` in `@layer components` after `.prose` (beats
+   prose, loses to component utilities). It zeroes `border-width: 0` (never `border: 0`).
+   **`.prose .lwp :is(h1..h6, strong, b, th)` resets `font-family`+`font-weight`** — the guide's
+   `.prose h2` uses the DISPLAY font (Archivo Black) which otherwise bleeds onto the app's
+   `<h2>` card/section titles and makes them look ultra-bold. Scoped to `.lwp` only.
+3. **Overlays render inside the window, non-modal** via `OverlayProvider` (portal container +
+   `modal:false`) — all 8 shad overlay primitives are wired. No page scroll-lock/focus-trap.
+4. **Product tokens** scoped under `.wt-scope`; app font is Inter (`--font-sans`).
 
-## Isolation & platform-parity contract (GUARDED — must never regress)
-A whole class of bugs comes from the HOST environment leaking into, or diverging from, the
-walkthrough island: the guide's `.prose` typography bleeding in, OS dark mode flipping the
-components' `dark:` variants, the OS system font replacing Inter, a `border: 0` shorthand
-darkening table separators, an overly-broad *unlayered* reset clobbering component utilities.
-Each looks tiny and each broke platform parity. The walkthrough MUST be an **isolated,
-faithful replay of the real app**, independent of the host page. Invariants:
-1. **Dark mode is class-based** (`@custom-variant dark (&:where(.dark, .dark *))` in
-   `global.css`). The help center ships no `.dark`, so `dark:` variants stay inert → the
-   walkthrough is always light. Never rely on `prefers-color-scheme`.
-2. **Prose is neutralized** by the `.wt-scope :is(…)` reset in `@layer components` AFTER
-   `.prose` (beats prose, loses to component utilities). It zeroes **`border-width: 0`**,
-   never `border: 0` (the shorthand resets border-COLOR → dark table separators). It never
-   resets `font` (would unbold `<b>` titles).
-3. **Same font as the app**: the player uses `var(--font-sans)` (Inter), never a hardcoded
-   `ui-sans-serif/system-ui` (heavier OS font → looks bold).
-4. **Non-interactive**: `.dwr-stage { pointer-events: none }` — a replay, not a live UI.
-5. **Product tokens** are scoped under `.wt-scope`; scrim'd dialogs render at the chrome
-   ROOT (`modal` slot) so the veil covers the whole window like the app's `fixed inset-0`.
+**Guard:** `npm run check:walkthrough` (`scripts/check-walkthroughs.mjs`, wired into
+`npm run build`) asserts the shared-CSS/isolation invariants. Any change to `global.css`,
+the player or the engine MUST be eyeballed inside a real guide page.
 
-**The guard:** `npm run check:walkthrough` (`scripts/check-walkthroughs.mjs`) asserts all of
-the above and is wired into `npm run build` — a regression fails the build. If you change a
-mechanism on purpose, update its assertion in the same commit; never just delete a check.
+## Drift self-check (dev)
+The RENDERING auto-updates; the only thing that can silently drift is the **director script**
+(the selectors/labels each step drives by — see §Principle). The player watches exactly that:
+when a step's `drive` **throws** or **finds no target** (both `spot` and `observe` resolve to
+nothing), it `console.warn`s which step in **dev only** (`import.meta.env.DEV` — never in the
+prod build). So a renamed label / moved `data-slot` / reordered flow shows up the moment you
+open the guide in dev — telling you which step to re-point — instead of a half-broken
+walkthrough discovered by chance. It changes nothing about rendering; it's a dev tripwire.
 
-**Manual step the guard can't do:** any change to shared CSS (`global.css`), the player, or
-`StudioChrome` MUST be eyeballed **inside a real guide page** (the walkthrough renders within
-the guide's `.prose` container, e.g. `/en/documents`, `/en/web-sources`,
-`/en/resource-libraries`) — and once with the OS in **dark mode**. A shared-CSS override that
-"looks fine" can still clobber a component utility or a host style; verify its **scope and
-cascade layer** against the real components before declaring it done.
+---
 
-## Enablers (already wired in `apps/help`)
-- `@astrojs/react` in `astro.config.ts`; deps `react`, `react-dom`, `@caseai-connect/ui`.
-- `global.css`: `@source "…/packages/ui/src"` (so Tailwind generates the imported
-  components' utility classes) **plus** a `.wt-scope` block re-declaring the **PRODUCT**
-  token values (coral `--primary` via `--brand-primary`, neutral greys) so the widget
-  looks like Studio, not the site's beige/gold brand.
-- Mount the island `client:only="react"`.
+# Legacy walkthrough methods (existing guides only — do not use for new work)
 
-## Per-feature recipe (audit first, then build)
-1. **AUDIT (Phase 0):** read the real route render tree exhaustively (chrome + page +
-   every leaf) and write down the full ground-truth spec — every screen/label/icon/
-   variant/order/state, EN+FR verbatim. Fan out Explore agents for big flows. This
-   happens BEFORE any scene code.
-2. Build the Scene **from that spec, faithful the first time**: import real components;
-   transcribe the assembly; cut one scene state per walkthrough step; model coherent
-   state evolution.
-3. Add `data-anchor` wrappers on each highlight target.
-4. Wire the player (steps → spot/observe anchors + captions EN/FR).
-5. `astro build` + `astro check` at 0 errors — a build/self-check gate, NOT the moment
-   you first compare against the real code (that was step 1).
+- **v2 static real-component islands** (`<Feature>Scene.tsx` + shared `StudioChrome.tsx` /
+  `WalkthroughPlayer.tsx` / `Anchor.tsx`, labels via `locales.ts`): per-step scenes that
+  *import* the real `@caseai-connect/ui` components but *transcribe* the page assembly by hand
+  (~99% fidelity). Still powers **web-sources** and **resource-libraries**. Kept as reference.
+- **v1 hand-built HTML/CSS replicas** (`*Walkthrough.astro` with a scoped root class like
+  `.caw`, `DUR = 6000`, 208px sidebar shell): full hand replicas. Still power the **agent**
+  guides (add-a-conversation-agent, …). Kept as backup.
+
+Both drift when the app changes (that's why v3 exists). Don't extend them; migrate a guide to
+v3 when you touch it. `locales.ts` (`makeT`) is shared by v2 and v3 for label lookups.
+
+### Agent editor reference (factual, RE-VERIFY before use)
+Source: `AgentCreator.tsx` + `AgentEditor.tsx` + each `Agent*Tab.tsx`.
+- **Create:** New Agent dialog → **Agent type** [Conversation / Extraction / Form] → **Name**
+  (≥3 chars) → **Create** → editor. Conversation is default.
+- **Editor = tabs, each its own form with `Save`** (`actions:save`) — except **Embed** which
+  saves with **`Update`**. Conversation tabs: General, Model, Sources, Resource libraries, then
+  **Conversation categories** (if the project has categories), **Orchestration**
+  (`agent-orchestration`), **Embed** (`agent-embed`). Extraction/Form: General, Model, **Output**
+  (labeled **Form** for form agents) — no Sources/Resources/Categories/Orchestration/Embed.
+- **Resources** tab is literally **Resources**; picker labels **Add library**, **Search
+  libraries…**, **No libraries found** stay English in FR.
 
 ---
 
 # Guide Authoring Playbook
 
-Every feature guide is **two paired artifacts** that must stay identical in
-**form** (only the content differs — see "Consistency" below):
-
+Every feature guide is **two paired artifacts** that stay identical in **form** (only content
+differs):
 1. A bilingual MDX doc: `src/content/docs/en/<slug>.mdx` + `src/content/docs/fr/<slug>.mdx`
-2. A paired animated walkthrough component: `src/components/<Feature>Walkthrough.astro`
+2. A paired walkthrough `src/components/<Feature>Walkthrough.astro` (§v3).
 
-References to copy from (most complete first): `DocumentsWalkthrough.astro`,
-`WebSourcesWalkthrough.astro`, `ResourceLibrariesWalkthrough.astro`.
-
-## One-shot recipe
-
-This expands step 3–8 of the master checklist above. **A source doc is NOT required**
-— but do NOT reconstruct from memory: **derive the flow from the CURRENT `apps/web`
-code every time** (re-read it now — it moves), following the Fidelity method
-(inventory → verbatim labels → verify). Only ask the user if the feature name is
-genuinely ambiguous (several candidates share it). If a doc *is* provided, follow it
-exactly; otherwise infer from the code and proceed without asking.
-
-1. **Read the real UI** in `apps/web` (read-only) and reconstruct the flow:
-   the feature's route(s), page component(s), dialogs/sheets, table columns, row
-   `⋮` actions, bulk actions, empty state, and locales
-   `apps/web/src/**/locales/*.{en,fr}.json`. Never guess a label — take exact
-   EN + FR strings and the exact icons from the code.
-2. **Get exact icons.** For any Lucide icon you're unsure of, fetch it verbatim
-   from `https://unpkg.com/lucide-static@0.576.0/icons/<name>.svg` (lucide-react
-   is pinned to `^0.576.0`). Never simplify or redraw an icon.
-3. **Copy `DocumentsWalkthrough.astro`** → new `<Feature>Walkthrough.astro`.
-   Rename the root class prefix everywhere (e.g. `dsw` → `xxw`), swap `STRINGS`,
-   the page markup, and the `steps` array. Keep every structural/CSS value.
-4. **Write both MDX files** on the skeleton below (EN + FR). Pick the guide
-   **sub-category** that matches the feature (see "Guide categories" below) as
-   `category`, set `order` = next free integer *within that sub-category*, and
-   `updated` = today (ISO).
-5. **Build & verify** (see "Validate"). Confirm the `##` skeleton and the
-   component's `DUR`/`grid-template-columns` match the sibling guides.
-
-## Deriving the flow & cutting the steps (no doc)
-
-Reconstruct the ordered actions from the code and cut **one animation step per
-discrete action or screen** — fine-grained, like the existing guides
-(resource-libraries = 10, web-sources = 13, documents = 8 steps). The recurring
-shape to look for and reuse:
-
-1. Open **Sources** in the sidebar (backdrop = workspace overview, spot Sources).
-2. Select the feature's sub-item (spot it).
-3. Primary action on the (empty) page — the top-right button (spot it).
-4. The create/upload **dialog**: fill fields / add tag, then confirm (spot confirm,
-   observe the fields).
-5. The **result** row in the table — wait for `Embedding Status` = Ready where
-   relevant (observe the status).
-6. Per-row **`⋮` menu** (View / Edit / Recrawl / Download / Delete as applicable)
-   — spot the dots.
-7. Secondary flows the feature actually has: expand a row, **tag** it (Edit → Add
-   tag → Update), **bulk-select** + toolbar (Add tag / Remove tag / Delete),
-   **select-all** via the header checkbox, manage **Tags** (Create tag …), attach
-   to an agent, etc. Include only what exists in the code; add a numbered step per
-   real action.
-
-Keep the backdrop for steps 1–2 = the workspace overview (reuse the `overview`
-page markup from `DocumentsWalkthrough.astro`). Mirror the sidebar exactly and set
-the active sub-item to the current feature.
+## Deriving the flow & cutting the steps
+Reconstruct the ordered actions from the CURRENT `apps/web` code and cut **one step per
+discrete action or screen** — fine-grained. The recurring shape:
+1. Open the section in the sidebar (backdrop = workspace overview, spot the nav item).
+2. Select the feature's sub-item.
+3. Primary action on the page (the top-right button).
+4. The create/upload **dialog**: fill fields, then confirm.
+5. The **result** row/entry in the table (wait for its status where relevant).
+6. Per-row **`⋮` menu** (View / Edit / Download / Delete as applicable).
+7. Secondary flows the feature actually has: tag, bulk-select + toolbar, select-all, detail
+   page, cancel a pending item, etc. Include only what exists; one step per real action.
+In v3 these become the `steps` array (what to drive) AND the `### n` MDX sub-sections (what to
+document) — they must match 1:1 (folding allowed, §Level of detail).
 
 ## MDX skeleton (identical order, both languages)
-
 ```
 ---
 title: <Feature>
@@ -517,15 +326,14 @@ updated: <YYYY-MM-DD>
 import <Feature>Walkthrough from "@/components/<Feature>Walkthrough.astro"
 
 <Intro para 1 — what it is>
-<Intro para 2 — where it lives: "under Sources…", "belongs to the workspace">
+<Intro para 2 — where it lives>
 
 ## <Concept>            ← how it works / how agents use it — BEFORE the animation
 <one short paragraph>
 
 ## The full flow at a glance
 The walkthrough below replays every step in the real interface. Use **Prev / Next**
-to move at your own pace; each step highlights the button to click and the area to
-watch.
+to move at your own pace; each step highlights the button to click and the area to watch.
 
 <<Feature>Walkthrough lang="en" />   (lang="fr" in the FR file)
 
@@ -536,229 +344,92 @@ watch.
 ## Tips
 ## Troubleshooting
 ```
+FR headings are fixed: `## Le parcours complet en un coup d'œil`, `## Étape par étape`,
+`## Conseils`, `## Dépannage`. The concept heading is feature-specific.
 
-FR headings are fixed translations: `## Le parcours complet en un coup d'œil`,
-`## Étape par étape`, `## Conseils`, `## Dépannage`. The concept heading is
-feature-specific (e.g. `## Comment les agents utilisent les documents`).
-
-**Extra `##` sections are allowed, additively.** Beyond this spine a guide MAY add
-feature-specific sections when the feature has real content that doesn't fit the
-canonical ones: one or more extra **concept** `##` *before* the walkthrough (as in
-apps-overview), and/or feature sections *after* `## Step by step` and before
-`## Tips` (e.g. `## Version history`, `## What happens at runtime`). Extras must carry
-genuine content (not padding), be mirrored EN + FR, and **never reorder, rename, or
-replace a canonical section**.
+**Extra `##` sections are allowed, additively** — genuine feature content, mirrored EN+FR,
+never reordering/renaming/replacing a canonical section.
 
 ## Feature-flag callout (MANDATORY when the feature is flagged)
-
-Some features only render when a **feature flag** is enabled on the project — the
-Phase-1 render inventory records this (§Fidelity Phase 1). Flags live in `apps/web`:
-grep `feature="<key>"` and `hasFeature("<key>")` (e.g. in `StudioRoutes.tsx`,
-`SidebarFooterChildren.tsx`, `AgentEditor.tsx`, the `*Button.tsx` gates). Known
-flags that gate a documented feature: `web-sources`, `project-analytics`,
-`evaluation` (Evaluations **and** Evaluation dashboard), `agent-orchestration`,
-`agent-embed`, `agent-mcp`.
-
-If the guide's feature is behind a flag, you **MUST** add a **blockquote callout**
-right after the intro/placement paragraph (before the first `##` heading, or before
-any existing disambiguation blockquote), in **both** EN and FR. It states the feature
-is optional and how to get it enabled — flags are set platform-side, so the reader
-must ask the Bayes team (a workspace admin cannot toggle them). Tailor the "if you
-don't see it" locator to the feature (sidebar item / workspace-card button / editor
-tab), and reuse the exact bold label from the locales.
-
-Templates (adapt the feature name + locator, keep the form byte-consistent):
+Flags gate rendering; grep `feature="<key>"` / `hasFeature("<key>")` in `apps/web`
+(`StudioRoutes.tsx`, `SidebarFooterChildren.tsx`, `AgentEditor.tsx`, `*Button.tsx`). Known:
+`web-sources`, `project-analytics`, `evaluation`, `agent-orchestration`, `agent-embed`,
+`agent-mcp`. If the feature is flagged, add a **blockquote callout** right after the intro,
+in **both** EN and FR — the feature is optional and flags are set platform-side (a workspace
+admin can't toggle them; ask the Bayes team). Tailor the "if you don't see it" locator.
 
 ```
-> **Optional feature — ask to have it enabled.** <Feature> is turned on per
-> workspace. If you don't see <exact bold locator> in Studio, the feature isn't
-> enabled for your workspace yet — contact the Bayes team to request it.
+> **Optional feature — ask to have it enabled.** <Feature> is turned on per workspace. If you
+> don't see <exact bold locator> in Studio, the feature isn't enabled for your workspace yet —
+> contact the Bayes team to request it.
 ```
 ```
-> **Fonctionnalité optionnelle — à faire activer.** <Fonctionnalité> s'active espace
-> de travail par espace de travail. Si vous ne voyez pas <repère exact en gras> dans
-> Studio, c'est que la fonctionnalité n'est pas encore activée pour votre espace de
-> travail — contactez l'équipe Bayes pour en faire la demande.
+> **Fonctionnalité optionnelle — à faire activer.** <Fonctionnalité> s'active espace de travail
+> par espace de travail. Si vous ne voyez pas <repère exact en gras> dans Studio, c'est que la
+> fonctionnalité n'est pas encore activée pour votre espace de travail — contactez l'équipe
+> Bayes pour en faire la demande.
 ```
-
-When the guide's intro already says "It's an optional feature", keep that sentence
-and still add the callout — the sentence states the fact, the callout states the
-**action** (how to get it turned on). Shorten the callout's opening to
-**`> **Ask to have it enabled.**`** / **`> **À faire activer.**`** in that case to
-avoid repeating "optional".
+If the intro already says "optional", shorten the opening to `> **Ask to have it enabled.**` /
+`> **À faire activer.**`.
 
 ## Guide categories (a `guides` parent with nested sub-categories)
+Two-level tree (`src/i18n/categories.ts`): a top-level category has no `parent`; a sub-category
+sets `parent`. The **`guides`** parent holds no docs. Pick the `category` id:
+- **`guides-agents`** — Agents. · **`guides-sources`** — Sources & knowledge (Documents, Web
+  sources, Resource libraries, tags). · **`guides-team`** — Team & access (members,
+  invitations, roles, Admin). · **`guides-eval`** — Evaluation & insights.
 
-Categories form a **two-level tree** (`src/i18n/categories.ts`): a top-level
-category has no `parent`; a sub-category sets `parent`. The **`guides`** parent
-holds no docs itself — every guide is filed under one of its sub-categories, which
-mirror the Studio left-nav groups and render as indented sub-headers under
-**Guides** in the sidebar and home page. Pick the `category` id that matches the
-feature:
-
-- **`guides-agents`** — Agents (creating/configuring agents). *Registered, no guide
-  yet.*
-- **`guides-sources`** — Sources & knowledge (Documents, Web sources, Resource
-  libraries, tags).
-- **`guides-team`** — Team & access (members, invitations, roles, Admin settings).
-- **`guides-eval`** — Evaluation & insights (Evaluations, Review campaigns,
-  Analytics). *Registered, no guide yet.*
-
-`order` on a sub-category sorts it within Guides; `order` in a doc's frontmatter
-sorts it within its sub-category. Only categories that ultimately contain a doc are
-shown (`groupByCategory` builds the tree from the docs present), so the parent and
-any still-empty sub-category never produce an empty section. To open a **new**
-sub-category, add its entry to `categories.ts` (`parent: "guides"`, bilingual label
-+ description, an `icon` from `Icon.astro` — add the Lucide glyph there if missing)
-in the same commit as the guide.
+`order` sorts within its level. Only categories that contain a doc are shown. To open a new
+sub-category, add it to `categories.ts` (`parent: "guides"`, bilingual label + description,
+`icon` from `Icon.astro`) in the same commit.
 
 ## Writing style
 
 ### Level of detail (non-negotiable)
-
-Guides are read by **two audiences at once**, and must serve both fully:
-
-- **End users** following along click-by-click in the real UI — they need every
-  concrete action named.
-- **AI agents** answering questions from the guide text alone — they can only state
-  what the text says, so anything omitted becomes an answer they cannot give.
+Guides are read by **two audiences at once**, both fully served:
+- **End users** following click-by-click in the real UI — they need every concrete action named.
+- **AI agents** answering from the guide text alone — anything omitted becomes an answer they
+  cannot give.
 
 Therefore:
+- **No step may be omitted or glossed over.** Document from the very first entry point (which
+  app / card / sidebar item / button, exact label + icon) to the final result — every screen,
+  dialog, tab, field, toggle, dropdown option, confirmation, and what happens after each action.
+  If clicking opens a dialog, the dialog is its own step. Three tabs → all three covered.
+  "Obvious" intermediate steps are still written.
+- **Numbered `### n` sub-sections track the walkthrough steps — 1:1 by default.** You MAY fold a
+  short run of *adjacent, closely-related* steps into one — but only if it drops **no** content
+  (every action/screen/dialog/label still appears, in bold). Never the reverse: no prose for a
+  screen the animation doesn't show; no animated action left undocumented.
+- **Every on-screen label appears verbatim and in bold** — buttons, tabs, fields, menu items,
+  empty-state text, status badges, validation messages — EN + FR, from the locale files. Never
+  paraphrase a label.
+- **Name the exact control**: "click **Run Evaluation** (top right)", not "start the run". Say
+  where it is and what it does.
+- **Cover conditional/edge surfaces**: empty states, disabled/greyed buttons and why,
+  flag-gated screens (annotate as optional), a **Troubleshooting** entry per way a step stalls.
+- Keep prose **tight** — exhaustive coverage, short label-dense sentences; sub-lists for fields.
 
-- **No step may be omitted or glossed over.** Document the flow from the very first
-  entry point to the final result — how the user *gets to* the feature (which app /
-  card / sidebar item / button, with its exact label and icon), every screen, dialog,
-  tab, field, toggle, dropdown option, and confirmation, and what happens after each
-  action. If clicking something opens a dialog, the dialog is its own step. If a page
-  has three tabs, all three are covered. "Obvious" intermediate steps are still
-  written — the AI agent and the first-time user do not find them obvious.
-- **Numbered `### n` sub-sections track the walkthrough steps — 1:1 by default.**
-  You MAY fold a short run of *adjacent, closely-related* animation steps (e.g. the
-  `⋮` row menu + bulk-select + select-all) into one numbered step — but only when the
-  fold drops **no** content: every action, screen, dialog and label those steps show
-  must still appear, in bold, in that step's prose. Never the reverse: a paragraph
-  must not describe a screen the animation doesn't show, and no animated action may be
-  left undocumented. A screen shown in the animation whose content appears in **no**
-  prose step is a gap to fix.
-- **Every on-screen label appears verbatim and in bold** — buttons, tabs, fields,
-  menu items, empty-state text, status badges, validation messages — in both EN and
-  FR, taken from the locale files (§Fidelity Phase 2). Never paraphrase a label.
-- **Name the exact control**: "click **Run Evaluation** (top right)", not "start the
-  run". State where it is (top-right, in the row's `⋮` menu, in the editor header)
-  and what it does.
-- **Cover conditional and edge surfaces**, not just the happy path: empty states,
-  disabled/greyed buttons and why, feature-flag-gated screens (annotate them as
-  optional/"if enabled"), and the **Troubleshooting** entries for each way a step can
-  stall or fail.
-- Keep prose **tight** — exhaustive coverage does not mean verbose sentences. Short,
-  direct, label-dense; use numbered/bulleted sub-lists inside a step when it has
-  several fields.
-
-**Litmus test before finishing:** could a user who has never opened the feature
-complete it end-to-end from the guide alone, and could an AI agent answer "where is
-X / how do I do Y" for every X and Y in the feature, using only the guide's words? If
-not, a step or label is missing.
+**Litmus test:** could a never-seen-it user finish the feature from the guide alone, and could
+an AI agent answer "where is X / how do I Y" for every X and Y using only the guide's words?
 
 ### Other rules
-
-- **Terminology: always "workspace" / "espace de travail"**, never "project" /
-  "projet".
-- **Keep platform-hardcoded English labels as-is** even in FR (e.g. the agent
-  editor **Resources** tab, **Add library** / its **Search libraries…** /
-  **No libraries found**). Flag these in the text when useful.
-- **Neutral sample data** — no vertical inferred (see root CLAUDE.md). Use generic
-  names (`handbook.pdf`, `example.com`, "Getting started"), not the doc's own
-  domain samples (e.g. medical "Patient 1").
-- Cross-link sibling guides where relevant (`/en/web-sources`, `/fr/web-sources`).
-
-## Walkthrough component spec (what MUST be identical across all guides)
-
-- **Isolation**: wrap everything in a unique root class (`.rlw` / `.wsw` / `.dsw`
-  / …). All CSS is scoped under it. Declare all design tokens locally on that
-  class **and** a `:global(html.dark) .<prefix> { … }` dark override so the widget
-  follows the site's light/dark toggle. Do NOT add a theme toggle.
-- **Shell** (platform `variant="inset"`): `grid-template-columns: 208px 1fr;
-  height: 680px`. Left sidebar (see below) + inset card (`.inset`) with a top bar
-  (`panel-left` toggle) + dotted `.canvas` + a coral `.fab`.
-  - **Exception — non-Studio surfaces.** A walkthrough for a screen that isn't inside
-    the Studio sidebar layout — the app launcher, login/onboarding, and the full-page
-    Evaluation / Test / Review dashboards — MAY drop the 208px sidebar and use its own
-    `.frame` layout. It MUST still keep the **680px height** and every other shared
-    element (controls, `DUR = 6000`, spot/observe mechanics, coral palette). This
-    exception is limited to genuinely non-Studio views; **every walkthrough of a
-    Studio page keeps the `208px 1fr` / 680px shell.**
-- **Controls**: **Prev / Next** buttons + `Step X / N` counter + clickable dots +
-  play/pause + a progress bar. `const DUR = 6000` (the `progress i.run` CSS
-  `var(--dur, 6000ms)` default MUST match).
-- **Mechanics**: pages are absolutely-stacked `.page` divs cross-faded via
-  `data-active`; `.spot-on` = pulsing coral ring on the **button to click**;
-  `.observe-on` = dashed coral outline on the **zone to watch**; `.subwrap.open`
-  expands the Sources sub-menu; the active sidebar item is toggled per step;
-  honor `prefers-reduced-motion`; **always full page, never zoom**.
-- **Data flow**: a `lang` prop selects from a `STRINGS = { en, fr }` table
-  (server-rendered text). A `steps` array of `{ page, sources, nav, spot,
-  observe, text }` (text from `s.steps[i]`) + `labels` are passed to the client
-  script via `<script define:vars={{ steps, labels }}>`. Query the DOM scoped to
-  the root (`root.querySelector`), not globally.
-- **Icons & logo — exact, never simplified**: use the exact Lucide path for the
-  icon the real component uses; use the real brand logo copied verbatim from
-  `apps/web/src/common/components/themes/Logo.tsx` (coral `#f18c6e` path + black
-  `#010101` circles, with `.logo svg { stroke:none }` + explicit `fill`). SVGs
-  injected at runtime via `innerHTML` do NOT receive scoped styles (they render
-  `fill:black`) — keep every SVG **static in the template**.
-
-## The Studio sidebar (identical in every walkthrough)
-
-- Header: real Logo + org **Bayes Impact Demo** + **Studio** (coral).
-- `AGENTS` group (+ `plus`): **Bayes Assistant** (`bot-message-square`),
-  **Conversation Agent** (`bot-message-square`), **Extraction Agent**
-  (`scan-text`), **Form Agent** (`form`).
-- Settings group: workspace name **Demo** + **Settings/Paramètres**; **Evaluations**
-  (`list-checks`, chevron) · **Analytics** (`bar-chart-3`) · **Sources**
-  (`database-zap`, chevron) ▸ **Documents** (`file`) / **Web sources** (`globe`) /
-  **Resource libraries** (`library-big`) · **Members** (`users`) · **Admin**
-  (`settings-2`).
-- User footer: **Alex Martin** / `alex.martin@example.com` (`chevrons-up-down`).
-- Sample identity is fixed: org `Bayes Impact Demo`, workspace `Demo`, user
-  `Alex Martin` / `alex.martin@example.com`.
-
-## Icon map (feature → exact Lucide name)
-
-conversation agent `bot-message-square` · extraction `scan-text` · form `form` ·
-Documents `file` · Web sources `globe` · Resource libraries `library-big` ·
-Sources group `database-zap` · Evaluations `list-checks` · Analytics `bar-chart-3`
-· Members `users` · Admin `settings-2` · Review campaigns `megaphone` · new/add
-`plus` · close `x` · back `arrow-left` · card arrow / next `arrow-right` · chevrons
-`chevron-right` / `chevron-down` · user `chevrons-up-down` · sidebar toggle
-`panel-left` · row menu `ellipsis-vertical` · view `info` · edit `pencil` · delete
-`trash-2` · recrawl `refresh-cw` · download `file-down` · upload `upload-cloud` ·
-tags (button) `tags` · single tag `tag` · external link `external-link` · check
-`check`.
-
-## Known hardcoded-English labels in the product (keep them as-is)
-
-- Agent editor tab is literally **Resources** (not "Resource libraries") —
-  `apps/web/.../BaseAgentForm.tsx`.
-- Resource library picker: **Add library**, **Search libraries…**, **No libraries
-  found** — `apps/web/.../ResourceLibraryPicker.tsx`.
+- **Terminology: always "workspace" / "espace de travail"**, never "project" / "projet".
+- **Keep platform-hardcoded English labels as-is** even in FR (agent editor **Resources**,
+  **Add library** / **Search libraries…** / **No libraries found**). Flag them when useful.
+- **Neutral sample data** (`handbook.pdf`, `example.com`, "Getting started") — no vertical.
+- Cross-link sibling guides where relevant.
 
 ## Consistency (hard rule)
-
-All guides share the **exact same form**, only content differs: the MDX `##`
-skeleton, the component shell (208px sidebar, 680px height), controls, `DUR = 6000`,
-highlight mechanics, theme handling, terminology, and sample identity must be
-byte-for-byte consistent with the existing guides — save the three documented
-exceptions: the **non-Studio shell** (§Walkthrough component spec), **additive extra
-`##` sections** (§MDX skeleton), and **step folding** (§Writing style → Level of
-detail). When adding one, diff its skeleton and its `DUR`/`grid-template-columns`
-against the siblings.
+All guides share the **same form**, only content differs: the MDX `##` skeleton, terminology,
+the fixed sample identity, and — for the animation — the **shared v3 engine + player** (no
+per-feature shell or player). Only the `<Feature>Live.tsx` seed + steps are bespoke. When
+adding a guide, diff its MDX skeleton against the siblings.
 
 ## Validate (Astro build; `npx` is NOT on PATH)
-
 ```
-node ../../node_modules/astro/astro.js build   # run from apps/help; node at "C:\Program Files\nodejs"
+node ../../node_modules/astro/astro.js build   # from apps/help; node at "C:\Program Files\nodejs"
 ```
-
-Then confirm: build is 0-error; the new pages exist in `dist/{en,fr}/<slug>/`; the
-component root class appears in the built HTML; the `##` skeleton and component
-constants match the sibling guides. `astro check` also works for type-checking.
+Confirm: build 0-error (runs the walkthrough guard); pages exist in `dist/{en,fr}/<slug>/`; the
+`##` skeleton matches siblings. `astro check` type-checks. Then open the guide page and watch
+the walkthrough render inside the `.prose` container.

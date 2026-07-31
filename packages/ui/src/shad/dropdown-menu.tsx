@@ -1,10 +1,18 @@
+import { useOverlayContext, useOverlayDismissProps } from "@caseai-connect/ui/shad/overlay-context"
 import { cn } from "@caseai-connect/ui/utils"
 import * as DropdownMenuPrimitive from "@radix-ui/react-dropdown-menu"
 import { CheckIcon, ChevronRightIcon, CircleIcon } from "lucide-react"
 import type * as React from "react"
 
-function DropdownMenu({ ...props }: React.ComponentProps<typeof DropdownMenuPrimitive.Root>) {
-  return <DropdownMenuPrimitive.Root data-slot="dropdown-menu" {...props} />
+function DropdownMenu({
+  modal,
+  ...props
+}: React.ComponentProps<typeof DropdownMenuPrimitive.Root>) {
+  // Honor an ambient non-modal override (embedded/preview hosts) unless set explicitly.
+  const ctx = useOverlayContext()
+  return (
+    <DropdownMenuPrimitive.Root data-slot="dropdown-menu" modal={modal ?? ctx.modal} {...props} />
+  )
 }
 
 function DropdownMenuPortal({
@@ -24,8 +32,11 @@ function DropdownMenuContent({
   sideOffset = 4,
   ...props
 }: React.ComponentProps<typeof DropdownMenuPrimitive.Content>) {
+  // Portal into an ambient container (walkthrough window) when provided; else body.
+  const ctx = useOverlayContext()
+  const dismiss = useOverlayDismissProps()
   return (
-    <DropdownMenuPrimitive.Portal>
+    <DropdownMenuPrimitive.Portal container={ctx.container ?? undefined}>
       <DropdownMenuPrimitive.Content
         data-slot="dropdown-menu-content"
         sideOffset={sideOffset}
@@ -34,6 +45,7 @@ function DropdownMenuContent({
           className,
         )}
         {...props}
+        {...dismiss}
       />
     </DropdownMenuPrimitive.Portal>
   )

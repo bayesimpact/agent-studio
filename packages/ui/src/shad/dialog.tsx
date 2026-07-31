@@ -1,18 +1,32 @@
+import { useOverlayContext, useOverlayDismissProps } from "@caseai-connect/ui/shad/overlay-context"
 import { cn } from "@caseai-connect/ui/utils"
 import * as DialogPrimitive from "@radix-ui/react-dialog"
 import { XIcon } from "lucide-react"
 import type * as React from "react"
 
-function Dialog({ ...props }: React.ComponentProps<typeof DialogPrimitive.Root>) {
-  return <DialogPrimitive.Root data-slot="dialog" {...props} />
+function Dialog({ modal, ...props }: React.ComponentProps<typeof DialogPrimitive.Root>) {
+  // Honor an ambient non-modal override (embedded/preview hosts) unless one is set explicitly.
+  const ctx = useOverlayContext()
+  return <DialogPrimitive.Root data-slot="dialog" modal={modal ?? ctx.modal} {...props} />
 }
 
 function DialogTrigger({ ...props }: React.ComponentProps<typeof DialogPrimitive.Trigger>) {
   return <DialogPrimitive.Trigger data-slot="dialog-trigger" {...props} />
 }
 
-function DialogPortal({ ...props }: React.ComponentProps<typeof DialogPrimitive.Portal>) {
-  return <DialogPrimitive.Portal data-slot="dialog-portal" {...props} />
+function DialogPortal({
+  container,
+  ...props
+}: React.ComponentProps<typeof DialogPrimitive.Portal>) {
+  // Portal into an ambient container (e.g. a walkthrough window) when provided; else body.
+  const ctx = useOverlayContext()
+  return (
+    <DialogPrimitive.Portal
+      data-slot="dialog-portal"
+      container={container ?? ctx.container ?? undefined}
+      {...props}
+    />
+  )
 }
 
 function DialogClose({ ...props }: React.ComponentProps<typeof DialogPrimitive.Close>) {
@@ -43,6 +57,7 @@ function DialogContent({
 }: React.ComponentProps<typeof DialogPrimitive.Content> & {
   showCloseButton?: boolean
 }) {
+  const dismiss = useOverlayDismissProps()
   return (
     <DialogPortal data-slot="dialog-portal">
       <DialogOverlay />
@@ -53,6 +68,7 @@ function DialogContent({
           className,
         )}
         {...props}
+        {...dismiss}
       >
         {children}
         {showCloseButton && (

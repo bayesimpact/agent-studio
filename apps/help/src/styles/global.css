@@ -17,6 +17,9 @@
  * are generated. Path is relative to this file (apps/help/src/styles).
  */
 @source "../../../../packages/ui/src";
+/* Scan apps/web so Tailwind generates the utility classes used by the REAL app components
+   rendered inside the LIVE walkthroughs (v3 islands — Documents, add-an-admin). */
+@source "../../../web/src";
 
 /*
  * Bayes Impact brand tokens (brand/tokens.css): warm-beige surface, black ink,
@@ -418,6 +421,25 @@
  * indentation, table row `border-b`, cell padding), and only the prose bleed is removed.
  * A blanket unlayered reset would clobber those utilities too — do NOT do that.
  */
+/*
+ * SPIKE (PR #602) — the REAL Studio layout (SidebarProvider variant=inset) assumes it owns
+ * the viewport: `position: fixed` sidebar + `svh` heights. When embedded in a bounded
+ * walkthrough window, contain it: the fixed sidebar becomes absolute within the window, and
+ * screen-height boxes fill the window instead. Scoped to `.wt-scope`; our transcription
+ * scenes use `collapsible="none"` (no fixed sidebar-container) so they're unaffected.
+ */
+.wt-scope [data-slot="sidebar-wrapper"] {
+  min-height: 100% !important;
+  height: 100%;
+}
+.wt-scope [data-slot="sidebar-container"] {
+  position: absolute !important;
+  height: 100% !important;
+}
+.wt-scope [data-slot="sidebar-inset"] {
+  min-height: 0 !important;
+}
+
 @layer components {
   /*
    * COMPREHENSIVE neutralizer (not per-symptom): reset EVERY element `.prose` styles, for
@@ -476,4 +498,39 @@
   .wt-scope li::marker {
     content: "";
   }
+
+  /*
+   * The custom `.prose` styles headings/strong/th — crucially `.prose h2` uses the DISPLAY font
+   * (`--font-display` = Archivo Black) and `.prose h3` sets font-weight 700. The v3 LIVE island
+   * renders the REAL app, whose card/section titles are `<h2>`/`<h3>` (e.g. `GridCardTitle` is an
+   * `<h2 class="font-medium">`): prose's DISPLAY FONT bleeds onto them → they look ultra-bold/black,
+   * and un-utilitied `<h3>` (a member email) gets 700. Reset both here, scoped to the live island
+   * (`.lwp`) only: font-family falls back to Inter, weight to normal; a `font-*` utility still wins
+   * (`@layer utilities`). The shared neutralizer above can't do this (it must keep v2 `<b>` bold).
+   */
+  .prose .lwp :is(h1, h2, h3, h4, h5, h6, strong, b, th) {
+    font-family: inherit;
+    font-weight: 400;
+  }
+}
+
+/*
+ * v3 LIVE walkthroughs mount the real app as a `client:only` island (the app chunk loads async).
+ * Reserve the vertical space and show a placeholder so the guide doesn't reflow and the animation
+ * doesn't "pop in" from nothing after load.
+ */
+.wt-embed {
+  min-height: 890px;
+}
+.wt-embed-loading {
+  height: 760px;
+  margin: 1.5rem 0;
+  border: 1px solid oklch(0.922 0 0);
+  border-radius: 14px;
+  background: #fff;
+  display: grid;
+  place-items: center;
+  color: oklch(0.556 0 0);
+  font-family: var(--font-sans);
+  font-size: 0.9rem;
 }
