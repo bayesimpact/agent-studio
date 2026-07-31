@@ -25,6 +25,7 @@ import {
   mandatoryToolInstruction,
 } from "./tools/mandatory.tool"
 import { createRetrievedChunksRegistry } from "./tools/retrieved-chunks-registry"
+import type { SessionStateTarget } from "./tools/session-state-target"
 import { surfaceResourcesTool } from "./tools/surface-resources.tool"
 import { createSurfacedResourcesRegistry } from "./tools/surfaced-resources-registry"
 
@@ -102,11 +103,14 @@ export class ToolsService extends ServiceWithLLM {
     onExecute,
     includeSessionMetadataTools = true,
     includeSubAgentTools = true,
+    sessionState,
   }: {
     agentSessionScope: AgentSessionScope
     onExecute: OnExecute
     includeSessionMetadataTools?: boolean
     includeSubAgentTools?: boolean
+    /** Overrides where stateful tools persist (public sessions). */
+    sessionState?: SessionStateTarget
   }): Promise<BuiltTools> {
     const { agent } = agentSessionScope
     const mcp = await this.buildMcpTools({ agent, onExecute })
@@ -119,6 +123,7 @@ export class ToolsService extends ServiceWithLLM {
           includeSubAgentTools,
           mcp,
           onExecute,
+          sessionState,
         })
 
       default:
@@ -192,12 +197,14 @@ export class ToolsService extends ServiceWithLLM {
     includeSubAgentTools,
     mcp,
     onExecute,
+    sessionState,
   }: {
     agentSessionScope: AgentSessionScope
     includeSessionMetadataTools: boolean
     includeSubAgentTools: boolean
     mcp: McpToolset
     onExecute: OnExecute
+    sessionState?: SessionStateTarget
   }): Promise<BuiltTools> {
     const { agent, agentSettings, connectScope, session } = agentSessionScope
     // fillForm needs a persisted session carrying a `result` column — public
@@ -262,7 +269,8 @@ export class ToolsService extends ServiceWithLLM {
                     .sort((leftCategoryName, rightCategoryName) =>
                       leftCategoryName.localeCompare(rightCategoryName),
                     ),
-                  conversationAgentSessionsService: this.conversationAgentSessionsService,
+                  metadataRecalculator:
+                    sessionState?.metadataRecalculator ?? this.conversationAgentSessionsService,
                 }
               : undefined,
             onExecute,
@@ -309,7 +317,8 @@ export class ToolsService extends ServiceWithLLM {
         ? {
             [ToolName.FillForm]: fillFormTool({
               agentSessionScope,
-              sessionResultUpdater: this.conversationAgentSessionsService,
+              sessionResultUpdater:
+                sessionState?.resultUpdater ?? this.conversationAgentSessionsService,
               onExecute,
             }),
           }

@@ -2,7 +2,6 @@ import { ToolName } from "@caseai-connect/api-contracts"
 import { tool } from "ai"
 import { z } from "zod"
 import type { RequiredConnectScope } from "@/common/entities/connect-required-fields"
-import type { ConversationAgentSessionsService } from "@/domains/agents/conversation-agent-sessions/conversation-agent-sessions.service"
 import type { RetrievedChunksRegistry } from "./retrieved-chunks-registry"
 import type { ToolExecutionLog } from "./tool-execution-log"
 
@@ -31,11 +30,26 @@ const MAX_PARTIAL_CONTENT_LENGTH = 500
  * unchanged.
  */
 
+/**
+ * Persists the reported title/categories on the session. Two
+ * implementations: ConversationAgentSessionsService (studio/app sessions)
+ * and PublicAgentSessionsService (embed sessions) — same semantics, keyed
+ * on their own session table.
+ */
+export type SessionMetadataRecalculator = {
+  recalculateSessionMetadataFromMessages(params: {
+    connectScope: RequiredConnectScope
+    sessionId: string
+    selectedCategoryNames: string[]
+    suggestedTitle: string | null
+  }): Promise<{ suggestedTitle: string | null; selectedCategoryNames: string[] }>
+}
+
 export type TurnSummarySessionMetadataConfig = {
   connectScope: RequiredConnectScope
   sessionId: string
   availableCategoryNames: string[]
-  conversationAgentSessionsService: ConversationAgentSessionsService
+  metadataRecalculator: SessionMetadataRecalculator
 }
 
 type MandatoryToolInput = {
@@ -241,14 +255,12 @@ export function mandatoryTool({
         input.categoryNames !== undefined || input.suggestedTitle !== undefined
       if (sessionMetadata && hasMetadataInput) {
         const { suggestedTitle, selectedCategoryNames } =
-          await sessionMetadata.conversationAgentSessionsService.recalculateSessionMetadataFromMessages(
-            {
-              connectScope: sessionMetadata.connectScope,
-              sessionId: sessionMetadata.sessionId,
-              selectedCategoryNames: input.categoryNames ?? [],
-              suggestedTitle: input.suggestedTitle ?? null,
-            },
-          )
+          await sessionMetadata.metadataRecalculator.recalculateSessionMetadataFromMessages({
+            connectScope: sessionMetadata.connectScope,
+            sessionId: sessionMetadata.sessionId,
+            selectedCategoryNames: input.categoryNames ?? [],
+            suggestedTitle: input.suggestedTitle ?? null,
+          })
         await onExecute({
           toolName: ToolName.RecalculateConversationSessionMetadata,
           arguments: { suggestedTitle, categoryNames: selectedCategoryNames },

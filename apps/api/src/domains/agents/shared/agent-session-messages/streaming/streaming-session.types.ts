@@ -10,6 +10,8 @@ import type { ToolExecutionLog } from "./tools/tool-execution-log"
  * corresponding ConversationAgentSession row.
  */
 export type PublicStreamingSessionProxy = {
+  /** fillForm state from public_agent_session.result — presence gates the tool. */
+  result?: Record<string, unknown> | null
   id: string
   traceId: string
   organizationId: string

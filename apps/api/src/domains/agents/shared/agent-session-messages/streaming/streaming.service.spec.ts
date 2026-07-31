@@ -112,6 +112,18 @@ describe("StreamingService", () => {
       agentSettings,
       userContent: "Bonjour",
       notifyClient,
+      sessionState: {
+        metadataRecalculator: {
+          recalculateSessionMetadataFromMessages: async ({
+            selectedCategoryNames,
+            suggestedTitle,
+          }) => ({ suggestedTitle, selectedCategoryNames }),
+        },
+        resultUpdater: {
+          updateSessionResult: async () => ({ result: null }),
+        },
+      },
+      sessionResult: null,
     })
 
     const { events, fulltextStream } = await aggregateStream(stream)

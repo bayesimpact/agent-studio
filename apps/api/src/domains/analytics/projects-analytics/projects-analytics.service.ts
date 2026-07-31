@@ -14,15 +14,17 @@ import {
   getQualifiedColumnSql,
   getUtcDayKeys,
 } from "@/domains/analytics/shared/analytics-conversation-metrics.helpers"
-
 import type {
   AnalyticsCategoryDailyPoint,
   AnalyticsDailyPoint,
 } from "@/domains/analytics/shared/analytics-metrics.types"
+import { getPublicSessionCategoryRows } from "@/domains/analytics/shared/public-session-category-rows.helper"
+import { PublicAgentSession } from "@/domains/public-chat/public-agent-sessions/public-agent-session.entity"
 
 @Injectable()
 export class ProjectsAnalyticsService {
   private readonly conversationAgentSessionConnectRepository: ConnectRepository<ConversationAgentSession>
+  private readonly publicAgentSessionConnectRepository: ConnectRepository<PublicAgentSession>
   private readonly conversationAgentSessionAlias = "conversationAgentSession"
   private readonly agentMessageAlias = "agentMessage"
   private readonly sessionCategoryAlias = "sessionCategory"
@@ -32,10 +34,16 @@ export class ProjectsAnalyticsService {
   constructor(
     @InjectRepository(ConversationAgentSession)
     conversationAgentSessionRepository: Repository<ConversationAgentSession>,
+    @InjectRepository(PublicAgentSession)
+    publicAgentSessionRepository: Repository<PublicAgentSession>,
   ) {
     this.conversationAgentSessionConnectRepository = new ConnectRepository(
       conversationAgentSessionRepository,
       this.conversationAgentSessionAlias,
+    )
+    this.publicAgentSessionConnectRepository = new ConnectRepository(
+      publicAgentSessionRepository,
+      "publicAgentSession",
     )
   }
 
@@ -248,26 +256,56 @@ export class ProjectsAnalyticsService {
       value: string
     }>()
 
-    const categorizedPoints: AnalyticsCategoryDailyPoint[] = categorizedRows.map((row) => ({
-      date: row.date,
-      agentId: row.agentId,
-      agentName: row.agentName,
-      categoryId: row.categoryId,
-      categoryName: row.categoryName,
-      value: Number(row.value),
-      isUncategorized: false,
-    }))
+    // PUBLIC (embed) sessions enter the same aggregation — their categories
+    // come from the agent's mandatory report (#616). Values are summed with
+    // the conversation-session rows per (date, agent, category).
+    const publicRows = await getPublicSessionCategoryRows({
+      publicAgentSessionConnectRepository: this.publicAgentSessionConnectRepository,
+      connectScope,
+      agentId,
+      startAt,
+      endAt,
+    })
 
-    const uncategorizedPoints: AnalyticsCategoryDailyPoint[] = uncategorizedRows
-      .filter((row) => Number(row.value) > 0)
-      .map((row) => ({
-        date: row.date,
-        agentId: row.agentId,
-        agentName: row.agentName,
-        categoryName: "uncategorized",
-        value: Number(row.value),
-        isUncategorized: true,
-      }))
+    const categorizedByKey = new Map<string, AnalyticsCategoryDailyPoint>()
+    for (const row of [...categorizedRows, ...publicRows.categorizedRows]) {
+      const key = `${row.date}|${row.agentId}|${row.categoryId}`
+      const existing = categorizedByKey.get(key)
+      if (existing) {
+        existing.value += Number(row.value)
+      } else {
+        categorizedByKey.set(key, {
+          date: row.date,
+          agentId: row.agentId,
+          agentName: row.agentName,
+          categoryId: row.categoryId,
+          categoryName: row.categoryName,
+          value: Number(row.value),
+          isUncategorized: false,
+        })
+      }
+    }
+    const categorizedPoints = [...categorizedByKey.values()]
+
+    const uncategorizedByKey = new Map<string, AnalyticsCategoryDailyPoint>()
+    for (const row of [...uncategorizedRows, ...publicRows.uncategorizedRows]) {
+      if (Number(row.value) <= 0) continue
+      const key = `${row.date}|${row.agentId}`
+      const existing = uncategorizedByKey.get(key)
+      if (existing) {
+        existing.value += Number(row.value)
+      } else {
+        uncategorizedByKey.set(key, {
+          date: row.date,
+          agentId: row.agentId,
+          agentName: row.agentName,
+          categoryName: "uncategorized",
+          value: Number(row.value),
+          isUncategorized: true,
+        })
+      }
+    }
+    const uncategorizedPoints = [...uncategorizedByKey.values()]
 
     return [...categorizedPoints, ...uncategorizedPoints].sort(
       (firstPoint, secondPoint) =>

@@ -62,7 +62,7 @@ export async function runTurnSummaryScenario({
       connectScope: { organizationId: "org-1", projectId: "project-1" },
       sessionId: "session-1",
       availableCategoryNames: ["HR", "IT", "Other"],
-      conversationAgentSessionsService: {
+      metadataRecalculator: {
         recalculateSessionMetadataFromMessages: async ({
           selectedCategoryNames,
           suggestedTitle,
@@ -160,7 +160,7 @@ export async function runFatPromptTurnScenario({
       connectScope: { organizationId: "org-1", projectId: "project-1" },
       sessionId: "session-1",
       availableCategoryNames: FAT_AGENT_CATEGORY_NAMES,
-      conversationAgentSessionsService: {
+      metadataRecalculator: {
         recalculateSessionMetadataFromMessages: async ({
           selectedCategoryNames,
           suggestedTitle,
