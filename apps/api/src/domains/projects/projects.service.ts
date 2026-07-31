@@ -55,7 +55,7 @@ export class ProjectsService {
     // all the project ids the user has access to, along with their permissions
     const permissionsByProjectId = await this.permissionService.listResourcePermissions(
       userId,
-      "project",
+      "project.read",
     )
 
     return this.projectRepository.findAllByIds(permissionsByProjectId)
@@ -74,7 +74,7 @@ export class ProjectsService {
   }): Promise<ProjectModel[]> {
     const permissionsByProjectId = await this.permissionService.listResourcePermissions(
       userId,
-      "project",
+      "project.read",
     )
 
     return this.projectRepository.findAllByOrganizationIdAndIds(
@@ -99,7 +99,7 @@ export class ProjectsService {
 
     const permissionsByProjectId = await this.permissionService.listResourcePermissions(
       userId,
-      "project",
+      "project.read",
     )
     return new ProjectModel(
       { ...updated, featureFlags: [], agentSessionCategories: [] },

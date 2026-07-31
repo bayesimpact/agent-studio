@@ -21,9 +21,17 @@ import {
 import type { EndpointRequest } from "@/common/context/request.interface"
 import { ZodValidationPipe } from "@/common/zod-validation-pipe"
 import { JwtAuthGuard } from "@/domains/auth/jwt-auth.guard"
+import { CheckPermission } from "@/domains/rbac/check-permission.decorator"
+import { CheckPermissionGuard } from "@/domains/rbac/check-permission.guard"
+import {
+  BACKOFFICE_AGENT_READ_PERMISSION,
+  BACKOFFICE_ORGANIZATION_READ_PERMISSION,
+  BACKOFFICE_PROJECT_READ_PERMISSION,
+  BACKOFFICE_PROJECT_UPDATE_PERMISSION,
+  ORGANIZATION_CREATE_PERMISSION,
+} from "@/domains/rbac/rbac.constants"
 import { UserGuard } from "@/domains/users/user.guard"
 import { TrackActivity } from "../activities/track-activity.decorator"
-import { isEmailBackofficeAuthorized } from "./backoffice.authorization"
 import { BackofficeGuard } from "./backoffice.guard"
 import {
   toBackofficeAgentDetailDto,
@@ -47,7 +55,7 @@ function assertValidFeatureFlagKey(value: string): FeatureFlagKey {
   return value as FeatureFlagKey
 }
 
-@UseGuards(JwtAuthGuard, UserGuard, BackofficeGuard)
+@UseGuards(JwtAuthGuard, UserGuard, BackofficeGuard, CheckPermissionGuard)
 @Controller()
 export class BackofficeController {
   constructor(private readonly backofficeService: BackofficeService) {}
@@ -60,11 +68,9 @@ export class BackofficeController {
     @Query("search") search?: string,
   ): Promise<typeof BackofficeRoutes.listOrganizations.response> {
     const { user } = request
-    const canListAll = isEmailBackofficeAuthorized(user.email)
     const page = Math.max(0, Number(pageParam) || 0)
     const limit = Math.min(100, Math.max(1, Number(limitParam) || 10))
     const { organizations, total } = await this.backofficeService.listOrganizations({
-      canListAll,
       userId: user.id,
       page,
       limit,
@@ -81,15 +87,11 @@ export class BackofficeController {
   }
 
   @Get(BackofficeRoutes.getOrganization.path)
+  @CheckPermission(BACKOFFICE_ORGANIZATION_READ_PERMISSION, "organization")
   async getOrganization(
-    @Req() request: EndpointRequest,
     @Param("organizationId") organizationId: string,
   ): Promise<typeof BackofficeRoutes.getOrganization.response> {
-    const { user } = request
-    const canListAll = isEmailBackofficeAuthorized(user.email)
     const result = await this.backofficeService.getOrganizationDetail({
-      canListAll,
-      requestingUserId: user.id,
       targetOrganizationId: organizationId,
     })
     if (!result) throw new NotFoundException(`Organization ${organizationId} not found`)
@@ -106,11 +108,9 @@ export class BackofficeController {
     @Query("search") search?: string,
   ): Promise<typeof BackofficeRoutes.listAgents.response> {
     const { user } = request
-    const canListAll = isEmailBackofficeAuthorized(user.email)
     const page = Math.max(0, Number(pageParam) || 0)
     const limit = Math.min(100, Math.max(1, Number(limitParam) || 10))
     const { agents, total } = await this.backofficeService.listAgents({
-      canListAll,
       userId: user.id,
       page,
       limit,
@@ -127,15 +127,11 @@ export class BackofficeController {
   }
 
   @Get(BackofficeRoutes.getAgent.path)
+  @CheckPermission(BACKOFFICE_AGENT_READ_PERMISSION, "agent")
   async getAgent(
-    @Req() request: EndpointRequest,
     @Param("agentId") agentId: string,
   ): Promise<typeof BackofficeRoutes.getAgent.response> {
-    const { user } = request
-    const canListAll = isEmailBackofficeAuthorized(user.email)
     const result = await this.backofficeService.getAgentDetail({
-      canListAll,
-      requestingUserId: user.id,
       targetAgentId: agentId,
     })
     if (!result) throw new NotFoundException(`Agent ${agentId} not found`)
@@ -150,11 +146,9 @@ export class BackofficeController {
     @Query("search") search?: string,
   ): Promise<typeof BackofficeRoutes.listUsers.response> {
     const { user } = request
-    const canListAll = isEmailBackofficeAuthorized(user.email)
     const page = Math.max(0, Number(pageParam) || 0)
     const limit = Math.min(100, Math.max(1, Number(limitParam) || 10))
     const { users, total } = await this.backofficeService.listUsers({
-      canListAll,
       userId: user.id,
       page,
       limit,
@@ -176,9 +170,7 @@ export class BackofficeController {
     @Param("userId") userId: string,
   ): Promise<typeof BackofficeRoutes.getUser.response> {
     const { user } = request
-    const canListAll = isEmailBackofficeAuthorized(user.email)
     const result = await this.backofficeService.getUserDetail({
-      canListAll,
       requestingUserId: user.id,
       targetUserId: userId,
     })
@@ -202,11 +194,9 @@ export class BackofficeController {
     @Query("search") search?: string,
   ): Promise<typeof BackofficeRoutes.listProjects.response> {
     const { user } = request
-    const canListAll = isEmailBackofficeAuthorized(user.email)
     const page = Math.max(0, Number(pageParam) || 0)
     const limit = Math.min(100, Math.max(1, Number(limitParam) || 10))
     const { projects, total } = await this.backofficeService.listProjects({
-      canListAll,
       userId: user.id,
       page,
       limit,
@@ -223,15 +213,11 @@ export class BackofficeController {
   }
 
   @Get(BackofficeRoutes.getProject.path)
+  @CheckPermission(BACKOFFICE_PROJECT_READ_PERMISSION, "project")
   async getProject(
-    @Req() request: EndpointRequest,
     @Param("projectId") projectId: string,
   ): Promise<typeof BackofficeRoutes.getProject.response> {
-    const { user } = request
-    const canListAll = isEmailBackofficeAuthorized(user.email)
     const result = await this.backofficeService.getProjectDetail({
-      canListAll,
-      requestingUserId: user.id,
       targetProjectId: projectId,
     })
     if (!result) throw new NotFoundException(`Project ${projectId} not found`)
@@ -241,6 +227,7 @@ export class BackofficeController {
   }
 
   @Post(BackofficeRoutes.createOrganization.path)
+  @CheckPermission(ORGANIZATION_CREATE_PERMISSION)
   @TrackActivity({ action: "backoffice.organization.create" })
   @UsePipes(new ZodValidationPipe(createBackofficeOrganizationSchema))
   async createOrganization(
@@ -255,39 +242,31 @@ export class BackofficeController {
   }
 
   @Post(BackofficeRoutes.addFeatureFlag.path)
+  @CheckPermission(BACKOFFICE_PROJECT_UPDATE_PERMISSION, "project")
   @TrackActivity({ action: "add_feature_flag", entityFrom: "project" })
   async addFeatureFlag(
-    @Req() request: EndpointRequest,
     @Param("projectId") projectId: string,
     @Body() body: typeof BackofficeRoutes.addFeatureFlag.request,
   ): Promise<typeof BackofficeRoutes.addFeatureFlag.response> {
-    const { user } = request
-    const canListAll = isEmailBackofficeAuthorized(user.email)
     const featureFlagKey = assertValidFeatureFlagKey(body.payload.featureFlagKey)
     await this.backofficeService.addFeatureFlag({
       projectId,
       featureFlagKey,
-      canListAll,
-      userId: user.id,
     })
     return { data: { success: true } }
   }
 
   @Delete(BackofficeRoutes.removeFeatureFlag.path)
+  @CheckPermission(BACKOFFICE_PROJECT_UPDATE_PERMISSION, "project")
   @TrackActivity({ action: "add_feature_flag", entityFrom: "project" })
   async removeFeatureFlag(
-    @Req() request: EndpointRequest,
     @Param("projectId") projectId: string,
     @Param("featureFlagKey") featureFlagKey: string,
   ): Promise<typeof BackofficeRoutes.removeFeatureFlag.response> {
-    const { user } = request
-    const canListAll = isEmailBackofficeAuthorized(user.email)
     const validatedKey = assertValidFeatureFlagKey(featureFlagKey)
     await this.backofficeService.removeFeatureFlag({
       projectId,
       featureFlagKey: validatedKey,
-      canListAll,
-      userId: user.id,
     })
     return { data: { success: true } }
   }

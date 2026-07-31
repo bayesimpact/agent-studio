@@ -4,15 +4,26 @@ import { InjectDataSource } from "@nestjs/typeorm"
 import { DataSource } from "typeorm"
 import type { PermissionResource, PermissionResourceType } from "./permission.types"
 import {
+  BACKOFFICE_USER_READ_PERMISSION,
   PARENT_RESOURCE_TYPE_MAP,
+  READ_PERMISSION_RESOURCE_TYPE_MAP,
   RESOURCE_TYPE_PERMISSIONS_MAP,
-  RESOURCE_TYPE_READ_PERMISSION_MAP,
+  type ResourceReadPermission,
+  USER_READ_PERMISSION,
 } from "./rbac.constants"
 
 type PermissionRow = { permissionKey: string }
 type ResourcePermissionRow = { resourceId: string; permissionKey: string }
 type ResourceIdRow = { resourceId: string }
 type ChildResourceRow = { resourceId: string; parentResourceId: string }
+type UserIdRow = { userId: string }
+
+/**
+ * Scope of visible users: holders of `backoffice.user.read` globally see the
+ * whole directory ("all"); everyone else gets an explicit id list, so callers
+ * can keep pagination in SQL without materializing every id.
+ */
+export type ResourceIdsScope = { scope: "all" } | { scope: "ids"; ids: string[] }
 
 @Injectable()
 export class PermissionService {
@@ -49,30 +60,42 @@ export class PermissionService {
 
   /**
    * Returns all resource ids that the user has access to, including:
-   * - direct access (easy)
-   * - access through parent resources (slightly harder)
+   * - a global grant of the permission (every alive resource of the mapped type)
+   * - direct access (membership on the resource whose role grants the key)
+   * - access through parent resources (same key on an ancestor role)
+   *
+   * Permission-first API: the resource type is resolved from the permission
+   * key (e.g. `organization.read` / `backoffice.organization.read` -> organization).
+   * The *requested* key is used end-to-end — no remapping to a "canonical" read
+   * permission — so granting `backoffice.organization.read` on an org role is
+   * enough for scoped backoffice listings.
    *
    * WARNING: this does not return the permissions for the resources, only the ids.
    * To get the permissions, use listResourcePermissions instead.
    */
-  async listResourceIds(userId: string, resourceType: PermissionResourceType): Promise<string[]> {
-    // the goal is to retrieve all resource ids that the user has access to, including:
-    // - direct access (easy)
-    // - access through parent resources (slightly harder)
+  async listResourceIds(userId: string, readPermission: ResourceReadPermission): Promise<string[]> {
+    const resourceType = READ_PERMISSION_RESOURCE_TYPE_MAP[readPermission]
 
-    const directResourceIds = await this.listResourceIdsFromDirectAccess(userId, resourceType)
+    if (await this.hasGlobal(userId, readPermission)) {
+      return this.listAllAliveResourceIds(resourceType)
+    }
+
+    const directResourceIds = await this.listResourceIdsMatchingPermission(
+      userId,
+      resourceType,
+      readPermission,
+    )
     const resourceIdsFromParents: string[] = []
 
     // every parent resource type contributes: a user can inherit access through
     // several sources at once (e.g. an org role AND a project role for agents),
     // so the loop accumulates instead of stopping at the first match
     for (const parentResourceType of PARENT_RESOURCE_TYPE_MAP[resourceType]) {
-      // parent resources qualify when their role grants the read permission
-      // for the requested resource type
+      // parent resources qualify when their role grants the *requested* permission
       const parentResourceIds = await this.listResourceIdsMatchingPermission(
         userId,
         parentResourceType,
-        RESOURCE_TYPE_READ_PERMISSION_MAP[resourceType],
+        readPermission,
       )
       if (parentResourceIds.length === 0) continue
 
@@ -92,11 +115,15 @@ export class PermissionService {
    * - direct access: the permissions of the role held on the resource itself
    * - access through a parent resource: the parent's permissions, filtered down to the
    *   ones that apply to the requested resource type (RESOURCE_TYPE_PERMISSIONS_MAP)
+   *
+   * Permission-first API: the resource type is resolved from the read
+   * permission key (e.g. `organization.read` -> organization).
    */
   async listResourcePermissions(
     userId: string,
-    resourceType: PermissionResourceType,
+    readPermission: ResourceReadPermission,
   ): Promise<Map<string, string[]>> {
+    const resourceType = READ_PERMISSION_RESOURCE_TYPE_MAP[readPermission]
     const permissionsByResourceId = await this.listDirectResourcePermissions(userId, resourceType)
     // permissions that apply to the requested resource type (e.g. project -> project.*)
     const resourceTypePermissions: readonly string[] = RESOURCE_TYPE_PERMISSIONS_MAP[resourceType]
@@ -111,7 +138,7 @@ export class PermissionService {
         await this.listDirectResourcePermissionsMatchingPermission(
           userId,
           parentResourceType,
-          RESOURCE_TYPE_READ_PERMISSION_MAP[resourceType],
+          readPermission,
         )
       if (parentPermissionsByParentId.size === 0) continue
 
@@ -189,19 +216,6 @@ export class PermissionService {
     return this.groupPermissionsByResourceId(rows)
   }
 
-  private async listResourceIdsFromDirectAccess(
-    userId: string,
-    resourceType: PermissionResourceType,
-  ): Promise<string[]> {
-    const readPermission = RESOURCE_TYPE_READ_PERMISSION_MAP[resourceType]
-
-    if (!readPermission) {
-      return []
-    }
-
-    return this.listResourceIdsMatchingPermission(userId, resourceType, readPermission)
-  }
-
   private async listResourceIdsMatchingPermission(
     userId: string,
     resourceType: PermissionResourceType,
@@ -219,6 +233,52 @@ export class PermissionService {
       [userId, resourceType, readPermission],
     )
     return rows.map((row) => row.resourceId)
+  }
+
+  /** Every alive resource id of the given type (used when the permission is held globally). */
+  private async listAllAliveResourceIds(resourceType: PermissionResourceType): Promise<string[]> {
+    const query = ALL_ALIVE_RESOURCE_IDS_QUERIES[resourceType]
+    if (!query) {
+      return []
+    }
+
+    const rows: ResourceIdRow[] = await this.dataSource.query(query)
+    return rows.map((row) => row.resourceId)
+  }
+
+  /**
+   * Which users is this user allowed to see?
+   * - `backoffice.user.read` held globally: the whole directory ({ scope: "all" })
+   * - otherwise: themselves, plus the members of every resource on which the
+   *   user holds a role granting `user.read` (same-resource members only:
+   *   an org role granting user.read shows the org's members, not the members
+   *   of every project of the org)
+   *
+   * NOTE: agent memberships are covered when the agent role grants `user.read`
+   * (agent_owner / agent_admin) and `role_id` is set on the membership.
+   */
+  async listUserIds(userId: string): Promise<ResourceIdsScope> {
+    if (await this.hasGlobal(userId, BACKOFFICE_USER_READ_PERMISSION)) {
+      return { scope: "all" }
+    }
+
+    const rows: UserIdRow[] = await this.dataSource.query(
+      `SELECT DISTINCT other_membership.user_id AS "userId"
+       FROM user_membership my_membership
+       INNER JOIN role_permission ON role_permission.role_id = my_membership.role_id
+         AND role_permission.permission_key = $2
+       INNER JOIN user_membership other_membership
+         ON other_membership.resource_type = my_membership.resource_type
+         AND other_membership.resource_id = my_membership.resource_id
+         AND other_membership.deleted_at IS NULL
+       WHERE my_membership.user_id = $1
+         AND my_membership.resource_id IS NOT NULL
+         AND my_membership.deleted_at IS NULL`,
+      [userId, USER_READ_PERMISSION],
+    )
+
+    const visibleUserIds = new Set<string>([userId, ...rows.map((row) => row.userId)])
+    return { scope: "ids", ids: [...visibleUserIds] }
   }
 
   async hasGlobal(userId: string, permission: string): Promise<boolean> {
@@ -241,15 +301,19 @@ export class PermissionService {
 
   /**
    * Whether the user holds the permission on the resource, either through a
-   * role held directly on the resource, or inherited from a role on an
-   * ancestor resource (e.g. an org role granting `project.read` applies to
-   * every project of the org).
+   * global role granting the permission everywhere, a role held directly on
+   * the resource, or inherited from a role on an ancestor resource (e.g. an
+   * org role granting `project.read` applies to every project of the org).
    *
    * Inheritance is gated by RESOURCE_TYPE_PERMISSIONS_MAP, with the same
    * semantics as listResourcePermissions: a parent role only conveys the
    * permissions that apply to the child resource type.
    */
   async has(userId: string, permission: string, resource: PermissionResource): Promise<boolean> {
+    if (await this.hasGlobal(userId, permission)) {
+      return true
+    }
+
     if (await this.hasDirectly(userId, permission, resource)) {
       return true
     }
@@ -342,6 +406,19 @@ export class PermissionService {
 
     return this.dataSource.query(query, [parentResourceIds])
   }
+}
+
+/** Every alive resource id of a given type (global-permission fast path). */
+const ALL_ALIVE_RESOURCE_IDS_QUERIES: Record<PermissionResourceType, string> = {
+  organization: `SELECT organization.id AS "resourceId"
+                 FROM organization
+                 WHERE organization.deleted_at IS NULL`,
+  project: `SELECT project.id AS "resourceId"
+            FROM project
+            WHERE project.deleted_at IS NULL`,
+  agent: `SELECT agent.id AS "resourceId"
+          FROM agent
+          WHERE agent.deleted_at IS NULL`,
 }
 
 /**

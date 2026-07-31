@@ -67,6 +67,7 @@ export class AgentContextResolver implements ContextResolver {
           userId: userMembership.userId,
           agentId: agent.id,
           role: userMembership.role,
+          roleId: userMembership.roleId,
           createdAt: userMembership.createdAt,
           updatedAt: userMembership.updatedAt,
           deletedAt: userMembership.deletedAt,

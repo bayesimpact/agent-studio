@@ -4,10 +4,6 @@ import { Body, Controller, Get, Patch, Req, UseGuards, UsePipes } from "@nestjs/
 import type { EndpointRequest } from "@/common/context/request.interface"
 import { ZodValidationPipe } from "@/common/zod-validation-pipe"
 import { JwtAuthGuard } from "@/domains/auth/jwt-auth.guard"
-import {
-  isDomainBackofficeAuthorized,
-  isEmailBackofficeAuthorized,
-} from "@/domains/backoffice/backoffice.authorization"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
 import { OrganizationsService } from "@/domains/organizations/organizations.service"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
@@ -87,8 +83,6 @@ function toUserDto({
     name: user.name ?? buildNameFromEmail(user.email),
     globalPermissions: globalPermissions as GlobalPermission[],
     memberships: toUserMembershipDto(memberships),
-    isBackofficeAuthorized: isDomainBackofficeAuthorized(user.email),
-    isTermsManagementAuthorized: isEmailBackofficeAuthorized(user.email),
     termsAccepted: isAcceptanceUpToDate(latestAcceptance, termsDocuments),
   }
 }

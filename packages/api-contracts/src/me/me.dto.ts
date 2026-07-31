@@ -32,8 +32,6 @@ export type UserDto = {
   name: string
   globalPermissions: GlobalPermission[]
   memberships: UserMembershipsDto
-  isBackofficeAuthorized: boolean
-  isTermsManagementAuthorized: boolean
   termsAccepted: boolean
 }
 

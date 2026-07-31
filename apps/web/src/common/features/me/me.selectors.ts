@@ -8,13 +8,13 @@ export const selectMeError = (state: RootState) => state.me.data.error
 export const selectPendingInvitations = (state: RootState) => state.me.pendingInvitations
 
 export const selectCanViewTraces = (state: RootState): boolean =>
-  state.me.data.value?.globalPermissions.includes("trace.view") ?? false
+  state.me.data.value?.globalPermissions.includes("trace.read") ?? false
 
 export const selectIsBackofficeAuthorized = (state: RootState): boolean =>
-  state.me.data.value?.isBackofficeAuthorized ?? false
+  state.me.data.value?.globalPermissions.includes("backoffice.read") ?? false
 
 export const selectIsTermsManagementAuthorized = (state: RootState): boolean =>
-  state.me.data.value?.isTermsManagementAuthorized ?? false
+  state.me.data.value?.globalPermissions.includes("backoffice.terms.update") ?? false
 
 export const selectTermsAccepted = (state: RootState): boolean =>
   state.me.data.value?.termsAccepted ?? false

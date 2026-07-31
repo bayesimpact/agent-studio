@@ -7,6 +7,7 @@ import {
   getMembershipResourceId,
   UserMembership,
 } from "@/domains/memberships/user-membership.entity"
+import { resolveAgentRoleId } from "@/domains/rbac/resolve-agent-role-id"
 import type { AgentMembershipModel } from "./agent-membership.model"
 import type { AgentMembershipRole } from "./agent-membership.types"
 
@@ -134,12 +135,15 @@ export class AgentMembershipRepository {
     agentId: string
     role: AgentMembershipRole
   }): Promise<AgentMembershipModel> {
+    const manager = this.transactionService.getManager()
+    const roleId = await resolveAgentRoleId(manager, role)
     const saved = await this.userMembershipRepo().save(
       this.userMembershipRepo().create({
         userId,
         resourceType: AGENT_RESOURCE_TYPE,
         resourceId: agentId,
         role,
+        roleId,
       }),
     )
     const withUser = await this.userMembershipRepo().findOneOrFail({
@@ -160,13 +164,15 @@ export class AgentMembershipRepository {
     agentId: string
     role: AgentMembershipRole
   }): Promise<void> {
+    const manager = this.transactionService.getManager()
+    const roleId = await resolveAgentRoleId(manager, role)
     await this.userMembershipRepo().update(
       {
         id: membershipId,
         resourceType: AGENT_RESOURCE_TYPE,
         resourceId: agentId,
       },
-      { role },
+      { role, roleId },
     )
   }
 
@@ -249,6 +255,7 @@ export class AgentMembershipRepository {
       userId: membership.userId,
       agentId: getMembershipResourceId(membership),
       role: membership.role as AgentMembershipRole,
+      roleId: membership.roleId,
       createdAt: membership.createdAt,
       updatedAt: membership.updatedAt,
       deletedAt: membership.deletedAt,
