@@ -12,7 +12,8 @@ import type { MigrationInterface, QueryRunner } from "typeorm"
  *   `backoffice.read`, `trace.read`, `backoffice.terms.update`, `organization.create`
  *   and the backoffice "list all" permissions
  *   `backoffice.{organization,project,agent,user}.read` + `backoffice.project.update`
- *   (ex BACKOFFICE_AUTHORIZED_EMAILS)
+ *   (ex BACKOFFICE_AUTHORIZED_EMAILS; memberships seeded later by
+ *   `SeedPlatformSuperadminByEmails1785492264653`)
  * - grants `user.read` to org/project/agent owner+admin roles
  * - grants `backoffice.organization.read` to org owner+admin roles
  * - grants `backoffice.project.read` to org and project owner+admin roles
@@ -23,8 +24,6 @@ import type { MigrationInterface, QueryRunner } from "typeorm"
  * - seeds agent RBAC roles (`agent_owner` / `agent_admin` / `agent_member`)
  *   and backfills `role_id` on agent memberships
  *   (scoped backoffice listings without a global grant)
- *
- * platform_superadmin memberships are not seeded: assigned manually.
  */
 export class PlatformRolesAndPermissions1785320282681 implements MigrationInterface {
   name = "PlatformRolesAndPermissions1785320282681"
