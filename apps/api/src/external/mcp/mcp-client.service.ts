@@ -1,6 +1,10 @@
 import { createMCPClient, type MCPClient } from "@ai-sdk/mcp"
 import { Injectable, Logger } from "@nestjs/common"
 import type { ToolSet } from "ai"
+import {
+  buildMcpRequestHeaders,
+  type McpConversationContext,
+} from "@/external/mcp/mcp-request-headers"
 
 export type McpSession = {
   tools: ToolSet
@@ -11,20 +15,26 @@ export type McpSession = {
 export class McpClientService {
   private readonly logger = new Logger(McpClientService.name)
 
-  async connect(config: { url: string; apiKey?: string }): Promise<McpSession> {
+  async connect(config: {
+    url: string
+    apiKey?: string
+    /** Static headers from the server's configuration. */
+    headers?: Record<string, string>
+    /** Conversation the tools will be called for (forwarded as headers). */
+    context?: McpConversationContext
+  }): Promise<McpSession> {
     let client: MCPClient | undefined
     try {
+      const headers = buildMcpRequestHeaders({
+        apiKey: config.apiKey,
+        staticHeaders: config.headers,
+        context: config.context,
+      })
       client = await createMCPClient({
         transport: {
           type: "http",
           url: config.url,
-          ...(config.apiKey
-            ? {
-                headers: {
-                  Authorization: `Bearer ${config.apiKey}`,
-                },
-              }
-            : {}),
+          ...(Object.keys(headers).length > 0 ? { headers } : {}),
         },
         name: "caseai-connect",
         version: "1.0.0",

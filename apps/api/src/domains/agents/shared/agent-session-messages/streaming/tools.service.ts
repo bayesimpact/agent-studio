@@ -14,6 +14,7 @@ import { ProjectsService } from "@/domains/projects/projects.service"
 import { ServiceWithLLM } from "@/external/llm"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
 import { McpClientService } from "@/external/mcp"
+import type { McpConversationContext } from "@/external/mcp/mcp-request-headers"
 import { generateMasterPrompt } from "./master-promts/generate-master-prompt"
 import type { AgentSessionScope, OnExecute } from "./streaming-session.types"
 import { type BuiltTools, buildSubAgentTools } from "./sub-agent-tools"
@@ -113,7 +114,11 @@ export class ToolsService extends ServiceWithLLM {
     sessionState?: SessionStateTarget
   }): Promise<BuiltTools> {
     const { agent } = agentSessionScope
-    const mcp = await this.buildMcpTools({ agent, onExecute })
+    const mcp = await this.buildMcpTools({
+      agent,
+      session: agentSessionScope.session,
+      onExecute,
+    })
 
     switch (agent.type) {
       case "conversation":
@@ -140,18 +145,28 @@ export class ToolsService extends ServiceWithLLM {
 
   private async buildMcpTools({
     agent,
+    session,
     onExecute,
   }: {
     agent: Agent
+    session: AgentSessionScope["session"]
     onExecute: OnExecute
   }): Promise<McpToolset> {
     const mcpCloseFns: (() => Promise<void>)[] = []
     const mcpTools: ToolSet = {}
     const mcpToolDescriptions: Record<string, string> = {}
 
+    // Forwarded to every MCP server as headers: deterministic context, so a
+    // server can attribute a call without the model having to carry it.
+    const context: McpConversationContext = {
+      agentId: agent.id,
+      sessionId: session.id,
+      externalVisitorId: "externalVisitorId" in session ? session.externalVisitorId : null,
+    }
+
     const serverConfigs = await this.mcpServersService.getEnabledServersForAgent(agent.id)
     for (const serverConfig of serverConfigs) {
-      const mcpSession = await this.mcpClientService.connect(serverConfig)
+      const mcpSession = await this.mcpClientService.connect({ ...serverConfig, context })
       mcpCloseFns.push(mcpSession.close)
       for (const [toolName, toolDef] of Object.entries(mcpSession.tools)) {
         const originalExecute = toolDef.execute

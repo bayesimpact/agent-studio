@@ -85,6 +85,7 @@ export class PublicChatService {
         resultUpdater: this.publicAgentSessionsService,
       },
       sessionResult: publicSession.result ?? null,
+      externalVisitorId: publicSession.externalVisitorId,
     })
   }
 

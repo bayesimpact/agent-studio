@@ -9,6 +9,13 @@ import { McpServer } from "./mcp-server.entity"
 export type McpServerConfig = {
   url: string
   apiKey?: string
+  /**
+   * Static headers sent on every call to this server. Stored in the encrypted
+   * config blob, so adding them needs no migration. Typical use: tagging the
+   * deployment a server is called from (`X-Deployment: recette`) when the same
+   * MCP server serves several agents.
+   */
+  headers?: Record<string, string>
 }
 
 @Injectable()
