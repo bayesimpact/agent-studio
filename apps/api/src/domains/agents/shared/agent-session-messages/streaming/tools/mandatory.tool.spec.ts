@@ -35,7 +35,7 @@ function buildSessionMetadata(
       connectScope: { organizationId: "organization-1", projectId: "project-1" },
       sessionId: "session-1",
       availableCategoryNames: ["HR", "IT"],
-      conversationAgentSessionsService: {
+      metadataRecalculator: {
         recalculateSessionMetadataFromMessages: recalculate,
       } as never,
     },

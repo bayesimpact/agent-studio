@@ -12,6 +12,9 @@ import { AgentSessionCategory } from "@/domains/agents/session-categories/agent-
 import { agentSettingsFactory } from "@/domains/agents/settings/agent.settings.factory"
 import { agentMessageFactory } from "@/domains/agents/shared/agent-session-messages/agent-messages.factory"
 import { createOrganizationWithProject } from "@/domains/organizations/organization.factory"
+import { agentEmbedConfigFactory } from "@/domains/public-chat/agent-embed-configs/agent-embed-config.factory"
+import { publicAgentSessionFactory } from "@/domains/public-chat/public-agent-sessions/public-agent-session.factory"
+import { PublicAgentSessionCategory } from "@/domains/public-chat/public-agent-sessions/public-agent-session-category.entity"
 import { ProjectsAnalyticsModule } from "./projects-analytics.module"
 import { ProjectsAnalyticsService } from "./projects-analytics.service"
 
@@ -351,6 +354,24 @@ describe("ProjectsAnalyticsService", () => {
       { conversationAgentSessionId: salesDay2.id, agentSessionCategoryId: onboardingCategory.id },
     ])
 
+    // PUBLIC (embed) sessions enter the same aggregation (#616): one
+    // categorized "billing" session on day 1 must SUM with the conversation
+    // one, and one uncategorized public session lands on day 2.
+    const embedConfig = agentEmbedConfigFactory
+      .transient({ organization, project, agent: supportAgent })
+      .build({ isEnabled: true })
+    await repositories.agentEmbedConfigRepository.save(embedConfig)
+    const publicDay1 = publicAgentSessionFactory
+      .transient({ embedConfig })
+      .build({ createdAt: hours(3).after(day1Start), updatedAt: new Date() })
+    const publicDay2Uncategorized = publicAgentSessionFactory
+      .transient({ embedConfig })
+      .build({ createdAt: hours(3).after(day2Start), updatedAt: new Date() })
+    await repositories.publicAgentSessionRepository.save([publicDay1, publicDay2Uncategorized])
+    await setup
+      .getRepository(PublicAgentSessionCategory)
+      .save([{ publicAgentSessionId: publicDay1.id, agentSessionCategoryId: billingCategory.id }])
+
     const connectScope = { organizationId: organization.id, projectId: project.id, userId: user.id }
     const supportPoints = await service.getConversationsByCategoryPerAgentPerDay({
       connectScope,
@@ -366,7 +387,8 @@ describe("ProjectsAnalyticsService", () => {
         agentName: "Support",
         categoryId: billingCategory.id,
         categoryName: "billing",
-        value: 1,
+        // 1 conversation session + 1 public (embed) session, summed.
+        value: 2,
         isUncategorized: false,
       },
       {
@@ -374,7 +396,8 @@ describe("ProjectsAnalyticsService", () => {
         agentId: supportAgent.id,
         agentName: "Support",
         categoryName: "uncategorized",
-        value: 1,
+        // 1 conversation session + 1 public (embed) session, summed.
+        value: 2,
         isUncategorized: true,
       },
     ])
@@ -411,7 +434,8 @@ describe("ProjectsAnalyticsService", () => {
         agentName: "Support",
         categoryId: billingCategory.id,
         categoryName: "billing",
-        value: 1,
+        // conversation + public (embed) session, summed (#616).
+        value: 2,
         isUncategorized: false,
       },
       {
@@ -428,7 +452,8 @@ describe("ProjectsAnalyticsService", () => {
         agentId: supportAgent.id,
         agentName: "Support",
         categoryName: "uncategorized",
-        value: 1,
+        // conversation + public (embed) session, summed (#616).
+        value: 2,
         isUncategorized: true,
       },
     ])

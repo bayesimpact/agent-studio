@@ -1,6 +1,7 @@
-import { Column, Entity, Index, JoinColumn, ManyToOne } from "typeorm"
+import { Column, Entity, Index, JoinColumn, ManyToOne, OneToMany } from "typeorm"
 import { Base4AllEntity } from "@/common/entities/base4all.entity"
 import { AgentEmbedConfig } from "../agent-embed-configs/agent-embed-config.entity"
+import { PublicAgentSessionCategory } from "./public-agent-session-category.entity"
 
 @Entity("public_agent_session")
 @Index(["sessionTokenHash"])
@@ -25,6 +26,20 @@ export class PublicAgentSession extends Base4AllEntity {
 
   @Column({ type: "timestamp", name: "last_activity_at", nullable: true })
   lastActivityAt!: Date | null
+
+  /** Session title suggested by the agent's mandatory report. */
+  @Column({ type: "varchar", name: "title", nullable: true })
+  title!: string | null
+
+  /** fillForm accumulated state, mirroring conversation_agent_session.result. */
+  @Column({ type: "jsonb", name: "result", nullable: true })
+  result!: Record<string, unknown> | null
+
+  @OneToMany(
+    () => PublicAgentSessionCategory,
+    (sessionCategory) => sessionCategory.publicAgentSession,
+  )
+  sessionCategories!: PublicAgentSessionCategory[]
 
   @ManyToOne(() => AgentEmbedConfig, { onDelete: "CASCADE" })
   @JoinColumn({ name: "embed_config_id" })

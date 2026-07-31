@@ -28,6 +28,7 @@ import type {
   PublicStreamingSessionProxy,
   StreamingSession,
 } from "./streaming-session.types"
+import type { SessionStateTarget } from "./tools/session-state-target"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
 import { ToolsService } from "./tools.service"
 
@@ -86,12 +87,14 @@ export class AgentLlmRequestService extends ServiceWithLLM {
     attachmentDocumentId,
     includeSessionMetadataTools = true,
     extraTags = [],
+    sessionState,
   }: {
     agentSessionScope: AgentSessionScope
     onToolExecute: OnExecute
     attachmentDocumentId?: string
     includeSessionMetadataTools?: boolean
     extraTags?: string[]
+    sessionState?: SessionStateTarget
   }): Promise<BuiltLLMRequest> {
     const { session, agent, agentSettings, connectScope } = agentSessionScope
 
@@ -108,6 +111,7 @@ export class AgentLlmRequestService extends ServiceWithLLM {
       agentSessionScope,
       includeSessionMetadataTools,
       onExecute: onToolExecute,
+      sessionState,
     })
 
     // End-of-turn tool names are included so the master prompt can explain
