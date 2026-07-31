@@ -30,6 +30,11 @@ export const nestConfig = {
     "!**/*.module.ts",
     "!**/script/**",
     "!**/llm/providers/*.provider.ts",
+    // Live-provider regression harness: fixtures, scenarios and the manual
+    // measurement script. Their specs are excluded from CI (no LLM calls), so
+    // these sources can never be executed there — counting them as uncovered
+    // hides the real coverage of product code.
+    "!**/live-regressions/**",
   ],
   coverageDirectory: "../coverage",
   coverageReporters: ["json-summary", "text", "lcov"],
