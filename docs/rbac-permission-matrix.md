@@ -9,7 +9,7 @@ This document mirrors those files. Whenever a role or a role/permission grant ch
 
 ## Global roles
 
-Global roles are stored as `user_membership` rows with `resource_type = 'global'`. `platform_staff` is renamed from `org_creator` and seeded by email domain in earlier/later migrations (`RenameOrgCreatorToPlatformStaff`, `SeedPlatformStaffByEmailDomain`); `platform_superadmin` is assigned manually. The app itself never reads env vars for authorization.
+Global roles are stored as `user_membership` rows with `resource_type = 'global'`. `platform_staff` is renamed from `org_creator` and seeded by email domain (`SeedPlatformStaffByEmailDomain` / `ORGANIZATION_CREATOR_EMAIL_DOMAIN`). `platform_superadmin` is seeded once from `BACKOFFICE_AUTHORIZED_EMAILS` by the `PlatformRolesAndPermissions` migration. The app itself never reads those env vars for authorization.
 
 | Permission | `platform_staff` | `platform_superadmin` |
 |---|---|---|

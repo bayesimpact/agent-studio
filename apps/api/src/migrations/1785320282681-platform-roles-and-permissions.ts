@@ -12,7 +12,8 @@ import type { MigrationInterface, QueryRunner } from "typeorm"
  *   `backoffice.read`, `trace.read`, `backoffice.terms.update`, `organization.create`
  *   and the backoffice "list all" permissions
  *   `backoffice.{organization,project,agent,user}.read` + `backoffice.project.update`
- *   (ex BACKOFFICE_AUTHORIZED_EMAILS)
+ *   (replaces BACKOFFICE_AUTHORIZED_EMAILS), then assigns that role to users
+ *   listed in BACKOFFICE_AUTHORIZED_EMAILS (throws if unset outside CI/test)
  * - grants `user.read` to org/project/agent owner+admin roles
  * - grants `backoffice.organization.read` to org owner+admin roles
  * - grants `backoffice.project.read` to org and project owner+admin roles
@@ -23,8 +24,6 @@ import type { MigrationInterface, QueryRunner } from "typeorm"
  * - seeds agent RBAC roles (`agent_owner` / `agent_admin` / `agent_member`)
  *   and backfills `role_id` on agent memberships
  *   (scoped backoffice listings without a global grant)
- *
- * platform_superadmin memberships are not seeded: assigned manually.
  */
 export class PlatformRolesAndPermissions1785320282681 implements MigrationInterface {
   name = "PlatformRolesAndPermissions1785320282681"
@@ -180,6 +179,46 @@ export class PlatformRolesAndPermissions1785320282681 implements MigrationInterf
         AND membership.role = 'member'
         AND role.key = 'agent_member'
     `)
+
+    const authorizedEmailsRaw = process.env.BACKOFFICE_AUTHORIZED_EMAILS?.trim()
+    const authorizedEmails = (authorizedEmailsRaw ?? "")
+      .split(",")
+      .map((email) => email.trim().toLowerCase())
+      .filter((email) => email.length > 0)
+
+    if (authorizedEmails.length === 0) {
+      // CI sets CI=true; test migrations should run with NODE_ENV=test
+      if (process.env.CI === "true" || process.env.NODE_ENV === "test") {
+        return
+      }
+
+      throw new Error(
+        "BACKOFFICE_AUTHORIZED_EMAILS must be set to run this migration: " +
+          "it assigns the platform_superadmin role to those users " +
+          "(comma-separated emails of former backoffice super-admins)",
+      )
+    }
+
+    await queryRunner.query(
+      `
+      INSERT INTO "user_membership" ("user_id", "resource_type", "resource_id", "role", "role_id")
+      SELECT user_account.id, 'global', NULL, 'member', role.id
+      FROM "user" AS user_account
+      CROSS JOIN "role" AS role
+      WHERE role.key = 'platform_superadmin'
+        AND lower(trim(user_account.email)) = ANY($1::text[])
+        AND user_account.deleted_at IS NULL
+        AND NOT EXISTS (
+          SELECT 1
+          FROM "user_membership" AS membership
+          WHERE membership.user_id = user_account.id
+            AND membership.resource_type = 'global'
+            AND membership.role_id = role.id
+            AND membership.deleted_at IS NULL
+        )
+      `,
+      [authorizedEmails],
+    )
   }
 
   public async down(queryRunner: QueryRunner): Promise<void> {
