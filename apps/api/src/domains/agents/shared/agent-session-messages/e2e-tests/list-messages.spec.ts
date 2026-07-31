@@ -9,11 +9,12 @@ import {
 } from "@/common/test/test-database"
 import { removeNullish } from "@/common/utils/remove-nullish"
 import { ConversationAgentSessionsModule } from "@/domains/agents/conversation-agent-sessions/conversation-agent-sessions.module"
+import { agentSettingsFactory } from "@/domains/agents/settings/agent.settings.factory"
 import { createOrganizationWithAgentSession } from "@/domains/organizations/organization.factory"
 import { sdk } from "@/external/llm/open-telemetry-init"
 import { setupUserGuardForTesting } from "../../../../../../test/e2e.helpers"
 import { type Requester, testRequester } from "../../../../../../test/request"
-import { createChitChatConversation } from "../agent-messages.factory"
+import { agentMessageFactory, createChitChatConversation } from "../agent-messages.factory"
 
 describe("AgentSessionMessagesRoutes.listMessages", () => {
   let app: INestApplication<App>
@@ -90,6 +91,38 @@ describe("AgentSessionMessagesRoutes.listMessages", () => {
       expect(messages[0]?.content).toBe("Hello")
       expect(messages[1]?.role).toBe("assistant")
       expect(messages[1]?.content).toBe("Hi!")
+    })
+
+    it("should report each message's own revision when a session spans two revisions", async () => {
+      const { organization, project, agent, agentSession } = await createContext()
+
+      // A newer published revision, as `publish` would produce after a settings change.
+      const secondRevision = agentSettingsFactory
+        .transient({ organization, project, agent })
+        .build({ revision: 2 })
+      await repositories.agentSettingsRepository.save(secondRevision)
+
+      // A later turn, answered by the newer revision.
+      const laterMessage = agentMessageFactory
+        .assistant()
+        .transient({
+          organization,
+          project,
+          session: agentSession,
+          agentSettings: secondRevision,
+        })
+        .build({ content: "Answered by v2", createdAt: new Date(Date.now() + 60 * 1000) })
+      await repositories.agentMessageRepository.save(laterMessage)
+
+      const response = await subject()
+
+      expect(response.status).toBe(201)
+      const messages = response.body.data
+      expect(messages).toHaveLength(3)
+      expect(messages[0]?.agentRevision).toBe(1)
+      expect(messages[1]?.agentRevision).toBe(1)
+      expect(messages[2]?.content).toBe("Answered by v2")
+      expect(messages[2]?.agentRevision).toBe(2)
     })
   })
 })

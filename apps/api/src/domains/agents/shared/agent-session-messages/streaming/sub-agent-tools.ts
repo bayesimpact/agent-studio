@@ -23,6 +23,16 @@ const tracer = trace.getTracer("caseai-sub-agent")
 
 export type BuiltTools = {
   tools: ToolSet | undefined
+  fireAndForgetToolNames: string[]
+  /**
+   * Tools the provider invokes through a forced generation after the
+   * answering loop, on every turn (mandatory_tool). Not part of `tools`.
+   */
+  endOfTurnTools: ToolSet
+  /** Optional freshness check for loop executions of end-of-turn tools. */
+  endOfTurnExecutionCounts?: (toolResult: { toolName: string; output: unknown }) => boolean
+  /** Final master-prompt section (e.g. the turn-summary response protocol). */
+  masterPromptEpilogue?: string
   mcpClose?: () => Promise<void>
   toolDescriptions: Record<string, string>
   hasSubAgentTools: boolean
@@ -33,6 +43,8 @@ type BuildLLMConfig = (params: {
   systemPrompt: string
   temperature: AgentSettings["temperature"]
   tools?: ToolSet
+  fireAndForgetToolNames?: string[]
+  endOfTurnTools?: ToolSet
 }) => LLMConfig
 
 type GenerateMasterPrompt = (params: {
@@ -40,6 +52,7 @@ type GenerateMasterPrompt = (params: {
   agentSettings: AgentSettings
   toolDescriptions?: Record<string, string>
   toolNames: string[]
+  epilogue?: string
 }) => string
 
 type BuildTools = (params: {
@@ -185,7 +198,14 @@ async function runSubAgentTool({
     .getActiveSpan()
     ?.setAttribute("ai.telemetry.metadata.subAgentTraceUrl", getTraceUrl(subAgentTraceId))
 
-  const { tools, mcpClose, toolDescriptions } = await buildTools({
+  const {
+    tools,
+    mcpClose,
+    toolDescriptions,
+    fireAndForgetToolNames,
+    endOfTurnTools,
+    masterPromptEpilogue,
+  } = await buildTools({
     agentSessionScope: childScope,
     includeSessionMetadataTools: false,
     includeSubAgentTools: false,
@@ -203,6 +223,7 @@ async function runSubAgentTool({
       agentSettings: childAgentSettings,
       toolNames,
       toolDescriptions,
+      epilogue: masterPromptEpilogue,
     })
 
     const config = buildLLMConfig({
@@ -210,6 +231,8 @@ async function runSubAgentTool({
       model: childAgentSettings.model,
       temperature: childAgentSettings.temperature,
       tools,
+      fireAndForgetToolNames,
+      endOfTurnTools,
     })
 
     const metadata = buildSubAgentMetadata({

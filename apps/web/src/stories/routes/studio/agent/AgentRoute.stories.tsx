@@ -23,6 +23,8 @@ type StoryArgs = StudioStoryArgs & {
   agentType: AgentType
   fillForm?: boolean
   withAgentSessions?: boolean
+  /** Unpublished draft revision — drives whether the header's publish button is enabled. */
+  withDraft?: boolean
 }
 
 const meta = {
@@ -37,6 +39,7 @@ const meta = {
     },
     fillForm: { control: "boolean" },
     withAgentSessions: { control: "boolean" },
+    withDraft: { control: "boolean" },
   },
   args: {
     ...studioStoryArgs,
@@ -44,6 +47,7 @@ const meta = {
     agentType: "conversation",
     fillForm: false,
     withAgentSessions: false,
+    withDraft: false,
   },
   render: render({ routes: studioRoutes, path: StudioRoutes.agent.path }),
 } satisfies Meta<StoryArgs>
@@ -53,13 +57,18 @@ type Story = StoryObj<typeof meta>
 
 export const Default: Story = {
   decorators: [
-    buildDecorator<StoryArgs>(({ agentType, fillForm, withAgentSessions, ...args }) => {
+    buildDecorator<StoryArgs>(({ agentType, fillForm, withAgentSessions, withDraft, ...args }) => {
       const { baseSeeds, project, agents } = buildStudioData(args)
       const [firstAgent, ...restAgents] = agents
       const withFillForm = agentType === "conversation" && !!fillForm
       const currentAgent = (withFillForm ? agentFactory.fillForm() : agentFactory)
         .transient({ project })
-        .build({ ...firstAgent, type: agentType, fillFormEnabled: withFillForm })
+        .build({
+          ...firstAgent,
+          type: agentType,
+          fillFormEnabled: withFillForm,
+          isDraft: !!withDraft,
+        })
 
       const conversationSessionFactory = conversationAgentSessionFactory.transient({
         agent: currentAgent,
@@ -111,6 +120,8 @@ export const AgentExtractionWithData: Story = {
   args: {
     ...AgentConvWithSessions.args,
     agentType: "extraction",
+    // The extraction playground edits settings inline, so its header owns the publish action.
+    withDraft: true,
   },
   decorators: Default.decorators,
 }

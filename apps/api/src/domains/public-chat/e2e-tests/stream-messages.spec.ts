@@ -12,6 +12,7 @@ import {
 } from "@/common/test/test-database"
 import { createOrganizationWithAgent } from "@/domains/organizations/organization.factory"
 import { sdk } from "@/external/llm/open-telemetry-init"
+import type { AISDKMockProvider } from "@/external/llm/providers/ai-sdk-mock.provider"
 import { agentEmbedConfigFactory } from "../agent-embed-configs/agent-embed-config.factory"
 import { publicAgentSessionFactory } from "../public-agent-sessions/public-agent-session.factory"
 import { PublicChatModule } from "../public-chat.module"
@@ -96,6 +97,25 @@ describe("PublicChat - streamMessages", () => {
       .map((event) => event.content)
       .join("")
     expect(fulltextStream).toBe("Hello, I'm the stream default mock value!")
+  })
+
+  it("does not declare mandatory_tool on public sessions (no ConversationAgentSession to update)", async () => {
+    // Regression: since suggestedTitle became a universal report, the public
+    // path inherited a metadata dispatch pointing at a public session id that
+    // recalculateSessionMetadataFromMessages cannot resolve. Public sessions
+    // must not build the session-metadata part at all — see issue #616 for the real support.
+    const { agent } = await createContext()
+
+    const mockProvider = setup.module.get<AISDKMockProvider>("_MockLLMProvider")
+    mockProvider.resetMock()
+    const response = await subject("Hello")
+    expect(response.status).toBe(200)
+
+    const agentCalls = mockProvider.getCalls().filter((call) => call.agentId === agent.id)
+    expect(agentCalls.length).toBeGreaterThan(0)
+    for (const call of agentCalls) {
+      expect(call.toolNames).not.toContain("mandatory_tool")
+    }
   })
 
   it("should return error when empty content", async () => {

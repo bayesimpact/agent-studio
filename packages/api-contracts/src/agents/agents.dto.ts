@@ -10,7 +10,9 @@ export enum AgentModel {
   Gemini25Flash = "gemini-2.5-flash",
   Gemini25Pro = "gemini-2.5-pro",
   Gemini31FlashLite = "gemini-3.1-flash-lite",
+  Gemini35FlashLite = "gemini-3.5-flash-lite",
   Gemini35Flash = "gemini-3.5-flash",
+  Gemini36Flash = "gemini-3.6-flash",
   MedGemma10_27B = "google/medgemma-27b-it",
   Gemma4_26B = "google/gemma-4-26b-A4B-it",
   MistralSmall31_24B = "mistralai/Mistral-Small-3.1-24B-Instruct-2503",
@@ -29,7 +31,9 @@ export const AgentModelToAgentProvider: Record<AgentModel, AgentProvider> = {
   [AgentModel.Gemini25Flash]: AgentProvider.Vertex,
   [AgentModel.Gemini25Pro]: AgentProvider.Vertex,
   [AgentModel.Gemini31FlashLite]: AgentProvider.Vertex3,
+  [AgentModel.Gemini35FlashLite]: AgentProvider.Vertex3,
   [AgentModel.Gemini35Flash]: AgentProvider.Vertex3,
+  [AgentModel.Gemini36Flash]: AgentProvider.Vertex3,
   [AgentModel.MedGemma10_27B]: AgentProvider.MedGemma,
   [AgentModel.Gemma4_26B]: AgentProvider.Gemma,
   [AgentModel.MistralSmall31_24B]: AgentProvider.Mistral,
@@ -59,6 +63,10 @@ export type AgentDto = {
   hasCategories?: boolean
   id: string
   revision: number
+  revisionName: string
+  revisionDesc: string
+  isDraft: boolean
+  isArchived: boolean
   locale: AgentLocale
   model: AgentModel
   name: string
@@ -378,3 +386,9 @@ export type UpdateAgentResourcesDto = z.infer<typeof updateAgentResourcesSchema>
 export type UpdateAgentToolsDto = z.infer<typeof updateAgentToolsSchema>
 export type UpdateAgentCategoriesDto = z.infer<typeof updateAgentCategoriesSchema>
 export type PartialUpdateAgentDto = z.infer<typeof partialUpdateAgentSchema>
+
+export const agentPublishSchema = z.object({
+  revisionName: z.string().optional(),
+  revisionDesc: z.string().optional(),
+})
+export type PublishAgentDto = z.infer<typeof agentPublishSchema>

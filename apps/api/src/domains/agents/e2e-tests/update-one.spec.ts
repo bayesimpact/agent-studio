@@ -149,6 +149,7 @@ describe("Agents - updateOne", () => {
       where: { agentId },
       order: { revision: "DESC" },
     })
+    expect(afterSet?.isDraft).toBeTruthy()
     expect(afterSet?.greetingMessage).toBe("Hello there!")
 
     // A different tab saves only its own field and omits greetingMessage entirely.
@@ -161,6 +162,7 @@ describe("Agents - updateOne", () => {
       where: { agentId },
       order: { revision: "DESC" },
     })
+    expect(updatedAgentSettings?.isDraft).toBeTruthy()
     expect(updatedAgentSettings?.greetingMessage).toBe("Hello there!")
   })
 
@@ -247,6 +249,7 @@ describe("Agents - updateOne", () => {
     let updatedAgentSettings = await repositories.agentSettingsRepository.findOne({
       where: { agentId, revision: 2 },
     })
+    expect(updatedAgentSettings?.isDraft).toBeTruthy()
     expect(updatedAgentSettings?.greetingMessage).toBe("Hi! How can I help you today?")
 
     const clearResponse = await subject({
@@ -265,7 +268,7 @@ describe("Agents - updateOne", () => {
     expectResponse(clearResponse, 200)
 
     updatedAgentSettings = await repositories.agentSettingsRepository.findOne({
-      where: { agentId, revision: 3 },
+      where: { agentId, revision: 2 },
     })
     expect(updatedAgentSettings?.greetingMessage).toBeNull()
   })
@@ -307,6 +310,7 @@ describe("Agents - updateOne", () => {
     const updatedAgentSettings = await repositories.agentSettingsRepository.findOne({
       where: { agentId, revision: 2 },
     })
+    expect(updatedAgentSettings?.isDraft).toBeTruthy()
     expect(updatedAgentSettings?.documentsRagMode).toBe(DocumentsRagMode.None)
   })
 

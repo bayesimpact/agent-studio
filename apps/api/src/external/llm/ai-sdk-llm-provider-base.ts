@@ -1,6 +1,6 @@
 import type { LanguageModelV3 } from "@ai-sdk/provider"
 import { AgentModelToAgentProvider, AgentProvider } from "@caseai-connect/api-contracts"
-import { NotImplementedException } from "@nestjs/common"
+import { Logger, NotImplementedException } from "@nestjs/common"
 import { trace } from "@opentelemetry/api"
 import {
   type FilePart,
@@ -8,6 +8,7 @@ import {
   type JSONSchema7,
   jsonSchema,
   Output,
+  stepCountIs,
   ToolLoopAgent,
   wrapLanguageModel,
 } from "ai"
@@ -20,7 +21,9 @@ import type {
   LLMProvider,
 } from "@/common/interfaces/llm-provider.interface"
 import { removeNullish } from "@/common/utils/remove-nullish"
+import { fireAndForgetStopCondition } from "@/external/llm/fire-and-forget-stop-condition"
 import { ResponseHelper } from "@/external/llm/response-helper"
+import { withStrictTools } from "@/external/llm/strict-tools"
 import { ThoughtTokensHelper } from "@/external/llm/thought-tokens-helper"
 
 // OTel attribute keys under which we publish the raw LLM request body and
@@ -64,6 +67,7 @@ function extractTextFromStreamChunks(chunks: unknown[]): string {
 }
 
 export abstract class AISDKLLMProviderBase implements LLMProvider {
+  private readonly endOfTurnLogger = new Logger("EndOfTurnTools")
   protected getLanguageModelWithRawCapture(args: {
     config: LLMConfig
     callOrigin: CallOrigin
@@ -240,14 +244,27 @@ export abstract class AISDKLLMProviderBase implements LLMProvider {
     }
 
     const systemMessage = messages.find((msg) => msg.role === "system")?.content
+    const functionId = this.buildFunctionIdForStreamChatResponse(aiSDKMessages)
 
     const agent = new ToolLoopAgent({
       model: this.getLanguageModelWithRawCapture({ config, callOrigin }),
       temperature: config.temperature,
-      tools: config.tools,
+      tools: this.supportsStrictTools() ? withStrictTools(config.tools) : config.tools,
+      // Keep the default step safety net, but skip the follow-up generation
+      // when a step only ran fire-and-forget tools (their output is noise).
+      ...(config.fireAndForgetToolNames?.length
+        ? {
+            stopWhen: [
+              stepCountIs(20),
+              fireAndForgetStopCondition({
+                fireAndForgetToolNames: config.fireAndForgetToolNames,
+              }),
+            ],
+          }
+        : {}),
       experimental_telemetry: {
         isEnabled: true,
-        functionId: this.buildFunctionIdForStreamChatResponse(aiSDKMessages),
+        functionId,
         metadata: this.buildMetadata({ config, metadata }),
       },
       providerOptions: {
@@ -261,12 +278,136 @@ export abstract class AISDKLLMProviderBase implements LLMProvider {
       ? [{ role: "system" as const, content: systemPrompt }]
       : []
 
-    const streamer = agent.stream({
-      messages: [...systemMessagePart, ...aiSDKMessages],
-    })
+    const fullMessages = [...systemMessagePart, ...aiSDKMessages]
+    const streamResult = await agent.stream({ messages: fullMessages })
 
-    for await (const chunk of (await streamer).textStream) {
+    for await (const chunk of streamResult.textStream) {
       yield chunk
+    }
+
+    await this.runEndOfTurnTools({
+      config,
+      callOrigin,
+      metadata,
+      functionId,
+      messages: fullMessages,
+      streamResult,
+    })
+  }
+
+  /**
+   * Guarantees the end-of-turn tools (e.g. mandatory_tool) ran on this turn.
+   * They are declared in the answering loop, so a cooperative model (Gemma)
+   * calls them in the same generation as its answer — zero extra cost. When
+   * the loop finished without calling them (Gemini Flash never volunteers
+   * bookkeeping calls), ONE forced generation (toolChoice "required",
+   * restricted to the missing tools) runs on top of the produced answer.
+   * Already-called tools are skipped so nothing executes twice.
+   * "required" is used rather than a named tool_choice because named forcing
+   * is silently ignored by the vLLM gemma4 parser on 0.26.0.
+   *
+   * Best-effort: the user already received the streamed answer, so a failure
+   * here is logged but never breaks the stream.
+   */
+  private async runEndOfTurnTools({
+    config,
+    callOrigin,
+    metadata,
+    functionId,
+    messages,
+    streamResult,
+  }: {
+    config: LLMConfig
+    callOrigin: CallOrigin
+    metadata: LLMMetadata
+    /**
+     * MUST be the same functionId as the answering loop: the langfuse
+     * exporter names the whole trace after the first resource.name it sees,
+     * and langfuse.trace() upserts — a distinct functionId here renames the
+     * user-facing trace to the bookkeeping call's name.
+     */
+    functionId: string
+    messages: LLMChatMessage[]
+    streamResult: {
+      steps: PromiseLike<Array<{ toolResults: Array<{ toolName: string; output: unknown }> }>>
+      response: PromiseLike<{ messages: LLMChatMessage[] }>
+    }
+  }): Promise<void> {
+    const endOfTurnTools = config.endOfTurnTools
+    if (!endOfTurnTools || Object.keys(endOfTurnTools).length === 0) return
+
+    try {
+      // Skip the tools the loop already EXECUTED — forcing them again would
+      // run their side effects twice. Executions (toolResults), not calls:
+      // a voluntary call with invalid arguments never executes and must not
+      // suppress the forced retry. Executions flagged endOfTurnNoOp recorded
+      // nothing (e.g. an empty {} report) and do not count either.
+      // A tool can also invalidate an execution after the fact through
+      // config.endOfTurnExecutionCounts (e.g. a turn summary submitted
+      // BEFORE the knowledge base lookup cannot have cited sources).
+      const executionCounts = config.endOfTurnExecutionCounts ?? (() => true)
+      const steps = await streamResult.steps
+      const executedToolNames = new Set(
+        steps.flatMap((step) =>
+          step.toolResults
+            .filter(
+              (toolResult) =>
+                (toolResult.output as { endOfTurnNoOp?: boolean } | undefined)?.endOfTurnNoOp !==
+                  true && executionCounts(toolResult),
+            )
+            .map((toolResult) => toolResult.toolName),
+        ),
+      )
+      const missingEndOfTurnTools = Object.fromEntries(
+        Object.entries(endOfTurnTools).filter(([toolName]) => !executedToolNames.has(toolName)),
+      )
+      if (Object.keys(missingEndOfTurnTools).length === 0) return
+
+      const responseMessages = (await streamResult.response).messages
+      const endOfTurnResult = await generateText({
+        model: this.getLanguageModelWithRawCapture({ config, callOrigin }),
+        messages: [
+          ...messages,
+          ...responseMessages,
+          // Some providers (Vertex gemini-3.5-flash-lite and newer) reject
+          // requests ending with a model turn — close with an explicit user
+          // instruction for the bookkeeping call. Phrased so its content
+          // never leaks into the report (a session got titled "Demande de
+          // résumé de tour" after an earlier wording of this message).
+          {
+            role: "user",
+            content:
+              "(bookkeeping, not a user message) Call the required tool now. Base its content ONLY on the conversation above — ignore this message entirely.",
+          },
+        ],
+        temperature: config.temperature,
+        tools: missingEndOfTurnTools,
+        toolChoice: "required",
+        experimental_telemetry: {
+          isEnabled: true,
+          functionId,
+          // Distinguish the forced bookkeeping generation from the answering
+          // loop in langfuse via metadata, not functionId (see above).
+          metadata: { ...this.buildMetadata({ config, metadata }), endOfTurnTools: true },
+        },
+        providerOptions: {
+          custom: this.buildCustomProviderOptions({ config, callOrigin, metadata }),
+        },
+      })
+      // toolChoice "required" guarantees a call was EMITTED, not that it was
+      // EXECUTED: invalid arguments or a provider quirk leave toolResults
+      // empty and the report silently skipped — make that loud.
+      if (endOfTurnResult.toolResults.length === 0) {
+        this.endOfTurnLogger.error(
+          `end-of-turn tools produced no executed result (calls: ${JSON.stringify(
+            endOfTurnResult.toolCalls.map((toolCall) => toolCall.toolName),
+          )}, finishReason: ${endOfTurnResult.finishReason})`,
+        )
+      }
+    } catch (error) {
+      this.endOfTurnLogger.error(
+        `end-of-turn tools call failed: ${error instanceof Error ? error.message : error}`,
+      )
     }
   }
   async generateChatResponse({
@@ -564,6 +705,16 @@ export abstract class AISDKLLMProviderBase implements LLMProvider {
   abstract getLanguageModel({ config, callOrigin }: { config: LLMConfig; callOrigin: CallOrigin })
   abstract getTags(config: LLMConfig): string[]
   abstract getAgentProvider(): AgentProvider
+
+  /**
+   * Providers whose backend enforces tool argument schemas when tools are
+   * marked `strict` opt in here (Vertex Gemini: mode VALIDATED). Applied to
+   * the answering loop only — never to the forced end-of-turn generation,
+   * which needs mode ANY to actually force the call.
+   */
+  protected supportsStrictTools(): boolean {
+    return false
+  }
 
   applySpecificToSystemPrompt({
     // biome-ignore lint/correctness/noUnusedFunctionParameters: used in override

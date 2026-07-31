@@ -153,6 +153,25 @@
       "title": "Unsaved changes",
       "description": "You have unsaved changes that will be lost. Do you want to discard them?"
     },
+    "publish": {
+      "button": "Publish",
+      "noDraft": "No draft to publish. Save a change first to create a new draft version.",
+      "unsavedChanges": "Save or discard your changes before publishing.",
+      "optional": "Optional",
+      "props": {
+        "revisionName": "Version name",
+        "revisionDesc": "Version description",
+        "placeholders": {
+          "revisionName": "Name this version",
+          "revisionDesc": "Describe what changed in this version"
+        }
+      },
+      "dialog": {
+        "title": "Publish version {{revision}}?",
+        "description": "Version {{revision}} becomes the settings this agent runs with. Later changes start a new draft version.",
+        "submit": "Publish"
+      }
+    },
     "history": {
       "button": "History",
       "title": "Version history",
@@ -160,8 +179,13 @@
       "loadError": "Failed to load version history",
       "revisionLabel": "Version {{revision}}",
       "currentBadge": "Current",
+      "revisionBadge": "v{{revision}}",
+      "revisionBadgeAria": "Version {{revision}} of the agent settings",
+      "messageRevisionTooltip": "Answered with version {{revision}}",
+      "headerRevisionTooltip": "New messages run with version {{revision}}",
       "compareWithPrevious": "Changes in this version",
       "compareWithCurrent": "Compare with current",
+      "compareWithDraft": "Compare with draft",
       "comparing": "Showing changes from version {{before}} to version {{after}}.",
       "noChangesTitle": "No differences",
       "noChangesDescription": "These two versions have identical settings.",

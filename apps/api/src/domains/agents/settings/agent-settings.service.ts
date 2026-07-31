@@ -3,7 +3,7 @@ import { InjectRepository } from "@nestjs/typeorm"
 import type { Repository } from "typeorm"
 import { ConnectRepository } from "@/common/entities/connect-repository"
 import type { RequiredConnectScope } from "@/common/entities/connect-required-fields"
-import { requiresNewAgentSettingsRevision } from "@/domains/agents/settings/agent.settings.functions"
+import { requiresUpdateAgentSettings } from "@/domains/agents/settings/agent.settings.functions"
 import { AgentSettings } from "./agent-settings.entity"
 
 export type AgentSettingsValues = Pick<
@@ -23,7 +23,7 @@ export class AgentSettingsService {
   private readonly agentSettingsConnectRepository: ConnectRepository<AgentSettings>
   constructor(
     @InjectRepository(AgentSettings)
-    agentSettingsRepository: Repository<AgentSettings>,
+    private agentSettingsRepository: Repository<AgentSettings>,
   ) {
     this.agentSettingsConnectRepository = new ConnectRepository(agentSettingsRepository, "agents")
   }
@@ -45,15 +45,27 @@ export class AgentSettingsService {
     }
     return undefined
   }
+  private async getMaxRevision(agentId: string): Promise<number> {
+    const last = await this.agentSettingsRepository
+      .createQueryBuilder("as")
+      .where("as.agentId = :agentId", { agentId })
+      .orderBy("as.revision", "DESC")
+      .getOne()
+    if (last) return last.revision
+    return 0
+  }
+
   private async getLastOrUndefined({
     connectScope,
     agentId,
+    includesDraft,
   }: {
     connectScope: RequiredConnectScope
     agentId: string
+    includesDraft?: true
   }): Promise<AgentSettings | undefined> {
     const found = await this.agentSettingsConnectRepository.find(connectScope, {
-      where: { agentId },
+      where: { agentId, ...(includesDraft ? {} : { isDraft: false }), isArchived: false },
       order: { revision: "DESC" },
     })
     return found[0]
@@ -61,11 +73,13 @@ export class AgentSettingsService {
   async getLast({
     connectScope,
     agentId,
+    includesDraft,
   }: {
     connectScope: RequiredConnectScope
     agentId: string
+    includesDraft?: true
   }): Promise<AgentSettings> {
-    const last = await this.getLastOrUndefined({ connectScope, agentId })
+    const last = await this.getLastOrUndefined({ connectScope, agentId, includesDraft })
     if (!last) throw new NotFoundException(`AgentSettings with agentId ${agentId} not found`)
     return last
   }
@@ -73,17 +87,81 @@ export class AgentSettingsService {
   async getAll({
     connectScope,
     agentId,
+    includesDraft,
+    includesArchived,
   }: {
     connectScope: RequiredConnectScope
     agentId: string
+    includesDraft?: true
+    includesArchived?: true
   }): Promise<AgentSettings[]> {
     return await this.agentSettingsConnectRepository.find(connectScope, {
-      where: { agentId },
+      where: {
+        agentId,
+        ...(includesDraft ? {} : { isDraft: false }),
+        ...(includesArchived ? {} : { isArchived: false }),
+      },
       order: { revision: "DESC" },
     })
   }
 
-  async createSettingsIfChanged({
+  async publish({
+    connectScope,
+    agentId,
+    revision,
+    revisionName,
+    revisionDesc,
+  }: {
+    connectScope: RequiredConnectScope
+    agentId: string
+    revision: number
+    revisionName?: string
+    revisionDesc?: string
+  }): Promise<AgentSettings | undefined> {
+    const found = await this.agentSettingsConnectRepository.find(connectScope, {
+      where: { agentId, revision },
+    })
+    if (!found || found.length !== 1 || !found[0]) return undefined
+    // if (!found[0].isDraft) return undefined  => disable check so we can call publish again to update name and/or desc
+    if (found[0].isArchived) return undefined
+    const toUpdate: AgentSettings = found[0]
+    toUpdate.revisionName = revisionName
+    toUpdate.revisionDesc = revisionDesc
+    toUpdate.isDraft = false
+
+    const updated = await this.agentSettingsConnectRepository.updateOneById({
+      connectScope,
+      id: toUpdate.id,
+      fields: { ...toUpdate },
+    })
+    if (!updated) return undefined
+
+    return toUpdate
+  }
+
+  async archive({
+    connectScope,
+    agentId,
+    revision,
+  }: {
+    connectScope: RequiredConnectScope
+    agentId: string
+    revision: number
+  }): Promise<{ success: boolean }> {
+    const found = await this.agentSettingsConnectRepository.find(connectScope, {
+      where: { agentId, revision },
+    })
+    if (!found || found.length !== 1) return { success: false }
+    if (!found[0] || found[0].isDraft) return { success: false }
+
+    return this.agentSettingsConnectRepository.updateOneById({
+      connectScope,
+      id: found[0].id,
+      fields: { isArchived: true },
+    })
+  }
+
+  async updateSettings({
     connectScope,
     agentId,
     agentSettings,
@@ -92,19 +170,22 @@ export class AgentSettingsService {
     agentId: string
     agentSettings: Partial<AgentSettingsValues>
   }): Promise<AgentSettings> {
-    const last = await this.getLastOrUndefined({ connectScope, agentId })
+    const last = await this.getLastOrUndefined({ connectScope, agentId, includesDraft: true })
     let previousSettings:
-      | Omit<AgentSettings, "id" | "createdAt" | "updatedAt" | "deletedAt">
+      | Omit<
+          AgentSettings,
+          "id" | "createdAt" | "updatedAt" | "deletedAt" | "revisionName" | "revisionDesc"
+        >
       | undefined
     let revision: number
+    let isDraft: boolean = false
     if (last) {
       if (
-        !requiresNewAgentSettingsRevision({
+        !requiresUpdateAgentSettings({
           initialAgentSettings: last,
           modifiedAgentSettings: {
             ...agentSettings,
             ...(agentSettings.temperature !== undefined && {
-              // temperature: Number(agentSettings.temperature.toFixed(2)),
               temperature: agentSettings.temperature,
             }),
           },
@@ -112,18 +193,49 @@ export class AgentSettingsService {
       )
         return last
 
-      revision = last.revision + 1
-      const { id, createdAt, updatedAt, deletedAt, ...cleanedSettings } = last
+      isDraft = last.isDraft
+      if (isDraft) revision = last.revision
+      else {
+        const rev = await this.getMaxRevision(agentId)
+        revision = rev + 1
+      }
+
+      const {
+        id,
+        createdAt,
+        updatedAt,
+        deletedAt,
+        revisionName,
+        revisionDesc,
+        ...cleanedSettings
+      } = last
       previousSettings = cleanedSettings
     } else {
-      revision = 1
+      const rev = await this.getMaxRevision(agentId)
+      revision = rev + 1
     }
 
-    return await this.agentSettingsConnectRepository.createAndSave(connectScope, {
-      ...(previousSettings ?? {}),
-      ...agentSettings,
-      revision,
-      agentId,
-    })
+    if (isDraft && last) {
+      await this.agentSettingsConnectRepository.updateOneById({
+        connectScope,
+        id: last.id,
+        fields: {
+          ...agentSettings,
+        },
+      })
+      const updated = await this.agentSettingsConnectRepository.getOneById(connectScope, last.id)
+      if (!updated) {
+        throw new NotFoundException(`AgentSettings with id ${last.id} not found`)
+      }
+      return updated
+    } else {
+      return await this.agentSettingsConnectRepository.createAndSave(connectScope, {
+        ...(previousSettings ?? {}),
+        ...agentSettings,
+        revision,
+        agentId,
+        isDraft: true,
+      })
+    }
   }
 }

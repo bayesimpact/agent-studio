@@ -106,7 +106,7 @@ export class AgentsService {
       resourceLibraries,
     })
     const agentSettingsValues = extractAgentSettingsCreateFields(agentFields)
-    const agentSettings = await this.agentSettingsService.createSettingsIfChanged({
+    const agentSettings = await this.agentSettingsService.updateSettings({
       connectScope,
       agentId: agent.id,
       agentSettings: { ...agentSettingsValues, outputJsonSchema, greetingMessage },
@@ -137,7 +137,20 @@ export class AgentsService {
       excludeUserId: userId,
     })
 
-    return { agent, agentSettings }
+    //first settings are automatically published
+    const publishedAgentSettings = await this.agentSettingsService.publish({
+      connectScope,
+      agentId: agent.id,
+      revision: agentSettings.revision,
+      revisionName: "",
+    })
+    if (!publishedAgentSettings) {
+      throw new UnprocessableEntityException(
+        `Unable to publish revision ${agentSettings.revision} for agent with id ${agent.id}`,
+      )
+    }
+
+    return { agent, agentSettings: publishedAgentSettings }
   }
 
   /**
@@ -243,6 +256,7 @@ export class AgentsService {
     const agentSettings = await this.agentSettingsService.getLast({
       connectScope,
       agentId,
+      includesDraft: true,
     })
 
     const nextType = type ?? agent.type
@@ -302,7 +316,7 @@ export class AgentsService {
     updatedAgent.sessionCategories =
       await this.agentSessionCategoriesService.listActiveCategoriesForAgent(agent.id)
 
-    const updatedAgentSettings = await this.agentSettingsService.createSettingsIfChanged({
+    const updatedAgentSettings = await this.agentSettingsService.updateSettings({
       connectScope,
       agentId: agent.id,
       agentSettings: {

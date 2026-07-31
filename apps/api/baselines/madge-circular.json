@@ -9,7 +9,7 @@
     "domains/agents/shared/agent-session-messages/streaming/agent-llm.module.ts"
   ],
   [
-    "domains/agents/shared/agent-session-messages/streaming/tools/retrieve-project-document-chunks.tool.ts",
+    "domains/agents/shared/agent-session-messages/streaming/tools/lookup-knowledge-base.tool.ts",
     "domains/documents/embeddings/document-chunk-retrieval.service.ts"
   ],
   [

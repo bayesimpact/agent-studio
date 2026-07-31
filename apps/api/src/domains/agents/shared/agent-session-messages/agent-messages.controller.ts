@@ -156,6 +156,9 @@ export class AgentMessagesController {
 }
 
 function toDto(message: AgentMessage): AgentSessionMessageDto {
+  if (!message.agentSettings)
+    throw new Error("Agent settings must be loaded to convert message to DTO")
+
   return {
     id: message.id,
     role: message.role,
@@ -164,6 +167,7 @@ function toDto(message: AgentMessage): AgentSessionMessageDto {
     createdAt: message.createdAt.getTime(),
     startedAt: message.startedAt?.getTime(),
     completedAt: message.completedAt?.getTime(),
+    agentRevision: message.agentSettings.revision,
     toolCalls: (message.toolCalls as AgentSessionMessageDto["toolCalls"]) ?? undefined,
     attachmentDocumentId: message.attachmentDocumentId ?? undefined,
   }

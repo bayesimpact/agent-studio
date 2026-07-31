@@ -13,6 +13,7 @@ import { addUserToOrganization } from "@/domains/organizations/memberships/organ
 import { createOrganizationWithOwner } from "@/domains/organizations/organization.factory"
 import { projectFactory } from "@/domains/projects/project.factory"
 import { mockForeignAuth0Id, setupUserGuardForTesting } from "../../../../test/e2e.helpers"
+import { ensureRbacCatalog } from "../../../../test/rbac-test.helpers"
 import { expectResponse, type Requester, testRequester } from "../../../../test/request"
 import { addUserToProject } from "../memberships/project-membership.factory"
 import { ProjectsModule } from "../projects.module"
@@ -32,6 +33,7 @@ describe("Projects - listProjects", () => {
       additionalImports: [ProjectsModule],
       applyOverrides: (moduleBuilder) => setupUserGuardForTesting(moduleBuilder, () => auth0Id),
     })
+    await ensureRbacCatalog(setup.module)
     repositories = setup.getAllRepositories()
     app = setup.module.createNestApplication()
     await app.init()

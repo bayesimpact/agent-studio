@@ -26,3 +26,19 @@ export const restoreAgentRevision = createAsyncThunk<void, { revision: number },
     await services.agents.restoreRevision({ organizationId, projectId, agentId, revision })
   },
 )
+
+export const publishAgentRevision = createAsyncThunk<
+  Agent,
+  { revision: number; revisionName?: string; revisionDesc?: string },
+  ThunkConfig
+>("agentHistory/publish", async (payload, { extra: { services }, getState }) => {
+  const { revision, ...publishPayload } = payload
+  const state = getState()
+  const organizationId = getCurrentId({ state, name: "organizationId" })
+  const projectId = getCurrentId({ state, name: "projectId" })
+  const agentId = getCurrentId({ state, name: "agentId" })
+  return await services.agents.publishRevision(
+    { organizationId, projectId, agentId, revision },
+    publishPayload,
+  )
+})

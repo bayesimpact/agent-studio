@@ -70,6 +70,9 @@ export function buildMockAgentsService(
     async getAll() {
       return agents
     },
+    async getAllWithDrafts() {
+      return agents
+    },
     async createOne() {
       throw new Error("createOne is not supported in eval stories")
     },
@@ -79,6 +82,9 @@ export function buildMockAgentsService(
       return versions
     },
     async restoreRevision() {},
+    async publishRevision() {
+      throw new Error("publishRevision is not supported in eval stories")
+    },
   }
 }
 

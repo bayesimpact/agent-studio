@@ -7,6 +7,7 @@ import {
   conversationAgentSessionFactory,
   conversationSubSessionFactory,
 } from "@/common/features/agents/agent-sessions/agent-session.factory"
+import type { Agent } from "@/common/features/agents/agents.models"
 import { buildDecorator, render } from "@/stories/decorators"
 import {
   buildStudioData,
@@ -22,6 +23,8 @@ type StoryArgs = StudioStoryArgs & {
   fillForm?: boolean
   withMessages?: boolean
   withSubAgentForms?: boolean
+  withVersionHistory?: boolean
+  withPendingDraft?: boolean
 }
 
 const meta = {
@@ -33,6 +36,8 @@ const meta = {
     fillForm: { control: "boolean" },
     withMessages: { control: "boolean" },
     withSubAgentForms: { control: "boolean" },
+    withVersionHistory: { control: "boolean" },
+    withPendingDraft: { control: "boolean" },
   },
   args: {
     ...studioStoryArgs,
@@ -40,6 +45,8 @@ const meta = {
     fillForm: false,
     withMessages: true,
     withSubAgentForms: false,
+    withVersionHistory: true,
+    withPendingDraft: false,
   },
   render: render({ routes: studioRoutes, path: StudioRoutes.agentSession.path }),
 } satisfies Meta<StoryArgs>
@@ -49,68 +56,108 @@ type Story = StoryObj<typeof meta>
 
 export const Default: Story = {
   decorators: [
-    buildDecorator<StoryArgs>(({ fillForm, withMessages, withSubAgentForms, ...args }) => {
-      const { baseSeeds, project, agents } = buildStudioData(args)
-      const [firstAgent, ...restAgents] = agents
+    buildDecorator<StoryArgs>(
+      ({
+        fillForm,
+        withMessages,
+        withSubAgentForms,
+        withVersionHistory,
+        withPendingDraft,
+        ...args
+      }) => {
+        const { baseSeeds, project, agents } = buildStudioData(args)
+        const [firstAgent, ...restAgents] = agents
 
-      const currentAgent = (fillForm ? agentFactory.fillForm() : agentFactory)
-        .transient({ project })
-        .build({ ...firstAgent, type: "conversation", fillFormEnabled: !!fillForm })
+        const currentAgent = (fillForm ? agentFactory.fillForm() : agentFactory)
+          .transient({ project })
+          .build({ ...firstAgent, type: "conversation", fillFormEnabled: !!fillForm })
 
-      const sessionFactory = conversationAgentSessionFactory.transient({ agent: currentAgent })
-      // fillForm-enabled agents accumulate a form result on the session, shown in the sheet.
-      const session = (fillForm ? sessionFactory.withResult() : sessionFactory).build()
+        const sessionFactory = conversationAgentSessionFactory.transient({ agent: currentAgent })
+        // fillForm-enabled agents accumulate a form result on the session, shown in the sheet.
+        const session = (fillForm ? sessionFactory.withResult() : sessionFactory).build()
 
-      // fillForm-enabled sub-agents the parent conversation delegated to during this session.
-      const subSessions = withSubAgentForms
-        ? [
-            conversationSubSessionFactory.build({
-              toolName: "collect_contact",
-              agentName: "Contact Assistant",
-            }),
-            conversationSubSessionFactory.build({
-              toolName: "collect_details",
-              agentName: "Details Assistant",
-            }),
-          ]
-        : []
+        // fillForm-enabled sub-agents the parent conversation delegated to during this session.
+        const subSessions = withSubAgentForms
+          ? [
+              conversationSubSessionFactory.build({
+                toolName: "collect_contact",
+                agentName: "Contact Assistant",
+              }),
+              conversationSubSessionFactory.build({
+                toolName: "collect_details",
+                agentName: "Details Assistant",
+              }),
+            ]
+          : []
 
-      const toolCalls = [
-        ...(fillForm ? [{ id: faker.string.uuid(), name: ToolName.FillForm, arguments: {} }] : []),
-        ...(withSubAgentForms
-          ? subSessions.map((subSession) => ({
-              id: faker.string.uuid(),
-              name: subSession.toolName,
-              arguments: {},
-            }))
-          : []),
-      ]
+        const toolCalls = [
+          ...(fillForm
+            ? [{ id: faker.string.uuid(), name: ToolName.FillForm, arguments: {} }]
+            : []),
+          ...(withSubAgentForms
+            ? subSessions.map((subSession) => ({
+                id: faker.string.uuid(),
+                name: subSession.toolName,
+                arguments: {},
+              }))
+            : []),
+        ]
 
-      const assistantMessage = agentSessionMessageFactory.build({
-        role: "assistant",
-        toolCalls: toolCalls.length > 0 ? toolCalls : undefined,
-      })
+        // Versions newest first, as the history endpoint returns them. The playground runs
+        // the newest published one; a pending draft is newer but not live.
+        const versions: Agent[] = withVersionHistory
+          ? [
+              ...(withPendingDraft
+                ? [{ ...currentAgent, revision: 3, isDraft: true, updatedAt: Date.now() }]
+                : []),
+              {
+                ...currentAgent,
+                revision: 2,
+                isDraft: false,
+                revisionName: "Tighter tone",
+                updatedAt: Date.now() - 1000 * 60 * 60,
+              },
+              {
+                ...currentAgent,
+                revision: 1,
+                isDraft: false,
+                revisionName: "First release",
+                updatedAt: Date.now() - 1000 * 60 * 60 * 48,
+              },
+            ]
+          : []
 
-      const messages = withMessages
-        ? [
-            agentSessionMessageFactory.build({ role: "user" }),
-            assistantMessage,
-            agentSessionMessageFactory.build({ role: "user" }),
-            agentSessionMessageFactory.build({ role: "assistant" }),
-          ]
-        : []
+        const assistantMessage = agentSessionMessageFactory.build({
+          role: "assistant",
+          agentRevision: 1,
+          toolCalls: toolCalls.length > 0 ? toolCalls : undefined,
+        })
 
-      return {
-        state: mergeSeeds(
-          baseSeeds,
-          seed.agents([...restAgents, currentAgent], { currentId: currentAgent.id }),
-          seed.conversationAgentSessions({ [currentAgent.id]: [session] }),
-          subSessions.length > 0 ? seed.conversationSubSessions({ [session.id]: subSessions }) : {},
-          seed.currentAgentSessionId(session.id),
-          seed.agentSessionMessages(messages),
-        ),
-      }
-    }),
+        // The last turn ran on the newer revision, so the footers show different versions.
+        const messages = withMessages
+          ? [
+              agentSessionMessageFactory.build({ role: "user", agentRevision: 1 }),
+              assistantMessage,
+              agentSessionMessageFactory.build({ role: "user", agentRevision: 2 }),
+              agentSessionMessageFactory.build({ role: "assistant", agentRevision: 2 }),
+            ]
+          : []
+
+        return {
+          state: mergeSeeds(
+            baseSeeds,
+            seed.agents([...restAgents, currentAgent], { currentId: currentAgent.id }),
+            seed.conversationAgentSessions({ [currentAgent.id]: [session] }),
+            subSessions.length > 0
+              ? seed.conversationSubSessions({ [session.id]: subSessions })
+              : {},
+            seed.currentAgentSessionId(session.id),
+            seed.agentSessionMessages(messages),
+            versions.length > 0 ? seed.studio.agentHistory(versions) : {},
+          ),
+        }
+      },
+    ),
   ],
 }
 
@@ -121,5 +168,23 @@ export const FillFormSession: Story = {
 
 export const WithSubAgentForms: Story = {
   args: { withMessages: true, withSubAgentForms: true },
+  decorators: Default.decorators,
+}
+
+/** A draft exists but is not published, so the header badge stays on the older running revision. */
+export const WithPendingDraft: Story = {
+  args: { withVersionHistory: true, withPendingDraft: true },
+  decorators: Default.decorators,
+}
+
+/** A member who cannot manage the agent sees no version indicators. */
+export const NonManager: Story = {
+  args: { agentMembershipRole: "member", withVersionHistory: true },
+  decorators: Default.decorators,
+}
+
+/** History not loaded (or failed): the playground renders, header badge is hidden. */
+export const WithoutVersionHistory: Story = {
+  args: { withVersionHistory: false },
   decorators: Default.decorators,
 }

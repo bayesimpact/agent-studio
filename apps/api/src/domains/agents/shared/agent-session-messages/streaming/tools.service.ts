@@ -18,10 +18,24 @@ import { generateMasterPrompt } from "./master-promts/generate-master-prompt"
 import type { AgentSessionScope, OnExecute } from "./streaming-session.types"
 import { type BuiltTools, buildSubAgentTools } from "./sub-agent-tools"
 import { fillFormTool } from "./tools/fill-form.tool"
-import { recalculateConversationSessionMetadataTool } from "./tools/recalculate-conversation-session-metadata.tool"
-import { retrieveProjectDocumentChunksTool } from "./tools/retrieve-project-document-chunks.tool"
-import { sourcesTool } from "./tools/sources.tool"
+import { lookupKnowledgeBaseTool } from "./tools/lookup-knowledge-base.tool"
+import {
+  mandatoryTool,
+  mandatoryToolExecutionCounts,
+  mandatoryToolInstruction,
+} from "./tools/mandatory.tool"
+import { createRetrievedChunksRegistry } from "./tools/retrieved-chunks-registry"
 import { surfaceResourcesTool } from "./tools/surface-resources.tool"
+import { createSurfacedResourcesRegistry } from "./tools/surfaced-resources-registry"
+
+/**
+ * Tools whose output the model never needs: they only log/notify (sources,
+ * resource cards, session metadata). When a tool-loop step invokes only these,
+ * the loop stops instead of paying an extra LLM generation for an empty
+ * follow-up. Round-trip tools (lookup_knowledge_base, fillForm, MCP,
+ * sub-agents) stay out of this list because the model consumes their output.
+ */
+const FIRE_AND_FORGET_TOOL_NAMES: string[] = [ToolName.SurfaceResources, ToolName.MandatoryTool]
 
 /**
  * The tools exposed by an agent's enabled MCP servers
@@ -112,6 +126,8 @@ export class ToolsService extends ServiceWithLLM {
           mcpClose: mcp.disconnect,
           toolDescriptions: {},
           tools: undefined,
+          fireAndForgetToolNames: [],
+          endOfTurnTools: {},
           hasSubAgentTools: false,
         }
     }
@@ -143,7 +159,7 @@ export class ToolsService extends ServiceWithLLM {
             this.logger.log(
               `[MCP] Calling tool "${toolName}" with args: ${JSON.stringify(executeArgs[0])}`,
             )
-            onExecute({
+            await onExecute({
               toolName,
               arguments: (executeArgs[0] ?? {}) as Record<string, unknown>,
             })
@@ -188,64 +204,104 @@ export class ToolsService extends ServiceWithLLM {
     // streaming sessions (proxy, no DB row) can't accumulate form state.
     const hasFillFormTool =
       agentSettings.fillFormEnabled && agentSettings.outputJsonSchema != null && "result" in session
-    const [
-      hasSourcesTool,
-      currentCategoryNames,
-      { tools: subAgentTools, toolDescriptions: subAgentToolDescriptions },
-    ] = await Promise.all([
-      // Check if the agent has the sources tool enabled
-      this.projectsService.hasFeature({ connectScope, feature: "sources-tool" }),
+    const [hasSourcesTool, { tools: subAgentTools, toolDescriptions: subAgentToolDescriptions }] =
+      await Promise.all([
+        // Check if the agent has the sources tool enabled
+        this.projectsService.hasFeature({ connectScope, feature: "sources-tool" }),
 
-      // Get the current category names for the session if requested and if the agent has session categories
-      includeSessionMetadataTools && (agent.sessionCategories?.length ?? 0) > 0
-        ? this.conversationAgentSessionsService.getCurrentCategoryNamesForSession({
-            connectScope,
-            sessionId: session.id,
-          })
-        : Promise.resolve([]),
+        // Build sub-agent tools if requested
+        includeSubAgentTools
+          ? buildSubAgentTools({
+              agentSessionScope,
+              agentSubAgentsService: this.agentSubAgentsService,
+              buildLLMConfig: (params) => this.buildLLMConfig(params),
+              buildTools: (params) => this.buildTools(params),
+              conversationAgentSessionsService: this.conversationAgentSessionsService,
+              agentSettingsService: this.agentSettingsService,
+              generateMasterPrompt,
+              getProviderForModel: (model) => this.getProviderForModel(model),
+              onExecute,
+              projectsService: this.projectsService,
+            })
+          : Promise.resolve({ tools: {}, toolDescriptions: {} }),
+      ])
 
-      // Build sub-agent tools if requested
-      includeSubAgentTools
-        ? buildSubAgentTools({
-            agentSessionScope,
-            agentSubAgentsService: this.agentSubAgentsService,
-            buildLLMConfig: (params) => this.buildLLMConfig(params),
-            buildTools: (params) => this.buildTools(params),
-            conversationAgentSessionsService: this.conversationAgentSessionsService,
-            agentSettingsService: this.agentSettingsService,
-            generateMasterPrompt,
-            getProviderForModel: (model) => this.getProviderForModel(model),
+    // chunkIds only make sense when the agent can actually retrieve chunks:
+    // the sources part of the turn summary requires BOTH the project feature
+    // flag and an active RAG mode (lookup tool present).
+    const hasSourcesReporting =
+      hasSourcesTool && agentSettings.documentsRagMode !== DocumentsRagMode.None
+    // Every conversation agent submits a turn summary: suggestedTitle is
+    // always reported; categories only when the agent has some configured;
+    // chunkIds only per hasSourcesReporting. Sub-agents are excluded
+    // (includeSessionMetadataTools=false) unless they report sources.
+    const hasMandatoryToolTool = hasSourcesReporting || includeSessionMetadataTools
+
+    // Shared between lookup (writer) and mandatory_tool (reader) within this
+    // request: the report resolves the chunkIds cited by the model against
+    // the chunks lookup actually retrieved.
+    const retrievedChunksRegistry = createRetrievedChunksRegistry()
+
+    // The end-of-turn report is declared in the answering loop (the model
+    // can call it in the same generation as its answer — no extra call) AND
+    // referenced in endOfTurnTools: the provider forces it after the answer
+    // whenever the loop did not call it, so it runs on every turn no matter
+    // what. The SAME tool instance backs both paths: its schema getters read
+    // the chunks registry, so chunkIds only appears (in loop steps and in
+    // the forced call alike) once a lookup registered chunks this turn.
+    const endOfTurnTools: ToolSet = hasMandatoryToolTool
+      ? {
+          [ToolName.MandatoryTool]: mandatoryTool({
+            retrievedChunksRegistry: hasSourcesReporting ? retrievedChunksRegistry : undefined,
+            sessionMetadata: includeSessionMetadataTools
+              ? {
+                  connectScope,
+                  sessionId: session.id,
+                  availableCategoryNames: (agent.sessionCategories ?? [])
+                    .map((agentSessionCategory) => agentSessionCategory.name)
+                    .sort((leftCategoryName, rightCategoryName) =>
+                      leftCategoryName.localeCompare(rightCategoryName),
+                    ),
+                  conversationAgentSessionsService: this.conversationAgentSessionsService,
+                }
+              : undefined,
             onExecute,
-            projectsService: this.projectsService,
-          })
-        : Promise.resolve({ tools: {}, toolDescriptions: {} }),
-    ])
-
-    const hasRecalculateConversationSessionMetadataTool =
-      includeSessionMetadataTools && (agent.sessionCategories?.length ?? 0) > 0
+          }),
+        }
+      : {}
 
     const tools: ToolSet = {
+      // The end-of-turn report is callable from turn 1, like any other tool.
+      ...endOfTurnTools,
+
       // Add the document retrieval tool if the agent has a RAG mode enabled
       ...(agentSettings.documentsRagMode === DocumentsRagMode.None
         ? {}
         : {
-            [ToolName.RetrieveProjectDocumentChunks]: retrieveProjectDocumentChunksTool({
+            [ToolName.LookupKnowledgeBase]: lookupKnowledgeBaseTool({
               connectScope,
               documentTagIds:
                 agentSettings.documentsRagMode === DocumentsRagMode.Tags
                   ? (agent.documentTags?.map((documentTag) => documentTag.id) ?? [])
                   : [],
               retrievalService: this.documentChunkRetrievalService,
+              retrievedChunksRegistry,
               onExecute,
             }),
           }),
 
-      // Add the sources tool if the agent has the sources tool feature enabled
-      ...(hasSourcesTool ? { [ToolName.Sources]: sourcesTool({ onExecute }) } : {}),
-
-      // Add the surface resources tool if the agent has any resource libraries
+      // Add the surface resources tool if the agent has any resource libraries.
+      // The registry resolves the prompt aliases (r1, r2...) back to real
+      // resources server-side — same pattern as the chunks registry.
       ...((agent.resourceLibraries?.length ?? 0) > 0
-        ? { [ToolName.SurfaceResources]: surfaceResourcesTool({ onExecute }) }
+        ? {
+            [ToolName.SurfaceResources]: surfaceResourcesTool({
+              surfacedResourcesRegistry: createSurfacedResourcesRegistry(
+                agent.resourceLibraries ?? [],
+              ),
+              onExecute,
+            }),
+          }
         : {}),
 
       // Add the fillForm tool if the agent has it enabled (with a form definition)
@@ -256,25 +312,6 @@ export class ToolsService extends ServiceWithLLM {
               sessionResultUpdater: this.conversationAgentSessionsService,
               onExecute,
             }),
-          }
-        : {}),
-
-      // Add the recalculate conversation session metadata tool if the agent has session categories and the feature is enabled
-      ...(hasRecalculateConversationSessionMetadataTool
-        ? {
-            [ToolName.RecalculateConversationSessionMetadata]:
-              recalculateConversationSessionMetadataTool({
-                connectScope,
-                sessionId: agentSessionScope.session.id,
-                availableCategoryNames: (agent.sessionCategories ?? [])
-                  .map((agentSessionCategory) => agentSessionCategory.name)
-                  .sort((leftCategoryName, rightCategoryName) =>
-                    leftCategoryName.localeCompare(rightCategoryName),
-                  ),
-                currentCategoryNames,
-                conversationAgentSessionsService: this.conversationAgentSessionsService,
-                onExecute,
-              }),
           }
         : {}),
     }
@@ -292,10 +329,22 @@ export class ToolsService extends ServiceWithLLM {
     return {
       mcpClose: mcp.disconnect,
       tools,
-      toolDescriptions: this.filterToolDescriptions({
-        descriptions: { ...mcp.toolDescriptions, ...subAgentToolDescriptions },
-        tools,
-      }),
+      toolDescriptions: {
+        ...this.filterToolDescriptions({
+          descriptions: { ...mcp.toolDescriptions, ...subAgentToolDescriptions },
+          tools,
+        }),
+      },
+      // Final section of the master prompt (recency): the response protocol
+      // demanding the turn summary on every response.
+      masterPromptEpilogue: hasMandatoryToolTool ? mandatoryToolInstruction() : undefined,
+      fireAndForgetToolNames: FIRE_AND_FORGET_TOOL_NAMES.filter((toolName) => toolName in tools),
+      endOfTurnTools,
+      // A report submitted before the lookup registered chunks is stale for
+      // the sources part: the forced end-of-turn retry must still run.
+      endOfTurnExecutionCounts: hasSourcesReporting
+        ? mandatoryToolExecutionCounts(retrievedChunksRegistry)
+        : undefined,
       hasSubAgentTools: Object.keys(subAgentTools).length > 0,
     }
   }

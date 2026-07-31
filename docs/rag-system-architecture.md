@@ -43,7 +43,7 @@ At a high level, the system has two flows:
   - `apps/api/src/domains/documents/embeddings/document-chunk-retrieval.service.ts`
 - **Chat streaming + tool loop**
   - `apps/api/src/domains/agents/shared/agent-session-messages/streaming/streaming.service.ts`
-  - `apps/api/src/domains/agents/shared/agent-session-messages/streaming/tools/retrieve-project-document-chunks.tool.ts`
+  - `apps/api/src/domains/agents/shared/agent-session-messages/streaming/tools/lookup-knowledge-base.tool.ts`
   - `apps/api/src/domains/agents/shared/agent-session-messages/streaming/master-promts/conversation-agent.prompt.ts`
 
 ### Data Storage
@@ -133,17 +133,17 @@ Conversation requests go through `StreamingService.streamAgentResponse(...)`:
 
 For `agent.type === "conversation"`, `buildTools(...)` registers:
 
-- `retrieveProjectDocumentChunks`
+- `lookup_knowledge_base`
 
 Tool registration and schema live in:
 
-- `retrieve-project-document-chunks.tool.ts`
+- `lookup-knowledge-base.tool.ts`
 
 Tool input:
 
-- `conversationSummary` (optional)
-- `latestUserQuestion` (required)
-- `topK` (default 3, max 10)
+- `query` (required) — the only parameter the model provides
+
+`topK` is not exposed to the model; retrieval always uses the `DEFAULT_TOP_K` constant (20).
 
 ### 3) Prompt instruction to use retrieval
 
@@ -159,10 +159,7 @@ This instruction is in:
 
 ### 4) Retrieval query construction
 
-`DocumentChunkRetrievalService` builds retrieval text as:
-
-- `Conversation summary: ...`
-- `Latest user question: ...`
+`DocumentChunkRetrievalService` embeds the `query` as-is — the standalone question the model wrote, with no extra framing around it.
 
 That text is embedded using the **first model** from `DOCUMENT_EMBEDDING_MODELS`.
 
@@ -263,7 +260,7 @@ On reprocessing a document, existing `document_chunk` rows are deleted first, th
 3. Worker pulls job, extracts text, splits chunks, embeds, writes chunk/vector rows.
 4. Document transitions to `completed`.
 5. User asks question in conversation chat.
-6. Model may call `retrieveProjectDocumentChunks`.
+6. Model may call `lookup_knowledge_base`.
 7. Retrieval service embeds query text and runs pgvector similarity search.
 8. Tool returns top chunks + metadata.
 9. Model answers with retrieved chunks as grounding context.

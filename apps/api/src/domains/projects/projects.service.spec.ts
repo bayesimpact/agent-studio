@@ -7,11 +7,15 @@ import {
 } from "@/common/test/test-database"
 import { INVITATION_SENDER } from "@/domains/auth/invitation-sender.interface"
 import { DocumentTag } from "@/domains/documents/tags/document-tag.entity"
+import { userMembershipFactory } from "@/domains/memberships/user-membership.factory"
+import { addUserToOrganization } from "@/domains/organizations/memberships/organization-membership.factory"
 import {
   createOrganizationWithOwner,
   createOrganizationWithProject,
 } from "@/domains/organizations/organization.factory"
+import { PROJECT_ROLES } from "@/domains/rbac/rbac.constants"
 import { userFactory } from "@/domains/users/user.factory"
+import { ensureRbacCatalog } from "../../../test/rbac-test.helpers"
 import { addUserToProject } from "./memberships/project-membership.factory"
 import { projectFactory } from "./project.factory"
 import { ProjectsModule } from "./projects.module"
@@ -32,6 +36,7 @@ describe("ProjectsService", () => {
       applyOverrides: (moduleBuilder) =>
         moduleBuilder.overrideProvider(INVITATION_SENDER).useValue(mockInvitationSender),
     })
+    await ensureRbacCatalog(setup.module)
     await clearTestDatabase(setup.dataSource)
     repositories = setup.getAllRepositories()
     service = setup.module.get<ProjectsService>(ProjectsService)
@@ -112,7 +117,7 @@ describe("ProjectsService", () => {
       expect(result.map((project) => project.name)).toContain("Project 2")
     })
 
-    it("should return empty array when user has no project membership", async () => {
+    it("should not return projects to an org owner without a project membership", async () => {
       const { organization, user } = await createOrganizationWithOwner(repositories)
       const project = projectFactory.transient({ organization }).build()
       await repositories.projectRepository.save(project)
@@ -122,13 +127,62 @@ describe("ProjectsService", () => {
       })
       expect(result).toEqual([])
     })
+
+    it("should return empty array when a plain org member has no project membership", async () => {
+      const { organization } = await createOrganizationWithOwner(repositories)
+      const project = projectFactory.transient({ organization }).build()
+      await repositories.projectRepository.save(project)
+      const { user: memberUser } = await addUserToOrganization({ repositories, organization })
+      const result = await service.listProjects({
+        organizationId: organization.id,
+        userId: memberUser.id,
+      })
+      expect(result).toEqual([])
+    })
+  })
+
+  describe("listUserProjects", () => {
+    it("does not return projects to an org owner without a project membership", async () => {
+      const { organization, user } = await createOrganizationWithOwner(repositories)
+      const project = projectFactory.transient({ organization }).build()
+      await repositories.projectRepository.save(project)
+
+      const result = await service.listUserProjects(user.id)
+
+      expect(result).toEqual([])
+    })
+
+    it("returns project.read for a plain project member", async () => {
+      const { organization } = await createOrganizationWithOwner(repositories)
+      const project = projectFactory.transient({ organization }).build()
+      await repositories.projectRepository.save(project)
+
+      const memberUser = await repositories.userRepository.save(userFactory.build())
+      const projectMemberRole = await repositories.roleRepository.findOneOrFail({
+        where: { key: PROJECT_ROLES.member },
+      })
+      await repositories.userMembershipRepository.save(
+        userMembershipFactory.build({
+          userId: memberUser.id,
+          resourceType: "project",
+          resourceId: project.id,
+          role: "member",
+          roleId: projectMemberRole.id,
+        }),
+      )
+
+      const result = await service.listUserProjects(memberUser.id)
+
+      expect(result).toHaveLength(1)
+      expect(result[0]?.permissions).toEqual(["project.read"])
+    })
   })
 
   describe("deleteProject", () => {
     it("should delete a project", async () => {
       const { project } = await createOrganizationWithProject(repositories)
 
-      await service.deleteProject(project)
+      await service.deleteProject(project.id)
 
       const deletedProject = await repositories.projectRepository.findOne({
         where: { id: project.id },
@@ -139,7 +193,7 @@ describe("ProjectsService", () => {
     it("should soft-delete project memberships when deleting a project", async () => {
       const { project } = await createOrganizationWithProject(repositories)
 
-      await service.deleteProject(project)
+      await service.deleteProject(project.id)
 
       const activeMemberships = await repositories.userMembershipRepository.find({
         where: { resourceType: "project", resourceId: project.id },
@@ -159,7 +213,7 @@ describe("ProjectsService", () => {
       const member = await repositories.userRepository.save(userFactory.build())
       await addUserToProject({ repositories, project, user: member })
 
-      await service.deleteProject(project)
+      await service.deleteProject(project.id)
 
       for (const userId of [owner.id, member.id]) {
         const activeMembership = await repositories.userMembershipRepository.findOne({

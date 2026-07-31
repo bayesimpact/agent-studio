@@ -1,28 +1,38 @@
 import { ProjectsRoutes } from "@caseai-connect/api-contracts"
 import { Body, Controller, Delete, Get, Patch, Post, Req, UseGuards } from "@nestjs/common"
 import type {
+  EndpointRequest,
   EndpointRequestWithOrganizationMembership,
   EndpointRequestWithProject,
 } from "@/common/context/request.interface"
 import { AddContext, RequireContext } from "@/common/context/require-context.decorator"
 import { ResourceContextGuard } from "@/common/context/resource-context.guard"
-import { CheckPolicy } from "@/common/policies/check-policy.decorator"
 import { TrackActivity } from "@/domains/activities/track-activity.decorator"
 import { JwtAuthGuard } from "@/domains/auth/jwt-auth.guard"
+import { CheckPermission } from "@/domains/rbac/check-permission.decorator"
+import { CheckPermissionGuard } from "@/domains/rbac/check-permission.guard"
 import { UserGuard } from "@/domains/users/user.guard"
-import { toProjectDto } from "./helpers"
-import { ProjectsGuard } from "./projects.guard"
+import { toMyProjectDto, toProjectDto } from "./helpers"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
 import { ProjectsService } from "./projects.service"
 
-@UseGuards(JwtAuthGuard, UserGuard, ResourceContextGuard, ProjectsGuard)
-@RequireContext("organization")
 @Controller()
 export class ProjectsController {
   constructor(private readonly projectsService: ProjectsService) {}
 
+  @Get(ProjectsRoutes.getAllMine.path)
+  @UseGuards(JwtAuthGuard, UserGuard)
+  async listUserProjects(
+    @Req() request: EndpointRequest,
+  ): Promise<typeof ProjectsRoutes.getAllMine.response> {
+    const projects = await this.projectsService.listUserProjects(request.user.id)
+    return { data: projects.map(toMyProjectDto) }
+  }
+
   @Post(ProjectsRoutes.createOne.path)
-  @CheckPolicy((policy) => policy.canCreate())
+  @UseGuards(JwtAuthGuard, UserGuard, ResourceContextGuard, CheckPermissionGuard)
+  @RequireContext("organization")
+  @CheckPermission("project.create", "organization")
   @TrackActivity({ action: "project.create" })
   async createProject(
     @Req() request: EndpointRequestWithOrganizationMembership,
@@ -38,7 +48,9 @@ export class ProjectsController {
   }
 
   @Get(ProjectsRoutes.getAll.path)
-  @CheckPolicy((policy) => policy.canList())
+  @UseGuards(JwtAuthGuard, UserGuard, ResourceContextGuard, CheckPermissionGuard)
+  @RequireContext("organization")
+  @CheckPermission("organization.read", "organization")
   async listProjects(
     @Req() request: EndpointRequestWithOrganizationMembership,
   ): Promise<typeof ProjectsRoutes.getAll.response> {
@@ -48,28 +60,36 @@ export class ProjectsController {
   }
 
   @Patch(ProjectsRoutes.updateOne.path)
-  @CheckPolicy((policy) => policy.canUpdate())
+  @UseGuards(JwtAuthGuard, UserGuard, ResourceContextGuard, CheckPermissionGuard)
+  @RequireContext("organization")
+  @CheckPermission("project.update", "project")
   @AddContext("project")
   @TrackActivity({ action: "project.update", entityFrom: "project" })
   async updateProject(
     @Req() request: EndpointRequestWithProject,
     @Body() body: typeof ProjectsRoutes.updateOne.request,
   ): Promise<typeof ProjectsRoutes.updateOne.response> {
-    const { project } = request
+    const { project, user } = request
 
-    const updatedProject = await this.projectsService.updateProject(project!, body.payload.name)
+    const updatedProject = await this.projectsService.updateProject({
+      projectId: project.id,
+      name: body.payload.name,
+      userId: user.id,
+    })
 
     return { data: toProjectDto(updatedProject) }
   }
 
   @Delete(ProjectsRoutes.deleteOne.path)
-  @CheckPolicy((policy) => policy.canDelete())
+  @UseGuards(JwtAuthGuard, UserGuard, ResourceContextGuard, CheckPermissionGuard)
+  @RequireContext("organization")
+  @CheckPermission("project.delete", "project")
   @AddContext("project")
   @TrackActivity({ action: "project.delete", entityFrom: "project" })
   async deleteProject(
     @Req() request: EndpointRequestWithProject,
   ): Promise<typeof ProjectsRoutes.deleteOne.response> {
-    await this.projectsService.deleteProject(request.project)
+    await this.projectsService.deleteProject(request.project.id)
     return { data: { success: true } }
   }
 }
