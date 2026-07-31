@@ -14,7 +14,8 @@ This project uses [CalVer](https://calver.org/) (YY.MM.Micro) for product versio
 - Embedded (public) agent sessions now get a session title and categories from the agent's bookkeeping report, and support form filling — the collected values accumulate on the public session across turns; embed sessions also enter the conversations-by-category analytics, summed with regular conversations
 
 ### Changed
-- Access control is moving to a unified roles-and-permissions model across the platform
+- Access control is moving to a unified roles-and-permissions model across the platform (WIP)
+- Back-office access is now controlled by the new roles-and-permissions system
 - Session bookkeeping is now guaranteed on every reply: conversation agents report their session title, categories, and cited sources through a single mandatory report, enforced by the platform when the model skips it — titles now appear even on agents without categories, and categories can no longer be invented outside the configured list (schema enforced at generation time on Gemini models)
 - Gemini models other than 3.6-flash are served from the EU endpoint again (EU data processing); only gemini-3.6-flash, unavailable in the EU region, uses the global endpoint
 - Evaluations: the agent version picker in the conversation run dialog labels each version as draft, and marks the published version the agent runs with as "Current" with its date, so runs are no longer launched on an unpublished draft by accident
