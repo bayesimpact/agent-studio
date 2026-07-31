@@ -239,6 +239,206 @@ conditions) + each `Agent*Tab.tsx`.
 
 ---
 
+# Walkthrough generation v2 — real imported components (PREFERRED)
+
+> The hand-built HTML/CSS/JS replica method (§Fidelity method, §Walkthrough
+> animations, §Walkthrough component spec) is **kept as a BACKUP — do not remove or
+> edit it**. For NEW walkthroughs, prefer this v2 method: it removes component drift
+> by using the product's REAL components, while staying light (no live app on the
+> site).
+
+## Principle
+A walkthrough is a **static React island** that renders the feature's screens as
+**per-step scenes composed of the REAL `@caseai-connect/ui` components** (imported,
+never redrawn), with the page **assembly transcribed faithfully from the real
+`apps/web` code**. A lightweight player cross-fades steps and overlays the
+spot/observe highlights. **No live app, no iframe, no screenshots.**
+
+## The audit comes FIRST — audit, then build (never build, then audit)
+The exhaustive fidelity audit is **Phase 0**, done BEFORE writing a single line of the
+scene — not a check run afterwards. Building first and auditing later is backwards and
+forbidden: it wastes a pass and bakes in drift. The order is always:
+1. **Audit the real code first.** Read `apps/web` (and `@caseai-connect/ui`,
+   `apps/web-embed`, locale files) exhaustively and extract the ground truth for the
+   WHOLE flow up front — every screen, component, label (EN+FR verbatim), icon, Button
+   `variant`/`size`, column order, badge variant, menu order/conditionals, empty state,
+   dialog/sheet copy, state transitions. Write it down as a spec. For a big flow, fan
+   out read-only Explore agents (one per feature area) to gather it in parallel.
+   - **The SHARED CHROME is audited like everything else — "reused" ≠ "verified".** The
+     `StudioChrome`/`Overview` shell (sidebar, group actions, icons, footer, top bar,
+     dots, wrap, bubble) is NOT exempt because a previous walkthrough already used it:
+     carry it INTO the audit scope, compare it to the real render tree, and remember a
+     bug in a shared component drifts onto every walkthrough at once. (A real miss: the
+     AGENTS "+" was `PlusCircle` instead of the app's bare `PlusIcon` — it survived a
+     feature-scoped audit precisely because the chrome was assumed good.)
+2. **Then build the scene once, already faithful** — transcribe from that spec, don't
+   guess and don't "approximate now, fix later".
+3. A final `astro build` + a quick self-check confirm the build is clean; they are NOT
+   the moment you discover fidelity gaps. If you find yourself auditing after building,
+   you skipped Phase 0 — stop and do it.
+
+## The one non-negotiable rule: READ, don't guess
+Every component, label, icon, order, class, and state MUST come from the real code —
+never memory or approximation:
+- **Leaf UI = the real components, IMPORTED** from `@caseai-connect/ui` (`Button`,
+  `Table*`, `Sidebar*`, `Badge`, `Checkbox`, `LayoutHeader`, `Breadcrumb`, …). Zero
+  redraw. If you're tempted to hand-draw a widget (e.g. a bubble/icon), stop and find
+  the real component/source first.
+- **Page ASSEMBLY** (what lives in `apps/web` and can't be imported — the route's
+  layout: which blocks, in what order, with what wrappers) = **transcribed by reading
+  the real render tree**, faithfully.
+- **Map the FULL render tree first.** For Documents that is:
+  `StudioLayout → SidebarLayout (HeaderWithLogo · SidebarAgentList · SidebarFooterChildren · NavUser) → SidebarInset (variant=inset: floating rounded card) → LayoutHeader (SidebarTrigger + breadcrumb) → DotsBackground (dotted) → Wrap (bordered card) → DocumentList`.
+- **The exhaustive read IS the audit, and it happens up front** (see "The audit comes
+  FIRST" above): compare against the real code file-by-file BEFORE building, capture
+  every detail — structure, order, icons, exact EN+FR locale strings,
+  sizes/spacing/colors, states — and build faithfully the first time. Do NOT wait for
+  review, and do NOT build-then-audit: reading is cheap, and the whole point is 100%
+  adherence from the start.
+
+## Labels: import the REAL locales (auto-sync, no hand-copying)
+Do NOT re-type UI strings into the scene — they drift the moment the app renames a
+button. Instead **import the real i18next locale JSON from `apps/web`** and resolve keys
+at build time via `src/walkthroughs/locales.ts` (`makeT(lang)` → `t("namespace:path.to.key", vars)`,
+with `{{var}}` interpolation and `_one`/`_other` pluralization). When a label changes in
+the product, the walkthrough picks it up on the next `astro build` — zero intervention.
+- Each scene builds its strings in a `strings(lang)` function: **CHROME labels = `t(...)`**
+  (e.g. `t("document:crawl.button")`, `t("actions:create")`, `t("resourceLibrary:title")`),
+  **sample DATA stays authored** (source/library/resource names, counts, urls, relative
+  times, chat lines) and domain-neutral.
+- Namespaces already wired in `locales.ts`: `document`, `documentTag`, `resourceLibrary`,
+  `actions` (shared verbs — reuse before inventing), `agent`. Add more imports there.
+- Missing keys render the raw `namespace:key` on screen (LOUD failure) — so a broken/moved
+  key is obvious, never silently wrong.
+- **Only exception:** a help-center terminology override (the "workspace"/"espace de
+  travail" rule) may force an authored string even when the app locale says "project" —
+  mark it with a comment. This is content/structure drift, still manual (see NEXT below).
+
+## Still manual (what auto-sync does NOT cover) — NEXT
+Auto-sync fixes label drift and component drift. It does NOT fix **structure/flow drift**
+(a new column, a reordered menu, a changed step, an added dialog): those still need a
+re-audit. A planned guard (a CI check that fingerprints the real strings/structure and
+fails the build when the app moves) would DETECT this; not yet built.
+
+## Honest reserve (~99%, not 100%)
+The leaf *components* are byte-identical (imported); the page *assembly* is a
+transcription (the app's page layout is store-coupled and not an importable
+standalone component), so fidelity is **~99%**. True 100% would require rendering the
+**live app** (full Redux/router/store harness → heavy bundle, loading, lag) — this was
+prototyped and **rejected** as the wrong tool for animations. **External embeds** are
+not app components: e.g. the help-launcher "bubble" is `useHelpLauncher` injecting
+`apps/web-embed`'s `launcher.js` — reproduce its visible element from the embed's own
+source (`apps/web-embed/src/launcher/…`, `TriggerButton`), not by guessing.
+
+## Start on the main menu (show the path to the feature)
+Every walkthrough that takes place INSIDE the platform MUST start on the **main menu —
+the workspace overview** (the `Overview` agent-list backdrop with the sidebar in
+workspace context), NOT already deep inside the feature or on an agent/sub-page. Step 0
+opens from the top level; the first steps then show the NAVIGATION path to reach the
+feature (e.g. open *Sources* → click *Resource libraries*). This is deliberate: the guide
+must teach HOW to get there, not assume the user is already there.
+- Reuse the shared `Overview` from `StudioChrome.tsx` for those opening steps (Documents,
+  Web sources, Resource libraries all do). Do NOT start on an agent page or a feature's
+  own screen.
+- A later part of a flow MAY move into a sub-context (e.g. attaching a resource library to
+  an agent enters the agent editor) — that is fine as a *continuation*, but the ENTRY
+  point is always the main menu.
+- (Fixed once: Resource libraries used to open on an agent page — a leftover from the old
+  hand-built trame — and was recut to open on the workspace overview like the others.)
+
+## Coherent state evolution
+Each step is one authored state, and states MUST evolve logically across steps —
+**nothing appears from nowhere**. Existing content shows from the start; a
+created/uploaded item appears only at/after its creation step (Documents: two existing
+**Ready** docs from the start; the uploaded doc appears **Processing** at the upload
+step, not before). Forward/backward is trivial (render step N) — no reset/replay.
+
+## Files & mechanics — SHARED, DRY (all three walkthroughs under `src/walkthroughs/`)
+**Naming:** one feature token drives everything — `<Feature>` (PascalCase) + `<feature-slug>`
+(kebab, = the guide's MDX slug). Per walkthrough: scene `src/walkthroughs/<Feature>Scene.tsx`
+(named `<Feature>Scene`, default `<Feature>Walkthrough`), guide mount
+`src/components/<Feature>Walkthrough.astro`, doc `content/docs/{en,fr}/<feature-slug>.mdx`.
+Shared infra uses PascalCase for components (`StudioChrome.tsx`, `WalkthroughPlayer.tsx`,
+`Anchor.tsx`) and lowercase for pure modules (`locales.ts`).
+
+Everything is factored so a scene only encodes what is unique to its feature; the shell,
+player and label resolution are shared. Do NOT re-implement these per feature.
+- **`StudioChrome.tsx`** — the SHARED `StudioChrome` (sidebar + inset + `LayoutHeader` +
+  dots + `Wrap` + launcher bubble) and `Overview` (workspace main-menu backdrop). Audited
+  once against `apps/web`; reused by every scene. Fix chrome bugs HERE (they propagate to
+  all). Labels come from `chrome(lang)` (locales, auto-sync).
+- **`WalkthroughPlayer.tsx`** — the GENERIC player: `{ Scene, steps, captions, lang }`.
+  Renders the scene per step, cross-fades (opacity only — never a transform, it shifts the
+  anchors), measures the `data-anchor` wrappers to place the coral **spot** (click target)
+  / dashed **observe** (watch zone), and the controls (Prev/Next/pause + progress bar,
+  `DUR = 7000`). One player for all walkthroughs — no per-feature player.
+- **`locales.ts`** — `makeT(lang)` → labels resolved from the real `apps/web` locale JSON
+  (auto-sync; see "Labels" above). Add namespaces here.
+- **`<Feature>Scene.tsx`** — the ONLY per-feature file. A named `export function
+  <Feature>Scene({ step, lang })` renders `<StudioChrome …>` with the feature's page as
+  children + a `strings(lang)` builder (chrome labels via `t()`, sample data authored),
+  and a `export default` thin wrapper: `<WalkthroughPlayer Scene={…} steps={…}
+  captions={…} lang={lang} />` (Astro islands can't take a component prop across the
+  boundary, hence the wrapper). `DocumentsScene`, `WebSourcesScene`,
+  `ResourceLibrariesScene` are the references.
+- **`Anchor.tsx`** — `<Anchor name>` (`display:contents`) so highlights anchor on a
+  marker WE own, never on the components' internal (generated) classes.
+- The `.astro` page mounts the scene's default export `client:only="react"`.
+
+## Isolation & platform-parity contract (GUARDED — must never regress)
+A whole class of bugs comes from the HOST environment leaking into, or diverging from, the
+walkthrough island: the guide's `.prose` typography bleeding in, OS dark mode flipping the
+components' `dark:` variants, the OS system font replacing Inter, a `border: 0` shorthand
+darkening table separators, an overly-broad *unlayered* reset clobbering component utilities.
+Each looks tiny and each broke platform parity. The walkthrough MUST be an **isolated,
+faithful replay of the real app**, independent of the host page. Invariants:
+1. **Dark mode is class-based** (`@custom-variant dark (&:where(.dark, .dark *))` in
+   `global.css`). The help center ships no `.dark`, so `dark:` variants stay inert → the
+   walkthrough is always light. Never rely on `prefers-color-scheme`.
+2. **Prose is neutralized** by the `.wt-scope :is(…)` reset in `@layer components` AFTER
+   `.prose` (beats prose, loses to component utilities). It zeroes **`border-width: 0`**,
+   never `border: 0` (the shorthand resets border-COLOR → dark table separators). It never
+   resets `font` (would unbold `<b>` titles).
+3. **Same font as the app**: the player uses `var(--font-sans)` (Inter), never a hardcoded
+   `ui-sans-serif/system-ui` (heavier OS font → looks bold).
+4. **Non-interactive**: `.dwr-stage { pointer-events: none }` — a replay, not a live UI.
+5. **Product tokens** are scoped under `.wt-scope`; scrim'd dialogs render at the chrome
+   ROOT (`modal` slot) so the veil covers the whole window like the app's `fixed inset-0`.
+
+**The guard:** `npm run check:walkthrough` (`scripts/check-walkthroughs.mjs`) asserts all of
+the above and is wired into `npm run build` — a regression fails the build. If you change a
+mechanism on purpose, update its assertion in the same commit; never just delete a check.
+
+**Manual step the guard can't do:** any change to shared CSS (`global.css`), the player, or
+`StudioChrome` MUST be eyeballed **inside a real guide page** (the walkthrough renders within
+the guide's `.prose` container, e.g. `/en/documents`, `/en/web-sources`,
+`/en/resource-libraries`) — and once with the OS in **dark mode**. A shared-CSS override that
+"looks fine" can still clobber a component utility or a host style; verify its **scope and
+cascade layer** against the real components before declaring it done.
+
+## Enablers (already wired in `apps/help`)
+- `@astrojs/react` in `astro.config.ts`; deps `react`, `react-dom`, `@caseai-connect/ui`.
+- `global.css`: `@source "…/packages/ui/src"` (so Tailwind generates the imported
+  components' utility classes) **plus** a `.wt-scope` block re-declaring the **PRODUCT**
+  token values (coral `--primary` via `--brand-primary`, neutral greys) so the widget
+  looks like Studio, not the site's beige/gold brand.
+- Mount the island `client:only="react"`.
+
+## Per-feature recipe (audit first, then build)
+1. **AUDIT (Phase 0):** read the real route render tree exhaustively (chrome + page +
+   every leaf) and write down the full ground-truth spec — every screen/label/icon/
+   variant/order/state, EN+FR verbatim. Fan out Explore agents for big flows. This
+   happens BEFORE any scene code.
+2. Build the Scene **from that spec, faithful the first time**: import real components;
+   transcribe the assembly; cut one scene state per walkthrough step; model coherent
+   state evolution.
+3. Add `data-anchor` wrappers on each highlight target.
+4. Wire the player (steps → spot/observe anchors + captions EN/FR).
+5. `astro build` + `astro check` at 0 errors — a build/self-check gate, NOT the moment
+   you first compare against the real code (that was step 1).
+
+---
+
 # Guide Authoring Playbook
 
 Every feature guide is **two paired artifacts** that must stay identical in

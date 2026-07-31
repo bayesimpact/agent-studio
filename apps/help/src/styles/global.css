@@ -2,6 +2,23 @@
 @import "./theme.css";
 
 /*
+ * Dark mode is CLASS-based (`.dark`), not `prefers-color-scheme`. The help center is a
+ * light brand and ships no dark theme, but the imported `@caseai-connect/ui` components
+ * carry `dark:` variants. With the default media-based dark variant, an OS/browser in
+ * dark mode would activate those inside the walkthrough (e.g. the "Ready" badge rendering
+ * light-green text on dark-green bg — inverted). Since nothing adds `.dark` here, this
+ * makes every `dark:` utility inert → the walkthrough (and the site) always render light.
+ */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/*
+ * Let Tailwind scan the shared UI package so utility classes used ONLY by the
+ * imported `@caseai-connect/ui` components (rendered inside walkthrough islands)
+ * are generated. Path is relative to this file (apps/help/src/styles).
+ */
+@source "../../../../packages/ui/src";
+
+/*
  * Bayes Impact brand tokens (brand/tokens.css): warm-beige surface, black ink,
  * gold hairlines. Gold is the accent; orange (#FF8400) is a punctuation accent
  * only (dots, ticks, active). Walkthrough widgets re-declare the platform (coral)
@@ -96,6 +113,48 @@
   --font-sans:
     "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial,
     sans-serif;
+}
+
+/*
+ * Walkthrough scope — real `@caseai-connect/ui` components rendered inside a
+ * walkthrough island must look like the PRODUCT (Studio), not the Bayes brand
+ * chrome. Re-declare the product token VALUES (mirrored from packages/ui
+ * global.css `:root`; `--primary` follows the tenant brand key, like apps/web)
+ * scoped to this class, so the site-wide beige/gold palette never leaks in and
+ * the widget palette never leaks out. Because the site's `@theme inline` maps
+ * `--color-*: var(--*)` lazily, overriding the raw tokens here cascades to every
+ * descendant component. Same intent as the hand-built walkthroughs' per-widget
+ * `.dsw`/`.msw` token blocks, shared here for the imported components.
+ */
+.wt-scope {
+  --background: oklch(1 0 0);
+  --foreground: oklch(0.145 0 0);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.145 0 0);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.145 0 0);
+  --primary: var(--brand-primary, oklch(62.8% 0.2 303.9));
+  --primary-foreground: oklch(0.985 0 0);
+  --secondary: oklch(0.97 0 0);
+  --secondary-foreground: oklch(0.205 0 0);
+  --muted: oklch(0.97 0 0);
+  --muted-foreground: oklch(0.556 0 0);
+  --accent: oklch(0.97 0 0);
+  --accent-foreground: oklch(0.205 0 0);
+  --destructive: oklch(0.577 0.245 27.325);
+  --destructive-foreground: oklch(0.985 0 0);
+  --border: oklch(0.922 0 0);
+  --input: oklch(0.922 0 0);
+  --ring: oklch(0.708 0 0);
+  --radius: 0.625rem;
+  --sidebar: oklch(0.985 0 0);
+  --sidebar-foreground: oklch(0.145 0 0);
+  --sidebar-primary: oklch(0.205 0 0);
+  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-accent: oklch(0.97 0 0);
+  --sidebar-accent-foreground: oklch(0.205 0 0);
+  --sidebar-border: oklch(0.922 0 0);
+  --sidebar-ring: oklch(0.708 0 0);
 }
 
 @layer base {
@@ -295,7 +354,7 @@
    * widget, tables, images) keep the whole column.
    */
   .prose :where(p, ul, ol, h2, h3, h4, blockquote) {
-    max-width: 46rem;
+    max-width: 72rem;
   }
   .prose code {
     background-color: var(--color-muted);
@@ -342,5 +401,79 @@
   .prose th {
     background-color: var(--color-muted);
     font-weight: 600;
+  }
+}
+
+/*
+ * POC (issue #568) — walkthrough islands render INSIDE the guide's `.prose` container
+ * (DocsLayout wraps the MDX in `<div class="prose">`). Without this, prose typography
+ * bleeds into the embedded REAL Studio components: list bullets on the sidebar
+ * `<ul>/<li>` ("points"), gold link underlines / marker-highlights ("surlignages"), and
+ * a full border on every table cell (turning the clean row-separated table into a grid).
+ *
+ * These rules live in `@layer components`, placed AFTER `.prose` (same layer, later
+ * source order) so they beat `.prose` — but they still LOSE to the components' own
+ * Tailwind utilities (`@layer utilities`, higher priority). That's exactly what we want:
+ * the real components keep their intended layout (sub-menu `mx-3.5 px-2.5 border-l`
+ * indentation, table row `border-b`, cell padding), and only the prose bleed is removed.
+ * A blanket unlayered reset would clobber those utilities too — do NOT do that.
+ */
+@layer components {
+  /*
+   * COMPREHENSIVE neutralizer (not per-symptom): reset EVERY element `.prose` styles, for
+   * every property `.prose` sets (margins, padding, borders, backgrounds, list markers,
+   * link/text decoration, max-width, inherited colors). So ANY prose rule — current or
+   * future — is cancelled inside a walkthrough, not just the handful we hit so far.
+   *
+   * Placement is what makes this safe: same `@layer components` as `.prose`, but LATER in
+   * source order → it beats `.prose`. It still LOSES to the components' own Tailwind
+   * classes (higher-priority `@layer utilities`) and to inline styles. Net effect: the real
+   * components render with THEIR styling (sidebar indentation, table row borders, badge
+   * colors, inline styles) and only the guide's prose bleed is stripped.
+   *
+   * `font` is intentionally NOT reset: `font: inherit` would unbold `<b>/<strong>` titles.
+   */
+  .wt-scope
+  :is(
+    h1,
+    h2,
+    h3,
+    h4,
+    h5,
+    h6,
+    p,
+    ul,
+    ol,
+    li,
+    a,
+    blockquote,
+    figure,
+    hr,
+    pre,
+    code,
+    img,
+    table,
+    thead,
+    tbody,
+    tr,
+    th,
+    td,
+    mark,
+    .hl
+  ) {
+    margin: 0;
+    padding: 0;
+    /* Only zero the WIDTH (kills prose's per-cell borders); do NOT use `border: 0`, which
+       also resets border-COLOR to currentColor — that darkened the table row `border-b`
+       separators (they take width from the utility but color from here). */
+    border-width: 0;
+    background: none;
+    max-width: none;
+    list-style: none;
+    text-decoration: none;
+    color: inherit;
+  }
+  .wt-scope li::marker {
+    content: "";
   }
 }

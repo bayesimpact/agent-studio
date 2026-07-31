@@ -1,4 +1,5 @@
 import mdx from "@astrojs/mdx"
+import react from "@astrojs/react"
 import sitemap from "@astrojs/sitemap"
 import tailwindcss from "@tailwindcss/vite"
 import type { AstroUserConfig } from "astro"
@@ -27,7 +28,7 @@ export default defineConfig({
       redirectToDefaultLocale: false,
     },
   },
-  integrations: [mdx(), sitemap()],
+  integrations: [react(), mdx(), sitemap()],
   vite: {
     plugins: vitePlugins,
   },
