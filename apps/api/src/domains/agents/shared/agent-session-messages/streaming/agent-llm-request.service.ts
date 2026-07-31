@@ -165,6 +165,7 @@ export class AgentLlmRequestService extends ServiceWithLLM {
       traceId,
       organizationId: connectScope.organizationId,
       messages: [userMessage],
+      type: "public",
     }
 
     const { config, metadata, messages, mcpClose } = await this.buildLLMRequest({
@@ -210,7 +211,13 @@ export class AgentLlmRequestService extends ServiceWithLLM {
     this.logger.log(
       `Agent "${agent.name}" (${agent.id}) trace: ${getTraceUrl(session.traceId)} (session ${session.id})`,
     )
-    const tags = [agent.name, `rev-${agentSettings.revision}`, agent.type, ...extraTags]
+    const tags = [
+      agent.name,
+      `rev-${agentSettings.revision}`,
+      agent.type,
+      session.type,
+      ...extraTags,
+    ]
     return {
       traceId: session.traceId,
       agentSessionId: session.id,

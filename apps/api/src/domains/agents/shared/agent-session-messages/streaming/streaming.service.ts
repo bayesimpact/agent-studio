@@ -199,6 +199,7 @@ export class StreamingService extends ServiceWithLLM {
       traceId: publicSessionId,
       organizationId: connectScope.organizationId,
       messages,
+      type: "public",
     }
 
     let fullContent = ""

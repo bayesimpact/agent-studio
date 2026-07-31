@@ -14,6 +14,7 @@ export type PublicStreamingSessionProxy = {
   traceId: string
   organizationId: string
   messages: AgentMessage[]
+  type: string
 }
 
 export type StreamingSession = ConversationAgentSession | PublicStreamingSessionProxy

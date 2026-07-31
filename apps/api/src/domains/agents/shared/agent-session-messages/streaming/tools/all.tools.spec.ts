@@ -18,7 +18,10 @@ import type { ConversationAgentSession } from "@/domains/agents/conversation-age
 import { conversationAgentSessionFactory } from "@/domains/agents/conversation-agent-sessions/conversation-agent-session.factory"
 import { StreamingModule } from "@/domains/agents/shared/agent-session-messages/streaming/streaming.module"
 import { StreamingService } from "@/domains/agents/shared/agent-session-messages/streaming/streaming.service"
-import type { AgentSessionScope } from "@/domains/agents/shared/agent-session-messages/streaming/streaming-session.types"
+import type {
+  AgentSessionScope,
+  PublicStreamingSessionProxy,
+} from "@/domains/agents/shared/agent-session-messages/streaming/streaming-session.types"
 import { ToolsService } from "@/domains/agents/shared/agent-session-messages/streaming/tools.service"
 import { DocumentChunkRetrievalService } from "@/domains/documents/embeddings/document-chunk-retrieval.service"
 import { McpServersService } from "@/domains/mcp-servers/mcp-servers.service"
@@ -328,11 +331,12 @@ describe("Tools execution", () => {
     const toolsService = setup.module.get<ToolsService>(ToolsService)
     // Mirrors PublicStreamingSessionProxy: no persisted row, so no `result`
     // column to accumulate form state into.
-    const publicSessionProxy = {
+    const publicSessionProxy: PublicStreamingSessionProxy = {
       id: v4(),
       traceId: v4(),
       organizationId: organization.id,
       messages: [],
+      type: "public",
     }
 
     const { tools } = await toolsService.buildTools({
