@@ -19,10 +19,10 @@ export type SurfaceableLibrary = {
  * as the retrieved-chunks registry (c1, c2...): real ids and links are
  * un-copyable by small models (a mangled character silently breaks the
  * card), and exposing them in the prompt lets a weak model RECITE the
- * referential into the user-visible text instead of calling the tool —
- * observed in production: raw internal link pasted in a chat answer, which
- * the front then rendered. With aliases, a recitation leaks nothing
- * renderable; the surfaceResources tool resolves aliases server-side.
+ * referential into the user-visible text instead of calling the tool — a raw
+ * internal link pasted in an answer, which the front then renders. With
+ * aliases, a recitation leaks nothing renderable; the surfaceResources tool
+ * resolves aliases server-side.
  *
  * Unlike chunks, resources are static for the whole request (they come from
  * the agent's libraries, not from a mid-turn retrieval): the registry is

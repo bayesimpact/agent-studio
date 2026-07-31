@@ -1,13 +1,13 @@
 import { findLeakedToolCallNames, ThoughtTokensHelper } from "./thought-tokens-helper"
 
-// The exact leak observed in production (gemini-3.5-flash-lite verbalizing
-// its tool call as pseudo-XML in the user-visible text instead of emitting a
-// functionCall part).
+// A leak captured from gemini-3.5-flash-lite: the model verbalizes its tool
+// call as pseudo-XML in the user-visible text instead of emitting a
+// functionCall part.
 const LEAKED_PSEUDO_CALL =
   '<call:default_api:mandatory_tool xmlns:default_api="default_api" categoryNames:[greetings,QA],suggestedTitle:Règles de Warmachine et pays de pays/>'
 
 describe("ThoughtTokensHelper - hallucinated tool-call XML", () => {
-  it("removes the production pseudo-call tag from a complete text", () => {
+  it("removes a pseudo-call tag from a complete text", () => {
     const text = `C'est noté, tu habites en France !\n\n${LEAKED_PSEUDO_CALL}`
     const cleaned = ThoughtTokensHelper.removeThoughtTokens(text)
 
@@ -60,14 +60,12 @@ describe("ThoughtTokensHelper - hallucinated tool-call XML", () => {
 })
 
 describe("findLeakedToolCallNames", () => {
-  it("extracts the tool name from a leaked safety-alert call (production case)", () => {
-    // Real production leak: the alert never reached the MCP server.
+  it("extracts the tool name from the brace-argument variant", () => {
     const text =
-      "Prenez soin de vous.\n\n<call:default_api:report_danger{category:self_harm," +
-      "severity:critical,summary:L'utilisateur exprime l'intention de mourir.," +
-      "verbatim:je veux mourrir}/>"
+      "Voici votre réponse.\n\n<call:default_api:notify_operator{severity:high," +
+      "summary:Escalation requested by the user.,reference:ABC-123}/>"
 
-    expect(findLeakedToolCallNames(text)).toEqual(["report_danger"])
+    expect(findLeakedToolCallNames(text)).toEqual(["notify_operator"])
   })
 
   it("extracts the tool name from the attribute-style variant", () => {

@@ -3,6 +3,7 @@ import { AgentModelToAgentProvider, AgentProvider } from "@caseai-connect/api-co
 import { Logger, NotImplementedException } from "@nestjs/common"
 import { trace } from "@opentelemetry/api"
 import {
+  asSchema,
   type FilePart,
   generateText,
   type JSONSchema7,
@@ -24,7 +25,11 @@ import { removeNullish } from "@/common/utils/remove-nullish"
 import { fireAndForgetStopCondition } from "@/external/llm/fire-and-forget-stop-condition"
 import { ResponseHelper } from "@/external/llm/response-helper"
 import { withStrictTools } from "@/external/llm/strict-tools"
-import { findLeakedToolCallNames, ThoughtTokensHelper } from "@/external/llm/thought-tokens-helper"
+import {
+  findLeakedToolCalls,
+  type LeakedToolCall,
+  ThoughtTokensHelper,
+} from "@/external/llm/thought-tokens-helper"
 
 // OTel attribute keys under which we publish the raw LLM request body and
 // response. The `ai.telemetry.metadata.` prefix is required so the AI SDK
@@ -72,21 +77,25 @@ export abstract class AISDKLLMProviderBase implements LLMProvider {
    * A model that VERBALIZES a tool call in the text channel instead of
    * emitting it (documented Gemini failure family) means the tool never
    * ran: the sanitizer hides the tag from the user, so without this log the
-   * failure is completely silent. Observed in production on a safety-alert
-   * tool — the alert was lost. Logged loudly so monitoring can catch it.
+   * failure would be completely silent. Logged loudly so monitoring can
+   * catch it — a tool with side effects must never fail unnoticed.
    */
   private readonly leakedToolCallLogger = new Logger("LeakedToolCall")
 
   private logLeakedToolCalls({
     originalText,
     config,
+    leakedToolCalls,
   }: {
     originalText: string
     config?: LLMConfig
+    leakedToolCalls?: LeakedToolCall[]
   }): void {
     try {
-      const leakedToolNames = findLeakedToolCallNames(originalText)
-      if (leakedToolNames.length === 0) return
+      const found = findLeakedToolCalls(originalText)
+      if (found.length === 0) return
+      const leakedToolNames = found.map((leakedCall) => leakedCall.name)
+      leakedToolCalls?.push(...found)
       const declaredToolNames = [
         ...Object.keys(config?.tools ?? {}),
         ...Object.keys(config?.endOfTurnTools ?? {}),
@@ -103,12 +112,22 @@ export abstract class AISDKLLMProviderBase implements LLMProvider {
   protected getLanguageModelWithRawCapture(args: {
     config: LLMConfig
     callOrigin: CallOrigin
+    /**
+     * Request-scoped sink for tool calls the model verbalized in the text
+     * channel. The sanitizer removes the tag before anything downstream sees
+     * it, so the raw leak has to be captured here, in the middleware.
+     */
+    leakedToolCalls?: LeakedToolCall[]
   }): LanguageModelV3 {
     const baseModel = this.getLanguageModel(args)
     // Bound for use inside the stream TransformStream, where `this` is the
     // transformer, not the provider.
     const logLeaked = ({ originalText }: { originalText: string }) =>
-      this.logLeakedToolCalls({ originalText, config: args.config })
+      this.logLeakedToolCalls({
+        originalText,
+        config: args.config,
+        leakedToolCalls: args.leakedToolCalls,
+      })
     return wrapLanguageModel({
       model: baseModel,
       middleware: {
@@ -133,7 +152,11 @@ export abstract class AISDKLLMProviderBase implements LLMProvider {
               if (strippedText !== originalText) {
                 activeSpan?.setAttribute(RAW_LLM_RESPONSE_STRIPPED_ATTR, strippedText)
               }
-              this.logLeakedToolCalls({ originalText, config: args.config })
+              this.logLeakedToolCalls({
+                originalText,
+                config: args.config,
+                leakedToolCalls: args.leakedToolCalls,
+              })
             }
           } catch {
             // never let telemetry capture break the generation
@@ -284,8 +307,13 @@ export abstract class AISDKLLMProviderBase implements LLMProvider {
     const systemMessage = messages.find((msg) => msg.role === "system")?.content
     const functionId = this.buildFunctionIdForStreamChatResponse(aiSDKMessages)
 
+    // Request-scoped: tool calls the model verbalized in the text channel
+    // instead of emitting them. Collected by the raw-capture middleware and
+    // recovered after the stream (see recoverLeakedToolCalls).
+    const leakedToolCalls: LeakedToolCall[] = []
+
     const agent = new ToolLoopAgent({
-      model: this.getLanguageModelWithRawCapture({ config, callOrigin }),
+      model: this.getLanguageModelWithRawCapture({ config, callOrigin, leakedToolCalls }),
       temperature: config.temperature,
       tools: this.supportsStrictTools() ? withStrictTools(config.tools) : config.tools,
       // Keep the default step safety net, but skip the follow-up generation
@@ -331,6 +359,15 @@ export abstract class AISDKLLMProviderBase implements LLMProvider {
       messages: fullMessages,
       streamResult,
     })
+
+    await this.recoverLeakedToolCalls({
+      config,
+      callOrigin,
+      metadata,
+      functionId,
+      leakedToolCalls,
+      streamResult,
+    })
   }
 
   /**
@@ -347,6 +384,113 @@ export abstract class AISDKLLMProviderBase implements LLMProvider {
    * Best-effort: the user already received the streamed answer, so a failure
    * here is logged but never breaks the stream.
    */
+  /**
+   * Recovers a tool call the model VERBALIZED in the text channel instead of
+   * emitting it (documented Gemini failure family). Without this, the call
+   * is simply lost: the sanitizer hides the tag from the user and nothing
+   * ran, which silently drops whatever the tool was meant to do.
+   *
+   * Recovery deliberately does NOT re-force a tool call: the model that
+   * leaked is the one that would be asked again, and the whole failure mode
+   * is "wrong channel". Instead it uses STRUCTURED OUTPUT (no tool channel
+   * involved, arguments grammar-constrained by the schema) to convert the
+   * leaked tag — which already carries the intended arguments in a
+   * malformed form — into valid input, validated by the tool's own schema
+   * before the tool executes.
+   *
+   * One attempt per tool, skipped when the tool already executed in the
+   * turn. Deduplicating repeated deliveries is the destination's job (e.g.
+   * the MCP server). Best-effort: the user already got their answer, so
+   * failures are logged loudly and never break the stream.
+   */
+  private async recoverLeakedToolCalls({
+    config,
+    callOrigin,
+    metadata,
+    functionId,
+    leakedToolCalls,
+    streamResult,
+  }: {
+    config: LLMConfig
+    callOrigin: CallOrigin
+    metadata: LLMMetadata
+    functionId: string
+    leakedToolCalls: LeakedToolCall[]
+    streamResult: {
+      steps: PromiseLike<Array<{ toolResults: Array<{ toolName: string; output: unknown }> }>>
+    }
+  }): Promise<void> {
+    if (leakedToolCalls.length === 0) return
+    const tools = config.tools
+    if (!tools) return
+
+    try {
+      const steps = await streamResult.steps
+      const executedToolNames = new Set(
+        steps.flatMap((step) => step.toolResults.map((toolResult) => toolResult.toolName)),
+      )
+
+      for (const leakedCall of leakedToolCalls) {
+        if (executedToolNames.has(leakedCall.name)) continue
+        const tool = tools[leakedCall.name]
+        if (!tool?.execute) {
+          this.leakedToolCallLogger.error(
+            `cannot recover leaked call to "${leakedCall.name}": tool not declared or not executable`,
+          )
+          continue
+        }
+
+        const recoveredInput = await generateText({
+          model: this.getLanguageModelWithRawCapture({ config, callOrigin }),
+          temperature: config.temperature,
+          messages: [
+            {
+              role: "user",
+              content: `A tool call was emitted as malformed text instead of a real tool call. Convert it into the tool's arguments, verbatim — copy every value exactly as written, invent nothing, and drop nothing.
+
+Malformed call:
+${leakedCall.raw}`,
+            },
+          ],
+          output: Output.object({ schema: tool.inputSchema }),
+          experimental_telemetry: {
+            isEnabled: true,
+            functionId,
+            metadata: {
+              ...this.buildMetadata({ config, metadata }),
+              recoveredLeakedToolCall: leakedCall.name,
+            },
+          },
+          providerOptions: {
+            custom: this.buildCustomProviderOptions({ config, callOrigin, metadata }),
+          },
+        })
+
+        // The tool's own schema is the last gate before a side effect runs.
+        const validatedInput = await asSchema(tool.inputSchema).validate?.(recoveredInput.output)
+        const input = validatedInput?.success ? validatedInput.value : recoveredInput.output
+        if (validatedInput && !validatedInput.success) {
+          this.leakedToolCallLogger.error(
+            `recovered arguments for "${leakedCall.name}" failed the tool schema — not executed`,
+          )
+          continue
+        }
+
+        await tool.execute(input, {
+          toolCallId: `recovered-${leakedCall.name}`,
+          messages: [],
+        })
+        this.leakedToolCallLogger.warn(
+          `recovered the leaked call to "${leakedCall.name}" through structured output and executed it`,
+        )
+      }
+    } catch (error) {
+      this.leakedToolCallLogger.error(
+        `leaked tool call recovery failed: ${error instanceof Error ? error.message : error}`,
+      )
+    }
+  }
+
   private async runEndOfTurnTools({
     config,
     callOrigin,

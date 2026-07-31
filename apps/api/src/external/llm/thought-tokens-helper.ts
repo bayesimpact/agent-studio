@@ -5,10 +5,10 @@
 const CHANNEL_KEYWORDS = "thought|analysis|reasoning|finalize|commentary|final"
 
 // Hallucinated tool-call syntax that Gemini models (lite especially) leak
-// into the TEXT stream instead of emitting a real functionCall — observed in
-// production: `<call:default_api:mandatory_tool xmlns:default_api=... />`.
-// `default_api` is an internal Gemini tool namespace; none of these tags can
-// ever be legitimate user-facing content.
+// into the TEXT stream instead of emitting a real functionCall, e.g.
+// `<call:default_api:some_tool xmlns:default_api=... />`. `default_api` is an
+// internal Gemini tool namespace; none of these tags can ever be legitimate
+// user-facing content.
 const PSEUDO_TOOL_CALL_RE = /<\/?(?:call|default_api)[:\s][^>]*\/?>/gi
 // An opener of that family that has no closing `>` yet (still streaming).
 const PSEUDO_TOOL_CALL_OPEN_RE = /<\/?(?:call|default_api)[:\s][^>]*$/i
@@ -46,25 +46,36 @@ function stripStrayChannelTokens(text: string): string {
 }
 
 /**
- * Names of the tools the model tried to call by VERBALIZING the call in the
- * text channel instead of emitting a real tool call. Extracted from the
- * leaked pseudo-XML (`<call:default_api:report_danger{...}/>`), so callers
- * can react — the call itself never reached the provider's tool channel and
- * the platform did NOT execute it.
+ * A tool call the model VERBALIZED in the text channel instead of emitting
+ * it (documented Gemini failure family): the call never reached the tool
+ * channel, so the platform did NOT execute it. `raw` keeps the whole leaked
+ * tag — it already carries the arguments the model intended, in a malformed
+ * form, which is what makes recovery possible.
  */
-export function findLeakedToolCallNames(text: string): string[] {
-  const names = new Set<string>()
+export type LeakedToolCall = {
+  name: string
+  raw: string
+}
+
+export function findLeakedToolCalls(text: string): LeakedToolCall[] {
+  const byName = new Map<string, LeakedToolCall>()
   // The leaked tag is malformed and comes in variants; the tool name is the
   // last `:`-separated segment of the tag opener, before its arguments
   // (`{...}`, ` attr=...`, or the closing `>`).
-  for (const match of text.matchAll(/<\/?(?:call|default_api)[:\s]([^>{(\s]+)/gi)) {
-    const segments = (match[1] ?? "").split(":").filter(Boolean)
+  for (const match of text.matchAll(PSEUDO_TOOL_CALL_RE)) {
+    const raw = match[0]
+    const opener = /<\/?(?:call|default_api)[:\s]([^>{(\s]+)/i.exec(raw)
+    const segments = (opener?.[1] ?? "").split(":").filter(Boolean)
     const name = segments.at(-1)
     if (name && name !== "default_api" && /^[a-zA-Z_][a-zA-Z0-9_]*$/.test(name)) {
-      names.add(name)
+      if (!byName.has(name)) byName.set(name, { name, raw })
     }
   }
-  return [...names]
+  return [...byName.values()]
+}
+
+export function findLeakedToolCallNames(text: string): string[] {
+  return findLeakedToolCalls(text).map((leakedCall) => leakedCall.name)
 }
 
 // biome-ignore lint/complexity/noStaticOnlyClass: helper
