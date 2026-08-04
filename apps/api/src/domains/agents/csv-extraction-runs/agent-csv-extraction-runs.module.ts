@@ -1,4 +1,4 @@
-import { Module } from "@nestjs/common"
+import { forwardRef, Module } from "@nestjs/common"
 import { TypeOrmModule } from "@nestjs/typeorm"
 import { AgentContextResolver } from "@/common/context/resolvers/agent-context.resolver"
 import { AgentCsvExtractionRunContextResolver } from "@/common/context/resolvers/agent-csv-extraction-run-context.resolver"
@@ -37,7 +37,7 @@ import { AgentCsvExtractionRunsService } from "./agent-csv-extraction-runs.servi
       Project,
     ]),
     AgentCsvExtractionRunBatchModule,
-    AgentSettingsModule,
+    forwardRef(() => AgentSettingsModule),
     DocumentsModule,
     StorageModule,
     OrganizationsModule,

@@ -1,3 +1,4 @@
+import { DocumentsRagMode } from "@caseai-connect/api-contracts"
 import { afterAll, expect } from "@jest/globals"
 import {
   type AllRepositories,
@@ -5,6 +6,7 @@ import {
   setupE2eTestDatabase,
   teardownE2eTestDatabase,
 } from "@/common/test/test-database"
+import { Agent } from "@/domains/agents/agent.entity"
 import { AgentsModule } from "@/domains/agents/agents.module"
 import { AgentsService } from "@/domains/agents/agents.service"
 import { agentSettingsFactory } from "@/domains/agents/settings/agent.settings.factory"
@@ -15,10 +17,13 @@ import {
   assertOnSettings,
 } from "@/domains/agents/settings/agent.settings.spec.helper"
 import { AgentSettings } from "@/domains/agents/settings/agent-settings.entity"
+import { DocumentTag } from "@/domains/documents/tags/document-tag.entity"
+import { documentTagFactory } from "@/domains/documents/tags/document-tag.factory"
 import {
   createOrganizationWithAgent,
   createOrganizationWithProject,
 } from "@/domains/organizations/organization.factory"
+import { createResourceLibraryForProject } from "@/domains/resource-libraries/resource-library.factory"
 import { sdk } from "@/external/llm/open-telemetry-init"
 import { AgentSettingsService } from "./agent-settings.service"
 
@@ -241,7 +246,7 @@ describe("AgentSettings", () => {
     })
   })
 
-  describe("AgentService extension", () => {
+  describe("Settings revisions", () => {
     it("createAgent should also create draft settings with revision = 1", async () => {
       const { organization, project, user } = await createOrganizationWithProject(repositories)
       const { agent, agentSettings } = await agentService.createAgent({
@@ -269,10 +274,11 @@ describe("AgentSettings", () => {
         includesDraft: true,
       })
       assertOnSettings(agentSettingsValuesRev1, savedSettings)
-      expect(savedSettings?.isDraft).toBeTruthy()
+      // Creating an agent publishes its first revision right away.
+      expect(savedSettings?.isDraft).toBeFalsy()
       expect(savedSettings?.revision).toBe(1)
     })
-    it("updateAgent should also create draft settings with revision = last revision +1 - no existing draft", async () => {
+    it("updateAllSettings should create draft settings with revision = last revision +1 - no existing draft", async () => {
       const { organization, project, agent } = await createAgentWithSettings(
         setup,
         repositories,
@@ -293,10 +299,9 @@ describe("AgentSettings", () => {
       const updatedFields = {
         ...agentSettingsValuesRev1,
         instructions: "My new instructions",
-        name: "My new agent name",
       }
 
-      const { agentSettings: updatedAgentSettings } = await agentService.updateAgent({
+      const { agentSettings: updatedAgentSettings } = await service.updateAllSettings({
         connectScope: {
           organizationId: organization.id,
           projectId: project.id,
@@ -320,7 +325,7 @@ describe("AgentSettings", () => {
       expect(savedSettings[0]?.revision).toBe(2)
       expect(savedSettings[0]?.isDraft).toBeTruthy()
     })
-    it("updateAgent should also create draft settings with revision = last revision +1 - no existing draft - last (first) revision archived", async () => {
+    it("updateAllSettings should create draft settings with revision = last revision +1 - no existing draft - last (first) revision archived", async () => {
       const { organization, project, agent } = await createAgentWithSettings(
         setup,
         repositories,
@@ -345,10 +350,9 @@ describe("AgentSettings", () => {
       const updatedFields = {
         ...agentSettingsValuesRev1,
         instructions: "My new instructions",
-        name: "My new agent name",
       }
 
-      const { agentSettings: updatedAgentSettings } = await agentService.updateAgent({
+      const { agentSettings: updatedAgentSettings } = await service.updateAllSettings({
         connectScope: {
           organizationId: organization.id,
           projectId: project.id,
@@ -373,7 +377,7 @@ describe("AgentSettings", () => {
       expect(savedSettings[0]?.isDraft).toBeTruthy()
     })
 
-    it("updateAgent should also create draft settings with revision = last revision +1 - no existing draft - last revision archived", async () => {
+    it("updateAllSettings should create draft settings with revision = last revision +1 - no existing draft - last revision archived", async () => {
       const { organization, project, agent } = await createAgentWithSettings(setup, repositories)
 
       let savedSettings = await service.getAll({
@@ -395,10 +399,9 @@ describe("AgentSettings", () => {
       const updatedFields = {
         ...agentSettingsValuesRev3Draft,
         instructions: "My new instructions",
-        name: "My new agent name",
       }
 
-      const { agentSettings: updatedAgentSettings } = await agentService.updateAgent({
+      const { agentSettings: updatedAgentSettings } = await service.updateAllSettings({
         connectScope: {
           organizationId: organization.id,
           projectId: project.id,
@@ -422,7 +425,7 @@ describe("AgentSettings", () => {
       expect(savedSettings[0]?.revision).toBe(4)
       expect(savedSettings[0]?.isDraft).toBeTruthy()
     })
-    it("updateAgent should update existing draft settings - existing draft", async () => {
+    it("updateAllSettings should update existing draft settings - existing draft", async () => {
       const { organization, project, agent } = await createAgentWithSettings(setup, repositories)
 
       const savedSettings = await service.getLast({
@@ -439,10 +442,9 @@ describe("AgentSettings", () => {
       const updatedFields = {
         ...agentSettingsValuesRev3Draft,
         instructions: "My updated instructions",
-        name: "My updated agent name",
       }
 
-      const { agentSettings: updatedAgentSettings } = await agentService.updateAgent({
+      const { agentSettings: updatedAgentSettings } = await service.updateAllSettings({
         connectScope: {
           organizationId: organization.id,
           projectId: project.id,
@@ -465,6 +467,161 @@ describe("AgentSettings", () => {
       expect(allSavedSettings[0]?.revision).toBe(savedSettings.revision)
       expect(allSavedSettings[0]?.isDraft).toBeTruthy()
     })
+    it("updateAllSettings should create a draft revision with the updated fields", async () => {
+      const { organization, project, agent } = await createOrganizationWithAgent(repositories)
+
+      const { agent: updatedAgent, agentSettings: updatedAgentSettings } =
+        await service.updateAllSettings({
+          connectScope: { organizationId: organization.id, projectId: project.id },
+          agentId: agent.id,
+          fieldsToUpdate: {
+            instructions: "Updated Prompt",
+            documentsRagMode: DocumentsRagMode.All,
+          },
+        })
+
+      expect(updatedAgent.id).toBe(agent.id)
+      expect(updatedAgentSettings.agentId).toBe(agent.id)
+      expect(updatedAgentSettings.instructions).toBe("Updated Prompt")
+      expect(updatedAgentSettings.revision).toBe(2)
+
+      const savedSettings = await repositories.agentSettingsRepository.findOne({
+        where: { agentId: agent.id, revision: 2 },
+      })
+      expect(savedSettings?.instructions).toBe("Updated Prompt")
+      expect(savedSettings?.isDraft).toBeTruthy()
+    })
+
+    it("updateAllSettings should update greetingMessage and clear it with an empty string", async () => {
+      const { organization, project, agent, agentSettings } =
+        await createOrganizationWithAgent(repositories)
+      const connectScope = { organizationId: organization.id, projectId: project.id }
+
+      await service.updateAllSettings({
+        connectScope,
+        agentId: agent.id,
+        fieldsToUpdate: { greetingMessage: "New greeting" },
+      })
+      let updatedAgentSettings = await service.getLast({
+        connectScope,
+        agentId: agent.id,
+        includesDraft: true,
+      })
+      expect(updatedAgentSettings.greetingMessage).not.toBe(agentSettings.greetingMessage)
+      expect(updatedAgentSettings.greetingMessage).toBe("New greeting")
+      expect(updatedAgentSettings.isDraft).toBeTruthy()
+
+      await service.updateAllSettings({
+        connectScope,
+        agentId: agent.id,
+        fieldsToUpdate: { greetingMessage: "" },
+      })
+      updatedAgentSettings = await service.getLast({
+        connectScope,
+        agentId: agent.id,
+        includesDraft: true,
+      })
+      expect(updatedAgentSettings.greetingMessage).toBeNull()
+      expect(updatedAgentSettings.isDraft).toBeTruthy()
+    })
+
+    it("updateAllSettings should preserve greetingMessage when a partial update omits it", async () => {
+      const { organization, project, agent } = await createOrganizationWithAgent(repositories, {
+        agentSettings: { greetingMessage: "Keep me" },
+      })
+      const connectScope = { organizationId: organization.id, projectId: project.id }
+
+      await service.updateAllSettings({
+        connectScope,
+        agentId: agent.id,
+        fieldsToUpdate: { instructions: "New instructions" },
+      })
+
+      const updatedAgentSettings = await service.getLast({
+        connectScope,
+        agentId: agent.id,
+        includesDraft: true,
+      })
+      expect(updatedAgentSettings.instructions).toBe("New instructions")
+      expect(updatedAgentSettings.greetingMessage).toBe("Keep me")
+    })
+
+    it("updateAllSettings should keep stored tags when switching documentsRagMode to none", async () => {
+      const { organization, project, agent } = await createOrganizationWithAgent(repositories, {
+        agentSettings: { documentsRagMode: DocumentsRagMode.Tags },
+      })
+      const connectScope = { organizationId: organization.id, projectId: project.id }
+      const documentTag = documentTagFactory.transient({ organization, project }).build()
+      await setup.getRepository(DocumentTag).save(documentTag)
+
+      await repositories.agentRepository
+        .createQueryBuilder()
+        .relation(Agent, "documentTags")
+        .of(agent.id)
+        .add(documentTag.id)
+
+      await service.updateAllSettings({
+        connectScope,
+        agentId: agent.id,
+        fieldsToUpdate: { documentsRagMode: DocumentsRagMode.None },
+      })
+
+      const updatedAgentSettings = await service.getLast({
+        connectScope,
+        agentId: agent.id,
+        includesDraft: true,
+      })
+      expect(updatedAgentSettings.documentsRagMode).toBe(DocumentsRagMode.None)
+
+      const updatedAgent = await repositories.agentRepository.findOne({
+        where: { id: agent.id },
+        relations: ["documentTags"],
+      })
+      expect(updatedAgent?.documentTags.map((documentTag) => documentTag.id)).toEqual([
+        documentTag.id,
+      ])
+    })
+
+    it("updateAllSettings should update resource libraries", async () => {
+      const { organization, project, agent, agentResourceLibraries } =
+        await createOrganizationWithAgent(repositories, {
+          agentSettings: { documentsRagMode: DocumentsRagMode.Tags },
+        })
+      const initialAgent = await repositories.agentRepository.findOne({
+        where: { id: agent.id },
+        relations: ["resourceLibraries"],
+      })
+      expect(initialAgent?.resourceLibraries.map((resourceLib) => resourceLib.id)).toEqual([
+        agentResourceLibraries[0]?.id,
+      ])
+
+      const resourceLibrary1 = await createResourceLibraryForProject({
+        repositories,
+        organization,
+        project,
+      })
+      const resourceLibrary2 = await createResourceLibraryForProject({
+        repositories,
+        organization,
+        project,
+      })
+
+      await service.updateAllSettings({
+        connectScope: { organizationId: organization.id, projectId: project.id },
+        agentId: agent.id,
+        fieldsToUpdate: { resourceLibraryIds: [resourceLibrary1.id, resourceLibrary2.id] },
+      })
+
+      const updatedAgent = await repositories.agentRepository.findOne({
+        where: { id: agent.id },
+        relations: ["resourceLibraries"],
+      })
+      expect(updatedAgent?.resourceLibraries.map((resourceLib) => resourceLib.id)).toEqual([
+        resourceLibrary1.id,
+        resourceLibrary2.id,
+      ])
+    })
+
     it("deleteAgent should also delete settings", async () => {
       const { organization, project, agent } = await createAgentWithSettings(setup, repositories)
 

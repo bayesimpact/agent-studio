@@ -69,7 +69,7 @@ import { TesterSessionFeedback } from "./tester-session-feedbacks/tester-session
     ProjectsModule,
     MembershipsModule,
     AgentsModule,
-    AgentSettingsModule,
+    forwardRef(() => AgentSettingsModule),
     forwardRef(() => InvitationsModule),
     UsersModule,
     AuthModule,

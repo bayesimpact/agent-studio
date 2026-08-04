@@ -16,7 +16,7 @@ import { ConversationAgentSessionsService } from "./conversation-agent-sessions.
   imports: [
     TypeOrmModule.forFeature([...moduleFeatures]),
     ...moduleImports,
-    AgentSettingsModule,
+    forwardRef(() => AgentSettingsModule),
     forwardRef(() => StreamingModule),
   ],
   providers: [

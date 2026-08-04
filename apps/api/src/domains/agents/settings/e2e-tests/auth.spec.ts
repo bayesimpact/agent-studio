@@ -62,7 +62,8 @@ describe("Agent Settings - Auth", () => {
       user: { auth0Id },
       organizationMembership: { role: "member" },
       projectMembership: { role },
-      agentMembership: { role: "member" },
+      // The settings endpoints check the agent membership, so it carries the tested role too.
+      agentMembership: { role },
     })
     organizationId = organization.id
     projectId = project.id
@@ -121,6 +122,103 @@ describe("Agent Settings - Auth", () => {
     })
   })
 
+  describe("AgentSettingsRoutes.updateOne", () => {
+    const subject = async () =>
+      request({
+        route: AgentSettingsRoutes.updateOne,
+        pathParams: removeNullish({ organizationId, projectId, agentId }),
+        token: accessToken ?? undefined,
+        request: { payload: { instructions: "New instructions" } },
+      })
+
+    it("requires an authentication token", async () => {
+      accessToken = null
+      expectResponse(await subject(), 401, AUTH_ERRORS.NO_ACCESS_TOKEN)
+    })
+    it("requires a valid organization ID", async () => {
+      await createContextForRole("owner")
+      organizationId = null
+      expectResponse(await subject(), 400, AUTH_ERRORS.NO_ORGANIZATION_ID)
+    })
+    it("requires a valid project ID", async () => {
+      await createContextForRole("owner")
+      projectId = randomUUID()
+      expectResponse(await subject(), 404)
+    })
+    it("requires a valid agent ID", async () => {
+      await createContextForRole("owner")
+      agentId = randomUUID()
+      expectResponse(await subject(), 404)
+    })
+    it("requires the user to be a member of the organization", async () => {
+      await createContextForRole("owner")
+      auth0Id = mockForeignAuth0Id()
+      expectResponse(await subject(), 401, AUTH_ERRORS.NOT_MEMBER_OF_ORG)
+    })
+    it("requires the agent to be part of the project", async () => {
+      const { organization } = await createContextForRole("owner")
+      const project2 = await repositories.projectRepository.save(
+        projectFactory.transient({ organization }).build(),
+      )
+      projectId = project2.id
+      expectResponse(await subject(), 404) //exception thrown by guard
+    })
+    it("doesn't allow a simple member to update the settings", async () => {
+      await createContextForRole("member")
+      expectResponse(await subject(), 403, AUTH_ERRORS.UNAUTHORIZED_RESOURCE)
+    })
+  })
+
+  describe("AgentSettingsRoutes.getFillFormOutputJsonSchema", () => {
+    const subject = async () =>
+      request({
+        route: AgentSettingsRoutes.getFillFormOutputJsonSchema,
+        pathParams: removeNullish({ organizationId, projectId, agentId, revision: "1" }),
+        token: accessToken ?? undefined,
+      })
+
+    it("requires an authentication token", async () => {
+      accessToken = null
+      expectResponse(await subject(), 401, AUTH_ERRORS.NO_ACCESS_TOKEN)
+    })
+    it("requires a valid organization ID", async () => {
+      await createContextForRole("owner")
+      organizationId = null
+      expectResponse(await subject(), 400, AUTH_ERRORS.NO_ORGANIZATION_ID)
+    })
+    it("requires a valid project ID", async () => {
+      await createContextForRole("owner")
+      projectId = randomUUID()
+      expectResponse(await subject(), 404)
+    })
+    it("requires a valid agent ID", async () => {
+      await createContextForRole("owner")
+      agentId = randomUUID()
+      expectResponse(await subject(), 404)
+    })
+    it("requires the user to be a member of the organization", async () => {
+      await createContextForRole("owner")
+      auth0Id = mockForeignAuth0Id()
+      expectResponse(await subject(), 401, AUTH_ERRORS.NOT_MEMBER_OF_ORG)
+    })
+    it("requires the agent to be part of the project", async () => {
+      const { organization } = await createContextForRole("owner")
+      const project2 = await repositories.projectRepository.save(
+        projectFactory.transient({ organization }).build(),
+      )
+      projectId = project2.id
+      expectResponse(await subject(), 404) //exception thrown by guard
+    })
+    it("allows a simple member to read the form schema, as the session side needs it", async () => {
+      await createContextForRole("member")
+      expectResponse(await subject(), 200)
+    })
+    it("allows an owner to read the form schema of a revision", async () => {
+      await createContextForRole("owner")
+      expectResponse(await subject(), 200)
+    })
+  })
+
   describe("AgentSettingsRoutes.restoreOne", () => {
     const subject = async () =>
       request({
@@ -168,10 +266,10 @@ describe("Agent Settings - Auth", () => {
     })
   })
 
-  describe("AgentSettingsRoutes.publishOne", () => {
+  describe("AgentSettingsRoutes.createOne", () => {
     const subject = async () =>
       request({
-        route: AgentSettingsRoutes.publishOne,
+        route: AgentSettingsRoutes.createOne,
         pathParams: removeNullish({ organizationId, projectId, agentId, revision: "1" }),
         token: accessToken ?? undefined,
         request: { payload: { revisionName: "A name", revisionDesc: "A description" } },
@@ -209,7 +307,7 @@ describe("Agent Settings - Auth", () => {
       projectId = project2.id
       expectResponse(await subject(), 404) //exception thrown by guard
     })
-    it("doesn't allow a simple member to publish a revision", async () => {
+    it("doesn't allow a simple member to publish a new revision", async () => {
       await createContextForRole("member")
       expectResponse(await subject(), 403, AUTH_ERRORS.UNAUTHORIZED_RESOURCE)
     })

@@ -4,6 +4,7 @@ import {
   conversationAgentSessionFactory,
   extractionAgentSessionSummaryFactory,
 } from "@/common/features/agents/agent-sessions/agent-session.factory"
+import { agentSettingsFactory } from "@/common/features/agents/agent-settings/agent-settings.factory"
 import type { Agent } from "@/common/features/agents/agents.models"
 import { buildDecorator, render } from "@/stories/decorators"
 import { sortRecentlyCreated } from "@/stories/helpers"
@@ -61,14 +62,21 @@ export const Default: Story = {
       const { baseSeeds, project, agents } = buildStudioData(args)
       const [firstAgent, ...restAgents] = agents
       const withFillForm = agentType === "conversation" && !!fillForm
-      const currentAgent = (withFillForm ? agentFactory.fillForm() : agentFactory)
-        .transient({ project })
-        .build({
-          ...firstAgent,
-          type: agentType,
-          fillFormEnabled: withFillForm,
-          isDraft: !!withDraft,
-        })
+      const currentAgent = agentFactory.transient({ project }).build({
+        ...firstAgent,
+        type: agentType,
+        currentRevision: { number: 1 },
+        // An unpublished draft revision is newer than the published one.
+        draftRevision: withDraft ? { number: 2 } : undefined,
+      })
+      const currentAgentSettings = (
+        withFillForm ? agentSettingsFactory.fillForm() : agentSettingsFactory
+      )
+        .transient({ agent: currentAgent })
+        .build({ revision: currentAgent.currentRevision.number })
+      const draftAgentSettings = currentAgent.draftRevision
+        ? { ...currentAgentSettings, revision: currentAgent.draftRevision.number, isDraft: true }
+        : undefined
 
       const conversationSessionFactory = conversationAgentSessionFactory.transient({
         agent: currentAgent,
@@ -95,6 +103,12 @@ export const Default: Story = {
           seed.conversationAgentSessions({ [currentAgent.id]: conversationSessions }),
           seed.extractionAgentSessions({
             [currentAgent.id]: { csvSessions: [], others: extractionSessions },
+          }),
+          seed.studio.agentHistory({
+            agentId: currentAgent.id,
+            versions: draftAgentSettings
+              ? [draftAgentSettings, currentAgentSettings]
+              : [currentAgentSettings],
           }),
         ),
       }

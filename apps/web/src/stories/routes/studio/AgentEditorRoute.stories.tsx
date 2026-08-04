@@ -63,6 +63,9 @@ function buildMockAgentsService(agents: Agent[]): IAgentsSpi {
 function buildMockAgentSettingsService(agentSettingsHistory: AgentSettings[]): IAgentSettingsSpi {
   return {
     getAll: async () => agentSettingsHistory,
+    getFillFormOutputJsonSchema: async ({ revision }) =>
+      agentSettingsHistory.find((agentSettings) => agentSettings.revision === revision)
+        ?.outputJsonSchema,
     updateOne: async () => {
       throw new Error("updateOne is not supported in this story")
     },

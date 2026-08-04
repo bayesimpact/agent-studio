@@ -1,7 +1,9 @@
 import { AgentLocale, AgentModel, DocumentsRagMode } from "@caseai-connect/api-contracts"
-import type { AgentSettingsUpdateFields } from "./agent.settings.types"
+import type { AgentSettingsCreateFields, AgentSettingsUpdateFields } from "./agent.settings.types"
 
-export const agentSettingsValuesRev1: AgentSettingsUpdateFields = {
+// Typed as create fields so the required settings (instructions, model, …) stay non-optional and
+// the fixtures can be spread into `createAgent` payloads.
+export const agentSettingsValuesRev1: AgentSettingsCreateFields = {
   instructions: "This is a default prompt 1",
   model: AgentModel.Gemini25Flash,
   temperature: 0,
@@ -15,7 +17,7 @@ export const agentSettingsValuesRev1: AgentSettingsUpdateFields = {
   },
   fillFormEnabled: false,
 }
-export const agentSettingsValuesRev2Archived: AgentSettingsUpdateFields = {
+export const agentSettingsValuesRev2Archived: AgentSettingsCreateFields = {
   instructions: "This is a default prompt 2",
   model: AgentModel.Gemma4_26B,
   temperature: 1,
@@ -29,7 +31,7 @@ export const agentSettingsValuesRev2Archived: AgentSettingsUpdateFields = {
   },
   fillFormEnabled: false,
 }
-export const agentSettingsValuesRev3Draft: AgentSettingsUpdateFields = {
+export const agentSettingsValuesRev3Draft: AgentSettingsCreateFields = {
   instructions: "This is a default prompt 3",
   model: AgentModel._Mock,
   temperature: 1,

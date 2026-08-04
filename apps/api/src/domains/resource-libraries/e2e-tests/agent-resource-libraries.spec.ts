@@ -1,6 +1,7 @@
 import {
   AgentLocale,
   AgentModel,
+  AgentSettingsRoutes,
   AgentsRoutes,
   DocumentsRagMode,
 } from "@caseai-connect/api-contracts"
@@ -90,15 +91,15 @@ describe("Agents - resource library selection", () => {
       token: accessToken,
       request: payload,
     })
-  const updateAgent = async ({
+  const updateAgentSettings = async ({
     agentId,
     payload,
   }: {
     agentId: string
-    payload: typeof AgentsRoutes.updateOne.request
+    payload: typeof AgentSettingsRoutes.updateOne.request
   }) =>
     request({
-      route: AgentsRoutes.updateOne,
+      route: AgentSettingsRoutes.updateOne,
       pathParams: removeNullish({ organizationId, projectId, agentId }),
       token: accessToken,
       request: payload,
@@ -155,16 +156,10 @@ describe("Agents - resource library selection", () => {
       project,
     })
 
-    const response = await updateAgent({
+    const response = await updateAgentSettings({
       agentId: agent.id,
       payload: {
-        payload: {
-          ...baseAgentPayload,
-          documentTagIds: [],
-          tagsToAdd: [] as string[],
-          tagsToRemove: [] as string[],
-          resourceLibraryIds: [resourceLibrary1.id, resourceLibrary2.id],
-        },
+        payload: { resourceLibraryIds: [resourceLibrary1.id, resourceLibrary2.id] },
       },
     })
 

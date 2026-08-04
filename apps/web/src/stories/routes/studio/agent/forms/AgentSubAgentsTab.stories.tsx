@@ -1,4 +1,3 @@
-import { DocumentsRagMode } from "@caseai-connect/api-contracts"
 import type { Meta, StoryObj } from "@storybook/react-vite"
 import { useState } from "react"
 import { agentFactory } from "@/common/features/agents/agent.factory"
@@ -6,43 +5,36 @@ import { organizationFactory } from "@/common/features/organizations/organizatio
 import { projectFactory } from "@/common/features/projects/projects.factory"
 import {
   type AgentSubAgentFormValue,
-  AgentSubAgentsTab,
+  SubAgentsTab,
 } from "@/studio/features/agents/agent-settings/components/tabs/SubAgentsTab"
 
 const organization = organizationFactory.build()
 const project = projectFactory.transient({ organization }).build()
 
+// The tab only lists the agents by name and type, so their settings are irrelevant here.
 const masterAgent = agentFactory.transient({ project }).build({
   type: "conversation",
   name: "Workspace Copilot",
-  documentsRagMode: DocumentsRagMode.All,
 })
 
 const resourceAgent = agentFactory.transient({ project }).build({
   type: "conversation",
   name: "Resource Navigator",
-  instructions: "Find relevant services, contacts, and eligibility details.",
-  documentsRagMode: DocumentsRagMode.None,
 })
 
 const policyAgent = agentFactory.transient({ project }).build({
   type: "conversation",
   name: "Policy Analyst",
-  instructions: "Interpret policy documents and summarize operational constraints.",
-  documentsRagMode: DocumentsRagMode.Tags,
 })
 
-// A conversation agent with the fillForm tool enabled — still a valid sub-agent candidate.
-const intakeAgent = agentFactory.fillForm().transient({ project }).build({
+const intakeAgent = agentFactory.transient({ project }).build({
+  type: "conversation",
   name: "Intake Assistant",
-  documentsRagMode: DocumentsRagMode.None,
 })
 
 const draftingAgent = agentFactory.transient({ project }).build({
   type: "conversation",
   name: "Drafting Assistant",
-  instructions: "Prepare concise drafts from approved context and prior decisions.",
-  documentsRagMode: DocumentsRagMode.None,
 })
 
 const agents = [masterAgent, resourceAgent, policyAgent, intakeAgent, draftingAgent]
@@ -55,7 +47,7 @@ function StatefulStory({ value: initialValue }: StoryArgs) {
   const [value, setValue] = useState(initialValue)
   return (
     <div className="mx-auto max-w-5xl p-6">
-      <AgentSubAgentsTab
+      <SubAgentsTab
         parentAgentId={masterAgent.id}
         agents={agents}
         value={value}

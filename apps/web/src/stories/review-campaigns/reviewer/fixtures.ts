@@ -3,7 +3,7 @@ import type {
   ListMyReviewCampaignsResponseDto,
   ReviewerSessionFullDto,
 } from "@caseai-connect/api-contracts"
-import { agentOutputJsonSchemaFactory } from "@/common/features/agents/agent.factory"
+import { agentOutputJsonSchemaFactory } from "@/common/features/agents/agent-settings/agent-settings.factory"
 import {
   reviewerAgentSnapshotFactory,
   reviewerSessionBlindFactory,

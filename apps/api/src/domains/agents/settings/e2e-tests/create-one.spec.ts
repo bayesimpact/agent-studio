@@ -1,4 +1,4 @@
-import { type AgentDto, AgentSettingsRoutes } from "@caseai-connect/api-contracts"
+import { AgentSettingsRoutes } from "@caseai-connect/api-contracts"
 import { afterAll } from "@jest/globals"
 import type { INestApplication } from "@nestjs/common"
 import type { App } from "supertest/types"
@@ -23,7 +23,7 @@ import { setupUserGuardForTesting } from "../../../../../test/e2e.helpers"
 import { expectResponse, type Requester, testRequester } from "../../../../../test/request"
 import { AgentsModule } from "../../agents.module"
 
-describe("Agent Settings - publishOne", () => {
+describe("Agent Settings - createOne", () => {
   let app: INestApplication<App>
   let request: Requester
   let setup: Awaited<ReturnType<typeof setupE2eTestDatabase>>
@@ -86,15 +86,15 @@ describe("Agent Settings - publishOne", () => {
     return { organization, project, agent, user }
   }
 
-  const subject = async (payload?: typeof AgentSettingsRoutes.publishOne.request) =>
+  const subject = async (payload?: typeof AgentSettingsRoutes.createOne.request) =>
     request({
-      route: AgentSettingsRoutes.publishOne,
+      route: AgentSettingsRoutes.createOne,
       pathParams: removeNullish({ organizationId, projectId, agentId, revision }),
       token: accessToken,
       request: payload,
     })
 
-  it("should publish a revision - draft", async () => {
+  it("should publish a revision as a new settings version - draft", async () => {
     await createContext()
 
     const initialAgentSettings = await repositories.agentSettingsRepository.findOne({
@@ -112,12 +112,7 @@ describe("Agent Settings - publishOne", () => {
       },
     })
     expectResponse(response, 201)
-    expect(response.body).toBeDefined()
-    const agent: AgentDto = response.body.data
-    expect(agent.id).toBe(agentId)
-    expect(agent.currentRevision.number).toBe(3)
-    expect(agent.currentRevision.name).toBe("revisionName")
-    expect(agent.currentRevision.description).toBe("revisionDesc")
+    expect(response.body).toEqual({ data: { success: true } })
 
     const updatedAgentSettings = await repositories.agentSettingsRepository.findOne({
       where: { agentId, revision: 3 },
@@ -125,7 +120,7 @@ describe("Agent Settings - publishOne", () => {
     expect(updatedAgentSettings?.isDraft).toBeFalsy()
     expect(updatedAgentSettings?.revisionName).toBe("revisionName")
     expect(updatedAgentSettings?.revisionDesc).toBe("revisionDesc")
-    await expectActivityCreated("agentSettings.publish")
+    await expectActivityCreated("agentSettings.create")
   })
   it("should updated a published revision - not draft", async () => {
     await createContext()
@@ -145,12 +140,7 @@ describe("Agent Settings - publishOne", () => {
       },
     })
     expectResponse(response, 201)
-    expect(response.body).toBeDefined()
-    const agent: AgentDto = response.body.data
-    expect(agent.id).toBe(agentId)
-    expect(agent.currentRevision.number).toBe(1)
-    expect(agent.currentRevision.name).toBe("revisionName")
-    expect(agent.currentRevision.description).toBe("revisionDesc")
+    expect(response.body).toEqual({ data: { success: true } })
 
     const updatedAgentSettings = await repositories.agentSettingsRepository.findOne({
       where: { agentId, revision: 1 },
@@ -158,7 +148,7 @@ describe("Agent Settings - publishOne", () => {
     expect(updatedAgentSettings?.isDraft).toBeFalsy()
     expect(updatedAgentSettings?.revisionName).toBe("revisionName")
     expect(updatedAgentSettings?.revisionDesc).toBe("revisionDesc")
-    await expectActivityCreated("agentSettings.publish")
+    await expectActivityCreated("agentSettings.create")
   })
   it("should fail with an archived revision - archived", async () => {
     await createContext()

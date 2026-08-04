@@ -1,4 +1,3 @@
-import { AgentLocale, AgentModel, DocumentsRagMode } from "@caseai-connect/api-contracts"
 import type { Meta, StoryObj } from "@storybook/react-vite"
 import { withRouter } from "storybook-addon-remix-react-router"
 import { agentFactory } from "@/common/features/agents/agent.factory"
@@ -7,6 +6,7 @@ import {
   conversationAgentSessionFactory,
 } from "@/common/features/agents/agent-sessions/agent-session.factory"
 import { TesterAgentSessionContent } from "@/tester/features/review-campaigns/components/TesterAgentSession"
+import { testerAgentSnapshotFactory } from "@/tester/features/review-campaigns/tester.factory"
 import { withRedux } from "../../decorators"
 import { mergeSeeds, seed } from "../../seed"
 import { mockProject } from "../fixtures"
@@ -17,19 +17,28 @@ const mockConversationAgent = agentFactory.transient({ project: mockProject }).b
   id: "agent-1",
   name: "Helpful Assistant",
   type: "conversation",
-  instructions: "You are a helpful assistant.",
+})
+
+// The session view only gets a snapshot of the agent and of its published settings.
+const mockConversationAgentSnapshot = testerAgentSnapshotFactory.build({
+  id: mockConversationAgent.id,
+  name: mockConversationAgent.name,
+  type: "conversation",
   greetingMessage: "Hi! Ask me anything about your account.",
-  locale: AgentLocale.EN,
-  model: AgentModel.Gemini25Flash,
-  temperature: 0.5,
-  documentsRagMode: DocumentsRagMode.All,
+})
+
+const mockFillFormAgent = agentFactory.transient({ project: mockProject }).build({
+  id: "agent-2",
+  name: "Intake Assistant",
+  type: "conversation",
 })
 
 // A conversation agent with the fillForm tool enabled — the session view shows the form panel.
-const mockFillFormAgent = agentFactory.transient({ project: mockProject }).build({
-  ...mockConversationAgent,
-  id: "agent-2",
-  name: "Intake Assistant",
+const mockFillFormAgentSnapshot = testerAgentSnapshotFactory.build({
+  id: mockFillFormAgent.id,
+  name: mockFillFormAgent.name,
+  type: "conversation",
+  greetingMessage: "Hi! Ask me anything about your account.",
   fillFormEnabled: true,
   outputJsonSchema: {
     type: "object",
@@ -113,7 +122,7 @@ type Story = StoryObj<typeof meta>
 export const ConversationWithMessages: Story = {
   args: {
     ...baseStoryArgs,
-    agent: mockConversationAgent,
+    agent: mockConversationAgentSnapshot,
     agentSession: mockConversationSession,
     messages: mockMessages,
   },
@@ -122,7 +131,7 @@ export const ConversationWithMessages: Story = {
 export const ConversationEmpty: Story = {
   args: {
     ...baseStoryArgs,
-    agent: mockConversationAgent,
+    agent: mockConversationAgentSnapshot,
     agentSession: mockConversationSession,
     messages: [],
   },
@@ -131,7 +140,7 @@ export const ConversationEmpty: Story = {
 export const FillFormSessionWithResult: Story = {
   args: {
     ...baseStoryArgs,
-    agent: mockFillFormAgent,
+    agent: mockFillFormAgentSnapshot,
     agentSession: mockFillFormSession,
     messages: mockMessages,
   },
