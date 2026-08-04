@@ -1,20 +1,34 @@
 import type { RequestPayload, ResponseData, SuccessResponseDTO } from "../../generic"
 import { defineRoute } from "../../helpers"
-import type { AgentDto, PublishAgentDto } from "../agents.dto"
-import type { AgentSettingsDto } from "./agent-settings.dto"
+import type {
+  AgentSettingsDto,
+  CreateAgentSettingsDto,
+  PartialUpdateAgentSettingsDto,
+} from "./agent-settings.dto"
 
 export const AgentSettingsRoutes = {
   getAll: defineRoute<ResponseData<AgentSettingsDto[]>>({
     method: "get",
     path: "organizations/:organizationId/projects/:projectId/agents/:agentId/settings",
   }),
+  getFillFormOutputJsonSchema: defineRoute<ResponseData<AgentSettingsDto["outputJsonSchema"]>>({
+    method: "get",
+    path: "organizations/:organizationId/projects/:projectId/agents/:agentId/settings/:revision/output-json-schema",
+  }),
+  updateOne: defineRoute<
+    ResponseData<SuccessResponseDTO>,
+    RequestPayload<PartialUpdateAgentSettingsDto>
+  >({
+    method: "patch",
+    path: "organizations/:organizationId/projects/:projectId/agents/:agentId/update-settings",
+  }),
   restoreOne: defineRoute<ResponseData<SuccessResponseDTO>>({
     method: "post",
     path: "organizations/:organizationId/projects/:projectId/agents/:agentId/settings/:revision/restore",
   }),
-  publishOne: defineRoute<ResponseData<AgentDto>, RequestPayload<PublishAgentDto>>({
+  createOne: defineRoute<ResponseData<SuccessResponseDTO>, RequestPayload<CreateAgentSettingsDto>>({
     method: "post",
-    path: "organizations/:organizationId/projects/:projectId/agents/:agentId/settings/:revision/publishOne",
+    path: "organizations/:organizationId/projects/:projectId/agents/:agentId/settings/:revision/createOne",
   }),
   archiveOne: defineRoute<ResponseData<SuccessResponseDTO>>({
     method: "post",

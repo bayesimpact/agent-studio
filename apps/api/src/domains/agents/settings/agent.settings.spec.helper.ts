@@ -1,7 +1,7 @@
 import { AgentLocale, AgentModel, DocumentsRagMode } from "@caseai-connect/api-contracts"
-import type { AgentSettingsValues } from "@/domains/agents/settings/agent-settings.service"
+import type { AgentSettingsUpdateFields } from "./agent.settings.types"
 
-export const agentSettingsValuesRev1: AgentSettingsValues = {
+export const agentSettingsValuesRev1: AgentSettingsUpdateFields = {
   instructions: "This is a default prompt 1",
   model: AgentModel.Gemini25Flash,
   temperature: 0,
@@ -15,7 +15,7 @@ export const agentSettingsValuesRev1: AgentSettingsValues = {
   },
   fillFormEnabled: false,
 }
-export const agentSettingsValuesRev2Archived: AgentSettingsValues = {
+export const agentSettingsValuesRev2Archived: AgentSettingsUpdateFields = {
   instructions: "This is a default prompt 2",
   model: AgentModel.Gemma4_26B,
   temperature: 1,
@@ -29,7 +29,7 @@ export const agentSettingsValuesRev2Archived: AgentSettingsValues = {
   },
   fillFormEnabled: false,
 }
-export const agentSettingsValuesRev3Draft: AgentSettingsValues = {
+export const agentSettingsValuesRev3Draft: AgentSettingsUpdateFields = {
   instructions: "This is a default prompt 3",
   model: AgentModel._Mock,
   temperature: 1,
@@ -44,7 +44,7 @@ export const agentSettingsValuesRev3Draft: AgentSettingsValues = {
   fillFormEnabled: false,
 }
 
-export function assertOnSettings(expected: object, value: AgentSettingsValues | undefined) {
+export function assertOnSettings(expected: object, value: AgentSettingsUpdateFields | undefined) {
   expect(value).toBeDefined()
   if (value) {
     // biome-ignore lint/complexity/useLiteralKeys: test usage

@@ -7,7 +7,7 @@ import { projectFactory } from "@/common/features/projects/projects.factory"
 import {
   type AgentSubAgentFormValue,
   AgentSubAgentsTab,
-} from "@/studio/features/agents/components/AgentSubAgentsTab"
+} from "@/studio/features/agents/agent-settings/components/tabs/SubAgentsTab"
 
 const organization = organizationFactory.build()
 const project = projectFactory.transient({ organization }).build()

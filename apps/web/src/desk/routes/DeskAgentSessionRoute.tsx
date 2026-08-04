@@ -2,12 +2,14 @@ import { useTranslation } from "react-i18next"
 import { useNavigate } from "react-router-dom"
 import { GridHeader } from "@/common/components/grid/Grid"
 import type { ConversationAgentSession } from "@/common/features/agents/agent-sessions/conversation/conversation-agent-sessions.models"
+import { selectFillFormOutputJsonSchema } from "@/common/features/agents/agent-sessions/conversation/conversation-agent-sessions.selectors"
 import { selectCurrentMessagesData } from "@/common/features/agents/agent-sessions/shared/agent-session-messages/agent-session-messages.selectors"
 import { AgentSessionMessages } from "@/common/features/agents/agent-sessions/shared/agent-session-messages/components/AgentSessionMessages"
 import { selectCurrentAgentData } from "@/common/features/agents/agents.selectors"
 import { getAgentIcon } from "@/common/features/agents/components/AgentIcon"
 import { useGetAgentRoute } from "@/common/hooks/use-get-path"
 import { useValue } from "@/common/hooks/use-value"
+import { useAppSelector } from "@/common/store/hooks"
 import { buildSince } from "@/common/utils/build-date"
 import { AgentSessionActions } from "@/studio/features/agents/components/AgentSessionActions"
 
@@ -16,6 +18,7 @@ type AgentSession = ConversationAgentSession
 export function DeskAgentSessionRoute({ agentSession }: { agentSession: AgentSession }) {
   const agent = useValue(selectCurrentAgentData)
   const messages = useValue(selectCurrentMessagesData)
+  const fillFormOutputJsonSchema = useAppSelector(selectFillFormOutputJsonSchema)
 
   const { t } = useTranslation()
   const navigate = useNavigate()
@@ -46,7 +49,7 @@ export function DeskAgentSessionRoute({ agentSession }: { agentSession: AgentSes
         <AgentSessionMessages
           session={agentSession}
           messages={messages}
-          formResultSchema={agent.fillFormEnabled ? agent.outputJsonSchema : undefined}
+          formResultSchema={fillFormOutputJsonSchema.value ?? undefined}
         />
       </div>
     </div>

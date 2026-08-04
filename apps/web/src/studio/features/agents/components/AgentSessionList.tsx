@@ -19,6 +19,7 @@ import type {
   ExtractionAgentSessions,
 } from "@/common/features/agents/agent-sessions/extraction/extraction-agent-sessions.models"
 import { selectCurrentExtractionAgentSessionsData } from "@/common/features/agents/agent-sessions/extraction/extraction-agent-sessions.selectors"
+import { selectAgentSettingsDataByAgentId } from "@/common/features/agents/agent-settings/agent-settings.selectors"
 import {
   selectCurrentAgentData,
   selectCurrentAgentId,
@@ -77,6 +78,9 @@ export function ConversationAgentSessionList() {
 
 export function ExtractionAgentSessionList() {
   const agent = useValue(selectCurrentAgentData)
+  const agentSettings = useValue(
+    selectAgentSettingsDataByAgentId({ agentId: agent.id, includeDraft: true }),
+  )
   const agentSessions = useValue(selectCurrentExtractionAgentSessionsData)
   const outlet = useOutlet()
   const { t } = useTranslation()
@@ -114,7 +118,14 @@ export function ExtractionAgentSessionList() {
         </GridCard.Body>
       </GridCard>
 
-      {canManageAgent && <AgentEditor key={agent.id} agent={agent} className="bg-white p-6" />}
+      {canManageAgent && (
+        <AgentEditor
+          key={agent.id}
+          agent={agent}
+          agentSettings={agentSettings}
+          className="bg-white p-6"
+        />
+      )}
     </Grid>
   )
 }

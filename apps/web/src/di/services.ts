@@ -2,6 +2,7 @@ import type { IBackofficeSpi } from "@/backoffice/features/backoffice/backoffice
 import type { IConversationAgentSessionsSpi } from "@/common/features/agents/agent-sessions/conversation/conversation-agent-sessions.spi"
 import type { IExtractionAgentSessionsSpi } from "@/common/features/agents/agent-sessions/extraction/extraction-agent-sessions.spi"
 import type { IAgentSessionMessagesSpi } from "@/common/features/agents/agent-sessions/shared/agent-session-messages/agent-session-messages.spi"
+import type { IAgentSettingsSpi } from "@/common/features/agents/agent-settings/agent-settings.spi"
 import type { IAgentsSpi } from "@/common/features/agents/agents.spi"
 import type { IAgentCsvExtractionRunsSpi } from "@/common/features/agents/csv-extraction-runs/agent-csv-extraction-runs.spi"
 import type { IMeSpi } from "@/common/features/me/me.spi"
@@ -37,6 +38,7 @@ export type Services = {
   agentMessageFeedback: IAgentMessageFeedbackSpi
   agentSubAgents: IAgentSubAgentsSpi
   agents: IAgentsSpi
+  agentSettings: IAgentSettingsSpi
   agentSessionMessages: IAgentSessionMessagesSpi
   backoffice: IBackofficeSpi
   conversationAgentSessions: IConversationAgentSessionsSpi

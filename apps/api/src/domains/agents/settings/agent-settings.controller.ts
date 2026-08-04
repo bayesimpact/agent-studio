@@ -1,4 +1,7 @@
-import { AgentSettingsRoutes } from "@caseai-connect/api-contracts"
+import {
+  AgentSettingsRoutes,
+  partialUpdateAgentSettingsSchema,
+} from "@caseai-connect/api-contracts"
 import type { AgentSettingsDto } from "@caseai-connect/api-contracts/src/agents/settings/agent-settings.dto"
 import {
   Body,
@@ -6,25 +9,24 @@ import {
   Get,
   NotFoundException,
   Param,
+  Patch,
   Post,
   Req,
   UnprocessableEntityException,
   UseGuards,
+  UsePipes,
 } from "@nestjs/common"
 import type { EndpointRequestWithAgent } from "@/common/context/request.interface"
 import { getRequiredConnectScope } from "@/common/context/request-context.helpers"
 import { RequireContext } from "@/common/context/require-context.decorator"
 import { ResourceContextGuard } from "@/common/context/resource-context.guard"
 import { CheckPolicy } from "@/common/policies/check-policy.decorator"
+import { ZodValidationPipe } from "@/common/zod-validation-pipe"
 import { TrackActivity } from "@/domains/activities/track-activity.decorator"
 import { AgentGuard } from "@/domains/agents/agent.guard"
-import { toAgentDto } from "@/domains/agents/agent.mapper"
-// biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
-import { AgentsService } from "@/domains/agents/agents.service"
 import { JwtAuthGuard } from "@/domains/auth/jwt-auth.guard"
 import { UserGuard } from "@/domains/users/user.guard"
 import type { Agent } from "../agent.entity"
-import { extractAgentSettingsUpdateFields } from "./agent.settings.functions"
 import type { AgentSettings } from "./agent-settings.entity"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
 import { AgentSettingsService } from "./agent-settings.service"
@@ -33,10 +35,7 @@ import { AgentSettingsService } from "./agent-settings.service"
 @RequireContext("organization", "project", "agent")
 @Controller()
 export class AgentSettingsController {
-  constructor(
-    private readonly agentsService: AgentsService,
-    private readonly agentSettingsService: AgentSettingsService,
-  ) {}
+  constructor(private readonly agentSettingsService: AgentSettingsService) {}
 
   // History timeline of all revisions for the agent settings, including drafts and published revisions.
   @Get(AgentSettingsRoutes.getAll.path)
@@ -59,6 +58,29 @@ export class AgentSettingsController {
     return { data: await Promise.all(results) }
   }
 
+  // Output JSON schema of a given revision, used to render the fill form on the session side.
+  @Get(AgentSettingsRoutes.getFillFormOutputJsonSchema.path)
+  @CheckPolicy((policy) => policy.canList())
+  async getFillFormOutputJsonSchema(
+    @Req() request: EndpointRequestWithAgent,
+    @Param("revision") revisionParam: string,
+  ): Promise<typeof AgentSettingsRoutes.getFillFormOutputJsonSchema.response> {
+    const revision = parseRevision(revisionParam)
+    const connectScope = getRequiredConnectScope(request)
+    const agentId = request.agent.id
+
+    const agentSettings = await this.agentSettingsService.get({ connectScope, agentId, revision })
+    if (!agentSettings) {
+      throw new NotFoundException(`Revision ${revision} not found for agent with id ${agentId}`)
+    }
+
+    if (!agentSettings.fillFormEnabled) {
+      return { data: undefined }
+    }
+
+    return { data: agentSettings.outputJsonSchema ?? undefined }
+  }
+
   @Post(AgentSettingsRoutes.restoreOne.path)
   @CheckPolicy((policy) => policy.canUpdate())
   @TrackActivity({ action: "agent.update", entityFrom: "agent" })
@@ -66,36 +88,45 @@ export class AgentSettingsController {
     @Req() request: EndpointRequestWithAgent,
     @Param("revision") revisionParam: string,
   ): Promise<typeof AgentSettingsRoutes.restoreOne.response> {
-    const revision = parseRevision(revisionParam)
+    const revision = Number(revisionParam)
+    if (!Number.isInteger(revision) || revision < 1) {
+      throw new UnprocessableEntityException(`Invalid revision "${revisionParam}"`)
+    }
+
+    const agentId = request.agent.id
     const connectScope = getRequiredConnectScope(request)
     const targetSettings = await this.agentSettingsService.get({
       connectScope,
-      agentId: request.agent.id,
+      agentId,
       revision,
     })
     if (!targetSettings) {
-      throw new NotFoundException(
-        `Revision ${revision} not found for agent with id ${request.agent.id}`,
-      )
+      throw new NotFoundException(`Revision ${revision} not found for agent with id ${agentId}`)
     }
 
-    await this.agentsService.updateAgent({
+    const isRestored = await this.agentSettingsService.updateAllSettings({
       connectScope,
-      agentId: request.agent.id,
-      fieldsToUpdate: extractAgentSettingsUpdateFields(targetSettings),
+      agentId,
+      fieldsToUpdate: targetSettings,
     })
+
+    if (!isRestored) {
+      throw new UnprocessableEntityException(
+        `Unable to restore revision ${revision} for agent with id ${agentId}`,
+      )
+    }
 
     return { data: { success: true } }
   }
 
-  @Post(AgentSettingsRoutes.publishOne.path)
+  @Post(AgentSettingsRoutes.createOne.path)
   @CheckPolicy((policy) => policy.canUpdate())
-  @TrackActivity({ action: "agentSettings.publish", entityFrom: "agentSettings" })
-  async publishOne(
+  @TrackActivity({ action: "agentSettings.create", entityFrom: "agentSettings" })
+  async createOne(
     @Req() request: EndpointRequestWithAgent,
-    @Body() { payload }: typeof AgentSettingsRoutes.publishOne.request,
+    @Body() { payload }: typeof AgentSettingsRoutes.createOne.request,
     @Param("revision") revisionParam: string,
-  ): Promise<typeof AgentSettingsRoutes.publishOne.response> {
+  ): Promise<typeof AgentSettingsRoutes.createOne.response> {
     const revision = parseRevision(revisionParam)
     const connectScope = getRequiredConnectScope(request)
     const targetSettings = await this.agentSettingsService.get({
@@ -121,7 +152,32 @@ export class AgentSettingsController {
         `Unable to publish revision ${revision} for agent with id ${request.agent.id}`,
       )
     }
-    return { data: toAgentDto({ agent: request.agent, agentSettings: updated }) }
+    return { data: { success: true } }
+  }
+
+  @Patch(AgentSettingsRoutes.updateOne.path)
+  @CheckPolicy((policy) => policy.canUpdate())
+  @TrackActivity({ action: "agentSettings.update", entityFrom: "agentSettings" })
+  @UsePipes(new ZodValidationPipe(partialUpdateAgentSettingsSchema))
+  async updateOne(
+    @Req() request: EndpointRequestWithAgent,
+    @Body() { payload }: typeof AgentSettingsRoutes.updateOne.request,
+  ): Promise<typeof AgentSettingsRoutes.updateOne.response> {
+    const connectScope = getRequiredConnectScope(request)
+    const agentId = request.agent.id
+
+    const updated = await this.agentSettingsService.updateAllSettings({
+      connectScope,
+      agentId,
+      fieldsToUpdate: payload,
+    })
+    if (!updated) {
+      throw new UnprocessableEntityException(
+        `Unable to update agent settings for agent with id ${request.agent.id}`,
+      )
+    }
+
+    return { data: { success: true } }
   }
 
   @Post(AgentSettingsRoutes.archiveOne.path)

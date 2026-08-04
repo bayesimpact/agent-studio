@@ -10,6 +10,7 @@ import {
 import { ExternalLinkIcon, InfoIcon } from "lucide-react"
 import { useMemo } from "react"
 import { useTranslation } from "react-i18next"
+import { selectAgentSettingsDataByAgentId } from "@/common/features/agents/agent-settings/agent-settings.selectors"
 import { selectAgentsData } from "@/common/features/agents/agents.selectors"
 import { selectCurrentOrganizationId } from "@/common/features/organizations/organizations.selectors"
 import { selectCurrentProjectId } from "@/common/features/projects/projects.selectors"
@@ -37,6 +38,8 @@ export function AgentMetadataDialog({
     return agentsData.find((entry) => entry.id === agentId) ?? null
   }, [agentsData, agentId])
 
+  const agentSettings = useValue(selectAgentSettingsDataByAgentId({ agentId: agent?.id ?? "" }))
+
   const studioUrl = StudioRoutes.agent.build({ organizationId, projectId, agentId })
   const canAccessStudio = abilities.canAccessStudio({ projectId })
 
@@ -53,7 +56,7 @@ export function AgentMetadataDialog({
           <DialogTitle>{t("evaluationExtractionRun:agentMetadata.title")}</DialogTitle>
         </DialogHeader>
 
-        {!agent ? (
+        {!agent || !agentSettings ? (
           <p className="text-sm text-muted-foreground">
             {t("evaluationExtractionRun:agentMetadata.notFound")}
           </p>
@@ -63,20 +66,20 @@ export function AgentMetadataDialog({
               <MetadataField label={t("evaluationExtractionRun:agent")} value={agent.name} />
               <MetadataField
                 label={t("evaluationExtractionRun:agentMetadata.model")}
-                value={agent.model}
+                value={agentSettings.model}
                 mono
               />
               <MetadataField
                 label={t("evaluationExtractionRun:agentMetadata.temperature")}
-                value={String(agent.temperature)}
+                value={String(agentSettings.temperature)}
               />
               <MetadataField
                 label={t("evaluationExtractionRun:agentMetadata.locale")}
-                value={agent.locale}
+                value={agentSettings.locale}
               />
               <MetadataField
                 label={t("evaluationExtractionRun:agentMetadata.documentsRagMode")}
-                value={agent.documentsRagMode}
+                value={agentSettings.documentsRagMode}
               />
             </div>
 
@@ -85,17 +88,17 @@ export function AgentMetadataDialog({
                 {t("evaluationExtractionRun:agentMetadata.prompt")}
               </span>
               <pre className="overflow-auto max-h-48 rounded-lg border bg-muted/50 p-3 text-sm font-mono whitespace-pre-wrap">
-                {agent.instructions}
+                {agentSettings.instructions}
               </pre>
             </div>
 
-            {agent.outputJsonSchema && (
+            {agentSettings.outputJsonSchema && (
               <div className="flex flex-col gap-1.5">
                 <span className="text-sm font-medium">
                   {t("evaluationExtractionRun:agentMetadata.outputSchema")}
                 </span>
                 <pre className="overflow-auto max-h-48 rounded-lg border bg-muted/50 p-3 text-sm font-mono whitespace-pre-wrap">
-                  {JSON.stringify(agent.outputJsonSchema, null, 2)}
+                  {JSON.stringify(agentSettings.outputJsonSchema, null, 2)}
                 </pre>
               </div>
             )}

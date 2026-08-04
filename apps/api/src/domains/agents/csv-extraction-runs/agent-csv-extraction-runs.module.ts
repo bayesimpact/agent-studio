@@ -6,7 +6,7 @@ import { OrganizationContextResolver } from "@/common/context/resolvers/organiza
 import { ProjectContextResolver } from "@/common/context/resolvers/project-context.resolver"
 import { ResourceContextGuard } from "@/common/context/resource-context.guard"
 import { AgentSettings } from "@/domains/agents/settings/agent-settings.entity"
-import { AgentSettingsService } from "@/domains/agents/settings/agent-settings.service"
+import { AgentSettingsModule } from "@/domains/agents/settings/agent-settings.module"
 import { AuthModule } from "@/domains/auth/auth.module"
 import { DocumentsModule } from "@/domains/documents/documents.module"
 import { StorageModule } from "@/domains/documents/storage/storage.module"
@@ -37,6 +37,7 @@ import { AgentCsvExtractionRunsService } from "./agent-csv-extraction-runs.servi
       Project,
     ]),
     AgentCsvExtractionRunBatchModule,
+    AgentSettingsModule,
     DocumentsModule,
     StorageModule,
     OrganizationsModule,
@@ -46,7 +47,6 @@ import { AgentCsvExtractionRunsService } from "./agent-csv-extraction-runs.servi
   ],
   providers: [
     AgentContextResolver,
-    AgentSettingsService,
     AgentCsvExtractionRunContextResolver,
     AgentCsvExtractionRunCsvExportService,
     AgentCsvExtractionRunGuard,

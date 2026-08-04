@@ -1,6 +1,6 @@
 import { forwardRef, Module } from "@nestjs/common"
 import { TypeOrmModule } from "@nestjs/typeorm"
-import { AgentSettingsService } from "@/domains/agents/settings/agent-settings.service"
+import { AgentSettingsModule } from "@/domains/agents/settings/agent-settings.module"
 import {
   moduleFeatures,
   moduleImports,
@@ -16,13 +16,13 @@ import { ConversationAgentSessionsService } from "./conversation-agent-sessions.
   imports: [
     TypeOrmModule.forFeature([...moduleFeatures]),
     ...moduleImports,
+    AgentSettingsModule,
     forwardRef(() => StreamingModule),
   ],
   providers: [
     ...moduleProviders,
     AgentMessageAttachmentDocumentsService,
     ConversationAgentSessionsService,
-    AgentSettingsService,
   ],
   controllers: [AgentMessagesController, ConversationAgentSessionsController],
   exports: [ConversationAgentSessionsService],

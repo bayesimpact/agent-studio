@@ -2,8 +2,8 @@ import {
   type AgentSubAgentDto,
   AgentSubAgentsRoutes,
   AgentsRoutes,
+  agentValidationSchema,
   createAgentSchema,
-  partialUpdateAgentSchema,
   replaceAgentSubAgentsSchema,
 } from "@caseai-connect/api-contracts"
 import {
@@ -122,29 +122,41 @@ export class AgentsController {
     return { data: results }
   }
 
+  // NOTE: update agent name only
   @Patch(AgentsRoutes.updateOne.path)
   @CheckPolicy((policy) => policy.canUpdate())
   @AddContext("agent")
   @TrackActivity({ action: "agent.update", entityFrom: "agent" })
-  @UsePipes(new ZodValidationPipe(partialUpdateAgentSchema))
+  @UsePipes(new ZodValidationPipe(agentValidationSchema.pick({ name: true })))
   async updateOne(
     @Req() request: EndpointRequestWithAgent,
-    @Body() { payload }: typeof AgentsRoutes.updateOne.request,
+    @Body() { payload: { name } }: typeof AgentsRoutes.updateOne.request,
   ): Promise<typeof AgentsRoutes.updateOne.response> {
     const agentId = request.agent.id
+    const connectScope = getRequiredConnectScope(request)
 
-    const agent = await this.agentsService.updateAgent({
-      connectScope: getRequiredConnectScope(request),
-      agentId,
-      fieldsToUpdate: payload,
-    })
+    const isUpdated = await this.agentsService.updateAgentName({ connectScope, agentId, name })
 
-    if (!agent) {
+    if (!isUpdated) {
       throw new Error("Agent not updated")
     }
     return { data: { success: true } }
   }
 
+  @Delete(AgentsRoutes.deleteOne.path)
+  @CheckPolicy((policy) => policy.canDelete())
+  @AddContext("agent")
+  @TrackActivity({ action: "agent.delete", entityFrom: "agent" })
+  async deleteOne(
+    @Req() request: EndpointRequestWithAgent,
+  ): Promise<typeof AgentsRoutes.deleteOne.response> {
+    await this.agentsService.deleteAgent(request.agent)
+    return { data: { success: true } }
+  }
+
+  //
+  // Sub-agents endpoints
+  //
   @Get(AgentSubAgentsRoutes.getAll.path)
   @CheckPolicy((policy) => policy.canUpdate())
   @AddContext("agent")
@@ -175,17 +187,6 @@ export class AgentsController {
     })
 
     return { data: subAgents.map(toAgentSubAgentDto) }
-  }
-
-  @Delete(AgentsRoutes.deleteOne.path)
-  @CheckPolicy((policy) => policy.canDelete())
-  @AddContext("agent")
-  @TrackActivity({ action: "agent.delete", entityFrom: "agent" })
-  async deleteOne(
-    @Req() request: EndpointRequestWithAgent,
-  ): Promise<typeof AgentsRoutes.deleteOne.response> {
-    await this.agentsService.deleteAgent(request.agent)
-    return { data: { success: true } }
   }
 }
 

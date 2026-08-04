@@ -121,6 +121,42 @@ describe("Agents - createOne", () => {
     await expectActivityCreated("agent.create")
   })
 
+  it("should publish the first revision so the new agent is immediately usable", async () => {
+    await createContext()
+
+    const response = await subject({
+      payload: {
+        type: "conversation",
+        name: "Fresh Agent",
+        instructions: "This is a default prompt",
+        documentsRagMode: DocumentsRagMode.All,
+        model: AgentModel.Gemini25Flash,
+        temperature: 0,
+        locale: AgentLocale.EN,
+        tagsToAdd: [],
+        projectAgentSessionCategoryIds: [],
+      },
+    })
+    expectResponse(response, 201)
+
+    const agentSettings = await setup.getRepository(AgentSettings).findOne({
+      where: { agentId: response.body.data.id, revision: 1 },
+    })
+    expect(agentSettings?.isDraft).toBe(false)
+
+    // Every runtime path resolves the last published revision, so listing the
+    // project agents must not 404 right after creation.
+    const listResponse = await request({
+      route: AgentsRoutes.getAllWithDrafts,
+      pathParams: removeNullish({ organizationId, projectId }),
+      token: accessToken,
+    })
+    expectResponse(listResponse, 200)
+    expect(listResponse.body.data).toHaveLength(1)
+    expect(listResponse.body.data[0]?.currentRevision.number).toBe(1)
+    expect(listResponse.body.data[0]?.draftRevision).toBeUndefined()
+  })
+
   it("should persist greetingMessage when provided", async () => {
     await createContext()
 

@@ -6,7 +6,7 @@ import { organizationFactory } from "@/common/features/organizations/organizatio
 import { projectFactory } from "@/common/features/projects/projects.factory"
 import { withRedux } from "@/stories/decorators"
 import { seed } from "@/stories/seed"
-import { AgentVersionExplorer } from "@/studio/features/agents/components/AgentVersionExplorer"
+import { AgentVersionExplorer } from "@/studio/features/agents/agent-settings/components/AgentSettingsExplorer"
 
 const organization = organizationFactory.build()
 const project = projectFactory.transient({ organization }).build()
