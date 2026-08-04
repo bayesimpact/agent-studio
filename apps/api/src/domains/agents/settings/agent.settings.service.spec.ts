@@ -247,7 +247,7 @@ describe("AgentSettings", () => {
   })
 
   describe("Settings revisions", () => {
-    it("createAgent should also create draft settings with revision = 1", async () => {
+    it("createAgent should also create published settings with revision = 1", async () => {
       const { organization, project, user } = await createOrganizationWithProject(repositories)
       const { agent, agentSettings } = await agentService.createAgent({
         connectScope: {

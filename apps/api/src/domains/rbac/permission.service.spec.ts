@@ -12,15 +12,25 @@ import { createOrganizationWithOwner } from "@/domains/organizations/organizatio
 import { projectFactory } from "@/domains/projects/project.factory"
 import { PermissionService } from "@/domains/rbac/permission.service"
 import {
+  AGENT_ROLE_PERMISSIONS,
+  AGENT_ROLES,
+  BACKOFFICE_AGENT_READ_PERMISSION,
+  BACKOFFICE_ORGANIZATION_READ_PERMISSION,
+  BACKOFFICE_PROJECT_READ_PERMISSION,
+  BACKOFFICE_PROJECT_UPDATE_PERMISSION,
+  BACKOFFICE_READ_PERMISSION,
+  BACKOFFICE_TERMS_UPDATE_PERMISSION,
+  BACKOFFICE_USER_READ_PERMISSION,
   ORGANIZATION_CREATE_PERMISSION,
   ORGANIZATION_ROLE_PERMISSIONS,
   ORGANIZATION_ROLES,
   PLATFORM_STAFF_ROLE,
+  PLATFORM_SUPERADMIN_ROLE,
   PROJECT_CREATE_PERMISSION,
   PROJECT_READ_PERMISSION,
   PROJECT_ROLE_PERMISSIONS,
   PROJECT_ROLES,
-  TRACE_VIEW_PERMISSION,
+  TRACE_READ_PERMISSION,
 } from "@/domains/rbac/rbac.constants"
 import { RbacModule } from "@/domains/rbac/rbac.module"
 import { RbacService } from "@/domains/rbac/rbac.service"
@@ -135,6 +145,53 @@ describe("PermissionService", () => {
     ).resolves.toBe(true)
   })
 
+  it("grants backoffice.organization.read everywhere when held globally", async () => {
+    const repositories = setup.getAllRepositories()
+    const { organization } = await createOrganizationWithOwner(repositories)
+
+    const superadmin = userFactory.build({ email: "superadmin@bayesimpact.org" })
+    await repositories.userRepository.save(superadmin)
+    const platformSuperadminRole = await repositories.roleRepository.findOneOrFail({
+      where: { key: PLATFORM_SUPERADMIN_ROLE },
+    })
+    await repositories.userMembershipRepository.save(
+      userMembershipFactory.build({
+        userId: superadmin.id,
+        resourceType: "global",
+        resourceId: null,
+        role: "member",
+        roleId: platformSuperadminRole.id,
+      }),
+    )
+
+    await expect(
+      service.has(superadmin.id, BACKOFFICE_ORGANIZATION_READ_PERMISSION, {
+        type: "organization",
+        id: organization.id,
+      }),
+    ).resolves.toBe(true)
+  })
+
+  it("grants backoffice.organization.read on orgs where the role holds it", async () => {
+    const repositories = setup.getAllRepositories()
+    const { organization, user: owner } = await createOrganizationWithOwner(repositories)
+    const { organization: otherOrganization } = await createOrganizationWithOwner(repositories)
+
+    await expect(
+      service.has(owner.id, BACKOFFICE_ORGANIZATION_READ_PERMISSION, {
+        type: "organization",
+        id: organization.id,
+      }),
+    ).resolves.toBe(true)
+
+    await expect(
+      service.has(owner.id, BACKOFFICE_ORGANIZATION_READ_PERMISSION, {
+        type: "organization",
+        id: otherOrganization.id,
+      }),
+    ).resolves.toBe(false)
+  })
+
   it("denies organization.update to members", async () => {
     const repositories = setup.getAllRepositories()
     const { organization } = await createOrganizationWithOwner(repositories)
@@ -162,9 +219,29 @@ describe("PermissionService", () => {
     ).resolves.toBe(false)
   })
 
-  it("grants organization.create via global platform_staff membership", async () => {
+  it("grants organization.create via global platform_superadmin membership", async () => {
     const repositories = setup.getAllRepositories()
-    const user = userFactory.build({ email: "creator@bayesimpact.org" })
+    const user = userFactory.build({ email: "superadmin@bayesimpact.org" })
+    await repositories.userRepository.save(user)
+    const platformSuperadminRole = await repositories.roleRepository.findOneOrFail({
+      where: { key: PLATFORM_SUPERADMIN_ROLE },
+    })
+    await repositories.userMembershipRepository.save(
+      userMembershipFactory.build({
+        userId: user.id,
+        resourceType: "global",
+        resourceId: null,
+        role: "member",
+        roleId: platformSuperadminRole.id,
+      }),
+    )
+
+    await expect(service.hasGlobal(user.id, ORGANIZATION_CREATE_PERMISSION)).resolves.toBe(true)
+  })
+
+  it("denies organization.create to platform_staff members", async () => {
+    const repositories = setup.getAllRepositories()
+    const user = userFactory.build({ email: "staff@bayesimpact.org" })
     await repositories.userRepository.save(user)
     const platformStaffRole = await repositories.roleRepository.findOneOrFail({
       where: { key: PLATFORM_STAFF_ROLE },
@@ -179,10 +256,10 @@ describe("PermissionService", () => {
       }),
     )
 
-    await expect(service.hasGlobal(user.id, ORGANIZATION_CREATE_PERMISSION)).resolves.toBe(true)
+    await expect(service.hasGlobal(user.id, ORGANIZATION_CREATE_PERMISSION)).resolves.toBe(false)
   })
 
-  it("denies organization.create without global platform_staff membership", async () => {
+  it("denies organization.create without any global membership", async () => {
     const repositories = setup.getAllRepositories()
     const user = userFactory.build({ email: "outsider@example.com" })
     await repositories.userRepository.save(user)
@@ -192,7 +269,7 @@ describe("PermissionService", () => {
 
   it("lists global permissions for platform_staff users", async () => {
     const repositories = setup.getAllRepositories()
-    const user = userFactory.build({ email: "creator@bayesimpact.org" })
+    const user = userFactory.build({ email: "staff@bayesimpact.org" })
     await repositories.userRepository.save(user)
     const platformStaffRole = await repositories.roleRepository.findOneOrFail({
       where: { key: PLATFORM_STAFF_ROLE },
@@ -208,15 +285,202 @@ describe("PermissionService", () => {
     )
 
     const permissions = await service.listGlobalPermissions(user.id)
-    expect(permissions.sort()).toEqual([ORGANIZATION_CREATE_PERMISSION, TRACE_VIEW_PERMISSION])
+    expect(permissions.sort()).toEqual([
+      BACKOFFICE_READ_PERMISSION,
+      BACKOFFICE_TERMS_UPDATE_PERMISSION,
+      TRACE_READ_PERMISSION,
+    ])
+  })
+
+  it("lists global permissions for platform_superadmin users", async () => {
+    const repositories = setup.getAllRepositories()
+    const user = userFactory.build({ email: "superadmin@bayesimpact.org" })
+    await repositories.userRepository.save(user)
+    const platformSuperadminRole = await repositories.roleRepository.findOneOrFail({
+      where: { key: PLATFORM_SUPERADMIN_ROLE },
+    })
+    await repositories.userMembershipRepository.save(
+      userMembershipFactory.build({
+        userId: user.id,
+        resourceType: "global",
+        resourceId: null,
+        role: "member",
+        roleId: platformSuperadminRole.id,
+      }),
+    )
+
+    const permissions = await service.listGlobalPermissions(user.id)
+    expect(permissions.sort()).toEqual([
+      BACKOFFICE_AGENT_READ_PERMISSION,
+      BACKOFFICE_ORGANIZATION_READ_PERMISSION,
+      BACKOFFICE_PROJECT_READ_PERMISSION,
+      BACKOFFICE_PROJECT_UPDATE_PERMISSION,
+      BACKOFFICE_READ_PERMISSION,
+      BACKOFFICE_TERMS_UPDATE_PERMISSION,
+      BACKOFFICE_USER_READ_PERMISSION,
+      ORGANIZATION_CREATE_PERMISSION,
+      TRACE_READ_PERMISSION,
+    ])
+  })
+
+  describe("listUserIds", () => {
+    it("returns the whole directory scope for backoffice.user.read holders", async () => {
+      const repositories = setup.getAllRepositories()
+      const superadmin = userFactory.build({ email: "superadmin@bayesimpact.org" })
+      await repositories.userRepository.save(superadmin)
+      const platformSuperadminRole = await repositories.roleRepository.findOneOrFail({
+        where: { key: PLATFORM_SUPERADMIN_ROLE },
+      })
+      await repositories.userMembershipRepository.save(
+        userMembershipFactory.build({
+          userId: superadmin.id,
+          resourceType: "global",
+          resourceId: null,
+          role: "member",
+          roleId: platformSuperadminRole.id,
+        }),
+      )
+
+      await expect(service.listUserIds(superadmin.id)).resolves.toEqual({ scope: "all" })
+    })
+
+    it("lists members of resources where the user's role grants user.read", async () => {
+      const repositories = setup.getAllRepositories()
+      const { organization, user: owner } = await createOrganizationWithOwner(repositories)
+
+      const fellowMember = userFactory.build()
+      const strangerUser = userFactory.build()
+      await repositories.userRepository.save([fellowMember, strangerUser])
+      const memberRole = await repositories.roleRepository.findOneOrFail({
+        where: { key: ORGANIZATION_ROLES.member },
+      })
+      await repositories.userMembershipRepository.save(
+        userMembershipFactory.build({
+          userId: fellowMember.id,
+          resourceType: "organization",
+          resourceId: organization.id,
+          role: "member",
+          roleId: memberRole.id,
+        }),
+      )
+
+      const scope = await service.listUserIds(owner.id)
+
+      expect(scope.scope).toBe("ids")
+      if (scope.scope === "ids") {
+        expect(scope.ids.sort()).toEqual([owner.id, fellowMember.id].sort())
+        expect(scope.ids).not.toContain(strangerUser.id)
+      }
+    })
+
+    it("only lists the user themselves for roles without user.read", async () => {
+      const repositories = setup.getAllRepositories()
+      const { organization } = await createOrganizationWithOwner(repositories)
+
+      // org_member does not grant user.read: no fellow-member visibility
+      const memberUser = userFactory.build()
+      await repositories.userRepository.save(memberUser)
+      const memberRole = await repositories.roleRepository.findOneOrFail({
+        where: { key: ORGANIZATION_ROLES.member },
+      })
+      await repositories.userMembershipRepository.save(
+        userMembershipFactory.build({
+          userId: memberUser.id,
+          resourceType: "organization",
+          resourceId: organization.id,
+          role: "member",
+          roleId: memberRole.id,
+        }),
+      )
+
+      await expect(service.listUserIds(memberUser.id)).resolves.toEqual({
+        scope: "ids",
+        ids: [memberUser.id],
+      })
+    })
+
+    it("returns only the user themselves without any membership", async () => {
+      const repositories = setup.getAllRepositories()
+      const loneUser = userFactory.build()
+      await repositories.userRepository.save(loneUser)
+
+      await expect(service.listUserIds(loneUser.id)).resolves.toEqual({
+        scope: "ids",
+        ids: [loneUser.id],
+      })
+    })
   })
 
   describe("listResourceIds", () => {
+    it("lists every organization when backoffice.organization.read is held globally", async () => {
+      const repositories = setup.getAllRepositories()
+      const { organization: organizationA } = await createOrganizationWithOwner(repositories)
+      const { organization: organizationB } = await createOrganizationWithOwner(repositories)
+
+      const superadmin = userFactory.build({ email: "superadmin@bayesimpact.org" })
+      await repositories.userRepository.save(superadmin)
+      const platformSuperadminRole = await repositories.roleRepository.findOneOrFail({
+        where: { key: PLATFORM_SUPERADMIN_ROLE },
+      })
+      await repositories.userMembershipRepository.save(
+        userMembershipFactory.build({
+          userId: superadmin.id,
+          resourceType: "global",
+          resourceId: null,
+          role: "member",
+          roleId: platformSuperadminRole.id,
+        }),
+      )
+
+      const organizationIds = await service.listResourceIds(
+        superadmin.id,
+        BACKOFFICE_ORGANIZATION_READ_PERMISSION,
+      )
+      expect(organizationIds.sort()).toEqual([organizationA.id, organizationB.id].sort())
+    })
+
+    it("lists organizations where the user's role grants backoffice.organization.read", async () => {
+      const repositories = setup.getAllRepositories()
+      const { organization, user: owner } = await createOrganizationWithOwner(repositories)
+      const { organization: otherOrganization } = await createOrganizationWithOwner(repositories)
+
+      const organizationIds = await service.listResourceIds(
+        owner.id,
+        BACKOFFICE_ORGANIZATION_READ_PERMISSION,
+      )
+      expect(organizationIds).toEqual([organization.id])
+      expect(organizationIds).not.toContain(otherOrganization.id)
+    })
+
+    it("lists no organizations for org_member (no backoffice.organization.read)", async () => {
+      const repositories = setup.getAllRepositories()
+      const { organization } = await createOrganizationWithOwner(repositories)
+
+      const memberUser = userFactory.build()
+      await repositories.userRepository.save(memberUser)
+      const memberRole = await repositories.roleRepository.findOneOrFail({
+        where: { key: ORGANIZATION_ROLES.member },
+      })
+      await repositories.userMembershipRepository.save(
+        userMembershipFactory.build({
+          userId: memberUser.id,
+          resourceType: "organization",
+          resourceId: organization.id,
+          role: "member",
+          roleId: memberRole.id,
+        }),
+      )
+
+      await expect(
+        service.listResourceIds(memberUser.id, BACKOFFICE_ORGANIZATION_READ_PERMISSION),
+      ).resolves.toEqual([])
+    })
+
     it("lists resource ids the user can read through a direct membership", async () => {
       const repositories = setup.getAllRepositories()
       const { organization, user } = await createOrganizationWithOwner(repositories)
 
-      await expect(service.listResourceIds(user.id, "organization")).resolves.toEqual([
+      await expect(service.listResourceIds(user.id, "organization.read")).resolves.toEqual([
         organization.id,
       ])
     })
@@ -233,7 +497,9 @@ describe("PermissionService", () => {
       await repositories.userRepository.save(orgUser)
       await addOrgMembershipWithRole(orgUser.id, organization.id, orgRole)
 
-      await expect(service.listResourceIds(orgUser.id, "project")).resolves.toEqual([project.id])
+      await expect(service.listResourceIds(orgUser.id, "project.read")).resolves.toEqual([
+        project.id,
+      ])
     })
 
     it("does not list the org's projects for an org owner without project membership", async () => {
@@ -243,7 +509,7 @@ describe("PermissionService", () => {
       const project = projectFactory.transient({ organization }).build()
       await repositories.projectRepository.save(project)
 
-      await expect(service.listResourceIds(user.id, "project")).resolves.toEqual([])
+      await expect(service.listResourceIds(user.id, "project.read")).resolves.toEqual([])
     })
 
     it("ignores memberships whose role does not grant the read permission", async () => {
@@ -264,7 +530,7 @@ describe("PermissionService", () => {
         }),
       )
 
-      await expect(service.listResourceIds(projectUser.id, "project")).resolves.toEqual([])
+      await expect(service.listResourceIds(projectUser.id, "project.read")).resolves.toEqual([])
     })
 
     it("returns an empty array when the user has no access", async () => {
@@ -272,7 +538,7 @@ describe("PermissionService", () => {
       const user = userFactory.build()
       await repositories.userRepository.save(user)
 
-      await expect(service.listResourceIds(user.id, "organization")).resolves.toEqual([])
+      await expect(service.listResourceIds(user.id, "organization.read")).resolves.toEqual([])
     })
 
     it("combines ids inherited from an organization role and a project role", async () => {
@@ -335,7 +601,7 @@ describe("PermissionService", () => {
 
         // both inheritance sources must contribute: matching the organization
         // parent type must not shadow the project parent type
-        const agentIds = await service.listResourceIds(user.id, "agent")
+        const agentIds = await service.listResourceIds(user.id, "agent.read")
         expect(agentIds.sort()).toEqual([agentA.id, agentB.id].sort())
       } finally {
         const testRole = await repositories.roleRepository.findOne({
@@ -364,7 +630,10 @@ describe("PermissionService", () => {
       await repositories.userRepository.save(orgUser)
       await addOrgMembershipWithRole(orgUser.id, organization.id, orgRole)
 
-      const permissionsByProjectId = await service.listResourcePermissions(orgUser.id, "project")
+      const permissionsByProjectId = await service.listResourcePermissions(
+        orgUser.id,
+        "project.read",
+      )
 
       expect([...permissionsByProjectId.keys()]).toEqual([project.id])
       expect(permissionsByProjectId.get(project.id)?.sort()).toEqual(
@@ -378,7 +647,7 @@ describe("PermissionService", () => {
       const project = projectFactory.transient({ organization }).build()
       await repositories.projectRepository.save(project)
 
-      const permissionsByProjectId = await service.listResourcePermissions(user.id, "project")
+      const permissionsByProjectId = await service.listResourcePermissions(user.id, "project.read")
 
       expect(permissionsByProjectId.size).toBe(0)
     })
@@ -406,7 +675,7 @@ describe("PermissionService", () => {
 
       const permissionsByProjectId = await service.listResourcePermissions(
         projectUser.id,
-        "project",
+        "project.read",
       )
 
       expect(permissionsByProjectId.get(project.id)).toEqual([PROJECT_READ_PERMISSION])
@@ -441,7 +710,7 @@ describe("PermissionService", () => {
         }),
       )
 
-      const permissionsByProjectId = await service.listResourcePermissions(user.id, "project")
+      const permissionsByProjectId = await service.listResourcePermissions(user.id, "project.read")
 
       expect(permissionsByProjectId.get(project.id)?.sort()).toEqual(
         [...new Set([...PROJECT_ROLE_PERMISSIONS.project_owner, "project.create"])].sort(),
@@ -485,7 +754,7 @@ describe("PermissionService", () => {
 
         const permissionsByProjectId = await service.listResourcePermissions(
           projectUser.id,
-          "project",
+          "project.read",
         )
 
         expect(permissionsByProjectId.get(project.id)).toEqual([PROJECT_READ_PERMISSION])
@@ -506,7 +775,7 @@ describe("PermissionService", () => {
 
       const permissionsByOrganizationId = await service.listResourcePermissions(
         user.id,
-        "organization",
+        "organization.read",
       )
 
       expect([...permissionsByOrganizationId.keys()]).toEqual([organization.id])
@@ -528,7 +797,10 @@ describe("PermissionService", () => {
       await repositories.userRepository.save(orgUser)
       await addOrgMembershipWithRole(orgUser.id, organizationA.id, orgRole)
 
-      const permissionsByProjectId = await service.listResourcePermissions(orgUser.id, "project")
+      const permissionsByProjectId = await service.listResourcePermissions(
+        orgUser.id,
+        "project.read",
+      )
 
       expect(permissionsByProjectId.size).toBe(0)
     })
@@ -562,7 +834,7 @@ describe("PermissionService", () => {
         }),
       )
 
-      const permissionsByProjectId = await service.listResourcePermissions(user.id, "project")
+      const permissionsByProjectId = await service.listResourcePermissions(user.id, "project.read")
 
       expect(permissionsByProjectId.size).toBe(2)
       expect(permissionsByProjectId.get(inheritedOnlyProject.id)?.sort()).toEqual(
@@ -597,7 +869,7 @@ describe("PermissionService", () => {
 
       const permissionsByProjectId = await service.listResourcePermissions(
         projectUser.id,
-        "project",
+        "project.read",
       )
 
       expect(permissionsByProjectId.size).toBe(0)
@@ -615,7 +887,10 @@ describe("PermissionService", () => {
       await repositories.userRepository.save(orgUser)
       await addOrgMembershipWithRole(orgUser.id, organization.id, orgRole)
 
-      const permissionsByProjectId = await service.listResourcePermissions(orgUser.id, "project")
+      const permissionsByProjectId = await service.listResourcePermissions(
+        orgUser.id,
+        "project.read",
+      )
 
       expect(permissionsByProjectId.size).toBe(0)
     })
@@ -634,7 +909,10 @@ describe("PermissionService", () => {
       // the org membership survives (only the organization is soft-deleted)
       await repositories.organizationRepository.softDelete(organization.id)
 
-      const permissionsByProjectId = await service.listResourcePermissions(orgUser.id, "project")
+      const permissionsByProjectId = await service.listResourcePermissions(
+        orgUser.id,
+        "project.read",
+      )
 
       expect(permissionsByProjectId.size).toBe(0)
     })
@@ -665,7 +943,10 @@ describe("PermissionService", () => {
       // the membership survives (only the project is soft-deleted): it must convey nothing
       await repositories.projectRepository.softDelete(project.id)
 
-      const permissionsByAgentId = await service.listResourcePermissions(projectUser.id, "agent")
+      const permissionsByAgentId = await service.listResourcePermissions(
+        projectUser.id,
+        "agent.read",
+      )
 
       expect(permissionsByAgentId.size).toBe(0)
     })
@@ -678,8 +959,9 @@ describe("PermissionService", () => {
       const agent = agentFactory.transient({ organization, project }).build()
       await repositories.agentRepository.save(agent)
 
-      // project_owner grants agent.read AND agent.create, but only agent.read
-      // applies to an agent resource (RESOURCE_TYPE_PERMISSIONS_MAP.agent)
+      // project_owner grants agent.read, agent.create, and backoffice.agent.read;
+      // only agent.* + backoffice.agent.read apply to an agent resource
+      // (RESOURCE_TYPE_PERMISSIONS_MAP.agent)
       const projectOwnerRole = await repositories.roleRepository.findOneOrFail({
         where: { key: PROJECT_ROLES.owner },
       })
@@ -695,10 +977,15 @@ describe("PermissionService", () => {
         }),
       )
 
-      const permissionsByAgentId = await service.listResourcePermissions(projectUser.id, "agent")
+      const permissionsByAgentId = await service.listResourcePermissions(
+        projectUser.id,
+        "agent.read",
+      )
 
       expect([...permissionsByAgentId.keys()]).toEqual([agent.id])
-      expect(permissionsByAgentId.get(agent.id)).toEqual(["agent.read"])
+      expect(permissionsByAgentId.get(agent.id)?.sort()).toEqual(
+        ["agent.read", BACKOFFICE_AGENT_READ_PERMISSION].sort(),
+      )
     })
 
     it("returns an empty map when the user has no access", async () => {
@@ -706,7 +993,7 @@ describe("PermissionService", () => {
       const user = userFactory.build()
       await repositories.userRepository.save(user)
 
-      const permissionsByProjectId = await service.listResourcePermissions(user.id, "project")
+      const permissionsByProjectId = await service.listResourcePermissions(user.id, "project.read")
 
       expect(permissionsByProjectId.size).toBe(0)
     })
@@ -776,9 +1063,11 @@ describe("PermissionService", () => {
 
         // ...so the listing must surface it too: matching the organization
         // parent type must not shadow the project parent type
-        const permissionsByAgentId = await service.listResourcePermissions(user.id, "agent")
+        const permissionsByAgentId = await service.listResourcePermissions(user.id, "agent.read")
         expect([...permissionsByAgentId.keys()].sort()).toEqual([agentA.id, agentB.id].sort())
-        expect(permissionsByAgentId.get(agentB.id)).toEqual(["agent.read"])
+        expect(permissionsByAgentId.get(agentB.id)?.sort()).toEqual(
+          ["agent.read", BACKOFFICE_AGENT_READ_PERMISSION].sort(),
+        )
       } finally {
         const testRole = await repositories.roleRepository.findOne({
           where: { key: "test_org_agent_reader_perms" },
@@ -1215,26 +1504,27 @@ describe("RbacService", () => {
   let setup: Awaited<ReturnType<typeof setupE2eTestDatabase>>
 
   beforeAll(async () => {
-    process.env.ORGANIZATION_CREATOR_EMAIL_DOMAIN = "@bayesimpact.org"
     setup = await setupE2eTestDatabase({ additionalImports: [RbacModule] })
     service = setup.module.get(RbacService)
     await service.seedOrganizationRolesAndPermissions()
   })
 
   afterAll(async () => {
-    delete process.env.ORGANIZATION_CREATOR_EMAIL_DOMAIN
     await teardownE2eTestDatabase(setup)
   })
 
   beforeEach(async () => {
-    process.env.ORGANIZATION_CREATOR_EMAIL_DOMAIN = "@bayesimpact.org"
     await clearTestDatabase(setup.dataSource)
   })
 
   it("seeds org roles and permissions idempotently", async () => {
     await service.seedOrganizationRolesAndPermissions()
 
-    const orgRoleKeys = [...Object.values(ORGANIZATION_ROLES), PLATFORM_STAFF_ROLE]
+    const orgRoleKeys = [
+      ...Object.values(ORGANIZATION_ROLES),
+      PLATFORM_STAFF_ROLE,
+      PLATFORM_SUPERADMIN_ROLE,
+    ]
     const roles = await setup.getRepository(Role).find({ where: { key: In(orgRoleKeys) } })
     expect(roles.map((role) => role.key).sort()).toEqual([...orgRoleKeys].sort())
 
@@ -1261,6 +1551,25 @@ describe("RbacService", () => {
       where: { roleId: In(roles.map((role) => role.id)) },
     })
     const expectedLinks = Object.values(PROJECT_ROLE_PERMISSIONS).flatMap((keys) => [...keys])
+    expect(rolePermissions).toHaveLength(expectedLinks.length)
+    expect([...new Set(rolePermissions.map((row) => row.permissionKey))].sort()).toEqual(
+      [...new Set(expectedLinks)].sort(),
+    )
+  })
+
+  it("seeds agent roles and permissions idempotently", async () => {
+    await service.seedAgentRolesAndPermissions()
+    await service.seedAgentRolesAndPermissions()
+
+    const agentRoleKeys = Object.values(AGENT_ROLES)
+    const roles = await setup.getRepository(Role).find({ where: { key: In(agentRoleKeys) } })
+    expect(roles.map((role) => role.key).sort()).toEqual([...agentRoleKeys].sort())
+    expect(roles.every((role) => role.scopeType === "agent")).toBe(true)
+
+    const rolePermissions = await setup.getRepository(RolePermission).find({
+      where: { roleId: In(roles.map((role) => role.id)) },
+    })
+    const expectedLinks = Object.values(AGENT_ROLE_PERMISSIONS).flatMap((keys) => [...keys])
     expect(rolePermissions).toHaveLength(expectedLinks.length)
     expect([...new Set(rolePermissions.map((row) => row.permissionKey))].sort()).toEqual(
       [...new Set(expectedLinks)].sort(),
@@ -1313,35 +1622,35 @@ describe("RbacService", () => {
     expect(membership.roleId).toBe(projectMemberRole.id)
   })
 
-  it("assigns platform_staff to eligible users", async () => {
+  it("assigns role_id on agent memberships", async () => {
+    await service.seedAgentRolesAndPermissions()
     const repositories = setup.getAllRepositories()
-    const eligibleUser = userFactory.build({ email: "member@bayesimpact.org" })
-    const ineligibleUser = userFactory.build({ email: "member@example.com" })
-    await repositories.userRepository.save([eligibleUser, ineligibleUser])
+    const { organization } = await createOrganizationWithOwner(repositories)
+    const project = projectFactory.transient({ organization }).build()
+    await repositories.projectRepository.save(project)
+    const agent = agentFactory.transient({ project, organization }).build()
+    await repositories.agentRepository.save(agent)
 
-    const assignedCount = await service.assignPlatformStaffToEligibleUsers()
-    expect(assignedCount).toBe(1)
+    const agentUser = userFactory.build()
+    await repositories.userRepository.save(agentUser)
+    await repositories.userMembershipRepository.save(
+      userMembershipFactory.build({
+        userId: agentUser.id,
+        resourceType: "agent",
+        resourceId: agent.id,
+        role: "member",
+        roleId: null,
+      }),
+    )
 
-    const platformStaffRole = await setup.getRepository(Role).findOneOrFail({
-      where: { key: PLATFORM_STAFF_ROLE },
-    })
-    const eligibleMembership = await setup.getRepository(UserMembership).findOne({
-      where: {
-        userId: eligibleUser.id,
-        resourceType: "global",
-        roleId: platformStaffRole.id,
-      },
-    })
-    const ineligibleMembership = await setup.getRepository(UserMembership).findOne({
-      where: {
-        userId: ineligibleUser.id,
-        resourceType: "global",
-        roleId: platformStaffRole.id,
-      },
-    })
+    await service.assignRoleIdsToAgentMemberships()
 
-    expect(eligibleMembership).not.toBeNull()
-    expect(eligibleMembership?.resourceId).toBeNull()
-    expect(ineligibleMembership).toBeNull()
+    const membership = await setup.getRepository(UserMembership).findOneOrFail({
+      where: { userId: agentUser.id, resourceId: agent.id, resourceType: "agent" },
+    })
+    const agentMemberRole = await setup.getRepository(Role).findOneOrFail({
+      where: { key: AGENT_ROLES.member },
+    })
+    expect(membership.roleId).toBe(agentMemberRole.id)
   })
 })

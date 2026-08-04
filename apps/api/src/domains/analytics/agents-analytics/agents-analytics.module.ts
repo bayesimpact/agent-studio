@@ -13,6 +13,7 @@ import { MembershipsModule } from "@/domains/memberships/memberships.module"
 import { Organization } from "@/domains/organizations/organization.entity"
 import { ProjectMembershipRepository } from "@/domains/projects/memberships/project-membership.repository"
 import { Project } from "@/domains/projects/project.entity"
+import { PublicAgentSession } from "@/domains/public-chat/public-agent-sessions/public-agent-session.entity"
 import { UsersModule } from "@/domains/users/users.module"
 import { AgentsAnalyticsController } from "./agents-analytics.controller"
 import { AgentsAnalyticsGuard } from "./agents-analytics.guard"
@@ -22,6 +23,7 @@ import { AgentsAnalyticsService } from "./agents-analytics.service"
   imports: [
     TypeOrmModule.forFeature([
       ConversationAgentSession,
+      PublicAgentSession,
       AgentMessage,
       Agent,
       Project,

@@ -101,7 +101,12 @@ export function SourcesTool({
   toolCall: NonNullable<AgentSessionMessageType["toolCalls"]>[number]
 }) {
   const { t } = useTranslation()
-  const sources = toolCall.arguments.sources as unknown as Source[]
+  const sources = (toolCall.arguments.sources ?? []) as unknown as Source[]
+
+  // The server resolves cited chunkIds against the chunks actually retrieved
+  // in the run — an empty list (no lookup ran, or invented ids) has nothing
+  // to show.
+  if (sources.length === 0) return null
 
   return (
     <Sheet>

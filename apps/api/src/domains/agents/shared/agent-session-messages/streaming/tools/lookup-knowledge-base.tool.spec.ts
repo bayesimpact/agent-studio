@@ -1,13 +1,14 @@
-import { retrieveProjectDocumentChunksTool } from "./retrieve-project-document-chunks.tool"
+import { DEFAULT_TOP_K, lookupKnowledgeBaseTool } from "./lookup-knowledge-base.tool"
+import { createRetrievedChunksRegistry } from "./retrieved-chunks-registry"
 
-describe("retrieveProjectDocumentChunksTool", () => {
-  it("accepts an empty conversation summary for first-turn questions", async () => {
+describe("lookupKnowledgeBaseTool", () => {
+  it("retrieves chunks for a query alone", async () => {
     const onExecute = jest.fn()
     const retrievalService = {
       retrieveTopChunks: jest.fn().mockResolvedValue([]),
     }
 
-    const sdkTool = retrieveProjectDocumentChunksTool({
+    const sdkTool = lookupKnowledgeBaseTool({
       connectScope: {
         organizationId: "organization-1",
         projectId: "project-1",
@@ -18,9 +19,7 @@ describe("retrieveProjectDocumentChunksTool", () => {
 
     await sdkTool.execute?.(
       {
-        conversationSummary: "",
-        latestUserQuestion: "Combien d'enfants sont restes sans solution ?",
-        topK: 3,
+        query: "Combien d'enfants sont restes sans solution ?",
       },
       {} as never,
     )
@@ -30,9 +29,8 @@ describe("retrieveProjectDocumentChunksTool", () => {
         organizationId: "organization-1",
         projectId: "project-1",
       },
-      conversationSummary: "",
-      latestUserQuestion: "Combien d'enfants sont restes sans solution ?",
-      topK: 3,
+      query: "Combien d'enfants sont restes sans solution ?",
+      topK: DEFAULT_TOP_K,
       documentTagIds: [],
     })
   })
@@ -54,20 +52,20 @@ describe("retrieveProjectDocumentChunksTool", () => {
       ]),
     }
 
-    const sdkTool = retrieveProjectDocumentChunksTool({
+    const retrievedChunksRegistry = createRetrievedChunksRegistry()
+    const sdkTool = lookupKnowledgeBaseTool({
       connectScope: {
         organizationId: "organization-1",
         projectId: "project-1",
       },
       retrievalService: retrievalService as never,
+      retrievedChunksRegistry,
       onExecute,
     })
 
     const result = (await sdkTool.execute?.(
       {
-        conversationSummary: "The user wants onboarding details.",
-        latestUserQuestion: "How long does onboarding take?",
-        topK: 3,
+        query: "How long does onboarding take?",
       },
       {} as never,
     )) as {
@@ -79,22 +77,31 @@ describe("retrieveProjectDocumentChunksTool", () => {
     }
     expect(result).toBeDefined()
 
+    // The model only sees the alias + what it needs to answer; UUIDs and
+    // retrieval internals stay server-side in the registry.
+    expect(result.retrievedChunks).toEqual([
+      {
+        id: "c1",
+        documentTitle: "Onboarding Guide",
+        content: "The onboarding process lasts two weeks.",
+      },
+    ])
+    expect(retrievedChunksRegistry.get("c1")?.chunkId).toBe("chunk-1")
+
     expect(retrievalService.retrieveTopChunks).toHaveBeenCalledWith({
       connectScope: {
         organizationId: "organization-1",
         projectId: "project-1",
       },
-      conversationSummary: "The user wants onboarding details.",
-      latestUserQuestion: "How long does onboarding take?",
-      topK: 3,
+      query: "How long does onboarding take?",
+      topK: DEFAULT_TOP_K,
       documentTagIds: [],
     })
     expect(onExecute).toHaveBeenCalledWith({
-      toolName: "retrieveProjectDocumentChunks",
+      toolName: "lookup_knowledge_base",
       arguments: {
-        conversationSummary: "The user wants onboarding details.",
-        latestUserQuestion: "How long does onboarding take?",
-        topK: 3,
+        query: "How long does onboarding take?",
+        topK: DEFAULT_TOP_K,
         documentTagIds: [],
         returnedChunkCount: 1,
         chunkIds: ["chunk-1"],
@@ -103,7 +110,7 @@ describe("retrieveProjectDocumentChunksTool", () => {
     })
     expect(result.retrievalMetadata).toEqual({
       returnedChunkCount: 1,
-      topK: 3,
+      topK: DEFAULT_TOP_K,
     })
   })
 
@@ -113,7 +120,7 @@ describe("retrieveProjectDocumentChunksTool", () => {
       retrieveTopChunks: jest.fn().mockResolvedValue([]),
     }
 
-    const sdkTool = retrieveProjectDocumentChunksTool({
+    const sdkTool = lookupKnowledgeBaseTool({
       connectScope: {
         organizationId: "organization-1",
         projectId: "project-1",
@@ -125,9 +132,7 @@ describe("retrieveProjectDocumentChunksTool", () => {
 
     await sdkTool.execute?.(
       {
-        conversationSummary: "Summary",
-        latestUserQuestion: "Question",
-        topK: 2,
+        query: "Question",
       },
       {} as never,
     )
@@ -137,17 +142,15 @@ describe("retrieveProjectDocumentChunksTool", () => {
         organizationId: "organization-1",
         projectId: "project-1",
       },
-      conversationSummary: "Summary",
-      latestUserQuestion: "Question",
-      topK: 2,
+      query: "Question",
+      topK: DEFAULT_TOP_K,
       documentTagIds: ["tag-1", "tag-2"],
     })
     expect(onExecute).toHaveBeenCalledWith({
-      toolName: "retrieveProjectDocumentChunks",
+      toolName: "lookup_knowledge_base",
       arguments: {
-        conversationSummary: "Summary",
-        latestUserQuestion: "Question",
-        topK: 2,
+        query: "Question",
+        topK: DEFAULT_TOP_K,
         documentTagIds: ["tag-1", "tag-2"],
         returnedChunkCount: 0,
         chunkIds: [],

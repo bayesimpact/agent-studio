@@ -2,10 +2,13 @@ import crypto from "node:crypto"
 import { Injectable, NotFoundException } from "@nestjs/common"
 import { InjectRepository } from "@nestjs/typeorm"
 import type { Repository } from "typeorm"
+import type { RequiredConnectScope } from "@/common/entities/connect-required-fields"
+import { AgentSessionCategory } from "@/domains/agents/session-categories/agent-session-category.entity"
 import { AgentSettings } from "@/domains/agents/settings/agent-settings.entity"
 import { AgentMessage } from "@/domains/agents/shared/agent-session-messages/agent-message.entity"
 import type { AgentEmbedConfig } from "../agent-embed-configs/agent-embed-config.entity"
 import { PublicAgentSession } from "./public-agent-session.entity"
+import { PublicAgentSessionCategory } from "./public-agent-session-category.entity"
 
 const STREAM_TIMEOUT_MS = 5 * 60 * 1000
 
@@ -18,7 +21,101 @@ export class PublicAgentSessionsService {
     private readonly agentMessageRepository: Repository<AgentMessage>,
     @InjectRepository(AgentSettings)
     private readonly agentSettingsRepository: Repository<AgentSettings>,
+    @InjectRepository(PublicAgentSessionCategory)
+    private readonly publicAgentSessionCategoryRepository: Repository<PublicAgentSessionCategory>,
+    @InjectRepository(AgentSessionCategory)
+    private readonly agentSessionCategoryRepository: Repository<AgentSessionCategory>,
   ) {}
+
+  /**
+   * SessionMetadataRecalculator implementation for PUBLIC sessions — same
+   * semantics as ConversationAgentSessionsService, keyed on
+   * public_agent_session (+ public_agent_session_category for analytics).
+   */
+  async recalculateSessionMetadataFromMessages({
+    connectScope,
+    sessionId,
+    selectedCategoryNames,
+    suggestedTitle,
+  }: {
+    connectScope: RequiredConnectScope
+    sessionId: string
+    selectedCategoryNames: string[]
+    suggestedTitle: string | null
+  }): Promise<{ suggestedTitle: string | null; selectedCategoryNames: string[] }> {
+    const session = await this.publicAgentSessionRepository.findOne({
+      where: {
+        id: sessionId,
+        organizationId: connectScope.organizationId,
+        projectId: connectScope.projectId,
+      },
+    })
+    if (!session) {
+      throw new NotFoundException(`PublicAgentSession with id ${sessionId} not found`)
+    }
+
+    const agentCategories = await this.agentSessionCategoryRepository.find({
+      where: { agentId: session.agentId },
+    })
+    const categoryByName = new Map(
+      agentCategories.map((category) => [category.name.toLowerCase(), category] as const),
+    )
+    const selectedCategories = [
+      ...new Set(selectedCategoryNames.map((name) => name.trim().toLowerCase())),
+    ]
+      .map((normalizedName) => categoryByName.get(normalizedName))
+      .filter((category): category is AgentSessionCategory => category !== undefined)
+
+    await this.publicAgentSessionCategoryRepository.delete({ publicAgentSessionId: session.id })
+    if (selectedCategories.length > 0) {
+      await this.publicAgentSessionCategoryRepository.save(
+        selectedCategories.map((category) =>
+          this.publicAgentSessionCategoryRepository.create({
+            publicAgentSessionId: session.id,
+            agentSessionCategoryId: category.id,
+          }),
+        ),
+      )
+    }
+
+    const nextTitle = suggestedTitle?.trim() || null
+    if (session.title !== nextTitle) {
+      session.title = nextTitle
+      await this.publicAgentSessionRepository.save(session)
+    }
+
+    return {
+      suggestedTitle: session.title,
+      selectedCategoryNames: selectedCategories.map((category) => category.name),
+    }
+  }
+
+  /**
+   * SessionResultUpdater implementation for PUBLIC sessions: merges the
+   * fillForm fields into public_agent_session.result.
+   */
+  async updateSessionResult({
+    connectScope,
+    input,
+    sessionId,
+  }: {
+    connectScope: RequiredConnectScope
+    input: Record<string, unknown>
+    sessionId: string
+  }): Promise<{ result: Record<string, unknown> | null }> {
+    const session = await this.publicAgentSessionRepository.findOne({
+      where: {
+        id: sessionId,
+        organizationId: connectScope.organizationId,
+        projectId: connectScope.projectId,
+      },
+    })
+    if (!session) return { result: null }
+
+    session.result = { ...session.result, ...input }
+    const updatedSession = await this.publicAgentSessionRepository.save(session)
+    return { result: updatedSession.result }
+  }
 
   async createSession(
     embedConfig: AgentEmbedConfig,

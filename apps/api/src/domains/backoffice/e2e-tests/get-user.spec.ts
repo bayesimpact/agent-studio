@@ -9,12 +9,17 @@ import {
   teardownE2eTestDatabase,
 } from "@/common/test/test-database"
 import { createOrganizationWithAgent } from "@/domains/organizations/organization.factory"
+import { RbacModule } from "@/domains/rbac/rbac.module"
 import {
   reviewCampaignMembershipFactory,
   saveReviewCampaignMembership,
 } from "@/domains/review-campaigns/memberships/review-campaign-membership.factory"
 import { reviewCampaignFactory } from "@/domains/review-campaigns/review-campaign.factory"
 import { mockAuth0EmailForSub, setupUserGuardForTesting } from "../../../../test/e2e.helpers"
+import {
+  assignPlatformSuperadminToUser,
+  ensureRbacCatalog,
+} from "../../../../test/rbac-test.helpers"
 import { expectResponse, type Requester, testRequester } from "../../../../test/request"
 import { BackofficeModule } from "../backoffice.module"
 
@@ -26,14 +31,12 @@ describe("Backoffice - get user", () => {
 
   let auth0Id = `auth0|${randomUUID()}`
 
-  const originalAuthorizedEmails = process.env.BACKOFFICE_AUTHORIZED_EMAILS
-  const originalAuthorizedDomain = process.env.BACKOFFICE_AUTHORIZED_DOMAIN
-
   beforeAll(async () => {
     setup = await setupE2eTestDatabase({
-      additionalImports: [BackofficeModule],
+      additionalImports: [BackofficeModule, RbacModule],
       applyOverrides: (moduleBuilder) => setupUserGuardForTesting(moduleBuilder, () => auth0Id),
     })
+    await ensureRbacCatalog(setup.module)
     repositories = setup.getAllRepositories()
     app = setup.module.createNestApplication()
     await app.init()
@@ -43,21 +46,6 @@ describe("Backoffice - get user", () => {
   beforeEach(async () => {
     await clearTestDatabase(setup.dataSource)
     auth0Id = `auth0|${randomUUID()}`
-    delete process.env.BACKOFFICE_AUTHORIZED_DOMAIN
-    delete process.env.BACKOFFICE_AUTHORIZED_EMAILS
-  })
-
-  afterEach(() => {
-    if (originalAuthorizedEmails === undefined) {
-      delete process.env.BACKOFFICE_AUTHORIZED_EMAILS
-    } else {
-      process.env.BACKOFFICE_AUTHORIZED_EMAILS = originalAuthorizedEmails
-    }
-    if (originalAuthorizedDomain === undefined) {
-      delete process.env.BACKOFFICE_AUTHORIZED_DOMAIN
-    } else {
-      process.env.BACKOFFICE_AUTHORIZED_DOMAIN = originalAuthorizedDomain
-    }
   })
 
   afterAll(async () => {
@@ -70,8 +58,7 @@ describe("Backoffice - get user", () => {
     const context = await createOrganizationWithAgent(repositories, {
       user: { auth0Id, email },
     })
-    process.env.BACKOFFICE_AUTHORIZED_DOMAIN = "@example.com"
-    process.env.BACKOFFICE_AUTHORIZED_EMAILS = email
+    await assignPlatformSuperadminToUser({ repositories, user: context.user })
     return context
   }
 

@@ -10,9 +10,16 @@ import type { ToolExecutionLog } from "./tools/tool-execution-log"
  * corresponding ConversationAgentSession row.
  */
 export type PublicStreamingSessionProxy = {
+  /** fillForm state from public_agent_session.result — presence gates the tool. */
+  result?: Record<string, unknown> | null
   id: string
   traceId: string
   organizationId: string
+  /**
+   * Identifier the embedding page attached to this session (for France
+   * Travail: the "identifiant DE"). Forwarded to MCP servers as context.
+   */
+  externalVisitorId?: string | null
   messages: AgentMessage[]
 }
 
@@ -25,4 +32,9 @@ export type AgentSessionScope = {
   connectScope: RequiredConnectScope
 }
 
-export type OnExecute = (toolExecution: ToolExecutionLog) => void
+/**
+ * Tool-execution log callback. May persist the tool call and notify the SSE
+ * client — tools MUST await it so persistence and notify events complete
+ * before the step (and therefore the stream) ends.
+ */
+export type OnExecute = (toolExecution: ToolExecutionLog) => void | Promise<void>

@@ -11,6 +11,7 @@ import { MembershipsModule } from "@/domains/memberships/memberships.module"
 import { Organization } from "@/domains/organizations/organization.entity"
 import { ProjectMembershipRepository } from "@/domains/projects/memberships/project-membership.repository"
 import { Project } from "@/domains/projects/project.entity"
+import { PublicAgentSession } from "@/domains/public-chat/public-agent-sessions/public-agent-session.entity"
 import { UsersModule } from "@/domains/users/users.module"
 import { ProjectsAnalyticsController } from "./projects-analytics.controller"
 import { ProjectsAnalyticsGuard } from "./projects-analytics.guard"
@@ -18,7 +19,13 @@ import { ProjectsAnalyticsService } from "./projects-analytics.service"
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([ConversationAgentSession, AgentMessage, Project, Organization]),
+    TypeOrmModule.forFeature([
+      ConversationAgentSession,
+      PublicAgentSession,
+      AgentMessage,
+      Project,
+      Organization,
+    ]),
     AuthModule,
     MembershipsModule,
     UsersModule,

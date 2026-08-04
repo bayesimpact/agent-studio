@@ -14,6 +14,7 @@ import { AgentMessage } from "../agent-message.entity"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
 import { AgentLlmRequestService } from "./agent-llm-request.service"
 import type { AgentSessionScope, PublicStreamingSessionProxy } from "./streaming-session.types"
+import type { SessionStateTarget } from "./tools/session-state-target"
 import type { ToolExecutionLog } from "./tools/tool-execution-log"
 
 type NotifyClient = (event: Extract<StreamEvent, { type: "notify_client" }>) => void
@@ -152,6 +153,9 @@ export class StreamingService extends ServiceWithLLM {
     agentSettings,
     userContent,
     notifyClient,
+    sessionState,
+    sessionResult,
+    externalVisitorId,
   }: {
     connectScope: RequiredConnectScope
     publicSessionId: string
@@ -159,6 +163,15 @@ export class StreamingService extends ServiceWithLLM {
     agentSettings: AgentSettings
     userContent: string
     notifyClient: NotifyClient
+    /**
+     * Public persistence target (PublicAgentSessionsService), provided by
+     * the public-chat domain — agents must not import it (domain cycle).
+     */
+    sessionState: SessionStateTarget
+    /** Current fillForm state from public_agent_session.result. */
+    sessionResult: Record<string, unknown> | null
+    /** Identifier the embedding page attached to the session, if any. */
+    externalVisitorId?: string | null
   }): AsyncGenerator<StreamEvent, void, unknown> {
     await this.recoverAbortedStreams(publicSessionId)
 
@@ -198,7 +211,9 @@ export class StreamingService extends ServiceWithLLM {
       id: publicSessionId,
       traceId: publicSessionId,
       organizationId: connectScope.organizationId,
+      externalVisitorId,
       messages,
+      result: sessionResult,
     }
 
     let fullContent = ""
@@ -213,6 +228,7 @@ export class StreamingService extends ServiceWithLLM {
       }
       const llmRequest = await this.agentLlmRequestService.buildLLMRequest({
         agentSessionScope,
+        sessionState,
         onToolExecute: async (toolExecution) => {
           await this.persistToolExecutionAndNotifyClient({
             agentSessionScope,

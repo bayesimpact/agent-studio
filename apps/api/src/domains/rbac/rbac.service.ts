@@ -1,13 +1,14 @@
 import { Injectable } from "@nestjs/common"
-// biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
-import { ConfigService } from "@nestjs/config"
 import { InjectDataSource, InjectRepository } from "@nestjs/typeorm"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
 import { DataSource, In, Not, type Repository } from "typeorm"
 import {
+  AGENT_ROLE_PERMISSIONS,
+  AGENT_ROLES,
   ORGANIZATION_ROLE_PERMISSIONS,
   ORGANIZATION_ROLES,
   PLATFORM_STAFF_ROLE,
+  PLATFORM_SUPERADMIN_ROLE,
   PROJECT_ROLE_PERMISSIONS,
   PROJECT_ROLES,
 } from "./rbac.constants"
@@ -19,6 +20,7 @@ const ORGANIZATION_ROLE_LABELS: Record<string, string> = {
   org_admin: "Organization Admin",
   org_member: "Organization Member",
   [PLATFORM_STAFF_ROLE]: "Platform Staff",
+  [PLATFORM_SUPERADMIN_ROLE]: "Platform Superadmin",
 }
 
 const PROJECT_ROLE_LABELS: Record<string, string> = {
@@ -27,8 +29,15 @@ const PROJECT_ROLE_LABELS: Record<string, string> = {
   project_member: "Project Member",
 }
 
+const AGENT_ROLE_LABELS: Record<string, string> = {
+  agent_owner: "Agent Owner",
+  agent_admin: "Agent Admin",
+  agent_member: "Agent Member",
+}
+
 const GLOBAL_ROLE_SCOPE: Record<string, Role["scopeType"]> = {
   [PLATFORM_STAFF_ROLE]: "global",
+  [PLATFORM_SUPERADMIN_ROLE]: "global",
 }
 
 @Injectable()
@@ -38,7 +47,6 @@ export class RbacService {
     @InjectRepository(RolePermission)
     private readonly rolePermissionRepository: Repository<RolePermission>,
     @InjectDataSource() private readonly dataSource: DataSource,
-    private readonly configService: ConfigService,
   ) {}
 
   /**
@@ -48,7 +56,11 @@ export class RbacService {
    */
   async seedOrganizationRolesAndPermissions(): Promise<void> {
     const rolesByKey = await this.upsertRoles({
-      roleKeys: [...Object.values(ORGANIZATION_ROLES), PLATFORM_STAFF_ROLE],
+      roleKeys: [
+        ...Object.values(ORGANIZATION_ROLES),
+        PLATFORM_STAFF_ROLE,
+        PLATFORM_SUPERADMIN_ROLE,
+      ],
       labels: ORGANIZATION_ROLE_LABELS,
       defaultScope: "organization",
     })
@@ -69,6 +81,20 @@ export class RbacService {
     await this.linkRolePermissions(rolesByKey, PROJECT_ROLE_PERMISSIONS)
   }
 
+  /**
+   * Idempotent catalog seed for the agent domain.
+   * Production/deploy also seeds via migration `PlatformRolesAndPermissions1785320282681`.
+   * Kept for tests (`synchronize: true`) and local `seed:rbac`.
+   */
+  async seedAgentRolesAndPermissions(): Promise<void> {
+    const rolesByKey = await this.upsertRoles({
+      roleKeys: Object.values(AGENT_ROLES),
+      labels: AGENT_ROLE_LABELS,
+      defaultScope: "agent",
+    })
+    await this.linkRolePermissions(rolesByKey, AGENT_ROLE_PERMISSIONS)
+  }
+
   /** Maps legacy org membership roles to RBAC role_id. Org rows only. */
   async assignRoleIdsToOrganizationMemberships(): Promise<number> {
     return this.assignRoleIdsToMemberships("organization", ORGANIZATION_ROLES)
@@ -79,8 +105,13 @@ export class RbacService {
     return this.assignRoleIdsToMemberships("project", PROJECT_ROLES)
   }
 
+  /** Maps legacy agent membership roles to RBAC role_id. Agent rows only. */
+  async assignRoleIdsToAgentMemberships(): Promise<number> {
+    return this.assignRoleIdsToMemberships("agent", AGENT_ROLES)
+  }
+
   private async assignRoleIdsToMemberships(
-    resourceType: "organization" | "project",
+    resourceType: "organization" | "project" | "agent",
     rolesByLegacyRole: Record<string, string>,
   ): Promise<number> {
     let updatedCount = 0
@@ -101,43 +132,6 @@ export class RbacService {
     }
 
     return updatedCount
-  }
-
-  /** Grants platform_staff to users whose email matches ORGANIZATION_CREATOR_EMAIL_DOMAIN. */
-  async assignPlatformStaffToEligibleUsers(): Promise<number> {
-    const allowedDomain = this.configService
-      .get<string>("ORGANIZATION_CREATOR_EMAIL_DOMAIN")
-      ?.trim()
-    if (!allowedDomain) {
-      return 0
-    }
-
-    const platformStaffRole = await this.roleRepository.findOne({
-      where: { key: PLATFORM_STAFF_ROLE },
-    })
-    if (!platformStaffRole) {
-      return 0
-    }
-
-    const insertedRows: { id: string }[] = await this.dataSource.query(
-      `INSERT INTO user_membership (user_id, resource_type, resource_id, role, role_id)
-       SELECT user_account.id, 'global', NULL, 'member', $1
-       FROM "user" AS user_account
-       WHERE lower(trim(user_account.email)) LIKE '%' || lower(trim($2))
-         AND user_account.deleted_at IS NULL
-         AND NOT EXISTS (
-           SELECT 1
-           FROM user_membership AS membership
-           WHERE membership.user_id = user_account.id
-             AND membership.resource_type = 'global'
-             AND membership.role_id = $1
-             AND membership.deleted_at IS NULL
-         )
-       RETURNING id`,
-      [platformStaffRole.id, allowedDomain],
-    )
-
-    return insertedRows.length
   }
 
   private async upsertRoles({

@@ -28,6 +28,7 @@ import type {
   PublicStreamingSessionProxy,
   StreamingSession,
 } from "./streaming-session.types"
+import type { SessionStateTarget } from "./tools/session-state-target"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
 import { ToolsService } from "./tools.service"
 
@@ -86,33 +87,52 @@ export class AgentLlmRequestService extends ServiceWithLLM {
     attachmentDocumentId,
     includeSessionMetadataTools = true,
     extraTags = [],
+    sessionState,
   }: {
     agentSessionScope: AgentSessionScope
     onToolExecute: OnExecute
     attachmentDocumentId?: string
     includeSessionMetadataTools?: boolean
     extraTags?: string[]
+    sessionState?: SessionStateTarget
   }): Promise<BuiltLLMRequest> {
     const { session, agent, agentSettings, connectScope } = agentSessionScope
 
-    const { tools, mcpClose, toolDescriptions, hasSubAgentTools } =
-      await this.toolsService.buildTools({
-        agentSessionScope,
-        includeSessionMetadataTools,
-        onExecute: onToolExecute,
-      })
+    const {
+      tools,
+      mcpClose,
+      toolDescriptions,
+      fireAndForgetToolNames,
+      endOfTurnTools,
+      endOfTurnExecutionCounts,
+      masterPromptEpilogue,
+      hasSubAgentTools,
+    } = await this.toolsService.buildTools({
+      agentSessionScope,
+      includeSessionMetadataTools,
+      onExecute: onToolExecute,
+      sessionState,
+    })
 
-    const toolNames = tools ? Object.keys(tools) : []
+    // End-of-turn tool names are included so the master prompt can explain
+    // the report; deduplicated because they are also declared in `tools`.
+    const toolNames = [
+      ...new Set([...(tools ? Object.keys(tools) : []), ...Object.keys(endOfTurnTools)]),
+    ]
     const config = this.buildLLMConfig({
       systemPrompt: generateMasterPrompt({
         agent,
         agentSettings,
         toolNames,
         toolDescriptions,
+        epilogue: masterPromptEpilogue,
       }),
       model: agentSettings.model,
       temperature: agentSettings.temperature,
       tools,
+      fireAndForgetToolNames,
+      endOfTurnTools,
+      endOfTurnExecutionCounts,
     })
 
     const metadata: LLMMetadata = this.buildLLMData({

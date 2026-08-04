@@ -61,11 +61,11 @@ export function fillFormTool({
           sessionId: session.id,
           input: typedInput,
         })
-        onExecute({ toolName: ToolName.FillForm, arguments: typedInput })
+        await onExecute({ toolName: ToolName.FillForm, arguments: typedInput })
         return { formState }
       }
 
-      onExecute({ toolName: ToolName.FillForm, arguments: input })
+      await onExecute({ toolName: ToolName.FillForm, arguments: input })
       assertSessionSupportsFormResult(agentSessionScope)
       return { formState: agentSessionScope.session.result || {} }
     },

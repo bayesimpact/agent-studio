@@ -13,7 +13,10 @@ import {
   createOrganizationWithProject,
 } from "@/domains/organizations/organization.factory"
 import { addUserToProject } from "@/domains/projects/memberships/project-membership.factory"
+import { AGENT_ROLES } from "@/domains/rbac/rbac.constants"
 import { sdk } from "@/external/llm/open-telemetry-init"
+import { ensureRbacCatalog } from "../../../../test/rbac-test.helpers"
+import { agentFactory } from "../agent.factory"
 import { AgentsModule } from "../agents.module"
 import {
   addUserToAgent,
@@ -31,6 +34,7 @@ describe("AgentMembershipsService", () => {
     setup = await setupE2eTestDatabase({
       additionalImports: [AgentsModule],
     })
+    await ensureRbacCatalog(setup.module)
   })
 
   afterAll(async () => {
@@ -42,6 +46,31 @@ describe("AgentMembershipsService", () => {
     await clearTestDatabase(setup.dataSource)
     service = setup.module.get(AgentMembershipsService)
     repositories = setup.getAllRepositories()
+  })
+
+  describe("createAgentOwnerMembership", () => {
+    it("creates an owner membership with the agent RBAC role_id", async () => {
+      const { project, organization, user } = await createOrganizationWithProject(repositories)
+      const agent = await repositories.agentRepository.save(
+        agentFactory.transient({ project, organization }).build(),
+      )
+
+      const membership = await service.createAgentOwnerMembership({
+        agentId: agent.id,
+        userId: user.id,
+      })
+
+      expect(membership.role).toBe("owner")
+      expect(membership.roleId).not.toBeNull()
+
+      const savedMembership = await repositories.userMembershipRepository.findOneOrFail({
+        where: { id: membership.id },
+      })
+      const agentOwnerRole = await repositories.roleRepository.findOneOrFail({
+        where: { key: AGENT_ROLES.owner },
+      })
+      expect(savedMembership.roleId).toBe(agentOwnerRole.id)
+    })
   })
 
   // ─── removeAgentMembership ────────────────────────────────────────────────

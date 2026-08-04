@@ -20,7 +20,11 @@ import {
 import { reviewCampaignFactory } from "@/domains/review-campaigns/review-campaign.factory"
 import { userFactory } from "@/domains/users/user.factory"
 import { setupUserGuardForTesting } from "../../../test/e2e.helpers"
-import { assignPlatformStaffToUser, ensureRbacCatalog } from "../../../test/rbac-test.helpers"
+import {
+  assignPlatformStaffToUser,
+  assignPlatformSuperadminToUser,
+  ensureRbacCatalog,
+} from "../../../test/rbac-test.helpers"
 import { expectResponse, type Requester, testRequester } from "../../../test/request"
 import { MeModule } from "./me.module"
 
@@ -228,7 +232,7 @@ describe("MeController (e2e)", () => {
       })
     })
 
-    it("returns global permissions such as organization.create", async () => {
+    it("returns global permissions of platform_staff users", async () => {
       const user = userFactory.build({ auth0Id })
       await repositories.userRepository.save(user)
       await assignPlatformStaffToUser({ repositories, user })
@@ -237,8 +241,30 @@ describe("MeController (e2e)", () => {
 
       expectResponse(response, 200)
       expect([...response.body.data.user.globalPermissions].sort()).toEqual([
+        "backoffice.read",
+        "backoffice.terms.update",
+        "trace.read",
+      ])
+    })
+
+    it("returns global permissions of platform_superadmin users", async () => {
+      const user = userFactory.build({ auth0Id })
+      await repositories.userRepository.save(user)
+      await assignPlatformSuperadminToUser({ repositories, user })
+
+      const response = await subject()
+
+      expectResponse(response, 200)
+      expect([...response.body.data.user.globalPermissions].sort()).toEqual([
+        "backoffice.agent.read",
+        "backoffice.organization.read",
+        "backoffice.project.read",
+        "backoffice.project.update",
+        "backoffice.read",
+        "backoffice.terms.update",
+        "backoffice.user.read",
         "organization.create",
-        "trace.view",
+        "trace.read",
       ])
     })
   })

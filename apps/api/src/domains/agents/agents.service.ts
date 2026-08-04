@@ -137,7 +137,7 @@ export class AgentsService {
       )
     }
 
-    return { agent, agentSettings }
+    return { agent, agentSettings: publishedAgentSettings }
   }
 
   /**
