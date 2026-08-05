@@ -5,6 +5,11 @@ import type { MigrationInterface, QueryRunner } from "typeorm"
  * (TesterService.getAgentForCampaign). Rows created before that used a placeholder
  * pin of revision 1, so re-pin every campaign to its agent's latest published
  * revision: that is the revision they were effectively running on until now.
+ *
+ * Note: if an agent has no revision that is both non-draft and non-archived, its
+ * campaigns have no match in the update's FROM clause and keep whatever pin they
+ * already had, silently. "Every campaign re-pinned" is not guaranteed for 100% of
+ * rows.
  */
 export class RepinReviewCampaignAgentSettings1785928420530 implements MigrationInterface {
   name = "RepinReviewCampaignAgentSettings1785928420530"
