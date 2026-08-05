@@ -1,3 +1,4 @@
+import { AgentModel, DEFAULT_AGENT_MODEL } from "@caseai-connect/api-contracts"
 import type { Meta, StoryObj } from "@storybook/react-vite"
 import type { Agent } from "@/common/features/agents/agents.models"
 import type { IAgentsSpi } from "@/common/features/agents/agents.spi"
@@ -17,6 +18,8 @@ type StoryArgs = StudioStoryArgs & {
   withSubAgents?: boolean
   /** Unpublished draft revision — drives whether the header's publish button is enabled. */
   withDraft?: boolean
+  /** Puts the agent on a retired model so the deprecation banner renders. */
+  withDeprecatedModel?: boolean
 }
 
 /** Older revisions of the agent so the version history sheet has content to compare. */
@@ -69,6 +72,7 @@ const meta = {
     ...studioStoryArgTypes,
     withSubAgents: { control: "boolean" },
     withDraft: { control: "boolean" },
+    withDeprecatedModel: { control: "boolean" },
   },
   args: {
     ...studioStoryArgs,
@@ -76,6 +80,7 @@ const meta = {
     withAgents: true,
     withSubAgents: true,
     withDraft: true,
+    withDeprecatedModel: false,
   },
   render: render({ routes: studioRoutes, path: StudioRoutes.agentEdit.path }),
 } satisfies Meta<StoryArgs>
@@ -85,7 +90,7 @@ type Story = StoryObj<typeof meta>
 
 export const ConversationAgent: Story = {
   decorators: [
-    buildDecorator<StoryArgs>(({ withSubAgents, withDraft, ...args }) => {
+    buildDecorator<StoryArgs>(({ withSubAgents, withDraft, withDeprecatedModel, ...args }) => {
       const { baseSeeds, agents } = buildStudioData({ ...args, withAgents: true })
       const [rawParentAgent, ...rawChildAgents] = agents
       if (!rawParentAgent) {
@@ -97,6 +102,7 @@ export const ConversationAgent: Story = {
         type: "conversation" as const,
         revision: 3,
         isDraft: !!withDraft,
+        model: withDeprecatedModel ? AgentModel.Gemini25Flash : DEFAULT_AGENT_MODEL,
       }
       const childAgents = rawChildAgents.map((agent, index) => ({
         ...agent,
@@ -129,4 +135,9 @@ export const ConversationAgent: Story = {
       }
     }),
   ],
+}
+
+export const ConversationAgentOnDeprecatedModel: Story = {
+  args: { withDeprecatedModel: true },
+  decorators: ConversationAgent.decorators,
 }
