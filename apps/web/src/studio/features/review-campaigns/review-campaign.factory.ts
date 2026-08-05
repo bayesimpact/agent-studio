@@ -24,6 +24,10 @@ export const campaignFormAgentOptionFactory = CampaignFormAgentOptionFactory.def
   ({ params }) => ({
     id: params.id ?? faker.string.uuid(),
     name: params.name ?? faker.helpers.arrayElement(AGENT_OPTION_NAMES),
+    versions: params.versions ?? [
+      { revision: 2, name: "Clearer greeting", updatedAt: faker.date.recent().getTime() },
+      { revision: 1, name: "Initial version", updatedAt: faker.date.past().getTime() },
+    ],
   }),
 )
 

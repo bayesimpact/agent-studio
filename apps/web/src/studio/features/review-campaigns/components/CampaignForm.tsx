@@ -40,9 +40,17 @@ export type CampaignFormValues = {
   reviewerQuestions: ReviewCampaignQuestionDto[]
 }
 
+export type CampaignFormAgentVersion = {
+  revision: number
+  name?: string
+  updatedAt: number
+}
+
 export type CampaignFormAgentOption = {
   id: string
   name: string
+  /** Published revisions of this agent, revision-descending. */
+  versions: CampaignFormAgentVersion[]
 }
 
 type Props = {
