@@ -109,7 +109,7 @@
       "description": "Vous avez des modifications non enregistrées qui seront perdues. Voulez-vous les abandonner ?"
     },
     "create": {
-      "button": "Créer une version",
+      "button": "Enregistrer la version",
       "noDraft": "Aucun brouillon à créer. Enregistrez une modification pour créer une nouvelle version brouillon.",
       "unsavedChanges": "Enregistrez ou annulez vos modifications avant de publier.",
       "optional": "Facultatif",
@@ -122,9 +122,9 @@
         }
       },
       "dialog": {
-        "title": "Créer la version {{revision}} ?",
+        "title": "Enregistrer la version {{revision}} ?",
         "description": "La version {{revision}} devient les paramètres utilisés par cet agent. Les modifications suivantes créeront une nouvelle version brouillon.",
-        "submit": "Créer la version"
+        "submit": "Enregistrer la version"
       }
     },
     "history": {

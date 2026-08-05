@@ -157,7 +157,6 @@ export const studioRoutes = {
               path: StudioRoutes.agentSession.path,
               element: <AgentSessionRoute Component={StudioAgentSessionRoute} />,
             },
-
             {
               path: StudioRoutes.agentExtraction.path,
               element: (

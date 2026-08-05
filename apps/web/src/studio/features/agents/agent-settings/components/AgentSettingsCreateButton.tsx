@@ -21,7 +21,7 @@ import {
 import { Input } from "@caseai-connect/ui/shad/input"
 import { Textarea } from "@caseai-connect/ui/shad/textarea"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { CheckSquareIcon, UploadIcon } from "lucide-react"
+import { SaveIcon } from "lucide-react"
 import { useState } from "react"
 import { useForm } from "react-hook-form"
 import { useTranslation } from "react-i18next"
@@ -38,11 +38,11 @@ import { useAppDispatch } from "@/common/store/hooks"
  */
 export function AgentSettingsCreateButton({
   agentSettings,
-  size,
+  buttonProps,
   hasUnsavedChanges = false,
 }: {
   agentSettings: AgentSettings
-  size?: React.ComponentProps<typeof Button>["size"]
+  buttonProps?: React.ComponentProps<typeof Button>
   hasUnsavedChanges?: boolean
 }) {
   const { t } = useTranslation()
@@ -59,12 +59,15 @@ export function AgentSettingsCreateButton({
       <DialogTrigger asChild>
         <Button
           type="button"
-          size={size}
           disabled={!agentSettings.isDraft || hasUnsavedChanges}
           title={disabledTitle}
+          size="lg"
+          variant="default"
+          className="text-base"
+          {...buttonProps}
         >
-          <CheckSquareIcon className="size-4" />
           {t("agentSettings:create.button")}
+          <SaveIcon className="ml-2 size-5" />
         </Button>
       </DialogTrigger>
       <DialogContent>
@@ -157,7 +160,6 @@ function PublishForm({
 
         <DialogFooter>
           <Button type="submit" disabled={form.formState.isSubmitting}>
-            <UploadIcon className="size-4" />
             {t("create.dialog.submit")}
           </Button>
         </DialogFooter>

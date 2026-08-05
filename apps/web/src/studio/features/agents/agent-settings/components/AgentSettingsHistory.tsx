@@ -16,9 +16,11 @@ import { AgentSettingsHistorySheet } from "./AgentSettingsHistorySheet"
 export function AgentSettingsHistory({
   agent,
   agentSettings,
+  buttonProps,
 }: {
   agent: Agent
   agentSettings: AgentSettings
+  buttonProps?: React.ComponentProps<typeof Button>
 }) {
   const { t } = useTranslation()
 
@@ -26,7 +28,7 @@ export function AgentSettingsHistory({
     <AgentSettingsHistorySheet
       agent={agent}
       trigger={
-        <Button type="button" variant="outline" size="sm">
+        <Button type="button" size="lg" variant="outline" {...buttonProps}>
           <HistoryIcon className="size-4" />
           {t("agentSettings:history.button")}
           <Badge variant="secondary">v{agentSettings.revision}</Badge>

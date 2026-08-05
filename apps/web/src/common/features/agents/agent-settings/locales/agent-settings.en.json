@@ -109,7 +109,7 @@
       "description": "You have unsaved changes that will be lost. Do you want to discard them?"
     },
     "create": {
-      "button": "Create version",
+      "button": "Save version",
       "noDraft": "No draft to create. Save a change first to create a new draft version.",
       "unsavedChanges": "Save or discard your changes before publishing.",
       "optional": "Optional",
@@ -122,9 +122,9 @@
         }
       },
       "dialog": {
-        "title": "Create version {{revision}}?",
+        "title": "Save version {{revision}}?",
         "description": "Version {{revision}} becomes the settings this agent runs with. Later changes start a new draft version.",
-        "submit": "Create version"
+        "submit": "Save version"
       }
     },
     "history": {

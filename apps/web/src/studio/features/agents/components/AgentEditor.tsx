@@ -1,3 +1,4 @@
+import { ButtonGroup } from "@caseai-connect/ui/shad/button-group"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@caseai-connect/ui/shad/tabs"
 import { AlertTriangleIcon } from "lucide-react"
 import { type ReactNode, useMemo, useState } from "react"
@@ -233,18 +234,12 @@ export function AgentEditor({
               </TabsTrigger>
             ))}
           </TabsList>
-          <div className="flex items-center gap-2">
-            <AgentSettingsHistory agent={agent} agentSettings={agentSettings} />
-            {/* Extraction agents edit their settings from the playground, which has no editor
-                route to host a publish action, so it sits next to the history button here. */}
-            {agent.type === "extraction" && (
-              <AgentSettingsCreateButton
-                agentSettings={agentSettings}
-                size="sm"
-                hasUnsavedChanges={dirty}
-              />
-            )}
-          </div>
+          {agent.type === "extraction" && (
+            <ButtonGroup>
+              <AgentSettingsHistory agent={agent} agentSettings={agentSettings} />
+              <AgentSettingsCreateButton agentSettings={agentSettings} hasUnsavedChanges={dirty} />
+            </ButtonGroup>
+          )}
         </div>
         {/* Also keyed on the revision and updatedAt so the active tab form reloads fresh defaults
             after a version is restored from the history sheet. Restoring over an existing draft

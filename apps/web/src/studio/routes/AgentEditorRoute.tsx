@@ -1,3 +1,4 @@
+import { ButtonGroup } from "@caseai-connect/ui/shad/button-group"
 import { useState } from "react"
 import { useTranslation } from "react-i18next"
 import { useNavigate } from "react-router-dom"
@@ -17,6 +18,7 @@ import {
 } from "@/studio/features/agents/components/AgentEditor"
 import { selectAgentSettingsDataByAgentId } from "../../common/features/agents/agent-settings/agent-settings.selectors"
 import { AgentSettingsCreateButton } from "../features/agents/agent-settings/components/AgentSettingsCreateButton"
+import { AgentSettingsHistory } from "../features/agents/agent-settings/components/AgentSettingsHistory"
 
 export function AgentEditorRoute() {
   const agent = useValue(selectCurrentAgentData)
@@ -65,10 +67,13 @@ function WithData({ orchestration }: { orchestration?: AgentEditorOrchestration 
         title={t(`agent:update.${agent.type}.title`)}
         description={t(`agent:update.${agent.type}.description`)}
         action={
-          <AgentSettingsCreateButton
-            agentSettings={agentSettings}
-            hasUnsavedChanges={editorDirty}
-          />
+          <ButtonGroup>
+            <AgentSettingsHistory agent={agent} agentSettings={agentSettings} />
+            <AgentSettingsCreateButton
+              agentSettings={agentSettings}
+              hasUnsavedChanges={editorDirty}
+            />
+          </ButtonGroup>
         }
       />
       <AgentEditor
