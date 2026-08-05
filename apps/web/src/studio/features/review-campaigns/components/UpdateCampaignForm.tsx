@@ -60,6 +60,9 @@ export function UpdateCampaignForm({ campaign, agents, onSuccess, onDeleted }: P
         fields: {
           name: values.name,
           description: values.description,
+          ...(values.agentSettingsRevision !== null && {
+            agentSettingsRevision: values.agentSettingsRevision,
+          }),
           testerPerSessionQuestions: values.testerPerSessionQuestions,
           testerEndOfPhaseQuestions: values.testerEndOfPhaseQuestions,
           reviewerQuestions: values.reviewerQuestions,
@@ -135,6 +138,7 @@ export function UpdateCampaignForm({ campaign, agents, onSuccess, onDeleted }: P
           name: campaign.name,
           description: campaign.description,
           agentId: campaign.agentId,
+          agentSettingsRevision: campaign.agentSettingsRevision,
           testerPerSessionQuestions: campaign.testerPerSessionQuestions,
           testerEndOfPhaseQuestions: campaign.testerEndOfPhaseQuestions,
           reviewerQuestions: campaign.reviewerQuestions,

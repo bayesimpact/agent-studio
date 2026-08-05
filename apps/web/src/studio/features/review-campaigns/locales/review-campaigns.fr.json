@@ -48,7 +48,10 @@
         "description": "Description",
         "descriptionPlaceholder": "Que voulons-nous évaluer ?",
         "agent": "Agent ciblé",
-        "agentPlaceholder": "Sélectionnez un agent"
+        "agentPlaceholder": "Sélectionnez un agent",
+        "agentVersion": "Version de l'agent",
+        "agentVersionPlaceholder": "Sélectionnez une version",
+        "agentVersionItem": "v{{revision}} — {{detail}}"
       },
       "actions": {
         "create": "Créer la campagne",
@@ -59,7 +62,8 @@
       },
       "validation": {
         "nameRequired": "Le nom de la campagne est requis",
-        "agentRequired": "L'agent est requis"
+        "agentRequired": "L'agent est requis",
+        "agentVersionRequired": "La version de l'agent est requise"
       }
     },
     "defaults": {

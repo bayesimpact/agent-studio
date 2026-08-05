@@ -48,7 +48,10 @@
         "description": "Description",
         "descriptionPlaceholder": "What are we evaluating?",
         "agent": "Target agent",
-        "agentPlaceholder": "Select an agent"
+        "agentPlaceholder": "Select an agent",
+        "agentVersion": "Agent version",
+        "agentVersionPlaceholder": "Select a version",
+        "agentVersionItem": "v{{revision}} — {{detail}}"
       },
       "actions": {
         "create": "Create campaign",
@@ -59,7 +62,8 @@
       },
       "validation": {
         "nameRequired": "Campaign name is required",
-        "agentRequired": "Agent is required"
+        "agentRequired": "Agent is required",
+        "agentVersionRequired": "Agent version is required"
       }
     },
     "defaults": {

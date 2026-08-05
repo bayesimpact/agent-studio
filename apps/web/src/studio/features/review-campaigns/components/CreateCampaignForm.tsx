@@ -26,6 +26,9 @@ export function CreateCampaignForm({ agents, onSuccess }: Props) {
       createReviewCampaign({
         fields: {
           agentId: values.agentId,
+          ...(values.agentSettingsRevision !== null && {
+            agentSettingsRevision: values.agentSettingsRevision,
+          }),
           name: values.name,
           description: values.description,
           testerPerSessionQuestions: values.testerPerSessionQuestions,

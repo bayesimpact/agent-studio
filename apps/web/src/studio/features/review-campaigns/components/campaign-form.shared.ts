@@ -3,7 +3,7 @@ import type {
   ReviewCampaignQuestionType,
 } from "@caseai-connect/api-contracts"
 import type { TFunction } from "i18next"
-import type { CampaignFormValues } from "./CampaignForm"
+import type { CampaignFormAgentVersion, CampaignFormValues } from "./CampaignForm"
 
 /**
  * Default values used to pre-fill the create-campaign sheet.
@@ -86,6 +86,29 @@ export function computeAutoCampaignName({
     return t("reviewCampaigns:defaults.campaignName", { agent: agentName, date })
   }
   return t("reviewCampaigns:defaults.campaignNameNoAgent", { date })
+}
+
+/**
+ * Version option label: `v2 — Clearer greeting`, falling back to the publication date
+ * when a revision has no name. Mirrors the eval run dialog's version item format.
+ */
+export function formatAgentVersionLabel({
+  t,
+  language,
+  version,
+}: {
+  t: TFunction
+  language: string
+  version: CampaignFormAgentVersion
+}): string {
+  const name = version.name?.trim()
+  const detail =
+    name ||
+    new Intl.DateTimeFormat(language, { dateStyle: "medium" }).format(new Date(version.updatedAt))
+  return t("reviewCampaigns:editor.fields.agentVersionItem", {
+    revision: version.revision,
+    detail,
+  })
 }
 
 export function getDefaultCampaignValues({

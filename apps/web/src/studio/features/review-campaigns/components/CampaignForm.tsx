@@ -26,7 +26,7 @@ import { z } from "zod"
 import type { PendingInvitations } from "@/studio/features/invitations/invitations.models"
 import { CampaignStatusBadge } from "./CampaignStatusBadge"
 import { CampaignSummaryPanel } from "./CampaignSummaryPanel"
-import { computeAutoCampaignName } from "./campaign-form.shared"
+import { computeAutoCampaignName, formatAgentVersionLabel } from "./campaign-form.shared"
 import { FeedbackPreview } from "./FeedbackPreview"
 import { ParticipantsList } from "./ParticipantsList"
 import { QuestionListEditor } from "./QuestionListEditor"
@@ -35,6 +35,8 @@ export type CampaignFormValues = {
   name: string
   description: string | null
   agentId: string
+  /** null until an agent is picked; the schema refuses null on submit. */
+  agentSettingsRevision: number | null
   testerPerSessionQuestions: ReviewCampaignQuestionDto[]
   testerEndOfPhaseQuestions: ReviewCampaignQuestionDto[]
   reviewerQuestions: ReviewCampaignQuestionDto[]
@@ -94,6 +96,13 @@ export function CampaignForm({
     name: z.string().min(1, t("reviewCampaigns:editor.validation.nameRequired")),
     description: z.string().nullable(),
     agentId: z.string().min(1, t("reviewCampaigns:editor.validation.agentRequired")),
+    agentSettingsRevision: z
+      .number()
+      .int()
+      .nullable()
+      .refine((value) => value !== null, {
+        message: t("reviewCampaigns:editor.validation.agentVersionRequired"),
+      }),
     testerPerSessionQuestions: z.array(z.any()),
     testerEndOfPhaseQuestions: z.array(z.any()),
     reviewerQuestions: z.array(z.any()),
@@ -121,6 +130,7 @@ export function CampaignForm({
       name: defaultValues?.name ?? "",
       description: defaultValues?.description ?? "",
       agentId: defaultValues?.agentId ?? "",
+      agentSettingsRevision: defaultValues?.agentSettingsRevision ?? null,
       testerPerSessionQuestions: defaultValues?.testerPerSessionQuestions ?? [],
       testerEndOfPhaseQuestions: defaultValues?.testerEndOfPhaseQuestions ?? [],
       reviewerQuestions: defaultValues?.reviewerQuestions ?? [],
@@ -147,6 +157,19 @@ export function CampaignForm({
     setValue("name", nextName, { shouldDirty: false })
     setLastAutoName(nextName)
   }, [mode, watchedAgentId, agents, t, i18n.language, getValues, setValue, lastAutoName])
+
+  const selectedAgentVersions = agents.find((agent) => agent.id === watchedAgentId)?.versions ?? []
+
+  // Create mode: pin the newest published revision as soon as an agent is picked, so the
+  // user only touches this field when they deliberately want an older version.
+  useEffect(() => {
+    if (mode !== "create") return
+    const latestRevision = selectedAgentVersions.reduce<number | null>(
+      (best, version) => (best === null || version.revision > best ? version.revision : best),
+      null,
+    )
+    setValue("agentSettingsRevision", latestRevision, { shouldDirty: false })
+  }, [mode, selectedAgentVersions, setValue])
 
   const submitHandler = handleSubmit((values) => {
     onSubmit({
@@ -270,6 +293,42 @@ export function CampaignForm({
               />
               {errors.agentId && (
                 <p className="text-destructive text-sm">{errors.agentId.message}</p>
+              )}
+            </Field>
+
+            <Field>
+              <FieldLabel htmlFor="agentSettingsRevision">
+                {t("reviewCampaigns:editor.fields.agentVersion")}
+              </FieldLabel>
+              <Controller
+                name="agentSettingsRevision"
+                control={control}
+                render={({ field }) => (
+                  <Select
+                    value={field.value !== null ? String(field.value) : undefined}
+                    disabled={configLocked || selectedAgentVersions.length === 0}
+                    onValueChange={(value) => {
+                      const parsed = Number.parseInt(value, 10)
+                      if (!Number.isNaN(parsed)) field.onChange(parsed)
+                    }}
+                  >
+                    <SelectTrigger id="agentSettingsRevision">
+                      <SelectValue
+                        placeholder={t("reviewCampaigns:editor.fields.agentVersionPlaceholder")}
+                      />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {selectedAgentVersions.map((version) => (
+                        <SelectItem key={version.revision} value={String(version.revision)}>
+                          {formatAgentVersionLabel({ t, language: i18n.language, version })}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+              />
+              {errors.agentSettingsRevision && (
+                <p className="text-destructive text-sm">{errors.agentSettingsRevision.message}</p>
               )}
             </Field>
           </FieldGroup>
