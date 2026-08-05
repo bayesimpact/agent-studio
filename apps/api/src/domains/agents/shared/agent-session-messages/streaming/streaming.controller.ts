@@ -1,13 +1,23 @@
 import { AgentSessionMessagesRoutes, type StreamEvent } from "@caseai-connect/api-contracts"
 import type { MessageEvent } from "@nestjs/common"
-import { Controller, ForbiddenException, Query, Req, Sse, UseGuards } from "@nestjs/common"
+import {
+  Controller,
+  ForbiddenException,
+  NotFoundException,
+  Query,
+  Req,
+  Sse,
+  UseGuards,
+} from "@nestjs/common"
 import { Observable } from "rxjs"
 import type { EndpointRequestWithAgentSession } from "@/common/context/request.interface"
 import { getRequiredConnectScope } from "@/common/context/request-context.helpers"
 import { RequireContext } from "@/common/context/require-context.decorator"
 import { ResourceContextGuard } from "@/common/context/resource-context.guard"
+import type { RequiredConnectScope } from "@/common/entities/connect-required-fields"
 import { CheckPolicy } from "@/common/policies/check-policy.decorator"
 import type { ConversationAgentSession } from "@/domains/agents/conversation-agent-sessions/conversation-agent-session.entity"
+import type { AgentSettings } from "@/domains/agents/settings/agent-settings.entity"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
 import { AgentSettingsService } from "@/domains/agents/settings/agent-settings.service"
 import { JwtAuthGuard } from "@/domains/auth/jwt-auth.guard"
@@ -50,9 +60,10 @@ export class StreamingController {
       return new Observable<StreamEvent>((subscriber) => {
         void (async () => {
           try {
-            const agentSettings = await this.agentSettingsService.getLast({
+            const agentSettings = await this.resolveAgentSettings({
               connectScope: { organizationId, projectId },
               agentId: agent.id,
+              session: request.agentSession,
             })
             const agentSessionScope: AgentSessionScope = {
               connectScope,
@@ -82,5 +93,41 @@ export class StreamingController {
     } catch (_) {
       throw new ForbiddenException("Invalid query format")
     }
+  }
+
+  /**
+   * The settings a reply must be generated with.
+   *
+   * A session collected for a review campaign runs on the revision that campaign is
+   * pinned to, so the whole conversation stays attributable to one configuration even
+   * after newer revisions are published. Every other session (studio playground, embed,
+   * sub-agent runs) keeps following the agent's latest published revision.
+   */
+  private async resolveAgentSettings({
+    connectScope,
+    agentId,
+    session,
+  }: {
+    connectScope: RequiredConnectScope
+    agentId: string
+    session: ConversationAgentSession
+  }): Promise<AgentSettings> {
+    const pinnedAgentSettingsId = session.reviewCampaign?.agentSettingsId
+    if (!pinnedAgentSettingsId) {
+      return this.agentSettingsService.getLast({ connectScope, agentId })
+    }
+
+    const pinnedAgentSettings = await this.agentSettingsService.getById({
+      connectScope,
+      agentSettingsId: pinnedAgentSettingsId,
+    })
+    // Falling back to the latest revision here is exactly the mixed-configuration bug this
+    // resolution exists to prevent, so a missing pin is an error rather than a default.
+    if (!pinnedAgentSettings) {
+      throw new NotFoundException(
+        `AgentSettings with id ${pinnedAgentSettingsId} pinned by campaign ${session.campaignId} not found`,
+      )
+    }
+    return pinnedAgentSettings
   }
 }
