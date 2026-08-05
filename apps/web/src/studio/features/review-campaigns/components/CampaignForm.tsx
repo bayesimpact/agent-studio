@@ -55,6 +55,9 @@ export type CampaignFormAgentOption = {
   versions: CampaignFormAgentVersion[]
 }
 
+/** Stable reference so the no-agent-selected case doesn't allocate a fresh array every render. */
+const EMPTY_VERSIONS: CampaignFormAgentVersion[] = []
+
 type Props = {
   mode: "create" | "edit"
   status: ReviewCampaignStatus
@@ -158,10 +161,20 @@ export function CampaignForm({
     setLastAutoName(nextName)
   }, [mode, watchedAgentId, agents, t, i18n.language, getValues, setValue, lastAutoName])
 
-  const selectedAgentVersions = agents.find((agent) => agent.id === watchedAgentId)?.versions ?? []
+  // The version list is keyed off the campaign's own agent in edit mode, not the live
+  // `agentId` field: that field's Select isn't disabled purely by mode (only by
+  // `configLocked`), so a user could visually change it on a draft without the change
+  // ever reaching the API (`UpdateReviewCampaignRequestDto` has no `agentId`). Resolving
+  // versions from `defaultValues?.agentId` there keeps the version list pinned to the
+  // agent that's actually persisted, so it can never offer a revision that belongs to a
+  // different agent than the one the campaign really runs on.
+  const versionsAgentId = mode === "create" ? watchedAgentId : (defaultValues?.agentId ?? "")
+  const selectedAgentVersions =
+    agents.find((agent) => agent.id === versionsAgentId)?.versions ?? EMPTY_VERSIONS
 
   // Create mode: pin the newest published revision as soon as an agent is picked, so the
-  // user only touches this field when they deliberately want an older version.
+  // user only touches this field when they deliberately want an older version. Never runs
+  // in edit mode, where the seeded default from the campaign is the source of truth.
   useEffect(() => {
     if (mode !== "create") return
     const latestRevision = selectedAgentVersions.reduce<number | null>(
