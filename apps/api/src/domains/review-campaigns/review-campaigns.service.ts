@@ -12,6 +12,7 @@ import type { RequiredConnectScope } from "@/common/entities/connect-required-fi
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
 import { TransactionService } from "@/common/transaction/transaction.service"
 import { Agent } from "@/domains/agents/agent.entity"
+import type { AgentSettings } from "@/domains/agents/settings/agent-settings.entity"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
 import { AgentSettingsService } from "@/domains/agents/settings/agent-settings.service"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
@@ -26,6 +27,7 @@ import { TesterService } from "./tester/tester.service"
 
 export type CreateReviewCampaignFields = {
   agentId: string
+  agentSettingsRevision?: number
   name: string
   description?: string | null
   testerPerSessionQuestions?: ReviewCampaignQuestion[]
@@ -84,9 +86,10 @@ export class ReviewCampaignsService {
     if (!agent) {
       throw new UnprocessableEntityException(`Agent ${fields.agentId} not found in this project`)
     }
-    const agentSettings = await this.agentSettingsService.getLast({
+    const agentSettings = await this.resolveAgentSettings({
       connectScope,
       agentId: agent.id,
+      revision: fields.agentSettingsRevision,
     })
 
     const campaign = await this.reviewCampaignConnectRepository.createAndSave(connectScope, {
@@ -103,6 +106,46 @@ export class ReviewCampaignsService {
     })
     campaign.agentSettings = agentSettings
     return campaign
+  }
+
+  /**
+   * The settings row a campaign runs on. A campaign must run on a stable, published
+   * revision: drafts keep mutating and archived revisions are retired, so both are
+   * refused rather than silently falling back to the latest one.
+   */
+  private async resolveAgentSettings({
+    connectScope,
+    agentId,
+    revision,
+  }: {
+    connectScope: RequiredConnectScope
+    agentId: string
+    revision?: number
+  }): Promise<AgentSettings> {
+    if (revision === undefined) {
+      return this.agentSettingsService.getLast({ connectScope, agentId })
+    }
+    const agentSettings = await this.agentSettingsService.get({
+      connectScope,
+      agentId,
+      revision,
+    })
+    if (!agentSettings) {
+      throw new UnprocessableEntityException(
+        `Agent settings revision ${revision} not found for agent ${agentId}`,
+      )
+    }
+    if (agentSettings.isDraft) {
+      throw new UnprocessableEntityException(
+        `Agent settings revision ${revision} is a draft and cannot be used by a campaign`,
+      )
+    }
+    if (agentSettings.isArchived) {
+      throw new UnprocessableEntityException(
+        `Agent settings revision ${revision} is archived and cannot be used by a campaign`,
+      )
+    }
+    return agentSettings
   }
 
   async listCampaigns(

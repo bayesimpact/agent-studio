@@ -69,6 +69,8 @@ export type ReviewCampaignDetailDto = ReviewCampaignDto & {
 
 export type CreateReviewCampaignRequestDto = {
   agentId: string
+  /** Published revision to pin. Omitted means the agent's latest published revision. */
+  agentSettingsRevision?: number
   name: string
   description?: string | null
   testerPerSessionQuestions?: ReviewCampaignQuestionDto[]
