@@ -54,15 +54,20 @@ export function UpdateCampaignForm({ campaign, agents, onSuccess, onDeleted }: P
   }
 
   const handleSubmit = async (values: CampaignFormValues) => {
+    // Only send the revision when it actually changes. Re-sending the current pin would 422
+    // as soon as that revision gets archived, blocking edits that have nothing to do with it.
+    const revisionToPin =
+      values.agentSettingsRevision !== null &&
+      values.agentSettingsRevision !== campaign.agentSettingsRevision
+        ? values.agentSettingsRevision
+        : null
     await dispatch(
       updateReviewCampaign({
         reviewCampaignId: campaign.id,
         fields: {
           name: values.name,
           description: values.description,
-          ...(values.agentSettingsRevision !== null && {
-            agentSettingsRevision: values.agentSettingsRevision,
-          }),
+          ...(revisionToPin !== null && { agentSettingsRevision: revisionToPin }),
           testerPerSessionQuestions: values.testerPerSessionQuestions,
           testerEndOfPhaseQuestions: values.testerEndOfPhaseQuestions,
           reviewerQuestions: values.reviewerQuestions,

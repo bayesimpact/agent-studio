@@ -51,7 +51,8 @@
         "agentPlaceholder": "Select an agent",
         "agentVersion": "Agent version",
         "agentVersionPlaceholder": "Select a version",
-        "agentVersionItem": "v{{revision}} — {{detail}}"
+        "agentVersionItem": "v{{revision}} — {{detail}}",
+        "agentVersionUnavailableItem": "v{{revision}} — no longer published"
       },
       "actions": {
         "create": "Create campaign",
@@ -62,8 +63,7 @@
       },
       "validation": {
         "nameRequired": "Campaign name is required",
-        "agentRequired": "Agent is required",
-        "agentVersionRequired": "Agent version is required"
+        "agentRequired": "Agent is required"
       }
     },
     "defaults": {
