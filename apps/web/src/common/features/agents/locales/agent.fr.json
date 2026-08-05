@@ -234,7 +234,11 @@
     },
     "playground": "Playground",
     "model": {
-      "deprecatedSuffix": "(déprécié)"
+      "deprecatedSuffix": "(déprécié)",
+      "deprecation": {
+        "title": "{{model}} sera retiré le {{date}}",
+        "description": "Mettez cet agent à jour vers {{replacement}} et testez-le avant cette date. Passé ce délai, les exécutions sur {{model}} échoueront."
+      }
     },
     "source_one": "{{count}} source",
     "source_other": "{{count}} sources",

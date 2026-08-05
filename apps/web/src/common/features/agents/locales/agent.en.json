@@ -234,7 +234,11 @@
     },
     "playground": "Playground",
     "model": {
-      "deprecatedSuffix": "(deprecated)"
+      "deprecatedSuffix": "(deprecated)",
+      "deprecation": {
+        "title": "{{model}} is being retired on {{date}}",
+        "description": "Update this agent to {{replacement}} and re-test it before that date. After it, runs on {{model}} will start failing."
+      }
     },
     "source_one": "{{count}} source",
     "source_other": "{{count}} sources",
