@@ -83,12 +83,16 @@ export class TesterService {
     })
     if (!agent) throw new NotFoundException(`Agent ${campaign.agentId} not found`)
 
-    const agentSettings = await this.agentSettingsService.getLast({
+    // The campaign runs on the revision it was pinned to, so results stay attributable
+    // to one configuration even after newer versions are published.
+    const agentSettings = await this.agentSettingsService.getById({
       connectScope,
-      agentId: agent.id,
+      agentSettingsId: campaign.agentSettingsId,
     })
     if (!agentSettings)
-      throw new NotFoundException(`AgentSettings for Agent ${campaign.agentId} not found`)
+      throw new NotFoundException(
+        `AgentSettings with id ${campaign.agentSettingsId} not found for campaign ${campaign.id}`,
+      )
 
     return { agent, agentSettings }
   }
