@@ -233,6 +233,9 @@
       "primaryColorDescription": "Primary color used in the chat widget header. Enter a hex value (e.g. #2563eb)."
     },
     "playground": "Playground",
+    "model": {
+      "deprecatedSuffix": "(deprecated)"
+    },
     "source_one": "{{count}} source",
     "source_other": "{{count}} sources",
     "source_zero": "No sources",

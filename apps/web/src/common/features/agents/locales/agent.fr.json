@@ -233,6 +233,9 @@
       "primaryColorDescription": "Couleur principale utilisée dans l'en-tête du widget de chat. Saisissez une valeur hexadécimale (ex. #2563eb)."
     },
     "playground": "Playground",
+    "model": {
+      "deprecatedSuffix": "(déprécié)"
+    },
     "source_one": "{{count}} source",
     "source_other": "{{count}} sources",
     "source_zero": "Aucune source",
