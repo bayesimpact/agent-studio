@@ -36,6 +36,7 @@ export type CreateReviewCampaignFields = {
 }
 
 export type UpdateReviewCampaignFields = {
+  agentSettingsRevision?: number
   name?: string
   description?: string | null
   testerPerSessionQuestions?: ReviewCampaignQuestion[]
@@ -235,6 +236,15 @@ export class ReviewCampaignsService {
     }
     if (configUpdates.reviewerQuestions !== undefined) {
       campaign.reviewerQuestions = configUpdates.reviewerQuestions
+    }
+    if (configUpdates.agentSettingsRevision !== undefined) {
+      const agentSettings = await this.resolveAgentSettings({
+        connectScope,
+        agentId: campaign.agentId,
+        revision: configUpdates.agentSettingsRevision,
+      })
+      campaign.agentSettingsId = agentSettings.id
+      campaign.agentSettings = agentSettings
     }
 
     if (status !== undefined && status !== campaign.status) {

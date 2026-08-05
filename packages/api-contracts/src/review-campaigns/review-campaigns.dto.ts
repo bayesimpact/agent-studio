@@ -79,6 +79,8 @@ export type CreateReviewCampaignRequestDto = {
 }
 
 export type UpdateReviewCampaignRequestDto = {
+  /** Re-pin the campaign to another published revision. Rejected once out of draft. */
+  agentSettingsRevision?: number
   name?: string
   description?: string | null
   testerPerSessionQuestions?: ReviewCampaignQuestionDto[]
