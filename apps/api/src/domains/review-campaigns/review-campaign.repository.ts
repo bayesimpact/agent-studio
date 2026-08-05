@@ -16,6 +16,7 @@ export class ReviewCampaignRepository {
   ): Promise<Array<{ campaign: ReviewCampaign; memberCount: number }>> {
     const { entities, raw } = await this.repo()
       .createQueryBuilder("campaign")
+      .leftJoinAndSelect("campaign.agentSettings", "agentSettings")
       .leftJoin(
         UserMembership,
         "membership",
@@ -27,6 +28,7 @@ export class ReviewCampaignRepository {
       .andWhere("campaign.project_id = :projectId", { projectId: connectScope.projectId })
       .addSelect("COUNT(membership.id)::int", "memberCount")
       .groupBy("campaign.id")
+      .addGroupBy("agentSettings.id")
       .orderBy("campaign.created_at", "DESC")
       .getRawAndEntities<{ memberCount: number }>()
 

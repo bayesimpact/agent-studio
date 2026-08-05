@@ -89,7 +89,7 @@ export class ReviewCampaignsService {
       agentId: agent.id,
     })
 
-    return this.reviewCampaignConnectRepository.createAndSave(connectScope, {
+    const campaign = await this.reviewCampaignConnectRepository.createAndSave(connectScope, {
       agentId: fields.agentId,
       agentSettingsId: agentSettings.id,
       name: fields.name.trim(),
@@ -101,6 +101,8 @@ export class ReviewCampaignsService {
       activatedAt: null,
       closedAt: null,
     })
+    campaign.agentSettings = agentSettings
+    return campaign
   }
 
   async listCampaigns(
@@ -116,7 +118,9 @@ export class ReviewCampaignsService {
     connectScope: RequiredConnectScope
     reviewCampaignId: string
   }): Promise<ReviewCampaign | null> {
-    return this.reviewCampaignConnectRepository.getOneById(connectScope, reviewCampaignId)
+    return this.reviewCampaignConnectRepository.getOneById(connectScope, reviewCampaignId, {
+      relations: ["agentSettings"],
+    })
   }
 
   async getDetail({
@@ -156,6 +160,7 @@ export class ReviewCampaignsService {
     const campaign = await this.reviewCampaignConnectRepository.getOneById(
       connectScope,
       reviewCampaignId,
+      { relations: ["agentSettings"] },
     )
     if (!campaign) {
       throw new NotFoundException(`Review campaign ${reviewCampaignId} not found`)

@@ -32,6 +32,10 @@ export type ReviewCampaignDto = {
   organizationId: string
   projectId: string
   agentId: string
+  /** Agent settings row the campaign runs on. */
+  agentSettingsId: string
+  /** Revision of that row, the number shown in the UI. */
+  agentSettingsRevision: number
   name: string
   description: string | null
   status: ReviewCampaignStatus

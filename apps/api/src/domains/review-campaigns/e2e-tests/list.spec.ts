@@ -173,4 +173,23 @@ describe("ReviewCampaigns - list", () => {
     expect(response.body.data.reviewCampaigns).toHaveLength(1)
     expect(response.body.data.reviewCampaigns[0]?.name).toBe("mine")
   })
+
+  it("returns the pinned agent settings revision for each campaign", async () => {
+    const { organization, project, agent, agentSettings } = await createOrganizationWithAgent(
+      repositories,
+      { user: { auth0Id } },
+    )
+    await repositories.reviewCampaignRepository.save(
+      reviewCampaignFactory.transient({ organization, project, agent, agentSettings }).build(),
+    )
+    organizationId = organization.id
+    projectId = project.id
+
+    const response = await subject()
+    expectResponse(response, 200)
+    expect(response.body.data.reviewCampaigns[0]).toMatchObject({
+      agentSettingsId: agentSettings.id,
+      agentSettingsRevision: agentSettings.revision,
+    })
+  })
 })

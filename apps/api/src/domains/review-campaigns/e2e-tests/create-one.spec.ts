@@ -10,6 +10,7 @@ import {
 } from "@/common/test/test-database"
 import { removeNullish } from "@/common/utils/remove-nullish"
 import { agentFactory } from "@/domains/agents/agent.factory"
+import { agentSettingsFactory } from "@/domains/agents/settings/agent.settings.factory"
 import { INVITATION_SENDER } from "@/domains/auth/invitation-sender.interface"
 import {
   createOrganizationWithAgent,
@@ -109,5 +110,20 @@ describe("ReviewCampaigns - createOne", () => {
     await repositories.agentRepository.save(otherAgent)
 
     expectResponse(await subject({ payload: { agentId: otherAgent.id, name: "Bad" } }), 422)
+  })
+
+  it("pins the latest published revision and returns it", async () => {
+    const { organization, project, agent } = await createContext()
+    const secondRevision = agentSettingsFactory
+      .transient({ organization, project, agent })
+      .build({ revision: 2 })
+    await repositories.agentSettingsRepository.save(secondRevision)
+
+    const response = await subject({ payload: { agentId: agent.id, name: "My Campaign" } })
+    expectResponse(response, 201)
+    expect(response.body.data).toMatchObject({
+      agentSettingsId: secondRevision.id,
+      agentSettingsRevision: 2,
+    })
   })
 })
