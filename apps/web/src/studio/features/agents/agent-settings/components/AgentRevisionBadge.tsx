@@ -27,7 +27,7 @@ export function AgentRevisionBadge({
   revision: number
   versions: AgentSettings[]
   /** Which `agent:history.*` key describes what this revision means in context. */
-  tooltipKey: "messageRevisionTooltip" | "headerRevisionTooltip"
+  tooltipKey: "messageRevisionTooltip" | "headerRevisionTooltip" | "runRevisionTooltip"
 }) {
   const { t } = useTranslation()
   const [open, setOpen] = useState(false)

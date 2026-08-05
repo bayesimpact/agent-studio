@@ -18,7 +18,14 @@ import { TraceUrlOpener } from "@/studio/components/TraceUrlOpener"
 import { AsyncRoute } from "../../AsyncRoute"
 import { LoadingRoute } from "../../LoadingRoute"
 
-export function AgentExtractionRunRoute() {
+/**
+ * `renderRevisionBadge` labels the run with the agent settings version it ran with. It is a
+ * render prop because the badge reads the settings history from the store, which only Studio
+ * loads — Desk mounts this route without it.
+ */
+type Props = { renderRevisionBadge?: (revision: number) => React.ReactNode }
+
+export function AgentExtractionRunRoute({ renderRevisionBadge }: Props) {
   const runData = useAppSelector(selectCurrentExtractionRunData)
   const runId = useAppSelector(selectCurrentExtractionRunId)
 
@@ -34,12 +41,12 @@ export function AgentExtractionRunRoute() {
   if (!runId) return <LoadingRoute />
   return (
     <AsyncRoute data={[runData]}>
-      <WithData />
+      <WithData renderRevisionBadge={renderRevisionBadge} />
     </AsyncRoute>
   )
 }
 
-function WithData() {
+function WithData({ renderRevisionBadge }: Props) {
   const navigate = useNavigate()
   const run = useValue(selectCurrentExtractionRunData)
   const { t } = useTranslation()
@@ -66,6 +73,7 @@ function WithData() {
                   })}
                 </Badge>
               )}
+              {renderRevisionBadge?.(run.agentRevision)}
             </div>
           </div>
         }

@@ -9,6 +9,8 @@ export type ExtractionAgentSessionStatus = "pending" | "success" | "failed"
 export type ExtractionAgentSessionSummaryDto = {
   id: string
   agentId: string
+  /** Revision of the agent settings the run was executed with. */
+  agentRevision: number
   documentId: string
   documentFileName: string | null
   traceUrl?: string

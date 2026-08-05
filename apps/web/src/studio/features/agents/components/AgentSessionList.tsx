@@ -35,6 +35,7 @@ import { selectCurrentProjectId } from "@/common/features/projects/projects.sele
 import { useAbility } from "@/common/hooks/use-ability"
 import { useGetProjectRoute } from "@/common/hooks/use-get-path"
 import { useCurrentId, useValue } from "@/common/hooks/use-value"
+import { CurrentAgentRevisionBadge } from "@/studio/features/agents/agent-settings/components/CurrentAgentRevisionBadge"
 import { StudioRoutes } from "@/studio/routes/helpers"
 import { AgentActions } from "./AgentActions"
 import { AgentEditor } from "./AgentEditor"
@@ -196,6 +197,12 @@ function History({ agentSessions }: { agentSessions: ExtractionAgentSessions }) 
                   className={itemClassName}
                   key={item.session.id}
                   agentSession={item.session}
+                  renderRevisionBadge={(revision) => (
+                    <CurrentAgentRevisionBadge
+                      revision={revision}
+                      tooltipKey="runRevisionTooltip"
+                    />
+                  )}
                 />
               )
             })}

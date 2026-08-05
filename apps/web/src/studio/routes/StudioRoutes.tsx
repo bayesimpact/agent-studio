@@ -13,6 +13,7 @@ import { RoutesBuilderProvider } from "@/common/routes/build-routes/RoutesBuilde
 import { ErrorRoute } from "@/common/routes/ErrorRoute"
 import { OrganizationRoute } from "@/common/routes/OrganizationRoute"
 import { ProjectRoute } from "@/common/routes/ProjectRoute"
+import { CurrentAgentRevisionBadge } from "@/studio/features/agents/agent-settings/components/CurrentAgentRevisionBadge"
 import {
   ConversationAgentSessionList,
   ExtractionAgentSessionList,
@@ -169,7 +170,16 @@ export const studioRoutes = {
                 },
                 {
                   path: StudioRoutes.agentExtractionRun.path,
-                  element: <AgentExtractionRunRoute />,
+                  element: (
+                    <AgentExtractionRunRoute
+                      renderRevisionBadge={(revision) => (
+                        <CurrentAgentRevisionBadge
+                          revision={revision}
+                          tooltipKey="runRevisionTooltip"
+                        />
+                      )}
+                    />
+                  ),
                 },
               ],
             },

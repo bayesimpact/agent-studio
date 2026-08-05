@@ -59,6 +59,7 @@ function fromExtractionAgentSessionDto(dto: ExtractionAgentSessionDto): Extracti
   return {
     id: dto.id,
     agentId: dto.agentId,
+    agentRevision: dto.agentRevision,
     documentId: dto.documentId,
     documentFileName: dto.documentFileName,
     traceUrl: dto.traceUrl,
@@ -78,6 +79,7 @@ function fromExtractionAgentSessionSummaryDto(
   return {
     id: dto.id,
     agentId: dto.agentId,
+    agentRevision: dto.agentRevision,
     documentId: dto.documentId,
     documentFileName: dto.documentFileName,
     traceUrl: dto.traceUrl,

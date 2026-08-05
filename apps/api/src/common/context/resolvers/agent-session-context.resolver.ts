@@ -30,25 +30,31 @@ export class AgentSessionContextResolver implements ContextResolver {
 
     const requestWithAgent = request as EndpointRequestWithAgent
 
-    const repository =
-      requestWithAgent.agent.type === "conversation"
-        ? this.conversationAgentSessionRepository
-        : requestWithAgent.agent.type === "extraction"
-          ? this.extractionAgentSessionRepository
-          : undefined
+    const where = {
+      id: agentSessionId,
+      userId: requestWithAgent.user.id,
+      organizationId: requestWithAgent.agent.organizationId,
+      projectId: requestWithAgent.agent.projectId,
+      agentId: requestWithAgent.agent.id,
+    }
 
-    if (!repository) throw new NotFoundException("Unsupported agent type")
-
-    const agentSession =
-      (await repository.findOne({
-        where: {
-          id: agentSessionId,
-          userId: requestWithAgent.user.id,
-          organizationId: requestWithAgent.agent.organizationId,
-          projectId: requestWithAgent.agent.projectId,
-          agentId: requestWithAgent.agent.id,
-        },
-      })) ?? undefined
+    let agentSession: ConversationAgentSession | ExtractionAgentSession | undefined
+    switch (requestWithAgent.agent.type) {
+      case "conversation":
+        agentSession =
+          (await this.conversationAgentSessionRepository.findOne({ where })) ?? undefined
+        break
+      case "extraction":
+        // The settings are loaded with the run: its DTO exposes the revision it ran with.
+        agentSession =
+          (await this.extractionAgentSessionRepository.findOne({
+            where,
+            relations: { agentSettings: true },
+          })) ?? undefined
+        break
+      default:
+        throw new NotFoundException("Unsupported agent type")
+    }
 
     if (!agentSession) throw new NotFoundException("Agent session not found")
 

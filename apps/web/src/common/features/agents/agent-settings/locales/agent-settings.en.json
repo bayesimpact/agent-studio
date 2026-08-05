@@ -137,6 +137,7 @@
       "revisionBadge": "v{{revision}}",
       "revisionBadgeAria": "Version {{revision}} of the agent settings",
       "messageRevisionTooltip": "Answered with version {{revision}}",
+      "runRevisionTooltip": "Extracted with version {{revision}}",
       "headerRevisionTooltip": "New messages run with version {{revision}}",
       "compareWithPrevious": "Changes in this version",
       "compareWithCurrent": "Compare with current",

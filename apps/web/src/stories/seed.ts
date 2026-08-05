@@ -239,8 +239,17 @@ export const seed = {
     return { extractionAgentSessions: { data } }
   },
 
+  /** Documents the extraction playground offers as extraction inputs. */
+  extractionAgentSessionDocuments(documents: Document[]): StoryPreloadedState {
+    return { extractionAgentSessions: { documents: ads.fulfilled(documents) } }
+  },
+
   currentAgentSessionId(id: string | null): StoryPreloadedState {
     return { currentIds: { agentSessionId: id } }
+  },
+
+  currentExtractionRunId(id: string | null): StoryPreloadedState {
+    return { currentIds: { extractionRunId: id } }
   },
 
   agentSessionMessages(messages: AgentSessionMessage[]): StoryPreloadedState {
