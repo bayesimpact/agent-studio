@@ -4,6 +4,7 @@ import {
   agentSessionMessageFactory,
   conversationAgentSessionFactory,
 } from "@/common/features/agents/agent-sessions/agent-session.factory"
+import { agentOutputJsonSchemaFactory } from "@/common/features/agents/agent-settings/agent-settings.factory"
 import { deskRoutes } from "@/desk/routes/DeskRoutes"
 import { DeskRoutes } from "@/desk/routes/helpers"
 import { buildDecorator, render } from "@/stories/decorators"
@@ -47,9 +48,9 @@ export const Default: Story = {
       const { baseSeeds, project, agents } = buildStudioData(args)
       const [firstAgent, ...restAgents] = agents
 
-      const currentAgent = (fillForm ? agentFactory.fillForm() : agentFactory)
+      const currentAgent = agentFactory
         .transient({ project })
-        .build({ ...firstAgent, type: "conversation", fillFormEnabled: !!fillForm })
+        .build({ ...firstAgent, type: "conversation" })
 
       const sessionFactory = conversationAgentSessionFactory.transient({ agent: currentAgent })
       // fillForm-enabled agents accumulate a form result on the session, shown in the right panel.
@@ -71,6 +72,10 @@ export const Default: Story = {
           seed.conversationAgentSessions({ [currentAgent.id]: [session] }),
           seed.currentAgentSessionId(session.id),
           seed.agentSessionMessages(messages),
+          // The form definition comes from the agent's published settings revision.
+          seed.fillFormOutputJsonSchema(
+            fillForm ? agentOutputJsonSchemaFactory.build() : undefined,
+          ),
         ),
       }
     }),

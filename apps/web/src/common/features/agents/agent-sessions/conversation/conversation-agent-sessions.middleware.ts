@@ -2,6 +2,7 @@ import { createListenerMiddleware } from "@reduxjs/toolkit"
 import { getCurrentId } from "@/common/features/helpers"
 import type { AppDispatch, RootState } from "@/common/store"
 import { isStudioInterface } from "@/studio/routes/helpers"
+import { getFillFormOutputJsonSchema } from "../../agent-settings/agent-settings.thunks"
 import { agentSessionMessagesActions } from "../shared/agent-session-messages/agent-session-messages.slice"
 import { listMessages } from "../shared/agent-session-messages/agent-session-messages.thunks"
 import { conversationAgentSessionsActions } from "./conversation-agent-sessions.slice"
@@ -39,6 +40,8 @@ function registerListeners() {
         await listenerApi.dispatch(
           conversationAgentSessionsActions.listSubSessions({ agentId, agentSessionId }),
         )
+      } else {
+        await listenerApi.dispatch(getFillFormOutputJsonSchema())
       }
     },
   })

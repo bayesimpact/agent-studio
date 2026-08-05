@@ -1,7 +1,11 @@
 import { DocumentsRagMode } from "@caseai-connect/api-contracts"
 import type { Meta, StoryObj } from "@storybook/react-vite"
 import { withRouter } from "storybook-addon-remix-react-router"
-import { agentFactory, agentOutputJsonSchemaFactory } from "@/common/features/agents/agent.factory"
+import { agentFactory } from "@/common/features/agents/agent.factory"
+import {
+  agentOutputJsonSchemaFactory,
+  agentSettingsFactory,
+} from "@/common/features/agents/agent-settings/agent-settings.factory"
 import { organizationFactory } from "@/common/features/organizations/organization.factory"
 import {
   projectAgentSessionCategoryFactory,
@@ -28,6 +32,11 @@ const projectWithMcp = {
   featureFlags: ["agent-mcp" as const],
 }
 const mcpServers = mcpServerFactory.transient({ project }).buildList(3)
+const enabledMcpServers = mcpServers.map((server) => ({
+  id: server.id,
+  name: server.name,
+  enabled: true,
+}))
 
 const productTag = documentTagFactory.transient({ project }).build({ name: "Product" })
 const pricingTag = documentTagFactory.transient({ project }).build({ name: "Pricing" })
@@ -38,42 +47,50 @@ const mockOutputJsonSchema = agentOutputJsonSchemaFactory.build()
 const conversationAgent = agentFactory.transient({ project }).build({
   type: "conversation",
   name: "Helpful Assistant",
-  documentTagIds: [productTag.id],
-  documentsRagMode: DocumentsRagMode.Tags,
-  projectAgentSessionCategoryIds: [billingCategory.id],
-  usedProjectAgentSessionCategoryIds: [billingCategory.id],
-  greetingMessage: "Hi! How can I help you today?",
 })
+const conversationAgentSettings = agentSettingsFactory
+  .transient({ agent: conversationAgent })
+  .build({
+    documentTagIds: [productTag.id],
+    documentsRagMode: DocumentsRagMode.Tags,
+    projectAgentSessionCategoryIds: [billingCategory.id],
+    usedProjectAgentSessionCategoryIds: [billingCategory.id],
+    greetingMessage: "Hi! How can I help you today?",
+  })
 
 const resourceAgent = agentFactory.transient({ project }).build({
   type: "conversation",
   name: "Resource Navigator",
-  instructions: "Find relevant services, contacts, and eligibility details.",
-  documentsRagMode: DocumentsRagMode.None,
 })
 
 const policyAgent = agentFactory.transient({ project }).build({
   type: "conversation",
   name: "Policy Analyst",
-  instructions: "Interpret policy documents and summarize operational constraints.",
-  documentsRagMode: DocumentsRagMode.Tags,
 })
 
 const extractionAgent = agentFactory.transient({ project }).build({
   type: "extraction",
   name: "Document Extractor",
+})
+const extractionAgentSettings = agentSettingsFactory.transient({ agent: extractionAgent }).build({
   documentsRagMode: DocumentsRagMode.None,
   outputJsonSchema: mockOutputJsonSchema,
   greetingMessage: undefined,
 })
 
 // A conversation agent with the fillForm tool enabled — the editor shows the Tools tab.
-const fillFormAgent = agentFactory.fillForm().transient({ project }).build({
+const fillFormAgent = agentFactory.transient({ project }).build({
+  type: "conversation",
   name: "Intake Assistant",
-  documentsRagMode: DocumentsRagMode.None,
-  outputJsonSchema: mockOutputJsonSchema,
-  greetingMessage: "Welcome — let's get started. I'll ask a few questions.",
 })
+const fillFormAgentSettings = agentSettingsFactory
+  .fillForm()
+  .transient({ agent: fillFormAgent })
+  .build({
+    documentsRagMode: DocumentsRagMode.None,
+    outputJsonSchema: mockOutputJsonSchema,
+    greetingMessage: "Welcome — let's get started. I'll ask a few questions.",
+  })
 
 const meta = {
   title: "routes/studio/project/agent/AgentEditor",
@@ -105,6 +122,7 @@ export const ConversationEdit: Story = {
   ],
   args: {
     agent: conversationAgent,
+    agentSettings: conversationAgentSettings,
   },
 }
 
@@ -120,6 +138,7 @@ export const ExtractionEdit: Story = {
   ],
   args: {
     agent: extractionAgent,
+    agentSettings: extractionAgentSettings,
   },
 }
 
@@ -135,6 +154,7 @@ export const ConversationWithFillForm: Story = {
   ],
   args: {
     agent: fillFormAgent,
+    agentSettings: fillFormAgentSettings,
   },
 }
 
@@ -150,14 +170,8 @@ export const WithMcpServers: Story = {
     }),
   ],
   args: {
-    agent: {
-      ...conversationAgent,
-      mcpServers: mcpServers.map((server) => ({
-        id: server.id,
-        name: server.name,
-        enabled: true,
-      })),
-    },
+    agent: conversationAgent,
+    agentSettings: { ...conversationAgentSettings, mcpServers: enabledMcpServers },
   },
 }
 
@@ -173,13 +187,7 @@ export const ConversationWithFillFormAndMcpServers: Story = {
     }),
   ],
   args: {
-    agent: {
-      ...fillFormAgent,
-      mcpServers: mcpServers.map((server) => ({
-        id: server.id,
-        name: server.name,
-        enabled: true,
-      })),
-    },
+    agent: fillFormAgent,
+    agentSettings: { ...fillFormAgentSettings, mcpServers: enabledMcpServers },
   },
 }

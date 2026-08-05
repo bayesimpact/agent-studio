@@ -18,8 +18,11 @@ import { GridCard } from "@/common/components/grid/Grid"
 import type { Project } from "@/common/features/projects/projects.models"
 import { useAppDispatch } from "@/common/store/hooks"
 import { StudioRoutes } from "@/studio/routes/helpers"
+import {
+  type AgentCreationChoice,
+  getDefaultFormValues,
+} from "../agent-settings/components/agent-form.shared"
 import { createAgent } from "../agents.thunks"
-import { type AgentCreationChoice, getDefaultFormValues } from "./agent-form.shared"
 
 const defaultChoice: AgentCreationChoice = "conversation"
 const creationChoices: AgentCreationChoice[] = ["conversation", "extraction", "form"]

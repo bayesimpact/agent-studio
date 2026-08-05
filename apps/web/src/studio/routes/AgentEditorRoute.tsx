@@ -1,3 +1,4 @@
+import { ButtonGroup } from "@caseai-connect/ui/shad/button-group"
 import { useState } from "react"
 import { useTranslation } from "react-i18next"
 import { useNavigate } from "react-router-dom"
@@ -15,12 +16,17 @@ import {
   AgentEditor,
   type AgentEditorOrchestration,
 } from "@/studio/features/agents/components/AgentEditor"
-import { AgentPublishButton } from "@/studio/features/agents/components/AgentPublishButton"
+import { selectAgentSettingsDataByAgentId } from "../../common/features/agents/agent-settings/agent-settings.selectors"
+import { AgentSettingsCreateButton } from "../features/agents/agent-settings/components/AgentSettingsCreateButton"
+import { AgentSettingsHistory } from "../features/agents/agent-settings/components/AgentSettingsHistory"
 
 export function AgentEditorRoute() {
   const agent = useValue(selectCurrentAgentData)
   const project = useValue(selectCurrentProjectData)
   const subAgents = useAppSelector(selectAgentSubAgentsData)
+  const agentSettings = useAppSelector(
+    selectAgentSettingsDataByAgentId({ agentId: agent.id, includeDraft: true }),
+  )
   const hasOrchestration =
     agent.type === "conversation" && project.featureFlags.includes("agent-orchestration")
 
@@ -28,7 +34,7 @@ export function AgentEditorRoute() {
 
   if (hasOrchestration) {
     return (
-      <AsyncRoute data={[subAgents]}>
+      <AsyncRoute data={[agentSettings, subAgents]}>
         <WithOrchestrationData />
       </AsyncRoute>
     )
@@ -45,6 +51,9 @@ function WithOrchestrationData() {
 
 function WithData({ orchestration }: { orchestration?: AgentEditorOrchestration }) {
   const agent = useValue(selectCurrentAgentData)
+  const agentSettings = useValue(
+    selectAgentSettingsDataByAgentId({ agentId: agent.id, includeDraft: true }),
+  )
   const { t } = useTranslation()
   const navigate = useNavigate()
   const agentRoute = useGetAgentRoute()
@@ -57,11 +66,20 @@ function WithData({ orchestration }: { orchestration?: AgentEditorOrchestration 
         onBack={handleBack}
         title={t(`agent:update.${agent.type}.title`)}
         description={t(`agent:update.${agent.type}.description`)}
-        action={<AgentPublishButton agent={agent} hasUnsavedChanges={editorDirty} />}
+        action={
+          <ButtonGroup>
+            <AgentSettingsHistory agent={agent} agentSettings={agentSettings} />
+            <AgentSettingsCreateButton
+              agentSettings={agentSettings}
+              hasUnsavedChanges={editorDirty}
+            />
+          </ButtonGroup>
+        }
       />
       <AgentEditor
         key={agent.id}
         agent={agent}
+        agentSettings={agentSettings}
         className="bg-white p-6"
         orchestration={orchestration}
         onDirtyChange={setEditorDirty}

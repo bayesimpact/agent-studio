@@ -1,4 +1,4 @@
-import { type AgentDto, AgentSettingsRoutes, AgentsRoutes } from "@caseai-connect/api-contracts"
+import { type AgentDto, AgentsRoutes, type AgentWithDraftDto } from "@caseai-connect/api-contracts"
 import { getAxiosInstance } from "@/external/axios"
 import type { Agent } from "../agents.models"
 import type { IAgentsSpi } from "../agents.spi"
@@ -16,7 +16,7 @@ export default {
     const response = await axios.get<typeof AgentsRoutes.getAllWithDrafts.response>(
       AgentsRoutes.getAllWithDrafts.getPath(params),
     )
-    return response.data.data.map(toAgent)
+    return response.data.data.map(toAgentWithDraft)
   },
   createOne: async (params, payload) => {
     const axios = getAxiosInstance()
@@ -28,61 +28,40 @@ export default {
   },
   updateOne: async (params, payload) => {
     const axios = getAxiosInstance()
-    await axios.patch(AgentsRoutes.updateOne.getPath(params), {
+    const response = await axios.patch(AgentsRoutes.updateOne.getPath(params), {
       payload,
     } satisfies typeof AgentsRoutes.updateOne.request)
+    return response.data.data
   },
   deleteOne: async (params) => {
     const axios = getAxiosInstance()
-    await axios.delete(AgentsRoutes.deleteOne.getPath(params))
-  },
-  getHistory: async (params) => {
-    const axios = getAxiosInstance()
-    const response = await axios.get<typeof AgentSettingsRoutes.getAll.response>(
-      AgentSettingsRoutes.getAll.getPath(params),
-    )
-    return response.data.data.map(toAgent)
-  },
-  restoreRevision: async ({ revision, ...params }) => {
-    const axios = getAxiosInstance()
-    await axios.post(
-      AgentSettingsRoutes.restoreOne.getPath({ ...params, revision: String(revision) }),
-    )
-  },
-  publishRevision: async ({ revision, ...params }, payload) => {
-    const axios = getAxiosInstance()
-    const response = await axios.post<typeof AgentSettingsRoutes.publishOne.response>(
-      AgentSettingsRoutes.publishOne.getPath({ ...params, revision: String(revision) }),
-      { payload } satisfies typeof AgentSettingsRoutes.publishOne.request,
-    )
-    return toAgent(response.data.data)
+    const response = await axios.delete(AgentsRoutes.deleteOne.getPath(params))
+    return response.data.data
   },
 } satisfies IAgentsSpi
 
 const toAgent = (dto: AgentDto): Agent => ({
   createdAt: dto.createdAt,
-  instructions: dto.instructions,
-  documentsRagMode: dto.documentsRagMode,
-  greetingMessage: dto.greetingMessage,
-  hasCategories: dto.hasCategories ?? false,
   id: dto.id,
-  revision: dto.revision ?? 1,
-  revisionName: dto.revisionName,
-  revisionDesc: dto.revisionDesc,
-  isDraft: dto.isDraft,
-  isArchived: dto.isArchived,
-  locale: dto.locale,
-  model: dto.model,
   name: dto.name,
-  outputJsonSchema: dto.outputJsonSchema,
   projectId: dto.projectId,
-  temperature: dto.temperature,
   type: dto.type,
-  updatedAt: dto.updatedAt,
-  documentTagIds: dto.documentTagIds,
-  resourceLibraryIds: dto.resourceLibraryIds,
-  fillFormEnabled: dto.fillFormEnabled,
-  projectAgentSessionCategoryIds: dto.projectAgentSessionCategoryIds,
-  usedProjectAgentSessionCategoryIds: dto.usedProjectAgentSessionCategoryIds,
-  mcpServers: dto.mcpServers,
+  currentRevision: {
+    updatedAt: dto.currentRevision.updatedAt,
+    name: dto.currentRevision.name,
+    description: dto.currentRevision.description,
+    number: dto.currentRevision.number,
+  },
+})
+
+const toAgentWithDraft = (dto: AgentWithDraftDto): Agent => ({
+  ...toAgent(dto),
+  ...(dto.draftRevision && {
+    draftRevision: {
+      updatedAt: dto.draftRevision.updatedAt,
+      name: dto.draftRevision.name,
+      description: dto.draftRevision.description,
+      number: dto.draftRevision.number,
+    },
+  }),
 })

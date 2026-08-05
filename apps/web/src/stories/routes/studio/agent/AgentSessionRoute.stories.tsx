@@ -7,7 +7,8 @@ import {
   conversationAgentSessionFactory,
   conversationSubSessionFactory,
 } from "@/common/features/agents/agent-sessions/agent-session.factory"
-import type { Agent } from "@/common/features/agents/agents.models"
+import { agentSettingsFactory } from "@/common/features/agents/agent-settings/agent-settings.factory"
+import type { AgentSettings } from "@/common/features/agents/agent-settings/agent-settings.models"
 import { buildDecorator, render } from "@/stories/decorators"
 import {
   buildStudioData,
@@ -68,9 +69,17 @@ export const Default: Story = {
         const { baseSeeds, project, agents } = buildStudioData(args)
         const [firstAgent, ...restAgents] = agents
 
-        const currentAgent = (fillForm ? agentFactory.fillForm() : agentFactory)
-          .transient({ project })
-          .build({ ...firstAgent, type: "conversation", fillFormEnabled: !!fillForm })
+        const currentAgent = agentFactory.transient({ project }).build({
+          ...firstAgent,
+          type: "conversation",
+          currentRevision: { number: 2 },
+          draftRevision: withPendingDraft ? { number: 3 } : undefined,
+        })
+        const currentAgentSettings = (
+          fillForm ? agentSettingsFactory.fillForm() : agentSettingsFactory
+        )
+          .transient({ agent: currentAgent })
+          .build({ revision: currentAgent.currentRevision.number })
 
         const sessionFactory = conversationAgentSessionFactory.transient({ agent: currentAgent })
         // fillForm-enabled agents accumulate a form result on the session, shown in the sheet.
@@ -105,27 +114,34 @@ export const Default: Story = {
 
         // Versions newest first, as the history endpoint returns them. The playground runs
         // the newest published one; a pending draft is newer but not live.
-        const versions: Agent[] = withVersionHistory
+        const versions: AgentSettings[] = withVersionHistory
           ? [
               ...(withPendingDraft
-                ? [{ ...currentAgent, revision: 3, isDraft: true, updatedAt: Date.now() }]
+                ? [
+                    {
+                      ...currentAgentSettings,
+                      revision: 3,
+                      isDraft: true,
+                      updatedAt: Date.now(),
+                    },
+                  ]
                 : []),
               {
-                ...currentAgent,
+                ...currentAgentSettings,
                 revision: 2,
                 isDraft: false,
-                revisionName: "Tighter tone",
+                name: "Tighter tone",
                 updatedAt: Date.now() - 1000 * 60 * 60,
               },
               {
-                ...currentAgent,
+                ...currentAgentSettings,
                 revision: 1,
                 isDraft: false,
-                revisionName: "First release",
+                name: "First release",
                 updatedAt: Date.now() - 1000 * 60 * 60 * 48,
               },
             ]
-          : []
+          : [currentAgentSettings]
 
         const assistantMessage = agentSessionMessageFactory.build({
           role: "assistant",
@@ -153,7 +169,7 @@ export const Default: Story = {
               : {},
             seed.currentAgentSessionId(session.id),
             seed.agentSessionMessages(messages),
-            versions.length > 0 ? seed.studio.agentHistory(versions) : {},
+            seed.studio.agentHistory({ agentId: currentAgent.id, versions }),
           ),
         }
       },

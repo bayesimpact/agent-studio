@@ -131,6 +131,7 @@ function toSummaryDto(agentSessionType: BaseAgentSessionType) {
     return {
       id: entity.id,
       agentId: entity.agentId,
+      agentRevision: entity.agentSettings.revision,
       documentId: entity.documentId,
       documentFileName: entity.document?.fileName ?? null,
       traceUrl,

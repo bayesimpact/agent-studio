@@ -31,7 +31,7 @@ export function AgentItem({
 
   const Icon = getAgentIcon(agent.type)
 
-  const date = buildSince(agent.updatedAt)
+  const date = buildSince(agent.createdAt)
   return (
     <GridCard className={className}>
       <GridCard.Badge>{t(`agent:create.typeDialog.${agent.type}`)}</GridCard.Badge>

@@ -1,8 +1,8 @@
+import { agentSettingsActions } from "@/common/features/agents/agent-settings/agent-settings.slice"
 import { selectCurrentAgentData } from "@/common/features/agents/agents.selectors"
 import { useAbility } from "@/common/hooks/use-ability"
 import { useMount } from "@/common/hooks/use-mount"
 import { useValue } from "@/common/hooks/use-value"
-import { agentHistoryActions } from "@/studio/features/agents/agent-history.slice"
 
 /**
  * Loads the agent settings history for the whole Studio agent subtree, so the playground
@@ -19,7 +19,7 @@ export function StudioAgentRoute({ children }: { children: React.ReactNode }) {
   const { abilities } = useAbility()
 
   useMount({
-    actions: agentHistoryActions,
+    actions: agentSettingsActions,
     condition: abilities.canManageAgent({ agentId: agent.id }),
     refreshOn: [agent.id],
   })

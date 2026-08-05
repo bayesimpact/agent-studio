@@ -82,6 +82,7 @@ export const extractionAgentSessionSummaryFactory = ExtractionAgentSessionSummar
     return {
       id: params.id ?? faker.string.uuid(),
       agentId: params.agentId ?? transientParams.agent?.id ?? faker.string.uuid(),
+      agentRevision: params.agentRevision ?? 1,
       documentId: params.documentId ?? faker.string.uuid(),
       documentFileName: params.documentFileName ?? `${faker.system.commonFileName("pdf")}`,
       traceUrl: params.traceUrl,

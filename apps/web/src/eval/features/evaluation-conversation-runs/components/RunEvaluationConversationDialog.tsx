@@ -40,19 +40,17 @@ import { useTranslation } from "react-i18next"
 import { useNavigate } from "react-router-dom"
 import { z } from "zod"
 import { RunScopeSelector } from "@/common/components/shared/RunScopeSelector"
+import type { AgentSettings } from "@/common/features/agents/agent-settings/agent-settings.models"
+import { selectAgentSettingsHistoryDataByAgentId } from "@/common/features/agents/agent-settings/agent-settings.selectors"
 import type { Agent } from "@/common/features/agents/agents.models"
 import { selectAgentsData } from "@/common/features/agents/agents.selectors"
 import { selectCurrentProjectData } from "@/common/features/projects/projects.selectors"
 import { useFeatureFlags } from "@/common/hooks/use-feature-flags"
 import { useValue } from "@/common/hooks/use-value"
-import { ADS } from "@/common/store/async-data-status"
 import { useAppDispatch, useAppSelector } from "@/common/store/hooks"
 import { buildDate } from "@/common/utils/build-date"
 import type { EvaluationConversationDataset } from "@/eval/features/evaluation-conversation-datasets/evaluation-conversation-datasets.models"
-import {
-  selectConversationRunAgentHistory,
-  selectIsExecutingConversationRun,
-} from "@/eval/features/evaluation-conversation-runs/evaluation-conversation-runs.selectors"
+import { selectIsExecutingConversationRun } from "@/eval/features/evaluation-conversation-runs/evaluation-conversation-runs.selectors"
 import { evaluationConversationRunsActions } from "@/eval/features/evaluation-conversation-runs/evaluation-conversation-runs.slice"
 import { useEvaluationConversationRunPath } from "@/eval/hooks/use-evaluation-conversation-run-path"
 
@@ -106,7 +104,7 @@ export function RunEvaluationConversationDialog({
   const agentsData = useValue(selectAgentsData)
   const project = useValue(selectCurrentProjectData)
   const { hasFeature } = useFeatureFlags(project)
-  const agentHistoryData = useAppSelector(selectConversationRunAgentHistory)
+
   const isExecuting = useAppSelector(selectIsExecutingConversationRun)
   const [open, setOpen] = useState(false)
 
@@ -115,15 +113,6 @@ export function RunEvaluationConversationDialog({
   const conversationAgents = useMemo(() => {
     return agentsData.filter((agent) => agent.type === "conversation")
   }, [agentsData])
-
-  const agentHistory = useMemo(() => {
-    if (!ADS.isFulfilled(agentHistoryData)) return []
-    return [...agentHistoryData.value].sort(
-      (olderVersion, newerVersion) => newerVersion.revision - olderVersion.revision,
-    )
-  }, [agentHistoryData])
-
-  const latestRevision = agentHistory[0]?.revision ?? null
 
   // Contract schema extended with the dialog-only fields and translated
   // validation messages (ADR 0012). Depends on latestRevision so the version
@@ -144,11 +133,11 @@ export function RunEvaluationConversationDialog({
           path: ["agentId"],
           message: t("evaluationConversationRun:agentPlaceholder"),
         })
-        .refine((values) => values.selectedRevision !== null || latestRevision !== null, {
+        .refine((values) => values.selectedRevision !== null, {
           path: ["selectedRevision"],
           message: t("evaluationConversationRun:version.placeholder"),
         }),
-    [t, latestRevision],
+    [t],
   )
 
   const form = useForm<RunFormValues>({
@@ -158,31 +147,31 @@ export function RunEvaluationConversationDialog({
   const { control, watch, setValue } = form
 
   const selectedAgentId = watch("agentId")
+
+  const agentSettingsHistory = useValue(
+    selectAgentSettingsHistoryDataByAgentId({ agentId: selectedAgentId ?? "", includeDraft: true }),
+  )
+
   const selectedRevision = watch("selectedRevision")
   const runScope = watch("runScope")
   const limitedCount = watch("limitedCount")
-
-  const isHistoryLoading = selectedAgentId !== "" && !ADS.isFulfilled(agentHistoryData)
-  const effectiveRevision = selectedRevision ?? latestRevision
 
   const handleOpenChange = useCallback(
     (nextOpen: boolean) => {
       setOpen(nextOpen)
       if (!nextOpen) {
         form.reset(defaultRunFormValues)
-        dispatch(evaluationConversationRunsActions.resetAgentHistory())
       }
     },
-    [dispatch, form],
+    [form],
   )
 
   const handleAgentChange = useCallback(
     (agentId: string) => {
+      setValue("agentId", agentId)
       setValue("selectedRevision", null)
-      dispatch(evaluationConversationRunsActions.resetAgentHistory())
-      dispatch(evaluationConversationRunsActions.getAgentHistory({ agentId }))
     },
-    [dispatch, setValue],
+    [setValue],
   )
 
   const handleLimitedCountChange = useCallback(
@@ -196,7 +185,7 @@ export function RunEvaluationConversationDialog({
   )
 
   const handleRun = form.handleSubmit(async (values) => {
-    const agentSettingsRevision = values.selectedRevision ?? latestRevision
+    const agentSettingsRevision = values.selectedRevision
     if (agentSettingsRevision === null) return
 
     const result = await dispatch(
@@ -248,9 +237,9 @@ export function RunEvaluationConversationDialog({
               {selectedAgentId && (
                 <AgentVersionField
                   control={control}
-                  history={agentHistory}
-                  isLoading={isHistoryLoading}
-                  effectiveRevision={effectiveRevision}
+                  history={agentSettingsHistory}
+                  isLoading={false}
+                  effectiveRevision={selectedRevision}
                 />
               )}
 
@@ -333,7 +322,7 @@ function AgentVersionField({
   effectiveRevision,
 }: {
   control: Control<RunFormValues>
-  history: Agent[]
+  history: AgentSettings[]
   isLoading: boolean
   effectiveRevision: number | null
 }) {
@@ -342,7 +331,7 @@ function AgentVersionField({
   // The newest non-draft revision: the one the agent actually runs with.
   const publishedRevision = history.find((agentVersion) => !agentVersion.isDraft)?.revision
 
-  const buildVersionDetail = (agentVersion: Agent) => {
+  const buildVersionDetail = (agentVersion: AgentSettings) => {
     if (agentVersion.isDraft) return t("status:draft")
     if (agentVersion.revision === publishedRevision)
       return t("evaluationConversationRun:version.current", {
