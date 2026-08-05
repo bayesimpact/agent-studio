@@ -1,17 +1,26 @@
 import type { Meta, StoryObj } from "@storybook/react-vite"
 import { withRouter } from "storybook-addon-remix-react-router"
-import type { Agent } from "@/common/features/agents/agents.models"
+import { agentFactory } from "@/common/features/agents/agent.factory"
 import { CampaignsRoute } from "@/studio/routes/CampaignsRoute"
 import { withRedux } from "../decorators"
 import { mergeSeeds, seed } from "../seed"
-import {
-  mockActiveCampaign,
-  mockAgents,
-  mockClosedCampaign,
-  mockDraftCampaign,
-  mockProject,
-} from "./fixtures"
+import { mockActiveCampaign, mockClosedCampaign, mockDraftCampaign, mockProject } from "./fixtures"
 import { buildMockReviewCampaignsService } from "./mock-service"
+
+// Distinct from the `mockAgents` fixture (a CampaignFormAgentOption[] used to
+// seed the form's agent options directly) — this seeds the `agents` slice,
+// which needs full Agent objects.
+const mockListAgents = [
+  agentFactory
+    .transient({ project: mockProject })
+    .build({ id: "agent-1", name: "Helpful Assistant", type: "conversation" }),
+  agentFactory
+    .transient({ project: mockProject })
+    .build({ id: "agent-2", name: "Scheduling Bot", type: "conversation" }),
+  agentFactory
+    .transient({ project: mockProject })
+    .build({ id: "agent-3", name: "Intake Form Agent", type: "conversation" }),
+]
 
 const meta = {
   title: "review-campaigns/CampaignsRoute",
@@ -43,7 +52,7 @@ export const WithCampaigns: Story = {
     withRedux({
       state: mergeSeeds(
         seed.currentProject(mockProject),
-        seed.agents(mockAgents as Agent[]),
+        seed.agents(mockListAgents),
         seed.studio.reviewCampaigns([mockDraftCampaign, mockActiveCampaign, mockClosedCampaign]),
       ),
       services: {
