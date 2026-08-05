@@ -39,6 +39,59 @@ export const AgentModelToAgentProvider: Record<AgentModel, AgentProvider> = {
   [AgentModel.MistralSmall31_24B]: AgentProvider.Mistral,
   [AgentModel._Mock]: AgentProvider._Mock,
 }
+export type AgentModelDeprecation = {
+  /** ISO date (YYYY-MM-DD) on which the provider retires the model. */
+  deprecatedOn: string
+  recommendedReplacement: AgentModel
+}
+
+/**
+ * Per-model catalog. The fields are optional, but the map is exhaustive on purpose: adding a
+ * model to `AgentModel` fails to compile until it has an entry here, so a new model can never
+ * silently ship without deprecation metadata.
+ *
+ * Grouping `deprecatedOn` and `recommendedReplacement` in one object makes "deprecated implies a
+ * replacement" a type invariant — no consumer has to render a dead end.
+ */
+export type AgentModelMetadata = {
+  deprecation?: AgentModelDeprecation
+}
+
+export const AgentModelMetadataMap: Record<AgentModel, AgentModelMetadata> = {
+  [AgentModel.Gemini25Flash]: {
+    deprecation: {
+      deprecatedOn: "2026-09-30",
+      recommendedReplacement: AgentModel.Gemini35FlashLite,
+    },
+  },
+  [AgentModel.Gemini25Pro]: {
+    deprecation: {
+      deprecatedOn: "2026-09-30",
+      recommendedReplacement: AgentModel.Gemini35Flash,
+    },
+  },
+  [AgentModel.Gemini31FlashLite]: {},
+  [AgentModel.Gemini35FlashLite]: {},
+  [AgentModel.Gemini35Flash]: {},
+  [AgentModel.Gemini36Flash]: {},
+  [AgentModel.MedGemma10_27B]: {},
+  [AgentModel.Gemma4_26B]: {},
+  [AgentModel.MistralSmall31_24B]: {},
+  [AgentModel._Mock]: {},
+}
+
+/** Model every newly created agent and eval judge run starts on. */
+export const DEFAULT_AGENT_MODEL = AgentModel.Gemini35FlashLite
+
+/**
+ * Single read path for deprecation state. Returns `undefined` for a supported model, so callers
+ * can branch on presence rather than on a model allow-list — a future deprecation is one entry
+ * in `AgentModelMetadataMap` and no code change here or downstream.
+ */
+export function getAgentModelDeprecation(model: AgentModel): AgentModelDeprecation | undefined {
+  return AgentModelMetadataMap[model].deprecation
+}
+
 export enum AgentLocale {
   EN = "en",
   FR = "fr",
