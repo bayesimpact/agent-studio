@@ -1,6 +1,6 @@
 import {
   AgentLocale,
-  AgentModel,
+  DEFAULT_AGENT_MODEL,
   DocumentsRagMode,
   type outputJsonSchemaSchema,
 } from "@caseai-connect/api-contracts"
@@ -73,7 +73,7 @@ export const agentFactory = AgentFactory.define(({ params, transientParams }) =>
     isDraft: !!params.isDraft,
     isArchived: !!params.isArchived,
     locale: params.locale ?? AgentLocale.EN,
-    model: params.model ?? AgentModel.Gemini25Flash,
+    model: params.model ?? DEFAULT_AGENT_MODEL,
     name: params.name ?? faker.helpers.arrayElement(AGENT_NAMES),
     projectAgentSessionCategoryIds: params.projectAgentSessionCategoryIds ?? [],
     projectId: project.id,

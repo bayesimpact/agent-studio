@@ -1,6 +1,7 @@
 import {
-  AgentModel,
+  type AgentModel,
   createEvaluationConversationRunSchema,
+  DEFAULT_AGENT_MODEL,
   EVALUATION_CONVERSATION_RUN_JUDGE_INSTRUCTIONS_MAX_LENGTH,
 } from "@caseai-connect/api-contracts"
 import { Button } from "@caseai-connect/ui/shad/button"
@@ -71,7 +72,7 @@ type RunFormValues = {
 const defaultRunFormValues: RunFormValues = {
   agentId: "",
   selectedRevision: null,
-  judgeModel: AgentModel.Gemini25Flash,
+  judgeModel: DEFAULT_AGENT_MODEL,
   judgeInstructions: "",
   runScope: "all",
   limitedCount: 1,
