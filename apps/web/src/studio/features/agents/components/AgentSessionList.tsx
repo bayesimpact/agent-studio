@@ -56,6 +56,10 @@ export function ConversationAgentSessionList() {
   if (outlet) return outlet
   return (
     <>
+      <div className="px-6 pt-4 empty:hidden bg-white">
+        <DeprecatedModelBanner model={agent.model} />
+      </div>
+
       <AgentSessionListHeader
         agent={agent}
         withBorderBottom={agentSessions.length > 0}
@@ -63,10 +67,6 @@ export function ConversationAgentSessionList() {
         organizationId={organizationId}
         projectId={projectId}
       />
-
-      <div className="px-6 pt-4 empty:hidden">
-        <DeprecatedModelBanner model={agent.model} />
-      </div>
 
       <Grid cols={3}>
         <GridContent>
@@ -107,35 +107,37 @@ export function ExtractionAgentSessionList() {
 
   if (outlet) return outlet
   return (
-    <Grid cols={0}>
-      <GridHeader
-        onBack={handleBack}
-        title={t("extractionAgentSession:playground.title")}
-        description={t("extractionAgentSession:playground.description")}
-        action={<AgentActions agent={agent} organizationId={organizationId} />}
-      />
-
-      <div className="px-6 pt-4 empty:hidden">
+    <>
+      <div className="px-6 pt-4 empty:hidden bg-white">
         <DeprecatedModelBanner model={agent.model} />
       </div>
 
-      <GridCard
-        className={cn("bg-muted/35 border-r-0 col-span-full", canManageAgent && "border-b")}
-      >
-        <GridCard.Body>
-          <GridCard.Title>{t("extractionAgentSession:create.title")}</GridCard.Title>
-          <GridCard.Description>
-            {t("extractionAgentSession:create.description")}
-          </GridCard.Description>
-          <div className="flex items-center gap-2">
-            <History agentSessions={agentSessions} />
-            <ExtractionButton />
-          </div>
-        </GridCard.Body>
-      </GridCard>
+      <Grid cols={0}>
+        <GridHeader
+          onBack={handleBack}
+          title={t("extractionAgentSession:playground.title")}
+          description={t("extractionAgentSession:playground.description")}
+          action={<AgentActions agent={agent} organizationId={organizationId} />}
+        />
 
-      {canManageAgent && <AgentEditor key={agent.id} agent={agent} className="bg-white p-6" />}
-    </Grid>
+        <GridCard
+          className={cn("bg-muted/35 border-r-0 col-span-full", canManageAgent && "border-b")}
+        >
+          <GridCard.Body>
+            <GridCard.Title>{t("extractionAgentSession:create.title")}</GridCard.Title>
+            <GridCard.Description>
+              {t("extractionAgentSession:create.description")}
+            </GridCard.Description>
+            <div className="flex items-center gap-2">
+              <History agentSessions={agentSessions} />
+              <ExtractionButton />
+            </div>
+          </GridCard.Body>
+        </GridCard>
+
+        {canManageAgent && <AgentEditor key={agent.id} agent={agent} className="bg-white p-6" />}
+      </Grid>
+    </>
   )
 }
 

@@ -26,10 +26,16 @@ export function DeprecatedModelBanner({ model }: { model: AgentModel }) {
   }
 
   return (
-    <Alert variant="destructive">
+    <Alert variant="destructive" className="bg-orange-50/50 border-orange-200">
       <TriangleAlertIcon />
-      <AlertTitle>{t("agent:model.deprecation.title", interpolation)}</AlertTitle>
-      <AlertDescription>{t("agent:model.deprecation.description", interpolation)}</AlertDescription>
+      <AlertTitle className="font-semibold">
+        {t("agent:model.deprecation.title", interpolation)}
+      </AlertTitle>
+      <AlertDescription>
+        <span className="text-red-950">
+          {t("agent:model.deprecation.description", interpolation)}
+        </span>
+      </AlertDescription>
     </Alert>
   )
 }
