@@ -23,6 +23,23 @@ const testModels = Object.values(AgentModel)
     model: m,
   }))
 
+// Endpoint routing is decided from the shared model catalog, with no call to Vertex, so this
+// runs everywhere — unlike the live generation specs below, which need credentials.
+describe("AISDKVertex3Provider location routing", () => {
+  const locationOf = (model: AgentModel) =>
+    new AISDKVertex3Provider().getTags({ model, temperature: 0 })[1]
+
+  it("routes the model that is not EU-served through the global endpoint", () => {
+    expect(locationOf(AgentModel.Gemini36Flash)).toBe("global")
+  })
+
+  it("keeps every other vertex 3 model on the eu endpoint", () => {
+    expect(locationOf(AgentModel.Gemini35FlashLite)).toBe("eu")
+    expect(locationOf(AgentModel.Gemini35Flash)).toBe("eu")
+    expect(locationOf(AgentModel.Gemini31FlashLite)).toBe("eu")
+  })
+})
+
 if (process.env.IS_TEST === "true" && process.env.VERTEX_PREVIEW_TEST === "true") {
   describe("AISDKVertex3Provider", () => {
     jest.setTimeout(60_000)

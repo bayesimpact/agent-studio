@@ -76,6 +76,7 @@ function WithData({ orchestration }: { orchestration?: AgentEditorOrchestration 
           </ButtonGroup>
         }
       />
+
       <AgentEditor
         key={agent.id}
         agent={agent}

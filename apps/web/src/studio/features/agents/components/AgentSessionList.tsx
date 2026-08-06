@@ -41,6 +41,7 @@ import { AgentActions } from "./AgentActions"
 import { AgentEditor } from "./AgentEditor"
 import { AgentSessionListHeader } from "./AgentSessionListHeader"
 
+/** Agent view for a conversation agent. A nested route replaces this list entirely. */
 export function ConversationAgentSessionList() {
   const agent = useValue(selectCurrentAgentData)
   const agentSessions = useValue(selectCurrentConversationAgentSessionsData)
@@ -77,6 +78,7 @@ export function ConversationAgentSessionList() {
   )
 }
 
+/** Agent view for an extraction agent. A nested extraction run route replaces it entirely. */
 export function ExtractionAgentSessionList() {
   const agent = useValue(selectCurrentAgentData)
   const agentSettings = useValue(

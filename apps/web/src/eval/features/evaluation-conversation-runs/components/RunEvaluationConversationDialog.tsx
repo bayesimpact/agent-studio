@@ -1,8 +1,7 @@
 import {
-  AgentModel,
-  AgentModelToAgentProvider,
-  AgentProvider,
+  type AgentModel,
   createEvaluationConversationRunSchema,
+  DEFAULT_AGENT_MODEL,
   EVALUATION_CONVERSATION_RUN_JUDGE_INSTRUCTIONS_MAX_LENGTH,
 } from "@caseai-connect/api-contracts"
 import { Button } from "@caseai-connect/ui/shad/button"
@@ -40,6 +39,10 @@ import { useTranslation } from "react-i18next"
 import { useNavigate } from "react-router-dom"
 import { z } from "zod"
 import { RunScopeSelector } from "@/common/components/shared/RunScopeSelector"
+import {
+  buildAgentModelOptions,
+  formatAgentModelLabel,
+} from "@/common/features/agents/agent-model.helpers"
 import type { AgentSettings } from "@/common/features/agents/agent-settings/agent-settings.models"
 import { selectAgentSettingsHistoryDataByAgentId } from "@/common/features/agents/agent-settings/agent-settings.selectors"
 import type { Agent } from "@/common/features/agents/agents.models"
@@ -67,29 +70,10 @@ type RunFormValues = {
 const defaultRunFormValues: RunFormValues = {
   agentId: "",
   selectedRevision: null,
-  judgeModel: AgentModel.Gemini25Flash,
+  judgeModel: DEFAULT_AGENT_MODEL,
   judgeInstructions: "",
   runScope: "all",
   limitedCount: 1,
-}
-
-// Mirrors AgentModelTab.extractModelList: the Vertex provider models are always
-// available; the other provider groups are gated behind the matching project
-// feature flag. AgentModel._Mock is naturally excluded (its provider is _Mock).
-function extractJudgeModelList(
-  hasFeature: ReturnType<typeof useFeatureFlags>["hasFeature"],
-): [string, AgentModel][] {
-  const allEntries = Object.entries(AgentModel) as [string, AgentModel][]
-  const byProvider = (provider: AgentProvider) =>
-    allEntries.filter(([_key, value]) => AgentModelToAgentProvider[value] === provider)
-
-  const defaultModels = byProvider(AgentProvider.Vertex)
-  const medGemmaModels = hasFeature("medgemma") ? byProvider(AgentProvider.MedGemma) : []
-  const gemmaModels = hasFeature("gemma") ? byProvider(AgentProvider.Gemma) : []
-  const vertex3Models = hasFeature("vertex-3") ? byProvider(AgentProvider.Vertex3) : []
-  const mistralModels = hasFeature("mistral") ? byProvider(AgentProvider.Mistral) : []
-
-  return [...defaultModels, ...medGemmaModels, ...gemmaModels, ...vertex3Models, ...mistralModels]
 }
 
 export function RunEvaluationConversationDialog({
@@ -108,7 +92,7 @@ export function RunEvaluationConversationDialog({
   const isExecuting = useAppSelector(selectIsExecutingConversationRun)
   const [open, setOpen] = useState(false)
 
-  const judgeModels = useMemo(() => extractJudgeModelList(hasFeature), [hasFeature])
+  const judgeModels = useMemo(() => buildAgentModelOptions(hasFeature), [hasFeature])
 
   const conversationAgents = useMemo(() => {
     return agentsData.filter((agent) => agent.type === "conversation")
@@ -389,7 +373,7 @@ function JudgeModelField({
   models,
 }: {
   control: Control<RunFormValues>
-  models: [string, AgentModel][]
+  models: AgentModel[]
 }) {
   const { t } = useTranslation()
 
@@ -407,9 +391,12 @@ function JudgeModelField({
               </SelectTrigger>
             </FormControl>
             <SelectContent>
-              {models.map(([key, value]) => (
-                <SelectItem key={key} value={value}>
-                  {value}
+              {models.map((model) => (
+                <SelectItem key={model} value={model}>
+                  {formatAgentModelLabel(model, {
+                    deprecatedSuffix: t("agent:model.deprecatedSuffix"),
+                    nonEuSuffix: t("agent:model.nonEuSuffix"),
+                  })}
                 </SelectItem>
               ))}
             </SelectContent>

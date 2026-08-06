@@ -1,3 +1,4 @@
+import { AgentModel, DEFAULT_AGENT_MODEL } from "@caseai-connect/api-contracts"
 import type { Meta, StoryObj } from "@storybook/react-vite"
 import { agentFactory } from "@/common/features/agents/agent.factory"
 import {
@@ -26,6 +27,8 @@ type StoryArgs = StudioStoryArgs & {
   withAgentSessions?: boolean
   /** Unpublished draft revision — drives whether the header's publish button is enabled. */
   withDraft?: boolean
+  /** Puts the agent on a retired model so the deprecation banner renders. */
+  withDeprecatedModel?: boolean
 }
 
 const meta = {
@@ -41,6 +44,7 @@ const meta = {
     fillForm: { control: "boolean" },
     withAgentSessions: { control: "boolean" },
     withDraft: { control: "boolean" },
+    withDeprecatedModel: { control: "boolean" },
   },
   args: {
     ...studioStoryArgs,
@@ -49,6 +53,7 @@ const meta = {
     fillForm: false,
     withAgentSessions: false,
     withDraft: false,
+    withDeprecatedModel: false,
   },
   render: render({ routes: studioRoutes, path: StudioRoutes.agent.path }),
 } satisfies Meta<StoryArgs>
@@ -58,61 +63,66 @@ type Story = StoryObj<typeof meta>
 
 export const Default: Story = {
   decorators: [
-    buildDecorator<StoryArgs>(({ agentType, fillForm, withAgentSessions, withDraft, ...args }) => {
-      const { baseSeeds, project, agents } = buildStudioData(args)
-      const [firstAgent, ...restAgents] = agents
-      const withFillForm = agentType === "conversation" && !!fillForm
-      const currentAgent = agentFactory.transient({ project }).build({
-        ...firstAgent,
-        type: agentType,
-        currentRevision: { number: 1 },
-        // An unpublished draft revision is newer than the published one.
-        draftRevision: withDraft ? { number: 2 } : undefined,
-      })
-      const currentAgentSettings = (
-        withFillForm ? agentSettingsFactory.fillForm() : agentSettingsFactory
-      )
-        .transient({ agent: currentAgent })
-        .build({ revision: currentAgent.currentRevision.number })
-      const draftAgentSettings = currentAgent.draftRevision
-        ? { ...currentAgentSettings, revision: currentAgent.draftRevision.number, isDraft: true }
-        : undefined
+    buildDecorator<StoryArgs>(
+      ({ agentType, fillForm, withAgentSessions, withDraft, withDeprecatedModel, ...args }) => {
+        const { baseSeeds, project, agents } = buildStudioData(args)
+        const [firstAgent, ...restAgents] = agents
+        const withFillForm = agentType === "conversation" && !!fillForm
+        const currentAgent = agentFactory.transient({ project }).build({
+          ...firstAgent,
+          type: agentType,
+          currentRevision: { number: 1 },
+          // An unpublished draft revision is newer than the published one.
+          draftRevision: withDraft ? { number: 2 } : undefined,
+        })
+        const currentAgentSettings = (
+          withFillForm ? agentSettingsFactory.fillForm() : agentSettingsFactory
+        )
+          .transient({ agent: currentAgent })
+          .build({
+            revision: currentAgent.currentRevision.number,
+            model: withDeprecatedModel ? AgentModel.Gemini25Flash : DEFAULT_AGENT_MODEL,
+          })
+        const draftAgentSettings = currentAgent.draftRevision
+          ? { ...currentAgentSettings, revision: currentAgent.draftRevision.number, isDraft: true }
+          : undefined
 
-      const conversationSessionFactory = conversationAgentSessionFactory.transient({
-        agent: currentAgent,
-      })
-      const conversationSessions =
-        withAgentSessions && agentType === "conversation"
-          ? // fillForm-enabled agents accumulate a form result on their sessions.
-            (withFillForm ? conversationSessionFactory.withResult() : conversationSessionFactory)
-              .buildList(3)
-              .sort(sortRecentlyCreated)
-          : []
-      const extractionSessions =
-        withAgentSessions && agentType === "extraction"
-          ? extractionAgentSessionSummaryFactory
-              .transient({ agent: currentAgent })
-              .buildList(3)
-              .sort(sortRecentlyCreated)
-          : []
+        const conversationSessionFactory = conversationAgentSessionFactory.transient({
+          agent: currentAgent,
+        })
+        const conversationSessions =
+          withAgentSessions && agentType === "conversation"
+            ? // fillForm-enabled agents accumulate a form result on their sessions.
+              (withFillForm ? conversationSessionFactory.withResult() : conversationSessionFactory)
+                .buildList(3)
+                .sort(sortRecentlyCreated)
+            : []
+        const extractionSessions =
+          withAgentSessions && agentType === "extraction"
+            ? extractionAgentSessionSummaryFactory
+                .transient({ agent: currentAgent })
+                .buildList(3)
+                .sort(sortRecentlyCreated)
+            : []
 
-      return {
-        state: mergeSeeds(
-          baseSeeds,
-          seed.agents([...restAgents, currentAgent], { currentId: currentAgent.id }),
-          seed.conversationAgentSessions({ [currentAgent.id]: conversationSessions }),
-          seed.extractionAgentSessions({
-            [currentAgent.id]: { csvSessions: [], others: extractionSessions },
-          }),
-          seed.studio.agentHistory({
-            agentId: currentAgent.id,
-            versions: draftAgentSettings
-              ? [draftAgentSettings, currentAgentSettings]
-              : [currentAgentSettings],
-          }),
-        ),
-      }
-    }),
+        return {
+          state: mergeSeeds(
+            baseSeeds,
+            seed.agents([...restAgents, currentAgent], { currentId: currentAgent.id }),
+            seed.conversationAgentSessions({ [currentAgent.id]: conversationSessions }),
+            seed.extractionAgentSessions({
+              [currentAgent.id]: { csvSessions: [], others: extractionSessions },
+            }),
+            seed.studio.agentHistory({
+              agentId: currentAgent.id,
+              versions: draftAgentSettings
+                ? [draftAgentSettings, currentAgentSettings]
+                : [currentAgentSettings],
+            }),
+          ),
+        }
+      },
+    ),
   ],
 }
 
@@ -145,6 +155,14 @@ export const AgentFillFormWithSessions: Story = {
     ...AgentConvWithSessions.args,
     agentType: "conversation",
     fillForm: true,
+  },
+  decorators: Default.decorators,
+}
+
+export const AgentOnDeprecatedModel: Story = {
+  args: {
+    ...AgentConvWithSessions.args,
+    withDeprecatedModel: true,
   },
   decorators: Default.decorators,
 }

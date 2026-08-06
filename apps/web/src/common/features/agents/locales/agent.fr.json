@@ -55,6 +55,14 @@
       "title": "Agents",
       "description": "Gérer les agents pour {{projectName}}"
     },
+    "model": {
+      "deprecatedSuffix": "(déprécié)",
+      "nonEuSuffix": "(hors UE)",
+      "deprecation": {
+        "title": "ACTION REQUISE : {{model}} sera retiré le {{date}}",
+        "description": "Mettez cet agent à jour vers {{replacement}} et testez-le avant cette date. Passé ce délai, les exécutions sur {{model}} échoueront."
+      }
+    },
     "playground": "Playground"
   }
 }

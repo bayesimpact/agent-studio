@@ -55,6 +55,14 @@
       "title": "Agents",
       "description": "Manage agents for {{projectName}}"
     },
+    "model": {
+      "deprecatedSuffix": "(deprecated)",
+      "nonEuSuffix": "(non-EU)",
+      "deprecation": {
+        "title": "ACTION REQUIRED: {{model}} is being retired on {{date}}",
+        "description": "Update this agent to {{replacement}} and re-test it before that date. After it, runs on {{model}} will start failing."
+      }
+    },
     "playground": "Playground"
   }
 }

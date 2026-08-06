@@ -1,4 +1,4 @@
-import { AgentModel } from "@caseai-connect/api-contracts"
+import { DEFAULT_AGENT_MODEL } from "@caseai-connect/api-contracts"
 import { faker } from "@faker-js/faker"
 import { Factory } from "fishery"
 import { agentSettingsFactory } from "@/common/features/agents/agent-settings/agent-settings.factory"
@@ -71,7 +71,7 @@ export const evaluationConversationRunFactory = EvaluationConversationRunFactory
         revision: params.agentSettings?.revision ?? agentSettings.revision,
         temperature: params.agentSettings?.temperature ?? agentSettings.temperature,
       },
-      judgeModel: params.judgeModel ?? AgentModel.Gemini25Flash,
+      judgeModel: params.judgeModel ?? DEFAULT_AGENT_MODEL,
       judgeInstructions: params.judgeInstructions ?? null,
       status: params.status ?? "completed",
       summary:

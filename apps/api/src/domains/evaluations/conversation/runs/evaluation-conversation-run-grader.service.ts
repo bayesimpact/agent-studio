@@ -8,7 +8,7 @@ import { ServiceWithLLM } from "@/external/llm"
  * LLM judge for conversation evaluation runs, ported from the legacy
  * EvaluationReportsService.rateReport: same prompts, same rating agent at
  * temperature 0, same mock swap for tests. The judge model is now selectable
- * per run (defaulting to Gemini 2.5 Flash) and passed in via `judgeModel`, and
+ * per run (see DEFAULT_AGENT_MODEL for the default the UI offers) and passed in via
  * optional per-run `judgeInstructions` are injected into the grading prompt.
  * Unlike the legacy version, the raw response is parsed into an integer score
  * clamped to 0-5 and an unparsable response throws (the run record then becomes

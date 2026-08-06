@@ -1,6 +1,6 @@
 import {
   AgentLocale,
-  AgentModel,
+  DEFAULT_AGENT_MODEL,
   DocumentsRagMode,
   type outputJsonSchemaSchema,
 } from "@caseai-connect/api-contracts"
@@ -62,7 +62,7 @@ export const agentSettingsFactory = AgentSettingsFactory.define(({ params, trans
     isDraft: !!params.isDraft,
     isArchived: !!params.isArchived,
     locale: params.locale ?? AgentLocale.EN,
-    model: params.model ?? AgentModel.Gemini25Flash,
+    model: params.model ?? DEFAULT_AGENT_MODEL,
     projectAgentSessionCategoryIds: params.projectAgentSessionCategoryIds ?? [],
     temperature: params.temperature ?? 0.7,
     updatedAt: params.updatedAt ?? faker.date.recent().getTime(),
