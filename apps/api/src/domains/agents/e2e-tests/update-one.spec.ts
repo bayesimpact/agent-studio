@@ -1,4 +1,4 @@
-import { AgentModel, AgentsRoutes, DocumentsRagMode } from "@caseai-connect/api-contracts"
+import { AgentsRoutes } from "@caseai-connect/api-contracts"
 import { afterAll } from "@jest/globals"
 import type { INestApplication } from "@nestjs/common"
 import type { App } from "supertest/types"
@@ -15,8 +15,6 @@ import { createOrganizationWithAgent } from "@/domains/organizations/organizatio
 import { sdk } from "@/external/llm/open-telemetry-init"
 import { setupUserGuardForTesting } from "../../../../test/e2e.helpers"
 import { expectResponse, type Requester, testRequester } from "../../../../test/request"
-import { DocumentTag } from "../../documents/tags/document-tag.entity"
-import { documentTagFactory } from "../../documents/tags/document-tag.factory"
 import { AgentsModule } from "../agents.module"
 
 describe("Agents - updateOne", () => {
@@ -74,373 +72,40 @@ describe("Agents - updateOne", () => {
       request: payload,
     })
 
-  it("should update an agent and return success", async () => {
-    const { agent, agentSettings } = await createContext()
+  it("should rename an agent and return success", async () => {
+    await createContext()
 
-    const response = await subject({
-      payload: {
-        ...agent,
-        ...agentSettings,
-        name: "Updated Agent",
-        instructions: "Updated Prompt",
-        documentTagIds: [],
-        documentsRagMode: DocumentsRagMode.All,
-        outputJsonSchema: undefined,
-        tagsToAdd: [],
-        tagsToRemove: [],
-        projectAgentSessionCategoryIds: [],
-        greetingMessage: undefined,
-      },
-    })
+    const response = await subject({ payload: { name: "Updated Agent" } })
 
     expectResponse(response, 200)
     expect(response.body).toEqual({ data: { success: true } })
 
-    const updatedAgent = await repositories.agentRepository.findOne({
-      where: { id: agentId },
-    })
+    const updatedAgent = await repositories.agentRepository.findOne({ where: { id: agentId } })
     expect(updatedAgent?.name).toBe("Updated Agent")
-
-    const updatedAgentSettings = await repositories.agentSettingsRepository.findOne({
-      where: { agentId, revision: 2 },
-    })
-    expect(updatedAgentSettings?.instructions).toBe("Updated Prompt")
-    expect(updatedAgentSettings?.documentsRagMode).toBe(DocumentsRagMode.All)
     await expectActivityCreated("agent.update")
   })
 
-  it("should update only provided fields (partial update)", async () => {
-    const { agent, agentSettings } = await createContext()
-    const originalPrompt = agentSettings.instructions
+  it("should not create a settings revision when renaming an agent", async () => {
+    const { agentSettings } = await createContext()
 
-    const response = await subject({
-      payload: {
-        ...agent,
-        ...agentSettings,
-        name: "Only Name Updated",
-        documentTagIds: [],
-        outputJsonSchema: undefined,
-        tagsToAdd: [],
-        tagsToRemove: [],
-        projectAgentSessionCategoryIds: [],
-        greetingMessage: undefined,
-      },
-    })
-
-    expectResponse(response, 200)
-
-    const updatedAgent = await repositories.agentRepository.findOne({
-      where: { id: agentId },
-    })
-    expect(updatedAgent?.name).toBe("Only Name Updated")
-
-    const updatedAgentSettings = await repositories.agentSettingsRepository.findOne({
-      where: { agentId, revision: 1 },
-    })
-    expect(updatedAgentSettings?.instructions).toBe(originalPrompt)
-  })
-
-  it("should preserve greetingMessage when a partial update omits it", async () => {
-    await createContext()
-
-    const setGreeting = await subject({ payload: { greetingMessage: "Hello there!" } })
-    expectResponse(setGreeting, 200)
-    const afterSet = await repositories.agentSettingsRepository.findOne({
-      where: { agentId },
-      order: { revision: "DESC" },
-    })
-    expect(afterSet?.isDraft).toBeTruthy()
-    expect(afterSet?.greetingMessage).toBe("Hello there!")
-
-    // A different tab saves only its own field and omits greetingMessage entirely.
     const response = await subject({ payload: { name: "Renamed Agent" } })
     expectResponse(response, 200)
-
-    const updatedAgent = await repositories.agentRepository.findOne({ where: { id: agentId } })
-    expect(updatedAgent?.name).toBe("Renamed Agent")
-    const updatedAgentSettings = await repositories.agentSettingsRepository.findOne({
-      where: { agentId },
-      order: { revision: "DESC" },
-    })
-    expect(updatedAgentSettings?.isDraft).toBeTruthy()
-    expect(updatedAgentSettings?.greetingMessage).toBe("Hello there!")
-  })
-
-  it("should update only the model tab fields and leave the rest untouched", async () => {
-    const { agent, agentSettings } = await createContext()
-
-    const response = await subject({
-      payload: { model: AgentModel.Gemini25Pro, temperature: 1.5 },
-    })
-    expectResponse(response, 200)
-
-    const updatedAgent = await repositories.agentRepository.findOne({ where: { id: agentId } })
-    expect(updatedAgent?.name).toBe(agent.name)
-
-    const updatedAgentSettings = await repositories.agentSettingsRepository.findOne({
-      where: { agentId },
-      order: { revision: "DESC" },
-    })
-    expect(updatedAgentSettings?.model).toBe(AgentModel.Gemini25Pro)
-    expect(updatedAgentSettings?.temperature).toBe(1.5)
-    expect(updatedAgentSettings?.instructions).toBe(agentSettings.instructions)
-  })
-
-  it("should enable the fillForm tool and bump the settings revision", async () => {
-    await createContext()
-
-    const response = await subject({
-      payload: {
-        fillFormEnabled: true,
-        outputJsonSchema: {
-          type: "object",
-          properties: { title: { type: "string" }, summary: { type: "string" } },
-        },
-      },
-    })
-
-    expectResponse(response, 200)
-    expect(response.body).toEqual({ data: { success: true } })
-
-    const updatedAgentSettings = await repositories.agentSettingsRepository.findOne({
-      where: { agentId },
-      order: { revision: "DESC" },
-    })
-    expect(updatedAgentSettings?.revision).toBe(2)
-    expect(updatedAgentSettings?.fillFormEnabled).toBe(true)
-    expect(updatedAgentSettings?.outputJsonSchema).toEqual({
-      type: "object",
-      properties: { title: { type: "string" }, summary: { type: "string" } },
-    })
-  })
-
-  it("should reject enabling the fillForm tool when the agent has no outputJsonSchema", async () => {
-    await createContext()
-
-    const response = await subject({ payload: { fillFormEnabled: true } })
-
-    expectResponse(response, 422, "outputJsonSchema is required when the fillForm tool is enabled")
 
     const latestAgentSettings = await repositories.agentSettingsRepository.findOne({
       where: { agentId },
       order: { revision: "DESC" },
     })
-    expect(latestAgentSettings?.revision).toBe(1)
-    expect(latestAgentSettings?.fillFormEnabled).toBe(false)
+    expect(latestAgentSettings?.revision).toBe(agentSettings.revision)
+    expect(latestAgentSettings?.isDraft).toBeFalsy()
   })
 
-  it("should update and clear greetingMessage", async () => {
-    const { agent, agentSettings } = await createContext()
+  it("should reject a name shorter than 3 characters", async () => {
+    const { agent } = await createContext()
 
-    const setResponse = await subject({
-      payload: {
-        ...agent,
-        ...agentSettings,
-        greetingMessage: "Hi! How can I help you today?",
-        documentTagIds: [],
-        outputJsonSchema: undefined,
-        tagsToAdd: [],
-        tagsToRemove: [],
-        projectAgentSessionCategoryIds: [],
-      },
-    })
-    expectResponse(setResponse, 200)
-
-    let updatedAgentSettings = await repositories.agentSettingsRepository.findOne({
-      where: { agentId, revision: 2 },
-    })
-    expect(updatedAgentSettings?.isDraft).toBeTruthy()
-    expect(updatedAgentSettings?.greetingMessage).toBe("Hi! How can I help you today?")
-
-    const clearResponse = await subject({
-      payload: {
-        ...agent,
-        ...agentSettings,
-        greetingMessage: "",
-        documentTagIds: [],
-        documentsRagMode: DocumentsRagMode.All,
-        outputJsonSchema: undefined,
-        tagsToAdd: [],
-        tagsToRemove: [],
-        projectAgentSessionCategoryIds: [],
-      },
-    })
-    expectResponse(clearResponse, 200)
-
-    updatedAgentSettings = await repositories.agentSettingsRepository.findOne({
-      where: { agentId, revision: 2 },
-    })
-    expect(updatedAgentSettings?.greetingMessage).toBeNull()
-  })
-
-  it("should preserve stored tags when switching documentsRagMode to none", async () => {
-    const { organization, project, agent, agentSettings } = await createContext()
-    const documentTag = documentTagFactory.transient({ organization, project }).build()
-    await setup.getRepository(DocumentTag).save(documentTag)
-    await repositories.agentSettingsRepository.update(agentSettings.id, {
-      documentsRagMode: DocumentsRagMode.Tags,
-    })
-    await repositories.agentRepository
-      .createQueryBuilder()
-      .relation("documentTags")
-      .of(agent.id)
-      .add(documentTag.id)
-
-    const response = await subject({
-      payload: {
-        ...agent,
-        ...agentSettings,
-        documentTagIds: [documentTag.id],
-        documentsRagMode: DocumentsRagMode.None,
-        outputJsonSchema: undefined,
-        tagsToAdd: [],
-        tagsToRemove: [],
-        projectAgentSessionCategoryIds: [],
-        greetingMessage: undefined,
-      },
-    })
-
-    expectResponse(response, 200)
-
-    const updatedAgent = await repositories.agentRepository.findOne({
-      where: { id: agentId },
-      relations: ["documentTags"],
-    })
-    expect(updatedAgent?.documentTags.map((savedTag) => savedTag.id)).toEqual([documentTag.id])
-    const updatedAgentSettings = await repositories.agentSettingsRepository.findOne({
-      where: { agentId, revision: 2 },
-    })
-    expect(updatedAgentSettings?.isDraft).toBeTruthy()
-    expect(updatedAgentSettings?.documentsRagMode).toBe(DocumentsRagMode.None)
-  })
-
-  it("should update selected project categories", async () => {
-    const { project, agent, agentSettings } = await createContext()
-    const projectCategory = await repositories.projectAgentSessionCategoryRepository.save(
-      repositories.projectAgentSessionCategoryRepository.create({
-        projectId: project.id,
-        name: "Billing",
-      }),
-    )
-
-    const response = await subject({
-      payload: {
-        ...agent,
-        ...agentSettings,
-        documentTagIds: [],
-        documentsRagMode: DocumentsRagMode.All,
-        outputJsonSchema: undefined,
-        tagsToAdd: [],
-        tagsToRemove: [],
-        projectAgentSessionCategoryIds: [projectCategory.id],
-        greetingMessage: undefined,
-      },
-    })
-
-    expectResponse(response, 200)
-    const agentSessionCategories = await repositories.agentSessionCategoryRepository.find({
-      where: { agentId },
-    })
-    expect(agentSessionCategories).toHaveLength(1)
-    expect(agentSessionCategories[0]?.projectAgentSessionCategoryId).toBe(projectCategory.id)
-  })
-
-  it("should preserve an existing soft-deleted project category while adding a new category", async () => {
-    const { project, agent, agentSettings } = await createContext()
-    const legacyProjectCategory = await repositories.projectAgentSessionCategoryRepository.save(
-      repositories.projectAgentSessionCategoryRepository.create({
-        projectId: project.id,
-        name: "Legacy",
-      }),
-    )
-    const newProjectCategory = await repositories.projectAgentSessionCategoryRepository.save(
-      repositories.projectAgentSessionCategoryRepository.create({
-        projectId: project.id,
-        name: "New",
-      }),
-    )
-    await repositories.agentSessionCategoryRepository.save(
-      repositories.agentSessionCategoryRepository.create({
-        agentId: agent.id,
-        projectAgentSessionCategoryId: legacyProjectCategory.id,
-        name: legacyProjectCategory.name,
-      }),
-    )
-    await repositories.projectAgentSessionCategoryRepository.softDelete(legacyProjectCategory.id)
-
-    const response = await subject({
-      payload: {
-        ...agent,
-        ...agentSettings,
-        documentTagIds: [],
-        documentsRagMode: DocumentsRagMode.All,
-        outputJsonSchema: undefined,
-        tagsToAdd: [],
-        tagsToRemove: [],
-        projectAgentSessionCategoryIds: [legacyProjectCategory.id, newProjectCategory.id],
-        greetingMessage: undefined,
-      },
-    })
-
-    expectResponse(response, 200)
-    const agentSessionCategories = await repositories.agentSessionCategoryRepository.find({
-      where: { agentId },
-      order: { name: "ASC" },
-    })
-    expect(
-      agentSessionCategories.map((category) => category.projectAgentSessionCategoryId),
-    ).toEqual([legacyProjectCategory.id, newProjectCategory.id])
-  })
-
-  it("should reject removing a category already used by a conversation", async () => {
-    const { organization, project, agent, agentSettings, user } = await createContext()
-    const projectCategory = await repositories.projectAgentSessionCategoryRepository.save(
-      repositories.projectAgentSessionCategoryRepository.create({
-        projectId: project.id,
-        name: "Billing",
-      }),
-    )
-    const agentSessionCategory = await repositories.agentSessionCategoryRepository.save(
-      repositories.agentSessionCategoryRepository.create({
-        agentId: agent.id,
-        projectAgentSessionCategoryId: projectCategory.id,
-        name: projectCategory.name,
-      }),
-    )
-    const session = await repositories.conversationAgentSessionRepository.save(
-      repositories.conversationAgentSessionRepository.create({
-        organizationId: organization.id,
-        projectId: project.id,
-        agentId: agent.id,
-        userId: user.id,
-        type: "playground",
-      }),
-    )
-    await repositories.conversationAgentSessionCategoryRepository.save(
-      repositories.conversationAgentSessionCategoryRepository.create({
-        conversationAgentSessionId: session.id,
-        agentSessionCategoryId: agentSessionCategory.id,
-      }),
-    )
-
-    const response = await subject({
-      payload: {
-        ...agent,
-        ...agentSettings,
-        documentTagIds: [],
-        documentsRagMode: DocumentsRagMode.All,
-        outputJsonSchema: undefined,
-        tagsToAdd: [],
-        tagsToRemove: [],
-        projectAgentSessionCategoryIds: [],
-        greetingMessage: undefined,
-      },
-    })
+    const response = await subject({ payload: { name: "AB" } })
 
     expectResponse(response, 400)
-    const activeCategory = await repositories.agentSessionCategoryRepository.findOne({
-      where: { id: agentSessionCategory.id },
-    })
-    expect(activeCategory).not.toBeNull()
+    const notUpdatedAgent = await repositories.agentRepository.findOne({ where: { id: agentId } })
+    expect(notUpdatedAgent?.name).toBe(agent.name)
   })
 })

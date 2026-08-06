@@ -22,9 +22,10 @@ export { ConversationAgentSessionsRoutes } from "./agents/conversation-agent-ses
 // Extraction Agent Sessions
 export * from "./agents/extraction-agent-sessions/extraction-agent-sessions.dto"
 export { ExtractionAgentSessionsRoutes } from "./agents/extraction-agent-sessions/extraction-agent-sessions.routes"
-// Form Agent Sessions
-// Agent History
+// Agent Settings
+export * from "./agents/settings/agent-settings.dto"
 export { AgentSettingsRoutes } from "./agents/settings/agent-settings.routes"
+// Form Agent Sessions
 // Agent Session Messages
 export * from "./agents/shared/agent-session-messages/agent-session-messages.dto"
 export { AgentSessionMessagesRoutes } from "./agents/shared/agent-session-messages/agent-session-messages.routes"

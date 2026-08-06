@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite"
 import { agentFactory } from "@/common/features/agents/agent.factory"
+import { agentSettingsFactory } from "@/common/features/agents/agent-settings/agent-settings.factory"
 import { buildDecorator, render } from "@/stories/decorators"
 import {
   buildStudioData,
@@ -43,9 +44,14 @@ export const Default: Story = {
     buildDecorator<StoryArgs>(({ fillForm, withFeedbacks, ...args }) => {
       const { baseSeeds, project, agents } = buildStudioData(args)
       const [firstAgent, ...restAgents] = agents
-      const currentAgent = (fillForm ? agentFactory.fillForm() : agentFactory)
+      const currentAgent = agentFactory
         .transient({ project })
-        .build({ ...firstAgent, type: "conversation", fillFormEnabled: !!fillForm })
+        .build({ ...firstAgent, type: "conversation" })
+      const currentAgentSettings = (
+        fillForm ? agentSettingsFactory.fillForm() : agentSettingsFactory
+      )
+        .transient({ agent: currentAgent })
+        .build({ revision: currentAgent.currentRevision.number })
 
       const feedbacks = withFeedbacks
         ? agentMessageFeedbackFactory.transient({ agent: currentAgent, project }).buildList(3)
@@ -56,6 +62,10 @@ export const Default: Story = {
           baseSeeds,
           seed.agents([...restAgents, currentAgent], { currentId: currentAgent.id }),
           seed.conversationAgentSessions({ [currentAgent.id]: [] }),
+          seed.studio.agentHistory({
+            agentId: currentAgent.id,
+            versions: [currentAgentSettings],
+          }),
           seed.studio.agentMessageFeedbacks({ [currentAgent.id]: feedbacks }),
         ),
       }

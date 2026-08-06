@@ -5,6 +5,7 @@ import { Provider } from "react-redux"
 import { createMemoryRouter, RouterProvider } from "react-router-dom"
 import { backofficeSliceList } from "@/backoffice/store/slices"
 import { selectCurrentAgentSessionId } from "@/common/features/agents/agent-sessions/current-agent-session-id/current-agent-session-id.selectors"
+import { selectCurrentExtractionRunId } from "@/common/features/agents/agent-sessions/extraction/extraction-agent-sessions.selectors"
 import { selectCurrentAgentId } from "@/common/features/agents/agents.selectors"
 import { selectCurrentOrganizationId } from "@/common/features/organizations/organizations.selectors"
 import { selectCurrentProjectId } from "@/common/features/projects/projects.selectors"
@@ -137,6 +138,7 @@ function useReplaceIds(path: string) {
   const projectId = useAppSelector(selectCurrentProjectId)
   const agentId = useAppSelector(selectCurrentAgentId)
   const agentSessionId = useAppSelector(selectCurrentAgentSessionId)
+  const extractionRunId = useAppSelector(selectCurrentExtractionRunId)
   const reviewCampaignId = useAppSelector(selectCurrentReviewCampaignId)
   const reviewerSessionId = useAppSelector(selectCurrentReviewerSessionId)
   const resourceLibraryId = useAppSelector(selectCurrentResourceLibraryId)
@@ -148,6 +150,7 @@ function useReplaceIds(path: string) {
   if (projectId) path = path.replace(":projectId", projectId)
   if (agentId) path = path.replace(":agentId", agentId)
   if (agentSessionId) path = path.replace(":agentSessionId", agentSessionId)
+  if (extractionRunId) path = path.replace(":extractionRunId", extractionRunId)
   if (reviewCampaignId) path = path.replace(":reviewCampaignId", reviewCampaignId)
   if (reviewerSessionId) path = path.replace(":reviewerSessionId", reviewerSessionId)
   if (resourceLibraryId) path = path.replace(":resourceLibraryId", resourceLibraryId)

@@ -1,16 +1,7 @@
-import {
-  AgentLocale,
-  DEFAULT_AGENT_MODEL,
-  DocumentsRagMode,
-  type outputJsonSchemaSchema,
-} from "@caseai-connect/api-contracts"
 import { faker } from "@faker-js/faker"
 import { Factory } from "fishery"
-import type { z } from "zod"
 import type { Project } from "@/common/features/projects/projects.models"
 import type { Agent } from "./agents.models"
-
-type AgentOutputJsonSchema = z.infer<typeof outputJsonSchemaSchema>
 
 type AgentTransientParams = {
   project: Project
@@ -25,30 +16,7 @@ const AGENT_NAMES = [
   "Support Agent",
 ]
 
-class AgentOutputJsonSchemaFactory extends Factory<AgentOutputJsonSchema> {}
-
-export const agentOutputJsonSchemaFactory = AgentOutputJsonSchemaFactory.define(({ params }) => {
-  const properties: AgentOutputJsonSchema["properties"] = (params.properties ?? {
-    title: { type: "string", description: faker.lorem.sentence() },
-    summary: { type: "string", description: faker.lorem.sentence() },
-  }) as AgentOutputJsonSchema["properties"]
-  return {
-    type: "object" as const,
-    properties,
-    required: params.required ?? Object.keys(properties).slice(0, 1),
-  }
-})
-
-class AgentFactory extends Factory<Agent, AgentTransientParams> {
-  /** A conversation agent with the fillForm tool enabled and a form definition. */
-  fillForm() {
-    return this.params({
-      type: "conversation",
-      fillFormEnabled: true,
-      outputJsonSchema: agentOutputJsonSchemaFactory.build(),
-    })
-  }
-}
+class AgentFactory extends Factory<Agent, AgentTransientParams> {}
 
 export const agentFactory = AgentFactory.define(({ params, transientParams }) => {
   const { project } = transientParams
@@ -57,30 +25,25 @@ export const agentFactory = AgentFactory.define(({ params, transientParams }) =>
   }
 
   const types = ["conversation", "extraction"] as const
-  const type = faker.helpers.arrayElement(types)
   return {
     createdAt: params.createdAt ?? faker.date.past().getTime(),
-    instructions: params.instructions ?? faker.lorem.paragraph(),
-    documentsRagMode: params.documentsRagMode ?? DocumentsRagMode.None,
-    documentTagIds: params.documentTagIds ?? [],
-    resourceLibraryIds: params.resourceLibraryIds ?? [],
-    fillFormEnabled: params.fillFormEnabled ?? false,
-    greetingMessage: params.greetingMessage ?? undefined,
     id: params.id ?? faker.string.uuid(),
-    revision: params.revision ?? 1,
-    revisionName: params.revisionName ?? "",
-    revisionDesc: params.revisionDesc ?? "",
-    isDraft: !!params.isDraft,
-    isArchived: !!params.isArchived,
-    locale: params.locale ?? AgentLocale.EN,
-    model: params.model ?? DEFAULT_AGENT_MODEL,
     name: params.name ?? faker.helpers.arrayElement(AGENT_NAMES),
-    projectAgentSessionCategoryIds: params.projectAgentSessionCategoryIds ?? [],
     projectId: project.id,
-    temperature: params.temperature ?? 0.7,
-    type: params.type ?? type,
-    updatedAt: params.updatedAt ?? faker.date.recent().getTime(),
-    usedProjectAgentSessionCategoryIds: params.usedProjectAgentSessionCategoryIds ?? [],
-    mcpServers: params.mcpServers ?? [],
-  }
+    type: params.type ?? faker.helpers.arrayElement(types),
+    currentRevision: {
+      name: params.currentRevision?.name,
+      description: params.currentRevision?.description,
+      updatedAt: params.currentRevision?.updatedAt ?? faker.date.recent().getTime(),
+      number: params.currentRevision?.number ?? 1,
+    },
+    draftRevision: params.draftRevision
+      ? {
+          name: params.draftRevision.name,
+          description: params.draftRevision.description,
+          updatedAt: params.draftRevision.updatedAt ?? faker.date.recent().getTime(),
+          number: params.draftRevision.number ?? 1,
+        }
+      : undefined,
+  } satisfies Agent
 })

@@ -1,26 +1,10 @@
 import { createListenerMiddleware, isAnyOf } from "@reduxjs/toolkit"
+import { listAgentSettings } from "@/common/features/agents/agent-settings/agent-settings.thunks"
 import { listAgents } from "@/common/features/agents/agents.thunks"
 import { fetchMe } from "@/common/features/me/me.thunks"
 import { notificationsActions } from "@/common/features/notifications/notifications.slice"
-import { ADS } from "@/common/store/async-data-status"
 import type { AppDispatch, RootState } from "@/common/store/types"
-import { selectAgentHistoryData } from "@/studio/features/agents/agent-history.selectors"
-import {
-  listAgentHistory,
-  publishAgentRevision,
-  restoreAgentRevision,
-} from "@/studio/features/agents/agent-history.thunks"
-import {
-  createAgent,
-  deleteAgent,
-  updateAgentCategories,
-  updateAgentGeneral,
-  updateAgentModel,
-  updateAgentOutput,
-  updateAgentResources,
-  updateAgentSources,
-  updateAgentTools,
-} from "@/studio/features/agents/agents.thunks"
+import { createAgent, deleteAgent, updateAgent } from "@/studio/features/agents/agents.thunks"
 import {
   deleteDocumentTag,
   updateDocumentTag,
@@ -41,8 +25,37 @@ function registerListeners() {
   })
 
   listenerMiddleware.startListening({
+    actionCreator: updateAgent.fulfilled,
+    effect: async (action, listenerApi) => {
+      const agentId = action.meta.arg.agentId
+      await listenerApi.dispatch(listAgents())
+      await listenerApi.dispatch(listAgentSettings({ agentId }))
+
+      listenerApi.dispatch(
+        notificationsActions.show({
+          title: "Agent updated successfully",
+          type: "success",
+        }),
+      )
+    },
+  })
+  listenerMiddleware.startListening({
+    actionCreator: updateAgent.rejected,
+    effect: async (_, listenerApi) => {
+      listenerApi.dispatch(
+        notificationsActions.show({
+          title: "Agent update failed",
+          type: "error",
+        }),
+      )
+    },
+  })
+
+  listenerMiddleware.startListening({
     actionCreator: deleteAgent.fulfilled,
     effect: async (_, listenerApi) => {
+      await listenerApi.dispatch(listAgents())
+
       listenerApi.dispatch(
         notificationsActions.show({
           title: "Agent deleted successfully",
@@ -66,6 +79,10 @@ function registerListeners() {
   listenerMiddleware.startListening({
     actionCreator: createAgent.fulfilled,
     effect: async (action, listenerApi) => {
+      const agentId = action.payload.id
+      await listenerApi.dispatch(listAgents())
+      await listenerApi.dispatch(listAgentSettings({ agentId }))
+
       listenerApi.dispatch(
         notificationsActions.show({
           title: "Agent created successfully",
@@ -85,106 +102,6 @@ function registerListeners() {
       listenerApi.dispatch(
         notificationsActions.show({
           title: "Agent creation failed",
-          type: "error",
-        }),
-      )
-    },
-  })
-
-  listenerMiddleware.startListening({
-    matcher: isAnyOf(
-      updateAgentGeneral.fulfilled,
-      updateAgentModel.fulfilled,
-      updateAgentOutput.fulfilled,
-      updateAgentSources.fulfilled,
-      updateAgentResources.fulfilled,
-      updateAgentCategories.fulfilled,
-      updateAgentTools.fulfilled,
-    ),
-    effect: async (_, listenerApi) => {
-      listenerApi.dispatch(listAgents())
-
-      // Keep the version history in sync when it has already been opened.
-      if (ADS.isFulfilled(selectAgentHistoryData(listenerApi.getState()))) {
-        listenerApi.dispatch(listAgentHistory())
-      }
-
-      listenerApi.dispatch(
-        notificationsActions.show({
-          title: "Agent updated successfully",
-          type: "success",
-        }),
-      )
-    },
-  })
-
-  listenerMiddleware.startListening({
-    actionCreator: restoreAgentRevision.fulfilled,
-    effect: async (_, listenerApi) => {
-      listenerApi.dispatch(listAgents())
-      listenerApi.dispatch(listAgentHistory())
-
-      listenerApi.dispatch(
-        notificationsActions.show({
-          title: "Agent version restored successfully",
-          type: "success",
-        }),
-      )
-    },
-  })
-  listenerMiddleware.startListening({
-    actionCreator: publishAgentRevision.fulfilled,
-    effect: async (_, listenerApi) => {
-      // Refetch so `agent.isDraft` flips to false (which disables the publish button) and the
-      // newly published revision shows up in the history sheet.
-      listenerApi.dispatch(listAgents())
-      listenerApi.dispatch(listAgentHistory())
-
-      listenerApi.dispatch(
-        notificationsActions.show({
-          title: "Agent version published successfully",
-          type: "success",
-        }),
-      )
-    },
-  })
-  listenerMiddleware.startListening({
-    actionCreator: publishAgentRevision.rejected,
-    effect: async (_, listenerApi) => {
-      listenerApi.dispatch(
-        notificationsActions.show({
-          title: "Agent version publication failed",
-          type: "error",
-        }),
-      )
-    },
-  })
-
-  listenerMiddleware.startListening({
-    actionCreator: restoreAgentRevision.rejected,
-    effect: async (_, listenerApi) => {
-      listenerApi.dispatch(
-        notificationsActions.show({
-          title: "Agent version restore failed",
-          type: "error",
-        }),
-      )
-    },
-  })
-  listenerMiddleware.startListening({
-    matcher: isAnyOf(
-      updateAgentGeneral.rejected,
-      updateAgentModel.rejected,
-      updateAgentOutput.rejected,
-      updateAgentSources.rejected,
-      updateAgentResources.rejected,
-      updateAgentCategories.rejected,
-      updateAgentTools.rejected,
-    ),
-    effect: async (_, listenerApi) => {
-      listenerApi.dispatch(
-        notificationsActions.show({
-          title: "Agent update failed",
           type: "error",
         }),
       )

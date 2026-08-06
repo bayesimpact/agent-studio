@@ -7,6 +7,14 @@ import { selectConversationSubSessionsBySessionId } from "@/common/features/agen
 import type { AgentSessionMessage } from "@/common/features/agents/agent-sessions/shared/agent-session-messages/agent-session-messages.models"
 import { selectCurrentMessagesData } from "@/common/features/agents/agent-sessions/shared/agent-session-messages/agent-session-messages.selectors"
 import { AgentSessionMessages } from "@/common/features/agents/agent-sessions/shared/agent-session-messages/components/AgentSessionMessages"
+import {
+  findPublishedVersion,
+  resolveMessageRevision,
+} from "@/common/features/agents/agent-settings/agent-settings.functions"
+import {
+  selectAgentSettingsDataByAgentId,
+  selectAgentSettingsHistoryDataByAgentId,
+} from "@/common/features/agents/agent-settings/agent-settings.selectors"
 import { selectCurrentAgentData } from "@/common/features/agents/agents.selectors"
 import { getAgentIcon } from "@/common/features/agents/components/AgentIcon"
 import { useAbility } from "@/common/hooks/use-ability"
@@ -14,17 +22,13 @@ import { useGetAgentRoute } from "@/common/hooks/use-get-path"
 import { useValue } from "@/common/hooks/use-value"
 import { useAppSelector } from "@/common/store/hooks"
 import { buildSince } from "@/common/utils/build-date"
-import {
-  findPublishedVersion,
-  resolveMessageRevision,
-} from "@/studio/features/agents/agent-history.functions"
-import { selectAgentHistoryData } from "@/studio/features/agents/agent-history.selectors"
-import { AgentRevisionBadge } from "@/studio/features/agents/components/AgentRevisionBadge"
+import { AgentRevisionBadge } from "@/studio/features/agents/agent-settings/components/AgentRevisionBadge"
 import { AgentSessionActions } from "../features/agents/components/AgentSessionActions"
 
 type AgentSession = ConversationAgentSession
 export function StudioAgentSessionRoute({ agentSession }: { agentSession: AgentSession }) {
   const agent = useValue(selectCurrentAgentData)
+  const agentSettings = useValue(selectAgentSettingsDataByAgentId({ agentId: agent.id }))
   const messages = useValue(selectCurrentMessagesData)
   const selectSubSessions = useMemo(
     () => selectConversationSubSessionsBySessionId(agentSession.id),
@@ -44,8 +48,10 @@ export function StudioAgentSessionRoute({ agentSession }: { agentSession: AgentS
 
   const { abilities } = useAbility()
   const canManageAgent = abilities.canManageAgent({ agentId: agent.id })
-  // Loaded by StudioAgentRoute; empty until it lands, or when the user cannot manage the agent.
-  const versions = useAppSelector(selectAgentHistoryData).value ?? []
+
+  const versions = useValue(
+    selectAgentSettingsHistoryDataByAgentId({ agentId: agent.id, includeDraft: true }),
+  )
 
   const renderMessageVersion = (message: AgentSessionMessage) => {
     if (!canManageAgent) return null
@@ -94,7 +100,9 @@ export function StudioAgentSessionRoute({ agentSession }: { agentSession: AgentS
           session={agentSession}
           messages={messages}
           formSubSessions={formSubSessions}
-          formResultSchema={agent.fillFormEnabled ? agent.outputJsonSchema : undefined}
+          formResultSchema={
+            agentSettings.fillFormEnabled ? agentSettings.outputJsonSchema : undefined
+          }
           renderMessageVersion={renderMessageVersion}
         />
       </div>

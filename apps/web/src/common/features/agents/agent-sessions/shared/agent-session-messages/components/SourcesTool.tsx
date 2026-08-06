@@ -112,12 +112,12 @@ export function SourcesTool({
     <Sheet>
       <SheetTrigger asChild>
         <Button variant="ghost" size="sm" className="text-muted-foreground text-xs">
-          {t("agent:source", { count: sources.length })}
+          {t("agentSettings:source", { count: sources.length })}
         </Button>
       </SheetTrigger>
       <SheetContent side="right" className="w-full sm:max-w-md overflow-y-auto">
         <SheetHeader>
-          <SheetTitle>{t("agent:source", { count: sources.length })}</SheetTitle>
+          <SheetTitle>{t("agentSettings:source", { count: sources.length })}</SheetTitle>
         </SheetHeader>
         <div className="px-4 pb-4">
           {sources.map((source) => (

@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite"
 import { agentFactory } from "@/common/features/agents/agent.factory"
+import { agentSettingsFactory } from "@/common/features/agents/agent-settings/agent-settings.factory"
 import type { Agent } from "@/common/features/agents/agents.models"
 import { buildDecorator, render } from "@/stories/decorators"
 import {
@@ -87,7 +88,10 @@ export const Default: Story = {
       const [firstAgent, ...restAgents] = agents
       const currentAgent = agentFactory
         .transient({ project })
-        .build({ ...firstAgent, type: "conversation", hasCategories: withCategories })
+        .build({ ...firstAgent, type: "conversation" })
+      const currentAgentSettings = agentSettingsFactory
+        .transient({ agent: currentAgent })
+        .build({ revision: currentAgent.currentRevision.number, hasCategories: withCategories })
 
       const analytics = withAnalytics
         ? buildAnalytics(currentAgent)
@@ -102,6 +106,10 @@ export const Default: Story = {
           baseSeeds,
           seed.agents([...restAgents, currentAgent], { currentId: currentAgent.id }),
           seed.conversationAgentSessions({ [currentAgent.id]: [] }),
+          seed.studio.agentHistory({
+            agentId: currentAgent.id,
+            versions: [currentAgentSettings],
+          }),
           seed.studio.agentAnalytics(analytics),
         ),
         services: {
@@ -134,8 +142,10 @@ export const WithData: Story = {
         .build({
           ...firstAgent,
           type: "conversation",
-          hasCategories: withCategories,
         })
+      const currentAgentSettings = agentSettingsFactory
+        .transient({ agent: currentAgent })
+        .build({ revision: currentAgent.currentRevision.number, hasCategories: withCategories })
 
       const analytics = withAnalytics
         ? buildAnalytics(currentAgent)
@@ -153,6 +163,10 @@ export const WithData: Story = {
           }),
           seed.conversationAgentSessions({
             [currentAgent.id]: [],
+          }),
+          seed.studio.agentHistory({
+            agentId: currentAgent.id,
+            versions: [currentAgentSettings],
           }),
           seed.studio.agentAnalytics(analytics),
         ),

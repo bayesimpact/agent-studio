@@ -1,7 +1,9 @@
 import { AgentLocale, AgentModel, DocumentsRagMode } from "@caseai-connect/api-contracts"
-import type { AgentSettingsValues } from "@/domains/agents/settings/agent-settings.service"
+import type { AgentSettingsCreateFields, AgentSettingsUpdateFields } from "./agent.settings.types"
 
-export const agentSettingsValuesRev1: AgentSettingsValues = {
+// Typed as create fields so the required settings (instructions, model, …) stay non-optional and
+// the fixtures can be spread into `createAgent` payloads.
+export const agentSettingsValuesRev1: AgentSettingsCreateFields = {
   instructions: "This is a default prompt 1",
   model: AgentModel.Gemini25Flash,
   temperature: 0,
@@ -15,7 +17,7 @@ export const agentSettingsValuesRev1: AgentSettingsValues = {
   },
   fillFormEnabled: false,
 }
-export const agentSettingsValuesRev2Archived: AgentSettingsValues = {
+export const agentSettingsValuesRev2Archived: AgentSettingsCreateFields = {
   instructions: "This is a default prompt 2",
   model: AgentModel.Gemma4_26B,
   temperature: 1,
@@ -29,7 +31,7 @@ export const agentSettingsValuesRev2Archived: AgentSettingsValues = {
   },
   fillFormEnabled: false,
 }
-export const agentSettingsValuesRev3Draft: AgentSettingsValues = {
+export const agentSettingsValuesRev3Draft: AgentSettingsCreateFields = {
   instructions: "This is a default prompt 3",
   model: AgentModel._Mock,
   temperature: 1,
@@ -44,7 +46,7 @@ export const agentSettingsValuesRev3Draft: AgentSettingsValues = {
   fillFormEnabled: false,
 }
 
-export function assertOnSettings(expected: object, value: AgentSettingsValues | undefined) {
+export function assertOnSettings(expected: object, value: AgentSettingsUpdateFields | undefined) {
   expect(value).toBeDefined()
   if (value) {
     // biome-ignore lint/complexity/useLiteralKeys: test usage

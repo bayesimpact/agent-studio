@@ -9,11 +9,14 @@ import { buildDate } from "@/common/utils/build-date"
  * is supported, so callers mount it unconditionally — declaring a future deprecation in
  * `AgentModelMetadataMap` is enough to surface it here.
  *
+ * `model` is optional because it lives on the agent settings, whose fetch some views do not gate
+ * their rendering on: an absent model renders nothing rather than forcing every caller to branch.
+ *
  * Not dismissible: migrating is mandatory, not advisory.
  */
-export function DeprecatedModelBanner({ model }: { model: AgentModel }) {
+export function DeprecatedModelBanner({ model }: { model?: AgentModel }) {
   const { t } = useTranslation()
-  const deprecation = getAgentModelDeprecation(model)
+  const deprecation = model ? getAgentModelDeprecation(model) : undefined
 
   if (!deprecation) return null
 
