@@ -404,7 +404,10 @@ function JudgeModelField({
             <SelectContent>
               {models.map((model) => (
                 <SelectItem key={model} value={model}>
-                  {formatAgentModelLabel(model, t("agent:model.deprecatedSuffix"))}
+                  {formatAgentModelLabel(model, {
+                    deprecatedSuffix: t("agent:model.deprecatedSuffix"),
+                    nonEuSuffix: t("agent:model.nonEuSuffix"),
+                  })}
                 </SelectItem>
               ))}
             </SelectContent>

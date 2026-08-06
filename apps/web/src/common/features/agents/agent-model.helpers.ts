@@ -3,6 +3,7 @@ import {
   AgentModelToAgentProvider,
   AgentProvider,
   getAgentModelDeprecation,
+  isAgentModelServedOutsideEu,
 } from "@caseai-connect/api-contracts"
 import type { HasFeature } from "@/common/hooks/use-feature-flags"
 
@@ -29,10 +30,25 @@ export function buildAgentModelOptions(hasFeature: HasFeature): AgentModel[] {
   )
 }
 
+/** Already-translated suffixes a model label can carry. Both can apply to the same model. */
+export type AgentModelLabelSuffixes = {
+  deprecatedSuffix: string
+  nonEuSuffix: string
+}
+
 /**
- * Option label for a model in a select. Pass the already-translated suffix
- * (`t("agent:model.deprecatedSuffix")`) so this stays a pure function.
+ * Option label for a model in a select: the model id plus whichever catalog facts apply, in the
+ * order urgency dictates (retirement first, residency second). Pass the already-translated
+ * suffixes so this stays a pure function.
  */
-export function formatAgentModelLabel(model: AgentModel, deprecatedSuffix: string): string {
-  return getAgentModelDeprecation(model) ? `${model} ${deprecatedSuffix}` : model
+export function formatAgentModelLabel(
+  model: AgentModel,
+  { deprecatedSuffix, nonEuSuffix }: AgentModelLabelSuffixes,
+): string {
+  const suffixes = [
+    getAgentModelDeprecation(model) ? deprecatedSuffix : undefined,
+    isAgentModelServedOutsideEu(model) ? nonEuSuffix : undefined,
+  ].filter((suffix) => suffix !== undefined)
+
+  return [model, ...suffixes].join(" ")
 }

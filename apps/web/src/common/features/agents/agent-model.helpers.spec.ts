@@ -3,6 +3,7 @@ import {
   AgentModelMetadataMap,
   DEFAULT_AGENT_MODEL,
   getAgentModelDeprecation,
+  isAgentModelServedOutsideEu,
 } from "@caseai-connect/api-contracts"
 import { describe, expect, it } from "vitest"
 import type { HasFeature } from "@/common/hooks/use-feature-flags"
@@ -46,19 +47,76 @@ describe("AgentModelMetadataMap", () => {
   it("does not deprecate the default model", () => {
     expect(getAgentModelDeprecation(DEFAULT_AGENT_MODEL)).toBeUndefined()
   })
+
+  it("treats a model that is no longer in the enum as not deprecated", () => {
+    // `agent_settings.model` is an unconstrained varchar, so a row can hold a model that has been
+    // dropped from `AgentModel` (exactly what retiring the 2.5 models will produce). Reading the
+    // catalog must answer "unknown", not throw — the banner renders inside the agent subtree and
+    // there is no error boundary above it.
+    expect(() => getAgentModelDeprecation("gemini-2.5-flash")).not.toThrow()
+    expect(getAgentModelDeprecation("gemini-1.5-flash-retired")).toBeUndefined()
+    expect(getAgentModelDeprecation("")).toBeUndefined()
+  })
+
+  it("reports only the non-EU model as served outside the EU", () => {
+    const servedOutsideEu = Object.values(AgentModel).filter((model) =>
+      isAgentModelServedOutsideEu(model),
+    )
+
+    expect(servedOutsideEu).toEqual([AgentModel.Gemini36Flash])
+  })
+
+  it("treats an unknown model as EU-served rather than throwing", () => {
+    expect(() => isAgentModelServedOutsideEu("gemini-1.5-flash-retired")).not.toThrow()
+    expect(isAgentModelServedOutsideEu("gemini-1.5-flash-retired")).toBe(false)
+  })
 })
 
 describe("formatAgentModelLabel", () => {
-  it("appends the suffix to a deprecated model", () => {
-    expect(formatAgentModelLabel(AgentModel.Gemini25Flash, "(deprecated)")).toBe(
+  const labels = { deprecatedSuffix: "(deprecated)", nonEuSuffix: "(non-EU)" }
+
+  it("appends the deprecated suffix to a deprecated model", () => {
+    expect(formatAgentModelLabel(AgentModel.Gemini25Flash, labels)).toBe(
       "gemini-2.5-flash (deprecated)",
     )
   })
 
-  it("leaves a supported model untouched", () => {
-    expect(formatAgentModelLabel(AgentModel.Gemini35FlashLite, "(deprecated)")).toBe(
+  it("leaves a supported EU-served model untouched", () => {
+    expect(formatAgentModelLabel(AgentModel.Gemini35FlashLite, labels)).toBe(
       "gemini-3.5-flash-lite",
     )
+  })
+
+  it("appends the residency suffix to the model served outside the EU", () => {
+    expect(formatAgentModelLabel(AgentModel.Gemini36Flash, labels)).toBe(
+      "gemini-3.6-flash (non-EU)",
+    )
+  })
+
+  it("does not mark the other vertex 3 models as non-EU", () => {
+    expect(formatAgentModelLabel(AgentModel.Gemini31FlashLite, labels)).toBe(
+      "gemini-3.1-flash-lite",
+    )
+    expect(formatAgentModelLabel(AgentModel.Gemini35Flash, labels)).toBe("gemini-3.5-flash")
+  })
+
+  it("appends both suffixes when a model is deprecated and served outside the EU", () => {
+    // No catalog entry carries both facts today, so the combination is seeded on the real catalog
+    // and restored: the assertion is about the formatter, not about the current data.
+    const metadata = AgentModelMetadataMap[AgentModel.Gemini36Flash]
+    const originalDeprecation = metadata.deprecation
+    metadata.deprecation = {
+      deprecatedOn: "2027-01-01",
+      recommendedReplacement: AgentModel.Gemini35Flash,
+    }
+
+    try {
+      expect(formatAgentModelLabel(AgentModel.Gemini36Flash, labels)).toBe(
+        "gemini-3.6-flash (deprecated) (non-EU)",
+      )
+    } finally {
+      metadata.deprecation = originalDeprecation
+    }
   })
 })
 

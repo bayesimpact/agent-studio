@@ -1,5 +1,9 @@
 import { createVertex } from "@ai-sdk/google-vertex"
-import { AgentModel, AgentProvider } from "@caseai-connect/api-contracts"
+import {
+  AgentModel,
+  AgentProvider,
+  isAgentModelServedOutsideEu,
+} from "@caseai-connect/api-contracts"
 import { Injectable } from "@nestjs/common"
 import type { LanguageModel } from "ai"
 import { Agent, fetch as undiciFetch } from "undici"
@@ -24,10 +28,16 @@ function readTimeoutMs(value: string | undefined, defaultMs: number): number {
  * 404 on aiplatform.eu.rep.googleapis.com, while 3.5-flash, 3.5-flash-lite
  * and 3.1-flash-lite all answer there) — they can only run through the
  * "global" endpoint, which does NOT guarantee EU data processing. Every
- * other model stays on "eu" (data residency). When Google opens EU serving
- * for a model, remove it from this list.
+ * other model stays on "eu" (data residency).
+ *
+ * The list is derived from `servedOutsideEu` in `AgentModelMetadataMap`, the
+ * shared catalog that also drives the "(non-EU)" label in the model pickers.
+ * When Google opens EU serving for a model, clear the flag there — this
+ * routing and the UI label follow from the same fact.
  */
-const GLOBAL_ONLY_MODELS: string[] = [AgentModel.Gemini36Flash]
+const GLOBAL_ONLY_MODELS: string[] = Object.values(AgentModel).filter((model) =>
+  isAgentModelServedOutsideEu(model),
+)
 
 type VertexLocation = "eu" | "global"
 

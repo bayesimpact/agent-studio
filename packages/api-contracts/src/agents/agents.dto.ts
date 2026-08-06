@@ -55,6 +55,12 @@ export type AgentModelDeprecation = {
  */
 export type AgentModelMetadata = {
   deprecation?: AgentModelDeprecation
+  /**
+   * `true` when the provider does not serve the model from the EU region. Such a model can only
+   * run through a global endpoint, which carries no EU data-processing guarantee. Absent means
+   * EU-served. This is the source of truth for both the API's endpoint routing and the UI label.
+   */
+  servedOutsideEu?: boolean
 }
 
 export const AgentModelMetadataMap: Record<AgentModel, AgentModelMetadata> = {
@@ -73,7 +79,7 @@ export const AgentModelMetadataMap: Record<AgentModel, AgentModelMetadata> = {
   [AgentModel.Gemini31FlashLite]: {},
   [AgentModel.Gemini35FlashLite]: {},
   [AgentModel.Gemini35Flash]: {},
-  [AgentModel.Gemini36Flash]: {},
+  [AgentModel.Gemini36Flash]: { servedOutsideEu: true },
   [AgentModel.MedGemma10_27B]: {},
   [AgentModel.Gemma4_26B]: {},
   [AgentModel.MistralSmall31_24B]: {},
@@ -84,12 +90,29 @@ export const AgentModelMetadataMap: Record<AgentModel, AgentModelMetadata> = {
 export const DEFAULT_AGENT_MODEL = AgentModel.Gemini35FlashLite
 
 /**
+ * Same map, read as a plain string lookup. `agent_settings.model` is an unconstrained varchar and
+ * a model leaves `AgentModel` once its provider retires it, so a stored value is not guaranteed to
+ * be a live enum member. Going through this alias turns a stale row into a miss (`undefined`)
+ * instead of a `TypeError` in whichever component happens to read it.
+ */
+const agentModelMetadata: Partial<Record<string, AgentModelMetadata>> = AgentModelMetadataMap
+
+/**
  * Single read path for deprecation state. Returns `undefined` for a supported model, so callers
  * can branch on presence rather than on a model allow-list — a future deprecation is one entry
  * in `AgentModelMetadataMap` and no code change here or downstream.
  */
-export function getAgentModelDeprecation(model: AgentModel): AgentModelDeprecation | undefined {
-  return AgentModelMetadataMap[model].deprecation
+export function getAgentModelDeprecation(model: string): AgentModelDeprecation | undefined {
+  return agentModelMetadata[model]?.deprecation
+}
+
+/**
+ * Single read path for data residency: `true` only for a model the provider does not serve from
+ * the EU. Unknown models answer `false`, which is the safe default for a label — it never claims
+ * a residency guarantee the catalog does not state.
+ */
+export function isAgentModelServedOutsideEu(model: string): boolean {
+  return agentModelMetadata[model]?.servedOutsideEu === true
 }
 
 export enum AgentLocale {
