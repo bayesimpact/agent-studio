@@ -6,6 +6,7 @@ import {
   isAgentModelServedOutsideEu,
 } from "@caseai-connect/api-contracts"
 import type { HasFeature } from "@/common/hooks/use-feature-flags"
+import { buildDate } from "@/common/utils/build-date"
 
 /**
  * Models a project may choose from, in enum declaration order.
@@ -28,6 +29,24 @@ export function buildAgentModelOptions(hasFeature: HasFeature): AgentModel[] {
   return Object.values(AgentModel).filter((model) =>
     providers.includes(AgentModelToAgentProvider[model]),
   )
+}
+
+/**
+ * Interpolation values for the `agent:model.deprecation.*` strings, shared by every surface that
+ * announces a retirement (banner, sidebar tooltip). Returns `undefined` when the model is supported
+ * or unknown, so callers can use it as their render gate.
+ */
+export function buildAgentModelDeprecationInterpolation(model: AgentModel | undefined) {
+  const deprecation = model ? getAgentModelDeprecation(model) : undefined
+  if (!deprecation) return undefined
+
+  return {
+    model,
+    replacement: deprecation.recommendedReplacement,
+    // `new Date("2026-09-30")` parses as UTC midnight, which formats as 29 September in any
+    // negative-offset timezone. Appending the time forces local-midnight parsing instead.
+    date: buildDate(new Date(`${deprecation.deprecatedOn}T00:00:00`).getTime(), "dd MMMM yyyy"),
+  }
 }
 
 /** Already-translated suffixes a model label can carry. Both can apply to the same model. */

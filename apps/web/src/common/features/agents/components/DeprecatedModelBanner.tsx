@@ -1,8 +1,8 @@
-import { type AgentModel, getAgentModelDeprecation } from "@caseai-connect/api-contracts"
+import type { AgentModel } from "@caseai-connect/api-contracts"
 import { Alert, AlertDescription, AlertTitle } from "@caseai-connect/ui/shad/alert"
 import { TriangleAlertIcon } from "lucide-react"
 import { useTranslation } from "react-i18next"
-import { buildDate } from "@/common/utils/build-date"
+import { buildAgentModelDeprecationInterpolation } from "@/common/features/agents/agent-model.helpers"
 
 /**
  * Warns that a model is being retired and names its replacement. Renders nothing when the model
@@ -16,17 +16,9 @@ import { buildDate } from "@/common/utils/build-date"
  */
 export function DeprecatedModelBanner({ model }: { model?: AgentModel }) {
   const { t } = useTranslation()
-  const deprecation = model ? getAgentModelDeprecation(model) : undefined
+  const interpolation = buildAgentModelDeprecationInterpolation(model)
 
-  if (!deprecation) return null
-
-  const interpolation = {
-    model,
-    replacement: deprecation.recommendedReplacement,
-    // `new Date("2026-09-30")` parses as UTC midnight, which formats as 29 September in any
-    // negative-offset timezone. Appending the time forces local-midnight parsing instead.
-    date: buildDate(new Date(`${deprecation.deprecatedOn}T00:00:00`).getTime(), "dd MMMM yyyy"),
-  }
+  if (!interpolation) return null
 
   return (
     <Alert variant="destructive" className="bg-orange-50/50 border-orange-200">

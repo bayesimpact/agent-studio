@@ -5,9 +5,13 @@ import {
   getAgentModelDeprecation,
   isAgentModelServedOutsideEu,
 } from "@caseai-connect/api-contracts"
-import { describe, expect, it } from "vitest"
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import type { HasFeature } from "@/common/hooks/use-feature-flags"
-import { buildAgentModelOptions, formatAgentModelLabel } from "./agent-model.helpers"
+import {
+  buildAgentModelDeprecationInterpolation,
+  buildAgentModelOptions,
+  formatAgentModelLabel,
+} from "./agent-model.helpers"
 
 describe("AgentModelMetadataMap", () => {
   it("has an entry for every model", () => {
@@ -69,6 +73,29 @@ describe("AgentModelMetadataMap", () => {
   it("treats an unknown model as EU-served rather than throwing", () => {
     expect(() => isAgentModelServedOutsideEu("gemini-1.5-flash-retired")).not.toThrow()
     expect(isAgentModelServedOutsideEu("gemini-1.5-flash-retired")).toBe(false)
+  })
+})
+
+describe("buildAgentModelDeprecationInterpolation", () => {
+  // Date formatting reads the UI language from `localStorage`, which these node-environment specs
+  // do not provide.
+  beforeEach(() => vi.stubGlobal("localStorage", { getItem: () => "en" }))
+  afterEach(() => vi.unstubAllGlobals())
+
+  it("names the model, its replacement and its retirement date", () => {
+    const interpolation = buildAgentModelDeprecationInterpolation(AgentModel.Gemini25Pro)
+
+    expect(interpolation).toMatchObject({
+      model: AgentModel.Gemini25Pro,
+      replacement: AgentModel.Gemini35Flash,
+    })
+    // The month name follows the UI locale; only the day and year are stable across languages.
+    expect(interpolation?.date).toMatch(/^30 \S+ 2026$/)
+  })
+
+  it("returns undefined for a supported model and for no model at all", () => {
+    expect(buildAgentModelDeprecationInterpolation(DEFAULT_AGENT_MODEL)).toBeUndefined()
+    expect(buildAgentModelDeprecationInterpolation(undefined)).toBeUndefined()
   })
 })
 
