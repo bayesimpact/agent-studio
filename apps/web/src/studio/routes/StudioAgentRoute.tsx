@@ -15,7 +15,10 @@ import { useAppSelector } from "@/common/store/hooks"
  * cannot manage the agent sees no version indicators.
  *
  * Rendering is not gated on the history — the playground shows immediately and the
- * indicators appear once the fetch lands.
+ * indicators appear once the fetch lands. The deprecated-model banner reads the same
+ * history and lives here so every view under the agent carries it exactly once; an
+ * absent model (fetch still in flight, or a member who cannot manage the agent) renders
+ * nothing.
  */
 export function StudioAgentRoute({ children }: { children: React.ReactNode }) {
   const agent = useValue(selectCurrentAgentData)

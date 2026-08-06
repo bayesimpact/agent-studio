@@ -41,12 +41,7 @@ import { AgentActions } from "./AgentActions"
 import { AgentEditor } from "./AgentEditor"
 import { AgentSessionListHeader } from "./AgentSessionListHeader"
 
-/**
- * Agent view for a conversation agent. The deprecated-model banner is rendered after the
- * `outlet` short-circuit on purpose: a nested route (playground chat, editor, …) replaces this
- * list entirely, so the banner stays off the chat, whose message panel is pinned to a
- * viewport-relative height and would push its composer below the fold.
- */
+/** Agent view for a conversation agent. A nested route replaces this list entirely. */
 export function ConversationAgentSessionList() {
   const agent = useValue(selectCurrentAgentData)
   const agentSessions = useValue(selectCurrentConversationAgentSessionsData)
@@ -83,11 +78,7 @@ export function ConversationAgentSessionList() {
   )
 }
 
-/**
- * Agent view for an extraction agent. Same rule as `ConversationAgentSessionList`: the banner
- * lives after the `outlet` short-circuit, so it shows on the agent view and not on the nested
- * extraction run routes.
- */
+/** Agent view for an extraction agent. A nested extraction run route replaces it entirely. */
 export function ExtractionAgentSessionList() {
   const agent = useValue(selectCurrentAgentData)
   const agentSettings = useValue(
