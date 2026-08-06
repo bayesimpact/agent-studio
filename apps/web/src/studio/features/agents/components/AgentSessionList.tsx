@@ -24,6 +24,7 @@ import {
   selectCurrentAgentId,
 } from "@/common/features/agents/agents.selectors"
 import { AgentSessionItem } from "@/common/features/agents/components/AgentSessionItem"
+import { DeprecatedModelBanner } from "@/common/features/agents/components/DeprecatedModelBanner"
 import {
   CsvExtractionSessionItem,
   ExtractionSessionItem,
@@ -39,6 +40,12 @@ import { AgentActions } from "./AgentActions"
 import { AgentEditor } from "./AgentEditor"
 import { AgentSessionListHeader } from "./AgentSessionListHeader"
 
+/**
+ * Agent view for a conversation agent. The deprecated-model banner is rendered after the
+ * `outlet` short-circuit on purpose: a nested route (playground chat, editor, …) replaces this
+ * list entirely, so the banner stays off the chat, whose message panel is pinned to a
+ * viewport-relative height and would push its composer below the fold.
+ */
 export function ConversationAgentSessionList() {
   const agent = useValue(selectCurrentAgentData)
   const agentSessions = useValue(selectCurrentConversationAgentSessionsData)
@@ -56,6 +63,10 @@ export function ConversationAgentSessionList() {
         organizationId={organizationId}
         projectId={projectId}
       />
+
+      <div className="px-6 pt-4 empty:hidden">
+        <DeprecatedModelBanner model={agent.model} />
+      </div>
 
       <Grid cols={3}>
         <GridContent>
@@ -75,6 +86,11 @@ export function ConversationAgentSessionList() {
   )
 }
 
+/**
+ * Agent view for an extraction agent. Same rule as `ConversationAgentSessionList`: the banner
+ * lives after the `outlet` short-circuit, so it shows on the agent view and not on the nested
+ * extraction run routes.
+ */
 export function ExtractionAgentSessionList() {
   const agent = useValue(selectCurrentAgentData)
   const agentSessions = useValue(selectCurrentExtractionAgentSessionsData)
@@ -98,6 +114,10 @@ export function ExtractionAgentSessionList() {
         description={t("extractionAgentSession:playground.description")}
         action={<AgentActions agent={agent} organizationId={organizationId} />}
       />
+
+      <div className="px-6 pt-4 empty:hidden">
+        <DeprecatedModelBanner model={agent.model} />
+      </div>
 
       <GridCard
         className={cn("bg-muted/35 border-r-0 col-span-full", canManageAgent && "border-b")}

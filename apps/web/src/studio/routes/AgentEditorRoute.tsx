@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next"
 import { useNavigate } from "react-router-dom"
 import { Grid, GridHeader } from "@/common/components/grid/Grid"
 import { selectAgentsData, selectCurrentAgentData } from "@/common/features/agents/agents.selectors"
+import { DeprecatedModelBanner } from "@/common/features/agents/components/DeprecatedModelBanner"
 import { selectCurrentProjectData } from "@/common/features/projects/projects.selectors"
 import { useGetAgentRoute } from "@/common/hooks/use-get-path"
 import { useMount } from "@/common/hooks/use-mount"
@@ -59,6 +60,9 @@ function WithData({ orchestration }: { orchestration?: AgentEditorOrchestration 
         description={t(`agent:update.${agent.type}.description`)}
         action={<AgentPublishButton agent={agent} hasUnsavedChanges={editorDirty} />}
       />
+      <div className="px-6 pt-4 empty:hidden">
+        <DeprecatedModelBanner model={agent.model} />
+      </div>
       <AgentEditor
         key={agent.id}
         agent={agent}
