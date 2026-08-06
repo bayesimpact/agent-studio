@@ -25,7 +25,6 @@ import {
   selectCurrentAgentId,
 } from "@/common/features/agents/agents.selectors"
 import { AgentSessionItem } from "@/common/features/agents/components/AgentSessionItem"
-import { DeprecatedModelBanner } from "@/common/features/agents/components/DeprecatedModelBanner"
 import {
   CsvExtractionSessionItem,
   ExtractionSessionItem,
@@ -36,7 +35,6 @@ import { selectCurrentProjectId } from "@/common/features/projects/projects.sele
 import { useAbility } from "@/common/hooks/use-ability"
 import { useGetProjectRoute } from "@/common/hooks/use-get-path"
 import { useCurrentId, useValue } from "@/common/hooks/use-value"
-import { useAppSelector } from "@/common/store/hooks"
 import { CurrentAgentRevisionBadge } from "@/studio/features/agents/agent-settings/components/CurrentAgentRevisionBadge"
 import { StudioRoutes } from "@/studio/routes/helpers"
 import { AgentActions } from "./AgentActions"
@@ -51,9 +49,6 @@ import { AgentSessionListHeader } from "./AgentSessionListHeader"
  */
 export function ConversationAgentSessionList() {
   const agent = useValue(selectCurrentAgentData)
-  const agentSettings = useAppSelector(
-    selectAgentSettingsDataByAgentId({ agentId: agent.id, includeDraft: true }),
-  )
   const agentSessions = useValue(selectCurrentConversationAgentSessionsData)
   const outlet = useOutlet()
   const organizationId = useCurrentId(selectCurrentOrganizationId)
@@ -62,10 +57,6 @@ export function ConversationAgentSessionList() {
   if (outlet) return outlet
   return (
     <>
-      <div className="px-6 pt-4 empty:hidden bg-white">
-        <DeprecatedModelBanner model={agentSettings.value?.model} />
-      </div>
-
       <AgentSessionListHeader
         agent={agent}
         withBorderBottom={agentSessions.length > 0}
@@ -116,44 +107,38 @@ export function ExtractionAgentSessionList() {
 
   if (outlet) return outlet
   return (
-    <>
-      <div className="px-6 pt-4 empty:hidden bg-white">
-        <DeprecatedModelBanner model={agentSettings.model} />
-      </div>
+    <Grid cols={0}>
+      <GridHeader
+        onBack={handleBack}
+        title={t("extractionAgentSession:playground.title")}
+        description={t("extractionAgentSession:playground.description")}
+        action={<AgentActions agent={agent} organizationId={organizationId} />}
+      />
 
-      <Grid cols={0}>
-        <GridHeader
-          onBack={handleBack}
-          title={t("extractionAgentSession:playground.title")}
-          description={t("extractionAgentSession:playground.description")}
-          action={<AgentActions agent={agent} organizationId={organizationId} />}
+      <GridCard
+        className={cn("bg-muted/35 border-r-0 col-span-full", canManageAgent && "border-b")}
+      >
+        <GridCard.Body>
+          <GridCard.Title>{t("extractionAgentSession:create.title")}</GridCard.Title>
+          <GridCard.Description>
+            {t("extractionAgentSession:create.description")}
+          </GridCard.Description>
+          <div className="flex items-center gap-2">
+            <History agentSessions={agentSessions} />
+            <ExtractionButton />
+          </div>
+        </GridCard.Body>
+      </GridCard>
+
+      {canManageAgent && (
+        <AgentEditor
+          key={agent.id}
+          agent={agent}
+          agentSettings={agentSettings}
+          className="bg-white p-6"
         />
-
-        <GridCard
-          className={cn("bg-muted/35 border-r-0 col-span-full", canManageAgent && "border-b")}
-        >
-          <GridCard.Body>
-            <GridCard.Title>{t("extractionAgentSession:create.title")}</GridCard.Title>
-            <GridCard.Description>
-              {t("extractionAgentSession:create.description")}
-            </GridCard.Description>
-            <div className="flex items-center gap-2">
-              <History agentSessions={agentSessions} />
-              <ExtractionButton />
-            </div>
-          </GridCard.Body>
-        </GridCard>
-
-        {canManageAgent && (
-          <AgentEditor
-            key={agent.id}
-            agent={agent}
-            agentSettings={agentSettings}
-            className="bg-white p-6"
-          />
-        )}
-      </Grid>
-    </>
+      )}
+    </Grid>
   )
 }
 

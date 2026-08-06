@@ -1,8 +1,11 @@
+import { selectAgentSettingsDataByAgentId } from "@/common/features/agents/agent-settings/agent-settings.selectors"
 import { agentSettingsActions } from "@/common/features/agents/agent-settings/agent-settings.slice"
 import { selectCurrentAgentData } from "@/common/features/agents/agents.selectors"
+import { DeprecatedModelBanner } from "@/common/features/agents/components/DeprecatedModelBanner"
 import { useAbility } from "@/common/hooks/use-ability"
 import { useMount } from "@/common/hooks/use-mount"
 import { useValue } from "@/common/hooks/use-value"
+import { useAppSelector } from "@/common/store/hooks"
 
 /**
  * Loads the agent settings history for the whole Studio agent subtree, so the playground
@@ -24,5 +27,16 @@ export function StudioAgentRoute({ children }: { children: React.ReactNode }) {
     refreshOn: [agent.id],
   })
 
-  return children
+  const agentSettings = useAppSelector(
+    selectAgentSettingsDataByAgentId({ agentId: agent.id, includeDraft: true }),
+  )
+
+  return (
+    <>
+      <div className="px-6 pt-4 empty:hidden bg-white">
+        <DeprecatedModelBanner model={agentSettings.value?.model} />
+      </div>
+      {children}
+    </>
+  )
 }
