@@ -60,6 +60,8 @@ export class ConversationAgentSessionsService {
     return this.agentMessageConnectRepository.find(connectScope, {
       where: { sessionId: agentSessionId },
       order: { createdAt: "ASC" },
+      // Joined so the DTO can report the revision that produced each message.
+      relations: { agentSettings: true },
     })
   }
 
@@ -70,7 +72,11 @@ export class ConversationAgentSessionsService {
     id: string
     connectScope: RequiredConnectScope
   }): Promise<AgentMessage | null> {
-    return this.agentMessageConnectRepository.getOneById(connectScope, id)
+    // `getOneById` builds a query builder, so relations are named as strings here — unlike
+    // the `find` above, which forwards TypeORM's object-form FindManyOptions.
+    return this.agentMessageConnectRepository.getOneById(connectScope, id, {
+      relations: ["agentSettings"],
+    })
   }
 
   async getAllSessionsForAgent({

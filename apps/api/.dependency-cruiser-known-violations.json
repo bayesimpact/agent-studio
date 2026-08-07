@@ -1,6 +1,25 @@
 [
   {
     "type": "cycle",
+    "from": "../../packages/api-contracts/src/agents/agents.dto.ts",
+    "to": "../../packages/api-contracts/src/agents/settings/agent-settings.dto.ts",
+    "rule": {
+      "severity": "error",
+      "name": "no-circular"
+    },
+    "cycle": [
+      {
+        "name": "../../packages/api-contracts/src/agents/settings/agent-settings.dto.ts",
+        "dependencyTypes": ["local", "import"]
+      },
+      {
+        "name": "../../packages/api-contracts/src/agents/agents.dto.ts",
+        "dependencyTypes": ["local", "type-only", "import"]
+      }
+    ]
+  },
+  {
+    "type": "cycle",
     "from": "src/domains/agents/agent.entity.ts",
     "to": "src/domains/agents/conversation-agent-sessions/conversation-agent-session.entity.ts",
     "rule": {
@@ -249,6 +268,45 @@
       {
         "name": "src/domains/agents/agents.module.ts",
         "dependencyTypes": ["local", "require"]
+      }
+    ]
+  },
+  {
+    "type": "cycle",
+    "from": "src/domains/agents/agents.module.ts",
+    "to": "src/domains/agents/settings/agent-settings.module.ts",
+    "rule": {
+      "severity": "error",
+      "name": "no-circular"
+    },
+    "cycle": [
+      {
+        "name": "src/domains/agents/settings/agent-settings.module.ts",
+        "dependencyTypes": ["local", "import"]
+      },
+      {
+        "name": "src/domains/documents/tags/document-tags.module.ts",
+        "dependencyTypes": [
+          "aliased",
+          "aliased-tsconfig",
+          "aliased-tsconfig-paths",
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "src/domains/projects/projects.module.ts",
+        "dependencyTypes": [
+          "aliased",
+          "aliased-tsconfig",
+          "aliased-tsconfig-paths",
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "src/domains/agents/agents.module.ts",
+        "dependencyTypes": ["local", "import"]
       }
     ]
   },
@@ -662,6 +720,61 @@
       },
       {
         "name": "src/domains/agents/conversation-agent-sessions/conversation-agent-session.entity.ts",
+        "dependencyTypes": [
+          "aliased",
+          "aliased-tsconfig",
+          "aliased-tsconfig-paths",
+          "local",
+          "import"
+        ]
+      }
+    ]
+  },
+  {
+    "type": "cycle",
+    "from": "src/domains/agents/conversation-agent-sessions/conversation-agent-sessions.module.ts",
+    "to": "src/domains/agents/settings/agent-settings.module.ts",
+    "rule": {
+      "severity": "error",
+      "name": "no-circular"
+    },
+    "cycle": [
+      {
+        "name": "src/domains/agents/settings/agent-settings.module.ts",
+        "dependencyTypes": [
+          "aliased",
+          "aliased-tsconfig",
+          "aliased-tsconfig-paths",
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "src/domains/documents/tags/document-tags.module.ts",
+        "dependencyTypes": [
+          "aliased",
+          "aliased-tsconfig",
+          "aliased-tsconfig-paths",
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "src/domains/projects/projects.module.ts",
+        "dependencyTypes": [
+          "aliased",
+          "aliased-tsconfig",
+          "aliased-tsconfig-paths",
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "src/domains/agents/agents.module.ts",
+        "dependencyTypes": ["local", "import"]
+      },
+      {
+        "name": "src/domains/agents/conversation-agent-sessions/conversation-agent-sessions.module.ts",
         "dependencyTypes": [
           "aliased",
           "aliased-tsconfig",
@@ -1124,6 +1237,45 @@
   },
   {
     "type": "cycle",
+    "from": "src/domains/agents/settings/agent-settings.module.ts",
+    "to": "src/domains/resource-libraries/resource-libraries.module.ts",
+    "rule": {
+      "severity": "error",
+      "name": "no-circular"
+    },
+    "cycle": [
+      {
+        "name": "src/domains/resource-libraries/resource-libraries.module.ts",
+        "dependencyTypes": [
+          "aliased",
+          "aliased-tsconfig",
+          "aliased-tsconfig-paths",
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "src/domains/projects/projects.module.ts",
+        "dependencyTypes": [
+          "aliased",
+          "aliased-tsconfig",
+          "aliased-tsconfig-paths",
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "src/domains/agents/agents.module.ts",
+        "dependencyTypes": ["local", "import"]
+      },
+      {
+        "name": "src/domains/agents/settings/agent-settings.module.ts",
+        "dependencyTypes": ["local", "import"]
+      }
+    ]
+  },
+  {
+    "type": "cycle",
     "from": "src/domains/agents/shared/agent-session-messages/agent-message-attachment-document.entity.ts",
     "to": "src/domains/organizations/organization.entity.ts",
     "rule": {
@@ -1484,7 +1636,7 @@
   },
   {
     "type": "cycle",
-    "from": "src/domains/agents/shared/agent-session-messages/streaming/tools/retrieve-project-document-chunks.tool.ts",
+    "from": "src/domains/agents/shared/agent-session-messages/streaming/tools/lookup-knowledge-base.tool.ts",
     "to": "src/domains/documents/embeddings/document-chunk-retrieval.service.ts",
     "rule": {
       "severity": "error",
@@ -1503,7 +1655,7 @@
         ]
       },
       {
-        "name": "src/domains/agents/shared/agent-session-messages/streaming/tools/retrieve-project-document-chunks.tool.ts",
+        "name": "src/domains/agents/shared/agent-session-messages/streaming/tools/lookup-knowledge-base.tool.ts",
         "dependencyTypes": [
           "aliased",
           "aliased-tsconfig",
@@ -1961,6 +2113,25 @@
   },
   {
     "type": "cycle",
+    "from": "src/domains/public-chat/public-agent-sessions/public-agent-session-category.entity.ts",
+    "to": "src/domains/public-chat/public-agent-sessions/public-agent-session.entity.ts",
+    "rule": {
+      "severity": "error",
+      "name": "no-circular"
+    },
+    "cycle": [
+      {
+        "name": "src/domains/public-chat/public-agent-sessions/public-agent-session.entity.ts",
+        "dependencyTypes": ["local", "import"]
+      },
+      {
+        "name": "src/domains/public-chat/public-agent-sessions/public-agent-session-category.entity.ts",
+        "dependencyTypes": ["local", "import"]
+      }
+    ]
+  },
+  {
+    "type": "cycle",
     "from": "src/domains/review-campaigns/review-campaign.entity.ts",
     "to": "src/domains/agents/settings/agent-settings.entity.ts",
     "rule": {
@@ -2349,15 +2520,6 @@
   },
   {
     "type": "dependency",
-    "from": "src/domains/agents/agents.service.ts",
-    "to": "src/domains/resource-libraries/resource-library.entity.ts",
-    "rule": {
-      "severity": "error",
-      "name": "no-cross-domain-entity-import"
-    }
-  },
-  {
-    "type": "dependency",
     "from": "src/domains/agents/base-agent-sessions/base-agent-sessions-module.helpers.ts",
     "to": "src/domains/documents/document.entity.ts",
     "rule": {
@@ -2484,25 +2646,7 @@
   },
   {
     "type": "dependency",
-    "from": "src/domains/agents/shared/agent-session-messages/feedback/agent-message-feedback.module.ts",
-    "to": "src/domains/organizations/organization.entity.ts",
-    "rule": {
-      "severity": "error",
-      "name": "no-cross-domain-entity-import"
-    }
-  },
-  {
-    "type": "dependency",
-    "from": "src/domains/agents/shared/agent-session-messages/feedback/agent-message-feedback.module.ts",
-    "to": "src/domains/projects/project.entity.ts",
-    "rule": {
-      "severity": "error",
-      "name": "no-cross-domain-entity-import"
-    }
-  },
-  {
-    "type": "dependency",
-    "from": "src/domains/agents/shared/agent-session-messages/streaming/master-promts/helpers.ts",
+    "from": "src/domains/agents/settings/agent-settings.service.ts",
     "to": "src/domains/resource-libraries/resource-library.entity.ts",
     "rule": {
       "severity": "error",
@@ -2511,6 +2655,24 @@
   },
   {
     "type": "dependency",
+    "from": "src/domains/agents/shared/agent-session-messages/feedback/agent-message-feedback.module.ts",
+    "to": "src/domains/organizations/organization.entity.ts",
+    "rule": {
+      "severity": "error",
+      "name": "no-cross-domain-entity-import"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "src/domains/agents/shared/agent-session-messages/feedback/agent-message-feedback.module.ts",
+    "to": "src/domains/projects/project.entity.ts",
+    "rule": {
+      "severity": "error",
+      "name": "no-cross-domain-entity-import"
+    }
+  },
+  {
+    "type": "dependency",
     "from": "src/domains/analytics/agents-analytics/agents-analytics.module.ts",
     "to": "src/domains/agents/agent.entity.ts",
     "rule": {
@@ -2549,6 +2711,15 @@
     "type": "dependency",
     "from": "src/domains/analytics/agents-analytics/agents-analytics.module.ts",
     "to": "src/domains/projects/project.entity.ts",
+    "rule": {
+      "severity": "error",
+      "name": "no-cross-domain-entity-import"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "src/domains/analytics/agents-analytics/agents-analytics.module.ts",
+    "to": "src/domains/public-chat/public-agent-sessions/public-agent-session.entity.ts",
     "rule": {
       "severity": "error",
       "name": "no-cross-domain-entity-import"
@@ -2601,6 +2772,15 @@
   },
   {
     "type": "dependency",
+    "from": "src/domains/analytics/agents-analytics/agents-analytics.service.ts",
+    "to": "src/domains/public-chat/public-agent-sessions/public-agent-session.entity.ts",
+    "rule": {
+      "severity": "error",
+      "name": "no-cross-domain-entity-import"
+    }
+  },
+  {
+    "type": "dependency",
     "from": "src/domains/analytics/projects-analytics/projects-analytics.module.ts",
     "to": "src/domains/agents/conversation-agent-sessions/conversation-agent-session.entity.ts",
     "rule": {
@@ -2630,6 +2810,15 @@
     "type": "dependency",
     "from": "src/domains/analytics/projects-analytics/projects-analytics.module.ts",
     "to": "src/domains/projects/project.entity.ts",
+    "rule": {
+      "severity": "error",
+      "name": "no-cross-domain-entity-import"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "src/domains/analytics/projects-analytics/projects-analytics.module.ts",
+    "to": "src/domains/public-chat/public-agent-sessions/public-agent-session.entity.ts",
     "rule": {
       "severity": "error",
       "name": "no-cross-domain-entity-import"
@@ -2675,6 +2864,51 @@
     "type": "dependency",
     "from": "src/domains/analytics/projects-analytics/projects-analytics.service.ts",
     "to": "src/domains/agents/shared/agent-session-messages/agent-message.entity.ts",
+    "rule": {
+      "severity": "error",
+      "name": "no-cross-domain-entity-import"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "src/domains/analytics/projects-analytics/projects-analytics.service.ts",
+    "to": "src/domains/public-chat/public-agent-sessions/public-agent-session.entity.ts",
+    "rule": {
+      "severity": "error",
+      "name": "no-cross-domain-entity-import"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "src/domains/analytics/shared/public-session-category-rows.helper.ts",
+    "to": "src/domains/agents/agent.entity.ts",
+    "rule": {
+      "severity": "error",
+      "name": "no-cross-domain-entity-import"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "src/domains/analytics/shared/public-session-category-rows.helper.ts",
+    "to": "src/domains/agents/session-categories/agent-session-category.entity.ts",
+    "rule": {
+      "severity": "error",
+      "name": "no-cross-domain-entity-import"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "src/domains/analytics/shared/public-session-category-rows.helper.ts",
+    "to": "src/domains/public-chat/public-agent-sessions/public-agent-session-category.entity.ts",
+    "rule": {
+      "severity": "error",
+      "name": "no-cross-domain-entity-import"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "src/domains/analytics/shared/public-session-category-rows.helper.ts",
+    "to": "src/domains/public-chat/public-agent-sessions/public-agent-session.entity.ts",
     "rule": {
       "severity": "error",
       "name": "no-cross-domain-entity-import"
@@ -3249,34 +3483,7 @@
   },
   {
     "type": "dependency",
-    "from": "src/domains/organizations/organization.helpers.ts",
-    "to": "src/domains/projects/project.entity.ts",
-    "rule": {
-      "severity": "error",
-      "name": "no-cross-domain-entity-import"
-    }
-  },
-  {
-    "type": "dependency",
-    "from": "src/domains/organizations/organization.policy.ts",
-    "to": "src/domains/users/user.entity.ts",
-    "rule": {
-      "severity": "error",
-      "name": "no-cross-domain-entity-import"
-    }
-  },
-  {
-    "type": "dependency",
     "from": "src/domains/organizations/organizations.module.ts",
-    "to": "src/domains/users/user.entity.ts",
-    "rule": {
-      "severity": "error",
-      "name": "no-cross-domain-entity-import"
-    }
-  },
-  {
-    "type": "dependency",
-    "from": "src/domains/organizations/organizations.service.ts",
     "to": "src/domains/users/user.entity.ts",
     "rule": {
       "severity": "error",
@@ -3357,42 +3564,6 @@
   },
   {
     "type": "dependency",
-    "from": "src/domains/projects/projects.module.ts",
-    "to": "src/domains/feature-flags/feature-flag.entity.ts",
-    "rule": {
-      "severity": "error",
-      "name": "no-cross-domain-entity-import"
-    }
-  },
-  {
-    "type": "dependency",
-    "from": "src/domains/projects/projects.module.ts",
-    "to": "src/domains/organizations/organization.entity.ts",
-    "rule": {
-      "severity": "error",
-      "name": "no-cross-domain-entity-import"
-    }
-  },
-  {
-    "type": "dependency",
-    "from": "src/domains/projects/projects.module.ts",
-    "to": "src/domains/users/user.entity.ts",
-    "rule": {
-      "severity": "error",
-      "name": "no-cross-domain-entity-import"
-    }
-  },
-  {
-    "type": "dependency",
-    "from": "src/domains/projects/projects.service.ts",
-    "to": "src/domains/feature-flags/feature-flag.entity.ts",
-    "rule": {
-      "severity": "error",
-      "name": "no-cross-domain-entity-import"
-    }
-  },
-  {
-    "type": "dependency",
     "from": "src/domains/public-chat/agent-embed-configs/agent-embed-configs-management.module.ts",
     "to": "src/domains/agents/agent.entity.ts",
     "rule": {
@@ -3404,6 +3575,15 @@
     "type": "dependency",
     "from": "src/domains/public-chat/agent-embed-configs/agent-embed-configs-management.module.ts",
     "to": "src/domains/projects/project.entity.ts",
+    "rule": {
+      "severity": "error",
+      "name": "no-cross-domain-entity-import"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "src/domains/public-chat/public-agent-sessions/public-agent-sessions.service.ts",
+    "to": "src/domains/agents/session-categories/agent-session-category.entity.ts",
     "rule": {
       "severity": "error",
       "name": "no-cross-domain-entity-import"
@@ -3431,6 +3611,15 @@
     "type": "dependency",
     "from": "src/domains/public-chat/public-chat.module.ts",
     "to": "src/domains/agents/agent.entity.ts",
+    "rule": {
+      "severity": "error",
+      "name": "no-cross-domain-entity-import"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "src/domains/public-chat/public-chat.module.ts",
+    "to": "src/domains/agents/session-categories/agent-session-category.entity.ts",
     "rule": {
       "severity": "error",
       "name": "no-cross-domain-entity-import"
@@ -3717,24 +3906,6 @@
   },
   {
     "type": "dependency",
-    "from": "src/domains/agents/agents.service.ts",
-    "to": "src/domains/documents/tags/document-tags.service.ts",
-    "rule": {
-      "severity": "warn",
-      "name": "no-cross-domain-service-reach"
-    }
-  },
-  {
-    "type": "dependency",
-    "from": "src/domains/agents/agents.service.ts",
-    "to": "src/domains/resource-libraries/resource-libraries.service.ts",
-    "rule": {
-      "severity": "warn",
-      "name": "no-cross-domain-service-reach"
-    }
-  },
-  {
-    "type": "dependency",
     "from": "src/domains/agents/csv-extraction-runs/agent-csv-extraction-run-csv-export.service.ts",
     "to": "src/domains/documents/documents.service.ts",
     "rule": {
@@ -3755,6 +3926,24 @@
     "type": "dependency",
     "from": "src/domains/agents/extraction-agent-sessions/extraction-agent-sessions.service.ts",
     "to": "src/domains/documents/documents.service.ts",
+    "rule": {
+      "severity": "warn",
+      "name": "no-cross-domain-service-reach"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "src/domains/agents/settings/agent-settings.service.ts",
+    "to": "src/domains/documents/tags/document-tags.service.ts",
+    "rule": {
+      "severity": "warn",
+      "name": "no-cross-domain-service-reach"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "src/domains/agents/settings/agent-settings.service.ts",
+    "to": "src/domains/resource-libraries/resource-libraries.service.ts",
     "rule": {
       "severity": "warn",
       "name": "no-cross-domain-service-reach"
@@ -3798,8 +3987,17 @@
   },
   {
     "type": "dependency",
-    "from": "src/domains/agents/shared/agent-session-messages/streaming/tools/retrieve-project-document-chunks.tool.ts",
+    "from": "src/domains/agents/shared/agent-session-messages/streaming/tools/lookup-knowledge-base.tool.ts",
     "to": "src/domains/documents/embeddings/document-chunk-retrieval.service.ts",
+    "rule": {
+      "severity": "warn",
+      "name": "no-cross-domain-service-reach"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "src/domains/backoffice/backoffice.guard.ts",
+    "to": "src/domains/rbac/permission.service.ts",
     "rule": {
       "severity": "warn",
       "name": "no-cross-domain-service-reach"
@@ -3863,6 +4061,15 @@
     "type": "dependency",
     "from": "src/domains/backoffice/backoffice.service.ts",
     "to": "src/domains/projects/memberships/project-memberships.service.ts",
+    "rule": {
+      "severity": "warn",
+      "name": "no-cross-domain-service-reach"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "src/domains/backoffice/backoffice.service.ts",
+    "to": "src/domains/rbac/permission.service.ts",
     "rule": {
       "severity": "warn",
       "name": "no-cross-domain-service-reach"
@@ -4042,7 +4249,7 @@
   {
     "type": "dependency",
     "from": "src/domains/me/me.controller.ts",
-    "to": "src/domains/projects/projects.service.ts",
+    "to": "src/domains/rbac/permission.service.ts",
     "rule": {
       "severity": "warn",
       "name": "no-cross-domain-service-reach"
@@ -4104,6 +4311,24 @@
   },
   {
     "type": "dependency",
+    "from": "src/domains/organizations/organizations.service.ts",
+    "to": "src/domains/rbac/permission.service.ts",
+    "rule": {
+      "severity": "warn",
+      "name": "no-cross-domain-service-reach"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "src/domains/organizations/organizations.service.ts",
+    "to": "src/domains/users/users.service.ts",
+    "rule": {
+      "severity": "warn",
+      "name": "no-cross-domain-service-reach"
+    }
+  },
+  {
+    "type": "dependency",
     "from": "src/domains/organizations/provisioning/workspace-invitation.service.ts",
     "to": "src/domains/projects/memberships/project-memberships.service.ts",
     "rule": {
@@ -4131,8 +4356,8 @@
   },
   {
     "type": "dependency",
-    "from": "src/domains/public-chat/public-chat.service.ts",
-    "to": "src/domains/agents/shared/agent-session-messages/streaming/streaming.service.ts",
+    "from": "src/domains/projects/projects.service.ts",
+    "to": "src/domains/rbac/permission.service.ts",
     "rule": {
       "severity": "warn",
       "name": "no-cross-domain-service-reach"
@@ -4140,8 +4365,8 @@
   },
   {
     "type": "dependency",
-    "from": "src/domains/review-campaigns/review-campaigns.module.ts",
-    "to": "src/domains/agents/settings/agent-settings.service.ts",
+    "from": "src/domains/public-chat/public-chat.service.ts",
+    "to": "src/domains/agents/shared/agent-session-messages/streaming/streaming.service.ts",
     "rule": {
       "severity": "warn",
       "name": "no-cross-domain-service-reach"

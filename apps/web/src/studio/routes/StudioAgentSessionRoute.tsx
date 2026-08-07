@@ -4,19 +4,31 @@ import { useNavigate } from "react-router-dom"
 import { GridHeader } from "@/common/components/grid/Grid"
 import type { ConversationAgentSession } from "@/common/features/agents/agent-sessions/conversation/conversation-agent-sessions.models"
 import { selectConversationSubSessionsBySessionId } from "@/common/features/agents/agent-sessions/conversation/conversation-agent-sessions.selectors"
+import type { AgentSessionMessage } from "@/common/features/agents/agent-sessions/shared/agent-session-messages/agent-session-messages.models"
 import { selectCurrentMessagesData } from "@/common/features/agents/agent-sessions/shared/agent-session-messages/agent-session-messages.selectors"
 import { AgentSessionMessages } from "@/common/features/agents/agent-sessions/shared/agent-session-messages/components/AgentSessionMessages"
+import {
+  findPublishedVersion,
+  resolveMessageRevision,
+} from "@/common/features/agents/agent-settings/agent-settings.functions"
+import {
+  selectAgentSettingsDataByAgentId,
+  selectAgentSettingsHistoryDataByAgentId,
+} from "@/common/features/agents/agent-settings/agent-settings.selectors"
 import { selectCurrentAgentData } from "@/common/features/agents/agents.selectors"
 import { getAgentIcon } from "@/common/features/agents/components/AgentIcon"
+import { useAbility } from "@/common/hooks/use-ability"
 import { useGetAgentRoute } from "@/common/hooks/use-get-path"
 import { useValue } from "@/common/hooks/use-value"
 import { useAppSelector } from "@/common/store/hooks"
 import { buildSince } from "@/common/utils/build-date"
+import { AgentRevisionBadge } from "@/studio/features/agents/agent-settings/components/AgentRevisionBadge"
 import { AgentSessionActions } from "../features/agents/components/AgentSessionActions"
 
 type AgentSession = ConversationAgentSession
 export function StudioAgentSessionRoute({ agentSession }: { agentSession: AgentSession }) {
   const agent = useValue(selectCurrentAgentData)
+  const agentSettings = useValue(selectAgentSettingsDataByAgentId({ agentId: agent.id }))
   const messages = useValue(selectCurrentMessagesData)
   const selectSubSessions = useMemo(
     () => selectConversationSubSessionsBySessionId(agentSession.id),
@@ -34,6 +46,29 @@ export function StudioAgentSessionRoute({ agentSession }: { agentSession: AgentS
 
   const handleBack = () => navigate(agentRoute)
 
+  const { abilities } = useAbility()
+  const canManageAgent = abilities.canManageAgent({ agentId: agent.id })
+
+  const versions = useValue(
+    selectAgentSettingsHistoryDataByAgentId({ agentId: agent.id, includeDraft: true }),
+  )
+
+  const renderMessageVersion = (message: AgentSessionMessage) => {
+    if (!canManageAgent) return null
+    const revision = resolveMessageRevision(message, versions)
+    if (revision === undefined) return null
+    return (
+      <AgentRevisionBadge
+        agent={agent}
+        revision={revision}
+        versions={versions}
+        tooltipKey="messageRevisionTooltip"
+      />
+    )
+  }
+
+  const publishedVersion = findPublishedVersion(versions)
+
   return (
     <div className="flex flex-col h-full">
       <GridHeader
@@ -44,6 +79,17 @@ export function StudioAgentSessionRoute({ agentSession }: { agentSession: AgentS
             <span className="capitalize-first">{agent.name}</span> •
             <span className="capitalize-first">{t(`agent:create.typeDialog.${agent.type}`)}</span>
             <Icon /> • {date}
+            {canManageAgent && publishedVersion && (
+              <>
+                •
+                <AgentRevisionBadge
+                  agent={agent}
+                  revision={publishedVersion.revision}
+                  versions={versions}
+                  tooltipKey="headerRevisionTooltip"
+                />
+              </>
+            )}
           </div>
         }
         action={<AgentSessionActions agent={agent} agentSession={agentSession} />}
@@ -54,7 +100,10 @@ export function StudioAgentSessionRoute({ agentSession }: { agentSession: AgentS
           session={agentSession}
           messages={messages}
           formSubSessions={formSubSessions}
-          formResultSchema={agent.fillFormEnabled ? agent.outputJsonSchema : undefined}
+          formResultSchema={
+            agentSettings.fillFormEnabled ? agentSettings.outputJsonSchema : undefined
+          }
+          renderMessageVersion={renderMessageVersion}
         />
       </div>
     </div>

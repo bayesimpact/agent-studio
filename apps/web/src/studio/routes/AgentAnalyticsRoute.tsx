@@ -6,6 +6,7 @@ import type { DateRange } from "react-day-picker"
 import { useTranslation } from "react-i18next"
 import { useNavigate } from "react-router-dom"
 import { GridHeader } from "@/common/components/grid/Grid"
+import { selectAgentSettingsDataByAgentId } from "@/common/features/agents/agent-settings/agent-settings.selectors"
 import {
   selectCurrentAgentData,
   selectCurrentAgentId,
@@ -74,6 +75,7 @@ function WithData({
   onAnalyticsRangeChange: (nextBounds: { startAt: number; endAt: number }) => void
 }) {
   const agent = useValue(selectCurrentAgentData)
+  const agentSettings = useValue(selectAgentSettingsDataByAgentId({ agentId: agent.id }))
   const conversationsPoints = useValue(selectAgentAnalyticsConversationsPerDay)
   const avgQuestionsPoints = useValue(selectAgentAnalyticsAvgUserQuestionsPerSessionPerDay)
   const categoryPoints = useValue(selectAgentAnalyticsConversationsByCategoryPerDay)
@@ -94,7 +96,7 @@ function WithData({
   )
 
   const Icon = getAgentIcon(agent.type)
-  const hasConfiguredCategoryTaxonomy = agent.hasCategories ?? false
+  const hasConfiguredCategoryTaxonomy = agentSettings.hasCategories ?? false
 
   return (
     <>

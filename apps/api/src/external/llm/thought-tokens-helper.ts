@@ -4,11 +4,26 @@
 // stripped), we treat it as leaked-marker content and drop it too.
 const CHANNEL_KEYWORDS = "thought|analysis|reasoning|finalize|commentary|final"
 
+// Hallucinated tool-call syntax that Gemini models (lite especially) leak
+// into the TEXT stream instead of emitting a real functionCall, e.g.
+// `<call:default_api:some_tool xmlns:default_api=... />`. `default_api` is an
+// internal Gemini tool namespace; none of these tags can ever be legitimate
+// user-facing content.
+const PSEUDO_TOOL_CALL_RE = /<\/?(?:call|default_api)[:\s][^>]*\/?>/gi
+// An opener of that family that has no closing `>` yet (still streaming).
+const PSEUDO_TOOL_CALL_OPEN_RE = /<\/?(?:call|default_api)[:\s][^>]*$/i
+// Give up holding the stream back after this many buffered characters: a
+// legitimate `<call:`-looking text (vanishingly unlikely) must not stall the
+// stream forever.
+const PSEUDO_TOOL_CALL_MAX_LEN = 600
+
 // Composite removals that need a full self-contained match. Safe to run on a
 // partial streaming buffer because they only fire once both ends are present.
 function stripPairedChannelMarkers(text: string): string {
   return (
     text
+      // Hallucinated tool-call tags verbalized into the text
+      .replace(PSEUDO_TOOL_CALL_RE, "")
       // <|channel>thought<channel|> ... <channel|> (eats nested openers too)
       .replace(new RegExp(`<\\|channel>(?:${CHANNEL_KEYWORDS})[\\s\\S]*?<channel\\|>`, "gi"), "")
       // Gemma 3 legacy: <unused N>thought ... <unused N>
@@ -28,6 +43,39 @@ function stripStrayChannelTokens(text: string): string {
     .replace(/<\|[a-z0-9_-]*>/gi, "")
     .replace(/<[a-z0-9_-]*\|>/gi, "")
     .replace(/<unused\d+>/g, "")
+}
+
+/**
+ * A tool call the model VERBALIZED in the text channel instead of emitting
+ * it (documented Gemini failure family): the call never reached the tool
+ * channel, so the platform did NOT execute it. `raw` keeps the whole leaked
+ * tag — it already carries the arguments the model intended, in a malformed
+ * form, which is what makes recovery possible.
+ */
+export type LeakedToolCall = {
+  name: string
+  raw: string
+}
+
+export function findLeakedToolCalls(text: string): LeakedToolCall[] {
+  const byName = new Map<string, LeakedToolCall>()
+  // The leaked tag is malformed and comes in variants; the tool name is the
+  // last `:`-separated segment of the tag opener, before its arguments
+  // (`{...}`, ` attr=...`, or the closing `>`).
+  for (const match of text.matchAll(PSEUDO_TOOL_CALL_RE)) {
+    const raw = match[0]
+    const opener = /<\/?(?:call|default_api)[:\s]([^>{(\s]+)/i.exec(raw)
+    const segments = (opener?.[1] ?? "").split(":").filter(Boolean)
+    const name = segments.at(-1)
+    if (name && name !== "default_api" && /^[a-zA-Z_][a-zA-Z0-9_]*$/.test(name)) {
+      if (!byName.has(name)) byName.set(name, { name, raw })
+    }
+  }
+  return [...byName.values()]
+}
+
+export function findLeakedToolCallNames(text: string): string[] {
+  return findLeakedToolCalls(text).map((leakedCall) => leakedCall.name)
 }
 
 // biome-ignore lint/complexity/noStaticOnlyClass: helper
@@ -68,6 +116,13 @@ export class ThoughtTokensHelper {
 
         let safeUntil = pending.length - HOLD_TAIL
         if (safeUntil <= 0) return ""
+        // A pseudo tool-call tag can be far longer than MAX_MARKER_LEN: if
+        // one is still open in the buffer, hold everything back from its
+        // `<` (bounded — a never-closing lookalike must not stall the stream).
+        const pseudoOpen = pending.search(PSEUDO_TOOL_CALL_OPEN_RE)
+        if (pseudoOpen !== -1 && pending.length - pseudoOpen < PSEUDO_TOOL_CALL_MAX_LEN) {
+          safeUntil = Math.min(safeUntil, pseudoOpen)
+        }
         const ltBeforeCut = pending.lastIndexOf("<", safeUntil - 1)
         if (ltBeforeCut !== -1 && safeUntil - ltBeforeCut < MAX_MARKER_LEN) {
           safeUntil = ltBeforeCut

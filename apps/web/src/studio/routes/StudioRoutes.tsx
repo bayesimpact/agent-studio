@@ -13,6 +13,7 @@ import { RoutesBuilderProvider } from "@/common/routes/build-routes/RoutesBuilde
 import { ErrorRoute } from "@/common/routes/ErrorRoute"
 import { OrganizationRoute } from "@/common/routes/OrganizationRoute"
 import { ProjectRoute } from "@/common/routes/ProjectRoute"
+import { CurrentAgentRevisionBadge } from "@/studio/features/agents/agent-settings/components/CurrentAgentRevisionBadge"
 import {
   ConversationAgentSessionList,
   ExtractionAgentSessionList,
@@ -38,6 +39,7 @@ import { ResourceLibraryCreatorRoute } from "./ResourceLibraryCreatorRoute"
 import { ResourceLibraryEditorRoute } from "./ResourceLibraryEditorRoute"
 import { RestrictedAccess } from "./RestrictedAccess"
 import { ReviewCampaignReportRoute } from "./ReviewCampaignReportRoute"
+import { StudioAgentRoute } from "./StudioAgentRoute"
 import { StudioAgentSessionRoute } from "./StudioAgentSessionRoute"
 import { StudioRoute } from "./StudioRoute"
 import { WebSourcesRoute } from "./WebSourcesRoute"
@@ -146,7 +148,9 @@ export const studioRoutes = {
           path: StudioRoutes.agent.path,
           element: (
             <AgentRoute>
-              <AgentSessionsHandler />
+              <StudioAgentRoute>
+                <AgentSessionsHandler />
+              </StudioAgentRoute>
             </AgentRoute>
           ),
           children: [
@@ -154,7 +158,6 @@ export const studioRoutes = {
               path: StudioRoutes.agentSession.path,
               element: <AgentSessionRoute Component={StudioAgentSessionRoute} />,
             },
-
             {
               path: StudioRoutes.agentExtraction.path,
               element: (
@@ -167,7 +170,16 @@ export const studioRoutes = {
                 },
                 {
                   path: StudioRoutes.agentExtractionRun.path,
-                  element: <AgentExtractionRunRoute />,
+                  element: (
+                    <AgentExtractionRunRoute
+                      renderRevisionBadge={(revision) => (
+                        <CurrentAgentRevisionBadge
+                          revision={revision}
+                          tooltipKey="runRevisionTooltip"
+                        />
+                      )}
+                    />
+                  ),
                 },
               ],
             },

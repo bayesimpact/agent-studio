@@ -19,6 +19,7 @@ import type {
   ExtractionAgentSessions,
 } from "@/common/features/agents/agent-sessions/extraction/extraction-agent-sessions.models"
 import { selectCurrentExtractionAgentSessionsData } from "@/common/features/agents/agent-sessions/extraction/extraction-agent-sessions.selectors"
+import { selectAgentSettingsDataByAgentId } from "@/common/features/agents/agent-settings/agent-settings.selectors"
 import {
   selectCurrentAgentData,
   selectCurrentAgentId,
@@ -34,11 +35,13 @@ import { selectCurrentProjectId } from "@/common/features/projects/projects.sele
 import { useAbility } from "@/common/hooks/use-ability"
 import { useGetProjectRoute } from "@/common/hooks/use-get-path"
 import { useCurrentId, useValue } from "@/common/hooks/use-value"
+import { CurrentAgentRevisionBadge } from "@/studio/features/agents/agent-settings/components/CurrentAgentRevisionBadge"
 import { StudioRoutes } from "@/studio/routes/helpers"
 import { AgentActions } from "./AgentActions"
 import { AgentEditor } from "./AgentEditor"
 import { AgentSessionListHeader } from "./AgentSessionListHeader"
 
+/** Agent view for a conversation agent. A nested route replaces this list entirely. */
 export function ConversationAgentSessionList() {
   const agent = useValue(selectCurrentAgentData)
   const agentSessions = useValue(selectCurrentConversationAgentSessionsData)
@@ -75,8 +78,12 @@ export function ConversationAgentSessionList() {
   )
 }
 
+/** Agent view for an extraction agent. A nested extraction run route replaces it entirely. */
 export function ExtractionAgentSessionList() {
   const agent = useValue(selectCurrentAgentData)
+  const agentSettings = useValue(
+    selectAgentSettingsDataByAgentId({ agentId: agent.id, includeDraft: true }),
+  )
   const agentSessions = useValue(selectCurrentExtractionAgentSessionsData)
   const outlet = useOutlet()
   const { t } = useTranslation()
@@ -114,7 +121,14 @@ export function ExtractionAgentSessionList() {
         </GridCard.Body>
       </GridCard>
 
-      {canManageAgent && <AgentEditor key={agent.id} agent={agent} className="bg-white p-6" />}
+      {canManageAgent && (
+        <AgentEditor
+          key={agent.id}
+          agent={agent}
+          agentSettings={agentSettings}
+          className="bg-white p-6"
+        />
+      )}
     </Grid>
   )
 }
@@ -185,6 +199,12 @@ function History({ agentSessions }: { agentSessions: ExtractionAgentSessions }) 
                   className={itemClassName}
                   key={item.session.id}
                   agentSession={item.session}
+                  renderRevisionBadge={(revision) => (
+                    <CurrentAgentRevisionBadge
+                      revision={revision}
+                      tooltipKey="runRevisionTooltip"
+                    />
+                  )}
                 />
               )
             })}

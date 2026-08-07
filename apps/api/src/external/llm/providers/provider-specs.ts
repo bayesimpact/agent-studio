@@ -10,6 +10,7 @@ import type {
   LLMProvider,
 } from "@/common/interfaces/llm-provider.interface"
 import { castToolInputParameters, zNullableType } from "@/common/zod-helper"
+import { LOOKUP_KNOWLEDGE_BASE_DESCRIPTION } from "@/domains/agents/shared/agent-session-messages/streaming/tools/lookup-knowledge-base.tool"
 import {
   expectIncludes,
   expectIncludesAtLeastOne,
@@ -431,23 +432,21 @@ Your purpose is to assist users by answering their questions about a tabletop wa
 ## Response language:
 Always answer in English.`
     const inputSchema = z.object({
-      conversationSummary: z.string().describe("Summary of the conversation"),
-      latestUserQuestion: z.string().describe("Latest user's question"),
-      topK: z.number().describe("topK value"),
+      query: z.string().describe("The question to look up, as a standalone sentence"),
     })
-    const retrieveProjectDocumentChunksTool = tool({
-      description: "Retrieve useful Document's Chunks",
+    const lookupKnowledgeBaseTool = tool({
+      description: LOOKUP_KNOWLEDGE_BASE_DESCRIPTION,
       inputSchema,
       outputSchema: undefined,
       execute: async (input, _options) => {
-        return getChunks(input.latestUserQuestion)
+        return getChunks(input.query)
       },
     })
     const config = {
       model,
       temperature: ProviderSpecs.temperature,
       systemPrompt: prompt,
-      tools: { retrieveProjectDocumentChunks: retrieveProjectDocumentChunksTool } as ToolSet,
+      tools: { lookup_knowledge_base: lookupKnowledgeBaseTool } as ToolSet,
     }
     const chatMessages: LLMChatMessage[] = [
       { role: "user", content: "C'est combien de deplacement en plus la charge" },
@@ -524,17 +523,15 @@ Your purpose is to assist users by answering their questions about a tabletop wa
 
 ## Response language:
 Always answer in English.`
-    const inputSchemaRetrieveProjectDocumentChunksTool = z.object({
-      conversationSummary: z.string().describe("Summary of the conversation"),
-      latestUserQuestion: z.string().describe("Latest user's question"),
-      topK: z.number().describe("topK value"),
+    const inputSchemaLookupKnowledgeBaseTool = z.object({
+      query: z.string().describe("The question to look up, as a standalone sentence"),
     })
-    const retrieveProjectDocumentChunksTool = tool({
-      description: "Retrieve useful Document's Chunks",
-      inputSchema: inputSchemaRetrieveProjectDocumentChunksTool,
+    const lookupKnowledgeBaseTool = tool({
+      description: LOOKUP_KNOWLEDGE_BASE_DESCRIPTION,
+      inputSchema: inputSchemaLookupKnowledgeBaseTool,
       outputSchema: undefined,
       execute: async (input, _options) => {
-        return getChunks(input.latestUserQuestion)
+        return getChunks(input.query)
       },
     })
     const inputSchemaGetUnitValue = z.object({
@@ -567,7 +564,7 @@ Always answer in English.`
       temperature: ProviderSpecs.temperature,
       systemPrompt: prompt,
       tools: {
-        retrieveProjectDocumentChunks: retrieveProjectDocumentChunksTool,
+        lookup_knowledge_base: lookupKnowledgeBaseTool,
         getUnitValue: getUnitValueTool,
         getUnitPrice: getUnitPriceTool,
       } as ToolSet,
@@ -828,12 +825,8 @@ Output the full list unchanged, except for the constant named ‘Pi’, which mu
   }
 }
 
-function getChunks(latestUserQuestion) {
-  if (
-    latestUserQuestion.includes("charge") &&
-    latestUserQuestion.includes("movement") &&
-    latestUserQuestion.includes("distance")
-  )
+function getChunks(query) {
+  if (query.includes("charge") && query.includes("movement") && query.includes("distance"))
     return {
       retrievedChunks: [
         {

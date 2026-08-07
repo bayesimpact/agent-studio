@@ -12,6 +12,7 @@ import {
 } from "@/common/test/test-database"
 import { createOrganizationWithAgent } from "@/domains/organizations/organization.factory"
 import { sdk } from "@/external/llm/open-telemetry-init"
+import type { AISDKMockProvider } from "@/external/llm/providers/ai-sdk-mock.provider"
 import { agentEmbedConfigFactory } from "../agent-embed-configs/agent-embed-config.factory"
 import { publicAgentSessionFactory } from "../public-agent-sessions/public-agent-session.factory"
 import { PublicChatModule } from "../public-chat.module"
@@ -96,6 +97,72 @@ describe("PublicChat - streamMessages", () => {
       .map((event) => event.content)
       .join("")
     expect(fulltextStream).toBe("Hello, I'm the stream default mock value!")
+  })
+
+  it("persists the mandatory report's title and categories on the PUBLIC session (#616)", async () => {
+    const { agent, session } = await createContext()
+    const category = await repositories.agentSessionCategoryRepository.save(
+      repositories.agentSessionCategoryRepository.create({ agentId: agent.id, name: "Billing" }),
+    )
+
+    const mockProvider = setup.module.get<AISDKMockProvider>("_MockLLMProvider")
+    mockProvider.resetMock()
+    // Generation 1: the answer. Generation 2: the forced end-of-turn report.
+    mockProvider.addTextTurn(agent.id, "Here you go.")
+    mockProvider.addToolCallTurn(agent.id, "mandatory_tool", {
+      suggestedTitle: "Invoice question",
+      categoryNames: ["Billing"],
+    })
+
+    const response = await subject("My invoice looks wrong")
+    expect(response.status).toBe(200)
+
+    const updatedSession = await repositories.publicAgentSessionRepository.findOneByOrFail({
+      id: session.id,
+    })
+    expect(updatedSession.title).toBe("Invoice question")
+    const sessionCategories = await repositories.publicAgentSessionCategoryRepository.findBy({
+      publicAgentSessionId: session.id,
+    })
+    expect(sessionCategories).toHaveLength(1)
+    expect(sessionCategories[0]?.agentSessionCategoryId).toBe(category.id)
+  })
+
+  it("accumulates fillForm state on the PUBLIC session across turns (#616)", async () => {
+    const { agent, agentSettings, session } = await createContext()
+    await repositories.agentSettingsRepository.update(agentSettings.id, {
+      fillFormEnabled: true,
+      outputJsonSchema: {
+        type: "object",
+        properties: { fullName: { type: "string" }, city: { type: "string" } },
+      },
+    })
+
+    const mockProvider = setup.module.get<AISDKMockProvider>("_MockLLMProvider")
+    mockProvider.resetMock()
+    // Turn 1: fill fullName, then answer, then the forced report.
+    mockProvider.addToolCallTurn(agent.id, "fillForm", { formFields: { fullName: "Ada" } })
+    mockProvider.addTextTurn(agent.id, "Noted!")
+    mockProvider.addToolCallTurn(agent.id, "mandatory_tool", { suggestedTitle: null })
+    const firstResponse = await subject("My name is Ada")
+    expect(firstResponse.status).toBe(200)
+
+    let updatedSession = await repositories.publicAgentSessionRepository.findOneByOrFail({
+      id: session.id,
+    })
+    expect(updatedSession.result).toEqual({ fullName: "Ada" })
+
+    // Turn 2: fill city — the state must accumulate, not reset.
+    mockProvider.addToolCallTurn(agent.id, "fillForm", { formFields: { city: "Paris" } })
+    mockProvider.addTextTurn(agent.id, "Saved!")
+    mockProvider.addToolCallTurn(agent.id, "mandatory_tool", { suggestedTitle: null })
+    const secondResponse = await subject("I live in Paris")
+    expect(secondResponse.status).toBe(200)
+
+    updatedSession = await repositories.publicAgentSessionRepository.findOneByOrFail({
+      id: session.id,
+    })
+    expect(updatedSession.result).toEqual({ fullName: "Ada", city: "Paris" })
   })
 
   it("should return error when empty content", async () => {

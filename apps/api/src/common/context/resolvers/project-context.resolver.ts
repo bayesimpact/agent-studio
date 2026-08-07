@@ -4,7 +4,7 @@ import type { Repository } from "typeorm"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
 import { DataSource } from "typeorm"
 import { UserMembership } from "@/domains/memberships/user-membership.entity"
-import type { ProjectMembershipFixture } from "@/domains/projects/memberships/project-membership.types"
+import type { ProjectMembershipModel } from "@/domains/projects/memberships/project-membership.model"
 import { Project } from "@/domains/projects/project.entity"
 import type { ContextResolver, ResolvableRequest } from "../context-resolver.interface"
 import type { EndpointRequestWithProject } from "../request.interface"
@@ -46,28 +46,28 @@ export class ProjectContextResolver implements ContextResolver {
         },
       })) ?? undefined
 
-    // TODO (cleanup PR): once ProjectMembership is removed, narrow the
-    // request-interface type for projectMembership to a Pick of only what
-    // policies actually read (projectId, role today), drop the `as` cast
-    // below, and load the `project` / `user` relations only if a policy
-    // starts needing them.
+    // TODO (cleanup PR): narrow the request-interface type for
+    // projectMembership to a Pick of only what policies actually read
+    // (projectId, role today), drop the `as` cast below, and load the
+    // `project` / `user` relations only if a policy starts needing them.
     //
-    // The `as ProjectMembership` below is intentional: we build a plain DTO
-    // from user_membership rows rather than a real entity instance, so the
-    // `project` and `user` relation fields are absent. TypeScript would reject
-    // `satisfies ProjectMembership` because of those missing fields. At runtime
-    // this is safe — ProjectScopedPolicy only reads `projectMembership.projectId`
+    // The `as ProjectMembershipModel` below is intentional: we build a plain
+    // DTO from user_membership rows rather than loading relations, so the
+    // `project` and `user` fields are absent. TypeScript would reject
+    // `satisfies ProjectMembershipModel` because of those missing fields. At
+    // runtime this is safe — policies only read `projectMembership.projectId`
     // and `projectMembership.role`; the relation fields are never accessed.
-    const projectMembership: ProjectMembershipFixture | undefined = userMembership
+    const projectMembership: ProjectMembershipModel | undefined = userMembership
       ? ({
           id: userMembership.id,
           userId: userMembership.userId,
           projectId: project.id,
-          role: userMembership.role,
+          role: userMembership.role as ProjectMembershipModel["role"],
+          roleId: userMembership.roleId,
           createdAt: userMembership.createdAt,
           updatedAt: userMembership.updatedAt,
           deletedAt: userMembership.deletedAt,
-        } as ProjectMembershipFixture)
+        } as ProjectMembershipModel)
       : undefined
 
     requestWithProject.project = project

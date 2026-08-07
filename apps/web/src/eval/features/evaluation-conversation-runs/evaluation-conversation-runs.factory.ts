@@ -1,6 +1,8 @@
-import { AgentModel } from "@caseai-connect/api-contracts"
+import { DEFAULT_AGENT_MODEL } from "@caseai-connect/api-contracts"
 import { faker } from "@faker-js/faker"
 import { Factory } from "fishery"
+import { agentSettingsFactory } from "@/common/features/agents/agent-settings/agent-settings.factory"
+import type { AgentSettings } from "@/common/features/agents/agent-settings/agent-settings.models"
 import type { Agent } from "@/common/features/agents/agents.models"
 import type { EvaluationConversationDataset } from "../evaluation-conversation-datasets/evaluation-conversation-datasets.models"
 import type {
@@ -31,6 +33,7 @@ export const evaluationConversationRunSummaryFactory =
 type EvaluationConversationRunTransientParams = {
   dataset: EvaluationConversationDataset
   agent: Agent
+  agentSettings: AgentSettings
 }
 
 class EvaluationConversationRunFactory extends Factory<
@@ -52,20 +55,23 @@ export const evaluationConversationRunFactory = EvaluationConversationRunFactory
       )
     }
 
+    const agentSettings =
+      transientParams.agentSettings ?? agentSettingsFactory.transient({ agent }).build()
+
     return {
       id: params.id ?? faker.string.uuid(),
       evaluationConversationDatasetId: dataset.id,
       agentId: agent.id,
-      // Snapshot of the agent settings pinned on the run, defaulted from the transient agent.
+      // Snapshot of the agent settings pinned on the run, defaulted from the transient settings.
       agentSettings: {
-        documentsRagMode: params.agentSettings?.documentsRagMode ?? agent.documentsRagMode,
-        instructions: params.agentSettings?.instructions ?? agent.instructions,
-        locale: params.agentSettings?.locale ?? agent.locale,
-        model: params.agentSettings?.model ?? agent.model,
-        revision: params.agentSettings?.revision ?? agent.revision,
-        temperature: params.agentSettings?.temperature ?? agent.temperature,
+        documentsRagMode: params.agentSettings?.documentsRagMode ?? agentSettings.documentsRagMode,
+        instructions: params.agentSettings?.instructions ?? agentSettings.instructions,
+        locale: params.agentSettings?.locale ?? agentSettings.locale,
+        model: params.agentSettings?.model ?? agentSettings.model,
+        revision: params.agentSettings?.revision ?? agentSettings.revision,
+        temperature: params.agentSettings?.temperature ?? agentSettings.temperature,
       },
-      judgeModel: params.judgeModel ?? AgentModel.Gemini25Flash,
+      judgeModel: params.judgeModel ?? DEFAULT_AGENT_MODEL,
       judgeInstructions: params.judgeInstructions ?? null,
       status: params.status ?? "completed",
       summary:

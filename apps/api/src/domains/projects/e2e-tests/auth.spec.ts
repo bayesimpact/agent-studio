@@ -11,8 +11,14 @@ import {
   teardownE2eTestDatabase,
 } from "@/common/test/test-database"
 import { removeNullish } from "@/common/utils/remove-nullish"
-import { createOrganizationWithProject } from "@/domains/organizations/organization.factory"
+import { userMembershipFactory } from "@/domains/memberships/user-membership.factory"
+import {
+  createOrganizationWithOwner,
+  createOrganizationWithProject,
+} from "@/domains/organizations/organization.factory"
+import { ORGANIZATION_ROLES } from "@/domains/rbac/rbac.constants"
 import { mockForeignAuth0Id, setupUserGuardForTesting } from "../../../../test/e2e.helpers"
+import { ensureRbacCatalog } from "../../../../test/rbac-test.helpers"
 import { expectResponse, type Requester, testRequester } from "../../../../test/request"
 import { ProjectsModule } from "../projects.module"
 
@@ -33,6 +39,7 @@ describe("Projects - Auth", () => {
       additionalImports: [ProjectsModule],
       applyOverrides: (moduleBuilder) => setupUserGuardForTesting(moduleBuilder, () => auth0Id),
     })
+    await ensureRbacCatalog(setup.module)
     repositories = setup.getAllRepositories()
     app = setup.module.createNestApplication()
     await app.init()
@@ -120,6 +127,31 @@ describe("Projects - Auth", () => {
     it("doesn't allow a simple member to create projects", async () => {
       await createContextForRole("member")
       expectResponse(await subject(), 500)
+    })
+    it("doesn't allow creating a project in an organization other than the one granting project.create", async () => {
+      // the user owns org A (which grants project.create there), but is only a member of org B
+      await createContextForRole("owner")
+      const { organization: otherOrganization } = await createOrganizationWithOwner(repositories)
+      const user = await repositories.userRepository.findOneOrFail({ where: { auth0Id } })
+      const memberRole = await repositories.roleRepository.findOneOrFail({
+        where: { key: ORGANIZATION_ROLES.member },
+      })
+      await repositories.userMembershipRepository.save(
+        userMembershipFactory.build({
+          userId: user.id,
+          resourceType: "organization",
+          resourceId: otherOrganization.id,
+          role: "member",
+          roleId: memberRole.id,
+        }),
+      )
+
+      organizationId = otherOrganization.id
+      expectResponse(
+        await subject({ payload: { name: "Sneaky Project" } }),
+        403,
+        AUTH_ERRORS.UNAUTHORIZED_RESOURCE,
+      )
     })
   })
 

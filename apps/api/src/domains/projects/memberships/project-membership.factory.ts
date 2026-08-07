@@ -8,6 +8,7 @@ import {
 } from "@/domains/organizations/memberships/organization-membership.factory"
 import type { OrganizationMembershipFixture } from "@/domains/organizations/memberships/organization-membership.types"
 import type { Organization } from "@/domains/organizations/organization.entity"
+import { PROJECT_ROLES } from "@/domains/rbac/rbac.constants"
 import type { User } from "@/domains/users/user.entity"
 import { userFactory } from "@/domains/users/user.factory"
 import type { Project } from "../project.entity"
@@ -70,6 +71,9 @@ export const saveProjectMembership = async ({
   repositories: AllRepositories
   membership: ProjectMembershipFixture
 }) => {
+  const roleKey = PROJECT_ROLES[membership.role]
+  const rbacRole = await repositories.roleRepository.findOne({ where: { key: roleKey } })
+
   const saved = await repositories.userMembershipRepository.save(
     userMembershipFactory.build({
       id: membership.id,
@@ -77,6 +81,7 @@ export const saveProjectMembership = async ({
       resourceType: "project",
       resourceId: membership.projectId,
       role: membership.role,
+      roleId: rbacRole?.id ?? null,
     }),
   )
   return { ...membership, id: saved.id }

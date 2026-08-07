@@ -4,7 +4,7 @@ import {
   AgentModel,
   type AgentTemperature,
   type DocumentsRagMode,
-} from "../agents/agents.dto"
+} from "../agents/settings/agent-settings.dto"
 import type { TimeType } from "../generic"
 
 export const EVALUATION_CONVERSATION_RUN_STATUS_CHANGED_CHANNEL_DTO =
@@ -81,7 +81,7 @@ export const createEvaluationConversationRunSchema = z.object({
   agentSettingsRevision: z.number().int().nullable(),
   datasetId: z.string(),
   // LLM judge model used to grade this run's records.
-  judgeModel: z.nativeEnum(AgentModel),
+  judgeModel: z.enum(AgentModel),
   // Optional extra instructions injected into the judge's grading prompt.
   judgeInstructions: z
     .string()

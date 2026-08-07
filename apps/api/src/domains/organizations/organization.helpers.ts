@@ -1,17 +1,11 @@
 import type { OrganizationDto } from "@caseai-connect/api-contracts"
-import { toProjectDto } from "../projects/helpers"
-import type { Project } from "../projects/project.entity"
-import type { Organization } from "./organization.entity"
+import type { OrganizationModel } from "./organization.model"
 
-export function toDto(
-  organization: Organization & {
-    projects: Project[]
-  },
-): OrganizationDto {
+export function toDto(organization: OrganizationModel): OrganizationDto {
   return {
     id: organization.id,
     name: organization.name,
-    projects: organization.projects.map(toProjectDto),
-    createdAt: organization.createdAt.getTime(),
+    permissions: organization.permissions,
+    createdAt: organization.createdAt,
   }
 }

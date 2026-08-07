@@ -28,7 +28,13 @@ import { SourcesTool } from "./SourcesTool"
 import { SubAgentFormResultSheet } from "./SubAgentFormResultSheet"
 import { SurfaceResourcesTool } from "./SurfaceResourcesTool"
 
-export function AgentSessionMessage({ message }: { message: AgentSessionMessageType }) {
+export function AgentSessionMessage({
+  message,
+  renderMessageVersion,
+}: {
+  message: AgentSessionMessageType
+  renderMessageVersion?: (message: AgentSessionMessageType) => React.ReactNode
+}) {
   const formSubSessions = useFormSubSessions()
   const formResult = useFormResult()
 
@@ -84,6 +90,8 @@ export function AgentSessionMessage({ message }: { message: AgentSessionMessageT
                 <FeedbackCreator message={message} />
 
                 <CopyToClipboard content={message.content} />
+
+                {renderMessageVersion?.(message)}
 
                 {filledForm && formResult && (
                   <FormResultSheet
@@ -143,7 +151,9 @@ function ErrorMessage() {
 const TOOL_ACTIVITY_KEY: Record<string, string> = {
   [ToolName.McpSearchResources]: "activity.searchingResources",
   [ToolName.McpSmartSearch]: "activity.smartSearch",
-  [ToolName.RetrieveProjectDocumentChunks]: "activity.retrievingDocuments",
+  [ToolName.LookupKnowledgeBase]: "activity.lookupKnowledgeBase",
+  // Legacy wire name kept so sessions recorded before the rename still show a label.
+  retrieveProjectDocumentChunks: "activity.lookupKnowledgeBase",
   [ToolName.Sources]: "activity.gatheringSources",
   [ToolName.SurfaceResources]: "activity.surfacingResources",
   [ToolName.FillForm]: "activity.fillingForm",

@@ -1,4 +1,21 @@
+import { createBackofficeOrganizationSchema } from "@caseai-connect/api-contracts"
 import { Button } from "@caseai-connect/ui/shad/button"
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@caseai-connect/ui/shad/dialog"
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@caseai-connect/ui/shad/form"
+import { Input } from "@caseai-connect/ui/shad/input"
 import {
   Table,
   TableBody,
@@ -7,10 +24,13 @@ import {
   TableHeader,
   TableRow,
 } from "@caseai-connect/ui/shad/table"
+import { zodResolver } from "@hookform/resolvers/zod"
 import { type ColumnDef, flexRender, getCoreRowModel, useReactTable } from "@tanstack/react-table"
-import { ChevronLeftIcon, ChevronRightIcon } from "lucide-react"
+import { ChevronLeftIcon, ChevronRightIcon, PlusIcon } from "lucide-react"
 import { useEffect, useMemo, useRef, useState } from "react"
+import { useForm } from "react-hook-form"
 import { useNavigate } from "react-router-dom"
+import type { z } from "zod"
 import { BackofficeOrganizationRoutes } from "@/backoffice/routes/helpers"
 import { useMount } from "@/common/hooks/use-mount"
 import { useValue } from "@/common/hooks/use-value"
@@ -23,6 +43,8 @@ import {
 } from "../backoffice.selectors"
 import { backofficeActions } from "../backoffice.slice"
 import { SearchField } from "./BackofficeTable"
+
+type CreateOrganizationFormValues = z.infer<typeof createBackofficeOrganizationSchema>
 
 const DEFAULT_PAGE_SIZE = 10
 
@@ -110,12 +132,15 @@ function WithData() {
 
   return (
     <>
-      <div className="p-4 border-b">
-        <SearchField
-          value={searchInput}
-          onChange={setSearchInput}
-          placeholder="Search by name or UUID…"
-        />
+      <div className="p-4 border-b flex items-center justify-between gap-2">
+        <div className="flex-1">
+          <SearchField
+            value={searchInput}
+            onChange={setSearchInput}
+            placeholder="Search by name or UUID…"
+          />
+        </div>
+        <CreateOrganizationDialog />
       </div>
       <Table>
         <TableHeader className="bg-muted/50">
@@ -188,6 +213,76 @@ function WithData() {
           </Button>
         </div>
       </div>
+    </>
+  )
+}
+
+function CreateOrganizationDialog() {
+  const dispatch = useAppDispatch()
+  const [open, setOpen] = useState(false)
+
+  const form = useForm<CreateOrganizationFormValues>({
+    resolver: zodResolver(createBackofficeOrganizationSchema),
+    defaultValues: { name: "" },
+  })
+
+  const close = () => {
+    setOpen(false)
+    form.reset({ name: "" })
+  }
+
+  const onValid = async ({ name }: CreateOrganizationFormValues) => {
+    try {
+      await dispatch(backofficeActions.createOrganization({ name })).unwrap()
+      close()
+    } catch {
+      // The middleware shows the error notification; keep the dialog open for a retry.
+    }
+  }
+
+  return (
+    <>
+      <Button size="sm" onClick={() => setOpen(true)}>
+        <PlusIcon className="size-4" />
+        Create organization
+      </Button>
+      <Dialog open={open} onOpenChange={(isOpen) => !isOpen && close()}>
+        <DialogContent className="sm:max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Create organization</DialogTitle>
+          </DialogHeader>
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onValid)} className="flex flex-col gap-2">
+              <FormField
+                control={form.control}
+                name="name"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Name</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Organization name" autoFocus {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <DialogFooter className="mt-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={close}
+                  disabled={form.formState.isSubmitting}
+                >
+                  Cancel
+                </Button>
+                <Button type="submit" disabled={form.formState.isSubmitting}>
+                  Create
+                </Button>
+              </DialogFooter>
+            </form>
+          </Form>
+        </DialogContent>
+      </Dialog>
     </>
   )
 }

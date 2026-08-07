@@ -1,0 +1,20 @@
+---
+description: Keep docs/rbac-permission-matrix.md in sync with the RBAC catalog
+globs: apps/api/src/domains/rbac/rbac.constants.ts,packages/api-contracts/src/rbac/permissions.ts
+alwaysApply: false
+---
+
+# Permission Matrix Sync
+
+`docs/rbac-permission-matrix.md` mirrors the RBAC catalog defined in:
+
+- `apps/api/src/domains/rbac/rbac.constants.ts` (roles + role/permission grants)
+- `packages/api-contracts/src/rbac/permissions.ts` (global permission contract)
+
+Whenever you add, rename, or remove a role, a permission, or a role/permission grant in those files, you MUST update the corresponding table in `docs/rbac-permission-matrix.md` in the same change set.
+
+Checklist:
+
+- [ ] Every role in `ORGANIZATION_ROLE_PERMISSIONS` / `PROJECT_ROLE_PERMISSIONS` has a column in the doc
+- [ ] Every granted permission has a row, checkmarks match the constants exactly
+- [ ] `GlobalPermission` union members all appear in the "Global roles" table

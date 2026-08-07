@@ -101,18 +101,23 @@ export function SourcesTool({
   toolCall: NonNullable<AgentSessionMessageType["toolCalls"]>[number]
 }) {
   const { t } = useTranslation()
-  const sources = toolCall.arguments.sources as unknown as Source[]
+  const sources = (toolCall.arguments.sources ?? []) as unknown as Source[]
+
+  // The server resolves cited chunkIds against the chunks actually retrieved
+  // in the run — an empty list (no lookup ran, or invented ids) has nothing
+  // to show.
+  if (sources.length === 0) return null
 
   return (
     <Sheet>
       <SheetTrigger asChild>
         <Button variant="ghost" size="sm" className="text-muted-foreground text-xs">
-          {t("agent:source", { count: sources.length })}
+          {t("agentSettings:source", { count: sources.length })}
         </Button>
       </SheetTrigger>
       <SheetContent side="right" className="w-full sm:max-w-md overflow-y-auto">
         <SheetHeader>
-          <SheetTitle>{t("agent:source", { count: sources.length })}</SheetTitle>
+          <SheetTitle>{t("agentSettings:source", { count: sources.length })}</SheetTitle>
         </SheetHeader>
         <div className="px-4 pb-4">
           {sources.map((source) => (

@@ -1,28 +1,31 @@
+import { ButtonGroup } from "@caseai-connect/ui/shad/button-group"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@caseai-connect/ui/shad/tabs"
 import { AlertTriangleIcon } from "lucide-react"
 import { type ReactNode, useMemo, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { useBlocker } from "react-router-dom"
 import { ConfirmDialog } from "@/common/components/ConfirmDialog"
+import type { AgentSettings } from "@/common/features/agents/agent-settings/agent-settings.models"
 import type { Agent } from "@/common/features/agents/agents.models"
 import { selectCurrentProjectData } from "@/common/features/projects/projects.selectors"
 import { useFeatureFlags } from "@/common/hooks/use-feature-flags"
 import { usePreventLeave } from "@/common/hooks/use-prevent-leave"
 import { useValue } from "@/common/hooks/use-value"
 import { ErrorRoute } from "@/common/routes/ErrorRoute"
-import { AgentEmbedTab } from "@/studio/features/agent-embed-configs/components/AgentEmbedTab"
 import type { AgentSubAgent } from "@/studio/features/agent-sub-agents/agent-sub-agents.models"
+import { EmbedTab } from "@/studio/features/agents/agent-settings/components/tabs/EmbedTab"
 import { selectMcpServersData } from "@/studio/features/mcp-servers/mcp-servers.selectors"
-import { AgentGeneralTab } from "./AgentGeneralTab"
-import { AgentMcpServersTab } from "./AgentMcpServersTab"
-import { AgentModelTab } from "./AgentModelTab"
-import { AgentOrchestrationTab } from "./AgentOrchestrationTab"
-import { AgentOutputTab } from "./AgentOutputTab"
-import { AgentResourceLibrariesTab } from "./AgentResourceLibrariesTab"
-import { AgentSessionCategoriesTab } from "./AgentSessionCategoriesTab"
-import { AgentSourcesTab } from "./AgentSourcesTab"
-import { AgentToolsTab } from "./AgentToolsTab"
-import { AgentVersionHistory } from "./AgentVersionHistory"
+import { AgentSettingsCreateButton } from "../agent-settings/components/AgentSettingsCreateButton"
+import { AgentSettingsHistory } from "../agent-settings/components/AgentSettingsHistory"
+import { GeneralTab } from "../agent-settings/components/tabs/GeneralTab"
+import { McpServersTab } from "../agent-settings/components/tabs/McpServersTab"
+import { ModelTab } from "../agent-settings/components/tabs/ModelTab"
+import { OrchestrationTab } from "../agent-settings/components/tabs/OrchestrationTab"
+import { OutputTab } from "../agent-settings/components/tabs/OutputTab"
+import { ResourceLibrariesTab } from "../agent-settings/components/tabs/ResourceLibrariesTab"
+import { SessionCategoriesTab } from "../agent-settings/components/tabs/SessionCategoriesTab"
+import { SourcesTab } from "../agent-settings/components/tabs/SourcesTab"
+import { ToolsTab } from "../agent-settings/components/tabs/ToolsTab"
 
 export type AgentEditorOrchestration = {
   agents: Agent[]
@@ -55,12 +58,17 @@ type TabConfig = {
  */
 export function AgentEditor({
   agent,
+  agentSettings,
   className,
   orchestration,
+  onDirtyChange,
 }: {
   agent: Agent
+  agentSettings: AgentSettings
   className?: string
   orchestration?: AgentEditorOrchestration
+  /** Reports whether the active tab has unsaved changes, e.g. to disable a publish action. */
+  onDirtyChange?: (dirty: boolean) => void
 }) {
   const { t } = useTranslation()
   const project = useValue(selectCurrentProjectData)
@@ -72,13 +80,17 @@ export function AgentEditor({
     const list: TabConfig[] = [
       {
         value: "general",
-        label: t("agent:tabs.general"),
-        render: (onDirtyChange) => <AgentGeneralTab agent={agent} onDirtyChange={onDirtyChange} />,
+        label: t("agentSettings:tabs.general"),
+        render: (onDirtyChange) => (
+          <GeneralTab agent={agent} agentSettings={agentSettings} onDirtyChange={onDirtyChange} />
+        ),
       },
       {
         value: "model",
-        label: t("agent:tabs.model"),
-        render: (onDirtyChange) => <AgentModelTab agent={agent} onDirtyChange={onDirtyChange} />,
+        label: t("agentSettings:tabs.model"),
+        render: (onDirtyChange) => (
+          <ModelTab agentSettings={agentSettings} onDirtyChange={onDirtyChange} />
+        ),
       },
     ]
 
@@ -86,30 +98,34 @@ export function AgentEditor({
     if (isConversation) {
       list.push({
         value: "sources",
-        label: t("agent:tabs.sources"),
-        render: (onDirtyChange) => <AgentSourcesTab agent={agent} onDirtyChange={onDirtyChange} />,
+        label: t("agentSettings:tabs.sources"),
+        render: (onDirtyChange) => (
+          <SourcesTab agentSettings={agentSettings} onDirtyChange={onDirtyChange} />
+        ),
       })
 
       list.push({
         value: "resourceLibraries",
-        label: t("agent:tabs.resourceLibraries"),
+        label: t("agentSettings:tabs.resourceLibraries"),
         render: (onDirtyChange) => (
-          <AgentResourceLibrariesTab agent={agent} onDirtyChange={onDirtyChange} />
+          <ResourceLibrariesTab agentSettings={agentSettings} onDirtyChange={onDirtyChange} />
         ),
       })
 
       list.push({
         value: "tools",
-        label: t("agent:tabs.tools"),
-        render: (onDirtyChange) => <AgentToolsTab agent={agent} onDirtyChange={onDirtyChange} />,
+        label: t("agentSettings:tabs.tools"),
+        render: (onDirtyChange) => (
+          <ToolsTab agentSettings={agentSettings} onDirtyChange={onDirtyChange} />
+        ),
       })
 
       if (project.agentSessionCategories.length > 0) {
         list.push({
           value: "categories",
-          label: t("agent:tabs.categories"),
+          label: t("agentSettings:tabs.categories"),
           render: (onDirtyChange) => (
-            <AgentSessionCategoriesTab agent={agent} onDirtyChange={onDirtyChange} />
+            <SessionCategoriesTab agentSettings={agentSettings} onDirtyChange={onDirtyChange} />
           ),
         })
       }
@@ -117,9 +133,9 @@ export function AgentEditor({
       if (hasFeature("agent-orchestration") && orchestration) {
         list.push({
           value: "orchestration",
-          label: t("agent:tabs.orchestration"),
+          label: t("agentSettings:tabs.orchestration"),
           render: (onDirtyChange) => (
-            <AgentOrchestrationTab
+            <OrchestrationTab
               agent={agent}
               availableAgents={orchestration.agents}
               subAgents={orchestration.subAgents}
@@ -132,8 +148,8 @@ export function AgentEditor({
       if (hasFeature("agent-embed")) {
         list.push({
           value: "embed",
-          label: t("agent:tabs.embed"),
-          render: (onDirtyChange) => <AgentEmbedTab onDirtyChange={onDirtyChange} />,
+          label: t("agentSettings:tabs.embed"),
+          render: (onDirtyChange) => <EmbedTab onDirtyChange={onDirtyChange} />,
         })
       }
     }
@@ -141,27 +157,36 @@ export function AgentEditor({
     else {
       list.push({
         value: "output",
-        label: t("agent:tabs.output"),
-        render: (onDirtyChange) => <AgentOutputTab agent={agent} onDirtyChange={onDirtyChange} />,
+        label: t("agentSettings:tabs.output"),
+        render: (onDirtyChange) => (
+          <OutputTab agentSettings={agentSettings} onDirtyChange={onDirtyChange} />
+        ),
       })
     }
 
     if (hasFeature("agent-mcp") && projectMcpServers.length > 0) {
       list.push({
         value: "mcpServers",
-        label: t("agent:tabs.mcpServers"),
-        render: () => <AgentMcpServersTab agentId={agent.id} agentMcpServers={agent.mcpServers} />,
+        label: t("agentSettings:tabs.mcpServers"),
+        render: () => (
+          <McpServersTab agentId={agent.id} agentMcpServers={agentSettings.mcpServers} />
+        ),
       })
     }
 
     return list
-  }, [agent, project, hasFeature, orchestration, projectMcpServers, t])
+  }, [agent, agentSettings, project, hasFeature, orchestration, projectMcpServers, t])
 
   const [nav, setNav] = useState<{ active: TabKey; pending: TabKey | null }>({
     active: "general",
     pending: null,
   })
   const [dirty, setDirty] = useState(false)
+
+  const handleDirtyChange = (next: boolean) => {
+    setDirty(next)
+    onDirtyChange?.(next)
+  }
 
   // Browser-level leave (refresh / close tab); in-app navigation is handled by the blocker below.
   usePreventLeave(dirty)
@@ -184,7 +209,7 @@ export function AgentEditor({
   const handleConfirm = () => {
     if (nav.pending) {
       setNav({ active: nav.pending, pending: null })
-      setDirty(false)
+      handleDirtyChange(false)
     } else if (isLeavingEditor) {
       blocker.proceed?.()
     }
@@ -209,23 +234,30 @@ export function AgentEditor({
               </TabsTrigger>
             ))}
           </TabsList>
-          <AgentVersionHistory agent={agent} />
+          {agent.type === "extraction" && (
+            <ButtonGroup>
+              <AgentSettingsHistory agent={agent} agentSettings={agentSettings} />
+              <AgentSettingsCreateButton agentSettings={agentSettings} hasUnsavedChanges={dirty} />
+            </ButtonGroup>
+          )}
         </div>
-        {/* Also keyed on the revision so the active tab form reloads fresh defaults after a
-            version is restored from the history sheet. */}
+        {/* Also keyed on the revision and updatedAt so the active tab form reloads fresh defaults
+            after a version is restored from the history sheet. Restoring over an existing draft
+            keeps the same revision (the draft is overwritten in place), so revision alone is not
+            enough to detect it. */}
         <TabsContent
-          key={`${activeTab.value}-${agent.revision}`}
+          key={`${activeTab.value}-${agentSettings.revision}-${agentSettings.updatedAt}`}
           value={activeTab.value}
           className="mt-4"
         >
-          {activeTab.render(setDirty)}
+          {activeTab.render(handleDirtyChange)}
         </TabsContent>
       </Tabs>
 
       <ConfirmDialog
         open={nav.pending !== null || isLeavingEditor}
-        title={t("agent:unsavedChanges.title")}
-        description={t("agent:unsavedChanges.description")}
+        title={t("agentSettings:unsavedChanges.title")}
+        description={t("agentSettings:unsavedChanges.description")}
         confirmLabel={t("actions:discard")}
         confirmIcon={<AlertTriangleIcon className="size-5" />}
         onConfirm={handleConfirm}

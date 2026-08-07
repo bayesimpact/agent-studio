@@ -13,12 +13,8 @@ import {
   createOrganizationWithProject,
 } from "@/domains/organizations/organization.factory"
 import { addUserToProject } from "@/domains/projects/memberships/project-membership.factory"
-import { createResourceLibraryForProject } from "@/domains/resource-libraries/resource-library.factory"
 import { userFactory } from "@/domains/users/user.factory"
 import { sdk } from "@/external/llm/open-telemetry-init"
-import { DocumentTag } from "../documents/tags/document-tag.entity"
-import { documentTagFactory } from "../documents/tags/document-tag.factory"
-import { Agent } from "./agent.entity"
 import { AgentsModule } from "./agents.module"
 import { AgentsService } from "./agents.service"
 import { addUserToAgent } from "./memberships/agent-membership.factory"
@@ -354,213 +350,48 @@ describe("AgentsService", () => {
     })
   })
 
-  describe("updateAgent", () => {
-    it("should update an Agent", async () => {
-      const { organization, project, agent } = await createOrganizationWithAgent(repositories)
+  describe("updateAgentName", () => {
+    it("should update an Agent name and leave its settings untouched", async () => {
+      const { organization, project, agent, agentSettings } =
+        await createOrganizationWithAgent(repositories)
 
-      // Act
-      const { agent: updatedAgent, agentSettings: updatedAgentSettings } =
-        await service.updateAgent({
-          connectScope: { organizationId: organization.id, projectId: project.id },
-          agentId: agent.id,
-          fieldsToUpdate: {
-            name: "Updated Template",
-            instructions: "Updated Prompt",
-            documentsRagMode: DocumentsRagMode.All,
-          },
-        })
-
-      expect(updatedAgent.name).toBe("Updated Template")
-      expect(updatedAgent.id).toBe(agent.id)
-
-      expect(updatedAgentSettings.instructions).toBe("Updated Prompt")
-      expect(updatedAgentSettings.agentId).toBe(agent.id)
-      expect(updatedAgentSettings.revision).toBe(2)
-
-      const updatedTemplate = await repositories.agentRepository.findOne({
-        where: { id: agent.id },
-      })
-      expect(updatedTemplate?.name).toBe("Updated Template")
-
-      const updatedPrompt = await repositories.agentSettingsRepository.findOne({
-        where: { agentId: agent.id, revision: 2 },
-      })
-      expect(updatedPrompt).toBeDefined()
-      expect(updatedPrompt?.instructions).toBe("Updated Prompt")
-    })
-
-    it("should update only name when instructions is not provided", async () => {
-      const {
-        organization,
-        project,
-        agent,
-        agentSettings: initialAgentSettings,
-      } = await createOrganizationWithAgent(repositories)
-
-      const { agent: updatedAgent, agentSettings } = await service.updateAgent({
+      const isUpdated = await service.updateAgentName({
         connectScope: { organizationId: organization.id, projectId: project.id },
         agentId: agent.id,
-        fieldsToUpdate: { name: "Updated Name" },
+        name: "Updated Template",
       })
 
-      expect(updatedAgent.name).toBe("Updated Name")
+      expect(isUpdated).toBeTruthy()
 
-      expect(agentSettings).toBeDefined()
-      expect(agentSettings?.instructions).toBe(initialAgentSettings.instructions) // Unchanged
-      expect(agentSettings?.revision).toBe(initialAgentSettings.revision) // Unchanged
+      const updatedAgent = await repositories.agentRepository.findOne({
+        where: { id: agent.id },
+      })
+      expect(updatedAgent?.name).toBe("Updated Template")
+
+      // Renaming an agent must not create a new settings revision.
+      const lastAgentSettings = await agentSettingsService.getLast({
+        connectScope: { organizationId: organization.id, projectId: project.id },
+        agentId: agent.id,
+        includesDraft: true,
+      })
+      expect(lastAgentSettings.revision).toBe(agentSettings.revision)
+      expect(lastAgentSettings.isDraft).toBeFalsy()
     })
 
     it("should throw UnprocessableEntityException when name is less than 3 characters", async () => {
       const { organization, project, agent } = await createOrganizationWithAgent(repositories)
 
-      const createWrongfulUpdateAgent = async () =>
-        service.updateAgent({
+      const updateWithTooShortName = async () =>
+        service.updateAgentName({
           connectScope: { organizationId: organization.id, projectId: project.id },
           agentId: agent.id,
-          fieldsToUpdate: { name: "AB" },
+          name: "AB",
         })
 
-      // Act & Assert
-      await expect(createWrongfulUpdateAgent()).rejects.toThrow(UnprocessableEntityException)
-      await expect(createWrongfulUpdateAgent()).rejects.toThrow(
+      await expect(updateWithTooShortName()).rejects.toThrow(UnprocessableEntityException)
+      await expect(updateWithTooShortName()).rejects.toThrow(
         "Agent name must be at least 3 characters long",
       )
-    })
-
-    it("should update greetingMessage and clear it with empty string", async () => {
-      const { organization, project, agent, agentSettings } = await createOrganizationWithAgent(
-        repositories,
-        {},
-      )
-
-      const _afterSet = await service.updateAgent({
-        connectScope: { organizationId: organization.id, projectId: project.id },
-        agentId: agent.id,
-        fieldsToUpdate: { greetingMessage: "New greeting" },
-      })
-      let updatedAgentSettings = await agentSettingsService.getLast({
-        connectScope: {
-          organizationId: organization.id,
-          projectId: project.id,
-        },
-        agentId: agent.id,
-      })
-      expect(updatedAgentSettings.greetingMessage).not.toBe(agentSettings.greetingMessage)
-      expect(updatedAgentSettings.greetingMessage).toBe("New greeting")
-
-      const _afterClear = await service.updateAgent({
-        connectScope: { organizationId: organization.id, projectId: project.id },
-        agentId: agent.id,
-        fieldsToUpdate: { greetingMessage: "" },
-      })
-
-      updatedAgentSettings = await agentSettingsService.getLast({
-        connectScope: {
-          organizationId: organization.id,
-          projectId: project.id,
-        },
-        agentId: agent.id,
-      })
-      expect(updatedAgentSettings.greetingMessage).toBeNull()
-    })
-
-    it("should preserve greetingMessage when not provided in a partial update", async () => {
-      const { organization, project, agent } = await createOrganizationWithAgent(repositories, {
-        agentSettings: { greetingMessage: "Keep me" },
-      })
-
-      await service.updateAgent({
-        connectScope: { organizationId: organization.id, projectId: project.id },
-        agentId: agent.id,
-        fieldsToUpdate: { name: "Renamed" },
-      })
-      const updatedAgentSettings = await agentSettingsService.getLast({
-        connectScope: {
-          organizationId: organization.id,
-          projectId: project.id,
-        },
-        agentId: agent.id,
-      })
-      expect(updatedAgentSettings?.greetingMessage).toBe("Keep me")
-    })
-
-    it("should keep stored tags when switching documentsRagMode to none", async () => {
-      const { organization, project, agent } = await createOrganizationWithAgent(repositories, {
-        agentSettings: { documentsRagMode: DocumentsRagMode.Tags },
-      })
-      const documentTag = documentTagFactory.transient({ organization, project }).build()
-      await setup.getRepository(DocumentTag).save(documentTag)
-
-      await repositories.agentRepository
-        .createQueryBuilder()
-        .relation(Agent, "documentTags")
-        .of(agent.id)
-        .add(documentTag.id)
-
-      await service.updateAgent({
-        connectScope: { organizationId: organization.id, projectId: project.id },
-        agentId: agent.id,
-        fieldsToUpdate: {
-          documentsRagMode: DocumentsRagMode.None,
-        },
-      })
-      const updatedAgentSettings = await agentSettingsService.getLast({
-        connectScope: {
-          organizationId: organization.id,
-          projectId: project.id,
-        },
-        agentId: agent.id,
-      })
-      expect(updatedAgentSettings?.documentsRagMode).toBe(DocumentsRagMode.None)
-
-      const updatedAgent = await repositories.agentRepository.findOne({
-        where: { id: agent.id },
-        relations: ["documentTags"],
-      })
-      expect(updatedAgent?.documentTags.map((documentTag) => documentTag.id)).toEqual([
-        documentTag.id,
-      ])
-    })
-    it("should update resource libraries", async () => {
-      const { organization, project, agent, agentResourceLibraries } =
-        await createOrganizationWithAgent(repositories, {
-          agentSettings: { documentsRagMode: DocumentsRagMode.Tags },
-        })
-      const initialAgent = await repositories.agentRepository.findOne({
-        where: { id: agent.id },
-        relations: ["resourceLibraries"],
-      })
-      expect(initialAgent?.resourceLibraries.map((resourceLib) => resourceLib.id)).toEqual([
-        agentResourceLibraries[0]?.id,
-      ])
-
-      const resourceLibrary1 = await createResourceLibraryForProject({
-        repositories,
-        organization,
-        project,
-      })
-      const resourceLibrary2 = await createResourceLibraryForProject({
-        repositories,
-        organization,
-        project,
-      })
-
-      await service.updateAgent({
-        connectScope: { organizationId: organization.id, projectId: project.id },
-        agentId: agent.id,
-        fieldsToUpdate: {
-          resourceLibraryIds: [resourceLibrary1.id, resourceLibrary2.id],
-        },
-      })
-
-      const updatedAgent = await repositories.agentRepository.findOne({
-        where: { id: agent.id },
-        relations: ["resourceLibraries"],
-      })
-      expect(updatedAgent?.resourceLibraries.map((resourceLib) => resourceLib.id)).toEqual([
-        resourceLibrary1.id,
-        resourceLibrary2.id,
-      ])
     })
   })
 

@@ -12,7 +12,7 @@ import { ConversationAgentSession } from "@/domains/agents/conversation-agent-se
 import { ConversationAgentSessionsModule } from "@/domains/agents/conversation-agent-sessions/conversation-agent-sessions.module"
 import { ExtractionAgentSession } from "@/domains/agents/extraction-agent-sessions/extraction-agent-session.entity"
 import { AgentSettings } from "@/domains/agents/settings/agent-settings.entity"
-import { AgentSettingsService } from "@/domains/agents/settings/agent-settings.service"
+import { AgentSettingsModule } from "@/domains/agents/settings/agent-settings.module"
 import { AgentMessage } from "@/domains/agents/shared/agent-session-messages/agent-message.entity"
 import { AuthModule } from "@/domains/auth/auth.module"
 import { InvitationsModule } from "@/domains/invitations/invitations.module"
@@ -69,6 +69,7 @@ import { TesterSessionFeedback } from "./tester-session-feedbacks/tester-session
     ProjectsModule,
     MembershipsModule,
     AgentsModule,
+    forwardRef(() => AgentSettingsModule),
     forwardRef(() => InvitationsModule),
     UsersModule,
     AuthModule,
@@ -76,7 +77,6 @@ import { TesterSessionFeedback } from "./tester-session-feedbacks/tester-session
   ],
   providers: [
     AgentSessionInCampaignContextResolver,
-    AgentSettingsService,
     CampaignReportGuard,
     OrganizationContextResolver,
     ProjectContextResolver,

@@ -10,6 +10,9 @@ export type MockValue =
   | { type: "object"; value: unknown }
   | { type: "stream"; chunks: string[] }
   | { type: "toolCall"; toolName: string; input: unknown }
+  // A production-shaped generation: text answer followed by a tool call in
+  // the SAME generation (what Gemma emits for fire-and-forget tools).
+  | { type: "textWithToolCall"; text: string; toolName: string; input: unknown }
 
 export type LLMConfig =
   | {
@@ -17,6 +20,9 @@ export type LLMConfig =
       temperature: number
       systemPrompt?: string
       tools?: ToolSet
+      fireAndForgetToolNames?: string[]
+      endOfTurnTools?: ToolSet
+      endOfTurnExecutionCounts?: (toolResult: { toolName: string; output: unknown }) => boolean
       useExtendedTimeouts?: never
     }
   | {
@@ -24,6 +30,27 @@ export type LLMConfig =
       temperature: number
       systemPrompt?: string
       tools?: ToolSet
+      /**
+       * Names of tools in {@link tools} whose output the model never needs
+       * (logging-style tools such as sources). When a tool-loop step only
+       * invokes these, the loop stops instead of running another generation.
+       */
+      fireAndForgetToolNames?: string[]
+      /**
+       * Tools invoked by a forced generation (toolChoice "required") after
+       * the tool loop completes, on EVERY turn (e.g. the mandatory_tool
+       * bookkeeping). Kept out of {@link tools} so the answering loop never
+       * depends on the model volunteering the call.
+       */
+      endOfTurnTools?: ToolSet
+      /**
+       * Decides whether a loop execution of an end-of-turn tool satisfies
+       * the guarantee. Lets the tool declare an execution STALE after the
+       * fact (e.g. a turn summary submitted before the knowledge base call
+       * cannot have cited sources) so the forced retry still runs. Default:
+       * every execution counts.
+       */
+      endOfTurnExecutionCounts?: (toolResult: { toolName: string; output: unknown }) => boolean
       /**
        * Opt in to the extended network timeouts on the underlying provider fetch
        * (see {@link AISDKVertexProvider}). Reserved for long-running calls such as

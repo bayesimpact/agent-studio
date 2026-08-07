@@ -56,7 +56,7 @@ export class PublicChatService {
   ): AsyncGenerator<StreamEvent, void, unknown> {
     const agent = await this.agentRepository.findOne({
       where: { id: publicSession.agentId },
-      relations: ["resourceLibraries"],
+      relations: ["resourceLibraries", "sessionCategories"],
     })
     if (!agent) throw new NotFoundException("Agent not found")
 
@@ -78,6 +78,14 @@ export class PublicChatService {
       agentSettings,
       userContent,
       notifyClient,
+      // Public sessions persist their state on public_agent_session — the
+      // same service implements both stateful-tool interfaces.
+      sessionState: {
+        metadataRecalculator: this.publicAgentSessionsService,
+        resultUpdater: this.publicAgentSessionsService,
+      },
+      sessionResult: publicSession.result ?? null,
+      externalVisitorId: publicSession.externalVisitorId,
     })
   }
 

@@ -22,9 +22,10 @@ export { ConversationAgentSessionsRoutes } from "./agents/conversation-agent-ses
 // Extraction Agent Sessions
 export * from "./agents/extraction-agent-sessions/extraction-agent-sessions.dto"
 export { ExtractionAgentSessionsRoutes } from "./agents/extraction-agent-sessions/extraction-agent-sessions.routes"
+// Agent Settings
+export * from "./agents/settings/agent-settings.dto"
+export { AgentSettingsRoutes } from "./agents/settings/agent-settings.routes"
 // Form Agent Sessions
-// Agent History
-export { AgentHistoryRoutes } from "./agents/settings/agent-history.routes"
 // Agent Session Messages
 export * from "./agents/shared/agent-session-messages/agent-session-messages.dto"
 export { AgentSessionMessagesRoutes } from "./agents/shared/agent-session-messages/agent-session-messages.routes"
@@ -35,6 +36,7 @@ export type * from "./analytics/analytics.dto"
 export { AgentAnalyticsRoutes, AnalyticsRoutes } from "./analytics/analytics.routes"
 // Backoffice
 export type * from "./backoffice/backoffice.dto"
+export { createBackofficeOrganizationSchema } from "./backoffice/backoffice.dto"
 export { BackofficeRoutes } from "./backoffice/backoffice.routes"
 // Document Tags
 export * from "./document-tags/document-tag.dto"
@@ -86,6 +88,8 @@ export { ProjectsRoutes } from "./projects/projects.routes"
 // Public Chat (anonymous embed access)
 export type * from "./public-chat/public-chat.dto"
 export { PublicChatRoutes } from "./public-chat/public-chat.routes"
+// RBAC
+export * from "./rbac/permissions"
 // Resource Libraries
 export * from "./resource-libraries/resource-library.dto"
 export { ResourceLibrariesRoutes } from "./resource-libraries/resource-library.routes"

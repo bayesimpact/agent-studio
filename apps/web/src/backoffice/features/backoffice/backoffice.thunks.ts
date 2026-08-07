@@ -4,6 +4,7 @@ import type { RootState, ThunkExtraArg } from "@/common/store"
 
 import type {
   BackofficeAgentDetail,
+  BackofficeOrganization,
   BackofficeOrganizationDetail,
   BackofficeProjectDetail,
   BackofficeUserDetail,
@@ -24,6 +25,13 @@ const listOrganizations = createAsyncThunk<
 >("backoffice/fetchOrganizations", async (params, { extra: { services } }) => {
   return services.backoffice.listOrganizations(params ?? {})
 })
+
+const createOrganization = createAsyncThunk<BackofficeOrganization, { name: string }, ThunkConfig>(
+  "backoffice/createOrganization",
+  async (params, { extra: { services } }) => {
+    return services.backoffice.createOrganization(params)
+  },
+)
 
 const getOrganization = createAsyncThunk<BackofficeOrganizationDetail, string, ThunkConfig>(
   "backoffice/getOrganization",
@@ -111,6 +119,7 @@ const updateTermsDocuments = createAsyncThunk<
 export const backofficeThunks = {
   listOrganizations,
   getOrganization,
+  createOrganization,
   listAgents,
   getAgent,
   listProjects,

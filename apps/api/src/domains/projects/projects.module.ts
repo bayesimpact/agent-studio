@@ -6,13 +6,11 @@ import { ProjectMembershipContextResolver } from "@/common/context/resolvers/pro
 import { ResourceContextGuard } from "@/common/context/resource-context.guard"
 import { AuthModule } from "@/domains/auth/auth.module"
 import { MembershipsModule } from "@/domains/memberships/memberships.module"
-import { Organization } from "@/domains/organizations/organization.entity"
 import { OrganizationsModule } from "@/domains/organizations/organizations.module"
-import { User } from "@/domains/users/user.entity"
+import { RbacModule } from "@/domains/rbac/rbac.module"
 import { UsersModule } from "@/domains/users/users.module"
 import { AgentsModule } from "../agents/agents.module"
 import { DocumentTagsModule } from "../documents/tags/document-tags.module"
-import { FeatureFlag } from "../feature-flags/feature-flag.entity"
 import { InvitationsModule } from "../invitations/invitations.module"
 import { ProjectMembershipRepository } from "./memberships/project-membership.repository"
 import { ProjectMembershipsController } from "./memberships/project-memberships.controller"
@@ -20,14 +18,14 @@ import { ProjectMembershipsService } from "./memberships/project-memberships.ser
 import { Project } from "./project.entity"
 import { ProjectRepository } from "./project.repository"
 import { ProjectsController } from "./projects.controller"
-import { ProjectsGuard } from "./projects.guard"
 import { ProjectsService } from "./projects.service"
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Project, Organization, User, FeatureFlag]),
+    TypeOrmModule.forFeature([Project]),
     MembershipsModule,
     OrganizationsModule,
+    RbacModule,
     forwardRef(() => AgentsModule),
     forwardRef(() => InvitationsModule),
     forwardRef(() => DocumentTagsModule),
@@ -39,7 +37,6 @@ import { ProjectsService } from "./projects.service"
     ProjectRepository,
     ProjectMembershipRepository,
     ProjectMembershipsService,
-    ProjectsGuard,
     ResourceContextGuard,
     OrganizationContextResolver,
     ProjectContextResolver,

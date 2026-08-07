@@ -30,6 +30,7 @@ export const testerAgentSnapshotFactory = TesterAgentSnapshotFactory.define(({ p
   type: params.type ?? "conversation",
   greetingMessage: params.greetingMessage ?? undefined,
   fillFormEnabled: params.fillFormEnabled ?? false,
+  outputJsonSchema: params.outputJsonSchema ?? undefined,
 }))
 
 type TesterContextTransientParams = {

@@ -72,8 +72,10 @@ export function buildBackofficeData(args: BackofficeStoryArgs): {
   baseSeeds: StoryPreloadedState
 } {
   const user = userFactory.build({
-    isBackofficeAuthorized: args.isBackofficeAuthorized,
-    isTermsManagementAuthorized: args.isTermsManagementAuthorized,
+    globalPermissions: [
+      ...(args.isBackofficeAuthorized ? (["backoffice.read"] as const) : []),
+      ...(args.isTermsManagementAuthorized ? (["backoffice.terms.update"] as const) : []),
+    ],
   })
 
   const organizations: PaginatedBackofficeOrganizations = args.withOrganizations
@@ -180,6 +182,9 @@ export function buildMockBackofficeService(overrides: {
   return {
     async listOrganizations() {
       return organizations
+    },
+    async createOrganization({ name }) {
+      return backofficeOrganizationFactory.build({ name })
     },
     async getOrganization(organizationId) {
       const detail = organizationDetails[organizationId]
