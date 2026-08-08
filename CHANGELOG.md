@@ -8,6 +8,7 @@ This project uses [CalVer](https://calver.org/) (YY.MM.Micro) for product versio
 ## [Unreleased]
 
 ### Added
+- Review campaigns: creating a campaign now asks which published agent version it runs on (defaulting to the latest), and the campaign editor shows and can re-pin that version while the campaign is still a draft; tester sessions run entirely on the pinned version, from the greeting to every agent reply, and the form reviewers grade comes from that same version, so publishing a new version no longer changes what a running campaign collects; existing campaigns are re-pinned to their agent's latest published version
 - Agent settings drafts and publishing: saving any tab of the agent editor now updates a draft version instead of changing the agent directly, and a new Publish button makes the draft the version the agent runs with, with an optional name and description shown in the version history; extraction agents get the Publish button next to the History button of their inline editor; the Publish button is disabled while the editor has unsaved changes
 - Studio playground: the header shows the published version new messages run with, and each agent reply carries a version badge showing which settings version produced it; clicking a badge opens the version history preselected on that version
 - Studio extraction agents: every run carries a version badge showing which settings version it ran with, on the run page and on each entry of the run history; clicking a badge opens the version history preselected on that version

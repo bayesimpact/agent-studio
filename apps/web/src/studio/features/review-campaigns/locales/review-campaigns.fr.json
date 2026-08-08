@@ -48,7 +48,11 @@
         "description": "Description",
         "descriptionPlaceholder": "Que voulons-nous évaluer ?",
         "agent": "Agent ciblé",
-        "agentPlaceholder": "Sélectionnez un agent"
+        "agentPlaceholder": "Sélectionnez un agent",
+        "agentVersion": "Version de l'agent",
+        "agentVersionPlaceholder": "Sélectionnez une version",
+        "agentVersionItem": "v{{revision}} — {{detail}}",
+        "agentVersionUnavailableItem": "v{{revision}} — plus publiée"
       },
       "actions": {
         "create": "Créer la campagne",

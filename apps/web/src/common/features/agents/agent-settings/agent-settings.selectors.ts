@@ -71,3 +71,25 @@ export const selectAgentSettingsHistoryDataByAgentId = ({
 
     return { status: ADS.Fulfilled, error: null, value: filteredSettings }
   })
+
+/**
+ * Published, non-archived revisions per agent id, revision-descending.
+ *
+ * For callers that need several agents at once (the review-campaign form lists every
+ * conversation agent of the project). Agents whose history is not loaded yet are absent
+ * from the record rather than present with an empty list, so callers can tell "no
+ * versions" from "not loaded".
+ */
+export const selectPublishedAgentSettingsByAgentId = createSelector(
+  [selectAgentSettingsHistoryData],
+  (data): Record<string, AgentSettings[]> => {
+    const byAgentId: Record<string, AgentSettings[]> = {}
+    for (const [agentId, historyData] of Object.entries(data)) {
+      if (!ADS.isFulfilled(historyData)) continue
+      byAgentId[agentId] = [...historyData.value]
+        .filter((settings) => !settings.isDraft && !settings.isArchived)
+        .sort((left: AgentSettings, right: AgentSettings) => right.revision - left.revision)
+    }
+    return byAgentId
+  },
+)

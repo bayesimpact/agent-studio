@@ -12,6 +12,7 @@ import type { RequiredConnectScope } from "@/common/entities/connect-required-fi
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
 import { TransactionService } from "@/common/transaction/transaction.service"
 import { Agent } from "@/domains/agents/agent.entity"
+import type { AgentSettings } from "@/domains/agents/settings/agent-settings.entity"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
 import { AgentSettingsService } from "@/domains/agents/settings/agent-settings.service"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
@@ -26,6 +27,7 @@ import { TesterService } from "./tester/tester.service"
 
 export type CreateReviewCampaignFields = {
   agentId: string
+  agentSettingsRevision?: number
   name: string
   description?: string | null
   testerPerSessionQuestions?: ReviewCampaignQuestion[]
@@ -34,6 +36,7 @@ export type CreateReviewCampaignFields = {
 }
 
 export type UpdateReviewCampaignFields = {
+  agentSettingsRevision?: number
   name?: string
   description?: string | null
   testerPerSessionQuestions?: ReviewCampaignQuestion[]
@@ -84,12 +87,13 @@ export class ReviewCampaignsService {
     if (!agent) {
       throw new UnprocessableEntityException(`Agent ${fields.agentId} not found in this project`)
     }
-    const agentSettings = await this.agentSettingsService.getLast({
+    const agentSettings = await this.resolveAgentSettings({
       connectScope,
       agentId: agent.id,
+      revision: fields.agentSettingsRevision,
     })
 
-    return this.reviewCampaignConnectRepository.createAndSave(connectScope, {
+    const campaign = await this.reviewCampaignConnectRepository.createAndSave(connectScope, {
       agentId: fields.agentId,
       agentSettingsId: agentSettings.id,
       name: fields.name.trim(),
@@ -101,6 +105,48 @@ export class ReviewCampaignsService {
       activatedAt: null,
       closedAt: null,
     })
+    campaign.agentSettings = agentSettings
+    return campaign
+  }
+
+  /**
+   * The settings row a campaign runs on. A campaign must run on a stable, published
+   * revision: drafts keep mutating and archived revisions are retired, so both are
+   * refused rather than silently falling back to the latest one.
+   */
+  private async resolveAgentSettings({
+    connectScope,
+    agentId,
+    revision,
+  }: {
+    connectScope: RequiredConnectScope
+    agentId: string
+    revision?: number
+  }): Promise<AgentSettings> {
+    if (revision === undefined) {
+      return this.agentSettingsService.getLast({ connectScope, agentId })
+    }
+    const agentSettings = await this.agentSettingsService.get({
+      connectScope,
+      agentId,
+      revision,
+    })
+    if (!agentSettings) {
+      throw new UnprocessableEntityException(
+        `Agent settings revision ${revision} not found for agent ${agentId}`,
+      )
+    }
+    if (agentSettings.isDraft) {
+      throw new UnprocessableEntityException(
+        `Agent settings revision ${revision} is a draft and cannot be used by a campaign`,
+      )
+    }
+    if (agentSettings.isArchived) {
+      throw new UnprocessableEntityException(
+        `Agent settings revision ${revision} is archived and cannot be used by a campaign`,
+      )
+    }
+    return agentSettings
   }
 
   async listCampaigns(
@@ -116,7 +162,9 @@ export class ReviewCampaignsService {
     connectScope: RequiredConnectScope
     reviewCampaignId: string
   }): Promise<ReviewCampaign | null> {
-    return this.reviewCampaignConnectRepository.getOneById(connectScope, reviewCampaignId)
+    return this.reviewCampaignConnectRepository.getOneById(connectScope, reviewCampaignId, {
+      relations: ["agentSettings"],
+    })
   }
 
   async getDetail({
@@ -156,6 +204,7 @@ export class ReviewCampaignsService {
     const campaign = await this.reviewCampaignConnectRepository.getOneById(
       connectScope,
       reviewCampaignId,
+      { relations: ["agentSettings"] },
     )
     if (!campaign) {
       throw new NotFoundException(`Review campaign ${reviewCampaignId} not found`)
@@ -187,6 +236,15 @@ export class ReviewCampaignsService {
     }
     if (configUpdates.reviewerQuestions !== undefined) {
       campaign.reviewerQuestions = configUpdates.reviewerQuestions
+    }
+    if (configUpdates.agentSettingsRevision !== undefined) {
+      const agentSettings = await this.resolveAgentSettings({
+        connectScope,
+        agentId: campaign.agentId,
+        revision: configUpdates.agentSettingsRevision,
+      })
+      campaign.agentSettingsId = agentSettings.id
+      campaign.agentSettings = agentSettings
     }
 
     if (status !== undefined && status !== campaign.status) {

@@ -10,6 +10,7 @@ import {
 } from "@/common/test/test-database"
 import { removeNullish } from "@/common/utils/remove-nullish"
 import type { Agent } from "@/domains/agents/agent.entity"
+import { agentSettingsFactory } from "@/domains/agents/settings/agent.settings.factory"
 import type { AgentSettings } from "@/domains/agents/settings/agent-settings.entity"
 import { INVITATION_SENDER } from "@/domains/auth/invitation-sender.interface"
 import type { Organization } from "@/domains/organizations/organization.entity"
@@ -148,5 +149,55 @@ describe("ReviewCampaigns - updateOne", () => {
     reviewCampaignId = campaign.id
 
     expectResponse(await subject({ payload: { status: "closed" } }), 409)
+  })
+
+  it("re-pins the agent settings revision while in draft", async () => {
+    const { organization, project, agent, agentSettings } = await createContext()
+    const secondRevision = agentSettingsFactory
+      .transient({ organization, project, agent })
+      .build({ revision: 2 })
+    await repositories.agentSettingsRepository.save(secondRevision)
+    const campaign = await repositories.reviewCampaignRepository.save(
+      reviewCampaignFactory.transient({ organization, project, agent, agentSettings }).build(),
+    )
+    reviewCampaignId = campaign.id
+
+    const response = await subject({ payload: { agentSettingsRevision: 2 } })
+    expectResponse(response, 200)
+    expect(response.body.data).toMatchObject({
+      agentSettingsId: secondRevision.id,
+      agentSettingsRevision: 2,
+    })
+
+    const persisted = await repositories.reviewCampaignRepository.findOne({
+      where: { id: campaign.id },
+    })
+    expect(persisted?.agentSettingsId).toBe(secondRevision.id)
+  })
+
+  it("refuses re-pinning an active campaign", async () => {
+    const { organization, project, agent, agentSettings } = await createContext()
+    await repositories.agentSettingsRepository.save(
+      agentSettingsFactory.transient({ organization, project, agent }).build({ revision: 2 }),
+    )
+    const campaign = await repositories.reviewCampaignRepository.save(
+      reviewCampaignFactory
+        .active()
+        .transient({ organization, project, agent, agentSettings })
+        .build(),
+    )
+    reviewCampaignId = campaign.id
+
+    expectResponse(await subject({ payload: { agentSettingsRevision: 2 } }), 409)
+  })
+
+  it("rejects re-pinning to an unknown revision", async () => {
+    const { organization, project, agent, agentSettings } = await createContext()
+    const campaign = await repositories.reviewCampaignRepository.save(
+      reviewCampaignFactory.transient({ organization, project, agent, agentSettings }).build(),
+    )
+    reviewCampaignId = campaign.id
+
+    expectResponse(await subject({ payload: { agentSettingsRevision: 99 } }), 422)
   })
 })

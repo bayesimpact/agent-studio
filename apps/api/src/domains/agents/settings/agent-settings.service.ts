@@ -62,6 +62,16 @@ export class AgentSettingsService {
     }
     return undefined
   }
+  async getById({
+    connectScope,
+    agentSettingsId,
+  }: {
+    connectScope: RequiredConnectScope
+    agentSettingsId: string
+  }): Promise<AgentSettings | null> {
+    return this.agentSettingsConnectRepository.getOneById(connectScope, agentSettingsId)
+  }
+
   private async getMaxRevision(agentId: string): Promise<number> {
     const last = await this.agentSettingsRepository
       .createQueryBuilder("as")

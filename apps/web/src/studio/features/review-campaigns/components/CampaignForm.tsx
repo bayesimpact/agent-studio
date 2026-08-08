@@ -26,7 +26,7 @@ import { z } from "zod"
 import type { PendingInvitations } from "@/studio/features/invitations/invitations.models"
 import { CampaignStatusBadge } from "./CampaignStatusBadge"
 import { CampaignSummaryPanel } from "./CampaignSummaryPanel"
-import { computeAutoCampaignName } from "./campaign-form.shared"
+import { computeAutoCampaignName, formatAgentVersionLabel } from "./campaign-form.shared"
 import { FeedbackPreview } from "./FeedbackPreview"
 import { ParticipantsList } from "./ParticipantsList"
 import { QuestionListEditor } from "./QuestionListEditor"
@@ -35,15 +35,38 @@ export type CampaignFormValues = {
   name: string
   description: string | null
   agentId: string
+  /**
+   * null until a version is picked. Submitting null is legal: on create the API pins the
+   * agent's latest published revision, and on update it means "leave the pin alone". That
+   * keeps creation possible when the agent's settings history hasn't loaded (or failed).
+   */
+  agentSettingsRevision: number | null
   testerPerSessionQuestions: ReviewCampaignQuestionDto[]
   testerEndOfPhaseQuestions: ReviewCampaignQuestionDto[]
   reviewerQuestions: ReviewCampaignQuestionDto[]
 }
 
+export type CampaignFormAgentVersion = {
+  revision: number
+  name?: string
+  updatedAt: number
+}
+
 export type CampaignFormAgentOption = {
   id: string
   name: string
+  /** Published revisions of this agent, revision-descending. */
+  versions: CampaignFormAgentVersion[]
 }
+
+/**
+ * A row of the version select. Published revisions come straight from the agent options; a
+ * campaign's own pin gets added as `unavailable` when it has left the published list.
+ */
+type AgentVersionOption = CampaignFormAgentVersion | { revision: number; unavailable: true }
+
+/** Stable reference so the no-agent-selected case doesn't allocate a fresh array every render. */
+const EMPTY_VERSIONS: CampaignFormAgentVersion[] = []
 
 type Props = {
   mode: "create" | "edit"
@@ -86,6 +109,7 @@ export function CampaignForm({
     name: z.string().min(1, t("reviewCampaigns:editor.validation.nameRequired")),
     description: z.string().nullable(),
     agentId: z.string().min(1, t("reviewCampaigns:editor.validation.agentRequired")),
+    agentSettingsRevision: z.number().int().nullable(),
     testerPerSessionQuestions: z.array(z.any()),
     testerEndOfPhaseQuestions: z.array(z.any()),
     reviewerQuestions: z.array(z.any()),
@@ -113,6 +137,7 @@ export function CampaignForm({
       name: defaultValues?.name ?? "",
       description: defaultValues?.description ?? "",
       agentId: defaultValues?.agentId ?? "",
+      agentSettingsRevision: defaultValues?.agentSettingsRevision ?? null,
       testerPerSessionQuestions: defaultValues?.testerPerSessionQuestions ?? [],
       testerEndOfPhaseQuestions: defaultValues?.testerEndOfPhaseQuestions ?? [],
       reviewerQuestions: defaultValues?.reviewerQuestions ?? [],
@@ -139,6 +164,49 @@ export function CampaignForm({
     setValue("name", nextName, { shouldDirty: false })
     setLastAutoName(nextName)
   }, [mode, watchedAgentId, agents, t, i18n.language, getValues, setValue, lastAutoName])
+
+  // The version list is keyed off the campaign's own agent in edit mode, not the live
+  // `agentId` field: that field's Select isn't disabled purely by mode (only by
+  // `configLocked`), so a user could visually change it on a draft without the change
+  // ever reaching the API (`UpdateReviewCampaignRequestDto` has no `agentId`). Resolving
+  // versions from `defaultValues?.agentId` there keeps the version list pinned to the
+  // agent that's actually persisted, so it can never offer a revision that belongs to a
+  // different agent than the one the campaign really runs on.
+  const versionsAgentId = mode === "create" ? watchedAgentId : (defaultValues?.agentId ?? "")
+  const selectedAgentVersions =
+    agents.find((agent) => agent.id === versionsAgentId)?.versions ?? EMPTY_VERSIONS
+
+  // Create mode: pin the newest published revision as soon as an agent is picked, so the
+  // user only touches this field when they deliberately want an older version. Never runs
+  // in edit mode, where the seeded default from the campaign is the source of truth.
+  //
+  // `selectedAgentVersions` gets a fresh identity every time the agent options are rebuilt
+  // (any settings history landing, any list refresh), so this only overwrites a value that
+  // isn't a valid choice for the current agent — otherwise a deliberate pick of v1 would be
+  // silently reset to the newest revision while the sheet is open.
+  useEffect(() => {
+    if (mode !== "create") return
+    const currentRevision = getValues("agentSettingsRevision")
+    const isStillSelectable =
+      currentRevision !== null &&
+      selectedAgentVersions.some((version) => version.revision === currentRevision)
+    if (isStillSelectable) return
+    const latestRevision = selectedAgentVersions.reduce<number | null>(
+      (best, version) => (best === null || version.revision > best ? version.revision : best),
+      null,
+    )
+    setValue("agentSettingsRevision", latestRevision, { shouldDirty: false })
+  }, [mode, selectedAgentVersions, setValue, getValues])
+
+  // A campaign can be pinned to a revision that has since been archived, which drops it out
+  // of the published list. Showing it anyway — flagged, so it can't be mistaken for a normal
+  // choice — keeps a locked campaign displaying the version it actually runs on.
+  const pinnedRevision = mode === "edit" ? (defaultValues?.agentSettingsRevision ?? null) : null
+  const versionOptions: AgentVersionOption[] =
+    pinnedRevision !== null &&
+    !selectedAgentVersions.some((version) => version.revision === pinnedRevision)
+      ? [...selectedAgentVersions, { revision: pinnedRevision, unavailable: true }]
+      : selectedAgentVersions
 
   const submitHandler = handleSubmit((values) => {
     onSubmit({
@@ -262,6 +330,46 @@ export function CampaignForm({
               />
               {errors.agentId && (
                 <p className="text-destructive text-sm">{errors.agentId.message}</p>
+              )}
+            </Field>
+
+            <Field>
+              <FieldLabel htmlFor="agentSettingsRevision">
+                {t("reviewCampaigns:editor.fields.agentVersion")}
+              </FieldLabel>
+              <Controller
+                name="agentSettingsRevision"
+                control={control}
+                render={({ field }) => (
+                  <Select
+                    value={field.value !== null ? String(field.value) : undefined}
+                    disabled={configLocked || versionOptions.length === 0}
+                    onValueChange={(value) => {
+                      const parsed = Number.parseInt(value, 10)
+                      if (!Number.isNaN(parsed)) field.onChange(parsed)
+                    }}
+                  >
+                    <SelectTrigger id="agentSettingsRevision">
+                      <SelectValue
+                        placeholder={t("reviewCampaigns:editor.fields.agentVersionPlaceholder")}
+                      />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {versionOptions.map((version) => (
+                        <SelectItem key={version.revision} value={String(version.revision)}>
+                          {"unavailable" in version
+                            ? t("reviewCampaigns:editor.fields.agentVersionUnavailableItem", {
+                                revision: version.revision,
+                              })
+                            : formatAgentVersionLabel({ t, language: i18n.language, version })}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+              />
+              {errors.agentSettingsRevision && (
+                <p className="text-destructive text-sm">{errors.agentSettingsRevision.message}</p>
               )}
             </Field>
           </FieldGroup>

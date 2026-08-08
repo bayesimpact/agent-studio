@@ -10,6 +10,7 @@ import {
 } from "@/common/test/test-database"
 import { removeNullish } from "@/common/utils/remove-nullish"
 import { agentFactory } from "@/domains/agents/agent.factory"
+import { agentSettingsFactory } from "@/domains/agents/settings/agent.settings.factory"
 import { INVITATION_SENDER } from "@/domains/auth/invitation-sender.interface"
 import {
   createOrganizationWithAgent,
@@ -60,12 +61,13 @@ describe("ReviewCampaigns - createOne", () => {
   })
 
   const createContext = async () => {
-    const { organization, project, agent } = await createOrganizationWithAgent(repositories, {
-      user: { auth0Id },
-    })
+    const { organization, project, agent, agentSettings } = await createOrganizationWithAgent(
+      repositories,
+      { user: { auth0Id } },
+    )
     organizationId = organization.id
     projectId = project.id
-    return { organization, project, agent }
+    return { organization, project, agent, agentSettings }
   }
 
   const subject = async (payload: typeof ReviewCampaignsRoutes.createOne.request) =>
@@ -109,5 +111,73 @@ describe("ReviewCampaigns - createOne", () => {
     await repositories.agentRepository.save(otherAgent)
 
     expectResponse(await subject({ payload: { agentId: otherAgent.id, name: "Bad" } }), 422)
+  })
+
+  it("pins the latest published revision and returns it", async () => {
+    const { organization, project, agent } = await createContext()
+    const secondRevision = agentSettingsFactory
+      .transient({ organization, project, agent })
+      .build({ revision: 2 })
+    await repositories.agentSettingsRepository.save(secondRevision)
+
+    const response = await subject({ payload: { agentId: agent.id, name: "My Campaign" } })
+    expectResponse(response, 201)
+    expect(response.body.data).toMatchObject({
+      agentSettingsId: secondRevision.id,
+      agentSettingsRevision: 2,
+    })
+  })
+
+  it("pins the requested revision", async () => {
+    const { organization, project, agent, agentSettings } = await createContext()
+    const secondRevision = agentSettingsFactory
+      .transient({ organization, project, agent })
+      .build({ revision: 2 })
+    await repositories.agentSettingsRepository.save(secondRevision)
+
+    const response = await subject({
+      payload: { agentId: agent.id, name: "Pinned", agentSettingsRevision: 1 },
+    })
+    expectResponse(response, 201)
+    expect(response.body.data).toMatchObject({
+      agentSettingsId: agentSettings.id,
+      agentSettingsRevision: 1,
+    })
+  })
+
+  it("rejects an unknown revision", async () => {
+    const { agent } = await createContext()
+    expectResponse(
+      await subject({ payload: { agentId: agent.id, name: "Bad", agentSettingsRevision: 99 } }),
+      422,
+    )
+  })
+
+  it("rejects a draft revision", async () => {
+    const { organization, project, agent } = await createContext()
+    await repositories.agentSettingsRepository.save(
+      agentSettingsFactory
+        .transient({ organization, project, agent })
+        .build({ revision: 2, isDraft: true }),
+    )
+
+    expectResponse(
+      await subject({ payload: { agentId: agent.id, name: "Bad", agentSettingsRevision: 2 } }),
+      422,
+    )
+  })
+
+  it("rejects an archived revision", async () => {
+    const { organization, project, agent } = await createContext()
+    await repositories.agentSettingsRepository.save(
+      agentSettingsFactory
+        .transient({ organization, project, agent })
+        .build({ revision: 2, isArchived: true }),
+    )
+
+    expectResponse(
+      await subject({ payload: { agentId: agent.id, name: "Bad", agentSettingsRevision: 2 } }),
+      422,
+    )
   })
 })

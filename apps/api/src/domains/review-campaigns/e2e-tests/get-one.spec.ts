@@ -132,4 +132,26 @@ describe("ReviewCampaigns - getOne", () => {
 
     expectResponse(await subject(), 404)
   })
+
+  it("returns the pinned agent settings revision", async () => {
+    const { organization, project, agent, agentSettings } = await createOrganizationWithAgent(
+      repositories,
+      { user: { auth0Id } },
+    )
+    const campaign = reviewCampaignFactory
+      .transient({ organization, project, agent, agentSettings })
+      .build()
+    await repositories.reviewCampaignRepository.save(campaign)
+
+    organizationId = organization.id
+    projectId = project.id
+    reviewCampaignId = campaign.id
+
+    const response = await subject()
+    expectResponse(response, 200)
+    expect(response.body.data).toMatchObject({
+      agentSettingsId: agentSettings.id,
+      agentSettingsRevision: agentSettings.revision,
+    })
+  })
 })

@@ -32,6 +32,10 @@ export type ReviewCampaignDto = {
   organizationId: string
   projectId: string
   agentId: string
+  /** Agent settings row the campaign runs on. */
+  agentSettingsId: string
+  /** Revision of that row, the number shown in the UI. */
+  agentSettingsRevision: number
   name: string
   description: string | null
   status: ReviewCampaignStatus
@@ -65,6 +69,8 @@ export type ReviewCampaignDetailDto = ReviewCampaignDto & {
 
 export type CreateReviewCampaignRequestDto = {
   agentId: string
+  /** Published revision to pin. Omitted means the agent's latest published revision. */
+  agentSettingsRevision?: number
   name: string
   description?: string | null
   testerPerSessionQuestions?: ReviewCampaignQuestionDto[]
@@ -73,6 +79,8 @@ export type CreateReviewCampaignRequestDto = {
 }
 
 export type UpdateReviewCampaignRequestDto = {
+  /** Re-pin the campaign to another published revision. Rejected once out of draft. */
+  agentSettingsRevision?: number
   name?: string
   description?: string | null
   testerPerSessionQuestions?: ReviewCampaignQuestionDto[]

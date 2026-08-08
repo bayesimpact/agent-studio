@@ -120,6 +120,8 @@ function toReviewCampaignDto(campaign: ReviewCampaign): ReviewCampaignDto {
     organizationId: campaign.organizationId,
     projectId: campaign.projectId,
     agentId: campaign.agentId,
+    agentSettingsId: campaign.agentSettingsId,
+    agentSettingsRevision: campaign.agentSettings.revision,
     name: campaign.name,
     description: campaign.description,
     status: campaign.status,

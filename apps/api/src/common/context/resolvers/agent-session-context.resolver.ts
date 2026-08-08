@@ -41,8 +41,15 @@ export class AgentSessionContextResolver implements ContextResolver {
     let agentSession: ConversationAgentSession | ExtractionAgentSession | undefined
     switch (requestWithAgent.agent.type) {
       case "conversation":
+        // The campaign a session belongs to, when any, pins the settings revision the
+        // session must keep running on. Loading it here keeps that decision available to
+        // every consumer of the session context (streaming included) without those
+        // consumers reaching into the review-campaigns domain themselves.
         agentSession =
-          (await this.conversationAgentSessionRepository.findOne({ where })) ?? undefined
+          (await this.conversationAgentSessionRepository.findOne({
+            where,
+            relations: { reviewCampaign: true },
+          })) ?? undefined
         break
       case "extraction":
         // The settings are loaded with the run: its DTO exposes the revision it ran with.

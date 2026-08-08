@@ -1,4 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite"
+import { agentSettingsFactory } from "@/common/features/agents/agent-settings/agent-settings.factory"
+import type { Agent } from "@/common/features/agents/agents.models"
 import { buildDecorator, render } from "@/stories/decorators"
 import {
   buildStudioData,
@@ -46,6 +48,18 @@ function buildMockReviewCampaignsService(
     async deleteOne() {},
     async revokeMembership() {},
   }
+}
+
+function buildAgentHistorySeeds(agents: Agent[]) {
+  return agents.map((agent) =>
+    seed.studio.agentHistory({
+      agentId: agent.id,
+      versions: [
+        agentSettingsFactory.transient({ agent }).build({ revision: 2, name: "Clearer greeting" }),
+        agentSettingsFactory.transient({ agent }).build({ revision: 1, name: "Initial version" }),
+      ],
+    }),
+  )
 }
 
 const meta = {
@@ -97,7 +111,11 @@ export const Default: Story = {
           ]
         : []
       return {
-        state: mergeSeeds(baseSeeds, seed.studio.reviewCampaigns(campaigns)),
+        state: mergeSeeds(
+          baseSeeds,
+          ...buildAgentHistorySeeds(agents),
+          seed.studio.reviewCampaigns(campaigns),
+        ),
         services: {
           reviewCampaigns: buildMockReviewCampaignsService({ campaigns }),
         },
@@ -157,7 +175,11 @@ export const WithData: Story = {
           ]
         : []
       return {
-        state: mergeSeeds(baseSeeds, seed.studio.reviewCampaigns(campaigns)),
+        state: mergeSeeds(
+          baseSeeds,
+          ...buildAgentHistorySeeds(agents),
+          seed.studio.reviewCampaigns(campaigns),
+        ),
 
         services: {
           reviewCampaigns: buildMockReviewCampaignsService({
