@@ -13,11 +13,17 @@ interface State {
    * from the draft-first default, which is the version a tester wants nine times out of ten.
    */
   playgroundRevisionBySessionId: Record<string, number>
+  /**
+   * Version an extraction runs, per agent. Keyed by agent rather than by session because the
+   * choice is made before any run exists. Not persisted, for the same reason as above.
+   */
+  extractionRevisionByAgentId: Record<string, number>
 }
 
 const initialState: State = {
   history: {},
   playgroundRevisionBySessionId: {},
+  extractionRevisionByAgentId: {},
 }
 
 const slice = createSlice({
@@ -32,6 +38,12 @@ const slice = createSlice({
       action: PayloadAction<{ agentSessionId: string; revision: number }>,
     ) => {
       state.playgroundRevisionBySessionId[action.payload.agentSessionId] = action.payload.revision
+    },
+    setExtractionRevision: (
+      state,
+      action: PayloadAction<{ agentId: string; revision: number }>,
+    ) => {
+      state.extractionRevisionByAgentId[action.payload.agentId] = action.payload.revision
     },
   },
   extraReducers: (builder) => {

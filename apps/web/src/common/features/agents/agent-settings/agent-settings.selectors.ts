@@ -10,6 +10,9 @@ const selectAgentSettingsHistoryData = (state: RootState) => state.agentSettings
 const selectPlaygroundRevisions = (state: RootState) =>
   state.agentSettings.playgroundRevisionBySessionId
 
+const selectExtractionRevisions = (state: RootState) =>
+  state.agentSettings.extractionRevisionByAgentId
+
 // Current Agent settings by agent ID
 export const selectAgentSettingsDataByAgentId = ({
   agentId,
@@ -96,6 +99,25 @@ export const selectPlaygroundRevision = ({
       return resolveEffectiveRevision({
         versions: agentHistory.value,
         chosenRevision: revisionBySessionId[agentSessionId],
+      })
+    },
+  )
+
+/**
+ * Revision an extraction run is started with for this agent. Keyed by agent because the choice is
+ * made before a run exists. `undefined` while the history is still loading — callers must then
+ * send no revision and let the API apply its own draft-first default.
+ */
+export const selectExtractionRevision = ({ agentId }: { agentId: string }) =>
+  createSelector(
+    [selectAgentSettingsHistoryData, selectExtractionRevisions],
+    (history, revisionByAgentId): number | undefined => {
+      const agentHistory = history[agentId]
+      if (!agentHistory || !ADS.isFulfilled(agentHistory)) return undefined
+
+      return resolveEffectiveRevision({
+        versions: agentHistory.value,
+        chosenRevision: revisionByAgentId[agentId],
       })
     },
   )
