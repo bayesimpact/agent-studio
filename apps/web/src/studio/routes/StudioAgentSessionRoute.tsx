@@ -5,30 +5,36 @@ import { GridHeader } from "@/common/components/grid/Grid"
 import type { ConversationAgentSession } from "@/common/features/agents/agent-sessions/conversation/conversation-agent-sessions.models"
 import { selectConversationSubSessionsBySessionId } from "@/common/features/agents/agent-sessions/conversation/conversation-agent-sessions.selectors"
 import type { AgentSessionMessage } from "@/common/features/agents/agent-sessions/shared/agent-session-messages/agent-session-messages.models"
-import { selectCurrentMessagesData } from "@/common/features/agents/agent-sessions/shared/agent-session-messages/agent-session-messages.selectors"
+import {
+  selectCurrentMessagesData,
+  selectStreaming,
+} from "@/common/features/agents/agent-sessions/shared/agent-session-messages/agent-session-messages.selectors"
 import { AgentSessionMessages } from "@/common/features/agents/agent-sessions/shared/agent-session-messages/components/AgentSessionMessages"
 import {
-  findPublishedVersion,
+  findVersion,
   resolveMessageRevision,
 } from "@/common/features/agents/agent-settings/agent-settings.functions"
 import {
   selectAgentSettingsDataByAgentId,
   selectAgentSettingsHistoryDataByAgentId,
+  selectPlaygroundRevision,
 } from "@/common/features/agents/agent-settings/agent-settings.selectors"
+import { agentSettingsActions } from "@/common/features/agents/agent-settings/agent-settings.slice"
 import { selectCurrentAgentData } from "@/common/features/agents/agents.selectors"
 import { getAgentIcon } from "@/common/features/agents/components/AgentIcon"
 import { useAbility } from "@/common/hooks/use-ability"
 import { useGetAgentRoute } from "@/common/hooks/use-get-path"
 import { useValue } from "@/common/hooks/use-value"
-import { useAppSelector } from "@/common/store/hooks"
+import { useAppDispatch, useAppSelector } from "@/common/store/hooks"
 import { buildSince } from "@/common/utils/build-date"
 import { AgentRevisionBadge } from "@/studio/features/agents/agent-settings/components/AgentRevisionBadge"
+import { AgentSettingsVersionSelect } from "@/studio/features/agents/agent-settings/components/AgentSettingsVersionSelect"
 import { AgentSessionActions } from "../features/agents/components/AgentSessionActions"
 
 type AgentSession = ConversationAgentSession
 export function StudioAgentSessionRoute({ agentSession }: { agentSession: AgentSession }) {
   const agent = useValue(selectCurrentAgentData)
-  const agentSettings = useValue(selectAgentSettingsDataByAgentId({ agentId: agent.id }))
+  const publishedSettings = useValue(selectAgentSettingsDataByAgentId({ agentId: agent.id }))
   const messages = useValue(selectCurrentMessagesData)
   const selectSubSessions = useMemo(
     () => selectConversationSubSessionsBySessionId(agentSession.id),
@@ -38,6 +44,7 @@ export function StudioAgentSessionRoute({ agentSession }: { agentSession: AgentS
 
   const { t } = useTranslation()
   const navigate = useNavigate()
+  const dispatch = useAppDispatch()
   const agentRoute = useGetAgentRoute()
 
   const Icon = getAgentIcon(agent.type)
@@ -53,11 +60,22 @@ export function StudioAgentSessionRoute({ agentSession }: { agentSession: AgentS
     selectAgentSettingsHistoryDataByAgentId({ agentId: agent.id, includeDraft: true }),
   )
 
-  const publishedVersion = findPublishedVersion(versions)
+  const selectPlayground = useMemo(
+    () => selectPlaygroundRevision({ agentId: agent.id, agentSessionId: agentSession.id }),
+    [agent.id, agentSession.id],
+  )
+  const runningRevision = useAppSelector(selectPlayground)
+  const isStreaming = useAppSelector(selectStreaming)
+
+  // The fillForm panel must describe the schema of the version being run, not of the published
+  // one, or a draft that changed the form renders the wrong questions.
+  const runningSettings =
+    (runningRevision !== undefined ? findVersion(versions, runningRevision) : undefined) ??
+    publishedSettings
 
   const renderMessageVersion = (message: AgentSessionMessage) => {
     if (!canManageAgent) return null
-    const revision = resolveMessageRevision(message, publishedVersion?.revision)
+    const revision = resolveMessageRevision(message, runningRevision)
     if (revision === undefined) return null
     return (
       <AgentRevisionBadge
@@ -79,14 +97,21 @@ export function StudioAgentSessionRoute({ agentSession }: { agentSession: AgentS
             <span className="capitalize-first">{agent.name}</span> •
             <span className="capitalize-first">{t(`agent:create.typeDialog.${agent.type}`)}</span>
             <Icon /> • {date}
-            {canManageAgent && publishedVersion && (
+            {canManageAgent && versions.length > 0 && (
               <>
                 •
-                <AgentRevisionBadge
-                  agent={agent}
-                  revision={publishedVersion.revision}
+                <AgentSettingsVersionSelect
                   versions={versions}
-                  tooltipKey="headerRevisionTooltip"
+                  revision={runningRevision}
+                  disabled={isStreaming}
+                  onRevisionChange={(revision) =>
+                    dispatch(
+                      agentSettingsActions.setPlaygroundRevision({
+                        agentSessionId: agentSession.id,
+                        revision,
+                      }),
+                    )
+                  }
                 />
               </>
             )}
@@ -101,7 +126,7 @@ export function StudioAgentSessionRoute({ agentSession }: { agentSession: AgentS
           messages={messages}
           formSubSessions={formSubSessions}
           formResultSchema={
-            agentSettings.fillFormEnabled ? agentSettings.outputJsonSchema : undefined
+            runningSettings.fillFormEnabled ? runningSettings.outputJsonSchema : undefined
           }
           renderMessageVersion={renderMessageVersion}
         />
