@@ -4,6 +4,7 @@ import {
   type AgentCsvExtractionRunRecordDto,
   type AgentCsvExtractionRunStatusChangedEventDto,
   AgentCsvExtractionRunsRoutes,
+  type ProjectMembershipRoleDto,
 } from "@caseai-connect/api-contracts"
 import {
   Body,
@@ -118,13 +119,15 @@ export class AgentCsvExtractionRunsController {
   }: {
     connectScope: RequiredConnectScope
     agentId: string
-    role: string | undefined
+    role: ProjectMembershipRoleDto | undefined
     revision: number | undefined
   }): Promise<AgentSettings> {
     if (revision === undefined) {
       return this.agentSettingsService.getLast({ connectScope, agentId })
     }
-    if (!Number.isInteger(revision)) {
+    // `agent_settings.revision` is a Postgres `integer`; anything outside its 32-bit signed range
+    // reaches TypeORM as-is and produces a driver error instead of a clean rejection here.
+    if (!(Number.isInteger(revision) && revision > 0 && revision <= 2147483647)) {
       throw new ForbiddenException("Settings version must be an integer")
     }
     if (role !== "admin" && role !== "owner") {

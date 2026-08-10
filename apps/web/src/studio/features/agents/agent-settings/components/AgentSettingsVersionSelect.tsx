@@ -12,7 +12,8 @@ import { findPublishedVersion } from "@/common/features/agents/agent-settings/ag
 import type { AgentSettings } from "@/common/features/agents/agent-settings/agent-settings.models"
 import { selectAgentSettingsHistoryDataByAgentId } from "@/common/features/agents/agent-settings/agent-settings.selectors"
 import { useAbility } from "@/common/hooks/use-ability"
-import { useValue } from "@/common/hooks/use-value"
+import { ADS } from "@/common/store/async-data-status"
+import { useAppSelector } from "@/common/store/hooks"
 import { buildDate } from "@/common/utils/build-date"
 
 /**
@@ -47,11 +48,20 @@ export function AgentSettingsVersionSelect({
   const { abilities } = useAbility()
   const canManageAgent = abilities.canManageAgent({ agentId })
 
-  const versions = useValue(
+  // The extraction routes render before their settings history is guaranteed to be loaded (a
+  // hard reload or deep link can land here while the fetch is still in flight), and never fetch
+  // it at all for a member who cannot manage the agent. The playground route always has a
+  // fulfilled history by the time this component renders, so this guard changes nothing there,
+  // but `useValue` would throw in both extraction cases, taking the screen down with it.
+  const versionsData = useAppSelector(
     selectAgentSettingsHistoryDataByAgentId({ agentId, includeDraft: true }),
   )
 
-  if (!canManageAgent || versions.length < 2) {
+  if (!canManageAgent) return null
+  if (!ADS.isFulfilled(versionsData)) return null
+  const versions = versionsData.value
+
+  if (versions.length < 2) {
     return null
   }
 
@@ -79,7 +89,7 @@ export function AgentSettingsVersionSelect({
         const parsed = Number.parseInt(value, 10)
         if (!Number.isNaN(parsed)) onChange(parsed)
       }}
-      disabled={disabled || versions.length < 2}
+      disabled={disabled}
     >
       <SelectTrigger
         size="sm"

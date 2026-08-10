@@ -216,4 +216,14 @@ describe("ExtractionAgentSessions - executeOne settings version", () => {
 
     expectResponse(response, 403)
   })
+
+  it("rejects a revision outside the Postgres integer range", async () => {
+    // `agent_settings.revision` is a Postgres `integer`; anything past its 32-bit signed range
+    // must be turned away here rather than surface as a driver range error.
+    await createContext()
+
+    const response = await subject({ agentSettingsRevision: 9999999999 })
+
+    expectResponse(response, 403)
+  })
 })

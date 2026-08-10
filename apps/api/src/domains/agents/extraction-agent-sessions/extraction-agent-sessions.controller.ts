@@ -65,7 +65,16 @@ export class ExtractionAgentSessionsController {
   ): Promise<typeof ExtractionAgentSessionsRoutes.executeOne.response> {
     const { documentId, type, agentSettingsRevision } = payload
 
-    if (agentSettingsRevision !== undefined && !Number.isInteger(agentSettingsRevision)) {
+    // `agent_settings.revision` is a Postgres `integer`; anything outside its 32-bit signed range
+    // reaches TypeORM as-is and produces a driver error instead of a clean rejection here.
+    if (
+      agentSettingsRevision !== undefined &&
+      !(
+        Number.isInteger(agentSettingsRevision) &&
+        agentSettingsRevision > 0 &&
+        agentSettingsRevision <= 2147483647
+      )
+    ) {
       throw new ForbiddenException("Settings version must be an integer")
     }
     if (agentSettingsRevision !== undefined && type !== "playground") {

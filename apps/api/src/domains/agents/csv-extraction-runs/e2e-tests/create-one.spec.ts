@@ -167,6 +167,27 @@ describe("AgentCsvExtractionRuns - createOne", () => {
     expectResponse(await subject(2), 403)
   })
 
+  it("lets a plain member create a run when asking for no revision", async () => {
+    // Positive control for the case above: `AgentCsvExtractionRunPolicy.canCreate()` is only
+    // `canAccess()`, so a plain member can create a run as long as they don't choose a version.
+    // Without this, a policy change that quietly blocked members here would go unnoticed while
+    // the 403 test above kept passing.
+    await createContext("member")
+
+    const response = await subject()
+
+    expectResponse(response, 201)
+    expect(response.body.data.agentSettingsId).toBe(context.agentSettings.id)
+  })
+
+  it("rejects a revision outside the Postgres integer range", async () => {
+    // `agent_settings.revision` is a Postgres `integer`; anything past its 32-bit signed range
+    // must be turned away here rather than surface as a driver range error.
+    await createContext()
+
+    expectResponse(await subject(9999999999), 403)
+  })
+
   it("returns 404 for a revision the agent does not have", async () => {
     await createContext()
 

@@ -70,12 +70,17 @@ beforeEach(() => {
 describe("executeOne", () => {
   it("carries the chosen revision in Studio", async () => {
     mockedIsStudioInterface.mockReturnValue(true)
-    const versions = [agentSettingsFactory.transient({ agent }).build({ revision: 2 })]
+    // The draft sits at a different revision than the explicit choice below: if the thunk ignored
+    // the choice and fell back to the draft-first default, it would send revision 3, not 1.
+    const versions = [
+      agentSettingsFactory.transient({ agent }).build({ revision: 3, isDraft: true }),
+      agentSettingsFactory.transient({ agent }).build({ revision: 1 }),
+    ]
 
-    await run(buildState({ history: { [agentId]: versions }, chosenRevision: 2 }))
+    await run(buildState({ history: { [agentId]: versions }, chosenRevision: 1 }))
 
     expect(executeOne).toHaveBeenCalledWith(
-      expect.objectContaining({ agentSettingsRevision: 2, type: "playground" }),
+      expect.objectContaining({ agentSettingsRevision: 1, type: "playground" }),
     )
   })
 
