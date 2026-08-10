@@ -103,19 +103,19 @@ export function resolveEffectiveRevision({
 /**
  * Revision to label a message with: the one the API recorded on it.
  *
- * Messages built client-side during streaming have no revision yet and are never refetched,
- * so they fall back to the published revision — which is exactly what streaming ran. Those
- * are recognisable by having no `createdAt`; every persisted message carries one.
+ * Messages built client-side during streaming have no revision yet and are never refetched, so
+ * they fall back to `fallbackRevision` — the version the playground was set to when the stream
+ * started, which is exactly what produced the answer.
  *
  * A persisted message with no revision must NOT fall back: labelling an old message with the
- * published revision would claim it is the latest version. Returns `undefined` instead, so
- * the caller hides the badge rather than showing a wrong number.
+ * running revision would claim it is the current version. Returns `undefined` instead, so the
+ * caller hides the badge rather than showing a wrong number.
  */
 export function resolveMessageRevision(
   message: AgentSessionMessage,
-  versions: AgentSettings[],
+  fallbackRevision: number | undefined,
 ): number | undefined {
   if (message.agentRevision !== undefined) return message.agentRevision
   const isPersisted = message.createdAt !== undefined
-  return isPersisted ? undefined : findPublishedVersion(versions)?.revision
+  return isPersisted ? undefined : fallbackRevision
 }

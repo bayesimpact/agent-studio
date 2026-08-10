@@ -53,9 +53,11 @@ export function StudioAgentSessionRoute({ agentSession }: { agentSession: AgentS
     selectAgentSettingsHistoryDataByAgentId({ agentId: agent.id, includeDraft: true }),
   )
 
+  const publishedVersion = findPublishedVersion(versions)
+
   const renderMessageVersion = (message: AgentSessionMessage) => {
     if (!canManageAgent) return null
-    const revision = resolveMessageRevision(message, versions)
+    const revision = resolveMessageRevision(message, publishedVersion?.revision)
     if (revision === undefined) return null
     return (
       <AgentRevisionBadge
@@ -66,8 +68,6 @@ export function StudioAgentSessionRoute({ agentSession }: { agentSession: AgentS
       />
     )
   }
-
-  const publishedVersion = findPublishedVersion(versions)
 
   return (
     <div className="flex flex-col h-full">

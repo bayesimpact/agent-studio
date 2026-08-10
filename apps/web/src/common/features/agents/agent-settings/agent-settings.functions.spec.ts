@@ -49,41 +49,40 @@ describe("resolveMessageRevision", () => {
   it("uses the revision recorded on the message", () => {
     const message = agentSessionMessageFactory.build({ role: "assistant", agentRevision: 3 })
 
-    expect(resolveMessageRevision(message, buildVersions({ revision: 4 }))).toBe(3)
+    expect(resolveMessageRevision(message, 4)).toBe(3)
   })
 
-  it("labels a still-unsaved streamed message with the published revision", () => {
-    // Messages built client-side during streaming have no `createdAt` and no revision;
-    // streaming always runs the latest published settings, so that is the correct label.
+  it("labels a still-unsaved streamed message with the version being run", () => {
+    // Messages built client-side during streaming have no `createdAt` and no revision. The
+    // caller passes whichever version the playground is currently set to, which is what the
+    // stream ran with — not necessarily the published one, now that a draft can be selected.
     const message = agentSessionMessageFactory.build({ role: "assistant" })
-    const versions = buildVersions({ revision: 5, isDraft: true }, { revision: 4 })
 
-    expect(resolveMessageRevision(message, versions)).toBe(4)
+    expect(resolveMessageRevision(message, 5)).toBe(5)
   })
 
   it("hides the badge for a server-loaded message with no revision", () => {
     // A persisted message always has `createdAt`. If its revision is missing the transport
-    // dropped it, and claiming the published revision would mislabel an old message as
-    // the latest version — so report nothing instead.
+    // dropped it, and claiming the running revision would mislabel an old message — so report
+    // nothing instead.
     const message = agentSessionMessageFactory.build({
       role: "assistant",
       createdAt: Date.now() - 1000 * 60 * 60,
     })
-    const versions = buildVersions({ revision: 4 }, { revision: 1 })
 
-    expect(resolveMessageRevision(message, versions)).toBeUndefined()
+    expect(resolveMessageRevision(message, 4)).toBeUndefined()
   })
 
-  it("returns undefined when there is no recorded revision and no published version", () => {
+  it("returns undefined when there is no recorded revision and no fallback", () => {
     const message = agentSessionMessageFactory.build({ role: "assistant" })
 
-    expect(resolveMessageRevision(message, [])).toBeUndefined()
+    expect(resolveMessageRevision(message, undefined)).toBeUndefined()
   })
 
   it("keeps a recorded revision that is absent from the history list", () => {
     const message = agentSessionMessageFactory.build({ role: "assistant", agentRevision: 2 })
 
-    expect(resolveMessageRevision(message, buildVersions({ revision: 4 }))).toBe(2)
+    expect(resolveMessageRevision(message, 4)).toBe(2)
   })
 })
 
