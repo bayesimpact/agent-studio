@@ -7,11 +7,11 @@ import { selectCurrentMessagesData } from "@/common/features/agents/agent-sessio
 import { AgentSessionMessages } from "@/common/features/agents/agent-sessions/shared/agent-session-messages/components/AgentSessionMessages"
 import { selectCurrentAgentData } from "@/common/features/agents/agents.selectors"
 import { getAgentIcon } from "@/common/features/agents/components/AgentIcon"
+import { DeleteAgentSessionButton } from "@/common/features/agents/components/DeleteAgentSessionButton"
 import { useGetAgentRoute } from "@/common/hooks/use-get-path"
 import { useValue } from "@/common/hooks/use-value"
 import { useAppSelector } from "@/common/store/hooks"
 import { buildSince } from "@/common/utils/build-date"
-import { AgentSessionActions } from "@/studio/features/agents/components/AgentSessionActions"
 
 type AgentSession = ConversationAgentSession
 
@@ -42,7 +42,7 @@ export function DeskAgentSessionRoute({ agentSession }: { agentSession: AgentSes
             <Icon />
           </div>
         }
-        action={<AgentSessionActions agent={agent} agentSession={agentSession} />}
+        action={<DeleteAgentSessionButton agent={agent} agentSession={agentSession} />}
       />
 
       <div className="flex-1">

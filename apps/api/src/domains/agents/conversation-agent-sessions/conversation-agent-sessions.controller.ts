@@ -138,6 +138,7 @@ export class ConversationAgentSessionsController {
 
 function toDto(agentSessionType: BaseAgentSessionType) {
   return (entity: ConversationAgentSession): ConversationAgentSessionDto => {
+    // FIXME: should use this.permissionService.listGlobalPermissions(user.id) to determine if the user can view the trace
     const traceUrl = agentSessionType === "live" ? undefined : getTraceUrl(entity.traceId)
     return {
       id: entity.id,

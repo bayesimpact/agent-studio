@@ -138,6 +138,7 @@
       "revisionBadgeAria": "Version {{revision}} des paramètres de l'agent",
       "messageRevisionTooltip": "Répondu avec la version {{revision}}",
       "runRevisionTooltip": "Extrait avec la version {{revision}}",
+      "headerRevisionTooltip": "Les nouveaux messages utilisent la version {{revision}}",
       "compareWithPrevious": "Changements de cette version",
       "compareWithCurrent": "Comparer avec l'actuelle",
       "compareWithDraft": "Comparer avec le brouillon",

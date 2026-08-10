@@ -5,10 +5,7 @@ import { GridHeader } from "@/common/components/grid/Grid"
 import type { ConversationAgentSession } from "@/common/features/agents/agent-sessions/conversation/conversation-agent-sessions.models"
 import { selectConversationSubSessionsBySessionId } from "@/common/features/agents/agent-sessions/conversation/conversation-agent-sessions.selectors"
 import type { AgentSessionMessage } from "@/common/features/agents/agent-sessions/shared/agent-session-messages/agent-session-messages.models"
-import {
-  selectCurrentMessagesData,
-  selectStreaming,
-} from "@/common/features/agents/agent-sessions/shared/agent-session-messages/agent-session-messages.selectors"
+import { selectCurrentMessagesData } from "@/common/features/agents/agent-sessions/shared/agent-session-messages/agent-session-messages.selectors"
 import { AgentSessionMessages } from "@/common/features/agents/agent-sessions/shared/agent-session-messages/components/AgentSessionMessages"
 import {
   findVersion,
@@ -19,17 +16,16 @@ import {
   selectAgentSettingsHistoryDataByAgentId,
   selectPlaygroundRevision,
 } from "@/common/features/agents/agent-settings/agent-settings.selectors"
-import { agentSettingsActions } from "@/common/features/agents/agent-settings/agent-settings.slice"
 import { selectCurrentAgentData } from "@/common/features/agents/agents.selectors"
-import { getAgentIcon } from "@/common/features/agents/components/AgentIcon"
+import { DeleteAgentSessionButton } from "@/common/features/agents/components/DeleteAgentSessionButton"
 import { useAbility } from "@/common/hooks/use-ability"
 import { useGetAgentRoute } from "@/common/hooks/use-get-path"
 import { useValue } from "@/common/hooks/use-value"
-import { useAppDispatch, useAppSelector } from "@/common/store/hooks"
+import { useAppSelector } from "@/common/store/hooks"
 import { buildSince } from "@/common/utils/build-date"
+import { TraceUrlOpener } from "@/studio/components/TraceUrlOpener"
 import { AgentRevisionBadge } from "@/studio/features/agents/agent-settings/components/AgentRevisionBadge"
 import { AgentSettingsVersionSelect } from "@/studio/features/agents/agent-settings/components/AgentSettingsVersionSelect"
-import { AgentSessionActions } from "../features/agents/components/AgentSessionActions"
 
 type AgentSession = ConversationAgentSession
 export function StudioAgentSessionRoute({ agentSession }: { agentSession: AgentSession }) {
@@ -44,10 +40,7 @@ export function StudioAgentSessionRoute({ agentSession }: { agentSession: AgentS
 
   const { t } = useTranslation()
   const navigate = useNavigate()
-  const dispatch = useAppDispatch()
   const agentRoute = useGetAgentRoute()
-
-  const Icon = getAgentIcon(agent.type)
 
   const date = buildSince(agentSession.updatedAt)
 
@@ -65,7 +58,6 @@ export function StudioAgentSessionRoute({ agentSession }: { agentSession: AgentS
     [agent.id, agentSession.id],
   )
   const runningRevision = useAppSelector(selectPlayground)
-  const isStreaming = useAppSelector(selectStreaming)
 
   // The fillForm panel must describe the schema of the version being run, not of the published
   // one, or a draft that changed the form renders the wrong questions.
@@ -87,6 +79,14 @@ export function StudioAgentSessionRoute({ agentSession }: { agentSession: AgentS
     )
   }
 
+  const renderVersionSelect = (
+    <AgentSettingsVersionSelect
+      agentId={agent.id}
+      agentSessionId={agentSession.id}
+      revision={runningRevision}
+    />
+  )
+
   return (
     <div className="flex flex-col h-full">
       <GridHeader
@@ -94,30 +94,30 @@ export function StudioAgentSessionRoute({ agentSession }: { agentSession: AgentS
         title={t("agent:playground")}
         description={
           <div className="flex items-center gap-2 flex-wrap">
-            <span className="capitalize-first">{agent.name}</span> •
-            <span className="capitalize-first">{t(`agent:create.typeDialog.${agent.type}`)}</span>
-            <Icon /> • {date}
-            {canManageAgent && versions.length > 0 && (
+            {date}
+            {canManageAgent && runningRevision && (
               <>
+                {" "}
                 •
-                <AgentSettingsVersionSelect
-                  versions={versions}
+                <AgentRevisionBadge
+                  agent={agent}
                   revision={runningRevision}
-                  disabled={isStreaming}
-                  onRevisionChange={(revision) =>
-                    dispatch(
-                      agentSettingsActions.setPlaygroundRevision({
-                        agentSessionId: agentSession.id,
-                        revision,
-                      }),
-                    )
-                  }
+                  versions={versions}
+                  tooltipKey="headerRevisionTooltip"
                 />
               </>
             )}
           </div>
         }
-        action={<AgentSessionActions agent={agent} agentSession={agentSession} />}
+        action={
+          <>
+            <TraceUrlOpener
+              buttonProps={{ variant: "secondary" }}
+              traceUrl={agentSession.traceUrl}
+            />
+            <DeleteAgentSessionButton agent={agent} agentSession={agentSession} />
+          </>
+        }
       />
 
       <div className="flex-1">
@@ -129,6 +129,7 @@ export function StudioAgentSessionRoute({ agentSession }: { agentSession: AgentS
             runningSettings.fillFormEnabled ? runningSettings.outputJsonSchema : undefined
           }
           renderMessageVersion={renderMessageVersion}
+          renderVersionSelect={renderVersionSelect}
         />
       </div>
     </div>
