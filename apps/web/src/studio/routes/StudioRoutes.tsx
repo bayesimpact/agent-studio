@@ -14,6 +14,7 @@ import { ErrorRoute } from "@/common/routes/ErrorRoute"
 import { OrganizationRoute } from "@/common/routes/OrganizationRoute"
 import { ProjectRoute } from "@/common/routes/ProjectRoute"
 import { CurrentAgentRevisionBadge } from "@/studio/features/agents/agent-settings/components/CurrentAgentRevisionBadge"
+import { ExtractionVersionSelect } from "@/studio/features/agents/agent-settings/components/ExtractionVersionSelect"
 import {
   ConversationAgentSessionList,
   ExtractionAgentSessionList,
@@ -161,7 +162,10 @@ export const studioRoutes = {
             {
               path: StudioRoutes.agentExtraction.path,
               element: (
-                <AgentExtractionRoute buildCsvRunPath={StudioRoutes.agentExtractionCsvRun.build} />
+                <AgentExtractionRoute
+                  buildCsvRunPath={StudioRoutes.agentExtractionCsvRun.build}
+                  renderVersionPicker={<StudioExtractionVersionPicker />}
+                />
               ),
               children: [
                 {
@@ -233,4 +237,10 @@ function AgentSessionsHandler() {
     default:
       return <ErrorRoute error={"Unknown agent type"} />
   }
+}
+
+/** Reads the current agent from the store so the route table stays hook-free. */
+function StudioExtractionVersionPicker() {
+  const agent = useValue(selectCurrentAgentData)
+  return <ExtractionVersionSelect agentId={agent.id} />
 }

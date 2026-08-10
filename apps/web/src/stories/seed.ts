@@ -364,6 +364,20 @@ export const seed = {
         },
       }
     },
+
+    extractionRevision({
+      agentId,
+      revision,
+    }: {
+      agentId: string
+      revision: number
+    }): StoryPreloadedState {
+      return {
+        agentSettings: {
+          extractionRevisionByAgentId: { [agentId]: revision },
+        },
+      }
+    },
   },
 
   backoffice: {
