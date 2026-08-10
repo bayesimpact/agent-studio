@@ -72,14 +72,14 @@ describe("AgentSessionMessagesRoutes.stream", () => {
     return { organization, project, agent, agentSettings, session: agentSession }
   }
 
-  const subject = (content: string, agentSettingsRevision?: number) => {
+  /** The stream is a GET: its payload travels JSON-encoded in `?q=`. */
+  const rawSubject = (query: string) => {
     const path = AgentSessionMessagesRoutes.stream.getPath({
       organizationId,
       projectId,
       agentId,
       agentSessionId,
     })
-    const query = JSON.stringify({ payload: { content, agentSettingsRevision } })
     const req = request(app.getHttpServer())
       .get(path)
       .query({ q: query })
@@ -87,6 +87,9 @@ describe("AgentSessionMessagesRoutes.stream", () => {
     if (accessToken) req.set("Authorization", `Bearer ${accessToken}`)
     return req
   }
+
+  const subject = (content: string, agentSettingsRevision?: number) =>
+    rawSubject(JSON.stringify({ payload: { content, agentSettingsRevision } }))
 
   const parseSseEvents = (text: string): StreamEventPayload[] =>
     text
@@ -168,13 +171,31 @@ describe("AgentSessionMessagesRoutes.stream", () => {
 
   describe("settings version selection", () => {
     it("runs the requested published revision in the playground", async () => {
-      const { organization, project, agent } = await createContext({ sessionType: "playground" })
-      const published2 = await seedRevision({ organization, project, agent, revision: 2 })
+      // Revision 1 is not the newest: asking for it can only be answered by the resolver reading
+      // the requested revision, never by the "latest published" lookup this route used before.
+      const { organization, project, agent, agentSettings } = await createContext({
+        sessionType: "playground",
+      })
+      await seedRevision({ organization, project, agent, revision: 2 })
 
-      const response = await subject("Hello", 2)
+      const response = await subject("Hello", agentSettings.revision)
 
       expect(response.text).not.toContain("event: error")
-      expect(await findAssistantMessageSettingsId()).toBe(published2.id)
+      expect(await findAssistantMessageSettingsId()).toBe(agentSettings.id)
+    })
+
+    it("runs the published revision when a draft exists and it is the one requested", async () => {
+      // The requirement the whole feature rests on: nobody demos a draft by accident. Pinning the
+      // published version must win over the draft-first default.
+      const { organization, project, agent, agentSettings } = await createContext({
+        sessionType: "playground",
+      })
+      await seedRevision({ organization, project, agent, revision: 2, isDraft: true })
+
+      const response = await subject("Hello", agentSettings.revision)
+
+      expect(response.text).not.toContain("event: error")
+      expect(await findAssistantMessageSettingsId()).toBe(agentSettings.id)
     })
 
     it("runs the requested draft revision in the playground", async () => {
@@ -248,6 +269,28 @@ describe("AgentSessionMessagesRoutes.stream", () => {
 
       expect(response.text).toContain("event: error")
       expect(errorData(response.text)).toContain("playground")
+    })
+
+    it("rejects a revision that is not an integer", async () => {
+      // The revision reaches TypeORM as-is, so anything else must be turned away here rather than
+      // surface as a driver error.
+      await createContext({ sessionType: "playground" })
+
+      const response = await rawSubject(
+        JSON.stringify({ payload: { content: "Hello", agentSettingsRevision: "2" } }),
+      )
+
+      expect(response.text).toContain("event: error")
+      expect(errorData(response.text)).toContain("integer")
+    })
+
+    it("rejects a query whose payload is not an object", async () => {
+      await createContext({ sessionType: "playground" })
+
+      const response = await rawSubject(JSON.stringify({ payload: null }))
+
+      expect(response.text).toContain("event: error")
+      expect(errorData(response.text)).toContain("Invalid query format")
     })
 
     it("keeps running the published revision on a live session with no revision", async () => {

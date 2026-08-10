@@ -49,12 +49,6 @@ export class StreamingController {
     const agent = request.agent
     const session = request.agentSession
     const connectScope = getRequiredConnectScope(request)
-    // Settings are looked up on the organization/project pair only, as they were before this
-    // route could name a revision. Widening the scope here would change which rows match.
-    const settingsScope: RequiredConnectScope = {
-      organizationId: request.organizationId,
-      projectId: request.project.id,
-    }
 
     if (!userContent) {
       throw new ForbiddenException("Missing user content")
@@ -74,7 +68,7 @@ export class StreamingController {
       void (async () => {
         try {
           const agentSettings = await this.resolveAgentSettings({
-            connectScope: settingsScope,
+            connectScope,
             agentId: agent.id,
             sessionType: session.type,
             revision: agentSettingsRevision,
@@ -143,17 +137,45 @@ export class StreamingController {
   }
 }
 
+type StreamPayload = (typeof AgentSessionMessagesRoutes.stream.request)["payload"]
+
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === "object" && value !== null && !Array.isArray(value)
+
+const isOptionalString = (value: unknown): value is string | undefined =>
+  value === undefined || typeof value === "string"
+
+const isOptionalInteger = (value: unknown): value is number | undefined =>
+  value === undefined || Number.isInteger(value)
+
 /**
  * The stream is a GET, so its payload travels JSON-encoded in `?q=`. Only the parse is guarded:
  * a wider try would rewrite every downstream failure as "Invalid query format" and hide which
  * version was rejected and why.
+ *
+ * What comes out of the parse is checked rather than trusted. The query is caller-controlled, and
+ * `agentSettingsRevision` goes straight to TypeORM: a string or an object there surfaces as a
+ * driver error instead of a clean rejection.
  */
-function parseStreamPayload(
-  query: string,
-): (typeof AgentSessionMessagesRoutes.stream.request)["payload"] {
+function parseStreamPayload(query: string): StreamPayload {
+  let parsed: unknown
   try {
-    return (JSON.parse(query) as typeof AgentSessionMessagesRoutes.stream.request).payload
+    parsed = JSON.parse(query)
   } catch (_) {
     throw new ForbiddenException("Invalid query format")
   }
+
+  const payload = isRecord(parsed) ? parsed.payload : undefined
+  if (!isRecord(payload)) throw new ForbiddenException("Invalid query format")
+
+  const { content, attachmentDocumentId, agentSettingsRevision } = payload
+  if (typeof content !== "string") throw new ForbiddenException("Missing user content")
+  if (!isOptionalString(attachmentDocumentId)) {
+    throw new ForbiddenException("Invalid attachment document")
+  }
+  if (!isOptionalInteger(agentSettingsRevision)) {
+    throw new ForbiddenException("Settings version must be an integer")
+  }
+
+  return { content, attachmentDocumentId, agentSettingsRevision }
 }
