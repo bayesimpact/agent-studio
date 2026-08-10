@@ -18,6 +18,9 @@ import { buildDate } from "@/common/utils/build-date"
  * bare version number is not enough to stop someone demoing an unpublished agent to a client by
  * accident (issue #622).
  *
+ * Items carry the version name under the label, as the version history does, so versions are
+ * recognisable by what they changed and not only by their number.
+ *
  * `versions` is the history list, newest first and already free of archived revisions: the history
  * endpoint omits them, so an archived version is never offered here.
  */
@@ -43,6 +46,13 @@ export function AgentSettingsVersionSelect({
     return buildDate(version.updatedAt)
   }
 
+  /** Compact form, the only one the trigger has room for. */
+  const buildVersionLabel = (version: AgentSettings) =>
+    t("agentSettings:version.item", {
+      revision: version.revision,
+      detail: buildVersionDetail(version),
+    })
+
   return (
     <Select
       value={revision !== undefined ? String(revision) : undefined}
@@ -57,15 +67,24 @@ export function AgentSettingsVersionSelect({
         aria-label={t("agentSettings:version.ariaLabel")}
         className={cn("font-normal", selectedVersion?.isDraft && "border-amber-500 text-amber-700")}
       >
-        <SelectValue placeholder={t("agentSettings:version.placeholder")} />
+        {/*
+         * Radix renders the selected item's own markup here unless it is given children. The
+         * items carry the version name over two lines; the trigger keeps the compact label so a
+         * long name cannot stretch the header.
+         */}
+        <SelectValue placeholder={t("agentSettings:version.placeholder")}>
+          {selectedVersion ? buildVersionLabel(selectedVersion) : null}
+        </SelectValue>
       </SelectTrigger>
       <SelectContent>
         {versions.map((version) => (
           <SelectItem key={version.revision} value={String(version.revision)}>
-            {t("agentSettings:version.item", {
-              revision: version.revision,
-              detail: buildVersionDetail(version),
-            })}
+            <span className="flex flex-col items-start">
+              <span>{buildVersionLabel(version)}</span>
+              {version.name?.trim() && (
+                <span className="text-muted-foreground text-xs">{version.name}</span>
+              )}
+            </span>
           </SelectItem>
         ))}
       </SelectContent>
