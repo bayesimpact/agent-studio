@@ -29,6 +29,7 @@ This project uses [CalVer](https://calver.org/) (YY.MM.Micro) for product versio
 - Model tool-call syntax (pseudo-XML fragments) no longer leaks into chat replies when the model mishandles its bookkeeping call
 - Agent prompts that referenced the old retrieval tool name are rewritten to the new one at deploy time, so hand-written instructions keep working
 - Agent editor: restoring a version from the history now updates the form fields immediately
+- Embedded agents now answer with the agent's published version: the widget on a customer site, the greeting of a new embed session, and the reviewer's session view all stopped picking up an unpublished draft as soon as an author saved a change in the agent editor; archived versions are skipped the same way
 - Fix some scanned PDF documents importing with no extracted text
 
 ### Security
