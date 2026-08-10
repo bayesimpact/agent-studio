@@ -73,6 +73,33 @@ export function findVersion(
   return versions.find((version) => version.revision === revision)
 }
 
+/** The unpublished revision, when the agent has one. There is at most one per agent. */
+export function findDraftVersion(versions: AgentSettings[]): AgentSettings | undefined {
+  return versions.find((version) => version.isDraft)
+}
+
+/**
+ * Revision the playground runs new messages with: the user's explicit pick, else the draft, else
+ * the published version. Defaulting to the draft is the point of the feature — a draft exists to
+ * be tested, and requiring a publish to try it defeats it.
+ *
+ * A pick that is no longer in the list (archived or published elsewhere since it was made) is
+ * treated as no pick at all, so the UI never offers a revision the API would reject.
+ *
+ * `undefined` means the history is not loaded yet. Callers must send no revision at all in that
+ * case; the API applies the same draft-first default server-side.
+ */
+export function resolveEffectiveRevision({
+  versions,
+  chosenRevision,
+}: {
+  versions: AgentSettings[]
+  chosenRevision: number | undefined
+}): number | undefined {
+  if (chosenRevision !== undefined && findVersion(versions, chosenRevision)) return chosenRevision
+  return (findDraftVersion(versions) ?? findPublishedVersion(versions))?.revision
+}
+
 /**
  * Revision to label a message with: the one the API recorded on it.
  *
