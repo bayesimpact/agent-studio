@@ -1,5 +1,6 @@
 import { ToolName } from "@caseai-connect/api-contracts"
 import { createAsyncThunk } from "@reduxjs/toolkit"
+import { selectPlaygroundRevision } from "@/common/features/agents/agent-settings/agent-settings.selectors"
 import { getCurrentId } from "@/common/features/helpers"
 import type { RootState, ThunkExtraArg } from "@/common/store"
 import { generateId } from "@/common/utils/generate-id"
@@ -81,6 +82,13 @@ export const sendMessage = createAsyncThunk<
     const agentId = getCurrentId({ state, name: "agentId" })
     const agentSessionId = getCurrentId({ state, name: "agentSessionId" })
 
+    // Only the playground may name a version; the API rejects one on a live session. `buildType`
+    // is the same signal the session was created with, so the two can never disagree.
+    const agentSettingsRevision =
+      buildType() === "playground"
+        ? selectPlaygroundRevision({ agentId, agentSessionId })(state)
+        : undefined
+
     // Guard: don't allow sending if already streaming
     if (state.agentSessionMessages.isStreaming) {
       return
@@ -121,6 +129,7 @@ export const sendMessage = createAsyncThunk<
         agentSessionId,
         content,
         attachmentDocumentId,
+        agentSettingsRevision,
         handlers: {
           onStart: (event) => {
             // Update the optimistic message ID to match the backend's ID
