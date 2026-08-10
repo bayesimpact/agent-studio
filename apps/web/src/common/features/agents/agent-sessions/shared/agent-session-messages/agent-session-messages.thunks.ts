@@ -121,6 +121,13 @@ export const sendMessage = createAsyncThunk<
 
     dispatch(agentSessionMessagesActions.startStreaming({ userMessage, assistantMessageId }))
 
+    // The message the answer is being written into: the optimistic one until the stream names the
+    // persisted one. Errors and truncations are attributed to whichever is current.
+    let streamedMessageId = assistantMessageId
+    // A stream that ends with neither `end` nor `error` left the message half-written. Without
+    // this the bubble would stay in `streaming` for good and block every later send.
+    let sawTerminalEvent = false
+
     try {
       await streamChatResponse({
         organizationId,
@@ -130,8 +137,10 @@ export const sendMessage = createAsyncThunk<
         content,
         attachmentDocumentId,
         agentSettingsRevision,
+        assistantMessageId,
         handlers: {
           onStart: (event) => {
+            streamedMessageId = event.messageId
             // Update the optimistic message ID to match the backend's ID
             dispatch(
               agentSessionMessagesActions.updateAssistantMessageId({
@@ -165,6 +174,7 @@ export const sendMessage = createAsyncThunk<
             }
           },
           onEnd: async (event) => {
+            sawTerminalEvent = true
             dispatch(
               agentSessionMessagesActions.completeAssistantMessage({
                 messageId: event.messageId,
@@ -174,6 +184,7 @@ export const sendMessage = createAsyncThunk<
             dispatch(getMessage(event.messageId))
           },
           onError: (event) => {
+            sawTerminalEvent = true
             dispatch(
               agentSessionMessagesActions.failAssistantMessage({
                 messageId: event.messageId,
@@ -184,11 +195,20 @@ export const sendMessage = createAsyncThunk<
         },
         signal,
       })
+
+      if (!sawTerminalEvent) {
+        dispatch(
+          agentSessionMessagesActions.failAssistantMessage({
+            messageId: streamedMessageId,
+            error: "The response ended unexpectedly",
+          }),
+        )
+      }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : "Failed to stream response"
       dispatch(
         agentSessionMessagesActions.failAssistantMessage({
-          messageId: assistantMessageId,
+          messageId: streamedMessageId,
           error: errorMessage,
         }),
       )

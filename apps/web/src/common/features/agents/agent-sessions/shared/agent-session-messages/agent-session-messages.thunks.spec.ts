@@ -32,6 +32,18 @@ const agent = agentFactory.transient({ project }).build({ id: agentId })
 
 const extra = { services: {} as Services }
 
+type SliceAction = { type: string; payload: Record<string, unknown> }
+
+const isSliceAction = (value: unknown): value is SliceAction =>
+  typeof value === "object" && value !== null && "type" in value && "payload" in value
+
+/** The `agentSessionMessages/<name>` action the thunk dispatched, if it dispatched one. */
+const findAction = (dispatch: ReturnType<typeof vi.fn>, name: string): SliceAction | undefined =>
+  dispatch.mock.calls
+    .map(([action]: unknown[]) => action)
+    .filter(isSliceAction)
+    .find((action) => action.type === `agentSessionMessages/${name}`)
+
 /**
  * A fixture shaped like only the slices `sendMessage` reads, not a full `RootState` — the real
  * type is a many-scope union not meant to be hand-built. The cast is safe because every field the
@@ -102,5 +114,33 @@ describe("sendMessage", () => {
     expect(mockedStreamChatResponse).toHaveBeenCalledWith(
       expect.objectContaining({ agentSettingsRevision: undefined }),
     )
+  })
+
+  it("fails the assistant message when the stream ends with no terminal event", async () => {
+    // A truncated stream used to leave the bubble streaming for good, which blocked every later
+    // send and disabled the version picker until the page was reloaded.
+    mockedIsStudioInterface.mockReturnValue(true)
+    const dispatch = vi.fn()
+
+    await sendMessage({ content: "Hello" })(dispatch, () => buildState(), extra)
+
+    const startStreaming = findAction(dispatch, "startStreaming")
+    expect(findAction(dispatch, "failAssistantMessage")?.payload).toEqual({
+      messageId: startStreaming?.payload.assistantMessageId,
+      error: "The response ended unexpectedly",
+    })
+  })
+
+  it("leaves a completed stream alone", async () => {
+    mockedIsStudioInterface.mockReturnValue(true)
+    mockedStreamChatResponse.mockImplementation(async ({ handlers }) => {
+      handlers.onEnd({ type: "end", messageId: "persisted-1", fullContent: "Hello" })
+    })
+    const dispatch = vi.fn()
+
+    await sendMessage({ content: "Hello" })(dispatch, () => buildState(), extra)
+
+    expect(findAction(dispatch, "failAssistantMessage")).toBeUndefined()
+    expect(findAction(dispatch, "completeAssistantMessage")).toBeDefined()
   })
 })
