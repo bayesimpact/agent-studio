@@ -25,6 +25,7 @@ export class EvaluationExtractionRunsService {
   private readonly runRecordConnectRepository: ConnectRepository<EvaluationExtractionRunRecord>
   private readonly datasetConnectRepository: ConnectRepository<EvaluationExtractionDataset>
   private readonly agentConnectRepository: ConnectRepository<Agent>
+  private readonly agentSettingsConnectRepository: ConnectRepository<AgentSettings>
 
   constructor(
     @InjectRepository(EvaluationExtractionRun)
@@ -36,7 +37,7 @@ export class EvaluationExtractionRunsService {
     @InjectRepository(Agent)
     agentRepository: Repository<Agent>,
     @InjectRepository(AgentSettings)
-    private readonly agentSettingsRepository: Repository<AgentSettings>,
+    agentSettingsRepository: Repository<AgentSettings>,
     @Inject(EVALUATION_EXTRACTION_RUN_BATCH_SERVICE)
     private readonly batchService: EvaluationExtractionRunBatchService,
   ) {
@@ -53,6 +54,10 @@ export class EvaluationExtractionRunsService {
       "evaluationExtractionDataset",
     )
     this.agentConnectRepository = new ConnectRepository(agentRepository, "agent")
+    this.agentSettingsConnectRepository = new ConnectRepository(
+      agentSettingsRepository,
+      "agentSettings",
+    )
   }
 
   async createRun({
@@ -283,23 +288,28 @@ export class EvaluationExtractionRunsService {
     })
   }
 
-  private async getAgent({
+  private async getAgentForRun({
     connectScope,
-    agentId,
+    evaluationExtractionRun,
   }: {
     connectScope: RequiredConnectScope
-    agentId: string
+    evaluationExtractionRun: EvaluationExtractionRun
   }): Promise<{ agent: Agent; agentSettings: AgentSettings }> {
+    const { agentId, agentSettingsId } = evaluationExtractionRun
     const agent = await this.agentConnectRepository.getOneById(connectScope, agentId)
     if (!agent) {
       throw new NotFoundException(`Agent with id ${agentId} not found`)
     }
-    const agentSettings = await this.agentSettingsRepository.findOne({
-      where: { agentId },
-      order: { revision: "DESC" }, //findOne + order DESC to get last revision
-    })
+    // A retry continues an existing run, so it reuses the exact settings version the
+    // run is pinned to, the way the run starter does. Re-resolving the highest
+    // revision picked up the draft an author was editing, and could also switch a
+    // run to another version halfway through (#636).
+    const agentSettings = await this.agentSettingsConnectRepository.getOneById(
+      connectScope,
+      agentSettingsId,
+    )
     if (!agentSettings)
-      throw new NotFoundException(`AgentSettings for Agent with id ${agentId} not found`)
+      throw new NotFoundException(`AgentSettings with id ${agentSettingsId} not found`)
 
     return { agent, agentSettings }
   }
@@ -318,9 +328,9 @@ export class EvaluationExtractionRunsService {
     evaluationExtractionRun.status = "running"
     await this.runConnectRepository.saveOne(evaluationExtractionRun)
 
-    const { agent, agentSettings } = await this.getAgent({
+    const { agent, agentSettings } = await this.getAgentForRun({
       connectScope,
-      agentId: evaluationExtractionRun.agentId,
+      evaluationExtractionRun,
     })
 
     const unfinishedRecords = await this.runRecordConnectRepository.find(connectScope, {
