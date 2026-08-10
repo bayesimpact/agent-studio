@@ -172,9 +172,11 @@ export class AgentCsvExtractionRunsController {
     const { agentCsvExtractionRun, agent } = request as EndpointRequestWithAgentCsvExtractionRun &
       EndpointRequestWithAgent
 
-    const agentSettings = await this.agentSettingsService.getLast({
+    // The run advertises its own revision, so a retry must use that one. Re-resolving the newest
+    // published version here would silently change what a retried run executes.
+    const agentSettings = await this.agentSettingsService.getById({
       connectScope,
-      agentId: agent.id,
+      agentSettingsId: agentCsvExtractionRun.agentSettingsId,
     })
 
     await this.agentCsvExtractionRunsService.retryRun({
