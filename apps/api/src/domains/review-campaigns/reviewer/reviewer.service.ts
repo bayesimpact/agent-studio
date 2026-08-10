@@ -10,7 +10,8 @@ import { In, type Repository } from "typeorm"
 import type { RequiredConnectScope } from "@/common/entities/connect-required-fields"
 import { Agent } from "@/domains/agents/agent.entity"
 import { ConversationAgentSession } from "@/domains/agents/conversation-agent-sessions/conversation-agent-session.entity"
-import { AgentSettings } from "@/domains/agents/settings/agent-settings.entity"
+// biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
+import { AgentSettingsService } from "@/domains/agents/settings/agent-settings.service"
 import { AgentMessage } from "@/domains/agents/shared/agent-session-messages/agent-message.entity"
 import type { ReviewCampaign } from "../review-campaign.entity"
 import type {
@@ -82,10 +83,9 @@ export class ReviewerService {
     private readonly agentMessageRepository: Repository<AgentMessage>,
     @InjectRepository(Agent)
     private readonly agentRepository: Repository<Agent>,
-    @InjectRepository(AgentSettings)
-    private readonly agentSettingsRepository: Repository<AgentSettings>,
     @InjectRepository(TesterSessionFeedback)
     private readonly testerFeedbackRepository: Repository<TesterSessionFeedback>,
+    private readonly agentSettingsService: AgentSettingsService,
   ) {}
 
   async listSessionsForCampaign({
@@ -175,19 +175,15 @@ export class ReviewerService {
     if (!agent) {
       throw new Error(`Agent ${campaign.agentId} not found for campaign ${campaign.id}`)
     }
-    const agentSettings = await this.agentSettingsRepository.findOne({
-      where: {
-        agentId: campaign.agentId,
+    // The reviewer context must describe the published settings, not the draft an
+    // author may be editing in the agent editor (#636).
+    const agentSettings = await this.agentSettingsService.getLast({
+      connectScope: {
         organizationId: campaign.organizationId,
         projectId: campaign.projectId,
       },
-      order: { revision: "DESC" }, //findOne + order DESC to get last revision
+      agentId: campaign.agentId,
     })
-    if (!agentSettings) {
-      throw new Error(
-        `AgentSettings for Agent ${campaign.agentId} not found for campaign ${campaign.id}`,
-      )
-    }
     // Loads everything we need in parallel. Redaction happens below based on
     // whether the caller has already reviewed.
     const [transcript, callerReview, allReviews, testerFeedback, session] = await Promise.all([

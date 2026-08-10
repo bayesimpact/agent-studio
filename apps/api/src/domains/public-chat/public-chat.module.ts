@@ -2,7 +2,7 @@ import { Module } from "@nestjs/common"
 import { TypeOrmModule } from "@nestjs/typeorm"
 import { Agent } from "@/domains/agents/agent.entity"
 import { AgentSessionCategory } from "@/domains/agents/session-categories/agent-session-category.entity"
-import { AgentSettings } from "@/domains/agents/settings/agent-settings.entity"
+import { AgentSettingsModule } from "@/domains/agents/settings/agent-settings.module"
 import { AgentMessage } from "@/domains/agents/shared/agent-session-messages/agent-message.entity"
 import { StreamingModule } from "@/domains/agents/shared/agent-session-messages/streaming/streaming.module"
 import { AgentEmbedConfig } from "./agent-embed-configs/agent-embed-config.entity"
@@ -24,8 +24,8 @@ import { PublicChatService } from "./public-chat.service"
       AgentSessionCategory,
       AgentMessage,
       Agent,
-      AgentSettings,
     ]),
+    AgentSettingsModule,
     StreamingModule,
   ],
   providers: [

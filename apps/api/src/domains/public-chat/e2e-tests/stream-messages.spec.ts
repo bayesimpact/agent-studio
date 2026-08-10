@@ -10,6 +10,7 @@ import {
   setupE2eTestDatabase,
   teardownE2eTestDatabase,
 } from "@/common/test/test-database"
+import { agentSettingsFactory } from "@/domains/agents/settings/agent.settings.factory"
 import { createOrganizationWithAgent } from "@/domains/organizations/organization.factory"
 import { sdk } from "@/external/llm/open-telemetry-init"
 import type { AISDKMockProvider } from "@/external/llm/providers/ai-sdk-mock.provider"
@@ -163,6 +164,28 @@ describe("PublicChat - streamMessages", () => {
       id: session.id,
     })
     expect(updatedSession.result).toEqual({ fullName: "Ada", city: "Paris" })
+  })
+
+  it("answers with the last published revision, not the newer draft (#636)", async () => {
+    const { organization, project, agent, agentSettings, session } = await createContext()
+    const draftSettings = await repositories.agentSettingsRepository.save(
+      agentSettingsFactory
+        .draft()
+        .transient({ organization, project, agent })
+        .build({ revision: agentSettings.revision + 1 }),
+    )
+
+    const response = await subject("Hello")
+    expect(response.status).toBe(200)
+
+    const messages = await repositories.agentMessageRepository.find({
+      where: { sessionId: session.id },
+    })
+    expect(messages.length).toBeGreaterThan(0)
+    for (const message of messages) {
+      expect(message.agentSettingsId).toBe(agentSettings.id)
+      expect(message.agentSettingsId).not.toBe(draftSettings.id)
+    }
   })
 
   it("should return error when empty content", async () => {
