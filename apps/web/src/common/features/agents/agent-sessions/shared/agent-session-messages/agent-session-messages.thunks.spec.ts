@@ -116,6 +116,18 @@ describe("sendMessage", () => {
     )
   })
 
+  it("records the sent revision on the optimistic assistant message", async () => {
+    // The badge must name the version the request carried, not whatever the picker shows later.
+    mockedIsStudioInterface.mockReturnValue(true)
+    const versions = [agentSettingsFactory.transient({ agent }).build({ revision: 2 })]
+    const state = buildState({ history: { [agentId]: versions }, chosenRevision: 2 })
+    const dispatch = vi.fn()
+
+    await sendMessage({ content: "Hello" })(dispatch, () => state, extra)
+
+    expect(findAction(dispatch, "startStreaming")?.payload).toMatchObject({ agentRevision: 2 })
+  })
+
   it("fails the assistant message when the stream ends with no terminal event", async () => {
     // A truncated stream used to leave the bubble streaming for good, which blocked every later
     // send and disabled the version picker until the page was reloaded.

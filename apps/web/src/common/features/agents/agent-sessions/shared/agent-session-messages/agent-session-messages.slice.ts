@@ -28,6 +28,11 @@ const slice = createSlice({
       action: PayloadAction<{
         userMessage: AgentSessionMessage
         assistantMessageId: string
+        /**
+         * Settings version the request was sent with. Recorded on the message so its badge keeps
+         * naming what produced it, even if the picker moves on before the refetch lands.
+         */
+        agentRevision?: number
       }>,
     ) => {
       if (!ADS.isFulfilled(state.data))
@@ -41,6 +46,7 @@ const slice = createSlice({
         role: "assistant",
         content: "",
         status: "streaming",
+        agentRevision: action.payload.agentRevision,
       })
     },
     updateAssistantMessageId: (

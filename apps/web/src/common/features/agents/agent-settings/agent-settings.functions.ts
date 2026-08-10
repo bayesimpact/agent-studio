@@ -101,11 +101,12 @@ export function resolveEffectiveRevision({
 }
 
 /**
- * Revision to label a message with: the one the API recorded on it.
+ * Revision to label a message with: the one recorded on it, whether by the API or, on the
+ * optimistic assistant message, by the client that sent the request.
  *
- * Messages built client-side during streaming have no revision yet and are never refetched, so
- * they fall back to `fallbackRevision` — the version the playground was set to when the stream
- * started, which is exactly what produced the answer.
+ * A streamed message can still have none — the playground sends no revision while the settings
+ * history is loading — so it falls back to `fallbackRevision`, the version the playground is set
+ * to, which is what the server defaulted to as well.
  *
  * A persisted message with no revision must NOT fall back: labelling an old message with the
  * running revision would claim it is the current version. Returns `undefined` instead, so the

@@ -119,7 +119,13 @@ export const sendMessage = createAsyncThunk<
       createdAt: Date.now(),
     }
 
-    dispatch(agentSessionMessagesActions.startStreaming({ userMessage, assistantMessageId }))
+    dispatch(
+      agentSessionMessagesActions.startStreaming({
+        userMessage,
+        assistantMessageId,
+        agentRevision: agentSettingsRevision,
+      }),
+    )
 
     // The message the answer is being written into: the optimistic one until the stream names the
     // persisted one. Errors and truncations are attributed to whichever is current.
