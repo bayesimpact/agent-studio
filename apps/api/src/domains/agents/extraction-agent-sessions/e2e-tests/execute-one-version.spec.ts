@@ -148,8 +148,11 @@ describe("ExtractionAgentSessions - executeOne settings version", () => {
   })
 
   it("runs the published revision the playground asks for", async () => {
+    // Revision 2 is both published and the newest, so a bare "latest" lookup would also land on
+    // it. Asking for revision 1 only proves the explicit-revision codepath if it diverges from
+    // that default, which is why revision 2 here is published rather than a draft.
     const { agentSettings } = await createContext()
-    await seedRevision({ revision: 2, isDraft: true })
+    await seedRevision({ revision: 2 })
 
     const response = await subject({ agentSettingsRevision: 1 })
 
