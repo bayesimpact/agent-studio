@@ -1,13 +1,24 @@
 import { AgentSessionMessagesRoutes, type StreamEvent } from "@caseai-connect/api-contracts"
 import type { MessageEvent } from "@nestjs/common"
-import { Controller, ForbiddenException, Query, Req, Sse, UseGuards } from "@nestjs/common"
+import {
+  Controller,
+  ForbiddenException,
+  NotFoundException,
+  Query,
+  Req,
+  Sse,
+  UnprocessableEntityException,
+  UseGuards,
+} from "@nestjs/common"
 import { Observable } from "rxjs"
 import type { EndpointRequestWithAgentSession } from "@/common/context/request.interface"
 import { getRequiredConnectScope } from "@/common/context/request-context.helpers"
 import { RequireContext } from "@/common/context/require-context.decorator"
 import { ResourceContextGuard } from "@/common/context/resource-context.guard"
+import type { RequiredConnectScope } from "@/common/entities/connect-required-fields"
 import { CheckPolicy } from "@/common/policies/check-policy.decorator"
 import type { ConversationAgentSession } from "@/domains/agents/conversation-agent-sessions/conversation-agent-session.entity"
+import type { AgentSettings } from "@/domains/agents/settings/agent-settings.entity"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
 import { AgentSettingsService } from "@/domains/agents/settings/agent-settings.service"
 import { JwtAuthGuard } from "@/domains/auth/jwt-auth.guard"
@@ -31,56 +42,118 @@ export class StreamingController {
     @Req() request: EndpointRequestWithAgentSession<ConversationAgentSession>,
     @Query("q") query: string,
   ): Observable<MessageEvent> {
-    try {
-      const parsedQuery = JSON.parse(query) as typeof AgentSessionMessagesRoutes.stream.request
-      const userContent = parsedQuery.payload.content
-      const attachmentDocumentId = parsedQuery.payload.attachmentDocumentId
-      const organizationId = request.organizationId
-      const projectId = request.project.id
-      const agent = request.agent
-      const connectScope = getRequiredConnectScope(request)
-
-      if (!userContent) {
-        throw new ForbiddenException("Missing user content")
-      }
-
-      if (typeof userContent === "string" && !userContent.trim()) {
-        throw new ForbiddenException("User content must not be empty")
-      }
-      return new Observable<StreamEvent>((subscriber) => {
-        void (async () => {
-          try {
-            const agentSettings = await this.agentSettingsService.getLast({
-              connectScope: { organizationId, projectId },
-              agentId: agent.id,
-            })
-            const agentSessionScope: AgentSessionScope = {
-              connectScope,
-              agent,
-              agentSettings,
-              session: request.agentSession,
-            }
-            const events = this.chatStreamingService.streamAgentResponse({
-              agentSessionScope,
-              userContent,
-              attachmentDocumentId,
-              notifyClient: (event) => {
-                subscriber.next(event)
-              },
-            })
-
-            for await (const event of events) {
-              subscriber.next(event)
-            }
-
-            subscriber.complete()
-          } catch (error) {
-            subscriber.error(error)
-          }
-        })()
-      })
-    } catch (_) {
-      throw new ForbiddenException("Invalid query format")
+    const payload = parseStreamPayload(query)
+    const userContent = payload.content
+    const attachmentDocumentId = payload.attachmentDocumentId
+    const agentSettingsRevision = payload.agentSettingsRevision
+    const agent = request.agent
+    const session = request.agentSession
+    const connectScope = getRequiredConnectScope(request)
+    // Settings are looked up on the organization/project pair only, as they were before this
+    // route could name a revision. Widening the scope here would change which rows match.
+    const settingsScope: RequiredConnectScope = {
+      organizationId: request.organizationId,
+      projectId: request.project.id,
     }
+
+    if (!userContent) {
+      throw new ForbiddenException("Missing user content")
+    }
+
+    if (typeof userContent === "string" && !userContent.trim()) {
+      throw new ForbiddenException("User content must not be empty")
+    }
+
+    if (agentSettingsRevision !== undefined && session.type !== "playground") {
+      throw new ForbiddenException(
+        "Choosing a settings version is only available in the playground",
+      )
+    }
+
+    return new Observable<StreamEvent>((subscriber) => {
+      void (async () => {
+        try {
+          const agentSettings = await this.resolveAgentSettings({
+            connectScope: settingsScope,
+            agentId: agent.id,
+            sessionType: session.type,
+            revision: agentSettingsRevision,
+          })
+          const agentSessionScope: AgentSessionScope = {
+            connectScope,
+            agent,
+            agentSettings,
+            session,
+          }
+          const events = this.chatStreamingService.streamAgentResponse({
+            agentSessionScope,
+            userContent,
+            attachmentDocumentId,
+            notifyClient: (event) => {
+              subscriber.next(event)
+            },
+          })
+
+          for await (const event of events) {
+            subscriber.next(event)
+          }
+
+          subscriber.complete()
+        } catch (error) {
+          subscriber.error(error)
+        }
+      })()
+    })
+  }
+
+  /**
+   * Settings the answer runs with.
+   *
+   * A playground session with no explicit revision runs the draft when there is one. The Studio
+   * playground renders before its settings history has loaded, so the client cannot always name
+   * a revision, and defaulting that window to the published one would run a version the header
+   * does not claim. A live session keeps running the newest published revision; it can never
+   * reach here with a revision, that is rejected in the handler.
+   */
+  private async resolveAgentSettings({
+    connectScope,
+    agentId,
+    sessionType,
+    revision,
+  }: {
+    connectScope: RequiredConnectScope
+    agentId: string
+    sessionType: ConversationAgentSession["type"]
+    revision: number | undefined
+  }): Promise<AgentSettings> {
+    if (revision === undefined) {
+      return sessionType === "playground"
+        ? this.agentSettingsService.getLast({ connectScope, agentId, includesDraft: true })
+        : this.agentSettingsService.getLast({ connectScope, agentId })
+    }
+
+    const agentSettings = await this.agentSettingsService.get({ connectScope, agentId, revision })
+    if (!agentSettings) {
+      throw new NotFoundException(`Version ${revision} not found for agent ${agentId}`)
+    }
+    if (agentSettings.isArchived) {
+      throw new UnprocessableEntityException(`Version ${revision} is archived and cannot be run`)
+    }
+    return agentSettings
+  }
+}
+
+/**
+ * The stream is a GET, so its payload travels JSON-encoded in `?q=`. Only the parse is guarded:
+ * a wider try would rewrite every downstream failure as "Invalid query format" and hide which
+ * version was rejected and why.
+ */
+function parseStreamPayload(
+  query: string,
+): (typeof AgentSessionMessagesRoutes.stream.request)["payload"] {
+  try {
+    return (JSON.parse(query) as typeof AgentSessionMessagesRoutes.stream.request).payload
+  } catch (_) {
+    throw new ForbiddenException("Invalid query format")
   }
 }
