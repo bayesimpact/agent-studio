@@ -215,7 +215,7 @@ export const NonManager: Story = {
   decorators: Default.decorators,
 }
 
-/** History not loaded (or failed): the playground renders, header badge is hidden. */
+/** An agent with a single version: the picker renders with nothing to switch to. */
 export const WithoutVersionHistory: Story = {
   args: { withVersionHistory: false },
   decorators: Default.decorators,

@@ -79,8 +79,12 @@ describe("resolveMessageRevision", () => {
     expect(resolveMessageRevision(message, undefined)).toBeUndefined()
   })
 
-  it("keeps a recorded revision that is absent from the history list", () => {
-    const message = agentSessionMessageFactory.build({ role: "assistant", agentRevision: 2 })
+  it("prefers the recorded revision over the fallback on a persisted message", () => {
+    const message = agentSessionMessageFactory.build({
+      role: "assistant",
+      agentRevision: 2,
+      createdAt: Date.now() - 1000 * 60,
+    })
 
     expect(resolveMessageRevision(message, 4)).toBe(2)
   })

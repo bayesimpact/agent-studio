@@ -3,9 +3,9 @@ import { AgentSessionMessagesRoutes } from "@caseai-connect/api-contracts"
 /**
  * The stream is a GET, so its payload travels JSON-encoded in `?q=`.
  *
- * `agentSettingsRevision` is omitted rather than sent as `undefined` when the caller has no
- * choice to express: the API rejects the field outright on a live session, so the absent-vs-null
- * distinction is load-bearing, not cosmetic.
+ * The conditional spread on `agentSettingsRevision` keeps the object honest for anything reading
+ * it here; it makes no difference on the wire, since `JSON.stringify` drops `undefined` values
+ * either way and the API cannot tell an omitted field from one explicitly set to `undefined`.
  */
 export function buildStreamUrl({
   baseURL,
