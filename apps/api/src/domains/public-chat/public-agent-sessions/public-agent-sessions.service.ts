@@ -4,7 +4,8 @@ import { InjectRepository } from "@nestjs/typeorm"
 import type { Repository } from "typeorm"
 import type { RequiredConnectScope } from "@/common/entities/connect-required-fields"
 import { AgentSessionCategory } from "@/domains/agents/session-categories/agent-session-category.entity"
-import { AgentSettings } from "@/domains/agents/settings/agent-settings.entity"
+// biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
+import { AgentSettingsService } from "@/domains/agents/settings/agent-settings.service"
 import { AgentMessage } from "@/domains/agents/shared/agent-session-messages/agent-message.entity"
 import type { AgentEmbedConfig } from "../agent-embed-configs/agent-embed-config.entity"
 import { PublicAgentSession } from "./public-agent-session.entity"
@@ -19,12 +20,11 @@ export class PublicAgentSessionsService {
     private readonly publicAgentSessionRepository: Repository<PublicAgentSession>,
     @InjectRepository(AgentMessage)
     private readonly agentMessageRepository: Repository<AgentMessage>,
-    @InjectRepository(AgentSettings)
-    private readonly agentSettingsRepository: Repository<AgentSettings>,
     @InjectRepository(PublicAgentSessionCategory)
     private readonly publicAgentSessionCategoryRepository: Repository<PublicAgentSessionCategory>,
     @InjectRepository(AgentSessionCategory)
     private readonly agentSessionCategoryRepository: Repository<AgentSessionCategory>,
+    private readonly agentSettingsService: AgentSettingsService,
   ) {}
 
   /**
@@ -124,14 +124,15 @@ export class PublicAgentSessionsService {
     const sessionToken = crypto.randomUUID()
     const sessionTokenHash = crypto.createHash("sha256").update(sessionToken).digest("hex")
 
-    const agentSettings = await this.agentSettingsRepository.findOne({
-      where: { agentId: embedConfig.agentId },
-      order: { revision: "DESC" }, //findOne + order DESC to get last revision
+    // The greeting and the session config come from the published settings, not from
+    // the draft an author is editing in the agent editor (#636).
+    const agentSettings = await this.agentSettingsService.getLast({
+      connectScope: {
+        organizationId: embedConfig.organizationId,
+        projectId: embedConfig.projectId,
+      },
+      agentId: embedConfig.agentId,
     })
-    if (!agentSettings)
-      throw new NotFoundException(
-        `AgentSettings for Agent with id ${embedConfig.agentId} not found`,
-      )
 
     const session = this.publicAgentSessionRepository.create({
       embedConfigId: embedConfig.id,

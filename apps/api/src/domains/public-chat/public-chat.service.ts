@@ -8,7 +8,8 @@ import { Injectable, NotFoundException } from "@nestjs/common"
 import { InjectRepository } from "@nestjs/typeorm"
 import type { Repository } from "typeorm"
 import { Agent } from "@/domains/agents/agent.entity"
-import { AgentSettings } from "@/domains/agents/settings/agent-settings.entity"
+// biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
+import { AgentSettingsService } from "@/domains/agents/settings/agent-settings.service"
 import type { AgentMessage } from "@/domains/agents/shared/agent-session-messages/agent-message.entity"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
 import { StreamingService } from "@/domains/agents/shared/agent-session-messages/streaming/streaming.service"
@@ -24,8 +25,7 @@ export class PublicChatService {
   constructor(
     @InjectRepository(Agent)
     private readonly agentRepository: Repository<Agent>,
-    @InjectRepository(AgentSettings)
-    private readonly agentSettingsRepository: Repository<AgentSettings>,
+    private readonly agentSettingsService: AgentSettingsService,
     readonly agentEmbedConfigsService: AgentEmbedConfigsService,
     private readonly publicAgentSessionsService: PublicAgentSessionsService,
     private readonly streamingService: StreamingService,
@@ -60,19 +60,21 @@ export class PublicChatService {
     })
     if (!agent) throw new NotFoundException("Agent not found")
 
-    const agentSettings = await this.agentSettingsRepository.findOne({
-      where: { agentId: publicSession.agentId },
-      order: { revision: "DESC" }, //findOne + order DESC to get last revision
+    const connectScope = {
+      organizationId: publicSession.organizationId,
+      projectId: publicSession.projectId,
+    }
+    // Visitors must be answered by the published settings, never by the draft an
+    // author is editing in the agent editor (#636).
+    const agentSettings = await this.agentSettingsService.getLast({
+      connectScope,
+      agentId: publicSession.agentId,
     })
-    if (!agentSettings) throw new NotFoundException("AgentSettings for Agent not found")
 
     await this.publicAgentSessionsService.updateLastActivity(publicSession.id)
 
     yield* this.streamingService.streamPublicAgentResponse({
-      connectScope: {
-        organizationId: publicSession.organizationId,
-        projectId: publicSession.projectId,
-      },
+      connectScope,
       publicSessionId: publicSession.id,
       agent,
       agentSettings,

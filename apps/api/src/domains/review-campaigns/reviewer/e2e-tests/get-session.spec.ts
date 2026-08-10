@@ -180,7 +180,7 @@ describe("ReviewCampaigns - Reviewer session detail (blind redaction)", () => {
     reviewCampaignId = campaign.id
     sessionId = session.id
 
-    return { organization, project, agent, campaign, reviewer, tester, session }
+    return { organization, project, agent, agentSettings, campaign, reviewer, tester, session }
   }
 
   const subject = async () =>
@@ -435,6 +435,26 @@ describe("ReviewCampaigns - Reviewer session detail (blind redaction)", () => {
 
   it("returns formResult: null when fillForm is not enabled on the agent", async () => {
     await seedCampaignAndSession()
+    const response = await subject()
+    expectResponse(response, 200)
+    expect(response.body.data.formResult).toBeNull()
+  })
+
+  it("reads the last published revision, not a newer draft (#636)", async () => {
+    const { organization, project, agent, agentSettings } = await seedCampaignAndSession()
+    // The draft enables fillForm; the published revision does not. The reviewer
+    // context must keep describing what the tester actually ran.
+    await repositories.agentSettingsRepository.save(
+      agentSettingsFactory
+        .draft()
+        .transient({ organization, project, agent })
+        .build({
+          revision: agentSettings.revision + 1,
+          fillFormEnabled: true,
+          outputJsonSchema: { type: "object", properties: { fullName: { type: "string" } } },
+        }),
+    )
+
     const response = await subject()
     expectResponse(response, 200)
     expect(response.body.data.formResult).toBeNull()
