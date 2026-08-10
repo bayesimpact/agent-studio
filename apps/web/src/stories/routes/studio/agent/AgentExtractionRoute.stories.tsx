@@ -15,8 +15,14 @@ import { StudioRoutes } from "@/studio/routes/helpers"
 import { studioRoutes } from "@/studio/routes/StudioRoutes"
 
 type StoryArgs = StudioStoryArgs & {
-  /** Whether the agent has an unpublished draft, which the picker defaults to. */
+  /**
+   * Whether the agent has an unpublished draft, which the picker defaults to. With this off, only
+   * one version exists, so `AgentSettingsVersionSelect` early-returns and the picker disappears
+   * entirely — that is expected, not a regression.
+   */
   withPendingDraft?: boolean
+  /** Whether a document is seeded for the uploader's document list. */
+  withDocuments?: boolean
 }
 
 const meta = {
@@ -26,11 +32,13 @@ const meta = {
     ...studioStoryArgTypes,
     withAgents: { control: undefined },
     withPendingDraft: { control: "boolean" },
+    withDocuments: { control: "boolean" },
   },
   args: {
     ...studioStoryArgs,
     withAgents: true,
     withPendingDraft: true,
+    withDocuments: true,
   },
   render: render({ routes: studioRoutes, path: StudioRoutes.agentExtraction.path }),
 } satisfies Meta<StoryArgs>
@@ -40,7 +48,7 @@ type Story = StoryObj<typeof meta>
 
 /** One decorator body for every story; `chosenRevision` is the only thing that varies. */
 const buildExtractionDecorator = (chosenRevision?: number) =>
-  buildDecorator<StoryArgs>(({ withPendingDraft, ...args }) => {
+  buildDecorator<StoryArgs>(({ withPendingDraft, withDocuments, ...args }) => {
     const { baseSeeds, project, agents } = buildStudioData(args)
     const [firstAgent, ...restAgents] = agents
     const currentAgent = agentFactory.transient({ project }).build({
@@ -59,9 +67,13 @@ const buildExtractionDecorator = (chosenRevision?: number) =>
         : []),
       agentSettingsFactory.transient({ agent: currentAgent }).build({ revision: 1 }),
     ]
-    const document = documentFactory
-      .transient({ project })
-      .build({ fileName: "sample-report.pdf", mimeType: MimeTypes.pdf })
+    const documents = withDocuments
+      ? [
+          documentFactory
+            .transient({ project })
+            .build({ fileName: "sample-report.pdf", mimeType: MimeTypes.pdf }),
+        ]
+      : []
 
     return {
       state: mergeSeeds(
@@ -70,7 +82,7 @@ const buildExtractionDecorator = (chosenRevision?: number) =>
         seed.extractionAgentSessions({
           [currentAgent.id]: { csvSessions: [], others: [] },
         }),
-        seed.extractionAgentSessionDocuments([document]),
+        seed.extractionAgentSessionDocuments(documents),
         seed.studio.agentHistory({ agentId: currentAgent.id, versions }),
         ...(chosenRevision === undefined
           ? []

@@ -142,7 +142,7 @@ function FileManager({
         title={t("extractionAgentSession:create.title")}
         description={t("extractionAgentSession:create.description")}
         action={
-          <>
+          <div className="flex items-center gap-2">
             {renderVersionPicker}
             <FileUploader
               maxFiles={1}
@@ -160,7 +160,7 @@ function FileManager({
                 handleSubmit({ file })
               }}
             />
-          </>
+          </div>
         }
       />
 
