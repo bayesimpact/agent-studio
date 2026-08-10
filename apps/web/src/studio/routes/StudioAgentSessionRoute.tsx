@@ -25,7 +25,7 @@ import { useAppSelector } from "@/common/store/hooks"
 import { buildSince } from "@/common/utils/build-date"
 import { TraceUrlOpener } from "@/studio/components/TraceUrlOpener"
 import { AgentRevisionBadge } from "@/studio/features/agents/agent-settings/components/AgentRevisionBadge"
-import { AgentSettingsVersionSelect } from "@/studio/features/agents/agent-settings/components/AgentSettingsVersionSelect"
+import { PlaygroundVersionSelect } from "@/studio/features/agents/agent-settings/components/PlaygroundVersionSelect"
 
 type AgentSession = ConversationAgentSession
 export function StudioAgentSessionRoute({ agentSession }: { agentSession: AgentSession }) {
@@ -79,14 +79,6 @@ export function StudioAgentSessionRoute({ agentSession }: { agentSession: AgentS
     )
   }
 
-  const renderVersionSelect = (
-    <AgentSettingsVersionSelect
-      agentId={agent.id}
-      agentSessionId={agentSession.id}
-      revision={runningRevision}
-    />
-  )
-
   return (
     <div className="flex flex-col h-full">
       <GridHeader
@@ -129,7 +121,13 @@ export function StudioAgentSessionRoute({ agentSession }: { agentSession: AgentS
             runningSettings.fillFormEnabled ? runningSettings.outputJsonSchema : undefined
           }
           renderMessageVersion={renderMessageVersion}
-          renderVersionSelect={renderVersionSelect}
+          renderVersionSelect={
+            <PlaygroundVersionSelect
+              agentId={agent.id}
+              agentSessionId={agentSession.id}
+              revision={runningRevision}
+            />
+          }
         />
       </div>
     </div>

@@ -155,6 +155,7 @@
     },
     "version": {
       "ariaLabel": "Settings version new messages run with",
+      "extractionAriaLabel": "Settings version extractions run with",
       "placeholder": "Select a version",
       "item": "v{{revision}} — {{detail}}",
       "current": "Current ({{date}})"
