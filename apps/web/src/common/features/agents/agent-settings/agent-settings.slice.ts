@@ -1,4 +1,4 @@
-import { createSlice } from "@reduxjs/toolkit"
+import { createSlice, type PayloadAction } from "@reduxjs/toolkit"
 import { ADS, type AsyncData } from "@/common/store/async-data-status"
 import type { Agent } from "../agents.models"
 import type { AgentSettings } from "./agent-settings.models"
@@ -8,10 +8,16 @@ type DataType = Record<Agent["id"], AsyncData<AgentSettings[]>> // keyed by agen
 
 interface State {
   history: DataType
+  /**
+   * Version the playground runs, per session. Deliberately not persisted: a reload starts over
+   * from the draft-first default, which is the version a tester wants nine times out of ten.
+   */
+  playgroundRevisionBySessionId: Record<string, number>
 }
 
 const initialState: State = {
   history: {},
+  playgroundRevisionBySessionId: {},
 }
 
 const slice = createSlice({
@@ -21,6 +27,12 @@ const slice = createSlice({
     mount: () => {},
     unmount: () => {},
     reset: () => initialState,
+    setPlaygroundRevision: (
+      state,
+      action: PayloadAction<{ agentSessionId: string; revision: number }>,
+    ) => {
+      state.playgroundRevisionBySessionId[action.payload.agentSessionId] = action.payload.revision
+    },
   },
   extraReducers: (builder) => {
     builder

@@ -2,9 +2,13 @@ import { createSelector } from "@reduxjs/toolkit"
 import { selectAgentsData } from "@/common/features/agents/agents.selectors"
 import type { RootState } from "@/common/store"
 import { ADS, type AsyncData } from "@/common/store/async-data-status"
+import { resolveEffectiveRevision } from "./agent-settings.functions"
 import type { AgentSettings } from "./agent-settings.models"
 
 const selectAgentSettingsHistoryData = (state: RootState) => state.agentSettings.history
+
+const selectPlaygroundRevisions = (state: RootState) =>
+  state.agentSettings.playgroundRevisionBySessionId
 
 // Current Agent settings by agent ID
 export const selectAgentSettingsDataByAgentId = ({
@@ -71,3 +75,27 @@ export const selectAgentSettingsHistoryDataByAgentId = ({
 
     return { status: ADS.Fulfilled, error: null, value: filteredSettings }
   })
+
+/**
+ * Revision the playground runs new messages with for this session. `undefined` while the history
+ * is still loading — callers must then send no revision and let the API apply its own default.
+ */
+export const selectPlaygroundRevision = ({
+  agentId,
+  agentSessionId,
+}: {
+  agentId: string
+  agentSessionId: string
+}) =>
+  createSelector(
+    [selectAgentSettingsHistoryData, selectPlaygroundRevisions],
+    (history, revisionBySessionId): number | undefined => {
+      const agentHistory = history[agentId]
+      if (!agentHistory || !ADS.isFulfilled(agentHistory)) return undefined
+
+      return resolveEffectiveRevision({
+        versions: agentHistory.value,
+        chosenRevision: revisionBySessionId[agentSessionId],
+      })
+    },
+  )

@@ -1,8 +1,10 @@
 import { ToolName } from "@caseai-connect/api-contracts"
 import { createAsyncThunk } from "@reduxjs/toolkit"
+import { selectPlaygroundRevision } from "@/common/features/agents/agent-settings/agent-settings.selectors"
 import { getCurrentId } from "@/common/features/helpers"
 import type { RootState, ThunkExtraArg } from "@/common/store"
 import { generateId } from "@/common/utils/generate-id"
+import type { ConversationAgentSession } from "../../conversation/conversation-agent-sessions.models"
 import { conversationAgentSessionsActions } from "../../conversation/conversation-agent-sessions.slice"
 import { buildType } from "../base-agent-session/base-agent-sessions.thunks"
 import type { AgentSessionMessage } from "./agent-session-messages.models"
@@ -67,19 +69,35 @@ export const getAttachmentDocumentTemporaryUrl = createAsyncThunk<
 
 export const sendMessage = createAsyncThunk<
   void,
-  { content: string; file?: File; onFillFormToolEvent?: () => void },
+  {
+    content: string
+    agentSession: ConversationAgentSession
+    file?: File
+    onFillFormToolEvent?: () => void
+  },
   ThunkConfig
 >(
   "agentSessionMessages/sendMessage",
   async (
-    { content, file, onFillFormToolEvent },
+    { content, agentSession, file, onFillFormToolEvent },
     { extra: { services }, dispatch, getState, signal },
   ) => {
     const state = getState()
     const organizationId = getCurrentId({ state, name: "organizationId" })
     const projectId = getCurrentId({ state, name: "projectId" })
     const agentId = getCurrentId({ state, name: "agentId" })
-    const agentSessionId = getCurrentId({ state, name: "agentSessionId" })
+
+    if (agentSession.agentId !== agentId) {
+      throw new Error("Agent session does not belong to the current agent")
+    }
+
+    const agentSessionId = agentSession.id
+
+    // Only the playground may name a version; the API rejects one on a live session.
+    const agentSettingsRevision =
+      agentSession.type === "playground"
+        ? selectPlaygroundRevision({ agentId, agentSessionId })(state)
+        : undefined
 
     // Guard: don't allow sending if already streaming
     if (state.agentSessionMessages.isStreaming) {
@@ -111,7 +129,20 @@ export const sendMessage = createAsyncThunk<
       createdAt: Date.now(),
     }
 
-    dispatch(agentSessionMessagesActions.startStreaming({ userMessage, assistantMessageId }))
+    dispatch(
+      agentSessionMessagesActions.startStreaming({
+        userMessage,
+        assistantMessageId,
+        agentRevision: agentSettingsRevision,
+      }),
+    )
+
+    // The message the answer is being written into: the optimistic one until the stream names the
+    // persisted one. Errors and truncations are attributed to whichever is current.
+    let streamedMessageId = assistantMessageId
+    // A stream that ends with neither `end` nor `error` left the message half-written. Without
+    // this the bubble would stay in `streaming` for good and block every later send.
+    let sawTerminalEvent = false
 
     try {
       await streamChatResponse({
@@ -121,8 +152,11 @@ export const sendMessage = createAsyncThunk<
         agentSessionId,
         content,
         attachmentDocumentId,
+        agentSettingsRevision,
+        assistantMessageId,
         handlers: {
           onStart: (event) => {
+            streamedMessageId = event.messageId
             // Update the optimistic message ID to match the backend's ID
             dispatch(
               agentSessionMessagesActions.updateAssistantMessageId({
@@ -156,6 +190,7 @@ export const sendMessage = createAsyncThunk<
             }
           },
           onEnd: async (event) => {
+            sawTerminalEvent = true
             dispatch(
               agentSessionMessagesActions.completeAssistantMessage({
                 messageId: event.messageId,
@@ -165,6 +200,7 @@ export const sendMessage = createAsyncThunk<
             dispatch(getMessage(event.messageId))
           },
           onError: (event) => {
+            sawTerminalEvent = true
             dispatch(
               agentSessionMessagesActions.failAssistantMessage({
                 messageId: event.messageId,
@@ -175,11 +211,20 @@ export const sendMessage = createAsyncThunk<
         },
         signal,
       })
+
+      if (!sawTerminalEvent) {
+        dispatch(
+          agentSessionMessagesActions.failAssistantMessage({
+            messageId: streamedMessageId,
+            error: "The response ended unexpectedly",
+          }),
+        )
+      }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : "Failed to stream response"
       dispatch(
         agentSessionMessagesActions.failAssistantMessage({
-          messageId: assistantMessageId,
+          messageId: streamedMessageId,
           error: errorMessage,
         }),
       )

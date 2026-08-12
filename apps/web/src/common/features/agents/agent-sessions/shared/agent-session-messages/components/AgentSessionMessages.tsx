@@ -1,4 +1,5 @@
 import { Button } from "@caseai-connect/ui/shad/button"
+import { ButtonGroup } from "@caseai-connect/ui/shad/button-group"
 import {
   Command,
   CommandEmpty,
@@ -52,6 +53,7 @@ export function AgentSessionMessages({
   formSubSessions = [],
   formResultSchema,
   renderMessageVersion,
+  renderVersionSelect,
 }: {
   session: AgentSession
   messages: AgentSessionMessageType[]
@@ -63,6 +65,7 @@ export function AgentSessionMessages({
    * Studio uses it for the agent settings revision badge; the other surfaces omit it.
    */
   renderMessageVersion?: (message: AgentSessionMessageType) => React.ReactNode
+  renderVersionSelect?: React.ReactNode
 }) {
   const isStreaming = useAppSelector(selectStreaming)
 
@@ -87,6 +90,7 @@ export function AgentSessionMessages({
               messages={messages}
               isStreaming={isStreaming}
               onFillFormToolEvent={onFillFormToolEvent}
+              rightSlot={renderVersionSelect}
             />
           </MessageScrollerProvider>
         </Chat>
@@ -190,11 +194,13 @@ function Footer({
   messages,
   isStreaming,
   onFillFormToolEvent,
+  rightSlot,
 }: {
   session: ConversationAgentSession
   messages: AgentSessionMessageType[]
   isStreaming: boolean
   onFillFormToolEvent?: () => void
+  rightSlot?: React.ReactNode
 }) {
   const { t } = useTranslation()
   const dispatch = useAppDispatch()
@@ -207,7 +213,14 @@ function Footer({
   const handleSubmit = (message: string) => {
     const trimmedMessage = message.trim()
     if (isStreaming || !trimmedMessage) return
-    void dispatch(sendMessage({ content: trimmedMessage, file, onFillFormToolEvent }))
+    void dispatch(
+      sendMessage({
+        content: trimmedMessage,
+        file,
+        onFillFormToolEvent,
+        agentSession: session,
+      }),
+    )
     handleUnattachDocument()
   }
 
@@ -234,7 +247,14 @@ function Footer({
           <Dictaphone disabled={isStreaming || !session} />
           <MessageNavigator messages={messages} />
         </div>
-        <ChatSubmit variant="ghost" disabled={isStreaming || !session} />
+        <ButtonGroup>
+          {rightSlot}
+          <ChatSubmit
+            size={rightSlot ? "icon-sm" : "icon"}
+            variant={rightSlot ? "default" : "ghost"}
+            disabled={isStreaming || !session}
+          />
+        </ButtonGroup>
       </ChatActions>
     </ChatFooter>
   )

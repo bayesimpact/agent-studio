@@ -1,59 +1,20 @@
-import { AgentSessionMessagesRoutes, type StreamEvent } from "@caseai-connect/api-contracts"
 import { getAccessToken } from "@/external/auth0Client"
+import {
+  processSSEChunk,
+  type StreamContext,
+  type StreamEventHandler,
+} from "./agent-session-messages-streaming-events"
+import { buildStreamUrl } from "./agent-session-messages-streaming-url"
 
-export type StreamEventHandler = {
-  onStart?: (event: Extract<StreamEvent, { type: "start" }>) => void
-  onChunk: (event: Extract<StreamEvent, { type: "chunk" }>) => void
-  onNotifyClient: (event: Extract<StreamEvent, { type: "notify_client" }>) => void
-  onEnd: (event: Extract<StreamEvent, { type: "end" }>) => void
-  onError: (event: Extract<StreamEvent, { type: "error" }>) => void
-}
-
-function parseSSEEvent(eventText: string): StreamEvent | null {
-  const dataLine = eventText.split("\n").find((line) => line.startsWith("data: "))
-  if (!dataLine) return null
-  try {
-    return JSON.parse(dataLine.slice(6)) as StreamEvent
-  } catch (parseError) {
-    console.error("Failed to parse SSE event:", parseError, "Data:", dataLine.slice(6))
-    return null
-  }
-}
-
-/** Returns true if the stream should terminate. */
-function dispatchStreamEvent(event: StreamEvent, handlers: StreamEventHandler): boolean {
-  if (event.type === "start") handlers.onStart?.(event)
-  else if (event.type === "chunk") handlers.onChunk(event)
-  else if (event.type === "notify_client") handlers.onNotifyClient(event)
-  else if (event.type === "end") {
-    handlers.onEnd(event)
-    return true
-  } else if (event.type === "error") {
-    handlers.onError(event)
-    return true
-  }
-  return false
-}
-
-function processSSEChunk(
-  chunk: string,
-  handlers: StreamEventHandler,
-): { remaining: string; done: boolean } {
-  const parts = chunk.split("\n\n")
-  const remaining = parts.pop() ?? ""
-
-  for (const eventText of parts) {
-    if (!eventText.trim()) continue
-    const event = parseSSEEvent(eventText)
-    if (event && dispatchStreamEvent(event, handlers)) return { remaining, done: true }
-  }
-
-  return { remaining, done: false }
-}
+export type { StreamEventHandler }
 
 /**
  * Streams a chat response using Server-Sent Events (SSE).
  * Uses fetch instead of EventSource to support Authorization headers.
+ *
+ * `assistantMessageId` is the optimistic message the answer is being written into: error frames
+ * come back without a message id, so they are attributed to it until a frame names the persisted
+ * message instead.
  */
 export async function streamChatResponse({
   organizationId,
@@ -62,6 +23,8 @@ export async function streamChatResponse({
   agentSessionId,
   content,
   attachmentDocumentId,
+  agentSettingsRevision,
+  assistantMessageId,
   handlers,
   signal,
 }: {
@@ -71,16 +34,28 @@ export async function streamChatResponse({
   agentSessionId: string
   content: string
   attachmentDocumentId?: string
+  agentSettingsRevision?: number
+  assistantMessageId: string
   handlers: StreamEventHandler
   signal?: AbortSignal
 }): Promise<void> {
   try {
     const token = await getAccessToken()
-    const baseURL = import.meta.env.VITE_API_URL as string
-    const body = {
-      payload: { content, attachmentDocumentId },
-    } satisfies typeof AgentSessionMessagesRoutes.stream.request
-    const url = `${baseURL}${AgentSessionMessagesRoutes.stream.getPath({ organizationId, projectId, agentId, agentSessionId })}?q=${encodeURIComponent(JSON.stringify(body))}`
+    if (!token) throw new Error("No access token available")
+
+    const baseURL = import.meta.env.VITE_API_URL as string | undefined
+    if (!baseURL) throw new Error("VITE_API_URL is not defined")
+
+    const url = buildStreamUrl({
+      baseURL,
+      organizationId,
+      projectId,
+      agentId,
+      agentSessionId,
+      content,
+      attachmentDocumentId,
+      agentSettingsRevision,
+    })
 
     const response = await fetch(url, {
       method: "GET",
@@ -96,6 +71,7 @@ export async function streamChatResponse({
 
     const reader = response.body.getReader()
     const decoder = new TextDecoder()
+    const context: StreamContext = { messageId: assistantMessageId }
     let buffer = ""
 
     try {
@@ -104,12 +80,12 @@ export async function streamChatResponse({
 
         if (done) {
           // Flush any remaining buffered events
-          if (buffer.trim()) processSSEChunk(`${buffer}\n\n`, handlers)
+          if (buffer.trim()) processSSEChunk(`${buffer}\n\n`, handlers, context)
           break
         }
 
         buffer += decoder.decode(value, { stream: true })
-        const result = processSSEChunk(buffer, handlers)
+        const result = processSSEChunk(buffer, handlers, context)
         buffer = result.remaining
         if (result.done) return
       }

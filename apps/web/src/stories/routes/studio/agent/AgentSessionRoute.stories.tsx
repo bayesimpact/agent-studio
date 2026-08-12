@@ -26,6 +26,7 @@ type StoryArgs = StudioStoryArgs & {
   withSubAgentForms?: boolean
   withVersionHistory?: boolean
   withPendingDraft?: boolean
+  pinnedRevision?: number
 }
 
 const meta = {
@@ -39,6 +40,7 @@ const meta = {
     withSubAgentForms: { control: "boolean" },
     withVersionHistory: { control: "boolean" },
     withPendingDraft: { control: "boolean" },
+    pinnedRevision: { control: "number" },
   },
   args: {
     ...studioStoryArgs,
@@ -48,6 +50,7 @@ const meta = {
     withSubAgentForms: false,
     withVersionHistory: true,
     withPendingDraft: false,
+    pinnedRevision: undefined,
   },
   render: render({ routes: studioRoutes, path: StudioRoutes.agentSession.path }),
 } satisfies Meta<StoryArgs>
@@ -64,6 +67,7 @@ export const Default: Story = {
         withSubAgentForms,
         withVersionHistory,
         withPendingDraft,
+        pinnedRevision,
         ...args
       }) => {
         const { baseSeeds, project, agents } = buildStudioData(args)
@@ -170,6 +174,12 @@ export const Default: Story = {
             seed.currentAgentSessionId(session.id),
             seed.agentSessionMessages(messages),
             seed.studio.agentHistory({ agentId: currentAgent.id, versions }),
+            pinnedRevision !== undefined
+              ? seed.studio.playgroundRevision({
+                  agentSessionId: session.id,
+                  revision: pinnedRevision,
+                })
+              : {},
           ),
         }
       },
@@ -187,9 +197,15 @@ export const WithSubAgentForms: Story = {
   decorators: Default.decorators,
 }
 
-/** A draft exists but is not published, so the header badge stays on the older running revision. */
+/** A draft exists, so the playground defaults to running it and the header select turns amber. */
 export const WithPendingDraft: Story = {
   args: { withVersionHistory: true, withPendingDraft: true },
+  decorators: Default.decorators,
+}
+
+/** A draft exists but the tester pinned the published version, so nothing unpublished runs. */
+export const WithPublishedPinned: Story = {
+  args: { withVersionHistory: true, withPendingDraft: true, pinnedRevision: 2 },
   decorators: Default.decorators,
 }
 
@@ -199,7 +215,7 @@ export const NonManager: Story = {
   decorators: Default.decorators,
 }
 
-/** History not loaded (or failed): the playground renders, header badge is hidden. */
+/** An agent with a single version: the picker renders with nothing to switch to. */
 export const WithoutVersionHistory: Story = {
   args: { withVersionHistory: false },
   decorators: Default.decorators,
