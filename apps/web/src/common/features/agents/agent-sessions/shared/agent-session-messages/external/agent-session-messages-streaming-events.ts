@@ -9,7 +9,7 @@ import type { StreamEventPayload } from "@caseai-connect/api-contracts"
  * intersection the server builds its frames from: the client only ever sees the payload.
  */
 export type StreamEventHandler = {
-  onStart?: (event: Extract<StreamEventPayload, { type: "start" }>) => void
+  onStart: (event: Extract<StreamEventPayload, { type: "start" }>) => void
   onChunk: (event: Extract<StreamEventPayload, { type: "chunk" }>) => void
   onNotifyClient: (event: Extract<StreamEventPayload, { type: "notify_client" }>) => void
   onEnd: (event: Extract<StreamEventPayload, { type: "end" }>) => void
@@ -67,9 +67,10 @@ export function dispatchStreamEvent(
   handlers: StreamEventHandler,
   context: StreamContext,
 ): boolean {
+  // The server's `notify_client` frames carry a message id, so the optimistic one can be replaced with the persisted one. The other frames don't, so they borrow the optimistic one until a frame names the persisted one.
   if (event.type !== "notify_client") context.messageId = event.messageId
 
-  if (event.type === "start") handlers.onStart?.(event)
+  if (event.type === "start") handlers.onStart(event)
   else if (event.type === "chunk") handlers.onChunk(event)
   else if (event.type === "notify_client") handlers.onNotifyClient(event)
   else if (event.type === "end") {

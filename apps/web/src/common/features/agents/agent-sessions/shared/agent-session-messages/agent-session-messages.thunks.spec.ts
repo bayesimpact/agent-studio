@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest"
 import { agentFactory } from "@/common/features/agents/agent.factory"
+import type { ConversationAgentSession } from "@/common/features/agents/agent-sessions/conversation/conversation-agent-sessions.models"
 import { agentSettingsFactory } from "@/common/features/agents/agent-settings/agent-settings.factory"
 import { organizationFactory } from "@/common/features/organizations/organization.factory"
 import { projectFactory } from "@/common/features/projects/projects.factory"
@@ -84,7 +85,13 @@ describe("sendMessage", () => {
     const state = buildState({ history: { [agentId]: versions }, chosenRevision: 2 })
     const dispatch = vi.fn()
 
-    await sendMessage({ content: "Hello" })(dispatch, () => state, extra)
+    const agentSession = {
+      id: agentSessionId,
+      type: "playground",
+      agentId,
+    } as ConversationAgentSession
+
+    await sendMessage({ content: "Hello", agentSession })(dispatch, () => state, extra)
 
     expect(mockedStreamChatResponse).toHaveBeenCalledWith(
       expect.objectContaining({ agentSettingsRevision: 2 }),
@@ -97,7 +104,13 @@ describe("sendMessage", () => {
     const state = buildState({ history: { [agentId]: versions }, chosenRevision: 2 })
     const dispatch = vi.fn()
 
-    await sendMessage({ content: "Hello" })(dispatch, () => state, extra)
+    const agentSession = {
+      id: agentSessionId,
+      type: "live",
+      agentId,
+    } as ConversationAgentSession
+
+    await sendMessage({ content: "Hello", agentSession })(dispatch, () => state, extra)
 
     expect(mockedStreamChatResponse).toHaveBeenCalledWith(
       expect.objectContaining({ agentSettingsRevision: undefined }),
@@ -109,7 +122,13 @@ describe("sendMessage", () => {
     const state = buildState()
     const dispatch = vi.fn()
 
-    await sendMessage({ content: "Hello" })(dispatch, () => state, extra)
+    const agentSession = {
+      id: agentSessionId,
+      type: "playground",
+      agentId,
+    } as ConversationAgentSession
+
+    await sendMessage({ content: "Hello", agentSession })(dispatch, () => state, extra)
 
     expect(mockedStreamChatResponse).toHaveBeenCalledWith(
       expect.objectContaining({ agentSettingsRevision: undefined }),
@@ -123,7 +142,13 @@ describe("sendMessage", () => {
     const state = buildState({ history: { [agentId]: versions }, chosenRevision: 2 })
     const dispatch = vi.fn()
 
-    await sendMessage({ content: "Hello" })(dispatch, () => state, extra)
+    const agentSession = {
+      id: agentSessionId,
+      type: "playground",
+      agentId,
+    } as ConversationAgentSession
+
+    await sendMessage({ content: "Hello", agentSession })(dispatch, () => state, extra)
 
     expect(findAction(dispatch, "startStreaming")?.payload).toMatchObject({ agentRevision: 2 })
   })
@@ -134,7 +159,13 @@ describe("sendMessage", () => {
     mockedIsStudioInterface.mockReturnValue(true)
     const dispatch = vi.fn()
 
-    await sendMessage({ content: "Hello" })(dispatch, () => buildState(), extra)
+    const agentSession = {
+      id: agentSessionId,
+      type: "playground",
+      agentId,
+    } as ConversationAgentSession
+
+    await sendMessage({ content: "Hello", agentSession })(dispatch, () => buildState(), extra)
 
     const startStreaming = findAction(dispatch, "startStreaming")
     expect(findAction(dispatch, "failAssistantMessage")?.payload).toEqual({
@@ -150,7 +181,13 @@ describe("sendMessage", () => {
     })
     const dispatch = vi.fn()
 
-    await sendMessage({ content: "Hello" })(dispatch, () => buildState(), extra)
+    const agentSession = {
+      id: agentSessionId,
+      type: "playground",
+      agentId,
+    } as ConversationAgentSession
+
+    await sendMessage({ content: "Hello", agentSession })(dispatch, () => buildState(), extra)
 
     expect(findAction(dispatch, "failAssistantMessage")).toBeUndefined()
     expect(findAction(dispatch, "completeAssistantMessage")).toBeDefined()

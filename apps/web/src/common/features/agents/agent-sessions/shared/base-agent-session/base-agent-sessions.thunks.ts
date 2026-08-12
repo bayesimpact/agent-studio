@@ -61,6 +61,7 @@ export const deleteAgentSession = createAsyncThunk<
   },
 )
 
+// FIXME: This is a temporary solution to avoid having to duplicate functions for live and playground agent sessions.
 export function buildType() {
   return isStudioInterface() ? "playground" : "live"
 }
