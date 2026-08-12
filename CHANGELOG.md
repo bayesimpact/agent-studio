@@ -33,6 +33,8 @@ This project uses [CalVer](https://calver.org/) (YY.MM.Micro) for product versio
 - Embedded agents now answer with the agent's published version: the widget on a customer site, the greeting of a new embed session, and the reviewer's session view all stopped picking up an unpublished draft as soon as an author saved a change in the agent editor; archived versions are skipped the same way
 - Evaluations: retrying an extraction run re-processes its records with the settings version the run was launched on, instead of the agent's newest version, which could be an unpublished draft
 - Fix some scanned PDF documents importing with no extracted text
+- Studio playground no longer crashes for project admins who don't manage the agent
+- Agent editor no longer crashes when the page is reloaded while the settings are still loading
 
 ### Security
 ## [26.07.3] - 2026-07-24
