@@ -213,7 +213,14 @@ function Footer({
   const handleSubmit = (message: string) => {
     const trimmedMessage = message.trim()
     if (isStreaming || !trimmedMessage) return
-    void dispatch(sendMessage({ content: trimmedMessage, file, onFillFormToolEvent }))
+    void dispatch(
+      sendMessage({
+        content: trimmedMessage,
+        file,
+        onFillFormToolEvent,
+        agentSession: session,
+      }),
+    )
     handleUnattachDocument()
   }
 

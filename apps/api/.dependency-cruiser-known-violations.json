@@ -3592,15 +3592,6 @@
   {
     "type": "dependency",
     "from": "src/domains/public-chat/public-agent-sessions/public-agent-sessions.service.ts",
-    "to": "src/domains/agents/settings/agent-settings.entity.ts",
-    "rule": {
-      "severity": "error",
-      "name": "no-cross-domain-entity-import"
-    }
-  },
-  {
-    "type": "dependency",
-    "from": "src/domains/public-chat/public-agent-sessions/public-agent-sessions.service.ts",
     "to": "src/domains/agents/shared/agent-session-messages/agent-message.entity.ts",
     "rule": {
       "severity": "error",
@@ -3628,15 +3619,6 @@
   {
     "type": "dependency",
     "from": "src/domains/public-chat/public-chat.module.ts",
-    "to": "src/domains/agents/settings/agent-settings.entity.ts",
-    "rule": {
-      "severity": "error",
-      "name": "no-cross-domain-entity-import"
-    }
-  },
-  {
-    "type": "dependency",
-    "from": "src/domains/public-chat/public-chat.module.ts",
     "to": "src/domains/agents/shared/agent-session-messages/agent-message.entity.ts",
     "rule": {
       "severity": "error",
@@ -3647,15 +3629,6 @@
     "type": "dependency",
     "from": "src/domains/public-chat/public-chat.service.ts",
     "to": "src/domains/agents/agent.entity.ts",
-    "rule": {
-      "severity": "error",
-      "name": "no-cross-domain-entity-import"
-    }
-  },
-  {
-    "type": "dependency",
-    "from": "src/domains/public-chat/public-chat.service.ts",
-    "to": "src/domains/agents/settings/agent-settings.entity.ts",
     "rule": {
       "severity": "error",
       "name": "no-cross-domain-entity-import"
@@ -3836,15 +3809,6 @@
     "type": "dependency",
     "from": "src/domains/review-campaigns/reviewer/reviewer.service.ts",
     "to": "src/domains/agents/conversation-agent-sessions/conversation-agent-session.entity.ts",
-    "rule": {
-      "severity": "error",
-      "name": "no-cross-domain-entity-import"
-    }
-  },
-  {
-    "type": "dependency",
-    "from": "src/domains/review-campaigns/reviewer/reviewer.service.ts",
-    "to": "src/domains/agents/settings/agent-settings.entity.ts",
     "rule": {
       "severity": "error",
       "name": "no-cross-domain-entity-import"
@@ -4365,6 +4329,24 @@
   },
   {
     "type": "dependency",
+    "from": "src/domains/public-chat/public-agent-sessions/public-agent-sessions.service.ts",
+    "to": "src/domains/agents/settings/agent-settings.service.ts",
+    "rule": {
+      "severity": "warn",
+      "name": "no-cross-domain-service-reach"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "src/domains/public-chat/public-chat.service.ts",
+    "to": "src/domains/agents/settings/agent-settings.service.ts",
+    "rule": {
+      "severity": "warn",
+      "name": "no-cross-domain-service-reach"
+    }
+  },
+  {
+    "type": "dependency",
     "from": "src/domains/public-chat/public-chat.service.ts",
     "to": "src/domains/agents/shared/agent-session-messages/streaming/streaming.service.ts",
     "rule": {
@@ -4375,6 +4357,15 @@
   {
     "type": "dependency",
     "from": "src/domains/review-campaigns/review-campaigns.service.ts",
+    "to": "src/domains/agents/settings/agent-settings.service.ts",
+    "rule": {
+      "severity": "warn",
+      "name": "no-cross-domain-service-reach"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "src/domains/review-campaigns/reviewer/reviewer.service.ts",
     "to": "src/domains/agents/settings/agent-settings.service.ts",
     "rule": {
       "severity": "warn",

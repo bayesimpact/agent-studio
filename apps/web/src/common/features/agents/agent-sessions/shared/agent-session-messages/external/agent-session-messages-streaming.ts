@@ -41,8 +41,13 @@ export async function streamChatResponse({
 }): Promise<void> {
   try {
     const token = await getAccessToken()
+    if (!token) throw new Error("No access token available")
+
+    const baseURL = import.meta.env.VITE_API_URL as string | undefined
+    if (!baseURL) throw new Error("VITE_API_URL is not defined")
+
     const url = buildStreamUrl({
-      baseURL: import.meta.env.VITE_API_URL as string,
+      baseURL,
       organizationId,
       projectId,
       agentId,

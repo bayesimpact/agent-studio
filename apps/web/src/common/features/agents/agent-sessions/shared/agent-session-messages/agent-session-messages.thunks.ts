@@ -4,6 +4,7 @@ import { selectPlaygroundRevision } from "@/common/features/agents/agent-setting
 import { getCurrentId } from "@/common/features/helpers"
 import type { RootState, ThunkExtraArg } from "@/common/store"
 import { generateId } from "@/common/utils/generate-id"
+import type { ConversationAgentSession } from "../../conversation/conversation-agent-sessions.models"
 import { conversationAgentSessionsActions } from "../../conversation/conversation-agent-sessions.slice"
 import { buildType } from "../base-agent-session/base-agent-sessions.thunks"
 import type { AgentSessionMessage } from "./agent-session-messages.models"
@@ -68,19 +69,35 @@ export const getAttachmentDocumentTemporaryUrl = createAsyncThunk<
 
 export const sendMessage = createAsyncThunk<
   void,
-  { content: string; file?: File; onFillFormToolEvent?: () => void },
+  {
+    content: string
+    agentSession: ConversationAgentSession
+    file?: File
+    onFillFormToolEvent?: () => void
+  },
   ThunkConfig
 >(
   "agentSessionMessages/sendMessage",
   async (
-    { content, file, onFillFormToolEvent },
+    { content, agentSession, file, onFillFormToolEvent },
     { extra: { services }, dispatch, getState, signal },
   ) => {
     const state = getState()
     const organizationId = getCurrentId({ state, name: "organizationId" })
     const projectId = getCurrentId({ state, name: "projectId" })
     const agentId = getCurrentId({ state, name: "agentId" })
-    const agentSessionId = getCurrentId({ state, name: "agentSessionId" })
+
+    if (agentSession.agentId !== agentId) {
+      throw new Error("Agent session does not belong to the current agent")
+    }
+
+    const agentSessionId = agentSession.id
+
+    // Only the playground may name a version; the API rejects one on a live session.
+    const agentSettingsRevision =
+      agentSession.type === "playground"
+        ? selectPlaygroundRevision({ agentId, agentSessionId })(state)
+        : undefined
 
     // Only the playground may name a version; the API rejects one on a live session. `buildType`
     // is the same signal the session was created with, so the two can never disagree.

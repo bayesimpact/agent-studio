@@ -8,18 +8,18 @@ import {
 import { cn } from "@caseai-connect/ui/utils"
 import { TriangleAlertIcon } from "lucide-react"
 import { useTranslation } from "react-i18next"
+import { selectStreaming } from "@/common/features/agents/agent-sessions/shared/agent-session-messages/agent-session-messages.selectors"
 import { findPublishedVersion } from "@/common/features/agents/agent-settings/agent-settings.functions"
 import type { AgentSettings } from "@/common/features/agents/agent-settings/agent-settings.models"
 import { selectAgentSettingsHistoryDataByAgentId } from "@/common/features/agents/agent-settings/agent-settings.selectors"
+import { agentSettingsActions } from "@/common/features/agents/agent-settings/agent-settings.slice"
 import { useAbility } from "@/common/hooks/use-ability"
-import { ADS } from "@/common/store/async-data-status"
-import { useAppSelector } from "@/common/store/hooks"
+import { useValue } from "@/common/hooks/use-value"
+import { useAppDispatch, useAppSelector } from "@/common/store/hooks"
 import { buildDate } from "@/common/utils/build-date"
 
 /**
- * Which settings version a surface runs with. Presentational: the caller owns the value, the
- * change handler and the disabled flag, so the playground and the extraction screens can each
- * store their choice where it belongs.
+ * Which settings version the playground runs new messages with.
  *
  * The draft is called out twice over — the trigger reads "v7 — Draft" and turns amber — because a
  * bare version number is not enough to stop someone demoing an unpublished agent to a client by
@@ -32,37 +32,37 @@ import { buildDate } from "@/common/utils/build-date"
  * endpoint omits them, so an archived version is never offered here.
  */
 export function AgentSettingsVersionSelect({
-  agentId,
   revision,
-  ariaLabel,
-  onChange,
-  disabled = false,
+  agentId,
+  agentSessionId,
 }: {
   agentId: string
+  agentSessionId: string
   revision: number | undefined
-  ariaLabel: string
-  onChange: (revision: number) => void
-  disabled?: boolean
 }) {
+  const dispatch = useAppDispatch()
   const { t } = useTranslation()
   const { abilities } = useAbility()
   const canManageAgent = abilities.canManageAgent({ agentId })
 
-  // The extraction routes render before their settings history is guaranteed to be loaded (a
-  // hard reload or deep link can land here while the fetch is still in flight), and never fetch
-  // it at all for a member who cannot manage the agent. The playground route always has a
-  // fulfilled history by the time this component renders, so this guard changes nothing there,
-  // but `useValue` would throw in both extraction cases, taking the screen down with it.
-  const versionsData = useAppSelector(
+  const versions = useValue(
     selectAgentSettingsHistoryDataByAgentId({ agentId, includeDraft: true }),
   )
 
-  if (!canManageAgent) return null
-  if (!ADS.isFulfilled(versionsData)) return null
-  const versions = versionsData.value
+  const isStreaming = useAppSelector(selectStreaming)
+  const disabled = isStreaming || versions.length < 2
 
-  if (versions.length < 2) {
+  if (!canManageAgent || versions.length < 2) {
     return null
+  }
+
+  const handleRevisionChange = (revision: number) => {
+    dispatch(
+      agentSettingsActions.setPlaygroundRevision({
+        agentSessionId,
+        revision,
+      }),
+    )
   }
 
   const publishedRevision = findPublishedVersion(versions)?.revision
@@ -87,13 +87,13 @@ export function AgentSettingsVersionSelect({
       value={revision !== undefined ? String(revision) : undefined}
       onValueChange={(value) => {
         const parsed = Number.parseInt(value, 10)
-        if (!Number.isNaN(parsed)) onChange(parsed)
+        if (!Number.isNaN(parsed)) handleRevisionChange(parsed)
       }}
       disabled={disabled}
     >
       <SelectTrigger
         size="sm"
-        aria-label={ariaLabel}
+        aria-label={t("agentSettings:version.ariaLabel")}
         className={cn(
           "font-normal",
           selectedVersion?.isDraft && "border-orange-500 text-orange-500",

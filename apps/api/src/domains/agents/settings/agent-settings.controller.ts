@@ -39,7 +39,11 @@ export class AgentSettingsController {
 
   // History timeline of all revisions for the agent settings, including drafts and published revisions.
   @Get(AgentSettingsRoutes.getAll.path)
-  @CheckPolicy((policy) => policy.canUpdate())
+  // NOTE: Project admin with only agent member access can see the history
+  // canCreate(): boolean {
+  //   return this.canAccess() && this.isProjectAdminOrOwner()
+  // }
+  @CheckPolicy((policy) => policy.canCreate())
   async getAll(
     @Req() request: EndpointRequestWithAgent,
   ): Promise<typeof AgentSettingsRoutes.getAll.response> {

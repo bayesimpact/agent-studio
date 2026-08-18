@@ -18,7 +18,6 @@ import {
 } from "@/common/features/agents/agent-settings/agent-settings.selectors"
 import { selectCurrentAgentData } from "@/common/features/agents/agents.selectors"
 import { DeleteAgentSessionButton } from "@/common/features/agents/components/DeleteAgentSessionButton"
-import { useAbility } from "@/common/hooks/use-ability"
 import { useGetAgentRoute } from "@/common/hooks/use-get-path"
 import { useValue } from "@/common/hooks/use-value"
 import { useAppSelector } from "@/common/store/hooks"
@@ -46,9 +45,6 @@ export function StudioAgentSessionRoute({ agentSession }: { agentSession: AgentS
 
   const handleBack = () => navigate(agentRoute)
 
-  const { abilities } = useAbility()
-  const canManageAgent = abilities.canManageAgent({ agentId: agent.id })
-
   const versions = useValue(
     selectAgentSettingsHistoryDataByAgentId({ agentId: agent.id, includeDraft: true }),
   )
@@ -66,7 +62,6 @@ export function StudioAgentSessionRoute({ agentSession }: { agentSession: AgentS
     publishedSettings
 
   const renderMessageVersion = (message: AgentSessionMessage) => {
-    if (!canManageAgent) return null
     const revision = resolveMessageRevision(message, runningRevision)
     if (revision === undefined) return null
     return (
@@ -87,7 +82,7 @@ export function StudioAgentSessionRoute({ agentSession }: { agentSession: AgentS
         description={
           <div className="flex items-center gap-2 flex-wrap">
             {date}
-            {canManageAgent && runningRevision && (
+            {runningRevision && (
               <>
                 {" "}
                 •

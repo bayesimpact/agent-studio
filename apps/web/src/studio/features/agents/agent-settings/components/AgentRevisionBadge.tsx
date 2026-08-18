@@ -32,6 +32,7 @@ export function AgentRevisionBadge({
   const { t } = useTranslation()
   const [open, setOpen] = useState(false)
   const version = findVersion(versions, revision)
+  const isDraft = version?.isDraft ?? false
 
   return (
     <>
@@ -39,7 +40,7 @@ export function AgentRevisionBadge({
         <TooltipTrigger asChild>
           <Badge
             asChild
-            variant="secondary"
+            variant={isDraft ? "warning" : "secondary"}
             className="cursor-pointer hover:bg-secondary/70"
             aria-label={t("agentSettings:history.revisionBadgeAria", { revision })}
           >
@@ -49,7 +50,8 @@ export function AgentRevisionBadge({
               aria-expanded={open}
               onClick={() => setOpen(true)}
             >
-              {t("agentSettings:history.revisionBadge", { revision })}
+              {t("agentSettings:history.revisionBadge", { revision })}{" "}
+              {isDraft && `- ${t("agentSettings:history.draft")}`}
             </button>
           </Badge>
         </TooltipTrigger>

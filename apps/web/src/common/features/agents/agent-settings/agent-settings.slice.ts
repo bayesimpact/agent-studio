@@ -12,11 +12,13 @@ interface State {
    * Version the playground runs, per session. Deliberately not persisted: a reload starts over
    * from the draft-first default, which is the version a tester wants nine times out of ten.
    */
+  // Playground conversation
   playgroundRevisionBySessionId: Record<string, number>
   /**
    * Version an extraction runs, per agent. Keyed by agent rather than by session because the
    * choice is made before any run exists. Not persisted, for the same reason as above.
    */
+  // Playground extraction
   extractionRevisionByAgentId: Record<string, number>
 }
 
