@@ -95,16 +95,7 @@ export const sendMessage = createAsyncThunk<
 
     // Only the playground may name a version; the API rejects one on a live session.
     const agentSettingsRevision =
-      agentSession.type === "playground"
-        ? selectPlaygroundRevision({ agentId, agentSessionId })(state)
-        : undefined
-
-    // Only the playground may name a version; the API rejects one on a live session. `buildType`
-    // is the same signal the session was created with, so the two can never disagree.
-    const agentSettingsRevision =
-      buildType() === "playground"
-        ? selectPlaygroundRevision({ agentId, agentSessionId })(state)
-        : undefined
+      agentSession.type === "playground" ? selectPlaygroundRevision({ agentId })(state) : undefined
 
     // Guard: don't allow sending if already streaming
     if (state.agentSessionMessages.isStreaming) {

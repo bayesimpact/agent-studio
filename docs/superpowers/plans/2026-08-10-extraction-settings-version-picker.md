@@ -38,7 +38,7 @@
 
 **Web state**
 - Modify `apps/web/src/common/features/agents/agent-settings/agent-settings.slice.ts` — `extractionRevisionByAgentId` + `setExtractionRevision`
-- Modify `apps/web/src/common/features/agents/agent-settings/agent-settings.selectors.ts` — `selectExtractionRevision`
+- Modify `apps/web/src/common/features/agents/agent-settings/agent-settings.selectors.ts` — `selectPlaygroundRevision`
 - Modify `apps/web/src/common/features/agents/agent-sessions/extraction/extraction-agent-sessions.spi.ts` and `external/extraction-agent-sessions.api.ts` and `extraction-agent-sessions.thunks.ts`
 - Create `apps/web/src/common/features/agents/agent-sessions/extraction/extraction-agent-sessions.thunks.spec.ts`
 - Modify `apps/web/src/common/features/agents/csv-extraction-runs/agent-csv-extraction-runs.spi.ts` and `external/agent-csv-extraction-runs.api.ts` and `agent-csv-extraction-runs.thunks.ts`
@@ -53,7 +53,7 @@
 - Modify `apps/web/src/common/features/agents/csv-extraction-runs/components/CsvExtractor.tsx` — accept and render `renderVersionPicker`
 - Modify `apps/web/src/studio/routes/StudioRoutes.tsx` and `apps/web/src/desk/routes/DeskRoutes.tsx`
 - Modify `apps/web/src/common/features/agents/agent-settings/locales/agent-settings.{en,fr}.json`
-- Modify `apps/web/src/stories/seed.ts` — `seed.studio.extractionRevision`
+- Modify `apps/web/src/stories/seed.ts` — `seed.studio.playgroundRevision`
 - Create `apps/web/src/stories/routes/studio/agent/AgentExtractionRoute.stories.tsx`
 
 **Docs**
@@ -803,7 +803,7 @@ git commit -m "fix(extraction): retry a CSV run with the version it was pinned t
 - Consumes: `ExtractionAgentSessionsRoutes.executeOne` payload from Task 1. `resolveEffectiveRevision({ versions, chosenRevision }): number | undefined` from `agent-settings.functions.ts`.
 - Produces:
   - `agentSettingsActions.setExtractionRevision({ agentId: string, revision: number })`
-  - `selectExtractionRevision({ agentId: string })` returning `number | undefined`
+  - `selectPlaygroundRevision({ agentId: string })` returning `number | undefined`
   - `State.extractionRevisionByAgentId: Record<string, number>` on the `agentSettings` slice
 
   All three are consumed by Tasks 5, 7 and 8.
@@ -992,7 +992,7 @@ and at the end of the file:
  * made before a run exists. `undefined` while the history is still loading — callers must then
  * send no revision and let the API apply its own draft-first default.
  */
-export const selectExtractionRevision = ({ agentId }: { agentId: string }) =>
+export const selectPlaygroundRevision = ({ agentId }: { agentId: string }) =>
   createSelector(
     [selectAgentSettingsHistoryData, selectExtractionRevisions],
     (history, revisionByAgentId): number | undefined => {
@@ -1038,7 +1038,7 @@ In `external/extraction-agent-sessions.api.ts`, replace `executeOne`:
 In `extraction-agent-sessions.thunks.ts`, add the import:
 
 ```ts
-import { selectExtractionRevision } from "@/common/features/agents/agent-settings/agent-settings.selectors"
+import { selectPlaygroundRevision } from "@/common/features/agents/agent-settings/agent-settings.selectors"
 ```
 
 and replace the tail of `executeOne`:
@@ -1051,7 +1051,7 @@ and replace the tail of `executeOne`:
     // Only Studio may name a version; a Desk run is a live run and the API rejects a revision on
     // one. `undefined` while the history is loading, which lets the API apply its own default.
     const agentSettingsRevision = isStudio
-      ? selectExtractionRevision({ agentId })(state)
+      ? selectPlaygroundRevision({ agentId })(state)
       : undefined
 
     return await services.extractionAgentSessions.executeOne({
@@ -1089,7 +1089,7 @@ git commit -m "feat(extraction): send the chosen settings version on single-docu
 - Test: `apps/web/src/common/features/agents/csv-extraction-runs/agent-csv-extraction-runs.thunks.spec.ts` (create)
 
 **Interfaces:**
-- Consumes: `CreateAgentCsvExtractionRunRequestDto.agentSettingsRevision` (Task 2), `selectExtractionRevision({ agentId })` (Task 4).
+- Consumes: `CreateAgentCsvExtractionRunRequestDto.agentSettingsRevision` (Task 2), `selectPlaygroundRevision({ agentId })` (Task 4).
 - Produces: nothing new.
 
 - [ ] **Step 1: Write the failing test**
@@ -1257,7 +1257,7 @@ In `agent-csv-extraction-runs.spi.ts`, widen `createOne`:
 In `agent-csv-extraction-runs.thunks.ts`, add the imports:
 
 ```ts
-import { selectExtractionRevision } from "@/common/features/agents/agent-settings/agent-settings.selectors"
+import { selectPlaygroundRevision } from "@/common/features/agents/agent-settings/agent-settings.selectors"
 import { isStudioInterface } from "@/studio/routes/helpers"
 ```
 
@@ -1273,7 +1273,7 @@ and replace the body of `createAndExecute`:
     // Only Studio may name a version; the API rejects a revision from anyone who cannot manage
     // the agent. `undefined` while the history is loading, so the API applies its own default.
     const agentSettingsRevision = isStudioInterface()
-      ? selectExtractionRevision({ agentId: params.agentId })(state)
+      ? selectPlaygroundRevision({ agentId: params.agentId })(state)
       : undefined
 
     const run = await services.agentCsvExtractionRuns.createOne({
@@ -1511,12 +1511,12 @@ git commit -m "refactor(playground): make the settings version select presentati
 - Create: `apps/web/src/stories/routes/studio/agent/AgentExtractionRoute.stories.tsx`
 
 **Interfaces:**
-- Consumes: `AgentSettingsVersionSelect` and its props (Task 6), `selectExtractionRevision` and `agentSettingsActions.setExtractionRevision` (Task 4).
+- Consumes: `AgentSettingsVersionSelect` and its props (Task 6), `selectPlaygroundRevision` and `agentSettingsActions.setExtractionRevision` (Task 4).
 - Produces:
   - `ExtractionVersionSelect({ agentId })`
   - `AgentExtractionRoute({ buildCsvRunPath, renderVersionPicker? })` where `renderVersionPicker?: React.ReactNode`
   - `CsvExtractor({ documentId, onBack, buildCsvRunPath, renderVersionPicker? })`
-  - `seed.studio.extractionRevision({ agentId, revision })`
+  - `seed.studio.playgroundRevision({ agentId, revision })`
 
 Both route files live in `common/` and are shared with Desk, so the picker arrives by prop injection, the way `renderRevisionBadge` already does. Desk passes nothing and keeps running published.
 
@@ -1527,7 +1527,7 @@ Create `apps/web/src/studio/features/agents/agent-settings/components/Extraction
 ```tsx
 import { useMemo } from "react"
 import { useTranslation } from "react-i18next"
-import { selectExtractionRevision } from "@/common/features/agents/agent-settings/agent-settings.selectors"
+import { selectPlaygroundRevision } from "@/common/features/agents/agent-settings/agent-settings.selectors"
 import { agentSettingsActions } from "@/common/features/agents/agent-settings/agent-settings.slice"
 import { useAppDispatch, useAppSelector } from "@/common/store/hooks"
 import { AgentSettingsVersionSelect } from "./AgentSettingsVersionSelect"
@@ -1539,7 +1539,7 @@ import { AgentSettingsVersionSelect } from "./AgentSettingsVersionSelect"
 export function ExtractionVersionSelect({ agentId }: { agentId: string }) {
   const { t } = useTranslation()
   const dispatch = useAppDispatch()
-  const selectRevision = useMemo(() => selectExtractionRevision({ agentId }), [agentId])
+  const selectRevision = useMemo(() => selectPlaygroundRevision({ agentId }), [agentId])
   const revision = useAppSelector(selectRevision)
 
   return (
@@ -1720,7 +1720,7 @@ with the imports `useValue` from `@/common/hooks/use-value` and `selectCurrentAg
 In `apps/web/src/stories/seed.ts`, next to `playgroundRevision`:
 
 ```ts
-    extractionRevision({
+    playgroundRevision({
       agentId,
       revision,
     }: {
@@ -1729,7 +1729,7 @@ In `apps/web/src/stories/seed.ts`, next to `playgroundRevision`:
     }): StoryPreloadedState {
       return {
         agentSettings: {
-          extractionRevisionByAgentId: { [agentId]: revision },
+          playgroundRevisionByAgentId: { [agentId]: revision },
         },
       }
     },
@@ -1815,7 +1815,7 @@ const buildExtractionDecorator = (chosenRevision?: number) =>
         seed.studio.agentHistory({ agentId: currentAgent.id, versions }),
         ...(chosenRevision === undefined
           ? []
-          : [seed.studio.extractionRevision({ agentId: currentAgent.id, revision: chosenRevision })]),
+          : [seed.studio.playgroundRevision({ agentId: currentAgent.id, revision: chosenRevision })]),
       ),
     }
   })
@@ -1910,5 +1910,5 @@ Spec coverage checked section by section:
 
 Two deliberate deviations from the spec, both noted where they occur:
 
-1. The spec asks for unit tests on `selectExtractionRevision`. The web app has no `*.selectors.spec.ts` anywhere, so the same four cases are covered through the thunk specs instead, matching the pattern `agent-session-messages.thunks.spec.ts` already set for the playground. The pure `resolveEffectiveRevision` underneath is already unit-tested in `agent-settings.functions.spec.ts`.
+1. The spec asks for unit tests on `selectPlaygroundRevision`. The web app has no `*.selectors.spec.ts` anywhere, so the same four cases are covered through the thunk specs instead, matching the pattern `agent-session-messages.thunks.spec.ts` already set for the playground. The pure `resolveEffectiveRevision` underneath is already unit-tested in `agent-settings.functions.spec.ts`.
 2. The spec describes one generalised component. The plan adds two thin wrappers around it, because the extraction mount point lives in a route table where hooks cannot be called inline. The presentational component is exactly as the spec describes it.

@@ -176,7 +176,7 @@ export const Default: Story = {
             seed.studio.agentHistory({ agentId: currentAgent.id, versions }),
             pinnedRevision !== undefined
               ? seed.studio.playgroundRevision({
-                  agentSessionId: session.id,
+                  agentId: currentAgent.id,
                   revision: pinnedRevision,
                 })
               : {},

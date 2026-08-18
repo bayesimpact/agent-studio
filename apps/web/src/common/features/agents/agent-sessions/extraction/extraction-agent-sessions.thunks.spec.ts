@@ -48,8 +48,7 @@ function buildState({
           { status: ADS.Fulfilled, error: null, value: versions },
         ]),
       ),
-      playgroundRevisionBySessionId: {},
-      extractionRevisionByAgentId:
+      playgroundRevisionByAgentId:
         chosenRevision === undefined ? {} : { [agentId]: chosenRevision },
     },
   } as unknown as RootState

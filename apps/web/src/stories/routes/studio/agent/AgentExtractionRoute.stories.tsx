@@ -87,7 +87,7 @@ const buildExtractionDecorator = (chosenRevision?: number) =>
         ...(chosenRevision === undefined
           ? []
           : [
-              seed.studio.extractionRevision({
+              seed.studio.playgroundRevision({
                 agentId: currentAgent.id,
                 revision: chosenRevision,
               }),

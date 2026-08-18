@@ -352,20 +352,6 @@ export const seed = {
     },
 
     playgroundRevision({
-      agentSessionId,
-      revision,
-    }: {
-      agentSessionId: string
-      revision: number
-    }): StoryPreloadedState {
-      return {
-        agentSettings: {
-          playgroundRevisionBySessionId: { [agentSessionId]: revision },
-        },
-      }
-    },
-
-    extractionRevision({
       agentId,
       revision,
     }: {
@@ -374,7 +360,7 @@ export const seed = {
     }): StoryPreloadedState {
       return {
         agentSettings: {
-          extractionRevisionByAgentId: { [agentId]: revision },
+          playgroundRevisionByAgentId: { [agentId]: revision },
         },
       }
     },

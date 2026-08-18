@@ -136,7 +136,7 @@ with `setExtractionRevision({ agentId, revision })`. Keyed by agent rather than 
 no session exists at the moment of choosing. A reload starts over from the default, as the
 playground does.
 
-`selectExtractionRevision({ agentId })` reuses the existing
+`selectPlaygroundRevision({ agentId })` reuses the existing
 `resolveEffectiveRevision({ versions, chosenRevision })`, returning `explicit ?? draft ?? published`
 and `undefined` while the history is still loading. Callers that get `undefined` send no revision and
 let the API apply its own default.
@@ -194,7 +194,7 @@ API e2e, mirroring the structure of
 
 Web:
 
-- unit tests on `selectExtractionRevision`: explicit choice wins, draft beats published, published
+- unit tests on `selectPlaygroundRevision`: explicit choice wins, draft beats published, published
   when no draft exists, `undefined` while the history loads
 - unit tests confirming both thunks omit `agentSettingsRevision` when the selector returns `undefined`
 - stories covering both mount points with and without a pending draft, following the existing

@@ -8,10 +8,7 @@ import type { AgentSettings } from "./agent-settings.models"
 const selectAgentSettingsHistoryData = (state: RootState) => state.agentSettings.history
 
 const selectPlaygroundRevisions = (state: RootState) =>
-  state.agentSettings.playgroundRevisionBySessionId
-
-const selectExtractionRevisions = (state: RootState) =>
-  state.agentSettings.extractionRevisionByAgentId
+  state.agentSettings.playgroundRevisionByAgentId
 
 // Current Agent settings by agent ID
 export const selectAgentSettingsDataByAgentId = ({
@@ -83,34 +80,9 @@ export const selectAgentSettingsHistoryDataByAgentId = ({
  * Revision the playground runs new messages with for this session. `undefined` while the history
  * is still loading — callers must then send no revision and let the API apply its own default.
  */
-export const selectPlaygroundRevision = ({
-  agentId,
-  agentSessionId,
-}: {
-  agentId: string
-  agentSessionId: string
-}) =>
+export const selectPlaygroundRevision = ({ agentId }: { agentId: string }) =>
   createSelector(
     [selectAgentSettingsHistoryData, selectPlaygroundRevisions],
-    (history, revisionBySessionId): number | undefined => {
-      const agentHistory = history[agentId]
-      if (!agentHistory || !ADS.isFulfilled(agentHistory)) return undefined
-
-      return resolveEffectiveRevision({
-        versions: agentHistory.value,
-        chosenRevision: revisionBySessionId[agentSessionId],
-      })
-    },
-  )
-
-/**
- * Revision an extraction run is started with for this agent. Keyed by agent because the choice is
- * made before a run exists. `undefined` while the history is still loading — callers must then
- * send no revision and let the API apply its own draft-first default.
- */
-export const selectExtractionRevision = ({ agentId }: { agentId: string }) =>
-  createSelector(
-    [selectAgentSettingsHistoryData, selectExtractionRevisions],
     (history, revisionByAgentId): number | undefined => {
       const agentHistory = history[agentId]
       if (!agentHistory || !ADS.isFulfilled(agentHistory)) return undefined

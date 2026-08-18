@@ -24,7 +24,7 @@ import { useAppSelector } from "@/common/store/hooks"
 import { buildSince } from "@/common/utils/build-date"
 import { TraceUrlOpener } from "@/studio/components/TraceUrlOpener"
 import { AgentRevisionBadge } from "@/studio/features/agents/agent-settings/components/AgentRevisionBadge"
-import { PlaygroundVersionSelect } from "@/studio/features/agents/agent-settings/components/PlaygroundVersionSelect"
+import { AgentSettingsVersionSelect } from "../features/agents/agent-settings/components/AgentSettingsVersionSelect"
 
 type AgentSession = ConversationAgentSession
 export function StudioAgentSessionRoute({ agentSession }: { agentSession: AgentSession }) {
@@ -50,8 +50,8 @@ export function StudioAgentSessionRoute({ agentSession }: { agentSession: AgentS
   )
 
   const selectPlayground = useMemo(
-    () => selectPlaygroundRevision({ agentId: agent.id, agentSessionId: agentSession.id }),
-    [agent.id, agentSession.id],
+    () => selectPlaygroundRevision({ agentId: agent.id }),
+    [agent.id],
   )
   const runningRevision = useAppSelector(selectPlayground)
 
@@ -117,11 +117,7 @@ export function StudioAgentSessionRoute({ agentSession }: { agentSession: AgentS
           }
           renderMessageVersion={renderMessageVersion}
           renderVersionSelect={
-            <PlaygroundVersionSelect
-              agentId={agent.id}
-              agentSessionId={agentSession.id}
-              revision={runningRevision}
-            />
+            <AgentSettingsVersionSelect agentId={agent.id} revision={runningRevision} />
           }
         />
       </div>
