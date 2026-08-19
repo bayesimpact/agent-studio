@@ -172,7 +172,16 @@ export const studioRoutes = {
               children: [
                 {
                   path: StudioRoutes.agentExtractionCsvRun.path,
-                  element: <AgentCsvExtractionRunRoute />,
+                  element: (
+                    <AgentCsvExtractionRunRoute
+                      renderRevisionBadge={(revision) => (
+                        <CurrentAgentRevisionBadge
+                          revision={revision}
+                          tooltipKey="runRevisionTooltip"
+                        />
+                      )}
+                    />
+                  ),
                 },
                 {
                   path: StudioRoutes.agentExtractionRun.path,

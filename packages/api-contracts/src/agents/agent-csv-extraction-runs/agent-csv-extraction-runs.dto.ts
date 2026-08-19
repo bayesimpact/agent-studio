@@ -42,6 +42,8 @@ export type AgentCsvExtractionRunDto = {
   id: string
   agentId: string
   agentSettingsId: string
+  /** Revision of the settings version the run is pinned to. */
+  agentRevision: number
   csvDocumentId: string
   columnSchema: AgentCsvExtractionRunColumnSchemaDto
   status: AgentCsvExtractionRunStatusDto
