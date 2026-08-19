@@ -193,6 +193,12 @@ function History({ agentSessions }: { agentSessions: ExtractionAgentSessions }) 
                   className={itemClassName}
                   key={item.session.id}
                   agentSession={item.session}
+                  renderRevisionBadge={(revision) => (
+                    <CurrentAgentRevisionBadge
+                      revision={revision}
+                      tooltipKey="runRevisionTooltip"
+                    />
+                  )}
                 />
               ) : (
                 <ExtractionSessionItem
