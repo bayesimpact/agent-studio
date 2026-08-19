@@ -13,6 +13,7 @@ export interface IAgentCsvExtractionRunsSpi {
       payload: {
         csvDocumentId: string
         columnSchema: AgentCsvExtractionRunColumnSchemaDto
+        agentSettingsRevision?: number
       }
     },
   ): Promise<AgentCsvExtractionRun>

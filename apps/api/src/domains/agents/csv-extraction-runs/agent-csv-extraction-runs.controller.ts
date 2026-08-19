@@ -4,11 +4,13 @@ import {
   type AgentCsvExtractionRunRecordDto,
   type AgentCsvExtractionRunStatusChangedEventDto,
   AgentCsvExtractionRunsRoutes,
+  type ProjectMembershipRoleDto,
 } from "@caseai-connect/api-contracts"
 import {
   Body,
   Controller,
   Delete,
+  ForbiddenException,
   Get,
   Inject,
   Logger,
@@ -30,8 +32,10 @@ import type {
 import { getRequiredConnectScope } from "@/common/context/request-context.helpers"
 import { AddContext, RequireContext } from "@/common/context/require-context.decorator"
 import { ResourceContextGuard } from "@/common/context/resource-context.guard"
+import type { RequiredConnectScope } from "@/common/entities/connect-required-fields"
 import { CheckPolicy } from "@/common/policies/check-policy.decorator"
 import { TrackActivity } from "@/domains/activities/track-activity.decorator"
+import type { AgentSettings } from "@/domains/agents/settings/agent-settings.entity"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
 import { AgentSettingsService } from "@/domains/agents/settings/agent-settings.service"
 import { JwtAuthGuard } from "@/domains/auth/jwt-auth.guard"
@@ -80,9 +84,11 @@ export class AgentCsvExtractionRunsController {
     @Body() { payload }: typeof AgentCsvExtractionRunsRoutes.createOne.request,
   ): Promise<typeof AgentCsvExtractionRunsRoutes.createOne.response> {
     const connectScope = getRequiredConnectScope(request)
-    const agentSettings = await this.agentSettingsService.getLast({
+    const agentSettings = await this.resolveAgentSettings({
       connectScope,
       agentId: request.agent.id,
+      role: request.projectMembership?.role,
+      revision: payload.agentSettingsRevision,
     })
     const run = await this.agentCsvExtractionRunsService.createRun({
       connectScope,
@@ -95,6 +101,47 @@ export class AgentCsvExtractionRunsController {
     })
     run.agentSettings = agentSettings
     return { data: toAgentCsvExtractionRunDto(run) }
+  }
+
+  /**
+   * Settings the run is pinned to.
+   *
+   * A CSV run has no playground/live distinction to branch on, so choosing a version is gated on
+   * the caller's project role instead. Admins and owners are exactly the roles that can list the
+   * versions, since the settings history endpoint sits behind the same check. Everyone else keeps
+   * getting the newest published revision.
+   */
+  private async resolveAgentSettings({
+    connectScope,
+    agentId,
+    role,
+    revision,
+  }: {
+    connectScope: RequiredConnectScope
+    agentId: string
+    role: ProjectMembershipRoleDto | undefined
+    revision: number | undefined
+  }): Promise<AgentSettings> {
+    if (revision === undefined) {
+      return this.agentSettingsService.getLast({ connectScope, agentId })
+    }
+    // `agent_settings.revision` is a Postgres `integer`; anything outside its 32-bit signed range
+    // reaches TypeORM as-is and produces a driver error instead of a clean rejection here.
+    if (!(Number.isInteger(revision) && revision > 0 && revision <= 2147483647)) {
+      throw new ForbiddenException("Settings version must be an integer")
+    }
+    if (role !== "admin" && role !== "owner") {
+      throw new ForbiddenException("Choosing a settings version requires managing the agent")
+    }
+
+    const agentSettings = await this.agentSettingsService.get({ connectScope, agentId, revision })
+    if (!agentSettings) {
+      throw new NotFoundException(`Version ${revision} not found for agent ${agentId}`)
+    }
+    if (agentSettings.isArchived) {
+      throw new UnprocessableEntityException(`Version ${revision} is archived and cannot be run`)
+    }
+    return agentSettings
   }
 
   @Post(AgentCsvExtractionRunsRoutes.executeOne.path)
@@ -128,9 +175,11 @@ export class AgentCsvExtractionRunsController {
     const { agentCsvExtractionRun, agent } = request as EndpointRequestWithAgentCsvExtractionRun &
       EndpointRequestWithAgent
 
-    const agentSettings = await this.agentSettingsService.getLast({
+    // The run advertises its own revision, so a retry must use that one. Re-resolving the newest
+    // published version here would silently change what a retried run executes.
+    const agentSettings = await this.agentSettingsService.getById({
       connectScope,
-      agentId: agent.id,
+      agentSettingsId: agentCsvExtractionRun.agentSettingsId,
     })
 
     await this.agentCsvExtractionRunsService.retryRun({

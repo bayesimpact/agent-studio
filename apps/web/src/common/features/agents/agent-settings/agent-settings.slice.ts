@@ -12,12 +12,12 @@ interface State {
    * Version the playground runs, per session. Deliberately not persisted: a reload starts over
    * from the draft-first default, which is the version a tester wants nine times out of ten.
    */
-  playgroundRevisionBySessionId: Record<string, number>
+  playgroundRevisionByAgentId: Record<string, number>
 }
 
 const initialState: State = {
   history: {},
-  playgroundRevisionBySessionId: {},
+  playgroundRevisionByAgentId: {},
 }
 
 const slice = createSlice({
@@ -29,9 +29,9 @@ const slice = createSlice({
     reset: () => initialState,
     setPlaygroundRevision: (
       state,
-      action: PayloadAction<{ agentSessionId: string; revision: number }>,
+      action: PayloadAction<{ agentId: string; revision: number }>,
     ) => {
-      state.playgroundRevisionBySessionId[action.payload.agentSessionId] = action.payload.revision
+      state.playgroundRevisionByAgentId[action.payload.agentId] = action.payload.revision
     },
   },
   extraReducers: (builder) => {

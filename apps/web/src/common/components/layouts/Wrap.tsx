@@ -4,7 +4,7 @@ export function Wrap({ children, className }: { children: React.ReactNode; class
   return (
     <div
       className={cn(
-        "md:mx-10 2xl:mx-30 md:my-10 border-b md:border relative md:rounded-2xl overflow-hidden",
+        "relative overflow-hidden md:m-0 xl:m-10 2xl:mx-30 border-b xl:border xl:rounded-2xl",
         className,
       )}
     >
