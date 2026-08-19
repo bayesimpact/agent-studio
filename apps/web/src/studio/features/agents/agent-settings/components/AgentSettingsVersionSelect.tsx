@@ -34,10 +34,8 @@ import { buildDate } from "@/common/utils/build-date"
 export function AgentSettingsVersionSelect({
   revision,
   agentId,
-  agentSessionId,
 }: {
   agentId: string
-  agentSessionId: string
   revision: number | undefined
 }) {
   const dispatch = useAppDispatch()
@@ -57,12 +55,7 @@ export function AgentSettingsVersionSelect({
   }
 
   const handleRevisionChange = (revision: number) => {
-    dispatch(
-      agentSettingsActions.setPlaygroundRevision({
-        agentSessionId,
-        revision,
-      }),
-    )
+    dispatch(agentSettingsActions.setPlaygroundRevision({ agentId, revision }))
   }
 
   const publishedRevision = findPublishedVersion(versions)?.revision

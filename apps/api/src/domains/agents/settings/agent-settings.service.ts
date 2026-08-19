@@ -45,6 +45,22 @@ export class AgentSettingsService {
     this.agentSettingsConnectRepository = new ConnectRepository(agentSettingsRepository, "agents")
   }
 
+  /** The exact settings row a run was pinned to, so a re-run uses the version it advertises. */
+  async getById({
+    connectScope,
+    agentSettingsId,
+  }: {
+    connectScope: RequiredConnectScope
+    agentSettingsId: string
+  }): Promise<AgentSettings> {
+    const found = await this.agentSettingsConnectRepository.getOneById(
+      connectScope,
+      agentSettingsId,
+    )
+    if (!found) throw new NotFoundException(`AgentSettings with id ${agentSettingsId} not found`)
+    return found
+  }
+
   async get({
     connectScope,
     agentId,

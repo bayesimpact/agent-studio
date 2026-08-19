@@ -16,7 +16,9 @@ type Request<T = object> = RequestPayload<{ type: BaseAgentSessionTypeDto } & T>
 export const ExtractionAgentSessionsRoutes = {
   executeOne: defineRoute<
     ResponseData<ExtractionAgentSessionResultDto>,
-    Request<Pick<ExtractionAgentSessionSummaryDto, "documentId">>
+    Request<
+      Pick<ExtractionAgentSessionSummaryDto, "documentId"> & { agentSettingsRevision?: number }
+    >
   >({
     method: "post",
     path: `${prefix}/execute`,

@@ -69,6 +69,8 @@ export type AgentCsvExtractionRunRecordDto = {
 export type CreateAgentCsvExtractionRunRequestDto = {
   csvDocumentId: string
   columnSchema: AgentCsvExtractionRunColumnSchemaDto
+  /** Settings version to pin the run to. Project admins and owners only. */
+  agentSettingsRevision?: number
 }
 
 export type ExecuteAgentCsvExtractionRunRequestDto = {

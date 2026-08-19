@@ -88,7 +88,7 @@ export function GridHeader(props: GridHeaderProps) {
 function DesktopHeader({ onBack, title, description, action }: GridHeaderProps) {
   return (
     <CardHeader className="gap-1">
-      <CardTitle className="text-2xl flex items-center gap-1 min-w-0">
+      <CardTitle className="text-xl xl:text-2xl flex items-center gap-1 min-w-0">
         {onBack && (
           <Button
             variant="secondary"
@@ -104,7 +104,10 @@ function DesktopHeader({ onBack, title, description, action }: GridHeaderProps) 
 
       {description && (
         <CardDescription
-          className={cn("text-xl flex items-center gap-2 capitalize-first", onBack && "pl-12")}
+          className={cn(
+            "text-base xl:text-xl flex items-center gap-2 capitalize-first",
+            onBack && "pl-12",
+          )}
         >
           {description}
         </CardDescription>

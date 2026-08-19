@@ -156,6 +156,7 @@
     },
     "version": {
       "ariaLabel": "Version des paramètres utilisée par les nouveaux messages",
+      "extractionAriaLabel": "Version des paramètres utilisée par les extractions",
       "placeholder": "Sélectionner une version",
       "item": "v{{revision}} — {{detail}}",
       "current": "Actuelle ({{date}})"
