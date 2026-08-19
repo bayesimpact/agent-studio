@@ -22,6 +22,7 @@ export interface IExtractionAgentSessionsSpi {
   executeOne: (
     params: BaseParams & {
       documentId: string
+      agentSettingsRevision?: number
     },
   ) => Promise<ExtractionAgentSessionResult>
   deleteOne: (params: BaseParams & { agentSessionId: string }) => Promise<SuccessResponseDTO>

@@ -18,14 +18,13 @@ import {
 } from "@/common/features/agents/agent-settings/agent-settings.selectors"
 import { selectCurrentAgentData } from "@/common/features/agents/agents.selectors"
 import { DeleteAgentSessionButton } from "@/common/features/agents/components/DeleteAgentSessionButton"
-import { useAbility } from "@/common/hooks/use-ability"
 import { useGetAgentRoute } from "@/common/hooks/use-get-path"
 import { useValue } from "@/common/hooks/use-value"
 import { useAppSelector } from "@/common/store/hooks"
 import { buildSince } from "@/common/utils/build-date"
 import { TraceUrlOpener } from "@/studio/components/TraceUrlOpener"
 import { AgentRevisionBadge } from "@/studio/features/agents/agent-settings/components/AgentRevisionBadge"
-import { AgentSettingsVersionSelect } from "@/studio/features/agents/agent-settings/components/AgentSettingsVersionSelect"
+import { AgentSettingsVersionSelect } from "../features/agents/agent-settings/components/AgentSettingsVersionSelect"
 
 type AgentSession = ConversationAgentSession
 export function StudioAgentSessionRoute({ agentSession }: { agentSession: AgentSession }) {
@@ -46,16 +45,13 @@ export function StudioAgentSessionRoute({ agentSession }: { agentSession: AgentS
 
   const handleBack = () => navigate(agentRoute)
 
-  const { abilities } = useAbility()
-  const canManageAgent = abilities.canManageAgent({ agentId: agent.id })
-
   const versions = useValue(
     selectAgentSettingsHistoryDataByAgentId({ agentId: agent.id, includeDraft: true }),
   )
 
   const selectPlayground = useMemo(
-    () => selectPlaygroundRevision({ agentId: agent.id, agentSessionId: agentSession.id }),
-    [agent.id, agentSession.id],
+    () => selectPlaygroundRevision({ agentId: agent.id }),
+    [agent.id],
   )
   const runningRevision = useAppSelector(selectPlayground)
 
@@ -66,7 +62,6 @@ export function StudioAgentSessionRoute({ agentSession }: { agentSession: AgentS
     publishedSettings
 
   const renderMessageVersion = (message: AgentSessionMessage) => {
-    if (!canManageAgent) return null
     const revision = resolveMessageRevision(message, runningRevision)
     if (revision === undefined) return null
     return (
@@ -79,14 +74,6 @@ export function StudioAgentSessionRoute({ agentSession }: { agentSession: AgentS
     )
   }
 
-  const renderVersionSelect = (
-    <AgentSettingsVersionSelect
-      agentId={agent.id}
-      agentSessionId={agentSession.id}
-      revision={runningRevision}
-    />
-  )
-
   return (
     <div className="flex flex-col h-full">
       <GridHeader
@@ -95,7 +82,7 @@ export function StudioAgentSessionRoute({ agentSession }: { agentSession: AgentS
         description={
           <div className="flex items-center gap-2 flex-wrap">
             {date}
-            {canManageAgent && runningRevision && (
+            {runningRevision && (
               <>
                 {" "}
                 •
@@ -129,7 +116,9 @@ export function StudioAgentSessionRoute({ agentSession }: { agentSession: AgentS
             runningSettings.fillFormEnabled ? runningSettings.outputJsonSchema : undefined
           }
           renderMessageVersion={renderMessageVersion}
-          renderVersionSelect={renderVersionSelect}
+          renderVersionSelect={
+            <AgentSettingsVersionSelect agentId={agent.id} revision={runningRevision} />
+          }
         />
       </div>
     </div>

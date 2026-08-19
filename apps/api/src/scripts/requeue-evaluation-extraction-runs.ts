@@ -131,10 +131,19 @@ async function bootstrapCli(): Promise<void> {
       if (!agent) {
         throw logger.warn(`Agent with id=${agentId} not found.`)
       }
+      // Pinned on purpose: a requeue re-processes records of an existing run, so it
+      // reuses the settings version that run was scored with. Resolving the highest
+      // revision instead would swap settings halfway through a run and could pick up
+      // the draft an author is editing (#636).
       const agentSettings = await agentSettingsRepository.findOne({
         where: { agentId, id: agentSettingsId },
       })
       if (!agentSettings) throw logger.warn(`AgentSettings for Agent with id=${agentId} not found`)
+      if (agentSettings.isDraft || agentSettings.isArchived) {
+        logger.warn(
+          `Run is pinned to revision ${agentSettings.revision} of agent id=${agentId}, which is ${agentSettings.isDraft ? "a draft" : "archived"}. Requeueing with it, as recorded on the run.`,
+        )
+      }
       return { agent, agentSettings }
     }
 

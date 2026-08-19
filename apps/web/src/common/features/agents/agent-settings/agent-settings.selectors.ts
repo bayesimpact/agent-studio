@@ -8,7 +8,7 @@ import type { AgentSettings } from "./agent-settings.models"
 const selectAgentSettingsHistoryData = (state: RootState) => state.agentSettings.history
 
 const selectPlaygroundRevisions = (state: RootState) =>
-  state.agentSettings.playgroundRevisionBySessionId
+  state.agentSettings.playgroundRevisionByAgentId
 
 // Current Agent settings by agent ID
 export const selectAgentSettingsDataByAgentId = ({
@@ -80,22 +80,16 @@ export const selectAgentSettingsHistoryDataByAgentId = ({
  * Revision the playground runs new messages with for this session. `undefined` while the history
  * is still loading — callers must then send no revision and let the API apply its own default.
  */
-export const selectPlaygroundRevision = ({
-  agentId,
-  agentSessionId,
-}: {
-  agentId: string
-  agentSessionId: string
-}) =>
+export const selectPlaygroundRevision = ({ agentId }: { agentId: string }) =>
   createSelector(
     [selectAgentSettingsHistoryData, selectPlaygroundRevisions],
-    (history, revisionBySessionId): number | undefined => {
+    (history, revisionByAgentId): number | undefined => {
       const agentHistory = history[agentId]
       if (!agentHistory || !ADS.isFulfilled(agentHistory)) return undefined
 
       return resolveEffectiveRevision({
         versions: agentHistory.value,
-        chosenRevision: revisionBySessionId[agentSessionId],
+        chosenRevision: revisionByAgentId[agentId],
       })
     },
   )

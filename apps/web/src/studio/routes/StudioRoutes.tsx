@@ -1,4 +1,6 @@
+import { useMemo } from "react"
 import { RestrictedFeature } from "@/common/components/RestrictedFeature"
+import { selectPlaygroundRevision } from "@/common/features/agents/agent-settings/agent-settings.selectors"
 import { selectCurrentAgentData } from "@/common/features/agents/agents.selectors"
 import { useValue } from "@/common/hooks/use-value"
 import { AgentRoute } from "@/common/routes/AgentRoute"
@@ -8,11 +10,11 @@ import { ExtractionAgentSessionsRoute } from "@/common/routes/agents/ExtractionA
 import { AgentCsvExtractionRunRoute } from "@/common/routes/agents/extraction/AgentCsvExtractionRunRoute"
 import { AgentExtractionRoute } from "@/common/routes/agents/extraction/AgentExtractionRoute"
 import { AgentExtractionRunRoute } from "@/common/routes/agents/extraction/AgentExtractionRunRoute"
-
 import { RoutesBuilderProvider } from "@/common/routes/build-routes/RoutesBuilderProvider"
 import { ErrorRoute } from "@/common/routes/ErrorRoute"
 import { OrganizationRoute } from "@/common/routes/OrganizationRoute"
 import { ProjectRoute } from "@/common/routes/ProjectRoute"
+import { useAppSelector } from "@/common/store/hooks"
 import { CurrentAgentRevisionBadge } from "@/studio/features/agents/agent-settings/components/CurrentAgentRevisionBadge"
 import {
   ConversationAgentSessionList,
@@ -21,6 +23,7 @@ import {
 import { CampaignsRoute } from "@/studio/routes/CampaignsRoute"
 import { ProjectAdminRoute } from "@/studio/routes/ProjectAdminRoute"
 import { StudioLayout } from "../components/StudioLayout"
+import { AgentSettingsVersionSelect } from "../features/agents/agent-settings/components/AgentSettingsVersionSelect"
 import { AgentList } from "../features/analytics/agent/components/AgentList"
 import { AgentAnalyticsRoute } from "./AgentAnalyticsRoute"
 import { AgentEditorRoute } from "./AgentEditorRoute"
@@ -161,7 +164,10 @@ export const studioRoutes = {
             {
               path: StudioRoutes.agentExtraction.path,
               element: (
-                <AgentExtractionRoute buildCsvRunPath={StudioRoutes.agentExtractionCsvRun.build} />
+                <AgentExtractionRoute
+                  buildCsvRunPath={StudioRoutes.agentExtractionCsvRun.build}
+                  renderVersionPicker={<StudioExtractionVersionPicker />}
+                />
               ),
               children: [
                 {
@@ -233,4 +239,15 @@ function AgentSessionsHandler() {
     default:
       return <ErrorRoute error={"Unknown agent type"} />
   }
+}
+
+/** Reads the current agent from the store so the route table stays hook-free. */
+function StudioExtractionVersionPicker() {
+  const agent = useValue(selectCurrentAgentData)
+  const selectPlayground = useMemo(
+    () => selectPlaygroundRevision({ agentId: agent.id }),
+    [agent.id],
+  )
+  const runningRevision = useAppSelector(selectPlayground)
+  return <AgentSettingsVersionSelect agentId={agent.id} revision={runningRevision} />
 }

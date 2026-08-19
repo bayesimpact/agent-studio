@@ -4,6 +4,9 @@ import { useState } from "react"
 import { useTranslation } from "react-i18next"
 import { ConfirmDialog } from "@/common/components/ConfirmDialog"
 import { restoreAgentSettings } from "@/common/features/agents/agent-settings/agent-settings.thunks"
+import { selectCurrentAgentData } from "@/common/features/agents/agents.selectors"
+import { useAbility } from "@/common/hooks/use-ability"
+import { useValue } from "@/common/hooks/use-value"
 import { useAppDispatch } from "@/common/store/hooks"
 
 /** One-click restore: copies the selected revision's settings as a new (current) revision. */
@@ -16,6 +19,9 @@ export function AgentSettingsRestoreButton({
 }) {
   const { t } = useTranslation()
   const dispatch = useAppDispatch()
+  const agent = useValue(selectCurrentAgentData)
+  const { abilities } = useAbility()
+  const canManageAgent = abilities.canManageAgent({ agentId: agent.id })
   const [confirmOpen, setConfirmOpen] = useState(false)
   const [isRestoring, setIsRestoring] = useState(false)
 
@@ -31,6 +37,7 @@ export function AgentSettingsRestoreButton({
     }
   }
 
+  if (!canManageAgent) return null
   return (
     <>
       <Button size="sm" disabled={disabled || isRestoring} onClick={() => setConfirmOpen(true)}>

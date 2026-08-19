@@ -40,7 +40,11 @@ export function AgentEditorRoute() {
     )
   }
 
-  return <WithData />
+  return (
+    <AsyncRoute data={[agentSettings]}>
+      <WithData />
+    </AsyncRoute>
+  )
 }
 
 function WithOrchestrationData() {
