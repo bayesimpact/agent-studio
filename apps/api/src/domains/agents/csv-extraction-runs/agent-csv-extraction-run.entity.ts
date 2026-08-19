@@ -2,6 +2,8 @@ import { Column, JoinColumn, ManyToOne, OneToMany } from "typeorm"
 import { ConnectEntity, ConnectEntityBase } from "@/common/entities/connect-entity"
 import type { AgentSettings } from "@/domains/agents/settings/agent-settings.entity"
 import type { Document } from "@/domains/documents/document.entity"
+import { User } from "@/domains/users/user.entity"
+import type { BaseAgentSessionType } from "../base-agent-sessions/base-agent-sessions.types"
 import { AgentCsvExtractionRunRecord } from "./agent-csv-extraction-run-record.entity"
 
 export const AGENT_CSV_EXTRACTION_RUN_COLUMN_ROLES = ["input", "reference", "ignore"] as const
@@ -54,6 +56,19 @@ export class AgentCsvExtractionRun extends ConnectEntityBase {
 
   @Column({ name: "column_schema", type: "jsonb", nullable: false })
   columnSchema!: AgentCsvExtractionRunColumnSchema
+
+  // Default "live": rows predating the column were surfaced on Desk, so they keep behaving as
+  // live runs rather than vanishing from it.
+  @Column({ type: "varchar", default: "live" })
+  type!: BaseAgentSessionType
+
+  // Nullable: rows predating the column have no knowable creator. They stay listed for every
+  // project member rather than vanishing (see AgentCsvExtractionRunsService.listRuns).
+  @Column({ type: "uuid", name: "user_id", nullable: true })
+  userId!: string | null
+  @ManyToOne(() => User)
+  @JoinColumn({ name: "user_id" })
+  user!: User | null
 
   @Column({ type: "varchar", default: "pending" })
   status!: AgentCsvExtractionRunStatus

@@ -86,12 +86,12 @@ describe("AgentCsvExtractionRuns - Auth", () => {
   }
 
   describe("createOne", () => {
-    const subject = async () =>
+    const subject = async (type: "live" | "playground" = "live") =>
       request({
         route: AgentCsvExtractionRunsRoutes.createOne,
         pathParams: removeNullish({ organizationId, projectId, agentId }),
         token: accessToken ?? undefined,
-        request: { payload: { csvDocumentId: documentId, columnSchema: {} } },
+        request: { payload: { csvDocumentId: documentId, columnSchema: {}, type } },
       })
 
     it("requires an authentication token", async () => {
@@ -114,6 +114,18 @@ describe("AgentCsvExtractionRuns - Auth", () => {
     it("allows a project member to create a run", async () => {
       await createContextForRole("member")
       expectResponse(await subject(), 201)
+    })
+
+    it("forbids a plain member to create a playground run", async () => {
+      // Playground runs mirror agent sessions: they belong to the Studio surface, which only
+      // project admins and owners operate.
+      await createContextForRole("member")
+      expectResponse(await subject("playground"), 403)
+    })
+
+    it("allows a project admin to create a playground run", async () => {
+      await createContextForRole("admin")
+      expectResponse(await subject("playground"), 201)
     })
   })
 
@@ -243,11 +255,12 @@ describe("AgentCsvExtractionRuns - Auth", () => {
   })
 
   describe("getAll", () => {
-    const subject = async () =>
+    const subject = async (type: "live" | "playground" = "live") =>
       request({
         route: AgentCsvExtractionRunsRoutes.getAll,
         pathParams: removeNullish({ organizationId, projectId, agentId }),
         token: accessToken ?? undefined,
+        query: { type },
       })
 
     it("requires an authentication token", async () => {
@@ -270,6 +283,16 @@ describe("AgentCsvExtractionRuns - Auth", () => {
     it("allows a project member to list runs", async () => {
       await createContextForRole("member")
       expectResponse(await subject(), 200)
+    })
+
+    it("forbids a plain member to list playground runs", async () => {
+      await createContextForRole("member")
+      expectResponse(await subject("playground"), 403)
+    })
+
+    it("allows a project admin to list playground runs", async () => {
+      await createContextForRole("admin")
+      expectResponse(await subject("playground"), 200)
     })
   })
 

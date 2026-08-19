@@ -10,6 +10,7 @@ import {
 import { removeNullish } from "@/common/utils/remove-nullish"
 import { agentFactory } from "@/domains/agents/agent.factory"
 import { agentSettingsFactory } from "@/domains/agents/settings/agent.settings.factory"
+import { userFactory } from "@/domains/users/user.factory"
 import { expectResponse, type Requester, testRequester } from "../../../../../test/request"
 import { agentCsvExtractionRunFactory } from "../agent-csv-extraction-run.factory"
 import { AgentCsvExtractionRunsModule } from "../agent-csv-extraction-runs.module"
@@ -62,11 +63,12 @@ describe("AgentCsvExtractionRuns - getAll", () => {
     await app.close()
   })
 
-  const subject = async () =>
+  const subject = async (type?: string) =>
     request({
       route: AgentCsvExtractionRunsRoutes.getAll,
       pathParams: removeNullish({ organizationId, projectId, agentId }),
       token: accessToken,
+      query: type === undefined ? undefined : { type },
     })
 
   it("returns an empty list when the agent has no runs", async () => {
@@ -76,10 +78,94 @@ describe("AgentCsvExtractionRuns - getAll", () => {
     agentId = context.agent.id
     auth0Id = context.user.auth0Id
 
-    const response = await subject()
+    const response = await subject("live")
 
     expectResponse(response, 200)
     expect(response.body.data).toEqual([])
+  })
+
+  it("returns only the runs of the requested type", async () => {
+    // The Desk app lists live runs and the Studio playground its own: one surface's runs must
+    // never leak into the other.
+    const context = await createCsvExtractionRunContext({ repositories, auth0Id })
+    organizationId = context.organization.id
+    projectId = context.project.id
+    agentId = context.agent.id
+    auth0Id = context.user.auth0Id
+
+    const liveRun = await createCsvExtractionRun({ repositories, context, type: "live" })
+    const playgroundRun = await createCsvExtractionRun({
+      repositories,
+      context,
+      type: "playground",
+    })
+
+    const liveResponse = await subject("live")
+    expectResponse(liveResponse, 200)
+    expect(liveResponse.body.data.map((run) => run.id)).toEqual([liveRun.id])
+    expect(liveResponse.body.data[0]?.type).toBe("live")
+
+    const playgroundResponse = await subject("playground")
+    expectResponse(playgroundResponse, 200)
+    expect(playgroundResponse.body.data.map((run) => run.id)).toEqual([playgroundRun.id])
+    expect(playgroundResponse.body.data[0]?.type).toBe("playground")
+  })
+
+  it("returns only the requesting user's runs", async () => {
+    // Extraction lists are per-user, exactly like extraction agent sessions: one member's runs
+    // must not show up in a colleague's Desk app.
+    const context = await createCsvExtractionRunContext({ repositories, auth0Id })
+    organizationId = context.organization.id
+    projectId = context.project.id
+    agentId = context.agent.id
+    auth0Id = context.user.auth0Id
+
+    const myRun = await createCsvExtractionRun({ repositories, context })
+    const colleague = userFactory.build()
+    await repositories.userRepository.save(colleague)
+    await createCsvExtractionRun({ repositories, context, user: colleague })
+
+    const response = await subject("live")
+
+    expectResponse(response, 200)
+    expect(response.body.data.map((run) => run.id)).toEqual([myRun.id])
+  })
+
+  it("still lists runs created before ownership was tracked", async () => {
+    // Rows predating the user_id column have no creator; they stay visible to every member
+    // rather than vanishing from all lists.
+    const context = await createCsvExtractionRunContext({ repositories, auth0Id })
+    organizationId = context.organization.id
+    projectId = context.project.id
+    agentId = context.agent.id
+    auth0Id = context.user.auth0Id
+
+    const legacyRun = await createCsvExtractionRun({ repositories, context, user: null })
+
+    const response = await subject("live")
+
+    expectResponse(response, 200)
+    expect(response.body.data.map((run) => run.id)).toEqual([legacyRun.id])
+  })
+
+  it("rejects a request that does not name a type", async () => {
+    const context = await createCsvExtractionRunContext({ repositories, auth0Id })
+    organizationId = context.organization.id
+    projectId = context.project.id
+    agentId = context.agent.id
+    auth0Id = context.user.auth0Id
+
+    expectResponse(await subject(), 403)
+  })
+
+  it("rejects an unknown type", async () => {
+    const context = await createCsvExtractionRunContext({ repositories, auth0Id })
+    organizationId = context.organization.id
+    projectId = context.project.id
+    agentId = context.agent.id
+    auth0Id = context.user.auth0Id
+
+    expectResponse(await subject("all"), 403)
   })
 
   it("returns only the runs belonging to the requested agent, newest first", async () => {
@@ -121,7 +207,7 @@ describe("AgentCsvExtractionRuns - getAll", () => {
       .build()
     await repositories.agentCsvExtractionRunRepository.save(otherRun)
 
-    const response = await subject()
+    const response = await subject("live")
 
     expectResponse(response, 200)
     expect(response.body.data.map((run) => run.id)).toEqual([newer.id, older.id])
