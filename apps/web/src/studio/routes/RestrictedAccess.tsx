@@ -44,7 +44,6 @@ export function RestrictedAccess({
   const canAccess = build({ ability, agentId, projectId })
 
   if (canAccess) return <>{children || <Outlet />}</>
-  if (!projectId) return <LoadingRoute />
-  if (ability === "canManageAgent" && !agentId) return <LoadingRoute />
+  if (!projectId || !agentId) return <LoadingRoute />
   return <NotFoundRoute />
 }

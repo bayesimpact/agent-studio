@@ -39,6 +39,7 @@ This project uses [CalVer](https://calver.org/) (YY.MM.Micro) for product versio
 - Agent editor no longer crashes when the page is reloaded while the settings are still loading
 - CSV extraction runs started in the Studio playground no longer show up in the Desk app, and vice versa
 - CSV extraction run lists are now personal: a member no longer sees runs started by colleagues
+- Studio no longer crashes when opening a project right after going back through onboarding
 
 ### Security
 ## [26.07.3] - 2026-07-24

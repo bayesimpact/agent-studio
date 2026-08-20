@@ -203,6 +203,7 @@ describe("AgentCsvExtractionRuns - createOne", () => {
 
     expectResponse(response, 201)
     expect(response.body.data.agentSettingsId).toBe(draft.id)
+    expect(response.body.data.agentRevision).toBe(2)
   })
 
   it("pins the run to the published version when no revision is asked for", async () => {
@@ -213,6 +214,7 @@ describe("AgentCsvExtractionRuns - createOne", () => {
 
     expectResponse(response, 201)
     expect(response.body.data.agentSettingsId).toBe(context.agentSettings.id)
+    expect(response.body.data.agentRevision).toBe(context.agentSettings.revision)
   })
 
   it("returns 403 when a plain member asks for a revision", async () => {

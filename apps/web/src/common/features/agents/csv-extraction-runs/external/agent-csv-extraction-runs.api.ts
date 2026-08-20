@@ -113,6 +113,7 @@ function toAgentCsvExtractionRun(dto: AgentCsvExtractionRunDto): AgentCsvExtract
     id: dto.id,
     agentId: dto.agentId,
     agentSettingsId: dto.agentSettingsId,
+    agentRevision: dto.agentRevision,
     csvDocumentId: dto.csvDocumentId,
     columnSchema: dto.columnSchema,
     type: dto.type,

@@ -420,6 +420,7 @@ function toAgentCsvExtractionRunDto(run: AgentCsvExtractionRun): AgentCsvExtract
     id: run.id,
     agentId: run.agentSettings.agentId,
     agentSettingsId: run.agentSettingsId,
+    agentRevision: run.agentSettings.revision,
     csvDocumentId: run.csvDocumentId,
     columnSchema: run.columnSchema,
     type: run.type,

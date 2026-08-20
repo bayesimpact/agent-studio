@@ -27,7 +27,14 @@ import { useAppDispatch, useAppSelector } from "@/common/store/hooks"
 import { buildDuration, buildSince } from "@/common/utils/build-date"
 import { DocumentOpener } from "@/studio/features/documents/components/DocumentOpener"
 
-export function AgentCsvExtractionRunRoute() {
+/**
+ * `renderRevisionBadge` labels the run with the agent settings version it ran with. It is a
+ * render prop because the badge reads the settings history from the store, which only Studio
+ * loads — Desk mounts this route without it.
+ */
+type Props = { renderRevisionBadge?: (revision: number) => React.ReactNode }
+
+export function AgentCsvExtractionRunRoute({ renderRevisionBadge }: Props) {
   const runData = useAppSelector(selectCurrentCsvRunData)
   const runId = useAppSelector(selectCurrentCsvRunId)
   const { setOpen, open } = useSidebar()
@@ -46,12 +53,12 @@ export function AgentCsvExtractionRunRoute() {
   if (!runId) return <LoadingRoute />
   return (
     <AsyncRoute data={[runData]}>
-      <WithData />
+      <WithData renderRevisionBadge={renderRevisionBadge} />
     </AsyncRoute>
   )
 }
 
-function WithData() {
+function WithData({ renderRevisionBadge }: Props) {
   const navigate = useNavigate()
   const run = useValue(selectCurrentCsvRunData)
   const dispatch = useAppDispatch()
@@ -115,6 +122,7 @@ function WithData() {
                   {t("agentCsvExtractionRun:results.remaining", { count: run.summary.running })}
                 </Badge>
               )}
+              {renderRevisionBadge?.(run.agentRevision)}
             </div>
           </div>
         }
