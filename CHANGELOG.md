@@ -37,6 +37,8 @@ This project uses [CalVer](https://calver.org/) (YY.MM.Micro) for product versio
 - Retrying a CSV extraction run re-runs the records with the settings version the run was started on, instead of silently switching to the latest published version
 - Studio playground no longer crashes for project admins who don't manage the agent
 - Agent editor no longer crashes when the page is reloaded while the settings are still loading
+- CSV extraction runs started in the Studio playground no longer show up in the Desk app, and vice versa
+- CSV extraction run lists are now personal: a member no longer sees runs started by colleagues
 - Studio no longer crashes when opening a project right after going back through onboarding
 
 ### Security

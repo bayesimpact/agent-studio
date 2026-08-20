@@ -1,5 +1,6 @@
 import type { AgentCsvExtractionRunColumnSchemaDto } from "@caseai-connect/api-contracts"
 import { createAsyncThunk } from "@reduxjs/toolkit"
+import { buildType } from "@/common/features/agents/agent-sessions/shared/base-agent-session/base-agent-sessions.thunks"
 import { selectPlaygroundRevision } from "@/common/features/agents/agent-settings/agent-settings.selectors"
 import { getCurrentId } from "@/common/features/helpers"
 import type { RootState, ThunkConfig } from "@/common/store/types"
@@ -109,7 +110,12 @@ const createAndExecute = createAsyncThunk<
 
     const run = await services.agentCsvExtractionRuns.createOne({
       ...params,
-      payload: { csvDocumentId: documentId, columnSchema, agentSettingsRevision },
+      payload: {
+        csvDocumentId: documentId,
+        columnSchema,
+        type: buildType(),
+        agentSettingsRevision,
+      },
     })
     await services.agentCsvExtractionRuns.executeOne({
       ...params,

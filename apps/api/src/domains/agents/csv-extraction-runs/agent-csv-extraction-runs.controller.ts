@@ -47,6 +47,7 @@ import {
 } from "@/domains/documents/storage/file-storage.interface"
 import { UserGuard } from "@/domains/users/user.guard"
 import { getTraceUrl } from "@/external/langfuse/langfuse-helper"
+import type { BaseAgentSessionType } from "../base-agent-sessions/base-agent-sessions.types"
 import type { AgentCsvExtractionRun } from "./agent-csv-extraction-run.entity"
 import { AgentCsvExtractionRunGuard } from "./agent-csv-extraction-run.guard"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
@@ -83,6 +84,7 @@ export class AgentCsvExtractionRunsController {
     @Req() request: EndpointRequestWithAgent,
     @Body() { payload }: typeof AgentCsvExtractionRunsRoutes.createOne.request,
   ): Promise<typeof AgentCsvExtractionRunsRoutes.createOne.response> {
+    const type = toBaseAgentSessionType(payload.type)
     const connectScope = getRequiredConnectScope(request)
     const agentSettings = await this.resolveAgentSettings({
       connectScope,
@@ -97,6 +99,8 @@ export class AgentCsvExtractionRunsController {
         agentSettingsId: agentSettings.id,
         csvDocumentId: payload.csvDocumentId,
         columnSchema: payload.columnSchema,
+        type,
+        userId: request.user.id,
       },
     })
     run.agentSettings = agentSettings
@@ -106,10 +110,9 @@ export class AgentCsvExtractionRunsController {
   /**
    * Settings the run is pinned to.
    *
-   * A CSV run has no playground/live distinction to branch on, so choosing a version is gated on
-   * the caller's project role instead. Admins and owners are exactly the roles that can list the
-   * versions, since the settings history endpoint sits behind the same check. Everyone else keeps
-   * getting the newest published revision.
+   * Choosing a version is gated on the caller's project role. Admins and owners are exactly the
+   * roles that can list the versions, since the settings history endpoint sits behind the same
+   * check. Everyone else keeps getting the newest published revision.
    */
   private async resolveAgentSettings({
     connectScope,
@@ -247,10 +250,13 @@ export class AgentCsvExtractionRunsController {
   @CheckPolicy((policy) => policy.canList())
   async getAll(
     @Req() request: EndpointRequestWithAgent,
+    @Query("type") typeParam?: string,
   ): Promise<typeof AgentCsvExtractionRunsRoutes.getAll.response> {
     const runs = await this.agentCsvExtractionRunsService.listRuns({
       connectScope: getRequiredConnectScope(request),
       agentId: request.agent.id,
+      type: toBaseAgentSessionType(typeParam),
+      userId: request.user.id,
     })
     return { data: runs.map(toAgentCsvExtractionRunDto) }
   }
@@ -397,6 +403,18 @@ export class AgentCsvExtractionRunsController {
   }
 }
 
+/**
+ * The requests carrying a type (createOne payload, getAll query) reach the handler even when the
+ * field is missing or garbled — the guard only rejects a *named* unknown type — so the handlers
+ * narrow it themselves before acting on it.
+ */
+function toBaseAgentSessionType(type: string | undefined): BaseAgentSessionType {
+  if (type !== "live" && type !== "playground") {
+    throw new ForbiddenException("A run type of live or playground is required")
+  }
+  return type
+}
+
 function toAgentCsvExtractionRunDto(run: AgentCsvExtractionRun): AgentCsvExtractionRunDto {
   return {
     id: run.id,
@@ -405,6 +423,7 @@ function toAgentCsvExtractionRunDto(run: AgentCsvExtractionRun): AgentCsvExtract
     agentRevision: run.agentSettings.revision,
     csvDocumentId: run.csvDocumentId,
     columnSchema: run.columnSchema,
+    type: run.type,
     status: run.status,
     summary: run.summary,
     csvExportDocumentId: run.csvExportDocumentId,

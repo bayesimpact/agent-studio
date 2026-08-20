@@ -107,12 +107,12 @@ describe("AgentCsvExtractionRuns - createOne", () => {
     },
   } as const
 
-  const subject = async (agentSettingsRevision?: number) =>
+  const subject = async (agentSettingsRevision?: number, type: "live" | "playground" = "live") =>
     request({
       route: AgentCsvExtractionRunsRoutes.createOne,
       pathParams: removeNullish({ organizationId, projectId, agentId }),
       token: accessToken,
-      request: { payload: { csvDocumentId, columnSchema, agentSettingsRevision } },
+      request: { payload: { csvDocumentId, columnSchema, type, agentSettingsRevision } },
     })
 
   it("creates a pending run and persists it", async () => {
@@ -126,6 +126,7 @@ describe("AgentCsvExtractionRuns - createOne", () => {
     expect(response.body.data.csvDocumentId).toBe(csvDocumentId)
     expect(response.body.data.agentId).toBe(agentId)
     expect(response.body.data.columnSchema).toEqual(columnSchema)
+    expect(response.body.data.type).toBe("live")
     expect(response.body.data.summary).toBeNull()
     expect(response.body.data.csvExportDocumentId).toBeNull()
 
@@ -136,6 +137,62 @@ describe("AgentCsvExtractionRuns - createOne", () => {
     expect(persisted?.status).toBe("pending")
 
     await expectActivityCreated("agentCsvExtractionRun.create")
+  })
+
+  it("stores the creator on the run", async () => {
+    await createContext()
+
+    const response = await subject()
+
+    expectResponse(response, 201)
+    const persisted = await repositories.agentCsvExtractionRunRepository.findOne({
+      where: { id: response.body.data.id },
+    })
+    expect(persisted?.userId).toBe(context.user.id)
+  })
+
+  it("stores the requested type on the run", async () => {
+    await createContext()
+
+    const response = await subject(undefined, "playground")
+
+    expectResponse(response, 201)
+    expect(response.body.data.type).toBe("playground")
+
+    const persisted = await repositories.agentCsvExtractionRunRepository.findOne({
+      where: { id: response.body.data.id },
+    })
+    expect(persisted?.type).toBe("playground")
+  })
+
+  it("rejects a payload that does not name a type", async () => {
+    await createContext()
+
+    const response = await request({
+      route: AgentCsvExtractionRunsRoutes.createOne,
+      pathParams: removeNullish({ organizationId, projectId, agentId }),
+      token: accessToken,
+      request: {
+        payload: { csvDocumentId, columnSchema },
+      } as unknown as typeof AgentCsvExtractionRunsRoutes.createOne.request,
+    })
+
+    expectResponse(response, 403)
+  })
+
+  it("rejects an unknown type", async () => {
+    await createContext()
+
+    const response = await request({
+      route: AgentCsvExtractionRunsRoutes.createOne,
+      pathParams: removeNullish({ organizationId, projectId, agentId }),
+      token: accessToken,
+      request: {
+        payload: { csvDocumentId, columnSchema, type: "all" },
+      } as unknown as typeof AgentCsvExtractionRunsRoutes.createOne.request,
+    })
+
+    expectResponse(response, 403)
   })
 
   it("pins the run to the draft when an admin asks for its revision", async () => {

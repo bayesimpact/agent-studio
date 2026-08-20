@@ -75,6 +75,32 @@ beforeEach(() => {
 })
 
 describe("createAndExecute", () => {
+  it("creates a playground run in Studio", async () => {
+    // A run is stamped with the surface that created it, so the Desk app never lists Studio
+    // experiments and vice versa.
+    mockedIsStudioInterface.mockReturnValue(true)
+
+    await run(buildState())
+
+    expect(createOne).toHaveBeenCalledWith(
+      expect.objectContaining({
+        payload: expect.objectContaining({ type: "playground" }),
+      }),
+    )
+  })
+
+  it("creates a live run outside Studio", async () => {
+    mockedIsStudioInterface.mockReturnValue(false)
+
+    await run(buildState())
+
+    expect(createOne).toHaveBeenCalledWith(
+      expect.objectContaining({
+        payload: expect.objectContaining({ type: "live" }),
+      }),
+    )
+  })
+
   it("carries the chosen revision in Studio", async () => {
     mockedIsStudioInterface.mockReturnValue(true)
     // The draft sits at a different revision than the explicit choice below: if the thunk ignored

@@ -35,7 +35,10 @@ const getAll = createAsyncThunk<
     type: buildType(),
   })
 
-  const csvSessions = await services.agentCsvExtractionRuns.getAll(params)
+  const csvSessions = await services.agentCsvExtractionRuns.getAll({
+    ...params,
+    type: buildType(),
+  })
 
   return { csvSessions, others }
 })

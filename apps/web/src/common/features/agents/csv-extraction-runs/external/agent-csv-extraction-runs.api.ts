@@ -51,10 +51,11 @@ export default {
     )
     return toAgentCsvExtractionRun(response.data.data)
   },
-  getAll: async (params) => {
+  getAll: async ({ type, ...params }) => {
     const axios = getAxiosInstance()
     const response = await axios.get<typeof AgentCsvExtractionRunsRoutes.getAll.response>(
       AgentCsvExtractionRunsRoutes.getAll.getPath(params),
+      { params: { type } },
     )
     return response.data.data.map(toAgentCsvExtractionRun)
   },
@@ -115,6 +116,7 @@ function toAgentCsvExtractionRun(dto: AgentCsvExtractionRunDto): AgentCsvExtract
     agentRevision: dto.agentRevision,
     csvDocumentId: dto.csvDocumentId,
     columnSchema: dto.columnSchema,
+    type: dto.type,
     status: dto.status,
     summary: dto.summary,
     csvExportDocumentId: dto.csvExportDocumentId,
