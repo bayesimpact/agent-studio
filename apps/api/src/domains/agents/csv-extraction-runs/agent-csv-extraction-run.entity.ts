@@ -57,13 +57,15 @@ export class AgentCsvExtractionRun extends ConnectEntityBase {
   @Column({ name: "column_schema", type: "jsonb", nullable: false })
   columnSchema!: AgentCsvExtractionRunColumnSchema
 
-  // Default "live": rows predating the column were surfaced on Desk, so they keep behaving as
-  // live runs rather than vanishing from it.
-  @Column({ type: "varchar", default: "live" })
+  // Rows predating the column are backfilled from the CSV uploader's agent membership (agent
+  // "member" → live, everyone else → playground). The default matches that fallback and must
+  // stay in sync with the DB default from migration AddTypeToAgentCsvExtractionRun.
+  @Column({ type: "varchar", default: "playground" })
   type!: BaseAgentSessionType
 
-  // Nullable: rows predating the column have no knowable creator. They stay listed for every
-  // project member rather than vanishing (see AgentCsvExtractionRunsService.listRuns).
+  // Rows predating the column are backfilled from the CSV document's uploader. Kept nullable as
+  // a safety net: null rows stay listed for every project member rather than vanishing (see
+  // AgentCsvExtractionRunsService.listRuns).
   @Column({ type: "uuid", name: "user_id", nullable: true })
   userId!: string | null
   @ManyToOne(() => User)
