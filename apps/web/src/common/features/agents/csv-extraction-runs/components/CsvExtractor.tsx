@@ -44,10 +44,12 @@ export function CsvExtractor({
   documentId,
   onBack,
   buildCsvRunPath,
+  renderVersionPicker,
 }: {
   onBack: () => void
   documentId: string
   buildCsvRunPath: BuildAgentExtractionCsvRunRoute
+  renderVersionPicker?: React.ReactNode
 }) {
   const navigate = useNavigate()
   const { t } = useTranslation()
@@ -191,7 +193,8 @@ export function CsvExtractor({
               onLimitedCountChange={handleLimitedCountChange}
             />
 
-            <div className="flex justify-end gap-2">
+            <div className="flex justify-end items-center gap-2">
+              {renderVersionPicker}
               <Button onClick={handleRun} disabled={isExecuting}>
                 {isExecuting
                   ? t("agentCsvExtractionRun:results.running")

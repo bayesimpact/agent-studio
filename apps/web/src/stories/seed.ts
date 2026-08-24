@@ -350,6 +350,20 @@ export const seed = {
         },
       }
     },
+
+    playgroundRevision({
+      agentId,
+      revision,
+    }: {
+      agentId: string
+      revision: number
+    }): StoryPreloadedState {
+      return {
+        agentSettings: {
+          playgroundRevisionByAgentId: { [agentId]: revision },
+        },
+      }
+    },
   },
 
   backoffice: {

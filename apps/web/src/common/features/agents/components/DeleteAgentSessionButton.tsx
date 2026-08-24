@@ -6,15 +6,13 @@ import { deleteAgentSession } from "@/common/features/agents/agent-sessions/shar
 import type { Agent } from "@/common/features/agents/agents.models"
 import { useGetAgentRoute } from "@/common/hooks/use-get-path"
 import { useAppDispatch } from "@/common/store/hooks"
-import { TraceUrlOpener } from "@/studio/components/TraceUrlOpener"
 
-type AgentSession = ConversationAgentSession
-export function AgentSessionActions({
+export function DeleteAgentSessionButton({
   agent,
   agentSession,
 }: {
   agent: Agent
-  agentSession: AgentSession
+  agentSession: ConversationAgentSession
 }) {
   const dispatch = useAppDispatch()
   const navigate = useNavigate()
@@ -33,11 +31,8 @@ export function AgentSessionActions({
   }
 
   return (
-    <>
-      <TraceUrlOpener buttonProps={{ variant: "secondary" }} traceUrl={agentSession.traceUrl} />
-      <Button variant="outline" size="icon" onClick={handleDelete}>
-        <Trash2Icon />
-      </Button>
-    </>
+    <Button variant="outline" size="icon" onClick={handleDelete}>
+      <Trash2Icon />
+    </Button>
   )
 }

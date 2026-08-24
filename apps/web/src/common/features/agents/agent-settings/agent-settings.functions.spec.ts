@@ -5,8 +5,10 @@ import { organizationFactory } from "@/common/features/organizations/organizatio
 import { projectFactory } from "@/common/features/projects/projects.factory"
 import { agentSettingsFactory } from "./agent-settings.factory"
 import {
+  findDraftVersion,
   findPublishedVersion,
   findVersion,
+  resolveEffectiveRevision,
   resolveMessageRevision,
 } from "./agent-settings.functions"
 
@@ -47,40 +49,87 @@ describe("resolveMessageRevision", () => {
   it("uses the revision recorded on the message", () => {
     const message = agentSessionMessageFactory.build({ role: "assistant", agentRevision: 3 })
 
-    expect(resolveMessageRevision(message, buildVersions({ revision: 4 }))).toBe(3)
+    expect(resolveMessageRevision(message, 4)).toBe(3)
   })
 
-  it("labels a still-unsaved streamed message with the published revision", () => {
-    // Messages built client-side during streaming have no `createdAt` and no revision;
-    // streaming always runs the latest published settings, so that is the correct label.
+  it("labels a still-unsaved streamed message with the version being run", () => {
+    // Messages built client-side during streaming have no `createdAt` and no revision. The
+    // caller passes whichever version the playground is currently set to, which is what the
+    // stream ran with — not necessarily the published one, now that a draft can be selected.
     const message = agentSessionMessageFactory.build({ role: "assistant" })
-    const versions = buildVersions({ revision: 5, isDraft: true }, { revision: 4 })
 
-    expect(resolveMessageRevision(message, versions)).toBe(4)
+    expect(resolveMessageRevision(message, 5)).toBe(5)
   })
 
   it("hides the badge for a server-loaded message with no revision", () => {
     // A persisted message always has `createdAt`. If its revision is missing the transport
-    // dropped it, and claiming the published revision would mislabel an old message as
-    // the latest version — so report nothing instead.
+    // dropped it, and claiming the running revision would mislabel an old message — so report
+    // nothing instead.
     const message = agentSessionMessageFactory.build({
       role: "assistant",
       createdAt: Date.now() - 1000 * 60 * 60,
     })
-    const versions = buildVersions({ revision: 4 }, { revision: 1 })
 
-    expect(resolveMessageRevision(message, versions)).toBeUndefined()
+    expect(resolveMessageRevision(message, 4)).toBeUndefined()
   })
 
-  it("returns undefined when there is no recorded revision and no published version", () => {
+  it("returns undefined when there is no recorded revision and no fallback", () => {
     const message = agentSessionMessageFactory.build({ role: "assistant" })
 
-    expect(resolveMessageRevision(message, [])).toBeUndefined()
+    expect(resolveMessageRevision(message, undefined)).toBeUndefined()
   })
 
-  it("keeps a recorded revision that is absent from the history list", () => {
-    const message = agentSessionMessageFactory.build({ role: "assistant", agentRevision: 2 })
+  it("prefers the recorded revision over the fallback on a persisted message", () => {
+    const message = agentSessionMessageFactory.build({
+      role: "assistant",
+      agentRevision: 2,
+      createdAt: Date.now() - 1000 * 60,
+    })
 
-    expect(resolveMessageRevision(message, buildVersions({ revision: 4 }))).toBe(2)
+    expect(resolveMessageRevision(message, 4)).toBe(2)
+  })
+})
+
+describe("findDraftVersion", () => {
+  it("returns the draft version", () => {
+    const versions = buildVersions({ revision: 5, isDraft: true }, { revision: 4 })
+
+    expect(findDraftVersion(versions)?.revision).toBe(5)
+  })
+
+  it("returns undefined when every version is published", () => {
+    expect(findDraftVersion(buildVersions({ revision: 4 }, { revision: 3 }))).toBeUndefined()
+  })
+})
+
+describe("resolveEffectiveRevision", () => {
+  it("honours an explicit choice", () => {
+    const versions = buildVersions({ revision: 5, isDraft: true }, { revision: 4 }, { revision: 3 })
+
+    expect(resolveEffectiveRevision({ versions, chosenRevision: 3 })).toBe(3)
+  })
+
+  it("defaults to the draft when there is no explicit choice", () => {
+    const versions = buildVersions({ revision: 5, isDraft: true }, { revision: 4 })
+
+    expect(resolveEffectiveRevision({ versions, chosenRevision: undefined })).toBe(5)
+  })
+
+  it("defaults to the published version when there is no draft", () => {
+    const versions = buildVersions({ revision: 4 }, { revision: 3 })
+
+    expect(resolveEffectiveRevision({ versions, chosenRevision: undefined })).toBe(4)
+  })
+
+  it("falls back to the default when the chosen revision left the list", () => {
+    // Another tab archived revision 3 while it was selected here. Keeping the stale number would
+    // send the API a revision it rejects, so the default takes over instead.
+    const versions = buildVersions({ revision: 5, isDraft: true }, { revision: 4 })
+
+    expect(resolveEffectiveRevision({ versions, chosenRevision: 3 })).toBe(5)
+  })
+
+  it("returns undefined when the history is empty", () => {
+    expect(resolveEffectiveRevision({ versions: [], chosenRevision: undefined })).toBeUndefined()
   })
 })

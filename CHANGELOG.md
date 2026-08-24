@@ -9,8 +9,10 @@ This project uses [CalVer](https://calver.org/) (YY.MM.Micro) for product versio
 
 ### Added
 - Agent settings drafts and publishing: saving any tab of the agent editor now updates a draft version instead of changing the agent directly, and a new Publish button makes the draft the version the agent runs with, with an optional name and description shown in the version history; extraction agents get the Publish button next to the History button of their inline editor; the Publish button is disabled while the editor has unsaved changes
-- Studio playground: the header shows the published version new messages run with, and each agent reply carries a version badge showing which settings version produced it; clicking a badge opens the version history preselected on that version
+- Studio playground: each agent reply carries a version badge showing which settings version produced it; clicking a badge opens the version history preselected on that version
+- Studio playground: a version picker in the header chooses which settings version new messages run with, listing the draft and the published versions with their names and dates, as the version history does; a session defaults to the draft when the agent has one, so a draft can be tested without publishing it, and the picker turns amber and reads "Draft" so an unpublished version is never demoed by accident; the choice applies to new messages only, so one session can mix versions, and it is locked while a reply is streaming
 - Studio extraction agents: every run carries a version badge showing which settings version it ran with, on the run page and on each entry of the run history; clicking a badge opens the version history preselected on that version
+- Studio extraction agents: a version picker on the New Extraction screen and on the CSV column setup screen chooses which settings version a run uses, listing the draft and the published versions with their names and dates; a run defaults to the draft when the agent has one, so a draft can be tested against a document without publishing it, and the picker turns amber and reads "Draft" so an unpublished version is never run by accident
 - Back-office administrators can create an organization directly from the organizations panel; the creating administrator becomes its owner
 - Embedded (public) agent sessions now get a session title and categories from the agent's bookkeeping report, and support form filling — the collected values accumulate on the public session across turns; embed sessions also enter the conversations-by-category analytics, summed with regular conversations
 - Agents running a model that is being retired now show a banner on the agent and editor views, giving the retirement date and the model to move to; retiring models are labelled "(deprecated)" in the model pickers and stay selectable so you can compare before switching
@@ -32,6 +34,12 @@ This project uses [CalVer](https://calver.org/) (YY.MM.Micro) for product versio
 - Embedded agents now answer with the agent's published version: the widget on a customer site, the greeting of a new embed session, and the reviewer's session view all stopped picking up an unpublished draft as soon as an author saved a change in the agent editor; archived versions are skipped the same way
 - Evaluations: retrying an extraction run re-processes its records with the settings version the run was launched on, instead of the agent's newest version, which could be an unpublished draft
 - Fix some scanned PDF documents importing with no extracted text
+- Retrying a CSV extraction run re-runs the records with the settings version the run was started on, instead of silently switching to the latest published version
+- Studio playground no longer crashes for project admins who don't manage the agent
+- Agent editor no longer crashes when the page is reloaded while the settings are still loading
+- CSV extraction runs started in the Studio playground no longer show up in the Desk app, and vice versa
+- CSV extraction run lists are now personal: a member no longer sees runs started by colleagues
+- Studio no longer crashes when opening a project right after going back through onboarding
 
 ### Security
 ## [26.07.3] - 2026-07-24

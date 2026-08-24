@@ -21,7 +21,11 @@ import type { BuildAgentExtractionCsvRunRoute } from "../../build-routes/context
 import { useRoutesBuilder } from "../../build-routes/context"
 import { ErrorRoute } from "../../ErrorRoute"
 
-export function AgentExtractionRoute(props: { buildCsvRunPath: BuildAgentExtractionCsvRunRoute }) {
+export function AgentExtractionRoute(props: {
+  buildCsvRunPath: BuildAgentExtractionCsvRunRoute
+  /** Studio-only version picker; Desk passes nothing and keeps running the published version. */
+  renderVersionPicker?: React.ReactNode
+}) {
   const documents = useAppSelector(selectExtractionAgentSessionsDocuments)
   const agent = useValue(selectCurrentAgentData)
   const [csvDocumentId, setCsvDocumentId] = useState<string | null>(null)
@@ -44,11 +48,13 @@ export function AgentExtractionRoute(props: { buildCsvRunPath: BuildAgentExtract
 
 function WithData({
   buildCsvRunPath,
+  renderVersionPicker,
   agentId,
   csvDocumentId,
   setCsvDocumentId,
 }: {
   buildCsvRunPath: BuildAgentExtractionCsvRunRoute
+  renderVersionPicker?: React.ReactNode
   agentId: string
   csvDocumentId: string | null
   setCsvDocumentId: (id: string | null) => void
@@ -76,11 +82,13 @@ function WithData({
         buildCsvRunPath={buildCsvRunPath}
         onBack={() => setCsvDocumentId(null)}
         documentId={csvDocumentId}
+        renderVersionPicker={renderVersionPicker}
       />
     )
   return (
     <FileManager
       agentId={agentId}
+      renderVersionPicker={renderVersionPicker}
       onCsvSuccess={handleCsvSuccess}
       onExtractionRunSuccess={handleExtractionRunSuccess}
     />
@@ -89,10 +97,12 @@ function WithData({
 
 function FileManager({
   agentId,
+  renderVersionPicker,
   onCsvSuccess,
   onExtractionRunSuccess,
 }: {
   agentId: string
+  renderVersionPicker?: React.ReactNode
   onCsvSuccess: (documentId: string) => void
   onExtractionRunSuccess: (runId: string) => void
 }) {
@@ -132,22 +142,25 @@ function FileManager({
         title={t("extractionAgentSession:create.title")}
         description={t("extractionAgentSession:create.description")}
         action={
-          <FileUploader
-            maxFiles={1}
-            maxSize={25 * 1024 * 1024} // 25 MB
-            allowedMimeTypes={{
-              "application/pdf": true,
-              "image/jpeg": true,
-              "text/csv": true,
-              "text/markdown": true,
-              "text/plain": true,
-            }}
-            onDropFiles={(files) => {
-              const file = files[0]
-              if (!file) return
-              handleSubmit({ file })
-            }}
-          />
+          <div className="flex items-center gap-2 flex-wrap">
+            {renderVersionPicker}
+            <FileUploader
+              maxFiles={1}
+              maxSize={25 * 1024 * 1024} // 25 MB
+              allowedMimeTypes={{
+                "application/pdf": true,
+                "image/jpeg": true,
+                "text/csv": true,
+                "text/markdown": true,
+                "text/plain": true,
+              }}
+              onDropFiles={(files) => {
+                const file = files[0]
+                if (!file) return
+                handleSubmit({ file })
+              }}
+            />
+          </div>
         }
       />
 

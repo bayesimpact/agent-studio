@@ -4,7 +4,17 @@ import {
   type ExtractionAgentSessionSummaryDto,
   ExtractionAgentSessionsRoutes,
 } from "@caseai-connect/api-contracts"
-import { Body, Controller, Post, Req, Sse, UseGuards } from "@nestjs/common"
+import {
+  Body,
+  Controller,
+  ForbiddenException,
+  NotFoundException,
+  Post,
+  Req,
+  Sse,
+  UnprocessableEntityException,
+  UseGuards,
+} from "@nestjs/common"
 import { filter, map, type Observable } from "rxjs"
 import type {
   EndpointRequestWithAgent,
@@ -13,8 +23,10 @@ import type {
 import { getRequiredConnectScope } from "@/common/context/request-context.helpers"
 import { AddContext, RequireContext } from "@/common/context/require-context.decorator"
 import { ResourceContextGuard } from "@/common/context/resource-context.guard"
+import type { RequiredConnectScope } from "@/common/entities/connect-required-fields"
 import { CheckPolicy } from "@/common/policies/check-policy.decorator"
 import { TrackActivity } from "@/domains/activities/track-activity.decorator"
+import type { AgentSettings } from "@/domains/agents/settings/agent-settings.entity"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
 import { AgentSettingsService } from "@/domains/agents/settings/agent-settings.service"
 import { JwtAuthGuard } from "@/domains/auth/jwt-auth.guard"
@@ -51,19 +63,78 @@ export class ExtractionAgentSessionsController {
     @Req() request: EndpointRequestWithAgent,
     @Body() { payload }: typeof ExtractionAgentSessionsRoutes.executeOne.request,
   ): Promise<typeof ExtractionAgentSessionsRoutes.executeOne.response> {
-    const agentSettings = await this.agentSettingsService.getLast({
-      connectScope: getRequiredConnectScope(request),
+    const { documentId, type, agentSettingsRevision } = payload
+
+    // `agent_settings.revision` is a Postgres `integer`; anything outside its 32-bit signed range
+    // reaches TypeORM as-is and produces a driver error instead of a clean rejection here.
+    if (
+      agentSettingsRevision !== undefined &&
+      !(
+        Number.isInteger(agentSettingsRevision) &&
+        agentSettingsRevision > 0 &&
+        agentSettingsRevision <= 2147483647
+      )
+    ) {
+      throw new ForbiddenException("Settings version must be an integer")
+    }
+    if (agentSettingsRevision !== undefined && type !== "playground") {
+      throw new ForbiddenException(
+        "Choosing a settings version is only available in the playground",
+      )
+    }
+
+    const connectScope = getRequiredConnectScope(request)
+    const agentSettings = await this.resolveAgentSettings({
+      connectScope,
       agentId: request.agent.id,
+      sessionType: type,
+      revision: agentSettingsRevision,
     })
     const run = await this.extractionAgentSessionsService.executeExtraction({
-      connectScope: getRequiredConnectScope(request),
+      connectScope,
       agent: request.agent,
-      agentSettings: agentSettings,
+      agentSettings,
       userId: request.user.id,
-      documentId: payload.documentId,
-      type: payload.type,
+      documentId,
+      type,
     })
     return { data: { runId: run.id } }
+  }
+
+  /**
+   * Settings the run is pinned to, which is what its worker will use.
+   *
+   * A playground run with no explicit revision uses the draft when there is one. The extraction
+   * screen renders before its settings history has loaded, so the client cannot always name a
+   * revision, and defaulting that window to the published one would run a version the picker does
+   * not claim. A live run keeps using the newest published revision; it can never reach here with
+   * a revision, that is rejected in the handler.
+   */
+  private async resolveAgentSettings({
+    connectScope,
+    agentId,
+    sessionType,
+    revision,
+  }: {
+    connectScope: RequiredConnectScope
+    agentId: string
+    sessionType: BaseAgentSessionType
+    revision: number | undefined
+  }): Promise<AgentSettings> {
+    if (revision === undefined) {
+      return sessionType === "playground"
+        ? this.agentSettingsService.getLast({ connectScope, agentId, includesDraft: true })
+        : this.agentSettingsService.getLast({ connectScope, agentId })
+    }
+
+    const agentSettings = await this.agentSettingsService.get({ connectScope, agentId, revision })
+    if (!agentSettings) {
+      throw new NotFoundException(`Version ${revision} not found for agent ${agentId}`)
+    }
+    if (agentSettings.isArchived) {
+      throw new UnprocessableEntityException(`Version ${revision} is archived and cannot be run`)
+    }
+    return agentSettings
   }
 
   @Sse(ExtractionAgentSessionsRoutes.streamSessionStatus.path, { method: 0 /* GET */ })

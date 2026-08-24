@@ -8,27 +8,28 @@ import type { AgentSessionMessage } from "@/common/features/agents/agent-session
 import { selectCurrentMessagesData } from "@/common/features/agents/agent-sessions/shared/agent-session-messages/agent-session-messages.selectors"
 import { AgentSessionMessages } from "@/common/features/agents/agent-sessions/shared/agent-session-messages/components/AgentSessionMessages"
 import {
-  findPublishedVersion,
+  findVersion,
   resolveMessageRevision,
 } from "@/common/features/agents/agent-settings/agent-settings.functions"
 import {
   selectAgentSettingsDataByAgentId,
   selectAgentSettingsHistoryDataByAgentId,
+  selectPlaygroundRevision,
 } from "@/common/features/agents/agent-settings/agent-settings.selectors"
 import { selectCurrentAgentData } from "@/common/features/agents/agents.selectors"
-import { getAgentIcon } from "@/common/features/agents/components/AgentIcon"
-import { useAbility } from "@/common/hooks/use-ability"
+import { DeleteAgentSessionButton } from "@/common/features/agents/components/DeleteAgentSessionButton"
 import { useGetAgentRoute } from "@/common/hooks/use-get-path"
 import { useValue } from "@/common/hooks/use-value"
 import { useAppSelector } from "@/common/store/hooks"
 import { buildSince } from "@/common/utils/build-date"
+import { TraceUrlOpener } from "@/studio/components/TraceUrlOpener"
 import { AgentRevisionBadge } from "@/studio/features/agents/agent-settings/components/AgentRevisionBadge"
-import { AgentSessionActions } from "../features/agents/components/AgentSessionActions"
+import { AgentSettingsVersionSelect } from "../features/agents/agent-settings/components/AgentSettingsVersionSelect"
 
 type AgentSession = ConversationAgentSession
 export function StudioAgentSessionRoute({ agentSession }: { agentSession: AgentSession }) {
   const agent = useValue(selectCurrentAgentData)
-  const agentSettings = useValue(selectAgentSettingsDataByAgentId({ agentId: agent.id }))
+  const publishedSettings = useValue(selectAgentSettingsDataByAgentId({ agentId: agent.id }))
   const messages = useValue(selectCurrentMessagesData)
   const selectSubSessions = useMemo(
     () => selectConversationSubSessionsBySessionId(agentSession.id),
@@ -40,22 +41,28 @@ export function StudioAgentSessionRoute({ agentSession }: { agentSession: AgentS
   const navigate = useNavigate()
   const agentRoute = useGetAgentRoute()
 
-  const Icon = getAgentIcon(agent.type)
-
   const date = buildSince(agentSession.updatedAt)
 
   const handleBack = () => navigate(agentRoute)
-
-  const { abilities } = useAbility()
-  const canManageAgent = abilities.canManageAgent({ agentId: agent.id })
 
   const versions = useValue(
     selectAgentSettingsHistoryDataByAgentId({ agentId: agent.id, includeDraft: true }),
   )
 
+  const selectPlayground = useMemo(
+    () => selectPlaygroundRevision({ agentId: agent.id }),
+    [agent.id],
+  )
+  const runningRevision = useAppSelector(selectPlayground)
+
+  // The fillForm panel must describe the schema of the version being run, not of the published
+  // one, or a draft that changed the form renders the wrong questions.
+  const runningSettings =
+    (runningRevision !== undefined ? findVersion(versions, runningRevision) : undefined) ??
+    publishedSettings
+
   const renderMessageVersion = (message: AgentSessionMessage) => {
-    if (!canManageAgent) return null
-    const revision = resolveMessageRevision(message, versions)
+    const revision = resolveMessageRevision(message, runningRevision)
     if (revision === undefined) return null
     return (
       <AgentRevisionBadge
@@ -67,8 +74,6 @@ export function StudioAgentSessionRoute({ agentSession }: { agentSession: AgentS
     )
   }
 
-  const publishedVersion = findPublishedVersion(versions)
-
   return (
     <div className="flex flex-col h-full">
       <GridHeader
@@ -76,15 +81,14 @@ export function StudioAgentSessionRoute({ agentSession }: { agentSession: AgentS
         title={t("agent:playground")}
         description={
           <div className="flex items-center gap-2 flex-wrap">
-            <span className="capitalize-first">{agent.name}</span> •
-            <span className="capitalize-first">{t(`agent:create.typeDialog.${agent.type}`)}</span>
-            <Icon /> • {date}
-            {canManageAgent && publishedVersion && (
+            {date}
+            {runningRevision && (
               <>
+                {" "}
                 •
                 <AgentRevisionBadge
                   agent={agent}
-                  revision={publishedVersion.revision}
+                  revision={runningRevision}
                   versions={versions}
                   tooltipKey="headerRevisionTooltip"
                 />
@@ -92,7 +96,15 @@ export function StudioAgentSessionRoute({ agentSession }: { agentSession: AgentS
             )}
           </div>
         }
-        action={<AgentSessionActions agent={agent} agentSession={agentSession} />}
+        action={
+          <>
+            <TraceUrlOpener
+              buttonProps={{ variant: "secondary" }}
+              traceUrl={agentSession.traceUrl}
+            />
+            <DeleteAgentSessionButton agent={agent} agentSession={agentSession} />
+          </>
+        }
       />
 
       <div className="flex-1">
@@ -101,9 +113,12 @@ export function StudioAgentSessionRoute({ agentSession }: { agentSession: AgentS
           messages={messages}
           formSubSessions={formSubSessions}
           formResultSchema={
-            agentSettings.fillFormEnabled ? agentSettings.outputJsonSchema : undefined
+            runningSettings.fillFormEnabled ? runningSettings.outputJsonSchema : undefined
           }
           renderMessageVersion={renderMessageVersion}
+          renderVersionSelect={
+            <AgentSettingsVersionSelect agentId={agent.id} revision={runningRevision} />
+          }
         />
       </div>
     </div>

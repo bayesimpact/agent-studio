@@ -5,6 +5,7 @@ import type { AgentSettings } from "@/domains/agents/settings/agent-settings.ent
 import type { Document } from "@/domains/documents/document.entity"
 import type { Organization } from "@/domains/organizations/organization.entity"
 import type { Project } from "@/domains/projects/project.entity"
+import type { User } from "@/domains/users/user.entity"
 import type {
   AgentCsvExtractionRun,
   AgentCsvExtractionRunColumnSchema,
@@ -17,6 +18,8 @@ type AgentCsvExtractionRunTransientParams = {
   agent: Agent
   agentSettings: AgentSettings
   csvDocument: Document
+  /** Creator of the run; omitted = a legacy row from before ownership was tracked. */
+  user: User
 }
 
 const defaultColumnSchema = (): AgentCsvExtractionRunColumnSchema => ({
@@ -66,6 +69,9 @@ export const agentCsvExtractionRunFactory = AgentCsvExtractionRunFactory.define(
       csvDocument: transientParams.csvDocument,
       columnSchema:
         (params.columnSchema as AgentCsvExtractionRunColumnSchema) || defaultColumnSchema(),
+      type: params.type || "live",
+      userId: params.userId ?? transientParams.user?.id ?? null,
+      user: transientParams.user ?? null,
       status: params.status || "pending",
       summary: (params.summary as AgentCsvExtractionRunSummary) ?? null,
       records: params.records || [],

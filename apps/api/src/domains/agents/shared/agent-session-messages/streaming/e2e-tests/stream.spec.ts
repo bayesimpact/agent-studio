@@ -1,3 +1,4 @@
+import type { BaseAgentSessionTypeDto } from "@caseai-connect/api-contracts"
 import { AgentSessionMessagesRoutes, type StreamEventPayload } from "@caseai-connect/api-contracts"
 import { afterAll } from "@jest/globals"
 import type { INestApplication } from "@nestjs/common"
@@ -9,7 +10,11 @@ import {
   setupE2eTestDatabase,
   teardownE2eTestDatabase,
 } from "@/common/test/test-database"
-import { createOrganizationWithAgent } from "@/domains/organizations/organization.factory"
+import type { Agent } from "@/domains/agents/agent.entity"
+import { agentSettingsFactory } from "@/domains/agents/settings/agent.settings.factory"
+import type { Organization } from "@/domains/organizations/organization.entity"
+import { createOrganizationWithAgentSession } from "@/domains/organizations/organization.factory"
+import type { Project } from "@/domains/projects/project.entity"
 import { sdk } from "@/external/llm/open-telemetry-init"
 import { setupUserGuardForTesting } from "../../../../../../../test/e2e.helpers"
 import { StreamingModule } from "../streaming.module"
@@ -48,28 +53,33 @@ describe("AgentSessionMessagesRoutes.stream", () => {
     await app.close()
   })
 
-  const createContext = async () => {
-    const { user, organization, project, agent, conversationAgentSession } =
-      await createOrganizationWithAgent(repositories, {
-        agent: { type: "conversation" },
-        withLiveConversationAgentSession: true,
+  const createContext = async ({
+    sessionType = "live",
+  }: {
+    sessionType?: BaseAgentSessionTypeDto
+  } = {}) => {
+    const { user, organization, project, agent, agentSession, agentSettings } =
+      await createOrganizationWithAgentSession({
+        repositories,
+        agentType: "conversation",
+        params: { agentSession: { type: sessionType } },
       })
     organizationId = organization.id
     projectId = project.id
     agentId = agent.id
-    agentSessionId = conversationAgentSession!.id
+    agentSessionId = agentSession.id
     auth0Id = user.auth0Id
-    return { organization, project, agent, session: conversationAgentSession! }
+    return { organization, project, agent, agentSettings, session: agentSession }
   }
 
-  const subject = (content: string) => {
+  /** The stream is a GET: its payload travels JSON-encoded in `?q=`. */
+  const rawSubject = (query: string) => {
     const path = AgentSessionMessagesRoutes.stream.getPath({
       organizationId,
       projectId,
       agentId,
       agentSessionId,
     })
-    const query = JSON.stringify({ payload: { content } })
     const req = request(app.getHttpServer())
       .get(path)
       .query({ q: query })
@@ -78,12 +88,52 @@ describe("AgentSessionMessagesRoutes.stream", () => {
     return req
   }
 
+  const subject = (content: string, agentSettingsRevision?: number) =>
+    rawSubject(JSON.stringify({ payload: { content, agentSettingsRevision } }))
+
   const parseSseEvents = (text: string): StreamEventPayload[] =>
     text
       .split("\n\n")
       .map((block) => block.split("\n").find((line) => line.startsWith("data:")))
       .filter((line): line is string => Boolean(line))
       .map((line) => JSON.parse(line.slice("data:".length).trim()) as StreamEventPayload)
+
+  const seedRevision = async ({
+    organization,
+    project,
+    agent,
+    revision,
+    isDraft = false,
+    isArchived = false,
+  }: {
+    organization: Organization
+    project: Project
+    agent: Agent
+    revision: number
+    isDraft?: boolean
+    isArchived?: boolean
+  }) => {
+    const settings = agentSettingsFactory
+      .transient({ organization, project, agent })
+      .build({ revision, isDraft, isArchived })
+    await repositories.agentSettingsRepository.save(settings)
+    return settings
+  }
+
+  /** Settings row the assistant reply was persisted against. */
+  const findAssistantMessageSettingsId = async () => {
+    const messages = await repositories.agentMessageRepository.find({
+      where: { sessionId: agentSessionId, role: "assistant" },
+    })
+    return messages[0]?.agentSettingsId
+  }
+
+  const errorData = (text: string) =>
+    text
+      .split("\n")
+      .filter((line) => line.startsWith("data:"))
+      .map((line) => line.slice("data:".length).trim())
+      .join("")
 
   it("should stream the response", async () => {
     await createContext()
@@ -117,5 +167,142 @@ describe("AgentSessionMessagesRoutes.stream", () => {
     const response = await subject("Hello")
 
     expect(response.status).toBe(401)
+  })
+
+  describe("settings version selection", () => {
+    it("runs the requested published revision in the playground", async () => {
+      // Revision 1 is not the newest: asking for it can only be answered by the resolver reading
+      // the requested revision, never by the "latest published" lookup this route used before.
+      const { organization, project, agent, agentSettings } = await createContext({
+        sessionType: "playground",
+      })
+      await seedRevision({ organization, project, agent, revision: 2 })
+
+      const response = await subject("Hello", agentSettings.revision)
+
+      expect(response.text).not.toContain("event: error")
+      expect(await findAssistantMessageSettingsId()).toBe(agentSettings.id)
+    })
+
+    it("runs the published revision when a draft exists and it is the one requested", async () => {
+      // The requirement the whole feature rests on: nobody demos a draft by accident. Pinning the
+      // published version must win over the draft-first default.
+      const { organization, project, agent, agentSettings } = await createContext({
+        sessionType: "playground",
+      })
+      await seedRevision({ organization, project, agent, revision: 2, isDraft: true })
+
+      const response = await subject("Hello", agentSettings.revision)
+
+      expect(response.text).not.toContain("event: error")
+      expect(await findAssistantMessageSettingsId()).toBe(agentSettings.id)
+    })
+
+    it("runs the requested draft revision in the playground", async () => {
+      const { organization, project, agent } = await createContext({ sessionType: "playground" })
+      const draft2 = await seedRevision({
+        organization,
+        project,
+        agent,
+        revision: 2,
+        isDraft: true,
+      })
+
+      const response = await subject("Hello", 2)
+
+      expect(response.text).not.toContain("event: error")
+      expect(await findAssistantMessageSettingsId()).toBe(draft2.id)
+    })
+
+    it("defaults a playground session with no revision to the draft", async () => {
+      const { organization, project, agent } = await createContext({ sessionType: "playground" })
+      const draft2 = await seedRevision({
+        organization,
+        project,
+        agent,
+        revision: 2,
+        isDraft: true,
+      })
+
+      const response = await subject("Hello")
+
+      expect(response.text).not.toContain("event: error")
+      expect(await findAssistantMessageSettingsId()).toBe(draft2.id)
+    })
+
+    it("defaults a playground session with no draft to the published revision", async () => {
+      const { organization, project, agent, agentSettings } = await createContext({
+        sessionType: "playground",
+      })
+      await seedRevision({ organization, project, agent, revision: 2, isArchived: true })
+
+      const response = await subject("Hello")
+
+      expect(response.text).not.toContain("event: error")
+      expect(await findAssistantMessageSettingsId()).toBe(agentSettings.id)
+    })
+
+    it("rejects an unknown revision", async () => {
+      await createContext({ sessionType: "playground" })
+
+      const response = await subject("Hello", 99)
+
+      expect(response.text).toContain("event: error")
+      expect(errorData(response.text)).toContain("Version 99 not found")
+    })
+
+    it("rejects an archived revision", async () => {
+      const { organization, project, agent } = await createContext({ sessionType: "playground" })
+      await seedRevision({ organization, project, agent, revision: 2, isArchived: true })
+
+      const response = await subject("Hello", 2)
+
+      expect(response.text).toContain("event: error")
+      expect(errorData(response.text)).toContain("archived")
+    })
+
+    it("rejects a revision on a live session", async () => {
+      const { organization, project, agent } = await createContext({ sessionType: "live" })
+      await seedRevision({ organization, project, agent, revision: 2 })
+
+      const response = await subject("Hello", 2)
+
+      expect(response.text).toContain("event: error")
+      expect(errorData(response.text)).toContain("playground")
+    })
+
+    it("rejects a revision that is not an integer", async () => {
+      // The revision reaches TypeORM as-is, so anything else must be turned away here rather than
+      // surface as a driver error.
+      await createContext({ sessionType: "playground" })
+
+      const response = await rawSubject(
+        JSON.stringify({ payload: { content: "Hello", agentSettingsRevision: "2" } }),
+      )
+
+      expect(response.text).toContain("event: error")
+      expect(errorData(response.text)).toContain("integer")
+    })
+
+    it("rejects a query whose payload is not an object", async () => {
+      await createContext({ sessionType: "playground" })
+
+      const response = await rawSubject(JSON.stringify({ payload: null }))
+
+      expect(response.text).toContain("event: error")
+      expect(errorData(response.text)).toContain("Invalid query format")
+    })
+
+    it("keeps running the published revision on a live session with no revision", async () => {
+      const { organization, project, agent, agentSettings } = await createContext({
+        sessionType: "live",
+      })
+      await seedRevision({ organization, project, agent, revision: 2, isDraft: true })
+
+      const response = await subject("Hello")
+
+      expect(response.text).not.toContain("event: error")
+      expect(await findAssistantMessageSettingsId()).toBe(agentSettings.id)
+    })
   })
 })

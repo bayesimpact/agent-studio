@@ -29,8 +29,9 @@ export type AgentSessionMessageDto = {
   startedAt?: TimeType
   completedAt?: TimeType
   /**
-   * Revision of the agent settings that produced this message. Absent on messages built
-   * client-side during a live stream, which are never refetched.
+   * Revision of the agent settings that produced this message. The client also sets it on the
+   * assistant message it builds optimistically, from the version the request named, so the badge
+   * stays right until the persisted message replaces it.
    */
   agentRevision?: number
   toolCalls?: Array<{
