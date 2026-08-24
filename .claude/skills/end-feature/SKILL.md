@@ -26,7 +26,12 @@ Only if checked. Edit `CHANGELOG.md`, adding a line under `## [Unreleased]`:
 - New capability → `### Added`; modified behavior → `### Changed`; bug fix → `### Fixed`.
 - **Write for end users, not developers** — describe the visible outcome, not entities/services/migrations.
 - Prefix with `(beta)` if the feature is behind a flag or not yet exposed in the UI.
-- One short line (under 100 chars) per feature/fix.
+- **Write in STE (Simplified Technical English)**: short sentences (max 20 words), one fact per sentence, active voice.
+- **One sentence per entry.** Even a large feature gets one headline sentence naming the capability or the new status (e.g. "Agents now have a draft and a published version of their settings."), not the mechanics. No sub-bullets. Never chain clauses with ";", "—", or "so".
+- Name the capability, not the UI: no button placement, labels, colors, or click behavior. Keep dates and required user actions.
+- Merge entries that belong to the same change into one. Delete an entry whose information is already carried by another.
+- **Verify before writing**: check the actual commits/code for how a change works (runtime vs data migration, full vs partial scope). Scope claims exactly — write "New CSV extraction runs are personal." when existing data is unaffected.
+- Do not add an entry for a bug that was never in a released version. Check that the bug's cause was in the last release tag before listing a fix.
 
 ## 2. Create a branch
 
