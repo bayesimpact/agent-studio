@@ -8,6 +8,20 @@ import { AgentMessageFeedback } from "./feedback/agent-message-feedback.entity"
 
 export type MessageStatus = "streaming" | "completed" | "aborted" | "error"
 
+/** Persisted MCP App pointer. Live HTML is hydrated onto the API DTO at read time. */
+export type AgentMessageMcpApp = {
+  mcpServerId: string
+  resourceUri: string
+}
+
+export type AgentMessageToolCall = {
+  id: string
+  name: string
+  arguments: Record<string, unknown>
+  result?: unknown
+  mcpApp?: AgentMessageMcpApp
+}
+
 @ConnectEntity("agent_message", "sessionId", "createdAt")
 export class AgentMessage extends ConnectEntityBase {
   @Column({ type: "uuid", name: "session_id" })
@@ -37,11 +51,7 @@ export class AgentMessage extends ConnectEntityBase {
   completedAt!: Date | null
 
   @Column({ type: "jsonb", nullable: true, name: "tool_calls" })
-  toolCalls!: Array<{
-    id: string
-    name: string
-    arguments: Record<string, unknown>
-  }> | null
+  toolCalls!: AgentMessageToolCall[] | null
 
   @ManyToOne(
     () => ConversationAgentSession,

@@ -28,6 +28,8 @@ ${promptHelpers.resourceLibraries(agent.resourceLibraries ?? [])}
 
 ${promptHelpers.tools({ names: toolNames, descriptions: toolDescriptions, agentSettings })}
 
+${promptHelpers.mcpAppUis(toolDescriptions)}
+
 ${promptHelpers.language(agentSettings.locale)}
 
 ${promptHelpers.now()}${

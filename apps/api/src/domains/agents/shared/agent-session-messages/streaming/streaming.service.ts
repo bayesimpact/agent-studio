@@ -515,6 +515,8 @@ export class StreamingService extends ServiceWithLLM {
       id: v4(),
       name: toolExecution.toolName,
       arguments: toolExecution.arguments,
+      ...(toolExecution.result !== undefined ? { result: toolExecution.result } : {}),
+      ...(toolExecution.mcpApp ? { mcpApp: toolExecution.mcpApp } : {}),
     }
 
     // Create a tool message in the database for each tool call, so that the session history is complete and reflects what actually happened during the agent execution (including tool calls)
