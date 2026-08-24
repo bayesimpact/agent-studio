@@ -87,7 +87,7 @@ export type * from "./projects/projects.dto"
 export { ProjectsRoutes } from "./projects/projects.routes"
 // Public Chat (anonymous embed access)
 export type * from "./public-chat/public-chat.dto"
-export { PublicChatRoutes } from "./public-chat/public-chat.routes"
+export { PUBLIC_PATH_PREFIX, PublicChatRoutes } from "./public-chat/public-chat.routes"
 // RBAC
 export * from "./rbac/permissions"
 // Resource Libraries

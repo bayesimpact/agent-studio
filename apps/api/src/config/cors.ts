@@ -1,3 +1,4 @@
+import { PUBLIC_PATH_PREFIX } from "@caseai-connect/api-contracts"
 import type {
   CorsOptions,
   CorsOptionsDelegate,
@@ -52,7 +53,7 @@ export function buildCorsOptionsDelegate(
   frontendUrls: string[],
 ): CorsOptionsDelegate<{ url?: string }> {
   return (req, callback: (error: Error | null, options: CorsOptions) => void) => {
-    const isPublicEmbed = req.url?.startsWith("/public/") ?? false
+    const isPublicEmbed = req.url?.startsWith(`/${PUBLIC_PATH_PREFIX}/`) ?? false
     callback(null, { origin: isPublicEmbed ? true : frontendUrls })
   }
 }
