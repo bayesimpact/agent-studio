@@ -34,6 +34,8 @@ This project uses [CalVer](https://calver.org/) (YY.MM.Micro) for product versio
 - Studio no longer crashes when a project opens right after onboarding restarts.
 
 ### Security
+- Cross-origin browser calls to authenticated endpoints are now limited to the platform's own domains.
+
 ## [26.07.3] - 2026-07-24
 
 ### Added
