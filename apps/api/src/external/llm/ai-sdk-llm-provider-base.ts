@@ -347,8 +347,13 @@ export abstract class AISDKLLMProviderBase implements LLMProvider {
     const fullMessages = [...systemMessagePart, ...aiSDKMessages]
     const streamResult = await agent.stream({ messages: fullMessages })
 
-    for await (const chunk of streamResult.textStream) {
-      yield chunk
+    // The AI SDK never throws stream failures at the consumer: they surface
+    // as `error` parts on fullStream, which textStream filters out — the
+    // stream just ends, indistinguishable from an empty answer. Consume
+    // fullStream so a failed generation rejects and callers can report it.
+    for await (const part of streamResult.fullStream) {
+      if (part.type === "text-delta") yield part.text
+      else if (part.type === "error") throw part.error
     }
 
     await this.runEndOfTurnTools({

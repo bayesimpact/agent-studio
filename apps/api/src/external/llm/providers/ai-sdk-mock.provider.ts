@@ -21,6 +21,7 @@ type ResolvedMock =
   | { type: "text"; chunks: string[] }
   | { type: "toolCall"; toolName: string; params: unknown }
   | { type: "textWithToolCall"; text: string; toolName: string; params: unknown }
+  | { type: "error"; error: Error }
 
 @Injectable()
 export class AISDKMockProvider extends AISDKLLMProviderBase {
@@ -58,6 +59,10 @@ export class AISDKMockProvider extends AISDKLLMProviderBase {
   ): void {
     this.enqueue(agentId, [{ type: "textWithToolCall", text, toolName, input }])
   }
+  /** The next generation fails at the provider, the way a real 400 does. */
+  addErrorTurn(agentId: string, error: Error): void {
+    this.enqueue(agentId, [{ type: "error", error }])
+  }
   private enqueue(agentId: string, values: MockValue[]): void {
     const queue = this.queuesByAgentId.get(agentId) ?? []
     queue.push(...values)
@@ -86,6 +91,7 @@ export class AISDKMockProvider extends AISDKLLMProviderBase {
     return new MockLanguageModelV3({
       doGenerate: async (options) => {
         const resolved = this.resolve({ mode: "generate", callOrigin, options })
+        if (resolved.type === "error") throw resolved.error
         if (resolved.type === "toolCall") {
           return {
             content: [
@@ -115,6 +121,7 @@ export class AISDKMockProvider extends AISDKLLMProviderBase {
       },
       doStream: async (options) => {
         const resolved = this.resolve({ mode: "stream", callOrigin, options })
+        if (resolved.type === "error") throw resolved.error
         return {
           stream:
             resolved.type === "toolCall"
@@ -167,6 +174,8 @@ export class AISDKMockProvider extends AISDKLLMProviderBase {
             toolName: next.toolName,
             params: next.input,
           }
+        case "error":
+          return { type: "error", error: next.error }
       }
     }
 

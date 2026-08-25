@@ -12,6 +12,7 @@ This project uses [CalVer](https://calver.org/) (YY.MM.Micro) for product versio
 ### Changed
 
 ### Fixed
+- Chat shows an error message instead of an empty reply when the model fails.
 
 ### Security
 
