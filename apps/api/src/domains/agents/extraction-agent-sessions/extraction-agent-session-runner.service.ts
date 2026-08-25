@@ -24,7 +24,7 @@ import {
   type IFileStorage,
 } from "@/domains/documents/storage/file-storage.interface"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
-import { ProjectRepository } from "@/domains/projects/project.repository"
+import { ProjectsService } from "@/domains/projects/projects.service"
 import { ServiceWithLLM } from "@/external/llm"
 import { modelRequiresPdfAsImages } from "@/external/llm/agent-provider"
 import type { Agent } from "../agent.entity"
@@ -52,7 +52,6 @@ export class ExtractionAgentSessionRunnerService extends ServiceWithLLM {
     private readonly projectsService: ProjectsService,
     private readonly pdfPagesService: PdfPagesService,
     private readonly documentsService: DocumentsService,
-    private readonly projectRepository: ProjectRepository,
     @Inject("_MockLLMProvider")
     mockLlmProvider: LLMProvider,
     @Inject("VertexLLMProvider")
@@ -131,7 +130,7 @@ export class ExtractionAgentSessionRunnerService extends ServiceWithLLM {
         connectScope,
       })
 
-      const llmFeatures = await this.projectRepository.getLlmFeatures(connectScope)
+      const llmFeatures = await this.projectsService.getLlmFeatures(connectScope)
       const result = await this.getProviderForModel(agentSettings.model).generateStructuredOutput({
         message: llmMessage,
         schema: agentSettings.outputJsonSchema,
