@@ -13,6 +13,8 @@ This project uses [CalVer](https://calver.org/) (YY.MM.Micro) for product versio
 - Studio playground: a version picker in the header selects the settings version for new messages.
 - Studio extraction agents: each run shows a version badge.
 - Studio extraction agents: a version picker selects the settings version for a run.
+- Extraction evaluations: a version picker selects the agent settings version for a run.
+- Extraction evaluations: each run shows the settings version it ran with.
 - Back-office administrators can create an organization from the organizations panel.
 - Embedded (public) agent sessions get a session title and categories, support form filling, and count in the category analytics.
 - Agents that run a retiring model show a banner with the retirement date and the replacement model.

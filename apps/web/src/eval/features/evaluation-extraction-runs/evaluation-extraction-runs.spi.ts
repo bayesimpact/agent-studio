@@ -13,6 +13,8 @@ export interface IEvaluationExtractionRunsSpi {
       payload: {
         evaluationExtractionDatasetId: string
         agentId: string
+        // Agent-settings revision to pin on the run; null pins the latest published revision.
+        agentSettingsRevision: number | null
         keyMapping: EvaluationExtractionRunKeyMappingEntryDto[]
       }
     },

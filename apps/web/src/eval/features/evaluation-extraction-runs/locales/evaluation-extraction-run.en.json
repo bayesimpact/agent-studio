@@ -8,6 +8,14 @@
     "agent": "Agent",
     "agentPlaceholder": "Select an agent",
     "agentSettingsUnavailable": "This agent's configuration could not be loaded.",
+    "version": {
+      "label": "Version",
+      "placeholder": "Select a version",
+      "loading": "Loading versions...",
+      "item": "v{{revision}} — {{detail}}",
+      "current": "Current ({{date}})",
+      "revision": "v{{revision}}"
+    },
     "scope": {
       "title": "Records to run",
       "all": "Run entire dataset ({{count}} records)",
@@ -23,6 +31,7 @@
       "scored": "Scored",
       "fyi": "FYI",
       "columnPlaceholder": "Select column",
+      "incomplete": "Map every scored key to a dataset column.",
       "noOutputSchema": "This agent has no output schema defined."
     },
     "results": {

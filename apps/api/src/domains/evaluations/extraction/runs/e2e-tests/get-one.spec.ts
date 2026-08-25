@@ -83,7 +83,7 @@ describe("EvaluationExtractionRuns - getOne", () => {
     await setup.getRepository(EvaluationExtractionRun).save(run)
     evaluationExtractionRunId = run.id
 
-    return { organization, project, dataset, agent, run }
+    return { organization, project, dataset, agent, agentSettings, run }
   }
 
   const subject = async () =>
@@ -94,7 +94,7 @@ describe("EvaluationExtractionRuns - getOne", () => {
     })
 
   it("should return the evaluation run", async () => {
-    const { run, dataset, agent } = await createContext()
+    const { run, dataset, agent, agentSettings } = await createContext()
 
     const res = await subject()
 
@@ -102,6 +102,8 @@ describe("EvaluationExtractionRuns - getOne", () => {
     expect(res.body.data.id).toBe(run.id)
     expect(res.body.data.evaluationExtractionDatasetId).toBe(dataset.id)
     expect(res.body.data.agentId).toBe(agent.id)
+    expect(res.body.data.agentSettingsId).toBe(agentSettings.id)
+    expect(res.body.data.agentRevision).toBe(agentSettings.revision)
     expect(res.body.data.status).toBe("pending")
   })
 

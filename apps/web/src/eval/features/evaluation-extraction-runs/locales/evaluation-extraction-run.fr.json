@@ -8,6 +8,14 @@
     "agent": "Agent",
     "agentPlaceholder": "Sélectionner un agent",
     "agentSettingsUnavailable": "La configuration de cet agent n'a pas pu être chargée.",
+    "version": {
+      "label": "Version",
+      "placeholder": "Sélectionner une version",
+      "loading": "Chargement des versions...",
+      "item": "v{{revision}} — {{detail}}",
+      "current": "Actuelle ({{date}})",
+      "revision": "v{{revision}}"
+    },
     "scope": {
       "title": "Enregistrements à exécuter",
       "all": "Exécuter le dataset entier ({{count}} enregistrements)",
@@ -23,6 +31,7 @@
       "scored": "Évalué",
       "fyi": "Info",
       "columnPlaceholder": "Sélectionner une colonne",
+      "incomplete": "Associez chaque clé évaluée à une colonne du dataset.",
       "noOutputSchema": "Cet agent n'a pas de schéma de sortie défini."
     },
     "results": {

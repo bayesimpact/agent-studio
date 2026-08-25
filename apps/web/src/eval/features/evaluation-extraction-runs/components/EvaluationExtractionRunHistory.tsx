@@ -83,6 +83,9 @@ function RunItem({
       >
         <div className="flex items-center gap-3">
           <RunStatusBadge status={run.status} />
+          <span className="text-sm text-muted-foreground">
+            {t("evaluationExtractionRun:version.revision", { revision: run.agentRevision })}
+          </span>
           <span className="text-sm text-muted-foreground">{buildSince(run.updatedAt)}</span>
         </div>
         <div className="flex items-center gap-3">
@@ -109,6 +112,7 @@ function RunItem({
           <AgentMetadataDialog
             buttonProps={{ variant: "secondary", size: "sm" }}
             agentId={run.agentId}
+            revision={run.agentRevision}
           />
           <DeleteEvaluationExtractionRunButton
             buttonProps={{ variant: "secondary", size: "icon-sm" }}

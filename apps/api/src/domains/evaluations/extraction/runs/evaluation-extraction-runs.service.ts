@@ -118,7 +118,10 @@ export class EvaluationExtractionRunsService {
     connectScope: RequiredConnectScope
     runId: string
   }): Promise<EvaluationExtractionRun | null> {
-    return this.runConnectRepository.getOneById(connectScope, runId)
+    // Run responses expose the pinned agent-settings revision.
+    return this.runConnectRepository.getOneById(connectScope, runId, {
+      relations: ["agentSettings"],
+    })
   }
 
   async markRunCancelled({
@@ -154,6 +157,8 @@ export class EvaluationExtractionRunsService {
     connectScope: RequiredConnectScope
   }): Promise<EvaluationExtractionRun[]> {
     const runs = await this.runConnectRepository.find(connectScope, {
+      // Run responses expose the pinned agent-settings revision.
+      relations: { agentSettings: true },
       order: { createdAt: "DESC" },
     })
     return runs

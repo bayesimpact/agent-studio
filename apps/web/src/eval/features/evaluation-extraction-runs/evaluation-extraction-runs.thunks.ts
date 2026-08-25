@@ -77,6 +77,8 @@ const createAndExecute = createAsyncThunk<
   {
     evaluationExtractionDatasetId: string
     agentId: string
+    // Agent-settings revision to pin on the run; null pins the latest published revision.
+    agentSettingsRevision: number | null
     keyMapping: EvaluationExtractionRunKeyMappingEntryDto[]
     recordLimit: number | null
   },
@@ -94,6 +96,7 @@ const createAndExecute = createAsyncThunk<
       payload: {
         evaluationExtractionDatasetId: payload.evaluationExtractionDatasetId,
         agentId: payload.agentId,
+        agentSettingsRevision: payload.agentSettingsRevision,
         keyMapping: payload.keyMapping,
       },
     })
