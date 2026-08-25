@@ -9,11 +9,15 @@ import { AgentSubAgentsService } from "@/domains/agents/sub-agents/agent-sub-age
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
 import { DocumentChunkRetrievalService } from "@/domains/documents/embeddings/document-chunk-retrieval.service"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
-import { McpServersService } from "@/domains/mcp-servers/mcp-servers.service"
+import { type EnabledMcpServer, McpServersService } from "@/domains/mcp-servers/mcp-servers.service"
 import { ProjectsService } from "@/domains/projects/projects.service"
 import { ServiceWithLLM } from "@/external/llm"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
 import { McpClientService } from "@/external/mcp"
+import { readMcpAppHtml } from "@/external/mcp/mcp-app-resource"
+import { getMcpAppResourceUri } from "@/external/mcp/mcp-app-resource-uri"
+import { applyMcpAppToolDescription } from "@/external/mcp/mcp-app-tool-description"
+import type { McpSession } from "@/external/mcp/mcp-client.service"
 import type { McpConversationContext } from "@/external/mcp/mcp-request-headers"
 import { generateMasterPrompt } from "./master-promts/generate-master-prompt"
 import type { AgentSessionScope, OnExecute } from "./streaming-session.types"
@@ -143,6 +147,11 @@ export class ToolsService extends ServiceWithLLM {
     }
   }
 
+  /**
+   * Connects to each enabled MCP server and exposes its tools to the model.
+   * MCP App HTML is not kept here: a successful call only stores the `ui://`
+   * pointer, and McpAppHtmlService re-reads the card when messages are loaded.
+   */
   private async buildMcpTools({
     agent,
     session,
@@ -152,58 +161,212 @@ export class ToolsService extends ServiceWithLLM {
     session: AgentSessionScope["session"]
     onExecute: OnExecute
   }): Promise<McpToolset> {
-    const mcpCloseFns: (() => Promise<void>)[] = []
-    const mcpTools: ToolSet = {}
-    const mcpToolDescriptions: Record<string, string> = {}
-
-    // Forwarded to every MCP server as headers: deterministic context, so a
-    // server can attribute a call without the model having to carry it.
+    const closeFns: (() => Promise<void>)[] = []
+    const tools: ToolSet = {}
+    const toolDescriptions: Record<string, string> = {}
+    const validatedAppResources = new Set<string>()
+    // Headers, not prompt text: the server can attribute the call without
+    // the model having to copy agent/session ids.
     const context: McpConversationContext = {
       agentId: agent.id,
       sessionId: session.id,
       externalVisitorId: "externalVisitorId" in session ? session.externalVisitorId : null,
     }
 
-    const serverConfigs = await this.mcpServersService.getEnabledServersForAgent(agent.id)
-    for (const serverConfig of serverConfigs) {
-      const mcpSession = await this.mcpClientService.connect({ ...serverConfig, context })
-      mcpCloseFns.push(mcpSession.close)
-      for (const [toolName, toolDef] of Object.entries(mcpSession.tools)) {
-        const originalExecute = toolDef.execute
-        if (!originalExecute) continue
-        const description = this.getToolDescription(toolDef)
-        if (description) mcpToolDescriptions[toolName] = description
-        mcpTools[toolName] = {
-          ...toolDef,
-          execute: (async (...executeArgs: Parameters<typeof originalExecute>) => {
-            this.logger.log(
-              `[MCP] Calling tool "${toolName}" with args: ${JSON.stringify(executeArgs[0])}`,
-            )
-            await onExecute({
-              toolName,
-              arguments: (executeArgs[0] ?? {}) as Record<string, unknown>,
-            })
-            try {
-              const result = await originalExecute(...executeArgs)
-              this.logger.log(`[MCP] Tool "${toolName}" returned: ${JSON.stringify(result)}`)
-              return result
-            } catch (error) {
-              this.logger.error(`[MCP] Tool "${toolName}" failed: ${error}`)
-              throw error
-            }
-          }) as typeof originalExecute,
-        }
-      }
+    for (const server of await this.mcpServersService.getEnabledServersForAgent(agent.id)) {
+      const mcpSession = await this.mcpClientService.connect({ ...server, context })
+      closeFns.push(mcpSession.close)
+      this.addMcpServerTools({
+        mcpSession,
+        onExecute,
+        server,
+        toolDescriptions,
+        tools,
+        validatedAppResources,
+      })
     }
 
-    const disconnect =
-      mcpCloseFns.length > 0
-        ? async () => {
-            for (const closeFn of mcpCloseFns) await closeFn()
-          }
-        : undefined
+    return {
+      disconnect:
+        closeFns.length > 0
+          ? async () => {
+              for (const closeFn of closeFns) await closeFn()
+            }
+          : undefined,
+      tools,
+      toolDescriptions,
+    }
+  }
 
-    return { disconnect, tools: mcpTools, toolDescriptions: mcpToolDescriptions }
+  private addMcpServerTools({
+    mcpSession,
+    onExecute,
+    server,
+    toolDescriptions,
+    tools,
+    validatedAppResources,
+  }: {
+    mcpSession: McpSession
+    onExecute: OnExecute
+    server: EnabledMcpServer
+    toolDescriptions: Record<string, string>
+    tools: ToolSet
+    validatedAppResources: Set<string>
+  }) {
+    for (const [toolName, toolDef] of Object.entries(mcpSession.tools)) {
+      const originalExecute = toolDef.execute
+      if (!originalExecute) continue
+
+      const resourceUri = getMcpAppResourceUri(toolDef)
+      const description = this.mcpToolDescription(toolDef, resourceUri)
+      if (description) toolDescriptions[toolName] = description
+      if (resourceUri) {
+        this.logger.log("MCP App resource discovered", {
+          mcpServerId: server.id,
+          resourceUri,
+          toolName,
+        })
+      }
+
+      tools[toolName] = {
+        ...toolDef,
+        ...(description ? { description } : {}),
+        execute: this.wrapMcpExecute({
+          mcpSession,
+          onExecute,
+          originalExecute,
+          resourceUri,
+          server,
+          toolName,
+          validatedAppResources,
+        }),
+      }
+    }
+  }
+
+  /**
+   * Logs the call, then persists a tool row. MCP App tools also get a pointer
+   * (`mcpServerId` + `ui://`) once the declared resource validates; ordinary
+   * MCP tools do not store `result`, to avoid extra PHI on the message.
+   */
+  private wrapMcpExecute({
+    mcpSession,
+    onExecute,
+    originalExecute,
+    resourceUri,
+    server,
+    toolName,
+    validatedAppResources,
+  }: {
+    mcpSession: McpSession
+    onExecute: OnExecute
+    originalExecute: NonNullable<ToolSet[string]["execute"]>
+    resourceUri: string | undefined
+    server: EnabledMcpServer
+    toolName: string
+    validatedAppResources: Set<string>
+  }): NonNullable<ToolSet[string]["execute"]> {
+    return (async (...executeArgs: Parameters<typeof originalExecute>) => {
+      this.logger.log(`[MCP] Calling tool "${toolName}"`)
+      const toolArguments = (executeArgs[0] ?? {}) as Record<string, unknown>
+      try {
+        const result = await originalExecute(...executeArgs)
+        this.logger.log(`[MCP] Tool "${toolName}" succeeded`)
+        const mcpApp = await this.mcpAppAfterSuccess({
+          mcpSession,
+          resourceUri,
+          server,
+          toolName,
+          validatedAppResources,
+        })
+        await onExecute({
+          arguments: toolArguments,
+          mcpApp,
+          result: mcpApp ? result : undefined,
+          toolName,
+        })
+        return result
+      } catch (error) {
+        this.logger.error(`[MCP] Tool "${toolName}" failed: ${error}`)
+        await onExecute({ arguments: toolArguments, toolName })
+        throw error
+      }
+    }) as typeof originalExecute
+  }
+
+  /**
+   * After a successful MCP call, tag MCP App tools with a `ui://` pointer only
+   * if that resource actually reads as an MCP App. Ordinary tools get no
+   * pointer. HTML is discarded; McpAppHtmlService loads the current card later.
+   */
+  private async mcpAppAfterSuccess({
+    mcpSession,
+    resourceUri,
+    server,
+    toolName,
+    validatedAppResources,
+  }: {
+    mcpSession: McpSession
+    resourceUri: string | undefined
+    server: EnabledMcpServer
+    toolName: string
+    validatedAppResources: Set<string>
+  }) {
+    if (!resourceUri) return undefined
+    const isValid = await this.isValidMcpAppResource({
+      mcpSession,
+      mcpServerId: server.id,
+      resourceUri,
+      toolName,
+      validatedAppResources,
+    })
+    return isValid ? { mcpServerId: server.id, resourceUri } : undefined
+  }
+
+  /**
+   * Prove the declared `ui://` is a real MCP App before tagging the tool call.
+   */
+  private async isValidMcpAppResource({
+    mcpSession,
+    mcpServerId,
+    resourceUri,
+    toolName,
+    validatedAppResources,
+  }: {
+    mcpSession: McpSession
+    mcpServerId: string
+    resourceUri: string
+    toolName: string
+    validatedAppResources: Set<string>
+  }): Promise<boolean> {
+    const cacheKey = `${mcpServerId}:${resourceUri}`
+    if (validatedAppResources.has(cacheKey)) return true
+
+    try {
+      readMcpAppHtml({
+        resource: await mcpSession.readResource(resourceUri),
+        resourceUri,
+      })
+      validatedAppResources.add(cacheKey)
+      this.logger.log("MCP App resource read", { mcpServerId, resourceUri, toolName })
+      return true
+    } catch (error) {
+      this.logger.warn("MCP App resource read failed", {
+        error: error instanceof Error ? error.message : String(error),
+        mcpServerId,
+        resourceUri,
+        toolName,
+      })
+      return false
+    }
+  }
+
+  private mcpToolDescription(
+    toolDef: unknown,
+    resourceUri: string | undefined,
+  ): string | undefined {
+    const description = this.getToolDescription(toolDef)
+    return resourceUri ? applyMcpAppToolDescription(description) : description
   }
 
   private async buildConversationAgentTools({

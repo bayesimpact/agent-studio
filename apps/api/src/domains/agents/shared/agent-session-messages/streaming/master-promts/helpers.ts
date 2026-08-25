@@ -9,6 +9,7 @@ import {
   enumerateAgentResources,
   type SurfaceableLibrary,
 } from "@/domains/agents/shared/agent-session-messages/streaming/tools/surfaced-resources-registry"
+import { mcpAppToolNamesFromDescriptions } from "@/external/mcp/mcp-app-tool-description"
 
 export const promptHelpers = {
   now: () => `Today's date: ${new Date().toLocaleDateString()}`,
@@ -51,6 +52,13 @@ ${serializedLibraries}`
     `## Response language:
 Always answer in ${locale === "en" ? "English" : locale === "fr" ? "French" : "user's language"}.
       `.trim(),
+
+  mcpAppUis: (descriptions?: Record<string, string>) => {
+    const toolNames = mcpAppToolNamesFromDescriptions(descriptions)
+    if (toolNames.length === 0) return ""
+    return `## Interactive tool UIs
+These tools display an interactive UI in the chat when called: ${toolNames.join(", ")}. When the user asks to see, open, or display that UI, call the matching tool — even if you already have the data from an earlier turn. Never say you cannot display UI components or resource URIs. Do not recap, summarize, or restate the UI contents in markdown; the host already shows it.`
+  },
 
   tools: ({
     agentSettings,

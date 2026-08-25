@@ -5,10 +5,22 @@ import {
   buildMcpRequestHeaders,
   type McpConversationContext,
 } from "@/external/mcp/mcp-request-headers"
+import { MCP_APP_MIME_TYPE } from "./mcp-app-resource"
+
+const MCP_APP_CLIENT_CAPABILITIES = {
+  extensions: {
+    "io.modelcontextprotocol/ui": {
+      mimeTypes: [MCP_APP_MIME_TYPE],
+    },
+  },
+}
+
+export type McpResourceReadResult = Awaited<ReturnType<MCPClient["readResource"]>>
 
 export type McpSession = {
   tools: ToolSet
   close: () => Promise<void>
+  readResource: (uri: string) => Promise<McpResourceReadResult>
 }
 
 @Injectable()
@@ -38,12 +50,15 @@ export class McpClientService {
         },
         name: "caseai-connect",
         version: "1.0.0",
+        capabilities: MCP_APP_CLIENT_CAPABILITIES,
       })
 
       const tools = (await client.tools()) as ToolSet
+      const connectedClient = client
       return {
         tools,
-        close: () => client?.close() ?? Promise.resolve(),
+        close: () => connectedClient.close(),
+        readResource: (uri: string) => connectedClient.readResource({ uri }),
       }
     } catch (error) {
       this.logger.error(
@@ -51,7 +66,13 @@ export class McpClientService {
         error instanceof Error ? error.stack : undefined,
       )
       await client?.close()
-      return { tools: {}, close: async () => {} }
+      return {
+        tools: {},
+        close: async () => {},
+        readResource: async () => {
+          throw new Error("MCP client is not connected")
+        },
+      }
     }
   }
 }
