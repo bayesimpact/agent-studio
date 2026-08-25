@@ -11,6 +11,16 @@ import type {
   PaginatedEvaluationConversationRunRecords,
 } from "@/eval/features/evaluation-conversation-runs/evaluation-conversation-runs.models"
 import type { IEvaluationConversationRunsSpi } from "@/eval/features/evaluation-conversation-runs/evaluation-conversation-runs.spi"
+import type {
+  EvaluationExtractionDataset,
+  PaginatedEvaluationExtractionDatasetRecords,
+} from "@/eval/features/evaluation-extraction-datasets/evaluation-extraction-datasets.models"
+import type { IEvaluationExtractionDatasetsSpi } from "@/eval/features/evaluation-extraction-datasets/evaluation-extraction-datasets.spi"
+import type {
+  EvaluationExtractionRun,
+  PaginatedEvaluationExtractionRunRecords,
+} from "@/eval/features/evaluation-extraction-runs/evaluation-extraction-runs.models"
+import type { IEvaluationExtractionRunsSpi } from "@/eval/features/evaluation-extraction-runs/evaluation-extraction-runs.spi"
 
 export function buildEmptyRecordsPage<TRecord>(): {
   records: TRecord[]
@@ -123,6 +133,87 @@ export function buildMockConversationRunsService(
     },
     async getRecords({ evaluationConversationRunId }) {
       return recordsByRunId[evaluationConversationRunId] ?? records
+    },
+    async streamRunStatus() {},
+    async deleteOne() {},
+  }
+}
+
+export function buildMockExtractionDatasetsService(
+  overrides: {
+    datasets?: EvaluationExtractionDataset[]
+    records?: PaginatedEvaluationExtractionDatasetRecords
+  } = {},
+): IEvaluationExtractionDatasetsSpi {
+  const datasets = overrides.datasets ?? []
+  const records = overrides.records ?? buildEmptyRecordsPage()
+  return {
+    async getAllFiles() {
+      return []
+    },
+    async getAll() {
+      return datasets
+    },
+    async getRecords() {
+      return records
+    },
+    async createOne() {
+      return { success: true }
+    },
+    async renameOne() {
+      return { success: true }
+    },
+    async updateOne() {
+      return { success: true }
+    },
+    async getFileColumns() {
+      return []
+    },
+    async deleteOne() {},
+  }
+}
+
+export function buildMockExtractionRunsService(
+  overrides: {
+    runs?: EvaluationExtractionRun[]
+    records?: PaginatedEvaluationExtractionRunRecords
+    // Per-run records, keyed by run id, so the compare page can show differing results.
+    recordsByRunId?: Record<string, PaginatedEvaluationExtractionRunRecords>
+  } = {},
+): IEvaluationExtractionRunsSpi {
+  const runs = overrides.runs ?? []
+  const records = overrides.records ?? buildEmptyRecordsPage()
+  const recordsByRunId = overrides.recordsByRunId ?? {}
+
+  const findRun = (evaluationExtractionRunId: string): EvaluationExtractionRun => {
+    const run = runs.find((candidate) => candidate.id === evaluationExtractionRunId)
+    if (!run) throw new Error(`No seeded run with id ${evaluationExtractionRunId}`)
+    return run
+  }
+
+  return {
+    async createOne() {
+      const [firstRun] = runs
+      if (!firstRun) throw new Error("No run seeded for createOne")
+      return firstRun
+    },
+    async executeOne({ evaluationExtractionRunId }) {
+      return findRun(evaluationExtractionRunId)
+    },
+    async retryOne({ evaluationExtractionRunId }) {
+      return findRun(evaluationExtractionRunId)
+    },
+    async cancelOne({ evaluationExtractionRunId }) {
+      return { ...findRun(evaluationExtractionRunId), status: "cancelled" }
+    },
+    async getOne({ evaluationExtractionRunId }) {
+      return findRun(evaluationExtractionRunId)
+    },
+    async getAll() {
+      return runs
+    },
+    async getRecords({ evaluationExtractionRunId }) {
+      return recordsByRunId[evaluationExtractionRunId] ?? records
     },
     async streamRunStatus() {},
     async deleteOne() {},

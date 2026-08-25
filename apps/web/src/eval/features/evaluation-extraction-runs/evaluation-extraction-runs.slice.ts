@@ -3,6 +3,7 @@ import { ADS, type AsyncData, defaultAsyncData } from "@/common/store/async-data
 import { currentIdsActions } from "@/eval/store/currentIds.slice"
 import type {
   EvaluationExtractionRun,
+  EvaluationExtractionRunRecord,
   EvaluationExtractionRunStatus,
   EvaluationExtractionRunSummary,
   PaginatedEvaluationExtractionRunRecords,
@@ -24,6 +25,9 @@ interface State {
   currentRun: AsyncData<EvaluationExtractionRun>
   currentRunRecords: AsyncData<PaginatedEvaluationExtractionRunRecords>
   currentRecordsQuery: RecordsQuery
+  // Run ids being compared (URL-driven, compare page) and their records keyed by run id.
+  comparisonRunIds: string[]
+  comparisonRecords: AsyncData<Record<string, EvaluationExtractionRunRecord[]>>
   isExecuting: boolean
   isRetrying: boolean
   isCancelling: boolean
@@ -32,12 +36,23 @@ interface State {
 
 const defaultRecordsQuery: RecordsQuery = { page: 0, limit: 10 }
 
+// Guards stale getComparisonRecords responses: only the response matching the
+// current comparison (same run ids, same order) may touch the state.
+function isCurrentComparison(
+  comparisonRunIds: string[],
+  requestArg: { evaluationExtractionRunIds: string[] },
+): boolean {
+  return comparisonRunIds.join(",") === requestArg.evaluationExtractionRunIds.join(",")
+}
+
 const initialState: State = {
   currentRunId: null,
   data: defaultAsyncData,
   currentRun: defaultAsyncData,
   currentRunRecords: defaultAsyncData,
   currentRecordsQuery: defaultRecordsQuery,
+  comparisonRunIds: [],
+  comparisonRecords: defaultAsyncData,
   isExecuting: false,
   isRetrying: false,
   isCancelling: false,
@@ -50,6 +65,19 @@ const slice = createSlice({
   reducers: {
     mount: () => {},
     unmount: () => {},
+    // Compare-page lifecycle (ADR 0009): the middleware fetches on compareMount;
+    // unmounting clears the comparison so a later visit never flashes stale data.
+    compareMount: () => {},
+    compareUnmount: (state) => {
+      state.comparisonRunIds = []
+      state.comparisonRecords = defaultAsyncData
+    },
+    // URL-driven, set by the compare route (same role as useSetCurrentIds).
+    setComparisonRunIds: (state, action: PayloadAction<string[]>) => {
+      if (state.comparisonRunIds.join(",") === action.payload.join(",")) return
+      state.comparisonRunIds = action.payload
+      state.comparisonRecords = defaultAsyncData
+    },
     reset: () => initialState,
     startRunStatusStream: (state) => {
       state.runStatusStream.isActive = true
@@ -150,6 +178,26 @@ const slice = createSlice({
         if (action.meta.arg.evaluationExtractionRunId !== state.currentRunId) return
         state.currentRunRecords.status = ADS.Error
         state.currentRunRecords.error = action.error.message || "Failed to get run records"
+      })
+
+    // getComparisonRecords — responses for run ids other than the current
+    // comparison are stale (the user already navigated on) and are discarded.
+    builder
+      .addCase(evaluationExtractionRunsThunks.getComparisonRecords.pending, (state, action) => {
+        if (!isCurrentComparison(state.comparisonRunIds, action.meta.arg)) return
+        if (!ADS.isFulfilled(state.comparisonRecords)) {
+          state.comparisonRecords.status = ADS.Loading
+        }
+        state.comparisonRecords.error = null
+      })
+      .addCase(evaluationExtractionRunsThunks.getComparisonRecords.fulfilled, (state, action) => {
+        if (!isCurrentComparison(state.comparisonRunIds, action.meta.arg)) return
+        state.comparisonRecords = { status: ADS.Fulfilled, error: null, value: action.payload }
+      })
+      .addCase(evaluationExtractionRunsThunks.getComparisonRecords.rejected, (state, action) => {
+        if (!isCurrentComparison(state.comparisonRunIds, action.meta.arg)) return
+        state.comparisonRecords.status = ADS.Error
+        state.comparisonRecords.error = action.error.message || "Failed to load runs to compare"
       })
 
     // createAndExecute

@@ -15,6 +15,8 @@ This project uses [CalVer](https://calver.org/) (YY.MM.Micro) for product versio
 - Studio extraction agents: a version picker selects the settings version for a run.
 - Extraction evaluations: a version picker selects the agent settings version for a run.
 - Extraction evaluations: each run shows the settings version it ran with.
+- Extraction evaluations: the run history is a table with one row per run.
+- Extraction evaluations: selected runs can be compared side by side.
 - Back-office administrators can create an organization from the organizations panel.
 - Embedded (public) agent sessions get a session title and categories, support form filling, and count in the category analytics.
 - Agents that run a retiring model show a banner with the retirement date and the replacement model.

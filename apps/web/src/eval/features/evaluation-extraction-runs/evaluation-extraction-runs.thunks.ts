@@ -4,6 +4,7 @@ import { getCurrentId } from "@/common/features/helpers"
 import type { ThunkConfig } from "@/common/store/types"
 import type {
   EvaluationExtractionRun,
+  EvaluationExtractionRunRecord,
   PaginatedEvaluationExtractionRunRecords,
 } from "./evaluation-extraction-runs.models"
 import { evaluationExtractionRunsActions } from "./evaluation-extraction-runs.slice"
@@ -69,6 +70,37 @@ const getRecords = createAsyncThunk<
       sortBy,
       sortOrder,
     })
+  },
+)
+
+// Loads every record for each selected run so the compare page can align statuses
+// per dataset record. Runs of the same dataset share small record counts, so a
+// single high-limit page per run is enough.
+const COMPARISON_RECORD_LIMIT = 1000
+
+const getComparisonRecords = createAsyncThunk<
+  Record<string, EvaluationExtractionRunRecord[]>,
+  { evaluationExtractionRunIds: string[] },
+  ThunkConfig
+>(
+  "evaluationExtractionRuns/getComparisonRecords",
+  async ({ evaluationExtractionRunIds }, { extra: { services }, getState }) => {
+    const state = getState()
+    const organizationId = getCurrentId({ state, name: "organizationId" })
+    const projectId = getCurrentId({ state, name: "projectId" })
+    const entries = await Promise.all(
+      evaluationExtractionRunIds.map(async (evaluationExtractionRunId) => {
+        const page = await services.evaluationExtractionRuns.getRecords({
+          organizationId,
+          projectId,
+          evaluationExtractionRunId,
+          page: 0,
+          limit: COMPARISON_RECORD_LIMIT,
+        })
+        return [evaluationExtractionRunId, page.records] as const
+      }),
+    )
+    return Object.fromEntries(entries)
   },
 )
 
@@ -192,6 +224,7 @@ export const evaluationExtractionRunsThunks = {
   deleteOne,
   retryOne,
   getAll,
+  getComparisonRecords,
   getOne,
   getRecords,
   streamRunStatus,

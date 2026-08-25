@@ -11,6 +11,8 @@ const conversation = project.extend("/conversation")
 // EXTRACTION-LEVEL
 const extractionDataset = extraction.extend("/:datasetId")
 const evaluationRun = extractionDataset.extend("/runs/:runId")
+// Selected run ids are carried in the `?runs=id1,id2` query string.
+const extractionDatasetCompare = extractionDataset.extend("/compare")
 
 // CONVERSATION-LEVEL
 const conversationDataset = conversation.extend("/:datasetId")
@@ -26,6 +28,7 @@ export const EvalRoutes = {
   evaluationRun,
   extraction,
   extractionDataset,
+  extractionDatasetCompare,
   home,
   organization,
   project,
