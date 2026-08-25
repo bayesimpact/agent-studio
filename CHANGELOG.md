@@ -8,6 +8,7 @@ This project uses [CalVer](https://calver.org/) (YY.MM.Micro) for product versio
 ## [Unreleased]
 
 ### Added
+- (beta) Gemma and MedGemma agents accept PDF documents in chat and extraction.
 
 ### Changed
 
@@ -31,7 +32,6 @@ This project uses [CalVer](https://calver.org/) (YY.MM.Micro) for product versio
 - Embedded (public) agent sessions get a session title and categories, support form filling, and count in the category analytics.
 - Agents that run a retiring model show a banner with the retirement date and the replacement model.
 - (beta) Conversation chat shows the MCP App UI for tools that provide one.
-- (beta) Gemma and MedGemma agents accept PDF documents in chat and extraction.
 
 ### Changed
 - Access control moves to a unified roles-and-permissions model (WIP).
