@@ -22,6 +22,8 @@ import {
   FILE_STORAGE_SERVICE,
   type IFileStorage,
 } from "@/domains/documents/storage/file-storage.interface"
+// biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
+import { ProjectsService } from "@/domains/projects/projects.service"
 import { ServiceWithLLM } from "@/external/llm"
 import { modelRequiresPdfAsImages } from "@/external/llm/agent-provider"
 import type { Agent } from "../agent.entity"
@@ -48,6 +50,7 @@ export class ExtractionAgentSessionRunnerService extends ServiceWithLLM {
     private readonly statusNotifierService: ExtractionAgentSessionStatusNotifierService,
     private readonly pdfPagesService: PdfPagesService,
     private readonly documentsService: DocumentsService,
+    private readonly projectsService: ProjectsService,
     @Inject("_MockLLMProvider")
     mockLlmProvider: LLMProvider,
     @Inject("VertexLLMProvider")
@@ -126,6 +129,7 @@ export class ExtractionAgentSessionRunnerService extends ServiceWithLLM {
         connectScope,
       })
 
+      const llmFeatures = await this.projectsService.getLlmFeatures(connectScope)
       const result = await this.getProviderForModel(agentSettings.model).generateStructuredOutput({
         message: llmMessage,
         schema: agentSettings.outputJsonSchema,
@@ -136,6 +140,8 @@ export class ExtractionAgentSessionRunnerService extends ServiceWithLLM {
           // Extraction agent runs can be long-running; opt in to the extended
           // network timeouts on the provider fetch (see AISDKVertexProvider).
           useExtendedTimeouts: true,
+          priorityCallsEnabled: agentSettings.priorityCallsEnabled,
+          llmFeatures,
         }),
         metadata: this.buildLLMMetadata({ agent, agentSettings, run, connectScope }),
       })

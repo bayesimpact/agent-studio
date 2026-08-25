@@ -9,6 +9,7 @@ import {
 import { toAgentWithSettingsRunJobPayload } from "@/domains/agents/shared/agent-with-settings-run.helper"
 import { StructuredExtractionAgentRunnerService } from "@/domains/agents/shared/structured-extraction-agent-runner.service"
 import { createOrganizationWithAgent } from "@/domains/organizations/organization.factory"
+import { ProjectRepository } from "@/domains/projects/project.repository"
 import { LlmModule } from "@/external/llm/llm.module"
 import { sdk } from "@/external/llm/open-telemetry-init"
 import type { AISDKMockProvider } from "@/external/llm/providers/ai-sdk-mock.provider"
@@ -38,6 +39,7 @@ describe("EvaluationExtractionRunProcessorService", () => {
         EvaluationExtractionRunGraderService,
         { provide: EvaluationExtractionRunStatusNotifierService, useValue: mockStatusNotifier },
         { provide: EvaluationExtractionRunCsvExportService, useValue: mockCsvExport },
+        ProjectRepository,
       ],
     })
     repositories = setup.getAllRepositories()
@@ -134,7 +136,11 @@ describe("EvaluationExtractionRunProcessorService", () => {
       evaluationExtractionRun: run,
       runRecordId: record.id,
       schemaMapping: dataset.schemaMapping,
-      agentWithSettings: toAgentWithSettingsRunJobPayload({ agent, agentSettings }),
+      agentWithSettings: toAgentWithSettingsRunJobPayload({
+        agent,
+        agentSettings,
+        llmFeatures: {},
+      }),
     }
 
     return { connectScope, agent, run, record, payload }
@@ -218,11 +224,8 @@ describe("EvaluationExtractionRunProcessorService", () => {
 
   it("processRunRecord - should fail when no output schema", async () => {
     const { run, record, payload } = await seedRunRecord({ recordStatus: "running" })
-
-    await service.processRunRecord({
-      ...payload,
-      agentWithSettings: { ...payload.agentWithSettings, outputJsonSchema: undefined },
-    })
+    payload.agentWithSettings.settings.outputJsonSchema = undefined
+    await service.processRunRecord(payload)
 
     const updatedRecord =
       await repositories.evaluationExtractionRunRecordRepository.findOneByOrFail({

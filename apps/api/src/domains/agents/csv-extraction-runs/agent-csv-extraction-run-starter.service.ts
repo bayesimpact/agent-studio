@@ -19,6 +19,8 @@ import {
   FILE_STORAGE_SERVICE,
   type IFileStorage,
 } from "@/domains/documents/storage/file-storage.interface"
+// biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
+import { ProjectRepository } from "@/domains/projects/project.repository"
 import {
   AGENT_CSV_EXTRACTION_RUN_QUEUE_NAME,
   AGENT_CSV_EXTRACTION_RUN_RECORD_JOB_NAME,
@@ -42,6 +44,7 @@ export class AgentCsvExtractionRunStarterService {
   private readonly agentSettingsConnectRepository: ConnectRepository<AgentSettings>
 
   constructor(
+    private readonly projectRepository: ProjectRepository,
     @InjectRepository(AgentCsvExtractionRun)
     runRepository: Repository<AgentCsvExtractionRun>,
     @InjectRepository(AgentCsvExtractionRunRecord)
@@ -92,6 +95,7 @@ export class AgentCsvExtractionRunStarterService {
     if (!agent) {
       throw new NotFoundException(`Agent with id ${agentSettings.agentId} not found`)
     }
+    const llmFeatures = await this.projectRepository.getLlmFeatures(connectScope)
 
     // Load CSV document from storage
     const csvRows = await this.parseCsvRows({
@@ -130,7 +134,11 @@ export class AgentCsvExtractionRunStarterService {
                 runRecordId: runRecord.id,
                 connectScope,
                 columnSchema: run.columnSchema,
-                agentWithSettings: toAgentWithSettingsRunJobPayload({ agent, agentSettings }),
+                agentWithSettings: toAgentWithSettingsRunJobPayload({
+                  agent,
+                  agentSettings,
+                  llmFeatures,
+                }),
               },
               opts: { jobId: runRecord.id },
             })),

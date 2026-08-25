@@ -17,6 +17,8 @@ import {
   FILE_STORAGE_SERVICE,
   type IFileStorage,
 } from "@/domains/documents/storage/file-storage.interface"
+// biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
+import { ProjectsService } from "@/domains/projects/projects.service"
 import { getTraceUrl } from "@/external/langfuse/langfuse-helper"
 import { ServiceWithLLM } from "@/external/llm"
 import { modelRequiresPdfAsImages } from "@/external/llm/agent-provider"
@@ -61,6 +63,7 @@ export class AgentLlmRequestService extends ServiceWithLLM {
     private readonly pdfPagesService: PdfPagesService,
 
     private readonly toolsService: ToolsService,
+    private readonly projectsService: ProjectsService,
 
     @Inject("_MockLLMProvider")
     mockLlmProvider: LLMProvider,
@@ -123,6 +126,7 @@ export class AgentLlmRequestService extends ServiceWithLLM {
     const toolNames = [
       ...new Set([...(tools ? Object.keys(tools) : []), ...Object.keys(endOfTurnTools)]),
     ]
+    const llmFeatures = await this.projectsService.getLlmFeatures(connectScope)
     const config = this.buildLLMConfig({
       systemPrompt: generateMasterPrompt({
         agent,
@@ -137,6 +141,8 @@ export class AgentLlmRequestService extends ServiceWithLLM {
       fireAndForgetToolNames,
       endOfTurnTools,
       endOfTurnExecutionCounts,
+      priorityCallsEnabled: agentSettings.priorityCallsEnabled,
+      llmFeatures,
     })
 
     const metadata: LLMMetadata = this.buildLLMData({

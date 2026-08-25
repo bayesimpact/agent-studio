@@ -43,6 +43,7 @@ export const agentSettingsFactory = AgentSettingsFactory.define(
       greetingMessage: params.greetingMessage ?? null,
       outputJsonSchema: params.outputJsonSchema ?? null,
       fillFormEnabled: params.fillFormEnabled ?? false,
+      priorityCallsEnabled: params.priorityCallsEnabled ?? false,
       organizationId: transientParams.organization.id,
       projectId: transientParams.project.id,
       agentId: transientParams.agent.id,

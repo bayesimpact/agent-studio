@@ -20,6 +20,7 @@ import {
   EvaluationExtractionRunRecord,
   type EvaluationExtractionRunRecordStatus,
 } from "@/domains/evaluations/extraction/runs/records/evaluation-extraction-run-record.entity"
+import { ProjectRepository } from "@/domains/projects/project.repository"
 import { confirmDatabaseTarget } from "./script-bootstrap"
 import {
   type BaseRequeueOptions,
@@ -90,6 +91,7 @@ async function bootstrapCli(): Promise<void> {
     const batchService = app.get<EvaluationExtractionRunBatchService>(
       EVALUATION_EXTRACTION_RUN_BATCH_SERVICE,
     )
+    const projectRepository = app.get<ProjectRepository>(ProjectRepository)
 
     const runsToRequeue = await loadRunRecordsForRequeue({ options, runRecordRepository })
 
@@ -177,11 +179,16 @@ async function bootstrapCli(): Promise<void> {
           const schemaMapping = await getDatasetSchemaMapping(
             evaluationExtractionRun.evaluationExtractionDatasetId,
           )
+          const llmFeatures = await projectRepository.getLlmFeatures(connectScope)
 
           return {
             evaluationExtractionRun,
             runRecordId: runRecord.id,
-            agentWithSettings: toAgentWithSettingsRunJobPayload({ agent, agentSettings }),
+            agentWithSettings: toAgentWithSettingsRunJobPayload({
+              agent,
+              agentSettings,
+              llmFeatures,
+            }),
             schemaMapping,
             connectScope,
           } satisfies ProcessEvaluationExtractionRunRecordJobPayload

@@ -3,6 +3,7 @@ import { afterAll, beforeAll } from "@jest/globals"
 import { BatchSpanProcessor, ConsoleSpanExporter } from "@opentelemetry/sdk-trace-base"
 import { NodeTracerProvider } from "@opentelemetry/sdk-trace-node"
 import { config as dotenvConfig } from "dotenv"
+import type { LLMConfig, LLMServiceTier } from "@/common/interfaces/llm-provider.interface"
 import { LangfuseIntegrationExporter } from "@/external/langfuse/langfuse-integration-exporter"
 import { GetAgentModelKeyFromValue } from "@/external/llm/agent-provider"
 import { sdk } from "@/external/llm/open-telemetry-init"
@@ -16,7 +17,7 @@ const testModels = Object.values(AgentModel)
   .filter(
     (am) =>
       AgentModelToAgentProvider[am] === AgentProvider.Vertex3 &&
-      process.env.VERTEX_PREVIEW_TEST === "true",
+      process.env.VERTEX3_TEST === "true",
   )
   .map((m) => ({
     name: GetAgentModelKeyFromValue(m),
@@ -27,7 +28,7 @@ const testModels = Object.values(AgentModel)
 // runs everywhere — unlike the live generation specs below, which need credentials.
 describe("AISDKVertex3Provider location routing", () => {
   const locationOf = (model: AgentModel) =>
-    new AISDKVertex3Provider().getTags({ model, temperature: 0 })[1]
+    new AISDKVertex3Provider().getTags({ model, temperature: 0, serviceTier: undefined })[1]
 
   it("routes the model that is not EU-served through the global endpoint", () => {
     expect(locationOf(AgentModel.Gemini36Flash)).toBe("global")
@@ -40,7 +41,33 @@ describe("AISDKVertex3Provider location routing", () => {
   })
 })
 
-if (process.env.IS_TEST === "true" && process.env.VERTEX_PREVIEW_TEST === "true") {
+describe("AISDKVertex3Provider service tier", () => {
+  class TestableProvider extends AISDKVertex3Provider {
+    public providerOptionsFor(config: LLMConfig) {
+      return this.buildNativeProviderOptions({ config })
+    }
+  }
+  const buildConfig = (serviceTier: LLMServiceTier): LLMConfig =>
+    ({ model: AgentModel.Gemini35Flash, temperature: 0, serviceTier }) as LLMConfig
+
+  it("serviceTier : priority - should set vertex.sharedRequestType = priority", () => {
+    expect(new TestableProvider().providerOptionsFor(buildConfig("priority"))).toEqual({
+      vertex: { sharedRequestType: "priority" },
+    })
+  })
+
+  it("serviceTier : flex - should set vertex.sharedRequestType = flex", () => {
+    expect(new TestableProvider().providerOptionsFor(buildConfig("flex"))).toEqual({
+      vertex: { sharedRequestType: "flex" },
+    })
+  })
+
+  it("serviceTier : undefined - should NOT set vertex.sharedRequestType", () => {
+    expect(new TestableProvider().providerOptionsFor(buildConfig(undefined))).toEqual({})
+  })
+})
+
+if (process.env.IS_TEST === "true" && process.env.VERTEX3_TEST === "true") {
   describe("AISDKVertex3Provider", () => {
     jest.setTimeout(60_000)
     const langfuse = new LangfuseIntegrationExporter({

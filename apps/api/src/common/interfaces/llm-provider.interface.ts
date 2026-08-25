@@ -16,6 +16,10 @@ export type MockValue =
   // A generation that fails at the provider (e.g. a 400 APICallError).
   | { type: "error"; error: Error }
 
+export type LLMFeatures = {
+  priorityCalls?: boolean
+}
+
 export type LLMConfig =
   | {
       model: MockModels
@@ -26,6 +30,7 @@ export type LLMConfig =
       endOfTurnTools?: ToolSet
       endOfTurnExecutionCounts?: (toolResult: { toolName: string; output: unknown }) => boolean
       useExtendedTimeouts?: never
+      serviceTier: never
     }
   | {
       model: Exclude<string, MockModels>
@@ -59,7 +64,9 @@ export type LLMConfig =
        * extraction agent runs; defaults to the provider's standard timeouts.
        */
       useExtendedTimeouts?: boolean
+      serviceTier: LLMServiceTier
     }
+export type LLMServiceTier = "priority" | "flex" | undefined
 export type LLMMetadata = (
   | {
       evaluationReportId?: never

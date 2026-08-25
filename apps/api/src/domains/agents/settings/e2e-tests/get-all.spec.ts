@@ -185,6 +185,7 @@ describe("Agent Settings - getAll", () => {
       usedProjectAgentSessionCategoryIds: [],
       createdAt: storedRevision2.createdAt.getTime(),
       updatedAt: storedRevision2.updatedAt.getTime(),
+      priorityCallsEnabled: false,
     })
   })
 

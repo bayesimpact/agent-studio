@@ -88,7 +88,7 @@ export class StructuredExtractionAgentRunnerService extends ServiceWithLLM {
     connectScope: RequiredConnectScope
     runTag: string
   }): Promise<{ output: Record<string, unknown>; traceId: string }> {
-    if (!agentWithSettings.outputJsonSchema) {
+    if (!agentWithSettings.settings.outputJsonSchema) {
       throw new UnprocessableEntityException(
         "Agent must have an outputJsonSchema for extraction runs",
       )
@@ -100,12 +100,14 @@ export class StructuredExtractionAgentRunnerService extends ServiceWithLLM {
       content: [{ type: "text", text: inputText }],
     }
 
-    const systemPrompt = `${agentWithSettings.instructions}\n\nToday's date: ${new Date().toLocaleDateString()}`
+    const systemPrompt = `${agentWithSettings.settings.instructions}\n\nToday's date: ${new Date().toLocaleDateString()}`
 
     const llmConfig = this.buildLLMConfig({
       systemPrompt,
-      model: agentWithSettings.model,
-      temperature: agentWithSettings.temperature,
+      model: agentWithSettings.settings.model,
+      temperature: agentWithSettings.settings.temperature,
+      priorityCallsEnabled: agentWithSettings.settings.priorityCallsEnabled,
+      llmFeatures: agentWithSettings.llmFeatures,
     })
 
     const llmMetadata: LLMMetadata = {
@@ -113,25 +115,25 @@ export class StructuredExtractionAgentRunnerService extends ServiceWithLLM {
       agentSessionId: traceId,
       currentTurn: 1,
       organizationId: connectScope.organizationId,
-      agentId: agentWithSettings.id,
-      revision: agentWithSettings.revision,
+      agentId: agentWithSettings.settings.id,
+      revision: agentWithSettings.settings.revision,
       projectId: connectScope.projectId,
       tags: [
-        agentWithSettings.name,
-        `rev-${agentWithSettings.revision}`,
-        agentWithSettings.type,
+        agentWithSettings.settings.name,
+        `rev-${agentWithSettings.settings.revision}`,
+        agentWithSettings.settings.type,
         runTag,
       ],
     }
 
-    const output = await this.getProviderForModel(agentWithSettings.model).generateStructuredOutput(
-      {
-        message: llmMessage,
-        schema: agentWithSettings.outputJsonSchema,
-        config: llmConfig,
-        metadata: llmMetadata,
-      },
-    )
+    const output = await this.getProviderForModel(
+      agentWithSettings.settings.model,
+    ).generateStructuredOutput({
+      message: llmMessage,
+      schema: agentWithSettings.settings.outputJsonSchema,
+      config: llmConfig,
+      metadata: llmMetadata,
+    })
 
     return { output, traceId }
   }

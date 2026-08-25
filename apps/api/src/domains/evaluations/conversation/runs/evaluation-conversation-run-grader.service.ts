@@ -75,6 +75,8 @@ ${
 }`,
       model: judgeModel,
       temperature: 0,
+      priorityCallsEnabled: false,
+      llmFeatures: { priorityCalls: false },
     }
 
     const llmMetadata: LLMMetadata = {

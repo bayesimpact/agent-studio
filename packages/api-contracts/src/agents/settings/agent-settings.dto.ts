@@ -140,6 +140,7 @@ export type AgentSettingsDto = {
   documentsRagMode: DocumentsRagMode
   documentTagIds: DocumentTagDto["id"][]
   fillFormEnabled: boolean
+  priorityCallsEnabled: boolean
   greetingMessage?: string
   hasCategories?: boolean
   id: string

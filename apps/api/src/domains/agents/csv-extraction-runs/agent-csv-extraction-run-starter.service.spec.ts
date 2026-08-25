@@ -9,6 +9,7 @@ import {
 import { documentFactory } from "@/domains/documents/document.factory"
 import { FILE_STORAGE_SERVICE } from "@/domains/documents/storage/file-storage.interface"
 import { createOrganizationWithAgent } from "@/domains/organizations/organization.factory"
+import { ProjectRepository } from "@/domains/projects/project.repository"
 import { AGENT_CSV_EXTRACTION_RUN_QUEUE_NAME } from "./agent-csv-extraction-run.constants"
 import { agentCsvExtractionRunFactory } from "./agent-csv-extraction-run.factory"
 import { AgentCsvExtractionRunStarterService } from "./agent-csv-extraction-run-starter.service"
@@ -34,6 +35,7 @@ describe("AgentCsvExtractionRunStarterService", () => {
         AgentCsvExtractionRunStarterService,
         { provide: getQueueToken(AGENT_CSV_EXTRACTION_RUN_QUEUE_NAME), useValue: mockQueue },
         { provide: FILE_STORAGE_SERVICE, useValue: mockFileStorage },
+        ProjectRepository,
       ],
     })
     repositories = setup.getAllRepositories()
