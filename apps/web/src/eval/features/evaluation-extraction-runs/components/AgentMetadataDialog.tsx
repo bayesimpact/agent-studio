@@ -10,22 +10,32 @@ import {
 import { ExternalLinkIcon, InfoIcon } from "lucide-react"
 import { useMemo } from "react"
 import { useTranslation } from "react-i18next"
-import { selectAgentSettingsDataByAgentId } from "@/common/features/agents/agent-settings/agent-settings.selectors"
+import { findVersion } from "@/common/features/agents/agent-settings/agent-settings.functions"
+import {
+  selectAgentSettingsDataByAgentId,
+  selectAgentSettingsHistoryDataByAgentId,
+} from "@/common/features/agents/agent-settings/agent-settings.selectors"
 import { selectAgentsData } from "@/common/features/agents/agents.selectors"
 import { selectCurrentOrganizationId } from "@/common/features/organizations/organizations.selectors"
 import { selectCurrentProjectId } from "@/common/features/projects/projects.selectors"
 import { useAbility } from "@/common/hooks/use-ability"
 import { useCurrentId, useValue } from "@/common/hooks/use-value"
+import { ADS } from "@/common/store/async-data-status"
+import { useAppSelector } from "@/common/store/hooks"
 import { StudioRoutes } from "@/studio/routes/helpers"
 
 export function AgentMetadataDialog({
   agentId,
+  revision,
   buttonProps = {
     variant: "outline",
     size: "sm",
   },
 }: {
   agentId: string
+  // Settings revision pinned on the run; when set, the dialog shows that
+  // version's settings instead of the agent's current ones.
+  revision?: number
   buttonProps?: React.ComponentProps<typeof Button>
 }) {
   const { t } = useTranslation()
@@ -38,7 +48,19 @@ export function AgentMetadataDialog({
     return agentsData.find((entry) => entry.id === agentId) ?? null
   }, [agentsData, agentId])
 
-  const agentSettings = useValue(selectAgentSettingsDataByAgentId({ agentId: agent?.id ?? "" }))
+  const currentAgentSettings = useValue(
+    selectAgentSettingsDataByAgentId({ agentId: agent?.id ?? "" }),
+  )
+  const historyData = useAppSelector(
+    selectAgentSettingsHistoryDataByAgentId({ agentId: agent?.id ?? "", includeDraft: true }),
+  )
+  // Falls back to the current settings when the pinned version is not in the
+  // history anymore (e.g. it was archived).
+  const pinnedAgentSettings =
+    revision !== undefined && ADS.isFulfilled(historyData)
+      ? findVersion(historyData.value, revision)
+      : undefined
+  const agentSettings = pinnedAgentSettings ?? currentAgentSettings
 
   const studioUrl = StudioRoutes.agent.build({ organizationId, projectId, agentId })
   const canAccessStudio = abilities.canAccessStudio({ projectId })
@@ -64,6 +86,12 @@ export function AgentMetadataDialog({
           <div className="flex flex-col gap-4">
             <div className="grid grid-cols-[auto_1fr] gap-x-6 gap-y-3 rounded-lg border p-4">
               <MetadataField label={t("evaluationExtractionRun:agent")} value={agent.name} />
+              {revision !== undefined && (
+                <MetadataField
+                  label={t("evaluationExtractionRun:version.label")}
+                  value={t("evaluationExtractionRun:version.revision", { revision })}
+                />
+              )}
               <MetadataField
                 label={t("evaluationExtractionRun:agentMetadata.model")}
                 value={agentSettings.model}

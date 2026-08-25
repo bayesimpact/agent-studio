@@ -1,3 +1,4 @@
+import { z } from "zod"
 import type { TimeType } from "../generic"
 
 export const EVALUATION_EXTRACTION_RUN_STATUS_CHANGED_CHANNEL_DTO =
@@ -43,6 +44,9 @@ export type EvaluationExtractionRunDto = {
   id: string
   evaluationExtractionDatasetId: string
   agentId: string
+  agentSettingsId: string
+  // Revision of the settings version the run is pinned to.
+  agentRevision: number
   keyMapping: EvaluationExtractionRunKeyMappingEntryDto[]
   status: EvaluationExtractionRunStatusDto
   summary: EvaluationExtractionRunSummaryDto | null
@@ -67,11 +71,23 @@ export type EvaluationExtractionRunRecordDto = {
 }
 
 // Request DTOs
-export type CreateEvaluationExtractionRunRequestDto = {
-  evaluationExtractionDatasetId: string
-  agentId: string
-  keyMapping: EvaluationExtractionRunKeyMappingEntryDto[]
-}
+export const createEvaluationExtractionRunSchema = z.object({
+  evaluationExtractionDatasetId: z.string(),
+  agentId: z.string(),
+  // Agent-settings revision to pin on the run; null pins the latest published revision.
+  agentSettingsRevision: z.number().int().nullable(),
+  keyMapping: z.array(
+    z.object({
+      agentOutputKey: z.string(),
+      datasetColumnId: z.string(),
+      mode: z.enum(["scored", "fyi"]),
+    }),
+  ),
+})
+
+export type CreateEvaluationExtractionRunRequestDto = z.infer<
+  typeof createEvaluationExtractionRunSchema
+>
 
 export type ExecuteEvaluationExtractionRunRequestDto = {
   recordLimit: number | null

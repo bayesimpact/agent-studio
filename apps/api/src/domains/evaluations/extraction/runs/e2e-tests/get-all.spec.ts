@@ -116,5 +116,7 @@ describe("EvaluationExtractionRuns - getAll", () => {
 
     expectResponse(res, 200)
     expect(res.body.data).toHaveLength(2)
+    expect(res.body.data[0]!.agentSettingsId).toBe(agentSettings.id)
+    expect(res.body.data[0]!.agentRevision).toBe(agentSettings.revision)
   })
 })

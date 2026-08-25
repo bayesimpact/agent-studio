@@ -3,6 +3,7 @@ import { notificationsActions } from "@/common/features/notifications/notificati
 import type { AppDispatch, RootState } from "@/common/store/types"
 import { evaluationExtractionDatasetsActions } from "../evaluation-extraction-datasets/evaluation-extraction-datasets.slice"
 import {
+  selectComparisonRunIds,
   selectCurrentRecordsQuery,
   selectCurrentRunId,
 } from "./evaluation-extraction-runs.selectors"
@@ -40,6 +41,21 @@ function registerListeners() {
     actionCreator: evaluationExtractionRunsActions.unmount,
     effect: async (_, listenerApi) => {
       listenerApi.dispatch(evaluationExtractionRunsActions.stopRunStatusStream())
+    },
+  })
+
+  // Compare page: fetch the records of the compared runs once the route has
+  // pushed the URL-driven run ids into the slice (setComparisonRunIds).
+  listenerMiddleware.startListening({
+    actionCreator: evaluationExtractionRunsActions.compareMount,
+    effect: async (_, listenerApi) => {
+      const runIds = selectComparisonRunIds(listenerApi.getState())
+      if (runIds.length === 0) return
+      listenerApi.dispatch(
+        evaluationExtractionRunsActions.getComparisonRecords({
+          evaluationExtractionRunIds: runIds,
+        }),
+      )
     },
   })
 

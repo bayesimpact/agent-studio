@@ -8,6 +8,14 @@
     "agent": "Agent",
     "agentPlaceholder": "Sélectionner un agent",
     "agentSettingsUnavailable": "La configuration de cet agent n'a pas pu être chargée.",
+    "version": {
+      "label": "Version",
+      "placeholder": "Sélectionner une version",
+      "loading": "Chargement des versions...",
+      "item": "v{{revision}} — {{detail}}",
+      "current": "Actuelle ({{date}})",
+      "revision": "v{{revision}}"
+    },
     "scope": {
       "title": "Enregistrements à exécuter",
       "all": "Exécuter le dataset entier ({{count}} enregistrements)",
@@ -23,6 +31,7 @@
       "scored": "Évalué",
       "fyi": "Info",
       "columnPlaceholder": "Sélectionner une colonne",
+      "incomplete": "Associez chaque clé évaluée à une colonne du dataset.",
       "noOutputSchema": "Cet agent n'a pas de schéma de sortie défini."
     },
     "results": {
@@ -65,6 +74,17 @@
       "description": "{{count}} exécutions",
       "matchRate": "{{matchRate}}% de correspondance",
       "recordCount": "{{count}} enregistrements",
+      "columns": {
+        "id": "ID",
+        "status": "Statut",
+        "date": "Date",
+        "agent": "Agent",
+        "version": "Version",
+        "matchRate": "Taux de correspondance",
+        "records": "Enregistrements"
+      },
+      "compare": "Comparer les exécutions",
+      "compareSelected": "Comparer {{count}} exécutions",
       "delete": {
         "button": "Supprimer l'exécution",
         "confirm": {
@@ -72,6 +92,27 @@
           "description": "Cette action est irréversible. Tous les enregistrements de l'exécution seront définitivement supprimés.",
           "submit": "Supprimer"
         }
+      }
+    },
+    "comparison": {
+      "title": "Comparer les exécutions",
+      "description": "Comparaison de {{count}} exécutions",
+      "summary": "Résumé",
+      "records": "Résultats par enregistrement",
+      "recordsDescription": "{{count}} enregistrements",
+      "metric": "Métrique",
+      "record": "Enregistrement",
+      "matchedFields": "{{matched}}/{{scored}} champs",
+      "notFound": "Aucune exécution sélectionnée à comparer.",
+      "metrics": {
+        "status": "Statut",
+        "agent": "Agent",
+        "version": "Version",
+        "matchRate": "Taux de correspondance",
+        "perfectMatches": "Correspondances parfaites",
+        "mismatches": "Non-correspondances",
+        "errors": "Erreurs",
+        "total": "Total des enregistrements"
       }
     },
     "agentMetadata": {

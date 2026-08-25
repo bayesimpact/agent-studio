@@ -27,6 +27,11 @@ import type {
   EvaluationConversationRunRecord,
   PaginatedEvaluationConversationRunRecords,
 } from "@/eval/features/evaluation-conversation-runs/evaluation-conversation-runs.models"
+import type { EvaluationExtractionDataset } from "@/eval/features/evaluation-extraction-datasets/evaluation-extraction-datasets.models"
+import type {
+  EvaluationExtractionRun,
+  EvaluationExtractionRunRecord,
+} from "@/eval/features/evaluation-extraction-runs/evaluation-extraction-runs.models"
 import type { AgentMembership } from "@/studio/features/agent-memberships/agent-memberships.models"
 import type { AgentMessageFeedback } from "@/studio/features/agent-message-feedback/agent-message-feedback.models"
 import type { AgentSubAgent } from "@/studio/features/agent-sub-agents/agent-sub-agents.models"
@@ -459,6 +464,43 @@ export const seed = {
     ): StoryPreloadedState {
       return {
         conversationRuns: {
+          // Seed the run ids too so the route's setComparisonRunIds sees the
+          // same comparison and does not reset the seeded records on mount.
+          comparisonRunIds: Object.keys(recordsByRunId),
+          comparisonRecords: ads.fulfilled(recordsByRunId),
+        },
+      }
+    },
+
+    extractionDatasets(
+      datasets: EvaluationExtractionDataset[],
+      options: { currentId?: string | null } = {},
+    ): StoryPreloadedState {
+      const currentId = options.currentId ?? null
+      return mergeSeeds(
+        { extractionDatasets: { data: ads.fulfilled(datasets) } },
+        { currentIds: { datasetId: currentId } },
+      )
+    },
+
+    extractionRuns(
+      runs: EvaluationExtractionRun[],
+      options: { currentId?: string | null } = {},
+    ): StoryPreloadedState {
+      const currentId = options.currentId ?? null
+      const currentRun = runs.find((run) => run.id === currentId)
+      return mergeSeeds(
+        { extractionRuns: { data: ads.fulfilled(runs), currentRunId: currentId } },
+        currentRun ? { extractionRuns: { currentRun: ads.fulfilled(currentRun) } } : {},
+        { currentIds: { runId: currentId } },
+      )
+    },
+
+    extractionRunsComparison(
+      recordsByRunId: Record<string, EvaluationExtractionRunRecord[]>,
+    ): StoryPreloadedState {
+      return {
+        extractionRuns: {
           // Seed the run ids too so the route's setComparisonRunIds sees the
           // same comparison and does not reset the seeded records on mount.
           comparisonRunIds: Object.keys(recordsByRunId),

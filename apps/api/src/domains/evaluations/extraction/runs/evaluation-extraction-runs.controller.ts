@@ -10,10 +10,12 @@ import {
   Delete,
   Get,
   Logger,
+  NotFoundException,
   Post,
   Query,
   Req,
   Sse,
+  UnprocessableEntityException,
   UseGuards,
 } from "@nestjs/common"
 import type { Observable } from "rxjs"
@@ -25,6 +27,7 @@ import type {
 import { getRequiredConnectScope } from "@/common/context/request-context.helpers"
 import { AddContext, RequireContext } from "@/common/context/require-context.decorator"
 import { ResourceContextGuard } from "@/common/context/resource-context.guard"
+import type { RequiredConnectScope } from "@/common/entities/connect-required-fields"
 import { CheckPolicy } from "@/common/policies/check-policy.decorator"
 import { TrackActivity } from "@/domains/activities/track-activity.decorator"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
@@ -65,12 +68,14 @@ export class EvaluationExtractionRunsController {
     @Req() request: EndpointRequestWithProject,
     @Body() { payload }: typeof EvaluationExtractionRunsRoutes.createOne.request,
   ): Promise<typeof EvaluationExtractionRunsRoutes.createOne.response> {
-    const agentSettings = await this.agentSettingsService.getLast({
-      connectScope: getRequiredConnectScope(request),
+    const connectScope = getRequiredConnectScope(request)
+    const agentSettings = await this.resolveAgentSettings({
+      connectScope,
       agentId: payload.agentId,
+      agentSettingsRevision: payload.agentSettingsRevision,
     })
     const run = await this.evaluationExtractionRunsService.createRun({
-      connectScope: getRequiredConnectScope(request),
+      connectScope,
       fields: {
         evaluationExtractionDatasetId: payload.evaluationExtractionDatasetId,
         agentId: payload.agentId,
@@ -78,7 +83,50 @@ export class EvaluationExtractionRunsController {
         keyMapping: payload.keyMapping,
       },
     })
+    // The freshly created run has no relations loaded; attach the settings we
+    // just resolved so the response exposes the pinned revision.
+    run.agentSettings = agentSettings
     return { data: toEvaluationExtractionRunDto(run) }
+  }
+
+  private async resolveAgentSettings({
+    connectScope,
+    agentId,
+    agentSettingsRevision,
+  }: {
+    connectScope: RequiredConnectScope
+    agentId: string
+    agentSettingsRevision: number | null | undefined
+  }) {
+    if (typeof agentSettingsRevision !== "number") {
+      return this.agentSettingsService.getLast({ connectScope, agentId })
+    }
+    if (
+      !(
+        Number.isInteger(agentSettingsRevision) &&
+        agentSettingsRevision > 0 &&
+        // Postgres int4 upper bound: a larger value would error at query time.
+        agentSettingsRevision <= 2147483647
+      )
+    ) {
+      throw new UnprocessableEntityException("Settings version must be a positive integer")
+    }
+    const agentSettings = await this.agentSettingsService.get({
+      connectScope,
+      agentId,
+      revision: agentSettingsRevision,
+    })
+    if (!agentSettings) {
+      throw new NotFoundException(
+        `Revision ${agentSettingsRevision} not found for agent with id ${agentId}`,
+      )
+    }
+    if (agentSettings.isArchived) {
+      throw new UnprocessableEntityException(
+        `Revision ${agentSettingsRevision} is archived and cannot be run`,
+      )
+    }
+    return agentSettings
   }
 
   @Post(EvaluationExtractionRunsRoutes.executeOne.path)
@@ -257,6 +305,8 @@ function toEvaluationExtractionRunDto(run: EvaluationExtractionRun): EvaluationE
     id: run.id,
     evaluationExtractionDatasetId: run.evaluationExtractionDatasetId,
     agentId: run.agentId,
+    agentSettingsId: run.agentSettingsId,
+    agentRevision: run.agentSettings.revision,
     keyMapping: run.keyMapping,
     status: run.status,
     summary: run.summary,
