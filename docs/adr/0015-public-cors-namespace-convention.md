@@ -15,10 +15,10 @@ The public namespace is a **convention**: every open-CORS endpoint lives under t
 
 ## Rejected alternative: per-controller CORS declaration
 
-A decorator such as `@PublicCors()` on the controller, collected at bootstrap via `DiscoveryService`/`MetadataScanner`, was considered and rejected:
+A `@PublicCors()` decorator on the controller was considered and rejected. Two distinct points:
 
-- CORS must answer the `OPTIONS` preflight **before** Nest routing. No guard or interceptor sees the preflight, so the decision is always taken on the raw path by a middleware. A decorator cannot change that; it can only feed the same path list through reflection machinery.
-- The scan would produce exactly what the convention already provides: a list of path prefixes consulted by the delegate. For two controllers, the machinery does not pay for itself.
+- **Request-time enforcement is impossible.** The `OPTIONS` preflight never reaches the controller handler, so nothing attached to the controller at request time (guard, interceptor, metadata read by a guard) runs on it. The CORS decision is always taken on the raw path by a middleware, before Nest routing.
+- **Bootstrap-time collection works but does not pay for itself.** The viable variant scans decorated controllers at startup (`DiscoveryService`/`MetadataScanner`), collects their paths, and hands the list to the middleware delegate. Its end product is exactly what the convention already provides — a list of path prefixes consulted by the delegate — at the cost of reflection machinery, for two controllers.
 
 Revisit if an endpoint ever needs open CORS **outside** the public namespace. That change breaks the convention and justifies the per-controller declaration in its own ADR.
 
