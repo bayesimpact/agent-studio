@@ -8,6 +8,16 @@ This project uses [CalVer](https://calver.org/) (YY.MM.Micro) for product versio
 ## [Unreleased]
 
 ### Added
+
+### Changed
+
+### Fixed
+
+### Security
+
+## [26.08.0] - 2026-08-25
+
+### Added
 - Agents now have a draft and a published version of their settings.
 - Studio playground: each agent reply shows a version badge.
 - Studio playground: a version picker in the header selects the settings version for new messages.
