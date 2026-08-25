@@ -76,8 +76,8 @@ export function AgentSessionMessages({
   const desktopHeightClasses = "md:h-[calc(100dvh-17rem)]"
   return (
     <div className={cn("flex flex-1 flex-col min-h-0", desktopHeightClasses)}>
-      <div className="flex flex-1 p-2 sm:p-4 min-h-0 md:min-h-full">
-        <Chat className="border shadow-none">
+      <div className="flex flex-1 min-h-0 md:min-h-full">
+        <Chat className="shadow-none">
           <MessageScrollerProvider scrollPreviousItemPeek={168} defaultScrollPosition="end">
             <FormSubSessionsProvider value={formSubSessions}>
               <FormResultProvider value={formResult}>
