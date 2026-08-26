@@ -140,7 +140,9 @@ function MobileHeader({ onBack, title, description, action }: GridHeaderProps) {
           <CardDescription className="text-sm flex items-center gap-2 capitalize-first shrink-0">
             {description}
           </CardDescription>
-          {action && <div className="flex-1 [&>*]:w-full">{action}</div>}
+          {action && (
+            <div className="flex-1 flex gap-2 items-center justify-end flex-wrap">{action}</div>
+          )}
         </div>
       )}
     </CardHeader>
