@@ -61,4 +61,11 @@ export const AgentSessionMessagesRoutes = {
     method: "post",
     path: `${basePath}/stream`,
   }),
+  // 302-redirects to a freshly signed GCS URL for one rendered pdf page (public
+  // capability URL fetched server-side by the LLM serving stack; see the
+  // AgentMessageAttachmentPdfPagesController docblock).
+  getAttachmentPdfPageImage: defineRoute<ResponseData<unknown>>({
+    method: "get",
+    path: "organizations/:organizationId/projects/:projectId/agent-attachment-documents/:attachmentDocumentId/pdf-pages/:pageNumber",
+  }),
 }
