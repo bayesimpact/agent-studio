@@ -73,6 +73,10 @@ func newServer(store objectStore, renderer *render.Renderer, maxSourceBytes int6
 		}
 
 		pdfBytes, err := store.Download(request.Context(), body.SourceObject)
+		if errors.Is(err, errObjectNotFound) {
+			writeError(response, http.StatusNotFound, "source pdf not found")
+			return
+		}
 		if err != nil {
 			log.Printf("download failed: %v", err)
 			writeError(response, http.StatusInternalServerError, "failed to download source pdf")

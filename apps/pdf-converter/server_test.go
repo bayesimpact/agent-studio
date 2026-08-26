@@ -99,6 +99,39 @@ func TestRenderDocumentSourceMissing(t *testing.T) {
 	}
 }
 
+// sourceDeletedBetweenSizeAndDownloadStore simulates the TOCTOU window where a
+// source object is removed after Size() succeeds but before Download() runs:
+// Size() reports a size, while Download() returns errObjectNotFound, exactly
+// as gcsStore's Download does when the underlying object is gone.
+type sourceDeletedBetweenSizeAndDownloadStore struct {
+	sourceSize int64
+}
+
+func (store *sourceDeletedBetweenSizeAndDownloadStore) Size(ctx context.Context, object string) (int64, error) {
+	return store.sourceSize, nil
+}
+
+func (store *sourceDeletedBetweenSizeAndDownloadStore) Download(ctx context.Context, object string) ([]byte, error) {
+	return nil, errObjectNotFound
+}
+
+func (store *sourceDeletedBetweenSizeAndDownloadStore) Upload(ctx context.Context, object string, contentType string, data []byte) error {
+	return nil
+}
+
+func TestRenderDocumentSourceMissingOnDownload(t *testing.T) {
+	renderer, err := render.NewRenderer()
+	if err != nil {
+		t.Fatalf("NewRenderer: %v", err)
+	}
+	handler := newServer(&sourceDeletedBetweenSizeAndDownloadStore{sourceSize: 1024}, renderer, 50*1024*1024)
+	response := postRender(handler,
+		`{"sourceObject":"org1/proj1/doc1.pdf","outputPrefix":"org1/proj1/derived/doc1/","maxPages":20,"maxPixelsPerPage":4000000}`)
+	if response.Code != http.StatusNotFound {
+		t.Fatalf("expected 404, got %d: %s", response.Code, response.Body.String())
+	}
+}
+
 func TestRenderDocumentInvalidPdf(t *testing.T) {
 	store := &fakeStore{objects: map[string][]byte{"org1/proj1/doc1.pdf": []byte("not a pdf")}}
 	response := postRender(newTestServer(t, store),
