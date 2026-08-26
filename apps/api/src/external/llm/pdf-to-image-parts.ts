@@ -1,17 +1,11 @@
-import {
-  type AgentModel,
-  AgentModelToAgentProvider,
-  AgentProvider,
-} from "@caseai-connect/api-contracts"
 import type { FilePart, ImagePart } from "ai"
 import { GoogleAuth } from "google-auth-library"
 import type { LLMChatMessage } from "@/common/interfaces/llm-provider.interface"
 
-/** Gemma and MedGemma are image-only models: pdfs must be sent as images. */
-export const modelRequiresPdfAsImages = (model: AgentModel | string): boolean => {
-  const provider = AgentModelToAgentProvider[model as AgentModel]
-  return provider === AgentProvider.Gemma || provider === AgentProvider.MedGemma
-}
+// Re-exported so existing importers keep working until this file is removed
+// (the definition now lives in agent-provider.ts, alongside the other
+// AgentModel/AgentProvider mapping helpers).
+export { modelRequiresPdfAsImages } from "@/external/llm/agent-provider"
 
 // Guards against oversized vision requests: each page becomes one image sent
 // to the model, so unbounded PDFs would blow up the request payload.
