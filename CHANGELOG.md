@@ -8,7 +8,7 @@ This project uses [CalVer](https://calver.org/) (YY.MM.Micro) for product versio
 ## [Unreleased]
 
 ### Added
-- Conversation retention (GDPR): conversations are now kept 30 days by default, on every workspace; a periodic job erases the content of older conversations (messages, tool calls, titles, form state, feedback text, attachments) and their Langfuse traces, while conversation counts, categories and feedback votes remain available in analytics. Workspace admins can change the duration, or clear it to keep conversations forever, in the workspace settings
+- Conversation retention: conversations are now kept 30 days by default, configurable per workspace.
 - (beta) Gemma and MedGemma agents accept PDF documents in chat and extraction.
 
 ### Changed

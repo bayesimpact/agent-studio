@@ -71,6 +71,15 @@ All commands should be run from the root directory using Turbo (via npm scripts)
 - Private packages with internal dependencies using `*` version specifier
 - Engines requirement: Node.js >= 18
 
+## Changelog
+
+Any edit to `CHANGELOG.md` follows the `end-feature` skill rules, whether or not that skill is invoked. The two that get violated most:
+
+- **One sentence per entry**, max 20 words. Never chain clauses with ";", "—", or "so". No sub-bullets.
+- **Write for end users**: name the capability, not the mechanics (no entities, services, migrations, jobs, or column names).
+
+Target shape: `Conversation retention: conversations are now kept 30 days by default, configurable per workspace.`
+
 ## Git
 
 - Use semantic commit messages consistent with the repo history: `feat: ...`, `fix: ...`, `chore: ...`.

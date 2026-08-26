@@ -4,10 +4,18 @@ import {
   setupE2eTestDatabase,
   teardownE2eTestDatabase,
 } from "@/common/test/test-database"
+import { agentFactory } from "@/domains/agents/agent.factory"
+import type { ConversationAgentSession } from "@/domains/agents/conversation-agent-sessions/conversation-agent-session.entity"
+import { agentSettingsFactory } from "@/domains/agents/settings/agent.settings.factory"
 import { agentMessageFactory } from "@/domains/agents/shared/agent-session-messages/agent-messages.factory"
 import { agentMessageFeedbackFactory } from "@/domains/agents/shared/agent-session-messages/feedback/agent-message-feedback.factory"
 import type { IFileStorage } from "@/domains/documents/storage/file-storage.interface"
-import { createOrganizationWithAgentMessage } from "@/domains/organizations/organization.factory"
+import {
+  createOrganizationWithAgentMessage,
+  createOrganizationWithProject,
+} from "@/domains/organizations/organization.factory"
+import { agentEmbedConfigFactory } from "@/domains/public-chat/agent-embed-configs/agent-embed-config.factory"
+import { publicAgentSessionFactory } from "@/domains/public-chat/public-agent-sessions/public-agent-session.factory"
 import { ConversationAgentSessionPurgeService } from "./conversation-agent-session-purge.service"
 
 describe("ConversationAgentSessionPurgeService", () => {
@@ -113,5 +121,69 @@ describe("ConversationAgentSessionPurgeService", () => {
   it("returns purged false for an unknown session", async () => {
     const { purged } = await service.purgeSessionContent("00000000-0000-0000-0000-000000000000")
     expect(purged).toBe(false)
+  })
+
+  const createPurgeablePublicSession = async () => {
+    const { organization, project } = await createOrganizationWithProject(repositories)
+    const agent = agentFactory.transient({ organization, project }).build()
+    await repositories.agentRepository.save(agent)
+    const agentSettings = agentSettingsFactory.transient({ organization, project, agent }).build()
+    await repositories.agentSettingsRepository.save(agentSettings)
+    const embedConfig = agentEmbedConfigFactory
+      .transient({ organization, project, agent })
+      .build({ isEnabled: true })
+    await repositories.agentEmbedConfigRepository.save(embedConfig)
+
+    const publicSession = publicAgentSessionFactory.transient({ embedConfig }).build({
+      title: "Embed session title",
+      result: { field: "embed value" },
+      externalVisitorId: "visitor-42",
+    })
+    await repositories.publicAgentSessionRepository.save(publicSession)
+
+    const publicMessage = agentMessageFactory
+      .user()
+      .transient({
+        organization,
+        project,
+        session: publicSession as unknown as ConversationAgentSession,
+        agentSettings,
+      })
+      .build({
+        content: "A visitor question with personal data",
+        toolCalls: [{ id: "tool-1", name: "lookup", arguments: { query: "sample" } }],
+      })
+    await repositories.agentMessageRepository.save(publicMessage)
+
+    return { publicSession, publicMessage }
+  }
+
+  it("purges a public session: content and visitor id go, rows and categories stay", async () => {
+    const { publicSession, publicMessage } = await createPurgeablePublicSession()
+
+    const { purged } = await service.purgePublicSessionContent(publicSession.id)
+    expect(purged).toBe(true)
+
+    const message = await repositories.agentMessageRepository.findOneByOrFail({
+      id: publicMessage.id,
+    })
+    expect(message.content).toBe("")
+    expect(message.toolCalls).toBeNull()
+
+    const session = await repositories.publicAgentSessionRepository.findOneByOrFail({
+      id: publicSession.id,
+    })
+    expect(session.title).toBeNull()
+    expect(session.result).toBeNull()
+    expect(session.externalVisitorId).toBeNull()
+    expect(session.purgedAt).not.toBeNull()
+    expect(session.createdAt).toEqual(publicSession.createdAt)
+  })
+
+  it("public purge is idempotent: a second run does nothing", async () => {
+    const { publicSession } = await createPurgeablePublicSession()
+    await service.purgePublicSessionContent(publicSession.id)
+    const secondRun = await service.purgePublicSessionContent(publicSession.id)
+    expect(secondRun.purged).toBe(false)
   })
 })
