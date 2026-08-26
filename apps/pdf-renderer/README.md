@@ -22,14 +22,21 @@ degenerate PDF can only take down that child process.
 - `maxPixelsPerPage` (default 4000000) — clamp each page's rendered bitmap.
 - `scale` (default 2) — pdf.js render scale (1 = 72dpi).
 
-Errors are `{ "message": "..." }` with 400 (invalid pdf/body/params), 401
-(bad token), 413 (body too large) or 422 (page limit exceeded).
+Errors are `{ "message": "..." }` with 400 (invalid pdf/body/params), 413
+(body too large) or 422 (page limit exceeded).
+
+## Authentication
+
+The app itself has no auth layer. In production the Cloud Run service runs
+with invoker IAM enabled: only identities holding `roles/run.invoker` (the
+platform's api service account) can reach the container, and callers must
+send a Google ID token minted for the service URL — the main API does this
+when `PDF_RENDERER_AUTH=google-iam` is set (Terraform sets it). Locally the
+service is only bound on the developer's machine.
 
 ## Environment variables
 
 - `PORT` (default `3001`)
-- `PDF_RENDERER_AUTH_TOKEN` — static bearer token callers must send. Unset:
-  auth is disabled (local development only; production refuses to serve).
 - `PDF_RENDERER_MAX_PDF_BYTES` (default `52428800`, 50MB) — request body limit.
   Note: behind Cloud Run the effective cap is 32MiB (HTTP/1 request limit);
   the main API pre-checks this and fails with a clear message. Responses are
@@ -52,7 +59,7 @@ To make the main API use it locally, set in `apps/api/.env`:
 PDF_RENDERER_URL=http://localhost:3001
 ```
 
-(`PDF_RENDERER_APIKEY` only if the renderer has `PDF_RENDERER_AUTH_TOKEN` set.)
+(Leave `PDF_RENDERER_AUTH` unset locally — no auth header is sent.)
 
 ## Tests
 

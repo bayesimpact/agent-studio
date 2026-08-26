@@ -37,15 +37,10 @@ describe("pdf-renderer", () => {
   let app: INestApplication
 
   beforeAll(async () => {
-    delete process.env.PDF_RENDERER_AUTH_TOKEN
     const moduleRef = await Test.createTestingModule({ imports: [AppModule] }).compile()
     app = moduleRef.createNestApplication({ bodyParser: false })
     configureApp(app)
     await app.init()
-  })
-
-  afterEach(() => {
-    delete process.env.PDF_RENDERER_AUTH_TOKEN
   })
 
   afterAll(async () => {
@@ -59,9 +54,7 @@ describe("pdf-renderer", () => {
       .send(body)
 
   describe("GET /healthz", () => {
-    it("responds ok without authentication even when a token is configured", async () => {
-      process.env.PDF_RENDERER_AUTH_TOKEN = "secret-token"
-
+    it("responds ok", async () => {
       const response = await request(app.getHttpServer()).get("/healthz")
 
       expect(response.status).toBe(200)
@@ -153,39 +146,6 @@ describe("pdf-renderer", () => {
       const response = await postPdf(buildPdfWithPages(1), "?maxPages=1000")
 
       expect(response.status).toBe(400)
-    })
-  })
-
-  describe("authentication", () => {
-    it("rejects with 401 when a token is configured and the header is missing", async () => {
-      process.env.PDF_RENDERER_AUTH_TOKEN = "secret-token"
-
-      const response = await postPdf(buildPdfWithPages(1))
-
-      expect(response.status).toBe(401)
-    })
-
-    it("rejects with 401 when the bearer token does not match", async () => {
-      process.env.PDF_RENDERER_AUTH_TOKEN = "secret-token"
-
-      const response = await postPdf(buildPdfWithPages(1)).set(
-        "Authorization",
-        "Bearer wrong-token",
-      )
-
-      expect(response.status).toBe(401)
-    })
-
-    it("accepts the request when the bearer token matches", async () => {
-      process.env.PDF_RENDERER_AUTH_TOKEN = "secret-token"
-
-      const response = await postPdf(buildPdfWithPages(1)).set(
-        "Authorization",
-        "Bearer secret-token",
-      )
-
-      expect(response.status).toBe(201)
-      expect(response.body.pages).toHaveLength(1)
     })
   })
 })

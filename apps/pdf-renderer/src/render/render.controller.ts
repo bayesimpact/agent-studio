@@ -1,15 +1,5 @@
-import {
-  BadRequestException,
-  Controller,
-  Get,
-  Post,
-  Query,
-  Req,
-  Res,
-  UseGuards,
-} from "@nestjs/common"
+import { BadRequestException, Controller, Get, Post, Query, Req, Res } from "@nestjs/common"
 import type { Request, Response } from "express"
-import { AuthTokenGuard } from "./auth-token.guard"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
 import { RenderService } from "./render.service"
 
@@ -52,7 +42,6 @@ export class RenderController {
     return { status: "ok" }
   }
 
-  @UseGuards(AuthTokenGuard)
   @Post("render-pages")
   async renderPages(
     @Req() request: Request,

@@ -11,6 +11,16 @@ import {
   modelRequiresPdfAsImages,
 } from "./pdf-to-image-parts"
 
+jest.mock("google-auth-library", () => ({
+  GoogleAuth: jest.fn().mockImplementation(() => ({
+    getIdTokenClient: jest.fn().mockImplementation((audience: string) => ({
+      idTokenProvider: {
+        fetchIdToken: jest.fn().mockResolvedValue(`fake-id-token-for-${audience}`),
+      },
+    })),
+  })),
+}))
+
 const PDF_BYTES = Buffer.from("%PDF-1.4 fake test document")
 const PAGE_ONE_PNG = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x01])
 const PAGE_TWO_PNG = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x02])
@@ -67,7 +77,7 @@ describe("convertPdfPartsToImageParts", () => {
   beforeEach(() => {
     const { port } = server.address() as AddressInfo
     process.env.PDF_RENDERER_URL = `http://127.0.0.1:${port}`
-    delete process.env.PDF_RENDERER_APIKEY
+    delete process.env.PDF_RENDERER_AUTH
     capturedRequests = []
     stubResponse = {
       status: 201,
@@ -77,7 +87,7 @@ describe("convertPdfPartsToImageParts", () => {
 
   afterAll(async () => {
     delete process.env.PDF_RENDERER_URL
-    delete process.env.PDF_RENDERER_APIKEY
+    delete process.env.PDF_RENDERER_AUTH
     await new Promise<void>((resolve, reject) =>
       server.close((error) => (error ? reject(error) : resolve())),
     )
@@ -120,12 +130,14 @@ describe("convertPdfPartsToImageParts", () => {
     expect(captured.body).toEqual(PDF_BYTES)
   })
 
-  it("sends the bearer token when PDF_RENDERER_APIKEY is configured", async () => {
-    process.env.PDF_RENDERER_APIKEY = "renderer-secret"
+  it("sends a Google ID token minted for the service origin when PDF_RENDERER_AUTH=google-iam", async () => {
+    process.env.PDF_RENDERER_AUTH = "google-iam"
 
     await convertPdfPartsToImageParts(buildUserMessage([pdfFilePart(PDF_BYTES)]))
 
-    expect(capturedRequests[0]?.authorization).toBe("Bearer renderer-secret")
+    expect(capturedRequests[0]?.authorization).toBe(
+      `Bearer fake-id-token-for-${process.env.PDF_RENDERER_URL}`,
+    )
   })
 
   it("accepts pdf data provided as a base64 string", async () => {

@@ -4,6 +4,7 @@ import {
   AgentProvider,
 } from "@caseai-connect/api-contracts"
 import type { FilePart, ImagePart } from "ai"
+import { GoogleAuth } from "google-auth-library"
 import type { LLMChatMessage } from "@/common/interfaces/llm-provider.interface"
 
 /** Gemma and MedGemma are image-only models: pdfs must be sent as images. */
@@ -33,14 +34,35 @@ export const MAX_PDF_BYTES_FOR_IMAGE_CONVERSION = 32 * 1024 * 1024
 // Rasterization is RAM-heavy (up to ~1GB per document), so it never runs in
 // the API/worker process: it is delegated to the dedicated pdf-renderer
 // service (apps/pdf-renderer), which scales independently.
-const resolvePdfRendererSettings = (): { url: string; apiKey?: string } => {
+const resolvePdfRendererSettings = (): { url: string } => {
   const url = process.env.PDF_RENDERER_URL
   if (!url) {
     throw new Error(
       "PDF_RENDERER_URL is not set: converting pdfs to images for Gemma and MedGemma requires the dedicated pdf-renderer service (apps/pdf-renderer)",
     )
   }
-  return { url, apiKey: process.env.PDF_RENDERER_APIKEY }
+  return { url }
+}
+
+// In production the pdf-renderer is locked behind Cloud Run invoker IAM:
+// requests must carry a Google ID token minted for the service URL, and
+// Google rejects everything else before it reaches the container. Terraform
+// sets PDF_RENDERER_AUTH=google-iam on the API and workers; locally the
+// renderer runs open and no header is sent.
+const GOOGLE_IAM_AUTH_MODE = "google-iam"
+
+let googleAuth: GoogleAuth | undefined
+
+async function buildAuthHeaders(rendererUrl: string): Promise<Record<string, string>> {
+  if (process.env.PDF_RENDERER_AUTH !== GOOGLE_IAM_AUTH_MODE) {
+    return {}
+  }
+  // The audience must be the Cloud Run service root URL, not the full path.
+  const audience = new URL(rendererUrl).origin
+  googleAuth ??= new GoogleAuth()
+  const idTokenClient = await googleAuth.getIdTokenClient(audience)
+  const idToken = await idTokenClient.idTokenProvider.fetchIdToken(audience)
+  return { Authorization: `Bearer ${idToken}` }
 }
 
 const isPdfFilePart = (part: unknown): part is FilePart =>
@@ -91,7 +113,7 @@ async function renderPdfPagesToPng(pdfBytes: Uint8Array): Promise<string[]> {
       `PDF is too large to be converted to images for this model: ${sizeMb}MB exceeds the ${limitMb}MB limit`,
     )
   }
-  const { url, apiKey } = resolvePdfRendererSettings()
+  const { url } = resolvePdfRendererSettings()
   const endpoint = new URL("render-pages", url.endsWith("/") ? url : `${url}/`)
   endpoint.searchParams.set("maxPages", String(MAX_PDF_PAGES_FOR_IMAGE_CONVERSION))
   endpoint.searchParams.set("maxPixelsPerPage", String(MAX_RENDERED_PIXELS_PER_PAGE))
@@ -102,7 +124,7 @@ async function renderPdfPagesToPng(pdfBytes: Uint8Array): Promise<string[]> {
       method: "POST",
       headers: {
         "Content-Type": "application/pdf",
-        ...(apiKey ? { Authorization: `Bearer ${apiKey}` } : {}),
+        ...(await buildAuthHeaders(url)),
       },
       body: pdfBytes,
       signal: AbortSignal.timeout(PDF_RENDER_TIMEOUT_MS),
