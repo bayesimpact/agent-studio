@@ -34,10 +34,11 @@ export class CustomMedGemmaLanguageModel implements LanguageModelV3 {
     this.modelId = config.model
   }
 
-  //required for LanguageModelV3 implementation
+  // Image URLs are passed through to the vLLM endpoint, which fetches them
+  // server-side (and follows the 302 from our pdf-pages redirect endpoints).
   get supportedUrls() {
     return {
-      "image/*": [/^https:\/\/example\.com\/images\/.*/],
+      "image/*": [/^https?:\/\/.*$/],
     }
   }
 
@@ -198,6 +199,13 @@ export class CustomMedGemmaLanguageModel implements LanguageModelV3 {
           case "file": {
             if (!value.mediaType.startsWith("image/"))
               throw new Error(`MedGemma model cannot process ${value.mediaType} file`)
+            if (value.data instanceof URL) {
+              contents.push({
+                type: "image_url",
+                image_url: { url: value.data.toString() },
+              })
+              break
+            }
             const buf = Buffer.from(value.data)
             // fixme DOO: reduce file size ?
             // const resizedBuffer = await sharp(buf)
