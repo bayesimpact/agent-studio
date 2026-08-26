@@ -1,5 +1,7 @@
 # pdf-renderer
 
+> **Deprecated**: replaced by `apps/pdf-converter`; remove once the converter is live in all environments.
+
 Dedicated API that rasterizes PDFs into PNG page images for image-only LLMs
 (Gemma, MedGemma). Rendering is RAM-heavy (up to ~1GB per document), so it runs
 here — isolated and independently scalable — instead of inside the main API or
