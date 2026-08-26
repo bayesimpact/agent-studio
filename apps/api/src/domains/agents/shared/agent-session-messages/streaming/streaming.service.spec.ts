@@ -112,6 +112,18 @@ describe("StreamingService", () => {
       agentSettings,
       userContent: "Bonjour",
       notifyClient,
+      sessionState: {
+        metadataRecalculator: {
+          recalculateSessionMetadataFromMessages: async ({
+            selectedCategoryNames,
+            suggestedTitle,
+          }) => ({ suggestedTitle, selectedCategoryNames }),
+        },
+        resultUpdater: {
+          updateSessionResult: async () => ({ result: null }),
+        },
+      },
+      sessionResult: null,
     })
 
     const { events, fulltextStream } = await aggregateStream(stream)
@@ -138,6 +150,36 @@ describe("StreamingService", () => {
     const { events, fulltextStream } = await aggregateStream(stream)
     expect(events.length).toBeGreaterThan(0)
     expect(fulltextStream).toBe(`Hello, I'm the stream default mock value!`)
+  })
+  it("streamAgentResponse - emits an error event when the provider stream fails", async () => {
+    const { connectScope, agent, agentSettings, session } = await createContextWithSession()
+    const notifyClient = jest.fn()
+
+    mockProvider.addErrorTurn(agent.id, new Error("Unsupported chat content part type: 'file'"))
+
+    const stream = service.streamAgentResponse({
+      agentSessionScope: { connectScope, session, agent, agentSettings },
+      userContent: "Bonjour",
+      notifyClient,
+    })
+
+    const events: StreamEventPayload[] = []
+    await expect(
+      (async () => {
+        for await (const event of stream) {
+          events.push(JSON.parse(event.data) as StreamEventPayload)
+        }
+      })(),
+    ).rejects.toThrow("Unsupported chat content part type: 'file'")
+
+    const errorEvent = events.find((event) => event.type === "error")
+    expect(errorEvent).toMatchObject({ error: "Unsupported chat content part type: 'file'" })
+    expect(events.find((event) => event.type === "end")).toBeUndefined()
+
+    const assistantMessage = await repositories.agentMessageRepository.findOne({
+      where: { sessionId: session.id, role: "assistant" },
+    })
+    expect(assistantMessage?.status).toBe("error")
   })
   it("streamAgentResponse - with document - pdf", async () => {
     const { connectScope, agent, agentSettings, session } = await createContextWithSession()
@@ -278,7 +320,9 @@ describe("StreamingService", () => {
     const subAgentCall = calls.find((call) => call.agentId === subAgent.id)
     expect(subAgentCall?.prompt).toContain("Collect the user's form")
     const parentCalls = calls.filter((call) => call.agentId === agent.id)
-    expect(parentCalls).toHaveLength(2)
+    // 3 generations: sub-agent call, answer, and the forced end-of-turn
+    // mandatory_tool report (every conversation agent now submits it).
+    expect(parentCalls).toHaveLength(3)
     expect(parentCalls[1]?.prompt).toContain("sub_answer")
   })
 

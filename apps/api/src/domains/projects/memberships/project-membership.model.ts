@@ -16,6 +16,8 @@ export type ProjectMembershipModel = {
   userId: string
   projectId: string
   role: ProjectMembershipRole
+  /** RBAC role backing this membership (null when the catalog is not seeded). */
+  roleId: string | null
   createdAt: Date
   updatedAt: Date
   deletedAt: Date | null

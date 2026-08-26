@@ -1,21 +1,36 @@
 import { Injectable, NotFoundException } from "@nestjs/common"
-import { InjectRepository } from "@nestjs/typeorm"
-import type { Repository } from "typeorm"
-import { User } from "@/domains/users/user.entity"
+// biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
+import { PermissionService } from "@/domains/rbac/permission.service"
+// biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
+import { UsersService } from "@/domains/users/users.service"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
 import { OrganizationMembershipsService } from "./memberships/organization-memberships.service"
-import { Organization } from "./organization.entity"
+import { OrganizationModel } from "./organization.model"
+// biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
+import { OrganizationRepository } from "./organization.repository"
 
 @Injectable()
 export class OrganizationsService {
   constructor(
-    @InjectRepository(Organization) readonly organizationRepository: Repository<Organization>,
-    @InjectRepository(User) private readonly userRepository: Repository<User>,
     private readonly organizationMembershipsService: OrganizationMembershipsService,
+    private readonly organizationRepository: OrganizationRepository,
+    private readonly permissionService: PermissionService,
+    private readonly usersService: UsersService,
   ) {}
 
-  async getUserOrganizations(userId: string): Promise<Organization[]> {
-    return this.organizationMembershipsService.listOrganizationsForUser(userId)
+  async listOrganizations(userId: string): Promise<OrganizationModel[]> {
+    /**
+     * {
+     *    "ORG_XXXX": ['organization.read', 'organization.write'],
+     *    "ORG_YYYY": ['organization.read', 'organization.write', 'project.create'],
+     *  }
+     */
+    const permissionsByOrganizationId = await this.permissionService.listResourcePermissions(
+      userId,
+      "organization.read",
+    )
+
+    return this.organizationRepository.findByIds(permissionsByOrganizationId)
   }
 
   async createOrganization({
@@ -24,25 +39,35 @@ export class OrganizationsService {
   }: {
     userId: string
     name: string
-  }): Promise<Organization> {
+  }): Promise<OrganizationModel> {
     if (!name || name.trim().length < 3) {
       throw new Error("Organization name must be at least 3 characters long")
     }
 
-    const user = await this.userRepository.findOne({ where: { id: userId } })
+    const user = await this.usersService.findById(userId)
     if (!user) {
       throw new Error(`User with id ${userId} not found`)
     }
 
-    const organization = this.organizationRepository.create({ name })
-    const savedOrganization = await this.organizationRepository.save(organization)
+    const organization = await this.organizationRepository.createOrganization(name)
 
-    await this.organizationMembershipsService.createOrganizationOwnerMembership({
-      userId: user.id,
-      organizationId: savedOrganization.id,
+    const membership = await this.organizationMembershipsService.createOrganizationOwnerMembership({
+      userId,
+      organizationId: organization.id,
     })
 
-    return savedOrganization
+    // the membership carries the RBAC role it was created with: ask RBAC what that role grants
+    const permissions = membership.roleId
+      ? await this.permissionService.listPermissionsForRole(membership.roleId)
+      : []
+    return new OrganizationModel(
+      {
+        id: organization.id,
+        name: organization.name,
+        createdAt: organization.createdAt.getTime(),
+      },
+      permissions,
+    )
   }
 
   async updateOrganizationName({
@@ -52,14 +77,9 @@ export class OrganizationsService {
     organizationId: string
     name: string
   }): Promise<void> {
-    const organization = await this.organizationRepository.findOne({
-      where: { id: organizationId },
-    })
-    if (!organization) {
+    const updated = await this.organizationRepository.updateName(organizationId, name)
+    if (!updated) {
       throw new NotFoundException(`Organization ${organizationId} not found`)
     }
-
-    organization.name = name
-    await this.organizationRepository.save(organization)
   }
 }

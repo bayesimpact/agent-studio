@@ -42,7 +42,7 @@ export function subAgentTool({
     inputSchema,
     outputSchema,
     execute: async (input) => {
-      onExecute({ toolName, arguments: input })
+      await onExecute({ toolName, arguments: input })
       return execute(input as SubAgentToolInput)
     },
   })

@@ -1,5 +1,6 @@
 import type { ProjectMembershipRoleDto } from "@caseai-connect/api-contracts"
 import type { AllRepositories } from "@/common/test/test-transaction-manager"
+import type { BaseAgentSessionType } from "@/domains/agents/base-agent-sessions/base-agent-sessions.types"
 import { documentFactory } from "@/domains/documents/document.factory"
 import { createOrganizationWithAgent } from "@/domains/organizations/organization.factory"
 import type { AgentCsvExtractionRunStatus } from "../agent-csv-extraction-run.entity"
@@ -38,15 +39,23 @@ export async function createCsvExtractionRunContext({
   return { user, organization, project, agent, agentSettings, csvDocument }
 }
 
-/** Creates and persists a run (defaulting to "pending") in the given scope. */
+/**
+ * Creates and persists a run (defaulting to "pending" and "live") in the given scope, owned by
+ * the context user unless another `user` is given (`null` = a legacy row from before ownership
+ * was tracked).
+ */
 export async function createCsvExtractionRun({
   repositories,
   context,
   status = "pending",
+  type = "live",
+  user = context.user,
 }: {
   repositories: AllRepositories
   context: Awaited<ReturnType<typeof createCsvExtractionRunContext>>
   status?: AgentCsvExtractionRunStatus
+  type?: BaseAgentSessionType
+  user?: Awaited<ReturnType<typeof createCsvExtractionRunContext>>["user"] | null
 }) {
   const run = agentCsvExtractionRunFactory
     .transient({
@@ -55,8 +64,9 @@ export async function createCsvExtractionRun({
       agent: context.agent,
       agentSettings: context.agentSettings,
       csvDocument: context.csvDocument,
+      user: user ?? undefined,
     })
-    .build({ status })
+    .build({ status, type })
   await repositories.agentCsvExtractionRunRepository.save(run)
   return run
 }

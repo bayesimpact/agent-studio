@@ -7,22 +7,22 @@ export const selectMeError = (state: RootState) => state.me.data.error
 
 export const selectPendingInvitations = (state: RootState) => state.me.pendingInvitations
 
-export const selectIsPremiumMember = (state: RootState): boolean => {
-  const emailDomain = import.meta.env.VITE_PREMIUM_EMAIL_DOMAIN as string | undefined
-  if (!emailDomain) return false
-  return !!state.me.data?.value?.email.endsWith(emailDomain)
-}
+export const selectCanViewTraces = (state: RootState): boolean =>
+  state.me.data.value?.globalPermissions.includes("trace.read") ?? false
 
 export const selectIsBackofficeAuthorized = (state: RootState): boolean =>
-  state.me.data.value?.isBackofficeAuthorized ?? false
+  state.me.data.value?.globalPermissions.includes("backoffice.read") ?? false
 
 export const selectIsTermsManagementAuthorized = (state: RootState): boolean =>
-  state.me.data.value?.isTermsManagementAuthorized ?? false
+  state.me.data.value?.globalPermissions.includes("backoffice.terms.update") ?? false
 
 export const selectTermsAccepted = (state: RootState): boolean =>
   state.me.data.value?.termsAccepted ?? false
 
 export const selectCurrentTerms = (state: RootState) => state.me.currentTerms
+
+export const selectCanCreateOrganization = (state: RootState): boolean =>
+  state.me.data.value?.globalPermissions.includes("organization.create") ?? false
 
 export const selectOrganizationMemberships = (state: RootState) =>
   state.me.data.value?.memberships.organizationMemberships

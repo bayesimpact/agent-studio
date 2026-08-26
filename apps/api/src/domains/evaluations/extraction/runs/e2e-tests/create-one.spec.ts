@@ -11,6 +11,7 @@ import {
 } from "@/common/test/test-transaction-manager"
 import { removeNullish } from "@/common/utils/remove-nullish"
 import { ActivitiesModule } from "@/domains/activities/activities.module"
+import { agentSettingsFactory } from "@/domains/agents/settings/agent.settings.factory"
 import { createOrganizationWithAgent } from "@/domains/organizations/organization.factory"
 import { setupUserGuardForTesting } from "../../../../../../test/e2e.helpers"
 import { expectResponse, type Requester, testRequester } from "../../../../../../test/request"
@@ -57,13 +58,16 @@ describe("EvaluationExtractionRuns - createOne", () => {
   })
 
   const createContext = async (agentType?: "conversation" | "extraction" | undefined) => {
-    const { user, organization, project, agent } = await createOrganizationWithAgent(repositories, {
-      agent: { type: agentType ?? "extraction" },
-      agentSettings: {
-        outputJsonSchema: { type: "object", properties: { age: { type: "string" } } },
-        model: AgentModel._Mock,
+    const { user, organization, project, agent, agentSettings } = await createOrganizationWithAgent(
+      repositories,
+      {
+        agent: { type: agentType ?? "extraction" },
+        agentSettings: {
+          outputJsonSchema: { type: "object", properties: { age: { type: "string" } } },
+          model: AgentModel._Mock,
+        },
       },
-    })
+    )
     organizationId = organization.id
     projectId = project.id
     auth0Id = user.auth0Id
@@ -73,7 +77,7 @@ describe("EvaluationExtractionRuns - createOne", () => {
       .build({ schemaMapping: {} })
     await setup.getRepository(EvaluationExtractionDataset).save(dataset)
 
-    return { organization, project, dataset, agent }
+    return { organization, project, dataset, agent, agentSettings }
   }
 
   const subject = async (payload?: typeof EvaluationExtractionRunsRoutes.createOne.request) =>
@@ -85,12 +89,13 @@ describe("EvaluationExtractionRuns - createOne", () => {
     })
 
   it("should create an evaluation run with valid data", async () => {
-    const { dataset, agent } = await createContext()
+    const { dataset, agent, agentSettings } = await createContext()
 
     const res = await subject({
       payload: {
         evaluationExtractionDatasetId: dataset.id,
         agentId: agent.id,
+        agentSettingsRevision: null,
         keyMapping: [{ agentOutputKey: "age", datasetColumnId: "col1", mode: "scored" }],
       },
     })
@@ -99,11 +104,114 @@ describe("EvaluationExtractionRuns - createOne", () => {
     expect(res.body.data.status).toBe("pending")
     expect(res.body.data.evaluationExtractionDatasetId).toBe(dataset.id)
     expect(res.body.data.agentId).toBe(agent.id)
+    expect(res.body.data.agentSettingsId).toBe(agentSettings.id)
+    expect(res.body.data.agentRevision).toBe(agentSettings.revision)
     expect(res.body.data.summary).toBeNull()
 
     const runs = await evaluationExtractionRunRepository.find()
     expect(runs).toHaveLength(1)
     await expectActivityCreated("evaluationExtractionRun.create")
+  })
+
+  it("should pin the latest published agent settings revision on the run when agentSettingsRevision is null", async () => {
+    const { organization, project, dataset, agent } = await createContext()
+    const newerSettings = agentSettingsFactory
+      .transient({ organization, project, agent })
+      .build({ revision: 2, instructions: "Newer helpful assistant instructions" })
+    await repositories.agentSettingsRepository.save(newerSettings)
+
+    const res = await subject({
+      payload: {
+        evaluationExtractionDatasetId: dataset.id,
+        agentId: agent.id,
+        agentSettingsRevision: null,
+        keyMapping: [{ agentOutputKey: "age", datasetColumnId: "col1", mode: "scored" }],
+      },
+    })
+
+    expectResponse(res, 201)
+    expect(res.body.data.agentRevision).toBe(2)
+    const runs = await evaluationExtractionRunRepository.find()
+    expect(runs[0]!.agentSettingsId).toBe(newerSettings.id)
+  })
+
+  it("should pin the requested agent settings revision on the run", async () => {
+    const { organization, project, dataset, agent, agentSettings } = await createContext()
+    const newerSettings = agentSettingsFactory
+      .transient({ organization, project, agent })
+      .build({ revision: 2, instructions: "Newer helpful assistant instructions" })
+    await repositories.agentSettingsRepository.save(newerSettings)
+
+    const res = await subject({
+      payload: {
+        evaluationExtractionDatasetId: dataset.id,
+        agentId: agent.id,
+        agentSettingsRevision: 1,
+        keyMapping: [{ agentOutputKey: "age", datasetColumnId: "col1", mode: "scored" }],
+      },
+    })
+
+    expectResponse(res, 201)
+    expect(res.body.data.agentRevision).toBe(1)
+    expect(res.body.data.agentSettingsId).toBe(agentSettings.id)
+    const runs = await evaluationExtractionRunRepository.find()
+    expect(runs[0]!.agentSettingsId).toBe(agentSettings.id)
+  })
+
+  it("should reject if the requested agent settings revision does not exist", async () => {
+    const { dataset, agent } = await createContext()
+
+    const res = await subject({
+      payload: {
+        evaluationExtractionDatasetId: dataset.id,
+        agentId: agent.id,
+        agentSettingsRevision: 999,
+        keyMapping: [],
+      },
+    })
+
+    expectResponse(res, 404)
+    const runs = await evaluationExtractionRunRepository.find()
+    expect(runs).toHaveLength(0)
+  })
+
+  it("should reject if the requested agent settings revision is archived", async () => {
+    const { organization, project, dataset, agent } = await createContext()
+    const archivedSettings = agentSettingsFactory
+      .transient({ organization, project, agent })
+      .build({ revision: 2, isArchived: true })
+    await repositories.agentSettingsRepository.save(archivedSettings)
+
+    const res = await subject({
+      payload: {
+        evaluationExtractionDatasetId: dataset.id,
+        agentId: agent.id,
+        agentSettingsRevision: 2,
+        keyMapping: [],
+      },
+    })
+
+    expectResponse(res, 422)
+    const runs = await evaluationExtractionRunRepository.find()
+    expect(runs).toHaveLength(0)
+  })
+
+  it("should reject if the requested agent settings revision is out of range", async () => {
+    const { dataset, agent } = await createContext()
+
+    const res = await subject({
+      payload: {
+        evaluationExtractionDatasetId: dataset.id,
+        agentId: agent.id,
+        // One past the Postgres int4 upper bound.
+        agentSettingsRevision: 2147483648,
+        keyMapping: [],
+      },
+    })
+
+    expectResponse(res, 422)
+    const runs = await evaluationExtractionRunRepository.find()
+    expect(runs).toHaveLength(0)
   })
 
   it("should reject if dataset does not exist", async () => {
@@ -113,6 +221,7 @@ describe("EvaluationExtractionRuns - createOne", () => {
       payload: {
         evaluationExtractionDatasetId: "00000000-0000-0000-0000-000000000000",
         agentId: agent.id,
+        agentSettingsRevision: null,
         keyMapping: [],
       },
     })
@@ -127,6 +236,7 @@ describe("EvaluationExtractionRuns - createOne", () => {
       payload: {
         evaluationExtractionDatasetId: dataset.id,
         agentId: "00000000-0000-0000-0000-000000000000",
+        agentSettingsRevision: null,
         keyMapping: [],
       },
     })
@@ -141,6 +251,7 @@ describe("EvaluationExtractionRuns - createOne", () => {
       payload: {
         evaluationExtractionDatasetId: dataset.id,
         agentId: agent.id,
+        agentSettingsRevision: null,
         keyMapping: [],
       },
     })

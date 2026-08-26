@@ -11,6 +11,11 @@ export const selectCurrentRunData = (state: RootState) => state.extractionRuns.c
 
 export const selectCurrentRunRecords = (state: RootState) => state.extractionRuns.currentRunRecords
 
+export const selectExtractionRunsComparison = (state: RootState) =>
+  state.extractionRuns.comparisonRecords
+
+export const selectComparisonRunIds = (state: RootState) => state.extractionRuns.comparisonRunIds
+
 export const selectIsExecuting = (state: RootState) => state.extractionRuns.isExecuting
 
 export const selectIsCancelling = (state: RootState) => state.extractionRuns.isCancelling

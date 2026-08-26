@@ -7,6 +7,15 @@
     "selectAgentDescription": "Choose which extraction agent to evaluate against this dataset.",
     "agent": "Agent",
     "agentPlaceholder": "Select an agent",
+    "agentSettingsUnavailable": "This agent's configuration could not be loaded.",
+    "version": {
+      "label": "Version",
+      "placeholder": "Select a version",
+      "loading": "Loading versions...",
+      "item": "v{{revision}} — {{detail}}",
+      "current": "Current ({{date}})",
+      "revision": "v{{revision}}"
+    },
     "scope": {
       "title": "Records to run",
       "all": "Run entire dataset ({{count}} records)",
@@ -22,6 +31,7 @@
       "scored": "Scored",
       "fyi": "FYI",
       "columnPlaceholder": "Select column",
+      "incomplete": "Map every scored key to a dataset column.",
       "noOutputSchema": "This agent has no output schema defined."
     },
     "results": {
@@ -64,6 +74,17 @@
       "description": "{{count}} runs",
       "matchRate": "{{matchRate}}% match",
       "recordCount": "{{count}} records",
+      "columns": {
+        "id": "ID",
+        "status": "Status",
+        "date": "Date",
+        "agent": "Agent",
+        "version": "Version",
+        "matchRate": "Match rate",
+        "records": "Records"
+      },
+      "compare": "Compare runs",
+      "compareSelected": "Compare {{count}} runs",
       "delete": {
         "button": "Delete run",
         "confirm": {
@@ -71,6 +92,27 @@
           "description": "This action cannot be undone. All run records will be permanently deleted.",
           "submit": "Delete"
         }
+      }
+    },
+    "comparison": {
+      "title": "Compare Runs",
+      "description": "Comparing {{count}} runs",
+      "summary": "Summary",
+      "records": "Per-record results",
+      "recordsDescription": "{{count}} records",
+      "metric": "Metric",
+      "record": "Record",
+      "matchedFields": "{{matched}}/{{scored}} fields",
+      "notFound": "No runs selected to compare.",
+      "metrics": {
+        "status": "Status",
+        "agent": "Agent",
+        "version": "Version",
+        "matchRate": "Match rate",
+        "perfectMatches": "Perfect matches",
+        "mismatches": "Mismatches",
+        "errors": "Errors",
+        "total": "Total records"
       }
     },
     "agentMetadata": {

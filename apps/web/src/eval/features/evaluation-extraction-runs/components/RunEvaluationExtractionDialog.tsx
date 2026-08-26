@@ -1,4 +1,7 @@
-import type { EvaluationExtractionRunKeyMappingEntryDto } from "@caseai-connect/api-contracts"
+import {
+  createEvaluationExtractionRunSchema,
+  type EvaluationExtractionRunKeyMappingEntryDto,
+} from "@caseai-connect/api-contracts"
 import { Button } from "@caseai-connect/ui/shad/button"
 import {
   Dialog,
@@ -9,6 +12,14 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@caseai-connect/ui/shad/dialog"
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@caseai-connect/ui/shad/form"
 import { Label } from "@caseai-connect/ui/shad/label"
 import {
   Select,
@@ -17,15 +28,27 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@caseai-connect/ui/shad/select"
+import { zodResolver } from "@hookform/resolvers/zod"
 import { PlayIcon } from "lucide-react"
-import { useCallback, useMemo, useState } from "react"
+import { useCallback, useEffect, useMemo, useState } from "react"
+import { type Control, useForm } from "react-hook-form"
 import { useTranslation } from "react-i18next"
 import { useNavigate } from "react-router-dom"
+import { z } from "zod"
+import { Loader } from "@/common/components/Loader"
 import { RunScopeSelector } from "@/common/components/shared/RunScopeSelector"
+import {
+  findPublishedVersion,
+  findVersion,
+} from "@/common/features/agents/agent-settings/agent-settings.functions"
+import type { AgentSettings } from "@/common/features/agents/agent-settings/agent-settings.models"
+import { selectAgentSettingsHistoryDataByAgentId } from "@/common/features/agents/agent-settings/agent-settings.selectors"
 import type { Agent } from "@/common/features/agents/agents.models"
 import { selectAgentsData } from "@/common/features/agents/agents.selectors"
 import { useValue } from "@/common/hooks/use-value"
+import { ADS } from "@/common/store/async-data-status"
 import { useAppDispatch, useAppSelector } from "@/common/store/hooks"
+import { buildDate } from "@/common/utils/build-date"
 import type {
   EvaluationExtractionDataset,
   EvaluationExtractionDatasetSchemaColumn,
@@ -40,132 +63,58 @@ type KeyMappingEntry = {
   mode: "scored" | "fyi"
 }
 
+type RunFormValues = {
+  agentId: string
+  // null = no explicit choice; the latest published revision is used once history loads.
+  selectedRevision: number | null
+  keyMapping: KeyMappingEntry[]
+  runScope: "all" | "limited"
+  limitedCount: number
+}
+
+const defaultRunFormValues: RunFormValues = {
+  agentId: "",
+  selectedRevision: null,
+  keyMapping: [],
+  runScope: "all",
+  limitedCount: 1,
+}
+
+function getAgentOutputKeys(agentSettings: AgentSettings): string[] {
+  const properties = agentSettings.outputJsonSchema?.properties as
+    | Record<string, unknown>
+    | undefined
+  if (!properties) return []
+  return Object.keys(properties)
+}
+
+function buildDefaultKeyMapping({
+  agentSettings,
+  targetColumns,
+}: {
+  agentSettings: AgentSettings
+  targetColumns: EvaluationExtractionDatasetSchemaColumn[]
+}): KeyMappingEntry[] {
+  // Auto-map by matching names
+  return getAgentOutputKeys(agentSettings).map((outputKey) => {
+    const matchingColumn = targetColumns.find(
+      (column) => column.finalName.toLowerCase() === outputKey.toLowerCase(),
+    )
+    return {
+      agentOutputKey: outputKey,
+      datasetColumnId: matchingColumn?.id ?? "",
+      mode: "scored" as const,
+    }
+  })
+}
+
 export function RunEvaluationExtractionDialog({
   dataset,
 }: {
   dataset: EvaluationExtractionDataset
 }) {
   const { t } = useTranslation()
-  const dispatch = useAppDispatch()
-  const navigate = useNavigate()
-  const { buildRunPath } = useEvaluationExtractionRunPath()
-  const agentsData = useValue(selectAgentsData)
-  const isExecuting = useAppSelector(selectIsExecuting)
   const [open, setOpen] = useState(false)
-  const [selectedAgentId, setSelectedAgentId] = useState<string | null>(null)
-  const [keyMapping, setKeyMapping] = useState<KeyMappingEntry[]>([])
-  const [runScope, setRunScope] = useState<"all" | "limited">("all")
-  const [limitedCount, setLimitedCount] = useState(1)
-
-  const extractionAgents = useMemo(() => {
-    return agentsData.filter((agent) => agent.type === "extraction")
-  }, [agentsData])
-
-  const targetColumns = useMemo(
-    () =>
-      Object.values(dataset.schemaMapping)
-        .filter((column) => column.role === "target")
-        .sort((columnA, columnB) => columnA.index - columnB.index),
-    [dataset.schemaMapping],
-  )
-
-  const selectedAgent = useMemo(
-    () => extractionAgents.find((agent) => agent.id === selectedAgentId) ?? null,
-    [extractionAgents, selectedAgentId],
-  )
-
-  const agentOutputKeys = useMemo(() => {
-    if (!selectedAgent?.outputJsonSchema) return []
-    const properties = selectedAgent.outputJsonSchema.properties as
-      | Record<string, unknown>
-      | undefined
-    if (!properties) return []
-    return Object.keys(properties)
-  }, [selectedAgent])
-
-  const handleAgentChange = useCallback(
-    (agentId: string) => {
-      setSelectedAgentId(agentId)
-      const agent = extractionAgents.find((extractionAgent) => extractionAgent.id === agentId)
-      if (!agent?.outputJsonSchema) {
-        setKeyMapping([])
-        return
-      }
-      const properties = agent.outputJsonSchema.properties as Record<string, unknown> | undefined
-      if (!properties) {
-        setKeyMapping([])
-        return
-      }
-      // Auto-map by matching names
-      const newMapping: KeyMappingEntry[] = Object.keys(properties).map((outputKey) => {
-        const matchingColumn = targetColumns.find(
-          (column) => column.finalName.toLowerCase() === outputKey.toLowerCase(),
-        )
-        return {
-          agentOutputKey: outputKey,
-          datasetColumnId: matchingColumn?.id ?? "",
-          mode: "scored" as const,
-        }
-      })
-      setKeyMapping(newMapping)
-    },
-    [extractionAgents, targetColumns],
-  )
-
-  const handleColumnChange = useCallback((agentOutputKey: string, datasetColumnId: string) => {
-    setKeyMapping((previous) =>
-      previous.map((entry) =>
-        entry.agentOutputKey === agentOutputKey ? { ...entry, datasetColumnId } : entry,
-      ),
-    )
-  }, [])
-
-  const handleModeChange = useCallback((agentOutputKey: string, mode: "scored" | "fyi") => {
-    setKeyMapping((previous) =>
-      previous.map((entry) =>
-        entry.agentOutputKey === agentOutputKey ? { ...entry, mode } : entry,
-      ),
-    )
-  }, [])
-
-  const handleLimitedCountChange = useCallback(
-    (value: string) => {
-      const parsed = Number.parseInt(value, 10)
-      if (!Number.isNaN(parsed)) {
-        setLimitedCount(Math.min(Math.max(1, parsed), dataset.recordCount))
-      }
-    },
-    [dataset.recordCount],
-  )
-
-  const isValid = useMemo(() => {
-    if (!selectedAgentId) return false
-    if (keyMapping.length === 0) return false
-    if (runScope === "limited" && (limitedCount < 1 || limitedCount > dataset.recordCount))
-      return false
-    return keyMapping.every((entry) => entry.mode === "fyi" || entry.datasetColumnId !== "")
-  }, [selectedAgentId, keyMapping, runScope, limitedCount, dataset.recordCount])
-
-  const handleRun = async () => {
-    if (!selectedAgentId || !isValid) return
-    const validMapping: EvaluationExtractionRunKeyMappingEntryDto[] = keyMapping.map((entry) => ({
-      agentOutputKey: entry.agentOutputKey,
-      datasetColumnId: entry.datasetColumnId,
-      mode: entry.mode,
-    }))
-
-    const result = await dispatch(
-      evaluationExtractionRunsActions.createAndExecute({
-        evaluationExtractionDatasetId: dataset.id,
-        agentId: selectedAgentId,
-        keyMapping: validMapping,
-        recordLimit: runScope === "limited" ? limitedCount : null,
-      }),
-    ).unwrap()
-
-    setOpen(false)
-    navigate(buildRunPath({ runId: result.id }))
-  }
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -183,75 +132,345 @@ export function RunEvaluationExtractionDialog({
           </DialogDescription>
         </DialogHeader>
 
-        <div className="flex flex-col gap-4">
-          <AgentSelector
-            agents={extractionAgents}
-            selectedAgentId={selectedAgentId}
-            onAgentChange={handleAgentChange}
-          />
-
-          {selectedAgent && agentOutputKeys.length > 0 && (
-            <KeyMappingEditor
-              agentOutputKeys={agentOutputKeys}
-              targetColumns={targetColumns}
-              keyMapping={keyMapping}
-              onColumnChange={handleColumnChange}
-              onModeChange={handleModeChange}
-            />
-          )}
-
-          {selectedAgent && agentOutputKeys.length === 0 && (
-            <p className="text-sm text-muted-foreground">
-              {t("evaluationExtractionRun:keyMapping.noOutputSchema")}
-            </p>
-          )}
-
-          <RunScopeSelector
-            recordCount={dataset.recordCount}
-            runScope={runScope}
-            limitedCount={limitedCount}
-            onRunScopeChange={setRunScope}
-            onLimitedCountChange={handleLimitedCountChange}
-          />
-        </div>
-
-        <DialogFooter>
-          <Button onClick={handleRun} disabled={!isValid || isExecuting}>
-            {isExecuting ? t("evaluationExtractionRun:running") : t("evaluationExtractionRun:run")}
-          </Button>
-        </DialogFooter>
+        <RunEvaluationExtractionForm dataset={dataset} onRan={() => setOpen(false)} />
       </DialogContent>
     </Dialog>
   )
 }
 
-function AgentSelector({
+function RunEvaluationExtractionForm({
+  dataset,
+  onRan,
+}: {
+  dataset: EvaluationExtractionDataset
+  onRan: () => void
+}) {
+  const { t } = useTranslation()
+  const dispatch = useAppDispatch()
+  const navigate = useNavigate()
+  const { buildRunPath } = useEvaluationExtractionRunPath()
+  const isExecuting = useAppSelector(selectIsExecuting)
+  const agentsData = useValue(selectAgentsData)
+
+  const extractionAgents = useMemo(() => {
+    return agentsData.filter((agent) => agent.type === "extraction")
+  }, [agentsData])
+
+  const targetColumns = useMemo(
+    () =>
+      Object.values(dataset.schemaMapping)
+        .filter((column) => column.role === "target")
+        .sort((columnA, columnB) => columnA.index - columnB.index),
+    [dataset.schemaMapping],
+  )
+
+  // Contract schema extended with the dialog-only fields and translated
+  // validation messages (ADR 0012).
+  const formSchema = useMemo(
+    () =>
+      createEvaluationExtractionRunSchema
+        .omit({ evaluationExtractionDatasetId: true, agentSettingsRevision: true })
+        .extend({
+          selectedRevision: z.number().int().nullable(),
+          runScope: z.enum(["all", "limited"]),
+          limitedCount: z.number().int().min(1),
+        })
+        .refine((values) => values.agentId.length > 0, {
+          path: ["agentId"],
+          message: t("evaluationExtractionRun:agentPlaceholder"),
+        })
+        .refine((values) => values.keyMapping.length > 0, {
+          path: ["keyMapping"],
+          message: t("evaluationExtractionRun:keyMapping.noOutputSchema"),
+        })
+        .refine(
+          (values) =>
+            values.keyMapping.every(
+              (entry) => entry.mode === "fyi" || entry.datasetColumnId !== "",
+            ),
+          {
+            path: ["keyMapping"],
+            message: t("evaluationExtractionRun:keyMapping.incomplete"),
+          },
+        ),
+    [t],
+  )
+
+  const form = useForm<RunFormValues>({
+    resolver: zodResolver(formSchema),
+    defaultValues: defaultRunFormValues,
+  })
+  const { control, watch, setValue, getValues } = form
+
+  const selectedAgentId = watch("agentId")
+  const selectedRevision = watch("selectedRevision")
+  const runScope = watch("runScope")
+  const limitedCount = watch("limitedCount")
+  const keyMapping = watch("keyMapping")
+
+  const agentSettingsHistoryData = useAppSelector(
+    selectAgentSettingsHistoryDataByAgentId({ agentId: selectedAgentId, includeDraft: true }),
+  )
+  const history = ADS.isFulfilled(agentSettingsHistoryData)
+    ? agentSettingsHistoryData.value
+    : undefined
+
+  // The user's explicit pick, defaulting to the latest published revision — the
+  // version the server would pin if the payload carried none.
+  const effectiveRevision =
+    selectedRevision ?? (history ? (findPublishedVersion(history)?.revision ?? null) : null)
+  const selectedVersion =
+    history && effectiveRevision !== null ? findVersion(history, effectiveRevision) : undefined
+
+  // The key mapping derives from the chosen version's output schema, so it must be
+  // rebuilt whenever the effective version changes.
+  useEffect(() => {
+    setValue(
+      "keyMapping",
+      selectedVersion
+        ? buildDefaultKeyMapping({ agentSettings: selectedVersion, targetColumns })
+        : [],
+    )
+  }, [setValue, selectedVersion, targetColumns])
+
+  const agentOutputKeys = useMemo(
+    () => (selectedVersion ? getAgentOutputKeys(selectedVersion) : []),
+    [selectedVersion],
+  )
+
+  const handleAgentChange = useCallback(() => {
+    setValue("selectedRevision", null)
+  }, [setValue])
+
+  const handleColumnChange = useCallback(
+    (agentOutputKey: string, datasetColumnId: string) => {
+      setValue(
+        "keyMapping",
+        getValues("keyMapping").map((entry) =>
+          entry.agentOutputKey === agentOutputKey ? { ...entry, datasetColumnId } : entry,
+        ),
+        { shouldValidate: true },
+      )
+    },
+    [setValue, getValues],
+  )
+
+  const handleModeChange = useCallback(
+    (agentOutputKey: string, mode: "scored" | "fyi") => {
+      setValue(
+        "keyMapping",
+        getValues("keyMapping").map((entry) =>
+          entry.agentOutputKey === agentOutputKey ? { ...entry, mode } : entry,
+        ),
+        { shouldValidate: true },
+      )
+    },
+    [setValue, getValues],
+  )
+
+  const handleLimitedCountChange = useCallback(
+    (value: string) => {
+      const parsed = Number.parseInt(value, 10)
+      if (!Number.isNaN(parsed)) {
+        setValue("limitedCount", Math.min(Math.max(1, parsed), dataset.recordCount))
+      }
+    },
+    [setValue, dataset.recordCount],
+  )
+
+  const handleRun = form.handleSubmit(async (values) => {
+    if (effectiveRevision === null) return
+    const validMapping: EvaluationExtractionRunKeyMappingEntryDto[] = values.keyMapping.map(
+      (entry) => ({
+        agentOutputKey: entry.agentOutputKey,
+        datasetColumnId: entry.datasetColumnId,
+        mode: entry.mode,
+      }),
+    )
+
+    const result = await dispatch(
+      evaluationExtractionRunsActions.createAndExecute({
+        evaluationExtractionDatasetId: dataset.id,
+        agentId: values.agentId,
+        agentSettingsRevision: effectiveRevision,
+        keyMapping: validMapping,
+        recordLimit: values.runScope === "limited" ? values.limitedCount : null,
+      }),
+    ).unwrap()
+
+    onRan()
+    navigate(buildRunPath({ runId: result.id }))
+  })
+
+  return (
+    <Form {...form}>
+      <form onSubmit={handleRun} className="flex flex-col gap-4">
+        <AgentField control={control} agents={extractionAgents} onAgentChange={handleAgentChange} />
+
+        {selectedAgentId &&
+          (ADS.isError(agentSettingsHistoryData) ? (
+            <p className="text-sm text-destructive">
+              {t("evaluationExtractionRun:agentSettingsUnavailable")}
+            </p>
+          ) : !history ? (
+            <Loader />
+          ) : (
+            <>
+              <AgentVersionField
+                control={control}
+                history={history}
+                effectiveRevision={effectiveRevision}
+              />
+
+              {agentOutputKeys.length > 0 ? (
+                <FormField
+                  control={control}
+                  name="keyMapping"
+                  render={() => (
+                    <FormItem>
+                      <KeyMappingEditor
+                        agentOutputKeys={agentOutputKeys}
+                        targetColumns={targetColumns}
+                        keyMapping={keyMapping}
+                        onColumnChange={handleColumnChange}
+                        onModeChange={handleModeChange}
+                      />
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              ) : (
+                <p className="text-sm text-muted-foreground">
+                  {t("evaluationExtractionRun:keyMapping.noOutputSchema")}
+                </p>
+              )}
+
+              <RunScopeSelector
+                recordCount={dataset.recordCount}
+                runScope={runScope}
+                limitedCount={limitedCount}
+                onRunScopeChange={(scope) => setValue("runScope", scope)}
+                onLimitedCountChange={handleLimitedCountChange}
+              />
+            </>
+          ))}
+
+        <DialogFooter>
+          <Button
+            type="submit"
+            disabled={!selectedAgentId || form.formState.isSubmitting || isExecuting}
+          >
+            {isExecuting ? t("evaluationExtractionRun:running") : t("evaluationExtractionRun:run")}
+          </Button>
+        </DialogFooter>
+      </form>
+    </Form>
+  )
+}
+
+function AgentField({
+  control,
   agents,
-  selectedAgentId,
   onAgentChange,
 }: {
+  control: Control<RunFormValues>
   agents: Agent[]
-  selectedAgentId: string | null
-  onAgentChange: (agentId: string) => void
+  onAgentChange: () => void
 }) {
   const { t } = useTranslation()
 
   return (
-    <div className="flex flex-col gap-2">
-      <Label>{t("evaluationExtractionRun:agent")}</Label>
-      <Select value={selectedAgentId ?? undefined} onValueChange={onAgentChange}>
-        <SelectTrigger className="w-full">
-          <SelectValue placeholder={t("evaluationExtractionRun:agentPlaceholder")} />
-        </SelectTrigger>
-        <SelectContent>
-          {agents.map((agent) => (
-            <SelectItem key={agent.id} value={agent.id}>
-              {agent.name}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-    </div>
+    <FormField
+      control={control}
+      name="agentId"
+      render={({ field }) => (
+        <FormItem>
+          <FormLabel>{t("evaluationExtractionRun:agent")}</FormLabel>
+          <Select
+            value={field.value || undefined}
+            onValueChange={(agentId) => {
+              field.onChange(agentId)
+              onAgentChange()
+            }}
+          >
+            <FormControl>
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder={t("evaluationExtractionRun:agentPlaceholder")} />
+              </SelectTrigger>
+            </FormControl>
+            <SelectContent>
+              {agents.map((agent) => (
+                <SelectItem key={agent.id} value={agent.id}>
+                  {agent.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <FormMessage />
+        </FormItem>
+      )}
+    />
+  )
+}
+
+function AgentVersionField({
+  control,
+  history,
+  effectiveRevision,
+}: {
+  control: Control<RunFormValues>
+  history: AgentSettings[]
+  effectiveRevision: number | null
+}) {
+  const { t } = useTranslation()
+
+  // The newest non-draft revision: the one the agent actually runs with.
+  const publishedRevision = findPublishedVersion(history)?.revision
+
+  const buildVersionDetail = (agentVersion: AgentSettings) => {
+    if (agentVersion.isDraft) return t("status:draft")
+    if (agentVersion.revision === publishedRevision)
+      return t("evaluationExtractionRun:version.current", {
+        date: buildDate(agentVersion.updatedAt),
+      })
+    return buildDate(agentVersion.updatedAt)
+  }
+
+  return (
+    <FormField
+      control={control}
+      name="selectedRevision"
+      render={({ field }) => (
+        <FormItem>
+          <FormLabel>{t("evaluationExtractionRun:version.label")}</FormLabel>
+          <Select
+            value={effectiveRevision !== null ? String(effectiveRevision) : undefined}
+            onValueChange={(value) => {
+              const parsed = Number.parseInt(value, 10)
+              if (!Number.isNaN(parsed)) field.onChange(parsed)
+            }}
+            disabled={history.length === 0}
+          >
+            <FormControl>
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder={t("evaluationExtractionRun:version.placeholder")} />
+              </SelectTrigger>
+            </FormControl>
+            <SelectContent>
+              {history.map((agentVersion) => (
+                <SelectItem key={agentVersion.revision} value={String(agentVersion.revision)}>
+                  {t("evaluationExtractionRun:version.item", {
+                    revision: agentVersion.revision,
+                    detail: buildVersionDetail(agentVersion),
+                  })}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <FormMessage />
+        </FormItem>
+      )}
+    />
   )
 }
 

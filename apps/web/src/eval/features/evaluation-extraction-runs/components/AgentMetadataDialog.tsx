@@ -10,21 +10,32 @@ import {
 import { ExternalLinkIcon, InfoIcon } from "lucide-react"
 import { useMemo } from "react"
 import { useTranslation } from "react-i18next"
+import { findVersion } from "@/common/features/agents/agent-settings/agent-settings.functions"
+import {
+  selectAgentSettingsDataByAgentId,
+  selectAgentSettingsHistoryDataByAgentId,
+} from "@/common/features/agents/agent-settings/agent-settings.selectors"
 import { selectAgentsData } from "@/common/features/agents/agents.selectors"
 import { selectCurrentOrganizationId } from "@/common/features/organizations/organizations.selectors"
 import { selectCurrentProjectId } from "@/common/features/projects/projects.selectors"
 import { useAbility } from "@/common/hooks/use-ability"
 import { useCurrentId, useValue } from "@/common/hooks/use-value"
+import { ADS } from "@/common/store/async-data-status"
+import { useAppSelector } from "@/common/store/hooks"
 import { StudioRoutes } from "@/studio/routes/helpers"
 
 export function AgentMetadataDialog({
   agentId,
+  revision,
   buttonProps = {
     variant: "outline",
     size: "sm",
   },
 }: {
   agentId: string
+  // Settings revision pinned on the run; when set, the dialog shows that
+  // version's settings instead of the agent's current ones.
+  revision?: number
   buttonProps?: React.ComponentProps<typeof Button>
 }) {
   const { t } = useTranslation()
@@ -36,6 +47,20 @@ export function AgentMetadataDialog({
   const agent = useMemo(() => {
     return agentsData.find((entry) => entry.id === agentId) ?? null
   }, [agentsData, agentId])
+
+  const currentAgentSettings = useValue(
+    selectAgentSettingsDataByAgentId({ agentId: agent?.id ?? "" }),
+  )
+  const historyData = useAppSelector(
+    selectAgentSettingsHistoryDataByAgentId({ agentId: agent?.id ?? "", includeDraft: true }),
+  )
+  // Falls back to the current settings when the pinned version is not in the
+  // history anymore (e.g. it was archived).
+  const pinnedAgentSettings =
+    revision !== undefined && ADS.isFulfilled(historyData)
+      ? findVersion(historyData.value, revision)
+      : undefined
+  const agentSettings = pinnedAgentSettings ?? currentAgentSettings
 
   const studioUrl = StudioRoutes.agent.build({ organizationId, projectId, agentId })
   const canAccessStudio = abilities.canAccessStudio({ projectId })
@@ -53,7 +78,7 @@ export function AgentMetadataDialog({
           <DialogTitle>{t("evaluationExtractionRun:agentMetadata.title")}</DialogTitle>
         </DialogHeader>
 
-        {!agent ? (
+        {!agent || !agentSettings ? (
           <p className="text-sm text-muted-foreground">
             {t("evaluationExtractionRun:agentMetadata.notFound")}
           </p>
@@ -61,22 +86,28 @@ export function AgentMetadataDialog({
           <div className="flex flex-col gap-4">
             <div className="grid grid-cols-[auto_1fr] gap-x-6 gap-y-3 rounded-lg border p-4">
               <MetadataField label={t("evaluationExtractionRun:agent")} value={agent.name} />
+              {revision !== undefined && (
+                <MetadataField
+                  label={t("evaluationExtractionRun:version.label")}
+                  value={t("evaluationExtractionRun:version.revision", { revision })}
+                />
+              )}
               <MetadataField
                 label={t("evaluationExtractionRun:agentMetadata.model")}
-                value={agent.model}
+                value={agentSettings.model}
                 mono
               />
               <MetadataField
                 label={t("evaluationExtractionRun:agentMetadata.temperature")}
-                value={String(agent.temperature)}
+                value={String(agentSettings.temperature)}
               />
               <MetadataField
                 label={t("evaluationExtractionRun:agentMetadata.locale")}
-                value={agent.locale}
+                value={agentSettings.locale}
               />
               <MetadataField
                 label={t("evaluationExtractionRun:agentMetadata.documentsRagMode")}
-                value={agent.documentsRagMode}
+                value={agentSettings.documentsRagMode}
               />
             </div>
 
@@ -85,17 +116,17 @@ export function AgentMetadataDialog({
                 {t("evaluationExtractionRun:agentMetadata.prompt")}
               </span>
               <pre className="overflow-auto max-h-48 rounded-lg border bg-muted/50 p-3 text-sm font-mono whitespace-pre-wrap">
-                {agent.instructions}
+                {agentSettings.instructions}
               </pre>
             </div>
 
-            {agent.outputJsonSchema && (
+            {agentSettings.outputJsonSchema && (
               <div className="flex flex-col gap-1.5">
                 <span className="text-sm font-medium">
                   {t("evaluationExtractionRun:agentMetadata.outputSchema")}
                 </span>
                 <pre className="overflow-auto max-h-48 rounded-lg border bg-muted/50 p-3 text-sm font-mono whitespace-pre-wrap">
-                  {JSON.stringify(agent.outputJsonSchema, null, 2)}
+                  {JSON.stringify(agentSettings.outputJsonSchema, null, 2)}
                 </pre>
               </div>
             )}

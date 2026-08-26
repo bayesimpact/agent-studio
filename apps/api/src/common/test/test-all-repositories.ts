@@ -31,6 +31,8 @@ import { Organization } from "@/domains/organizations/organization.entity"
 import { Project } from "@/domains/projects/project.entity"
 import { AgentEmbedConfig } from "@/domains/public-chat/agent-embed-configs/agent-embed-config.entity"
 import { PublicAgentSession } from "@/domains/public-chat/public-agent-sessions/public-agent-session.entity"
+import { PublicAgentSessionCategory } from "@/domains/public-chat/public-agent-sessions/public-agent-session-category.entity"
+import { Role } from "@/domains/rbac/role.entity"
 import { ResourceLibrary } from "@/domains/resource-libraries/resource-library.entity"
 import { ReviewCampaign } from "@/domains/review-campaigns/review-campaign.entity"
 import { ReviewerSessionReview } from "@/domains/review-campaigns/reviewer-session-reviews/reviewer-session-review.entity"
@@ -73,7 +75,9 @@ export type AllRepositories = {
   organizationRepository: Repository<Organization>
   projectAgentSessionCategoryRepository: Repository<ProjectAgentSessionCategory>
   projectRepository: Repository<Project>
+  roleRepository: Repository<Role>
   publicAgentSessionRepository: Repository<PublicAgentSession>
+  publicAgentSessionCategoryRepository: Repository<PublicAgentSessionCategory>
   resourceLibraryRepository: Repository<ResourceLibrary>
   reviewCampaignRepository: Repository<ReviewCampaign>
   reviewerSessionReviewRepository: Repository<ReviewerSessionReview>
@@ -124,7 +128,9 @@ export function buildAllRepositories(
     organizationRepository: getRepository(Organization),
     projectAgentSessionCategoryRepository: getRepository(ProjectAgentSessionCategory),
     projectRepository: getRepository(Project),
+    roleRepository: getRepository(Role),
     publicAgentSessionRepository: getRepository(PublicAgentSession),
+    publicAgentSessionCategoryRepository: getRepository(PublicAgentSessionCategory),
     resourceLibraryRepository: getRepository(ResourceLibrary),
     reviewCampaignRepository: getRepository(ReviewCampaign),
     reviewerSessionReviewRepository: getRepository(ReviewerSessionReview),

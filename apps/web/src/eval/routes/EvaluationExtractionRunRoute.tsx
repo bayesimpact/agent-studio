@@ -81,6 +81,9 @@ function WithData() {
 
             <div className="flex gap-2">
               <RunStatusBadge status={run.status} />
+              <Badge variant="secondary">
+                {t("evaluationExtractionRun:version.revision", { revision: run.agentRevision })}
+              </Badge>
               {isFinished && (
                 <Badge variant="secondary">
                   {t("evaluationExtractionRun:results.duration", {
@@ -116,6 +119,7 @@ function WithData() {
             <AgentMetadataDialog
               buttonProps={{ variant: "outline", size: "sm" }}
               agentId={run.agentId}
+              revision={run.agentRevision}
             />
             <DeleteEvaluationExtractionRunButton
               buttonProps={{ variant: "secondary", size: "icon" }}

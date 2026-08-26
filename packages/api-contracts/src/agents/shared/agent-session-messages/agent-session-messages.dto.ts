@@ -2,15 +2,42 @@ import type { TimeType } from "../../../generic"
 
 export enum ToolName {
   FillForm = "fillForm",
-  RetrieveProjectDocumentChunks = "retrieveProjectDocumentChunks",
+  LookupKnowledgeBase = "lookup_knowledge_base",
   Sources = "sources",
   RecalculateConversationSessionMetadata = "recalculateConversationSessionMetadata",
   McpSearchResources = "search_resources",
   McpSmartSearch = "smart_search",
   SurfaceResources = "surfaceResources",
+  /**
+   * Composite turn-summary tool exposed to the LLM: one call carries the
+   * used chunkIds (sources) and/or the session categorization. Its execution
+   * is logged as separate Sources / RecalculateConversationSessionMetadata
+   * entries so persisted tool calls and the UI keep their historical names.
+   */
+  MandatoryTool = "mandatory_tool",
 }
 
 export type AgentSessionToolName = ToolName | (string & {})
+
+/**
+ * MCP App attached to a tool. The `ui://` pointer is persisted; `html` is the
+ * current `resources/read` result, hydrated when messages are loaded so card
+ * UI updates apply to old conversations.
+ */
+export type AgentSessionMcpAppDto = {
+  mcpServerId: string
+  resourceUri: string
+  html?: string
+}
+
+export type AgentSessionToolCallDto = {
+  id: string
+  name: AgentSessionToolName
+  arguments: Record<string, unknown>
+  /** Raw MCP tool result (`content`, `structuredContent`, `_meta`) when an MCP App is rendered. */
+  result?: unknown
+  mcpApp?: AgentSessionMcpAppDto
+}
 
 export type AgentSessionMessageDto = {
   id: string
@@ -21,11 +48,13 @@ export type AgentSessionMessageDto = {
   createdAt?: TimeType
   startedAt?: TimeType
   completedAt?: TimeType
-  toolCalls?: Array<{
-    id: string
-    name: AgentSessionToolName
-    arguments: Record<string, unknown>
-  }>
+  /**
+   * Revision of the agent settings that produced this message. The client also sets it on the
+   * assistant message it builds optimistically, from the version the request named, so the badge
+   * stays right until the persisted message replaces it.
+   */
+  agentRevision?: number
+  toolCalls?: AgentSessionToolCallDto[]
 }
 
 export const agentSessionMessageAttachmentAllowedMimeTypes = [

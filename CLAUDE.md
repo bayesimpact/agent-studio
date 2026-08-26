@@ -7,6 +7,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 This is a Turborepo monorepo with the following structure:
 
 - `apps/api` - NestJS backend application (runs on port 3000)
+- `apps/pdf-renderer` - Dedicated NestJS service converting PDFs to PNG page images for image-only LLMs (runs on port 3001)
 - `apps/web` - Vite + React frontend application (runs on port 5173)
 - `packages/@caseai-connect/api-contracts` - Shared API contracts and DTOs
 - `packages/@repo/jest-config` - Shared Jest configurations

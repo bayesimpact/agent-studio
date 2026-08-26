@@ -9,6 +9,17 @@ import { McpServer } from "./mcp-server.entity"
 export type McpServerConfig = {
   url: string
   apiKey?: string
+  /**
+   * Static headers sent on every call to this server, for whatever a given
+   * server expects beyond its auth (an API version, a tenant). Stored in the
+   * encrypted config blob, so adding them needs no migration. The conversation
+   * context is applied after them and cannot be overridden here.
+   */
+  headers?: Record<string, string>
+}
+
+export type EnabledMcpServer = McpServerConfig & {
+  id: string
 }
 
 @Injectable()
@@ -21,7 +32,7 @@ export class McpServersService {
     private readonly encryptionService: EncryptionService,
   ) {}
 
-  async getEnabledServersForAgent(agentId: string): Promise<McpServerConfig[]> {
+  async getEnabledServersForAgent(agentId: string): Promise<EnabledMcpServer[]> {
     const agentMcpServers = await this.agentMcpServerRepository.find({
       where: { agentId, enabled: true },
       relations: ["mcpServer"],
@@ -29,7 +40,10 @@ export class McpServersService {
 
     return agentMcpServers
       .filter((agentMcpServer) => agentMcpServer.mcpServer)
-      .map((agentMcpServer) => this.decryptConfig(agentMcpServer.mcpServer))
+      .map((agentMcpServer) => ({
+        id: agentMcpServer.mcpServer.id,
+        ...this.decryptConfig(agentMcpServer.mcpServer),
+      }))
   }
 
   async createPreset(slug: string, name: string, config: McpServerConfig): Promise<McpServer> {

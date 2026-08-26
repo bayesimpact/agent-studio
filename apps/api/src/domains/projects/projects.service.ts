@@ -1,38 +1,38 @@
 import type { FeatureFlagKey } from "@caseai-connect/api-contracts"
-import { Injectable } from "@nestjs/common"
-import { InjectRepository } from "@nestjs/typeorm"
-import { In, type Repository } from "typeorm"
+import { Injectable, NotFoundException } from "@nestjs/common"
 import type { RequiredConnectScope } from "@/common/entities/connect-required-fields"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
 import { TransactionService } from "@/common/transaction/transaction.service"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
+import { PermissionService } from "@/domains/rbac/permission.service"
+// biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
 import { DocumentTagsService } from "../documents/tags/document-tags.service"
-import { FeatureFlag } from "../feature-flags/feature-flag.entity"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
 import { ProjectMembershipsService } from "./memberships/project-memberships.service"
-import { Project } from "./project.entity"
+import { ProjectModel } from "./project.model"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
 import { ProjectRepository } from "./project.repository"
 
 @Injectable()
 export class ProjectsService {
   constructor(
-    @InjectRepository(Project) private readonly projectRepository: Repository<Project>,
-    @InjectRepository(FeatureFlag) private readonly featureFlagRepository: Repository<FeatureFlag>,
+    private readonly projectRepository: ProjectRepository,
     private readonly projectMembershipsService: ProjectMembershipsService,
     private readonly documentTagsService: DocumentTagsService,
     private readonly transactionService: TransactionService,
-    private readonly projectsRepository: ProjectRepository,
+    private readonly permissionService: PermissionService,
   ) {}
 
   async createProject(params: {
     organizationId: string
     userId: string
     name: string
-  }): Promise<Project> {
-    const project = this.projectRepository.create(params)
-    await this.projectRepository.save(project)
-    await this.projectMembershipsService.createProjectOwnerMembership({
+  }): Promise<ProjectModel> {
+    const project = await this.projectRepository.createProject({
+      organizationId: params.organizationId,
+      name: params.name,
+    })
+    const membership = await this.projectMembershipsService.createProjectOwnerMembership({
       projectId: project.id,
       userId: params.userId,
     })
@@ -40,52 +40,84 @@ export class ProjectsService {
       organizationId: params.organizationId,
       projectId: project.id,
     })
-    return project
+
+    // the membership carries the RBAC role it was created with: ask RBAC what that role grants
+    const permissions = membership.roleId
+      ? await this.permissionService.listPermissionsForRole(membership.roleId)
+      : []
+    return new ProjectModel(
+      { ...project, featureFlags: [], agentSessionCategories: [] },
+      permissions,
+    )
   }
 
+  async listUserProjects(userId: string): Promise<ProjectModel[]> {
+    // all the project ids the user has access to, along with their permissions
+    const permissionsByProjectId = await this.permissionService.listResourcePermissions(
+      userId,
+      "project.read",
+    )
+
+    return this.projectRepository.findAllByIds(permissionsByProjectId)
+  }
+
+  /**
+   * Org-scoped listing: RBAC decides WHICH projects the user sees, but the
+   * response (ProjectDto) carries no permissions, so entities are returned.
+   */
   async listProjects({
     organizationId,
     userId,
   }: {
     organizationId: string
     userId: string
-  }): Promise<Project[]> {
-    const memberships = await this.projectMembershipsService.listMembershipsForUser(userId)
-    const projectIds = memberships.map((membership) => membership.projectId)
-    if (projectIds.length === 0) {
-      return []
+  }): Promise<ProjectModel[]> {
+    const permissionsByProjectId = await this.permissionService.listResourcePermissions(
+      userId,
+      "project.read",
+    )
+
+    return this.projectRepository.findAllByOrganizationIdAndIds(
+      organizationId,
+      permissionsByProjectId,
+    )
+  }
+
+  async updateProject({
+    projectId,
+    name,
+    conversationRetentionDays,
+    userId,
+  }: {
+    projectId: string
+    name: string
+    conversationRetentionDays?: number | null
+    userId: string
+  }): Promise<ProjectModel> {
+    const updates: { name: string; conversationRetentionDays?: number | null } = { name }
+    // undefined = do not change; null = keep forever
+    if (conversationRetentionDays !== undefined) {
+      updates.conversationRetentionDays = conversationRetentionDays
+    }
+    const updated = await this.projectRepository.updateProject(projectId, updates)
+    if (!updated) {
+      throw new NotFoundException(`Project ${projectId} not found`)
     }
 
-    return this.projectRepository.find({
-      where: { organizationId, id: In(projectIds) },
-      relations: { featureFlags: true, projectAgentSessionCategories: true },
-      order: { createdAt: "DESC" },
-    })
+    const permissionsByProjectId = await this.permissionService.listResourcePermissions(
+      userId,
+      "project.read",
+    )
+    return new ProjectModel(
+      { ...updated, featureFlags: [], agentSessionCategories: [] },
+      permissionsByProjectId.get(updated.id) ?? [],
+    )
   }
 
-  async getProject(organizationId: string, projectId: string): Promise<Project | undefined> {
-    const project = await this.projectRepository.findOne({
-      where: { id: projectId, organizationId },
-      relations: { featureFlags: true, projectAgentSessionCategories: true },
-    })
-    return project ?? undefined
-  }
-
-  async updateProject(
-    project: Project,
-    updates: { name: string; conversationRetentionDays?: number | null },
-  ): Promise<Project> {
-    project.name = updates.name
-    if (updates.conversationRetentionDays !== undefined) {
-      project.conversationRetentionDays = updates.conversationRetentionDays
-    }
-    return this.projectRepository.save(project)
-  }
-
-  async deleteProject(project: Project): Promise<void> {
+  async deleteProject(projectId: string): Promise<void> {
     await this.transactionService.run(async () => {
-      await this.projectsRepository.softDelete(project.id)
-      await this.projectMembershipsService.deleteMembership({ projectId: project.id })
+      await this.projectRepository.softDelete(projectId)
+      await this.projectMembershipsService.deleteMembership({ projectId })
     })
   }
 
@@ -96,13 +128,9 @@ export class ProjectsService {
     connectScope: RequiredConnectScope
     feature: FeatureFlagKey
   }): Promise<boolean> {
-    const flag = await this.featureFlagRepository.findOne({
-      where: {
-        projectId: connectScope.projectId,
-        featureFlagKey: feature,
-        enabled: true,
-      },
+    return this.projectRepository.isFeatureEnabled({
+      projectId: connectScope.projectId,
+      feature,
     })
-    return flag !== null
   }
 }

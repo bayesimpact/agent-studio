@@ -3,85 +3,14 @@
     "agent": "Agent",
     "agents": "Agents",
     "selectAgent": "Select Agent",
-    "settings": "Agent Settings",
     "props": {
       "createdAt": "Created At",
-      "instructions": "Instructions",
-      "formConfiguration": "Form Configuration",
-      "greeting": "Greeting",
-      "documentsRagMode": "Answer source",
-      "locale": "Locale",
       "name": "Name",
-      "model": "Model",
-      "outputJsonSchema": "Output JSON Schema",
-      "fillFormEnabled": "Form filling",
-      "schemaBuilder": {
-        "advancedMode": "Advanced mode",
-        "visualMode": "Visual editor",
-        "addField": "Add field",
-        "removeField": "Remove field",
-        "empty": "No fields yet. Add a field to get started.",
-        "fieldName": "Field name",
-        "fieldNameEmpty": "Set field name",
-        "fieldNamePlaceholder": "e.g. country",
-        "type": "Type",
-        "description": "Description",
-        "descriptionEmpty": "Add description",
-        "descriptionPlaceholder": "Question or hint the assistant uses to fill this field",
-        "expandDescription": "Expand",
-        "required": "Required",
-        "dragHandle": "Drag to reorder",
-        "orderQuestions": "Ask questions in this order",
-        "orderQuestionsHint": "When on, the assistant asks for each field in the order below. Turn off to let it choose the order.",
-        "enumValuesEmpty": "Add choices",
-        "enumValues_one": "{{count}} choice",
-        "enumValues_other": "{{count}} choices",
-        "enumValuesPlaceholder": "Add a choice",
-        "enumValueAdd": "Add choice",
-        "enumValueRemove": "Remove choice {{value}}",
-        "enumValuesHint": "The assistant may only pick one of these values.",
-        "rangeEmpty": "Set range",
-        "rangeBoth": "{{min}} – {{max}}",
-        "rangeMinOnly": "Min {{min}}",
-        "rangeMaxOnly": "Max {{max}}",
-        "rangeMin": "Minimum",
-        "rangeMax": "Maximum",
-        "rangeHint": "Optional. Leave a bound empty to keep that side unbounded.",
-        "types": {
-          "string": "Text",
-          "number": "Number",
-          "boolean": "Yes / No",
-          "array": "List",
-          "enum": "Choice",
-          "object": "Object"
-        }
-      },
-      "temperature": "Temperature",
-      "updatedAt": "Updated At",
-      "documentTags": "Document Tags",
-      "agentSessionCategories": "Conversation categories",
-      "agentSessionCategoriesInUse": "Categories already used in this agent's conversations cannot be unchecked.",
-      "documentsRagModeOptions": {
-        "none": "Answer from model knowledge only",
-        "all": "Search across all documents",
-        "tags": "Search by document tags"
-      },
       "placeholders": {
-        "name": "Enter agent name",
-        "instructions": "Enter instructions for the agent to follow when responding to user input",
-        "greeting": "Optional greeting the agent sends first when a new conversation starts",
-        "documentsRagMode": "Select document usage",
-        "model": "Select model",
-        "outputJsonSchema": "{\n \"type\": \"object\", \"properties\": {\n    \"field\": { \"type\": \"string\", \"description\": \"blablabla\" }\n  },\n  \"required\": [\"field\"]\n}",
-        "temperature": "Enter temperature 0.0 - 2.0",
-        "locale": "Select language for agent responses"
+        "name": "Enter agent name"
       },
       "validation": {
-        "nameMinLength": "Name must be at least 3 characters",
-        "promptRequired": "Instructions are required",
-        "temperatureInvalid": "Temperature must be between 0.0 and 2.0",
-        "outputJsonSchemaRequired": "Output JSON schema is required",
-        "outputJsonSchemaInvalid": "Output JSON schema must be a valid JSON object"
+        "nameMinLength": "Name must be at least 3 characters"
       }
     },
     "create": {
@@ -126,98 +55,14 @@
       "title": "Agents",
       "description": "Manage agents for {{projectName}}"
     },
-    "defaultPromptDialog": {
-      "title": "Instructions",
-      "description": "These instructions define the behavior of the agent.",
-      "button": "View Instructions"
-    },
-    "tabs": {
-      "general": "General",
-      "model": "Model",
-      "output": "Output",
-      "sources": "Sources",
-      "resourceLibraries": "Resource libraries",
-      "tools": "Tools",
-      "categories": "Conversation categories",
-      "orchestration": "Orchestration",
-      "embed": "Embed",
-      "mcpServers": "MCP Servers"
-    },
-    "mcpServers": {
-      "label": "MCP Servers",
-      "manage": "Manage servers",
-      "emptyTitle": "No MCP servers",
-      "emptyDescription": "Add MCP servers to this project to give your agents access to external tools."
-    },
-    "unsavedChanges": {
-      "title": "Unsaved changes",
-      "description": "You have unsaved changes that will be lost. Do you want to discard them?"
-    },
-    "history": {
-      "button": "History",
-      "title": "Version history",
-      "description": "Browse, compare and restore previous settings of {{name}}.",
-      "loadError": "Failed to load version history",
-      "revisionLabel": "Version {{revision}}",
-      "currentBadge": "Current",
-      "compareWithPrevious": "Changes in this version",
-      "compareWithCurrent": "Compare with current",
-      "comparing": "Showing changes from version {{before}} to version {{after}}.",
-      "noChangesTitle": "No differences",
-      "noChangesDescription": "These two versions have identical settings.",
-      "onlyVersionTitle": "Only one version",
-      "onlyVersionDescription": "This agent has a single settings version, so there is nothing to compare yet.",
-      "restore": "Restore this version",
-      "restoreDialog": {
-        "title": "Restore version {{revision}}?",
-        "description": "The settings of version {{revision}} will be copied as a new version and become the current settings. No version is deleted."
+    "model": {
+      "deprecatedSuffix": "(deprecated)",
+      "nonEuSuffix": "(non-EU)",
+      "deprecation": {
+        "title": "ACTION REQUIRED: {{model}} is being retired on {{date}}",
+        "description": "Update this agent to {{replacement}} and re-test it before that date. After it, runs on {{model}} will start failing."
       }
     },
-    "orchestration": {
-      "selectedTitle": "Sub-agents",
-      "availableTitle": "Available conversation agents",
-      "emptyTitle": "No sub-agents",
-      "emptyDescription": "This agent answers directly without delegating to another agent.",
-      "noAvailableAgents": "No other conversation agents are available.",
-      "missingAgent": "Missing agent",
-      "add": "Add",
-      "remove": "Remove",
-      "enabled": "Enabled",
-      "disabled": "Disabled",
-      "toolName": "Tool name",
-      "toolNamePlaceholder": "ask_specialist_agent",
-      "description": "Tool description",
-      "defaultDescription": "Route specialized requests to {{name}}."
-    },
-    "embed": {
-      "loading": "Loading embed configuration…",
-      "loadError": "Failed to load embed configuration.",
-      "enabledLabel": "Enable embed",
-      "enabledDescription": "Allow {{name}} to be embedded on external websites via an iframe.",
-      "snippetLabel": "Embed snippet",
-      "snippetDescription": "Paste this <script> tag before the closing </body> tag on any page where you want the chat widget to appear.",
-      "snippetHint": "Optional attributes: data-color=\"#2563eb\" (button color), data-locale=\"fr\" (widget language), data-display-mode=\"drawer\" (side panel instead of bubble), data-hint=\"Need help?\" (tooltip shown on load and hover).",
-      "allowedOriginsLabel": "Allowed origins",
-      "allowedOriginsDescription": "Comma-separated list of allowed origins (e.g. https://app.example.com). Leave empty to allow all origins.",
-      "allowedOriginsPlaceholder": "https://app.example.com, https://staging.example.com",
-      "titleLabel": "Widget title",
-      "titleDescription": "Title shown in the chat header. Defaults to {{name}} when left empty.",
-      "logoUrlLabel": "Logo URL",
-      "logoUrlDescription": "URL of the logo image shown in the chat header.",
-      "logoUrlPlaceholder": "https://example.com/logo.png",
-      "primaryColorLabel": "Brand color",
-      "primaryColorDescription": "Primary color used in the chat widget header. Enter a hex value (e.g. #2563eb)."
-    },
-    "playground": "Playground",
-    "source_one": "{{count}} source",
-    "source_other": "{{count}} sources",
-    "source_zero": "No sources",
-    "tools": {
-      "fillForm": {
-        "title": "Form filling",
-        "description": "Let the agent fill a structured form from the user's answers during the conversation.",
-        "schemaDescription": "Define the form fields the agent should fill. The field order is the order in which the agent asks its questions."
-      }
-    }
+    "playground": "Playground"
   }
 }

@@ -1,0 +1,210 @@
+{
+  "agentSettings": {
+    "agentSettings": "Paramètres de l'agent",
+    "agentSettingsHistory": "Historique des paramètres de l'agent",
+    "selectAgentSettings": "Sélectionner les paramètres de l'agent",
+    "props": {
+      "createdAt": "Créé le",
+      "instructions": "Instructions",
+      "formConfiguration": "Configuration du formulaire",
+      "greeting": "Message d'accueil",
+      "documentsRagMode": "Source de réponse",
+      "locale": "Langue",
+      "model": "Modèle",
+      "outputJsonSchema": "Schéma JSON de sortie",
+      "fillFormEnabled": "Remplissage de formulaire",
+      "schemaBuilder": {
+        "advancedMode": "Mode avancé",
+        "visualMode": "Éditeur visuel",
+        "addField": "Ajouter un champ",
+        "removeField": "Supprimer le champ",
+        "empty": "Aucun champ pour le moment. Ajoutez un champ pour commencer.",
+        "fieldName": "Nom du champ",
+        "fieldNameEmpty": "Définir le nom du champ",
+        "fieldNamePlaceholder": "ex. pays",
+        "type": "Type",
+        "description": "Description",
+        "descriptionEmpty": "Ajouter une description",
+        "descriptionPlaceholder": "Question ou indice que l'assistant utilise pour remplir ce champ",
+        "expandDescription": "Agrandir",
+        "required": "Obligatoire",
+        "dragHandle": "Glisser pour réordonner",
+        "orderQuestions": "Poser les questions dans cet ordre",
+        "orderQuestionsHint": "Activé, l'assistant demande chaque champ dans l'ordre ci-dessous. Désactivez pour le laisser choisir l'ordre.",
+        "enumValuesEmpty": "Ajouter des choix",
+        "enumValues_one": "{{count}} choix",
+        "enumValues_other": "{{count}} choix",
+        "enumValuesPlaceholder": "Ajouter un choix",
+        "enumValueAdd": "Ajouter un choix",
+        "enumValueRemove": "Supprimer le choix {{value}}",
+        "enumValuesHint": "L'assistant ne peut choisir qu'une de ces valeurs.",
+        "rangeEmpty": "Définir une plage",
+        "rangeBoth": "{{min}} – {{max}}",
+        "rangeMinOnly": "Min {{min}}",
+        "rangeMaxOnly": "Max {{max}}",
+        "rangeMin": "Minimum",
+        "rangeMax": "Maximum",
+        "rangeHint": "Facultatif. Laissez une borne vide pour ne pas limiter ce côté.",
+        "types": {
+          "string": "Texte",
+          "number": "Nombre",
+          "boolean": "Oui / Non",
+          "array": "Liste",
+          "enum": "Choix",
+          "object": "Objet"
+        }
+      },
+      "temperature": "Température",
+      "updatedAt": "Mis à jour le",
+      "documentTags": "Étiquettes de document",
+      "agentSessionCategories": "Catégories de conversation",
+      "agentSessionCategoriesInUse": "Les catégories déjà utilisées dans les conversations de cet agent ne peuvent pas être décochées.",
+      "documentsRagModeOptions": {
+        "none": "Répondre sans consulter de documents",
+        "all": "Rechercher dans tous les documents",
+        "tags": "Recherche dans les documents étiquetés"
+      },
+      "placeholders": {
+        "instructions": "Entrez les instructions que l'agent doit suivre pour répondre aux entrées de l'utilisateur",
+        "greeting": "Message d'accueil facultatif envoyé par l'agent au début d'une nouvelle conversation",
+        "documentsRagMode": "Sélectionnez l'usage des documents",
+        "model": "Sélectionnez le modèle",
+        "outputJsonSchema": "{\n \"type\": \"object\", \"properties\": {\n    \"field\": { \"type\": \"string\", \"description\": \"blablabla\" }\n  },\n  \"required\": [\"field\"]\n}",
+        "temperature": "Entrez la température 0.0 - 2.0",
+        "locale": "Sélectionnez la langue pour les réponses de l'agent"
+      },
+      "validation": {
+        "nameMinLength": "Le nom doit comporter au moins 3 caractères",
+        "promptRequired": "Les instructions sont requises",
+        "temperatureInvalid": "La température doit être comprise entre 0,0 et 2,0",
+        "outputJsonSchemaRequired": "Le schéma JSON de sortie est requis",
+        "outputJsonSchemaInvalid": "Le schéma JSON de sortie doit être un objet JSON valide"
+      }
+    },
+    "defaultPromptDialog": {
+      "title": "Instructions",
+      "description": "Ces instructions définissent le comportement de l'agent.",
+      "button": "Voir les instructions"
+    },
+    "tabs": {
+      "general": "Général",
+      "model": "Modèle",
+      "output": "Sortie",
+      "sources": "Sources",
+      "resourceLibraries": "Bibliothèques de ressources",
+      "tools": "Outils",
+      "categories": "Catégories de conversation",
+      "orchestration": "Orchestration",
+      "embed": "Intégration",
+      "mcpServers": "Serveurs MCP"
+    },
+    "mcpServers": {
+      "label": "Serveurs MCP",
+      "manage": "Gérer les serveurs",
+      "emptyTitle": "Aucun serveur MCP",
+      "emptyDescription": "Ajoutez des serveurs MCP à ce projet pour donner à vos agents accès à des outils externes."
+    },
+    "unsavedChanges": {
+      "title": "Modifications non enregistrées",
+      "description": "Vous avez des modifications non enregistrées qui seront perdues. Voulez-vous les abandonner ?"
+    },
+    "create": {
+      "button": "Enregistrer la version",
+      "noDraft": "Aucun brouillon à créer. Enregistrez une modification pour créer une nouvelle version brouillon.",
+      "unsavedChanges": "Enregistrez ou annulez vos modifications avant de publier.",
+      "optional": "Facultatif",
+      "props": {
+        "revisionName": "Nom de la version",
+        "revisionDesc": "Description de la version",
+        "placeholders": {
+          "revisionName": "Nommez cette version",
+          "revisionDesc": "Décrivez ce qui a changé dans cette version"
+        }
+      },
+      "dialog": {
+        "title": "Enregistrer la version {{revision}} ?",
+        "description": "La version {{revision}} devient les paramètres utilisés par cet agent. Les modifications suivantes créeront une nouvelle version brouillon.",
+        "submit": "Enregistrer la version"
+      }
+    },
+    "history": {
+      "button": "Historique",
+      "title": "Historique des versions",
+      "description": "Parcourez, comparez et restaurez les paramètres précédents de {{name}}.",
+      "loadError": "Échec du chargement de l'historique des versions",
+      "revisionLabel": "Version {{revision}}",
+      "currentBadge": "Actuelle",
+      "revisionBadge": "v{{revision}}",
+      "revisionBadgeAria": "Version {{revision}} des paramètres de l'agent",
+      "messageRevisionTooltip": "Répondu avec la version {{revision}}",
+      "runRevisionTooltip": "Extrait avec la version {{revision}}",
+      "headerRevisionTooltip": "Les nouveaux messages utilisent la version {{revision}}",
+      "compareWithPrevious": "Changements de cette version",
+      "compareWithCurrent": "Comparer avec l'actuelle",
+      "compareWithDraft": "Comparer avec le brouillon",
+      "comparing": "Changements de la version {{before}} à la version {{after}}.",
+      "noChangesTitle": "Aucune différence",
+      "noChangesDescription": "Ces deux versions ont des paramètres identiques.",
+      "onlyVersionTitle": "Une seule version",
+      "onlyVersionDescription": "Cet agent n'a qu'une seule version de paramètres, il n'y a donc rien à comparer pour le moment.",
+      "restore": "Restaurer cette version",
+      "restoreDialog": {
+        "title": "Restaurer la version {{revision}} ?",
+        "description": "Les paramètres de la version {{revision}} seront copiés comme nouvelle version et deviendront les paramètres actuels. Aucune version n'est supprimée."
+      },
+      "draft": "Brouillon"
+    },
+    "version": {
+      "ariaLabel": "Version des paramètres utilisée par les nouveaux messages",
+      "extractionAriaLabel": "Version des paramètres utilisée par les extractions",
+      "placeholder": "Sélectionner une version",
+      "item": "v{{revision}} — {{detail}}",
+      "current": "Actuelle ({{date}})"
+    },
+    "orchestration": {
+      "selectedTitle": "Sous-agents",
+      "availableTitle": "Agents conversationnels disponibles",
+      "emptyTitle": "Aucun sous-agent",
+      "emptyDescription": "Cet agent répond directement sans déléguer à un autre agent.",
+      "noAvailableAgents": "Aucun autre agent conversationnel n'est disponible.",
+      "missingAgent": "Agent manquant",
+      "add": "Ajouter",
+      "remove": "Retirer",
+      "enabled": "Activé",
+      "disabled": "Désactivé",
+      "toolName": "Nom de l'outil",
+      "toolNamePlaceholder": "ask_specialist_agent",
+      "description": "Description de l'outil",
+      "defaultDescription": "Transmettre les demandes spécialisées à {{name}}."
+    },
+    "embed": {
+      "loading": "Chargement de la configuration d'intégration…",
+      "loadError": "Impossible de charger la configuration d'intégration.",
+      "enabledLabel": "Activer l'intégration",
+      "enabledDescription": "Permettre à {{name}} d'être intégré sur des sites externes via un iframe.",
+      "snippetLabel": "Extrait d'intégration",
+      "snippetDescription": "Collez cette balise <script> avant la balise </body> fermante sur chaque page où vous souhaitez afficher le widget de chat.",
+      "snippetHint": "Attributs optionnels : data-color=\"#2563eb\" (couleur du bouton), data-locale=\"fr\" (langue du widget), data-display-mode=\"drawer\" (panneau latéral au lieu d'une bulle), data-hint=\"Besoin d'aide ?\" (infobulle affichée au chargement et au survol).",
+      "allowedOriginsLabel": "Origines autorisées",
+      "allowedOriginsDescription": "Liste d'origines autorisées séparées par des virgules (ex. https://app.example.com). Laissez vide pour autoriser toutes les origines.",
+      "allowedOriginsPlaceholder": "https://app.example.com, https://staging.example.com",
+      "titleLabel": "Titre du widget",
+      "titleDescription": "Titre affiché dans l'en-tête du chat. Correspond au nom {{name}} si laissé vide.",
+      "logoUrlLabel": "URL du logo",
+      "logoUrlDescription": "URL de l'image du logo affichée dans l'en-tête du chat.",
+      "logoUrlPlaceholder": "https://example.com/logo.png",
+      "primaryColorLabel": "Couleur principale",
+      "primaryColorDescription": "Couleur principale utilisée dans l'en-tête du widget de chat. Saisissez une valeur hexadécimale (ex. #2563eb)."
+    },
+    "source_one": "{{count}} source",
+    "source_other": "{{count}} sources",
+    "source_zero": "Aucune source",
+    "tools": {
+      "fillForm": {
+        "title": "Remplissage de formulaire",
+        "description": "Permet à l'agent de remplir un formulaire structuré à partir des réponses de l'utilisateur pendant la conversation.",
+        "schemaDescription": "Définissez les champs du formulaire que l'agent doit remplir. L'ordre des champs est l'ordre dans lequel l'agent pose ses questions."
+      }
+    }
+  }
+}

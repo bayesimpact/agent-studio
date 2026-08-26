@@ -86,11 +86,19 @@ export function buildChitChatConversation(
   agentSettings: AgentSettings,
   params: BuildAgentConversationParams = {},
 ): [AgentMessage, AgentMessage] {
+  // The answer comes after the question. Both messages would otherwise be stamped with the
+  // same millisecond-precision date, leaving `ORDER BY created_at` ambiguous so the order
+  // callers get back depends on the query plan. Production never sets `createdAt` — Postgres
+  // fills it per insert at microsecond precision — so only fixtures can collide.
+  const askedAt = new Date()
+  const answeredAt = new Date(askedAt.getTime() + 1000)
+
   const userMessage = agentMessageFactory
     .user()
     .transient({ organization, project, session, agentSettings })
     .build({
       content: "Hello",
+      createdAt: askedAt,
       ...params.userMessage,
     })
 
@@ -99,6 +107,7 @@ export function buildChitChatConversation(
     .transient({ organization, project, session, agentSettings })
     .build({
       content: "Hi!",
+      createdAt: answeredAt,
       ...params.assistantMessage,
     })
 

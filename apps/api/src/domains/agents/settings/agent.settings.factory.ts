@@ -9,7 +9,15 @@ type AgentSettingsTransientParams = RequiredScopeTransientParams & {
   agent: Agent
 }
 
-class AgentSettingsFactory extends Factory<AgentSettings, AgentSettingsTransientParams> {}
+class AgentSettingsFactory extends Factory<AgentSettings, AgentSettingsTransientParams> {
+  draft() {
+    return this.params({ isDraft: true })
+  }
+
+  archived() {
+    return this.params({ isArchived: true })
+  }
+}
 
 export const agentSettingsFactory = AgentSettingsFactory.define(
   ({ sequence, params, transientParams }) => {
@@ -39,6 +47,8 @@ export const agentSettingsFactory = AgentSettingsFactory.define(
       projectId: transientParams.project.id,
       agentId: transientParams.agent.id,
       agent: transientParams.agent,
+      isDraft: params.isDraft ?? false,
+      isArchived: params.isArchived ?? false,
       createdAt: params.createdAt || now,
       updatedAt: params.updatedAt || now,
       deletedAt: params.deletedAt || null,

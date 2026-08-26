@@ -11,11 +11,12 @@ import type {
 } from "@/common/features/agents/agent-sessions/conversation/conversation-agent-sessions.models"
 import type { ExtractionAgentSessions } from "@/common/features/agents/agent-sessions/extraction/extraction-agent-sessions.models"
 import type { AgentSessionMessage } from "@/common/features/agents/agent-sessions/shared/agent-session-messages/agent-session-messages.models"
+import type { AgentSettings } from "@/common/features/agents/agent-settings/agent-settings.models"
 import type { Agent } from "@/common/features/agents/agents.models"
 import type { User } from "@/common/features/me/me.models"
 import { organizationFactory } from "@/common/features/organizations/organization.factory"
 import type { Organization } from "@/common/features/organizations/organizations.models"
-import type { Project } from "@/common/features/projects/projects.models"
+import type { MyProject, Project } from "@/common/features/projects/projects.models"
 import { ADS, type AsyncData, defaultAsyncData } from "@/common/store/async-data-status"
 import type {
   EvaluationConversationDataset,
@@ -26,6 +27,11 @@ import type {
   EvaluationConversationRunRecord,
   PaginatedEvaluationConversationRunRecords,
 } from "@/eval/features/evaluation-conversation-runs/evaluation-conversation-runs.models"
+import type { EvaluationExtractionDataset } from "@/eval/features/evaluation-extraction-datasets/evaluation-extraction-datasets.models"
+import type {
+  EvaluationExtractionRun,
+  EvaluationExtractionRunRecord,
+} from "@/eval/features/evaluation-extraction-runs/evaluation-extraction-runs.models"
 import type { AgentMembership } from "@/studio/features/agent-memberships/agent-memberships.models"
 import type { AgentMessageFeedback } from "@/studio/features/agent-message-feedback/agent-message-feedback.models"
 import type { AgentSubAgent } from "@/studio/features/agent-sub-agents/agent-sub-agents.models"
@@ -133,6 +139,11 @@ export const seed = {
     )
   },
 
+  /** Seeds `projects.mine` (all projects the current user can access, across organizations). */
+  myProjects(projects: MyProject[]): StoryPreloadedState {
+    return { projects: { mine: ads.fulfilled(projects) } }
+  },
+
   projects(projects: Project[], options: { currentId?: string | null } = {}): StoryPreloadedState {
     const currentId = options.currentId ?? projects[0]?.id ?? null
     return mergeSeeds(
@@ -200,6 +211,15 @@ export const seed = {
     return { conversationAgentSessions: { data } }
   },
 
+  /** Form definition the session panel renders when the agent has the fillForm tool enabled. */
+  fillFormOutputJsonSchema(
+    outputJsonSchema: AgentSettings["outputJsonSchema"],
+  ): StoryPreloadedState {
+    return {
+      conversationAgentSessions: { fillFormOutputJsonSchema: ads.fulfilled(outputJsonSchema) },
+    }
+  },
+
   conversationSubSessions(
     subSessionsByParentSessionId: Record<string, ConversationSubSession[]>,
   ): StoryPreloadedState {
@@ -224,8 +244,17 @@ export const seed = {
     return { extractionAgentSessions: { data } }
   },
 
+  /** Documents the extraction playground offers as extraction inputs. */
+  extractionAgentSessionDocuments(documents: Document[]): StoryPreloadedState {
+    return { extractionAgentSessions: { documents: ads.fulfilled(documents) } }
+  },
+
   currentAgentSessionId(id: string | null): StoryPreloadedState {
     return { currentIds: { agentSessionId: id } }
+  },
+
+  currentExtractionRunId(id: string | null): StoryPreloadedState {
+    return { currentIds: { extractionRunId: id } }
   },
 
   agentSessionMessages(messages: AgentSessionMessage[]): StoryPreloadedState {
@@ -311,8 +340,34 @@ export const seed = {
       return { agentSubAgents: { data: ads.fulfilled(subAgents) } }
     },
 
-    agentHistory(versions: Agent[]): StoryPreloadedState {
-      return { agentHistory: { data: ads.fulfilled(versions) } }
+    agentHistory({
+      agentId,
+      versions,
+    }: {
+      agentId: string
+      versions: AgentSettings[]
+    }): StoryPreloadedState {
+      return {
+        agentSettings: {
+          history: {
+            [agentId]: ads.fulfilled(versions),
+          },
+        },
+      }
+    },
+
+    playgroundRevision({
+      agentId,
+      revision,
+    }: {
+      agentId: string
+      revision: number
+    }): StoryPreloadedState {
+      return {
+        agentSettings: {
+          playgroundRevisionByAgentId: { [agentId]: revision },
+        },
+      }
     },
   },
 
@@ -409,6 +464,43 @@ export const seed = {
     ): StoryPreloadedState {
       return {
         conversationRuns: {
+          // Seed the run ids too so the route's setComparisonRunIds sees the
+          // same comparison and does not reset the seeded records on mount.
+          comparisonRunIds: Object.keys(recordsByRunId),
+          comparisonRecords: ads.fulfilled(recordsByRunId),
+        },
+      }
+    },
+
+    extractionDatasets(
+      datasets: EvaluationExtractionDataset[],
+      options: { currentId?: string | null } = {},
+    ): StoryPreloadedState {
+      const currentId = options.currentId ?? null
+      return mergeSeeds(
+        { extractionDatasets: { data: ads.fulfilled(datasets) } },
+        { currentIds: { datasetId: currentId } },
+      )
+    },
+
+    extractionRuns(
+      runs: EvaluationExtractionRun[],
+      options: { currentId?: string | null } = {},
+    ): StoryPreloadedState {
+      const currentId = options.currentId ?? null
+      const currentRun = runs.find((run) => run.id === currentId)
+      return mergeSeeds(
+        { extractionRuns: { data: ads.fulfilled(runs), currentRunId: currentId } },
+        currentRun ? { extractionRuns: { currentRun: ads.fulfilled(currentRun) } } : {},
+        { currentIds: { runId: currentId } },
+      )
+    },
+
+    extractionRunsComparison(
+      recordsByRunId: Record<string, EvaluationExtractionRunRecord[]>,
+    ): StoryPreloadedState {
+      return {
+        extractionRuns: {
           // Seed the run ids too so the route's setComparisonRunIds sees the
           // same comparison and does not reset the seeded records on mount.
           comparisonRunIds: Object.keys(recordsByRunId),

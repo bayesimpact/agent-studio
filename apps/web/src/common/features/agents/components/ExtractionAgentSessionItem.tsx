@@ -32,10 +32,16 @@ export function ExtractionSessionItem({
   agentSession,
   className,
   canDelete = true,
+  renderRevisionBadge,
 }: {
   agentSession: ExtractionAgentSessionSummary
   className?: string
   canDelete?: boolean
+  /**
+   * Labels the run with the agent settings version it ran with. A render prop because the badge
+   * reads the settings history from the store, which only Studio loads.
+   */
+  renderRevisionBadge?: (revision: number) => React.ReactNode
 }) {
   const { t } = useTranslation()
   const dispatch = useAppDispatch()
@@ -83,6 +89,7 @@ export function ExtractionSessionItem({
             {badge}
           </span>
         </GridCard.Badge>
+        {renderRevisionBadge?.(agentSession.agentRevision)}
       </div>
 
       <GridCard.Body>
@@ -117,10 +124,16 @@ export function CsvExtractionSessionItem({
   agentSession,
   className,
   canDelete = true,
+  renderRevisionBadge,
 }: {
   agentSession: AgentCsvExtractionRun
   className?: string
   canDelete?: boolean
+  /**
+   * Labels the run with the agent settings version it ran with. A render prop because the badge
+   * reads the settings history from the store, which only Studio loads.
+   */
+  renderRevisionBadge?: (revision: number) => React.ReactNode
 }) {
   const { t } = useTranslation()
   const dispatch = useAppDispatch()
@@ -157,6 +170,7 @@ export function CsvExtractionSessionItem({
       <div className="flex gap-2">
         <GridCard.Badge variant="outline">CSV</GridCard.Badge>
         <GridCard.Badge variant={isSuccess ? "secondary" : "destructive"}>{badge}</GridCard.Badge>
+        {renderRevisionBadge?.(agentSession.agentRevision)}
       </div>
       <GridCard.Body>
         <GridCard.Title>{date}</GridCard.Title>

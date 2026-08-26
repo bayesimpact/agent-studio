@@ -35,8 +35,7 @@ export const userFactory = UserFactory.define(({ params, transientParams }) => {
     id: params.id ?? faker.string.uuid(),
     email: params.email ?? faker.internet.email({ firstName, lastName }).toLowerCase(),
     name: params.name ?? `${firstName} ${lastName}`,
-    isBackofficeAuthorized: params.isBackofficeAuthorized ?? false,
-    isTermsManagementAuthorized: params.isTermsManagementAuthorized ?? false,
+    globalPermissions: params.globalPermissions ?? [],
     termsAccepted: params.termsAccepted ?? true,
     memberships: {
       organizationMemberships,

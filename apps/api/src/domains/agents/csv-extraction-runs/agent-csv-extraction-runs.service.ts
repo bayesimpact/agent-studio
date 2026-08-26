@@ -1,8 +1,9 @@
 import { Inject, Injectable, NotFoundException, UnprocessableEntityException } from "@nestjs/common"
 import { InjectRepository } from "@nestjs/typeorm"
-import type { Repository } from "typeorm"
+import { IsNull, type Repository } from "typeorm"
 import { ConnectRepository } from "@/common/entities/connect-repository"
 import type { RequiredConnectScope } from "@/common/entities/connect-required-fields"
+import type { BaseAgentSessionType } from "@/domains/agents/base-agent-sessions/base-agent-sessions.types"
 import { toAgentWithSettingsRunJobPayload } from "@/domains/agents/shared/agent-with-settings-run.helper"
 import type { AgentCsvExtractionRunColumnSchema } from "./agent-csv-extraction-run.entity"
 import { AgentCsvExtractionRun } from "./agent-csv-extraction-run.entity"
@@ -44,12 +45,18 @@ export class AgentCsvExtractionRunsService {
       agentSettingsId: string
       csvDocumentId: string
       columnSchema: AgentCsvExtractionRunColumnSchema
+      type: BaseAgentSessionType
+      userId: string
     }
   }): Promise<AgentCsvExtractionRun> {
     return this.runConnectRepository.createAndSave(connectScope, {
       agentSettingsId: fields.agentSettingsId,
       csvDocumentId: fields.csvDocumentId,
       columnSchema: fields.columnSchema,
+      type: fields.type,
+      // Explicit rather than relying on the connectScope spread: org admins and owners have no
+      // project membership, so the scope's userId is undefined for them.
+      userId: fields.userId,
       status: "pending",
       summary: null,
       csvExportDocumentId: null,
@@ -69,12 +76,22 @@ export class AgentCsvExtractionRunsService {
   async listRuns({
     connectScope,
     agentId,
+    type,
+    userId,
   }: {
     connectScope: RequiredConnectScope
     agentId: string
+    type: BaseAgentSessionType
+    userId: string
   }): Promise<AgentCsvExtractionRun[]> {
+    // Per-user, like extraction agent sessions. Runs created before ownership was tracked have
+    // no creator and stay visible to every member rather than vanishing from all lists.
+    const scopedRun = { agentSettings: { agentId }, type }
     const runs = await this.runConnectRepository.find(connectScope, {
-      where: { agentSettings: { agentId } },
+      where: [
+        { ...scopedRun, userId },
+        { ...scopedRun, userId: IsNull() },
+      ],
       relations: { agentSettings: true },
       order: { createdAt: "DESC" },
     })

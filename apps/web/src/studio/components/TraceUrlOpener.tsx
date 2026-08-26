@@ -1,7 +1,8 @@
 import { Button } from "@caseai-connect/ui/shad/button"
 import { ExternalLinkIcon } from "lucide-react"
 import { useEffect, useState } from "react"
-import { useAbility } from "@/common/hooks/use-ability"
+import { selectCanViewTraces } from "@/common/features/me/me.selectors"
+import { useAppSelector } from "@/common/store/hooks"
 
 export function TraceUrlOpener({
   traceUrl,
@@ -10,11 +11,11 @@ export function TraceUrlOpener({
   traceUrl?: string
   buttonProps?: React.ComponentProps<typeof Button>
 }) {
-  const { isPremiumMember } = useAbility()
+  const canViewTraces = useAppSelector(selectCanViewTraces)
   const [isShown, setIsShown] = useState(false)
 
   useEffect(() => {
-    if (!isPremiumMember) return
+    if (!canViewTraces) return
 
     function keyDownHandler(e: globalThis.KeyboardEvent) {
       if (traceUrl && e.key === "Control") {
@@ -26,9 +27,9 @@ export function TraceUrlOpener({
     document.removeEventListener("keydown", keyDownHandler)
     document.addEventListener("keydown", keyDownHandler)
     return () => document.removeEventListener("keydown", keyDownHandler)
-  }, [traceUrl, isPremiumMember])
+  }, [traceUrl, canViewTraces])
 
-  if (!traceUrl || !isPremiumMember || !isShown) return null
+  if (!traceUrl || !canViewTraces || !isShown) return null
   return (
     <Button asChild variant="ghost" {...buttonProps}>
       <a href={traceUrl} className="cursor-pointer" target="_blank" rel="noreferrer">

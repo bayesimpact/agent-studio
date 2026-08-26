@@ -10,7 +10,12 @@ import {
   teardownE2eTestDatabase,
 } from "@/common/test/test-database"
 import { createOrganizationWithOwner } from "@/domains/organizations/organization.factory"
+import { RbacModule } from "@/domains/rbac/rbac.module"
 import { mockAuth0EmailForSub, setupUserGuardForTesting } from "../../../../test/e2e.helpers"
+import {
+  assignPlatformSuperadminToUser,
+  ensureRbacCatalog,
+} from "../../../../test/rbac-test.helpers"
 import { expectResponse, type Requester, testRequester } from "../../../../test/request"
 import { BackofficeModule } from "../backoffice.module"
 
@@ -23,14 +28,12 @@ describe("Backoffice - Auth", () => {
   let accessToken: string | null = "token"
   let auth0Id = `auth0|${randomUUID()}`
 
-  const originalAuthorizedEmails = process.env.BACKOFFICE_AUTHORIZED_EMAILS
-  const originalAuthorizedDomain = process.env.BACKOFFICE_AUTHORIZED_DOMAIN
-
   beforeAll(async () => {
     setup = await setupE2eTestDatabase({
-      additionalImports: [BackofficeModule],
+      additionalImports: [BackofficeModule, RbacModule],
       applyOverrides: (moduleBuilder) => setupUserGuardForTesting(moduleBuilder, () => auth0Id),
     })
+    await ensureRbacCatalog(setup.module)
     repositories = setup.getAllRepositories()
     app = setup.module.createNestApplication()
     await app.init()
@@ -41,21 +44,6 @@ describe("Backoffice - Auth", () => {
     await clearTestDatabase(setup.dataSource)
     accessToken = "token"
     auth0Id = `auth0|${randomUUID()}`
-    delete process.env.BACKOFFICE_AUTHORIZED_DOMAIN
-    delete process.env.BACKOFFICE_AUTHORIZED_EMAILS
-  })
-
-  afterEach(() => {
-    if (originalAuthorizedEmails === undefined) {
-      delete process.env.BACKOFFICE_AUTHORIZED_EMAILS
-    } else {
-      process.env.BACKOFFICE_AUTHORIZED_EMAILS = originalAuthorizedEmails
-    }
-    if (originalAuthorizedDomain === undefined) {
-      delete process.env.BACKOFFICE_AUTHORIZED_DOMAIN
-    } else {
-      process.env.BACKOFFICE_AUTHORIZED_DOMAIN = originalAuthorizedDomain
-    }
   })
 
   afterAll(async () => {
@@ -67,8 +55,7 @@ describe("Backoffice - Auth", () => {
     const { user } = await createOrganizationWithOwner(repositories, {
       user: { auth0Id, email: mockAuth0EmailForSub(auth0Id) },
     })
-    process.env.BACKOFFICE_AUTHORIZED_DOMAIN = "@example.com"
-    process.env.BACKOFFICE_AUTHORIZED_EMAILS = user.email
+    await assignPlatformSuperadminToUser({ repositories, user })
     return user
   }
 
@@ -84,19 +71,10 @@ describe("Backoffice - Auth", () => {
       expectResponse(await subject(), 401, AUTH_ERRORS.NO_ACCESS_TOKEN)
     })
 
-    it("rejects users whose email domain is not in BACKOFFICE_AUTHORIZED_DOMAIN", async () => {
+    it("rejects users without the backoffice.read permission", async () => {
       await createOrganizationWithOwner(repositories, {
         user: { auth0Id, email: mockAuth0EmailForSub(auth0Id) },
       })
-      process.env.BACKOFFICE_AUTHORIZED_DOMAIN = "@other-domain.test"
-      expectResponse(await subject(), 403, AUTH_ERRORS.UNAUTHORIZED_RESOURCE)
-    })
-
-    it("rejects when BACKOFFICE_AUTHORIZED_DOMAIN is unset", async () => {
-      await createOrganizationWithOwner(repositories, {
-        user: { auth0Id, email: mockAuth0EmailForSub(auth0Id) },
-      })
-      delete process.env.BACKOFFICE_AUTHORIZED_DOMAIN
       expectResponse(await subject(), 403, AUTH_ERRORS.UNAUTHORIZED_RESOURCE)
     })
 
@@ -118,11 +96,10 @@ describe("Backoffice - Auth", () => {
       expectResponse(await subject(), 401, AUTH_ERRORS.NO_ACCESS_TOKEN)
     })
 
-    it("rejects users whose email domain is not in BACKOFFICE_AUTHORIZED_DOMAIN", async () => {
+    it("rejects users without the backoffice.read permission", async () => {
       await createOrganizationWithOwner(repositories, {
         user: { auth0Id, email: mockAuth0EmailForSub(auth0Id) },
       })
-      process.env.BACKOFFICE_AUTHORIZED_DOMAIN = "@other-domain.test"
       expectResponse(await subject(), 403, AUTH_ERRORS.UNAUTHORIZED_RESOURCE)
     })
 
@@ -145,11 +122,10 @@ describe("Backoffice - Auth", () => {
       expectResponse(await subject(), 401, AUTH_ERRORS.NO_ACCESS_TOKEN)
     })
 
-    it("rejects users whose email domain is not in BACKOFFICE_AUTHORIZED_DOMAIN", async () => {
+    it("rejects users without the backoffice.read permission", async () => {
       await createOrganizationWithOwner(repositories, {
         user: { auth0Id, email: mockAuth0EmailForSub(auth0Id) },
       })
-      process.env.BACKOFFICE_AUTHORIZED_DOMAIN = "@other-domain.test"
       expectResponse(await subject(), 403, AUTH_ERRORS.UNAUTHORIZED_RESOURCE)
     })
 
@@ -173,11 +149,10 @@ describe("Backoffice - Auth", () => {
       expectResponse(await subject(randomUUID()), 401, AUTH_ERRORS.NO_ACCESS_TOKEN)
     })
 
-    it("rejects unauthorized users", async () => {
+    it("rejects users without the backoffice.read permission", async () => {
       await createOrganizationWithOwner(repositories, {
         user: { auth0Id, email: mockAuth0EmailForSub(auth0Id) },
       })
-      process.env.BACKOFFICE_AUTHORIZED_DOMAIN = "@other-domain.test"
       expectResponse(await subject(randomUUID()), 403, AUTH_ERRORS.UNAUTHORIZED_RESOURCE)
     })
   })
@@ -195,11 +170,10 @@ describe("Backoffice - Auth", () => {
       expectResponse(await subject(randomUUID()), 401, AUTH_ERRORS.NO_ACCESS_TOKEN)
     })
 
-    it("rejects unauthorized users", async () => {
+    it("rejects users without the backoffice.read permission", async () => {
       await createOrganizationWithOwner(repositories, {
         user: { auth0Id, email: mockAuth0EmailForSub(auth0Id) },
       })
-      process.env.BACKOFFICE_AUTHORIZED_DOMAIN = "@other-domain.test"
       expectResponse(await subject(randomUUID()), 403, AUTH_ERRORS.UNAUTHORIZED_RESOURCE)
     })
   })

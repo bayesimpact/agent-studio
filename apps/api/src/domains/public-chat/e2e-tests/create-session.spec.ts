@@ -9,6 +9,8 @@ import {
   setupE2eTestDatabase,
   teardownE2eTestDatabase,
 } from "@/common/test/test-database"
+import { agentSettingsFactory } from "@/domains/agents/settings/agent.settings.factory"
+import type { AgentSettings } from "@/domains/agents/settings/agent-settings.entity"
 import { createOrganizationWithAgent } from "@/domains/organizations/organization.factory"
 import { sdk } from "@/external/llm/open-telemetry-init"
 import { agentEmbedConfigFactory } from "../agent-embed-configs/agent-embed-config.factory"
@@ -41,14 +43,17 @@ describe("PublicChat - createSession", () => {
     await app.close()
   })
 
-  const createContext = async () => {
-    const { organization, project, agent } = await createOrganizationWithAgent(repositories)
+  const createContext = async (params?: { agentSettings?: Partial<AgentSettings> }) => {
+    const { organization, project, agent, agentSettings } = await createOrganizationWithAgent(
+      repositories,
+      params?.agentSettings ? { agentSettings: params.agentSettings } : {},
+    )
     const embedConfig = agentEmbedConfigFactory
       .transient({ organization, project, agent })
       .build({ isEnabled: true })
     await repositories.agentEmbedConfigRepository.save(embedConfig)
     embedToken = embedConfig.embedToken
-    return { organization, project, agent, embedConfig }
+    return { organization, project, agent, agentSettings, embedConfig }
   }
 
   const subject = (payload?: { externalVisitorId?: string }) =>
@@ -119,6 +124,50 @@ describe("PublicChat - createSession", () => {
       where: { id: response.body.data.sessionId },
     })
     expect(savedSession?.externalVisitorId).toBeNull()
+  })
+
+  it("greets with the last published revision, not the newer draft (#636)", async () => {
+    const { organization, project, agent, agentSettings } = await createContext({
+      agentSettings: { greetingMessage: "Published greeting" },
+    })
+    await repositories.agentSettingsRepository.save(
+      agentSettingsFactory
+        .draft()
+        .transient({ organization, project, agent })
+        .build({ revision: agentSettings.revision + 1, greetingMessage: "Draft greeting" }),
+    )
+
+    const response = await subject()
+
+    expect(response.status).toBe(201)
+    const messages = await repositories.agentMessageRepository.find({
+      where: { sessionId: response.body.data.sessionId },
+    })
+    expect(messages).toHaveLength(1)
+    expect(messages[0]?.content).toBe("Published greeting")
+    expect(messages[0]?.agentSettingsId).toBe(agentSettings.id)
+  })
+
+  it("greets with the last non-archived revision (#636)", async () => {
+    const { organization, project, agent, agentSettings } = await createContext({
+      agentSettings: { greetingMessage: "Published greeting" },
+    })
+    await repositories.agentSettingsRepository.save(
+      agentSettingsFactory
+        .archived()
+        .transient({ organization, project, agent })
+        .build({ revision: agentSettings.revision + 1, greetingMessage: "Archived greeting" }),
+    )
+
+    const response = await subject()
+
+    expect(response.status).toBe(201)
+    const messages = await repositories.agentMessageRepository.find({
+      where: { sessionId: response.body.data.sessionId },
+    })
+    expect(messages).toHaveLength(1)
+    expect(messages[0]?.content).toBe("Published greeting")
+    expect(messages[0]?.agentSettingsId).toBe(agentSettings.id)
   })
 
   it("each session call returns a unique sessionToken", async () => {

@@ -12,6 +12,7 @@ import { removeNullish } from "@/common/utils/remove-nullish"
 import { ActivitiesModule } from "@/domains/activities/activities.module"
 import { createOrganizationWithOwner } from "@/domains/organizations/organization.factory"
 import { setupUserGuardForTesting } from "../../../../test/e2e.helpers"
+import { ensureRbacCatalog } from "../../../../test/rbac-test.helpers"
 import { type Requester, testRequester } from "../../../../test/request"
 import { Project } from "../project.entity"
 import { ProjectsModule } from "../projects.module"
@@ -32,6 +33,7 @@ describe("Projects - createProject", () => {
       additionalImports: [ProjectsModule, ActivitiesModule],
       applyOverrides: (moduleBuilder) => setupUserGuardForTesting(moduleBuilder, () => auth0Id),
     })
+    await ensureRbacCatalog(setup.module)
     repositories = setup.getAllRepositories()
     expectCreateActivity = bindExpectActivityCreated(repositories.activityRepository)
     app = setup.module.createNestApplication()

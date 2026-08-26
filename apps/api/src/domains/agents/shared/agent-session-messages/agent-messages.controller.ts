@@ -1,5 +1,4 @@
 import {
-  type AgentSessionMessageDto,
   AgentSessionMessagesRoutes,
   agentSessionMessageAttachmentAllowedMimeTypes,
 } from "@caseai-connect/api-contracts"
@@ -36,9 +35,11 @@ import { UserGuard } from "@/domains/users/user.guard"
 import type { ConversationAgentSession } from "../../conversation-agent-sessions/conversation-agent-session.entity"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
 import { ConversationAgentSessionsService } from "../../conversation-agent-sessions/conversation-agent-sessions.service"
-import type { AgentMessage } from "./agent-message.entity"
+import { toDto, toDtos } from "./agent-message.helpers"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
 import { AgentMessageAttachmentDocumentsService } from "./agent-message-attachment-documents.service"
+// biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
+import { McpAppHtmlService } from "./mcp-app-html.service"
 
 @UseGuards(JwtAuthGuard, UserGuard, ResourceContextGuard, BaseAgentSessionGuard)
 @RequireContext("organization", "project", "agent", "agentSession")
@@ -49,6 +50,7 @@ export class AgentMessagesController {
     private readonly fileStorageService: IFileStorage,
     private readonly agentMessageAttachmentDocumentsService: AgentMessageAttachmentDocumentsService,
     private readonly conversationAgentSessionsService: ConversationAgentSessionsService,
+    private readonly mcpAppHtmlService: McpAppHtmlService,
   ) {}
 
   @CheckPolicy((policy) => policy.canList())
@@ -62,7 +64,12 @@ export class AgentMessagesController {
       agentSessionId,
       connectScope,
     })
-    return { data: messages.map(toDto) }
+    const htmlByKey = await this.mcpAppHtmlService.readLiveHtml({
+      agentId: request.agent.id,
+      sessionId: agentSessionId,
+      messages,
+    })
+    return { data: toDtos(messages, htmlByKey) }
   }
 
   @CheckPolicy((policy) => policy.canList())
@@ -79,7 +86,12 @@ export class AgentMessagesController {
     if (!message) {
       throw new NotFoundException("Message not found")
     }
-    return { data: toDto(message) }
+    const htmlByKey = await this.mcpAppHtmlService.readLiveHtml({
+      agentId: request.agent.id,
+      sessionId: request.agentSession.id,
+      messages: [message],
+    })
+    return { data: toDto(message, htmlByKey) }
   }
 
   @CheckPolicy((policy) => policy.canCreate())
@@ -152,19 +164,5 @@ export class AgentMessagesController {
         url: await this.fileStorageService.getTemporaryUrl(attachmentDocument.storageRelativePath),
       },
     }
-  }
-}
-
-function toDto(message: AgentMessage): AgentSessionMessageDto {
-  return {
-    id: message.id,
-    role: message.role,
-    content: message.content,
-    status: message.status ?? undefined,
-    createdAt: message.createdAt.getTime(),
-    startedAt: message.startedAt?.getTime(),
-    completedAt: message.completedAt?.getTime(),
-    toolCalls: (message.toolCalls as AgentSessionMessageDto["toolCalls"]) ?? undefined,
-    attachmentDocumentId: message.attachmentDocumentId ?? undefined,
   }
 }

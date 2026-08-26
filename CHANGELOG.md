@@ -9,16 +9,53 @@ This project uses [CalVer](https://calver.org/) (YY.MM.Micro) for product versio
 
 ### Added
 - Conversation retention (GDPR): conversations are now kept 30 days by default, on every workspace; a periodic job erases the content of older conversations (messages, tool calls, titles, form state, feedback text, attachments) and their Langfuse traces, while conversation counts, categories and feedback votes remain available in analytics. Workspace admins can change the duration, or clear it to keep conversations forever, in the workspace settings
-- Back-office administrators can create an organization directly from the organizations panel; the creating administrator becomes its owner
+- (beta) Gemma and MedGemma agents accept PDF documents in chat and extraction.
 
 ### Changed
-- Form agents are no longer a separate agent type: any conversation agent can now turn on "Form filling" from a new Tools tab, define the form fields with the visual schema editor (drag to set the order the agent asks its questions), and the agent fills the form from the user's answers during the chat; the collected values open from a "Show form state" button on the agent's replies; the agent creator still offers a "Form" choice, which now creates a conversation agent with form filling already enabled — existing form agents, with their sessions and settings history, are migrated to conversation agents with form filling enabled
+- PDF documents sent to Gemma and MedGemma agents are now converted to images by a dedicated service, so heavy PDF processing no longer slows down the platform.
 
 ### Fixed
-- Fix some scanned PDF documents importing with no extracted text
+- Chat shows an error message instead of an empty reply when the model fails.
+- Agent replies no longer show a leaked internal tool-call tag; the platform hides it and still runs the tool.
+- Chat: a server error carrying no message now ends the reply with an error instead of being dropped.
+- Agent and session pages now display correctly on small screens.
 
 ### Security
 
+## [26.08.0] - 2026-08-25
+
+### Added
+- Agents now have a draft and a published version of their settings.
+- Studio playground: each agent reply shows a version badge.
+- Studio playground: a version picker in the header selects the settings version for new messages.
+- Studio extraction agents: each run shows a version badge.
+- Studio extraction agents: a version picker selects the settings version for a run.
+- Extraction evaluations: a version picker selects the agent settings version for a run.
+- Extraction evaluations: each run shows the settings version it ran with.
+- Extraction evaluations: the run history is a table with one row per run.
+- Extraction evaluations: selected runs can be compared side by side.
+- Back-office administrators can create an organization from the organizations panel.
+- Embedded (public) agent sessions get a session title and categories, support form filling, and count in the category analytics.
+- Agents that run a retiring model show a banner with the retirement date and the replacement model.
+- (beta) Conversation chat shows the MCP App UI for tools that provide one.
+
+### Changed
+- Access control moves to a unified roles-and-permissions model (WIP).
+- Conversation agents report the session title, categories, and cited sources in one mandatory report, enforced by the platform.
+- Gemini models use the EU endpoint again; only gemini-3.6-flash uses the global endpoint (not available in the EU region).
+- gemini-2.5-flash and gemini-2.5-pro retire on 30 September 2026.
+- The Gemini 3.x models are available to every project.
+- Form agents are now merged with conversation agents.
+
+### Fixed
+- Agent editor: restoring a version updates the form fields immediately.
+- Scanned PDF documents now import with their extracted text.
+- Agent editor no longer crashes when the page reloads while the settings load.
+- CSV extraction runs from the Studio playground no longer show in the Desk app, and vice versa.
+- New CSV extraction runs are personal.
+- Studio no longer crashes when a project opens right after onboarding restarts.
+
+### Security
 ## [26.07.3] - 2026-07-24
 
 ### Added
@@ -30,6 +67,7 @@ This project uses [CalVer](https://calver.org/) (YY.MM.Micro) for product versio
 - (beta) Evaluations: conversation-agent evaluation moved from the Studio into the Evaluation app — build datasets of input/expected-output records (add them inline one after another or paste a batch as CSV), run them against a chosen version of an agent's settings in the background, and follow each run's scores (rated 0–5 by an LLM judge whose model you pick per run) live on its own report page; the run's "view agent" panel shows the exact settings version that was scored, and existing Studio evaluations are migrated into a "Studio evaluations" dataset per project
 
 ### Fixed
+- Conversation agents answer from their knowledge base instead of from memory: the retrieval tool was renamed and its description rewritten so that smaller models stop skipping the lookup and inventing an answer
 - Extraction runs: the run page updates live after cancelling a run, and refreshes when switching runs
 - Extraction document uploads are capped at 25 MB, with files over the limit rejected upfront
 - (beta) Evaluations: conversation and extraction runs now execute the agent exactly as the Studio does — same master prompt and same tools (document retrieval, sources, resource libraries, MCP servers, sub-agents) — so evaluation scores reflect the agent's real behaviour; previously evaluated agents ran with a legacy prompt and no tools at all

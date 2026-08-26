@@ -105,6 +105,8 @@ function toEvaluationExtractionRun(dto: EvaluationExtractionRunDto): EvaluationE
     id: dto.id,
     evaluationExtractionDatasetId: dto.evaluationExtractionDatasetId,
     agentId: dto.agentId,
+    agentSettingsId: dto.agentSettingsId,
+    agentRevision: dto.agentRevision,
     keyMapping: dto.keyMapping,
     status: dto.status,
     summary: dto.summary,

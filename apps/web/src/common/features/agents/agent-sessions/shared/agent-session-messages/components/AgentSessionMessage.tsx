@@ -24,11 +24,19 @@ import { Attachment } from "./Attachment"
 import { useFormResult } from "./form-result-context"
 import { useFormSubSessions } from "./form-sub-sessions-context"
 import { MarkdownWrapper } from "./MarkdownWrapper"
+import { McpAppView } from "./McpAppView"
+import { getRenderableMcpApp, hasRenderableMcpApp } from "./mcp-app-view"
 import { SourcesTool } from "./SourcesTool"
 import { SubAgentFormResultSheet } from "./SubAgentFormResultSheet"
 import { SurfaceResourcesTool } from "./SurfaceResourcesTool"
 
-export function AgentSessionMessage({ message }: { message: AgentSessionMessageType }) {
+export function AgentSessionMessage({
+  message,
+  renderMessageVersion,
+}: {
+  message: AgentSessionMessageType
+  renderMessageVersion?: (message: AgentSessionMessageType) => React.ReactNode
+}) {
   const formSubSessions = useFormSubSessions()
   const formResult = useFormResult()
 
@@ -43,6 +51,11 @@ export function AgentSessionMessage({ message }: { message: AgentSessionMessageT
       const surfaceResourcesTool = message.toolCalls?.find(
         (call) => call.name === ToolName.SurfaceResources,
       )
+      const mcpAppViews = (message.toolCalls ?? []).flatMap((toolCall) => {
+        const view = getRenderableMcpApp(toolCall)
+        return view ? [{ toolCall, view }] : []
+      })
+      const hideMarkdownRecap = !isStreaming && hasRenderableMcpApp(message.toolCalls)
       // Tool names this message delegated to that resolved to a form sub-session,
       // deduplicated so a sub-agent invoked twice shows a single affordance.
       const delegatedToolNames = [
@@ -62,11 +75,12 @@ export function AgentSessionMessage({ message }: { message: AgentSessionMessageT
             {isError ? (
               <Bubble variant="destructive">
                 <BubbleContent className="px-4 py-3">
-                  <ErrorMessage />
+                  <ErrorMessage detail={message.content} />
                 </BubbleContent>
               </Bubble>
             ) : (
-              hasContent && (
+              hasContent &&
+              !hideMarkdownRecap && (
                 <Bubble variant="muted">
                   <BubbleContent className="px-4 py-3">
                     <MarkdownWrapper content={message.content} />
@@ -79,11 +93,23 @@ export function AgentSessionMessage({ message }: { message: AgentSessionMessageT
               <SurfaceResourcesTool toolCall={surfaceResourcesTool} />
             )}
 
+            {!isStreaming &&
+              mcpAppViews.map(({ toolCall, view }) => (
+                <McpAppView
+                  key={toolCall.id}
+                  html={view.html}
+                  toolInput={view.toolInput}
+                  toolResult={view.toolResult}
+                />
+              ))}
+
             {!isStreaming && (
               <MessageFooter className="gap-0 px-1">
                 <FeedbackCreator message={message} />
 
-                <CopyToClipboard content={message.content} />
+                {!hideMarkdownRecap && <CopyToClipboard content={message.content} />}
+
+                {renderMessageVersion?.(message)}
 
                 {filledForm && formResult && (
                   <FormResultSheet
@@ -129,12 +155,21 @@ export function AgentSessionMessage({ message }: { message: AgentSessionMessageT
   }
 }
 
-function ErrorMessage() {
+/**
+ * Failed turns store the human-readable reason in the message content (e.g.
+ * "PDF has 92 pages, but at most 20 pages can be converted to images"), so
+ * show it under the generic label instead of leaving the user guessing.
+ */
+function ErrorMessage({ detail }: { detail: string }) {
   const { t } = useTranslation("status")
+  const trimmedDetail = detail.trim()
   return (
-    <div className="flex items-center gap-2">
-      <AlertCircleIcon className="size-4" />
-      <span className="font-semibold">{t("error")}</span>
+    <div className="flex flex-col gap-1">
+      <div className="flex items-center gap-2">
+        <AlertCircleIcon className="size-4" />
+        <span className="font-semibold">{t("error")}</span>
+      </div>
+      {trimmedDetail.length > 0 && <p className="whitespace-pre-wrap text-sm">{trimmedDetail}</p>}
     </div>
   )
 }
@@ -143,7 +178,9 @@ function ErrorMessage() {
 const TOOL_ACTIVITY_KEY: Record<string, string> = {
   [ToolName.McpSearchResources]: "activity.searchingResources",
   [ToolName.McpSmartSearch]: "activity.smartSearch",
-  [ToolName.RetrieveProjectDocumentChunks]: "activity.retrievingDocuments",
+  [ToolName.LookupKnowledgeBase]: "activity.lookupKnowledgeBase",
+  // Legacy wire name kept so sessions recorded before the rename still show a label.
+  retrieveProjectDocumentChunks: "activity.lookupKnowledgeBase",
   [ToolName.Sources]: "activity.gatheringSources",
   [ToolName.SurfaceResources]: "activity.surfacingResources",
   [ToolName.FillForm]: "activity.fillingForm",

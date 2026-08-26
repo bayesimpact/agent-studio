@@ -1,8 +1,7 @@
 import {
-  AgentModel,
-  AgentModelToAgentProvider,
-  AgentProvider,
+  type AgentModel,
   createEvaluationConversationRunSchema,
+  DEFAULT_AGENT_MODEL,
   EVALUATION_CONVERSATION_RUN_JUDGE_INSTRUCTIONS_MAX_LENGTH,
 } from "@caseai-connect/api-contracts"
 import { Button } from "@caseai-connect/ui/shad/button"
@@ -40,19 +39,21 @@ import { useTranslation } from "react-i18next"
 import { useNavigate } from "react-router-dom"
 import { z } from "zod"
 import { RunScopeSelector } from "@/common/components/shared/RunScopeSelector"
+import {
+  buildAgentModelOptions,
+  formatAgentModelLabel,
+} from "@/common/features/agents/agent-model.helpers"
+import type { AgentSettings } from "@/common/features/agents/agent-settings/agent-settings.models"
+import { selectAgentSettingsHistoryDataByAgentId } from "@/common/features/agents/agent-settings/agent-settings.selectors"
 import type { Agent } from "@/common/features/agents/agents.models"
 import { selectAgentsData } from "@/common/features/agents/agents.selectors"
 import { selectCurrentProjectData } from "@/common/features/projects/projects.selectors"
 import { useFeatureFlags } from "@/common/hooks/use-feature-flags"
 import { useValue } from "@/common/hooks/use-value"
-import { ADS } from "@/common/store/async-data-status"
 import { useAppDispatch, useAppSelector } from "@/common/store/hooks"
 import { buildDate } from "@/common/utils/build-date"
 import type { EvaluationConversationDataset } from "@/eval/features/evaluation-conversation-datasets/evaluation-conversation-datasets.models"
-import {
-  selectConversationRunAgentHistory,
-  selectIsExecutingConversationRun,
-} from "@/eval/features/evaluation-conversation-runs/evaluation-conversation-runs.selectors"
+import { selectIsExecutingConversationRun } from "@/eval/features/evaluation-conversation-runs/evaluation-conversation-runs.selectors"
 import { evaluationConversationRunsActions } from "@/eval/features/evaluation-conversation-runs/evaluation-conversation-runs.slice"
 import { useEvaluationConversationRunPath } from "@/eval/hooks/use-evaluation-conversation-run-path"
 
@@ -69,29 +70,10 @@ type RunFormValues = {
 const defaultRunFormValues: RunFormValues = {
   agentId: "",
   selectedRevision: null,
-  judgeModel: AgentModel.Gemini25Flash,
+  judgeModel: DEFAULT_AGENT_MODEL,
   judgeInstructions: "",
   runScope: "all",
   limitedCount: 1,
-}
-
-// Mirrors AgentModelTab.extractModelList: the Vertex provider models are always
-// available; the other provider groups are gated behind the matching project
-// feature flag. AgentModel._Mock is naturally excluded (its provider is _Mock).
-function extractJudgeModelList(
-  hasFeature: ReturnType<typeof useFeatureFlags>["hasFeature"],
-): [string, AgentModel][] {
-  const allEntries = Object.entries(AgentModel) as [string, AgentModel][]
-  const byProvider = (provider: AgentProvider) =>
-    allEntries.filter(([_key, value]) => AgentModelToAgentProvider[value] === provider)
-
-  const defaultModels = byProvider(AgentProvider.Vertex)
-  const medGemmaModels = hasFeature("medgemma") ? byProvider(AgentProvider.MedGemma) : []
-  const gemmaModels = hasFeature("gemma") ? byProvider(AgentProvider.Gemma) : []
-  const vertex3Models = hasFeature("vertex-3") ? byProvider(AgentProvider.Vertex3) : []
-  const mistralModels = hasFeature("mistral") ? byProvider(AgentProvider.Mistral) : []
-
-  return [...defaultModels, ...medGemmaModels, ...gemmaModels, ...vertex3Models, ...mistralModels]
 }
 
 export function RunEvaluationConversationDialog({
@@ -106,24 +88,15 @@ export function RunEvaluationConversationDialog({
   const agentsData = useValue(selectAgentsData)
   const project = useValue(selectCurrentProjectData)
   const { hasFeature } = useFeatureFlags(project)
-  const agentHistoryData = useAppSelector(selectConversationRunAgentHistory)
+
   const isExecuting = useAppSelector(selectIsExecutingConversationRun)
   const [open, setOpen] = useState(false)
 
-  const judgeModels = useMemo(() => extractJudgeModelList(hasFeature), [hasFeature])
+  const judgeModels = useMemo(() => buildAgentModelOptions(hasFeature), [hasFeature])
 
   const conversationAgents = useMemo(() => {
     return agentsData.filter((agent) => agent.type === "conversation")
   }, [agentsData])
-
-  const agentHistory = useMemo(() => {
-    if (!ADS.isFulfilled(agentHistoryData)) return []
-    return [...agentHistoryData.value].sort(
-      (olderVersion, newerVersion) => newerVersion.revision - olderVersion.revision,
-    )
-  }, [agentHistoryData])
-
-  const latestRevision = agentHistory[0]?.revision ?? null
 
   // Contract schema extended with the dialog-only fields and translated
   // validation messages (ADR 0012). Depends on latestRevision so the version
@@ -144,11 +117,11 @@ export function RunEvaluationConversationDialog({
           path: ["agentId"],
           message: t("evaluationConversationRun:agentPlaceholder"),
         })
-        .refine((values) => values.selectedRevision !== null || latestRevision !== null, {
+        .refine((values) => values.selectedRevision !== null, {
           path: ["selectedRevision"],
           message: t("evaluationConversationRun:version.placeholder"),
         }),
-    [t, latestRevision],
+    [t],
   )
 
   const form = useForm<RunFormValues>({
@@ -158,31 +131,31 @@ export function RunEvaluationConversationDialog({
   const { control, watch, setValue } = form
 
   const selectedAgentId = watch("agentId")
+
+  const agentSettingsHistory = useValue(
+    selectAgentSettingsHistoryDataByAgentId({ agentId: selectedAgentId ?? "", includeDraft: true }),
+  )
+
   const selectedRevision = watch("selectedRevision")
   const runScope = watch("runScope")
   const limitedCount = watch("limitedCount")
-
-  const isHistoryLoading = selectedAgentId !== "" && !ADS.isFulfilled(agentHistoryData)
-  const effectiveRevision = selectedRevision ?? latestRevision
 
   const handleOpenChange = useCallback(
     (nextOpen: boolean) => {
       setOpen(nextOpen)
       if (!nextOpen) {
         form.reset(defaultRunFormValues)
-        dispatch(evaluationConversationRunsActions.resetAgentHistory())
       }
     },
-    [dispatch, form],
+    [form],
   )
 
   const handleAgentChange = useCallback(
     (agentId: string) => {
+      setValue("agentId", agentId)
       setValue("selectedRevision", null)
-      dispatch(evaluationConversationRunsActions.resetAgentHistory())
-      dispatch(evaluationConversationRunsActions.getAgentHistory({ agentId }))
     },
-    [dispatch, setValue],
+    [setValue],
   )
 
   const handleLimitedCountChange = useCallback(
@@ -196,7 +169,7 @@ export function RunEvaluationConversationDialog({
   )
 
   const handleRun = form.handleSubmit(async (values) => {
-    const agentSettingsRevision = values.selectedRevision ?? latestRevision
+    const agentSettingsRevision = values.selectedRevision
     if (agentSettingsRevision === null) return
 
     const result = await dispatch(
@@ -248,9 +221,9 @@ export function RunEvaluationConversationDialog({
               {selectedAgentId && (
                 <AgentVersionField
                   control={control}
-                  history={agentHistory}
-                  isLoading={isHistoryLoading}
-                  effectiveRevision={effectiveRevision}
+                  history={agentSettingsHistory}
+                  isLoading={false}
+                  effectiveRevision={selectedRevision}
                 />
               )}
 
@@ -333,11 +306,23 @@ function AgentVersionField({
   effectiveRevision,
 }: {
   control: Control<RunFormValues>
-  history: Agent[]
+  history: AgentSettings[]
   isLoading: boolean
   effectiveRevision: number | null
 }) {
   const { t } = useTranslation()
+
+  // The newest non-draft revision: the one the agent actually runs with.
+  const publishedRevision = history.find((agentVersion) => !agentVersion.isDraft)?.revision
+
+  const buildVersionDetail = (agentVersion: AgentSettings) => {
+    if (agentVersion.isDraft) return t("status:draft")
+    if (agentVersion.revision === publishedRevision)
+      return t("evaluationConversationRun:version.current", {
+        date: buildDate(agentVersion.updatedAt),
+      })
+    return buildDate(agentVersion.updatedAt)
+  }
 
   return (
     <FormField
@@ -366,16 +351,12 @@ function AgentVersionField({
               </SelectTrigger>
             </FormControl>
             <SelectContent>
-              {history.map((agentVersion, index) => (
+              {history.map((agentVersion) => (
                 <SelectItem key={agentVersion.revision} value={String(agentVersion.revision)}>
-                  {index === 0
-                    ? t("evaluationConversationRun:version.latest", {
-                        revision: agentVersion.revision,
-                      })
-                    : t("evaluationConversationRun:version.item", {
-                        revision: agentVersion.revision,
-                        date: buildDate(agentVersion.updatedAt),
-                      })}
+                  {t("evaluationConversationRun:version.item", {
+                    revision: agentVersion.revision,
+                    detail: buildVersionDetail(agentVersion),
+                  })}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -392,7 +373,7 @@ function JudgeModelField({
   models,
 }: {
   control: Control<RunFormValues>
-  models: [string, AgentModel][]
+  models: AgentModel[]
 }) {
   const { t } = useTranslation()
 
@@ -410,9 +391,12 @@ function JudgeModelField({
               </SelectTrigger>
             </FormControl>
             <SelectContent>
-              {models.map(([key, value]) => (
-                <SelectItem key={key} value={value}>
-                  {value}
+              {models.map((model) => (
+                <SelectItem key={model} value={model}>
+                  {formatAgentModelLabel(model, {
+                    deprecatedSuffix: t("agent:model.deprecatedSuffix"),
+                    nonEuSuffix: t("agent:model.nonEuSuffix"),
+                  })}
                 </SelectItem>
               ))}
             </SelectContent>

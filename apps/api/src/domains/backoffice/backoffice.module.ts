@@ -13,6 +13,7 @@ import { Organization } from "@/domains/organizations/organization.entity"
 import { ProjectMembershipRepository } from "@/domains/projects/memberships/project-membership.repository"
 import { ProjectMembershipsService } from "@/domains/projects/memberships/project-memberships.service"
 import { Project } from "@/domains/projects/project.entity"
+import { RbacModule } from "@/domains/rbac/rbac.module"
 import { ReviewCampaignMembershipRepository } from "@/domains/review-campaigns/memberships/review-campaign-membership.repository"
 import { ReviewCampaignMembershipsService } from "@/domains/review-campaigns/memberships/review-campaign-memberships.service"
 import { User } from "@/domains/users/user.entity"
@@ -27,6 +28,7 @@ import { BackofficeService } from "./backoffice.service"
     MembershipsModule,
     UsersModule,
     AuthModule,
+    RbacModule,
   ],
   controllers: [BackofficeController],
   providers: [

@@ -1,7 +1,10 @@
 import type { AgentCsvExtractionRunColumnSchemaDto } from "@caseai-connect/api-contracts"
 import { createAsyncThunk } from "@reduxjs/toolkit"
+import { buildType } from "@/common/features/agents/agent-sessions/shared/base-agent-session/base-agent-sessions.thunks"
+import { selectPlaygroundRevision } from "@/common/features/agents/agent-settings/agent-settings.selectors"
 import { getCurrentId } from "@/common/features/helpers"
 import type { RootState, ThunkConfig } from "@/common/store/types"
+import { isStudioInterface } from "@/studio/routes/helpers"
 import { patchRunStatus } from "./agent-csv-extraction-runs.actions"
 import type {
   AgentCsvExtractionRun,
@@ -97,10 +100,22 @@ const createAndExecute = createAsyncThunk<
     { documentId, columnSchema, recordLimit, onSuccess },
     { extra: { services }, getState },
   ) => {
-    const params = getBaseParams(getState())
+    const state = getState()
+    const params = getBaseParams(state)
+    // Only Studio may name a version; the API rejects a revision from anyone who cannot manage
+    // the agent. `undefined` while the history is loading, so the API applies its own default.
+    const agentSettingsRevision = isStudioInterface()
+      ? selectPlaygroundRevision({ agentId: params.agentId })(state)
+      : undefined
+
     const run = await services.agentCsvExtractionRuns.createOne({
       ...params,
-      payload: { csvDocumentId: documentId, columnSchema },
+      payload: {
+        csvDocumentId: documentId,
+        columnSchema,
+        type: buildType(),
+        agentSettingsRevision,
+      },
     })
     await services.agentCsvExtractionRuns.executeOne({
       ...params,

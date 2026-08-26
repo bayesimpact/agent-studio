@@ -30,12 +30,12 @@ const api: IExtractionAgentSessionsSpi = {
     )
     return fromExtractionAgentSessionDto(response.data.data)
   },
-  executeOne: async ({ documentId, type, ...params }) => {
+  executeOne: async ({ documentId, type, agentSettingsRevision, ...params }) => {
     const axios = getAxiosInstance()
     const response = await axios.post<typeof ExtractionAgentSessionsRoutes.executeOne.response>(
       ExtractionAgentSessionsRoutes.executeOne.getPath(params),
       {
-        payload: { documentId, type },
+        payload: { documentId, type, agentSettingsRevision },
       } satisfies typeof ExtractionAgentSessionsRoutes.executeOne.request,
     )
     return fromExtractionAgentSessionResultDto(response.data.data)
@@ -59,6 +59,7 @@ function fromExtractionAgentSessionDto(dto: ExtractionAgentSessionDto): Extracti
   return {
     id: dto.id,
     agentId: dto.agentId,
+    agentRevision: dto.agentRevision,
     documentId: dto.documentId,
     documentFileName: dto.documentFileName,
     traceUrl: dto.traceUrl,
@@ -78,6 +79,7 @@ function fromExtractionAgentSessionSummaryDto(
   return {
     id: dto.id,
     agentId: dto.agentId,
+    agentRevision: dto.agentRevision,
     documentId: dto.documentId,
     documentFileName: dto.documentFileName,
     traceUrl: dto.traceUrl,

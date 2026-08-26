@@ -1,4 +1,5 @@
 import { Button } from "@caseai-connect/ui/shad/button"
+import { ButtonGroup } from "@caseai-connect/ui/shad/button-group"
 import {
   Command,
   CommandEmpty,
@@ -51,12 +52,20 @@ export function AgentSessionMessages({
   onFillFormToolEvent,
   formSubSessions = [],
   formResultSchema,
+  renderMessageVersion,
+  renderVersionSelect,
 }: {
   session: AgentSession
   messages: AgentSessionMessageType[]
   onFillFormToolEvent?: () => void
   formSubSessions?: ConversationSubSession[]
   formResultSchema?: Record<string, unknown>
+  /**
+   * Optional per-message affordance rendered in the footer, after the copy button.
+   * Studio uses it for the agent settings revision badge; the other surfaces omit it.
+   */
+  renderMessageVersion?: (message: AgentSessionMessageType) => React.ReactNode
+  renderVersionSelect?: React.ReactNode
 }) {
   const isStreaming = useAppSelector(selectStreaming)
 
@@ -64,15 +73,15 @@ export function AgentSessionMessages({
     ? { outputJsonSchema: formResultSchema, result: session.result }
     : null
 
-  const desktopHeightClasses = "md:h-[calc(100dvh-17rem)]"
+  const desktopHeightClasses = "h-[85dvh] md:h-[calc(100dvh-11rem)] xl:h-[calc(100dvh-17rem)]"
   return (
     <div className={cn("flex flex-1 flex-col min-h-0", desktopHeightClasses)}>
-      <div className="flex flex-1 p-2 sm:p-4 min-h-0 md:min-h-full">
-        <Chat className="border shadow-none">
+      <div className="flex flex-1 min-h-0 md:min-h-full">
+        <Chat className="shadow-none">
           <MessageScrollerProvider scrollPreviousItemPeek={168} defaultScrollPosition="end">
             <FormSubSessionsProvider value={formSubSessions}>
               <FormResultProvider value={formResult}>
-                <Messages messages={messages} />
+                <Messages messages={messages} renderMessageVersion={renderMessageVersion} />
               </FormResultProvider>
             </FormSubSessionsProvider>
 
@@ -81,6 +90,7 @@ export function AgentSessionMessages({
               messages={messages}
               isStreaming={isStreaming}
               onFillFormToolEvent={onFillFormToolEvent}
+              rightSlot={renderVersionSelect}
             />
           </MessageScrollerProvider>
         </Chat>
@@ -89,7 +99,13 @@ export function AgentSessionMessages({
   )
 }
 
-function Messages({ messages }: { messages: AgentSessionMessageType[] }) {
+function Messages({
+  messages,
+  renderMessageVersion,
+}: {
+  messages: AgentSessionMessageType[]
+  renderMessageVersion?: (message: AgentSessionMessageType) => React.ReactNode
+}) {
   return (
     <MessageScroller className="flex-1">
       <MessageScrollerViewport className="p-6">
@@ -101,7 +117,7 @@ function Messages({ messages }: { messages: AgentSessionMessageType[] }) {
               // Anchor on user turns so jumps land on a question with prior context peeking above.
               scrollAnchor={message.role === "user"}
             >
-              <AgentSessionMessage message={message} />
+              <AgentSessionMessage message={message} renderMessageVersion={renderMessageVersion} />
             </MessageScrollerItem>
           ))}
         </MessageScrollerContent>
@@ -178,11 +194,13 @@ function Footer({
   messages,
   isStreaming,
   onFillFormToolEvent,
+  rightSlot,
 }: {
   session: ConversationAgentSession
   messages: AgentSessionMessageType[]
   isStreaming: boolean
   onFillFormToolEvent?: () => void
+  rightSlot?: React.ReactNode
 }) {
   const { t } = useTranslation()
   const dispatch = useAppDispatch()
@@ -195,7 +213,14 @@ function Footer({
   const handleSubmit = (message: string) => {
     const trimmedMessage = message.trim()
     if (isStreaming || !trimmedMessage) return
-    void dispatch(sendMessage({ content: trimmedMessage, file, onFillFormToolEvent }))
+    void dispatch(
+      sendMessage({
+        content: trimmedMessage,
+        file,
+        onFillFormToolEvent,
+        agentSession: session,
+      }),
+    )
     handleUnattachDocument()
   }
 
@@ -222,7 +247,14 @@ function Footer({
           <Dictaphone disabled={isStreaming || !session} />
           <MessageNavigator messages={messages} />
         </div>
-        <ChatSubmit variant="ghost" disabled={isStreaming || !session} />
+        <ButtonGroup>
+          {rightSlot}
+          <ChatSubmit
+            size={rightSlot ? "icon-sm" : "icon"}
+            variant={rightSlot ? "default" : "ghost"}
+            disabled={isStreaming || !session}
+          />
+        </ButtonGroup>
       </ChatActions>
     </ChatFooter>
   )
