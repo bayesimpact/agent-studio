@@ -42,16 +42,18 @@ export function parseSSEEvent(
   context: StreamContext,
 ): StreamEventPayload | null {
   const dataLines = readField(eventText, "data")
-  if (dataLines.length === 0) return null
   const data = dataLines.join("\n")
 
   // Nest turns anything the SSE handler throws into `event: error` with the raw message as data —
   // a bare string, never JSON. The events the app emits itself carry no `event:` line at all, so
   // the line is what identifies the frame. Parsing it would throw, drop the frame, and leave the
-  // caller waiting for a terminal event that never comes.
+  // caller waiting for a terminal event that never comes. Checked before the no-data early return:
+  // Nest omits the `data:` line entirely when the thrown error's message is falsy.
   if (readField(eventText, "event")[0] === "error") {
     return { type: "error", messageId: context.messageId, error: data || unknownStreamError }
   }
+
+  if (dataLines.length === 0) return null
 
   try {
     return JSON.parse(data) as StreamEventPayload

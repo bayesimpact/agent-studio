@@ -41,6 +41,18 @@ describe("parseSSEEvent", () => {
     })
   })
 
+  it("turns an error frame with no data line into an error event with the fallback message", () => {
+    // Nest omits the `data:` line entirely when the thrown error's message is falsy:
+    // `data += message.data ? toDataString(message.data) : ''` in its sse-stream.
+    const event = parseSSEEvent("\nevent: error\nid: 1", buildContext())
+
+    expect(event).toEqual({
+      type: "error",
+      messageId: "optimistic-1",
+      error: "The agent stopped responding",
+    })
+  })
+
   it("reads a JSON payload frame", () => {
     const event = parseSSEEvent('data: {"type":"chunk","content":"Hi","messageId":"m1"}', {
       messageId: "optimistic-1",
