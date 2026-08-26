@@ -41,6 +41,7 @@ function toDisplayMessage(msg: {
   content: string
   status?: string
   createdAt?: number
+  toolCalls?: PublicSessionMessageDto["toolCalls"]
 }): PublicSessionMessageDto {
   return {
     id: msg.id,
@@ -48,6 +49,7 @@ function toDisplayMessage(msg: {
     content: msg.content,
     status: msg.status as PublicSessionMessageDto["status"],
     createdAt: msg.createdAt ?? Date.now(),
+    toolCalls: msg.toolCalls,
   }
 }
 
@@ -157,6 +159,7 @@ export function usePublicChat(embedToken: string): UsePublicChatResult {
       void (async () => {
         try {
           let realMessageId = tempAssistantId
+          let shouldHydrate = false
 
           for await (const event of streamMessages(
             embedToken,
@@ -185,6 +188,7 @@ export function usePublicChat(embedToken: string): UsePublicChatResult {
                 break
 
               case "end":
+                shouldHydrate = true
                 setMessages((prev) =>
                   prev.map((message) =>
                     message.id === realMessageId
@@ -205,6 +209,22 @@ export function usePublicChat(embedToken: string): UsePublicChatResult {
               case "notify_client":
                 // Tool call in progress — no UI change needed in the embed
                 break
+            }
+          }
+
+          // Hydrate MCP App HTML only after the SSE generator's `finally` has
+          // closed the stream's MCP session. Fetching on `end` raced that close
+          // and `resources/read` often failed, so the card appeared only on reload.
+          if (shouldHydrate) {
+            try {
+              const sessionData = await getSession(
+                embedToken,
+                session.sessionId,
+                session.sessionToken,
+              )
+              setMessages(sessionData.messages.map(toDisplayMessage))
+            } catch {
+              // Keep streamed text if the hydrate fetch fails
             }
           }
         } catch {

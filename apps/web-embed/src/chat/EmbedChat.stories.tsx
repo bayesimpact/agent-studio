@@ -97,6 +97,13 @@ export const NoCloseButton: Story = {
   },
 }
 
+export const HiddenHeader: Story = {
+  args: {
+    messages: shortConversation,
+    hideHeader: true,
+  },
+}
+
 export const CustomPlaceholder: Story = {
   args: {
     messages: emptyConversation,

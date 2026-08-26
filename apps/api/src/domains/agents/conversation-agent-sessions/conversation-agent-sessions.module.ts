@@ -31,6 +31,6 @@ import { ConversationAgentSessionsService } from "./conversation-agent-sessions.
     McpAppHtmlService,
   ],
   controllers: [AgentMessagesController, ConversationAgentSessionsController],
-  exports: [ConversationAgentSessionsService],
+  exports: [ConversationAgentSessionsService, McpAppHtmlService],
 })
 export class ConversationAgentSessionsModule {}
