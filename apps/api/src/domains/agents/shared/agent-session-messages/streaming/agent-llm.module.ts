@@ -5,6 +5,7 @@ import {
   moduleImports,
 } from "@/domains/agents/base-agent-sessions/base-agent-sessions-module.helpers"
 import { ConversationAgentSessionsModule } from "@/domains/agents/conversation-agent-sessions/conversation-agent-sessions.module"
+import { PdfPagesModule } from "@/domains/documents/pdf-pages/pdf-pages.module"
 import { McpServersModule } from "@/domains/mcp-servers/mcp-servers.module"
 import { McpModule } from "@/external/mcp"
 import { AgentMessageAttachmentDocumentsService } from "../agent-message-attachment-documents.service"
@@ -22,6 +23,7 @@ import { ToolsService } from "./tools.service"
     ...moduleImports,
     McpModule,
     McpServersModule,
+    PdfPagesModule,
     forwardRef(() => ConversationAgentSessionsModule),
   ],
   providers: [AgentLlmRequestService, AgentMessageAttachmentDocumentsService, ToolsService],
