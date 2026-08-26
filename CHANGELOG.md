@@ -13,6 +13,7 @@ This project uses [CalVer](https://calver.org/) (YY.MM.Micro) for product versio
 
 ### Fixed
 - Chat: a server error carrying no message now ends the reply with an error instead of being dropped.
+- Agent and session pages now display correctly on small screens.
 
 ### Security
 

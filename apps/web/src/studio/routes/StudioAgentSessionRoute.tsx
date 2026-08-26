@@ -97,13 +97,13 @@ export function StudioAgentSessionRoute({ agentSession }: { agentSession: AgentS
           </div>
         }
         action={
-          <>
+          <div className="flex items-center justify-end gap-2">
             <TraceUrlOpener
               buttonProps={{ variant: "secondary" }}
               traceUrl={agentSession.traceUrl}
             />
             <DeleteAgentSessionButton agent={agent} agentSession={agentSession} />
-          </>
+          </div>
         }
       />
 

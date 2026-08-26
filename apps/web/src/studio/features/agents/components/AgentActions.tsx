@@ -17,7 +17,7 @@ export function AgentActions({ organizationId, agent }: { organizationId: string
   const canManageAgent = abilities.canManageAgent({ agentId: agent.id })
   const isExtractionAgent = agent.type === "extraction"
   return (
-    <>
+    <div className="flex flex-wrap gap-2 items-center justify-end">
       {isExtractionAgent && (
         <NavEvaluation organizationId={organizationId} projectId={agent.projectId} />
       )}
@@ -43,7 +43,7 @@ export function AgentActions({ organizationId, agent }: { organizationId: string
           <AgentDeletorWithTrigger organizationId={organizationId} agent={agent} />
         </>
       )}
-    </>
+    </div>
   )
 }
 
