@@ -151,6 +151,36 @@ describe("StreamingService", () => {
     expect(events.length).toBeGreaterThan(0)
     expect(fulltextStream).toBe(`Hello, I'm the stream default mock value!`)
   })
+  it("streamAgentResponse - emits an error event when the provider stream fails", async () => {
+    const { connectScope, agent, agentSettings, session } = await createContextWithSession()
+    const notifyClient = jest.fn()
+
+    mockProvider.addErrorTurn(agent.id, new Error("Unsupported chat content part type: 'file'"))
+
+    const stream = service.streamAgentResponse({
+      agentSessionScope: { connectScope, session, agent, agentSettings },
+      userContent: "Bonjour",
+      notifyClient,
+    })
+
+    const events: StreamEventPayload[] = []
+    await expect(
+      (async () => {
+        for await (const event of stream) {
+          events.push(JSON.parse(event.data) as StreamEventPayload)
+        }
+      })(),
+    ).rejects.toThrow("Unsupported chat content part type: 'file'")
+
+    const errorEvent = events.find((event) => event.type === "error")
+    expect(errorEvent).toMatchObject({ error: "Unsupported chat content part type: 'file'" })
+    expect(events.find((event) => event.type === "end")).toBeUndefined()
+
+    const assistantMessage = await repositories.agentMessageRepository.findOne({
+      where: { sessionId: session.id, role: "assistant" },
+    })
+    expect(assistantMessage?.status).toBe("error")
+  })
   it("streamAgentResponse - with document - pdf", async () => {
     const { connectScope, agent, agentSettings, session } = await createContextWithSession()
     const notifyClient = jest.fn()

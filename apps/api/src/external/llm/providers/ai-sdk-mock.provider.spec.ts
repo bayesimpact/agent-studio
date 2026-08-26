@@ -142,6 +142,14 @@ describe("AISDKMockProvider", () => {
     expect(results.join("")).toBe("Hello!")
   })
 
+  it("streamChatResponse - rethrows a provider error instead of ending silently", async () => {
+    provider.addErrorTurn(metadata.agentId, new Error("Unsupported chat content part type: 'file'"))
+
+    await expect(
+      streamToStringArray(provider.streamChatResponse({ messages, config, metadata })),
+    ).rejects.toThrow("Unsupported chat content part type: 'file'")
+  })
+
   it("addObjectTurn - should works", async () => {
     const schema = z.object({ content: z.string(), source: z.string() })
     provider.addObjectTurn(metadata.agentId, { content: "hello", source: "queued" })
