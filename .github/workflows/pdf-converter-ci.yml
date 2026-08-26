@@ -1,0 +1,23 @@
+name: PDF Converter CI
+
+on:
+  pull_request:
+    paths: ["apps/pdf-converter/**"]
+  push:
+    branches: [main]
+    paths: ["apps/pdf-converter/**"]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/pdf-converter
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: apps/pdf-converter/go.mod
+          cache-dependency-path: apps/pdf-converter/go.sum
+      - run: go vet ./...
+      - run: go test ./...
