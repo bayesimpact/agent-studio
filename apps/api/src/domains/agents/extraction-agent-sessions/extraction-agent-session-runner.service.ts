@@ -13,11 +13,16 @@ import type {
 } from "@/common/interfaces/llm-provider.interface"
 import type { AgentSettings } from "@/domains/agents/settings/agent-settings.entity"
 import type { Document } from "@/domains/documents/document.entity"
+// biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
+import { DocumentsService } from "@/domains/documents/documents.service"
+// biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
+import { PdfPagesService } from "@/domains/documents/pdf-pages/pdf-pages.service"
 import {
   FILE_STORAGE_SERVICE,
   type IFileStorage,
 } from "@/domains/documents/storage/file-storage.interface"
 import { ServiceWithLLM } from "@/external/llm"
+import { modelRequiresPdfAsImages } from "@/external/llm/agent-provider"
 import type { Agent } from "../agent.entity"
 import { ExtractionAgentSession } from "./extraction-agent-session.entity"
 import type { ExecuteExtractionAgentSessionJobPayload } from "./extraction-agent-session.types"
@@ -40,6 +45,8 @@ export class ExtractionAgentSessionRunnerService extends ServiceWithLLM {
     @Inject(FILE_STORAGE_SERVICE)
     private readonly fileStorageService: IFileStorage,
     private readonly statusNotifierService: ExtractionAgentSessionStatusNotifierService,
+    private readonly pdfPagesService: PdfPagesService,
+    private readonly documentsService: DocumentsService,
     @Inject("_MockLLMProvider")
     mockLlmProvider: LLMProvider,
     @Inject("VertexLLMProvider")
@@ -114,6 +121,8 @@ export class ExtractionAgentSessionRunnerService extends ServiceWithLLM {
       const llmMessage = await this.buildLLMMessage({
         document,
         prompt: effectivePrompt,
+        model: agentSettings.model,
+        connectScope,
       })
 
       const result = await this.getProviderForModel(agentSettings.model).generateStructuredOutput({
@@ -194,9 +203,13 @@ export class ExtractionAgentSessionRunnerService extends ServiceWithLLM {
   private async buildLLMMessage({
     document,
     prompt,
+    model,
+    connectScope,
   }: {
     document: Document
     prompt: string
+    model: string
+    connectScope: RequiredConnectScope
   }): Promise<LLMChatMessage> {
     const llmMessage: LLMChatMessage = {
       role: "user",
@@ -205,6 +218,45 @@ export class ExtractionAgentSessionRunnerService extends ServiceWithLLM {
 
     switch (document.mimeType) {
       case "application/pdf": {
+        if (modelRequiresPdfAsImages(model)) {
+          // Image-only models: send one rendered page image URL per page. The
+          // pages live in GCS (rendered once by pdf-converter, cached via
+          // pdf_page_count) and the model fetches them through the public
+          // pdf-pages redirect endpoint — no pdf/image bytes in this process.
+          const hasStorageBucketName: boolean = !!process.env.GCS_STORAGE_BUCKET_NAME
+          if (!hasStorageBucketName) {
+            throw new Error(
+              "PDF attachments with Gemma/MedGemma models require GCS storage and the pdf-converter service (set GCS_STORAGE_BUCKET_NAME and PDF_CONVERTER_URL)",
+            )
+          }
+          const pdfPageCount = await this.pdfPagesService.ensureRenderedPages({
+            storageRelativePath: document.storageRelativePath,
+            cachedPageCount: document.pdfPageCount,
+          })
+          if (document.pdfPageCount === null) {
+            await this.documentsService.updatePdfPageCount({
+              connectScope,
+              documentId: document.id,
+              pdfPageCount,
+            })
+          }
+          const content = llmMessage.content as Array<ImagePart>
+          for (let pageNumber = 1; pageNumber <= pdfPageCount; pageNumber++) {
+            content.push({
+              type: "image",
+              image: this.pdfPagesService.buildDocumentPageImageUrl({
+                organizationId: connectScope.organizationId,
+                projectId: connectScope.projectId,
+                documentId: document.id,
+                pageNumber,
+              }),
+            })
+          }
+          break
+        }
+
+        // Other models accept pdf file parts directly (signed URL; the AI
+        // SDK downloads it when the provider doesn't support URLs).
         const url = await this.fileStorageService.getTemporaryUrl(document.storageRelativePath)
         const content = llmMessage.content as Array<FilePart>
         content.push({
