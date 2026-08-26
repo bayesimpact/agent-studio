@@ -73,7 +73,7 @@ export function AgentSessionMessages({
     ? { outputJsonSchema: formResultSchema, result: session.result }
     : null
 
-  const desktopHeightClasses = "md:h-[calc(100dvh-17rem)]"
+  const desktopHeightClasses = "h-[85dvh] md:h-[calc(100dvh-11rem)] xl:h-[calc(100dvh-17rem)]"
   return (
     <div className={cn("flex flex-1 flex-col min-h-0", desktopHeightClasses)}>
       <div className="flex flex-1 min-h-0 md:min-h-full">

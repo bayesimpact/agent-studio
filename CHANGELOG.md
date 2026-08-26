@@ -13,6 +13,9 @@ This project uses [CalVer](https://calver.org/) (YY.MM.Micro) for product versio
 ### Changed
 
 ### Fixed
+- Agent replies no longer show a leaked internal tool-call tag; the platform hides it and still runs the tool.
+- Chat: a server error carrying no message now ends the reply with an error instead of being dropped.
+- Agent and session pages now display correctly on small screens.
 
 ### Security
 
