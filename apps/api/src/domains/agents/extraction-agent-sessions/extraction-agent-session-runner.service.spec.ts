@@ -21,7 +21,6 @@ import {
 import { StorageModule } from "@/domains/documents/storage/storage.module"
 import { createOrganizationWithAgent } from "@/domains/organizations/organization.factory"
 import { ProjectRepository } from "@/domains/projects/project.repository"
-import { ProjectsModule } from "@/domains/projects/projects.module"
 import { LlmModule } from "@/external/llm/llm.module"
 import { extractionAgentSessionFactory } from "./extraction-agent-session.factory"
 import { ExtractionAgentSessionRunnerService } from "./extraction-agent-session-runner.service"
@@ -41,7 +40,6 @@ describe("ExtractionAgentSessionRunnerService", () => {
         StorageModule,
         PdfPagesModule,
         DocumentsModule,
-        ProjectsModule,
       ],
       providers: [
         ExtractionAgentSessionRunnerService,
