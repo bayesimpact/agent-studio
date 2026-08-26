@@ -86,13 +86,20 @@ export class ProjectsService {
   async updateProject({
     projectId,
     name,
+    conversationRetentionDays,
     userId,
   }: {
     projectId: string
     name: string
+    conversationRetentionDays?: number | null
     userId: string
   }): Promise<ProjectModel> {
-    const updated = await this.projectRepository.updateName(projectId, name)
+    const updates: { name: string; conversationRetentionDays?: number | null } = { name }
+    // undefined = do not change; null = keep forever
+    if (conversationRetentionDays !== undefined) {
+      updates.conversationRetentionDays = conversationRetentionDays
+    }
+    const updated = await this.projectRepository.updateProject(projectId, updates)
     if (!updated) {
       throw new NotFoundException(`Project ${projectId} not found`)
     }

@@ -1,5 +1,15 @@
-import { ProjectsRoutes } from "@caseai-connect/api-contracts"
-import { Body, Controller, Delete, Get, Patch, Post, Req, UseGuards } from "@nestjs/common"
+import { ProjectsRoutes, updateProjectSchema } from "@caseai-connect/api-contracts"
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Patch,
+  Post,
+  Req,
+  UseGuards,
+  UsePipes,
+} from "@nestjs/common"
 import type {
   EndpointRequest,
   EndpointRequestWithOrganizationMembership,
@@ -7,6 +17,7 @@ import type {
 } from "@/common/context/request.interface"
 import { AddContext, RequireContext } from "@/common/context/require-context.decorator"
 import { ResourceContextGuard } from "@/common/context/resource-context.guard"
+import { ZodValidationPipe } from "@/common/zod-validation-pipe"
 import { TrackActivity } from "@/domains/activities/track-activity.decorator"
 import { JwtAuthGuard } from "@/domains/auth/jwt-auth.guard"
 import { CheckPermission } from "@/domains/rbac/check-permission.decorator"
@@ -63,6 +74,7 @@ export class ProjectsController {
   @UseGuards(JwtAuthGuard, UserGuard, ResourceContextGuard, CheckPermissionGuard)
   @RequireContext("organization")
   @CheckPermission("project.update", "project")
+  @UsePipes(new ZodValidationPipe(updateProjectSchema))
   @AddContext("project")
   @TrackActivity({ action: "project.update", entityFrom: "project" })
   async updateProject(
@@ -74,6 +86,7 @@ export class ProjectsController {
     const updatedProject = await this.projectsService.updateProject({
       projectId: project.id,
       name: body.payload.name,
+      conversationRetentionDays: body.payload.conversationRetentionDays,
       userId: user.id,
     })
 
