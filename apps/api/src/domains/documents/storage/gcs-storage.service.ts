@@ -52,7 +52,9 @@ export class GcsStorageService implements IFileStorage {
     const bucket = this.storage.bucket(this.bucketName)
     const file = bucket.file(storageRelativePath)
     const expires = Date.now() + 15 * 60 * 1000 // 15 minutes
+    // V4: same keyless IAM signing path as the upload URLs; V2 is legacy.
     const [url] = await file.getSignedUrl({
+      version: "v4",
       action: "read",
       expires,
     })
