@@ -1,7 +1,7 @@
 import { Inject, Injectable, Logger } from "@nestjs/common"
 import { InjectDataSource } from "@nestjs/typeorm"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
-import { DataSource, In } from "typeorm"
+import { DataSource, type EntityManager, In } from "typeorm"
 import {
   FILE_STORAGE_SERVICE,
   type IFileStorage,
@@ -34,46 +34,8 @@ export class ConversationAgentSessionPurgeService {
       })
       if (!session || session.purgedAt) return false
 
-      const messages = await entityManager.find(AgentMessage, {
-        where: { sessionId },
-        select: { id: true, documentId: true, attachmentDocumentId: true },
-      })
-      const messageIds = messages.map((message) => message.id)
+      attachmentStoragePaths.push(...(await this.purgeSessionMessages(entityManager, sessionId)))
 
-      if (messageIds.length > 0) {
-        // Feedback free text is user content; the row and its vote stay for stats.
-        await entityManager.update(
-          AgentMessageFeedback,
-          { agentMessageId: In(messageIds) },
-          { content: "" },
-        )
-      }
-
-      const attachmentDocumentIds = messages
-        .map((message) => message.attachmentDocumentId)
-        .filter((id): id is string => Boolean(id))
-      if (attachmentDocumentIds.length > 0) {
-        const attachments = await entityManager.find(AgentMessageAttachmentDocument, {
-          where: { id: In(attachmentDocumentIds) },
-        })
-        attachmentStoragePaths.push(
-          ...attachments.map((attachment) => attachment.storageRelativePath),
-        )
-        await entityManager.delete(AgentMessageAttachmentDocument, {
-          id: In(attachmentDocumentIds),
-        })
-      }
-
-      const generatedDocumentIds = messages
-        .map((message) => message.documentId)
-        .filter((id): id is string => Boolean(id))
-      if (generatedDocumentIds.length > 0) {
-        // Deleted by entity name: importing the Document entity here would be a
-        // cross-domain entity import (no-cross-domain-entity-import).
-        await entityManager.delete("Document", { id: In(generatedDocumentIds) })
-      }
-
-      await entityManager.update(AgentMessage, { sessionId }, { content: "", toolCalls: null })
       await entityManager.update(
         ConversationAgentSession,
         { id: sessionId },
@@ -82,8 +44,96 @@ export class ConversationAgentSessionPurgeService {
       return true
     })
 
-    // Storage cleanup happens after commit: a storage hiccup must not resurrect
-    // the DB content, and a missing file is not an error.
+    await this.deleteAttachmentFiles(attachmentStoragePaths, sessionId)
+    return { purged }
+  }
+
+  /**
+   * Same purge for an embed (public) session: the session row, its categories
+   * and timestamps stay for stats, but externalVisitorId is also cleared so
+   * the purged session no longer links to a person.
+   */
+  async purgePublicSessionContent(sessionId: string): Promise<{ purged: boolean }> {
+    const attachmentStoragePaths: string[] = []
+
+    const purged = await this.dataSource.transaction(async (entityManager) => {
+      // Loaded by entity name: importing the PublicAgentSession entity here
+      // would be a cross-domain entity import (no-cross-domain-entity-import).
+      const session = (await entityManager.findOne("PublicAgentSession", {
+        where: { id: sessionId },
+      })) as { id: string; purgedAt: Date | null } | null
+      if (!session || session.purgedAt) return false
+
+      attachmentStoragePaths.push(...(await this.purgeSessionMessages(entityManager, sessionId)))
+
+      await entityManager.update(
+        "PublicAgentSession",
+        { id: sessionId },
+        { title: null, result: null, externalVisitorId: null, purgedAt: new Date() },
+      )
+      return true
+    })
+
+    await this.deleteAttachmentFiles(attachmentStoragePaths, sessionId)
+    return { purged }
+  }
+
+  /** Empties the messages of a session; returns the storage paths of deleted attachments. */
+  private async purgeSessionMessages(
+    entityManager: EntityManager,
+    sessionId: string,
+  ): Promise<string[]> {
+    const attachmentStoragePaths: string[] = []
+
+    const messages = await entityManager.find(AgentMessage, {
+      where: { sessionId },
+      select: { id: true, documentId: true, attachmentDocumentId: true },
+    })
+    const messageIds = messages.map((message) => message.id)
+
+    if (messageIds.length > 0) {
+      // Feedback free text is user content; the row and its vote stay for stats.
+      await entityManager.update(
+        AgentMessageFeedback,
+        { agentMessageId: In(messageIds) },
+        { content: "" },
+      )
+    }
+
+    const attachmentDocumentIds = messages
+      .map((message) => message.attachmentDocumentId)
+      .filter((id): id is string => Boolean(id))
+    if (attachmentDocumentIds.length > 0) {
+      const attachments = await entityManager.find(AgentMessageAttachmentDocument, {
+        where: { id: In(attachmentDocumentIds) },
+      })
+      attachmentStoragePaths.push(
+        ...attachments.map((attachment) => attachment.storageRelativePath),
+      )
+      await entityManager.delete(AgentMessageAttachmentDocument, {
+        id: In(attachmentDocumentIds),
+      })
+    }
+
+    const generatedDocumentIds = messages
+      .map((message) => message.documentId)
+      .filter((id): id is string => Boolean(id))
+    if (generatedDocumentIds.length > 0) {
+      // Deleted by entity name: importing the Document entity here would be a
+      // cross-domain entity import (no-cross-domain-entity-import).
+      await entityManager.delete("Document", { id: In(generatedDocumentIds) })
+    }
+
+    await entityManager.update(AgentMessage, { sessionId }, { content: "", toolCalls: null })
+    return attachmentStoragePaths
+  }
+
+  // Storage cleanup happens after commit: a storage hiccup must not resurrect
+  // the DB content, and a missing file is not an error.
+  private async deleteAttachmentFiles(
+    attachmentStoragePaths: string[],
+    sessionId: string,
+  ): Promise<void> {
     for (const storageRelativePath of attachmentStoragePaths) {
       try {
         await this.fileStorage.deleteFile(storageRelativePath)
@@ -93,7 +143,5 @@ export class ConversationAgentSessionPurgeService {
         )
       }
     }
-
-    return { purged }
   }
 }
