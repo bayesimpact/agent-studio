@@ -17,6 +17,7 @@ import { DocumentCrawlProgressStreamService } from "./crawling/document-crawl-pr
 import { UrlCrawlingBatchModule } from "./crawling/url-crawling-batch.module"
 import { WebSourceEmbeddingsBatchModule } from "./crawling/web-source-embeddings-batch.module"
 import { Document } from "./document.entity"
+import { DocumentPdfPagesController } from "./document-pdf-pages.controller"
 import { DocumentsController } from "./documents.controller"
 import { DocumentsGuard } from "./documents.guard"
 import { DocumentsService } from "./documents.service"
@@ -24,6 +25,7 @@ import { DocumentChunkRetrievalService } from "./embeddings/document-chunk-retri
 import { DocumentEmbeddingStatusNotifierService } from "./embeddings/document-embedding-status-notifier.service"
 import { DocumentEmbeddingStatusStreamService } from "./embeddings/document-embedding-status-stream.service"
 import { DocumentEmbeddingsBatchModule } from "./embeddings/document-embeddings-batch.module"
+import { PdfPagesModule } from "./pdf-pages/pdf-pages.module"
 import { LocalPresignUploadController } from "./storage/local-presign-upload.controller"
 import { StorageModule } from "./storage/storage.module"
 import { DocumentTagsModule } from "./tags/document-tags.module"
@@ -54,6 +56,7 @@ import { DocumentTagsModule } from "./tags/document-tags.module"
     DocumentEmbeddingsBatchModule,
     UrlCrawlingBatchModule,
     WebSourceEmbeddingsBatchModule,
+    PdfPagesModule,
   ],
   providers: [
     DocumentsService,
@@ -70,6 +73,7 @@ import { DocumentTagsModule } from "./tags/document-tags.module"
   controllers: [
     DocumentsController,
     CrawlingController,
+    DocumentPdfPagesController,
     ...(process.env.NODE_ENV !== "production" ? [LocalPresignUploadController] : []),
   ],
   exports: [DocumentsService, DocumentChunkRetrievalService],

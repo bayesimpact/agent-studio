@@ -1,6 +1,7 @@
 import { forwardRef, Module } from "@nestjs/common"
 import { TypeOrmModule } from "@nestjs/typeorm"
 import { AgentSettingsModule } from "@/domains/agents/settings/agent-settings.module"
+import { PdfPagesModule } from "@/domains/documents/pdf-pages/pdf-pages.module"
 import { McpServersModule } from "@/domains/mcp-servers/mcp-servers.module"
 import { McpModule } from "@/external/mcp"
 import {
@@ -9,6 +10,7 @@ import {
   moduleProviders,
 } from "../base-agent-sessions/base-agent-sessions-module.helpers"
 import { AgentMessageAttachmentDocumentsService } from "../shared/agent-session-messages/agent-message-attachment-documents.service"
+import { AgentMessageAttachmentPdfPagesController } from "../shared/agent-session-messages/agent-message-attachment-pdf-pages.controller"
 import { AgentMessagesController } from "../shared/agent-session-messages/agent-messages.controller"
 import { McpAppHtmlService } from "../shared/agent-session-messages/mcp-app-html.service"
 import { StreamingModule } from "../shared/agent-session-messages/streaming/streaming.module"
@@ -23,6 +25,7 @@ import { ConversationAgentSessionsService } from "./conversation-agent-sessions.
     forwardRef(() => StreamingModule),
     McpModule,
     McpServersModule,
+    PdfPagesModule,
   ],
   providers: [
     ...moduleProviders,
@@ -30,7 +33,11 @@ import { ConversationAgentSessionsService } from "./conversation-agent-sessions.
     ConversationAgentSessionsService,
     McpAppHtmlService,
   ],
-  controllers: [AgentMessagesController, ConversationAgentSessionsController],
+  controllers: [
+    AgentMessagesController,
+    ConversationAgentSessionsController,
+    AgentMessageAttachmentPdfPagesController,
+  ],
   exports: [ConversationAgentSessionsService],
 })
 export class ConversationAgentSessionsModule {}
