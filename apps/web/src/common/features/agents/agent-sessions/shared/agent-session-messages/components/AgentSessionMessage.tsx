@@ -75,7 +75,7 @@ export function AgentSessionMessage({
             {isError ? (
               <Bubble variant="destructive">
                 <BubbleContent className="px-4 py-3">
-                  <ErrorMessage />
+                  <ErrorMessage detail={message.content} />
                 </BubbleContent>
               </Bubble>
             ) : (
@@ -155,12 +155,21 @@ export function AgentSessionMessage({
   }
 }
 
-function ErrorMessage() {
+/**
+ * Failed turns store the human-readable reason in the message content (e.g.
+ * "PDF has 92 pages, but at most 20 pages can be converted to images"), so
+ * show it under the generic label instead of leaving the user guessing.
+ */
+function ErrorMessage({ detail }: { detail: string }) {
   const { t } = useTranslation("status")
+  const trimmedDetail = detail.trim()
   return (
-    <div className="flex items-center gap-2">
-      <AlertCircleIcon className="size-4" />
-      <span className="font-semibold">{t("error")}</span>
+    <div className="flex flex-col gap-1">
+      <div className="flex items-center gap-2">
+        <AlertCircleIcon className="size-4" />
+        <span className="font-semibold">{t("error")}</span>
+      </div>
+      {trimmedDetail.length > 0 && <p className="whitespace-pre-wrap text-sm">{trimmedDetail}</p>}
     </div>
   )
 }
