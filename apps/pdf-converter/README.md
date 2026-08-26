@@ -64,8 +64,9 @@ To make the main API use it locally, set in `apps/api/.env`:
 
 ```
 PDF_CONVERTER_URL=http://localhost:3002
-PDF_CONVERTER_AUTH=google-iam  # Use actual bearer token in dev (set PDF_CONVERTER_TOKEN if needed for local testing)
 ```
+
+(Leave `PDF_CONVERTER_AUTH` unset locally — no auth header is sent.)
 
 ## Tests
 
@@ -77,15 +78,19 @@ go vet ./...
 ## Deployment
 
 This service is intentionally **not** part of the automatic deploy pipeline
-(it changes rarely; the platform deploy does not rebuild it). When this app
-changes, trigger the **"Deploy PDF Converter"** GitHub action in the infra
-repo (workflow_dispatch: pick the app-repo ref and the GCP project), once per
-project. This action mirrors the "Deploy PDF Renderer" action and replaces
-the older `apps/pdf-renderer` service.
+(it changes rarely; the platform deploy does not rebuild it).
 
-Equivalent local command, if you have the GCP credentials:
+Deployment will mirror the pdf-renderer flow: a manual **"Deploy PDF
+Converter"** GitHub action in the infra repo (**to be created** — clone of
+"Deploy PDF Renderer"; workflow_dispatch: pick the app-repo ref and the GCP
+project), once per project, replacing the older `apps/pdf-renderer` service.
+
+Equivalent local command, once available, if you have the GCP credentials:
 
 ```bash
 cd infra/platform
 make deploy-pdf-converter REGION=eu PROJECT=connect version=<app-repo-short-sha>
 ```
+
+(`deploy-pdf-converter` is **not yet a Makefile target** — it is planned as
+part of the same infra-repo follow-up as the GitHub action above.)
