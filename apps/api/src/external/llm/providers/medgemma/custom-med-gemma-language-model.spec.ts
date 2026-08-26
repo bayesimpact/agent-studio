@@ -27,6 +27,7 @@ describe("CustomMedGemmaLanguageModel", () => {
 
   afterEach(() => {
     jest.restoreAllMocks()
+    delete process.env.API_PUBLIC_BASE_URL
   })
 
   it("passes an https image URL through as an OpenAI-style image_url part", async () => {
@@ -70,5 +71,36 @@ describe("CustomMedGemmaLanguageModel", () => {
     expect(body.messages[0].content).toEqual([
       { type: "image_url", image_url: { url: `data:image/jpeg;base64,${base64}` } },
     ])
+  })
+
+  describe("supportedUrls", () => {
+    it("allows the API's public origin and GCS signed urls when API_PUBLIC_BASE_URL is set", () => {
+      process.env.API_PUBLIC_BASE_URL = "https://api.example.test"
+      const allowedPatterns = buildModel().supportedUrls["image/*"]
+
+      const matchesAny = (candidateUrl: string) =>
+        allowedPatterns.some((pattern) => pattern.test(candidateUrl))
+
+      expect(
+        matchesAny(
+          "https://api.example.test/organizations/o/projects/p/agent-attachment-documents/a/pdf-pages/1",
+        ),
+      ).toBe(true)
+      expect(matchesAny("https://storage.googleapis.com/bucket/x.png")).toBe(true)
+      expect(matchesAny("https://evil.example.com/x.png")).toBe(false)
+      expect(matchesAny("http://169.254.169.254/latest")).toBe(false)
+    })
+
+    it("only allows GCS signed urls when API_PUBLIC_BASE_URL is unset", () => {
+      delete process.env.API_PUBLIC_BASE_URL
+      const allowedPatterns = buildModel().supportedUrls["image/*"]
+
+      expect(allowedPatterns).toHaveLength(1)
+      expect(
+        allowedPatterns.some((pattern) =>
+          pattern.test("https://storage.googleapis.com/bucket/x.png"),
+        ),
+      ).toBe(true)
+    })
   })
 })
