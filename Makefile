@@ -27,12 +27,6 @@ API_PATHS := \
 	apps/api/Dockerfile \
 	apps/api/requirements-torch.txt \
 	apps/api/requirements-docling.txt \
-	apps/pdf-renderer/src \
-	apps/pdf-renderer/package.json \
-	apps/pdf-renderer/nest-cli.json \
-	apps/pdf-renderer/tsconfig.json \
-	apps/pdf-renderer/tsconfig.build.json \
-	apps/pdf-renderer/Dockerfile \
 	packages/api-contracts \
 	package.json \
 	package-lock.json \

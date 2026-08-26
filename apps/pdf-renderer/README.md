@@ -66,3 +66,14 @@ PDF_RENDERER_URL=http://localhost:3001
 ```bash
 npx turbo test --filter=@caseai-connect/pdf-renderer
 ```
+
+## Deployment
+
+This service is intentionally **not** part of the automatic deploy pipeline
+(it changes rarely; the platform deploy does not rebuild it). Deploy it
+manually from the infra repo when this app changes:
+
+```bash
+cd infra/platform
+make deploy-pdf-renderer REGION=eu PROJECT=connect version=<app-repo-short-sha>
+```
