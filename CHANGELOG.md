@@ -13,6 +13,8 @@ This project uses [CalVer](https://calver.org/) (YY.MM.Micro) for product versio
 
 ### Fixed
 - Chat shows an error message instead of an empty reply when the model fails.
+- Agent replies no longer show a leaked internal tool-call tag; the platform hides it and still runs the tool.
+- Chat: a server error carrying no message now ends the reply with an error instead of being dropped.
 
 ### Security
 

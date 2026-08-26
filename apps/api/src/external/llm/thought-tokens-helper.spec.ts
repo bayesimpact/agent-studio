@@ -6,6 +6,11 @@ import { findLeakedToolCallNames, ThoughtTokensHelper } from "./thought-tokens-h
 const LEAKED_PSEUDO_CALL =
   '<call:default_api:mandatory_tool xmlns:default_api="default_api" categoryNames:[greetings,QA],suggestedTitle:Règles de Warmachine et pays de pays/>'
 
+// A newer leak variant captured in production: opens with `<function:` and
+// terminates at the closing brace of its arguments — there is no `>` at all.
+const LEAKED_FUNCTION_CALL =
+  "<function:default_api:mandatory_tool{categoryNames:[test],suggestedTitle:null}"
+
 describe("ThoughtTokensHelper - hallucinated tool-call XML", () => {
   it("removes a pseudo-call tag from a complete text", () => {
     const text = `C'est noté, tu habites en France !\n\n${LEAKED_PSEUDO_CALL}`
@@ -21,6 +26,27 @@ describe("ThoughtTokensHelper - hallucinated tool-call XML", () => {
       'a <default_api:mandatory_tool args="x"/> b </default_api:call> c',
     )
     expect(cleaned).toBe("a  b  c")
+  })
+
+  it("removes the brace-terminated <function:> variant that has no closing angle bracket", () => {
+    const text = `Je vous invite à contacter votre conseiller.\n\n${LEAKED_FUNCTION_CALL}`
+    const cleaned = ThoughtTokensHelper.removeThoughtTokens(text)
+
+    expect(cleaned).not.toContain("default_api")
+    expect(cleaned).not.toContain("<function")
+    expect(cleaned).toContain("Je vous invite à contacter votre conseiller.")
+  })
+
+  it("removes the brace-terminated variant for the whole opener family", () => {
+    const cleaned = ThoughtTokensHelper.removeThoughtTokens(
+      "a <call:default_api:notify_operator{severity:high} b <default_api:mandatory_tool{x:1} c",
+    )
+    expect(cleaned).toBe("a  b  c")
+  })
+
+  it("keeps legitimate text mentioning the function keyword", () => {
+    const text = "En JS, une fonction s'écrit function foo() {} et on vérifie que 2 < 3."
+    expect(ThoughtTokensHelper.removeThoughtTokens(text)).toBe(text)
   })
 
   it("keeps legitimate text with angle brackets and comparisons", () => {
@@ -40,6 +66,20 @@ describe("ThoughtTokensHelper - hallucinated tool-call XML", () => {
 
     expect(out).not.toContain("default_api")
     expect(out).not.toContain("<call:")
+    expect(out).toContain("Voici ma réponse complète")
+  })
+
+  it("strips the brace-terminated <function:> variant even when split across stream deltas", () => {
+    const stripper = ThoughtTokensHelper.createStripper()
+    const full = `Voici ma réponse complète pour toi, avec assez de texte pour dépasser la retenue du stripper.\n\n${LEAKED_FUNCTION_CALL}`
+    let out = ""
+    for (let i = 0; i < full.length; i += 7) {
+      out += stripper.feed(full.slice(i, i + 7))
+    }
+    out += stripper.flush()
+
+    expect(out).not.toContain("default_api")
+    expect(out).not.toContain("<function")
     expect(out).toContain("Voici ma réponse complète")
   })
 
@@ -70,6 +110,11 @@ describe("findLeakedToolCallNames", () => {
 
   it("extracts the tool name from the attribute-style variant", () => {
     expect(findLeakedToolCallNames(LEAKED_PSEUDO_CALL)).toEqual(["mandatory_tool"])
+  })
+
+  it("extracts the tool name from the <function:> brace variant with no closing angle bracket", () => {
+    const text = `Je vous invite à contacter votre conseiller.\n\n${LEAKED_FUNCTION_CALL}`
+    expect(findLeakedToolCallNames(text)).toEqual(["mandatory_tool"])
   })
 
   it("returns nothing for legitimate text, including angle brackets and markup", () => {

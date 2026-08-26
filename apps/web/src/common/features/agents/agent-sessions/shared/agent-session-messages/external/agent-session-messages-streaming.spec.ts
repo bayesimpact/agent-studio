@@ -57,6 +57,22 @@ describe("streamChatResponse", () => {
     })
   })
 
+  it("reports an error frame carrying no data line through onError", async () => {
+    // What the API answers when the SSE handler throws an error whose message is falsy: Nest
+    // omits the `data:` line entirely. The frame must still terminate the stream as an error,
+    // with the fallback message standing in for the missing one.
+    respondWith("\nevent: error\nid: 1\n\n")
+    const handlers = buildHandlers()
+
+    await streamChatResponse({ ...params, handlers })
+
+    expect(handlers.onError).toHaveBeenCalledWith({
+      type: "error",
+      messageId: "optimistic-1",
+      error: "The agent stopped responding",
+    })
+  })
+
   it("reads a full answer from the event stream", async () => {
     respondWith(
       [
