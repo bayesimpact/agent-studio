@@ -1,12 +1,14 @@
 // Renders every page of a PDF (received on stdin) to PNG and writes
 // {"pages": ["<base64 png>", ...]} to stdout.
 //
-// Runs as a short-lived subprocess (see pdf-to-image-parts.ts) so that a
+// Runs as a short-lived subprocess (see render.service.ts) so that a
 // malicious or degenerate PDF can only crash/hang this process — never the
-// API or worker event loop — and so that the ESM-only pdfjs-dist loads under
+// serving event loop — and so that the ESM-only pdfjs-dist loads under
 // plain Node, outside jest's CommonJS module registry.
 //
 // Usage: node pdf-pages-to-png.script.mjs <maxPages> <maxPixelsPerPage> <renderScale>
+//
+// Exit codes: 0 success, 2 page limit exceeded, 1 any other failure.
 import { createCanvas } from "@napi-rs/canvas"
 import { getDocument } from "pdfjs-dist/legacy/build/pdf.mjs"
 
@@ -22,9 +24,10 @@ try {
   const loadingTask = getDocument({ data: pdfBytes })
   const pdfDocument = await loadingTask.promise
   if (pdfDocument.numPages > maxPages) {
-    throw new Error(
+    process.stderr.write(
       `PDF has ${pdfDocument.numPages} pages, but at most ${maxPages} pages can be converted to images`,
     )
+    process.exit(2)
   }
   const pages = []
   for (let pageNumber = 1; pageNumber <= pdfDocument.numPages; pageNumber++) {

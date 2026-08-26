@@ -10,6 +10,7 @@ TEST_MCP_ENCRYPTION_KEY ?= 00000000000000000000000000000000000000000000000000000
 localApiImage = caseai-connect/api:local
 localCpuWorkersImage = caseai-connect/cpu-workers:local
 localGpuWorkersImage = caseai-connect/gpu-workers:local
+localPdfRendererImage = caseai-connect/pdf-renderer:local
 smokeComposeFile = infra/docker-compose.api-workers-smoke.yaml
 smokeEnv = API_IMAGE=${localApiImage} CPU_WORKERS_IMAGE=${localCpuWorkersImage} GPU_WORKERS_IMAGE=${localGpuWorkersImage}
 
@@ -26,6 +27,12 @@ API_PATHS := \
 	apps/api/Dockerfile \
 	apps/api/requirements-torch.txt \
 	apps/api/requirements-docling.txt \
+	apps/pdf-renderer/src \
+	apps/pdf-renderer/package.json \
+	apps/pdf-renderer/nest-cli.json \
+	apps/pdf-renderer/tsconfig.json \
+	apps/pdf-renderer/tsconfig.build.json \
+	apps/pdf-renderer/Dockerfile \
 	packages/api-contracts \
 	package.json \
 	package-lock.json \
@@ -70,8 +77,9 @@ trivy-scan: docker-build
 	trivy image --ignore-unfixed --pkg-types os,library --severity CRITICAL,HIGH --ignorefile .trivyignore.yaml ${localApiImage}
 	trivy image --ignore-unfixed --pkg-types os,library --severity CRITICAL,HIGH --ignorefile .trivyignore.yaml ${localCpuWorkersImage}
 	trivy image --ignore-unfixed --pkg-types os,library --severity CRITICAL,HIGH --ignorefile .trivyignore.yaml ${localGpuWorkersImage}
+	trivy image --ignore-unfixed --pkg-types os,library --severity CRITICAL,HIGH --ignorefile .trivyignore.yaml ${localPdfRendererImage}
 
-docker-build: docker-build-api docker-build-cpu-workers docker-build-gpu-workers
+docker-build: docker-build-api docker-build-cpu-workers docker-build-gpu-workers docker-build-pdf-renderer
 
 docker-build-api:
 	docker build --platform=linux/amd64 --target api-runtime -t ${localApiImage} -f apps/api/Dockerfile .
@@ -81,6 +89,9 @@ docker-build-cpu-workers:
 
 docker-build-gpu-workers:
 	docker build --platform=linux/amd64 --target gpu-workers-runtime -t ${localGpuWorkersImage} -f apps/api/Dockerfile .
+
+docker-build-pdf-renderer:
+	docker build --platform=linux/amd64 --target pdf-renderer-runtime -t ${localPdfRendererImage} -f apps/pdf-renderer/Dockerfile .
 
 docker-check: docker-build-api
 	@echo "Starting docker container and checking for successful startup..."
@@ -243,9 +254,12 @@ db-tests:
 
 tests: db-tests ci-checks
 	cd apps/api && DATABASE_URL=${TEST_DATABASE_URL} MCP_ENCRYPTION_KEY=${TEST_MCP_ENCRYPTION_KEY} npm run migration:test:run && DATABASE_URL=${TEST_DATABASE_URL} MCP_ENCRYPTION_KEY=${TEST_MCP_ENCRYPTION_KEY} npm run test
+	cd apps/pdf-renderer && npm run test
 
 tests-parallel: db-tests ci-checks
 	cd apps/api && DATABASE_URL=${TEST_DATABASE_URL} MCP_ENCRYPTION_KEY=${TEST_MCP_ENCRYPTION_KEY} npm run migration:test:run && TEST_ADMIN_DATABASE_URL=${TEST_ADMIN_DATABASE_URL} TEST_MAX_WORKERS=${TEST_MAX_WORKERS} DATABASE_URL=${TEST_DATABASE_URL} MCP_ENCRYPTION_KEY=${TEST_MCP_ENCRYPTION_KEY} npm run test:parallel
+	cd apps/pdf-renderer && npm run test
 
 tests-only-parallel: npm-ci db-tests
 	cd apps/api && DATABASE_URL=${TEST_DATABASE_URL} MCP_ENCRYPTION_KEY=${TEST_MCP_ENCRYPTION_KEY} npm run migration:test:run && TEST_ADMIN_DATABASE_URL=${TEST_ADMIN_DATABASE_URL} TEST_MAX_WORKERS=${TEST_MAX_WORKERS} DATABASE_URL=${TEST_DATABASE_URL} MCP_ENCRYPTION_KEY=${TEST_MCP_ENCRYPTION_KEY} npm run test:parallel
+	cd apps/pdf-renderer && npm run test

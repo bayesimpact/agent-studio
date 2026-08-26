@@ -1,48 +1,35 @@
-import { readFile } from "node:fs/promises"
-import { join } from "node:path"
+import { createServer, type Server } from "node:http"
+import type { AddressInfo } from "node:net"
 import { AgentModel } from "@caseai-connect/api-contracts"
 import type { FilePart, ImagePart, TextPart } from "ai"
 import type { LLMChatMessage } from "@/common/interfaces/llm-provider.interface"
 import {
   convertPdfPartsToImageParts,
+  MAX_PDF_BYTES_FOR_IMAGE_CONVERSION,
   MAX_PDF_PAGES_FOR_IMAGE_CONVERSION,
   MAX_RENDERED_PIXELS_PER_PAGE,
   modelRequiresPdfAsImages,
 } from "./pdf-to-image-parts"
 
-const PNG_MAGIC = Buffer.from([0x89, 0x50, 0x4e, 0x47])
+const PDF_BYTES = Buffer.from("%PDF-1.4 fake test document")
+const PAGE_ONE_PNG = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x01])
+const PAGE_TWO_PNG = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x02])
 
-const loadTestPdf = () => readFile(join(__dirname, "providers", "files", "test-pdf.pdf"))
+type CapturedRequest = {
+  url: string
+  contentType?: string
+  authorization?: string
+  body: Buffer
+}
+
+type StubResponse = {
+  status: number
+  body: string
+  contentType?: string
+}
 
 const buildUserMessage = (content: LLMChatMessage["content"]): LLMChatMessage =>
   ({ role: "user", content }) as LLMChatMessage
-
-/** Builds a minimal but valid PDF containing `pageCount` empty pages. */
-function buildPdfWithPages(pageCount: number, pageSize = 200): Buffer {
-  const kids = Array.from({ length: pageCount }, (_, pageIndex) => `${pageIndex + 3} 0 R`).join(" ")
-  const objects = [
-    "1 0 obj\n<< /Type /Catalog /Pages 2 0 R >>\nendobj\n",
-    `2 0 obj\n<< /Type /Pages /Kids [${kids}] /Count ${pageCount} >>\nendobj\n`,
-  ]
-  for (let pageIndex = 0; pageIndex < pageCount; pageIndex++) {
-    objects.push(
-      `${pageIndex + 3} 0 obj\n<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${pageSize} ${pageSize}] >>\nendobj\n`,
-    )
-  }
-  let body = "%PDF-1.4\n"
-  const offsets: number[] = []
-  for (const object of objects) {
-    offsets.push(body.length)
-    body += object
-  }
-  const xrefOffset = body.length
-  let xref = `xref\n0 ${objects.length + 1}\n0000000000 65535 f \n`
-  for (const offset of offsets) {
-    xref += `${String(offset).padStart(10, "0")} 00000 n \n`
-  }
-  const trailer = `trailer\n<< /Size ${objects.length + 1} /Root 1 0 R >>\nstartxref\n${xrefOffset}\n%%EOF`
-  return Buffer.from(body + xref + trailer, "latin1")
-}
 
 const pdfFilePart = (data: FilePart["data"]): FilePart => ({
   type: "file",
@@ -51,83 +38,154 @@ const pdfFilePart = (data: FilePart["data"]): FilePart => ({
   data,
 })
 
+// Stands in for the dedicated pdf-renderer service (apps/pdf-renderer): the
+// client is exercised over real HTTP, capturing what it sends.
 describe("convertPdfPartsToImageParts", () => {
-  it("converts a single-page pdf file part into one png image part, preserving other parts", async () => {
-    const pdfBuffer = await loadTestPdf()
+  let server: Server
+  let capturedRequests: CapturedRequest[]
+  let stubResponse: StubResponse
+
+  beforeAll(async () => {
+    server = createServer((request, response) => {
+      const chunks: Buffer[] = []
+      request.on("data", (chunk) => chunks.push(chunk))
+      request.on("end", () => {
+        capturedRequests.push({
+          url: request.url ?? "",
+          contentType: request.headers["content-type"],
+          authorization: request.headers.authorization,
+          body: Buffer.concat(chunks),
+        })
+        response.statusCode = stubResponse.status
+        response.setHeader("Content-Type", stubResponse.contentType ?? "application/json")
+        response.end(stubResponse.body)
+      })
+    })
+    await new Promise<void>((resolve) => server.listen(0, "127.0.0.1", resolve))
+  })
+
+  beforeEach(() => {
+    const { port } = server.address() as AddressInfo
+    process.env.PDF_RENDERER_URL = `http://127.0.0.1:${port}`
+    delete process.env.PDF_RENDERER_APIKEY
+    capturedRequests = []
+    stubResponse = {
+      status: 201,
+      body: JSON.stringify({ pages: [PAGE_ONE_PNG.toString("base64")] }),
+    }
+  })
+
+  afterAll(async () => {
+    delete process.env.PDF_RENDERER_URL
+    delete process.env.PDF_RENDERER_APIKEY
+    await new Promise<void>((resolve, reject) =>
+      server.close((error) => (error ? reject(error) : resolve())),
+    )
+  })
+
+  it("replaces the pdf file part with one image part per rendered page, preserving other parts", async () => {
+    stubResponse.body = JSON.stringify({
+      pages: [PAGE_ONE_PNG.toString("base64"), PAGE_TWO_PNG.toString("base64")],
+    })
     const message = buildUserMessage([
       { type: "text", text: "extract the values" },
-      pdfFilePart(pdfBuffer),
+      pdfFilePart(PDF_BYTES),
     ])
 
     const converted = await convertPdfPartsToImageParts(message)
 
     const parts = converted.content as Array<TextPart | ImagePart>
-    expect(parts).toHaveLength(2)
-    expect(parts[0]).toEqual({ type: "text", text: "extract the values" })
-    const imagePart = parts[1] as ImagePart
-    expect(imagePart.type).toBe("image")
-    expect(imagePart.mediaType).toBe("image/png")
-    const imageBuffer = Buffer.from(imagePart.image as Uint8Array)
-    expect(imageBuffer.subarray(0, 4)).toEqual(PNG_MAGIC)
-  })
-
-  it("converts each page of a multi-page pdf into its own image part", async () => {
-    const message = buildUserMessage([pdfFilePart(buildPdfWithPages(3))])
-
-    const converted = await convertPdfPartsToImageParts(message)
-
-    const parts = converted.content as ImagePart[]
     expect(parts).toHaveLength(3)
-    for (const part of parts) {
-      expect(part.type).toBe("image")
-      expect(part.mediaType).toBe("image/png")
+    expect(parts[0]).toEqual({ type: "text", text: "extract the values" })
+    for (const [pageIndex, expectedPng] of [PAGE_ONE_PNG, PAGE_TWO_PNG].entries()) {
+      const imagePart = parts[pageIndex + 1] as ImagePart
+      expect(imagePart.type).toBe("image")
+      expect(imagePart.mediaType).toBe("image/png")
+      expect(Buffer.from(imagePart.image as Uint8Array)).toEqual(expectedPng)
     }
   })
 
-  it("throws when the pdf has more pages than the conversion limit", async () => {
-    const tooManyPages = MAX_PDF_PAGES_FOR_IMAGE_CONVERSION + 1
-    const message = buildUserMessage([pdfFilePart(buildPdfWithPages(tooManyPages))])
+  it("posts the raw pdf bytes with the conversion limits as query parameters", async () => {
+    await convertPdfPartsToImageParts(buildUserMessage([pdfFilePart(PDF_BYTES)]))
 
-    await expect(convertPdfPartsToImageParts(message)).rejects.toThrow(
-      `PDF has ${tooManyPages} pages, but at most ${MAX_PDF_PAGES_FOR_IMAGE_CONVERSION} pages can be converted to images`,
-    )
+    expect(capturedRequests).toHaveLength(1)
+    const captured = capturedRequests[0] as CapturedRequest
+    const url = new URL(captured.url, "http://localhost")
+    expect(url.pathname).toBe("/render-pages")
+    expect(url.searchParams.get("maxPages")).toBe(String(MAX_PDF_PAGES_FOR_IMAGE_CONVERSION))
+    expect(url.searchParams.get("maxPixelsPerPage")).toBe(String(MAX_RENDERED_PIXELS_PER_PAGE))
+    expect(url.searchParams.get("scale")).toBe("2")
+    expect(captured.contentType).toBe("application/pdf")
+    expect(captured.authorization).toBeUndefined()
+    expect(captured.body).toEqual(PDF_BYTES)
+  })
+
+  it("sends the bearer token when PDF_RENDERER_APIKEY is configured", async () => {
+    process.env.PDF_RENDERER_APIKEY = "renderer-secret"
+
+    await convertPdfPartsToImageParts(buildUserMessage([pdfFilePart(PDF_BYTES)]))
+
+    expect(capturedRequests[0]?.authorization).toBe("Bearer renderer-secret")
   })
 
   it("accepts pdf data provided as a base64 string", async () => {
-    const pdfBuffer = await loadTestPdf()
-    const message = buildUserMessage([pdfFilePart(pdfBuffer.toString("base64"))])
+    await convertPdfPartsToImageParts(buildUserMessage([pdfFilePart(PDF_BYTES.toString("base64"))]))
 
-    const converted = await convertPdfPartsToImageParts(message)
-
-    const parts = converted.content as ImagePart[]
-    expect(parts).toHaveLength(1)
-    expect(parts[0]?.type).toBe("image")
+    expect(capturedRequests[0]?.body).toEqual(PDF_BYTES)
   })
 
   it("accepts pdf data provided as a URL by downloading it", async () => {
-    const pdfBuffer = await loadTestPdf()
-    const url = new URL(`data:application/pdf;base64,${pdfBuffer.toString("base64")}`)
-    const message = buildUserMessage([pdfFilePart(url)])
+    const url = new URL(`data:application/pdf;base64,${PDF_BYTES.toString("base64")}`)
 
-    const converted = await convertPdfPartsToImageParts(message)
+    const converted = await convertPdfPartsToImageParts(buildUserMessage([pdfFilePart(url)]))
 
-    const parts = converted.content as ImagePart[]
-    expect(parts).toHaveLength(1)
-    expect(parts[0]?.type).toBe("image")
+    expect(capturedRequests[0]?.body).toEqual(PDF_BYTES)
+    expect((converted.content as ImagePart[])[0]?.type).toBe("image")
   })
 
-  it("clamps the rendered size of oversized pages to the pixel budget", async () => {
-    const hugePageSize = 3000
-    const message = buildUserMessage([pdfFilePart(buildPdfWithPages(1, hugePageSize))])
+  it("propagates the renderer's error message, like the page limit rejection", async () => {
+    const pageLimitMessage = `PDF has 21 pages, but at most ${MAX_PDF_PAGES_FOR_IMAGE_CONVERSION} pages can be converted to images`
+    stubResponse = {
+      status: 422,
+      body: JSON.stringify({ message: pageLimitMessage, statusCode: 422 }),
+    }
 
-    const converted = await convertPdfPartsToImageParts(message)
+    await expect(
+      convertPdfPartsToImageParts(buildUserMessage([pdfFilePart(PDF_BYTES)])),
+    ).rejects.toThrow(pageLimitMessage)
+  })
 
-    const [imagePart] = converted.content as ImagePart[]
-    const pngBuffer = Buffer.from(imagePart?.image as Uint8Array)
-    const widthPx = pngBuffer.readUInt32BE(16)
-    const heightPx = pngBuffer.readUInt32BE(20)
-    expect(widthPx * heightPx).toBeLessThanOrEqual(MAX_RENDERED_PIXELS_PER_PAGE)
-    expect(widthPx).toBeGreaterThan(hugePageSize / 2)
+  it("falls back to a generic error when the renderer response is not json", async () => {
+    stubResponse = { status: 502, body: "Bad Gateway", contentType: "text/plain" }
+
+    await expect(
+      convertPdfPartsToImageParts(buildUserMessage([pdfFilePart(PDF_BYTES)])),
+    ).rejects.toThrow("PDF rendering failed: pdf-renderer responded with HTTP 502")
+  })
+
+  it("rejects pdfs above the request size limit without calling the renderer", async () => {
+    const oversizedPdf = Buffer.alloc(MAX_PDF_BYTES_FOR_IMAGE_CONVERSION + 1)
+
+    await expect(
+      convertPdfPartsToImageParts(buildUserMessage([pdfFilePart(oversizedPdf)])),
+    ).rejects.toThrow("PDF is too large to be converted to images for this model")
+    expect(capturedRequests).toHaveLength(0)
+  })
+
+  it("throws a configuration error when PDF_RENDERER_URL is not set", async () => {
+    delete process.env.PDF_RENDERER_URL
+
+    await expect(
+      convertPdfPartsToImageParts(buildUserMessage([pdfFilePart(PDF_BYTES)])),
+    ).rejects.toThrow("PDF_RENDERER_URL is not set")
+  })
+
+  it("throws a reachability error when the renderer is down", async () => {
+    process.env.PDF_RENDERER_URL = "http://127.0.0.1:1"
+
+    await expect(
+      convertPdfPartsToImageParts(buildUserMessage([pdfFilePart(PDF_BYTES)])),
+    ).rejects.toThrow("could not reach pdf-renderer")
   })
 
   it("returns the message unchanged when the content has no pdf part", async () => {
@@ -139,6 +197,7 @@ describe("convertPdfPartsToImageParts", () => {
     const converted = await convertPdfPartsToImageParts(message)
 
     expect(converted).toBe(message)
+    expect(capturedRequests).toHaveLength(0)
   })
 
   it("returns the message unchanged when the content is a plain string", async () => {
@@ -147,6 +206,7 @@ describe("convertPdfPartsToImageParts", () => {
     const converted = await convertPdfPartsToImageParts(message)
 
     expect(converted).toBe(message)
+    expect(capturedRequests).toHaveLength(0)
   })
 })
 

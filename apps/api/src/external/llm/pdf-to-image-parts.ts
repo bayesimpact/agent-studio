@@ -1,5 +1,3 @@
-import { execFile } from "node:child_process"
-import { join } from "node:path"
 import {
   type AgentModel,
   AgentModelToAgentProvider,
@@ -26,13 +24,24 @@ export const MAX_RENDERED_PIXELS_PER_PAGE = 4_000_000
 const PDF_RENDER_SCALE = 2
 
 const PDF_RENDER_TIMEOUT_MS = 60_000
-const PDF_RENDER_MAX_OUTPUT_BYTES = 256 * 1024 * 1024
 
-// Rendering runs in a short-lived subprocess (a plain ESM script, ships to
-// dist via the nest-cli assets rule): an untrusted pdf that crashes or hangs
-// the renderer cannot take down the API/worker event loop, the child gets a
-// hard timeout and heap cap, and it inherits none of the parent's env.
-const RENDER_SCRIPT_PATH = join(__dirname, "pdf-pages-to-png.script.mjs")
+// Cloud Run rejects HTTP/1 requests larger than 32MiB before they reach the
+// pdf-renderer service (https://docs.cloud.google.com/run/quotas), so fail
+// with a clear message instead of an opaque 413 from the frontend.
+export const MAX_PDF_BYTES_FOR_IMAGE_CONVERSION = 32 * 1024 * 1024
+
+// Rasterization is RAM-heavy (up to ~1GB per document), so it never runs in
+// the API/worker process: it is delegated to the dedicated pdf-renderer
+// service (apps/pdf-renderer), which scales independently.
+const resolvePdfRendererSettings = (): { url: string; apiKey?: string } => {
+  const url = process.env.PDF_RENDERER_URL
+  if (!url) {
+    throw new Error(
+      "PDF_RENDERER_URL is not set: converting pdfs to images for Gemma and MedGemma requires the dedicated pdf-renderer service (apps/pdf-renderer)",
+    )
+  }
+  return { url, apiKey: process.env.PDF_RENDERER_APIKEY }
+}
 
 const isPdfFilePart = (part: unknown): part is FilePart =>
   typeof part === "object" &&
@@ -58,32 +67,57 @@ async function resolvePdfBytes(data: FilePart["data"]): Promise<Uint8Array> {
   return new Uint8Array(data)
 }
 
-function renderPdfPagesToPng(pdfBytes: Uint8Array): Promise<string[]> {
-  return new Promise((resolve, reject) => {
-    const child = execFile(
-      process.execPath,
-      [
-        "--max-old-space-size=1024",
-        RENDER_SCRIPT_PATH,
-        String(MAX_PDF_PAGES_FOR_IMAGE_CONVERSION),
-        String(MAX_RENDERED_PIXELS_PER_PAGE),
-        String(PDF_RENDER_SCALE),
-      ],
-      { timeout: PDF_RENDER_TIMEOUT_MS, maxBuffer: PDF_RENDER_MAX_OUTPUT_BYTES, env: {} },
-      (error, stdout, stderr) => {
-        if (error) {
-          if (error.killed) {
-            reject(new Error(`PDF rendering timed out after ${PDF_RENDER_TIMEOUT_MS}ms`))
-            return
-          }
-          reject(new Error(stderr.trim() || `PDF rendering failed: ${error.message}`))
-          return
-        }
-        resolve((JSON.parse(stdout) as { pages: string[] }).pages)
-      },
+async function extractErrorMessage(response: Response): Promise<string> {
+  const fallback = `PDF rendering failed: pdf-renderer responded with HTTP ${response.status}`
+  try {
+    const body = (await response.json()) as { message?: string | string[] }
+    if (typeof body.message === "string") {
+      return body.message
+    }
+    if (Array.isArray(body.message)) {
+      return body.message.join(", ")
+    }
+  } catch {
+    // Non-json error body: fall through to the generic message.
+  }
+  return fallback
+}
+
+async function renderPdfPagesToPng(pdfBytes: Uint8Array): Promise<string[]> {
+  if (pdfBytes.length > MAX_PDF_BYTES_FOR_IMAGE_CONVERSION) {
+    const sizeMb = Math.round(pdfBytes.length / 1024 / 1024)
+    const limitMb = MAX_PDF_BYTES_FOR_IMAGE_CONVERSION / 1024 / 1024
+    throw new Error(
+      `PDF is too large to be converted to images for this model: ${sizeMb}MB exceeds the ${limitMb}MB limit`,
     )
-    child.stdin?.end(pdfBytes)
-  })
+  }
+  const { url, apiKey } = resolvePdfRendererSettings()
+  const endpoint = new URL("render-pages", url.endsWith("/") ? url : `${url}/`)
+  endpoint.searchParams.set("maxPages", String(MAX_PDF_PAGES_FOR_IMAGE_CONVERSION))
+  endpoint.searchParams.set("maxPixelsPerPage", String(MAX_RENDERED_PIXELS_PER_PAGE))
+  endpoint.searchParams.set("scale", String(PDF_RENDER_SCALE))
+  let response: Response
+  try {
+    response = await fetch(endpoint, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/pdf",
+        ...(apiKey ? { Authorization: `Bearer ${apiKey}` } : {}),
+      },
+      body: pdfBytes,
+      signal: AbortSignal.timeout(PDF_RENDER_TIMEOUT_MS),
+    })
+  } catch (error) {
+    if (error instanceof Error && error.name === "TimeoutError") {
+      throw new Error(`PDF rendering timed out after ${PDF_RENDER_TIMEOUT_MS}ms`)
+    }
+    const reason = error instanceof Error ? error.message : String(error)
+    throw new Error(`PDF rendering failed: could not reach pdf-renderer at ${url}: ${reason}`)
+  }
+  if (!response.ok) {
+    throw new Error(await extractErrorMessage(response))
+  }
+  return ((await response.json()) as { pages: string[] }).pages
 }
 
 async function convertPdfPart(part: FilePart): Promise<ImagePart[]> {

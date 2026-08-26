@@ -11,6 +11,7 @@ This project uses [CalVer](https://calver.org/) (YY.MM.Micro) for product versio
 - (beta) Gemma and MedGemma agents accept PDF documents in chat and extraction.
 
 ### Changed
+- PDF documents sent to Gemma and MedGemma agents are now converted to images by a dedicated service, so heavy PDF processing no longer slows down the platform.
 
 ### Fixed
 - Agent replies no longer show a leaked internal tool-call tag; the platform hides it and still runs the tool.
