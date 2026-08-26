@@ -70,8 +70,10 @@ npx turbo test --filter=@caseai-connect/pdf-renderer
 ## Deployment
 
 This service is intentionally **not** part of the automatic deploy pipeline
-(it changes rarely; the platform deploy does not rebuild it). Deploy it
-manually from the infra repo when this app changes:
+(it changes rarely; the platform deploy does not rebuild it). When this app
+changes, trigger the **"Deploy PDF Renderer"** GitHub action in the infra
+repo (workflow_dispatch: pick the app-repo ref and the GCP project), once per
+project. Equivalent local command, if you have the GCP credentials:
 
 ```bash
 cd infra/platform
