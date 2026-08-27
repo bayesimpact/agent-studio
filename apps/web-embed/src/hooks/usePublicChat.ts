@@ -83,27 +83,30 @@ export function usePublicChat(embedToken: string): UsePublicChatResult {
   const sessionRef = useRef<StoredSession | null>(null)
   const resetNonceRef = useRef(0)
 
-  const startFreshSession = useCallback(async (nonce: number) => {
-    clearSession(embedToken)
-    sessionRef.current = null
-    setMessages([])
-    setErrorKey(null)
-    setIsStreaming(false)
-    setStatus("initializing")
+  const startFreshSession = useCallback(
+    async (nonce: number) => {
+      clearSession(embedToken)
+      sessionRef.current = null
+      setMessages([])
+      setErrorKey(null)
+      setIsStreaming(false)
+      setStatus("initializing")
 
-    const newSession = await createSession(embedToken)
-    if (resetNonceRef.current !== nonce) return
-    sessionRef.current = newSession
-    saveSession(embedToken, newSession)
-    const sessionData = await getSession(
-      embedToken,
-      newSession.sessionId,
-      newSession.sessionToken,
-    )
-    if (resetNonceRef.current !== nonce) return
-    setMessages(sessionData.messages.map(toDisplayMessage))
-    setStatus("ready")
-  }, [embedToken])
+      const newSession = await createSession(embedToken)
+      if (resetNonceRef.current !== nonce) return
+      sessionRef.current = newSession
+      saveSession(embedToken, newSession)
+      const sessionData = await getSession(
+        embedToken,
+        newSession.sessionId,
+        newSession.sessionToken,
+      )
+      if (resetNonceRef.current !== nonce) return
+      setMessages(sessionData.messages.map(toDisplayMessage))
+      setStatus("ready")
+    },
+    [embedToken],
+  )
 
   const failInit = useCallback((err: unknown, nonce: number) => {
     if (resetNonceRef.current !== nonce) return

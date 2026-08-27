@@ -231,13 +231,7 @@ function SimulatedChat({
 
 // ─── Loading / error shells ────────────────────────────────────────────────
 
-function ChatLoadingShell({
-  theme,
-  hideHeader,
-}: {
-  theme: EmbedChatTheme
-  hideHeader: boolean
-}) {
+function ChatLoadingShell({ theme, hideHeader }: { theme: EmbedChatTheme; hideHeader: boolean }) {
   const { t } = useTranslation("chat")
   return (
     <div className="flex h-full flex-col overflow-hidden rounded-2xl bg-white">
