@@ -87,6 +87,7 @@ describe("McpServersService", () => {
 
       expect(configs).toHaveLength(1)
       expect(configs[0]).toEqual({
+        id: server.id,
         url: "https://example.com/mcp",
         apiKey: "sk-test-key",
       })
@@ -129,8 +130,8 @@ describe("McpServersService", () => {
       expect(configs).toHaveLength(2)
       expect(configs).toEqual(
         expect.arrayContaining([
-          { url: "https://social.example.com/mcp", apiKey: "sk-social" },
-          { url: "https://other.example.com/mcp" },
+          { id: server1.id, url: "https://social.example.com/mcp", apiKey: "sk-social" },
+          { id: server2.id, url: "https://other.example.com/mcp" },
         ]),
       )
     })

@@ -13,6 +13,8 @@ export type MockValue =
   // A production-shaped generation: text answer followed by a tool call in
   // the SAME generation (what Gemma emits for fire-and-forget tools).
   | { type: "textWithToolCall"; text: string; toolName: string; input: unknown }
+  // A generation that fails at the provider (e.g. a 400 APICallError).
+  | { type: "error"; error: Error }
 
 export type LLMConfig =
   | {

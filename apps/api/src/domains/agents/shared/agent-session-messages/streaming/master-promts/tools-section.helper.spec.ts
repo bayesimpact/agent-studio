@@ -1,5 +1,6 @@
 import { ToolName } from "@caseai-connect/api-contracts"
 import type { AgentSettings } from "@/domains/agents/settings/agent-settings.entity"
+import { applyMcpAppToolDescription } from "@/external/mcp/mcp-app-tool-description"
 import { promptHelpers } from "./helpers"
 
 const agentSettings = {} as AgentSettings
@@ -28,5 +29,21 @@ describe("promptHelpers.tools", () => {
 
     expect(section).toContain("## Tools:")
     expect(section).toContain(`[${ToolName.MandatoryTool}]: mandatory bookkeeping report`)
+  })
+
+  it("explains that MCP App tools render a UI when called", () => {
+    const section = promptHelpers.mcpAppUis({
+      get_patient: applyMcpAppToolDescription("Get a patient."),
+      search_resources: "Search resources.",
+    })
+
+    expect(section).toContain("## Interactive tool UIs")
+    expect(section).toContain("get_patient")
+    expect(section).toContain("Do not recap, summarize, or restate the UI contents in markdown")
+    expect(section).not.toContain("search_resources")
+  })
+
+  it("omits the MCP App section when no tool has a UI resource", () => {
+    expect(promptHelpers.mcpAppUis({ search_resources: "Search resources." })).toBe("")
   })
 })

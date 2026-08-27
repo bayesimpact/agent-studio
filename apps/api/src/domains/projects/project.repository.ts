@@ -13,6 +13,7 @@ export type ProjectRecord = {
   name: string
   createdAt: Date
   updatedAt: Date
+  conversationRetentionDays: number | null
 }
 
 @Injectable()
@@ -63,14 +64,20 @@ export class ProjectRepository {
     return this.toRecord(saved)
   }
 
-  /** Returns null when the project does not exist. */
-  async updateName(projectId: string, name: string): Promise<ProjectRecord | null> {
+  /** Returns null when the project does not exist. An absent retention field leaves the column untouched. */
+  async updateProject(
+    projectId: string,
+    updates: { name: string; conversationRetentionDays?: number | null },
+  ): Promise<ProjectRecord | null> {
     const project = await this.repo().findOne({ where: { id: projectId } })
     if (!project) {
       return null
     }
 
-    project.name = name
+    project.name = updates.name
+    if (updates.conversationRetentionDays !== undefined) {
+      project.conversationRetentionDays = updates.conversationRetentionDays
+    }
     const saved = await this.repo().save(project)
     return this.toRecord(saved)
   }
@@ -110,6 +117,7 @@ export class ProjectRepository {
       name: project.name,
       createdAt: project.createdAt,
       updatedAt: project.updatedAt,
+      conversationRetentionDays: project.conversationRetentionDays ?? null,
     }
   }
 

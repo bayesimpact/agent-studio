@@ -4,11 +4,13 @@ import {
   type AgentCsvExtractionRunRecordDto,
   type AgentCsvExtractionRunStatusChangedEventDto,
   AgentCsvExtractionRunsRoutes,
+  type ProjectMembershipRoleDto,
 } from "@caseai-connect/api-contracts"
 import {
   Body,
   Controller,
   Delete,
+  ForbiddenException,
   Get,
   Inject,
   Logger,
@@ -30,8 +32,10 @@ import type {
 import { getRequiredConnectScope } from "@/common/context/request-context.helpers"
 import { AddContext, RequireContext } from "@/common/context/require-context.decorator"
 import { ResourceContextGuard } from "@/common/context/resource-context.guard"
+import type { RequiredConnectScope } from "@/common/entities/connect-required-fields"
 import { CheckPolicy } from "@/common/policies/check-policy.decorator"
 import { TrackActivity } from "@/domains/activities/track-activity.decorator"
+import type { AgentSettings } from "@/domains/agents/settings/agent-settings.entity"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
 import { AgentSettingsService } from "@/domains/agents/settings/agent-settings.service"
 import { JwtAuthGuard } from "@/domains/auth/jwt-auth.guard"
@@ -43,6 +47,7 @@ import {
 } from "@/domains/documents/storage/file-storage.interface"
 import { UserGuard } from "@/domains/users/user.guard"
 import { getTraceUrl } from "@/external/langfuse/langfuse-helper"
+import type { BaseAgentSessionType } from "../base-agent-sessions/base-agent-sessions.types"
 import type { AgentCsvExtractionRun } from "./agent-csv-extraction-run.entity"
 import { AgentCsvExtractionRunGuard } from "./agent-csv-extraction-run.guard"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
@@ -79,10 +84,13 @@ export class AgentCsvExtractionRunsController {
     @Req() request: EndpointRequestWithAgent,
     @Body() { payload }: typeof AgentCsvExtractionRunsRoutes.createOne.request,
   ): Promise<typeof AgentCsvExtractionRunsRoutes.createOne.response> {
+    const type = toBaseAgentSessionType(payload.type)
     const connectScope = getRequiredConnectScope(request)
-    const agentSettings = await this.agentSettingsService.getLast({
+    const agentSettings = await this.resolveAgentSettings({
       connectScope,
       agentId: request.agent.id,
+      role: request.projectMembership?.role,
+      revision: payload.agentSettingsRevision,
     })
     const run = await this.agentCsvExtractionRunsService.createRun({
       connectScope,
@@ -91,10 +99,52 @@ export class AgentCsvExtractionRunsController {
         agentSettingsId: agentSettings.id,
         csvDocumentId: payload.csvDocumentId,
         columnSchema: payload.columnSchema,
+        type,
+        userId: request.user.id,
       },
     })
     run.agentSettings = agentSettings
     return { data: toAgentCsvExtractionRunDto(run) }
+  }
+
+  /**
+   * Settings the run is pinned to.
+   *
+   * Choosing a version is gated on the caller's project role. Admins and owners are exactly the
+   * roles that can list the versions, since the settings history endpoint sits behind the same
+   * check. Everyone else keeps getting the newest published revision.
+   */
+  private async resolveAgentSettings({
+    connectScope,
+    agentId,
+    role,
+    revision,
+  }: {
+    connectScope: RequiredConnectScope
+    agentId: string
+    role: ProjectMembershipRoleDto | undefined
+    revision: number | undefined
+  }): Promise<AgentSettings> {
+    if (revision === undefined) {
+      return this.agentSettingsService.getLast({ connectScope, agentId })
+    }
+    // `agent_settings.revision` is a Postgres `integer`; anything outside its 32-bit signed range
+    // reaches TypeORM as-is and produces a driver error instead of a clean rejection here.
+    if (!(Number.isInteger(revision) && revision > 0 && revision <= 2147483647)) {
+      throw new ForbiddenException("Settings version must be an integer")
+    }
+    if (role !== "admin" && role !== "owner") {
+      throw new ForbiddenException("Choosing a settings version requires managing the agent")
+    }
+
+    const agentSettings = await this.agentSettingsService.get({ connectScope, agentId, revision })
+    if (!agentSettings) {
+      throw new NotFoundException(`Version ${revision} not found for agent ${agentId}`)
+    }
+    if (agentSettings.isArchived) {
+      throw new UnprocessableEntityException(`Version ${revision} is archived and cannot be run`)
+    }
+    return agentSettings
   }
 
   @Post(AgentCsvExtractionRunsRoutes.executeOne.path)
@@ -128,9 +178,11 @@ export class AgentCsvExtractionRunsController {
     const { agentCsvExtractionRun, agent } = request as EndpointRequestWithAgentCsvExtractionRun &
       EndpointRequestWithAgent
 
-    const agentSettings = await this.agentSettingsService.getLast({
+    // The run advertises its own revision, so a retry must use that one. Re-resolving the newest
+    // published version here would silently change what a retried run executes.
+    const agentSettings = await this.agentSettingsService.getById({
       connectScope,
-      agentId: agent.id,
+      agentSettingsId: agentCsvExtractionRun.agentSettingsId,
     })
 
     await this.agentCsvExtractionRunsService.retryRun({
@@ -198,10 +250,13 @@ export class AgentCsvExtractionRunsController {
   @CheckPolicy((policy) => policy.canList())
   async getAll(
     @Req() request: EndpointRequestWithAgent,
+    @Query("type") typeParam?: string,
   ): Promise<typeof AgentCsvExtractionRunsRoutes.getAll.response> {
     const runs = await this.agentCsvExtractionRunsService.listRuns({
       connectScope: getRequiredConnectScope(request),
       agentId: request.agent.id,
+      type: toBaseAgentSessionType(typeParam),
+      userId: request.user.id,
     })
     return { data: runs.map(toAgentCsvExtractionRunDto) }
   }
@@ -348,13 +403,27 @@ export class AgentCsvExtractionRunsController {
   }
 }
 
+/**
+ * The requests carrying a type (createOne payload, getAll query) reach the handler even when the
+ * field is missing or garbled — the guard only rejects a *named* unknown type — so the handlers
+ * narrow it themselves before acting on it.
+ */
+function toBaseAgentSessionType(type: string | undefined): BaseAgentSessionType {
+  if (type !== "live" && type !== "playground") {
+    throw new ForbiddenException("A run type of live or playground is required")
+  }
+  return type
+}
+
 function toAgentCsvExtractionRunDto(run: AgentCsvExtractionRun): AgentCsvExtractionRunDto {
   return {
     id: run.id,
     agentId: run.agentSettings.agentId,
     agentSettingsId: run.agentSettingsId,
+    agentRevision: run.agentSettings.revision,
     csvDocumentId: run.csvDocumentId,
     columnSchema: run.columnSchema,
+    type: run.type,
     status: run.status,
     summary: run.summary,
     csvExportDocumentId: run.csvExportDocumentId,

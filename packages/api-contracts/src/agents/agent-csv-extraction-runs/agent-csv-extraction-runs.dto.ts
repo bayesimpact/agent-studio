@@ -1,4 +1,5 @@
 import type { TimeType } from "../../generic"
+import type { BaseAgentSessionTypeDto } from "../conversation-agent-sessions/conversation-agent-sessions.dto"
 
 export const AGENT_CSV_EXTRACTION_RUN_STATUS_CHANGED_CHANNEL_DTO =
   "agent_csv_extraction_run_status_changed"
@@ -42,8 +43,11 @@ export type AgentCsvExtractionRunDto = {
   id: string
   agentId: string
   agentSettingsId: string
+  /** Revision of the settings version the run is pinned to. */
+  agentRevision: number
   csvDocumentId: string
   columnSchema: AgentCsvExtractionRunColumnSchemaDto
+  type: BaseAgentSessionTypeDto
   status: AgentCsvExtractionRunStatusDto
   summary: AgentCsvExtractionRunSummaryDto | null
   csvExportDocumentId: string | null
@@ -69,6 +73,9 @@ export type AgentCsvExtractionRunRecordDto = {
 export type CreateAgentCsvExtractionRunRequestDto = {
   csvDocumentId: string
   columnSchema: AgentCsvExtractionRunColumnSchemaDto
+  type: BaseAgentSessionTypeDto
+  /** Settings version to pin the run to. Project admins and owners only. */
+  agentSettingsRevision?: number
 }
 
 export type ExecuteAgentCsvExtractionRunRequestDto = {

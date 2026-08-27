@@ -38,6 +38,7 @@ export function toProjectDto(project: ProjectModel): ProjectDto {
     createdAt: project.createdAt.getTime() as TimeType,
     updatedAt: project.updatedAt.getTime() as TimeType,
     featureFlags: project.featureFlags as FeatureFlagKey[],
+    conversationRetentionDays: project.conversationRetentionDays,
     agentSessionCategories: project.agentSessionCategories.map(toProjectAgentSessionCategoryDto),
   }
 }

@@ -24,6 +24,8 @@ import { Attachment } from "./Attachment"
 import { useFormResult } from "./form-result-context"
 import { useFormSubSessions } from "./form-sub-sessions-context"
 import { MarkdownWrapper } from "./MarkdownWrapper"
+import { McpAppView } from "./McpAppView"
+import { getRenderableMcpApp, hasRenderableMcpApp } from "./mcp-app-view"
 import { SourcesTool } from "./SourcesTool"
 import { SubAgentFormResultSheet } from "./SubAgentFormResultSheet"
 import { SurfaceResourcesTool } from "./SurfaceResourcesTool"
@@ -49,6 +51,11 @@ export function AgentSessionMessage({
       const surfaceResourcesTool = message.toolCalls?.find(
         (call) => call.name === ToolName.SurfaceResources,
       )
+      const mcpAppViews = (message.toolCalls ?? []).flatMap((toolCall) => {
+        const view = getRenderableMcpApp(toolCall)
+        return view ? [{ toolCall, view }] : []
+      })
+      const hideMarkdownRecap = !isStreaming && hasRenderableMcpApp(message.toolCalls)
       // Tool names this message delegated to that resolved to a form sub-session,
       // deduplicated so a sub-agent invoked twice shows a single affordance.
       const delegatedToolNames = [
@@ -68,11 +75,12 @@ export function AgentSessionMessage({
             {isError ? (
               <Bubble variant="destructive">
                 <BubbleContent className="px-4 py-3">
-                  <ErrorMessage />
+                  <ErrorMessage detail={message.content} />
                 </BubbleContent>
               </Bubble>
             ) : (
-              hasContent && (
+              hasContent &&
+              !hideMarkdownRecap && (
                 <Bubble variant="muted">
                   <BubbleContent className="px-4 py-3">
                     <MarkdownWrapper content={message.content} />
@@ -85,11 +93,21 @@ export function AgentSessionMessage({
               <SurfaceResourcesTool toolCall={surfaceResourcesTool} />
             )}
 
+            {!isStreaming &&
+              mcpAppViews.map(({ toolCall, view }) => (
+                <McpAppView
+                  key={toolCall.id}
+                  html={view.html}
+                  toolInput={view.toolInput}
+                  toolResult={view.toolResult}
+                />
+              ))}
+
             {!isStreaming && (
               <MessageFooter className="gap-0 px-1">
                 <FeedbackCreator message={message} />
 
-                <CopyToClipboard content={message.content} />
+                {!hideMarkdownRecap && <CopyToClipboard content={message.content} />}
 
                 {renderMessageVersion?.(message)}
 
@@ -137,12 +155,21 @@ export function AgentSessionMessage({
   }
 }
 
-function ErrorMessage() {
+/**
+ * Failed turns store the human-readable reason in the message content (e.g.
+ * "PDF has 92 pages, but at most 20 pages can be converted to images"), so
+ * show it under the generic label instead of leaving the user guessing.
+ */
+function ErrorMessage({ detail }: { detail: string }) {
   const { t } = useTranslation("status")
+  const trimmedDetail = detail.trim()
   return (
-    <div className="flex items-center gap-2">
-      <AlertCircleIcon className="size-4" />
-      <span className="font-semibold">{t("error")}</span>
+    <div className="flex flex-col gap-1">
+      <div className="flex items-center gap-2">
+        <AlertCircleIcon className="size-4" />
+        <span className="font-semibold">{t("error")}</span>
+      </div>
+      {trimmedDetail.length > 0 && <p className="whitespace-pre-wrap text-sm">{trimmedDetail}</p>}
     </div>
   )
 }

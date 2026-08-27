@@ -96,6 +96,7 @@ describe("EvaluationExtractionRuns - Auth", () => {
       payload: {
         evaluationExtractionDatasetId: randomUUID(),
         agentId: randomUUID(),
+        agentSettingsRevision: null,
         keyMapping: [],
       },
     }

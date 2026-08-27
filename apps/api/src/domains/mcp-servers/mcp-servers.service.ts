@@ -18,6 +18,10 @@ export type McpServerConfig = {
   headers?: Record<string, string>
 }
 
+export type EnabledMcpServer = McpServerConfig & {
+  id: string
+}
+
 @Injectable()
 export class McpServersService {
   constructor(
@@ -28,7 +32,7 @@ export class McpServersService {
     private readonly encryptionService: EncryptionService,
   ) {}
 
-  async getEnabledServersForAgent(agentId: string): Promise<McpServerConfig[]> {
+  async getEnabledServersForAgent(agentId: string): Promise<EnabledMcpServer[]> {
     const agentMcpServers = await this.agentMcpServerRepository.find({
       where: { agentId, enabled: true },
       relations: ["mcpServer"],
@@ -36,7 +40,10 @@ export class McpServersService {
 
     return agentMcpServers
       .filter((agentMcpServer) => agentMcpServer.mcpServer)
-      .map((agentMcpServer) => this.decryptConfig(agentMcpServer.mcpServer))
+      .map((agentMcpServer) => ({
+        id: agentMcpServer.mcpServer.id,
+        ...this.decryptConfig(agentMcpServer.mcpServer),
+      }))
   }
 
   async createPreset(slug: string, name: string, config: McpServerConfig): Promise<McpServer> {

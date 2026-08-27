@@ -7,6 +7,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 This is a Turborepo monorepo with the following structure:
 
 - `apps/api` - NestJS backend application (runs on port 3000)
+- `apps/pdf-renderer` - Dedicated NestJS service converting PDFs to PNG page images for image-only LLMs (runs on port 3001)
 - `apps/web` - Vite + React frontend application (runs on port 5173)
 - `packages/@caseai-connect/api-contracts` - Shared API contracts and DTOs
 - `packages/@repo/jest-config` - Shared Jest configurations
@@ -69,6 +70,15 @@ All commands should be run from the root directory using Turbo (via npm scripts)
 - Uses npm workspaces for monorepo management
 - Private packages with internal dependencies using `*` version specifier
 - Engines requirement: Node.js >= 18
+
+## Changelog
+
+Any edit to `CHANGELOG.md` follows the `end-feature` skill rules, whether or not that skill is invoked. The two that get violated most:
+
+- **One sentence per entry**, max 20 words. Never chain clauses with ";", "—", or "so". No sub-bullets.
+- **Write for end users**: name the capability, not the mechanics (no entities, services, migrations, jobs, or column names).
+
+Target shape: `Conversation retention: conversations are now kept 30 days by default, configurable per workspace.`
 
 ## Git
 

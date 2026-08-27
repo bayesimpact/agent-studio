@@ -748,4 +748,135 @@ describe("Tools execution", () => {
     expect(agentCalls).toHaveLength(3)
     expect(agentCalls[1]?.prompt).toContain("smart answer")
   })
+
+  it("MCP App - reads the declared ui:// resource and persists the pointer without HTML", async () => {
+    const { connectScope, agent, agentSettings, session } = await createContextWithSession()
+    const resourceUri = "ui://patient-summary/mcp-app.html"
+    const html = "<html><body>Patient summary</body></html>"
+    const toolResult = {
+      content: [{ type: "text" as const, text: "ok" }],
+      structuredContent: { title: "Ada Lovelace", summary: "Mathematician" },
+    }
+    const readResource = jest.fn().mockResolvedValue({
+      contents: [{ uri: resourceUri, mimeType: "text/html;profile=mcp-app", text: html }],
+    })
+    const getPatientExecute = jest.fn().mockResolvedValue(toolResult)
+    mockMcpServersService.getEnabledServersForAgent.mockResolvedValue([
+      { id: "mcp-server-1", url: "http://mcp.test" },
+    ])
+    mockMcpClientService.connect.mockResolvedValue({
+      tools: {
+        get_patient: Object.assign(
+          tool({
+            description: "Get a patient",
+            inputSchema: z.object({ patientId: z.string() }),
+            execute: getPatientExecute,
+          }),
+          { _meta: { ui: { resourceUri } } },
+        ),
+      },
+      close: jest.fn(),
+      readResource,
+    })
+
+    await runWithToolCall({
+      agent,
+      agentSettings,
+      session,
+      connectScope,
+      toolName: "get_patient",
+      toolInput: { patientId: "p-1" },
+    })
+
+    expect(readResource).toHaveBeenCalledWith(resourceUri)
+    const assistantMessage = await repositories.agentMessageRepository.findOne({
+      where: { sessionId: session.id, role: "assistant" },
+    })
+    const mcpAppCall = assistantMessage?.toolCalls?.find(
+      (toolCall) => toolCall.name === "get_patient",
+    )
+    expect(mcpAppCall?.mcpApp).toEqual({ mcpServerId: "mcp-server-1", resourceUri })
+    expect(mcpAppCall?.mcpApp).not.toHaveProperty("html")
+    expect(mcpAppCall?.result).toEqual(toolResult)
+  })
+
+  it("MCP App - does not read an undeclared resource URI", async () => {
+    const { connectScope, agent, agentSettings, session } = await createContextWithSession()
+    const readResource = jest.fn()
+    const searchExecute = jest.fn().mockResolvedValue({
+      content: [{ type: "text", text: "ok" }],
+      _meta: { ui: { resourceUri: "ui://undeclared/app.html" } },
+    })
+    mockMcpServersService.getEnabledServersForAgent.mockResolvedValue([
+      { id: "mcp-server-1", url: "http://mcp.test" },
+    ])
+    mockMcpClientService.connect.mockResolvedValue({
+      tools: {
+        search_resources: tool({
+          description: "Search",
+          inputSchema: z.object({ query: z.string() }),
+          execute: searchExecute,
+        }),
+      },
+      close: jest.fn(),
+      readResource,
+    })
+
+    await runWithToolCall({
+      agent,
+      agentSettings,
+      session,
+      connectScope,
+      toolName: ToolName.McpSearchResources,
+      toolInput: { query: "insurance" },
+    })
+
+    expect(readResource).not.toHaveBeenCalled()
+  })
+
+  it("MCP App - falls back to a normal tool call when the resource MIME type is wrong", async () => {
+    const { connectScope, agent, agentSettings, session } = await createContextWithSession()
+    const resourceUri = "ui://patient-summary/mcp-app.html"
+    const readResource = jest.fn().mockResolvedValue({
+      contents: [{ uri: resourceUri, mimeType: "text/plain", text: "nope" }],
+    })
+    mockMcpServersService.getEnabledServersForAgent.mockResolvedValue([
+      { id: "mcp-server-1", url: "http://mcp.test" },
+    ])
+    mockMcpClientService.connect.mockResolvedValue({
+      tools: {
+        get_patient: Object.assign(
+          tool({
+            description: "Get a patient",
+            inputSchema: z.object({ patientId: z.string() }),
+            execute: jest.fn().mockResolvedValue({
+              content: [{ type: "text", text: "ok" }],
+              structuredContent: { title: "Ada" },
+            }),
+          }),
+          { _meta: { ui: { resourceUri } } },
+        ),
+      },
+      close: jest.fn(),
+      readResource,
+    })
+
+    await runWithToolCall({
+      agent,
+      agentSettings,
+      session,
+      connectScope,
+      toolName: "get_patient",
+      toolInput: { patientId: "p-1" },
+    })
+
+    const assistantMessage = await repositories.agentMessageRepository.findOne({
+      where: { sessionId: session.id, role: "assistant" },
+    })
+    const mcpAppCall = assistantMessage?.toolCalls?.find(
+      (toolCall) => toolCall.name === "get_patient",
+    )
+    expect(mcpAppCall?.mcpApp).toBeUndefined()
+    expect(mcpAppCall?.name).toBe("get_patient")
+  })
 })

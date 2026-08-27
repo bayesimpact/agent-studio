@@ -1,3 +1,4 @@
+import type { AgentSessionToolCallDto } from "../agents/shared/agent-session-messages/agent-session-messages.dto"
 import type { TimeType } from "../generic"
 
 export type PublicSessionMessageDto = {
@@ -6,6 +7,8 @@ export type PublicSessionMessageDto = {
   content: string
   status?: "streaming" | "completed" | "aborted" | "error"
   createdAt: TimeType
+  /** Present when the turn ran tools. MCP Apps include a hydrated `ui://` card. */
+  toolCalls?: AgentSessionToolCallDto[]
 }
 
 export type PublicAgentSessionDto = {

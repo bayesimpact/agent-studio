@@ -1,4 +1,7 @@
-import type { AgentCsvExtractionRunColumnSchemaDto } from "@caseai-connect/api-contracts"
+import type {
+  AgentCsvExtractionRunColumnSchemaDto,
+  BaseAgentSessionTypeDto,
+} from "@caseai-connect/api-contracts"
 import type {
   AgentCsvExtractionRun,
   AgentCsvExtractionRunStatusChangedEvent,
@@ -13,6 +16,8 @@ export interface IAgentCsvExtractionRunsSpi {
       payload: {
         csvDocumentId: string
         columnSchema: AgentCsvExtractionRunColumnSchemaDto
+        type: BaseAgentSessionTypeDto
+        agentSettingsRevision?: number
       }
     },
   ): Promise<AgentCsvExtractionRun>
@@ -24,7 +29,7 @@ export interface IAgentCsvExtractionRunsSpi {
     params: BaseParams & { agentCsvExtractionRunId: string },
   ): Promise<AgentCsvExtractionRun>
   getOne(params: BaseParams & { agentCsvExtractionRunId: string }): Promise<AgentCsvExtractionRun>
-  getAll(params: BaseParams): Promise<AgentCsvExtractionRun[]>
+  getAll(params: BaseParams & { type: BaseAgentSessionTypeDto }): Promise<AgentCsvExtractionRun[]>
   getFileColumns(
     params: BaseParams & { documentId: string },
   ): Promise<{ id: string; name: string; values: unknown[] }[]>

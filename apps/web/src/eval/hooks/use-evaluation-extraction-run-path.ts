@@ -12,5 +12,16 @@ export function useEvaluationExtractionRunPath() {
   const buildRunPath = ({ runId }: { runId: string }): string => {
     return EvalRoutes.evaluationRun.build({ organizationId, projectId, datasetId, runId })
   }
-  return { buildRunPath }
+
+  const buildComparePath = ({ runIds }: { runIds: string[] }): string => {
+    const path = EvalRoutes.extractionDatasetCompare.build({
+      organizationId,
+      projectId,
+      datasetId,
+    })
+    const search = new URLSearchParams({ runs: runIds.join(",") }).toString()
+    return `${path}?${search}`
+  }
+
+  return { buildRunPath, buildComparePath }
 }

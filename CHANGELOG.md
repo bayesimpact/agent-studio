@@ -8,30 +8,53 @@ This project uses [CalVer](https://calver.org/) (YY.MM.Micro) for product versio
 ## [Unreleased]
 
 ### Added
-- Agent settings drafts and publishing: saving any tab of the agent editor now updates a draft version instead of changing the agent directly, and a new Publish button makes the draft the version the agent runs with, with an optional name and description shown in the version history; extraction agents get the Publish button next to the History button of their inline editor; the Publish button is disabled while the editor has unsaved changes
-- Studio playground: the header shows the published version new messages run with, and each agent reply carries a version badge showing which settings version produced it; clicking a badge opens the version history preselected on that version
-- Studio extraction agents: every run carries a version badge showing which settings version it ran with, on the run page and on each entry of the run history; clicking a badge opens the version history preselected on that version
-- Back-office administrators can create an organization directly from the organizations panel; the creating administrator becomes its owner
-- Embedded (public) agent sessions now get a session title and categories from the agent's bookkeeping report, and support form filling — the collected values accumulate on the public session across turns; embed sessions also enter the conversations-by-category analytics, summed with regular conversations
-- Agents running a model that is being retired now show a banner on the agent and editor views, giving the retirement date and the model to move to; retiring models are labelled "(deprecated)" in the model pickers and stay selectable so you can compare before switching
+- Conversation retention: conversations are now kept 30 days by default, configurable per workspace.
+- (beta) Gemma and MedGemma agents accept PDF documents in chat and extraction.
+- (beta) Embedded public chat shows the MCP App UI for tools that provide one.
 
 ### Changed
-- Access control is moving to a unified roles-and-permissions model across the platform (WIP)
-- Back-office access is now controlled by the new roles-and-permissions system
-- Session bookkeeping is now guaranteed on every reply: conversation agents report their session title, categories, and cited sources through a single mandatory report, enforced by the platform when the model skips it — titles now appear even on agents without categories, and categories can no longer be invented outside the configured list (schema enforced at generation time on Gemini models)
-- Gemini models other than 3.6-flash are served from the EU endpoint again (EU data processing); only gemini-3.6-flash, unavailable in the EU region, uses the global endpoint
-- gemini-2.5-flash and gemini-2.5-pro are retired on 30 September 2026: new agents and evaluation judge runs now start on gemini-3.5-flash-lite, and existing agents on a 2.5 model should be moved over and re-tested before that date
-- The Gemini 3.x models are now available to every project, so the replacement models can be picked without an administrator enabling a flag first; gemini-3.6-flash is labelled "(non-EU)" in the model pickers because it is the one model served outside the EU region
-- Evaluations: the agent version picker in the conversation run dialog labels each version as draft, and marks the published version the agent runs with as "Current" with its date, so runs are no longer launched on an unpublished draft by accident
-- Form agents are no longer a separate agent type: any conversation agent can now turn on "Form filling" from a new Tools tab, define the form fields with the visual schema editor (drag to set the order the agent asks its questions), and the agent fills the form from the user's answers during the chat; the collected values open from a "Show form state" button on the agent's replies; the agent creator still offers a "Form" choice, which now creates a conversation agent with form filling already enabled — existing form agents, with their sessions and settings history, are migrated to conversation agents with form filling enabled
+- PDF documents sent to Gemma and MedGemma agents are now converted to images by a dedicated service, so heavy PDF processing no longer slows down the platform.
 
 ### Fixed
-- Model tool-call syntax (pseudo-XML fragments) no longer leaks into chat replies when the model mishandles its bookkeeping call
-- Agent prompts that referenced the old retrieval tool name are rewritten to the new one at deploy time, so hand-written instructions keep working
-- Agent editor: restoring a version from the history now updates the form fields immediately
-- Embedded agents now answer with the agent's published version: the widget on a customer site, the greeting of a new embed session, and the reviewer's session view all stopped picking up an unpublished draft as soon as an author saved a change in the agent editor; archived versions are skipped the same way
-- Evaluations: retrying an extraction run re-processes its records with the settings version the run was launched on, instead of the agent's newest version, which could be an unpublished draft
-- Fix some scanned PDF documents importing with no extracted text
+- Chat shows an error message instead of an empty reply when the model fails.
+- Agent replies no longer show a leaked internal tool-call tag; the platform hides it and still runs the tool.
+- Chat: a server error carrying no message now ends the reply with an error instead of being dropped.
+- Agent and session pages now display correctly on small screens.
+
+### Security
+
+## [26.08.0] - 2026-08-25
+
+### Added
+- Agents now have a draft and a published version of their settings.
+- Studio playground: each agent reply shows a version badge.
+- Studio playground: a version picker in the header selects the settings version for new messages.
+- Studio extraction agents: each run shows a version badge.
+- Studio extraction agents: a version picker selects the settings version for a run.
+- Extraction evaluations: a version picker selects the agent settings version for a run.
+- Extraction evaluations: each run shows the settings version it ran with.
+- Extraction evaluations: the run history is a table with one row per run.
+- Extraction evaluations: selected runs can be compared side by side.
+- Back-office administrators can create an organization from the organizations panel.
+- Embedded (public) agent sessions get a session title and categories, support form filling, and count in the category analytics.
+- Agents that run a retiring model show a banner with the retirement date and the replacement model.
+- (beta) Conversation chat shows the MCP App UI for tools that provide one.
+
+### Changed
+- Access control moves to a unified roles-and-permissions model (WIP).
+- Conversation agents report the session title, categories, and cited sources in one mandatory report, enforced by the platform.
+- Gemini models use the EU endpoint again; only gemini-3.6-flash uses the global endpoint (not available in the EU region).
+- gemini-2.5-flash and gemini-2.5-pro retire on 30 September 2026.
+- The Gemini 3.x models are available to every project.
+- Form agents are now merged with conversation agents.
+
+### Fixed
+- Agent editor: restoring a version updates the form fields immediately.
+- Scanned PDF documents now import with their extracted text.
+- Agent editor no longer crashes when the page reloads while the settings load.
+- CSV extraction runs from the Studio playground no longer show in the Desk app, and vice versa.
+- New CSV extraction runs are personal.
+- Studio no longer crashes when a project opens right after onboarding restarts.
 
 ### Security
 ## [26.07.3] - 2026-07-24

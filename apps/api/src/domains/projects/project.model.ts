@@ -10,6 +10,7 @@ type ProjectModelProps = {
   createdAt: Date
   updatedAt: Date
   featureFlags: string[]
+  conversationRetentionDays: number | null
   agentSessionCategories: ProjectAgentSessionCategory[]
 }
 
@@ -21,6 +22,8 @@ export class ProjectModel extends ModelWithPermissions {
   readonly updatedAt: Date
   /** Keys of the enabled feature flags. */
   readonly featureFlags: string[]
+  /** GDPR retention in days; null means keep forever. */
+  readonly conversationRetentionDays: number | null
   readonly agentSessionCategories: ProjectAgentSessionCategory[]
 
   constructor(props: ProjectModelProps, permissions: readonly string[]) {
@@ -31,6 +34,7 @@ export class ProjectModel extends ModelWithPermissions {
     this.createdAt = props.createdAt
     this.updatedAt = props.updatedAt
     this.featureFlags = props.featureFlags
+    this.conversationRetentionDays = props.conversationRetentionDays
     this.agentSessionCategories = props.agentSessionCategories
   }
 
@@ -45,6 +49,7 @@ export class ProjectModel extends ModelWithPermissions {
         featureFlags: (project.featureFlags ?? [])
           .filter((featureFlag) => featureFlag.enabled)
           .map((featureFlag) => featureFlag.featureFlagKey),
+        conversationRetentionDays: project.conversationRetentionDays ?? null,
         agentSessionCategories: (project.projectAgentSessionCategories ?? []).map((category) => ({
           id: category.id,
           name: category.name,

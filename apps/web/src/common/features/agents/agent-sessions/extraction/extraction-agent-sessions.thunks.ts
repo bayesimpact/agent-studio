@@ -1,4 +1,5 @@
 import { createAsyncThunk } from "@reduxjs/toolkit"
+import { selectPlaygroundRevision } from "@/common/features/agents/agent-settings/agent-settings.selectors"
 import { getCurrentId } from "@/common/features/helpers"
 import type { RootState, ThunkExtraArg } from "@/common/store"
 import type { Document } from "@/studio/features/documents/documents.models"
@@ -34,7 +35,10 @@ const getAll = createAsyncThunk<
     type: buildType(),
   })
 
-  const csvSessions = await services.agentCsvExtractionRuns.getAll(params)
+  const csvSessions = await services.agentCsvExtractionRuns.getAll({
+    ...params,
+    type: buildType(),
+  })
 
   return { csvSessions, others }
 })
@@ -76,12 +80,19 @@ const executeOne = createAsyncThunk<
     const projectId = getCurrentId({ state, name: "projectId" })
     const agentId = getCurrentId({ state, name: "agentId" })
 
+    // Only Studio may name a version; a Desk run is a live run and the API rejects a revision on
+    // one. `undefined` while the history is loading, which lets the API apply its own default.
+    const agentSettingsRevision = isStudio
+      ? selectPlaygroundRevision({ agentId })(state)
+      : undefined
+
     return await services.extractionAgentSessions.executeOne({
       organizationId,
       projectId,
       agentId,
       documentId: document.id,
       type: isStudio ? "playground" : "live",
+      agentSettingsRevision,
     })
   },
 )

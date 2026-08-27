@@ -11,6 +11,9 @@ import { Agent } from "@/domains/agents/agent.entity"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
 import { AgentSettingsService } from "@/domains/agents/settings/agent-settings.service"
 import type { AgentMessage } from "@/domains/agents/shared/agent-session-messages/agent-message.entity"
+import { applyLiveMcpAppHtml } from "@/domains/agents/shared/agent-session-messages/agent-message.helpers"
+// biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
+import { McpAppHtmlService } from "@/domains/agents/shared/agent-session-messages/mcp-app-html.service"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
 import { StreamingService } from "@/domains/agents/shared/agent-session-messages/streaming/streaming.service"
 import type { AgentEmbedConfig } from "./agent-embed-configs/agent-embed-config.entity"
@@ -29,6 +32,7 @@ export class PublicChatService {
     readonly agentEmbedConfigsService: AgentEmbedConfigsService,
     private readonly publicAgentSessionsService: PublicAgentSessionsService,
     private readonly streamingService: StreamingService,
+    private readonly mcpAppHtmlService: McpAppHtmlService,
   ) {}
 
   async createSession(
@@ -46,7 +50,13 @@ export class PublicChatService {
     const { session, messages } = await this.publicAgentSessionsService.getSessionWithMessages(
       publicSession.id,
     )
-    return this.toSessionDto(session, messages)
+    const htmlByKey = await this.mcpAppHtmlService.readLiveHtml({
+      agentId: session.agentId,
+      sessionId: session.id,
+      messages,
+      externalVisitorId: session.externalVisitorId,
+    })
+    return this.toSessionDto(session, messages, htmlByKey)
   }
 
   async *streamResponse(
@@ -109,6 +119,7 @@ export class PublicChatService {
   private toSessionDto(
     session: PublicAgentSession,
     messages: AgentMessage[],
+    htmlByKey: Map<string, string> = new Map(),
   ): PublicAgentSessionDto {
     return {
       id: session.id,
@@ -120,6 +131,7 @@ export class PublicChatService {
           content: message.content,
           status: message.status ?? undefined,
           createdAt: message.createdAt.getTime(),
+          toolCalls: applyLiveMcpAppHtml(message.toolCalls, htmlByKey),
         }),
       ),
       createdAt: session.createdAt.getTime(),

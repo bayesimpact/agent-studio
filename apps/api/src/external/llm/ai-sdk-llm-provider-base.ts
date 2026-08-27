@@ -23,6 +23,10 @@ import type {
 } from "@/common/interfaces/llm-provider.interface"
 import { removeNullish } from "@/common/utils/remove-nullish"
 import { fireAndForgetStopCondition } from "@/external/llm/fire-and-forget-stop-condition"
+import {
+  convertPdfPartsToImageParts,
+  modelRequiresPdfAsImages,
+} from "@/external/llm/pdf-to-image-parts"
 import { ResponseHelper } from "@/external/llm/response-helper"
 import { withStrictTools } from "@/external/llm/strict-tools"
 import {
@@ -288,6 +292,10 @@ export abstract class AISDKLLMProviderBase implements LLMProvider {
       ? CallOrigin.streamChatResponse_withTools
       : CallOrigin.streamChatResponse
     this.checkConfigProviderAndModel(config)
+    // Gemma and MedGemma only accept images: send pdfs as one image per page
+    if (modelRequiresPdfAsImages(config.model)) {
+      messages = await Promise.all(messages.map(convertPdfPartsToImageParts))
+    }
     const aiSDKMessages: LLMChatMessage[] = messages
       .map((message) => {
         if (message.role === "system") {
@@ -347,8 +355,13 @@ export abstract class AISDKLLMProviderBase implements LLMProvider {
     const fullMessages = [...systemMessagePart, ...aiSDKMessages]
     const streamResult = await agent.stream({ messages: fullMessages })
 
-    for await (const chunk of streamResult.textStream) {
-      yield chunk
+    // The AI SDK never throws stream failures at the consumer: they surface
+    // as `error` parts on fullStream, which textStream filters out — the
+    // stream just ends, indistinguishable from an empty answer. Consume
+    // fullStream so a failed generation rejects and callers can report it.
+    for await (const part of streamResult.fullStream) {
+      if (part.type === "text-delta") yield part.text
+      else if (part.type === "error") throw part.error
     }
 
     await this.runEndOfTurnTools({
@@ -740,11 +753,12 @@ ${leakedCall.raw}`,
         ],
       }
     }
-    //Gemma and Mistral restriction: no pdf
-    if (
-      AgentModelToAgentProvider[config.model] === AgentProvider.Gemma ||
-      AgentModelToAgentProvider[config.model] === AgentProvider.Mistral
-    ) {
+    // Gemma and MedGemma only accept images: send pdfs as one image per page
+    if (modelRequiresPdfAsImages(config.model)) {
+      message = await convertPdfPartsToImageParts(message)
+    }
+    //Mistral restriction: no pdf
+    if (AgentModelToAgentProvider[config.model] === AgentProvider.Mistral) {
       if (Array.isArray(message.content)) {
         const filePart = message.content.find((p): p is FilePart => p.type === "file")
         if (filePart?.mediaType === "application/pdf") {

@@ -27,6 +27,20 @@ function readDisplayModeFromUrl(): EmbedDisplayMode {
   return readParam("displayMode") === "drawer" ? "drawer" : "modal"
 }
 
+function readHideHeaderFromUrl(): boolean {
+  const value = readParam("hideHeader")
+  return value === "1" || value === "true"
+}
+
+function isResetSessionMessage(data: unknown): boolean {
+  return (
+    typeof data === "object" &&
+    data !== null &&
+    "type" in data &&
+    data.type === "agent-studio:reset-session"
+  )
+}
+
 // ─── Root ──────────────────────────────────────────────────────────────────
 
 export function App() {
@@ -41,6 +55,7 @@ export function App() {
 
   const embedToken = readParam("embedToken")
   const displayMode = readDisplayModeFromUrl()
+  const hideHeader = readHideHeaderFromUrl()
 
   const handleClose = () => {
     window.parent.postMessage({ type: "agent-studio:close" }, "*")
@@ -54,10 +69,16 @@ export function App() {
             embedToken={embedToken}
             locale={locale}
             displayMode={displayMode}
+            hideHeader={hideHeader}
             onClose={handleClose}
           />
         ) : (
-          <SimulatedChat locale={locale} displayMode={displayMode} onClose={handleClose} />
+          <SimulatedChat
+            locale={locale}
+            displayMode={displayMode}
+            hideHeader={hideHeader}
+            onClose={handleClose}
+          />
         )}
       </div>
     </I18nextProvider>
@@ -70,11 +91,13 @@ function LiveChat({
   embedToken,
   locale,
   displayMode,
+  hideHeader,
   onClose,
 }: {
   embedToken: string
   locale: SupportedLocale
   displayMode: EmbedDisplayMode
+  hideHeader: boolean
   onClose: () => void
 }) {
   const [remoteConfig, setRemoteConfig] = useState<EmbedPublicConfigDto | null>(null)
@@ -92,14 +115,30 @@ function LiveChat({
     logoUrl: remoteConfig?.logoUrl ?? undefined,
   }
 
-  const { status, messages, isStreaming, errorKey, send } = usePublicChat(embedToken)
+  const { status, messages, isStreaming, errorKey, send, reset } = usePublicChat(embedToken)
+
+  useEffect(() => {
+    function onMessage(event: MessageEvent) {
+      if (isResetSessionMessage(event.data)) {
+        reset()
+      }
+    }
+    window.addEventListener("message", onMessage)
+    return () => window.removeEventListener("message", onMessage)
+  }, [reset])
 
   if (status === "initializing") {
-    return <ChatLoadingShell theme={theme} />
+    return <ChatLoadingShell theme={theme} hideHeader={hideHeader} />
   }
 
   if (status === "error") {
-    return <ChatErrorShell errorKey={errorKey ?? "status.errorUnknown"} theme={theme} />
+    return (
+      <ChatErrorShell
+        errorKey={errorKey ?? "status.errorUnknown"}
+        theme={theme}
+        hideHeader={hideHeader}
+      />
+    )
   }
 
   return (
@@ -108,6 +147,7 @@ function LiveChat({
       theme={theme}
       locale={locale}
       displayMode={displayMode}
+      hideHeader={hideHeader}
       messages={messages}
       isStreaming={isStreaming}
       onSendMessage={send}
@@ -121,14 +161,26 @@ function LiveChat({
 function SimulatedChat({
   locale,
   displayMode,
+  hideHeader,
   onClose,
 }: {
   locale: SupportedLocale
   displayMode: EmbedDisplayMode
+  hideHeader: boolean
   onClose: () => void
 }) {
   const [messages, setMessages] = useState<AgentSessionMessageDto[]>(shortConversation)
   const [isStreaming, setIsStreaming] = useState(false)
+
+  useEffect(() => {
+    function onMessage(event: MessageEvent) {
+      if (!isResetSessionMessage(event.data)) return
+      setIsStreaming(false)
+      setMessages([])
+    }
+    window.addEventListener("message", onMessage)
+    return () => window.removeEventListener("message", onMessage)
+  }, [])
 
   const handleSendMessage = (content: string) => {
     const userMessage: AgentSessionMessageDto = {
@@ -168,6 +220,7 @@ function SimulatedChat({
       agentName="Helpful Assistant"
       locale={locale}
       displayMode={displayMode}
+      hideHeader={hideHeader}
       messages={messages}
       isStreaming={isStreaming}
       onSendMessage={handleSendMessage}
@@ -178,17 +231,19 @@ function SimulatedChat({
 
 // ─── Loading / error shells ────────────────────────────────────────────────
 
-function ChatLoadingShell({ theme }: { theme: EmbedChatTheme }) {
+function ChatLoadingShell({ theme, hideHeader }: { theme: EmbedChatTheme; hideHeader: boolean }) {
   const { t } = useTranslation("chat")
   return (
     <div className="flex h-full flex-col overflow-hidden rounded-2xl bg-white">
-      <div
-        className="flex h-16 shrink-0 items-center gap-3 px-5"
-        style={{ backgroundColor: theme.primaryColor ?? "#2563eb" }}
-      >
-        <div className="h-9 w-9 animate-pulse rounded-full bg-white/30" />
-        <div className="h-4 w-32 animate-pulse rounded bg-white/30" />
-      </div>
+      {!hideHeader && (
+        <div
+          className="chat-header flex h-16 shrink-0 items-center gap-3 px-5"
+          style={{ backgroundColor: theme.primaryColor ?? "#2563eb" }}
+        >
+          <div className="h-9 w-9 animate-pulse rounded-full bg-white/30" />
+          <div className="h-4 w-32 animate-pulse rounded bg-white/30" />
+        </div>
+      )}
       <div className="flex flex-1 items-center justify-center text-sm text-gray-400">
         {t("status.connecting")}
       </div>
@@ -199,17 +254,21 @@ function ChatLoadingShell({ theme }: { theme: EmbedChatTheme }) {
 function ChatErrorShell({
   errorKey,
   theme,
+  hideHeader,
 }: {
   errorKey: PublicChatErrorKey
   theme: EmbedChatTheme
+  hideHeader: boolean
 }) {
   const { t } = useTranslation("chat")
   return (
     <div className="flex h-full flex-col overflow-hidden rounded-2xl bg-white">
-      <div
-        className="flex h-16 shrink-0 items-center gap-3 px-5"
-        style={{ backgroundColor: theme.primaryColor ?? "#2563eb" }}
-      />
+      {!hideHeader && (
+        <div
+          className="chat-header flex h-16 shrink-0 items-center gap-3 px-5"
+          style={{ backgroundColor: theme.primaryColor ?? "#2563eb" }}
+        />
+      )}
       <div className="flex flex-1 flex-col items-center justify-center gap-2 p-6 text-center">
         <p className="text-sm font-medium text-gray-700">{t(errorKey)}</p>
       </div>

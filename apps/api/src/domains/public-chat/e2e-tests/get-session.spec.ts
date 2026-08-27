@@ -157,4 +157,53 @@ describe("PublicChat - getSession", () => {
     expect(response.body.data.messages[1].content).toBe("Hi there!")
     expect(response.body.data.messages[1].status).toBe("completed")
   })
+
+  it("should return persisted toolCalls including MCP App resource URIs", async () => {
+    const { embedConfig, agentSettings } = await createContext()
+    const connectScope = {
+      organizationId: embedConfig.organizationId,
+      projectId: embedConfig.projectId,
+    }
+    const resourceUri = "ui://patient-summary/mcp-app.html"
+    const mcpServerId = randomUUID()
+
+    await repositories.agentMessageRepository.save({
+      id: randomUUID(),
+      sessionId,
+      ...connectScope,
+      agentSettingsId: agentSettings.id,
+      role: "assistant" as const,
+      content: "Here is the summary.",
+      status: "completed" as const,
+      startedAt: new Date("2026-01-01T10:00:01Z"),
+      completedAt: new Date("2026-01-01T10:00:02Z"),
+      toolCalls: [
+        {
+          id: "call-1",
+          name: "get_patient",
+          arguments: { patientId: "p-1" },
+          result: { structuredContent: { title: "Ada" } },
+          mcpApp: { mcpServerId, resourceUri },
+        },
+      ],
+      documentId: null,
+      attachmentDocumentId: null,
+      createdAt: new Date("2026-01-01T10:00:01Z"),
+      updatedAt: new Date("2026-01-01T10:00:02Z"),
+      deletedAt: null,
+    })
+
+    const response = await subject()
+    expect(response.status).toBe(200)
+    expect(response.body.data.messages).toHaveLength(1)
+    expect(response.body.data.messages[0].toolCalls).toEqual([
+      {
+        id: "call-1",
+        name: "get_patient",
+        arguments: { patientId: "p-1" },
+        result: { structuredContent: { title: "Ada" } },
+        mcpApp: { mcpServerId, resourceUri },
+      },
+    ])
+  })
 })

@@ -151,7 +151,15 @@
       "restoreDialog": {
         "title": "Restaurer la version {{revision}} ?",
         "description": "Les paramètres de la version {{revision}} seront copiés comme nouvelle version et deviendront les paramètres actuels. Aucune version n'est supprimée."
-      }
+      },
+      "draft": "Brouillon"
+    },
+    "version": {
+      "ariaLabel": "Version des paramètres utilisée par les nouveaux messages",
+      "extractionAriaLabel": "Version des paramètres utilisée par les extractions",
+      "placeholder": "Sélectionner une version",
+      "item": "v{{revision}} — {{detail}}",
+      "current": "Actuelle ({{date}})"
     },
     "orchestration": {
       "selectedTitle": "Sous-agents",

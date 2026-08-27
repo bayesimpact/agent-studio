@@ -19,6 +19,26 @@ export enum ToolName {
 
 export type AgentSessionToolName = ToolName | (string & {})
 
+/**
+ * MCP App attached to a tool. The `ui://` pointer is persisted; `html` is the
+ * current `resources/read` result, hydrated when messages are loaded so card
+ * UI updates apply to old conversations.
+ */
+export type AgentSessionMcpAppDto = {
+  mcpServerId: string
+  resourceUri: string
+  html?: string
+}
+
+export type AgentSessionToolCallDto = {
+  id: string
+  name: AgentSessionToolName
+  arguments: Record<string, unknown>
+  /** Raw MCP tool result (`content`, `structuredContent`, `_meta`) when an MCP App is rendered. */
+  result?: unknown
+  mcpApp?: AgentSessionMcpAppDto
+}
+
 export type AgentSessionMessageDto = {
   id: string
   role: "user" | "assistant" | "tool"
@@ -29,15 +49,12 @@ export type AgentSessionMessageDto = {
   startedAt?: TimeType
   completedAt?: TimeType
   /**
-   * Revision of the agent settings that produced this message. Absent on messages built
-   * client-side during a live stream, which are never refetched.
+   * Revision of the agent settings that produced this message. The client also sets it on the
+   * assistant message it builds optimistically, from the version the request named, so the badge
+   * stays right until the persisted message replaces it.
    */
   agentRevision?: number
-  toolCalls?: Array<{
-    id: string
-    name: AgentSessionToolName
-    arguments: Record<string, unknown>
-  }>
+  toolCalls?: AgentSessionToolCallDto[]
 }
 
 export const agentSessionMessageAttachmentAllowedMimeTypes = [

@@ -5,34 +5,58 @@ import { useTranslation } from "react-i18next"
 import { cn } from "../lib/cn"
 import { ChatBotMessage, ChatUserMessage } from "./index"
 import { MarkdownWrapper } from "./MarkdownWrapper"
+import { McpAppView } from "./McpAppView"
+import { getRenderableMcpApp, hasRenderableMcpApp } from "./mcp-app-view"
 
 export function ChatMessage({ message }: { message: AgentSessionMessageDto }) {
   switch (message.role) {
     case "assistant": {
       const isStreaming = message.status === "streaming"
-      const isEmpty = message.content.trim().length === 0 && message.status === "completed"
+      const mcpAppViews = (message.toolCalls ?? []).flatMap((toolCall) => {
+        const view = getRenderableMcpApp(toolCall)
+        return view ? [{ toolCall, view }] : []
+      })
+      const hideMarkdownRecap = !isStreaming && hasRenderableMcpApp(message.toolCalls)
+      const isEmpty =
+        message.content.trim().length === 0 && message.status === "completed" && !hideMarkdownRecap
       const isError = message.status === "error" || isEmpty
+      const showTextBubble =
+        isError || isStreaming || (!hideMarkdownRecap && message.content.trim().length > 0)
 
       return (
-        <ChatBotMessage>
-          <div
-            className={cn(
-              "rounded-2xl p-4 text-sm",
-              isError
-                ? "border border-red-200 bg-red-50 text-red-800"
-                : "bg-gray-100 text-gray-900",
-            )}
-          >
-            {isStreaming && message.content.trim().length === 0 && <ThinkingIndicator />}
-            {isError ? <ErrorIndicator /> : <MarkdownWrapper content={message.content} />}
-          </div>
+        <div className="flex w-full flex-col">
+          {showTextBubble && (
+            <ChatBotMessage>
+              <div
+                className={cn(
+                  "rounded-2xl p-4 text-sm",
+                  isError
+                    ? "border border-red-200 bg-red-50 text-red-800"
+                    : "bg-gray-100 text-gray-900",
+                )}
+              >
+                {isStreaming && message.content.trim().length === 0 && <ThinkingIndicator />}
+                {isError ? <ErrorIndicator /> : <MarkdownWrapper content={message.content} />}
+              </div>
 
-          {!isStreaming && !isError && message.content.trim().length > 0 && (
-            <div className="mt-1 flex items-center">
-              <CopyButton content={message.content} />
-            </div>
+              {!isStreaming && !isError && message.content.trim().length > 0 && (
+                <div className="mt-1 flex items-center">
+                  <CopyButton content={message.content} />
+                </div>
+              )}
+            </ChatBotMessage>
           )}
-        </ChatBotMessage>
+
+          {!isStreaming &&
+            mcpAppViews.map(({ toolCall, view }) => (
+              <McpAppView
+                key={toolCall.id}
+                html={view.html}
+                toolInput={view.toolInput}
+                toolResult={view.toolResult}
+              />
+            ))}
+        </div>
       )
     }
 
