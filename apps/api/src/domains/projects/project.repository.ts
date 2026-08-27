@@ -89,7 +89,11 @@ export class ProjectRepository {
       projectId: connectScope.projectId,
       feature: "llm-priority-calls",
     })
-    return { priorityCalls }
+    const flexWorkers = await this.isFeatureEnabled({
+      projectId: connectScope.projectId,
+      feature: "llm-flex-workers",
+    })
+    return { priorityCalls, flexWorkers }
   }
   /** Queried through the featureFlags relation to keep this repository on the Project entity only. */
   async isFeatureEnabled({
