@@ -225,7 +225,6 @@ export function McpAppView({
         await initialized
         if (thisAttempt !== attempt || cancelled) return
 
-        console.debug("MCP App initialized")
         // Apps often register `ontoolresult` after `connect()`, so the first
         // notification is dropped and the UI stays on its loading shell.
         resendOnNextSizeChange = true
@@ -234,11 +233,7 @@ export function McpAppView({
         for (const delayMs of TOOL_RESULT_RETRY_DELAYS_MS) {
           retryTimeoutIds.push(window.setTimeout(() => void pushToolData(), delayMs))
         }
-      } catch (error) {
-        console.debug(
-          "MCP App render failed",
-          error instanceof Error ? error.message : "unknown error",
-        )
+      } catch {
         if (thisAttempt === attempt && !cancelled) setHasFailed(true)
       }
     }
@@ -289,7 +284,7 @@ export function McpAppView({
   return (
     <iframe
       ref={iframeRef}
-      className="mt-2 w-full overflow-hidden rounded-md border bg-background"
+      className="mt-2 w-full overflow-hidden rounded-md border border-gray-200 bg-white"
       sandbox="allow-scripts"
       style={{ height: INITIAL_IFRAME_HEIGHT_PX, border: 0 }}
       title="MCP App"

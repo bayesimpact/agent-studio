@@ -41,6 +41,8 @@ export type EmbedChatProps = {
   placeholder?: string
   /** Called when the user clicks the close button in the header */
   onClose?: () => void
+  /** Hide the branded header (agent name, logo, close). Useful when the host already has chrome. */
+  hideHeader?: boolean
 }
 
 export function EmbedChat(props: EmbedChatProps) {
@@ -70,6 +72,7 @@ function EmbedChatInner({
   onSendMessage,
   placeholder,
   onClose,
+  hideHeader = false,
 }: EmbedChatProps) {
   const { t } = useTranslation("chat")
   const chatEndRef = useRef<HTMLDivElement>(null)
@@ -95,7 +98,9 @@ function EmbedChatInner({
 
   return (
     <Chat primaryColor={theme?.primaryColor} displayMode={displayMode}>
-      <ChatHeader agentName={agentName} logoUrl={theme?.logoUrl} onClose={onClose} />
+      {!hideHeader && (
+        <ChatHeader agentName={agentName} logoUrl={theme?.logoUrl} onClose={onClose} />
+      )}
 
       <ChatContent>
         {messages.map((message) => (

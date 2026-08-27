@@ -41,6 +41,7 @@ function toDisplayMessage(msg: {
   content: string
   status?: string
   createdAt?: number
+  toolCalls?: PublicSessionMessageDto["toolCalls"]
 }): PublicSessionMessageDto {
   return {
     id: msg.id,
@@ -48,6 +49,7 @@ function toDisplayMessage(msg: {
     content: msg.content,
     status: msg.status as PublicSessionMessageDto["status"],
     createdAt: msg.createdAt ?? Date.now(),
+    toolCalls: msg.toolCalls,
   }
 }
 
@@ -67,6 +69,7 @@ export type UsePublicChatResult = {
   isStreaming: boolean
   errorKey: PublicChatErrorKey | null
   send: (content: string) => void
+  reset: () => void
 }
 
 export function usePublicChat(embedToken: string): UsePublicChatResult {
@@ -78,24 +81,62 @@ export function usePublicChat(embedToken: string): UsePublicChatResult {
   // Keep session in a ref so stream callbacks always see the latest value
   // without re-triggering effects.
   const sessionRef = useRef<StoredSession | null>(null)
+  const resetNonceRef = useRef(0)
+
+  const startFreshSession = useCallback(
+    async (nonce: number) => {
+      clearSession(embedToken)
+      sessionRef.current = null
+      setMessages([])
+      setErrorKey(null)
+      setIsStreaming(false)
+      setStatus("initializing")
+
+      const newSession = await createSession(embedToken)
+      if (resetNonceRef.current !== nonce) return
+      sessionRef.current = newSession
+      saveSession(embedToken, newSession)
+      const sessionData = await getSession(
+        embedToken,
+        newSession.sessionId,
+        newSession.sessionToken,
+      )
+      if (resetNonceRef.current !== nonce) return
+      setMessages(sessionData.messages.map(toDisplayMessage))
+      setStatus("ready")
+    },
+    [embedToken],
+  )
+
+  const failInit = useCallback((err: unknown, nonce: number) => {
+    if (resetNonceRef.current !== nonce) return
+    const key: PublicChatErrorKey =
+      err instanceof ApiError && err.isUnauthorized
+        ? "status.errorAccessDisabled"
+        : "status.errorSessionFailed"
+    setErrorKey(key)
+    setStatus("error")
+  }, [])
 
   // ── Session init ──────────────────────────────────────────────────────────
   useEffect(() => {
+    const nonce = resetNonceRef.current
     let cancelled = false
 
     async function init() {
+      const stillCurrent = () => !cancelled && resetNonceRef.current === nonce
       const stored = loadStoredSession(embedToken)
 
       if (stored) {
         try {
           const sessionData = await getSession(embedToken, stored.sessionId, stored.sessionToken)
-          if (cancelled) return
+          if (!stillCurrent()) return
           sessionRef.current = stored
           setMessages(sessionData.messages.map(toDisplayMessage))
           setStatus("ready")
           return
         } catch (err) {
-          if (cancelled) return
+          if (!stillCurrent()) return
           // 401/403 → session expired or invalid, create a new one below
           if (!(err instanceof ApiError && err.isUnauthorized)) {
             setErrorKey("status.errorUnknown")
@@ -106,28 +147,10 @@ export function usePublicChat(embedToken: string): UsePublicChatResult {
         }
       }
 
-      // No stored session, or previous one was expired — create fresh
       try {
-        const newSession = await createSession(embedToken)
-        if (cancelled) return
-        sessionRef.current = newSession
-        saveSession(embedToken, newSession)
-        const sessionData = await getSession(
-          embedToken,
-          newSession.sessionId,
-          newSession.sessionToken,
-        )
-        if (cancelled) return
-        setMessages(sessionData.messages.map(toDisplayMessage))
-        setStatus("ready")
+        await startFreshSession(nonce)
       } catch (err) {
-        if (cancelled) return
-        const key: PublicChatErrorKey =
-          err instanceof ApiError && err.isUnauthorized
-            ? "status.errorAccessDisabled"
-            : "status.errorSessionFailed"
-        setErrorKey(key)
-        setStatus("error")
+        failInit(err, nonce)
       }
     }
 
@@ -135,7 +158,12 @@ export function usePublicChat(embedToken: string): UsePublicChatResult {
     return () => {
       cancelled = true
     }
-  }, [embedToken])
+  }, [embedToken, failInit, startFreshSession])
+
+  const reset = useCallback(() => {
+    const nonce = ++resetNonceRef.current
+    void startFreshSession(nonce).catch((err) => failInit(err, nonce))
+  }, [failInit, startFreshSession])
 
   // ── Send message ──────────────────────────────────────────────────────────
   const send = useCallback(
@@ -155,8 +183,10 @@ export function usePublicChat(embedToken: string): UsePublicChatResult {
       setIsStreaming(true)
 
       void (async () => {
+        const nonce = resetNonceRef.current
         try {
           let realMessageId = tempAssistantId
+          let shouldHydrate = false
 
           for await (const event of streamMessages(
             embedToken,
@@ -164,6 +194,7 @@ export function usePublicChat(embedToken: string): UsePublicChatResult {
             session.sessionToken,
             content,
           )) {
+            if (resetNonceRef.current !== nonce) return
             switch (event.type) {
               case "start":
                 realMessageId = event.messageId
@@ -185,6 +216,7 @@ export function usePublicChat(embedToken: string): UsePublicChatResult {
                 break
 
               case "end":
+                shouldHydrate = true
                 setMessages((prev) =>
                   prev.map((message) =>
                     message.id === realMessageId
@@ -207,7 +239,26 @@ export function usePublicChat(embedToken: string): UsePublicChatResult {
                 break
             }
           }
+
+          // Hydrate MCP App HTML only after the SSE generator's `finally` has
+          // closed the stream's MCP session. Fetching on `end` raced that close
+          // and `resources/read` often failed, so the card appeared only on reload.
+          if (shouldHydrate) {
+            if (resetNonceRef.current !== nonce) return
+            try {
+              const sessionData = await getSession(
+                embedToken,
+                session.sessionId,
+                session.sessionToken,
+              )
+              if (resetNonceRef.current !== nonce) return
+              setMessages(sessionData.messages.map(toDisplayMessage))
+            } catch {
+              // Keep streamed text if the hydrate fetch fails
+            }
+          }
         } catch {
+          if (resetNonceRef.current !== nonce) return
           setMessages((prev) =>
             prev.map((message) =>
               message.id === tempAssistantId || message.status === "streaming"
@@ -216,12 +267,14 @@ export function usePublicChat(embedToken: string): UsePublicChatResult {
             ),
           )
         } finally {
-          setIsStreaming(false)
+          if (resetNonceRef.current === nonce) {
+            setIsStreaming(false)
+          }
         }
       })()
     },
     [embedToken, isStreaming],
   )
 
-  return { status, messages, isStreaming, errorKey, send }
+  return { status, messages, isStreaming, errorKey, send, reset }
 }

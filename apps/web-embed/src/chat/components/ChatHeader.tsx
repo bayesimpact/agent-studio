@@ -20,7 +20,7 @@ export function ChatHeader({
   return (
     <div
       data-slot="chat-header"
-      className={cn("flex h-16 shrink-0 items-center gap-3 px-5 text-white", className)}
+      className={cn("chat-header flex h-16 shrink-0 items-center gap-3 px-5 text-white", className)}
       style={{ backgroundColor: "var(--embed-primary)" }}
       {...props}
     >

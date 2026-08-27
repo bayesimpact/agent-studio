@@ -118,4 +118,36 @@ describe("McpAppHtmlService", () => {
     expect(connect).not.toHaveBeenCalled()
     expect(htmlByKey.size).toBe(0)
   })
+
+  it("forwards the public session visitor id on the MCP connection", async () => {
+    readResource.mockResolvedValue(mcpAppResource("<html>card</html>"))
+
+    await service.readLiveHtml({
+      agentId: "agent-1",
+      sessionId: "session-1",
+      externalVisitorId: "visitor-1",
+      messages: [
+        {
+          toolCalls: [
+            {
+              id: "call-1",
+              name: "get_patient",
+              arguments: {},
+              mcpApp: { mcpServerId, resourceUri },
+            },
+          ],
+        },
+      ],
+    })
+
+    expect(connect).toHaveBeenCalledWith(
+      expect.objectContaining({
+        context: {
+          agentId: "agent-1",
+          sessionId: "session-1",
+          externalVisitorId: "visitor-1",
+        },
+      }),
+    )
+  })
 })
