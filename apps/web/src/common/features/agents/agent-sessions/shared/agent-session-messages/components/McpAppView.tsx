@@ -1,8 +1,15 @@
-import { AppBridge, PostMessageTransport } from "@modelcontextprotocol/ext-apps/app-bridge"
+import { AppBridge } from "@modelcontextprotocol/ext-apps/app-bridge"
+import type { Transport } from "@modelcontextprotocol/sdk/shared/transport.js"
+import type { JSONRPCMessage, MessageExtraInfo } from "@modelcontextprotocol/sdk/types.js"
 import { useEffect, useRef, useState } from "react"
 
 const HOST_INFO = { name: "caseai-connect", version: "1.0.0" }
 const INITIALIZE_TIMEOUT_MS = 15_000
+const INITIAL_IFRAME_HEIGHT_PX = 72
+const SANDBOX_RPC_TYPE = "caseai/sandbox-rpc"
+const BOOTSTRAP_READY_METHOD = "caseai/sandbox-bootstrap-ready"
+const SANDBOX_ID_PLACEHOLDER = "__SANDBOX_ID__"
+const TOOL_RESULT_RETRY_DELAYS_MS = [50, 250] as const
 
 /**
  * Outer proxy (unique origin vs the host). It creates an inner iframe and
@@ -11,13 +18,17 @@ const INITIALIZE_TIMEOUT_MS = 15_000
  * unapplied even though the stylesheet was in the DOM.
  *
  * Inner `allow-same-origin` is same-origin with this proxy only, not the host.
+ *
+ * RPC is wrapped with a sandbox id so two cards on the same page do not share
+ * JSON-RPC over `window`. Unique-origin `event.source === contentWindow` is
+ * not reliable, so PostMessageTransport would mix or drop replies at random.
  */
 const SANDBOX_BOOTSTRAP_HTML = `<!DOCTYPE html>
 <html>
   <head>
     <meta charset="utf-8" />
     <style>
-      html, body { margin: 0; height: 100%; width: 100%; background: transparent; }
+      html, body { margin: 0; width: 100%; height: 100%; background: transparent; overflow: hidden; }
       body { display: flex; flex-direction: column; }
       iframe { border: 0; flex: 1; width: 100%; height: 100%; }
     </style>
@@ -25,6 +36,7 @@ const SANDBOX_BOOTSTRAP_HTML = `<!DOCTYPE html>
   <body>
     <script>
       (function () {
+        var sandboxId = "${SANDBOX_ID_PLACEHOLDER}"
         var inner = document.createElement("iframe")
         inner.setAttribute("sandbox", "allow-scripts allow-same-origin")
         inner.setAttribute("title", "MCP App view")
@@ -33,22 +45,27 @@ const SANDBOX_BOOTSTRAP_HTML = `<!DOCTYPE html>
         window.addEventListener("message", function (event) {
           if (event.source === window.parent) {
             var data = event.data
-            if (data && data.method === "ui/notifications/sandbox-resource-ready") {
-              var html = data.params && data.params.html
+            var rpc = data && data.type === "${SANDBOX_RPC_TYPE}" ? data.message : data
+            if (rpc && rpc.method === "ui/notifications/sandbox-resource-ready") {
+              var html = rpc.params && rpc.params.html
               if (typeof html === "string") {
                 var blob = new Blob([html], { type: "text/html" })
                 inner.src = URL.createObjectURL(blob)
               }
               return
             }
-            if (inner.contentWindow) inner.contentWindow.postMessage(data, "*")
+            if (inner.contentWindow) inner.contentWindow.postMessage(rpc, "*")
             return
           }
           if (inner.contentWindow && event.source === inner.contentWindow) {
-            window.parent.postMessage(event.data, "*")
+            window.parent.postMessage({
+              type: "${SANDBOX_RPC_TYPE}",
+              sandboxId: sandboxId,
+              message: event.data
+            }, "*")
           }
         })
-        window.parent.postMessage({ method: "caseai/sandbox-bootstrap-ready" }, "*")
+        window.parent.postMessage({ method: "${BOOTSTRAP_READY_METHOD}", sandboxId: sandboxId }, "*")
       })()
     </script>
   </body>
@@ -65,6 +82,64 @@ function toToolResult(result: unknown): Parameters<AppBridge["sendToolResult"]>[
       result && typeof result === "object"
         ? (result as Record<string, unknown>)
         : { value: result },
+  }
+}
+
+type SandboxRpcEnvelope = {
+  type: typeof SANDBOX_RPC_TYPE
+  sandboxId: string
+  message: unknown
+}
+
+function isSandboxRpcEnvelope(data: unknown): data is SandboxRpcEnvelope {
+  return (
+    typeof data === "object" &&
+    data !== null &&
+    "type" in data &&
+    data.type === SANDBOX_RPC_TYPE &&
+    "sandboxId" in data &&
+    typeof data.sandboxId === "string" &&
+    "message" in data
+  )
+}
+
+/**
+ * Like PostMessageTransport, but routes by sandbox id instead of WindowProxy
+ * identity. Two unique-origin iframes otherwise collide on the host `window`.
+ */
+class SandboxedPostMessageTransport implements Transport {
+  onclose?: () => void
+  onerror?: (error: Error) => void
+  onmessage?: (message: JSONRPCMessage, extra?: MessageExtraInfo) => void
+
+  private readonly listener: (event: MessageEvent) => void
+
+  constructor(
+    private readonly eventTarget: Window,
+    private readonly sandboxId: string,
+  ) {
+    this.listener = (event: MessageEvent) => {
+      if (!isSandboxRpcEnvelope(event.data) || event.data.sandboxId !== this.sandboxId) {
+        return
+      }
+      this.onmessage?.(event.data.message as JSONRPCMessage)
+    }
+  }
+
+  async start() {
+    window.addEventListener("message", this.listener)
+  }
+
+  async send(message: JSONRPCMessage) {
+    this.eventTarget.postMessage(
+      { type: SANDBOX_RPC_TYPE, sandboxId: this.sandboxId, message },
+      "*",
+    )
+  }
+
+  async close() {
+    window.removeEventListener("message", this.listener)
+    this.onclose?.()
   }
 }
 
@@ -88,9 +163,12 @@ export function McpAppView({
     const iframe = iframeRef.current
     if (!iframe) return
 
+    const sandboxId = crypto.randomUUID()
     let cancelled = false
     let attempt = 0
+    let started = false
     let bridge: AppBridge | undefined
+    const retryTimeoutIds: number[] = []
 
     const start = async () => {
       const thisAttempt = ++attempt
@@ -106,9 +184,23 @@ export function McpAppView({
           },
         )
         bridge = appBridge
+
+        const pushToolData = async () => {
+          if (cancelled || thisAttempt !== attempt) return
+          await appBridge.sendToolInput({
+            arguments: (toolInput ?? {}) as Record<string, unknown>,
+          })
+          await appBridge.sendToolResult(toToolResult(toolResult))
+        }
+
+        let resendOnNextSizeChange = false
         appBridge.onsizechange = ({ height }) => {
-          if (typeof height === "number") {
-            iframe.style.height = `${height}px`
+          if (typeof height === "number" && height > 0) {
+            iframe.style.height = `${Math.ceil(height)}px`
+          }
+          if (resendOnNextSizeChange) {
+            resendOnNextSizeChange = false
+            void pushToolData()
           }
         }
 
@@ -122,9 +214,7 @@ export function McpAppView({
           }
         })
 
-        await appBridge.connect(
-          new PostMessageTransport(iframe.contentWindow, iframe.contentWindow),
-        )
+        await appBridge.connect(new SandboxedPostMessageTransport(iframe.contentWindow, sandboxId))
         if (thisAttempt !== attempt || cancelled) {
           void appBridge.close()
           return
@@ -136,10 +226,14 @@ export function McpAppView({
         if (thisAttempt !== attempt || cancelled) return
 
         console.debug("MCP App initialized")
-        await appBridge.sendToolInput({
-          arguments: (toolInput ?? {}) as Record<string, unknown>,
-        })
-        await appBridge.sendToolResult(toToolResult(toolResult))
+        // Apps often register `ontoolresult` after `connect()`, so the first
+        // notification is dropped and the UI stays on its loading shell.
+        resendOnNextSizeChange = true
+        await pushToolData()
+        if (thisAttempt !== attempt || cancelled) return
+        for (const delayMs of TOOL_RESULT_RETRY_DELAYS_MS) {
+          retryTimeoutIds.push(window.setTimeout(() => void pushToolData(), delayMs))
+        }
       } catch (error) {
         console.debug(
           "MCP App render failed",
@@ -150,16 +244,19 @@ export function McpAppView({
     }
 
     const handleMessage = (event: MessageEvent) => {
-      if (event.source !== iframe.contentWindow) return
       const data = event.data
       if (
         typeof data !== "object" ||
         data === null ||
         !("method" in data) ||
-        data.method !== "caseai/sandbox-bootstrap-ready"
+        data.method !== BOOTSTRAP_READY_METHOD ||
+        !("sandboxId" in data) ||
+        data.sandboxId !== sandboxId
       ) {
         return
       }
+      if (started) return
+      started = true
       void start()
     }
 
@@ -168,11 +265,14 @@ export function McpAppView({
     // until the 15s init timeout hides it. Reload works because that blank
     // load often does not happen on first paint.
     window.addEventListener("message", handleMessage)
-    iframe.srcdoc = SANDBOX_BOOTSTRAP_HTML
+    iframe.srcdoc = SANDBOX_BOOTSTRAP_HTML.replaceAll(SANDBOX_ID_PLACEHOLDER, sandboxId)
 
     return () => {
       cancelled = true
       attempt += 1
+      for (const timeoutId of retryTimeoutIds) {
+        window.clearTimeout(timeoutId)
+      }
       window.removeEventListener("message", handleMessage)
       const currentBridge = bridge
       void currentBridge
@@ -191,7 +291,7 @@ export function McpAppView({
       ref={iframeRef}
       className="mt-2 w-full overflow-hidden rounded-md border bg-background"
       sandbox="allow-scripts"
-      style={{ minHeight: 360, border: 0 }}
+      style={{ height: INITIAL_IFRAME_HEIGHT_PX, border: 0 }}
       title="MCP App"
     />
   )

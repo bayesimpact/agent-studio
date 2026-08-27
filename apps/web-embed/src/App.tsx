@@ -32,6 +32,15 @@ function readHideHeaderFromUrl(): boolean {
   return value === "1" || value === "true"
 }
 
+function isResetSessionMessage(data: unknown): boolean {
+  return (
+    typeof data === "object" &&
+    data !== null &&
+    "type" in data &&
+    data.type === "agent-studio:reset-session"
+  )
+}
+
 // ─── Root ──────────────────────────────────────────────────────────────────
 
 export function App() {
@@ -106,7 +115,17 @@ function LiveChat({
     logoUrl: remoteConfig?.logoUrl ?? undefined,
   }
 
-  const { status, messages, isStreaming, errorKey, send } = usePublicChat(embedToken)
+  const { status, messages, isStreaming, errorKey, send, reset } = usePublicChat(embedToken)
+
+  useEffect(() => {
+    function onMessage(event: MessageEvent) {
+      if (isResetSessionMessage(event.data)) {
+        reset()
+      }
+    }
+    window.addEventListener("message", onMessage)
+    return () => window.removeEventListener("message", onMessage)
+  }, [reset])
 
   if (status === "initializing") {
     return <ChatLoadingShell theme={theme} hideHeader={hideHeader} />
@@ -152,6 +171,16 @@ function SimulatedChat({
 }) {
   const [messages, setMessages] = useState<AgentSessionMessageDto[]>(shortConversation)
   const [isStreaming, setIsStreaming] = useState(false)
+
+  useEffect(() => {
+    function onMessage(event: MessageEvent) {
+      if (!isResetSessionMessage(event.data)) return
+      setIsStreaming(false)
+      setMessages([])
+    }
+    window.addEventListener("message", onMessage)
+    return () => window.removeEventListener("message", onMessage)
+  }, [])
 
   const handleSendMessage = (content: string) => {
     const userMessage: AgentSessionMessageDto = {
