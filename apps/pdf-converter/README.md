@@ -33,6 +33,7 @@ Errors are:
 - **413** — source PDF exceeds `PDF_CONVERTER_MAX_PDF_BYTES`.
 - **422** — PDF has more pages than `maxPages`.
 - **500** — server error (e.g., failed to upload page to GCS).
+- **504** — rendering exceeded `PDF_CONVERTER_RENDER_TIMEOUT_MS` (or the caller disconnected); the pdfium instance is killed and re-created, so a hostile PDF cannot wedge the service.
 
 ## Authentication
 
@@ -48,6 +49,7 @@ service is only bound on the developer's machine.
 - `GCS_STORAGE_BUCKET_NAME` (required) — GCS bucket for source PDFs and rendered pages.
 - `PORT` (default `3002`) — listen port.
 - `PDF_CONVERTER_MAX_PDF_BYTES` (default `52428800`, 50MB) — source PDF size limit.
+- `PDF_CONVERTER_RENDER_TIMEOUT_MS` (default `60000`, 60s) — hard per-request deadline for rendering/page-count work; must stay below the API client's 120s request timeout.
 
 ## Local development
 

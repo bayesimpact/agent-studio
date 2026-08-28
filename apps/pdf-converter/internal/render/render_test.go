@@ -2,6 +2,7 @@ package render
 
 import (
 	"bytes"
+	"context"
 	"errors"
 	"image/png"
 	"testing"
@@ -21,7 +22,7 @@ func newTestRenderer(t *testing.T) *Renderer {
 func collectPages(t *testing.T, renderer *Renderer, pdfBytes []byte, maxPages, maxPixels int) (int, [][]byte) {
 	t.Helper()
 	rendered := [][]byte{}
-	pageCount, err := renderer.RenderPages(pdfBytes, maxPages, maxPixels,
+	pageCount, err := renderer.RenderPages(context.Background(), pdfBytes, maxPages, maxPixels,
 		func(pageNumber int, pngBytes []byte) error {
 			rendered = append(rendered, pngBytes)
 			return nil
@@ -30,6 +31,63 @@ func collectPages(t *testing.T, renderer *Renderer, pdfBytes []byte, maxPages, m
 		t.Fatalf("RenderPages: %v", err)
 	}
 	return pageCount, rendered
+}
+
+// interruptRender starts a render whose emit cancels the context and then
+// blocks until test cleanup, so cancellation always lands while the render
+// call is in flight and only an instance kill can end it promptly.
+func interruptRender(t *testing.T, renderer *Renderer, release <-chan struct{}) error {
+	t.Helper()
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	_, err := renderer.RenderPages(ctx, pdftest.BuildPdfWithPages(2, 200), 20, 4_000_000,
+		func(pageNumber int, pngBytes []byte) error {
+			cancel()
+			<-release
+			return nil
+		})
+	return err
+}
+
+func TestRenderPagesReturnsAbortedWhenCancelledMidRender(t *testing.T) {
+	renderer := newTestRenderer(t)
+	release := make(chan struct{})
+	t.Cleanup(func() { close(release) })
+	err := interruptRender(t, renderer, release)
+	if !errors.Is(err, ErrAborted) {
+		t.Fatalf("expected ErrAborted, got %v", err)
+	}
+	if !errors.Is(err, context.Canceled) {
+		t.Fatalf("expected error to wrap context.Canceled, got %v", err)
+	}
+}
+
+func TestInterruptedRendersDoNotExhaustThePool(t *testing.T) {
+	renderer := newTestRenderer(t)
+	release := make(chan struct{})
+	t.Cleanup(func() { close(release) })
+	// One more interruption than the pool holds instances (MaxTotal 4): if an
+	// interrupted render leaked its instance, the pool would be exhausted.
+	for attempt := 0; attempt < 5; attempt++ {
+		if err := interruptRender(t, renderer, release); !errors.Is(err, ErrAborted) {
+			t.Fatalf("attempt %d: expected ErrAborted, got %v", attempt, err)
+		}
+	}
+	pageCount, rendered := collectPages(t, renderer, pdftest.BuildPdfWithPages(1, 200), 20, 4_000_000)
+	if pageCount != 1 || len(rendered) != 1 {
+		t.Fatalf("expected a working pool after interruptions, got pageCount=%d rendered=%d",
+			pageCount, len(rendered))
+	}
+}
+
+func TestGetPageCountReturnsAbortedWhenContextAlreadyCancelled(t *testing.T) {
+	renderer := newTestRenderer(t)
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel()
+	_, err := renderer.GetPageCount(ctx, pdftest.BuildPdfWithPages(3, 200))
+	if !errors.Is(err, ErrAborted) {
+		t.Fatalf("expected ErrAborted, got %v", err)
+	}
 }
 
 func TestRendersEachPageAsPng(t *testing.T) {
@@ -64,7 +122,7 @@ func TestCapsPixelsPerPage(t *testing.T) {
 
 func TestRejectsTooManyPages(t *testing.T) {
 	renderer := newTestRenderer(t)
-	_, err := renderer.RenderPages(pdftest.BuildPdfWithPages(3, 200), 2, 4_000_000,
+	_, err := renderer.RenderPages(context.Background(), pdftest.BuildPdfWithPages(3, 200), 2, 4_000_000,
 		func(pageNumber int, pngBytes []byte) error { return nil })
 	if !errors.Is(err, ErrTooManyPages) {
 		t.Fatalf("expected ErrTooManyPages, got %v", err)
@@ -73,7 +131,7 @@ func TestRejectsTooManyPages(t *testing.T) {
 
 func TestRejectsInvalidPdf(t *testing.T) {
 	renderer := newTestRenderer(t)
-	_, err := renderer.RenderPages([]byte("not a pdf at all"), 20, 4_000_000,
+	_, err := renderer.RenderPages(context.Background(), []byte("not a pdf at all"), 20, 4_000_000,
 		func(pageNumber int, pngBytes []byte) error { return nil })
 	if !errors.Is(err, ErrInvalidPdf) {
 		t.Fatalf("expected ErrInvalidPdf, got %v", err)
@@ -82,7 +140,7 @@ func TestRejectsInvalidPdf(t *testing.T) {
 
 func TestGetPageCount(t *testing.T) {
 	renderer := newTestRenderer(t)
-	pageCount, err := renderer.GetPageCount(pdftest.BuildPdfWithPages(3, 200))
+	pageCount, err := renderer.GetPageCount(context.Background(), pdftest.BuildPdfWithPages(3, 200))
 	if err != nil {
 		t.Fatalf("GetPageCount: %v", err)
 	}
@@ -93,7 +151,7 @@ func TestGetPageCount(t *testing.T) {
 
 func TestGetPageCountRejectsInvalidPdf(t *testing.T) {
 	renderer := newTestRenderer(t)
-	_, err := renderer.GetPageCount([]byte("not a pdf at all"))
+	_, err := renderer.GetPageCount(context.Background(), []byte("not a pdf at all"))
 	if !errors.Is(err, ErrInvalidPdf) {
 		t.Fatalf("expected ErrInvalidPdf, got %v", err)
 	}

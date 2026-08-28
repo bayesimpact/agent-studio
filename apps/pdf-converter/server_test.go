@@ -8,6 +8,7 @@ import (
 	"net/http/httptest"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/bayesimpact/bayes-platform/apps/pdf-converter/internal/render"
 	"github.com/bayesimpact/bayes-platform/apps/pdf-converter/internal/render/pdftest"
@@ -44,7 +45,7 @@ func newTestServer(t *testing.T, store *fakeStore) http.Handler {
 	if err != nil {
 		t.Fatalf("NewRenderer: %v", err)
 	}
-	return newServer(store, renderer, 50*1024*1024)
+	return newServer(store, renderer, 50*1024*1024, time.Minute)
 }
 
 func postRender(handler http.Handler, body string) *httptest.ResponseRecorder {
@@ -124,7 +125,7 @@ func TestRenderDocumentSourceMissingOnDownload(t *testing.T) {
 	if err != nil {
 		t.Fatalf("NewRenderer: %v", err)
 	}
-	handler := newServer(&sourceDeletedBetweenSizeAndDownloadStore{sourceSize: 1024}, renderer, 50*1024*1024)
+	handler := newServer(&sourceDeletedBetweenSizeAndDownloadStore{sourceSize: 1024}, renderer, 50*1024*1024, time.Minute)
 	response := postRender(handler,
 		`{"sourceObject":"org1/proj1/doc1.pdf","outputPrefix":"org1/proj1/derived/doc1/","maxPages":20,"maxPixelsPerPage":4000000}`)
 	if response.Code != http.StatusNotFound {
@@ -152,6 +153,45 @@ func TestRenderDocumentValidation(t *testing.T) {
 		if response := postRender(handler, body); response.Code != http.StatusBadRequest {
 			t.Fatalf("expected 400 for %q, got %d", body, response.Code)
 		}
+	}
+}
+
+// stalledUploadStore serves the source pdf normally but its uploads hang
+// until the request is cancelled, simulating a render pipeline that stalls
+// mid-document.
+type stalledUploadStore struct {
+	objects map[string][]byte
+}
+
+func (store *stalledUploadStore) Size(ctx context.Context, object string) (int64, error) {
+	return int64(len(store.objects[object])), nil
+}
+
+func (store *stalledUploadStore) Download(ctx context.Context, object string) ([]byte, error) {
+	return store.objects[object], nil
+}
+
+func (store *stalledUploadStore) Upload(ctx context.Context, object string, contentType string, data []byte) error {
+	<-ctx.Done()
+	return ctx.Err()
+}
+
+func TestRenderDocumentTimesOutWhenRenderingStalls(t *testing.T) {
+	store := &stalledUploadStore{objects: map[string][]byte{
+		"org1/proj1/doc1.pdf": pdftest.BuildPdfWithPages(2, 200),
+	}}
+	renderer, err := render.NewRenderer()
+	if err != nil {
+		t.Fatalf("NewRenderer: %v", err)
+	}
+	handler := newServer(store, renderer, 50*1024*1024, 50*time.Millisecond)
+	response := postRender(handler,
+		`{"sourceObject":"org1/proj1/doc1.pdf","outputPrefix":"org1/proj1/derived/doc1/","maxPages":20,"maxPixelsPerPage":4000000}`)
+	if response.Code != http.StatusGatewayTimeout {
+		t.Fatalf("expected 504, got %d: %s", response.Code, response.Body.String())
+	}
+	if !strings.Contains(response.Body.String(), "timed out") {
+		t.Fatalf("expected a timeout message, got %s", response.Body.String())
 	}
 }
 

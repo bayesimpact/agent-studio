@@ -1,12 +1,14 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"log"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/bayesimpact/bayes-platform/apps/pdf-converter/internal/render"
 )
@@ -74,7 +76,12 @@ func fetchSourcePdf(
 	return pdfBytes, true
 }
 
-func newServer(store objectStore, renderer *render.Renderer, maxSourceBytes int64) http.Handler {
+func newServer(
+	store objectStore,
+	renderer *render.Renderer,
+	maxSourceBytes int64,
+	renderTimeout time.Duration,
+) http.Handler {
 	mux := http.NewServeMux()
 
 	mux.HandleFunc("GET /healthz", func(response http.ResponseWriter, request *http.Request) {
@@ -103,13 +110,19 @@ func newServer(store objectStore, renderer *render.Renderer, maxSourceBytes int6
 			return
 		}
 
-		pageCount, err := renderer.RenderPages(pdfBytes, body.MaxPages, body.MaxPixelsPerPage,
+		renderCtx, cancelRender := context.WithTimeout(request.Context(), renderTimeout)
+		defer cancelRender()
+		pageCount, err := renderer.RenderPages(renderCtx, pdfBytes, body.MaxPages, body.MaxPixelsPerPage,
 			func(pageNumber int, pngBytes []byte) error {
 				object := fmt.Sprintf("%spage-%d.png", body.OutputPrefix, pageNumber)
-				return store.Upload(request.Context(), object, "image/png", pngBytes)
+				return store.Upload(renderCtx, object, "image/png", pngBytes)
 			})
 		if errors.Is(err, render.ErrTooManyPages) {
 			writeError(response, http.StatusUnprocessableEntity, err.Error())
+			return
+		}
+		if errors.Is(err, render.ErrAborted) {
+			writeError(response, http.StatusGatewayTimeout, "pdf rendering timed out or was cancelled")
 			return
 		}
 		if errors.Is(err, render.ErrInvalidPdf) {
@@ -140,9 +153,15 @@ func newServer(store objectStore, renderer *render.Renderer, maxSourceBytes int6
 			return
 		}
 
-		pageCount, err := renderer.GetPageCount(pdfBytes)
+		countCtx, cancelCount := context.WithTimeout(request.Context(), renderTimeout)
+		defer cancelCount()
+		pageCount, err := renderer.GetPageCount(countCtx, pdfBytes)
 		if errors.Is(err, render.ErrInvalidPdf) {
 			writeError(response, http.StatusBadRequest, err.Error())
+			return
+		}
+		if errors.Is(err, render.ErrAborted) {
+			writeError(response, http.StatusGatewayTimeout, "pdf page count timed out or was cancelled")
 			return
 		}
 		if err != nil {

@@ -11,7 +11,8 @@ export const MAX_PDF_PAGES_FOR_IMAGE_CONVERSION = 20
 export const MAX_RENDERED_PIXELS_PER_PAGE = 4_000_000
 
 // Rendering happens once per document (cached in pdf_page_count) so a generous
-// timeout is fine; the converter's own render timeout is stricter.
+// timeout is fine; the converter aborts stuck renders itself after
+// PDF_CONVERTER_RENDER_TIMEOUT_MS (60s default), well within this budget.
 const RENDER_REQUEST_TIMEOUT_MS = 120_000
 
 // In production the pdf-converter is locked behind Cloud Run invoker IAM:
