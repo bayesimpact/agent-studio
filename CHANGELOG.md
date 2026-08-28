@@ -9,12 +9,10 @@ This project uses [CalVer](https://calver.org/) (YY.MM.Micro) for product versio
 
 ### Added
 - Conversation retention: conversations are now kept 30 days by default, configurable per workspace.
-- Workspace admin has a "Retention policy" tab with the purge history.
 - (beta) Gemma and MedGemma agents accept PDF documents in chat and extraction.
 - (beta) Embedded public chat shows the MCP App UI for tools that provide one.
 
 ### Changed
-- Conversation retention is now always set (1 to 3650 days); the "keep forever" option is removed.
 - PDF documents sent to Gemma and MedGemma agents are now converted to images by a dedicated service, so heavy PDF processing no longer slows down the platform.
 
 ### Fixed
