@@ -2,6 +2,14 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
+> **Superseded in part (2026-08-28):** after execution, the public 302-redirect
+> page endpoints (`getAttachmentPdfPageImage`, `getPdfPageImage`, Task 8) were
+> removed — `PdfPagesService.getImageUrls` now hands the model fresh V4-signed
+> GCS URLs directly, `PdfConverterClient.renderDocument` was renamed
+> `generatePdfPageImages`, and the `API_PUBLIC_BASE_URL` env var is gone with
+> them. The spec (link below) reflects the final architecture; the tasks below
+> are kept as the historical execution record.
+
 **Goal:** Replace the byte-pumping PDF→image conversion for Gemma/MedGemma with a GCS-native Go converter service, cached page counts, and stable 302-redirect page URLs the LLM serving stack fetches itself.
 
 **Architecture:** A new Go Cloud Run service (`apps/pdf-converter`, go-pdfium WebAssembly backend) reads PDFs from GCS, writes one PNG per page back to GCS, and returns only a page count. The API renders eagerly at LLM-request build time (cached in a new `pdf_page_count` column), then sends the model stable public capability URLs that 302-redirect to fresh V4-signed GCS URLs. The old in-API byte pipeline (`convertPdfPartsToImageParts` + `apps/pdf-renderer` HTTP calls) is deleted.

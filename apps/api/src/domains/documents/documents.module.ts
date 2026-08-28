@@ -17,7 +17,6 @@ import { DocumentCrawlProgressStreamService } from "./crawling/document-crawl-pr
 import { UrlCrawlingBatchModule } from "./crawling/url-crawling-batch.module"
 import { WebSourceEmbeddingsBatchModule } from "./crawling/web-source-embeddings-batch.module"
 import { Document } from "./document.entity"
-import { DocumentPdfPagesController } from "./document-pdf-pages.controller"
 import { DocumentsController } from "./documents.controller"
 import { DocumentsGuard } from "./documents.guard"
 import { DocumentsService } from "./documents.service"
@@ -73,7 +72,6 @@ import { DocumentTagsModule } from "./tags/document-tags.module"
   controllers: [
     DocumentsController,
     CrawlingController,
-    DocumentPdfPagesController,
     ...(process.env.NODE_ENV !== "production" ? [LocalPresignUploadController] : []),
   ],
   exports: [DocumentsService, DocumentChunkRetrievalService],

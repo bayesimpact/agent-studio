@@ -23,7 +23,9 @@ const GOOGLE_IAM_AUTH_MODE = "google-iam"
 export class PdfConverterClient {
   private googleAuth: GoogleAuth | undefined
 
-  async renderDocument({
+  // Renders a PDF document into individual page images.
+  // Returns the number of pages rendered.
+  async generatePdfPageImages({
     sourceObject,
     outputPrefix,
   }: {

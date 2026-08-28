@@ -38,13 +38,6 @@ export const DocumentsRoutes = {
     method: "get",
     path: "organizations/:organizationId/projects/:projectId/documents/:documentId/temporary-url",
   }),
-  // 302-redirects to a freshly signed GCS URL for one rendered pdf page (public
-  // capability URL fetched server-side by the LLM serving stack; see the
-  // DocumentPdfPagesController docblock).
-  getPdfPageImage: defineRoute<ResponseData<unknown>>({
-    method: "get",
-    path: "organizations/:organizationId/projects/:projectId/documents/:documentId/pdf-pages/:pageNumber",
-  }),
   getIsPublic: defineRoute<ResponseData<{ isPublicDocument: boolean }>>({
     method: "get",
     path: "organizations/:organizationId/projects/:projectId/documents/:documentId/is-public",

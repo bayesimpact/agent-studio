@@ -10,7 +10,6 @@ import {
   moduleProviders,
 } from "../base-agent-sessions/base-agent-sessions-module.helpers"
 import { AgentMessageAttachmentDocumentsService } from "../shared/agent-session-messages/agent-message-attachment-documents.service"
-import { AgentMessageAttachmentPdfPagesController } from "../shared/agent-session-messages/agent-message-attachment-pdf-pages.controller"
 import { AgentMessagesController } from "../shared/agent-session-messages/agent-messages.controller"
 import { McpAppHtmlService } from "../shared/agent-session-messages/mcp-app-html.service"
 import { StreamingModule } from "../shared/agent-session-messages/streaming/streaming.module"
@@ -33,11 +32,7 @@ import { ConversationAgentSessionsService } from "./conversation-agent-sessions.
     ConversationAgentSessionsService,
     McpAppHtmlService,
   ],
-  controllers: [
-    AgentMessagesController,
-    ConversationAgentSessionsController,
-    AgentMessageAttachmentPdfPagesController,
-  ],
+  controllers: [AgentMessagesController, ConversationAgentSessionsController],
   exports: [ConversationAgentSessionsService],
 })
 export class ConversationAgentSessionsModule {}

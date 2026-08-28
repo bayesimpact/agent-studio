@@ -13,9 +13,10 @@ CORS preflights). Nothing is cached: retries re-render the same PDF.
 ## Solution
 
 Make the API a **URL broker**. Bytes flow GCS → converter → GCS; the model fetches
-page images itself via stable redirect URLs.
+page images itself via temporary signed GCS URLs.
 
-1. **New Go service `apps/pdf-converter`** (replaces `apps/pdf-renderer` long-term).
+1. **New Go service `apps/pdf-converter`** (replaces `apps/pdf-renderer`, since
+   removed from the repo).
    Uses `klippa-app/go-pdfium` (MIT) with the **WebAssembly backend** (wazero):
    `CGO_ENABLED=0`, PDFium embedded, sandboxed against malicious PDFs (no host FS
    mounted), a PDF crash cannot kill the process. Contract is URL-in/URL-out:
@@ -25,34 +26,30 @@ page images itself via stable redirect URLs.
      `{outputPrefix}page-{n}.png` to GCS, returns `{"pageCount": n}`.
    - Errors: `{"message"}` with 400 (bad body/pdf), 404 (source object missing),
      413 (source too large), 422 (page limit exceeded).
-   - No in-app auth: Cloud Run invoker IAM, same pattern as pdf-renderer
-     (`PDF_CONVERTER_AUTH=google-iam` on the API mints a Google ID token).
+   - No in-app auth: Cloud Run invoker IAM (`PDF_CONVERTER_AUTH=google-iam` on
+     the API mints a Google ID token).
 
 2. **Eager rendering + Postgres cache.** New nullable `pdf_page_count` integer column
    on `agent_message_attachment_document` (chat attachments) and `document`
    (extraction runs). At LLM-request build time, when the model requires PDFs as
    images: if `pdfPageCount` is null, call the converter once and persist the count;
-   otherwise skip conversion entirely. Rendering never happens inside the redirect
-   endpoint (vLLM's image fetch timeout is 5s).
+   otherwise skip conversion entirely.
 
-3. **Stable 302 redirect endpoints** (same pattern as `downloadResourceFile`:
-   public, unguessable-UUID capability URLs, org/project prefix defense, fresh
-   signed URL per hit):
-   - `GET organizations/:organizationId/projects/:projectId/agent-attachment-documents/:attachmentDocumentId/pdf-pages/:pageNumber`
-   - `GET organizations/:organizationId/projects/:projectId/documents/:documentId/pdf-pages/:pageNumber`
-   Both 404 unless the row exists in that org/project, is a PDF, has been rendered,
-   and `1 ≤ pageNumber ≤ pdfPageCount`. On success: 302 to a fresh **V4** signed GCS
-   URL for `{derived prefix}page-{n}.png`.
+3. **Signed page URLs.** `PdfPagesService.getImageUrls` returns one fresh **V4**
+   signed GCS URL per rendered page (`{derived prefix}page-{n}.png`), minted at
+   LLM-request build time. No API endpoint sits in the fetch path — an earlier
+   iteration used public 302-redirect capability endpoints, but vLLM fetches the
+   signed URL directly (auth is in the query string, no headers needed), so the
+   endpoints were dropped.
 
 4. **URL passthrough to the model.** Message building pushes
-   `{type: "image", image: new URL(stableUrl)}` parts instead of PDF file parts.
+   `{type: "image", image: new URL(signedUrl)}` parts instead of PDF file parts.
    - Gemma uses `@ai-sdk/openai` chat models whose `supportedUrls` already allows
-     `image/*` https URLs → the URL reaches vLLM verbatim as `image_url`, vLLM
-     fetches it server-side and follows the 302 (verified behavior, no auth headers
-     possible — hence the public capability endpoint).
-   - MedGemma's `CustomMedGemmaLanguageModel` gets its placeholder `supportedUrls`
-     broadened to `{"image/*": [/^https?:\/\/.*$/]}` and a URL branch in `toInput`
-     emitting `image_url: {url}`.
+     `image/*` https URLs → the URL reaches vLLM verbatim as `image_url` and vLLM
+     fetches it server-side.
+   - MedGemma's `CustomMedGemmaLanguageModel` gets `supportedUrls` restricted to
+     GCS signed URLs (the only image urls we generate) and a URL branch in
+     `toInput` emitting `image_url: {url}`.
    The API never holds PDF or image bytes.
 
 5. **Byte pump removed.** `convertPdfPartsToImageParts` and the fetch-to-pdf-renderer
@@ -62,8 +59,8 @@ page images itself via stable redirect URLs.
 ## Derived object layout
 
 Source `{org}/{proj}/{uuid}.pdf` → pages `{org}/{proj}/derived/{uuid}/page-{n}.png`.
-The derived path stays under the org/project prefix so the redirect endpoints'
-defense-in-depth check works unchanged. Page numbers are 1-based. Limits stay
+The derived path stays under the org/project prefix, so signed page URLs can only
+ever point inside the owning project's storage. Page numbers are 1-based. Limits stay
 `maxPages=20`, `maxPixelsPerPage=4_000_000`. The 32MiB HTTP cap disappears
 (no bytes over HTTP); the converter enforces a 50MB source-object cap.
 
@@ -73,7 +70,6 @@ defense-in-depth check works unchanged. Page numbers are 1-based. Limits stay
 | --- | --- | --- |
 | `PDF_CONVERTER_URL` | api, workers | Base URL of the Go converter |
 | `PDF_CONVERTER_AUTH` | api, workers | `google-iam` in prod (ID-token auth), unset locally |
-| `API_PUBLIC_BASE_URL` | api, workers | Public base URL of the API, used to build stable page URLs |
 | `GCS_STORAGE_BUCKET_NAME` | pdf-converter | Bucket to read PDFs from / write pages to |
 | `PDF_CONVERTER_MAX_PDF_BYTES` | pdf-converter | Source-object size cap (default 50MB) |
 | `PORT` | pdf-converter | default 3002 |
@@ -81,25 +77,27 @@ defense-in-depth check works unchanged. Page numbers are 1-based. Limits stay
 ## Local development
 
 The converter is GCS-native, so PDF→image for Gemma/MedGemma requires a real GCS
-bucket even locally. When `GCS_STORAGE_BUCKET_NAME` is unset on the API, the
-Gemma/MedGemma PDF path throws a clear error instead of silently degrading. All
-other flows (images, other models, the hard-coded demo-URL fallback) are unchanged.
+bucket even locally. When `GCS_STORAGE_BUCKET_NAME` is unset, the API falls back to
+local storage and the "signed" page URLs point at the local API itself — the vLLM
+endpoints cannot fetch those, so the flow only works end-to-end with a real bucket.
+All other flows (images, other models) are unchanged.
 
 ## Failure semantics
 
 Converter errors surface as thrown `Error`s with the converter's `message` (shown in
 the chat error bubble). PDFs above 20 pages are rejected (422) like today, not
-truncated. `ensureRenderedPages` uses a 120s request timeout. Concurrent renders of
-the same document are idempotent (same output objects, benign overwrite).
+truncated. The converter client (`generatePdfPageImages`) uses a 120s request
+timeout. Concurrent renders of the same document are idempotent (same output
+objects, benign overwrite).
 
 ## Out of scope / follow-ups (infra repo)
 
 - Terraform: new Cloud Run service `pdf-converter` (min instances 0, 1–2GB RAM),
   SA with `roles/storage.objectAdmin` on the bucket, `roles/run.invoker` for the
-  API/workers SA, plus the three new API env vars. `API_PUBLIC_BASE_URL` must be the
-  URL the vLLM containers can reach (the public Cloud Run URL of the API).
-- "Deploy PDF Converter" GitHub action in the infra repo (clone of Deploy PDF Renderer).
+  API/workers SA, plus the new API env vars.
+- "Deploy PDF Converter" GitHub action in the infra repo.
 - Verify once in prod that the MedGemma/Gemma vLLM endpoints have public egress:
   send a chat completion with `image_url` pointing at any public PNG.
-- Decommission `apps/pdf-renderer` (separate PR once the converter is live:
-  remove app, Makefile targets, trivy scan entry, `PDF_RENDERER_*` envs).
+- `apps/pdf-renderer` is removed from this repo (app, Makefile targets, trivy
+  scan entry); still to clean up in the infra repo: the "Deploy PDF Renderer"
+  action, its Cloud Run service, and the `PDF_RENDERER_*` envs.

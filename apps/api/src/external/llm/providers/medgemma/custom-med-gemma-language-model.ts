@@ -35,20 +35,10 @@ export class CustomMedGemmaLanguageModel implements LanguageModelV3 {
   }
 
   // Image URLs are passed through to the vLLM endpoint, which fetches them
-  // server-side (and follows the 302 from our pdf-pages redirect endpoints).
-  // Restricted to hosts we generate ourselves (defense in depth against SSRF
-  // via injected URLs): the API's public origin (stable pdf-page urls) and
-  // GCS signed urls. Anything else falls back to the AI SDK downloading the
-  // bytes and inlining base64 below.
-  get supportedUrls() {
-    const allowedUrlPatterns: RegExp[] = [/^https:\/\/storage\.googleapis\.com\/.+/]
-    const apiPublicBaseUrl = process.env.API_PUBLIC_BASE_URL
-    if (apiPublicBaseUrl) {
-      const escapedOrigin = new URL(apiPublicBaseUrl).origin.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
-      allowedUrlPatterns.push(new RegExp(`^${escapedOrigin}/.+`))
-    }
-    return { "image/*": allowedUrlPatterns }
-  }
+  // server-side. Restricted to GCS signed urls, the only image urls we
+  // generate (defense in depth against SSRF via injected URLs). Anything else
+  // falls back to the AI SDK downloading the bytes and inlining base64 below.
+  readonly supportedUrls = { "image/*": [/^https:\/\/storage\.googleapis\.com\/.+/] }
 
   async doGenerate(options: LanguageModelV3CallOptions): Promise<LanguageModelV3GenerateResult> {
     const callOrigin = options.providerOptions?.custom?.callOrigin

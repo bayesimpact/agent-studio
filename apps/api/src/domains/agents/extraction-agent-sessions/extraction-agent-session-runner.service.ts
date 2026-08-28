@@ -220,51 +220,35 @@ export class ExtractionAgentSessionRunnerService extends ServiceWithLLM {
       case "application/pdf": {
         if (modelRequiresPdfAsImages(model)) {
           // Image-only models: send one rendered page image URL per page. The
-          // pages live in GCS (rendered once by pdf-converter, cached via
-          // pdf_page_count) and the model fetches them through the public
-          // pdf-pages redirect endpoint — no pdf/image bytes in this process.
-          const hasStorageBucketName: boolean = !!process.env.GCS_STORAGE_BUCKET_NAME
-          if (!hasStorageBucketName) {
-            throw new Error(
-              "PDF attachments with Gemma/MedGemma models require GCS storage and the pdf-converter service (set GCS_STORAGE_BUCKET_NAME and PDF_CONVERTER_URL)",
-            )
-          }
-          const pdfPageCount = await this.pdfPagesService.ensureRenderedPages({
-            storageRelativePath: document.storageRelativePath,
-            cachedPageCount: document.pdfPageCount,
-          })
-          if (document.pdfPageCount === null) {
-            await this.documentsService.updatePdfPageCount({
-              connectScope,
-              documentId: document.id,
-              pdfPageCount,
-            })
-          }
-          const content = llmMessage.content as Array<ImagePart>
-          for (let pageNumber = 1; pageNumber <= pdfPageCount; pageNumber++) {
-            content.push({
-              type: "image",
-              image: this.pdfPagesService.buildDocumentPageImageUrl({
-                organizationId: connectScope.organizationId,
-                projectId: connectScope.projectId,
+          // pages live in GCS (rendered once by pdf-converter, cached)
+          const imageUrls = await this.pdfPagesService.getImageUrls({
+            document: {
+              storageRelativePath: document.storageRelativePath,
+              pdfPageCount: document.pdfPageCount,
+            },
+            onPageCountUpdate: async (pdfPageCount: number) => {
+              await this.documentsService.updatePdfPageCount({
+                connectScope,
                 documentId: document.id,
-                pageNumber,
-              }),
-            })
-          }
-          break
+                pdfPageCount,
+              })
+            },
+            fileStorageService: this.fileStorageService,
+          })
+          const content = llmMessage.content as Array<ImagePart>
+          imageUrls.map((url) => content.push({ type: "image", image: new URL(url) }))
+        } else {
+          // Other models accept pdf file parts directly (signed URL; the AI
+          // SDK downloads it when the provider doesn't support URLs).
+          const url = await this.fileStorageService.getTemporaryUrl(document.storageRelativePath)
+          const content = llmMessage.content as Array<FilePart>
+          content.push({
+            type: "file",
+            mediaType: "application/pdf",
+            data: new URL(url),
+            filename: document.fileName,
+          })
         }
-
-        // Other models accept pdf file parts directly (signed URL; the AI
-        // SDK downloads it when the provider doesn't support URLs).
-        const url = await this.fileStorageService.getTemporaryUrl(document.storageRelativePath)
-        const content = llmMessage.content as Array<FilePart>
-        content.push({
-          type: "file",
-          mediaType: "application/pdf",
-          data: new URL(url),
-          filename: document.fileName,
-        })
         break
       }
       case "image/png":

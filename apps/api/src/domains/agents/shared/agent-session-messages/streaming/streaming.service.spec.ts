@@ -17,7 +17,7 @@ import { conversationAgentSessionFactory } from "@/domains/agents/conversation-a
 import type { AgentSettings } from "@/domains/agents/settings/agent-settings.entity"
 import { AgentMessageAttachmentDocumentsService } from "@/domains/agents/shared/agent-session-messages/agent-message-attachment-documents.service"
 import type { AgentSessionScope } from "@/domains/agents/shared/agent-session-messages/streaming/streaming-session.types"
-import { PdfPagesService } from "@/domains/documents/pdf-pages/pdf-pages.service"
+import { PdfConverterClient } from "@/domains/documents/pdf-pages/pdf-converter.client"
 import {
   addFeature,
   createOrganizationWithAgent,
@@ -33,7 +33,7 @@ describe("StreamingService", () => {
   let service: StreamingService
   let agentLlmRequestService: AgentLlmRequestService
   let agentMessageAttachmentDocumentsService: AgentMessageAttachmentDocumentsService
-  let pdfPagesService: PdfPagesService
+  let pdfConverterClient: PdfConverterClient
   let mockProvider: AISDKMockProvider
   let setup: Awaited<ReturnType<typeof setupE2eTestDatabase>>
   let repositories: AllRepositories
@@ -57,7 +57,7 @@ describe("StreamingService", () => {
       setup.module.get<AgentMessageAttachmentDocumentsService>(
         AgentMessageAttachmentDocumentsService,
       )
-    pdfPagesService = setup.module.get<PdfPagesService>(PdfPagesService)
+    pdfConverterClient = setup.module.get<PdfConverterClient>(PdfConverterClient)
     mockProvider = setup.module.get<AISDKMockProvider>("_MockLLMProvider")
     mockProvider.resetMock()
     repositories = setup.getAllRepositories()
@@ -261,20 +261,7 @@ describe("StreamingService", () => {
   })
 
   describe("buildLLMRequest - with a pdf document - Gemma/MedGemma image-only models", () => {
-    const originalGcsStorageBucketName = process.env.GCS_STORAGE_BUCKET_NAME
-    const originalApiPublicBaseUrl = process.env.API_PUBLIC_BASE_URL
-
     afterEach(() => {
-      if (originalGcsStorageBucketName === undefined) {
-        delete process.env.GCS_STORAGE_BUCKET_NAME
-      } else {
-        process.env.GCS_STORAGE_BUCKET_NAME = originalGcsStorageBucketName
-      }
-      if (originalApiPublicBaseUrl === undefined) {
-        delete process.env.API_PUBLIC_BASE_URL
-      } else {
-        process.env.API_PUBLIC_BASE_URL = originalApiPublicBaseUrl
-      }
       jest.restoreAllMocks()
     })
 
@@ -303,9 +290,6 @@ describe("StreamingService", () => {
     }
 
     it("sends one image part per rendered page and caches the page count on the attachment row", async () => {
-      process.env.GCS_STORAGE_BUCKET_NAME = "test-bucket"
-      process.env.API_PUBLIC_BASE_URL = "https://api.example.test"
-
       const { connectScope, agent, agentSettings, session } = await createContextWithSession({
         model: AgentModel.Gemma4_26B,
       })
@@ -322,8 +306,8 @@ describe("StreamingService", () => {
         },
       })
 
-      const ensureRenderedPagesSpy = jest
-        .spyOn(pdfPagesService, "ensureRenderedPages")
+      const generatePdfPageImagesSpy = jest
+        .spyOn(pdfConverterClient, "generatePdfPageImages")
         .mockResolvedValue(2)
 
       const { messages } = await buildLLMRequestForAttachment({
@@ -331,22 +315,19 @@ describe("StreamingService", () => {
         attachmentDocumentId,
       })
 
+      const derivedPagesPrefix = `${connectScope.organizationId}/${connectScope.projectId}/derived/attachment/`
       const lastMessage = messages[messages.length - 1]
       const content = lastMessage?.content as [TextPart, ImagePart, ImagePart]
       expect(content).toHaveLength(3)
       expect(content[0].type).toBe("text")
       expect(content[1].type).toBe("image")
-      expect(String(content[1].image)).toMatch(
-        `/agent-attachment-documents/${attachmentDocumentId}/pdf-pages/1`,
-      )
+      expect(String(content[1].image)).toMatch(`${derivedPagesPrefix}page-1.png`)
       expect(content[2].type).toBe("image")
-      expect(String(content[2].image)).toMatch(
-        `/agent-attachment-documents/${attachmentDocumentId}/pdf-pages/2`,
-      )
+      expect(String(content[2].image)).toMatch(`${derivedPagesPrefix}page-2.png`)
 
-      expect(ensureRenderedPagesSpy).toHaveBeenCalledWith({
-        storageRelativePath,
-        cachedPageCount: null,
+      expect(generatePdfPageImagesSpy).toHaveBeenCalledWith({
+        sourceObject: storageRelativePath,
+        outputPrefix: derivedPagesPrefix,
       })
 
       const persistedAttachmentDocument =
@@ -356,10 +337,7 @@ describe("StreamingService", () => {
       expect(persistedAttachmentDocument?.pdfPageCount).toBe(2)
     })
 
-    it("passes the cached page count instead of re-rendering", async () => {
-      process.env.GCS_STORAGE_BUCKET_NAME = "test-bucket"
-      process.env.API_PUBLIC_BASE_URL = "https://api.example.test"
-
+    it("signs the cached pages without re-rendering", async () => {
       const { connectScope, agent, agentSettings, session } = await createContextWithSession({
         model: AgentModel.Gemma4_26B,
       })
@@ -381,46 +359,20 @@ describe("StreamingService", () => {
         pdfPageCount: 2,
       })
 
-      const ensureRenderedPagesSpy = jest
-        .spyOn(pdfPagesService, "ensureRenderedPages")
-        .mockResolvedValue(2)
+      const generatePdfPageImagesSpy = jest.spyOn(pdfConverterClient, "generatePdfPageImages")
 
-      await buildLLMRequestForAttachment({
+      const { messages } = await buildLLMRequestForAttachment({
         agentSessionScope: { connectScope, session, agent, agentSettings },
         attachmentDocumentId,
       })
 
-      expect(ensureRenderedPagesSpy).toHaveBeenCalledWith({
-        storageRelativePath,
-        cachedPageCount: 2,
-      })
-    })
-
-    it("rejects when GCS_STORAGE_BUCKET_NAME is not set", async () => {
-      delete process.env.GCS_STORAGE_BUCKET_NAME
-      process.env.API_PUBLIC_BASE_URL = "https://api.example.test"
-
-      const { connectScope, agent, agentSettings, session } = await createContextWithSession({
-        model: AgentModel.Gemma4_26B,
-      })
-      const attachmentDocumentId = "00000000-0000-4000-8000-000000000012"
-      await agentMessageAttachmentDocumentsService.createAttachmentDocument({
-        attachmentDocumentId,
-        connectScope,
-        fields: {
-          fileName: "attachment.pdf",
-          mimeType: "application/pdf",
-          size: 1234,
-          storageRelativePath: `${connectScope.organizationId}/${connectScope.projectId}/attachment.pdf`,
-        },
-      })
-
-      await expect(
-        buildLLMRequestForAttachment({
-          agentSessionScope: { connectScope, session, agent, agentSettings },
-          attachmentDocumentId,
-        }),
-      ).rejects.toThrow(/GCS_STORAGE_BUCKET_NAME/)
+      expect(generatePdfPageImagesSpy).not.toHaveBeenCalled()
+      const lastMessage = messages[messages.length - 1]
+      const content = lastMessage?.content as [TextPart, ImagePart, ImagePart]
+      expect(content).toHaveLength(3)
+      expect(String(content[1].image)).toMatch(
+        `${connectScope.organizationId}/${connectScope.projectId}/derived/attachment/page-1.png`,
+      )
     })
   })
 

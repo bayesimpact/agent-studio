@@ -275,64 +275,40 @@ export class AgentLlmRequestService extends ServiceWithLLM {
       content: [{ type: "text", text: message.content as string }],
     }
 
-    const hasStorageBucketName: boolean = !!process.env.GCS_STORAGE_BUCKET_NAME
-
     switch (attachmentDocument.mimeType) {
       case "application/pdf":
         {
           if (modelRequiresPdfAsImages(model)) {
             // Image-only models: send one rendered page image URL per page. The
-            // pages live in GCS (rendered once by pdf-converter, cached via
-            // pdf_page_count) and the model fetches them through the public
-            // pdf-pages redirect endpoint — no pdf/image bytes in this process.
-            if (!hasStorageBucketName) {
-              throw new Error(
-                "PDF attachments with Gemma/MedGemma models require GCS storage and the pdf-converter service (set GCS_STORAGE_BUCKET_NAME and PDF_CONVERTER_URL)",
-              )
-            }
-            const pdfPageCount = await this.pdfPagesService.ensureRenderedPages({
-              storageRelativePath: attachmentDocument.storageRelativePath,
-              cachedPageCount: attachmentDocument.pdfPageCount,
+            // pages live in GCS (rendered once by pdf-converter, cached)
+            const imageUrls = await this.pdfPagesService.getImageUrls({
+              document: attachmentDocument,
+              onPageCountUpdate: async (pdfPageCount: number) => {
+                await this.agentMessageAttachmentDocumentsService.updatePdfPageCount({
+                  attachmentDocumentId: attachmentDocument.id,
+                  connectScope,
+                  pdfPageCount,
+                })
+              },
+              fileStorageService: this.fileStorageService,
             })
-            if (attachmentDocument.pdfPageCount === null) {
-              await this.agentMessageAttachmentDocumentsService.updatePdfPageCount({
-                attachmentDocumentId,
-                connectScope,
-                pdfPageCount,
-              })
-            }
             const content = llmMessage.content as Array<ImagePart>
-            for (let pageNumber = 1; pageNumber <= pdfPageCount; pageNumber++) {
-              content.push({
-                type: "image",
-                image: this.pdfPagesService.buildAttachmentPageImageUrl({
-                  organizationId: connectScope.organizationId,
-                  projectId: connectScope.projectId,
-                  attachmentDocumentId,
-                  pageNumber,
-                }),
-              })
-            }
-            break
+            imageUrls.map((url) => content.push({ type: "image", image: new URL(url) }))
+          } else {
+            // Other models accept pdf file parts directly (signed URL; the AI
+            // SDK downloads it when the provider doesn't support URLs).
+            const url = await this.fileStorageService.getTemporaryUrl(
+              attachmentDocument.storageRelativePath,
+            )
+            const data = new URL(url)
+            const content = llmMessage.content as Array<FilePart>
+            content.push({
+              type: "file",
+              mediaType: "application/pdf",
+              data,
+              filename: attachmentDocument.fileName,
+            })
           }
-
-          // Other models accept pdf file parts directly (signed URL; the AI
-          // SDK downloads it when the provider doesn't support URLs).
-          const url = await this.fileStorageService.getTemporaryUrl(
-            attachmentDocument.storageRelativePath,
-          )
-          const data = new URL(
-            hasStorageBucketName
-              ? url
-              : "https://www.impots.gouv.fr/sites/default/files/formulaires/2042/2025/2042_5180.pdf",
-          )
-          const content = llmMessage.content as Array<FilePart>
-          content.push({
-            type: "file",
-            mediaType: "application/pdf",
-            data,
-            filename: attachmentDocument.fileName,
-          })
         }
         break
 
@@ -343,11 +319,7 @@ export class AgentLlmRequestService extends ServiceWithLLM {
           const url = await this.fileStorageService.getTemporaryUrl(
             attachmentDocument.storageRelativePath,
           )
-          const image = new URL(
-            hasStorageBucketName
-              ? url
-              : "https://www.oiseaux.net/photos/marc.fasol/images/id/canard.colvert.mafa.3p.230.h.jpg",
-          )
+          const image = new URL(url)
 
           const content = llmMessage.content as Array<ImagePart>
           content.push({ type: "image", image })
