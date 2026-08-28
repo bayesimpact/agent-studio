@@ -28,12 +28,12 @@
     "retention": {
       "title": "Retention policy",
       "retentionLabel": "Conversation retention (days)",
-      "retentionHelp": "Conversations older than this are permanently anonymized: their content is erased while usage statistics remain. Between 1 and 3650 days.",
+      "retentionHelp": "Conversations older than this have their content permanently erased. Usage statistics remain. Between 1 and 3650 days.",
       "logTitle": "Purge log",
       "nextRun": "Next purge: {{date}}",
       "logEmpty": "No purge has run yet.",
       "columnDate": "Date",
-      "columnPurged": "Conversations anonymized",
+      "columnPurged": "Conversations erased",
       "columnStatus": "Status"
     }
   }

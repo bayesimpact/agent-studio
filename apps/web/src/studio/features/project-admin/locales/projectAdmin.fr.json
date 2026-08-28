@@ -28,12 +28,12 @@
     "retention": {
       "title": "Politique de conservation",
       "retentionLabel": "Durée de conservation des conversations (jours)",
-      "retentionHelp": "Les conversations plus anciennes sont anonymisées définitivement : leur contenu est effacé mais les statistiques d'usage restent disponibles. Entre 1 et 3650 jours.",
+      "retentionHelp": "Le contenu des conversations plus anciennes est effacé définitivement. Les statistiques d'usage restent disponibles. Entre 1 et 3650 jours.",
       "logTitle": "Journal des purges",
       "nextRun": "Prochaine purge : {{date}}",
       "logEmpty": "Aucune purge n'a encore été exécutée.",
       "columnDate": "Date",
-      "columnPurged": "Conversations anonymisées",
+      "columnPurged": "Conversations effacées",
       "columnStatus": "Statut"
     }
   }
