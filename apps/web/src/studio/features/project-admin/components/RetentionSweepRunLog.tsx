@@ -9,6 +9,7 @@ import {
 } from "@caseai-connect/ui/shad/table"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@caseai-connect/ui/shad/tooltip"
 import { format } from "date-fns"
+import { InfoIcon } from "lucide-react"
 import { useTranslation } from "react-i18next"
 import { MarkdownWrapper } from "@/common/features/agents/agent-sessions/shared/agent-session-messages/components/MarkdownWrapper"
 import type {
@@ -68,15 +69,18 @@ function RetentionSweepRunRow({ run }: { run: RetentionSweepRun }) {
       <TableCell>{format(run.ranAt, "PPp", { locale })}</TableCell>
       <TableCell>{run.purgedCount}</TableCell>
       <TableCell>
-        {/* The run report shows on hover of the status badge. */}
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Badge variant={STATUS_VARIANTS[run.status]}>{run.status}</Badge>
-          </TooltipTrigger>
-          <TooltipContent side="left" className="max-w-sm">
-            <MarkdownWrapper content={run.report} />
-          </TooltipContent>
-        </Tooltip>
+        <span className="inline-flex items-center gap-1.5">
+          <Badge variant={STATUS_VARIANTS[run.status]}>{run.status}</Badge>
+          {/* The run report shows on hover of the info icon. */}
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <InfoIcon className="size-3.5 cursor-help text-muted-foreground" />
+            </TooltipTrigger>
+            <TooltipContent side="left" className="max-w-sm">
+              <MarkdownWrapper content={run.report} />
+            </TooltipContent>
+          </Tooltip>
+        </span>
       </TableCell>
     </TableRow>
   )
