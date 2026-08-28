@@ -25,6 +25,26 @@ describe("CustomMedGemmaLanguageModel", () => {
       { status: 200 },
     )
 
+  const streamingChatCompletionsResponse = () => {
+    const answer = JSON.stringify({ type: "answer", content: "ok" })
+    const sse = [
+      `data: ${JSON.stringify({
+        choices: [{ delta: { content: answer }, finish_reason: "stop" }],
+        usage: { prompt_tokens: 1, completion_tokens: 1 },
+      })}`,
+      "data: [DONE]",
+      "",
+    ].join("\n")
+    return new Response(sse, { status: 200 })
+  }
+
+  const drain = async (stream: ReadableStream<unknown>) => {
+    const reader = stream.getReader()
+    while (!(await reader.read()).done) {
+      // consume the stream so the SSE parsing in `start` completes
+    }
+  }
+
   afterEach(() => {
     jest.restoreAllMocks()
   })
@@ -69,6 +89,35 @@ describe("CustomMedGemmaLanguageModel", () => {
     const base64 = Buffer.from([1, 2, 3]).toString("base64")
     expect(body.messages[0].content).toEqual([
       { type: "image_url", image_url: { url: `data:image/jpeg;base64,${base64}` } },
+    ])
+  })
+
+  it("preserves image parts in the streaming chat path (doStreamWithTools)", async () => {
+    const fetchSpy = jest
+      .spyOn(globalThis, "fetch")
+      .mockResolvedValue(streamingChatCompletionsResponse())
+    const imageUrl =
+      "https://storage.googleapis.com/bucket/org/project/derived/doc/page-1.png?X-Goog-Signature=abc"
+
+    const { stream } = await buildModel().doStream({
+      prompt: [
+        {
+          role: "user",
+          content: [
+            { type: "text", text: "Describe this document" },
+            { type: "file", mediaType: "image/png", data: new URL(imageUrl) },
+          ],
+        },
+      ],
+      providerOptions: { custom: { callOrigin: CallOrigin.streamChatResponse_withTools } },
+    })
+    await drain(stream)
+
+    const [, calledInit] = fetchSpy.mock.calls[0]!
+    const body = JSON.parse(String(calledInit?.body))
+    expect(body.messages[0].content).toEqual([
+      { type: "text", text: "Describe this document" },
+      { type: "image_url", image_url: { url: imageUrl } },
     ])
   })
 
