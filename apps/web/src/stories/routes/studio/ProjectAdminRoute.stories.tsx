@@ -63,7 +63,7 @@ export const Default: Story = {
                 status: "PARTIAL",
                 purgedCount: 3,
                 report:
-                  "- Conversations purged: 3\n- Embed sessions purged: 0\n- Trace deletions postponed: 2 (retried on the next run)",
+                  "- Conversations purged: 3\n- Embed sessions purged: 0\n- Purge failures: 2 (retried on the next run)",
               }),
               retentionSweepRunFactory.build({
                 status: "ERROR",
@@ -110,7 +110,7 @@ export const WithCategories: Story = {
                 status: "PARTIAL",
                 purgedCount: 3,
                 report:
-                  "- Conversations purged: 3\n- Embed sessions purged: 0\n- Trace deletions postponed: 2 (retried on the next run)",
+                  "- Conversations purged: 3\n- Embed sessions purged: 0\n- Purge failures: 2 (retried on the next run)",
               }),
               retentionSweepRunFactory.build({
                 status: "ERROR",

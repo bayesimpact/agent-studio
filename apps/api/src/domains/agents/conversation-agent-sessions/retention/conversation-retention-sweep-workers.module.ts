@@ -3,7 +3,6 @@ import { Module } from "@nestjs/common"
 import { TypeOrmModule } from "@nestjs/typeorm"
 import { ALL_ENTITIES } from "@/common/all-entities"
 import { StorageModule } from "@/domains/documents/storage/storage.module"
-import { LangfuseAdminService } from "@/external/langfuse/langfuse-admin"
 import { ConversationAgentSessionPurgeService } from "./conversation-agent-session-purge.service"
 import { CONVERSATION_RETENTION_SWEEP_QUEUE_NAME } from "./conversation-retention.constants"
 import { ConversationRetentionSweepService } from "./conversation-retention-sweep.service"
@@ -23,7 +22,6 @@ import { ConversationRetentionSweepSchedulerService } from "./conversation-reten
     ConversationRetentionSweepService,
     ConversationRetentionSweepSchedulerService,
     ConversationAgentSessionPurgeService,
-    LangfuseAdminService,
   ],
 })
 export class ConversationRetentionSweepWorkersModule {}

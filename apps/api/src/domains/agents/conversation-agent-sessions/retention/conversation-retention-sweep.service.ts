@@ -2,8 +2,6 @@ import { Injectable, Logger } from "@nestjs/common"
 import { InjectRepository } from "@nestjs/typeorm"
 import { metrics } from "@opentelemetry/api"
 import type { Repository } from "typeorm"
-// biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
-import { LangfuseAdminService } from "@/external/langfuse/langfuse-admin"
 import { ConversationAgentSession } from "../conversation-agent-session.entity"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
 import { ConversationAgentSessionPurgeService } from "./conversation-agent-session-purge.service"
@@ -23,8 +21,11 @@ type SweepRunStatus = ConversationRetentionSweepRunStatus
 type ProjectTally = {
   conversationCount: number
   publicSessionCount: number
-  postponedCount: number
+  failedCount: number
 }
+
+// Langfuse is out of the purge's scope on purpose: observability data gets its
+// own global TTL, tracked infra-side (infra#136).
 
 @Injectable()
 export class ConversationRetentionSweepService {
@@ -49,15 +50,14 @@ export class ConversationRetentionSweepService {
     @InjectRepository(ConversationRetentionSweepRun)
     private readonly sweepRunRepository: Repository<ConversationRetentionSweepRun>,
     private readonly purgeService: ConversationAgentSessionPurgeService,
-    private readonly langfuseAdminService: LangfuseAdminService,
   ) {}
 
   async sweepExpiredConversations(): Promise<{ purgedCount: number }> {
     const ranAt = new Date()
     const startedAt = Date.now()
-    // Sessions whose Langfuse trace deletion failed in this run. They keep
-    // purged_at empty, so the next nightly run selects and retries them; the
-    // in-run exclusion only stops them from filling every batch of THIS run.
+    // Sessions whose purge failed in this run. They keep purged_at empty, so
+    // the next nightly run selects and retries them; the in-run exclusion only
+    // stops them from filling every batch of THIS run.
     const failedSessionIds = new Set<string>()
     const tallies = new Map<string, ProjectTally>()
     let purgedCount = 0
@@ -86,7 +86,7 @@ export class ConversationRetentionSweepService {
     if (purgedCount > 0 || failedSessionIds.size > 0) {
       this.logger.log(
         `Retention sweep purged ${purgedCount} conversation session(s), ` +
-          `${failedSessionIds.size} postponed after a failed trace deletion.`,
+          `${failedSessionIds.size} failed and left for the next run.`,
       )
     }
     return { purgedCount }
@@ -166,11 +166,12 @@ export class ConversationRetentionSweepService {
     let purgedCount = 0
     for (const session of expiredSessions) {
       const tally = this.tallyFor(tallies, session.projectId)
-      if (!(await this.deleteTraceBeforePurge(session.id, session.traceId, failedSessionIds))) {
-        tally.postponedCount += 1
-        continue
-      }
-      const { purged } = await this.purgeService.purgeSessionContent(session.id)
+      const purged = await this.purgeOne(
+        () => this.purgeService.purgeSessionContent(session.id),
+        session.id,
+        failedSessionIds,
+        tally,
+      )
       if (purged) {
         purgedCount += 1
         tally.conversationCount += 1
@@ -188,12 +189,12 @@ export class ConversationRetentionSweepService {
     let purgedCount = 0
     for (const session of expiredSessions) {
       const tally = this.tallyFor(tallies, session.projectId)
-      // Public streaming uses the session id as the Langfuse trace id.
-      if (!(await this.deleteTraceBeforePurge(session.id, session.id, failedSessionIds))) {
-        tally.postponedCount += 1
-        continue
-      }
-      const { purged } = await this.purgeService.purgePublicSessionContent(session.id)
+      const purged = await this.purgeOne(
+        () => this.purgeService.purgePublicSessionContent(session.id),
+        session.id,
+        failedSessionIds,
+        tally,
+      )
       if (purged) {
         purgedCount += 1
         tally.publicSessionCount += 1
@@ -203,38 +204,37 @@ export class ConversationRetentionSweepService {
     return purgedCount
   }
 
-  private tallyFor(tallies: Map<string, ProjectTally>, projectId: string): ProjectTally {
-    let tally = tallies.get(projectId)
-    if (!tally) {
-      tally = { conversationCount: 0, publicSessionCount: 0, postponedCount: 0 }
-      tallies.set(projectId, tally)
-    }
-    return tally
-  }
-
   /**
-   * The trace goes first: purged_at is set only after every step worked, so a
-   * session whose trace deletion failed stays selectable and the next nightly
-   * run retries it. Trace deletion tolerates a 404, which makes that safe.
-   * Returns false when the purge must be postponed.
+   * One session's purge must not sink the whole run: a failure marks the run
+   * PARTIAL, the session keeps purged_at empty, and the next nightly run
+   * retries it. Returns whether the session was purged.
    */
-  private async deleteTraceBeforePurge(
+  private async purgeOne(
+    purge: () => Promise<{ purged: boolean }>,
     sessionId: string,
-    traceId: string | null,
     failedSessionIds: Set<string>,
+    tally: ProjectTally,
   ): Promise<boolean> {
-    if (!traceId) return true
     try {
-      await this.langfuseAdminService.deleteTrace(traceId)
-      return true
+      const { purged } = await purge()
+      return purged
     } catch (error) {
       failedSessionIds.add(sessionId)
+      tally.failedCount += 1
       this.logger.error(
-        `Langfuse trace deletion failed for session ${sessionId} (trace ${traceId}); ` +
-          `purge postponed to the next run: ${(error as Error).message}`,
+        `Purge failed for session ${sessionId}; retried on the next run: ${(error as Error).message}`,
       )
       return false
     }
+  }
+
+  private tallyFor(tallies: Map<string, ProjectTally>, projectId: string): ProjectTally {
+    let tally = tallies.get(projectId)
+    if (!tally) {
+      tally = { conversationCount: 0, publicSessionCount: 0, failedCount: 0 }
+      tallies.set(projectId, tally)
+    }
+    return tally
   }
 
   /**
@@ -255,9 +255,9 @@ export class ConversationRetentionSweepService {
         const tally = tallies.get(id) ?? {
           conversationCount: 0,
           publicSessionCount: 0,
-          postponedCount: 0,
+          failedCount: 0,
         }
-        const status: SweepRunStatus = error ? "ERROR" : tally.postponedCount > 0 ? "PARTIAL" : "OK"
+        const status: SweepRunStatus = error ? "ERROR" : tally.failedCount > 0 ? "PARTIAL" : "OK"
         return this.sweepRunRepository.create({
           projectId: id,
           ranAt,
@@ -278,8 +278,8 @@ export class ConversationRetentionSweepService {
       `- Conversations purged: ${tally.conversationCount}`,
       `- Embed sessions purged: ${tally.publicSessionCount}`,
     ]
-    if (tally.postponedCount > 0) {
-      lines.push(`- Trace deletions postponed: ${tally.postponedCount} (retried on the next run)`)
+    if (tally.failedCount > 0) {
+      lines.push(`- Purge failures: ${tally.failedCount} (retried on the next run)`)
     }
     return lines.join("\n")
   }

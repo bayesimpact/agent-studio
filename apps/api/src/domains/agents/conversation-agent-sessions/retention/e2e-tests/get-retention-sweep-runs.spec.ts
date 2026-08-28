@@ -86,7 +86,7 @@ describe("Retention - getRetentionSweepRuns", () => {
       projectId,
       ranAt: new Date("2026-08-27T04:00:00Z"),
       status: "PARTIAL",
-      report: "- Trace deletions postponed: 1 (retried on the next run)",
+      report: "- Purge failures: 1 (retried on the next run)",
     })
 
     const response = await subject()
@@ -94,7 +94,7 @@ describe("Retention - getRetentionSweepRuns", () => {
     expectResponse(response, 200)
     expect(response.body.data.runs).toHaveLength(2)
     expect(response.body.data.runs[0]?.status).toBe("PARTIAL")
-    expect(response.body.data.runs[0]?.report).toContain("postponed")
+    expect(response.body.data.runs[0]?.report).toContain("failures")
     expect(response.body.data.runs[1]?.purgedCount).toBe(2)
     expect(response.body.data.nextRunAt).toBeGreaterThan(Date.now())
   })
