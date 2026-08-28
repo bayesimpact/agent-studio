@@ -14,6 +14,44 @@ describe("getAllSessionsForAgent", () => {
     await sdk.shutdown()
   })
   describe("type: live", () => {
+    it("leaves purged sessions out of the list", async () => {
+      const {
+        service,
+        testAgent,
+        testOrganization,
+        testUser,
+        conversationAgentSessionRepository,
+        testProject,
+      } = getTestContext()
+
+      const build = (params: { date: Date; purgedAt?: Date }) =>
+        conversationAgentSessionFactory
+          .transient({
+            organization: testOrganization,
+            project: testProject,
+            agent: testAgent,
+            user: testUser,
+          })
+          .live()
+          .build({ type: "live", ...params })
+
+      const visibleSession = build({ date: new Date("2026-01-15T10:00:00Z") })
+      const purgedSession = build({
+        date: new Date("2026-01-10T10:00:00Z"),
+        purgedAt: new Date("2026-02-10T04:00:00Z"),
+      })
+      await conversationAgentSessionRepository.save([visibleSession, purgedSession])
+
+      const sessions = await service.getAllSessionsForAgent({
+        connectScope: { organizationId: testOrganization.id, projectId: testProject.id },
+        agentId: testAgent.id,
+        userId: testUser.id,
+        type: "live",
+      })
+
+      expect(sessions.map((session) => session.id)).toEqual([visibleSession.id])
+    })
+
     it("should return all sessions for a agent and user ordered by createdAt DESC", async () => {
       const {
         service,
