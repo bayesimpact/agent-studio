@@ -293,6 +293,36 @@ describe("ExtractionAgentSessionRunnerService", () => {
       expect(run.status).toBe("success")
     })
 
+    it("fails with PDF_PAGE_LIMIT_EXCEEDED when the pdf exceeds the page limit", async () => {
+      const { organization, project, pendingSession } = await seedPendingSessionWithDocument({
+        documentDesc: {
+          mimeType: "application/pdf",
+          sourceType: "extraction",
+          storageRelativePath: "test/file.pdf",
+        },
+        model: AgentModel.Gemma4_26B,
+      })
+
+      jest.spyOn(pdfConverterClient, "getPageCount").mockResolvedValue(25)
+      const generateStructuredOutputSpy = jest.spyOn(gemmaLlmProvider, "generateStructuredOutput")
+
+      await expect(
+        service.runById({
+          extractionAgentSessionId: pendingSession.id,
+          organizationId: organization.id,
+          projectId: project.id,
+        }),
+      ).rejects.toThrow("This PDF has 25 pages; the maximum is 20 pages.")
+
+      expect(generateStructuredOutputSpy).not.toHaveBeenCalled()
+      const run = await repositories.extractionAgentSessionRepository.findOneByOrFail({
+        id: pendingSession.id,
+      })
+      expect(run.status).toBe("failed")
+      expect(run.errorCode).toBe("PDF_PAGE_LIMIT_EXCEEDED")
+      expect(run.errorDetails?.message).toBe("This PDF has 25 pages; the maximum is 20 pages.")
+    })
+
     it("signs the cached pages without re-rendering", async () => {
       const { organization, project, pendingSession } = await seedPendingSessionWithDocument({
         documentDesc: {

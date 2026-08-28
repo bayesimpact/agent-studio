@@ -85,10 +85,12 @@ All other flows (images, other models) are unchanged.
 ## Failure semantics
 
 Converter errors surface as thrown `Error`s with the converter's `message` (shown in
-the chat error bubble). PDFs above 20 pages are rejected (422) like today, not
-truncated. The converter client (`generatePdfPageImages`) uses a 120s request
-timeout. Concurrent renders of the same document are idempotent (same output
-objects, benign overwrite).
+the chat error bubble). PDFs above 20 pages are rejected before rendering, not
+truncated: `generatePdfPageImages` first calls the converter's `POST /page-count`
+and throws `PdfPageLimitExceededError` with a user-facing message (chat error
+bubble; extraction runs fail with `errorCode: PDF_PAGE_LIMIT_EXCEEDED`). The
+converter client uses a 120s request timeout. Concurrent renders of the same
+document are idempotent (same output objects, benign overwrite).
 
 ## Out of scope / follow-ups (infra repo)
 

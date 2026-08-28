@@ -337,6 +337,34 @@ describe("StreamingService", () => {
       expect(persistedAttachmentDocument?.pdfPageCount).toBe(2)
     })
 
+    it("rejects with a user-facing error when the pdf exceeds the page limit", async () => {
+      const { connectScope, agent, agentSettings, session } = await createContextWithSession({
+        model: AgentModel.Gemma4_26B,
+      })
+      const attachmentDocumentId = "00000000-0000-4000-8000-000000000012"
+      await agentMessageAttachmentDocumentsService.createAttachmentDocument({
+        attachmentDocumentId,
+        connectScope,
+        fields: {
+          fileName: "attachment.pdf",
+          mimeType: "application/pdf",
+          size: 1234,
+          storageRelativePath: `${connectScope.organizationId}/${connectScope.projectId}/attachment.pdf`,
+        },
+      })
+
+      jest.spyOn(pdfConverterClient, "getPageCount").mockResolvedValue(25)
+      const generatePdfPageImagesSpy = jest.spyOn(pdfConverterClient, "generatePdfPageImages")
+
+      await expect(
+        buildLLMRequestForAttachment({
+          agentSessionScope: { connectScope, session, agent, agentSettings },
+          attachmentDocumentId,
+        }),
+      ).rejects.toThrow("This PDF has 25 pages; the maximum is 20 pages.")
+      expect(generatePdfPageImagesSpy).toHaveBeenCalledTimes(1)
+    })
+
     it("signs the cached pages without re-rendering", async () => {
       const { connectScope, agent, agentSettings, session } = await createContextWithSession({
         model: AgentModel.Gemma4_26B,

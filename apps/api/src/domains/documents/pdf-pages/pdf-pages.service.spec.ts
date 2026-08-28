@@ -1,5 +1,6 @@
 import type { IFileStorage } from "../storage/file-storage.interface"
 import { PdfConverterClient } from "./pdf-converter.client"
+import { PdfPageLimitExceededError } from "./pdf-page-limit-exceeded.error"
 import { PdfPagesService } from "./pdf-pages.service"
 
 describe("PdfPagesService", () => {
@@ -47,11 +48,13 @@ describe("PdfPagesService", () => {
     expect(onPageCountUpdate).not.toHaveBeenCalled()
   })
 
-  it("renders the document and reports the page count when it is not cached", async () => {
+  it("checks the page count, renders the document and reports the count when it is not cached", async () => {
     process.env.PDF_CONVERTER_URL = "http://pdf-converter.test"
     const fetchSpy = jest
       .spyOn(globalThis, "fetch")
-      .mockResolvedValue(new Response(JSON.stringify({ pageCount: 2 }), { status: 200 }))
+      .mockImplementation(() =>
+        Promise.resolve(new Response(JSON.stringify({ pageCount: 2 }), { status: 200 })),
+      )
     const onPageCountUpdate = jest.fn()
 
     const imageUrls = await buildService().getImageUrls({
@@ -64,15 +67,43 @@ describe("PdfPagesService", () => {
       "https://storage.example.test/org1/proj1/derived/doc1/page-1.png?signature=abc",
       "https://storage.example.test/org1/proj1/derived/doc1/page-2.png?signature=abc",
     ])
-    const [calledUrl, calledInit] = fetchSpy.mock.calls[0]!
-    expect(String(calledUrl)).toBe("http://pdf-converter.test/render-document")
-    expect(JSON.parse(String(calledInit?.body))).toEqual({
+    expect(fetchSpy).toHaveBeenCalledTimes(2)
+    const [pageCountUrl, pageCountInit] = fetchSpy.mock.calls[0]!
+    expect(String(pageCountUrl)).toBe("http://pdf-converter.test/page-count")
+    expect(JSON.parse(String(pageCountInit?.body))).toEqual({
+      sourceObject: "org1/proj1/doc1.pdf",
+    })
+    const [renderUrl, renderInit] = fetchSpy.mock.calls[1]!
+    expect(String(renderUrl)).toBe("http://pdf-converter.test/render-document")
+    expect(JSON.parse(String(renderInit?.body))).toEqual({
       sourceObject: "org1/proj1/doc1.pdf",
       outputPrefix: "org1/proj1/derived/doc1/",
       maxPages: 20,
       maxPixelsPerPage: 4_000_000,
     })
     expect(onPageCountUpdate).toHaveBeenCalledWith(2)
+  })
+
+  it("throws a user-facing error without rendering when the pdf exceeds the page limit", async () => {
+    process.env.PDF_CONVERTER_URL = "http://pdf-converter.test"
+    const fetchSpy = jest
+      .spyOn(globalThis, "fetch")
+      .mockResolvedValue(new Response(JSON.stringify({ pageCount: 25 }), { status: 200 }))
+    const onPageCountUpdate = jest.fn()
+
+    const imageUrlsPromise = buildService().getImageUrls({
+      document: { storageRelativePath: "org1/proj1/doc1.pdf", pdfPageCount: null },
+      onPageCountUpdate,
+      fileStorageService: buildFileStorageService(),
+    })
+
+    await expect(imageUrlsPromise).rejects.toBeInstanceOf(PdfPageLimitExceededError)
+    await expect(imageUrlsPromise).rejects.toThrow(
+      "This PDF has 25 pages; the maximum is 20 pages.",
+    )
+    expect(fetchSpy).toHaveBeenCalledTimes(1)
+    expect(String(fetchSpy.mock.calls[0]![0])).toBe("http://pdf-converter.test/page-count")
+    expect(onPageCountUpdate).not.toHaveBeenCalled()
   })
 
   it("surfaces the converter's error message", async () => {

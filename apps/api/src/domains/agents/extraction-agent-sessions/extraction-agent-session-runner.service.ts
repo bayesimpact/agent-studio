@@ -15,6 +15,7 @@ import type { AgentSettings } from "@/domains/agents/settings/agent-settings.ent
 import type { Document } from "@/domains/documents/document.entity"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
 import { DocumentsService } from "@/domains/documents/documents.service"
+import { PdfPageLimitExceededError } from "@/domains/documents/pdf-pages/pdf-page-limit-exceeded.error"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
 import { PdfPagesService } from "@/domains/documents/pdf-pages/pdf-pages.service"
 import {
@@ -181,6 +182,9 @@ export class ExtractionAgentSessionRunnerService extends ServiceWithLLM {
     if (isSchemaValidationError) {
       run.errorCode = "SCHEMA_VALIDATION_FAILED"
       run.errorDetails = { message: (error as Error).message }
+    } else if (error instanceof PdfPageLimitExceededError) {
+      run.errorCode = "PDF_PAGE_LIMIT_EXCEEDED"
+      run.errorDetails = { message: error.message }
     } else {
       run.errorCode = "EXTRACTION_PROVIDER_ERROR"
       run.errorDetails = {
