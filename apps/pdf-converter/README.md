@@ -10,6 +10,7 @@ are streamed directly to GCS. No local storage or subprocess management needed.
 | Method | Path | Description |
 | --- | --- | --- |
 | `POST` | `/render-document` | Body: JSON with source PDF path and output prefix. Returns `{ "pageCount": <number> }` with pages uploaded as `{outputPrefix}page-{n}.png`. |
+| `POST` | `/page-count` | Body: JSON with the source PDF path (`sourceObject` only). Returns `{ "pageCount": <number> }` without rendering anything. |
 | `GET` | `/healthz` | Liveness probe, no auth. |
 
 `POST /render-document` requires a JSON body with:
@@ -18,6 +19,9 @@ are streamed directly to GCS. No local storage or subprocess management needed.
 - `outputPrefix` (string, required) — relative GCS object path prefix where pages are saved; must end with `/` (e.g., `org/project/output/`).
 - `maxPages` (integer, 1–100, required) — reject PDFs with more pages (HTTP 422).
 - `maxPixelsPerPage` (integer, 1–16000000, required) — clamp each page's rendered bitmap height and width.
+
+`POST /page-count` requires a JSON body with only `sourceObject` (same
+constraints) and shares the error semantics below (no 422: it never renders).
 
 All paths must be relative (no leading `/`) and free of `..` traversal.
 

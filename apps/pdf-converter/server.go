@@ -18,6 +18,10 @@ type renderDocumentRequest struct {
 	MaxPixelsPerPage int    `json:"maxPixelsPerPage"`
 }
 
+type pageCountRequest struct {
+	SourceObject string `json:"sourceObject"`
+}
+
 func writeJSON(response http.ResponseWriter, status int, payload any) {
 	response.Header().Set("Content-Type", "application/json")
 	response.WriteHeader(status)
@@ -30,6 +34,44 @@ func writeError(response http.ResponseWriter, status int, message string) {
 
 func validObjectPath(path string) bool {
 	return path != "" && !strings.HasPrefix(path, "/") && !strings.Contains(path, "..")
+}
+
+// fetchSourcePdf stats and downloads the source pdf, writing the error
+// response and returning ok=false when it cannot.
+func fetchSourcePdf(
+	response http.ResponseWriter,
+	request *http.Request,
+	store objectStore,
+	sourceObject string,
+	maxSourceBytes int64,
+) ([]byte, bool) {
+	size, err := store.Size(request.Context(), sourceObject)
+	if errors.Is(err, errObjectNotFound) {
+		writeError(response, http.StatusNotFound, "source pdf not found")
+		return nil, false
+	}
+	if err != nil {
+		log.Printf("size check failed: %v", err)
+		writeError(response, http.StatusInternalServerError, "failed to stat source pdf")
+		return nil, false
+	}
+	if size > maxSourceBytes {
+		writeError(response, http.StatusRequestEntityTooLarge,
+			fmt.Sprintf("source pdf is %dMB, max is %dMB", size/1024/1024, maxSourceBytes/1024/1024))
+		return nil, false
+	}
+
+	pdfBytes, err := store.Download(request.Context(), sourceObject)
+	if errors.Is(err, errObjectNotFound) {
+		writeError(response, http.StatusNotFound, "source pdf not found")
+		return nil, false
+	}
+	if err != nil {
+		log.Printf("download failed: %v", err)
+		writeError(response, http.StatusInternalServerError, "failed to download source pdf")
+		return nil, false
+	}
+	return pdfBytes, true
 }
 
 func newServer(store objectStore, renderer *render.Renderer, maxSourceBytes int64) http.Handler {
@@ -56,30 +98,8 @@ func newServer(store objectStore, renderer *render.Renderer, maxSourceBytes int6
 			return
 		}
 
-		size, err := store.Size(request.Context(), body.SourceObject)
-		if errors.Is(err, errObjectNotFound) {
-			writeError(response, http.StatusNotFound, "source pdf not found")
-			return
-		}
-		if err != nil {
-			log.Printf("size check failed: %v", err)
-			writeError(response, http.StatusInternalServerError, "failed to stat source pdf")
-			return
-		}
-		if size > maxSourceBytes {
-			writeError(response, http.StatusRequestEntityTooLarge,
-				fmt.Sprintf("source pdf is %dMB, max is %dMB", size/1024/1024, maxSourceBytes/1024/1024))
-			return
-		}
-
-		pdfBytes, err := store.Download(request.Context(), body.SourceObject)
-		if errors.Is(err, errObjectNotFound) {
-			writeError(response, http.StatusNotFound, "source pdf not found")
-			return
-		}
-		if err != nil {
-			log.Printf("download failed: %v", err)
-			writeError(response, http.StatusInternalServerError, "failed to download source pdf")
+		pdfBytes, ok := fetchSourcePdf(response, request, store, body.SourceObject, maxSourceBytes)
+		if !ok {
 			return
 		}
 
@@ -99,6 +119,35 @@ func newServer(store objectStore, renderer *render.Renderer, maxSourceBytes int6
 		if err != nil {
 			log.Printf("render failed: %v", err)
 			writeError(response, http.StatusInternalServerError, "pdf rendering failed")
+			return
+		}
+		writeJSON(response, http.StatusOK, map[string]int{"pageCount": pageCount})
+	})
+
+	mux.HandleFunc("POST /page-count", func(response http.ResponseWriter, request *http.Request) {
+		var body pageCountRequest
+		if err := json.NewDecoder(request.Body).Decode(&body); err != nil {
+			writeError(response, http.StatusBadRequest, "invalid json body")
+			return
+		}
+		if !validObjectPath(body.SourceObject) {
+			writeError(response, http.StatusBadRequest, "sourceObject must be a relative object path")
+			return
+		}
+
+		pdfBytes, ok := fetchSourcePdf(response, request, store, body.SourceObject, maxSourceBytes)
+		if !ok {
+			return
+		}
+
+		pageCount, err := renderer.GetPageCount(pdfBytes)
+		if errors.Is(err, render.ErrInvalidPdf) {
+			writeError(response, http.StatusBadRequest, err.Error())
+			return
+		}
+		if err != nil {
+			log.Printf("page count failed: %v", err)
+			writeError(response, http.StatusInternalServerError, "pdf page count failed")
 			return
 		}
 		writeJSON(response, http.StatusOK, map[string]int{"pageCount": pageCount})

@@ -79,3 +79,22 @@ func TestRejectsInvalidPdf(t *testing.T) {
 		t.Fatalf("expected ErrInvalidPdf, got %v", err)
 	}
 }
+
+func TestGetPageCount(t *testing.T) {
+	renderer := newTestRenderer(t)
+	pageCount, err := renderer.GetPageCount(pdftest.BuildPdfWithPages(3, 200))
+	if err != nil {
+		t.Fatalf("GetPageCount: %v", err)
+	}
+	if pageCount != 3 {
+		t.Fatalf("expected 3 pages, got %d", pageCount)
+	}
+}
+
+func TestGetPageCountRejectsInvalidPdf(t *testing.T) {
+	renderer := newTestRenderer(t)
+	_, err := renderer.GetPageCount([]byte("not a pdf at all"))
+	if !errors.Is(err, ErrInvalidPdf) {
+		t.Fatalf("expected ErrInvalidPdf, got %v", err)
+	}
+}

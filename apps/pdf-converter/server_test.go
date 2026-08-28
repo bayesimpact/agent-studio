@@ -155,6 +155,62 @@ func TestRenderDocumentValidation(t *testing.T) {
 	}
 }
 
+func postPageCount(handler http.Handler, body string) *httptest.ResponseRecorder {
+	request := httptest.NewRequest(http.MethodPost, "/page-count", strings.NewReader(body))
+	request.Header.Set("Content-Type", "application/json")
+	recorder := httptest.NewRecorder()
+	handler.ServeHTTP(recorder, request)
+	return recorder
+}
+
+func TestPageCountHappyPath(t *testing.T) {
+	store := &fakeStore{objects: map[string][]byte{
+		"org1/proj1/doc1.pdf": pdftest.BuildPdfWithPages(3, 200),
+	}}
+	response := postPageCount(newTestServer(t, store), `{"sourceObject":"org1/proj1/doc1.pdf"}`)
+	if response.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d: %s", response.Code, response.Body.String())
+	}
+	var parsed struct {
+		PageCount int `json:"pageCount"`
+	}
+	if err := json.Unmarshal(response.Body.Bytes(), &parsed); err != nil || parsed.PageCount != 3 {
+		t.Fatalf("expected pageCount 3, got %s", response.Body.String())
+	}
+	if len(store.objects) != 1 {
+		t.Fatalf("expected no uploads, store has %d objects", len(store.objects))
+	}
+}
+
+func TestPageCountSourceMissing(t *testing.T) {
+	response := postPageCount(newTestServer(t, &fakeStore{objects: map[string][]byte{}}),
+		`{"sourceObject":"org1/proj1/nope.pdf"}`)
+	if response.Code != http.StatusNotFound {
+		t.Fatalf("expected 404, got %d", response.Code)
+	}
+}
+
+func TestPageCountInvalidPdf(t *testing.T) {
+	store := &fakeStore{objects: map[string][]byte{"org1/proj1/doc1.pdf": []byte("not a pdf")}}
+	response := postPageCount(newTestServer(t, store), `{"sourceObject":"org1/proj1/doc1.pdf"}`)
+	if response.Code != http.StatusBadRequest {
+		t.Fatalf("expected 400, got %d", response.Code)
+	}
+}
+
+func TestPageCountValidation(t *testing.T) {
+	handler := newTestServer(t, &fakeStore{objects: map[string][]byte{}})
+	for _, body := range []string{
+		`{`,
+		`{"sourceObject":""}`,
+		`{"sourceObject":"../etc/x.pdf"}`,
+	} {
+		if response := postPageCount(handler, body); response.Code != http.StatusBadRequest {
+			t.Fatalf("expected 400 for %q, got %d", body, response.Code)
+		}
+	}
+}
+
 func TestHealthz(t *testing.T) {
 	request := httptest.NewRequest(http.MethodGet, "/healthz", nil)
 	recorder := httptest.NewRecorder()

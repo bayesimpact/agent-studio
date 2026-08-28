@@ -44,6 +44,30 @@ func NewRenderer() (*Renderer, error) {
 	return &Renderer{pool: pool}, nil
 }
 
+// GetPageCount opens the document and returns its page count without
+// rendering any page.
+func (renderer *Renderer) GetPageCount(pdfBytes []byte) (int, error) {
+	instance, err := renderer.pool.GetInstance(30 * time.Second)
+	if err != nil {
+		return 0, fmt.Errorf("get pdfium instance: %w", err)
+	}
+	defer instance.Close()
+
+	document, err := instance.OpenDocument(&requests.OpenDocument{File: &pdfBytes})
+	if err != nil {
+		return 0, fmt.Errorf("%w: %v", ErrInvalidPdf, err)
+	}
+	defer instance.FPDF_CloseDocument(&requests.FPDF_CloseDocument{Document: document.Document})
+
+	pageCountResponse, err := instance.FPDF_GetPageCount(&requests.FPDF_GetPageCount{
+		Document: document.Document,
+	})
+	if err != nil {
+		return 0, fmt.Errorf("%w: %v", ErrInvalidPdf, err)
+	}
+	return pageCountResponse.PageCount, nil
+}
+
 // RenderPages rasterizes every page as PNG and hands each to emit with a
 // 1-based page number. Returns the page count.
 func (renderer *Renderer) RenderPages(
