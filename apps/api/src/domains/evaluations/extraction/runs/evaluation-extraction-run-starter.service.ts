@@ -8,6 +8,8 @@ import type { RequiredConnectScope } from "@/common/entities/connect-required-fi
 import { Agent } from "@/domains/agents/agent.entity"
 import { AgentSettings } from "@/domains/agents/settings/agent-settings.entity"
 import { toAgentWithSettingsRunJobPayload } from "@/domains/agents/shared/agent-with-settings-run.helper"
+// biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
+import { ProjectRepository } from "@/domains/projects/project.repository"
 import { EvaluationExtractionDataset } from "../datasets/evaluation-extraction-dataset.entity"
 import { EvaluationExtractionDatasetRecord } from "../datasets/records/evaluation-extraction-dataset-record.entity"
 import {
@@ -48,6 +50,7 @@ export class EvaluationExtractionRunStarterService {
     agentSettingsRepository: Repository<AgentSettings>,
     @InjectQueue(EVALUATION_EXTRACTION_RUN_QUEUE_NAME)
     private readonly queue: Queue<ProcessEvaluationExtractionRunRecordJobPayload>,
+    private readonly projectRepository: ProjectRepository,
   ) {
     this.runConnectRepository = new ConnectRepository(runRepository, "evaluationExtractionRun")
     this.runRecordConnectRepository = new ConnectRepository(
@@ -111,6 +114,7 @@ export class EvaluationExtractionRunStarterService {
     if (!agentSettings) {
       throw new NotFoundException(`AgentSettings with id ${run.agentSettingsId} not found`)
     }
+    const llmFeatures = await this.projectRepository.getLlmFeatures(connectScope)
 
     const runRecords: EvaluationExtractionRunRecord[] = []
 
@@ -141,6 +145,7 @@ export class EvaluationExtractionRunStarterService {
                 agentWithSettings: toAgentWithSettingsRunJobPayload({
                   agent,
                   agentSettings,
+                  llmFeatures,
                 }),
               },
               opts: { jobId: runRecord.id },

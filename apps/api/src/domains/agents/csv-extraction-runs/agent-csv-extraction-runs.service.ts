@@ -5,6 +5,8 @@ import { ConnectRepository } from "@/common/entities/connect-repository"
 import type { RequiredConnectScope } from "@/common/entities/connect-required-fields"
 import type { BaseAgentSessionType } from "@/domains/agents/base-agent-sessions/base-agent-sessions.types"
 import { toAgentWithSettingsRunJobPayload } from "@/domains/agents/shared/agent-with-settings-run.helper"
+// biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
+import { ProjectRepository } from "@/domains/projects/project.repository"
 import type { AgentCsvExtractionRunColumnSchema } from "./agent-csv-extraction-run.entity"
 import { AgentCsvExtractionRun } from "./agent-csv-extraction-run.entity"
 import {
@@ -27,6 +29,7 @@ export class AgentCsvExtractionRunsService {
     runRecordRepository: Repository<AgentCsvExtractionRunRecord>,
     @Inject(AGENT_CSV_EXTRACTION_RUN_BATCH_SERVICE)
     private readonly batchService: AgentCsvExtractionRunBatchService,
+    private readonly projectRepository: ProjectRepository,
   ) {
     this.runConnectRepository = new ConnectRepository(runRepository, "agentCsvExtractionRun")
     this.runRecordConnectRepository = new ConnectRepository(
@@ -171,6 +174,7 @@ export class AgentCsvExtractionRunsService {
     })
 
     const batches = batchArray(unfinishedRecords, BATCH_SIZE)
+    const llmFeatures = await this.projectRepository.getLlmFeatures(connectScope)
 
     try {
       await Promise.all(
@@ -185,6 +189,7 @@ export class AgentCsvExtractionRunsService {
                 agentWithSettings: toAgentWithSettingsRunJobPayload({
                   agent,
                   agentSettings,
+                  llmFeatures,
                 }),
               })),
             ),

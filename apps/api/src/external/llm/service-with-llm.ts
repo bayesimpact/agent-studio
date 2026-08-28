@@ -6,7 +6,12 @@ import {
 } from "@caseai-connect/api-contracts"
 import { NotImplementedException } from "@nestjs/common"
 import type { ToolSet } from "ai"
-import type { LLMConfig, LLMProvider } from "@/common/interfaces/llm-provider.interface"
+import type {
+  LLMConfig,
+  LLMFeatures,
+  LLMProvider,
+  LLMServiceTier,
+} from "@/common/interfaces/llm-provider.interface"
 
 export abstract class ServiceWithLLM {
   constructor({
@@ -65,6 +70,8 @@ export abstract class ServiceWithLLM {
     endOfTurnTools,
     endOfTurnExecutionCounts,
     useExtendedTimeouts,
+    priorityCallsEnabled,
+    llmFeatures,
   }: {
     tools?: ToolSet
     fireAndForgetToolNames?: string[]
@@ -74,6 +81,8 @@ export abstract class ServiceWithLLM {
     model: AgentModel
     temperature: AgentTemperature
     useExtendedTimeouts?: boolean
+    priorityCallsEnabled: boolean
+    llmFeatures: LLMFeatures
   }): LLMConfig {
     // Convert temperature to number (database decimal types may be returned as strings)
     const safeTemperature =
@@ -85,6 +94,14 @@ export abstract class ServiceWithLLM {
         `Invalid temperature value: ${safeTemperature}. Temperature must be a number between 0 and 2.`,
       )
     }
+    let serviceTier: LLMServiceTier
+    if (
+      llmFeatures?.priorityCalls &&
+      priorityCallsEnabled &&
+      AgentModelToAgentProvider[model] === AgentProvider.Vertex3
+    ) {
+      serviceTier = "priority"
+    }
     return {
       model,
       temperature: safeTemperature,
@@ -94,6 +111,7 @@ export abstract class ServiceWithLLM {
       endOfTurnTools,
       endOfTurnExecutionCounts,
       useExtendedTimeouts,
+      serviceTier,
     } as LLMConfig
   }
 }

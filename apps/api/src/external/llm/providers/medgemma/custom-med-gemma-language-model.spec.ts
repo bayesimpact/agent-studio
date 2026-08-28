@@ -7,6 +7,7 @@ describe("CustomMedGemmaLanguageModel", () => {
   const buildConfig = (): LLMConfig => ({
     model: AgentModel.MedGemma10_27B,
     temperature: 0,
+    serviceTier: undefined,
   })
 
   const buildModel = () =>

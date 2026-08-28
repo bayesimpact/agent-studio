@@ -137,6 +137,6 @@ describe("AgentCsvExtractionRuns - retryOne", () => {
 
     expect(mockBatchService.retryRunRecords).toHaveBeenCalledTimes(1)
     const [payloads] = mockBatchService.retryRunRecords.mock.calls[0]
-    expect(payloads[0].agentWithSettings.revision).toBe(context.agentSettings.revision)
+    expect(payloads[0].agentWithSettings.settings.revision).toBe(context.agentSettings.revision)
   })
 })

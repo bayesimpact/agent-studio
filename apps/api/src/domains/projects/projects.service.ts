@@ -1,6 +1,7 @@
 import type { FeatureFlagKey } from "@caseai-connect/api-contracts"
 import { Injectable, NotFoundException } from "@nestjs/common"
 import type { RequiredConnectScope } from "@/common/entities/connect-required-fields"
+import type { LLMFeatures } from "@/common/interfaces/llm-provider.interface"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
 import { TransactionService } from "@/common/transaction/transaction.service"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
@@ -119,6 +120,9 @@ export class ProjectsService {
       await this.projectRepository.softDelete(projectId)
       await this.projectMembershipsService.deleteMembership({ projectId })
     })
+  }
+  async getLlmFeatures(connectScope: RequiredConnectScope): Promise<LLMFeatures> {
+    return this.projectRepository.getLlmFeatures(connectScope)
   }
 
   async hasFeature({

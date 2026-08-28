@@ -8,6 +8,7 @@ import type {
   LLMChatMessage,
   LLMMetadata,
   LLMProvider,
+  LLMServiceTier,
 } from "@/common/interfaces/llm-provider.interface"
 import { castToolInputParameters, zNullableType } from "@/common/zod-helper"
 import { LOOKUP_KNOWLEDGE_BASE_DESCRIPTION } from "@/domains/agents/shared/agent-session-messages/streaming/tools/lookup-knowledge-base.tool"
@@ -39,9 +40,11 @@ export class ProviderSpecs {
   static async testGenerateText({
     provider,
     model,
+    serviceTier,
   }: {
     provider: LLMProvider
     model: string
+    serviceTier?: LLMServiceTier
   }): Promise<void> {
     const metadata = ProviderSpecs.getMetadata()
     const prompt = "What's your name?"
@@ -49,6 +52,7 @@ export class ProviderSpecs {
       model,
       temperature: ProviderSpecs.temperature,
       systemPrompt: ProviderSpecs.systemPrompt,
+      serviceTier,
     }
     const result = await provider.generateText({ prompt, config, metadata })
     expect(result).toBeDefined()
@@ -57,9 +61,11 @@ export class ProviderSpecs {
   static async testGenerateObject({
     provider,
     model,
+    serviceTier,
   }: {
     provider: LLMProvider
     model: string
+    serviceTier?: LLMServiceTier
   }): Promise<void> {
     const metadata = ProviderSpecs.getMetadata()
     const prompt = "Can I use aspirin if I am bleeding?"
@@ -71,6 +77,7 @@ export class ProviderSpecs {
       model,
       temperature: ProviderSpecs.temperature,
       systemPrompt: ProviderSpecs.systemPrompt,
+      serviceTier,
     }
     const result = await provider.generateObject({ schema, prompt, config, metadata })
     expect(result).toBeDefined()
@@ -81,9 +88,11 @@ export class ProviderSpecs {
   static async testStreamChatResponse({
     provider,
     model,
+    serviceTier,
   }: {
     provider: LLMProvider
     model: string
+    serviceTier?: LLMServiceTier
   }): Promise<void> {
     const metadata = ProviderSpecs.getMetadata()
     const messages: LLMChatMessage[] = [{ role: "user", content: "What can you do for me?" }]
@@ -91,6 +100,7 @@ export class ProviderSpecs {
       model,
       temperature: ProviderSpecs.temperature,
       systemPrompt: ProviderSpecs.systemPrompt,
+      serviceTier,
     }
     const stream = provider.streamChatResponse({ messages, config, metadata })
     const results = await ProviderSpecs.streamToStringArray(stream)
@@ -102,10 +112,12 @@ export class ProviderSpecs {
     provider,
     model,
     advancedExpectation,
+    serviceTier,
   }: {
     provider: LLMProvider
     model: string
     advancedExpectation: boolean
+    serviceTier?: LLMServiceTier
   }) {
     const prompt = `##Instructions:
     Your main task is to help the user fill out the form by asking questions and providing guidance.
@@ -168,6 +180,7 @@ export class ProviderSpecs {
       temperature: ProviderSpecs.temperature,
       systemPrompt: prompt,
       tools: { fillForm: fillFormTool } as ToolSet,
+      serviceTier,
     }
     const chatMessages: LLMChatMessage[] = [{ role: "user", content: "Hello" }]
     const metadata = ProviderSpecs.getMetadata()
@@ -253,10 +266,12 @@ export class ProviderSpecs {
     provider,
     model,
     advancedExpectation,
+    serviceTier,
   }: {
     provider: LLMProvider
     model: string
     advancedExpectation: boolean
+    serviceTier?: LLMServiceTier
   }): Promise<void> {
     const prompt = `##Instructions:
     Your main task is to help the user fill out the form by asking questions and providing guidance.
@@ -320,6 +335,7 @@ export class ProviderSpecs {
       temperature: ProviderSpecs.temperature,
       systemPrompt: prompt,
       tools: { fillForm: fillFormTool } as ToolSet,
+      serviceTier,
     }
     const chatMessages: LLMChatMessage[] = [{ role: "user", content: "Hello" }]
     const metadata = ProviderSpecs.getMetadata()
@@ -405,10 +421,12 @@ export class ProviderSpecs {
     provider,
     model,
     advancedExpectation,
+    serviceTier,
   }: {
     provider: LLMProvider
     model: string
     advancedExpectation: boolean
+    serviceTier?: LLMServiceTier
   }): Promise<void> {
     const prompt = `Today's date: 4/1/2026
 
@@ -447,6 +465,7 @@ Always answer in English.`
       temperature: ProviderSpecs.temperature,
       systemPrompt: prompt,
       tools: { lookup_knowledge_base: lookupKnowledgeBaseTool } as ToolSet,
+      serviceTier,
     }
     const chatMessages: LLMChatMessage[] = [
       { role: "user", content: "C'est combien de deplacement en plus la charge" },
@@ -497,10 +516,12 @@ Always answer in English.`
     provider,
     model,
     advancedExpectation,
+    serviceTier,
   }: {
     provider: LLMProvider
     model: string
     advancedExpectation: boolean
+    serviceTier?: LLMServiceTier
   }): Promise<void> {
     const prompt = `Today's date: 4/1/2026
 
@@ -568,6 +589,7 @@ Always answer in English.`
         getUnitValue: getUnitValueTool,
         getUnitPrice: getUnitPriceTool,
       } as ToolSet,
+      serviceTier,
     }
     const chatMessages: LLMChatMessage[] = [
       {
@@ -639,9 +661,11 @@ Always answer in English.`
   static async testGenerateStructuredOutputFromPdf({
     provider,
     model,
+    serviceTier,
   }: {
     provider: LLMProvider
     model: string
+    serviceTier?: LLMServiceTier
   }) {
     const prompt = `From the file, get the expected values and replace the phone number by 007.
 DO NOT HALLUCINATE VALUES, return only values that you find in the file; if no values then return undefined`
@@ -668,6 +692,7 @@ DO NOT HALLUCINATE VALUES, return only values that you find in the file; if no v
       model,
       temperature: ProviderSpecs.temperature,
       systemPrompt: ProviderSpecs.systemPrompt,
+      serviceTier,
     }
     const result = await provider.generateStructuredOutput({
       message,
@@ -685,9 +710,11 @@ DO NOT HALLUCINATE VALUES, return only values that you find in the file; if no v
   static async testGenerateStructuredOutputFromMathematicalJpg({
     provider,
     model,
+    serviceTier,
   }: {
     provider: LLMProvider
     model: string
+    serviceTier?: LLMServiceTier
   }): Promise<void> {
     const prompt = `From the input table, extract each constant name and its value. 
 Output the full list unchanged, except for the constant named ‘Pi’, which must have its value replaced by 0.007.`
@@ -719,6 +746,7 @@ Output the full list unchanged, except for the constant named ‘Pi’, which mu
       model,
       temperature: ProviderSpecs.temperature,
       systemPrompt: ProviderSpecs.systemPrompt,
+      serviceTier,
     }
     const result = await provider.generateStructuredOutput({
       message,
@@ -741,40 +769,62 @@ Output the full list unchanged, except for the constant named ‘Pi’, which mu
   static async testGenerateStructuredOutputFromXRayPng_FR({
     provider,
     model,
+    serviceTier,
   }: {
     provider: LLMProvider
     model: string
+    serviceTier?: LLMServiceTier
   }): Promise<void> {
     const filename = "xray-png.png"
-    return await ProviderSpecs.testGenerateStructuredOutputFromXRay(filename, model, provider)
+    return await ProviderSpecs.testGenerateStructuredOutputFromXRay(
+      filename,
+      model,
+      provider,
+      serviceTier,
+    )
   }
 
   static async testGenerateStructuredOutputFromXRayLowPng_FR({
     provider,
     model,
+    serviceTier,
   }: {
     provider: LLMProvider
     model: string
+    serviceTier?: LLMServiceTier
   }): Promise<void> {
     const filename = "xray-micro-png.png"
-    return await ProviderSpecs.testGenerateStructuredOutputFromXRay(filename, model, provider)
+    return await ProviderSpecs.testGenerateStructuredOutputFromXRay(
+      filename,
+      model,
+      provider,
+      serviceTier,
+    )
   }
 
   static async testGenerateStructuredOutputFromXRayJpg_FR({
     provider,
     model,
+    serviceTier,
   }: {
     provider: LLMProvider
     model: string
+    serviceTier?: LLMServiceTier
   }): Promise<void> {
     const filename = "xray-jpg.jpg"
-    return await ProviderSpecs.testGenerateStructuredOutputFromXRay(filename, model, provider)
+    return await ProviderSpecs.testGenerateStructuredOutputFromXRay(
+      filename,
+      model,
+      provider,
+      serviceTier,
+    )
   }
 
   private static async testGenerateStructuredOutputFromXRay(
     filename: string,
     model: string,
     provider: LLMProvider,
+    serviceTier: LLMServiceTier,
   ): Promise<void> {
     const systemPromptFr =
       "Tu es un chat bot nommé Elvis. Ton objectif est de répondre aux utilisateurs en fonction des connaissances dont tu disposes"
@@ -807,6 +857,7 @@ Output the full list unchanged, except for the constant named ‘Pi’, which mu
       model,
       temperature: ProviderSpecs.temperature,
       systemPrompt: systemPromptFr,
+      serviceTier,
     }
     const result = await provider.generateStructuredOutput({
       message,

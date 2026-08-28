@@ -20,7 +20,7 @@ describe("AISDKMockProvider", () => {
   beforeAll(async () => {
     provider = new AISDKMockProvider()
     messages = [{ role: "user", content: "for test purpose" }]
-    config = { model: AgentModel._Mock, temperature: 1, systemPrompt: "" }
+    config = { model: AgentModel._Mock, temperature: 1, systemPrompt: "", serviceTier: undefined }
     metadata = {
       agentId: "agentId",
       agentSessionId: "agentSessionId",
@@ -163,6 +163,7 @@ describe("AISDKMockProvider", () => {
       model: AgentModel._Mock,
       temperature: 1,
       systemPrompt: "",
+      serviceTier: undefined,
       tools: {
         echo: tool({
           description: "echoes its input",

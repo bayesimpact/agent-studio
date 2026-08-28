@@ -125,7 +125,7 @@ describe("EvaluationExtractionRuns - retryOne", () => {
     expect(mockRetryRunRecords).toHaveBeenCalledTimes(1)
     const [payloads] = mockRetryRunRecords.mock.calls[0]
     expect(payloads).toHaveLength(1)
-    expect(payloads[0].agentWithSettings).toMatchObject({
+    expect(payloads[0].agentWithSettings.settings).toMatchObject({
       revision: agentSettings.revision,
       instructions: "Published instructions",
     })
@@ -145,7 +145,7 @@ describe("EvaluationExtractionRuns - retryOne", () => {
     expectResponse(res, 201)
     expect(mockRetryRunRecords).toHaveBeenCalledTimes(1)
     const [payloads] = mockRetryRunRecords.mock.calls[0]
-    expect(payloads[0].agentWithSettings).toMatchObject({
+    expect(payloads[0].agentWithSettings.settings).toMatchObject({
       revision: agentSettings.revision,
       instructions: "Published instructions",
     })

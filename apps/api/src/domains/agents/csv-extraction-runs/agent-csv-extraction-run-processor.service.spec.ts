@@ -1,5 +1,6 @@
 import { afterAll, beforeAll, beforeEach } from "@jest/globals"
 import type { RequiredConnectScope } from "@/common/entities/connect-required-fields"
+import type { LLMFeatures } from "@/common/interfaces/llm-provider.interface"
 import {
   type AllRepositories,
   clearTestDatabase,
@@ -28,6 +29,7 @@ describe("AgentCsvExtractionRunProcessorService", () => {
   let mockProvider: AISDKMockProvider
   let setup: Awaited<ReturnType<typeof setupE2eTestDatabase>>
   let repositories: AllRepositories
+  let llmFeatures: LLMFeatures
 
   beforeAll(async () => {
     setup = await setupE2eTestDatabase({
@@ -42,6 +44,7 @@ describe("AgentCsvExtractionRunProcessorService", () => {
     repositories = setup.getAllRepositories()
     service = setup.module.get(AgentCsvExtractionRunProcessorService)
     mockProvider = setup.module.get<AISDKMockProvider>("_MockLLMProvider")
+    llmFeatures = { priorityCalls: false }
   })
 
   afterAll(async () => {
@@ -97,7 +100,7 @@ describe("AgentCsvExtractionRunProcessorService", () => {
       agentCsvExtractionRun: run,
       runRecordId: record.id,
       columnSchema: run.columnSchema,
-      agentWithSettings: toAgentWithSettingsRunJobPayload({ agent, agentSettings }),
+      agentWithSettings: toAgentWithSettingsRunJobPayload({ agent, agentSettings, llmFeatures }),
     }
 
     return { connectScope, agent, run, record, payload }
@@ -144,9 +147,10 @@ describe("AgentCsvExtractionRunProcessorService", () => {
   it("processRunRecord - should fail when no output schema", async () => {
     const { run, record, payload } = await seedExtractionRunRecord()
 
+    const settings = { ...payload.agentWithSettings.settings, outputJsonSchema: undefined }
     await service.processRunRecord({
       ...payload,
-      agentWithSettings: { ...payload.agentWithSettings, outputJsonSchema: undefined },
+      agentWithSettings: { settings, llmFeatures },
     })
 
     const updatedRecord = await repositories.agentCsvExtractionRunRecordRepository.findOneByOrFail({

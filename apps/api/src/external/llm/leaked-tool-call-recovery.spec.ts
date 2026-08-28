@@ -43,6 +43,7 @@ describe("leaked tool call recovery", () => {
     ({
       model: AgentModel._Mock,
       temperature: 0,
+      serviceTier: undefined,
       tools: {
         notify_operator: tool({
           description: "Notify a human operator about this conversation.",

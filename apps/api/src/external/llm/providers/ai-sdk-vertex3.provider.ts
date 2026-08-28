@@ -1,4 +1,5 @@
 import { createVertex } from "@ai-sdk/google-vertex"
+import type { JSONValue } from "@ai-sdk/provider"
 import {
   AgentModel,
   AgentProvider,
@@ -116,7 +117,19 @@ export class AISDKVertex3Provider extends AISDKLLMProviderBase {
       : this.vertexProviders[location]
     return provider(config.model)
   }
+
+  protected override buildNativeProviderOptions({
+    config,
+  }: {
+    config: LLMConfig
+  }): Record<string, Record<string, JSONValue>> {
+    if (!config.serviceTier) return {}
+    return { vertex: { sharedRequestType: config.serviceTier } }
+  }
+
   getTags(config: LLMConfig): string[] {
-    return [this.vertexProject, locationForModel(config.model), config.model]
+    const tags = [this.vertexProject, locationForModel(config.model), config.model]
+    if (config.serviceTier) tags.push(config.serviceTier.toUpperCase())
+    return tags
   }
 }

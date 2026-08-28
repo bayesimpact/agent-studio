@@ -54,6 +54,7 @@ export const agentSettingsFactory = AgentSettingsFactory.define(({ params, trans
     documentTagIds: params.documentTagIds ?? [],
     resourceLibraryIds: params.resourceLibraryIds ?? [],
     fillFormEnabled: params.fillFormEnabled ?? false,
+    priorityCallsEnabled: params.priorityCallsEnabled ?? false,
     greetingMessage: params.greetingMessage ?? undefined,
     id: params.id ?? faker.string.uuid(),
     revision: params.revision ?? 1,
