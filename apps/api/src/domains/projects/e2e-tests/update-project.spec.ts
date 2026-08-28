@@ -1,4 +1,4 @@
-import { ProjectsRoutes } from "@caseai-connect/api-contracts"
+import { ProjectsRoutes, type UpdateProjectRequestDto } from "@caseai-connect/api-contracts"
 import type { INestApplication } from "@nestjs/common"
 import type { App } from "supertest/types"
 import { bindExpectActivityCreated } from "@/common/test/activity-test.helpers"
@@ -98,7 +98,7 @@ describe("Projects - updateProject", () => {
     expect(updatedProject.conversationRetentionDays).toBe(30)
   })
 
-  it("clears the conversation retention with null", async () => {
+  it("rejects a null retention: keep-forever does not exist", async () => {
     const { project } = await createContext()
     await repositories.projectRepository.update(
       { id: projectId },
@@ -106,11 +106,17 @@ describe("Projects - updateProject", () => {
     )
 
     const response = await subject({
-      payload: { name: project.name, conversationRetentionDays: null },
+      payload: {
+        name: project.name,
+        conversationRetentionDays: null,
+      } as unknown as UpdateProjectRequestDto,
     })
 
-    expectResponse(response, 200)
-    expect(response.body.data.conversationRetentionDays).toBeNull()
+    expectResponse(response, 400)
+    const untouchedProject = await repositories.projectRepository.findOneByOrFail({
+      id: projectId,
+    })
+    expect(untouchedProject.conversationRetentionDays).toBe(30)
   })
 
   it("keeps the retention untouched when the field is omitted", async () => {

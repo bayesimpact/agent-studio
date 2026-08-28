@@ -92,11 +92,11 @@ export class ProjectsService {
   }: {
     projectId: string
     name: string
-    conversationRetentionDays?: number | null
+    conversationRetentionDays?: number
     userId: string
   }): Promise<ProjectModel> {
-    const updates: { name: string; conversationRetentionDays?: number | null } = { name }
-    // undefined = do not change; null = keep forever
+    const updates: { name: string; conversationRetentionDays?: number } = { name }
+    // undefined = do not change
     if (conversationRetentionDays !== undefined) {
       updates.conversationRetentionDays = conversationRetentionDays
     }

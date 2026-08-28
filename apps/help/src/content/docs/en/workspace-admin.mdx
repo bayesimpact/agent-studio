@@ -1,16 +1,17 @@
 ---
 title: Manage your workspace
 highlight: workspace
-description: Use the Admin page to rename your workspace and manage its conversation categories — the labels that classify conversations and power the by-category analytics.
+description: Use the Admin page to rename your workspace, set the conversation retention policy, and manage the conversation categories that classify conversations in analytics.
 category: guides-team
 order: 3
-updated: 2026-07-22
+updated: 2026-08-28
 ---
 
 import WorkspaceAdminWalkthrough from "@/components/WorkspaceAdminWalkthrough.astro"
 
 The **Admin** page is where a workspace's owner or admins manage its settings. It has
-two tabs: **General** — rename the workspace — and **Conversation categories** —
+three tabs: **General** — rename the workspace —, **Retention policy** — set how long
+conversations are kept and read the purge log —, and **Conversation categories** —
 create the labels used to classify your conversation agents' sessions.
 
 You open it from **Admin** in the left sidebar of **Studio**. It applies to the whole
@@ -25,6 +26,17 @@ sessions are sorted into them, and the totals appear in the **Sessions per day b
 category** chart in [Analytics](/en/analytics). Managing the list of categories
 happens here in Admin; **turning them on for a given agent** happens on that agent's
 **Conversation categories** tab.
+
+## What the retention policy does
+
+Every workspace keeps its conversations for a set number of days — **30 by default**.
+Each night, a purge erases the content of older conversations: messages, tool calls,
+titles, form state, feedback text, and attachments. Usage statistics (conversation
+counts, categories, feedback votes) remain. The value goes from **1** to **3650**
+days (10 years); a workspace that must keep history a long time sets a high value.
+Conversations from the [embedded chat](/en/agent-embed) follow the same rule.
+Conversations that belong to a [test campaign](/en/review-campaigns) are not purged:
+they are test material, kept for review.
 
 ## The full flow at a glance
 
@@ -47,24 +59,41 @@ tab and a **Conversation categories** tab. (It's meant for workspace **owners** 
 On the **General** tab, edit the **Workspace name** field and click **Save**. The new
 name is used across the platform.
 
-### 3. Manage categories (Conversation categories)
+### 3. Set the retention (Retention policy)
+
+Open the **Retention policy** tab. Edit **Conversation retention (days)** and click
+**Save**. The help text reads: **Conversations older than this have their content
+permanently erased. Usage statistics remain. Between 1 and 3650 days.** The field is
+required — **0** and an empty value are rejected.
+
+### 4. Read the purge log
+
+Below the setting, **Purge log** lists one row per nightly run for this workspace,
+with the next scheduled purge above it (**Next purge:** followed by the date). Each
+row shows the **Date**, the number of **Conversations erased** (a **0** proves the
+purge ran with nothing to erase), and a **Status** badge: **OK** (green) — the run
+completed; **PARTIAL** (amber) — part of the cleanup was postponed and retries on the
+next run; **ERROR** (red) — the run failed. Hover the status badge to see the run report.
+The log keeps 12 months of runs.
+
+### 5. Manage categories (Conversation categories)
 
 Open the **Conversation categories** tab. Your existing categories are shown as
 badges; if there are none yet it reads **No categories yet.** Click **Add category**
 to create one.
 
-### 4. Add a category
+### 6. Add a category
 
 In the **Add conversation category** dialog, type a **Category name**. Tick **Also
 enable for all existing conversation agents** if you want every conversation agent to
 start using it right away (otherwise you enable it per agent later). Click **Add**.
 
-### 5. Remove a category
+### 7. Remove a category
 
 To delete a category, click the **✕** on its badge. A confirmation — **Remove
 conversation category?** — asks before removing it from the workspace's category list.
 
-### 6. Enable categories on an agent
+### 8. Enable categories on an agent
 
 Categories only classify an agent's conversations once they're **enabled on that
 agent**. Open a **conversation agent**, go to its **Conversation categories** tab, and
@@ -74,6 +103,10 @@ this agent's conversations cannot be unchecked.** Click **Save**. (See
 
 ## Tips
 
+- Leave the retention at **30 days** unless you have a reason not to: it's the
+  GDPR-friendly default.
+- Check the **Purge log** after changing the retention — the next nightly run shows
+  how many conversations the new value erased.
 - Keep the category list **short and distinct** — a handful of clear labels classifies
   better than many overlapping ones.
 - Tick **Also enable for all existing conversation agents** when a category should
@@ -91,5 +124,13 @@ this agent's conversations cannot be unchecked.** Click **Save**. (See
   sessions come in.
 - **I can't uncheck a category on an agent** — categories already **used** in that
   agent's conversations are locked on, so past sessions keep their labels.
+- **The purge log is empty** — no purge has run yet for this workspace; the first
+  nightly run after the feature is enabled creates the first row.
+- **I can't empty the retention field to keep conversations forever** — that option
+  does not exist: the retention is always set. Use a high value (up to **3650** days)
+  instead.
+- **A run shows PARTIAL** — some conversations could not be purged during that run;
+  they are retried automatically on the next run. Hover the status badge for the
+  detail.
 - **I don't see the Admin page** — administering the workspace is reserved for its
   **owner** and **admins**; ask them if you need a change.

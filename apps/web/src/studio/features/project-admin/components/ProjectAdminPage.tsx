@@ -3,15 +3,23 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@caseai-connect/ui/sha
 import { useTranslation } from "react-i18next"
 import { useNavigate } from "react-router-dom"
 import { GridHeader } from "@/common/components/grid/Grid"
-import { selectCurrentProjectData } from "@/common/features/projects/projects.selectors"
+import {
+  selectCurrentProjectData,
+  selectRetentionSweepRunsData,
+} from "@/common/features/projects/projects.selectors"
 import { useGetProjectRoute } from "@/common/hooks/use-get-path"
 import { useValue } from "@/common/hooks/use-value"
+import { AsyncRoute } from "@/common/routes/AsyncRoute"
+import { useAppSelector } from "@/common/store/hooks"
 import { ProjectAgentSessionCategoriesForm } from "./ProjectAgentSessionCategoriesForm"
 import { ProjectGeneralForm } from "./ProjectGeneralForm"
+import { ProjectRetentionPolicyForm } from "./ProjectRetentionPolicyForm"
+import { RetentionSweepRunLog } from "./RetentionSweepRunLog"
 
 export function ProjectAdminPage() {
   const { t } = useTranslation()
   const project = useValue(selectCurrentProjectData)
+  const retentionSweepRuns = useAppSelector(selectRetentionSweepRunsData)
   const navigate = useNavigate()
   const projectRoute = useGetProjectRoute()
 
@@ -28,6 +36,7 @@ export function ProjectAdminPage() {
             <Tabs defaultValue="general">
               <TabsList>
                 <TabsTrigger value="general">{t("projectAdmin:tabs.general")}</TabsTrigger>
+                <TabsTrigger value="retention">{t("projectAdmin:tabs.retention")}</TabsTrigger>
                 <TabsTrigger value="categories">
                   {t("projectAdmin:tabs.agentSessionCategories")}
                 </TabsTrigger>
@@ -36,6 +45,15 @@ export function ProjectAdminPage() {
               <div className="p-2">
                 <TabsContent value="general" forceMount className="data-[state=inactive]:hidden">
                   <ProjectGeneralForm project={project} />
+                </TabsContent>
+
+                <TabsContent value="retention" forceMount className="data-[state=inactive]:hidden">
+                  <div className="flex flex-col gap-6">
+                    <ProjectRetentionPolicyForm project={project} />
+                    <AsyncRoute data={[retentionSweepRuns]}>
+                      <RetentionSweepRunLogSection />
+                    </AsyncRoute>
+                  </div>
                 </TabsContent>
 
                 <TabsContent value="categories" forceMount className="data-[state=inactive]:hidden">
@@ -48,4 +66,9 @@ export function ProjectAdminPage() {
       </div>
     </>
   )
+}
+
+function RetentionSweepRunLogSection() {
+  const log = useValue(selectRetentionSweepRunsData)
+  return <RetentionSweepRunLog log={log} />
 }

@@ -6,10 +6,18 @@ import { notificationsActions } from "../notifications/notifications.slice"
 import { selectCurrentOrganizationId } from "../organizations/organizations.selectors"
 import { fetchOrganizations } from "../organizations/organizations.thunks"
 import { projectsActions } from "./projects.slice"
-import { fetchMyProjects, listProjects } from "./projects.thunks"
+import { fetchMyProjects, fetchRetentionSweepRuns, listProjects } from "./projects.thunks"
 
 // Create typed listener middleware
 const listenerMiddleware = createListenerMiddleware<RootState, AppDispatch>()
+
+// Load the purge log when the workspace admin page mounts
+listenerMiddleware.startListening({
+  actionCreator: projectsActions.adminMount,
+  effect: async (_, listenerApi) => {
+    await listenerApi.dispatch(fetchRetentionSweepRuns())
+  },
+})
 
 // List projects when the current organization changes
 listenerMiddleware.startListening({

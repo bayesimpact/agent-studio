@@ -5,15 +5,13 @@
     "description": "Manage your workspace settings.",
     "tabs": {
       "general": "General",
-      "agentSessionCategories": "Conversation categories"
+      "agentSessionCategories": "Conversation categories",
+      "retention": "Retention policy"
     },
     "general": {
       "title": "General",
       "description": "Update the general settings for this workspace.",
-      "workspaceName": "Workspace name",
-      "conversationRetentionLabel": "Conversation retention (days)",
-      "conversationRetentionPlaceholder": "Never delete",
-      "conversationRetentionHelp": "Conversations older than this are permanently anonymized: their content is erased while usage statistics remain. Leave empty to keep conversations forever."
+      "workspaceName": "Workspace name"
     },
     "agentSessionCategories": {
       "title": "Conversation categories",
@@ -26,6 +24,17 @@
       "assignToAllConversationalAgents": "Also enable for all existing conversation agents",
       "removeDialogTitle": "Remove conversation category?",
       "removeDialogDescription": "This will remove \"{{name}}\" from the workspace category list."
+    },
+    "retention": {
+      "title": "Retention policy",
+      "retentionLabel": "Conversation retention (days)",
+      "retentionHelp": "Conversations older than this have their content permanently erased. Usage statistics remain. Between 1 and 3650 days.",
+      "logTitle": "Purge log",
+      "nextRun": "Next purge: {{date}}",
+      "logEmpty": "No purge has run yet.",
+      "columnDate": "Date",
+      "columnPurged": "Conversations erased",
+      "columnStatus": "Status"
     }
   }
 }

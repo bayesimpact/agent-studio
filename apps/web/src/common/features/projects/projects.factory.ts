@@ -1,7 +1,12 @@
 import { faker } from "@faker-js/faker"
 import { Factory } from "fishery"
 import type { Organization } from "@/common/features/organizations/organizations.models"
-import type { MyProject, Project, ProjectAgentSessionCategory } from "./projects.models"
+import type {
+  MyProject,
+  Project,
+  ProjectAgentSessionCategory,
+  RetentionSweepRun,
+} from "./projects.models"
 
 type ProjectTransientParams = {
   organization: Organization
@@ -23,8 +28,7 @@ export const projectFactory = ProjectFactory.define(({ params, transientParams }
     createdAt: params.createdAt ?? faker.date.past().getTime(),
     updatedAt: params.updatedAt ?? faker.date.recent().getTime(),
     featureFlags: params.featureFlags ?? [],
-    conversationRetentionDays:
-      params.conversationRetentionDays === undefined ? 30 : params.conversationRetentionDays,
+    conversationRetentionDays: params.conversationRetentionDays ?? 30,
     agentSessionCategories: params.agentSessionCategories ?? [],
   }
 })
@@ -68,3 +72,16 @@ export const projectAgentSessionCategoryFactory = ProjectAgentSessionCategoryFac
     name: params.name ?? faker.helpers.arrayElement(AGENT_SESSION_CATEGORY_NAMES),
   }),
 )
+
+class RetentionSweepRunFactory extends Factory<RetentionSweepRun> {}
+
+export const retentionSweepRunFactory = RetentionSweepRunFactory.define(({ params, sequence }) => {
+  const purgedCount = params.purgedCount ?? faker.number.int({ min: 0, max: 40 })
+  return {
+    id: params.id ?? faker.string.uuid(),
+    ranAt: params.ranAt ?? faker.date.recent({ days: sequence }).getTime(),
+    purgedCount,
+    status: params.status ?? "OK",
+    report: params.report ?? `- Conversations purged: ${purgedCount}\n- Embed sessions purged: 0`,
+  }
+})

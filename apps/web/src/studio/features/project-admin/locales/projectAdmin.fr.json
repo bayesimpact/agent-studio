@@ -5,15 +5,13 @@
     "description": "Gérez les paramètres de votre espace de travail.",
     "tabs": {
       "general": "Général",
-      "agentSessionCategories": "Catégories de conversation"
+      "agentSessionCategories": "Catégories de conversation",
+      "retention": "Politique de conservation"
     },
     "general": {
       "title": "Général",
       "description": "Mettez à jour les paramètres généraux de cet espace de travail.",
-      "workspaceName": "Nom de l'espace de travail",
-      "conversationRetentionLabel": "Durée de conservation des conversations (jours)",
-      "conversationRetentionPlaceholder": "Aucune suppression",
-      "conversationRetentionHelp": "Les conversations plus anciennes sont anonymisées définitivement : leur contenu est effacé mais les statistiques d'usage restent disponibles. Laissez vide pour conserver les conversations sans limite."
+      "workspaceName": "Nom de l'espace de travail"
     },
     "agentSessionCategories": {
       "title": "Catégories de conversation",
@@ -26,6 +24,17 @@
       "assignToAllConversationalAgents": "Activer également pour tous les agents conversationnels existants",
       "removeDialogTitle": "Supprimer la catégorie de conversation ?",
       "removeDialogDescription": "Cela supprimera \"{{name}}\" de la liste des catégories de l'espace de travail."
+    },
+    "retention": {
+      "title": "Politique de conservation",
+      "retentionLabel": "Durée de conservation des conversations (jours)",
+      "retentionHelp": "Le contenu des conversations plus anciennes est effacé définitivement. Les statistiques d'usage restent disponibles. Entre 1 et 3650 jours.",
+      "logTitle": "Journal des purges",
+      "nextRun": "Prochaine purge : {{date}}",
+      "logEmpty": "Aucune purge n'a encore été exécutée.",
+      "columnDate": "Date",
+      "columnPurged": "Conversations effacées",
+      "columnStatus": "Statut"
     }
   }
 }

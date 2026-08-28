@@ -1,8 +1,8 @@
 import type { Repository } from "typeorm"
-import type { LangfuseAdminService } from "@/external/langfuse/langfuse-admin"
 import type { ConversationAgentSession } from "../conversation-agent-session.entity"
 import type { ConversationAgentSessionPurgeService } from "./conversation-agent-session-purge.service"
 import { ConversationRetentionSweepService } from "./conversation-retention-sweep.service"
+import type { ConversationRetentionSweepRun } from "./conversation-retention-sweep-run.entity"
 
 function buildService(...batches: Partial<ConversationAgentSession>[][]) {
   return buildServiceWithPublicBatches({ batches, publicBatches: [] })
@@ -15,6 +15,7 @@ function buildServiceWithPublicBatches({
   batches: Partial<ConversationAgentSession>[][]
   publicBatches: { id: string }[][]
 }) {
+  const managerQuery = jest.fn().mockResolvedValue([])
   const getMany = jest.fn().mockResolvedValue([])
   for (const batch of batches) getMany.mockResolvedValueOnce(batch)
   const queryBuilder = {
@@ -29,6 +30,7 @@ function buildServiceWithPublicBatches({
   for (const batch of publicBatches) getRawMany.mockResolvedValueOnce(batch)
   const rawQueryBuilder = {
     select: jest.fn().mockReturnThis(),
+    addSelect: jest.fn().mockReturnThis(),
     from: jest.fn().mockReturnThis(),
     innerJoin: jest.fn().mockReturnThis(),
     where: jest.fn().mockReturnThis(),
@@ -39,66 +41,79 @@ function buildServiceWithPublicBatches({
   }
   const sessionRepository = {
     createQueryBuilder: jest.fn().mockReturnValue(queryBuilder),
-    manager: { createQueryBuilder: jest.fn().mockReturnValue(rawQueryBuilder) },
+    manager: {
+      createQueryBuilder: jest.fn().mockReturnValue(rawQueryBuilder),
+      query: managerQuery,
+    },
   } as unknown as Repository<ConversationAgentSession>
   const purgeService = {
     purgeSessionContent: jest.fn().mockResolvedValue({ purged: true }),
     purgePublicSessionContent: jest.fn().mockResolvedValue({ purged: true }),
   }
-  const langfuseAdminService = {
-    deleteTrace: jest.fn().mockResolvedValue(true),
-  }
+  const insert = jest.fn().mockResolvedValue(undefined)
+  const sweepRunRepository = {
+    create: jest.fn((row: unknown) => row),
+    insert,
+    createQueryBuilder: jest.fn().mockReturnValue({
+      delete: jest.fn().mockReturnThis(),
+      where: jest.fn().mockReturnThis(),
+      execute: jest.fn().mockResolvedValue(undefined),
+    }),
+  } as unknown as Repository<ConversationRetentionSweepRun>
   const service = new ConversationRetentionSweepService(
     sessionRepository,
+    sweepRunRepository,
     purgeService as unknown as ConversationAgentSessionPurgeService,
-    langfuseAdminService as unknown as LangfuseAdminService,
   )
-  return { service, purgeService, langfuseAdminService, queryBuilder, rawQueryBuilder }
+  return {
+    service,
+    purgeService,
+    queryBuilder,
+    rawQueryBuilder,
+    insert,
+    managerQuery,
+  }
 }
 
 describe("ConversationRetentionSweepService", () => {
-  it("purges every expired session and deletes its Langfuse trace first", async () => {
-    const { service, purgeService, langfuseAdminService } = buildService([
-      { id: "session-1", traceId: "trace-1" },
-      { id: "session-2", traceId: null as unknown as string },
-    ])
+  it("purges every expired session", async () => {
+    const { service, purgeService } = buildService([{ id: "session-1" }, { id: "session-2" }])
 
     const { purgedCount } = await service.sweepExpiredConversations()
 
     expect(purgedCount).toBe(2)
     expect(purgeService.purgeSessionContent).toHaveBeenCalledTimes(2)
-    expect(langfuseAdminService.deleteTrace).toHaveBeenCalledTimes(1)
-    expect(langfuseAdminService.deleteTrace).toHaveBeenCalledWith("trace-1")
-    // the trace deletion happens before the content purge
-    expect(langfuseAdminService.deleteTrace.mock.invocationCallOrder[0]).toBeLessThan(
-      purgeService.purgeSessionContent.mock.invocationCallOrder[0] as number,
-    )
+  })
+
+  it("leaves review-campaign sessions out of the purge", async () => {
+    const { service, queryBuilder } = buildService([])
+
+    await service.sweepExpiredConversations()
+
+    expect(queryBuilder.andWhere).toHaveBeenCalledWith("session.campaign_id IS NULL")
   })
 
   it("does not count sessions the purge skipped", async () => {
-    const { service, purgeService, langfuseAdminService } = buildService([
-      { id: "session-1", traceId: "trace-1" },
-    ])
+    const { service, purgeService } = buildService([{ id: "session-1" }])
     purgeService.purgeSessionContent.mockResolvedValue({ purged: false })
 
     const { purgedCount } = await service.sweepExpiredConversations()
 
     expect(purgedCount).toBe(0)
-    expect(langfuseAdminService.deleteTrace).toHaveBeenCalledTimes(1)
   })
 
-  it("postpones the purge when the trace deletion fails, so the next run retries", async () => {
-    const { service, purgeService, langfuseAdminService, rawQueryBuilder } = buildService([
-      { id: "session-1", traceId: "trace-1" },
-      { id: "session-2", traceId: "trace-2" },
+  it("continues past a failed purge, so the next run retries that session", async () => {
+    const { service, purgeService, rawQueryBuilder } = buildService([
+      { id: "session-1" },
+      { id: "session-2" },
     ])
-    langfuseAdminService.deleteTrace.mockRejectedValueOnce(new Error("boom"))
+    purgeService.purgeSessionContent.mockRejectedValueOnce(new Error("boom"))
 
     const { purgedCount } = await service.sweepExpiredConversations()
 
     expect(purgedCount).toBe(1)
-    expect(purgeService.purgeSessionContent).toHaveBeenCalledTimes(1)
-    expect(purgeService.purgeSessionContent).toHaveBeenCalledWith("session-2")
+    expect(purgeService.purgeSessionContent).toHaveBeenCalledTimes(2)
+    expect(purgeService.purgeSessionContent).toHaveBeenLastCalledWith("session-2")
     // the failed session is excluded from the later queries of the same run
     // (here the public pass, which runs after the conversation pass)
     expect(rawQueryBuilder.andWhere).toHaveBeenCalledWith(
@@ -108,12 +123,9 @@ describe("ConversationRetentionSweepService", () => {
   })
 
   it("excludes an in-run failure from the next conversation batch", async () => {
-    const fullBatch = Array.from({ length: 200 }, (_, index) => ({
-      id: `session-${index}`,
-      traceId: `trace-${index}`,
-    }))
-    const { service, langfuseAdminService, queryBuilder } = buildService(fullBatch, [])
-    langfuseAdminService.deleteTrace.mockRejectedValueOnce(new Error("boom"))
+    const fullBatch = Array.from({ length: 200 }, (_, index) => ({ id: `session-${index}` }))
+    const { service, purgeService, queryBuilder } = buildService(fullBatch, [])
+    purgeService.purgeSessionContent.mockRejectedValueOnce(new Error("boom"))
 
     await service.sweepExpiredConversations()
 
@@ -124,11 +136,8 @@ describe("ConversationRetentionSweepService", () => {
   })
 
   it("drains full batches until the backlog is empty", async () => {
-    const fullBatch = Array.from({ length: 200 }, (_, index) => ({
-      id: `session-${index}`,
-      traceId: null as unknown as string,
-    }))
-    const lastBatch = [{ id: "session-last", traceId: null as unknown as string }]
+    const fullBatch = Array.from({ length: 200 }, (_, index) => ({ id: `session-${index}` }))
+    const lastBatch = [{ id: "session-last" }]
     const { service, purgeService } = buildService(fullBatch, lastBatch)
 
     const { purgedCount } = await service.sweepExpiredConversations()
@@ -137,8 +146,8 @@ describe("ConversationRetentionSweepService", () => {
     expect(purgeService.purgeSessionContent).toHaveBeenCalledTimes(201)
   })
 
-  it("purges expired public sessions and deletes their trace by session id, trace first", async () => {
-    const { service, purgeService, langfuseAdminService } = buildServiceWithPublicBatches({
+  it("purges expired public sessions", async () => {
+    const { service, purgeService } = buildServiceWithPublicBatches({
       batches: [],
       publicBatches: [[{ id: "public-1" }, { id: "public-2" }]],
     })
@@ -147,36 +156,66 @@ describe("ConversationRetentionSweepService", () => {
 
     expect(purgedCount).toBe(2)
     expect(purgeService.purgePublicSessionContent).toHaveBeenCalledTimes(2)
-    expect(langfuseAdminService.deleteTrace).toHaveBeenCalledWith("public-1")
-    expect(langfuseAdminService.deleteTrace).toHaveBeenCalledWith("public-2")
-    expect(langfuseAdminService.deleteTrace.mock.invocationCallOrder[0]).toBeLessThan(
-      purgeService.purgePublicSessionContent.mock.invocationCallOrder[0] as number,
-    )
   })
 
-  it("postpones a public session whose trace deletion fails", async () => {
-    const { service, purgeService, langfuseAdminService } = buildServiceWithPublicBatches({
+  it("continues past a failed public purge", async () => {
+    const { service, purgeService } = buildServiceWithPublicBatches({
       batches: [],
       publicBatches: [[{ id: "public-1" }, { id: "public-2" }]],
     })
-    langfuseAdminService.deleteTrace.mockRejectedValueOnce(new Error("boom"))
+    purgeService.purgePublicSessionContent.mockRejectedValueOnce(new Error("boom"))
 
     const { purgedCount } = await service.sweepExpiredConversations()
 
     expect(purgedCount).toBe(1)
-    expect(purgeService.purgePublicSessionContent).toHaveBeenCalledTimes(1)
-    expect(purgeService.purgePublicSessionContent).toHaveBeenCalledWith("public-2")
+    expect(purgeService.purgePublicSessionContent).toHaveBeenCalledTimes(2)
+    expect(purgeService.purgePublicSessionContent).toHaveBeenLastCalledWith("public-2")
   })
 
   it("counts internal and public sessions together", async () => {
-    const { service, langfuseAdminService } = buildServiceWithPublicBatches({
-      batches: [[{ id: "session-1", traceId: "trace-1" }]],
+    const { service } = buildServiceWithPublicBatches({
+      batches: [[{ id: "session-1" }]],
       publicBatches: [[{ id: "public-1" }]],
     })
 
     const { purgedCount } = await service.sweepExpiredConversations()
 
     expect(purgedCount).toBe(2)
-    expect(langfuseAdminService.deleteTrace).toHaveBeenCalledTimes(2)
+  })
+
+  it("writes one log row per project, zero counts included", async () => {
+    const { service, insert, managerQuery } = buildService([
+      { id: "session-1", projectId: "project-a" },
+    ])
+    managerQuery.mockResolvedValue([{ id: "project-a" }, { id: "project-b" }])
+
+    await service.sweepExpiredConversations()
+
+    expect(insert).toHaveBeenCalledTimes(1)
+    const rows = insert.mock.calls[0]?.[0] as {
+      projectId: string
+      purgedCount: number
+      status: string
+      report: string
+    }[]
+    const projectARow = rows.find((row) => row.projectId === "project-a")
+    const projectBRow = rows.find((row) => row.projectId === "project-b")
+    expect(projectARow).toMatchObject({ purgedCount: 1, status: "OK" })
+    expect(projectARow?.report).toContain("Conversations purged: 1")
+    expect(projectBRow).toMatchObject({ purgedCount: 0, status: "OK" })
+  })
+
+  it("marks a project PARTIAL in the log when a purge failed", async () => {
+    const { service, insert, managerQuery, purgeService } = buildService([
+      { id: "session-1", projectId: "project-a" },
+    ])
+    managerQuery.mockResolvedValue([{ id: "project-a" }])
+    purgeService.purgeSessionContent.mockRejectedValueOnce(new Error("boom"))
+
+    await service.sweepExpiredConversations()
+
+    const rows = insert.mock.calls[0]?.[0] as { status: string; report: string }[]
+    expect(rows[0]).toMatchObject({ status: "PARTIAL", purgedCount: 0 })
+    expect(rows[0]?.report).toContain("Purge failures: 1")
   })
 })

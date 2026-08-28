@@ -93,8 +93,9 @@ export class ConversationAgentSessionsService {
     return await this.conversationAgentSessionConnectRepository.find(connectScope, {
       // Exclude sub-sessions (those with a parent session): these are internal
       // artifacts created when a parent agent delegates to this conversation
-      // agent, not user-facing sessions.
-      where: { agentId, userId, type, parentSessionId: IsNull() },
+      // agent, not user-facing sessions. Purged sessions (retention, #677) are
+      // empty husks: they stay out of the list too.
+      where: { agentId, userId, type, parentSessionId: IsNull(), purgedAt: IsNull() },
       order: { createdAt: "DESC" },
     })
   }
@@ -212,7 +213,7 @@ export class ConversationAgentSessionsService {
     type: BaseAgentSessionType
   }): Promise<ConversationAgentSession[]> {
     return this.conversationAgentSessionConnectRepository.find(connectScope, {
-      where: { parentSessionId, userId, type },
+      where: { parentSessionId, userId, type, purgedAt: IsNull() },
       order: { createdAt: "ASC" },
     })
   }
