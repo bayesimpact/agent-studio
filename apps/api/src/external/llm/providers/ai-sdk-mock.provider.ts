@@ -89,6 +89,9 @@ export class AISDKMockProvider extends AISDKLLMProviderBase {
 
   getLanguageModel({ callOrigin }: { config: LLMConfig; callOrigin: CallOrigin }): LanguageModel {
     return new MockLanguageModelV3({
+      // Pass file/image URLs through instead of downloading them: attachments
+      // are signed storage URLs that are unreachable from the test process.
+      supportedUrls: { "*/*": [/.*/] },
       doGenerate: async (options) => {
         const resolved = this.resolve({ mode: "generate", callOrigin, options })
         if (resolved.type === "error") throw resolved.error

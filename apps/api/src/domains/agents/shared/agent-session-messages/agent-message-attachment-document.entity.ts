@@ -24,4 +24,8 @@ export class AgentMessageAttachmentDocument extends ConnectEntityBase {
 
   @Column({ type: "varchar", name: "storage_relative_path" })
   storageRelativePath!: string
+
+  /** Rendered PNG page count in GCS (derived/{id}/page-{n}.png); null = not rendered. PDFs only. */
+  @Column({ type: "integer", name: "pdf_page_count", nullable: true })
+  pdfPageCount!: number | null
 }

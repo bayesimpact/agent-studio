@@ -11,12 +11,15 @@ import type {
 } from "@/common/interfaces/llm-provider.interface"
 import type { Agent } from "@/domains/agents/agent.entity"
 import type { AgentSettings } from "@/domains/agents/settings/agent-settings.entity"
+// biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
+import { PdfPagesService } from "@/domains/documents/pdf-pages/pdf-pages.service"
 import {
   FILE_STORAGE_SERVICE,
   type IFileStorage,
 } from "@/domains/documents/storage/file-storage.interface"
 import { getTraceUrl } from "@/external/langfuse/langfuse-helper"
 import { ServiceWithLLM } from "@/external/llm"
+import { modelRequiresPdfAsImages } from "@/external/llm/agent-provider"
 import type { AgentMessage } from "../agent-message.entity"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
 import { AgentMessageAttachmentDocumentsService } from "../agent-message-attachment-documents.service"
@@ -55,6 +58,7 @@ export class AgentLlmRequestService extends ServiceWithLLM {
     @Inject(FILE_STORAGE_SERVICE)
     private readonly fileStorageService: IFileStorage,
     private readonly agentMessageAttachmentDocumentsService: AgentMessageAttachmentDocumentsService,
+    private readonly pdfPagesService: PdfPagesService,
 
     private readonly toolsService: ToolsService,
 
@@ -151,6 +155,7 @@ export class AgentLlmRequestService extends ServiceWithLLM {
         llmMessages: messages,
         attachmentDocumentId,
         connectScope,
+        model: agentSettings.model,
       })
 
     return { config, metadata, messages, mcpClose }
@@ -247,10 +252,12 @@ export class AgentLlmRequestService extends ServiceWithLLM {
     llmMessages,
     attachmentDocumentId,
     connectScope,
+    model,
   }: {
     llmMessages: LLMChatMessage[]
     attachmentDocumentId: string
     connectScope: RequiredConnectScope
+    model: string
   }) {
     const message = llmMessages.pop()
     if (!message) return
@@ -263,32 +270,45 @@ export class AgentLlmRequestService extends ServiceWithLLM {
       throw new Error(`Attachment document with ID ${attachmentDocumentId} not found`)
     }
 
-    const url = await this.fileStorageService.getTemporaryUrl(
-      attachmentDocument.storageRelativePath,
-    )
     const llmMessage: LLMChatMessage = {
       role: "user",
       content: [{ type: "text", text: message.content as string }],
     }
 
-    const hasStorageBucketName: boolean = !!process.env.GCS_STORAGE_BUCKET_NAME
-
     switch (attachmentDocument.mimeType) {
       case "application/pdf":
         {
-          const data = new URL(
-            hasStorageBucketName
-              ? url
-              : "https://www.impots.gouv.fr/sites/default/files/formulaires/2042/2025/2042_5180.pdf",
-          )
-
-          const content = llmMessage.content as Array<FilePart>
-          content.push({
-            type: "file",
-            mediaType: "application/pdf",
-            data,
-            filename: attachmentDocument.fileName,
-          })
+          if (modelRequiresPdfAsImages(model)) {
+            // Image-only models: send one rendered page image URL per page. The
+            // pages live in GCS (rendered once by pdf-converter, cached)
+            const imageUrls = await this.pdfPagesService.getImageUrls({
+              document: attachmentDocument,
+              onPageCountUpdate: async (pdfPageCount: number) => {
+                await this.agentMessageAttachmentDocumentsService.updatePdfPageCount({
+                  attachmentDocumentId: attachmentDocument.id,
+                  connectScope,
+                  pdfPageCount,
+                })
+              },
+              fileStorageService: this.fileStorageService,
+            })
+            const content = llmMessage.content as Array<ImagePart>
+            imageUrls.map((url) => content.push({ type: "image", image: new URL(url) }))
+          } else {
+            // Other models accept pdf file parts directly (signed URL; the AI
+            // SDK downloads it when the provider doesn't support URLs).
+            const url = await this.fileStorageService.getTemporaryUrl(
+              attachmentDocument.storageRelativePath,
+            )
+            const data = new URL(url)
+            const content = llmMessage.content as Array<FilePart>
+            content.push({
+              type: "file",
+              mediaType: "application/pdf",
+              data,
+              filename: attachmentDocument.fileName,
+            })
+          }
         }
         break
 
@@ -296,11 +316,10 @@ export class AgentLlmRequestService extends ServiceWithLLM {
       case "image/jpeg":
       case "image/jpg":
         {
-          const image = new URL(
-            hasStorageBucketName
-              ? url
-              : "https://www.oiseaux.net/photos/marc.fasol/images/id/canard.colvert.mafa.3p.230.h.jpg",
+          const url = await this.fileStorageService.getTemporaryUrl(
+            attachmentDocument.storageRelativePath,
           )
+          const image = new URL(url)
 
           const content = llmMessage.content as Array<ImagePart>
           content.push({ type: "image", image })

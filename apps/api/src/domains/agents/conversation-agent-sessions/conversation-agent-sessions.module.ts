@@ -1,6 +1,7 @@
 import { forwardRef, Module } from "@nestjs/common"
 import { TypeOrmModule } from "@nestjs/typeorm"
 import { AgentSettingsModule } from "@/domains/agents/settings/agent-settings.module"
+import { PdfPagesModule } from "@/domains/documents/pdf-pages/pdf-pages.module"
 import { McpServersModule } from "@/domains/mcp-servers/mcp-servers.module"
 import { McpModule } from "@/external/mcp"
 import {
@@ -23,6 +24,7 @@ import { ConversationAgentSessionsService } from "./conversation-agent-sessions.
     forwardRef(() => StreamingModule),
     McpModule,
     McpServersModule,
+    PdfPagesModule,
   ],
   providers: [
     ...moduleProviders,

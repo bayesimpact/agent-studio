@@ -86,4 +86,33 @@ describe("AgentMessageAttachmentDocumentsService", () => {
 
     expect(foundAttachmentDocument).toBeNull()
   })
+
+  it("should persist the rendered page count on the attachment document", async () => {
+    const { organization, project } = await createOrganizationWithProject(repositories)
+    const connectScope = { organizationId: organization.id, projectId: project.id }
+
+    const createdAttachmentDocument = await service.createAttachmentDocument({
+      attachmentDocumentId: "00000000-0000-4000-8000-000000000003",
+      connectScope,
+      fields: {
+        fileName: "attachment.pdf",
+        mimeType: "application/pdf",
+        size: 1234,
+        storageRelativePath: `${organization.id}/${project.id}/attachment.pdf`,
+      },
+    })
+    expect(createdAttachmentDocument.pdfPageCount).toBeNull()
+
+    await service.updatePdfPageCount({
+      attachmentDocumentId: createdAttachmentDocument.id,
+      connectScope,
+      pdfPageCount: 3,
+    })
+
+    const foundAttachmentDocument = await service.findById({
+      attachmentDocumentId: createdAttachmentDocument.id,
+      connectScope,
+    })
+    expect(foundAttachmentDocument?.pdfPageCount).toBe(3)
+  })
 })

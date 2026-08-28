@@ -4,6 +4,7 @@ import {
   type StreamEventPayload,
 } from "@caseai-connect/api-contracts"
 import { afterAll } from "@jest/globals"
+import type { ImagePart, TextPart } from "ai"
 import { v4 } from "uuid"
 import {
   type AllRepositories,
@@ -13,8 +14,10 @@ import {
 } from "@/common/test/test-database"
 import type { ConversationAgentSession } from "@/domains/agents/conversation-agent-sessions/conversation-agent-session.entity"
 import { conversationAgentSessionFactory } from "@/domains/agents/conversation-agent-sessions/conversation-agent-session.factory"
+import type { AgentSettings } from "@/domains/agents/settings/agent-settings.entity"
 import { AgentMessageAttachmentDocumentsService } from "@/domains/agents/shared/agent-session-messages/agent-message-attachment-documents.service"
 import type { AgentSessionScope } from "@/domains/agents/shared/agent-session-messages/streaming/streaming-session.types"
+import { PdfConverterClient } from "@/domains/documents/pdf-pages/pdf-converter.client"
 import {
   addFeature,
   createOrganizationWithAgent,
@@ -22,12 +25,15 @@ import {
 } from "@/domains/organizations/organization.factory"
 import { sdk } from "@/external/llm/open-telemetry-init"
 import type { AISDKMockProvider } from "@/external/llm/providers/ai-sdk-mock.provider"
+import { AgentLlmRequestService } from "./agent-llm-request.service"
 import { StreamingModule } from "./streaming.module"
 import { StreamingService } from "./streaming.service"
 
 describe("StreamingService", () => {
   let service: StreamingService
+  let agentLlmRequestService: AgentLlmRequestService
   let agentMessageAttachmentDocumentsService: AgentMessageAttachmentDocumentsService
+  let pdfConverterClient: PdfConverterClient
   let mockProvider: AISDKMockProvider
   let setup: Awaited<ReturnType<typeof setupE2eTestDatabase>>
   let repositories: AllRepositories
@@ -46,10 +52,12 @@ describe("StreamingService", () => {
   beforeEach(async () => {
     await clearTestDatabase(setup.dataSource)
     service = setup.module.get<StreamingService>(StreamingService)
+    agentLlmRequestService = setup.module.get<AgentLlmRequestService>(AgentLlmRequestService)
     agentMessageAttachmentDocumentsService =
       setup.module.get<AgentMessageAttachmentDocumentsService>(
         AgentMessageAttachmentDocumentsService,
       )
+    pdfConverterClient = setup.module.get<PdfConverterClient>(PdfConverterClient)
     mockProvider = setup.module.get<AISDKMockProvider>("_MockLLMProvider")
     mockProvider.resetMock()
     repositories = setup.getAllRepositories()
@@ -68,10 +76,11 @@ describe("StreamingService", () => {
       agentSettings,
     }
   }
-  const createContextWithSession = async () => {
+  const createContextWithSession = async (agentSettingsOverrides?: Partial<AgentSettings>) => {
     const { organization, project, agent, agentSettings, conversationAgentSession } =
       await createOrganizationWithAgent(repositories, {
         agent: { type: "conversation" },
+        agentSettings: agentSettingsOverrides,
         withLiveConversationAgentSession: true,
       })
 
@@ -249,6 +258,150 @@ describe("StreamingService", () => {
     const { events, fulltextStream } = await aggregateStream(stream)
     expect(events.length).toBeGreaterThan(0)
     expect(fulltextStream).toBe(`Hello, I'm the stream default mock value!`)
+  })
+
+  describe("buildLLMRequest - with a pdf document - Gemma/MedGemma image-only models", () => {
+    afterEach(() => {
+      jest.restoreAllMocks()
+    })
+
+    // Builds the LLM request the same way StreamingService does (persist the
+    // user message, reload the session, then hand it to
+    // AgentLlmRequestService) without going through the LLM provider itself —
+    // buildLLMRequest never calls the provider, so this exercises exactly the
+    // attachment-handling logic under test.
+    const buildLLMRequestForAttachment = async ({
+      agentSessionScope,
+      attachmentDocumentId,
+    }: {
+      agentSessionScope: AgentSessionScope
+      attachmentDocumentId: string
+    }) => {
+      const { session: sessionWithUserMessage } = await service.prepareForStreaming({
+        agentSessionScope,
+        userContent: "Bonjour",
+        attachmentDocumentId,
+      })
+      return agentLlmRequestService.buildLLMRequest({
+        agentSessionScope: { ...agentSessionScope, session: sessionWithUserMessage },
+        attachmentDocumentId,
+        onToolExecute: () => undefined,
+      })
+    }
+
+    it("sends one image part per rendered page and caches the page count on the attachment row", async () => {
+      const { connectScope, agent, agentSettings, session } = await createContextWithSession({
+        model: AgentModel.Gemma4_26B,
+      })
+      const attachmentDocumentId = "00000000-0000-4000-8000-000000000010"
+      const storageRelativePath = `${connectScope.organizationId}/${connectScope.projectId}/attachment.pdf`
+      await agentMessageAttachmentDocumentsService.createAttachmentDocument({
+        attachmentDocumentId,
+        connectScope,
+        fields: {
+          fileName: "attachment.pdf",
+          mimeType: "application/pdf",
+          size: 1234,
+          storageRelativePath,
+        },
+      })
+
+      const generatePdfPageImagesSpy = jest
+        .spyOn(pdfConverterClient, "generatePdfPageImages")
+        .mockResolvedValue(2)
+
+      const { messages } = await buildLLMRequestForAttachment({
+        agentSessionScope: { connectScope, session, agent, agentSettings },
+        attachmentDocumentId,
+      })
+
+      const derivedPagesPrefix = `${connectScope.organizationId}/${connectScope.projectId}/derived/attachment/`
+      const lastMessage = messages[messages.length - 1]
+      const content = lastMessage?.content as [TextPart, ImagePart, ImagePart]
+      expect(content).toHaveLength(3)
+      expect(content[0].type).toBe("text")
+      expect(content[1].type).toBe("image")
+      expect(String(content[1].image)).toMatch(`${derivedPagesPrefix}page-1.png`)
+      expect(content[2].type).toBe("image")
+      expect(String(content[2].image)).toMatch(`${derivedPagesPrefix}page-2.png`)
+
+      expect(generatePdfPageImagesSpy).toHaveBeenCalledWith({
+        sourceObject: storageRelativePath,
+        outputPrefix: derivedPagesPrefix,
+      })
+
+      const persistedAttachmentDocument =
+        await repositories.agentMessageAttachmentDocumentRepository.findOne({
+          where: { id: attachmentDocumentId },
+        })
+      expect(persistedAttachmentDocument?.pdfPageCount).toBe(2)
+    })
+
+    it("rejects with a user-facing error when the pdf exceeds the page limit", async () => {
+      const { connectScope, agent, agentSettings, session } = await createContextWithSession({
+        model: AgentModel.Gemma4_26B,
+      })
+      const attachmentDocumentId = "00000000-0000-4000-8000-000000000012"
+      await agentMessageAttachmentDocumentsService.createAttachmentDocument({
+        attachmentDocumentId,
+        connectScope,
+        fields: {
+          fileName: "attachment.pdf",
+          mimeType: "application/pdf",
+          size: 1234,
+          storageRelativePath: `${connectScope.organizationId}/${connectScope.projectId}/attachment.pdf`,
+        },
+      })
+
+      jest.spyOn(pdfConverterClient, "getPageCount").mockResolvedValue(25)
+      const generatePdfPageImagesSpy = jest.spyOn(pdfConverterClient, "generatePdfPageImages")
+
+      await expect(
+        buildLLMRequestForAttachment({
+          agentSessionScope: { connectScope, session, agent, agentSettings },
+          attachmentDocumentId,
+        }),
+      ).rejects.toThrow("This PDF has 25 pages; the maximum is 20 pages.")
+      expect(generatePdfPageImagesSpy).toHaveBeenCalledTimes(1)
+    })
+
+    it("signs the cached pages without re-rendering", async () => {
+      const { connectScope, agent, agentSettings, session } = await createContextWithSession({
+        model: AgentModel.Gemma4_26B,
+      })
+      const attachmentDocumentId = "00000000-0000-4000-8000-000000000011"
+      const storageRelativePath = `${connectScope.organizationId}/${connectScope.projectId}/attachment.pdf`
+      await agentMessageAttachmentDocumentsService.createAttachmentDocument({
+        attachmentDocumentId,
+        connectScope,
+        fields: {
+          fileName: "attachment.pdf",
+          mimeType: "application/pdf",
+          size: 1234,
+          storageRelativePath,
+        },
+      })
+      await agentMessageAttachmentDocumentsService.updatePdfPageCount({
+        attachmentDocumentId,
+        connectScope,
+        pdfPageCount: 2,
+      })
+
+      const generatePdfPageImagesSpy = jest.spyOn(pdfConverterClient, "generatePdfPageImages")
+
+      const { messages } = await buildLLMRequestForAttachment({
+        agentSessionScope: { connectScope, session, agent, agentSettings },
+        attachmentDocumentId,
+      })
+
+      expect(generatePdfPageImagesSpy).not.toHaveBeenCalled()
+      const lastMessage = messages[messages.length - 1]
+      const content = lastMessage?.content as [TextPart, ImagePart, ImagePart]
+      expect(content).toHaveLength(3)
+      expect(String(content[1].image)).toMatch(
+        `${connectScope.organizationId}/${connectScope.projectId}/derived/attachment/page-1.png`,
+      )
+    })
   })
 
   it("streamAgentResponse - with fillForm-enabled sub-agent", async () => {

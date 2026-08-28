@@ -34,12 +34,11 @@ export class CustomMedGemmaLanguageModel implements LanguageModelV3 {
     this.modelId = config.model
   }
 
-  //required for LanguageModelV3 implementation
-  get supportedUrls() {
-    return {
-      "image/*": [/^https:\/\/example\.com\/images\/.*/],
-    }
-  }
+  // Image URLs are passed through to the vLLM endpoint, which fetches them
+  // server-side. Restricted to GCS signed urls, the only image urls we
+  // generate (defense in depth against SSRF via injected URLs). Anything else
+  // falls back to the AI SDK downloading the bytes and inlining base64 below.
+  readonly supportedUrls = { "image/*": [/^https:\/\/storage\.googleapis\.com\/.+/] }
 
   async doGenerate(options: LanguageModelV3CallOptions): Promise<LanguageModelV3GenerateResult> {
     const callOrigin = options.providerOptions?.custom?.callOrigin
@@ -198,6 +197,13 @@ export class CustomMedGemmaLanguageModel implements LanguageModelV3 {
           case "file": {
             if (!value.mediaType.startsWith("image/"))
               throw new Error(`MedGemma model cannot process ${value.mediaType} file`)
+            if (value.data instanceof URL) {
+              contents.push({
+                type: "image_url",
+                image_url: { url: value.data.toString() },
+              })
+              break
+            }
             const buf = Buffer.from(value.data)
             // fixme DOO: reduce file size ?
             // const resizedBuffer = await sharp(buf)

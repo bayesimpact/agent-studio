@@ -45,6 +45,7 @@ export const documentFactory = DocumentFactory.define(({ sequence, params, trans
     uploadStatus: params.uploadStatus || "uploaded",
     evaluationExtractionDatasetDocuments: params.evaluationExtractionDatasetDocuments || [],
     userId: params.userId || null,
+    pdfPageCount: params.pdfPageCount ?? null,
   } satisfies Document
 })
 
