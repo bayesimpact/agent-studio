@@ -76,7 +76,7 @@ ${
       model: judgeModel,
       temperature: 0,
       priorityCallsEnabled: false,
-      llmFeatures: { priorityCalls: false },
+      llmFeatures: { priorityCalls: false, flexWorkers: false },
     }
 
     const llmMetadata: LLMMetadata = {

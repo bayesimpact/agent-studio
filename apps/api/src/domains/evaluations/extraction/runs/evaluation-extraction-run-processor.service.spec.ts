@@ -137,7 +137,7 @@ describe("EvaluationExtractionRunProcessorService", () => {
       agentWithSettings: toAgentWithSettingsRunJobPayload({
         agent,
         agentSettings,
-        llmFeatures: {},
+        llmFeatures: { priorityCalls: false, flexWorkers: false },
       }),
     }
 

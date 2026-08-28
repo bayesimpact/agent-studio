@@ -43,7 +43,7 @@ describe("AgentCsvExtractionRunProcessorService", () => {
     repositories = setup.getAllRepositories()
     service = setup.module.get(AgentCsvExtractionRunProcessorService)
     mockProvider = setup.module.get<AISDKMockProvider>("_MockLLMProvider")
-    llmFeatures = { priorityCalls: false }
+    llmFeatures = { priorityCalls: false, flexWorkers: false }
   })
 
   afterAll(async () => {

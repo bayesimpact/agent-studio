@@ -93,7 +93,10 @@ export class ProjectRepository {
       projectId: connectScope.projectId,
       feature: "llm-flex-workers",
     })
-    return { priorityCalls, flexWorkers }
+    return {
+      priorityCalls,
+      flexWorkers: flexWorkers && process.env.LLM_VERTEX3_ENABLE_FLEX_FOR_WORKERS === "true", //kill switch by env variable
+    }
   }
   /** Queried through the featureFlags relation to keep this repository on the Project entity only. */
   async isFeatureEnabled({
