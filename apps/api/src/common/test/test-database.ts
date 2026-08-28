@@ -198,6 +198,7 @@ export async function clearTestDatabase(dataSource: DataSource): Promise<void> {
       `)
       await queryRunner.query(`DELETE FROM "invitation"`)
       await queryRunner.query(`DELETE FROM "extraction_agent_session"`)
+      await queryRunner.query(`DELETE FROM "conversation_retention_sweep_run"`)
       await queryRunner.query(`DELETE FROM "conversation_agent_session"`)
       await queryRunner.query(`DELETE FROM "review_campaign"`)
       await queryRunner.query(`DELETE FROM "document"`)

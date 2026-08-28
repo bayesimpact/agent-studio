@@ -1,6 +1,11 @@
 import type { RequestPayload, ResponseData, SuccessResponseDTO } from "../generic"
 import { defineRoute } from "../helpers"
-import type { MyProjectDto, ProjectDto, UpdateProjectRequestDto } from "./projects.dto"
+import type {
+  MyProjectDto,
+  ProjectDto,
+  RetentionSweepRunsResponseDto,
+  UpdateProjectRequestDto,
+} from "./projects.dto"
 
 export const ProjectsRoutes = {
   getAllMine: defineRoute<ResponseData<MyProjectDto[]>>({
@@ -22,5 +27,9 @@ export const ProjectsRoutes = {
   deleteOne: defineRoute<ResponseData<SuccessResponseDTO>>({
     method: "delete",
     path: "organizations/:organizationId/projects/:projectId",
+  }),
+  getRetentionSweepRuns: defineRoute<ResponseData<RetentionSweepRunsResponseDto>>({
+    method: "get",
+    path: "organizations/:organizationId/projects/:projectId/retention-sweep-runs",
   }),
 }

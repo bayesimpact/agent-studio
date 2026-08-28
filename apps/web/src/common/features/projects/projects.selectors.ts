@@ -7,6 +7,8 @@ export const selectProjectsData = (state: RootState) => state.projects.data
 
 export const selectMyProjectsData = (state: RootState) => state.projects.mine
 
+export const selectRetentionSweepRunsData = (state: RootState) => state.projects.retentionSweepRuns
+
 export const selectCurrentProjectId = (state: RootState) => state.currentIds.projectId
 
 export const selectCurrentProjectData = createSelector(

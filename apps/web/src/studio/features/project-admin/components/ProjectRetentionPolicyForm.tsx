@@ -1,8 +1,10 @@
+import { CONVERSATION_RETENTION_MAX_DAYS, updateProjectSchema } from "@caseai-connect/api-contracts"
 import { Button } from "@caseai-connect/ui/shad/button"
 import { FieldGroup } from "@caseai-connect/ui/shad/field"
 import {
   Form,
   FormControl,
+  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -13,32 +15,38 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { useEffect } from "react"
 import { useForm } from "react-hook-form"
 import { useTranslation } from "react-i18next"
-import { z } from "zod"
+import type { z } from "zod"
 import type { Project } from "@/common/features/projects/projects.models"
 import { useAppDispatch } from "@/common/store/hooks"
 import { updateProject } from "@/studio/features/projects/projects.thunks"
 
-const schema = z.object({
-  name: z.string().min(1),
-})
+// The retention is always set: no empty value, no zero (#677).
+const schema = updateProjectSchema.pick({ conversationRetentionDays: true }).required()
 
 type FormValues = z.infer<typeof schema>
 
-export function ProjectGeneralForm({ project }: { project: Project }) {
+export function ProjectRetentionPolicyForm({ project }: { project: Project }) {
   const { t } = useTranslation()
   const dispatch = useAppDispatch()
 
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
-    defaultValues: { name: project.name },
+    defaultValues: { conversationRetentionDays: project.conversationRetentionDays },
   })
 
   useEffect(() => {
-    form.reset({ name: project.name })
-  }, [project.name, form])
+    form.reset({ conversationRetentionDays: project.conversationRetentionDays })
+  }, [project.conversationRetentionDays, form])
 
   const onSubmit = async (values: FormValues) => {
-    await dispatch(updateProject({ payload: { name: values.name } }))
+    await dispatch(
+      updateProject({
+        payload: {
+          name: project.name,
+          conversationRetentionDays: values.conversationRetentionDays,
+        },
+      }),
+    )
   }
 
   return (
@@ -48,13 +56,27 @@ export function ProjectGeneralForm({ project }: { project: Project }) {
           <div className="grid gap-4 md:grid-cols-2">
             <FormField
               control={form.control}
-              name="name"
+              name="conversationRetentionDays"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>{t("projectAdmin:general.workspaceName")}</FormLabel>
+                  <FormLabel>{t("projectAdmin:retention.retentionLabel")}</FormLabel>
                   <FormControl>
-                    <Input {...field} />
+                    <Input
+                      type="number"
+                      min={1}
+                      max={CONVERSATION_RETENTION_MAX_DAYS}
+                      value={Number.isFinite(field.value) ? field.value : ""}
+                      onChange={(event) =>
+                        field.onChange(
+                          event.target.value === "" ? Number.NaN : Number(event.target.value),
+                        )
+                      }
+                      onBlur={field.onBlur}
+                      name={field.name}
+                      ref={field.ref}
+                    />
                   </FormControl>
+                  <FormDescription>{t("projectAdmin:retention.retentionHelp")}</FormDescription>
                   <FormMessage />
                 </FormItem>
               )}

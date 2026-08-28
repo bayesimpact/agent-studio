@@ -16,7 +16,11 @@ import type { Agent } from "@/common/features/agents/agents.models"
 import type { User } from "@/common/features/me/me.models"
 import { organizationFactory } from "@/common/features/organizations/organization.factory"
 import type { Organization } from "@/common/features/organizations/organizations.models"
-import type { MyProject, Project } from "@/common/features/projects/projects.models"
+import type {
+  MyProject,
+  Project,
+  RetentionSweepRuns,
+} from "@/common/features/projects/projects.models"
 import { ADS, type AsyncData, defaultAsyncData } from "@/common/store/async-data-status"
 import type {
   EvaluationConversationDataset,
@@ -142,6 +146,11 @@ export const seed = {
   /** Seeds `projects.mine` (all projects the current user can access, across organizations). */
   myProjects(projects: MyProject[]): StoryPreloadedState {
     return { projects: { mine: ads.fulfilled(projects) } }
+  },
+
+  /** Seeds the purge log of the workspace admin retention tab. */
+  retentionSweepRuns(log: RetentionSweepRuns): StoryPreloadedState {
+    return { projects: { retentionSweepRuns: ads.fulfilled(log) } }
   },
 
   projects(projects: Project[], options: { currentId?: string | null } = {}): StoryPreloadedState {

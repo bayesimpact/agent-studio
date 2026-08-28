@@ -13,3 +13,6 @@ export const CONVERSATION_RETENTION_SWEEP_BATCH_LIMIT = 200
 
 /** Safety cap on batches per run (200 x 100 = 20k sessions); leftovers wait for the next run. */
 export const CONVERSATION_RETENTION_SWEEP_MAX_BATCHES_PER_RUN = 100
+
+/** The purge log itself keeps 12 months of rows (#677). */
+export const CONVERSATION_RETENTION_SWEEP_LOG_RETENTION_MONTHS = 12

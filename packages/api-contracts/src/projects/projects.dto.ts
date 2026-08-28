@@ -10,18 +10,44 @@ export type ProjectDto = {
   updatedAt: TimeType
   featureFlags: FeatureFlagsDto
   agentSessionCategories: ProjectAgentSessionCategoryDto[]
-  /** GDPR retention: conversations older than this many days get their content purged. Null = never. */
-  conversationRetentionDays: number | null
+  /** GDPR retention: conversations older than this many days get their content purged. Always set. */
+  conversationRetentionDays: number
 }
+
+export const CONVERSATION_RETENTION_MIN_DAYS = 1
+export const CONVERSATION_RETENTION_MAX_DAYS = 3650
 
 export const updateProjectSchema = z
   .object({
     name: z.string().min(1).max(100).trim(),
-    conversationRetentionDays: z.number().int().min(1).max(3650).nullable().optional(),
+    conversationRetentionDays: z
+      .number()
+      .int()
+      .min(CONVERSATION_RETENTION_MIN_DAYS)
+      .max(CONVERSATION_RETENTION_MAX_DAYS)
+      .optional(),
   })
   .strict()
 
 export type UpdateProjectRequestDto = z.infer<typeof updateProjectSchema>
+
+export type RetentionSweepRunStatusDto = "OK" | "PARTIAL" | "ERROR"
+
+/** One purge run of the retention sweep, for one project. */
+export type RetentionSweepRunDto = {
+  id: string
+  ranAt: TimeType
+  purgedCount: number
+  status: RetentionSweepRunStatusDto
+  /** Run report in markdown. */
+  report: string
+}
+
+export type RetentionSweepRunsResponseDto = {
+  /** Next scheduled sweep, from the cron pattern. */
+  nextRunAt: TimeType
+  runs: RetentionSweepRunDto[]
+}
 
 export type ProjectAgentSessionCategoryDto = {
   id: string

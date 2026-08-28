@@ -8,7 +8,24 @@ export type Project = {
   updatedAt: TimeType
   featureFlags: FeatureFlagsDto
   agentSessionCategories: ProjectAgentSessionCategory[]
-  conversationRetentionDays: number | null
+  conversationRetentionDays: number
+}
+
+export type RetentionSweepRunStatus = "OK" | "PARTIAL" | "ERROR"
+
+/** One purge run of the retention sweep, for the current project. */
+export type RetentionSweepRun = {
+  id: string
+  ranAt: TimeType
+  purgedCount: number
+  status: RetentionSweepRunStatus
+  /** Run report in markdown. */
+  report: string
+}
+
+export type RetentionSweepRuns = {
+  nextRunAt: TimeType
+  runs: RetentionSweepRun[]
 }
 
 export type ProjectAgentSessionCategory = {

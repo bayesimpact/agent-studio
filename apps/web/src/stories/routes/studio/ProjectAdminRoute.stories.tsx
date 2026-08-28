@@ -1,5 +1,8 @@
 import type { Meta, StoryObj } from "@storybook/react-vite"
-import { projectAgentSessionCategoryFactory } from "@/common/features/projects/projects.factory"
+import {
+  projectAgentSessionCategoryFactory,
+  retentionSweepRunFactory,
+} from "@/common/features/projects/projects.factory"
 import type { ProjectAgentSessionCategory } from "@/common/features/projects/projects.models"
 import { buildDecorator, render } from "@/stories/decorators"
 import {
@@ -14,6 +17,7 @@ import { studioRoutes } from "@/studio/routes/StudioRoutes"
 
 type StoryArgs = StudioStoryArgs & {
   withAgentSessionCategories?: boolean
+  withRetentionLog?: boolean
 }
 
 const meta = {
@@ -22,10 +26,12 @@ const meta = {
   argTypes: {
     ...studioStoryArgTypes,
     withAgentSessionCategories: { control: "boolean" },
+    withRetentionLog: { control: "boolean" },
   },
   args: {
     ...studioStoryArgs,
     withAgentSessionCategories: false,
+    withRetentionLog: true,
   },
   render: render({
     routes: studioRoutes,
@@ -38,7 +44,7 @@ type Story = StoryObj<typeof meta>
 
 export const Default: Story = {
   decorators: [
-    buildDecorator<StoryArgs>(({ withAgentSessionCategories, ...args }) => {
+    buildDecorator<StoryArgs>(({ withAgentSessionCategories, withRetentionLog, ...args }) => {
       const { baseSeeds, project } = buildStudioData(args)
       const categories: ProjectAgentSessionCategory[] = withAgentSessionCategories
         ? [
@@ -48,10 +54,31 @@ export const Default: Story = {
           ]
         : []
       const seededProject = { ...project, agentSessionCategories: categories }
+      const retentionLog = {
+        nextRunAt: Date.now() + 8 * 60 * 60 * 1000,
+        runs: withRetentionLog
+          ? [
+              retentionSweepRunFactory.build({ status: "OK", purgedCount: 12 }),
+              retentionSweepRunFactory.build({
+                status: "PARTIAL",
+                purgedCount: 3,
+                report:
+                  "- Conversations purged: 3\n- Embed sessions purged: 0\n- Trace deletions postponed: 2 (retried on the next run)",
+              }),
+              retentionSweepRunFactory.build({
+                status: "ERROR",
+                purgedCount: 0,
+                report: "The run failed: the database connection dropped.",
+              }),
+              retentionSweepRunFactory.build({ status: "OK", purgedCount: 0 }),
+            ]
+          : [],
+      }
       return {
         state: mergeSeeds(
           baseSeeds,
           seed.projects([seededProject], { currentId: seededProject.id }),
+          seed.retentionSweepRuns(retentionLog),
         ),
       }
     }),
@@ -64,7 +91,7 @@ export const WithCategories: Story = {
     withAgentSessionCategories: true,
   },
   decorators: [
-    buildDecorator<StoryArgs>(({ withAgentSessionCategories, ...args }) => {
+    buildDecorator<StoryArgs>(({ withAgentSessionCategories, withRetentionLog, ...args }) => {
       const { baseSeeds, project } = buildStudioData(args)
       const categories: ProjectAgentSessionCategory[] = withAgentSessionCategories
         ? [
@@ -74,10 +101,31 @@ export const WithCategories: Story = {
           ]
         : []
       const seededProject = { ...project, agentSessionCategories: categories }
+      const retentionLog = {
+        nextRunAt: Date.now() + 8 * 60 * 60 * 1000,
+        runs: withRetentionLog
+          ? [
+              retentionSweepRunFactory.build({ status: "OK", purgedCount: 12 }),
+              retentionSweepRunFactory.build({
+                status: "PARTIAL",
+                purgedCount: 3,
+                report:
+                  "- Conversations purged: 3\n- Embed sessions purged: 0\n- Trace deletions postponed: 2 (retried on the next run)",
+              }),
+              retentionSweepRunFactory.build({
+                status: "ERROR",
+                purgedCount: 0,
+                report: "The run failed: the database connection dropped.",
+              }),
+              retentionSweepRunFactory.build({ status: "OK", purgedCount: 0 }),
+            ]
+          : [],
+      }
       return {
         state: mergeSeeds(
           baseSeeds,
           seed.projects([seededProject], { currentId: seededProject.id }),
+          seed.retentionSweepRuns(retentionLog),
         ),
       }
     }),
