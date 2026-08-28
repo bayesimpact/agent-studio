@@ -53,11 +53,11 @@ function buildServiceWithPublicBatches({
     purgeService as unknown as ConversationAgentSessionPurgeService,
     langfuseAdminService as unknown as LangfuseAdminService,
   )
-  return { service, purgeService, langfuseAdminService }
+  return { service, purgeService, langfuseAdminService, queryBuilder, rawQueryBuilder }
 }
 
 describe("ConversationRetentionSweepService", () => {
-  it("purges every expired session and deletes its Langfuse trace", async () => {
+  it("purges every expired session and deletes its Langfuse trace first", async () => {
     const { service, purgeService, langfuseAdminService } = buildService([
       { id: "session-1", traceId: "trace-1" },
       { id: "session-2", traceId: null as unknown as string },
@@ -69,6 +69,10 @@ describe("ConversationRetentionSweepService", () => {
     expect(purgeService.purgeSessionContent).toHaveBeenCalledTimes(2)
     expect(langfuseAdminService.deleteTrace).toHaveBeenCalledTimes(1)
     expect(langfuseAdminService.deleteTrace).toHaveBeenCalledWith("trace-1")
+    // the trace deletion happens before the content purge
+    expect(langfuseAdminService.deleteTrace.mock.invocationCallOrder[0]).toBeLessThan(
+      purgeService.purgeSessionContent.mock.invocationCallOrder[0] as number,
+    )
   })
 
   it("does not count sessions the purge skipped", async () => {
@@ -80,17 +84,43 @@ describe("ConversationRetentionSweepService", () => {
     const { purgedCount } = await service.sweepExpiredConversations()
 
     expect(purgedCount).toBe(0)
-    expect(langfuseAdminService.deleteTrace).not.toHaveBeenCalled()
+    expect(langfuseAdminService.deleteTrace).toHaveBeenCalledTimes(1)
   })
 
-  it("survives a Langfuse deletion failure", async () => {
-    const { service, langfuseAdminService } = buildService([
+  it("postpones the purge when the trace deletion fails, so the next run retries", async () => {
+    const { service, purgeService, langfuseAdminService, rawQueryBuilder } = buildService([
       { id: "session-1", traceId: "trace-1" },
+      { id: "session-2", traceId: "trace-2" },
     ])
-    langfuseAdminService.deleteTrace.mockRejectedValue(new Error("boom"))
+    langfuseAdminService.deleteTrace.mockRejectedValueOnce(new Error("boom"))
 
     const { purgedCount } = await service.sweepExpiredConversations()
+
     expect(purgedCount).toBe(1)
+    expect(purgeService.purgeSessionContent).toHaveBeenCalledTimes(1)
+    expect(purgeService.purgeSessionContent).toHaveBeenCalledWith("session-2")
+    // the failed session is excluded from the later queries of the same run
+    // (here the public pass, which runs after the conversation pass)
+    expect(rawQueryBuilder.andWhere).toHaveBeenCalledWith(
+      "session.id NOT IN (:...excludedSessionIds)",
+      { excludedSessionIds: ["session-1"] },
+    )
+  })
+
+  it("excludes an in-run failure from the next conversation batch", async () => {
+    const fullBatch = Array.from({ length: 200 }, (_, index) => ({
+      id: `session-${index}`,
+      traceId: `trace-${index}`,
+    }))
+    const { service, langfuseAdminService, queryBuilder } = buildService(fullBatch, [])
+    langfuseAdminService.deleteTrace.mockRejectedValueOnce(new Error("boom"))
+
+    await service.sweepExpiredConversations()
+
+    expect(queryBuilder.andWhere).toHaveBeenCalledWith(
+      "session.id NOT IN (:...excludedSessionIds)",
+      { excludedSessionIds: ["session-0"] },
+    )
   })
 
   it("drains full batches until the backlog is empty", async () => {
@@ -107,7 +137,7 @@ describe("ConversationRetentionSweepService", () => {
     expect(purgeService.purgeSessionContent).toHaveBeenCalledTimes(201)
   })
 
-  it("purges expired public sessions and deletes their trace by session id", async () => {
+  it("purges expired public sessions and deletes their trace by session id, trace first", async () => {
     const { service, purgeService, langfuseAdminService } = buildServiceWithPublicBatches({
       batches: [],
       publicBatches: [[{ id: "public-1" }, { id: "public-2" }]],
@@ -119,19 +149,34 @@ describe("ConversationRetentionSweepService", () => {
     expect(purgeService.purgePublicSessionContent).toHaveBeenCalledTimes(2)
     expect(langfuseAdminService.deleteTrace).toHaveBeenCalledWith("public-1")
     expect(langfuseAdminService.deleteTrace).toHaveBeenCalledWith("public-2")
+    expect(langfuseAdminService.deleteTrace.mock.invocationCallOrder[0]).toBeLessThan(
+      purgeService.purgePublicSessionContent.mock.invocationCallOrder[0] as number,
+    )
   })
 
-  it("counts internal and public sessions together and skips unpurged public ones", async () => {
+  it("postpones a public session whose trace deletion fails", async () => {
     const { service, purgeService, langfuseAdminService } = buildServiceWithPublicBatches({
-      batches: [[{ id: "session-1", traceId: "trace-1" }]],
-      publicBatches: [[{ id: "public-1" }]],
+      batches: [],
+      publicBatches: [[{ id: "public-1" }, { id: "public-2" }]],
     })
-    purgeService.purgePublicSessionContent.mockResolvedValue({ purged: false })
+    langfuseAdminService.deleteTrace.mockRejectedValueOnce(new Error("boom"))
 
     const { purgedCount } = await service.sweepExpiredConversations()
 
     expect(purgedCount).toBe(1)
-    expect(langfuseAdminService.deleteTrace).toHaveBeenCalledTimes(1)
-    expect(langfuseAdminService.deleteTrace).toHaveBeenCalledWith("trace-1")
+    expect(purgeService.purgePublicSessionContent).toHaveBeenCalledTimes(1)
+    expect(purgeService.purgePublicSessionContent).toHaveBeenCalledWith("public-2")
+  })
+
+  it("counts internal and public sessions together", async () => {
+    const { service, langfuseAdminService } = buildServiceWithPublicBatches({
+      batches: [[{ id: "session-1", traceId: "trace-1" }]],
+      publicBatches: [[{ id: "public-1" }]],
+    })
+
+    const { purgedCount } = await service.sweepExpiredConversations()
+
+    expect(purgedCount).toBe(2)
+    expect(langfuseAdminService.deleteTrace).toHaveBeenCalledTimes(2)
   })
 })
