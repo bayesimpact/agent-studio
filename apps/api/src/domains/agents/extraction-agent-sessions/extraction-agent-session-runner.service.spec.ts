@@ -20,6 +20,7 @@ import {
 import { StorageModule } from "@/domains/documents/storage/storage.module"
 import { createOrganizationWithAgent } from "@/domains/organizations/organization.factory"
 import { ProjectRepository } from "@/domains/projects/project.repository"
+import { ProjectsModule } from "@/domains/projects/projects.module"
 import { LlmModule } from "@/external/llm/llm.module"
 import { sdk } from "@/external/llm/open-telemetry-init"
 import { extractionAgentSessionFactory } from "./extraction-agent-session.factory"
@@ -35,8 +36,18 @@ describe("ExtractionAgentSessionRunnerService", () => {
 
   beforeAll(async () => {
     setup = await setupE2eTestDatabase({
-      additionalImports: [LlmModule, StorageModule, PdfPagesModule, DocumentsModule, ProjectsModule],
-      providers: [ExtractionAgentSessionRunnerService, ExtractionAgentSessionStatusNotifierService,ProjectRepository],
+      additionalImports: [
+        LlmModule,
+        StorageModule,
+        PdfPagesModule,
+        DocumentsModule,
+        ProjectsModule,
+      ],
+      providers: [
+        ExtractionAgentSessionRunnerService,
+        ExtractionAgentSessionStatusNotifierService,
+        ProjectRepository,
+      ],
     })
     repositories = setup.getAllRepositories()
     service = setup.module.get(ExtractionAgentSessionRunnerService)
