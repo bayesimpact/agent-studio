@@ -50,4 +50,25 @@ export class AgentMessageAttachmentDocumentsService {
   }): Promise<AgentMessageAttachmentDocument | null> {
     return this.attachmentDocumentConnectRepository.getOneById(connectScope, attachmentDocumentId)
   }
+
+  /**
+   * Caches the rendered page count for a PDF attachment, so future chat turns
+   * referencing the same attachment reuse the already-rendered GCS pages
+   * instead of asking the pdf-converter service to render again.
+   */
+  async updatePdfPageCount({
+    attachmentDocumentId,
+    connectScope,
+    pdfPageCount,
+  }: {
+    attachmentDocumentId: string
+    connectScope: RequiredConnectScope
+    pdfPageCount: number
+  }): Promise<void> {
+    await this.attachmentDocumentConnectRepository.updateOneById({
+      connectScope,
+      id: attachmentDocumentId,
+      fields: { pdfPageCount },
+    })
+  }
 }

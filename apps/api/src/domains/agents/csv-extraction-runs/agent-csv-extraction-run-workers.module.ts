@@ -5,6 +5,7 @@ import { ALL_ENTITIES } from "@/common/all-entities"
 import { StructuredExtractionAgentRunnerService } from "@/domains/agents/shared/structured-extraction-agent-runner.service"
 import { DocumentsModule } from "@/domains/documents/documents.module"
 import { StorageModule } from "@/domains/documents/storage/storage.module"
+import { ProjectRepository } from "@/domains/projects/project.repository"
 import { LlmModule } from "@/external/llm/llm.module"
 import {
   AGENT_CSV_EXTRACTION_RUN_EXECUTE_QUEUE_NAME,
@@ -36,6 +37,7 @@ import { AgentCsvExtractionRunQueueMetricsService } from "./queue-metrics.servic
     AgentCsvExtractionRunStatusNotifierService,
     AgentCsvExtractionRunCsvExportService,
     AgentCsvExtractionRunQueueMetricsService,
+    ProjectRepository,
   ],
 })
 export class AgentCsvExtractionRunWorkersModule {}

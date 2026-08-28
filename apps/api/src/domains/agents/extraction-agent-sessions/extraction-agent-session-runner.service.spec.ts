@@ -1,5 +1,7 @@
 import { AgentModel } from "@caseai-connect/api-contracts"
+import type { ImagePart, TextPart } from "ai"
 import { z } from "zod"
+import type { LLMProvider } from "@/common/interfaces/llm-provider.interface"
 import {
   type AllRepositories,
   clearTestDatabase,
@@ -8,12 +10,17 @@ import {
 } from "@/common/test/test-database"
 import type { Document } from "@/domains/documents/document.entity"
 import { documentFactory } from "@/domains/documents/document.factory"
+import { DocumentsModule } from "@/domains/documents/documents.module"
+import { PdfConverterClient } from "@/domains/documents/pdf-pages/pdf-converter.client"
+import { PdfPagesModule } from "@/domains/documents/pdf-pages/pdf-pages.module"
 import {
   FILE_STORAGE_SERVICE,
   type IFileStorage,
 } from "@/domains/documents/storage/file-storage.interface"
 import { StorageModule } from "@/domains/documents/storage/storage.module"
 import { createOrganizationWithAgent } from "@/domains/organizations/organization.factory"
+import { ProjectRepository } from "@/domains/projects/project.repository"
+import { ProjectsModule } from "@/domains/projects/projects.module"
 import { LlmModule } from "@/external/llm/llm.module"
 import { sdk } from "@/external/llm/open-telemetry-init"
 import { extractionAgentSessionFactory } from "./extraction-agent-session.factory"
@@ -24,14 +31,28 @@ describe("ExtractionAgentSessionRunnerService", () => {
   let service: ExtractionAgentSessionRunnerService
   let setup: Awaited<ReturnType<typeof setupE2eTestDatabase>>
   let repositories: AllRepositories
+  let pdfConverterClient: PdfConverterClient
+  let gemmaLlmProvider: LLMProvider
 
   beforeAll(async () => {
     setup = await setupE2eTestDatabase({
-      additionalImports: [LlmModule, StorageModule],
-      providers: [ExtractionAgentSessionRunnerService, ExtractionAgentSessionStatusNotifierService],
+      additionalImports: [
+        LlmModule,
+        StorageModule,
+        PdfPagesModule,
+        DocumentsModule,
+        ProjectsModule,
+      ],
+      providers: [
+        ExtractionAgentSessionRunnerService,
+        ExtractionAgentSessionStatusNotifierService,
+        ProjectRepository,
+      ],
     })
     repositories = setup.getAllRepositories()
     service = setup.module.get(ExtractionAgentSessionRunnerService)
+    pdfConverterClient = setup.module.get(PdfConverterClient)
+    gemmaLlmProvider = setup.module.get<LLMProvider>("GemmaLLMProvider")
   })
 
   beforeEach(async () => {
@@ -47,9 +68,12 @@ describe("ExtractionAgentSessionRunnerService", () => {
   const seedPendingSessionWithDocument = async ({
     documentDesc,
     forceEmptySchema,
+    model = AgentModel._Mock,
   }: {
-    documentDesc: Pick<Document, "mimeType" | "sourceType" | "storageRelativePath">
+    documentDesc: Pick<Document, "mimeType" | "sourceType" | "storageRelativePath"> &
+      Partial<Pick<Document, "pdfPageCount">>
     forceEmptySchema?: true
+    model?: AgentModel
   }) => {
     const schema = z.object({ content: z.string(), source: z.string() })
     const { organization, project, user, agent, agentSettings } = await createOrganizationWithAgent(
@@ -59,7 +83,7 @@ describe("ExtractionAgentSessionRunnerService", () => {
           type: "extraction",
         },
         agentSettings: {
-          model: AgentModel._Mock,
+          model,
           outputJsonSchema: forceEmptySchema ? undefined : schema.toJSONSchema(),
         },
       },
@@ -77,7 +101,7 @@ describe("ExtractionAgentSessionRunnerService", () => {
       })
 
     await repositories.extractionAgentSessionRepository.save(pendingSession)
-    return { organization, project, schema, pendingSession }
+    return { organization, project, schema, pendingSession, document }
   }
 
   it("runById - should works - pdf", async () => {
@@ -224,5 +248,121 @@ describe("ExtractionAgentSessionRunnerService", () => {
     expect(run.result).toBeNull()
     expect(run.errorCode).toBe("EXTRACTION_PROVIDER_ERROR")
     expect(run.errorDetails?.message).toContain("Unsupported document type")
+  })
+
+  describe("runById - with a pdf document - Gemma/MedGemma image-only models", () => {
+    afterEach(() => {
+      jest.restoreAllMocks()
+    })
+
+    it("sends one image part per rendered page and caches the page count on the document row", async () => {
+      const { organization, project, pendingSession, document } =
+        await seedPendingSessionWithDocument({
+          documentDesc: {
+            mimeType: "application/pdf",
+            sourceType: "extraction",
+            storageRelativePath: "test/file.pdf",
+          },
+          model: AgentModel.Gemma4_26B,
+        })
+
+      const generatePdfPageImagesSpy = jest
+        .spyOn(pdfConverterClient, "generatePdfPageImages")
+        .mockResolvedValue(2)
+      const generateStructuredOutputSpy = jest
+        .spyOn(gemmaLlmProvider, "generateStructuredOutput")
+        .mockResolvedValue({ content: "content-value", source: "source-value" })
+
+      await service.runById({
+        extractionAgentSessionId: pendingSession.id,
+        organizationId: organization.id,
+        projectId: project.id,
+      })
+
+      expect(generatePdfPageImagesSpy).toHaveBeenCalledWith({
+        sourceObject: document.storageRelativePath,
+        outputPrefix: "test/derived/file/",
+      })
+
+      expect(generateStructuredOutputSpy).toHaveBeenCalledTimes(1)
+      const { message } = generateStructuredOutputSpy.mock.calls[0]?.[0] ?? {}
+      const content = message?.content as [TextPart, ImagePart, ImagePart]
+      expect(content).toHaveLength(3)
+      expect(content[0].type).toBe("text")
+      expect(content[1].type).toBe("image")
+      expect(String(content[1].image)).toMatch("/test/derived/file/page-1.png")
+      expect(content[2].type).toBe("image")
+      expect(String(content[2].image)).toMatch("/test/derived/file/page-2.png")
+
+      const persistedDocument = await repositories.documentRepository.findOneByOrFail({
+        id: document.id,
+      })
+      expect(persistedDocument.pdfPageCount).toBe(2)
+
+      const run = await repositories.extractionAgentSessionRepository.findOneByOrFail({
+        id: pendingSession.id,
+      })
+      expect(run.status).toBe("success")
+    })
+
+    it("fails with PDF_PAGE_LIMIT_EXCEEDED when the pdf exceeds the page limit", async () => {
+      const { organization, project, pendingSession } = await seedPendingSessionWithDocument({
+        documentDesc: {
+          mimeType: "application/pdf",
+          sourceType: "extraction",
+          storageRelativePath: "test/file.pdf",
+        },
+        model: AgentModel.Gemma4_26B,
+      })
+
+      jest.spyOn(pdfConverterClient, "getPageCount").mockResolvedValue(25)
+      const generateStructuredOutputSpy = jest.spyOn(gemmaLlmProvider, "generateStructuredOutput")
+
+      await expect(
+        service.runById({
+          extractionAgentSessionId: pendingSession.id,
+          organizationId: organization.id,
+          projectId: project.id,
+        }),
+      ).rejects.toThrow("This PDF has 25 pages; the maximum is 20 pages.")
+
+      expect(generateStructuredOutputSpy).not.toHaveBeenCalled()
+      const run = await repositories.extractionAgentSessionRepository.findOneByOrFail({
+        id: pendingSession.id,
+      })
+      expect(run.status).toBe("failed")
+      expect(run.errorCode).toBe("PDF_PAGE_LIMIT_EXCEEDED")
+      expect(run.errorDetails?.message).toBe("This PDF has 25 pages; the maximum is 20 pages.")
+    })
+
+    it("signs the cached pages without re-rendering", async () => {
+      const { organization, project, pendingSession } = await seedPendingSessionWithDocument({
+        documentDesc: {
+          mimeType: "application/pdf",
+          sourceType: "extraction",
+          storageRelativePath: "test/file.pdf",
+          pdfPageCount: 2,
+        },
+        model: AgentModel.Gemma4_26B,
+      })
+
+      const generatePdfPageImagesSpy = jest.spyOn(pdfConverterClient, "generatePdfPageImages")
+      const generateStructuredOutputSpy = jest
+        .spyOn(gemmaLlmProvider, "generateStructuredOutput")
+        .mockResolvedValue({ content: "content-value", source: "source-value" })
+
+      await service.runById({
+        extractionAgentSessionId: pendingSession.id,
+        organizationId: organization.id,
+        projectId: project.id,
+      })
+
+      expect(generatePdfPageImagesSpy).not.toHaveBeenCalled()
+      const { message } = generateStructuredOutputSpy.mock.calls[0]?.[0] ?? {}
+      const content = message?.content as [TextPart, ImagePart, ImagePart]
+      expect(content).toHaveLength(3)
+      expect(String(content[1].image)).toMatch("/test/derived/file/page-1.png")
+      expect(String(content[2].image)).toMatch("/test/derived/file/page-2.png")
+    })
   })
 })

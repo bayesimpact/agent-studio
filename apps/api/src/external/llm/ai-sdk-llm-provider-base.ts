@@ -1,4 +1,4 @@
-import type { LanguageModelV3 } from "@ai-sdk/provider"
+import type { JSONValue, LanguageModelV3 } from "@ai-sdk/provider"
 import { AgentModelToAgentProvider, AgentProvider } from "@caseai-connect/api-contracts"
 import { Logger, NotImplementedException } from "@nestjs/common"
 import { trace } from "@opentelemetry/api"
@@ -23,10 +23,6 @@ import type {
 } from "@/common/interfaces/llm-provider.interface"
 import { removeNullish } from "@/common/utils/remove-nullish"
 import { fireAndForgetStopCondition } from "@/external/llm/fire-and-forget-stop-condition"
-import {
-  convertPdfPartsToImageParts,
-  modelRequiresPdfAsImages,
-} from "@/external/llm/pdf-to-image-parts"
 import { ResponseHelper } from "@/external/llm/response-helper"
 import { withStrictTools } from "@/external/llm/strict-tools"
 import {
@@ -292,10 +288,6 @@ export abstract class AISDKLLMProviderBase implements LLMProvider {
       ? CallOrigin.streamChatResponse_withTools
       : CallOrigin.streamChatResponse
     this.checkConfigProviderAndModel(config)
-    // Gemma and MedGemma only accept images: send pdfs as one image per page
-    if (modelRequiresPdfAsImages(config.model)) {
-      messages = await Promise.all(messages.map(convertPdfPartsToImageParts))
-    }
     const aiSDKMessages: LLMChatMessage[] = messages
       .map((message) => {
         if (message.role === "system") {
@@ -341,9 +333,7 @@ export abstract class AISDKLLMProviderBase implements LLMProvider {
         functionId,
         metadata: this.buildMetadata({ config, metadata }),
       },
-      providerOptions: {
-        custom: this.buildCustomProviderOptions({ config, callOrigin, metadata }),
-      },
+      providerOptions: this.buildProviderOptions({ config, callOrigin, metadata }),
     })
 
     let systemPrompt = systemMessage || config.systemPrompt || ""
@@ -474,9 +464,7 @@ ${leakedCall.raw}`,
               recoveredLeakedToolCall: leakedCall.name,
             },
           },
-          providerOptions: {
-            custom: this.buildCustomProviderOptions({ config, callOrigin, metadata }),
-          },
+          providerOptions: this.buildProviderOptions({ config, callOrigin, metadata }),
         })
 
         // The tool's own schema is the last gate before a side effect runs.
@@ -585,9 +573,7 @@ ${leakedCall.raw}`,
           // loop in langfuse via metadata, not functionId (see above).
           metadata: { ...this.buildMetadata({ config, metadata }), endOfTurnTools: true },
         },
-        providerOptions: {
-          custom: this.buildCustomProviderOptions({ config, callOrigin, metadata }),
-        },
+        providerOptions: this.buildProviderOptions({ config, callOrigin, metadata }),
       })
       // toolChoice "required" guarantees a call was EMITTED, not that it was
       // EXECUTED: invalid arguments or a provider quirk leave toolResults
@@ -642,9 +628,7 @@ ${leakedCall.raw}`,
         functionId: this.buildFunctionIdForStreamChatResponse(aiSDKMessages),
         metadata: this.buildMetadata({ config, metadata }),
       },
-      providerOptions: {
-        custom: this.buildCustomProviderOptions({ config, callOrigin, metadata }),
-      },
+      providerOptions: this.buildProviderOptions({ config, callOrigin, metadata }),
     })
     return result.text
   }
@@ -669,9 +653,7 @@ ${leakedCall.raw}`,
         functionId: "LLMProvider.generateText",
         metadata: this.buildMetadata({ config, metadata }),
       },
-      providerOptions: {
-        custom: this.buildCustomProviderOptions({ config, callOrigin, metadata }),
-      },
+      providerOptions: this.buildProviderOptions({ config, callOrigin, metadata }),
     })
     return text
   }
@@ -708,14 +690,12 @@ ${leakedCall.raw}`,
       output: Output.object({
         schema: schema,
       }),
-      providerOptions: {
-        custom: this.buildCustomProviderOptions({
-          config,
-          callOrigin,
-          metadata,
-          schema: schema.toJSONSchema() as JSONSchema7,
-        }),
-      },
+      providerOptions: this.buildProviderOptions({
+        config,
+        callOrigin,
+        metadata,
+        schema: schema.toJSONSchema() as JSONSchema7,
+      }),
     })
     return schema.parse(res.output)
   }
@@ -752,10 +732,6 @@ ${leakedCall.raw}`,
           },
         ],
       }
-    }
-    // Gemma and MedGemma only accept images: send pdfs as one image per page
-    if (modelRequiresPdfAsImages(config.model)) {
-      message = await convertPdfPartsToImageParts(message)
     }
     //Mistral restriction: no pdf
     if (AgentModelToAgentProvider[config.model] === AgentProvider.Mistral) {
@@ -800,14 +776,12 @@ ${leakedCall.raw}`,
           schema,
         }),
       },
-      providerOptions: {
-        custom: this.buildCustomProviderOptions({
-          config,
-          callOrigin,
-          metadata,
-          schema,
-        }),
-      },
+      providerOptions: this.buildProviderOptions({
+        config,
+        callOrigin,
+        metadata,
+        schema,
+      }),
     })
     if (
       AgentModelToAgentProvider[config.model] === AgentProvider.MedGemma ||
@@ -896,6 +870,35 @@ ${leakedCall.raw}`,
       agentId: metadata.agentId,
       metadata: this.buildMetadata({ config, metadata, schema }),
     }
+  }
+
+  /**
+   * `providerOptions` for every AI SDK call: our own `custom` namespace (read
+   * by the mock and MedGemma language models, and by the telemetry exporter)
+   * plus whatever the concrete provider adds under its own namespace.
+   */
+  private buildProviderOptions(args: {
+    config: LLMConfig
+    callOrigin: CallOrigin
+    metadata: LLMMetadata
+    schema?: JSONSchema7
+  }) {
+    return {
+      custom: this.buildCustomProviderOptions(args),
+      ...this.buildNativeProviderOptions({ config: args.config }),
+    }
+  }
+
+  /**
+   * Options passed under the SDK's own namespace for this provider (e.g.
+   * "vertex"), keyed by namespace. Empty by default; providers exposing
+   * backend knobs we drive from LLMConfig (e.g. the Vertex priority tier)
+   * override it.
+   */
+  protected buildNativeProviderOptions(_args: {
+    config: LLMConfig
+  }): Record<string, Record<string, JSONValue>> {
+    return {}
   }
 
   abstract getLanguageModel({ config, callOrigin }: { config: LLMConfig; callOrigin: CallOrigin })

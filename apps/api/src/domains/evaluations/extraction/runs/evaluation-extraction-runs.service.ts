@@ -3,9 +3,12 @@ import { InjectRepository } from "@nestjs/typeorm"
 import type { Repository } from "typeorm"
 import { ConnectRepository } from "@/common/entities/connect-repository"
 import type { RequiredConnectScope } from "@/common/entities/connect-required-fields"
+import type { LLMFeatures } from "@/common/interfaces/llm-provider.interface"
 import { Agent } from "@/domains/agents/agent.entity"
 import { AgentSettings } from "@/domains/agents/settings/agent-settings.entity"
 import { toAgentWithSettingsRunJobPayload } from "@/domains/agents/shared/agent-with-settings-run.helper"
+// biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
+import { ProjectRepository } from "@/domains/projects/project.repository"
 import { EvaluationExtractionDataset } from "../datasets/evaluation-extraction-dataset.entity"
 import {
   EvaluationExtractionRun,
@@ -40,6 +43,7 @@ export class EvaluationExtractionRunsService {
     agentSettingsRepository: Repository<AgentSettings>,
     @Inject(EVALUATION_EXTRACTION_RUN_BATCH_SERVICE)
     private readonly batchService: EvaluationExtractionRunBatchService,
+    private readonly projectRepository: ProjectRepository,
   ) {
     this.runConnectRepository = new ConnectRepository(
       evaluationExtractionRunRepository,
@@ -337,6 +341,7 @@ export class EvaluationExtractionRunsService {
       connectScope,
       evaluationExtractionRun,
     })
+    const llmFeatures: LLMFeatures = await this.projectRepository.getLlmFeatures(connectScope)
 
     const unfinishedRecords = await this.runRecordConnectRepository.find(connectScope, {
       where: [
@@ -354,7 +359,11 @@ export class EvaluationExtractionRunsService {
           async (batch) =>
             await this.batchService.retryRunRecords(
               batch.map((runRecord) => ({
-                agentWithSettings: toAgentWithSettingsRunJobPayload({ agent, agentSettings }),
+                agentWithSettings: toAgentWithSettingsRunJobPayload({
+                  agent,
+                  agentSettings,
+                  llmFeatures,
+                }),
                 connectScope,
                 evaluationExtractionRun,
                 runRecordId: runRecord.id,

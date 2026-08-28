@@ -3,7 +3,9 @@ import { Module } from "@nestjs/common"
 import { TypeOrmModule } from "@nestjs/typeorm"
 import { ALL_ENTITIES } from "@/common/all-entities"
 import { DocumentsModule } from "@/domains/documents/documents.module"
+import { PdfPagesModule } from "@/domains/documents/pdf-pages/pdf-pages.module"
 import { StorageModule } from "@/domains/documents/storage/storage.module"
+import { ProjectRepository } from "@/domains/projects/project.repository"
 import { LlmModule } from "@/external/llm/llm.module"
 import { EXTRACTION_AGENT_SESSION_QUEUE_NAME } from "./extraction-agent-session.constants"
 import { ExtractionAgentSessionExecuteWorker } from "./extraction-agent-session-execute.worker"
@@ -17,6 +19,7 @@ import { ExtractionAgentSessionQueueMetricsService } from "./queue-metrics.servi
     TypeOrmModule.forFeature(ALL_ENTITIES),
     LlmModule,
     DocumentsModule,
+    PdfPagesModule,
     StorageModule,
   ],
   providers: [
@@ -24,6 +27,7 @@ import { ExtractionAgentSessionQueueMetricsService } from "./queue-metrics.servi
     ExtractionAgentSessionRunnerService,
     ExtractionAgentSessionStatusNotifierService,
     ExtractionAgentSessionQueueMetricsService,
+    ProjectRepository,
   ],
 })
 export class ExtractionAgentSessionWorkersModule {}

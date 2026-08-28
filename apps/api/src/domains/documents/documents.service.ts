@@ -208,6 +208,30 @@ export class DocumentsService {
     return this.documentConnectRepository.saveOne(document)
   }
 
+  /**
+   * Caches the rendered page count for a PDF document, so future extraction
+   * runs referencing the same document reuse the already-rendered GCS pages
+   * instead of asking the pdf-converter service to render again.
+   */
+  async updatePdfPageCount({
+    connectScope,
+    documentId,
+    pdfPageCount,
+  }: {
+    connectScope: RequiredConnectScope
+    documentId: string
+    pdfPageCount: number
+  }): Promise<void> {
+    await this.documentRepository.update(
+      {
+        id: documentId,
+        organizationId: connectScope.organizationId,
+        projectId: connectScope.projectId,
+      },
+      { pdfPageCount },
+    )
+  }
+
   async updateEmbeddingStatus({
     connectScope,
     documentId,

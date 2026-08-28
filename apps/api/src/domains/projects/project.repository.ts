@@ -1,6 +1,8 @@
 import { Injectable } from "@nestjs/common"
 import { In, type Repository } from "typeorm"
 import { ALL_ENTITIES } from "@/common/all-entities"
+import type { RequiredConnectScope } from "@/common/entities/connect-required-fields"
+import type { LLMFeatures } from "@/common/interfaces/llm-provider.interface"
 // biome-ignore lint/style/useImportType: Required at runtime for NestJS DI
 import { TransactionService } from "@/common/transaction/transaction.service"
 import { Project } from "./project.entity"
@@ -82,6 +84,13 @@ export class ProjectRepository {
     return this.toRecord(saved)
   }
 
+  async getLlmFeatures(connectScope: RequiredConnectScope): Promise<LLMFeatures> {
+    const priorityCalls = await this.isFeatureEnabled({
+      projectId: connectScope.projectId,
+      feature: "llm-priority-calls",
+    })
+    return { priorityCalls }
+  }
   /** Queried through the featureFlags relation to keep this repository on the Project entity only. */
   async isFeatureEnabled({
     projectId,

@@ -1,6 +1,7 @@
 import { forwardRef, Module } from "@nestjs/common"
 import { TypeOrmModule } from "@nestjs/typeorm"
 import { AgentSettingsModule } from "@/domains/agents/settings/agent-settings.module"
+import { PdfPagesModule } from "@/domains/documents/pdf-pages/pdf-pages.module"
 import { McpServersModule } from "@/domains/mcp-servers/mcp-servers.module"
 import { RbacModule } from "@/domains/rbac/rbac.module"
 import { McpModule } from "@/external/mcp"
@@ -26,6 +27,7 @@ import { ConversationRetentionSweepRunsController } from "./retention/conversati
     forwardRef(() => StreamingModule),
     McpModule,
     McpServersModule,
+    PdfPagesModule,
     RbacModule,
   ],
   providers: [

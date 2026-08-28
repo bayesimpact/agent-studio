@@ -267,6 +267,7 @@ function toAgentSettingsDto({
     documentsRagMode: agentSettings.documentsRagMode,
     documentTagIds,
     fillFormEnabled: agentSettings.fillFormEnabled,
+    priorityCallsEnabled: agentSettings.priorityCallsEnabled,
     greetingMessage: agentSettings.greetingMessage ?? undefined,
     hasCategories,
     id: agentSettings.id,

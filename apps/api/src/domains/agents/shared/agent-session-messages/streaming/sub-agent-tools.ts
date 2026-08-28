@@ -3,6 +3,7 @@ import { trace } from "@opentelemetry/api"
 import type { ToolSet } from "ai"
 import type {
   LLMConfig,
+  LLMFeatures,
   LLMMetadata,
   LLMProvider,
 } from "@/common/interfaces/llm-provider.interface"
@@ -45,6 +46,8 @@ type BuildLLMConfig = (params: {
   tools?: ToolSet
   fireAndForgetToolNames?: string[]
   endOfTurnTools?: ToolSet
+  priorityCallsEnabled: boolean
+  llmFeatures: LLMFeatures
 }) => LLMConfig
 
 type GenerateMasterPrompt = (params: {
@@ -97,6 +100,7 @@ export async function buildSubAgentTools({
   if (!hasAgentOrchestration) {
     return { tools: {}, toolDescriptions: {}, hasSubAgentTools: false }
   }
+  const llmFeatures = await projectsService.getLlmFeatures(connectScope)
 
   const subAgents = await agentSubAgentsService.listSubAgents({
     connectScope,
@@ -126,6 +130,7 @@ export async function buildSubAgentTools({
           input,
           onExecute,
           subAgent,
+          llmFeatures,
         }),
     })
     toolDescriptions[subAgent.toolName] = description
@@ -145,6 +150,7 @@ async function runSubAgentTool({
   input,
   onExecute,
   subAgent,
+  llmFeatures,
 }: {
   agentSessionScope: AgentSessionScope
   buildLLMConfig: BuildLLMConfig
@@ -156,6 +162,7 @@ async function runSubAgentTool({
   input: SubAgentToolInput
   onExecute: OnExecute
   subAgent: AgentSubAgent
+  llmFeatures: LLMFeatures
 }): Promise<Record<string, unknown>> {
   const childAgent = subAgent.childAgent
   if (childAgent.type === "extraction") {
@@ -233,6 +240,8 @@ async function runSubAgentTool({
       tools,
       fireAndForgetToolNames,
       endOfTurnTools,
+      priorityCallsEnabled: childAgentSettings.priorityCallsEnabled,
+      llmFeatures,
     })
 
     const metadata = buildSubAgentMetadata({

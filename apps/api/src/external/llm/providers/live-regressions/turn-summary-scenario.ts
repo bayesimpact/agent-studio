@@ -109,6 +109,7 @@ ${mandatoryToolInstruction()}`
       // sources part — the forced retry must still run (production wiring).
       endOfTurnExecutionCounts: mandatoryToolExecutionCounts(registry),
       fireAndForgetToolNames: [ToolName.MandatoryTool],
+      serviceTier: undefined,
     },
     metadata: {
       traceId: `live-regression-${model}`,
@@ -194,6 +195,7 @@ ${mandatoryToolInstruction()}`
       tools: { [ToolName.MandatoryTool]: turnSummary },
       endOfTurnTools: { [ToolName.MandatoryTool]: turnSummary },
       fireAndForgetToolNames: [ToolName.MandatoryTool],
+      serviceTier: undefined,
     },
     metadata: {
       traceId: `live-regression-fat-${model}`,

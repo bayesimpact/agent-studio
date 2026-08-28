@@ -24,6 +24,7 @@ import { DocumentChunkRetrievalService } from "./embeddings/document-chunk-retri
 import { DocumentEmbeddingStatusNotifierService } from "./embeddings/document-embedding-status-notifier.service"
 import { DocumentEmbeddingStatusStreamService } from "./embeddings/document-embedding-status-stream.service"
 import { DocumentEmbeddingsBatchModule } from "./embeddings/document-embeddings-batch.module"
+import { PdfPagesModule } from "./pdf-pages/pdf-pages.module"
 import { LocalPresignUploadController } from "./storage/local-presign-upload.controller"
 import { StorageModule } from "./storage/storage.module"
 import { DocumentTagsModule } from "./tags/document-tags.module"
@@ -54,6 +55,7 @@ import { DocumentTagsModule } from "./tags/document-tags.module"
     DocumentEmbeddingsBatchModule,
     UrlCrawlingBatchModule,
     WebSourceEmbeddingsBatchModule,
+    PdfPagesModule,
   ],
   providers: [
     DocumentsService,

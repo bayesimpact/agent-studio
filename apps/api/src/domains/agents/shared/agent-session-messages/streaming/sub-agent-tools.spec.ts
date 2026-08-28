@@ -102,6 +102,7 @@ describe("buildSubAgentTools", () => {
       },
       projectsService: {
         hasFeature: jest.fn().mockResolvedValue(true),
+        getLlmFeatures: jest.fn().mockResolvedValue({}),
       } as never,
     })
 
@@ -219,7 +220,10 @@ describe("buildSubAgentTools", () => {
           },
         }) as never,
       onExecute: () => {},
-      projectsService: { hasFeature: jest.fn().mockResolvedValue(true) } as never,
+      projectsService: {
+        hasFeature: jest.fn().mockResolvedValue(true),
+        getLlmFeatures: jest.fn().mockResolvedValue({}),
+      } as never,
     })
 
     const subAgentTool = tools.ask_intake_form as never as {
@@ -340,7 +344,10 @@ describe("buildSubAgentTools", () => {
           },
         }) as never,
       onExecute: () => {},
-      projectsService: { hasFeature: jest.fn().mockResolvedValue(true) } as never,
+      projectsService: {
+        hasFeature: jest.fn().mockResolvedValue(true),
+        getLlmFeatures: jest.fn().mockResolvedValue({}),
+      } as never,
     })
 
     const subAgentTool = tools.ask_pricing_expert as never as {

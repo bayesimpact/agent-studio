@@ -7,6 +7,7 @@ import {
   teardownE2eTestDatabase,
 } from "@/common/test/test-database"
 import { createOrganizationWithAgent } from "@/domains/organizations/organization.factory"
+import { ProjectRepository } from "@/domains/projects/project.repository"
 import { evaluationExtractionDatasetFactory } from "../datasets/evaluation-extraction-dataset.factory"
 import type { EvaluationExtractionDatasetRecord } from "../datasets/records/evaluation-extraction-dataset-record.entity"
 import { EVALUATION_EXTRACTION_RUN_QUEUE_NAME } from "./evaluation-extraction-run.constants"
@@ -25,6 +26,7 @@ describe("EvaluationExtractionRunStarterService", () => {
       providers: [
         EvaluationExtractionRunStarterService,
         { provide: getQueueToken(EVALUATION_EXTRACTION_RUN_QUEUE_NAME), useValue: mockQueue },
+        ProjectRepository,
       ],
     })
     repositories = setup.getAllRepositories()

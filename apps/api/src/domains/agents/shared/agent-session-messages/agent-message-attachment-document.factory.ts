@@ -24,6 +24,7 @@ export const agentMessageAttachmentDocumentFactory = Factory.define<
     storageRelativePath:
       params.storageRelativePath ||
       `${transientParams.organization.id}/${transientParams.project.id}/${id}.pdf`,
+    pdfPageCount: params.pdfPageCount ?? null,
     createdAt: params.createdAt || now,
     updatedAt: params.updatedAt || now,
     deletedAt: null,

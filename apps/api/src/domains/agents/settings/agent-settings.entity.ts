@@ -67,4 +67,7 @@ export class AgentSettings extends ConnectEntityBase {
 
   @Column({ type: "boolean", name: "fill_form_enabled", default: false, nullable: false })
   fillFormEnabled!: boolean
+
+  @Column({ type: "boolean", name: "priority_calls_enabled", default: false, nullable: false })
+  priorityCallsEnabled!: boolean
 }

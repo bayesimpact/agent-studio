@@ -4,7 +4,12 @@ export type AgentSettingsCreateFields = Pick<
   AgentSettings,
   "instructions" | "documentsRagMode" | "model" | "temperature" | "locale"
 > &
-  Partial<Pick<AgentSettings, "outputJsonSchema" | "greetingMessage" | "fillFormEnabled">>
+  Partial<
+    Pick<
+      AgentSettings,
+      "outputJsonSchema" | "greetingMessage" | "fillFormEnabled" | "priorityCallsEnabled"
+    >
+  >
 
 export type AgentSettingsUpdateFields = Partial<
   Pick<
@@ -17,5 +22,6 @@ export type AgentSettingsUpdateFields = Partial<
     | "locale"
     | "outputJsonSchema"
     | "fillFormEnabled"
+    | "priorityCallsEnabled"
   >
 >
