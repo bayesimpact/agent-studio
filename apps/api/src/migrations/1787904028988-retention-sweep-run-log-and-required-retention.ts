@@ -10,10 +10,10 @@ export class RetentionSweepRunLogAndRequiredRetention1787904028988 implements Mi
     await queryRunner.query(
       `CREATE INDEX "IDX_a5983c43791a892b6672d1e361" ON "conversation_retention_sweep_run" ("project_id", "ran_at") `,
     )
-    // "Keep forever" (null) disappears: those projects get the maximum
-    // retention (10 years) instead (#677).
+    // "Keep forever" (null) disappears: those projects get the default
+    // retention, like everyone (#677).
     await queryRunner.query(
-      `UPDATE "project" SET "conversation_retention_days" = 3650 WHERE "conversation_retention_days" IS NULL`,
+      `UPDATE "project" SET "conversation_retention_days" = 30 WHERE "conversation_retention_days" IS NULL`,
     )
     await queryRunner.query(
       `ALTER TABLE "project" ALTER COLUMN "conversation_retention_days" SET NOT NULL`,
