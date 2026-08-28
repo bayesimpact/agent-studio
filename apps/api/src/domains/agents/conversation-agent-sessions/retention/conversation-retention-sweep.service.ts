@@ -116,6 +116,10 @@ export class ConversationRetentionSweepService {
       // cross-domain entity import (no-cross-domain-entity-import).
       .innerJoin("project", "project", "project.id = session.project_id")
       .where("session.purged_at IS NULL")
+      // Review-campaign sessions are test material, reviewed long after they
+      // happen: they stay out of the retention purge until session kinds are
+      // differentiated (#617).
+      .andWhere("session.campaign_id IS NULL")
       .andWhere(
         "session.created_at < now() - (project.conversation_retention_days * interval '1 day')",
       )

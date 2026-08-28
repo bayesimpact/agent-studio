@@ -85,6 +85,14 @@ describe("ConversationRetentionSweepService", () => {
     expect(purgeService.purgeSessionContent).toHaveBeenCalledTimes(2)
   })
 
+  it("leaves review-campaign sessions out of the purge", async () => {
+    const { service, queryBuilder } = buildService([])
+
+    await service.sweepExpiredConversations()
+
+    expect(queryBuilder.andWhere).toHaveBeenCalledWith("session.campaign_id IS NULL")
+  })
+
   it("does not count sessions the purge skipped", async () => {
     const { service, purgeService } = buildService([{ id: "session-1" }])
     purgeService.purgeSessionContent.mockResolvedValue({ purged: false })
