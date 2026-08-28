@@ -7,8 +7,8 @@ import {
   TableHeader,
   TableRow,
 } from "@caseai-connect/ui/shad/table"
+import { Tooltip, TooltipContent, TooltipTrigger } from "@caseai-connect/ui/shad/tooltip"
 import { format } from "date-fns"
-import { ChevronRightIcon } from "lucide-react"
 import { useTranslation } from "react-i18next"
 import { MarkdownWrapper } from "@/common/features/agents/agent-sessions/shared/agent-session-messages/components/MarkdownWrapper"
 import type {
@@ -65,18 +65,18 @@ function RetentionSweepRunRow({ run }: { run: RetentionSweepRun }) {
 
   return (
     <TableRow>
-      <TableCell className="align-top">{format(run.ranAt, "PPp", { locale })}</TableCell>
-      <TableCell className="align-top">{run.purgedCount}</TableCell>
+      <TableCell>{format(run.ranAt, "PPp", { locale })}</TableCell>
+      <TableCell>{run.purgedCount}</TableCell>
       <TableCell>
-        <details className="group">
-          <summary className="flex cursor-pointer list-none items-center gap-1">
+        {/* The run report shows on hover of the status badge. */}
+        <Tooltip>
+          <TooltipTrigger asChild>
             <Badge variant={STATUS_VARIANTS[run.status]}>{run.status}</Badge>
-            <ChevronRightIcon className="size-3 text-muted-foreground transition-transform group-open:rotate-90" />
-          </summary>
-          <div className="mt-2 text-sm text-muted-foreground">
+          </TooltipTrigger>
+          <TooltipContent side="left" className="max-w-sm">
             <MarkdownWrapper content={run.report} />
-          </div>
-        </details>
+          </TooltipContent>
+        </Tooltip>
       </TableCell>
     </TableRow>
   )

@@ -4,10 +4,13 @@
  * categories) and where categories are applied on a conversation agent. Derived from
  * the real components (verified, not copied blind): SidebarFooterChildren.tsx (Admin
  * nav item), ProjectAdminPage.tsx (General + Conversation categories tabs),
- * ProjectGeneralForm.tsx (Workspace name), ProjectAgentSessionCategoriesForm.tsx
- * (badges, Add category dialog, remove confirm), AgentSessionCategoriesTab.tsx.
+ * ProjectGeneralForm.tsx (Workspace name), ProjectRetentionPolicyForm.tsx +
+ * RetentionSweepRunLog.tsx (Retention policy tab: retention field, next purge,
+ * purge log), ProjectAgentSessionCategoriesForm.tsx (badges, Add category dialog,
+ * remove confirm), AgentSessionCategoriesTab.tsx.
  * Labels verbatim from projectAdmin / agent / actions locales (EN + FR). Uses the
- * PRODUCT (coral) palette, pinned locally. Derived 2026-07-16.
+ * PRODUCT (coral) palette, pinned locally. Derived 2026-07-16; retention tab added
+ * 2026-08-28 (#677).
  */
 type Lang = "en" | "fr"
 const { lang = "en" } = Astro.props as { lang?: Lang }
@@ -20,8 +23,14 @@ const STRINGS = {
     members: "Members", admin: "Admin",
     userName: "Alex Martin", userEmail: "alex.martin@example.com",
     adminTitle: "Admin", adminDesc: "Manage your workspace settings.",
-    tabGeneral: "General", tabCategories: "Conversation categories",
+    tabGeneral: "General", tabRetention: "Retention policy", tabCategories: "Conversation categories",
     genDesc: "Update the general settings for this workspace.", workspaceName: "Workspace name", wsValue: "Demo", save: "Save",
+    retentionLabel: "Conversation retention (days)", retentionVal: "30",
+    retentionHelp: "Conversations older than this have their content permanently erased. Usage statistics remain. Between 1 and 3650 days.",
+    logTitle: "Purge log", nextRun: "Next purge: Aug 29, 2026, 4:00 AM",
+    colDate: "Date", colPurged: "Conversations erased", colStatus: "Status",
+    row1Date: "Aug 28, 2026, 4:00 AM", row2Date: "Aug 27, 2026, 4:00 AM", row3Date: "Aug 26, 2026, 4:00 AM",
+    stOk: "OK", stPartial: "PARTIAL",
     catTitle: "Conversation categories",
     catDesc: "Manage the categories used to automatically classify this workspace's conversations.",
     addCategory: "Add category",
@@ -36,6 +45,8 @@ const STRINGS = {
     steps: [
       "In Studio, open Admin from the sidebar to manage your workspace.",
       "General: rename your workspace in the Workspace name field, then Save.",
+      "Retention policy: set how many days conversations are kept, then Save.",
+      "Below the setting, the purge log shows each nightly run and how many conversations were erased.",
       "Conversation categories: your categories are listed here — click Add category.",
       "Name the category, optionally enable it for all conversation agents, then Add.",
       "Remove a category with the ✕ on its badge (a confirmation asks first).",
@@ -49,8 +60,14 @@ const STRINGS = {
     members: "Membres", admin: "Admin",
     userName: "Alex Martin", userEmail: "alex.martin@example.com",
     adminTitle: "Admin", adminDesc: "Gérez les paramètres de votre espace de travail.",
-    tabGeneral: "Général", tabCategories: "Catégories de conversation",
+    tabGeneral: "Général", tabRetention: "Politique de conservation", tabCategories: "Catégories de conversation",
     genDesc: "Mettez à jour les paramètres généraux de cet espace de travail.", workspaceName: "Nom de l'espace de travail", wsValue: "Demo", save: "Enregistrer",
+    retentionLabel: "Durée de conservation des conversations (jours)", retentionVal: "30",
+    retentionHelp: "Le contenu des conversations plus anciennes est effacé définitivement. Les statistiques d'usage restent disponibles. Entre 1 et 3650 jours.",
+    logTitle: "Journal des purges", nextRun: "Prochaine purge : 29 août 2026, 04:00",
+    colDate: "Date", colPurged: "Conversations effacées", colStatus: "Statut",
+    row1Date: "28 août 2026, 04:00", row2Date: "27 août 2026, 04:00", row3Date: "26 août 2026, 04:00",
+    stOk: "OK", stPartial: "PARTIAL",
     catTitle: "Catégories de conversation",
     catDesc: "Gérez les catégories utilisées pour classer automatiquement les conversations de cet espace de travail.",
     addCategory: "Ajouter une catégorie",
@@ -65,6 +82,8 @@ const STRINGS = {
     steps: [
       "Dans Studio, ouvrez Admin depuis la barre latérale pour administrer votre espace de travail.",
       "Général : renommez votre espace dans le champ Nom de l'espace de travail, puis Enregistrez.",
+      "Politique de conservation : fixez le nombre de jours de conservation, puis Enregistrez.",
+      "Sous le réglage, le journal des purges montre chaque passage nocturne et le nombre de conversations effacées.",
       "Catégories de conversation : vos catégories sont listées ici — cliquez sur Ajouter une catégorie.",
       "Nommez la catégorie, activez-la éventuellement pour tous les agents conversationnels, puis Ajouter.",
       "Supprimez une catégorie avec le ✕ sur son badge (une confirmation est demandée).",
@@ -82,6 +101,8 @@ const eTabs = [s.eTabGeneral, s.eTabModel, s.eTabSources, s.eTabCategories]
 const steps = [
   { page: "overview", nav: "", spot: "navAdmin", observe: [] },
   { page: "general", nav: "admin", spot: "", observe: ["obsGeneral"] },
+  { page: "retention", nav: "admin", spot: "", observe: ["obsRetention"] },
+  { page: "retention", nav: "admin", spot: "", observe: ["obsPurgeLog"] },
   { page: "categories", nav: "admin", spot: "btnAddCategory", observe: ["obsCatList"] },
   { page: "addDialog", nav: "admin", spot: "btnAddConfirm", observe: ["obsAddFields"] },
   { page: "categories", nav: "admin", spot: "btnRemove", observe: [] },
@@ -138,7 +159,7 @@ const labels = { prev: s.prev, next: s.next, step: s.step }
         <div class="page" data-page="general">
           <div class="page-head"><span class="backbtn"><svg viewBox="0 0 24 24"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg></span><span><span class="ttl">{s.adminTitle}</span><span class="desc">{s.adminDesc}</span></span></div>
           <div class="editor">
-            <div class="tablist"><span class="tab on">{s.tabGeneral}</span><span class="tab">{s.tabCategories}</span></div>
+            <div class="tablist"><span class="tab on">{s.tabGeneral}</span><span class="tab">{s.tabRetention}</span><span class="tab">{s.tabCategories}</span></div>
             <div class="tabbody" id="obsGeneral">
               <p class="hint">{s.genDesc}</p>
               <div class="grid2"><div class="fld"><p class="lbl">{s.workspaceName}</p><span class="input block">{s.wsValue}</span></div></div>
@@ -147,11 +168,35 @@ const labels = { prev: s.prev, next: s.next, step: s.step }
           </div>
         </div>
 
-        <!-- Admin — Conversation categories tab (steps 3 & 5) -->
+        <!-- Admin — Retention policy tab (steps 3 & 4) -->
+        <div class="page" data-page="retention">
+          <div class="page-head"><span class="backbtn"><svg viewBox="0 0 24 24"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg></span><span><span class="ttl">{s.adminTitle}</span><span class="desc">{s.adminDesc}</span></span></div>
+          <div class="editor">
+            <div class="tablist"><span class="tab">{s.tabGeneral}</span><span class="tab on">{s.tabRetention}</span><span class="tab">{s.tabCategories}</span></div>
+            <div class="tabbody">
+              <div id="obsRetention">
+                <div class="grid2"><div class="fld"><p class="lbl">{s.retentionLabel}</p><span class="input block">{s.retentionVal}</span><p class="hint" style="margin-top:0.35rem">{s.retentionHelp}</p></div></div>
+                <div class="editor-foot" style="margin-top:0.6rem"><span class="btn">{s.save}</span></div>
+              </div>
+              <div id="obsPurgeLog" style="margin-top:0.9rem">
+                <p class="lbl" style="margin:0">{s.logTitle}</p>
+                <p class="hint">{s.nextRun}</p>
+                <div class="logtable">
+                  <div class="lrow head"><span>{s.colDate}</span><span>{s.colPurged}</span><span>{s.colStatus}</span></div>
+                  <div class="lrow"><span>{s.row1Date}</span><span>12</span><span><span class="stbadge ok">{s.stOk}</span></span></div>
+                  <div class="lrow"><span>{s.row2Date}</span><span>3</span><span><span class="stbadge warn">{s.stPartial}</span></span></div>
+                  <div class="lrow"><span>{s.row3Date}</span><span>0</span><span><span class="stbadge ok">{s.stOk}</span></span></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Admin — Conversation categories tab (steps 5 & 7) -->
         <div class="page" data-page="categories">
           <div class="page-head"><span class="backbtn"><svg viewBox="0 0 24 24"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg></span><span><span class="ttl">{s.adminTitle}</span><span class="desc">{s.adminDesc}</span></span></div>
           <div class="editor">
-            <div class="tablist"><span class="tab">{s.tabGeneral}</span><span class="tab on">{s.tabCategories}</span></div>
+            <div class="tablist"><span class="tab">{s.tabGeneral}</span><span class="tab">{s.tabRetention}</span><span class="tab on">{s.tabCategories}</span></div>
             <div class="tabbody">
               <p class="lbl" style="margin-top:0">{s.catTitle}</p>
               <p class="hint">{s.catDesc}</p>
@@ -165,7 +210,7 @@ const labels = { prev: s.prev, next: s.next, step: s.step }
           </div>
         </div>
 
-        <!-- Add category dialog (step 4) -->
+        <!-- Add category dialog (step 6) -->
         <div class="page center" data-page="addDialog">
           <div class="scrim"></div>
           <div class="modal">
@@ -178,7 +223,7 @@ const labels = { prev: s.prev, next: s.next, step: s.step }
           </div>
         </div>
 
-        <!-- Conversation agent editor — Conversation categories tab (step 6) -->
+        <!-- Conversation agent editor — Conversation categories tab (step 8) -->
         <div class="page" data-page="agentTab">
           <div class="page-head"><span class="backbtn"><svg viewBox="0 0 24 24"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg></span><span><span class="ttl">{s.editTitle}</span><span class="desc">{s.editDesc}</span></span></div>
           <div class="editor">
@@ -368,6 +413,13 @@ const labels = { prev: s.prev, next: s.next, step: s.step }
   .waw .catbadge { display: inline-flex; align-items: center; gap: 0.4rem; background: var(--secondary); color: var(--secondary-foreground); border-radius: 999px; padding: 0.25rem 0.35rem 0.25rem 0.7rem; font-size: 0.78rem; }
   .waw .catbadge .x { display: inline-grid; place-items: center; width: 1rem; height: 1rem; border-radius: 999px; color: var(--muted-foreground); }
   .waw .catbadge .x svg { font-size: 0.75rem; }
+
+  .waw .logtable { border: 1px solid var(--border); border-radius: 10px; overflow: hidden; font-size: 0.78rem; }
+  .waw .lrow { display: grid; grid-template-columns: 1.4fr 1fr 0.7fr; gap: 0.5rem; padding: 0.4rem 0.7rem; border-top: 1px solid var(--border); align-items: center; }
+  .waw .lrow.head { border-top: 0; background: var(--secondary); color: var(--muted-foreground); font-weight: 600; font-size: 0.72rem; }
+  .waw .stbadge { display: inline-flex; align-items: center; border-radius: 999px; padding: 0.1rem 0.55rem; font-size: 0.68rem; font-weight: 600; }
+  .waw .stbadge.ok { background: oklch(0.95 0.05 150); color: oklch(0.45 0.12 150); }
+  .waw .stbadge.warn { background: oklch(0.96 0.06 85); color: oklch(0.5 0.12 70); }
 
   .waw .checks { display: flex; flex-direction: column; gap: 0.55rem; }
   .waw .checkrow { display: flex; align-items: center; gap: 0.55rem; font-size: 0.82rem; }

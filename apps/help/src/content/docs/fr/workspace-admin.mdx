@@ -1,18 +1,20 @@
 ---
 title: Administrer l'espace de travail
 highlight: espace de travail
-description: Utilisez la page Admin pour renommer votre espace de travail et gérer ses catégories de conversation — les étiquettes qui classent les conversations et alimentent l'analytique par catégorie.
+description: Utilisez la page Admin pour renommer votre espace de travail, régler la politique de conservation des conversations et gérer les catégories de conversation qui classent les conversations dans l'analytique.
 category: guides-team
 order: 3
-updated: 2026-07-22
+updated: 2026-08-28
 ---
 
 import WorkspaceAdminWalkthrough from "@/components/WorkspaceAdminWalkthrough.astro"
 
 La page **Admin** est l'endroit où le propriétaire ou les admins d'un espace de
-travail gèrent ses paramètres. Elle comporte deux onglets : **Général** — renommer
-l'espace de travail — et **Catégories de conversation** — créer les étiquettes
-utilisées pour classer les sessions de vos agents conversationnels.
+travail gèrent ses paramètres. Elle comporte trois onglets : **Général** — renommer
+l'espace de travail —, **Politique de conservation** — régler la durée de
+conservation des conversations et consulter le journal des purges —, et **Catégories
+de conversation** — créer les étiquettes utilisées pour classer les sessions de vos
+agents conversationnels.
 
 Vous l'ouvrez depuis **Admin** dans la barre latérale gauche de **Studio**. Elle
 s'applique à tout l'**espace de travail**.
@@ -28,6 +30,17 @@ l'[Analytique](/fr/analytics). La **gestion de la liste** des catégories se fai
 dans Admin ; leur **activation sur un agent donné** se fait dans l'onglet **Catégories
 de conversation** de cet agent.
 
+## Ce que fait la politique de conservation
+
+Chaque espace de travail conserve ses conversations pendant un nombre de jours donné —
+**30 par défaut**. Chaque nuit, une purge efface le contenu des conversations plus
+anciennes : messages, appels d'outils, titres, état des formulaires, texte des retours
+et pièces jointes. Les statistiques d'usage (nombre de conversations, catégories,
+votes des retours) restent disponibles. La valeur va de **1** à **3650** jours
+(10 ans) ; un espace de travail qui doit conserver longtemps son historique choisit
+une valeur haute. Les conversations du [chat intégré](/fr/agent-embed) suivent la même
+règle.
+
 ## Le parcours complet en un coup d'œil
 
 La démonstration ci-dessous rejoue chaque étape dans l'interface réelle. Utilisez
@@ -41,7 +54,8 @@ bouton à cliquer et la zone à observer.
 ### 1. Ouvrir Admin
 
 Dans **Studio**, ouvrez **Admin** dans la barre latérale gauche. La page s'ouvre avec
-un onglet **Général** et un onglet **Catégories de conversation**. (Elle est destinée
+les onglets **Général**, **Politique de conservation** et **Catégories de
+conversation**. (Elle est destinée
 aux **propriétaires** et **admins** de l'espace de travail.)
 
 ### 2. Renommer l'espace de travail (Général)
@@ -49,13 +63,32 @@ aux **propriétaires** et **admins** de l'espace de travail.)
 Sur l'onglet **Général**, modifiez le champ **Nom de l'espace de travail** et cliquez
 sur **Enregistrer**. Le nouveau nom est utilisé dans toute la plateforme.
 
-### 3. Gérer les catégories (Catégories de conversation)
+### 3. Régler la conservation (Politique de conservation)
+
+Ouvrez l'onglet **Politique de conservation**. Modifiez **Durée de conservation des
+conversations (jours)** et cliquez sur **Enregistrer**. Le texte d'aide indique :
+**Le contenu des conversations plus anciennes est effacé définitivement. Les
+statistiques d'usage restent disponibles. Entre 1 et 3650 jours.** Le champ est
+obligatoire — **0** et une valeur vide sont refusés.
+
+### 4. Lire le journal des purges
+
+Sous le réglage, le **Journal des purges** liste une ligne par passage nocturne pour
+cet espace de travail, avec la prochaine purge planifiée au-dessus (**Prochaine
+purge :** suivie de la date). Chaque ligne montre la **Date**, le nombre de
+**Conversations effacées** (un **0** prouve que la purge a tourné sans rien à
+effacer), et un badge **Statut** : **OK** (vert) — le passage a réussi ; **PARTIAL**
+(orange) — une partie du nettoyage a été reportée et sera retentée au prochain
+passage ; **ERROR** (rouge) — le passage a échoué. Survolez le badge de statut pour
+voir le rapport du passage. Le journal conserve 12 mois de passages.
+
+### 5. Gérer les catégories (Catégories de conversation)
 
 Ouvrez l'onglet **Catégories de conversation**. Vos catégories existantes s'affichent
 sous forme de badges ; s'il n'y en a aucune, la page indique **Aucune catégorie pour
 l'instant.** Cliquez sur **Ajouter une catégorie** pour en créer une.
 
-### 4. Ajouter une catégorie
+### 6. Ajouter une catégorie
 
 Dans la boîte de dialogue **Ajouter une catégorie de conversation**, saisissez un
 **Nom de la catégorie**. Cochez **Activer également pour tous les agents
@@ -63,13 +96,13 @@ conversationnels existants** si vous voulez que tous les agents conversationnels
 commencent à l'utiliser tout de suite (sinon, vous l'activerez agent par agent plus
 tard). Cliquez sur **Ajouter**.
 
-### 5. Supprimer une catégorie
+### 7. Supprimer une catégorie
 
 Pour supprimer une catégorie, cliquez sur le **✕** de son badge. Une confirmation —
 **Supprimer la catégorie de conversation ?** — vous est demandée avant de la retirer
 de la liste des catégories de l'espace de travail.
 
-### 6. Activer les catégories sur un agent
+### 8. Activer les catégories sur un agent
 
 Les catégories ne classent les conversations d'un agent qu'une fois **activées sur cet
 agent**. Ouvrez un **agent conversationnel**, allez dans son onglet **Catégories de
@@ -80,6 +113,10 @@ peuvent pas être décochées.** Cliquez sur **Enregistrer**. (Voir
 
 ## Conseils
 
+- Laissez la conservation à **30 jours** sauf raison particulière : c'est le réglage
+  par défaut, adapté au RGPD.
+- Consultez le **Journal des purges** après un changement de durée — le passage
+  nocturne suivant montre combien de conversations la nouvelle valeur a effacées.
 - Gardez la liste des catégories **courte et distincte** — quelques étiquettes claires
   classent mieux que de nombreuses catégories qui se recoupent.
 - Cochez **Activer également pour tous les agents conversationnels existants** quand
@@ -99,6 +136,15 @@ peuvent pas être décochées.** Cliquez sur **Enregistrer**. (Voir
 - **Je ne peux pas décocher une catégorie sur un agent** — les catégories déjà
   **utilisées** dans les conversations de cet agent sont verrouillées, pour que les
   sessions passées conservent leurs étiquettes.
+- **Le journal des purges est vide** — aucune purge n'a encore tourné pour cet espace
+  de travail ; le premier passage nocturne après l'activation de la fonctionnalité
+  crée la première ligne.
+- **Je ne peux pas vider le champ pour conserver les conversations sans limite** —
+  cette option n'existe pas : la durée est toujours définie. Utilisez une valeur haute
+  (jusqu'à **3650** jours) à la place.
+- **Un passage affiche PARTIAL** — une partie du nettoyage (par exemple la suppression
+  d'une trace dans l'outil d'observabilité) a échoué et sera retentée automatiquement
+  au prochain passage ; survolez le badge pour le détail.
 - **Je ne vois pas la page Admin** — administrer l'espace de travail est réservé à son
   **propriétaire** et à ses **admins** ; demandez-leur si vous avez besoin d'une
   modification.
