@@ -21,8 +21,8 @@ var (
 	ErrInvalidPdf   = errors.New("invalid pdf")
 )
 
-// PDF points are 1/72"; scale 2 renders ~144dpi, matching the previous
-// pdf-renderer so extracted text stays legible.
+// PDF points are 1/72"; scale 2 renders ~144dpi so extracted text stays
+// legible.
 const renderScale = 2.0
 
 type Renderer struct {

@@ -1,5 +1,5 @@
 // pdf-converter: GCS-native PDF -> PNG page rasterizer for image-only LLMs.
-// Auth is Cloud Run invoker IAM (no in-app auth), like apps/pdf-renderer.
+// Auth is Cloud Run invoker IAM (no in-app auth).
 package main
 
 import (

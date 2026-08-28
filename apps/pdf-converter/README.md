@@ -80,10 +80,9 @@ go vet ./...
 This service is intentionally **not** part of the automatic deploy pipeline
 (it changes rarely; the platform deploy does not rebuild it).
 
-Deployment will mirror the pdf-renderer flow: a manual **"Deploy PDF
-Converter"** GitHub action in the infra repo (**to be created** — clone of
-"Deploy PDF Renderer"; workflow_dispatch: pick the app-repo ref and the GCP
-project), once per project, replacing the older `apps/pdf-renderer` service.
+Deployment is a manual **"Deploy PDF Converter"** GitHub action in the infra
+repo (**to be created** — workflow_dispatch: pick the app-repo ref and the GCP
+project), run once per project.
 
 Equivalent local command, once available, if you have the GCP credentials:
 
