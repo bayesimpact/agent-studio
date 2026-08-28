@@ -25,7 +25,7 @@ type ProjectTally = {
 }
 
 // Langfuse is out of the purge's scope on purpose: observability data gets its
-// own global TTL, tracked infra-side (infra#136).
+// own global TTL, applied on the observability store directly.
 
 @Injectable()
 export class ConversationRetentionSweepService {
