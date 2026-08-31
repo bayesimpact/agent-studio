@@ -20,10 +20,6 @@ type renderDocumentRequest struct {
 	MaxPixelsPerPage int    `json:"maxPixelsPerPage"`
 }
 
-type pageCountRequest struct {
-	SourceObject string `json:"sourceObject"`
-}
-
 func writeJSON(response http.ResponseWriter, status int, payload any) {
 	response.Header().Set("Content-Type", "application/json")
 	response.WriteHeader(status)
@@ -118,7 +114,12 @@ func newServer(
 				return store.Upload(renderCtx, object, "image/png", pngBytes)
 			})
 		if errors.Is(err, render.ErrTooManyPages) {
-			writeError(response, http.StatusUnprocessableEntity, err.Error())
+			// pageCount rides along so the API can raise its typed, user-facing
+			// page-limit error without a separate page-count request.
+			writeJSON(response, http.StatusUnprocessableEntity, map[string]any{
+				"message":   err.Error(),
+				"pageCount": pageCount,
+			})
 			return
 		}
 		if errors.Is(err, render.ErrAborted) {
@@ -132,41 +133,6 @@ func newServer(
 		if err != nil {
 			log.Printf("render failed: %v", err)
 			writeError(response, http.StatusInternalServerError, "pdf rendering failed")
-			return
-		}
-		writeJSON(response, http.StatusOK, map[string]int{"pageCount": pageCount})
-	})
-
-	mux.HandleFunc("POST /page-count", func(response http.ResponseWriter, request *http.Request) {
-		var body pageCountRequest
-		if err := json.NewDecoder(request.Body).Decode(&body); err != nil {
-			writeError(response, http.StatusBadRequest, "invalid json body")
-			return
-		}
-		if !validObjectPath(body.SourceObject) {
-			writeError(response, http.StatusBadRequest, "sourceObject must be a relative object path")
-			return
-		}
-
-		pdfBytes, ok := fetchSourcePdf(response, request, store, body.SourceObject, maxSourceBytes)
-		if !ok {
-			return
-		}
-
-		countCtx, cancelCount := context.WithTimeout(request.Context(), renderTimeout)
-		defer cancelCount()
-		pageCount, err := renderer.GetPageCount(countCtx, pdfBytes)
-		if errors.Is(err, render.ErrInvalidPdf) {
-			writeError(response, http.StatusBadRequest, err.Error())
-			return
-		}
-		if errors.Is(err, render.ErrAborted) {
-			writeError(response, http.StatusGatewayTimeout, "pdf page count timed out or was cancelled")
-			return
-		}
-		if err != nil {
-			log.Printf("page count failed: %v", err)
-			writeError(response, http.StatusInternalServerError, "pdf page count failed")
 			return
 		}
 		writeJSON(response, http.StatusOK, map[string]int{"pageCount": pageCount})

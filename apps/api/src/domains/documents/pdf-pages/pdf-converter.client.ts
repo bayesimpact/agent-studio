@@ -1,5 +1,6 @@
 import { Injectable } from "@nestjs/common"
 import { GoogleAuth, type IdTokenClient } from "google-auth-library"
+import { PdfHasNoPagesError } from "./pdf-has-no-pages.error"
 import { PdfPageLimitExceededError } from "./pdf-page-limit-exceeded.error"
 
 // Guards against oversized vision requests: each page becomes one image sent
@@ -41,16 +42,12 @@ export class PdfConverterClient {
   // client instance.
   private readonly idTokenClients = new Map<string, IdTokenClient>()
 
-  // Returns the number of pages of a PDF document without rendering it.
-  async getPageCount({ sourceObject }: { sourceObject: string }): Promise<number> {
-    const { pageCount } = await this.postToConverter("page-count", { sourceObject })
-    return pageCount
-  }
-
   // Renders a PDF document into individual page images.
   // Returns the number of pages rendered. Throws PdfPageLimitExceededError
-  // (user-facing message) without rendering anything when the document has
-  // more pages than image-only models accept.
+  // (user-facing message) when the document has more pages than image-only
+  // models accept: the converter counts pages first and rejects with a 422
+  // before rendering anything. Throws PdfHasNoPagesError (also user-facing)
+  // when the converter reports a zero-page pdf, so 0 is never returned.
   async generatePdfPageImages({
     sourceObject,
     outputPrefix,
@@ -58,16 +55,18 @@ export class PdfConverterClient {
     sourceObject: string
     outputPrefix: string
   }): Promise<number> {
-    const pageCount = await this.getPageCount({ sourceObject })
-    if (pageCount > MAX_PDF_PAGES_FOR_IMAGE_CONVERSION) {
-      throw new PdfPageLimitExceededError(pageCount, MAX_PDF_PAGES_FOR_IMAGE_CONVERSION)
-    }
     const rendered = await this.postToConverter("render-document", {
       sourceObject,
       outputPrefix,
       maxPages: MAX_PDF_PAGES_FOR_IMAGE_CONVERSION,
       maxPixelsPerPage: MAX_RENDERED_PIXELS_PER_PAGE,
     })
+    // The converter returns a 200 with pageCount 0 for a zero-page pdf; if
+    // that were returned, the caller would cache it and every later run would
+    // silently send the model no page images at all.
+    if (rendered.pageCount === 0) {
+      throw new PdfHasNoPagesError()
+    }
     return rendered.pageCount
   }
 
@@ -94,7 +93,7 @@ export class PdfConverterClient {
       throw new Error(`could not reach pdf-converter at ${converterUrl}: ${reason}`)
     }
     if (!response.ok) {
-      throw new Error(await this.extractErrorMessage(response))
+      throw await this.buildErrorFromResponse(response)
     }
     let body: unknown
     try {
@@ -147,15 +146,20 @@ export class PdfConverterClient {
     return idTokenClient
   }
 
-  private async extractErrorMessage(response: Response): Promise<string> {
-    const fallback = `pdf-converter responded with HTTP ${response.status}`
+  private async buildErrorFromResponse(response: Response): Promise<Error> {
+    let body: { message?: string | string[]; pageCount?: number } = {}
     try {
-      const body = (await response.json()) as { message?: string | string[] }
-      if (typeof body.message === "string") return body.message
-      if (Array.isArray(body.message)) return body.message.join(", ")
+      body = (await response.json()) as typeof body
     } catch {
       // Non-json error body: fall through to the generic message.
     }
-    return fallback
+    // 422 is the converter's page-limit rejection; its body carries the
+    // document's page count so the typed error can name it.
+    if (response.status === 422 && typeof body.pageCount === "number") {
+      return new PdfPageLimitExceededError(body.pageCount, MAX_PDF_PAGES_FOR_IMAGE_CONVERSION)
+    }
+    if (typeof body.message === "string") return new Error(body.message)
+    if (Array.isArray(body.message)) return new Error(body.message.join(", "))
+    return new Error(`pdf-converter responded with HTTP ${response.status}`)
   }
 }

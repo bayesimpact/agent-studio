@@ -10,7 +10,6 @@ are streamed directly to GCS. No local storage or subprocess management needed.
 | Method | Path | Description |
 | --- | --- | --- |
 | `POST` | `/render-document` | Body: JSON with source PDF path and output prefix. Returns `{ "pageCount": <number> }` with pages uploaded as `{outputPrefix}page-{n}.png`. |
-| `POST` | `/page-count` | Body: JSON with the source PDF path (`sourceObject` only). Returns `{ "pageCount": <number> }` without rendering anything. |
 | `GET` | `/healthz` | Liveness probe, no auth. |
 
 `POST /render-document` requires a JSON body with:
@@ -20,9 +19,6 @@ are streamed directly to GCS. No local storage or subprocess management needed.
 - `maxPages` (integer, 1–100, required) — reject PDFs with more pages (HTTP 422).
 - `maxPixelsPerPage` (integer, 1–16000000, required) — clamp each page's rendered bitmap height and width.
 
-`POST /page-count` requires a JSON body with only `sourceObject` (same
-constraints) and shares the error semantics below (no 422: it never renders).
-
 All paths must be relative (no leading `/`) and free of `..` traversal.
 
 Response on success: `{ "pageCount": <int> }` (HTTP 200).
@@ -31,7 +27,7 @@ Errors are:
 - **400** — invalid PDF, malformed JSON body, invalid parameters, or invalid object paths.
 - **404** — source PDF not found in GCS.
 - **413** — source PDF exceeds `PDF_CONVERTER_MAX_PDF_BYTES`.
-- **422** — PDF has more pages than `maxPages`.
+- **422** — PDF has more pages than `maxPages`; nothing is rendered and the body includes the document's `pageCount`.
 - **500** — server error (e.g., failed to upload page to GCS).
 - **504** — rendering exceeded `PDF_CONVERTER_RENDER_TIMEOUT_MS` (or the caller disconnected); the pdfium instance is killed and re-created, so a hostile PDF cannot wedge the service.
 
@@ -49,7 +45,7 @@ service is only bound on the developer's machine.
 - `GCS_STORAGE_BUCKET_NAME` (required) — GCS bucket for source PDFs and rendered pages.
 - `PORT` (default `3002`) — listen port.
 - `PDF_CONVERTER_MAX_PDF_BYTES` (default `52428800`, 50MB) — source PDF size limit.
-- `PDF_CONVERTER_RENDER_TIMEOUT_MS` (default `60000`, 60s) — hard per-request deadline for rendering/page-count work; must stay below the API client's 120s request timeout.
+- `PDF_CONVERTER_RENDER_TIMEOUT_MS` (default `60000`, 60s) — hard per-request deadline for rendering work; must stay below the API client's 120s request timeout.
 
 ## Local development
 
