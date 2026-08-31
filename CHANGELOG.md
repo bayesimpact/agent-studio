@@ -16,7 +16,6 @@ This project uses [CalVer](https://calver.org/) (YY.MM.Micro) for product versio
 - PDF documents sent to Gemma and MedGemma agents are now converted to images by a dedicated service, so heavy PDF processing no longer slows down the platform.
 
 ### Fixed
-- (beta) Sending an empty PDF to Gemma or MedGemma now shows a clear error instead of an invented answer.
 - The chat widget hint no longer blocks clicks on the page underneath.
 - (beta) The MCP Servers tab on the agent editor shows translated labels and each server's saved state.
 - Chat shows an error message instead of an empty reply when the model fails.
