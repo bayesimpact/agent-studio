@@ -18,6 +18,7 @@ import type { AgentSettings } from "@/domains/agents/settings/agent-settings.ent
 import { AgentMessageAttachmentDocumentsService } from "@/domains/agents/shared/agent-session-messages/agent-message-attachment-documents.service"
 import type { AgentSessionScope } from "@/domains/agents/shared/agent-session-messages/streaming/streaming-session.types"
 import { PdfConverterClient } from "@/domains/documents/pdf-pages/pdf-converter.client"
+import { PdfPageLimitExceededError } from "@/domains/documents/pdf-pages/pdf-page-limit-exceeded.error"
 import {
   addFeature,
   createOrganizationWithAgent,
@@ -353,8 +354,9 @@ describe("StreamingService", () => {
         },
       })
 
-      jest.spyOn(pdfConverterClient, "getPageCount").mockResolvedValue(25)
-      const generatePdfPageImagesSpy = jest.spyOn(pdfConverterClient, "generatePdfPageImages")
+      const generatePdfPageImagesSpy = jest
+        .spyOn(pdfConverterClient, "generatePdfPageImages")
+        .mockRejectedValue(new PdfPageLimitExceededError(25, 20))
 
       await expect(
         buildLLMRequestForAttachment({

@@ -80,11 +80,12 @@ func TestInterruptedRendersDoNotExhaustThePool(t *testing.T) {
 	}
 }
 
-func TestGetPageCountReturnsAbortedWhenContextAlreadyCancelled(t *testing.T) {
+func TestRenderPagesReturnsAbortedWhenContextAlreadyCancelled(t *testing.T) {
 	renderer := newTestRenderer(t)
 	ctx, cancel := context.WithCancel(context.Background())
 	cancel()
-	_, err := renderer.GetPageCount(ctx, pdftest.BuildPdfWithPages(3, 200))
+	_, err := renderer.RenderPages(ctx, pdftest.BuildPdfWithPages(3, 200), 20, 4_000_000,
+		func(pageNumber int, pngBytes []byte) error { return nil })
 	if !errors.Is(err, ErrAborted) {
 		t.Fatalf("expected ErrAborted, got %v", err)
 	}
@@ -122,10 +123,13 @@ func TestCapsPixelsPerPage(t *testing.T) {
 
 func TestRejectsTooManyPages(t *testing.T) {
 	renderer := newTestRenderer(t)
-	_, err := renderer.RenderPages(context.Background(), pdftest.BuildPdfWithPages(3, 200), 2, 4_000_000,
+	pageCount, err := renderer.RenderPages(context.Background(), pdftest.BuildPdfWithPages(3, 200), 2, 4_000_000,
 		func(pageNumber int, pngBytes []byte) error { return nil })
 	if !errors.Is(err, ErrTooManyPages) {
 		t.Fatalf("expected ErrTooManyPages, got %v", err)
+	}
+	if pageCount != 3 {
+		t.Fatalf("expected the rejected page count 3 alongside the error, got %d", pageCount)
 	}
 }
 
@@ -133,25 +137,6 @@ func TestRejectsInvalidPdf(t *testing.T) {
 	renderer := newTestRenderer(t)
 	_, err := renderer.RenderPages(context.Background(), []byte("not a pdf at all"), 20, 4_000_000,
 		func(pageNumber int, pngBytes []byte) error { return nil })
-	if !errors.Is(err, ErrInvalidPdf) {
-		t.Fatalf("expected ErrInvalidPdf, got %v", err)
-	}
-}
-
-func TestGetPageCount(t *testing.T) {
-	renderer := newTestRenderer(t)
-	pageCount, err := renderer.GetPageCount(context.Background(), pdftest.BuildPdfWithPages(3, 200))
-	if err != nil {
-		t.Fatalf("GetPageCount: %v", err)
-	}
-	if pageCount != 3 {
-		t.Fatalf("expected 3 pages, got %d", pageCount)
-	}
-}
-
-func TestGetPageCountRejectsInvalidPdf(t *testing.T) {
-	renderer := newTestRenderer(t)
-	_, err := renderer.GetPageCount(context.Background(), []byte("not a pdf at all"))
 	if !errors.Is(err, ErrInvalidPdf) {
 		t.Fatalf("expected ErrInvalidPdf, got %v", err)
 	}

@@ -12,6 +12,7 @@ import type { Document } from "@/domains/documents/document.entity"
 import { documentFactory } from "@/domains/documents/document.factory"
 import { DocumentsModule } from "@/domains/documents/documents.module"
 import { PdfConverterClient } from "@/domains/documents/pdf-pages/pdf-converter.client"
+import { PdfPageLimitExceededError } from "@/domains/documents/pdf-pages/pdf-page-limit-exceeded.error"
 import { PdfPagesModule } from "@/domains/documents/pdf-pages/pdf-pages.module"
 import {
   FILE_STORAGE_SERVICE,
@@ -315,7 +316,9 @@ describe("ExtractionAgentSessionRunnerService", () => {
         model: AgentModel.Gemma4_26B,
       })
 
-      jest.spyOn(pdfConverterClient, "getPageCount").mockResolvedValue(25)
+      jest
+        .spyOn(pdfConverterClient, "generatePdfPageImages")
+        .mockRejectedValue(new PdfPageLimitExceededError(25, 20))
       const generateStructuredOutputSpy = jest.spyOn(gemmaLlmProvider, "generateStructuredOutput")
 
       await expect(
