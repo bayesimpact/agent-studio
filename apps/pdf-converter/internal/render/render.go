@@ -138,10 +138,24 @@ func (renderer *Renderer) RenderPages(
 			if size.Width*size.Height*scale*scale > float64(maxPixelsPerPage) {
 				scale = math.Sqrt(float64(maxPixelsPerPage) / (size.Width * size.Height))
 			}
+			// Floor to 1px: a dimension truncated to 0 would either fail the
+			// render (0x0) or be silently recomputed from the page aspect
+			// ratio by go-pdfium (single 0), bypassing maxPixelsPerPage.
+			width := max(1, int(size.Width*scale))
+			height := max(1, int(size.Height*scale))
+			// Flooring a sub-pixel dimension to 1 can leave the other past
+			// the budget on extreme aspect ratios; cap it.
+			if width*height > maxPixelsPerPage {
+				if width > height {
+					width = maxPixelsPerPage / height
+				} else {
+					height = maxPixelsPerPage / width
+				}
+			}
 			rendered, err := instance.RenderPageInPixels(&requests.RenderPageInPixels{
 				Page:   page,
-				Width:  int(size.Width * scale),
-				Height: int(size.Height * scale),
+				Width:  width,
+				Height: height,
 			})
 			if err != nil {
 				return 0, fmt.Errorf("render page %d: %w", pageIndex+1, err)
