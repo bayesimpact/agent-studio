@@ -1,5 +1,8 @@
 import type { AllRepositories } from "@/common/test/test-all-repositories"
-import type { UserMembershipResourceType } from "@/domains/memberships/user-membership.entity"
+import type {
+  UserMembershipResourceType,
+  UserMembershipRole,
+} from "@/domains/memberships/user-membership.entity"
 
 export async function findUserMembershipRow({
   repositories,
@@ -12,15 +15,10 @@ export async function findUserMembershipRow({
   userId: string
   resourceType: UserMembershipResourceType
   resourceId: string
-  role?: string
+  role?: UserMembershipRole
 }) {
   return repositories.userMembershipRepository.findOne({
-    where: {
-      userId,
-      resourceType,
-      resourceId,
-      ...(role ? { role } : {}),
-    },
+    where: role ? { userId, resourceType, resourceId, role } : { userId, resourceType, resourceId },
   })
 }
 
@@ -62,7 +60,7 @@ export async function findAgentMembershipRow(
 
 export async function findReviewCampaignMembershipRow(
   repositories: AllRepositories,
-  params: { userId: string; campaignId: string; role?: string },
+  params: { userId: string; campaignId: string; role?: UserMembershipRole },
 ) {
   return findUserMembershipRow({
     repositories,
